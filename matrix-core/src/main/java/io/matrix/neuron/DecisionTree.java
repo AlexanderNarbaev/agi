@@ -2,6 +2,7 @@ package io.matrix.neuron;
 
 import java.util.BitSet;
 import java.util.Objects;
+import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
@@ -232,20 +233,31 @@ public sealed interface DecisionTree permits DecisionTree.Leaf, DecisionTree.Spl
     }
 
     /**
-     * Creates a random decision tree.
+     * Creates a random decision tree (non-deterministic, uses ThreadLocalRandom).
      *
      * @param k        number of inputs, 1..K_MAX
      * @param maxDepth maximum depth of the generated tree
      * @return a random decision tree
      */
     static DecisionTree random(int k, int maxDepth) {
+        return random(k, maxDepth, ThreadLocalRandom.current());
+    }
+
+    /**
+     * Creates a random decision tree using the provided RNG.
+     *
+     * @param k        number of inputs, 1..K_MAX
+     * @param maxDepth maximum depth of the generated tree
+     * @param rng      random number generator (seeded for reproducibility)
+     * @return a random decision tree
+     */
+    static DecisionTree random(int k, int maxDepth, Random rng) {
         if (k < 1 || k > K_MAX) {
             throw new IllegalArgumentException("k must be in [1, " + K_MAX + "], got: " + k);
         }
         if (k == 1 || maxDepth <= 0) {
-            return new Leaf(ThreadLocalRandom.current().nextBoolean());
+            return new Leaf(rng.nextBoolean());
         }
-        var rng = ThreadLocalRandom.current();
         DecisionTree tree = randomTree(k, Math.min(maxDepth, k), rng, new java.util.HashSet<>());
         if (tree instanceof Leaf leaf) {
             int bit = rng.nextInt(k);
@@ -254,7 +266,7 @@ public sealed interface DecisionTree permits DecisionTree.Leaf, DecisionTree.Spl
         return tree;
     }
 
-    private static DecisionTree randomTree(int k, int maxDepth, ThreadLocalRandom rng,
+    private static DecisionTree randomTree(int k, int maxDepth, Random rng,
                                             Set<Integer> usedBits) {
         if (maxDepth <= 0 || usedBits.size() >= k) {
             return new Leaf(rng.nextBoolean());
