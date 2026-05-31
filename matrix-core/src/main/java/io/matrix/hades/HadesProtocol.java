@@ -2,6 +2,7 @@ package io.matrix.hades;
 
 import io.matrix.cluster.NeuronId;
 import io.matrix.cluster.NeuronInstance;
+import io.matrix.observability.MatrixMetrics;
 import io.matrix.snapshot.ClusterSnapshot;
 import io.matrix.snapshot.SnapshotStore;
 
@@ -52,12 +53,18 @@ public class HadesProtocol {
 
     private final SnapshotStore snapshotStore;
     private final DerangementDetector detector;
+    private final MatrixMetrics metrics;
     private final List<String> hadesLog = new ArrayList<>();
     private HadesState state = HadesState.IDLE;
 
-    public HadesProtocol(SnapshotStore snapshotStore) {
+    public HadesProtocol(SnapshotStore snapshotStore, MatrixMetrics metrics) {
         this.snapshotStore = snapshotStore;
         this.detector = new DerangementDetector();
+        this.metrics = metrics;
+    }
+
+    public HadesProtocol(SnapshotStore snapshotStore) {
+        this(snapshotStore, null);
     }
 
     public DerangementDetector detector() { return detector; }
@@ -83,6 +90,9 @@ public class HadesProtocol {
         var alerts = detector.scanAll(
                 new ArrayList<>(neurons.values()), signalRates);
         hadesLog.add("HADES:SCAN alerts=" + alerts.size());
+        if (metrics != null) {
+            alerts.forEach(a -> metrics.hadesAlert());
+        }
 
         if (alerts.isEmpty()) {
             state = HadesState.IDLE;
@@ -107,6 +117,9 @@ public class HadesProtocol {
         }
         hadesLog.add("HADES:ISOLATE count=" + quarantine.size()
                 + " ids=" + affected);
+        if (metrics != null) {
+            quarantine.forEach(n -> metrics.hadesIsolation());
+        }
 
         // Phase 3: Create emergency snapshot
         state = HadesState.ROLLING_BACK;

@@ -146,7 +146,7 @@ public class BlockAgent {
     public void eat() {
         if (inventory.getOrDefault("BREAD", 0) > 0) {
             inventory.merge("BREAD", -1, Integer::sum);
-            hunger = Math.min(maxHunger, hunger + 5);
+            hunger = Math.min(maxHunger, hunger + 10);
             health = Math.min(maxHealth, health + 2);
         }
     }

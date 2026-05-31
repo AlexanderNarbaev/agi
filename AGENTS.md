@@ -85,13 +85,31 @@ At the start of each response, include a brief anchor tag: `[CTX: <3-word sessio
 ## ОКРУЖЕНИЕ И ИНСТРУМЕНТЫ
 
 ### Модели (Multi-Provider: DeepSeek API + OpenCode Go)
-- **Основная (reasoning):** `deepseek/deepseek-v4-pro` (DeepSeek-V4-Pro, thinking mode auto, 64K output).
-- **Бюджетная (fast):** `deepseek/deepseek-v4-flash` ($0.14/1M input, non-thinking, 1M context).
-- **OpenCode Go (резерв):** `opencode-go/glm-5.1` — авто-фолбэк если DeepSeek недоступен.
-- **Small model (фон):** `opencode-go/gpt-5-nano` — для фоновых операций и простых задач.
-- Переключение: `/model deepseek/deepseek-v4-pro` или `/model opencode-go/glm-5.1`.
-- Конфигурация провайдеров в `~/.config/opencode/opencode.json` → `provider: { deepseek: {}, opencode: {} }`.
-- API ключи: DeepSeek — через `/connect` в TUI, OpenCode Go — `opencode auth login`.
+
+#### Основная цепочка (приоритет):
+1. **DeepSeek V4 Pro Max:** `deepseek/deepseek-v4-pro` — основная модель для reasoning, кодогенерации, верификации. Использовать всегда первой.
+2. **DeepSeek V4 Flash:** `deepseek/deepseek-v4-flash` — бюджетная (fast), для рутинных задач, не требующих глубокого reasoning.
+3. **OpenCode Go (GLM-5.1):** `opencode-go/glm-5.1` — резерв при недоступности DeepSeek.
+4. **Small model (фон):** `opencode-go/gpt-5-nano` — для фоновых операций и простых задач.
+
+#### Правила fallback (жёсткие):
+- **При ограничении лимитов OpenCode Go** → немедленно переключаться на DeepSeek V4 Pro Max (`deepseek/deepseek-v4-pro`).
+- **При окончании лимитов DeepSeek** → использовать бесплатные модели OpenCode Go (`opencode-go/glm-5.1`, `opencode-go/gpt-5-nano`).
+- **Если DeepSeek не обладает нужными навыками** → сразу использовать бесплатные модели OpenCode Go без попыток обхода.
+- **DeepSeek V4 Pro Max недоступен** → fallback: `deepseek/deepseek-v4-flash` → `opencode-go/glm-5.1` → `opencode-go/gpt-5-nano`.
+
+#### Правила для агентов:
+| Агент | Модель по умолчанию | Fallback |
+|-------|-------------------|----------|
+| @pm, @analyst, @architect | `deepseek/deepseek-v4-pro` | `opencode-go/glm-5.1` |
+| @developer, @researcher, @devops | `deepseek/deepseek-v4-pro` | `deepseek/deepseek-v4-flash` |
+| @qa, @designer | `deepseek/deepseek-v4-pro` | `opencode-go/minimax-m2.7` |
+| @reviewer | `deepseek/deepseek-v4-pro` | `opencode-go/qwen3.6-plus` |
+| @security | `deepseek/deepseek-v4-pro` | `opencode-go/glm-5` |
+
+Переключение: `/model deepseek/deepseek-v4-pro` или `/model opencode-go/glm-5.1`.
+Конфигурация провайдеров в `~/.config/opencode/opencode.json` → `provider: { deepseek: {}, opencode: {} }`.
+API ключи: DeepSeek — через `/connect` в TUI, OpenCode Go — `opencode auth login`.
 
 ### Агенты (вызов через `@имя`)
 - `@pm`, `@analyst`, `@architect` → `glm-5.1`
@@ -188,13 +206,15 @@ At the start of each response, include a brief anchor tag: `[CTX: <3-word sessio
 - Какие пункты пользователю стоит перепроверить?
 
 ## ПРИОРИТЕТЫ (заполни под свой проект)
-<!-- Определи 3-5 ключевых приоритетов MVP. Пример:
-1. Auth (OAuth2/OIDC)
-2. Core API (REST + GraphQL)
-3. Admin UI (React/Vue)
-4. CI/CD Pipeline
-5. Observability (OpenTelemetry)
--->
+1. Observability (Micrometer + OTEL + JSON logs + Grafana)
+2. Evolution + симуляция (фитнес, curriculum, Minecraft)
+3. Quarkus native compilation (GraalVM)
+4. Spigot Plugin — реальный Minecraft-запуск
+5. CI/CD Pipeline (GitHub Actions)
 
 ## СТАРТ СЕССИИ
 [CTX: project dev session]. Немедленно выполни инициализацию: прочитай WAL, INDEX.md, загрузи память из muninn/agentic-tools, получи обзор codegraph. Выведи сводку в 3 строках: статус, активная задача, защищённые зоны.
+
+**Текущий стек (v1.1.0):** Quarkus 3.35.4, Java 25, Apache Pekko 1.6.0, Gradle 9.x, Paper API 1.20.4.
+**Observability:** Micrometer (Prometheus :9091), OpenTelemetry (Jaeger :16686), JSON-логи, Grafana :3000.
+**Ключевые файлы:** `wal/GLOBAL_WAL.md`, `wal/SESSION_WAL.md`, `docs/INDEX.md`, `.opencode/config.yml`, `README.md`.

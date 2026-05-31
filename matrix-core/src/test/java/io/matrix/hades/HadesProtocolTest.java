@@ -22,7 +22,7 @@ class HadesProtocolTest {
 
         Map<NeuronId, NeuronInstance> neurons = new HashMap<>();
         var id = NeuronId.create();
-        neurons.put(id, NeuronInstance.stable(id, TruthTable.random(2)));
+        neurons.put(id, NeuronInstance.stable(id, TruthTable.fromLong(2, 5)));
 
         var result = hades.execute(neurons, new HashMap<>(), tempDir);
 

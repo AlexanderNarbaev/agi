@@ -33,3 +33,4 @@ out/
 .opencode/user.db*
 .opencode/*.db-shm
 .opencode/*.db-wal
+/logs/

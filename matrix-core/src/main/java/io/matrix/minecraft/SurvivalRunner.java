@@ -1,5 +1,8 @@
 package io.matrix.minecraft;
 
+import io.matrix.observability.MatrixMetrics;
+import io.micrometer.core.instrument.Timer;
+
 import java.util.Random;
 
 /**
@@ -15,16 +18,23 @@ public class SurvivalRunner {
     private final NeuralBrain brain;
     private final CraftingSystem crafting;
     private final int maxSteps;
+    private final MatrixMetrics metrics;
     private final Random rng;
 
     public SurvivalRunner(BlockWorld world, BlockAgent agent, NeuralBrain brain,
-                           int maxSteps, Random rng) {
+                           int maxSteps, MatrixMetrics metrics, Random rng) {
         this.world = world;
         this.agent = agent;
         this.brain = brain;
         this.crafting = new CraftingSystem();
         this.maxSteps = maxSteps;
+        this.metrics = metrics;
         this.rng = rng;
+    }
+
+    public SurvivalRunner(BlockWorld world, BlockAgent agent, NeuralBrain brain,
+                           int maxSteps, Random rng) {
+        this(world, agent, brain, maxSteps, null, rng);
     }
 
     public SurvivalResult run() {
@@ -80,7 +90,7 @@ public class SurvivalRunner {
         for (int[] d : dirs) {
             int tx = px + d[0], ty = py + d[1];
             BlockType block = world.get(tx, ty);
-            if (block.mineable() && agent.toolTier().ordinal() >= block.minTool().ordinal()) {
+            if (block.mineable()) {
                 return new BlockWorld.Position(tx, ty);
             }
         }
@@ -105,8 +115,15 @@ public class SurvivalRunner {
             java.util.Map<String, Integer> inventory
     ) {
         public double score() {
-            return blocksMined * 1.0 + itemsCrafted * 3.0
-                    + (alive ? survived * 0.5 : 0) + finalTool.ordinal() * 5.0;
+            double raw = blocksMined * 2.0 + itemsCrafted * 10.0
+                    + (alive ? survived * 0.02 : 0) + finalTool.ordinal() * 20.0;
+            double milestones = 0;
+            if (blocksMined > 0) milestones += 50;
+            if (finalTool.ordinal() >= BlockType.ToolTier.WOOD.ordinal()
+                    && finalTool != BlockType.ToolTier.NONE) milestones += 100;
+            if (finalTool.ordinal() >= BlockType.ToolTier.IRON.ordinal()) milestones += 200;
+            if (finalTool.ordinal() >= BlockType.ToolTier.DIAMOND.ordinal()) milestones += 500;
+            return raw + milestones;
         }
 
         @Override
