@@ -31,7 +31,7 @@ import java.util.concurrent.ThreadLocalRandom;
  */
 public final class TruthTable {
 
-    public static final int K_MAX = 16;
+    public static final int K_MAX = 20;
 
     private final int k;
 
