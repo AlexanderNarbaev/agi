@@ -1,0 +1,150 @@
+package io.matrix.cluster;
+
+import org.apache.pekko.actor.testkit.typed.javadsl.ActorTestKit;
+import io.matrix.cluster.NeuronClusterActor.*;
+import io.matrix.neuron.TruthTable;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+
+import java.time.Duration;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
+class NeuronClusterActorTest {
+
+    private static ActorTestKit testKit;
+
+    @BeforeAll
+    static void setup() {
+        testKit = ActorTestKit.create();
+    }
+
+    @AfterAll
+    static void teardown() {
+        testKit.shutdownTestKit();
+    }
+
+    @Test
+    void shouldLoadNeuron() {
+        var actor = testKit.spawn(NeuronClusterActor.create(ClusterConfig.defaults()));
+        var probe = testKit.<Response>createTestProbe();
+        NeuronId id = NeuronId.create();
+        TruthTable table = TruthTable.random(3);
+
+        actor.tell(new LoadNeuron(id, table, NeuronInstance.State.STABLE, probe.ref()));
+        Response response = probe.receiveMessage();
+
+        assertThat(response).isInstanceOf(NeuronLoaded.class);
+        assertThat(((NeuronLoaded) response).id()).isEqualTo(id);
+    }
+
+    @Test
+    void shouldRejectWhenFull() {
+        var actor = testKit.spawn(NeuronClusterActor.create(
+                new ClusterConfig(2, 100, 1)));
+        var probe = testKit.<Response>createTestProbe();
+
+        actor.tell(new LoadNeuron(NeuronId.create(), TruthTable.random(2),
+                NeuronInstance.State.STABLE, probe.ref()));
+        probe.receiveMessage();
+
+        actor.tell(new LoadNeuron(NeuronId.create(), TruthTable.random(2),
+                NeuronInstance.State.STABLE, probe.ref()));
+        probe.receiveMessage();
+
+        actor.tell(new LoadNeuron(NeuronId.create(), TruthTable.random(2),
+                NeuronInstance.State.STABLE, probe.ref()));
+        Response response = probe.receiveMessage();
+
+        assertThat(response).isInstanceOf(ErrorResponse.class);
+    }
+
+    @Test
+    void shouldFreezeNeuron() {
+        var actor = testKit.spawn(NeuronClusterActor.create(ClusterConfig.defaults()));
+        var probe = testKit.<Response>createTestProbe();
+        NeuronId id = NeuronId.create();
+
+        actor.tell(new LoadNeuron(id, TruthTable.random(3),
+                NeuronInstance.State.STABLE, probe.ref()));
+        probe.receiveMessage();
+
+        actor.tell(new FreezeNeuron(id, probe.ref()));
+        Response response = probe.receiveMessage();
+
+        assertThat(response).isInstanceOf(NeuronFrozen.class);
+    }
+
+    @Test
+    void shouldRejectDoubleFreeze() {
+        var actor = testKit.spawn(NeuronClusterActor.create(ClusterConfig.defaults()));
+        var probe = testKit.<Response>createTestProbe();
+        NeuronId id = NeuronId.create();
+
+        actor.tell(new LoadNeuron(id, TruthTable.random(3),
+                NeuronInstance.State.STABLE, probe.ref()));
+        probe.receiveMessage();
+
+        actor.tell(new FreezeNeuron(id, probe.ref()));
+        probe.receiveMessage();
+
+        actor.tell(new FreezeNeuron(id, probe.ref()));
+        Response response = probe.receiveMessage();
+
+        assertThat(response).isInstanceOf(ErrorResponse.class);
+    }
+
+    @Test
+    void shouldEvaluateTick() {
+        var actor = testKit.spawn(NeuronClusterActor.create(ClusterConfig.defaults()));
+        var probe = testKit.<Response>createTestProbe();
+        NeuronId id = NeuronId.create();
+
+        actor.tell(new LoadNeuron(id, TruthTable.random(3),
+                NeuronInstance.State.STABLE, probe.ref()));
+        probe.receiveMessage();
+
+        actor.tell(new EvaluateTick(probe.ref()));
+        Response response = probe.receiveMessage();
+
+        assertThat(response).isInstanceOf(TickResult.class);
+    }
+
+    @Test
+    void shouldReturnMetrics() {
+        var actor = testKit.spawn(NeuronClusterActor.create(ClusterConfig.defaults()));
+        var probe = testKit.<Response>createTestProbe();
+
+        actor.tell(new LoadNeuron(NeuronId.create(), TruthTable.random(2),
+                NeuronInstance.State.STABLE, probe.ref()));
+        probe.receiveMessage();
+
+        actor.tell(new GetMetrics(probe.ref()));
+        Response response = probe.receiveMessage();
+
+        assertThat(response).isInstanceOf(MetricsResult.class);
+        MetricsResult metrics = (MetricsResult) response;
+        assertThat(metrics.activeNeurons()).isEqualTo(1);
+    }
+
+    @Test
+    void shouldCountNeurons() {
+        var actor = testKit.spawn(NeuronClusterActor.create(ClusterConfig.defaults()));
+        var probe = testKit.<Response>createTestProbe();
+
+        actor.tell(new LoadNeuron(NeuronId.create(), TruthTable.random(2),
+                NeuronInstance.State.STABLE, probe.ref()));
+        probe.receiveMessage();
+
+        actor.tell(new LoadNeuron(NeuronId.create(), TruthTable.random(2),
+                NeuronInstance.State.FROZEN, probe.ref()));
+        probe.receiveMessage();
+
+        actor.tell(new GetNeuronCount(probe.ref()));
+        Response response = probe.receiveMessage();
+
+        assertThat(response).isInstanceOf(CountResult.class);
+        assertThat(((CountResult) response).count()).isEqualTo(2);
+    }
+}
