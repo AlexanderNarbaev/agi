@@ -16,13 +16,17 @@
 - [x] infra/, .opencode/ добавлены в git
 - [x] SESSION_WAL создан
 - [x] **Фаза 1.2 завершена:** InstanceMediator + DriverState + Goal + Task
-  - 3 драйвера (ENERGY, SAFETY, CURIOSITY) с формулой d(t+1)=clamp(d+α*(target−d)+noise)
-  - Генерация целей при превышении порога (THRESHOLD_HIGH=0.7)
-  - Приоритетная очередь задач с anti-procrastination (ageFactor)
-  - Внешние сигналы: reportLowResources(), reportAnomaly(), reportStagnation()
-  - 14 тестов в пакете io.matrix.mediator
+  - 3 драйвера (ENERGY, SAFETY, CURIOSITY)
+  - Генерация целей, приоритетная очередь задач, anti-procrastination
+  - 14 тестов
+- [x] **Фаза 1.3 завершена:** Event Sourcing + .ldn снапшоты
+  - EventJournal интерфейс + InMemoryEventJournal
+  - ClusterEvent/ClusterEventType (NEURON_CREATED, NEURON_MUTATED, ...)
+  - ClusterSnapshot + SnapshotStore (Jackson JSON, .ldn файлы)
+  - Интеграция в NeuronClusterActor: CreateSnapshot/RestoreSnapshot команды
+  - 10 тестов событий + 8 тестов снапшотов + 3 теста снапшотов в акторе
 
 ## План на сессию
 1. ~~Фаза 1.2: InstanceMediator~~ ✅
-2. Фаза 1.3: Kafka Event Sourcing + .ldn снапшоты
+2. ~~Фаза 1.3: Kafka Event Sourcing + .ldn снапшоты~~ ✅
 3. Фаза 1.4: Интеграция 1000 нейронов
