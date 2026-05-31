@@ -128,6 +128,10 @@ class SnapshotStoreTest {
                 NeuronId.create(), TruthTable.random(2)));
 
         store.save(store.createSnapshot(neurons, 0));
+        Thread.sleep(5);
+
+        neurons.put(NeuronId.create(), NeuronInstance.stable(
+                NeuronId.create(), TruthTable.random(2)));
         store.save(store.createSnapshot(neurons, 0));
 
         List<Path> snapshots = store.listSnapshots();

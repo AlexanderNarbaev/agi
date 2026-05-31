@@ -121,14 +121,18 @@ public class NeuronClusterActor extends AbstractBehavior<NeuronClusterActor.Comm
 
     private Behavior<Command> onLoadNeuron(LoadNeuron cmd) {
         if (activeNeurons.size() >= config.maxNeurons()) {
-            cmd.replyTo().tell(new ErrorResponse("Cluster full: " + config.maxNeurons()));
+            if (cmd.replyTo() != null) {
+                cmd.replyTo().tell(new ErrorResponse("Cluster full: " + config.maxNeurons()));
+            }
             return this;
         }
         NeuronInstance neuron = new NeuronInstance(cmd.id(), cmd.table(), cmd.state());
         activeNeurons.put(cmd.id(), neuron);
         journal(ClusterEventType.NEURON_CREATED, cmd.id(),
                 "k=" + cmd.table().k() + ", state=" + cmd.state());
-        cmd.replyTo().tell(new NeuronLoaded(cmd.id()));
+        if (cmd.replyTo() != null) {
+            cmd.replyTo().tell(new NeuronLoaded(cmd.id()));
+        }
         return this;
     }
 

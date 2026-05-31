@@ -13,6 +13,7 @@ import org.apache.avro.specific.SpecificDatumReader;
 import org.apache.avro.specific.SpecificDatumWriter;
 
 import java.io.ByteArrayInputStream;
+import java.util.Random;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -64,21 +65,27 @@ public final class TruthTable {
     }
 
     /**
-     * Creates a random truth table where each output bit is set with 50% probability.
+     * Creates a random truth table using the provided RNG (seeded for reproducibility).
      */
-    public static TruthTable random(int k) {
+    public static TruthTable random(int k, Random rng) {
         if (k < 1 || k > K_MAX) {
             throw new IllegalArgumentException("k must be in [1, " + K_MAX + "], got: " + k);
         }
         int size = 1 << k;
         BitSet table = new BitSet(size);
-        var rng = ThreadLocalRandom.current();
         for (int i = 0; i < size; i++) {
             if (rng.nextBoolean()) {
                 table.set(i);
             }
         }
         return new TruthTable(k, table);
+    }
+
+    /**
+     * Creates a random truth table where each output bit is set with 50% probability.
+     */
+    public static TruthTable random(int k) {
+        return random(k, ThreadLocalRandom.current());
     }
 
     /**

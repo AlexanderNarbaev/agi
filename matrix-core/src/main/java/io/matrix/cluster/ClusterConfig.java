@@ -11,4 +11,8 @@ public record ClusterConfig(
     public static ClusterConfig defaults() {
         return new ClusterConfig(1000, 10_000, 1);
     }
+
+    public static ClusterConfig forSize(int neuronCount) {
+        return new ClusterConfig(neuronCount, neuronCount * 10, 1);
+    }
 }

@@ -19,14 +19,15 @@
   - 3 драйвера (ENERGY, SAFETY, CURIOSITY)
   - Генерация целей, приоритетная очередь задач, anti-procrastination
   - 14 тестов
-- [x] **Фаза 1.3 завершена:** Event Sourcing + .ldn снапшоты
-  - EventJournal интерфейс + InMemoryEventJournal
-  - ClusterEvent/ClusterEventType (NEURON_CREATED, NEURON_MUTATED, ...)
-  - ClusterSnapshot + SnapshotStore (Jackson JSON, .ldn файлы)
-  - Интеграция в NeuronClusterActor: CreateSnapshot/RestoreSnapshot команды
-  - 10 тестов событий + 8 тестов снапшотов + 3 теста снапшотов в акторе
+- [x] **Фаза 1.4 завершена:** Кластер 1000 нейронов + адаптивное поведение
+  - ClusterTopology: слоистая топология (18 сенсорных → скрытые → 4 моторных)
+  - AgentClusterBrain: обёртка NeuronClusterActor для симуляции
+  - ClusterConfig.forSize() + TruthTable.random(int, Random)
+  - Интеграционные тесты: 1000 нейронов, сигналы, снапшоты
+  - Эксперимент: агент в нормальной и враждебной среде
+  - 202/202 тестов проходят
 
-## План на сессию
-1. ~~Фаза 1.2: InstanceMediator~~ ✅
-2. ~~Фаза 1.3: Kafka Event Sourcing + .ldn снапшоты~~ ✅
-3. Фаза 1.4: Интеграция 1000 нейронов
+## Итоги сессии
+- 4 коммита: 470cd9f → ffe13f9 → 7ced6dc → ...
+- Фаза 1 полностью завершена ✅
+- Следующий этап: Фаза 2 «Организм» — распределённая архитектура, консенсус, иерархия Медиаторов
