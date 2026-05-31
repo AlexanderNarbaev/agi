@@ -4,4 +4,4 @@
 | Phase 0 (Spark) | ✅ Complete | developer | MPDT neuron + GridWorld + GA |
 | Phase 1.1 (Cluster) | ✅ Complete | developer | NeuronClusterActor + batch inference |
 | Phase 1.2 (Mediator) | ✅ Complete | developer | InstanceMediator + drivers + tasks |
-| Phase 1.3 (Event Sourcing) | ✅ Complete | developer | EventJournal + SnapshotStore + .ldn |
+| Phase 1.4 (Scale) | ✅ Complete | developer | 1000-neuron cluster + adaptive tests |
