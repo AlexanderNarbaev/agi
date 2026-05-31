@@ -4,4 +4,4 @@
 | Phase 0 (Spark) | ✅ Complete | developer | MPDT neuron + GridWorld + GA |
 | Phase 1.1 (Cluster) | ✅ Complete | developer | NeuronClusterActor + batch inference |
 | Phase 1.2 (Mediator) | ✅ Complete | developer | InstanceMediator + drivers + tasks |
-| Phase 2.3 (Consensus) | ✅ Complete | developer | PoA consensus engine |
+| Phase 2.5 (Verify) | ✅ Complete | developer | Safety props + 10K stress + integration |
