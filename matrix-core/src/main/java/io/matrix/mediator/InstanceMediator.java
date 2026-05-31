@@ -6,6 +6,8 @@ import java.util.PriorityQueue;
 import java.util.Random;
 import java.util.UUID;
 
+import io.matrix.observability.MatrixMetrics;
+
 /**
  * Instance-level Mediator — coordinates drivers, goals, and task scheduling.
  *
@@ -31,6 +33,7 @@ public final class InstanceMediator {
     private final DriverState energy;
     private final DriverState safety;
     private final DriverState curiosity;
+    private final MatrixMetrics metrics;
     private final Random rng;
 
     private final List<Goal> goals = new ArrayList<>();
@@ -40,16 +43,25 @@ public final class InstanceMediator {
     private long tickCount;
     private long lastTickTime;
 
-    public InstanceMediator(MediatorConfig config, Random rng) {
+    public InstanceMediator(MediatorConfig config, MatrixMetrics metrics, Random rng) {
         this.config = config;
+        this.metrics = metrics;
         this.rng = rng;
         this.energy = DriverState.withDefaults(DriverType.ENERGY);
         this.safety = DriverState.withDefaults(DriverType.SAFETY);
         this.curiosity = DriverState.withDefaults(DriverType.CURIOSITY);
     }
 
+    public InstanceMediator(MediatorConfig config, Random rng) {
+        this(config, null, rng);
+    }
+
+    public static InstanceMediator withDefaults(MatrixMetrics metrics, Random rng) {
+        return new InstanceMediator(MediatorConfig.defaults(), metrics, rng);
+    }
+
     public static InstanceMediator withDefaults(Random rng) {
-        return new InstanceMediator(MediatorConfig.defaults(), rng);
+        return new InstanceMediator(MediatorConfig.defaults(), null, rng);
     }
 
     public DriverState energy() { return energy; }
@@ -99,6 +111,12 @@ public final class InstanceMediator {
         actionLog.addAll(actions);
         if (actionLog.size() > 100) {
             actionLog.subList(0, actionLog.size() - 100).clear();
+        }
+
+        if (metrics != null) {
+            metrics.driverEnergy(Math.round(energy.level() * 100));
+            metrics.driverCuriosity(Math.round(curiosity.level() * 100));
+            metrics.driverSafety(Math.round(safety.level() * 100));
         }
 
         return actions;

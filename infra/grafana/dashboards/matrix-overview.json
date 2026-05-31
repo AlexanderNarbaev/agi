@@ -1,0 +1,72 @@
+{
+  "title": "MATRIX Overview",
+  "uid": "matrix-overview",
+  "panels": [
+    {
+      "id": 1,
+      "title": "Neurons Active",
+      "type": "stat",
+      "gridPos": {"x": 0, "y": 0, "w": 6, "h": 4},
+      "targets": [{"expr": "matrix_neurons_active", "refId": "A"}],
+      "fieldConfig": {"defaults": {"thresholds": {"steps": [{"color": "green", "value": null}]}}}
+    },
+    {
+      "id": 2,
+      "title": "Neurons Frozen",
+      "type": "stat",
+      "gridPos": {"x": 6, "y": 0, "w": 6, "h": 4},
+      "targets": [{"expr": "matrix_neurons_frozen", "refId": "A"}],
+      "fieldConfig": {"defaults": {"thresholds": {"steps": [{"color": "blue", "value": null}]}}}
+    },
+    {
+      "id": 3,
+      "title": "Evolution Fitness (Best)",
+      "type": "timeseries",
+      "gridPos": {"x": 0, "y": 4, "w": 12, "h": 8},
+      "targets": [{"expr": "matrix_evolution_fitness_best", "refId": "A", "legendFormat": "best"}]
+    },
+    {
+      "id": 4,
+      "title": "Evolution Fitness (Avg)",
+      "type": "timeseries",
+      "gridPos": {"x": 12, "y": 4, "w": 12, "h": 8},
+      "targets": [{"expr": "matrix_evolution_fitness_avg", "refId": "A", "legendFormat": "avg"}]
+    },
+    {
+      "id": 5,
+      "title": "Actor Messages / sec",
+      "type": "timeseries",
+      "gridPos": {"x": 0, "y": 12, "w": 12, "h": 8},
+      "targets": [{"expr": "rate(matrix_actor_messages_total[1m])", "refId": "A", "legendFormat": "msg/s"}]
+    },
+    {
+      "id": 6,
+      "title": "HADES Alerts / min",
+      "type": "timeseries",
+      "gridPos": {"x": 12, "y": 12, "w": 12, "h": 8},
+      "targets": [{"expr": "rate(matrix_hades_alerts_total[1m])", "refId": "A", "legendFormat": "alerts/min"}]
+    },
+    {
+      "id": 7,
+      "title": "Driver States",
+      "type": "timeseries",
+      "gridPos": {"x": 0, "y": 20, "w": 12, "h": 8},
+      "targets": [
+        {"expr": "matrix_driver_energy", "refId": "A", "legendFormat": "energy"},
+        {"expr": "matrix_driver_curiosity", "refId": "B", "legendFormat": "curiosity"},
+        {"expr": "matrix_driver_safety", "refId": "C", "legendFormat": "safety"}
+      ]
+    },
+    {
+      "id": 8,
+      "title": "JVM Heap Used",
+      "type": "timeseries",
+      "gridPos": {"x": 12, "y": 20, "w": 12, "h": 8},
+      "targets": [{"expr": "jvm_memory_used_bytes{area=\"heap\"}", "refId": "A", "legendFormat": "heap"}]
+    }
+  ],
+  "schemaVersion": 39,
+  "tags": ["matrix", "mpdt"],
+  "time": {"from": "now-15m", "to": "now"},
+  "refresh": "5s"
+}

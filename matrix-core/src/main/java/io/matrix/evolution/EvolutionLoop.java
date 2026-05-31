@@ -1,6 +1,7 @@
 package io.matrix.evolution;
 
 import io.matrix.neuron.DecisionTree;
+import io.matrix.observability.MatrixMetrics;
 import io.matrix.simulation.AgentBrain;
 
 import java.util.ArrayList;
@@ -18,6 +19,7 @@ public class EvolutionLoop {
     private final int k;
     private final FitnessFn fitnessFn;
     private final Random rng;
+    private final MatrixMetrics metrics;
 
     private final Population nPop;
     private final Population sPop;
@@ -28,16 +30,22 @@ public class EvolutionLoop {
     private final List<Long> avgFitnessHistory = new ArrayList<>();
 
     public EvolutionLoop(int generations, int populationSize, int k,
-                          FitnessFn fitnessFn, Random rng) {
+                          FitnessFn fitnessFn, MatrixMetrics metrics, Random rng) {
         this.generations = generations;
         this.populationSize = populationSize;
         this.k = k;
         this.fitnessFn = fitnessFn;
+        this.metrics = metrics;
         this.rng = rng;
         this.nPop = new Population(populationSize, k, rng);
         this.sPop = new Population(populationSize, k, rng);
         this.wPop = new Population(populationSize, k, rng);
         this.ePop = new Population(populationSize, k, rng);
+    }
+
+    public EvolutionLoop(int generations, int populationSize, int k,
+                          FitnessFn fitnessFn, Random rng) {
+        this(generations, populationSize, k, fitnessFn, null, rng);
     }
 
     public List<Long> bestFitnessHistory() { return List.copyOf(bestFitnessHistory); }
@@ -65,8 +73,13 @@ public class EvolutionLoop {
         ePop.initialize();
 
         for (int gen = 0; gen < generations; gen++) {
+            if (metrics != null) metrics.evolutionGeneration();
             evaluateGeneration();
             recordHistory();
+            if (metrics != null) {
+                metrics.fitnessBest(bestFitnessHistory.get(bestFitnessHistory.size() - 1));
+                metrics.fitnessAvg(avgFitnessHistory.get(avgFitnessHistory.size() - 1));
+            }
             nPop.evolve();
             sPop.evolve();
             wPop.evolve();
@@ -74,6 +87,10 @@ public class EvolutionLoop {
         }
         evaluateGeneration();
         recordHistory();
+        if (metrics != null) {
+            metrics.fitnessBest(bestFitnessHistory.get(bestFitnessHistory.size() - 1));
+            metrics.fitnessAvg(avgFitnessHistory.get(avgFitnessHistory.size() - 1));
+        }
     }
 
     private void evaluateGeneration() {

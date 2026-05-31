@@ -1,6 +1,91 @@
-# Project Auto-Save Configuration
-# Каждый успешный этап: commit → push → WAL update
+# MATRIX Project Configuration
+# v1.0.0 — 2026-05-31
 
+# ============================================================
+# Model Provider Configuration
+# ============================================================
+model_providers:
+  primary:
+    provider: deepseek
+    models:
+      reasoning: deepseek-v4-pro
+      fast: deepseek-v4-flash
+  fallback:
+    provider: opencode
+    models:
+      default: glm-5.1
+      nano: gpt-5-nano
+      minimax: minimax-m2.7
+      qwen: qwen3.6-plus
+      glm5: glm-5
+
+# ============================================================
+# Model Fallback Chain (priority order)
+# ============================================================
+# 1. DeepSeek V4 Pro Max (основная) → deepseek-v4-flash → OpenCode Go free
+# 2. При ограничении лимитов OpenCode Go → DeepSeek V4 Pro Max
+# 3. При окончании DeepSeek → бесплатные OpenCode Go (glm-5.1, gpt-5-nano)
+# 4. Если DeepSeek не имеет нужного навыка → сразу бесплатные модели OpenCode Go
+model_fallback:
+  enabled: true
+  chain:
+    - deepseek/deepseek-v4-pro
+    - deepseek/deepseek-v4-flash
+    - opencode-go/glm-5.1
+    - opencode-go/gpt-5-nano
+  rules:
+    - when: opencode_go_limit_reached
+      action: switch_to_deepseek_v4_pro_max
+    - when: deepseek_limit_reached
+      action: switch_to_free_opencode_models
+    - when: deepseek_lacks_skill
+      action: switch_to_free_opencode_models_immediately
+
+# ============================================================
+# Agent Model Assignments
+# ============================================================
+agents:
+  pm:
+    model: deepseek/deepseek-v4-pro
+    fallback: opencode-go/glm-5.1
+  analyst:
+    model: deepseek/deepseek-v4-pro
+    fallback: opencode-go/glm-5.1
+  architect:
+    model: deepseek/deepseek-v4-pro
+    fallback: opencode-go/glm-5.1
+  developer:
+    model: deepseek/deepseek-v4-pro
+    fallback: deepseek/deepseek-v4-flash
+  researcher:
+    model: deepseek/deepseek-v4-pro
+    fallback: deepseek/deepseek-v4-flash
+  devops:
+    model: deepseek/deepseek-v4-pro
+    fallback: deepseek/deepseek-v4-flash
+  qa:
+    model: deepseek/deepseek-v4-pro
+    fallback: opencode-go/minimax-m2.7
+  designer:
+    model: deepseek/deepseek-v4-pro
+    fallback: opencode-go/minimax-m2.7
+  reviewer:
+    model: deepseek/deepseek-v4-pro
+    fallback: opencode-go/qwen3.6-plus
+  security:
+    model: deepseek/deepseek-v4-pro
+    fallback: opencode-go/glm-5
+
+# ============================================================
+# Language: Russian-only responses (технические термины на EN)
+# ============================================================
+language:
+  response: ru
+  technical_terms: en
+
+# ============================================================
+# Auto-Save Configuration
+# ============================================================
 auto_save:
   enabled: true
   on_phase_complete:
@@ -11,21 +96,71 @@ auto_save:
     - wal_update
     - codegraph_index
 
+# ============================================================
+# Git Configuration
+# ============================================================
 git:
   remotes:
     - origin
     - gitverse
   commit_template: "{phase}: {description}"
 
+# ============================================================
+# WAL Configuration
+# ============================================================
 wal:
   global: wal/GLOBAL_WAL.md
   session: wal/SESSION_WAL.md
+  lock_dir: .lock
+  lock_ttl: 300
 
+# ============================================================
+# Development Phases
+# ============================================================
 phases:
-  current: "Phase 2 Organism"
+  current: "v1.0.0 Complete"
   completed:
     - "Phase 0 Spark"
-    - "Phase 1.1 Cluster"
-    - "Phase 1.2 Mediator"
-    - "Phase 1.3 Event Sourcing"
-    - "Phase 1.4 Scale"
+    - "Phase 1 Cell (1.1-1.4)"
+    - "Phase 2 Organism"
+    - "Phase 3 Noosphere"
+    - "Phase 3.5 Psyche"
+    - "Phase 4 Shadow"
+    - "Phase 6 Civilization"
+    - "Phase 7 Economy"
+    - "Minecraft Plugin"
+    - "CI/CD + Kafka"
+
+# ============================================================
+# Skills Configuration
+# ============================================================
+skills:
+  directory: .opencode/skills
+  superpowers:
+    path: ~/.config/opencode/skills/superpowers/
+    enabled:
+      - brainstorming
+      - dispatching-parallel-agents
+      - executing-plans
+      - finishing-a-development-branch
+      - receiving-code-review
+      - requesting-code-review
+      - subagent-driven-development
+      - systematic-debugging
+      - test-driven-development
+      - using-git-worktrees
+      - using-superpowers
+      - verification-before-completion
+      - writing-plans
+      - writing-skills
+
+# ============================================================
+# MCP Servers
+# ============================================================
+mcp:
+  enabled:
+    - filesystem
+    - context7
+    - codegraph
+    - agentic-tools
+    - playwright

@@ -141,10 +141,24 @@ public class MatrixPlugin extends JavaPlugin {
      */
     private void tick() {
         tickCount++;
+        long tickStart = System.currentTimeMillis();
         long sensors = readSensors();
 
         BlockAgent.Action action = brain.act(sensors);
         executeAction(action);
+
+        long tickDuration = System.currentTimeMillis() - tickStart;
+
+        if (tickCount % 100 == 0) {
+            getLogger().info(String.format(
+                    "MATRIX tick=%d mined=%d health=%d hunger=%d tool=%s action=%s duration=%dms",
+                    tickCount, blocksMined,
+                    botPlayer != null ? (int) botPlayer.getHealth() : 0,
+                    botPlayer != null ? botPlayer.getFoodLevel() : 0,
+                    detectToolTier(),
+                    action.getClass().getSimpleName(),
+                    tickDuration));
+        }
     }
 
     /**
