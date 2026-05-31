@@ -12,7 +12,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 class TruthTableTest {
 
     @ParameterizedTest
-    @ValueSource(ints = {1, 2, 3, 4, 8, 12, 16})
+    @ValueSource(ints = {1, 2, 3, 4, 8, 12, 16, 20})
     void randomTableShouldHaveCorrectSize(int k) {
         TruthTable tt = TruthTable.random(k);
         assertThat(tt.k()).isEqualTo(k);
@@ -21,7 +21,7 @@ class TruthTableTest {
     }
 
     @ParameterizedTest
-    @ValueSource(ints = {0, -1, 17, 100})
+    @ValueSource(ints = {0, -1, 21, 100})
     void shouldRejectInvalidK(int k) {
         assertThatThrownBy(() -> TruthTable.random(k))
                 .isInstanceOf(IllegalArgumentException.class);

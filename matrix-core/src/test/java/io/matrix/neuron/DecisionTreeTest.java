@@ -21,7 +21,7 @@ class DecisionTreeTest {
     }
 
     @ParameterizedTest
-    @ValueSource(ints = {0, -1, 17, 100})
+    @ValueSource(ints = {0, -1, 21, 100})
     void shouldRejectInvalidK(int k) {
         assertThatThrownBy(() -> DecisionTree.random(k))
                 .isInstanceOf(IllegalArgumentException.class);
