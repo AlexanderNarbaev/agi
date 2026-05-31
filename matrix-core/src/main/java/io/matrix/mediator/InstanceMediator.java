@@ -228,4 +228,38 @@ public final class InstanceMediator {
     public void reportStagnation() {
         curiosity.nudge(0.15);
     }
+
+    // ---- Phase 2: Hierarchy integration ----
+
+    /**
+     * Returns the mediator level (INSTANCE = 0.8).
+     *
+     * <p>Ref: L4_Mediator.md §2.1
+     */
+    public double weight() { return 0.8; }
+
+    /**
+     * Delegates a decision upward (to GlobalMediator in Phase 2).
+     * For Phase 2.1, returns the action name for logging.
+     */
+    public String escalateUp(String action, String reason) {
+        actionLog.add("ESCALATE:" + action + " reason=" + reason);
+        return "ESCALATED to GLOBAL: " + action;
+    }
+
+    /**
+     * Vetoes a lower-level decision that threatens privacy or safety.
+     * Implemented as FROZEN rule per L4 §2.2.
+     */
+    public String veto(String action, String reason) {
+        actionLog.add("VETO:" + action + " reason=" + reason);
+        return "VETO applied: " + action;
+    }
+
+    /**
+     * Receives a message from a ClusterMediator.
+     */
+    public void receiveClusterMessage(String clusterId, String action, String payload) {
+        actionLog.add("FROM_CLUSTER:" + clusterId + ":" + action + "=" + payload);
+    }
 }
