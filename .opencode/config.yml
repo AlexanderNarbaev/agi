@@ -1,0 +1,31 @@
+# Project Auto-Save Configuration
+# Каждый успешный этап: commit → push → WAL update
+
+auto_save:
+  enabled: true
+  on_phase_complete:
+    - git_add
+    - git_commit
+    - git_push_origin
+    - git_push_gitverse
+    - wal_update
+    - codegraph_index
+
+git:
+  remotes:
+    - origin
+    - gitverse
+  commit_template: "{phase}: {description}"
+
+wal:
+  global: wal/GLOBAL_WAL.md
+  session: wal/SESSION_WAL.md
+
+phases:
+  current: "Phase 2 Organism"
+  completed:
+    - "Phase 0 Spark"
+    - "Phase 1.1 Cluster"
+    - "Phase 1.2 Mediator"
+    - "Phase 1.3 Event Sourcing"
+    - "Phase 1.4 Scale"
