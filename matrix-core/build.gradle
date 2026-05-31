@@ -1,0 +1,27 @@
+plugins {
+    id 'java'
+}
+
+group = 'io.matrix'
+version = '0.1.0-SNAPSHOT'
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_25
+    targetCompatibility = JavaVersion.VERSION_25
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation 'org.apache.avro:avro:1.12.0'
+
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.11.0'
+    testImplementation 'org.assertj:assertj-core:3.26.0'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher:1.12.0'
+}
+
+tasks.withType(Test) {
+    useJUnitPlatform()
+}

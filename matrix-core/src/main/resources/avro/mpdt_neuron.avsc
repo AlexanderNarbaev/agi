@@ -1,0 +1,52 @@
+{
+  "type": "record",
+  "name": "MPDTNeuron",
+  "namespace": "io.matrix.neuron",
+  "doc": "MPDT neuron schema. Ref: L1_MPDT_neuron.md §7",
+  "fields": [
+    {
+      "name": "id",
+      "type": {
+        "type": "record",
+        "name": "NeuronId",
+        "fields": [
+          {"name": "uuid", "type": "string"},
+          {"name": "generation", "type": "long"}
+        ]
+      }
+    },
+    {"name": "k", "type": "int"},
+    {
+      "name": "state",
+      "type": {
+        "type": "enum",
+        "name": "NeuronState",
+        "symbols": ["STABLE", "LEARNING", "MUTATING", "FROZEN"]
+      }
+    },
+    {"name": "truthTable", "type": "bytes"},
+    {
+      "name": "weights",
+      "type": {"type": "array", "items": "int"}
+    },
+    {
+      "name": "metadata",
+      "type": ["null", {
+        "type": "record",
+        "name": "Metadata",
+        "fields": [
+          {"name": "createdAt", "type": "long"},
+          {"name": "mutationCount", "type": "long"},
+          {
+            "name": "parentIds",
+            "type": {"type": "array", "items": "string"}
+          },
+          {
+            "name": "accuracyHistory",
+            "type": {"type": "array", "items": "double"}
+          }
+        ]
+      }]
+    }
+  ]
+}
