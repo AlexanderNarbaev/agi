@@ -28,3 +28,8 @@ out/
 *.heapdump
 
 /.lock/
+.agentic-tools-mcp/
+.codegraph/
+.opencode/user.db*
+.opencode/*.db-shm
+.opencode/*.db-wal

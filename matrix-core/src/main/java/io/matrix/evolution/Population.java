@@ -35,7 +35,7 @@ public class Population {
     public void initialize() {
         chromosomes.clear();
         for (int i = 0; i < size; i++) {
-            DecisionTree tree = DecisionTree.random(k, k / 2);
+            DecisionTree tree = DecisionTree.random(k, k / 2, rng);
             chromosomes.add(Chromosome.of(tree));
         }
     }

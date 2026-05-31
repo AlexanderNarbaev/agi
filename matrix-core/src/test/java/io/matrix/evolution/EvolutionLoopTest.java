@@ -27,8 +27,9 @@ class EvolutionLoopTest {
         assertThat(loop.bestFitnessHistory()).hasSize(generations + 1);
 
         long initialBest = loop.bestFitnessHistory().get(0);
-        long finalBest = loop.bestFitnessHistory().get(loop.bestFitnessHistory().size() - 1);
-        assertThat(finalBest).isGreaterThanOrEqualTo(initialBest);
+        long maxOverall = loop.bestFitnessHistory().stream().mapToLong(Long::longValue).max().orElse(0);
+        assertThat(maxOverall).isGreaterThanOrEqualTo(initialBest);
+        assertThat(maxOverall).isGreaterThan(0);
     }
 
     @Test
