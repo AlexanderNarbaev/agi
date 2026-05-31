@@ -14,4 +14,15 @@ public record NeuronId(UUID uuid, long generation) {
     public NeuronId nextGeneration() {
         return new NeuronId(uuid, generation + 1);
     }
+
+    @Override
+    public String toString() {
+        return uuid + ":" + generation;
+    }
+
+    public static NeuronId parse(String s) {
+        String[] parts = s.split(":");
+        if (parts.length != 2) throw new IllegalArgumentException("Invalid NeuronId: " + s);
+        return new NeuronId(UUID.fromString(parts[0]), Long.parseLong(parts[1]));
+    }
 }
