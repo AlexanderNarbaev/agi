@@ -1,3 +1,3 @@
-📍 Статус: Фаза 0 «Искра», итерация 0.1 завершена. TruthTable (K_MAX=16, evaluate, random, Avro-сериализация), DecisionTree (sealed interface с Leaf/Split, toTruthTable), Avro-схема mpdt_neuron.avsc реализованы. 48 юнит-тестов проходят (все комбинации k=1..16, консистентность дерево↔таблица). Сборка Gradle успешна.
-🚀 Активный этап: Фаза 0, итерация 0.2 — Chromosome и генетические операторы (FlipLeaf, SplitLeaf, PruneTree, Crossover) по L5.
-🛑 Защищённые зоны: MPDT-нейрон — только дискретные операции (BitSet, long[], побитовые), K_MAX=16, FROZEN-аксиомы, Три запрета.
+📍 Статус: Фаза 0 «Искра», итерация 0.2 завершена. Chromosome, TreeWalker, GeneticOperators (FlipLeaf, SplitLeaf, PruneTree, ChangeInput, SwapChildren, GrowSubtree, Crossover, CompressBranch) реализованы. DecisionTree.toTruthTable(int k) добавлен для корректного сравнения таблиц при изменении inputCount. 88 тестов проходят (48 старых + 40 новых).
+🚀 Активный этап: Фаза 0, итерация 0.3 — симулятор среды (GridWorld/упрощённый мир) и обучение агента генетическим алгоритмом.
+🛑 Защищённые зоны: MPDT-нейрон — только дискретные операции, K_MAX=16, все операторы мутации проверяют валидность дерева (нет повторных битов), FROZEN-аксиомы, Три запрета.

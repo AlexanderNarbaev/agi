@@ -28,14 +28,23 @@ public sealed interface DecisionTree permits DecisionTree.Leaf, DecisionTree.Spl
     boolean evaluate(BitSet input);
 
     /**
-     * Compiles this tree into an equivalent truth table.
-     *
-     * <p>Computes the output for all {@code 2^k} input combinations
-     * and stores them in a flat bit array.
+     * Compiles this tree into an equivalent truth table using {@link #inputCount()}
+     * as the number of inputs.
      *
      * @return the compiled truth table
      */
     TruthTable toTruthTable();
+
+    /**
+     * Compiles this tree into an equivalent truth table with exactly {@code k} inputs.
+     *
+     * <p>If the tree references fewer than {@code k} bits, the output is
+     * constant with respect to the unused bits.
+     *
+     * @param k number of inputs, 1..K_MAX
+     * @return the compiled truth table of size {@code 2^k}
+     */
+    TruthTable toTruthTable(int k);
 
     /**
      * Returns the number of input variables (k) this tree operates on.
@@ -67,6 +76,11 @@ public sealed interface DecisionTree permits DecisionTree.Leaf, DecisionTree.Spl
         @Override
         public TruthTable toTruthTable() {
             return compile(1);
+        }
+
+        @Override
+        public TruthTable toTruthTable(int k) {
+            return compile(k);
         }
 
         /**
@@ -133,6 +147,14 @@ public sealed interface DecisionTree permits DecisionTree.Leaf, DecisionTree.Spl
             int k = inputCount();
             if (k < 1) {
                 throw new IllegalStateException("inputCount is 0; add at least one Split.");
+            }
+            return toTruthTable(k);
+        }
+
+        @Override
+        public TruthTable toTruthTable(int k) {
+            if (k < 1 || k > K_MAX) {
+                throw new IllegalArgumentException("k must be in [1, " + K_MAX + "], got: " + k);
             }
             int size = 1 << k;
             BitSet table = new BitSet(size);
