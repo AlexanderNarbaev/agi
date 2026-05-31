@@ -8,18 +8,21 @@
 🛑 **Защищённые зоны:** Pekko 1.6.0 (не akka), K_MAX=20, FROZEN-нейроны, Java 25, Scala 2.13 transitively, бинарная логика в ядре.
 
 ## Изменения в сессии
-- [x] CodeGraph инициализирован и проиндексирован (688 nodes, 1639 edges)
+- [x] CodeGraph инициализирован и проиндексирован
 - [x] DecisionTree.random: добавлен параметр Random rng для детерминизма
 - [x] Population.initialize: использует seeded RNG вместо ThreadLocalRandom
 - [x] EvolutionLoopTest: исправлен — проверяет all-time max >= initial best
-- [x] .gitignore обновлён (.agentic-tools-mcp/, user.db*)
+- [x] .gitignore обновлён (.agentic-tools-mcp/, .codegraph/, user.db*)
 - [x] infra/, .opencode/ добавлены в git
 - [x] SESSION_WAL создан
+- [x] **Фаза 1.2 завершена:** InstanceMediator + DriverState + Goal + Task
+  - 3 драйвера (ENERGY, SAFETY, CURIOSITY) с формулой d(t+1)=clamp(d+α*(target−d)+noise)
+  - Генерация целей при превышении порога (THRESHOLD_HIGH=0.7)
+  - Приоритетная очередь задач с anti-procrastination (ageFactor)
+  - Внешние сигналы: reportLowResources(), reportAnomaly(), reportStagnation()
+  - 14 тестов в пакете io.matrix.mediator
 
 ## План на сессию
-1. Фаза 1.2: InstanceMediator (L4_Roadmap.md §3.2 п.2)
-   - Драйверы: EnergyDriver, CuriosityDriver, SafetyDriver
-   - Управление мутациями по расписанию
-   - Тесты
+1. ~~Фаза 1.2: InstanceMediator~~ ✅
 2. Фаза 1.3: Kafka Event Sourcing + .ldn снапшоты
 3. Фаза 1.4: Интеграция 1000 нейронов
