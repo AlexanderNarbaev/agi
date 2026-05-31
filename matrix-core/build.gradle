@@ -17,9 +17,20 @@ repositories {
 dependencies {
     implementation 'org.apache.avro:avro:1.12.0'
 
+    // Apache Pekko (Akka fork) — Actor system for neuron clusters
+    implementation platform('org.apache.pekko:pekko-bom_2.13:1.6.0')
+    implementation 'org.apache.pekko:pekko-actor-typed_2.13'
+    implementation 'org.apache.pekko:pekko-serialization-jackson_2.13'
+    implementation 'org.apache.pekko:pekko-slf4j_2.13'
+    runtimeOnly 'ch.qos.logback:logback-classic:1.3.15'
+
+    // Testing
     testImplementation 'org.junit.jupiter:junit-jupiter:5.11.0'
     testImplementation 'org.assertj:assertj-core:3.26.0'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher:1.12.0'
+
+    // Pekko test kit
+    testImplementation 'org.apache.pekko:pekko-actor-testkit-typed_2.13'
 }
 
 tasks.withType(Test) {
