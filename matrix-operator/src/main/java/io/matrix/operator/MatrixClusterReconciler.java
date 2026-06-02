@@ -1,39 +1,41 @@
 package io.matrix.operator;
 
-import io.fabric8.kubernetes.api.model.apps.Deployment;
-import io.fabric8.kubernetes.api.model.apps.DeploymentBuilder;
-import io.javaoperatorsdk.operator.api.reconciler.*;
-import jakarta.inject.Singleton;
+import io.fabric8.kubernetes.client.KubernetesClient;
+import io.fabric8.kubernetes.client.KubernetesClientBuilder;
 
 import java.util.Map;
 
-@ControllerConfiguration
-@Singleton
-public class MatrixClusterReconciler implements Reconciler<MatrixCluster> {
+public class MatrixClusterReconciler {
 
-    @Override
-    public UpdateControl<MatrixCluster> reconcile(MatrixCluster resource, Context<MatrixCluster> context) {
+    private final KubernetesClient client;
+
+    public MatrixClusterReconciler() {
+        this.client = new KubernetesClientBuilder().build();
+    }
+
+    public MatrixClusterReconciler(KubernetesClient client) {
+        this.client = client;
+    }
+
+    public MatrixClusterStatus reconcile(MatrixCluster resource) {
         MatrixClusterSpec spec = resource.getSpec();
-        MatrixClusterStatus status = resource.getStatus();
+        MatrixClusterStatus status = resource.getStatus() != null
+                ? resource.getStatus() : new MatrixClusterStatus();
         String name = resource.getMetadata().getName();
         String namespace = resource.getMetadata().getNamespace();
 
         try {
-            var client = context.getClient();
-
-            Deployment existing = client.apps().deployments()
+            var existing = client.apps().deployments()
                     .inNamespace(namespace)
                     .withName(name + "-workers")
                     .get();
 
             if (existing == null) {
-                Deployment deployment = new DeploymentBuilder()
+                var deployment = new io.fabric8.kubernetes.api.model.apps.DeploymentBuilder()
                         .withNewMetadata()
                         .withName(name + "-workers")
                         .withNamespace(namespace)
-                        .withLabels(Map.of(
-                                "app", "matrix-cluster",
-                                "cluster", name))
+                        .withLabels(Map.of("app", "matrix-cluster", "cluster", name))
                         .endMetadata()
                         .withNewSpec()
                         .withReplicas(1)
@@ -48,9 +50,8 @@ public class MatrixClusterReconciler implements Reconciler<MatrixCluster> {
                         .addNewContainer()
                         .withName("matrix-core")
                         .withImage("ghcr.io/matrix-ai/matrix-core:latest")
-                        .withArgs("simulate",
-                                "-g", "50",
-                                "-p", String.valueOf(spec.getNeurons()),
+                        .withArgs("simulate", "-g", "50", "-p",
+                                String.valueOf(spec.getNeurons()),
                                 "-k", String.valueOf(spec.getK()))
                         .endContainer()
                         .endSpec()
@@ -58,20 +59,22 @@ public class MatrixClusterReconciler implements Reconciler<MatrixCluster> {
                         .endSpec()
                         .build();
 
-                client.apps().deployments()
-                        .inNamespace(namespace)
-                        .create(deployment);
-
+                client.apps().deployments().inNamespace(namespace).create(deployment);
                 status.setPhase("Running");
             }
 
             status.setActiveNeurons(spec.getNeurons());
-            status.setFrozenNeurons(spec.getFrozenNeurons() != null ? spec.getFrozenNeurons().size() : 0);
+            status.setFrozenNeurons(
+                    spec.getFrozenNeurons() != null ? spec.getFrozenNeurons().size() : 0);
 
         } catch (Exception e) {
             status.setPhase("Degraded");
         }
 
-        return UpdateControl.updateStatus(resource);
+        return status;
+    }
+
+    public void close() {
+        client.close();
     }
 }
