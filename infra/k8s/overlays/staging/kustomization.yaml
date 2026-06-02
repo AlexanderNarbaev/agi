@@ -1,0 +1,27 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - ../base
+
+namespace: matrix
+
+replicas:
+  - name: matrix-core
+    count: 3
+
+images:
+  - name: ghcr.io/matrix-ai/matrix-core
+    newTag: staging
+
+patches:
+  - target:
+      kind: Deployment
+      name: matrix-core
+    patch: |
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/requests/cpu
+        value: "250m"
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/requests/memory
+        value: "256Mi"
