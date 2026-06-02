@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: matrix-config
+  namespace: matrix
+data:
+  application.properties: |
+    quarkus.http.port=9091
+    quarkus.micrometer.export.prometheus.path=/metrics
+    quarkus.micrometer.export.prometheus.enabled=true
+    quarkus.opentelemetry.tracer.exporter.otlp.endpoint=http://jaeger-collector.matrix:4317
+    quarkus.log.console.json=true
+    quarkus.log.level=INFO
+    matrix.evolution.default-generations=50
+    matrix.evolution.default-population=20
+    matrix.evolution.default-k=18

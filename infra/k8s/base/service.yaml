@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: matrix-core
+  namespace: matrix
+  labels:
+    app: matrix-core
+spec:
+  type: ClusterIP
+  selector:
+    app: matrix-core
+  ports:
+    - name: http
+      port: 9091
+      targetPort: 9091
+      protocol: TCP
