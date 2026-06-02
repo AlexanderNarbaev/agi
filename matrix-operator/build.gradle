@@ -1,0 +1,19 @@
+plugins {
+    id 'java'
+    id 'io.quarkus'
+}
+
+dependencies {
+    implementation enforcedPlatform("${quarkusPlatformGroupId}:${quarkusPlatformArtifactId}:${quarkusPlatformVersion}")
+    implementation 'io.quarkus:quarkus-kubernetes-client'
+    implementation 'io.quarkus:quarkus-jackson'
+    implementation 'io.fabric8:kubernetes-client:7.2.0'
+    implementation 'io.javaoperatorsdk:operator-framework-core:5.0.0'
+    testImplementation 'io.quarkus:quarkus-junit5'
+    testImplementation 'io.fabric8:kubernetes-server-mock:7.2.0'
+}
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_25
+    targetCompatibility = JavaVersion.VERSION_25
+}
