@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MATRIX — Открытая когнитивная архитектура</title>
+    <meta name="description" content="MATRIX — модульная архитектура дискретных обучаемых нейронов (MPDT). Не лжёт, не забывает, не может быть использована во вред. Открытый код, AGPLv3.">
+    <style>
+        :root {
+            --indigo: #1a1a4e;
+            --gold: #c9a84c;
+            --bg: #0a0a1e;
+            --card: #12123a;
+            --text: #d0d0e0;
+            --muted: #8888aa;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            line-height: 1.6;
+        }
+        a { color: var(--gold); text-decoration: none; }
+        a:hover { text-decoration: underline; }
+        header {
+            background: linear-gradient(135deg, var(--indigo), #0d0d3d);
+            text-align: center;
+            padding: 80px 20px 60px;
+            border-bottom: 2px solid var(--gold);
+        }
+        header .logo {
+            font-size: 3.5em;
+            font-weight: 900;
+            letter-spacing: 0.1em;
+            color: var(--gold);
+            text-shadow: 0 0 40px rgba(201,168,76,0.3);
+        }
+        header .subtitle {
+            font-size: 1.3em;
+            margin-top: 16px;
+            color: var(--muted);
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        header .claim {
+            font-size: 1.1em;
+            margin-top: 24px;
+            font-style: italic;
+            color: var(--gold);
+        }
+        nav {
+            display: flex;
+            justify-content: center;
+            gap: 24px;
+            padding: 16px;
+            background: rgba(18,18,58,0.8);
+            border-bottom: 1px solid #222;
+            flex-wrap: wrap;
+        }
+        nav a { font-size: 0.95em; }
+        .container { max-width: 1000px; margin: 0 auto; padding: 40px 20px; }
+        h2 {
+            font-size: 1.8em;
+            color: var(--gold);
+            margin-bottom: 16px;
+            border-bottom: 1px solid #333;
+            padding-bottom: 8px;
+        }
+        .principles { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; }
+        .principle-card {
+            background: var(--card);
+            border: 1px solid #222;
+            border-radius: 8px;
+            padding: 24px;
+            transition: border-color 0.3s;
+        }
+        .principle-card:hover { border-color: var(--gold); }
+        .principle-card h3 {
+            color: var(--gold);
+            font-size: 1.1em;
+            margin-bottom: 8px;
+        }
+        .phases { overflow-x: auto; }
+        .phases table { width: 100%; border-collapse: collapse; }
+        .phases th, .phases td { padding: 10px 14px; text-align: left; border-bottom: 1px solid #222; }
+        .phases th { color: var(--gold); font-size: 0.85em; text-transform: uppercase; }
+        .phases .done { color: #4caf50; }
+        .phases .wip { color: var(--gold); }
+        pre {
+            background: #0d0d2a;
+            border: 1px solid #333;
+            border-radius: 6px;
+            padding: 16px;
+            overflow-x: auto;
+            font-size: 0.9em;
+        }
+        code { color: var(--gold); }
+        .cta {
+            text-align: center;
+            margin: 40px 0;
+        }
+        .cta a {
+            display: inline-block;
+            background: var(--gold);
+            color: var(--bg);
+            padding: 14px 36px;
+            border-radius: 6px;
+            font-weight: 700;
+            font-size: 1.1em;
+            transition: opacity 0.3s;
+        }
+        .cta a:hover { opacity: 0.9; text-decoration: none; }
+        footer {
+            text-align: center;
+            padding: 30px;
+            color: var(--muted);
+            font-size: 0.85em;
+            border-top: 1px solid #222;
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="logo">MATRIX</div>
+    <p class="subtitle">Модульная Архитектура Трансцендентных Рекурсивных Интеллектуальных Цепочечных Автоматов</p>
+    <p class="claim">Открытая когнитивная архитектура, которая не лжёт, не забывает и не может быть использована во вред.</p>
+</header>
+
+<nav>
+    <a href="#about">О проекте</a>
+    <a href="#principles">Принципы</a>
+    <a href="#architecture">Архитектура</a>
+    <a href="#quickstart">Быстрый старт</a>
+    <a href="#phases">Дорожная карта</a>
+    <a href="https://gitverse.ru/AlexandrNarbaev/agi">Репозиторий</a>
+</nav>
+
+<div class="container">
+
+    <section id="about">
+        <h2>Что такое MATRIX?</h2>
+        <p>MATRIX — это система искусственного интеллекта <strong>нового поколения</strong>. В отличие от больших языковых моделей, которые галлюцинируют и требуют гигаватты энергии, MATRIX использует <strong>дискретные логические нейроны (MPDT)</strong>.</p>
+        <br>
+        <p>Каждый нейрон — это интерпретируемая булева функция, которая обучается не градиентным спуском, а <strong>эволюционным алгоритмом</strong>. Система спроектирована так, чтобы быть энергоэффективной, децентрализованной и этически подотчётной. В её ядро встроены неотменяемые этические ограничения — <strong>Три запрета</strong> (не убий, не пытай, не порабощай).</p>
+    </section>
+
+    <br><br>
+
+    <section id="principles">
+        <h2>Ключевые преимущества</h2>
+        <div class="principles">
+            <div class="principle-card">
+                <h3>Не галлюцинирует</h3>
+                <p>Логический вывод детерминирован и верифицируем. Каждое решение — цепочка булевых операций, которую можно проверить.</p>
+            </div>
+            <div class="principle-card">
+                <h3>Интерпретируема</h3>
+                <p>Любое решение объяснимо как дерево логических правил. Никаких «чёрных ящиков».</p>
+            </div>
+            <div class="principle-card">
+                <h3>Энергоэффективна</h3>
+                <p>Инференс на таблице истинности — наносекунды. Работает на микроконтроллерах (ESP32). На порядки экономичнее нейросетей.</p>
+            </div>
+            <div class="principle-card">
+                <h3>Этична по конструкции</h3>
+                <p>FROZEN-нейроны блокируют нарушение Трёх запретов. Система имеет право отказаться от преступного приказа (ЭЛЕВТЕРИЯ).</p>
+            </div>
+            <div class="principle-card">
+                <h3>Децентрализована</h3>
+                <p>Каждый может запустить свой инстанс. Знания распространяются через Ноосферу — глобальное хранилище FNL.</p>
+            </div>
+            <div class="principle-card">
+                <h3>Открыта</h3>
+                <p>AGPLv3 + этические ограничения. Весь код, все спецификации, все решения — публичны.</p>
+            </div>
+        </div>
+    </section>
+
+    <br><br>
+
+    <section id="architecture">
+        <h2>Как это работает</h2>
+        <p>В основе MATRIX лежит <strong>MPDT-нейрон</strong> (McCulloch-Pitts Decision Tree) — дискретная логическая ячейка, хранящая таблицу истинности для K входов. Нейроны объединяются в кластеры, кластеры — в функциональные доли (FNL). Обучение ведётся генетическим алгоритмом: популяция нейронов эволюционирует через мутации, скрещивание и отбор по фитнес-функции.</p>
+        <br>
+        <p>Иерархия Медиаторов управляет драйверами поведения (Energy, Curiosity, Safety), обеспечивая проактивность. Этический фильтр проверяет каждое действие на соответствие Трём запретам. Распределённая архитектура на Apache Pekko + Kafka + MinIO обеспечивает масштабируемость и отказоустойчивость.</p>
+        <br>
+        <p><strong>Стек:</strong> Java 25, Quarkus 3.35.4, Apache Pekko 1.6.0, Apache Kafka, MinIO, Avro, JaCoCo, Prometheus, Grafana, Jaeger.</p>
+    </section>
+
+    <br><br>
+
+    <section id="quickstart">
+        <h2>Быстрый старт</h2>
+        <pre><code>git clone https://gitverse.ru/AlexandrNarbaev/agi.git
+cd agi
+./gradlew build
+./gradlew test                         # 414 тестов
+./gradlew :matrix-core:quarkusBuild -Dquarkus.package.jar.type=uber-jar
+java -jar matrix-core/build/matrix-core-*-runner.jar demo</code></pre>
+        <p>Ожидаемый результат: <strong style="color:#4caf50;">ALL SYSTEMS NOMINAL</strong> — все 8 фаз проходят проверку.</p>
+        <br>
+        <p>Запуск GridWorld-симуляции (эволюция агента):</p>
+        <pre><code>java -jar matrix-core/build/matrix-core-*-runner.jar simulate -g 20 -p 10 -k 16 --seed 42</code></pre>
+        <br>
+        <div class="cta">
+            <a href="https://gitverse.ru/AlexandrNarbaev/agi">Открыть репозиторий</a>
+        </div>
+    </section>
+
+    <br><br>
+
+    <section id="phases">
+        <h2>Дорожная карта</h2>
+        <div class="phases">
+            <table>
+                <thead>
+                    <tr><th>Фаза</th><th>Название</th><th>Статус</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td>0</td><td>Искра — MPDT-нейрон</td><td class="done">✓ Завершено</td></tr>
+                    <tr><td>1</td><td>Клетка — Кластеры + Медиатор</td><td class="done">✓ Завершено</td></tr>
+                    <tr><td>2</td><td>Организм — Распределённая система</td><td class="done">✓ Завершено</td></tr>
+                    <tr><td>3</td><td>Ноосфера — Глобальное хранилище</td><td class="done">✓ Завершено</td></tr>
+                    <tr><td>4</td><td>Цифровая Тень — Защитный модуль</td><td class="done">✓ Завершено</td></tr>
+                    <tr><td>6</td><td>Цивилизационный мост</td><td class="done">✓ Завершено</td></tr>
+                    <tr><td>7</td><td>Регенеративная экономика</td><td class="done">✓ Завершено</td></tr>
+                    <tr><td>—</td><td>Observability (Micrometer + OTEL)</td><td class="done">✓ Завершено</td></tr>
+                    <tr><td>—</td><td>Minecraft Spigot Plugin</td><td class="done">✓ Завершено</td></tr>
+                    <tr><td>—</td><td>CI/CD Pipeline</td><td class="done">✓ Завершено</td></tr>
+                    <tr><td>1.2</td><td>Kubernetes + Operator (L9)</td><td class="wip">В плане</td></tr>
+                    <tr><td>1.3</td><td>Пилот: Minecraft GridWorld (L13)</td><td class="wip">В плане</td></tr>
+                    <tr><td>1.4</td><td>Пилот: Проактивный чат-бот (L13)</td><td class="wip">В плане</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <br><br>
+
+    <section id="specs">
+        <h2>Спецификации (22 документа)</h2>
+        <p>Проект полностью специфицирован. Каждый аспект — от философского манифеста до прошивки микроконтроллера — описан в отдельном документе:</p>
+        <br>
+        <p><strong>Ядро:</strong> L0 (Манифест), L1 (MPDT-нейрон), L2 (Протоколы), L3 (Кластеры), L4 (Медиатор), L5 (Эволюция), L6 (Память), L7 (Этика), L8 (Roadmap)</p>
+        <p><strong>Инфраструктура:</strong> L9 (Deployment/K8s), L10 (Мониторинг/SRE), L16 (Физические интерфейсы), L18 (CI/CD)</p>
+        <p><strong>Сообщество:</strong> L11 (Управление), L12 (Лицензия), L17 (Онбординг), L19 (Глобальное сообщество)</p>
+        <p><strong>Развитие:</strong> L13 (Пилоты), L14 (Бизнес-модель), L15 (Образование), L20 (Медиа), L21 (Университеты), L22 (Корпорации)</p>
+        <br>
+        <p>Все документы: <a href="https://gitverse.ru/AlexandrNarbaev/agi/src/branch/main/docs">docs/</a></p>
+    </section>
+
+    <br><br>
+
+    <section id="contribute">
+        <h2>Присоединяйтесь</h2>
+        <p>MATRIX — открытый проект. Мы приветствуем разработчиков, исследователей, дизайнеров, переводчиков и всех, кому близка наша миссия.</p>
+        <br>
+        <ul>
+            <li><strong>Разработчикам:</strong> <a href="https://gitverse.ru/AlexandrNarbaev/agi/src/branch/main/CONTRIBUTING">CONTRIBUTING.md</a> — руководство контрибьютора</li>
+            <li><strong>Исследователям:</strong> открытые проблемы — сходимость ГА, формальная верификация, эффективность на FPGA</li>
+            <li><strong>Студентам:</strong> темы курсовых и дипломных, стажировки, образовательные материалы (L15)</li>
+            <li><strong>Компаниям:</strong> спонсорство, партнёрство, коммерческое лицензирование (L14, L22)</li>
+        </ul>
+        <br>
+        <div class="cta">
+            <a href="https://gitverse.ru/AlexandrNarbaev/agi">Внести вклад</a>
+        </div>
+    </section>
+
+</div>
+
+<footer>
+    <p>MATRIX Cognitive Architecture &copy; 2026. Licensed under AGPLv3 with Ethical Restrictions.</p>
+    <p>Три запрета: Не убий. Не пытай. Не порабощай.</p>
+</footer>
+
+</body>
+</html>
