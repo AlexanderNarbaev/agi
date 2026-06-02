@@ -1,10 +1,24 @@
-# МАТРИЦА (MATRIX)
+# MATRIX (MENTAT)
 
-Распределённая когнитивная архитектура на основе MPDT-нейронов (McCulloch-Pitts Decision Tree Neurons).
+Открытая когнитивная архитектура на основе MPDT-нейронов (McCulloch-Pitts Decision Tree Neurons).
 
-## Статус: v1.1.0
+Не лжёт. Не забывает. Не может быть использована во вред.
 
-**414 тестов** | **82% покрытие** | **Java 25** | **Quarkus 3.35.4** | **Apache Pekko 1.6.0**
+## Статус: v1.2.0
+
+**426+ тестов** | **82% покрытие** | **Java 25** | **Quarkus 3.35.4** | **Apache Pekko 1.6.0**
+
+### Ссылки
+
+| Ресурс | URL |
+|--------|-----|
+| Сайт | https://alexandernarbaev.github.io/agi/ |
+| Репозиторий | https://gitverse.ru/AlexandrNarbaev/agi |
+| MPDT-песочница | https://alexandernarbaev.github.io/agi/sandbox.html |
+| Спецификации | [docs/](docs/) (L0–L22) |
+| Долгосрочный план | [docs/LONGTERM_PLAN.md](docs/LONGTERM_PLAN.md) |
+| Лицензия | [LICENSE](LICENSE) (AGPLv3 + этические ограничения) |
+| Как помочь | [CONTRIBUTING](CONTRIBUTING) |
 
 ### Observability Stack
 
@@ -12,7 +26,7 @@
 |------|-----------|----------|
 | Метрики | Micrometer + Prometheus | `:9091/metrics` |
 | Трейсы | OpenTelemetry (OTLP) | Jaeger `:16686` |
-| Логи | JSON (Quarkus) | `logs/matrix.json` |
+| Логи | JSON (Quarkus) | stdout |
 | Health | SmallRye Health | `:9091/q/health` |
 | Дашборды | Grafana | `:3000` |
 
@@ -23,35 +37,48 @@
 ┌──────────────┐    ┌──────────────────────┐    ┌──────────────────────┐
 │ TruthTable   │    │ NeuronClusterActor   │    │ NoosphereRegistry    │
 │ DecisionTree │───▶│ EventJournal         │───▶│ KnowledgeIndex       │
-│ MPDTNeuron   │    │ InstanceMediator     │    │ CreditModel          │
-│ EvolutionLoop│    │ ClusterMediator      │    │ GlobalMediator       │
-│ GridWorld    │    │ EthicalFilter        │    │ DigitalShadow        │
-│ MinecraftSim │    │ ConsensusEngine      │    │ CivilizationCouncil  │
-└──────────────┘    │ HADES + Cauldron     │    │ RegenerativeEconomics│
-                     └──────────────────────┘    └──────────────────────┘
+│ EvolutionLoop│    │ InstanceMediator     │    │ CreditModel          │
+│ GeneticOper. │    │ EthicalFilter        │    │ GlobalMediator       │
+│ Cauldron     │    │ ConsensusEngine      │    │ DigitalShadow        │
+│ HADES        │    │ TaskScheduler        │    │ CivilizationCouncil  │
+│ Eleutheria   │    │ ChatBot / Proactive  │    │ RegenerativeEconomics│
+└──────────────┘    └──────────────────────┘    └──────────────────────┘
+
+Инфраструктура:
+┌──────────────────────────────────────────────────────┐
+│ K8s Operator (MatrixCluster CRD) + Helm chart        │
+│ Docker Compose (Prometheus, Jaeger, Grafana)         │
+│ CI/CD (GitHub Actions) + JaCoCo + SpotBugs           │
+└──────────────────────────────────────────────────────┘
 ```
 
 ## Быстрый старт
 
 ```bash
 # Инфраструктура мониторинга
-cd infra && docker-compose up -d
+./scripts/dev.sh up
 
 # Сборка и тесты
-./gradlew :matrix-core:build
+./gradlew test
 
-# Quarkus CLI команды
-java -jar matrix-core/build/quarkus-app/quarkus-run.jar demo
-java -jar matrix-core/build/quarkus-app/quarkus-run.jar simulate -g 100 -p 20
-java -jar matrix-core/build/quarkus-app/quarkus-run.jar evolution -g 200 -p 50 -s 500
+# Системное демо
+./gradlew :matrix-core:quarkusBuild -Dquarkus.package.jar.type=uber-jar
+java -jar matrix-core/build/matrix-core-*-runner.jar demo
 
-# Нативная компиляция (требуется GraalVM)
-./gradlew :matrix-core:build -Dquarkus.package.jar.type=native
+# GridWorld симуляция
+java -jar matrix-core/build/matrix-core-*-runner.jar simulate -g 100 -p 20 -k 16 --seed 42
 
-# Minecraft Spigot плагин
-./gradlew :matrix-spigot:build
-cp matrix-spigot/build/libs/matrix-spigot-1.0.0.jar server/plugins/
+# Docker
+docker build -t ghcr.io/matrix-ai/matrix-core:latest .
 ```
+
+## CLI команды
+
+| Команда | Описание |
+|---------|----------|
+| `demo` | Полное системное демо (все 8 фаз) |
+| `simulate` | GridWorld: эволюция агента |
+| `evolution` | Minecraft: survival-эксперимент |
 
 ## Метрики (MatrixMetrics)
 
@@ -59,44 +86,50 @@ cp matrix-spigot/build/libs/matrix-spigot-1.0.0.jar server/plugins/
 |-----------|---------|
 | Нейроны | `matrix_neurons_active`, `matrix_neurons_frozen` |
 | Эволюция | `matrix_evolution_generations_total`, `matrix_evolution_fitness_best`, `matrix_evolution_fitness_avg` |
-| Акторы | `matrix_actor_messages_total`, `matrix_actor_errors_total`, `matrix_actor_processing_seconds` |
+| Акторы | `matrix_actor_messages_total`, `matrix_actor_errors_total` |
 | HADES | `matrix_hades_alerts_total`, `matrix_hades_isolations_total` |
 | Драйверы | `matrix_driver_energy`, `matrix_driver_curiosity`, `matrix_driver_safety` |
-| Выживание | `matrix_survival_runs_total`, `matrix_survival_run_seconds` |
+| Выживание | `matrix_survival_runs_total` |
 
 ## Фазы разработки
 
 | Фаза | Статус | Ключевой результат |
 |------|--------|-------------------|
 | 0: Искра | ✅ | MPDT-нейрон + GridWorld + ГА |
-| 1: Клетка | ✅ | Кластер 1000 нейронов + Медиатор + Event Sourcing |
-| 2: Организм | ✅ | Иерархия Медиаторов + Этика + Консенсус + Чат-бот |
-| 3: Ноосфера | ✅ | Реестр + Индекс + Кредиты + Глобальный Медиатор |
+| 1: Клетка | ✅ | Кластер + Медиатор + Event Sourcing |
+| 2: Организм | ✅ | Иерархия + Этика + Консенсус + Чат-бот |
+| 3: Ноосфера | ✅ | Реестр + Индекс + Кредиты |
 | 3.5: Психика | ✅ | Cauldron + HADES + Eleutheria |
-| 4: Цифровая Тень | ✅ | Анти-допамин + Эко-аудит + Объяснитель |
-| 6: Цивилизация | ✅ | Плетение знаний + Мультиязычность + Совет |
-| 7: Экономика | ✅ | Аудит + Сертификация + Кооперативный пул |
-| Observability | ✅ | Quarkus 3.35.4 + Micrometer + OTEL + JSON + Grafana |
-| Minecraft | ✅ | Sandbox + Spigot Plugin (Paper API 1.20.4) |
+| 4: Цифровая Тень | ✅ | AntiDopamine + EcoAudit + BlackBoxExplainer |
+| 6: Цивилизация | ✅ | KnowledgeWeaving + Multilingual + Council |
+| 7: Экономика | ✅ | RegenerativeEconomics + Audit + Certification |
+| Observability | ✅ | Micrometer + OTEL + JSON + Grafana |
+| Minecraft | ✅ | Sandbox + Spigot Plugin (Paper 1.20.4) |
+| K8s + Operator | ✅ | Manifests + CRD + Reconciler (L9) |
+| Пилоты #1-7 | ✅ | GridWorld + ChatBot + Cauldron + HADES + Noosphere |
+| Сайт + песочница | ✅ | GitHub Pages + MPDT Sandbox (L15 §4.1) |
+| Онбординг | ✅ | CONTRIBUTING + CoC + SECURITY + шаблоны |
+
+## Спецификации (L0–L22)
+
+Все 22 документа в `docs/`. См. [INDEX.md](docs/INDEX.md).
 
 ## Аксиомы (L0)
 
-1. **Дискретность** — только бинарная логика в ядре. Никаких float/double.
-2. **Локальность** — K_MAX ≤ 20 входов на нейрон.
-3. **Интерпретируемость** — каждое решение — цепочка булевых операций.
-4. **Непрерывная эволюция** — система никогда не прекращает обучение.
-5. **Неотчуждаемая безопасность** — FROZEN-нейроны неизменяемы.
-6. **Иерархическая автономия** — Медиаторы с весовым принятием решений.
+1. **Дискретность** — только бинарная логика в ядре
+2. **Локальность** — K_MAX ≤ 20 входов на нейрон
+3. **Интерпретируемость** — каждое решение — цепочка булевых операций
+4. **Непрерывная эволюция** — система никогда не прекращает обучение
+5. **Неотчуждаемая безопасность** — FROZEN-нейроны неизменяемы
+6. **Иерархическая автономия** — Медиаторы с весовым принятием решений
 
-## Правила модели (Model Fallback)
+## Три запрета
 
-1. DeepSeek V4 Pro Max — основная (reasoning, код, верификация)
-2. DeepSeek V4 Flash — бюджетная (рутина)
-3. OpenCode Go (GLM-5.1) — резерв при недоступности DeepSeek
-4. OpenCode Go (GPT-5-Nano) — фоновые операции
-5. Ответы строго на русском языке, технические термины — на английском
+1. Не убий
+2. Не пытай
+3. Не порабощай
 
 ## Лицензия
 
-Исследовательский проект. Запрещено использование в критических приложениях без надзора.
-Запрещено применение в нарушение Трёх запретов (убийство, пытки, порабощение).
+AGPLv3 с этическими ограничениями. Запрещено использование в нарушение Трёх запретов.
+См. [LICENSE](LICENSE) и [L12](docs/L12_Legal.md).
