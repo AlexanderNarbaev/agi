@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MATRIX — MPDT Sandbox</title>
+    <style>
+        :root { --indigo: #1a1a4e; --gold: #c9a84c; --bg: #0a0a1e; --card: #12123a; --text: #d0d0e0; }
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { background:var(--bg); color:var(--text); font-family:system-ui,sans-serif; padding:20px; }
+        h1 { color:var(--gold); text-align:center; margin-bottom:20px; }
+        .container { max-width:800px; margin:0 auto; }
+        .card { background:var(--card); border:1px solid #333; border-radius:8px; padding:20px; margin-bottom:20px; }
+        .card h2 { color:var(--gold); margin-bottom:12px; font-size:1.1em; }
+        label { display:block; margin:8px 0 4px; color:#aaa; font-size:0.9em; }
+        input[type=range] { width:100%; }
+        .bits { display:flex; gap:8px; margin:10px 0; flex-wrap:wrap; }
+        .bit { width:36px; height:36px; border:1px solid #444; border-radius:4px; display:flex; align-items:center; justify-content:center; cursor:pointer; font-family:monospace; font-size:1.2em; user-select:none; transition:all 0.2s; background:#0d0d2a; }
+        .bit.on { background:var(--gold); color:var(--bg); border-color:var(--gold); }
+        .output { margin:16px 0; }
+        .output .result { display:inline-block; width:40px; height:40px; border-radius:4px; text-align:center; line-height:40px; font-weight:900; font-size:1.2em; }
+        .output .result.true { background:#4caf50; color:#fff; }
+        .output .result.false { background:#e53935; color:#fff; }
+        .truth-grid { display:grid; gap:2px; margin-top:12px; }
+        .truth-cell { aspect-ratio:1; border-radius:2px; min-width:28px; }
+        .truth-cell.on { background:var(--gold); }
+        .truth-cell.off { background:#1a1a3a; }
+        button { background:var(--gold); color:var(--bg); border:none; padding:8px 16px; border-radius:4px; cursor:pointer; font-weight:700; margin:4px; transition:opacity 0.2s; }
+        button:hover { opacity:0.9; }
+        .info { font-size:0.85em; color:#888; margin-top:8px; }
+        .frozen { border:2px solid #00bcd4 !important; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>MATRIX — MPDT Neuron Sandbox</h1>
+
+    <div class="card">
+        <h2>1. Собери таблицу истинности</h2>
+        <p class="info">Выбери K (число входов) и задай выходы для всех комбинаций</p>
+        <label>K (inputs): <span id="kVal">3</span></label>
+        <input type="range" min="1" max="8" value="3" id="kSlider" oninput="updateK()">
+        <div class="truth-grid" id="truthGrid"></div>
+    </div>
+
+    <div class="card">
+        <h2>2. Подай входной вектор</h2>
+        <div class="bits" id="inputBits"></div>
+        <div class="output">
+            <span style="color:#aaa;">Output: </span>
+            <span class="result false" id="outputResult">0</span>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>3. Проверь функцию</h2>
+        <p class="info">Какие логические функции может выразить один MPDT-нейрон?</p>
+        <button onclick="setFunction('xor')">XOR-подобная</button>
+        <button onclick="setFunction('and')">AND</button>
+        <button onclick="setFunction('or')">OR</button>
+        <button onclick="setFunction('nand')">NAND</button>
+        <button onclick="setFunction('majority')">Majority</button>
+        <button onclick="setFunction('random')">Random</button>
+    </div>
+
+    <div class="card">
+        <h2>4. Обучение (симуляция мутации)</h2>
+        <p class="info">Каждая мутация меняет 1 бит в таблице. Нажми несколько раз.</p>
+        <button onclick="mutate()">Мутировать (1 bit flip)</button>
+        <p class="info" id="mutCount">Мутаций: 0</p>
+    </div>
+
+    <div class="card">
+        <h2>Что это значит?</h2>
+        <p class="info">
+            <strong>MPDT-нейрон</strong> (McCulloch-Pitts Decision Tree) — это дискретная логическая ячейка.
+            В отличие от нейросетей, он <strong>не использует вещественные числа</strong> (аксиома дискретности).
+            Каждый выход — булево значение, вычисляемое за наносекунды.
+            Обучение идёт через эволюционный алгоритм: случайные мутации таблицы истинности
+            с отбором по фитнес-функции. <strong>Никакого градиентного спуска.</strong>
+        </p>
+        <br>
+        <p class="info">
+            Этот тренажёр — упрощённая модель. Реальная МАТРИЦА использует DecisionTree
+            (сжатое представление) и работает с 2<sup>K</sup> битами при K до 20.
+            <a href="https://gitverse.ru/AlexandrNarbaev/agi" style="color:var(--gold)">Исходный код →</a>
+        </p>
+    </div>
+</div>
+
+<script>
+let K = 3;
+let truthTable = [];
+let mutations = 0;
+
+function updateK() {
+    K = parseInt(document.getElementById('kSlider').value);
+    document.getElementById('kVal').textContent = K;
+    setFunction('random');
+}
+
+function setFunction(fn) {
+    mutations = 0;
+    document.getElementById('mutCount').textContent = 'Мутаций: 0';
+    const size = 1 << K;
+    truthTable = new Array(size);
+
+    for (let i = 0; i < size; i++) {
+        switch(fn) {
+            case 'xor': truthTable[i] = popcount(i) % 2 === 1; break;
+            case 'and': truthTable[i] = popcount(i) === K; break;
+            case 'or': truthTable[i] = popcount(i) > 0; break;
+            case 'nand': truthTable[i] = !(popcount(i) === K); break;
+            case 'majority': truthTable[i] = popcount(i) > K/2; break;
+            case 'random': truthTable[i] = Math.random() > 0.5; break;
+        }
+    }
+    renderTruthTable();
+    renderInputs();
+    evalOutput();
+}
+
+function popcount(n) {
+    let c = 0;
+    while (n) { c += n & 1; n >>= 1; }
+    return c;
+}
+
+function renderTruthTable() {
+    const grid = document.getElementById('truthGrid');
+    const cols = Math.min(16, Math.max(4, 1 << Math.ceil(K/2)));
+    grid.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+
+    const size = 1 << K;
+    grid.innerHTML = '';
+    for (let i = 0; i < size; i++) {
+        const cell = document.createElement('div');
+        cell.className = 'truth-cell ' + (truthTable[i] ? 'on' : 'off');
+        cell.title = `Input ${i.toString(2).padStart(K,'0')} → ${truthTable[i] ? 1 : 0}`;
+        cell.onclick = () => { truthTable[i] = !truthTable[i]; renderTruthTable(); evalOutput(); };
+        grid.appendChild(cell);
+    }
+}
+
+function renderInputs() {
+    const container = document.getElementById('inputBits');
+    container.innerHTML = '';
+    for (let i = K-1; i >= 0; i--) {
+        const bit = document.createElement('div');
+        bit.className = 'bit';
+        bit.textContent = '0';
+        bit.onclick = function() {
+            bit.classList.toggle('on');
+            bit.textContent = bit.classList.contains('on') ? '1' : '0';
+            evalOutput();
+        };
+        container.appendChild(bit);
+    }
+}
+
+function evalOutput() {
+    const bits = document.querySelectorAll('#inputBits .bit');
+    let index = 0;
+    bits.forEach((b, i) => {
+        if (b.classList.contains('on')) index |= (1 << (K-1-i));
+    });
+    const out = truthTable[index];
+    const el = document.getElementById('outputResult');
+    el.textContent = out ? '1' : '0';
+    el.className = 'result ' + (out ? 'true' : 'false');
+}
+
+function mutate() {
+    const idx = Math.floor(Math.random() * truthTable.length);
+    truthTable[idx] = !truthTable[idx];
+    mutations++;
+    document.getElementById('mutCount').textContent = 'Мутаций: ' + mutations;
+    renderTruthTable();
+    evalOutput();
+}
+
+updateK();
+</script>
+</body>
+</html>
