@@ -9,6 +9,9 @@ resources:
   - hpa.yaml
   - pvc.yaml
   - rbac.yaml
+  - servicemonitor.yaml
+  - prometheusrule.yaml
+  - jaeger.yaml
 
 commonLabels:
   app.kubernetes.io/part-of: matrix

@@ -1,0 +1,74 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: matrix-alerts
+  namespace: matrix
+  labels:
+    app: matrix-core
+    release: prometheus
+spec:
+  groups:
+    - name: matrix-slo
+      rules:
+        - alert: MatrixHighErrorRate
+          expr: rate(matrix_errors_total[5m]) > 0.01
+          for: 5m
+          labels:
+            severity: critical
+          annotations:
+            summary: "MATRIX error rate above 1%"
+            description: "Error rate is {{ $value | humanizePercentage }} in the last 5 minutes."
+            runbook_url: "https://github.com/AlexanderNarbaev/agi/wiki/Runbooks#high-error-rate"
+
+        - alert: MatrixHighLatency
+          expr: histogram_quantile(0.99, rate(matrix_request_duration_seconds_bucket[5m])) > 1
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: "MATRIX p99 latency > 1s"
+            description: "p99 latency is {{ $value }}s."
+            runbook_url: "https://github.com/AlexanderNarbaev/agi/wiki/Runbooks#high-latency"
+
+    - name: matrix-operational
+      rules:
+        - alert: MatrixPodDown
+          expr: up{job="matrix-core"} == 0
+          for: 2m
+          labels:
+            severity: critical
+          annotations:
+            summary: "MATRIX pod is down"
+            description: "Pod {{ $labels.pod }} has been down for 2 minutes."
+            runbook_url: "https://github.com/AlexanderNarbaev/agi/wiki/Runbooks#pod-down"
+
+        - alert: MatrixHPAWarning
+          expr: kube_hpa_status_current_replicas{horizontalpodautoscaler="matrix-core-hpa"} >= kube_hpa_spec_max_replicas{horizontalpodautoscaler="matrix-core-hpa"}
+          for: 10m
+          labels:
+            severity: warning
+          annotations:
+            summary: "MATRIX HPA at max replicas"
+            description: "HPA has reached max replicas ({{ $value }}). Consider scaling limits."
+
+    - name: matrix-ethics
+      rules:
+        - alert: MatrixEthicalViolation
+          expr: rate(matrix_ethical_rejections_total[5m]) > 0
+          for: 1m
+          labels:
+            severity: critical
+          annotations:
+            summary: "MATRIX ethical filter rejecting requests"
+            description: "{{ $value }} violations detected in 5 minutes. Investigate immediately."
+            runbook_url: "https://github.com/AlexanderNarbaev/agi/wiki/Runbooks#ethical-violation"
+
+        - alert: MatrixFrozenMutationAttempt
+          expr: rate(matrix_frozen_mutation_attempts_total[5m]) > 0
+          for: 1m
+          labels:
+            severity: critical
+          annotations:
+            summary: "Attempt to mutate FROZEN neuron detected"
+            description: "{{ $value }} mutation attempts on FROZEN neurons in 5 minutes."
+            runbook_url: "https://github.com/AlexanderNarbaev/agi/wiki/Runbooks#frozen-mutation"
