@@ -1,3 +1,3 @@
-📍 Статус: Фаза 1.1 «Инфраструктура + NeuronClusterActor» — Pekko 1.6.0 добавлен, NeuronClusterActor (Typed Actor + batch inference) реализован, билд компилируется. 137/138 тестов проходят. 1 тест (EvolutionLoopTest) флапает из-за стохастики. Осталось: InstanceMediator (1.2), Kafka ES + .ldn (1.3), интеграция 1000 нейронов (1.4).
-🚀 Активный этап: Фаза 1.1 завершена на 95%. Следующий шаг: починить флапающий тест, затем Фаза 1.2 — InstanceMediator с драйверами Energy/Curiosity/Safety.
-🛑 Защищённые зоны: Pekko 1.6.0 (org.apache.pekko, не akka), K_MAX=20, FROZEN-нейроны, Scala 2.13 transitively, Java 25. Не использовать Pekko 2.0.0-M2.
+📍 Статус: v1.1.0+ — 22 спецификации (L0–L22). 414 тестов, 82% покрытия. ALL SYSTEMS NOMINAL. Docker Compose (Prometheus+Jaeger+Grafana) работает. Сайт GitHub Pages готов. LICENSE = AGPLv3+этика. Онбординг (CONTRIBUTING/CoC/SECURITY/шаблоны) готов.
+🚀 Активный этап: K8s-манифесты → Grafana-дашборды → пилот GridWorld → пилот Чат-бот.
+🛑 Защищённые зоны: Pekko 1.6.0, K_MAX=20, FROZEN-neurons, Quarkus 3.35.4 LTS, Java 25, Три запрета, AGPLv3.

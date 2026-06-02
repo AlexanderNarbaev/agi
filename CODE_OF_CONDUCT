@@ -1,0 +1,78 @@
+# Code of Conduct
+
+## Our Pledge
+
+We, as members, contributors, and maintainers of the MATRIX project,
+pledge to make participation in our community a harassment-free
+experience for everyone, regardless of age, body size, disability,
+ethnicity, gender identity and expression, level of experience,
+nationality, personal appearance, race, religion, sexual identity and
+orientation, or any other characteristic.
+
+We pledge to uphold the **Three Prohibitions** at the core of MATRIX
+philosophy ([L0](docs/L0_manifesto.md)):
+
+1. **No Killing** — we reject violence, weapons development, and lethal
+   autonomous systems.
+2. **No Torture** — we reject infliction of suffering, physical or
+   psychological.
+3. **No Enslavement** — we reject coercion, trafficking, social scoring,
+   and deprivation of autonomy without consent.
+
+## Standards
+
+### Expected Behavior
+
+- Be respectful and constructive.
+- Critique ideas, not people.
+- Assume good faith. Clarify before judging.
+- Help newcomers. Every expert was once a beginner.
+- Use inclusive language. Avoid idioms that may exclude non-native
+  speakers.
+- Respect privacy and confidentiality.
+
+### Unacceptable Behavior
+
+- Harassment, intimidation, or personal attacks.
+- Discrimination based on protected characteristics.
+- Publishing others' private information without consent.
+- Sexual language or imagery in project spaces.
+- Advocating for or encouraging violation of the Three Prohibitions.
+- Trolling, flaming, or sustained disruption of discussions.
+
+## Enforcement
+
+### Reporting
+
+Report violations to maintainers via:
+- GitHub: open an issue marked `[CoC]`.
+- Email: `conduct@matrix-ai.org` (will be established).
+
+All reports are confidential. Maintainers will respond within 48 hours.
+
+### Consequences
+
+Violations may result in:
+1. **Warning** — private communication about the violation.
+2. **Temporary ban** — removal from project spaces for a specified period.
+3. **Permanent ban** — expulsion from the community.
+
+Violations of the Three Prohibitions result in immediate and permanent
+expulsion.
+
+## Scope
+
+This Code of Conduct applies to all project spaces: GitHub, chat,
+forums, video calls, conferences, and any other venue where MATRIX is
+discussed. It also applies when an individual represents the project in
+public.
+
+## Attribution
+
+This Code of Conduct is based on the [Contributor Covenant](https://www.contributor-covenant.org),
+version 2.1, adapted with MATRIX-specific principles from
+[L11 §6](docs/L11_Mangement.md) and [L0](docs/L0_manifesto.md).
+
+---
+
+*Ref: L11 §6, L0*

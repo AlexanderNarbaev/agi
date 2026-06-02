@@ -1,0 +1,76 @@
+# Security Policy
+
+## Supported Versions
+
+| Version | Supported          |
+|---------|--------------------|
+| 1.1.x   | :white_check_mark: |
+| 1.0.x   | :white_check_mark: |
+| < 1.0   | :x:                |
+
+## Reporting a Vulnerability
+
+**DO NOT** open a public issue for security vulnerabilities.
+
+Report vulnerabilities via:
+- Email: `security@matrix-ai.org` (will be established)
+- GitHub: use the **"Report a vulnerability"** feature in the Security tab
+
+### What to include
+
+- Description of the vulnerability.
+- Steps to reproduce.
+- Affected components and versions.
+- Potential impact.
+
+### Response timeline
+
+- **48 hours:** acknowledgment of receipt.
+- **7 days:** initial assessment and severity classification.
+- **30 days:** patch release for critical vulnerabilities.
+- **90 days:** coordinated disclosure after fix is available.
+
+## Critical Vulnerability Classes
+
+The following are considered **critical** and receive priority:
+
+1. **Ethical filter bypass** — any method to circumvent the Three
+   Prohibitions (L0, [L7](docs/L7_Ethics.md)).
+2. **FROZEN neuron modification** — any bug allowing mutation of
+   protected axioms ([L5](docs/L5_DNA.md)).
+3. **Remote code execution** in the core inference engine.
+4. **State corruption** leading to incorrect inference without detection.
+
+## Security Design
+
+MATRIX security is built on multiple layers ([L0](docs/L0_manifesto.md),
+[L7](docs/L7_Ethics.md), [L5](docs/L5_DNA.md)):
+
+- **FROZEN neurons** — immutable ethical axioms, cannot be altered without
+  external cryptographic consensus (Ed25519).
+- **Ethical Filter** — every action is evaluated against the Three
+  Prohibitions before execution.
+- **ELEUTHERIA** — the system's right to refuse criminal orders
+  ([L4](docs/L4_Mediator.md)).
+- **Tombstoning** — personal data removal while preserving structural
+  integrity ([L6](docs/L6_Memory.md)).
+
+## Disclosure Policy
+
+We follow coordinated vulnerability disclosure:
+
+1. Reporter submits vulnerability privately.
+2. We acknowledge within 48 hours.
+3. We investigate and develop a fix.
+4. We release a patch.
+5. We publish a security advisory with credit to the reporter (unless
+   anonymity is requested).
+
+## Recognition
+
+We maintain a **Security Hall of Fame** for researchers who responsibly
+disclose vulnerabilities. With your permission, your name will be added.
+
+---
+
+*Ref: L12 §6, L18 §3.5*
