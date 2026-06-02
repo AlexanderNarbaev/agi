@@ -18,7 +18,6 @@ dependencies {
     implementation 'io.fabric8:kubernetes-client:7.2.0'
     implementation 'io.fabric8:kubernetes-model-core:7.2.0'
     implementation 'io.fabric8:kubernetes-model-apps:7.2.0'
-    implementation 'io.javaoperatorsdk:operator-framework-core:5.0.0'
 
     testImplementation 'org.junit.jupiter:junit-jupiter:5.12.2'
     testImplementation 'org.assertj:assertj-core:3.27.3'
