@@ -1,0 +1,15 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - namespace.yaml
+  - configmap.yaml
+  - deployment.yaml
+  - service.yaml
+  - hpa.yaml
+  - pvc.yaml
+  - rbac.yaml
+
+commonLabels:
+  app.kubernetes.io/part-of: matrix
+  app.kubernetes.io/version: v1.2.0

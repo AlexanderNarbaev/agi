@@ -1,0 +1,57 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: matrix-core
+  namespace: matrix
+  labels:
+    app: matrix-core
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: matrix-core
+  template:
+    metadata:
+      labels:
+        app: matrix-core
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "9091"
+        prometheus.io/path: "/metrics"
+    spec:
+      containers:
+        - name: matrix-core
+          image: ghcr.io/matrix-ai/matrix-core:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 9091
+              name: http
+          env:
+            - name: JAVA_OPTS
+              value: "-Xms256m -Xmx512m -XX:+UseZGC"
+          resources:
+            requests:
+              cpu: "500m"
+              memory: "512Mi"
+            limits:
+              cpu: "2000m"
+              memory: "1Gi"
+          livenessProbe:
+            httpGet:
+              path: /q/health/live
+              port: 9091
+            initialDelaySeconds: 15
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /q/health/ready
+              port: 9091
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          volumeMounts:
+            - name: snapshots
+              mountPath: /data/snapshots
+      volumes:
+        - name: snapshots
+          persistentVolumeClaim:
+            claimName: matrix-snapshots
