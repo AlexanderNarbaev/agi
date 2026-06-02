@@ -2,3 +2,4 @@ rootProject.name = 'matrix'
 
 include 'matrix-core'
 include 'matrix-spigot'
+include 'matrix-operator'

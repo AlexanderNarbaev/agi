@@ -1,0 +1,102 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: matrixclusters.matrix.opencode.ai
+spec:
+  group: matrix.opencode.ai
+  names:
+    kind: MatrixCluster
+    listKind: MatrixClusterList
+    plural: matrixclusters
+    singular: matrixcluster
+    shortNames:
+      - mc
+  scope: Namespaced
+  versions:
+    - name: v1
+      served: true
+      storage: true
+      schema:
+        openAPIV3Schema:
+          type: object
+          properties:
+            spec:
+              type: object
+              required: ["neurons", "k"]
+              properties:
+                neurons:
+                  type: integer
+                  description: Number of MPDT neurons in the cluster
+                  minimum: 1
+                  maximum: 10000
+                k:
+                  type: integer
+                  description: Number of inputs per neuron
+                  minimum: 1
+                  maximum: 20
+                frozenNeurons:
+                  type: array
+                  description: UUIDs of FROZEN neurons (immutable)
+                  items:
+                    type: string
+                instanceId:
+                  type: string
+                  description: Instance UUID
+                mediatorConfig:
+                  type: object
+                  properties:
+                    tickIntervalMs:
+                      type: integer
+                      default: 1000
+                    resourceFactorStart:
+                      type: number
+                      default: 0.8
+                    maxActiveGoals:
+                      type: integer
+                      default: 10
+            status:
+              type: object
+              properties:
+                phase:
+                  type: string
+                  enum: ["Pending", "Running", "Degraded", "Terminating"]
+                activeNeurons:
+                  type: integer
+                frozenNeurons:
+                  type: integer
+                messagesPerSecond:
+                  type: number
+                lastSnapshot:
+                  type: string
+                  format: date-time
+                conditions:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      type:
+                        type: string
+                      status:
+                        type: string
+                      reason:
+                        type: string
+                      message:
+                        type: string
+                      lastTransitionTime:
+                        type: string
+                        format: date-time
+      subresources:
+        status: {}
+      additionalPrinterColumns:
+        - name: Neurons
+          type: integer
+          jsonPath: .spec.neurons
+        - name: K
+          type: integer
+          jsonPath: .spec.k
+        - name: Phase
+          type: string
+          jsonPath: .status.phase
+        - name: Age
+          type: date
+          jsonPath: .metadata.creationTimestamp

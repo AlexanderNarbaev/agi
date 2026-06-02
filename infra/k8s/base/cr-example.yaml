@@ -1,0 +1,13 @@
+apiVersion: matrix.opencode.ai/v1
+kind: MatrixCluster
+metadata:
+  name: example-cluster
+  namespace: matrix
+spec:
+  neurons: 100
+  k: 16
+  instanceId: "demo-instance-001"
+  mediatorConfig:
+    tickIntervalMs: 1000
+    resourceFactorStart: 0.8
+    maxActiveGoals: 10
