@@ -1,19 +1,30 @@
 plugins {
-    id 'java'
-    id 'io.quarkus'
+    id 'java-library'
 }
 
-dependencies {
-    implementation enforcedPlatform("${quarkusPlatformGroupId}:${quarkusPlatformArtifactId}:${quarkusPlatformVersion}")
-    implementation 'io.quarkus:quarkus-kubernetes-client'
-    implementation 'io.quarkus:quarkus-jackson'
-    implementation 'io.fabric8:kubernetes-client:7.2.0'
-    implementation 'io.javaoperatorsdk:operator-framework-core:5.0.0'
-    testImplementation 'io.quarkus:quarkus-junit5'
-    testImplementation 'io.fabric8:kubernetes-server-mock:7.2.0'
-}
+group = 'io.matrix'
+version = '0.1.0-SNAPSHOT'
 
 java {
     sourceCompatibility = JavaVersion.VERSION_25
     targetCompatibility = JavaVersion.VERSION_25
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation 'io.fabric8:kubernetes-client:7.2.0'
+    implementation 'io.fabric8:kubernetes-model-core:7.2.0'
+    implementation 'io.fabric8:kubernetes-model-apps:7.2.0'
+    implementation 'io.javaoperatorsdk:operator-framework-core:5.0.0'
+
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.12.2'
+    testImplementation 'org.assertj:assertj-core:3.27.3'
+    testImplementation 'io.fabric8:kubernetes-server-mock:7.2.0'
+}
+
+tasks.withType(Test).configureEach {
+    useJUnitPlatform()
 }
