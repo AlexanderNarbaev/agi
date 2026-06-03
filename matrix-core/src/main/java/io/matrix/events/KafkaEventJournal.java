@@ -5,12 +5,12 @@ import io.matrix.cluster.NeuronId;
 import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericRecord;
+import org.apache.avro.generic.GenericDatumReader;
+import org.apache.avro.generic.GenericDatumWriter;
 import org.apache.avro.io.BinaryDecoder;
 import org.apache.avro.io.BinaryEncoder;
 import org.apache.avro.io.DecoderFactory;
 import org.apache.avro.io.EncoderFactory;
-import org.apache.avro.specific.SpecificDatumReader;
-import org.apache.avro.specific.SpecificDatumWriter;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -72,6 +72,9 @@ public final class KafkaEventJournal implements EventJournal {
 
     @Override
     public List<ClusterEvent> replayFrom(long fromIndex) {
+        if (fromIndex < 0) {
+            return List.of();
+        }
         List<ClusterEvent> events = new ArrayList<>();
         long idx = 0;
         for (byte[] data : queue) {
@@ -117,7 +120,7 @@ public final class KafkaEventJournal implements EventJournal {
 
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             BinaryEncoder encoder = EncoderFactory.get().binaryEncoder(baos, null);
-            new SpecificDatumWriter<>(SCHEMA).write(record, encoder);
+            new GenericDatumWriter<>(SCHEMA).write(record, encoder);
             encoder.flush();
             return baos.toByteArray();
         } catch (IOException e) {
@@ -129,7 +132,7 @@ public final class KafkaEventJournal implements EventJournal {
         try {
             BinaryDecoder decoder = DecoderFactory.get()
                     .binaryDecoder(new ByteArrayInputStream(data), null);
-            GenericRecord record = new SpecificDatumReader<GenericRecord>(SCHEMA)
+            GenericRecord record = new GenericDatumReader<GenericRecord>(SCHEMA)
                     .read(null, decoder);
 
             return new ClusterEvent(

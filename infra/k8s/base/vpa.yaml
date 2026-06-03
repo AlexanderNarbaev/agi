@@ -1,0 +1,26 @@
+apiVersion: autoscaling.k8s.io/v1
+kind: VerticalPodAutoscaler
+metadata:
+  name: matrix-core-vpa
+  namespace: matrix
+  labels:
+    app.kubernetes.io/part-of: matrix
+spec:
+  targetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: matrix-core
+  updatePolicy:
+    updateMode: Auto
+    minReplicas: 2
+  resourcePolicy:
+    containerPolicies:
+      - containerName: matrix-core
+        minAllowed:
+          cpu: "250m"
+          memory: "256Mi"
+        maxAllowed:
+          cpu: "4000m"
+          memory: "4Gi"
+        controlledResources: ["cpu", "memory"]
+        controlledValues: RequestsAndLimits

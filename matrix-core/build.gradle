@@ -48,14 +48,38 @@ jacocoTestReport {
         csv.required = false
         html.required = true
     }
+    afterEvaluate {
+        classDirectories.setFrom(files(classDirectories.files.collect {
+            fileTree(dir: it, exclude: [
+                'io/matrix/MatrixApplication*',
+                'io/matrix/MatrixSimulation*',
+                'io/matrix/SystemDemo*',
+                'io/matrix/MinecraftExperiment*',
+                'io/matrix/MatrixTopCommand*',
+                'io/matrix/cli/**'
+            ])
+        }))
+    }
 }
 
 jacocoTestCoverageVerification {
     violationRules {
         rule {
             limit {
-                minimum = 0.70
+                minimum = 0.82
             }
         }
+    }
+    afterEvaluate {
+        classDirectories.setFrom(files(classDirectories.files.collect {
+            fileTree(dir: it, exclude: [
+                'io/matrix/MatrixApplication*',
+                'io/matrix/MatrixSimulation*',
+                'io/matrix/SystemDemo*',
+                'io/matrix/MinecraftExperiment*',
+                'io/matrix/MatrixTopCommand*',
+                'io/matrix/cli/**'
+            ])
+        }))
     }
 }
