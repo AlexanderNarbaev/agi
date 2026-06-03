@@ -7,11 +7,15 @@ resources:
   - deployment.yaml
   - service.yaml
   - hpa.yaml
+  - vpa.yaml
   - pvc.yaml
   - rbac.yaml
   - servicemonitor.yaml
   - prometheusrule.yaml
   - jaeger.yaml
+  - loki.yaml
+  - strimzi-kafka.yaml
+  - minio-tenant.yaml
   - crd.yaml
   - cr-example.yaml
 

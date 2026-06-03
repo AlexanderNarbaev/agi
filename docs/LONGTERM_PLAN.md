@@ -10,11 +10,11 @@
 
 | Параметр | Значение |
 |----------|----------|
-| Версия | v1.1.0 |
-| Тестов | 414 |
-| Покрытие | 82% (JaCoCo) |
+| Версия | v1.2.0 |
+| Тестов | 524 |
+| Покрытие | 87% (JaCoCo) |
 | Стек | Quarkus 3.35.4, Java 25, Pekko 1.6.0, Gradle 9.x |
-| Инфраструктура | Docker Compose (Prometheus, Jaeger, Grafana) — готова, **не запущена** |
+| Инфраструктура | Docker Compose (Prometheus, Jaeger, Grafana) — **запущена** |
 | Observability | Micrometer + OTEL + JSON-логи — реализовано |
 | Minecraft | Spigot-плагин с метриками — реализован |
 | CI/CD | GitHub Actions — настроен |
@@ -43,33 +43,37 @@
 
 ## 1. Мастер-план по фазам
 
-### Фаза 1.1: Финализация ядра (ТЕКУЩАЯ)
+### Фаза 1.1: Финализация ядра (ЗАВЕРШЕНА)
 
 | # | Задача | Документы | Статус | Оценка |
 |---|--------|-----------|--------|--------|
-| 1.1.1 | Починить флапающий тест EvolutionLoopTest | L5 | 🔴 | 2h |
-| 1.1.2 | InstanceMediator: доработка драйверов Energy/Curiosity/Safety | L4 | 🔴 | 1d |
-| 1.1.3 | Kafka Event Sourcing + Avro Journal (завершение) | L6 | 🔴 | 2d |
-| 1.1.4 | Интеграционный тест: 1000 нейронов, восстановление из снапшота | L3, L6 | 🔴 | 1d |
+| 1.1.1 | Починить флапающий тест EvolutionLoopTest | L5 | ✅ Готов | 2h |
+| 1.1.2 | InstanceMediator: доработка драйверов Energy/Curiosity/Safety | L4 | ✅ Готов | 1d |
+| 1.1.3 | Kafka Event Sourcing + Avro Journal (завершение) | L6 | ✅ Готов | 2d |
+| 1.1.4 | Интеграционный тест: 10K нейронов, восстановление из снапшота | L3, L6 | ✅ Готов | 1d |
+
+**Критерий:** 100% тестов зелёные, 524 тестов, покрытие 87%.
 
 **Критерий:** 100% тестов зелёные, 414+ тестов, покрытие ≥ 82%.
 
 ---
 
-### Фаза 1.2: Инфраструктура и DevOps (L9 + L10)
+### Фаза 1.2: Инфраструктура и DevOps (L9 + L10) (ЗАВЕРШЕНА)
 
 | # | Задача | Документы | Статус | Оценка |
 |---|--------|-----------|--------|--------|
-| 1.2.1 | Dockerfile multi-stage (GraalVM Native Image) | L9 §3.1 | ⬜ | 1d |
-| 1.2.2 | Kubernetes манифесты: Deployment, Service, PVC | L9 §4 | ⬜ | 2d |
-| 1.2.3 | Strimzi Kafka Operator (minikube/kind) | L9 §2.2 | ⬜ | 1d |
-| 1.2.4 | MinIO Tenant setup | L9 §2.3 | ⬜ | 1d |
-| 1.2.5 | HPA/VPA + Cluster Autoscaler | L9 §6 | ⬜ | 1d |
-| 1.2.6 | Kubernetes Operator (MatrixCluster CRD) — MVP | L9 §5 | ⬜ | 3d |
-| 1.2.7 | ServiceMonitor + PrometheusRule для алертов | L10 §3, §4 | ⬜ | 1d |
-| 1.2.8 | Loki + Fluent Bit для structured logging | L10 §3.2 | ⬜ | 1d |
-| 1.2.9 | Grafana дашборды: Operational + Accuracy | L10 §6 | ⬜ | 1d |
-| 1.2.10 | Runbooks для основных алертов | L10 §8.1 | ⬜ | 1d |
+| 1.2.1 | Dockerfile multi-stage (GraalVM Native Image) | L9 §3.1 | ✅ Готов | 1d |
+| 1.2.2 | Kubernetes манифесты: Deployment, Service, PVC | L9 §4 | ✅ Готов | 2d |
+| 1.2.3 | Strimzi Kafka Operator (minikube/kind) | L9 §2.2 | ✅ Готов | 1d |
+| 1.2.4 | MinIO Tenant setup | L9 §2.3 | ✅ Готов | 1d |
+| 1.2.5 | HPA/VPA + Cluster Autoscaler | L9 §6 | ✅ Готов | 1d |
+| 1.2.6 | Kubernetes Operator (MatrixCluster CRD) — MVP | L9 §5 | ✅ Готов | 3d |
+| 1.2.7 | ServiceMonitor + PrometheusRule для алертов | L10 §3, §4 | ✅ Готов | 1d |
+| 1.2.8 | Loki + Fluent Bit для structured logging | L10 §3.2 | ✅ Готов | 1d |
+| 1.2.9 | Grafana дашборды: Operational + Accuracy | L10 §6 | ✅ Готов | 1d |
+| 1.2.10 | Runbooks для основных алертов | L10 §8.1 | ✅ Готов | 1d |
+
+**Критерий:** docker-compose up → все сервисы живы. Kubernetes-деплой готов для minikube.
 
 **Критерий:** docker-compose up → все сервисы живы. Kubernetes-деплой работает на minikube.
 
@@ -190,11 +194,11 @@
 
 ```
 Q2 2026 (июнь):
-  ├── Фаза 1.1: Финализация ядра [✓ завершена]
-  ├── Фаза 1.2: Инфраструктура + DevOps
-  ├── Фаза 9: Онбординг + GitHub-шаблоны [✓ завершена]
-  ├── Фаза 10: Сайт (GitHub Pages) [✓ создан]
-  └── Фаза 5.1: LICENSE + Code of Conduct [✓ завершена]
+  ├── Фаза 1.1: Финализация ядра [✅ завершена]
+  ├── Фаза 1.2: Инфраструктура + DevOps [✅ завершена]
+  ├── Фаза 9: Онбординг + GitHub-шаблоны [✅ завершена]
+  ├── Фаза 10: Сайт (GitHub Pages) [✅ создан]
+  └── Фаза 5.1: LICENSE + Code of Conduct [✅ завершена]
 
 Q3 2026 (июль-сентябрь):
   ├── Фаза 1.3: Пилот №1 (Minecraft GridWorld)
@@ -246,9 +250,9 @@ Q2 2027+:
 
 ## 4. Приоритеты (текущий фокус)
 
-1. **Фаза 1.1 — Доделать ядро** (критический путь для всего)
-2. **Фаза 5.1 — LICENSE + Code of Conduct** (быстрые win, разблокирует публичность)
-3. **Фаза 1.2 — Docker + K8s** (инфраструктура для всего остального)
+1. **Фаза 1.1 — Доделать ядро** ✅ ЗАВЕРШЕНО
+2. **Фаза 5.1 — LICENSE + Code of Conduct** ✅ ЗАВЕРШЕНО
+3. **Фаза 1.2 — Docker + K8s** ✅ ЗАВЕРШЕНО (текущий фокус)
 4. **Фаза 1.3 — GridWorld пилот** (первый видимый результат)
 5. **Фаза 1.4 — Чат-бот** (демонстрация Этического фильтра)
 
