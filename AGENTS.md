@@ -215,6 +215,42 @@ API ключи: DeepSeek — через `/connect` в TUI, OpenCode Go — `open
 ## СТАРТ СЕССИИ
 [CTX: project dev session]. Немедленно выполни инициализацию: прочитай WAL, INDEX.md, загрузи память из muninn/agentic-tools, получи обзор codegraph. Выведи сводку в 3 строках: статус, активная задача, защищённые зоны.
 
-**Текущий стек (v1.1.0):** Quarkus 3.35.4, Java 25, Apache Pekko 1.6.0, Gradle 9.x, Paper API 1.20.4.
-**Observability:** Micrometer (Prometheus :9091), OpenTelemetry (Jaeger :16686), JSON-логи, Grafana :3000.
-**Ключевые файлы:** `wal/GLOBAL_WAL.md`, `wal/SESSION_WAL.md`, `docs/INDEX.md`, `.opencode/config.yml`, `README.md`.
+**Текущий стек (v1.3.0):** Quarkus 3.35.4, Java 25, Apache Pekko 1.6.0, Gradle 9.x, Paper API 1.20.4, Avro 1.12.0.
+**Observability:** Micrometer (Prometheus :9091), OpenTelemetry (Jaeger :16686), JSON-логи, Grafana :3000, Loki+FluentBit.
+**Ключевые файлы:** `wal/GLOBAL_WAL.md`, `wal/SESSION_WAL.md`, `docs/INDEX.md`, `docs/MASTER_PLAN.md`, `.opencode/config.yml`, `AGENTS.md`, `README.md`.
+
+## ПРАВИЛА ПРОЕКТА (PROJECT-SPECIFIC RULES)
+
+### Workflow — обязательный протокол
+1. **Каждый шаг = коммит + пуш.** После любой значимой группы изменений — немедленно `git add` + `git commit` + `git push origin main && git push gitverse main`. Никаких незакоммиченных изменений между шагами.
+2. **WAL — автоматически.** После коммита — обновить `wal/GLOBAL_WAL.md`, `wal/SESSION_WAL.md`, `WAL.md`. Не предлагать пользователю скопировать — писать самостоятельно.
+3. **Память — каждый шаг.** Сохранять ключевые решения в `agentic-tools` (create_memory) с категорией `session_checkpoint` или `project_context`.
+4. **Todo — всегда актуален.** Обновлять `todowrite` при смене статуса задач.
+5. **Пуш в оба remote:** `origin` (github.com/AlexanderNarbaev/agi) и `gitverse` (gitverse.ru/AlexandrNarbaev/agi).
+
+### Качество кода
+6. **Тесты перед коммитом:** `./gradlew test` для Java-изменений. C-код: `gcc -Wall -Wextra`.
+7. **Coverage floor:** 82% (JaCoCo). CLI/demo/application classes исключены из покрытия.
+8. **CodeGraph — primary navigation.** Использовать `codegraph_context`, `codegraph_explore`, `codegraph_search` для навигации по коду перед Read/Grep.
+9. **Не добавлять комментарии** без явного запроса.
+
+### Структура коммитов
+10. **Формат:** `type: Short description — details`. Types: `feat:`, `fix:`, `docs:`, `test:`, `refactor:`.
+11. **Сообщение — на английском.** Содержательное, с метриками где применимо.
+
+### Защищённые зоны (никогда не менять без явного подтверждения)
+- `K_MAX = 20` (L1_MPDT_neuron.md)
+- FROZEN-нейроны (L5_DNA.md, L7_Ethics.md)
+- Три запрета (L0_manifesto.md: NO_KILLING, NO_TORTURE, NO_ENSLAVEMENT)
+- AGPLv3 + этические ограничения (LICENSE)
+- Quarkus 3.35.4 LTS, Java 25, Pekko 1.6.0
+- Coverage floor 82% (matrix-core/build.gradle jacocoTestCoverageVerification)
+
+### Приоритеты проекта (текущая версия v1.3.0)
+1. Пилоты #4-7: PyBullet/ROS2, Cauldron/HADES/Noosphere демо, FPGA компилятор
+2. University pilot course + video course (7 modules)
+3. Observability (Micrometer + OTEL + JSON logs + Grafana) — ✅ running
+4. Evolution + симуляция (фитнес, curriculum, Minecraft) — ✅ core done
+5. CI/CD Pipeline (GitHub Actions) — ✅ done
+6. GraalVM native compilation
+7. Spigot Plugin — реальный Minecraft-запуск
