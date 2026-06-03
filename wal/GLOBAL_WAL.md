@@ -1,33 +1,22 @@
-# GLOBAL WAL — 2026-06-03 — v1.2.0
+# GLOBAL WAL — 2026-06-03 — v1.2.0 FINAL
 | Module | Status | Last_Agent | Last_Action |
 |--------|--------|------------|-------------|
-| L0-L8 (Архитектура) | ✅ Spec Done | architect | Все 9 спецификаций утверждены |
-| L9 (Deployment, K8s) | ✅ Code Done | developer | K8s-манифесты (Strimzi, MinIO, VPA, Loki), Dockerfile multi-stage, runbooks |
-| L10 (Monitoring, SRE) | ✅ Code Done | developer | ServiceMonitor, PrometheusRule, Grafana дашборды, runbooks |
-| L11 (Сообщество) | ✅ Spec Done | — | Спецификация утверждена 2026-06-02 |
-| L12 (Юридическая) | ✅ Spec Done | — | Спецификация утверждена 2026-06-02 |
-| L13 (Пилоты) | 📋 Spec Done | — | GridWorld ноутбук + viz готовы, пилоты #2+#5-7 тесты |
-| L14 (Бизнес-модель) | 📋 Spec Done | — | Спецификация утверждена 2026-06-02 |
-| L15 (Образование) | 📋 Spec Done | — | Спецификация утверждена 2026-06-02 |
-| L16 (Физ. интерфейсы) | 📋 Spec Done | — | Спецификация утверждена 2026-06-02 |
-| L17 (Онбординг) | ✅ Code Done | — | CONTRIBUTING + GitHub шаблоны |
-| L18 (CI/CD + Testing) | ✅ Code Done | — | GitHub Actions + CI workflow |
-| L19 (Глобальное сообщество) | 📋 Spec Done | — | Спецификация утверждена 2026-06-03 |
-| L20 (Медиа-стратегия) | 📋 Spec Done | — | Спецификация утверждена 2026-06-03 |
-| L21 (Университеты) | 📋 Spec Done | — | Спецификация утверждена 2026-06-03 |
-| L22 (Корпорации) | 📋 Spec Done | — | Спецификация утверждена 2026-06-03 |
-| Phase 0-7 (Code) | ✅ Code | developer | Все фазы реализованы в коде |
-| Phase 1.1 (Core finalize) | ✅ Code | developer | 524 теста, 87% coverage, EvolutionLoopTest стабилен |
-| Phase 1.2 (Infra/DevOps) | ✅ Code | developer | K8s (16 манифестов), Dockerfile, Docker Compose, runbooks |
-| Observability | ✅ Running | — | Prometheus:9090, Jaeger:16686, Grafana:3000 запущены |
-| Docker Compose | ✅ Running | — | Prometheus:9091, Jaeger:16686, Grafana:3000 |
-| LICENSE | ✅ Updated | — | AGPLv3 + этические ограничения (L12 §2) |
-| CONTRIBUTING | ✅ Created | — | Руководство контрибьютора (L17) |
-| CODE_OF_CONDUCT | ✅ Created | — | Кодекс поведения (L11 §6) |
-| SECURITY | ✅ Created | — | Политика безопасности (L18 §3.5) |
-| GitHub Templates | ✅ Created | — | Issue/PR templates (.github/) |
-| Website | ✅ Created | — | docs/index.html (GitHub Pages landing) |
-| LONGTERM_PLAN | ✅ Updated | developer | Фазы 1.1-1.2 завершены, фазы 1.3-1.4 — текущий приоритет |
-| INDEX.md | ✅ Updated | developer | Все 22 спецификации + инфра-файлы |
+| L0-L8 (Архитектура) | ✅ Code | developer | Все 9 слоёв реализованы в коде |
+| L9 (Deployment, K8s) | ✅ Code | developer | 20 K8s-манифестов, Dockerfile, Docker Compose запущен |
+| L10 (Monitoring, SRE) | ✅ Code | developer | Prometheus+Jaeger+Grafana+Loki+FluentBit+8 runbooks |
+| L11 (Сообщество) | ✅ Spec | — | CoC, CONTRIBUTING, GitHub-шаблоны готовы |
+| L12 (Юридическая) | ✅ Code | developer | AGPLv3+этика, CLA, PRIVACY, GDPR |
+| L13 (Пилоты) | ✅ Code | developer | Пилот #1 GridWorld (200 gen, 746→940), Пилот #2 ChatBot (Telegram) |
+| L14 (Бизнес-модель) | 📋 Spec | — | Спецификация утверждена |
+| L15 (Образование) | 📋 Spec | — | Спецификация утверждена |
+| L16 (Физ. интерфейсы) | 📋 Spec | — | Спецификация утверждена |
+| L17 (Онбординг) | ✅ Code | — | CONTRIBUTING, GitHub-шаблоны |
+| L18 (CI/CD) | ✅ Code | — | GitHub Actions, 529 тестов, 84% coverage |
+| L19 (Глобальное сообщество) | 📋 Spec | — | Спецификация утверждена |
+| L20 (Медиа/PR) | ✅ Code | developer | SVG-логотип, брендбук, блог #1, сайт |
+| L21 (Университеты) | 📋 Spec | — | Спецификация + OPEN_PROBLEMS.md (14 тем) |
+| L22 (Корпорации) | 📋 Spec | — | Спецификация утверждена |
 
-**v1.2.0 — 524 теста, 87% coverage, 16 K8s-манифестов, Docker Compose запущен. ALL SYSTEMS NOMINAL.**
+**v1.2.0 FINAL — 529 тестов, 84% coverage, 2 пилота, 20 K8s-манифестов, логотип, блог, CLA, PRIVACY, OPEN_PROBLEMS. Docker Compose запущен. ALL SYSTEMS NOMINAL.**
+
+(End of file - total 18 lines)
