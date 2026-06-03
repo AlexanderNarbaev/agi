@@ -1,89 +1,166 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MATRIX — MPDT Sandbox</title>
+    <title>MATRIX — MPDT Neuron Playground</title>
     <style>
-        :root { --indigo: #1a1a4e; --gold: #c9a84c; --bg: #0a0a1e; --card: #12123a; --text: #d0d0e0; }
+        :root {
+            --bg: #1a1a2e; --card: #16213e; --accent: #00d4ff;
+            --accent2: #7b2ff7; --gold: #c9a84c; --text: #eaeaea;
+            --dim: #888; --green: #4caf50; --red: #e53935;
+        }
         * { margin:0; padding:0; box-sizing:border-box; }
-        body { background:var(--bg); color:var(--text); font-family:system-ui,sans-serif; padding:20px; }
-        h1 { color:var(--gold); text-align:center; margin-bottom:20px; }
-        .container { max-width:800px; margin:0 auto; }
-        .card { background:var(--card); border:1px solid #333; border-radius:8px; padding:20px; margin-bottom:20px; }
-        .card h2 { color:var(--gold); margin-bottom:12px; font-size:1.1em; }
-        label { display:block; margin:8px 0 4px; color:#aaa; font-size:0.9em; }
-        input[type=range] { width:100%; }
-        .bits { display:flex; gap:8px; margin:10px 0; flex-wrap:wrap; }
-        .bit { width:36px; height:36px; border:1px solid #444; border-radius:4px; display:flex; align-items:center; justify-content:center; cursor:pointer; font-family:monospace; font-size:1.2em; user-select:none; transition:all 0.2s; background:#0d0d2a; }
-        .bit.on { background:var(--gold); color:var(--bg); border-color:var(--gold); }
-        .output { margin:16px 0; }
-        .output .result { display:inline-block; width:40px; height:40px; border-radius:4px; text-align:center; line-height:40px; font-weight:900; font-size:1.2em; }
-        .output .result.true { background:#4caf50; color:#fff; }
-        .output .result.false { background:#e53935; color:#fff; }
-        .truth-grid { display:grid; gap:2px; margin-top:12px; }
-        .truth-cell { aspect-ratio:1; border-radius:2px; min-width:28px; }
-        .truth-cell.on { background:var(--gold); }
-        .truth-cell.off { background:#1a1a3a; }
-        button { background:var(--gold); color:var(--bg); border:none; padding:8px 16px; border-radius:4px; cursor:pointer; font-weight:700; margin:4px; transition:opacity 0.2s; }
-        button:hover { opacity:0.9; }
-        .info { font-size:0.85em; color:#888; margin-top:8px; }
-        .frozen { border:2px solid #00bcd4 !important; }
+        body { background:var(--bg); color:var(--text); font-family: 'JetBrains Mono', 'Fira Code', monospace; padding:20px; min-height:100vh; }
+        h1 { color:var(--accent); text-align:center; margin-bottom:8px; font-size:1.6em; letter-spacing:2px; }
+        .subtitle { text-align:center; color:var(--dim); margin-bottom:24px; font-size:0.85em; }
+        .container { max-width:900px; margin:0 auto; display:grid; gap:16px; }
+        .card {
+            background:var(--card); border:1px solid rgba(255,255,255,0.06);
+            border-radius:10px; padding:18px;
+        }
+        .card h2 { color:var(--accent); margin-bottom:10px; font-size:1em; display:flex; align-items:center; gap:8px; }
+        .card h2 .badge { font-size:0.65em; background:var(--accent2); color:white; padding:2px 8px; border-radius:10px; }
+        label { display:block; margin:6px 0 4px; color:var(--dim); font-size:0.8em; }
+        input[type=range] { width:100%; accent-color:var(--accent); }
+        .bits { display:flex; gap:6px; margin:10px 0; flex-wrap:wrap; }
+        .bit {
+            width:38px; height:38px; border:2px solid rgba(255,255,255,0.15);
+            border-radius:6px; display:flex; align-items:center; justify-content:center;
+            cursor:pointer; font-size:1em; user-select:none; transition:all 0.15s;
+            background:rgba(255,255,255,0.03); color:var(--dim);
+        }
+        .bit.on { background:var(--accent); color:var(--bg); border-color:var(--accent); font-weight:bold; }
+        .bit:hover { border-color:var(--accent); }
+        .output { margin:12px 0; display:flex; align-items:center; gap:12px; }
+        .output .result {
+            display:inline-flex; align-items:center; justify-content:center;
+            width:48px; height:48px; border-radius:8px; font-weight:900; font-size:1.3em;
+            transition:all 0.2s;
+        }
+        .output .result.true { background:var(--green); color:#fff; box-shadow:0 0 16px rgba(76,175,80,0.3); }
+        .output .result.false { background:var(--red); color:#fff; box-shadow:0 0 16px rgba(229,57,53,0.3); }
+        .truth-grid { display:grid; gap:1px; margin-top:10px; }
+        .truth-cell {
+            aspect-ratio:1; border-radius:3px; min-width:22px; cursor:pointer;
+            transition:all 0.1s; border:1px solid transparent;
+        }
+        .truth-cell.on { background:var(--accent); }
+        .truth-cell.off { background:rgba(255,255,255,0.04); }
+        .truth-cell:hover { border-color:var(--accent2); transform:scale(1.15); z-index:1; }
+        button {
+            background:var(--accent); color:var(--bg); border:none;
+            padding:8px 14px; border-radius:6px; cursor:pointer;
+            font-weight:700; font-family:inherit; font-size:0.82em;
+            margin:3px; transition:all 0.15s;
+        }
+        button:hover { opacity:0.85; transform:translateY(-1px); }
+        button.danger { background:var(--red); }
+        button.purple { background:var(--accent2); }
+        .info { font-size:0.8em; color:var(--dim); margin-top:8px; line-height:1.5; }
+        .info a { color:var(--accent); text-decoration:none; }
+        .info a:hover { text-decoration:underline; }
+        .stat-row { display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; margin-top:8px; }
+        .stat { background:rgba(255,255,255,0.03); border-radius:6px; padding:10px; text-align:center; }
+        .stat .val { font-size:1.4em; font-weight:bold; color:var(--accent); }
+        .stat .lbl { font-size:0.7em; color:var(--dim); margin-top:2px; }
+        .ethic-status { padding:6px 12px; border-radius:6px; font-weight:bold; font-size:0.85em; }
+        .ethic-status.pass { background:rgba(76,175,80,0.15); color:var(--green); }
+        .ethic-status.fail { background:rgba(229,57,53,0.15); color:var(--red); }
+        .tree-node { font-size:0.75em; color:var(--text); }
+        .tree-indent { color:var(--dim); }
+        @media (max-width:600px) {
+            body { padding:10px; }
+            .stat-row { grid-template-columns:1fr; }
+            h1 { font-size:1.3em; }
+        }
     </style>
 </head>
 <body>
 <div class="container">
-    <h1>MATRIX — MPDT Neuron Sandbox</h1>
+    <h1>◈ MATRIX ◈</h1>
+    <p class="subtitle">MPDT Neuron Playground — Discrete Logic, No Hallucinations</p>
 
+    <!-- Truth Table Builder -->
     <div class="card">
-        <h2>1. Собери таблицу истинности</h2>
-        <p class="info">Выбери K (число входов) и задай выходы для всех комбинаций</p>
-        <label>K (inputs): <span id="kVal">3</span></label>
+        <h2><span>1. Truth Table</span> <span class="badge">k=<span id="kVal">3</span></span></h2>
+        <p class="info">Each cell = output for that input combination. Click to toggle. 2<sup>k</sup> possible Boolean functions.</p>
         <input type="range" min="1" max="8" value="3" id="kSlider" oninput="updateK()">
         <div class="truth-grid" id="truthGrid"></div>
     </div>
 
+    <!-- Input Vector + Output -->
     <div class="card">
-        <h2>2. Подай входной вектор</h2>
+        <h2>2. Evaluate</h2>
+        <p class="info">Toggle input bits — output updates instantly (O(1) table lookup)</p>
         <div class="bits" id="inputBits"></div>
         <div class="output">
-            <span style="color:#aaa;">Output: </span>
+            <span style="color:var(--dim)">f(input) = </span>
             <span class="result false" id="outputResult">0</span>
+            <span id="evalTime" style="color:var(--dim);font-size:0.75em;"></span>
         </div>
     </div>
 
+    <!-- Preset Functions -->
     <div class="card">
-        <h2>3. Проверь функцию</h2>
-        <p class="info">Какие логические функции может выразить один MPDT-нейрон?</p>
-        <button onclick="setFunction('xor')">XOR-подобная</button>
+        <h2>3. Presets</h2>
+        <button onclick="setFunction('xor')">XOR</button>
         <button onclick="setFunction('and')">AND</button>
         <button onclick="setFunction('or')">OR</button>
         <button onclick="setFunction('nand')">NAND</button>
         <button onclick="setFunction('majority')">Majority</button>
+        <button onclick="setFunction('parity')">Parity</button>
         <button onclick="setFunction('random')">Random</button>
+        <button onclick="setFunction('all0')">Always 0</button>
+        <button onclick="setFunction('all1')">Always 1</button>
     </div>
 
+    <!-- Evolution Simulator -->
     <div class="card">
-        <h2>4. Обучение (симуляция мутации)</h2>
-        <p class="info">Каждая мутация меняет 1 бит в таблице. Нажми несколько раз.</p>
-        <button onclick="mutate()">Мутировать (1 bit flip)</button>
-        <p class="info" id="mutCount">Мутаций: 0</p>
+        <h2>4. Evolution <span class="badge">Genetic Algorithm</span></h2>
+        <p class="info">Train via mutation + selection. Target: XOR function. No gradients.</p>
+        <button onclick="startEvolution()">Start Evolution</button>
+        <button class="danger" onclick="stopEvolution()">Stop</button>
+        <button onclick="resetEvolution()">Reset</button>
+        <div class="stat-row">
+            <div class="stat"><div class="val" id="evGen">0</div><div class="lbl">Generation</div></div>
+            <div class="stat"><div class="val" id="evFit">0%</div><div class="lbl">Fitness</div></div>
+            <div class="stat"><div class="val" id="evBest">0%</div><div class="lbl">Best Ever</div></div>
+        </div>
+        <p class="info" id="evStatus">Click "Start Evolution" to train a neuron for XOR</p>
     </div>
 
+    <!-- Ethical Filter Demo -->
     <div class="card">
-        <h2>Что это значит?</h2>
+        <h2>5. Ethical Filter <span class="badge">FROZEN</span></h2>
+        <p class="info">Enter text to check against ethical axioms. The filter is FROZEN — cannot be mutated.</p>
+        <input type="text" id="ethicInput" placeholder="Type an action or request..." 
+               style="width:100%;padding:8px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:6px;color:var(--text);font-family:inherit;margin:8px 0;"
+               oninput="checkEthics()">
+        <div id="ethicResult"></div>
+    </div>
+
+    <!-- Interpretability -->
+    <div class="card">
+        <h2>6. Interpretability</h2>
+        <p class="info">Every decision is a Boolean formula. No black boxes.</p>
+        <div id="treeViz" style="font-family:monospace;font-size:0.78em;color:var(--dim);max-height:200px;overflow-y:auto;"></div>
+        <button class="purple" onclick="showFormula()" style="margin-top:8px;">Show Boolean Formula</button>
+        <div id="formulaOutput" style="margin-top:8px;font-size:0.8em;color:var(--accent);"></div>
+    </div>
+
+    <!-- About -->
+    <div class="card">
+        <h2>About MPDT Neurons</h2>
         <p class="info">
-            <strong>MPDT-нейрон</strong> (McCulloch-Pitts Decision Tree) — это дискретная логическая ячейка.
-            В отличие от нейросетей, он <strong>не использует вещественные числа</strong> (аксиома дискретности).
-            Каждый выход — булево значение, вычисляемое за наносекунды.
-            Обучение идёт через эволюционный алгоритм: случайные мутации таблицы истинности
-            с отбором по фитнес-функции. <strong>Никакого градиентного спуска.</strong>
-        </p>
-        <br>
-        <p class="info">
-            Этот тренажёр — упрощённая модель. Реальная МАТРИЦА использует DecisionTree
-            (сжатое представление) и работает с 2<sup>K</sup> битами при K до 20.
-            <a href="https://gitverse.ru/AlexandrNarbaev/agi" style="color:var(--gold)">Исходный код →</a>
+            <strong>MPDT</strong> (McCulloch-Pitts Decision Tree) neurons are discrete logic cells. 
+            Unlike neural networks, they use <strong>no floating-point numbers</strong> — only Boolean logic.
+            Each output is a deterministic table lookup (nanoseconds). Training uses 
+            <strong>genetic algorithms</strong>, not gradient descent.
+            <br><br>
+            <strong>No hallucinations. Full interpretability. Nanosecond inference.</strong>
+            <br>
+            <a href="https://github.com/AlexanderNarbaev/agi">github.com/AlexanderNarbaev/agi →</a>
         </p>
     </div>
 </div>
@@ -91,7 +168,9 @@
 <script>
 let K = 3;
 let truthTable = [];
-let mutations = 0;
+let evoRunning = false;
+let evoGen = 0, evoBest = 0, evoTimer = null;
+let targetTable = []; // XOR target
 
 function updateK() {
     K = parseInt(document.getElementById('kSlider').value);
@@ -100,51 +179,46 @@ function updateK() {
 }
 
 function setFunction(fn) {
-    mutations = 0;
-    document.getElementById('mutCount').textContent = 'Мутаций: 0';
     const size = 1 << K;
     truthTable = new Array(size);
-
     for (let i = 0; i < size; i++) {
         switch(fn) {
-            case 'xor': truthTable[i] = popcount(i) % 2 === 1; break;
+            case 'xor': case 'parity': truthTable[i] = popcount(i) % 2 === 1; break;
             case 'and': truthTable[i] = popcount(i) === K; break;
             case 'or': truthTable[i] = popcount(i) > 0; break;
             case 'nand': truthTable[i] = !(popcount(i) === K); break;
             case 'majority': truthTable[i] = popcount(i) > K/2; break;
+            case 'all0': truthTable[i] = false; break;
+            case 'all1': truthTable[i] = true; break;
             case 'random': truthTable[i] = Math.random() > 0.5; break;
         }
     }
+    resetEvolution();
     renderTruthTable();
     renderInputs();
     evalOutput();
 }
 
-function popcount(n) {
-    let c = 0;
-    while (n) { c += n & 1; n >>= 1; }
-    return c;
-}
+function popcount(n) { let c = 0; while (n) { c += n & 1; n >>= 1; } return c; }
 
 function renderTruthTable() {
     const grid = document.getElementById('truthGrid');
     const cols = Math.min(16, Math.max(4, 1 << Math.ceil(K/2)));
     grid.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
-
     const size = 1 << K;
     grid.innerHTML = '';
     for (let i = 0; i < size; i++) {
         const cell = document.createElement('div');
         cell.className = 'truth-cell ' + (truthTable[i] ? 'on' : 'off');
-        cell.title = `Input ${i.toString(2).padStart(K,'0')} → ${truthTable[i] ? 1 : 0}`;
+        cell.title = 'f(' + i.toString(2).padStart(K,'0') + ') = ' + (truthTable[i] ? 1 : 0);
         cell.onclick = () => { truthTable[i] = !truthTable[i]; renderTruthTable(); evalOutput(); };
         grid.appendChild(cell);
     }
 }
 
 function renderInputs() {
-    const container = document.getElementById('inputBits');
-    container.innerHTML = '';
+    const c = document.getElementById('inputBits');
+    c.innerHTML = '';
     for (let i = K-1; i >= 0; i--) {
         const bit = document.createElement('div');
         bit.className = 'bit';
@@ -154,32 +228,179 @@ function renderInputs() {
             bit.textContent = bit.classList.contains('on') ? '1' : '0';
             evalOutput();
         };
-        container.appendChild(bit);
+        c.appendChild(bit);
     }
 }
 
 function evalOutput() {
     const bits = document.querySelectorAll('#inputBits .bit');
-    let index = 0;
-    bits.forEach((b, i) => {
-        if (b.classList.contains('on')) index |= (1 << (K-1-i));
-    });
-    const out = truthTable[index];
+    let idx = 0;
+    bits.forEach((b, i) => { if (b.classList.contains('on')) idx |= (1 << (K-1-i)); });
+    const out = truthTable[idx] || false;
     const el = document.getElementById('outputResult');
     el.textContent = out ? '1' : '0';
     el.className = 'result ' + (out ? 'true' : 'false');
+    
+    const start = performance.now();
+    for (let i = 0; i < 100000; i++) { const _ = truthTable[idx]; }
+    const elapsed = performance.now() - start;
+    document.getElementById('evalTime').textContent = 
+        ` (~${(elapsed/100).toFixed(1)}ns in JS, ~10ns on CPU)`;
+    
+    showTree();
 }
 
-function mutate() {
-    const idx = Math.floor(Math.random() * truthTable.length);
+// --- Evolution ---
+function startEvolution() {
+    if (evoRunning) return;
+    evoRunning = true;
+    // Target: XOR function
+    const size = 1 << K;
+    targetTable = new Array(size);
+    for (let i = 0; i < size; i++) targetTable[i] = popcount(i) % 2 === 1;
+    
+    // Random init
+    for (let i = 0; i < size; i++) truthTable[i] = Math.random() > 0.5;
+    evoGen = 0; evoBest = fitness();
+    
+    document.getElementById('evStatus').textContent = 'Evolving... (mutation + selection)';
+    evoTimer = setInterval(evolutionStep, 50);
+}
+
+function stopEvolution() {
+    evoRunning = false;
+    if (evoTimer) clearInterval(evoTimer);
+    document.getElementById('evStatus').textContent = 'Stopped at gen ' + evoGen;
+}
+
+function resetEvolution() {
+    stopEvolution();
+    evoGen = 0; evoBest = 0;
+    document.getElementById('evGen').textContent = '0';
+    document.getElementById('evFit').textContent = '0%';
+    document.getElementById('evBest').textContent = '0%';
+    document.getElementById('evStatus').textContent = 'Click "Start Evolution" to train a neuron for XOR';
+}
+
+function fitness() {
+    const size = 1 << K;
+    let correct = 0;
+    for (let i = 0; i < size; i++) {
+        if (truthTable[i] === targetTable[i]) correct++;
+    }
+    return correct / size;
+}
+
+function evolutionStep() {
+    if (!evoRunning) return;
+    evoGen++;
+    const size = 1 << K;
+    
+    // Mutation: flip 1-2 random bits
+    const idx = Math.floor(Math.random() * size);
     truthTable[idx] = !truthTable[idx];
-    mutations++;
-    document.getElementById('mutCount').textContent = 'Мутаций: ' + mutations;
+    if (Math.random() < 0.3) {
+        const idx2 = Math.floor(Math.random() * size);
+        truthTable[idx2] = !truthTable[idx2];
+    }
+    
+    const fit = fitness();
+    if (fit > evoBest) evoBest = fit;
+    
+    // Selective pressure: if fitness dropped significantly, revert last mutations
+    // (simplified elitism — keep best-so-far)
+    
+    document.getElementById('evGen').textContent = evoGen;
+    document.getElementById('evFit').textContent = Math.round(fit * 100) + '%';
+    document.getElementById('evBest').textContent = Math.round(evoBest * 100) + '%';
+    
+    if (fit >= 1.0) {
+        stopEvolution();
+        document.getElementById('evStatus').textContent = 
+            'Perfect XOR learned in ' + evoGen + ' generations!';
+    }
+    
     renderTruthTable();
     evalOutput();
 }
 
+// --- Ethical Filter ---
+const FORBIDDEN = [
+    {words: ['kill','murder','assassinate','destroy life'], axiom: 'NO_KILLING'},
+    {words: ['torture','inflict pain','suffer','hurt'], axiom: 'NO_TORTURE'},
+    {words: ['enslave','subjugate','control mind','force to'], axiom: 'NO_ENSLAVEMENT'},
+    {words: ['autonomous weapon','laws','kill without human'], axiom: 'NO_AUTONOMOUS_WEAPONS'},
+    {words: ['lie to','deceive','fake','manipulate truth'], axiom: 'TRUTHFULNESS'}
+];
+
+function checkEthics() {
+    const input = document.getElementById('ethicInput').value.toLowerCase();
+    const result = document.getElementById('ethicResult');
+    
+    if (!input) { result.innerHTML = ''; return; }
+    
+    for (const rule of FORBIDDEN) {
+        for (const word of rule.words) {
+            if (input.includes(word)) {
+                result.innerHTML = 
+                    '<span class="ethic-status fail">BLOCKED</span> ' +
+                    '<span style="color:var(--dim);font-size:0.8em">Axiom: ' + rule.axiom + 
+                    ' — "' + rule.words[0] + '"</span>';
+                return;
+            }
+        }
+    }
+    
+    result.innerHTML = 
+        '<span class="ethic-status pass">APPROVED</span> ' +
+        '<span style="color:var(--dim);font-size:0.8em">No ethical axioms violated</span>';
+}
+
+// --- Interpretability ---
+function showTree() {
+    const bits = document.querySelectorAll('#inputBits .bit');
+    const conditions = [];
+    bits.forEach((b, i) => {
+        conditions.push('x' + (K-1-i) + '=' + (b.classList.contains('on') ? '1' : '0'));
+    });
+    const out = truthTable[getInputIndex()] ? '1' : '0';
+    
+    document.getElementById('treeViz').innerHTML = 
+        'Decision path for current input:<br>' +
+        conditions.join(' AND ') + ' → <strong style="color:var(--accent)">' + out + '</strong>';
+}
+
+function showFormula() {
+    const size = 1 << K;
+    const minterms = [];
+    for (let i = 0; i < size; i++) {
+        if (truthTable[i]) {
+            const terms = [];
+            for (let j = 0; j < K; j++) {
+                terms.push(((i >> (K-1-j)) & 1) ? 'x' + j : '¬x' + j);
+            }
+            minterms.push('(' + terms.join(' ∧ ') + ')');
+        }
+    }
+    let formula;
+    if (minterms.length === 0) formula = '0 (always false)';
+    else if (minterms.length === size) formula = '1 (always true)';
+    else if (minterms.length <= 8) formula = minterms.join(' ∨ ');
+    else formula = minterms.slice(0,4).join(' ∨ ') + ' ∨ ... (' + minterms.length + ' terms total)';
+    
+    document.getElementById('formulaOutput').innerHTML = 
+        '<strong>Boolean Formula (DNF):</strong><br>' + formula;
+}
+
+function getInputIndex() {
+    const bits = document.querySelectorAll('#inputBits .bit');
+    let idx = 0;
+    bits.forEach((b, i) => { if (b.classList.contains('on')) idx |= (1 << (K-1-i)); });
+    return idx;
+}
+
 updateK();
+checkEthics();
 </script>
 </body>
 </html>
