@@ -83,3 +83,11 @@ jacocoTestCoverageVerification {
         }))
     }
 }
+
+tasks.register('runMinecraftExperiment', JavaExec) {
+    dependsOn jar
+    group = 'application'
+    description = 'Runs MinecraftExperiment sandbox'
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'io.matrix.MinecraftExperiment'
+}
