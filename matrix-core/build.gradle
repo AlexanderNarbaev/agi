@@ -91,3 +91,8 @@ tasks.register('runMinecraftExperiment', JavaExec) {
     classpath = sourceSets.main.runtimeClasspath
     mainClass = 'io.matrix.MinecraftExperiment'
 }
+
+// GraalVM Native Image build:
+//   ./gradlew build -Dquarkus.native.enabled=true
+//   or: ./gradlew build -Dquarkus.package.jar.type=native
+// Requires: GraalVM 23+ with native-image installed
