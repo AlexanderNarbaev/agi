@@ -2,6 +2,7 @@ package io.matrix;
 
 import io.matrix.observability.MatrixMetrics;
 import io.micrometer.core.instrument.MeterRegistry;
+import io.quarkus.runtime.Quarkus;
 import io.quarkus.runtime.QuarkusApplication;
 import io.quarkus.runtime.annotations.QuarkusMain;
 import jakarta.enterprise.inject.Produces;
@@ -19,6 +20,15 @@ public class MatrixApplication implements QuarkusApplication {
 
     @Override
     public int run(String... args) {
+        if (args.length == 0) {
+            System.out.println("MATRIX v2.0.0 — HTTP server mode (port " +
+                    System.getProperty("quarkus.http.port", "9091") + ")");
+            System.out.println("  REST API: http://localhost:9091/api/v1/");
+            System.out.println("  Metrics:  http://localhost:9091/metrics");
+            System.out.println("  Health:   http://localhost:9091/q/health");
+            Quarkus.waitForExit();
+            return 0;
+        }
         return new CommandLine(new MatrixTopCommand(), factory).execute(args);
     }
 

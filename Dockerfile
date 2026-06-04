@@ -1,23 +1,13 @@
-# MATRIX Core — Multi-stage Docker build
-# Stage 1: Build native binary (Mandrel container)
-# Stage 2: Distroless runtime
+# MATRIX Core — Docker build
+# Pre-build: ./gradlew :matrix-core:quarkusBuild -Dquarkus.package.jar.type=uber-jar
+# Then:      docker build -t matrix-core:2.0.0 .
 
-FROM quay.io/quarkus/ubi-quarkus-mandrel-builder:23.1.6.0-Final-java21 AS builder
-
-WORKDIR /build
-COPY --chown=quarkus:quarkus gradlew gradle.properties settings.gradle ./
-COPY --chown=quarkus:quarkus gradle/ gradle/
-RUN ./gradlew --version
-
-COPY --chown=quarkus:quarkus matrix-core/ matrix-core/
-RUN ./gradlew :matrix-core:quarkusBuild -Dquarkus.native.enabled=true -Dquarkus.package.type=native --no-daemon -x test
-
-FROM gcr.io/distroless/cc-debian12:nonroot AS runtime
-
-COPY --from=builder /build/matrix-core/build/*-runner /app/matrix
-COPY --from=builder /build/matrix-core/src/main/resources/application.properties /app/config/application.properties
+FROM eclipse-temurin:25-jre AS runtime
+WORKDIR /app
+COPY matrix-core/build/matrix-core-*-runner.jar /app/matrix-core.jar
 
 EXPOSE 9091
+HEALTHCHECK --interval=30s --timeout=5s --retries=3 CMD java -jar /app/matrix-core.jar --help
 
-ENTRYPOINT ["/app/matrix"]
-CMD ["--help"]
+ENTRYPOINT ["java", "-Xmx512m", "-jar", "/app/matrix-core.jar"]
+CMD []

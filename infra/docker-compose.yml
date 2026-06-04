@@ -1,4 +1,56 @@
 services:
+  # ─── MATRIX Core Application ───
+  matrix-core:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    ports:
+      - "9091:9091"
+    environment:
+      - QUARKUS_HTTP_PORT=9091
+      - QUARKUS_OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger:4317
+      - QUARKUS_LOG_LEVEL=INFO
+    volumes:
+      - matrix_snapshots:/tmp/matrix-snapshots
+    depends_on:
+      - kafka
+      - minio
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "/app/matrix", "--help"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  # ─── Kafka (Redpanda — single-node) ───
+  kafka:
+    image: docker.redpanda.com/redpandadata/redpanda:v24.3.10
+    command:
+      - redpanda start
+      - --smp 1
+      - --reserve-memory 0M
+      - --overprovisioned
+      - --kafka-addr PLAINTEXT://0.0.0.0:9092
+      - --advertise-kafka-addr PLAINTEXT://kafka:9092
+      - --pandaproxy-addr 0.0.0.0:8082
+    ports:
+      - "9092:9092"
+      - "8082:8082"
+
+  # ─── MinIO S3-compatible storage ───
+  minio:
+    image: minio/minio:RELEASE.2025-09-22T18-31-02Z
+    command: server /data --console-address ":9001"
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      - MINIO_ROOT_USER=minioadmin
+      - MINIO_ROOT_PASSWORD=minioadmin
+    volumes:
+      - minio_data:/data
+
+  # ─── Observability stack ───
   prometheus:
     image: prom/prometheus:v3.7.0
     ports:
@@ -9,7 +61,6 @@ services:
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
       - '--storage.tsdb.path=/prometheus'
-    network_mode: host
 
   jaeger:
     image: jaegertracing/all-in-one:1.67.0
@@ -18,7 +69,6 @@ services:
       - "4317:4317"
     environment:
       - COLLECTOR_OTLP_ENABLED=true
-    network_mode: host
 
   grafana:
     image: grafana/grafana:11.6.0
@@ -31,9 +81,11 @@ services:
     environment:
       - GF_AUTH_ANONYMOUS_ENABLED=true
       - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
-      - GF_INSTALL_PLUGINS=grafana-piechart-panel
-    network_mode: host
+    depends_on:
+      - prometheus
 
 volumes:
   prometheus_data:
   grafana_data:
+  minio_data:
+  matrix_snapshots:
