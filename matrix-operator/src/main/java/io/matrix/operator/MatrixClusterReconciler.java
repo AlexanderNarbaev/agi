@@ -21,10 +21,11 @@ public class MatrixClusterReconciler {
         MatrixClusterSpec spec = resource.getSpec();
         MatrixClusterStatus status = resource.getStatus() != null
                 ? resource.getStatus() : new MatrixClusterStatus();
-        String name = resource.getMetadata().getName();
-        String namespace = resource.getMetadata().getNamespace();
 
         try {
+            String name = resource.getMetadata().getName();
+            String namespace = resource.getMetadata().getNamespace();
+
             var existing = client.apps().deployments()
                     .inNamespace(namespace)
                     .withName(name + "-workers")
