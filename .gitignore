@@ -34,3 +34,4 @@ out/
 .opencode/*.db-shm
 .opencode/*.db-wal
 /logs/
+.wslconfig
