@@ -4,14 +4,27 @@
     "allDeclaredConstructors": true,
     "allPublicConstructors": true,
     "allDeclaredMethods": true,
-    "allPublicMethods": true
+    "allPublicMethods": true,
+    "allDeclaredFields": true,
+    "allPublicFields": true
   },
   {
     "name": "io.matrix.neuron.DecisionTree",
     "allDeclaredConstructors": true,
     "allPublicConstructors": true,
     "allDeclaredMethods": true,
-    "allPublicMethods": true
+    "allPublicMethods": true,
+    "allDeclaredFields": true
+  },
+  {
+    "name": "io.matrix.neuron.DecisionTree$Leaf",
+    "allDeclaredConstructors": true,
+    "allDeclaredMethods": true
+  },
+  {
+    "name": "io.matrix.neuron.DecisionTree$Split",
+    "allDeclaredConstructors": true,
+    "allDeclaredMethods": true
   },
   {
     "name": "io.matrix.snapshot.ClusterSnapshot",
@@ -23,43 +36,231 @@
   {
     "name": "io.matrix.snapshot.ClusterSnapshot$NeuronRecord",
     "allDeclaredConstructors": true,
-    "allPublicConstructors": true,
-    "allDeclaredMethods": true,
-    "allPublicMethods": true
+    "allDeclaredMethods": true
   },
   {
     "name": "io.matrix.events.ClusterEvent",
     "allDeclaredConstructors": true,
-    "allPublicConstructors": true,
     "allDeclaredMethods": true,
-    "allPublicMethods": true
+    "allDeclaredFields": true
+  },
+  {
+    "name": "io.matrix.events.ClusterEventType",
+    "allDeclaredConstructors": true,
+    "allDeclaredMethods": true
   },
   {
     "name": "io.matrix.noosphere.FnlPackage",
     "allDeclaredConstructors": true,
-    "allPublicConstructors": true,
     "allDeclaredMethods": true,
-    "allPublicMethods": true
+    "allDeclaredFields": true
+  },
+  {
+    "name": "io.matrix.noosphere.FnlPackage$Builder",
+    "allDeclaredConstructors": true,
+    "allDeclaredMethods": true
   },
   {
     "name": "io.matrix.cluster.NeuronId",
     "allDeclaredConstructors": true,
-    "allPublicConstructors": true,
     "allDeclaredMethods": true,
-    "allPublicMethods": true
+    "allDeclaredFields": true
   },
   {
     "name": "io.matrix.cluster.NeuronInstance",
     "allDeclaredConstructors": true,
-    "allPublicConstructors": true,
     "allDeclaredMethods": true,
-    "allPublicMethods": true
+    "allDeclaredFields": true
+  },
+  {
+    "name": "io.matrix.cluster.NeuronInstance$State",
+    "allDeclaredConstructors": true,
+    "allDeclaredMethods": true
+  },
+  {
+    "name": "io.matrix.cluster.Signal",
+    "allDeclaredConstructors": true,
+    "allDeclaredMethods": true
+  },
+  {
+    "name": "io.matrix.cluster.SignalBuffer",
+    "allDeclaredConstructors": true,
+    "allDeclaredMethods": true
   },
   {
     "name": "io.matrix.consensus.Proposal",
     "allDeclaredConstructors": true,
-    "allPublicConstructors": true,
     "allDeclaredMethods": true,
-    "allPublicMethods": true
+    "allDeclaredFields": true
+  },
+  {
+    "name": "io.matrix.consensus.Vote",
+    "allDeclaredConstructors": true,
+    "allDeclaredMethods": true
+  },
+  {
+    "name": "io.matrix.consensus.ConsensusLevel",
+    "allDeclaredConstructors": true,
+    "allDeclaredMethods": true
+  },
+  {
+    "name": "io.matrix.consensus.ConsensusEngine$Decision",
+    "allDeclaredConstructors": true,
+    "allDeclaredMethods": true
+  },
+  {
+    "name": "io.matrix.mediator.DriverState",
+    "allDeclaredConstructors": true,
+    "allDeclaredMethods": true
+  },
+  {
+    "name": "io.matrix.mediator.DriverType",
+    "allDeclaredConstructors": true,
+    "allDeclaredMethods": true
+  },
+  {
+    "name": "io.matrix.mediator.Goal",
+    "allDeclaredConstructors": true,
+    "allDeclaredMethods": true
+  },
+  {
+    "name": "io.matrix.mediator.GoalStatus",
+    "allDeclaredConstructors": true,
+    "allDeclaredMethods": true
+  },
+  {
+    "name": "io.matrix.mediator.Task",
+    "allDeclaredConstructors": true,
+    "allDeclaredMethods": true
+  },
+  {
+    "name": "io.matrix.mediator.hierarchy.MediatorMessage",
+    "allDeclaredConstructors": true,
+    "allDeclaredMethods": true
+  },
+  {
+    "name": "io.matrix.mediator.hierarchy.MediatorLevel",
+    "allDeclaredConstructors": true,
+    "allDeclaredMethods": true
+  },
+  {
+    "name": "io.matrix.ethics.EthicalFilter$EthicalVerdict",
+    "allDeclaredConstructors": true,
+    "allDeclaredMethods": true
+  },
+  {
+    "name": "io.matrix.ethics.EthicalFilter$EthicalGradient",
+    "allDeclaredConstructors": true,
+    "allDeclaredMethods": true
+  },
+  {
+    "name": "io.matrix.hades.HadesProtocol$HadesState",
+    "allDeclaredConstructors": true,
+    "allDeclaredMethods": true
+  },
+  {
+    "name": "io.matrix.hades.HadesProtocol$HadesResult",
+    "allDeclaredConstructors": true,
+    "allDeclaredMethods": true
+  },
+  {
+    "name": "io.matrix.hades.DerangementDetector$Severity",
+    "allDeclaredConstructors": true,
+    "allDeclaredMethods": true
+  },
+  {
+    "name": "io.matrix.hades.DerangementDetector$DerangementAlert",
+    "allDeclaredConstructors": true,
+    "allDeclaredMethods": true
+  },
+  {
+    "name": "io.matrix.cauldron.CauldronProtocol$CauldronState",
+    "allDeclaredConstructors": true,
+    "allDeclaredMethods": true
+  },
+  {
+    "name": "io.matrix.cauldron.CauldronProtocol$CauldronResult",
+    "allDeclaredConstructors": true,
+    "allDeclaredMethods": true
+  },
+  {
+    "name": "io.matrix.noosphere.NoosphereRegistry$EntryStatus",
+    "allDeclaredConstructors": true,
+    "allDeclaredMethods": true
+  },
+  {
+    "name": "io.matrix.noosphere.NoosphereRegistry$RegistryEntry",
+    "allDeclaredConstructors": true,
+    "allDeclaredMethods": true
+  },
+  {
+    "name": "io.matrix.simulation.SimulationResult",
+    "allDeclaredConstructors": true,
+    "allDeclaredMethods": true
+  },
+  {
+    "name": "io.matrix.simulation.Position",
+    "allDeclaredConstructors": true,
+    "allDeclaredMethods": true
+  },
+  {
+    "name": "io.matrix.simulation.Direction",
+    "allDeclaredConstructors": true,
+    "allDeclaredMethods": true
+  },
+  {
+    "name": "io.matrix.simulation.CellType",
+    "allDeclaredConstructors": true,
+    "allDeclaredMethods": true
+  },
+  {
+    "name": "io.matrix.evolution.Chromosome",
+    "allDeclaredConstructors": true,
+    "allDeclaredMethods": true
+  },
+  {
+    "name": "io.matrix.evolution.Population",
+    "allDeclaredConstructors": true,
+    "allDeclaredMethods": true
+  },
+  {
+    "name": "io.matrix.cluster.NeuronClusterActor$LoadNeuron",
+    "allDeclaredConstructors": true,
+    "allDeclaredMethods": true
+  },
+  {
+    "name": "io.matrix.cluster.NeuronClusterActor$CreateSnapshot",
+    "allDeclaredConstructors": true,
+    "allDeclaredMethods": true
+  },
+  {
+    "name": "io.matrix.cluster.NeuronClusterActor$Response",
+    "allDeclaredConstructors": true,
+    "allDeclaredMethods": true
+  },
+  {
+    "name": "io.matrix.cluster.NeuronClusterActor$SnapshotCreated",
+    "allDeclaredConstructors": true,
+    "allDeclaredMethods": true
+  },
+  {
+    "name": "java.util.BitSet",
+    "allDeclaredConstructors": true,
+    "allDeclaredMethods": true
+  },
+  {
+    "name": "java.util.UUID",
+    "allDeclaredConstructors": true,
+    "allDeclaredMethods": true
+  },
+  {
+    "name": "com.fasterxml.jackson.databind.ObjectMapper",
+    "allDeclaredConstructors": true,
+    "allDeclaredMethods": true
+  },
+  {
+    "name": "com.fasterxml.jackson.databind.SerializationFeature",
+    "allDeclaredConstructors": true,
+    "allDeclaredMethods": true
   }
 ]
