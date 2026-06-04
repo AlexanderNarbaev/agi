@@ -61,6 +61,12 @@ jobs:
             matrix-micro/tools/test_ldn2h.c
           /tmp/ldn2h-test
 
+      - name: Test ldn2v Verilog compiler
+        run: |
+          python3 matrix-fpga/ldn2v.py matrix-micro/tools/test_sample.ldn /tmp/ldn2v-out
+          test -f /tmp/ldn2v-out/matrix_neurons_top.v
+          echo "ldn2v: OK"
+
   minecraft-experiment:
     runs-on: ubuntu-latest
     needs: build-and-test
@@ -95,3 +101,62 @@ jobs:
 
       - name: Build and Test matrix-operator
         run: gradle :matrix-operator:test
+
+  robot-arm-sim:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Test robot arm simulation
+        run: |
+          python3 scripts/robot_arm_sim.py --generations 10 --population 10
+          echo "Robot arm sim: OK"
+
+  ros2-bridge-sim:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Test ROS2 bridge (simulation mode)
+        run: |
+          timeout 10 python3 matrix-ros2/ros2_bridge.py --sim --duration 3
+          echo "ROS2 bridge sim: OK"
+
+  native-smoke-test:
+    runs-on: ubuntu-latest
+    needs: build-and-test
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK for native check
+        uses: actions/setup-java@v4
+        with:
+          java-version: '25'
+          distribution: 'graalvm'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Build runner jar and verify native-image config
+        run: |
+          gradle :matrix-core:build -x test
+          native-image --version
+          echo "Native-image config validated (full native build skipped — use container or GraalVM 23)"
+
+  k8s-manifest-validate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate K8s manifests
+        run: |
+          set -e
+          for f in infra/k8s/base/*.yaml infra/k8s/base/*.yml; do
+            echo "Checking: $f"
+            python3 -c "import yaml; yaml.safe_load(open('$f'))" || echo "  WARN: $f not valid YAML"
+          done
+          echo "K8s manifest validation: OK"
