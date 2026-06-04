@@ -1,4 +1,4 @@
-# INDEX: Knowledge Base Map — MATRIX v1.2.0
+# INDEX: Knowledge Base Map — MATRIX v2.0.0
 | ID | Path | Title | Phase | Topics | Last_Updated |
 |----|------|-------|-------|--------|--------------|
 | L0 | docs/L0_manifesto.md | Манифест и аксиомы | Фундамент | Аксиомы, миссия, антипаттерны | 2026-05-31 |
