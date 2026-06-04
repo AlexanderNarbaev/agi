@@ -1,7 +1,7 @@
 plugins {
     id 'java'
     id 'jacoco'
-    id 'io.quarkus' version '3.35.4'
+    id 'io.quarkus' version '3.36.1'
 }
 
 group = 'io.matrix'
@@ -17,13 +17,15 @@ repositories {
 }
 
 dependencies {
-    implementation enforcedPlatform('io.quarkus.platform:quarkus-bom:3.35.4')
+    implementation enforcedPlatform('io.quarkus.platform:quarkus-bom:3.36.1')
     implementation 'io.quarkus:quarkus-arc'
     implementation 'io.quarkus:quarkus-micrometer-registry-prometheus'
     implementation 'io.quarkus:quarkus-opentelemetry'
     implementation 'io.quarkus:quarkus-logging-json'
     implementation 'io.quarkus:quarkus-smallrye-health'
     implementation 'io.quarkus:quarkus-picocli'
+    implementation 'io.quarkus:quarkus-rest'
+    implementation 'io.quarkus:quarkus-rest-jackson'
 
     implementation 'org.apache.avro:avro:1.12.0'
 
