@@ -92,7 +92,17 @@ tasks.register('runMinecraftExperiment', JavaExec) {
     mainClass = 'io.matrix.MinecraftExperiment'
 }
 
-// GraalVM Native Image build:
-//   ./gradlew build -Dquarkus.native.enabled=true
-//   or: ./gradlew build -Dquarkus.package.jar.type=native
-// Requires: GraalVM 23+ with native-image installed
+// ─── GraalVM Native Image ───
+// Build:    ./gradlew build -Dquarkus.native.enabled=true -Dquarkus.native.additional-build-args=-H:+ReportExceptionStackTraces,-H:ReflectionConfigurationResources=reflect-config.json,-H:ResourceConfigurationResources=resource-config.json,--enable-url-protocols=http,https,-H:+AddAllCharsets,-J-Xmx8g
+// Requires: GraalVM 25+ (currently 25.0.3), native-image installed
+// Note:    Native build args set via application.properties + command-line override
+
+tasks.register('nativeBuildExec', Exec) {
+    dependsOn 'build'
+    group = 'native'
+    description = 'Build GraalVM native image'
+    workingDir = projectDir
+    commandLine './gradlew', 'build',
+            '-Dquarkus.native.enabled=true',
+            '--no-daemon'
+}

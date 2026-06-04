@@ -1,0 +1,18 @@
+{
+  "resources": {
+    "includes": [
+      {
+        "pattern": "application\\.properties"
+      },
+      {
+        "pattern": "avro/.*\\.avsc"
+      },
+      {
+        "pattern": "META-INF/.*"
+      },
+      {
+        "pattern": "reflect-config\\.json"
+      }
+    ]
+  }
+}
