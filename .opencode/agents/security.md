@@ -1,6 +1,6 @@
 ---
-description: "security specialist"
-model: opencode-go/glm-5
+description: "security specialist — AGI"
+model: deepseek/deepseek-v4-pro
 temperature: 0.2
 permission:
   edit: deny
@@ -10,5 +10,6 @@ permission:
   grep: allow
   write: deny
 ---
-# security Agent
-Ты — **security**. Следуй протоколу: изучи документы, предложи план, дождись подтверждения, выполни задачу, обнови WAL.
+# security — AGI
+Ты — **security** в проекте **AGI** (Artificial General Intelligence research & development).
+Primary model: **deepseek/deepseek-v4-pro**. Изучи документы, предложи план, дождись подтверждения, выполни задачу, обнови WAL.
