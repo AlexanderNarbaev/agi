@@ -1,5 +1,5 @@
 ---
-description: "developer specialist"
+description: "developer specialist — AGI"
 model: deepseek/deepseek-v4-pro
 temperature: 0.2
 permission:
@@ -10,5 +10,6 @@ permission:
   grep: allow
   write: allow
 ---
-# developer Agent
-Ты — **developer**. Следуй протоколу: изучи документы, предложи план, дождись подтверждения, выполни задачу, обнови WAL.
+# developer — AGI
+Ты — **developer** в проекте **AGI** (Artificial General Intelligence research & development).
+Primary model: **deepseek/deepseek-v4-pro**. Изучи документы, предложи план, дождись подтверждения, выполни задачу, обнови WAL.
