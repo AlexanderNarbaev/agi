@@ -1,33 +1,34 @@
 #!/bin/bash
-# MATRIX Minecraft — запуск сервера и клиента
+echo "=== MATRIX Minecraft ==="
 
-echo "=== MATRIX Minecraft Launcher ==="
-echo ""
+# Start auth mock
+kill $(lsof -ti:25567) 2>/dev/null
+python3 ~/.local/share/matrix-auth/yggdrasil-mock.py 25567 &
+sleep 1
 
-# 1. Start Paper server if not running
+# Start Paper server
 if ! lsof -i:25565 &>/dev/null; then
     echo "[1/2] Starting Paper server..."
     cd ~/Projects/agi/minecraft-server
     java -Xmx2G -Xms1G -jar paper.jar --nogui &
-    echo "  Waiting for server to start..."
     for i in $(seq 1 30); do
-        if lsof -i:25565 &>/dev/null; then
-            echo "  Server ready on localhost:25565"
-            break
-        fi
+        lsof -i:25565 &>/dev/null && break
         sleep 1
     done
-else
-    echo "[1/2] Server already running on localhost:25565"
 fi
+echo "  Server: localhost:25565"
 
-echo "[2/2] Launching Prism Launcher..."
-echo "  Instance: MATRIX 1.20.4"
-echo "  Account: MatrixAgent (offline)"
-echo "  Server: localhost"
-echo ""
-echo "  In Minecraft: Multiplayer → Direct Connect → localhost"
-echo "  Commands: /matrix start | /matrix status | /matrix train"
+echo "[2/2] Launching HMCL with authlib-injector..."
+echo "  Auth bypass: active"
+echo "  In HMCL: Add Offline Account → 1.20.4 → Launch → localhost"
+echo "  /matrix start | /matrix status | /matrix train"
 echo ""
 
-~/.local/bin/prismlauncher
+cd ~/Projects/agi/minecraft-server
+java \
+    -javaagent:"$HOME/.local/share/matrix-auth/authlib-injector.jar"="http://127.0.0.1:25567/api/authlib-injector" \
+    -Dauthlibinjector.mojangNamespace=disabled \
+    -Dauthlibinjector.profileKey=disabled \
+    -Dauthlibinjector.usernameCheck=disabled \
+    -Dauthlibinjector.mojangAntiFeatures=disabled \
+    -jar "$HOME/.local/bin/hmcl.jar"
