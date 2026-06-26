@@ -1,136 +1,85 @@
 # MATRIX Player Guide — Minecraft Client Setup
 
-## 1. Установка клиента Minecraft Java Edition 1.20.4
-
-### Вариант А — Официальный лаунчер (лицензия)
-
-1. Купить лицензию на [minecraft.net](https://www.minecraft.net) (~$30)
-2. Скачать [Minecraft Launcher](https://www.minecraft.net/download)
-3. Установить, войти в аккаунт Microsoft/Mojang
-4. В лаунчере: **Installations → New → Version 1.20.4 → Create**
-5. Запустить с выбранной версией 1.20.4
-
-### Вариант Б — Prism Launcher (бесплатно, офлайн)
-
-1. Скачать [Prism Launcher](https://prismlauncher.org/download/)
-2. Установить: `sudo apt install prismlauncher` (Linux) или `winget install PrismLauncher` (Windows)
-3. Запустить Prism Launcher
-4. **Add Instance →** Name: `MATRIX 1.20.4`, Version: `1.20.4`, Loader: `None`
-5. Нажать иконку профиля (правый верхний угол) → **Manage Accounts**
-6. Нажать **Add** → выбрать **«Offline»** (НЕ Microsoft!)
-7. Ввести любое имя (например, `MatrixBot`)
-8. Нажать **OK** — аккаунт создан, лицензия не нужна
-
-Если кнопка «Offline» отсутствует — использовать Вариант В (TLauncher).
-
-### Вариант В — TLauncher (самый простой, 100% офлайн)
-
-### Вариант В — TLauncher (самый простой, 100% офлайн)
-
-1. Скачать с [tlauncher.org](https://tlauncher.org) или через консоль:
-   ```bash
-   wget https://tlauncher.org/jar -O ~/TLauncher.jar
-   java -jar ~/TLauncher.jar
-   ```
-2. Ввести **любой никнейм** (пароль не нужен)
-3. Версия → **1.20.4** → Установить → Войти
-4. Multiplayer → `localhost` (или `127.0.0.1`)
-5. Готово — никаких Microsoft-аккаунтов, лицензий не требуется
-
-## 2. Подключение к серверу MATRIX
-
-### Запуск сервера (на локальной машине)
+## Быстрый старт (без лицензии)
 
 ```bash
-cd /path/to/agi/minecraft-server
+matrix-minecraft
+```
+
+Используется **HMCL** — не требует Microsoft-аккаунта, лицензии, подписки.
+
+В HMCL:
+1. **Accounts** → **Add Offline** → любой ник
+2. **Versions** → Install **1.20.4** (скачает автоматически, ~200 MB)
+3. **Launch** → **Multiplayer** → Direct Connect → **localhost**
+4. Чат: `/matrix start`
+
+## Альтернативные лаунчеры (все бесплатные)
+
+| Лаунчер | Офлайн | Комментарий |
+|---------|--------|-------------|
+| **HMCL** | ✅ Гарантированно | Уже установлен (`java -jar ~/.local/bin/hmcl.jar`) |
+| **MultiMC** | ✅ | `sudo apt install multimc` |
+| **Prism Launcher** | ⚠️ Нестабильно | В новых версиях кнопка Offline может быть скрыта |
+| **TLauncher** | ✅ | tlauncher.org |
+
+## Если нужна лицензия
+
+Minecraft Java & Bedrock Edition стоит **$29.99 USD** (~2600 RUB) на [minecraft.net](https://minecraft.net).
+
+**Способы сэкономить:**
+
+| Способ | Цена | Детали |
+|--------|------|--------|
+| Xbox Game Pass PC | ~$9.99/мес | Включает Minecraft Java. Первый месяц часто $1 |
+| Steam / G2A / Eneba | $15–25 | Ключи от реселлеров (риск блокировки) |
+| Турецкий регион Xbox | ~$5 | Региональная цена через VPN + турецкую карту |
+| Аргентина Xbox | ~$3 | Самая дешёвая, нужна карта Аргентины |
+| Подарочные карты | $20–30 | Карты Minecraft в DNS, М.Видео, Ozon |
+| Скидки | −30–50% | Распродажи: Чёрная пятница, день рождения Minecraft (17 мая) |
+
+**Инструкция для Game Pass ($1 первый месяц):**
+1. Зайти на [xbox.com/ru-RU/xbox-game-pass/pc-game-pass](https://xbox.com)
+2. Оформить подписку → первый месяц $1
+3. Скачать Xbox App → установить Minecraft Launcher
+4. Войти в Microsoft-аккаунт → игра доступна по подписке
+
+## Подключение к серверу
+
+Сервер запускается автоматически при `matrix-minecraft`, либо вручную:
+
+```bash
+cd minecraft-server
 java -Xmx2G -Xms1G -jar paper.jar --nogui
 ```
 
-Сервер запустится на `localhost:25565`.
+Сервер на `localhost:25565`, офлайн-режим включён (`online-mode=false`).
 
-### Подключение из клиента
-
-1. Запустить Minecraft 1.20.4
-2. **Multiplayer** → **Direct Connect** (или **Add Server**)
-3. Server Address: `localhost` (или `127.0.0.1`)
-4. **Join Server**
-
-Если сервер на другой машине — указать её IP-адрес.
-
-### Настройка офлайн-режима
-
-Для тестов без лицензии в `server.properties` установлено `online-mode=false`.
-
-В Prism Launcher для офлайн-игры:
-- Settings → Accounts → Add Offline → любое имя
-
-## 3. Команды MATRIX в игре
-
-Открыть чат (клавиша `T` или `/`) и ввести:
+## Команды MATRIX
 
 | Команда | Описание |
 |---------|----------|
 | `/matrix start` | Запустить MPDT-нейробота |
 | `/matrix stop` | Остановить бота |
-| `/matrix status` | Показать состояние бота (тики, блоки добыто) |
-| `/matrix train` | Запустить обучение нейросети (асинхронно) |
+| `/matrix status` | Состояние (тики, блоки добыто) |
+| `/matrix train` | Обучение нейросети |
 
-### Что делает бот
-- **Сенсоры (20 бит):** блоки вокруг (15 бит), здоровье (1), голод (2), инструмент (1), еда (1)
+## Что делает бот
+
+- **Сенсоры (20 бит):** блоки вокруг, здоровье, голод, инструмент
 - **Действия:** Move (N/S/W/E/STAY), Mine, Eat
-- **Логика:** MPDT-нейроны (DecisionTree) оценивают сенсоры → выбирают действие
-- **Тик:** 20 тиков/сек — каждый тик sensor→action→execute
+- **Логика:** DecisionTree нейроны → action
 
-## 4. Управление в Minecraft
-
-| Клавиша | Действие |
-|---------|----------|
-| `W/A/S/D` | Ходьба |
-| `Space` | Прыжок |
-| `ЛКМ` | Ломать блоки / атака |
-| `E` | Инвентарь |
-| `T` / `/` | Чат (команды) |
-| `F3` | Отладка (координаты, FPS) |
-| `Esc` | Меню |
-
-## 5. Разработка и отладка
-
-### Логи плагина
+## Для разработчиков
 
 ```bash
-tail -f minecraft-server/logs/latest.log | grep MatrixSpigot
-```
-
-### Пересборка плагина после изменений
-
-```bash
+# Пересборка плагина
 ./gradlew :matrix-spigot:fatJar
 cp matrix-spigot/build/libs/matrix-spigot-1.0.0-all.jar minecraft-server/plugins/matrix-spigot.jar
-# Рестарт сервера: команда reload в консоли сервера
-```
 
-### Тестирование без клиента (Java-песочница)
-
-```bash
-# Встроенный симулятор — не требует Minecraft
+# Тестирование без клиента
 ./gradlew runMinecraftExperiment
-```
 
-## 6. Сетевая игра
-
-Для игры по сети:
-
-1. В `server.properties`: `server-ip=0.0.0.0`
-2. Открыть порт на роутере: `25565 TCP`
-3. Клиенты подключаются по внешнему IP сервера
-4. Для безопасности: установить `white-list=true` и `/whitelist add <игрок>`
-
-### Docker-версия (альтернатива)
-
-```bash
-# itzg/minecraft-server — готовый образ с Paper
-docker run -d -p 25565:25565 \
-  -e EULA=TRUE -e VERSION=1.20.4 -e TYPE=PAPER \
-  -v ./plugins:/plugins \
-  itzg/minecraft-server
+# Логи
+tail -f minecraft-server/logs/latest.log | grep MatrixSpigot
 ```
