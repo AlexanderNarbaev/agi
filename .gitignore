@@ -1,8 +1,10 @@
 .gradle/
 build/
 *.class
-*.jar
 *.war
+# JAR files except gradle wrapper
+*.jar
+!/gradle/wrapper/gradle-wrapper.jar
 *.log
 *.tmp
 *.swp
@@ -35,3 +37,5 @@ out/
 .opencode/*.db-wal
 /logs/
 .wslconfig
+*.db
+matrix-core/logs/
