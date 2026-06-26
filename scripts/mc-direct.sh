@@ -9,15 +9,12 @@ AUTH_JAR="$HOME/.local/share/matrix-auth/authlib-injector.jar"
 AUTH_URL="http://127.0.0.1:25567/api/authlib-injector"
 
 # Build classpath from all libraries
-CP=""
-VER_JSON="$MC_DIR/versions/$VER/$VER.json"
-for lib in $(python3 -c "
+CP=$(python3 -c "
 import json, os, sys
 v = json.load(open('$VER_JSON'))
-rules = v.get('libraries', [])
-for r in rules:
+paths = []
+for r in v.get('libraries', []):
     if 'rules' in r:
-        # Check OS rules - skip macOS-specific on Linux
         skip = False
         for rule in r['rules']:
             if 'os' in rule:
@@ -29,15 +26,15 @@ for r in rules:
         if skip:
             continue
     name = r['name']
-    # Convert maven coords to path
     parts = name.split(':')
     group = parts[0].replace('.', '/')
     artifact = parts[1]
     version = parts[2]
     path = os.path.expanduser(f'~/.minecraft/libraries/{group}/{artifact}/{version}/{artifact}-{version}.jar')
     if os.path.exists(path):
-        print(path, end=':')
-" 2>/dev/null); do :; done
+        paths.append(path)
+print(':'.join(paths))
+" 2>/dev/null)
 
 # Add client jar
 CLIENT_JAR="$MC_DIR/versions/$VER/$VER.jar"
