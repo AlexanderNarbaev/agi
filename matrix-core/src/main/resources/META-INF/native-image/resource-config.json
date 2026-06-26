@@ -1,0 +1,24 @@
+{
+  "resources": {
+    "includes": [
+      {
+        "pattern": ".*\\.properties$"
+      },
+      {
+        "pattern": ".*\\.avsc$"
+      },
+      {
+        "pattern": "db/migration/.*\\.sql$"
+      },
+      {
+        "pattern": "META-INF/.*"
+      }
+    ]
+  },
+  "bundles": [
+    {
+      "name": "sun.text.resources.cldr.FormatData",
+      "locales": ["en", "ru"]
+    }
+  ]
+}

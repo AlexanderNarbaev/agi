@@ -6,6 +6,7 @@ import io.matrix.evolution.FitnessFn;
 import io.matrix.neuron.TruthTable;
 import io.matrix.snapshot.ClusterSnapshot;
 import io.matrix.snapshot.SnapshotStore;
+import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 
@@ -15,19 +16,51 @@ import java.util.concurrent.ConcurrentHashMap;
 @Path("/api/v1")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
+@TenantAware
 public class MatrixResource {
 
     private final Random rng = new Random();
     private final Map<String, EvolutionLoop> activeLoops = new ConcurrentHashMap<>();
     private final Map<String, Integer> loopGenerations = new ConcurrentHashMap<>();
 
+    @Inject
+    TenantFilter tenantFilter;
+
     @GET
     @Path("/health")
     public Map<String, Object> health() {
+        TenantContext tc = CurrentTenant.get();
         return Map.of(
                 "status", "UP",
-                "version", "2.0.0",
+                "version", "2.1.0",
+                "tenantId", tc != null ? tc.tenantId() : "system",
+                "tenantName", tc != null ? tc.displayName() : "System",
                 "activeLoops", activeLoops.size()
+        );
+    }
+
+    @GET
+    @Path("/tenants")
+    public Map<String, Object> listTenants() {
+        return Map.of(
+                "count", tenantFilter.allTenants().size(),
+                "tenants", tenantFilter.allTenants().values().stream()
+                        .map(t -> Map.of("tenantId", t.tenantId(),
+                                "displayName", t.displayName()))
+                        .toList()
+        );
+    }
+
+    @POST
+    @Path("/tenants")
+    public Map<String, Object> createTenant(TenantCreateRequest req) {
+        String id = req.id != null && !req.id.isBlank()
+                ? req.id : UUID.randomUUID().toString().substring(0, 12);
+        TenantContext tenant = tenantFilter.getOrCreate(id);
+        return Map.of(
+                "tenantId", tenant.tenantId(),
+                "instanceId", tenant.instanceId(),
+                "displayName", tenant.displayName()
         );
     }
 
@@ -38,7 +71,8 @@ public class MatrixResource {
         int population = req.population > 0 ? req.population : 30;
         int k = req.k > 0 ? req.k : 8;
 
-        FitnessFn fitness = new FitnessFn(20, 20, 5, 10, 50, 3, new Random());
+        FitnessFn fitness = new FitnessFn(20, 20, 5, 10, 50, 3,
+                new Random(CurrentTenant.tenantId().hashCode()));
         EvolutionLoop loop = new EvolutionLoop(generations, population, k, fitness, rng);
         loop.run();
 
@@ -47,6 +81,7 @@ public class MatrixResource {
 
         return Map.of(
                 "status", "completed",
+                "tenantId", CurrentTenant.tenantId(),
                 "generations", generations,
                 "population", population,
                 "k", k,
@@ -174,6 +209,10 @@ public class MatrixResource {
 
     public static class CauldronRequest {
         public String task;
+    }
+
+    public static class TenantCreateRequest {
+        public String id;
     }
 
     public static class TruthTableRequest {
