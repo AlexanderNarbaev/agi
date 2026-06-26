@@ -1,13 +1,11 @@
 package io.matrix.events;
 
-import io.quarkus.runtime.StartupEvent;
 import io.smallrye.mutiny.Uni;
 import io.vertx.mutiny.pgclient.PgPool;
 import io.vertx.mutiny.sqlclient.Row;
 import io.vertx.mutiny.sqlclient.RowSet;
 import io.vertx.mutiny.sqlclient.Tuple;
 import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.enterprise.event.Observes;
 import jakarta.inject.Inject;
 
 import java.util.ArrayList;
@@ -18,7 +16,7 @@ import java.util.List;
  * R2DBC (PostgreSQL) persistent event journal for Event Sourcing.
  *
  * <p>Replaces {@link InMemoryEventJournal} for production deployments.
- * Events survive restarts and can be replayed by any instance.
+ * Table auto-created on first write via {@code CREATE TABLE IF NOT EXISTS}.
  *
  * <p>Ref: L6_Memory.md §3
  */
@@ -28,29 +26,34 @@ public final class R2dbcEventJournal implements EventJournal {
     @Inject
     PgPool pgPool;
 
-    void init(@Observes StartupEvent ev) {
-        pgPool.query("""
-            CREATE TABLE IF NOT EXISTS cluster_events (
-                event_index BIGSERIAL PRIMARY KEY,
-                event_id VARCHAR(36) NOT NULL UNIQUE,
-                event_type VARCHAR(64) NOT NULL,
-                instance_id VARCHAR(36) NOT NULL,
-                neuron_id_uuid VARCHAR(36),
-                neuron_generation BIGINT,
-                event_timestamp BIGINT NOT NULL,
-                payload TEXT,
-                created_at TIMESTAMPTZ DEFAULT NOW()
-            );
-            CREATE INDEX IF NOT EXISTS idx_cluster_events_instance
-                ON cluster_events(instance_id);
-            CREATE INDEX IF NOT EXISTS idx_cluster_events_type
-                ON cluster_events(event_type);
-            CREATE INDEX IF NOT EXISTS idx_cluster_events_timestamp
-                ON cluster_events(event_timestamp);
-            """)
-            .execute()
-            .await()
-            .indefinitely();
+    private volatile boolean initialized;
+    private static final String DDL = """
+        CREATE TABLE IF NOT EXISTS cluster_events (
+            event_index BIGSERIAL PRIMARY KEY,
+            event_id VARCHAR(36) NOT NULL UNIQUE,
+            event_type VARCHAR(64) NOT NULL,
+            instance_id VARCHAR(36) NOT NULL,
+            neuron_id_uuid VARCHAR(36),
+            neuron_generation BIGINT,
+            event_timestamp BIGINT NOT NULL,
+            payload TEXT,
+            created_at TIMESTAMPTZ DEFAULT NOW()
+        )""";
+
+    private void ensureInitialized() {
+        if (!initialized) {
+            synchronized (this) {
+                if (!initialized) {
+                    pgPool.query(DDL + "; " +
+                        "CREATE INDEX IF NOT EXISTS idx_ce_instance ON cluster_events(instance_id); " +
+                        "CREATE INDEX IF NOT EXISTS idx_ce_type ON cluster_events(event_type)")
+                        .execute()
+                        .await()
+                        .indefinitely();
+                    initialized = true;
+                }
+            }
+        }
     }
 
     @Override

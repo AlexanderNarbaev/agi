@@ -44,7 +44,7 @@ public class CauldronDemoCommand implements Callable<Integer> {
             if (result.state() == CauldronProtocol.CauldronState.COMPLETED) {
                 var pkg = cauldron.packageResult(result, taskName + "-v" + i,
                         taskName.toUpperCase(), "demo-instance");
-                System.out.printf("FNL #%d: %s | fitness=%.1f | gens=%d | accuracy=%.2f%n",
+                System.out.printf("FNL #%d: %s | fitness=%d | gens=%d | accuracy=%.2f%n",
                         i, pkg.name(), result.bestFitness(), result.generations(),
                         pkg.accuracy());
             } else {
