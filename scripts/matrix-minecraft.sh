@@ -10,25 +10,25 @@ sleep 1
 if ! lsof -i:25565 &>/dev/null; then
     echo "[1/2] Starting Paper server..."
     cd ~/Projects/agi/minecraft-server
-    java -Xmx2G -Xms1G -jar paper.jar --nogui &
+    java -Xmx2G -Xms1G -jar paper.jar --nogui > /dev/null 2>&1 &
     for i in $(seq 1 30); do
         lsof -i:25565 &>/dev/null && break
         sleep 1
     done
+    echo "  Server: localhost:25565"
+else
+    echo "[1/2] Server already running"
 fi
-echo "  Server: localhost:25565"
 
-echo "[2/2] Launching HMCL with authlib-injector..."
-echo "  Auth bypass: active"
-echo "  In HMCL: Add Offline Account → 1.20.4 → Launch → localhost"
-echo "  /matrix start | /matrix status | /matrix train"
-echo ""
+echo "[2/2] Launching Minecraft (direct mode)..."
 
-cd ~/Projects/agi/minecraft-server
-java \
-    -javaagent:"$HOME/.local/share/matrix-auth/authlib-injector.jar"="http://127.0.0.1:25567/api/authlib-injector" \
-    -Dauthlibinjector.mojangNamespace=disabled \
-    -Dauthlibinjector.profileKey=disabled \
-    -Dauthlibinjector.usernameCheck=disabled \
-    -Dauthlibinjector.mojangAntiFeatures=disabled \
-    -jar "$HOME/.local/bin/hmcl.jar"
+# Check if client jar exists
+if [ ! -f ~/.minecraft/versions/1.20.4/1.20.4.jar ]; then
+    echo ""
+    echo "Minecraft 1.20.4 not downloaded. Opening HMCL to download..."
+    echo "In HMCL: install 1.20.4, then close HMCL and re-run matrix-minecraft"
+    java -jar ~/.local/bin/hmcl.jar
+    exit 0
+fi
+
+~/.local/bin/mc-direct
