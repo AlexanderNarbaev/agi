@@ -1,0 +1,116 @@
+[
+  {
+    "name": "io.matrix.neuron.TruthTable",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allPublicConstructors": true
+  },
+  {
+    "name": "io.matrix.neuron.DecisionTree",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allPublicConstructors": true
+  },
+  {
+    "name": "io.matrix.cluster.NeuronId",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allPublicConstructors": true
+  },
+  {
+    "name": "io.matrix.cluster.Signal",
+    "allDeclaredFields": true,
+    "allPublicConstructors": true
+  },
+  {
+    "name": "io.matrix.evolution.Chromosome",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true
+  },
+  {
+    "name": "io.matrix.events.ClusterEvent",
+    "allDeclaredFields": true,
+    "allPublicConstructors": true
+  },
+  {
+    "name": "io.matrix.events.R2dbcEventJournal",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allPublicConstructors": true
+  },
+  {
+    "name": "io.matrix.api.TenantFilter",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allPublicConstructors": true
+  },
+  {
+    "name": "io.matrix.api.TenantContext",
+    "allDeclaredFields": true,
+    "allPublicConstructors": true
+  },
+  {
+    "name": "io.matrix.api.MatrixResource",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allPublicConstructors": true
+  },
+  {
+    "name": "io.matrix.api.MatrixResource$SimulateRequest",
+    "allDeclaredFields": true,
+    "allPublicConstructors": true
+  },
+  {
+    "name": "io.matrix.api.MatrixResource$EvolveRequest",
+    "allDeclaredFields": true,
+    "allPublicConstructors": true
+  },
+  {
+    "name": "io.matrix.api.MatrixResource$CauldronRequest",
+    "allDeclaredFields": true,
+    "allPublicConstructors": true
+  },
+  {
+    "name": "io.matrix.api.MatrixResource$TruthTableRequest",
+    "allDeclaredFields": true,
+    "allPublicConstructors": true
+  },
+  {
+    "name": "io.matrix.api.MatrixResource$TenantCreateRequest",
+    "allDeclaredFields": true,
+    "allPublicConstructors": true
+  },
+  {
+    "name": "io.matrix.simulation.World",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true
+  },
+  {
+    "name": "io.matrix.simulation.Grid",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true
+  },
+  {
+    "name": "io.matrix.snapshot.ClusterSnapshot",
+    "allDeclaredFields": true,
+    "allPublicConstructors": true
+  },
+  {
+    "name": "io.matrix.cauldron.CauldronProtocol",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allPublicConstructors": true
+  },
+  {
+    "name": "io.matrix.ethics.EthicalFilter",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allPublicConstructors": true
+  },
+  {
+    "name": "io.matrix.hades.HadesProtocol",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allPublicConstructors": true
+  }
+]

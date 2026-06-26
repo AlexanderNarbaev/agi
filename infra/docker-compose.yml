@@ -13,6 +13,7 @@ services:
     volumes:
       - matrix_snapshots:/tmp/matrix-snapshots
     depends_on:
+      - postgres
       - kafka
       - minio
     restart: unless-stopped
@@ -21,6 +22,23 @@ services:
       interval: 30s
       timeout: 5s
       retries: 3
+
+  # ─── PostgreSQL (Event Journal persistence) ───
+  postgres:
+    image: postgres:18-alpine
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_DB=matrix
+      - POSTGRES_USER=matrix
+      - POSTGRES_PASSWORD=matrix
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U matrix -d matrix"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   # ─── Kafka (Redpanda — single-node) ───
   kafka:
@@ -85,6 +103,7 @@ services:
       - prometheus
 
 volumes:
+  postgres_data:
   prometheus_data:
   grafana_data:
   minio_data:
