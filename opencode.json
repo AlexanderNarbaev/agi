@@ -69,6 +69,21 @@
       "env": {
         "GITHUB_PERSONAL_ACCESS_TOKEN": "${GITHUB_TOKEN}"
       }
+    },
+    "chrome-devtools": {
+      "type": "local",
+      "command": ["/home/alexandr-narbaev/.npm-global/bin/chrome-devtools-mcp"],
+      "enabled": true
+    },
+    "context7-official": {
+      "type": "local",
+      "command": ["/home/alexandr-narbaev/.npm-global/bin/context7-mcp"],
+      "enabled": true
+    },
+    "excalidraw": {
+      "type": "local",
+      "command": ["uvx", "excalidraw-architect-mcp"],
+      "enabled": true
     }
   }
 }
