@@ -16,24 +16,26 @@
 2. Установить: `sudo apt install prismlauncher` (Linux) или `winget install PrismLauncher` (Windows)
 3. Запустить Prism Launcher
 4. **Add Instance →** Name: `MATRIX 1.20.4`, Version: `1.20.4`, Loader: `None`
-5. Settings → Accounts → Add Offline → Name: любое имя
-6. Settings → Java → Java 21 или 25
+5. Нажать иконку профиля (правый верхний угол) → **Manage Accounts**
+6. Нажать **Add** → выбрать **«Offline»** (НЕ Microsoft!)
+7. Ввести любое имя (например, `MatrixBot`)
+8. Нажать **OK** — аккаунт создан, лицензия не нужна
 
-### Вариант В — Консольный клиент (без GUI)
+Если кнопка «Offline» отсутствует — использовать Вариант В (TLauncher).
 
-```bash
-# Установка Java 21+ и Minecraft через пакетный менеджер
-sudo apt install openjdk-21-jdk
+### Вариант В — TLauncher (самый простой, 100% офлайн)
 
-# Загрузка консольного клиента
-mkdir -p ~/.minecraft/versions/1.20.4
-cd ~/.minecraft/versions/1.20.4
+### Вариант В — TLauncher (самый простой, 100% офлайн)
 
-# Скачать клиентский JAR
-curl -L -o client.jar \
-  "https://piston-meta.mojang.com/v1/packages/<hash>/client.jar"
-# Или использовать Prism Launcher — он автоматически загрузит нужные файлы
-```
+1. Скачать с [tlauncher.org](https://tlauncher.org) или через консоль:
+   ```bash
+   wget https://tlauncher.org/jar -O ~/TLauncher.jar
+   java -jar ~/TLauncher.jar
+   ```
+2. Ввести **любой никнейм** (пароль не нужен)
+3. Версия → **1.20.4** → Установить → Войти
+4. Multiplayer → `localhost` (или `127.0.0.1`)
+5. Готово — никаких Microsoft-аккаунтов, лицензий не требуется
 
 ## 2. Подключение к серверу MATRIX
 
