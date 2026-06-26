@@ -39,3 +39,5 @@ out/
 .wslconfig
 *.db
 matrix-core/logs/
+minecraft-server/
+!minecraft-server/eula.txt

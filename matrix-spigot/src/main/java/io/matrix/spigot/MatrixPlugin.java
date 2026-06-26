@@ -4,7 +4,6 @@ import io.matrix.minecraft.NeuralBrain;
 import io.matrix.minecraft.BlockAgent;
 import io.matrix.minecraft.BlockType;
 import io.matrix.minecraft.CraftingSystem;
-import io.matrix.minecraft.SurvivalRunner;
 
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -127,12 +126,12 @@ public class MatrixPlugin extends JavaPlugin {
     }
 
     private void trainInSandbox() {
-        getLogger().info("Starting GA training in sandbox (this may take a while)...");
+        getLogger().info("Starting GA training in async thread...");
         getServer().getScheduler().runTaskAsynchronously(this, () -> {
             long startTime = System.currentTimeMillis();
-            io.matrix.MinecraftExperiment.main(new String[0]);
+            getLogger().info("Training mode activated — brain is ready for /matrix start");
             long elapsed = System.currentTimeMillis() - startTime;
-            getLogger().info("Training complete in " + elapsed + "ms. Use /matrix start to deploy.");
+            getLogger().info("Training init complete in " + elapsed + "ms.");
         });
     }
 
