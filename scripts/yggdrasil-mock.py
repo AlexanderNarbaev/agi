@@ -112,10 +112,14 @@ class YggdrasilHandler(BaseHTTPRequestHandler):
                 "meta": {
                     "serverName": "MATRIX Offline Auth",
                     "implementationName": "matrix-yggdrasil-mock",
-                    "implementationVersion": "1.0"
+                    "implementationVersion": "1.0",
+                    "links": {
+                        "homepage": "https://github.com/AlexanderNarbaev/agi"
+                    },
+                    "feature.no_mojang_namespace": True,
+                    "feature.enable_profile_key": False
                 },
-                "skinDomains": [],
-                "signaturePublickey": ""
+                "skinDomains": []
             })
             return
 
