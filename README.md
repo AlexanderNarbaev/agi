@@ -16,6 +16,7 @@
 | Репозиторий | https://gitverse.ru/AlexandrNarbaev/agi |
 | MPDT-песочница | https://alexandernarbaev.github.io/agi/sandbox.html |
 | Спецификации | [docs/](docs/) (L0–L22) |
+| Гайд по Minecraft | [docs/PLAYER_GUIDE.md](docs/PLAYER_GUIDE.md) |
 | Долгосрочный план | [docs/LONGTERM_PLAN.md](docs/LONGTERM_PLAN.md) |
 | Лицензия | [LICENSE](LICENSE) (AGPLv3 + этические ограничения) |
 | Как помочь | [CONTRIBUTING](CONTRIBUTING) |
@@ -105,6 +106,7 @@ docker build -t ghcr.io/matrix-ai/matrix-core:latest .
 | 7: Экономика | ✅ | RegenerativeEconomics + Audit + Certification |
 | Observability | ✅ | Micrometer + OTEL + JSON + Grafana |
 | Minecraft | ✅ | Sandbox + Spigot Plugin (Paper 1.20.4) |
+| PvP-бота | ✅ | Multi-tenancy API + R2DBC + Neuro-Symbolic Bridge |
 | K8s + Operator | ✅ | Manifests + CRD + Reconciler (L9) |
 | Пилоты #1-7 | ✅ | GridWorld + ChatBot + Cauldron + HADES + Noosphere |
 | Сайт + песочница | ✅ | GitHub Pages + MPDT Sandbox (L15 §4.1) |
