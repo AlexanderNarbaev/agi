@@ -41,3 +41,5 @@ out/
 matrix-core/logs/
 minecraft-server/
 !minecraft-server/eula.txt
+.hmcl/
+.minecraft/
