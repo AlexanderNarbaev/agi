@@ -117,16 +117,19 @@ API ключи: DeepSeek — через `/connect` в TUI, OpenCode Go — `open
 - `@qa`, `@designer` → `minimax-m2.7`
 - `@reviewer` → `qwen3.6-plus` | `@security` → `glm-5`
 
-### MCP-серверы
+### MCP-серверы (12)
 - **`filesystem`** — работа с файлами.
-- **`context7`** — живая документация библиотек.
+- **`context7`** — живая документация библиотек (community edition).
+- **`context7-official`** — актуальная документация библиотек и фреймворков (включая версионированные API).
 - **`codegraph`** — граф вызовов и метрики сложности. **Всегда используй для навигации по коду.**
 - **`agentic-tools`** — иерархическая память задач.
-- **`memorylayer`** — семантическая память и сессионный контекст (замена muninn).
+- **`memorylayer`** — семантическая память и сессионный контекст.
 - **`playwright`** — UI-тестирование и браузерная автоматизация.
 - **`sequential-thinking`** — пошаговое рассуждение для сложных задач.
 - **`fetch`** — HTTP-запросы и получение веб-содержимого.
 - **`github`** — взаимодействие с GitHub API (репозитории, PR, issues).
+- **`chrome-devtools`** — Chrome DevTools Protocol для отладки, профилирования и аудита.
+- **`excalidraw`** — генерация архитектурных диаграмм (Excalidraw).
 
 ### Инструменты эффективности
 - **Caveman:** Сокращает выходные токены до 75%. Для рутинных ответов.
@@ -139,14 +142,14 @@ API ключи: DeepSeek — через `/connect` в TUI, OpenCode Go — `open
 ### Языки
 | Язык | Версия | Среда |
 |------|--------|-------|
-| Go | 1.24+ | `go` toolchain |
-| Rust | 1.85+ | `rustup` + `cargo` |
+| Go | 1.26+ | `go` toolchain |
+| Rust | 1.96+ | `rustup` + `cargo` |
 | TypeScript | 5.8+ | `bun` / `node` |
-| Python | 3.12+ | `uv` + `pip` |
+| Python | 3.14+ | `uv` + `pip` |
 | Java | 25 LTS | SDKMAN (`java`, `gradle`, `mvn`) |
 | Kotlin | 2.1+ | SDKMAN / Gradle |
-| C# | .NET 9 | `dotnet` SDK |
-| Zig | 0.14+ | `zig` toolchain |
+| C# | .NET 10 | `dotnet` SDK |
+| Zig | 0.15.1+ | `zig` toolchain |
 
 ### Backend-фреймворки
 | Язык | Фреймворк |
