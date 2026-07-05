@@ -85,9 +85,18 @@ EOF
 
 cleanup_previous() {
   if docker compose -f "$COMPOSE_FILE" ps -q 2>/dev/null | grep -q .; then
-    echo -e "  ${YELLOW}Previous MATRIX containers — stopping...${NC}"
-    docker compose -f "$COMPOSE_FILE" down -v 2>/dev/null || true
+    echo -e "  ${YELLOW}Previous MATRIX containers — stopping + removing volumes...${NC}"
+    docker compose -f "$COMPOSE_FILE" down -v --remove-orphans 2>/dev/null || true
     sleep 2
+  fi
+  # Clean stale PostgreSQL data that may be incompatible (v17→v18 upgrade)
+  local pg_vol="infra_postgres_data"
+  if docker volume ls -q 2>/dev/null | grep -q "$pg_vol"; then
+    if ! docker run --rm -v "$pg_vol":/data alpine:latest ls /data/PG_VERSION 2>/dev/null; then
+      echo -e "  ${YELLOW}Removing stale PostgreSQL volume $pg_vol...${NC}"
+      docker volume rm "$pg_vol" 2>/dev/null || true
+      sleep 1
+    fi
   fi
 }
 
