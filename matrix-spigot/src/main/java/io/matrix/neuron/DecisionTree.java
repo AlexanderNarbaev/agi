@@ -16,6 +16,8 @@ import java.util.stream.IntStream;
  * <p>Internal nodes ({@link Split}) test a single input bit; leaves ({@link Leaf})
  * return a constant value. No path checks the same bit twice.
  */
+@Deprecated(since = "2.2.0", forRemoval = true)
+@SuppressWarnings("removal")
 public sealed interface DecisionTree permits DecisionTree.Leaf, DecisionTree.Split {
 
     int K_MAX = TruthTable.K_MAX;

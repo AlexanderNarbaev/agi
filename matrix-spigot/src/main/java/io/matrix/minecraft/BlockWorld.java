@@ -8,6 +8,8 @@ import java.util.Random;
  * <p>World generation: layers of dirt/stone with ore veins, surface grass,
  * occasional trees and water bodies.
  */
+@Deprecated(since = "2.2.0", forRemoval = true)
+@SuppressWarnings("removal")
 public class BlockWorld {
 
     public record Position(int x, int y) {

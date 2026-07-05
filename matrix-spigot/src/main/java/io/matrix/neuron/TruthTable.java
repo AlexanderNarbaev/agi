@@ -30,6 +30,8 @@ import java.util.concurrent.ThreadLocalRandom;
  *
  * <p>Ref: L1_MPDT_neuron.md §3.1
  */
+@Deprecated(since = "2.2.0", forRemoval = true)
+@SuppressWarnings("removal")
 public final class TruthTable {
 
     public static final int K_MAX = 20;

@@ -10,6 +10,8 @@ import java.util.Map;
  * Sensors: 5x5 vision grid (25 cells) + internal state (health, hunger, tool).
  * Sensor encoding: 25 vision bits + 4 health bits + 4 hunger bits + 2 tool bits = 35 bits.
  */
+@Deprecated(since = "2.2.0", forRemoval = true)
+@SuppressWarnings("removal")
 public class BlockAgent {
 
     public enum Direction { N, S, W, E, STAY }
