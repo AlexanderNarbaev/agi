@@ -133,7 +133,7 @@ public class MatrixPlugin extends JavaPlugin {
     private void registerCommands() {
         getCommand("matrix").setExecutor((sender, cmd, label, args) -> {
             if (args.length == 0) {
-                sender.sendMessage("Usage: /matrix <connect|start|stop|status|train|save>");
+                sender.sendMessage("Usage: /matrix <connect|start|stop|status|train|save|load>");
                 return true;
             }
             switch (args[0].toLowerCase()) {
@@ -155,7 +155,12 @@ public class MatrixPlugin extends JavaPlugin {
                     client.save();
                     sender.sendMessage("Saving brain...");
                 }
-                default -> sender.sendMessage("Usage: /matrix <connect|start|stop|status|train|save>");
+                case "load" -> {
+                    String path = args.length > 1 ? args[1] : "models/pretrained";
+                    loadPretrained(path);
+                    sender.sendMessage("Loading pretrained brain from: " + path);
+                }
+                default -> sender.sendMessage("Usage: /matrix <connect|start|stop|status|train|save|load>");
             }
             return true;
         });
@@ -231,6 +236,17 @@ public class MatrixPlugin extends JavaPlugin {
                 .thenAccept(body -> getLogger().info("Training complete: " + truncate(body, 200)))
                 .exceptionally(ex -> {
                     getLogger().warning("Training failed: " + ex.getMessage());
+                    return null;
+                });
+    }
+
+    private void loadPretrained(String path) {
+        getLogger().info("Requesting brain load from: " + path);
+        client.load(path)
+                .orTimeout(30, TimeUnit.SECONDS)
+                .thenRun(() -> getLogger().info("Brain load request sent successfully"))
+                .exceptionally(ex -> {
+                    getLogger().warning("Brain load failed: " + ex.getMessage());
                     return null;
                 });
     }

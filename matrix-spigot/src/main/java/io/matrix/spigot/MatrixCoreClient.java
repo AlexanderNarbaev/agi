@@ -217,6 +217,33 @@ public class MatrixCoreClient {
     }
 
     /**
+     * Loads pretrained brain weights from a specified path via REST API.
+     *
+     * @param path file path to the pretrained brain JSON file, or
+     *             "models/pretrained" to auto-discover pretrained weights
+     * @return future that completes when load is acknowledged
+     */
+    public CompletableFuture<Void> load(String path) {
+        String body = "{\"path\":\"" + (path != null ? path : "models/pretrained") + "\"}";
+
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(baseUrl + "/api/v1/agent/load"))
+                .timeout(HTTP_TIMEOUT)
+                .header("Content-Type", "application/json")
+                .POST(HttpRequest.BodyPublishers.ofString(body))
+                .build();
+
+        return httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofString())
+                .thenAccept(response -> {
+                    if (response.statusCode() >= 200 && response.statusCode() < 300) {
+                        logger.info("Brain loaded: " + response.body());
+                    } else {
+                        logger.warning("Load failed: HTTP " + response.statusCode());
+                    }
+                });
+    }
+
+    /**
      * Returns whether the WebSocket is currently connected.
      */
     public boolean isConnected() {
@@ -254,7 +281,7 @@ public class MatrixCoreClient {
     }
 
     private String wsUrl() {
-        return baseUrl.replaceFirst("^http", "ws") + "/ws/agent";
+        return baseUrl.replaceFirst("^http", "ws") + "/api/v1/agent/ws";
     }
 
     private void notifyAction(String action) {
