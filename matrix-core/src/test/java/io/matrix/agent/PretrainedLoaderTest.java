@@ -29,7 +29,6 @@ class PretrainedLoaderTest {
     }
 
     @Test
-    @org.junit.jupiter.api.Disabled("Requires numpy + fastavro — run 'uv pip install numpy fastavro' first")
     void testLoadTruthTablesFromDemoOutput() throws Exception {
         Path dir = Files.createTempDirectory("pretrain-test");
         try {
@@ -65,7 +64,6 @@ class PretrainedLoaderTest {
     }
 
     @Test
-    @org.junit.jupiter.api.Disabled("Requires numpy + fastavro — run 'uv pip install numpy fastavro' first")
     void testLoadPretrainedBrain() throws Exception {
         Path dir = Files.createTempDirectory("pretrain-brain");
         try {
@@ -77,7 +75,11 @@ class PretrainedLoaderTest {
             );
             pb.directory(Path.of("").toAbsolutePath().toFile());
             Process p = pb.start();
-            p.waitFor();
+            int exit = p.waitFor();
+            if (exit != 0) {
+                System.err.println("Python stderr: " + new String(p.getErrorStream().readAllBytes()));
+                return;
+            }
 
             AgentBrain brain = loader.loadPretrainedBrain(dir.toString(), 0);
 

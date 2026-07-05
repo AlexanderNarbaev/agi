@@ -30,7 +30,8 @@ class RealTimeExchangeTest {
     void shouldNotifySubscribers() {
         var exchange = new RealTimeExchange("node-a");
         List<FnlPackage> received = new ArrayList<>();
-        exchange.subscribe("fnl:vision", received::add);
+        java.util.function.Consumer<FnlPackage> handler = received::add;
+        exchange.subscribe("fnl:vision", handler);
 
         exchange.publish(pkg("test", "vision"));
 
@@ -42,8 +43,9 @@ class RealTimeExchangeTest {
     void shouldUnsubscribe() {
         var exchange = new RealTimeExchange("node-a");
         List<FnlPackage> received = new ArrayList<>();
-        exchange.subscribe("fnl:vision", received::add);
-        exchange.unsubscribe("fnl:vision", received::add);
+        java.util.function.Consumer<FnlPackage> handler = received::add;
+        exchange.subscribe("fnl:vision", handler);
+        exchange.unsubscribe("fnl:vision", handler);
 
         exchange.publish(pkg("x", "vision"));
         assertThat(received).isEmpty();

@@ -1,0 +1,12 @@
+{
+  "model_name": "SmolLM2-135M-synth",
+  "mode": "real",
+  "k": 12,
+  "neurons_per_layer": 30,
+  "layers": 6,
+  "threshold": 0.0,
+  "seed": 123,
+  "d_model": 576,
+  "d_ff": "from_model",
+  "created_at": "2026-07-05T17:35:49Z"
+}
