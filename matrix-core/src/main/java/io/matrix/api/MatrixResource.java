@@ -1,5 +1,6 @@
 package io.matrix.api;
 
+import io.matrix.agent.AgentBrainService;
 import io.matrix.cauldron.CauldronProtocol;
 import io.matrix.evolution.EvolutionLoop;
 import io.matrix.evolution.FitnessFn;
@@ -11,6 +12,7 @@ import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Path("/api/v1")
@@ -25,6 +27,9 @@ public class MatrixResource {
 
     @Inject
     TenantFilter tenantFilter;
+
+    @Inject
+    AgentBrainService brainService;
 
     @GET
     @Path("/health")
@@ -195,6 +200,49 @@ public class MatrixResource {
         );
     }
 
+    // ─── Agent endpoints ───
+
+    @POST
+    @Path("/agent/infer")
+    public Map<String, Object> inferAgent(AgentInferRequest req) {
+        String action = brainService.act(req.sensorBits);
+        return Map.of("action", action, "sensorBits", req.sensorBits);
+    }
+
+    @POST
+    @Path("/agent/train")
+    public Map<String, Object> trainAgent(AgentTrainRequest req) {
+        int generations = req.generations > 0 ? req.generations : 20;
+        int population = req.population > 0 ? req.population : 30;
+        int k = req.k > 0 ? req.k : 8;
+
+        AgentBrainService.EvolutionResult result = brainService.train(generations, population, k);
+
+        return Map.of(
+                "status", "completed",
+                "generations", result.generations(),
+                "bestFitness", result.bestFitness()
+        );
+    }
+
+    @POST
+    @Path("/agent/save")
+    public Map<String, Object> saveAgent(AgentSaveRequest req) throws Exception {
+        String path = req.path != null ? req.path : "/tmp/matrix-brain-default.json";
+        java.nio.file.Path saved = brainService.save(path);
+
+        return Map.of("status", "saved", "path", saved.toAbsolutePath().toString());
+    }
+
+    @POST
+    @Path("/agent/load")
+    public Map<String, Object> loadAgent(AgentLoadRequest req) throws Exception {
+        String path = req.path != null ? req.path : "/tmp/matrix-brain-default.json";
+        brainService.load(path);
+
+        return Map.of("status", "loaded", "path", path);
+    }
+
     public static class SimulateRequest {
         public int generations;
         public int population;
@@ -218,5 +266,23 @@ public class MatrixResource {
     public static class TruthTableRequest {
         public int k;
         public int input;
+    }
+
+    public static class AgentInferRequest {
+        public long sensorBits;
+    }
+
+    public static class AgentTrainRequest {
+        public int generations;
+        public int population;
+        public int k;
+    }
+
+    public static class AgentSaveRequest {
+        public String path;
+    }
+
+    public static class AgentLoadRequest {
+        public String path;
     }
 }
