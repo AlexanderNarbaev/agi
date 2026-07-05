@@ -45,3 +45,4 @@ minecraft-server/
 .hmcl/
 .minecraft/
 __pycache__/
+infra/.env
