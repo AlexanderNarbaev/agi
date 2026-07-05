@@ -1,3 +1,3 @@
-📍 Status: FPGA synthesis flow created — matrix-fpga/ now has Makefile, constraints, testbench, CI job. ldn2v.py fixed with -o flag.
-🚀 Active: FPGA synthesis toolchain ready for use: `cd matrix-fpga && make direct NEURON=xor4 TABLE=0x6A9C K=4`
-🛑 Protected: Pekko 1.6.0, K_MAX=20, FROZEN-neurons, Quarkus 3.36.1, Java 25, AGPLv3+ethics, Three Prohibitions, 82% coverage floor
+📍 Status: v2.3.0 — P0/P1/P2 completed. robot_arm_sim bitwise bug fixed. TelegramBot @PostConstruct auto-start. JMH plugin added. 9 @Deprecated files removed + Avro dep. Cauldron→Noosphere→HADES pipeline CLI (PipelineCommand + 7 tests). FPGA synthesis flow (Makefile, constraints, testbench, CI job, Amaranth verified). 580+ tests.
+🚀 Active: GraalVM native compilation (needs SDKMAN install), Discord bot, K8s operator framework
+🛑 Protected: Pekko 1.6.0, K_MAX=20, FROZEN-neurons, Quarkus 3.36.1, Java 25, AGPLv3+ethics, Three Prohibitions, 84% floor
