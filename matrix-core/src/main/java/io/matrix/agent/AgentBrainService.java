@@ -36,6 +36,9 @@ public class AgentBrainService {
 
     private volatile HierarchicalBrain brain;
     private final Random rng = new Random();
+    private volatile String lastAction = "";
+    private volatile int stuckCounter = 0;
+    private static final int STUCK_THRESHOLD = 30;
 
     @Inject
     NeuronCacheService neuronCache;
@@ -112,22 +115,35 @@ public class AgentBrainService {
         boolean bit4 = (actionCode & 0x10) != 0;
 
         // Priority-based action selection (matches original semantics)
+        String action;
         if (bit4 && hungerUrgent(sensorBits)) {
-            return "EAT";
+            action = "EAT";
+        } else if (bit3) {
+            action = "CRAFT";
+        } else if (bit2) {
+            action = "TOOL_UP";
+        } else if (bit1) {
+            action = "MINE";
+        } else if (bit0) {
+            action = "MOVE_N";
+        } else {
+            action = "STAY";
         }
-        if (bit3) {
-            return "CRAFT";
+
+        // ── Stuck detection: if same action 30+ times, force random exploration ──
+        if (action.equals(lastAction)) {
+            stuckCounter++;
+            if (stuckCounter >= STUCK_THRESHOLD) {
+                String[] breaks = {"MOVE_N", "MOVE_S", "MOVE_W", "MOVE_E", "MINE"};
+                action = breaks[rng.nextInt(breaks.length)];
+                stuckCounter = 0;
+                log.info("Stuck detection: forcing random action {} after {} STAY ticks", action, STUCK_THRESHOLD);
+            }
+        } else {
+            stuckCounter = 0;
         }
-        if (bit2) {
-            return "TOOL_UP";
-        }
-        if (bit1) {
-            return "MINE";
-        }
-        if (bit0) {
-            return "MOVE_N";
-        }
-        return "STAY";
+        lastAction = action;
+        return action;
     }
 
     /**
