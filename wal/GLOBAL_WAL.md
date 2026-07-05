@@ -1,4 +1,3 @@
-📍 Status: v2.1.0 — Unified launcher `scripts/matrix-full.sh` (start/stop/status + graceful shutdown), Redis added to infra/docker-compose.yml. Minecraft offline multiplayer: Yggdrasil auth mock + authlib-injector v1.2.7, Paper 1.20.4. R2DBC store, multi-tenancy, NeuroSymbolicBridge, RealTimeExchange. 570+ tests.
-🚀 Active: v2.1.0 FINAL — проект готов. Minecraft: localhost:25565, /matrix start/stop/status/train
-🚀 Active: v2.0.0 FINALIZED — все документы проиндексированы в agentic-tools (18 memories). Optional: GraalVM 25 native (wait Quarkus 3.37), Discord, social media
-🛑 Protected: Pekko 1.6.0, K_MAX=20, FROZEN-neurons, Quarkus 3.36.1, Java 25, AGPLv3+ethics, Three Prohibitions, 84% coverage floor
+📍 Status: v2.2.0 — WebSocket + REST API for real-time agent control: AgentBrainService (5-tree neural brain, Avro persistence, EvolutionLoop training), AgentWebSocket (/api/v1/agent/ws, JSON protocol), MatrixResource agent endpoints (/agent/infer, /agent/train, /agent/save, /agent/load)
+🚀 Active: v2.2.0 READY — Spigot plugin can now use API calls instead of copied NeuralBrain/DecisionTree code. Next: update Spigot plugin to use REST/WS client.
+🛑 Protected: Pekko 1.6.0, K_MAX=20, FROZEN-neurons, Quarkus 3.36.1, Java 25, AGPLv3+ethics, Three Prohibitions, 82% coverage floor
