@@ -1,0 +1,17 @@
+# iCE40 HX1K pin constraints for TinyFPGA BX / Lattice iCEstick
+# Adjust pin numbers for your specific board
+
+# Clock (12 MHz on-board oscillator)
+set_io clock 21
+
+# LED outputs (action bits)
+set_io led[0] 95
+set_io led[1] 96
+set_io led[2] 97
+set_io led[3] 98
+
+# Sensor inputs
+set_io sensor[0] 1
+set_io sensor[1] 2
+set_io sensor[2] 3
+set_io sensor[3] 4

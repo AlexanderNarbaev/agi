@@ -140,6 +140,8 @@ def main():
     parser = argparse.ArgumentParser(description="ldn2v — .ldn to Verilog FPGA compiler")
     parser.add_argument("input", nargs="?", help=".ldn snapshot file path")
     parser.add_argument("output_dir", nargs="?", default=".", help="Output directory")
+    parser.add_argument("-o", "--output-dir", dest="output_dir_opt",
+                        help="Output directory (overrides positional)")
     parser.add_argument("--direct", action="store_true",
                         help="Generate single neuron directly")
     parser.add_argument("--k", type=int, default=4, help="Neuron input count")
@@ -147,7 +149,8 @@ def main():
     parser.add_argument("--name", type=str, default="custom", help="Neuron name")
     args = parser.parse_args()
 
-    os.makedirs(args.output_dir, exist_ok=True)
+    output_dir = args.output_dir_opt if args.output_dir_opt else args.output_dir
+    os.makedirs(output_dir, exist_ok=True)
 
     if args.direct:
         table_val = int(args.table, 16)
@@ -160,7 +163,7 @@ def main():
         }
         verilog = generate_verilog(record)
         safe_name = sanitize_verilog_identifier(args.name)
-        out_path = os.path.join(args.output_dir, f"mpdt_{safe_name}.v")
+        out_path = os.path.join(output_dir, f"mpdt_{safe_name}.v")
         with open(out_path, "w") as f:
             f.write(verilog)
         print(f"Generated: {out_path}")
@@ -182,7 +185,7 @@ def main():
     for record in neurons:
         verilog = generate_verilog(record)
         safe_name = sanitize_verilog_identifier(record["neuronId"])
-        out_path = os.path.join(args.output_dir, f"mpdt_{safe_name}.v")
+        out_path = os.path.join(output_dir, f"mpdt_{safe_name}.v")
         with open(out_path, "w") as f:
             f.write(verilog)
         print(f"  Generated: {out_path}")
@@ -209,7 +212,7 @@ def main():
 
     top_verilog += "endmodule\n"
 
-    top_path = os.path.join(args.output_dir, "matrix_neurons_top.v")
+    top_path = os.path.join(output_dir, "matrix_neurons_top.v")
     with open(top_path, "w") as f:
         f.write(top_verilog)
     print(f"  Generated: {top_path}")
