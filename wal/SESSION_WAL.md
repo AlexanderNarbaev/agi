@@ -1,3 +1,3 @@
-📍 Status: Pretrain from large open-source models implemented. scripts/pretrain_neurons.py: +--quantize, +--source-model, +--dtype, +architecture auto-detection, +streaming layer-by-layer. scripts/pretrain_large.py: new for >10GB (sharded, mmap, MoE, 8-bit quant). Tested: Qwen2.5-0.5B (720 neurons, 24 layers, k=16)
-🚀 Active: 2 files changed (pretrain_neurons.py, pretrain_large.py). 27 files committed (24 .avro + metadata.json for Qwen2.5-0.5B). Pushed to origin + gitverse.
-🛑 Protected: Backward compat verified (demo mode + bulk loading still work). Existing SmolLM2-135M-synth data untouched. K_MAX=20.
+📍 Status: Hierarchical neuron composition implemented. NeuronLayer (composable MPDT layer), HierarchicalBrain (3-layer pipeline: 12×k12 → 8×k12 → 5×k8), AgentBrainService refactored with backward-compatible accessors. 24 new tests pass. Pushed to origin+gitverse.
+🚀 Active: Next — hierarchical training (evolve all layers, not just action layer), or wire into simulation/Minecraft.
+🛑 Protected: K_MAX=20, backward-compat AgentBrainService accessors (deprecated), coverage floor 82%, Avro schema unchanged.
