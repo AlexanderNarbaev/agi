@@ -451,3 +451,85 @@ spec:
 ## 11. Заключение
 
 Документ L9 предоставляет полный план развёртывания системы МАТРИЦА в production- и dev-окружениях с использованием Kubernetes, оператора для автоматизации управления жизненным циклом, HPA/VPA для автоматического масштабирования и встроенных метрик для мониторинга. Это делает систему готовой к реальной эксплуатации и дальнейшему развитию.
+
+---
+
+## Quick Start with minikube
+
+### Prerequisites
+- minikube v1.34+
+- kubectl v1.32+
+- Docker (for building images)
+
+### Step-by-step
+
+```bash
+# 1. Start minikube
+minikube start --cpus 4 --memory 8192
+
+# 2. Build Docker image locally
+eval $(minikube docker-env)
+./gradlew :matrix-core:quarkusBuild -Dquarkus.package.jar.type=uber-jar
+docker build -t ghcr.io/alexandernarbaev/matrix-core:latest .
+
+# 3. Deploy flat manifests (namespace, deployment, service, HPA)
+kubectl apply -k infra/k8s/
+
+# 4. Wait for pods to be ready
+kubectl wait --for=condition=ready pod -l app=matrix-core -n matrix --timeout=120s
+
+# 5. Port-forward for local access
+kubectl port-forward svc/matrix-core 9091:9091 -n matrix &
+
+# 6. Verify health
+curl http://localhost:9091/q/health/ready
+curl http://localhost:9091/q/health/live
+
+# 7. Check metrics
+curl http://localhost:9091/metrics
+```
+
+### Deploy with Operator (advanced)
+
+```bash
+# 1. Apply CRD and RBAC
+kubectl apply -f infra/k8s/base/crd.yaml
+kubectl apply -f infra/k8s/base/rbac.yaml
+
+# 2. Apply operator Deployment (if using in-cluster operator)
+# or run locally for development
+./gradlew :matrix-operator:run
+
+# 3. Create a MatrixCluster instance
+kubectl apply -f infra/k8s/base/cr-example.yaml
+
+# 4. Watch cluster status
+kubectl get matrixclusters -n matrix -w
+kubectl describe matrixcluster my-matrix -n matrix
+```
+
+### Full infrastructure stack (base kustomization)
+
+```bash
+# Deploy all infrastructure: Kafka, MinIO, monitoring, operator CRD
+kubectl apply -k infra/k8s/base/
+
+# Check all pods
+kubectl get pods -n matrix -w
+```
+
+### Useful commands
+
+```bash
+# View logs
+kubectl logs -l app=matrix-core -n matrix -f
+
+# Scale manually
+kubectl scale deployment matrix-core -n matrix --replicas=5
+
+# Check HPA status
+kubectl get hpa -n matrix
+
+# Delete everything
+kubectl delete namespace matrix
+```
