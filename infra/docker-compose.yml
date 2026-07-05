@@ -60,6 +60,8 @@ services:
   # ─── Observability stack ───
   prometheus:
     image: prom/prometheus:v3.7.0
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     ports:
       - "${PROM_PORT}:9090"
     volumes:

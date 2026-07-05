@@ -60,7 +60,7 @@ public final class NeuronLayer {
     /**
      * Package-private constructor for {@link #fromTruthTables(List)}.
      */
-    NeuronLayer(List<DecisionTree> neurons, int k) {
+    public NeuronLayer(List<DecisionTree> neurons, int k) {
         this.neurons = List.copyOf(neurons);
         this.k = k;
         this.outputWidth = neurons.size();

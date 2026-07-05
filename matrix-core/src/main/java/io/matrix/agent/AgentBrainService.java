@@ -353,7 +353,9 @@ public class AgentBrainService {
         List<FeedbackRecord> snapshot;
         synchronized (recentFeedback) {
             if (recentFeedback.isEmpty()) {
-                log.warn("No feedback data available for online training");
+                // No feedback — fallback to random mutation of action layer
+                log.info("No feedback available — performing random mutation hill-climb");
+                mutateActionLayer(iterations);
                 return;
             }
             snapshot = List.copyOf(recentFeedback);
@@ -466,4 +468,16 @@ public class AgentBrainService {
     }
 
     public record EvolutionResult(List<Long> history, long bestFitness, int generations) {}
+
+    private void mutateActionLayer(int iterations) {
+        NeuronLayer actionLayer = this.brain.actionLayer();
+        List<DecisionTree> neurons = new ArrayList<>(actionLayer.neurons());
+        for (int i = 0; i < Math.min(iterations, neurons.size()); i++) {
+            int idx = rng.nextInt(neurons.size());
+            neurons.set(idx, DecisionTree.random(K, 10, rng));
+        }
+        NeuronLayer newAction = new NeuronLayer(neurons, actionLayer.k());
+        this.brain = new HierarchicalBrain(this.brain.sensorLayer(), this.brain.featureLayer(), newAction);
+        log.info("Mutated {}/{} neurons in action layer", Math.min(iterations, neurons.size()), neurons.size());
+    }
 }
