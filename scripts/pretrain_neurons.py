@@ -165,16 +165,30 @@ def generate_synthetic_weights(d_model: int, d_ff: int, seed: int = 42
 
 
 def load_safetensors_weights(model_path: str) -> dict[str, np.ndarray]:
-    """Load all tensors from a safetensors file (single-file checkpoint)."""
+    """Load all tensors from a safetensors file, converting to float32 numpy."""
     if not SAFETENSORS_AVAILABLE:
         raise ImportError(
             "safetensors is required for --model-path mode. "
             "Install: pip install safetensors"
         )
     tensors = {}
+    try:
+        import torch
+        from safetensors.torch import load_file
+        torch_tensors = load_file(model_path)
+        for key, t in torch_tensors.items():
+            tensors[key] = t.float().numpy()
+        return tensors
+    except ImportError:
+        pass
+
     with safe_open(model_path, framework="np") as f:
         for key in f.keys():
-            tensors[key] = f.get_tensor(key)
+            try:
+                tensors[key] = f.get_tensor(key)
+            except TypeError:
+                t = f.get_tensor(key)
+                tensors[key] = t.astype(np.float32) if hasattr(t, 'astype') else np.array(t, dtype=np.float32)
     return tensors
 
 
