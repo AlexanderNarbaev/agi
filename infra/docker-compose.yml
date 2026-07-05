@@ -1,28 +1,4 @@
 services:
-  # ─── MATRIX Core Application ───
-  matrix-core:
-    build:
-      context: ..
-      dockerfile: Dockerfile
-    ports:
-      - "9091:9091"
-    environment:
-      - QUARKUS_HTTP_PORT=9091
-      - QUARKUS_OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger:4317
-      - QUARKUS_LOG_LEVEL=INFO
-    volumes:
-      - matrix_snapshots:/tmp/matrix-snapshots
-    depends_on:
-      - postgres
-      - kafka
-      - minio
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "/app/matrix", "--help"]
-      interval: 30s
-      timeout: 5s
-      retries: 3
-
   # ─── PostgreSQL (Event Journal persistence) ───
   postgres:
     image: postgres:18-alpine
@@ -121,4 +97,3 @@ volumes:
   prometheus_data:
   grafana_data:
   minio_data:
-  matrix_snapshots:
