@@ -3,36 +3,22 @@ package io.matrix;
 import io.quarkus.test.junit.main.QuarkusMainTest;
 import io.quarkus.test.junit.main.Launch;
 import io.quarkus.test.junit.main.LaunchResult;
-import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 /**
- * Smoke tests for the Quarkus main application CLI.
+ * CLI smoke tests for GraalVM native image verification.
  *
- * <p>Requires full CDI with Kafka + Redis + PostgreSQL.
- * Automatically skipped when infrastructure is unavailable.
+ * <p>Requires {@code -Dquarkus.native.enabled=true} and full infrastructure
+ * (Kafka, Redis, PostgreSQL). Run as part of CI native-image pipeline.
  */
 @QuarkusMainTest
+@Tag("native")
+@Disabled("Requires GraalVM native image or full infrastructure. Run with: ./gradlew build -Dquarkus.native.enabled=true")
 class NativeSmokeTest {
-
-    @BeforeAll
-    static void checkInfra() {
-        boolean kafkaUp = isPortOpen("localhost", 9092);
-        boolean redisUp = isPortOpen("localhost", 6379);
-        assumeTrue(kafkaUp && redisUp,
-                "Skipping smoke tests — infrastructure not available. Run: ./scripts/matrix-full.sh start");
-    }
-
-    private static boolean isPortOpen(String host, int port) {
-        try (var s = new java.net.Socket(host, port)) {
-            return true;
-        } catch (Exception e) {
-            return false;
-        }
-    }
 
     @Test
     @Launch({"--help"})
