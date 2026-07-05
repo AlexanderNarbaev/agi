@@ -96,7 +96,7 @@ def evaluate_fitness(neuron, target_x, target_y, steps=100):
 
     for _ in range(steps):
         sensors = encode_sensors(angles, target_x, target_y)
-        action = neuron.evaluate(sensors * 0b111111)
+        action = neuron.evaluate(sensors & 0b111111)
         deltas = decode_action(action)
         angles[0] = max(-math.pi, min(math.pi, angles[0] + deltas[0]))
         angles[1] = max(-math.pi, min(math.pi, angles[1] + deltas[1]))

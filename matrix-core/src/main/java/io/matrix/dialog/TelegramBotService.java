@@ -5,6 +5,7 @@ import io.matrix.ethics.EthicalVerdict;
 import io.matrix.mediator.DriverState;
 import io.matrix.mediator.DriverType;
 import io.matrix.mediator.InstanceMediator;
+import jakarta.annotation.PostConstruct;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
@@ -84,6 +85,11 @@ public class TelegramBotService {
         this.mediator = InstanceMediator.withDefaults(new Random());
         this.chatBot = new ChatBot(ethicalFilter, new io.matrix.dialog.ProactiveInterface());
         this.scheduler = Executors.newScheduledThreadPool(2);
+    }
+
+    @PostConstruct
+    void init() {
+        start();
     }
 
     public void start() {
