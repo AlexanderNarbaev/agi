@@ -171,7 +171,7 @@ wait_infra() {
     info "Waiting for PostgreSQL (pg_isready)..."
     local elapsed=0
     while [ "$elapsed" -lt 60 ]; do
-      if pg_isready -h localhost -p 5432 -U matrix -d matrix -q 2>/dev/null; then
+      if pg_isready -h localhost -p "${PORT_MAP[PG]}" -U matrix -d matrix -q 2>/dev/null; then
         log_ok "PostgreSQL is ready"
         break
       fi
@@ -181,14 +181,14 @@ wait_infra() {
     [ "$elapsed" -ge 60 ] && log_err "PostgreSQL did not become ready within 60s" && return 1
   else
     log_warn "pg_isready not found, falling back to TCP check"
-    wait_for_port localhost 5432 "PostgreSQL" 60 || return 1
+    wait_for_port localhost "${PORT_MAP[PG]}" "PostgreSQL" 60 || return 1
   fi
 
   # Kafka / Redpanda
-  wait_for_port localhost 9092 "Kafka/Redpanda" 60 || return 1
+  wait_for_port localhost "${PORT_MAP[KAFKA]}" "Kafka/Redpanda" 60 || return 1
 
   # MinIO
-  wait_for_port localhost 9000 "MinIO" 60 || return 1
+  wait_for_port localhost "${PORT_MAP[MINIO]}" "MinIO" 60 || return 1
 
   # Redis
   info "Waiting for Redis..."
@@ -200,7 +200,7 @@ wait_infra() {
         return 0
       fi
     else
-      if timeout 2 bash -c "echo 'ping' | nc -w1 localhost 6379" 2>/dev/null | grep -qi '+PONG'; then
+      if timeout 2 bash -c "echo 'ping' | nc -w1 localhost ${PORT_MAP[REDIS]}" 2>/dev/null | grep -qi '+PONG'; then
         log_ok "Redis is ready"
         return 0
       fi
@@ -420,7 +420,7 @@ cmd_status() {
   echo ""
   echo "Port listeners:"
   for svc in "$MC_PORT:Minecraft" "$AUTH_PORT:Auth Mock" "$CORE_PORT:matrix-core" \
-             "5432:PostgreSQL" "9092:Kafka" "9000:MinIO" "6379:Redis" \
+             "${PORT_MAP[PG]}:PostgreSQL" "${PORT_MAP[KAFKA]}:Kafka" "${PORT_MAP[MINIO]}:MinIO" "${PORT_MAP[REDIS]}:Redis" \
              "9090:Prometheus" "3000:Grafana" "16686:Jaeger"; do
     local port="${svc%%:*}"
     local name="${svc#*:}"
