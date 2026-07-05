@@ -13,6 +13,7 @@ readonly PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
 readonly PID_FILE="$PROJECT_DIR/.matrix-full.pids"
 readonly COMPOSE_FILE="$PROJECT_DIR/infra/docker-compose.yml"
 readonly JAR_GLOB="$PROJECT_DIR/matrix-core/build/matrix-core-*-runner.jar"
+readonly NATIVE_BINARY="$PROJECT_DIR/matrix-core/build/matrix-core-1.0.0-runner"
 readonly MC_SERVER_DIR="$PROJECT_DIR/minecraft-server"
 readonly AUTH_MOCK="$HOME/.local/share/matrix-auth/yggdrasil-mock.py"
 readonly MC_CLIENT="$HOME/.local/bin/mc-direct"
@@ -29,6 +30,35 @@ log_warn()  { echo -e "  ${YELLOW}[WARN]${NC} $*"; }
 log_err()   { echo -e "  ${RED}[ERR]${NC} $*"; }
 stage_hdr() { echo -e "\n${BOLD}=== Stage $* ===${NC}"; }
 info()      { echo -e "  $*"; }
+
+# ─── Port management ─────────────────────────────────────────────────────────
+declare -A MATRIX_PORTS=(
+  ["postgres"]=5432 ["redis"]=6379 ["kafka"]=9092 ["minio"]=9000
+  ["prometheus"]=9090 ["jaeger-ui"]=16686 ["jaeger-otlp"]=4317 ["grafana"]=3000
+  ["matrix-core"]=9091 ["minecraft"]=25565 ["auth-mock"]=25567
+)
+
+check_port() { ss -tlnp 2>/dev/null | grep -q ":$1 " && return 0 || return 1; }
+
+cleanup_previous() {
+  local cleaned=0
+  if docker compose -f "$COMPOSE_FILE" ps --services 2>/dev/null | grep -q .; then
+    echo -e "  ${YELLOW}Stopping previous MATRIX containers...${NC}"
+    docker compose -f "$COMPOSE_FILE" down -v 2>/dev/null || true
+    sleep 2; ((cleaned++))
+  fi
+  for name in "${!MATRIX_PORTS[@]}"; do
+    local port="${MATRIX_PORTS[$name]}"
+    if check_port "$port"; then
+      local pid
+      pid=$(ss -tlnp 2>/dev/null | grep ":$port " | grep -oP 'pid=\K\d+' | head -1 || true)
+      if [ -n "$pid" ]; then
+        kill "$pid" 2>/dev/null && echo -e "  ${YELLOW}Killed PID $pid on $port ($name)${NC}" && ((cleaned++)) || true
+      fi
+    fi
+  done
+  [ "$cleaned" -gt 0 ] && sleep 1
+}
 
 # ─── Help ───────────────────────────────────────────────────────────────────
 usage() {
@@ -76,6 +106,12 @@ check_prereqs() {
     return 1
   fi
   log_ok "python3: $(python3 --version)"
+
+  local conflicts=()
+  for name in "${!MATRIX_PORTS[@]}"; do
+    check_port "${MATRIX_PORTS[$name]}" && conflicts+=("$name:${MATRIX_PORTS[$name]}")
+  done
+  [ ${#conflicts[@]} -gt 0 ] && log_warn "Ports in use (will cleanup): ${conflicts[*]}"
 }
 
 # ─── Wait for TCP port ──────────────────────────────────────────────────────
@@ -155,30 +191,54 @@ wait_infra() {
 # ─── Build matrix-core ──────────────────────────────────────────────────────
 build_matrix_core() {
   stage_hdr "3/6: Build matrix-core"
+
+  # Check native binary
+  if [ -f "$NATIVE_BINARY" ] && [ -x "$NATIVE_BINARY" ]; then
+    log_ok "Native binary: $NATIVE_BINARY ($(du -h "$NATIVE_BINARY" | cut -f1))"
+    echo "$NATIVE_BINARY"
+    return 0
+  fi
+
   local jar
   jar=$(ls $JAR_GLOB 2>/dev/null | head -1 || true)
   if [ -n "$jar" ]; then
-    log_ok "Uber-jar exists: $(basename "$jar")"
+    log_ok "Uber-jar: $(basename "$jar")"
     echo "$jar"
     return 0
   fi
-  info "Building uber-jar (this may take a while)..."
+
+  # Try native build if GraalVM available
+  if command -v native-image &>/dev/null; then
+    info "GraalVM detected — building native binary..."
+    (cd "$PROJECT_DIR" && ./gradlew build -Dquarkus.native.enabled=true --no-daemon)
+    if [ -f "$NATIVE_BINARY" ] && [ -x "$NATIVE_BINARY" ]; then
+      log_ok "Native binary built"
+      echo "$NATIVE_BINARY"
+      return 0
+    fi
+    log_warn "Native build failed, falling back to JVM"
+  fi
+
+  info "Building uber-jar..."
   (cd "$PROJECT_DIR" && ./gradlew :matrix-core:quarkusBuild -Dquarkus.package.jar.type=uber-jar)
   jar=$(ls $JAR_GLOB 2>/dev/null | head -1 || true)
-  if [ -z "$jar" ]; then
-    log_err "Build failed: no uber-jar found"
-    return 1
-  fi
+  [ -z "$jar" ] && log_err "Build failed: no binary or jar" && return 1
   log_ok "Built: $(basename "$jar")"
   echo "$jar"
 }
 
 # ─── Start matrix-core ──────────────────────────────────────────────────────
 start_matrix_core() {
-  local jar="$1"
+  local binary="$1"
   stage_hdr "4/6: Start matrix-core"
-  info "Launching matrix-core..."
-  java -jar "$jar" &
+
+  if [[ "$binary" == *"-runner" ]] && [ -x "$binary" ]; then
+    info "Launching native binary..."
+    "$binary" &
+  else
+    info "Launching (JVM)..."
+    java -jar "$binary" &
+  fi
   local pid=$!
   echo "matrix-core:$pid" >> "$PID_FILE"
   log_ok "matrix-core PID: $pid"
@@ -360,6 +420,8 @@ cmd_start() {
   trap cleanup SIGINT SIGTERM
 
   check_prereqs || exit 1
+
+  cleanup_previous
 
   start_infra || exit 1
 
