@@ -32,28 +32,55 @@ stage_hdr() { echo -e "\n${BOLD}=== Stage $* ===${NC}"; }
 info()      { echo -e "  $*"; }
 
 # ─── Port management ─────────────────────────────────────────────────────────
-PORTS_USED=(5432 6379 9092 9000 9090 16686 4317 3000 9091 25565 25567)
-PORT_NAMES=([5432]="PostgreSQL" [6379]="Redis" [9092]="Kafka" [9000]="MinIO"
-            [9090]="Prometheus" [16686]="Jaeger" [4317]="OTLP" [3000]="Grafana"
-            [9091]="matrix-core" [25565]="Minecraft" [25567]="Auth Mock")
+# Each service: default port, env var name for docker-compose, description
+declare -A PORT_MAP=(
+  ["PG"]="5432"   ["REDIS"]="6379"   ["KAFKA"]="9092"  ["MINIO"]="9000"
+  ["PROM"]="9090" ["JAEGER"]="16686" ["OTLP"]="4317"   ["GRAFANA"]="3000"
+)
+MC_PORT=25565  AUTH_PORT=25567  CORE_PORT=9091
 
 check_port() { ss -tln 2>/dev/null | grep -q ":$1 " && return 0 || return 1; }
 
-warn_ports() {
-  local conflicts=()
-  for port in "${PORTS_USED[@]}"; do
-    check_port "$port" && conflicts+=("$port/${PORT_NAMES[$port]:-unknown}")
-  done
-  if [ ${#conflicts[@]} -gt 0 ]; then
-    log_warn "Ports already in use: ${conflicts[*]}"
-    log_warn "Docker Compose may fail if ports conflict with other services."
+assign_port() {
+  local default=$1
+  if check_port "$default"; then
+    echo $((default + 10000))
+  else
+    echo "$default"
   fi
 }
 
-# Stop only OUR previous docker-compose containers, never kill other processes
+allocate_ports() {
+  local changed=0
+  for var in "${!PORT_MAP[@]}"; do
+    local default="${PORT_MAP[$var]}"
+    local assigned
+    assigned=$(assign_port "$default")
+    PORT_MAP[$var]="$assigned"
+    [ "$assigned" != "$default" ] && { log_warn "$default→$assigned ($var)"; ((changed++)); }
+  done
+  MC_PORT=$(assign_port "$MC_PORT")
+  AUTH_PORT=$(assign_port "$AUTH_PORT")
+  CORE_PORT=$(assign_port "$CORE_PORT")
+  [ "$changed" -gt 0 ] && info "Using alternative ports (+10000 offset)"
+}
+
+write_env() {
+  cat > "$PROJECT_DIR/infra/.env" <<EOF
+PG_PORT=${PORT_MAP[PG]}
+REDIS_PORT=${PORT_MAP[REDIS]}
+KAFKA_PORT=${PORT_MAP[KAFKA]}
+MINIO_PORT=${PORT_MAP[MINIO]}
+PROM_PORT=${PORT_MAP[PROM]}
+JAEGER_PORT=${PORT_MAP[JAEGER]}
+OTLP_PORT=${PORT_MAP[OTLP]}
+GRAFANA_PORT=${PORT_MAP[GRAFANA]}
+EOF
+}
+
 cleanup_previous() {
   if docker compose -f "$COMPOSE_FILE" ps -q 2>/dev/null | grep -q .; then
-    echo -e "  ${YELLOW}Previous MATRIX containers detected — stopping...${NC}"
+    echo -e "  ${YELLOW}Previous MATRIX containers — stopping...${NC}"
     docker compose -f "$COMPOSE_FILE" down -v 2>/dev/null || true
     sleep 2
   fi
@@ -105,8 +132,6 @@ check_prereqs() {
     return 1
   fi
   log_ok "python3: $(python3 --version)"
-
-  warn_ports
 }
 
 # ─── Wait for TCP port ──────────────────────────────────────────────────────
@@ -238,10 +263,10 @@ start_matrix_core() {
   echo "matrix-core:$pid" >> "$PID_FILE"
   log_ok "matrix-core PID: $pid"
 
-  info "Waiting for health check (port 9091)..."
+  info "Waiting for health check (port $CORE_PORT)..."
   local elapsed=0
   while [ "$elapsed" -lt 120 ]; do
-    if curl -sf http://localhost:9091/q/health/ready &>/dev/null; then
+    if curl -sf http://localhost:$CORE_PORT/q/health/ready &>/dev/null; then
       log_ok "matrix-core is healthy (ready)"
       return 0
     fi
@@ -255,7 +280,7 @@ start_matrix_core() {
 # ─── Start Paper Minecraft Server ────────────────────────────────────────────
 start_minecraft() {
   stage_hdr "5/6: Minecraft Server"
-  if ! lsof -i:25565 &>/dev/null; then
+  if ! lsof -i:$MC_PORT &>/dev/null; then
     info "Starting Paper server..."
     cd "$MC_SERVER_DIR"
     java -Xmx2G -Xms1G -jar paper.jar --nogui > /dev/null 2>&1 &
@@ -263,31 +288,31 @@ start_minecraft() {
     echo "minecraft:$mc_pid" >> "$PID_FILE"
     log_ok "Paper server PID: $mc_pid"
 
-    info "Waiting for server (port 25565)..."
+    info "Waiting for server (port $MC_PORT)..."
     local elapsed=0
     while [ "$elapsed" -lt 60 ]; do
-      lsof -i:25565 &>/dev/null && break
+      lsof -i:$MC_PORT &>/dev/null && break
       sleep 2
       ((elapsed+=2))
     done
     if [ "$elapsed" -ge 60 ]; then
       log_warn "Minecraft server did not start within 60s (may still be loading)"
     else
-      log_ok "Minecraft server: localhost:25565"
+      log_ok "Minecraft server: localhost:$MC_PORT"
     fi
     cd "$PROJECT_DIR"
   else
-    log_ok "Minecraft server already running on :25565"
+    log_ok "Minecraft server already running on :$MC_PORT"
   fi
 }
 
 # ─── Start Yggdrasil Auth ───────────────────────────────────────────────────
 start_auth() {
   stage_hdr "6/6: Auth Mock + Client"
-  # Kill any previous auth mock on port 25567
-  kill "$(lsof -ti:25567)" 2>/dev/null || true
-  info "Starting Yggdrasil auth mock (port 25567)..."
-  python3 "$AUTH_MOCK" 25567 &
+  # Kill any previous auth mock on port $AUTH_PORT
+  kill "$(lsof -ti:$AUTH_PORT)" 2>/dev/null || true
+  info "Starting Yggdrasil auth mock (port $AUTH_PORT)..."
+  python3 "$AUTH_MOCK" $AUTH_PORT &
   local auth_pid=$!
   echo "auth-mock:$auth_pid" >> "$PID_FILE"
   sleep 1
@@ -326,7 +351,7 @@ cleanup() {
     local pid
     pid=$(grep "^auth-mock:" "$PID_FILE" | cut -d: -f2)
     kill "$pid" 2>/dev/null && info "Stopped auth mock" || true
-    kill "$(lsof -ti:25567)" 2>/dev/null || true
+    kill "$(lsof -ti:$AUTH_PORT)" 2>/dev/null || true
   fi
 
   # 3. Minecraft server
@@ -389,7 +414,7 @@ cmd_status() {
   # Port checks
   echo ""
   echo "Port listeners:"
-  for svc in "25565:Minecraft" "25567:Auth Mock" "9091:matrix-core" \
+  for svc in "$MC_PORT:Minecraft" "$AUTH_PORT:Auth Mock" "$CORE_PORT:matrix-core" \
              "5432:PostgreSQL" "9092:Kafka" "9000:MinIO" "6379:Redis" \
              "9090:Prometheus" "3000:Grafana" "16686:Jaeger"; do
     local port="${svc%%:*}"
@@ -416,6 +441,9 @@ cmd_start() {
 
   check_prereqs || exit 1
 
+  allocate_ports
+  write_env
+
   cleanup_previous
 
   start_infra || exit 1
@@ -435,9 +463,9 @@ cmd_start() {
 
   echo ""
   echo -e "${BOLD}${GREEN}=== MATRIX Stack is running ===${NC}"
-  echo "  matrix-core:    http://localhost:9091"
-  echo "  Minecraft srv:  localhost:25565"
-  echo "  Auth mock:      localhost:25567"
+  echo "  matrix-core:    http://localhost:$CORE_PORT"
+  echo "  Minecraft srv:  localhost:$MC_PORT"
+  echo "  Auth mock:      localhost:$AUTH_PORT"
   echo "  Prometheus:     http://localhost:9090"
   echo "  Jaeger:         http://localhost:16686"
   echo "  Grafana:        http://localhost:3000"
