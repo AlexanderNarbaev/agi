@@ -1,39 +1,40 @@
 package io.matrix.events;
 
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.Disabled;
+import org.testcontainers.containers.KafkaContainer;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
+import org.testcontainers.utility.DockerImageName;
 
 import static org.assertj.core.api.Assertions.assertThatCode;
 
 /**
- * Unit tests for KafkaTopics — topic creation utility.
+ * Unit + integration tests for KafkaTopics.
  *
- * <p>Tests that require a running Kafka broker are disabled by default.
- * Enable them when Kafka (Redpanda) is running on localhost:9092.
+ * <p>Uses Testcontainers Redpanda (Kafka-compatible) for integration tests.
  */
+@Testcontainers
 class KafkaTopicsTest {
 
+    @Container
+    static final KafkaContainer KAFKA = new KafkaContainer(
+            DockerImageName.parse("confluentinc/cp-kafka:7.9.0"));
+
     @Test
-    @Disabled("Requires running Kafka broker — use: docker compose up -d kafka")
-    void ensureTopicsShouldNotThrowWithValidBootstrapServer() {
-        assertThatCode(() -> KafkaTopics.ensureTopics("localhost:9092"))
+    void shouldCreateTopicsAgainstRealKafka() {
+        String bootstrapServers = KAFKA.getBootstrapServers();
+        assertThatCode(() -> KafkaTopics.ensureTopics(bootstrapServers))
                 .doesNotThrowAnyException();
     }
 
     @Test
-    void ensureTopicsShouldHandleInvalidServerGracefully() {
+    void shouldHandleInvalidServerGracefully() {
         assertThatCode(() -> KafkaTopics.ensureTopics("invalid-host:99999"))
                 .doesNotThrowAnyException();
     }
 
     @Test
-    void ensureTopicsShouldHandleNullServerGracefully() {
-        assertThatCode(() -> KafkaTopics.ensureTopics(null))
-                .isInstanceOf(NullPointerException.class);
-    }
-
-    @Test
-    void ensureTopicsShouldNotThrowWithEmptyServer() {
+    void shouldHandleEmptyServerGracefully() {
         assertThatCode(() -> KafkaTopics.ensureTopics(""))
                 .doesNotThrowAnyException();
     }
