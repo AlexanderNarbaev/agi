@@ -30,6 +30,8 @@ dependencies {
     implementation 'io.quarkus:quarkus-jdbc-postgresql'
 
     implementation 'org.apache.avro:avro:1.12.0'
+    implementation 'io.lettuce:lettuce-core:6.5.0.RELEASE'
+    implementation 'org.apache.kafka:kafka-clients:3.9.0'
 
     implementation platform('org.apache.pekko:pekko-bom_2.13:1.6.0')
     implementation 'org.apache.pekko:pekko-actor-typed_2.13'
