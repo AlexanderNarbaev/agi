@@ -3,7 +3,7 @@ services:
   postgres:
     image: postgres:18-alpine
     ports:
-      - "5432:5432"
+      - "${PG_PORT:-5432}:5432"
     environment:
       - POSTGRES_DB=matrix
       - POSTGRES_USER=matrix
@@ -28,14 +28,14 @@ services:
       - --advertise-kafka-addr PLAINTEXT://kafka:9092
       - --pandaproxy-addr 0.0.0.0:8082
     ports:
-      - "9092:9092"
+      - "${KAFKA_PORT:-9092}:9092"
       - "8082:8082"
 
   # ─── Redis (cache + pub/sub) ───
   redis:
     image: redis:7-alpine
     ports:
-      - "6379:6379"
+      - "${REDIS_PORT:-6379}:6379"
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s
@@ -49,7 +49,7 @@ services:
     image: minio/minio:latest
     command: server /data --console-address ":9001"
     ports:
-      - "9000:9000"
+      - "${MINIO_PORT:-9000}:9000"
       - "9001:9001"
     environment:
       - MINIO_ROOT_USER=minioadmin
@@ -61,7 +61,7 @@ services:
   prometheus:
     image: prom/prometheus:v3.7.0
     ports:
-      - "9090:9090"
+      - "${PROMETHEUS_PORT:-9090}:9090"
     volumes:
       - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
       - prometheus_data:/prometheus
@@ -72,15 +72,15 @@ services:
   jaeger:
     image: jaegertracing/all-in-one:1.67.0
     ports:
-      - "16686:16686"
-      - "4317:4317"
+      - "${JAEGER_UI_PORT:-16686}:16686"
+      - "${JAEGER_OTLP_PORT:-4317}:4317"
     environment:
       - COLLECTOR_OTLP_ENABLED=true
 
   grafana:
     image: grafana/grafana:11.6.0
     ports:
-      - "3000:3000"
+      - "${GRAFANA_PORT:-3000}:3000"
     volumes:
       - ./grafana/datasources:/etc/grafana/provisioning/datasources
       - ./grafana/dashboards:/etc/grafana/provisioning/dashboards

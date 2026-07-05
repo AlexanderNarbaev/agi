@@ -32,32 +32,57 @@ stage_hdr() { echo -e "\n${BOLD}=== Stage $* ===${NC}"; }
 info()      { echo -e "  $*"; }
 
 # ─── Port management ─────────────────────────────────────────────────────────
-declare -A MATRIX_PORTS=(
-  ["postgres"]=5432 ["redis"]=6379 ["kafka"]=9092 ["minio"]=9000
+# Default ports — will be reassigned if occupied
+declare -A PORTS=(
+  ["postgres"]=5432   ["redis"]=6379     ["kafka"]=9092     ["minio"]=9000
   ["prometheus"]=9090 ["jaeger-ui"]=16686 ["jaeger-otlp"]=4317 ["grafana"]=3000
   ["matrix-core"]=9091 ["minecraft"]=25565 ["auth-mock"]=25567
 )
 
 check_port() { ss -tlnp 2>/dev/null | grep -q ":$1 " && return 0 || return 1; }
 
-cleanup_previous() {
-  local cleaned=0
-  if docker compose -f "$COMPOSE_FILE" ps --services 2>/dev/null | grep -q .; then
-    echo -e "  ${YELLOW}Stopping previous MATRIX containers...${NC}"
-    docker compose -f "$COMPOSE_FILE" down -v 2>/dev/null || true
-    sleep 2; ((cleaned++))
-  fi
-  for name in "${!MATRIX_PORTS[@]}"; do
-    local port="${MATRIX_PORTS[$name]}"
-    if check_port "$port"; then
-      local pid
-      pid=$(ss -tlnp 2>/dev/null | grep ":$port " | grep -oP 'pid=\K\d+' | head -1 || true)
-      if [ -n "$pid" ]; then
-        kill "$pid" 2>/dev/null && echo -e "  ${YELLOW}Killed PID $pid on $port ($name)${NC}" && ((cleaned++)) || true
-      fi
+find_free_port() {
+  local port=$1
+  while check_port "$port"; do ((port++)); done
+  echo "$port"
+}
+
+allocate_ports() {
+  local changed=0
+  for name in "${!PORTS[@]}"; do
+    local default="${PORTS[$name]}"
+    if check_port "$default"; then
+      local new_port
+      new_port=$(find_free_port "$default")
+      PORTS[$name]="$new_port"
+      log_warn "Port $default ($name) in use → using $new_port"
+      ((changed++))
     fi
   done
-  [ "$cleaned" -gt 0 ] && sleep 1
+  [ "$changed" -gt 0 ] && log_ok "Ports allocated ($changed reassigned)"
+}
+
+# Generate .env file for docker-compose port substitution
+write_docker_env() {
+  cat > "$PROJECT_DIR/infra/.env" <<EOF
+PG_PORT=${PORTS[postgres]}
+REDIS_PORT=${PORTS[redis]}
+KAFKA_PORT=${PORTS[kafka]}
+MINIO_PORT=${PORTS[minio]}
+PROMETHEUS_PORT=${PORTS[prometheus]}
+JAEGER_UI_PORT=${PORTS[jaeger-ui]}
+JAEGER_OTLP_PORT=${PORTS[jaeger-otlp]}
+GRAFANA_PORT=${PORTS[grafana]}
+EOF
+}
+
+# Clean up only OUR previous docker-compose containers
+cleanup_previous() {
+  if docker compose -f "$COMPOSE_FILE" ps --services 2>/dev/null | grep -q .; then
+    echo -e "  ${YELLOW}Previous MATRIX containers — stopping...${NC}"
+    docker compose -f "$COMPOSE_FILE" down -v 2>/dev/null || true
+    sleep 2
+  fi
 }
 
 # ─── Help ───────────────────────────────────────────────────────────────────
@@ -108,10 +133,10 @@ check_prereqs() {
   log_ok "python3: $(python3 --version)"
 
   local conflicts=()
-  for name in "${!MATRIX_PORTS[@]}"; do
-    check_port "${MATRIX_PORTS[$name]}" && conflicts+=("$name:${MATRIX_PORTS[$name]}")
+  for name in "${!PORTS[@]}"; do
+    check_port "${PORTS[$name]}" && conflicts+=("$name:${PORTS[$name]}")
   done
-  [ ${#conflicts[@]} -gt 0 ] && log_warn "Ports in use (will cleanup): ${conflicts[*]}"
+  [ ${#conflicts[@]} -gt 0 ] && log_warn "Ports in use: ${conflicts[*]} (will reassign)"
 }
 
 # ─── Wait for TCP port ──────────────────────────────────────────────────────
@@ -233,20 +258,26 @@ start_matrix_core() {
   stage_hdr "4/6: Start matrix-core"
 
   if [[ "$binary" == *"-runner" ]] && [ -x "$binary" ]; then
-    info "Launching native binary..."
+    info "Launching native binary (port ${PORTS[matrix-core]})..."
+    QUARKUS_HTTP_PORT="${PORTS[matrix-core]}" \
+    KAFKA_BOOTSTRAP_SERVERS="localhost:${PORTS[kafka]}" \
+    QUARKUS_OTEL_EXPORTER_OTLP_ENDPOINT="http://localhost:${PORTS[jaeger-otlp]}" \
     "$binary" &
   else
-    info "Launching (JVM)..."
+    info "Launching JVM (port ${PORTS[matrix-core]})..."
+    QUARKUS_HTTP_PORT="${PORTS[matrix-core]}" \
+    KAFKA_BOOTSTRAP_SERVERS="localhost:${PORTS[kafka]}" \
+    QUARKUS_OTEL_EXPORTER_OTLP_ENDPOINT="http://localhost:${PORTS[jaeger-otlp]}" \
     java -jar "$binary" &
   fi
   local pid=$!
   echo "matrix-core:$pid" >> "$PID_FILE"
   log_ok "matrix-core PID: $pid"
 
-  info "Waiting for health check (port 9091)..."
+  info "Waiting for health check (port ${PORTS[matrix-core]})..."
   local elapsed=0
   while [ "$elapsed" -lt 120 ]; do
-    if curl -sf http://localhost:9091/q/health/ready &>/dev/null; then
+    if curl -sf http://localhost:${PORTS[matrix-core]}/q/health/ready &>/dev/null; then
       log_ok "matrix-core is healthy (ready)"
       return 0
     fi
@@ -289,10 +320,11 @@ start_minecraft() {
 # ─── Start Yggdrasil Auth ───────────────────────────────────────────────────
 start_auth() {
   stage_hdr "6/6: Auth Mock + Client"
-  # Kill any previous auth mock on port 25567
-  kill "$(lsof -ti:25567)" 2>/dev/null || true
-  info "Starting Yggdrasil auth mock (port 25567)..."
-  python3 "$AUTH_MOCK" 25567 &
+  local auth_port="${PORTS[auth-mock]}"
+  # Kill any previous auth mock on our port
+  kill "$(lsof -ti:$auth_port)" 2>/dev/null || true
+  info "Starting Yggdrasil auth mock (port $auth_port)..."
+  python3 "$AUTH_MOCK" "$auth_port" &
   local auth_pid=$!
   echo "auth-mock:$auth_pid" >> "$PID_FILE"
   sleep 1
@@ -331,7 +363,7 @@ cleanup() {
     local pid
     pid=$(grep "^auth-mock:" "$PID_FILE" | cut -d: -f2)
     kill "$pid" 2>/dev/null && info "Stopped auth mock" || true
-    kill "$(lsof -ti:25567)" 2>/dev/null || true
+    kill "$(lsof -ti:${PORTS[auth-mock]})" 2>/dev/null || true
   fi
 
   # 3. Minecraft server
@@ -394,9 +426,12 @@ cmd_status() {
   # Port checks
   echo ""
   echo "Port listeners:"
-  for svc in "25565:Minecraft" "25567:Auth Mock" "9091:matrix-core" \
-             "5432:PostgreSQL" "9092:Kafka" "9000:MinIO" "6379:Redis" \
-             "9090:Prometheus" "3000:Grafana" "16686:Jaeger"; do
+  for svc in "${PORTS[minecraft]}:Minecraft" "${PORTS[auth-mock]}:Auth Mock" \
+             "${PORTS[matrix-core]}:matrix-core" \
+             "${PORTS[postgres]}:PostgreSQL" "${PORTS[kafka]}:Kafka" \
+             "${PORTS[minio]}:MinIO" "${PORTS[redis]}:Redis" \
+             "${PORTS[prometheus]}:Prometheus" "${PORTS[grafana]}:Grafana" \
+             "${PORTS[jaeger-ui]}:Jaeger"; do
     local port="${svc%%:*}"
     local name="${svc#*:}"
     if lsof -i:"$port" &>/dev/null 2>&1; then
@@ -421,6 +456,9 @@ cmd_start() {
 
   check_prereqs || exit 1
 
+  allocate_ports
+  write_docker_env
+
   cleanup_previous
 
   start_infra || exit 1
@@ -440,12 +478,12 @@ cmd_start() {
 
   echo ""
   echo -e "${BOLD}${GREEN}=== MATRIX Stack is running ===${NC}"
-  echo "  matrix-core:    http://localhost:9091"
-  echo "  Minecraft srv:  localhost:25565"
-  echo "  Auth mock:      localhost:25567"
-  echo "  Prometheus:     http://localhost:9090"
-  echo "  Jaeger:         http://localhost:16686"
-  echo "  Grafana:        http://localhost:3000"
+  echo "  matrix-core:    http://localhost:${PORTS[matrix-core]}"
+  echo "  Minecraft srv:  localhost:${PORTS[minecraft]}"
+  echo "  Auth mock:      localhost:${PORTS[auth-mock]}"
+  echo "  Prometheus:     http://localhost:${PORTS[prometheus]}"
+  echo "  Jaeger:         http://localhost:${PORTS[jaeger-ui]}"
+  echo "  Grafana:        http://localhost:${PORTS[grafana]}"
   echo ""
   echo "Press Ctrl+C to stop all services."
 
