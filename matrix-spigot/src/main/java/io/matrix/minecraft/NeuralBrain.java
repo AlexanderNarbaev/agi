@@ -13,6 +13,8 @@ import java.util.Random;
  * Sensor bits (35) are evaluated by each tree; the tree with the best
  * combined output selects the action.
  */
+@Deprecated(since = "2.2.0", forRemoval = true)
+@SuppressWarnings("removal")
 public class NeuralBrain {
 
     private final DecisionTree moveTree;

@@ -1,11 +1,11 @@
 name: MatrixSpigot
-version: 1.0.0
+version: 2.2.0
 main: io.matrix.spigot.MatrixPlugin
 api-version: 1.20
-description: MATRIX neural network controlling a Minecraft bot
+description: MATRIX neural bot controlled via matrix-core WebSocket/REST API
 author: MATRIX Project
 
 commands:
   matrix:
     description: MATRIX neural bot control
-    usage: /matrix <start|stop|status|train>
+    usage: /matrix <connect|start|stop|status|train|save>

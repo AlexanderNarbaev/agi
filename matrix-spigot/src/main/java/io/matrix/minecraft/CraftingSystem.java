@@ -11,6 +11,8 @@ import java.util.Map;
  * <p>Recipes: resources → crafted items. Higher-tier tools
  * enable mining of harder blocks.
  */
+@Deprecated(since = "2.2.0", forRemoval = true)
+@SuppressWarnings("removal")
 public class CraftingSystem {
 
     public record Recipe(String name, Map<String, Integer> inputs,

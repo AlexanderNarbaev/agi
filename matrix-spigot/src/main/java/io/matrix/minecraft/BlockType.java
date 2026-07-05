@@ -8,6 +8,8 @@ import java.util.Random;
  * <p>Each block has mineable, solid, flammable, and resource properties.
  * Higher-tier blocks require better tools to mine.
  */
+@Deprecated(since = "2.2.0", forRemoval = true)
+@SuppressWarnings("removal")
 public enum BlockType {
     AIR(false, false, false, 0, ToolTier.NONE),
     DIRT(true, true, false, 1, ToolTier.NONE),
