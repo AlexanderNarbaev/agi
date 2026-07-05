@@ -8,6 +8,7 @@ import io.matrix.neuron.DecisionTree;
 import io.matrix.neuron.TruthTable;
 import io.matrix.redis.NeuronCacheService;
 import io.matrix.simulation.AgentBrain;
+import jakarta.annotation.PostConstruct;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import org.slf4j.Logger;
@@ -26,6 +27,8 @@ public class AgentBrainService {
 
     private static final Logger log = LoggerFactory.getLogger(AgentBrainService.class);
     private static final int K = 20;
+    private static final String PRETRAINED_DIR = "models/pretrained";
+    private static final String PRETRAINED_MODEL = "SmolLM2-135M-synth";
     private static final ObjectMapper MAPPER = new ObjectMapper();
 
     private volatile DecisionTree moveTree;
@@ -37,6 +40,40 @@ public class AgentBrainService {
 
     @Inject
     NeuronCacheService neuronCache;
+
+    @PostConstruct
+    void init() {
+        Path pretrainedDir = Path.of(PRETRAINED_DIR);
+        if (Files.isDirectory(pretrainedDir)) {
+            try {
+                PretrainedLoader loader = new PretrainedLoader();
+
+                // Map pretrained neurons from layers 0-4 → 5 behavior trees.
+                // Each layer has 30 neurons; we use the first neuron from each.
+                this.moveTree = loadLayerNeuron(loader, pretrainedDir, 0);
+                this.mineTree = loadLayerNeuron(loader, pretrainedDir, 1);
+                this.craftTree = loadLayerNeuron(loader, pretrainedDir, 2);
+                this.eatTree = loadLayerNeuron(loader, pretrainedDir, 3);
+                this.toolUpTree = loadLayerNeuron(loader, pretrainedDir, 4);
+
+                log.info("Loaded pretrained brain from {} (5 layers × 1 neuron)", pretrainedDir.toAbsolutePath());
+            } catch (Exception e) {
+                log.warn("Failed to load pretrained brain from {}: {}. Using random brain.",
+                        pretrainedDir.toAbsolutePath(), e.getMessage());
+                initializeRandom();
+            }
+        } else {
+            log.info("No pretrained weights at {} — keeping random brain from constructor", pretrainedDir.toAbsolutePath());
+        }
+    }
+
+    private static DecisionTree loadLayerNeuron(PretrainedLoader loader, Path dir, int layerIndex) throws IOException {
+        List<TruthTable> tables = loader.loadLayer(dir, PRETRAINED_MODEL, layerIndex);
+        if (tables.isEmpty()) {
+            return DecisionTree.constant(false);
+        }
+        return loader.truthTableToTree(tables.get(0));
+    }
 
     public AgentBrainService() {
         initializeRandom();
