@@ -84,17 +84,13 @@ EOF
 }
 
 cleanup_previous() {
-  if docker compose -f "$COMPOSE_FILE" ps -q 2>/dev/null | grep -q .; then
-    echo -e "  ${YELLOW}Previous MATRIX containers — stopping + removing volumes...${NC}"
-    docker compose -f "$COMPOSE_FILE" down -v --remove-orphans 2>/dev/null || true
-    sleep 2
-  fi
-  # Force-remove stale database volumes (PG version upgrade data incompatibility)
+  echo -e "  ${YELLOW}Cleaning up previous MATRIX containers and volumes...${NC}"
+  # Always run down — handles running AND stopped containers
+  docker compose -f "$COMPOSE_FILE" down -v --remove-orphans 2>/dev/null || true
+  sleep 2
+  # Force-remove any leftover named volumes (belt and suspenders)
   for vol in infra_postgres_data infra_redis_data infra_minio_data infra_prometheus_data infra_grafana_data; do
-    if docker volume ls -q 2>/dev/null | grep -qx "$vol"; then
-      echo -e "  ${YELLOW}Removing stale volume: $vol${NC}"
-      docker volume rm -f "$vol" 2>/dev/null || true
-    fi
+    docker volume rm -f "$vol" 2>/dev/null || true
   done
   sleep 1
 }
