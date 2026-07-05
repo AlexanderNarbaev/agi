@@ -38,7 +38,9 @@ public class AgentBrainService {
     private final Random rng = new Random();
     private volatile String lastAction = "";
     private volatile int stuckCounter = 0;
+    private volatile int exploreTicks = 0;
     private static final int STUCK_THRESHOLD = 30;
+    private static final int EXPLORE_WINDOW = 80; // explore for 80 ticks after stuck detected
 
     @Inject
     NeuronCacheService neuronCache;
@@ -130,18 +132,27 @@ public class AgentBrainService {
             action = "STAY";
         }
 
-        // ── Stuck detection: if same action 30+ times, force random exploration ──
+        // ── Stuck detection + exploration: if same action 30+ times, force random exploration for 80 ticks ──
         if (action.equals(lastAction)) {
             stuckCounter++;
             if (stuckCounter >= STUCK_THRESHOLD) {
-                String[] breaks = {"MOVE_N", "MOVE_S", "MOVE_W", "MOVE_E", "MINE"};
-                action = breaks[rng.nextInt(breaks.length)];
+                exploreTicks = EXPLORE_WINDOW;
                 stuckCounter = 0;
-                log.info("Stuck detection: forcing random action {} after {} STAY ticks", action, STUCK_THRESHOLD);
+                log.info("Stuck detected after {} STAY — enabling exploration mode for {} ticks", STUCK_THRESHOLD, EXPLORE_WINDOW);
             }
         } else {
             stuckCounter = 0;
         }
+
+        if (exploreTicks > 0) {
+            exploreTicks--;
+            String[] moves = {"MOVE_N", "MOVE_S", "MOVE_W", "MOVE_E", "MINE", "MINE", "CRAFT", "MOVE_N"};
+            String exploreAction = moves[rng.nextInt(moves.length)];
+            if (rng.nextInt(4) == 0) { // 25% use brain, 75% random
+                action = exploreAction;
+            }
+        }
+
         lastAction = action;
         return action;
     }
