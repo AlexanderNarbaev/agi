@@ -89,15 +89,14 @@ cleanup_previous() {
     docker compose -f "$COMPOSE_FILE" down -v --remove-orphans 2>/dev/null || true
     sleep 2
   fi
-  # Clean stale PostgreSQL data that may be incompatible (v17→v18 upgrade)
-  local pg_vol="infra_postgres_data"
-  if docker volume ls -q 2>/dev/null | grep -q "$pg_vol"; then
-    if ! docker run --rm -v "$pg_vol":/data alpine:latest ls /data/PG_VERSION 2>/dev/null; then
-      echo -e "  ${YELLOW}Removing stale PostgreSQL volume $pg_vol...${NC}"
-      docker volume rm "$pg_vol" 2>/dev/null || true
-      sleep 1
+  # Force-remove stale database volumes (PG version upgrade data incompatibility)
+  for vol in infra_postgres_data infra_redis_data infra_minio_data infra_prometheus_data infra_grafana_data; do
+    if docker volume ls -q 2>/dev/null | grep -qx "$vol"; then
+      echo -e "  ${YELLOW}Removing stale volume: $vol${NC}"
+      docker volume rm -f "$vol" 2>/dev/null || true
     fi
-  fi
+  done
+  sleep 1
 }
 
 # ─── Help ───────────────────────────────────────────────────────────────────
