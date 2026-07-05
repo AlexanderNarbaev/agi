@@ -1,7 +1,7 @@
 {
   "projectId": "",
   "defaultAgentId": "opencode",
-  "stateFilePath": "/home/narbaevay/agi/.opencode/state/codegraph-session-runtime.json",
+  "stateFilePath": "/home/alexandr-narbaev/Projects/agi/.opencode/state/codegraph-session-runtime.json",
   "lastWorkflowState": null,
   "pendingReviewCommit": null,
   "lastContextSessionId": null,
