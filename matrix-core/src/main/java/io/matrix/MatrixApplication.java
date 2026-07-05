@@ -1,5 +1,7 @@
 package io.matrix;
 
+import io.matrix.events.KafkaEventJournal;
+import io.matrix.events.KafkaTopics;
 import io.matrix.observability.MatrixMetrics;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.quarkus.runtime.Quarkus;
@@ -10,6 +12,7 @@ import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import org.apache.pekko.actor.typed.ActorSystem;
 import org.apache.pekko.actor.typed.javadsl.Behaviors;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import picocli.CommandLine;
 
 @QuarkusMain
@@ -42,5 +45,14 @@ public class MatrixApplication implements QuarkusApplication {
     @Singleton
     public MatrixMetrics matrixMetrics(MeterRegistry registry) {
         return new MatrixMetrics(registry);
+    }
+
+    @Produces
+    @Singleton
+    public KafkaEventJournal kafkaEventJournal(
+            @ConfigProperty(name = "kafka.bootstrap.servers", defaultValue = "localhost:9092")
+            String bootstrapServers) {
+        KafkaTopics.ensureTopics(bootstrapServers);
+        return new KafkaEventJournal("neuron-events", bootstrapServers);
     }
 }

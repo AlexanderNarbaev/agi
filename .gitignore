@@ -17,6 +17,7 @@ Thumbs.db
 *.iml
 *.ipr
 *.iws
+__pycache__/
 
 bin/
 out/
@@ -43,3 +44,4 @@ minecraft-server/
 !minecraft-server/eula.txt
 .hmcl/
 .minecraft/
+__pycache__/

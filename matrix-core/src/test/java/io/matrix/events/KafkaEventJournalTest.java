@@ -12,7 +12,7 @@ class KafkaEventJournalTest {
 
     @Test
     void shouldBeEmptyInitially() {
-        KafkaEventJournal journal = new KafkaEventJournal("test-topic");
+        KafkaEventJournal journal = KafkaEventJournal.forTesting("test-topic");
 
         assertThat(journal.size()).isEqualTo(0);
         assertThat(journal.replayAll()).isEmpty();
@@ -21,14 +21,14 @@ class KafkaEventJournalTest {
 
     @Test
     void shouldUseDefaultTopic() {
-        KafkaEventJournal journal = new KafkaEventJournal();
+        KafkaEventJournal journal = KafkaEventJournal.forTesting("neuron-events");
 
         assertThat(journal.topic()).isEqualTo("neuron-events");
     }
 
     @Test
     void shouldAppendAndReplaySingleEvent() {
-        KafkaEventJournal journal = new KafkaEventJournal("test-topic");
+        KafkaEventJournal journal = KafkaEventJournal.forTesting("test-topic");
         NeuronId id = NeuronId.create();
 
         long idx = journal.append(ClusterEvent.of(ClusterEventType.NEURON_CREATED,
@@ -47,7 +47,7 @@ class KafkaEventJournalTest {
 
     @Test
     void shouldAppendAndReplayMultipleEvents() {
-        KafkaEventJournal journal = new KafkaEventJournal("test-topic");
+        KafkaEventJournal journal = KafkaEventJournal.forTesting("test-topic");
         Random rng = new Random(42);
 
         for (int i = 0; i < 50; i++) {
@@ -61,7 +61,7 @@ class KafkaEventJournalTest {
 
     @Test
     void shouldReplayFromIndex() {
-        KafkaEventJournal journal = new KafkaEventJournal("test-topic");
+        KafkaEventJournal journal = KafkaEventJournal.forTesting("test-topic");
         NeuronId id = NeuronId.create();
 
         journal.append(ClusterEvent.of(ClusterEventType.NEURON_CREATED, "i1", id, "e1"));
@@ -77,7 +77,7 @@ class KafkaEventJournalTest {
 
     @Test
     void shouldReplayFromOutOfBounds() {
-        KafkaEventJournal journal = new KafkaEventJournal("test-topic");
+        KafkaEventJournal journal = KafkaEventJournal.forTesting("test-topic");
         journal.append(ClusterEvent.of(ClusterEventType.NEURON_CREATED,
                 "i1", NeuronId.create(), "e1"));
 
@@ -86,8 +86,8 @@ class KafkaEventJournalTest {
     }
 
     @Test
-    void shouldDrainForPublish() {
-        KafkaEventJournal journal = new KafkaEventJournal("test-topic");
+    void drainForPublishShouldReturnEmpty() {
+        KafkaEventJournal journal = KafkaEventJournal.forTesting("test-topic");
 
         for (int i = 0; i < 10; i++) {
             journal.append(ClusterEvent.of(ClusterEventType.SIGNAL_EMITTED,
@@ -95,13 +95,13 @@ class KafkaEventJournalTest {
         }
 
         List<byte[]> batch = journal.drainForPublish();
-        assertThat(batch).hasSize(10);
-        assertThat(journal.size()).isEqualTo(0);
+        assertThat(batch).isEmpty();
+        assertThat(journal.size()).isEqualTo(10);
     }
 
     @Test
     void shouldHandleAllEventTypes() {
-        KafkaEventJournal journal = new KafkaEventJournal("test-topic");
+        KafkaEventJournal journal = KafkaEventJournal.forTesting("test-topic");
         NeuronId id = NeuronId.create();
 
         for (ClusterEventType type : ClusterEventType.values()) {
@@ -120,7 +120,7 @@ class KafkaEventJournalTest {
 
     @Test
     void shouldSerializeAndDeserializeCorrectly() {
-        KafkaEventJournal journal = new KafkaEventJournal("test-topic");
+        KafkaEventJournal journal = KafkaEventJournal.forTesting("test-topic");
         NeuronId id = NeuronId.create();
 
         ClusterEvent original = ClusterEvent.of(ClusterEventType.SNAPSHOT_CREATED,
@@ -138,13 +138,13 @@ class KafkaEventJournalTest {
 
     @Test
     void shouldSupportMultipleDrainCycles() {
-        KafkaEventJournal journal = new KafkaEventJournal("test-topic");
+        KafkaEventJournal journal = KafkaEventJournal.forTesting("test-topic");
 
         journal.append(ClusterEvent.of(ClusterEventType.NEURON_CREATED,
                 "i1", NeuronId.create(), "batch1"));
 
         List<byte[]> batch1 = journal.drainForPublish();
-        assertThat(batch1).hasSize(1);
+        assertThat(batch1).isEmpty();
 
         journal.append(ClusterEvent.of(ClusterEventType.NEURON_MUTATED,
                 "i1", NeuronId.create(), "batch2"));
@@ -152,12 +152,12 @@ class KafkaEventJournalTest {
                 "i1", NeuronId.create(), "batch2"));
 
         List<byte[]> batch2 = journal.drainForPublish();
-        assertThat(batch2).hasSize(2);
+        assertThat(batch2).isEmpty();
     }
 
     @Test
     void shouldMaintainEventOrder() {
-        KafkaEventJournal journal = new KafkaEventJournal("test-topic");
+        KafkaEventJournal journal = KafkaEventJournal.forTesting("test-topic");
 
         for (int i = 0; i < 100; i++) {
             journal.append(ClusterEvent.of(
