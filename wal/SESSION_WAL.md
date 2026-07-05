@@ -1,3 +1,3 @@
-📍 Status: v2.3.0 — P0/P1/P2 completed. robot_arm_sim bitwise bug fixed. TelegramBot @PostConstruct auto-start. JMH plugin added. 9 @Deprecated files removed + Avro dep. Cauldron→Noosphere→HADES pipeline CLI (PipelineCommand + 7 tests). FPGA synthesis flow (Makefile, constraints, testbench, CI job, Amaranth verified). 580+ tests.
+📍 Status: v2.3.1 — Observability stack fixed: Grafana datasource → prometheus:9090 (Docker internal), Prometheus scrape → host.docker.internal:9091, matrix-core env vars.
 🚀 Active: GraalVM native compilation (needs SDKMAN install), Discord bot, K8s operator framework
 🛑 Protected: Pekko 1.6.0, K_MAX=20, FROZEN-neurons, Quarkus 3.36.1, Java 25, AGPLv3+ethics, Three Prohibitions, 84% floor
