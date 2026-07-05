@@ -51,22 +51,27 @@ assign_port() {
 }
 
 allocate_ports() {
+  set +e  # disable exit-on-error for port checks
   local changed=0
   for var in "${!PORT_MAP[@]}"; do
     local default="${PORT_MAP[$var]}"
     local assigned
-    assigned=$(assign_port "$default")
+    assigned=$(assign_port "$default" 2>/dev/null || echo "$default")
     PORT_MAP[$var]="$assigned"
-    [ "$assigned" != "$default" ] && { log_warn "$default→$assigned ($var)"; ((changed++)); }
+    if [ "$assigned" != "$default" ]; then
+      log_warn "$default→$assigned ($var)"
+      ((changed++)) || true
+    fi
   done
-  MC_PORT=$(assign_port "$MC_PORT")
-  AUTH_PORT=$(assign_port "$AUTH_PORT")
-  CORE_PORT=$(assign_port "$CORE_PORT")
+  MC_PORT=$(assign_port "$MC_PORT" 2>/dev/null || echo "$MC_PORT")
+  AUTH_PORT=$(assign_port "$AUTH_PORT" 2>/dev/null || echo "$AUTH_PORT")
+  CORE_PORT=$(assign_port "$CORE_PORT" 2>/dev/null || echo "$CORE_PORT")
   [ "$changed" -gt 0 ] && info "Using alternative ports (+10000 offset)"
+  set -e
 }
 
 write_env() {
-  cat > "$PROJECT_DIR/infra/.env" <<EOF
+  cat > "$PROJECT_DIR/infra/.env" <<EOF || true
 PG_PORT=${PORT_MAP[PG]}
 REDIS_PORT=${PORT_MAP[REDIS]}
 KAFKA_PORT=${PORT_MAP[KAFKA]}
