@@ -1,3 +1,3 @@
-📍 Status: v2.3.1 — Observability stack fixed: Grafana datasource → prometheus:9090 (Docker internal), Prometheus scrape → host.docker.internal:9091, matrix-core env vars.
-🚀 Active: GraalVM native compilation (needs SDKMAN install), Discord bot, K8s operator framework
-🛑 Protected: Pekko 1.6.0, K_MAX=20, FROZEN-neurons, Quarkus 3.36.1, Java 25, AGPLv3+ethics, Three Prohibitions, 84% floor
+📍 Status: Pretrain from large open-source models implemented. scripts/pretrain_neurons.py: +--quantize, +--source-model, +--dtype, +architecture auto-detection, +streaming layer-by-layer. scripts/pretrain_large.py: new for >10GB (sharded, mmap, MoE, 8-bit quant). Tested: Qwen2.5-0.5B (720 neurons, 24 layers, k=16)
+🚀 Active: 2 files changed (pretrain_neurons.py, pretrain_large.py). 27 files committed (24 .avro + metadata.json for Qwen2.5-0.5B). Pushed to origin + gitverse.
+🛑 Protected: Backward compat verified (demo mode + bulk loading still work). Existing SmolLM2-135M-synth data untouched. K_MAX=20.
