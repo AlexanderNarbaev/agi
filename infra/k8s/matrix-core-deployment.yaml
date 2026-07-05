@@ -1,0 +1,43 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: matrix-core
+  namespace: matrix
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: matrix-core
+  template:
+    metadata:
+      labels:
+        app: matrix-core
+    spec:
+      containers:
+        - name: matrix-core
+          image: ghcr.io/alexandernarbaev/matrix-core:latest
+          ports:
+            - containerPort: 9091
+          env:
+            - name: QUARKUS_HTTP_PORT
+              value: "9091"
+            - name: JAVA_OPTS
+              value: "-Xms256m -Xmx512m -XX:+UseZGC"
+            - name: DB_HOST
+              value: "matrix-postgres"
+            - name: DB_PORT
+              value: "5432"
+            - name: KAFKA_BOOTSTRAP_SERVERS
+              value: "matrix-kafka:9092"
+          readinessProbe:
+            httpGet:
+              path: /q/health/ready
+              port: 9091
+            initialDelaySeconds: 10
+            periodSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /q/health/live
+              port: 9091
+            initialDelaySeconds: 30
+            periodSeconds: 10

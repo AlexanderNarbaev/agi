@@ -7,7 +7,8 @@ WORKDIR /app
 COPY matrix-core/build/matrix-core-*-runner.jar /app/matrix-core.jar
 
 EXPOSE 9091
-HEALTHCHECK --interval=30s --timeout=5s --retries=3 CMD java -jar /app/matrix-core.jar --help
+HEALTHCHECK --interval=30s --timeout=5s --start-period=60s --retries=3 \
+    CMD java -jar /app/matrix-core.jar --help || exit 1
 
 ENTRYPOINT ["java", "-Xmx512m", "-jar", "/app/matrix-core.jar"]
 CMD []
