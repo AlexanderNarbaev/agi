@@ -16,6 +16,7 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @ServerEndpoint("/api/v1/agent/ws")
 @ApplicationScoped
@@ -23,9 +24,12 @@ public class AgentWebSocket {
 
     private static final Logger log = LoggerFactory.getLogger(AgentWebSocket.class);
     private static final ObjectMapper MAPPER = new ObjectMapper();
+    private static final int MAX_SENSOR_BITS = 0xFFFFF;
+    private static final int MAX_MESSAGE_RATE = 100;
 
     private final Map<String, Session> agentSessions = new ConcurrentHashMap<>();
     private final Map<Session, String> sessionAgents = new ConcurrentHashMap<>();
+    private final Map<Session, AtomicInteger> messageCounters = new ConcurrentHashMap<>();
 
     @Inject
     AgentBrainService brainService;
@@ -57,20 +61,36 @@ public class AgentWebSocket {
     @OnMessage
     public void onMessage(String message, Session session) {
         try {
+            int count = messageCounters.computeIfAbsent(session, s -> new AtomicInteger()).incrementAndGet();
+            if (count > MAX_MESSAGE_RATE) {
+                sendError(session, "Rate limit exceeded: " + MAX_MESSAGE_RATE + " messages per session");
+                return;
+            }
+
             JsonNode msg = MAPPER.readTree(message);
             String type = msg.has("type") ? msg.get("type").asText() : "";
 
             switch (type) {
-                case "start" -> handleStart(msg, session);
+                case "start" -> { validateAgentId(msg); handleStart(msg, session); }
                 case "stop" -> handleStop(session);
                 case "sensors" -> handleSensors(msg, session);
                 case "train" -> handleTrain(msg, session);
                 case "save" -> handleSave(session);
                 default -> sendError(session, "Unknown message type: " + type);
             }
+        } catch (IllegalArgumentException e) {
+            sendError(session, "Validation error: " + e.getMessage());
         } catch (Exception e) {
-            log.error("Failed to process message: {}", message, e);
+            log.error("Failed to process message", e);
             sendError(session, "Message processing failed: " + e.getMessage());
+        }
+    }
+
+    private void validateAgentId(JsonNode msg) {
+        if (!msg.has("agentId")) return;
+        String id = msg.get("agentId").asText();
+        if (id.length() > 64 || !id.matches("[a-zA-Z0-9_-]+")) {
+            throw new IllegalArgumentException("Invalid agentId: max 64 chars, alphanumeric+[-_]");
         }
     }
 
