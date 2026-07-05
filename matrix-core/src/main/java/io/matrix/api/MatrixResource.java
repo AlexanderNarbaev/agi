@@ -10,6 +10,8 @@ import io.matrix.snapshot.SnapshotStore;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
@@ -20,6 +22,8 @@ import java.util.concurrent.ConcurrentHashMap;
 @Consumes(MediaType.APPLICATION_JSON)
 @TenantAware
 public class MatrixResource {
+
+    private static final Logger log = LoggerFactory.getLogger(MatrixResource.class);
 
     private final Random rng = new Random();
     private final Map<String, EvolutionLoop> activeLoops = new ConcurrentHashMap<>();
@@ -243,6 +247,70 @@ public class MatrixResource {
         return Map.of("status", "loaded", "path", path);
     }
 
+    @POST
+    @Path("/agent/train-online")
+    public Map<String, Object> trainOnline(TrainOnlineRequest req) {
+        int iterations = req.iterations > 0 ? req.iterations : 5;
+        brainService.onlineTrain(iterations);
+
+        return Map.of(
+                "status", "completed",
+                "method", "online",
+                "iterations", iterations
+        );
+    }
+
+    // ─── Swarm intelligence: Neuron sharing via Noosphere ───
+
+    private final Map<String, List<SharedNeuron>> sharedNeurons = new ConcurrentHashMap<>();
+
+    /** A neuron shared by an agent to the swarm. */
+    public record SharedNeuron(String agentId, String neuronData, double fitness, long timestamp) {}
+
+    @POST
+    @Path("/agent/share")
+    public Map<String, Object> shareNeurons(NeuronShareRequest req) {
+        String role = req.role != null ? req.role.toLowerCase() : "generalist";
+        SharedNeuron shared = new SharedNeuron(
+                req.agentId != null ? req.agentId : "unknown",
+                req.neuronData,
+                req.fitness,
+                System.currentTimeMillis());
+
+        sharedNeurons.computeIfAbsent(role, k -> new ArrayList<>()).add(shared);
+
+        // Keep only top 50 neurons per role
+        List<SharedNeuron> list = sharedNeurons.get(role);
+        if (list.size() > 50) {
+            list.sort((a, b) -> Double.compare(b.fitness, a.fitness));
+            while (list.size() > 50) list.remove(list.size() - 1);
+        }
+
+        log.info("Neuron shared: role={} agentId={} fitness={:.3f}",
+                role, shared.agentId(), shared.fitness());
+
+        return Map.of(
+                "status", "shared",
+                "role", role,
+                "totalShared", sharedNeurons.get(role).size()
+        );
+    }
+
+    @GET
+    @Path("/agent/neurons/{role}")
+    public List<Map<String, Object>> getSharedNeurons(@PathParam("role") String role) {
+        List<SharedNeuron> neurons = sharedNeurons.getOrDefault(role.toLowerCase(), List.of());
+
+        return neurons.stream()
+                .sorted((a, b) -> Double.compare(b.fitness, a.fitness))
+                .map(n -> Map.<String, Object>of(
+                        "agentId", n.agentId(),
+                        "neuronData", n.neuronData(),
+                        "fitness", n.fitness(),
+                        "timestamp", n.timestamp()))
+                .toList();
+    }
+
     public static class SimulateRequest {
         public int generations;
         public int population;
@@ -284,5 +352,9 @@ public class MatrixResource {
 
     public static class AgentLoadRequest {
         public String path;
+    }
+
+    public static class TrainOnlineRequest {
+        public int iterations;
     }
 }

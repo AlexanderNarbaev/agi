@@ -75,6 +75,7 @@ public class AgentWebSocket {
                 case "stop" -> handleStop(session);
                 case "sensors" -> handleSensors(msg, session);
                 case "train" -> handleTrain(msg, session);
+                case "train-online" -> handleTrainOnline(msg, session);
                 case "save" -> handleSave(session);
                 default -> sendError(session, "Unknown message type: " + type);
             }
@@ -128,7 +129,11 @@ public class AgentWebSocket {
     }
 
     private void handleSensors(JsonNode msg, Session session) throws IOException {
-        String agentId = sessionAgents.get(session);
+        // Support multi-agent: agentId can come from the message or the session
+        String agentId = msg.has("agentId")
+                ? msg.get("agentId").asText()
+                : sessionAgents.get(session);
+
         if (agentId == null) {
             sendError(session, "No agent started for this session");
             return;
@@ -172,6 +177,34 @@ public class AgentWebSocket {
             } catch (Exception e) {
                 log.error("Training failed for agent {}", agentId, e);
                 sendError(session, "Training failed: " + e.getMessage());
+            }
+        });
+    }
+
+    private void handleTrainOnline(JsonNode msg, Session session) {
+        String agentId = sessionAgents.get(session);
+        if (agentId == null) {
+            sendError(session, "No agent started for this session");
+            return;
+        }
+
+        int iterations = msg.has("iterations") ? msg.get("iterations").asInt() : 5;
+        log.info("Starting online training for agent {}: iterations={}", agentId, iterations);
+
+        CompletableFuture.runAsync(() -> {
+            try {
+                brainService.onlineTrain(iterations);
+
+                ObjectNode response = MAPPER.createObjectNode();
+                response.put("type", "training_complete");
+                response.put("method", "online");
+                response.put("iterations", iterations);
+                session.getAsyncRemote().sendText(MAPPER.writeValueAsString(response));
+
+                log.info("Online training complete for agent {}", agentId);
+            } catch (Exception e) {
+                log.error("Online training failed for agent {}", agentId, e);
+                sendError(session, "Online training failed: " + e.getMessage());
             }
         });
     }
