@@ -115,18 +115,27 @@ public class MatrixCoreClient {
      * Sends sensor data to matrix-core via WebSocket for neural inference.
      * The action result arrives asynchronously via {@link ActionCallback#onAction}.
      *
+     * @param agentId    unique agent identifier (for multi-agent mode)
      * @param sensorBits 20-bit sensor vector from Minecraft world state
      */
-    public void sendSensors(long sensorBits) {
+    public void sendSensors(String agentId, long sensorBits) {
         if (!connected || webSocket == null) {
             return;
         }
-        String msg = "{\"type\":\"sensors\",\"data\":" + sensorBits + "}";
+        String msg = "{\"type\":\"sensors\",\"data\":" + sensorBits
+                + ",\"agentId\":\"" + agentId + "\"}";
         webSocket.sendText(msg, true)
                 .exceptionally(ex -> {
                     logger.warning("Failed to send sensors: " + ex.getMessage());
                     return null;
                 });
+    }
+
+    /**
+     * Sends sensor data without explicit agentId (backward compat).
+     */
+    public void sendSensors(long sensorBits) {
+        sendSensors("default", sensorBits);
     }
 
     /**
@@ -239,6 +248,94 @@ public class MatrixCoreClient {
                         logger.info("Brain loaded: " + response.body());
                     } else {
                         logger.warning("Load failed: HTTP " + response.statusCode());
+                    }
+                });
+    }
+
+    /**
+     * Triggers online training (hill-climbing) via REST API.
+     *
+     * <p>This is a lightweight alternative to full GA training,
+     * using recent feedback to adjust weights locally.
+     *
+     * @param iterations number of hill-climbing iterations per tree
+     * @return future with the server's JSON response
+     */
+    public CompletableFuture<String> trainOnline(int iterations) {
+        String body = "{\"iterations\":" + iterations + "}";
+
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(baseUrl + "/api/v1/agent/train-online"))
+                .timeout(HTTP_TIMEOUT)
+                .header("Content-Type", "application/json")
+                .POST(HttpRequest.BodyPublishers.ofString(body))
+                .build();
+
+        return httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofString())
+                .thenApply(response -> {
+                    if (response.statusCode() >= 200 && response.statusCode() < 300) {
+                        logger.info("Online training response: " + response.body());
+                    } else {
+                        logger.warning("Online training failed: HTTP " + response.statusCode()
+                                + " — " + response.body());
+                    }
+                    return response.body();
+                });
+    }
+
+    /**
+     * Shares best-performing neurons with the swarm via REST API.
+     *
+     * @param role       agent role (miner, crafter, explorer, etc.)
+     * @param agentId    unique identifier of the sharing agent
+     * @param neuronData base64-encoded neuron data
+     * @param fitness    fitness score of this neuron
+     * @return future with the server's JSON response
+     */
+    public CompletableFuture<String> shareNeurons(String role, String agentId,
+                                                   String neuronData, double fitness) {
+        String body = "{\"role\":\"" + role + "\",\"agentId\":\"" + agentId
+                + "\",\"neuronData\":\"" + neuronData + "\",\"fitness\":" + fitness + "}";
+
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(baseUrl + "/api/v1/agent/share"))
+                .timeout(HTTP_TIMEOUT)
+                .header("Content-Type", "application/json")
+                .POST(HttpRequest.BodyPublishers.ofString(body))
+                .build();
+
+        return httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofString())
+                .thenApply(response -> {
+                    if (response.statusCode() >= 200 && response.statusCode() < 300) {
+                        logger.info("Neuron shared: " + response.body());
+                    } else {
+                        logger.warning("Share failed: HTTP " + response.statusCode());
+                    }
+                    return response.body();
+                });
+    }
+
+    /**
+     * Retrieves shared neurons from the swarm for a given role.
+     *
+     * @param role agent role (miner, crafter, explorer, etc.)
+     * @return future with the server's JSON response (list of shared neurons)
+     */
+    public CompletableFuture<String> getSharedNeurons(String role) {
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(baseUrl + "/api/v1/agent/neurons/" + role))
+                .timeout(HTTP_TIMEOUT)
+                .header("Content-Type", "application/json")
+                .GET()
+                .build();
+
+        return httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofString())
+                .thenApply(response -> {
+                    if (response.statusCode() >= 200 && response.statusCode() < 300) {
+                        return response.body();
+                    } else {
+                        logger.warning("Get neurons failed: HTTP " + response.statusCode());
+                        return "[]";
                     }
                 });
     }

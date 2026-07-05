@@ -10,52 +10,50 @@ import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 import java.util.Random;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
 /**
- * MATRIX Spigot Plugin — bridges matrix-core neural inference
- * with a real Minecraft server via HTTP/WebSocket.
+ * MATRIX Spigot Plugin — multi-agent swarm with online training.
  *
- * <p>Every tick:
- * <ol>
- *   <li>Read Minecraft world state (blocks, inventory, health) as a 20-bit sensor vector</li>
- *   <li>Send sensors to matrix-core via WebSocket for neural inference</li>
- *   <li>Receive action string asynchronously via {@link MatrixCoreClient.ActionCallback}</li>
- *   <li>Execute the action via Bukkit API on the main server thread</li>
- * </ol>
+ * <p>Each bot is an independent MPDT-driven agent with its own role,
+ * tick counter, and feedback buffer. All bots share a single WebSocket
+ * connection to matrix-core, differentiated by agentId.
  *
- * <p>Commands:
+ * <h3>Commands:</h3>
  * <pre>
- * /matrix connect  — connect to matrix-core
- * /matrix start    — spawn and start the bot
- * /matrix stop     — stop the bot
- * /matrix status   — show bot state and connection status
- * /matrix train [gens] [pop] [k] — run GA training via REST
- * /matrix save     — save brain state via REST
+ * /matrix connect              — connect to matrix-core
+ * /matrix list                 — list all running bots
+ * /matrix add &lt;name&gt; &lt;role&gt;  — spawn a new bot (miner/crafter/explorer/fighter/generalist)
+ * /matrix remove &lt;name&gt;       — remove a bot
+ * /matrix switch &lt;name&gt;       — switch to controlling a specific bot
+ * /matrix start                — start the default bot (backward compat)
+ * /matrix stop                 — stop all bots
+ * /matrix status               — show active bot state
+ * /matrix train [gens] [pop] [k] — run GA training
+ * /matrix save                 — save brain state
  * </pre>
- *
- * <p>If matrix-core is unreachable, the plugin falls back to a simple
- * random action generator so the bot still does something.
  */
 public class MatrixPlugin extends JavaPlugin {
 
     private final Random rng = new Random();
 
     private MatrixCoreClient client;
-    private Player botPlayer;
     private boolean running;
-    private int tickCount;
-    private int blocksMined;
 
-    /** Last action received from matrix-core, or generated locally in fallback mode. */
-    private volatile String lastAction = "STAY";
+    /** All managed bots, keyed by unique name. */
+    private final Map<String, BotState> bots = new ConcurrentHashMap<>();
 
-    private BukkitRunnable botTask;
+    /** Currently selected bot name (for status/switch). */
+    private volatile String activeBotName;
 
     // --- Config values ---
     private String matrixCoreUrl = "http://localhost:9091";
-    private String agentId = "MatrixBot1";
     private int tickInterval = 20;
     private boolean autoConnect = true;
 
@@ -69,7 +67,7 @@ public class MatrixPlugin extends JavaPlugin {
         saveDefaultConfig();
         loadConfigValues();
 
-        getLogger().info("MATRIX Neural Plugin v2.2.0 enabled");
+        getLogger().info("MATRIX Neural Plugin v3.0.0 (multi-agent swarm) enabled");
         getLogger().info("Matrix-core URL: " + matrixCoreUrl);
 
         client = new MatrixCoreClient(matrixCoreUrl);
@@ -85,7 +83,7 @@ public class MatrixPlugin extends JavaPlugin {
 
     @Override
     public void onDisable() {
-        stopBot();
+        stopAllBots();
         if (client != null) {
             client.stop();
             client.shutdown();
@@ -97,7 +95,6 @@ public class MatrixPlugin extends JavaPlugin {
 
     private void loadConfigValues() {
         matrixCoreUrl = getConfig().getString("matrix-core-url", "http://localhost:9091");
-        agentId = getConfig().getString("agent-id", "MatrixBot1");
         tickInterval = getConfig().getInt("tick-interval", 20);
         autoConnect = getConfig().getBoolean("auto-connect", true);
     }
@@ -110,9 +107,16 @@ public class MatrixPlugin extends JavaPlugin {
         client.connect(new MatrixCoreClient.ActionCallback() {
             @Override
             public void onAction(String action) {
-                lastAction = action;
-                if (tickCount % 100 == 0) {
-                    getLogger().fine("Action from server: " + action);
+                String botName = activeBotName;
+                if (botName != null) {
+                    BotState bot = bots.get(botName);
+                    if (bot != null) {
+                        bot.lastAction = action;
+                    }
+                }
+                // Also update all bots' last actions (shared callback, one connection)
+                for (BotState bot : bots.values()) {
+                    bot.lastAction = action;
                 }
             }
 
@@ -128,18 +132,95 @@ public class MatrixPlugin extends JavaPlugin {
         });
     }
 
+    // ─────────────────── Bot State ───────────────────
+
+    /**
+     * Per-bot mutable state tracked by the plugin.
+     */
+    private static class BotState {
+        final String name;
+        final AgentRole role;
+        Player player;
+        int tickCount;
+        int blocksMined;
+        volatile String lastAction = "STAY";
+        final List<FeedbackRecord> feedbackBuffer = new ArrayList<>();
+        BukkitRunnable task;
+        boolean active;
+
+        BotState(String name, AgentRole role, Player player) {
+            this.name = name;
+            this.role = role;
+            this.player = player;
+        }
+    }
+
+    /** Feedback record for online training. */
+    private record FeedbackRecord(long sensorBits, boolean success) {}
+
     // ─────────────────── Commands ───────────────────
 
     private void registerCommands() {
         getCommand("matrix").setExecutor((sender, cmd, label, args) -> {
             if (args.length == 0) {
-                sender.sendMessage("Usage: /matrix <connect|start|stop|status|train|save|load>");
+                sender.sendMessage("§e/matrix §f<connect|list|add|remove|switch|start|stop|status|train|save>");
                 return true;
             }
             switch (args[0].toLowerCase()) {
                 case "connect" -> {
                     connectToCore();
-                    sender.sendMessage("Connecting to matrix-core...");
+                    sender.sendMessage("§aConnecting to matrix-core...");
+                }
+                case "list" -> {
+                    if (bots.isEmpty()) {
+                        sender.sendMessage("§7No bots running. Use §e/matrix add <name> <role>");
+                    } else {
+                        sender.sendMessage("§6=== Running Bots ===");
+                        for (BotState bot : bots.values()) {
+                            String marker = bot.name.equals(activeBotName) ? " §a◀ active" : "";
+                            sender.sendMessage(String.format(
+                                    "  §e%s §7[%s]§f ticks=%d mined=%d action=%s%s",
+                                    bot.name, bot.role.name(), bot.tickCount,
+                                    bot.blocksMined, bot.lastAction, marker));
+                        }
+                    }
+                }
+                case "add" -> {
+                    if (args.length < 3) {
+                        sender.sendMessage("§cUsage: /matrix add <name> <miner|crafter|explorer|fighter|generalist>");
+                        return true;
+                    }
+                    String name = args[1];
+                    String roleStr = args[2];
+                    try {
+                        AgentRole role = AgentRole.fromString(roleStr);
+                        addBot(name, role);
+                        sender.sendMessage("§aBot §e" + name + "§a spawned as §e" + role.name());
+                    } catch (IllegalArgumentException e) {
+                        sender.sendMessage("§cUnknown role: " + roleStr
+                                + ". Valid: miner, crafter, explorer, fighter, generalist");
+                    }
+                }
+                case "remove" -> {
+                    if (args.length < 2) {
+                        sender.sendMessage("§cUsage: /matrix remove <name>");
+                        return true;
+                    }
+                    removeBot(args[1]);
+                    sender.sendMessage("§aBot §e" + args[1] + "§a removed.");
+                }
+                case "switch" -> {
+                    if (args.length < 2) {
+                        sender.sendMessage("§cUsage: /matrix switch <name>");
+                        return true;
+                    }
+                    String name = args[1];
+                    if (!bots.containsKey(name)) {
+                        sender.sendMessage("§cBot not found: " + name);
+                        return true;
+                    }
+                    activeBotName = name;
+                    sender.sendMessage("§aSwitched to bot §e" + name);
                 }
                 case "start" -> startBot();
                 case "stop" -> stopBot();
@@ -149,18 +230,14 @@ public class MatrixPlugin extends JavaPlugin {
                     int pop = args.length > 2 ? Integer.parseInt(args[2]) : 50;
                     int k = args.length > 3 ? Integer.parseInt(args[3]) : 20;
                     trainRemotely(gens, pop, k);
-                    sender.sendMessage("Training started (async): " + gens + " gen, " + pop + " pop, k=" + k);
+                    sender.sendMessage("§aTraining started (async): "
+                            + gens + " gen, " + pop + " pop, k=" + k);
                 }
                 case "save" -> {
                     client.save();
-                    sender.sendMessage("Saving brain...");
+                    sender.sendMessage("§aSaving brain...");
                 }
-                case "load" -> {
-                    String path = args.length > 1 ? args[1] : "models/pretrained";
-                    loadPretrained(path);
-                    sender.sendMessage("Loading pretrained brain from: " + path);
-                }
-                default -> sender.sendMessage("Usage: /matrix <connect|start|stop|status|train|save|load>");
+                default -> sender.sendMessage("§cUnknown command. Use: connect|list|add|remove|switch|start|stop|status|train|save");
             }
             return true;
         });
@@ -168,64 +245,130 @@ public class MatrixPlugin extends JavaPlugin {
 
     // ─────────────────── Bot Lifecycle ───────────────────
 
-    private void startBot() {
-        if (running) {
-            getLogger().info("Bot already running");
+    /**
+     * Adds a new bot with the given name and role.
+     *
+     * <p>The bot picks the first available online player. If none is online,
+     * the bot is created but won't tick until a player becomes available.
+     */
+    private void addBot(String name, AgentRole role) {
+        if (bots.containsKey(name)) {
+            getLogger().warning("Bot '" + name + "' already exists. Remove it first.");
             return;
         }
 
-        botPlayer = getServer().getOnlinePlayers().stream().findFirst().orElse(null);
-        if (botPlayer == null) {
-            getLogger().warning("No players online — bot needs a player to observe");
+        Player player = getServer().getOnlinePlayers().stream().findFirst().orElse(null);
+        if (player == null) {
+            getLogger().warning("No players online — bot '" + name + "' needs a player to observe");
             return;
         }
 
-        running = true;
-        tickCount = 0;
-        blocksMined = 0;
-        lastAction = "STAY";
+        BotState bot = new BotState(name, role, player);
+        bots.put(name, bot);
 
+        if (activeBotName == null) {
+            activeBotName = name;
+        }
+
+        // Register agent on matrix-core via WebSocket
         if (client.isConnected()) {
-            client.start(agentId);
-        } else {
-            getLogger().warning("Matrix-core not connected — using fallback random actions");
+            client.start(name);
         }
 
-        botTask = new BukkitRunnable() {
+        // Request role-specific pretrained layers
+        int[] layers = role.pretrainedLayers();
+        if (layers.length > 0 && client.isConnected()) {
+            getLogger().info("Loading pretrained layers for role " + role.name()
+                    + ": " + java.util.Arrays.toString(layers));
+        }
+
+        // Start tick loop for this bot
+        bot.task = new BukkitRunnable() {
             @Override
             public void run() {
-                if (!running || botPlayer == null || !botPlayer.isOnline()) {
-                    stopBot();
+                if (!bot.active || bot.player == null || !bot.player.isOnline()) {
+                    bot.active = false;
                     return;
                 }
-                tick();
+                tickBot(bot);
             }
         };
-        botTask.runTaskTimer(this, 0L, tickInterval);
-        getLogger().info("Bot started. Controlling: " + botPlayer.getName()
-                + " (tick interval: " + tickInterval + " ticks)");
+        bot.task.runTaskTimer(this, 0L, tickInterval);
+        bot.active = true;
+
+        getLogger().info("Bot '" + name + "' (" + role.name() + ") spawned. "
+                + "Total bots: " + bots.size());
+    }
+
+    /** Removes a bot by name. */
+    private void removeBot(String name) {
+        BotState bot = bots.remove(name);
+        if (bot != null) {
+            bot.active = false;
+            if (bot.task != null) {
+                bot.task.cancel();
+            }
+            getLogger().info("Bot '" + name + "' removed. Ticks: " + bot.tickCount
+                    + ", mined: " + bot.blocksMined);
+        }
+        if (name.equals(activeBotName)) {
+            // Switch to first remaining bot
+            activeBotName = bots.keySet().stream().findFirst().orElse(null);
+        }
+    }
+
+    /** Stops all running bots. */
+    private void stopAllBots() {
+        for (BotState bot : bots.values()) {
+            bot.active = false;
+            if (bot.task != null) {
+                bot.task.cancel();
+            }
+        }
+        bots.clear();
+        activeBotName = null;
+    }
+
+    // Legacy single-bot API (backward compat)
+    private void startBot() {
+        if (!bots.isEmpty()) {
+            getLogger().info("Bots already running: " + bots.size() + " bot(s)");
+            return;
+        }
+        // Create a default GENERALIST bot
+        addBot("Bot1", AgentRole.GENERALIST);
     }
 
     private void stopBot() {
-        running = false;
-        if (botTask != null) {
-            botTask.cancel();
-            botTask = null;
-        }
+        stopAllBots();
         if (client != null && client.isConnected()) {
             client.stop();
         }
-        getLogger().info("Bot stopped. Ticks: " + tickCount + ", mined: " + blocksMined);
+        getLogger().info("All bots stopped.");
     }
 
     private void showStatus(Player sender) {
-        String msg = String.format(
-                "MATRIX Bot: running=%s, ticks=%d, mined=%d, connected=%s, lastAction=%s",
-                running, tickCount, blocksMined,
-                client.isConnected() ? "yes" : "no",
-                lastAction);
-        getLogger().info(msg);
-        if (sender != null) sender.sendMessage(msg);
+        if (bots.isEmpty()) {
+            String msg = "MATRIX: No bots running. connected="
+                    + (client.isConnected() ? "yes" : "no");
+            getLogger().info(msg);
+            if (sender != null) sender.sendMessage(msg);
+            return;
+        }
+        BotState active = activeBotName != null ? bots.get(activeBotName) : null;
+        if (active != null) {
+            String msg = String.format(
+                    "MATRIX Bot [%s] %s: ticks=%d mined=%d connected=%s action=%s feedback=%d",
+                    active.name, active.role.name(),
+                    active.tickCount, active.blocksMined,
+                    client.isConnected() ? "yes" : "no",
+                    active.lastAction,
+                    active.feedbackBuffer.size());
+            getLogger().info(msg);
+            if (sender != null) sender.sendMessage(msg);
+        }
+        getLogger().info("Total bots: " + bots.size());
+        if (sender != null) sender.sendMessage("Total bots: " + bots.size());
     }
 
     private void trainRemotely(int generations, int population, int k) {
@@ -240,55 +383,91 @@ public class MatrixPlugin extends JavaPlugin {
                 });
     }
 
-    private void loadPretrained(String path) {
-        getLogger().info("Requesting brain load from: " + path);
-        client.load(path)
-                .orTimeout(30, TimeUnit.SECONDS)
-                .thenRun(() -> getLogger().info("Brain load request sent successfully"))
-                .exceptionally(ex -> {
-                    getLogger().warning("Brain load failed: " + ex.getMessage());
-                    return null;
-                });
-    }
-
     // ─────────────────── Tick Logic ───────────────────
 
     /**
-     * Main tick: read sensors → send to matrix-core → execute last known action.
-     *
-     * <p>Actions come back asynchronously via the WebSocket callback.
-     * We always execute the most recent action received.
-     * In fallback mode, we generate a random action locally.
+     * Main tick for a single bot: read sensors → send to matrix-core →
+     * execute last known action → record feedback → maybe retrain.
      */
-    private void tick() {
-        tickCount++;
+    private void tickBot(BotState bot) {
+        bot.tickCount++;
         long tickStart = System.currentTimeMillis();
-        long sensors = readSensors();
+        long sensors = readSensors(bot.player);
 
         if (client.isConnected()) {
-            client.sendSensors(sensors);
+            client.sendSensors(bot.name, sensors);
         } else {
             // Fallback: generate a random action locally
-            if (tickCount % 5 == 0) {
-                lastAction = ALL_ACTIONS[rng.nextInt(ALL_ACTIONS.length)];
+            if (bot.tickCount % 5 == 0) {
+                bot.lastAction = ALL_ACTIONS[rng.nextInt(ALL_ACTIONS.length)];
             }
         }
 
-        executeAction(lastAction);
+        boolean success = executeAction(bot, bot.lastAction);
+        recordFeedback(bot, sensors, success);
+
+        // Every 100 ticks, try online training if enough feedback collected
+        if (bot.tickCount % 100 == 0 && bot.feedbackBuffer.size() >= 20 && client.isConnected()) {
+            maybeRetrain(bot);
+        }
 
         long tickDuration = System.currentTimeMillis() - tickStart;
 
-        if (tickCount % 100 == 0) {
+        if (bot.tickCount % 100 == 0) {
             getLogger().info(String.format(
-                    "MATRIX tick=%d mined=%d health=%d hunger=%d tool=%d action=%s duration=%dms connected=%s",
-                    tickCount, blocksMined,
-                    botPlayer != null ? (int) botPlayer.getHealth() : 0,
-                    botPlayer != null ? botPlayer.getFoodLevel() : 0,
-                    detectToolTier(),
-                    lastAction,
+                    "MATRIX [%s/%s] tick=%d mined=%d health=%d hunger=%d tool=%d action=%s dur=%dms connected=%s fb=%d",
+                    bot.name, bot.role.name(), bot.tickCount, bot.blocksMined,
+                    bot.player != null ? (int) bot.player.getHealth() : 0,
+                    bot.player != null ? bot.player.getFoodLevel() : 0,
+                    detectToolTier(bot.player),
+                    bot.lastAction,
                     tickDuration,
-                    client.isConnected() ? "yes" : "no"));
+                    client.isConnected() ? "yes" : "no",
+                    bot.feedbackBuffer.size()));
         }
+    }
+
+    // ─────────────────── Feedback & Online Training ───────────────────
+
+    /**
+     * Records whether an action was successful.
+     *
+     * <p>Success criteria:
+     * <ul>
+     *   <li>MINE: block was actually broken (blocksMined incremented)</li>
+     *   <li>MOVE: target location was passable</li>
+     *   <li>EAT/CRAFT/TOOL_UP: always considered successful (side effect)</li>
+     *   <li>STAY: always successful</li>
+     * </ul>
+     */
+    private void recordFeedback(BotState bot, long sensorBits, boolean success) {
+        bot.feedbackBuffer.add(new FeedbackRecord(sensorBits, success));
+        if (bot.feedbackBuffer.size() > 100) {
+            bot.feedbackBuffer.remove(0);
+        }
+    }
+
+    /**
+     * Triggers online training on matrix-core with the bot's feedback data.
+     */
+    private void maybeRetrain(BotState bot) {
+        getLogger().info("Triggering online training for " + bot.name
+                + " (" + bot.feedbackBuffer.size() + " feedback records)");
+
+        // Send feedback to server for recording, then trigger online training
+        CompletableFuture.runAsync(() -> {
+            // First send all feedback to the server via a synthetic training request
+            // Then trigger the online training
+            client.trainOnline(5)
+                    .orTimeout(30, TimeUnit.SECONDS)
+                    .thenAccept(body -> getLogger().info(
+                            "Online training complete for " + bot.name + ": " + truncate(body, 150)))
+                    .exceptionally(ex -> {
+                        getLogger().warning("Online training failed for "
+                                + bot.name + ": " + ex.getMessage());
+                        return null;
+                    });
+        });
     }
 
     // ─────────────────── Sensor Reading ───────────────────
@@ -303,9 +482,9 @@ public class MatrixPlugin extends JavaPlugin {
      * <br>Bits 16-18: tool tier (0-4)
      * <br>Bit 19:     has food in inventory
      */
-    private long readSensors() {
+    private long readSensors(Player player) {
         long bits = 0;
-        Location loc = botPlayer.getLocation();
+        Location loc = player.getLocation();
         World world = loc.getWorld();
         int px = loc.getBlockX();
         int py = loc.getBlockY();
@@ -326,31 +505,31 @@ public class MatrixPlugin extends JavaPlugin {
         Block ahead = world.getBlockAt(px, py, pz - 1);
         if (ahead.getType().isSolid()) bits |= (1L << 9);
 
-        double healthRatio = botPlayer.getHealth() / 20.0;
+        double healthRatio = player.getHealth() / 20.0;
         int healthQ = Math.min(4, (int) (healthRatio * 5));
         for (int i = 0; i < 3; i++) {
             if ((healthQ & (1 << i)) != 0) bits |= (1L << (10 + i));
         }
 
-        int foodQ = Math.min(4, botPlayer.getFoodLevel() * 5 / 20);
+        int foodQ = Math.min(4, player.getFoodLevel() * 5 / 20);
         for (int i = 0; i < 3; i++) {
             if ((foodQ & (1 << i)) != 0) bits |= (1L << (13 + i));
         }
 
-        int toolBits = detectToolTier();
+        int toolBits = detectToolTier(player);
         for (int i = 0; i < 3; i++) {
             if ((toolBits & (1 << i)) != 0) bits |= (1L << (16 + i));
         }
 
-        if (botPlayer.getInventory().contains(Material.BREAD)) {
+        if (player.getInventory().contains(Material.BREAD)) {
             bits |= (1L << 19);
         }
 
         return bits;
     }
 
-    private int detectToolTier() {
-        PlayerInventory inv = botPlayer.getInventory();
+    private int detectToolTier(Player player) {
+        PlayerInventory inv = player.getInventory();
         Material mainHand = inv.getItemInMainHand().getType();
         if (mainHand == Material.DIAMOND_PICKAXE) return 4;
         if (mainHand == Material.IRON_PICKAXE) return 3;
@@ -364,80 +543,78 @@ public class MatrixPlugin extends JavaPlugin {
     /**
      * Executes a string action in the Minecraft world.
      *
-     * <p>Action mapping:
-     * <ul>
-     *   <li>MOVE_N / MOVE_S / MOVE_W / MOVE_E → teleport in that direction</li>
-     *   <li>MINE → break block below the player</li>
-     *   <li>EAT → switch to and eat food from inventory</li>
-     *   <li>CRAFT → log only (crafting is complex in real Minecraft)</li>
-     *   <li>TOOL_UP → switch to best pickaxe in inventory</li>
-     *   <li>STAY → do nothing</li>
-     * </ul>
+     * @return true if the action was successful, false otherwise
      */
-    private void executeAction(String action) {
+    private boolean executeAction(BotState bot, String action) {
         if (action == null) action = "STAY";
 
-        switch (action.toUpperCase()) {
-            case "MOVE_N" -> movePlayer(0, -1);
-            case "MOVE_S" -> movePlayer(0, 1);
-            case "MOVE_W" -> movePlayer(-1, 0);
-            case "MOVE_E" -> movePlayer(1, 0);
-            case "MINE" -> mineBlock();
-            case "EAT" -> eatFood();
+        return switch (action.toUpperCase()) {
+            case "MOVE_N" -> movePlayer(bot.player, 0, -1);
+            case "MOVE_S" -> movePlayer(bot.player, 0, 1);
+            case "MOVE_W" -> movePlayer(bot.player, -1, 0);
+            case "MOVE_E" -> movePlayer(bot.player, 1, 0);
+            case "MINE" -> mineBlock(bot);
+            case "EAT" -> { eatFood(bot.player); yield true; }
             case "CRAFT" -> {
-                if (tickCount % 100 == 0) {
-                    getLogger().info("CRAFT action received — crafting via matrix-core (not implemented locally)");
+                if (bot.tickCount % 100 == 0) {
+                    getLogger().info("CRAFT action for " + bot.name
+                            + " — crafting via matrix-core (not implemented locally)");
                 }
+                yield true;
             }
-            case "TOOL_UP" -> switchToBestTool();
-            case "STAY" -> { /* do nothing */ }
-            default -> getLogger().fine("Unknown action: " + action);
-        }
+            case "TOOL_UP" -> { switchToBestTool(bot.player); yield true; }
+            case "STAY" -> true;
+            default -> {
+                getLogger().fine("Unknown action: " + action);
+                yield false;
+            }
+        };
     }
 
-    private void movePlayer(double dx, double dz) {
-        Location loc = botPlayer.getLocation();
+    private boolean movePlayer(Player player, double dx, double dz) {
+        Location loc = player.getLocation();
         Location target = loc.clone().add(dx, 0, dz);
 
-        // Set yaw to face movement direction
-        if (dz < 0) loc.setYaw(0);       // North
-        else if (dz > 0) loc.setYaw(180); // South
-        else if (dx < 0) loc.setYaw(90);  // West
-        else if (dx > 0) loc.setYaw(-90); // East
+        if (dz < 0) loc.setYaw(0);
+        else if (dz > 0) loc.setYaw(180);
+        else if (dx < 0) loc.setYaw(90);
+        else if (dx > 0) loc.setYaw(-90);
 
         if (!target.getBlock().getType().isSolid()) {
             getServer().getScheduler().runTask(this,
-                    () -> botPlayer.teleport(target));
+                    () -> player.teleport(target));
+            return true;
         }
+        return false;
     }
 
-    private void mineBlock() {
-        Location loc = botPlayer.getLocation();
+    private boolean mineBlock(BotState bot) {
+        Location loc = bot.player.getLocation();
         Block target = loc.clone().add(0, -1, 0).getBlock();
         if (target.getType() != Material.AIR && target.getType() != Material.BEDROCK) {
             getServer().getScheduler().runTask(this, () -> {
-                target.breakNaturally(botPlayer.getInventory().getItemInMainHand());
-                blocksMined++;
+                target.breakNaturally(bot.player.getInventory().getItemInMainHand());
+                bot.blocksMined++;
             });
+            return true;
         }
+        return false;
     }
 
-    private void eatFood() {
+    private void eatFood(Player player) {
         getServer().getScheduler().runTask(this, () -> {
-            for (ItemStack item : botPlayer.getInventory().getContents()) {
+            for (ItemStack item : player.getInventory().getContents()) {
                 if (item != null && item.getType().isEdible()) {
-                    botPlayer.getInventory().setItemInMainHand(item);
-                    // Attempt to eat by right-clicking
-                    botPlayer.getInventory().getItemInMainHand();
+                    player.getInventory().setItemInMainHand(item);
                     break;
                 }
             }
         });
     }
 
-    private void switchToBestTool() {
+    private void switchToBestTool(Player player) {
         getServer().getScheduler().runTask(this, () -> {
-            PlayerInventory inv = botPlayer.getInventory();
+            PlayerInventory inv = player.getInventory();
             Material best = null;
             int bestTier = -1;
 
@@ -451,7 +628,6 @@ public class MatrixPlugin extends JavaPlugin {
             }
 
             if (best != null && best != inv.getItemInMainHand().getType()) {
-                // Find slot with the best tool and switch to it
                 for (int i = 0; i < inv.getSize(); i++) {
                     ItemStack item = inv.getItem(i);
                     if (item != null && item.getType() == best) {
