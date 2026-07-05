@@ -483,9 +483,9 @@ cmd_start() {
   echo "  matrix-core:    http://localhost:$CORE_PORT"
   echo "  Minecraft srv:  localhost:$MC_PORT"
   echo "  Auth mock:      localhost:$AUTH_PORT"
-  echo "  Prometheus:     http://localhost:9090"
-  echo "  Jaeger:         http://localhost:16686"
-  echo "  Grafana:        http://localhost:3000"
+  echo "  Prometheus:     http://localhost:${PORT_MAP[PROM]}"
+  echo "  Jaeger:         http://localhost:${PORT_MAP[JAEGER]}"
+  echo "  Grafana:        http://localhost:${PORT_MAP[GRAFANA]}"
   echo ""
   echo "Press Ctrl+C to stop all services."
 
