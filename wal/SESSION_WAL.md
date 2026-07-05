@@ -1,3 +1,3 @@
-📍 Status: Hierarchical neuron composition implemented. NeuronLayer (composable MPDT layer), HierarchicalBrain (3-layer pipeline: 12×k12 → 8×k12 → 5×k8), AgentBrainService refactored with backward-compatible accessors. 24 new tests pass. Pushed to origin+gitverse.
-🚀 Active: Next — hierarchical training (evolve all layers, not just action layer), or wire into simulation/Minecraft.
-🛑 Protected: K_MAX=20, backward-compat AgentBrainService accessors (deprecated), coverage floor 82%, Avro schema unchanged.
+📍 Status: Multi-agent swarm and online training implemented. Spigot plugin now supports /matrix list|add|remove|switch with per-agent BotState, role-based pretrained layers, feedback recording, and periodic hill-climbing retraining. Neuron sharing endpoints (/agent/share, /agent/neurons/{role}) added for swarm intelligence. All 6 files compiled and tested — pushed to origin+gitverse.
+🚀 Active: Next — test multi-agent in real Minecraft (spawn 3+ bots with different roles), verify online training convergence, wire neuron sharing between bots.
+🛑 Protected: K_MAX=20, backward-compat AgentBrainService accessors (deprecated), coverage floor 82%, Avro schema unchanged, single WebSocket connection for all agents.
