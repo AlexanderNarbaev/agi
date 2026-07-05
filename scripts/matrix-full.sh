@@ -262,10 +262,18 @@ start_matrix_core() {
   stage_hdr "4/6: Start matrix-core"
 
   if [[ "$binary" == *"-runner" ]] && [ -x "$binary" ]; then
-    info "Launching native binary..."
+    info "Launching native binary (port $CORE_PORT)..."
+    DB_HOST=localhost DB_PORT="${PORT_MAP[PG]}" DB_PASS=matrix \
+    QUARKUS_HTTP_PORT="$CORE_PORT" \
+    KAFKA_BOOTSTRAP_SERVERS="localhost:${PORT_MAP[KAFKA]}" \
+    QUARKUS_OTEL_EXPORTER_OTLP_ENDPOINT="http://localhost:${PORT_MAP[OTLP]}" \
     "$binary" &
   else
-    info "Launching (JVM)..."
+    info "Launching JVM (port $CORE_PORT)..."
+    DB_HOST=localhost DB_PORT="${PORT_MAP[PG]}" DB_PASS=matrix \
+    QUARKUS_HTTP_PORT="$CORE_PORT" \
+    KAFKA_BOOTSTRAP_SERVERS="localhost:${PORT_MAP[KAFKA]}" \
+    QUARKUS_OTEL_EXPORTER_OTLP_ENDPOINT="http://localhost:${PORT_MAP[OTLP]}" \
     java -jar "$binary" &
   fi
   local pid=$!
