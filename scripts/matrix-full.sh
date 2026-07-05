@@ -25,11 +25,11 @@ RED='\033[0;31m'
 BOLD='\033[1m'
 NC='\033[0m' # No Color
 
-log_ok()    { echo -e "  ${GREEN}[OK]${NC} $*"; }
-log_warn()  { echo -e "  ${YELLOW}[WARN]${NC} $*"; }
-log_err()   { echo -e "  ${RED}[ERR]${NC} $*"; }
-stage_hdr() { echo -e "\n${BOLD}=== Stage $* ===${NC}"; }
-info()      { echo -e "  $*"; }
+log_ok()    { echo -e "  ${GREEN}[OK]${NC} $*" >&2; }
+log_warn()  { echo -e "  ${YELLOW}[WARN]${NC} $*" >&2; }
+log_err()   { echo -e "  ${RED}[ERR]${NC} $*" >&2; }
+stage_hdr() { echo -e "\n${BOLD}=== Stage $* ===${NC}" >&2; }
+info()      { echo -e "  $*" >&2; }
 
 # ─── Port management ─────────────────────────────────────────────────────────
 # Each service: default port, env var name for docker-compose, description
