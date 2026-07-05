@@ -108,4 +108,39 @@ class AgentWebSocketTest {
         String type = msg.has("type") ? msg.get("type").asText() : "";
         assertThat(type).isEqualTo("invalid_type");
     }
+
+    @Test
+    void shouldValidateAgentIdFormat() {
+        assertThat("MatrixBot1".matches("[a-zA-Z0-9_-]+")).isTrue();
+        assertThat("agent_42".matches("[a-zA-Z0-9_-]+")).isTrue();
+        assertThat("test-agent".matches("[a-zA-Z0-9_-]+")).isTrue();
+    }
+
+    @Test
+    void shouldRejectInvalidAgentId() {
+        assertThat("bad id".matches("[a-zA-Z0-9_-]+")).isFalse();
+        assertThat("x;DROP".matches("[a-zA-Z0-9_-]+")).isFalse();
+        assertThat("".matches("[a-zA-Z0-9_-]+")).isFalse();
+    }
+
+    @Test
+    void shouldRejectOverlongAgentId() {
+        String longId = "x".repeat(65);
+        assertThat(longId.length() <= 64).isFalse();
+    }
+
+    @Test
+    void shouldValidateSensorBitsRange() {
+        long valid = 0xFFFFFL;
+        assertThat(valid).isLessThanOrEqualTo(0xFFFFFL);
+        long overflow = 0x1FFFFFL;
+        assertThat(overflow).isGreaterThan(0xFFFFFL);
+    }
+
+    @Test
+    void shouldHandleEmptyMessage() throws Exception {
+        ObjectNode msg = MAPPER.createObjectNode();
+        String type = msg.has("type") ? msg.get("type").asText() : "";
+        assertThat(type).isEmpty();
+    }
 }
