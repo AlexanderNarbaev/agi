@@ -1,0 +1,24 @@
+{
+  "model_name": "Qwen2.5-0.5B",
+  "source_model": "Qwen/Qwen2.5-0.5B",
+  "mode": "real",
+  "loading_mode": "quantized",
+  "k": 16,
+  "neurons_per_layer": 30,
+  "layers": 0,
+  "threshold": 0.0,
+  "seed": 42,
+  "d_model": "from_model",
+  "d_ff": "from_model",
+  "dtype": "float32",
+  "created_at": "2026-07-05T20:38:03Z",
+  "architectures": [
+    "Qwen2ForCausalLM"
+  ],
+  "hidden_size": 896,
+  "intermediate_size": 4864,
+  "num_hidden_layers": 24,
+  "model_type": "qwen2",
+  "sharded": false,
+  "file_size_bytes": 988097824
+}
