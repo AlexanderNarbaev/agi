@@ -1,7 +1,7 @@
 services:
   # ─── PostgreSQL (Event Journal persistence) ───
   postgres:
-    image: postgres:18-alpine
+    image: postgres:17-alpine
     ports:
       - "${PG_PORT}:5432"
     environment:
