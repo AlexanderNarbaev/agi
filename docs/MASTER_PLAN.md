@@ -1,9 +1,9 @@
-# MASTER PLAN — MATRIX v2.0.0
+# MASTER PLAN — MATRIX v2.5.0
 # Полный план реализации L0–L22
 
-**Дата:** 2026-06-26
-**Версия:** v2.0.0
-**Статус:** Завершён (FINAL)
+**Дата:** 2026-07-06
+**Версия:** v2.5.0
+**Статус:** В процессе (активная разработка)
 
 ---
 
@@ -96,15 +96,42 @@
 ## L9 — Развёртывание и K8s ✅
 **Реализовано:** 20 K8s-манифестов, Operator + CRD, Dockerfile multi-stage
 **K8s-манифесты:** namespace, configmap, deployment, service, hpa, vpa, pvc, rbac, servicemonitor, prometheusrule, jaeger, loki, strimzi-kafka, minio-tenant, crd, cr-example, + kustomization
-**Дальнейшие шаги:** Деплой в реальный кластер (minikube/kind), GraalVM Native Image (опционально).
+**Minikube:** 9 pods Running (matrix-core, paper-server, postgres, redis, kafka, minio, prometheus, grafana, jaeger)
+**NodePorts:** matrix-core :30091, grafana :30300, prometheus :30090, jaeger :31686, minio :30900, paper :32565
+**Дальнейшие шаги:** Деплой в реальный кластер, GPU passthrough для ML-инференса, GraalVM Native Image.
 
 ## L10 — Мониторинг и SRE ✅
 **Реализовано:** Prometheus, Jaeger, Grafana (docker-compose запущен), Loki+FluentBit (манифест), runbooks (8 процедур)
 **Дальнейшие шаги:** Chaos Engineering (Chaos Mesh), Thanos/VictoriaMetrics, Alertmanager→Slack.
 
 ## L18 — CI/CD и тестирование ✅
-**Реализовано:** GitHub Actions workflow, JaCoCo (87%), 524 теста
+**Реализовано:** GitHub Actions workflow, JaCoCo (82%), 920 тестов
 **Дальнейшие шаги:** Интеграция с K8s (деплой в staging), автоматические релизы.
+
+---
+
+# БЛОК B2: PRETRAINED MODELS & OPENAI API — РЕАЛИЗОВАНО
+
+## Pretrained Models Integration ✅
+**Реализовано:** Конвертация весов трансформеров в Avro-таблицы истинности
+**Модели:** SmolLM2-135M (180 нейронов, 6 слоёв, k=12), Qwen2.5-0.5B (720 нейронов, 24 слоя, k=16)
+**Пайплайн:** `scripts/pretrain_neurons.py` (safetensors → Avro), `scripts/pretrain_large.py` (>10GB модели)
+**K8s:** Pretrained weights встроены в Docker image, Qwen загружается первым
+**Дальнейшие шаги:** Интеграция Qwen3-1.7B, DeepSeek-R1-Distill-Qwen-1.5B (см. MODEL_RECOMMENDATIONS.md)
+
+## OpenAI-Compatible API ✅
+**Реализовано:** REST API совместимый с OpenAI форматом
+**Эндпоинты:** `/v1/chat/completions`, `/v1/models`, `/v1/embeddings`
+**Модели:** `mpdt-qwen`, `mpdt-smollm2`
+**Streaming:** Поддержка `stream: true`
+**Дальнейшие шаги:** Rate limiting, API keys,更多 моделей.
+
+## Minecraft K8s Integration ✅
+**Реализовано:** Paper сервер в K8s (Dockerfile + манифест)
+**Образ:** `itzg/minecraft-server:java21` + Spigot plugin
+**NodePort:** 32565
+**WebSocket:** Auto-reconnect к matrix-core (K8s Service)
+**Дальнейшие шаги:** GPU passthrough для ML-инференса в K8s.
 
 ---
 

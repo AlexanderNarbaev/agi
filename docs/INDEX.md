@@ -1,4 +1,4 @@
-# INDEX: Knowledge Base Map — MATRIX v2.0.0
+# INDEX: Knowledge Base Map — MATRIX v2.5.0
 | ID | Path | Title | Phase | Topics | Last_Updated |
 |----|------|-------|-------|--------|--------------|
 | L0 | docs/L0_manifesto.md | Манифест и аксиомы | Фундамент | Аксиомы, миссия, антипаттерны | 2026-05-31 |
@@ -57,3 +57,8 @@
 | — | matrix-spigot/build.gradle | Spigot плагин | Инфра | Java 21, Avro fatJar, Paper 1.20.4 | 2026-06-26 |
 | — | matrix-spigot/src/.../MatrixPlugin.java | Spigot плагин | Игра | MPDT-бот в Minecraft (/matrix start/stop/status/train) | 2026-06-26 |
 | — | minecraft-server/ | PaperMC сервер | Игра | Paper 1.20.4, eula, server.properties, world | 2026-06-26 |
+| — | docs/HARDWARE_ANALYSIS.md | Анализ мощностей | Инфра | CPU, RAM, GPU, Minikube, рекомендации | 2026-07-06 |
+| — | docs/MODEL_RECOMMENDATIONS.md | Рекомендации моделей | AI | ТОП-10 моделей для pretraining, план интеграции | 2026-07-06 |
+| — | infra/k8s/minikube/paper.yaml | Paper K8s манифест | Инфра | Minecraft Paper сервер в K8s (NodePort 32565) | 2026-07-06 |
+| — | matrix-spigot/Dockerfile | Paper Docker image | Инфра | itzg/minecraft-server:java21 + Spigot plugin | 2026-07-06 |
+| — | scripts/matrix-minikube.sh | Minikube launcher | Инфра | 7-stage запуск: minikube + build + deploy + DNS | 2026-07-06 |
