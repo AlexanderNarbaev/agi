@@ -6,6 +6,8 @@ resources:
   - postgres.yaml
   - redis.yaml
   - kafka.yaml
+  - jaeger.yaml
+  - minio.yaml
   - prometheus.yaml
   - grafana.yaml
   - matrix-core.yaml
