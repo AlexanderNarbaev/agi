@@ -13,6 +13,8 @@ import org.apache.avro.specific.SpecificDatumReader;
 import org.apache.avro.specific.SpecificDatumWriter;
 
 import java.io.ByteArrayInputStream;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Random;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -37,10 +39,12 @@ public final class TruthTable {
     private final int k;
 
     private final BitSet table;
+    private final WeightVector weights;
 
-    private TruthTable(int k, BitSet table) {
+    private TruthTable(int k, BitSet table, WeightVector weights) {
         this.k = k;
         this.table = table;
+        this.weights = weights;
     }
 
     /**
@@ -51,10 +55,29 @@ public final class TruthTable {
      * @throws IllegalArgumentException if k is out of range or table size mismatch
      */
     public static TruthTable of(int k, BitSet table) {
+        return of(k, table, null);
+    }
+
+    /**
+     * Creates a truth table with a specific bit pattern and optional priority weights.
+     *
+     * <p>When {@code weights} is non-null, {@link #evaluate} permutes input bits
+     * by priority order (highest weight first) before indexing the table.
+     *
+     * @param k       number of inputs, 1..K_MAX
+     * @param table   bits representing outputs for all 2^k input combinations
+     * @param weights optional priority weights, must have size {@code k} if non-null
+     * @throws IllegalArgumentException if k is out of range
+     */
+    public static TruthTable of(int k, BitSet table, WeightVector weights) {
         if (k < 1 || k > K_MAX) {
             throw new IllegalArgumentException("k must be in [1, " + K_MAX + "], got: " + k);
         }
-        return new TruthTable(k, (BitSet) table.clone());
+        if (weights != null && weights.size() != k) {
+            throw new IllegalArgumentException(
+                    "weights size " + weights.size() + " must equal k=" + k);
+        }
+        return new TruthTable(k, (BitSet) table.clone(), weights);
     }
 
     /**
@@ -65,11 +88,34 @@ public final class TruthTable {
     }
 
     /**
+     * Creates a truth table from a long value with optional priority weights.
+     */
+    public static TruthTable fromLong(int k, long bits, WeightVector weights) {
+        return of(k, BitSet.valueOf(new long[]{bits}), weights);
+    }
+
+    /**
      * Creates a random truth table using the provided RNG (seeded for reproducibility).
      */
     public static TruthTable random(int k, Random rng) {
+        return random(k, rng, null);
+    }
+
+    /**
+     * Creates a random truth table with optional priority weights.
+     *
+     * @param k       number of inputs, 1..K_MAX
+     * @param rng     random number generator
+     * @param weights optional priority weights; if non-null, size must equal k
+     * @return random truth table
+     */
+    public static TruthTable random(int k, Random rng, WeightVector weights) {
         if (k < 1 || k > K_MAX) {
             throw new IllegalArgumentException("k must be in [1, " + K_MAX + "], got: " + k);
+        }
+        if (weights != null && weights.size() != k) {
+            throw new IllegalArgumentException(
+                    "weights size " + weights.size() + " must equal k=" + k);
         }
         int size = 1 << k;
         BitSet table = new BitSet(size);
@@ -78,7 +124,7 @@ public final class TruthTable {
                 table.set(i);
             }
         }
-        return new TruthTable(k, table);
+        return new TruthTable(k, table, weights);
     }
 
     /**
@@ -89,35 +135,82 @@ public final class TruthTable {
     }
 
     /**
+     * Creates a random truth table with uniform priority weights.
+     */
+    public static TruthTable random(int k, WeightVector weights) {
+        return random(k, ThreadLocalRandom.current(), weights);
+    }
+
+    /**
      * Evaluates the truth table for a given input vector.
      *
      * <p>The input bits are packed in a {@code long[]} array. Bits 0..k-1
      * of the first long are used as the input vector (LSB = bit 0).
+     *
+     * <p>If priority weights are present, input bits are permuted by priority
+     * order (highest weight first) before indexing the table.
      *
      * @param input packed input bits
      * @return the output value for this input
      */
     public boolean evaluate(long[] input) {
         long first = (input != null && input.length > 0) ? input[0] : 0L;
-        int index = (int) (first & ((1L << k) - 1));
-        return table.get(index);
+        if (weights == null) {
+            int index = (int) (first & ((1L << k) - 1));
+            return table.get(index);
+        }
+        return evaluateWeightedLong(first);
     }
 
     /**
      * Evaluates the truth table for a given integer input (LSB = bit 0).
+     *
+     * <p>If priority weights are present, input bits are permuted by priority
+     * order before indexing.
      */
     public boolean evaluate(int input) {
-        int index = input & ((1 << k) - 1);
-        return table.get(index);
+        if (weights == null) {
+            int index = input & ((1 << k) - 1);
+            return table.get(index);
+        }
+        return evaluateWeightedLong(input & 0xFFFFFFFFL);
     }
 
     /**
      * Evaluates the truth table for a given {@link BitSet} input.
+     *
+     * <p>If priority weights are present, input bits are permuted by priority
+     * order (highest weight first) before indexing the table.
      */
     public boolean evaluate(BitSet input) {
+        if (weights == null) {
+            int index = 0;
+            for (int i = 0; i < k; i++) {
+                if (input.get(i)) {
+                    index |= (1 << i);
+                }
+            }
+            return table.get(index);
+        }
+        int[] order = weights.priorityOrder();
         int index = 0;
         for (int i = 0; i < k; i++) {
-            if (input.get(i)) {
+            if (input.get(order[i])) {
+                index |= (1 << i);
+            }
+        }
+        return table.get(index);
+    }
+
+    /**
+     * Permutes bits of {@code packed} by priority order, then indexes the table.
+     */
+    private boolean evaluateWeightedLong(long packed) {
+        int[] order = weights.priorityOrder();
+        int index = 0;
+        for (int i = 0; i < k; i++) {
+            int srcBit = order[i];
+            if (((packed >>> srcBit) & 1L) != 0) {
                 index |= (1 << i);
             }
         }
@@ -130,6 +223,15 @@ public final class TruthTable {
 
     public BitSet table() {
         return (BitSet) table.clone();
+    }
+
+    /**
+     * Returns the optional priority weights, or {@code null} if none.
+     *
+     * @return weight vector or null
+     */
+    public WeightVector weights() {
+        return weights;
     }
 
     public int size() {
@@ -175,7 +277,10 @@ public final class TruthTable {
             System.arraycopy(rawBytes, 0, padded, 0, Math.min(rawBytes.length, byteLen));
             record.put("truthTable", ByteBuffer.wrap(padded));
 
-            record.put("weights", java.util.List.of());
+            List<Integer> weightList = (weights != null)
+                    ? Arrays.stream(weights.toArray()).boxed().toList()
+                    : java.util.List.of();
+            record.put("weights", weightList);
             record.put("metadata", null);
 
             ByteArrayOutputStream out = new ByteArrayOutputStream();
@@ -191,6 +296,8 @@ public final class TruthTable {
 
     /**
      * Deserializes a truth table from Avro bytes.
+     *
+     * <p>Restores priority weights if they were serialised.
      */
     public static TruthTable fromAvroBytes(byte[] bytes) {
         try {
@@ -204,7 +311,19 @@ public final class TruthTable {
             byte[] rawBytes = new byte[buf.remaining()];
             buf.get(rawBytes);
             BitSet table = BitSet.valueOf(rawBytes);
-            return new TruthTable(k, table);
+
+            WeightVector weights = null;
+            Object weightsField = record.get("weights");
+            if (weightsField instanceof List<?> list && !list.isEmpty()) {
+                int[] w = new int[list.size()];
+                for (int i = 0; i < list.size(); i++) {
+                    w[i] = ((Number) list.get(i)).intValue();
+                }
+                if (w.length == k) {
+                    weights = new WeightVector(w);
+                }
+            }
+            return new TruthTable(k, table, weights);
         } catch (IOException e) {
             throw new RuntimeException("Failed to deserialize truth table from Avro", e);
         }
@@ -234,12 +353,14 @@ public final class TruthTable {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof TruthTable that)) return false;
-        return k == that.k && table.equals(that.table);
+        return k == that.k
+                && table.equals(that.table)
+                && Objects.equals(weights, that.weights);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(k, table);
+        return Objects.hash(k, table, weights);
     }
 
     @Override
