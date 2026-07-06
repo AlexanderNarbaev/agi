@@ -1,15 +1,16 @@
 package io.matrix.benchmark;
 
-import io.matrix.cauldron.CauldronProtocol;
 import io.matrix.cluster.NeuronId;
-import io.matrix.cluster.NeuronInstance;
 import io.matrix.consensus.ConsensusEngine;
 import io.matrix.consensus.ConsensusLevel;
 import io.matrix.consensus.Proposal;
 import io.matrix.consensus.Vote;
 import io.matrix.ethics.EthicalFilter;
+import io.matrix.ethics.EthicalVerdict;
 import io.matrix.evolution.EvolutionLoop;
+import io.matrix.evolution.FitnessFn;
 import io.matrix.evolution.GeneticOperators;
+import io.matrix.neuron.DecisionTree;
 import io.matrix.neuron.TruthTable;
 import io.matrix.simulation.ClusterTopology;
 
@@ -46,7 +47,7 @@ public class NeuronBenchmark {
     }
 
     @Benchmark
-    public EthicalFilter.EthicalVerdict ethicalFilterEvaluate() {
+    public EthicalVerdict ethicalFilterEvaluate() {
         return ethics.evaluate("help user learn mathematics", List.of("education"));
     }
 
@@ -59,15 +60,17 @@ public class NeuronBenchmark {
     }
 
     @Benchmark
-    public double evolutionGeneration() {
-        EvolutionLoop loop = EvolutionLoop.small(rng, 8);
-        return loop.step();
+    public long evolutionGeneration() {
+        FitnessFn fn = new FitnessFn(8, 8, 3, 3, 20, 1, rng);
+        EvolutionLoop loop = new EvolutionLoop(1, 8, 8, fn, rng);
+        loop.run();
+        return loop.bestOverall().fitness();
     }
 
     @Benchmark
-    public double geneticOperatorMutate() {
-        TruthTable t = TruthTable.random(8, rng);
-        return GeneticOperators.mutateFlipRate(t, 0.05, rng).table().cardinality();
+    public int geneticOperatorMutate() {
+        DecisionTree tree = DecisionTree.random(8, 8, rng);
+        return GeneticOperators.flipLeaf(rng, tree).depth();
     }
 
     @Benchmark
