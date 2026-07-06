@@ -43,12 +43,6 @@ public class MatrixApplication implements QuarkusApplication {
 
     @Produces
     @Singleton
-    public MatrixMetrics matrixMetrics(MeterRegistry registry) {
-        return new MatrixMetrics(registry);
-    }
-
-    @Produces
-    @Singleton
     public KafkaEventJournal kafkaEventJournal(
             @ConfigProperty(name = "kafka.bootstrap.servers", defaultValue = "localhost:9092")
             String bootstrapServers) {
