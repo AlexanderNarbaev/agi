@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.matrix.agent.AgentBrainService;
+import io.matrix.observability.MatrixMetrics;
 import io.matrix.redis.NeuronCacheService;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -36,6 +37,9 @@ public class AgentWebSocket {
 
     @Inject
     NeuronCacheService neuronCache;
+
+    @Inject
+    MatrixMetrics metrics;
 
     @OnOpen
     public void onOpen(Session session) {
@@ -77,6 +81,12 @@ public class AgentWebSocket {
                 case "train" -> handleTrain(msg, session);
                 case "train-online" -> handleTrainOnline(msg, session);
                 case "save" -> handleSave(session);
+                case "feedback" -> {
+                    long sensors = msg.get("sensors").asLong();
+                    boolean success = msg.get("success").asBoolean();
+                    brainService.recordFeedback(sensors, success);
+                    log.debug("Recorded feedback: sensors={}, success={}", sensors, success);
+                }
                 default -> sendError(session, "Unknown message type: " + type);
             }
         } catch (IllegalArgumentException e) {
@@ -142,6 +152,8 @@ public class AgentWebSocket {
         long sensorBits = msg.has("data") ? msg.get("data").asLong() : 0L;
         String action = brainService.act(sensorBits);
 
+        metrics.recordSensorRequest();
+
         neuronCache.cacheBrainState(agentId, sensorBits, action);
 
         ObjectNode response = MAPPER.createObjectNode();
@@ -163,6 +175,8 @@ public class AgentWebSocket {
 
         log.info("Starting training for agent {}: generations={}, population={}, k={}",
                 agentId, generations, population, k);
+
+        metrics.recordTrainRequest();
 
         CompletableFuture.runAsync(() -> {
             try {
@@ -190,6 +204,8 @@ public class AgentWebSocket {
 
         int iterations = msg.has("iterations") ? msg.get("iterations").asInt() : 5;
         log.info("Starting online training for agent {}: iterations={}", agentId, iterations);
+
+        metrics.recordTrainRequest();
 
         CompletableFuture.runAsync(() -> {
             try {

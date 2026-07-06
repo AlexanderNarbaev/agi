@@ -62,6 +62,10 @@ public class MatrixCoreClient {
 
     private static final Duration HTTP_TIMEOUT = Duration.ofSeconds(30);
     private static final int RECONNECT_DELAY_SECONDS = 5;
+    private static final int MAX_RECONNECT_ATTEMPTS = 10;
+    private static final long RECONNECT_DELAY_MS = 3000;
+    private volatile int reconnectAttempts = 0;
+    private volatile boolean shouldReconnect = true;
 
     /**
      * Creates a client targeting the given matrix-core base URL.
@@ -100,6 +104,7 @@ public class MatrixCoreClient {
         return wsFuture.thenAccept(ws -> {
             this.webSocket = ws;
             this.connected = true;
+            this.reconnectAttempts = 0;
             logger.info("WebSocket connected to " + wsUrl());
             notifyStatus("connected");
         }).exceptionally(ex -> {
@@ -377,6 +382,27 @@ public class MatrixCoreClient {
         }
     }
 
+    /**
+     * Sends feedback data to matrix-core for online training.
+     * Fire-and-forget via WebSocket — non-blocking.
+     *
+     * @param agentId    agent identifier
+     * @param sensorBits sensor vector that triggered the action
+     * @param success    whether the action was successful
+     */
+    public void sendFeedback(String agentId, long sensorBits, boolean success) {
+        if (!connected || webSocket == null) return;
+        String msg = "{\"type\":\"feedback\",\"agentId\":\""
+                + agentId + "\",\"sensors\":" + sensorBits
+                + ",\"success\":" + success + "}";
+        webSocket.sendText(msg, true)
+                .exceptionally(ex -> {
+                    logger.fine("Failed to send feedback: " + ex.getMessage());
+                    return null;
+                });
+        logger.fine("Sent feedback: " + agentId + " success=" + success);
+    }
+
     private String wsUrl() {
         return baseUrl.replaceFirst("^http", "ws") + "/api/v1/agent/ws";
     }
@@ -456,9 +482,24 @@ public class MatrixCoreClient {
         @Override
         public CompletionStage<?> onClose(WebSocket ws, int statusCode, String reason) {
             connected = false;
-            logger.info("WebSocket closed: " + statusCode + " " + reason);
+            logger.warning("WebSocket closed: " + statusCode + " " + reason);
             notifyStatus("disconnected");
-            scheduleReconnect();
+            if (shouldReconnect && reconnectAttempts < MAX_RECONNECT_ATTEMPTS) {
+                reconnectAttempts++;
+                logger.info("Reconnecting in " + RECONNECT_DELAY_MS + "ms (attempt "
+                        + reconnectAttempts + "/" + MAX_RECONNECT_ATTEMPTS + ")");
+                new Thread(() -> {
+                    try {
+                        Thread.sleep(RECONNECT_DELAY_MS);
+                        connect(callback);
+                    } catch (Exception e) {
+                        logger.warning("Reconnect failed: " + e.getMessage());
+                    }
+                }, "matrix-reconnect-" + reconnectAttempts).start();
+            } else if (reconnectAttempts >= MAX_RECONNECT_ATTEMPTS) {
+                logger.severe("Max reconnect attempts (" + MAX_RECONNECT_ATTEMPTS
+                        + ") reached. Giving up.");
+            }
             return null;
         }
 
