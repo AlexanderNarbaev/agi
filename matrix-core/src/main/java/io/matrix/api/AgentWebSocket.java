@@ -150,10 +150,11 @@ public class AgentWebSocket {
         }
 
         long sensorBits = msg.has("data") ? msg.get("data").asLong() : 0L;
+        String role = msg.has("role") ? msg.get("role").asText() : "unknown";
         String action = brainService.act(sensorBits);
 
         metrics.recordSensorRequest();
-        metrics.recordBotTick(agentId, "unknown", action);
+        metrics.recordBotTick(agentId, role, action);
 
         neuronCache.cacheBrainState(agentId, sensorBits, action);
 
