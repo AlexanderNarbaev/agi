@@ -11,6 +11,7 @@ import java.util.List;
  *
  * <p>Ref: L7_Ethics.md §3.1, §3.2
  */
+@jakarta.enterprise.context.ApplicationScoped
 public final class EthicalFilter {
 
     /** Three absolute prohibitions (L0). */
