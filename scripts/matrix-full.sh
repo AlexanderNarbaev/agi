@@ -228,15 +228,7 @@ build_matrix_core() {
     return 0
   fi
 
-  local jar
-  jar=$(ls $JAR_GLOB 2>/dev/null | head -1 || true)
-  if [ -n "$jar" ]; then
-    log_ok "Uber-jar: $(basename "$jar")"
-    echo "$jar"
-    return 0
-  fi
-
-  # Try native build if GraalVM available
+  # Always rebuild — skip jar cache check, go straight to clean build
   if command -v native-image &>/dev/null; then
     info "GraalVM detected — building native binary..."
     (cd "$PROJECT_DIR" && ./gradlew build -Dquarkus.native.enabled=true --no-daemon)

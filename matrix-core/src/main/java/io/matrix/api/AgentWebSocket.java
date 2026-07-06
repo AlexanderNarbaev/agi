@@ -153,6 +153,7 @@ public class AgentWebSocket {
         String action = brainService.act(sensorBits);
 
         metrics.recordSensorRequest();
+        metrics.recordBotTick(agentId, "unknown", action);
 
         neuronCache.cacheBrainState(agentId, sensorBits, action);
 
