@@ -105,7 +105,7 @@ public class AgentBrainService {
      */
     private void loadFromQwen(Path qwenDir) throws IOException {
         PretrainedLoader loader = new PretrainedLoader();
-        String qwenModel = "qwen2.5-0.5b";
+        String qwenModel = "Qwen2.5-0.5B";
 
         List<TruthTable> s0 = loader.loadLayer(qwenDir, qwenModel, 0);
         List<TruthTable> s1 = loader.loadLayer(qwenDir, qwenModel, 1);
