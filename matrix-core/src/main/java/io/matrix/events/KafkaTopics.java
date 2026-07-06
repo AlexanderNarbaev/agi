@@ -24,7 +24,8 @@ public final class KafkaTopics {
     private static final List<NewTopic> TOPICS = List.of(
             new NewTopic("neuron-events", 3, (short) 1),
             new NewTopic("cluster-snapshots", 1, (short) 1),
-            new NewTopic("ethics-log", 1, (short) 1)
+            new NewTopic("ethics-log", 1, (short) 1),
+            new NewTopic("neuron-batch", 6, (short) 1)
     );
 
     private KafkaTopics() { /* utility */ }
