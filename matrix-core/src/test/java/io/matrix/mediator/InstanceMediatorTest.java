@@ -15,7 +15,7 @@ class InstanceMediatorTest {
         assertThat(mediator.energy()).isNotNull();
         assertThat(mediator.safety()).isNotNull();
         assertThat(mediator.curiosity()).isNotNull();
-        assertThat(mediator.drivers()).hasSize(3);
+        assertThat(mediator.drivers()).hasSize(8);
         assertThat(mediator.goals()).isEmpty();
         assertThat(mediator.tasks()).isEmpty();
         assertThat(mediator.tickCount()).isEqualTo(0);

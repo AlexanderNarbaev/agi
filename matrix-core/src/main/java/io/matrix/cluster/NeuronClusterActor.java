@@ -11,6 +11,8 @@ import io.matrix.events.ClusterEventType;
 import io.matrix.events.EventJournal;
 import io.matrix.events.InMemoryEventJournal;
 import io.matrix.neuron.TruthTable;
+import io.matrix.protocol.NeuronBatch;
+import io.matrix.security.SnapshotSigner;
 import io.matrix.snapshot.ClusterSnapshot;
 import io.matrix.snapshot.SnapshotStore;
 
@@ -21,6 +23,7 @@ import java.util.BitSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 /**
  * Pekko Typed Actor managing a pool of MPDT neurons with batched inference,
@@ -36,7 +39,9 @@ public class NeuronClusterActor extends AbstractBehavior<NeuronClusterActor.Comm
     public sealed interface Command permits
             LoadNeuron, UnloadNeuron, FreezeNeuron,
             InjectSignal, EvaluateTick, GetMetrics, GetNeuronCount,
-            CreateSnapshot, RestoreSnapshot {}
+            CreateSnapshot, RestoreSnapshot,
+            LoadFNL, UnloadFNL, ListLoadedFNLs,
+            FlushBatch {}
 
     public record LoadNeuron(NeuronId id, TruthTable table, NeuronInstance.State state,
                               ActorRef<Response> replyTo) implements Command {}
@@ -59,11 +64,28 @@ public class NeuronClusterActor extends AbstractBehavior<NeuronClusterActor.Comm
     public record RestoreSnapshot(Path storeDir, ActorRef<Response> replyTo)
             implements Command {}
 
+    // --- FNL Dynamic Loading commands (Task 6, L3 §4.2) ---
+
+    public record LoadFNL(FNLMetadata metadata, byte[] neuronData) implements Command {}
+
+    public record UnloadFNL(UUID fnlId) implements Command {}
+
+    public record ListLoadedFNLs(ActorRef<List<FNLMetadata>> replyTo) implements Command {}
+
+    // --- Batch Protocol command (L2 §3) ---
+
+    /**
+     * Flushes the output batch buffer, packing accumulated signals into a
+     * {@link NeuronBatch} for inter-cluster transmission.
+     */
+    public record FlushBatch(ActorRef<Response> replyTo) implements Command {}
+
     // --- Response protocol ---
     public sealed interface Response permits
             NeuronLoaded, NeuronUnloaded, NeuronFrozen,
             TickResult, MetricsResult, CountResult,
-            SnapshotCreated, SnapshotRestored, ErrorResponse {}
+            SnapshotCreated, SnapshotRestored, ErrorResponse,
+            BatchResult {}
 
     public record NeuronLoaded(NeuronId id) implements Response {}
     public record NeuronUnloaded(NeuronId id) implements Response {}
@@ -76,6 +98,11 @@ public class NeuronClusterActor extends AbstractBehavior<NeuronClusterActor.Comm
     public record SnapshotRestored(String snapshotId, int neuronCount) implements Response {}
     public record ErrorResponse(String message) implements Response {}
 
+    /**
+     * Result of a batch flush: the packed batch and number of signals packed.
+     */
+    public record BatchResult(NeuronBatch batch, int signalCount) implements Response {}
+
     // --- State ---
     private final Map<NeuronId, NeuronInstance> activeNeurons = new HashMap<>();
     private final SignalBuffer inputBuffer;
@@ -83,6 +110,10 @@ public class NeuronClusterActor extends AbstractBehavior<NeuronClusterActor.Comm
     private final EventJournal eventJournal;
     private final ClusterConfig config;
     private final String instanceId;
+    private final TopologyCache topologyCache;
+    private final Map<UUID, FNLMetadata> loadedFNLs = new HashMap<>();
+    private final SnapshotSigner snapshotSigner;
+    private final List<Signal> batchBuffer = new ArrayList<>();
     private long tickCount;
 
     public static Behavior<Command> create(ClusterConfig config) {
@@ -94,14 +125,27 @@ public class NeuronClusterActor extends AbstractBehavior<NeuronClusterActor.Comm
         return Behaviors.setup(ctx -> new NeuronClusterActor(ctx, config, journal, instanceId));
     }
 
+    public static Behavior<Command> create(ClusterConfig config, EventJournal journal,
+                                            String instanceId, SnapshotSigner signer) {
+        return Behaviors.setup(ctx -> new NeuronClusterActor(ctx, config, journal, instanceId, signer));
+    }
+
     public NeuronClusterActor(ActorContext<Command> context, ClusterConfig config,
                                EventJournal eventJournal, String instanceId) {
+        this(context, config, eventJournal, instanceId, null);
+    }
+
+    public NeuronClusterActor(ActorContext<Command> context, ClusterConfig config,
+                               EventJournal eventJournal, String instanceId,
+                               SnapshotSigner signer) {
         super(context);
         this.config = config;
         this.eventJournal = eventJournal;
         this.instanceId = instanceId;
         this.inputBuffer = new SignalBuffer(config.signalBufferCapacity());
         this.outputBuffer = new SignalBuffer(config.signalBufferCapacity());
+        this.topologyCache = new TopologyCache();
+        this.snapshotSigner = signer;
     }
 
     @Override
@@ -116,6 +160,10 @@ public class NeuronClusterActor extends AbstractBehavior<NeuronClusterActor.Comm
                 .onMessage(GetNeuronCount.class, this::onGetNeuronCount)
                 .onMessage(CreateSnapshot.class, this::onCreateSnapshot)
                 .onMessage(RestoreSnapshot.class, this::onRestoreSnapshot)
+                .onMessage(LoadFNL.class, this::onLoadFNL)
+                .onMessage(UnloadFNL.class, this::onUnloadFNL)
+                .onMessage(ListLoadedFNLs.class, this::onListLoadedFNLs)
+                .onMessage(FlushBatch.class, this::onFlushBatch)
                 .build();
     }
 
@@ -139,6 +187,7 @@ public class NeuronClusterActor extends AbstractBehavior<NeuronClusterActor.Comm
     private Behavior<Command> onUnloadNeuron(UnloadNeuron cmd) {
         NeuronInstance removed = activeNeurons.remove(cmd.id());
         if (removed != null) {
+            topologyCache.removeNeuron(cmd.id().uuid());
             journal(ClusterEventType.NEURON_REMOVED, cmd.id(), "unloaded");
         }
         cmd.replyTo().tell(new NeuronUnloaded(cmd.id()));
@@ -163,7 +212,11 @@ public class NeuronClusterActor extends AbstractBehavior<NeuronClusterActor.Comm
     }
 
     private Behavior<Command> onInjectSignal(InjectSignal cmd) {
-        inputBuffer.push(cmd.signal());
+        Signal signal = cmd.signal();
+        inputBuffer.push(signal);
+        topologyCache.registerConnection(
+                signal.sourceId().uuid(),
+                signal.targetId().uuid());
         return this;
     }
 
@@ -179,14 +232,18 @@ public class NeuronClusterActor extends AbstractBehavior<NeuronClusterActor.Comm
         List<Signal> incoming = new ArrayList<>();
         inputBuffer.drainTo(incoming);
 
+        Map<UUID, List<Signal>> grouped = topologyCache.groupByTarget(incoming);
+
         Map<NeuronId, BitSet> currentInputs = new HashMap<>();
-        for (Signal s : incoming) {
-            NeuronInstance neuron = activeNeurons.get(s.targetId());
-            if (neuron != null && neuron.isMutable()) {
-                BitSet input = currentInputs.computeIfAbsent(s.targetId(),
-                        k -> new BitSet(neuron.k()));
-                if (s.value()) {
-                    input.set(0);
+        for (var entry : grouped.entrySet()) {
+            for (Signal s : entry.getValue()) {
+                NeuronInstance neuron = activeNeurons.get(s.targetId());
+                if (neuron != null && neuron.isMutable()) {
+                    BitSet input = currentInputs.computeIfAbsent(s.targetId(),
+                            k -> new BitSet(neuron.k()));
+                    if (s.value()) {
+                        input.set(0);
+                    }
                 }
             }
         }
@@ -218,8 +275,21 @@ public class NeuronClusterActor extends AbstractBehavior<NeuronClusterActor.Comm
         for (Signal s : outgoing) {
             journal(ClusterEventType.SIGNAL_EMITTED, s.sourceId(),
                     "value=" + s.value());
+            batchBuffer.add(s);
         }
         return count;
+    }
+
+    /**
+     * Packs accumulated output signals into a {@link NeuronBatch} and returns it.
+     * Clears the batch buffer after packing.
+     */
+    private Behavior<Command> onFlushBatch(FlushBatch cmd) {
+        List<Signal> toPack = new ArrayList<>(batchBuffer);
+        batchBuffer.clear();
+        NeuronBatch batch = NeuronBatch.pack(toPack);
+        cmd.replyTo().tell(new BatchResult(batch, toPack.size()));
+        return this;
     }
 
     private Behavior<Command> onGetMetrics(GetMetrics cmd) {
@@ -238,7 +308,7 @@ public class NeuronClusterActor extends AbstractBehavior<NeuronClusterActor.Comm
 
     private Behavior<Command> onCreateSnapshot(CreateSnapshot cmd) {
         try {
-            SnapshotStore store = new SnapshotStore(cmd.storeDir(), instanceId);
+            SnapshotStore store = new SnapshotStore(cmd.storeDir(), instanceId, snapshotSigner);
             ClusterSnapshot snapshot = store.createSnapshot(activeNeurons,
                     eventJournal.size());
             Path filePath = store.save(snapshot);
@@ -255,7 +325,7 @@ public class NeuronClusterActor extends AbstractBehavior<NeuronClusterActor.Comm
 
     private Behavior<Command> onRestoreSnapshot(RestoreSnapshot cmd) {
         try {
-            SnapshotStore store = new SnapshotStore(cmd.storeDir(), instanceId);
+            SnapshotStore store = new SnapshotStore(cmd.storeDir(), instanceId, snapshotSigner);
             ClusterSnapshot snapshot = store.loadLatest();
             if (snapshot == null) {
                 cmd.replyTo().tell(new ErrorResponse("No snapshot found"));
@@ -278,6 +348,32 @@ public class NeuronClusterActor extends AbstractBehavior<NeuronClusterActor.Comm
             cmd.replyTo().tell(new ErrorResponse("Snapshot restore failed: "
                     + e.getMessage()));
         }
+        return this;
+    }
+
+    // --- FNL Dynamic Loading handlers (Task 6, L3 §4.2) ---
+
+    private Behavior<Command> onLoadFNL(LoadFNL cmd) {
+        loadedFNLs.put(cmd.metadata().fnlId(), cmd.metadata());
+        journal(ClusterEventType.NEURON_CREATED,
+                new NeuronId(cmd.metadata().fnlId(), 0),
+                "FNL loaded: " + cmd.metadata().name()
+                        + ", neurons=" + cmd.metadata().neuronCount());
+        return this;
+    }
+
+    private Behavior<Command> onUnloadFNL(UnloadFNL cmd) {
+        FNLMetadata removed = loadedFNLs.remove(cmd.fnlId());
+        if (removed != null) {
+            journal(ClusterEventType.NEURON_REMOVED,
+                    new NeuronId(cmd.fnlId(), 0),
+                    "FNL unloaded: " + removed.name());
+        }
+        return this;
+    }
+
+    private Behavior<Command> onListLoadedFNLs(ListLoadedFNLs cmd) {
+        cmd.replyTo().tell(new ArrayList<>(loadedFNLs.values()));
         return this;
     }
 

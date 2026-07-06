@@ -4,9 +4,12 @@ import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
+import io.matrix.mediator.DriverType;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
+import java.util.EnumMap;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -37,10 +40,8 @@ public class MatrixMetrics {
     private final Counter hadesAlerts;
     private final Counter hadesIsolations;
 
-    // ── Driver metrics (preserved) ──
-    private final AtomicLong driverEnergy;
-    private final AtomicLong driverCuriosity;
-    private final AtomicLong driverSafety;
+    // ── Driver metrics (all 8 drivers) ──
+    private final Map<DriverType, AtomicLong> driverLevels;
 
     // ── Neuron evaluation + survival (preserved) ──
     private final Timer neuronEvaluateTime;
@@ -91,19 +92,16 @@ public class MatrixMetrics {
         this.hadesIsolations = registry.counter("matrix.hades.isolations",
                 "description", "Total HADES neuron isolations");
 
-        // ── Drivers ──
-        this.driverEnergy = new AtomicLong(0);
-        this.driverCuriosity = new AtomicLong(0);
-        this.driverSafety = new AtomicLong(0);
-        Gauge.builder("matrix.driver.energy", driverEnergy, AtomicLong::get)
-                .description("Energy driver level")
-                .register(registry);
-        Gauge.builder("matrix.driver.curiosity", driverCuriosity, AtomicLong::get)
-                .description("Curiosity driver level")
-                .register(registry);
-        Gauge.builder("matrix.driver.safety", driverSafety, AtomicLong::get)
-                .description("Safety driver level")
-                .register(registry);
+        // ── Drivers (all 8) ──
+        this.driverLevels = new EnumMap<>(DriverType.class);
+        for (DriverType type : DriverType.values()) {
+            AtomicLong gauge = new AtomicLong(0);
+            driverLevels.put(type, gauge);
+            Gauge.builder("matrix.driver.level", gauge, AtomicLong::get)
+                    .description("Driver level: " + type.description())
+                    .tag("driver", type.name().toLowerCase())
+                    .register(registry);
+        }
 
         // ── Neuron Eval ──
         this.neuronEvaluateTime = registry.timer("matrix.neuron.evaluate.time",
@@ -144,9 +142,13 @@ public class MatrixMetrics {
     public void hadesIsolation() { hadesIsolations.increment(); }
 
     // ── Drivers ──
-    public void driverEnergy(long v) { driverEnergy.set(v); }
-    public void driverCuriosity(long v) { driverCuriosity.set(v); }
-    public void driverSafety(long v) { driverSafety.set(v); }
+    public void driverLevel(DriverType type, long v) {
+        driverLevels.get(type).set(v);
+    }
+
+    public void driverEnergy(long v) { driverLevel(DriverType.ENERGY, v); }
+    public void driverCuriosity(long v) { driverLevel(DriverType.CURIOSITY, v); }
+    public void driverSafety(long v) { driverLevel(DriverType.SAFETY, v); }
 
     // ── Neuron Eval ──
     public Timer.Sample startNeuronEval() { return Timer.start(); }
