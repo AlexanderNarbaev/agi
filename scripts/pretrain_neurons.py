@@ -721,8 +721,8 @@ Examples:
 
     # Mode selection
     parser.add_argument(
-        "--demo", action="store_true", default=True,
-        help="Generate synthetic weights (default mode)",
+        "--demo", action="store_true", default=False,
+        help="Generate synthetic weights (use --demo for no-dependency mode)",
     )
     parser.add_argument(
         "--model-path", type=str, default=None,
@@ -731,8 +731,8 @@ Examples:
 
     # Model parameters
     parser.add_argument(
-        "--model-name", type=str, default="SmolLM2-135M-synth",
-        help="Model name for output filenames",
+        "--model-name", type=str, default=None,
+        help="Model name for output filenames (auto-detected from --model-path if not set)",
     )
     parser.add_argument(
         "--source-model", type=str, default=None,
@@ -789,6 +789,28 @@ Examples:
     )
 
     args = parser.parse_args()
+
+    # Auto-detect model name from path if not specified
+    # If no --model-path and no --demo, default to demo mode
+    if not args.demo and not args.model_path:
+        args.demo = True
+
+    if args.model_name is None:
+        if args.demo:
+            args.model_name = "SmolLM2-135M-synth"
+        elif args.model_path:
+            # Extract model name from path like .../models--Qwen--Qwen2.5-0.5B/snapshots/.../model.safetensors
+            import re
+            m = re.search(r'models--(.+?)--(.+?)(?:/|$)', args.model_path)
+            if m:
+                args.model_name = m.group(2)
+            else:
+                # Fallback: use parent directory name
+                args.model_name = os.path.basename(os.path.dirname(args.model_path))
+                if args.model_name in ('snapshots', 'snapshots'):
+                    args.model_name = os.path.basename(args.model_path).replace('.safetensors', '').replace('.bin', '')
+        else:
+            args.model_name = "SmolLM2-135M-synth"
 
     # Validate k
     if args.k < 1 or args.k > 20:
