@@ -103,6 +103,16 @@ services:
     volumes:
       - ./loki/loki-config.yaml:/etc/loki/local-config.yaml
 
+  # ─── Promtail (log shipper) ───
+  promtail:
+    image: grafana/promtail:2.9.10
+    volumes:
+      - ./promtail/promtail-config.yaml:/etc/promtail/config.yml
+      - ../logs:/var/log/matrix:ro
+    command: -config.file=/etc/promtail/config.yml
+    depends_on:
+      - loki
+
 volumes:
   postgres_data:
   redis_data:
