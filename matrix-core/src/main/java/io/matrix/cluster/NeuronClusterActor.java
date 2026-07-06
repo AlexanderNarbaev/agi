@@ -105,6 +105,7 @@ public class NeuronClusterActor extends AbstractBehavior<NeuronClusterActor.Comm
 
     // --- State ---
     private final Map<NeuronId, NeuronInstance> activeNeurons = new HashMap<>();
+    private final List<NeuronInstance> pendingMutations = new ArrayList<>();
     private final SignalBuffer inputBuffer;
     private final SignalBuffer outputBuffer;
     private final EventJournal eventJournal;

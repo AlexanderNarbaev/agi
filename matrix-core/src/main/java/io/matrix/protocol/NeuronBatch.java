@@ -42,8 +42,8 @@ public final class NeuronBatch {
     public enum CompressionMode { RAW, RLE, BITMASK }
 
     private static final int UUID_BYTES = 16;
-    private static final int RAW_SIGNAL_BYTES = UUID_BYTES + 8 + UUID_BYTES + 8 + 1 + 8; // 57
-    private static final int BITMASK_SIGNAL_BYTES = UUID_BYTES + 8 + UUID_BYTES + 8 + 8;   // 48
+    private static final int RAW_SIGNAL_BYTES = UUID_BYTES + 8 + UUID_BYTES + 8 + 1 + 8 + 1; // 58 (incl priority)
+    private static final int BITMASK_SIGNAL_BYTES = UUID_BYTES + 8 + UUID_BYTES + 8 + 8 + 1;   // 49 (incl priority)
 
     private final List<Signal> signals;
     private final CompressionMode compression;
@@ -211,6 +211,7 @@ public final class NeuronBatch {
                 out.writeInt(group.size());
                 for (Signal s : group) {
                     out.writeLong(s.timestamp());
+                    out.writeByte(s.priority());
                 }
             }
             return bos.toByteArray();
@@ -235,7 +236,8 @@ public final class NeuronBatch {
                 NeuronId tgt = new NeuronId(tgtUuid, tgtGen);
                 for (int i = 0; i < runLen; i++) {
                     long ts = in.readLong();
-                    result.add(new Signal(src, tgt, value, ts));
+                    int prio = in.readByte() & 0xFF;
+                    result.add(new Signal(src, tgt, value, ts, prio));
                 }
             }
             return result;
@@ -284,15 +286,7 @@ public final class NeuronBatch {
             List<Signal> result = new ArrayList<>(count);
             for (int i = 0; i < count; i++) {
                 boolean value = (bitmask[i / 8] & (1 << (i % 8))) != 0;
-                UUID srcUuid = readUUID(in);
-                long srcGen = in.readLong();
-                UUID tgtUuid = readUUID(in);
-                long tgtGen = in.readLong();
-                long ts = in.readLong();
-                result.add(new Signal(
-                        new NeuronId(srcUuid, srcGen),
-                        new NeuronId(tgtUuid, tgtGen),
-                        value, ts));
+                result.add(readSignal(in, false, true, value));
             }
             return result;
         } catch (IOException e) {
@@ -311,16 +305,22 @@ public final class NeuronBatch {
             out.writeBoolean(s.value());
         }
         out.writeLong(s.timestamp());
+        out.writeByte(s.priority());
     }
 
-    private static Signal readSignal(DataInputStream in, boolean includeValue) throws IOException {
+    private static Signal readSignal(DataInputStream in, boolean includeValue, boolean valueFromBitmask, boolean bitmaskValue) throws IOException {
         UUID srcUuid = readUUID(in);
         long srcGen = in.readLong();
         UUID tgtUuid = readUUID(in);
         long tgtGen = in.readLong();
-        boolean value = includeValue ? in.readBoolean() : false;
+        boolean value = includeValue ? in.readBoolean() : (valueFromBitmask ? bitmaskValue : false);
         long ts = in.readLong();
-        return new Signal(new NeuronId(srcUuid, srcGen), new NeuronId(tgtUuid, tgtGen), value, ts);
+        int priority = in.readByte() & 0xFF;
+        return new Signal(new NeuronId(srcUuid, srcGen), new NeuronId(tgtUuid, tgtGen), value, ts, priority);
+    }
+
+    private static Signal readSignal(DataInputStream in, boolean includeValue) throws IOException {
+        return readSignal(in, includeValue, false, false);
     }
 
     private static void writeUUID(DataOutputStream out, UUID uuid) throws IOException {

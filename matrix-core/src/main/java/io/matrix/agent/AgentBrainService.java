@@ -46,8 +46,18 @@ public class AgentBrainService {
     @Inject
     NeuronCacheService neuronCache;
 
+    private final MatrixMetrics metrics;
+
     @Inject
-    MatrixMetrics metrics;
+    AgentBrainService(MatrixMetrics metrics) {
+        this.metrics = metrics;
+        initializeRandom();
+    }
+
+    public AgentBrainService() {
+        this.metrics = null;
+        initializeRandom();
+    }
 
     @PostConstruct
     void init() {
@@ -143,10 +153,6 @@ public class AgentBrainService {
         return NeuronLayer.fromTruthTables(selected);
     }
 
-    public AgentBrainService() {
-        initializeRandom();
-    }
-
     public void initializeRandom() {
         this.brain = new HierarchicalBrain(rng);
         log.info("Agent brain initialized with hierarchical brain: {}", brain);
@@ -190,7 +196,7 @@ public class AgentBrainService {
             if (stuckCounter >= STUCK_THRESHOLD) {
                 exploreTicks = EXPLORE_WINDOW;
                 stuckCounter = 0;
-                metrics.recordStuck();
+                if (metrics != null) metrics.recordStuck();
                 log.info("Stuck detected after {} STAY — enabling exploration mode for {} ticks", STUCK_THRESHOLD, EXPLORE_WINDOW);
             }
         } else {
@@ -205,7 +211,7 @@ public class AgentBrainService {
                 action = exploreAction;
             }
         }
-        metrics.recordExploration(exploreTicks);
+        if (metrics != null) metrics.recordExploration(exploreTicks);
 
         lastAction = action;
         return action;

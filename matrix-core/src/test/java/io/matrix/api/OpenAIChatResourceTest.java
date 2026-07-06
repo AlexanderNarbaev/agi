@@ -21,7 +21,7 @@ class OpenAIChatResourceTest {
     @BeforeEach
     void setUp() {
         resource = new OpenAIChatResource();
-        resource.brainService = new AgentBrainService();
+        resource.brainService(new AgentBrainService());
     }
 
     @Test

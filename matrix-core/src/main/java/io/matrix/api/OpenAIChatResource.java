@@ -64,16 +64,29 @@ public class OpenAIChatResource {
     private final Random rng;
     private final List<String> responseHistory;
     private int stuckCounter;
+    private final MatrixMetrics metrics;
+    private AgentBrainService brainService;
+
+    public AgentBrainService brainService() { return brainService; }
+    public void brainService(AgentBrainService b) { this.brainService = b; }
 
     @Inject
-    AgentBrainService brainService;
-
-    @Inject
-    MatrixMetrics metrics;
+    OpenAIChatResource(MatrixMetrics metrics, AgentBrainService brainService,
+                       Text2VecService text2Vec, EthicalFilter ethicalFilter) {
+        this.metrics = metrics;
+        this.brainService = brainService;
+        this.text2vec = text2Vec;
+        this.ethicalFilter = ethicalFilter;
+        this.rng = new Random();
+        this.responseHistory = new ArrayList<>();
+        this.stuckCounter = 0;
+    }
 
     public OpenAIChatResource() {
-        this.ethicalFilter = new EthicalFilter();
+        this.metrics = null;
+        this.brainService = null;
         this.text2vec = new Text2VecService();
+        this.ethicalFilter = new EthicalFilter();
         this.rng = new Random();
         this.responseHistory = new ArrayList<>();
         this.stuckCounter = 0;
@@ -91,7 +104,7 @@ public class OpenAIChatResource {
     @POST
     @Path("/chat/completions")
     public Response chatCompletions(ChatCompletionRequest request) {
-        metrics.recordChatRequest();
+        if (metrics != null) metrics.recordChatRequest();
 
         // Validate request
         if (request == null || request.messages == null || request.messages.isEmpty()) {
