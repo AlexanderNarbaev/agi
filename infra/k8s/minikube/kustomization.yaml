@@ -11,3 +11,4 @@ resources:
   - prometheus.yaml
   - grafana.yaml
   - matrix-core.yaml
+  - paper.yaml

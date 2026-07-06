@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: paper-server
+  namespace: matrix
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: paper-server
+  template:
+    metadata:
+      labels:
+        app: paper-server
+    spec:
+      containers:
+        - name: paper-server
+          image: matrix-paper:latest
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 25565
+          env:
+            - name: MATRIX_CORE_URL
+              value: "http://matrix-core:9091"
+            - name: JAVA_OPTS
+              value: "-Xms512M -Xmx1G"
+          volumeMounts:
+            - name: world-data
+              mountPath: /server/world
+      volumes:
+        - name: world-data
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: paper-server
+  namespace: matrix
+spec:
+  type: NodePort
+  selector:
+    app: paper-server
+  ports:
+    - name: minecraft
+      port: 25565
+      targetPort: 25565
+      nodePort: 32565

@@ -26,7 +26,7 @@ cmd_start() {
   echo ""
 
   # 1. Start minikube
-  echo -e "${BOLD}=== Stage 1/6: Start minikube ===${NC}"
+  echo -e "${BOLD}=== Stage 1/7: Start minikube ===${NC}"
   if minikube status 2>/dev/null | grep -q "Running"; then
     log_ok "minikube already running"
   else
@@ -36,7 +36,7 @@ cmd_start() {
   fi
 
   # 2. Build matrix-core image into minikube
-  echo -e "\n${BOLD}=== Stage 2/6: Build matrix-core image ===${NC}"
+  echo -e "\n${BOLD}=== Stage 2/7: Build matrix-core image ===${NC}"
   info "Building uber-jar..."
   (cd "$PROJECT_DIR" && ./gradlew :matrix-core:clean :matrix-core:quarkusBuild -Dquarkus.package.jar.type=uber-jar --no-build-cache) >/dev/null 2>&1
   log_ok "Uber-jar built"
@@ -46,28 +46,44 @@ cmd_start() {
   docker build -t matrix-core:latest -f "$PROJECT_DIR/Dockerfile" "$PROJECT_DIR"
   log_ok "Docker image matrix-core:latest built"
 
-  # 3. Deploy K8s manifests
-  echo -e "\n${BOLD}=== Stage 3/6: Deploy to K8s ===${NC}"
+  # 3. Build Paper server image into minikube
+  echo -e "\n${BOLD}=== Stage 3/7: Build Paper server image ===${NC}"
+  info "Building Spigot plugin..."
+  (cd "$PROJECT_DIR" && ./gradlew :matrix-spigot:clean :matrix-spigot:build) >/dev/null 2>&1
+  log_ok "Spigot plugin built"
+
+  info "Building Paper Docker image (in minikube)..."
+  eval "$(minikube docker-env)"
+  docker build -t matrix-paper:latest -f "$PROJECT_DIR/matrix-spigot/Dockerfile" "$PROJECT_DIR"
+  log_ok "Docker image matrix-paper:latest built"
+
+  # 4. Deploy K8s manifests
+  echo -e "\n${BOLD}=== Stage 4/7: Deploy to K8s ===${NC}"
   kubectl apply -k "$K8S_DIR"
   log_ok "Manifests applied"
 
-  # 4. Wait for pods
-  echo -e "\n${BOLD}=== Stage 4/6: Wait for pods ===${NC}"
+  # 5. Wait for pods
+  echo -e "\n${BOLD}=== Stage 5/7: Wait for pods ===${NC}"
   info "Waiting for matrix-core pod..."
   kubectl wait --for=condition=ready pod -l app=matrix-core -n matrix --timeout=120s 2>/dev/null || {
     log_warn "matrix-core not ready yet, checking status..."
     kubectl get pods -n matrix
   }
+  info "Waiting for paper-server pod..."
+  kubectl wait --for=condition=ready pod -l app=paper-server -n matrix --timeout=120s 2>/dev/null || {
+    log_warn "paper-server not ready yet, checking status..."
+    kubectl get pods -n matrix
+  }
   log_ok "Pods running"
   kubectl get pods -n matrix
 
-  # 5. Setup DNS entries
-  echo -e "\n${BOLD}=== Stage 5/6: DNS setup ===${NC}"
+  # 6. Setup DNS entries
+  echo -e "\n${BOLD}=== Stage 6/7: DNS setup ===${NC}"
   MINIKUBE_IP=$(minikube ip)
   info "minikube IP: $MINIKUBE_IP"
 
   # Add DNS entries to /etc/hosts (requires sudo)
-  for host in matrix.local grafana.local prometheus.local; do
+  for host in matrix.local grafana.local prometheus.local minecraft.local; do
     if grep -q "$host" /etc/hosts 2>/dev/null; then
       log_ok "$host already in /etc/hosts"
     else
@@ -79,18 +95,20 @@ cmd_start() {
     fi
   done
 
-  # 6. Port forwarding
-  echo -e "\n${BOLD}=== Stage 6/6: Access info ===${NC}"
+  # 7. Access info
+  echo -e "\n${BOLD}=== Stage 7/7: Access info ===${NC}"
   echo ""
   echo -e "${BOLD}${GREEN}=== MATRIX Stack (minikube) ===${NC}"
   echo "  matrix-core:  http://matrix.local:30091"
   echo "  Grafana:      http://grafana.local:30300"
   echo "  Prometheus:   http://prometheus.local:30090"
+  echo "  Paper MC:     minecraft.local:32565"
   echo ""
   echo "  Or use minikube service:"
   echo "    minikube service matrix-core -n matrix"
   echo "    minikube service grafana -n matrix"
   echo "    minikube service prometheus -n matrix"
+  echo "    minikube service paper-server -n matrix"
   echo ""
   echo "  OpenAI Chat API:"
   echo "    curl -X POST http://matrix.local:30091/v1/chat/completions \\"
