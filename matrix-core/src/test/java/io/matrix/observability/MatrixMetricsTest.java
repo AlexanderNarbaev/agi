@@ -2,6 +2,7 @@ package io.matrix.observability;
 
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
+import io.matrix.mediator.DriverType;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -21,13 +22,13 @@ class MatrixMetricsTest {
     @Test
     void shouldRegisterAllMetrics() {
         assertThat(registry.getMeters()).isNotEmpty();
-        assertThat(registry.get("matrix_evolution_generations_total").counter()).isNotNull();
-        assertThat(registry.get("matrix_evolution_fitness_best").gauge()).isNotNull();
-        assertThat(registry.get("matrix_evolution_fitness_avg").gauge()).isNotNull();
-        assertThat(registry.get("matrix_neurons_active").gauge()).isNotNull();
-        assertThat(registry.get("matrix_neurons_frozen").gauge()).isNotNull();
-        assertThat(registry.get("matrix_actor_messages_total").counter()).isNotNull();
-        assertThat(registry.get("matrix_actor_errors_total").counter()).isNotNull();
+        assertThat(registry.get("matrix.evolution.generations").counter()).isNotNull();
+        assertThat(registry.get("matrix.evolution.fitness.best").gauge()).isNotNull();
+        assertThat(registry.get("matrix.evolution.fitness.avg").gauge()).isNotNull();
+        assertThat(registry.get("matrix.neurons.active").gauge()).isNotNull();
+        assertThat(registry.get("matrix.neurons.frozen").gauge()).isNotNull();
+        assertThat(registry.get("matrix.actor.messages").counter()).isNotNull();
+        assertThat(registry.get("matrix.actor.errors").counter()).isNotNull();
     }
 
     @Test
@@ -35,7 +36,7 @@ class MatrixMetricsTest {
         metrics.evolutionGeneration();
         metrics.evolutionGeneration();
 
-        assertThat(registry.get("matrix_evolution_generations_total")
+        assertThat(registry.get("matrix.evolution.generations")
                 .counter().count()).isEqualTo(2.0);
     }
 
@@ -44,9 +45,9 @@ class MatrixMetricsTest {
         metrics.fitnessBest(150);
         metrics.fitnessAvg(100);
 
-        assertThat(registry.get("matrix_evolution_fitness_best")
+        assertThat(registry.get("matrix.evolution.fitness.best")
                 .gauge().value()).isEqualTo(150.0);
-        assertThat(registry.get("matrix_evolution_fitness_avg")
+        assertThat(registry.get("matrix.evolution.fitness.avg")
                 .gauge().value()).isEqualTo(100.0);
     }
 
@@ -55,9 +56,9 @@ class MatrixMetricsTest {
         metrics.neuronsActive(42);
         metrics.neuronsFrozen(7);
 
-        assertThat(registry.get("matrix_neurons_active")
+        assertThat(registry.get("matrix.neurons.active")
                 .gauge().value()).isEqualTo(42.0);
-        assertThat(registry.get("matrix_neurons_frozen")
+        assertThat(registry.get("matrix.neurons.frozen")
                 .gauge().value()).isEqualTo(7.0);
     }
 
@@ -67,9 +68,9 @@ class MatrixMetricsTest {
         metrics.actorMessage();
         metrics.actorError();
 
-        assertThat(registry.get("matrix_actor_messages_total")
+        assertThat(registry.get("matrix.actor.messages")
                 .counter().count()).isEqualTo(2.0);
-        assertThat(registry.get("matrix_actor_errors_total")
+        assertThat(registry.get("matrix.actor.errors")
                 .counter().count()).isEqualTo(1.0);
     }
 
@@ -78,7 +79,7 @@ class MatrixMetricsTest {
         var sample = metrics.startActorTimer();
         metrics.stopActorTimer(sample);
 
-        assertThat(registry.get("matrix_actor_processing_seconds")
+        assertThat(registry.get("matrix.actor.processing.time")
                 .timer().count()).isEqualTo(1);
     }
 
@@ -88,9 +89,9 @@ class MatrixMetricsTest {
         metrics.hadesAlert();
         metrics.hadesIsolation();
 
-        assertThat(registry.get("matrix_hades_alerts_total")
+        assertThat(registry.get("matrix.hades.alerts")
                 .counter().count()).isEqualTo(2.0);
-        assertThat(registry.get("matrix_hades_isolations_total")
+        assertThat(registry.get("matrix.hades.isolations")
                 .counter().count()).isEqualTo(1.0);
     }
 
@@ -100,12 +101,22 @@ class MatrixMetricsTest {
         metrics.driverCuriosity(60);
         metrics.driverSafety(30);
 
-        assertThat(registry.get("matrix_driver_energy")
-                .gauge().value()).isEqualTo(75.0);
-        assertThat(registry.get("matrix_driver_curiosity")
-                .gauge().value()).isEqualTo(60.0);
-        assertThat(registry.get("matrix_driver_safety")
-                .gauge().value()).isEqualTo(30.0);
+        assertThat(registry.get("matrix.driver.level")
+                .tag("driver", "energy").gauge().value()).isEqualTo(75.0);
+        assertThat(registry.get("matrix.driver.level")
+                .tag("driver", "curiosity").gauge().value()).isEqualTo(60.0);
+        assertThat(registry.get("matrix.driver.level")
+                .tag("driver", "safety").gauge().value()).isEqualTo(30.0);
+    }
+
+    @Test
+    void shouldTrackAll8DriverMetrics() {
+        for (DriverType type : DriverType.values()) {
+            metrics.driverLevel(type, 50);
+            assertThat(registry.get("matrix.driver.level")
+                    .tag("driver", type.name().toLowerCase())
+                    .gauge().value()).isEqualTo(50.0);
+        }
     }
 
     @Test
@@ -113,7 +124,7 @@ class MatrixMetricsTest {
         var sample = metrics.startNeuronEval();
         metrics.stopNeuronEval(sample);
 
-        assertThat(registry.get("matrix_neuron_evaluate_seconds")
+        assertThat(registry.get("matrix.neuron.evaluate.time")
                 .timer().count()).isEqualTo(1);
     }
 
@@ -123,9 +134,9 @@ class MatrixMetricsTest {
         metrics.survivalRun();
         metrics.stopSurvivalRun(sample);
 
-        assertThat(registry.get("matrix_survival_runs_total")
+        assertThat(registry.get("matrix.survival.runs")
                 .counter().count()).isEqualTo(1.0);
-        assertThat(registry.get("matrix_survival_run_seconds")
+        assertThat(registry.get("matrix.survival.run.time")
                 .timer().count()).isEqualTo(1);
     }
 }

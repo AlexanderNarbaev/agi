@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import io.matrix.cluster.NeuronId;
 import io.matrix.cluster.NeuronInstance;
 import io.matrix.neuron.TruthTable;
+import io.matrix.security.SnapshotSigner;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -30,10 +31,16 @@ public final class SnapshotStore {
 
     private final Path storeDir;
     private final String instanceId;
+    private final SnapshotSigner signer;
 
     public SnapshotStore(Path storeDir, String instanceId) {
+        this(storeDir, instanceId, null);
+    }
+
+    public SnapshotStore(Path storeDir, String instanceId, SnapshotSigner signer) {
         this.storeDir = storeDir;
         this.instanceId = instanceId;
+        this.signer = signer;
     }
 
     /**
@@ -58,6 +65,10 @@ public final class SnapshotStore {
     /**
      * Saves a snapshot to a {@code .ldn} JSON file.
      *
+     * <p>If a {@link SnapshotSigner} is configured, the snapshot JSON is
+     * cryptographically signed and the signature is written to a
+     * {@code .sig} sidecar file.
+     *
      * @return the file path of the saved snapshot
      */
     public Path save(ClusterSnapshot snapshot) throws IOException {
@@ -68,7 +79,20 @@ public final class SnapshotStore {
         Path filePath = storeDir.resolve(filename);
 
         String json = MAPPER.writeValueAsString(snapshot);
-        Files.writeString(filePath, json);
+        byte[] jsonBytes = json.getBytes();
+        Files.write(filePath, jsonBytes);
+
+        if (signer != null) {
+            try {
+                byte[] signature = signer.sign(jsonBytes);
+                Files.write(filePath.resolveSibling(
+                        filePath.getFileName() + ".sig"), signature);
+            } catch (IOException e) {
+                throw e;
+            } catch (Exception e) {
+                throw new IOException("Failed to sign snapshot", e);
+            }
+        }
 
         return filePath;
     }
@@ -95,13 +119,36 @@ public final class SnapshotStore {
 
     /**
      * Loads a snapshot from a specific file.
+     *
+     * <p>If a {@link SnapshotSigner} is configured and a {@code .sig}
+     * sidecar file exists, the signature is verified before deserialisation.
+     * A {@link SecurityException} is thrown if verification fails.
      */
     public ClusterSnapshot load(Path filePath) {
         try {
-            String json = Files.readString(filePath);
-            return MAPPER.readValue(json, ClusterSnapshot.class);
+            byte[] jsonBytes = Files.readAllBytes(filePath);
+
+            if (signer != null) {
+                Path sigPath = filePath.resolveSibling(
+                        filePath.getFileName() + ".sig");
+                if (Files.exists(sigPath)) {
+                    byte[] signature = Files.readAllBytes(sigPath);
+                    if (!signer.verify(jsonBytes, signature)) {
+                        throw new SecurityException(
+                                "Snapshot signature verification failed: "
+                                        + filePath.getFileName());
+                    }
+                }
+            }
+
+            return MAPPER.readValue(jsonBytes, ClusterSnapshot.class);
+        } catch (SecurityException e) {
+            throw e;
         } catch (IOException e) {
             throw new RuntimeException("Failed to load snapshot: " + filePath, e);
+        } catch (Exception e) {
+            throw new RuntimeException(
+                    "Failed to verify snapshot signature: " + filePath, e);
         }
     }
 

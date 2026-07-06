@@ -37,6 +37,11 @@ public final class DriverState {
             case ENERGY -> new DriverState(type, 0.3, 0.2, 0.1, 0.02, 0.7, 0.1);
             case SAFETY -> new DriverState(type, 0.2, 0.05, 0.05, 0.01, 0.7, 0.1);
             case CURIOSITY -> new DriverState(type, 0.5, 0.4, 0.15, 0.03, 0.7, 0.1);
+            case ENTROPY -> new DriverState(type, 0.5, type.target(), 0.12, 0.03, 0.7, 0.1);
+            case SOCIAL -> new DriverState(type, 0.4, type.target(), 0.1, 0.02, 0.7, 0.1);
+            case SELFACTUALIZATION -> new DriverState(type, 0.3, type.target(), 0.08, 0.02, 0.7, 0.1);
+            case ATTENTION -> new DriverState(type, 0.4, type.target(), 0.1, 0.02, 0.7, 0.1);
+            case UBUNTU -> new DriverState(type, 0.5, type.target(), 0.1, 0.02, 0.7, 0.1);
         };
     }
 

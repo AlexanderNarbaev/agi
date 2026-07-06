@@ -1,7 +1,9 @@
 package io.matrix.mediator;
 
 import java.util.ArrayList;
+import java.util.EnumMap;
 import java.util.List;
+import java.util.Map;
 import java.util.PriorityQueue;
 import java.util.Random;
 import java.util.UUID;
@@ -30,9 +32,7 @@ public final class InstanceMediator {
     }
 
     private final MediatorConfig config;
-    private final DriverState energy;
-    private final DriverState safety;
-    private final DriverState curiosity;
+    private final Map<DriverType, DriverState> driverStates;
     private final MatrixMetrics metrics;
     private final Random rng;
 
@@ -47,9 +47,10 @@ public final class InstanceMediator {
         this.config = config;
         this.metrics = metrics;
         this.rng = rng;
-        this.energy = DriverState.withDefaults(DriverType.ENERGY);
-        this.safety = DriverState.withDefaults(DriverType.SAFETY);
-        this.curiosity = DriverState.withDefaults(DriverType.CURIOSITY);
+        this.driverStates = new EnumMap<>(DriverType.class);
+        for (DriverType type : DriverType.values()) {
+            driverStates.put(type, DriverState.withDefaults(type));
+        }
     }
 
     public InstanceMediator(MediatorConfig config, Random rng) {
@@ -64,12 +65,19 @@ public final class InstanceMediator {
         return new InstanceMediator(MediatorConfig.defaults(), null, rng);
     }
 
-    public DriverState energy() { return energy; }
-    public DriverState safety() { return safety; }
-    public DriverState curiosity() { return curiosity; }
+    public DriverState energy() { return driverStates.get(DriverType.ENERGY); }
+    public DriverState safety() { return driverStates.get(DriverType.SAFETY); }
+    public DriverState curiosity() { return driverStates.get(DriverType.CURIOSITY); }
+
+    /**
+     * Returns the driver state for the given type, or {@code null} if not found.
+     */
+    public DriverState getDriverState(DriverType type) {
+        return driverStates.get(type);
+    }
 
     public List<DriverState> drivers() {
-        return List.of(energy, safety, curiosity);
+        return List.copyOf(driverStates.values());
     }
 
     public List<Goal> goals() { return List.copyOf(goals); }
@@ -114,9 +122,9 @@ public final class InstanceMediator {
         }
 
         if (metrics != null) {
-            metrics.driverEnergy(Math.round(energy.level() * 100));
-            metrics.driverCuriosity(Math.round(curiosity.level() * 100));
-            metrics.driverSafety(Math.round(safety.level() * 100));
+            for (var entry : driverStates.entrySet()) {
+                metrics.driverLevel(entry.getKey(), Math.round(entry.getValue().level() * 100));
+            }
         }
 
         return actions;
@@ -153,6 +161,11 @@ public final class InstanceMediator {
             case ENERGY -> "optimize_resources";
             case SAFETY -> "run_safety_check";
             case CURIOSITY -> "explore_mutation_space";
+            case ENTROPY -> "diversify_exploration";
+            case SOCIAL -> "engage_communication";
+            case SELFACTUALIZATION -> "pursue_mastery";
+            case ATTENTION -> "reallocate_focus";
+            case UBUNTU -> "strengthen_cooperation";
         };
     }
 
@@ -230,21 +243,21 @@ public final class InstanceMediator {
      * External signal: low resource availability increases Energy driver.
      */
     public void reportLowResources() {
-        energy.nudge(0.15);
+        driverStates.get(DriverType.ENERGY).nudge(0.15);
     }
 
     /**
      * External signal: anomaly detected increases Safety driver.
      */
     public void reportAnomaly() {
-        safety.nudge(0.2);
+        driverStates.get(DriverType.SAFETY).nudge(0.2);
     }
 
     /**
      * External signal: no new data for a while increases Curiosity driver.
      */
     public void reportStagnation() {
-        curiosity.nudge(0.15);
+        driverStates.get(DriverType.CURIOSITY).nudge(0.15);
     }
 
     // ---- Phase 2: Hierarchy integration ----
