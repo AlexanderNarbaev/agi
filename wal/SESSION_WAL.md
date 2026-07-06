@@ -1,3 +1,3 @@
-📍 Status: v2.3.1 FINAL — Full stack operational: Docker infra (PG+Kafka+Redis+MinIO+Prom+Jaeger+Grafana) + matrix-core (REST+WS :9091) + Minecraft Paper + auth mock. OpenAI-compatible chat API, HierarchicalBrain (3×25 neurons), multi-agent swarm (7 roles), online training, pretrained weights, exploration mode, Prometheus metrics (80+). 30+ commits.
-🚀 Active: WebSocket reconnect after kick, feedback→server loop, chat rate limiting
+📍 Status: v2.4.0 — 5 matrix tasks complete: Qwen brain fallback, SSE streaming, /v1/embeddings endpoint, Amaranth FPGA test (16/16 pass), PyBullet bridge integration test.
+🚀 Active: Next: PyBullet/ROS2 pilot #4, University course modules, FPGA compiler
 🛑 Protected: Pekko 1.6.0, K_MAX=20, FROZEN-neurons, Quarkus 3.36.1, Java 25, AGPLv3+ethics
