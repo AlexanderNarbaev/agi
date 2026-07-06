@@ -147,6 +147,7 @@ public class MatrixPlugin extends JavaPlugin {
         final List<FeedbackRecord> feedbackBuffer = new ArrayList<>();
         BukkitRunnable task;
         boolean active;
+        long lastStatusTime = 0;
 
         BotState(String name, AgentRole role, Player player) {
             this.name = name;
@@ -357,6 +358,13 @@ public class MatrixPlugin extends JavaPlugin {
         }
         BotState active = activeBotName != null ? bots.get(activeBotName) : null;
         if (active != null) {
+            long now = System.currentTimeMillis();
+            if (sender != null && now - active.lastStatusTime < 5000) {
+                sender.sendMessage("§7Status updated " + (now - active.lastStatusTime) / 1000
+                        + "s ago. Use /matrix status to force refresh.");
+                return;
+            }
+            active.lastStatusTime = now;
             String msg = String.format(
                     "MATRIX Bot [%s] %s: ticks=%d mined=%d connected=%s action=%s feedback=%d",
                     active.name, active.role.name(),
@@ -405,6 +413,9 @@ public class MatrixPlugin extends JavaPlugin {
 
         boolean success = executeAction(bot, bot.lastAction);
         recordFeedback(bot, sensors, success);
+        if (client.isConnected()) {
+            client.sendFeedback(bot.name, sensors, success);
+        }
 
         // Every 100 ticks, try online training if enough feedback collected
         if (bot.tickCount % 100 == 0 && bot.feedbackBuffer.size() >= 20 && client.isConnected()) {
