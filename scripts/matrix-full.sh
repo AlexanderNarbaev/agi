@@ -249,8 +249,8 @@ build_matrix_core() {
   fi
 
   info "Building uber-jar (force clean)..."
-  (cd "$PROJECT_DIR" && ./gradlew :matrix-core:clean :matrix-core:quarkusBuild -Dquarkus.package.jar.type=uber-jar --no-build-cache)
-  jar=$(ls $JAR_GLOB 2>/dev/null | head -1 || true)
+  (cd "$PROJECT_DIR" && ./gradlew :matrix-core:clean :matrix-core:quarkusBuild -Dquarkus.package.jar.type=uber-jar --no-build-cache) >/dev/null
+  jar=$(ls $JAR_GLOB 2>/dev/null | tail -1 || true)
   [ -z "$jar" ] && log_err "Build failed: no binary or jar" && return 1
   log_ok "Built: $(basename "$jar")"
   echo "$jar"
