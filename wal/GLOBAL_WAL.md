@@ -1,3 +1,3 @@
-📍 v1.3.0 — Phase 1 P0 audit complete (commit 9e1b266). WeightVector, SensorProxy, EffectorProxy, NeuronBatch implemented. 104 new tests, 0 failures. Full stack: Docker (PG+Kafka+Redis+MinIO+Prom+Jaeger+Grafana+Loki+Promtail) + matrix-core (REST+WS :9091) + Paper Minecraft + auth mock. OpenAI API, HierarchicalBrain, multi-agent, Qwen pretrain, Prometheus metrics, logs.
-🚀 Active: Phase 1 P0 complete — next: Phase 1 P1 (audit plan continuation)
+📍 v1.3.0 — Full K8s stack running in minikube: 9 pods (matrix-core, paper-server, postgres, redis, kafka, minio, prometheus, grafana, jaeger). Qwen2.5-0.5B pretrained weights loaded. Paper server connected via WebSocket. OpenAI API working.
+🚀 Active: Minecraft+minikube integration complete — next: commit+push done, explore bot behavior
 🛑 Protected: Pekko 1.6.0, K_MAX=20, FROZEN-neurons, Quarkus 3.36.1, Java 25, AGPLv3+ethics, 82% coverage floor
