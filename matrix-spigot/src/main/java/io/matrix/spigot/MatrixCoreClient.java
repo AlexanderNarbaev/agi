@@ -124,11 +124,16 @@ public class MatrixCoreClient {
      * @param sensorBits 20-bit sensor vector from Minecraft world state
      */
     public void sendSensors(String agentId, long sensorBits) {
+        sendSensors(agentId, sensorBits, "unknown");
+    }
+
+    public void sendSensors(String agentId, long sensorBits, String role) {
         if (!connected || webSocket == null) {
             return;
         }
         String msg = "{\"type\":\"sensors\",\"data\":" + sensorBits
-                + ",\"agentId\":\"" + agentId + "\"}";
+                + ",\"agentId\":\"" + agentId + "\""
+                + ",\"role\":\"" + role + "\"}";
         webSocket.sendText(msg, true)
                 .exceptionally(ex -> {
                     logger.warning("Failed to send sensors: " + ex.getMessage());

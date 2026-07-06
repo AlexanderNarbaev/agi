@@ -403,7 +403,7 @@ public class MatrixPlugin extends JavaPlugin {
         long sensors = readSensors(bot.player);
 
         if (client.isConnected()) {
-            client.sendSensors(bot.name, sensors);
+            client.sendSensors(bot.name, sensors, bot.role.name());
         } else {
             // Fallback: generate a random action locally
             if (bot.tickCount % 5 == 0) {
