@@ -39,8 +39,11 @@ public class ChatCompletionResponse {
         /** Index of this choice (0-based). */
         public int index;
 
-        /** The response message. */
+        /** The response message (non-streaming). */
         public Message message;
+
+        /** The streaming delta (SSE streaming). */
+        public Delta delta;
 
         /** Reason for completion: "stop", "length", or "content_filter". */
         public String finish_reason;
@@ -75,7 +78,41 @@ public class ChatCompletionResponse {
         public Usage() {}
     }
 
+    /** A streaming delta chunk (for SSE streaming). */
+    @RegisterForReflection
+    public static class Delta {
+        /** The incremental response text. */
+        public String content;
+
+        /** Always "assistant" for streaming delta. */
+        public String role = "assistant";
+
+        public Delta() {}
+    }
+
     // ─── Factory methods ───
+
+    /** Creates a streaming delta response chunk for SSE. */
+    public static ChatCompletionResponse delta(String content, int index) {
+        ChatCompletionResponse resp = new ChatCompletionResponse();
+        resp.id = "chatcmpl-" + UUID.randomUUID().toString().substring(0, 8);
+        resp.created = System.currentTimeMillis() / 1000;
+        resp.model = "mpdt-smollm2";
+        resp.object = "chat.completion.chunk";
+
+        Delta delta = new Delta();
+        delta.content = content;
+
+        Choice choice = new Choice();
+        choice.index = index;
+        choice.delta = delta;
+        choice.finish_reason = null;
+
+        resp.choices = List.of(choice);
+        resp.usage = null;
+
+        return resp;
+    }
 
     /** Creates a response with the given content and model. */
     public static ChatCompletionResponse of(String content, String model) {
