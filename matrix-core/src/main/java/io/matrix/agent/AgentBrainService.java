@@ -11,7 +11,6 @@ import io.matrix.neuron.TruthTable;
 import io.matrix.observability.MatrixMetrics;
 import io.matrix.redis.NeuronCacheService;
 import io.matrix.simulation.AgentBrain;
-import jakarta.annotation.PostConstruct;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import org.slf4j.Logger;
@@ -51,16 +50,19 @@ public class AgentBrainService {
     @Inject
     AgentBrainService(MatrixMetrics metrics) {
         this.metrics = metrics;
-        initializeRandom();
+        initializeWithPretrainedFallback();
     }
 
     public AgentBrainService() {
         this.metrics = null;
-        initializeRandom();
+        initializeWithPretrainedFallback();
     }
 
-    @PostConstruct
-    void init() {
+    /**
+     * Initialize brain: try pretrained weights first, fall back to random.
+     * Called from constructors (not @PostConstruct — Quarkus ArC lazy-init issue).
+     */
+    private void initializeWithPretrainedFallback() {
         Path pretrainedDir = Path.of(PRETRAINED_DIR);
         if (Files.isDirectory(pretrainedDir)) {
             // ─── Try Qwen2.5-0.5B first (24 layers, better model) ───
@@ -92,15 +94,16 @@ public class AgentBrainService {
                 log.info("Loaded pretrained hierarchical brain from {} (3 layers × {} neurons total)",
                         pretrainedDir.toAbsolutePath(),
                         12 + 8 + 5);
+                return;
             } catch (Exception e) {
                 log.warn("Failed to load pretrained brain from {}: {}. Using random brain.",
                         pretrainedDir.toAbsolutePath(), e.getMessage());
-                initializeRandom();
             }
         } else {
-            log.info("No pretrained weights at {} — keeping random brain from constructor",
-                    pretrainedDir.toAbsolutePath());
+            log.info("No pretrained weights at {} — using random brain", pretrainedDir.toAbsolutePath());
         }
+        // Fall back to random
+        initializeRandom();
     }
 
     /**

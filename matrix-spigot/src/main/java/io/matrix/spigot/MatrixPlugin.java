@@ -94,7 +94,13 @@ public class MatrixPlugin extends JavaPlugin {
     // ─────────────────── Configuration ───────────────────
 
     private void loadConfigValues() {
-        matrixCoreUrl = getConfig().getString("matrix-core-url", "http://localhost:9091");
+        // Read from env var first, then config.yml, then default
+        String envUrl = System.getenv("MATRIX_CORE_URL");
+        if (envUrl != null && !envUrl.isEmpty()) {
+            matrixCoreUrl = envUrl;
+        } else {
+            matrixCoreUrl = getConfig().getString("matrix-core-url", "http://localhost:9091");
+        }
         tickInterval = getConfig().getInt("tick-interval", 20);
         autoConnect = getConfig().getBoolean("auto-connect", true);
     }
