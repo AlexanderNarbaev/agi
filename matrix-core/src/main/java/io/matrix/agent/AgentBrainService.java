@@ -8,6 +8,7 @@ import io.matrix.neuron.DecisionTree;
 import io.matrix.neuron.HierarchicalBrain;
 import io.matrix.neuron.NeuronLayer;
 import io.matrix.neuron.TruthTable;
+import io.matrix.observability.MatrixMetrics;
 import io.matrix.redis.NeuronCacheService;
 import io.matrix.simulation.AgentBrain;
 import jakarta.annotation.PostConstruct;
@@ -45,14 +46,29 @@ public class AgentBrainService {
     @Inject
     NeuronCacheService neuronCache;
 
+    @Inject
+    MatrixMetrics metrics;
+
     @PostConstruct
     void init() {
         Path pretrainedDir = Path.of(PRETRAINED_DIR);
         if (Files.isDirectory(pretrainedDir)) {
+            // ─── Try Qwen2.5-0.5B first (24 layers, better model) ───
+            Path qwenDir = Path.of("models/pretrained/qwen2.5-0.5b");
+            if (Files.isDirectory(qwenDir)) {
+                try {
+                    loadFromQwen(qwenDir);
+                    log.info("Loaded Qwen2.5-0.5B pretrained brain");
+                    return;
+                } catch (Exception e) {
+                    log.warn("Qwen load failed: {}", e.getMessage());
+                }
+            }
+
+            // ─── Fall back to SmolLM2-135M ───
             try {
                 PretrainedLoader loader = new PretrainedLoader();
 
-                // ─── Load action layer from pretrained weights ───
                 List<TruthTable> layer0Tables = loader.loadLayer(pretrainedDir, PRETRAINED_MODEL, 0);
                 List<TruthTable> layer1Tables = loader.loadLayer(pretrainedDir, PRETRAINED_MODEL, 1);
                 List<TruthTable> layer2Tables = loader.loadLayer(pretrainedDir, PRETRAINED_MODEL, 2);
@@ -75,6 +91,42 @@ public class AgentBrainService {
             log.info("No pretrained weights at {} — keeping random brain from constructor",
                     pretrainedDir.toAbsolutePath());
         }
+    }
+
+    /**
+     * Loads Qwen2.5-0.5B pretrained weights as a HierarchicalBrain.
+     *
+     * <p>Uses layers 0-5 (deeper layers for better features):
+     * <ul>
+     * <li>Layers 0-1 → sensor layer (12 neurons each)</li>
+     * <li>Layers 2-3 → feature layer (8 neurons each)</li>
+     * <li>Layers 4-5 → action layer (5 neurons each)</li>
+     * </ul>
+     */
+    private void loadFromQwen(Path qwenDir) throws IOException {
+        PretrainedLoader loader = new PretrainedLoader();
+        String qwenModel = "qwen2.5-0.5b";
+
+        List<TruthTable> s0 = loader.loadLayer(qwenDir, qwenModel, 0);
+        List<TruthTable> s1 = loader.loadLayer(qwenDir, qwenModel, 1);
+        List<TruthTable> f2 = loader.loadLayer(qwenDir, qwenModel, 2);
+        List<TruthTable> f3 = loader.loadLayer(qwenDir, qwenModel, 3);
+        List<TruthTable> a4 = loader.loadLayer(qwenDir, qwenModel, 4);
+        List<TruthTable> a5 = loader.loadLayer(qwenDir, qwenModel, 5);
+
+        // Merge layer pairs: each sensor/feature/action layer gets neurons from 2 Qwen layers
+        List<TruthTable> sensorTables = new ArrayList<>(s0);
+        sensorTables.addAll(s1);
+        List<TruthTable> featureTables = new ArrayList<>(f2);
+        featureTables.addAll(f3);
+        List<TruthTable> actionTables = new ArrayList<>(a4);
+        actionTables.addAll(a5);
+
+        NeuronLayer sensorLayer = buildLayer(sensorTables, 12, 12, 0);
+        NeuronLayer featureLayer = buildLayer(featureTables, 8, 12, 1);
+        NeuronLayer actionLayer = buildLayer(actionTables, 5, 8, 2);
+
+        this.brain = new HierarchicalBrain(sensorLayer, featureLayer, actionLayer);
     }
 
     private static NeuronLayer buildLayer(List<TruthTable> tables, int neuronCount, int k,
@@ -138,6 +190,7 @@ public class AgentBrainService {
             if (stuckCounter >= STUCK_THRESHOLD) {
                 exploreTicks = EXPLORE_WINDOW;
                 stuckCounter = 0;
+                metrics.recordStuck();
                 log.info("Stuck detected after {} STAY — enabling exploration mode for {} ticks", STUCK_THRESHOLD, EXPLORE_WINDOW);
             }
         } else {
@@ -152,6 +205,7 @@ public class AgentBrainService {
                 action = exploreAction;
             }
         }
+        metrics.recordExploration(exploreTicks);
 
         lastAction = action;
         return action;
