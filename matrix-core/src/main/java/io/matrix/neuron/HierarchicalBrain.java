@@ -1,6 +1,9 @@
 package io.matrix.neuron;
 
 import io.matrix.agent.PretrainedLoader;
+import io.matrix.reasoning.BrcChain;
+import io.matrix.reasoning.BrcState;
+import io.matrix.reasoning.BrcStep;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -77,6 +80,51 @@ public final class HierarchicalBrain {
     public NeuronLayer sensorLayer() { return sensorLayer; }
     public NeuronLayer featureLayer() { return featureLayer; }
     public NeuronLayer actionLayer() { return actionLayer; }
+
+    /**
+     * Returns the layers as a list for BRC integration.
+     */
+    public List<NeuronLayer> layers() {
+        return List.of(sensorLayer, featureLayer, actionLayer);
+    }
+
+    /**
+     * Creates a BrcChain from this brain's layers.
+     *
+     * @param maxSteps maximum reasoning steps (0 = unlimited)
+     * @param convergenceThreshold Hamming distance threshold for convergence
+     * @return BrcChain using this brain's layers
+     */
+    public BrcChain toBrcChain(int maxSteps, int convergenceThreshold) {
+        BrcStep sensorStep = new BrcStep(sensorLayer, "sensor", convergenceThreshold);
+        BrcStep featureStep = new BrcStep(featureLayer, "feature", convergenceThreshold);
+        BrcStep actionStep = new BrcStep(actionLayer, "action", convergenceThreshold);
+
+        return BrcChain.builder()
+            .addStep(sensorStep)
+            .addStep(featureStep)
+            .addStep(actionStep)
+            .maxSteps(maxSteps)
+            .earlyStopping(true)
+            .build();
+    }
+
+    /**
+     * Decides with multi-step reasoning using BRC.
+     *
+     * <p>Processes input through the3-layer hierarchy with convergence
+     * detection and early stopping. Returns both the action code and
+     * the reasoning state.
+     *
+     * @param sensors sensor input
+     * @param maxSteps maximum reasoning steps (0 = unlimited)
+     * @return BrcState with final output and reasoning history
+     */
+    public BrcState decideWithReasoning(long sensors, int maxSteps) {
+        BitSet input = toBitSet(sensors, 20);
+        BrcChain chain = toBrcChain(maxSteps, 2); // threshold=2 bits
+        return chain.evaluate(input, 20);
+    }
 
     // ─── Serialization ───
 
