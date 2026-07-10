@@ -6,6 +6,7 @@ import io.matrix.evolution.EvolutionLoop;
 import io.matrix.evolution.FitnessFn;
 import io.matrix.neuron.DecisionTree;
 import io.matrix.neuron.HierarchicalBrain;
+import io.matrix.neuron.NeuralTextGenerator;
 import io.matrix.neuron.NeuronLayer;
 import io.matrix.neuron.TruthTable;
 import io.matrix.observability.MatrixMetrics;
@@ -35,6 +36,7 @@ public class AgentBrainService {
     private static final ObjectMapper MAPPER = new ObjectMapper();
 
     private volatile HierarchicalBrain brain;
+    private volatile NeuralTextGenerator textGenerator;
     private final Random rng = new Random();
     private volatile String lastAction = "";
     private volatile int stuckCounter = 0;
@@ -50,64 +52,90 @@ public class AgentBrainService {
     @Inject
     AgentBrainService(MatrixMetrics metrics) {
         this.metrics = metrics;
+        this.textGenerator = NeuralTextGenerator.loadPretrained(rng);
+        if (this.textGenerator == null) {
+            this.textGenerator = new NeuralTextGenerator(rng);
+        }
         initializeWithPretrainedFallback();
     }
 
     public AgentBrainService() {
         this.metrics = null;
+        this.textGenerator = NeuralTextGenerator.loadPretrained(rng);
+        if (this.textGenerator == null) {
+            this.textGenerator = new NeuralTextGenerator(rng);
+        }
         initializeWithPretrainedFallback();
     }
 
     /**
      * Initialize brain: try pretrained weights first, fall back to random.
      * Called from constructors (not @PostConstruct — Quarkus ArC lazy-init issue).
+     *
+     * <p>Priority order (best quality first):
+     * <ol>
+     * <li>Qwen3-1.7B — thinking mode, agent capabilities</li>
+     * <li>DeepSeek-R1-Distill-Qwen-1.5B — R1 distillation, best reasoning</li>
+     * <li>Qwen3-0.6B — fast iteration, thinking mode</li>
+     * <li>Qwen2.5-0.5B — existing integration</li>
+     * <li>SmolLM2-135M — fallback</li>
+     * </ol>
      */
     private void initializeWithPretrainedFallback() {
         Path pretrainedDir = Path.of(PRETRAINED_DIR);
-        if (Files.isDirectory(pretrainedDir)) {
-            // ─── Try Qwen2.5-0.5B first (24 layers, better model) ───
-            Path qwenDir = Path.of("models/pretrained/qwen2.5-0.5b");
-            if (Files.isDirectory(qwenDir)) {
+        if (!Files.isDirectory(pretrainedDir)) {
+            log.info("No pretrained weights at {} — using random brain", pretrainedDir.toAbsolutePath());
+            initializeRandom();
+            return;
+        }
+
+        // ─── Try models in priority order ───
+        String[][] models = {
+            {"qwen3-1.7b", "Qwen3-1.7B"},
+            {"deepseek-r1-distill-qwen-1.5b", "DeepSeek-R1-Distill-Qwen-1.5B"},
+            {"qwen3-0.6b", "Qwen3-0.6B"},
+            {"qwen2.5-0.5b", "Qwen2.5-0.5B"},
+        };
+
+        for (String[] model : models) {
+            Path modelDir = pretrainedDir.resolve(model[0]);
+            if (Files.isDirectory(modelDir)) {
                 try {
-                    loadFromQwen(qwenDir);
-                    log.info("Loaded Qwen2.5-0.5B pretrained brain");
+                    loadFromQwen(modelDir, model[1]);
+                    log.info("Loaded {} pretrained brain (180 neurons, 6 layers)", model[1]);
                     return;
                 } catch (Exception e) {
-                    log.warn("Qwen load failed: {}", e.getMessage());
+                    log.warn("{} load failed: {}", model[1], e.getMessage());
                 }
             }
-
-            // ─── Fall back to SmolLM2-135M ───
-            try {
-                PretrainedLoader loader = new PretrainedLoader();
-
-                List<TruthTable> layer0Tables = loader.loadLayer(pretrainedDir, PRETRAINED_MODEL, 0);
-                List<TruthTable> layer1Tables = loader.loadLayer(pretrainedDir, PRETRAINED_MODEL, 1);
-                List<TruthTable> layer2Tables = loader.loadLayer(pretrainedDir, PRETRAINED_MODEL, 2);
-
-                NeuronLayer sensorLayer = buildLayer(layer0Tables, 12, 12, 0);
-                NeuronLayer featureLayer = buildLayer(layer1Tables, 8, 12, 1);
-                NeuronLayer actionLayer = buildLayer(layer2Tables, 5, 8, 2);
-
-                this.brain = new HierarchicalBrain(sensorLayer, featureLayer, actionLayer);
-
-                log.info("Loaded pretrained hierarchical brain from {} (3 layers × {} neurons total)",
-                        pretrainedDir.toAbsolutePath(),
-                        12 + 8 + 5);
-                return;
-            } catch (Exception e) {
-                log.warn("Failed to load pretrained brain from {}: {}. Using random brain.",
-                        pretrainedDir.toAbsolutePath(), e.getMessage());
-            }
-        } else {
-            log.info("No pretrained weights at {} — using random brain", pretrainedDir.toAbsolutePath());
         }
+
+        // ─── Fall back to SmolLM2-135M ───
+        try {
+            PretrainedLoader loader = new PretrainedLoader();
+
+            List<TruthTable> layer0Tables = loader.loadLayer(pretrainedDir, PRETRAINED_MODEL, 0);
+            List<TruthTable> layer1Tables = loader.loadLayer(pretrainedDir, PRETRAINED_MODEL, 1);
+            List<TruthTable> layer2Tables = loader.loadLayer(pretrainedDir, PRETRAINED_MODEL, 2);
+
+            NeuronLayer sensorLayer = buildLayer(layer0Tables, 12, 12, 0);
+            NeuronLayer featureLayer = buildLayer(layer1Tables, 8, 12, 1);
+            NeuronLayer actionLayer = buildLayer(layer2Tables, 5, 8, 2);
+
+            this.brain = new HierarchicalBrain(sensorLayer, featureLayer, actionLayer);
+
+            log.info("Loaded SmolLM2-135M pretrained brain (25 neurons, 3 layers)");
+            return;
+        } catch (Exception e) {
+            log.warn("Failed to load SmolLM2-135M: {}. Using random brain.", e.getMessage());
+        }
+
         // Fall back to random
         initializeRandom();
     }
 
     /**
-     * Loads Qwen2.5-0.5B pretrained weights as a HierarchicalBrain.
+     * Loads pretrained weights from a model directory as a HierarchicalBrain.
      *
      * <p>Uses layers 0-5 (deeper layers for better features):
      * <ul>
@@ -116,16 +144,15 @@ public class AgentBrainService {
      * <li>Layers 4-5 → action layer (5 neurons each)</li>
      * </ul>
      */
-    private void loadFromQwen(Path qwenDir) throws IOException {
+    private void loadFromQwen(Path modelDir, String modelName) throws IOException {
         PretrainedLoader loader = new PretrainedLoader();
-        String qwenModel = "Qwen2.5-0.5B";
 
-        List<TruthTable> s0 = loader.loadLayer(qwenDir, qwenModel, 0);
-        List<TruthTable> s1 = loader.loadLayer(qwenDir, qwenModel, 1);
-        List<TruthTable> f2 = loader.loadLayer(qwenDir, qwenModel, 2);
-        List<TruthTable> f3 = loader.loadLayer(qwenDir, qwenModel, 3);
-        List<TruthTable> a4 = loader.loadLayer(qwenDir, qwenModel, 4);
-        List<TruthTable> a5 = loader.loadLayer(qwenDir, qwenModel, 5);
+        List<TruthTable> s0 = loader.loadLayer(modelDir, modelName, 0);
+        List<TruthTable> s1 = loader.loadLayer(modelDir, modelName, 1);
+        List<TruthTable> f2 = loader.loadLayer(modelDir, modelName, 2);
+        List<TruthTable> f3 = loader.loadLayer(modelDir, modelName, 3);
+        List<TruthTable> a4 = loader.loadLayer(modelDir, modelName, 4);
+        List<TruthTable> a5 = loader.loadLayer(modelDir, modelName, 5);
 
         // Merge layer pairs: each sensor/feature/action layer gets neurons from 2 Qwen layers
         List<TruthTable> sensorTables = new ArrayList<>(s0);
@@ -158,7 +185,15 @@ public class AgentBrainService {
 
     public void initializeRandom() {
         this.brain = new HierarchicalBrain(rng);
+        this.textGenerator = new NeuralTextGenerator(rng);
         log.info("Agent brain initialized with hierarchical brain: {}", brain);
+    }
+
+    /**
+     * Returns the neural text generator for autoregressive text generation.
+     */
+    public NeuralTextGenerator textGenerator() {
+        return textGenerator;
     }
 
     /**
