@@ -3,6 +3,9 @@ kind: Deployment
 metadata:
   name: matrix-core
   namespace: matrix
+  labels:
+    app: matrix-core
+    version: v3.0
 spec:
   replicas: 1
   selector:
@@ -12,6 +15,7 @@ spec:
     metadata:
       labels:
         app: matrix-core
+        version: v3.0
     spec:
       containers:
         - name: matrix-core
@@ -20,6 +24,7 @@ spec:
           ports:
             - containerPort: 9091
           env:
+            # ── Core infrastructure ──
             - name: QUARKUS_HTTP_PORT
               value: "9091"
             - name: DB_HOST
@@ -34,18 +39,66 @@ spec:
               value: "redis://matrix-redis:6379"
             - name: QUARKUS_OTEL_EXPORTER_OTLP_ENDPOINT
               value: "http://jaeger:4317"
+            # ── v3.0: Boolean Reasoning Chain (BRC) ──
+            - name: BRC_MAX_STEPS
+              value: "5"
+            - name: BRC_CONVERGENCE_THRESHOLD
+              value: "2"
+            # ── v3.0: Boolean RAG ──
+            - name: RAG_TOP_K
+              value: "5"
+            # ── v3.0: VQ-VAE Proxy ──
+            - name: VQVAE_CODEBOOK_SIZE
+              value: "256"
+            # ── v3.0: MCTS-Guided Evolution ──
+            - name: MCTS_ITERATIONS
+              value: "100"
+            # ── v3.0: Agent Loop ──
+            - name: AGENT_MAX_ITERATIONS
+              value: "1000"
+          resources:
+            limits:
+              cpu: "2"
+              memory: 2Gi
+            requests:
+              cpu: 500m
+              memory: 512Mi
           readinessProbe:
             httpGet:
               path: /q/health/ready
               port: 9091
             initialDelaySeconds: 10
             periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 3
           livenessProbe:
             httpGet:
               path: /q/health/live
               port: 9091
             initialDelaySeconds: 30
             periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          volumeMounts:
+            - name: pretrained-weights
+              mountPath: /app/models/pretrained
+              readOnly: true
+      volumes:
+        - name: pretrained-weights
+          persistentVolumeClaim:
+            claimName: pretrained-weights-pvc
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: pretrained-weights-pvc
+  namespace: matrix
+spec:
+  accessModes:
+    - ReadOnlyMany
+  resources:
+    requests:
+      storage: 10Gi
 ---
 apiVersion: v1
 kind: Service

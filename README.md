@@ -4,7 +4,7 @@
 
 Не лжёт. Не забывает. Не может быть использована во вред.
 
-## Статус: v2.5.0
+## Статус: v3.0
 
 **920 тестов** | **82% покрытие** | **Java 25** | **Quarkus 3.36.1** | **Apache Pekko 1.6.0**
 
@@ -20,6 +20,7 @@
 | Аппаратные мощности | [docs/HARDWARE_ANALYSIS.md](docs/HARDWARE_ANALYSIS.md) |
 | Рекомендации моделей | [docs/MODEL_RECOMMENDATIONS.md](docs/MODEL_RECOMMENDATIONS.md) |
 | Долгосрочный план | [docs/LONGTERM_PLAN.md](docs/LONGTERM_PLAN.md) |
+| v3.0 Конфигурация | [docs/V3_CONFIGURATION.md](docs/V3_CONFIGURATION.md) |
 | Лицензия | [LICENSE](LICENSE) (AGPLv3 + этические ограничения) |
 | Как помочь | [CONTRIBUTING](CONTRIBUTING) |
 
@@ -40,12 +41,21 @@
 │ Pretrained   │    │ OpenAI API           │    │                      │
 └──────────────┘    └──────────────────────┘    └──────────────────────┘
 
+v3.0 Новые компоненты:
+┌──────────────────────────────────────────────────────────────────────┐
+│ BRC (Boolean Reasoning Chain)   — multi-step reasoning (max 5)      │
+│ Boolean RAG                     — knowledge retrieval (top-K=5)     │
+│ VQ-VAE Proxy                    — sensor/effector encoding (256)    │
+│ MCTS Tree                       — guided evolution (100 iterations) │
+│ Agent Loop                      — Observe→Think→Act (1000 iters)    │
+└──────────────────────────────────────────────────────────────────────┘
+
 Инфраструктура:
-┌──────────────────────────────────────────────────────┐
-│ Minikube K8s (9 pods) + Docker Compose (dev)         │
-│ Prometheus + Grafana + Jaeger + Loki                 │
-│ CI/CD (GitHub Actions) + JaCoCo + SpotBugs           │
-└──────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────┐
+│ Minikube K8s (9 pods) + Docker Compose (dev)                 │
+│ Prometheus + Grafana + Jaeger + Loki                         │
+│ CI/CD (GitHub Actions) + JaCoCo + SpotBugs                  │
+└──────────────────────────────────────────────────────────────┘
 ```
 
 ---
@@ -104,6 +114,62 @@ java -jar matrix-core/build/matrix-core-*-runner.jar
 
 ---
 
+## v3.0 Архитектура: Новые компоненты
+
+### BRC (Boolean Reasoning Chain)
+
+Multi-step логический reasoning в булевом пространстве. Каждый шаг применяет NeuronLayer для трансформации boolean-вектора. Поддерживает convergence detection и early stopping.
+
+```
+Input → Step 0 → Step 1 → ... → Step N → Output
+         ↓          ↓              ↓
+      [check]    [check]        [check]
+      converge   converge       converge
+```
+
+**Свойства:** детерминированный, интерпретируемый, конвергентный, композируемый.
+
+### Boolean RAG (Retrieval-Augmented Generation)
+
+Расширяет boolean query вектор с Top-K знаниями из индекса. Гибридная retrieval через BooleanIndex + KnowledgeIndex.
+
+```java
+BooleanRag rag = BooleanRag.builder()
+    .index(booleanIndex)
+    .knowledgeIndex(knowledgeIndex)
+    .topK(5)
+    .build();
+
+RagResult result = rag.query(queryVector);
+// result.expandedVector() = [query, knowledge_1, ..., knowledge_K]
+```
+
+### VQ-VAE Proxy
+
+Мультимодальный прокси для интеграции сенсоров и эффекторов:
+- **Sensor proxy:** continuous input → boolean vector (через VQ)
+- **Effector proxy:** boolean vector → continuous output (через codebook lookup)
+- **Text proxy:** text → boolean vector (через Text2VecService + VQ)
+
+### MCTS (Monte Carlo Tree Search)
+
+Направленная эволюция DecisionTree через 4 фазы MCTS:
+1. **Selection:** traverse с UCB1
+2. **Expansion:** добавление нового child
+3. **Simulation:** random playout
+4. **Backpropagation:** обновление статистики
+
+### Agent Loop
+
+Core Observe → Think → Act цикл:
+1. **Observe:** чтение sensor bits + snapshot driver states
+2. **Think:** обработка через HierarchicalBrain → boolean thought vector
+3. **Act:** выбор действия на основе thought + task + driver priorities
+
+**Convergence:** repeating action, task completed, max iterations, manual stop.
+
+---
+
 ## OpenAI-совместимый API
 
 MATRIX предоставляет OpenAI-совместимый API для работы с нейронными сетями:
@@ -126,6 +192,21 @@ curl -X POST http://matrix.local:30091/v1/embeddings \
 **Доступные модели:**
 - `mpdt-qwen` — Qwen2.5-0.5B pretrained (720 нейронов, 24 слоя, k=16)
 - `mpdt-smollm2` — SmolLM2-135M pretrained (180 нейронов, 6 слоёв, k=12)
+
+---
+
+## v3.0 Конфигурация
+
+| Переменная | Описание | Значение по умолчанию |
+|-----------|----------|----------------------|
+| `BRC_MAX_STEPS` | Максимум шагов BRC reasoning | `5` |
+| `BRC_CONVERGENCE_THRESHOLD` | Порог сходимости BRC | `2` |
+| `RAG_TOP_K` | Количество Top-K знаний для RAG | `5` |
+| `VQVAE_CODEBOOK_SIZE` | Размер codebook VQ-VAE | `256` |
+| `MCTS_ITERATIONS` | Количество итераций MCTS | `100` |
+| `AGENT_MAX_ITERATIONS` | Максимум итераций Agent Loop | `1000` |
+
+Полная документация: [docs/V3_CONFIGURATION.md](docs/V3_CONFIGURATION.md)
 
 ---
 
@@ -218,6 +299,10 @@ Minecraft Server (Paper 1.20.4)
 | API | `matrix_api_requests_total`, `matrix_api_latency_seconds` |
 | Драйверы | `matrix_driver_energy`, `matrix_driver_curiosity`, `matrix_driver_safety` |
 | HADES | `matrix_hades_alerts_total`, `matrix_hades_isolations_total` |
+| BRC | `matrix_brc_steps_total`, `matrix_brc_converged_total` |
+| RAG | `matrix_rag_queries_total`, `matrix_rag_hits_total` |
+| MCTS | `matrix_mcts_iterations_total`, `matrix_mcts_best_reward` |
+| Agent | `matrix_agent_ticks_total`, `matrix_agent_converged_total` |
 
 ---
 
@@ -262,6 +347,8 @@ Minecraft Server (Paper 1.20.4)
 | Pretrained | ✅ | SmolLM2-135M + Qwen2.5-0.5B (Avro) |
 | K8s + Operator | ✅ | Minikube + 9 pods + NodePort |
 | OpenAI API | ✅ | /v1/chat/completions + /v1/models + /v1/embeddings |
+| v3.0 Phase 1–6 | ✅ | BRC + Boolean RAG + VQ-VAE + MCTS + Agent Loop + Compression |
+| v3.0 Phase 10 | ✅ | K8s manifests + documentation + configuration |
 
 ---
 
