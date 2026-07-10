@@ -1,4 +1,4 @@
-# INDEX: Knowledge Base Map — MATRIX v2.5.0
+# INDEX: Knowledge Base Map — MATRIX v3.0
 | ID | Path | Title | Phase | Topics | Last_Updated |
 |----|------|-------|-------|--------|--------------|
 | L0 | docs/L0_manifesto.md | Манифест и аксиомы | Фундамент | Аксиомы, миссия, антипаттерны | 2026-05-31 |
@@ -25,8 +25,9 @@
 | L21 | docs/L22.md | Партнёрства с университетами | Социум | Исследования, гранты, стажировки, публикации | 2026-06-03 |
 | L22 | docs/L23.md | Корпоративные участники | Социум | Спонсорство, партнёрство, этический аудит | 2026-06-03 |
 | — | docs/LONGTERM_PLAN.md | Долгосрочный план | Все | Мастер-план реализации фаз 1.1–8 | 2026-06-26 |
-| — | docs/MASTER_PLAN.md | Мастер-план L0–L22 | Все | Полный план: 23 документа, 50+ задач | 2026-06-26 |
+| — | docs/MASTER_PLAN.md | Мастер-план L0–L22 | Все | Полный план: 23 документа, 50+ задач | 2026-07-10 |
 | — | docs/PLAYER_GUIDE.md | Гайд по Minecraft-клиенту | Гайд | Установка, лаунчеры, подключение, команды | 2026-06-26 |
+| — | docs/V3_CONFIGURATION.md | v3.0 Конфигурация | Инфра | BRC, RAG, VQ-VAE, MCTS, Agent Loop, tuning | 2026-07-10 |
 | — | icon/matrix-logo.svg | Логотип МАТРИЦЫ | Бренд | SVG-логотип: спираль + нейроны + таблица истинности | 2026-06-03 |
 | — | docs/BRAND_BOOK.md | Брендбук | Бренд | Логотип, цвета, типографика, key messages, voice | 2026-06-03 |
 | — | docs/blog/001-mpdt-neuron.md | Блог: MPDT-нейрон | Медиа | Пост: что такое MPDT-нейрон и почему он не галлюцинирует | 2026-06-03 |
@@ -45,20 +46,14 @@
 | — | .github/ | GitHub-шаблоны | Инфра | Issue/PR templates, CI workflows | 2026-06-03 |
 | — | build.gradle | Gradle сборка | Инфра | Java 25, Pekko 1.6.0, 570 тестов | 2026-06-26 |
 | — | .opencode/config.yml | Конфигурация проекта | Инфра | Модели, агенты, автосохранение | 2026-05-31 |
-| — | WAL.md | Корневой WAL | Инфра | Статус итераций v2.0.0 | 2026-06-26 |
-| — | wal/GLOBAL_WAL.md | Глобальный WAL | Инфра | Сводка всех фаз v2.0.0 | 2026-06-26 |
-| — | wal/SESSION_WAL.md | Сессионный WAL | Инфра | Текущая сессия | 2026-06-26 |
-| — | README.md | README проекта | Инфра | Быстрый старт, v2.1.0, Minecraft сервер | 2026-06-26 |
-| — | build.gradle | Gradle сборка | Инфра | Java 25, Pekko 1.6.0, 570 тестов, R2DBC | 2026-06-26 |
-| — | matrix-core/src/.../R2dbcEventJournal.java | R2DBC Event Journal | Инфра | Персистентный event sourcing (PostgreSQL) | 2026-06-26 |
-| — | matrix-core/src/.../NeuroSymbolicBridge.java | Neuro-Symbolic Bridge | AI | MPDT↔LLM гибридный режим | 2026-06-26 |
-| — | matrix-core/src/.../RealTimeExchange.java | WebRTC Noosphere | AI | Pub/sub обмен FNL между инстансами | 2026-06-26 |
-| — | matrix-core/src/.../TenantFilter.java | Multi-tenancy API | Инфра | Изоляция тенантов через X-Tenant-Id | 2026-06-26 |
-| — | matrix-spigot/build.gradle | Spigot плагин | Инфра | Java 21, Avro fatJar, Paper 1.20.4 | 2026-06-26 |
-| — | matrix-spigot/src/.../MatrixPlugin.java | Spigot плагин | Игра | MPDT-бот в Minecraft (/matrix start/stop/status/train) | 2026-06-26 |
-| — | minecraft-server/ | PaperMC сервер | Игра | Paper 1.20.4, eula, server.properties, world | 2026-06-26 |
-| — | docs/HARDWARE_ANALYSIS.md | Анализ мощностей | Инфра | CPU, RAM, GPU, Minikube, рекомендации | 2026-07-06 |
-| — | docs/MODEL_RECOMMENDATIONS.md | Рекомендации моделей | AI | ТОП-10 моделей для pretraining, план интеграции | 2026-07-06 |
-| — | infra/k8s/minikube/paper.yaml | Paper K8s манифест | Инфра | Minecraft Paper сервер в K8s (NodePort 32565) | 2026-07-06 |
-| — | matrix-spigot/Dockerfile | Paper Docker image | Инфра | itzg/minecraft-server:java21 + Spigot plugin | 2026-07-06 |
-| — | scripts/matrix-minikube.sh | Minikube launcher | Инфра | 7-stage запуск: minikube + build + deploy + DNS | 2026-07-06 |
+| — | WAL.md | Корневой WAL | Инфра | Статус итераций v3.0 | 2026-07-10 |
+| — | wal/GLOBAL_WAL.md | Глобальный WAL | Инфра | Сводка всех фаз v3.0 | 2026-07-10 |
+| — | wal/SESSION_WAL.md | Сессионный WAL | Инфра | Текущая сессия | 2026-07-10 |
+| — | README.md | README проекта | Инфра | Быстрый старт, v3.0, Minecraft сервер | 2026-07-10 |
+| — | matrix-core/src/.../BrcChain.java | Boolean Reasoning Chain | AI | Multi-step boolean reasoning, convergence | 2026-07-10 |
+| — | matrix-core/src/.../BooleanRag.java | Boolean RAG | AI | Knowledge retrieval, Top-K expansion | 2026-07-10 |
+| — | matrix-core/src/.../VqVaeProxy.java | VQ-VAE Proxy | AI | Sensor/effector encoding, codebook | 2026-07-10 |
+| — | matrix-core/src/.../MctsTree.java | MCTS Evolution | AI | Monte Carlo tree search, guided mutation | 2026-07-10 |
+| — | matrix-core/src/.../AgentLoop.java | Agent Loop | AI | Observe→Think→Act cycle, convergence | 2026-07-10 |
+| — | infra/k8s/minikube/matrix-core.yaml | K8s v3.0 Manifest | Инфра | BRC, RAG, VQ-VAE, MCTS, Agent env vars | 2026-07-10 |
+| — | scripts/matrix-minikube.sh | Minikube launcher v3.0 | Инфра | 8-stage запуск + pretrained weights | 2026-07-10 |

@@ -1,3 +1,3 @@
-📍 v1.3.0 — Full K8s stack running in minikube: 9 pods (matrix-core, paper-server, postgres, redis, kafka, minio, prometheus, grafana, jaeger). Qwen2.5-0.5B pretrained weights loaded. Paper server connected via WebSocket. OpenAI API working.
-🚀 Active: Minecraft+minikube integration complete — next: commit+push done, explore bot behavior
+📍 v3.0 — Phase 10 complete: K8s manifests updated (env vars, resource limits, probes, pretrained PVC), documentation created (V3_CONFIGURATION.md, README v3.0, INDEX v3.0, MASTER_PLAN v3.0).
+🚀 Active: Phase 10 Deployment & Documentation complete — v3.0 fully documented and deployable.
 🛑 Protected: Pekko 1.6.0, K_MAX=20, FROZEN-neurons, Quarkus 3.36.1, Java 25, AGPLv3+ethics, 82% coverage floor
