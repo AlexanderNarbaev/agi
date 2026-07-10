@@ -8,6 +8,7 @@ import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Random;
 import java.util.Set;
 
 /**
@@ -187,12 +188,22 @@ public final class TruthTableMinimizer {
         int k = tt.k();
         int size = 1 << k;
 
-        // Sample-based approach for very large tables
-        // Collect a representative sample of minterms
+        // For large k, use random sampling to avoid O(2^k) iteration
         List<Integer> minterms = new ArrayList<>();
-        for (int i = 0; i < size; i++) {
-            if (tt.evaluate(i)) {
-                minterms.add(i);
+        if (size > 4096) {
+            Random rng = new Random(42);
+            int sampleSize = Math.min(4096, size);
+            for (int s = 0; s < sampleSize; s++) {
+                int i = rng.nextInt(size);
+                if (tt.evaluate(i)) {
+                    minterms.add(i);
+                }
+            }
+        } else {
+            for (int i = 0; i < size; i++) {
+                if (tt.evaluate(i)) {
+                    minterms.add(i);
+                }
             }
         }
 
@@ -206,8 +217,13 @@ public final class TruthTableMinimizer {
             cover.add(new Implicant(m, 0, k));
         }
 
-        // Phase 2: Expand — try to merge adjacent implicants
-        cover = expandPhase(cover, k);
+        // Phase 2: Expand — try to merge adjacent implicants (with limit for large covers)
+        if (cover.size() > 1000) {
+            // For very large covers, expand greedily in batches
+            cover = expandPhaseBatched(cover, k);
+        } else {
+            cover = expandPhase(cover, k);
+        }
 
         // Phase 3: Reduce — shrink implicants to reduce redundancy
         cover = reducePhase(cover, k);
@@ -216,6 +232,43 @@ public final class TruthTableMinimizer {
         cover = shrinkPhase(cover, minterms);
 
         return new MinimizedDNF(cover, Algorithm.ESPRESSO, k);
+    }
+
+    /**
+     * Batched expansion for large covers (avoids O(n²) merge loop).
+     */
+    private static List<Implicant> expandPhaseBatched(List<Implicant> cover, int k) {
+        // Simple greedy: try to merge with a random sample of neighbors
+        List<Implicant> expanded = new ArrayList<>();
+        Set<Implicant> used = new HashSet<>();
+        Random rng = new Random(42);
+
+        for (int i = 0; i < cover.size(); i++) {
+            if (used.contains(cover.get(i))) continue;
+            Implicant current = cover.get(i);
+            boolean merged = false;
+
+            // Try merging with a random sample of remaining implicants
+            int attempts = Math.min(50, cover.size() - i - 1);
+            for (int a = 0; a < attempts; a++) {
+                int j = i + 1 + rng.nextInt(cover.size() - i - 1);
+                Implicant other = cover.get(j);
+                Implicant m = current.merge(other);
+                if (m != null) {
+                    expanded.add(m);
+                    used.add(current);
+                    used.add(other);
+                    merged = true;
+                    break;
+                }
+            }
+
+            if (!merged) {
+                expanded.add(current);
+            }
+        }
+
+        return expanded;
     }
 
     private static List<Implicant> expandPhase(List<Implicant> cover, int k) {
