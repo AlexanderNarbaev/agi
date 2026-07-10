@@ -79,14 +79,8 @@ spec:
             periodSeconds: 10
             timeoutSeconds: 5
             failureThreshold: 3
-          volumeMounts:
-            - name: pretrained-weights
-              mountPath: /app/models/pretrained
-              readOnly: true
-      volumes:
-        - name: pretrained-weights
-          persistentVolumeClaim:
-            claimName: pretrained-weights-pvc
+          volumeMounts: []
+      volumes: []
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim

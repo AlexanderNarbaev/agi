@@ -42,8 +42,7 @@ import java.util.Set;
  *
  * <p>Supported models:
  * <ul>
- * <li>{@code mpdt-smollm2} — SmolLM2-135M pretrained MPDT brain</li>
- * <li>{@code mpdt-qwen}   — random MPDT brain (untrained)</li>
+ * <li>{@code M.A.T.R.I.X.} — M.A.T.R.I.X. unified neural system (all pretrained neurons merged)</li>
  * </ul>
  */
 @Path("/v1")
@@ -53,8 +52,8 @@ import java.util.Set;
 public class OpenAIChatResource {
 
     private static final Logger log = LoggerFactory.getLogger(OpenAIChatResource.class);
-    private static final Set<String> VALID_MODELS = Set.of("mpdt-smollm2", "mpdt-qwen");
-    private static final String DEFAULT_MODEL = "mpdt-smollm2";
+    private static final Set<String> VALID_MODELS = Set.of("M.A.T.R.I.X.");
+    private static final String DEFAULT_MODEL = "M.A.T.R.I.X.";
     private static final int STUCK_THRESHOLD = 10;
     private static final int MAX_RESPONSE_HISTORY = 128;
     private static final ObjectMapper MAPPER = new ObjectMapper();
@@ -123,7 +122,7 @@ public class OpenAIChatResource {
             return Response.status(400)
                     .entity(Map.of("error", Map.of(
                             "message", "Unknown model: " + request.model
-                                    + ". Available: mpdt-smollm2, mpdt-qwen",
+                                    + ". Available: M.A.T.R.I.X.",
                             "type", "invalid_request_error",
                             "code", "unknown_model")))
                     .build();
@@ -155,14 +154,22 @@ public class OpenAIChatResource {
         // ─── Text → Binary Vector ───
         long sensorBits = text2vec.textToBits(userText);
 
-        // ─── Feed through HierarchicalBrain ───
+        // ─── Generate response using neural text generator ───
         String response;
         try {
-            int actionCode = brainService.brain().decide(sensorBits);
-            response = text2vec.bitsToResponse(actionCode);
+            response = brainService.textGenerator().generate(userText);
+            log.info("NeuralTextGenerator: input='{}', output='{}', length={}", 
+                userText.substring(0, Math.min(50, userText.length())), 
+                response, 
+                response != null ? response.length() : 0);
+            if (response == null || response.isBlank()) {
+                // Fallback to brain decision if generator produces empty output
+                int actionCode = brainService.brain().decide(sensorBits);
+                response = "Neural output: " + Integer.toBinaryString(actionCode);
+            }
         } catch (Exception e) {
-            log.error("Brain processing failed", e);
-            response = text2vec.bitsToResponse(rng.nextInt(32));
+            log.error("Neural text generation failed", e);
+            response = "Neural processing error. Retrying with different pathway.";
         }
 
         // ─── Circuit Breaker (HADES): stuck neuron detection ───
@@ -201,12 +208,7 @@ public class OpenAIChatResource {
 
         List<Map<String, Object>> models = List.of(
                 Map.<String, Object>of(
-                        "id", "mpdt-smollm2",
-                        "object", "model",
-                        "created", now,
-                        "owned_by", "matrix"),
-                Map.<String, Object>of(
-                        "id", "mpdt-qwen",
+                        "id", "M.A.T.R.I.X.",
                         "object", "model",
                         "created", now,
                         "owned_by", "matrix")
