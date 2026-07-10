@@ -3,6 +3,7 @@ plugins {
     id 'jacoco'
     id 'io.quarkus' version '3.36.1'
     id 'me.champeau.jmh' version '0.7.3'
+    id 'org.graalvm.buildtools.native' version '0.10.4'
 }
 
 group = 'io.matrix'
@@ -107,17 +108,53 @@ tasks.register('runMinecraftExperiment', JavaExec) {
 }
 
 // ─── GraalVM Native Image ───
-// Build:    ./gradlew build -Dquarkus.native.enabled=true -Dquarkus.native.additional-build-args=-H:+ReportExceptionStackTraces,-H:ReflectionConfigurationResources=reflect-config.json,-H:ResourceConfigurationResources=resource-config.json,--enable-url-protocols=http,https,-H:+AddAllCharsets,-J-Xmx8g
+// Build:    ./gradlew :matrix-core:build -Dquarkus.package.type=native
 // Requires: GraalVM 25+ (currently 25.0.3), native-image installed
-// Note:    Native build args set via application.properties + command-line override
+// Note:    Native build args set via application.properties + native-image.properties
+
+graalvmNative {
+    binaries {
+        main {
+            imageName = 'matrix-core'
+            mainClass = 'io.matrix.MatrixApplication'
+            buildArgs.addAll(
+                '-H:+ReportExceptionStackTraces',
+                '--enable-url-protocols=http,https',
+                '-H:+AddAllCharsets',
+                '-J-Xmx8g',
+                '--initialize-at-build-time=org.jboss.logmanager',
+                '--initialize-at-build-time=org.slf4j',
+                '--initialize-at-build-time=io.netty',
+                '--initialize-at-build-time=com.fasterxml',
+                '--initialize-at-build-time=io.smallrye',
+                '--initialize-at-build-time=org.apache.avro',
+                '--initialize-at-run-time=io.matrix.cluster.NeuronClusterActor',
+                '--initialize-at-run-time=org.apache.pekko',
+                '--initialize-at-run-time=io.matrix.events.R2dbcEventJournal',
+                '--initialize-at-run-time=io.vertx.mutiny'
+            )
+        }
+    }
+}
 
 tasks.register('nativeBuildExec', Exec) {
     dependsOn 'build'
     group = 'native'
-    description = 'Build GraalVM native image'
+    description = 'Build GraalVM native image via Quarkus'
     workingDir = projectDir
-    commandLine './gradlew', 'build',
-            '-Dquarkus.native.enabled=true',
+    commandLine './gradlew', ':matrix-core:build',
+            '-Dquarkus.package.type=native',
             '--no-daemon'
+}
+
+// nativeTest is provided by GraalVM plugin as NativeRunTask
+
+tasks.register('nativeReflectionTest', Test) {
+    group = 'native'
+    description = 'Run native image reflection tests (JVM mode)'
+    useJUnitPlatform {
+        includeTags 'native-image'
+    }
+    include 'io/matrix/nativeimage/**'
 }
 
