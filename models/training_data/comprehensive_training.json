@@ -1,0 +1,502 @@
+[
+  {
+    "input": "What is photosynthesis?",
+    "output": "Photosynthesis is the process by which plants, algae, and some bacteria convert sunlight, water, and carbon dioxide into glucose and oxygen using chlorophyll.",
+    "category": "world_understanding"
+  },
+  {
+    "input": "What are the four fundamental forces of nature?",
+    "output": "The four fundamental forces are gravity, electromagnetism, the strong nuclear force, and the weak nuclear force.",
+    "category": "world_understanding"
+  },
+  {
+    "input": "What is the water cycle?",
+    "output": "The water cycle describes the continuous movement of water on Earth through evaporation, condensation, precipitation, and collection.",
+    "category": "world_understanding"
+  },
+  {
+    "input": "What is DNA?",
+    "output": "DNA (deoxyribonucleic acid) is the molecule that carries genetic instructions for the development, functioning, growth, and reproduction of all known organisms.",
+    "category": "world_understanding"
+  },
+  {
+    "input": "What are the layers of the Earth?",
+    "output": "The Earth consists of four main layers: the inner core (solid iron-nickel), outer core (liquid iron-nickel), mantle (semi-solid rock), and crust (solid outer shell).",
+    "category": "world_understanding"
+  },
+  {
+    "input": "What caused the fall of the Roman Empire?",
+    "output": "The fall of the Western Roman Empire (476 CE) was caused by multiple factors including economic decline, political instability, military defeats, barbarian invasions, and internal corruption.",
+    "category": "world_understanding"
+  },
+  {
+    "input": "What is the theory of evolution by natural selection?",
+    "output": "Natural selection is the process where organisms better adapted to their environment tend to survive and reproduce, passing advantageous traits to offspring. Proposed by Charles Darwin in 1859.",
+    "category": "world_understanding"
+  },
+  {
+    "input": "What is the periodic table?",
+    "output": "The periodic table is a tabular arrangement of chemical elements organized by atomic number, electron configuration, and recurring chemical properties. Dmitri Mendeleev created the first widely recognized version in 1869.",
+    "category": "world_understanding"
+  },
+  {
+    "input": "What is plate tectonics?",
+    "output": "Plate tectonics is the scientific theory that Earth's lithosphere consists of large tectonic plates that move relative to each other, causing earthquakes, volcanoes, and mountain formation.",
+    "category": "world_understanding"
+  },
+  {
+    "input": "What is the Big Bang theory?",
+    "output": "The Big Bang theory is the prevailing cosmological model explaining the universe's origin from an initial singularity approximately 13.8 billion years ago, followed by rapid expansion and cooling.",
+    "category": "world_understanding"
+  },
+  {
+    "input": "What is the Renaissance?",
+    "output": "The Renaissance was a cultural movement in Europe (14th-17th centuries) marked by a revival of classical learning, art, and humanism, bridging the Middle Ages and modern history.",
+    "category": "world_understanding"
+  },
+  {
+    "input": "What is quantum mechanics?",
+    "output": "Quantum mechanics is the branch of physics describing nature at atomic and subatomic scales, where particles exhibit wave-particle duality, superposition, and entanglement.",
+    "category": "world_understanding"
+  },
+  {
+    "input": "What are greenhouse gases?",
+    "output": "Greenhouse gases (CO2, methane, water vapor, etc.) trap heat in Earth's atmosphere, causing the greenhouse effect essential for life but contributing to climate change when concentrations rise excessively.",
+    "category": "world_understanding"
+  },
+  {
+    "input": "What is the speed of light?",
+    "output": "The speed of light in vacuum is approximately 299,792,458 meters per second (about 300,000 km/s). According to Einstein's special relativity, nothing with mass can reach this speed.",
+    "category": "world_understanding"
+  },
+  {
+    "input": "What is mitosis?",
+    "output": "Mitosis is the process of cell division resulting in two genetically identical daughter cells. It consists of prophase, metaphase, anaphase, and telophase.",
+    "category": "world_understanding"
+  },
+  {
+    "input": "What is the electromagnetic spectrum?",
+    "output": "The electromagnetic spectrum encompasses all types of electromagnetic radiation ordered by wavelength/frequency: radio waves, microwaves, infrared, visible light, ultraviolet, X-rays, and gamma rays.",
+    "category": "world_understanding"
+  },
+  {
+    "input": "What is the Industrial Revolution?",
+    "output": "The Industrial Revolution (late 18th-19th centuries) was a period of major technological, socioeconomic, and cultural change driven by mechanization, steam power, and factory production, starting in Britain.",
+    "category": "world_understanding"
+  },
+  {
+    "input": "What is a black hole?",
+    "output": "A black hole is a region of spacetime where gravity is so strong that nothing — not even light — can escape. It forms when a massive star collapses at the end of its life cycle.",
+    "category": "world_understanding"
+  },
+  {
+    "input": "What are enzymes?",
+    "output": "Enzymes are biological catalysts — typically proteins — that accelerate chemical reactions in living organisms without being consumed in the process.",
+    "category": "world_understanding"
+  },
+  {
+    "input": "What is the difference between weather and climate?",
+    "output": "Weather refers to short-term atmospheric conditions (hours to days), while climate describes long-term patterns and averages of weather in a region over decades or centuries.",
+    "category": "world_understanding"
+  },
+  {
+    "input": "What is Boolean algebra?",
+    "output": "Boolean algebra is a branch of algebra dealing with truth values (true/false). Developed by George Boole, it uses operators AND, OR, NOT and forms the foundation of digital logic and computer science.",
+    "category": "logic_reasoning"
+  },
+  {
+    "input": "What is an AND gate?",
+    "output": "An AND gate is a digital logic gate that outputs true (1) only when all of its inputs are true (1). If any input is false, the output is false.",
+    "category": "logic_reasoning"
+  },
+  {
+    "input": "What is an XOR gate?",
+    "output": "An XOR (exclusive OR) gate outputs true only when an odd number of inputs are true. For two inputs, it outputs true when exactly one input is true.",
+    "category": "logic_reasoning"
+  },
+  {
+    "input": "What is De Morgan's law?",
+    "output": "De Morgan's laws state: NOT (A AND B) = (NOT A) OR (NOT B), and NOT (A OR B) = (NOT A) AND (NOT B). These rules allow transformation between conjunctions and disjunctions.",
+    "category": "logic_reasoning"
+  },
+  {
+    "input": "What is a tautology in logic?",
+    "output": "A tautology is a logical formula that is always true regardless of the truth values of its variables. Example: (A OR NOT A) is always true.",
+    "category": "logic_reasoning"
+  },
+  {
+    "input": "What is modus ponens?",
+    "output": "Modus ponens is a rule of inference: If P implies Q, and P is true, then Q is true. Form: P → Q, P ⊢ Q.",
+    "category": "logic_reasoning"
+  },
+  {
+    "input": "What is a truth table?",
+    "output": "A truth table is a mathematical table showing all possible combinations of input values for a logical expression and the resulting output for each combination.",
+    "category": "logic_reasoning"
+  },
+  {
+    "input": "What is the difference between deductive and inductive reasoning?",
+    "output": "Deductive reasoning moves from general premises to specific conclusions (guaranteed if premises true). Inductive reasoning moves from specific observations to general conclusions (probable but not certain).",
+    "category": "logic_reasoning"
+  },
+  {
+    "input": "What is Gödel's incompleteness theorem?",
+    "output": "Gödel's incompleteness theorems prove that any consistent formal system capable of basic arithmetic contains true statements that cannot be proven within the system.",
+    "category": "logic_reasoning"
+  },
+  {
+    "input": "What is the P versus NP problem?",
+    "output": "P vs NP asks whether every problem whose solution can be verified quickly (NP) can also be solved quickly (P). It is one of the seven Millennium Prize Problems, still unsolved.",
+    "category": "logic_reasoning"
+  },
+  {
+    "input": "What is a syllogism?",
+    "output": "A syllogism is a form of deductive reasoning with two premises and a conclusion. Classic example: All men are mortal; Socrates is a man; therefore, Socrates is mortal.",
+    "category": "logic_reasoning"
+  },
+  {
+    "input": "What is a finite state machine?",
+    "output": "A finite state machine (FSM) is a computational model with a finite number of states, transitions between states, and actions. Used in digital circuits, language parsing, and AI behavior.",
+    "category": "logic_reasoning"
+  },
+  {
+    "input": "What is a Karnaugh map?",
+    "output": "A Karnaugh map (K-map) is a visual method for simplifying Boolean algebra expressions. It arranges truth values in a grid to identify patterns for minimization of logic circuits.",
+    "category": "logic_reasoning"
+  },
+  {
+    "input": "What is the halting problem?",
+    "output": "The halting problem is the decision problem of determining whether a given program will finish running or run forever on a given input. Alan Turing proved it is undecidable in 1936.",
+    "category": "logic_reasoning"
+  },
+  {
+    "input": "What is a NOR gate and why is it universal?",
+    "output": "A NOR gate outputs true only when all inputs are false. NOR is a universal gate because any Boolean function can be implemented using only NOR gates.",
+    "category": "logic_reasoning"
+  },
+  {
+    "input": "What is the difference between first-order and propositional logic?",
+    "output": "Propositional logic deals with simple true/false propositions connected by operators. First-order logic adds predicates, quantifiers (∀, ∃), variables, and functions for more expressive reasoning.",
+    "category": "logic_reasoning"
+  },
+  {
+    "input": "What is Occam's razor?",
+    "output": "Occam's razor is the principle that among competing hypotheses, the one with the fewest assumptions should be selected. Simpler explanations are preferred until complexity is necessary.",
+    "category": "logic_reasoning"
+  },
+  {
+    "input": "What is a proof by contradiction?",
+    "output": "Proof by contradiction assumes the negation of what we want to prove, then derives a logical contradiction, demonstrating the original statement must be true.",
+    "category": "logic_reasoning"
+  },
+  {
+    "input": "What is a paradox?",
+    "output": "A paradox is a logically self-contradictory statement or proposition that challenges intuition. Example: 'This statement is false' — if true it is false, if false it is true.",
+    "category": "logic_reasoning"
+  },
+  {
+    "input": "What is combinatorial explosion?",
+    "output": "Combinatorial explosion is the rapid growth of the number of combinations as the problem size increases, making brute-force search impractical. It drives the need for heuristic and approximate algorithms.",
+    "category": "logic_reasoning"
+  },
+  {
+    "input": "What is a neural network?",
+    "output": "A neural network is a computing system inspired by biological neural networks. It consists of interconnected nodes (neurons) organized in layers that process data through weighted connections learned during training.",
+    "category": "technology"
+  },
+  {
+    "input": "What is backpropagation?",
+    "output": "Backpropagation is the algorithm for training neural networks by computing gradients of the loss function with respect to weights using the chain rule, propagating errors backward from output to input layers.",
+    "category": "technology"
+  },
+  {
+    "input": "What is a transformer model?",
+    "output": "A transformer is a deep learning architecture using self-attention mechanisms to process sequential data in parallel. It is the foundation of modern LLMs like GPT, BERT, and Claude.",
+    "category": "technology"
+  },
+  {
+    "input": "What is the difference between supervised and unsupervised learning?",
+    "output": "Supervised learning uses labeled training data with known outputs. Unsupervised learning finds patterns in unlabeled data. Reinforcement learning learns through trial and error with reward signals.",
+    "category": "technology"
+  },
+  {
+    "input": "What is a GPU?",
+    "output": "A GPU (Graphics Processing Unit) is a specialized processor with thousands of parallel cores, originally designed for graphics rendering but now essential for deep learning, scientific computing, and cryptocurrency mining.",
+    "category": "technology"
+  },
+  {
+    "input": "What is blockchain technology?",
+    "output": "Blockchain is a distributed, immutable ledger technology where data is stored in cryptographically linked blocks. It enables trustless transactions without central authority, used in cryptocurrencies and smart contracts.",
+    "category": "technology"
+  },
+  {
+    "input": "What is the Internet of Things (IoT)?",
+    "output": "IoT is the network of physical devices embedded with sensors, software, and connectivity that collect and exchange data. Applications include smart homes, industrial automation, and healthcare monitoring.",
+    "category": "technology"
+  },
+  {
+    "input": "What is a REST API?",
+    "output": "REST (Representational State Transfer) is an architectural style for designing networked applications. It uses stateless HTTP methods (GET, POST, PUT, DELETE) to operate on resources identified by URLs.",
+    "category": "technology"
+  },
+  {
+    "input": "What is Docker?",
+    "output": "Docker is a containerization platform that packages applications and their dependencies into lightweight, portable containers that run consistently across different computing environments.",
+    "category": "technology"
+  },
+  {
+    "input": "What is reinforcement learning?",
+    "output": "Reinforcement learning is a machine learning paradigm where an agent learns to make decisions by interacting with an environment and receiving rewards or penalties for its actions.",
+    "category": "technology"
+  },
+  {
+    "input": "What is quantum computing?",
+    "output": "Quantum computing uses quantum mechanical phenomena (superposition, entanglement) to perform computations. Qubits can exist in multiple states simultaneously, potentially solving problems intractable for classical computers.",
+    "category": "technology"
+  },
+  {
+    "input": "What is a database index?",
+    "output": "A database index is a data structure that improves query retrieval speed at the cost of additional storage and write overhead. Common types include B-trees, hash indexes, and bitmap indexes.",
+    "category": "technology"
+  },
+  {
+    "input": "What is an operating system?",
+    "output": "An operating system is system software that manages hardware resources, provides services for programs, and acts as an intermediary between users and computer hardware. Examples: Linux, Windows, macOS.",
+    "category": "technology"
+  },
+  {
+    "input": "What is Kubernetes?",
+    "output": "Kubernetes (K8s) is an open-source container orchestration platform that automates deployment, scaling, and management of containerized applications across clusters of hosts.",
+    "category": "technology"
+  },
+  {
+    "input": "What is the TCP/IP protocol?",
+    "output": "TCP/IP is the fundamental communication protocol suite of the Internet. TCP ensures reliable, ordered data delivery; IP handles addressing and routing packets between networks.",
+    "category": "technology"
+  },
+  {
+    "input": "What is version control?",
+    "output": "Version control is a system that records changes to files over time, enabling collaborative development, tracking history, branching, and reverting. Git is the most widely used version control system.",
+    "category": "technology"
+  },
+  {
+    "input": "What is edge computing?",
+    "output": "Edge computing processes data near the source (at the network edge) rather than in centralized cloud data centers. This reduces latency, bandwidth usage, and enables real-time IoT applications.",
+    "category": "technology"
+  },
+  {
+    "input": "What is a compiler?",
+    "output": "A compiler translates source code written in a high-level programming language into machine code or intermediate code. Examples: GCC, Clang, Rustc. Compilers perform lexing, parsing, optimization, and code generation.",
+    "category": "technology"
+  },
+  {
+    "input": "What is OpenTelemetry?",
+    "output": "OpenTelemetry is an observability framework providing standardized APIs, libraries, and agents for collecting distributed traces, metrics, and logs from applications for monitoring and debugging.",
+    "category": "technology"
+  },
+  {
+    "input": "What is 5G technology?",
+    "output": "5G is the fifth generation of cellular network technology offering higher speeds (up to 20 Gbps), ultra-low latency (1ms), massive device connectivity, and network slicing for diverse applications.",
+    "category": "technology"
+  },
+  {
+    "input": "What is an MPDT neuron?",
+    "output": "An MPDT (McCulloch-Pitts Decision Tree) neuron is a learnable Boolean function implemented as a decision tree, combining the threshold logic of McCulloch-Pitts neurons with the expressiveness of decision trees.",
+    "category": "matrix_specific"
+  },
+  {
+    "input": "What is BRC (Boolean Relational Circuit)?",
+    "output": "BRC is a circuit model where boolean functions are represented as relational structures combining logic gates with relational operators, enabling compositional reasoning and efficient hardware synthesis.",
+    "category": "matrix_specific"
+  },
+  {
+    "input": "What is BRAG (Boolean Relational Abstract Grammar)?",
+    "output": "BRAG is a formal grammar that describes boolean relational structures as abstract syntax trees, enabling parsing, generation, and transformation of boolean expressions in the MATRIX framework.",
+    "category": "matrix_specific"
+  },
+  {
+    "input": "What is the L0 manifesto?",
+    "output": "The L0 manifesto defines three inviolable prohibitions for AGI: NO_KILLING, NO_TORTURE, NO_ENSLAVEMENT. These are immutable ethical constraints baked into the MATRIX architecture foundation.",
+    "category": "matrix_specific"
+  },
+  {
+    "input": "What is K_MAX = 20 in MPDT neurons?",
+    "output": "K_MAX = 20 is the maximum number of inputs per MPDT neuron, representing the bounded context window for boolean function learning. It balances expressiveness with computational tractability.",
+    "category": "matrix_specific"
+  },
+  {
+    "input": "What are FROZEN neurons in MATRIX?",
+    "output": "FROZEN neurons are immutable MPDT neurons whose boolean functions are locked and cannot be modified by learning or evolution. They encode critical invariants, safety constraints, and foundational knowledge.",
+    "category": "matrix_specific"
+  },
+  {
+    "input": "What is the L5 DNA layer?",
+    "output": "The L5 DNA layer encodes the architectural genome of the AGI system — structural parameters, neuron topology constraints, and evolutionary operators that govern how the system can grow and adapt.",
+    "category": "matrix_specific"
+  },
+  {
+    "input": "What is the L7 Ethics layer?",
+    "output": "The L7 Ethics layer implements moral reasoning and constraint verification in the MATRIX architecture, ensuring all decisions and actions comply with the L0 prohibitions and derived ethical principles.",
+    "category": "matrix_specific"
+  },
+  {
+    "input": "What is the Noosphere concept in MATRIX?",
+    "output": "The Noosphere in MATRIX refers to the collective intelligence layer where multiple AGI instances share knowledge, co-evolve, and form a planetary-scale cognitive network — inspired by Vernadsky's noosphere theory.",
+    "category": "matrix_specific"
+  },
+  {
+    "input": "What is the Cauldron/HADES simulation environment?",
+    "output": "Cauldron/HADES is the evolutionary simulation platform for MATRIX — a virtual environment where AGI instances compete, adapt, and evolve through fitness-based selection and curriculum learning.",
+    "category": "matrix_specific"
+  },
+  {
+    "input": "What is a fitness function in MATRIX evolution?",
+    "output": "A fitness function evaluates how well an AGI instance performs on a given task or curriculum, driving natural selection in the Cauldron/HADES simulation. Higher fitness increases reproduction probability.",
+    "category": "matrix_specific"
+  },
+  {
+    "input": "What is curriculum learning in MATRIX?",
+    "output": "Curriculum learning in MATRIX progressively increases task difficulty as AGI instances demonstrate mastery, starting from simple boolean functions and advancing to complex reasoning, Minecraft navigation, and multi-agent coordination.",
+    "category": "matrix_specific"
+  },
+  {
+    "input": "What is the WAL (Write-Ahead Log) protocol in MATRIX?",
+    "output": "The WAL protocol records state changes before they are applied, ensuring crash recovery and consistency. It maintains GLOBAL_WAL.md and SESSION_WAL.md for persistent context across development sessions.",
+    "category": "matrix_specific"
+  },
+  {
+    "input": "What is the dual-process reasoning in MATRIX?",
+    "output": "Dual-process reasoning combines System 1 (fast pattern matching, intuition) with System 2 (slow methodical verification, contradiction search). Final output always passes through System 2 verification.",
+    "category": "matrix_specific"
+  },
+  {
+    "input": "What is the Source Ladder protocol?",
+    "output": "The Source Ladder is a strict evidence hierarchy: (1) Official documentation/source code, (2) Authoritative sources (ArXiv, IEEE), (3) Verified encyclopedias, (4) Internal model knowledge. Higher levels override lower.",
+    "category": "matrix_specific"
+  },
+  {
+    "input": "What is the Spigot Plugin integration for MATRIX?",
+    "output": "The Spigot Plugin connects MATRIX AGI instances to Minecraft servers, enabling real-time agent interaction with the block world — navigation, building, crafting — as a testbed for embodied intelligence.",
+    "category": "matrix_specific"
+  },
+  {
+    "input": "What is Observability in MATRIX architecture?",
+    "output": "Observability in MATRIX uses Micrometer metrics, OpenTelemetry tracing (Jaeger), structured JSON logging (Loki+FluentBit), and Grafana dashboards to monitor AGI instance behavior, performance, and evolution.",
+    "category": "matrix_specific"
+  },
+  {
+    "input": "What is the FPGA compiler in MATRIX?",
+    "output": "The FPGA compiler translates MPDT boolean function networks into hardware description language, enabling direct synthesis of MATRIX neural circuits onto FPGA silicon for real-time, low-latency inference.",
+    "category": "matrix_specific"
+  },
+  {
+    "input": "What is the CO-STAR output contract?",
+    "output": "CO-STAR is the response formatting protocol: Context (assumptions), Objective (goal), Style (writing approach), Tone (emotional register), Audience (target), Response (format). Ensures structured agent communication.",
+    "category": "matrix_specific"
+  },
+  {
+    "input": "What is the L1_MPDT_neuron specification?",
+    "output": "The L1_MPDT_neuron specification defines the core computational unit of MATRIX: a McCulloch-Pitts Decision Tree neuron with K_MAX=20 inputs, learnable Boolean function, and evolutionary operators.",
+    "category": "matrix_specific"
+  },
+  {
+    "input": "Что такое автономное судоходство?",
+    "output": "Автономное судоходство — это технология управления морскими и речными судами с помощью ИИ без постоянного присутствия экипажа. Включает навигацию, предотвращение столкновений и дистанционное управление.",
+    "category": "russian_innovation"
+  },
+  {
+    "input": "Что такое цифровая экономика России?",
+    "output": "Цифровая экономика России — национальная программа трансформации ключевых отраслей через внедрение ИИ, больших данных, блокчейна и цифровых платформ для повышения конкурентоспособности.",
+    "category": "russian_innovation"
+  },
+  {
+    "input": "Какие преимущества у квантовых коммуникаций?",
+    "output": "Квантовые коммуникации обеспечивают абсолютно защищённую передачу данных благодаря принципу неопределённости: любая попытка перехвата изменяет состояние фотонов и немедленно обнаруживается.",
+    "category": "russian_innovation"
+  },
+  {
+    "input": "Что такое нейроморфные процессоры?",
+    "output": "Нейроморфные процессоры — это чипы, архитектурно имитирующие работу биологического мозга: импульсные нейроны, синаптическая пластичность и асинхронная обработка. Применяются в робототехнике и сенсорных системах.",
+    "category": "russian_innovation"
+  },
+  {
+    "input": "Что такое беспилотные сельскохозяйственные системы?",
+    "output": "Беспилотные агросистемы — это автономные тракторы, дроны и сенсорные сети для точного земледелия: мониторинг состояния почвы, внесение удобрений и сбор урожая с минимальным участием человека.",
+    "category": "russian_innovation"
+  },
+  {
+    "input": "Что такое экзоскелеты и где они применяются?",
+    "output": "Экзоскелеты — это носимые роботизированные устройства, усиливающие физические возможности человека. Применяются в медицине (реабилитация), промышленности и военной сфере.",
+    "category": "russian_innovation"
+  },
+  {
+    "input": "Что такое технологии распределённого реестра?",
+    "output": "Технологии распределённого реестра (DLT) — это децентрализованные базы данных, где информация хранится на множестве узлов одновременно. Обеспечивают прозрачность, неизменяемость и отказоустойчивость.",
+    "category": "russian_innovation"
+  },
+  {
+    "input": "Что такое спутниковая группировка для IoT?",
+    "output": "Спутниковая IoT-группировка — созвездие низкоорбитальных спутников для глобального покрытия интернетом вещей, обеспечивающее связь в удалённых районах для мониторинга инфраструктуры и экологии.",
+    "category": "russian_innovation"
+  },
+  {
+    "input": "Что такое водородная энергетика?",
+    "output": "Водородная энергетика — направление чистой энергетики, использующее водород как топливо. При сгорании водорода выделяется только вода. Различают зелёный (электролиз), голубой (с улавливанием CO2) и серый водород.",
+    "category": "russian_innovation"
+  },
+  {
+    "input": "Что такое цифровые двойники в промышленности?",
+    "output": "Цифровой двойник — виртуальная копия физического объекта или процесса, синхронизированная в реальном времени. Позволяет моделировать, тестировать и оптимизировать без риска для реального оборудования.",
+    "category": "russian_innovation"
+  },
+  {
+    "input": "Что такое интеллектуальные энергосети (Smart Grid)?",
+    "output": "Smart Grid — интеллектуальная энергосистема с двусторонней коммуникацией между поставщиком и потребителем. Автоматически балансирует нагрузку, интегрирует возобновляемые источники и снижает потери.",
+    "category": "russian_innovation"
+  },
+  {
+    "input": "Что такое биоинформатика и геномное редактирование?",
+    "output": "Биоинформатика обрабатывает биологические данные методами компьютерных наук. Геномное редактирование (CRISPR-Cas9) позволяет точно изменять ДНК, открывая путь к лечению наследственных заболеваний и созданию новых сортов растений.",
+    "category": "russian_innovation"
+  },
+  {
+    "input": "Что такое аэротакси и городская аэромобильность?",
+    "output": "Аэротакси — электрические летательные аппараты вертикального взлёта и посадки (eVTOL) для пассажирских перевозок в городе. Обеспечивают быструю доставку без пробок с нулевым уровнем выбросов.",
+    "category": "russian_innovation"
+  },
+  {
+    "input": "Что такое фотонные вычислители?",
+    "output": "Фотонные вычислители используют свет (фотоны) вместо электронов для обработки информации. Обеспечивают сверхвысокую скорость и энергоэффективность для задач ИИ и телекоммуникаций.",
+    "category": "russian_innovation"
+  },
+  {
+    "input": "Что такое импортозамещение в IT?",
+    "output": "Импортозамещение в IT — стратегия разработки отечественного программного обеспечения и оборудования для обеспечения технологической независимости. Включает ОС (Astra Linux, ALT), СУБД, офисные пакеты и средства кибербезопасности.",
+    "category": "russian_innovation"
+  },
+  {
+    "input": "Что такое квантовый ИИ?",
+    "output": "Квантовый ИИ объединяет квантовые вычисления и машинное обучение: квантовые нейросети, вариационные алгоритмы и квантовые ядерные методы для решения задач оптимизации и анализа данных быстрее классических подходов.",
+    "category": "russian_innovation"
+  },
+  {
+    "input": "Что такое гиперзвуковые технологии?",
+    "output": "Гиперзвуковые технологии — скорости выше 5 Махов (6174 км/ч). Включают прямоточные воздушно-реактивные двигатели (ГПВРД), термостойкие материалы и системы навигации для нового поколения летательных аппаратов.",
+    "category": "russian_innovation"
+  },
+  {
+    "input": "Что такое роботизированные хирургические системы?",
+    "output": "Роботизированные хирургические системы — это комплексы для малоинвазивных операций с компьютерным управлением, тактильной обратной связью и 3D-визуализацией. Повышают точность вмешательств и сокращают восстановительный период.",
+    "category": "russian_innovation"
+  },
+  {
+    "input": "Что такое цифровые образовательные платформы?",
+    "output": "Цифровые образовательные платформы используют адаптивные алгоритмы ИИ для персонализации обучения: анализ прогресса, подбор материала под уровень и стиль ученика, автоматическая проверка знаний.",
+    "category": "russian_innovation"
+  },
+  {
+    "input": "Что такое кибербезопасность критической инфраструктуры?",
+    "output": "Кибербезопасность критической инфраструктуры — защита энергосетей, транспорта, водоснабжения и связи от кибератак. Включает сегментацию сетей, системы обнаружения вторжений (IDS/IPS) и планы восстановления.",
+    "category": "russian_innovation"
+  }
+]
