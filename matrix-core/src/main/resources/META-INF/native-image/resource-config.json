@@ -8,10 +8,31 @@
         "pattern": ".*\\.avsc$"
       },
       {
+        "pattern": ".*\\.avro$"
+      },
+      {
         "pattern": "db/migration/.*\\.sql$"
       },
       {
         "pattern": "META-INF/.*"
+      },
+      {
+        "pattern": "models/.*"
+      },
+      {
+        "pattern": "pretrained/.*"
+      },
+      {
+        "pattern": ".*SmolLM2.*"
+      },
+      {
+        "pattern": ".*\\.json$"
+      },
+      {
+        "pattern": ".*\\.yaml$"
+      },
+      {
+        "pattern": ".*\\.yml$"
       }
     ]
   },

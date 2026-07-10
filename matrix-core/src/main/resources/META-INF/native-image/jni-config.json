@@ -6,5 +6,45 @@
         "name": "getPlatformClassLoader"
       }
     ]
+  },
+  {
+    "name": "jdk.incubator.vector.VectorSpecies",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true
+  },
+  {
+    "name": "jdk.incubator.vector.VectorShuffle",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true
+  },
+  {
+    "name": "jdk.incubator.vector.VectorMask",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true
+  },
+  {
+    "name": "jdk.incubator.vector.ByteVector",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true
+  },
+  {
+    "name": "jdk.incubator.vector.IntVector",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true
+  },
+  {
+    "name": "jdk.incubator.vector.LongVector",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true
+  },
+  {
+    "name": "java.lang.foreign.MemorySegment",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true
+  },
+  {
+    "name": "java.lang.foreign.Arena",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true
   }
 ]
