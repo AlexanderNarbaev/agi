@@ -12,8 +12,11 @@ import java.nio.file.Path;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -69,6 +72,7 @@ public final class MatrixTrainingEngine {
     private static final int AUTO_SAVE_INTERVAL = 100;
 
     private final NeuralTextGenerator generator;
+    private final LlmVerificationService llmVerifier;
     private final ScheduledExecutorService scheduler;
     private final AtomicBoolean running;
     private final AtomicLong trainingSteps;
@@ -85,6 +89,7 @@ public final class MatrixTrainingEngine {
     public MatrixTrainingEngine() {
         this.rng = new Random(42);
         this.generator = NeuralTextGenerator.loadPretrained(rng);
+        this.llmVerifier = new LlmVerificationService();
         this.scheduler = Executors.newScheduledThreadPool(2);
         this.running = new AtomicBoolean(false);
         this.trainingSteps = new AtomicLong(0);
@@ -375,37 +380,38 @@ public final class MatrixTrainingEngine {
      * like HuggingFace Inference API or local Ollama.
      */
     private String callFreeLlm(String prompt) {
-        // TODO: Implement actual LLM API call
-        // For now, return a placeholder
-        // In production, this would call:
-        // - HuggingFace Inference API (free tier)
-        // - Local Ollama instance
-        // - Free API endpoints
-
-        // Simulate LLM response
-        return "LLM verification response for: " + prompt.substring(0, Math.min(50, prompt.length()));
+        try {
+            String response = llmVerifier.verify(prompt).get(30, TimeUnit.SECONDS);
+            return response;
+        } catch (Exception e) {
+            log("LLM verification call failed: " + e.getMessage());
+            return null;
+        }
     }
 
     /**
      * Calculates similarity between two strings (0.0 to 1.0).
      */
     private double calculateSimilarity(String a, String b) {
-        if (a.isEmpty() || b.isEmpty()) {
+        if (a == null || b == null || a.isEmpty() || b.isEmpty()) {
             return 0.0;
         }
-
-        // Simple character-based similarity
-        int matches = 0;
-        int maxLen = Math.max(a.length(), b.length());
-        int minLen = Math.min(a.length(), b.length());
-
-        for (int i = 0; i < minLen; i++) {
-            if (a.charAt(i) == b.charAt(i)) {
-                matches++;
-            }
+        
+        // Token-based Jaccard similarity
+        Set<String> tokensA = new HashSet<>(Arrays.asList(a.toLowerCase().split("\\W+")));
+        Set<String> tokensB = new HashSet<>(Arrays.asList(b.toLowerCase().split("\\W+")));
+        
+        if (tokensA.isEmpty() || tokensB.isEmpty()) {
+            return 0.0;
         }
-
-        return (double) matches / maxLen;
+        
+        Set<String> intersection = new HashSet<>(tokensA);
+        intersection.retainAll(tokensB);
+        
+        Set<String> union = new HashSet<>(tokensA);
+        union.addAll(tokensB);
+        
+        return (double) intersection.size() / union.size();
     }
 
     /**
