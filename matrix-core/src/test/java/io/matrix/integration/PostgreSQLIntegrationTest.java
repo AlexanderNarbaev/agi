@@ -434,6 +434,14 @@ class PostgreSQLIntegrationTest {
 
     private void insertTestEventWithTimestamp(String eventId, String eventType,
                                                long timestamp, String instanceId, String payload) {
+        io.vertx.mutiny.sqlclient.Tuple t = io.vertx.mutiny.sqlclient.Tuple.tuple()
+                .addString(eventId)
+                .addString(eventType)
+                .addString(instanceId)
+                .addString(UUID.randomUUID().toString())
+                .addLong(0L)
+                .addLong(timestamp)
+                .addString(payload);
         pgPool.preparedQuery("""
                 INSERT INTO cluster_events
                     (event_id, event_type, instance_id,
@@ -441,14 +449,7 @@ class PostgreSQLIntegrationTest {
                      event_timestamp, payload)
                 VALUES ($1, $2, $3, $4, $5, $6, $7)
                 """)
-                .execute(Tuple.tuple(java.util.List.of(
-                        eventId,
-                        eventType,
-                        instanceId,
-                        UUID.randomUUID().toString(),
-                        0L,
-                        timestamp,
-                        payload)))
+                .execute(t)
                 .await()
                 .indefinitely();
     }
