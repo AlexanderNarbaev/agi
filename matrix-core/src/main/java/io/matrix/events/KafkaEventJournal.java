@@ -64,6 +64,8 @@ public final class KafkaEventJournal implements EventJournal, AutoCloseable {
     private final String topic;
     private final KafkaProducer<String, byte[]> producer;
     private final LinkedList<byte[]> replayCache;
+    private final LinkedList<byte[]> drainBuffer;
+    private final boolean drainEnabled;
     private long offset;
 
     public KafkaEventJournal(String topic) {
@@ -74,6 +76,8 @@ public final class KafkaEventJournal implements EventJournal, AutoCloseable {
         this.topic = topic;
         this.producer = createProducer(bootstrapServers);
         this.replayCache = new LinkedList<>();
+        this.drainBuffer = new LinkedList<>();
+        this.drainEnabled = true;
         this.offset = 0;
         LOG.info("KafkaEventJournal initialized — topic={}, bootstrapServers={}", topic, bootstrapServers);
     }
@@ -94,6 +98,8 @@ public final class KafkaEventJournal implements EventJournal, AutoCloseable {
         this.topic = topic;
         this.producer = (bootstrapServers != null) ? createProducer(bootstrapServers) : null;
         this.replayCache = new LinkedList<>();
+        this.drainBuffer = new LinkedList<>();
+        this.drainEnabled = false;
         this.offset = 0;
         if (producer != null) {
             LOG.info("KafkaEventJournal initialized — topic={}, bootstrapServers={}", topic, bootstrapServers);
@@ -129,6 +135,13 @@ public final class KafkaEventJournal implements EventJournal, AutoCloseable {
                             event.eventId(), metadata.topic(), metadata.partition(), metadata.offset());
                 }
             });
+        }
+
+        // Buffer events for drain-based publishing
+        if (drainEnabled) {
+            synchronized (drainBuffer) {
+                drainBuffer.addLast(serialized);
+            }
         }
 
         long currentOffset = offset;
@@ -173,13 +186,24 @@ public final class KafkaEventJournal implements EventJournal, AutoCloseable {
     }
 
     /**
-     * Drains all events as Avro-encoded byte arrays (for Kafka publishing).
-     * With the real producer, events are already published on {@link #append},
-     * so this is a no-op, kept for backward compatibility.
+     * Drains all buffered events as Avro-encoded byte arrays for external publishing.
+     *
+     * <p>When the journal is configured with a Kafka producer (production mode),
+     * events are published on {@link #append} and this method returns an empty list.
+     *
+     * <p>When draining is enabled (events buffered via {@link #append}), this returns
+     * all accumulated events and clears the drain buffer atomically.
      */
     public List<byte[]> drainForPublish() {
-        LOG.debug("drainForPublish called — events are already published via Kafka producer");
-        return List.of();
+        synchronized (drainBuffer) {
+            if (drainBuffer.isEmpty()) {
+                return List.of();
+            }
+            List<byte[]> drained = new ArrayList<>(drainBuffer);
+            drainBuffer.clear();
+            LOG.debug("Drained {} events for publishing", drained.size());
+            return Collections.unmodifiableList(drained);
+        }
     }
 
     @Override

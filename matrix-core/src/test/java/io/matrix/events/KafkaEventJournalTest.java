@@ -86,7 +86,7 @@ class KafkaEventJournalTest {
     }
 
     @Test
-    void drainForPublishShouldReturnEmpty() {
+    void drainForPublishShouldReturnEmptyInTestingMode() {
         KafkaEventJournal journal = KafkaEventJournal.forTesting("test-topic");
 
         for (int i = 0; i < 10; i++) {
