@@ -24,7 +24,7 @@ class ConsensusBenchmarkTest {
     }
 
     @Test
-    void shouldRunBenchmarkWithTolerableFaults() {
+    void shouldRunWithTolerableFaults() {
         ConsensusBenchmark benchmark = new ConsensusBenchmark();
 
         ConsensusBenchmark.BenchmarkResult result = benchmark.run(7, 2, 5);
@@ -117,5 +117,81 @@ class ConsensusBenchmarkTest {
         assertThat(result.minLatencyMs()).isLessThanOrEqualTo(result.maxLatencyMs());
         assertThat(result.avgLatencyMs()).isBetween(
                 result.minLatencyMs(), result.maxLatencyMs());
+    }
+
+    @Test
+    void shouldRunSimpleMajorityBenchmark() {
+        ConsensusBenchmark benchmark = new ConsensusBenchmark();
+
+        ConsensusBenchmark.BenchmarkResult result = benchmark.runSimpleMajority(5, 3);
+
+        assertThat(result.totalNodes()).isEqualTo(5);
+        assertThat(result.rounds()).isEqualTo(3);
+        assertThat(result.committed() + result.rejected()).isEqualTo(3);
+        assertThat(result.scenario()).contains("SIMPLE_MAJORITY");
+    }
+
+    @Test
+    void shouldRunWeightedBenchmark() {
+        ConsensusBenchmark benchmark = new ConsensusBenchmark();
+
+        ConsensusBenchmark.BenchmarkResult result = benchmark.runWeighted(5, 3);
+
+        assertThat(result.totalNodes()).isEqualTo(5);
+        assertThat(result.rounds()).isEqualTo(3);
+        assertThat(result.committed() + result.rejected()).isEqualTo(3);
+        assertThat(result.scenario()).contains("WEIGHTED");
+    }
+
+    @Test
+    void shouldRunDebateBenchmark() {
+        ConsensusBenchmark benchmark = new ConsensusBenchmark();
+
+        ConsensusBenchmark.BenchmarkResult result = benchmark.runDebate(5, 3);
+
+        assertThat(result.totalNodes()).isEqualTo(5);
+        assertThat(result.rounds()).isEqualTo(3);
+        assertThat(result.committed() + result.rejected()).isEqualTo(3);
+        assertThat(result.scenario()).contains("DEBATE");
+    }
+
+    @Test
+    void shouldCompareAllStrategies() {
+        ConsensusBenchmark benchmark = new ConsensusBenchmark();
+
+        List<ConsensusBenchmark.BenchmarkResult> results = benchmark.compareStrategies(5, 3);
+
+        assertThat(results).hasSize(3);
+        assertThat(results.get(0).scenario()).contains("SIMPLE_MAJORITY");
+        assertThat(results.get(1).scenario()).contains("WEIGHTED");
+        assertThat(results.get(2).scenario()).contains("DEBATE");
+
+        for (ConsensusBenchmark.BenchmarkResult result : results) {
+            assertThat(result.rounds()).isEqualTo(3);
+            assertThat(result.committed() + result.rejected()).isEqualTo(3);
+        }
+    }
+
+    @Test
+    void shouldMeasureThroughputAcrossStrategies() {
+        ConsensusBenchmark benchmark = new ConsensusBenchmark();
+
+        List<ConsensusBenchmark.BenchmarkResult> results = benchmark.compareStrategies(4, 5);
+
+        for (ConsensusBenchmark.BenchmarkResult result : results) {
+            assertThat(result.throughputRps()).isGreaterThanOrEqualTo(0);
+        }
+    }
+
+    @Test
+    void shouldReportLatencyForEachStrategy() {
+        ConsensusBenchmark benchmark = new ConsensusBenchmark();
+
+        List<ConsensusBenchmark.BenchmarkResult> results = benchmark.compareStrategies(4, 5);
+
+        for (ConsensusBenchmark.BenchmarkResult result : results) {
+            assertThat(result.avgLatencyMs()).isGreaterThanOrEqualTo(0);
+            assertThat(result.minLatencyMs()).isLessThanOrEqualTo(result.maxLatencyMs());
+        }
     }
 }
