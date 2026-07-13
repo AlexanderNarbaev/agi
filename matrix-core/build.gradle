@@ -120,6 +120,36 @@ spotbugsMain {
     }
 }
 
+// ─── JMH Benchmark Configuration ───
+jmh {
+    jmhVersion = '1.37'
+    duplicateClassesStrategy = DuplicatesStrategy.EXCLUDE
+    // Default benchmark: PerformanceBenchmark (all critical paths)
+    // Override with: ./gradlew :matrix-core:jmh -PjmhBenchmark=NeuronBenchmark
+    if (project.hasProperty('jmhBenchmark')) {
+        includes = [project.jmhBenchmark]
+    }
+    // Result output format
+    resultFormat = 'JSON'
+    // Warmup and measurement defaults (overridden by annotations)
+    warmupIterations = 5
+    iterations = 10
+    fork = 2
+    // Profiling
+    if (project.hasProperty('jmhProfiler')) {
+        profilers = [project.jmhProfiler]
+    }
+}
+
+// Custom task: run benchmarks and generate report
+tasks.register('jmhReport', JavaExec) {
+    dependsOn jmh
+    group = 'benchmark'
+    description = 'Run JMH benchmarks and generate performance report'
+    classpath = sourceSets.jmh.runtimeClasspath
+    mainClass = 'io.matrix.benchmark.PerformanceReport'
+}
+
 tasks.register('runMinecraftExperiment', JavaExec) {
     dependsOn jar
     group = 'application'
