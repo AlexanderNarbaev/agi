@@ -7,6 +7,10 @@ import io.matrix.mediator.scheduler.TaskScheduler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import io.matrix.agent.react.ReActAgentLoop;
+import io.matrix.agent.react.ReflexionMemory;
+import io.matrix.memory.HierarchicalMemory;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -97,6 +101,16 @@ public final class AgentLoop {
     }
 
     /**
+     * Agent loop execution mode.
+     */
+    public enum LoopMode {
+        /** Classic Observe → Think → Act cycle. */
+        CLASSIC,
+        /** ReAct mode with explicit reasoning, acting, and reflexion. */
+        REACT
+    }
+
+    /**
      * Creates an AgentLoop with default convergence threshold.
      */
     public AgentLoop(AgentBrainService brain, Sensor sensor, Effector effector,
@@ -116,6 +130,53 @@ public final class AgentLoop {
         this.drivers = Objects.requireNonNull(drivers, "drivers must not be null");
         this.scheduler = Objects.requireNonNull(scheduler, "scheduler must not be null");
         this.convergenceThreshold = Math.max(1, convergenceThreshold);
+    }
+
+    /**
+     * Creates a {@link ReActAgentLoop} with the same dependencies as this classic loop,
+     * using a new {@link HierarchicalMemory} for long-term reflexion storage.
+     *
+     * @return a configured ReActAgentLoop
+     */
+    public ReActAgentLoop toReActLoop() {
+        return toReActLoop(new HierarchicalMemory());
+    }
+
+    /**
+     * Creates a {@link ReActAgentLoop} with the same dependencies as this classic loop,
+     * using the provided {@link HierarchicalMemory} for long-term reflexion storage.
+     *
+     * @param longTermMemory the hierarchical memory for long-term reflection persistence
+     * @return a configured ReActAgentLoop
+     */
+    public ReActAgentLoop toReActLoop(HierarchicalMemory longTermMemory) {
+        ReflexionMemory reflexionMemory = new ReflexionMemory(
+                Objects.requireNonNull(longTermMemory, "longTermMemory must not be null"));
+        return new ReActAgentLoop(brain, sensor, effector, drivers, scheduler, reflexionMemory,
+                convergenceThreshold, ReActAgentLoop.DEFAULT_CONTEXT_WINDOW);
+    }
+
+    /**
+     * Factory method that creates either a classic or ReAct loop based on the mode.
+     *
+     * @param mode           the desired loop mode
+     * @param brain          agent brain service
+     * @param sensor         environment sensor
+     * @param effector       action effector
+     * @param drivers        driver states
+     * @param scheduler      task scheduler
+     * @param convergenceThreshold convergence threshold
+     * @return an AgentLoopBase (either AgentLoop or ReActAgentLoop)
+     */
+    public static Object create(LoopMode mode, AgentBrainService brain, Sensor sensor,
+                                 Effector effector, DriverState[] drivers,
+                                 TaskScheduler scheduler, int convergenceThreshold) {
+        return switch (mode) {
+            case CLASSIC -> new AgentLoop(brain, sensor, effector, drivers, scheduler, convergenceThreshold);
+            case REACT -> new ReActAgentLoop(brain, sensor, effector, drivers, scheduler,
+                    new ReflexionMemory(new HierarchicalMemory()), convergenceThreshold,
+                    ReActAgentLoop.DEFAULT_CONTEXT_WINDOW);
+        };
     }
 
     // ── Synchronous execution ──
@@ -383,7 +444,7 @@ public final class AgentLoop {
     /**
      * Converts a 5-bit action code to a boolean thought vector.
      */
-    static boolean[] actionCodeToThought(int actionCode) {
+    public static boolean[] actionCodeToThought(int actionCode) {
         boolean[] thought = new boolean[5];
         for (int i = 0; i < 5; i++) {
             thought[i] = (actionCode & (1 << i)) != 0;
