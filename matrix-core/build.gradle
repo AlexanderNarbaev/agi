@@ -28,6 +28,7 @@ dependencies {
     implementation 'io.quarkus:quarkus-picocli'
     implementation 'io.quarkus:quarkus-rest'
     implementation 'io.quarkus:quarkus-rest-jackson'
+    implementation 'io.quarkus:quarkus-hibernate-validator'
     implementation 'io.quarkus:quarkus-websockets'
     implementation 'io.quarkus:quarkus-reactive-pg-client'
     implementation 'io.quarkus:quarkus-jdbc-postgresql'
@@ -49,6 +50,7 @@ dependencies {
     testImplementation 'io.quarkus:quarkus-test-vertx'
     testImplementation 'org.testcontainers:testcontainers:1.21.3'
     testImplementation 'org.testcontainers:kafka:1.21.3'
+    testImplementation 'org.testcontainers:postgresql:1.21.3'
     testImplementation 'org.testcontainers:junit-jupiter:1.21.3'
 }
 

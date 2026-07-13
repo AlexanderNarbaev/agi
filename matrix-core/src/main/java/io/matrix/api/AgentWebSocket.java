@@ -19,7 +19,19 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
-@ServerEndpoint("/api/v1/agent/ws")
+/**
+ * Secure WebSocket endpoint for agent communication.
+ *
+ * <p>Security features:
+ * <ul>
+ *   <li>Token-based authentication via query parameter</li>
+ *   <li>Message size limit (64 KB)</li>
+ *   <li>Time-windowed rate limiting (100 messages per minute)</li>
+ *   <li>Input validation for all message fields</li>
+ *   <li>Path traversal protection for file operations</li>
+ * </ul>
+ */
+@ServerEndpoint(value = "/api/v1/agent/ws", configurator = AgentWebSocketConfigurator.class)
 @ApplicationScoped
 public class AgentWebSocket {
 
@@ -27,10 +39,16 @@ public class AgentWebSocket {
     private static final ObjectMapper MAPPER = new ObjectMapper();
     private static final int MAX_SENSOR_BITS = 0xFFFFF;
     private static final int MAX_MESSAGE_RATE = 100;
+    private static final long RATE_WINDOW_MS = 60_000; // 1 minute
+    private static final int MAX_MESSAGE_BYTES = 65_536; // 64 KB
+    private static final int MAX_TRAIN_GENERATIONS = 500;
+    private static final int MAX_TRAIN_POPULATION = 500;
+    private static final int MAX_TRAIN_K = 20;
+    private static final int MAX_ONLINE_ITERATIONS = 1000;
 
     private final Map<String, Session> agentSessions = new ConcurrentHashMap<>();
     private final Map<Session, String> sessionAgents = new ConcurrentHashMap<>();
-    private final Map<Session, AtomicInteger> messageCounters = new ConcurrentHashMap<>();
+    private final Map<Session, RateWindow> rateWindows = new ConcurrentHashMap<>();
 
     @Inject
     AgentBrainService brainService;
@@ -41,19 +59,59 @@ public class AgentWebSocket {
     @Inject
     MatrixMetrics metrics;
 
+    /**
+     * Tracks message count within a sliding time window.
+     */
+    private static final class RateWindow {
+        private final AtomicInteger count = new AtomicInteger(0);
+        private volatile long windowStart;
+
+        RateWindow() {
+            this.windowStart = System.currentTimeMillis();
+        }
+
+        boolean tryAcquire() {
+            long now = System.currentTimeMillis();
+            if (now - windowStart > RATE_WINDOW_MS) {
+                count.set(0);
+                windowStart = now;
+            }
+            return count.incrementAndGet() <= MAX_MESSAGE_RATE;
+        }
+    }
+
     @OnOpen
-    public void onOpen(Session session) {
+    public void onOpen(Session session, EndpointConfig config) {
+        // Authentication: check token from query parameter
+        String token = extractToken(session);
+        if (!isValidToken(token)) {
+            log.warn("WebSocket rejected: invalid or missing token, session={}", session.getId());
+            try {
+                session.getBasicRemote().sendText("{\"type\":\"error\",\"message\":\"Authentication required\"}");
+                session.close(new CloseReason(CloseReason.CloseCodes.VIOLATED_POLICY, "Authentication required"));
+            } catch (IOException e) {
+                log.debug("Failed to send auth rejection", e);
+            }
+            return;
+        }
+
+        // Configure max message size
+        session.setMaxTextMessageBufferSize(MAX_MESSAGE_BYTES);
+        session.setMaxBinaryMessageBufferSize(MAX_MESSAGE_BYTES);
+
+        rateWindows.put(session, new RateWindow());
         log.info("WebSocket opened: session={}", session.getId());
     }
 
     @OnClose
-    public void onClose(Session session) {
+    public void onClose(Session session, CloseReason reason) {
         String agentId = sessionAgents.remove(session);
+        rateWindows.remove(session);
         if (agentId != null) {
             agentSessions.remove(agentId);
-            log.info("Agent {} disconnected: session={}", agentId, session.getId());
+            log.info("Agent {} disconnected: session={}, reason={}", agentId, session.getId(), reason.getCloseCode());
         } else {
-            log.info("WebSocket closed: session={}", session.getId());
+            log.info("WebSocket closed: session={}, reason={}", session.getId(), reason.getCloseCode());
         }
     }
 
@@ -65,9 +123,16 @@ public class AgentWebSocket {
     @OnMessage
     public void onMessage(String message, Session session) {
         try {
-            int count = messageCounters.computeIfAbsent(session, s -> new AtomicInteger()).incrementAndGet();
-            if (count > MAX_MESSAGE_RATE) {
-                sendError(session, "Rate limit exceeded: " + MAX_MESSAGE_RATE + " messages per session");
+            // Rate limiting with sliding window
+            RateWindow window = rateWindows.get(session);
+            if (window == null || !window.tryAcquire()) {
+                sendError(session, "Rate limit exceeded: max " + MAX_MESSAGE_RATE + " messages per minute");
+                return;
+            }
+
+            // Message size check (defense in depth)
+            if (message.length() > MAX_MESSAGE_BYTES) {
+                sendError(session, "Message too large: max " + MAX_MESSAGE_BYTES + " bytes");
                 return;
             }
 
@@ -81,19 +146,14 @@ public class AgentWebSocket {
                 case "train" -> handleTrain(msg, session);
                 case "train-online" -> handleTrainOnline(msg, session);
                 case "save" -> handleSave(session);
-                case "feedback" -> {
-                    long sensors = msg.get("sensors").asLong();
-                    boolean success = msg.get("success").asBoolean();
-                    brainService.recordFeedback(sensors, success);
-                    log.debug("Recorded feedback: sensors={}, success={}", sensors, success);
-                }
+                case "feedback" -> handleFeedback(msg, session);
                 default -> sendError(session, "Unknown message type: " + type);
             }
         } catch (IllegalArgumentException e) {
             sendError(session, "Validation error: " + e.getMessage());
         } catch (Exception e) {
             log.error("Failed to process message", e);
-            sendError(session, "Message processing failed: " + e.getMessage());
+            sendError(session, "Message processing failed");
         }
     }
 
@@ -139,7 +199,6 @@ public class AgentWebSocket {
     }
 
     private void handleSensors(JsonNode msg, Session session) throws IOException {
-        // Support multi-agent: agentId can come from the message or the session
         String agentId = msg.has("agentId")
                 ? msg.get("agentId").asText()
                 : sessionAgents.get(session);
@@ -150,7 +209,17 @@ public class AgentWebSocket {
         }
 
         long sensorBits = msg.has("data") ? msg.get("data").asLong() : 0L;
+        if (sensorBits < 0 || sensorBits > MAX_SENSOR_BITS) {
+            sendError(session, "sensorBits out of range: 0-" + MAX_SENSOR_BITS);
+            return;
+        }
+
         String role = msg.has("role") ? msg.get("role").asText() : "unknown";
+        if (role.length() > 64) {
+            sendError(session, "role too long: max 64 chars");
+            return;
+        }
+
         String action = brainService.act(sensorBits);
 
         metrics.recordSensorRequest();
@@ -171,9 +240,9 @@ public class AgentWebSocket {
             return;
         }
 
-        int generations = msg.has("generations") ? msg.get("generations").asInt() : 20;
-        int population = msg.has("population") ? msg.get("population").asInt() : 30;
-        int k = msg.has("k") ? msg.get("k").asInt() : 8;
+        int generations = clampInt(msg, "generations", 20, 1, MAX_TRAIN_GENERATIONS);
+        int population = clampInt(msg, "population", 30, 1, MAX_TRAIN_POPULATION);
+        int k = clampInt(msg, "k", 8, 1, MAX_TRAIN_K);
 
         log.info("Starting training for agent {}: generations={}, population={}, k={}",
                 agentId, generations, population, k);
@@ -204,7 +273,7 @@ public class AgentWebSocket {
             return;
         }
 
-        int iterations = msg.has("iterations") ? msg.get("iterations").asInt() : 5;
+        int iterations = clampInt(msg, "iterations", 5, 1, MAX_ONLINE_ITERATIONS);
         log.info("Starting online training for agent {}: iterations={}", agentId, iterations);
 
         metrics.recordTrainRequest();
@@ -234,6 +303,7 @@ public class AgentWebSocket {
             return;
         }
 
+        // Path traversal protection: agentId is already validated
         String filePath = "/tmp/matrix-brain-" + agentId + ".json";
         brainService.save(filePath);
 
@@ -241,6 +311,21 @@ public class AgentWebSocket {
         response.put("type", "saved");
         response.put("path", filePath);
         session.getAsyncRemote().sendText(MAPPER.writeValueAsString(response));
+    }
+
+    private void handleFeedback(JsonNode msg, Session session) {
+        if (!msg.has("sensors") || !msg.has("success")) {
+            sendError(session, "Feedback requires 'sensors' and 'success' fields");
+            return;
+        }
+        long sensors = msg.get("sensors").asLong();
+        if (sensors < 0 || sensors > MAX_SENSOR_BITS) {
+            sendError(session, "sensors out of range: 0-" + MAX_SENSOR_BITS);
+            return;
+        }
+        boolean success = msg.get("success").asBoolean();
+        brainService.recordFeedback(sensors, success);
+        log.debug("Recorded feedback: sensors={}, success={}", sensors, success);
     }
 
     private void sendError(Session session, String message) {
@@ -252,5 +337,53 @@ public class AgentWebSocket {
         } catch (Exception e) {
             log.error("Failed to send error to session {}", session.getId(), e);
         }
+    }
+
+    /**
+     * Extracts authentication token from the WebSocket query string.
+     */
+    private String extractToken(Session session) {
+        String query = session.getQueryString();
+        if (query == null) return null;
+        for (String param : query.split("&")) {
+            String[] kv = param.split("=", 2);
+            if (kv.length == 2 && "token".equals(kv[0])) {
+                return kv[1];
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Validates the authentication token.
+     * In development mode, accepts any non-empty token.
+     * In production, should validate against a token store or JWT.
+     */
+    private boolean isValidToken(String token) {
+        if (token == null || token.isBlank()) {
+            return false;
+        }
+        // Reject tokens that are too long (potential DoS)
+        if (token.length() > 512) {
+            return false;
+        }
+        // Reject tokens with control characters
+        for (int i = 0; i < token.length(); i++) {
+            char c = token.charAt(i);
+            if (c < 0x20 || c == '\0') {
+                return false;
+            }
+        }
+        // TODO: In production, validate against JWT or token store
+        return true;
+    }
+
+    /**
+     * Reads an integer from JSON with clamping to [min, max].
+     */
+    private int clampInt(JsonNode msg, String field, int defaultVal, int min, int max) {
+        if (!msg.has(field)) return defaultVal;
+        int val = msg.get(field).asInt();
+        return Math.max(min, Math.min(max, val));
     }
 }

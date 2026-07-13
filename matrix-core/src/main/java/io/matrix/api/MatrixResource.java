@@ -14,6 +14,11 @@ import io.matrix.snapshot.ClusterSnapshot;
 import io.matrix.snapshot.SnapshotStore;
 import jakarta.annotation.PreDestroy;
 import jakarta.inject.Inject;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import org.slf4j.Logger;
@@ -22,6 +27,7 @@ import org.slf4j.LoggerFactory;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.regex.Pattern;
 
 @Path("/api/v1")
 @Produces(MediaType.APPLICATION_JSON)
@@ -33,6 +39,8 @@ public class MatrixResource {
     private static final ObjectMapper MAPPER = new ObjectMapper();
     private static final String REDIS_KEY_PREFIX = "shared:neurons:";
     private static final int MAX_NEURONS_PER_ROLE = 50;
+    private static final int MAX_STRING_LENGTH = 4096;
+    private static final Pattern SAFE_STRING_PATTERN = Pattern.compile("^[a-zA-Z0-9_\\-./ :;,!?@#$%&*()+=\\[\\]{}|~`'\"]*$");
 
     private final Random rng = new Random();
     private final Map<String, EvolutionLoop> activeLoops = new ConcurrentHashMap<>();
@@ -74,7 +82,7 @@ public class MatrixResource {
 
     @POST
     @Path("/tenants")
-    public Map<String, Object> createTenant(TenantCreateRequest req) {
+    public Map<String, Object> createTenant(@Valid TenantCreateRequest req) {
         String id = req.id != null && !req.id.isBlank()
                 ? req.id : UUID.randomUUID().toString().substring(0, 12);
         TenantContext tenant = tenantFilter.getOrCreate(id);
@@ -87,7 +95,7 @@ public class MatrixResource {
 
     @POST
     @Path("/simulate")
-    public Map<String, Object> simulate(SimulateRequest req) {
+    public Map<String, Object> simulate(@Valid SimulateRequest req) {
         int generations = req.generations > 0 ? req.generations : 20;
         int population = req.population > 0 ? req.population : 30;
         int k = req.k > 0 ? req.k : 8;
@@ -112,7 +120,7 @@ public class MatrixResource {
 
     @POST
     @Path("/evolve")
-    public Map<String, Object> evolve(EvolveRequest req) {
+    public Map<String, Object> evolve(@Valid EvolveRequest req) {
         String loopId = UUID.randomUUID().toString().substring(0, 8);
         int generations = req.generations > 0 ? req.generations : 10;
 
@@ -150,8 +158,8 @@ public class MatrixResource {
 
     @POST
     @Path("/cauldron")
-    public Map<String, Object> cauldron(CauldronRequest req) {
-        String task = req.task != null ? req.task : "navigation";
+    public Map<String, Object> cauldron(@Valid CauldronRequest req) {
+        String task = req.task != null ? sanitize(req.task, "task") : "navigation";
         CauldronProtocol cauldron = new CauldronProtocol(rng);
         var result = cauldron.evolveForTask(task);
         var pkg = cauldron.packageResult(result, task,
@@ -216,7 +224,7 @@ public class MatrixResource {
 
     @POST
     @Path("/truth-table")
-    public Map<String, Object> evaluateTruthTable(TruthTableRequest req) {
+    public Map<String, Object> evaluateTruthTable(@Valid TruthTableRequest req) {
         TruthTable table;
         if (req.tableBits != null && req.k > 0) {
             // Use user-provided truth table
@@ -246,14 +254,14 @@ public class MatrixResource {
 
     @POST
     @Path("/agent/infer")
-    public Map<String, Object> inferAgent(AgentInferRequest req) {
+    public Map<String, Object> inferAgent(@Valid AgentInferRequest req) {
         String action = brainService.act(req.sensorBits);
         return Map.of("action", action, "sensorBits", req.sensorBits);
     }
 
     @POST
     @Path("/agent/train")
-    public Map<String, Object> trainAgent(AgentTrainRequest req) {
+    public Map<String, Object> trainAgent(@Valid AgentTrainRequest req) {
         int generations = req.generations > 0 ? req.generations : 20;
         int population = req.population > 0 ? req.population : 30;
         int k = req.k > 0 ? req.k : 8;
@@ -269,7 +277,7 @@ public class MatrixResource {
 
     @POST
     @Path("/agent/save")
-    public Map<String, Object> saveAgent(AgentSaveRequest req) throws Exception {
+    public Map<String, Object> saveAgent(@Valid AgentSaveRequest req) throws Exception {
         String path = req.path != null ? req.path : "/tmp/matrix-brain-default.json";
         java.nio.file.Path saved = brainService.save(path);
 
@@ -278,7 +286,7 @@ public class MatrixResource {
 
     @POST
     @Path("/agent/load")
-    public Map<String, Object> loadAgent(AgentLoadRequest req) throws Exception {
+    public Map<String, Object> loadAgent(@Valid AgentLoadRequest req) throws Exception {
         String path = req.path != null ? req.path : "/tmp/matrix-brain-default.json";
         brainService.load(path);
 
@@ -287,7 +295,7 @@ public class MatrixResource {
 
     @POST
     @Path("/agent/train-online")
-    public Map<String, Object> trainOnline(TrainOnlineRequest req) {
+    public Map<String, Object> trainOnline(@Valid TrainOnlineRequest req) {
         int iterations = req.iterations > 0 ? req.iterations : 5;
         brainService.onlineTrain(iterations);
 
@@ -307,8 +315,8 @@ public class MatrixResource {
 
     @POST
     @Path("/agent/share")
-    public Map<String, Object> shareNeurons(NeuronShareRequest req) {
-        String role = req.role != null ? req.role.toLowerCase() : "generalist";
+    public Map<String, Object> shareNeurons(@Valid NeuronShareRequest req) {
+        String role = req.role != null ? sanitize(req.role, "role").toLowerCase() : "generalist";
         SharedNeuron shared = new SharedNeuron(
                 req.agentId != null ? req.agentId : "unknown",
                 req.neuronData,
@@ -397,51 +405,96 @@ public class MatrixResource {
         }
     }
 
+    // ─── Input Sanitization ───
+
+    /**
+     * Sanitizes a string input by trimming, enforcing max length,
+     * and rejecting potentially dangerous content.
+     *
+     * @param input the raw input string
+     * @param fieldName field name for error messages
+     * @return sanitized string
+     * @throws BadRequestException if input is invalid
+     */
+    static String sanitize(String input, String fieldName) {
+        if (input == null) return null;
+        String trimmed = input.trim();
+        if (trimmed.length() > MAX_STRING_LENGTH) {
+            throw new BadRequestException(fieldName + " exceeds maximum length of " + MAX_STRING_LENGTH);
+        }
+        // Reject null bytes and control characters (except newline/tab)
+        for (int i = 0; i < trimmed.length(); i++) {
+            char c = trimmed.charAt(i);
+            if (c == '\0' || (c < 0x20 && c != '\n' && c != '\t' && c != '\r')) {
+                throw new BadRequestException(fieldName + " contains invalid control characters");
+            }
+        }
+        return trimmed;
+    }
+
     public static class SimulateRequest {
+        @Min(1) @Max(500)
         public int generations;
+        @Min(1) @Max(500)
         public int population;
+        @Min(1) @Max(20)
         public int k;
     }
 
     public static class EvolveRequest {
+        @Min(1) @Max(500)
         public int generations;
+        @Min(1) @Max(500)
         public int population;
+        @Min(1) @Max(20)
         public int k;
     }
 
     public static class CauldronRequest {
+        @Size(max = 256)
         public String task;
     }
 
     public static class TenantCreateRequest {
+        @Size(max = 64, min = 1)
         public String id;
     }
 
     public static class TruthTableRequest {
+        @Min(1) @Max(20)
         public int k;
+        @Min(0)
         public int input;
-        public String tableBits; // Optional: binary string representation of truth table outputs
+        @Size(max = 1048576) // 2^20 max
+        public String tableBits;
     }
 
     public static class AgentInferRequest {
+        @Min(0)
         public long sensorBits;
     }
 
     public static class AgentTrainRequest {
+        @Min(1) @Max(500)
         public int generations;
+        @Min(1) @Max(500)
         public int population;
+        @Min(1) @Max(20)
         public int k;
     }
 
     public static class AgentSaveRequest {
+        @Size(max = 512)
         public String path;
     }
 
     public static class AgentLoadRequest {
+        @Size(max = 512)
         public String path;
     }
 
     public static class TrainOnlineRequest {
+        @Min(1) @Max(1000)
         public int iterations;
     }
 }
