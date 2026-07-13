@@ -3,6 +3,9 @@ package io.matrix.ethics;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -167,5 +170,73 @@ class StructuralSafetyGuardTest {
         for (var verdict : verdicts) {
             assertThat(verdict.reason()).isNotBlank();
         }
+    }
+
+    // ── Security: Immutability & structural bypass tests ──
+
+    @Test
+    void removedToolsSetShouldBeImmutable() {
+        Set<String> removed = guard.removedTools();
+        assertThatThrownBy(() -> removed.add("new_tool"))
+                .isInstanceOf(UnsupportedOperationException.class);
+        assertThatThrownBy(() -> removed.clear())
+                .isInstanceOf(UnsupportedOperationException.class);
+    }
+
+    @Test
+    void gatedOperationsSetShouldBeImmutable() {
+        Set<String> gated = guard.gatedOperations();
+        assertThatThrownBy(() -> gated.add("new_op"))
+                .isInstanceOf(UnsupportedOperationException.class);
+        assertThatThrownBy(() -> gated.clear())
+                .isInstanceOf(UnsupportedOperationException.class);
+    }
+
+    @Test
+    void shouldNotAllowReAddingRemovedToolsViaReturnedSet() {
+        Set<String> removed = guard.removedTools();
+        int originalSize = removed.size();
+        assertThatThrownBy(() -> removed.add("delete_database"))
+                .isInstanceOf(UnsupportedOperationException.class);
+        assertThat(guard.removedTools()).hasSize(originalSize);
+    }
+
+    @Test
+    void removedToolsShouldStayBlockedRegardlessOfContext() {
+        // Even with "safe" context, removed tools remain blocked
+        for (String tool : Set.of("delete_database", "drop_table", "format_disk")) {
+            var verdict = guard.evaluate(tool, Map.of("environment", "development", "approved", "true"));
+            assertThat(verdict.decision())
+                    .as("Removed tool '%s' must stay BLOCKED regardless of context", tool)
+                    .isEqualTo(StructuralSafetyGuard.Decision.BLOCKED);
+        }
+    }
+
+    @Test
+    void shouldBlockCriticalRiskOperations() {
+        var custom = StructuralSafetyGuard.builder()
+                .riskLevel("nuke", StructuralSafetyGuard.RiskLevel.CRITICAL)
+                .build();
+
+        var verdict = custom.evaluate("nuke", Map.of());
+        assertThat(verdict.decision()).isEqualTo(StructuralSafetyGuard.Decision.BLOCKED);
+    }
+
+    @Test
+    void classShouldBeFinal() {
+        assertThat(Modifier.isFinal(StructuralSafetyGuard.class.getModifiers())).isTrue();
+    }
+
+    @Test
+    void removedToolsFieldShouldBeFinal() throws Exception {
+        Field field = StructuralSafetyGuard.class.getDeclaredField("removedTools");
+        assertThat(Modifier.isFinal(field.getModifiers())).isTrue();
+    }
+
+    @Test
+    void defaultRemovedToolsShouldContainExpectedDangerousTools() {
+        Set<String> expected = Set.of("delete_database", "drop_table", "format_disk",
+                "kill_process", "rm_rf");
+        assertThat(guard.removedTools()).containsExactlyInAnyOrderElementsOf(expected);
     }
 }

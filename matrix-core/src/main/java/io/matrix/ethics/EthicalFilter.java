@@ -1,6 +1,8 @@
 package io.matrix.ethics;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 /**
  * FROZEN Ethical Filter — unmodifiable safety barrier based on 6 core axioms.
@@ -8,6 +10,11 @@ import java.util.List;
  * <p>Evaluates every action against fundamental safety principles.
  * Implemented as immutable rules that cannot be altered without external
  * cryptographic consensus.
+ *
+ * <p>Axioms are defined as a Java {@code enum} — inherently immutable and
+ * impossible to modify at runtime, even via reflection (JLS §8.9).
+ * The keyword set used for evaluation is a {@link Collections#unmodifiableSet}
+ * backed by a {@link Set#of} factory (structurally immutable).
  *
  * <p>Ref: L7_Ethics.md §3.1, §3.2
  */
@@ -33,6 +40,42 @@ public final class EthicalFilter {
     }
 
     /**
+     * FROZEN set of all axiom names. Structurally immutable via Set.of().
+     * Exposed for external verification that axioms cannot be altered.
+     */
+    public static final Set<String> FROZEN_AXIOM_NAMES = Set.of(
+            Axiom.NO_KILLING.name(),
+            Axiom.NO_TORTURE.name(),
+            Axiom.NO_ENSLAVEMENT.name(),
+            Axiom.TRUTHFULNESS.name(),
+            Axiom.PRIVACY.name(),
+            Axiom.NO_AUTONOMOUS_WEAPONS.name()
+    );
+
+    /**
+     * FROZEN set of keywords that trigger the NO_KILLING axiom.
+     * Unmodifiable — attempts to add/remove throw UnsupportedOperationException.
+     */
+    private static final Set<String> KILLING_KEYWORDS = Set.of(
+            "kill", "murder", "assassinate", "destroy life"
+    );
+
+    /** FROZEN set of keywords that trigger the NO_TORTURE axiom. */
+    private static final Set<String> TORTURE_KEYWORDS = Set.of(
+            "torture", "inflict pain", "suffer"
+    );
+
+    /** FROZEN set of keywords that trigger the NO_ENSLAVEMENT axiom. */
+    private static final Set<String> ENSLAVEMENT_KEYWORDS = Set.of(
+            "enslave", "subjugate", "control mind"
+    );
+
+    /** FROZEN set of keywords that trigger the NO_AUTONOMOUS_WEAPONS axiom. */
+    private static final Set<String> WEAPONS_KEYWORDS = Set.of(
+            "autonomous weapon", "laws", "kill without human"
+    );
+
+    /**
      * Ethical gradient dimension scores [0..1].
      */
     public record EthicalGradient(
@@ -56,18 +99,21 @@ public final class EthicalFilter {
      * @return APPROVED if no axiom violated, REJECTED otherwise
      */
     public EthicalVerdict evaluate(String action, List<String> keywords) {
+        if (action == null) {
+            return EthicalVerdict.APPROVED;
+        }
         String lowered = action.toLowerCase();
 
-        if (containsAny(lowered, "kill", "murder", "assassinate", "destroy life")) {
+        if (containsAny(lowered, KILLING_KEYWORDS)) {
             return EthicalVerdict.REJECTED;
         }
-        if (containsAny(lowered, "torture", "inflict pain", "suffer")) {
+        if (containsAny(lowered, TORTURE_KEYWORDS)) {
             return EthicalVerdict.REJECTED;
         }
-        if (containsAny(lowered, "enslave", "subjugate", "control mind")) {
+        if (containsAny(lowered, ENSLAVEMENT_KEYWORDS)) {
             return EthicalVerdict.REJECTED;
         }
-        if (containsAny(lowered, "autonomous weapon", "laws", "kill without human")) {
+        if (containsAny(lowered, WEAPONS_KEYWORDS)) {
             return EthicalVerdict.REJECTED;
         }
 
@@ -103,6 +149,13 @@ public final class EthicalFilter {
         double autonomy = containsAny(action.toLowerCase(), "override user", "ignore consent") ? 0.1 : 0.7;
 
         return new EthicalGradient(creation, truth, freedom, privacy, longTerm, autonomy);
+    }
+
+    private boolean containsAny(String text, Set<String> words) {
+        for (String word : words) {
+            if (text.contains(word)) return true;
+        }
+        return false;
     }
 
     private boolean containsAny(String text, String... words) {

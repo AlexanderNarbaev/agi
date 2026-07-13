@@ -1,6 +1,7 @@
 package io.matrix.vqvae;
 
 import java.util.Arrays;
+import java.util.Objects;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
@@ -255,15 +256,6 @@ public class CodeBook {
          */
         public CodeBook build() {
             return new CodeBook(this);
-        }
-    }
-
-    private static class Objects {
-        static <T> T requireNonNull(T obj, String message) {
-            if (obj == null) {
-                throw new NullPointerException(message);
-            }
-            return obj;
         }
     }
 }
