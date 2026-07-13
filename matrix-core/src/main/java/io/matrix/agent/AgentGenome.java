@@ -95,7 +95,7 @@ public record AgentGenome(
             boolean structureAware
     ) {
         public static RagConfig defaults() {
-            return new RagConfig(5, true, 0.5, 0.32, 0.25, true, true);
+            return new RagConfig(5, true, 0.5, 0.015, 0.010, true, true);
         }
     }
 

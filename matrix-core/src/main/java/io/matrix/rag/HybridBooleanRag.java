@@ -114,7 +114,7 @@ public final class HybridBooleanRag {
 
         return new HybridRagResult(
                 query, pruned, strong, borderline, expanded,
-                strong.isEmpty() && !borderline.isEmpty()
+                strong.isEmpty()
         );
     }
 
@@ -198,8 +198,8 @@ public final class HybridBooleanRag {
         private int topK = 5;
         private boolean adaptiveContext = true;
         private double kneeSensitivity = 0.5;
-        private double strongThreshold = 0.32;
-        private double borderlineThreshold = 0.25;
+        private double strongThreshold = 0.015;
+        private double borderlineThreshold = 0.010;
 
         public Builder index(BooleanIndex index) {
             this.index = Objects.requireNonNull(index);

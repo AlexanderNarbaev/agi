@@ -40,8 +40,8 @@ class AgentGenomeTest {
         assertThat(rag.topK()).isEqualTo(5);
         assertThat(rag.adaptiveContext()).isTrue();
         assertThat(rag.kneeSensitivity()).isEqualTo(0.5);
-        assertThat(rag.strongThreshold()).isEqualTo(0.32);
-        assertThat(rag.borderlineThreshold()).isEqualTo(0.25);
+        assertThat(rag.strongThreshold()).isEqualTo(0.015);
+        assertThat(rag.borderlineThreshold()).isEqualTo(0.010);
         assertThat(rag.hybridSearch()).isTrue();
         assertThat(rag.structureAware()).isTrue();
     }
