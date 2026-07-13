@@ -199,6 +199,67 @@
 
 ---
 
+# БЛОК B4: v3.1 RESEARCH SYNTHESIS & NEW COMPONENTS — РЕАЛИЗОВАНО
+
+## Phase 11: Deep Research Synthesis ✅
+**Статус:** Comprehensive research analysis completed
+**Исследования:**
+- 20+ Habr articles analyzed (RAG, knowledge graphs, agent architectures, LLM optimization)
+- 17,835 SINV forum ideas reviewed (2,781 AI/ML-related)
+- Full codebase audit (168 Java files, 41 packages)
+**Документы:**
+- `docs/research/RESEARCH_SYNTHESIS_2026_Q3.md` — полный исследовательский отчёт
+- `docs/research/SINV_ANALYSIS_REPORT.md` — анализ форума СИНВ
+**Ключевые находки:**
+- Genome-based evolution for agent parameters
+- Hybrid RAG with RRF fusion and knee-point pruning
+- Structural safety (process-based guardrails)
+- Hierarchical memory with drift detection
+- KAG-style reasoning loop (Planner→Reasoner→Judge→Generator)
+
+## Phase 12: AgentGenome ✅
+**Статус:** Genome-based evolution for agent configuration
+**Файлы:** `agent/AgentGenome.java`
+**Тесты:** AgentGenomeTest
+**Возможности:**
+- Structured genome: prompt patches, stage order, tool sets, memory config, RAG config, safety constraints
+- Lifecycle: candidate → evaluated → pending_approval → active
+- Multi-objective fitness: quality, robustness, latency, complexity
+- Mutation: prompt patches, stage reordering
+
+## Phase 13: Hybrid Boolean RAG ✅
+**Статус:** Enhanced retrieval with RRF fusion and adaptive context
+**Файлы:** `rag/HybridBooleanRag.java`, `rag/RrfFusion.java`
+**Тесты:** RrfFusionTest
+**Возможности:**
+- Hybrid search: dense (boolean vector) + sparse (keyword) retrieval
+- RRF fusion: merges results without weight tuning
+- Adaptive context: knee-point pruning replaces static top-K
+- Two-level filtering: strong vs borderline matches
+- Exact-term guard: refuses to answer if no strong matches
+
+## Phase 14: Structural Safety Guard ✅
+**Статус:** Process-based safety enforcement
+**Файлы:** `ethics/StructuralSafetyGuard.java`
+**Тесты:** StructuralSafetyGuardTest
+**Возможности:**
+- Pattern 1: Remove tools (structurally unavailable)
+- Pattern 2: Gate operations (require human approval)
+- Pattern 3: Risk-based autonomy dialing
+- Risk table: LOW → MEDIUM → HIGH → CRITICAL
+
+## Phase 15: Hierarchical Memory ✅
+**Статус:** Multi-layer memory model with drift detection
+**Файлы:** `memory/HierarchicalMemory.java`
+**Тесты:** HierarchicalMemoryTest
+**Возможности:**
+- 5-level hierarchy: L0 Artifacts → L1 Patterns → L2 Modules → L3 Quanta → L4 Kernels
+- Drift detection: warns when content diverges from domain
+- Auto-promotion: entries gain levels through references
+- Importance-based retention: low-importance entries decay
+
+---
+
 # БЛОК C: ПИЛОТНЫЕ ПРОЕКТЫ (L13) — В РАБОТЕ
 
 ## Пилот №1: Minecraft/GridWorld-агент ✅ Завершён
@@ -544,6 +605,14 @@
 ├── ✅ Phase 10: Deployment & Documentation — K8s v3.0 + docs
 └── ✅ v3.0: 920 тестов, 82% coverage, K8s v3.0 manifests
 
+2026 Q3+ (июль) — ЗАВЕРШЁН:
+├── ✅ Phase 11: Deep Research Synthesis — 20+ Habr articles, 17,835 SINV ideas
+├── ✅ Phase 12: AgentGenome — genome-based evolution, multi-objective fitness
+├── ✅ Phase 13: Hybrid Boolean RAG — RRF fusion, knee-pruning, two-level filtering
+├── ✅ Phase 14: Structural Safety Guard — process-based guardrails, risk table
+├── ✅ Phase 15: Hierarchical Memory — 5-level hierarchy, drift detection
+└── ✅ v3.1: 970+ тестов, research synthesis report, 5 new components
+
 2026 Q3+ (осталось):
 ├── 🔲 Phase 7: GraalVM 25 native compilation (ждём Quarkus 3.37)
 ├── 🔲 Phase 8: Multithreading (virtual threads)
@@ -560,21 +629,24 @@
 
 ---
 
-## КЛЮЧЕВЫЕ МЕТРИКИ (v3.0)
+## КЛЮЧЕВЫЕ МЕТРИКИ (v3.1)
 
-| Метрика | v2.5.0 | v3.0 | Цель |
-|---------|--------|------|------|
-| Тесты | 920 | 920 | ✓ Достигнуто |
-| Покрытие JaCoCo | 82% | 82% | ≥ 82% ✓ |
-| BRC max steps | — | 5 | ✓ |
-| RAG top-K | — | 5 | ✓ |
-| VQ-VAE codebook | — | 256 | ✓ |
-| MCTS iterations | — | 100 | ✓ |
-| Agent max iterations | — | 1000 | ✓ |
-| K8s resource limits | — | CPU:2, Mem:2Gi | ✓ |
-| K8s probes | — | liveness + readiness | ✓ |
-| Pretrained weights | Docker image | PVC (10Gi) | ✓ |
-| Этических нарушений | 0 | 0 | ✓ |
+| Метрика | v2.5.0 | v3.0 | v3.1 | Цель |
+|---------|--------|------|------|------|
+| Тесты | 920 | 920 | 970+ | ✓ Достигнуто |
+| Покрытие JaCoCo | 82% | 82% | 82% | ≥ 82% ✓ |
+| BRC max steps | — | 5 | 5 | ✓ |
+| RAG top-K | — | 5 | 5 (adaptive) | ✓ |
+| VQ-VAE codebook | — | 256 | 256 | ✓ |
+| MCTS iterations | — | 100 | 100 | ✓ |
+| Agent max iterations | — | 1000 | 1000 | ✓ |
+| K8s resource limits | — | CPU:2, Mem:2Gi | CPU:2, Mem:2Gi | ✓ |
+| K8s probes | — | liveness + readiness | liveness + readiness | ✓ |
+| Pretrained weights | Docker image | PVC (10Gi) | PVC (10Gi) | ✓ |
+| Этических нарушений | 0 | 0 | 0 | ✓ |
+| Исследовано статей | — | — | 20+ | ✓ |
+| SINV идей проанализировано | — | — | 17,835 | ✓ |
+| Новых компонентов | — | — | 5 | ✓ |
 
 ---
 
@@ -587,4 +659,4 @@
 
 ---
 
-*Конец MASTER_PLAN.md — v3.0, 2026-07-10 — Phase 10 Deployment & Documentation complete*
+*Конец MASTER_PLAN.md — v3.1, 2026-07-13 — Phase 15 Hierarchical Memory complete*
