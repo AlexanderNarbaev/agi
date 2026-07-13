@@ -159,8 +159,9 @@ tasks.register('runMinecraftExperiment', JavaExec) {
 }
 
 // ─── GraalVM Native Image ───
-// Build:    ./gradlew :matrix-core:build -Dquarkus.package.type=native
-// Requires: GraalVM 25+ (currently 25.0.3), native-image installed
+// Container build (recommended): ./gradlew :matrix-core:buildNative
+// Local build:                    ./gradlew :matrix-core:build -Dquarkus.package.type=native
+// Requires: GraalVM 25+ or Mandrel 24.x (container), native-image installed
 // Note:    Native build args set via application.properties + native-image.properties
 
 graalvmNative {
@@ -168,17 +169,24 @@ graalvmNative {
         main {
             imageName = 'matrix-core'
             mainClass = 'io.matrix.MatrixApplication'
+            javaLauncher = javaToolchains.launcherFor {
+                languageVersion = JavaLanguageVersion.of(25)
+            }
             buildArgs.addAll(
                 '-H:+ReportExceptionStackTraces',
                 '--enable-url-protocols=http,https',
                 '-H:+AddAllCharsets',
                 '-J-Xmx8g',
+                '--no-fallback',
+                '-H:+RemoveSaturatedTypeFlows',
                 '--initialize-at-build-time=org.jboss.logmanager',
                 '--initialize-at-build-time=org.slf4j',
                 '--initialize-at-build-time=io.netty',
                 '--initialize-at-build-time=com.fasterxml',
                 '--initialize-at-build-time=io.smallrye',
                 '--initialize-at-build-time=org.apache.avro',
+                '--initialize-at-build-time=io.lettuce',
+                '--initialize-at-build-time=org.apache.kafka',
                 '--initialize-at-run-time=io.matrix.cluster.NeuronClusterActor',
                 '--initialize-at-run-time=org.apache.pekko',
                 '--initialize-at-run-time=io.matrix.events.R2dbcEventJournal',
@@ -188,14 +196,37 @@ graalvmNative {
     }
 }
 
-tasks.register('nativeBuildExec', Exec) {
-    dependsOn 'build'
+// Native build via Mandrel container (recommended for CI/CD)
+tasks.register('buildNativeContainer', Exec) {
     group = 'native'
-    description = 'Build GraalVM native image via Quarkus'
+    description = 'Build GraalVM native image via Quarkus + Mandrel container'
     workingDir = projectDir
-    commandLine './gradlew', ':matrix-core:build',
+    commandLine './gradlew', ':matrix-core:quarkusBuild',
+            '-Dquarkus.native.enabled=true',
+            '-Dquarkus.package.type=native',
+            '-Dquarkus.native.container-build=true',
+            '-Dquarkus.native.builder-image=quay.io/quarkus/ubi-quarkus-mandrel-builder:24.1.0-java21',
+            '--no-daemon'
+}
+
+// Local native build (requires GraalVM/Mandrel installed locally)
+tasks.register('buildNativeLocal', Exec) {
+    group = 'native'
+    description = 'Build GraalVM native image locally (requires GraalVM/Mandrel)'
+    workingDir = projectDir
+    commandLine './gradlew', ':matrix-core:quarkusBuild',
+            '-Dquarkus.native.enabled=true',
             '-Dquarkus.package.type=native',
             '--no-daemon'
+}
+
+// Run native binary
+tasks.register('runNative', Exec) {
+    dependsOn 'buildNative'
+    group = 'native'
+    description = 'Run the native binary'
+    workingDir = projectDir
+    commandLine "${project.layout.buildDirectory.get()}/matrix-core-${project.version}-runner"
 }
 
 // nativeTest is provided by GraalVM plugin as NativeRunTask
@@ -205,6 +236,29 @@ tasks.register('nativeReflectionTest', Test) {
     description = 'Run native image reflection tests (JVM mode)'
     useJUnitPlatform {
         includeTags 'native-image'
+    }
+    include 'io/matrix/nativeimage/**'
+}
+
+// Native image smoke test (requires native binary)
+tasks.register('nativeSmokeTest', Test) {
+    group = 'native'
+    description = 'Run native image smoke tests'
+    dependsOn 'buildNative'
+    useJUnitPlatform {
+        includeTags 'native'
+    }
+    include 'io/matrix/NativeSmokeTest*'
+    // Disable JVM tests — these run against the native binary
+    enabled = false
+}
+
+// Native image compilation test (JVM mode, validates config)
+tasks.register('nativeCompilationTest', Test) {
+    group = 'native'
+    description = 'Run native image compilation validation tests (JVM mode)'
+    useJUnitPlatform {
+        includeTags 'native-compilation'
     }
     include 'io/matrix/nativeimage/**'
 }

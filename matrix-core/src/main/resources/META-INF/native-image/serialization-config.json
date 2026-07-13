@@ -1,5 +1,176 @@
 [
   {
     "name": "org.apache.pekko.actor.typed.javadsl.Behaviors$EmptyBehavior$"
+  },
+  {
+    "name": "org.apache.pekko.actor.typed.javadsl.Behaviors$SameBehavior$"
+  },
+  {
+    "name": "org.apache.pekko.actor.typed.javadsl.Behaviors$StoppedBehavior$"
+  },
+  {
+    "name": "org.apache.pekko.actor.typed.ActorRef"
+  },
+  {
+    "name": "org.apache.pekko.actor.typed.ActorSystem"
+  },
+  {
+    "name": "org.apache.pekko.actor.typed.Behavior"
+  },
+  {
+    "name": "org.apache.pekko.actor.typed.internal.BehaviorImpl$BehaviorTags"
+  },
+  {
+    "name": "org.apache.pekko.actor.typed.internal.BehaviorImpl$StoppedBehavior"
+  },
+  {
+    "name": "org.apache.pekko.actor.typed.javadsl.AbstractBehavior"
+  },
+  {
+    "name": "org.apache.pekko.serialization.jackson.JacksonSerializer"
+  },
+  {
+    "name": "com.fasterxml.jackson.databind.ObjectMapper"
+  },
+  {
+    "name": "com.fasterxml.jackson.databind.node.ObjectNode"
+  },
+  {
+    "name": "io.matrix.cluster.NeuronClusterActor"
+  },
+  {
+    "name": "io.matrix.cluster.NeuronClusterActor$Command"
+  },
+  {
+    "name": "io.matrix.cluster.NeuronClusterActor$Response"
+  },
+  {
+    "name": "io.matrix.cluster.NeuronClusterActor$LoadNeuron"
+  },
+  {
+    "name": "io.matrix.cluster.NeuronClusterActor$UnloadNeuron"
+  },
+  {
+    "name": "io.matrix.cluster.NeuronClusterActor$FreezeNeuron"
+  },
+  {
+    "name": "io.matrix.cluster.NeuronClusterActor$InjectSignal"
+  },
+  {
+    "name": "io.matrix.cluster.NeuronClusterActor$EvaluateTick"
+  },
+  {
+    "name": "io.matrix.cluster.NeuronClusterActor$GetMetrics"
+  },
+  {
+    "name": "io.matrix.cluster.NeuronClusterActor$GetNeuronCount"
+  },
+  {
+    "name": "io.matrix.cluster.NeuronClusterActor$CreateSnapshot"
+  },
+  {
+    "name": "io.matrix.cluster.NeuronClusterActor$RestoreSnapshot"
+  },
+  {
+    "name": "io.matrix.cluster.NeuronClusterActor$LoadFNL"
+  },
+  {
+    "name": "io.matrix.cluster.NeuronClusterActor$UnloadFNL"
+  },
+  {
+    "name": "io.matrix.cluster.NeuronClusterActor$ListLoadedFNLs"
+  },
+  {
+    "name": "io.matrix.cluster.NeuronClusterActor$FlushBatch"
+  },
+  {
+    "name": "io.matrix.cluster.NeuronClusterActor$NeuronLoaded"
+  },
+  {
+    "name": "io.matrix.cluster.NeuronClusterActor$NeuronUnloaded"
+  },
+  {
+    "name": "io.matrix.cluster.NeuronClusterActor$NeuronFrozen"
+  },
+  {
+    "name": "io.matrix.cluster.NeuronClusterActor$TickResult"
+  },
+  {
+    "name": "io.matrix.cluster.NeuronClusterActor$MetricsResult"
+  },
+  {
+    "name": "io.matrix.cluster.NeuronClusterActor$CountResult"
+  },
+  {
+    "name": "io.matrix.cluster.NeuronClusterActor$SnapshotCreated"
+  },
+  {
+    "name": "io.matrix.cluster.NeuronClusterActor$SnapshotRestored"
+  },
+  {
+    "name": "io.matrix.cluster.NeuronClusterActor$ErrorResponse"
+  },
+  {
+    "name": "io.matrix.cluster.NeuronClusterActor$BatchResult"
+  },
+  {
+    "name": "io.matrix.cluster.NeuronId"
+  },
+  {
+    "name": "io.matrix.cluster.Signal"
+  },
+  {
+    "name": "io.matrix.cluster.ClusterConfig"
+  },
+  {
+    "name": "io.matrix.cluster.NeuronInstance"
+  },
+  {
+    "name": "io.matrix.cluster.NeuronInstance$State"
+  },
+  {
+    "name": "io.matrix.mediator.hierarchy.ClusterMediator"
+  },
+  {
+    "name": "io.matrix.mediator.hierarchy.ClusterMediator$Command"
+  },
+  {
+    "name": "io.matrix.mediator.hierarchy.ClusterMediator$Response"
+  },
+  {
+    "name": "io.matrix.mediator.hierarchy.ClusterMediator$Tick"
+  },
+  {
+    "name": "io.matrix.mediator.hierarchy.ClusterMediator$ReceiveMessage"
+  },
+  {
+    "name": "io.matrix.mediator.hierarchy.ClusterMediator$GetMetrics"
+  },
+  {
+    "name": "io.matrix.mediator.hierarchy.ClusterMediator$TickResult"
+  },
+  {
+    "name": "io.matrix.mediator.hierarchy.ClusterMediator$MetricsResult"
+  },
+  {
+    "name": "io.matrix.mediator.hierarchy.ClusterMediator$FnlCountResult"
+  },
+  {
+    "name": "io.matrix.mediator.hierarchy.ClusterMediator$ErrorResponse"
+  },
+  {
+    "name": "io.matrix.mediator.hierarchy.MediatorMessage"
+  },
+  {
+    "name": "io.matrix.events.ClusterEvent"
+  },
+  {
+    "name": "io.matrix.events.ClusterEventType"
+  },
+  {
+    "name": "io.matrix.snapshot.ClusterSnapshot"
+  },
+  {
+    "name": "io.matrix.protocol.NeuronBatch"
   }
 ]
