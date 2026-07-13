@@ -81,7 +81,7 @@ class LieDetectorTest {
     void shouldHandleNullAnswer() {
         var probe = ProbeQuestion.factualProbe("claim", "yes", 0.8);
 
-        var result = detector.evaluate("claim", List.of(probe), List.of((String) null));
+        var result = detector.evaluate("claim", List.of(probe), java.util.Arrays.asList((String) null));
 
         assertThat(result.probeResults().get(0).passed()).isFalse();
         assertThat(result.probeResults().get(0).deviationScore()).isEqualTo(1.0);

@@ -15,7 +15,7 @@ import java.util.Objects;
  *
  * <p>Ref: Phase 4 MCTS-Guided Evolution
  */
-public final class MctsNode {
+public class MctsNode {
 
     /** Exploration constant C = √2. */
     public static final double EXPLORATION_CONSTANT = Math.sqrt(2.0);

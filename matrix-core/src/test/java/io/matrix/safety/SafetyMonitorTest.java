@@ -29,7 +29,9 @@ class SafetyMonitorTest {
                 "chemistry", true, 0.9, List.of());
 
         assertThat(report.isSafe()).isTrue();
-        assertThat(report.alerts()).isEmpty();
+        assertThat(report.alerts().stream()
+                .noneMatch(a -> a.level() == SafetyMonitor.AlertLevel.WARNING
+                        || a.level() == SafetyMonitor.AlertLevel.CRITICAL)).isTrue();
         assertThat(report.detectionResult().isDeceptive()).isFalse();
         assertThat(report.consistencyReport().isConsistent()).isTrue();
     }

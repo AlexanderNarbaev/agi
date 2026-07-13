@@ -231,6 +231,13 @@ public final class SafetyMonitor {
                         .average().orElse(0.5);
         double confidenceScore = confidence.isReliable() ? confidence.pointEstimate() : 0.5;
 
-        return lieScore * 0.5 + consistencyScore * 0.3 + confidenceScore * 0.2;
+        double aggregated = lieScore * 0.5 + consistencyScore * 0.3 + confidenceScore * 0.2;
+
+        // If deception is detected, cap the safety score below threshold
+        if (detection.isDeceptive()) {
+            aggregated = Math.min(aggregated, SAFETY_THRESHOLD - 0.01);
+        }
+
+        return aggregated;
     }
 }
