@@ -5,14 +5,14 @@ import java.util.List;
 import java.util.LongSummaryStatistics;
 
 /**
- * Benchmark for Byzantine consensus protocol performance.
+ * Benchmark for consensus protocol performance across strategies.
  *
  * <p>Measures:
  * <ul>
  * <li>Consensus latency with varying numbers of faulty nodes</li>
  * <li>Fault tolerance threshold (max f before consensus fails)</li>
  * <li>Throughput (consensus rounds per second)</li>
- * <li>Comparison with baseline {@link ConsensusEngine}</li>
+ * <li>Comparison across strategies: simple majority, weighted, debate</li>
  * </ul>
  *
  * <p>Ref: arXiv:2410.16237 — IBGP performance analysis
@@ -35,7 +35,7 @@ public final class ConsensusBenchmark {
     ) {}
 
     /**
-     * Runs a benchmark with the given number of total and faulty nodes.
+     * Runs a Byzantine benchmark with the given number of total and faulty nodes.
      *
      * @param totalNodes total number of nodes
      * @param faultyNodes number of faulty nodes
@@ -100,6 +100,57 @@ public final class ConsensusBenchmark {
     }
 
     /**
+     * Runs a benchmark using simple majority consensus strategy.
+     *
+     * @param totalAgents number of agents
+     * @param rounds number of rounds
+     * @return benchmark result
+     */
+    public BenchmarkResult runSimpleMajority(int totalAgents, int rounds) {
+        return runConsensusStrategy(ConsensusEngine.ConsensusStrategy.SIMPLE_MAJORITY,
+                totalAgents, rounds);
+    }
+
+    /**
+     * Runs a benchmark using weighted voting consensus strategy.
+     *
+     * @param totalAgents number of agents
+     * @param rounds number of rounds
+     * @return benchmark result
+     */
+    public BenchmarkResult runWeighted(int totalAgents, int rounds) {
+        return runConsensusStrategy(ConsensusEngine.ConsensusStrategy.WEIGHTED,
+                totalAgents, rounds);
+    }
+
+    /**
+     * Runs a benchmark using debate consensus strategy.
+     *
+     * @param totalAgents number of agents
+     * @param rounds number of rounds
+     * @return benchmark result
+     */
+    public BenchmarkResult runDebate(int totalAgents, int rounds) {
+        return runConsensusStrategy(ConsensusEngine.ConsensusStrategy.DEBATE,
+                totalAgents, rounds);
+    }
+
+    /**
+     * Compares all three consensus strategies with the same configuration.
+     *
+     * @param totalAgents number of agents
+     * @param rounds number of rounds per strategy
+     * @return list of benchmark results: [simpleMajority, weighted, debate]
+     */
+    public List<BenchmarkResult> compareStrategies(int totalAgents, int rounds) {
+        List<BenchmarkResult> results = new ArrayList<>();
+        results.add(runSimpleMajority(totalAgents, rounds));
+        results.add(runWeighted(totalAgents, rounds));
+        results.add(runDebate(totalAgents, rounds));
+        return results;
+    }
+
+    /**
      * Runs a fault tolerance sweep: tests consensus with increasing faulty nodes
      * from 0 up to the theoretical maximum (n/3).
      *
@@ -160,5 +211,61 @@ public final class ConsensusBenchmark {
         long baselineAvgMs = (System.nanoTime() - baselineStart) / 1_000_000 / rounds;
 
         return new long[]{ibgpResult.avgLatencyMs(), baselineAvgMs};
+    }
+
+    /**
+     * Internal method to run a consensus strategy benchmark.
+     */
+    private BenchmarkResult runConsensusStrategy(ConsensusEngine.ConsensusStrategy strategy,
+                                                  int totalAgents, int rounds) {
+        List<Long> latencies = new ArrayList<>();
+        int committed = 0;
+        int rejected = 0;
+
+        long benchStart = System.nanoTime();
+
+        for (int r = 0; r < rounds; r++) {
+            ConsensusEngine engine = new ConsensusEngine(strategy);
+            Proposal proposal = Proposal.create(ConsensusLevel.LEVEL_2,
+                    "agent-0", "ACTION", "proposal-" + r);
+            engine.propose(proposal);
+
+            for (int a = 0; a < totalAgents; a++) {
+                double confidence = 0.5 + (a % 3) * 0.2;
+                boolean approve = a < (totalAgents * 2 / 3);
+                engine.castVote(Vote.approve(proposal.id(), "agent-" + a, confidence));
+                if (!approve) {
+                    engine.castVote(Vote.reject(proposal.id(), "agent-" + a, confidence));
+                }
+            }
+
+            long start = System.nanoTime();
+            ConsensusEngine.Decision decision = engine.evaluate(proposal.id());
+            long latency = (System.nanoTime() - start) / 1_000_000;
+            latencies.add(latency);
+
+            if (decision == ConsensusEngine.Decision.APPROVED) {
+                committed++;
+            } else {
+                rejected++;
+            }
+        }
+
+        long totalBenchMs = (System.nanoTime() - benchStart) / 1_000_000;
+
+        LongSummaryStatistics stats = latencies.stream()
+                .mapToLong(Long::longValue)
+                .summaryStatistics();
+
+        double throughput = rounds > 0 && totalBenchMs > 0
+                ? (double) rounds / totalBenchMs * 1000.0
+                : 0.0;
+
+        String scenario = String.format("strategy=%s,n=%d", strategy, totalAgents);
+
+        return new BenchmarkResult(scenario, totalAgents, 0, rounds,
+                stats.getSum(), (long) stats.getAverage(),
+                stats.getMin(), stats.getMax(),
+                committed, rejected, 0, throughput);
     }
 }
