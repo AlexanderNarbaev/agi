@@ -56,6 +56,10 @@ dependencies {
 
 tasks.withType(Test) {
     useJUnitPlatform()
+    // Exclude integration tests from default test run (requires Docker)
+    if (!project.hasProperty('includeIntegration')) {
+        exclude '**/integration/**'
+    }
 }
 
 jacocoTestReport {
