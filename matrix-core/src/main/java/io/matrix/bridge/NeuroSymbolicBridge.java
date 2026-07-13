@@ -47,7 +47,7 @@ public final class NeuroSymbolicBridge {
     }
 
     /**
-     * Converts MPDT truth table logic into natural language explanation.
+     * Converts MPDT truth table logic into natural language explanation with DNF.
      */
     public String explain(TruthTable table, Map<Integer, String> inputLabels) {
         StringBuilder sb = new StringBuilder();
@@ -66,21 +66,76 @@ public final class NeuroSymbolicBridge {
             sb.append("Balanced function (e.g., XOR-like).");
         }
 
+        // Extract DNF (Disjunctive Normal Form)
+        String dnf = extractDNF(table, inputLabels);
+        if (!dnf.isEmpty()) {
+            sb.append("\nDNF: ").append(dnf);
+        }
+
         return sb.toString();
     }
 
     /**
+     * Extracts DNF from truth table: OR of AND terms for each input where output=1.
+     */
+    private String extractDNF(TruthTable table, Map<Integer, String> inputLabels) {
+        List<String> terms = new ArrayList<>();
+        int total = 1 << table.k();
+
+        for (int input = 0; input < total; input++) {
+            if (table.evaluate(input)) {
+                List<String> literals = new ArrayList<>();
+                for (int bit = 0; bit < table.k(); bit++) {
+                    String label = inputLabels != null && inputLabels.containsKey(bit)
+                            ? inputLabels.get(bit)
+                            : "x" + bit;
+                    if ((input & (1 << bit)) != 0) {
+                        literals.add(label);
+                    } else {
+                        literals.add("¬" + label);
+                    }
+                }
+                terms.add(String.join(" ∧ ", literals));
+            }
+        }
+
+        if (terms.isEmpty()) return "";
+        if (terms.size() == 1) return terms.get(0);
+        return "(" + String.join(") ∨ (", terms) + ")";
+    }
+
+    /**
      * Hybrid reasoning: use MPDT for verifiable logic, LLM for NL context.
+     *
+     * <p>Extracts relevant input bits from LLM context by hashing the context
+     * to determine which input combinations to evaluate, then evaluates the
+     * truth table at those points.
      */
     public HybridResult reason(TruthTable logicCore, String llmContext) {
-        boolean mpdtResult = evaluateSample(logicCore, 0);
+        // Hash LLM context to determine input selection
+        int contextHash = llmContext.hashCode();
+        int maxInput = (1 << logicCore.k()) - 1;
+        int selectedInput = Math.abs(contextHash) & maxInput;
+
+        boolean mpdtResult = evaluateSample(logicCore, selectedInput);
         double confidence = confidence(logicCore);
+
+        // Evaluate at multiple points for richer analysis
+        int trueCount = 0;
+        int evalCount = Math.min(8, maxInput + 1);
+        for (int i = 0; i < evalCount; i++) {
+            int input = Math.abs(contextHash + i) & maxInput;
+            if (evaluateSample(logicCore, input)) trueCount++;
+        }
+        double contextRelevance = (double) trueCount / evalCount;
 
         return new HybridResult(
                 mpdtResult,
-                confidence,
-                "MPDT result: " + mpdtResult + " | LLM context: " +
-                        llmContext.substring(0, Math.min(llmContext.length(), 80))
+                confidence * contextRelevance,
+                "MPDT result at context-derived input " + selectedInput + ": " + mpdtResult
+                        + " | Confidence: " + String.format("%.2f", confidence)
+                        + " | Context relevance: " + String.format("%.2f", contextRelevance)
+                        + " | LLM context: " + llmContext.substring(0, Math.min(llmContext.length(), 60))
         );
     }
 

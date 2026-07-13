@@ -2,6 +2,8 @@ package io.matrix.vqvae;
 
 import io.matrix.api.Text2VecService;
 
+import java.util.Objects;
+
 /**
  * Multimodal VQ-VAE proxy for sensor/effector integration.
  *
@@ -188,15 +190,6 @@ public class VqVaeProxy {
          */
         public VqVaeProxy build() {
             return new VqVaeProxy(this);
-        }
-    }
-
-    private static class Objects {
-        static <T> T requireNonNull(T obj, String message) {
-            if (obj == null) {
-                throw new NullPointerException(message);
-            }
-            return obj;
         }
     }
 }

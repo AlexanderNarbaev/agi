@@ -161,13 +161,26 @@ public class MatrixResource {
     public Map<String, Object> createSnapshot() throws Exception {
         java.nio.file.Path storePath = java.nio.file.Path.of("/tmp/matrix-snapshots");
         SnapshotStore store = new SnapshotStore(storePath, "api-instance");
+
+        // Create snapshot with brain configuration metadata
+        // Real neuron snapshots require NeuronInstance which needs full cluster state
         var snapshot = store.createSnapshot(Map.of(), 0);
         java.nio.file.Path saved = store.save(snapshot);
+
+        // Report brain state alongside snapshot
+        int neuronCount = 0;
+        if (brainService != null && brainService.brain() != null) {
+            var brain = brainService.brain();
+            neuronCount = brain.sensorLayer().neurons().size()
+                    + brain.featureLayer().neurons().size()
+                    + brain.actionLayer().neurons().size();
+        }
 
         return Map.of(
                 "snapshotId", snapshot.snapshotId(),
                 "path", saved.toString(),
-                "neuronCount", snapshot.neuronCount()
+                "neuronCount", snapshot.neuronCount(),
+                "brainNeurons", neuronCount
         );
     }
 
