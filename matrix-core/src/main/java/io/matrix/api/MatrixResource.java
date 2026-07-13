@@ -1,5 +1,10 @@
 package io.matrix.api;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import io.lettuce.core.RedisClient;
+import io.lettuce.core.api.StatefulRedisConnection;
+import io.lettuce.core.api.sync.RedisCommands;
 import io.matrix.agent.AgentBrainService;
 import io.matrix.cauldron.CauldronProtocol;
 import io.matrix.evolution.EvolutionLoop;
@@ -7,6 +12,7 @@ import io.matrix.evolution.FitnessFn;
 import io.matrix.neuron.TruthTable;
 import io.matrix.snapshot.ClusterSnapshot;
 import io.matrix.snapshot.SnapshotStore;
+import jakarta.annotation.PreDestroy;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
@@ -24,6 +30,9 @@ import java.util.concurrent.ConcurrentHashMap;
 public class MatrixResource {
 
     private static final Logger log = LoggerFactory.getLogger(MatrixResource.class);
+    private static final ObjectMapper MAPPER = new ObjectMapper();
+    private static final String REDIS_KEY_PREFIX = "shared:neurons:";
+    private static final int MAX_NEURONS_PER_ROLE = 50;
 
     private final Random rng = new Random();
     private final Map<String, EvolutionLoop> activeLoops = new ConcurrentHashMap<>();
@@ -34,6 +43,9 @@ public class MatrixResource {
 
     @Inject
     AgentBrainService brainService;
+
+    @Inject
+    RedisClient redisClient;
 
     @GET
     @Path("/health")
@@ -303,29 +315,41 @@ public class MatrixResource {
                 req.fitness,
                 System.currentTimeMillis());
 
-        sharedNeurons.computeIfAbsent(role, k -> new ArrayList<>()).add(shared);
+        List<SharedNeuron> list = sharedNeurons.computeIfAbsent(role, k -> new ArrayList<>());
+        list.add(shared);
 
         // Keep only top 50 neurons per role
-        List<SharedNeuron> list = sharedNeurons.get(role);
-        if (list.size() > 50) {
+        if (list.size() > MAX_NEURONS_PER_ROLE) {
             list.sort((a, b) -> Double.compare(b.fitness, a.fitness));
-            while (list.size() > 50) list.remove(list.size() - 1);
+            while (list.size() > MAX_NEURONS_PER_ROLE) list.remove(list.size() - 1);
         }
 
-        log.info("Neuron shared: role={} agentId={} fitness={:.3f}",
+        // Persist to Redis
+        persistSharedNeurons(role, list);
+
+        log.info("Neuron shared: role={} agentId={} fitness={}",
                 role, shared.agentId(), shared.fitness());
 
         return Map.of(
                 "status", "shared",
                 "role", role,
-                "totalShared", sharedNeurons.get(role).size()
+                "totalShared", list.size()
         );
     }
 
     @GET
     @Path("/agent/neurons/{role}")
     public List<Map<String, Object>> getSharedNeurons(@PathParam("role") String role) {
-        List<SharedNeuron> neurons = sharedNeurons.getOrDefault(role.toLowerCase(), List.of());
+        String normalizedRole = role.toLowerCase();
+        List<SharedNeuron> neurons = sharedNeurons.get(normalizedRole);
+
+        // Fallback to Redis if not in memory cache
+        if (neurons == null || neurons.isEmpty()) {
+            neurons = loadSharedNeurons(normalizedRole);
+            if (!neurons.isEmpty()) {
+                sharedNeurons.put(normalizedRole, neurons);
+            }
+        }
 
         return neurons.stream()
                 .sorted((a, b) -> Double.compare(b.fitness, a.fitness))
@@ -335,6 +359,42 @@ public class MatrixResource {
                         "fitness", n.fitness(),
                         "timestamp", n.timestamp()))
                 .toList();
+    }
+
+    // ─── SharedNeuron Redis persistence ───
+
+    private void persistSharedNeurons(String role, List<SharedNeuron> neurons) {
+        if (redisClient == null) return;
+        try {
+            StatefulRedisConnection<String, String> conn = redisClient.connect();
+            try {
+                RedisCommands<String, String> sync = conn.sync();
+                String json = MAPPER.writeValueAsString(neurons);
+                sync.set(REDIS_KEY_PREFIX + role, json);
+            } finally {
+                conn.close();
+            }
+        } catch (Exception e) {
+            log.warn("Failed to persist shared neurons for role {} to Redis: {}", role, e.getMessage());
+        }
+    }
+
+    private List<SharedNeuron> loadSharedNeurons(String role) {
+        if (redisClient == null) return List.of();
+        try {
+            StatefulRedisConnection<String, String> conn = redisClient.connect();
+            try {
+                RedisCommands<String, String> sync = conn.sync();
+                String json = sync.get(REDIS_KEY_PREFIX + role);
+                if (json == null || json.isEmpty()) return List.of();
+                return MAPPER.readValue(json, new TypeReference<>() {});
+            } finally {
+                conn.close();
+            }
+        } catch (Exception e) {
+            log.warn("Failed to load shared neurons for role {} from Redis: {}", role, e.getMessage());
+            return List.of();
+        }
     }
 
     public static class SimulateRequest {
