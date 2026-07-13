@@ -2,6 +2,7 @@ package io.matrix.dialog;
 
 import io.matrix.ethics.EthicalFilter;
 import io.matrix.ethics.EthicalVerdict;
+import io.matrix.neuron.NeuralTextGenerator;
 
 import java.time.Instant;
 import java.util.ArrayList;
@@ -12,6 +13,10 @@ import java.util.List;
  *
  * <p>Uses ethical filter before sending any message. Tracks conversation
  * state and adapts to user preferences (reduces proactivity if ignored).
+ *
+ * <p>Uses {@link NeuralTextGenerator} for neural response generation.
+ * Falls back to template responses if neural generator is unavailable
+ * or produces empty output.
  *
  * <p>Ref: L4_Mediator.md §6.2, §6.3
  */
@@ -42,12 +47,19 @@ public class ChatBot {
 
     private final EthicalFilter ethicalFilter;
     private final ProactiveInterface proactiveInterface;
+    private final NeuralTextGenerator neuralGenerator;
     private final List<DialogMessage> history = new ArrayList<>();
     private ConversationState state = ConversationState.IDLE;
 
     public ChatBot(EthicalFilter ethicalFilter, ProactiveInterface proactiveInterface) {
+        this(ethicalFilter, proactiveInterface, null);
+    }
+
+    public ChatBot(EthicalFilter ethicalFilter, ProactiveInterface proactiveInterface,
+                   NeuralTextGenerator neuralGenerator) {
         this.ethicalFilter = ethicalFilter;
         this.proactiveInterface = proactiveInterface;
+        this.neuralGenerator = neuralGenerator;
     }
 
     public ConversationState state() { return state; }
@@ -119,7 +131,32 @@ public class ChatBot {
         proactiveInterface.recordIgnored();
     }
 
+    /**
+     * Generates response using neural text generator, falling back to templates.
+     */
     private String generateResponse(String userMessage) {
+        // Try neural generation first
+        if (neuralGenerator != null) {
+            try {
+                String neuralResponse = neuralGenerator.generate(userMessage);
+                if (neuralResponse != null && !neuralResponse.isBlank()
+                        && neuralResponse.length() > 3
+                        && !isGibberish(neuralResponse)) {
+                    return neuralResponse;
+                }
+            } catch (Exception e) {
+                // Fall through to template
+            }
+        }
+
+        // Template fallback
+        return templateResponse(userMessage);
+    }
+
+    /**
+     * Template-based response as fallback when neural generation fails.
+     */
+    private String templateResponse(String userMessage) {
         String lower = userMessage.toLowerCase();
 
         if (hasWord(lower, "hello", "hi", "hey", "greetings")) {
@@ -145,6 +182,25 @@ public class ChatBot {
         }
 
         return "I understand. Is there anything specific you'd like to discuss about the MATRIX system?";
+    }
+
+    /**
+     * Detects gibberish output from untrained neural generator.
+     */
+    private boolean isGibberish(String text) {
+        if (text.length() < 2) return true;
+        // Check if more than 50% non-alphanumeric characters
+        long alphaCount = text.chars().filter(Character::isLetterOrDigit).count();
+        if ((double) alphaCount / text.length() < 0.5) return true;
+        // Check for excessive repetition (same char 4+ times in a row)
+        for (int i = 0; i < text.length() - 3; i++) {
+            if (text.charAt(i) == text.charAt(i + 1)
+                    && text.charAt(i) == text.charAt(i + 2)
+                    && text.charAt(i) == text.charAt(i + 3)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private boolean hasWord(String text, String... words) {

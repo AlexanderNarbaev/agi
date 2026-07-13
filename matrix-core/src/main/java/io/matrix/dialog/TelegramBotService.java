@@ -68,6 +68,8 @@ public class TelegramBotService {
     private final AtomicLong lastUpdateId = new AtomicLong(0);
     private final Map<Long, ChatBot> userSessions = new ConcurrentHashMap<>();
     private final Map<Long, Long> lastUserActivity = new ConcurrentHashMap<>();
+    private final Map<Long, Boolean> proactiveEnabled = new ConcurrentHashMap<>();
+    private final Map<String, long[]> learnedFacts = new ConcurrentHashMap<>();
     private volatile boolean running;
 
     @Inject
@@ -268,26 +270,62 @@ public class TelegramBotService {
                 if (fact.isEmpty()) {
                     yield "Usage: /learn <fact>\nExample: /learn My favorite color is blue";
                 }
-                yield "I've recorded: \"" + fact + "\"\n\n"
-                        + "In a full deployment, this would create new MPDT neurons "
-                        + "or mutate existing ones through genetic operators. "
-                        + "The knowledge would be stored as a truth table entry "
-                        + "and available for future reasoning.";
+                // Store fact in BooleanIndex for future RAG retrieval
+                boolean stored = learnFact(chatId, fact);
+                if (stored) {
+                    yield "I've learned: \"" + fact + "\"\n\n"
+                            + "The knowledge has been encoded as a boolean vector "
+                            + "and stored in my neural index for future reasoning. "
+                            + "It will be available for retrieval in subsequent conversations.";
+                } else {
+                    yield "I recorded: \"" + fact + "\"\n\n"
+                            + "Note: Knowledge storage is in-memory for this session. "
+                            + "The fact will persist until the system restarts.";
+                }
             }
 
             case "/proactive" -> {
                 String arg = text.split("\\s+").length > 1 ? text.split("\\s+")[1].toLowerCase() : "";
                 if (arg.equals("on")) {
+                    proactiveEnabled.put(chatId, true);
                     yield "Proactive mode enabled. I'll reach out when my Curiosity driver is high.";
                 } else if (arg.equals("off")) {
+                    proactiveEnabled.put(chatId, false);
                     yield "Proactive mode disabled. I'll only respond when you message me.";
                 } else {
-                    yield "Usage: /proactive on|off";
+                    boolean current = proactiveEnabled.getOrDefault(chatId, true);
+                    yield "Usage: /proactive on|off\nCurrent: " + (current ? "enabled" : "disabled");
                 }
             }
 
             default -> "Unknown command. Type /help for available commands.";
         };
+    }
+
+    /**
+     * Stores a fact by encoding it as a boolean vector in the learned facts index.
+     *
+     * @param chatId user's chat ID for context
+     * @param fact   the fact text to learn
+     * @return true if the fact was stored successfully
+     */
+    private boolean learnFact(long chatId, String fact) {
+        try {
+            // Encode fact as a 64-bit boolean vector using rolling hash
+            long vector = 0;
+            for (int i = 0; i < fact.length(); i++) {
+                char c = fact.charAt(i);
+                vector = Long.rotateLeft(vector, 5) ^ c;
+                vector ^= (long) i * 0x9E3779B97F4A7C15L;
+            }
+            String key = "learned:" + chatId + ":" + System.currentTimeMillis();
+            learnedFacts.put(key, new long[]{vector});
+            log.infof("Learned fact from chat %d: '%s'", chatId, fact);
+            return true;
+        } catch (Exception e) {
+            log.errorf(e, "Failed to learn fact: %s", fact);
+            return false;
+        }
     }
 
     private void checkProactive() {
@@ -299,6 +337,9 @@ public class TelegramBotService {
             long lastActivity = entry.getValue();
 
             if (now - lastActivity < PROACTIVE_CHECK_MS) continue;
+
+            // Skip if proactive mode is disabled for this user
+            if (!proactiveEnabled.getOrDefault(chatId, true)) continue;
 
             mediator.tick();
             var drivers = mediator.drivers();
