@@ -33,9 +33,9 @@ public final class BooleanIndex {
     private final int dimensions;
     private final int longsPerVector;
     private final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
-    private final Map<String, long[]> vectors = new LinkedHashMap<>();
+    final Map<String, long[]> vectors = new LinkedHashMap<>(); // package-private for persistence
 
-    private BooleanIndex(int dimensions) {
+    BooleanIndex(int dimensions) { // package-private for persistence
         this.dimensions = dimensions;
         this.longsPerVector = dimensions / 64;
     }
@@ -63,6 +63,64 @@ public final class BooleanIndex {
         lock.writeLock().lock();
         try {
             vectors.put(id, Arrays.copyOf(vector, vector.length));
+        } finally {
+            lock.writeLock().unlock();
+        }
+    }
+
+    /**
+     * Updates (overwrites) the vector for an existing ID.
+     *
+     * @param id      non-null unique identifier (must already exist)
+     * @param vector  non-null boolean vector; length must equal {@code dimensions / 64}
+     * @return {@code true} if the vector was updated, {@code false} if ID not found
+     */
+    public boolean update(String id, long[] vector) {
+        Objects.requireNonNull(id, "id");
+        Objects.requireNonNull(vector, "vector");
+        if (vector.length != longsPerVector) {
+            throw new IllegalArgumentException(
+                    "Vector length " + vector.length + " does not match dimensions " + dimensions);
+        }
+        lock.writeLock().lock();
+        try {
+            if (!vectors.containsKey(id)) {
+                return false;
+            }
+            vectors.put(id, Arrays.copyOf(vector, vector.length));
+            return true;
+        } finally {
+            lock.writeLock().unlock();
+        }
+    }
+
+    /**
+     * Bulk-adds multiple vectors to the index.
+     *
+     * <p>Each entry is validated before any are added. If any entry is invalid,
+     * no vectors are added (atomic operation).
+     *
+     * @param entries map of ID to vector
+     * @throws IllegalArgumentException if any vector has wrong dimensions
+     * @throws NullPointerException if entries or any key/value is null
+     */
+    public void bulkAdd(Map<String, long[]> entries) {
+        Objects.requireNonNull(entries, "entries");
+        // Validate all entries first
+        for (var entry : entries.entrySet()) {
+            Objects.requireNonNull(entry.getKey(), "id");
+            Objects.requireNonNull(entry.getValue(), "vector");
+            if (entry.getValue().length != longsPerVector) {
+                throw new IllegalArgumentException(
+                        "Vector length " + entry.getValue().length
+                                + " does not match dimensions " + dimensions);
+            }
+        }
+        lock.writeLock().lock();
+        try {
+            for (var entry : entries.entrySet()) {
+                vectors.put(entry.getKey(), Arrays.copyOf(entry.getValue(), entry.getValue().length));
+            }
         } finally {
             lock.writeLock().unlock();
         }

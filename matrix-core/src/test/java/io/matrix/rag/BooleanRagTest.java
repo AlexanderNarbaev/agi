@@ -213,4 +213,66 @@ class BooleanRagTest {
         // First element of expanded must be the original query
         assertThat(result.expandedVector()[0]).isEqualTo(query);
     }
+
+    // --- Query Expansion Integration ---
+
+    @Test
+    void shouldBuildWithQueryExpander() {
+        var expander = QueryExpander.builder().numVariants(2).build();
+        var r = BooleanRag.builder()
+                .index(knowledgeStore)
+                .topK(2)
+                .queryExpander(expander)
+                .useRrfFusion(true)
+                .build();
+        assertThat(r).isNotNull();
+    }
+
+    @Test
+    void shouldQueryWithExpansion() {
+        var expander = QueryExpander.builder().numVariants(2).build();
+        var r = BooleanRag.builder()
+                .index(knowledgeStore)
+                .topK(2)
+                .queryExpander(expander)
+                .useRrfFusion(true)
+                .build();
+
+        long[] query = {0b00000001L};
+        BooleanRag.RagResult result = r.query(query);
+
+        assertThat(result.originalQuery()).isEqualTo(query);
+        assertThat(result.knowledgeHits()).isNotEmpty();
+    }
+
+    @Test
+    void shouldWorkWithoutExpansion() {
+        // Default: no expander, useRrfFusion=true but no expander = direct search
+        var r = BooleanRag.builder()
+                .index(knowledgeStore)
+                .topK(2)
+                .build();
+
+        long[] query = {0b00000001L};
+        BooleanRag.RagResult result = r.query(query);
+
+        assertThat(result.knowledgeHits()).isNotEmpty();
+    }
+
+    @Test
+    void shouldDisableRrfFusion() {
+        var expander = QueryExpander.builder().numVariants(2).build();
+        var r = BooleanRag.builder()
+                .index(knowledgeStore)
+                .topK(2)
+                .queryExpander(expander)
+                .useRrfFusion(false)
+                .build();
+
+        long[] query = {0b00000001L};
+        BooleanRag.RagResult result = r.query(query);
+
+        // Should still work, just without RRF fusion
+        assertThat(result.knowledgeHits()).isNotEmpty();
+    }
 }
