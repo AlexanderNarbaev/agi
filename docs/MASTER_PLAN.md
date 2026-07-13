@@ -1,9 +1,9 @@
-# MASTER PLAN — MATRIX v3.0
+# MASTER PLAN — MATRIX v3.1
 # Полный план реализации L0–L22
 
-**Дата:** 2026-07-10
-**Версия:** v3.0
-**Статус:** Phases 1–6 complete, Phase 10 complete
+**Дата:** 2026-07-13
+**Версия:** v3.1
+**Статус:** Phases 1–15 complete, Phase 10 complete
 
 ---
 
@@ -72,18 +72,18 @@
 **Дальнейшие шаги:** Поддержка.
 
 ## L6 — Память и Event Sourcing ✅
-**Статус:** EventJournal, InMemoryEventJournal, KafkaEventJournal (Avro), SnapshotStore — реализованы.
+**Статус:** EventJournal, InMemoryEventJournal, KafkaEventJournal (Avro), R2dbcEventJournal (PostgreSQL), SnapshotStore — реализованы.
 **Файлы:** `events/`, `snapshot/SnapshotStore.java`
 **Исправлено:** KafkaEventJournal Avro-десериализация (SpecificDatumReader→GenericDatumReader)
 **K8s:** Strimzi Kafka 4.2.0, MinIO Tenant — в манифестах
 **Тесты:** InMemoryEventJournalTest, KafkaEventJournalTest, SnapshotStoreTest, NoosphereRegistryTest, KnowledgeIndexTest, CreditModelTest, FnlPackageTest, GlobalMediatorTest, NoospherePilotTest
-**Дальнейшие шаги:** Реальная Kafka-интеграция (сейчас in-memory, Kafka-ready).
+**Дальнейшие шаги:** Поддержка.
 
 ## L7 — Этика и мультимодальность ✅
-**Статус:** EthicalFilter, прокси, ЭЛЕВТЕРИЯ — реализованы.
-**Файлы:** `ethics/EthicalFilter.java`, `hades/Eleutheria.java`
-**Тесты:** EthicalFilterTest, EleutheriaTest
-**Дальнейшие шаги:** Мультимодальный прокси (текст↔бинарный вектор) — частично реализован в чат-боте.
+**Статус:** EthicalFilter, StructuralSafetyGuard, прокси, ЭЛЕВТЕРИЯ — реализованы.
+**Файлы:** `ethics/EthicalFilter.java`, `ethics/StructuralSafetyGuard.java`, `hades/Eleutheria.java`
+**Тесты:** EthicalFilterTest, StructuralSafetyGuardTest, EleutheriaTest
+**Дальнейшие шаги:** Поддержка.
 
 ## L8 — Дорожная карта ✅
 **Статус:** Документ-план, обновлён.
@@ -94,7 +94,11 @@
 # БЛОК B: ИНФРАСТРУКТУРА (L9, L10, L18) — РЕАЛИЗОВАНО
 
 ## L9 — Развёртывание и K8s ✅
-**Реализовано:** 20 K8s-манифестов, Operator + CRD, Dockerfile multi-stage
+**Реализовано:** 20 K8s-манифестов, Operator + CRD, Dockerfile multi-stage, docker-compose
+**Docker:**
+- `Dockerfile.dev` — multi-stage сборка (JDK 25 → JRE 25)
+- `docker-compose.yml` — полный стек: PostgreSQL + Redis + Kafka + matrix-core + Minecraft
+- `docker-compose.dev.yml` — только инфраструктура для локальной разработки
 **K8s-манифесты:** namespace, configmap, deployment, service, hpa, vpa, pvc, rbac, servicemonitor, prometheusrule, jaeger, loki, strimzi-kafka, minio-tenant, crd, cr-example, + kustomization
 **Minikube:** 9 pods Running (matrix-core, paper-server, postgres, redis, kafka, minio, prometheus, grafana, jaeger)
 **NodePorts:** matrix-core :30091, grafana :30300, prometheus :30090, jaeger :31686, minio :30900, paper :32565
@@ -106,7 +110,7 @@
 **Дальнейшие шаги:** Chaos Engineering (Chaos Mesh), Thanos/VictoriaMetrics, Alertmanager→Slack.
 
 ## L18 — CI/CD и тестирование ✅
-**Реализовано:** GitHub Actions workflow, JaCoCo (82%), 920 тестов
+**Реализовано:** GitHub Actions workflow, JaCoCo (82%), 970+ тестов, 127 test files
 **Дальнейшие шаги:** Интеграция с K8s (деплой в staging), автоматические релизы.
 
 ---
@@ -123,16 +127,15 @@
 ## OpenAI-Compatible API ✅
 **Реализовано:** REST API совместимый с OpenAI форматом
 **Эндпоинты:** `/v1/chat/completions`, `/v1/models`, `/v1/embeddings`
-**Модели:** `mpdt-qwen`, `mpdt-smollm2`
-**Streaming:** Поддержка `stream: true`
-**Дальнейшие шаги:** Rate limiting, API keys,更多 моделей.
+**Модели:** `M.A.T.R.I.X.` (unified neural system)
+**Streaming:** Поддержка `stream: true` (SSE)
+**Дальнейшие шаги:** Rate limiting, API keys, больше моделей.
 
-## Minecraft K8s Integration ✅
-**Реализовано:** Paper сервер в K8s (Dockerfile + манифест)
-**Образ:** `itzg/minecraft-server:java21` + Spigot plugin
-**NodePort:** 32565
-**WebSocket:** Auto-reconnect к matrix-core (K8s Service)
-**Дальнейшие шаги:** GPU passthrough для ML-инференса в K8s.
+## Minecraft Docker Integration ✅
+**Реализовано:** Paper сервер в Docker (itzg/minecraft-server:java21)
+**Docker-compose:** matrix-core → paper-server dependency chain
+**WebSocket:** Auto-reconnect к matrix-core
+**Дальнейшие шаги:** GPU passthrough для ML-инференса.
 
 ---
 
@@ -186,16 +189,21 @@
 **Дальнейшие шаги:** После multithreading
 
 ## Phase 10: Deployment & Documentation ✅
-**Статус:** K8s manifests обновлены, документация v3.0 создана
+**Статус:** K8s manifests обновлены, документация v3.0 создана, Docker Compose создан
 **Обновлено:**
+- `Dockerfile.dev` — multi-stage сборка
+- `docker-compose.yml` — полный стек
+- `docker-compose.dev.yml` — инфраструктура только
 - `infra/k8s/minikube/matrix-core.yaml` — v3.0 env vars, resource limits, probes, pretrained PVC
 - `scripts/matrix-minikube.sh` — v3.0 config, pretrained weights mount
-- `README.md` — v3.0 architecture, components, API docs, config reference
+- `README.md` — v3.1 architecture, components, API docs, config reference
 - `docs/INDEX.md` — v3.0 documents added
-- `docs/MASTER_PLAN.md` — Phases 1–6 complete, Phase 10 complete
+- `docs/MASTER_PLAN.md` — Phases 1–15 complete
+- `docs/API.md` — полная документация API
+- `docs/DEPLOYMENT.md` — гайд по деплою
 - `docs/V3_CONFIGURATION.md` — full configuration reference
-- `wal/GLOBAL_WAL.md` — v3.0 status
-- `wal/SESSION_WAL.md` — v3.0 status
+- `wal/GLOBAL_WAL.md` — v3.1 status
+- `wal/SESSION_WAL.md` — v3.1 status
 
 ---
 
@@ -210,6 +218,8 @@
 **Документы:**
 - `docs/research/RESEARCH_SYNTHESIS_2026_Q3.md` — полный исследовательский отчёт
 - `docs/research/SINV_ANALYSIS_REPORT.md` — анализ форума СИНВ
+- `docs/research/AI_AGENT_SYSTEMS_RESEARCH_2026_Q3.md` — исследование AI агентов
+- `docs/research/2026-07-10_AI_ML_Architectures_vs_MPDT.md` — сравнение архитектур
 **Ключевые находки:**
 - Genome-based evolution for agent parameters
 - Hybrid RAG with RRF fusion and knee-point pruning
@@ -250,7 +260,7 @@
 
 ## Phase 15: Hierarchical Memory ✅
 **Статус:** Multi-layer memory model with drift detection
-**Файлы:** `memory/HierarchicalMemory.java`
+**Файлы:** `memory/HierarchicalMemory.java`, `memory/MemoryHierarchy.java`
 **Тесты:** HierarchicalMemoryTest
 **Возможности:**
 - 5-level hierarchy: L0 Artifacts → L1 Patterns → L2 Modules → L3 Quanta → L4 Kernels
@@ -566,6 +576,35 @@
 
 ---
 
+# БЛОК L: НОВЫЕ ИССЛЕДОВАТЕЛЬСКИЕ ЗАДАЧИ
+
+### Задача L.1: Knowledge Graph Integration ⬜ (5d)
+- Интеграция Knowledge Graph с Boolean RAG
+- Structured knowledge storage и retrieval
+- Graph-based reasoning для сложных запросов
+
+### Задача L.2: Multi-Agent Collaboration ⬜ (5d)
+- Протокол обмена знаниями между агентами
+- Collaborative learning через Noosphere
+- Conflict resolution при противоречивых знаниях
+
+### Задача L.3: Continuous Learning Pipeline ⬜ (5d)
+- Online learning с feedback loop
+- Automatic retraining при drift detection
+- A/B testing для разных конфигураций агента
+
+### Задача L.4: Explainability Dashboard ⬜ (3d)
+- Веб-интерфейс для визуализации reasoning chains
+- Interactive decision tree explorer
+- Real-time neuron activity monitoring
+
+### Задача L.5: Performance Optimization ⬜ (3d)
+- Boolean vector SIMD optimization
+- Parallel evolution with virtual threads
+- Cache optimization для frequently accessed neurons
+
+---
+
 # ДОРОЖНАЯ КАРТА ПО КВАРТАЛАМ
 
 ```
@@ -611,7 +650,8 @@
 ├── ✅ Phase 13: Hybrid Boolean RAG — RRF fusion, knee-pruning, two-level filtering
 ├── ✅ Phase 14: Structural Safety Guard — process-based guardrails, risk table
 ├── ✅ Phase 15: Hierarchical Memory — 5-level hierarchy, drift detection
-└── ✅ v3.1: 970+ тестов, research synthesis report, 5 new components
+├── ✅ Docker Compose — full stack (PostgreSQL + Redis + Kafka + matrix-core + Minecraft)
+└── ✅ v3.1: 970+ тестов, research synthesis report, 5 new components, Docker
 
 2026 Q3+ (осталось):
 ├── 🔲 Phase 7: GraalVM 25 native compilation (ждём Quarkus 3.37)
@@ -624,6 +664,11 @@
 ├── 🔲 Пилотный университетский курс
 ├── 🔲 Корпоративные формы + реестр
 ├── 🔲 Видео-запись курса, социальные сети, YouTube
+├── 🔲 Knowledge Graph Integration
+├── 🔲 Multi-Agent Collaboration
+├── 🔲 Continuous Learning Pipeline
+├── 🔲 Explainability Dashboard
+├── 🔲 Performance Optimization
 └── 🔲 Нейроморфное исследование (R)
 ```
 
@@ -634,12 +679,14 @@
 | Метрика | v2.5.0 | v3.0 | v3.1 | Цель |
 |---------|--------|------|------|------|
 | Тесты | 920 | 920 | 970+ | ✓ Достигнуто |
+| Test files | — | — | 127 | ✓ |
 | Покрытие JaCoCo | 82% | 82% | 82% | ≥ 82% ✓ |
 | BRC max steps | — | 5 | 5 | ✓ |
 | RAG top-K | — | 5 | 5 (adaptive) | ✓ |
 | VQ-VAE codebook | — | 256 | 256 | ✓ |
 | MCTS iterations | — | 100 | 100 | ✓ |
 | Agent max iterations | — | 1000 | 1000 | ✓ |
+| Docker services | — | — | 5 | ✓ |
 | K8s resource limits | — | CPU:2, Mem:2Gi | CPU:2, Mem:2Gi | ✓ |
 | K8s probes | — | liveness + readiness | liveness + readiness | ✓ |
 | Pretrained weights | Docker image | PVC (10Gi) | PVC (10Gi) | ✓ |
@@ -647,6 +694,7 @@
 | Исследовано статей | — | — | 20+ | ✓ |
 | SINV идей проанализировано | — | — | 17,835 | ✓ |
 | Новых компонентов | — | — | 5 | ✓ |
+| Research docs | — | — | 4 | ✓ |
 
 ---
 
@@ -659,4 +707,4 @@
 
 ---
 
-*Конец MASTER_PLAN.md — v3.1, 2026-07-13 — Phase 15 Hierarchical Memory complete*
+*Конец MASTER_PLAN.md — v3.1, 2026-07-13 — Phase 15 Hierarchical Memory complete, Docker Compose added*

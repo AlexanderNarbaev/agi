@@ -1,4 +1,4 @@
-# INDEX: Knowledge Base Map — MATRIX v3.0
+# INDEX: Knowledge Base Map — MATRIX v3.1
 | ID | Path | Title | Phase | Topics | Last_Updated |
 |----|------|-------|-------|--------|--------------|
 | L0 | docs/L0_manifesto.md | Манифест и аксиомы | Фундамент | Аксиомы, миссия, антипаттерны | 2026-05-31 |
@@ -25,7 +25,9 @@
 | L21 | docs/L22.md | Партнёрства с университетами | Социум | Исследования, гранты, стажировки, публикации | 2026-06-03 |
 | L22 | docs/L23.md | Корпоративные участники | Социум | Спонсорство, партнёрство, этический аудит | 2026-06-03 |
 | — | docs/LONGTERM_PLAN.md | Долгосрочный план | Все | Мастер-план реализации фаз 1.1–8 | 2026-06-26 |
-| — | docs/MASTER_PLAN.md | Мастер-план L0–L22 | Все | Полный план: 23 документа, 50+ задач | 2026-07-10 |
+| — | docs/MASTER_PLAN.md | Мастер-план L0–L22 | Все | Полный план: 23 документа, 50+ задач | 2026-07-13 |
+| — | docs/API.md | API документация | Инфра | REST API, WebSocket, Telegram команды | 2026-07-13 |
+| — | docs/DEPLOYMENT.md | Гайд по деплою | Инфра | Docker Compose, Minikube, конфигурация | 2026-07-13 |
 | — | docs/PLAYER_GUIDE.md | Гайд по Minecraft-клиенту | Гайд | Установка, лаунчеры, подключение, команды | 2026-06-26 |
 | — | docs/V3_CONFIGURATION.md | v3.0 Конфигурация | Инфра | BRC, RAG, VQ-VAE, MCTS, Agent Loop, tuning | 2026-07-10 |
 | — | icon/matrix-logo.svg | Логотип МАТРИЦЫ | Бренд | SVG-логотип: спираль + нейроны + таблица истинности | 2026-06-03 |
@@ -44,22 +46,34 @@
 | — | CODE_OF_CONDUCT | Кодекс поведения | Социум | Правила, Три запрета, санкции | 2026-06-03 |
 | — | SECURITY | Политика безопасности | Инфра | Уязвимости, disclosure, критические классы | 2026-06-03 |
 | — | .github/ | GitHub-шаблоны | Инфра | Issue/PR templates, CI workflows | 2026-06-03 |
-| — | build.gradle | Gradle сборка | Инфра | Java 25, Pekko 1.6.0, 570 тестов | 2026-06-26 |
+| — | build.gradle | Gradle сборка | Инфра | Java 25, Pekko 1.6.0, 970+ тестов | 2026-07-13 |
 | — | .opencode/config.yml | Конфигурация проекта | Инфра | Модели, агенты, автосохранение | 2026-05-31 |
-| — | WAL.md | Корневой WAL | Инфра | Статус итераций v3.0 | 2026-07-10 |
-| — | wal/GLOBAL_WAL.md | Глобальный WAL | Инфра | Сводка всех фаз v3.0 | 2026-07-10 |
-| — | wal/SESSION_WAL.md | Сессионный WAL | Инфра | Текущая сессия | 2026-07-10 |
-| — | README.md | README проекта | Инфра | Быстрый старт, v3.0, Minecraft сервер | 2026-07-10 |
+| — | WAL.md | Корневой WAL | Инфра | Статус итераций v3.1 | 2026-07-13 |
+| — | wal/GLOBAL_WAL.md | Глобальный WAL | Инфра | Сводка всех фаз v3.1 | 2026-07-13 |
+| — | wal/SESSION_WAL.md | Сессионный WAL | Инфра | Текущая сессия | 2026-07-13 |
+| — | README.md | README проекта | Инфра | Быстрый старт, v3.1, Docker Compose, Minecraft | 2026-07-13 |
+| — | Dockerfile.dev | Docker Dev Build | Инфра | Multi-stage: JDK 25 → JRE 25, Quarkus uber-jar | 2026-07-13 |
+| — | docker-compose.yml | Docker Compose (full) | Инфра | PostgreSQL + Redis + Kafka + matrix-core + Minecraft | 2026-07-13 |
+| — | docker-compose.dev.yml | Docker Compose (dev) | Инфра | Infrastructure only for local development | 2026-07-13 |
 | — | matrix-core/src/.../BrcChain.java | Boolean Reasoning Chain | AI | Multi-step boolean reasoning, convergence | 2026-07-10 |
 | — | matrix-core/src/.../BooleanRag.java | Boolean RAG | AI | Knowledge retrieval, Top-K expansion | 2026-07-10 |
+| — | matrix-core/src/.../HybridBooleanRag.java | Hybrid Boolean RAG | AI | RRF fusion, knee-pruning, two-level filtering | 2026-07-13 |
+| — | matrix-core/src/.../RrfFusion.java | RRF Fusion | AI | Reciprocal Rank Fusion, knee-point pruning | 2026-07-13 |
 | — | matrix-core/src/.../VqVaeProxy.java | VQ-VAE Proxy | AI | Sensor/effector encoding, codebook | 2026-07-10 |
 | — | matrix-core/src/.../MctsTree.java | MCTS Evolution | AI | Monte Carlo tree search, guided mutation | 2026-07-10 |
 | — | matrix-core/src/.../AgentLoop.java | Agent Loop | AI | Observe→Think→Act cycle, convergence | 2026-07-10 |
+| — | matrix-core/src/.../AgentGenome.java | Agent Genome | AI | Genome-based evolution, fitness, safety constraints | 2026-07-13 |
+| — | matrix-core/src/.../StructuralSafetyGuard.java | Structural Safety | Ethics | Process-based guardrails, risk table, tool removal | 2026-07-13 |
+| — | matrix-core/src/.../HierarchicalMemory.java | Hierarchical Memory | Memory | 5-level hierarchy, drift detection, auto-promotion | 2026-07-13 |
+| — | matrix-core/src/.../KafkaEventJournal.java | Kafka Event Journal | Events | Kafka producer/consumer, Avro serialization | 2026-07-13 |
+| — | matrix-core/src/.../NeuronCacheService.java | Redis Neuron Cache | Cache | Redis caching, TTL, brain state | 2026-07-13 |
+| — | matrix-core/src/.../AgentWebSocket.java | Agent WebSocket | API | Real-time agent communication, rate limiting | 2026-07-13 |
+| — | matrix-core/src/.../TelegramBotService.java | Telegram Bot | Dialog | Telegram integration, proactive chat, ethical filter | 2026-07-13 |
+| — | matrix-core/src/.../OpenAIChatResource.java | OpenAI Chat API | API | /v1/chat/completions, streaming, ethical filter | 2026-07-13 |
+| — | matrix-core/src/.../MatrixResource.java | Matrix REST API | API | /api/v1/* endpoints, tenant management | 2026-07-13 |
 | — | infra/k8s/minikube/matrix-core.yaml | K8s v3.0 Manifest | Инфра | BRC, RAG, VQ-VAE, MCTS, Agent env vars | 2026-07-10 |
 | — | scripts/matrix-minikube.sh | Minikube launcher v3.0 | Инфра | 8-stage запуск + pretrained weights | 2026-07-10 |
 | — | docs/research/RESEARCH_SYNTHESIS_2026_Q3.md | Research Synthesis Q3 2026 | Исследования | 20+ Habr articles, 17,835 SINV ideas, 5 new components | 2026-07-13 |
-| — | matrix-core/src/.../AgentGenome.java | Agent Genome | AI | Genome-based evolution, fitness, safety constraints | 2026-07-13 |
-| — | matrix-core/src/.../HybridBooleanRag.java | Hybrid Boolean RAG | AI | RRF fusion, knee-pruning, two-level filtering | 2026-07-13 |
-| — | matrix-core/src/.../RrfFusion.java | RRF Fusion | AI | Reciprocal Rank Fusion, knee-point pruning | 2026-07-13 |
-| — | matrix-core/src/.../StructuralSafetyGuard.java | Structural Safety | Ethics | Process-based guardrails, risk table, tool removal | 2026-07-13 |
-| — | matrix-core/src/.../HierarchicalMemory.java | Hierarchical Memory | Memory | 5-level hierarchy, drift detection, auto-promotion | 2026-07-13 |
+| — | docs/research/SINV_ANALYSIS_REPORT.md | SINV Analysis Report | Исследования | Forum analysis, AI/ML ideas extraction | 2026-07-13 |
+| — | docs/research/AI_AGENT_SYSTEMS_RESEARCH_2026_Q3.md | AI Agent Systems Research | Исследования | Agent architectures, safety patterns | 2026-07-13 |
+| — | docs/research/2026-07-10_AI_ML_Architectures_vs_MPDT.md | AI/ML vs MPDT | Исследования | Architecture comparison, trade-offs | 2026-07-13 |
