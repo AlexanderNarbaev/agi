@@ -1,6 +1,7 @@
 plugins {
     id 'java'
     id 'jacoco'
+    id 'com.github.spotbugs' version '6.1.7'
     id 'io.quarkus' version '3.36.1'
     id 'me.champeau.jmh' version '0.7.3'
     id 'org.graalvm.buildtools.native' version '0.10.4'
@@ -102,6 +103,20 @@ jacocoTestCoverageVerification {
                 'io/matrix/cli/**'
             ])
         }))
+    }
+}
+
+// ─── SpotBugs Static Analysis ───
+spotbugs {
+    effort = com.github.spotbugs.snom.Effort.DEFAULT
+    reportLevel = com.github.spotbugs.snom.Confidence.valueOf('MEDIUM')
+    excludeFilter = file('config/spotbugs/exclude.xml')
+}
+
+spotbugsMain {
+    reports {
+        xml.required = true
+        html.required = true
     }
 }
 

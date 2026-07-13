@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -327,6 +328,92 @@ class BooleanIndexTest {
         latch.await();
         pool.shutdown();
         assertThat(failed.get()).isFalse();
+    }
+
+    // --- Update ---
+
+    @Test
+    void shouldUpdateExistingVector() {
+        index.add("doc1", new long[]{0xFFL});
+        boolean updated = index.update("doc1", new long[]{0x0FL});
+
+        assertThat(updated).isTrue();
+        assertThat(index.get("doc1")).isEqualTo(new long[]{0x0FL});
+    }
+
+    @Test
+    void shouldReturnFalseWhenUpdatingNonexistent() {
+        boolean updated = index.update("missing", new long[]{0xFFL});
+        assertThat(updated).isFalse();
+    }
+
+    @Test
+    void shouldRejectWrongDimensionOnUpdate() {
+        index.add("doc1", new long[]{0xFFL});
+        assertThatThrownBy(() -> index.update("doc1", new long[]{0L, 0L}))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void shouldRejectNullIdOnUpdate() {
+        assertThatThrownBy(() -> index.update(null, new long[]{0L}))
+                .isInstanceOf(NullPointerException.class);
+    }
+
+    @Test
+    void shouldRejectNullVectorOnUpdate() {
+        assertThatThrownBy(() -> index.update("doc1", null))
+                .isInstanceOf(NullPointerException.class);
+    }
+
+    // --- Bulk Add ---
+
+    @Test
+    void shouldBulkAddMultipleVectors() {
+        Map<String, long[]> entries = Map.of(
+                "a", new long[]{0x01L},
+                "b", new long[]{0x02L},
+                "c", new long[]{0x03L}
+        );
+
+        index.bulkAdd(entries);
+
+        assertThat(index.size()).isEqualTo(3);
+        assertThat(index.get("a")).isEqualTo(new long[]{0x01L});
+        assertThat(index.get("b")).isEqualTo(new long[]{0x02L});
+        assertThat(index.get("c")).isEqualTo(new long[]{0x03L});
+    }
+
+    @Test
+    void shouldBulkAddOverwriteExisting() {
+        index.add("existing", new long[]{0xFFL});
+
+        Map<String, long[]> entries = Map.of(
+                "existing", new long[]{0x0FL},
+                "new", new long[]{0x01L}
+        );
+
+        index.bulkAdd(entries);
+
+        assertThat(index.size()).isEqualTo(2);
+        assertThat(index.get("existing")).isEqualTo(new long[]{0x0FL});
+    }
+
+    @Test
+    void shouldRejectBulkAddWithWrongDimensions() {
+        Map<String, long[]> entries = Map.of(
+                "a", new long[]{0x01L},
+                "b", new long[]{0x02L, 0x03L} // wrong dimensions
+        );
+
+        assertThatThrownBy(() -> index.bulkAdd(entries))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void shouldRejectBulkAddWithNullEntries() {
+        assertThatThrownBy(() -> index.bulkAdd(null))
+                .isInstanceOf(NullPointerException.class);
     }
 
     // --- Edge Cases ---
