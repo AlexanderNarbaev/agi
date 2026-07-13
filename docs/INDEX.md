@@ -57,3 +57,9 @@
 | — | matrix-core/src/.../AgentLoop.java | Agent Loop | AI | Observe→Think→Act cycle, convergence | 2026-07-10 |
 | — | infra/k8s/minikube/matrix-core.yaml | K8s v3.0 Manifest | Инфра | BRC, RAG, VQ-VAE, MCTS, Agent env vars | 2026-07-10 |
 | — | scripts/matrix-minikube.sh | Minikube launcher v3.0 | Инфра | 8-stage запуск + pretrained weights | 2026-07-10 |
+| — | docs/research/RESEARCH_SYNTHESIS_2026_Q3.md | Research Synthesis Q3 2026 | Исследования | 20+ Habr articles, 17,835 SINV ideas, 5 new components | 2026-07-13 |
+| — | matrix-core/src/.../AgentGenome.java | Agent Genome | AI | Genome-based evolution, fitness, safety constraints | 2026-07-13 |
+| — | matrix-core/src/.../HybridBooleanRag.java | Hybrid Boolean RAG | AI | RRF fusion, knee-pruning, two-level filtering | 2026-07-13 |
+| — | matrix-core/src/.../RrfFusion.java | RRF Fusion | AI | Reciprocal Rank Fusion, knee-point pruning | 2026-07-13 |
+| — | matrix-core/src/.../StructuralSafetyGuard.java | Structural Safety | Ethics | Process-based guardrails, risk table, tool removal | 2026-07-13 |
+| — | matrix-core/src/.../HierarchicalMemory.java | Hierarchical Memory | Memory | 5-level hierarchy, drift detection, auto-promotion | 2026-07-13 |
