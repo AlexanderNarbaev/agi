@@ -120,19 +120,33 @@ public final class NeuralTextGenerator {
     }
 
     /**
-     * Builds a NeuronLayer from two truth table lists.
+     * Builds a NeuronLayer from two truth table lists using pretrained weights.
      */
     private static NeuronLayer buildLayer(List<TruthTable> tables1, List<TruthTable> tables2, int neuronCount, int k) {
         // Combine tables from two layers
-        java.util.List<DecisionTree> neurons = new java.util.ArrayList<>();
         java.util.List<TruthTable> allTables = new java.util.ArrayList<>(tables1);
         allTables.addAll(tables2);
-        
-        for (int i = 0; i < neuronCount && i < allTables.size(); i++) {
-            TruthTable table = allTables.get(i);
-            // Create a decision tree that evaluates the truth table
-            // For now, use a random tree that will be evolved later
-            neurons.add(DecisionTree.random(k, Math.min(k, 8), new Random(table.hashCode())));
+
+        // Filter tables with matching k and limit to neuronCount
+        List<TruthTable> matching = allTables.stream()
+                .filter(t -> t.k() == k)
+                .limit(neuronCount)
+                .toList();
+
+        if (matching.size() >= neuronCount) {
+            // Use real pretrained weights via NeuronLayer.fromTruthTables
+            return NeuronLayer.fromTruthTables(matching);
+        }
+
+        // Not enough matching tables — fill remaining with random, but use real ones first
+        java.util.List<DecisionTree> neurons = new java.util.ArrayList<>();
+        for (TruthTable table : matching) {
+            neurons.add(PretrainedLoader.truthTableToTree(table));
+        }
+        // Fill remaining with random neurons
+        Random fillRng = new Random(42);
+        for (int i = neurons.size(); i < neuronCount; i++) {
+            neurons.add(DecisionTree.random(k, Math.min(k, 8), fillRng));
         }
         return new NeuronLayer(neurons, k);
     }

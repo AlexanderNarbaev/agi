@@ -192,7 +192,20 @@ public class MatrixResource {
     @POST
     @Path("/truth-table")
     public Map<String, Object> evaluateTruthTable(TruthTableRequest req) {
-        TruthTable table = TruthTable.random(req.k > 0 ? req.k : 4, rng);
+        TruthTable table;
+        if (req.tableBits != null && req.k > 0) {
+            // Use user-provided truth table
+            BitSet bits = new BitSet(1 << req.k);
+            for (int i = 0; i < req.tableBits.length() && i < (1 << req.k); i++) {
+                if (req.tableBits.charAt(i) == '1') {
+                    bits.set(i);
+                }
+            }
+            table = TruthTable.of(req.k, bits);
+        } else {
+            // Create random table if none provided
+            table = TruthTable.random(req.k > 0 ? req.k : 4, rng);
+        }
         int input = req.input & ((1 << table.k()) - 1);
         boolean result = table.evaluate(input);
 
@@ -334,6 +347,7 @@ public class MatrixResource {
     public static class TruthTableRequest {
         public int k;
         public int input;
+        public String tableBits; // Optional: binary string representation of truth table outputs
     }
 
     public static class AgentInferRequest {
