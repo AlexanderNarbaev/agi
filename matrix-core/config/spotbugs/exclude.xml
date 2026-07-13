@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<FindBugsFilter>
+    <!-- Exclude CLI/demo/application classes (mirrors JaCoCo exclusions) -->
+    <Match>
+        <Class name="io.matrix.MatrixApplication"/>
+    </Match>
+    <Match>
+        <Class name="io.matrix.MatrixSimulation"/>
+    </Match>
+    <Match>
+        <Class name="io.matrix.SystemDemo"/>
+    </Match>
+    <Match>
+        <Class name="io.matrix.MinecraftExperiment"/>
+    </Match>
+    <Match>
+        <Class name="io.matrix.MatrixTopCommand"/>
+    </Match>
+    <Match>
+        <Package name="io.matrix.cli"/>
+    </Match>
+    <!-- Exclude generated Avro classes -->
+    <Match>
+        <Package name="~io\.matrix\.events\.avro\..*"/>
+    </Match>
+    <!-- Suppress known Pekko actor patterns -->
+    <Match>
+        <Bug pattern="EI_EXPOSE_REP,EI_EXPOSE_REP2"/>
+        <Package name="~io\.matrix\.cluster\..*"/>
+    </Match>
+</FindBugsFilter>
