@@ -180,13 +180,23 @@
 **Статус:** GraalVM native-image — blocked on Quarkus 3.37
 **Дальнейшие шаги:** Ждём Quarkus 3.37 с Java 25 native support
 
-## Phase 8: Multithreading 📋 Planned
-**Статус:** Virtual threads + structured concurrency
-**Дальнейшие шаги:** Реализация после native compilation
+## Phase 8: Multithreading ✅
+**Статус:** Virtual threads (JEP 444) интегрированы — миграция завершена.
+**Файлы:** `agent/AgentLoop.java`, `concurrent/AsyncAgentLoop.java`, `concurrent/ParallelEvolution.java`, `concurrent/ThreadSafeNeuronLayer.java`, `evolution/EvolutionLoop.java`, `agent/AgentBrainService.java`, `nas/ArchitectureEvaluator.java`, `training/MatrixTrainingEngine.java`
+**Изменения:**
+- ForkJoinPool → Executors.newVirtualThreadPerTaskExecutor() во всех компонентах
+- ReentrantReadWriteLock → StampedLock (ThreadSafeNeuronLayer)
+- synchronized → ReentrantLock (AgentBrainService)
+- Random → ThreadLocalRandom (AgentBrainService.act)
+- EvolutionLoop.runParallel() — параллельная оценка 4 популяций на virtual threads
+**Тесты:** Все concurrent/evolution/agent/NAS/RAG/MCTS/VQ-VAE/compression тесты проходят.
+**Дальнейшие шаги:** StructuredTaskScope при выходе из preview в Java.
 
-## Phase 9: Integration Testing 📋 Planned
-**Статус:** E2E тесты всех v3.0 компонентов
-**Дальнейшие шаги:** После multithreading
+## Phase 9: Integration Testing ✅
+**Статус:** Интеграционные тесты v3.0 компонентов расширены.
+**Новые файлы:** `integration/BrcMctsIntegrationTest.java` (5 тестов), `integration/RagAgentLoopIntegrationTest.java` (5 тестов)
+**Покрытие:** 14 integration/E2E файлов, ~82 тестовых метода.
+**Дальнейшие шаги:** ConcurrentAgentLoopTest, multi-instance кластерные тесты.
 
 ## Phase 10: Deployment & Documentation ✅
 **Статус:** K8s manifests обновлены, документация v3.0 создана, Docker Compose создан
@@ -653,10 +663,10 @@
 ├── ✅ Docker Compose — full stack (PostgreSQL + Redis + Kafka + matrix-core + Minecraft)
 └── ✅ v3.1: 970+ тестов, research synthesis report, 5 new components, Docker
 
-2026 Q3+ (осталось):
+2026 Q3+ (в работе):
+├── ✅ Phase 8: Virtual Threads — ForkJoinPool→VT, ReentrantReadWriteLock→StampedLock, 7 files
+├── ✅ Phase 9: Integration Testing — BrcMctsIntegrationTest, RagAgentLoopIntegrationTest, 10 new tests
 ├── 🔲 Phase 7: GraalVM 25 native compilation (ждём Quarkus 3.37)
-├── 🔲 Phase 8: Multithreading (virtual threads)
-├── 🔲 Phase 9: Integration testing (E2E v3.0)
 ├── 🔲 Managed Matrix MVP
 ├── 🔲 Сертификация «Спираль-совместимости»
 ├── 🔲 Патентная стратегия
