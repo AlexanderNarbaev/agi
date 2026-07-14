@@ -680,21 +680,25 @@
 ├── ✅ L.4: Boolean Explainability — SHAP-style feature importance (8 tests)
 ├── ✅ L.5: BooleanCompressor SIMD — Vector API pack/unpack (19 tests)
 ├── 🔲 Phase 7: GraalVM 25 native compilation (ждём Quarkus 3.37)
-├── 🔲 Phase C: GraphRAG, MCP protocol, Meta-harness optimization
-├── 🔲 Managed Matrix MVP
+├── ✅ Phase C: Meta-harness — MetaHarnessOptimizer (18 tests) + MatrixLifecycleManager (18 tests)
+├── ✅ Managed Matrix MVP — MatrixLifecycleManager: init→train→deploy→monitor→retrain
 ├── 🔲 Сертификация «Спираль-совместимости»
 └── 🔲 L.1-L.5: Knowledge Graph, Multi-Agent, Continuous Learning, Explainability, Perf
 ```
 
 ---
 
-## КЛЮЧЕВЫЕ МЕТРИКИ (v3.1)
+## КЛЮЧЕВЫЕ МЕТРИКИ (v3.16)
 
-| Метрика | v2.5.0 | v3.0 | v3.1 | Цель |
-|---------|--------|------|------|------|
-| Тесты | 920 | 920 | 970+ | ✓ Достигнуто |
-| Test files | — | — | 127 | ✓ |
-| Покрытие JaCoCo | 82% | 82% | 82% | ≥ 82% ✓ |
+| Метрика | v2.5.0 | v3.0 | v3.1 | v3.16 | Цель |
+|---------|--------|------|------|-------|------|
+| Тесты | 920 | 920 | 970+ | 2315+ | ✓ Достигнуто |
+| Test files | — | — | 127 | 194 | ✓ |
+| Prod files | — | — | 168 | 225 | ✓ |
+| Покрытие JaCoCo | 82% | 82% | 82% | 82% | ≥ 82% ✓ |
+| Компоненты | — | 5 | 10 | 27 | ✓ |
+| L.1-L.5 | — | — | — | ✅ Все 5 | ✓ |
+| Phase A+B+C | — | — | — | ✅ A+B, C в работе | ✓ |
 | BRC max steps | — | 5 | 5 | ✓ |
 | RAG top-K | — | 5 | 5 (adaptive) | ✓ |
 | VQ-VAE codebook | — | 256 | 256 | ✓ |
