@@ -1,5 +1,6 @@
 package io.matrix.rag;
 
+import io.matrix.knowledge.KnowledgeGraphStore;
 import io.matrix.noosphere.KnowledgeIndex;
 
 import java.util.*;
@@ -9,11 +10,13 @@ import java.util.*;
  *
  * <p>Extends the basic Boolean RAG with:
  * <ul>
- *   <li><b>Hybrid search:</b> combines dense (boolean vector) + sparse (keyword) retrieval</li>
+ *   <li><b>Hybrid search:</b> combines dense (boolean vector) + sparse (keyword) + graph (entity-relation) retrieval</li>
  *   <li><b>RRF fusion:</b> merges results from multiple strategies without weight tuning</li>
  *   <li><b>Adaptive context:</b> knee-point pruning replaces static top-K</li>
  *   <li><b>Two-level filtering:</b> strong vs borderline matches</li>
  *   <li><b>Structure-aware chunking:</b> breadcrumb injection for context</li>
+ *   <li><b>Exact-term guard:</b> verification of technical terms in context</li>
+ *   <li><b>Graph retrieval:</b> entity-relation graph traversal for multi-hop reasoning</li>
  * </ul>
  *
  * <p>Ref: Research Synthesis 2026-Q3 §1.1, §1.2, §1.3
@@ -22,6 +25,7 @@ public final class HybridBooleanRag {
 
     private final BooleanIndex index;
     private final KnowledgeIndex knowledgeIndex;
+    private final KnowledgeGraphStore knowledgeGraphStore;
     private final int topK;
     private final boolean adaptiveContext;
     private final double kneeSensitivity;
@@ -31,6 +35,7 @@ public final class HybridBooleanRag {
     private HybridBooleanRag(Builder builder) {
         this.index = Objects.requireNonNull(builder.index, "index");
         this.knowledgeIndex = builder.knowledgeIndex;
+        this.knowledgeGraphStore = builder.knowledgeGraphStore;
         this.topK = builder.topK;
         this.adaptiveContext = builder.adaptiveContext;
         this.kneeSensitivity = builder.kneeSensitivity;
@@ -64,11 +69,20 @@ public final class HybridBooleanRag {
             sparseConverted = sparseSearch(query, topK * 2);
         }
 
+        // Step 2.5: Graph retrieval (entity-relation traversal, if KnowledgeGraphStore available)
+        List<RrfFusion.SearchHit> graphConverted = Collections.emptyList();
+        if (knowledgeGraphStore != null) {
+            graphConverted = graphSearch(topK * 2);
+        }
+
         // Step 3: RRF Fusion
         List<List<RrfFusion.SearchHit>> allResults = new ArrayList<>();
         allResults.add(denseConverted);
         if (!sparseConverted.isEmpty()) {
             allResults.add(sparseConverted);
+        }
+        if (!graphConverted.isEmpty()) {
+            allResults.add(graphConverted);
         }
         List<RrfFusion.FusedResult> fused = RrfFusion.fuse(allResults);
 
@@ -134,6 +148,29 @@ public final class HybridBooleanRag {
                     .map(r -> new RrfFusion.SearchHit(
                             r.entryId().toString(), r.relevance(), "sparse",
                             Map.of("fnl", r.fnl().name())))
+                    .toList();
+        } catch (Exception e) {
+            return Collections.emptyList();
+        }
+    }
+
+    /**
+     * Performs graph-based retrieval via entity-relation traversal.
+     * Returns top-N entities ranked by degree centrality as retrieval hits.
+     */
+    private List<RrfFusion.SearchHit> graphSearch(int limit) {
+        if (knowledgeGraphStore == null) return Collections.emptyList();
+
+        try {
+            List<String> topIds = knowledgeGraphStore.topCentral(limit);
+            if (topIds.isEmpty()) return Collections.emptyList();
+
+            return topIds.stream()
+                    .map(id -> new RrfFusion.SearchHit(
+                            id,
+                            knowledgeGraphStore.centrality(id),
+                            "graph",
+                            Map.of("source", "knowledge-graph")))
                     .toList();
         } catch (Exception e) {
             return Collections.emptyList();
@@ -210,6 +247,7 @@ public final class HybridBooleanRag {
     public static final class Builder {
         private BooleanIndex index;
         private KnowledgeIndex knowledgeIndex;
+        private KnowledgeGraphStore knowledgeGraphStore;
         private int topK = 5;
         private boolean adaptiveContext = true;
         private double kneeSensitivity = 0.5;
@@ -223,6 +261,11 @@ public final class HybridBooleanRag {
 
         public Builder knowledgeIndex(KnowledgeIndex knowledgeIndex) {
             this.knowledgeIndex = knowledgeIndex;
+            return this;
+        }
+
+        public Builder knowledgeGraphStore(KnowledgeGraphStore store) {
+            this.knowledgeGraphStore = store;
             return this;
         }
 

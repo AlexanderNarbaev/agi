@@ -95,3 +95,7 @@
 | — | matrix-core/src/.../AgentTrajectoryRecorder.java | Trajectory Recorder | AI | Record/Replay agent trajectories as JSONL for testing/evolution | 2026-07-14 |
 | — | matrix-core/.../AgentTrajectoryRecorderTest.java | Trajectory Recorder Test | Тесты | 36 tests for trajectory recording/replay | 2026-07-14 |
 | — | matrix-core/.../GuardedHybridRagTest.java | Guarded Hybrid RAG Test | Тесты | 9 tests for ExactTermGuard integration with RAG | 2026-07-14 |
+| — | matrix-core/src/.../KnowledgeGraphStore.java | Knowledge Graph Store | AI | Entity-relation graph: BFS traversal, centrality, JSON | 2026-07-14 |
+| — | matrix-core/.../KnowledgeGraphStoreTest.java | Knowledge Graph Store Test | Тесты | 22 tests for entity/relation/traversal/path/centrality | 2026-07-14 |
+| — | matrix-core/.../EvolutionLoopParetoTest.java | Pareto Evolution Test | Тесты | 8 tests for multi-objective Pareto evolution | 2026-07-14 |
+| — | matrix-core/.../PipelineIntegrationTest.java | Pipeline Integration Test | Тесты | 5 tests: GuardedRAG→AgentLoop→TrajectoryRecorder E2E | 2026-07-14 |
