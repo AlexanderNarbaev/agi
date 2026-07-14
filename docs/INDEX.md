@@ -107,3 +107,9 @@
 | — | matrix-core/.../ContinuousLearningLoopTest.java | Continuous Learning Test | Тесты | 14 tests for feedback collection, batch retrain, fitness tracking | 2026-07-14 |
 | — | matrix-core/src/.../SimdBooleanCompressor.java | SIMD Boolean Compressor | Оптимизация | Vector API boolean[]→long[] pack/unpack, batch, BitSet | 2026-07-14 |
 | — | matrix-core/.../SimdBooleanCompressorTest.java | SIMD Compressor Test | Тесты | 19 tests for SIMD pack/unpack roundtrip, edge cases | 2026-07-14 |
+| — | matrix-core/src/.../MetaHarnessOptimizer.java | Meta-Harness Optimizer | AI | Genetic outer loop: optimizes agent config (tools, memory, safety) | 2026-07-14 |
+| — | matrix-core/.../MetaHarnessOptimizerTest.java | Meta-Harness Optimizer Test | Тесты | 18 tests for genetic config optimization | 2026-07-14 |
+| — | matrix-core/src/.../MatrixLifecycleManager.java | Lifecycle Manager | AI | Managed MVP: init→train→deploy→monitor→retrain→shutdown | 2026-07-14 |
+| — | matrix-core/.../MatrixLifecycleManagerTest.java | Lifecycle Manager Test | Тесты | 18 tests for agent lifecycle phases and transitions | 2026-07-14 |
+| — | matrix-core/.../L1toL5IntegrationTest.java | L.1-L.5 Integration Test | Тесты | 3 tests: KG→Explain→SIMD + MultiAgent→ContinuousLearning | 2026-07-14 |
+| — | matrix-core/.../KnowledgeGraphRagIntegrationTest.java | KG+RAG Integration Test | Тесты | 4 tests: graph store as third RAG source | 2026-07-14 |
