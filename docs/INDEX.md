@@ -76,4 +76,11 @@
 | — | docs/research/RESEARCH_SYNTHESIS_2026_Q3.md | Research Synthesis Q3 2026 | Исследования | 20+ Habr articles, 17,835 SINV ideas, 5 new components | 2026-07-13 |
 | — | docs/research/SINV_ANALYSIS_REPORT.md | SINV Analysis Report | Исследования | Forum analysis, AI/ML ideas extraction | 2026-07-13 |
 | — | docs/research/AI_AGENT_SYSTEMS_RESEARCH_2026_Q3.md | AI Agent Systems Research | Исследования | Agent architectures, safety patterns | 2026-07-13 |
-| — | docs/research/2026-07-10_AI_ML_Architectures_vs_MPDT.md | AI/ML vs MPDT | Исследования | Architecture comparison, trade-offs | 2026-07-13 |
+| — | matrix-core/src/.../VectorizedEvaluator.java | Vector API SIMD | Оптимизация | jdk.incubator.vector — parallel boolean evaluation | 2026-07-14 |
+| — | matrix-core/src/.../SimdEvaluator.java | SIMD Batch Eval | Оптимизация | SIMD-friendly block processing, benchmarks | 2026-07-10 |
+| — | matrix-core/src/.../AsyncAgentLoop.java | Async Agent Loop | Concurrency | Virtual-thread-based async AgentLoop | 2026-07-14 |
+| — | matrix-core/src/.../ParallelEvolution.java | Parallel Evolution | Concurrency | Virtual-thread parallel population evaluation | 2026-07-14 |
+| — | matrix-core/src/.../ThreadSafeNeuronLayer.java | Thread-Safe Layer | Concurrency | StampedLock — concurrent neuron evaluation | 2026-07-14 |
+| — | matrix-core/.../ConcurrentAgentLoopIntegrationTest.java | Concurrent Agent Test | Тесты | Parallel loops, cancel, shared brain | 2026-07-14 |
+| — | matrix-core/.../BrcMctsIntegrationTest.java | BRC+MCTS Test | Тесты | BRC reasoning as MCTS reward signal | 2026-07-14 |
+| — | matrix-core/.../RagAgentLoopIntegrationTest.java | RAG+Agent Test | Тесты | RAG knowledge → agent reasoning pipeline | 2026-07-14 |
