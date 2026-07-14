@@ -92,3 +92,6 @@
 | — | matrix-core/.../ExactTermGuardTest.java | Exact-Term Guard Test | Тесты | 18 tests for exact-term verification | 2026-07-14 |
 | — | matrix-core/.../AgentResponseTest.java | Agent Response Test | Тесты | 23 tests for agent response timing/sources | 2026-07-14 |
 | — | matrix-core/.../ParetoFitnessTest.java | Pareto Fitness Test | Тесты | 20 tests for Pareto dominance/selection | 2026-07-14 |
+| — | matrix-core/src/.../AgentTrajectoryRecorder.java | Trajectory Recorder | AI | Record/Replay agent trajectories as JSONL for testing/evolution | 2026-07-14 |
+| — | matrix-core/.../AgentTrajectoryRecorderTest.java | Trajectory Recorder Test | Тесты | 36 tests for trajectory recording/replay | 2026-07-14 |
+| — | matrix-core/.../GuardedHybridRagTest.java | Guarded Hybrid RAG Test | Тесты | 9 tests for ExactTermGuard integration with RAG | 2026-07-14 |
