@@ -451,4 +451,19 @@ class AgentLoopTest {
         var loop = new AgentLoop(brain, sensor, effector, drivers, scheduler, -5);
         assertThat(loop.convergenceThreshold()).isEqualTo(1);
     }
+
+    @Test
+    void runWithTimingShouldReturnValidAgentResponse() {
+        var loop = new AgentLoop(brain, sensor, effector, drivers, scheduler, 5);
+
+        AgentResponse response = loop.runWithTiming(5);
+
+        assertThat(response.requestId()).isNotNull();
+        assertThat(response.answer()).isNotEmpty();
+        assertThat(response.answer()).contains("Completed", "ticks");
+        assertThat(response.durationMs()).isGreaterThanOrEqualTo(0);
+        assertThat(response.timings()).isNotNull();
+        assertThat(response.timings().retrievalMs()).isGreaterThanOrEqualTo(0);
+        assertThat(response.sources()).isNotEmpty();
+    }
 }
