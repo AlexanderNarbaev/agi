@@ -61,6 +61,11 @@ tasks.withType(Test) {
     if (!project.hasProperty('includeIntegration')) {
         exclude '**/integration/**'
     }
+    jvmArgs '--add-modules=jdk.incubator.vector'
+}
+
+tasks.withType(JavaCompile) {
+    options.compilerArgs.add('--add-modules=jdk.incubator.vector')
 }
 
 jacocoTestReport {
