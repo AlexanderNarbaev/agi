@@ -295,16 +295,41 @@ class AgentLoopTest {
     }
 
     @Test
-    void runShouldNotAllowConcurrentExecution() {
-        var loop = new AgentLoop(brain, sensor, effector, drivers, scheduler, 100);
+    void runShouldNotAllowConcurrentExecution() throws Exception {
+        // Use a latch to ensure the async run is still executing
+        // when we attempt the second (blocking) run. Virtual threads
+        // are fast enough to complete before the assertion otherwise.
+        CountDownLatch startedLatch = new CountDownLatch(1);
+        CountDownLatch blockedLatch = new CountDownLatch(1);
 
-        // Start first run
-        CompletableFuture<List<AgentState>> f1 = loop.runAsync(100);
+        var blockingSensor = new AgentLoop.Sensor() {
+            @Override
+            public long read() {
+                startedLatch.countDown();
+                try {
+                    blockedLatch.await();
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
+                return 0xABCDEL;
+            }
+        };
 
-        // Second run should throw
+        var loop = new AgentLoop(brain, blockingSensor, effector, drivers, scheduler, 200);
+
+        // Start async run
+        CompletableFuture<List<AgentState>> f1 = loop.runAsync(200);
+
+        // Wait until at least one tick has started
+        assertThat(startedLatch.await(5, TimeUnit.SECONDS)).isTrue();
+
+        // Now try to start a second run — should throw
         assertThatThrownBy(() -> loop.run(10))
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining("already running");
+
+        // Unblock the first run
+        blockedLatch.countDown();
 
         try {
             f1.get(5, TimeUnit.SECONDS);
