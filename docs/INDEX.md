@@ -86,3 +86,9 @@
 | — | matrix-core/.../ConcurrentAgentLoopIntegrationTest.java | Concurrent Agent Test | Тесты | Parallel loops, cancel, shared brain | 2026-07-14 |
 | — | matrix-core/.../BrcMctsIntegrationTest.java | BRC+MCTS Test | Тесты | BRC reasoning as MCTS reward signal | 2026-07-14 |
 | — | matrix-core/.../RagAgentLoopIntegrationTest.java | RAG+Agent Test | Тесты | RAG knowledge → agent reasoning pipeline | 2026-07-14 |
+| — | matrix-core/src/.../ExactTermGuard.java | Exact-Term Guard | AI | Prevents RAG hallucination — verifies technical terms in context | 2026-07-14 |
+| — | matrix-core/src/.../AgentResponse.java | Agent Response | AI | Observable response: request_id, timing breakdown, sources | 2026-07-14 |
+| — | matrix-core/src/.../ParetoFitness.java | Pareto Fitness | AI | Multi-objective evolution: quality+robustness+latency+complexity | 2026-07-14 |
+| — | matrix-core/.../ExactTermGuardTest.java | Exact-Term Guard Test | Тесты | 18 tests for exact-term verification | 2026-07-14 |
+| — | matrix-core/.../AgentResponseTest.java | Agent Response Test | Тесты | 23 tests for agent response timing/sources | 2026-07-14 |
+| — | matrix-core/.../ParetoFitnessTest.java | Pareto Fitness Test | Тесты | 20 tests for Pareto dominance/selection | 2026-07-14 |
