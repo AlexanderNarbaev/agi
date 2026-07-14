@@ -73,9 +73,11 @@
 | — | matrix-core/src/.../MatrixResource.java | Matrix REST API | API | /api/v1/* endpoints, tenant management | 2026-07-13 |
 | — | infra/k8s/minikube/matrix-core.yaml | K8s v3.0 Manifest | Инфра | BRC, RAG, VQ-VAE, MCTS, Agent env vars | 2026-07-10 |
 | — | scripts/matrix-minikube.sh | Minikube launcher v3.0 | Инфра | 8-stage запуск + pretrained weights | 2026-07-10 |
-| — | docs/research/RESEARCH_SYNTHESIS_2026_Q3.md | Research Synthesis Q3 2026 | Исследования | 20+ Habr articles, 17,835 SINV ideas, 5 new components | 2026-07-13 |
+| — | docs/research/RESEARCH_SYNTHESIS_2026_Q3.md | Research Synthesis Q3 2026 v1 | Исследования | 20+ Habr articles, 17,835 SINV ideas, 5 new components (superseded by v2) | 2026-07-13 |
+| — | docs/research/RESEARCH_SYNTHESIS_2026_Q3_v2.md | Research Synthesis Q3 2026 v2 | Исследования | 21 articles, 10 patterns, 3-phase roadmap, code patterns, risk analysis | 2026-07-14 |
 | — | docs/research/SINV_ANALYSIS_REPORT.md | SINV Analysis Report | Исследования | Forum analysis, AI/ML ideas extraction | 2026-07-13 |
-| — | docs/research/AI_AGENT_SYSTEMS_RESEARCH_2026_Q3.md | AI Agent Systems Research | Исследования | Agent architectures, safety patterns | 2026-07-13 |
+| — | docs/research/AI_AGENT_SYSTEMS_RESEARCH_2026_Q3.md | AI Agent Systems Research | Исследования | Agent architectures, safety patterns (14 ArXiv papers) | 2026-07-13 |
+| — | docs/research/2026-07-10_AI_ML_Architectures_vs_MPDT.md | MPDT vs ML Architecture Audit | Исследования | 12-domain comparison, paradigm analysis, 9 recommendations | 2026-07-10 |
 | — | matrix-core/src/.../VectorizedEvaluator.java | Vector API SIMD | Оптимизация | jdk.incubator.vector — parallel boolean evaluation | 2026-07-14 |
 | — | matrix-core/src/.../SimdEvaluator.java | SIMD Batch Eval | Оптимизация | SIMD-friendly block processing, benchmarks | 2026-07-10 |
 | — | matrix-core/src/.../AsyncAgentLoop.java | Async Agent Loop | Concurrency | Virtual-thread-based async AgentLoop | 2026-07-14 |
