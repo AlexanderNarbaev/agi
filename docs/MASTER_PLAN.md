@@ -674,6 +674,8 @@
 │   ├── ✅ AgentTrajectoryRecorder — Record/Replay trajectories (36 tests)
 │   ├── ✅ AgentLoop.runWithTiming() — observable agent execution
 │   └── ✅ PipelineIntegrationTest — full pipeline E2E (5 tests)
+├── ✅ L.2: Multi-Agent Consensus — MultiAgentLoop (16 tests)
+├── ✅ L.4: Boolean Explainability — SHAP-style feature importance (8 tests)
 ├── 🔲 Phase 7: GraalVM 25 native compilation (ждём Quarkus 3.37)
 ├── 🔲 Phase C: GraphRAG, MCP protocol, Meta-harness optimization
 ├── 🔲 Managed Matrix MVP

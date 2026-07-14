@@ -99,3 +99,7 @@
 | — | matrix-core/.../KnowledgeGraphStoreTest.java | Knowledge Graph Store Test | Тесты | 22 tests for entity/relation/traversal/path/centrality | 2026-07-14 |
 | — | matrix-core/.../EvolutionLoopParetoTest.java | Pareto Evolution Test | Тесты | 8 tests for multi-objective Pareto evolution | 2026-07-14 |
 | — | matrix-core/.../PipelineIntegrationTest.java | Pipeline Integration Test | Тесты | 5 tests: GuardedRAG→AgentLoop→TrajectoryRecorder E2E | 2026-07-14 |
+| — | matrix-core/src/.../MultiAgentLoop.java | Multi-Agent Loop | AI | Byzantine/Weighted/Debate consensus across N agent instances | 2026-07-14 |
+| — | matrix-core/.../MultiAgentLoopTest.java | Multi-Agent Loop Test | Тесты | 16 tests for multi-agent consensus | 2026-07-14 |
+| — | matrix-core/src/.../BooleanExplainability.java | Boolean Explainability | AI | SHAP-style feature importance for Boolean neuron decisions | 2026-07-14 |
+| — | matrix-core/.../BooleanExplainabilityTest.java | Boolean Explainability Test | Тесты | 8 tests for SHAP values and feature importance | 2026-07-14 |
