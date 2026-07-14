@@ -115,3 +115,4 @@
 | — | matrix-core/.../KnowledgeGraphRagIntegrationTest.java | KG+RAG Integration Test | Тесты | 4 tests: graph store as third RAG source | 2026-07-14 |
 | — | matrix-core/src/.../MatrixMcpServer.java | MCP Server | API | MCP protocol server: tools (query/act/explain/traverse) + resources | 2026-07-14 |
 | — | matrix-core/.../MatrixMcpServerTest.java | MCP Server Test | Тесты | 26 tests for MCP tools/resources/dispatch | 2026-07-14 |
+| — | matrix-core/.../McpLifecycleIntegrationTest.java | MCP+Lifecycle Integration Test | Тесты | 4 tests: MCP server orchestrating agent lifecycle | 2026-07-14 |
