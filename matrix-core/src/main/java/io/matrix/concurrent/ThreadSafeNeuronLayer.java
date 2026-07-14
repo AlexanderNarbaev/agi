@@ -9,8 +9,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.concurrent.locks.ReadWriteLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.concurrent.locks.StampedLock;
 
 /**
  * Thread-safe wrapper around {@link NeuronLayer}.
@@ -18,19 +17,20 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  * <p>Provides concurrent access to neuron evaluation with:
  * <ul>
  *   <li>{@link ConcurrentHashMap} for neuron result caching</li>
- *   <li>{@link ReadWriteLock} for concurrent {@link #evaluate(BitSet)} calls</li>
+ *   <li>{@link StampedLock} for concurrent {@link #evaluate(BitSet)} calls —
+ *       virtual-thread-friendly: park-on-contention rather than blocking carrier threads</li>
  *   <li>{@link AtomicLong} for metrics counters (evaluation count, cache hits)</li>
  * </ul>
  *
  * <p>All public methods are thread-safe and can be called concurrently from
  * multiple threads without external synchronization.
  *
- * <p>Ref: Phase8 — Multithreading & Concurrency
+ * <p>Ref: Phase8 — Multithreading & Concurrency (StampedLock for virtual threads)
  */
 public final class ThreadSafeNeuronLayer {
 
     private final NeuronLayer delegate;
-    private final ReadWriteLock rwLock = new ReentrantReadWriteLock();
+    private final StampedLock lock = new StampedLock();
     private final ConcurrentHashMap<Integer, BitSet> evaluateCache = new ConcurrentHashMap<>();
     private final AtomicLong evaluateCount = new AtomicLong(0);
     private final AtomicLong cacheHitCount = new AtomicLong(0);
@@ -74,7 +74,19 @@ public final class ThreadSafeNeuronLayer {
             return (BitSet) cached.clone();
         }
 
-        rwLock.readLock().lock();
+        // Use optimistic read first (no lock, fastest path)
+        long stamp = lock.tryOptimisticRead();
+        if (stamp != 0L) {
+            cached = evaluateCache.get(cacheKey);
+            if (cached != null) {
+                cacheHitCount.incrementAndGet();
+                evaluateCount.incrementAndGet();
+                if (lock.validate(stamp)) return (BitSet) cached.clone();
+            }
+        }
+
+        // Fallback to read lock
+        stamp = lock.readLock();
         try {
             // Double-check after acquiring lock
             cached = evaluateCache.get(cacheKey);
@@ -90,20 +102,20 @@ public final class ThreadSafeNeuronLayer {
             evaluateCache.put(cacheKey, (BitSet) result.clone());
             return result;
         } finally {
-            rwLock.readLock().unlock();
+            lock.unlockRead(stamp);
         }
     }
 
     /**
      * Returns an unmodifiable view of the neurons in this layer.
-     * Acquires a read lock to ensure visibility.
+     * Acquires an optimistic read (validated) to ensure visibility.
      */
     public List<DecisionTree> neurons() {
-        rwLock.readLock().lock();
+        long stamp = lock.readLock();
         try {
             return delegate.neurons();
         } finally {
-            rwLock.readLock().unlock();
+            lock.unlockRead(stamp);
         }
     }
 
@@ -126,11 +138,11 @@ public final class ThreadSafeNeuronLayer {
      * Acquires a read lock to ensure consistent state during serialization.
      */
     public byte[] toAvroBytes() {
-        rwLock.readLock().lock();
+        long stamp = lock.readLock();
         try {
             return delegate.toAvroBytes();
         } finally {
-            rwLock.readLock().unlock();
+            lock.unlockRead(stamp);
         }
     }
 
@@ -138,11 +150,11 @@ public final class ThreadSafeNeuronLayer {
      * Clears the evaluation cache. Useful after layer mutation.
      */
     public void invalidateCache() {
-        rwLock.writeLock().lock();
+        long stamp = lock.writeLock();
         try {
             evaluateCache.clear();
         } finally {
-            rwLock.writeLock().unlock();
+            lock.unlockWrite(stamp);
         }
     }
 

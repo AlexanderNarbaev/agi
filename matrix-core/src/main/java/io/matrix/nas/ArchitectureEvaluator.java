@@ -23,7 +23,7 @@ import java.util.concurrent.Executors;
  *   <li><b>Memory</b> — parameter count (inversely scored)</li>
  * </ul>
  *
- * <p>Supports parallel evaluation via Pekko-style thread pool or
+ * <p>Supports parallel evaluation via virtual threads or
  * {@link CompletableFuture} for batch evaluation.
  *
  * <p>Thread-safe: uses per-evaluation local state; the shared
@@ -65,7 +65,7 @@ public final class ArchitectureEvaluator {
                                   double accuracyWeight, double latencyWeight,
                                   double memoryWeight, Random rng) {
         this(testPatternCount, inputBits, accuracyWeight, latencyWeight, memoryWeight, rng,
-                Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors()));
+                Executors.newVirtualThreadPerTaskExecutor());
     }
 
     /**
