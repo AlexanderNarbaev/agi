@@ -14,7 +14,7 @@ import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.Executor;
-import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -23,17 +23,18 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 
 /**
- * Async version of {@link AgentLoop} using {@link CompletableFuture}.
+ * Async version of {@link AgentLoop} using {@link CompletableFuture}
+ * backed by virtual threads (JEP 444).
  *
  * <p>Provides a non-blocking Observe → Think → Act cycle with:
  * <ul>
- *   <li>Non-blocking execution via CompletableFuture</li>
+ *   <li>Non-blocking execution via CompletableFuture on virtual threads</li>
  *   <li>Configurable timeout per tick and total execution</li>
  *   <li>Cancellation support with graceful shutdown</li>
  *   <li>CompletionStage chaining for reactive pipelines</li>
  * </ul>
  *
- * <p>Ref: Phase8 — Multithreading & Concurrency
+ * <p>Ref: Phase8 — Multithreading & Concurrency (virtual threads)
  */
 public final class AsyncAgentLoop {
 
@@ -45,12 +46,12 @@ public final class AsyncAgentLoop {
     private final AtomicLong completedTicks = new AtomicLong(0);
 
     /**
-     * Creates an async agent loop with default ForkJoinPool executor.
+     * Creates an async agent loop with a virtual-thread-per-task executor.
      *
      * @param delegate the underlying AgentLoop
      */
     public AsyncAgentLoop(AgentLoop delegate) {
-        this(delegate, ForkJoinPool.commonPool());
+        this(delegate, Executors.newVirtualThreadPerTaskExecutor());
     }
 
     /**

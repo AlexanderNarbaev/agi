@@ -18,7 +18,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
-import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -50,6 +50,10 @@ public final class AgentLoop {
 
     /** Default max consecutive identical actions before declaring convergence. */
     public static final int DEFAULT_CONVERGENCE_THRESHOLD = 5;
+
+    /** Virtual-thread-per-task executor for async execution (lightweight, JVM-managed). */
+    private static final Executor VIRTUAL_THREAD_EXECUTOR =
+            Executors.newVirtualThreadPerTaskExecutor();
 
     /** Sensor function: reads environment → sensor bits. */
     @FunctionalInterface
@@ -222,12 +226,12 @@ public final class AgentLoop {
     // ── Asynchronous execution ──
 
     /**
-     * Runs the agent loop asynchronously using the default ForkJoinPool.
+     * Runs the agent loop asynchronously using a virtual-thread-per-task executor.
      *
      * @return CompletableFuture that completes when the loop converges
      */
     public CompletableFuture<List<AgentState>> runAsync(int maxIterations) {
-        return runAsync(maxIterations, ForkJoinPool.commonPool());
+        return runAsync(maxIterations, VIRTUAL_THREAD_EXECUTOR);
     }
 
     /**

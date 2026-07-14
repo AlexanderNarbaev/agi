@@ -13,25 +13,30 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ForkJoinPool;
-import java.util.concurrent.RecursiveTask;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
- * Parallel evolution engine using {@link ForkJoinPool} for concurrent
- * population evaluation with work-stealing load balancing.
+ * Parallel evolution engine using virtual threads (JEP 444) for concurrent
+ * population evaluation. Each of the 4 directional populations (N/S/W/E)
+ * is evaluated in its own lightweight virtual thread.
  *
  * <p>Key features:
  * <ul>
- *   <li>ForkJoinPool with configurable parallelism for population evaluation</li>
- *   <li>Work-stealing algorithm: each population evaluation is a RecursiveTask</li>
- *   <li>{@link CompletableFuture} for async results</li>
+ *   <li>Virtual-thread-per-task executor for population evaluation</li>
+ *   <li>{@link CompletableFuture} for async orchestration</li>
  *   <li>Thread-safe metrics via {@link AtomicLong}</li>
+ *   <li>No manual pool lifecycle — virtual threads are JVM-managed</li>
  * </ul>
  *
- * <p>Ref: Phase8 — Multithreading & Concurrency
+ * <p>Ref: Phase8 — Multithreading & Concurrency (virtual threads)
  */
 public final class ParallelEvolution {
+
+    /** Virtual-thread-per-task executor. No need to shut down manually. */
+    private static final Executor VT_EXECUTOR =
+            Executors.newVirtualThreadPerTaskExecutor();
 
     private final int generations;
     private final int populationSize;
@@ -39,7 +44,6 @@ public final class ParallelEvolution {
     private final FitnessFn fitnessFn;
     private final Random rng;
     private final int parallelism;
-    private final ForkJoinPool pool;
 
     // Metrics
     private final AtomicLong totalEvaluations = new AtomicLong(0);
@@ -63,7 +67,8 @@ public final class ParallelEvolution {
      * @param k              input width per neuron
      * @param fitnessFn      fitness function
      * @param rng            random generator
-     * @param parallelism    ForkJoinPool parallelism level (0 = default)
+     * @param parallelism    ignored (retained for API compatibility); virtual threads
+     *                       scale automatically
      */
     public ParallelEvolution(int generations, int populationSize, int k,
                              FitnessFn fitnessFn, Random rng, int parallelism) {
@@ -73,11 +78,10 @@ public final class ParallelEvolution {
         this.fitnessFn = fitnessFn;
         this.rng = rng;
         this.parallelism = parallelism > 0 ? parallelism : Runtime.getRuntime().availableProcessors();
-        this.pool = new ForkJoinPool(this.parallelism);
     }
 
     /**
-     * Creates with default parallelism (available processors).
+     * Creates with default parallelism (available processors — informational only).
      */
     public ParallelEvolution(int generations, int populationSize, int k,
                              FitnessFn fitnessFn, Random rng) {
@@ -120,7 +124,8 @@ public final class ParallelEvolution {
     }
 
     /**
-     * Runs the evolution synchronously with parallel population evaluation.
+     * Runs the evolution synchronously with parallel population evaluation
+     * on virtual threads.
      */
     public void run() {
         nPop = new Population(populationSize, k, rng);
@@ -148,92 +153,56 @@ public final class ParallelEvolution {
     }
 
     /**
-     * Runs the evolution asynchronously using CompletableFuture.
+     * Runs the evolution asynchronously using a virtual thread.
      *
      * @return CompletableFuture that completes when evolution finishes
      */
     public CompletableFuture<Void> runAsync() {
-        return CompletableFuture.runAsync(this::run, pool);
+        return CompletableFuture.runAsync(this::run, VT_EXECUTOR);
     }
 
     /**
-     * Evaluates all 4 populations in parallel using ForkJoinPool.
+     * Evaluates all 4 populations in parallel using virtual threads.
      */
     private void evaluateGenerationParallel() {
         Population[] pops = {nPop, sPop, wPop, ePop};
-        List<RecursiveTask<List<Long>>> tasks = new ArrayList<>(4);
 
-        for (Population pop : pops) {
-            tasks.add(new PopulationEvalTask(pop));
-        }
+        var nFuture = CompletableFuture.supplyAsync(() -> evaluatePopulation(pops[0]), VT_EXECUTOR);
+        var sFuture = CompletableFuture.supplyAsync(() -> evaluatePopulation(pops[1]), VT_EXECUTOR);
+        var wFuture = CompletableFuture.supplyAsync(() -> evaluatePopulation(pops[2]), VT_EXECUTOR);
+        var eFuture = CompletableFuture.supplyAsync(() -> evaluatePopulation(pops[3]), VT_EXECUTOR);
 
-        // Fork all tasks
-        for (var task : tasks) {
-            pool.invoke(task);
-        }
+        // Wait for all to complete
+        CompletableFuture.allOf(nFuture, sFuture, wFuture, eFuture).join();
 
-        // Join and update fitness
-        for (int i = 0; i < 4; i++) {
-            pops[i].updateFitness(tasks.get(i).join());
-        }
+        // Update fitness values
+        pops[0].updateFitness(nFuture.join());
+        pops[1].updateFitness(sFuture.join());
+        pops[2].updateFitness(wFuture.join());
+        pops[3].updateFitness(eFuture.join());
     }
 
     /**
-     * RecursiveTask for evaluating a single population using work-stealing.
+     * Evaluates a single population's chromosomes and returns fitness values.
      */
-    private class PopulationEvalTask extends RecursiveTask<List<Long>> {
+    private List<Long> evaluatePopulation(Population pop) {
+        List<Chromosome> chs = pop.chromosomes();
+        List<Long> fitnesses = new ArrayList<>(chs.size());
 
-        private static final int THRESHOLD = 16;
-        private final Population pop;
+        for (int i = 0; i < chs.size(); i++) {
+            Chromosome n = chs.get(i);
+            Chromosome s = sPop.chromosomes().get(
+                    Math.min(i, sPop.chromosomes().size() - 1));
+            Chromosome w = wPop.chromosomes().get(
+                    Math.min(i, wPop.chromosomes().size() - 1));
+            Chromosome e = ePop.chromosomes().get(
+                    Math.min(i, ePop.chromosomes().size() - 1));
 
-        PopulationEvalTask(Population pop) {
-            this.pop = pop;
+            long fitness = fitnessFn.evaluate(n, s, w, e);
+            fitnesses.add(fitness);
+            totalEvaluations.incrementAndGet();
         }
-
-        @Override
-        protected List<Long> compute() {
-            List<Chromosome> chs = pop.chromosomes();
-            if (chs.size() <= THRESHOLD) {
-                return evaluateChunk(chs);
-            }
-
-            int mid = chs.size() / 2;
-            PopulationEvalTask left = new PopulationEvalTask(subPopulation(chs, 0, mid));
-            PopulationEvalTask right = new PopulationEvalTask(subPopulation(chs, mid, chs.size()));
-
-            left.fork();
-            List<Long> rightResult = right.compute();
-            List<Long> leftResult = left.join();
-
-            List<Long> combined = new ArrayList<>(leftResult.size() + rightResult.size());
-            combined.addAll(leftResult);
-            combined.addAll(rightResult);
-            return combined;
-        }
-
-        private Population subPopulation(List<Chromosome> chs, int from, int to) {
-            Population sub = new Population(to - from, k, new Random(rng.nextLong()));
-            sub.initialize();
-            return sub;
-        }
-
-        private List<Long> evaluateChunk(List<Chromosome> chs) {
-            List<Long> fitnesses = new ArrayList<>(chs.size());
-            for (int i = 0; i < chs.size(); i++) {
-                Chromosome n = chs.get(i);
-                Chromosome s = sPop.chromosomes().get(
-                        Math.min(i, sPop.chromosomes().size() - 1));
-                Chromosome w = wPop.chromosomes().get(
-                        Math.min(i, wPop.chromosomes().size() - 1));
-                Chromosome e = ePop.chromosomes().get(
-                        Math.min(i, ePop.chromosomes().size() - 1));
-
-                long fitness = fitnessFn.evaluate(n, s, w, e);
-                fitnesses.add(fitness);
-                totalEvaluations.incrementAndGet();
-            }
-            return fitnesses;
-        }
+        return fitnesses;
     }
 
     private void recordHistory() {
@@ -266,23 +235,18 @@ public final class ParallelEvolution {
     }
 
     /**
-     * Returns the ForkJoinPool parallelism level.
+     * Returns the configured parallelism level (informational only;
+     * virtual threads auto-scale).
      */
     public int parallelism() {
         return parallelism;
     }
 
     /**
-     * Returns the ForkJoinPool instance.
-     */
-    public ForkJoinPool pool() {
-        return pool;
-    }
-
-    /**
-     * Shuts down the ForkJoinPool. Must be called when done.
+     * No-op: virtual threads are JVM-managed and do not require explicit shutdown.
+     * Kept for backward compatibility.
      */
     public void shutdown() {
-        pool.shutdown();
+        // Virtual threads auto-cleanup — no explicit shutdown needed
     }
 }

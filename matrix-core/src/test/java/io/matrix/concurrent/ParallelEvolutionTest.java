@@ -119,18 +119,16 @@ class ParallelEvolutionTest {
     }
 
     @Test
-    void forkJoinPoolConfiguration() {
+    void virtualThreadParallelism() {
         // Given
         FitnessFn fitnessFn = new FitnessFn(10, 10, 3, 5, 20, 2, new Random(42));
 
-        // When: create with explicit parallelism
+        // When: create with explicit parallelism parameter (informational)
         ParallelEvolution parallel = new ParallelEvolution(
                 GENERATIONS, POPULATION_SIZE, K, fitnessFn, new Random(), 4);
 
-        // Then: parallelism configured correctly
+        // Then: parallelism value preserved for API compatibility
         assertThat(parallel.parallelism()).isEqualTo(4);
-        assertThat(parallel.pool()).isNotNull();
-        assertThat(parallel.pool().getParallelism()).isEqualTo(4);
 
         parallel.shutdown();
     }

@@ -25,6 +25,8 @@ import java.util.Base64;
 import java.util.BitSet;
 import java.util.List;
 import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.locks.ReentrantLock;
 
 @ApplicationScoped
 public class AgentBrainService {
@@ -43,6 +45,9 @@ public class AgentBrainService {
     private volatile int exploreTicks = 0;
     private static final int STUCK_THRESHOLD = 30;
     private static final int EXPLORE_WINDOW = 80; // explore for 80 ticks after stuck detected
+
+    /** Lock for serializing {@link #train(int, int, int)} and protecting feedback list. */
+    private final ReentrantLock trainLock = new ReentrantLock();
 
     @Inject
     NeuronCacheService neuronCache;
@@ -244,8 +249,8 @@ public class AgentBrainService {
         if (exploreTicks > 0) {
             exploreTicks--;
             String[] moves = {"MOVE_N", "MOVE_S", "MOVE_W", "MOVE_E", "MINE", "MINE", "CRAFT", "MOVE_N"};
-            String exploreAction = moves[rng.nextInt(moves.length)];
-            if (rng.nextInt(4) == 0) { // 25% use brain, 75% random
+            String exploreAction = moves[ThreadLocalRandom.current().nextInt(moves.length)];
+            if (ThreadLocalRandom.current().nextInt(4) == 0) { // 25% use brain, 75% random
                 action = exploreAction;
             }
         }
@@ -257,8 +262,20 @@ public class AgentBrainService {
 
     /**
      * Runs evolution training synchronously and updates the hierarchical brain.
+     *
+     * <p>Uses {@link ReentrantLock} instead of {@code synchronized} — virtual-thread-friendly
+     * because lock acquisition parks rather than blocking the carrier thread.
      */
-    public synchronized EvolutionResult train(int generations, int population, int k) {
+    public EvolutionResult train(int generations, int population, int k) {
+        trainLock.lock();
+        try {
+            return doTrain(generations, population, k);
+        } finally {
+            trainLock.unlock();
+        }
+    }
+
+    private EvolutionResult doTrain(int generations, int population, int k) {
         log.info("Starting training: generations={}, population={}, k={}", generations, population, k);
 
         FitnessFn fitness = new FitnessFn(K, K, 5, 10, 50, 3, rng);
@@ -430,11 +447,14 @@ public class AgentBrainService {
 
     /** Records a feedback event for later online training. */
     public void recordFeedback(long sensorBits, boolean success) {
-        synchronized (recentFeedback) {
+        trainLock.lock();
+        try {
             recentFeedback.add(new FeedbackRecord(sensorBits, success));
             if (recentFeedback.size() > MAX_FEEDBACK) {
                 recentFeedback.remove(0);
             }
+        } finally {
+            trainLock.unlock();
         }
     }
 
@@ -449,7 +469,8 @@ public class AgentBrainService {
      */
     public void onlineTrain(int iterations) {
         List<FeedbackRecord> snapshot;
-        synchronized (recentFeedback) {
+        trainLock.lock();
+        try {
             if (recentFeedback.isEmpty()) {
                 // No feedback — fallback to random mutation of action layer
                 log.info("No feedback available — performing random mutation hill-climb");
@@ -457,6 +478,8 @@ public class AgentBrainService {
                 return;
             }
             snapshot = List.copyOf(recentFeedback);
+        } finally {
+            trainLock.unlock();
         }
 
         HierarchicalBrain current = this.brain;

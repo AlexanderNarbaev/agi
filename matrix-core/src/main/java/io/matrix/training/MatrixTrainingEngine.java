@@ -18,6 +18,7 @@ import java.util.List;
 import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -74,6 +75,7 @@ public final class MatrixTrainingEngine {
     private final NeuralTextGenerator generator;
     private final LlmVerificationService llmVerifier;
     private final ScheduledExecutorService scheduler;
+    private final Executor vtExecutor;
     private final AtomicBoolean running;
     private final AtomicLong trainingSteps;
     private final AtomicLong verificationAttempts;
@@ -91,6 +93,7 @@ public final class MatrixTrainingEngine {
         this.generator = NeuralTextGenerator.loadPretrained(rng);
         this.llmVerifier = new LlmVerificationService();
         this.scheduler = Executors.newScheduledThreadPool(2);
+        this.vtExecutor = Executors.newVirtualThreadPerTaskExecutor();
         this.running = new AtomicBoolean(false);
         this.trainingSteps = new AtomicLong(0);
         this.verificationAttempts = new AtomicLong(0);
@@ -326,7 +329,7 @@ public final class MatrixTrainingEngine {
         // Generate MATRIX response
         String matrixResponse = generateResponse(pair.input());
 
-        // Call free LLM for verification (async)
+        // Call free LLM for verification (async on virtual thread)
         CompletableFuture.runAsync(() -> {
             try {
                 String llmResponse = callFreeLlm(pair.input());
@@ -352,7 +355,7 @@ public final class MatrixTrainingEngine {
             } catch (Exception e) {
                 // Silently ignore LLM call failures
             }
-        });
+        }, vtExecutor);
     }
 
     /**

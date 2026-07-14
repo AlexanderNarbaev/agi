@@ -7,12 +7,22 @@ import io.matrix.simulation.AgentBrain;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 
 /**
  * Main evolution loop: runs generations of mutation and fitness evaluation
  * for 4 populations (one per direction neuron).
+ *
+ * <p>Supports both sequential and parallel (virtual-thread-based) evaluation
+ * of the four directional populations per generation.
  */
 public class EvolutionLoop {
+
+    /** Virtual-thread-per-task executor for parallel population evaluation. */
+    private static final Executor VT_EXECUTOR =
+            Executors.newVirtualThreadPerTaskExecutor();
 
     private final int generations;
     private final int populationSize;
@@ -93,11 +103,58 @@ public class EvolutionLoop {
         }
     }
 
+    /**
+     * Runs the evolution loop with parallel population evaluation per generation
+     * using {@link CompletableFuture} on virtual threads. The 4 directional
+     * populations (N/S/W/E) are evaluated concurrently.
+     */
+    public void runParallel() {
+        nPop.initialize();
+        sPop.initialize();
+        wPop.initialize();
+        ePop.initialize();
+
+        for (int gen = 0; gen < generations; gen++) {
+            if (metrics != null) metrics.evolutionGeneration();
+            evaluateGenerationParallel();
+            recordHistory();
+            if (metrics != null) {
+                metrics.fitnessBest(bestFitnessHistory.get(bestFitnessHistory.size() - 1));
+                metrics.fitnessAvg(avgFitnessHistory.get(avgFitnessHistory.size() - 1));
+            }
+            nPop.evolve();
+            sPop.evolve();
+            wPop.evolve();
+            ePop.evolve();
+        }
+        evaluateGenerationParallel();
+        recordHistory();
+        if (metrics != null) {
+            metrics.fitnessBest(bestFitnessHistory.get(bestFitnessHistory.size() - 1));
+            metrics.fitnessAvg(avgFitnessHistory.get(avgFitnessHistory.size() - 1));
+        }
+    }
+
     private void evaluateGeneration() {
         evaluatePopulation(nPop);
         evaluatePopulation(sPop);
         evaluatePopulation(wPop);
         evaluatePopulation(ePop);
+    }
+
+    /**
+     * Evaluates all 4 directional populations concurrently using
+     * {@link CompletableFuture} backed by virtual threads.
+     * Each population's fitness evaluation is an independent subtask.
+     */
+    private void evaluateGenerationParallel() {
+        var nFuture = CompletableFuture.runAsync(() -> evaluatePopulation(nPop), VT_EXECUTOR);
+        var sFuture = CompletableFuture.runAsync(() -> evaluatePopulation(sPop), VT_EXECUTOR);
+        var wFuture = CompletableFuture.runAsync(() -> evaluatePopulation(wPop), VT_EXECUTOR);
+        var eFuture = CompletableFuture.runAsync(() -> evaluatePopulation(ePop), VT_EXECUTOR);
+
+        // Wait for all four population evaluations to complete
+        CompletableFuture.allOf(nFuture, sFuture, wFuture, eFuture).join();
     }
 
     private void evaluatePopulation(Population pop) {
