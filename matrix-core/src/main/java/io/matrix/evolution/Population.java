@@ -50,6 +50,11 @@ public class Population {
         return chromosomes.stream().max(Comparator.comparingLong(Chromosome::fitness)).orElseThrow();
     }
 
+    public void replaceWith(List<Chromosome> newChromosomes) {
+        chromosomes.clear();
+        chromosomes.addAll(newChromosomes);
+    }
+
     public void evolve() {
         List<Chromosome> sorted = new ArrayList<>(chromosomes);
         sorted.sort((a, b) -> Long.compare(b.fitness(), a.fitness()));
