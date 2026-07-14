@@ -113,3 +113,5 @@
 | — | matrix-core/.../MatrixLifecycleManagerTest.java | Lifecycle Manager Test | Тесты | 18 tests for agent lifecycle phases and transitions | 2026-07-14 |
 | — | matrix-core/.../L1toL5IntegrationTest.java | L.1-L.5 Integration Test | Тесты | 3 tests: KG→Explain→SIMD + MultiAgent→ContinuousLearning | 2026-07-14 |
 | — | matrix-core/.../KnowledgeGraphRagIntegrationTest.java | KG+RAG Integration Test | Тесты | 4 tests: graph store as third RAG source | 2026-07-14 |
+| — | matrix-core/src/.../MatrixMcpServer.java | MCP Server | API | MCP protocol server: tools (query/act/explain/traverse) + resources | 2026-07-14 |
+| — | matrix-core/.../MatrixMcpServerTest.java | MCP Server Test | Тесты | 26 tests for MCP tools/resources/dispatch | 2026-07-14 |
