@@ -103,3 +103,7 @@
 | — | matrix-core/.../MultiAgentLoopTest.java | Multi-Agent Loop Test | Тесты | 16 tests for multi-agent consensus | 2026-07-14 |
 | — | matrix-core/src/.../BooleanExplainability.java | Boolean Explainability | AI | SHAP-style feature importance for Boolean neuron decisions | 2026-07-14 |
 | — | matrix-core/.../BooleanExplainabilityTest.java | Boolean Explainability Test | Тесты | 8 tests for SHAP values and feature importance | 2026-07-14 |
+| — | matrix-core/src/.../ContinuousLearningLoop.java | Continuous Learning | AI | Feedback→retrain loop: agent actions trigger online neural training | 2026-07-14 |
+| — | matrix-core/.../ContinuousLearningLoopTest.java | Continuous Learning Test | Тесты | 14 tests for feedback collection, batch retrain, fitness tracking | 2026-07-14 |
+| — | matrix-core/src/.../SimdBooleanCompressor.java | SIMD Boolean Compressor | Оптимизация | Vector API boolean[]→long[] pack/unpack, batch, BitSet | 2026-07-14 |
+| — | matrix-core/.../SimdBooleanCompressorTest.java | SIMD Compressor Test | Тесты | 19 tests for SIMD pack/unpack roundtrip, edge cases | 2026-07-14 |
