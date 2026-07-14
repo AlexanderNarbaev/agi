@@ -674,6 +674,7 @@
 │   ├── ✅ AgentTrajectoryRecorder — Record/Replay trajectories (36 tests)
 │   ├── ✅ AgentLoop.runWithTiming() — observable agent execution
 │   └── ✅ PipelineIntegrationTest — full pipeline E2E (5 tests)
+├── ✅ L.1: Knowledge Graph — KnowledgeGraphStore integrated into RAG (22+4 tests)
 ├── ✅ L.2: Multi-Agent Consensus — MultiAgentLoop (16 tests)
 ├── ✅ L.3: Continuous Learning — ContinuousLearningLoop (14 tests)
 ├── ✅ L.4: Boolean Explainability — SHAP-style feature importance (8 tests)
