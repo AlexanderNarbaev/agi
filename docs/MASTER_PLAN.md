@@ -679,11 +679,10 @@
 ├── ✅ L.3: Continuous Learning — ContinuousLearningLoop (14 tests)
 ├── ✅ L.4: Boolean Explainability — SHAP-style feature importance (8 tests)
 ├── ✅ L.5: BooleanCompressor SIMD — Vector API pack/unpack (19 tests)
-├── 🔲 Phase 7: GraalVM 25 native compilation (ждём Quarkus 3.37)
-├── ✅ Phase C: Meta-harness — MetaHarnessOptimizer (18 tests) + MatrixLifecycleManager (18 tests)
+├── ✅ Phase C: Meta-harness — MetaHarnessOptimizer (18) + MatrixLifecycleManager (18) + MCP server (26)
 ├── ✅ Managed Matrix MVP — MatrixLifecycleManager: init→train→deploy→monitor→retrain
+├── ⏸️ Phase 7: GraalVM 25 native — configs готовы (1173 строк reflect-config), блокирован на Quarkus 3.37
 ├── 🔲 Сертификация «Спираль-совместимости»
-└── 🔲 L.1-L.5: Knowledge Graph, Multi-Agent, Continuous Learning, Explainability, Perf
 ```
 
 ---
