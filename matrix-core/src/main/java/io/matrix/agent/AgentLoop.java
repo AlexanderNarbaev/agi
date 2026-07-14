@@ -262,8 +262,7 @@ public final class AgentLoop {
 
         return new AgentResponse(
                 requestId, answer, sources,
-                new AgentResponse.TimingInfo(retrievalMs, filteringMs, 0, totalMs,
-                        retrievalMs + filteringMs + totalMs),
+                new AgentResponse.TimingInfo(retrievalMs, filteringMs, 0, 0, totalMs),
                 totalMs
         );
     }

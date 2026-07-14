@@ -664,22 +664,21 @@
 └── ✅ v3.1: 970+ тестов, research synthesis report, 5 new components, Docker
 
 2026 Q3+ (в работе):
-├── ✅ Phase 8: Virtual Threads — ForkJoinPool→VT, ReentrantReadWriteLock→StampedLock, 7 files
-├── ✅ Phase 9: Integration Testing — BrcMctsIntegrationTest, RagAgentLoopIntegrationTest, 10 new tests
+├── ✅ Phase 8: Virtual Threads — ForkJoinPool→VT, StampedLock, 8 files
+├── ✅ Phase 9: Integration Testing — 16 files, ~100 integration tests
+├── ✅ Phase B: Research-Driven Components — 21 articles, 3 new components
+│   ├── ✅ ExactTermGuard — exact-term verification for RAG (18 tests)
+│   ├── ✅ AgentResponse — observable timing+source response (23 tests)
+│   ├── ✅ ParetoFitness — multi-objective evolution (20 tests)
+│   ├── ✅ GuardedHybridRag — ExactTermGuard integration (9 tests)
+│   ├── ✅ AgentTrajectoryRecorder — Record/Replay trajectories (36 tests)
+│   ├── ✅ AgentLoop.runWithTiming() — observable agent execution
+│   └── ✅ PipelineIntegrationTest — full pipeline E2E (5 tests)
 ├── 🔲 Phase 7: GraalVM 25 native compilation (ждём Quarkus 3.37)
+├── 🔲 Phase C: GraphRAG, MCP protocol, Meta-harness optimization
 ├── 🔲 Managed Matrix MVP
 ├── 🔲 Сертификация «Спираль-совместимости»
-├── 🔲 Патентная стратегия
-├── 🔲 Грантовые заявки
-├── 🔲 Пилотный университетский курс
-├── 🔲 Корпоративные формы + реестр
-├── 🔲 Видео-запись курса, социальные сети, YouTube
-├── 🔲 Knowledge Graph Integration
-├── 🔲 Multi-Agent Collaboration
-├── 🔲 Continuous Learning Pipeline
-├── 🔲 Explainability Dashboard
-├── 🔲 Performance Optimization
-└── 🔲 Нейроморфное исследование (R)
+└── 🔲 L.1-L.5: Knowledge Graph, Multi-Agent, Continuous Learning, Explainability, Perf
 ```
 
 ---
