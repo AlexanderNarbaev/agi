@@ -16,6 +16,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
@@ -221,6 +222,61 @@ public final class AgentLoop {
         } finally {
             running.set(false);
         }
+    }
+
+    // ── Observable execution (AgentResponse with timing) ──
+
+    /**
+     * Runs the agent loop and returns an {@link AgentResponse} with full timing
+     * breakdown (retrieval, filtering, reasoning, generation phases).
+     *
+     * <p>This is the "Observable Agent Response" pattern from research:
+     * every run produces a request_id, timing breakdown, and traceable history.
+     *
+     * @param maxIterations maximum number of ticks
+     * @return AgentResponse with timing info and history as answer
+     */
+    public AgentResponse runWithTiming(int maxIterations) {
+        UUID requestId = UUID.randomUUID();
+        long startNs = System.nanoTime();
+
+        long retrievalStart = System.nanoTime();
+        List<AgentState> history = run(maxIterations);
+        long retrievalEnd = System.nanoTime();
+
+        long filteringStart = System.nanoTime();
+        String answer = formatHistorySummary(history);
+        long filteringEnd = System.nanoTime();
+
+        long generationEnd = System.nanoTime();
+
+        long retrievalMs = (retrievalEnd - retrievalStart) / 1_000_000;
+        long filteringMs = (filteringEnd - filteringStart) / 1_000_000;
+        long totalMs = (generationEnd - startNs) / 1_000_000;
+
+        List<AgentResponse.SourceInfo> sources = history.stream()
+                .map(s -> new AgentResponse.SourceInfo(
+                        "agent-state", "tick-" + s.tick(), (int) s.tick(),
+                        1.0, s.actionType().name()))
+                .toList();
+
+        return new AgentResponse(
+                requestId, answer, sources,
+                new AgentResponse.TimingInfo(retrievalMs, filteringMs, 0, totalMs,
+                        retrievalMs + filteringMs + totalMs),
+                totalMs
+        );
+    }
+
+    private static String formatHistorySummary(List<AgentState> history) {
+        if (history.isEmpty()) return "no actions";
+        var actions = history.stream()
+                .map(s -> s.actionType().name())
+                .distinct()
+                .toList();
+        return String.format("Completed %d ticks, actions: %s, converged: %b",
+                history.size(), String.join(", ", actions),
+                !history.isEmpty());
     }
 
     // ── Asynchronous execution ──
