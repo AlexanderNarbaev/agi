@@ -187,6 +187,21 @@ public final class HybridBooleanRag {
         public int totalRetrieved() {
             return strongMatches.size() + borderlineMatches.size();
         }
+
+        /**
+         * Returns the text content (IDs as chunk labels) from both strong
+         * and borderline sources. Used by ExactTermGuard for term verification.
+         */
+        public List<String> contextChunks() {
+            List<String> chunks = new java.util.ArrayList<>();
+            for (var match : strongMatches) {
+                chunks.add(match.id());
+            }
+            for (var match : borderlineMatches) {
+                chunks.add(match.id());
+            }
+            return chunks;
+        }
     }
 
     /**
@@ -244,4 +259,38 @@ public final class HybridBooleanRag {
             return new HybridBooleanRag(this);
         }
     }
+
+    /**
+     * Queries the RAG system with ExactTermGuard verification.
+     *
+     * <p>Calls the standard {@link #query(long[])} first, then extracts technical
+     * terms from {@code textQuery} and verifies they appear in the retrieved
+     * context chunks. Returns a {@link GuardedRagResult} that wraps the original
+     * result together with the guard verdict.
+     *
+     * @param query     boolean vector query
+     * @param textQuery natural-language query string for term extraction
+     * @return guarded result with guard verdict
+     */
+    public GuardedRagResult guardedQuery(long[] query, String textQuery) {
+        Objects.requireNonNull(query, "query");
+        Objects.requireNonNull(textQuery, "textQuery");
+
+        HybridRagResult ragResult = query(query);
+        List<String> contextChunks = ragResult.contextChunks();
+        ExactTermGuard.GuardResult guardResult =
+                ExactTermGuard.check(textQuery, contextChunks);
+
+        return new GuardedRagResult(ragResult, guardResult, guardResult.allowed());
+    }
+
+    /**
+     * Result of a guarded RAG query — wraps {@link HybridRagResult}
+     * together with the {@link ExactTermGuard.GuardResult}.
+     */
+    public record GuardedRagResult(
+            HybridRagResult ragResult,
+            ExactTermGuard.GuardResult guardResult,
+            boolean generationAllowed
+    ) {}
 }
