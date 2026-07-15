@@ -116,3 +116,4 @@
 | — | matrix-core/src/.../MatrixMcpServer.java | MCP Server | API | MCP protocol server: tools (query/act/explain/traverse) + resources | 2026-07-14 |
 | — | matrix-core/.../MatrixMcpServerTest.java | MCP Server Test | Тесты | 26 tests for MCP tools/resources/dispatch | 2026-07-14 |
 | — | matrix-core/.../McpLifecycleIntegrationTest.java | MCP+Lifecycle Integration Test | Тесты | 4 tests: MCP server orchestrating agent lifecycle | 2026-07-14 |
+| — | docs/MATRIX_TEAM.md | Многоагентная команда разработки | Социум | 14 ролей, волновой процесс, карта делегирования под-агентов | 2026-07-16 |
