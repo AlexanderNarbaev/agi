@@ -152,7 +152,8 @@ public final class BrcChain {
      * Validates the final output of the chain against the output schema.
      *
      * <p>If {@code outputSchema} is present, validates that the final state's
-     * boolean vector satisfies the schema constraints.
+     * boolean vector satisfies the schema constraints for each bit position
+     * up to the schema's k limit.
      *
      * @param result the final BRC state from {@link #evaluate(BitSet, int)}
      * @return true if no schema or validation passes
@@ -163,9 +164,9 @@ public final class BrcChain {
         if (outputSchema == null) {
             return true;
         }
-        // Validate each bit position of the output vector against the schema
         BitSet vector = result.vector();
-        for (int i = 0; i < vector.length(); i++) {
+        int limit = Math.min(vector.length(), outputSchema.k());
+        for (int i = 0; i < limit; i++) {
             outputSchema.validateOutput(vector.get(i), i);
         }
         return true;
