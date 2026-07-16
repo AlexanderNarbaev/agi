@@ -3,6 +3,7 @@ package io.matrix.rag;
 import io.matrix.noosphere.KnowledgeIndex;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -34,14 +35,17 @@ public final class BooleanRag {
     private final int topK;
     private final QueryExpander queryExpander;
     private final boolean useRrfFusion;
+    private final SkeletonNode skeletonTree;
 
     private BooleanRag(BooleanIndex index, KnowledgeIndex knowledgeIndex, int topK,
-                       QueryExpander queryExpander, boolean useRrfFusion) {
+                       QueryExpander queryExpander, boolean useRrfFusion,
+                       SkeletonNode skeletonTree) {
         this.index = Objects.requireNonNull(index, "index");
         this.knowledgeIndex = knowledgeIndex;
         this.topK = topK;
         this.queryExpander = queryExpander;
         this.useRrfFusion = useRrfFusion;
+        this.skeletonTree = skeletonTree;
     }
 
     /**
@@ -86,7 +90,8 @@ public final class BooleanRag {
             expanded[i + 1] = knowledgeVectors.get(i);
         }
 
-        return new RagResult(query, hits, expanded);
+        Map<String, String> breadcrumbs = buildBreadcrumbs(hits);
+        return new RagResult(query, hits, expanded, breadcrumbs);
     }
 
     /**
@@ -129,17 +134,52 @@ public final class BooleanRag {
         return topK;
     }
 
+    /**
+     * Returns the skeleton tree, or null if not configured.
+     *
+     * @since 3.25
+     */
+    public SkeletonNode skeletonTree() {
+        return skeletonTree;
+    }
+
+    /**
+     * Builds breadcrumb context for search hits using the skeleton tree.
+     */
+    private Map<String, String> buildBreadcrumbs(List<BooleanIndex.SearchResult> hits) {
+        if (skeletonTree == null || hits.isEmpty()) {
+            return Map.of();
+        }
+        Map<String, String> breadcrumbs = new HashMap<>();
+        for (var hit : hits) {
+            // Use the document ID as text to search in the skeleton tree
+            String docId = hit.id();
+            String breadcrumb = SkeletonTreeParser.findBreadcrumbFor(skeletonTree, docId);
+            breadcrumbs.put(docId, breadcrumb);
+        }
+        return breadcrumbs;
+    }
+
     // --- Records ---
 
     /**
      * Result of a RAG query containing the original query, knowledge hits,
-     * and the expanded boolean vector.
+     * expanded boolean vector, and optional breadcrumb context.
+     *
+     * @param breadcrumbs map of document ID → breadcrumb path (empty if no skeleton tree)
      */
     public record RagResult(
             long[] originalQuery,
             List<BooleanIndex.SearchResult> knowledgeHits,
-            long[][] expandedVector
-    ) {}
+            long[][] expandedVector,
+            Map<String, String> breadcrumbs
+    ) {
+        /** Compatible constructor without breadcrumbs. */
+        public RagResult(long[] originalQuery, List<BooleanIndex.SearchResult> knowledgeHits,
+                         long[][] expandedVector) {
+            this(originalQuery, knowledgeHits, expandedVector, Map.of());
+        }
+    }
 
     // --- Builder ---
 
@@ -152,6 +192,7 @@ public final class BooleanRag {
         private int topK = 3;
         private QueryExpander queryExpander;
         private boolean useRrfFusion = true;
+        private SkeletonNode skeletonTree;
 
         /**
          * Sets the boolean index to retrieve knowledge from. Required.
@@ -197,10 +238,20 @@ public final class BooleanRag {
         }
 
         /**
+         * Sets an optional {@link SkeletonNode} tree for breadcrumb context.
+         *
+         * @since 3.25
+         */
+        public Builder skeletonTree(SkeletonNode tree) {
+            this.skeletonTree = tree;
+            return this;
+        }
+
+        /**
          * Builds the {@link BooleanRag}.
          */
         public BooleanRag build() {
-            return new BooleanRag(index, knowledgeIndex, topK, queryExpander, useRrfFusion);
+            return new BooleanRag(index, knowledgeIndex, topK, queryExpander, useRrfFusion, skeletonTree);
         }
     }
 }
