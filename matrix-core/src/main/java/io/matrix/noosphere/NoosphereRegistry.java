@@ -1,5 +1,7 @@
 package io.matrix.noosphere;
 
+import jakarta.enterprise.context.ApplicationScoped;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -13,8 +15,11 @@ import java.util.UUID;
  * <p>Tracks all published FNLs with their status (ACTIVE, REVOKED, DEPRECATED).
  * Each entry includes author signature and metadata.
  *
+ * <p>CDI: {@code @ApplicationScoped} — single shared registry across the application.
+ *
  * <p>Ref: L6_Memory.md §6.2
  */
+@ApplicationScoped
 public class NoosphereRegistry {
 
     public enum EntryStatus { ACTIVE, REVOKED, DEPRECATED }

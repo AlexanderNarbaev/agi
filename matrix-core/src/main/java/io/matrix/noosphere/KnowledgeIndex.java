@@ -1,5 +1,8 @@
 package io.matrix.noosphere;
 
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -14,8 +17,11 @@ import java.util.UUID;
  * Supports ranked search with accuracy-sorted results.
  * Certified FNLs receive priority in search rankings.
  *
+ * <p>CDI: {@code @ApplicationScoped} — injected via constructor.
+ *
  * <p>Ref: L6_Memory.md §6.2
  */
+@ApplicationScoped
 public class KnowledgeIndex {
 
     public record SearchResult(FnlPackage fnl, double relevance, UUID entryId) {}
@@ -23,6 +29,7 @@ public class KnowledgeIndex {
     private final NoosphereRegistry registry;
     private final Map<String, List<UUID>> keywordIndex = new HashMap<>();
 
+    @Inject
     public KnowledgeIndex(NoosphereRegistry registry) {
         this.registry = registry;
     }
@@ -64,6 +71,15 @@ public class KnowledgeIndex {
     public List<SearchResult> search(String query) {
         Map<UUID, Double> scores = new HashMap<>();
         String[] keywords = query.toLowerCase().split("[\\s,]+");
+
+        // Empty query: return all active entries sorted by accuracy
+        if (keywords.length == 0 || (keywords.length == 1 && keywords[0].isBlank())) {
+            return registry.activeEntries().stream()
+                    .map(e -> new SearchResult(e.fnlPackage(),
+                            e.fnlPackage().accuracy(), e.entryId()))
+                    .sorted(Comparator.comparingDouble(SearchResult::relevance).reversed())
+                    .toList();
+        }
 
         for (String keyword : keywords) {
             if (keyword.length() < 3) continue;
