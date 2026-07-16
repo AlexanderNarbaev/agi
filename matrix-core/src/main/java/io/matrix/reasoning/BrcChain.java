@@ -1,5 +1,7 @@
 package io.matrix.reasoning;
 
+import io.matrix.neuron.SchemaDescriptor;
+
 import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.List;
@@ -33,6 +35,7 @@ public final class BrcChain {
     private final List<BrcStep> steps;
     private final int maxSteps;
     private final boolean earlyStopping;
+    private final SchemaDescriptor outputSchema;
 
     /**
      * Creates a BRC chain.
@@ -40,11 +43,14 @@ public final class BrcChain {
      * @param steps reasoning steps
      * @param maxSteps maximum number of steps (0 = unlimited)
      * @param earlyStopping whether to stop on convergence
+     * @param outputSchema optional schema to validate chain output
      */
-    public BrcChain(List<BrcStep> steps, int maxSteps, boolean earlyStopping) {
+    public BrcChain(List<BrcStep> steps, int maxSteps, boolean earlyStopping,
+                     SchemaDescriptor outputSchema) {
         this.steps = List.copyOf(Objects.requireNonNull(steps, "steps"));
         this.maxSteps = Math.max(0, maxSteps);
         this.earlyStopping = earlyStopping;
+        this.outputSchema = outputSchema;
     }
 
     /**
@@ -133,6 +139,39 @@ public final class BrcChain {
     }
 
     /**
+     * Returns the optional output schema for chain validation.
+     *
+     * @return output schema, or null
+     * @since 3.24
+     */
+    public SchemaDescriptor outputSchema() {
+        return outputSchema;
+    }
+
+    /**
+     * Validates the final output of the chain against the output schema.
+     *
+     * <p>If {@code outputSchema} is present, validates that the final state's
+     * boolean vector satisfies the schema constraints.
+     *
+     * @param result the final BRC state from {@link #evaluate(BitSet, int)}
+     * @return true if no schema or validation passes
+     * @throws SchemaDescriptor.SchemaViolationException if strict schema and output fails
+     * @since 3.24
+     */
+    public boolean validateOutput(BrcState result) {
+        if (outputSchema == null) {
+            return true;
+        }
+        // Validate each bit position of the output vector against the schema
+        BitSet vector = result.vector();
+        for (int i = 0; i < vector.length(); i++) {
+            outputSchema.validateOutput(vector.get(i), i);
+        }
+        return true;
+    }
+
+    /**
      * Builder for BrcChain.
      */
     public static Builder builder() {
@@ -143,6 +182,7 @@ public final class BrcChain {
         private final List<BrcStep> steps = new ArrayList<>();
         private int maxSteps = 0;
         private boolean earlyStopping = true;
+        private SchemaDescriptor outputSchema = null;
 
         public Builder addStep(BrcStep step) {
             steps.add(Objects.requireNonNull(step, "step"));
@@ -159,11 +199,21 @@ public final class BrcChain {
             return this;
         }
 
+        /**
+         * Sets an optional output schema for chain validation.
+         *
+         * @since 3.24
+         */
+        public Builder outputSchema(SchemaDescriptor schema) {
+            this.outputSchema = schema;
+            return this;
+        }
+
         public BrcChain build() {
             if (steps.isEmpty()) {
                 throw new IllegalStateException("At least one step is required");
             }
-            return new BrcChain(steps, maxSteps, earlyStopping);
+            return new BrcChain(steps, maxSteps, earlyStopping, outputSchema);
         }
     }
 
