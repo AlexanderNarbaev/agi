@@ -223,7 +223,7 @@ API ключи: DeepSeek — через `/connect` в TUI, OpenCode Go — `open
 ## СТАРТ СЕССИИ
 [CTX: project dev session]. Немедленно выполни инициализацию: прочитай WAL, INDEX.md, загрузи память из memorylayer/agentic-tools, получи обзор codegraph. Выведи сводку в 3 строках: статус, активная задача, защищённые зоны.
 
-**Текущий стек (v1.3.0):** Quarkus 3.35.4, Java 25, Apache Pekko 1.6.0, Gradle 9.x, Paper API 1.20.4, Avro 1.12.0.
+**Текущий стек (v1.3.0):** Quarkus 3.36.1, Java 25, Apache Pekko 1.6.0, Gradle 9.x, Paper API 1.20.4, Avro 1.12.0.
 **Observability:** Micrometer (Prometheus :9091), OpenTelemetry (Jaeger :16686), JSON-логи, Grafana :3000, Loki+FluentBit.
 **Ключевые файлы:** `wal/GLOBAL_WAL.md`, `wal/SESSION_WAL.md`, `docs/INDEX.md`, `docs/MASTER_PLAN.md`, `.opencode/config.yml`, `AGENTS.md`, `README.md`.
 
@@ -251,7 +251,7 @@ API ключи: DeepSeek — через `/connect` в TUI, OpenCode Go — `open
 - FROZEN-нейроны (L5_DNA.md, L7_Ethics.md)
 - Три запрета (L0_manifesto.md: NO_KILLING, NO_TORTURE, NO_ENSLAVEMENT)
 - AGPLv3 + этические ограничения (LICENSE)
-- Quarkus 3.35.4 LTS, Java 25, Pekko 1.6.0
+- Quarkus 3.36.1 LTS, Java 25, Pekko 1.6.0
 - Coverage floor 82% (matrix-core/build.gradle jacocoTestCoverageVerification)
 
 ### Приоритеты проекта (текущая версия v1.3.0)

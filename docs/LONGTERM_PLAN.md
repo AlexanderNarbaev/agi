@@ -13,7 +13,7 @@
 | Версия | v1.2.0 |
 | Тестов | 524 |
 | Покрытие | 87% (JaCoCo) |
-| Стек | Quarkus 3.35.4, Java 25, Pekko 1.6.0, Gradle 9.x |
+| Стек | Quarkus 3.36.1, Java 25, Pekko 1.6.0, Gradle 9.x |
 | Инфраструктура | Docker Compose (Prometheus, Jaeger, Grafana) — **запущена** |
 | Observability | Micrometer + OTEL + JSON-логи — реализовано |
 | Minecraft | Spigot-плагин с метриками — реализован |
