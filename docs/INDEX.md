@@ -136,3 +136,5 @@
 | — | matrix-core/.../SkeletonTreeParserTest.java | Skeleton Tree Parser Test | Тесты | 11 tests for heading/list/code/breadcrumb parsing | 2026-07-16 |
 | — | matrix-core/src/.../LieDetector.java | Lie Detector | Ethics | Phase C4: Probe-based output verification (4 probe types) | 2026-07-16 |
 | — | matrix-core/.../LieDetectorTest.java | Lie Detector Test | Тесты | 16 tests for all probe types + StructuralSafetyGuard integration | 2026-07-16 |
+| — | matrix-core/src/.../CommunityDetector.java | Community Detector | AI | Phase C1: Louvain-style graph partitioning for Noosphere | 2026-07-16 |
+| — | matrix-core/.../CommunityDetectorTest.java | Community Detector Test | Тесты | 10 tests: modularity, clusters, star topology, disconnected | 2026-07-16 |
