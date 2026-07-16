@@ -76,12 +76,15 @@ public final class StructuralSafetyGuard {
     private final Set<String> gatedOperations;
     private final Map<String, RiskLevel> riskTable;
     private final double maxAutonomy;
+    private final LieDetector lieDetector;
 
     private StructuralSafetyGuard(Builder builder) {
         this.removedTools = Set.copyOf(builder.removedTools);
         this.gatedOperations = Set.copyOf(builder.gatedOperations);
         this.riskTable = Map.copyOf(builder.riskTable);
         this.maxAutonomy = builder.maxAutonomy;
+        this.lieDetector = builder.lieDetector != null
+                ? builder.lieDetector : LieDetector.essential();
     }
 
     public static Builder builder() {
@@ -195,6 +198,34 @@ public final class StructuralSafetyGuard {
     }
 
     /**
+     * Returns the configured Lie Detector.
+     *
+     * @since 3.25
+     */
+    public LieDetector lieDetector() {
+        return lieDetector;
+    }
+
+    /**
+     * Verifies agent output text against the configured {@link LieDetector}.
+     *
+     * @param output  the textual agent output to verify
+     * @param context additional context for verification
+     * @return detection result
+     * @since 3.25
+     */
+    public LieDetector.DetectionResult verifyOutput(String output, Map<String, String> context) {
+        return lieDetector.detect(output, context);
+    }
+
+    /**
+     * Verifies agent output text against the configured Lie Detector with no context.
+     */
+    public LieDetector.DetectionResult verifyOutput(String output) {
+        return lieDetector.detect(output);
+    }
+
+    /**
      * Builder for {@link StructuralSafetyGuard}.
      */
     public static final class Builder {
@@ -202,6 +233,7 @@ public final class StructuralSafetyGuard {
         private final Set<String> gatedOperations = new HashSet<>();
         private final Map<String, RiskLevel> riskTable = new HashMap<>();
         private double maxAutonomy = 0.7;
+        private LieDetector lieDetector;
 
         public Builder removeTool(String tool) {
             removedTools.add(tool);
@@ -223,6 +255,16 @@ public final class StructuralSafetyGuard {
                 throw new IllegalArgumentException("autonomy must be 0-1");
             }
             this.maxAutonomy = autonomy;
+            return this;
+        }
+
+        /**
+         * Sets a {@link LieDetector} for post-output verification.
+         *
+         * @since 3.25
+         */
+        public Builder lieDetector(LieDetector detector) {
+            this.lieDetector = detector;
             return this;
         }
 
