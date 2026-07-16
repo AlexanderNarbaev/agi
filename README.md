@@ -4,9 +4,16 @@
 
 Не лжёт. Не забывает. Не может быть использована во вред.
 
-## Статус: v3.1
+## Статус: v3.30
 
-**970+ тестов** | **82% покрытие** | **Java 25** | **Quarkus 3.36.1** | **Apache Pekko 1.6.0**
+**1000+ тестов** | **82% покрытие** | **Java 25** | **Quarkus 3.36.1** | **Apache Pekko 1.6.0**
+
+### Новое в v3.30
+- **BooleanSchemaValidator** — структурная валидация выходов TruthTable (SCALAR/ENUM/RANGE/VECTOR)
+- **Skeleton Tree RAG** — структурно-ориентированный retrieval с breadcrumb-контекстом
+- **Lie Detector Safety** — детектор лжи на 4 probe-типах (PASS/SUSPICIOUS/DECEPTIVE)
+- **Community Detector** — разбиение графа знаний на сообщества (Louvain-style)
+- **Phase A+B+C Research Synthesis**: 14/15 компонентов реализовано
 
 ### Ссылки
 
