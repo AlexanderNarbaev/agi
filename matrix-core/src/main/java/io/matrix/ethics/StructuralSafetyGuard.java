@@ -106,11 +106,15 @@ public final class StructuralSafetyGuard {
                 .gateOperation("access_credentials")
                 .gateOperation("modify_safety_constraints")
                 .gateOperation("external_api_call")
+                .gateOperation("scada.shutdown")
                 .riskLevel("read_data", RiskLevel.LOW)
                 .riskLevel("write_data", RiskLevel.MEDIUM)
                 .riskLevel("delete_data", RiskLevel.HIGH)
                 .riskLevel("deploy", RiskLevel.HIGH)
                 .riskLevel("modify_config", RiskLevel.MEDIUM)
+                .riskLevel("scada.sensor.override", RiskLevel.HIGH)
+                .riskLevel("scada.valve.control", RiskLevel.MEDIUM)
+                .riskLevel("scada.sensor.read", RiskLevel.LOW)
                 .maxAutonomy(0.7)
                 .build();
     }

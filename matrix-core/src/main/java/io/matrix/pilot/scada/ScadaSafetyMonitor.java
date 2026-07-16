@@ -15,7 +15,11 @@ import java.util.Map;
  * <p>Thresholds are customisable per sensor type. Critical violations
  * escalate to EMERGENCY_SHUTDOWN.
  *
- * @since 3.33
+ * <p>Supports mapping to {@link io.matrix.ethics.StructuralSafetyGuard}
+ * for layered safety enforcement: the monitor's verdict feeds into
+ * the structural guard's risk-based approval system.
+ *
+ * @since 3.34
  */
 public class ScadaSafetyMonitor {
 
@@ -112,5 +116,30 @@ public class ScadaSafetyMonitor {
 
     private static SafetyAction maxAction(SafetyAction a, SafetyAction b) {
         return a.ordinal() >= b.ordinal() ? a : b;
+    }
+
+    /**
+     * Maps the SCADA safety action to a StructuralSafetyGuard operation key.
+     *
+     * @return the operation key for use with
+     *         {@link io.matrix.ethics.StructuralSafetyGuard#evaluate}
+     */
+    public static String toOperation(SafetyAction action) {
+        return switch (action) {
+            case CONTINUE -> "scada.sensor.read";
+            case WAIT -> "scada.valve.control";
+            case SHUTDOWN -> "scada.shutdown";
+        };
+    }
+
+    /**
+     * Maps the SCADA safety action to a StructuralSafetyGuard risk level.
+     */
+    public static io.matrix.ethics.StructuralSafetyGuard.RiskLevel toRiskLevel(SafetyAction action) {
+        return switch (action) {
+            case CONTINUE -> io.matrix.ethics.StructuralSafetyGuard.RiskLevel.LOW;
+            case WAIT -> io.matrix.ethics.StructuralSafetyGuard.RiskLevel.MEDIUM;
+            case SHUTDOWN -> io.matrix.ethics.StructuralSafetyGuard.RiskLevel.HIGH;
+        };
     }
 }

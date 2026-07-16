@@ -1,8 +1,10 @@
 package io.matrix.pilot.scada;
 
+import io.matrix.ethics.StructuralSafetyGuard;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
+import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -86,5 +88,31 @@ class ScadaSafetyMonitorTest {
     void emptyReadingsShouldReturnContinue() {
         ScadaSafetyMonitor.MonitorResult result = monitor.evaluate(List.of());
         assertThat(result.isSafe()).isTrue();
+    }
+
+    @Test
+    void scadaActionShouldMapToStructuralSafetyGuard() {
+        StructuralSafetyGuard guard = StructuralSafetyGuard.defaults();
+
+        // CONTINUE → LOW risk, should be allowed
+        String normalOp = ScadaSafetyMonitor.toOperation(ScadaSafetyMonitor.SafetyAction.CONTINUE);
+        StructuralSafetyGuard.SafetyVerdict normal = guard.evaluate(normalOp, Map.of());
+        assertThat(normal.decision()).isEqualTo(StructuralSafetyGuard.Decision.APPROVED);
+
+        // SHUTDOWN → gated operation, requires approval
+        String shutdownOp = ScadaSafetyMonitor.toOperation(ScadaSafetyMonitor.SafetyAction.SHUTDOWN);
+        StructuralSafetyGuard.SafetyVerdict shutdown = guard.evaluate(shutdownOp, Map.of());
+        assertThat(shutdown.decision()).isEqualTo(StructuralSafetyGuard.Decision.REQUIRES_APPROVAL);
+
+        // VALVE control → MEDIUM risk
+        var riskLevel = ScadaSafetyMonitor.toRiskLevel(ScadaSafetyMonitor.SafetyAction.WAIT);
+        assertThat(riskLevel).isEqualTo(StructuralSafetyGuard.RiskLevel.MEDIUM);
+    }
+
+    @Test
+    void shutdownShouldBeGated() {
+        StructuralSafetyGuard guard = StructuralSafetyGuard.defaults();
+        StructuralSafetyGuard.SafetyVerdict verdict = guard.evaluate("scada.shutdown", Map.of());
+        assertThat(verdict.decision()).isEqualTo(StructuralSafetyGuard.Decision.REQUIRES_APPROVAL);
     }
 }
