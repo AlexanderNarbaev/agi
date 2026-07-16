@@ -572,13 +572,7 @@ public class MatrixPlugin extends JavaPlugin {
             case "MOVE_E" -> movePlayer(bot.player, 1, 0);
             case "MINE" -> mineBlock(bot);
             case "EAT" -> { eatFood(bot.player); yield true; }
-            case "CRAFT" -> {
-                if (bot.tickCount % 100 == 0) {
-                    getLogger().info("CRAFT action for " + bot.name
-                            + " — crafting via matrix-core (not implemented locally)");
-                }
-                yield true;
-            }
+            case "CRAFT" -> craftItem(bot);
             case "TOOL_UP" -> { switchToBestTool(bot.player); yield true; }
             case "STAY" -> true;
             default -> {
@@ -673,6 +667,117 @@ public class MatrixPlugin extends JavaPlugin {
             if (item != null && item.getType() == mat) return i;
         }
         return inv.getHeldItemSlot();
+    }
+
+    // ─────────────────── Crafting ───────────────────
+
+    /**
+     * Attempts to craft an item from available inventory materials.
+     *
+     * <p>Priority order: logs → planks → sticks → wooden pickaxe.
+     * Returns true if any crafting was performed.
+     */
+    private boolean craftItem(BotState bot) {
+        Player player = bot.player;
+        if (player == null || !player.isOnline()) return false;
+
+        PlayerInventory inv = player.getInventory();
+        ItemStack[] contents = inv.getContents();
+
+        // 1) Log → Planks
+        if (hasMaterial(contents, Material.OAK_LOG, 1)) {
+            removeMaterial(inv, Material.OAK_LOG, 1);
+            giveItem(player, Material.OAK_PLANKS, 4);
+            getLogger().fine(bot.name + " crafted 4x Planks from Log");
+            return true;
+        }
+        if (hasMaterial(contents, Material.SPRUCE_LOG, 1)) {
+            removeMaterial(inv, Material.SPRUCE_LOG, 1);
+            giveItem(player, Material.SPRUCE_PLANKS, 4);
+            getLogger().fine(bot.name + " crafted 4x Spruce Planks");
+            return true;
+        }
+        if (hasMaterial(contents, Material.BIRCH_LOG, 1)) {
+            removeMaterial(inv, Material.BIRCH_LOG, 1);
+            giveItem(player, Material.BIRCH_PLANKS, 4);
+            getLogger().fine(bot.name + " crafted 4x Birch Planks");
+            return true;
+        }
+
+        // 2) Planks → Sticks
+        long plankCount = countMaterial(contents, Material.OAK_PLANKS)
+                + countMaterial(contents, Material.SPRUCE_PLANKS)
+                + countMaterial(contents, Material.BIRCH_PLANKS);
+        if (plankCount >= 2) {
+            Material plankType = findFirst(contents, Material.OAK_PLANKS, Material.SPRUCE_PLANKS, Material.BIRCH_PLANKS);
+            if (plankType != null && removeMaterial(inv, plankType, 2)) {
+                giveItem(player, Material.STICK, 4);
+                getLogger().fine(bot.name + " crafted 4x Sticks");
+                return true;
+            }
+        }
+
+        // 3) Planks + Sticks → Wooden Pickaxe
+        long sticks = countMaterial(contents, Material.STICK);
+        plankCount = countMaterial(contents, Material.OAK_PLANKS)
+                + countMaterial(contents, Material.SPRUCE_PLANKS)
+                + countMaterial(contents, Material.BIRCH_PLANKS);
+        if (sticks >= 2 && plankCount >= 3) {
+            // Deduct: 2 sticks + 3 planks → wooden pickaxe
+            removeMaterial(inv, Material.STICK, 2);
+            Material pType = findFirst(contents, Material.OAK_PLANKS, Material.SPRUCE_PLANKS, Material.BIRCH_PLANKS);
+            if (pType != null) removeMaterial(inv, pType, 3);
+            giveItem(player, Material.WOODEN_PICKAXE, 1);
+            getLogger().info(bot.name + " crafted Wooden Pickaxe!");
+            return true;
+        }
+
+        return false; // nothing craftable
+    }
+
+    private boolean hasMaterial(ItemStack[] contents, Material mat, int minCount) {
+        return countMaterial(contents, mat) >= minCount;
+    }
+
+    private long countMaterial(ItemStack[] contents, Material mat) {
+        long total = 0;
+        for (ItemStack item : contents) {
+            if (item != null && item.getType() == mat) {
+                total += item.getAmount();
+            }
+        }
+        return total;
+    }
+
+    private boolean removeMaterial(PlayerInventory inv, Material mat, int amount) {
+        int remaining = amount;
+        for (int i = 0; i < inv.getSize() && remaining > 0; i++) {
+            ItemStack item = inv.getItem(i);
+            if (item != null && item.getType() == mat) {
+                int take = Math.min(remaining, item.getAmount());
+                if (take == item.getAmount()) {
+                    inv.clear(i);
+                } else {
+                    item.setAmount(item.getAmount() - take);
+                }
+                remaining -= take;
+            }
+        }
+        return remaining == 0;
+    }
+
+    private void giveItem(Player player, Material mat, int amount) {
+        ItemStack leftover = player.getInventory().addItem(new ItemStack(mat, amount)).get(0);
+        if (leftover != null) {
+            player.getWorld().dropItemNaturally(player.getLocation(), leftover);
+        }
+    }
+
+    private Material findFirst(ItemStack[] contents, Material... candidates) {
+        for (Material m : candidates) {
+            if (countMaterial(contents, m) > 0) return m;
+        }
+        return null;
     }
 
     // ─────────────────── Utilities ───────────────────
