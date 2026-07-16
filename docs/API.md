@@ -980,10 +980,11 @@ done
 **`POST /api/v1/noosphere/publish`**
 
 ```json
-// Request
 { "name": "navigation-v3", "type": "navigation", "accuracy": 0.92, "tags": ["spatial"] }
+```
 
-// Response
+Response:
+```json
 { "success": true, "entryId": "abc123...", "fnlName": "navigation-v3", "timestamp": "..." }
 ```
 
@@ -1028,8 +1029,8 @@ SCADA operations are gated through `StructuralSafetyGuard`:
 - `scada.valve.control` → `MEDIUM` risk
 - `scada.sensor.read` → `LOW` risk (auto-approved)
 
+Guard verdict example for `scada.shutdown`:
 ```json
-// Guard verdict for scada.shutdown:
 { "decision": "REQUIRES_APPROVAL", "riskLevel": "HIGH", "gateId": "scada.shutdown-..." }
 ```
 
