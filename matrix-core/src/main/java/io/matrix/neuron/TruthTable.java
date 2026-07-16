@@ -47,11 +47,14 @@ public final class TruthTable {
      */
     private final long[] tableLongs;
 
-    private TruthTable(int k, BitSet table, WeightVector weights) {
+    private final SchemaDescriptor schema;
+
+    private TruthTable(int k, BitSet table, WeightVector weights, SchemaDescriptor schema) {
         this.k = k;
         this.table = table;
         this.weights = weights;
         this.tableLongs = table.toLongArray();
+        this.schema = schema;
     }
 
     /**
@@ -84,7 +87,34 @@ public final class TruthTable {
             throw new IllegalArgumentException(
                     "weights size " + weights.size() + " must equal k=" + k);
         }
-        return new TruthTable(k, (BitSet) table.clone(), weights);
+        return new TruthTable(k, (BitSet) table.clone(), weights, null);
+    }
+
+    /**
+     * Creates a truth table with optional priority weights and a schema descriptor
+     * for output validation.
+     *
+     * @param k       number of inputs, 1..K_MAX
+     * @param table   bits representing outputs for all 2^k input combinations
+     * @param weights optional priority weights, must have size {@code k} if non-null
+     * @param schema  optional schema descriptor for output validation
+     * @throws IllegalArgumentException if k is out of range
+     * @since 3.24
+     */
+    public static TruthTable of(int k, BitSet table, WeightVector weights,
+                                 SchemaDescriptor schema) {
+        if (k < 1 || k > K_MAX) {
+            throw new IllegalArgumentException("k must be in [1, " + K_MAX + "], got: " + k);
+        }
+        if (weights != null && weights.size() != k) {
+            throw new IllegalArgumentException(
+                    "weights size " + weights.size() + " must equal k=" + k);
+        }
+        if (schema != null && schema.k() != k) {
+            throw new IllegalArgumentException(
+                    "schema k=" + schema.k() + " must equal k=" + k);
+        }
+        return new TruthTable(k, (BitSet) table.clone(), weights, schema);
     }
 
     /**
@@ -131,7 +161,7 @@ public final class TruthTable {
                 table.set(i);
             }
         }
-        return new TruthTable(k, table, weights);
+        return new TruthTable(k, table, weights, null);
     }
 
     /**
@@ -165,11 +195,19 @@ public final class TruthTable {
      */
     public boolean evaluate(long[] input) {
         long first = (input != null && input.length > 0) ? input[0] : 0L;
+        int index;
+        boolean result;
         if (weights == null) {
-            int index = (int) (first & ((1L << k) - 1));
-            return getBit(index);
+            index = (int) (first & ((1L << k) - 1));
+            result = getBit(index);
+        } else {
+            result = evaluateWeightedLong(first);
+            index = (int) (first & ((1L << k) - 1));
         }
-        return evaluateWeightedLong(first);
+        if (schema != null) {
+            schema.validateOutput(result, index);
+        }
+        return result;
     }
 
     /**
@@ -182,11 +220,19 @@ public final class TruthTable {
      * for common k values.
      */
     public boolean evaluate(int input) {
+        int index;
+        boolean result;
         if (weights == null) {
-            int index = input & ((1 << k) - 1);
-            return getBit(index);
+            index = input & ((1 << k) - 1);
+            result = getBit(index);
+        } else {
+            result = evaluateWeightedLong(input & 0xFFFFFFFFL);
+            index = input & ((1 << k) - 1);
         }
-        return evaluateWeightedLong(input & 0xFFFFFFFFL);
+        if (schema != null) {
+            schema.validateOutput(result, index);
+        }
+        return result;
     }
 
     /**
@@ -198,23 +244,30 @@ public final class TruthTable {
      * <p>Optimized: uses direct bit manipulation on cached long[] for unweighted case.
      */
     public boolean evaluate(BitSet input) {
+        int index;
+        boolean result;
         if (weights == null) {
-            int index = 0;
+            index = 0;
             for (int i = 0; i < k; i++) {
                 if (input.get(i)) {
                     index |= (1 << i);
                 }
             }
-            return getBit(index);
-        }
-        int[] order = weights.priorityOrder();
-        int index = 0;
-        for (int i = 0; i < k; i++) {
-            if (input.get(order[i])) {
-                index |= (1 << i);
+            result = getBit(index);
+        } else {
+            int[] order = weights.priorityOrder();
+            index = 0;
+            for (int i = 0; i < k; i++) {
+                if (input.get(order[i])) {
+                    index |= (1 << i);
+                }
             }
+            result = getBit(index);
         }
-        return getBit(index);
+        if (schema != null) {
+            schema.validateOutput(result, index);
+        }
+        return result;
     }
 
     /**
@@ -262,6 +315,46 @@ public final class TruthTable {
      */
     public WeightVector weights() {
         return weights;
+    }
+
+    /**
+     * Returns the optional schema descriptor for output validation,
+     * or {@code null} if no schema is attached.
+     *
+     * @return schema descriptor or null
+     * @since 3.24
+     */
+    public SchemaDescriptor schema() {
+        return schema;
+    }
+
+    /**
+     * Returns a copy of this truth table with the given schema descriptor attached.
+     *
+     * @param newSchema the schema descriptor, or null to remove
+     * @return new TruthTable with schema
+     * @since 3.24
+     */
+    public TruthTable withSchema(SchemaDescriptor newSchema) {
+        if (newSchema != null && newSchema.k() != k) {
+            throw new IllegalArgumentException(
+                    "schema k=" + newSchema.k() + " must equal k=" + k);
+        }
+        return new TruthTable(k, (BitSet) table.clone(), weights, newSchema);
+    }
+
+    /**
+     * Validates this truth table against its attached schema (if any).
+     *
+     * @return true if no schema is attached or validation passes
+     * @throws SchemaDescriptor.SchemaViolationException if strict schema and validation fails
+     * @since 3.24
+     */
+    public boolean validateSchema() {
+        if (schema == null) {
+            return true;
+        }
+        return schema.validateTable(this);
     }
 
     public int size() {
@@ -355,7 +448,7 @@ public final class TruthTable {
                     weights = new WeightVector(w);
                 }
             }
-            return new TruthTable(k, table, weights);
+            return new TruthTable(k, table, weights, null);
         } catch (IOException e) {
             throw new RuntimeException("Failed to deserialize truth table from Avro", e);
         }
