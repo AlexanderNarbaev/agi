@@ -4,11 +4,23 @@
 
 Не лжёт. Не забывает. Не может быть использована во вред.
 
-## Статус: v3.33
+## Статус: v3.34
 
 **1000+ тестов** | **82% покрытие** | **Java 25** | **Quarkus 3.36.1** | **Apache Pekko 1.6.0**
 
-### Новое в v3.33
+### Phase A+B+C Research Synthesis: ✅ 15/15 COMPLETE
+- **Phase A** (Immediate): ExactTermGuard, AgentResponse, ParetoFitness, RRF Knee-Point, SchemaDescriptor
+- **Phase B** (Short-term): Skeleton Tree RAG, Record/Replay, AgentGenome, ReflexionMemory, ExactTermGuard Tests
+- **Phase C** (Medium-term): GraphRAG Community, MCP Server, MetaHarnessOptimizer, Lie Detector, SCADA Pilot
+
+### Новые компоненты
+- **SCADA Pilot** — промышленная симуляция датчиков + Safety Monitor (CONTINUE/WAIT/SHUTDOWN)
+- **Noosphere REST API** — publish/search/stats для FNL
+- **HADES→Noosphere Pipeline** — замкнутый Cauldron→Noosphere→HADES с авто-отчётами
+- **Explainability Dashboard** — визуализация Reasoning Chain с SHAP
+- **Lie Detector** — 4 probe-типа (PASS/SUSPICIOUS/DECEPTIVE)
+- **Skeleton Tree RAG** — структурный retrieval с breadcrumb-контекстом
+- **BooleanSchemaValidator** — SCALAR/ENUM/RANGE/VECTOR валидация
 - **BooleanSchemaValidator** — структурная валидация выходов TruthTable (SCALAR/ENUM/RANGE/VECTOR)
 - **Skeleton Tree RAG** — структурно-ориентированный retrieval с breadcrumb-контекстом
 - **Lie Detector Safety** — детектор лжи на 4 probe-типах (PASS/SUSPICIOUS/DECEPTIVE)
