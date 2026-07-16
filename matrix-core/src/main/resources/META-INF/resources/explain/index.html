@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MATRIX — Reasoning Chain Explorer</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: system-ui, -apple-system, sans-serif; background: #0d1117; color: #c9d1d9; min-height: 100vh; }
+        .header { background: #161b22; border-bottom: 1px solid #30363d; padding: 16px 24px; display: flex; justify-content: space-between; align-items: center; }
+        .header h1 { font-size: 20px; color: #58a6ff; }
+        .header span { font-size: 12px; color: #8b949e; }
+        .container { max-width: 1200px; margin: 24px auto; padding: 0 24px; }
+        .chain-name { font-size: 18px; color: #f0f6fc; margin-bottom: 16px; }
+        .step-card { background: #161b22; border: 1px solid #30363d; border-radius: 8px; margin-bottom: 16px; overflow: hidden; }
+        .step-header { padding: 12px 16px; background: #1c2129; border-bottom: 1px solid #30363d; display: flex; justify-content: space-between; cursor: pointer; user-select: none; }
+        .step-header:hover { background: #21262d; }
+        .step-header h3 { font-size: 14px; color: #7ee787; }
+        .step-header .step-num { color: #8b949e; font-size: 12px; }
+        .step-body { padding: 16px; display: none; }
+        .step-body.open { display: block; }
+        .truth-table { font-family: 'Courier New', monospace; font-size: 14px; color: #a5d6ff; padding: 8px; background: #0d1117; border-radius: 4px; display: inline-block; letter-spacing: 2px; margin-bottom: 12px; }
+        .section-title { font-size: 13px; color: #8b949e; margin: 12px 0 8px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .shap-bar { display: flex; align-items: center; margin: 4px 0; gap: 8px; }
+        .shap-label { width: 80px; font-size: 12px; color: #c9d1d9; text-align: right; }
+        .shap-track { flex: 1; height: 20px; background: #21262d; border-radius: 3px; overflow: hidden; position: relative; }
+        .shap-fill-positive { height: 100%; background: linear-gradient(90deg, #238636, #3fb950); border-radius: 3px; transition: width 0.3s; }
+        .shap-fill-negative { height: 100%; background: linear-gradient(90deg, #da3633, #f85149); border-radius: 3px; position: absolute; right: 0; }
+        .shap-value { width: 60px; font-size: 11px; color: #8b949e; text-align: right; }
+        .input-badge { display: inline-block; padding: 2px 8px; border-radius: 3px; font-size: 12px; margin: 2px; }
+        .input-true { background: #238636; color: #fff; }
+        .input-false { background: #30363d; color: #8b949e; }
+        .top-feature { background: #1c2129; border: 1px solid #d29922; border-radius: 6px; padding: 10px; margin-top: 10px; }
+        .top-feature h4 { color: #d29922; font-size: 12px; margin-bottom: 4px; }
+        .btn { background: #238636; color: #fff; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 13px; margin-right: 8px; }
+        .btn:hover { background: #2ea043; }
+        .btn-outline { background: transparent; border: 1px solid #30363d; color: #c9d1d9; }
+        .btn-outline:hover { background: #21262d; }
+        .loading { text-align: center; padding: 40px; color: #8b949e; }
+        .error { background: #da363320; border: 1px solid #da3633; border-radius: 6px; padding: 12px; color: #f85149; margin-bottom: 16px; }
+    </style>
+</head>
+<body>
+<div class="header">
+    <h1>🧠 MATRIX Reasoning Chain Explorer</h1>
+    <span>v3.30 — Explainability Dashboard</span>
+</div>
+<div class="container">
+    <div style="margin-bottom: 16px;">
+        <button class="btn" onclick="loadTrace()">🔄 Load Demo Trace</button>
+        <button class="btn btn-outline" onclick="toggleAll()">📋 Toggle All Steps</button>
+    </div>
+    <div id="status" class="loading">Click "Load Demo Trace" to visualize a reasoning chain with SHAP feature importance.</div>
+    <div id="chain-view"></div>
+</div>
+<script>
+async function loadTrace() {
+    const status = document.getElementById('status');
+    const view = document.getElementById('chain-view');
+    status.className = 'loading';
+    status.textContent = 'Loading trace from /api/v1/explain/trace...';
+    
+    try {
+        const resp = await fetch('/api/v1/explain/trace');
+        if (!resp.ok) throw new Error(`HTTP ${resp.status}: ${resp.statusText}`);
+        const data = await resp.json();
+        renderChain(data);
+        status.style.display = 'none';
+    } catch (e) {
+        status.className = 'error';
+        status.textContent = 'Failed to load trace: ' + e.message;
+        view.innerHTML = '';
+    }
+}
+
+function renderChain(data) {
+    const view = document.getElementById('chain-view');
+    view.innerHTML = `
+        <div class="chain-name">🔗 ${data.chainName} <span style="color:#8b949e;font-size:12px;">(${data.totalSteps} steps)</span></div>
+        ${data.steps.map((step, idx) => renderStep(step, idx === 0)).join('')}
+    `;
+}
+
+function renderStep(step, openFirst) {
+    const shap = step.shapImportance || [];
+    const maxAbsShap = shap.reduce((m, s) => Math.max(m, Math.abs(s.shapValue)), 1);
+    
+    return `
+    <div class="step-card">
+        <div class="step-header" onclick="toggleStep(this)">
+            <h3>Step ${step.step}: ${step.name}</h3>
+            <span class="step-num">k=${step.k} | input=0b${step.input.toString(2).padStart(step.k,'0')}</span>
+        </div>
+        <div class="step-body ${openFirst ? 'open' : ''}">
+            <div class="truth-table">TT: ${step.truthTable}</div>
+            
+            <div class="section-title">SHAP Feature Importance</div>
+            ${shap.map(s => {
+                const absPct = (Math.abs(s.shapValue) / maxAbsShap * 100);
+                const isPositive = s.shapValue >= 0;
+                return `
+                <div class="shap-bar">
+                    <span class="shap-label">Bit ${s.bitIndex} 
+                        <span class="input-badge ${s.inputValue ? 'input-true' : 'input-false'}">${s.inputValue ? '1' : '0'}</span>
+                    </span>
+                    <div class="shap-track">
+                        <div class="shap-fill-positive" style="width:${isPositive ? absPct : 0}%"></div>
+                        ${!isPositive ? `<div class="shap-fill-negative" style="width:${absPct}%"></div>` : ''}
+                    </div>
+                    <span class="shap-value">${s.shapValue >= 0 ? '+' : ''}${s.shapValue.toFixed(3)}</span>
+                </div>`;
+            }).join('')}
+            ${step.topFeature ? `
+            <div class="top-feature">
+                <h4>⭐ Most Important</h4>
+                <span style="color:#d29922">Bit ${step.topFeature.bitIndex}: ${step.topFeature.explanation}</span>
+            </div>` : ''}
+        </div>
+    </div>`;
+}
+
+function toggleStep(header) {
+    const body = header.nextElementSibling;
+    body.classList.toggle('open');
+}
+
+function toggleAll() {
+    document.querySelectorAll('.step-body').forEach(b => b.classList.toggle('open'));
+}
+</script>
+</body>
+</html>
