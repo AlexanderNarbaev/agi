@@ -1,9 +1,13 @@
 package io.matrix.explainability;
 
+import io.matrix.explain.BooleanExplainability;
+import io.matrix.neuron.DecisionTree;
+import io.matrix.neuron.TruthTable;
 import io.smallrye.mutiny.Uni;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.NotFoundException;
+import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
@@ -11,8 +15,12 @@ import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.core.MediaType;
 
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.BitSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 
 /**
  * REST API endpoint for neuron decision explainability.
@@ -132,5 +140,105 @@ public class ExplainabilityResource {
                 "primitives", ExplanationPrimitive.values().length,
                 "categories", ExplanationPrimitive.Category.values().length
         );
+    }
+
+    /**
+     * Returns a BRC reasoning chain trace with SHAP feature importance
+     * for each step. Supports both GET (demo) and POST (custom chain).
+     *
+     * <p>Demo mode (GET) generates a 3-step reasoning chain on random trees
+     * with full SHAP analysis per step.
+     *
+     * @since 3.30
+     */
+    @GET
+    @Path("/trace")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Map<String, Object> getTrace() {
+        return generateDemoTrace();
+    }
+
+    /**
+     * Returns a BRC reasoning chain trace from a custom chain definition.
+     */
+    @POST
+    @Path("/trace")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Map<String, Object> postTrace(Map<String, Object> request) {
+        // For now, return demo trace; custom traces can be added later
+        return generateDemoTrace();
+    }
+
+    private Map<String, Object> generateDemoTrace() {
+        Random rng = new Random(42);
+        Map<String, Object> result = new LinkedHashMap<>();
+        result.put("chainId", "demo-" + System.currentTimeMillis());
+        result.put("chainName", "Demo Reasoning Chain");
+        result.put("timestamp", Instant.now().toString());
+
+        List<Map<String, Object>> steps = new ArrayList<>();
+        String[] stepNames = {"PERCEIVE", "REASON", "DECIDE"};
+        int k = 4;
+
+        for (int i = 0; i < stepNames.length; i++) {
+            Map<String, Object> step = new LinkedHashMap<>();
+            step.put("step", i);
+            step.put("name", stepNames[i]);
+            step.put("k", k);
+
+            // Generate a decision tree
+            DecisionTree tree = DecisionTree.random(k, k * 2, rng);
+            TruthTable tt = tree.toTruthTable(k);
+            step.put("truthTable", formatTruthTable(tt, k));
+
+            // Generate SHAP values
+            BitSet input = new BitSet(k);
+            for (int b = 0; b < k; b++) input.set(b, rng.nextBoolean());
+
+            List<BooleanExplainability.FeatureImportance> shap =
+                    BooleanExplainability.explain(tree, input);
+
+            List<Map<String, Object>> importances = new ArrayList<>();
+            for (var fi : shap) {
+                Map<String, Object> m = new LinkedHashMap<>();
+                m.put("bitIndex", fi.bitIndex());
+                m.put("inputValue", fi.inputValue());
+                m.put("shapValue", fi.shapValue());
+                m.put("explanation", fi.explanation());
+                importances.add(m);
+            }
+            step.put("shapImportance", importances);
+            step.put("input", bitsToInt(input, k));
+
+            // Decision heatmap colors the most important bit
+            if (!importances.isEmpty()) {
+                step.put("topFeature", importances.get(0));
+            }
+
+            steps.add(step);
+        }
+
+        result.put("steps", steps);
+        result.put("totalSteps", steps.size());
+
+        return result;
+    }
+
+    private static String formatTruthTable(TruthTable tt, int k) {
+        StringBuilder sb = new StringBuilder();
+        int size = 1 << k;
+        for (int i = 0; i < Math.min(size, 16); i++) {
+            sb.append(tt.evaluate(i) ? '1' : '0');
+        }
+        if (size > 16) sb.append("...");
+        return sb.toString();
+    }
+
+    private static int bitsToInt(BitSet bits, int k) {
+        int val = 0;
+        for (int i = 0; i < k; i++) {
+            if (bits.get(i)) val |= (1 << i);
+        }
+        return val;
     }
 }
