@@ -1,7 +1,7 @@
 # MATRIX API Documentation
 
-**Версия:** v3.1
-**Дата:** 2026-07-13
+**Версия:** v3.35
+**Дата:** 2026-07-16
 **Base URL:** `http://localhost:8080` (Docker) | `http://matrix.local:30091` (K8s)
 
 ---
@@ -974,4 +974,65 @@ done
 
 ---
 
-*Конец API.md — v3.1, 2026-07-13*
+## Noosphere API (`/api/v1/noosphere`) — v3.30+
+
+### Publish FNL
+**`POST /api/v1/noosphere/publish`**
+
+```json
+// Request
+{ "name": "navigation-v3", "type": "navigation", "accuracy": 0.92, "tags": ["spatial"] }
+
+// Response
+{ "success": true, "entryId": "abc123...", "fnlName": "navigation-v3", "timestamp": "..." }
+```
+
+### Search FNLs
+**`GET /api/v1/noosphere/search?q=navigation&limit=10`**
+
+```json
+{ "query": "navigation", "totalResults": 3, "returned": 3,
+  "results": [{ "name": "nav-v1", "type": "navigation", "relevance": 0.85, ... }] }
+```
+
+### Registry Stats
+**`GET /api/v1/noosphere/stats`**
+
+```json
+{ "totalEntries": 42, "activeEntries": 42, "indexedDocuments": 42, "topTypes": ["navigation","vision"] }
+```
+
+---
+
+## Explainability Trace (`/api/v1/explain/trace`) — v3.30+
+
+### BRC Reasoning Trace
+**`GET /api/v1/explain/trace`**
+
+Returns a 3-step PERCEIVE→REASON→DECIDE trace with SHAP feature importance per step.
+
+```json
+{ "chainName": "Demo Reasoning Chain", "totalSteps": 3,
+  "steps": [{ "step": 0, "name": "PERCEIVE", "k": 4,
+    "shapImportance": [{ "bitIndex": 0, "shapValue": 0.25, "explanation": "..." }] }] }
+```
+
+Static HTML explorer: `/explain/index.html`
+
+---
+
+## SCADA Safety Monitor — v3.34+
+
+SCADA operations are gated through `StructuralSafetyGuard`:
+- `scada.shutdown` → `REQUIRES_APPROVAL` (HIGH risk, gated)
+- `scada.valve.control` → `MEDIUM` risk
+- `scada.sensor.read` → `LOW` risk (auto-approved)
+
+```json
+// Guard verdict for scada.shutdown:
+{ "decision": "REQUIRES_APPROVAL", "riskLevel": "HIGH", "gateId": "scada.shutdown-..." }
+```
+
+---
+
+*Конец API.md — v3.35, 2026-07-16*
