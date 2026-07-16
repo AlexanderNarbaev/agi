@@ -17,7 +17,7 @@ public enum AgentRole {
     /** Prioritizes movement — uses layers 4,5 for specialized move neurons. */
     EXPLORER,
 
-    /** Combat-focused bot. */
+    /** Combat-focused bot — uses mix of sensor (0) and action (4) layers. */
     FIGHTER,
 
     /** Balanced — current default behavior (all layers). */
@@ -31,7 +31,7 @@ public enum AgentRole {
             case MINER -> new int[]{0, 1};
             case CRAFTER -> new int[]{2, 3};
             case EXPLORER -> new int[]{4, 5};
-            case FIGHTER -> new int[]{0, 1};        // same as MINER for now
+            case FIGHTER -> new int[]{0, 4};   // sensor + action layers for combat
             case GENERALIST -> new int[]{0, 1, 2, 3, 4, 5};
         };
     }
