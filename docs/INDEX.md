@@ -138,3 +138,8 @@
 | — | matrix-core/.../LieDetectorTest.java | Lie Detector Test | Тесты | 16 tests for all probe types + StructuralSafetyGuard integration | 2026-07-16 |
 | — | matrix-core/src/.../CommunityDetector.java | Community Detector | AI | Phase C1: Louvain-style graph partitioning for Noosphere | 2026-07-16 |
 | — | matrix-core/.../CommunityDetectorTest.java | Community Detector Test | Тесты | 10 tests: modularity, clusters, star topology, disconnected | 2026-07-16 |
+| — | matrix-core/src/.../NoosphereResource.java | Noosphere REST API | API | W8: CDI beans, publish/search/stats (POST+GET) | 2026-07-16 |
+| — | matrix-core/.../NoosphereResourceTest.java | Noosphere REST Test | Тесты | 7 tests: publish, search, stats, limits, empty registry | 2026-07-16 |
+| — | matrix-core/src/.../ExplainabilityResource.java | Explainability REST API | API | W6: trace endpoint + SHAP viz (GET /trace) | 2026-07-16 |
+| — | matrix-core/.../ExplainabilityResourceTest.java | Explainability REST Test | Тесты | 6 tests: trace structure, SHAP, determinism | 2026-07-16 |
+| — | matrix-core/.../resources/META-INF/resources/explain/index.html | Reasoning Chain Explorer | UI | W6: Interactive SHAP viz, dark theme, toggle steps | 2026-07-16 |

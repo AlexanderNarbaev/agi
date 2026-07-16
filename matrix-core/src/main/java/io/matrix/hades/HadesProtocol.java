@@ -2,15 +2,19 @@ package io.matrix.hades;
 
 import io.matrix.cluster.NeuronId;
 import io.matrix.cluster.NeuronInstance;
+import io.matrix.noosphere.FnlPackage;
+import io.matrix.noosphere.NoosphereRegistry;
 import io.matrix.observability.MatrixMetrics;
 import io.matrix.snapshot.ClusterSnapshot;
 import io.matrix.snapshot.SnapshotStore;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 /**
  * HADES Protocol — Healing and Derangement Eradication System.
@@ -28,7 +32,7 @@ import java.util.Map;
  */
 public class HadesProtocol {
 
-    public enum HadesState { IDLE, ISOLATING, ROLLING_BACK, ANALYZING, COMPLETED, FAILED }
+    public enum HadesState { IDLE, ISOLATING, ROLLING_BACK, ANALYZING, REPORTING, COMPLETED, FAILED }
 
     public record HadesResult(
             HadesState state,
@@ -54,17 +58,24 @@ public class HadesProtocol {
     private final SnapshotStore snapshotStore;
     private final DerangementDetector detector;
     private final MatrixMetrics metrics;
+    private final NoosphereRegistry noosphereRegistry;
     private final List<String> hadesLog = new ArrayList<>();
     private HadesState state = HadesState.IDLE;
 
-    public HadesProtocol(SnapshotStore snapshotStore, MatrixMetrics metrics) {
+    public HadesProtocol(SnapshotStore snapshotStore, MatrixMetrics metrics,
+                          NoosphereRegistry noosphereRegistry) {
         this.snapshotStore = snapshotStore;
         this.detector = new DerangementDetector();
         this.metrics = metrics;
+        this.noosphereRegistry = noosphereRegistry;
+    }
+
+    public HadesProtocol(SnapshotStore snapshotStore, MatrixMetrics metrics) {
+        this(snapshotStore, metrics, null);
     }
 
     public HadesProtocol(SnapshotStore snapshotStore) {
-        this(snapshotStore, null);
+        this(snapshotStore, null, null);
     }
 
     public DerangementDetector detector() { return detector; }
@@ -157,6 +168,30 @@ public class HadesProtocol {
                 + rolledBack + " restored from snapshot";
 
         hadesLog.add("HADES:ANALYSIS " + analysis);
+
+        // Phase 6: Report — publish anonymized log to Noosphere
+        if (noosphereRegistry != null) {
+            state = HadesState.REPORTING;
+            try {
+                FnlPackage report = FnlPackage.builder()
+                        .name("hades-report-" + UUID.randomUUID().toString().substring(0, 8))
+                        .type("hades-report")
+                        .version("1.0.0")
+                        .authorInstanceId("hades-protocol")
+                        .accuracy(0.99)
+                        .generation(1)
+                        .description(analysis)
+                        .tags(new String[]{"hades", "recovery", "anonymized"})
+                        .build();
+                var result = noosphereRegistry.publish(report);
+                hadesLog.add("HADES:REPORT published=" + result.success()
+                        + " id=" + result.entryId());
+            } catch (Exception e) {
+                hadesLog.add("HADES:REPORT failed: " + e.getMessage());
+            }
+        } else {
+            hadesLog.add("HADES:REPORT skipped — no NoosphereRegistry configured");
+        }
 
         state = HadesState.COMPLETED;
         hadesLog.add("HADES:DONE");

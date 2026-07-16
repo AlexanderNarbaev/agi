@@ -138,7 +138,7 @@ public class PipelineCommand implements Callable<Integer> {
         try {
             Path tempDir = Files.createTempDirectory("hades-pipeline-");
             SnapshotStore store = new SnapshotStore(tempDir, "pipeline-instance");
-            HadesProtocol hades = new HadesProtocol(store);
+            HadesProtocol hades = new HadesProtocol(store, null, registry);
 
             // build a synthetic neuron cluster representing the published packages
             Map<NeuronId, NeuronInstance> neurons = new HashMap<>();
