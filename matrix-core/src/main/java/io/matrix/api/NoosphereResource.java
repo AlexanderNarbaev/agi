@@ -4,6 +4,8 @@ import io.matrix.noosphere.FnlPackage;
 import io.matrix.noosphere.KnowledgeIndex;
 import io.matrix.noosphere.NoosphereRegistry;
 import jakarta.inject.Inject;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.DefaultValue;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
@@ -45,10 +47,18 @@ public class NoosphereResource {
      */
     @POST
     @Path("/publish")
+    @Consumes(MediaType.APPLICATION_JSON)
     public Map<String, Object> publish(Map<String, Object> request) {
         String name = (String) request.getOrDefault("name", "demo-fnl-" + System.currentTimeMillis());
         String type = (String) request.getOrDefault("type", "demo");
         String author = (String) request.getOrDefault("authorInstanceId", "instance-" + UUID.randomUUID().toString().substring(0, 8));
+
+        if (name == null || name.isBlank()) {
+            name = "demo-fnl-" + System.currentTimeMillis();
+        }
+        if (type == null || type.isBlank()) {
+            type = "demo";
+        }
 
         @SuppressWarnings("unchecked")
         List<String> tags = request.containsKey("tags")
@@ -58,6 +68,7 @@ public class NoosphereResource {
         double accuracy = request.containsKey("accuracy")
                 ? ((Number) request.get("accuracy")).doubleValue()
                 : 0.85;
+        accuracy = Math.clamp(accuracy, 0.0, 1.0);
 
         FnlPackage fnl = FnlPackage.builder()
                 .name(name)
@@ -71,7 +82,9 @@ public class NoosphereResource {
                 .build();
 
         NoosphereRegistry.PublishResult result = registry.publish(fnl);
-        knowledgeIndex.reindex(); // keep index fresh
+        if (result.success()) {
+            knowledgeIndex.reindex(); // incremental after successful publish
+        }
 
         Map<String, Object> response = new LinkedHashMap<>();
         response.put("success", result.success());
@@ -88,12 +101,11 @@ public class NoosphereResource {
     @GET
     @Path("/search")
     public Map<String, Object> search(@QueryParam("q") String query,
-                                       @QueryParam("limit") @jakarta.ws.rs.DefaultValue("10") int limit) {
+                                       @QueryParam("limit") @DefaultValue("10") int limit) {
         if (query == null || query.isBlank()) {
             query = "";
         }
 
-        knowledgeIndex.reindex();
         List<KnowledgeIndex.SearchResult> results = knowledgeIndex.search(query);
 
         List<Map<String, Object>> items = new ArrayList<>();
