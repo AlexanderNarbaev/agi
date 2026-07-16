@@ -143,3 +143,7 @@
 | — | matrix-core/src/.../ExplainabilityResource.java | Explainability REST API | API | W6: trace endpoint + SHAP viz (GET /trace) | 2026-07-16 |
 | — | matrix-core/.../ExplainabilityResourceTest.java | Explainability REST Test | Тесты | 6 tests: trace structure, SHAP, determinism | 2026-07-16 |
 | — | matrix-core/.../resources/META-INF/resources/explain/index.html | Reasoning Chain Explorer | UI | W6: Interactive SHAP viz, dark theme, toggle steps | 2026-07-16 |
+| — | matrix-core/src/.../HadesProtocol.java | HADES Protocol | Core | W9: REPORT phase — publish anonymized log to NoosphereRegistry | 2026-07-16 |
+| — | matrix-core/.../HadesNoosphereIntegrationTest.java | HADES+Noosphere Test | Тесты | 5 tests: REPORT with/without registry, analysis, log | 2026-07-16 |
+| — | matrix-spigot/src/.../AgentRoleTest.java | AgentRole Test | Тесты | 8 tests: unique layers, FIGHTER, case-insensitivity | 2026-07-16 |
+| — | matrix-spigot/src/.../resources/paper-plugin.yml | Paper Plugin Config | Инфра | W7: Paper 1.20.4 bootstrap config | 2026-07-16 |
