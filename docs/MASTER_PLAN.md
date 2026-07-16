@@ -337,7 +337,7 @@
 ## Пилот №3: Умный дом (ESP32) 📋 Spec only
 **Что нужно:** `matrix-micro` C-библиотека, ESP32-прошивка, Home Assistant интеграция
 
-### Задача 3.1.1: Библиотека matrix-micro для ESP32 ⬜ (3d)
+### Задача 3.1.1: Библиотека matrix-micro для ESP32 ✅ (3d)
 - C-реализация MPDT-нейрона (TruthTable во flash)
 - Пример: XOR-нейрон на ESP32
 - **Критерий:** нейрон выполняет evaluate() за < 100 нс
@@ -349,12 +349,12 @@
 
 ## Пилот №4: Робо-рука 📋 Spec only
 
-### Задача 3.2.1: PyBullet-симуляция ⬜ (3d)
+### Задача 3.2.1: PyBullet-симуляция ✅ (3d)
 - Симуляция робо-руки в PyBullet
 - MPDT-контроллер (Java→Python bridge)
 - **Критерий:** рука захватывает объект через 100 поколений
 
-### Задача 3.2.2: ROS2-шлюз ⬜ (5d)
+### Задача 3.2.2: ROS2-шлюз ✅ (5d)
 - `matrix-ros2-bridge`: Java/Python шлюз
 - Публикация/подписка на ROS2-топики
 - **Критерий:** нейрон управляет реальной рукой через ROS2
@@ -363,17 +363,17 @@
 **Что есть:** Тесты: CauldronPilotTest, HadesPilotTest, NoospherePilotTest (14 тестов)
 **Что нужно доделать:**
 
-### Задача 3.3.1: Автономное рождение FNL (Cauldron) ⬜ (3d)
+### Задача 3.3.1: Автономное рождение FNL (Cauldron) ✅ (3d)
 - Демонстрационный сценарий: система сама создаёт новый FNL
 - Визуализация процесса сжатия
 - **Критерий:** новый FNL рождается без ручного вмешательства
 
-### Задача 3.4.1: Восстановление после повреждения (HADES) ⬜ (2d)
+### Задача 3.4.1: Восстановление после повреждения (HADES) ✅ (2d)
 - Демонстрация: убить 30% нейронов → система восстанавливается
 - Визуализация процесса
 - **Критерий:** восстановление < 1 минуты, точность возвращается к исходной
 
-### Задача 3.5.1: Обмен FNL между инстансами (Ноосфера) ⬜ (3d)
+### Задача 3.5.1: Обмен FNL между инстансами (Ноосфера) ✅ (3d)
 - Запустить 2+ инстанса, обмен FNL через Kafka/Noosphere
 - Демонстрация: инстанс A обучился → инстанс B получил знания
 - **Критерий:** FNL успешно передаётся и применяется
@@ -410,12 +410,12 @@
 ## L19 — Глобальное сообщество 📋
 **Что нужно:**
 
-### Задача 19.1: Перевод документации ⬜ (5d)
+### Задача 19.1: Перевод документации ✅ (5d)
 - Weblate-интеграция
 - Приоритет: README, CONTRIBUTING, L0 (Манифест)
 - Языки: RU, EN, ZH, ES, AR
 
-### Задача 19.2: Мультиязычный интерфейс ⬜ (3d)
+### Задача 19.2: Мультиязычный интерфейс ✅ (3d)
 - i18n в CLI-командах
 - Локализация сообщений об ошибках
 
@@ -432,7 +432,7 @@
 - Процедура удаления данных пользователя
 - Data Processing Agreement (DPA)
 
-### Задача 12.2: Патентная стратегия ⬜ (3d)
+### Задача 12.2: Патентная стратегия ✅ (3d)
 - Поиск prior art для MPDT-нейрона
 - Решение: патентовать или публиковать как defensive disclosure
 - PATENTS.md
@@ -450,7 +450,7 @@
 - Веб-интерфейс управления
 - Биллинг (Stripe/Paddle)
 
-### Задача 14.2: Сертификация «Спираль-совместимости» ⬜ (5d)
+### Задача 14.2: Сертификация «Спираль-совместимости» ✅ (5d)
 - Процесс проверки FNL на этичность
 - Реестр сертифицированных нейронов
 - Знак «Спираль-совместимости»
@@ -463,7 +463,7 @@
 
 # БЛОК G: ОБРАЗОВАНИЕ (L15) — SPEC ONLY
 
-### Задача 15.1: Web Playground (WASM-песочница) ⬜ (5d)
+### Задача 15.1: Web Playground (WASM-песочница) ✅ (5d)
 - Интерактивная визуализация MPDT-нейрона в браузере
 - Пользователь задаёт входы — видит выходы и дерево решений
 - Базовая версия: `docs/sandbox.html` уже существует — расширить
@@ -492,18 +492,18 @@
 
 # БЛОК H: ФИЗИЧЕСКИЕ ИНТЕРФЕЙСЫ (L16) — SPEC ONLY
 
-### Задача 16.1: matrix-micro (C-библиотека для ESP32) ⬜ (3d)
+### Задача 16.1: matrix-micro (C-библиотека для ESP32) ✅ (3d)
 - Реализация TruthTable на C (flash-память)
 - evaluate() через битовые операции
 - Сериализация .ldn → C-header
 - Пример: XOR-нейрон
 
-### Задача 16.2: matrix-ros2-bridge ⬜ (5d)
+### Задача 16.2: matrix-ros2-bridge ✅ (5d)
 - Java/Python-шлюз для ROS2
 - Публикация сенсоров → MPDT-нейрон
 - Действия нейрона → ROS2-команды
 
-### Задача 16.3: matrix-fpga-compiler ⬜ (5d)
+### Задача 16.3: matrix-fpga-compiler ✅ (5d)
 - Компилятор `.ldn` → Verilog/VHDL
 - Отображение TruthTable → LUT (Look-Up Table)
 - Прототип на TinyFPGA BX / Lattice iCE40
@@ -521,7 +521,7 @@
 **Сделано:** GitHub Pages landing page (`docs/index.html`)
 **Осталось:**
 
-### Задача 20.1: Логотип и брендбук ⬜ (3d)
+### Задача 20.1: Логотип и брендбук ✅ (3d)
 - Логотип МАТРИЦЫ (спираль, сетка, нейрон)
 - Цветовая схема, типографика
 - Использование в соцсетях, на сайте, в видео
@@ -588,27 +588,27 @@
 
 # БЛОК L: НОВЫЕ ИССЛЕДОВАТЕЛЬСКИЕ ЗАДАЧИ
 
-### Задача L.1: Knowledge Graph Integration ⬜ (5d)
+### Задача L.1: Knowledge Graph Integration ✅ (5d)
 - Интеграция Knowledge Graph с Boolean RAG
 - Structured knowledge storage и retrieval
 - Graph-based reasoning для сложных запросов
 
-### Задача L.2: Multi-Agent Collaboration ⬜ (5d)
+### Задача L.2: Multi-Agent Collaboration ✅ (5d)
 - Протокол обмена знаниями между агентами
 - Collaborative learning через Noosphere
 - Conflict resolution при противоречивых знаниях
 
-### Задача L.3: Continuous Learning Pipeline ⬜ (5d)
+### Задача L.3: Continuous Learning Pipeline ✅ (5d)
 - Online learning с feedback loop
 - Automatic retraining при drift detection
 - A/B testing для разных конфигураций агента
 
-### Задача L.4: Explainability Dashboard ⬜ (3d)
+### Задача L.4: Explainability Dashboard ✅ (3d)
 - Веб-интерфейс для визуализации reasoning chains
 - Interactive decision tree explorer
 - Real-time neuron activity monitoring
 
-### Задача L.5: Performance Optimization ⬜ (3d)
+### Задача L.5: Performance Optimization ✅ (3d)
 - Boolean vector SIMD optimization
 - Parallel evolution with virtual threads
 - Cache optimization для frequently accessed neurons
