@@ -200,6 +200,29 @@ public final class KnowledgeGraphStore {
         return relations.size();
     }
 
+    /** Returns all entity IDs. */
+    public Set<String> entityIds() {
+        return Set.copyOf(entities.keySet());
+    }
+
+    /** Returns all relations. */
+    public List<Relation> allRelations() {
+        return List.copyOf(relations);
+    }
+
+    /** Returns all neighbors of an entity (both outgoing and incoming). */
+    public Set<String> neighbors(String entityId) {
+        Set<String> result = new HashSet<>();
+        for (Relation r : relations) {
+            if (r.fromId().equals(entityId)) {
+                result.add(r.toId());
+            } else if (r.toId().equals(entityId)) {
+                result.add(r.fromId());
+            }
+        }
+        return result;
+    }
+
     // ─── Traversal ───
 
     /**

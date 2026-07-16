@@ -128,3 +128,11 @@
 | — | matrix-core/.../MatrixMcpServerTest.java | MCP Server Test | Тесты | 26 tests for MCP tools/resources/dispatch | 2026-07-14 |
 | — | matrix-core/.../McpLifecycleIntegrationTest.java | MCP+Lifecycle Integration Test | Тесты | 4 tests: MCP server orchestrating agent lifecycle | 2026-07-14 |
 | — | docs/MATRIX_TEAM.md | Многоагентная команда разработки | Социум | 14 ролей, волновой процесс, карта делегирования под-агентов | 2026-07-16 |
+| — | matrix-core/src/.../SchemaDescriptor.java | BooleanSchemaValidator | AI | Phase A5: Schema constraints (SCALAR/ENUM/RANGE/VECTOR), test vectors | 2026-07-16 |
+| — | matrix-core/.../SchemaDescriptorTest.java | SchemaDescriptor Test | Тесты | 28 tests: schema types, strict/non-strict, TruthTable integration | 2026-07-16 |
+| — | matrix-core/src/.../SkeletonNode.java | Skeleton Node | AI | Phase B1: Document tree node — heading/paragraph/list/code | 2026-07-16 |
+| — | matrix-core/src/.../SkeletonTreeParser.java | Skeleton Tree Parser | AI | Phase B1: Markdown→hierarchical tree + breadcrumb extraction | 2026-07-16 |
+| — | matrix-core/.../SkeletonNodeTest.java | Skeleton Node Test | Тесты | 11 tests for tree traversal, findContaining, flatten | 2026-07-16 |
+| — | matrix-core/.../SkeletonTreeParserTest.java | Skeleton Tree Parser Test | Тесты | 11 tests for heading/list/code/breadcrumb parsing | 2026-07-16 |
+| — | matrix-core/src/.../LieDetector.java | Lie Detector | Ethics | Phase C4: Probe-based output verification (4 probe types) | 2026-07-16 |
+| — | matrix-core/.../LieDetectorTest.java | Lie Detector Test | Тесты | 16 tests for all probe types + StructuralSafetyGuard integration | 2026-07-16 |
