@@ -149,7 +149,7 @@
 
 ## Phase 2: Boolean RAG ✅
 **Статус:** Knowledge retrieval с Top-K expansion
-**Файлы:** `rag/BooleanRag.java`, `rag/BooleanIndex.java`, `rag/RagResult.java`
+**Файлы:** `rag/BooleanRag.java`, `rag/BooleanIndex.java`, `rag/QueryExpander.java`
 **Тесты:** BooleanRagTest
 **K8s:** `RAG_TOP_K=5`
 

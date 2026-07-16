@@ -111,11 +111,15 @@
 | Код | 75/226 files (33%) без тестов | LOW (многие — DTO/demo) |
 | Код | `explain` vs `explainability` — overlapping packages | LOW |
 | Код | 5 files >500 строк (max: ExplanationGenerator 608) | LOW |
+| MASTER_PLAN | `benchmark/CompressionBenchmark.java` — ✅ FALSE POSITIVE: file exists (JMH) | RESOLVED |
+| WAL | root WAL.md v3.10 stale — ✅ FIXED: updated to v3.23 | RESOLVED |
 
 **Приоритеты на следующую волну:**
-1. **HIGH**: Синхронизировать WAL-файлы, поправить MASTER_PLAN references
-2. **MEDIUM**: Обновить AGENTS.md Quarkus version, INDEX.md дополнения
-3. **LOW**: Разобраться с `explain`/`explainability` overlap
+1. ~~HIGH: Синхронизировать WAL-файлы~~ ✅ FIXED
+2. **HIGH**: Поправить MASTER_PLAN references (RagResult.java → BooleanRag.java) ✅ FIXED
+3. **MEDIUM**: Обновить AGENTS.md Quarkus version (3.35.4→3.36.1) ✅ FIXED
+4. **MEDIUM**: INDEX.md дополнения (11 новых доков + L21/L22 clarification) ✅ FIXED
+5. **LOW**: Разобраться с `explain`/`explainability` overlap
 
 ---
 
