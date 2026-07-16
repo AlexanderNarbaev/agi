@@ -1,18 +1,18 @@
-📍 v3.25 — Wave 2 COMPLETE (review fixes applied). Phase A: 5/5 DONE. 3 commits pushed.
-🚀 Active: Wave 3 NEXT
+📍 v3.30 — Session waves: W1 (docs) ✅, W2 (SchemaDescriptor A5) ✅, W3 (SkeletonTree B1) ✅, W4 (LieDetector C4) ✅. 6 commits pushed. Phase A:5/5, Phase B:5/5, Phase C:4/5.
+🚀 Active: Wave 5 — doc consolidation + continue
 🛑 Protected: Pekko 1.6.0, K_MAX=20, FROZEN-neurons, Quarkus 3.36.1, Java 25, AGPLv3+ethics, 82% coverage floor
 
-## Session Summary — 4 commits pushed to origin+gitverse
-1. 6d8d8d7 docs: Wave 1 — sync WAL, Quarkus 3.35.4→3.36.1, INDEX.md +11 docs
-2. 6d145f3 feat: BooleanSchemaValidator A5 — SchemaDescriptor + TruthTable (28 tests)
-3. 1d68d1e feat: Integrate SchemaDescriptor with BrcChain — outputSchema validation
-4. 2afb67e fix: Guard review — weighted skip, BrcChain limit, AgentBrainService.validateSchema, import restore
+## Session Summary — 4 waves, 6 commits
+| Wave | Item | Tests | Commit |
+|------|------|-------|--------|
+| W1 | Quarkus sync + INDEX.md + MASTER_PLAN fixes | — | 6d8d8d7 |
+| W2 | BooleanSchemaValidator A5 | 28 | 6d145f3, 1d68d1e, 2afb67e, c02380c |
+| W3 | Skeleton Tree RAG B1 | 22 | 7ec21ae |
+| W4 | Lie Detector Safety C4 | 16 | 25fd545 |
 
-## Guard Review Fixes (2afb67e)
-- ✅ Weighted evaluate(): schema validation only runs when weights==null (index mismatch)
-- ✅ BrcChain.validateOutput(): capped to outputSchema.k() 
-- ✅ NeuralTextGenerator import restored (regression from edit)
-- ✅ AgentBrainService.validateSchema(): traverses layers → validates all TT schemas
-
-## Phase A Research Synthesis — 5/5 COMPLETE (100%)
-A1 ExactTermGuard ✅ | A2 AgentResponse ✅ | A3 ParetoFitness ✅ | A4 Knee-Point RRF ✅ | A5 BooleanSchemaValidator ✅
+## Research Synthesis Completion Status
+| Phase | Items | Status |
+|-------|-------|--------|
+| A | 5/5 | ✅ 100% |
+| B | 5/5 | ✅ 100% |
+| C | 4/5 | ⚠️ C1 GraphRAG Noosphere pending, C5 SCADA pending |
