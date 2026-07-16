@@ -147,6 +147,7 @@
 | — | matrix-core/.../HadesNoosphereIntegrationTest.java | HADES+Noosphere Test | Тесты | 5 tests: REPORT with/without registry, analysis, log | 2026-07-16 |
 | — | matrix-spigot/src/.../AgentRoleTest.java | AgentRole Test | Тесты | 8 tests: unique layers, FIGHTER, case-insensitivity | 2026-07-16 |
 | — | matrix-spigot/src/.../resources/paper-plugin.yml | Paper Plugin Config | Инфра | W7: Paper 1.20.4 bootstrap config | 2026-07-16 |
+| — | matrix-spigot/src/.../MatrixPlugin.java | Spigot Plugin | Minecraft | W11: CRAFT action (log→planks→sticks→pickaxe) | 2026-07-16 |
 | — | matrix-core/src/.../ScadaSensor.java | SCADA Sensor | Pilot | C5: Industrial sensor types + safe ranges | 2026-07-16 |
 | — | matrix-core/src/.../ScadaSimulator.java | SCADA Simulator | Pilot | C5: Process simulation, fault injection, shutdown | 2026-07-16 |
 | — | matrix-core/src/.../ScadaSafetyMonitor.java | SCADA Safety Monitor | Pilot | C5: Threshold-based safety with CONTINUE/WAIT/SHUTDOWN | 2026-07-16 |
