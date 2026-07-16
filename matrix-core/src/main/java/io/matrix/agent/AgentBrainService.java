@@ -8,6 +8,7 @@ import io.matrix.neuron.DecisionTree;
 import io.matrix.neuron.HierarchicalBrain;
 import io.matrix.neuron.NeuralTextGenerator;
 import io.matrix.neuron.NeuronLayer;
+import io.matrix.neuron.SchemaDescriptor;
 import io.matrix.neuron.TruthTable;
 import io.matrix.observability.MatrixMetrics;
 import io.matrix.redis.NeuronCacheService;
@@ -401,6 +402,28 @@ public class AgentBrainService {
     /** Returns the hierarchical brain. */
     public HierarchicalBrain brain() {
         return brain;
+    }
+
+    /**
+     * Validates all truth table schemas in all brain layers.
+     *
+     * @return true if no schemas or all pass validation
+     * @throws SchemaDescriptor.SchemaViolationException if a strict schema fails
+     * @since 3.24
+     */
+    public boolean validateSchema() {
+        if (brain == null) {
+            return true;
+        }
+        for (NeuronLayer layer : brain.layers()) {
+            for (DecisionTree neuron : layer.neurons()) {
+                TruthTable tt = neuron.toTruthTable(layer.k());
+                if (tt.schema() != null) {
+                    tt.validateSchema();
+                }
+            }
+        }
+        return true;
     }
 
     // ─── Persistence helpers ───

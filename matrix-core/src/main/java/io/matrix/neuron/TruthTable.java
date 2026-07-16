@@ -195,17 +195,15 @@ public final class TruthTable {
      */
     public boolean evaluate(long[] input) {
         long first = (input != null && input.length > 0) ? input[0] : 0L;
-        int index;
         boolean result;
         if (weights == null) {
-            index = (int) (first & ((1L << k) - 1));
+            int index = (int) (first & ((1L << k) - 1));
             result = getBit(index);
+            if (schema != null) {
+                schema.validateOutput(result, index);
+            }
         } else {
             result = evaluateWeightedLong(first);
-            index = (int) (first & ((1L << k) - 1));
-        }
-        if (schema != null) {
-            schema.validateOutput(result, index);
         }
         return result;
     }
@@ -220,17 +218,15 @@ public final class TruthTable {
      * for common k values.
      */
     public boolean evaluate(int input) {
-        int index;
         boolean result;
         if (weights == null) {
-            index = input & ((1 << k) - 1);
+            int index = input & ((1 << k) - 1);
             result = getBit(index);
+            if (schema != null) {
+                schema.validateOutput(result, index);
+            }
         } else {
             result = evaluateWeightedLong(input & 0xFFFFFFFFL);
-            index = input & ((1 << k) - 1);
-        }
-        if (schema != null) {
-            schema.validateOutput(result, index);
         }
         return result;
     }
@@ -244,28 +240,27 @@ public final class TruthTable {
      * <p>Optimized: uses direct bit manipulation on cached long[] for unweighted case.
      */
     public boolean evaluate(BitSet input) {
-        int index;
         boolean result;
         if (weights == null) {
-            index = 0;
+            int index = 0;
             for (int i = 0; i < k; i++) {
                 if (input.get(i)) {
                     index |= (1 << i);
                 }
             }
             result = getBit(index);
+            if (schema != null) {
+                schema.validateOutput(result, index);
+            }
         } else {
             int[] order = weights.priorityOrder();
-            index = 0;
+            int index = 0;
             for (int i = 0; i < k; i++) {
                 if (input.get(order[i])) {
                     index |= (1 << i);
                 }
             }
             result = getBit(index);
-        }
-        if (schema != null) {
-            schema.validateOutput(result, index);
         }
         return result;
     }
