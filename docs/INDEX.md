@@ -154,3 +154,5 @@
 | — | matrix-core/src/.../ScadaSafetyMonitor.java | SCADA Safety Monitor | Pilot | C5: Threshold-based safety with CONTINUE/WAIT/SHUTDOWN | 2026-07-16 |
 | — | matrix-core/.../ScadaSimulatorTest.java | SCADA Simulator Test | Тесты | 9 tests: fault injection, determinism, thresholds | 2026-07-16 |
 | — | matrix-core/.../ScadaSafetyMonitorTest.java | SCADA Safety Monitor Test | Тесты | 6 tests: CONTINUE/WAIT/SHUTDOWN verdicts | 2026-07-16 |
+| — | docs/REQUIREMENTS.md | Единый свод требований | Все | 150+ FR/NFR из L0-L22, исследований, код-аудита | 2026-07-17 |
+| — | docs/CRITICAL_GAPS.md | Отчёт о критических пробелах | Все | 24 проблемы: 5 CRITICAL, 7 HIGH, 8 MEDIUM, 4 LOW | 2026-07-17 |

@@ -683,6 +683,15 @@
 ├── ✅ Managed Matrix MVP — MatrixLifecycleManager: init→train→deploy→monitor→retrain
 ├── ⏸️ Phase 7: GraalVM 25 native — configs готовы (1173 строк reflect-config), блокирован на Quarkus 3.37
 ├── 🔲 Сертификация «Спираль-совместимости»
+├── ✅ v3.37: Requirements Audit & Code Review — 150+ FR/NFR, 10 files audited, 24 gaps
+│   ├── ✅ docs/REQUIREMENTS.md — единый свод требований (L0-L22 + исследования + конфиги)
+│   ├── ✅ docs/CRITICAL_GAPS.md — 24 проблемы (5 CRITICAL, 7 HIGH, 8 MEDIUM, 4 LOW)
+│   ├── 🔴 GAP-001: EvolutionLoop гонка данных в evaluateGenerationParallel()
+│   ├── 🔴 GAP-002: ConsensusEngine полное отсутствие потокобезопасности
+│   ├── 🔴 GAP-003: EthicalFilter не реализован как FROZEN FNL (отклонение от L5/L7)
+│   ├── 🔴 GAP-004: ConsensusEngine двойной подсчёт голосов
+│   ├── 🔴 GAP-005: CauldronProtocol отсутствует этический аудит после эволюции
+│   └── 📋 Improvement Plan: 5 фаз, 30+ задач
 ```
 
 ---
@@ -724,4 +733,4 @@
 
 ---
 
-*Конец MASTER_PLAN.md — v3.1, 2026-07-13 — Phase 15 Hierarchical Memory complete, Docker Compose added*
+*Конец MASTER_PLAN.md — v3.37, 2026-07-17 — Requirements Audit complete: 150+ FR/NFR, 24 gaps identified*
