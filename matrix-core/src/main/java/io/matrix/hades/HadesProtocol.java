@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -96,10 +97,12 @@ public class HadesProtocol {
                                 Path storeDir) throws IOException {
         hadesLog.add("HADES:START neurons=" + neurons.size());
 
+        Map<NeuronId, NeuronInstance> workingNeurons = new HashMap<>(neurons);
+
         // Phase 1: Scan for derangement
         state = HadesState.ISOLATING;
         var alerts = detector.scanAll(
-                new ArrayList<>(neurons.values()), signalRates);
+                new ArrayList<>(workingNeurons.values()), signalRates);
         hadesLog.add("HADES:SCAN alerts=" + alerts.size());
         if (metrics != null) {
             alerts.forEach(a -> metrics.hadesAlert());
@@ -120,10 +123,14 @@ public class HadesProtocol {
 
         List<NeuronInstance> quarantine = new ArrayList<>();
         for (NeuronId id : affected) {
-            var neuron = neurons.get(id);
+            var neuron = workingNeurons.get(id);
             if (neuron != null) {
+                if (neuron.state() == NeuronInstance.State.FROZEN) {
+                    hadesLog.add("HADES:SKIP_FROZEN " + id);
+                    continue;
+                }
                 quarantine.add(neuron);
-                neurons.remove(id);
+                workingNeurons.remove(id);
             }
         }
         hadesLog.add("HADES:ISOLATE count=" + quarantine.size()
@@ -135,7 +142,7 @@ public class HadesProtocol {
         // Phase 3: Create emergency snapshot
         state = HadesState.ROLLING_BACK;
         ClusterSnapshot emergencySnapshot = snapshotStore.createSnapshot(
-                neurons, 0);
+                workingNeurons, 0);
         Path emergencyPath = snapshotStore.save(emergencySnapshot);
         hadesLog.add("HADES:EMERGENCY_SNAP " + emergencyPath.getFileName());
 
@@ -145,9 +152,9 @@ public class HadesProtocol {
         String snapId = null;
         if (lastGood != null && !lastGood.snapshotId().equals(emergencySnapshot.snapshotId())) {
             List<NeuronInstance> restored = snapshotStore.restoreNeurons(lastGood);
-            neurons.clear();
+            workingNeurons.clear();
             for (var n : restored) {
-                neurons.put(n.id(), n);
+                workingNeurons.put(n.id(), n);
             }
             rolledBack = restored.size();
             snapId = lastGood.snapshotId();

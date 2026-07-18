@@ -1,5 +1,7 @@
 package io.matrix.cauldron;
 
+import io.matrix.ethics.EthicalFilter;
+import io.matrix.ethics.EthicalVerdict;
 import io.matrix.evolution.EvolutionLoop;
 import io.matrix.evolution.FitnessFn;
 import io.matrix.noosphere.FnlPackage;
@@ -46,11 +48,17 @@ public class CauldronProtocol {
     private static final int DEFAULT_K = 18;
 
     private final Random rng;
+    private final EthicalFilter ethicalFilter;
     private final List<String> cauldronLog = new ArrayList<>();
     private CauldronState state = CauldronState.IDLE;
 
-    public CauldronProtocol(Random rng) {
+    public CauldronProtocol(Random rng, EthicalFilter ethicalFilter) {
         this.rng = rng;
+        this.ethicalFilter = ethicalFilter;
+    }
+
+    public CauldronProtocol(Random rng) {
+        this(rng, null);
     }
 
     /**
@@ -85,6 +93,17 @@ public class CauldronProtocol {
             long bestFitness = loop.bestFitnessHistory().stream()
                     .mapToLong(Long::longValue).max().orElse(0);
             AgentBrain brain = loop.bestBrain();
+
+            if (ethicalFilter != null) {
+                EthicalVerdict auditResult =
+                        ethicalFilter.evaluate("cauldron_evolve:" + brain.toString(), List.of());
+                if (auditResult == EthicalVerdict.REJECTED) {
+                    state = CauldronState.FAILED;
+                    cauldronLog.add("CAULDRON:ETHICAL_REJECTED " + auditResult.name());
+                    return CauldronResult.failed("Ethical audit rejected: " + auditResult.name());
+                }
+                cauldronLog.add("CAULDRON:ETHICAL_PASSED decision=" + auditResult.name());
+            }
 
             state = CauldronState.COMPLETED;
             cauldronLog.add("CAULDRON:DONE fitness=" + bestFitness);

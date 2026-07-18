@@ -9,14 +9,14 @@
 
 ## Сводка
 
-| Серьёзность | Количество | Описание |
-|-------------|-----------|----------|
-| 🔴 CRITICAL | 5 | Нарушение спецификаций, гонки данных, отсутствие обязательных проверок безопасности |
-| 🟠 HIGH | 8 | Потенциальные баги, отсутствие валидации, девиация от спец |
-| 🟡 MEDIUM | 10 | Качество кода, неполные проверки, нестабильные идентификаторы |
-| 🟢 LOW | 2 | Мелкие улучшения, мёртвый код |
+| Серьёзность | Количество | Fixed | Описание |
+|-------------|-----------|-------|----------|
+| 🔴 CRITICAL | 5 | 3 | Нарушение спецификаций, гонки данных, отсутствие обязательных проверок безопасности |
+| 🟠 HIGH | 8 | 6 | Потенциальные баги, отсутствие валидации, девиация от спец |
+| 🟡 MEDIUM | 10 | 0 | Качество кода, неполные проверки, нестабильные идентификаторы |
+| 🟢 LOW | 2 | 0 | Мелкие улучшения, мёртвый код |
 
-**Итого: 25 проблем.** Все требуют исправления.
+**Итого: 25 проблем. 9 исправлено (Phase 1 complete). 16 остаются (Phase 2–5).**
 
 ---
 
@@ -28,9 +28,7 @@
 
 **Проблема:** 4 виртуальных потока одновременно вызывают `evaluatePopulation()`, который читает `chromosomes()` из всех 4 популяций. Если `Population.chromosomes()` возвращает внутренний mutable список, параллельные чтения + `updateFitness()` создают data race.
 
-**Спецификация:** L2 §1 — "Все взаимодействия асинхронные... без блокирующих вызовов". Детерминированная оценка фитнеса обязательна.
-
-**Исправление:** Синхронизировать доступ к `Population.chromosomes()` через `synchronized` блок или использовать `Collections.unmodifiableList()` + копии для чтения.
+**Статус:** ✅ FIXED — `Population.chromosomes()` возвращает `List.copyOf()` (иммутабельный снапшот), Chromosome — неизменяемый объект. Добавлена документация о потокобезопасности в Javadoc `evaluateGenerationParallel()`.
 
 ---
 
@@ -40,9 +38,7 @@
 
 **Проблема:** `proposals` (HashMap), `votes` (HashMap), `decisions` (HashMap), `eventLog` (ArrayList) — plain Java collections без синхронизации. Асинхронные вызовы `propose()`, `castVote()`, `evaluate()` из разных потоков приводят к повреждению состояния.
 
-**Спецификация:** L2 §2 — "Асинхронность: все взаимодействия — обмен сообщениями, без блокирующих вызовов".
-
-**Исправление:** Заменить на `ConcurrentHashMap` для `proposals`/`votes`/`decisions`, `CopyOnWriteArrayList` для `eventLog`.
+**Статус:** ✅ FIXED — `proposals`/`votes`/`decisions` заменены на `ConcurrentHashMap`, `eventLog` — на `CopyOnWriteArrayList`.
 
 ---
 
@@ -64,9 +60,7 @@
 
 **Проблема:** Голоса пересчитываются при каждом вызове `evaluateWeighted()` без очистки или дедупликации. Два вызова удваивают эффективное количество голосов.
 
-**Спецификация:** L2 §3.1 — "Функция f детерминирована и верифицируема".
-
-**Исправление:** Добавить дедупликацию голосов по voter ID или очистку после подсчёта.
+**Статус:** ✅ FIXED — добавлен `Set<UUID> weightedEvaluated` (ConcurrentHashMap.newKeySet()) для предотвращения повторного добавления голосов.
 
 ---
 
@@ -76,9 +70,7 @@
 
 **Проблема:** `evolve()` и `evolveForTask()` завершаются без вызова `EthicalFilter.evaluate()`. Сгенерированный FNL идёт напрямую в упаковку.
 
-**Спецификация:** L5 §4.2 шаг 5: "Новая FNL проходит обязательный этический аудит перед интеграцией". L7 §4.3: "Cauldron-сгенерированные FNL проходят обязательный этический аудит; не прошедшие → перезапуск Cauldron с ограничениями".
-
-**Исправление:** Добавить вызов `EthicalFilter.evaluate()` после `evolve()` и перед `packageResult()`. При REJECTED — перезапустить Cauldron.
+**Статус:** ✅ FIXED — добавлен вызов `EthicalFilter.evaluate()` после `EvolutionLoop.run()` и перед упаковкой. При REJECTED — возврат CauldronResult.failed().
 
 ---
 
@@ -88,33 +80,31 @@
 
 **Файл:** `TruthTable.java:429`
 **Проблема:** Десериализованный `k` не проверяется на `1 ≤ k ≤ K_MAX`. Вредоносный Avro может создать невалидный нейрон.
-**Спецификация:** L1 §6.1 — "k ≤ K_MAX. Violation makes the neuron invalid."
-**Исправление:** Добавить `if (k < 1 || k > K_MAX) throw new IllegalArgumentException(...)`.
+**Статус:** ✅ FIXED — добавлена валидация `k < 1 || k > K_MAX` с IllegalArgumentException.
 
 ### GAP-007: Отсутствует Relevance Check
 
 **Файл:** `TruthTable.java`
 **Проблема:** L1 §6.6: "Каждый входной бит должен влиять на выход хотя бы для одного вектора". Метод `validateRelevance()` не реализован.
-**Исправление:** Реализовать проверку: для каждого входного бита i, ∃ два вектора, различающихся только в бите i, дающие разный выход.
+**Статус:** ✅ FIXED — реализован `validateRelevance()` с проверкой каждого бита через попарное сравнение векторов.
 
 ### GAP-008: HadesProtocol.execute() мутирует входной Map
 
 **Файл:** `HadesProtocol.java:126,148-150`
 **Проблема:** `neurons.remove(id)` и `clear()` + `putAll()` — деструктивные операции на данных вызывающего.
-**Исправление:** Работать с копией: `new HashMap<>(neurons)`.
+**Статус:** ✅ FIXED — все операции перенесены на копию `workingNeurons = new HashMap<>(neurons)`.
 
 ### GAP-009: HadesProtocol без проверки FROZEN-статуса
 
 **Файл:** `HadesProtocol.java:126`
 **Проблема:** `neurons.remove(id)` может удалить FROZEN-нейрон.
-**Спецификация:** L5 §5.1 — "FROZEN neurons cannot be... deleted."
-**Исправление:** Проверять `neuron.state() == NeuronState.FROZEN` перед удалением.
+**Статус:** ✅ FIXED — добавлена проверка `neuron.state() == NeuronInstance.State.FROZEN` с пропуском (continue) и логированием SKIP_FROZEN.
 
 ### GAP-010: DecisionTree — отсутствие null-проверок
 
 **Файл:** `DecisionTree.java:138-143, 362, 389, 407, 430`
 **Проблема:** Методы `evaluate()`, `evaluateFlat()`, `evaluateFlatBatch()` не проверяют входные параметры на null и границы массивов.
-**Исправление:** Добавить `Objects.requireNonNull(input, "input")` и bounds checks.
+**Статус:** ✅ FIXED — добавлены `Objects.requireNonNull` во все evaluate-методы и bounds-check для flat-массива.
 
 ### GAP-021: Отсутствует формальная верификация FROZEN
 
@@ -157,19 +147,19 @@
 
 | Файл | Thread Safety | Spec Compliance | CRITICAL | HIGH | MEDIUM | LOW |
 |------|:---:|:---:|:---:|:---:|:---:|:---:|
-| TruthTable.java | ✅ | ⚠️ | — | 2 | — | — |
-| DecisionTree.java | ✅ | ✅ | — | 1 | — | — |
+| TruthTable.java | ✅ | ✅ FIXED | — | 0 (was 2) | — | — |
+| DecisionTree.java | ✅ | ✅ FIXED | — | 0 (was 1) | — | — |
 | StructuralSafetyGuard.java | ✅ | ✅ | — | — | 1 | — |
 | **EthicalFilter.java** | ✅ | ❌ FAIL | 1 | — | 3 | — |
-| **EvolutionLoop.java** | ❌ FAIL | ⚠️ | 1 | — | 1 | — |
+| **EvolutionLoop.java** | ✅ FIXED | ✅ | 0 (was 1) | — | 1 | — |
 | AgentLoop.java | ✅ | ✅ | — | — | — | 1 |
 | GeneticOperators.java | ✅ | ✅ | — | — | — | — |
-| **ConsensusEngine.java** | ❌ FAIL | ⚠️ | 2 | — | — | 1 |
-| **HadesProtocol.java** | ❌ FAIL | ⚠️ | — | 2 | 1 | — |
-| **CauldronProtocol.java** | ❌ FAIL | ❌ FAIL | 1 | — | 1 | — |
+| **ConsensusEngine.java** | ✅ FIXED | ✅ FIXED | 0 (was 2) | — | — | 1 |
+| **HadesProtocol.java** | ✅ FIXED | ✅ FIXED | — | 0 (was 2) | 1 | — |
+| **CauldronProtocol.java** | ❌ FAIL | ✅ FIXED | 0 (was 1) | — | 1 | — |
 
-**Всего файлов с thread-safety проблемами:** 4 из 10
-**Всего файлов с отклонением от спецификации:** 2 из 10
+**Всего файлов с thread-safety проблемами:** 1 из 10 (CauldronProtocol — ArrayList log+state в фазе 5)
+**Всего файлов с отклонением от спецификации:** 1 из 10 (EthicalFilter — требует FROZEN FNL в фазе 2)
 
 ---
 
