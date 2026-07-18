@@ -1,5 +1,5 @@
 📍 v3.37 — SESSION ACTIVE (2026-07-17). Requirements audit + code review complete.
-🚀 Active: REQUIREMENTS.md (150+ FR/NFR) + CRITICAL_GAPS.md (24 issues) created. Идёт коммит + пуш.
+🚀 Active: REQUIREMENTS.md (150+ FR/NFR) + CRITICAL_GAPS.md (25 issues) created. Commit + push completed. Fixed Doc Reviewer findings: stats aligned, duplicate GAP-011 removed, typo fixed.
 🛑 Protected: Pekko 1.6.0, K_MAX=20, FROZEN-neurons, Quarkus 3.36.1, Java 25, AGPLv3+ethics, 82% coverage floor
 
 ## Session Artifacts
