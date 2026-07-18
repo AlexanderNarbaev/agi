@@ -136,6 +136,7 @@ public sealed interface DecisionTree permits DecisionTree.Leaf, DecisionTree.Spl
 
         @Override
         public boolean evaluate(BitSet input) {
+            Objects.requireNonNull(input, "input must not be null");
             if (!input.get(inputIndex)) {
                 return leftChild.evaluate(input);
             } else {
@@ -360,9 +361,15 @@ public sealed interface DecisionTree permits DecisionTree.Leaf, DecisionTree.Spl
      * @return tree output
      */
     static boolean evaluateFlat(int[] flat, BitSet input) {
-        int nodeIdx = 0; // root
+        Objects.requireNonNull(flat, "flat tree array must not be null");
+        Objects.requireNonNull(input, "input must not be null");
+        int nodeIdx = 0;
         while (true) {
             int base = nodeIdx * 3;
+            if (base + 2 >= flat.length) {
+                throw new IllegalArgumentException(
+                        "Invalid flat tree: node index " + nodeIdx + " out of bounds");
+            }
             int inputIndex = flat[base];
             if (inputIndex == -1) {
                 // Leaf node
@@ -387,6 +394,8 @@ public sealed interface DecisionTree permits DecisionTree.Leaf, DecisionTree.Spl
      * @return array of results
      */
     static boolean[] evaluateFlatBatch(int[] flat, BitSet[] inputs) {
+        Objects.requireNonNull(flat, "flat tree array must not be null");
+        Objects.requireNonNull(inputs, "inputs must not be null");
         boolean[] results = new boolean[inputs.length];
         for (int i = 0; i < inputs.length; i++) {
             results[i] = evaluateFlat(flat, inputs[i]);
@@ -405,9 +414,14 @@ public sealed interface DecisionTree permits DecisionTree.Leaf, DecisionTree.Spl
      * @return tree output
      */
     static boolean evaluateFlatInt(int[] flat, int input) {
-        int nodeIdx = 0; // root
+        Objects.requireNonNull(flat, "flat tree array must not be null");
+        int nodeIdx = 0;
         while (true) {
             int base = nodeIdx * 3;
+            if (base + 2 >= flat.length) {
+                throw new IllegalArgumentException(
+                        "Invalid flat tree: node index " + nodeIdx + " out of bounds");
+            }
             int inputIndex = flat[base];
             if (inputIndex == -1) {
                 return flat[base + 1] == -2;
@@ -428,6 +442,8 @@ public sealed interface DecisionTree permits DecisionTree.Leaf, DecisionTree.Spl
      * @return array of results
      */
     static boolean[] evaluateFlatIntBatch(int[] flat, int[] inputs) {
+        Objects.requireNonNull(flat, "flat tree array must not be null");
+        Objects.requireNonNull(inputs, "inputs must not be null");
         boolean[] results = new boolean[inputs.length];
         for (int i = 0; i < inputs.length; i++) {
             results[i] = evaluateFlatInt(flat, inputs[i]);

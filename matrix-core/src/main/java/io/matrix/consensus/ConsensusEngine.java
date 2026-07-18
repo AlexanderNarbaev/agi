@@ -1,10 +1,12 @@
 package io.matrix.consensus;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
  * Proof-of-Accuracy consensus engine with multi-strategy support.
@@ -40,12 +42,13 @@ public final class ConsensusEngine {
 
     private static final double APPROVAL_THRESHOLD = 2.0 / 3.0;
 
-    private final Map<UUID, Proposal> proposals = new HashMap<>();
-    private final Map<UUID, List<Vote>> votes = new HashMap<>();
-    private final Map<UUID, Decision> decisions = new HashMap<>();
-    private final List<String> eventLog = new ArrayList<>();
+    private final Map<UUID, Proposal> proposals = new ConcurrentHashMap<>();
+    private final Map<UUID, List<Vote>> votes = new ConcurrentHashMap<>();
+    private final Map<UUID, Decision> decisions = new ConcurrentHashMap<>();
+    private final List<String> eventLog = new CopyOnWriteArrayList<>();
     private final WeightedVoting weightedVoting;
     private final DebateProtocol debateProtocol;
+    private final Set<UUID> weightedEvaluated = ConcurrentHashMap.newKeySet();
     private ConsensusStrategy activeStrategy;
 
     public ConsensusEngine() {
@@ -284,9 +287,12 @@ public final class ConsensusEngine {
         }
 
         List<Vote> proposalVotes = votes.get(proposalId);
-        for (Vote vote : proposalVotes) {
-            weightedVoting.castVote(proposalId, vote.voterId(),
-                    vote.approve(), vote.weight());
+        if (!weightedEvaluated.contains(proposalId)) {
+            for (Vote vote : proposalVotes) {
+                weightedVoting.castVote(proposalId, vote.voterId(),
+                        vote.approve(), vote.weight());
+            }
+            weightedEvaluated.add(proposalId);
         }
 
         WeightedVoting.VotingResult result = weightedVoting.evaluate(proposalId);

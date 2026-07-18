@@ -372,6 +372,43 @@ public final class TruthTable {
     }
 
     /**
+     * Validates that each input bit influences the output (L1 §6.6).
+     *
+     * <p>A bit {@code i} is relevant if there exist two input vectors that differ
+     * only in bit {@code i} yet produce different outputs. If any bit has no
+     * influence on the output, the neuron is invalid.
+     *
+     * @return {@code true} if all input bits are relevant
+     */
+    public boolean validateRelevance() {
+        for (int bit = 0; bit < k; bit++) {
+            if (!isBitRelevant(bit)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * Checks whether a single input bit influences the output.
+     *
+     * <p>Iterates over all input vectors that differ only in the given bit.
+     * Returns {@code true} if at least one pair produces different outputs.
+     */
+    private boolean isBitRelevant(int bit) {
+        int mask = 1 << bit;
+        for (int idx = 0; idx < size(); idx++) {
+            if ((idx & mask) == 0) {
+                int pairedIdx = idx | mask;
+                if (pairedIdx < size() && getBit(idx) != getBit(pairedIdx)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    /**
      * Serializes this truth table to Avro bytes using the MPDTNeuron schema.
      *
      * <p>Only the truth table data is serialised; wrapper fields use defaults.
@@ -427,6 +464,10 @@ public final class TruthTable {
             GenericRecord record = reader.read(null, decoder);
 
             int k = (int) record.get("k");
+            if (k < 1 || k > K_MAX) {
+                throw new IllegalArgumentException(
+                        "Deserialized k=" + k + " is outside valid range [1, " + K_MAX + "]");
+            }
             ByteBuffer buf = (ByteBuffer) record.get("truthTable");
             byte[] rawBytes = new byte[buf.remaining()];
             buf.get(rawBytes);

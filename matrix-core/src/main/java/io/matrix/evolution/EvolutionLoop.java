@@ -147,6 +147,12 @@ public class EvolutionLoop {
      * Evaluates all 4 directional populations concurrently using
      * {@link CompletableFuture} backed by virtual threads.
      * Each population's fitness evaluation is an independent subtask.
+     *
+     * <p>Thread safety: each population evaluates independently and calls
+     * {@link Population#updateFitness(List)} on its own population only.
+     * Cross-population chromosome reads use {@link Population#chromosomes()}
+     * which returns an immutable snapshot via {@link List#copyOf}, preventing
+     * data races even when fitness values are being updated concurrently.
      */
     private void evaluateGenerationParallel() {
         var nFuture = CompletableFuture.runAsync(() -> evaluatePopulation(nPop), VT_EXECUTOR);
