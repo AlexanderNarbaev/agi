@@ -3,8 +3,36 @@
   "model": "deepseek/deepseek-v4-pro",
   "small_model": "deepseek/deepseek-v4-flash",
   "provider": {
-    "deepseek": {},
-    "opencode": {}
+    "deepseek": {
+      "options": {"timeout": 600000, "chunkTimeout": 60000, "setCacheKey": true, "baseURL": "https://api.moonshot.ai/v1"},
+      "fallback": ["opencode", "moonshotai", "minimax", "mimo"]
+    },
+    "opencode": {
+      "fallback": ["deepseek", "moonshotai", "minimax", "mimo"]
+    },
+    "moonshotai": {
+      "npm": "@ai-sdk/openai-compatible",
+      "name": "Moonshot Kimi",
+      "options": {"timeout": 600000, "chunkTimeout": 60000, "setCacheKey": true, "baseURL": "https://api.moonshot.ai/v1"},
+      "models": {
+        "kimi-k3": {"name": "Kimi K3", "limit": {"context": 1000000, "output": 65536}},
+        "kimi-k2.7-code": {"name": "Kimi K2.7 Code", "limit": {"context": 262144, "output": 65536}},
+        "kimi-k2.7-code-highspeed": {"name": "Kimi K2.7 Code Highspeed", "limit": {"context": 262144, "output": 65536}}
+      },
+      "fallback": ["deepseek", "opencode"]
+    },
+    "minimax": {
+      "npm": "@ai-sdk/openai-compatible",
+      "name": "MiniMax",
+      "options": {"timeout": 600000, "chunkTimeout": 60000, "setCacheKey": true, "baseURL": "https://api.moonshot.ai/v1"},
+      "fallback": ["deepseek", "opencode"]
+    },
+    "mimo": {
+      "npm": "@ai-sdk/openai-compatible",
+      "name": "MiMo",
+      "options": {"timeout": 600000, "chunkTimeout": 60000, "setCacheKey": true, "baseURL": "https://api.moonshot.ai/v1"},
+      "fallback": ["deepseek", "opencode"]
+    }
   },
   "instructions": ["AGENTS.md"],
   "compaction": {
@@ -66,9 +94,7 @@
       "type": "local",
       "command": ["/home/alexandr-narbaev/.bun/bin/mcp-server-github"],
       "enabled": true,
-      "env": {
-        "GITHUB_PERSONAL_ACCESS_TOKEN": "${GITHUB_TOKEN}"
-      }
+      "env": {"GITHUB_PERSONAL_ACCESS_TOKEN": "${GITHUB_TOKEN}"}
     },
     "chrome-devtools": {
       "type": "local",
