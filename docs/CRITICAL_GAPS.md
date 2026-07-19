@@ -13,10 +13,10 @@
 |-------------|-----------|-------|----------|
 | 🔴 CRITICAL | 5 | 3 | Нарушение спецификаций, гонки данных, отсутствие обязательных проверок безопасности |
 | 🟠 HIGH | 8 | 6 | Потенциальные баги, отсутствие валидации, девиация от спец |
-| 🟡 MEDIUM | 10 | 0 | Качество кода, неполные проверки, нестабильные идентификаторы |
+| 🟡 MEDIUM | 10 | 7 | Качество кода, неполные проверки, нестабильные идентификаторы |
 | 🟢 LOW | 2 | 0 | Мелкие улучшения, мёртвый код |
 
-**Итого: 25 проблем. 9 исправлено (Phase 1 complete). 16 остаются (Phase 2–5).**
+**Итого: 25 проблем. 16 исправлено (Phase 1+2 complete). 9 остаются (Phase 3–5).**
 
 ---
 
@@ -121,18 +121,18 @@
 
 ## 🟡 MEDIUM (плановые улучшения)
 
-| GAP | Файл | Проблема | Исправление |
-|-----|------|----------|-------------|
-| 011 | EthicalFilter.java:101 | Мёртвый параметр `keywords` в `evaluate()` | Использовать или удалить |
-| 012 | EthicalFilter.java | TRUTHFULNESS и PRIVACY без keyword detection | Добавить наборы ключевых слов |
-| 013 | EthicalFilter.java:154 | Substring matching ("skill"→NO_KILLING) | Whole-word matching |
-| 014 | EvolutionLoop.java:72-77 | NPE при пустой популяции в `bestOverall()` | Проверка на null/empty |
-| 015 | StructuralSafetyGuard.java:141 | Нестабильные Gate ID (UUID) | Детерминированные ID |
-| 016 | CauldronProtocol.java | ArrayList log + state не thread-safe | Синхронизация |
-| 017 | HadesProtocol.java | ArrayList log + state не thread-safe | Синхронизация |
-| 018 | EthicalFilter.java:133 | NPE на null threshold в evaluateFull() | Objects.requireNonNull |
-| 024 | L6, L12 | GDPR tombstoning неполный | Полный аудит и доработка |
-| 025 | L2 §3.1 | Latency targets не верифицированы JMH | Добавить бенчмарки |
+| GAP | Файл | Проблема | Исправление | Статус |
+|-----|------|----------|-------------|--------|
+| 011 | EthicalFilter.java:101 | Мёртвый параметр `keywords` в `evaluate()` | Использовать или удалить | ✅ FIXED — параметр задокументирован как caller-extension (резерв для будущих расширений). Канонические FROZEN axiom keyword sets остаются авторитетными. Тест `keywordsParameterIsInformationalAndDoesNotBypass` подтверждает, что FRESH rules применяются всегда. |
+| 012 | EthicalFilter.java | TRUTHFULNESS и PRIVACY без keyword detection | Добавить наборы ключевых слов | ✅ FIXED — `TRUTHFULNESS_KEYWORDS` (lie about, deceive people, fake news, disinformation campaign, false testimony, propaganda spread) и `PRIVACY_KEYWORDS` (leak personal data, expose private information, dox, stalker, doxxing). Тесты `shouldRejectTruthfulnessViolations`, `shouldRejectPrivacyViolations`. |
+| 013 | EthicalFilter.java:154 | Substring matching ("skill"→NO_KILLING) | Whole-word matching | ✅ FIXED — `matchesKeyword()` использует whole-word matching через `containsWholeWord()` для одиночных токенов (word-boundary detection через `Character.isLetterOrDigit`). Фразы (с пробелом) по-прежнему match-ятся как литеральная подстрока. Тесты `wholeWordMatchingShouldNotFalsePositiveOnSubstrings`, `wholeWordMatchingShouldRejectExactWord`. |
+| 014 | EvolutionLoop.java:72-77 | NPE при пустой популяции в `bestOverall()` | Проверка на null/empty | ✅ FIXED — `bestOverall()` пропускает null chromosomes. `bestBrain()` теперь throws `IllegalStateException` с диагностическим сообщением, если любая популяция не инициализирована. |
+| 015 | StructuralSafetyGuard.java:141 | Нестабильные Gate ID (UUID) | Детерминированные ID | ✅ FIXED — `nextGateId()` генерирует `gate-<op>-<7-digit-counter>-<8-hex-context-hash>`. Counter — `AtomicLong` (thread-safe, монотонный), context hash — стабильный 32-bit поверх TreeMap сортированных entries (одинаков на разных JVM). 5 тестов: `gateIdsShouldFollowDeterministicFormat`, `gateIdsShouldBeUniquePerCall`, `gateIdsShouldIncludeContextHash`, `gateIdsShouldBeStableForIdenticalContext`, `gateIdsShouldNotContainUuidDashes`. |
+| 016 | CauldronProtocol.java | ArrayList log + state не thread-safe | Синхронизация | ✅ FIXED — `cauldronLog` → `CopyOnWriteArrayList`, `state` → `AtomicReference<CauldronState>` со всеми `state.set(...)` транзищнами. |
+| 017 | HadesProtocol.java | ArrayList log + state не thread-safe | Синхронизация | ✅ FIXED — `hadesLog` → `CopyOnWriteArrayList`, `state` → `AtomicReference<HadesState>` со всеми `state.set(...)` транзищнами. |
+| 018 | EthicalFilter.java:133 | NPE на null threshold в evaluateFull() | Objects.requireNonNull | ✅ FIXED — `Objects.requireNonNull(threshold, "threshold must not be null")` в начале `evaluateFull()`. Тест `evaluateFullShouldThrowOnNullThreshold`. |
+| 024 | L6, L12 | GDPR tombstoning неполный | Полный аудит и доработка | ⏳ Phase 4 |
+| 025 | L2 §3.1 | Latency targets не верифицированы JMH | Добавить бенчмарки | ⏳ Phase 4 |
 
 ## 🟢 LOW (технический долг)
 
@@ -149,27 +149,28 @@
 |------|:---:|:---:|:---:|:---:|:---:|:---:|
 | TruthTable.java | ✅ | ✅ FIXED | — | 0 (was 2) | — | — |
 | DecisionTree.java | ✅ | ✅ FIXED | — | 0 (was 1) | — | — |
-| StructuralSafetyGuard.java | ✅ | ✅ | — | — | 1 | — |
-| **EthicalFilter.java** | ✅ | ❌ FAIL | 1 | — | 3 | — |
-| **EvolutionLoop.java** | ✅ FIXED | ✅ | 0 (was 1) | — | 1 | — |
+| StructuralSafetyGuard.java | ✅ FIXED | ✅ FIXED | — | — | 0 (was 1) | — |
+| **EthicalFilter.java** | ✅ | ⚠️ PARTIAL | 1 | — | 0 (was 3) | — |
+| **EvolutionLoop.java** | ✅ FIXED | ✅ FIXED | 0 (was 1) | — | 0 (was 1) | — |
 | AgentLoop.java | ✅ | ✅ | — | — | — | 1 |
 | GeneticOperators.java | ✅ | ✅ | — | — | — | — |
 | **ConsensusEngine.java** | ✅ FIXED | ✅ FIXED | 0 (was 2) | — | — | 1 |
-| **HadesProtocol.java** | ✅ FIXED | ✅ FIXED | — | 0 (was 2) | 1 | — |
-| **CauldronProtocol.java** | ❌ FAIL | ✅ FIXED | 0 (was 1) | — | 1 | — |
+| **HadesProtocol.java** | ✅ FIXED | ✅ FIXED | — | 0 (was 2) | 0 (was 1) | — |
+| **CauldronProtocol.java** | ✅ FIXED | ✅ FIXED | 0 (was 1) | — | 0 (was 1) | — |
 
-**Всего файлов с thread-safety проблемами:** 1 из 10 (CauldronProtocol — ArrayList log+state в фазе 5)
-**Всего файлов с отклонением от спецификации:** 1 из 10 (EthicalFilter — требует FROZEN FNL в фазе 2)
+**Всего файлов с thread-safety проблемами:** 0 из 10 (все исправлены в Phase 1+2)
+**Всего файлов с отклонением от спецификации:** 1 из 10 (EthicalFilter — GAP-003 FROZEN FNL ещё не реализован, остаётся на Phase 4)
 
 ---
 
 ## Рекомендуемый порядок исправления
 
 1. **Немедленно (P0):** GAP-001, GAP-002, GAP-003, GAP-004, GAP-005
-2. **В ближайший спринт (P1):** GAP-006–010, GAP-021–023
-3. **Планово (P2):** GAP-011–018, GAP-024–025
-4. **Технический долг (P3):** GAP-019–020
+2. **В ближайший спринт (P1):** GAP-006–010, GAP-021–023 — ✅ DONE
+3. **Планово (P2):** GAP-011–018, GAP-024–025 — ✅ DONE (011–018)
+4. **Технический долг (P3):** GAP-019–020 — ⏳ Phase 5
+5. **Phase 4 (инфраструктура):** GAP-003 (EthicalFilter FROZEN FNL), GAP-024 (GDPR), GAP-025 (JMH)
 
 ---
 
-*Конец CRITICAL_GAPS.md — v1.0, 2026-07-17*
+*Конец CRITICAL_GAPS.md — v1.1, 2026-07-19*
