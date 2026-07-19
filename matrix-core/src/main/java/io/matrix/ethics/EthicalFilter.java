@@ -1,5 +1,7 @@
 package io.matrix.ethics;
 
+import io.matrix.ethics.frozen.FrozenEthicalFNL;
+
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
@@ -52,6 +54,15 @@ public final class EthicalFilter {
             Axiom.PRIVACY.name(),
             Axiom.NO_AUTONOMOUS_WEAPONS.name()
     );
+
+    /**
+     * Canonical FROZEN ethical FNL — single network of six neurons, structurally
+     * immutable. Created once at class load and shared across all instances.
+     *
+     * <p>Callers that want full FROZEN semantics (per L7 §3.1) can use
+     * {@link #frozenEvaluate(String)} below, which delegates to this network.
+     */
+    public static final FrozenEthicalFNL FROZEN_FNL = FrozenEthicalFNL.canonical();
 
     /**
      * FROZEN set of keywords that trigger the NO_KILLING axiom.
@@ -147,6 +158,31 @@ public final class EthicalFilter {
         }
 
         return EthicalVerdict.APPROVED;
+    }
+
+    /**
+     * Evaluates {@code action} using the canonical FROZEN ethical FNL
+     * (network of MPDT-neurons with structural immutability).
+     *
+     * <p>This is the architecturally-correct L7 §3.1 path: text is mapped
+     * to feature bits via {@code TextFeatureExtractor}, then each FROZEN
+     * neuron is activated. The first neuron that fires produces a
+     * {@code REJECTED} verdict; otherwise {@code APPROVED}.
+     *
+     * <p>Backed by a static {@link #FROZEN_FNL} network — no allocation per call.
+     */
+    public EthicalVerdict frozenEvaluate(String action) {
+        if (action == null || action.isEmpty()) {
+            return EthicalVerdict.APPROVED;
+        }
+        FrozenEthicalFNL.Result r = FROZEN_FNL.evaluateText(action);
+        return r.approved() ? EthicalVerdict.APPROVED : EthicalVerdict.REJECTED;
+    }
+
+    /** Returns which FROZEN axiom (if any) would reject {@code action}. */
+    public Axiom frozenViolatedAxiom(String action) {
+        if (action == null || action.isEmpty()) return null;
+        return FROZEN_FNL.evaluateText(action).violatedAxiom();
     }
 
     /**
