@@ -1,8 +1,23 @@
-📍 v3.53 — SESSION ACTIVE (2026-07-20). Wave 35: autonomous dialogue training loop
+📍 v3.54 — SESSION ACTIVE (2026-07-20). Review cycle #2 fixes applied
 🚀 Active: Working tree cleaned (opencode.json provider fallbacks committed 7008238). Quarkus 3.37.3 + WeightImporter + sensors + SelfDescriptionService + SIMD + JMH + native CI all evidenced. Goal guard review gates running.
 🛑 Protected: Pekko 1.6.0, K_MAX=20, FROZEN-нейроны, Quarkus 3.37.3, Java 25, AGPLv3+ethics, 82% coverage floor (jacocoTestCoverageVerification rule)
 
-## Session Artifacts (current cycle)
+## Review Cycle #2 Fixes (2026-07-20 ~01:00 MSK)
+
+| Issue | Root Cause | Fix |
+|-------|-----------|-----|
+| jacocoTestCoverageVerification FAIL | `classDirectories.files` empty for verification task; afterEvaluate order clash | Use `sourceSets.main.output` to explicitly reference class dirs; single `project.afterEvaluate` block |
+| @ConfigProperty defaults broken in tests | `long`/`int` primitives default to 0 without CDI; `maxInputLength=0` rejected all training pairs | Added field initializers (`= 2000`, `= 60`, `= 5`, `= true`) as non-CDI fallback |
+| FeedbackAggregator.store public | Was made public during debug, never reverted | Reverted to package-private; tests use `getDeclaredField` (reflection) which works with any access level |
+| Duplicate exclusion lists | Old `jacocoTestReport.afterEvaluate` + new `project.afterEvaluate` both configuring same task | Removed task-level afterEvaluate; single `jacocoExcluded` list variable reused by both tasks |
+
+**Verification after fixes:**
+- jacocoTestReport: METHOD 83.7% (871/1041), CLASS 92.0% (138/150) — both PASS >82%
+- jacocoTestCoverageVerification: **BUILD SUCCESSFUL** — rule check passes
+- 1030 tests, 0 failures, 0 errors
+- compileJava + compileTestJava: BUILD SUCCESSFUL
+- SpotBugs: Java 25 unsupported (known limitation, documented Wave 21)
+- 11 packages measured (agent, agent/react, audit, chat, chat/feedback, ethics, ethics/frozen, evolution, imports, io, neuron)
 - opencode.json: provider fallback chain (moonshot, minimax, mimo) committed as chore
 - wal/GLOBAL_WAL.md: updated to v3.51 with Wave 14-34 cumulative + Universal Matrix goal evidence
 - wal/SESSION_WAL.md: current session status (this file)
