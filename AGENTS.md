@@ -262,3 +262,15 @@ API ключи: DeepSeek — через `/connect` в TUI, OpenCode Go — `open
 5. CI/CD Pipeline (GitHub Actions) — ✅ done
 6. GraalVM native compilation
 7. Spigot Plugin — реальный Minecraft-запуск
+
+## AI Development Tools (via opencode_initializer)
+
+| Tool | IDE | License | Purpose |
+|------|-----|---------|---------|
+| DevoxxGenie | JetBrains | Apache 2.0 | Local LLMs, RAG, MCP, agent mode |
+| Cline | VS Code + JetBrains | Apache 2.0 | AI coding agent, Ollama, MCP |
+| Tabby | VS Code + JetBrains | Apache 2.0 | Self-hosted code completion |
+| Aider | CLI | Apache 2.0 | Git-aware multi-file AI edits |
+| Veai | JetBrains (RU) | Proprietary | On-prem, Memory Bank, sanctions-resilient |
+
+All installed via: `bash ~/Projects/opencode_initializer/setup.sh --full`
