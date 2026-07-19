@@ -103,7 +103,7 @@ class AgentLoopTest {
         assertThat(state).isNotNull();
         assertThat(state.tick()).isEqualTo(1);
         assertThat(state.observation()).isEqualTo(0xABCDEL);
-        assertThat(state.thought()).hasSize(5);
+        assertThat(state.thought()).hasSize(AgentLoop.THOUGHT_BITS);
         assertThat(state.action()).isNotNull();
         assertThat(state.action().hasResult()).isTrue();
         assertThat(state.driverLevels()).hasSize(3);
@@ -363,7 +363,7 @@ class AgentLoopTest {
         scheduler.enqueue(task);
 
         var loop = new AgentLoop(brain, sensor, effector, drivers, scheduler);
-        AgentAction action = loop.selectAction(new boolean[5], new double[3]);
+        AgentAction action = loop.selectAction(new boolean[AgentLoop.THOUGHT_BITS], new double[3]);
 
         assertThat(action.type()).isEqualTo(AgentAction.ActionType.EXPLORE);
         assertThat(action.parameters()).containsKey("taskId");
@@ -395,21 +395,26 @@ class AgentLoopTest {
 
     @Test
     void actionCodeToThoughtShouldConvertCorrectly() {
-        // Code 0 = 00000
-        assertThat(AgentLoop.actionCodeToThought(0))
-                .containsExactly(false, false, false, false, false);
+        // GAP-019: thought vector length is derived from AgentAction.ActionType count,
+        // not hardcoded. With 10 ActionTypes, THOUGHT_BITS=4 and vectors have 4 elements.
+        int n = AgentLoop.THOUGHT_BITS;
+        boolean[] zero = new boolean[n]; // all false
+        boolean[] one = new boolean[n]; one[0] = true;
+        boolean[] five = new boolean[n]; five[0] = true; five[2] = true;
+        boolean[] fifteen = new boolean[n]; // all true (0b1111 for n=4)
+        for (int i = 0; i < n; i++) fifteen[i] = true;
 
-        // Code 1 = 00001
-        assertThat(AgentLoop.actionCodeToThought(1))
-                .containsExactly(true, false, false, false, false);
+        // Code 0 = 000..0
+        assertThat(AgentLoop.actionCodeToThought(0)).containsExactly(zero);
 
-        // Code 5 = 00101
-        assertThat(AgentLoop.actionCodeToThought(5))
-                .containsExactly(true, false, true, false, false);
+        // Code 1 = 000..1
+        assertThat(AgentLoop.actionCodeToThought(1)).containsExactly(one);
 
-        // Code 31 = 11111
-        assertThat(AgentLoop.actionCodeToThought(31))
-                .containsExactly(true, true, true, true, true);
+        // Code 5 = 00101 (low 4 bits)
+        assertThat(AgentLoop.actionCodeToThought(5)).containsExactly(five);
+
+        // Code 15 = 01111 (all bits set within the vector)
+        assertThat(AgentLoop.actionCodeToThought(15)).containsExactly(fifteen);
     }
 
     // ── Driver integration ──
@@ -465,5 +470,53 @@ class AgentLoopTest {
         assertThat(response.timings()).isNotNull();
         assertThat(response.timings().retrievalMs()).isGreaterThanOrEqualTo(0);
         assertThat(response.sources()).isNotEmpty();
+    }
+
+    // ── GAP-019: actionCodeToThought should derive bits from ActionType ──
+
+    @Test
+    void thoughtBitsShouldMatchActionTypeCount() {
+        // THOUGHT_BITS must be wide enough to index all ActionType values.
+        int actionTypeCount = AgentAction.ActionType.values().length;
+        // 2^bits must be >= count so we can encode 0..count-1.
+        assertThat(AgentLoop.THOUGHT_BITS).isLessThanOrEqualTo(31); // sane bound
+        int representable = 1 << AgentLoop.THOUGHT_BITS;
+        assertThat(representable)
+                .as("2^THOUGHT_BITS must be ≥ count(%d), got 2^%d=%d", actionTypeCount, AgentLoop.THOUGHT_BITS, representable)
+                .isGreaterThanOrEqualTo(actionTypeCount);
+        // For 10 ActionType values → THOUGHT_BITS = 4 (2^4 = 16 ≥ 10).
+        // We assert only the "wide enough" property here so the test stays correct if the
+        // enum grows or shrinks.
+        assertThat(AgentLoop.THOUGHT_BITS).isGreaterThanOrEqualTo(1);
+    }
+
+    @Test
+    void actionCodeToThoughtShouldRespectThoughtBitsLength() {
+        for (int code = 0; code < 32; code++) {
+            boolean[] thought = AgentLoop.actionCodeToThought(code);
+            assertThat(thought).hasSize(AgentLoop.THOUGHT_BITS);
+        }
+    }
+
+    @Test
+    void actionCodeToThoughtShouldDecodeBits() {
+        // Code 0 → all false; code 1 → only first bit set (size = THOUGHT_BITS).
+        assertThat(AgentLoop.actionCodeToThought(0))
+                .containsOnly(false);
+        boolean[] expected = new boolean[AgentLoop.THOUGHT_BITS];
+        expected[0] = true; // bit 0 set for code=1
+        assertThat(AgentLoop.actionCodeToThought(1))
+                .containsExactly(expected);
+    }
+
+    @Test
+    void actionCodeToThoughtShouldIgnoreBitsBeyondLength() {
+        // Pass an absurdly large code; only low bits should be reflected.
+        var thought = AgentLoop.actionCodeToThought(0xFFFFFFFF);
+        assertThat(thought).hasSize(AgentLoop.THOUGHT_BITS);
+        // All bits in the resulting vector should be true (low N bits set).
+        for (boolean b : thought) {
+            assertThat(b).isTrue();
+        }
     }
 }

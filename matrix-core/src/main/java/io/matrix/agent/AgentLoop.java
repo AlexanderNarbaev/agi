@@ -501,11 +501,35 @@ public final class AgentLoop {
     // ── Thought vector helpers ──
 
     /**
-     * Converts a 5-bit action code to a boolean thought vector.
+     * Number of bits required to represent {@link AgentAction.ActionType#values()}.
+     * GAP-019 fix — previously hardcoded to 5, now derived from the action enum so that adding
+     * a new {@code ActionType} automatically widens the thought vector with no source edits.
+     */
+    public static final int THOUGHT_BITS = bitsNeeded(AgentAction.ActionType.values().length);
+
+    private static int bitsNeeded(int maxValueExclusive) {
+        if (maxValueExclusive <= 0) return 0;
+        int bits = 1;
+        int cap = 2;
+        while (cap < maxValueExclusive) {
+            cap <<= 1;
+            bits++;
+        }
+        return bits;
+    }
+
+    /**
+     * Converts an action code to a boolean thought vector.
+     *
+     * <p>The vector length is {@link #THOUGHT_BITS}, derived from the
+     * {@link AgentAction.ActionType} enum size — so adding a new action
+     * automatically widens the thought without manual edits.
+     *
+     * @param actionCode any non-negative integer; bits outside the length are ignored
      */
     public static boolean[] actionCodeToThought(int actionCode) {
-        boolean[] thought = new boolean[5];
-        for (int i = 0; i < 5; i++) {
+        boolean[] thought = new boolean[THOUGHT_BITS];
+        for (int i = 0; i < THOUGHT_BITS; i++) {
             thought[i] = (actionCode & (1 << i)) != 0;
         }
         return thought;
