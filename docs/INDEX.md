@@ -178,3 +178,6 @@
 | — | matrix-core/src/.../minecraft/HeadlessBotRegistry.java | Headless Bot Registry | Minecraft | Multi-bot lifecycle manager | 2026-07-19 |
 | — | matrix-core/src/.../minecraft/HeadlessBotSnapshot.java | Headless Bot Snapshot | Minecraft | Pure-data record for HTTP/WS consumers | 2026-07-19 |
 | — | matrix-core/src/.../privacy/storage/ | Pluggable TombstoneStorage | Privacy | memory/PG/Kafka/S3/composite backends | 2026-07-19 |
+| — | matrix-core/src/.../chat/ | Autonomous Training Pipeline (Wave 35) | AI | ConversationRecorder + FeedbackStore + TrainingPairGenerator + ChatDrivenTrainer | 2026-07-20 |
+| — | matrix-core/src/.../cli/TrainOnAllCommand.java | train-all CLI | AI | One-shot orchestration of WeightImporter + chat pair generator | 2026-07-20 |
+| — | docs/WAVE_35_AUTONOMOUS_TRAINING.md | Wave 35 doc | AI | Architecture diagram, components, smoke test recipe | 2026-07-20 |
