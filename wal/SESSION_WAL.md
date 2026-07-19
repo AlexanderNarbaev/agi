@@ -1,4 +1,4 @@
-📍 v3.52 — SESSION ACTIVE (2026-07-19). Review cycle #1 fixes: coverage gate, verification chain, build.gradle refactoring
+📍 v3.53 — SESSION ACTIVE (2026-07-20). Wave 35: autonomous dialogue training loop
 🚀 Active: Working tree cleaned (opencode.json provider fallbacks committed 7008238). Quarkus 3.37.3 + WeightImporter + sensors + SelfDescriptionService + SIMD + JMH + native CI all evidenced. Goal guard review gates running.
 🛑 Protected: Pekko 1.6.0, K_MAX=20, FROZEN-нейроны, Quarkus 3.37.3, Java 25, AGPLv3+ethics, 82% coverage floor (jacocoTestCoverageVerification rule)
 

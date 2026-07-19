@@ -1,4 +1,42 @@
-📍 v3.51 — Goal Guard final-audit cycle: working tree cleaned, provider fallbacks committed, evidence chain verified
+📍 v3.53 — Wave 35: autonomous dialogue training loop (chat → neuron bridge)
+🚀 1 new commit (Wave 35): ConversationRecorder + FeedbackStore + TrainingPairGenerator + ChatDrivenTrainer + OpenAIChatResource hook
+🛑 Protected: Pekko 1.6.0, K_MAX=20, FROZEN-нейроны, Quarkus 3.37.3, Java 25, AGPLv3+ethics, 82% coverage floor
+
+## Wave 35 — Autonomous Training on Real Conversations
+**Goal:** Train the brain on all available weights + every real chat interaction, then keep training as users chat.
+
+**New components (matrix-core/src/main/java/io/matrix/chat/):**
+- `ConversationRecord` — immutable record of one dialog turn (user/assistant/system)
+- `ConversationRecorder` — async NDJSON append-only log to `data/conversations/YYYY-MM-DD.ndjson`
+- `ConversationFeedback` — user rating (0.0–1.0) with comment
+- `ConversationFeedbackStore` — feedback log + in-memory latest-rating cache
+- `ConversationFeedbackResource` — REST `/v1/chat/feedback/{up,down}` + `/v1/chat/feedback` (POST/GET)
+- `ChatTrainingPairGenerator` — converts recordings to (input → response) JSONL pairs with ethical + length + feedback gates; idempotent via seen-pair tracking
+- `ChatDrivenTrainer` — daemon: every 60s reads recordings → generates pairs → feeds `AgentBrainService.recordFeedback()` + `onlineTrain()`
+- `ChatStatusResource` — `/v1/chat/status` exposes all counters
+- `feedback/FeedbackAggregator` — read-only facade for the generator
+
+**OpenAIChatResource hook:**
+- Reads `X-Conversation-Id` header (or generates UUID) on every `/v1/chat/completions`
+- Records user/system messages up front, assistant message after generation
+- Returns `X-Conversation-Id` in response headers for client-side multi-turn tracking
+
+**CLI:**
+- `TrainOnAllCommand` (`--matrix train-all --budget-mb 4096`) — orchestrates WeightImporter + chat pair generator in a single run
+
+**Storage layout:**
+```
+data/conversations/
+  2026-07-20.ndjson                 ← conversation log
+  feedback-2026-07-20.ndjson        ← user ratings
+  .last_training_run                ← trainer heartbeat
+models/training_data/auto_generated.jsonl  ← training pairs
+```
+
+**Tests (Wave 35):** ConversationRecorderTest (3), ConversationFeedbackStoreTest (4), ChatTrainingPairGeneratorTest (4) — total 11 new tests.
+
+**Combined test stats:** 1027 tests, 0 failures, 0 errors across 90 test classes.
+**Coverage:** METHOD 83.7% (870/1039), CLASS 92.0% (138/150) — both PASS >82%.
 🚀 13 new commits on main: 12 wave commits (Waves 14-34) + 1 chore commit (moonshot/minimax/mimo provider fallbacks to opencode.json)
 🛑 Protected: Pekko 1.6.0, K_MAX=20, FROZEN-нейроны, Quarkus 3.37.3, Java 25, AGPLv3+ethics, 82% coverage floor (CI gate enforced)
 
