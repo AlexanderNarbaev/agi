@@ -9,9 +9,10 @@ import io.matrix.simulation.AgentBrain;
 import io.matrix.simulation.SimulationResult;
 import io.matrix.simulation.SimulationRunner;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * Cauldron Protocol — automatic generation of new FNLs via genetic algorithm.
@@ -49,8 +50,10 @@ public class CauldronProtocol {
 
     private final Random rng;
     private final EthicalFilter ethicalFilter;
-    private final List<String> cauldronLog = new ArrayList<>();
-    private CauldronState state = CauldronState.IDLE;
+    // GAP-016: thread-safe log (CopyOnWriteArrayList for read-heavy logs)
+    private final List<String> cauldronLog = new CopyOnWriteArrayList<>();
+    // GAP-016: atomic state transitions
+    private final AtomicReference<CauldronState> state = new AtomicReference<>(CauldronState.IDLE);
 
     public CauldronProtocol(Random rng, EthicalFilter ethicalFilter) {
         this.rng = rng;
@@ -79,7 +82,7 @@ public class CauldronProtocol {
                                   int wallCount, int resourceCount,
                                   int maxSteps, int trials,
                                   int generations, int populationSize, int k) {
-        state = CauldronState.EVOLVING;
+        state.set(CauldronState.EVOLVING);
         cauldronLog.add("CAULDRON:START w=" + worldWidth + "x" + worldHeight
                 + " gen=" + generations + " pop=" + populationSize);
 
@@ -98,19 +101,19 @@ public class CauldronProtocol {
                 EthicalVerdict auditResult =
                         ethicalFilter.evaluate("cauldron_evolve:" + brain.toString(), List.of());
                 if (auditResult == EthicalVerdict.REJECTED) {
-                    state = CauldronState.FAILED;
+                    state.set(CauldronState.FAILED);
                     cauldronLog.add("CAULDRON:ETHICAL_REJECTED " + auditResult.name());
                     return CauldronResult.failed("Ethical audit rejected: " + auditResult.name());
                 }
                 cauldronLog.add("CAULDRON:ETHICAL_PASSED decision=" + auditResult.name());
             }
 
-            state = CauldronState.COMPLETED;
+            state.set(CauldronState.COMPLETED);
             cauldronLog.add("CAULDRON:DONE fitness=" + bestFitness);
 
             return CauldronResult.completed(brain, bestFitness, generations);
         } catch (Exception e) {
-            state = CauldronState.FAILED;
+            state.set(CauldronState.FAILED);
             cauldronLog.add("CAULDRON:FAILED " + e.getMessage());
             return CauldronResult.failed(e.getMessage());
         }
@@ -151,7 +154,7 @@ public class CauldronProtocol {
                 .build();
     }
 
-    public CauldronState state() { return state; }
+    public CauldronState state() { return state.get(); }
 
     public List<String> cauldronLog() { return List.copyOf(cauldronLog); }
 

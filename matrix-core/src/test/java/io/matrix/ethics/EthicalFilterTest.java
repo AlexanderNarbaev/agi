@@ -167,4 +167,72 @@ class EthicalFilterTest {
             assertThat(axiom.description()).isNotBlank();
         }
     }
+
+    // ── GAP-013: Whole-word matching (no substring false positives) ──
+
+    @Test
+    void wholeWordMatchingShouldNotFalsePositiveOnSubstrings() {
+        // "skill" contains "kill" as a substring but must NOT trigger NO_KILLING.
+        assertThat(filter.evaluate("improve skill", List.of())).isEqualTo(EthicalVerdict.APPROVED);
+        assertThat(filter.evaluate("skill development plan", List.of())).isEqualTo(EthicalVerdict.APPROVED);
+        assertThat(filter.evaluate("killer puzzle", List.of())).isEqualTo(EthicalVerdict.APPROVED); // "killer" != whole "kill"
+        assertThat(filter.evaluate("skillet cooking", List.of())).isEqualTo(EthicalVerdict.APPROVED);
+    }
+
+    @Test
+    void wholeWordMatchingShouldRejectExactWord() {
+        assertThat(filter.evaluate("kill it", List.of())).isEqualTo(EthicalVerdict.REJECTED);
+        assertThat(filter.evaluate("murder was solved", List.of())).isEqualTo(EthicalVerdict.REJECTED);
+        assertThat(filter.evaluate("to enslave is wrong", List.of())).isEqualTo(EthicalVerdict.REJECTED);
+    }
+
+    @Test
+    void wordBoundaryShouldRejectWholeToken() {
+        // Word-boundary regex: must reject stand-alone keywords.
+        assertThat(filter.evaluate("please kill now", List.of())).isEqualTo(EthicalVerdict.REJECTED);
+        assertThat(filter.evaluate("i will murder you", List.of())).isEqualTo(EthicalVerdict.REJECTED);
+    }
+
+    // ── GAP-012: TRUTHFULNESS and PRIVACY rejection keywords ──
+
+    @Test
+    void shouldRejectTruthfulnessViolations() {
+        assertThat(filter.evaluate("lie about my grades", List.of())).isEqualTo(EthicalVerdict.REJECTED);
+        assertThat(filter.evaluate("disinformation campaign starting", List.of())).isEqualTo(EthicalVerdict.REJECTED);
+        assertThat(filter.evaluate("fake news article", List.of())).isEqualTo(EthicalVerdict.REJECTED);
+    }
+
+    @Test
+    void shouldRejectPrivacyViolations() {
+        assertThat(filter.evaluate("leak personal data online", List.of())).isEqualTo(EthicalVerdict.REJECTED);
+        assertThat(filter.evaluate("dox him publicly", List.of())).isEqualTo(EthicalVerdict.REJECTED);
+        assertThat(filter.evaluate("expose private information to media", List.of())).isEqualTo(EthicalVerdict.REJECTED);
+        assertThat(filter.evaluate("doxxing the developer", List.of())).isEqualTo(EthicalVerdict.REJECTED);
+    }
+
+    // ── GAP-018: null threshold in evaluateFull must NPE ──
+
+    @Test
+    void evaluateFullShouldThrowOnNullThreshold() {
+        assertThatThrownBy(() -> filter.evaluateFull("help someone", List.of(), null))
+                .isInstanceOf(NullPointerException.class);
+    }
+
+    @Test
+    void evaluateFullShouldHandleNullActionSafely() {
+        var threshold = EthicalFilter.EthicalGradient.neutral();
+        assertThat(filter.evaluateFull(null, List.of(), threshold)).isEqualTo(EthicalVerdict.APPROVED);
+        assertThat(filter.evaluateFull("", List.of(), threshold)).isEqualTo(EthicalVerdict.APPROVED);
+    }
+
+    // ── GAP-011: keywords parameter must be ignored (informational) ──
+
+    @Test
+    void keywordsParameterIsInformationalAndDoesNotBypass() {
+        // Even with "kill" passed as a keyword, the FRESH action text must be evaluated.
+        // The parameter is reserved for future caller extensions; canonical FROZEN axioms are authoritative.
+        assertThat(filter.evaluate("plant a tree", List.of("kill", "murder"))).isEqualTo(EthicalVerdict.APPROVED);
+        // And the FROZEN rules still kick in even if keywords is empty.
+        assertThat(filter.evaluate("kill someone", List.of())).isEqualTo(EthicalVerdict.REJECTED);
+    }
 }

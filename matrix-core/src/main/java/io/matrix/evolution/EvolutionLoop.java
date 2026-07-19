@@ -63,16 +63,24 @@ public class EvolutionLoop {
     public List<Long> avgFitnessHistory() { return List.copyOf(avgFitnessHistory); }
 
     public AgentBrain bestBrain() {
-        return new AgentBrain(
-                nPop.best().tree(), sPop.best().tree(),
-                wPop.best().tree(), ePop.best().tree());
+        Chromosome n = nPop.best();
+        Chromosome s = sPop.best();
+        Chromosome w = wPop.best();
+        Chromosome e = ePop.best();
+        if (n == null || s == null || w == null || e == null) {
+            throw new IllegalStateException(
+                    "bestBrain() requires all four populations to have a best chromosome; "
+                            + "call run() first. n=" + n + " s=" + s + " w=" + w + " e=" + e);
+        }
+        return new AgentBrain(n.tree(), s.tree(), w.tree(), e.tree());
     }
 
     public Chromosome bestOverall() {
         Chromosome[] all = {nPop.best(), sPop.best(), wPop.best(), ePop.best()};
-        Chromosome best = all[0];
-        for (int i = 1; i < all.length; i++) {
-            if (all[i].fitness() > best.fitness()) best = all[i];
+        Chromosome best = null;
+        for (Chromosome c : all) {
+            if (c == null) continue;                       // GAP-014: skip unset chromosomes from empty/initialised populations
+            if (best == null || c.fitness() > best.fitness()) best = c;
         }
         return best;
     }

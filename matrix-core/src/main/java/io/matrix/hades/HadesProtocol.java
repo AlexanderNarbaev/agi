@@ -16,6 +16,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * HADES Protocol — Healing and Derangement Eradication System.
@@ -60,8 +62,10 @@ public class HadesProtocol {
     private final DerangementDetector detector;
     private final MatrixMetrics metrics;
     private final NoosphereRegistry noosphereRegistry;
-    private final List<String> hadesLog = new ArrayList<>();
-    private HadesState state = HadesState.IDLE;
+    // GAP-017: thread-safe log (CopyOnWriteArrayList)
+    private final List<String> hadesLog = new CopyOnWriteArrayList<>();
+    // GAP-017: atomic state transitions
+    private final AtomicReference<HadesState> state = new AtomicReference<>(HadesState.IDLE);
 
     public HadesProtocol(SnapshotStore snapshotStore, MatrixMetrics metrics,
                           NoosphereRegistry noosphereRegistry) {
@@ -81,7 +85,7 @@ public class HadesProtocol {
 
     public DerangementDetector detector() { return detector; }
 
-    public HadesState state() { return state; }
+    public HadesState state() { return state.get(); }
 
     public List<String> hadesLog() { return List.copyOf(hadesLog); }
 
@@ -100,7 +104,7 @@ public class HadesProtocol {
         Map<NeuronId, NeuronInstance> workingNeurons = new HashMap<>(neurons);
 
         // Phase 1: Scan for derangement
-        state = HadesState.ISOLATING;
+        state.set(HadesState.ISOLATING);
         var alerts = detector.scanAll(
                 new ArrayList<>(workingNeurons.values()), signalRates);
         hadesLog.add("HADES:SCAN alerts=" + alerts.size());
@@ -109,7 +113,7 @@ public class HadesProtocol {
         }
 
         if (alerts.isEmpty()) {
-            state = HadesState.IDLE;
+            state.set(HadesState.IDLE);
             hadesLog.add("HADES:CLEAN no derangement detected");
             return HadesResult.completed(0, 0, null,
                     "No derangement detected", List.of());
@@ -140,7 +144,7 @@ public class HadesProtocol {
         }
 
         // Phase 3: Create emergency snapshot
-        state = HadesState.ROLLING_BACK;
+        state.set(HadesState.ROLLING_BACK);
         ClusterSnapshot emergencySnapshot = snapshotStore.createSnapshot(
                 workingNeurons, 0);
         Path emergencyPath = snapshotStore.save(emergencySnapshot);
@@ -164,7 +168,7 @@ public class HadesProtocol {
         }
 
         // Phase 5: Analyze
-        state = HadesState.ANALYZING;
+        state.set(HadesState.ANALYZING);
         long criticalCount = alerts.stream()
                 .filter(a -> a.severity() == DerangementDetector.Severity.CRITICAL
                         || a.severity() == DerangementDetector.Severity.HIGH)
@@ -178,7 +182,7 @@ public class HadesProtocol {
 
         // Phase 6: Report — publish anonymized log to Noosphere
         if (noosphereRegistry != null) {
-            state = HadesState.REPORTING;
+            state.set(HadesState.REPORTING);
             try {
                 FnlPackage report = FnlPackage.builder()
                         .name("hades-report-" + UUID.randomUUID().toString().substring(0, 8))
@@ -200,7 +204,7 @@ public class HadesProtocol {
             hadesLog.add("HADES:REPORT skipped — no NoosphereRegistry configured");
         }
 
-        state = HadesState.COMPLETED;
+        state.set(HadesState.COMPLETED);
         hadesLog.add("HADES:DONE");
 
         return HadesResult.completed(quarantine.size(), rolledBack,

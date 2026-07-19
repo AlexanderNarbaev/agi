@@ -36,6 +36,7 @@ out/
 .opencode/user.db*
 .opencode/*.db-shm
 .opencode/*.db-wal
+.opencode/state/
 /logs/
 .wslconfig
 *.db
