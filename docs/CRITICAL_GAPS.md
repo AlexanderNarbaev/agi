@@ -14,9 +14,9 @@
 | 🔴 CRITICAL | 5 | 3 | Нарушение спецификаций, гонки данных, отсутствие обязательных проверок безопасности |
 | 🟠 HIGH | 8 | 6 | Потенциальные баги, отсутствие валидации, девиация от спец |
 | 🟡 MEDIUM | 10 | 7 | Качество кода, неполные проверки, нестабильные идентификаторы |
-| 🟢 LOW | 2 | 0 | Мелкие улучшения, мёртвый код |
+| 🟢 LOW | 2 | 2 | Мелкие улучшения, мёртвый код |
 
-**Итого: 25 проблем. 16 исправлено (Phase 1+2 complete). 9 остаются (Phase 3–5).**
+**Итого: 25 проблем. 18 исправлено (Phase 1+2+3+5 complete). 7 остаются (Phase 4).**
 
 ---
 
@@ -146,10 +146,10 @@
 
 ## 🟢 LOW (технический долг)
 
-| GAP | Файл | Проблема |
-|-----|------|----------|
-| 019 | AgentLoop.java:507 | actionCodeToThought() хардкодит 5 бит |
-| 020 | ConsensusEngine.java:48 | Мёртвое поле debateProtocol |
+| GAP | Файл | Проблема | Исправление | Статус |
+|-----|------|----------|-------------|--------|
+| 019 | AgentLoop.java:507 | actionCodeToThought() хардкодит 5 бит | Вычислять из AgentAction.ActionType.values().length | ✅ FIXED — `THOUGHT_BITS = bitsNeeded(ActionType.values().length)`. Для 10 actions → 4 бита. `actionCodeToThought()` использует константу. Тесты `thoughtBitsShouldMatchActionTypeCount`, `actionCodeToThoughtShouldRespectThoughtBitsLength`, `actionCodeToThoughtShouldDecodeBits`, `actionCodeToThoughtShouldIgnoreBitsBeyondLength`. Существующие тесты `tickShouldReturnValidState`, `selectActionShouldUseThoughtWhenNoTask`, `actionCodeToThoughtShouldConvertCorrectly` обновлены для динамической длины. |
+| 020 | ConsensusEngine.java:48 | Мёртвое поле debateProtocol | Использовать поле | ✅ FIXED — `DebateResult evaluateProposal(...)` теперь использует `this.debateProtocol` вместо локального `new DebateProtocol()`. Поле больше не мёртвое — единая инстанция переиспользуется между вызовами. |
 
 ---
 
@@ -162,25 +162,27 @@
 | StructuralSafetyGuard.java | ✅ FIXED | ✅ FIXED | — | — | 0 (was 1) | — |
 | **EthicalFilter.java** | ✅ | ⚠️ PARTIAL | 1 | — | 0 (was 3) | — |
 | **EvolutionLoop.java** | ✅ FIXED | ✅ FIXED | 0 (was 1) | — | 0 (was 1) | — |
-| AgentLoop.java | ✅ | ✅ | — | — | — | 1 |
+| AgentLoop.java | ✅ | ✅ FIXED | — | — | — | 0 (was 1) |
 | GeneticOperators.java | ✅ | ✅ | — | — | — | — |
-| **ConsensusEngine.java** | ✅ FIXED | ✅ FIXED | 0 (was 2) | — | — | 1 |
+| **ConsensusEngine.java** | ✅ FIXED | ✅ FIXED | 0 (was 2) | — | — | 0 (was 1) |
 | **HadesProtocol.java** | ✅ FIXED | ✅ FIXED | — | 0 (was 2) | 0 (was 1) | — |
 | **CauldronProtocol.java** | ✅ FIXED | ✅ FIXED | 0 (was 1) | — | 0 (was 1) | — |
 
-**Всего файлов с thread-safety проблемами:** 0 из 10 (все исправлены в Phase 1+2)
-**Всего файлов с отклонением от спецификации:** 1 из 10 (EthicalFilter — GAP-003 FROZEN FNL ещё не реализован, остаётся на Phase 4)
+**Всего файлов с thread-safety проблемами:** 0 из 10 ✅
+**Всего файлов с отклонением от спецификации:** 1 из 10 (EthicalFilter — GAP-003 FROZEN FNL, остаётся на Phase 4)
+**Всего файлов с technical debt:** 0 из 2 ✅
 
 ---
 
 ## Рекомендуемый порядок исправления
 
 1. **Немедленно (P0):** GAP-001, GAP-002, GAP-003, GAP-004, GAP-005
-2. **В ближайший спринт (P1):** GAP-006–010, GAP-021–023 — ✅ DONE
-3. **Планово (P2):** GAP-011–018, GAP-024–025 — ✅ DONE (011–018)
-4. **Технический долг (P3):** GAP-019–020 — ⏳ Phase 5
-5. **Phase 4 (инфраструктура):** GAP-003 (EthicalFilter FROZEN FNL), GAP-024 (GDPR), GAP-025 (JMH)
+2. **В ближайший спринт (P1):** GAP-006–010 — ✅ DONE
+3. **Phase 3 (security polish):** GAP-022/023 Periodic scanning — ✅ DONE (PeriodicProactiveScanner)
+4. **Планово (P2):** GAP-011–018 — ✅ DONE
+5. **Технический долг (P3):** GAP-019–020 — ✅ DONE
+6. **Phase 4 (infrastructure):** GAP-003 (EthicalFilter FROZEN FNL), GAP-021 (Formal verification), GAP-024 (GDPR), GAP-025 (JMH) — ⏳ OPEN
 
 ---
 
-*Конец CRITICAL_GAPS.md — v1.1, 2026-07-19*
+*Конец CRITICAL_GAPS.md — v1.2, 2026-07-19*

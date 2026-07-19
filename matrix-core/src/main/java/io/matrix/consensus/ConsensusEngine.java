@@ -157,7 +157,9 @@ public final class ConsensusEngine {
             throw new IllegalArgumentException("Unknown proposal: " + proposalId);
         }
 
-        DebateProtocol protocol = new DebateProtocol();
+        // GAP-020 fix: use the shared debateProtocol field (was previously dead — a new local
+        // instance was created each call, leaving the field uninitialised-effectively).
+        DebateProtocol protocol = this.debateProtocol;
         for (DebateAgent agent : debateAgents) {
             protocol.addAgent(agent);
         }
