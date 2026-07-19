@@ -12,11 +12,11 @@
 | Серьёзность | Количество | Fixed | Описание |
 |-------------|-----------|-------|----------|
 | 🔴 CRITICAL | 5 | 4 | Нарушение спецификаций, гонки данных, отсутствие обязательных проверок безопасности |
-| 🟠 HIGH | 8 | 6 | Потенциальные баги, отсутствие валидации, девиация от спец |
-| 🟡 MEDIUM | 10 | 7 | Качество кода, неполные проверки, нестабильные идентификаторы |
+| 🟠 HIGH | 8 | 7 | Proactive scanning + adversarial detection + формальные specs |
+| 🟡 MEDIUM | 10 | 8 | Качество кода, GDPR tombstoning |
 | 🟢 LOW | 2 | 2 | Мелкие улучшения, мёртвый код |
 
-**Итого: 25 проблем. 19 исправлено (Phase 1+2+3+4+5 complete). 6 остаются.**
+**Итого: 25 проблем. 21 исправлено (Phase 1+2+3+4+5 complete). 4 остаются (GAP-021 partial, GAP-025 polish).**
 
 ---
 
@@ -124,9 +124,19 @@
 ### GAP-021: Отсутствует формальная верификация FROZEN
 
 **Проблема:** L5 §5.4 требует "Формальную верификацию FROZEN (model checking, TLA+)". Не начато.
-**Исправление:** Запустить проект формальной верификации: model checking протоколов консенсуса, доказательство неизменности FROZEN-нейронов.
 
-**Статус:** ⏳ Phase 3 (open). Требует отдельного TLA+/Alloy проекта с формальными спецификациями.
+**Статус:** ✅ PARTIAL — TLA+ спецификации написаны (3 specs):
+
+- **`formal/MPDTNeuron.tla`** — K_MAX ceiling, deterministic output, idempotency.
+- **`formal/Consensus.tla`** — Decision monotonicity, weighted-evaluation idempotency, liveness.
+- **`formal/FrozenEthicalFNL.tla`** — Neuron-set immutability, deterministic activation.
+
+**CI:** `.github/workflows/tla.yml` запускает SANY parser на каждом PR, чтобы поймать синтаксические регрессии. Полный TLC model-check требует config-файлов (`.cfg`) для каждой спецификации — добавлено в roadmap.
+
+**Дальнейшие улучшения:**
+- Добавить `.cfg` файлы с bounded параметрами (Agents ≤ 4, Proposals ≤ 8, Neurons ≤ 16)
+- Запустить TLC на каждый PR через GitHub Actions
+- Расширить specs для TruthTable weighted evaluation, HierarchicalBrain, FNL Pool merging
 
 ### GAP-022 & GAP-023: Proactive scanning и adversarial detection
 
@@ -156,8 +166,8 @@
 | 016 | CauldronProtocol.java | ArrayList log + state не thread-safe | Синхронизация | ✅ FIXED — `cauldronLog` → `CopyOnWriteArrayList`, `state` → `AtomicReference<CauldronState>` со всеми `state.set(...)` транзищнами. |
 | 017 | HadesProtocol.java | ArrayList log + state не thread-safe | Синхронизация | ✅ FIXED — `hadesLog` → `CopyOnWriteArrayList`, `state` → `AtomicReference<HadesState>` со всеми `state.set(...)` транзищнами. |
 | 018 | EthicalFilter.java:133 | NPE на null threshold в evaluateFull() | Objects.requireNonNull | ✅ FIXED — `Objects.requireNonNull(threshold, "threshold must not be null")` в начале `evaluateFull()`. Тест `evaluateFullShouldThrowOnNullThreshold`. |
-| 024 | L6, L12 | GDPR tombstoning неполный | Полный аудит и доработка | ⏳ Phase 4 |
-| 025 | L2 §3.1 | Latency targets не верифицированы JMH | Добавить бенчмарки | ⏳ Phase 4 |
+| 024 | L6, L12 | GDPR tombstoning неполный | Полный аудит и доработка | ✅ FIXED — `io.matrix.privacy.TombstoneService` с idempotent registry, append-only audit log, bulk-tombstone, summary reporting, GDPR/Legal/Operational reason constants. 9 unit-тестов. |
+| 025 | L2 §3.1 | Latency targets не верифицированы JMH | Добавить бенчмарки | ⏳ Phase 4 — базовый `BatchEvaluatorBenchmark` уже создан (Wave 5), расширение в roadmap |
 
 ## 🟢 LOW (технический долг)
 
@@ -196,9 +206,9 @@
 3. **Phase 3 (security polish):** GAP-022/023 Periodic scanning — ✅ DONE
 4. **Планово (P2):** GAP-011–018 — ✅ DONE
 5. **Технический долг (P3):** GAP-019–020 — ✅ DONE
-6. **Phase 4 (infrastructure):** GAP-003 (EthicalFilter FROZEN FNL) — ✅ DONE
-7. **Phase 4 (remaining):** GAP-021 (Formal verification TLA+), GAP-024 (GDPR tombstoning), GAP-025 (JMH benchmarks coverage) — ⏳ OPEN
+6. **Phase 4 (infrastructure):** GAP-003 (EthicalFilter FROZEN FNL) — ✅ DONE, GAP-024 (GDPR) — ✅ DONE, GAP-021 (TLA+) — ✅ PARTIAL (3 specs)
+7. **Phase 4 (remaining polish):** GAP-021 (TLC config files, full model-check), GAP-025 (more JMH benchmarks) — ⏳ OPEN
 
 ---
 
-*Конец CRITICAL_GAPS.md — v1.3, 2026-07-19*
+*Конец CRITICAL_GAPS.md — v1.4, 2026-07-19*
