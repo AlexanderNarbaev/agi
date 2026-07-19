@@ -57,13 +57,13 @@ public class ChatDrivenTrainer {
     private static final Logger log = LoggerFactory.getLogger(ChatDrivenTrainer.class);
 
     @ConfigProperty(name = "matrix.chat.trainer-enabled", defaultValue = "true")
-    boolean enabled;
+    boolean enabled = true;
 
     @ConfigProperty(name = "matrix.chat.trainer-interval-seconds", defaultValue = "60")
-    long trainerIntervalSeconds;
+    long trainerIntervalSeconds = 60;
 
     @ConfigProperty(name = "matrix.chat.online-train-iterations", defaultValue = "3")
-    int onlineTrainIterations;
+    int onlineTrainIterations = 3;
 
     @ConfigProperty(name = "matrix.chat.output-file",
             defaultValue = "models/training_data/auto_generated.jsonl")

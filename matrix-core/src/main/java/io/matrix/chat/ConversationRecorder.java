@@ -63,10 +63,10 @@ public class ConversationRecorder {
     String storageDir;
 
     @ConfigProperty(name = "matrix.chat.flush-interval-seconds", defaultValue = "5")
-    long flushIntervalSeconds;
+    long flushIntervalSeconds = 5;
 
     @ConfigProperty(name = "matrix.chat.enabled", defaultValue = "true")
-    boolean enabled;
+    boolean enabled = true;
 
     private final ConcurrentLinkedQueue<ConversationRecord> buffer = new ConcurrentLinkedQueue<>();
     private final AtomicLong totalRecorded = new AtomicLong();

@@ -68,44 +68,40 @@ tasks.withType(JavaCompile) {
     options.compilerArgs.add('--add-modules=jdk.incubator.vector')
 }
 
+// Shared exclusion list for jacoco coverage measurement.
+// Packages listed here are NOT counted towards the 82% METHOD-coverage gate.
+// Rationale: experimental, pilot, infrastructure, and non-core-goal packages
+// are excluded to keep the coverage gate meaningful for the currently
+// tested surface area (agent, imports, io, evolution, neuron, ethics, audit, chat).
+def jacocoExcluded = [
+    'io/matrix/MatrixApplication*', 'io/matrix/MatrixSimulation*',
+    'io/matrix/SystemDemo*', 'io/matrix/MinecraftExperiment*',
+    'io/matrix/MatrixTopCommand*', 'io/matrix/cli/**',
+    'io/matrix/pilot/**', 'io/matrix/rag/**', 'io/matrix/compression/**',
+    'io/matrix/explainability/**', 'io/matrix/nas/**', 'io/matrix/mcts/**',
+    'io/matrix/vqvae/**', 'io/matrix/civilization/**', 'io/matrix/economy/**',
+    'io/matrix/cauldron/**', 'io/matrix/hades/**', 'io/matrix/proxy/**',
+    'io/matrix/shadow/**', 'io/matrix/snapshot/**', 'io/matrix/protocol/**',
+    'io/matrix/knowledge/**', 'io/matrix/learning/**', 'io/matrix/dialog/**',
+    'io/matrix/simulation/**', 'io/matrix/training/**', 'io/matrix/bridge/**',
+    'io/matrix/cluster/**', 'io/matrix/explain/**', 'io/matrix/lifecycle/**',
+    'io/matrix/events/**', 'io/matrix/mcp/**', 'io/matrix/concurrent/**',
+    'io/matrix/observability/**', 'io/matrix/redis/**', 'io/matrix/safety/**',
+    'io/matrix/security/**', 'io/matrix/benchmark/**',
+    'io/matrix/noosphere/**', 'io/matrix/neuron/binary/**',
+    'io/matrix/reasoning/**',
+    'io/matrix/minecraft/**', 'io/matrix/api/**',
+    'io/matrix/mediator/**', 'io/matrix/privacy/**',
+    'io/matrix/memory/**', 'io/matrix/consensus/**',
+    'io/matrix/ethics/guardrail/**'
+]
+
 jacocoTestReport {
     dependsOn test
     reports {
         xml.required = true
         csv.required = false
         html.required = true
-    }
-    afterEvaluate {
-        classDirectories.setFrom(files(classDirectories.files.collect {
-            fileTree(dir: it, exclude: [
-                // CLI / demo / entry-points (no business logic)
-                'io/matrix/MatrixApplication*',
-                'io/matrix/MatrixSimulation*',
-                'io/matrix/SystemDemo*',
-                'io/matrix/MinecraftExperiment*',
-                'io/matrix/MatrixTopCommand*',
-                'io/matrix/cli/**',
-                // Experimental, pilots, research — not core goal "Universal Matrix weight ingestion"
-                'io/matrix/pilot/**', 'io/matrix/rag/**', 'io/matrix/compression/**',
-                'io/matrix/explainability/**', 'io/matrix/nas/**', 'io/matrix/mcts/**',
-                'io/matrix/vqvae/**', 'io/matrix/civilization/**', 'io/matrix/economy/**',
-                'io/matrix/cauldron/**', 'io/matrix/hades/**', 'io/matrix/proxy/**',
-                'io/matrix/shadow/**', 'io/matrix/snapshot/**', 'io/matrix/protocol/**',
-                'io/matrix/knowledge/**', 'io/matrix/learning/**', 'io/matrix/dialog/**',
-                'io/matrix/simulation/**', 'io/matrix/training/**', 'io/matrix/bridge/**',
-                'io/matrix/cluster/**', 'io/matrix/explain/**', 'io/matrix/lifecycle/**',
-                'io/matrix/events/**', 'io/matrix/mcp/**', 'io/matrix/concurrent/**',
-                'io/matrix/observability/**', 'io/matrix/redis/**', 'io/matrix/safety/**',
-                'io/matrix/security/**', 'io/matrix/benchmark/**',
-                'io/matrix/noosphere/**', 'io/matrix/neuron/binary/**',
-                'io/matrix/reasoning/**',
-                // Added for coverage focus — untested infrastructure/experimental packages
-                'io/matrix/minecraft/**', 'io/matrix/api/**',
-                'io/matrix/mediator/**', 'io/matrix/privacy/**',
-                'io/matrix/memory/**', 'io/matrix/consensus/**',
-                'io/matrix/ethics/guardrail/**'
-            ])
-        }))
     }
 }
 
@@ -122,39 +118,25 @@ jacocoTestCoverageVerification {
     }
 }
 
-// Shared exclusion list for both jacoco report and verification
+// Single afterEvaluate block — applies exclusion to BOTH tasks
+// using sourceSets.main.output instead of task-local classDirectories
+// (which may be uninitialized for CoverageVerification in Gradle 9.x)
 project.afterEvaluate {
-    def excluded = [
-        'io/matrix/MatrixApplication*', 'io/matrix/MatrixSimulation*',
-        'io/matrix/SystemDemo*', 'io/matrix/MinecraftExperiment*',
-        'io/matrix/MatrixTopCommand*', 'io/matrix/cli/**',
-        'io/matrix/pilot/**', 'io/matrix/rag/**', 'io/matrix/compression/**',
-        'io/matrix/explainability/**', 'io/matrix/nas/**', 'io/matrix/mcts/**',
-        'io/matrix/vqvae/**', 'io/matrix/civilization/**', 'io/matrix/economy/**',
-        'io/matrix/cauldron/**', 'io/matrix/hades/**', 'io/matrix/proxy/**',
-        'io/matrix/shadow/**', 'io/matrix/snapshot/**', 'io/matrix/protocol/**',
-        'io/matrix/knowledge/**', 'io/matrix/learning/**', 'io/matrix/dialog/**',
-        'io/matrix/simulation/**', 'io/matrix/training/**', 'io/matrix/bridge/**',
-        'io/matrix/cluster/**', 'io/matrix/explain/**', 'io/matrix/lifecycle/**',
-        'io/matrix/events/**', 'io/matrix/mcp/**', 'io/matrix/concurrent/**',
-        'io/matrix/observability/**', 'io/matrix/redis/**', 'io/matrix/safety/**',
-        'io/matrix/security/**', 'io/matrix/benchmark/**',
-        'io/matrix/noosphere/**', 'io/matrix/neuron/binary/**',
-        'io/matrix/reasoning/**',
-        'io/matrix/minecraft/**', 'io/matrix/api/**',
-        'io/matrix/mediator/**', 'io/matrix/privacy/**',
-        'io/matrix/memory/**', 'io/matrix/consensus/**',
-        'io/matrix/ethics/guardrail/**'
-    ]
+    def mainDirs = project.sourceSets.main.output.files
+            .findAll { it.name == 'classes' }
+    if (mainDirs.isEmpty()) {
+        mainDirs = sourceSets.main.output.classesDirs.files.toList()
+    }
+    def filteredDirs = mainDirs.collect { dir ->
+        project.fileTree(dir: dir, exclude: jacocoExcluded)
+    }
+    def filteredFiles = project.files(filteredDirs)
+
     tasks.named('jacocoTestReport').configure {
-        classDirectories.setFrom(files(classDirectories.files.collect {
-            fileTree(dir: it, exclude: excluded)
-        }))
+        classDirectories.setFrom(filteredFiles)
     }
     tasks.named('jacocoTestCoverageVerification').configure {
-        classDirectories.setFrom(files(classDirectories.files.collect {
-            fileTree(dir: it, exclude: excluded)
-        }))
+        classDirectories.setFrom(filteredFiles)
     }
 }
 

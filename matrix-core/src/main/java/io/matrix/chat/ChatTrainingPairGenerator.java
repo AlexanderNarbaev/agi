@@ -68,19 +68,19 @@ public class ChatTrainingPairGenerator {
     String outputFile;
 
     @ConfigProperty(name = "matrix.chat.min-input-length", defaultValue = "4")
-    int minInputLength;
+    int minInputLength = 4;
 
     @ConfigProperty(name = "matrix.chat.max-input-length", defaultValue = "2000")
-    int maxInputLength;
+    int maxInputLength = 2000;
 
     @ConfigProperty(name = "matrix.chat.min-output-length", defaultValue = "8")
-    int minOutputLength;
+    int minOutputLength = 8;
 
     @ConfigProperty(name = "matrix.chat.max-output-length", defaultValue = "4000")
-    int maxOutputLength;
+    int maxOutputLength = 4000;
 
     @ConfigProperty(name = "matrix.chat.required-rating-floor", defaultValue = "0.35")
-    double requiredRatingFloor;
+    double requiredRatingFloor = 0.35;
 
     @ConfigProperty(name = "matrix.chat.required-positive-feedback", defaultValue = "false")
     boolean requirePositiveFeedback;

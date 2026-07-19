@@ -16,7 +16,7 @@ import jakarta.inject.Inject;
 public class FeedbackAggregator {
 
     @Inject
-    public ConversationFeedbackStore store;
+    ConversationFeedbackStore store;
 
     /** Latest rating (0.0..1.0), defaulting to 0.5 (neutral). */
     public double ratingFor(String conversationId) {
