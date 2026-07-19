@@ -156,3 +156,14 @@
 | — | matrix-core/.../ScadaSafetyMonitorTest.java | SCADA Safety Monitor Test | Тесты | 6 tests: CONTINUE/WAIT/SHUTDOWN verdicts | 2026-07-16 |
 | — | docs/REQUIREMENTS.md | Единый свод требований | Все | 150+ FR/NFR из L0-L22, исследований, код-аудита | 2026-07-17 |
 | — | docs/CRITICAL_GAPS.md | Отчёт о критических пробелах | Все | 24 проблемы: 5 CRITICAL, 7 HIGH, 8 MEDIUM, 4 LOW | 2026-07-17 |
+| — | docs/ARCHITECTURE.md | Архитектура MATRIX v3.47 | Все | Mermaid-диаграмма, таблица подсистем, FROZEN-инварианты, wave history | 2026-07-19 |
+| — | matrix-core/src/.../imports/ | Universal Weight Ingestion | AI | HF Hub → safetensors → TensorProjector → TruthTable pool | 2026-07-19 |
+| — | matrix-core/src/.../io/ | Sensor/IO Evolution Framework | AI | ChatSensor, IoTSensor, MinecraftBotSensor, SensorBus | 2026-07-19 |
+| — | matrix-core/src/.../privacy/ | GDPR Tombstoning | Юр. | TombstoneService — Article 17 right-to-erasure | 2026-07-19 |
+| — | matrix-core/src/.../ethics/frozen/ | FROZEN Ethical FNL (L7 §3.1) | Ethics | FrozenAxiomNeuron + TextFeatureExtractor + FrozenEthicalFNL | 2026-07-19 |
+| — | matrix-core/src/.../neuron/BatchEvaluator.java | Batch TruthTable Eval (SIMD) | Оптимизация | 64-bit batch eval, trueCount, int-packed decode | 2026-07-19 |
+| — | matrix-core/src/.../neuron/SimdTruthTableEval.java | Real SIMD Eval (jdk.incubator.vector) | Оптимизация | VectorSpecies<Long> chunked batch evaluation | 2026-07-19 |
+| — | matrix-core/src/.../neuron/DecisionTreeBatch.java | Batch DecisionTree Eval | Оптимизация | 64-bit packed result for DecisionTree | 2026-07-19 |
+| — | formal/MPDTNeuron.tla | TLA+ — MPDT нейрон | Верификация | K_MAX bounded, deterministic output, idempotency | 2026-07-19 |
+| — | formal/Consensus.tla | TLA+ — Консенсус | Верификация | Decision monotonicity, weighted idempotency, liveness | 2026-07-19 |
+| — | formal/FrozenEthicalFNL.tla | TLA+ — FROZEN FNL | Верификация | Neuron-set immutability, deterministic activation | 2026-07-19 |
