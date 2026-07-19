@@ -85,7 +85,7 @@ class ReActAgentLoopTest {
         assertThat(state).isNotNull();
         assertThat(state.tick()).isEqualTo(1);
         assertThat(state.observation()).isEqualTo(0xABCDEL);
-        assertThat(state.thought()).hasSize(5);
+        assertThat(state.thought()).hasSize(AgentLoop.THOUGHT_BITS);
         assertThat(state.action()).isNotNull();
         assertThat(state.action().hasResult()).isTrue();
     }
