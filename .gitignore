@@ -32,11 +32,14 @@ out/
 
 /.lock/
 .agentic-tools-mcp/
+.claude/
 .codegraph/
 .opencode/user.db*
 .opencode/*.db-shm
 .opencode/*.db-wal
 .opencode/state/
+# Excalidraw knowledge-graph stub (replaced by docs/ARCHITECTURE.md)
+docs/architecture.md
 /logs/
 .wslconfig
 *.db
