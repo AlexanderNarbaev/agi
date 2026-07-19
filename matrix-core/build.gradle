@@ -2,7 +2,7 @@ plugins {
     id 'java'
     id 'jacoco'
     id 'com.github.spotbugs' version '6.1.7'
-    id 'io.quarkus' version '3.36.1'
+    id 'io.quarkus' version '3.37.3'
     id 'me.champeau.jmh' version '0.7.3'
     id 'org.graalvm.buildtools.native' version '0.10.4'
 }
@@ -20,7 +20,7 @@ repositories {
 }
 
 dependencies {
-    implementation enforcedPlatform('io.quarkus.platform:quarkus-bom:3.36.1')
+    implementation enforcedPlatform('io.quarkus.platform:quarkus-bom:3.37.3')
     implementation 'io.quarkus:quarkus-arc'
     implementation 'io.quarkus:quarkus-micrometer-registry-prometheus'
     implementation 'io.quarkus:quarkus-opentelemetry'
@@ -210,7 +210,7 @@ tasks.register('buildNativeContainer', Exec) {
             '-Dquarkus.native.enabled=true',
             '-Dquarkus.package.type=native',
             '-Dquarkus.native.container-build=true',
-            '-Dquarkus.native.builder-image=quay.io/quarkus/ubi-quarkus-mandrel-builder:24.1.0-java21',
+            '-Dquarkus.native.builder-image=quay.io/quarkus/ubi-quarkus-mandrel-builder:25.0.1-java25',
             '--no-daemon'
 }
 
