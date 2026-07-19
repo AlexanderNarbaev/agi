@@ -126,7 +126,7 @@ class MultiAgentLoopTest {
             assertThat(agentState).isNotNull();
             assertThat(agentState.tick()).isPositive();
             assertThat(agentState.action()).isNotNull();
-            assertThat(agentState.thought()).hasSize(5);
+            assertThat(agentState.thought()).hasSize(AgentLoop.THOUGHT_BITS);
         }
     }
 
