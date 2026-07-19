@@ -239,4 +239,62 @@ class StructuralSafetyGuardTest {
                 "kill_process", "rm_rf");
         assertThat(guard.removedTools()).containsExactlyInAnyOrderElementsOf(expected);
     }
+
+    // ── GAP-015: Deterministic Gate IDs (no UUID.randomUUID) ──
+
+    @Test
+    void gateIdsShouldFollowDeterministicFormat() {
+        var verdict = guard.evaluate("deploy_production", Map.of());
+
+        assertThat(verdict.gateId()).isPresent();
+        String id = verdict.gateId().get();
+        // Format: gate-<operation>-<7-digit counter>-<8-hex context hash>
+        assertThat(id).matches("^gate-deploy_production-\\d{7}-[0-9a-f]{8}$");
+    }
+
+    @Test
+    void gateIdsShouldBeUniquePerCall() {
+        var v1 = guard.evaluate("deploy_production", Map.of());
+        var v2 = guard.evaluate("deploy_production", Map.of());
+
+        assertThat(v1.gateId()).isPresent();
+        assertThat(v2.gateId()).isPresent();
+        assertThat(v1.gateId().get()).isNotEqualTo(v2.gateId().get());
+    }
+
+    @Test
+    void gateIdsShouldIncludeContextHash() {
+        // Both ops are HIGH risk → both require approval → both produce gate IDs.
+        var ctxA = guard.evaluate("delete_data", Map.of("environment", "production"));
+        var ctxB = guard.evaluate("delete_data", Map.of("environment", "development"));
+
+        assertThat(ctxA.gateId()).isPresent();
+        assertThat(ctxB.gateId()).isPresent();
+        // Same operation/different context → context-hash tail differs.
+        String suffixA = ctxA.gateId().get().substring(ctxA.gateId().get().lastIndexOf('-') + 1);
+        String suffixB = ctxB.gateId().get().substring(ctxB.gateId().get().lastIndexOf('-') + 1);
+        assertThat(suffixA).isNotEqualTo(suffixB);
+    }
+
+    @Test
+    void gateIdsShouldBeStableForIdenticalContext() {
+        // Determinism check: identical inputs must produce identical tail hashes.
+        // (Counter differs, but the context hash segment is stable.)
+        var v1 = guard.evaluate("write_data", Map.of("environment", "production"));
+        var v2 = guard.evaluate("write_data", Map.of("environment", "production"));
+
+        String suffix1 = v1.gateId().get().substring(v1.gateId().get().lastIndexOf('-') + 1);
+        String suffix2 = v2.gateId().get().substring(v2.gateId().get().lastIndexOf('-') + 1);
+        assertThat(suffix1).isEqualTo(suffix2);
+    }
+
+    @Test
+    void gateIdsShouldNotContainUuidDashes() {
+        // UUIDs look like xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx — gate IDs must NOT match.
+        var verdict = guard.evaluate("deploy_production", Map.of());
+        String id = verdict.gateId().get();
+        // Strip our known fixed prefixes — no remainder should look like a UUID.
+        String remainder = id.replaceAll("^gate-deploy_production-\\d{7}-", "");
+        assertThat(remainder).matches("^[0-9a-f]{8}$"); // 8 hex chars, not a 32-char UUID
+    }
 }

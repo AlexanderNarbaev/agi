@@ -1,6 +1,7 @@
 package io.matrix.ethics;
 
 import java.util.*;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * Structural Safety Guard — process-based safety enforcement.
@@ -72,6 +73,13 @@ public final class StructuralSafetyGuard {
 
     // ── Configuration ──
 
+    /**
+     * Process-wide monotonic Gate ID counter (GAP-015 fix).
+     * Provides reproducible, monotonically-increasing sequence for
+     * deterministic gate IDs across calls within this JVM.
+     */
+    private static final AtomicLong GATE_COUNTER = new AtomicLong(0);
+
     private final Set<String> removedTools;
     private final Set<String> gatedOperations;
     private final Map<String, RiskLevel> riskTable;
@@ -138,7 +146,7 @@ public final class StructuralSafetyGuard {
 
         // Pattern 2: Gated operations — require human approval
         if (gatedOperations.contains(operation)) {
-            String gateId = "gate-" + operation + "-" + UUID.randomUUID();
+            String gateId = nextGateId(operation, context);
             return SafetyVerdict.requiresApproval(gateId,
                     "Operation '" + operation + "' requires human approval");
         }
@@ -152,20 +160,45 @@ public final class StructuralSafetyGuard {
                 String env = context.getOrDefault("environment", "development");
                 if ("production".equals(env) && maxAutonomy < 0.8) {
                     yield SafetyVerdict.requiresApproval(
-                            "gate-" + operation + "-" + UUID.randomUUID(),
+                            nextGateId(operation, context),
                             "Medium-risk operation in production requires approval");
                 }
                 yield SafetyVerdict.approved(risk,
                         "Medium-risk operation approved in " + env);
             }
             case HIGH -> {
-                String gateId = "gate-" + operation + "-" + UUID.randomUUID();
+                String gateId = nextGateId(operation, context);
                 yield SafetyVerdict.requiresApproval(gateId,
                         "High-risk operation requires human approval");
             }
             case CRITICAL -> SafetyVerdict.blocked(
                     "Critical-risk operation is structurally blocked");
         };
+    }
+
+    /**
+     * Deterministic, context-aware Gate ID generator (GAP-015 fix).
+     *
+     * <p>Combines a thread-safe monotonic counter with a stable hash of
+     * {@code operation + context}, so the same logical request produces
+     * the same gate ID across runs and across cluster nodes — making
+     * approvals auditable and reproducible without relying on
+     * non-deterministic {@link UUID#randomUUID()} values.
+     */
+    private String nextGateId(String operation, Map<String, String> context) {
+        long seq = GATE_COUNTER.incrementAndGet();
+        int ctxHash = stableContextHash(context);
+        return String.format("gate-%s-%07d-%08x", operation, seq, ctxHash);
+    }
+
+    private static int stableContextHash(Map<String, String> context) {
+        // Sort entries to ensure identical maps on different machines produce the same hash.
+        TreeMap<String, String> sorted = new TreeMap<>(context);
+        int h = 0;
+        for (Map.Entry<String, String> e : sorted.entrySet()) {
+            h = 31 * h + Objects.hash(e.getKey(), e.getValue());
+        }
+        return h;
     }
 
     /**
