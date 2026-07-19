@@ -103,13 +103,13 @@ jobs:
           key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
           restore-keys: ${{ runner.os }}-gradle-
 
-      - name: Build native image (container-based, Mandrel 24)
+      - name: Build native image (container-based, Mandrel 25 + Java 25 LTS)
         run: |
           ./gradlew :matrix-core:quarkusBuild \
             -Dquarkus.native.enabled=true \
             -Dquarkus.package.type=native \
             -Dquarkus.native.container-build=true \
-            -Dquarkus.native.builder-image=quay.io/quarkus/ubi-quarkus-mandrel-builder:24.1.0-java21 \
+            -Dquarkus.native.builder-image=quay.io/quarkus/ubi-quarkus-mandrel-builder:25.0.1-java25 \
             --no-daemon
 
       - name: Verify native binary exists
@@ -227,7 +227,7 @@ jobs:
             -Dquarkus.native.enabled=true \
             -Dquarkus.package.type=native \
             -Dquarkus.native.container-build=true \
-            -Dquarkus.native.builder-image=quay.io/quarkus/ubi-quarkus-mandrel-builder:24.1.0-java21 \
+            -Dquarkus.native.builder-image=quay.io/quarkus/ubi-quarkus-mandrel-builder:25.0.1-java25 \
             --no-daemon
 
       - name: Build native Docker image
