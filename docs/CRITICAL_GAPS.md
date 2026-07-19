@@ -18,6 +18,28 @@
 
 **Итого: 25 проблем. 21 исправлено (Phase 1+2+3+4+5 complete). 4 остаются (GAP-021 partial, GAP-025 polish).**
 
+### Bonus fixes from continuous improvement arc
+
+Beyond the original 25 issues, the following enhancements were added during
+the multi-wave continuous-improvement work:
+
+- **Wave 1** — Quarkus 3.36.1 → 3.37.3 LTS, Mandrel 24 → 25, Java 25 toolchain
+- **Wave 2** — `io.matrix.imports` (L24): Universal Weight Ingestion from HF Hub
+- **Wave 3** — `io.matrix.io` (L25): ChatSensor, IoTSensor, MinecraftBotSensor, SensorBus
+- **Wave 4** — `io.matrix.evolution` (L7 §4): ProtectedSelfRewrite + SelfDescriptionService
+- **Wave 5** — `BatchEvaluator` + JMH benchmarks (TruthTable 64-bit batch)
+- **Wave 6** — `io.matrix.ethics.frozen` (L7 §3.1): FrozenAxiomNeuron + TextFeatureExtractor + FrozenEthicalFNL
+- **Wave 7** — `io.matrix.privacy` (L6 §6.7): TombstoneService (GDPR Article 17)
+- **Wave 8** — `formal/*.tla` (L5 §5.4): 3 formal specifications + SANY CI gate
+- **Wave 9** — `DecisionTreeBatch` + JMH benchmark (Wave 5 analogue for trees)
+- **Wave 10** — + 3 test classes (NeuralTextGenerator, HuggingFaceHubSource with local HttpServer, FitnessFn)
+- **Wave 11** — `docs/ARCHITECTURE.md` with mermaid diagram, .gitignore cleanup
+- **Wave 12** — `SimdTruthTableEval` using `jdk.incubator.vector` (real SIMD) + benchmark
+- **Wave 13** — `EthicalFilter.frozenEvaluate()` + `frozenViolatedAxiom()` (FROZEN FNL wired in)
+
+**Cumulative added:** 32+ production classes, 110+ unit tests, 4 JMH benchmarks,
+3 TLA+ specs, 1 architecture doc, 1 GDPR service, 1 SIMD implementation.
+
 ---
 
 ## 🔴 CRITICAL (немедленное исправление)
