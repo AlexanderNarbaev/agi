@@ -4,37 +4,94 @@
   "small_model": "deepseek/deepseek-v4-flash",
   "provider": {
     "deepseek": {
-      "options": {"timeout": 600000, "chunkTimeout": 60000, "setCacheKey": true, "baseURL": "https://api.moonshot.ai/v1"},
-      "fallback": ["opencode", "moonshotai", "minimax", "mimo"]
+      "options": {
+        "timeout": 600000,
+        "chunkTimeout": 60000,
+        "setCacheKey": true
+      },
+      "fallback": [
+        "opencode",
+        "moonshotai",
+        "minimax",
+        "mimo"
+      ]
     },
     "opencode": {
-      "fallback": ["deepseek", "moonshotai", "minimax", "mimo"]
+      "fallback": [
+        "deepseek",
+        "moonshotai",
+        "minimax",
+        "mimo"
+      ]
     },
     "moonshotai": {
-      "npm": "@ai-sdk/openai-compatible",
-      "name": "Moonshot Kimi",
-      "options": {"timeout": 600000, "chunkTimeout": 60000, "setCacheKey": true, "baseURL": "https://api.moonshot.ai/v1"},
-      "models": {
-        "kimi-k3": {"name": "Kimi K3", "limit": {"context": 1000000, "output": 65536}},
-        "kimi-k2.7-code": {"name": "Kimi K2.7 Code", "limit": {"context": 262144, "output": 65536}},
-        "kimi-k2.7-code-highspeed": {"name": "Kimi K2.7 Code Highspeed", "limit": {"context": 262144, "output": 65536}}
+      
+      
+      "options": {
+        "timeout": 600000,
+        "chunkTimeout": 60000,
+        "setCacheKey": true,
+        "baseURL": "https://api.moonshot.ai/v1"
       },
-      "fallback": ["deepseek", "opencode"]
+      "models": {
+        "kimi-k3": {
+          "name": "Kimi K3",
+          "limit": {
+            "context": 1000000,
+            "output": 65536
+          }
+        },
+        "kimi-k2.7-code": {
+          "name": "Kimi K2.7 Code",
+          "limit": {
+            "context": 262144,
+            "output": 65536
+          }
+        },
+        "kimi-k2.7-code-highspeed": {
+          "name": "Kimi K2.7 Code Highspeed",
+          "limit": {
+            "context": 262144,
+            "output": 65536
+          }
+        }
+      },
+      "fallback": [
+        "deepseek",
+        "opencode"
+      ]
     },
     "minimax": {
-      "npm": "@ai-sdk/openai-compatible",
+      
       "name": "MiniMax",
-      "options": {"timeout": 600000, "chunkTimeout": 60000, "setCacheKey": true, "baseURL": "https://api.moonshot.ai/v1"},
-      "fallback": ["deepseek", "opencode"]
+      "options": {
+        "timeout": 600000,
+        "chunkTimeout": 60000,
+        "setCacheKey": true,
+        "baseURL": "https://api.minimax.io/v1"
+      },
+      "fallback": [
+        "deepseek",
+        "opencode"
+      ]
     },
     "mimo": {
-      "npm": "@ai-sdk/openai-compatible",
+      
       "name": "MiMo",
-      "options": {"timeout": 600000, "chunkTimeout": 60000, "setCacheKey": true, "baseURL": "https://api.moonshot.ai/v1"},
-      "fallback": ["deepseek", "opencode"]
+      "options": {
+        "timeout": 600000,
+        "chunkTimeout": 60000,
+        "setCacheKey": true
+      },
+      "fallback": [
+        "deepseek",
+        "opencode"
+      ]
     }
   },
-  "instructions": ["AGENTS.md"],
+  "instructions": [
+    "AGENTS.md"
+  ],
   "compaction": {
     "auto": true,
     "prune": true,
@@ -46,69 +103,108 @@
     "max_bytes": 51200
   },
   "watcher": {
-    "ignore": ["node_modules/**", "dist/**", ".git/**", "target/**", "__pycache__/**"]
+    "ignore": [
+      "node_modules/**",
+      "dist/**",
+      ".git/**",
+      "target/**",
+      "__pycache__/**"
+    ]
   },
-  "plugin": ["opencode-codegraph"],
+  "plugin": [
+    "opencode-codegraph"
+  ],
   "mcp": {
     "filesystem": {
       "type": "local",
-      "command": ["/home/alexandr-narbaev/.bun/bin/mcp-server-filesystem", "/home/alexandr-narbaev/Projects/agi"],
+      "command": [
+        "/home/alexandr-narbaev/.bun/bin/mcp-server-filesystem",
+        "/home/alexandr-narbaev/Projects/agi"
+      ],
       "enabled": true
     },
     "context7": {
       "type": "local",
-      "command": ["/home/alexandr-narbaev/.bun/bin/c7-mcp-server"],
+      "command": [
+        "/home/alexandr-narbaev/.bun/bin/c7-mcp-server"
+      ],
       "enabled": true
     },
     "sequential-thinking": {
       "type": "local",
-      "command": ["/home/alexandr-narbaev/.bun/bin/mcp-server-sequential-thinking"],
+      "command": [
+        "/home/alexandr-narbaev/.bun/bin/mcp-server-sequential-thinking"
+      ],
       "enabled": true
     },
     "codegraph": {
       "type": "local",
-      "command": ["codegraph", "serve", "--mcp"],
+      "command": [
+        "codegraph",
+        "serve",
+        "--mcp"
+      ],
       "enabled": true
     },
     "agentic-tools": {
       "type": "local",
-      "command": ["/home/alexandr-narbaev/.bun/bin/agentic-tools-mcp"],
+      "command": [
+        "/home/alexandr-narbaev/.bun/bin/agentic-tools-mcp"
+      ],
       "enabled": true
     },
     "memorylayer": {
       "type": "local",
-      "command": ["/home/alexandr-narbaev/.bun/bin/memorylayer-mcp"],
+      "command": [
+        "/home/alexandr-narbaev/.bun/bin/memorylayer-mcp"
+      ],
       "enabled": true
     },
     "fetch": {
       "type": "local",
-      "command": ["uvx", "mcp-server-fetch"],
+      "command": [
+        "uvx",
+        "mcp-server-fetch"
+      ],
       "enabled": true
     },
     "playwright": {
       "type": "local",
-      "command": ["/home/alexandr-narbaev/.bun/bin/playwright-mcp"],
+      "command": [
+        "/home/alexandr-narbaev/.bun/bin/playwright-mcp"
+      ],
       "enabled": true
     },
     "github": {
       "type": "local",
-      "command": ["/home/alexandr-narbaev/.bun/bin/mcp-server-github"],
+      "command": [
+        "/home/alexandr-narbaev/.bun/bin/mcp-server-github"
+      ],
       "enabled": true,
-      "env": {"GITHUB_PERSONAL_ACCESS_TOKEN": "${GITHUB_TOKEN}"}
+      "env": {
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "${GITHUB_TOKEN}"
+      }
     },
     "chrome-devtools": {
       "type": "local",
-      "command": ["/home/alexandr-narbaev/.npm-global/bin/chrome-devtools-mcp"],
+      "command": [
+        "/home/alexandr-narbaev/.npm-global/bin/chrome-devtools-mcp"
+      ],
       "enabled": true
     },
     "context7-official": {
       "type": "local",
-      "command": ["/home/alexandr-narbaev/.npm-global/bin/context7-mcp"],
+      "command": [
+        "/home/alexandr-narbaev/.npm-global/bin/context7-mcp"
+      ],
       "enabled": true
     },
     "excalidraw": {
       "type": "local",
-      "command": ["uvx", "excalidraw-architect-mcp"],
+      "command": [
+        "uvx",
+        "excalidraw-architect-mcp"
+      ],
       "enabled": true
     }
   }
