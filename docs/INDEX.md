@@ -167,3 +167,14 @@
 | — | formal/MPDTNeuron.tla | TLA+ — MPDT нейрон | Верификация | K_MAX bounded, deterministic output, idempotency | 2026-07-19 |
 | — | formal/Consensus.tla | TLA+ — Консенсус | Верификация | Decision monotonicity, weighted idempotency, liveness | 2026-07-19 |
 | — | formal/FrozenEthicalFNL.tla | TLA+ — FROZEN FNL | Верификация | Neuron-set immutability, deterministic activation | 2026-07-19 |
+| — | formal/HashChain.tla | TLA+ — HashChain | Верификация | Append-only, chain integrity, tamper detection, restore | 2026-07-19 |
+| — | matrix-core/src/.../api/HeadlessBotResource.java | HeadlessBot HTTP Resource | API | /api/v1/bot/headless — REST endpoint for headless bots | 2026-07-19 |
+| — | matrix-core/src/.../audit/HashLink.java | Hash Link (blockchain) | Audit | Immutable link in cryptographic hash chain (SHA-256) | 2026-07-19 |
+| — | matrix-core/src/.../audit/HashChain.java | Hash Chain | Audit | Append-only chain with verify() and restore() | 2026-07-19 |
+| — | matrix-core/src/.../audit/FrozenFNLHashChain.java | FROZEN FNL → Chain | Audit | Bridge between FROZEN FNL and HashChain | 2026-07-19 |
+| — | matrix-core/src/.../ethics/FROZENFNLGuardian.java | FROZEN FNL Guardian | Ethics | Single entry point: FROZEN FNL + audit + counters | 2026-07-19 |
+| — | matrix-core/src/.../ethics/FROZENGDPREscalator.java | FROZEN → GDPR Escalator | Ethics | Auto-tombstone on REJECT verdict | 2026-07-19 |
+| — | matrix-core/src/.../minecraft/BotCoordinator.java | Bot Coordinator | Minecraft | Bridge between BlockAgent and MinecraftBotSensor | 2026-07-19 |
+| — | matrix-core/src/.../minecraft/HeadlessBotRegistry.java | Headless Bot Registry | Minecraft | Multi-bot lifecycle manager | 2026-07-19 |
+| — | matrix-core/src/.../minecraft/HeadlessBotSnapshot.java | Headless Bot Snapshot | Minecraft | Pure-data record for HTTP/WS consumers | 2026-07-19 |
+| — | matrix-core/src/.../privacy/storage/ | Pluggable TombstoneStorage | Privacy | memory/PG/Kafka/S3/composite backends | 2026-07-19 |
