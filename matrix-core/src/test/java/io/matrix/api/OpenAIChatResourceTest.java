@@ -49,7 +49,7 @@ class OpenAIChatResourceTest {
         request.model = "M.A.T.R.I.X.";
         request.messages = List.of(msg);
 
-        var response = resource.chatCompletions(request);
+        var response = resource.chatCompletions(null, request);
         assertThat(response.getStatus()).isEqualTo(200);
 
         var entity = (ChatCompletionResponse) response.getEntity();
@@ -72,7 +72,7 @@ class OpenAIChatResourceTest {
         var request = new ChatCompletionRequest();
         request.messages = List.of(msg);
 
-        var response = resource.chatCompletions(request);
+        var response = resource.chatCompletions(null, request);
         assertThat(response.getStatus()).isEqualTo(200);
 
         var entity = (ChatCompletionResponse) response.getEntity();
@@ -89,7 +89,7 @@ class OpenAIChatResourceTest {
         request.model = "M.A.T.R.I.X.";
         request.messages = List.of(msg);
 
-        var response = resource.chatCompletions(request);
+        var response = resource.chatCompletions(null, request);
         assertThat(response.getStatus()).isEqualTo(200);
 
         var entity = (ChatCompletionResponse) response.getEntity();
@@ -107,7 +107,7 @@ class OpenAIChatResourceTest {
         request.model = "M.A.T.R.I.X.";
         request.messages = List.of(msg);
 
-        var response = resource.chatCompletions(request);
+        var response = resource.chatCompletions(null, request);
         assertThat(response.getStatus()).isEqualTo(200);
 
         var entity = (ChatCompletionResponse) response.getEntity();
@@ -126,7 +126,7 @@ class OpenAIChatResourceTest {
         request.model = "M.A.T.R.I.X.";
         request.messages = List.of(msg);
 
-        var response = resource.chatCompletions(request);
+        var response = resource.chatCompletions(null, request);
         assertThat(response.getStatus()).isEqualTo(200);
 
         var entity = (ChatCompletionResponse) response.getEntity();
@@ -143,7 +143,7 @@ class OpenAIChatResourceTest {
         request.model = "M.A.T.R.I.X.";
         request.messages = List.of(msg);
 
-        var response = resource.chatCompletions(request);
+        var response = resource.chatCompletions(null, request);
         assertThat(response.getStatus()).isEqualTo(200);
 
         var entity = (ChatCompletionResponse) response.getEntity();
@@ -160,7 +160,7 @@ class OpenAIChatResourceTest {
         request.model = "M.A.T.R.I.X.";
         request.messages = List.of(msg);
 
-        var response = resource.chatCompletions(request);
+        var response = resource.chatCompletions(null, request);
         assertThat(response.getStatus()).isEqualTo(200);
 
         var entity = (ChatCompletionResponse) response.getEntity();
@@ -173,7 +173,7 @@ class OpenAIChatResourceTest {
         request.model = "M.A.T.R.I.X.";
         request.messages = List.of();
 
-        var response = resource.chatCompletions(request);
+        var response = resource.chatCompletions(null, request);
         assertThat(response.getStatus()).isEqualTo(400);
 
         @SuppressWarnings("unchecked")
@@ -186,7 +186,7 @@ class OpenAIChatResourceTest {
         var request = new ChatCompletionRequest();
         request.model = "M.A.T.R.I.X.";
 
-        var response = resource.chatCompletions(request);
+        var response = resource.chatCompletions(null, request);
         assertThat(response.getStatus()).isEqualTo(400);
     }
 
@@ -200,7 +200,7 @@ class OpenAIChatResourceTest {
         request.model = "gpt-4-nonexistent";
         request.messages = List.of(msg);
 
-        var response = resource.chatCompletions(request);
+        var response = resource.chatCompletions(null, request);
         assertThat(response.getStatus()).isEqualTo(400);
 
         @SuppressWarnings("unchecked")
@@ -218,7 +218,7 @@ class OpenAIChatResourceTest {
         request1.model = "M.A.T.R.I.X.";
         request1.messages = List.of(msg);
 
-        var response1 = resource.chatCompletions(request1);
+        var response1 = resource.chatCompletions(null, request1);
         var resp1 = (ChatCompletionResponse) response1.getEntity();
 
         var msg2 = new ChatCompletionRequest.Message();
@@ -229,7 +229,7 @@ class OpenAIChatResourceTest {
         request2.model = "M.A.T.R.I.X.";
         request2.messages = List.of(msg2);
 
-        var response2 = resource.chatCompletions(request2);
+        var response2 = resource.chatCompletions(null, request2);
         var resp2 = (ChatCompletionResponse) response2.getEntity();
 
         assertThat(resp1.id).isNotNull().isNotEmpty();
@@ -255,7 +255,7 @@ class OpenAIChatResourceTest {
         request.model = "M.A.T.R.I.X.";
         request.messages = List.of(userMsg1, assistantMsg, userMsg2);
 
-        var response = resource.chatCompletions(request);
+        var response = resource.chatCompletions(null, request);
         assertThat(response.getStatus()).isEqualTo(200);
 
         var entity = (ChatCompletionResponse) response.getEntity();
@@ -273,7 +273,7 @@ class OpenAIChatResourceTest {
         request.model = "M.A.T.R.I.X.";
         request.messages = List.of(sysMsg);
 
-        var response = resource.chatCompletions(request);
+        var response = resource.chatCompletions(null, request);
         assertThat(response.getStatus()).isEqualTo(200);
 
         var entity = (ChatCompletionResponse) response.getEntity();
@@ -290,7 +290,7 @@ class OpenAIChatResourceTest {
         request.model = "M.A.T.R.I.X.";
         request.messages = List.of(msg);
 
-        var response = resource.chatCompletions(request);
+        var response = resource.chatCompletions(null, request);
         var entity = (ChatCompletionResponse) response.getEntity();
 
         assertThat(entity.id).startsWith("chatcmpl-");
@@ -319,7 +319,7 @@ class OpenAIChatResourceTest {
         request.stream = false;
         request.max_tokens = 100;
 
-        var response = resource.chatCompletions(request);
+        var response = resource.chatCompletions(null, request);
         assertThat(response.getStatus()).isEqualTo(200);
 
         var entity = (ChatCompletionResponse) response.getEntity();
@@ -336,7 +336,7 @@ class OpenAIChatResourceTest {
         request.model = "M.A.T.R.I.X.";
         request.messages = List.of(msg);
 
-        var response = resource.chatCompletions(request);
+        var response = resource.chatCompletions(null, request);
         assertThat(response.getStatus()).isEqualTo(200);
 
         var entity = (ChatCompletionResponse) response.getEntity();

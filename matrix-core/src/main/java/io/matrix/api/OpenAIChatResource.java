@@ -2,6 +2,8 @@ package io.matrix.api;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.matrix.agent.AgentBrainService;
+import io.matrix.chat.ConversationRecord;
+import io.matrix.chat.ConversationRecorder;
 import io.matrix.ethics.EthicalFilter;
 import io.matrix.ethics.EthicalVerdict;
 import io.matrix.hades.DerangementDetector;
@@ -66,6 +68,10 @@ public class OpenAIChatResource {
     private final MatrixMetrics metrics;
     private AgentBrainService brainService;
 
+    // Optional injection: null-safe in case the chat recorder is not on the classpath
+    @Inject
+    private ConversationRecorder conversationRecorder;
+
     public AgentBrainService brainService() { return brainService; }
     public void brainService(AgentBrainService b) { this.brainService = b; }
 
@@ -102,7 +108,9 @@ public class OpenAIChatResource {
      */
     @POST
     @Path("/chat/completions")
-    public Response chatCompletions(ChatCompletionRequest request) {
+    public Response chatCompletions(
+            @HeaderParam("X-Conversation-Id") String conversationIdHeader,
+            ChatCompletionRequest request) {
         if (metrics != null) metrics.recordChatRequest();
 
         // Validate request
@@ -113,6 +121,32 @@ public class OpenAIChatResource {
                             "type", "invalid_request_error",
                             "code", "missing_messages")))
                     .build();
+        }
+
+        // Allocate a conversation id so all messages in this request can be joined
+        // later by the training pipeline. Re-uses an explicit header if the client
+        // passed one — helpful for multi-turn dialogs that the bot tracks itself.
+        String conversationId = conversationIdHeader;
+        if (conversationId == null || conversationId.isBlank()) {
+            conversationId = ConversationRecord.newConversationId();
+        }
+        final String finalConvId = conversationId;
+
+        // Record each user message up-front so a server crash mid-generation still
+        // preserves the human side of the dialog. Assistant records are added later.
+        if (conversationRecorder != null) {
+            List<ConversationRecord> toRecord = new ArrayList<>();
+            for (ChatCompletionRequest.Message m : request.messages) {
+                if ("user".equalsIgnoreCase(m.role)) {
+                    toRecord.add(ConversationRecord.user(
+                            finalConvId, null, DEFAULT_MODEL, m.content));
+                } else if ("system".equalsIgnoreCase(m.role)) {
+                    toRecord.add(ConversationRecord.system(finalConvId, m.content));
+                }
+            }
+            if (!toRecord.isEmpty()) {
+                conversationRecorder.recordAll(toRecord);
+            }
         }
 
         // Validate model
@@ -188,12 +222,25 @@ public class OpenAIChatResource {
         log.info("Chat completion: model={} inputLen={} verdict={} responseLen={}",
                 model, userText.length(), verdict, response.length());
 
+        // Record the assistant turn so the training pipeline can later join
+        // (user, assistant) pairs from the same conversation.
+        if (conversationRecorder != null) {
+            long assistantSensorBits = text2vec.textToBits(userText);
+            int approxTokens = estimateTokens(response);
+            conversationRecorder.record(ConversationRecord.assistant(
+                    finalConvId, null, model, response,
+                    verdict == null ? "APPROVED" : verdict.name(),
+                    assistantSensorBits, 0.0, approxTokens));
+        }
+
         ChatCompletionResponse result = ChatCompletionResponse.of(response, model);
         result.usage.prompt_tokens = estimateTokens(userText);
         result.usage.completion_tokens = estimateTokens(response);
         result.usage.total_tokens = result.usage.prompt_tokens + result.usage.completion_tokens;
 
-        return Response.ok(result).build();
+        return Response.ok(result)
+                .header("X-Conversation-Id", finalConvId)
+                .build();
     }
 
     /**
