@@ -75,6 +75,16 @@ public final class BotEthicsPipeline {
         return sharedGuardian;
     }
 
+    /** The escalator — exposed for resource endpoints that need to query tombstones. */
+    public FROZENGDPREscalator escalator() {
+        return escalator;
+    }
+
+    /** The bot registry — exposed for snapshot endpoints. */
+    public HeadlessBotRegistry botRegistry() {
+        return botRegistry;
+    }
+
     /** Run a single bot tick AND run the FROZEN pipeline on the action. */
     public Optional<HeadlessBotSnapshot> tickBot(String botId, String actionText) {
         // Step 1: Run bot tick (produces BotEvent in shared sensor + snapshot).
