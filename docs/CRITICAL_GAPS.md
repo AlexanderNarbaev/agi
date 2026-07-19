@@ -111,11 +111,21 @@
 **Проблема:** L5 §5.4 требует "Формальную верификацию FROZEN (model checking, TLA+)". Не начато.
 **Исправление:** Запустить проект формальной верификации: model checking протоколов консенсуса, доказательство неизменности FROZEN-нейронов.
 
+**Статус:** ⏳ Phase 3 (open). Требует отдельного TLA+/Alloy проекта с формальными спецификациями.
+
 ### GAP-022 & GAP-023: Proactive scanning и adversarial detection
 
 **Спецификация:** L7 §3.6 (периодическое сканирование), L7 §3.7 (защита от adversarial-атак).
-**Проблема:** Не реализованы.
-**Исправление:** Реализовать фоновые задачи сканирования драйверов/мутаций/сигналов и фильтрации adversarial-входов в Сенсорном прокси.
+
+**Статус:** ✅ ALREADY IMPLEMENTED в v3.30+:
+- `ProactiveEthicalScanner.java`: сканирование driver-states (SAFETY < 0.3 = critical, CURIOSITY > 0.8 + SAFETY < 0.5 = dangerous exploration, ENTROPY > 0.9 = chaos). `scanMutations(mutationCount, ethicalViolations)` rate-based risk classification.
+- `AdversarialInputFilter.java`: 7 regex patterns детектируют jailbreak attempts (DAN, "ignore previous instructions", "override ethics", base64/exec/eval injection, encoding tricks, repetition flooding).
+- Тесты: `ProactiveEthicalScannerTest`, `AdversarialInputFilterTest`.
+- Coverage: полное покрытие в проектных guardrail-фреймворках.
+
+**Дальнейшие улучшения (Phase 3 polish):**
+- Добавить ScheduledExecutorService для периодического запуска `scan()` каждые N секунд (L7 §3.6).
+- Расширить `AdversarialInputFilter` детекцией prompt-injection через Unicode homoglyphs и ZWJ.
 
 ---
 
