@@ -17,6 +17,7 @@ mandatory part of the project. The specs in this directory cover:
 | `Consensus.tla` | `io.matrix.consensus.ConsensusEngine` | Decision monotonicity, weighted-evaluation idempotency |
 | `FrozenEthicalFNL.tla` | `io.matrix.ethics.frozen.FrozenEthicalFNL` | Neuron-set immutability, deterministic activation |
 | `HashChain.tla` | `io.matrix.audit.HashChain` | Append-only, chain integrity, tamper detection, restore validity |
+| `BotEthicsPipeline.tla` | `io.matrix.api.BotEthicsPipeline` | Bot monotonicity, audit-tombstone consistency, liveness |
 
 ## How to model-check
 
