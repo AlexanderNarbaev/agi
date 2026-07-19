@@ -16,7 +16,7 @@
 | 🟡 MEDIUM | 10 | 8 | Качество кода, GDPR tombstoning |
 | 🟢 LOW | 2 | 2 | Мелкие улучшения, мёртвый код |
 
-**Итого: 25 проблем. 21 исправлено (Phase 1+2+3+4+5 complete). 4 остаются (GAP-021 partial, GAP-025 polish).**
+**Итого: 25 проблем. 18 исправлено (Phase 1+2+3+5 complete). 6 остаются (GAP-003 FROZEN FNL).
 
 ### Bonus fixes from continuous improvement arc
 
@@ -36,9 +36,15 @@ the multi-wave continuous-improvement work:
 - **Wave 11** — `docs/ARCHITECTURE.md` with mermaid diagram, .gitignore cleanup
 - **Wave 12** — `SimdTruthTableEval` using `jdk.incubator.vector` (real SIMD) + benchmark
 - **Wave 13** — `EthicalFilter.frozenEvaluate()` + `frozenViolatedAxiom()` (FROZEN FNL wired in)
+- **Wave 14** — Pluggable TombstoneStorage: memory/PG/Kafka/S3/composite (4 implementations + factory)
+- **Wave 15** — `BotCoordinator` + `HeadlessBotRegistry` (headless Minecraft bot bridge, multi-bot management)
+- **Wave 16** — `HashLink` + `HashChain` (blockchain-style audit trail) + `FrozenFNLHashChain`
+- **Wave 17** — `FROZENFNLGuardian` (single entry point: FROZEN FNL + audit + counters)
+- **Wave 18** — `HeadlessBotResource` (HTTP/REST endpoint exposing the bot registry over JSON)
 
-**Cumulative added:** 32+ production classes, 110+ unit tests, 4 JMH benchmarks,
-3 TLA+ specs, 1 architecture doc, 1 GDPR service, 1 SIMD implementation.
+**Cumulative added:** 50+ production classes, 180+ unit tests, 4 JMH benchmarks,
+3 TLA+ specs, 1 architecture doc, 1 GDPR service (multi-backend), 1 SIMD implementation,
+1 cryptographic hash chain.
 
 ---
 
