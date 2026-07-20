@@ -9,6 +9,9 @@ import io.matrix.neuron.HierarchicalBrain;
 import io.matrix.neuron.MultiBrainEnsemble;
 import io.matrix.neuron.NeuralMemoryResponse;
 import io.matrix.neuron.NeuralTextGenerator;
+import io.matrix.neuron.UnifiedPretrainedMerger;
+import io.matrix.training.DropFolderWatcher;
+import io.matrix.training.MultimodalTrainer;
 import io.matrix.neuron.NeuronLayer;
 import io.matrix.neuron.SchemaDescriptor;
 import io.matrix.neuron.TruthTable;
@@ -46,6 +49,13 @@ public class AgentBrainService {
     private volatile NeuralTextGenerator textGenerator;
     private volatile NeuralMemoryResponse neuralMemory;
     private volatile MultiBrainEnsemble ensemble;
+    private volatile UnifiedPretrainedMerger.BaselineManifest baselineManifest;
+
+    @Inject
+    DropFolderWatcher dropFolder;
+
+    @Inject
+    MultimodalTrainer multimodalTrainer;
     private final Random rng = new Random();
     private volatile String lastAction = "";
     private volatile int stuckCounter = 0;
@@ -86,18 +96,38 @@ public class AgentBrainService {
      */
     void onStart(@Observes StartupEvent ev) {
         Thread preload = new Thread(() -> {
-            log.info("Background preload: MultiBrainEnsemble + NeuralMemory corpus...");
+            log.info("Background preload: UnifiedPretrainedMerger + MultiBrainEnsemble + NeuralMemory corpus...");
             long t0 = System.currentTimeMillis();
             try {
-                // Preload all 8 pretrained models
+                // 1. Build unified brain from all pretrained models (one snapshot to rule them all)
+                if (UnifiedPretrainedMerger.baselineExists()) {
+                    this.baselineManifest = UnifiedPretrainedMerger.loadBaseline(UnifiedPretrainedMerger.baselineFile());
+                    log.info("Baseline snapshot loaded: {}", baselineManifest);
+                } else {
+                    UnifiedPretrainedMerger.MergeResult result = UnifiedPretrainedMerger.buildUnifiedBrain();
+                    this.baselineManifest = result.manifest();
+                    log.info("Unified baseline built: {} (kept {} of {} neurons from {} models)",
+                            baselineManifest, result.keptNeurons(),
+                            result.totalNeurons(), result.modelCount());
+                }
+                // 2. Preload all 8 pretrained models
                 this.ensemble = MultiBrainEnsemble.loadAll();
-                // Preload corpus + compute signatures
+                // 3. Preload corpus + compute signatures
                 preloadNeuralMemory();
                 long ms = System.currentTimeMillis() - t0;
-                log.info("Background preload complete: {} models, {} corpus entries ({}ms)",
+                log.info("Background preload complete: {} models, {} corpus entries, baseline={} ({}ms)",
                         ensemble != null ? ensemble.size() : 0,
                         neuralMemory != null ? neuralMemory.corpusSize() : 0,
+                        baselineManifest != null && baselineManifest.sha256 != null
+                                ? baselineManifest.sha256.substring(0, 12) : "n/a",
                         ms);
+                // 4. Trigger initial drop folder scan (non-blocking)
+                if (dropFolder != null) {
+                    dropFolder.scanNow();
+                    log.info("Initial drop folder scan: {} files, {} pairs, {} multimodal",
+                            dropFolder.totalFiles(), dropFolder.totalPairs(),
+                            dropFolder.totalMultimodal());
+                }
             } catch (Exception e) {
                 log.error("Background preload failed: {}", e.getMessage());
             }
