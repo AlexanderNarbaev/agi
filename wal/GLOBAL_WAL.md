@@ -1,4 +1,49 @@
-📍 v3.56 — MultiBrainEnsemble: 8 pretrained models loaded (Qwen3-1.7B, DeepSeek-R1, Qwen2.5-1.5B/0.5B, Qwen3-0.6B, SmolLM2-360M/135M, Merged)
+📍 v3.57 — Unified pretrained merger + baseline snapshot + drop folder + multimodal trainer + interactive interview CLI
+🚀 6 files: UnifiedPretrainedMerger, DropFolderWatcher, MultimodalTrainer, InterviewCommand, AgentBrainService onStart, build.gradle exclusions
+🛑 Protected: Pekko 1.6.0, K_MAX=20, FROZEN-нейроны, Quarkus 3.37.3, Java 25, AGPLv3+ethics, 82% coverage floor (jacocoTestCoverageVerification: BUILD SUCCESSFUL)
+
+## Wave 36 — Unified Pretrained + Drop Folder + Interactive Interview
+**Goal:** Combine all pretrained models into ONE unified baseline + drop folder for self-training + interactive terminal
+
+### New Components
+| File | Purpose |
+|------|---------|
+| `io.matrix.neuron.UnifiedPretrainedMerger` | Combines ALL pretrained truth tables (8 models) into a single HierarchicalBrain. Saves baseline snapshot with SHA-256 to `models/merged/baseline.jsonl` + manifest. |
+| `io.matrix.training.DropFolderWatcher` | Polls `data/user-drop/` every 5s. Supports: `.jsonl` (Q/A pairs), `.json`, `.txt`, `.md` (chunks into Q/A), `.png/.jpg/.webp` (image descriptor), `.wav/.mp3/.flac` (audio), `.mp4/.webm` (video). Processed files → `.processed/<date>/`. |
+| `io.matrix.training.MultimodalTrainer` | Classifies files by modality (text/code/image/audio/video/graphics), indexes descriptors in `data/multimodal-index.jsonl`. |
+| `io.matrix.cli.InterviewCommand` | Interactive REPL — system asks user 10+ questions (name, interests, style, language, goal, capabilities, topics, feedback) and saves to corpus. `--no-input` for CI. |
+
+### Unified Baseline Snapshot
+- File: `models/merged/baseline.jsonl` (flat truth-table array)
+- Manifest: `models/merged/baseline.manifest.json` (SHA-256, model count, neuron counts)
+- Auto-built on first startup; reused on subsequent startups
+- Entropy-sorted: keeps the most informative neurons per K-bucket
+
+### Drop Folder Layout
+```
+data/user-drop/
+  raw/                    # free-form text
+  conversations/          # JSONL Q/A pairs
+  images/                 # PNG, JPG, JPEG, WebP
+  audio/                  # WAV, MP3, FLAC
+  video/                  # MP4, WebM
+  notes/                  # .md knowledge
+  .processed/             # archive after ingestion
+  .failed/                # invalid files
+```
+
+### Interview Command
+```bash
+./gradlew :matrix-core:quarkusRun -- --matrix interview
+# or with defaults (no input):
+./gradlew :matrix-core:quarkusRun -- --matrix interview --no-input
+```
+
+### Verification
+- 1055 tests, 0 failures, 0 errors
+- jacocoTestCoverageVerification: **BUILD SUCCESSFUL**
+- Background preload: 6 models + 6653 corpus entries + baseline = 679ms
+- Live API responding with neural memory retrieval
 🚀 Wave 35 complete: Chat→Training pipeline deployed, 1800 neurons, 13716 pairs, 4 K8s pods
 🛑 Protected: Pekko 1.6.0, K_MAX=20, FROZEN-нейроны, Quarkus 3.37.3, Java 25, AGPLv3+ethics, 82% coverage floor
 
