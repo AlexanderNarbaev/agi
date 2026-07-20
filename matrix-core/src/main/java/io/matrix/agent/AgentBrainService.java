@@ -16,7 +16,9 @@ import io.matrix.observability.MatrixMetrics;
 import io.matrix.redis.NeuronCacheService;
 import io.matrix.simulation.AgentBrain;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.event.Observes;
 import jakarta.inject.Inject;
+import io.quarkus.runtime.StartupEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -76,6 +78,32 @@ public class AgentBrainService {
             this.textGenerator = new NeuralTextGenerator(rng);
         }
         initializeWithPretrainedFallback();
+    }
+
+    /**
+     * Preloads the multi-brain ensemble and neural memory corpus asynchronously
+     * after application startup so the first chat request doesn't block for 60+ sec.
+     */
+    void onStart(@Observes StartupEvent ev) {
+        Thread preload = new Thread(() -> {
+            log.info("Background preload: MultiBrainEnsemble + NeuralMemory corpus...");
+            long t0 = System.currentTimeMillis();
+            try {
+                // Preload all 8 pretrained models
+                this.ensemble = MultiBrainEnsemble.loadAll();
+                // Preload corpus + compute signatures
+                preloadNeuralMemory();
+                long ms = System.currentTimeMillis() - t0;
+                log.info("Background preload complete: {} models, {} corpus entries ({}ms)",
+                        ensemble != null ? ensemble.size() : 0,
+                        neuralMemory != null ? neuralMemory.corpusSize() : 0,
+                        ms);
+            } catch (Exception e) {
+                log.error("Background preload failed: {}", e.getMessage());
+            }
+        }, "matrix-preload");
+        preload.setDaemon(true);
+        preload.start();
     }
 
     /**
