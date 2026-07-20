@@ -1,5 +1,39 @@
-📍 v3.53 — Wave 35: autonomous dialogue training loop (chat → neuron bridge)
-🚀 1 new commit (Wave 35): ConversationRecorder + FeedbackStore + TrainingPairGenerator + ChatDrivenTrainer + OpenAIChatResource hook
+📍 v3.55 — FULL DEPLOYMENT: minikube K8s cluster running, API live, OpenWebUI connected
+🚀 Wave 35 complete: Chat→Training pipeline deployed, 1800 neurons, 13716 pairs, 4 K8s pods
+🛑 Protected: Pekko 1.6.0, K_MAX=20, FROZEN-нейроны, Quarkus 3.37.3, Java 25, AGPLv3+ethics, 82% coverage floor
+
+## Deployment Status (2026-07-20)
+- minikube cluster: Running (Docker driver, k8s v1.35.1)
+- matrix-core pod: Running (1 replica, 9091/tcp NodePort:30091)
+- PostgreSQL: Running (DB_HOST=matrix-postgres)
+- Redis: Running (REDIS_URI=redis://matrix-redis:6379)
+- MinIO: Running (S3-compatible storage)
+- Port forward: kubectl port-forward svc/matrix-core 9091:9091 → active
+- Models mount: minikube mount → /data/models (54GB host directory)
+- Conversations mount: minikube mount → /data/conversations
+- OpenWebUI: Running on port 13000 (Docker container), HTTP 200
+
+## API Surface
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| /v1/chat/completions | POST | OpenAI-compatible chat |
+| /v1/models | GET | Model list (M.A.T.R.I.X.) |
+| /v1/chat/feedback | POST | Submit feedback rating |
+| /v1/chat/feedback/{id}/up | POST | Quick thumbs-up |
+| /v1/chat/feedback/{id}/down | POST | Quick thumbs-down |
+| /v1/chat/status | GET | Pipeline observability |
+| /v1/chat/status/train | POST | Force training cycle |
+| /v1/chat/status/flush | POST | Force flush to disk |
+| /q/health | GET | Health check |
+| /metrics | GET | Prometheus metrics |
+
+## Pipeline Counters
+- Conversations: 6 recorded, 6 flushed
+- Training pairs: 3 generated
+- Trainer cycles: 7
+- Online trains: 1
+- 1800 pretrained neurons (Qwen3-1.7B)
+- 13716 training data pairs loaded
 🛑 Protected: Pekko 1.6.0, K_MAX=20, FROZEN-нейроны, Quarkus 3.37.3, Java 25, AGPLv3+ethics, 82% coverage floor
 
 ## Wave 35 — Autonomous Training on Real Conversations
