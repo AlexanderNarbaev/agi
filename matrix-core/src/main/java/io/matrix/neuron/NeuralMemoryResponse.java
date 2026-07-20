@@ -164,7 +164,7 @@ public final class NeuralMemoryResponse {
      * activation patterns (small Hamming/L1 distance) because the
      * pretrained neurons learned these associations.
      */
-    static long[] neuralSignature(AgentBrainService brainService, String text) {
+    public static long[] neuralSignature(AgentBrainService brainService, String text) {
         if (brainService == null || brainService.brain() == null) {
             return null;
         }

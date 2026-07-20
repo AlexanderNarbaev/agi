@@ -6,6 +6,7 @@ import io.matrix.evolution.EvolutionLoop;
 import io.matrix.evolution.FitnessFn;
 import io.matrix.neuron.DecisionTree;
 import io.matrix.neuron.HierarchicalBrain;
+import io.matrix.neuron.MultiBrainEnsemble;
 import io.matrix.neuron.NeuralMemoryResponse;
 import io.matrix.neuron.NeuralTextGenerator;
 import io.matrix.neuron.NeuronLayer;
@@ -42,6 +43,7 @@ public class AgentBrainService {
     private volatile HierarchicalBrain brain;
     private volatile NeuralTextGenerator textGenerator;
     private volatile NeuralMemoryResponse neuralMemory;
+    private volatile MultiBrainEnsemble ensemble;
     private final Random rng = new Random();
     private volatile String lastAction = "";
     private volatile int stuckCounter = 0;
@@ -221,13 +223,18 @@ public class AgentBrainService {
      * @return generated response from neural memory, or null
      */
     public String generateFromMemory(String inputText) {
+        // First call: lazy-load the ensemble + corpus
+        if (this.ensemble == null) {
+            this.ensemble = MultiBrainEnsemble.loadAll();
+            if (this.ensemble.size() == 0) {
+                log.warn("MultiBrainEnsemble: no models loaded");
+            }
+        }
         NeuralMemoryResponse mem = this.neuralMemory;
         if (mem == null) {
-            // Lazy-init from the training corpus
             Path corpus = Path.of("models/training_data/combined_training.json");
             mem = NeuralMemoryResponse.load(this, corpus);
             if (mem == null) {
-                // Try auto-generated pairs as well
                 Path auto = Path.of("models/training_data/auto_generated.jsonl");
                 mem = NeuralMemoryResponse.load(this, auto);
             }
@@ -243,7 +250,23 @@ public class AgentBrainService {
     }
 
     /**
-     * Pre-loads the neural memory corpus on startup so the first chat request
+     * Returns the composite neural signature from ALL pretrained brains
+     * (not just the primary one). Used by NeuralMemoryResponse for
+     * multi-model retrieval.
+     */
+    public long[] compositeSignature(String text) {
+        if (ensemble == null) {
+            ensemble = MultiBrainEnsemble.loadAll();
+        }
+        if (ensemble.size() == 0) {
+            // Fall back to single-brain signature
+            return NeuralMemoryResponse.neuralSignature(this, text);
+        }
+        return ensemble.compositeSignature(text);
+    }
+
+    /**
+     * Pre-loads all pretrained brains and the neural memory corpus.
      * doesn't pay the IO+signature-computation cost.
      */
     public void preloadNeuralMemory() {
