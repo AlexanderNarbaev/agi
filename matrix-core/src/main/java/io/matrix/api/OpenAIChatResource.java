@@ -188,21 +188,19 @@ public class OpenAIChatResource {
         // ─── Text → Binary Vector ───
         long sensorBits = text2vec.textToBits(userText);
 
-        // ─── Generate response using neural text generator ───
+        // ─── Generate response using neural memory (primary) or text generator (fallback) ───
         String response;
         try {
-            response = brainService.textGenerator().generate(userText);
-            log.info("NeuralTextGenerator: input='{}', output='{}', length={}", 
-                userText.substring(0, Math.min(50, userText.length())), 
-                response, 
-                response != null ? response.length() : 0);
+            // Primary: pretrained neuron memory retrieval (13K corpus, real neural processing)
+            response = brainService.generateFromMemory(userText);
             if (response == null || response.isBlank()) {
-                // Fallback when neural text generator produces empty output.
-                // Use the brain's decision branch + text2vec templates to produce
-                // a contextually varied (if not highly specific) response.
+                // Secondary: character-level neural text generator
+                response = brainService.textGenerator().generate(userText);
+            }
+            if (response == null || response.isBlank()) {
+                // Tertiary: brain decision code fallback
                 int actionCode = brainService.brain().decide(sensorBits);
-                String template = text2vec.bitsToResponse(sensorBits ^ actionCode);
-                response = template;
+                response = text2vec.bitsToResponse(sensorBits ^ actionCode);
             }
         } catch (Exception e) {
             log.error("Neural text generation failed", e);

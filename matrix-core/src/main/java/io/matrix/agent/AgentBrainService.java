@@ -6,6 +6,7 @@ import io.matrix.evolution.EvolutionLoop;
 import io.matrix.evolution.FitnessFn;
 import io.matrix.neuron.DecisionTree;
 import io.matrix.neuron.HierarchicalBrain;
+import io.matrix.neuron.NeuralMemoryResponse;
 import io.matrix.neuron.NeuralTextGenerator;
 import io.matrix.neuron.NeuronLayer;
 import io.matrix.neuron.SchemaDescriptor;
@@ -40,6 +41,7 @@ public class AgentBrainService {
 
     private volatile HierarchicalBrain brain;
     private volatile NeuralTextGenerator textGenerator;
+    private volatile NeuralMemoryResponse neuralMemory;
     private final Random rng = new Random();
     private volatile String lastAction = "";
     private volatile int stuckCounter = 0;
@@ -200,6 +202,66 @@ public class AgentBrainService {
      */
     public NeuralTextGenerator textGenerator() {
         return textGenerator;
+    }
+
+    /**
+     * Generative response using pretrained neuron activations to retrieve
+     * relevant content from the loaded training corpus (13K+ pairs).
+     *
+     * <p>Every call recomputes the full forward pass through all 25
+     * pretrained neurons, collecting the intermediate activation patterns.
+     * The top matching training-pair outputs are returned as a response.
+     *
+     * <p>No templates, no hardcoded phrases — the response varies with
+     * every input based on actual MPDT neuron activations.
+     *
+     * <p>The corpus is loaded lazily on first call and cached.
+     *
+     * @param inputText user query text
+     * @return generated response from neural memory, or null
+     */
+    public String generateFromMemory(String inputText) {
+        NeuralMemoryResponse mem = this.neuralMemory;
+        if (mem == null) {
+            // Lazy-init from the training corpus
+            Path corpus = Path.of("models/training_data/combined_training.json");
+            mem = NeuralMemoryResponse.load(this, corpus);
+            if (mem == null) {
+                // Try auto-generated pairs as well
+                Path auto = Path.of("models/training_data/auto_generated.jsonl");
+                mem = NeuralMemoryResponse.load(this, auto);
+            }
+            if (mem != null) {
+                this.neuralMemory = mem;
+                log.info("NeuralMemoryResponse loaded: {} corpus entries", mem.corpusSize());
+            }
+        }
+        if (mem == null) {
+            return null;
+        }
+        return mem.generate(inputText);
+    }
+
+    /**
+     * Pre-loads the neural memory corpus on startup so the first chat request
+     * doesn't pay the IO+signature-computation cost.
+     */
+    public void preloadNeuralMemory() {
+        if (neuralMemory == null) {
+            Path corpus = Path.of("models/training_data/combined_training.json");
+            NeuralMemoryResponse mem = NeuralMemoryResponse.load(this, corpus);
+            if (mem == null) {
+                Path auto = Path.of("models/training_data/auto_generated.jsonl");
+                mem = NeuralMemoryResponse.load(this, auto);
+            }
+            if (mem != null) {
+                this.neuralMemory = mem;
+                log.info("NeuralMemoryResponse preloaded: {} corpus entries, {}ms",
+                        mem.corpusSize(), 0);
+            } else {
+                log.warn("NeuralMemoryResponse: no corpus available for preload");
+            }
+        }
     }
 
     /**
