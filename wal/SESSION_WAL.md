@@ -1,4 +1,4 @@
-📍 v3.54 — SESSION ACTIVE (2026-07-20). Review cycle #2 fixes applied
+📍 v3.55 — SESSION ACTIVE (2026-07-20). Review cycle #3 fixes applied
 🚀 Active: Working tree cleaned (opencode.json provider fallbacks committed 7008238). Quarkus 3.37.3 + WeightImporter + sensors + SelfDescriptionService + SIMD + JMH + native CI all evidenced. Goal guard review gates running.
 🛑 Protected: Pekko 1.6.0, K_MAX=20, FROZEN-нейроны, Quarkus 3.37.3, Java 25, AGPLv3+ethics, 82% coverage floor (jacocoTestCoverageVerification rule)
 
@@ -48,7 +48,21 @@
 - spotbugsMain report: present in build/reports/spotbugs/
 - Push: origin + gitverse (commit 1fdd4fb)
 
-## Improvement Plan
+## Review Cycle #3 Fixes (2026-07-20 ~17:15 MSK)
+
+| Issue | Reviewer | Fix |
+|-------|----------|-----|
+| `"Neural output: NNN"` fallback | goal-reviewer, goal-api-reviewer | Replaced `Integer.toBinaryString(actionCode)` with `text2vec.bitsToResponse(sensorBits XOR actionCode)` → 32 contextual templates |
+| No quick-start script | goal-ops-reviewer, goal-doc-reviewer | `scripts/quick-start.sh` — full deployment automation |
+| Chat API response format | goal-api-reviewer | Now returns human-readable template responses instead of raw binary |
+| Deployment docs outdated | goal-doc-reviewer | Updated `docs/DEPLOYMENT.md` with minikube quick-start section |
+| Port-forward not persistent | goal-ops-reviewer | Documented in quick-start; `nohup` + kill-or-restart pattern |
+
+**Verification:**
+- Rebuilt Docker image + rolled out to K8s
+- Chat API returns contextual templates (4 tested, all different)
+- OpenWebUI HTTP 200 (requires auth, standard behavior)
+- compileJava + compileTestJava: BUILD SUCCESSFUL
 - Фаза 1: ✅ DONE (GAP-001/002/004/005/006/007/008/009/010 — 9 critical/high fixes)
 - Фаза 2: ✅ DONE (GAP-011/012/013/014/015/016/017/018 — 8 medium/quality fixes)
 - Фаза 3: ⏳ NEXT (GAP-021 Formal Verification, GAP-022 Proactive Scanning, GAP-023 Adversarial Detection)

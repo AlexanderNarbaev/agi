@@ -674,3 +674,41 @@ server {
 ---
 
 *Конец DEPLOYMENT.md — v3.1, 2026-07-13*
+
+## Quick Start (minikube)
+
+For a fully automated deployment, use the quick-start script:
+
+```bash
+bash scripts/quick-start.sh
+```
+
+This will:
+1. Start minikube (Docker driver)
+2. Build the uber-jar and Docker image
+3. Mount the models directory (54 GB)
+4. Deploy PostgreSQL, Redis, and matrix-core
+5. Set up port-forward to localhost:9091
+6. Run a smoke test
+
+### Manual steps after quick-start:
+
+```bash
+# Test the API
+curl -X POST http://localhost:9091/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -d '{"model":"M.A.T.R.I.X.","messages":[{"role":"user","content":"Hello"}]}'
+
+# Check pipeline status
+curl http://localhost:9091/v1/chat/status
+
+# Force a training cycle
+curl -X POST http://localhost:9091/v1/chat/status/train
+
+# OpenWebUI (if running on port 13000)
+# 1. Go to http://localhost:13000
+# 2. Create an account, then Settings → Connections → OpenAI API
+# 3. URL: http://host.docker.internal:9091/v1
+# 4. API Key: matrix-local
+# 5. Set model: M.A.T.R.I.X.
+```
