@@ -197,9 +197,12 @@ public class OpenAIChatResource {
                 response, 
                 response != null ? response.length() : 0);
             if (response == null || response.isBlank()) {
-                // Fallback to brain decision if generator produces empty output
+                // Fallback when neural text generator produces empty output.
+                // Use the brain's decision branch + text2vec templates to produce
+                // a contextually varied (if not highly specific) response.
                 int actionCode = brainService.brain().decide(sensorBits);
-                response = "Neural output: " + Integer.toBinaryString(actionCode);
+                String template = text2vec.bitsToResponse(sensorBits ^ actionCode);
+                response = template;
             }
         } catch (Exception e) {
             log.error("Neural text generation failed", e);
