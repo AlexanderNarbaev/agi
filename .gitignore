@@ -71,3 +71,4 @@ models/pretrained/qwen3-0.6b/
 models/pretrained/qwen3-1.7b/
 models/pretrained/smollm2-360m/
 data/
+models/training_data/auto_generated.jsonl
