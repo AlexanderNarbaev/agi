@@ -71,13 +71,13 @@ public final class NeuralMemoryResponse {
                 return null;
             }
             List<String> lines = Files.readAllLines(corpusPath, StandardCharsets.UTF_8);
-            for (String line : lines) {
-                if (line.isBlank()) continue;
-                // Simple JSON parsing to avoid Jackson dependency here
-                String input = extractField(line, "input");
-                String output = extractField(line, "output");
-                if (input != null && output != null && input.length() > 2 && output.length() > 3) {
-                    corpus.add(new TrainingPair(input, output));
+            if (!lines.isEmpty() && lines.get(0).trim().startsWith("[")) {
+                // JSON array format: extract individual {...} blocks
+                parseJsonArray(lines, corpus);
+            } else {
+                // JSONL format: one object per line
+                for (String line : lines) {
+                    parseOneLine(line, corpus);
                 }
             }
         } catch (IOException e) {
@@ -322,6 +322,40 @@ public final class NeuralMemoryResponse {
             }
         }
         return null;
+    }
+
+    private static void parseOneLine(String line, List<TrainingPair> corpus) {
+        if (line.isBlank()) return;
+        String input = extractField(line, "input");
+        String output = extractField(line, "output");
+        if (input == null) input = extractField(line, "question");
+        if (output == null) output = extractField(line, "answer");
+        if (input != null && output != null && input.length() > 2 && output.length() > 3) {
+            corpus.add(new TrainingPair(input, output));
+        }
+    }
+
+    private static void parseJsonArray(List<String> lines, List<TrainingPair> corpus) {
+        StringBuilder buf = new StringBuilder();
+        int depth = 0;
+        for (String line : lines) {
+            for (int i = 0; i < line.length(); i++) {
+                char c = line.charAt(i);
+                if (c == '{') {
+                    depth++;
+                    buf.append(c);
+                } else if (c == '}') {
+                    depth--;
+                    buf.append(c);
+                    if (depth == 0 && buf.length() > 0) {
+                        parseOneLine(buf.toString(), corpus);
+                        buf.setLength(0);
+                    }
+                } else if (depth > 0) {
+                    buf.append(c);
+                }
+            }
+        }
     }
 
     // ─── Package-private test accessors ───
