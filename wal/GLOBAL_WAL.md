@@ -1,4 +1,4 @@
-📍 v3.55 — FULL DEPLOYMENT: minikube K8s cluster running, API live, OpenWebUI connected
+📍 v3.56 — MultiBrainEnsemble: 8 pretrained models loaded (Qwen3-1.7B, DeepSeek-R1, Qwen2.5-1.5B/0.5B, Qwen3-0.6B, SmolLM2-360M/135M, Merged)
 🚀 Wave 35 complete: Chat→Training pipeline deployed, 1800 neurons, 13716 pairs, 4 K8s pods
 🛑 Protected: Pekko 1.6.0, K_MAX=20, FROZEN-нейроны, Quarkus 3.37.3, Java 25, AGPLv3+ethics, 82% coverage floor
 
