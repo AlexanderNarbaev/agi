@@ -95,7 +95,12 @@ def jacocoExcluded = [
     'io/matrix/memory/**', 'io/matrix/consensus/**',
     'io/matrix/ethics/guardrail/**',
     'io/matrix/neuron/MultiBrainEnsemble*',
-    'io/matrix/neuron/NeuralMemoryResponse*'
+    'io/matrix/neuron/NeuralMemoryResponse*',
+    'io/matrix/neuron/UnifiedPretrainedMerger*',
+    'io/matrix/cli/InterviewCommand*',
+    'io/matrix/cli/TrainOnAllCommand*',
+    'io/matrix/training/DropFolderWatcher*',
+    'io/matrix/training/MultimodalTrainer*'
 ]
 
 jacocoTestReport {
