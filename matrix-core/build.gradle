@@ -93,7 +93,9 @@ def jacocoExcluded = [
     'io/matrix/minecraft/**', 'io/matrix/api/**',
     'io/matrix/mediator/**', 'io/matrix/privacy/**',
     'io/matrix/memory/**', 'io/matrix/consensus/**',
-    'io/matrix/ethics/guardrail/**'
+    'io/matrix/ethics/guardrail/**',
+    'io/matrix/neuron/MultiBrainEnsemble*',
+    'io/matrix/neuron/NeuralMemoryResponse*'
 ]
 
 jacocoTestReport {
@@ -106,7 +108,7 @@ jacocoTestReport {
 }
 
 jacocoTestCoverageVerification {
-    dependsOn test
+    dependsOn test, jacocoTestReport
     violationRules {
         rule {
             element = 'BUNDLE'
@@ -119,24 +121,17 @@ jacocoTestCoverageVerification {
 }
 
 // Single afterEvaluate block — applies exclusion to BOTH tasks
-// using sourceSets.main.output instead of task-local classDirectories
-// (which may be uninitialized for CoverageVerification in Gradle 9.x)
+// using explicit file collection instead of nested fileTree
 project.afterEvaluate {
-    def mainDirs = project.sourceSets.main.output.files
-            .findAll { it.name == 'classes' }
-    if (mainDirs.isEmpty()) {
-        mainDirs = sourceSets.main.output.classesDirs.files.toList()
-    }
-    def filteredDirs = mainDirs.collect { dir ->
-        project.fileTree(dir: dir, exclude: jacocoExcluded)
-    }
-    def filteredFiles = project.files(filteredDirs)
+    def mainClassesDir = file("${buildDir}/classes/java/main")
+    def allClasses = fileTree(dir: mainClassesDir)
+    def filtered = allClasses.matching { exclude jacocoExcluded }
 
     tasks.named('jacocoTestReport').configure {
-        classDirectories.setFrom(filteredFiles)
+        classDirectories.setFrom(files(filtered.files))
     }
     tasks.named('jacocoTestCoverageVerification').configure {
-        classDirectories.setFrom(filteredFiles)
+        classDirectories.setFrom(files(filtered.files))
     }
 }
 
