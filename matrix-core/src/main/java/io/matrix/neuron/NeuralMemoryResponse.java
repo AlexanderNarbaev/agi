@@ -140,12 +140,9 @@ public final class NeuralMemoryResponse {
 
         String result = sb.toString().trim();
         if (result.isEmpty()) {
-            // Fallback: the single best match
-            for (int i = 0; i < corpus.size(); i++) {
-                int idx = topIndices[0];
-                if (idx >= 0 && idx < corpus.size()) {
-                    return corpus.get(idx).output;
-                }
+            int idx = topIndices[0];
+            if (idx >= 0 && idx < corpus.size()) {
+                return corpus.get(idx).output;
             }
         }
         return result;
@@ -178,6 +175,10 @@ public final class NeuralMemoryResponse {
         NeuronLayer sensorLayer = brainService.brain().sensorLayer();
         NeuronLayer featureLayer = brainService.brain().featureLayer();
         NeuronLayer actionLayer = brainService.brain().actionLayer();
+
+        if (sensorLayer == null || featureLayer == null || actionLayer == null) {
+            return null;
+        }
 
         BitSet input = toBitSet(sensorBits, 20);
         BitSet l0 = sensorLayer.evaluate(padInput(input, sensorLayer.outputWidth() * sensorLayer.k()));
@@ -294,18 +295,43 @@ public final class NeuralMemoryResponse {
         return bs.toLongArray();
     }
 
-    /** Simple JSON field extractor (no Jackson dependency). */
+    /** Simple JSON field extractor — handles escaped quotes via lookahead. */
     private static String extractField(String json, String field) {
         String key = "\"" + field + "\"";
         int ki = json.indexOf(key);
         if (ki < 0) return null;
         int colon = json.indexOf(':', ki + key.length());
         if (colon < 0) return null;
-        int valueStart = json.indexOf('"', colon);
-        if (valueStart < 0) return null;
-        int valueEnd = json.indexOf('"', valueStart + 1);
-        if (valueEnd < 0) return null;
-        return json.substring(valueStart + 1, valueEnd);
+        // Skip whitespace between colon and value
+        int valueStart = colon + 1;
+        while (valueStart < json.length() && Character.isWhitespace(json.charAt(valueStart))) {
+            valueStart++;
+        }
+        if (valueStart >= json.length()) return null;
+        if (json.charAt(valueStart) != '"') return null;
+        // Find closing quote handling escaped quotes
+        StringBuilder sb = new StringBuilder();
+        for (int i = valueStart + 1; i < json.length(); i++) {
+            char c = json.charAt(i);
+            if (c == '\\' && i + 1 < json.length()) {
+                sb.append(json.charAt(++i));
+            } else if (c == '"') {
+                return sb.toString();
+            } else {
+                sb.append(c);
+            }
+        }
+        return null;
+    }
+
+    // ─── Package-private test accessors ───
+
+    static String accessExtractField(String json, String field) {
+        return extractField(json, field);
+    }
+
+    static float accessCosineSimilarity(long[] a, long[] b) {
+        return cosineSimilarity(a, b);
     }
 
     /** One training pair from the corpus. */
