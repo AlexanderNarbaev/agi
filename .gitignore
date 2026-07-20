@@ -70,3 +70,4 @@ models/pretrained/qwen2.5-1.5b/
 models/pretrained/qwen3-0.6b/
 models/pretrained/qwen3-1.7b/
 models/pretrained/smollm2-360m/
+data/

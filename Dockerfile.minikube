@@ -1,0 +1,18 @@
+# MATRIX Core — Minikube/Development build
+# Uses uber-jar built by: ./gradlew :matrix-core:quarkusBuild -Dquarkus.package.type=uber-jar
+# Models are mounted from the host via hostPath volume (not copied into image).
+FROM eclipse-temurin:25-jre AS runtime
+WORKDIR /app
+
+# Copy the uber-jar
+COPY matrix-core/build/matrix-core-1.0.0-runner.jar /app/matrix-core.jar
+
+# Composable training data (lightweight JSON — models go in hostPath volume)
+COPY models/training_data/ /app/models/training_data/
+
+EXPOSE 9091
+
+HEALTHCHECK --interval=60s --timeout=10s --start-period=120s --retries=3 \
+    CMD curl -f http://localhost:9091/q/health/ready || exit 1
+
+ENTRYPOINT ["java","-Xms256m","-Xmx1024m","-XX:+UseZGC","-XX:MaxRAMPercentage=75.0","-jar","/app/matrix-core.jar"]

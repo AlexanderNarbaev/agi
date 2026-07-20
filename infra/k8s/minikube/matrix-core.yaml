@@ -56,6 +56,19 @@ spec:
             # ── v3.0: Agent Loop ──
             - name: AGENT_MAX_ITERATIONS
               value: "1000"
+            # ── Wave 35: Chat → Training Pipeline ──
+            - name: matrix.chat.enabled
+              value: "true"
+            - name: matrix.chat.trainer-enabled
+              value: "true"
+            - name: matrix.chat.trainer-interval-seconds
+              value: "60"
+            - name: matrix.chat.storage-dir
+              value: "/app/data/conversations"
+            - name: matrix.chat.output-file
+              value: "/app/models/training_data/auto_generated.jsonl"
+            - name: matrix.model-dir
+              value: "/app/models"
           resources:
             limits:
               cpu: "2"
@@ -79,8 +92,20 @@ spec:
             periodSeconds: 10
             timeoutSeconds: 5
             failureThreshold: 3
-          volumeMounts: []
-      volumes: []
+          volumeMounts:
+            - name: models
+              mountPath: /app/models
+            - name: conversations
+              mountPath: /app/data/conversations
+      volumes:
+        - name: models
+          hostPath:
+            path: /data/models
+            type: Directory
+        - name: conversations
+          hostPath:
+            path: /data/conversations
+            type: DirectoryOrCreate
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
