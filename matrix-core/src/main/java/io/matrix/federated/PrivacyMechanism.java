@@ -1,7 +1,7 @@
 package io.matrix.federated;
 
 import jakarta.enterprise.context.ApplicationScoped;
-import java.util.Random;
+import java.security.SecureRandom;
 
 /**
  * Differential privacy mechanism for federated learning.
@@ -9,7 +9,7 @@ import java.util.Random;
 @ApplicationScoped
 public class PrivacyMechanism {
 
-    private final Random random = new Random();
+    private final SecureRandom secureRandom = new SecureRandom();
     private double epsilon = 1.0;
 
     /**
@@ -25,7 +25,7 @@ public class PrivacyMechanism {
             if (original[i]) {
                 // Flip bit with probability proportional to noise
                 double noise = laplacianNoise(scale);
-                noisy[i] = Math.random() > Math.abs(noise);
+                noisy[i] = secureRandom.nextDouble() > Math.abs(noise);
             } else {
                 noisy[i] = original[i];
             }
@@ -43,7 +43,7 @@ public class PrivacyMechanism {
      * Set privacy budget (epsilon).
      */
     public void setEpsilon(double epsilon) {
-        this.epsilon = epsilon;
+        this.epsilon = Math.max(0.01, Math.min(100.0, epsilon));
     }
 
     /**
@@ -54,7 +54,7 @@ public class PrivacyMechanism {
     }
 
     private double laplacianNoise(double scale) {
-        double u = random.nextDouble() - 0.5;
+        double u = secureRandom.nextDouble() - 0.5;
         return -scale * Math.signum(u) * Math.log(1 - 2 * Math.abs(u));
     }
 }
