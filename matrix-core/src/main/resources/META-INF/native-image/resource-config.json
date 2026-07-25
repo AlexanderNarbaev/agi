@@ -1,45 +1,15 @@
 {
   "resources": {
     "includes": [
-      {
-        "pattern": ".*\\.properties$"
-      },
-      {
-        "pattern": ".*\\.avsc$"
-      },
-      {
-        "pattern": ".*\\.avro$"
-      },
-      {
-        "pattern": "db/migration/.*\\.sql$"
-      },
-      {
-        "pattern": "META-INF/.*"
-      },
-      {
-        "pattern": "models/.*"
-      },
-      {
-        "pattern": "pretrained/.*"
-      },
-      {
-        "pattern": ".*SmolLM2.*"
-      },
-      {
-        "pattern": ".*\\.json$"
-      },
-      {
-        "pattern": ".*\\.yaml$"
-      },
-      {
-        "pattern": ".*\\.yml$"
-      }
+      {"pattern": ".*\\.avro$"},
+      {"pattern": ".*\\.jsonl$"},
+      {"pattern": ".*\\.properties$"},
+      {"pattern": ".*\\.json$"},
+      {"pattern": ".*\\.yaml$"},
+      {"pattern": ".*\\.yml$"},
+      {"pattern": "models/.*"},
+      {"pattern": "META-INF/services/.*"},
+      {"pattern": "META-INF/microprofile-config\\.properties"}
     ]
-  },
-  "bundles": [
-    {
-      "name": "sun.text.resources.cldr.FormatData",
-      "locales": ["en", "ru"]
-    }
-  ]
+  }
 }
