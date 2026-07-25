@@ -4,9 +4,9 @@
 
 Не лжёт. Не забывает. Не может быть использована во вред.
 
-## Статус: v3.35
+## Статус: v3.57
 
-**1000+ тестов** | **82% покрытие** | **Java 25** | **Quarkus 3.36.1** | **Apache Pekko 1.6.0**
+**1055+ тестов** | **83.7% покрытие (METHOD)** | **Java 25** | **Quarkus 3.37.3** | **Apache Pekko 1.6.0**
 
 ### Phase A+B+C Research Synthesis: ✅ 15/15 COMPLETE
 - **Phase A** (Immediate): ExactTermGuard, AgentResponse, ParetoFitness, RRF Knee-Point, SchemaDescriptor

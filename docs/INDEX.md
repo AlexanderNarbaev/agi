@@ -1,4 +1,4 @@
-# INDEX: Knowledge Base Map — MATRIX v3.1
+# INDEX: Knowledge Base Map — MATRIX v3.57
 | ID | Path | Title | Phase | Topics | Last_Updated |
 |----|------|-------|-------|--------|--------------|
 | L0 | docs/L0_manifesto.md | Манифест и аксиомы | Фундамент | Аксиомы, миссия, антипаттерны | 2026-05-31 |
@@ -180,4 +180,14 @@
 | — | matrix-core/src/.../privacy/storage/ | Pluggable TombstoneStorage | Privacy | memory/PG/Kafka/S3/composite backends | 2026-07-19 |
 | — | matrix-core/src/.../chat/ | Autonomous Training Pipeline (Wave 35) | AI | ConversationRecorder + FeedbackStore + TrainingPairGenerator + ChatDrivenTrainer | 2026-07-20 |
 | — | matrix-core/src/.../cli/TrainOnAllCommand.java | train-all CLI | AI | One-shot orchestration of WeightImporter + chat pair generator | 2026-07-20 |
+| — | docs/PROJECT_AUDIT_2026-07-25.md | Полный аудит проекта v3.57 | Все | Codebase, documentation, development plan, knowledge graph | 2026-07-25 |
+| — | docs/architecture-knowledge-graph.excalidraw | Architecture Knowledge Graph | Все | 20 nodes, 25 edges, 4 domains, Excalidraw diagram | 2026-07-25 |
+| — | docs/improvements/GRAALVM_NATIVE.md | GraalVM Native план | Улучшения | 7 steps: native-image config, reflection, JNI, Docker, CI | 2026-07-25 |
+| — | docs/improvements/FPGA_SYNTHESIS.md | FPGA Synthesis план | Улучшения | 6 steps: Verilog gen, testbench, Vivado synth, HW accel | 2026-07-25 |
+| — | docs/improvements/ROS2_INTEGRATION.md | ROS2 Integration план | Улучшения | 6 steps: ROS2 node, sensor fusion, control loop, launch | 2026-07-25 |
+| — | docs/improvements/P2P_NOOSPHERE.md | P2P Noosphere план | Улучшения | 7 steps: P2P network, discovery, trust, consensus, privacy | 2026-07-25 |
+| — | docs/improvements/FORMAL_VERIFICATION.md | Formal Verification план | Улучшения | 6 steps: TLA+ checking, runtime verify, property tests, CI | 2026-07-25 |
+| — | docs/improvements/PERFORMANCE_OPTIMIZATION.md | Performance Optimization план | Улучшения | 6 steps: SIMD, parallel evolution, indexed RAG, Kafka batch | 2026-07-25 |
+| — | docs/improvements/MULTIMODAL_LEARNING.md | Multi-modal Learning план | Улучшения | 6 steps: feature extractors, cross-modal align, unified repr | 2026-07-25 |
+| — | docs/improvements/FEDERATED_LEARNING.md | Federated Learning план | Улучшения | 7 steps: federated protocol, local train, secure aggregation, DP | 2026-07-25 |
 | — | docs/WAVE_35_AUTONOMOUS_TRAINING.md | Wave 35 doc | AI | Architecture diagram, components, smoke test recipe | 2026-07-20 |
