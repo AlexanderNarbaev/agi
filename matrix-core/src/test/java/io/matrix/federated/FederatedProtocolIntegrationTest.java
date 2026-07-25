@@ -8,7 +8,7 @@ class FederatedProtocolIntegrationTest {
 
     @Test
     void protocolRoundtrip() {
-        var protocol = new FederatedProtocol(10, 2);
+        var protocol = new FederatedProtocol();
         var aggregator = new SecureAggregator();
         var privacy = new PrivacyMechanism();
         

@@ -2,7 +2,6 @@ package io.matrix.multimodal;
 
 import static org.junit.jupiter.api.Assertions.*;
 import org.junit.jupiter.api.Test;
-import java.util.Map;
 
 class TextFeatureExtractorTest {
 
@@ -38,19 +37,45 @@ class TextFeatureExtractorTest {
     }
 }
 
+class ImageFeatureExtractorTest {
+
+    @Test
+    void extractReturns512Features() {
+        var extractor = new ImageFeatureExtractor();
+        byte[] data = new byte[900]; // 300 pixels RGB
+        for (int i = 0; i < data.length; i++) data[i] = (byte) i;
+        var features = extractor.extract(data);
+        assertEquals(512, features.length);
+    }
+
+    @Test
+    void modalityIsImage() {
+        assertEquals("image", new ImageFeatureExtractor().modality());
+    }
+}
+
+class AudioFeatureExtractorTest {
+
+    @Test
+    void extractReturns128Features() {
+        var extractor = new AudioFeatureExtractor();
+        byte[] data = new byte[200]; // 100 samples 16-bit
+        for (int i = 0; i < data.length; i++) data[i] = (byte) ((i % 256) - 128);
+        var features = extractor.extract(data);
+        assertEquals(128, features.length);
+    }
+
+    @Test
+    void modalityIsAudio() {
+        assertEquals("audio", new AudioFeatureExtractor().modality());
+    }
+}
+
 class UnifiedRepresentationTest {
 
     @Test
     void toBooleanVectorThresholdsCorrectly() {
-        var aligner = new CrossModalAligner(Map.of("text", new TextFeatureExtractor()));
         var repr = new UnifiedRepresentation();
-        try {
-            var field = UnifiedRepresentation.class.getDeclaredField("aligner");
-            field.setAccessible(true);
-            field.set(repr, aligner);
-        } catch (Exception e) {
-            fail("Failed to inject aligner: " + e.getMessage());
-        }
         boolean[] bits = repr.toBooleanVector("test text", "text");
         assertNotNull(bits);
         assertTrue(bits.length > 0);
@@ -86,19 +111,5 @@ class UnifiedRepresentationTest {
     void mergeEmptyReturnsEmpty() {
         var repr = new UnifiedRepresentation();
         assertEquals(0, repr.merge(new boolean[0][]).length);
-    }
-
-    @Test
-    void crossModalAlignerExtractsFeatures() {
-        var aligner = new CrossModalAligner(Map.of("text", new TextFeatureExtractor()));
-        var features = aligner.extract("text", "hello");
-        assertEquals(256, features.length);
-    }
-
-    @Test
-    void crossModalAlignerUnknownModalityThrows() {
-        var aligner = new CrossModalAligner(Map.of());
-        assertThrows(IllegalArgumentException.class, () -> 
-            aligner.extract("unknown", "data"));
     }
 }

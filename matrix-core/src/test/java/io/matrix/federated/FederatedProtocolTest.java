@@ -1,7 +1,6 @@
 package io.matrix.federated;
 
 import static org.junit.jupiter.api.Assertions.*;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import java.util.List;
 
@@ -9,7 +8,7 @@ class FederatedProtocolTest {
 
     @Test
     void runRoundAggregates() {
-        var protocol = new FederatedProtocol(10, 2);
+        var protocol = new FederatedProtocol();
         var update1 = new LocalUpdate("node1", new boolean[]{true, false, true}, 10, 0.1);
         var update2 = new LocalUpdate("node2", new boolean[]{false, true, false}, 20, 0.2);
         var round = protocol.runRound(List.of(update1, update2));
@@ -21,7 +20,7 @@ class FederatedProtocolTest {
 
     @Test
     void insufficientParticipantsThrowsException() {
-        var protocol = new FederatedProtocol(10, 5);
+        var protocol = new FederatedProtocol();
         assertThrows(IllegalStateException.class, () -> 
             protocol.runRound(List.of()));
     }
