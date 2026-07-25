@@ -101,5 +101,15 @@
     "name": "io.matrix.simulation.Position",
     "allDeclaredMethods": true,
     "allDeclaredFields": true
+  },
+  {
+    "name": "io.matrix.verification.PropertyViolation",
+    "allDeclaredMethods": true,
+    "allDeclaredFields": true
+  },
+  {
+    "name": "io.matrix.federated.LocalUpdate",
+    "allDeclaredMethods": true,
+    "allDeclaredFields": true
   }
 ]
