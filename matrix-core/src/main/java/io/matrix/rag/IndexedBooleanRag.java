@@ -18,16 +18,22 @@ public class IndexedBooleanRag {
 
     private static final Logger log = LoggerFactory.getLogger(IndexedBooleanRag.class);
 
-    private final BooleanIndex booleanIndex;
+    private BooleanIndex booleanIndex;
 
-    public IndexedBooleanRag(BooleanIndex booleanIndex) {
-        this.booleanIndex = booleanIndex;
+    /**
+     * Initialize with a BooleanIndex instance.
+     */
+    public void init(BooleanIndex index) {
+        this.booleanIndex = index;
     }
 
     /**
      * Search with BooleanIndex's optimized Hamming distance.
      */
     public List<BooleanIndex.SearchResult> search(long[] query, int topK) {
+        if (booleanIndex == null) {
+            throw new IllegalStateException("IndexedBooleanRag not initialized. Call init() first.");
+        }
         return booleanIndex.search(query, topK);
     }
 
@@ -43,7 +49,7 @@ public class IndexedBooleanRag {
      * Get index size.
      */
     public int size() {
-        return booleanIndex.size();
+        return booleanIndex != null ? booleanIndex.size() : 0;
     }
 
     private long[] packBooleans(boolean[] bits) {

@@ -1,7 +1,10 @@
 package io.matrix.multimodal;
 
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.inject.Instance;
+import jakarta.inject.Inject;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * Cross-modal alignment for projecting features between modality spaces.
@@ -11,17 +14,19 @@ import java.util.Map;
 @ApplicationScoped
 public class CrossModalAligner {
 
-    private final Map<String, FeatureExtractor> extractors;
+    private final Map<String, FeatureExtractor> extractorMap;
 
-    public CrossModalAligner(Map<String, FeatureExtractor> extractors) {
-        this.extractors = extractors;
+    @Inject
+    public CrossModalAligner(Instance<FeatureExtractor> extractors) {
+        this.extractorMap = extractors.stream()
+                .collect(Collectors.toMap(FeatureExtractor::modality, e -> e));
     }
 
     /**
      * Extract features from input in specified modality.
      */
     public float[] extract(String modality, Object input) {
-        FeatureExtractor extractor = extractors.get(modality);
+        FeatureExtractor extractor = extractorMap.get(modality);
         if (extractor == null) {
             throw new IllegalArgumentException("Unknown modality: " + modality);
         }

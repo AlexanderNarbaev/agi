@@ -1,19 +1,16 @@
 package io.matrix.federated;
 
+import jakarta.enterprise.context.ApplicationScoped;
 import java.util.List;
 
 /**
  * Protocol for federated learning rounds.
  */
+@ApplicationScoped
 public class FederatedProtocol {
 
-    private final int rounds;
-    private final int minParticipants;
-
-    public FederatedProtocol(int rounds, int minParticipants) {
-        this.rounds = rounds;
-        this.minParticipants = minParticipants;
-    }
+    private int rounds = 10;
+    private int minParticipants = 2;
 
     /**
      * Run federated training round.
