@@ -3,7 +3,7 @@
 # Usage: docker build -f Dockerfile.native -t matrix-core-native .
 
 # ─── Stage 1: Build native image ───
-FROM quay.io/quarkus/ubi-quarkus-mandrel-builder:24.1.0-java21 AS build
+FROM quay.io/quarkus/ubi-quarkus-mandrel-builder:jdk-25 AS build
 WORKDIR /workspace
 
 # Copy Gradle wrapper and config first (layer caching)
@@ -36,10 +36,10 @@ COPY --from=build /workspace/matrix-core/build/*-runner /app/matrix-core
 COPY models/pretrained/ /app/models/pretrained/
 
 # Quarkus HTTP + Micrometer Prometheus
-EXPOSE 8080 9091
+EXPOSE 9091
 
 # Health check via SmallRye Health endpoint
 HEALTHCHECK --interval=15s --timeout=5s --start-period=5s --retries=3 \
-    CMD curl -sf http://localhost:8080/q/health || exit 1
+    CMD curl -sf http://localhost:9091/q/health || exit 1
 
 ENTRYPOINT ["/app/matrix-core"]
