@@ -1,0 +1,46 @@
+name: GraalVM Native Build
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  native-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: graalvm/setup-graalvm@v1
+        with:
+          java-version: '25'
+          distribution: 'graalvm'
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Cache Gradle
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.jar') }}
+
+      - name: Build Native Image
+        run: |
+          ./gradlew :matrix-core:quarkusBuild \
+            -Dquarkus.native.enabled=true \
+            -Dquarkus.package.type=native \
+            --no-daemon \
+            -x test
+
+      - name: Verify Native Binary
+        run: |
+          ls -la matrix-core/build/*-runner
+          file matrix-core/build/*-runner
+
+      - name: Upload Native Binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: matrix-core-native
+          path: matrix-core/build/*-runner
+          retention-days: 7
