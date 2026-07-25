@@ -40,6 +40,13 @@ public class EvolutionLoop {
     private final List<Long> bestFitnessHistory = new ArrayList<>();
     private final List<Long> avgFitnessHistory = new ArrayList<>();
 
+    /**
+     * Default constructor for CDI.
+     */
+    public EvolutionLoop() {
+        this(100, 50, 12, new FitnessFn() {}, new Random());
+    }
+
     public EvolutionLoop(int generations, int populationSize, int k,
                           FitnessFn fitnessFn, MatrixMetrics metrics, Random rng) {
         this.generations = generations;

@@ -19,6 +19,13 @@ public class FitnessFn {
     private final int trials;
     private final Random worldRng;
 
+    /**
+     * Default constructor with reasonable defaults.
+     */
+    public FitnessFn() {
+        this(10, 10, 5, 3, 100, 10, new Random());
+    }
+
     public FitnessFn(int worldWidth, int worldHeight, int wallCount, int resourceCount,
                      int maxSteps, int trials, Random worldRng) {
         this.worldWidth = worldWidth;
