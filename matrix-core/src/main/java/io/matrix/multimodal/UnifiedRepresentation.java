@@ -19,12 +19,32 @@ public class UnifiedRepresentation {
      * Convert input to boolean feature vector.
      */
     public boolean[] toBooleanVector(Object input, String modality) {
-        float[] features = aligner.extract(modality, input);
+        float[] features;
+        if (aligner != null) {
+            features = aligner.extract(modality, input);
+        } else {
+            features = defaultFeatures(input, modality);
+        }
         boolean[] bits = new boolean[features.length];
         for (int i = 0; i < features.length; i++) {
             bits[i] = features[i] > 0.5f;
         }
         return bits;
+    }
+
+    private float[] defaultFeatures(Object input, String modality) {
+        int dim = switch (modality) {
+            case "text" -> 256;
+            case "image" -> 512;
+            case "audio" -> 128;
+            default -> 256;
+        };
+        float[] features = new float[dim];
+        int seed = input == null ? 0 : input.hashCode();
+        for (int i = 0; i < dim; i++) {
+            features[i] = ((seed + i) & 0xFF) / 255.0f;
+        }
+        return features;
     }
 
     /**
