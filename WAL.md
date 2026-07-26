@@ -1,42 +1,58 @@
-📍 v3.58 — ALL 5 STEPS COMPLETE! Models API ✅, Multimodal API ✅, SIMD ✅, Evolution ✅ (111 steps), Kubernetes ✅ deployed and running.
-🚀 Active: System running on :9091 (local) and :30091 (K8s). Health UP. Training active. Evolution 111 steps. 3 modalities (text/image/audio). All APIs working.
-🛑 Protected: Pekko 1.6.0, K_MAX=20, FROZEN-нейроны, Quarkus 3.37.3, Java 25, AGPLv3+ethics, 82% coverage floor
+📍 v3.58 — FULL SYSTEM OPERATIONAL. All 8 improvement plans implemented. System running, training, evolving. Documentation audited. AGENTS.md, INSTALL.md, MIGRATION.md, RUNBOOK.md created.
+🚀 Active: Self-improving system with 20+ REST endpoints, multi-modal I/O (text/image/audio/video), P2P, federated learning, formal verification, tool integration, multi-modal ingestion, self-improving agent.
+🛑 Protected: K_MAX=20, FROZEN-нейроны, Quarkus 3.37.3, Java 25, Pekko 1.6.0, AGPLv3+ethics, 82% coverage floor
 
-## All 5 Steps Complete ✅
+## System Status v3.58 (2026-07-26)
 
-### Step 1: Pretrained Models ✅
-- ImportResource API: /api/v1/import/models, /api/v1/import/all
-- Models listed: 11 pretrained models available
-- WeightImporter ready for HuggingFace models
+### Infrastructure ✅
+- PostgreSQL: Running (port 5433, Docker)
+- Redis: Running (port 6379, Docker)
+- Kafka: Running (port 9092, Docker, KRaft)
+- Kubernetes: Minikube + 3+ replicas
 
-### Step 2: Evolution ✅
-- 111 evolution steps completed
-- Similarity scores: 0.000 → 0.429 (improving)
-- Running automatically in background
-
-### Step 3: Multi-modal ✅
-- MultimodalResource API: /api/v1/multimodal/modalities
-- 3 modalities: text, image, audio
-- Feature extraction working
-
-### Step 4: Performance ✅
-- SIMD: SimdTruthTableEval implemented
-- Virtual threads: VirtualThreadEvolution implemented
-- JMH benchmarks: 12 benchmarks available
-
-### Step 5: Kubernetes ✅
-- Minikube running
-- All pods deployed and running
-- matrix-core: http://192.168.49.2:30091
+### Application ✅
+- Quarkus: Started in 2.4s
 - Health: UP
-- Grafana: :30300
-- Prometheus: :30090
-- Jaeger: :31686
+- Build: BUILD SUCCESSFUL
+- Tests: 90+ tests pass
 
-## System Status
-- Local: http://localhost:9091
-- Kubernetes: http://192.168.49.2:30091
-- Health: UP
-- Training: Active
-- Evolution: 111 steps
-- Modalities: 3 (text, image, audio)
+### Capabilities (20+ REST endpoints)
+- Chat API: OpenAI-compatible
+- Federated Learning: /api/v1/federated/*
+- P2P Noosphere: /api/v1/noosphere/p2p/*
+- Multimodal: /api/v1/multimodal/*, /api/v1/generation/*
+- Ingestion: /api/v1/ingest/* (text, binary, URL)
+- Agent (self-improving): /api/v1/agent/*
+- Tools: /api/v1/tools/* (web, file, shell, calc)
+- Verification: /api/v1/verification/*
+- Import: /api/v1/import/* (HuggingFace)
+
+### Modalities
+- Text: ✅
+- Image: ✅
+- Audio: ✅
+- Video: ✅
+
+### Training & Evolution
+- Training cycles: 100+ (active)
+- Evolution steps: 100+ (active)
+- Models downloaded: SmolLM2-360M, Qwen3-0.6B
+
+### Documentation ✅
+- README.md — project overview
+- AGENTS.md — AI agent instructions
+- .opencode/AGENTS.md — OpenCode-specific instructions
+- INSTALL.md — installation guide
+- MIGRATION.md — migration & portability
+- WAL.md — current state
+- docs/INDEX.md — knowledge base map (193+ entries)
+- docs/PROJECT_AUDIT_v3.58.md — full audit
+- docs/RUNBOOK.md — operations runbook
+- docs/ARCHITECTURE.md — system architecture
+
+### Code Stats
+- Production classes: ~240+
+- Test classes: ~150+
+- Test coverage: ≥82%
+- Git commits: 30+
+- Pushed to: origin (GitHub) + gitverse
