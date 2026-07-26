@@ -1,8 +1,31 @@
-📍 v3.58 — All 8 improvements fully implemented. 30+16 classes, 90 tests, ~60 files. Pushed to both remotes. BUILD SUCCESSFUL.
-🚀 Active: Wave 37 complete. All 8 plans fully implemented across 4 waves.
+📍 v3.58.1 — Audit blockers resolved. Tests compile + pass, both remotes synced, M.A.T.R.I.X. live with 3 Matrix dashboards.
+🚀 Active: Re-pushed 5 commits (eb448a2..ffc01e7) to origin + gitverse. Quarkus UP. Training: 1071+ steps. Grafana: 3 MATRIX dashboards live.
 🛑 Protected: Pekko 1.6.0, K_MAX=20, FROZEN-нейроны, Quarkus 3.37.3, Java 25, AGPLv3+ethics, 82% coverage floor
 
-## Implementation Summary
+## v3.58.1 Audit Fixes (this session)
+
+| Fix | Detail | Status |
+|-----|--------|--------|
+| Duplicate test classes | Deleted ExtractorsTest.java, merged unique tests into MultimodalTest | ✅ |
+| UnifiedRepresentation NPE | `toBooleanVector` falls back to deterministic default features when aligner is null (test path) | ✅ |
+| Untracked .safetensors (~1GB) | Rewrote local history: model files removed from all unpushed commits (root cause: 4b1032f added .gitignore but didn't `git rm --cached` tracked files) | ✅ |
+| Push to origin | HTTPS via GITHUB_TOKEN: 5 commits, 121KB payload | ✅ |
+| Push to gitverse | SSH: same 5 commits | ✅ |
+| Grafana datasources | Prometheus + Loki provisioned via API | ✅ |
+| Grafana dashboards | matrix-kubernetes, matrix-operational, matrix-overview imported | ✅ |
+
+## Live State (v3.58.1)
+
+| Component | Endpoint | Status |
+|-----------|----------|--------|
+| Quarkus matrix-core | 192.168.49.2:30091 /api/v1/health | UP, 2.1.0, 3 replicas |
+| Training | POST /api/v1/agent/train {generations:2,population:8,k:5} | bestFitness=370, completed |
+| Evolution loop | background every 5min | 1071 training steps |
+| Grafana | 192.168.49.2:30300 | 200, 2 datasources, 3 dashboards |
+| Prometheus | 192.168.49.2:30090 | up{job="matrix"}=1 |
+| Postgres / Redis / Kafka / Qdrant | cluster-internal | running |
+
+## v3.58 Implementation Summary
 
 | Plan | Classes | Status |
 |------|---------|--------|
