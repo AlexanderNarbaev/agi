@@ -1,4 +1,4 @@
-# INDEX: Knowledge Base Map — MATRIX v3.57
+# INDEX: Knowledge Base Map — MATRIX v3.58
 | ID | Path | Title | Phase | Topics | Last_Updated |
 |----|------|-------|-------|--------|--------------|
 | L0 | docs/L0_manifesto.md | Манифест и аксиомы | Фундамент | Аксиомы, миссия, антипаттерны | 2026-05-31 |
@@ -191,3 +191,48 @@
 | — | docs/improvements/MULTIMODAL_LEARNING.md | Multi-modal Learning план | Улучшения | 6 steps: feature extractors, cross-modal align, unified repr | 2026-07-25 |
 | — | docs/improvements/FEDERATED_LEARNING.md | Federated Learning план | Улучшения | 7 steps: federated protocol, local train, secure aggregation, DP | 2026-07-25 |
 | — | docs/WAVE_35_AUTONOMOUS_TRAINING.md | Wave 35 doc | AI | Architecture diagram, components, smoke test recipe | 2026-07-20 |
+| — | matrix-core/src/.../noosphere/p2p/P2PNetwork.java | P2P Network | P2P | P2P Noosphere with mDNS discovery, TCP communication | 2026-07-26 |
+| — | matrix-core/src/.../noosphere/p2p/Peer.java | Peer | P2P | P2P peer connection with heartbeats | 2026-07-26 |
+| — | matrix-core/src/.../noosphere/p2p/PeerDiscovery.java | Peer Discovery | P2P | TCP-based peer discovery service | 2026-07-26 |
+| — | matrix-core/src/.../noosphere/p2p/TrustManager.java | Trust Manager | P2P | Peer reputation, trust scoring | 2026-07-26 |
+| — | matrix-core/src/.../noosphere/p2p/KnowledgeConsensus.java | Knowledge Consensus | P2P | Weighted voting for conflicting knowledge | 2026-07-26 |
+| — | matrix-core/src/.../noosphere/p2p/P2PResource.java | P2P REST API | API | /api/v1/noosphere/p2p/* endpoints | 2026-07-26 |
+| — | matrix-core/src/.../noosphere/p2p/PrivacyPreserver.java | Privacy Preserver | P2P | SHA-256 anonymization of peer identities | 2026-07-26 |
+| — | matrix-core/src/.../verification/RuntimeVerifier.java | Runtime Verifier | Verification | Property checking (TruthTable, FROZEN, Consensus) | 2026-07-26 |
+| — | matrix-core/src/.../verification/PropertyViolation.java | Property Violation | Verification | Violation record with context | 2026-07-26 |
+| — | matrix-core/src/.../verification/VerificationResult.java | Verification Result | Verification | Result aggregation | 2026-07-26 |
+| — | matrix-core/src/.../verification/VerificationReport.java | Verification Report | Verification | Report to event journal | 2026-07-26 |
+| — | matrix-core/src/.../verification/ContinuousVerifier.java | Continuous Verifier | Verification | Scheduled runtime verification | 2026-07-26 |
+| — | matrix-core/src/.../verification/VerificationResource.java | Verification REST | API | /api/v1/verification/* endpoints | 2026-07-26 |
+| — | matrix-core/src/.../verification/TlaIntegration.java | TLA+ Integration | Verification | TLC model checker integration | 2026-07-26 |
+| — | matrix-core/src/.../verification/PropertyBasedVerifier.java | Property-Based Verifier | Verification | Monotonicity, binary, frozen checks | 2026-07-26 |
+| — | matrix-core/src/.../verification/VerificationHealthCheck.java | Verification Health | Verification | Quarkus health check for violations | 2026-07-26 |
+| — | matrix-core/src/.../multimodal/FeatureExtractor.java | Feature Extractor | Multimodal | Interface for text/image/audio extraction | 2026-07-26 |
+| — | matrix-core/src/.../multimodal/TextFeatureExtractor.java | Text Feature Extractor | Multimodal | 256-dim byte-frequency features | 2026-07-26 |
+| — | matrix-core/src/.../multimodal/ImageFeatureExtractor.java | Image Feature Extractor | Multimodal | 512-dim RGB histogram + texture | 2026-07-26 |
+| — | matrix-core/src/.../multimodal/AudioFeatureExtractor.java | Audio Feature Extractor | Multimodal | 128-dim energy + ZCR | 2026-07-26 |
+| — | matrix-core/src/.../multimodal/CrossModalAligner.java | Cross-Modal Aligner | Multimodal | Feature alignment between modalities | 2026-07-26 |
+| — | matrix-core/src/.../multimodal/UnifiedRepresentation.java | Unified Representation | Multimodal | Boolean vector unification | 2026-07-26 |
+| — | matrix-core/src/.../multimodal/MultimodalFeatureExtractor.java | Multi-modal Extractor | Multimodal | Extracts from text/image/audio | 2026-07-26 |
+| — | matrix-core/src/.../multimodal/MultimodalResource.java | Multimodal REST | API | /api/v1/multimodal/* endpoints | 2026-07-26 |
+| — | matrix-core/src/.../multimodal/GenerationResource.java | Generation REST | API | /api/v1/generation/* (image/video/audio) | 2026-07-26 |
+| — | matrix-core/src/.../federated/FederatedProtocol.java | Federated Protocol | Federated | Federated learning rounds | 2026-07-26 |
+| — | matrix-core/src/.../federated/LocalUpdate.java | Local Update | Federated | Local training update record | 2026-07-26 |
+| — | matrix-core/src/.../federated/SecureAggregator.java | Secure Aggregator | Federated | Byzantine-resilient aggregation | 2026-07-26 |
+| — | matrix-core/src/.../federated/PrivacyMechanism.java | Privacy Mechanism | Federated | Differential privacy with SecureRandom | 2026-07-26 |
+| — | matrix-core/src/.../federated/FederatedResource.java | Federated REST | API | /api/v1/federated/* endpoints | 2026-07-26 |
+| — | matrix-core/src/.../federated/CompressionCodec.java | Compression Codec | Federated | RLE compression for updates | 2026-07-26 |
+| — | matrix-core/src/.../federated/ModelVersioning.java | Model Versioning | Federated | Model version tracking | 2026-07-26 |
+| — | matrix-core/src/.../rag/IndexedBooleanRag.java | Indexed Boolean RAG | Performance | Wrapper around BooleanIndex with indexing | 2026-07-26 |
+| — | matrix-core/src/.../events/BatchKafkaJournal.java | Batch Kafka Journal | Performance | Batched event publishing | 2026-07-26 |
+| — | matrix-core/src/.../evolution/VirtualThreadEvolution.java | Virtual Thread Evolution | Performance | Virtual thread parallel evolution | 2026-07-26 |
+| — | matrix-core/src/.../imports/ImportResource.java | Import REST | API | /api/v1/import/* endpoints (HuggingFace) | 2026-07-26 |
+| — | matrix-core/src/.../ingest/IngestResource.java | Ingest REST | API | /api/v1/ingest/* (text, binary, URL) | 2026-07-26 |
+| — | matrix-core/src/.../ingest/MultimodalIngestor.java | Multi-modal Ingestor | Ingest | Chunks and stores for RAG | 2026-07-26 |
+| — | matrix-core/src/.../tools/ToolsResource.java | Tools REST | API | /api/v1/tools/* (8 tools: web, file, shell) | 2026-07-26 |
+| — | matrix-core/src/.../agent/SelfAgentResource.java | Self-Agent REST | API | /api/v1/agent/* (decompose, improve) | 2026-07-26 |
+| — | — | .opencode/AGENTS.md | OpenCode | AI agent instructions for OpenCode tools | 2026-07-26 |
+| — | — | INSTALL.md | Setup | Full installation & startup guide | 2026-07-26 |
+| — | — | MIGRATION.md | Setup | Migration & portability guide | 2026-07-26 |
+| — | — | docs/RUNBOOK.md | Operations | Daily/weekly/monthly operations guide | 2026-07-26 |
+| — | — | docs/PROJECT_AUDIT_v3.58.md | Audit | Full project audit at v3.58 | 2026-07-26 |
