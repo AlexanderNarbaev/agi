@@ -1,5 +1,5 @@
-📍 v3.58.1 — FULL SYSTEM OPERATIONAL. All 8 improvement plans implemented. Audit blockers resolved. Both remotes in sync. M.A.T.R.I.X. live with Grafana dashboards.
-🚀 Active: Self-improving system with 20+ REST endpoints, multi-modal I/O (text/image/audio/video), P2P, federated learning, formal verification, tool integration, multi-modal ingestion, self-improving agent. Training: 1071+ steps. Grafana: 3 MATRIX dashboards.
+📍 v3.58.5 — FULL SYSTEM OPERATIONAL. All 8 improvement plans implemented. Audit blockers resolved. Follow-up: monitor, train, test, CI. Both remotes in sync. M.A.T.R.I.X. live with Grafana dashboards.
+🚀 Active: Self-improving system with 20+ REST endpoints, multi-modal I/O (text/image/audio/video), P2P, federated learning, formal verification, tool integration, multi-modal ingestion, self-improving agent. Live monitor TUI, training 1121+ steps. Grafana: 3 MATRIX dashboards. CI validated in eclipse-temurin:25-jdk.
 🛑 Protected: K_MAX=20, FROZEN-нейроны, Quarkus 3.37.3, Java 25, Pekko 1.6.0, AGPLv3+ethics, 82% coverage floor
 
 ## System Status v3.58 (2026-07-26)
