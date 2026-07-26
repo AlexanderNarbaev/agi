@@ -10,8 +10,8 @@ import jakarta.inject.Inject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.security.SecureRandom;
 import java.util.Map;
-import java.util.Random;
 
 @Path("/api/v1/generation")
 @Produces(MediaType.APPLICATION_JSON)
@@ -27,8 +27,11 @@ public class GenerationResource {
     public Response generateImage(@QueryParam("prompt") String prompt,
                                    @QueryParam("width") @jakarta.ws.rs.DefaultValue("256") int width,
                                    @QueryParam("height") @jakarta.ws.rs.DefaultValue("256") int height) {
-        if (prompt == null || prompt.isBlank()) {
-            return Response.status(400).entity(Map.of("error", "prompt required")).build();
+        if (prompt == null || prompt.isBlank() || prompt.length() > 5000) {
+            return Response.status(400).entity(Map.of("error", "prompt required, max 5000 chars")).build();
+        }
+        if (width < 1 || width > 1024 || height < 1 || height > 1024) {
+            return Response.status(400).entity(Map.of("error", "dimensions must be 1-1024")).build();
         }
         try {
             var features = featureExtractor.extractFeatures(Map.of("text", prompt));
@@ -49,8 +52,11 @@ public class GenerationResource {
                                    @QueryParam("frames") @jakarta.ws.rs.DefaultValue("30") int frames,
                                    @QueryParam("width") @jakarta.ws.rs.DefaultValue("128") int width,
                                    @QueryParam("height") @jakarta.ws.rs.DefaultValue("128") int height) {
-        if (prompt == null || prompt.isBlank()) {
-            return Response.status(400).entity(Map.of("error", "prompt required")).build();
+        if (prompt == null || prompt.isBlank() || prompt.length() > 5000) {
+            return Response.status(400).entity(Map.of("error", "prompt required, max 5000 chars")).build();
+        }
+        if (width < 1 || width > 1024 || height < 1 || height > 1024) {
+            return Response.status(400).entity(Map.of("error", "dimensions must be 1-1024")).build();
         }
         try {
             var features = featureExtractor.extractFeatures(Map.of("text", prompt));
@@ -71,8 +77,8 @@ public class GenerationResource {
     @POST
     @Path("/audio")
     public Response generateAudio(@QueryParam("prompt") String prompt) {
-        if (prompt == null || prompt.isBlank()) {
-            return Response.status(400).entity(Map.of("error", "prompt required")).build();
+        if (prompt == null || prompt.isBlank() || prompt.length() > 5000) {
+            return Response.status(400).entity(Map.of("error", "prompt required, max 5000 chars")).build();
         }
         try {
             var features = featureExtractor.extractFeatures(Map.of("text", prompt));
@@ -88,7 +94,8 @@ public class GenerationResource {
         if (features == null || features.length == 0) return new byte[width * height * 3];
         byte[] pixels = new byte[width * height * 3];
         long seed = hashLong(features);
-        Random rng = new Random(seed);
+        SecureRandom rng = new SecureRandom();
+        rng.setSeed(seed);
         for (int i = 0; i < pixels.length; i++) {
             pixels[i] = (byte) (rng.nextInt(256));
         }

@@ -73,3 +73,7 @@ models/pretrained/smollm2-360m/
 data/
 models/training_data/auto_generated.jsonl
 models/trained/
+matrix-core/models/HuggingFaceTB_SmolLM2-360M-Instruct/
+matrix-core/models/Qwen_Qwen3-0.6B/
+matrix-core/models/HuggingFaceTB*
+matrix-core/models/Qwen*
