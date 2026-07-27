@@ -13,5 +13,5 @@ EXPOSE 9091
 HEALTHCHECK --interval=30s --timeout=5s --start-period=60s --retries=3 \
     CMD java -jar /app/matrix-core.jar --help || exit 1
 
-ENTRYPOINT ["java", "-Xmx512m", "-jar", "/app/matrix-core.jar"]
+ENTRYPOINT ["java", "-Xmx3g", "-jar", "/app/matrix-core.jar"]
 CMD []
