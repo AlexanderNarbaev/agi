@@ -195,6 +195,35 @@ public final class NeuralTextGenerator {
     }
 
     /**
+     * Continue generation from an existing partial output.
+     *
+     * <p>Encodes the prefix (existing generation + memory seed) and continues
+     * the autoregressive forward pass for additional characters. Used by
+     * {@code OpenAIChatResource} when the initial generation is too short and
+     * a memory scaffold is available to extend the semantic context.
+     *
+     * @param seedText partial output + corpus memory seed
+     * @return extended generation
+     */
+    public String continueGeneration(String seedText) {
+        if (seedText == null || seedText.isBlank()) {
+            return "";
+        }
+        long sensorState = encodeText(seedText);
+        StringBuilder response = new StringBuilder(seedText);
+        int maxLen = Math.min(MAX_RESPONSE_LENGTH, seedText.length() * 2 + 100);
+        int startLen = seedText.length();
+        for (int i = 0; i < maxLen - startLen; i++) {
+            int charCode = forwardPass(sensorState);
+            if (charCode == 0 || charCode > 127) break;
+            char c = (char) charCode;
+            response.append(c);
+            sensorState = updateState(sensorState, c, i);
+        }
+        return response.toString().trim();
+    }
+
+    /**
      * Forward pass through the3-layer neural hierarchy.
      *
      * @param sensorState64-bit input state
