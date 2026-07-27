@@ -1,6 +1,52 @@
-📍 v3.58.5 — Monitor, train, test, CI. 4 follow-up tasks complete. M.A.T.R.I.X. fully operational with live monitoring and CI.
-🚀 Active: matrix-monitor.sh (live TUI), 17 new tests (ToolsResource/IngestResource/SelfAgentResource), CI validated in docker, background evolution 1121+ steps.
+📍 v3.58.6 — M.A.T.R.I.X. actually training. MultiBrainEnsemble loads 6 pretrained models with 150 neurons. Continuous training verified.
+🚀 Active: Wave 1 (load pretrained), Wave 2 (1491 iter/10min, bestFitness 690→890), Wave 3 (10 knowledge domains ingested). Quarkus path conflict fixed.
 🛑 Protected: Pekko 1.6.0, K_MAX=20, FROZEN-нейроны, Quarkus 3.37.3, Java 25, AGPLv3+ethics, 82% coverage floor
+
+## v3.58.6 — Critical fixes for actual AGI operation
+
+| Fix | Detail | Status |
+|-----|--------|--------|
+| loadBaseline manifest path | AgentBrainService called loadBaseline(baselineFile()) but should be baselineManifest() — fixed | ✅ |
+| Dockerfile heap 512m→3g | OOM in PretrainedLoader.buildTree() recursive call over 24 layers × 25 neurons × 6 models | ✅ |
+| Pretrained data in K8s | Copied `models/pretrained/` (312MB) into minikube's `/data/models/` via tar pipe | ✅ |
+| Old baseline deleted | Empty baseline.jsonl blocked buildUnifiedBrain rebuild with real data | ✅ |
+| SelfAgentResource path | `/api/v1/agent` collision with MatrixResource's `/agent/*` methods → all /agent/train returned 404. Moved to `/api/v1/self-agent` | ✅ |
+
+## Models loaded by MultiBrainEnsemble (6/8)
+
+| Model | Neurons |
+|-------|---------|
+| Qwen3-1.7B | 25 |
+| DeepSeek-R1-Distill-Qwen-1.5B | 25 |
+| Qwen2.5-1.5B | 25 |
+| Qwen3-0.6B | 25 |
+| SmolLM2-360M | 25 |
+| Qwen2.5-0.5B | 25 |
+| **Total** | **150 neurons** |
+
+Failed: merged (Avro file not found), phi-4-mini (file naming)
+
+## Live State (v3.58.6)
+
+| Component | Endpoint | Status |
+|-----------|----------|--------|
+| Quarkus matrix-core | 192.168.49.2:30091 /api/v1/health | UP, v2.1.0, 3 replicas, 3G heap |
+| Training | POST /api/v1/agent/train | bestFitness 690→890 over 10min |
+| Pretrained brain | MultiBrainEnsemble | 6 models, 150 neurons |
+| Inference | POST /api/v1/agent/infer | 200 OK |
+| Ingest | POST /api/v1/ingest/text | 200 OK, 10 KB-ingested domains |
+| Decompose (plan) | POST /api/v1/self-agent/decompose | 200 OK (4 subtasks) |
+| Grafana | 192.168.49.2:30300 | 3 dashboards live |
+| minikube | Docker driver | Running |
+
+## v3.58.5 — Follow-up session (prior)
+
+| Step | Result | Evidence |
+|------|--------|----------|
+| P1: matrix-monitor.sh | 92-line bash TUI: health + neurons + train probe + K8s evolution log | Working |
+| P2: Continuous training | 5+ min loop, 860 iter, bestFitness 690→890 | Verified |
+| P3: Test coverage | 17 new tests, ToolsResource 0/1→1/1 | Verified |
+| P4: CI validation | eclipse-temurin:25-jdk container | Verified |
 
 ## v3.58.5 — Follow-up (Monitor / Train / Test / CI)
 
