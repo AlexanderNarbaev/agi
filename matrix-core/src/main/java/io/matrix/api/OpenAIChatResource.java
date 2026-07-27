@@ -83,6 +83,9 @@ public class OpenAIChatResource {
     @Inject
     private io.matrix.agent.LongHorizonPlanner longHorizonPlanner;
 
+    @Inject
+    private io.matrix.agent.SubAgent subAgent;
+
     public AgentBrainService brainService() { return brainService; }
     public void brainService(AgentBrainService b) { this.brainService = b; }
 
@@ -553,5 +556,45 @@ public class OpenAIChatResource {
                     .entity(Map.of("error", e.getMessage()))
                     .build();
         }
+    }
+
+    // ─── Sub-agent tool use endpoint (L13 Pilot, L14 BusinessModel) ─────
+
+    /**
+     * Spawn a sub-agent for a focused tool-using task. Sub-agent is
+     * sandboxed: only whitelisted tools, no memory writes, no training,
+     * no recursive chat. Result is returned to the caller.
+     */
+    @POST
+    @Path("/brain/subagent")
+    @Consumes(MediaType.APPLICATION_JSON)
+    public Response brainSubagent(SubAgentRequest req) {
+        if (req == null || req.task == null || req.task.isBlank()) {
+            return Response.status(400)
+                    .entity(Map.of("error", "task is required"))
+                    .build();
+        }
+        try {
+            var result = subAgent.run(req.task, req.tool, req.toolArgs);
+            return Response.ok(Map.of(
+                    "model", "M.A.T.R.I.X.",
+                    "task", result.task(),
+                    "ok", result.ok(),
+                    "toolOutput", result.toolOutput() == null ? "" : result.toolOutput(),
+                    "response", result.response()
+            )).build();
+        } catch (Exception e) {
+            log.error("brainSubagent failed", e);
+            return Response.serverError()
+                    .entity(Map.of("error", e.getMessage()))
+                    .build();
+        }
+    }
+
+    /** Request body for {@code POST /v1/brain/subagent}. */
+    public static class SubAgentRequest {
+        public String task;
+        public String tool;        // optional: calculator, datetime, file_read, web_search, web_fetch
+        public String toolArgs;    // optional: expression / url / query
     }
 }

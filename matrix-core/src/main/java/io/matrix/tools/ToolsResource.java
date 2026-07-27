@@ -92,9 +92,9 @@ public class ToolsResource {
     }
 
     /**
-     * Invoke a specific tool.
+     * Invoke a specific tool. Public for sub-agent access.
      */
-    private String invoke(String tool, Map<String, Object> args) {
+    public String invoke(String tool, Map<String, Object> args) {
         return switch (tool) {
             case "web_search" -> webSearch((String) args.getOrDefault("query", ""));
             case "web_fetch" -> webFetch((String) args.getOrDefault("url", ""));
