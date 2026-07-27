@@ -15,7 +15,7 @@ class SelfAgentResourceTest {
     void decomposeTaskValidPayload() {
         var res = new SelfAgentResource();
         Map<String, Object> payload = new HashMap<>();
-        payload.put("task", "Build a hello world app");
+        payload.put("goal", "Build a hello world app");
         Response r = res.decomposeTask(payload);
         // SelfAgentResource is created without CDI wiring, so responses may vary
         // from 200 (lucky path) to 500 (NPE caught). The test documents the

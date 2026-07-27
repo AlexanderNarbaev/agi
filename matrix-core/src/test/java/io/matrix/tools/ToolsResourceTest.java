@@ -108,7 +108,8 @@ class ToolsResourceTest {
         Map<String, Object> payload = new HashMap<>();
         payload.put("tool", "datetime");
         payload.put("args", args);
-        res.invokeTool(payload);
+        Response invokeResp = res.invokeTool(payload);
+        assertEquals(200, invokeResp.getStatus());
 
         Response r = res.getStats();
         @SuppressWarnings("unchecked")
@@ -116,6 +117,6 @@ class ToolsResourceTest {
         assertEquals(1, body.get("totalInvocations"));
         @SuppressWarnings("unchecked")
         var perTool = (Map<String, Integer>) body.get("perTool");
-        assertEquals(1, perTool.get("datetime").intValue());
+        assertEquals(Integer.valueOf(1), perTool.getOrDefault("datetime", 0));
     }
 }

@@ -80,7 +80,7 @@ while true; do
   if command -v kubectl >/dev/null 2>&1; then
     pod=$(kubectl -n "$KUBE_NS" get pod -l "$POD_SELECTOR" -o jsonpath='{.items[0].metadata.name}' 2>/dev/null)
     if [ -n "$pod" ]; then
-      last_evo=$(kubectl -n "$KUBE_NS" logs "$pod" 2>/dev/null | grep "Evolution step" | tail -1)
+      last_evo=$(kubectl -n "$KUBE_NS" logs --tail=100 "$pod" 2>/dev/null | grep "Evolution step" | tail -1)
       if [ -n "$last_evo" ]; then
         printf "  %sevolution:%s %s\n" "$CYN" "$RST" "$last_evo"
       fi
