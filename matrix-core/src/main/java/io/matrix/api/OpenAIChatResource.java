@@ -7,6 +7,7 @@ import io.matrix.chat.ConversationRecorder;
 import io.matrix.ethics.EthicalFilter;
 import io.matrix.ethics.EthicalVerdict;
 import io.matrix.hades.DerangementDetector;
+import io.matrix.memory.HierarchicalMemory;
 import io.matrix.observability.MatrixMetrics;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -71,6 +72,9 @@ public class OpenAIChatResource {
     // Optional injection: null-safe in case the chat recorder is not on the classpath
     @Inject
     private ConversationRecorder conversationRecorder;
+
+    @Inject
+    private HierarchicalMemory longTermMemory;
 
     public AgentBrainService brainService() { return brainService; }
     public void brainService(AgentBrainService b) { this.brainService = b; }
@@ -190,6 +194,7 @@ public class OpenAIChatResource {
 
         // ─── Generate response using neural hierarchy (GENERATIVE primary) ───
         // Pipeline:
+        //   0. HierarchicalMemory search (world model + long-term memory)
         //   1. TextGenerator.forwardPass() — 3-layer MPDT neural hierarchy (genuine
         //      character-by-character generation, not retrieval)
         //   2. BrainService.generateFromMemory() — corpus retrieval as semantic
@@ -197,8 +202,25 @@ public class OpenAIChatResource {
         //   3. Brain decision code (last-resort)
         String response;
         try {
-            // Primary: GENERATIVE — 3-layer neural forward pass
-            response = brainService.textGenerator().generate(userText);
+            // Pre-load world model + long-term memory context
+            StringBuilder context = new StringBuilder();
+            if (longTermMemory != null) {
+                var memEntries = longTermMemory.search(userText, 3);
+                for (var entry : memEntries) {
+                    if (entry != null && entry.content() != null && !entry.content().isBlank()) {
+                        context.append(entry.content()).append(' ');
+                        if (context.length() > 400) break;
+                    }
+                }
+            }
+            String worldContext = context.toString().trim();
+
+            // Primary: GENERATIVE — 3-layer neural forward pass, primed with world context
+            String prompt = userText;
+            if (!worldContext.isEmpty()) {
+                prompt = worldContext + " | " + userText;
+            }
+            response = brainService.textGenerator().generate(prompt);
             String generated = response;
 
             // If generator produced < 8 chars or blank, augment with corpus memory
@@ -218,6 +240,15 @@ public class OpenAIChatResource {
                 // Tertiary: brain decision code fallback
                 int actionCode = brainService.brain().decide(sensorBits);
                 response = text2vec.bitsToResponse(sensorBits ^ actionCode);
+            }
+
+            // World-model write-back: store the interaction as a memory entry
+            if (longTermMemory != null && response != null && !response.isBlank()) {
+                longTermMemory.store(
+                        HierarchicalMemory.Level.L2_MODULE,
+                        "Q: " + truncate(userText, 200) + " | A: " + truncate(response, 200),
+                        "chat",
+                        Set.of("auto", "user-interaction"));
             }
         } catch (Exception e) {
             log.error("Neural text generation failed", e);
