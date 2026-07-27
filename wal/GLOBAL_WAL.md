@@ -1,6 +1,90 @@
-📍 v3.59.1 — World model + long-term memory wired. HierarchicalMemory (L0..L4) as CDI bean. Generative chat with memory context + write-back.
-🚀 Active: Waves 1-19 complete. Sequential HF load (W16), generative chat primary (W17), working calculator + datetime (W18), HierarchicalMemory world model (W19).
+📍 v3.59.2 — 3-block brain pipeline operational. HierarchicalMemory as world model. LongHorizonPlanner with DAG execution.
+🚀 Active: Waves 1-20 complete. /v1/brain/think and /v1/brain/plan endpoints live. 4-step planning cycle executed through BrainPipeline.
 🛑 Protected: Pekko 1.6.0, K_MAX=20, FROZEN-нейроны, Quarkus 3.37.3, Java 25, AGPLv3+ethics, 82% coverage floor
+
+## v3.59.2 — 3-block brain pipeline + long-horizon planning
+
+### 3-Block Brain Pipeline (L0 axiom 6: Hierarchical autonomy)
+
+**Block 1 — InputProcessor:**
+- TextFeatureExtractor (always)
+- ImageFeatureExtractor (optional per modality)
+- AudioFeatureExtractor (optional per modality)
+- Output: 64-bit signal vector via Text2VecService
+
+**Block 2 — ConsciousLayer (NeuralTextGenerator.forwardPass):**
+- 3-layer MPDT neural hierarchy: encoder → compression → output (k=16)
+- World-model context prepended from HierarchicalMemory search()
+- ContinueGeneration() for semantic scaffold when initial output too short
+
+**Block 3 — OutputProcessor:**
+- Text formatter with length cap (1024 chars)
+- Write-back to HierarchicalMemory (L2_MODULE level)
+
+### REST endpoints
+
+| Endpoint | Description |
+|----------|-------------|
+| POST /v1/chat/completions | OpenAI-compatible (legacy, also uses BrainPipeline internally) |
+| POST /v1/brain/think | Direct 3-block pipeline on raw text (+ optional media) |
+| POST /v1/brain/plan | LongHorizonPlanner with DAG execution (decompose → run → verify) |
+| POST /v1/embeddings | 20-dim binary embeddings |
+
+### LongHorizonPlanner (L4 Mediator hierarchy)
+
+Decomposes goal into:
+1. analyze: identify constraints & unknowns
+2. plan: design approach  
+3. execute: gather evidence (web_search if research) or run brain
+4. verify: confirm outcomes via testable signals
+5. (optional) deploy + monitor if goal mentions deploy/ship/release
+
+Each step runs through BrainPipeline (3-block). Ethical filter enforced per step (L7).
+
+### Verified working
+
+```
+POST /v1/brain/think {"text":"What is gravity?"}
+→ {"latencyMicros":4434, "content":"...", 
+   "executions":{"inputProcessor":"textExtractor",
+                "consciousLayer":"textGenerator.forwardPass (k=16, 3 layers)",
+                "outputProcessor":"truncate@1024",
+                "memoryReads":0, "memoryWrites":1}}
+
+POST /v1/brain/plan {"text":"Research quantum computing"}
+→ {"stepCount":4, "steps":[{"index":1,"subGoal":"analyze:..."},...]}
+```
+
+### Live State (v3.59.2)
+
+| Component | Status |
+|-----------|--------|
+| Quarkus matrix-core | 3 replicas, matrix-core:3.58.8b image |
+| 3-block BrainPipeline | LIVE (latency ~4ms per turn) |
+| HierarchicalMemory world model | LIVE (write-back per turn) |
+| LongHorizonPlanner | LIVE (4-6 steps per goal) |
+| Tools (calculator + datetime) | LIVE |
+| Pretrained ensemble | 6 models × 25 neurons = 150 neurons |
+
+### Open gaps
+
+| Gap | Notes |
+|-----|-------|
+| Multi-modal real input | FeatureExtractors exist but produce length-only summaries. Real image/audio decoding needs safetensors → feature pipeline (Wave 16 enables once sequential-train.sh completes) |
+| Sub-agent tool use | Tools exist but no sub-agent spawning |
+| Coverage floor | Quarkus native-image blocks jacoco agent (env) |
+| HierarchicalMemory visualization | Storage backend not implemented; only in-memory |
+
+### Wave history
+
+| Wave | Description | Status |
+|------|-------------|--------|
+| 1-15 | Pretrained models, training pipeline, self-improvement loop | ✅ |
+| 16 | sequential-train.sh (HF → neurons → delete) | ✅ script ready |
+| 17 | Generative chat primary via textGenerator.forwardPass | ✅ |
+| 18 | Working calculator (recursive-descent parser) | ✅ |
+| 19 | HierarchicalMemory as world model + long-term memory | ✅ |
+| 20 | 3-block BrainPipeline + LongHorizonPlanner + /v1/brain endpoints | ✅ |
 
 ## v3.59.1 — World model + long-term memory wired
 
