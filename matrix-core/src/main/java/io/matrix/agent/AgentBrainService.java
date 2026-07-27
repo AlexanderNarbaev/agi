@@ -101,7 +101,7 @@ public class AgentBrainService {
             try {
                 // 1. Build unified brain from all pretrained models (one snapshot to rule them all)
                 if (UnifiedPretrainedMerger.baselineExists()) {
-                    this.baselineManifest = UnifiedPretrainedMerger.loadBaseline(UnifiedPretrainedMerger.baselineFile());
+                    this.baselineManifest = UnifiedPretrainedMerger.loadBaseline(UnifiedPretrainedMerger.baselineManifest());
                     log.info("Baseline snapshot loaded: {}", baselineManifest);
                 } else {
                     UnifiedPretrainedMerger.MergeResult result = UnifiedPretrainedMerger.buildUnifiedBrain();
