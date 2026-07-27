@@ -62,7 +62,10 @@ public class UnifiedRepresentation {
      * Merge multiple boolean vectors using XOR.
      */
     public boolean[] merge(boolean[][] vectors) {
-        if (vectors.length == 0) return new boolean[0];
+        if (vectors == null || vectors.length == 0) return new boolean[0];
+        for (var v : vectors) {
+            if (v == null) throw new IllegalArgumentException("null vector in merge input");
+        }
         
         int maxLen = 0;
         for (boolean[] v : vectors) {
