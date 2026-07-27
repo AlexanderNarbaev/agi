@@ -1,6 +1,64 @@
-📍 v3.59 — Architecture rewrite: GENERATIVE primary chat, sequential HF load pipeline, working tool use. New era begins.
-🚀 Active: Waves 1-18 complete. Sequential HF training script (Wave 16), generative chat via NeuralTextGenerator.forwardPass (Wave 17), working calculator + datetime tools (Wave 18).
+📍 v3.59.1 — World model + long-term memory wired. HierarchicalMemory (L0..L4) as CDI bean. Generative chat with memory context + write-back.
+🚀 Active: Waves 1-19 complete. Sequential HF load (W16), generative chat primary (W17), working calculator + datetime (W18), HierarchicalMemory world model (W19).
 🛑 Protected: Pekko 1.6.0, K_MAX=20, FROZEN-нейроны, Quarkus 3.37.3, Java 25, AGPLv3+ethics, 82% coverage floor
+
+## v3.59.1 — World model + long-term memory wired
+
+### HierarchicalMemory (CDI @ApplicationScoped)
+
+- 5 levels: L0_ARTIFACT → L1_PATTERN → L2_MODULE → L3_QUANTUM → L4_KERNEL
+- Each entry has: id, content, domain, tags, accessCount, lastAccessed, importance
+- DriftSignal — significant drift triggers reconsolidation
+- MemoryEntry.withAccessed() — tracks access patterns
+
+### OpenAIChatResource memory integration
+
+**Pre-generation (context lookup):**
+```
+HierarchicalMemory.search(userText, 3) → 3 entries → "world context"
+→ prepended to textGenerator prompt
+```
+
+**Post-generation (write-back):**
+```
+Each Q/A turn stored at L2_MODULE with domain="chat", tags={auto, user-interaction}
+→ grows world model organically with each chat interaction
+```
+
+### Operational tasks completed
+
+| Task | Detail | Status |
+|------|--------|--------|
+| T1: ChatDrivenTrainer rating default 0.5 → 0.7 | Auto-train loop more sensitive | ✅ |
+| T2: ChatDrivenTrainer threshold 0.6 → 0.4 | More triggers on real feedback | ✅ |
+| T3: jacoco env blocker | Quarkus native-image plugin filters jacoco agent. Tried: chown via docker --privileged (worked), standalone jacococli CLI (failed — args4j version mismatch), gradle subproject (failed). Coverage measurement remains blocked by env. | ❌ env blocker |
+| T4: sequential-train.sh (Wave 16) | HF load → convert → delete. Loads from local HF cache via tar pipe to minikube. Triggers Quarkus train-all subcommand. | ✅ |
+| T5: Generative chat (Wave 17) | textGenerator.forwardPass PRIMARY (3-layer neural hierarchy). ContinueGeneration() for seed extension. | ✅ |
+| T6: Calculator tool (Wave 18) | Recursive-descent parser (JS engine removed in JDK 15+). (2+3)*4+10/2 = 25, 100/4+50 = 75 | ✅ |
+| T7: HierarchicalMemory wiring (Wave 19) | @ApplicationScoped bean. Pre-gen context lookup, post-gen write-back | ✅ |
+
+### Architecture gaps still open (for next sessions)
+
+| Gap | Scope |
+|-----|-------|
+| 3-block brain architecture (input → conscious → output) | textGenerator IS the conscious layer; need dedicated input processor with multi-modal encoders and output formatter |
+| Multi-modal perception (vision/audio) | MultimodalResource exists; not wired into chat flow |
+| Long-horizon planning | decompose() gives 4 subtasks but no execution chain or DAG |
+| Sub-agent tool use | ToolsResource exists with 8 tools; sub-agents not spawned |
+| Coverage floor (82%) | jacoco agent filtered by Quarkus native-image plugin (env issue) |
+
+### Live State (v3.59.1)
+
+| Component | Endpoint | Status |
+|-----------|----------|--------|
+| Quarkus matrix-core | 192.168.49.2:30091 /api/v1/health | UP, v2.1.0, 3 replicas |
+| Chat | /v1/chat/completions | Generative primary + memory context |
+| Tools | /api/v1/tools/{list,invoke,stats} | calculator + datetime working |
+| Training | /api/v1/agent/train | bestFitness 1050 (carryover) |
+| Self-improvement | ChatDrivenTrainer | 60s cycle, threshold 0.4 |
+| World model | HierarchicalMemory (L0..L4) | Wired, accumulates Q/A pairs |
+| Pretrained | /data/models/pretrained/ | 6 models × 25 neurons each = 150 neurons |
+| Grafana | 192.168.49.2:30300 | 3 dashboards |
 
 ## v3.59 — Architecture pivot
 
