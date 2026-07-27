@@ -198,19 +198,60 @@ public class ToolsResource {
     private String calculator(String expression) {
         if (expression == null || expression.isBlank()) return "0";
         try {
-            // Simple safe evaluator: only digits, basic operators
+            // Whitelist: digits, whitespace, parens, basic operators
             if (!expression.matches("[0-9+\\-*/().\\s]+")) {
-                return "Invalid expression";
+                return "Invalid expression (allowed: digits, + - * / ( ))";
             }
-            // Use JavaScript engine for evaluation
-            javax.script.ScriptEngine engine = new javax.script.ScriptEngineManager()
-                    .getEngineByName("JavaScript");
-            if (engine == null) return "No JS engine";
-            Object result = engine.eval(expression);
-            return String.valueOf(result);
+            // JavaScript engine removed from JDK 15+. Implement a small recursive
+            // descent parser that handles + - * / with parens and unary minus.
+            return String.valueOf(parseExpression(new java.io.StringReader(expression)));
         } catch (Exception e) {
             return "Calc error: " + e.getMessage();
         }
+    }
+
+    // ── Recursive-descent expression parser (no JS engine dependency) ──
+    private double parseExpression(java.io.Reader r) throws java.io.IOException {
+        java.io.StreamTokenizer st = new java.io.StreamTokenizer(r);
+        st.ordinaryChar('-');
+        st.ordinaryChar('/');
+        st.ordinaryChar('+');
+        st.ordinaryChar('*');
+        st.ordinaryChar('(');
+        st.ordinaryChar(')');
+        double v = parseExpr(st);
+        return v;
+    }
+    private double parseExpr(java.io.StreamTokenizer st) throws java.io.IOException {
+        double v = parseTerm(st);
+        for (;;) {
+            int t = st.nextToken();
+            if (t == '+') { v += parseTerm(st); }
+            else if (t == '-') { v -= parseTerm(st); }
+            else { st.pushBack(); return v; }
+        }
+    }
+    private double parseTerm(java.io.StreamTokenizer st) throws java.io.IOException {
+        double v = parseFactor(st);
+        for (;;) {
+            int t = st.nextToken();
+            if (t == '*') { v *= parseFactor(st); }
+            else if (t == '/') { v /= parseFactor(st); }
+            else { st.pushBack(); return v; }
+        }
+    }
+    private double parseFactor(java.io.StreamTokenizer st) throws java.io.IOException {
+        int t = st.nextToken();
+        if (t == '-') return -parseFactor(st);
+        if (t == '+') return parseFactor(st);
+        if (t == java.io.StreamTokenizer.TT_NUMBER) return st.nval;
+        if (t == '(') {
+            double v = parseExpr(st);
+            int t2 = st.nextToken();
+            if (t2 != ')') throw new java.io.IOException("missing )");
+            return v;
+        }
+        throw new java.io.IOException("unexpected token: " + t);
     }
 
     private String datetime(String timezone) {
