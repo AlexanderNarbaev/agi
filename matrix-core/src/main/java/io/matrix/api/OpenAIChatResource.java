@@ -2,6 +2,7 @@ package io.matrix.api;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.matrix.agent.AgentBrainService;
+import io.matrix.brain.BrainPipeline;
 import io.matrix.chat.ConversationRecord;
 import io.matrix.chat.ConversationRecorder;
 import io.matrix.ethics.EthicalFilter;
@@ -75,6 +76,12 @@ public class OpenAIChatResource {
 
     @Inject
     private HierarchicalMemory longTermMemory;
+
+    @Inject
+    private BrainPipeline brainPipeline;
+
+    @Inject
+    private io.matrix.agent.LongHorizonPlanner longHorizonPlanner;
 
     public AgentBrainService brainService() { return brainService; }
     public void brainService(AgentBrainService b) { this.brainService = b; }
@@ -462,5 +469,89 @@ public class OpenAIChatResource {
     private static String truncate(String text, int maxLen) {
         if (text == null) return "null";
         return text.length() <= maxLen ? text : text.substring(0, maxLen) + "...";
+    }
+
+    // ─── Direct brain pipeline access (3-block: input → conscious → output) ───
+
+    /**
+     * Run the 3-block BrainPipeline directly: InputProcessor → Conscious →
+     * OutputProcessor. Bypasses the OpenAI request envelope so callers can
+     * run the brain with raw text (+ optional media attachments).
+     *
+     * <p>Returns the response plus execution metadata (which blocks fired,
+     * memory reads/writes, total latency).
+     */
+    @POST
+    @Path("/brain/think")
+    @Consumes(MediaType.APPLICATION_JSON)
+    public Response brainThink(BrainRequest req) {
+        if (req == null || req.text == null || req.text.isBlank()) {
+            return Response.status(400)
+                    .entity(Map.of("error", "text is required"))
+                    .build();
+        }
+        try {
+            var input = new io.matrix.brain.BrainPipeline.BrainInput(
+                    req.text,
+                    req.images == null ? java.util.List.of() : req.images,
+                    req.audio == null ? java.util.List.of() : req.audio);
+            var output = brainPipeline.run(input);
+            return Response.ok(Map.of(
+                    "model", "M.A.T.R.I.X.",
+                    "content", output.content(),
+                    "executions", Map.of(
+                            "inputProcessor", output.executions().inputProcessor(),
+                            "consciousLayer", output.executions().consciousLayer(),
+                            "outputProcessor", output.executions().outputProcessor(),
+                            "memoryReads", output.executions().memoryReads(),
+                            "memoryWrites", output.executions().memoryWrites()),
+                    "latencyMicros", output.latencyMicros()
+            )).build();
+        } catch (Exception e) {
+            log.error("brainThink failed", e);
+            return Response.serverError()
+                    .entity(Map.of("error", e.getMessage()))
+                    .build();
+        }
+    }
+
+    /** Request body for {@code POST /v1/brain/think}. */
+    public static class BrainRequest {
+        public String text;
+        public java.util.List<byte[]> images;
+        public java.util.List<byte[]> audio;
+    }
+
+    // ─── Long-horizon planning endpoint (L4 Mediator) ─────────────
+
+    /**
+     * Plan a goal: decompose → run BrainPipeline per step → return trace.
+     * Each step is reasoned through the 3-block brain, with the ethical
+     * filter enforced before any execution.
+     */
+    @POST
+    @Path("/brain/plan")
+    @Consumes(MediaType.APPLICATION_JSON)
+    public Response brainPlan(BrainRequest req) {
+        if (req == null || req.text == null || req.text.isBlank()) {
+            return Response.status(400)
+                    .entity(Map.of("error", "text is required"))
+                    .build();
+        }
+        try {
+            var result = longHorizonPlanner.plan(req.text);
+            return Response.ok(Map.of(
+                    "model", "M.A.T.R.I.X.",
+                    "goal", result.goal(),
+                    "stepCount", result.steps().size(),
+                    "steps", result.steps(),
+                    "aggregateOutput", result.aggregateOutput()
+            )).build();
+        } catch (Exception e) {
+            log.error("brainPlan failed", e);
+            return Response.serverError()
+                    .entity(Map.of("error", e.getMessage()))
+                    .build();
+        }
     }
 }
