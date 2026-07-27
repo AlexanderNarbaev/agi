@@ -188,14 +188,31 @@ public class OpenAIChatResource {
         // ─── Text → Binary Vector ───
         long sensorBits = text2vec.textToBits(userText);
 
-        // ─── Generate response using neural memory (primary) or text generator (fallback) ───
+        // ─── Generate response using neural hierarchy (GENERATIVE primary) ───
+        // Pipeline:
+        //   1. TextGenerator.forwardPass() — 3-layer MPDT neural hierarchy (genuine
+        //      character-by-character generation, not retrieval)
+        //   2. BrainService.generateFromMemory() — corpus retrieval as semantic
+        //      scaffold (used as seed for continued generation)
+        //   3. Brain decision code (last-resort)
         String response;
         try {
-            // Primary: pretrained neuron memory retrieval (13K corpus, real neural processing)
-            response = brainService.generateFromMemory(userText);
+            // Primary: GENERATIVE — 3-layer neural forward pass
+            response = brainService.textGenerator().generate(userText);
+            String generated = response;
+
+            // If generator produced < 8 chars or blank, augment with corpus memory
+            // (semantic scaffold) and continue generation
+            if (generated == null || generated.trim().length() < 8) {
+                String memory = brainService.generateFromMemory(userText);
+                if (memory != null && !memory.isBlank()) {
+                    // Re-generate with the memory snippet as a "prompt continuation"
+                    response = brainService.textGenerator().continueGeneration(
+                            generated == null ? "" : generated + " " + memory);
+                }
+            }
             if (response == null || response.isBlank()) {
-                // Secondary: character-level neural text generator
-                response = brainService.textGenerator().generate(userText);
+                response = generated;
             }
             if (response == null || response.isBlank()) {
                 // Tertiary: brain decision code fallback
