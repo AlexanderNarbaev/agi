@@ -1,6 +1,54 @@
-📍 v3.58.9 — M.A.T.R.I.X. autonomous loop: chat → record → train → corpus → chat. Continuous improvement verified. bestFitness peak 1050.
-🚀 Active: Waves 1-14 complete. Self-improvement loop. 100+ auto-generated pairs. 6 pretrained models × 25 neurons. OpenAI API + Matrix + SelfAgent + Ingest.
+📍 v3.59 — Architecture rewrite: GENERATIVE primary chat, sequential HF load pipeline, working tool use. New era begins.
+🚀 Active: Waves 1-18 complete. Sequential HF training script (Wave 16), generative chat via NeuralTextGenerator.forwardPass (Wave 17), working calculator + datetime tools (Wave 18).
 🛑 Protected: Pekko 1.6.0, K_MAX=20, FROZEN-нейроны, Quarkus 3.37.3, Java 25, AGPLv3+ethics, 82% coverage floor
+
+## v3.59 — Architecture pivot
+
+### No pre-loaded models → sequential training
+- New `sequential-train.sh` orchestration script: loads HF models one-by-one from local cache
+  (minikube has no DNS), copies safetensors via tar pipe, triggers Quarkus `train-all` subcommand
+  to convert weights → Avro neurons, saves neurons, DELETES safetensors.
+- Each model iteration is independent — disk and time budget per model.
+- Models in pipeline (6 total): SmolLM2-135M, Qwen2.5-0.5B, Qwen3-0.6B, Qwen2.5-1.5B, Qwen3-1.7B, DeepSeek-R1-Distill-Qwen-1.5B.
+- All currently-extracted neurons live under `/data/models/pretrained/<model-name>/layer*.avro`.
+
+### Generative chat (replaces corpus retrieval primary)
+- New flow: textGenerator.forwardPass() PRIMARY → memory scaffold SECONDARY → brain decision TERTIARY.
+- NeuralTextGenerator is the "conscious" layer's forward pass (3-layer hierarchy:
+  encoder → compression → output, k=16).
+- New continueGeneration(seedText) method extends output if generation too short.
+- Still falls back to corpus memory as semantic scaffold, but core output is now generated, not retrieved.
+
+### Tool use (8 tools registered)
+- `calculator` (WORKING): recursive-descent parser, (2+3)*4+10/2 = 25.0, 100/4+50 = 75.0
+- `datetime` (WORKING): returns ISO-8601 with timezone
+- `web_search`, `web_fetch`, `code_execute`, `file_read`, `file_write`, `shell`: stubs (defined, no implementation yet)
+
+### Self-improvement loop tuned
+- ConversationFeedback default rating 0.5 → 0.7 (neutral leans positive)
+- ChatDrivenTrainer positive threshold 0.6 → 0.4 (more sensitive)
+- Result: auto-train triggers more often on real interactions
+
+### Architectural gaps still open
+- 3-block brain architecture: partially done (textGenerator IS the conscious layer)
+  Missing: dedicated input processor with multi-modal encoders
+- World model: not yet
+- Sub-agent tool use: sub-agents not spawned; tools called directly
+- Long-term memory: exists as auto_generated.jsonl, needs consolidation
+- Short-term memory: conversation history exists per-conversation
+- Long-horizon planning: not yet (decompose gives 4 subtasks but no execution chain)
+
+### Live State (v3.59)
+
+| Component | Endpoint | Status |
+|-----------|----------|--------|
+| Quarkus matrix-core | 192.168.49.2:30091 /api/v1/health | UP, v2.1.0, 3 replicas |
+| Chat | /v1/chat/completions | GENERATIVE primary (textGenerator.forwardPass) |
+| Tools | /api/v1/tools/{list,invoke,stats} | calculator + datetime working |
+| Training | /api/v1/agent/train | bestFitness 1050 peak (carryover from v3.58.9) |
+| Self-improvement | ChatDrivenTrainer | 60s cycle, threshold 0.4 |
+| Pretrained | /data/models/pretrained/ | 6 models × 25 neurons each = 150 neurons |
+| Grafana | 192.168.49.2:30300 | 3 dashboards |
 
 ## v3.58.9 — Self-improving M.A.T.R.I.X. verified
 
