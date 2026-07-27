@@ -290,15 +290,24 @@ public class AgentBrainService {
         }
         NeuralMemoryResponse mem = this.neuralMemory;
         if (mem == null) {
-            Path corpus = Path.of("models/training_data/combined_training.json");
-            mem = NeuralMemoryResponse.load(this, corpus);
-            if (mem == null) {
-                Path auto = Path.of("models/training_data/auto_generated.jsonl");
-                mem = NeuralMemoryResponse.load(this, auto);
+            // Try corpora in priority order — combined_training.json has the most diverse QA pairs.
+            String[] corpusCandidates = {
+                "models/training_data/combined_training.json",
+                "models/training_data/world_knowledge.json",
+                "models/training_data/comprehensive_training.json",
+                "models/training_data/forum_training_pairs.json",
+                "models/training_data/qa_pairs.json",
+                "models/training_data/auto_generated.jsonl"
+            };
+            for (String path : corpusCandidates) {
+                mem = NeuralMemoryResponse.load(this, Path.of(path));
+                if (mem != null) {
+                    log.info("NeuralMemoryResponse loaded from {}: {} corpus entries", path, mem.corpusSize());
+                    break;
+                }
             }
             if (mem != null) {
                 this.neuralMemory = mem;
-                log.info("NeuralMemoryResponse loaded: {} corpus entries", mem.corpusSize());
             }
         }
         if (mem == null) {
@@ -329,17 +338,27 @@ public class AgentBrainService {
      */
     public void preloadNeuralMemory() {
         if (neuralMemory == null) {
-            Path corpus = Path.of("models/training_data/combined_training.json");
-            NeuralMemoryResponse mem = NeuralMemoryResponse.load(this, corpus);
-            if (mem == null) {
-                Path auto = Path.of("models/training_data/auto_generated.jsonl");
-                mem = NeuralMemoryResponse.load(this, auto);
+            // Load the largest / most diverse corpus first; combined_training.json
+            // has 6.6K+ QA pairs and is the primary knowledge source.
+            String[] corpusCandidates = {
+                "models/training_data/combined_training.json",
+                "models/training_data/world_knowledge.json",
+                "models/training_data/comprehensive_training.json",
+                "models/training_data/forum_training_pairs.json",
+                "models/training_data/qa_pairs.json",
+                "models/training_data/auto_generated.jsonl"
+            };
+            NeuralMemoryResponse mem = null;
+            for (String path : corpusCandidates) {
+                mem = NeuralMemoryResponse.load(this, Path.of(path));
+                if (mem != null) {
+                    log.info("NeuralMemoryResponse preloaded from {}: {} corpus entries, {}ms",
+                            path, mem.corpusSize(), 0);
+                    this.neuralMemory = mem;
+                    break;
+                }
             }
-            if (mem != null) {
-                this.neuralMemory = mem;
-                log.info("NeuralMemoryResponse preloaded: {} corpus entries, {}ms",
-                        mem.corpusSize(), 0);
-            } else {
+            if (mem == null) {
                 log.warn("NeuralMemoryResponse: no corpus available for preload");
             }
         }

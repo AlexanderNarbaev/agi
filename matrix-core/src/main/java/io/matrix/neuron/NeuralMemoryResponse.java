@@ -9,8 +9,10 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Generates responses using pretrained neuron activations + memory retrieval.
@@ -124,17 +126,23 @@ public final class NeuralMemoryResponse {
         // Arg-sort by descending score
         int[] topIndices = topK(scores, TOP_K);
 
-        // Compose response from the best matches
+        // Compose response from the best matches, deduping near-duplicates
         StringBuilder sb = new StringBuilder();
+        Set<String> seenOutputs = new HashSet<>();
         for (int idx : topIndices) {
-            if (idx >= 0 && scores[idx] > 0.0f) {
+            if (idx >= 0 && scores[idx] > 0.05f) {
                 TrainingPair pair = corpus.get(idx);
-                if (sb.length() > 0) {
-                    sb.append(' ');
-                }
-                // Take the most relevant sentence from each top match
                 String bestSentence = extractBestSentence(pair.output, querySig);
-                sb.append(bestSentence);
+                // Dedup by sentence-content fingerprint (first 60 chars, lowercased)
+                String fp = bestSentence.length() > 60
+                        ? bestSentence.substring(0, 60).toLowerCase().trim()
+                        : bestSentence.toLowerCase().trim();
+                if (seenOutputs.add(fp)) {
+                    if (sb.length() > 0) {
+                        sb.append(' ');
+                    }
+                    sb.append(bestSentence);
+                }
             }
         }
 
