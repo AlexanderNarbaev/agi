@@ -19,7 +19,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * Self-improving agent: decomposes complex tasks, plans execution,
  * and continuously improves the system.
  */
-@Path("/api/v1/agent")
+@Path("/api/v1/self-agent")
 @Produces(MediaType.APPLICATION_JSON)
 public class SelfAgentResource {
 
