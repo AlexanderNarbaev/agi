@@ -25,6 +25,7 @@ import java.util.concurrent.atomic.AtomicLong;
  *
  * <p>Ref: Research Synthesis 2026-Q3 §3.1
  */
+@jakarta.enterprise.context.ApplicationScoped
 public final class HierarchicalMemory {
 
     /**
