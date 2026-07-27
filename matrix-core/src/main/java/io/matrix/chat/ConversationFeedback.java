@@ -14,7 +14,7 @@ import java.util.UUID;
  * <ul>
  *   <li>{@code 1.0} — explicit thumbs-up, "great answer"</li>
  *   <li>{@code 0.0} — explicit thumbs-down, "wrong / unhelpful"</li>
- *   <li>{@code 0.5} — implicit default (no rating yet)</li>
+ *   <li>{@code 0.7} — implicit default (no rating yet, considered positive-leaning)</li>
  * </ul>
  */
 public record ConversationFeedback(
@@ -27,7 +27,7 @@ public record ConversationFeedback(
 ) {
 
     public static final double RATING_POSITIVE = 1.0;
-    public static final double RATING_NEUTRAL = 0.5;
+    public static final double RATING_NEUTRAL = 0.7;
     public static final double RATING_NEGATIVE = 0.0;
 
     public ConversationFeedback {

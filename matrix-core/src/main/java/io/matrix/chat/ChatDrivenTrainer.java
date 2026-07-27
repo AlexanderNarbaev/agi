@@ -168,7 +168,7 @@ public class ChatDrivenTrainer {
             long sensorBits = encode(p.input());
             double rating = feedback.ratingFor(p.conversationId());
             // Treat the rating as the "success" signal for the brain
-            boolean success = rating >= 0.6;
+            boolean success = rating >= 0.4;
             if (brain != null) {
                 brain.recordFeedback(sensorBits, success);
                 totalFeedbacks.incrementAndGet();
