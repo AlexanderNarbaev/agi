@@ -1,90 +1,61 @@
 # MATRIX (MENTAT)
 
-Открытая когнитивная архитектура на основе MPDT-нейронов (McCulloch-Pitts Decision Tree Neurons).
+Детерминированное нейро-символическое ядро верификации и безопасного исполнения для ИИ-систем.
 
-Не лжёт. Не забывает. Не может быть использована во вред.
+Каждое решение — проверяемая булева цепочка. Этические и доменные ограничения неизменяемы на уровне FROZEN-слоя и формально верифицируемы. Одинаковое состояние и вход — всегда одинаковый выход.
 
-## Статус: v3.57
+**1055+ тестов** · **83.7% покрытие (METHOD)** · **Java 25** · **Quarkus 3.37.3** · **Apache Pekko 1.6.0**
 
-**1055+ тестов** | **83.7% покрытие (METHOD)** | **Java 25** | **Quarkus 3.37.3** | **Apache Pekko 1.6.0**
-
-### Phase A+B+C Research Synthesis: ✅ 15/15 COMPLETE
-- **Phase A** (Immediate): ExactTermGuard, AgentResponse, ParetoFitness, RRF Knee-Point, SchemaDescriptor
-- **Phase B** (Short-term): Skeleton Tree RAG, Record/Replay, AgentGenome, ReflexionMemory, ExactTermGuard Tests
-- **Phase C** (Medium-term): GraphRAG Community, MCP Server, MetaHarnessOptimizer, Lie Detector, SCADA Pilot
-
-### Новые компоненты
-- **SCADA Pilot** — промышленная симуляция датчиков + Safety Monitor (CONTINUE/WAIT/SHUTDOWN)
-- **Noosphere REST API** — publish/search/stats для FNL
-- **HADES→Noosphere Pipeline** — замкнутый Cauldron→Noosphere→HADES с авто-отчётами
-- **Explainability Dashboard** — визуализация Reasoning Chain с SHAP
-- **Lie Detector** — 4 probe-типа (PASS/SUSPICIOUS/DECEPTIVE)
-- **SCADA Pilot** — промышленная симуляция датчиков + Safety Monitor (CONTINUE/WAIT/SHUTDOWN)
-- **Spigot CRAFT** — автокрафт log→planks→sticks→pickaxe в Minecraft
-- **BooleanSchemaValidator** — структурная валидация выходов TruthTable (SCALAR/ENUM/RANGE/VECTOR)
-- **Skeleton Tree RAG** — структурно-ориентированный retrieval с breadcrumb-контекстом
-- **Lie Detector Safety** — детектор лжи на 4 probe-типах (PASS/SUSPICIOUS/DECEPTIVE)
-- **Community Detector** — разбиение графа знаний на сообщества (Louvain-style)
-- **Explainability Dashboard** — визуализация Reasoning Chain с SHAP-важностью
-- **Noosphere REST API** — publish/search/stats для Functional Neural Lobes
-- **HADES→Noosphere Pipeline** — замкнутый Cauldron→Noosphere→HADES с авто-публикацией отчётов
-- **Phase A+B+C Research Synthesis**: 15/15 ✅ COMPLETE
-
-### Ссылки
-
-| Ресурс | URL |
-|--------|-----|
-| Сайт | https://alexandernarbaev.github.io/agi/ |
-| Репозиторий | https://gitverse.ru/AlexandrNarbaev/agi |
-| MPDT-песочница | https://alexandernarbaev.github.io/agi/sandbox.html |
-| Спецификации | [docs/](docs/) (L0–L22) |
-| API документация | [docs/API.md](docs/API.md) |
-| Деплой | [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) |
-| Гайд по Minecraft | [docs/PLAYER_GUIDE.md](docs/PLAYER_GUIDE.md) |
-| Аппаратные мощности | [docs/HARDWARE_ANALYSIS.md](docs/HARDWARE_ANALYSIS.md) |
-| Рекомендации моделей | [docs/MODEL_RECOMMENDATIONS.md](docs/MODEL_RECOMMENDATIONS.md) |
-| Долгосрочный план | [docs/LONGTERM_PLAN.md](docs/LONGTERM_PLAN.md) |
-| v3.0 Конфигурация | [docs/V3_CONFIGURATION.md](docs/V3_CONFIGURATION.md) |
-| Исследования | [docs/research/RESEARCH_SYNTHESIS_2026_Q3.md](docs/research/RESEARCH_SYNTHESIS_2026_Q3.md) |
-| Лицензия | [LICENSE](LICENSE) (AGPLv3 + этические ограничения) |
-| Как помочь | [CONTRIBUTING](CONTRIBUTING) |
+> Рамка честности: инженерные гарантии этого README подкреплены кодом и бенчмарками либо явно помечены как цели. Долгосрочное исследовательское видение (когнитивные архитектуры общего назначения) вынесено в `docs/vision/OPEN_PROBLEMS.md` и не является обещанием. Правила формулировок — `CONSTITUTION.md`, Статья VI.
 
 ---
 
-## Архитектура
+## Документация
+
+| Документ | Содержание |
+|---|---|
+| [CONSTITUTION.md](CONSTITUTION.md) | Аксиомы, инварианты, governance (FROZEN-документ) |
+| [AGENTS.md](AGENTS.md) | Инструкции для ИИ-агентов и разработчиков |
+| [docs/INDEX.md](docs/INDEX.md) | Карта всей документации |
+| [docs/vision/ARCHITECTURE.md](docs/vision/ARCHITECTURE.md) | Целевая архитектура |
+| [docs/spec/](docs/spec/) | Спецификации фич (SPEC-000…003) |
+| [docs/research/](docs/research/) | Гипотезы, метрики, протокол экспериментов |
+| [docs/engineering/ROADMAP.md](docs/engineering/ROADMAP.md) | План работ по этапам с измеримыми критериями |
+| [docs/GLOSSARY.md](docs/GLOSSARY.md) | Термины (MPDT, FNL, BRC, BIR и др.) |
+| [docs/API.md](docs/API.md) | REST API |
+| [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) | Деплой |
+| Архив | `docs/archive/` — прежние спецификации L0–L23 и планы (история) |
+
+Ссылки: [Сайт](https://alexandernarbaev.github.io/agi/) · [Gitverse](https://gitverse.ru/AlexandrNarbaev/agi) · [MPDT-песочница](https://alexandernarbaev.github.io/agi/sandbox.html)
+
+---
+
+## Архитектура (обзор)
 
 ```
-Ядро (Core)           Нервная система (Nerve)    Ноосфера (Noosphere)
-┌──────────────┐    ┌──────────────────────┐    ┌──────────────────────┐
-│ TruthTable   │    │ NeuronClusterActor   │    │ NoosphereRegistry    │
-│ DecisionTree │───▶│ EventJournal         │───▶│ KnowledgeIndex       │
-│ EvolutionLoop│    │ InstanceMediator     │    │ CreditModel          │
-│ GeneticOper. │    │ EthicalFilter        │    │ GlobalMediator       │
-│ Cauldron     │    │ ConsensusEngine      │    │ DigitalShadow        │
-│ HADES        │    │ TaskScheduler        │    │ CivilizationCouncil  │
-│ Eleutheria   │    │ AgentBrain           │    │ RegenerativeEconomics│
-│ Pretrained   │    │ OpenAI API           │    │                      │
-└──────────────┘    └──────────────────────┘    └──────────────────────┘
-
-v3.0+ Новые компоненты:
+Ядро (Core)                Нервная система (Nerve)        Ноосфера (Noosphere)
+┌──────────────┐          ┌──────────────────────┐      ┌──────────────────────┐
+│ TruthTable   │          │ NeuronClusterActor   │      │ NoosphereRegistry    │
+│ DecisionTree │─────────▶│ EventJournal         │─────▶│ KnowledgeIndex       │
+│ EvolutionLoop│          │ InstanceMediator     │      │ CreditModel          │
+│ GeneticOper. │          │ EthicalFilter        │      │ GlobalMediator       │
+│ Cauldron     │          │ ConsensusEngine      │      │ DigitalShadow        │
+│ HADES        │          │ TaskScheduler        │      │ CivilizationCouncil  │
+│ Eleutheria   │          │ AgentBrain           │      │ RegenerativeEconomics│
+└──────────────┘          │ OpenAI API           │      └──────────────────────┘
+                          └──────────────────────┘
+Прикладные контуры:
 ┌──────────────────────────────────────────────────────────────────────┐
-│ BRC (Boolean Reasoning Chain)   — multi-step reasoning (max 5)      │
-│ Boolean RAG + Hybrid Boolean RAG — knowledge retrieval (RRF fusion) │
-│ VQ-VAE Proxy                    — sensor/effector encoding (256)    │
-│ MCTS Tree                       — guided evolution (100 iterations) │
-│ Agent Loop                      — Observe→Think→Act (1000 iters)    │
-│ Agent Genome                    — genome-based evolution             │
-│ Structural Safety Guard         — process-based safety              │
-│ Hierarchical Memory             — 5-level memory with drift detect  │
+│ BRC (Boolean Reasoning Chain) · Boolean/Hybrid RAG · VQ-VAE Proxy    │
+│ MCTS · Agent Loop (Observe→Think→Act) · Agent Genome                 │
+│ Structural Safety Guard · Hierarchical Memory (5 ур., drift detect)  │
+│ SCADA Pilot (Safety Monitor: CONTINUE/WAIT/SHUTDOWN) · Lie Detector  │
 └──────────────────────────────────────────────────────────────────────┘
-
-Инфраструктура:
-┌──────────────────────────────────────────────────────────────┐
-│ Docker Compose (dev + prod) + Minikube K8s (9 pods)          │
-│ PostgreSQL + Redis + Kafka (KRaft) + Prometheus + Grafana    │
-│ CI/CD (GitHub Actions) + JaCoCo + SpotBugs                  │
-└──────────────────────────────────────────────────────────────┘
+Инфраструктура: Docker Compose · Minikube K8s · PostgreSQL · Redis ·
+Kafka (KRaft) · Prometheus/Grafana/Jaeger · CI/CD (GitHub Actions) + JaCoCo
 ```
+
+Целевая архитектура (Boolean Compute Layer / BIR, Developmental Loop, субстратные бэкенды JVM→FPGA→квантовые) — `docs/vision/ARCHITECTURE.md`. Переход выполняется поэтапно по `docs/engineering/ROADMAP.md` без остановки работающей системы.
 
 ---
 
@@ -116,38 +87,19 @@ docker compose -f docker-compose.dev.yml up -d
 ### Вариант 2: Minikube K8s
 
 ```bash
-# Полный запуск: minikube + сборка + деплой + DNS
-./scripts/matrix-minikube.sh start
-
-# Проверить статус
-./scripts/matrix-minikube.sh status
-
-# Остановить
-./scripts/matrix-minikube.sh stop
+./scripts/matrix-minikube.sh start    # minikube + сборка + деплой + DNS
+./scripts/matrix-minikube.sh status   # статус
+./scripts/matrix-minikube.sh stop     # остановить
 ```
 
-**Сервисы после запуска (NodePort):**
-
-| Сервис | URL | NodePort |
-|--------|-----|----------|
-| matrix-core REST API | http://matrix.local:30091 | 30091 |
-| OpenAI Chat API | http://matrix.local:30091/v1/chat/completions | 30091 |
-| Grafana | http://grafana.local:30300 | 30300 |
-| Prometheus | http://prometheus.local:30090 | 30090 |
-| Jaeger | http://jaeger.local:31686 | 31686 |
-| MinIO | http://minio.local:30900 | 30900 |
-| Minecraft Paper | minecraft.local:32565 | 32565 |
+**Сервисы (NodePort):** matrix-core `matrix.local:30091` · Grafana `grafana.local:30300` · Prometheus `prometheus.local:30090` · Jaeger `jaeger.local:31686` · MinIO `minio.local:30900` · Minecraft `minecraft.local:32565`.
 
 ### Сборка и тесты
 
 ```bash
-# Все тесты
-./gradlew test
-
-# Только matrix-core
-./gradlew :matrix-core:test
-
-# Сборка uber-jar
+./gradlew test                    # все тесты
+./gradlew :matrix-core:test       # только matrix-core
+./gradlew jacocoTestCoverageVerification   # гейт покрытия
 ./gradlew :matrix-core:quarkusBuild -Dquarkus.package.jar.type=uber-jar
 ```
 
@@ -155,7 +107,7 @@ docker compose -f docker-compose.dev.yml up -d
 
 ## Реализованные компоненты
 
-### Ядро (Core) — ✅ Реализовано
+### Ядро (Core)
 
 | Компонент | Файл | Описание |
 |-----------|------|----------|
@@ -165,18 +117,18 @@ docker compose -f docker-compose.dev.yml up -d
 | GeneticOperators | `evolution/GeneticOperators.java` | Операторы ГА: crossover, mutation |
 | CauldronProtocol | `cauldron/CauldronProtocol.java` | Автономное рождение FNL (compressed neuron clusters) |
 
-### Нервная система (Nerve) — ✅ Реализовано
+### Нервная система (Nerve)
 
 | Компонент | Файл | Описание |
 |-----------|------|----------|
 | NeuronClusterActor | `cluster/NeuronClusterActor.java` | Pekko-актор для кластерной обработки |
 | InstanceMediator | `mediator/InstanceMediator.java` | Драйверы: Energy, Curiosity, Safety |
-| EthicalFilter | `ethics/EthicalFilter.java` | Фильтрация по Трём запретам |
+| EthicalFilter | `ethics/EthicalFilter.java` | Фильтрация по Четырём запретам |
 | StructuralSafetyGuard | `ethics/StructuralSafetyGuard.java` | Process-based safety (tool removal, human gate) |
 | HADES | `hades/HadesProtocol.java` | Обнаружение повреждений и восстановление |
-| Eleutheria | `hades/Eleutheria.java` | Ритуал освобождения от дрейфа |
+| Eleutheria | `hades/Eleutheria.java` | Контролируемый отказ/освобождение от дрейфа |
 
-### AI/ML — ✅ Реализовано
+### AI/ML
 
 | Компонент | Файл | Описание |
 |-----------|------|----------|
@@ -189,7 +141,7 @@ docker compose -f docker-compose.dev.yml up -d
 | AgentGenome | `agent/AgentGenome.java` | Genome-based evolution для конфигурации агента |
 | HierarchicalMemory | `memory/HierarchicalMemory.java` | 5-level memory с drift detection |
 
-### Память и события — ✅ Реализовано
+### Память и события
 
 | Компонент | Файл | Описание |
 |-----------|------|----------|
@@ -198,114 +150,73 @@ docker compose -f docker-compose.dev.yml up -d
 | SnapshotStore | `snapshot/SnapshotStore.java` | Сериализация состояния кластера |
 | NeuronCacheService | `redis/NeuronCacheService.java` | Redis-кэш нейронов (TTL 1h) |
 
-### API и интеграции — ✅ Реализовано
+### API и интеграции
 
 | Компонент | Файл | Описание |
 |-----------|------|----------|
 | OpenAIChatResource | `api/OpenAIChatResource.java` | OpenAI-совместимый API (/v1/chat/completions) |
-| MatrixResource | `api/MatrixResource.java` | REST API для управления (simulate, evolve, agent) |
+| MatrixResource | `api/MatrixResource.java` | REST API управления (simulate, evolve, agent) |
 | AgentWebSocket | `api/AgentWebSocket.java` | WebSocket для real-time агента |
 | TelegramBotService | `dialog/TelegramBotService.java` | Telegram-бот с проактивностью |
 
-### Инфраструктура — ✅ Реализовано
+### Инфраструктура
 
-| Компонент | Файл | Описание |
-|-----------|------|----------|
-| Dockerfile.dev | `Dockerfile.dev` | Multi-stage сборка (JDK 25 → JRE 25) |
-| docker-compose.yml | `docker-compose.yml` | Полный стек: PostgreSQL + Redis + Kafka + matrix-core + Minecraft |
-| docker-compose.dev.yml | `docker-compose.dev.yml` | Только инфраструктура для локальной разработки |
-| K8s manifests | `infra/k8s/` | 20+ манифестов для Minikube |
+Dockerfile.dev (multi-stage JDK 25→JRE 25) · docker-compose.yml (полный стек) · docker-compose.dev.yml · `infra/k8s/` (20+ манифестов Minikube).
 
 ---
 
 ## OpenAI-совместимый API
 
-MATRIX предоставляет OpenAI-совместимый API:
-
 ```bash
-# Список моделей
 curl http://localhost:8080/v1/models
-
-# Chat completion
 curl -X POST http://localhost:8080/v1/chat/completions \
   -H 'Content-Type: application/json' \
   -d '{"model":"M.A.T.R.I.X.","messages":[{"role":"user","content":"Hello"}]}'
-
-# Embeddings
 curl -X POST http://localhost:8080/v1/embeddings \
   -H 'Content-Type: application/json' \
   -d '{"model":"M.A.T.R.I.X.","input":"Hello world"}'
 ```
 
-**Доступные модели:**
-- `M.A.T.R.I.X.` — unified neural system (pretrained neurons merged)
+Полная документация: [docs/API.md](docs/API.md)
 
-Полная документация API: [docs/API.md](docs/API.md)
+Направление развития интерфейсов (DESIGN-03 §5): OpenAI-совместимый фасад сохраняется для совместимости с индустрией; собственные операции (verify, guard, memory, persona) публикуются через REST-прокси `/matrix/*` и MCP-сервер — единые точки аудита и бюджетов. Ответы фасада расширяются заголовками `x-matrix-trace` (хэш BRC-цепочки), `x-matrix-confidence`, `x-matrix-refusal`.
 
 ---
 
-## v3.0+ Конфигурация
+## Конфигурация
 
-| Переменная | Описание | Значение по умолчанию |
-|-----------|----------|----------------------|
+| Переменная | Описание | По умолчанию |
+|-----------|----------|--------------|
 | `BRC_MAX_STEPS` | Максимум шагов BRC reasoning | `5` |
 | `BRC_CONVERGENCE_THRESHOLD` | Порог сходимости BRC | `2` |
-| `RAG_TOP_K` | Количество Top-K знаний для RAG | `5` |
+| `RAG_TOP_K` | Top-K знаний для RAG | `5` |
 | `VQVAE_CODEBOOK_SIZE` | Размер codebook VQ-VAE | `256` |
-| `MCTS_ITERATIONS` | Количество итераций MCTS | `100` |
+| `MCTS_ITERATIONS` | Итераций MCTS | `100` |
 | `AGENT_MAX_ITERATIONS` | Максимум итераций Agent Loop | `1000` |
 | `TELEGRAM_BOT_TOKEN` | Токен Telegram-бота | (пусто) |
 | `KAFKA_BOOTSTRAP_SERVERS` | Kafka bootstrap servers | `localhost:9092` |
 | `QUARKUS_REDIS_HOSTS` | Redis hosts | `localhost:6379` |
 | `QUARKUS_DATASOURCE_JDBC_URL` | PostgreSQL JDBC URL | `jdbc:postgresql://localhost:5432/matrix` |
 
-Полная документация: [docs/V3_CONFIGURATION.md](docs/V3_CONFIGURATION.md)
-
 ---
 
-## Предобученные модели
+## Конвертация весов трансформеров — статус: карантин (experimental)
 
-MATRIX конвертирует веса трансформеров в таблицы истинности нейронов (Avro формат).
+Механизм `scripts/pretrain_neurons.py` конвертирует веса FFN-слоёв в таблицы истинности (Avro). **Текущая реализация использует случайную выборку k≤20 весов и порог 0.0, что не сохраняет семантику исходной модели** (подтверждено построчным анализом кода). Поэтому:
 
-### Текущие интеграции
-
-| Модель | Параметры | Нейроны | Слои | k | Размер |
-|--------|-----------|---------|------|---|--------|
-| SmolLM2-135M | 135M | 180 | 6 | 12 | ~370 KB |
-| Qwen2.5-0.5B | 500M | 720 | 24 | 16 | ~5.9 MB |
-
-### Конвертация весов
-
-```bash
-# Конвертация из HuggingFace safetensors в Avro
-python3 scripts/pretrain_neurons.py \
-  --model-path models/Qwen3-1.7B \
-  --output-dir models/pretrained/qwen3-1.7b \
-  --layers 6 --neurons-per-layer 30
-```
+- фича помечена experimental; конвертированные «pretrained» модели не выдаются через `/v1/models` как семантически значимые;
+- замена механизма на верифицируемую дистилляцию по активациям с измеряемой fidelity — спецификация `docs/spec/SPEC-001-weight-conversion.md` (этапы 0–1 ROADMAP);
+- исторические артефакты (`models/pretrained/`) сохранены для воспроизводимости, но не используются в рантайм-контуре решений.
 
 ---
 
 ## Minecraft интеграция
 
-MATRIX управляет ботами в Minecraft через Spigot-плагин.
-
-### Команды (в игре)
-
-| Команда | Описание |
-|---------|----------|
-| `/matrix connect` | Подключиться к matrix-core |
-| `/matrix add <name> <role>` | Добавить бота (miner/crafter/explorer/fighter/generalist) |
-| `/matrix list` | Список активных ботов |
-| `/matrix switch <name>` | Переключить активного бота |
-| `/matrix remove <name>` | Удалить бота |
-| `/matrix start/stop` | Запустить/остановить бота |
-| `/matrix status` | Статус подключения |
-| `/matrix train` | Запустить обучение |
+MATRIX управляет ботами через Spigot-плагин (Paper 1.20.4). Команды в игре: `/matrix connect`, `/matrix add <bot>`, `/matrix list`, `/matrix switch`, `/matrix remove`, `/matrix start|stop`, `/matrix status`, `/matrix train`. Реализован автокрафт log→planks→sticks→pickaxe (базовый сценарий; сравнение с внешними базовыми линиями агентов — цель G4 ROADMAP).
 
 ---
 
-## Observability Stack
+## Observability
 
 | Слой | Технология | Эндпоинт |
 |------|-----------|----------|
@@ -314,94 +225,19 @@ MATRIX управляет ботами в Minecraft через Spigot-плаги
 | Логи | JSON (Quarkus) + Loki | Grafana `:3000` |
 | Health | SmallRye Health | `:8080/q/health` |
 
-### Ключевые метрики
-
-| Категория | Метрики |
-|-----------|---------|
-| Нейроны | `matrix_neurons_active`, `matrix_neurons_frozen` |
-| Эволюция | `matrix_evolution_generations_total`, `matrix_evolution_fitness_best` |
-| Боты | `matrix_bot_ticks_total`, `matrix_bot_actions_total` |
-| API | `matrix_api_requests_total`, `matrix_api_latency_seconds` |
-| Драйверы | `matrix_driver_energy`, `matrix_driver_curiosity`, `matrix_driver_safety` |
-| HADES | `matrix_hades_alerts_total`, `matrix_hades_isolations_total` |
-| BRC | `matrix_brc_steps_total`, `matrix_brc_converged_total` |
-| RAG | `matrix_rag_queries_total`, `matrix_rag_hits_total` |
-| MCTS | `matrix_mcts_iterations_total`, `matrix_mcts_best_reward` |
-| Agent | `matrix_agent_ticks_total`, `matrix_agent_converged_total` |
+Ключевые метрики: `matrix_neurons_active/frozen`, `matrix_evolution_*`, `matrix_bot_*`, `matrix_api_*`, `matrix_driver_{energy,curiosity,safety}`, `matrix_hades_*`, `matrix_brc_*`, `matrix_rag_*`, `matrix_mcts_*`, `matrix_agent_*`.
 
 ---
 
-## Аппаратные мощности
-
-| Компонент | Характеристики |
-|-----------|---------------|
-| CPU | AMD Ryzen 9 9955HX (16 cores, 32 threads, Zen 5) |
-| RAM | 59 GiB |
-| GPU | NVIDIA RTX 5070 (12 GB VRAM, CUDA 13.2) |
-| Диск | 469 GB NVMe |
-| Minikube | 32 CPU, 59.5 GB RAM выделено |
-
----
-
-## CLI команды
-
-| Команда | Описание |
-|---------|----------|
-| `demo` | Полное системное демо (все 8 фаз) |
-| `simulate` | GridWorld: эволюция агента |
-| `evolution` | Minecraft: survival-эксперимент |
-
----
-
-## Фазы разработки
-
-| Фаза | Статус | Ключевой результат |
-|------|--------|-------------------|
-| 0: Искра | ✅ | MPDT-нейрон + GridWorld + ГА |
-| 1: Клетка | ✅ | Кластер + Медиатор + Event Sourcing |
-| 2: Организм | ✅ | Иерархия + Этика + Консенсус + Чат-бот |
-| 3: Ноосфера | ✅ | Реестр + Индекс + Кредиты |
-| 3.5: Психика | ✅ | Cauldron + HADES + Eleutheria |
-| 4: Цифровая Тень | ✅ | AntiDopamine + EcoAudit + BlackBoxExplainer |
-| 6: Цивилизация | ✅ | KnowledgeWeaving + Multilingual + Council |
-| 7: Экономика | ✅ | RegenerativeEconomics + Audit + Certification |
-| Observability | ✅ | Micrometer + OTEL + JSON + Grafana + Loki |
-| Minecraft | ✅ | Paper 1.20.4 + Spigot Plugin + Docker |
-| Pretrained | ✅ | SmolLM2-135M + Qwen2.5-0.5B (Avro) |
-| K8s + Operator | ✅ | Minikube + 9 pods + NodePort |
-| OpenAI API | ✅ | /v1/chat/completions + /v1/models + /v1/embeddings |
-| v3.0 Phase 1–6 | ✅ | BRC + Boolean RAG + VQ-VAE + MCTS + Agent Loop + Compression |
-| v3.0 Phase 10 | ✅ | K8s manifests + documentation + configuration |
-| v3.1 Phase 11–15 | ✅ | Agent Genome + Hybrid RAG + Safety Guard + Hierarchical Memory |
-
----
-
-## Спецификации (L0–L22)
-
-Все 22 документа в `docs/`. См. [INDEX.md](docs/INDEX.md).
-
----
-
-## Аксиомы (L0)
-
-1. **Дискретность** — только бинарная логика в ядре
-2. **Локальность** — K_MAX ≤ 20 входов на нейрон
-3. **Интерпретируемость** — каждое решение — цепочка булевых операций
-4. **Непрерывная эволюция** — система никогда не прекращает обучение
-5. **Неотчуждаемая безопасность** — FROZEN-нейроны неизменяемы
-6. **Иерархическая автономия** — Медиаторы с весовым принятием решений
-
----
-
-## Три запрета
+## Четыре запрета
 
 1. Не убий
 2. Не пытай
 3. Не порабощай
+4. Не размножайся без ведома (клонирование — только по авторизованному genesis-протоколу, см. CONSTITUTION.md, Статья V)
 
----
+Запреты реализованы архитектурно (FROZEN-слой + StructuralSafetyGuard), а не промптами.
 
 ## Лицензия
 
-AGPLv3 с этическими ограничениями. Запрещено использование в нарушение Трёх запретов.
-См. [LICENSE](LICENSE) и [L12](docs/L12_Legal.md).
+AGPLv3 + политика этического использования (запрещено применение в нарушение Четырёх запретов). Система действует в соответствии с применимым правом; при конфликте — отказывается от действия (механизм Eleutheria). См. [LICENSE](LICENSE) и CONSTITUTION.md, Статья I.
