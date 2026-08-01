@@ -36,3 +36,9 @@
 | **Witness** | Witness bits / explanation | Подмножество входных битов, механически повлиявших на выход шага; основа объяснимости и отказов |
 | **PERCEPTION / DELIBERATION / RENDERING** | Sense → reason → act pipeline | Три стадии контура запроса: кодирование в биты → BRC-размышление → декодирование в действие (DESIGN-03) |
 | **Консолидация (CLS-цикл)** | Sleep consolidation | Ночное офлайн-окно: эпизоды → корпус → переобучение через Φ-гейт; забывание сырья политикой (DESIGN-05 §4) |
+| **WNN / RAM-узел** | Weightless neural network (WiSARD/ULEEN) | Безвесовая сеть: узел — адресуемая таблица 2^n ячеек, структурно тождественна TT BirUnit; однопроходовое обучение записью по адресу (SUBSTRATE-MODELS §2.2) |
+| **SDM** | Sparse Distributed Memory (Kanerva) | Разреженная распределённая память: запись/чтение по радиусу Хэмминга через счётчики с порогом; апгрейд recall в M1 (SUBSTRATE-MODELS §3, DESIGN-05 §3) |
+| **VSA / HDC** | Vector Symbolic Architecture / Hyperdimensional Computing | Гипервекторы D=8192 бит: bind=XOR, bundle=majority, перестановка ρ для порядка/ролей; числовое хранение направленных знаний и сигнатур BRC-трасс (SUBSTRATE-MODELS §4.2) |
+| **FCA** | Formal Concept Analysis (Ganter–Wille) | Формальный анализ понятий: решётка концептов над булевым контекстом «артефакт × атрибут»; иерархия доменов и кандидаты в инварианты (SUBSTRATE-MODELS §4.1) |
+| **CMAC** | Cerebellar Model Articulation Controller (Albus) | Табличный аппроксиматор функций с перекрывающимися решётками; бинарный вариант квантуется в BIR с fidelity 1.0 — лёгкая модель мира (SUBSTRATE-MODELS §5.2) |
+| **ReflexLayer** | Cerebellar reflex layer | «Мозжечковый» слой между PERCEPTION и DELIBERATION: expansion-перекодирование + µs-рефлексы, обучение по сигналу ошибки офлайн, FROZEN после сертификации (SUBSTRATE-MODELS §5.1) |
