@@ -1,58 +1,19 @@
-📍 v3.58.5 — FULL SYSTEM OPERATIONAL. All 8 improvement plans implemented. Audit blockers resolved. Follow-up: monitor, train, test, CI. Both remotes in sync. M.A.T.R.I.X. live with Grafana dashboards.
-🚀 Active: Self-improving system with 20+ REST endpoints, multi-modal I/O (text/image/audio/video), P2P, federated learning, formal verification, tool integration, multi-modal ingestion, self-improving agent. Live monitor TUI, training 1121+ steps. Grafana: 3 MATRIX dashboards. CI validated in eclipse-temurin:25-jdk.
-🛑 Protected: K_MAX=20, FROZEN-нейроны, Quarkus 3.37.3, Java 25, Pekko 1.6.0, AGPLv3+ethics, 82% coverage floor
+# WAL — Write-Ahead Log сессий (checkpoint, не лог)
 
-## System Status v3.58 (2026-07-26)
+**Статус: ephemeral.** Переписывается в конце каждой сессии. Детали реализации — в спеках и git-истории, не здесь.
 
-### Infrastructure ✅
-- PostgreSQL: Running (port 5433, Docker)
-- Redis: Running (port 6379, Docker)
-- Kafka: Running (port 9092, Docker, KRaft)
-- Kubernetes: Minikube + 3+ replicas
+## Активный фокус
+- Этап 0 ROADMAP: честная рамка (карантин конвертации весов, правка claims). Ссылки: ROADMAP#этап-0, SPEC-001#этап-A
 
-### Application ✅
-- Quarkus: Started in 2.4s
-- Health: UP
-- Build: BUILD SUCCESSFUL
-- Tests: 90+ tests pass
+## Правила сессии
+- НЕ ТРОГАТЬ: ethics/**, CONSTITUTION.md, avro/**, workflows
+- Хэширование/схемы: только обратимо-совместимые изменения Avro
 
-### Capabilities (20+ REST endpoints)
-- Chat API: OpenAI-compatible
-- Federated Learning: /api/v1/federated/*
-- P2P Noosphere: /api/v1/noosphere/p2p/*
-- Multimodal: /api/v1/multimodal/*, /api/v1/generation/*
-- Ingestion: /api/v1/ingest/* (text, binary, URL)
-- Agent (self-improving): /api/v1/agent/*
-- Tools: /api/v1/tools/* (web, file, shell, calc)
-- Verification: /api/v1/verification/*
-- Import: /api/v1/import/* (HuggingFace)
+## Что сделано
+- [x] Установлен пакет документации (INSTALL.md)
 
-### Modalities
-- Text: ✅
-- Image: ✅
-- Audio: ✅
-- Video: ✅
+## Следующее действие
+Карантин `scripts/pretrain_neurons.py` (SPEC-001 этап A): experimental-флаг, исключение из `/v1/models`, тест. Альтернатива: правка claims в docs/API.md.
 
-### Training & Evolution
-- Training cycles: 100+ (active)
-- Evolution steps: 100+ (active)
-- Models downloaded: SmolLM2-360M, Qwen3-0.6B
-
-### Documentation ✅
-- README.md — project overview
-- AGENTS.md — AI agent instructions
-- .opencode/AGENTS.md — OpenCode-specific instructions
-- INSTALL.md — installation guide
-- MIGRATION.md — migration & portability
-- WAL.md — current state
-- docs/INDEX.md — knowledge base map (193+ entries)
-- docs/PROJECT_AUDIT_v3.58.md — full audit
-- docs/RUNBOOK.md — operations runbook
-- docs/ARCHITECTURE.md — system architecture
-
-### Code Stats
-- Production classes: ~240+
-- Test classes: ~150+
-- Test coverage: ≥82%
-- Git commits: 30+
-- Pushed to: origin (GitHub) + gitverse
+## Известные проблемы
+- Дыры покрытия: api/, cli/, cluster/events/, R2dbcEventJournal (этап 1 ROADMAP)
