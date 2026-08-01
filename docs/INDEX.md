@@ -22,6 +22,7 @@
 | Документ | Назначение |
 |---|---|
 | [science/FOUNDATIONS.md](science/FOUNDATIONS.md) | Что заимствовано из математики, физики, биологии, химии, медицины, психологии, педагогики, социологии — с механизмами и метриками; что отвергнуто и почему |
+| [science/SUBSTRATE-MODELS.md](science/SUBSTRATE-MODELS.md) | Субстратные модели: конечные автоматы, свёрточные схемы, WNN, комбинаторика памяти (SDM), FCA-классификация знаний, VSA-векторы, мозжечковый ReflexLayer, CMAC, композиция кластеров — с переносом в BIR и метриками |
 
 ## Спецификации фич
 
@@ -48,7 +49,7 @@
 
 | Документ | Назначение |
 |---|---|
-| [research/HYPOTHESES.md](research/HYPOTHESES.md) | Пререгистрированные гипотезы H-001…H-009 и карточки экспериментов EXP-001…009 |
+| [research/HYPOTHESES.md](research/HYPOTHESES.md) | Пререгистрированные гипотезы H-001…H-011 и карточки экспериментов EXP-001…011 |
 | [research/METRICS.md](research/METRICS.md) | Реестр метрик: формула, источник, команда, порог; теоретические и прототипные значения |
 | [research/ANALYSIS-laptop-feasibility.md](research/ANALYSIS-laptop-feasibility.md) | Пробелы/возможности + расчёт ноутбучной реализуемости vs локальные LLM |
 | [research/prototype/](research/prototype/) | Воспроизводимый прототип BIR (код + результаты) |
