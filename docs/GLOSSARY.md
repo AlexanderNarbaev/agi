@@ -42,3 +42,5 @@
 | **FCA** | Formal Concept Analysis (Ganter–Wille) | Формальный анализ понятий: решётка концептов над булевым контекстом «артефакт × атрибут»; иерархия доменов и кандидаты в инварианты (SUBSTRATE-MODELS §4.1) |
 | **CMAC** | Cerebellar Model Articulation Controller (Albus) | Табличный аппроксиматор функций с перекрывающимися решётками; бинарный вариант квантуется в BIR с fidelity 1.0 — лёгкая модель мира (SUBSTRATE-MODELS §5.2) |
 | **ReflexLayer** | Cerebellar reflex layer | «Мозжечковый» слой между PERCEPTION и DELIBERATION: expansion-перекодирование + µs-рефлексы, обучение по сигналу ошибки офлайн, FROZEN после сертификации (SUBSTRATE-MODELS §5.1) |
+| **Модуль сигналов (SignalModule)** | Signal I/O module (codec with contract) | Изолированный преобразователь «мысль ⇄ медиа»: контракт id/version/direction/mediaType/bitWidth/bitMeaning; BIR внутри, биты+witness снаружи (DESIGN-06) |
+| **ModuleRegistry** | Module registry (explicit, frozen) | Реестр модулей сигналов: явная регистрация (R1–R4), детерминированный resolve, freeze после сборки; без ServiceLoader/рефлексии — GraalVM-совместимо (DESIGN-06 §3, JAVA_NATIVE §2) |

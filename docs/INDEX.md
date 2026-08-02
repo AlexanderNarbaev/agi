@@ -44,6 +44,7 @@
 | [design/DESIGN-03-pipeline.md](design/DESIGN-03-pipeline.md) | сквозной контур | Ввод → биты (кодировщики), размышление (BRC-цикл с бюджетами), вывод (декодеры); OpenAI-фасад, прокси, MCP; изоляция внешних зависимостей |
 | [design/DESIGN-04-learning.md](design/DESIGN-04-learning.md) | офлайн-обучение | TsetlinTrainer (формулы), дистилляция (конвейер TREPAN), интерактивное обучение с учителем, предобучение Persona, fading |
 | [design/DESIGN-05-memory.md](design/DESIGN-05-memory.md) | состояние | Слои M0–M4, recall, консолидация («сон»), забывание/tombstone, журнал событий, дрейф, коллективная память |
+| [design/DESIGN-06-signal-modules.md](design/DESIGN-06-signal-modules.md) | периферия | Модули входящих/исходящих сигналов: контракт SignalModule, реестр, медиа-линейки (текст/число/аудио/видео/сетки/VSA), формы деплоя, измерения Java-прототипа |
 
 ## Исследования
 
@@ -52,7 +53,8 @@
 | [research/HYPOTHESES.md](research/HYPOTHESES.md) | Пререгистрированные гипотезы H-001…H-011 и карточки экспериментов EXP-001…011 |
 | [research/METRICS.md](research/METRICS.md) | Реестр метрик: формула, источник, команда, порог; теоретические и прототипные значения |
 | [research/ANALYSIS-laptop-feasibility.md](research/ANALYSIS-laptop-feasibility.md) | Пробелы/возможности + расчёт ноутбучной реализуемости vs локальные LLM |
-| [research/prototype/](research/prototype/) | Воспроизводимый прототип BIR (код + результаты) |
+| [research/prototype/](research/prototype/) | Воспроизводимый прототип BIR (код + результаты, Python/numpy) |
+| [research/prototype-java/](research/prototype-java/) | Java-прототип модулей сигналов на BIR (javac, без зависимостей; замеры on/off-heap) |
 | [research/papers/](research/papers/) | Научные публикации (автогенерация из артефактов) + протокол |
 | research/reports/ | Отчёты экспериментов (включая отрицательные) |
 
@@ -63,6 +65,8 @@
 | [engineering/ROADMAP.md](engineering/ROADMAP.md) | Цели G1–G6, этапы 0–5 с критериями выхода, стратегия миграции |
 | [engineering/JAVA_STACK.md](engineering/JAVA_STACK.md) | Технологический стек: принято/отвергнуто, ONNX-контракт |
 | [engineering/ADR-001-matrix-vs-rag-system-roles.md](engineering/ADR-001-matrix-vs-rag-system-roles.md) | rag-system как внешняя зависимость: заимствование принципов, интеграция по контракту |
+| [engineering/JAVA_NATIVE.md](engineering/JAVA_NATIVE.md) | GraalVM native-image: правила кода; ограничения JMM и кучи (off-heap, публикация, false sharing); путь субстратов JVM→native→FPGA→quantum |
+| [agents/](agents/) | Специализированные протоколы для агентов: модули сигналов (AGENTS-MODULES), исследования и статьи (AGENTS-RESEARCH) |
 
 ## Операционные документы
 
