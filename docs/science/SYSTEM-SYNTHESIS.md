@@ -8,8 +8,9 @@ depends_on: [SUBSTRATE-MODELS, ALGORITHM-ATLAS, GOALS-REQUIREMENTS, DESIGN-01…
 # SYSTEM-SYNTHESIS. Единая система
 
 Этот документ — сшивка трёх томов исследования (SUBSTRATE-MODELS §1–§10,
-ALGORITHM-ATLAS §1–§32 — том 2 в двух файлах: ALGORITHM-ATLAS.md (§1–§23) и
-ALGORITHM-ATLAS-WAVE4.md (§24–§32)) в **один стек механизмов** с полной
+ALGORITHM-ATLAS §1–§32 — том 2 в четырёх файлах: ALGORITHM-ATLAS.md (§1–§23),
+ALGORITHM-ATLAS-WAVE4.md (§24–§25), ALGORITHM-ATLAS-WAVE4B.md (§26–§28) и
+ALGORITHM-ATLAS-WAVE4C.md (§29–§32)) в **один стек механизмов** с полной
 трассировкой:
 каждый перенесённый результат школы → конкретный механизм → дизайн-документ →
 функциональные/нефункциональные требования → гипотеза. Назначение: автономный
