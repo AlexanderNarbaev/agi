@@ -16,13 +16,14 @@
 |---|---|
 | [vision/ARCHITECTURE.md](vision/ARCHITECTURE.md) | Целевая архитектура: BIR, Developmental Loop, MA-уровни, Noosphere, субстраты |
 | [vision/OPEN_PROBLEMS.md](vision/OPEN_PROBLEMS.md) | Исследовательское видение без обещаний сроков |
+| [vision/GOALS-REQUIREMENTS.md](vision/GOALS-REQUIREMENTS.md) | Консолидированные цели (G-A…G-G), функциональные (FR-01…15) и нефункциональные (NFR-01…14) требования с трассировкой к документам |
 
 ## Научные основания
 
 | Документ | Назначение |
 |---|---|
 | [science/FOUNDATIONS.md](science/FOUNDATIONS.md) | Что заимствовано из математики, физики, биологии, химии, медицины, психологии, педагогики, социологии — с механизмами и метриками; что отвергнуто и почему |
-| [science/SUBSTRATE-MODELS.md](science/SUBSTRATE-MODELS.md) | Субстратные модели: конечные автоматы, свёрточные схемы, WNN, комбинаторика памяти (SDM), FCA-классификация знаний, VSA-векторы, мозжечковый ReflexLayer, CMAC, композиция кластеров — с переносом в BIR и метриками |
+| [science/SUBSTRATE-MODELS.md](science/SUBSTRATE-MODELS.md) | Субстратные модели: конечные автоматы, свёрточные схемы, WNN, комбинаторика памяти (SDM), FCA-классификация знаний, VSA-векторы, мозжечковый ReflexLayer, CMAC, композиция кластеров, советская школа алгоритмов (МГУА, потенциальные функции, АВО, алгебра автоматов Глушкова) — с переносом в BIR и метриками |
 
 ## Спецификации фич
 
@@ -45,12 +46,14 @@
 | [design/DESIGN-04-learning.md](design/DESIGN-04-learning.md) | офлайн-обучение | TsetlinTrainer (формулы), дистилляция (конвейер TREPAN), интерактивное обучение с учителем, предобучение Persona, fading |
 | [design/DESIGN-05-memory.md](design/DESIGN-05-memory.md) | состояние | Слои M0–M4, recall, консолидация («сон»), забывание/tombstone, журнал событий, дрейф, коллективная память |
 | [design/DESIGN-06-signal-modules.md](design/DESIGN-06-signal-modules.md) | периферия | Модули входящих/исходящих сигналов: контракт SignalModule, реестр, медиа-линейки (текст/число/аудио/видео/сетки/VSA), формы деплоя, измерения Java-прототипа |
+| [design/DESIGN-07-lifecycle.md](design/DESIGN-07-lifecycle.md) | жизненный цикл | Жизненный цикл элементов: Cauldron (самосоздание, МГУА-ряды + Φ-гейт, off-heap арены), FNL, TaskCell (эфемерные задачные инстансы), постоянное обучение и proactive-активность, сон с route-drain, Kubernetes Operator (CRD) |
+| [design/DESIGN-08-federation.md](design/DESIGN-08-federation.md) | федерация/безопасность | Глобальная федерация: эдж-профили EDGE-0…3, криптография протокола (подписи, anti-MitM/replay, ротация), обезличенный экспорт в пул (k-анонимность, DP, opt-in), импорт свежих нейронов через M4-гейт |
 
 ## Исследования
 
 | Документ | Назначение |
 |---|---|
-| [research/HYPOTHESES.md](research/HYPOTHESES.md) | Пререгистрированные гипотезы H-001…H-011 и карточки экспериментов EXP-001…011 |
+| [research/HYPOTHESES.md](research/HYPOTHESES.md) | Пререгистрированные гипотезы H-001…H-013 и карточки экспериментов EXP-001…013 |
 | [research/METRICS.md](research/METRICS.md) | Реестр метрик: формула, источник, команда, порог; теоретические и прототипные значения |
 | [research/ANALYSIS-laptop-feasibility.md](research/ANALYSIS-laptop-feasibility.md) | Пробелы/возможности + расчёт ноутбучной реализуемости vs локальные LLM |
 | [research/prototype/](research/prototype/) | Воспроизводимый прототип BIR (код + результаты, Python/numpy) |
