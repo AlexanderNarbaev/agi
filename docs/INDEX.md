@@ -70,8 +70,13 @@
 | Документ | Назначение |
 |---|---|
 | [engineering/ROADMAP.md](engineering/ROADMAP.md) | Цели G1–G6, этапы 0–5 с критериями выхода, стратегия миграции |
+| [engineering/C4.md](engineering/C4.md) | C4-модель: контекст системы, контейнеры узла, компоненты BIR-ядра и Cauldron, развёртывание по эдж-профилям (Mermaid); соглашения трассировки блоков |
 | [engineering/JAVA_STACK.md](engineering/JAVA_STACK.md) | Технологический стек: принято/отвергнуто, ONNX-контракт |
 | [engineering/ADR-001-matrix-vs-rag-system-roles.md](engineering/ADR-001-matrix-vs-rag-system-roles.md) | rag-system как внешняя зависимость: заимствование принципов, интеграция по контракту |
+| [engineering/ADR-002-bir-canonical-representation.md](engineering/ADR-002-bir-canonical-representation.md) | BIR как единое каноническое представление: TT/CLAUSESET/BDD + заголовок; верификатор на каждой границе |
+| [engineering/ADR-003-tsetlin-producers-over-living-mechanisms.md](engineering/ADR-003-tsetlin-producers-over-living-mechanisms.md) | Автоматы Цетлина как базовые producers; ГА/трёхфакторные — только через H-002/H-003 |
+| [engineering/ADR-004-cauldron-budget-scheduling.md](engineering/ADR-004-cauldron-budget-scheduling.md) | Бюджетер рядов Cauldron: расписание Левина (база), сопряжённый DP (H-021), гомеостат коридоров (H-022), фолбэк-матрица |
+| [engineering/ADR-005-three-valued-gate-verdicts.md](engineering/ADR-005-three-valued-gate-verdicts.md) | Трёхзначный вердикт гейтов accept/reject/undecided: witness обязателен, UNDECIDED заразителен, два класса отказа |
 | [engineering/JAVA_NATIVE.md](engineering/JAVA_NATIVE.md) | GraalVM native-image: правила кода; ограничения JMM и кучи (off-heap, публикация, false sharing); путь субстратов JVM→native→FPGA→quantum |
 | [agents/](agents/) | Специализированные протоколы для агентов: модули сигналов (AGENTS-MODULES), исследования и статьи (AGENTS-RESEARCH) |
 
