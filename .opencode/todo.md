@@ -23,7 +23,7 @@
 - [x] T19: BIR wired into chat pipeline
 - [x] T22: WAL v3.60
 
-## Remaining (env blockers — cannot fix in code)
+## Blocked (environmental — not code issues)
 
-- [ ] T20: Coverage measurement — JaCoCo agent filtered by Quarkus native-image plugin
-- [ ] T21: K8s integration test — Cluster needs restart
+- [BLOCKED] T20: Coverage measurement — JaCoCo agent filtered by Quarkus native-image plugin; ASM version conflict with Java 25
+- [BLOCKED] T21: K8s integration test — minikube API server not responding after restart cycles
