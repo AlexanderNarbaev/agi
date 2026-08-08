@@ -315,3 +315,6 @@ tasks.register('coverageTest', Test) {
     // Force execution even if test task is up-to-date
     outputs.upToDateWhen { false }
 }
+
+// Enable zip64 for JMH jar
+tasks.named("jmhJar") { zip64 = true }
