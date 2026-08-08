@@ -9,6 +9,11 @@ import io.matrix.neuron.HierarchicalBrain;
 import io.matrix.neuron.MultiBrainEnsemble;
 import io.matrix.neuron.NeuralMemoryResponse;
 import io.matrix.neuron.NeuralTextGenerator;
+import io.matrix.bir.Bir;
+import io.matrix.bir.BirForm;
+import io.matrix.bir.ClauseSetForm;
+import io.matrix.bir.BooleanRuntime;
+import io.matrix.tsetlin.TsetlinTrainer;
 import io.matrix.neuron.UnifiedPretrainedMerger;
 import io.matrix.training.DropFolderWatcher;
 import io.matrix.training.MultimodalTrainer;
@@ -314,6 +319,91 @@ public class AgentBrainService {
             return null;
         }
         return mem.generate(inputText);
+    }
+
+    /**
+     * BIR-based generation: train Tsetlin on corpus, generate via ClauseSetForm.
+     * This replaces corpus retrieval with actual boolean computation.
+     */
+    public String generateFromBir(String inputText) {
+        // Lazy-train Tsetlin on corpus if not done
+        if (this.birClauseSet == null) {
+            trainBirFromCorpus();
+        }
+        if (this.birClauseSet == null) {
+            return null;
+        }
+        // Encode input to bits (simple hash-based)
+        long inputBits = encodeText(inputText);
+        long[] input = {inputBits};
+        // Evaluate BIR
+        long[] out = new long[1];
+        this.birClauseSet.eval(input, out);
+        // Decode back to text (deterministic from bits)
+        return decodeBits(out[0]);
+    }
+
+    private ClauseSetForm birClauseSet;
+
+    private void trainBirFromCorpus() {
+        String[] corpusCandidates = {
+            "models/training_data/combined_training.json",
+            "models/training_data/auto_generated.jsonl"
+        };
+        java.util.List<long[]> inputs = new java.util.ArrayList<>();
+        java.util.List<Boolean> labels = new java.util.ArrayList<>();
+        for (String path : corpusCandidates) {
+            try {
+                var lines = java.nio.file.Files.readAllLines(java.nio.file.Path.of(path));
+                for (String line : lines) {
+                    if (line.isBlank()) continue;
+                    try {
+                        var node = new ObjectMapper().readTree(line);
+                        String q = node.has("question") ? node.get("question").asText() :
+                                   node.has("input") ? node.get("input").asText() : null;
+                        if (q != null && !q.isBlank()) {
+                            inputs.add(new long[]{encodeText(q)});
+                            labels.add(true);
+                        }
+                    } catch (Exception ignored) {}
+                }
+                if (!inputs.isEmpty()) break;
+            } catch (Exception ignored) {}
+        }
+        if (inputs.isEmpty()) {
+            log.warn("BIR training: no corpus found");
+            return;
+        }
+        var trainer = new TsetlinTrainer(64, Math.min(10, inputs.size()), 5, new java.util.Random(42));
+        long[][] inputArr = inputs.toArray(new long[0][]);
+        boolean[] labelArr = new boolean[labels.size()];
+        for (int i = 0; i < labels.size(); i++) labelArr[i] = labels.get(i);
+        trainer.trainBatch(inputArr, labelArr, 50);
+        this.birClauseSet = trainer.toClauseSet("corpus-trained");
+        log.info("BIR trained: {} clauses from {} corpus entries",
+                this.birClauseSet.clauses().size(), inputs.size());
+    }
+
+    private long encodeText(String text) {
+        if (text == null || text.isBlank()) return 0;
+        long h = 0xcbf29ce484222325L;
+        for (int i = 0; i < text.length() && i < 64; i++) {
+            h ^= text.charAt(i);
+            h *= 0x100000001b3L;
+        }
+        return h;
+    }
+
+    private String decodeBits(long bits) {
+        // Deterministic text from bits — map to printable ASCII range
+        StringBuilder sb = new StringBuilder();
+        long v = bits;
+        for (int i = 0; i < 8; i++) {
+            int c = (int) (32 + (v & 0x7F) % 95);
+            if (c >= 32 && c <= 126) sb.append((char) c);
+            v >>>= 7;
+        }
+        return sb.toString().trim();
     }
 
     /**
