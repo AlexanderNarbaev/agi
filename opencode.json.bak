@@ -11,6 +11,7 @@
       },
       "fallback": [
         "opencode",
+        "moonshotai",
         "minimax",
         "mimo"
       ]
@@ -18,6 +19,7 @@
     "opencode": {
       "fallback": [
         "deepseek",
+        "moonshotai",
         "minimax",
         "mimo"
       ]
@@ -25,8 +27,22 @@
     "opencode-go": {
       "fallback": [
         "deepseek",
+        "moonshotai",
         "minimax",
         "mimo"
+      ]
+    },
+    "moonshotai": {
+      "options": {
+        "timeout": 600000,
+        "chunkTimeout": 60000,
+        "setCacheKey": true,
+        "baseURL": "https://api.moonshot.ai/v1",
+        "apiKey": "{env:MOONSHOT_API_KEY}"
+      },
+      "fallback": [
+        "deepseek",
+        "opencode-go"
       ]
     },
     "minimax": {
