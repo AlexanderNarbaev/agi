@@ -1,0 +1,33 @@
+@namespace("io.matrix.bir")
+protocol BirProtocol {
+
+  record BirArtifact {
+    string id;
+    string form;           // "tt", "clauseset", "bdd"
+    int inputBits;
+    int outputBits;
+    string provenance;
+    double fidelity;
+    bytes payload;         // form-specific serialized data
+    bytes contentHash;     // SHA3-256 of payload
+    long createdAt;        // epoch millis
+    string version;        // schema version
+  }
+
+  record BirLineage {
+    string artifactId;
+    string parentId;       // parent artifact (if derived)
+    string operation;      // "compile", "train", "distill", "merge"
+    string mechanism;      // "tsetlin", "ga", "distill", "manual"
+    double phi;            // fitness/quality metric
+    long timestamp;
+  }
+
+  record BirValidation {
+    string artifactId;
+    string checkType;      // "equivalence", "sat", "property"
+    boolean passed;
+    string details;
+    long timestamp;
+  }
+}

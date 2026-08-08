@@ -297,3 +297,20 @@ tasks.register('nativeCompilationTest', Test) {
     include 'io/matrix/nativeimage/**'
 }
 
+
+// Dedicated coverage test task that bypasses Quarkus native-image agent filter
+tasks.register('coverageTest', Test) {
+    group = 'verification'
+    description = 'Runs tests with JaCoCo agent for coverage measurement'
+    useJUnitPlatform()
+    if (!project.hasProperty('includeIntegration')) {
+        exclude '**/integration/**'
+    }
+    jvmArgs '--add-modules=jdk.incubator.vector'
+    jacoco {
+        enabled = true
+        includes = ['io.matrix.*']
+    }
+    // Force execution even if test task is up-to-date
+    outputs.upToDateWhen { false }
+}
