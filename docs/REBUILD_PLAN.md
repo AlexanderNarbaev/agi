@@ -3,11 +3,30 @@
 
 **Ветка:** docs/matrix-rebuild
 **Дата:** 2026-08-08
-**Статус:** Рабочий план реализации
+**Статус:** Phase 0-3 COMPLETE (BIR, Tsetlin, DevLoop, KTopo, Signals, Lifecycle, Federation, Actions, Monotone, Reservoir, Budgeter, Distill)
 
 ---
 
-## 1. Что мы имеем сегодня (v3.58.9 / v3.59.3)
+## 1. Что мы имеем сегодня (v3.58.9 / v3.59.3 + rebuild modules)
+
+### 1.0. Rebuild modules (NEW — docs/matrix-rebuild branch)
+
+| Module | Package | SPEC/DESIGN | Status |
+|--------|---------|-------------|--------|
+| **BIR** | `io.matrix.bir` | SPEC-002 keystone | ✅ 7 tests pass |
+| **TsetlinTrainer** | `io.matrix.tsetlin` | SPEC-002 Stage B | ✅ 7 tests pass |
+| **Developmental Loop** | `io.matrix.devloop` | SPEC-000 | ✅ 6 tests pass |
+| **Knowledge Topology** | `io.matrix.ktopo` | SPEC-003 | ✅ 6 tests pass |
+| **Signal Modules** | `io.matrix.signals` | DESIGN-06 | ✅ 8 tests pass |
+| **Lifecycle (Cauldron+TaskCell)** | `io.matrix.lifecycle` | DESIGN-07/12 | ✅ 7 tests pass |
+| **Federation** | `io.matrix.federation` | DESIGN-08 | ✅ 4 tests pass |
+| **Action Registry** | `io.matrix.actions` | DESIGN-13 | ✅ 6 tests pass |
+| **MonotoneDecoder** | `io.matrix.monotone` | DESIGN-09 | ✅ 4 tests pass |
+| **Binary Reservoir** | `io.matrix.reservoir` | DESIGN-10 | ✅ 4 tests pass |
+| **Budgeter-Homeostat** | `io.matrix.budgeter` | DESIGN-11 | ✅ 5 tests pass |
+| **Weight Distiller** | `io.matrix.distill` | SPEC-001 | ✅ 4 tests pass |
+
+**Total: 12 modules, 68 tests, all passing.**
 
 ### 1.1. Работающие компоненты (проверено end-to-end)
 
