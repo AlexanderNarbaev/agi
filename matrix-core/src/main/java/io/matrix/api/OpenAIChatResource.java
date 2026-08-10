@@ -233,14 +233,18 @@ public class OpenAIChatResource {
             response = brainService.textGenerator().generate(prompt);
             String generated = response;
 
-            // If generator produced < 8 chars or blank, augment with corpus memory
-            // (semantic scaffold) and continue generation
+            // If generator produced < 8 chars or blank, try BIR-based generation
             if (generated == null || generated.trim().length() < 8) {
-                String memory = brainService.generateFromMemory(userText);
-                if (memory != null && !memory.isBlank()) {
-                    // Re-generate with the memory snippet as a "prompt continuation"
-                    response = brainService.textGenerator().continueGeneration(
-                            generated == null ? "" : generated + " " + memory);
+                String birResponse = brainService.generateFromBir(userText);
+                if (birResponse != null && !birResponse.isBlank()) {
+                    response = birResponse;
+                } else {
+                    // Fallback to corpus memory
+                    String memory = brainService.generateFromMemory(userText);
+                    if (memory != null && !memory.isBlank()) {
+                        response = brainService.textGenerator().continueGeneration(
+                                generated == null ? "" : generated + " " + memory);
+                    }
                 }
             }
             if (response == null || response.isBlank()) {

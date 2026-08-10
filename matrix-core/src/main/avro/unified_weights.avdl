@@ -1,0 +1,28 @@
+@namespace("io.matrix.weights")
+protocol UnifiedWeightsProtocol {
+
+  record UnifiedWeights {
+    string modelId;           // e.g., "qwen3-1.7b"
+    string version;           // e.g., "1.0.0"
+    int totalNeurons;         // total neuron count
+    int totalLayers;          // total layer count
+    array<LayerWeights> layers; // per-layer weights
+    bytes contentHash;        // SHA3-256 of all weights
+    long createdAt;           // epoch millis
+  }
+
+  record LayerWeights {
+    int layerIndex;
+    int neuronCount;
+    bytes weights;            // serialized neuron weights (Avro bytes)
+    string format;            // "avro-mpdt", "avro-bir", etc.
+  }
+
+  record ConsolidatedWeights {
+    array<UnifiedWeights> models;  // all models in one file
+    string consolidationId;        // unique ID for this consolidation
+    long createdAt;
+    int totalModels;
+    int totalNeurons;
+  }
+}
