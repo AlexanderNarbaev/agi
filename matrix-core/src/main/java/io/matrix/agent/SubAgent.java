@@ -11,6 +11,12 @@ import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
@@ -29,6 +35,7 @@ import java.util.concurrent.atomic.AtomicLong;
  *   <li>Cannot modify HierarchicalMemory</li>
  *   <li>Cannot trigger training cycles</li>
  *   <li>Only allowed tools: calculator, datetime, file_read, web_search, web_fetch</li>
+ *   <li>Process isolation: tool execution runs in a separate thread with timeout</li>
  * </ul>
  */
 @ApplicationScoped
@@ -37,12 +44,14 @@ public class SubAgent {
     private static final Logger log = LoggerFactory.getLogger(SubAgent.class);
     private static final List<String> ALLOWED_TOOLS = List.of(
             "calculator", "datetime", "file_read", "web_search", "web_fetch");
+    private static final long TOOL_TIMEOUT_MS = 5000;
 
     @Inject BrainPipeline brainPipeline;
     @Inject EthicalFilter ethicalFilter;
     @Inject ToolsResource tools;
 
     private final AtomicLong totalRuns = new AtomicLong();
+    private final ExecutorService toolExecutor = Executors.newVirtualThreadPerTaskExecutor();
 
     public SubAgentResult run(String task, String toolName, String toolArgs) {
         log.info("SubAgent.run(task='{}', tool={})",
@@ -60,11 +69,11 @@ public class SubAgent {
                     "tool '" + toolName + "' not in whitelist: " + ALLOWED_TOOLS);
         }
 
-        // Step 1: run the tool (inference-only)
+        // Step 1: run the tool (inference-only, isolated)
         String toolResult = null;
         if (toolName != null && !toolName.isBlank()) {
             try {
-                toolResult = tools.invoke(toolName, parseArgs(toolArgs));
+                toolResult = runToolIsolated(toolName, toolArgs);
             } catch (Exception e) {
                 return new SubAgentResult(task, null, false,
                         "tool invocation failed: " + e.getMessage());
@@ -81,19 +90,32 @@ public class SubAgent {
         return new SubAgentResult(task, toolResult, true, brainOutput.content());
     }
 
+    /** Run tool in isolated thread with timeout. */
+    private String runToolIsolated(String toolName, String toolArgs) throws Exception {
+        Callable<String> toolCall = () -> {
+            Map<String, Object> args = parseArgs(toolArgs);
+            return tools.invoke(toolName, args);
+        };
+
+        Future<String> future = toolExecutor.submit(toolCall);
+        try {
+            return future.get(TOOL_TIMEOUT_MS, TimeUnit.MILLISECONDS);
+        } catch (TimeoutException e) {
+            future.cancel(true);
+            throw new RuntimeException("Tool timeout after " + TOOL_TIMEOUT_MS + "ms");
+        }
+    }
+
     private Map<String, Object> parseArgs(String toolArgs) {
         if (toolArgs == null || toolArgs.isBlank()) return Map.of();
-        // naive: treat toolArgs as the expression string for calculator,
-        // or as the URL for web_fetch, etc.
         return Map.of("expression", toolArgs, "url", toolArgs, "query", toolArgs);
     }
 
-    private String invokeTool(Map<String, Object> payload) {
-        // unused — kept private for potential future inline use
-        return null;
-    }
-
     public long totalRuns() { return totalRuns.get(); }
+
+    public void shutdown() {
+        toolExecutor.shutdown();
+    }
 
     public record SubAgentResult(
             String task,
