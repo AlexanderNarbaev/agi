@@ -1,0 +1,134 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: matrix-core
+  namespace: matrix
+  labels:
+    app: matrix-core
+    version: v3.0
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: matrix-core
+  template:
+    metadata:
+      labels:
+        app: matrix-core
+        version: v3.0
+    spec:
+      containers:
+        - name: matrix-core
+          image: matrix-core:latest
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 9091
+          env:
+            # ── Core infrastructure ──
+            - name: QUARKUS_HTTP_PORT
+              value: "9091"
+            - name: DB_HOST
+              value: "matrix-postgres"
+            - name: DB_PORT
+              value: "5432"
+            - name: DB_PASS
+              value: "matrix"
+            - name: KAFKA_BOOTSTRAP_SERVERS
+              value: "matrix-kafka:9092"
+            - name: REDIS_URI
+              value: "redis://matrix-redis:6379"
+            - name: QUARKUS_OTEL_EXPORTER_OTLP_ENDPOINT
+              value: "http://jaeger:4317"
+            # ── v3.0: Boolean Reasoning Chain (BRC) ──
+            - name: BRC_MAX_STEPS
+              value: "5"
+            - name: BRC_CONVERGENCE_THRESHOLD
+              value: "2"
+            # ── v3.0: Boolean RAG ──
+            - name: RAG_TOP_K
+              value: "5"
+            # ── v3.0: VQ-VAE Proxy ──
+            - name: VQVAE_CODEBOOK_SIZE
+              value: "256"
+            # ── v3.0: MCTS-Guided Evolution ──
+            - name: MCTS_ITERATIONS
+              value: "100"
+            # ── v3.0: Agent Loop ──
+            - name: AGENT_MAX_ITERATIONS
+              value: "1000"
+            # ── Wave 35: Chat → Training Pipeline ──
+            - name: matrix.chat.enabled
+              value: "true"
+            - name: matrix.chat.trainer-enabled
+              value: "true"
+            - name: matrix.chat.trainer-interval-seconds
+              value: "60"
+            - name: matrix.chat.storage-dir
+              value: "/app/data/conversations"
+            - name: matrix.chat.output-file
+              value: "/app/models/training_data/auto_generated.jsonl"
+            - name: matrix.model-dir
+              value: "/app/models"
+          resources:
+            limits:
+              cpu: "2"
+              memory: 2Gi
+            requests:
+              cpu: 500m
+              memory: 512Mi
+          readinessProbe:
+            httpGet:
+              path: /q/health/ready
+              port: 9091
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /q/health/live
+              port: 9091
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          volumeMounts:
+            - name: models
+              mountPath: /app/models
+            - name: conversations
+              mountPath: /app/data/conversations
+      volumes:
+        - name: models
+          hostPath:
+            path: /data/models
+            type: Directory
+        - name: conversations
+          hostPath:
+            path: /data/conversations
+            type: DirectoryOrCreate
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: pretrained-weights-pvc
+  namespace: matrix
+spec:
+  accessModes:
+    - ReadOnlyMany
+  resources:
+    requests:
+      storage: 10Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: matrix-core
+  namespace: matrix
+spec:
+  type: NodePort
+  selector:
+    app: matrix-core
+  ports:
+    - port: 9091
+      targetPort: 9091
+      nodePort: 30091

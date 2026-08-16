@@ -1,0 +1,22 @@
+[
+  {
+    "name": "io.matrix.neuron.TruthTable",
+    "queryAllDeclaredMethods": true,
+    "queryAllDeclaredConstructors": true
+  },
+  {
+    "name": "io.matrix.neuron.DecisionTree",
+    "queryAllDeclaredMethods": true,
+    "queryAllDeclaredConstructors": true
+  },
+  {
+    "name": "io.matrix.evolution.Chromosome",
+    "queryAllDeclaredMethods": true,
+    "queryAllDeclaredConstructors": true
+  },
+  {
+    "name": "io.matrix.events.ClusterEvent",
+    "queryAllDeclaredMethods": true,
+    "queryAllDeclaredConstructors": true
+  }
+]

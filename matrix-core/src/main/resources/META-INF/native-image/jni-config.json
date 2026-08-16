@@ -1,0 +1,22 @@
+[
+  {
+    "name": "jdk.incubator.vector.VectorSpecies",
+    "allDeclaredMethods": true
+  },
+  {
+    "name": "jdk.incubator.vector.LongVector",
+    "allDeclaredMethods": true
+  },
+  {
+    "name": "jdk.incubator.vector.VectorMask",
+    "allDeclaredMethods": true
+  },
+  {
+    "name": "java.lang.invoke.MethodHandles",
+    "allDeclaredMethods": true
+  },
+  {
+    "name": "java.lang.invoke.MethodHandle",
+    "allDeclaredMethods": true
+  }
+]

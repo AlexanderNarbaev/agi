@@ -1,0 +1,88 @@
+{
+  "title": "MATRIX Kubernetes",
+  "uid": "matrix-kubernetes",
+  "panels": [
+    {
+      "id": 1,
+      "title": "Pods Running",
+      "type": "stat",
+      "gridPos": {"x": 0, "y": 0, "w": 6, "h": 4},
+      "targets": [{"expr": "count(up{job=\"matrix-core\"} == 1)", "refId": "A"}],
+      "fieldConfig": {"defaults": {"thresholds": {"steps": [{"color": "green"}, {"color": "red", "value": 1}]}}}
+    },
+    {
+      "id": 2,
+      "title": "HPA Current / Max",
+      "type": "stat",
+      "gridPos": {"x": 6, "y": 0, "w": 6, "h": 4},
+      "targets": [{"expr": "kube_hpa_status_current_replicas{horizontalpodautoscaler=\"matrix-core-hpa\"}", "refId": "A"}],
+      "fieldConfig": {"defaults": {"thresholds": {"steps": [{"color": "green"}, {"color": "yellow", "value": 5}, {"color": "red", "value": 9}]}}}
+    },
+    {
+      "id": 3,
+      "title": "CPU Usage per Pod",
+      "type": "timeseries",
+      "gridPos": {"x": 0, "y": 4, "w": 12, "h": 8},
+      "targets": [{"expr": "rate(container_cpu_usage_seconds_total{namespace=\"matrix\",container=\"matrix-core\"}[5m])", "refId": "A", "legendFormat": "{{pod}}"}]
+    },
+    {
+      "id": 4,
+      "title": "Memory Usage per Pod",
+      "type": "timeseries",
+      "gridPos": {"x": 12, "y": 4, "w": 12, "h": 8},
+      "targets": [{"expr": "container_memory_working_set_bytes{namespace=\"matrix\",container=\"matrix-core\"}", "refId": "A", "legendFormat": "{{pod}}"}]
+    },
+    {
+      "id": 5,
+      "title": "Request Rate",
+      "type": "timeseries",
+      "gridPos": {"x": 0, "y": 12, "w": 8, "h": 8},
+      "targets": [{"expr": "rate(http_server_requests_seconds_count[1m])", "refId": "A", "legendFormat": "req/s"}]
+    },
+    {
+      "id": 6,
+      "title": "Request Latency (p99)",
+      "type": "timeseries",
+      "gridPos": {"x": 8, "y": 12, "w": 8, "h": 8},
+      "targets": [{"expr": "histogram_quantile(0.99, rate(http_server_requests_seconds_bucket[1m]))", "refId": "A", "legendFormat": "p99"}]
+    },
+    {
+      "id": 7,
+      "title": "Error Rate",
+      "type": "timeseries",
+      "gridPos": {"x": 16, "y": 12, "w": 8, "h": 8},
+      "targets": [{"expr": "rate(matrix_errors_total[1m])", "refId": "A", "legendFormat": "err/s"}]
+    },
+    {
+      "id": 8,
+      "title": "Neurons Active vs Frozen",
+      "type": "timeseries",
+      "gridPos": {"x": 0, "y": 20, "w": 12, "h": 8},
+      "targets": [
+        {"expr": "matrix_neurons_active", "refId": "A", "legendFormat": "active"},
+        {"expr": "matrix_neurons_frozen", "refId": "B", "legendFormat": "frozen"}
+      ]
+    },
+    {
+      "id": 9,
+      "title": "Fitness Trend",
+      "type": "timeseries",
+      "gridPos": {"x": 12, "y": 20, "w": 12, "h": 8},
+      "targets": [
+        {"expr": "matrix_evolution_fitness_best", "refId": "A", "legendFormat": "best"},
+        {"expr": "matrix_evolution_fitness_avg", "refId": "B", "legendFormat": "avg"}
+      ]
+    },
+    {
+      "id": 10,
+      "title": "Alerts Firing",
+      "type": "table",
+      "gridPos": {"x": 0, "y": 28, "w": 24, "h": 8},
+      "targets": [{"expr": "ALERTS{alertstate=\"firing\"}", "refId": "A", "format": "table"}]
+    }
+  ],
+  "schemaVersion": 39,
+  "tags": ["matrix", "kubernetes"],
+  "time": {"from": "now-30m", "to": "now"},
+  "refresh": "10s"
+}

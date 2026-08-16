@@ -1,0 +1,15 @@
+{
+  "resources": {
+    "includes": [
+      {"pattern": ".*\\.avro$"},
+      {"pattern": ".*\\.jsonl$"},
+      {"pattern": ".*\\.properties$"},
+      {"pattern": ".*\\.json$"},
+      {"pattern": ".*\\.yaml$"},
+      {"pattern": ".*\\.yml$"},
+      {"pattern": "models/.*"},
+      {"pattern": "META-INF/services/.*"},
+      {"pattern": "META-INF/microprofile-config\\.properties"}
+    ]
+  }
+}

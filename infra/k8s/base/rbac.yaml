@@ -1,0 +1,29 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: matrix-core
+  namespace: matrix
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: matrix-core
+  namespace: matrix
+rules:
+  - apiGroups: [""]
+    resources: ["pods", "services", "configmaps"]
+    verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: matrix-core
+  namespace: matrix
+subjects:
+  - kind: ServiceAccount
+    name: matrix-core
+    namespace: matrix
+roleRef:
+  kind: Role
+  name: matrix-core
+  apiGroup: rbac.authorization.k8s.io
