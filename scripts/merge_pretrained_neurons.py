@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# MATRIX RESEARCH-ONLY (NOT IN RUNTIME/PRODUCTION)
+# Запрещено вызывать из Gradle/Java рантайма (CONSTITUTION VII.1)
+# Только ручной запуск для исследований в docs/research/
 """
 Merge all pretrained neurons from multiple models into unified datasets.
 

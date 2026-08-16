@@ -3,6 +3,7 @@ package io.matrix.agent;
 import io.matrix.brain.BrainPipeline;
 import io.matrix.ethics.EthicalFilter;
 import io.matrix.ethics.EthicalVerdict;
+import io.matrix.memory.HierarchicalMemory;
 import io.matrix.tools.ToolsResource;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -11,6 +12,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -43,15 +45,21 @@ public class SubAgent {
 
     private static final Logger log = LoggerFactory.getLogger(SubAgent.class);
     private static final List<String> ALLOWED_TOOLS = List.of(
-            "calculator", "datetime", "file_read", "web_search", "web_fetch");
+            "calculator", "datetime", "file_read", "web_search", "web_fetch", "code_execute");
     private static final long TOOL_TIMEOUT_MS = 5000;
 
     @Inject BrainPipeline brainPipeline;
     @Inject EthicalFilter ethicalFilter;
     @Inject ToolsResource tools;
+    @Inject HierarchicalMemory memory;
 
     private final AtomicLong totalRuns = new AtomicLong();
     private final ExecutorService toolExecutor = Executors.newVirtualThreadPerTaskExecutor();
+
+    private static String truncate(String s, int maxLen) {
+        if (s == null) return "";
+        return s.length() <= maxLen ? s : s.substring(0, maxLen) + "...";
+    }
 
     public SubAgentResult run(String task, String toolName, String toolArgs) {
         log.info("SubAgent.run(task='{}', tool={})",
@@ -87,7 +95,22 @@ public class SubAgent {
                 new io.matrix.brain.BrainPipeline.BrainInput(
                         reasoningInput, java.util.List.of(), java.util.List.of()));
 
-        return new SubAgentResult(task, toolResult, true, brainOutput.content());
+        String response = brainOutput.content();
+
+        // Step 3: memory write-back for successful tool results
+        if (toolResult != null && !toolResult.startsWith("Error") && !toolResult.startsWith("CRASHED")) {
+            try {
+                memory.store(
+                        HierarchicalMemory.Level.L1_PATTERN,
+                        "SubAgent[" + toolName + "]: " + truncate(toolResult, 500),
+                        "subagent",
+                        Set.of("tool:" + toolName, "subagent"));
+            } catch (Exception e) {
+                log.warn("Memory write-back failed: {}", e.getMessage());
+            }
+        }
+
+        return new SubAgentResult(task, toolResult, true, response);
     }
 
     /** Run tool in isolated thread with timeout. */

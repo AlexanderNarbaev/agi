@@ -2,6 +2,7 @@ package io.matrix.api;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.matrix.agent.AgentBrainService;
+import io.matrix.bir.PureBirGenerator;
 import io.matrix.brain.BrainPipeline;
 import io.matrix.chat.ConversationRecord;
 import io.matrix.chat.ConversationRecorder;
@@ -64,6 +65,7 @@ public class OpenAIChatResource {
 
     private final EthicalFilter ethicalFilter;
     private final Text2VecService text2vec;
+    private final PureBirGenerator pureBir;
     private final Random rng;
     private final List<String> responseHistory;
     private int stuckCounter;
@@ -96,6 +98,7 @@ public class OpenAIChatResource {
         this.brainService = brainService;
         this.text2vec = text2Vec;
         this.ethicalFilter = ethicalFilter;
+        this.pureBir = new PureBirGenerator();
         this.rng = new Random();
         this.responseHistory = new ArrayList<>();
         this.stuckCounter = 0;
@@ -106,6 +109,7 @@ public class OpenAIChatResource {
         this.brainService = null;
         this.text2vec = new Text2VecService();
         this.ethicalFilter = new EthicalFilter();
+        this.pureBir = new PureBirGenerator();
         this.rng = new Random();
         this.responseHistory = new ArrayList<>();
         this.stuckCounter = 0;
@@ -202,17 +206,19 @@ public class OpenAIChatResource {
         // ─── Text → Binary Vector ───
         long sensorBits = text2vec.textToBits(userText);
 
-        // ─── Generate response using neural hierarchy (GENERATIVE primary) ───
+        // ─── Generate response using PURE BIR (deterministic boolean algebra) ───
         // Pipeline:
-        //   0. HierarchicalMemory search (world model + long-term memory)
-        //   1. TextGenerator.forwardPass() — 3-layer MPDT neural hierarchy (genuine
-        //      character-by-character generation, not retrieval)
-        //   2. BrainService.generateFromMemory() — corpus retrieval as semantic
-        //      scaffold (used as seed for continued generation)
-        //   3. Brain decision code (last-resort)
+        //   0. HierarchicalMemory search (world model + long-term memory) — provides
+        //      semantic seed, but is NOT used as retrieval response.
+        //   1. PURE BIR generation (NEW primary) — 3-layer boolean cascade over the
+        //      input 20-bit feature vector. NO corpus. NO training. Deterministic
+        //      boolean function composition.
+        //   2. Tsetlin-trained BIR (legacy) — kept for backward compatibility.
+        //   3. TextGenerator.forwardPass() — character-by-character continuation.
+        //   4. Brain decision code (last-resort).
         String response;
         try {
-            // Pre-load world model + long-term memory context
+            // Pre-load world model + long-term memory as semantic seed (not as response)
             StringBuilder context = new StringBuilder();
             if (longTermMemory != null) {
                 var memEntries = longTermMemory.search(userText, 3);
@@ -225,33 +231,34 @@ public class OpenAIChatResource {
             }
             String worldContext = context.toString().trim();
 
-            // Primary: GENERATIVE — 3-layer neural forward pass, primed with world context
-            String prompt = userText;
-            if (!worldContext.isEmpty()) {
-                prompt = worldContext + " | " + userText;
-            }
-            response = brainService.textGenerator().generate(prompt);
+            // PRIMARY: PURE BIR generation — deterministic boolean function composition.
+            // NO corpus retrieval. NO training. NO ML weights. Same input → same output.
+            long pureBirBits = pureBir.generate(sensorBits);
+            response = text2vec.bitsToResponse(pureBirBits);
             String generated = response;
 
-            // If generator produced < 8 chars or blank, try BIR-based generation
+            // Optional flavor: prepend memory context as semantic scaffold
+            // (visible to user, but the generation itself is pure boolean)
+            if (!worldContext.isEmpty() && response != null && !response.isBlank()) {
+                response = response; // template is already from BIR; worldContext is for LTM store only
+            }
+
+            // If pureBir produced something too short, try Tsetlin-trained BIR
             if (generated == null || generated.trim().length() < 8) {
                 String birResponse = brainService.generateFromBir(userText);
                 if (birResponse != null && !birResponse.isBlank()) {
                     response = birResponse;
                 } else {
-                    // Fallback to corpus memory
-                    String memory = brainService.generateFromMemory(userText);
-                    if (memory != null && !memory.isBlank()) {
-                        response = brainService.textGenerator().continueGeneration(
-                                generated == null ? "" : generated + " " + memory);
-                    }
+                    // Continue with character-by-character generation
+                    response = brainService.textGenerator().generate(
+                            worldContext.isEmpty() ? userText : worldContext + " | " + userText);
                 }
             }
             if (response == null || response.isBlank()) {
                 response = generated;
             }
             if (response == null || response.isBlank()) {
-                // Tertiary: brain decision code fallback
+                // Last-resort: brain decision code
                 int actionCode = brainService.brain().decide(sensorBits);
                 response = text2vec.bitsToResponse(sensorBits ^ actionCode);
             }

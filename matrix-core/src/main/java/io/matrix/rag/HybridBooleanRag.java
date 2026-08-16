@@ -11,7 +11,7 @@ import java.util.*;
  * <p>Extends the basic Boolean RAG with:
  * <ul>
  *   <li><b>Hybrid search:</b> combines dense (boolean vector) + sparse (keyword) + graph (entity-relation) retrieval</li>
- *   <li><b>RRF fusion:</b> merges results from multiple strategies without weight tuning</li>
+ *   <li><b>Weighted RRF fusion:</b> merges results from multiple strategies with configurable per-strategy weights</li>
  *   <li><b>Adaptive context:</b> knee-point pruning replaces static top-K</li>
  *   <li><b>Two-level filtering:</b> strong vs borderline matches</li>
  *   <li><b>Structure-aware chunking:</b> breadcrumb injection for context</li>
@@ -26,21 +26,27 @@ public final class HybridBooleanRag {
     private final BooleanIndex index;
     private final KnowledgeIndex knowledgeIndex;
     private final KnowledgeGraphStore knowledgeGraphStore;
+    private final FloatEmbeddingIndex embeddingIndex;
+    private final int embeddingDimensions;
     private final int topK;
     private final boolean adaptiveContext;
     private final double kneeSensitivity;
     private final double strongThreshold;
     private final double borderlineThreshold;
+    private final double[] strategyWeights;
 
     private HybridBooleanRag(Builder builder) {
         this.index = Objects.requireNonNull(builder.index, "index");
         this.knowledgeIndex = builder.knowledgeIndex;
         this.knowledgeGraphStore = builder.knowledgeGraphStore;
+        this.embeddingIndex = builder.embeddingIndex;
+        this.embeddingDimensions = builder.embeddingDimensions;
         this.topK = builder.topK;
         this.adaptiveContext = builder.adaptiveContext;
         this.kneeSensitivity = builder.kneeSensitivity;
         this.strongThreshold = builder.strongThreshold;
         this.borderlineThreshold = builder.borderlineThreshold;
+        this.strategyWeights = builder.strategyWeights;
     }
 
     public static Builder builder() {
@@ -75,16 +81,32 @@ public final class HybridBooleanRag {
             graphConverted = graphSearch(topK * 2);
         }
 
-        // Step 3: RRF Fusion
+        // Step 2.7: Float embedding retrieval (cosine similarity)
+        List<RrfFusion.SearchHit> embeddingConverted = Collections.emptyList();
+        if (embeddingIndex != null) {
+            embeddingConverted = embeddingSearch(query, topK * 2);
+        }
+
+        // Step 3: Weighted RRF Fusion (normalize weights to active strategies)
         List<List<RrfFusion.SearchHit>> allResults = new ArrayList<>();
+        List<Double> activeWeights = new ArrayList<>();
         allResults.add(denseConverted);
+        activeWeights.add(strategyWeights.length > 0 ? strategyWeights[0] : 1.0);
         if (!sparseConverted.isEmpty()) {
             allResults.add(sparseConverted);
+            activeWeights.add(strategyWeights.length > 1 ? strategyWeights[1] : 1.0);
         }
         if (!graphConverted.isEmpty()) {
             allResults.add(graphConverted);
+            activeWeights.add(strategyWeights.length > 2 ? strategyWeights[2] : 1.0);
         }
-        List<RrfFusion.FusedResult> fused = RrfFusion.fuse(allResults);
+        if (!embeddingConverted.isEmpty()) {
+            allResults.add(embeddingConverted);
+            activeWeights.add(strategyWeights.length > 3 ? strategyWeights[3] : 1.0);
+        }
+        double totalWeight = activeWeights.stream().mapToDouble(Double::doubleValue).sum();
+        double[] normalized = activeWeights.stream().mapToDouble(w -> w / totalWeight).toArray();
+        List<RrfFusion.FusedResult> fused = RrfFusion.fuseWeighted(allResults, normalized);
 
         // Step 4: Adaptive context management (knee-point pruning)
         List<RrfFusion.FusedResult> pruned;
@@ -195,6 +217,24 @@ public final class HybridBooleanRag {
     }
 
     /**
+     * Float embedding retrieval via FloatEmbeddingIndex (cosine similarity).
+     */
+    private List<RrfFusion.SearchHit> embeddingSearch(long[] query, int limit) {
+        if (embeddingIndex == null || embeddingIndex.size() == 0)
+            return Collections.emptyList();
+        float[] qf = longToFloat(query, embeddingDimensions);
+        return embeddingIndex.search(qf, limit).stream()
+                .map(item -> new RrfFusion.SearchHit(
+                        item.id(), item.score(), "float_embedding", Map.of()))
+                .toList();
+    }
+
+    /** Converts long[] boolean vector to float[] for embedding search. */
+    private float[] longToFloat(long[] query, int dim) {
+        return FloatEmbeddingIndex.fromValue((int) query[0], dim);
+    }
+
+    /**
      * Result of a hybrid RAG query.
      */
     public record HybridRagResult(
@@ -248,11 +288,14 @@ public final class HybridBooleanRag {
         private BooleanIndex index;
         private KnowledgeIndex knowledgeIndex;
         private KnowledgeGraphStore knowledgeGraphStore;
+        private FloatEmbeddingIndex embeddingIndex;
+        private int embeddingDimensions = 64;
         private int topK = 5;
         private boolean adaptiveContext = true;
         private double kneeSensitivity = 0.5;
         private double strongThreshold = 0.015;
         private double borderlineThreshold = 0.010;
+        private double[] strategyWeights = RrfFusion.DEFAULT_4STRATEGY_WEIGHTS;
 
         public Builder index(BooleanIndex index) {
             this.index = Objects.requireNonNull(index);
@@ -266,6 +309,17 @@ public final class HybridBooleanRag {
 
         public Builder knowledgeGraphStore(KnowledgeGraphStore store) {
             this.knowledgeGraphStore = store;
+            return this;
+        }
+
+        public Builder embeddingIndex(FloatEmbeddingIndex embeddingIndex) {
+            this.embeddingIndex = embeddingIndex;
+            return this;
+        }
+
+        public Builder embeddingDimensions(int dims) {
+            if (dims < 1) throw new IllegalArgumentException("dims >= 1");
+            this.embeddingDimensions = dims;
             return this;
         }
 
@@ -295,6 +349,11 @@ public final class HybridBooleanRag {
 
         public Builder borderlineThreshold(double threshold) {
             this.borderlineThreshold = threshold;
+            return this;
+        }
+
+        public Builder strategyWeights(double[] weights) {
+            this.strategyWeights = Objects.requireNonNull(weights);
             return this;
         }
 

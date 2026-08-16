@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# MATRIX RESEARCH-ONLY (NOT IN RUNTIME/PRODUCTION)
+# Запрещено вызывать из Gradle/Java рантайма (CONSTITUTION VII.1)
+# Только ручной запуск для исследований в docs/research/
 """GridWorld Pilot — Visualization and Interpretability."""
 import json, sys
 from pathlib import Path
