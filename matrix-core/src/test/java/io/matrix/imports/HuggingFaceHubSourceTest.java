@@ -5,6 +5,7 @@ import com.sun.net.httpserver.HttpServer;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -14,6 +15,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -25,12 +27,15 @@ import static org.assertj.core.api.Assertions.assertThat;
  * no internet access required. The fake HF API returns canned JSON that
  * points to itself for the model weight files.
  */
+@Timeout(value = 30, unit = TimeUnit.SECONDS)
 class HuggingFaceHubSourceTest {
 
     private HttpServer server;
     private int port;
     private HuggingFaceHubSource source;
     private AtomicInteger hits;
+    /** Saved original value of {@code HuggingFaceHubSource.HF_BASE} before reflection override. */
+    private String originalHfBase;
 
     @BeforeEach
     void setup() throws IOException {
@@ -45,6 +50,8 @@ class HuggingFaceHubSourceTest {
         try {
             java.lang.reflect.Field base = HuggingFaceHubSource.class.getDeclaredField("HF_BASE");
             base.setAccessible(true);
+            // Save original value before removing final
+            originalHfBase = (String) base.get(null);
             // Remove final
             java.lang.reflect.Field mods = java.lang.reflect.Field.class.getDeclaredField("modifiers");
             mods.setAccessible(true);
@@ -58,6 +65,19 @@ class HuggingFaceHubSourceTest {
 
     @AfterEach
     void teardown() {
+        // Restore original HF_BASE to prevent JVM state corruption for subsequent tests
+        if (originalHfBase != null) {
+            try {
+                java.lang.reflect.Field base = HuggingFaceHubSource.class.getDeclaredField("HF_BASE");
+                base.setAccessible(true);
+                java.lang.reflect.Field mods = java.lang.reflect.Field.class.getDeclaredField("modifiers");
+                mods.setAccessible(true);
+                mods.setInt(base, base.getModifiers() & ~java.lang.reflect.Modifier.FINAL);
+                base.set(null, originalHfBase);
+            } catch (Exception e) {
+                // Best-effort restoration
+            }
+        }
         if (server != null) server.stop(0);
     }
 

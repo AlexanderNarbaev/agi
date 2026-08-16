@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# MATRIX RESEARCH-ONLY (NOT IN RUNTIME/PRODUCTION)
+# Запрещено вызывать из Gradle/Java рантайма (CONSTITUTION VII.1)
+# Только ручной запуск для исследований в docs/research/
 """
 SINV Forum Ideas Analyzer — extracts themes, categories, and generates
 training pairs for the MATRIX project from forum ideas JSON files.

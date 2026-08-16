@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# MATRIX RESEARCH-ONLY (NOT IN RUNTIME/PRODUCTION)
+# Запрещено вызывать из Gradle/Java рантайма (CONSTITUTION VII.1)
+# Только ручной запуск для исследований в docs/research/
 """Pre-train MPDT neurons from open-source transformer model weights.
 
 Converts feed-forward network (FFN) weights from transformer layers into

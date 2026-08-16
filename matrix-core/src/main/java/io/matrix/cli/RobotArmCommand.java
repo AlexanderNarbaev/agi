@@ -14,6 +14,13 @@ import java.util.concurrent.Callable;
         description = "Train MPDT neuron to control a 2-DOF robot arm (Pilot #4)")
 public class RobotArmCommand implements Callable<Integer> {
 
+    /**
+     * CONSTITUTION VII.1: Python scripts in {@code scripts/} are research-only.
+     * This command requires {@code -Dmatrix.research.enabled=true} to invoke Python.
+     */
+    private static final boolean RESEARCH_ENABLED =
+            System.getProperty("matrix.research.enabled") != null;
+
     @Option(names = {"-g", "--generations"},
             description = "Number of generations",
             defaultValue = "100")
@@ -36,6 +43,10 @@ public class RobotArmCommand implements Callable<Integer> {
 
     @Override
     public Integer call() throws Exception {
+        if (!Boolean.getBoolean("matrix.research.enabled")) {
+            throw new IllegalStateException(
+                    "RobotArmCommand requires -Dmatrix.research.enabled=true (CONSTITUTION VII.1)");
+        }
         if (!Files.exists(Path.of(scriptPath))) {
             System.err.println("Script not found: " + scriptPath);
             return 1;

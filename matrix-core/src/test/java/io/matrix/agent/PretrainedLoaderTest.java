@@ -2,6 +2,7 @@ package io.matrix.agent;
 
 import io.matrix.neuron.TruthTable;
 import io.matrix.simulation.AgentBrain;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -11,10 +12,27 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 class PretrainedLoaderTest {
 
     private final PretrainedLoader loader = new PretrainedLoader();
+
+    /**
+     * CONSTITUTION VII.1: Python scripts in {@code scripts/} are research-only.
+     * Tests that invoke Python via ProcessBuilder require the
+     * {@code matrix.research.enabled} system property to be set.
+     */
+    private static final boolean RESEARCH_ENABLED =
+            System.getProperty("matrix.research.enabled") != null;
+
+    @BeforeAll
+    static void checkResearchMode() {
+        if (!RESEARCH_ENABLED) {
+            System.out.println("[CONSTITUTION VII.1] Skipping Python-dependent tests. "
+                    + "Set -Dmatrix.research.enabled=true to run.");
+        }
+    }
 
     @Test
     void testEmptyDirReturnsEmptyList() throws Exception {
@@ -30,6 +48,8 @@ class PretrainedLoaderTest {
 
     @Test
     void testLoadTruthTablesFromDemoOutput() throws Exception {
+        assumeTrue(RESEARCH_ENABLED,
+                "CONSTITUTION VII.1: requires -Dmatrix.research.enabled=true");
         Path dir = Files.createTempDirectory("pretrain-test");
         try {
             ProcessBuilder pb = new ProcessBuilder(
@@ -65,6 +85,8 @@ class PretrainedLoaderTest {
 
     @Test
     void testLoadPretrainedBrain() throws Exception {
+        assumeTrue(RESEARCH_ENABLED,
+                "CONSTITUTION VII.1: requires -Dmatrix.research.enabled=true");
         Path dir = Files.createTempDirectory("pretrain-brain");
         try {
             ProcessBuilder pb = new ProcessBuilder(

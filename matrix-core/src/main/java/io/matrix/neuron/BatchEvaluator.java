@@ -92,6 +92,21 @@ public final class BatchEvaluator {
     }
 
     /**
+     * Unpack a packed 64-bit result into an existing boolean array at a given offset.
+     * Used by {@link BatchMemoryAdapter} for chunked batch evaluation.
+     *
+     * @param packed packed 64-bit result
+     * @param length number of bits to unpack (≤ 64)
+     * @param dest   destination array
+     * @param offset starting index in dest
+     */
+    public static void unpack(long packed, int length, boolean[] dest, int offset) {
+        for (int i = 0; i < length; i++) {
+            dest[offset + i] = ((packed >>> i) & 1L) != 0L;
+        }
+    }
+
+    /**
      * Convenience: convert a {@link BitSet} of length {@code size} into
      * an {@code int[]} of decision-tree-friendly words (LSB-first).
      */

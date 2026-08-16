@@ -77,3 +77,52 @@ matrix-core/models/HuggingFaceTB_SmolLM2-360M-Instruct/
 matrix-core/models/Qwen_Qwen3-0.6B/
 matrix-core/models/HuggingFaceTB*
 matrix-core/models/Qwen*
+
+# Runtime artifacts (added 2026-08-10)
+/matrix-core/.jqwik-database
+/memory/constitution.md
+/models/pretrained/consolidated_weights.avro
+/opencode.json.pre-v3.1.bak
+/opencode.json.pre-v3.1.1.bak
+/specs/_template.md
+/wal/state.yaml
+/.sinv_session
+.opencode/state/codegraph-session-runtime.json
+/.sinv_session
+/.weblate
+
+# More runtime/development artifacts
+/matrix-core/matrix-core/build.gradle
+/matrix-core/models/merged/
+/matrix-core/models/training_data/
+/matrix-fpga/ldn2v.py
+/matrix-core/jni-config.json
+/matrix-core/reflect-config.json
+/matrix-core/resource-config.json
+/.opencode/state/
+
+# Large runtime/data files (rev 2026-08-10)
+/memory/
+/models/pretrained/consolidated_weights.avro
+/models/pretrained/.gitkeep
+/opencode.json.bak
+
+# Pretrained weights (large Avro files)
+/models/pretrained/*.avro
+/models/pretrained/**/*.avro
+
+# More runtime/derived data
+/models/training_data/
+/notebooks/
+/output/
+/opencode.json
+/specs/_template.md
+/wal/
+/models/pretrained/*_metadata.json
+/prompts/
+/sequential-train.sh
+/models/pretrained/qwen2.5-0.5b/Qwen2.5-0.5B_metadata.json
+/.opencode/config.yml
+/.opencode/docs/
+/matrix-core/bin_stale_backup/
+unit-tests/

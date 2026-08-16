@@ -35,6 +35,7 @@ dependencies {
     implementation 'io.quarkus:quarkus-jdbc-postgresql'
     implementation 'org.xerial:sqlite-jdbc:3.43.0.0'
     implementation 'org.apache.commons:commons-imaging:1.0.0-alpha5'
+    implementation 'org.jsoup:jsoup:1.17.2'
 
     implementation 'org.apache.avro:avro:1.12.0'
     implementation 'io.lettuce:lettuce-core:6.5.0.RELEASE'
@@ -55,6 +56,7 @@ dependencies {
     testImplementation 'org.testcontainers:kafka:1.21.3'
     testImplementation 'org.testcontainers:postgresql:1.21.3'
     testImplementation 'org.testcontainers:junit-jupiter:1.21.3'
+    testImplementation 'net.jqwik:jqwik:1.9.2'
 }
 
 tasks.withType(Test) {

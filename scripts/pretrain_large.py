@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# MATRIX RESEARCH-ONLY (NOT IN RUNTIME/PRODUCTION)
+# Запрещено вызывать из Gradle/Java рантайма (CONSTITUTION VII.1)
+# Только ручной запуск для исследований в docs/research/
 """Pre-train MPDT neurons from LARGE (>10GB) transformer models.
 
 Uses memory-mapped loading with optional disk swapping to handle models

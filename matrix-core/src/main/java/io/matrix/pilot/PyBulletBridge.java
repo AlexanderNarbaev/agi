@@ -10,15 +10,29 @@ import java.io.OutputStreamWriter;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Bridge to Python simulation scripts.
+ *
+ * <p>CONSTITUTION VII.1: Python scripts in {@code scripts/} are research-only.
+ * This bridge requires {@code matrix.research.enabled} system property to be set.
+ * Without it, construction throws {@link IllegalStateException}.
+ */
 public class PyBulletBridge implements AutoCloseable {
 
     private static final ObjectMapper MAPPER = new ObjectMapper();
+
+    private static final boolean RESEARCH_ENABLED =
+            System.getProperty("matrix.research.enabled") != null;
 
     private final Process process;
     private final BufferedWriter writer;
     private final BufferedReader reader;
 
     public PyBulletBridge(String pythonScript) throws IOException {
+        if (!RESEARCH_ENABLED) {
+            throw new IllegalStateException(
+                    "CONSTITUTION VII.1: PyBulletBridge requires -Dmatrix.research.enabled=true");
+        }
         ProcessBuilder pb = new ProcessBuilder(
                 "python3", pythonScript, "--json");
         pb.redirectErrorStream(true);
