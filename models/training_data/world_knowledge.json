@@ -1,0 +1,1502 @@
+[
+  {
+    "input": "What is gravity?",
+    "output": "Gravity is the fundamental force of attraction between masses, described by Newton's law of universal gravitation and Einstein's general relativity as spacetime curvature.",
+    "category": "physics"
+  },
+  {
+    "input": "What is energy?",
+    "output": "Energy is the capacity to do work, existing in various forms (kinetic, potential, thermal, chemical, nuclear, electromagnetic) and conserved in isolated systems per the first law of thermodynamics.",
+    "category": "physics"
+  },
+  {
+    "input": "What is Newton's first law of motion?",
+    "output": "Newton's first law states that an object at rest stays at rest and an object in motion stays in motion with constant velocity unless acted upon by an external net force.",
+    "category": "physics"
+  },
+  {
+    "input": "What is electromagnetic radiation?",
+    "output": "Electromagnetic radiation is energy propagating through space as oscillating electric and magnetic fields, including radio waves, microwaves, infrared, visible light, ultraviolet, X-rays, and gamma rays.",
+    "category": "physics"
+  },
+  {
+    "input": "What is the speed of light?",
+    "output": "The speed of light in vacuum is approximately 299,792,458 meters per second (c), a universal constant that serves as the maximum speed for information transfer in the universe.",
+    "category": "physics"
+  },
+  {
+    "input": "What is quantum mechanics?",
+    "output": "Quantum mechanics is the branch of physics describing nature at atomic and subatomic scales, characterized by wave-particle duality, superposition, uncertainty principle, and quantized energy levels.",
+    "category": "physics"
+  },
+  {
+    "input": "What is the theory of relativity?",
+    "output": "Einstein's theory of relativity comprises special relativity (describing physics in inertial frames, with time dilation and E=mc²) and general relativity (describing gravity as spacetime curvature caused by mass-energy).",
+    "category": "physics"
+  },
+  {
+    "input": "What is a wave?",
+    "output": "A wave is a propagating disturbance that transfers energy through a medium or space, characterized by wavelength, frequency, amplitude, and velocity, and can be transverse or longitudinal.",
+    "category": "physics"
+  },
+  {
+    "input": "What is entropy?",
+    "output": "Entropy is a measure of disorder or randomness in a system, central to the second law of thermodynamics, which states that the total entropy of an isolated system never decreases over time.",
+    "category": "physics"
+  },
+  {
+    "input": "What is the standard model of particle physics?",
+    "output": "The Standard Model is the theory describing three fundamental forces (electromagnetic, weak, strong) and classifying all known elementary particles: quarks, leptons, gauge bosons, and the Higgs boson.",
+    "category": "physics"
+  },
+  {
+    "input": "What is a black hole?",
+    "output": "A black hole is a region of spacetime where gravity is so strong that nothing—not even light—can escape, formed by the gravitational collapse of massive stars, bounded by the event horizon.",
+    "category": "physics"
+  },
+  {
+    "input": "What is the photoelectric effect?",
+    "output": "The photoelectric effect is the emission of electrons from a material when light shines on it, explained by Einstein using photon quantization, demonstrating light's particle nature and earning him the Nobel Prize.",
+    "category": "physics"
+  },
+  {
+    "input": "What is nuclear fission?",
+    "output": "Nuclear fission is the splitting of a heavy atomic nucleus (e.g., uranium-235) into lighter nuclei, releasing enormous energy, used in nuclear power plants and atomic weapons.",
+    "category": "physics"
+  },
+  {
+    "input": "What is nuclear fusion?",
+    "output": "Nuclear fusion is the combining of light atomic nuclei (e.g., hydrogen isotopes) into heavier nuclei, releasing energy—the process powering stars like the Sun and pursued for clean energy on Earth.",
+    "category": "physics"
+  },
+  {
+    "input": "What is the Doppler effect?",
+    "output": "The Doppler effect is the change in observed frequency of a wave relative to the motion of its source: approaching sources produce higher frequencies (blueshift), receding sources produce lower frequencies (redshift).",
+    "category": "physics"
+  },
+  {
+    "input": "What is superconductivity?",
+    "output": "Superconductivity is a quantum phenomenon where certain materials exhibit zero electrical resistance and expel magnetic fields (Meissner effect) when cooled below a critical temperature.",
+    "category": "physics"
+  },
+  {
+    "input": "What is the Higgs boson?",
+    "output": "The Higgs boson is an elementary particle predicted by the Standard Model, confirmed at CERN in 2012, associated with the Higgs field that gives other particles their mass through electroweak symmetry breaking.",
+    "category": "physics"
+  },
+  {
+    "input": "What are Maxwell's equations?",
+    "output": "Maxwell's equations are four fundamental equations unifying electricity and magnetism, describing how electric charges produce electric fields, how magnetic monopoles don't exist, how changing magnetic fields induce electric fields, and how currents and changing electric fields produce magnetic fields.",
+    "category": "physics"
+  },
+  {
+    "input": "What is antimatter?",
+    "output": "Antimatter consists of antiparticles with the same mass but opposite charge and quantum numbers as ordinary particles. When matter meets antimatter, both annihilate, converting mass to energy via E=mc².",
+    "category": "physics"
+  },
+  {
+    "input": "What is the double-slit experiment?",
+    "output": "The double-slit experiment demonstrates wave-particle duality: particles (electrons, photons) create an interference pattern when passing through two slits, even when sent one at a time, showing quantum superposition.",
+    "category": "physics"
+  },
+  {
+    "input": "What is dark matter?",
+    "output": "Dark matter is a hypothetical form of matter that does not emit or interact with electromagnetic radiation but exerts gravitational effects, inferred from galaxy rotation curves and gravitational lensing, comprising about 27% of the universe.",
+    "category": "physics"
+  },
+  {
+    "input": "What is dark energy?",
+    "output": "Dark energy is a mysterious force causing the accelerating expansion of the universe, comprising about 68% of the universe's energy density, discovered through observations of distant Type Ia supernovae in 1998.",
+    "category": "physics"
+  },
+  {
+    "input": "What is the uncertainty principle?",
+    "output": "Heisenberg's uncertainty principle states that certain pairs of physical properties (like position and momentum) cannot be simultaneously measured with arbitrary precision: the more precisely one is known, the less precisely the other.",
+    "category": "physics"
+  },
+  {
+    "input": "What is the conservation of momentum?",
+    "output": "The law of conservation of momentum states that the total momentum of an isolated system remains constant over time, provided no external forces act on it, derived from Newton's third law.",
+    "category": "physics"
+  },
+  {
+    "input": "What is the Big Bang theory?",
+    "output": "The Big Bang theory is the prevailing cosmological model describing the universe's origin from an extremely hot, dense state approximately 13.8 billion years ago, followed by expansion and cooling, supported by cosmic microwave background radiation.",
+    "category": "physics"
+  },
+  {
+    "input": "What is refraction?",
+    "output": "Refraction is the bending of light as it passes from one transparent medium to another with a different refractive index, described by Snell's law, explaining phenomena like rainbow formation and lens focusing.",
+    "category": "physics"
+  },
+  {
+    "input": "What is a quark?",
+    "output": "A quark is a fundamental elementary particle and constituent of matter, combining to form hadrons like protons and neutrons. Six flavors exist: up, down, charm, strange, top, and bottom, held together by the strong force via gluons.",
+    "category": "physics"
+  },
+  {
+    "input": "What is time dilation?",
+    "output": "Time dilation is a relativistic effect where time passes more slowly for a moving clock relative to a stationary observer (special relativity) and in stronger gravitational fields (general relativity), confirmed by GPS satellite corrections.",
+    "category": "physics"
+  },
+  {
+    "input": "What are gravitational waves?",
+    "output": "Gravitational waves are ripples in spacetime caused by accelerating massive objects (e.g., merging black holes), predicted by Einstein in 1916 and first directly detected by LIGO in 2015.",
+    "category": "physics"
+  },
+  {
+    "input": "What is the photoelectric temperature of absolute zero?",
+    "output": "Absolute zero is 0 Kelvin (−273.15°C or −459.67°F), the theoretical lowest temperature limit where particles have minimal thermal motion—zero-point energy remains due to quantum mechanics but no heat can be extracted.",
+    "category": "physics"
+  },
+  {
+    "input": "What is an atom?",
+    "output": "An atom is the smallest unit of ordinary matter that forms a chemical element, consisting of a dense nucleus of protons and neutrons surrounded by a cloud of electrons in discrete energy levels.",
+    "category": "chemistry"
+  },
+  {
+    "input": "What is the periodic table?",
+    "output": "The periodic table is a tabular arrangement of chemical elements organized by atomic number, electron configuration, and recurring chemical properties, with rows (periods) and columns (groups) reflecting periodic trends.",
+    "category": "chemistry"
+  },
+  {
+    "input": "What is a chemical bond?",
+    "output": "A chemical bond is a lasting attraction between atoms enabling the formation of molecules, primarily including ionic bonds (electron transfer), covalent bonds (electron sharing), and metallic bonds (electron sea model).",
+    "category": "chemistry"
+  },
+  {
+    "input": "What is pH?",
+    "output": "pH is a logarithmic scale measuring the acidity or basicity of an aqueous solution, ranging from 0 (strongly acidic) to 14 (strongly basic), with 7 being neutral, defined as the negative logarithm of hydrogen ion concentration.",
+    "category": "chemistry"
+  },
+  {
+    "input": "What is a mole?",
+    "output": "A mole is the SI unit for amount of substance, containing exactly 6.02214076 × 10²³ elementary entities (Avogadro's number), providing a bridge between atomic-scale and macroscopic quantities in chemistry.",
+    "category": "chemistry"
+  },
+  {
+    "input": "What is oxidation?",
+    "output": "Oxidation is the loss of electrons by an atom, molecule, or ion in a chemical reaction, often (but not always) involving oxygen. It always occurs alongside reduction (electron gain) in redox reactions.",
+    "category": "chemistry"
+  },
+  {
+    "input": "What is a catalyst?",
+    "output": "A catalyst is a substance that increases the rate of a chemical reaction without being consumed, by lowering the activation energy barrier, and remains unchanged at the end of the reaction.",
+    "category": "chemistry"
+  },
+  {
+    "input": "What are isotopes?",
+    "output": "Isotopes are variants of a chemical element with the same number of protons but different numbers of neutrons, having identical chemical properties but different atomic masses (e.g., carbon-12, carbon-13, carbon-14).",
+    "category": "chemistry"
+  },
+  {
+    "input": "What is an acid?",
+    "output": "An acid is a substance that donates protons (H⁺ ions) according to Brønsted-Lowry theory or accepts electron pairs per Lewis theory, typically having a sour taste, turning litmus red, and reacting with bases to form salts.",
+    "category": "chemistry"
+  },
+  {
+    "input": "What is a base?",
+    "output": "A base is a substance that accepts protons (H⁺ ions) per Brønsted-Lowry theory or donates electron pairs per Lewis theory, typically having a bitter taste, feeling slippery, and turning litmus blue.",
+    "category": "chemistry"
+  },
+  {
+    "input": "What is an organic compound?",
+    "output": "An organic compound is a chemical substance containing carbon atoms bonded to hydrogen and often other elements (O, N, S, P), forming the basis of all known life, with millions of known compounds from methane to complex biomolecules.",
+    "category": "chemistry"
+  },
+  {
+    "input": "What is polymerization?",
+    "output": "Polymerization is the chemical process where small monomer molecules join together to form large polymer chains, either via addition polymerization (e.g., polyethylene) or condensation polymerization (e.g., nylon, proteins).",
+    "category": "chemistry"
+  },
+  {
+    "input": "What is the ideal gas law?",
+    "output": "The ideal gas law, PV = nRT, relates pressure (P), volume (V), amount (n in moles), and temperature (T) of an ideal gas, with R being the universal gas constant (8.314 J/mol·K).",
+    "category": "chemistry"
+  },
+  {
+    "input": "What is an electrolyte?",
+    "output": "An electrolyte is a substance that dissociates into ions when dissolved in a polar solvent (like water), producing an electrically conducting solution essential for batteries, biological processes, and electrochemistry.",
+    "category": "chemistry"
+  },
+  {
+    "input": "What is stoichiometry?",
+    "output": "Stoichiometry is the calculation of relative quantities of reactants and products in chemical reactions based on the conservation of mass and the law of definite proportions, using balanced chemical equations.",
+    "category": "chemistry"
+  },
+  {
+    "input": "What are hydrocarbons?",
+    "output": "Hydrocarbons are organic compounds consisting entirely of hydrogen and carbon atoms, categorized as alkanes (single bonds), alkenes (double bonds), alkynes (triple bonds), and aromatics (ring structures like benzene).",
+    "category": "chemistry"
+  },
+  {
+    "input": "What is an enzyme?",
+    "output": "An enzyme is a protein (or RNA) that acts as a biological catalyst, accelerating biochemical reactions by lowering activation energy, with high specificity for substrates at the active site, functioning under mild physiological conditions.",
+    "category": "chemistry"
+  },
+  {
+    "input": "What is the law of conservation of mass?",
+    "output": "The law of conservation of mass states that mass is neither created nor destroyed in a chemical reaction—the total mass of reactants equals the total mass of products, a fundamental principle formulated by Antoine Lavoisier.",
+    "category": "chemistry"
+  },
+  {
+    "input": "What is a solution?",
+    "output": "A solution is a homogeneous mixture of two or more substances, consisting of a solute dissolved in a solvent, where the solute particles are uniformly distributed at the molecular or ionic level and do not settle over time.",
+    "category": "chemistry"
+  },
+  {
+    "input": "What is electronegativity?",
+    "output": "Electronegativity is a measure of an atom's tendency to attract shared electrons in a chemical bond, increasing across periods and decreasing down groups on the periodic table, with fluorine being the most electronegative element.",
+    "category": "chemistry"
+  },
+  {
+    "input": "What are noble gases?",
+    "output": "Noble gases (helium, neon, argon, krypton, xenon, radon) are Group 18 elements with full valence electron shells, making them extremely stable, colorless, odorless, and largely chemically inert under normal conditions.",
+    "category": "chemistry"
+  },
+  {
+    "input": "What is chromatography?",
+    "output": "Chromatography is a laboratory technique for separating mixtures into individual components based on differential partitioning between a mobile phase and a stationary phase, widely used in analytical chemistry and biochemistry.",
+    "category": "chemistry"
+  },
+  {
+    "input": "What is a redox reaction?",
+    "output": "A redox (reduction-oxidation) reaction is a chemical reaction where electron transfer occurs between species: one substance loses electrons (oxidation) while another gains electrons (reduction), fundamental to electrochemistry and metabolism.",
+    "category": "chemistry"
+  },
+  {
+    "input": "What is an allotrope?",
+    "output": "An allotrope is a structurally different form of the same element in the same physical state, such as diamond and graphite (both carbon) or O₂ and O₃ (ozone), exhibiting different properties due to different atomic arrangements.",
+    "category": "chemistry"
+  },
+  {
+    "input": "What is the Arrhenius equation?",
+    "output": "The Arrhenius equation, k = A·e^(-Ea/RT), describes how the rate constant (k) of a chemical reaction depends on temperature and activation energy (Ea), with A being the pre-exponential factor and R the gas constant.",
+    "category": "chemistry"
+  },
+  {
+    "input": "What is a buffer solution?",
+    "output": "A buffer solution resists changes in pH when small amounts of acid or base are added, consisting of a weak acid and its conjugate base (or weak base and its conjugate acid), essential for maintaining stable pH in biological systems.",
+    "category": "chemistry"
+  },
+  {
+    "input": "What are transition metals?",
+    "output": "Transition metals are elements in the d-block of the periodic table (Groups 3-12), characterized by partially filled d orbitals, variable oxidation states, colored compounds, and catalytic properties, including iron, copper, gold, and platinum.",
+    "category": "chemistry"
+  },
+  {
+    "input": "What is Le Chatelier's principle?",
+    "output": "Le Chatelier's principle states that if a dynamic equilibrium system is disturbed by changing conditions (concentration, temperature, pressure), the system shifts to counteract the change and establish a new equilibrium.",
+    "category": "chemistry"
+  },
+  {
+    "input": "What is a free radical?",
+    "output": "A free radical is an atom, molecule, or ion with unpaired valence electrons, making it highly reactive. They play roles in combustion, polymerization, atmospheric chemistry, and biological oxidative stress and aging.",
+    "category": "chemistry"
+  },
+  {
+    "input": "What is the difference between exothermic and endothermic reactions?",
+    "output": "Exothermic reactions release energy (usually as heat) to the surroundings (ΔH < 0), while endothermic reactions absorb energy from the surroundings (ΔH > 0), distinguished by their enthalpy changes.",
+    "category": "chemistry"
+  },
+  {
+    "input": "What is a cell?",
+    "output": "A cell is the basic structural, functional, and biological unit of all known organisms, capable of self-replication, containing genetic material and organelles within a membrane boundary, classified as prokaryotic or eukaryotic.",
+    "category": "biology"
+  },
+  {
+    "input": "What is DNA?",
+    "output": "DNA (deoxyribonucleic acid) is the hereditary molecule in all known organisms, consisting of two polynucleotide strands forming a double helix, with sequences of four nucleotide bases (A, T, G, C) encoding genetic information.",
+    "category": "biology"
+  },
+  {
+    "input": "What is natural selection?",
+    "output": "Natural selection is the process where organisms with favorable traits are more likely to survive and reproduce, driving evolution by increasing the frequency of advantageous alleles in populations over generations.",
+    "category": "biology"
+  },
+  {
+    "input": "What is photosynthesis?",
+    "output": "Photosynthesis is the process by which green plants, algae, and cyanobacteria convert light energy into chemical energy, using carbon dioxide and water to produce glucose and oxygen, primarily in chloroplasts via chlorophyll.",
+    "category": "biology"
+  },
+  {
+    "input": "What is mitosis?",
+    "output": "Mitosis is the process of cell division producing two genetically identical daughter cells from a single parent cell, consisting of prophase, metaphase, anaphase, telophase, and cytokinesis, essential for growth and tissue repair.",
+    "category": "biology"
+  },
+  {
+    "input": "What is meiosis?",
+    "output": "Meiosis is a specialized type of cell division producing four non-identical haploid gametes (sperm or eggs) from a diploid cell, involving two rounds of division and genetic recombination via crossing over.",
+    "category": "biology"
+  },
+  {
+    "input": "What is an ecosystem?",
+    "output": "An ecosystem is a community of interacting living organisms (biotic factors) and their physical environment (abiotic factors), such as a forest, coral reef, or desert, with energy flow and nutrient cycling.",
+    "category": "biology"
+  },
+  {
+    "input": "What is a protein?",
+    "output": "A protein is a large biomolecule composed of one or more chains of amino acids folded into specific three-dimensional structures, performing diverse functions including catalysis (enzymes), structure, transport, signaling, and immune defense.",
+    "category": "biology"
+  },
+  {
+    "input": "What is the central dogma of molecular biology?",
+    "output": "The central dogma describes the flow of genetic information: DNA is transcribed into messenger RNA (mRNA), which is then translated into proteins, representing the fundamental process of gene expression in living cells.",
+    "category": "biology"
+  },
+  {
+    "input": "What is a gene?",
+    "output": "A gene is a specific sequence of DNA nucleotides that encodes instructions for synthesizing a functional product, typically a protein or RNA molecule, and serves as the basic unit of heredity transmitted from parents to offspring.",
+    "category": "biology"
+  },
+  {
+    "input": "What is a mutation?",
+    "output": "A mutation is a permanent change in the DNA sequence of a gene or chromosome, arising from errors during replication, exposure to mutagens, or viral insertion, and is the ultimate source of genetic variation for evolution.",
+    "category": "biology"
+  },
+  {
+    "input": "What is homeostasis?",
+    "output": "Homeostasis is the ability of an organism to maintain a stable internal environment despite external changes, regulated through feedback mechanisms controlling temperature, pH, ion concentration, and glucose levels.",
+    "category": "biology"
+  },
+  {
+    "input": "What is the immune system?",
+    "output": "The immune system is a complex network of cells, tissues, and organs that defends the body against pathogens through innate (nonspecific) and adaptive (specific, antibody-mediated) responses, including memory for long-term immunity.",
+    "category": "biology"
+  },
+  {
+    "input": "What is ATP?",
+    "output": "ATP (adenosine triphosphate) is the primary energy currency of cells, storing energy in high-energy phosphate bonds; hydrolysis of ATP to ADP releases energy used for cellular processes including muscle contraction, transport, and biosynthesis.",
+    "category": "biology"
+  },
+  {
+    "input": "What are stem cells?",
+    "output": "Stem cells are undifferentiated cells with the capacity to self-renew and differentiate into specialized cell types, classified as embryonic (pluripotent) or adult (multipotent), holding therapeutic potential for regenerative medicine.",
+    "category": "biology"
+  },
+  {
+    "input": "What is the circulatory system?",
+    "output": "The circulatory system (cardiovascular system) comprises the heart, blood vessels, and blood, transporting oxygen, nutrients, hormones, and waste products throughout the body, while regulating temperature and immune responses.",
+    "category": "biology"
+  },
+  {
+    "input": "What is the nervous system?",
+    "output": "The nervous system is the body's command center, consisting of the brain, spinal cord (central nervous system), and peripheral nerves, using electrical and chemical signals to coordinate sensation, movement, cognition, and autonomic functions.",
+    "category": "biology"
+  },
+  {
+    "input": "What is cellular respiration?",
+    "output": "Cellular respiration is the metabolic process where cells convert biochemical energy from nutrients (primarily glucose) into ATP through glycolysis, the Krebs cycle, and oxidative phosphorylation, consuming oxygen and releasing carbon dioxide.",
+    "category": "biology"
+  },
+  {
+    "input": "What is a virus?",
+    "output": "A virus is a microscopic infectious agent consisting of genetic material (DNA or RNA) enclosed in a protein coat (capsid), requiring a host cell to replicate, existing at the boundary between living and non-living matter.",
+    "category": "biology"
+  },
+  {
+    "input": "What is the human genome?",
+    "output": "The human genome is the complete set of genetic information in human DNA, containing approximately 3 billion base pairs organized into 23 pairs of chromosomes, with about 20,000-25,000 protein-coding genes.",
+    "category": "biology"
+  },
+  {
+    "input": "What is symbiosis?",
+    "output": "Symbiosis is a close and long-term biological interaction between two different species, categorized as mutualism (both benefit), commensalism (one benefits, other unaffected), or parasitism (one benefits, other harmed).",
+    "category": "biology"
+  },
+  {
+    "input": "What is a food web?",
+    "output": "A food web is a complex network of interconnected food chains showing feeding relationships within an ecosystem, illustrating energy flow from producers through various consumer and decomposer trophic levels.",
+    "category": "biology"
+  },
+  {
+    "input": "What is the difference between RNA and DNA?",
+    "output": "DNA is double-stranded with deoxyribose sugar and thymine base; RNA is typically single-stranded with ribose sugar and uracil replacing thymine. DNA stores genetic information, while RNA translates it and has catalytic functions.",
+    "category": "biology"
+  },
+  {
+    "input": "What are chromosomes?",
+    "output": "Chromosomes are thread-like structures composed of DNA tightly coiled around histone proteins, located in the cell nucleus, carrying genetic information in genes, with humans having 46 chromosomes (23 pairs) in somatic cells.",
+    "category": "biology"
+  },
+  {
+    "input": "What is a neuron?",
+    "output": "A neuron is a specialized cell transmitting nerve impulses through electrical and chemical signals, consisting of a cell body (soma), dendrites (receiving signals), and an axon (transmitting signals), forming the basis of the nervous system.",
+    "category": "biology"
+  },
+  {
+    "input": "What is apoptosis?",
+    "output": "Apoptosis is programmed cell death, a highly regulated process where cells self-destruct in response to signals, distinct from necrosis (traumatic cell death), playing crucial roles in development, tissue homeostasis, and cancer prevention.",
+    "category": "biology"
+  },
+  {
+    "input": "What is the endocrine system?",
+    "output": "The endocrine system is a network of glands (pituitary, thyroid, adrenal, pancreas, etc.) that secrete hormones directly into the bloodstream, regulating metabolism, growth, reproduction, mood, and homeostasis over long time scales.",
+    "category": "biology"
+  },
+  {
+    "input": "What is biodiversity?",
+    "output": "Biodiversity refers to the variety and variability of life on Earth at all levels—genetic diversity within species, species diversity within communities, and ecosystem diversity across landscapes—essential for ecosystem resilience and human well-being.",
+    "category": "biology"
+  },
+  {
+    "input": "What are mitochondria?",
+    "output": "Mitochondria are double-membrane organelles found in most eukaryotic cells, the primary site of aerobic respiration and ATP production, possessing their own DNA and ribosomes, supporting the endosymbiotic theory of their evolutionary origin.",
+    "category": "biology"
+  },
+  {
+    "input": "What is the theory of evolution?",
+    "output": "The theory of evolution, primarily formulated by Charles Darwin, explains how species change over time through natural selection, genetic drift, mutation, and gene flow, supported by evidence from fossils, comparative anatomy, genetics, and direct observation.",
+    "category": "biology"
+  },
+  {
+    "input": "What is a prime number?",
+    "output": "A prime number is a natural number greater than 1 that has no positive divisors other than 1 and itself. The first few primes are 2, 3, 5, 7, 11, 13, 17, 19, 23, 29.",
+    "category": "mathematics"
+  },
+  {
+    "input": "What is the Pythagorean theorem?",
+    "output": "The Pythagorean theorem states that in a right triangle, the square of the hypotenuse length equals the sum of squares of the other two sides: a² + b² = c², fundamental to Euclidean geometry.",
+    "category": "mathematics"
+  },
+  {
+    "input": "What is a derivative?",
+    "output": "A derivative measures how a function changes as its input changes, representing the instantaneous rate of change or slope of the tangent line at any point, the fundamental concept of differential calculus.",
+    "category": "mathematics"
+  },
+  {
+    "input": "What is an integral?",
+    "output": "An integral calculates the area under a curve, the accumulation of quantities, or the inverse of differentiation. Definite integrals compute accumulated change over an interval; indefinite integrals find antiderivatives.",
+    "category": "mathematics"
+  },
+  {
+    "input": "What is a vector?",
+    "output": "A vector is a mathematical object with both magnitude and direction, represented as an ordered list of components, fundamental to physics (forces, velocities), linear algebra, and computer graphics.",
+    "category": "mathematics"
+  },
+  {
+    "input": "What is a matrix?",
+    "output": "A matrix is a rectangular array of numbers, symbols, or expressions arranged in rows and columns, used in linear algebra for solving systems of equations, transformations, and representing data in various applications.",
+    "category": "mathematics"
+  },
+  {
+    "input": "What is the Fibonacci sequence?",
+    "output": "The Fibonacci sequence begins 0, 1, 1, 2, 3, 5, 8, 13, 21... where each term is the sum of the two preceding terms (F(n) = F(n-1) + F(n-2)), appearing in nature from spiral shells to flower petals.",
+    "category": "mathematics"
+  },
+  {
+    "input": "What is π (pi)?",
+    "output": "Pi (π) is the mathematical constant representing the ratio of a circle's circumference to its diameter, approximately 3.14159, an irrational and transcendental number appearing in geometry, trigonometry, and many physics equations.",
+    "category": "mathematics"
+  },
+  {
+    "input": "What is a logarithm?",
+    "output": "A logarithm is the inverse of exponentiation: log_b(x) = y means b^y = x, where b is the base. Logarithms simplify multiplication into addition and are fundamental to exponential growth, information theory, and complexity analysis.",
+    "category": "mathematics"
+  },
+  {
+    "input": "What is the normal distribution?",
+    "output": "The normal (Gaussian) distribution is a symmetric bell-shaped probability distribution characterized by its mean and standard deviation, describing many natural phenomena and forming the basis of statistical inference via the Central Limit Theorem.",
+    "category": "mathematics"
+  },
+  {
+    "input": "What is a complex number?",
+    "output": "A complex number has the form a + bi, where a and b are real numbers and i is the imaginary unit (i² = -1). They extend the real number system, essential in quantum mechanics, electrical engineering, and signal processing.",
+    "category": "mathematics"
+  },
+  {
+    "input": "What is a limit in calculus?",
+    "output": "A limit describes the value that a function approaches as the input approaches some value, forming the rigorous foundation for defining derivatives, integrals, and continuity in calculus.",
+    "category": "mathematics"
+  },
+  {
+    "input": "What is probability?",
+    "output": "Probability is a numerical measure (between 0 and 1) of the likelihood that an event will occur, computed as the ratio of favorable outcomes to total possible outcomes in equally likely scenarios, fundamental to statistics and risk analysis.",
+    "category": "mathematics"
+  },
+  {
+    "input": "What is a function?",
+    "output": "A function is a relation between a set of inputs (domain) and a set of permissible outputs (codomain) where each input maps to exactly one output, expressed as y = f(x), fundamental to all branches of mathematics.",
+    "category": "mathematics"
+  },
+  {
+    "input": "What is e (Euler's number)?",
+    "output": "Euler's number e ≈ 2.71828 is the base of natural logarithms, an irrational and transcendental constant fundamental to calculus because the exponential function e^x equals its own derivative, modeling continuous growth and decay.",
+    "category": "mathematics"
+  },
+  {
+    "input": "What is a fractal?",
+    "output": "A fractal is a complex geometric shape exhibiting self-similarity at different scales, often generated by iterative processes, with fractional dimension (e.g., Mandelbrot set, Koch snowflake), modeling natural phenomena like coastlines and snowflakes.",
+    "category": "mathematics"
+  },
+  {
+    "input": "What is the Central Limit Theorem?",
+    "output": "The Central Limit Theorem states that the sampling distribution of the sample mean approaches a normal distribution as sample size increases, regardless of the underlying population distribution, foundational to inferential statistics.",
+    "category": "mathematics"
+  },
+  {
+    "input": "What is Gödel's incompleteness theorem?",
+    "output": "Gödel's incompleteness theorems prove that any consistent formal system sufficient for basic arithmetic contains statements that are true but unprovable within that system, revealing fundamental limitations of mathematical logic.",
+    "category": "mathematics"
+  },
+  {
+    "input": "What is set theory?",
+    "output": "Set theory is the branch of mathematical logic studying collections of objects (sets), serving as the foundation of modern mathematics, with concepts of union, intersection, complement, and cardinality formalized by Cantor and Zermelo-Fraenkel axioms.",
+    "category": "mathematics"
+  },
+  {
+    "input": "What is a polynomial?",
+    "output": "A polynomial is an algebraic expression consisting of variables and coefficients combined using addition, subtraction, and multiplication, where variables have non-negative integer exponents (e.g., 3x² + 2x - 5).",
+    "category": "mathematics"
+  },
+  {
+    "input": "What is group theory?",
+    "output": "Group theory studies algebraic structures called groups, consisting of a set and an operation satisfying closure, associativity, identity, and inverse properties, fundamental to abstract algebra with applications in physics and cryptography.",
+    "category": "mathematics"
+  },
+  {
+    "input": "What is Bayes' theorem?",
+    "output": "Bayes' theorem, P(A|B) = P(B|A)·P(A)/P(B), describes the probability of an event based on prior knowledge of related conditions, providing a mathematical framework for updating beliefs with new evidence.",
+    "category": "mathematics"
+  },
+  {
+    "input": "What is the Fundamental Theorem of Calculus?",
+    "output": "The Fundamental Theorem of Calculus establishes that differentiation and integration are inverse operations: the integral of a function over an interval equals the difference of its antiderivative evaluated at the endpoints.",
+    "category": "mathematics"
+  },
+  {
+    "input": "What is a topology?",
+    "output": "A topology on a set defines which subsets are considered open, providing a general notion of continuity, convergence, and connectedness without requiring distance, forming the foundation of modern geometry and analysis.",
+    "category": "mathematics"
+  },
+  {
+    "input": "What is the golden ratio?",
+    "output": "The golden ratio φ ≈ 1.618 is an irrational number where (a+b)/a = a/b, appearing in the Fibonacci sequence, classical art and architecture, and natural growth patterns, related to aesthetically pleasing proportions.",
+    "category": "mathematics"
+  },
+  {
+    "input": "What is linear regression?",
+    "output": "Linear regression is a statistical method modeling the relationship between a dependent variable and one or more independent variables using a linear equation, minimizing the sum of squared residuals to find the best-fit line.",
+    "category": "mathematics"
+  },
+  {
+    "input": "What is the law of large numbers?",
+    "output": "The law of large numbers states that as a sample size grows, the sample mean converges to the expected value (population mean), explaining why casinos profit over time and why large samples yield more reliable statistics.",
+    "category": "mathematics"
+  },
+  {
+    "input": "What are the axioms of Euclidean geometry?",
+    "output": "Euclid's five postulates are: (1) a straight line can be drawn between any two points, (2) a line segment can be extended indefinitely, (3) a circle can be drawn with any center and radius, (4) all right angles are equal, (5) the parallel postulate.",
+    "category": "mathematics"
+  },
+  {
+    "input": "What is the number zero?",
+    "output": "Zero is the integer representing nothing or the absence of quantity, serving as the additive identity (x + 0 = x), an essential placeholder in place-value numeral systems, and the origin point on number lines and coordinate systems.",
+    "category": "mathematics"
+  },
+  {
+    "input": "What is a Taylor series?",
+    "output": "A Taylor series represents a function as an infinite sum of terms calculated from its derivatives at a single point, enabling approximation of complex functions (e^x, sin x, cos x) by polynomials for computation and analysis.",
+    "category": "mathematics"
+  },
+  {
+    "input": "What is an algorithm?",
+    "output": "An algorithm is a finite sequence of well-defined instructions for solving a specific problem or performing a computation, characterized by correctness, termination, and efficiency, independent of programming language.",
+    "category": "computer_science"
+  },
+  {
+    "input": "What is a data structure?",
+    "output": "A data structure is a specialized format for organizing, processing, retrieving, and storing data, with common types including arrays, linked lists, trees, graphs, hash tables, stacks, and queues, each optimized for different operations.",
+    "category": "computer_science"
+  },
+  {
+    "input": "What is object-oriented programming?",
+    "output": "Object-oriented programming (OOP) is a paradigm organizing code around objects containing data (attributes) and behavior (methods), emphasizing encapsulation, inheritance, and polymorphism, with languages including Java, C++, Python, and C#.",
+    "category": "computer_science"
+  },
+  {
+    "input": "What is the Internet?",
+    "output": "The Internet is a global network of interconnected computers using the TCP/IP protocol suite to communicate, enabling services including the World Wide Web, email, file transfer, and streaming, originally developed from ARPANET in the 1960s.",
+    "category": "computer_science"
+  },
+  {
+    "input": "What is a database?",
+    "output": "A database is an organized collection of structured data stored and accessed electronically, managed by a database management system (DBMS), with types including relational (SQL), document (NoSQL), key-value, graph, and time-series databases.",
+    "category": "computer_science"
+  },
+  {
+    "input": "What is machine learning?",
+    "output": "Machine learning is a subset of artificial intelligence where algorithms learn patterns from data without explicit programming, through supervised learning (labeled data), unsupervised learning (pattern discovery), and reinforcement learning (reward-based).",
+    "category": "computer_science"
+  },
+  {
+    "input": "What is a neural network?",
+    "output": "A neural network is a computational model inspired by biological neurons, consisting of interconnected layers of nodes (neurons) that process and transform input data through weighted connections, trained via backpropagation to recognize patterns.",
+    "category": "computer_science"
+  },
+  {
+    "input": "What is big-O notation?",
+    "output": "Big-O notation describes the upper bound of an algorithm's time or space complexity as input size grows, classifying efficiency (e.g., O(1) constant, O(log n) logarithmic, O(n) linear, O(n²) quadratic, O(2ⁿ) exponential).",
+    "category": "computer_science"
+  },
+  {
+    "input": "What is a programming language?",
+    "output": "A programming language is a formal language with syntax and semantics for writing instructions executed by computers, ranging from low-level (assembly) to high-level (Python, Java, C++), compiled or interpreted, domain-specific or general-purpose.",
+    "category": "computer_science"
+  },
+  {
+    "input": "What is encryption?",
+    "output": "Encryption is the process of converting plaintext into ciphertext using cryptographic algorithms and keys, ensuring data confidentiality. Symmetric encryption uses one key; asymmetric (public-key) encryption uses key pairs for security over untrusted channels.",
+    "category": "computer_science"
+  },
+  {
+    "input": "What is an operating system?",
+    "output": "An operating system is system software managing computer hardware, software resources, and providing common services for programs, including process scheduling, memory management, file systems, device drivers, and user interfaces (Windows, Linux, macOS).",
+    "category": "computer_science"
+  },
+  {
+    "input": "What is TCP/IP?",
+    "output": "TCP/IP (Transmission Control Protocol/Internet Protocol) is the foundational communication protocol suite of the Internet: IP handles addressing and routing packets, while TCP ensures reliable, ordered data delivery with error checking and flow control.",
+    "category": "computer_science"
+  },
+  {
+    "input": "What is recursion?",
+    "output": "Recursion is a programming technique where a function calls itself to solve smaller instances of the same problem, requiring a base case to terminate, often elegantly solving problems like tree traversal, factorial calculation, and the Tower of Hanoi.",
+    "category": "computer_science"
+  },
+  {
+    "input": "What is a hash table?",
+    "output": "A hash table (hash map) is a data structure mapping keys to values via a hash function computing an index, providing average O(1) time complexity for insert, delete, and lookup operations, widely used in caching, databases, and symbol tables.",
+    "category": "computer_science"
+  },
+  {
+    "input": "What is the difference between HTTP and HTTPS?",
+    "output": "HTTP (Hypertext Transfer Protocol) transfers web data in plaintext; HTTPS adds a layer of encryption via TLS/SSL, ensuring data confidentiality, integrity, and server authentication through digital certificates for secure web communication.",
+    "category": "computer_science"
+  },
+  {
+    "input": "What is a compiler?",
+    "output": "A compiler translates source code written in a high-level programming language into machine code or an intermediate form (e.g., bytecode) in one pass, producing an executable program, contrasted with interpreters that execute code line by line.",
+    "category": "computer_science"
+  },
+  {
+    "input": "What is cloud computing?",
+    "output": "Cloud computing delivers on-demand computing resources over the Internet—servers, storage, databases, networking, software—with pay-as-you-go pricing, offering service models: IaaS, PaaS, SaaS across public, private, and hybrid clouds.",
+    "category": "computer_science"
+  },
+  {
+    "input": "What is a graph algorithm?",
+    "output": "A graph algorithm operates on graph data structures (nodes and edges), solving problems like shortest path (Dijkstra's), minimum spanning tree (Kruskal's, Prim's), traversal (BFS, DFS), and page ranking (PageRank).",
+    "category": "computer_science"
+  },
+  {
+    "input": "What is concurrency?",
+    "output": "Concurrency is the ability of a system to execute multiple tasks in overlapping time periods, not necessarily simultaneously, managed through threads, processes, locks, semaphores, and message passing, essential for responsive and efficient applications.",
+    "category": "computer_science"
+  },
+  {
+    "input": "What is version control?",
+    "output": "Version control tracks and manages changes to source code over time, enabling multiple developers to collaborate, revert to previous states, and maintain branching histories. Git is the most widely used distributed version control system.",
+    "category": "computer_science"
+  },
+  {
+    "input": "What is REST API?",
+    "output": "REST (Representational State Transfer) is an architectural style for designing networked applications using stateless HTTP methods (GET, POST, PUT, DELETE) on resources identified by URIs, with responses typically in JSON or XML format.",
+    "category": "computer_science"
+  },
+  {
+    "input": "What is a distributed system?",
+    "output": "A distributed system consists of multiple autonomous computers communicating over a network to achieve a common goal, facing challenges of consistency, availability, partition tolerance (CAP theorem), latency, and fault tolerance.",
+    "category": "computer_science"
+  },
+  {
+    "input": "What is artificial intelligence?",
+    "output": "Artificial intelligence is the field of computer science creating systems capable of performing tasks requiring human-like intelligence: reasoning, learning, perception, natural language understanding, with subfields including machine learning, NLP, computer vision, and robotics.",
+    "category": "computer_science"
+  },
+  {
+    "input": "What is a sorting algorithm?",
+    "output": "A sorting algorithm arranges elements in a specific order (numerical, lexicographical). Common algorithms include quicksort (O(n log n) average), mergesort (O(n log n) stable), heapsort, and potentially faster radix sort for integers.",
+    "category": "computer_science"
+  },
+  {
+    "input": "What is DNS?",
+    "output": "The Domain Name System (DNS) is a hierarchical, decentralized naming system translating human-readable domain names (e.g., google.com) to machine-readable IP addresses (e.g., 142.250.80.46), functioning like the Internet's phonebook.",
+    "category": "computer_science"
+  },
+  {
+    "input": "What is a blockchain?",
+    "output": "A blockchain is a distributed, immutable digital ledger recording transactions across a peer-to-peer network, secured by cryptographic hashing and consensus mechanisms (proof-of-work, proof-of-stake), enabling trustless decentralized applications and cryptocurrencies.",
+    "category": "computer_science"
+  },
+  {
+    "input": "What is a SQL injection?",
+    "output": "SQL injection is a code injection attack where malicious SQL statements are inserted into application queries via user input, potentially exposing, modifying, or deleting database data—prevented through parameterized queries and input sanitization.",
+    "category": "computer_science"
+  },
+  {
+    "input": "What is the OSI model?",
+    "output": "The OSI (Open Systems Interconnection) model is a conceptual framework with 7 layers (Physical, Data Link, Network, Transport, Session, Presentation, Application) standardizing network communication functions for interoperability.",
+    "category": "computer_science"
+  },
+  {
+    "input": "What is a linked list?",
+    "output": "A linked list is a linear data structure where elements (nodes) contain data and a reference to the next node, allowing efficient insertion and deletion but requiring sequential access, unlike arrays which allow random access.",
+    "category": "computer_science"
+  },
+  {
+    "input": "What is a Turing machine?",
+    "output": "A Turing machine is a theoretical computational model consisting of an infinite tape, a read-write head, and a state register, defining computability—any problem solvable by an algorithm can be solved by a Turing machine (Church-Turing thesis).",
+    "category": "computer_science"
+  },
+  {
+    "input": "When did World War 2 end?",
+    "output": "World War 2 ended in 1945 with Germany's unconditional surrender on May 8 (V-E Day) and Japan's surrender on September 2 (V-J Day) following the atomic bombings of Hiroshima and Nagasaki.",
+    "category": "history"
+  },
+  {
+    "input": "What was the French Revolution?",
+    "output": "The French Revolution (1789-1799) was a period of radical social and political upheaval that overthrew the monarchy, established a republic, and introduced modern democratic ideals of liberty, equality, and fraternity, ending with Napoleon's rise.",
+    "category": "history"
+  },
+  {
+    "input": "Who was Julius Caesar?",
+    "output": "Julius Caesar (100-44 BCE) was a Roman military general, statesman, and dictator who played a critical role in the Roman Republic's transition to the Roman Empire through conquests in Gaul and civil war, assassinated by senators on the Ides of March.",
+    "category": "history"
+  },
+  {
+    "input": "What was the Renaissance?",
+    "output": "The Renaissance was a cultural rebirth from the 14th to 17th centuries, beginning in Italy and spreading across Europe, marked by a revival of classical learning, artistic innovation (da Vinci, Michelangelo), scientific inquiry, and humanist philosophy.",
+    "category": "history"
+  },
+  {
+    "input": "What caused World War 1?",
+    "output": "World War 1 (1914-1918) was triggered by the assassination of Archduke Franz Ferdinand of Austria-Hungary, but underlying causes included militarism, complex alliances (Triple Entente vs. Triple Alliance), imperialism, and nationalism.",
+    "category": "history"
+  },
+  {
+    "input": "What was the Cold War?",
+    "output": "The Cold War (1947-1991) was a geopolitical tension between the United States (and NATO allies) and the Soviet Union (and Warsaw Pact), characterized by nuclear arms race, proxy wars, space race, and ideological conflict between capitalism and communism.",
+    "category": "history"
+  },
+  {
+    "input": "What was the Industrial Revolution?",
+    "output": "The Industrial Revolution was the transition from agrarian handicraft economies to machine-based manufacturing beginning in Britain (~1760-1840), driven by steam power, mechanized textile production, iron making, and later railways, fundamentally transforming society.",
+    "category": "history"
+  },
+  {
+    "input": "What was the American Civil War?",
+    "output": "The American Civil War (1861-1865) was fought between the Union (North) and the Confederacy (South) primarily over slavery and states' rights, resulting in Union victory, abolition of slavery (13th Amendment), and preservation of the United States.",
+    "category": "history"
+  },
+  {
+    "input": "Who was Genghis Khan?",
+    "output": "Genghis Khan (c. 1162-1227) was the founder and first Great Khan of the Mongol Empire, the largest contiguous land empire in history, unifying nomadic tribes and conquering vast territories across Asia and Eastern Europe through military genius.",
+    "category": "history"
+  },
+  {
+    "input": "What was the Holocaust?",
+    "output": "The Holocaust was the systematic, state-sponsored genocide of six million Jews by Nazi Germany and its collaborators during World War 2, alongside persecution of Roma, disabled people, Slavic peoples, and political opponents.",
+    "category": "history"
+  },
+  {
+    "input": "What was the Roman Empire?",
+    "output": "The Roman Empire (27 BCE - 476 CE Western, -1453 CE Eastern) was the post-Republican period of ancient Rome, dominating the Mediterranean world through military conquest, engineering, law, and administration, profoundly influencing Western civilization.",
+    "category": "history"
+  },
+  {
+    "input": "What was the Age of Exploration?",
+    "output": "The Age of Exploration (15th-17th centuries) was a period of European overseas exploration, led by Portugal and Spain, with figures like Columbus, Magellan, and da Gama discovering new trade routes and continents, initiating global colonization.",
+    "category": "history"
+  },
+  {
+    "input": "What was the Russian Revolution?",
+    "output": "The Russian Revolution (1917) comprised the February Revolution overthrowing the Tsarist autocracy and the October Revolution bringing the Bolsheviks under Lenin to power, establishing the world's first socialist state, later becoming the Soviet Union.",
+    "category": "history"
+  },
+  {
+    "input": "What was the Vietnam War?",
+    "output": "The Vietnam War (1955-1975) was a Cold War conflict between communist North Vietnam (supported by USSR and China) and South Vietnam (supported by the US), ending with North Vietnamese victory and reunification under communist rule.",
+    "category": "history"
+  },
+  {
+    "input": "Who was Napoleon Bonaparte?",
+    "output": "Napoleon Bonaparte (1769-1821) was a French military leader who rose to Emperor of the French, conquering much of Europe, implementing the Napoleonic Code legal reforms, before defeat at Waterloo in 1815 and exile to Saint Helena.",
+    "category": "history"
+  },
+  {
+    "input": "What was the Silk Road?",
+    "output": "The Silk Road was an ancient network of trade routes connecting East Asia with the Mediterranean world from ~130 BCE to 1450s CE, facilitating the exchange of goods (silk, spices), ideas, technologies, religions, and diseases across civilizations.",
+    "category": "history"
+  },
+  {
+    "input": "What was the American Revolution?",
+    "output": "The American Revolution (1765-1783) was the political upheaval where thirteen American colonies overthrew British rule and founded the United States of America, driven by Enlightenment ideals and grievances over taxation without representation.",
+    "category": "history"
+  },
+  {
+    "input": "What was the fall of Constantinople?",
+    "output": "The fall of Constantinople in 1453 marked the end of the Byzantine (Eastern Roman) Empire when the Ottoman Turks under Mehmed II captured the city, a watershed event that shifted trade routes and helped spark the Renaissance.",
+    "category": "history"
+  },
+  {
+    "input": "What was the Manhattan Project?",
+    "output": "The Manhattan Project (1942-1946) was the secret US-led research and development program producing the first nuclear weapons during World War 2, involving scientists like Oppenheimer and Fermi, culminating in the atomic bombings of Hiroshima and Nagasaki.",
+    "category": "history"
+  },
+  {
+    "input": "What was the Berlin Wall?",
+    "output": "The Berlin Wall (1961-1989) was a guarded concrete barrier dividing West Berlin from East Berlin and East Germany, the iconic symbol of the Cold War, with its fall in 1989 marking the beginning of German reunification and the end of the Cold War.",
+    "category": "history"
+  },
+  {
+    "input": "What was the Spanish Flu?",
+    "output": "The Spanish Flu was the 1918-1920 H1N1 influenza pandemic infecting about one-third of the world's population and causing an estimated 50 million deaths, one of the deadliest pandemics in human history, exacerbated by wartime conditions.",
+    "category": "history"
+  },
+  {
+    "input": "Who was Cleopatra?",
+    "output": "Cleopatra VII (69-30 BCE) was the last active ruler of Ptolemaic Egypt, known for her political acumen, alliances with Julius Caesar and Mark Antony, and dramatic death, marking the end of Hellenistic rule and Egypt's absorption into the Roman Empire.",
+    "category": "history"
+  },
+  {
+    "input": "What was the Meiji Restoration?",
+    "output": "The Meiji Restoration (1868) was the political revolution restoring imperial rule in Japan under Emperor Meiji, rapidly modernizing and industrializing Japan by adopting Western technology and institutions, transforming it into a world power within a generation.",
+    "category": "history"
+  },
+  {
+    "input": "What was the Peloponnesian War?",
+    "output": "The Peloponnesian War (431-404 BCE) was a protracted conflict between Athens (Delian League) and Sparta (Peloponnesian League) for dominance of the Greek world, ending with Spartan victory, weakening all Greek city-states and leading to Macedonian ascendancy.",
+    "category": "history"
+  },
+  {
+    "input": "What was the Civil Rights Movement?",
+    "output": "The Civil Rights Movement (1954-1968) was a mass struggle for racial equality in the United States, led by figures like Martin Luther King Jr. and Rosa Parks, achieving landmark legislation ending legal segregation and protecting voting rights.",
+    "category": "history"
+  },
+  {
+    "input": "What was the printing press revolution?",
+    "output": "Johannes Gutenberg's movable-type printing press (~1440) revolutionized communication by enabling mass production of books, dramatically reducing costs, spreading literacy, enabling the Reformation and Scientific Revolution, and democratizing knowledge across Europe.",
+    "category": "history"
+  },
+  {
+    "input": "What was the Treaty of Versailles?",
+    "output": "The Treaty of Versailles (1919) formally ended World War 1, imposing heavy reparations, territorial losses, and military restrictions on Germany, with the war guilt clause; its punitive terms contributed to German resentment and the rise of Nazism.",
+    "category": "history"
+  },
+  {
+    "input": "What was the Apollo 11 mission?",
+    "output": "Apollo 11 (July 1969) was the first spaceflight landing humans on the Moon, with Neil Armstrong and Buzz Aldrin walking on the lunar surface while Michael Collins orbited above, fulfilling a national goal during the space race and marking a milestone for humanity.",
+    "category": "history"
+  },
+  {
+    "input": "Who was Mahatma Gandhi?",
+    "output": "Mahatma Gandhi (1869-1948) was the leader of India's non-violent independence movement against British rule, employing civil disobedience and non-cooperation, inspiring civil rights movements worldwide; assassinated shortly after India's independence in 1947.",
+    "category": "history"
+  },
+  {
+    "input": "What was the Opium Wars?",
+    "output": "The Opium Wars (1839-1842, 1856-1860) were conflicts between China and Western powers (primarily Britain), triggered by China's attempt to suppress the opium trade, resulting in unequal treaties, loss of Hong Kong, and opening of treaty ports to foreign trade.",
+    "category": "history"
+  },
+  {
+    "input": "What is the largest continent?",
+    "output": "Asia is the largest continent by both area (about 44.58 million km²) and population (~4.7 billion), spanning from the Ural Mountains to the Pacific Ocean, encompassing diverse climates, cultures, and landscapes including the Himalayas.",
+    "category": "geography"
+  },
+  {
+    "input": "What is the capital of Japan?",
+    "output": "Tokyo is the capital and largest city of Japan, a global financial and cultural hub with a metropolitan population exceeding 37 million, making it the most populous metropolitan area in the world.",
+    "category": "geography"
+  },
+  {
+    "input": "What is the longest river in the world?",
+    "output": "The Nile River, flowing about 6,650 km through northeastern Africa (primarily Egypt and Sudan), is traditionally considered the longest river in the world, though some measurements suggest the Amazon may be slightly longer.",
+    "category": "geography"
+  },
+  {
+    "input": "What is the highest mountain on Earth?",
+    "output": "Mount Everest, at 8,848.86 meters (29,031.7 feet) above sea level, is the highest point on Earth, located in the Himalayas on the border between Nepal and the Tibet Autonomous Region of China.",
+    "category": "geography"
+  },
+  {
+    "input": "What is the Sahara Desert?",
+    "output": "The Sahara is the world's largest hot desert, covering approximately 9.2 million km² across North Africa, stretching from the Atlantic Ocean to the Red Sea, with sand dunes, rocky plateaus, and extreme temperature variations.",
+    "category": "geography"
+  },
+  {
+    "input": "What is the equator?",
+    "output": "The equator is the imaginary circle at 0° latitude dividing Earth into Northern and Southern Hemispheres, approximately 40,075 km in circumference, receiving the most direct solar radiation and characterized by tropical climates.",
+    "category": "geography"
+  },
+  {
+    "input": "What is the population of Earth?",
+    "output": "The world population surpassed 8 billion in November 2022, concentrated primarily in Asia (about 60%) and Africa (about 17%), with continuing growth driven by improved healthcare and declining mortality rates.",
+    "category": "geography"
+  },
+  {
+    "input": "What is the Ring of Fire?",
+    "output": "The Pacific Ring of Fire is a horseshoe-shaped region around the Pacific Ocean basin characterized by frequent earthquakes and volcanic eruptions, containing about 75% of the world's active volcanoes, driven by tectonic plate boundaries.",
+    "category": "geography"
+  },
+  {
+    "input": "What are the Great Lakes?",
+    "output": "The Great Lakes (Superior, Michigan, Huron, Erie, Ontario) form the largest group of freshwater lakes on Earth by total surface area, located on the Canada-US border, containing about 21% of the world's surface fresh water.",
+    "category": "geography"
+  },
+  {
+    "input": "What is the Amazon rainforest?",
+    "output": "The Amazon rainforest is the world's largest tropical rainforest, covering about 5.5 million km² across nine South American countries, predominantly Brazil, harboring unparalleled biodiversity and playing a critical role in global carbon and water cycles.",
+    "category": "geography"
+  },
+  {
+    "input": "What is a continental drift?",
+    "output": "Continental drift is the theory, proposed by Alfred Wegener in 1912, that continents move slowly across Earth's surface over geological time, now explained by plate tectonics, evidenced by matching coastlines, fossils, and rock formations across continents.",
+    "category": "geography"
+  },
+  {
+    "input": "What is the capital of Australia?",
+    "output": "Canberra is the capital city of Australia, purpose-built as a compromise between rivals Sydney and Melbourne, located in the Australian Capital Territory, distinct from the country's largest cities of Sydney, Melbourne, and Brisbane.",
+    "category": "geography"
+  },
+  {
+    "input": "What are time zones?",
+    "output": "Time zones are longitudinal regions where a uniform standard time is used, generally offset from Coordinated Universal Time (UTC) by whole hours, established to account for Earth's rotation, with 24 standard time zones spanning 15° of longitude each.",
+    "category": "geography"
+  },
+  {
+    "input": "What is the Suez Canal?",
+    "output": "The Suez Canal is a 193.3 km artificial waterway in Egypt connecting the Mediterranean Sea to the Red Sea, completed in 1869, providing the shortest maritime route between Europe and Asia and handling about 12% of global trade.",
+    "category": "geography"
+  },
+  {
+    "input": "What is a monsoon?",
+    "output": "A monsoon is a seasonal reversing wind accompanied by dramatic precipitation changes, most prominent in South and Southeast Asia, driven by temperature differences between land and ocean, crucial for agriculture but capable of causing devastating floods.",
+    "category": "geography"
+  },
+  {
+    "input": "What is the deepest point in the ocean?",
+    "output": "The Challenger Deep in the Mariana Trench in the western Pacific Ocean is the deepest known point on Earth's seabed, reaching about 11,034 meters (36,201 feet) below sea level, where extreme pressure is over 1,000 times atmospheric pressure.",
+    "category": "geography"
+  },
+  {
+    "input": "What is the European Union?",
+    "output": "The European Union is a political and economic union of 27 European member states with a single market, common currency (euro used by 20 members), and supranational institutions, promoting free movement, trade, and regional cooperation.",
+    "category": "geography"
+  },
+  {
+    "input": "What is a coral reef?",
+    "output": "A coral reef is an underwater ecosystem built by colonies of coral polyps held together by calcium carbonate, found in tropical oceans, with the Great Barrier Reef off Australia being the largest, supporting immense marine biodiversity.",
+    "category": "geography"
+  },
+  {
+    "input": "What is the Gulf Stream?",
+    "output": "The Gulf Stream is a powerful warm Atlantic ocean current originating in the Gulf of Mexico, flowing along the US East Coast and across the Atlantic, significantly moderating Western Europe's climate by transporting tropical heat northward.",
+    "category": "geography"
+  },
+  {
+    "input": "What is the Serengeti?",
+    "output": "The Serengeti ecosystem encompasses Serengeti National Park (Tanzania) and Maasai Mara (Kenya), famous for the annual migration of over 1.5 million wildebeest and hundreds of thousands of zebras and gazelles, one of Earth's great wildlife spectacles.",
+    "category": "geography"
+  },
+  {
+    "input": "What is Antarctica?",
+    "output": "Antarctica is Earth's southernmost continent, covering 14.2 million km², the coldest, driest, and windiest continent, with 98% ice cover containing about 70% of the world's fresh water, governed by the Antarctic Treaty System for peaceful scientific research.",
+    "category": "geography"
+  },
+  {
+    "input": "What is a tectonic plate?",
+    "output": "A tectonic plate is a massive, irregularly shaped slab of solid rock composing Earth's lithosphere, whose movement at plate boundaries causes earthquakes, volcanic activity, mountain building, and ocean trench formation through convergent, divergent, and transform interactions.",
+    "category": "geography"
+  },
+  {
+    "input": "What is the Panama Canal?",
+    "output": "The Panama Canal is an 82 km artificial waterway across the Isthmus of Panama connecting the Atlantic and Pacific Oceans, completed in 1914, using a system of locks to raise and lower ships, dramatically shortening maritime travel between oceans.",
+    "category": "geography"
+  },
+  {
+    "input": "What is the Arctic Circle?",
+    "output": "The Arctic Circle is the parallel of latitude at approximately 66°33′ N, marking the southern boundary of the region where the sun does not set on the summer solstice and does not rise on the winter solstice, encompassing the Arctic Ocean and parts of eight countries.",
+    "category": "geography"
+  },
+  {
+    "input": "What is the Gobi Desert?",
+    "output": "The Gobi Desert is a large cold desert region in East Asia, spanning northern China and southern Mongolia, covering about 1.3 million km², known for its extreme temperature ranges, important dinosaur fossil discoveries, and historical Silk Road routes.",
+    "category": "geography"
+  },
+  {
+    "input": "What are fjords?",
+    "output": "Fjords are long, narrow, deep inlets of the sea between high cliffs, formed by glacial erosion and subsequent flooding, most famously found in Norway, New Zealand, Chile, and Canada, creating dramatic coastal landscapes.",
+    "category": "geography"
+  },
+  {
+    "input": "What is the Nile Delta?",
+    "output": "The Nile Delta is the fan-shaped region in northern Egypt where the Nile River spreads out and drains into the Mediterranean Sea, one of the world's largest river deltas, forming highly fertile agricultural land that has supported civilizations for millennia.",
+    "category": "geography"
+  },
+  {
+    "input": "What are the seven continents?",
+    "output": "The seven continents, ordered by area, are: Asia (largest), Africa, North America, South America, Antarctica, Europe, and Australia/Oceania (smallest), together covering about 29% of Earth's surface with the remaining 71% being oceans.",
+    "category": "geography"
+  },
+  {
+    "input": "What is the greenhouse effect?",
+    "output": "The greenhouse effect is the warming of Earth's surface by atmospheric gases (CO₂, methane, water vapor) trapping outgoing infrared radiation, essential for life at natural levels but intensified by human emissions driving climate change.",
+    "category": "geography"
+  },
+  {
+    "input": "What is a tsunami?",
+    "output": "A tsunami is a series of massive ocean waves caused by sudden displacement of large water volumes, typically by undersea earthquakes, volcanic eruptions, or landslides, traveling at jet-aircraft speeds across oceans and devastating coastlines upon arrival.",
+    "category": "geography"
+  },
+  {
+    "input": "What is epistemology?",
+    "output": "Epistemology is the branch of philosophy concerned with the nature, sources, and scope of knowledge, asking how we know what we know, what distinguishes justified belief from opinion, and what the limits of human understanding are.",
+    "category": "philosophy"
+  },
+  {
+    "input": "What is ethics?",
+    "output": "Ethics (moral philosophy) is the branch of philosophy systematizing concepts of right and wrong behavior, addressing how people should act, what constitutes a good life, and the justification of moral principles through theories like consequentialism, deontology, and virtue ethics.",
+    "category": "philosophy"
+  },
+  {
+    "input": "Who was Socrates?",
+    "output": "Socrates (c. 470-399 BCE) was a foundational Greek philosopher known for the Socratic method—relentless questioning to expose contradictions—who was executed for allegedly corrupting youth, recorded through his student Plato's dialogues.",
+    "category": "philosophy"
+  },
+  {
+    "input": "What is the categorical imperative?",
+    "output": "The categorical imperative is Immanuel Kant's supreme moral principle: act only according to maxims that could become universal laws and treat humanity always as an end, never merely as a means, demanding moral consistency irrespective of consequences.",
+    "category": "philosophy"
+  },
+  {
+    "input": "What is existentialism?",
+    "output": "Existentialism is a philosophical movement emphasizing individual existence, freedom, and choice, asserting that humans define their own meaning through authentic living in an absurd, indifferent universe, associated with Kierkegaard, Nietzsche, Sartre, and Camus.",
+    "category": "philosophy"
+  },
+  {
+    "input": "What is the allegory of the cave?",
+    "output": "Plato's allegory of the cave depicts prisoners mistaking shadows for reality and the painful journey toward enlightenment, illustrating his theory of Forms—that true reality exists beyond sensory perception, accessible only through philosophical reasoning.",
+    "category": "philosophy"
+  },
+  {
+    "input": "What is stoicism?",
+    "output": "Stoicism is a Hellenistic philosophy teaching that virtue (wisdom, courage, justice, temperance) is the highest good, emphasizing rationality, self-control, and accepting events beyond one's control, founded by Zeno of Citium and practiced by Seneca, Epictetus, and Marcus Aurelius.",
+    "category": "philosophy"
+  },
+  {
+    "input": "What is metaphysics?",
+    "output": "Metaphysics is the branch of philosophy investigating the fundamental nature of reality, existence, and the universe, asking questions about being, time, space, causality, identity, mind and matter, free will, and the existence of God.",
+    "category": "philosophy"
+  },
+  {
+    "input": "What is utilitarianism?",
+    "output": "Utilitarianism, formulated by Jeremy Bentham and John Stuart Mill, is an ethical theory holding that the morally right action is the one producing the greatest happiness for the greatest number, evaluating consequences to determine moral worth.",
+    "category": "philosophy"
+  },
+  {
+    "input": "What is Cartesian doubt?",
+    "output": "Cartesian doubt, introduced by René Descartes, is a systematic method of doubting all beliefs until reaching indubitable truth, famously concluding Cogito, ergo sum (I think, therefore I am) as the foundational certainty upon which knowledge can be built.",
+    "category": "philosophy"
+  },
+  {
+    "input": "What is the problem of evil?",
+    "output": "The problem of evil questions how an omnipotent, omnibenevolent, and omniscient God can coexist with suffering and evil in the world, a central argument against classical theism, with theodicies attempting to reconcile divine attributes with observable suffering.",
+    "category": "philosophy"
+  },
+  {
+    "input": "What is nihilism?",
+    "output": "Nihilism, associated with Nietzsche, is the rejection of fundamental meaning, values, or purpose in existence—the view that life lacks objective meaning, morality, or intrinsic value, requiring individuals to create their own values to avoid despair.",
+    "category": "philosophy"
+  },
+  {
+    "input": "What is phenomenology?",
+    "output": "Phenomenology, developed by Husserl and extended by Heidegger and Merleau-Ponty, is the philosophical study of conscious experience from the first-person perspective, focusing on how phenomena appear to consciousness without presupposing external reality.",
+    "category": "philosophy"
+  },
+  {
+    "input": "What is the social contract?",
+    "output": "The social contract theory, articulated by Hobbes, Locke, and Rousseau, posits that legitimate political authority derives from an implicit agreement among individuals to surrender some freedoms in exchange for protection of rights and social order.",
+    "category": "philosophy"
+  },
+  {
+    "input": "What is the trolley problem?",
+    "output": "The trolley problem is an ethical thought experiment where one must choose between letting a runaway trolley kill five people or actively diverting it to kill one person, illuminating tensions between consequentialist and deontological moral reasoning.",
+    "category": "philosophy"
+  },
+  {
+    "input": "What is dualism?",
+    "output": "Dualism is the philosophical view that mind and matter are fundamentally distinct substances, classically formulated by Descartes as the separation of res cogitans (thinking substance) from res extensa (extended substance), challenging the mind-body problem.",
+    "category": "philosophy"
+  },
+  {
+    "input": "What is solipsism?",
+    "output": "Solipsism is the philosophical position that only one's own mind is certain to exist—the external world and other minds cannot be verified, raising profound epistemological questions but generally considered irrefutable yet practically untenable.",
+    "category": "philosophy"
+  },
+  {
+    "input": "What is the is-ought problem?",
+    "output": "The is-ought problem, identified by David Hume, notes that one cannot logically derive prescriptive moral statements (what ought to be) from purely descriptive factual statements (what is), a foundational challenge to ethical naturalism.",
+    "category": "philosophy"
+  },
+  {
+    "input": "What is the veil of ignorance?",
+    "output": "The veil of ignorance is John Rawls's thought experiment for designing a just society: decision-makers are unaware of their own social position, ensuring fair principles because no one can tailor rules to benefit their particular circumstances.",
+    "category": "philosophy"
+  },
+  {
+    "input": "What is empiricism?",
+    "output": "Empiricism is the epistemological view that knowledge primarily derives from sensory experience, championed by Locke, Berkeley, and Hume, opposing rationalism's emphasis on innate ideas, asserting the mind begins as a tabula rasa (blank slate).",
+    "category": "philosophy"
+  },
+  {
+    "input": "What is rationalism?",
+    "output": "Rationalism is the epistemological position that reason is the primary source of knowledge, independent of sensory experience, with innate ideas and logical deduction yielding truths about reality, associated with Descartes, Spinoza, and Leibniz.",
+    "category": "philosophy"
+  },
+  {
+    "input": "What is the meaning of life according to Aristotle?",
+    "output": "Aristotle proposed eudaimonia (flourishing or well-being) as the highest human good, achieved by living virtuously in accordance with reason and fulfilling one's potential as a rational being, a teleological view of life's purpose.",
+    "category": "philosophy"
+  },
+  {
+    "input": "What is deontology?",
+    "output": "Deontology is an ethical framework where the morality of an action is judged by adherence to rules, duties, or obligations rather than consequences, most famously articulated in Kant's categorical imperative and the concept of moral absolutes.",
+    "category": "philosophy"
+  },
+  {
+    "input": "What is logical positivism?",
+    "output": "Logical positivism, developed by the Vienna Circle in the 1920s, held that only statements verifiable through empirical observation or logical proof are meaningful, rejecting metaphysics, ethics, and theology as literally nonsensical under the verification principle.",
+    "category": "philosophy"
+  },
+  {
+    "input": "What is the Chinese room argument?",
+    "output": "John Searle's Chinese room thought experiment argues that executing syntactic rules (like a computer program) does not produce semantic understanding, challenging strong AI claims that a program alone can generate consciousness or genuine comprehension.",
+    "category": "philosophy"
+  },
+  {
+    "input": "What is determinism?",
+    "output": "Determinism is the philosophical thesis that every event, including human actions and decisions, is causally determined by prior events and natural laws, raising questions about free will and moral responsibility if all choices are predetermined.",
+    "category": "philosophy"
+  },
+  {
+    "input": "What is the concept of Platonic love?",
+    "output": "Platonic love, derived from Plato's Symposium, refers to love transcending physical desire, ascending from appreciation of bodily beauty to love of the soul, and ultimately to contemplation of the Form of Beauty itself—a pure, spiritual connection.",
+    "category": "philosophy"
+  },
+  {
+    "input": "What is Occam's razor?",
+    "output": "Occam's razor is the philosophical and scientific principle attributed to William of Ockham, stating that among competing hypotheses, the one with the fewest assumptions should be preferred, favoring explanatory parsimony without unnecessary complexity.",
+    "category": "philosophy"
+  },
+  {
+    "input": "What is Hegelian dialectic?",
+    "output": "The Hegelian dialectic is a process of reasoning where a thesis generates its antithesis through contradiction, resolved in a synthesis at a higher level of understanding, driving historical and intellectual progress through the dynamic of Aufhebung (sublation).",
+    "category": "philosophy"
+  },
+  {
+    "input": "What is postmodernism?",
+    "output": "Postmodernism is a philosophical movement skeptical of grand narratives, objective truth, and universal reason, emphasizing deconstruction, relativism, and the role of language and power in constructing meaning, associated with Foucault, Derrida, and Lyotard.",
+    "category": "philosophy"
+  },
+  {
+    "input": "What is inflation?",
+    "output": "Inflation is the rate at which the general level of prices for goods and services rises, eroding purchasing power of currency over time, typically measured by the Consumer Price Index (CPI), managed by central banks through monetary policy.",
+    "category": "economics"
+  },
+  {
+    "input": "What is GDP?",
+    "output": "GDP (Gross Domestic Product) is the total monetary value of all finished goods and services produced within a country's borders in a specific time period, the primary measure of economic output and growth, calculated via production, income, or expenditure approaches.",
+    "category": "economics"
+  },
+  {
+    "input": "What is supply and demand?",
+    "output": "Supply and demand is the fundamental economic model determining market prices: higher prices incentivize more supply (producers) but reduce quantity demanded (consumers), with equilibrium where supply equals demand at the market-clearing price.",
+    "category": "economics"
+  },
+  {
+    "input": "What is a monopoly?",
+    "output": "A monopoly is a market structure where a single firm dominates the supply of a good or service with no close substitutes, allowing price-setting power, restricted output, and potential consumer harm, often regulated through antitrust laws.",
+    "category": "economics"
+  },
+  {
+    "input": "What is fiscal policy?",
+    "output": "Fiscal policy is the use of government spending and taxation to influence the economy: expansionary (increasing spending or cutting taxes to stimulate growth) or contractionary (reducing spending or raising taxes to cool an overheating economy).",
+    "category": "economics"
+  },
+  {
+    "input": "What is monetary policy?",
+    "output": "Monetary policy is the management of money supply and interest rates by a central bank (e.g., Federal Reserve, ECB) to achieve macroeconomic objectives like price stability, full employment, and economic growth through tools like interest rates and open market operations.",
+    "category": "economics"
+  },
+  {
+    "input": "What is comparative advantage?",
+    "output": "Comparative advantage, formulated by David Ricardo, is the economic principle that countries benefit from trade by specializing in producing goods at a lower opportunity cost than trading partners, even if one country is absolutely more efficient at everything.",
+    "category": "economics"
+  },
+  {
+    "input": "What is a recession?",
+    "output": "A recession is a significant, widespread decline in economic activity lasting more than a few months, technically defined as two consecutive quarters of negative GDP growth, characterized by falling output, rising unemployment, and reduced spending.",
+    "category": "economics"
+  },
+  {
+    "input": "What is the stock market?",
+    "output": "The stock market is a marketplace where shares of publicly traded companies are bought and sold, enabling capital raising for companies and investment opportunities for individuals, with major exchanges including the NYSE, NASDAQ, and Tokyo Stock Exchange.",
+    "category": "economics"
+  },
+  {
+    "input": "What is a tariff?",
+    "output": "A tariff is a tax imposed by a government on imported goods, used to protect domestic industries, generate revenue, or retaliate in trade disputes, typically increasing consumer prices and potentially triggering trade wars through retaliatory tariffs.",
+    "category": "economics"
+  },
+  {
+    "input": "What is Keynesian economics?",
+    "output": "Keynesian economics, developed by John Maynard Keynes, advocates for active government intervention during recessions through increased spending and lower taxes to boost aggregate demand, counterbalancing private sector contraction with fiscal stimulus.",
+    "category": "economics"
+  },
+  {
+    "input": "What is a free market?",
+    "output": "A free market is an economic system where prices for goods and services are determined by voluntary exchange between buyers and sellers with minimal government intervention, relying on competition, property rights, and profit motive to allocate resources efficiently.",
+    "category": "economics"
+  },
+  {
+    "input": "What is the invisible hand?",
+    "output": "The invisible hand is Adam Smith's metaphor describing how individuals pursuing their self-interest in competitive markets unintentionally benefit society as a whole by efficiently allocating resources, as if guided by an invisible hand to promote the common good.",
+    "category": "economics"
+  },
+  {
+    "input": "What is hyperinflation?",
+    "output": "Hyperinflation is extremely rapid, out-of-control price increases (often exceeding 50% per month), destroying currency value, savings, and economic stability—historical examples include Weimar Germany (1923), Zimbabwe (2008), and Venezuela (2010s).",
+    "category": "economics"
+  },
+  {
+    "input": "What is a bond?",
+    "output": "A bond is a fixed-income debt security where an investor loans money to an entity (government or corporation) for a defined period at a variable or fixed interest rate (coupon), with repayment of principal at maturity.",
+    "category": "economics"
+  },
+  {
+    "input": "What is unemployment?",
+    "output": "Unemployment measures the percentage of the labor force actively seeking work but unable to find employment, categorized as frictional (between jobs), structural (skills mismatch), cyclical (economic downturns), and seasonal.",
+    "category": "economics"
+  },
+  {
+    "input": "What is the Phillips curve?",
+    "output": "The Phillips curve illustrates the historically observed inverse relationship between unemployment and inflation—lower unemployment correlates with higher inflation and vice versa—though the relationship is debated and has varied across time periods.",
+    "category": "economics"
+  },
+  {
+    "input": "What is a central bank?",
+    "output": "A central bank is a national institution managing a country's currency, money supply, and interest rates—such as the Federal Reserve (US), European Central Bank, and Bank of Japan—responsible for monetary policy, financial stability, and lender-of-last-resort functions.",
+    "category": "economics"
+  },
+  {
+    "input": "What is opportunity cost?",
+    "output": "Opportunity cost is the value of the next best alternative foregone when making a choice—what is sacrificed to pursue one course of action over another, a fundamental concept in rational decision-making and resource allocation.",
+    "category": "economics"
+  },
+  {
+    "input": "What is capitalism?",
+    "output": "Capitalism is an economic system characterized by private ownership of the means of production, market-based allocation of resources, profit motive, competition, and capital accumulation through investment, with prices and wages determined by supply and demand.",
+    "category": "economics"
+  },
+  {
+    "input": "What is socialism?",
+    "output": "Socialism is an economic system emphasizing social or public ownership of the means of production, cooperative management, and distribution based on contribution or need, ranging from democratic socialism within market economies to state-controlled planned economies.",
+    "category": "economics"
+  },
+  {
+    "input": "What is the Gini coefficient?",
+    "output": "The Gini coefficient is a statistical measure of income or wealth inequality within a population, ranging from 0 (perfect equality) to 1 (perfect inequality), with higher values indicating greater disparities.",
+    "category": "economics"
+  },
+  {
+    "input": "What is quantitative easing?",
+    "output": "Quantitative easing (QE) is an unconventional monetary policy where a central bank purchases large-scale government bonds and other financial assets to inject liquidity into the economy, lower long-term interest rates, and stimulate growth when conventional tools are exhausted.",
+    "category": "economics"
+  },
+  {
+    "input": "What is stagflation?",
+    "output": "Stagflation is the simultaneous occurrence of stagnant economic growth (or recession), high unemployment, and high inflation, a combination that challenges conventional Keynesian models, most notably experienced in the 1970s oil crisis era.",
+    "category": "economics"
+  },
+  {
+    "input": "What is a trade deficit?",
+    "output": "A trade deficit occurs when a country's imports of goods and services exceed its exports over a given period, indicating more money leaving than entering through trade, potentially weakening currency but also reflecting strong domestic demand.",
+    "category": "economics"
+  },
+  {
+    "input": "What is behavioral economics?",
+    "output": "Behavioral economics integrates psychological insights into economic theory, challenging the assumption of perfect rationality by showing systematic biases (e.g., loss aversion, framing effects, present bias) that influence decisions, pioneered by Kahneman and Thaler.",
+    "category": "economics"
+  },
+  {
+    "input": "What is a progressive tax?",
+    "output": "A progressive tax imposes higher tax rates on higher income levels, with the marginal tax rate increasing as taxable income increases, designed to redistribute wealth and fund public services according to the ability-to-pay principle.",
+    "category": "economics"
+  },
+  {
+    "input": "What is the tragedy of the commons?",
+    "output": "The tragedy of the commons describes how individuals acting in self-interest deplete shared limited resources (commons)—such as fisheries or clean air—despite understanding that collective overuse harms everyone in the long run.",
+    "category": "economics"
+  },
+  {
+    "input": "What is a subsidy?",
+    "output": "A subsidy is a government payment or tax concession to producers or consumers to encourage production or consumption of certain goods, lower prices, or support strategic industries, often used in agriculture, energy, and education.",
+    "category": "economics"
+  },
+  {
+    "input": "What is the World Trade Organization?",
+    "output": "The World Trade Organization (WTO) is an intergovernmental organization regulating international trade between nations, providing a framework for trade agreements, dispute resolution, and trade liberalization, established in 1995 succeeding the GATT.",
+    "category": "economics"
+  },
+  {
+    "input": "What is cognitive dissonance?",
+    "output": "Cognitive dissonance is the mental discomfort from holding contradictory beliefs, values, or attitudes, leading to attitude or behavior changes to reduce inconsistency—a theory by Leon Festinger explaining post-decision rationalization and attitude change.",
+    "category": "psychology"
+  },
+  {
+    "input": "What is conditioning in psychology?",
+    "output": "Conditioning is a learning process where behavior becomes associated with specific stimuli: classical conditioning (Pavlov) pairs a neutral stimulus with a reflexive response; operant conditioning (Skinner) uses reinforcement and punishment to shape voluntary behavior.",
+    "category": "psychology"
+  },
+  {
+    "input": "What is the unconscious mind?",
+    "output": "The unconscious mind, central to Freudian psychoanalysis, comprises mental processes inaccessible to conscious awareness but influencing behavior, emotions, and thoughts—including repressed memories, desires, and automatic processes that shape personality.",
+    "category": "psychology"
+  },
+  {
+    "input": "What is Maslow's hierarchy of needs?",
+    "output": "Maslow's hierarchy of needs is a motivational theory organizing human needs into a pyramid: physiological needs (base), safety, love/belonging, esteem, and self-actualization (peak), with lower-level needs requiring fulfillment before higher motivations emerge.",
+    "category": "psychology"
+  },
+  {
+    "input": "What is the placebo effect?",
+    "output": "The placebo effect is a therapeutic improvement resulting from a person's belief in treatment efficacy rather than the treatment's pharmacological properties, demonstrating the mind's powerful influence over physical health and symptom perception.",
+    "category": "psychology"
+  },
+  {
+    "input": "What is attachment theory?",
+    "output": "Attachment theory, developed by John Bowlby and Mary Ainsworth, describes how early caregiver-infant bonds form internal working models affecting lifelong relationships, categorized as secure, anxious-ambivalent, avoidant, or disorganized attachment styles.",
+    "category": "psychology"
+  },
+  {
+    "input": "What is confirmation bias?",
+    "output": "Confirmation bias is the tendency to search for, interpret, favor, and recall information that confirms pre-existing beliefs while giving disproportionately less consideration to alternative possibilities, a pervasive cognitive bias affecting reasoning.",
+    "category": "psychology"
+  },
+  {
+    "input": "What is schizophrenia?",
+    "output": "Schizophrenia is a severe chronic mental disorder characterized by distortions in thinking, perception, emotions, language, sense of self, and behavior, with symptoms including hallucinations, delusions, disorganized speech, and impaired functioning.",
+    "category": "psychology"
+  },
+  {
+    "input": "What is the bystander effect?",
+    "output": "The bystander effect is a social psychological phenomenon where individuals are less likely to help a victim when other people are present, driven by diffusion of responsibility and social influence—the more bystanders, the less likely anyone intervenes.",
+    "category": "psychology"
+  },
+  {
+    "input": "What is cognitive behavioral therapy?",
+    "output": "Cognitive behavioral therapy (CBT) is an evidence-based psychotherapy that identifies and changes maladaptive thought patterns and behaviors, teaching practical skills to manage psychological problems including depression, anxiety, and phobias.",
+    "category": "psychology"
+  },
+  {
+    "input": "What is the Stanford prison experiment?",
+    "output": "The Stanford prison experiment (1971) by Philip Zimbardo demonstrated how social roles and institutional power dramatically influence behavior, with randomly assigned guards becoming abusive and prisoners showing extreme stress, though its methodology has been heavily criticized.",
+    "category": "psychology"
+  },
+  {
+    "input": "What is working memory?",
+    "output": "Working memory is the cognitive system temporarily holding and manipulating information needed for complex tasks like reasoning, comprehension, and learning, distinct from short-term memory through its active processing component, with limited capacity (about 7±2 chunks).",
+    "category": "psychology"
+  },
+  {
+    "input": "What is the big five personality model?",
+    "output": "The Big Five (OCEAN) is the dominant trait model of personality structure identifying five broad dimensions: Openness, Conscientiousness, Extraversion, Agreeableness, and Neuroticism, each representing a spectrum of individual differences in behavior and cognition.",
+    "category": "psychology"
+  },
+  {
+    "input": "What is classical conditioning?",
+    "output": "Classical conditioning, discovered by Ivan Pavlov, is learning where a neutral stimulus (bell) repeatedly paired with an unconditioned stimulus (food, which naturally produces salivation) eventually elicits the same response (salivation) as a conditioned stimulus alone.",
+    "category": "psychology"
+  },
+  {
+    "input": "What is operant conditioning?",
+    "output": "Operant conditioning, developed by B.F. Skinner, is learning through consequences: behaviors followed by reinforcement (positive or negative) increase in frequency, while behaviors followed by punishment decrease—shaping voluntary behavior through contingencies.",
+    "category": "psychology"
+  },
+  {
+    "input": "What is the nature vs. nurture debate?",
+    "output": "The nature vs. nurture debate concerns the relative contributions of genetic inheritance (nature) and environmental factors (nurture) to human development, behavior, and traits, with modern psychology recognizing their inseparable interaction throughout development.",
+    "category": "psychology"
+  },
+  {
+    "input": "What is Erikson's psychosocial development theory?",
+    "output": "Erikson's theory proposes eight psychosocial stages across the lifespan (trust vs. mistrust through integrity vs. despair), each characterized by a developmental crisis that must be resolved for healthy personality development and psychological adjustment.",
+    "category": "psychology"
+  },
+  {
+    "input": "What is the Milgram experiment?",
+    "output": "The Milgram experiment (1961) on obedience to authority shocked psychology by showing that ordinary people would administer apparently lethal electric shocks when instructed by an authority figure, revealing disturbing truths about conformity and moral disengagement.",
+    "category": "psychology"
+  },
+  {
+    "input": "What is intrinsic vs. extrinsic motivation?",
+    "output": "Intrinsic motivation arises from internal satisfaction or interest in an activity itself, while extrinsic motivation comes from external rewards or punishments. Research shows excessive external rewards can undermine intrinsic motivation (overjustification effect).",
+    "category": "psychology"
+  },
+  {
+    "input": "What is the halo effect?",
+    "output": "The halo effect is a cognitive bias where a positive impression in one area (e.g., physical attractiveness) influences perception of unrelated characteristics (e.g., intelligence, kindness), leading to overly favorable overall evaluations based on a single trait.",
+    "category": "psychology"
+  },
+  {
+    "input": "What is the mere-exposure effect?",
+    "output": "The mere-exposure effect is the psychological phenomenon where people develop a preference for things simply because they are familiar with them—repeated, unreinforced exposure increases positive affect towards a stimulus, important in advertising and social relationships.",
+    "category": "psychology"
+  },
+  {
+    "input": "What is learned helplessness?",
+    "output": "Learned helplessness occurs when an individual repeatedly exposed to uncontrollable adverse events stops trying to escape, even when escape becomes possible, a phenomenon linked to depression and discovered by Martin Seligman through animal experiments.",
+    "category": "psychology"
+  },
+  {
+    "input": "What is the Asch conformity experiment?",
+    "output": "The Asch conformity experiments (1950s) demonstrated that people often conform to majority opinion on unambiguous perceptual judgments due to normative social influence, even when the group is clearly wrong, revealing powerful social conformity pressures.",
+    "category": "psychology"
+  },
+  {
+    "input": "What is the Flynn effect?",
+    "output": "The Flynn effect is the substantial, sustained increase in IQ test scores observed across the 20th century in many parts of the world (about 3 points per decade), attributed to improved nutrition, education, reduced disease, and greater environmental complexity.",
+    "category": "psychology"
+  },
+  {
+    "input": "What is the fundamental attribution error?",
+    "output": "The fundamental attribution error is the tendency to overemphasize personality-based explanations for others' behavior while underestimating situational factors, yet making the opposite attribution for one's own behavior (actor-observer asymmetry).",
+    "category": "psychology"
+  },
+  {
+    "input": "What is Dunning-Kruger effect?",
+    "output": "The Dunning-Kruger effect is a cognitive bias where people with low competence in a domain overestimate their ability, while high-performers underestimate theirs—because poor performers lack the metacognitive ability to recognize their own incompetence.",
+    "category": "psychology"
+  },
+  {
+    "input": "What is REM sleep?",
+    "output": "REM (Rapid Eye Movement) sleep is a recurring sleep stage characterized by vivid dreaming, brain activity similar to wakefulness, muscle atonia, and rapid eye movements, playing a crucial role in memory consolidation, emotional processing, and learning.",
+    "category": "psychology"
+  },
+  {
+    "input": "What is the fight-or-flight response?",
+    "output": "The fight-or-flight response is the autonomic nervous system's automatic physiological reaction to perceived threats, triggering adrenaline/cortisol release, increased heart rate, and redirected blood flow, preparing the body for immediate action—a survival mechanism.",
+    "category": "psychology"
+  },
+  {
+    "input": "What is flow state?",
+    "output": "Flow state, identified by Mihaly Csikszentmihalyi, is optimal experience of complete absorption in an activity where challenge matches skill, characterized by intense focus, loss of self-consciousness, altered time perception, and intrinsic reward.",
+    "category": "psychology"
+  },
+  {
+    "input": "What is innate vs. learned behavior?",
+    "output": "Innate behaviors are genetically programmed (reflexes, instincts) present from birth without learning, while learned behaviors are acquired through experience and interaction with the environment, with most complex behaviors involving both components interacting dynamically.",
+    "category": "psychology"
+  }
+]
