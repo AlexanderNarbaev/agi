@@ -1,28 +1,33 @@
-# MATRIX GitHub Pages — Bilingual Documentation Deployment
+# MATRIX GitHub Pages
 
-Deploys the bilingual (English + Russian) GitHub Pages site for MATRIX.
+Bilingual documentation site for MATRIX, deployed via GitHub Actions to `https://alexandernarbaev.github.io/agi/`.
 
-## What gets deployed
+## Pages
 
-| File | Language | Purpose |
-|------|----------|---------|
-| `docs/index.html` | Russian (default) | Full landing page with BIR paradigm |
-| `docs/index.en.html` | English | Full landing page with BIR paradigm |
-| `docs/index.en.md` | English | README mirror (Markdown source) |
-| `docs/sandbox.html` | — | MPDT interactive sandbox |
-| `docs/architecture-knowledge-graph.excalidraw` | — | Architecture diagram |
-| `docs/GITHUB_PAGES.md` | English | Pages documentation |
+| Page | English | Russian | Description |
+|------|---------|---------|-------------|
+| Overview | `index.en.html` | `index.html` | BIR paradigm, principles, architecture, metrics, quick start |
+| Documentation | `docs.en.html` | `docs.html` | Specs, designs, ADRs, research, training, papers, API |
+| Algorithms | `algorithms.en.html` | `algorithms.html` | Deep dive into 10 algorithms with code, hypothesis, reproduction |
+| Benchmarks | `benchmarks.en.html` | `benchmarks.html` | JMH methodology, raw numbers, reproduction instructions |
+| Research | `research.en.html` | `research.html` | 34 hypotheses, papers, experiment protocols, training data |
+
+Each page has:
+- Sticky topbar with nav links + EN/RU language switcher
+- Sticky sidebar TOC with section anchors
+- Responsive layout (mobile: sidebar hidden)
+- Deep linking via section IDs
 
 ## Triggers
 
-- **Push to `main`** when any of the above files change
-- **Manual dispatch** via `workflow_dispatch`
+- Push to `main` when any `docs/*.html` or `docs/*.md` file changes
+- Manual dispatch via `workflow_dispatch`
 
 ## Setup
 
 In GitHub repository settings → Pages:
 1. Source: **GitHub Actions**
-2. No branch selection needed (auto-deployed by this workflow)
+2. No branch selection needed
 
 ## Local preview
 
@@ -31,21 +36,23 @@ cd docs && python3 -m http.server 8000
 # Open http://localhost:8000
 ```
 
-## Validation
+## CI/CD
 
-The workflow validates:
-- All required HTML files exist
-- `lang` attribute is correctly set per file (`lang="ru"` or `lang="en"`)
-- HTML files are well-formed (size check)
+The workflow (`.github/workflows/pages.yml`) validates:
+- All 11 bilingual pages exist
+- Correct `lang` attribute per page (`lang="ru"` or `lang="en"`)
+- Cross-links between EN and RU pages
 
-## Pages URL
+## Content
 
-After first deploy, the site is available at:
-`https://<owner>.github.io/<repo>/`
-
-For this project: `https://alexandernarbaev.github.io/agi/`
+All pages reflect the BIR (Boolean Intermediate Representation) paradigm:
+- Three equivalent forms: TT, CLAUSESET, BDD
+- FROZEN ethics layer (compile-time enforcement)
+- 10 implemented algorithms with preregistered hypotheses
+- 8 measured metrics (tests, coverage, latency, FPR/TPR)
+- 8-layer C4 architecture
 
 ## License
 
 - HTML content: CC-BY-SA-4.0
-- Code: GNU AGPLv3 (see [`LICENSE`](../LICENSE))
+- Code: GNU AGPLv3 with Ethical Restrictions
