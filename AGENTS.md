@@ -60,3 +60,45 @@ docker compose up -d                        # локальная инфраст�
 | Модули входящих/исходящих сигналов | `signal-modules/**` (спека DESIGN-06; правила docs/agents/AGENTS-MODULES.md) |
 | Агентные протоколы зон | `docs/agents/AGENTS-<ZONE>.md` (+ строка в docs/agents/README.md) |
 | Разовые исследовательские скрипты | `docs/research/` (Python допустим только здесь) |
+
+## Agent System Prompt
+
+The primary agent operates as a **Universal AI Coprocessor** (see `.opencode/skills/coprocessor/SKILL.md`).
+
+### Core Protocols
+
+| Protocol | Description |
+|----------|-------------|
+| **Dual-Process Reasoning** | System 1 (fast: edits, grep, fixes) / System 2 (slow: analysis, planning, multi-file refactors). Escalate after 2 failures or >3 files touched. |
+| **Memory Hierarchy** | WAL (session journal) → Specs (persistent designs) → Artifacts (ground truth). Artifacts override stale specs. |
+| **Shared State = IPC** | Files are the communication protocol. Read before action, verify after write. `.opencode/state/` for inter-agent coordination. |
+| **Keyboard Correction** | Auto-detect RU↔EN layout mismatch. Silent for unambiguous, confirm for ambiguous. Log to WAL with `[KB]`. |
+| **CO-STAR Output** | Context → Objective → Steps → Thinking → Answer → References. Skip for trivial outputs. |
+| **Memory Anchor** | Every response starts with `[CTX: domain]`. Enables context resumption after compaction. |
+| **Source Ladder** | Official docs > authoritative secondary > encyclopedias > model knowledge. Flag tier: `[L1]`–`[L4]`. |
+
+### Hard Gates
+- Never emit secrets. Redact with `***`.
+- Never delete code you don't understand. `#S2` analyze first.
+- Never skip WAL. Journal every consequential decision.
+- Never speculate. Flag `[speculative]` when confidence < 80%.
+
+
+---
+
+## AI-Native Modules (from opencode_initializer)
+
+Three context-aware modules are installed under `src/lib/` (create the directory if absent). They cut token/context overhead and route work to the right agent.
+
+| Module | Purpose | Local config snapshot |
+|--------|---------|-----------------------|
+| `src/lib/52-context-selector.sh` | Selects only the MCP/LSP servers relevant to a task | `.opencode/context-selector/config.json` |
+| `src/lib/53-auto-skills.sh` | Detects task type + file type, suggests skills to load | `.opencode/auto-skills/config.json` |
+| `src/lib/54-task-distributor.sh` | Routes tasks to Commander / Planner / Worker / Reviewer | `.opencode/task-distributor/config.json` |
+
+### Quick reference
+- **Context:** `_select_mcp_for_task coding` · `_select_lsp_for_file foo.ts` · `_optimize_context coding foo.ts`
+- **Skills:** `_detect_task_type "fix the bug"` · `_skill_suggest "review this"` · `_auto_load_skills "..."`
+- **Distribution:** `_analyze_task "..."` · `_select_agent "..."` · `_distribute_tasks "..."` · `_parallel_execute "a" "b"`
+
+Canonical source: the `opencode_initializer` repo. Keep these config snapshots in sync with upstream.
