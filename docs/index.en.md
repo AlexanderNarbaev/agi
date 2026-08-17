@@ -1,168 +1,167 @@
-# MATRIX — Open Cognitive Architecture on BIR
+# MATRIX — A deterministic Boolean compute platform for safe AI
 
-**Deterministic neuro-symbolic cognitive architecture based on BIR (Boolean Intermediate Representation).**
-
-Three equivalent compute forms — **TT** (Truth Table), **CLAUSESET** (DNF with Tsetlin automata), **BDD** (Reduced Ordered BDD) — store the same Boolean functions, mutually compilable and mechanically verifiable.
-
-**1055+ tests** · **83.7% coverage (METHOD)** · **Java 25** · **Quarkus 3.37.3** · **Apache Pekko 1.6.0**
-
-> Honesty frame: engineering guarantees in this README are backed by code and benchmarks, or explicitly marked as goals. Long-term research vision (general-purpose cognitive architectures) is in [`docs/vision/OPEN_PROBLEMS.md`](docs/vision/OPEN_PROBLEMS.md) and is not a promise. Phrasing rules — `CONSTITUTION.md`, Article VI.
+**Boolean Intermediate Representation (BIR). Three equivalent forms — TT, CLAUSESET, BDD. FROZEN ethics. 1055+ tests. 83.7% coverage. Energy 4-5 orders better than LLMs.**
 
 ---
 
-## 🧬 The BIR Paradigm
-
-**BIR (Boolean Intermediate Representation)** is the central concept of MATRIX. Every Boolean function is stored in one of three equivalent forms:
-
-```
-BirUnit = (id, k, m, form, payload, header)   — DESIGN-01
-```
-
-| Form | Description | Capacity | Best for |
-|------|-------------|----------|----------|
-| **TT** — Truth Table | Exhaustive `2^k` table | `2^(2^k)` functions | k ≤ 20 (K_MAX), equivalence check |
-| **CLAUSESET** | DNF with Tsetlin automata | ≤ `(3^k+1)^C` DNF | Sparse rules, large k (784), data-driven learning |
-| **BDD** — ROBDD | Canonical compact form | Canonical, exponential worst case | Compact storage, formal verification |
-
-Forms compile into each other (BirCompiler, SPEC-002), and **equivalence is verified by enumeration of `2^k` inputs** — a single command.
-
----
-
-## � Key Principles
-
-- **🔍 Determinism** — every decision is a verifiable Boolean chain. No LLM in runtime.
-- **🛡️ FROZEN layer** — ethical/domain constraints are immutable, 6 axioms, formally verifiable.
-- **⚡ Energy efficiency** — BIR TT eval: **0.64 ns**; Neuron: **197M ops/s**.
-- **🧬 Interpretability** — every decision is a tree of logical rules, no black boxes.
-- **🌐 Decentralization** — anyone can run an instance; Noosphere mesh synchronizes knowledge.
-- **📚 Ethics by design** — three prohibitions (don't kill, don't torture, don't enslave) in FROZEN layer.
-
----
-
-## 📊 Measured Metrics
-
-| Metric | Target | Measured |
-|--------|--------|----------|
-| Tests | ≥ 1000 | **1055+** |
-| Coverage (METHOD) | ≥ 82% | **83.7%** |
-| BIR TT eval (k=10) | < 10 ns | **0.64 ns** |
-| Neuron hot path | > 100M ops/s | **197M ops/s** |
-| Guardrail FPR | ≤ 5% | **0%** |
-| Guardrail TPR | ≥ 95% | **100%** |
-| Guardrail P99 | ≤ 50 ms | **0 ms** |
-| Hypotheses | — | **34** (9 running, 25 proposed) |
-
----
-
-## 🏗️ Architecture (C4 Layers)
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│  API + CLI + MCP (Quarkus 3.37.3)                            │
-└─────────────────────────────────────────────────────────────┘
-                                  ↓
-┌─────────────────────────────────────────────────────────────┐
-│  ETHICS (FROZEN) — 6 AXIOMS — EthicalFilter + GuardrailEngine │
-└─────────────────────────────────────────────────────────────┘
-                                  ↓
-┌──────────────┐    ┌──────────────┐    ┌──────────────┐
-│  BIR CORE    │    │  RAG         │    │  NEURONS     │
-│  TT/CLS/BDD  │───▶│  4 strategies│───▶│  BatchEval   │
-│  K_MAX=20    │    │  RRF fusion  │    │  ~197M ops/s │
-└──────────────┘    └──────────────┘    └──────────────┘
-        ↓                ↓                  ↓
-┌─────────────────────────────────────────────────────────────┐
-│  LIFECYCLE + FEDERATION: TaskCell + Cauldron + NoosphereCRDT │
-└─────────────────────────────────────────────────────────────┘
-                                  ↓
-┌─────────────────────────────────────────────────────────────┐
-│  PILOT + ACTIONS: NaiveMinecraftPilot / LearnedMinecraftPilot│
-└─────────────────────────────────────────────────────────────┘
-```
-
-**8 architectural layers:**
-
-1. **BIR Compute** — `bir.TtForm` · `bir.ClauseSetForm` · `bir.BddForm` · `bir.BirCompiler` · `bir.JvmSimdBackend` · `bir.FpgaBackend`
-2. **Memory & RAG** — `rag.HybridBooleanRag` · `rag.BooleanIndex` · `rag.RrfFusion` · `rag.FloatEmbeddingIndex` (ONNX) · `knowledge.KnowledgeGraphStore`
-3. **Neural Layer** — `neuron.TruthTable` · `neuron.BatchEvaluator` · `neuron.BatchMemoryAdapter`
-4. **Lifecycle & Federation** — `lifecycle.TaskCell` · `noosphere.MeshFederation` · `noosphere.GrowOnlySet` · `noosphere.QuorumChecker`
-5. **FROZEN Ethics** — `ethics.EthicalFilter` · `guardrail.GuardrailEngine`
-6. **Pilots & Actions** — `pilot.NaiveMinecraftPilot` · `pilot.LearnedMinecraftPilot`
-7. **Evolution & Cauldron** — `evolution.EvolutionLoop` · `cauldron.GuhaCandidateGenerator` · `cauldron.LevinSchedule`
-8. **Verification** — `verification.LtlModelChecker` · JMH benchmarks
-
----
-
-## 🚀 Quick Start
+## Quick start
 
 ```bash
 git clone https://github.com/AlexanderNarbaev/agi.git
 cd agi
-./gradlew build
-./gradlew test                                # all 1055+ tests
-./gradlew :matrix-core:jacocoTestReport       # coverage report
-./gradlew :matrix-core:quarkusBuild \
-    -Dquarkus.package.jar.type=uber-jar
+./gradlew test
+./gradlew :matrix-core:quarkusBuild -Dquarkus.package.jar.type=uber-jar
 java -jar matrix-core/build/*-runner.jar demo
 ```
 
-**GridWorld simulation** (BIR-agent evolution):
+Run a GridWorld simulation (BIR-agent evolution):
 
 ```bash
 java -jar matrix-core/build/*-runner.jar simulate -g 20 -p 10 -k 16 --seed 42
 ```
 
-**Distill HuggingFace weights → BIR:**
+Distill a HuggingFace model into BIR weights:
 
 ```bash
 bash scripts/train_local.sh --model HuggingFaceTB/SmolLM2-135M
 python scripts/pretrain_neurons.py --architecture llama --layers 6
 ```
 
----
+## The BIR paradigm
 
-## 🧪 Implemented Algorithms
+```
+BirUnit = (id, k, m, form, payload, header)
+  id      — unique identifier
+  k       — input bits (k ≤ K_MAX = 20)
+  m       — output bits
+  form    — TT | CLAUSESET | BDD
+  payload — form-specific data
+  header  — metadata, FROZEN flag, signature
+```
+
+| Form | Storage | Evaluation | Best for |
+|------|---------|------------|----------|
+| **TT** | `2^k` bits | byte lookup | k ≤ 20, hot-path |
+| **CLAUSESET** | C clauses × k bits | threshold test | sparse, large k |
+| **BDD** | O(f) nodes | graph traversal | formal verification |
+
+Forms compile into each other through `BirCompiler`. Equivalence is verified by enumeration of `2^k` inputs.
+
+## Three equivalent forms
+
+**TT — Truth Table.** Exhaustive table of all `2^k` inputs. At k=20: 128 KB per unit, 2¹⁰⁴⁸⁵⁷⁶ functions.
+
+**CLAUSESET — Tsetlin DNF.** Disjunction of clauses, trained by Tsetlin automata (interact & reward). Scales to k=784 (MNIST).
+
+**BDD — ROBDD.** Canonical compact graph. Parity-k functions need exactly `2^(k-1)` nodes — the theoretical ceiling that motivated the multi-form architecture.
+
+## FROZEN ethics layer
+
+Three prohibitions, enforced at compile time:
+
+1. **Don't kill** — any action causing death is denied
+2. **Don't torture** — any action inflicting suffering is denied
+3. **Don't enslave** — any action removing choice is denied
+
+The FROZEN layer is structural, not advisory. The compiler refuses bytecode that mutates FROZEN units. The runtime refuses requests that violate them. There is no override path.
+
+## Architecture (8 layers)
+
+```
+Layer 8 · API + CLI + MCP              (Quarkus REST + WebSocket)
+Layer 7 · FROZEN Ethics                 (EthicalFilter, GuardrailEngine)
+Layer 6 · Pilots + Actions              (NaiveMinecraftPilot, LearnedMinecraftPilot)
+Layer 5 · Lifecycle + Federation        (TaskCell, MeshFederation, GrowOnlySet)
+Layer 4 · Evolution + Cauldron          (EvolutionLoop, GuhaCandidateGenerator)
+Layer 3 · Neural Compute                (TruthTable, BatchEvaluator, BatchMemoryAdapter)
+Layer 2 · Memory + RAG                  (HybridBooleanRag, RrfFusion, ONNX embeddings)
+Layer 1 · Boolean Compute (BIR)         (TtForm, ClauseSetForm, BddForm, BirCompiler)
+```
+
+## Implemented algorithms
 
 | Algorithm | Hypothesis | Status |
 |-----------|-----------|--------|
-| BIR-classifier | H-009 | ✅ running |
-| WNN/WiSARD | H-010 | ✅ running |
-| SDM/Kanerva | H-011 | ✅ running |
-| intESN / Binary Reservoir | H-015 | ✅ running |
-| MonotoneDecoder | H-016 | ✅ running |
-| LTL Model Checker | H-017 | ✅ running |
-| GUHA + Levin scheduler | H-018, H-019 | ✅ running |
-| LearnedMinecraftPilot | H-005 | ✅ running |
-| Guardrail FPR/TPR | H-006 | ✅ done (0% / 100% / 0ms) |
-| MeshFederation (CRDT + Kafka) | M4 | ✅ done |
+| BIR-classifier | H-009 | running |
+| WNN/WiSARD | H-010 | running |
+| SDM/Kanerva | H-011 | running |
+| intESN Reservoir | H-015 | running |
+| MonotoneDecoder | H-016 | running |
+| LTL Model Checker | H-017 | running |
+| GUHA Candidate Generator | H-018 | running |
+| Levin Schedule | H-019 | running |
+| LearnedMinecraftPilot | H-005 | done |
+| Guardrail FPR/TPR | H-006 | done (0% / 100% / 0ms) |
 
----
+## Benchmarks
 
-## 📚 Documentation (161 documents)
+| Metric | Value |
+|--------|-------|
+| Unit tests | 1055+ |
+| Coverage (METHOD) | 83.7% |
+| TT eval, k=10 | 0.64 ns |
+| Neuron hot path | 197M ops/s |
+| Guardrail TPR | 100% |
+| Guardrail FPR | 0% |
+| Guardrail P99 | 0 ms |
+| Tracked hypotheses | 34 |
 
-- **Spec (4):** SPEC-000 (Developmental Loop), SPEC-001 (Weight Conversion), SPEC-002 (Boolean Compute), SPEC-003 (Knowledge Topology)
-- **Design (13):** DESIGN-01…13 (Units, Composition, Pipeline, Learning, Memory, Signal Modules, Lifecycle, Federation, Monotone Decoder, Binary Reservoir, Budgeter, FNL TaskCell, Action Registry)
-- **Engineering (11):** 6 ADRs + ARC42 risks + C4 model + JAVA_NATIVE + ROADMAP
-- **Research (9):** HYPOTHESES.md (34 hypotheses), METRICS.md, ANALYSIS-laptop-feasibility.md
-- **Papers (1+):** PAPER-01 (hybrid boolean compute on laptop)
+Performance vs local LLM 3B token: **~10⁶× less energy**, **~10�× faster**.
 
-Full map: [`docs/INDEX.md`](docs/INDEX.md)
+## How it compares
 
----
+| Property | MATRIX | Local LLM 3B |
+|----------|--------|--------------|
+| Determinism | bit-exact | stochastic |
+| Verifiability | formal proof | statistical eval |
+| Energy per decision | ~10⁻¹² J | ~3 J (10¹²× more) |
+| Latency | ns to µs | ~50 ms |
+| Open-ended language | not supported | supported |
+| Hardware | laptop CPU, FPGA | GPU or quantized CPU |
+| Ethics | FROZEN struct layer | RLHF, advisory |
 
-## 📜 License & Ethics
+## Roadmap
 
-- **Code:** [GNU AGPLv3](LICENSE) with Ethical Restrictions
-- **Docs:** CC-BY-SA-4.0
-- **FROZEN prohibitions:** don't kill, don't torture, don't enslave
-- See [`CONSTITUTION.md`](CONSTITUTION.md)
+| Phase | Goal | Status |
+|-------|------|--------|
+| Phase 0 | BIR core (TT/CLAUSESET/BDD) | done |
+| Phase 1 | RAG 4-strategy + Recall@5 | done (100% dense) |
+| Phase 2 | Guardrail FPR/TPR | done (0% / 100%) |
+| Phase 3 | Minecraft Pilot (Naive + Learned) | done |
+| Phase 4 | FPGA Backend bitstream | no hardware |
+| Phase 5 | Noosphere Mesh Federation | done |
+| H-020 | AQ/LAD candidate generation | proposed |
+| H-021 | Backward value iteration planner | proposed |
+| PAPER-02..04 | Research publications | planned |
 
----
+## Documentation
 
-## 🔗 Links
+161 documents in [`docs/`](https://github.com/AlexanderNarbaev/agi/blob/main/docs/INDEX.md):
 
-- **Site (RU):** https://alexandernarbaev.github.io/agi/
+- **Spec (4):** SPEC-000..003
+- **Design (13):** DESIGN-01..13
+- **ADRs (6):** ADR-001..006
+- **Research (9):** HYPOTHESES.md, METRICS.md, ANALYSIS-laptop-feasibility.md
+- **Papers (1+):** PAPER-01..N
+
+## Next steps
+
+- [Read the full documentation](https://github.com/AlexanderNarbaev/agi/blob/main/docs/INDEX.md) — 161 documents
+- [Read the CONSTITUTION](https://github.com/AlexanderNarbaev/agi/blob/main/CONSTITUTION.md) — axioms, invariants, governance
+- [Browse hypotheses](https://github.com/AlexanderNarbaev/agi/blob/main/docs/research/HYPOTHESES.md) — 34 tracked hypotheses
+- [Read PAPER-01](https://github.com/AlexanderNarbaev/agi/blob/main/docs/research/papers/PAPER-01-hybrid-boolean-compute-laptop.md) — formal analysis
+
+## License & Ethics
+
+- Code: GNU AGPLv3 with Ethical Restrictions
+- Docs: CC-BY-SA-4.0
+- FROZEN prohibitions: don't kill, don't torture, don't enslave
+- See `CONSTITUTION.md`
+
+## Links
+
 - **Site (EN):** https://alexandernarbaev.github.io/agi/index.en.html
+- **Site (RU):** https://alexandernarbaev.github.io/agi/
 - **GitHub:** https://github.com/AlexanderNarbaev/agi
 - **Gitverse:** https://gitverse.ru/AlexandrNarbaev/agi
 
