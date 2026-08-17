@@ -6,10 +6,12 @@ on:
   push:
     branches: [main]
     paths:
-      - 'docs/index.html'
-      - 'docs/index.en.html'
-      - 'docs/index.ru.html'
-      - 'docs/index.en.md'
+      - 'docs/index*.html'
+      - 'docs/index*.md'
+      - 'docs/docs*.html'
+      - 'docs/algorithms*.html'
+      - 'docs/benchmarks*.html'
+      - 'docs/research*.html'
       - 'docs/sandbox.html'
       - '.github/workflows/pages.yml'
   workflow_dispatch:
@@ -34,30 +36,52 @@ jobs:
         id: pages
         uses: actions/configure-pages@v5
 
-      - name: Build site (verify HTML)
+      - name: Verify all bilingual pages exist
         run: |
-          echo "Verifying bilingual site..."
-          for f in docs/index.html docs/index.en.html docs/index.ru.html; do
+          echo "Verifying multi-page bilingual site..."
+          PAGES=(
+            docs/index.html
+            docs/index.en.html
+            docs/index.en.md
+            docs/docs.html
+            docs/docs.en.html
+            docs/algorithms.html
+            docs/algorithms.en.html
+            docs/benchmarks.html
+            docs/benchmarks.en.html
+            docs/research.html
+            docs/research.en.html
+          )
+          FAIL=0
+          for f in "${PAGES[@]}"; do
             if [ ! -f "$f" ]; then
               echo "ERROR: Missing $f"
-              exit 1
+              FAIL=1
+            else
+              SIZE=$(wc -c < "$f")
+              echo "OK: $f ($SIZE bytes)"
             fi
-            echo "OK: $f ($(wc -c < $f) bytes)"
+          done
+          if [ $FAIL -eq 1 ]; then
+            echo "SOME PAGES MISSING"
+            exit 1
+          fi
+          echo "All pages present"
+
+      - name: Verify lang attributes
+        run: |
+          for f in docs/index.html docs/docs.html docs/algorithms.html docs/benchmarks.html docs/research.html; do
+            grep -q '<html lang="ru"' "$f" && echo "RU: $f OK" || (echo "RU: $f MISSING lang" && exit 1)
+          done
+          for f in docs/index.en.html docs/docs.en.html docs/algorithms.en.html docs/benchmarks.en.html docs/research.en.html; do
+            grep -q '<html lang="en"' "$f" && echo "EN: $f OK" || (echo "EN: $f MISSING lang" && exit 1)
           done
 
-      - name: Inject lang attributes
+      - name: Verify cross-links
         run: |
-          # Verify lang attribute is set correctly
-          grep -q '<html lang="ru"' docs/index.html && echo "RU lang OK" || (echo "RU lang MISSING" && exit 1)
-          grep -q '<html lang="en"' docs/index.en.html && echo "EN lang OK" || (echo "EN lang MISSING" && exit 1)
-
-      - name: Copy sandbox
-        run: |
-          if [ -f docs/sandbox.html ]; then
-            echo "Sandbox present"
-          else
-            echo "WARNING: sandbox.html not found"
-          fi
+          # Check that EN pages link to RU and vice versa
+          grep -q 'lang-switcher' docs/index.html && echo "index.html has lang switcher OK"
+          grep -q 'lang-switcher' docs/index.en.html && echo "index.en.html has lang switcher OK"
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
