@@ -3,16 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MATRIX — Открытая когнитивная архитектура</title>
-    <meta name="description" content="MATRIX — модульная архитектура дискретных обучаемых нейронов (MPDT). Не лжёт, не забывает, не может быть использована во вред. Открытый код, AGPLv3.">
+    <title>MATRIX — Открытая когнитивная архитектура на BIR</title>
+    <meta name="description" content="MATRIX — детерминированная нейро-символическая когнитивная архитектура на базе BIR (Boolean Intermediate Representation). Три формы вычислений: TT / CLAUSESET / BDD. FROZEN-слой, формальная верифицируемость, 1055+ тестов.">
     <style>
         :root {
             --indigo: #1a1a4e;
             --gold: #c9a84c;
             --bg: #0a0a1e;
             --card: #12123a;
+            --card-bir: #1a2447;
             --text: #d0d0e0;
             --muted: #8888aa;
+            --green: #4caf50;
+            --orange: #ff9800;
+            --red: #f44336;
         }
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -23,6 +27,8 @@
         }
         a { color: var(--gold); text-decoration: none; }
         a:hover { text-decoration: underline; }
+
+        /* Header */
         header {
             background: linear-gradient(135deg, var(--indigo), #0d0d3d);
             text-align: center;
@@ -30,73 +36,258 @@
             border-bottom: 2px solid var(--gold);
         }
         header .logo {
-            font-size: 3.5em;
+            font-size: 3.8em;
             font-weight: 900;
             letter-spacing: 0.1em;
             color: var(--gold);
             text-shadow: 0 0 40px rgba(201,168,76,0.3);
         }
+        header .tagline {
+            font-size: 0.9em;
+            margin-top: 12px;
+            color: var(--muted);
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+        }
         header .subtitle {
-            font-size: 1.3em;
+            font-size: 1.2em;
             margin-top: 16px;
             color: var(--muted);
-            max-width: 600px;
+            max-width: 720px;
             margin-left: auto;
             margin-right: auto;
         }
         header .claim {
-            font-size: 1.1em;
-            margin-top: 24px;
+            font-size: 1.05em;
+            margin-top: 20px;
             font-style: italic;
             color: var(--gold);
         }
+        header .badges {
+            margin-top: 24px;
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .badge {
+            display: inline-block;
+            background: rgba(201,168,76,0.15);
+            border: 1px solid var(--gold);
+            padding: 6px 14px;
+            border-radius: 16px;
+            font-size: 0.85em;
+            color: var(--gold);
+        }
+
+        /* Lang switcher */
+        nav.lang-switcher {
+            text-align: center;
+            padding: 10px;
+            background: rgba(18,18,58,0.8);
+            border-bottom: 1px solid #222;
+            font-size: 0.9em;
+        }
+        nav.lang-switcher a.active {
+            font-weight: bold;
+            color: var(--gold);
+        }
+
+        /* Main nav */
         nav {
             display: flex;
             justify-content: center;
-            gap: 24px;
-            padding: 16px;
+            gap: 18px;
+            padding: 14px;
             background: rgba(18,18,58,0.8);
             border-bottom: 1px solid #222;
             flex-wrap: wrap;
         }
-        nav a { font-size: 0.95em; }
-        .container { max-width: 1000px; margin: 0 auto; padding: 40px 20px; }
+        nav a { font-size: 0.92em; }
+
+        /* Container */
+        .container { max-width: 1080px; margin: 0 auto; padding: 40px 24px; }
+
+        /* Headings */
         h2 {
-            font-size: 1.8em;
+            font-size: 1.7em;
             color: var(--gold);
             margin-bottom: 16px;
             border-bottom: 1px solid #333;
             padding-bottom: 8px;
+            margin-top: 32px;
         }
-        .principles { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; }
-        .principle-card {
+        h2:first-of-type { margin-top: 0; }
+        h3 {
+            color: var(--gold);
+            margin-top: 16px;
+            margin-bottom: 8px;
+            font-size: 1.2em;
+        }
+
+        /* BIR paradigm block */
+        .bir-paradigm {
+            background: linear-gradient(135deg, var(--card-bir), var(--card));
+            border: 2px solid var(--gold);
+            border-radius: 12px;
+            padding: 32px;
+            margin: 32px 0;
+        }
+        .bir-paradigm h2 {
+            border-bottom: 1px solid rgba(201,168,76,0.3);
+            margin-top: 0;
+            font-size: 2em;
+            text-align: center;
+        }
+        .bir-paradigm .bir-formula {
+            font-family: 'Courier New', monospace;
+            background: #0a0a20;
+            border: 1px solid #444;
+            padding: 16px;
+            border-radius: 6px;
+            margin: 16px 0;
+            text-align: center;
+            font-size: 1.1em;
+            color: var(--gold);
+        }
+        .bir-three-forms {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin: 24px 0;
+        }
+        .bir-form-card {
+            background: var(--card);
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 20px;
+        }
+        .bir-form-card h4 {
+            color: var(--gold);
+            font-size: 1.15em;
+            margin-bottom: 8px;
+        }
+        .bir-form-card .formula {
+            font-family: 'Courier New', monospace;
+            background: #0a0a20;
+            border: 1px solid #444;
+            padding: 8px;
+            border-radius: 4px;
+            margin: 8px 0;
+            font-size: 0.85em;
+            color: var(--gold);
+        }
+        .bir-form-card .good-for {
+            font-size: 0.9em;
+            color: var(--muted);
+            margin-top: 8px;
+            font-style: italic;
+        }
+
+        /* Cards */
+        .principles, .algorithms { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; }
+        .principle-card, .algorithm-card {
             background: var(--card);
             border: 1px solid #222;
             border-radius: 8px;
             padding: 24px;
             transition: border-color 0.3s;
         }
-        .principle-card:hover { border-color: var(--gold); }
-        .principle-card h3 {
+        .principle-card:hover, .algorithm-card:hover { border-color: var(--gold); }
+        .principle-card h3, .algorithm-card h3 {
             color: var(--gold);
-            font-size: 1.1em;
+            margin-bottom: 12px;
+            font-size: 1.15em;
+        }
+        .algorithm-card .status {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 8px;
+            font-size: 0.75em;
+            font-weight: 700;
             margin-bottom: 8px;
         }
-        .phases { overflow-x: auto; }
-        .phases table { width: 100%; border-collapse: collapse; }
-        .phases th, .phases td { padding: 10px 14px; text-align: left; border-bottom: 1px solid #222; }
-        .phases th { color: var(--gold); font-size: 0.85em; text-transform: uppercase; }
-        .phases .done { color: #4caf50; }
-        .phases .wip { color: var(--gold); }
+        .status.running { background: var(--orange); color: #000; }
+        .status.proposed { background: #555; color: #fff; }
+        .status.completed { background: var(--green); color: #000; }
+
+        /* Metrics */
+        .metrics {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 16px;
+            margin: 24px 0;
+        }
+        .metric {
+            background: var(--card);
+            border: 1px solid #222;
+            padding: 16px;
+            text-align: center;
+            border-radius: 6px;
+        }
+        .metric-value {
+            font-size: 2em;
+            font-weight: 700;
+            color: var(--gold);
+        }
+        .metric-label {
+            font-size: 0.85em;
+            color: var(--muted);
+            margin-top: 4px;
+        }
+
+        /* Architecture */
+        .arch-diagram {
+            background: var(--card);
+            border: 1px solid #222;
+            padding: 24px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            white-space: pre;
+            overflow-x: auto;
+            font-size: 0.78em;
+            margin: 24px 0;
+            line-height: 1.4;
+        }
+
+        /* Code */
         pre {
             background: #0d0d2a;
             border: 1px solid #333;
             border-radius: 6px;
             padding: 16px;
             overflow-x: auto;
+            font-size: 0.88em;
+            margin: 12px 0;
+        }
+        code { color: var(--gold); font-family: 'Courier New', monospace; }
+        p code, li code {
+            background: rgba(201,168,76,0.15);
+            padding: 1px 6px;
+            border-radius: 3px;
             font-size: 0.9em;
         }
-        code { color: var(--gold); }
+
+        /* Architecture (C4 layer) */
+        .c4-layer {
+            background: var(--card);
+            border-left: 3px solid var(--gold);
+            padding: 14px 18px;
+            margin: 8px 0;
+            border-radius: 0 6px 6px 0;
+        }
+        .c4-layer .layer-name {
+            color: var(--gold);
+            font-weight: 700;
+            font-size: 0.95em;
+            margin-bottom: 4px;
+        }
+        .c4-layer .layer-modules {
+            color: var(--muted);
+            font-size: 0.88em;
+        }
+
+        /* CTA */
         .cta {
             text-align: center;
             margin: 40px 0;
@@ -110,14 +301,44 @@
             font-weight: 700;
             font-size: 1.1em;
             transition: opacity 0.3s;
+            margin: 4px;
         }
         .cta a:hover { opacity: 0.9; text-decoration: none; }
+        .cta a.secondary {
+            background: transparent;
+            color: var(--gold);
+            border: 2px solid var(--gold);
+        }
+
+        /* Footer */
         footer {
             text-align: center;
-            padding: 30px;
-            color: var(--muted);
-            font-size: 0.85em;
+            padding: 40px 20px;
             border-top: 1px solid #222;
+            color: var(--muted);
+            font-size: 0.9em;
+            margin-top: 60px;
+        }
+        footer a { color: var(--gold); }
+        .forbidden {
+            color: var(--red);
+            font-weight: 700;
+            margin-top: 12px;
+        }
+        ul li { margin-bottom: 4px; }
+
+        /* Frozen layer */
+        .frozen-badge {
+            display: inline-block;
+            background: var(--red);
+            color: #fff;
+            font-weight: 700;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 0.75em;
+            letter-spacing: 0.1em;
+            vertical-align: middle;
+            margin-left: 8px;
         }
     </style>
 </head>
@@ -125,156 +346,338 @@
 
 <header>
     <div class="logo">MATRIX</div>
-    <p class="subtitle">Модульная Архитектура Трансцендентных Рекурсивных Интеллектуальных Цепочечных Автоматов</p>
-    <p class="claim">Открытая когнитивная архитектура, которая не лжёт, не забывает и не может быть использована во вред.</p>
+    <div class="tagline">Boolean Intermediate Representation</div>
+    <p class="subtitle">Детерминированная нейро-символическая когнитивная архитектура. Три формы вычислений — TT, CLAUSESET, BDD — для одного и того же набора булевых функций.</p>
+    <p class="claim">«Одинаковое состояние и вход — всегда одинаковый выход»</p>
+    <div class="badges">
+        <span class="badge">1055+ тестов</span>
+        <span class="badge">83.7% покрытие</span>
+        <span class="badge">Java 25</span>
+        <span class="badge">Quarkus 3.37.3</span>
+        <span class="badge">Apache Pekko 1.6.0</span>
+        <span class="badge">AGPLv3 + Ethical</span>
+    </div>
 </header>
 
+<nav class="lang-switcher">
+    <a href="index.en.html">English</a> ·
+    <a href="index.html" class="active">Русский</a>
+</nav>
+
 <nav>
-    <a href="#about">О проекте</a>
+    <a href="#bir">BIR</a>
     <a href="#principles">Принципы</a>
+    <a href="#algorithms">Алгоритмы</a>
     <a href="#architecture">Архитектура</a>
-    <a href="#quickstart">Быстрый старт</a>
-    <a href="#phases">Дорожная карта</a>
-    <a href="https://gitverse.ru/AlexandrNarbaev/agi">Репозиторий</a>
+    <a href="#metrics">Метрики</a>
+    <a href="#phases">Roadmap</a>
+    <a href="https://gitverse.ru/AlexandrNarbaev/agi">Gitverse</a>
+    <a href="https://github.com/AlexanderNarbaev/agi">GitHub</a>
 </nav>
 
 <div class="container">
 
-    <section id="about">
-        <h2>Что такое MATRIX?</h2>
-        <p>MATRIX — это система искусственного интеллекта <strong>нового поколения</strong>. В отличие от больших языковых моделей, которые галлюцинируют и требуют гигаватты энергии, MATRIX использует <strong>дискретные логические нейроны (MPDT)</strong>.</p>
-        <br>
-        <p>Каждый нейрон — это интерпретируемая булева функция, которая обучается не градиентным спуском, а <strong>эволюционным алгоритмом</strong>. Система спроектирована так, чтобы быть энергоэффективной, децентрализованной и этически подотчётной. В её ядро встроены неотменяемые этические ограничения — <strong>Три запрета</strong> (не убий, не пытай, не порабощай).</p>
+    <!-- BIR PARADIGM (central concept) -->
+    <section id="bir" class="bir-paradigm">
+        <h2>Парадигма BIR</h2>
+        <p><strong>BIR (Boolean Intermediate Representation)</strong> — это центральная концепция MATRIX. Каждая булева функция в системе хранится в одной из трёх эквивалентных форм, которые <em>взаимно компилируемы</em> и <em>механически верифицируемы</em>:</p>
+
+        <div class="bir-formula">
+            BirUnit = (id, k, m, form, payload, header)   — DESIGN-01
+        </div>
+
+        <div class="bir-three-forms">
+            <div class="bir-form-card">
+                <h4>TT — Truth Table</h4>
+                <div class="formula">f: {0,1}^k → {0,1}</div>
+                <p>Исчерпывающая таблица истинности. Хранит 2<sup>k</sup> бит — все возможные входные комбинации.</p>
+                <p><strong>Ёмкость:</strong> 2<sup>2<sup>k</sup></sup> функций. При k=20 (K_MAX): 128 КБ на единицу, 1.05M функций.</p>
+                <p class="good-for">Лучше для: k ≤ 20, гарантированная корректность, эквивалентность BDD/CLAUSESET.</p>
+            </div>
+
+            <div class="bir-form-card">
+                <h4>CLAUSESET — DNF с автоматами Цетлина</h4>
+                <div class="formula">f = ⋁<sub>i=1..C</sub> L<sub>i</sub></div>
+                <p>Дизъюнктивная нормальная форма. Обучение автоматами Цетлина (interact &amp; reward).</p>
+                <p><strong>Сложность:</strong> ≤(3<sup>k</sup>+1)<sup>C</sup> DNF; PAC-оценка n ≳ (Ck·ln3 + ln(1/δ))/ε².</p>
+                <p class="good-for">Лучше для: разреженные правила, большое k (784 для MNIST), обучение на данных.</p>
+            </div>
+
+            <div class="bir-form-card">
+                <h4>BDD — Reduced Ordered BDD</h4>
+                <div class="formula">ROBDD (Bryant, 1986)</div>
+                <p>Каноническая компактная форма. <em>Эквивалентность проверяется механически</em>: перечислением 2<sup>k</sup> входов.</p>
+                <p><strong>Потолок:</strong> Паритет k переменных требует 2<sup>k-1</sup> клауз → для больших k используется TT или сеть XOR.</p>
+                <p class="good-for">Лучше для: компактное хранение, формальная верификация, Model Checking.</p>
+            </div>
+        </div>
+
+        <p style="text-align:center; margin-top:20px;"><strong>Три формы компилируются друг в друга (BirCompiler, SPEC-002), и эквивалентность проверяется одной командой.</strong></p>
     </section>
 
-    <br><br>
-
     <section id="principles">
-        <h2>Ключевые преимущества</h2>
+        <h2>Ключевые принципы</h2>
         <div class="principles">
             <div class="principle-card">
-                <h3>Не галлюцинирует</h3>
-                <p>Логический вывод детерминирован и верифицируем. Каждое решение — цепочка булевых операций, которую можно проверить.</p>
+                <h3>🔍 Детерминизм</h3>
+                <p>Каждое решение — проверяемая булева цепочка. Идентичное состояние и вход всегда дают идентичный выход. <strong>Никаких LLM в рантайме</strong> (CONSTITUTION, Статья III).</p>
             </div>
             <div class="principle-card">
-                <h3>Интерпретируема</h3>
-                <p>Любое решение объяснимо как дерево логических правил. Никаких «чёрных ящиков».</p>
+                <h3>🛡️ FROZEN-слой <span class="frozen-badge">FROZEN</span></h3>
+                <p>Этические и доменные ограничения иммутабельны на уровне FROZEN-слоя. 6 аксиом, структурно неизменяемые, формально верифицируемые. Любая попытка модификации отклоняется автоматически.</p>
             </div>
             <div class="principle-card">
-                <h3>Энергоэффективна</h3>
-                <p>Инференс на таблице истинности — наносекунды. Работает на микроконтроллерах (ESP32). На порядки экономичнее нейросетей.</p>
+                <h3>⚡ Энергоэффективность</h3>
+                <p>BIR: <strong>0.64 нс</strong> на оценку TT (k=10). Neuron: <strong>197M ops/s</strong>. На 4-5 порядков экономичнее LLM. Работает на ноутбуке и в FPGA.</p>
             </div>
             <div class="principle-card">
-                <h3>Этична по конструкции</h3>
-                <p>FROZEN-нейроны блокируют нарушение Трёх запретов. Система имеет право отказаться от преступного приказа (ЭЛЕВТЕРИЯ).</p>
+                <h3>🧬 Интерпретируемость</h3>
+                <p>Каждое решение — дерево логических правил. Никаких «чёрных ящиков». MonotoneDecoder объясняет любую схему максимальным верхним нулём (DESIGN-09).</p>
             </div>
             <div class="principle-card">
-                <h3>Децентрализована</h3>
-                <p>Каждый может запустить свой инстанс. Знания распространяются через Ноосферу — глобальное хранилище FNL.</p>
+                <h3>🌐 Децентрализация</h3>
+                <p>Любой может запустить инстанс. Знания синхронизируются через Noosphere (CRDT + Kafka + WebSocket). Mesh Federation гарантирует консенсус при BFT.</p>
             </div>
             <div class="principle-card">
-                <h3>Открыта</h3>
-                <p>AGPLv3 + этические ограничения. Весь код, все спецификации, все решения — публичны.</p>
+                <h3>📚 Этика по конструкции</h3>
+                <p>Три запрета (не убий, не пытай, не порабощай) — в FROZEN-слое. EthicalFilter отклоняет команду до выполнения. Guardrail FPR 0% / TPR 100% (H-006).</p>
             </div>
         </div>
     </section>
 
-    <br><br>
+    <h2 id="algorithms">Реализованные алгоритмы</h2>
+    <div class="algorithms">
+        <div class="algorithm-card">
+            <span class="status running">RUN</span>
+            <h3>BIR-classifier (H-009)</h3>
+            <p>Бинарный классификатор на BIR. Паритет с LLM ≤3B (±3 п.п. balanced accuracy) при ≥10⁴× меньшей энергии на ноутбуке.</p>
+        </div>
+        <div class="algorithm-card">
+            <span class="status running">RUN</span>
+            <h3>WNN/WiSARD (H-010)</h3>
+            <p>Однопроходовый ансамбль TT-единиц. WiSARD-стиль: RAM по адресу. Точность ±2 п.п. от TsetlinTrainer при ≥10× быстрее обучения.</p>
+        </div>
+        <div class="algorithm-card">
+            <span class="status running">RUN</span>
+            <h3>SDM/Kanerva (H-011)</h3>
+            <p>Sparse Distributed Memory: счётчики + порог + радиус. Precision@5 ≥+5 п.п. vs плоский top-K Hamming при том же бюджете.</p>
+        </div>
+        <div class="algorithm-card">
+            <span class="status running">RUN</span>
+            <h3>intESN / Binary Reservoir (H-015)</h3>
+            <p>VSA-состояние + перестановочная рекуррентность + TT/WNN-readout. Fixed seed. Accuracy ±3 п.п. от float-ESN при ≥10× меньшей энергии.</p>
+        </div>
+        <div class="algorithm-card">
+            <span class="status running">RUN</span>
+            <h3>MonotoneDecoder (H-016)</h3>
+            <p>Идентификация монотонных булевых функций по схеме максимального верхнего нуля. ≥5× меньше корпуса vs TsetlinTrainer на монотонных доменах.</p>
+        </div>
+        <div class="algorithm-card">
+            <span class="status running">RUN</span>
+            <h3>LTL Model Checker (H-017)</h3>
+            <p>Формализация DESIGN-07/08 в LTL + bounded model checking. Обнаруживает нарушения, не покрытые приёмочными тестами AT-*. Школа Пнуэли.</p>
+        </div>
+        <div class="algorithm-card">
+            <span class="status running">RUN</span>
+            <h3>GUHA + Levin (H-018, H-019)</h3>
+            <p>Систематический генератор кандидатов (Hájek–Havránek) + оптимальный планировщик бюджетов 2<sup>-l</sup>. Покрытие на джоуль ≥+15% vs равномерное расписание.</p>
+        </div>
+        <div class="algorithm-card">
+            <span class="status running">RUN</span>
+            <h3>LearnedMinecraftPilot (H-005)</h3>
+            <p>Обучение пилота Minecraft через эволюционный цикл Developmental Loop. −30% времени vs random при нехудшей точности.</p>
+        </div>
+        <div class="algorithm-card">
+            <span class="status running">RUN</span>
+            <h3>MeshFederation (M4)</h3>
+            <p>CRDT + QuorumChecker (3/5 BFT) + Kafka + WebSocket. Распределённая синхронизация FNL без центрального сервера.</p>
+        </div>
+        <div class="algorithm-card">
+            <span class="status completed">DONE</span>
+            <h3>Guardrail FPR/TPR (H-006)</h3>
+            <p>FPR <strong>0%</strong>, TPR <strong>100%</strong>, P99 latency <strong>0 мс</strong>. Цели (≤5%, ≥95%, ≤50ms) достигнуты.</p>
+        </div>
+    </div>
 
     <section id="architecture">
-        <h2>Как это работает</h2>
-        <p>В основе MATRIX лежит <strong>MPDT-нейрон</strong> (McCulloch-Pitts Decision Tree) — дискретная логическая ячейка, хранящая таблицу истинности для K входов. Нейроны объединяются в кластеры, кластеры — в функциональные доли (FNL). Обучение ведётся генетическим алгоритмом: популяция нейронов эволюционирует через мутации, скрещивание и отбор по фитнес-функции.</p>
-        <br>
-        <p>Иерархия Медиаторов управляет драйверами поведения (Energy, Curiosity, Safety), обеспечивая проактивность. Этический фильтр проверяет каждое действие на соответствие Трём запретам. Распределённая архитектура на Apache Pekko + Kafka + MinIO обеспечивает масштабируемость и отказоустойчивость.</p>
-        <br>
-        <p><strong>Стек:</strong> Java 25, Quarkus 3.37.3, Apache Pekko 1.6.0, Apache Kafka, MinIO, Avro, JaCoCo, Prometheus, Grafana, Jaeger.</p>
+        <h2>Архитектура (C4-уровни)</h2>
+
+        <div class="c4-layer">
+            <div class="layer-name">1. Boolean Compute (BIR)</div>
+            <div class="layer-modules">
+                <code>bir.TtForm</code> · <code>bir.ClauseSetForm</code> · <code>bir.BddForm</code> · <code>bir.BirCompiler</code> · <code>bir.BooleanRuntime</code> · <code>bir.JvmSimdBackend</code> · <code>bir.FpgaBackend</code>
+            </div>
+        </div>
+        <div class="c4-layer">
+            <div class="layer-name">2. Memory & RAG (Knowledge Stack)</div>
+            <div class="layer-modules">
+                <code>rag.HybridBooleanRag</code> · <code>rag.BooleanIndex</code> · <code>rag.RrfFusion</code> · <code>rag.FloatEmbeddingIndex</code> (ONNX) · <code>knowledge.KnowledgeGraphStore</code>
+            </div>
+        </div>
+        <div class="c4-layer">
+            <div class="layer-name">3. Neural Layer (Neuron/Batch)</div>
+            <div class="layer-modules">
+                <code>neuron.TruthTable</code> · <code>neuron.BatchEvaluator</code> · <code>neuron.BatchMemoryAdapter</code> · <code>neuron.HierarchicalBrain</code> · <code>neuron.NeuralTextGenerator</code>
+            </div>
+        </div>
+        <div class="c4-layer">
+            <div class="layer-name">4. Lifecycle & Federation</div>
+            <div class="layer-modules">
+                <code>lifecycle.TaskCell</code> · <code>budgeter.Homeostat</code> · <code>noosphere.MeshFederation</code> · <code>noosphere.GrowOnlySet</code> · <code>noosphere.QuorumChecker</code>
+            </div>
+        </div>
+        <div class="c4-layer">
+            <div class="layer-name">5. FROZEN — Ethics & Guardrail</div>
+            <div class="layer-modules">
+                <code>ethics.EthicalFilter</code> · <code>ethics.EthicalVerdict</code> · <code>guardrail.GuardrailEngine</code> · <code>guardrail.GuardrailResult</code>
+            </div>
+        </div>
+        <div class="c4-layer">
+            <div class="layer-name">6. Pilots & Action</div>
+            <div class="layer-modules">
+                <code>pilot.MinecraftPilot</code> · <code>pilot.NaiveMinecraftPilot</code> · <code>pilot.LearnedMinecraftPilot</code> · <code>actions.ActionRegistry</code>
+            </div>
+        </div>
+        <div class="c4-layer">
+            <div class="layer-name">7. Evolution & Cauldron</div>
+            <div class="layer-modules">
+                <code>evolution.EvolutionLoop</code> · <code>evolution.FitnessFn</code> · <code>cauldron.CauldronProtocol</code> · <code>cauldron.GuhaCandidateGenerator</code> · <code>cauldron.LevinSchedule</code>
+            </div>
+        </div>
+        <div class="c4-layer">
+            <div class="layer-name">8. Verification & Performance</div>
+            <div class="layer-modules">
+                <code>verification.LtlModelChecker</code> · <code>benchmark.JMH</code> · <code>benchmark.PerformanceReport</code>
+            </div>
+        </div>
+
+        <div class="arch-diagram">┌─────────────────────────────────────────────────────────────┐
+│  API + CLI + MCP (Quarkus 3.37.3)                            │
+└─────────────────────────────────────────────────────────────┘
+                                  ↓
+┌─────────────────────────────────────────────────────────────┐
+│  ETHICS (FROZEN) — 6 AXIOMS — EthicalFilter + GuardrailEngine │
+└─────────────────────────────────────────────────────────────┘
+                                  ↓
+┌──────────────┐    ┌──────────────┐    ┌──────────────┐
+│  BIR CORE    │    │  RAG         │    │  NEURONS     │
+│  TT/CLS/BDD  │───▶│  4 strategies│───▶│  BatchEval   │
+│  K_MAX=20    │    │  RRF fusion  │    │  ~197M ops/s │
+└──────────────┘    └──────────────┘    └──────────────┘
+        ↓                ↓                  ↓
+┌─────────────────────────────────────────────────────────────┐
+│  LIFECYCLE + FEDERATION: TaskCell + Cauldron + NoosphereCRDT │
+└─────────────────────────────────────────────────────────────┘
+                                  ↓
+┌─────────────────────────────────────────────────────────────┐
+│  PILOT + ACTIONS: NaiveMinecraftPilot / LearnedMinecraftPilot│
+└─────────────────────────────────────────────────────────────┘</div>
     </section>
 
-    <br><br>
+    <h2 id="metrics">Измеренные метрики</h2>
+    <div class="metrics">
+        <div class="metric">
+            <div class="metric-value">1055+</div>
+            <div class="metric-label">тестов</div>
+        </div>
+        <div class="metric">
+            <div class="metric-value">83.7%</div>
+            <div class="metric-label">покрытие (METHOD)</div>
+        </div>
+        <div class="metric">
+            <div class="metric-value">0.64 нс</div>
+            <div class="metric-label">BIR TT eval</div>
+        </div>
+        <div class="metric">
+            <div class="metric-value">197M</div>
+            <div class="metric-label">Neuron ops/s</div>
+        </div>
+        <div class="metric">
+            <div class="metric-value">100%</div>
+            <div class="metric-label">Guardrail TPR</div>
+        </div>
+        <div class="metric">
+            <div class="metric-value">0%</div>
+            <div class="metric-label">Guardrail FPR</div>
+        </div>
+        <div class="metric">
+            <div class="metric-value">0 мс</div>
+            <div class="metric-label">Guardrail P99</div>
+        </div>
+        <div class="metric">
+            <div class="metric-value">34</div>
+            <div class="metric-label">гипотез</div>
+        </div>
+    </div>
 
     <section id="quickstart">
         <h2>Быстрый старт</h2>
-        <pre><code>git clone https://gitverse.ru/AlexandrNarbaev/agi.git
+        <pre><code>git clone https://github.com/AlexanderNarbaev/agi.git
 cd agi
 ./gradlew build
-./gradlew test                         # 414 тестов
+./gradlew test                          # все 1055+ тестов
+./gradlew :matrix-core:jacocoTestReport # отчёт покрытия
 ./gradlew :matrix-core:quarkusBuild -Dquarkus.package.jar.type=uber-jar
-java -jar matrix-core/build/matrix-core-*-runner.jar demo</code></pre>
-        <p>Ожидаемый результат: <strong style="color:#4caf50;">ALL SYSTEMS NOMINAL</strong> — все 8 фаз проходят проверку.</p>
-        <br>
-        <p>Запуск GridWorld-симуляции (эволюция агента):</p>
-        <pre><code>java -jar matrix-core/build/matrix-core-*-runner.jar simulate -g 20 -p 10 -k 16 --seed 42</code></pre>
-        <br>
-        <div class="cta">
-            <a href="https://gitverse.ru/AlexandrNarbaev/agi">Открыть репозиторий</a>
-        </div>
+java -jar matrix-core/build/*-runner.jar demo</code></pre>
+        <p>Запуск GridWorld-симуляции (эволюция BIR-агента):</p>
+        <pre><code>java -jar matrix-core/build/*-runner.jar simulate -g 20 -p 10 -k 16 --seed 42</code></pre>
+        <p>Дистилляция весов HuggingFace → BIR:</p>
+        <pre><code>bash scripts/train_local.sh --model HuggingFaceTB/SmolLM2-135M
+python scripts/pretrain_neurons.py --architecture llama --layers 6</code></pre>
     </section>
 
-    <br><br>
+    <h2 id="phases">Roadmap</h2>
+    <div class="phases" style="overflow-x: auto;">
+        <table style="width:100%; border-collapse:collapse;">
+            <thead>
+                <tr style="background: rgba(18,18,58,0.6);">
+                    <th style="padding:10px 14px; text-align:left; color:var(--gold); border-bottom:1px solid #333;">Фаза</th>
+                    <th style="padding:10px 14px; text-align:left; color:var(--gold); border-bottom:1px solid #333;">Цель</th>
+                    <th style="padding:10px 14px; text-align:left; color:var(--gold); border-bottom:1px solid #333;">Статус</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td style="padding:8px 14px; border-bottom:1px solid #222;">Phase 0</td><td style="padding:8px 14px; border-bottom:1px solid #222;">BIR ядро (TT/CLAUSESET/BDD)</td><td style="padding:8px 14px; border-bottom:1px solid #222; color:#4caf50;">✓ Завершено</td></tr>
+                <tr><td style="padding:8px 14px; border-bottom:1px solid #222;">Phase 1</td><td style="padding:8px 14px; border-bottom:1px solid #222;">RAG 4-strategy + Recall@5</td><td style="padding:8px 14px; border-bottom:1px solid #222; color:#4caf50;">✓ Завершено (100% dense)</td></tr>
+                <tr><td style="padding:8px 14px; border-bottom:1px solid #222;">Phase 2</td><td style="padding:8px 14px; border-bottom:1px solid #222;">Guardrail FPR/TPR</td><td style="padding:8px 14px; border-bottom:1px solid #222; color:#4caf50;">✓ 0% / 100%</td></tr>
+                <tr><td style="padding:8px 14px; border-bottom:1px solid #222;">Phase 3</td><td style="padding:8px 14px; border-bottom:1px solid #222;">Minecraft Pilot (Naive + Learned)</td><td style="padding:8px 14px; border-bottom:1px solid #222; color:#4caf50;">✓ Завершено</td></tr>
+                <tr><td style="padding:8px 14px; border-bottom:1px solid #222;">Phase 4</td><td style="padding:8px 14px; border-bottom:1px solid #222;">FPGA Backend (bitstream)</td><td style="padding:8px 14px; border-bottom:1px solid #222; color:#ff9800;">⚠ Без оборудования</td></tr>
+                <tr><td style="padding:8px 14px; border-bottom:1px solid #222;">Phase 5</td><td style="padding:8px 14px; border-bottom:1px solid #222;">Noosphere Mesh Federation</td><td style="padding:8px 14px; border-bottom:1px solid #222; color:#4caf50;">✓ Завершено</td></tr>
+                <tr><td style="padding:8px 14px; border-bottom:1px solid #222;">CAv4</td><td style="padding:8px 14px; border-bottom:1px solid #222;">Сauldron improvements (H-018…022)</td><td style="padding:8px 14px; border-bottom:1px solid #222; color:#4caf50;">✓ Частично</td></tr>
+                <tr><td style="padding:8px 14px; border-bottom:1px solid #222;">H-020</td><td style="padding:8px 14px; border-bottom:1px solid #222;">AQ/LAD candidate generation</td><td style="padding:8px 14px; border-bottom:1px solid #222; color:#888;">— proposed</td></tr>
+                <tr><td style="padding:8px 14px; border-bottom:1px solid #222;">H-021</td><td style="padding:8px 14px; border-bottom:1px solid #222;">Backward value iteration planner</td><td style="padding:8px 14px; border-bottom:1px solid #222; color:#888;">— proposed</td></tr>
+            </tbody>
+        </table>
+    </div>
 
-    <section id="phases">
-        <h2>Дорожная карта</h2>
-        <div class="phases">
-            <table>
-                <thead>
-                    <tr><th>Фаза</th><th>Название</th><th>Статус</th></tr>
-                </thead>
-                <tbody>
-                    <tr><td>0</td><td>Искра — MPDT-нейрон</td><td class="done">✓ Завершено</td></tr>
-                    <tr><td>1</td><td>Клетка — Кластеры + Медиатор</td><td class="done">✓ Завершено</td></tr>
-                    <tr><td>2</td><td>Организм — Распределённая система</td><td class="done">✓ Завершено</td></tr>
-                    <tr><td>3</td><td>Ноосфера — Глобальное хранилище</td><td class="done">✓ Завершено</td></tr>
-                    <tr><td>4</td><td>Цифровая Тень — Защитный модуль</td><td class="done">✓ Завершено</td></tr>
-                    <tr><td>6</td><td>Цивилизационный мост</td><td class="done">✓ Завершено</td></tr>
-                    <tr><td>7</td><td>Регенеративная экономика</td><td class="done">✓ Завершено</td></tr>
-                    <tr><td>—</td><td>Observability (Micrometer + OTEL)</td><td class="done">✓ Завершено</td></tr>
-                    <tr><td>—</td><td>Minecraft Spigot Plugin</td><td class="done">✓ Завершено</td></tr>
-                    <tr><td>—</td><td>CI/CD Pipeline</td><td class="done">✓ Завершено</td></tr>
-                    <tr><td>1.2</td><td>Kubernetes + Operator (L9)</td><td class="wip">В плане</td></tr>
-                    <tr><td>1.3</td><td>Пилот: Minecraft GridWorld (L13)</td><td class="wip">В плане</td></tr>
-                    <tr><td>1.4</td><td>Пилот: Проактивный чат-бот (L13)</td><td class="wip">В плане</td></tr>
-                </tbody>
-            </table>
-        </div>
+    <section id="docs">
+        <h2>Документация</h2>
+        <p>Проект полностью специфицирован — 161 документ в <code>docs/</code>:</p>
+        <ul>
+            <li><strong>Spec:</strong> SPEC-000 (Developmental Loop), SPEC-001 (Weight Conversion), SPEC-002 (Boolean Compute), SPEC-003 (Knowledge Topology)</li>
+            <li><strong>Design:</strong> DESIGN-01…13 (Units, Composition, Pipeline, Learning, Memory, Signal Modules, Lifecycle, Federation, Monotone Decoder, Binary Reservoir, Budgeter, FNL TaskCell, Action Registry)</li>
+            <li><strong>ADRs:</strong> ADR-001…006 (Architecture Decision Records)</li>
+            <li><strong>Research:</strong> HYPOTHESES.md (34 hypotheses), METRICS.md, ANALYSIS-laptop-feasibility.md, PAPER-01…</li>
+        </ul>
+        <p><a href="https://github.com/AlexanderNarbaev/agi/blob/main/docs/INDEX.md">Полная карта документации →</a></p>
     </section>
-
-    <br><br>
-
-    <section id="specs">
-        <h2>Спецификации (22 документа)</h2>
-        <p>Проект полностью специфицирован. Каждый аспект — от философского манифеста до прошивки микроконтроллера — описан в отдельном документе:</p>
-        <br>
-        <p><strong>Ядро:</strong> L0 (Манифест), L1 (MPDT-нейрон), L2 (Протоколы), L3 (Кластеры), L4 (Медиатор), L5 (Эволюция), L6 (Память), L7 (Этика), L8 (Roadmap)</p>
-        <p><strong>Инфраструктура:</strong> L9 (Deployment/K8s), L10 (Мониторинг/SRE), L16 (Физические интерфейсы), L18 (CI/CD)</p>
-        <p><strong>Сообщество:</strong> L11 (Управление), L12 (Лицензия), L17 (Онбординг), L19 (Глобальное сообщество)</p>
-        <p><strong>Развитие:</strong> L13 (Пилоты), L14 (Бизнес-модель), L15 (Образование), L20 (Медиа), L21 (Университеты), L22 (Корпорации)</p>
-        <br>
-        <p>Все документы: <a href="https://gitverse.ru/AlexandrNarbaev/agi/src/branch/main/docs">docs/</a></p>
-    </section>
-
-    <br><br>
 
     <section id="contribute">
         <h2>Присоединяйтесь</h2>
-        <p>MATRIX — открытый проект. Мы приветствуем разработчиков, исследователей, дизайнеров, переводчиков и всех, кому близка наша миссия.</p>
-        <br>
-        <ul>
-            <li><strong>Разработчикам:</strong> <a href="https://gitverse.ru/AlexandrNarbaev/agi/src/branch/main/CONTRIBUTING">CONTRIBUTING.md</a> — руководство контрибьютора</li>
-            <li><strong>Исследователям:</strong> открытые проблемы — сходимость ГА, формальная верификация, эффективность на FPGA</li>
-            <li><strong>Студентам:</strong> темы курсовых и дипломных, стажировки, образовательные материалы (L15)</li>
-            <li><strong>Компаниям:</strong> спонсорство, партнёрство, коммерческое лицензирование (L14, L22)</li>
-        </ul>
-        <br>
+        <p>MATRIX — открытый проект под AGPLv3 + этические ограничения.</p>
         <div class="cta">
-            <a href="https://gitverse.ru/AlexandrNarbaev/agi">Внести вклад</a>
+            <a href="https://github.com/AlexanderNarbaev/agi">GitHub</a>
+            <a href="https://gitverse.ru/AlexandrNarbaev/agi" class="secondary">Gitverse</a>
+            <a href="https://github.com/AlexanderNarbaev/agi/blob/main/docs/research/HYPOTHESES.md" class="secondary">HYPOTHESES.md</a>
         </div>
     </section>
 
 </div>
 
 <footer>
-    <p>MATRIX Cognitive Architecture &copy; 2026. Licensed under AGPLv3 with Ethical Restrictions.</p>
-    <p>Три запрета: Не убий. Не пытай. Не порабощай.</p>
+    <p>MATRIX Cognitive Architecture · 2026 · <a href="https://github.com/AlexanderNarbaev/agi/blob/main/CONSTITUTION.md">CONSTITUTION.md</a></p>
+    <p class="forbidden">«Не убий. Не пытай. Не порабощай.» — Три запрета, FROZEN-слой</p>
+    <p style="margin-top:8px; font-size:0.85em;">Last updated: 2026-08-17 · GNU AGPLv3 with Ethical Restrictions</p>
 </footer>
 
 </body>

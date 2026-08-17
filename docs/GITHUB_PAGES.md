@@ -1,44 +1,51 @@
-# MATRIX GitHub Pages — bilingual documentation
+# MATRIX GitHub Pages — Bilingual Documentation Deployment
 
-This workflow builds and deploys the bilingual (English + Russian) GitHub Pages site for the MATRIX project.
+Deploys the bilingual (English + Russian) GitHub Pages site for MATRIX.
+
+## What gets deployed
+
+| File | Language | Purpose |
+|------|----------|---------|
+| `docs/index.html` | Russian (default) | Full landing page with BIR paradigm |
+| `docs/index.en.html` | English | Full landing page with BIR paradigm |
+| `docs/index.en.md` | English | README mirror (Markdown source) |
+| `docs/sandbox.html` | — | MPDT interactive sandbox |
+| `docs/architecture-knowledge-graph.excalidraw` | — | Architecture diagram |
+| `docs/GITHUB_PAGES.md` | English | Pages documentation |
 
 ## Triggers
 
-- **Push to `main`** (when `docs/index*.html`, `docs/index*.md` change) → build + deploy
-- **Manual** via `workflow_dispatch`
-
-## What it deploys
-
-- `docs/index.html` (Russian, primary)
-- `docs/index.en.html` (English)
-- `docs/sandbox.html` (existing sandbox)
-- `docs/index.en.md` (English README)
-- `docs/architecture-knowledge-graph.excalidraw` (architecture diagram)
+- **Push to `main`** when any of the above files change
+- **Manual dispatch** via `workflow_dispatch`
 
 ## Setup
 
 In GitHub repository settings → Pages:
 1. Source: **GitHub Actions**
-2. Branch: `gh-pages` (auto-created by this workflow)
-3. Custom domain: optional
-
-## Workflow file
-
-See `.github/workflows/pages.yml` in the repository root.
+2. No branch selection needed (auto-deployed by this workflow)
 
 ## Local preview
 
 ```bash
-# Serve docs locally
 cd docs && python3 -m http.server 8000
 # Open http://localhost:8000
 ```
 
-## Bilingual navigation
+## Validation
 
-The English page (`index.en.html`) and Russian page (`index.html`) have a language switcher in the nav bar.
+The workflow validates:
+- All required HTML files exist
+- `lang` attribute is correctly set per file (`lang="ru"` or `lang="en"`)
+- HTML files are well-formed (size check)
+
+## Pages URL
+
+After first deploy, the site is available at:
+`https://<owner>.github.io/<repo>/`
+
+For this project: `https://alexandernarbaev.github.io/agi/`
 
 ## License
 
-Documentation content: CC-BY-SA-4.0
-Code: GNU AGPLv3 (see LICENSE)
+- HTML content: CC-BY-SA-4.0
+- Code: GNU AGPLv3 (see [`LICENSE`](../LICENSE))
