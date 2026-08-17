@@ -1,0 +1,14 @@
+# GLOBAL WAL — 2026-08-10
+session:
+  id: "20260810-130733"
+  status: "init"
+  started: "2026-08-10T13:07:33+03:00"
+artifacts:
+  changed: []
+  staged: false
+protected:
+  - "config/secrets.env"
+  - "migrations/"
+  - ".opencode/agents/"
+decisions: []
+next: []
