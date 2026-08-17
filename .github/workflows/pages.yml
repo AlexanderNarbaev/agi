@@ -1,0 +1,76 @@
+# MATRIX GitHub Pages — bilingual documentation deployment
+
+name: MATRIX Pages
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'docs/index.html'
+      - 'docs/index.en.html'
+      - 'docs/index.ru.html'
+      - 'docs/index.en.md'
+      - 'docs/sandbox.html'
+      - '.github/workflows/pages.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Build site
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Pages
+        id: pages
+        uses: actions/configure-pages@v5
+
+      - name: Build site (verify HTML)
+        run: |
+          echo "Verifying bilingual site..."
+          for f in docs/index.html docs/index.en.html docs/index.ru.html; do
+            if [ ! -f "$f" ]; then
+              echo "ERROR: Missing $f"
+              exit 1
+            fi
+            echo "OK: $f ($(wc -c < $f) bytes)"
+          done
+
+      - name: Inject lang attributes
+        run: |
+          # Verify lang attribute is set correctly
+          grep -q '<html lang="ru"' docs/index.html && echo "RU lang OK" || (echo "RU lang MISSING" && exit 1)
+          grep -q '<html lang="en"' docs/index.en.html && echo "EN lang OK" || (echo "EN lang MISSING" && exit 1)
+
+      - name: Copy sandbox
+        run: |
+          if [ -f docs/sandbox.html ]; then
+            echo "Sandbox present"
+          else
+            echo "WARNING: sandbox.html not found"
+          fi
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs
+
+  deploy:
+    name: Deploy to GitHub Pages
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
