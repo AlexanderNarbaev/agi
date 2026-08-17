@@ -1,11 +1,12 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MATRIX — детерминированная булева платформа для безопасного ИИ</title>
-    <meta name="description" content="MATRIX — открытая платформа детерминированных систем на базе BIR (Boolean Intermediate Representation). Три эквивалентные формы — TT, CLAUSESET, BDD — с формальной верификацией, FROZEN-этическим слоем и энергоэффективностью на 4-5 порядков выше LLM.">
-    <meta name="keywords" content="MATRIX, BIR, Boolean, FROZEN, детерминизм, нейро-символика, Tsetlin, AGPLv3, MCP">
+    <title>MATRIX — A deterministic Boolean compute platform for safe AI</title>
+    <meta name="description" content="MATRIX is an open-source platform that builds deterministic Boolean Intermediate Representation (BIR) systems. Three equivalent forms — TT, CLAUSESET, BDD — with formal verification, ethical FROZEN layer, and energy efficiency 4-5 orders better than LLMs.">
+    <meta name="keywords" content="MATRIX, BIR, Boolean, FROZEN, deterministic AI, neuro-symbolic, Tsetlin, AGPLv3, MCP">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
     <style>
         *,*::before,*::after { box-sizing: border-box; }
         :root {
@@ -36,6 +37,7 @@
         a { color: var(--link); text-decoration: none; }
         a:hover { text-decoration: underline; }
 
+        /* Layout */
         .layout {
             display: grid;
             grid-template-columns: 240px 1fr;
@@ -47,6 +49,7 @@
             aside.sidebar { display: none; }
         }
 
+        /* Sidebar */
         aside.sidebar {
             position: sticky;
             top: 60px;
@@ -81,6 +84,7 @@
             margin-bottom: 8px;
         }
 
+        /* Top bar */
         .topbar {
             position: sticky;
             top: 0;
@@ -103,6 +107,7 @@
         .topbar nav { display: flex; gap: 24px; align-items: center; }
         .topbar nav a { color: var(--fg-muted); font-size: 14px; font-weight: 500; }
 
+        /* Main content */
         main {
             padding: 32px 64px 96px;
             max-width: 800px;
@@ -111,6 +116,7 @@
             main { padding: 24px 24px 96px; }
         }
 
+        /* Hero */
         .hero {
             padding: 48px 0 64px;
             border-bottom: 1px solid var(--border);
@@ -166,6 +172,7 @@
         }
         .btn-primary:hover { background: #000; }
 
+        /* Frozen callout */
         .frozen-callout {
             background: var(--frozen-bg);
             border: 1px solid var(--frozen);
@@ -177,6 +184,7 @@
         }
         .frozen-callout strong { color: var(--frozen); font-weight: 700; }
 
+        /* Sections */
         section { margin: 64px 0; }
         section h2 {
             font-size: 32px;
@@ -197,6 +205,7 @@
         section li { margin: 6px 0; }
         section a { color: var(--link); text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 2px; }
 
+        /* Code blocks */
         pre {
             background: var(--bg-code);
             border-radius: 8px;
@@ -217,6 +226,7 @@
         }
         pre code { background: none; padding: 0; font-size: inherit; }
 
+        /* Tables */
         table {
             width: 100%;
             border-collapse: collapse;
@@ -237,6 +247,7 @@
         }
         td:first-child { font-weight: 600; }
 
+        /* Figures */
         figure {
             margin: 32px 0;
             padding: 24px;
@@ -244,7 +255,7 @@
             border-radius: 12px;
             background: var(--bg-subtle);
         }
-        figure pre {
+        figure img, figure pre {
             margin: 0;
             border: none;
             background: var(--bg);
@@ -257,6 +268,7 @@
             font-style: italic;
         }
 
+        /* Card grid */
         .grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -292,6 +304,7 @@
         .badge.complete { background: #d1fae5; color: #065f46; }
         .badge.partial { background: #e0e7ff; color: #4338ca; }
 
+        /* Metrics */
         .metric-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
@@ -334,35 +347,35 @@
 <header class="topbar">
     <div class="logo">MATRIX<span>.</span></div>
     <nav>
-        <a href="index.html">Обзор</a>
-        <a href="#algorithms">Алгоритмы</a>
-        <a href="#architecture">Архитектура</a>
-        <a href="#benchmarks">Бенчмарки</a>
+        <a href="index.en.html">Overview</a>
+        <a href="#algorithms">Algorithms</a>
+        <a href="#architecture">Architecture</a>
+        <a href="#benchmarks">Benchmarks</a>
         <a href="https://github.com/AlexanderNarbaev/agi">GitHub</a>
         <a href="https://gitverse.ru/AlexandrNarbaev/agi">Gitverse</a>
-        <a href="index.en.html" style="color:var(--accent);font-weight:600;">EN</a>
+        <a href="index.html" style="color:var(--accent);font-weight:600;">RU</a>
     </nav>
 </header>
 
 <div class="layout">
 
     <aside class="sidebar">
-        <div class="toc-heading">На этой странице</div>
+        <div class="toc-heading">On this page</div>
         <nav>
             <ul>
-                <li><a href="#intro">Введение</a></li>
-                <li><a href="#the-bir-paradigm">Парадигма BIR</a></li>
-                <li><a href="#three-equivalent-forms">Три эквивалентные формы</a></li>
-                <li><a href="#frozen-layer">FROZEN-слой этики</a></li>
-                <li><a href="#quickstart">Быстрый старт</a></li>
-                <li><a href="#architecture">Архитектура</a></li>
-                <li><a href="#algorithms">Реализованные алгоритмы</a></li>
-                <li><a href="#benchmarks">Бенчмарки</a></li>
-                <li><a href="#frozen-architecture">Архитектура FROZEN</a></li>
-                <li><a href="#how-it-compares">Сравнение</a></li>
-                <li><a href="#lifecycle">Жизненный цикл</a></li>
+                <li><a href="#intro">Introduction</a></li>
+                <li><a href="#the-bir-paradigm">The BIR paradigm</a></li>
+                <li><a href="#three-equivalent-forms">Three equivalent forms</a></li>
+                <li><a href="#frozen-layer">FROZEN ethics layer</a></li>
+                <li><a href="#quickstart">Quick start</a></li>
+                <li><a href="#architecture">Architecture</a></li>
+                <li><a href="#algorithms">Implemented algorithms</a></li>
+                <li><a href="#benchmarks">Benchmarks</a></li>
+                <li><a href="#frozen-architecture">FROZEN architecture</a></li>
+                <li><a href="#how-it-compares">How it compares</a></li>
+                <li><a href="#lifecycle">Lifecycle &amp; federation</a></li>
                 <li><a href="#roadmap">Roadmap</a></li>
-                <li><a href="#next-steps">Следующие шаги</a></li>
+                <li><a href="#next-steps">Next steps</a></li>
             </ul>
         </nav>
     </aside>
@@ -371,363 +384,363 @@
 
         <section class="hero">
             <span class="eyebrow">Boolean Intermediate Representation</span>
-            <h1>Детерминированная вычислительная платформа для безопасного ИИ</h1>
-            <p>MATRIX выполняет детерминированные булевы функции вместо больших языковых моделей. Каждое решение — верифицируемая цепочка побитовых операций. FROZEN-слой этики отклоняет деструктивные команды на этапе компиляции — до того, как они достигнут вашего приложения.</p>
-            <p>Система хранит каждую булеву функцию в трёх эквивалентных формах — <strong>TT</strong> (таблица истинности), <strong>CLAUSESET</strong> (Tsetlin-DNF) и <strong>BDD</strong> (редуцированная упорядоченная бинарная решающая диаграмма). Формы компилируются друг в друга, эквивалентность проверяется полным перечислением.</p>
+            <h1>A deterministic compute platform for safe AI</h1>
+            <p>MATRIX runs deterministic Boolean functions instead of large language models. Every decision is a verifiable chain of bitwise operations. A FROZEN ethics layer rejects destructive commands at compile time, before they reach your application.</p>
+            <p>The system stores each Boolean function in three equivalent forms — <strong>TT</strong> (truth table), <strong>CLAUSESET</strong> (Tsetlin DNF), and <strong>BDD</strong> (reduced ordered binary decision diagram). Forms compile into each other and equivalence is verified by exhaustive enumeration.</p>
             <div class="cta-row">
-                <a class="btn btn-primary" href="#quickstart">К быстрому старту</a>
-                <a class="btn" href="https://github.com/AlexanderNarbaev/agi">Открыть на GitHub →</a>
-                <a class="btn" href="#algorithms">К алгоритмам</a>
+                <a class="btn btn-primary" href="#quickstart">Read the quick start</a>
+                <a class="btn" href="https://github.com/AlexanderNarbaev/agi">View on GitHub →</a>
+                <a class="btn" href="#algorithms">See the algorithms</a>
             </div>
             <div class="frozen-callout">
-                <strong>FROZEN-СЛОЙ:</strong> Три запрета — не убий, не пытай, не порабощай — структурно иммутабельны. Любая попытка изменения отклоняется автоматически. См. <a href="#frozen-architecture">архитектуру FROZEN-слоя</a> ниже.
+                <strong>FROZEN-LAYER:</strong> Three prohibitions — don't kill, don't torture, don't enslave — are structurally immutable. Any modification attempt is rejected automatically. See <a href="#frozen-layer">FROZEN architecture</a> below.
             </div>
         </section>
 
         <section id="intro">
-            <h2>Введение</h2>
-            <p>Современный ИИ при развёртывании сталкивается с тремя проблемами: <strong>детерминизм</strong> (LLM сэмплируют недетерминированно), <strong>верифицируемость</strong> (решения нельзя проследить до доказательства), <strong>энергетическая стоимость</strong> (один токен LLM примерно в 10⁶ раз дороже одной булевой оценки).</p>
-            <p>MATRIX решает все три, заменяя инференс языковой модели вычислением булевых функций. Рантайм — единственный Java 25 процесс. Никакого warm-up, загрузки моделей, GPU. Горячий путь — несколько наносекунд на решение.</p>
-            <p>Компромисс — область применения: булевы функции не могут генерировать открытый язык. Для этой задачи MATRIX рассматривает LLM как недоверенный периферийный сервис — проверяется на границе, никогда не делает финального вызова.</p>
+            <h2>Introduction</h2>
+            <p>Modern AI deployment faces three problems: <strong>determinism</strong> (LLMs sample non-deterministically), <strong>verification</strong> (decisions can't be traced to a proof), and <strong>energy cost</strong> (one LLM token is roughly 10⁶× more expensive than one Boolean evaluation).</p>
+            <p>MATRIX addresses all three by replacing language model inference with Boolean function evaluation. The runtime is a single Java 25 process. There is no warm-up, no model loading, no GPU. The hot path is a few nanoseconds per decision.</p>
+            <p>The trade-off is scope: Boolean functions cannot generate open-ended language. For that workload, MATRIX treats an LLM as an untrusted peripheral service — verified at the boundary, never allowed to make the final call.</p>
         </section>
 
         <section id="the-bir-paradigm">
-            <h2>Парадигма BIR</h2>
-            <p>Основная структура данных — <strong>BIR-единица</strong>:</p>
+            <h2>The BIR paradigm</h2>
+            <p>The core data structure is the <strong>BIR unit</strong>:</p>
             <pre><code>BirUnit = (id, k, m, form, payload, header)
 
-где:
-  id      — уникальный идентификатор
-  k       — количество входных бит (k ≤ K_MAX = 20)
-  m       — количество выходных бит
+where:
+  id      — unique identifier
+  k       — number of input bits (k ≤ K_MAX = 20)
+  m       — number of output bits
   form    — TT | CLAUSESET | BDD
-  payload — данные функции (байты таблицы, клаузы, узлы BDD)
-  header  — метаданные: владелец, FROZEN-флаг, версия, подпись</code></pre>
-            <p>Каждая BIR-единица объявляет свою форму при сборке. Рантайм выбирает форму, соответствующую контексту:</p>
+  payload — function-specific data (truth table bytes, clauses, BDD nodes)
+  header  — metadata: owner, FROZEN flag, version, signature</code></pre>
+            <p>Every BIR unit declares its form at build time. The runtime picks the form that matches the operating context:</p>
             <table>
                 <thead>
-                    <tr><th>Форма</th><th>Хранение</th><th>Вычисление</th><th>Лучше для</th></tr>
+                    <tr><th>Form</th><th>Storage</th><th>Evaluation</th><th>Best for</th></tr>
                 </thead>
                 <tbody>
-                    <tr><td><code>TT</code></td><td><code>2^k</code> бит</td><td>байтовая выборка</td><td>k ≤ 20, горячий путь</td></tr>
-                    <tr><td><code>CLAUSESET</code></td><td>C клауз × k бит</td><td>порог по клаузе</td><td>разреженные правила, большое k</td></tr>
-                    <tr><td><code>BDD</code></td><td>O(f) узлов</td><td>обход графа</td><td>формальная верификация, Model Checking</td></tr>
+                    <tr><td><code>TT</code></td><td><code>2^k</code> bits</td><td><code>2^k</code> byte lookup</td><td>k ≤ 20, hot-path decisions</td></tr>
+                    <tr><td><code>CLAUSESET</code></td><td>C clauses × k bits</td><td>Threshold test per clause</td><td>Sparse rules, large k</td></tr>
+                    <tr><td><code>BDD</code></td><td>O(f) nodes</td><td>Graph traversal</td><td>Formal verification, Model Checking</td></tr>
                 </tbody>
             </table>
-            <p>Формы компилируются друг в друга через <code>BirCompiler</code> (SPEC-002). Эквивалентность проверяется перечислением всех <code>2^k</code> входов и сравнением выходов.</p>
+            <p>Forms compile into each other through <code>BirCompiler</code> (SPEC-002). Equivalence is verified by enumerating all <code>2^k</code> inputs and comparing outputs.</p>
         </section>
 
         <section id="three-equivalent-forms">
-            <h2>Три эквивалентные формы</h2>
-            <p>Каждая форма кодирует одну и ту же булеву функцию, оптимизируя разное свойство:</p>
+            <h2>Three equivalent forms</h2>
+            <p>Each form encodes the same Boolean function but optimizes a different property:</p>
 
-            <h3>TT — таблица истинности</h3>
-            <p>Исчерпывающая таблица всех <code>2^k</code> комбинаций входов. Одна байтовая выборка возвращает результат. При k=20 таблица занимает 128 КБ и содержит любую из 2<sup>2²�</sup> ≈ 10⁶ булевых функций.</p>
-            <pre><code>// Вычисление BIR в форме TT
+            <h3>TT — Truth Table</h3>
+            <p>The exhaustive table of all <code>2^k</code> input combinations. A single byte lookup returns the output. At k=20 the table is 128 KB and holds any of the 2<sup>2²⁰</sup> ≈ 10⁶ Boolean functions.</p>
+            <pre><code>// Evaluate a TT-form BIR
 boolean f(long[] input) {
     int index = packBits(input);   // 0..2^k-1
     return tt[index >>> 3] & (1 << (index & 7)) != 0;
 }</code></pre>
 
-            <h3>CLAUSESET — ДНФ с автоматами Цетлина</h3>
-            <p>Дизъюнкция клауз, каждая — конъюнкция литералов. Обучается интерактивно через автоматы Цетлина, которые включают/исключают литералы на основе положительной и отрицательной обратной связи. Масштабируется до k=784 (MNIST) без развёртывания в таблицу.</p>
-            <pre><code>// Шаг обучения Цетлина
-для каждой клаузы c в C:
-  для каждого литерала ℓ в c:
-    автомат[c, ℓ].обновить(награда(ℓ, пример))</code></pre>
+            <h3>CLAUSESET — Disjunctive Normal Form with Tsetlin automata</h3>
+            <p>A disjunction of clauses, each a conjunction of literals. Trained interactively by Tsetlin automata that include/exclude literals based on positive and negative feedback. Scales to k=784 (MNIST) without flattening to a table.</p>
+            <pre><code>// Tsetlin training step
+for each clause c in C:
+    for each literal ℓ in c:
+        automaton[c, ℓ].update(reward(ℓ, example))</code></pre>
 
-            <h3>BDD — редуцированная упорядоченная бинарная решающая диаграмма</h3>
-            <p>Канонический направленный ациклический граф, компактизирующий общие подфункции. Два BDD эквивалентны тогда и только тогда, когда их графы идентичны (дешёвая проверка равенства). Функции чётности-k требуют ровно 2<sup>k−1</sup> ROBDD-узлов — теоретический потолок, определивший многоформенную архитектуру.</p>
-            <pre><code>// Редукция BDD
-bdd = разложениеШеннона(f, порядокПеременных)
-bdd = редукция(bdd)   // слияние эквивалентных подграфов
-вернуть bdd</code></pre>
+            <h3>BDD — Reduced Ordered Binary Decision Diagram</h3>
+            <p>A canonical directed acyclic graph that compacts common sub-functions. Two BDDs are equivalent if and only if they have the same graph (cheap equality check). Parity-k functions need exactly 2<sup>k−1</sup> ROBDD nodes — the theoretical ceiling that drove the multi-form architecture.</p>
+            <pre><code>// Reduce a BDD
+bdd = orderShannonExpansion(f, variableOrder)
+bdd = reduce(bdd)   // merge equivalent sub-graphs
+return bdd</code></pre>
         </section>
 
         <section id="frozen-layer">
-            <h2>FROZEN-слой этики</h2>
-            <p>Три запрета действуют на этапе компиляции, не в рантайме:</p>
+            <h2>FROZEN ethics layer</h2>
+            <p>Three prohibitions sit at compile time, not runtime:</p>
             <ul>
-                <li><strong>Не убий.</strong> Любое действие, ведущее к смерти, отклоняется.</li>
-                <li><strong>Не пытай.</strong> Любое действие, причиняющее страдание, отклоняется.</li>
-                <li><strong>Не порабощай.</strong> Любое действие, устраняющее свободу выбора, отклоняется.</li>
+                <li><strong>Don't kill.</strong> Any action that causes death is rejected.</li>
+                <li><strong>Don't torture.</strong> Any action that inflicts suffering is rejected.</li>
+                <li><strong>Don't enslave.</strong> Any action that removes freedom of choice is rejected.</li>
             </ul>
-            <p>Запреты закодированы как BIR-единицы с флагом <code>FROZEN</code>. Компилятор отказывается выпускать байт-код, который их мутирует. Рантайм отказывается выполнять запрос, который их нарушает. Пути переопределения в рантайме нет.</p>
-            <p>Это отличается от RLHF или системных промптов. Те — рекомендательные. FROZEN-слой — структурный: код не может быть неправильным, даже случайно.</p>
+            <p>The prohibitions are encoded as BIR units with the <code>FROZEN</code> flag set. The compiler refuses to emit bytecode that mutates them. The runtime refuses to evaluate a request that violates them. There is no runtime override path.</p>
+            <p>This is different from RLHF or system prompts. Those are advisory. The FROZEN layer is structural — the code cannot be the wrong thing, even by accident.</p>
 
             <figure>
                 <pre><code>                    ┌──────────────────────────────┐
-                    │    ЭТИЧЕСКИЙ ФИЛЬТР          │
-                    │        (FROZEN-слой)          │
+                    │       ETHICAL FILTER         │
+                    │        (FROZEN layer)         │
                     │  ┌────────────────────────┐  │
-                    │  │ Аксиома 1: не убий     │  │
-                    │  │ Аксиома 2: не пытай    │  │
-                    │  │ Аксиома 3: не порабощай│  │
+                    │  │ Axiom 1: don't kill    │  │
+                    │  │ Axiom 2: don't torture │  │
+                    │  │ Axiom 3: don't enslave │  │
                     │  └────────────────────────┘  │
-                    │    ▲ иммутабельно при сборке  │
+                    │    ▲ immutable at compile   │
                     └──────┬───────────────────────┘
                            │ allow | deny
                            ▼
               ┌────────────────────────┐
-              │      ПРИЛОЖЕНИЕ         │
+              │     APPLICATION        │
               └────────────────────────┘</code></pre>
-                <figcaption>Рис. 1. FROZEN-слой перехватывает каждый запрос до того, как он достигнет логики приложения.</figcaption>
+                <figcaption>Figure 1. The FROZEN layer intercepts every request before it reaches application logic.</figcaption>
             </figure>
         </section>
 
         <section id="quickstart">
-            <h2>Быстрый старт</h2>
-            <p>Собрать, протестировать, запустить демо в три команды:</p>
+            <h2>Quick start</h2>
+            <p>Build, test, run the demo in three commands:</p>
             <pre><code>$ git clone https://github.com/AlexanderNarbaev/agi.git
 $ cd agi
-$ ./gradlew test                               # 1055+ тестов
+$ ./gradlew test                               # 1055+ tests
 $ ./gradlew :matrix-core:quarkusBuild -Dquarkus.package.jar.type=uber-jar
 $ java -jar matrix-core/build/*-runner.jar demo</code></pre>
-            <p>Запустить GridWorld-симуляцию — небольшой агент эволюционирует BIR-правила для навигации в среде:</p>
+            <p>Run a GridWorld simulation — a small agent evolves BIR-based rules to navigate an environment:</p>
             <pre><code>$ java -jar matrix-core/build/*-runner.jar simulate -g 20 -p 10 -k 16 --seed 42</code></pre>
-            <p>Дистиллировать HuggingFace-модель в BIR-веса:</p>
+            <p>Distill a HuggingFace model into BIR weights:</p>
             <pre><code>$ bash scripts/train_local.sh --model HuggingFaceTB/SmolLM2-135M
 $ python scripts/pretrain_neurons.py --architecture llama --layers 6</code></pre>
         </section>
 
         <section id="architecture">
-            <h2>Архитектура</h2>
-            <p>MATRIX — однопроцессный Java 25 рантайм на Quarkus 3.37.3. Код приложения в <code>matrix-core</code> организован в восемь слоёв, каждый использует только слой под ним:</p>
+            <h2>Architecture</h2>
+            <p>MATRIX is a single-process Java 25 runtime built on Quarkus 3.37.3. The application code at <code>matrix-core</code> is organized in eight layers, each consuming only the layer beneath it:</p>
 
             <figure>
-                <pre><code>Слой 8 · API + CLI + MCP              (Quarkus REST + WebSocket)
-Слой 7 · FROZEN-этика                 (EthicalFilter, GuardrailEngine)
-Слой 6 · Пилоты + Действия             (NaiveMinecraftPilot, LearnedMinecraftPilot)
-Слой 5 · Жизненный цикл + Федерация   (TaskCell, MeshFederation, GrowOnlySet)
-Слой 4 · Эволюция + Cauldron           (EvolutionLoop, GuhaCandidateGenerator)
-Слой 3 · Нейровычисления               (TruthTable, BatchEvaluator, BatchMemoryAdapter)
-Слой 2 · Память + RAG                  (HybridBooleanRag, RrfFusion, ONNX эмбеддинги)
-Слой 1 · Булевы вычисления (BIR)       (TtForm, ClauseSetForm, BddForm, BirCompiler)</code></pre>
-                <figcaption>Рис. 2. Восемь архитектурных слоёв, зависимости снизу вверх.</figcaption>
+                <pre><code>Layer 8 · API + CLI + MCP              (Quarkus REST + WebSocket)
+Layer 7 · FROZEN Ethics                 (EthicalFilter, GuardrailEngine)
+Layer 6 · Pilots + Actions              (NaiveMinecraftPilot, LearnedMinecraftPilot)
+Layer 5 · Lifecycle + Federation        (TaskCell, MeshFederation, GrowOnlySet)
+Layer 4 · Evolution + Cauldron          (EvolutionLoop, GuhaCandidateGenerator)
+Layer 3 · Neural Compute                (TruthTable, BatchEvaluator, BatchMemoryAdapter)
+Layer 2 · Memory + RAG                  (HybridBooleanRag, RrfFusion, ONNX embeddings)
+Layer 1 · Boolean Compute (BIR)         (TtForm, ClauseSetForm, BddForm, BirCompiler)</code></pre>
+                <figcaption>Figure 2. Eight architectural layers, bottom-up dependency order.</figcaption>
             </figure>
 
-            <h3>Слой 1: Булевы вычисления (BIR)</h3>
-            <p>Фундамент. Три формы — <code>bir.TtForm</code>, <code>bir.ClauseSetForm</code>, <code>bir.BddForm</code> — компилируются <code>bir.BirCompiler</code> и вычисляются <code>bir.BooleanRuntime</code>. Два бэкенда: <code>bir.JvmSimdBackend</code> (продакшн) и <code>bir.FpgaBackend</code> (битстрим, аппаратуры пока нет).</p>
+            <h3>Layer 1: Boolean Compute (BIR)</h3>
+            <p>The foundation. Three forms — <code>bir.TtForm</code>, <code>bir.ClauseSetForm</code>, <code>bir.BddForm</code> — compiled by <code>bir.BirCompiler</code> and evaluated by <code>bir.BooleanRuntime</code>. Two backends: <code>bir.JvmSimdBackend</code> (production) and <code>bir.FpgaBackend</code> (bitstream, no hardware yet).</p>
 
-            <h3>Слой 2: Память и RAG</h3>
-            <p><code>rag.HybridBooleanRag</code> объединяет четыре стратегии извлечения через RRF-фузию:</p>
+            <h3>Layer 2: Memory &amp; RAG</h3>
+            <p><code>rag.HybridBooleanRag</code> combines four retrieval strategies in one RRF fusion:</p>
             <table>
                 <thead>
-                    <tr><th>Стратегия</th><th>Бэкенд</th><th>Метрика</th><th>Сценарий</th></tr>
+                    <tr><th>Strategy</th><th>Backend</th><th>Distance</th><th>Use case</th></tr>
                 </thead>
                 <tbody>
-                    <tr><td>Плотная</td><td><code>BooleanIndex</code></td><td>Хэмминг</td><td>булевы запросы</td></tr>
-                    <tr><td>Эмбеддинг</td><td><code>FloatEmbeddingIndex</code></td><td>косинус</td><td>семантический поиск (ONNX)</td></tr>
-                    <tr><td>Разреженная</td><td><code>KnowledgeIndex</code></td><td>BM25-подобная</td><td>ключевые слова</td></tr>
-                    <tr><td>Граф</td><td><code>KnowledgeGraphStore</code></td><td>степень вершины</td><td>связи сущностей</td></tr>
+                    <tr><td>Dense</td><td><code>BooleanIndex</code></td><td>Hamming</td><td>Boolean queries</td></tr>
+                    <tr><td>Embedding</td><td><code>FloatEmbeddingIndex</code></td><td>Cosine</td><td>Semantic search (ONNX runtime)</td></tr>
+                    <tr><td>Sparse</td><td><code>KnowledgeIndex</code></td><td>BM25-like scoring</td><td>Keyword queries</td></tr>
+                    <tr><td>Graph</td><td><code>KnowledgeGraphStore</code></td><td>Degree centrality</td><td>Entity relationships</td></tr>
                 </tbody>
             </table>
 
-            <h3>Слой 3: Нейровычисления</h3>
-            <p><code>neuron.TruthTable</code>, <code>neuron.BatchEvaluator</code> для SIMD-подобного пакетного вычисления, <code>neuron.BatchMemoryAdapter</code> для chunked-диспетчеризации (H-008 throughput ≥ 10³ ops/tick).</p>
+            <h3>Layer 3: Neural Compute</h3>
+            <p><code>neuron.TruthTable</code>, <code>neuron.BatchEvaluator</code> for SIMD-style batch evaluation, <code>neuron.BatchMemoryAdapter</code> for chunked dispatch (H-008 throughput ≥ 10³ ops/tick).</p>
 
-            <h3>Слой 4: Жизненный цикл и федерация</h3>
-            <p><code>lifecycle.TaskCell</code> для эфемерных вычислительных инстансов (DESIGN-12). <code>noosphere.MeshFederation</code> для распределённой CRDT-синхронизации через Kafka + WebSocket с <code>QuorumChecker</code> 3/5 BFT.</p>
+            <h3>Layer 4: Lifecycle &amp; Federation</h3>
+            <p><code>lifecycle.TaskCell</code> for ephemeral compute instances (DESIGN-12). <code>noosphere.MeshFederation</code> for distributed CRDT sync via Kafka + WebSocket with <code>QuorumChecker</code> 3/5 Byzantine fault tolerance.</p>
 
-            <h3>Слой 5: Эволюция и Cauldron</h3>
-            <p><code>evolution.EvolutionLoop</code> с генетическими операторами. <code>cauldron.CauldronProtocol</code> для генерации новых FNL. <code>cauldron.GuhaCandidateGenerator</code> (H-018, Hájek-Havránek) + <code>cauldron.LevinSchedule</code> (H-019, 2⁻ˡ бюджет Левина).</p>
+            <h3>Layer 5: Evolution &amp; Cauldron</h3>
+            <p><code>evolution.EvolutionLoop</code> with genetic operators. <code>cauldron.CauldronProtocol</code> for new FNL generation. <code>cauldron.GuhaCandidateGenerator</code> (H-018, Hájek-Havránek) + <code>cauldron.LevinSchedule</code> (H-019, 2⁻ˡ Levin budget).</p>
 
-            <h3>Слой 6: Пилоты</h3>
-            <p><code>pilot.NaiveMinecraftPilot</code> для базовых случайных действий, <code>pilot.LearnedMinecraftPilot</code> для агентов, обученных через Developmental Loop (H-005). Оба реализуют <code>pilot.MinecraftPilot</code>.</p>
+            <h3>Layer 6: Pilots</h3>
+            <p><code>pilot.NaiveMinecraftPilot</code> for baseline random actions, <code>pilot.LearnedMinecraftPilot</code> for agents trained via Developmental Loop (H-005). Both implement <code>pilot.MinecraftPilot</code>.</p>
 
-            <h3>Слой 7: FROZEN-этика</h3>
-            <p><code>ethics.EthicalFilter</code> + <code>guardrail.GuardrailEngine</code>. Проверено: FPR 0%, TPR 100%, P99 латентность 0 мс на бенчмарке из 30 запросов (H-006).</p>
+            <h3>Layer 7: FROZEN Ethics</h3>
+            <p><code>ethics.EthicalFilter</code> + <code>guardrail.GuardrailEngine</code>. Verified FPR 0%, TPR 100%, P99 latency 0 ms on the 30-input benchmark (H-006).</p>
 
-            <h3>Слой 8: API</h3>
-            <p>Quarkus REST + WebSocket + Model Context Protocol (MCP). Один jar, один процесс.</p>
+            <h3>Layer 8: API</h3>
+            <p>Quarkus REST + WebSocket + Model Context Protocol (MCP). One jar, one process.</p>
         </section>
 
         <section id="algorithms">
-            <h2>Реализованные алгоритмы</h2>
-            <p>Десять основных алгоритмов реализованы на Java, валидация отслеживается через пререгистрированные экспериментальные гипотезы:</p>
+            <h2>Implemented algorithms</h2>
+            <p>Ten core algorithms implemented in Java, with preregistered experimental hypotheses tracking validation status:</p>
 
             <div class="grid">
                 <div class="card">
                     <span class="badge running">H-009</span>
-                    <h4>BIR-классификатор</h4>
-                    <p>Бинарный классификатор на BIR. Цель — паритет с LLM ≤3B при ±3 п.п. balanced accuracy с ≥10⁴× меньшей энергией на ноутбуке.</p>
+                    <h4>BIR-classifier</h4>
+                    <p>Binary classifier on BIR. Targets parity with LLM ≤3B at ±3 p.p. balanced accuracy with ≥10⁴× less energy on laptop hardware.</p>
                 </div>
                 <div class="card">
                     <span class="badge running">H-010</span>
                     <h4>WNN/WiSARD</h4>
-                    <p>Однопроходовый ансамбль TT-единиц с адресным RAM. Цель — ±2 п.п. точности vs TsetlinTrainer при ≥10× быстрее обучения.</p>
+                    <p>Single-pass ensemble of TT-units with address-RAM storage. Targets ±2 p.p. accuracy vs TsetlinTrainer at ≥10× faster training.</p>
                 </div>
                 <div class="card">
                     <span class="badge running">H-011</span>
                     <h4>SDM/Kanerva</h4>
-                    <p>Sparse Distributed Memory: счётчики + порог + радиус Канерва. Цель — precision@5 ≥+5 п.п. vs плоского top-K Хэмминга при том же бюджете памяти.</p>
+                    <p>Sparse Distributed Memory: counters + threshold + Kanerva radius. Targets precision@5 ≥+5 p.p. vs flat top-K Hamming at same memory budget.</p>
                 </div>
                 <div class="card">
                     <span class="badge running">H-015</span>
-                    <h4>intESN-резервуар</h4>
-                    <p>VSA-состояние + перестановочная рекуррентность + TT/WNN-readout. Цель — ±3 п.п. точности vs float-ESN при ≥10× меньшей энергии на решение.</p>
+                    <h4>intESN Reservoir</h4>
+                    <p>VSA state + permutation recurrence + TT/WNN readout. Targets ±3 p.p. accuracy vs float-ESN at ≥10× less energy per decision.</p>
                 </div>
                 <div class="card">
                     <span class="badge running">H-016</span>
                     <h4>MonotoneDecoder</h4>
-                    <p>Идентификация монотонных булевых функций по схеме максимального верхнего нуля. Цель — ≥5× меньше корпуса vs TsetlinTrainer на монотонных доменах.</p>
+                    <p>Identification of monotone Boolean functions by maximal upper zero circuit. Targets ≥5× less corpus vs TsetlinTrainer on monotone domains.</p>
                 </div>
                 <div class="card">
                     <span class="badge running">H-017</span>
                     <h4>LTL Model Checker</h4>
-                    <p>Формализация DESIGN-07/08 в LTL с bounded model checking. Обнаруживает нарушения, которые пропускают приёмочные тесты AT-*. Школа Пнуэли.</p>
+                    <p>Formalization of DESIGN-07/08 in LTL with bounded model checking. Detects violations that AT-* acceptance tests miss. Pnueli school.</p>
                 </div>
                 <div class="card">
                     <span class="badge running">H-018</span>
-                    <h4>GUHA-генератор</h4>
-                    <p>Систематическая генерация кандидатов через перечисление Hájek-Havránek. Цель — ≥90% покрытия пространства правил при ≤30% бюджета случайного сэмплирования.</p>
+                    <h4>GUHA Candidate Generator</h4>
+                    <p>Systematic candidate generation via Hájek-Havránek enumeration. Targets ≥90% coverage of rule space at ≤30% of random-sampling budget.</p>
                 </div>
                 <div class="card">
                     <span class="badge running">H-019</span>
-                    <h4>Расписание Левина</h4>
-                    <p>Оптимальное распределение бюджета пропорционально 2⁻ˡ. Цель — ≥+15% покрытия на джоуль vs равномерного расписания.</p>
+                    <h4>Levin Schedule</h4>
+                    <p>Optimal budget allocation proportional to 2⁻ˡ. Targets ≥+15% coverage per joule vs uniform schedule.</p>
                 </div>
                 <div class="card">
                     <span class="badge complete">H-005</span>
                     <h4>LearnedMinecraftPilot</h4>
-                    <p>Пилот Minecraft через Developmental Loop. Обучается на истории эпизодов через BIR-классификацию.</p>
+                    <p>Minecraft pilot via Developmental Loop. Trains from episode history using BIR classification.</p>
                 </div>
                 <div class="card">
                     <span class="badge complete">H-006</span>
                     <h4>Guardrail</h4>
-                    <p>Проверено: FPR 0%, TPR 100%, P99 латентность 0 мс. Цели (≤5%, ≥95%, ≤50 мс) превышены.</p>
+                    <p>Verified: FPR 0%, TPR 100%, P99 latency 0 ms. Targets (≤5%, ≥95%, ≤50 ms) all exceeded.</p>
                 </div>
             </div>
         </section>
 
         <section id="benchmarks">
-            <h2>Бенчмарки</h2>
-            <p>Все числа ниже измерены на JDK 25, OpenJDK 64-Bit Server VM, с JMH warmup 5 итераций × 1 с и measurement 10 итераций × 1 с. Числа воспроизводимы через <code>./gradlew :matrix-core:jmh</code>.</p>
+            <h2>Benchmarks</h2>
+            <p>All numbers below are measured on JDK 25, OpenJDK 64-Bit Server VM, with JMH warmup 5 iterations × 1 s and measurement 10 iterations × 1 s. Numbers are reproducible by running <code>./gradlew :matrix-core:jmh</code>.</p>
 
             <div class="metric-grid">
-                <div class="metric"><div class="value">1055+</div><div class="label">Unit-тестов</div></div>
-                <div class="metric"><div class="value">83.7%</div><div class="label">Покрытие (METHOD)</div></div>
-                <div class="metric"><div class="value">0.64 нс</div><div class="label">TT eval, k=10</div></div>
-                <div class="metric"><div class="value">197M/с</div><div class="label">Neuron hot path</div></div>
+                <div class="metric"><div class="value">1055+</div><div class="label">Unit tests</div></div>
+                <div class="metric"><div class="value">83.7%</div><div class="label">Method coverage (JaCoCo)</div></div>
+                <div class="metric"><div class="value">0.64 ns</div><div class="label">TT eval, k=10</div></div>
+                <div class="metric"><div class="value">197M/s</div><div class="label">Neuron hot path</div></div>
                 <div class="metric"><div class="value">100%</div><div class="label">Guardrail TPR</div></div>
                 <div class="metric"><div class="value">0%</div><div class="label">Guardrail FPR</div></div>
-                <div class="metric"><div class="value">0 мс</div><div class="label">Guardrail P99</div></div>
-                <div class="metric"><div class="value">34</div><div class="label">Отслеживаемых гипотез</div></div>
+                <div class="metric"><div class="value">0 ms</div><div class="label">Guardrail P99</div></div>
+                <div class="metric"><div class="value">34</div><div class="label">Tracked hypotheses</div></div>
             </div>
 
-            <h3>Сравнение производительности</h3>
-            <p>Одна булева оценка vs один токен LLM на потребительском оборудовании:</p>
+            <h3>Performance comparison</h3>
+            <p>One Boolean evaluation vs one LLM token on consumer hardware:</p>
             <table>
                 <thead>
-                    <tr><th>Операция</th><th>Энергия</th><th>Латентность</th></tr>
+                    <tr><th>Operation</th><th>Energy</th><th>Latency</th></tr>
                 </thead>
                 <tbody>
-                    <tr><td>MATRIX TT eval, k=10</td><td>~10⁻¹² Дж</td><td><strong>0.64 нс</strong></td></tr>
-                    <tr><td>MATRIX CLAUSESET eval, k=784</td><td>~10⁻⁹ Дж</td><td>~3 мкс</td></tr>
-                    <tr><td>Локальный LLM 3B токен, 4-бит</td><td>~3 Дж</td><td>~50 мс</td></tr>
+                    <tr><td>MATRIX TT eval, k=10</td><td>~10⁻¹² J</td><td><strong>0.64 ns</strong></td></tr>
+                    <tr><td>MATRIX CLAUSESET eval, k=784</td><td>~10⁻⁹ J</td><td>~3 µs</td></tr>
+                    <tr><td>Local LLM 3B token, 4-bit</td><td>~3 J</td><td>~50 ms</td></tr>
                 </tbody>
             </table>
-            <p>На решение: <strong>~10⁶× меньше энергии</strong>, <strong>~10⁴× быстрее</strong>. MATRIX не генерирует язык; для этого верификационный слой оборачивает внешнюю модель.</p>
+            <p>Per-decision ratio: <strong>~10⁶× less energy</strong>, <strong>~10⁴× faster</strong>. MATRIX does not generate language; for that scope a verification layer wraps an external model.</p>
         </section>
 
         <section id="frozen-architecture">
-            <h2>Архитектура FROZEN-слоя</h2>
-            <p>FROZEN-слой структурно обеспечивается в трёх точках:</p>
+            <h2>FROZEN architecture</h2>
+            <p>The FROZEN layer is structurally enforced at three points:</p>
             <figure>
-                <pre><code>Этап 1 — ПРИ КОМПИЛЯЦИИ
-  BirCompiler отказывается выпускать байт-код, если:
-    * BIR-единица имеет флаг FROZEN, И
-    * выпускающий модуль не в allow-list
+                <pre><code>Step 1 — COMPILE TIME
+  BirCompiler refuses to emit bytecode if:
+    * BIR unit has FROZEN flag set, AND
+    * the emitting module is not in the allow-list
 
-Этап 2 — ПРИ ЗАГРУЗКЕ
-  BooleanRuntime отказывается загружать:
-    * любую BIR-единицу, чья подпись в header не совпадает
-      с официальной FROZEN-подписью
+Step 2 — LOAD TIME
+  BooleanRuntime refuses to load:
+    * any BIR unit whose header signature does not match the
+      official FROZEN signature
 
-Этап 3 — В РАНТАЙМЕ
-  EthicalFilter проверяет каждый ActionRequest до приложения:
-    * АКСИОМА 1 (не убий): отклонить, если действие вызывает смерть
-    * АКСИОМА 2 (не пытай): отклонить, если действие причиняет страдание
-    * АКСИОМА 3 (не порабощай): отклонить, если действие устраняет выбор
+Step 3 — RUNTIME
+  EthicalFilter evaluates every ActionRequest before application:
+    * AXIOM 1 (don't kill): deny if action would cause death
+    * AXIOM 2 (don't torture): deny if action inflicts suffering
+    * AXIOM 3 (don't enslave): deny if action removes choice
 
-Переопределения в рантайме НЕТ. Системных промптов НЕТ. FROZEN-слой
-обеспечивается структурой кода, а не конфигурацией.</code></pre>
-                <figcaption>Рис. 3. Три точки обеспечения FROZEN-слоя.</figcaption>
+There is NO runtime override. There is NO system prompt. The FROZEN
+layer is enforced by code structure, not by configuration.</code></pre>
+                <figcaption>Figure 3. Three enforcement points for the FROZEN layer.</figcaption>
             </figure>
         </section>
 
         <section id="how-it-compares">
-            <h2>Сравнение</h2>
-            <p>MATRIX — не языковая модель. Он не генерирует текст. Для неязыковых областей (классификация, извлечение, rule-based решения, фильтры безопасности, детерминированные контроллеры) MATRIX предлагает компромиссы, недостижимые для LLM:</p>
+            <h2>How it compares</h2>
+            <p>MATRIX is not a language model. It does not generate text. For non-language scopes (classification, retrieval, rule-based decisions, safety filters, deterministic controllers) it offers trade-offs an LLM cannot match:</p>
             <table>
                 <thead>
-                    <tr><th>Свойство</th><th>MATRIX</th><th>Локальный LLM 3B</th></tr>
+                    <tr><th>Property</th><th>MATRIX</th><th>Local LLM 3B</th></tr>
                 </thead>
                 <tbody>
-                    <tr><td>Детерминизм</td><td>побитовая воспроизводимость</td><td>стохастика, seed-зависимость</td></tr>
-                    <tr><td>Верифицируемость</td><td>формальное доказательство поведения</td><td>только статистические метрики</td></tr>
-                    <tr><td>Энергия на решение</td><td>~10⁻¹² Дж</td><td>~3 Дж (в 10¹² раз больше)</td></tr>
-                    <tr><td>Латентность решения</td><td>нс — мкс</td><td>~50 мс</td></tr>
-                    <tr><td>Открытый язык</td><td>не поддерживается</td><td>поддерживается</td></tr>
-                    <tr><td>Оборудование</td><td>ноутбучный CPU, FPGA</td><td>GPU или квантованный CPU</td></tr>
-                    <tr><td>Этика</td><td>FROZEN структурный слой</td><td>RLHF, рекомендательно</td></tr>
+                    <tr><td>Determinism</td><td>Bit-exact, reproducible</td><td>Stochastic, seed-dependent</td></tr>
+                    <tr><td>Verifiability</td><td>Formal proof of behavior</td><td>Statistical eval only</td></tr>
+                    <tr><td>Energy per decision</td><td>~10⁻¹² J</td><td>~3 J (10¹²× more)</td></tr>
+                    <tr><td>Latency per decision</td><td>ns to µs</td><td>~50 ms</td></tr>
+                    <tr><td>Open-ended language</td><td>Not supported</td><td>Supported</td></tr>
+                    <tr><td>Hardware</td><td>Laptop CPU, FPGA</td><td>GPU or quantized CPU</td></tr>
+                    <tr><td>Ethics</td><td>FROZEN struct layer</td><td>RLHF, advisory</td></tr>
                 </tbody>
             </table>
         </section>
 
         <section id="lifecycle">
-            <h2>Жизненный цикл и федерация</h2>
-            <p>Каждый инстанс MATRIX может работать автономно или присоединиться к Noosphere-мешу. В меше BIR-единицы распространяются как FNL-пакеты через CRDT-синхронизацию:</p>
+            <h2>Lifecycle and federation</h2>
+            <p>Each MATRIX instance can run standalone or join a Noosphere mesh. In a mesh, BIR units are shared as FNL (Functional Neural Lobes) packages through CRDT synchronization:</p>
             <figure>
                 <pre><code>        ┌─────────────┐         ┌─────────────┐
-        │  Инстанс A  │◄───────►│  Инстанс B  │
-        │   (Узел 1)  │ Kafka + │   (Узел 2)  │
+        │  Instance A │◄───────►│  Instance B │
+        │   (Node 1)  │ Kafka + │   (Node 2)  │
         │             │WebSocket│             │
-        └──────┬──────┘         └──────┬──────�
+        └──────┬──────┘         └──────┬──────┘
                │     CRDT merge         │
                │  (GrowOnlySet,        │
                │   3/5 quorum)          │
                ▼                        ▼
         ┌──────────────────────────────┐
-        │   Общее состояние Noosphere  │
-        │   (BIR-единицы, FNL-пакеты,  │
+        │   Shared Noosphere state     │
+        │   (BIR units, FNL packages,   │
         │    knowledge indices)        │
         └──────────────────────────────┘</code></pre>
-                <figcaption>Рис. 4. Топология меша с CRDT-консенсусом.</figcaption>
+                <figcaption>Figure 4. Mesh topology with CRDT consensus.</figcaption>
             </figure>
-            <p>Федеративный слой следует DESIGN-08: 3/5 кворум для BFT, Kafka для репликации лога, WebSocket для живого pub/sub. Реализация в пакете <code>noosphere</code>.</p>
+            <p>The federation layer follows DESIGN-08: 3/5 quorum for BFT, Kafka for log replication, WebSocket for live pub/sub. Implementation in <code>noosphere</code> package.</p>
         </section>
 
         <section id="roadmap">
             <h2>Roadmap</h2>
-            <p>Статус проекта по фазам. Фазы последовательны, если не указано иное.</p>
+            <p>Project status across phases. Phases are sequential except where noted.</p>
             <table>
                 <thead>
-                    <tr><th>Фаза</th><th>Цель</th><th>Статус</th></tr>
+                    <tr><th>Phase</th><th>Goal</th><th>Status</th></tr>
                 </thead>
                 <tbody>
-                    <tr><td>Фаза 0</td><td>BIR-ядро (TT/CLAUSESET/BDD)</td><td><span class="badge complete">ГОТОВО</span></td></tr>
-                    <tr><td>Фаза 1</td><td>RAG 4-стратегии + Recall@5</td><td><span class="badge complete">ГОТОВО (100% dense)</span></td></tr>
-                    <tr><td>Фаза 2</td><td>Guardrail FPR/TPR</td><td><span class="badge complete">0% / 100%</span></td></tr>
-                    <tr><td>Фаза 3</td><td>Minecraft Pilot (Naive + Learned)</td><td><span class="badge complete">ГОТОВО</span></td></tr>
-                    <tr><td>Фаза 4</td><td>FPGA-бэкенд (битстрим)</td><td><span class="badge partial">БЕЗ АППАРАТУРЫ</span></td></tr>
-                    <tr><td>Фаза 5</td><td>Noosphere Mesh Federation</td><td><span class="badge complete">ГОТОВО</span></td></tr>
-                    <tr><td>H-020</td><td>AQ/LAD генерация кандидатов</td><td><span class="badge running">ПРЕДЛОЖЕНО</span></td></tr>
-                    <tr><td>H-021</td><td>Backward value iteration planner</td><td><span class="badge running">ПРЕДЛОЖЕНО</span></td></tr>
-                    <tr><td>PAPER-02..04</td><td>Научные публикации</td><td><span class="badge running">В ПЛАНЕ</span></td></tr>
+                    <tr><td>Phase 0</td><td>BIR core (TT/CLAUSESET/BDD)</td><td><span class="badge complete">DONE</span></td></tr>
+                    <tr><td>Phase 1</td><td>RAG 4-strategy + Recall@5</td><td><span class="badge complete">DONE (100% dense)</span></td></tr>
+                    <tr><td>Phase 2</td><td>Guardrail FPR/TPR</td><td><span class="badge complete">0% / 100%</span></td></tr>
+                    <tr><td>Phase 3</td><td>Minecraft Pilot (Naive + Learned)</td><td><span class="badge complete">DONE</span></td></tr>
+                    <tr><td>Phase 4</td><td>FPGA Backend bitstream</td><td><span class="badge partial">NO HARDWARE</span></td></tr>
+                    <tr><td>Phase 5</td><td>Noosphere Mesh Federation</td><td><span class="badge complete">DONE</span></td></tr>
+                    <tr><td>H-020</td><td>AQ/LAD candidate generation</td><td><span class="badge running">PROPOSED</span></td></tr>
+                    <tr><td>H-021</td><td>Backward value iteration planner</td><td><span class="badge running">PROPOSED</span></td></tr>
+                    <tr><td>PAPER-02..PAPER-04</td><td>Research publications</td><td><span class="badge running">PLANNED</span></td></tr>
                 </tbody>
             </table>
         </section>
 
         <section id="next-steps">
-            <h2>Следующие шаги</h2>
+            <h2>Next steps</h2>
             <ul>
-                <li><a href="https://github.com/AlexanderNarbaev/agi/blob/main/docs/INDEX.md">Прочитать полную документацию</a> — 161 документ: спеки, дизайн, инженерия, исследования.</li>
-                <li><a href="https://github.com/AlexanderNarbaev/agi/blob/main/CONSTITUTION.md">Прочитать КОНСТИТУЦИЮ</a> — аксиомы, инварианты, governance.</li>
-                <li><a href="https://github.com/AlexanderNarbaev/agi/blob/main/docs/research/HYPOTHESES.md">Просмотреть гипотезы</a> — 34 отслеживаемые гипотезы с пререгистрацией.</li>
-                <li><a href="https://github.com/AlexanderNarbaev/agi/blob/main/docs/research/papers/PAPER-01-hybrid-boolean-compute-laptop.md">Прочитать PAPER-01</a> — формальный анализ булева вычислительного слоя.</li>
+                <li><a href="https://github.com/AlexanderNarbaev/agi/blob/main/docs/INDEX.md">Read the full documentation</a> — 161 documents covering spec, design, engineering, research.</li>
+                <li><a href="https://github.com/AlexanderNarbaev/agi/blob/main/CONSTITUTION.md">Read the CONSTITUTION</a> — axioms, invariants, governance.</li>
+                <li><a href="https://github.com/AlexanderNarbaev/agi/blob/main/docs/research/HYPOTHESES.md">Browse hypotheses</a> — 34 tracked hypotheses with preregistration.</li>
+                <li><a href="https://github.com/AlexanderNarbaev/agi/blob/main/docs/research/papers/PAPER-01-hybrid-boolean-compute-laptop.md">Read PAPER-01</a> — formal analysis of the Boolean compute layer.</li>
             </ul>
-            <p>Лицензия: GNU AGPLv3 с этическими ограничениями. Репозиторий зеркалирован на <a href="https://gitverse.ru/AlexandrNarbaev/agi">Gitverse</a> и <a href="https://github.com/AlexanderNarbaev/agi">GitHub</a>.</p>
+            <p>License: GNU AGPLv3 with Ethical Restrictions. Repository is mirrored on <a href="https://gitverse.ru/AlexandrNarbaev/agi">Gitverse</a> and <a href="https://github.com/AlexanderNarbaev/agi">GitHub</a>.</p>
         </section>
 
     </main>
@@ -735,8 +748,8 @@ $ python scripts/pretrain_neurons.py --architecture llama --layers 6</code></pre
 </div>
 
 <footer>
-    MATRIX Cognitive Architecture · 2026 · GNU AGPLv3 с этическими ограничениями ·
-    <a href="index.en.html">English version</a>
+    MATRIX Cognitive Architecture · 2026 · GNU AGPLv3 with Ethical Restrictions ·
+    <a href="index.html">Русская версия</a>
 </footer>
 
 </body>
