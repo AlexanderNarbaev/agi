@@ -196,6 +196,34 @@
 - **Риски:** синтетические когорты — идеализация (конфаундинг возраст × период × когорта); C5 (2050) — чистая экстраполяция; малый размер эффекта (d ≥ 0.05) требует большой синтетической выборки (n ≥ 500/когорту для мощности 0.8).
 - **Критерии H-030.**
 
+### EXP-031 — Размер социальной группы и D-осевая асимметрия (H-031)
+- **Пререгистрация:** до запуска — зафиксировать: 6 синтетических Dunbar-слоёв (L1=5, L2=15, L3=50, L4=150, L5=500, L6=1500) с preregistered контекстом суждения на слой; n ≥ 200 синтетических суждений на слой с известной D-полярностью; ground truth |Cohen's h| на слой с монотонным убыванием L1→L6 (ρ_gt = −0.5); метрики: Spearman ρ (номер слоя × |Cohen's h|), permutation test (n=10⁴), FDR-коррекция Бенджамини–Хохберга на 6 слоёв, тест монотонности соседних слоёв, калибровка восстановления ρ_gt.
+- **Протокол:** для каждого слоя генерируется социальный контекст, реалистичный для его размера (L1: распределение домашних обязанностей; L6: голосование за национальную политику); измерение D-осевой асимметрии по протоколу EXP-023; корреляционный анализ слой × асимметрия; тест монотонности (знак ρ между соседними слоями одинаков); визуализация: line plot |Cohen's h| по слоям с bootstrap CI.
+- **Базовые линии:** H₀: ρ = 0 (permutation test); слой-агностичная асимметрия (одинаковый |Cohen's h| на всех слоях).
+- **Риски:** синтетические социальные контексты — идеализация (реальный индивидуум принадлежит всем слоям одновременно); Dunbar's number ≈ 150 — эмпирически оспариваемый параметр, дизайн проверяет связь, не само число; размер группы — не единственный фактор социальной структуры.
+- **Критерии H-031.** Полный дизайн: docs/research/notes/DUALITY-socio-cognitive.md §1.
+
+### EXP-032 — Рационализация как защита от когнитивного диссонанса (H-032)
+- **Пререгистрация:** до запуска — зафиксировать: within-subject дизайн, n ≥ 200 синтетических респондентов; три условия диссонанса (low < 0.3; medium [0.3, 0.7); high ≥ 0.7), dissonance_score = 1 − cosine_similarity(judgment_vector, prior_belief_vector); ground truth — линейный рост RAT с dissonance_score (β_gt = 0.4); метрики: paired t-test (high vs low), Cohen's d для paired comparison, mixed-effects RAT ~ dissonance_score + (1 | respondent), bootstrap CI 95% (n=10⁴), FDR на 3 сравнения, калибровка β_gt.
+- **Протокол:** для каждого респондента генерируется prior belief vector (D1–D4 по EXP-023 + синтетические измерения); для каждого условия — суждения с preregistered dissonance; Conf_pre измеряется до exposure к диссонансу, Rat_post — после; RAT-индекс по формуле EXP-024; визуализация: scatter RAT ~ dissonance_score с regression line и CI.
+- **Базовые линии:** H₀: ΔRAT = 0 (Festinger-нуль); конкурирующая гипотеза Kahneman-постфактум (RAT не зависит от диссонанса).
+- **Риски:** синтетический диссонанс без аффективного компонента (негативное возбуждение не моделируется); чувствительность RAT к шкалам Conf_pre/Rat_post; артефакты идеализированной within-subject генерации.
+- **Критерии H-032.** Полный дизайн: docs/research/notes/DUALITY-socio-cognitive.md §2.
+
+### EXP-033 — Онтологическая позиция как предиктор моральных оснований (H-033)
+- **Пререгистрация:** до запуска — зафиксировать: 6 синтетических moral foundations (care, fairness, loyalty, authority, sanctity, liberty; endorsement ∈ [0,1] каждое); онтологическая позиция one-hot (essentialist [1,0] / constructionist [0,1], медианный split по протоколу EXP-026); target — бинарный endorsement (high/low, медианный split) на foundation; метрики: 5-fold stratified CV, multi-output логистическая регрессия (6 классификаторов), accuracy и AUC на foundation, binomial test vs chance (0.5), FDR на 6 foundations, preregistered контраст binding (loyalty+authority+sanctity) vs individualising (care+fairness+liberty), калибровка восстановления β_gt.
+- **Протокол:** генерация синтетических респондентов с известным β_gt (градиент essentialism → binding); фаза 1 — анкета онтологической позиции (EXP-026); фаза 2 — измерение endorsement по 6 основаниям; фаза 3 — multi-output классификация с CV; визуализация: ROC на foundation, feature importance (permutation).
+- **Базовые линии:** chance accuracy = 0.5 (binomial test); модель без онтологической позиции (только marginal base rates endorsement).
+- **Риски:** синтетические MFT-шкалы — упрощение (Moral Foundations Questionnaire многомерен); n ≈ 200 при 6 выходах и CV — риск переобучения; дихотомия essentialist/constructionist теряет нюансы; генерация может искусственно усилить binding-градиент.
+- **Критерии H-033.** Полный дизайн: docs/research/notes/DUALITY-socio-cognitive.md §3.
+
+### EXP-034 — Нейропластичность как модератор когортного сдвига D-оси (H-034)
+- **Пререгистрация:** до запуска — зафиксировать: 5 синтетических когорт (C1=1950, C2=1975, C3=2000, C4=2025, C5=2050_preregistered) с preregistered plasticity_score (0.30 / 0.55 / 0.70 / 0.85 / 0.90, монотонный рост); D-осевая асимметрия (Cohen's h) на когорту по протоколу EXP-030, ≥5 доменов суждений (random intercept); ground truth — interaction β_gt = −0.35; метрики: mixed-effects Cohen's h ~ cohort × plasticity_score + (1 | domain) (REML, Kenward-Roger df), standardised β interaction + bootstrap CI 95% (n=10⁴), Cohen's d контраста high-plasticity (C4+C5) vs low-plasticity (C1+C2), simple slopes plasticity → Cohen's h в каждой когорте, калибровка β_gt.
+- **Протокол:** генерация D-асимметрии как функции cohort × plasticity с preregistered ground truth; оценка mixed-effects модели; тест простых эффектов по когортам; визуализация: interaction plot (Cohen's h ~ cohort при уровнях plasticity).
+- **Базовые линии:** H₀: interaction β = 0; модель только с cohort (как в EXP-030, без модератора).
+- **Риски:** plasticity_score — прокси на уровне когорты (реальная нейропластичность измеряется индивидуально); конфаундинг plasticity × cohort × age неразличим в синтетическом дизайне; C5 — чистая экстраполяция; n = 5 когорт ограничивает мощность interaction-теста; направление эффекта (amplifier vs buffer) — exploratory, не preregistered gate.
+- **Критерии H-034.** Полный дизайн: docs/research/notes/DUALITY-socio-cognitive.md §4.
+
 ## Что здесь не бывает
 
 — Гипотез без опровержимого порога («система станет умнее» — не гипотеза).
