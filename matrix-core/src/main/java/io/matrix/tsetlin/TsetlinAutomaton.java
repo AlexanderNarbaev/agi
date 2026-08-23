@@ -5,10 +5,9 @@ package io.matrix.tsetlin;
  *
  * <p>State space {@code [1..2N]}: states {@code 1..N} mean the corresponding
  * literal is EXCLUDED from its clause, states {@code N+1..2N} mean INCLUDED.
- * Directions are fixed by meaning: {@link #reward()} always moves one step
- * toward INCLUDE, {@link #penalty()} one step toward EXCLUDE;
- * {@link #includeNow()} jumps to the first include state (Type II feedback,
- * Granmo-style).
+ * Canonical Granmo dynamics: {@link #reward()} deepens the automaton into its
+ * CURRENT action's extreme; {@link #penalty()} takes one step toward the
+ * opposite side; {@link #includeNow()} jumps to the first include state.
  */
 public final class TsetlinAutomaton {
 
@@ -34,14 +33,16 @@ public final class TsetlinAutomaton {
 
     public boolean includes() { return state > n; }
 
-    /** One step toward INCLUDE (saturates at {@code 2n}). */
+    /** Deepen into the CURRENT action's side (canonical TM reward). */
     public void reward() {
-        state = Math.min(2 * n, state + 1);
+        if (state <= n) state = Math.max(1, state - 1);
+        else state = Math.min(2 * n, state + 1);
     }
 
-    /** One step toward EXCLUDE (saturates at {@code 1}). */
+    /** One step toward the OPPOSITE side (canonical TM penalty). */
     public void penalty() {
-        state = Math.max(1, state - 1);
+        if (state <= n) state = Math.min(2 * n, state + 1);
+        else state = Math.max(1, state - 1);
     }
 
     /** Jump straight to the first INCLUDE state (Type II feedback). */
@@ -58,11 +59,14 @@ public final class TsetlinAutomaton {
     public void penalize() { penalty(); }
 
     /**
-     * Flat Type I: literal present ⇒ reinforce toward include
-     * ({@code reward()}), absent ⇒ push toward exclude ({@code penalty()}).
+     * Flat Type I (canonical rows): a TRUE-valued literal that is excluded
+     * takes one step toward inclusion; a FALSE-valued literal that is
+     * included takes one step toward exclusion; already-consistent states
+     * stay put in this flat helper.
      */
     public void feedbackTypeI(boolean literalPresent) {
-        if (literalPresent) reward(); else penalty();
+        if (literalPresent && !includes()) penalty();
+        else if (!literalPresent && includes()) penalty();
     }
 
     /**
