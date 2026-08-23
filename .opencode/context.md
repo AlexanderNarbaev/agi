@@ -1,29 +1,28 @@
 # MATRIX Project Context - Session State
 
 ## Current Status
-- **Миссия**: волны; Java/Quarkus/GraalVM; перед push fetch+rebase; origin ✅, gitverse нестабилен (ретраить `timeout 45 git push gitverse main`)
-- **Критерий A закрыт** (7 волн, DESIGN-14 реестр полный); WiSARD+Tsetlin продюсеры с дистилляцией; 371+/0 регресс ранее
-- **АКТИВ: волна 12 — TM convergence. НАЙДЕНЫ И ЧАСТИЧНО ИСПРАВЛЕНЫ 2 точных дефекта в TsetlinTrainer (файл matrix-core/src/main/java/io/matrix/tsetlin/TsetlinTrainer.java):**
-  1. typeOne → переписан канонически «consistency(value==includes) ⇒ Reward w.p.(s−1)/s; mismatch ⇒ Penalty w.p.1/s» для обоих рядов x_j/¬x_j (строки ~83–110)
-  2. typeOneGrowth → был инвертирован (растил ложную полярность); исправлен: при !v растить cl[1][j](¬x_j)+push cl[0][j]; при v зеркально (строки ~112–127)
+- **Миссия**: волны; Java/Quarkus/GraalVM; перед push fetch+rebase
+- **Синхронизация**: локальный коммит с H-035 создан, НО origin push УПАЛ (GitHub LFS locks/verify i/o timeout — сетевой глюк); gitverse ✅ прошёл (grep=1). ФИКС: `git config lfs.https://github.com/AlexanderNarbaev/agi.git/info/lfs.locksverify false` затем повторить `git pull --rebase origin main && git push origin main`
+- Тесты: tsetlin+bir зелёные (последний прогон BUILD SUCCESSFUL)
 
-## Текущее состояние теста TsetlinGranmoReferenceTest (harness ВКЛЮЧЁН, конфиги уже канонических масштабов: AND/OR c=24,N=50,e=1500; XOR c=32,N=60,e=3000; MUX c=40,N=60,e=4000 seed42)
-- ✅ AND все сиды, MUX ✅, XOR seeds {1,5} ✅
-- ❌ OR все сиды, XOR seeds {2,3,4}, noisyXor
+## Волны этой сессии (всё в истории коммитов)
+- Wave 6-7: NeuronLayer кейстоун + canonical Granmo TM (см. предыдущие чекпойнты)
+- Wave 8: attempt-4 hetero-init отвергнут
+- Wave 9: WiSARD toDecisionClauseSet + parity property
+- Waves 10-11: attempts 5-7 (pairing-bug найден+исправлен→XOR частично; vote-war; canonical-scale fail+14min anomaly)
+- Wave 12: attempt-8 — growth верифицирован изолированно, tug-of-war equilibrium структурный; откат к лучшей базе; гарнесс @Disabled
+- Wave 13: H-035 EBL hypothesis card добавлена в HYPOTHESES.md (proposed) — ЗАКОММИЧЕНО ЛОКАЛЬНО, ждёт пуша
 
-## Гипотеза следующего шага (НЕ проверена)
-OR требует чтобы pos-пул покрыл {01,10,11}: клаузы стартуют как all-positive conjunction (комплементарный init: [0]=n+1 включён, [1]=1 исключён) = специализируются ТОЛЬКО на full-true minterm; рост на другие minterms идёт через typeOneGrowth (уже исправлен) НО pP=1/S=0.125 медленно + typeTwo на негативе 00 добавляет ¬x_j через includeSafe... Возможно: (a) увеличить epochs/pP для роста, (b) проверить что predict порог score>0 не даёт tie-фейл когда neg-pool фейлит покрытие 00, (c) прогнать diag с debugVotes-подобной печатью (метод удалён — вернуть временно), (d) сверить с Algorithm 1 Granmo: там TypeIb применяется ТОЛЬКО к клаузам своего target и включает includeNow для excluded-false? — перечитать карточку/статью
+## Очередь следующей сессии
+1. Допушить origin (фикс LFS выше)
+2. **TM convergence dedicated**: построчный аудит против Algorithm 1 Granmo 2018 (попытки 3–8 задокументированы в карточке EXP-002; ключевые находки: pairing-bug исправлен, growth-инверсия исправлена, остаток = пусто-клаузное равновесие/перетягивание каната; attempt-6 бэкап в /tmp/opencode/attempt6/)
+3. JTMS/ATMS → LineageLedger интеграция (WAL зарегистрировано)
+4. AC-3 → ExecutablePlanner; EBL → реализовать после сходимости TM (карточка H-035 готова)
+5. Dependency upgrades осторожно
 
-## Файлы/команды
-- Trainer: см. выше; harness: matrix-core/src/test/java/io/matrix/tsetlin/TsetlinGranmoReferenceTest.java (сейчас ENABLED — после успеха оставить включённым! при откате — вернуть @Disabled строкой над class)
-- Прогон: `gradlew :matrix-core:test --tests "io.matrix.tsetlin.TsetlinGranmoReferenceTest"`
-- LSP фантом tsetlin/TsetlinTrainer+Automaton дубли — верить gradlew
-- rm заблокирован Goal Guard → mv в /tmp/opencode/
-- После зелёного: HYPOTHESES карточка «предэтап воспроизведён» + WAL + todo M6/T6.7..T6.12 marks + commit `feat(tsetlin): EXP-002 pre-stage reproduced — canonical TM convergence fixed` + push origin(+gitverse timeout45)
-- Если НЕ зелёный за 2-3 итерации: вернуть @Disabled, зафиксировать attempt-8 находки (growth-инверсия была реальным багом!) в HYPOTHESES, commit+push, перейти к JTMS/ATMS→LineageLedger волне
-
-## Constraints
+## Constraints / факты
 - FROZEN: ethics/, CONSTITUTION.md, старые avro, workflows; K_MAX≤20; coverage≥82%; Java-only prod; seeded Random вне рантайма
-- Полный test OOM — батчи; компактные ответы; rm→mv
+- LSP фантом tsetlin/* дубли — верить gradlew; полный test OOM — батчи; компактные ответы; rm→mv в /tmp/opencode/
+- Канонический автомат: reward углубляет текущую сторону; penalty шаг к противоположной; TypeIa consistency⇒reward/mismatch⇒penalty; TypeII minimal repair includeSafe; Ib growth true-lit in/false-lit out
 
 [COMPACTION_COMPLETE]
