@@ -48,13 +48,29 @@ public final class BooleanExplainability {
      * @param input the concrete input vector that was evaluated
      * @return feature importances sorted by absolute SHAP value (most important first)
      */
+    // ── BIR execution path (SPEC-002 Критерий A, DESIGN-14) ──
+
+    /** BIR form cache per immutable decision tree (utility class → static cache). */
+    private static final java.util.Map<DecisionTree, io.matrix.bir.TtForm> BIR_FORM_CACHE =
+            java.util.Collections.synchronizedMap(new java.util.WeakHashMap<>());
+
+    /** Single execution point through the BIR runtime (Критерий A). */
+    private static boolean birEvaluate(DecisionTree tree, int k, BitSet input) {
+        var form = BIR_FORM_CACHE.computeIfAbsent(tree, t -> io.matrix.bir.DecisionTreeAdapter.toBir(t, k));
+        // BitSet.toLongArray() omits trailing zero words — normalize to k's width.
+        long[] packed = new long[(k + 63) >>> 6];
+        long[] raw = input.toLongArray();
+        System.arraycopy(raw, 0, packed, 0, Math.min(raw.length, packed.length));
+        return io.matrix.bir.BooleanRuntime.evaluate(form, packed)[0] == 1L;
+    }
+
     public static List<FeatureImportance> explain(DecisionTree tree, BitSet input) {
         int k = tree.inputCount();
         if (k == 0) {
             return List.of();
         }
         int size = 1 << k;
-        boolean baseOutput = tree.evaluate(input);
+        boolean baseOutput = birEvaluate(tree, k, input);
 
         List<FeatureImportance> result = new ArrayList<>(k);
         for (int bit = 0; bit < k; bit++) {
@@ -168,7 +184,7 @@ public final class BooleanExplainability {
             boolean bitValue = ((i >> bit) & 1) == 1;
             if (bitValue == fixedValue) {
                 total++;
-                if (tree.evaluate(intToBitSet(i, k))) {
+                if (birEvaluate(tree, k, intToBitSet(i, k))) {
                     count++;
                 }
             }

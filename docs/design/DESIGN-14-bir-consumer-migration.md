@@ -26,11 +26,15 @@
 | cluster/NeuronClusterActor | 1 | ✅ wave 1 (кэш форм + equivalence test) |
 | api/MatrixResource | 1 | ✅ wave 2 (/truth-table через BIR; api-пакет 163/0) |
 | bridge/NeuroSymbolicBridge | 2 | ✅ wave 3 (birEvaluate + weak-кэш форм) |
-| explain/BooleanExplainability | 2 | pending |
+| explain/BooleanExplainability | 2 | ✅ wave 4 (DecisionTreeAdapter + статический кэш; правило §4.1) |
 | agent/PretrainedLoader | 2 | pending |
 | agent/AgentBrainService (fitness) | 1+ | ⚠️ только после кэша форм (§3) |
 | ethics/frozen/FrozenAxiomNeuron | 1 | 🔒 FROZEN-зона — не мигрировать без RFC владельца |
 | прочие `.evaluate(` вне bir/neuron | ~118 | аудит семантики (часть — не булевы нейроны: FROZENFNLGuardian и т.п., вне scope) |
+
+## 4.1 Правило нормализации входа (урок wave 4)
+
+`BitSet.toLongArray()` опускает старшие нулевые слова — для нулевого ввода возвращается массив длины 0, а `TtForm.eval` индексирует `input[0]`. Всегда нормализовать до фиксированной ширины `(k+63)/64` слов с `System.arraycopy(min(len))`. См. `BooleanExplainability.birEvaluate`.
 
 ## 5. Критерий завершения
 
