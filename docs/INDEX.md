@@ -60,12 +60,13 @@
 
 | Документ | Назначение |
 |---|---|
-| [research/HYPOTHESES.md](research/HYPOTHESES.md) | Пререгистрированные гипотезы H-001…H-022 и карточки экспериментов EXP-001…022 |
+| [research/HYPOTHESES.md](research/HYPOTHESES.md) | Пререгистрированные гипотезы H-001…H-034 и карточки экспериментов EXP-001…EXP-034 |
 | [research/METRICS.md](research/METRICS.md) | Реестр метрик: формула, источник, команда, порог; теоретические и прототипные значения |
 | [research/ANALYSIS-laptop-feasibility.md](research/ANALYSIS-laptop-feasibility.md) | Пробелы/возможности + расчёт ноутбучной реализуемости vs локальные LLM |
 | [research/prototype/](research/prototype/) | Воспроизводимый прототип BIR (код + результаты, Python/numpy) |
 | [research/prototype-java/](research/prototype-java/) | Java-прототип модулей сигналов на BIR (javac, без зависимостей; замеры on/off-heap) |
 | [research/papers/](research/papers/) | Научные публикации (автогенерация из артефактов) + протокол |
+| [research/notes/](research/notes/) | Исследовательские заметки: BIR-THEORY-scan, DUALITY-* (источники, операциональные определения, расширения), HARNESS-PRACTICE-scan (индустрия агентных харнессов 2026 → стек MATRIX) |
 | research/reports/ | Отчёты экспериментов (включая отрицательные) |
 
 ## Инженерия
