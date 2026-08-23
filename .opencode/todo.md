@@ -70,6 +70,9 @@
 - [x] S5.2: WAL rewrite + финальный commit+push оба remote | | evidence: seed-injected Random в конструкторе; same-seed → идентичные ClauseSet (тест) | | evidence: gradlew BUILD SUCCESSFUL; TOTAL XML tests=146 failed=0 (131 bir + 15 tsetlin) | size:S
 
 ## M6: Критерий A — миграция потребителей на BIR (DESIGN-14) | status: completed | note: эпик продолжается по реестру DESIGN-14 (living-doc), следующие волны — новые сессии
+### T6.3: Волна 3 bridge | agent:direct
+- [x] S6.3.1: NeuroSymbolicBridge оба call-site → birEvaluate через weak-кэш TtForm | size:S | evidence: правки строк 86/296 + прогон bridge+equivalence BUILD SUCCESSFUL
+
 ### T6.2: Волна 2 api | agent:direct
 - [x] S6.2.1: MatrixResource /truth-table → BooleanRuntime (request-local form) | size:S | evidence: правка + прогон io.matrix.api.* 163/0 BUILD SUCCESSFUL
 - [x] S6.2.2: DESIGN-14 реестр обновлён; fetch-check; commit+push оба remote | size:S

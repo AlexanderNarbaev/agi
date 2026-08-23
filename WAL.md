@@ -31,6 +31,7 @@
 - DESIGN-14 создан: стратегия миграции, правило кэша форм, реестр прогресса
 - Tracer: NeuronClusterActor.longEvaluate → BIR (кэш TtForm), equivalence-тест зелёный (179/0)
 - Wave 2: api/MatrixResource /truth-table → BIR (request-local форма); api-пакет 163/0
+- Wave 3: bridge/NeuroSymbolicBridge (extractDNF + evaluateSample) → BIR через weak-кэш форм
 - EXP-002: метод бинаризации зафиксирован ДО запуска (median-threshold) — блок этапа B снят
 
 ## Следующее действие (приоритет сверху вниз)
@@ -42,6 +43,7 @@
 ## Известные проблемы
 - **gitverse: main под правилом PR** — пуш печатает «Bypassed rule violations… protected ref», но обновление проходит (токен владельца с bypass); фактически dual-push работает, однако правило чужое для флоу проекта — при появлении отказа перейти на PR-флоу
 - LSP-кэш показывает фантомные дубли методов в io.matrix/tsetlin/TsetlinAutomaton при чистом файле на диске (компилятор и тесты зелёные) — верифицировать gradlew, не LSP
+- gitverse push временно таймаутится (>7 мин без ответа) — origin первичен, к gitverse вернуться
 - Full `gradle test` OOM/timeout ~4–5min — гонять пакетами
 - JaCoCo coverage gate env-blocked (native-image × jacoco agent)
 - Субагенты: code-делегации создают параллельные правки молча (гонки файлов) — после делегаций сверять git status; research/audit-делегации стабильны

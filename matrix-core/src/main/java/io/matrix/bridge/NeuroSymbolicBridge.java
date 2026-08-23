@@ -83,7 +83,7 @@ public final class NeuroSymbolicBridge {
         int total = 1 << table.k();
 
         for (int input = 0; input < total; input++) {
-            if (table.evaluate(input)) {
+            if (birEvaluate(table, input)) {
                 List<String> literals = new ArrayList<>();
                 for (int bit = 0; bit < table.k(); bit++) {
                     String label = inputLabels != null && inputLabels.containsKey(bit)
@@ -293,7 +293,19 @@ public final class NeuroSymbolicBridge {
     // ── Helpers ──
 
     private boolean evaluateSample(TruthTable table, int input) {
-        return table.evaluate(input);
+        return birEvaluate(table, input);
+    }
+
+    // ── BIR execution path (SPEC-002 Критерий A, DESIGN-14) ──
+
+    /** BIR form cache per immutable truth table (weak keys — no leak on reload). */
+    private final java.util.Map<TruthTable, io.matrix.bir.TtForm> birFormCache =
+            java.util.Collections.synchronizedMap(new java.util.WeakHashMap<>());
+
+    /** Single execution point through the BIR runtime (Критерий A). */
+    private boolean birEvaluate(TruthTable table, int input) {
+        var form = birFormCache.computeIfAbsent(table, io.matrix.bir.TruthTableAdapter::toBir);
+        return io.matrix.bir.BooleanRuntime.evaluate(form, new long[]{input})[0] == 1L;
     }
 
     private double confidence(TruthTable table) {

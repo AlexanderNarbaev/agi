@@ -1,28 +1,24 @@
 # MATRIX Project Context - Session State
 
 ## Current Status
-- **Миссия**: волны; перед push всегда `git fetch` обеих remote → при новых коммитах в main: rebase. Параллельная чужая волна (практики/алгоритмы) может прийти в любой момент
-- База: main = origin/main = gitverse/main, локально 3d23aa2 + один новый незакоммиченный правка
-- Тесты базовые: 179/0 (cluster+bir прогон)
+- **Миссия**: волны без остановки (юзер оффлайн); перед push fetch→rebase; gitverse ВРЕМЕННО висит на push — origin первичен, gitverse ретраить с малым таймаутом
+- HEAD: `c00761f` (=origin/main), локально НЕЗАКОММИЧЕНО: bridge/NeuroSymbolicBridge.java переведён на BIR
 
-## Незакрыто ПРЯМО СЕЙЧАС (одна правка на диске, не закоммичена)
-1. `api/MatrixResource.java`: `/truth-table` endpoint переведён на BIR — заменён блок:
-   старый: `boolean result = table.evaluate(input);`
-   новый: `var birForm = io.matrix.bir.TruthTableAdapter.toBir(table); boolean result = io.matrix.bir.BooleanRuntime.evaluate(birForm, new long[]{input})[0] == 1L;`
-   (кэш не нужен — таблица строится per-request; комментарий DESIGN-14 на месте)
-2. ДАЛЕЕ: скомпилировать и прогнать тесты api: `gradlew :matrix-core:test --tests "io.matrix.api.*"` — ВНИМАНИЕ: возможны QuarkusTest/env-фолы; если падения выглядят средовыми (Docker/port), сравнить с baseline: `git stash && gradlew ... те же тесты ... && git stash pop` и сопоставить список упавших. Мои правки затрагивают только evaluateTruthTable
-3. Обновить DESIGN-14 реестр: строка api/MatrixResource → ✅ wave 2
-4. todo.md M6: добавить S6.2.x пункты (MatrixResource [x], commit+push [ ]) или отметить в S6.1.4-стиле; WAL «Что сделано» дополнить; status.md
-5. fetch обеих remote → если новые коммиты: `git pull --rebase origin main`; затем `git add -A && git commit -m "feat(api): migrate /truth-table endpoint to BIR runtime (Критерий A wave 2)" && git push origin main && git push gitverse main`
+## Волна 3 (bridge) — правки НА ДИСКЕ, осталось верифицировать и запушить
+1. ✅ Правки: строка 86 `extractDNF` → `birEvaluate(table,input)`; строка 296 `evaluateSample` → `birEvaluate`; добавлены поле `birFormCache` (synchronized WeakHashMap<TruthTable,TtForm>) + метод `birEvaluate` (полные имена io.matrix.bir.*, импорты не требуются). grep подтвердил: table.evaluate в файле больше нет, birEvaluate×3
+2. СЛЕДУЮЩИЙ ШАГ: `gradlew :matrix-core:test --tests "io.matrix.bridge.*"` (если тестов пакета нет — просто compile; тогда прогнать хотя бы `--tests "io.matrix.cluster.BirMigrationEquivalenceTest"` для санити компиляции всего)
+3. DESIGN-14 реестр: bridge строка → `✅ wave 3 (2 sites через birEvaluate+weak cache)`
+4. WAL «Что сделано» += wave 2 api ✅163/0; wave 3 bridge; «Известные проблемы» += «gitverse push временно таймаутится (>7 мин), origin первичен»
+5. todo M6 += T6.3 волна 3 пункты [x]
+6. ФИНАЛ ВОЛНЫ: `git fetch origin -q; R=$(git rev-list --count main..origin/main); [ "$R" != 0 ] && git pull --rebase origin main`; `git add -A && git commit -m "feat(bridge): route NeuroSymbolicBridge evaluation through BIR (Критерий A wave 3)"`; `git push origin main`; gitverse: `timeout 60 git push gitverse main || echo GITVERSE_DEFERRED`
 
-## Реестр миграции остаток (DESIGN-14)
-bridge/NeuroSymbolicBridge:86,296 → explain/BooleanExplainability:57,171 → agent/PretrainedLoader:149,166 → agent/AgentBrainService:801 ⚠️hot-loop(только кэш форм на принятых) → 🔒ethics/frozen/FrozenAxiomNeuron НЕ ТРОГАТЬ. ~118 прочих `.evaluate(` вне bir/neuron — аудит семантики (не булевы — вне scope)
+## Реестр остаток (DESIGN-14)
+explain/BooleanExplainability:57,171 (tree.evaluate! — это DecisionTree, использовать DecisionTreeAdapter) → agent/PretrainedLoader:149,166 (table.evaluate внутри построения DecisionTree.Leaf/constant — конверсия при загрузке, кэш не нужен) → agent/AgentBrainService:801 ⚠️hot-loop GA fitness (ТОЛЬКО кэш форм на принятых нейронах; наив=2^20 eval) → 🔒ethics/frozen/FrozenAxiomNeuron FROZEN НЕ ТРОГАТЬ
 
 ## Constraints / факты
 - FROZEN: ethics/, CONSTITUTION.md, старые avro, workflows; K_MAX≤20; coverage≥82%; Java-only prod
-- LSP фантом tsetlin/TsetlinAutomaton — верить gradlew
-- Полный gradle test OOM — батчи; компактные ответы
-- Адаптеры: TruthTableAdapter.toBir/fromBir; BooleanRuntime.evaluate(Bir,long[])→long[]
-- gitverse push: bypass-warning но проходит
+- LSP фантом tsetlin/TsetlinAutomaton (дубли) — верить gradlew; полный test OOM — батчи; компактные ответы
+- Адаптеры: TruthTableAdapter.toBir/fromBir; DecisionTreeAdapter есть для DecisionTree; BooleanRuntime.evaluate(Bir,long[])→long[]
+- Юзер просил после реализации тщательно ревьюить код и переходить на более качественные алгоритмы/новейшие версии протоколов — очередь на следующий цикл: code-review волна по новым BIR-точкам + апгрейд зависимостей отдельной осторожной волной (Quarkus/Pekko pinned в build.gradle)
 
 [COMPACTION_COMPLETE]

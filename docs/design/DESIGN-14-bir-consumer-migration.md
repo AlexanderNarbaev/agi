@@ -25,7 +25,7 @@
 |---|---|---|
 | cluster/NeuronClusterActor | 1 | ✅ wave 1 (кэш форм + equivalence test) |
 | api/MatrixResource | 1 | ✅ wave 2 (/truth-table через BIR; api-пакет 163/0) |
-| bridge/NeuroSymbolicBridge | 2 | pending |
+| bridge/NeuroSymbolicBridge | 2 | ✅ wave 3 (birEvaluate + weak-кэш форм) |
 | explain/BooleanExplainability | 2 | pending |
 | agent/PretrainedLoader | 2 | pending |
 | agent/AgentBrainService (fitness) | 1+ | ⚠️ только после кэша форм (§3) |
