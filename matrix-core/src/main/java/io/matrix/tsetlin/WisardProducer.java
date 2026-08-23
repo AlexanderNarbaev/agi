@@ -2,6 +2,10 @@ package io.matrix.tsetlin;
 
 import java.util.*;
 
+import io.matrix.bir.BirCompiler;
+import io.matrix.bir.ClauseSetForm;
+import io.matrix.bir.TruthTableAdapter;
+
 /**
  * WNN/WiSARD Producer (H-010): Weightless Neural Network in WiSARD style.
  *
@@ -100,6 +104,27 @@ public final class WisardProducer {
             }
         }
         return (double) correct / inputs.size();
+    }
+
+    /**
+     * Distills the producer's decision function into an exact CLAUSESET BIR
+     * artifact (SPEC-002 FR-B1/B2 producer contract): evaluates
+     * {@link #classifyLabel(long[])} over the full {@code 2^inputBits} space
+     * and compiles the resulting truth table through the espresso-type exact
+     * minimizer. Requires {@code inputBits <= 20} (K_MAX). The stochasticity
+     * stays here, in the producer; the runtime executes only the artifact.
+     */
+    public ClauseSetForm toDecisionClauseSet(String provenance) {
+        if (inputBits > 20) {
+            throw new IllegalStateException("distillation requires inputBits <= 20");
+        }
+        int size = 1 << inputBits;
+        var bits = new java.util.BitSet(size);
+        for (int i = 0; i < size; i++) {
+            bits.set(i, classifyLabel(new long[]{i}) == 1);
+        }
+        var tt = io.matrix.neuron.TruthTable.of(inputBits, bits);
+        return BirCompiler.ttToClauseSet(TruthTableAdapter.toBir(tt));
     }
 
     /**

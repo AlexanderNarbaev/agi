@@ -34,6 +34,7 @@
 - Wave 3: bridge/NeuroSymbolicBridge (extractDNF + evaluateSample) → BIR через weak-кэш форм
 - Wave 4: explain/BooleanExplainability (SHAP-подобный) → BIR (DecisionTreeAdapter); ловушка BitSet.toLongArray()→пустой массив задокументирована как §4.1 DESIGN-14
 - Wave 5 (решение): PretrainedLoader=producer-side, evaluateTreeFitness=training-side — вне Критерия A
+- Wave 9: WiSARD унифицирован под контракт продюсеров (toDecisionClauseSet + exhaustive parity)
 - Wave 7: канонический Гранмо-TM (голосование полярностей ±1, TypeIa/Ib/II, точная дистилляция решения в BIR); EXP-002 предэтап честно НЕ воспроизведён (AND✅/OR≤0.75/XOR≤0.50) — гарнесс @Disabled, карточка дополнена; tsetlin-пакет зелёный
 - Wave 6 КЕЙСТОУН: neuron/NeuronLayer.evaluate → BIR (ленивый weak-кэш TtForm); через него идут MultiBrainEnsemble/NeuralTextGenerator/агентный act() — основная масса рантайма теперь на единой точке исполнения; neuron-пакет 244/0
 - EXP-002: метод бинаризации зафиксирован ДО запуска (median-threshold) — блок этапа B снят

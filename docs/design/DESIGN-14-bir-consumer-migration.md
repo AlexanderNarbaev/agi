@@ -44,6 +44,8 @@
 
 | neuron/SchemaDescriptor (148,206,217) | ⏭️ validation/utility-side (test-vectors, tableAsLong, countTrue) — вне рантайм-контура
 
+| tsetlin/WisardProducer | producer contract unified: toDecisionClauseSet distillation + exhaustive parity property (wave 9)
+
 ## 5. Критерий завершения
 
 Все булевы call-sites из реестра идут через BooleanRuntime; ArchUnit-правило INV-1 (сырые структуры не проникают в рантайм) включено в CI; полный прогон зелёный; JMH ≤10% подтверждён повторно.

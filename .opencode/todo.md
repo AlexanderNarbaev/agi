@@ -73,6 +73,9 @@
 ### T6.6: Волна 6 кейстоун NeuronLayer | agent:direct
 - [x] S6.6.1: NeuronLayer.evaluate → BIR (ленивый weak-кэш форм на нейрон, нормализация слов); покрывает MultiBrainEnsemble/NeuralTextGenerator/act()-контур | size:M | evidence: io.matrix.neuron.* 244/0 BUILD SUCCESSFUL
 
+### T6.9: Волна 9 WiSARD унификация | agent:direct
+- [x] S6.9.1: WisardProducer.toDecisionClauseSet (дистилляция ≤20) + WisardExportPropertyTest (exhaustive parity, single-pass memorization) | size:M | evidence: tsetlin BUILD SUCCESSFUL
+
 ### T6.7: Волна 7 Granmo-TM + предэтап EXP-002 | agent:direct
 - [x] S6.7.1: Канонический TM (±голосование, TypeIa/Ib/II), дистилляция решения; предэтап EXP-002 зафиксирован как not-reproduced (@Disabled гарнесс, числа в карточке); tsetlin зелёный | size:L | evidence: canonical voting trainer + includeSafe guard + @Disabled harness + HYPOTHESES attempts ×3 + tsetlin/bir BUILD SUCCESSFUL
 
