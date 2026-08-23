@@ -6,6 +6,8 @@
 - Workers: 0 active (code-делегация ненадёжна — прямой режим)
 - Verification Strategy: tool-evidence на каждый пункт (JUnit XML, grep, git diff)
 - Execution Status: pass
+- Waves+ : Критерий A wave 1 done — commit 3d23aa2 (rebased on parallel docs 2ac6684); оба remote
+- Tests: 179 green (cluster+bir прогон)
 - Waves: 0..3 done (commits f2b8874, 4e3744a, 515c0ae; оба remote)
 - Tests: 146 green (131 bir + 15 tsetlin)
 
@@ -17,6 +19,10 @@ M1+M2 CONCLUDED — SPEC-002 этап A + WAL #2/#3 закрыты и вериф
 - BddForm: enum Op{AND..IMPLIES}, apply/not/constant (ITE+call-local cache), структурный equivalentTo; мёртвые поля удалены
 - FROZEN/Art.VI/ссылки — чисто (Doc Review PASS)
 - Инфра-инцидент: NoSuchFileException in-progress-results-generic.bin = битый каталог результатов, устранён переносом в /tmp
+
+## Progress Registry
+- Миграция BIR: DESIGN-14 ведётся; NeuronClusterActor ✅; далее MatrixResource → NeuroSymbolicBridge → explain → PretrainedLoader; AgentBrainService ⚠️кэш; FrozenAxiomNeuron 🔒FROZEN
+- EXP-002 бинаризация зафиксирована (median-threshold) — этап B разблокирован
 
 ## Known Issues
 - gitverse main под PR-правилом, но пуш проходит через bypass (владельческий токен); LSP фантомные ошибки в tsetlin — верить gradlew
