@@ -56,11 +56,13 @@ public final class TsetlinTrainer {
             var pair = new TsetlinAutomaton[2][inputBits];
             for (int j = 0; j < inputBits; j++) {
                 int off = (int) (((seed >>> 4) + 31L * j + 61L * c) % nStates);
-                // Complementary init: x_j included, ¬x_j excluded — the
-                // clause starts as the all-positive conjunction (fires on its
-                // full-true minterm) instead of a contradictory never-fire.
-                pair[0][j] = new TsetlinAutomaton(nStates, nStates + 1); // x_j in
-                pair[1][j] = new TsetlinAutomaton(nStates, 1);           // ¬x_j out
+                // Random init (reference-style): diverse starting subsets let
+                // different clauses specialize onto different minterms; rare
+                // dead (x∧¬x) clauses are absorbed by the pool.
+                int r1 = 1 + rng.nextInt(2 * nStates);
+                int r2 = 1 + rng.nextInt(2 * nStates);
+                pair[0][j] = new TsetlinAutomaton(nStates, r1);
+                pair[1][j] = new TsetlinAutomaton(nStates, r2);
             }
             clauses.add(pair);
             polarity.add(c % 2 == 0 ? +1 : -1);

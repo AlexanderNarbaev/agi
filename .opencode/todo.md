@@ -80,6 +80,9 @@
 ### T6.9: Волна 9 WiSARD унификация | agent:direct
 - [x] S6.9.1: WisardProducer.toDecisionClauseSet (дистилляция ≤20) + WisardExportPropertyTest (exhaustive parity, single-pass memorization) | size:M | evidence: tsetlin BUILD SUCCESSFUL
 
+### T6.16: Волна 16 ПРОРЫВ сходимости TM | agent:direct
+- [x] S6.16.1: Random-init автомата (attempt-9) → GranmoReferenceTest 5/5 ВКЛЮЧЁН постоянно; полный регресс 375/0; карточка/WAL обновлены | size:L | evidence: XML GranmoReferenceTest tests=5 fail=0 mtime свежий; REGRESSION 375/0
+
 ### T6.7: Волна 7 Granmo-TM + предэтап EXP-002 | agent:direct
 - [x] S6.7.1: Канонический TM (±голосование, TypeIa/Ib/II), дистилляция решения; предэтап EXP-002 зафиксирован как not-reproduced (@Disabled гарнесс, числа в карточке); tsetlin зелёный | size:L | evidence: canonical voting trainer + includeSafe guard + @Disabled harness + HYPOTHESES attempts ×3 + tsetlin/bir BUILD SUCCESSFUL
 
