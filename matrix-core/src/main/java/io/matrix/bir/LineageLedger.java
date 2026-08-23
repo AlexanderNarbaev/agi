@@ -40,7 +40,9 @@ public final class LineageLedger {
         CLAUSESET_TO_TT,
         COMPOSE,
         MUTATE,
-        VERIFY
+        VERIFY,
+        /** ATMS/JTMS-style withdrawal: artifact no longer active (GLOSSARY §102). */
+        RETRACT
     }
 
     /** A single ledger entry. Immutable. */
@@ -117,6 +119,34 @@ public final class LineageLedger {
 
         chain.add(entry);
         return entry;
+    }
+
+    /**
+     * JTMS/ATMS-style retraction: appends a {@link Operation#RETRACT} entry
+     * whose contentHash carries the retracted artifact's latest hash as the
+     * justification link. The ledger stays append-only; activity is derived
+     * via {@link #latestStatus()} / {@link #isRetracted(String)}.
+     */
+    public LedgerEntry retract(String birId) {
+        byte[] justification = new byte[32];
+        List<LedgerEntry> hist = getHistory(birId);
+        if (!hist.isEmpty()) justification = hist.get(hist.size() - 1).contentHash().clone();
+        return append(birId, Operation.RETRACT, justification, 0.0);
+    }
+
+    /**
+     * ATMS-style label: last operation per BIR id in chain order.
+     * An id whose last operation is {@link Operation#RETRACT} is OUT.
+     */
+    public java.util.Map<String, Operation> latestStatus() {
+        var status = new java.util.LinkedHashMap<String, Operation>();
+        for (LedgerEntry e : chain) status.put(e.birId(), e.op());
+        return status;
+    }
+
+    /** True iff the artifact exists and its latest operation is RETRACT. */
+    public boolean isRetracted(String birId) {
+        return latestStatus().get(birId) == Operation.RETRACT;
     }
 
     /**

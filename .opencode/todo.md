@@ -73,6 +73,10 @@
 ### T6.6: Волна 6 кейстоун NeuronLayer | agent:direct
 - [x] S6.6.1: NeuronLayer.evaluate → BIR (ленивый weak-кэш форм на нейрон, нормализация слов); покрывает MultiBrainEnsemble/NeuralTextGenerator/act()-контур | size:M | evidence: io.matrix.neuron.* 244/0 BUILD SUCCESSFUL
 
+### T6.15: Волна 15 JTMS/ATMS → LineageLedger | agent:direct
+- [x] S6.15.1: Operation.RETRACT + retract() с justification-link (последний contentHash) + latestStatus()/isRetracted() (ATMS label) | size:M | evidence: LineageLedgerTest jtms-тесты зелёные; bir BUILD SUCCESSFUL
+- [x] S6.15.2: commit+push оба remote после fetch-check | size:S
+
 ### T6.9: Волна 9 WiSARD унификация | agent:direct
 - [x] S6.9.1: WisardProducer.toDecisionClauseSet (дистилляция ≤20) + WisardExportPropertyTest (exhaustive parity, single-pass memorization) | size:M | evidence: tsetlin BUILD SUCCESSFUL
 

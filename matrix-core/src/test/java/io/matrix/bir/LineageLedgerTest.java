@@ -146,4 +146,28 @@ class LineageLedgerTest {
         assertThat(view).hasSize(1); // snapshot, not live
         assertThat(ledger.chain()).hasSize(2);
     }
+    @Test
+    void jtmsRetractionKeepsChainAndLabels() {
+        var ledger = new LineageLedger();
+        var e1 = ledger.append("bir-1", LineageLedger.Operation.CREATE, new byte[32], 0.9);
+        assertThat(ledger.isRetracted("bir-1")).isFalse();
+
+        ledger.append("bir-1", LineageLedger.Operation.VERIFY, e1.contentHash(), 0.9);
+        ledger.retract("bir-1");
+
+        assertThat(ledger.isRetracted("bir-1")).isTrue();
+        assertThat(ledger.latestStatus()).containsEntry("bir-1", LineageLedger.Operation.RETRACT);
+        assertThat(ledger.verifyChain()).isEmpty(); // append-only chain intact
+        var hist = ledger.getHistory("bir-1");
+        org.assertj.core.api.Assertions.assertThat(hist.get(hist.size() - 1).contentHash())
+                .isEqualTo(hist.get(hist.size() - 2).contentHash()); // justification link
+    }
+
+    @Test
+    void retractUnknownIdUsesZeroJustification() {
+        var ledger = new LineageLedger();
+        ledger.retract("ghost");
+        assertThat(ledger.isRetracted("ghost")).isTrue();
+        assertThat(ledger.verifyChain()).isEmpty();
+    }
 }
