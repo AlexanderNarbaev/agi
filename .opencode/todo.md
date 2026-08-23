@@ -70,6 +70,9 @@
 - [x] S5.2: WAL rewrite + финальный commit+push оба remote | | evidence: seed-injected Random в конструкторе; same-seed → идентичные ClauseSet (тест) | | evidence: gradlew BUILD SUCCESSFUL; TOTAL XML tests=146 failed=0 (131 bir + 15 tsetlin) | size:S
 
 ## M6: Критерий A — миграция потребителей на BIR (DESIGN-14) | status: completed | note: эпик продолжается по реестру DESIGN-14 (living-doc), следующие волны — новые сессии
+### T6.5: Волна 5 классификация целей | agent:Architect
+- [x] S6.5.1: PretrainedLoader → producer-side (legacy ok); evaluateTreeFitness → training-side (вне Критерия A); runtime-эпик = NeuronLayer/HierarchicalBrain — следующая сессия | size:S | evidence: правки реестра DESIGN-14
+
 ### T6.4: Волна 4 explain | agent:direct
 - [x] S6.4.1: BooleanExplainability (обе точки DecisionTree) → BIR через DecisionTreeAdapter+статический кэш; пойман и зафиксирован AIOOBE-ловушка BitSet.toLongArray → правило §4.1 в DESIGN-14 | size:M | evidence: прогон io.matrix.explain.* 9/0 после фикса
 

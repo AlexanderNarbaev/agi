@@ -27,8 +27,8 @@
 | api/MatrixResource | 1 | ✅ wave 2 (/truth-table через BIR; api-пакет 163/0) |
 | bridge/NeuroSymbolicBridge | 2 | ✅ wave 3 (birEvaluate + weak-кэш форм) |
 | explain/BooleanExplainability | 2 | ✅ wave 4 (DecisionTreeAdapter + статический кэш; правило §4.1) |
-| agent/PretrainedLoader | 2 | pending |
-| agent/AgentBrainService (fitness) | 1+ | ⚠️ только после кэша форм (§3) |
+| agent/PretrainedLoader | 2 | ⏭️ переклассифицировано: producer-конверсия (офлайн построение артефакта), не рантайм-путь — legacy допустим до INV-1 ArchUnit |
+| agent/AgentBrainService.evaluateTreeFitness | 1 | ⏭️ training-side (ГА-кандидаты вне рантайм-контура, CONSTITUTION II.2–3) — Критерий A не применяется; runtime-цель = HierarchicalBrain/NeuronLayer после принятия нейронов (отдельный эпик) |
 | ethics/frozen/FrozenAxiomNeuron | 1 | 🔒 FROZEN-зона — не мигрировать без RFC владельца |
 | прочие `.evaluate(` вне bir/neuron | ~118 | аудит семантики (часть — не булевы нейроны: FROZENFNLGuardian и т.п., вне scope) |
 
