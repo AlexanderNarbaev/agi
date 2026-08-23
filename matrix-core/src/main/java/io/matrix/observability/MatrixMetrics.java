@@ -56,6 +56,9 @@ public class MatrixMetrics {
     public MatrixMetrics(MeterRegistry registry) {
         this.registry = registry;
 
+        // BIR form metrics (INV-2): static no-op core in bir/ attaches here.
+        io.matrix.bir.BirMetrics.attach(registry);
+
         // ── Evolution ──
         this.evolutionGenerations = registry.counter("matrix.evolution.generations",
                 "description", "Total evolution generations run");

@@ -65,6 +65,7 @@ public final class BirRegistry {
      * @param lineageHash previous lineage hash (null for genesis)
      * @return the registered entry
      * @throws IllegalStateException if ID already registered
+     * @throws IllegalArgumentException if the BIR has no provenance (INV-4)
      */
     public Entry register(String id, Bir bir, String name, double phi,
                           byte[] lineageHash) {
@@ -72,10 +73,18 @@ public final class BirRegistry {
         Objects.requireNonNull(bir, "bir");
         Objects.requireNonNull(name, "name");
 
+        // INV-4: provenance is mandatory — reject artifacts without lineage.
+        String provenance = bir.provenance();
+        if (provenance == null || provenance.isBlank() || "unknown".equals(provenance)) {
+            throw new IllegalArgumentException(
+                    "BIR provenance required (SPEC-002 INV-4): id=" + id
+                            + " has no lineage (provenance=" + provenance + ")");
+        }
+
         Entry entry = new Entry(id, bir, name, phi,
                 lineageHash != null ? lineageHash.clone() : null,
                 System.currentTimeMillis(),
-                bir.provenance());
+                provenance);
 
         Entry previous = byId.putIfAbsent(id, entry);
         if (previous != null) {

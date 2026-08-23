@@ -36,8 +36,10 @@ public final class FpgaBackend implements SubstrateBackend {
     /** K_MAX constraint per CONSTITUTION II.3. */
     private static final int K_MAX = 20;
 
-    /** Maximum input bits this backend supports. */
-    private static final int MAX_INPUT_BITS = 4096;
+    /** Maximum input bits this backend supports (SPEC-002 INV-2, configurable). */
+    private static int maxInputBits() {
+        return BirLimits.maxLiterals();
+    }
 
     private final FpgaConfig config;
 
@@ -60,9 +62,9 @@ public final class FpgaBackend implements SubstrateBackend {
         if (!(bir instanceof BirForm form)) {
             throw new IllegalArgumentException("Not a BirForm: " + bir.getClass());
         }
-        if (bir.inputBits() > MAX_INPUT_BITS) {
+        if (bir.inputBits() > maxInputBits()) {
             throw new IllegalArgumentException(
-                    "inputBits " + bir.inputBits() + " exceeds max " + MAX_INPUT_BITS);
+                    "inputBits " + bir.inputBits() + " exceeds max " + maxInputBits());
         }
         long[][] outputs = new long[inputs.length][(form.outputBits() + 63) / 64];
         form.evalBatch(inputs, outputs);
@@ -134,7 +136,7 @@ public final class FpgaBackend implements SubstrateBackend {
         return new Capabilities(
                 /* supportsBatch    */ true,
                 /* supportsCompile  */ true,
-                /* maxInputBits     */ MAX_INPUT_BITS,
+                /* maxInputBits     */ maxInputBits(),
                 /* description      */ "FPGA LUT backend (" + config.target()
                         + ", LUT" + config.lutWidth()
                         + ", pipeline=" + config.pipelineDepth() + ")"

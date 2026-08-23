@@ -3,6 +3,8 @@ package io.matrix.bir;
 import java.util.ArrayList;
 import java.util.List;
 
+import io.matrix.compression.TruthTableMinimizer;
+
 /**
  * BIR Compiler: converts between TT, CLAUSESET, and BDD forms.
  *
@@ -18,7 +20,7 @@ public final class BirCompiler {
         int k = tt.k();
         BddForm.Builder builder = new BddForm.Builder();
         int root = buildBddFromTt(builder, tt, 0, 0);
-        return builder.build(k, "compiled-from-tt");
+        return builder.build(k, "compiled-from-tt", root);
     }
 
     private static int buildBddFromTt(BddForm.Builder builder, TtForm tt, int level, int prefix) {
@@ -61,23 +63,42 @@ public final class BirCompiler {
         return new TtForm(k, table, "compiled-from-clauseset", 1.0);
     }
 
-    /** TT → CLAUSESET (espresso-type minimization). */
+    /**
+     * TT → CLAUSESET (espresso-type minimization, exact).
+     *
+     * <p>Uses {@link TruthTableMinimizer} (Quine-McCluskey for k ≤ 12,
+     * Espresso heuristic for k &gt; 12) to produce a minimized DNF, then maps
+     * each implicant to a clause: pos = set bits, neg = cleared bits,
+     * don't-care positions omitted.
+     *
+     * <p>Exactness (SPEC-002 §1): the QM path is exact by construction. The
+     * Espresso path samples minterms for k &gt; 12, so any 1-minterm left
+     * uncovered by the minimized DNF is restored as a full-minterm clause —
+     * eval(CLAUSESET) = eval(TT) always holds.
+     */
     public static ClauseSetForm ttToClauseSet(TtForm tt) {
         int k = tt.k();
-        // Collect all minterms where output = 1
+        TruthTableMinimizer.MinimizedDNF dnf =
+                TruthTableMinimizer.minimize(TruthTableAdapter.fromBir(tt));
+        long bitMask = (1L << k) - 1;
         List<ClauseSetForm.Clause> clauses = new ArrayList<>();
-        for (int i = 0; i < (1 << k); i++) {
-            long[] in = {i};
+        for (TruthTableMinimizer.Implicant imp : dnf.implicants()) {
+            long pos = imp.bits() & ~imp.dontCare() & bitMask;
+            long neg = ~imp.bits() & ~imp.dontCare() & bitMask;
+            clauses.add(new ClauseSetForm.Clause(new long[]{pos}, new long[]{neg}));
+        }
+        if (dnf.algorithm() == TruthTableMinimizer.Algorithm.ESPRESSO) {
+            // Restore exactness: add uncovered 1-minterms as full clauses.
+            long[] in = new long[1];
             long[] out = new long[1];
-            tt.eval(in, out);
-            if (out[0] == 1) {
-                long[] pos = new long[(k + 63) / 64];
-                long[] neg = new long[(k + 63) / 64];
-                for (int b = 0; b < k; b++) {
-                    if (((i >>> b) & 1) == 1) pos[b >>> 6] |= (1L << (b & 63));
-                    else neg[b >>> 6] |= (1L << (b & 63));
+            for (int i = 0; i < (1 << k); i++) {
+                in[0] = i;
+                tt.eval(in, out);
+                if (out[0] == 1 && !dnf.evaluate(i)) {
+                    long pos = i & bitMask;
+                    long neg = ~i & bitMask;
+                    clauses.add(new ClauseSetForm.Clause(new long[]{pos}, new long[]{neg}));
                 }
-                clauses.add(new ClauseSetForm.Clause(pos, neg));
             }
         }
         return new ClauseSetForm(k, clauses, "compiled-from-tt", 1.0);

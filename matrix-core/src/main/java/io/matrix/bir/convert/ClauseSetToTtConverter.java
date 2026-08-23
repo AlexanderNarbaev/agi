@@ -46,8 +46,12 @@ public final class ClauseSetToTtConverter {
                     "CLAUSESET→TT requires k ≤ 20, got k=" + cs.inputBits());
         }
         TtForm tt = BirCompiler.clauseSetToTt(cs);
-        // Measure fidelity and re-wrap
+        // Measure fidelity and re-wrap; a lossy result goes through the
+        // measured-fidelity factory (SPEC-002 INV-3).
         double fidelity = measureFidelity(tt, cs);
+        if (fidelity < 1.0) {
+            return TtForm.lossy(tt.k(), tt.table(), "clauseset-to-tt-converter", fidelity);
+        }
         return new TtForm(tt.k(), tt.table(), "clauseset-to-tt-converter", fidelity);
     }
 

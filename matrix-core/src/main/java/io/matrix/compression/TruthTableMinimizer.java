@@ -346,7 +346,7 @@ public final class TruthTableMinimizer {
      *
      * <p>An implicant covers input x iff {@code (x & ~dontCare) == (bits & ~dontCare)}.
      */
-    static final class Implicant {
+    public static final class Implicant {
         final int bits;
         final int dontCare;
         final int k;
@@ -356,6 +356,15 @@ public final class TruthTableMinimizer {
             this.dontCare = dontCare;
             this.k = k;
         }
+
+        /** Set bits of the implicant (positions with bit=1 where not don't-care). */
+        public int bits() { return bits; }
+
+        /** Don't-care mask (bit=1 → variable absent from the implicant). */
+        public int dontCare() { return dontCare; }
+
+        /** Number of input variables. */
+        public int k() { return k; }
 
         /** Checks if this implicant covers the given minterm. */
         boolean covers(int minterm) {

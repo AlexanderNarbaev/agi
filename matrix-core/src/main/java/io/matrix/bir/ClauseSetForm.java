@@ -43,9 +43,56 @@ public final class ClauseSetForm extends BirForm {
     private final List<Clause> clauses;
 
     public ClauseSetForm(int inputBits, List<Clause> clauses, String provenance, double fidelity) {
-        super(inputBits, 1, provenance, fidelity);
+        this(inputBits, clauses, provenance, fidelity, false);
+    }
+
+    private ClauseSetForm(int inputBits, List<Clause> clauses, String provenance, double fidelity,
+                          boolean measuredFidelity) {
+        super(inputBits, 1, provenance, fidelity, measuredFidelity);
         this.kWords = (inputBits + 63) / 64;
         this.clauses = List.copyOf(clauses);
+        BirMetrics.recordClauseSetCreated(this.clauses.size(), validateAndCountLiterals(inputBits));
+    }
+
+    /**
+     * Creates a lossy clause set with a measured fidelity value (SPEC-002 INV-3).
+     *
+     * @param measuredFidelity fidelity measured against the source artifact, in [0, 1)
+     */
+    public static ClauseSetForm lossy(int inputBits, List<Clause> clauses, String provenance,
+                                      double measuredFidelity) {
+        return new ClauseSetForm(inputBits, clauses, provenance, measuredFidelity, true);
+    }
+
+    /**
+     * Validates that no clause sets a literal outside the declared input range
+     * (INV-2) and returns the total literal count across all clauses.
+     */
+    private long validateAndCountLiterals(int inputBits) {
+        long literals = 0;
+        for (Clause c : this.clauses) {
+            int words = Math.max(c.pos.length, c.neg.length);
+            for (int w = 0; w < words; w++) {
+                long p = w < c.pos.length ? c.pos[w] : 0L;
+                long n = w < c.neg.length ? c.neg[w] : 0L;
+                long used = p | n;
+                long allowed = allowedMask(w, inputBits);
+                if ((used & ~allowed) != 0L) {
+                    throw new IllegalArgumentException(
+                            "clause literal out of range: inputBits=" + inputBits
+                                    + ", word " + w + " has bits outside 0.." + (inputBits - 1));
+                }
+                literals += Long.bitCount(used);
+            }
+        }
+        return literals;
+    }
+
+    private long allowedMask(int word, int inputBits) {
+        int wordStart = word * 64;
+        if (wordStart >= inputBits) return 0L;
+        int bitsInWord = Math.min(64, inputBits - wordStart);
+        return bitsInWord == 64 ? -1L : ((1L << bitsInWord) - 1);
     }
 
     public List<Clause> clauses() { return clauses; }

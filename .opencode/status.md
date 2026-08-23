@@ -1,0 +1,22 @@
+# Mission Status
+
+## Progress
+- .opencode/todo.md: 22/22 ([100]%)
+- Issues: 0 unresolved
+- Workers: 0 active (code-делегация ненадёжна — прямой режим)
+- Verification Strategy: tool-evidence на каждый пункт (JUnit XML, grep, git diff)
+- Execution Status: pass
+
+## Current Phase
+M1+M2 CONCLUDED — SPEC-002 этап A + WAL #2/#3 закрыты и верифицированы
+
+## Evidence Snapshot (2026-08-23)
+- Полный пакет bir: BUILD SUCCESSFUL (job_0c3be865, после чистки битого test-results); XML: 16 классов, tests=131, failed=0, skipped=0 (121 прежних + 10 BirBooleanAlgebraTest)
+- BddForm: enum Op{AND..IMPLIES}, apply/not/constant (ITE+call-local cache), структурный equivalentTo; мёртвые поля удалены
+- FROZEN/Art.VI/ссылки — чисто (Doc Review PASS)
+- Инфра-инцидент: NoSuchFileException in-progress-results-generic.bin = битый каталог результатов, устранён переносом в /tmp
+
+## Next Front (зафиксировано в WAL)
+1. Критерий A — эпик отдельных сессий (61 call-site, нужен дизайн кэширования форм)
+2. Этап B: matrix-tsetlin FR-B1/B2 + EXP-002 (пререгистрация бинаризации ДО запуска)
+3. Долги: H-007 embedding, H-008 пререгистрация

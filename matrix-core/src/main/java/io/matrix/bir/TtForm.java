@@ -12,7 +12,11 @@ public final class TtForm extends BirForm {
     private final long[] table; // 2^k bits packed little-endian
 
     public TtForm(int k, long[] table, String provenance, double fidelity) {
-        super(k, 1, provenance, fidelity);
+        this(k, table, provenance, fidelity, false);
+    }
+
+    private TtForm(int k, long[] table, String provenance, double fidelity, boolean measuredFidelity) {
+        super(k, 1, provenance, fidelity, measuredFidelity);
         if (k < 1 || k > 20) throw new IllegalArgumentException("k in 1..20");
         int expected = ((1 << k) + 63) / 64;
         if (table == null || table.length < expected) {
@@ -20,6 +24,15 @@ public final class TtForm extends BirForm {
         }
         this.k = k;
         this.table = table.clone();
+    }
+
+    /**
+     * Creates a lossy TT form with a measured fidelity value (SPEC-002 INV-3).
+     *
+     * @param measuredFidelity fidelity measured against the source artifact, in [0, 1)
+     */
+    public static TtForm lossy(int k, long[] table, String provenance, double measuredFidelity) {
+        return new TtForm(k, table, provenance, measuredFidelity, true);
     }
 
     public int k() { return k; }

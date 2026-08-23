@@ -35,7 +35,7 @@ class BirTest {
         // Simple BDD: if x0 then 1 else 0
         var builder = new BddForm.Builder();
         int root = builder.mk(0, 0, 1); // if x0=0 → 0, if x0=1 → 1
-        var bdd = builder.build(1, "test");
+        var bdd = builder.build(1, "test", root);
         long[] out = new long[1];
         bdd.eval(new long[]{0}, out); assertEquals(0, out[0]);
         bdd.eval(new long[]{1}, out); assertEquals(1, out[0]);
@@ -56,8 +56,8 @@ class BirTest {
     void bddToTtConversion() {
         // if x0 then 1 else 0
         var builder = new BddForm.Builder();
-        builder.mk(0, 0, 1);
-        var bdd = builder.build(1, "test");
+        int root = builder.mk(0, 0, 1);
+        var bdd = builder.build(1, "test", root);
         var tt = BirCompiler.bddToTt(bdd);
         long[] out = new long[1];
         tt.eval(new long[]{0}, out); assertEquals(0, out[0]);

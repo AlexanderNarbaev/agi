@@ -3,14 +3,40 @@
 **Статус: ephemeral.** Переписывается в конце каждой сессии. Детали реализации — в спеках и git-истории, не здесь.
 
 ## Активный фокус
-- Финальная верификация перед milestone-коммитом — проверка всех артефактов M1, M2, M4.
+- Закрытие пробелов SPEC-002 этап A (BIR-ядро) по результатам аудита 2026-08-22.
 
 ## Правила сессии
 - НЕ ТРОГАТЬ: ethics/**, CONSTITUTION.md, avro/**, workflows
 - Python только в docs/research/ и scripts/ (CONSTITUTION VII.1)
 - Coverage gate ≥82% — не понижен
 
-## Что сделано (сессия 2026-08-10)
+## Что сделано (сессия 2026-08-22)
+
+### Аудит SPEC-002 этап A (BIR-ядро)
+- Gap-анализ `io.matrix.bir` против FR-A1…A4, INV-1…5, Критерия A (статическое чтение, без запуска тестов).
+- Вердикт на момент аудита: все пункты ⚠️/❌. Ниже — закрытие пробелов в этой же сессии.
+
+### Закрытие пробелов SPEC-002 этап A
+- [x] FR-A1: эспрессо-минимизация в `BirCompiler.ttToClauseSet` через `TruthTableMinimizer` (QM exact k≤12, Espresso+восстановление точности k>12); `TtToClauseSetConverter` подхватывает делегированием.
+- [x] FR-A1 (Avro): `BirAvroCodec` (GenericRecord-идиом как в TruthTable, без codegen-плагина) + схема `resources/avro/bir_artifact.avsc` (additive, backward-compatible) + round-trip тесты всех форм. Отклонение от брифа: avdl остаётся человеко-читаемым источником, avsc — производный; codegen-плагин не добавлял (хрупкость/GraalVM).
+- [x] FR-A2: починены 2 реальных бага `BddForm` (eval обходил по счётчику уровня вместо var[node] — ломал level-skip; корень const-0 = терминал 1). `Builder.build(inputBits, provenance, root)` теперь с явным root.
+- [x] FR-A2: jqwik `BirPropertiesTest` — каноничность BDD, eval(BDD)=eval(TT), round-trip TT⇄BDD / TT⇄CLAUSESET (детерминированные генераторы).
+- [x] Тесты: заполнены пустые `JvmSimdBackendTest`, `TtToBddConverterTest`; новые `BirInvariantsTest` (13), `BddToTtConverterTest`, `ClauseSetToTtConverterTest`, `TtToClauseSetConverterTest`, `TruthTableAdapterTest`, `DecisionTreeAdapterTest`, `BirRegistryTest`, `LineageLedgerTest`, `BirAvroCodecTest`. Всего в пакете: 121 тест, 0 failed, 0 skipped.
+- [x] INV-2: `BirLimits` (matrix.bir.max-literals / MATRIX_BIR_MAX_LITERALS, дефолт 4096) вместо хардкода в BirForm/FpgaBackend; `BirMetrics` (Micrometer, no-op ядро, подключено в MatrixMetrics); валидация диапазона литералов в ClauseSetForm.
+- [x] INV-3: fidelity валидация ([0,1], NaN); lossy только через фабрики `TtForm.lossy`/`ClauseSetForm.lossy` с измеренным значением.
+- [x] INV-4: `BirRegistry.register` отвергает provenance null/blank/"unknown".
+- [x] INV-5: `BirCompilerMutationTest` (9 тестов) — 5 классов мутантов компилятора (dropped clause, flipped polarity, complemented edge, bit-flip, const-confusion) ловятся гейтом BDD-эквивалентности + исчерпывающим eval; позитивные контроли проходят. Гейт живёт в обычной тест-сюите → исполняется в CI без изменения workflows (FROZEN).
+- [x] FR-A4 (часть): `@Deprecated` на `neuron.TruthTable` и `neuron.DecisionTree` с указанием на адаптеры.
+- [x] FR-A3 (метрика): JMH legacy vs BIR — legacyTruthTableEval 5.619 ns/op vs ttEval 0.642 / runtimeEval 2.191 ns/op → BIR-путь БЫСТРЕЕ legacy (порог ≤10% выполнен с запасом). Результат: matrix-core/build/results/jmh/results.json.
+- [x] Исследование: `docs/research/notes/BIR-THEORY-scan.md` — Espresso/BDD-ITE/Tsetlin/CEC + мутационный гейт, источники [L1]–[L3]; ключевое: sifting обоснованно отложен, бинаризация входа — главный риск EXP-002.
+
+### Закрытие WAL #2+#3 (2026-08-23)
+- [x] `BddForm.apply(Op)/not()/constant()` — рекурсивный ITE (Shannon по старшей переменной), call-local computed-cache; материализация через Builder.mk (reduction сохранён, ROBDD-каноничность).
+- [x] `equivalentTo` — мемоизированное структурное сравнение: канонично при одном порядке переменных независимо от порядка построения (второй путь построения = apply-композиции). Мёртвые поля uniqueTable/computedCache удалены, javadoc честный.
+- [x] Тесты `BirBooleanAlgebraTest` (10) + прежние 121 → 131/0/0 в пакете bir (BUILD SUCCESSFUL после чистки битого каталога test-results — NoSuchFileException in-progress-results-generic.bin был инфраструктурным).
+- [x] Исследование «коннекторов»: таксономии в docs/ нет (0 grep-совпадений); ближайшие реализованные концепции — BDD-композиции (этот milestone), BRC-цепочки, голосование клауз. Следующий крупный фронт — этап B (matrix-tsetlin, FR-B1/B2 + EXP-002 с пререгистрацией бинаризации).
+
+### Что сделано (сессия 2026-08-10)
 
 ### M1: Разблокировка full test suite
 - [x] Патч 2 висящих тестов: KafkaTopicsTest (+@Timeout(60s), +Docker assumeTrue), HuggingFaceHubSourceTest (+@Timeout(30s), +HF_BASE save/restore)
@@ -48,13 +74,16 @@
 - Created (~14): context.md, work-log.md, scripts/README.md, docs/research/{notes,scripts,reports}/*
 - Deleted (12): .opencode/agents/*.md (pre-existing, не наши)
 
-## Следующее действие
-- `git add -A && git commit -m "WAL: M1 (test hang patch) + M2 (quarantine pretrain_neurons.py) + M4 (4 preregistered hypotheses H-023..H-026)"`
-- M3: Долги этапа 1 (HybridBooleanRag embedding, MPDT batch mode) — deferred до следующей итерации
-- S1.3 (82% coverage gate): env-blocked, вернуться когда native-image позволит jacoco agent
+## Следующее действие (приоритет сверху вниз)
+1. **Критерий A (миграция потребителей)** — единственный оставшийся пункт этапа A. Эпик на отдельные сессии: 61 call-site `.evaluate(` вне bir/; каждый потребитель — отдельный коммит с jqwik property-тестом эквивалентности (ROADMAP §3). ВНИМАНИЕ: наивная миграция `AgentBrainService.evaluateTreeFitness` катастрофична — адаптация DecisionTree→TtForm при K=20 это 2^20 eval'ов на кандидата против ~100 в фитнес-цикле; нужен дизайн с кэшированием формы (или мигрировать только финальные принятые нейроны).
+2. Затем этап B: matrix-tsetlin (FR-B1/B2) + EXP-002 — метод бинаризации входа зафиксировать ДО запуска (главный риск по литературному скану).
+3. Долги этапа 1: H-007 HybridBooleanRag embedding (running), H-008 MPDT batch mode (proposed — нужна пререгистрация).
+
+S1.3 (82% coverage gate): env-blocked, вернуться когда native-image позволит jacoco agent
 
 ## Известные проблемы
+- Критерий A не закрыт: ядро по-прежнему исполняется минуя BIR (см. Следующее действие #1). Остальные пункты этапа A закрыты 2026-08-22.
 - Full `gradle test` (298 классов) OOM/timeout при ~4-5min — все batches по отдельности зелёные
 - JaCoCo coverage gate env-blocked (Quarkus native-image несовместим с jacoco agent)
 - Дыры покрытия: api/, cli/, cluster/events/, R2dbcEventJournal — deferred до M3
-- .opencode/agents/*.md удалены — pre-existing cleanup
+- Субагенты: квота на billing cycle исчерпана в ходе сессии (403) — дальнейшая делегация невозможна до обновления квоты

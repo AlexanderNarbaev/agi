@@ -2,6 +2,15 @@ package io.matrix.bir;
 
 /**
  * Base class for BIR forms. All forms are immutable.
+ *
+ * <p>Invariants (SPEC-002):
+ * <ul>
+ *   <li>INV-2: input/output bits bounded by {@link BirLimits#maxLiterals()}
+ *       ({@code matrix.bir.max-literals}, default 4096)</li>
+ *   <li>INV-3: fidelity must be in [0, 1]; a lossy form (fidelity &lt; 1.0)
+ *       is only constructible via a {@code lossy(...)} factory that takes a
+ *       measured fidelity value — never silently via the plain constructor</li>
+ * </ul>
  */
 public abstract sealed class BirForm implements Bir
         permits TtForm, ClauseSetForm, BddForm {
@@ -12,11 +21,25 @@ public abstract sealed class BirForm implements Bir
     private final double fidelity;
 
     protected BirForm(int inputBits, int outputBits, String provenance, double fidelity) {
-        if (inputBits < 1 || inputBits > 4096) {
-            throw new IllegalArgumentException("inputBits in 1..4096");
+        this(inputBits, outputBits, provenance, fidelity, false);
+    }
+
+    protected BirForm(int inputBits, int outputBits, String provenance, double fidelity,
+                      boolean measuredFidelity) {
+        int maxLiterals = BirLimits.maxLiterals();
+        if (inputBits < 1 || inputBits > maxLiterals) {
+            throw new IllegalArgumentException("inputBits in 1.." + maxLiterals);
         }
-        if (outputBits < 1 || outputBits > 4096) {
-            throw new IllegalArgumentException("outputBits in 1..4096");
+        if (outputBits < 1 || outputBits > maxLiterals) {
+            throw new IllegalArgumentException("outputBits in 1.." + maxLiterals);
+        }
+        if (Double.isNaN(fidelity) || fidelity < 0.0 || fidelity > 1.0) {
+            throw new IllegalArgumentException("fidelity must be in [0, 1], got: " + fidelity);
+        }
+        if (fidelity < 1.0 && !measuredFidelity) {
+            throw new IllegalArgumentException(
+                    "lossy BIR (fidelity < 1.0) requires a measured fidelity value; "
+                            + "use the lossy(...) factory instead of the plain constructor");
         }
         this.inputBits = inputBits;
         this.outputBits = outputBits;

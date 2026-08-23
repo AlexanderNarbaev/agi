@@ -31,7 +31,14 @@ import java.util.concurrent.ThreadLocalRandom;
  * for input vector {@code i} (bits 0..k-1 as LSB-to-MSB).
  *
  * <p>Ref: L1_MPDT_neuron.md §3.1
+ *
+ * @deprecated legacy core API (SPEC-002 FR-A4, strangler-fig migration). New code
+ *             must use the BIR TT-form: wrap via {@code TtForm.fromTruthTable(tt)} /
+ *             {@code io.matrix.bir.TruthTableAdapter} and execute through
+ *             {@code io.matrix.bir.BooleanRuntime}. This class remains functional
+ *             until all consumers migrate (ROADMAP §3).
  */
+@Deprecated
 public final class TruthTable {
 
     public static final int K_MAX = 20;

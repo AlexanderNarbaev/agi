@@ -5,19 +5,21 @@ import io.matrix.bir.ClauseSetForm;
 import io.matrix.bir.TtForm;
 
 /**
- * TT → ClauseSet converter (via SAT/minterm expansion).
+ * TT → ClauseSet converter (espresso-type minimized DNF).
  *
  * <p>Delegates to {@link BirCompiler#ttToClauseSet(TtForm)} for the
- * conversion. This wrapper provides:
+ * conversion (Quine-McCluskey for k ≤ 12, Espresso heuristic for k &gt; 12,
+ * with exactness restored for sampled-out minterms). This wrapper provides:
  * <ul>
  *   <li>Explicit BIR-form contract (TT input, CLAUSESET output)</li>
  *   <li>k≤20 validation</li>
  *   <li>Lossless/lossy classification with fidelity metric</li>
  * </ul>
  *
- * <p>Per SPEC-002 §1: TT→CLAUSESET is exact. Each minterm where the TT
- * outputs 1 becomes a DNF clause with literal masks (pos=1 bits, neg=0 bits
- * for that minterm). For constant-zero functions, the clause set is empty.
+ * <p>Per SPEC-002 §1: TT→CLAUSESET is exact. The on-set is minimized to a
+ * DNF (espresso-type); each implicant becomes a clause with literal masks
+ * (pos=1 bits, neg=0 bits, don't-care positions omitted). For constant-zero
+ * functions, the clause set is empty.
  *
  * <p>The conversion is lossless for the same k — the reconstructed TT from
  * the resulting ClauseSet is identical to the original. For k>20, conversion

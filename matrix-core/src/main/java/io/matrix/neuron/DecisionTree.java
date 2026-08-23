@@ -15,7 +15,13 @@ import java.util.stream.IntStream;
  *
  * <p>Internal nodes ({@link Split}) test a single input bit; leaves ({@link Leaf})
  * return a constant value. No path checks the same bit twice.
+ *
+ * @deprecated legacy core API (SPEC-002 FR-A4, strangler-fig migration). New code
+ *             must use the BIR forms via {@code io.matrix.bir.DecisionTreeAdapter}
+ *             and execute through {@code io.matrix.bir.BooleanRuntime}. This
+ *             interface remains functional until all consumers migrate (ROADMAP §3).
  */
+@Deprecated
 public sealed interface DecisionTree permits DecisionTree.Leaf, DecisionTree.Split {
 
     int K_MAX = TruthTable.K_MAX;
