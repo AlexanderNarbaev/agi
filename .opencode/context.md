@@ -1,24 +1,27 @@
 # MATRIX Project Context - Session State
 
 ## Current Status
-- **Миссия**: волны без остановки (юзер оффлайн); перед push fetch→rebase; gitverse ВРЕМЕННО висит на push — origin первичен, gitverse ретраить с малым таймаутом
-- HEAD: `c00761f` (=origin/main), локально НЕЗАКОММИЧЕНО: bridge/NeuroSymbolicBridge.java переведён на BIR
+- **Миссия**: волны без остановки; перед push fetch+rebase (гонки бывают — всегда после пуша проверять `git status -sb` и `rev-list --count main..origin/main`)
+- **Синхронизировано**: main=origin/main, HEAD `77d1224`, behind=0, дерево чистое. gitverse отстаёт (временно не отвечает на push; origin первичен; вернуть позже `timeout 60 git push gitverse main`)
+- Тесты: все затронутые пакеты зелёные (api 163/0, explain 9/0 после фикса §4.1, cluster+bir 179/0 ранее)
 
-## Волна 3 (bridge) — правки НА ДИСКЕ, осталось верифицировать и запушить
-1. ✅ Правки: строка 86 `extractDNF` → `birEvaluate(table,input)`; строка 296 `evaluateSample` → `birEvaluate`; добавлены поле `birFormCache` (synchronized WeakHashMap<TruthTable,TtForm>) + метод `birEvaluate` (полные имена io.matrix.bir.*, импорты не требуются). grep подтвердил: table.evaluate в файле больше нет, birEvaluate×3
-2. СЛЕДУЮЩИЙ ШАГ: `gradlew :matrix-core:test --tests "io.matrix.bridge.*"` (если тестов пакета нет — просто compile; тогда прогнать хотя бы `--tests "io.matrix.cluster.BirMigrationEquivalenceTest"` для санити компиляции всего)
-3. DESIGN-14 реестр: bridge строка → `✅ wave 3 (2 sites через birEvaluate+weak cache)`
-4. WAL «Что сделано» += wave 2 api ✅163/0; wave 3 bridge; «Известные проблемы» += «gitverse push временно таймаутится (>7 мин), origin первичен»
-5. todo M6 += T6.3 волна 3 пункты [x]
-6. ФИНАЛ ВОЛНЫ: `git fetch origin -q; R=$(git rev-list --count main..origin/main); [ "$R" != 0 ] && git pull --rebase origin main`; `git add -A && git commit -m "feat(bridge): route NeuroSymbolicBridge evaluation through BIR (Критерий A wave 3)"`; `git push origin main`; gitverse: `timeout 60 git push gitverse main || echo GITVERSE_DEFERRED`
+## Волны Критерия A — ВЫПОЛНЕНО
+- Wave 1: cluster/NeuronClusterActor ✅ (+equivalence test)
+- Wave 2: api/MatrixResource /truth-table ✅
+- Wave 3: bridge/NeuroSymbolicBridge ✅ (birEvaluate + weak cache)
+- Wave 4: explain/BooleanExplainability ✅ (DecisionTreeAdapter+static cache; поймана ловушка BitSet.toLongArray()→пустой массив → правило §4.1 в DESIGN-14)
+- Wave 5 (решение архитектора): PretrainedLoader=producer-side ⏭️, evaluateTreeFitness=training-side ⏭️ (вне Критерия A по CONSTITUTION II.2–3); **настоящий рантайм-фронт = NeuronLayer/HierarchicalBrain** (io/matrix/neuron/) — ЭПИК СЛЕДУЮЩЕЙ СЕССИИ
 
-## Реестр остаток (DESIGN-14)
-explain/BooleanExplainability:57,171 (tree.evaluate! — это DecisionTree, использовать DecisionTreeAdapter) → agent/PretrainedLoader:149,166 (table.evaluate внутри построения DecisionTree.Leaf/constant — конверсия при загрузке, кэш не нужен) → agent/AgentBrainService:801 ⚠️hot-loop GA fitness (ТОЛЬКО кэш форм на принятых нейронах; наив=2^20 eval) → 🔒ethics/frozen/FrozenAxiomNeuron FROZEN НЕ ТРОГАТЬ
+## Следующие шаги (новая сессия продолжит отсюда)
+1. **gitverse догнать**: `timeout 60 git push gitverse main` (сейчас таймаутится; не блокирует)
+2. **Эпик NeuronLayer/HierarchicalBrain**: grep `.evaluate(` в io/matrix/neuron/ (NeuronLayer, HierarchicalBrain) → дизайн кэша TtForm внутри NeuronLayer.fromTruthTables (формы строить ОДИН РАЗ при fromTruthTables, хранить рядом с таблицей) → миграция act()-пути → equivalence property → это закрывает основную массу рантайма Критерия A
+3. Затем: WiSARD-унификация контракта продюсеров; запуск EXP-002 по пререгистрации (median-threshold зафиксирован); code-review волна новых BIR-точек; осторожная волна апгрейда зависимостей (Quarkus/Pekko pinned)
+4. Пользователь просил «более качественные алгоритмы/новейшие протоколы» — кандидат: применить находки параллельного атласа (§95 доминанта/§96 деятельность/§97 ЗБР) к Cauldron/REFLEX-контуру — сначала прочитать эти секции в ALGORITHM-ATLAS
 
 ## Constraints / факты
-- FROZEN: ethics/, CONSTITUTION.md, старые avro, workflows; K_MAX≤20; coverage≥82%; Java-only prod
-- LSP фантом tsetlin/TsetlinAutomaton (дубли) — верить gradlew; полный test OOM — батчи; компактные ответы
-- Адаптеры: TruthTableAdapter.toBir/fromBir; DecisionTreeAdapter есть для DecisionTree; BooleanRuntime.evaluate(Bir,long[])→long[]
-- Юзер просил после реализации тщательно ревьюить код и переходить на более качественные алгоритмы/новейшие версии протоколов — очередь на следующий цикл: code-review волна по новым BIR-точкам + апгрейд зависимостей отдельной осторожной волной (Quarkus/Pekko pinned в build.gradle)
+- FROZEN: ethics/, CONSTITUTION.md, старые avro, workflows; K_MAX≤20; coverage≥82%; Java-only prod; seeded Random вне рантайма
+- LSP фантом tsetlin/TsetlinAutomaton — верить gradlew; полный test OOM — батчи; компактные ответы
+- Гонки git: python-правки после fetch ломают rebase («unstaged changes») → порядок: правки→commit→pull --rebase→push→verify rev-list=0
+- Коммиты сессии: f2b8874→4e3744a→515c0ae→0a9763a→(2ac6684чуж)→3d23aa2→(031a492,92e8c60,7841b13,6e98e6d чужие)→c00761f→c475c3c→77d1224
 
 [COMPACTION_COMPLETE]
