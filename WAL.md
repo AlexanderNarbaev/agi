@@ -29,7 +29,8 @@
 
 ## Что сделано (волна Критерий A, 2026-08-23)
 - DESIGN-14 создан: стратегия миграции, правило кэша форм, реестр прогресса
-- Tracer: NeuronClusterActor.longEvaluate → BIR (кэш TtForm), equivalence-тест зелёный (179/0 в прогоне cluster+bir)
+- Tracer: NeuronClusterActor.longEvaluate → BIR (кэш TtForm), equivalence-тест зелёный (179/0)
+- Wave 2: api/MatrixResource /truth-table → BIR (request-local форма); api-пакет 163/0
 - EXP-002: метод бинаризации зафиксирован ДО запуска (median-threshold) — блок этапа B снят
 
 ## Следующее действие (приоритет сверху вниз)

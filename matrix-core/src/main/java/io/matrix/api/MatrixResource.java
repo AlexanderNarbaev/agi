@@ -240,7 +240,10 @@ public class MatrixResource {
             table = TruthTable.random(req.k > 0 ? req.k : 4, rng);
         }
         int input = req.input & ((1 << table.k()) - 1);
-        boolean result = table.evaluate(input);
+        // SPEC-002 Критерий A (DESIGN-14): execution through the BIR runtime;
+        // the form is request-local since the table is built per request.
+        var birForm = io.matrix.bir.TruthTableAdapter.toBir(table);
+        boolean result = io.matrix.bir.BooleanRuntime.evaluate(birForm, new long[]{input})[0] == 1L;
 
         return Map.of(
                 "k", table.k(),

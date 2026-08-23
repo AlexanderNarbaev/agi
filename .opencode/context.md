@@ -1,39 +1,28 @@
 # MATRIX Project Context - Session State
 
 ## Current Status
-- **Миссия**: автономный оптимальный ИИ по документации; волны; перед КАЖДЫМ push: `git fetch origin && git fetch gitverse` + проверка новых коммитов в main (параллельно идёт чужая доки-волна!) → при расхождении rebase, затем push origin + gitverse
-- База коммитов: f2b8874 → 4e3744a → 515c0ae → 0a9763a. Тесты последний прогон: 179/0 (cluster+bir)
+- **Миссия**: волны; перед push всегда `git fetch` обеих remote → при новых коммитах в main: rebase. Параллельная чужая волна (практики/алгоритмы) может прийти в любой момент
+- База: main = origin/main = gitverse/main, локально 3d23aa2 + один новый незакоммиченный правка
+- Тесты базовые: 179/0 (cluster+bir прогон)
 
-## Волна Критерий A — ГОТОВА К КОММИТУ (остался 1 unchecked todo S6.1.4 = сам commit+push)
-Сделано и верифицировано:
-1. `cluster/NeuronClusterActor.java` → BIR-путь (`BooleanRuntime.evaluate(TruthTableAdapter.toBir(table),packed)`) + кэш `formCache` (synchronized WeakHashMap)
-2. Тест `matrix-core/src/test/java/io/matrix/cluster/BirMigrationEquivalenceTest.java` (legacy vs BIR, seed 20260823, 64×64) — зелёный
-3. `docs/design/DESIGN-14-bir-consumer-migration.md` создан (стратегия strangler-fig, кэш-правило §3 — AgentBrainService только с кэшем, реестр прогресса, FROZEN FrozenAxiomNeuron исключён)
-4. EXP-002 в docs/research/HYPOTHESES.md: фиксация бинаризации median-threshold ДО запуска
-5. todo.md: M6 добавлен, S6.1.1–S6.1.3 [x], S6.1.4 [ ] ; WAL.md дополнен (волна Критерий A + обновлённое Следующее действие)
+## Незакрыто ПРЯМО СЕЙЧАС (одна правка на диске, не закоммичена)
+1. `api/MatrixResource.java`: `/truth-table` endpoint переведён на BIR — заменён блок:
+   старый: `boolean result = table.evaluate(input);`
+   новый: `var birForm = io.matrix.bir.TruthTableAdapter.toBir(table); boolean result = io.matrix.bir.BooleanRuntime.evaluate(birForm, new long[]{input})[0] == 1L;`
+   (кэш не нужен — таблица строится per-request; комментарий DESIGN-14 на месте)
+2. ДАЛЕЕ: скомпилировать и прогнать тесты api: `gradlew :matrix-core:test --tests "io.matrix.api.*"` — ВНИМАНИЕ: возможны QuarkusTest/env-фолы; если падения выглядят средовыми (Docker/port), сравнить с baseline: `git stash && gradlew ... те же тесты ... && git stash pop` и сопоставить список упавших. Мои правки затрагивают только evaluateTruthTable
+3. Обновить DESIGN-14 реестр: строка api/MatrixResource → ✅ wave 2
+4. todo.md M6: добавить S6.2.x пункты (MatrixResource [x], commit+push [ ]) или отметить в S6.1.4-стиле; WAL «Что сделано» дополнить; status.md
+5. fetch обеих remote → если новые коммиты: `git pull --rebase origin main`; затем `git add -A && git commit -m "feat(api): migrate /truth-table endpoint to BIR runtime (Критерий A wave 2)" && git push origin main && git push gitverse main`
 
-## Финальный шаг этой волны (выполнить немедленно после compaction)
-```
-git fetch origin && git fetch gitverse && git status -sb   # есть ли новые main-коммиты?
-# если origin/main впереди: git pull --rebase origin main (разрешить конфликты, особенно в docs/*)
-python3 - <<'PY'  # отметить S6.1.4 [x] в .opencode/todo.md после успеха
-PY
-git add -A && git commit -m "feat(cluster): migrate NeuronClusterActor to BIR execution path (Критерий A wave 1)
-
-- DESIGN-14 consumer migration strategy + progress registry
-- longEvaluate via BooleanRuntime with weak TtForm cache; equivalence test legacy-vs-BIR
-- EXP-002 binarization preregistration fixed (median-threshold)"
-git push origin main && git push gitverse main
-```
-Затем обновить .opencode/status.md (волна завершена, счётчики).
-
-## Реестр миграции (DESIGN-14) — следующие цели
-api/MatrixResource:243 → bridge/NeuroSymbolicBridge:86,296 → explain/BooleanExplainability:57,171 → agent/PretrainedLoader:149,166 → agent/AgentBrainService:801 ⚠️hot-loop(только кэш форм) → 🔒 ethics/frozen/FrozenAxiomNeuron НЕ ТРОГАТЬ. Прочие ~118 `.evaluate(` вне bir/ — аудит семантики (многие не булевы: FROZENFNLGuardian и пр.)
+## Реестр миграции остаток (DESIGN-14)
+bridge/NeuroSymbolicBridge:86,296 → explain/BooleanExplainability:57,171 → agent/PretrainedLoader:149,166 → agent/AgentBrainService:801 ⚠️hot-loop(только кэш форм на принятых) → 🔒ethics/frozen/FrozenAxiomNeuron НЕ ТРОГАТЬ. ~118 прочих `.evaluate(` вне bir/neuron — аудит семантики (не булевы — вне scope)
 
 ## Constraints / факты
-- FROZEN: ethics/, CONSTITUTION.md, старые avro, workflows; K_MAX≤20; coverage≥82%; Java-only prod; seeded Random вне рантайма
-- LSP фантом tsetlin/TsetlinAutomaton — верить gradlew (146+33=179 тестов зелёные фактически)
+- FROZEN: ethics/, CONSTITUTION.md, старые avro, workflows; K_MAX≤20; coverage≥82%; Java-only prod
+- LSP фантом tsetlin/TsetlinAutomaton — верить gradlew
 - Полный gradle test OOM — батчи; компактные ответы
-- Адаптеры: io.matrix.bir.TruthTableAdapter.toBir/fromBir; DecisionTreeAdapter; BooleanRuntime.evaluate(Bir,long[])→long[]
+- Адаптеры: TruthTableAdapter.toBir/fromBir; BooleanRuntime.evaluate(Bir,long[])→long[]
+- gitverse push: bypass-warning но проходит
 
 [COMPACTION_COMPLETE]

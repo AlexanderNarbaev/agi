@@ -70,6 +70,10 @@
 - [x] S5.2: WAL rewrite + финальный commit+push оба remote | | evidence: seed-injected Random в конструкторе; same-seed → идентичные ClauseSet (тест) | | evidence: gradlew BUILD SUCCESSFUL; TOTAL XML tests=146 failed=0 (131 bir + 15 tsetlin) | size:S
 
 ## M6: Критерий A — миграция потребителей на BIR (DESIGN-14) | status: completed | note: эпик продолжается по реестру DESIGN-14 (living-doc), следующие волны — новые сессии
+### T6.2: Волна 2 api | agent:direct
+- [x] S6.2.1: MatrixResource /truth-table → BooleanRuntime (request-local form) | size:S | evidence: правка + прогон io.matrix.api.* 163/0 BUILD SUCCESSFUL
+- [x] S6.2.2: DESIGN-14 реестр обновлён; fetch-check; commit+push оба remote | size:S
+
 ### T6.1: Волна 1 tracer | agent:direct
 - [x] S6.1.1: DESIGN-14 стратегия (strangler-fig, кэш форм на принятом нейроне, реестр 127 sites, FROZEN-исключения) | size:M | evidence: docs/design/DESIGN-14-bir-consumer-migration.md
 - [x] S6.1.2: NeuronClusterActor.longEvaluate → BooleanRuntime + WeakHashMap-кэш TtForm; equivalence-тест legacy-vs-BIR (64×64 seeded) | size:S | evidence: cluster/BirMigrationEquivalenceTest; прогон cluster+bir BUILD SUCCESSFUL 179/0

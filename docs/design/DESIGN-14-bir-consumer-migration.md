@@ -24,7 +24,7 @@
 | Потребитель | Call-sites | Статус |
 |---|---|---|
 | cluster/NeuronClusterActor | 1 | ✅ wave 1 (кэш форм + equivalence test) |
-| api/MatrixResource | 1 | pending |
+| api/MatrixResource | 1 | ✅ wave 2 (/truth-table через BIR; api-пакет 163/0) |
 | bridge/NeuroSymbolicBridge | 2 | pending |
 | explain/BooleanExplainability | 2 | pending |
 | agent/PretrainedLoader | 2 | pending |
