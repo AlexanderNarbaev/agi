@@ -33,12 +33,13 @@
 - Wave 2: api/MatrixResource /truth-table → BIR (request-local форма); api-пакет 163/0
 - Wave 3: bridge/NeuroSymbolicBridge (extractDNF + evaluateSample) → BIR через weak-кэш форм
 - Wave 4: explain/BooleanExplainability (SHAP-подобный) → BIR (DecisionTreeAdapter); ловушка BitSet.toLongArray()→пустой массив задокументирована как §4.1 DESIGN-14
-- Wave 5 (решение): PretrainedLoader=producer-side, evaluateTreeFitness=training-side — вне Критерия A; настоящий рантайм-фронт = NeuronLayer/HierarchicalBrain (эпик следующей сессии)
+- Wave 5 (решение): PretrainedLoader=producer-side, evaluateTreeFitness=training-side — вне Критерия A
+- Wave 6 КЕЙСТОУН: neuron/NeuronLayer.evaluate → BIR (ленивый weak-кэш TtForm); через него идут MultiBrainEnsemble/NeuralTextGenerator/агентный act() — основная масса рантайма теперь на единой точке исполнения; neuron-пакет 244/0
 - EXP-002: метод бинаризации зафиксирован ДО запуска (median-threshold) — блок этапа B снят
 
 ## Следующее действие (приоритет сверху вниз)
 1. **Критерий A** — продолжение по реестру DESIGN-14: api/MatrixResource → bridge/NeuroSymbolicBridge → explain/* → PretrainedLoader; AgentBrainService.evaluateTreeFitness только с кэшем форм; FrozenAxiomNeuron — FROZEN, не трогать
-2. **EXP-002 (FR-B3)**: пререгистрировать метод бинаризации входа в HYPOTHESES.md ДО запуска сравнения форм; затем карточка running
+2. **Хвосты Критерия A**: SchemaDescriptor (3 валидационных call-site — аудит семантики), точечные остатки по реестру; затем **EXP-002 (FR-B3)**: пререгистрировать метод бинаризации входа в HYPOTHESES.md ДО запуска сравнения форм; затем карточка running
 3. Долги этапа 1: H-007 HybridBooleanRag embedding (running), H-008 MPDT batch mode (нужна пререгистрация)
 4. WisardProducer (H-010): привести к единому контракту продюсеров с Trainer (экспорт BIR + property эквивалентности) — мелкая волна
 

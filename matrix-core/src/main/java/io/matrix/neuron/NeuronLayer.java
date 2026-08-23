@@ -75,14 +75,30 @@ public final class NeuronLayer {
      */
     public BitSet evaluate(BitSet input) {
         BitSet output = new BitSet(outputWidth);
+        int words = (k + 63) >>> 6;
+        long[] packed = new long[words];
         for (int i = 0; i < outputWidth; i++) {
             BitSet neuronInput = input.get(i * k, (i + 1) * k);
-            if (neurons.get(i).evaluate(neuronInput)) {
+            // SPEC-002 Критерий A (DESIGN-14): execution through the BIR
+            // runtime. Forms are built lazily ONCE per immutable tree and
+            // cached weakly (the layer itself holds strong references, so
+            // entries live as long as the layer). Training-time GA candidates
+            // never reach this method — they use the deprecated direct path.
+            var form = formCache.computeIfAbsent(neurons.get(i),
+                    dt -> io.matrix.bir.DecisionTreeAdapter.toBir(dt, k));
+            long[] raw = neuronInput.toLongArray(); // may drop zero words
+            java.util.Arrays.fill(packed, 0L);
+            System.arraycopy(raw, 0, packed, 0, Math.min(raw.length, words));
+            if (io.matrix.bir.BooleanRuntime.evaluate(form, packed)[0] == 1L) {
                 output.set(i);
             }
         }
         return output;
     }
+
+    /** BIR form cache per accepted neuron (SPEC-002 Критерий A, DESIGN-14 §3). */
+    private final java.util.Map<DecisionTree, io.matrix.bir.TtForm> formCache =
+            java.util.Collections.synchronizedMap(new java.util.WeakHashMap<>());
 
     /** Returns an unmodifiable view of the neurons in this layer. */
     public List<DecisionTree> neurons() {

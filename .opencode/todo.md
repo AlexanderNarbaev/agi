@@ -70,6 +70,9 @@
 - [x] S5.2: WAL rewrite + финальный commit+push оба remote | | evidence: seed-injected Random в конструкторе; same-seed → идентичные ClauseSet (тест) | | evidence: gradlew BUILD SUCCESSFUL; TOTAL XML tests=146 failed=0 (131 bir + 15 tsetlin) | size:S
 
 ## M6: Критерий A — миграция потребителей на BIR (DESIGN-14) | status: completed | note: эпик продолжается по реестру DESIGN-14 (living-doc), следующие волны — новые сессии
+### T6.6: Волна 6 кейстоун NeuronLayer | agent:direct
+- [x] S6.6.1: NeuronLayer.evaluate → BIR (ленивый weak-кэш форм на нейрон, нормализация слов); покрывает MultiBrainEnsemble/NeuralTextGenerator/act()-контур | size:M | evidence: io.matrix.neuron.* 244/0 BUILD SUCCESSFUL
+
 ### T6.5: Волна 5 классификация целей | agent:Architect
 - [x] S6.5.1: PretrainedLoader → producer-side (legacy ok); evaluateTreeFitness → training-side (вне Критерия A); runtime-эпик = NeuronLayer/HierarchicalBrain — следующая сессия | size:S | evidence: правки реестра DESIGN-14
 

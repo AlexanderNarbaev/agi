@@ -36,6 +36,12 @@
 
 `BitSet.toLongArray()` опускает старшие нулевые слова — для нулевого ввода возвращается массив длины 0, а `TtForm.eval` индексирует `input[0]`. Всегда нормализовать до фиксированной ширины `(k+63)/64` слов с `System.arraycopy(min(len))`. См. `BooleanExplainability.birEvaluate`.
 
+## Реестр дополнение (wave 6)
+
+| Потребитель | Статус |
+|---|---|
+| neuron/NeuronLayer.evaluate (через него: MultiBrainEnsemble, NeuralTextGenerator, агентный act()-контур) | ✅ wave 6 — ленивый weak-кэш TtForm на нейрон, нормализация слов; пакет 244/0 |
+
 ## 5. Критерий завершения
 
 Все булевы call-sites из реестра идут через BooleanRuntime; ArchUnit-правило INV-1 (сырые структуры не проникают в рантайм) включено в CI; полный прогон зелёный; JMH ≤10% подтверждён повторно.
