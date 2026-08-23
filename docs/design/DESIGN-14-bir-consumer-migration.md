@@ -42,6 +42,8 @@
 |---|---|
 | neuron/NeuronLayer.evaluate (через него: MultiBrainEnsemble, NeuralTextGenerator, агентный act()-контур) | ✅ wave 6 — ленивый weak-кэш TtForm на нейрон, нормализация слов; пакет 244/0 |
 
+| neuron/SchemaDescriptor (148,206,217) | ⏭️ validation/utility-side (test-vectors, tableAsLong, countTrue) — вне рантайм-контура
+
 ## 5. Критерий завершения
 
 Все булевы call-sites из реестра идут через BooleanRuntime; ArchUnit-правило INV-1 (сырые структуры не проникают в рантайм) включено в CI; полный прогон зелёный; JMH ≤10% подтверждён повторно.

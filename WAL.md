@@ -39,7 +39,7 @@
 
 ## Следующее действие (приоритет сверху вниз)
 1. **Критерий A** — продолжение по реестру DESIGN-14: api/MatrixResource → bridge/NeuroSymbolicBridge → explain/* → PretrainedLoader; AgentBrainService.evaluateTreeFitness только с кэшем форм; FrozenAxiomNeuron — FROZEN, не трогать
-2. **Хвосты Критерия A**: SchemaDescriptor (3 валидационных call-site — аудит семантики), точечные остатки по реестру; затем **EXP-002 (FR-B3)**: пререгистрировать метод бинаризации входа в HYPOTHESES.md ДО запуска сравнения форм; затем карточка running
+2. **Критерий A закрыт для булевых рантайм-потребителей** (реестр DESIGN-14 полный: 5 волн ✅ + 3 переклассификации ⏭️ + 1 🔒FROZEN); затем **EXP-002 (FR-B3)**: пререгистрировать метод бинаризации входа в HYPOTHESES.md ДО запуска сравнения форм; затем карточка running
 3. Долги этапа 1: H-007 HybridBooleanRag embedding (running), H-008 MPDT batch mode (нужна пререгистрация)
 4. WisardProducer (H-010): привести к единому контракту продюсеров с Trainer (экспорт BIR + property эквивалентности) — мелкая волна
 
