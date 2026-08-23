@@ -6,6 +6,8 @@ import org.apache.pekko.actor.typed.javadsl.AbstractBehavior;
 import org.apache.pekko.actor.typed.javadsl.ActorContext;
 import org.apache.pekko.actor.typed.javadsl.Behaviors;
 import org.apache.pekko.actor.typed.javadsl.Receive;
+import io.matrix.bir.BooleanRuntime;
+import io.matrix.bir.TruthTableAdapter;
 import io.matrix.events.ClusterEvent;
 import io.matrix.events.ClusterEventType;
 import io.matrix.events.EventJournal;
@@ -266,9 +268,18 @@ public class NeuronClusterActor extends AbstractBehavior<NeuronClusterActor.Comm
     }
 
     private boolean longEvaluate(TruthTable table, BitSet input) {
-        long[] packed = input.toLongArray();
-        return table.evaluate(packed);
+        // SPEC-002 Критерий A: single execution point through BIR. The TtForm
+        // is cached per immutable table instance (weak keys — no leak across
+        // neuron reloads); conversion cost is paid once, evaluation then goes
+        // through BooleanRuntime like every other BIR consumer.
+        var form = formCache.computeIfAbsent(table, TruthTableAdapter::toBir);
+        long[] out = BooleanRuntime.evaluate(form, input.toLongArray());
+        return out[0] == 1L;
     }
+
+    /** BIR form cache per loaded truth table (SPEC-002 DESIGN-14, strangler-fig). */
+    private final java.util.Map<TruthTable, io.matrix.bir.TtForm> formCache =
+            java.util.Collections.synchronizedMap(new java.util.WeakHashMap<>());
 
     private int flushOutputs() {
         List<Signal> outgoing = new ArrayList<>();

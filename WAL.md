@@ -27,8 +27,13 @@
 - [x] SPEC-002: Changelog-строка в шапке (этап B начат; отклонение «модуль matrix-tsetlin»→пакет в matrix-core отложено до анализа CI/jacoco)
 - [x] status.md/todo.md синхронизированы с evidence
 
+## Что сделано (волна Критерий A, 2026-08-23)
+- DESIGN-14 создан: стратегия миграции, правило кэша форм, реестр прогресса
+- Tracer: NeuronClusterActor.longEvaluate → BIR (кэш TtForm), equivalence-тест зелёный (179/0 в прогоне cluster+bir)
+- EXP-002: метод бинаризации зафиксирован ДО запуска (median-threshold) — блок этапа B снят
+
 ## Следующее действие (приоритет сверху вниз)
-1. **Критерий A** — эпик отдельных сессий: миграция 61 call-site `.evaluate(` через BIR, каждый потребитель = отдельный коммит + jqwik property эквивалентности; для `AgentBrainService.evaluateTreeFitness` обязателен дизайн кэширования форм (наив = 2^20 eval на кандидата)
+1. **Критерий A** — продолжение по реестру DESIGN-14: api/MatrixResource → bridge/NeuroSymbolicBridge → explain/* → PretrainedLoader; AgentBrainService.evaluateTreeFitness только с кэшем форм; FrozenAxiomNeuron — FROZEN, не трогать
 2. **EXP-002 (FR-B3)**: пререгистрировать метод бинаризации входа в HYPOTHESES.md ДО запуска сравнения форм; затем карточка running
 3. Долги этапа 1: H-007 HybridBooleanRag embedding (running), H-008 MPDT batch mode (нужна пререгистрация)
 4. WisardProducer (H-010): привести к единому контракту продюсеров с Trainer (экспорт BIR + property эквивалентности) — мелкая волна
