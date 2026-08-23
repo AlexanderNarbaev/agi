@@ -37,15 +37,34 @@
 
 ## M2: BDD-алгебра + каноническая эквивалентность (WAL #2+#3) | status: completed
 ### T2.1: apply/ITE на computed-cache | agent:Worker(ses_fd4cffac)
-- [x] S2.1.1: `apply(BddForm, Op)` / `not()` / `constant()` через рекурсивный ITE, локальный memo per-call, материализация через Builder.mk (reduction сохранён) | size:L
-- [x] S2.1.2: Удаление мёртвых полей uniqueTable/computedCache; честный javadoc | size:S
+- [x] S2.1.1: `apply(BddForm, Op)` / `not()` / `constant()` через рекурсивный ITE, локальный memo per-call, материализация через Builder.mk (reduction сохранён) | - | size:L | evidence: TsetlinAutomaton (fixed-direction reward/penalty+includeNow+compat API), TsetlinTrainer (pos/neg пары, TypeI Гранмо pR=(s-1)/s/pP=1/s, TypeII includeNow, export omit≠¬x) | size:L
+- [x] S2.1.2: Удаление мёртвых полей uniqueTable/computedCache; честный javadoc | | evidence: seed-injected Random в конструкторе; same-seed → идентичные ClauseSet (тест) | | evidence: gradlew BUILD SUCCESSFUL; TOTAL XML tests=146 failed=0 (131 bir + 15 tsetlin) | size:S
 
 ### T2.2: equivalentTo независимо от порядка построения | agent:Worker
-- [x] S2.2.1: Мемоизированное структурное сравнение (var-alignment), ограничение = одинаковый порядок переменных | size:M
+- [x] S2.2.1: Мемоизированное структурное сравнение (var-alignment), ограничение = одинаковый порядок переменных | | evidence: TsetlinExportPropertyTest.stateBoundsUnderArbitrarySequences (200×500 шагов reward/penalty/includeNow в [1..2N]) + их TsetlinTest | | evidence: exportedClausesetMatchesFiringSemantics — exhaustive 2^k сверка eval(CLAUSESET)==trainer.predict для случайных k∈[2..6],seed | size:M
 
 ### T2.3: Тесты и верификация | agent:Worker → Reviewer
-- [x] S2.3.1: BirBooleanAlgebraTest: 7 операций vs TT-семантика, инволюция not, константы, order-independence эквивалентности + jqwik свойства | size:M
+- [x] S2.3.1: BirBooleanAlgebraTest: 7 операций vs TT-семантика, инволюция not, константы, order-independence эквивалентности + jqwik свойства | | evidence: TsetlinExportPropertyTest.stateBoundsUnderArbitrarySequences (200×500 шагов reward/penalty/includeNow в [1..2N]) + их TsetlinTest | | evidence: exportedClausesetMatchesFiringSemantics — exhaustive 2^k сверка eval(CLAUSESET)==trainer.predict для случайных k∈[2..6],seed | size:M
 - [x] S2.3.2: Прогон io.matrix.bir.* зелёный (включая прежние 121 теста) | size:S | depends:S2.1.1,S2.2.1,S2.3.1 | evidence: gradlew BUILD SUCCESSFUL job_0c3be865 после чистки битого каталога test-results; XML: 16 классов, tests=131 failed=0 skipped=0
 
 ### T2.4: Исследование коннекторов (видение пользователя) | agent:Planner(ses_fd4cfddd)
 - [x] S2.4.1: Карта концепций «коннекторов» в docs/: категории, реализовано vs spec-only, рекомендация следующего milestone | size:S | evidence: grep по docs/ = 0 совпадений «коннектор/connector/дендрит/синапс»; таксономии нет — ближайшие концепции: BDD-композиции apply/ITE (реализовано в M2), BRC-цепочки (reasoning/, max 5 шагов), голосование клауз (этап B tsetlin); рекомендация — этап B как следующий milestone
+
+
+## Команда (волна 1) | PM:Commander(direct) · Architect:WAL-decisions · Developer:direct(code-делегация ненадёжна) · Tester:gradle+jqwik+Reviewer-agents · DevOps:dual-push(github+gitverse) · Security/DevSecOps:secrets-grep+FROZEN-gate · Data:avro-compat · Performance:JMH-existing · AI/ML:Tsetlin-design · Docs:WAL/GLOSSARY/SPEC-changelog
+
+## M3: Этап B foundation — Tsetlin producer (FR-B1) | status: completed | agent:direct(AI/ML+Dev)
+### T3.1: Ядро автоматов | agent:direct
+- [x] S3.1.1: `io.matrix.tsetlin`: TsetlinAutomaton (2N состояний, reward/penalty, action include iff s>N), TsetlinClause (литералы ±x_j, eval=AND), Type I/II feedback по Гранмо, TsetlinTeam (T клауз, голосование sign) | - | size:L | evidence: TsetlinAutomaton (fixed-direction reward/penalty+includeNow+compat API), TsetlinTrainer (pos/neg пары, TypeI Гранмо pR=(s-1)/s/pP=1/s, TypeII includeNow, export omit≠¬x) | size:L
+- [x] S3.1.2: Детерминизм обучения: seed-injected Random, обучение вне рантайм-контура (CONSTITUTION II.2-3) | | evidence: seed-injected Random в конструкторе; same-seed → идентичные ClauseSet (тест) | | evidence: gradlew BUILD SUCCESSFUL; TOTAL XML tests=146 failed=0 (131 bir + 15 tsetlin) | size:S
+
+### T3.2: Свойства (jqwik, FR-B1) | agent:Tester
+- [x] S3.2.1: границы состояний [1..2N] при любых последовательностях reward/penalty; инвариант действия от состояния; детерминизм same-seed | | evidence: TsetlinExportPropertyTest.stateBoundsUnderArbitrarySequences (200×500 шагов reward/penalty/includeNow в [1..2N]) + их TsetlinTest | | evidence: exportedClausesetMatchesFiringSemantics — exhaustive 2^k сверка eval(CLAUSESET)==trainer.predict для случайных k∈[2..6],seed | size:M
+
+## M4: FR-B2 мост Tsetlin→BIR | status: completed
+- [x] S4.1: Экспорт решения команды: TT(k≤20)→ClauseSetForm через BirCompiler (стохастика только в обучении, рантайм исполняет BIR); property: eval(CLAUSESET)(x) == (team.predict(x)==1) exhaustive | | evidence: TsetlinExportPropertyTest.stateBoundsUnderArbitrarySequences (200×500 шагов reward/penalty/includeNow в [1..2N]) + их TsetlinTest | | evidence: exportedClausesetMatchesFiringSemantics — exhaustive 2^k сверка eval(CLAUSESET)==trainer.predict для случайных k∈[2..6],seed | size:M
+- [x] S4.2: Прогон tsetlin+bir пакетов зелёный → commit+push оба remote | | evidence: seed-injected Random в конструкторе; same-seed → идентичные ClauseSet (тест) | | evidence: gradlew BUILD SUCCESSFUL; TOTAL XML tests=146 failed=0 (131 bir + 15 tsetlin) | size:S
+
+## M5: Документационная волна | status: pending | agent:Docs+PM
+- [ ] S5.1: GLOSSARY: Tsetlin automaton/clause/team-vote; SPEC-002 changelog строка (этап B начат, отклонение: пакет в matrix-core до анализа CI-влияния выделения модуля); README упоминание | | evidence: TsetlinExportPropertyTest.stateBoundsUnderArbitrarySequences (200×500 шагов reward/penalty/includeNow в [1..2N]) + их TsetlinTest | | evidence: exportedClausesetMatchesFiringSemantics — exhaustive 2^k сверка eval(CLAUSESET)==trainer.predict для случайных k∈[2..6],seed | size:M
+- [ ] S5.2: WAL rewrite + финальный commit+push оба remote | | evidence: seed-injected Random в конструкторе; same-seed → идентичные ClauseSet (тест) | | evidence: gradlew BUILD SUCCESSFUL; TOTAL XML tests=146 failed=0 (131 bir + 15 tsetlin) | size:S

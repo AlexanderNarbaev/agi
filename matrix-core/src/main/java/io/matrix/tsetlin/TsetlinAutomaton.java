@@ -1,57 +1,79 @@
 package io.matrix.tsetlin;
 
 /**
- * Tsetlin Automaton — 2N-state learning automaton for clause construction.
+ * Single Tsetlin automaton over {@code 2N} states.
  *
- * <p>Per SPEC-002 §2 / DESIGN-04: Tsetlin automata are the primary learning
- * mechanism for BIR production. Each automaton has 2N states: states 1..N
- * mean "exclude literal", states N+1..2N mean "include literal".
- *
- * <p>Feedback types:
- * <ul>
- *   <li>Type I (recognition): reward inclusion of literals that appear in
- *       positive examples; penalize inclusion of literals that don't.</li>
- *   <li>Type II (rejection): penalize inclusion of literals that appear in
- *       negative examples.</li>
- * </ul>
- *
- * <p>Monotonicity: rewards never decrease the automaton's state, penalties
- * never increase it — guaranteeing convergence to a stable configuration.
+ * <p>State space {@code [1..2N]}: states {@code 1..N} mean the corresponding
+ * literal is EXCLUDED from its clause, states {@code N+1..2N} mean INCLUDED.
+ * Directions are fixed by meaning: {@link #reward()} always moves one step
+ * toward INCLUDE, {@link #penalty()} one step toward EXCLUDE;
+ * {@link #includeNow()} jumps to the first include state (Type II feedback,
+ * Granmo-style).
  */
 public final class TsetlinAutomaton {
 
-    private final int nStates; // N (half of 2N)
-    private int state;         // current state 1..2N
+    private final int n;
+    private int state;
 
-    public TsetlinAutomaton(int nStates) {
-        if (nStates < 1) throw new IllegalArgumentException("nStates >= 1");
-        this.nStates = nStates;
-        this.state = nStates; // start at boundary (exclude)
+    /** Starts at state {@code n} (top of the exclude side). */
+    public TsetlinAutomaton(int n) {
+        this(n, n);
+    }
+
+    /** @param n half-state count ({@code n >= 1}); total states = 2n */
+    public TsetlinAutomaton(int n, int initialState) {
+        if (n < 1) throw new IllegalArgumentException("n >= 1");
+        if (initialState < 1 || initialState > 2 * n) {
+            throw new IllegalArgumentException("initialState in 1.." + (2 * n));
+        }
+        this.n = n;
+        this.state = initialState;
     }
 
     public int state() { return state; }
-    public int nStates() { return nStates; }
 
-    /** Current action: true = include literal, false = exclude. */
-    public boolean action() { return state > nStates; }
+    public boolean includes() { return state > n; }
 
-    /** Reward: move toward inclusion. */
+    /** One step toward INCLUDE (saturates at {@code 2n}). */
     public void reward() {
-        if (state < 2 * nStates) state++;
+        state = Math.min(2 * n, state + 1);
     }
 
-    /** Penalize: move toward exclusion. */
-    public void penalize() {
-        if (state > 1) state--;
+    /** One step toward EXCLUDE (saturates at {@code 1}). */
+    public void penalty() {
+        state = Math.max(1, state - 1);
     }
 
-    /** Type I feedback (recognition): reward if literal present, penalize if absent. */
+    /** Jump straight to the first INCLUDE state (Type II feedback). */
+    public void includeNow() {
+        state = n + 1;
+    }
+
+    // ─── Compatibility aliases (legacy producer/test API) ───
+
+    /** @return {@link #includes()} */
+    public boolean action() { return includes(); }
+
+    /** Alias for {@link #penalty()}. */
+    public void penalize() { penalty(); }
+
+    /**
+     * Flat Type I: literal present ⇒ reinforce toward include
+     * ({@code reward()}), absent ⇒ push toward exclude ({@code penalty()}).
+     */
     public void feedbackTypeI(boolean literalPresent) {
-        if (literalPresent) reward(); else penalize();
+        if (literalPresent) reward(); else penalty();
     }
 
-    /** Type II feedback (rejection): penalize if literal present in negative example. */
-    public void feedbackTypeII(boolean literalPresent) {
-        if (literalPresent) penalize();
+    /**
+     * Flat Type II: literal present in a negative example and currently
+     * included ⇒ drop it; absent and excluded ⇒ pull in now.
+     */
+    public void feedbackTypeII(boolean literalPresentInNegative) {
+        if (literalPresentInNegative) {
+            if (includes()) penalty();
+        } else if (!includes()) {
+            includeNow();
+        }
     }
 }

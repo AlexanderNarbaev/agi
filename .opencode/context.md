@@ -1,28 +1,28 @@
 # MATRIX Project Context - Session State
 
 ## Current Status
-- **Mission**: булева машина (BIR) по документации; прямой режим (code-делегация агентов ненадёжна)
-- **M1 (SPEC-002 этап A)**: ✅ VERIFIED
-- **M2 (BDD-алгебра WAL#2+#3)**: ✅ VERIFIED — todo.md 22/22 [x], status.md обновлён, WAL.md обновлён (пункты #2/#3 закрыты, computedCache-issue удалён, добавлен блок «Закрытие WAL #2+#3 2026-08-23»)
-- **Тесты**: полный пакет bir BUILD SUCCESSFUL (job_0c3be865): 16 классов, tests=131, failed=0, skipped=0 (121 старых + 10 BirBooleanAlgebraTest)
+- **Mission**: волны команды до полной реализации документированных функций; каждая волна = commit+push в оба remote (github origin + gitverse) ✅ настроено и работает
+- **Wave 0 DONE**: commit f2b8874 (M1+M2, 122 файла) запушен в ОБА remote. Тесты: bir 131/0/0 зелёные
+- **Wave 1 DONE**: план M3-M5 записан в todo.md (7 unchecked: S3.1.1,S3.1.2,S3.2.1,S4.1,S4.2,S5.1,S5.2); роли команды зафиксированы в todo.md
 
-## Остался ровно один шаг миссии
-1. **Milestone commit всего рабочего дерева** (проектный протокол AGENTS.md «Заверши сессию milestone-коммитом»):
-   `git add -A && git commit -m "feat(bir): SPEC-002 stage A closure + BDD boolean algebra & canonical equivalence (WAL #2/#3)"`
-   Включает: изменения M1 (bir core+tests+avro+доки), BddForm.java (315 строк, Op/apply/not/constant/equivalentTo), BirBooleanAlgebraTest.java (вариант с record TtPair), .opencode/{todo,status,context}.md, WAL.md, docs/research/notes/BIR-THEORY-scan.md
-   Проверить перед коммитом: git status не содержит секретов (.env и т.п.)
+## Wave 2 IN PROGRESS — Tsetlin (FR-B1), конфликт разрешается
+- Пакет io.matrix.tsetlin содержит РОЙ файлов от гонки агентов + мои:
+  - `TsetlinAutomaton.java` — НА ДИСКЕ ИХ версия + мой дубль-блок методов в конце → **СИНТАКСИЧЕСКАЯ ОШИБКА (лишняя `}`), надо переписать файл ЦЕЛИКОМ** как надмножество API:
+    ctor( int n ) init state=n; ctor(int n,int initialState) с проверкой [1..2N]; state(); includes(); reward() (вглубь стороны); penalty() (к противоположной); includeNow() (state=n+1); compat: action()==includes, penalize()==penalty, feedbackTypeI(present){present?reward:penalty}, feedbackTypeII(present){present&&includes→penalty; !present&&!includes→includeNow}
+  - `TsetlinClause.java` — МОЙ, дублирует логику Trainer → **УДАЛИТЬ**
+  - `TsetlinTrainer.java` — их версия с СЕМАНТИЧЕСКИМ БАГОМ экспорта (excluded→neg-mask вместо omit; evaluate игнорирует ¬x) → **ПЕРЕПИСАТЬ**: публичный API сохранить (ctor(int inputBits,int nClauses,int nStates,Random), trainStep(long[] words,boolean pos), trainBatch(long[][],boolean[],int epochs), toClauseSet(String)→ClauseSetForm, clauseCount(), inputBits()); внутри на клаузу пары автоматов pos[j]/neg[j] (init spread как у них: offset=(seed+31j)%n, neg offset+n/2); evaluate: pos-incl&&bit=0→false, neg-incl&&bit=1→false; TypeI(target1,fired): included→reward w.p.(s-1)/s, excluded&&litTrue→penalty w.p.1/s (s фикс 8.0 или поле); TypeII(target0,fired): excluded&&litFalse→includeNow(); export маски: pos-bit=included pos, neg-bit=included neg, omitted иначе
+  - `WisardProducer.java` + тесты `Exp002ComparisonTest/Exp003ProducerComparisonTest/TsetlinTest` — их, трогать НЕ надо (после фикса Automaton/Trainer должны компилироваться)
+- После правок: `gradlew :matrix-core:test --tests "io.matrix.tsetlin.*"` → зелёный; затем добавить МОЙ TsetlinExportPropertyTest (jqwik: same-seed детерминизм; bounds-fuzz; export≡fires exhaustive k≤6) — S3.2.1/S4.1
+
+## Дальше
+- S4.2: прогон tsetlin+bir → commit+push оба remote
+- Wave 3 (S5.x): GLOSSARY (Tsetlin automaton/clause/vote), SPEC-002 changelog строка (этап B начат; отклонение: пакет io.matrix.tsetlin в matrix-core, выделение модуля — после анализа CI; FROZEN не тронуты), README строка; WAL rewrite; финальный commit+push
+- Затем следующий фронт из WAL «Следующее действие» (Критерий A эпик / EXP-002 пререгистрация)
 
 ## Key IDs / факты
-- Jobs: job_0c3be865 зелёный финал; job_e8b54b5d/job_fcace48b — инфра-сбой NoSuchFileException in-progress-results-generic.bin (битый test-results каталог, устранён переносом в /tmp/opencode/stale-testresults/)
-- Агенты: Worker task_024dfa7d FAIL; Reviewer'ы task_083af1bd/task_9364db4a/task_e61fb9bb завершены (9364db4a дедупнул BddForm до 315 строк + переписал мой тест на TtPair — API цел); Planner task_c3af32df результат утерян → исследование «коннекторов» сделано напрямую grep'ами: таксономии в docs/ нет, ближайшие концепции = apply/ITE композиции, BRC, голосование клауз
-
-## Next Front (после коммита, новые сессии)
-1. Критерий A: миграция 61 call-site (эпик, дизайн кэширования форм обязателен — наив = 2^20 eval'ов)
-2. Этап B: matrix-tsetlin FR-B1/B2 + EXP-002 (пререгистрация бинаризации ДО запуска)
-3. Долги: H-007 embedding, H-008 пререгистрация
-
-## Constraints
-- FROZEN: ethics/, CONSTITUTION.md, существующие avro, workflows; K_MAX=20; coverage ≥82%; Java-only; детерминизм
-- Полный gradle test OOM — батчами; отвечать компактно (anomaly-протокол)
+- Remote: github.com:AlexanderNarbaev/agi (origin), gitverse.ru:AlexandrNarbaev/agi — оба пушатся
+- Инфра: полный gradle test OOM (батчи); битый test-results каталог лечится переносом в /tmp; jqwik генераторы seeded
+- Агент-гонки: code-делегации создают параллельные файлы молча (task_9364db4a правил BddForm/тест; кто-то создал tsetlin-рой) — после каждой делегации сверять git status; приоритет прямому коду
+- Constraints: FROZEN ethics/CONSTITUTION/avro/workflows; K_MAX≤20; coverage ≥82%; Java-only; seeded-Random только вне рантайм-контура (обучение)
 
 [COMPACTION_COMPLETE]
