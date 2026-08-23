@@ -6,6 +6,7 @@
 - Workers: 0 active (code-делегация ненадёжна — прямой режим)
 - Verification Strategy: tool-evidence на каждый пункт (JUnit XML, grep, git diff)
 - Execution Status: pass
+- Wave 7: canonical Granmo TM + exact distillation; EXP-002 pre-stage honestly NOT reproduced (3 attempts documented in card); tsetlin+bir green
 - Waves+ : Критерий A wave 1 done — commit 3d23aa2 (rebased on parallel docs 2ac6684); оба remote
 - Tests: 179 green (cluster+bir прогон)
 - Waves: 0..3 done (commits f2b8874, 4e3744a, 515c0ae; оба remote)
@@ -26,6 +27,10 @@ M1+M2 CONCLUDED — SPEC-002 этап A + WAL #2/#3 закрыты и вериф
 
 ## Known Issues
 - gitverse main под PR-правилом, но пуш проходит через bypass (владельческий токен); LSP фантомные ошибки в tsetlin — верить gradlew
+
+## Known Issues
+- gitverse push timeouts persist; origin primary
+- TM convergence open (see EXP-002 card attempt-3 notes: empty-clause equilibrium, contradiction guard added)
 
 ## Next Front (зафиксировано в WAL)
 1. Критерий A — эпик отдельных сессий (61 call-site, нужен дизайн кэширования форм)

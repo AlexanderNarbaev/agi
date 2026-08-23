@@ -56,8 +56,11 @@ public final class TsetlinTrainer {
             var pair = new TsetlinAutomaton[2][inputBits];
             for (int j = 0; j < inputBits; j++) {
                 int off = (int) (((seed >>> 4) + 31L * j + 61L * c) % nStates);
-                pair[0][j] = new TsetlinAutomaton(nStates, 1 + off);
-                pair[1][j] = new TsetlinAutomaton(nStates, 1 + ((off + nStates / 2) % nStates));
+                // Complementary init: x_j included, ¬x_j excluded — the
+                // clause starts as the all-positive conjunction (fires on its
+                // full-true minterm) instead of a contradictory never-fire.
+                pair[0][j] = new TsetlinAutomaton(nStates, nStates + 1);
+                pair[1][j] = new TsetlinAutomaton(nStates, 1);
             }
             clauses.add(pair);
             polarity.add(c % 2 == 0 ? +1 : -1);
@@ -102,12 +105,31 @@ public final class TsetlinTrainer {
     }
 
     private void typeOneGrowth(TsetlinAutomaton[][] cl, long x) {
-        // Type Ib: pull excluded-but-true literals toward inclusion (weak).
+        // Type Ib (non-firing, target=1): pull excluded-but-TRUE literals
+        // toward inclusion AND push included-but-FALSE literals out — without
+        // the second row a clause can never re-specialize onto a new minterm
+        // (it would grow a contradicting literal and die).
         double pP = 1.0 / S;
         for (int j = 0; j < inputBits; j++) {
             boolean v = bit(x, j);
-            if (!cl[0][j].includes() && v && rng.nextDouble() < pP) cl[0][j].reward();
-            if (!cl[1][j].includes() && !v && rng.nextDouble() < pP) cl[1][j].reward();
+            if (!v && rng.nextDouble() < pP) {
+                if (!cl[0][j].includes()) includeSafe(cl, 0, j);
+                if (cl[1][j].includes()) cl[1][j].penalty();
+            } else if (v && rng.nextDouble() < pP) {
+                if (!cl[1][j].includes()) includeSafe(cl, 1, j);
+                if (cl[0][j].includes()) cl[0][j].penalty();
+            }
+        }
+    }
+
+    /** Contradiction-safe inclusion: if the opposite literal is included,
+     *  push IT out instead of creating an always-false x∧¬x pair. */
+    private void includeSafe(TsetlinAutomaton[][] cl, int polIdx, int j) {
+        var lit = cl[polIdx][j];
+        var opp = cl[1 - polIdx][j];
+        if (!lit.includes()) {
+            if (opp.includes()) opp.penalty();
+            else lit.includeNow();
         }
     }
 
@@ -116,8 +138,8 @@ public final class TsetlinTrainer {
         // off for this input without destroying its remaining coverage.
         for (int j = 0; j < inputBits; j++) {
             boolean v = bit(x, j);
-            if (!cl[0][j].includes() && !v) { cl[0][j].includeNow(); return; }
-            if (!cl[1][j].includes() && v) { cl[1][j].includeNow(); return; }
+            if (!cl[0][j].includes() && !v) { includeSafe(cl, 0, j); return; }
+            if (!cl[1][j].includes() && v) { includeSafe(cl, 1, j); return; }
         }
     }
 

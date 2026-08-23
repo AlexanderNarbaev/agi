@@ -74,7 +74,7 @@
 - [x] S6.6.1: NeuronLayer.evaluate → BIR (ленивый weak-кэш форм на нейрон, нормализация слов); покрывает MultiBrainEnsemble/NeuralTextGenerator/act()-контур | size:M | evidence: io.matrix.neuron.* 244/0 BUILD SUCCESSFUL
 
 ### T6.7: Волна 7 Granmo-TM + предэтап EXP-002 | agent:direct
-- [x] S6.7.1: Канонический TM (±голосование, TypeIa/Ib/II), дистилляция решения; предэтап EXP-002 зафиксирован как not-reproduced (@Disabled гарнесс, числа в карточке); tsetlin зелёный | size:L | evidence: TsetlinGranmoReferenceTest @Disabled + HYPOTHESES правка + BUILD SUCCESSFUL
+- [x] S6.7.1: Канонический TM (±голосование, TypeIa/Ib/II), дистилляция решения; предэтап EXP-002 зафиксирован как not-reproduced (@Disabled гарнесс, числа в карточке); tsetlin зелёный | size:L | evidence: canonical voting trainer + includeSafe guard + @Disabled harness + HYPOTHESES attempts ×3 + tsetlin/bir BUILD SUCCESSFUL
 
 ### T6.5: Волна 5 классификация целей | agent:Architect
 - [x] S6.5.1: PretrainedLoader → producer-side (legacy ok); evaluateTreeFitness → training-side (вне Критерия A); runtime-эпик = NeuronLayer/HierarchicalBrain — следующая сессия | size:S | evidence: правки реестра DESIGN-14
