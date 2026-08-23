@@ -43,7 +43,8 @@
 1. **Критерий A** — продолжение по реестру DESIGN-14: api/MatrixResource → bridge/NeuroSymbolicBridge → explain/* → PretrainedLoader; AgentBrainService.evaluateTreeFitness только с кэшем форм; FrozenAxiomNeuron — FROZEN, не трогать
 2. **Критерий A закрыт для булевых рантайм-потребителей** (реестр DESIGN-14 полный: 5 волн ✅ + 3 переклассификации ⏭️ + 1 🔒FROZEN); затем **EXP-002 (FR-B3)**: пререгистрировать метод бинаризации входа в HYPOTHESES.md ДО запуска сравнения форм; затем карточка running
 3. Долги этапа 1: H-007 HybridBooleanRag embedding (running), H-008 MPDT batch mode (нужна пререгистрация)
-4. WisardProducer (H-010): привести к единому контракту продюсеров с Trainer (экспорт BIR + property эквивалентности) — мелкая волна
+4. ✅ WiSARD унифицирован (wave 9: toDecisionClauseSet + exhaustive parity)
+5. **Интеграции из атласа wave-27** (GLOSSARY §101–103): JTMS/ATMS → контур LineageLedger/обоснований BRC (откат выводов при изменении фактов); AC-3 → предобработчик ограничений для ExecutablePlanner; EBL → кандидат-карточка HYPOTHESES (переиспользование объяснений BooleanExplainability как обучающего сигнала)
 
 ## Известные проблемы
 - **gitverse: main под правилом PR** — пуш печатает «Bypassed rule violations… protected ref», но обновление проходит (токен владельца с bypass); фактически dual-push работает, однако правило чужое для флоу проекта — при появлении отказа перейти на PR-флоу
