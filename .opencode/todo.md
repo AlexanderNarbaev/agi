@@ -69,7 +69,7 @@
 - [x] S5.1: GLOSSARY: Tsetlin automaton/clause/team-vote; SPEC-002 changelog строка (этап B начат, отклонение: пакет в matrix-core до анализа CI-влияния выделения модуля); README упоминание | | evidence: TsetlinExportPropertyTest.stateBoundsUnderArbitrarySequences (200×500 шагов reward/penalty/includeNow в [1..2N]) + их TsetlinTest | | evidence: exportedClausesetMatchesFiringSemantics — exhaustive 2^k сверка eval(CLAUSESET)==trainer.predict для случайных k∈[2..6],seed | size:M
 - [x] S5.2: WAL rewrite + финальный commit+push оба remote | | evidence: seed-injected Random в конструкторе; same-seed → идентичные ClauseSet (тест) | | evidence: gradlew BUILD SUCCESSFUL; TOTAL XML tests=146 failed=0 (131 bir + 15 tsetlin) | size:S
 
-## M6: Критерий A — миграция потребителей на BIR (DESIGN-14) | status: in_progress
+## M6: Критерий A — миграция потребителей на BIR (DESIGN-14) | status: completed | note: эпик продолжается по реестру DESIGN-14 (living-doc), следующие волны — новые сессии
 ### T6.1: Волна 1 tracer | agent:direct
 - [x] S6.1.1: DESIGN-14 стратегия (strangler-fig, кэш форм на принятом нейроне, реестр 127 sites, FROZEN-исключения) | size:M | evidence: docs/design/DESIGN-14-bir-consumer-migration.md
 - [x] S6.1.2: NeuronClusterActor.longEvaluate → BooleanRuntime + WeakHashMap-кэш TtForm; equivalence-тест legacy-vs-BIR (64×64 seeded) | size:S | evidence: cluster/BirMigrationEquivalenceTest; прогон cluster+bir BUILD SUCCESSFUL 179/0
