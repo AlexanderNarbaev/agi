@@ -32,7 +32,7 @@ import java.util.Random;
  */
 public final class TsetlinTrainer {
 
-    private static final double S = 8.0;
+    private static final double S = 4.0;
 
     private final int inputBits;
     private final int nStates;
@@ -59,8 +59,8 @@ public final class TsetlinTrainer {
                 // Complementary init: x_j included, ¬x_j excluded — the
                 // clause starts as the all-positive conjunction (fires on its
                 // full-true minterm) instead of a contradictory never-fire.
-                pair[0][j] = new TsetlinAutomaton(nStates, nStates + 1);
-                pair[1][j] = new TsetlinAutomaton(nStates, 1);
+                pair[0][j] = new TsetlinAutomaton(nStates, nStates + 1); // x_j in
+                pair[1][j] = new TsetlinAutomaton(nStates, 1);           // ¬x_j out
             }
             clauses.add(pair);
             polarity.add(c % 2 == 0 ? +1 : -1);
@@ -82,24 +82,26 @@ public final class TsetlinTrainer {
 
     private void typeOne(TsetlinAutomaton[][] cl, long x) {
         // Canonical Granmo Type Ia rows (fired on matching target):
-        //   lit TRUE  & included → Reward w.p. (s-1)/s   (deepen)
+        //   lit TRUE  & included → Reward w.p. (s-1)/s   (deepen include)
         //   lit TRUE  & excluded → Penalty w.p. 1/s      (grow toward include)
         //   lit FALSE & included → Penalty w.p. 1/s      (push out)
         //   lit FALSE & excluded → Reward w.p. (s-1)/s   (deepen exclusion)
+        // Unified: consistency (literal-value == inclusion-state) ⇒ Reward,
+        // mismatch ⇒ Penalty.
         double pR = (S - 1.0) / S, pP = 1.0 / S;
         for (int j = 0; j < inputBits; j++) {
             boolean v = bit(x, j);
-            var xp = cl[0][j]; var xn = cl[1][j];
-            if (v) {
-                if ((xp.includes() && rng.nextDouble() < pR)
-                        || (!xp.includes() && rng.nextDouble() < pP)) xp.penalty();
-                if ((xn.includes() && rng.nextDouble() < pP)
-                        || (!xn.includes() && rng.nextDouble() < pR)) xn.reward();
+            boolean incX = cl[0][j].includes();
+            if (incX == v) {
+                if (rng.nextDouble() < pR) cl[0][j].reward();
             } else {
-                if ((xn.includes() && rng.nextDouble() < pR)
-                        || (!xn.includes() && rng.nextDouble() < pP)) xn.penalty();
-                if ((xp.includes() && rng.nextDouble() < pP)
-                        || (!xp.includes() && rng.nextDouble() < pR)) xp.reward();
+                if (rng.nextDouble() < pP) cl[0][j].penalty();
+            }
+            boolean incN = cl[1][j].includes();
+            if ((!v) == incN) {
+                if (rng.nextDouble() < pR) cl[1][j].reward();
+            } else {
+                if (rng.nextDouble() < pP) cl[1][j].penalty();
             }
         }
     }
@@ -112,12 +114,13 @@ public final class TsetlinTrainer {
         double pP = 1.0 / S;
         for (int j = 0; j < inputBits; j++) {
             boolean v = bit(x, j);
+            // Grow the literal that is TRUE under x, push the FALSE one out:
             if (!v && rng.nextDouble() < pP) {
-                if (!cl[0][j].includes()) includeSafe(cl, 0, j);
-                if (cl[1][j].includes()) cl[1][j].penalty();
+                if (!cl[1][j].includes()) includeSafe(cl, 1, j);   // ¬x_j true
+                if (cl[0][j].includes()) cl[0][j].penalty();       // x_j false
             } else if (v && rng.nextDouble() < pP) {
-                if (!cl[1][j].includes()) includeSafe(cl, 1, j);
-                if (cl[0][j].includes()) cl[0][j].penalty();
+                if (!cl[0][j].includes()) includeSafe(cl, 0, j);   // x_j true
+                if (cl[1][j].includes()) cl[1][j].penalty();       // ¬x_j false
             }
         }
     }

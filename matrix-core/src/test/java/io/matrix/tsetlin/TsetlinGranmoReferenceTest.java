@@ -22,7 +22,7 @@ import static org.assertj.core.api.Assertions.within;
  *
  * <p>All runs are seeded and therefore exactly reproducible.
  */
-@Disabled("EXP-002 pre-stage open: attempts 3-6 logged; dedicated convergence session required")
+@Disabled("EXP-002 pre-stage open: attempts 3-8 logged; tug-of-war equilibrium is structural")
 class TsetlinGranmoReferenceTest {
 
     private static double trainAccuracy(int k, long[][] inputs, boolean[] labels,
