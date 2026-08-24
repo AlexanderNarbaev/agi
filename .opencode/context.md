@@ -1,29 +1,22 @@
-# MATRIX Project Context - Session State (актуальный чекпойнт)
+# MATRIX Project Context - Session State (актуальный)
 
 ## Current Status
-- **Сессия**: 30 волн, ~6.5ч. Всё в origin+gitverse, дерево чистое. Критерий A ЗАКРЫТ; этап B: toy-гейт green, синтетика k≥8 — открытый frontier (attempt-15 empty-collapse диагностирован)
-- **Wave 30 ЗАВЕРШЕНА**: арифметическая модель автомата (счётчик [0..2N], include⟺≥N, init=0 глубокое исключение — точный порт tm_initialize эталона). Полный регресс **377/0**, оба remote
-- TsetlinTest переписан под счётную модель (gradual walk, saturation, includeNow=n); TsetlinExportPropertyTest границы [0..2n]
+- Сессия: ~33 волны, 6.5ч+. Всё в origin+gitverse, дерево чистое. Критерий A ЗАКРЫТ; этап B: продюсеры работают, toy-гейт green; frontier = TM-сходимость k≥8 (attempts 3–21 задокументированы)
+- **Wave 33 АКТИВНА**: эталон найден — **cair/tmu** (★175, чистый python, современный TM). План: fetch lib/tmu/models/…tsetlin_machine.py → дословный порт update-loop → пробы XOR/MUX → закрыть frontier
 
-## Точная модель тренера (текущая, каноническая)
-- Автомат: счётчик; inc()=+1 cap 2n (к include), dec()=−1 floor 0 (к exclude); includes⟺state≥n; includeNow=n; init RANDOM: rawState uniform [1..2n]; COMPLEMENTARY: x_j=2n? нет — pair[0]=n+1(pair0 включён), pair[1]=1
-- init по умолчанию RANDOM (reference-style) — это дало прорыв toy-сходимости (attempt-9)
-- TypeIa (fired+target): consistency⇒reward(inc) БЕЗУСЛОВНО (D2 boost); mismatch⇒dec w.p. 1/s
-- Ib (non-fired+target): dec обоих рядов w.p. 1/s (pure decay, БЕЗ pull-in)
-- TypeII (fired+против target): batch includeNow ВСЕХ excluded-противоречащих (без guard)
-- D1' гейтинг: per-clause p=(T±vote)/2T по собственной цели (tBit)
-- predict = Σ polarity·fires > 0; дистилляция точная через TT→BirCompiler
+## Немедленный шаг
+`timeout 60 curl -sL https://raw.githubusercontent.com/cair/tmu/master/lib/tmu/models/tsetlin_machine.py -o /tmp/opencode/ref_tmu.py && wc -l /tmp/opencode/ref_tmu.py`
+→ прочитать update-блок (inc/dec, feedback rules) → сравнить с нашей TsetlinTrainer построчно → порт отличий → пробы
 
-## Очередь следующей сессии
-1. **Синтетика на новой модели**: Exp002SyntheticBringUpTest (сейчас ENABLED, конфиги k≤12:c96/e400 EBL, k≥16:c128/e300; D3-cap unlimited) — прогон; при empty-collapse повторить трассировку dbgClause (метод удалён из тренера — вернуть временно или диагностировать через XML bacc)
-2. При зелёном: stage-1 закрыт → доменная фаза EXP-002 (Minecraft-перцепт, median-threshold бинаризация frozen)
-3. JTMS justification-graph; AC-3/CSP спека ExecutablePlanner; dependency upgrades
-4. Атлас §95–103 прочитать для REFLEX/Cauldron
+## Ключевое из уже сделанного аудита (не переоткрывать)
+- Наша семантика правил эквивалентна C-эталону по A1–A7 (audit-plan §3–4, verbatim там же); D1'/D2/D5/Ib-decay внедрены
+- Инициализация канона: ВСЕ автоматы на N−1 (граница исключения) — attempt-20 внедрил flip-вариант
+- Flat curve на k=8 DNF при зелёных toys — сигнатура «синхронного недонасыщения»; подозрение сместилось на тонкость Ib/gating взаимодействия при больших k
+- H-035 refuted-toy (пины EblH035Test XOR); MUX3 parked; Exp002SyntheticBringUpTest ENABLED (k=8..20 конфиги c=96..128)
+- Файлы: /tmp/opencode/{ref_tm.c,Sweep.java,Exp002Bench.java,TmBench.java}; removed-tests в /tmp/opencode/removed-tests/
 
-## Инфраструктура / факты
-- push цепочка: правки→commit→pull --rebase→push origin→push gitverse(timeout45); LFS locksverify off локально
-- rm заблокирован → mv в /tmp/opencode/; полный test OOM — батчи по пакетам; LSP фантомы tsetlin/* — верить gradlew
-- FROZEN: ethics/, CONSTITUTION.md, старые avro, workflows; K_MAX≤20; coverage≥82%; Java-only prod; seeded Random вне рантайма
-- Коммит последнего пуша: «wave 30 arithmetic-counter» + docs; статус main=origin=gitverse
+## Инфраструктура
+- push: правки→commit→pull --rebase→push origin→gitverse(timeout45); LFS off; rm→mv; полный test OOM — батчи; LSP фантомы — верить gradlew
+- FROZEN: ethics/, CONSTITUTION.md, старые avro, workflows; K_MAX≤20; coverage≥82%; Java-only prod
 
 [COMPACTION_COMPLETE]

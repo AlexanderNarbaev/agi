@@ -6,6 +6,7 @@
 - Workers: 0 active (code-делегация ненадёжна — прямой режим)
 - Verification Strategy: tool-evidence на каждый пункт (JUnit XML, grep, git diff)
 - Execution Status: pass
+- Session final: Критерий A closed; stage B producers + toy gate green; TM k>=8 generalization handed off with complete audit package (attempts 3-21, deltas D1-D5, verbatim C rows)
 - H-035 REFUTED-toy (pinned): EBL ≈×17 slower by examples on XOR under canonical trainer; card → refuted-toy; MUX3 perfect-bar parked
 - Suite: 157/0 (tsetlin+bir); full 377/0 ранее
 - Waves 16-20: EXP-002 pre-stage REPRODUCED (random init); H-035 EBL toy-win (5/5 vs 0/5); k>=8 generalization parked with numbers; JTMS/ATMS shipped; full tsetlin+bir green
