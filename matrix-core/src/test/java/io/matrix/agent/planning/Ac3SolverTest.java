@@ -79,4 +79,34 @@ class Ac3SolverTest {
         }
         }
     }
+    @Test
+    void cspBuilderFluentApi() {
+        var csp = CspBuilder.vars(3, 2)
+                .neq(0, 1)
+                .eq(1, 2)
+                .build();
+        assertThat(csp.solve()).isTrue();
+        // v0 != v1 == v2 ⇒ v0 != v2 transitively; AC-3 keeps 2 values per var here
+        for (var d : csp.domains()) assertThat(d.cardinality()).isEqualTo(2);
+    }
+
+    @Test
+    void cspBuilderForbidValuePrunes() {
+        var csp = CspBuilder.vars(1, 4).forbidValue(0, 0).forbidValue(0, 3).build();
+        assertThat(csp.solve()).isTrue();
+        var d = csp.domains()[0];
+        assertThat(d.get(0)).isFalse();
+        assertThat(d.get(3)).isFalse();
+        assertThat(d.get(1)).isTrue();
+        assertThat(d.get(2)).isTrue();
+    }
+
+    @Test
+    void cspBuilderContradictionDetected() {
+        var csp = CspBuilder.vars(2, 2)
+                .neq(0, 1)
+                .forbidValue(0, 0).forbidValue(0, 1) // v0 has no values left
+                .build();
+        assertThat(csp.solve()).isFalse();
+    }
 }

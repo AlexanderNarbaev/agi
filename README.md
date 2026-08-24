@@ -141,6 +141,20 @@ docker compose -f docker-compose.dev.yml up -d
 | AgentGenome | `agent/AgentGenome.java` | Genome-based evolution для конфигурации агента |
 | HierarchicalMemory | `memory/HierarchicalMemory.java` | 5-level memory с drift detection |
 
+### Этап B — продюсеры знаний и верифицируемая линия происхождения
+
+| Компонент | Файл | Описание |
+|-----------|------|----------|
+| TsetlinTrainer | `tsetlin/TsetlinTrainer.java` | Каноническая TM (голосование полярностей ±1, D1'/D2/Ib-decay/TypeII-batch) с точной дистилляцией решения в CLAUSESET/BIR |
+| WisardProducer | `tsetlin/WisardProducer.java` | WiSARD-продюсер (RAM-дискриминатор), тот же контракт дистилляции |
+| MedianThresholdBinarizer | `tsetlin/MedianThresholdBinarizer.java` | Frozen median-threshold бинаризация (EXP-002 протокол) |
+| Ac3Solver | `agent/planning/Ac3Solver.java` | AC-3 дуговая согласованность (Mackworth 1977) — предобработка планов |
+| LineageLedger + JTMS | `bir/LineageLedger.java` | Append-only hash-chain + RETRACT + justification-graph (ATMS labels, cycle-safe) |
+
+Протокол этапа B: продюсеры обучаются вне рантайм-контура (seeded-stochastic),
+решение дистиллируется ТОЧНО в BIR через truth-table компилятор; рантайм
+исполняет только артефакты. Детали: `docs/spec/SPEC-002`, `docs/research/HYPOTHESES.md` (EXP-002), `TM-CONVERGENCE-AUDIT-PLAN.md`.
+
 ### Память и события
 
 | Компонент | Файл | Описание |

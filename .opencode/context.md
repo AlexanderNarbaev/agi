@@ -20,3 +20,6 @@
 - FROZEN: ethics/, CONSTITUTION.md, старые avro, workflows; K_MAX≤20; coverage≥82%; Java-only prod
 
 [COMPACTION_COMPLETE]
+
+## DELTA (финал сессии)
+- Отчёт владельцу выдан (простые термины vs обычный ИИ); новых техфактов нет. Все чекпойнты выше актуальны.
