@@ -3,6 +3,7 @@ package io.matrix.tsetlin;
 import io.matrix.bir.ClauseSetForm;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
@@ -17,7 +18,7 @@ import static org.assertj.core.api.Assertions.within;
  * 5 seeds, exact distillation. Full comparison against MPDT-GA / BNN
  * baselines follows in stage 2 (see HYPOTHESES EXP-002 card).
  */
-@Disabled("EXP-002 stage-1 open: pipeline E2E works; k>=8 generalization of simplified TM rules insufficient (bAcc 0.54-0.67 no-noise) — needs reference-impl comparison; see card")
+@Disabled("stage-1 open: EBL helps toy-scale but not k>=8 generalization (0.59/0.50) — root cause is update-rule fidelity vs reference; see EXP-002 card")
 class Exp002SyntheticBringUpTest {
 
     /** Random R-term × L-literal DNF over k variables. Returns label fn. */
@@ -75,10 +76,15 @@ class Exp002SyntheticBringUpTest {
                 boolean clean = truth.test(x);
                 noisyY[i] = rnd.nextInt(10) == 0 ? !clean : clean; // 10% noise
             }
-            var tr = new TsetlinTrainer(k, 32, 16, new Random(seed));
+            var tr = new TsetlinTrainer(k, 48, 16, new Random(seed),
+                    TsetlinTrainer.InitStrategy.COMPLEMENTARY);
             long[][] trainX = java.util.Arrays.copyOf(allX, total - holdout);
             boolean[] trainY = java.util.Arrays.copyOf(noisyY, total - holdout);
-            tr.trainBatch(trainX, trainY, 300);
+            // H-035 EBL curriculum per epoch (counterfactual prioritization)
+            for (int e = 0; e < 120; e++) {
+                var pr = EblCurriculum.prioritize(trainX, trainY, tr::predict);
+                tr.trainBatch(pr.x(), pr.y(), 1);
+            }
 
             long[][] holdX = java.util.Arrays.copyOfRange(allX, total - holdout, total);
             double acc = balancedAccuracy(tr, holdX, null, truth);
