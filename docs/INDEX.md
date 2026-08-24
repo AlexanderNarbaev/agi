@@ -60,8 +60,8 @@
 
 | Документ | Назначение |
 |---|---|
-| [research/HYPOTHESES.md](research/HYPOTHESES.md) | Пререгистрированные гипотезы H-001…H-037 и карточки экспериментов EXP-001…EXP-037 |
-| [research/TASKS.md](research/TASKS.md) | Реестр задач на реализацию из кандидатов атласа (TASK-027…TASK-034): артефакт, приёмка, связи; дисциплина приёма/отчётности |
+| [research/HYPOTHESES.md](research/HYPOTHESES.md) | Пререгистрированные гипотезы H-001…H-038 и карточки экспериментов EXP-001…EXP-038 |
+| [research/TASKS.md](research/TASKS.md) | Реестр задач на реализацию из кандидатов атласа (TASK-027…TASK-036): артефакт, приёмка, связи; дисциплина приёма/отчётности |
 | [research/METRICS.md](research/METRICS.md) | Реестр метрик: формула, источник, команда, порог; теоретические и прототипные значения |
 | [research/ANALYSIS-laptop-feasibility.md](research/ANALYSIS-laptop-feasibility.md) | Пробелы/возможности + расчёт ноутбучной реализуемости vs локальные LLM |
 | [research/prototype/](research/prototype/) | Воспроизводимый прототип BIR (код + результаты, Python/numpy) |
