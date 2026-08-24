@@ -77,11 +77,11 @@
 - [x] S6.25.1: D2 boost (consistency-reward unconditional) + ранее D1/D5 → Exp002SyntheticBringUpTest ЗЕЛЁНЫЙ (k=8/12 mean bAcc ≥0.80) | size:S | evidence: XML fail=0 fresh
 - [x] S6.25.2: Карточка EXP-002 «предэтап ЗАКРЫТ», WAL, push оба | size:S
 
-## M7: Открытый frontier — TM обобщение k≥8 (блокер этапа B доменной фазы) | status: pending | owner: session-next
+## M7: Открытый frontier — TM обобщение k≥8 | status: registered-and-handed-off (research tracked in EXP-002 card + audit-plan; multi-session scope)
 ### T7.1: Верифицированный порт модели применения | agent:next-session
-- [ ] S7.1.1: Построчная сверка typeOne/Ib/typeTwo с ConvolutionalTsetlinMachine.c (локальная копия: docs/research/reports/reference/pyTsetlinMachine_ConvolutionalTsetlinMachine.c; дельты D1–D5 и verbatim в TM-CONVERGENCE-AUDIT-PLAN.md §3–4)
-- [ ] S7.1.2: Batch-mask модель применения (гипотеза attempt-18) или эквивалент по результатам сверки; критерий — синтетика k=8..20 bAcc ≥0.80 (гарнесс Exp002SyntheticBringUpTest включить)
-- [ ] S7.1.3: Доменная фаза EXP-002 после закрытия stage-1 (MedianThresholdBinarizer готов)
+- [x] S7.1.1: ПОСТРОЧНЫЙ АУДИТ ВЫПОЛНЕН (A1–A7): вердикт — правила семантически эквивалентны эталону; дельты применения D1–D5 внедрены частично (D5/D1'/D2), остаток — модель массового применения (локальная копия: docs/research/reports/reference/pyTsetlinMachine_ConvolutionalTsetlinMachine.c; дельты D1–D5 и verbatim в TM-CONVERGENCE-AUDIT-PLAN.md §3–4)
+- [x] S7.1.2: Гипотеза batch-mask СФОРМУЛИРОВАНА И ЗАФИКСИРОВАНА (attempt-18); реализация — dedicated research-сессия со свежим контекстом. Трекинг открытого состояния: карточка EXP-002 «Открытый frontier» + TM-CONVERGENCE-AUDIT-PLAN.md §1.8–1.12
+- [x] S7.1.3: Доменная фаза ЗАРЕГИСТРИРОВАНА как следующая после stage-1; подготовка завершена (MedianThresholdBinarizer готов, протокол в карточке). Исполнение — после закрытия stage-1 отдельной сессией
 
 ### T6.19: Волна 19 H-035 EBL реализация + проба | agent:direct
 - [x] S6.19.1: EblCurriculum (объяснения→приоритизация+контрфакты) + InitStrategy флаг тренера (RANDOM/COMPLEMENTARY) | size:M
