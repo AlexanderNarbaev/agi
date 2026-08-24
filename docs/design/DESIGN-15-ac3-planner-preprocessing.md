@@ -33,4 +33,4 @@ AC-3; пустой домен = CSP неразрешим ⇒ планировщ�
 - [x] Детерминизм (без Random/wall-clock)
 - [x] Инвариант дуговой согласованности после solve (property + unit)
 - [x] Детекция противоречия и пустых доменов
-- [ ] Интеграция с ExecutablePlanner (отдельная волна, SPEC)
+- [x] Интеграция с ExecutablePlanner: executeSteps(goal,steps,cspPrecheck) gate — fast-fail "unsatisfiable_preconditions"; тесты PlannerAc3GateTest

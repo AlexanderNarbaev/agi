@@ -70,6 +70,20 @@ public class ExecutablePlanner {
      * Execute a pre-built list of PlanStep items. Public for testing.
      */
     public ExecutionResult executeSteps(String goal, List<PlanStep> steps) {
+        return executeSteps(goal, steps, null);
+    }
+
+    /**
+     * DESIGN-15 §3: optional AC-3 preprocessing gate — when a CSP over plan
+     * preconditions is provided and unsatisfiable, execution fast-fails
+     * without entering the generation contour.
+     */
+    public ExecutionResult executeSteps(String goal, List<PlanStep> steps,
+                                        io.matrix.agent.planning.Ac3Solver cspPrecheck) {
+        if (cspPrecheck != null && !cspPrecheck.solve()) {
+            log.warn("AC-3 preprocessing: CSP unsatisfiable — fast-fail before execution");
+            return new ExecutionResult(goal, List.of(), false, "unsatisfiable_preconditions");
+        }
         List<StepOutcome> trace = new ArrayList<>();
         String lastOutput = "";
         boolean allPassed = true;
