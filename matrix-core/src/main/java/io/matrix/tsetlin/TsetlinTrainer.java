@@ -69,13 +69,14 @@ public final class TsetlinTrainer {
         for (int c = 0; c < nClauses; c++) {
             var pair = new TsetlinAutomaton[2][inputBits];
             for (int j = 0; j < inputBits; j++) {
-                if (this.init == InitStrategy.RANDOM) {
-                    pair[0][j] = new TsetlinAutomaton(nStates, 1 + rng.nextInt(2 * nStates));
-                    pair[1][j] = new TsetlinAutomaton(nStates, 1 + rng.nextInt(2 * nStates));
-                } else {
-                    pair[0][j] = new TsetlinAutomaton(nStates, nStates + 1); // x_j in
-                    pair[1][j] = new TsetlinAutomaton(nStates, 1);           // ¬x_j out
-                }
+                // CANONICAL INIT (tm_initialize): every automaton starts at
+                // state N-1 — the EXCLUDE position ADJACENT TO INCLUDE — so
+                // a single Type Ia increment flips it into inclusion and
+                // learning takes off immediately from epoch one.
+                int adjacentExclude = Math.max(0, nStates - 1);
+                boolean flip = (c & 1) == 1; // polarity-interleaved diversity
+                pair[0][j] = new TsetlinAutomaton(nStates, flip ? adjacentExclude : nStates);
+                pair[1][j] = new TsetlinAutomaton(nStates, flip ? nStates : adjacentExclude);
             }
             clauses.add(pair);
             polarity.add(c % 2 == 0 ? +1 : -1);
@@ -169,6 +170,10 @@ public final class TsetlinTrainer {
             fired[i] = fires(clauses.get(i), x);
             if (fired[i]) score += polarity.get(i);
         }
+        boolean confidentInLabel = isPositive
+                ? score >= feedbackT      // class-1 vote saturated at +T
+                : score <= -feedbackT;    // class-0 vote saturated at −T
+
         for (int i = 0; i < clauses.size(); i++) {
             var cl = clauses.get(i);
             boolean target = isPositive == (polarity.get(i) == +1);
@@ -177,11 +182,14 @@ public final class TsetlinTrainer {
             p = Math.max(0.0, Math.min(1.0, p));
             if (rng.nextDouble() >= p) continue;
             if (fired[i]) {
-                if (!target) typeTwo(cl, x);
-                else if (countIncludes(cl) <= maxIncludedLiterals()) typeOne(cl, x);
-                else typeOneGrowth(cl, x); // over-inclusive → decay path
-            } else if (target) {
-                typeOneGrowth(cl, x);
+                if (!target) {
+                    typeTwo(cl, x);       // always prune against-label firing
+                } else if (!confidentInLabel) {
+                    if (countIncludes(cl) <= maxIncludedLiterals()) typeOne(cl, x);
+                    else typeOneGrowth(cl, x); // D3: over-inclusive → decay path
+                }
+            } else if (target && !confidentInLabel) {
+                typeOneGrowth(cl, x);     // grow toward undecided label region
             }
         }
     }
