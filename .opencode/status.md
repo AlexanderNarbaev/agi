@@ -6,6 +6,7 @@
 - Workers: 0 active (code-делегация ненадёжна — прямой режим)
 - Verification Strategy: tool-evidence на каждый пункт (JUnit XML, grep, git diff)
 - Execution Status: pass
+- Waves 16-20: EXP-002 pre-stage REPRODUCED (random init); H-035 EBL toy-win (5/5 vs 0/5); k>=8 generalization parked with numbers; JTMS/ATMS shipped; full tsetlin+bir green
 - Wave 7: canonical Granmo TM + exact distillation; EXP-002 pre-stage honestly NOT reproduced (3 attempts documented in card); tsetlin+bir green
 - Waves+ : Критерий A wave 1 done — commit 3d23aa2 (rebased on parallel docs 2ac6684); оба remote
 - Tests: 179 green (cluster+bir прогон)
