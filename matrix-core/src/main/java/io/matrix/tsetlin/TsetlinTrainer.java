@@ -126,21 +126,13 @@ public final class TsetlinTrainer {
     }
 
     private void typeOneGrowth(TsetlinAutomaton[][] cl, long x) {
-        // Type Ib (non-firing, target=1): pull excluded-but-TRUE literals
-        // toward inclusion AND push included-but-FALSE literals out — without
-        // the second row a clause can never re-specialize onto a new minterm
-        // (it would grow a contradicting literal and die).
+        // CANONICAL Type Ib: pure decay — excluded literals deepen their
+        // exclusion w.p. 1/s. No pull-in: coverage emerges from random-init
+        // diversity plus Type Ia reinforcement of near-miss specialists.
         double pP = 1.0 / S;
         for (int j = 0; j < inputBits; j++) {
-            boolean v = bit(x, j);
-            // Grow the literal that is TRUE under x, push the FALSE one out:
-            if (!v && rng.nextDouble() < pP) {
-                if (!cl[1][j].includes()) includeSafe(cl, 1, j);   // ¬x_j true
-                if (cl[0][j].includes()) cl[0][j].penalty();       // x_j false
-            } else if (v && rng.nextDouble() < pP) {
-                if (!cl[0][j].includes()) includeSafe(cl, 0, j);   // x_j true
-                if (cl[1][j].includes()) cl[1][j].penalty();       // ¬x_j false
-            }
+            if (!cl[0][j].includes() && rng.nextDouble() < pP) cl[0][j].penalty();
+            if (!cl[1][j].includes() && rng.nextDouble() < pP) cl[1][j].penalty();
         }
     }
 
