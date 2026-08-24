@@ -92,12 +92,15 @@ public final class TsetlinTrainer {
     }
 
     private boolean fires(TsetlinAutomaton[][] cl, long x) {
+        boolean anyIncluded = false;
         for (int j = 0; j < inputBits; j++) {
             boolean v = bit(x, j);
             if (cl[0][j].includes() && !v) return false;
             if (cl[1][j].includes() && v) return false;
+            if (cl[0][j].includes() || cl[1][j].includes()) anyIncluded = true;
         }
-        return true;
+        // Canonical D5: an all-exclude (empty) clause does NOT output 1.
+        return anyIncluded;
     }
 
     private void typeOne(TsetlinAutomaton[][] cl, long x) {
