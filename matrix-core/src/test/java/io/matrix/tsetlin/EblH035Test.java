@@ -16,6 +16,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * <p>Metric: total training examples consumed until balanced accuracy
  * reaches 1.0 (exact fit of the tiny table), averaged over seeds 1..5.
  */
+@Disabled("H-035 probes superseded: canonical margin-gating changed dynamics; refutation recorded in card (EBL ~x17 slower by examples)")
 class EblH035Test {
 
     private record Result(long examples, boolean converged) {}
