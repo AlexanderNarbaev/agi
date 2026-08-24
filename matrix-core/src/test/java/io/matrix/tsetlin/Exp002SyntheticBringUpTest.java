@@ -3,9 +3,6 @@ package io.matrix.tsetlin;
 import io.matrix.bir.ClauseSetForm;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Disabled;
-import org.junit.jupiter.api.Disabled;
-import org.junit.jupiter.api.Disabled;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
@@ -20,7 +17,7 @@ import static org.assertj.core.api.Assertions.within;
  * 5 seeds, exact distillation. Full comparison against MPDT-GA / BNN
  * baselines follows in stage 2 (see HYPOTHESES EXP-002 card).
  */
-@Disabled("stage-1 open: attempt-14 D1 soft-gating improved k8 0.58->0.64; remaining deltas D2/D3/D4 per audit plan §3")
+@Disabled("stage-1 OPEN: all deltas D1/D2/D5 applied — k8/12/16/20 bAcc 0.59/0.52/0.49/0.50; update-rule fidelity vs reference is the blocker")
 class Exp002SyntheticBringUpTest {
 
     /** Random R-term × L-literal DNF over k variables. Returns label fn. */
@@ -61,7 +58,7 @@ class Exp002SyntheticBringUpTest {
     }
 
     @ParameterizedTest
-    @ValueSource(ints = {8, 12})
+    @ValueSource(ints = {8, 12, 16, 20})
     void syntheticDnfPipeline(int k) {
         double meanAcc = 0;
         int minClauses = Integer.MAX_VALUE;
@@ -78,12 +75,14 @@ class Exp002SyntheticBringUpTest {
                 boolean clean = truth.test(x);
                 noisyY[i] = rnd.nextInt(10) == 0 ? !clean : clean; // 10% noise
             }
-            var tr = new TsetlinTrainer(k, 48, 16, new Random(seed),
+            int clauses = k <= 12 ? 48 : 96;
+            int epochs = k <= 12 ? 120 : 160;
+            var tr = new TsetlinTrainer(k, clauses, 16, new Random(seed),
                     TsetlinTrainer.InitStrategy.COMPLEMENTARY);
             long[][] trainX = java.util.Arrays.copyOf(allX, total - holdout);
             boolean[] trainY = java.util.Arrays.copyOf(noisyY, total - holdout);
             // H-035 EBL curriculum per epoch (counterfactual prioritization)
-            for (int e = 0; e < 120; e++) {
+            for (int e = 0; e < epochs; e++) {
                 var pr = EblCurriculum.prioritize(trainX, trainY, tr::predict);
                 tr.trainBatch(pr.x(), pr.y(), 1);
             }
