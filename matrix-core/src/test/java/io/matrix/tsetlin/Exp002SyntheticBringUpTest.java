@@ -20,7 +20,7 @@ import static org.assertj.core.api.Assertions.within;
  * 5 seeds, exact distillation. Full comparison against MPDT-GA / BNN
  * baselines follows in stage 2 (see HYPOTHESES EXP-002 card).
  */
-@Disabled("stage-1 open: attempt-13 D5 empty-clause semantics applied (canonical), k>=8 still 0.58/0.51 — remaining deltas D1-D4 per audit plan §3")
+@Disabled("stage-1 open: attempt-14 D1 soft-gating improved k8 0.58->0.64; remaining deltas D2/D3/D4 per audit plan §3")
 class Exp002SyntheticBringUpTest {
 
     /** Random R-term × L-literal DNF over k variables. Returns label fn. */

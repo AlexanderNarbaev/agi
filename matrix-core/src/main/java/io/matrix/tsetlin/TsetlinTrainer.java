@@ -169,17 +169,31 @@ public final class TsetlinTrainer {
         }
     }
 
-    /** Train on a single labeled example (packed bits, bit j = feature j).
-     *  Ungated canonical loop: this configuration is the one that
-     *  reproduces Granmo toy gates AND converges with the H-035 EBL
-     *  curriculum; margin-gating variants were tried and rejected
-     *  (audit plan §1.3). */
+    /**
+     * Train on a single labeled example (packed bits, bit j = feature j).
+     *
+     * <p>Canonical soft gating (audit plan D1): each clause receives
+     * feedback with probability {@code (T ± vote)/(2T)} — high while the
+     * example-level vote disagrees with the clause's own target, decaying to
+     * zero once the vote saturates in favour. Type II repair of against-
+     * target firing clauses rides the same gate.
+     */
     public void trainStep(long[] inputWords, boolean isPositive) {
         long x = pack(inputWords);
+        int score = 0;
+        boolean[] fired = new boolean[clauses.size()];
         for (int i = 0; i < clauses.size(); i++) {
+            fired[i] = fires(clauses.get(i), x);
+            if (fired[i]) score += polarity.get(i);
+        }
+        int tSign = isPositive ? 1 : 0;
+        double pFeedback = ((double) FEEDBACK_T + (1 - 2 * tSign) * score) / (2.0 * FEEDBACK_T);
+        pFeedback = Math.max(0.0, Math.min(1.0, pFeedback));
+        for (int i = 0; i < clauses.size(); i++) {
+            if (rng.nextDouble() >= pFeedback) continue;
             var cl = clauses.get(i);
             boolean target = isPositive == (polarity.get(i) == +1);
-            if (fires(cl, x)) {
+            if (fired[i]) {
                 if (target) typeOne(cl, x);
                 else typeTwo(cl, x);
             } else if (target) {
@@ -187,6 +201,9 @@ public final class TsetlinTrainer {
             }
         }
     }
+
+    /** Soft-gating saturation threshold for the example-level vote. */
+    private static final int FEEDBACK_T = 12;
 
     /** Vote magnitude at which the example is considered decided. */
     private static final int FEEDBACK_MARGIN = 2;
