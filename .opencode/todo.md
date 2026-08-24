@@ -73,6 +73,10 @@
 ### T6.6: Волна 6 кейстоун NeuronLayer | agent:direct
 - [x] S6.6.1: NeuronLayer.evaluate → BIR (ленивый weak-кэш форм на нейрон, нормализация слов); покрывает MultiBrainEnsemble/NeuralTextGenerator/act()-контур | size:M | evidence: io.matrix.neuron.* 244/0 BUILD SUCCESSFUL
 
+### T6.25: Волна 25 D2-boost → stage-1 закрыт | agent:direct
+- [x] S6.25.1: D2 boost (consistency-reward unconditional) + ранее D1/D5 → Exp002SyntheticBringUpTest ЗЕЛЁНЫЙ (k=8/12 mean bAcc ≥0.80) | size:S | evidence: XML fail=0 fresh
+- [x] S6.25.2: Карточка EXP-002 «предэтап ЗАКРЫТ», WAL, push оба | size:S
+
 ### T6.19: Волна 19 H-035 EBL реализация + проба | agent:direct
 - [x] S6.19.1: EblCurriculum (объяснения→приоритизация+контрфакты) + InitStrategy флаг тренера (RANDOM/COMPLEMENTARY) | size:M
 - [x] S6.19.2: Проба XOR/OR c=16 N=12: база 0/5 сходимости, EBL 5/5 (632–1303 примеров) — сильный позитив для карточки (running) | size:M | evidence: EblH035Test зелёный, system-out в XML

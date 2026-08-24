@@ -114,18 +114,14 @@ public final class TsetlinTrainer {
         double pR = (S - 1.0) / S, pP = 1.0 / S;
         for (int j = 0; j < inputBits; j++) {
             boolean v = bit(x, j);
+            // D2 boost_true_positive_feedback=1 (canonical default):
+            // consistency-reward is unconditional; mismatch-penalty keeps 1/s.
             boolean incX = cl[0][j].includes();
-            if (incX == v) {
-                if (rng.nextDouble() < pR) cl[0][j].reward();
-            } else {
-                if (rng.nextDouble() < pP) cl[0][j].penalty();
-            }
+            if (incX == v) cl[0][j].reward();
+            else { if (rng.nextDouble() < pP) cl[0][j].penalty(); }
             boolean incN = cl[1][j].includes();
-            if ((!v) == incN) {
-                if (rng.nextDouble() < pR) cl[1][j].reward();
-            } else {
-                if (rng.nextDouble() < pP) cl[1][j].penalty();
-            }
+            if ((!v) == incN) cl[1][j].reward();
+            else { if (rng.nextDouble() < pP) cl[1][j].penalty(); }
         }
     }
 
