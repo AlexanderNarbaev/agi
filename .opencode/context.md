@@ -1,29 +1,21 @@
 # MATRIX Project Context - Session State
 
 ## Current Status
-- **Миссия**: волны; Java/Quarkus/GraalVM; fetch→rebase→push перед каждым пушем
-- **Синхронизировано**: main=origin/main (за rebase влита чужая волна), gitverse тоже прошёл (grep=1). Дерево чистое
-- **Критерий A закрыт**; tsetlin+bir зелёные; TM convergence открыт (attempts 3–8 в карточке EXP-002)
+- **ПРОРЫВ**: EXP-002 предэтап ВОСПРОИЗВЕДЁН (wave 16, attempt-9): корень фиаско попыток ≤8 = синхронный комплементарный init клауз (все — идентичные специалисты full-true minterm; TypeIa reward 0.75 перевешивал Ib growth 0.25). Фикс: **random per-automaton init** (reference-style). GranmoReferenceTest 5/5 ВКЛЮЧЁН ПОСТОЯННО как regression-gate. Полный регресс 5 пакетов **375/0**
+- Синхронизация: за rebase влита чужая волна; push origin ✅ + gitverse ✅ (grep=1); дерево чистое
+- Всё зафиксировано: HYPOTHESES карточка (attempt-9 ✅ + причина), WAL «Прорыв», todo T6.16 [x]
 
-## Волны этой сессии (все запушены)
-- Wave 6–7: NeuronLayer кейстоун BIR; canonical Granmo TM каркас
-- Wave 9: WiSARD toDecisionClauseSet + parity
-- Waves 10–12: TM attempts 5–8 (pairing-bug исправлен; growth-инверсия исправлена; вердикт: tug-of-war equilibrium структурный → dedicated session; attempt-6 бэкап /tmp/opencode/attempt6/)
-- Wave 13: H-035 EBL карточка (proposed)
-- Wave 15: **JTMS/ATMS-lite в LineageLedger**: Operation.RETRACT + retract() (justification = последний contentHash артефакта) + latestStatus()/isRetracted() (ATMS label поверх append-only цепи); тесты jtmsRetractionKeepsChainAndLabels / retractUnknownIdUsesZeroJustification зелёные
+## Этап B теперь разблокирован полностью. Очередь следующей сессии:
+1. **EXP-002 доменный этап** по протоколу карточки: эталоны ✓ → synthetic k∈{8,12,16,20} → Minecraft-перцепт; сравнение Tsetlin vs MPDT-ГА vs BNN-ориентир; метрики из карточки; 5 сидов
+2. EBL реализация (H-035): приоритизация выборки контрфактическими минтермами → examples-to-99%
+3. JTMS/ATMS развитие LineageLedger (RETRACT есть; дальше — justification-graph)
+4. AC-3 → ExecutablePlanner (атлас §101); атлас §95–103 прочитать целиком при планировании REFLEX/Cauldron
+5. Dependency upgrades осторожно
 
-## Очередь следующей сессии (приоритет)
-1. **TM convergence dedicated-session**: построчный трассировочный аудит typeOne/typeTwo/Ib против Algorithm 1 Granmo 2018; попытки 3–8 и кандидаты — в карточке EXP-002 HYPOTHESES.md; бэкап attempt-6: /tmp/opencode/attempt6/TsetlinTrainer.attempt6.java; гарнесс TsetlinGranmoReferenceTest @Disabled (включить снятием аннотации); конфиги уже канонические масштабы (AND/OR c=24,N=10,e=1200; XOR c=32,N=12,e=1500; MUX c=48,N=12,e=2000); S=4.0 в тренере
-2. AC-3 → ExecutablePlanner (атлас §101)
-3. EBL реализация после сходимости TM (H-035 готова)
-4. Dependency upgrades осторожно (Quarkus/Pekko pinned)
-5. Прочитать атлас §95–103 полностью при планировании REFLEX/Cauldron
-
-## Constraints / факты
-- FROZEN: ethics/, CONSTITUTION.md, старые avro, workflows; K_MAX≤20; coverage≥82%; Java-only prod; seeded Random вне рантайма
-- LSP фантом tsetlin/* — верить gradlew; полный test OOM — батчи; компактные ответы; rm заблокирован → mv в /tmp/opencode/
-- Вложенный enum: писать LineageLedger.Operation.XXX в тестах (sed по голому Operation.* задваивает префикс — осторожно)
-- Каноника автомата: reward углубляет текущую сторону; penalty шаг к противоположной; includeNow=n+1; TypeIa consistency⇒reward/mismatch⇒penalty; Ib growth true-in/false-out; TypeII minimal repair includeSafe
-- Гонки: правки→commit→pull --rebase→push→verify rev-list=0
+## Ключевые факты TM (для будущих правок)
+- TsetlinTrainer: canonical voting ±1, пулы НЕ разделены по классам; random init автоматов (rng.nextInt(2N)); S=4.0; TypeIa consistency⇒reward/mismatch⇒penalty; Ib growth true-in/false-out (+includeSafe guard от x∧¬x); TypeII minimal repair (один литерал); shuffle по эпохам; predict=score>0; дистилляция toDecisionClauseSet/toDecisionBir точная (exhaustive 2^k ≤20)
+- Гарнесс конфиги: AND/OR c=24,N=10,e=1200; XOR c=32,N=12,e=1500; MUX c=48,N=12,e=2000 seed42; noisyXor mean≥0.75
+- LSP фантом tsetlin/* дубли — верить gradlew; rm→mv в /tmp/opencode/; полный test OOM — батчи; компактные ответы
+- FROZEN: ethics/, CONSTITUTION.md, старые avro, workflows; K_MAX≤20; coverage≥82%; Java-only prod
 
 [COMPACTION_COMPLETE]
