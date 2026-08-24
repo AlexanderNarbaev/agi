@@ -17,7 +17,7 @@ import static org.assertj.core.api.Assertions.within;
  * 5 seeds, exact distillation. Full comparison against MPDT-GA / BNN
  * baselines follows in stage 2 (see HYPOTHESES EXP-002 card).
  */
-@Disabled("stage-1 OPEN: attempt-15 — empty-collapse under sparse-sample regime (bAcc=0.500, minClauses=0 all seeds/k); needs trace vs reference C; toy gates green")
+@Disabled("stage-1 open: attempt-16 D1-prime per-clause asymmetric gating implemented (canonical-correct) — k=8..20 bAcc ~0.50; needs systematic s/T/N/data-scale sweep vs reference (audit plan §2)")
 class Exp002SyntheticBringUpTest {
 
     /** Random R-term × L-literal DNF over k variables. Returns label fn. */
@@ -75,8 +75,8 @@ class Exp002SyntheticBringUpTest {
                 boolean clean = truth.test(x);
                 noisyY[i] = rnd.nextInt(10) == 0 ? !clean : clean; // 10% noise
             }
-            int clauses = k <= 12 ? 48 : 96;
-            int epochs = k <= 12 ? 120 : 160;
+            int clauses = k <= 12 ? 96 : 128;
+            int epochs = k <= 12 ? 400 : 300;
             var tr = new TsetlinTrainer(k, clauses, 16, new Random(seed),
                     TsetlinTrainer.InitStrategy.COMPLEMENTARY);
             long[][] trainX = java.util.Arrays.copyOf(allX, total - holdout);

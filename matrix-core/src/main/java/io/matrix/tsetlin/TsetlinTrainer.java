@@ -141,13 +141,15 @@ public final class TsetlinTrainer {
     }
 
     private void typeOneGrowth(TsetlinAutomaton[][] cl, long x) {
-        // CANONICAL Type Ib: pure decay — excluded literals deepen their
-        // exclusion w.p. 1/s. No pull-in: coverage emerges from random-init
-        // diversity plus Type Ia reinforcement of near-miss specialists.
+        // CANONICAL Type Ib (C ref: tm_dec over random feedback_to_la
+        // subset): sampled automata take ONE STEP TOWARD EXCLUDE regardless
+        // of current side — this gradually walks over-inclusive literals
+        // OUT (prevents x∧¬x lock-in) while leaving correct exclusions to
+        // random-walk within the exclude region.
         double pP = 1.0 / S;
         for (int j = 0; j < inputBits; j++) {
-            if (!cl[0][j].includes() && rng.nextDouble() < pP) cl[0][j].penalty();
-            if (!cl[1][j].includes() && rng.nextDouble() < pP) cl[1][j].penalty();
+            if (rng.nextDouble() < pP) cl[0][j].penalty();
+            if (rng.nextDouble() < pP) cl[1][j].penalty();
         }
     }
 
@@ -162,13 +164,15 @@ public final class TsetlinTrainer {
         }
     }
 
+    /** CANONICAL Type II (batch): EVERY excluded literal that would
+     *  contradict the clause under this input jumps into inclusion at once —
+     *  one-shot region pruning without progressive drain of included
+     *  literals (progressive drain was our empty-collapse bug). */
     private void typeTwo(TsetlinAutomaton[][] cl, long x) {
-        // Minimal repair: one excluded contradicting literal flips the clause
-        // off for this input without destroying its remaining coverage.
         for (int j = 0; j < inputBits; j++) {
             boolean v = bit(x, j);
-            if (!cl[0][j].includes() && !v) { includeSafe(cl, 0, j); return; }
-            if (!cl[1][j].includes() && v) { includeSafe(cl, 1, j); return; }
+            if (!cl[0][j].includes() && !v) cl[0][j].includeNow();
+            if (!cl[1][j].includes() && v) cl[1][j].includeNow();
         }
     }
 
@@ -189,13 +193,17 @@ public final class TsetlinTrainer {
             fired[i] = fires(clauses.get(i), x);
             if (fired[i]) score += polarity.get(i);
         }
-        int tSign = isPositive ? 1 : 0;
-        double pFeedback = ((double) FEEDBACK_T + (1 - 2 * tSign) * score) / (2.0 * FEEDBACK_T);
-        pFeedback = Math.max(0.0, Math.min(1.0, pFeedback));
+        // D1' canonical PER-CLAUSE asymmetric gating (C ref ~331):
+        // p_i = (T + (1 - 2*t_i)*class_sum) / (2T). Pos-target clauses fade
+        // as vote → +T; opposite-target clauses get STRONGER pressure —
+        // the self-balancing loop a flat |score| gate destroyed.
         for (int i = 0; i < clauses.size(); i++) {
-            if (rng.nextDouble() >= pFeedback) continue;
             var cl = clauses.get(i);
             boolean target = isPositive == (polarity.get(i) == +1);
+            int tBit = target ? 1 : 0;
+            double p = ((double) FEEDBACK_T + (1 - 2 * tBit) * score) / (2.0 * FEEDBACK_T);
+            p = Math.max(0.0, Math.min(1.0, p));
+            if (rng.nextDouble() >= p) continue;
             if (fired[i]) {
                 if (!target) typeTwo(cl, x);
                 else if (countIncludes(cl) <= maxIncludedLiterals()) typeOne(cl, x);
@@ -259,6 +267,16 @@ public final class TsetlinTrainer {
     /** Legacy alias used by existing producers/tests. */
     public ClauseSetForm toClauseSet(String provenance) {
         return toDecisionClauseSet(provenance);
+    }
+
+    /** TEMP diagnostics */
+    public String dbgClause(int i) {
+        var cl = clauses.get(i);
+        StringBuilder b = new StringBuilder("pol=" + polarity.get(i) + ": ");
+        for (int j = 0; j < inputBits; j++)
+            b.append(cl[0][j].includes() ? 'X' : '.').append(cl[1][j].includes() ? 'N' : '.').append(' ');
+        return b.append("| fires@00..11=").append(fires(cl, 0)).append(fires(cl, 1))
+                .append(fires(cl, 2)).append(fires(cl, 3)).toString();
     }
 
     public int clauseCount() { return clauses.size(); }
