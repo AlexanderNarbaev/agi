@@ -1,5 +1,6 @@
 package io.matrix.tsetlin;
 
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.util.Random;
