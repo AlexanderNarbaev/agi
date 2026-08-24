@@ -121,11 +121,11 @@ public final class TsetlinTrainer {
         for (int j = 0; j < inputBits; j++) {
             boolean v = bit(x, j);
             boolean incX = cl[0][j].includes();
-            if (incX == v) cl[0][j].reward();
-            else if (rng.nextDouble() < pP) cl[0][j].penalty();
+            if (incX == v) cl[0][j].inc();
+            else if (rng.nextDouble() < pP) cl[0][j].dec();
             boolean incN = cl[1][j].includes();
-            if ((!v) == incN) cl[1][j].reward();
-            else if (rng.nextDouble() < pP) cl[1][j].penalty();
+            if ((!v) == incN) cl[1][j].inc();
+            else if (rng.nextDouble() < pP) cl[1][j].dec();
         }
     }
 
@@ -150,8 +150,8 @@ public final class TsetlinTrainer {
     private void typeOneGrowth(TsetlinAutomaton[][] cl, long x) {
         double pP = 1.0 / sParam;
         for (int j = 0; j < inputBits; j++) {
-            if (rng.nextDouble() < pP) cl[0][j].penalty();
-            if (rng.nextDouble() < pP) cl[1][j].penalty();
+            if (rng.nextDouble() < pP) cl[0][j].dec();
+            if (rng.nextDouble() < pP) cl[1][j].dec();
         }
     }
 

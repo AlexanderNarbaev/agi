@@ -1,83 +1,86 @@
 package io.matrix.tsetlin;
 
 /**
- * Single Tsetlin automaton over {@code 2N} states.
+ * Tsetlin automaton — faithful arithmetic-counter port of the reference
+ * implementation (cair/pyTsetlinMachine ConvolutionalTsetlinMachine.c).
  *
- * <p>State space {@code [1..2N]}: states {@code 1..N} mean the corresponding
- * literal is EXCLUDED from its clause, states {@code N+1..2N} mean INCLUDED.
- * Canonical Granmo dynamics: {@link #reward()} deepens the automaton into its
- * CURRENT action's extreme; {@link #penalty()} takes one step toward the
- * opposite side; {@link #includeNow()} jumps to the first include state.
+ * <p>State is an unsigned counter {@code [0..2^nStates-1]}: INCLUDED iff
+ * {@code state >= n} (top bit set), otherwise EXCLUDED. Operations are
+ * direction-fixed arithmetic: {@link #inc()} = +1 saturating at 2n,
+ * {@link #dec()} = −1 floored at 0. Reference init: counter 0 (deepest
+ * exclude) — tm_initialize writes low bits ~0 and top bit 0.
  */
 public final class TsetlinAutomaton {
 
     private final int n;
     private int state;
 
-    /** Starts at state {@code n} (top of the exclude side). */
+    /** Legacy ctor: starts at exclude-saturation (counter 0). */
     public TsetlinAutomaton(int n) {
-        this(n, n);
+        this(n, 0);
     }
 
-    /** @param n half-state count ({@code n >= 1}); total states = 2n */
-    public TsetlinAutomaton(int n, int initialState) {
+    /**
+     * @param rawState raw counter value {@code [0..2n]} (0 = deepest exclude,
+     *                 2n = deepest include); differs from the old 1-based
+     *                 side notation by design.
+     */
+    public TsetlinAutomaton(int n, int rawState) {
         if (n < 1) throw new IllegalArgumentException("n >= 1");
-        if (initialState < 1 || initialState > 2 * n) {
-            throw new IllegalArgumentException("initialState in 1.." + (2 * n));
-        }
+        if (rawState < 0 || rawState > 2 * n) throw new IllegalArgumentException("rawState in 0.." + (2 * n));
         this.n = n;
-        this.state = initialState;
+        this.state = rawState;
     }
 
     public int state() { return state; }
 
-    public boolean includes() { return state > n; }
+    public boolean includes() { return state >= n; }
 
-    /** Deepen into the CURRENT action's side (canonical TM reward). */
-    public void reward() {
-        if (state <= n) state = Math.max(1, state - 1);
-        else state = Math.min(2 * n, state + 1);
+    /** +1 toward include, saturating at {@code 2n}. */
+    public void inc() {
+        if (state < 2 * n) state++;
     }
 
-    /** One step toward the OPPOSITE side (canonical TM penalty). */
-    public void penalty() {
-        if (state <= n) state = Math.min(2 * n, state + 1);
-        else state = Math.max(1, state - 1);
+    /** −1 toward exclude, floored at {@code 0}. */
+    public void dec() {
+        if (state > 0) state--;
     }
 
-    /** Jump straight to the first INCLUDE state (Type II feedback). */
+    /** Jump straight to the first include position {@code n}. */
     public void includeNow() {
-        state = n + 1;
+        state = n;
     }
 
-    // ─── Compatibility aliases (legacy producer/test API) ───
+    // ─── Compatibility aliases ───
 
     /** @return {@link #includes()} */
     public boolean action() { return includes(); }
 
-    /** Alias for {@link #penalty()}. */
-    public void penalize() { penalty(); }
+    /** Alias for {@link #dec()}. */
+    public void penalize() { dec(); }
+
+    /** Alias for {@link #dec()} (legacy name). */
+    public void penalty() { dec(); }
+
+    /** Legacy alias: {@link #inc()} toward include. */
+    public void reward() { inc(); }
 
     /**
-     * Flat Type I (canonical rows): a TRUE-valued literal that is excluded
-     * takes one step toward inclusion; a FALSE-valued literal that is
-     * included takes one step toward exclusion; already-consistent states
-     * stay put in this flat helper.
+     * Flat Type I: literal present ⇒ inc; absent ⇒ dec.
      */
     public void feedbackTypeI(boolean literalPresent) {
-        if (literalPresent && !includes()) penalty();
-        else if (!literalPresent && includes()) penalty();
+        if (literalPresent) inc(); else dec();
     }
 
     /**
-     * Flat Type II: literal present in a negative example and currently
-     * included ⇒ drop it; absent and excluded ⇒ pull in now.
+     * Flat Type II: present-in-negative & included ⇒ drop out;
+     * absent & excluded ⇒ step toward inclusion.
      */
     public void feedbackTypeII(boolean literalPresentInNegative) {
         if (literalPresentInNegative) {
-            if (includes()) penalty();
+            if (includes()) dec();
         } else if (!includes()) {
-            includeNow();
+            inc();
         }
     }
 }

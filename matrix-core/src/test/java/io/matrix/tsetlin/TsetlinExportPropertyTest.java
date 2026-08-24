@@ -38,8 +38,8 @@ class TsetlinExportPropertyTest {
                     case 1 -> a.penalty();
                     default -> a.includeNow();
                 }
-                assertThat(a.state()).as("state must stay in 1..%d", 2 * n).isBetween(1, 2 * n);
-                assertThat(a.includes()).isEqualTo(a.state() > n);
+                assertThat(a.state()).as("state must stay in 0..%d", 2 * n).isBetween(0, 2 * n);
+                assertThat(a.includes()).as("state=%d n=%d", a.state(), n).isEqualTo(a.state() >= n);
             }
         }
     }
