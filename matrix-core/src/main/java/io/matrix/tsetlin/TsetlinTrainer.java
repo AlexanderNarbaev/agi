@@ -166,14 +166,17 @@ public final class TsetlinTrainer {
         }
     }
 
-    /** Train on a single labeled example (packed bits, bit j = feature j). */
+    /** Train on a single labeled example (packed bits, bit j = feature j).
+     *  Ungated canonical loop: this configuration is the one that
+     *  reproduces Granmo toy gates AND converges with the H-035 EBL
+     *  curriculum; margin-gating variants were tried and rejected
+     *  (audit plan §1.3). */
     public void trainStep(long[] inputWords, boolean isPositive) {
         long x = pack(inputWords);
         for (int i = 0; i < clauses.size(); i++) {
             var cl = clauses.get(i);
             boolean target = isPositive == (polarity.get(i) == +1);
-            boolean f = fires(cl, x);
-            if (f) {
+            if (fires(cl, x)) {
                 if (target) typeOne(cl, x);
                 else typeTwo(cl, x);
             } else if (target) {
@@ -181,6 +184,9 @@ public final class TsetlinTrainer {
             }
         }
     }
+
+    /** Vote magnitude at which the example is considered decided. */
+    private static final int FEEDBACK_MARGIN = 2;
 
     /** Train on a batch for the given number of epochs. */
     public void trainBatch(long[][] inputs, boolean[] labels, int epochs) {

@@ -4,6 +4,7 @@ import io.matrix.bir.ClauseSetForm;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
@@ -18,7 +19,7 @@ import static org.assertj.core.api.Assertions.within;
  * 5 seeds, exact distillation. Full comparison against MPDT-GA / BNN
  * baselines follows in stage 2 (see HYPOTHESES EXP-002 card).
  */
-@Disabled("stage-1 open: EBL helps toy-scale but not k>=8 generalization (0.59/0.50) — root cause is update-rule fidelity vs reference; see EXP-002 card")
+@Disabled("stage-1 open: attempt-11 margin-gating (canonical F6 fix) insufficient alone for k>=8 (0.59/0.53); full canonical stack per audit-plan §2 required")
 class Exp002SyntheticBringUpTest {
 
     /** Random R-term × L-literal DNF over k variables. Returns label fn. */
