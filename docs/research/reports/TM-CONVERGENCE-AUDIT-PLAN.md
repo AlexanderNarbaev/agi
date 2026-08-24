@@ -59,3 +59,94 @@
 - Один фикс-кандидат за раз; прогон гарнесса до/после; числа — в этот файл и карточку
 - Откат через git (attempt-бэкапы в /tmp/opencode/)
 - Стоп-условие тюнинга: 3 неудачных кандидата → вернуться к A-чеклисту
+
+## 3. Дельты из эталонного C-кода (cair/pyTsetlinMachine ConvolutionalTsetlinMachine.c)
+
+```c
+// D1: вероятностный гейтинг фидбека клаузы (строка ~331)
+feedback_to_clauses |= (fast_rand()/(FAST_RAND_MAX) <= (1.0/(T*2))*(T + (1 - 2*target)*class_sum));
+```
+- **D1**: гейтинг мягкий и пропорциональный: p_клаузы = (T ± class_sum)/(2T), а не жёсткий margin. Для target=1 p падает до 0 при sum→T; для target=0 — симметрично. Наш margin-gating был грубой аппроксимацией.
+- **D2**: `boost_true_positive_feedback` переключает вариант усиления (два блока в строках ~82–93).
+- **D3**: `max_included_literals` — потолок роста клаузы (у нас отсутствует).
+- **D4**: полярность через чётность индекса j&1 ✓ совпадает с нашей схемой.
+- **D5 (ВАЖНО)**: пустая клауза (all_exclude) по умолчанию НЕ даёт output: `output && !(all_exclude)` (строка ~288). У нас `fires()` на пустой = TRUE. Это меняет всю раннюю динамику!
+
+## 4. Верbatim эталонных строк
+
+### Гейтинг (ref_gate.txt)
+```c
+		unsigned int clause_chunk_pos = j % 32;
+
+		if ((tm->drop_clause[clause_chunk] & (1 << clause_chunk_pos))) {
+			continue;
+		}
+
+	 	tm->feedback_to_clauses[clause_chunk] |= (((float)fast_rand())/((float)FAST_RAND_MAX) <= (1.0/(tm->T*2))*(tm->T + (1 - 2*target)*class_sum)) << clause_chunk_pos;
+	}
+
+	for (int j = 0; j < tm->number_of_clauses; j++) {
+		unsigned int clause_chunk = j / 32;
+		unsigned int clause_chunk_pos = j % 32;
+
+		if (!(tm->feedback_to_clauses[clause_chunk] & (1 << clause_chunk_pos))) {
+			continue;
+		}
+```
+### Ряды обновления (ref_rows.txt)
+```c
+		unsigned int clause_chunk_pos = j % 32;
+
+		if (!(tm->feedback_to_clauses[clause_chunk] & (1 << clause_chunk_pos))) {
+			continue;
+		}
+		
+		if ((2*target-1) * (1 - 2 * (j & 1)) == -1) {
+			if ((tm->clause_output[clause_chunk] & (1 << clause_chunk_pos)) > 0) {
+				// Type II Feedback
+				
+				if (tm->weighted_clauses && tm->clause_weights[j] > 1) {
+					tm->clause_weights[j]--;
+				}
+
+				for (int k = 0; k < tm->number_of_ta_chunks; ++k) {
+					int patch = tm->clause_patch[j];
+					unsigned int pos = j*tm->number_of_ta_chunks*tm->number_of_state_bits + k*tm->number_of_state_bits + tm->number_of_state_bits-1;
+
+					tm_inc(tm, j, k, (~tm->drop_literal[k]) & (~Xi[patch*tm->number_of_ta_chunks + k]) & (~ta_state[pos]));
+				}
+			}
+		} else if ((2*target-1) * (1 - 2 * (j & 1)) == 1) {
+			// Type I Feedback
+
+			tm_initialize_random_streams(tm, j);
+
+			if (((tm->clause_output[clause_chunk] & (1 << clause_chunk_pos)) > 0) && (tm_number_of_include_actions(tm, j) <= tm->max_included_literals)) {
+				// Type Ia Feedback
+
+				if (tm->weighted_clauses) {
+					tm->clause_weights[j]++;
+				}
+				
+				for (int k = 0; k < tm->number_of_ta_chunks; ++k) {
+					int patch = tm->clause_patch[j];
+					if (tm->boost_true_positive_feedback == 1) {
+		 				tm_inc(tm, j, k, (~tm->drop_literal[k]) & Xi[patch*tm->number_of_ta_chunks + k]);
+					} else {
+						tm_inc(tm, j, k, (~tm->drop_literal[k]) & Xi[patch*tm->number_of_ta_chunks + k] & (~tm->feedback_to_la[k]));
+					}
+		 			
+		 			tm_dec(tm, j, k, (~tm->drop_literal[k]) & (~Xi[patch*tm->number_of_ta_chunks + k]) & tm->feedback_to_la[k]);
+				}
+			} else {
+				// Type Ib Feedback
+				
+				for (int k = 0; k < tm->number_of_ta_chunks; ++k) {
+					tm_dec(tm, j, k, (~tm->drop_literal[k]) & tm->feedback_to_la[k]);
+				}
+			}
+		}
+	}
+}
+
+void tm_update(```
