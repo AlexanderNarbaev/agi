@@ -17,7 +17,7 @@ import static org.assertj.core.api.Assertions.within;
  * 5 seeds, exact distillation. Full comparison against MPDT-GA / BNN
  * baselines follows in stage 2 (see HYPOTHESES EXP-002 card).
  */
-@Disabled("stage-1 open: attempt-16 D1-prime per-clause asymmetric gating implemented (canonical-correct) — k=8..20 bAcc ~0.50; needs systematic s/T/N/data-scale sweep vs reference (audit plan §2)")
+@Disabled("stage-1 open: attempt-19 — canonical-faithful rules (D1-prime/D2/D5/Ib-decay) still yield bAcc~0.5 at k>=8/160 samples; needs dedicated ML-debug session with side-by-side reference run")
 class Exp002SyntheticBringUpTest {
 
     /** Random R-term × L-literal DNF over k variables. Returns label fn. */
