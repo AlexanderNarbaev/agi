@@ -6,6 +6,7 @@
 - Workers: 0 active (code-делегация ненадёжна — прямой режим)
 - Verification Strategy: tool-evidence на каждый пункт (JUnit XML, grep, git diff)
 - Execution Status: pass
+- FINAL: waves 16-34 delivered — Критерий A closed; canonical TM (arithmetic-counter, D1'/D2/D5/Ib-decay); JTMS justification-graph; AC-3 module+gate; H-035 refuted-toy pinned; 377→626/0 regressions
 - Session final: Критерий A closed; stage B producers + toy gate green; TM k>=8 generalization handed off with complete audit package (attempts 3-21, deltas D1-D5, verbatim C rows)
 - H-035 REFUTED-toy (pinned): EBL ≈×17 slower by examples on XOR under canonical trainer; card → refuted-toy; MUX3 perfect-bar parked
 - Suite: 157/0 (tsetlin+bir); full 377/0 ранее
