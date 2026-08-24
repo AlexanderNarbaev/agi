@@ -87,6 +87,21 @@ public final class TsetlinTrainer {
         }
     }
 
+    /** D3: canonical max_included_literals — clauses above the cap fall
+     *  into the decay path instead of further reinforcement. */
+    private int maxIncludedLiterals() {
+        return Integer.MAX_VALUE; // canonical default: unlimited
+    }
+
+    private int countIncludes(TsetlinAutomaton[][] cl) {
+        int n = 0;
+        for (int j = 0; j < inputBits; j++) {
+            if (cl[0][j].includes()) n++;
+            if (cl[1][j].includes()) n++;
+        }
+        return n;
+    }
+
     private static boolean bit(long x, int j) {
         return ((x >>> j) & 1L) == 1L;
     }
@@ -182,8 +197,9 @@ public final class TsetlinTrainer {
             var cl = clauses.get(i);
             boolean target = isPositive == (polarity.get(i) == +1);
             if (fired[i]) {
-                if (target) typeOne(cl, x);
-                else typeTwo(cl, x);
+                if (!target) typeTwo(cl, x);
+                else if (countIncludes(cl) <= maxIncludedLiterals()) typeOne(cl, x);
+                else typeOneGrowth(cl, x); // D3: over-inclusive → decay path
             } else if (target) {
                 typeOneGrowth(cl, x);
             }

@@ -17,7 +17,7 @@ import static org.assertj.core.api.Assertions.within;
  * 5 seeds, exact distillation. Full comparison against MPDT-GA / BNN
  * baselines follows in stage 2 (see HYPOTHESES EXP-002 card).
  */
-@Disabled("stage-1 OPEN: all deltas D1/D2/D5 applied — k8/12/16/20 bAcc 0.59/0.52/0.49/0.50; update-rule fidelity vs reference is the blocker")
+@Disabled("stage-1 OPEN: attempt-15 — empty-collapse under sparse-sample regime (bAcc=0.500, minClauses=0 all seeds/k); needs trace vs reference C; toy gates green")
 class Exp002SyntheticBringUpTest {
 
     /** Random R-term × L-literal DNF over k variables. Returns label fn. */
