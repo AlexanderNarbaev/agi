@@ -87,7 +87,12 @@ public final class TsetlinTrainer {
         return ((x >>> j) & 1L) == 1L;
     }
 
-    private boolean fires(TsetlinAutomaton[][] cl, long x) {
+    /**
+     * Clause output with canonical mode split (C ref: all_exclude filters
+     * only in PREDICT; UPDATE lets empty clauses fire so learning can
+     * bootstrap — audit plan D5 refinement).
+     */
+    private boolean fires(TsetlinAutomaton[][] cl, long x, boolean updateMode) {
         boolean anyIncluded = false;
         for (int j = 0; j < inputBits; j++) {
             boolean v = bit(x, j);
@@ -95,8 +100,11 @@ public final class TsetlinTrainer {
             if (cl[1][j].includes() && v) return false;
             if (cl[0][j].includes() || cl[1][j].includes()) anyIncluded = true;
         }
-        // Canonical D5: an all-exclude clause does NOT output 1.
-        return anyIncluded;
+        return updateMode ? true : anyIncluded; // UPDATE: empty fires (bootstrap); PREDICT: D5
+    }
+
+    private boolean fires(TsetlinAutomaton[][] cl, long x) {
+        return fires(cl, x, false); // prediction semantics
     }
 
     private int countIncludes(TsetlinAutomaton[][] cl) {
@@ -162,12 +170,17 @@ public final class TsetlinTrainer {
      * Type Ia (capped by max-included, else falls to Ib decay); fired-
      * against ⇒ Type II; non-fired own-target ⇒ Type Ib.
      */
+    /** UPDATE-mode clause output: empty clauses fire (learning bootstrap). */
+    private boolean firesForUpdate(TsetlinAutomaton[][] cl, long x) {
+        return fires(cl, x, true);
+    }
+
     public void trainStep(long[] inputWords, boolean isPositive) {
         long x = pack(inputWords);
         int score = 0;
         boolean[] fired = new boolean[clauses.size()];
         for (int i = 0; i < clauses.size(); i++) {
-            fired[i] = fires(clauses.get(i), x);
+            fired[i] = firesForUpdate(clauses.get(i), x);
             if (fired[i]) score += polarity.get(i);
         }
         boolean confidentInLabel = isPositive
