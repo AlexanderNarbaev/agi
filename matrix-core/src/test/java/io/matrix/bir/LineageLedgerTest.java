@@ -170,4 +170,27 @@ class LineageLedgerTest {
         assertThat(ledger.isRetracted("ghost")).isTrue();
         assertThat(ledger.verifyChain()).isEmpty();
     }
+    @Test
+    void jtmsTransitiveActivityPropagation() {
+        var ledger = new LineageLedger();
+        var base = ledger.append("base", LineageLedger.Operation.CREATE, new byte[32], 1.0);
+        ledger.append("derived", LineageLedger.Operation.CREATE, base.contentHash(), 1.0);
+        ledger.addJustification("derived", "base");
+        assertThat(ledger.activeTransitively("derived")).isTrue();
+
+        ledger.retract("base"); // ancestor OUT
+        assertThat(ledger.isRetracted("base")).isTrue();
+        assertThat(ledger.activeTransitively("derived"))
+                .as("dependent must go OUT when justification retracted").isFalse();
+        assertThat(ledger.verifyChain()).isEmpty(); // chain integrity intact
+    }
+
+    @Test
+    void cyclesAreSafeForLabelPropagation() {
+        var ledger = new LineageLedger();
+        ledger.addJustification("a", "b");
+        ledger.addJustification("b", "a");
+        assertThat(ledger.activeTransitively("a")).isTrue(); // cycle-safe
+    }
+
 }

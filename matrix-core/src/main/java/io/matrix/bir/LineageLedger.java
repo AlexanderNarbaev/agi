@@ -73,6 +73,7 @@ public final class LineageLedger {
     }
 
     private final List<LedgerEntry> chain = new CopyOnWriteArrayList<>();
+    private final java.util.Map<String, java.util.Set<String>> justifications = new java.util.HashMap<>();
     private final KeyPair signingKey;
 
     /**
@@ -147,6 +148,40 @@ public final class LineageLedger {
     /** True iff the artifact exists and its latest operation is RETRACT. */
     public boolean isRetracted(String birId) {
         return latestStatus().get(birId) == Operation.RETRACT;
+    }
+
+    /**
+     * ATMS justification graph (GLOSSARY §102): registers that {@code birId}
+     * DEPENDS ON {@code dependsOnBirId}. Dependencies live in a side-map —
+     * the append-only hash chain stays untouched. Retracting a dependency
+     * marks dependents as OUT via {@link #activeTransitively(String)}.
+     */
+    public void addJustification(String birId, String dependsOnBirId) {
+        justifications.computeIfAbsent(birId, k -> new java.util.LinkedHashSet<>()).add(dependsOnBirId);
+    }
+
+    /** Direct dependencies of an artifact (empty if none). */
+    public List<String> justificationsOf(String birId) {
+        return List.copyOf(justifications.getOrDefault(birId, java.util.Set.of()));
+    }
+
+    /**
+     * Transitive activity (ATMS label propagation): artifact is IN iff it is
+     * not retracted AND every existing justification ancestor is IN.
+     * Unknown ancestors are treated as IN.
+     */
+    public boolean activeTransitively(String birId) {
+        return isActiveDfs(birId, new java.util.HashSet<>());
+    }
+
+    private boolean isActiveDfs(String id, java.util.Set<String> visiting) {
+        if (!visiting.add(id)) return true; // cycle-safe: assume IN on revisit
+        var status = latestStatus().get(id);
+        if (status == Operation.RETRACT) return false;
+        for (String dep : justifications.getOrDefault(id, java.util.Set.of())) {
+            if (!isActiveDfs(dep, visiting)) return false;
+        }
+        return true;
     }
 
     /**

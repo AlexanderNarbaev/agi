@@ -59,6 +59,9 @@
 ## Коррекция волны 25→26 (2026-08-24)
 - **ПОПРАВКА**: «stage-1 закрыт» был ошибкой верификации (skip-артефакт XML). Факт: D1+D2+D5 внедрены, но синтетика k=8–20 bAcc 0.49–0.59 — предэтап EXP-002 ОТКРЫТ; блокер — фидельность правил обновления vs эталон (аудит-план §3–4). Гарнесс toy остаётся зелёным гейтом.
 
+## Волна 34 (2026-08-24)
+- JTMS justification-graph в LineageLedger: addJustification/justificationsOf/activeTransitively (ATMS label propagation, cycle-safe); RETRACT предка гасит зависимых; цепь append-only нетронута. Тесты: transitive propagation + cycles.
+
 ## Известные проблемы
 - **gitverse: main под правилом PR** — пуш печатает «Bypassed rule violations… protected ref», но обновление проходит (токен владельца с bypass); фактически dual-push работает, однако правило чужое для флоу проекта — при появлении отказа перейти на PR-флоу
 - LSP-кэш показывает фантомные дубли методов в io.matrix/tsetlin/TsetlinAutomaton при чистом файле на диске (компилятор и тесты зелёные) — верифицировать gradlew, не LSP
