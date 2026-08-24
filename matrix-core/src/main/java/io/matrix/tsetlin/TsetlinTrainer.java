@@ -43,7 +43,21 @@ public final class TsetlinTrainer {
     /** Polarity per clause: +1 contributes +1 when firing, −1 contributes −1. */
     private final List<Integer> polarity = new ArrayList<>();
 
+    /** Clause-pair initialization strategy. */
+    public enum InitStrategy {
+        /** Reference-style uniform-random automaton states. */
+        RANDOM,
+        /** Deterministic complementary: x_j included, ¬x_j excluded. */
+        COMPLEMENTARY
+    }
+
+    private final InitStrategy init;
+
     public TsetlinTrainer(int inputBits, int nClauses, int nStates, Random rng) {
+        this(inputBits, nClauses, nStates, rng, InitStrategy.RANDOM);
+    }
+
+    public TsetlinTrainer(int inputBits, int nClauses, int nStates, Random rng, InitStrategy init) {
         if (inputBits < 1 || inputBits > 20) {
             throw new IllegalArgumentException("inputBits in 1..20");
         }
@@ -51,6 +65,7 @@ public final class TsetlinTrainer {
         this.inputBits = inputBits;
         this.nStates = nStates;
         this.rng = rng;
+        this.init = init == null ? InitStrategy.RANDOM : init;
         long seed = rng.nextLong();
         for (int c = 0; c < nClauses; c++) {
             var pair = new TsetlinAutomaton[2][inputBits];
@@ -59,10 +74,13 @@ public final class TsetlinTrainer {
                 // Random init (reference-style): diverse starting subsets let
                 // different clauses specialize onto different minterms; rare
                 // dead (x∧¬x) clauses are absorbed by the pool.
-                int r1 = 1 + rng.nextInt(2 * nStates);
-                int r2 = 1 + rng.nextInt(2 * nStates);
-                pair[0][j] = new TsetlinAutomaton(nStates, r1);
-                pair[1][j] = new TsetlinAutomaton(nStates, r2);
+                if (init == InitStrategy.RANDOM) {
+                    pair[0][j] = new TsetlinAutomaton(nStates, 1 + rng.nextInt(2 * nStates));
+                    pair[1][j] = new TsetlinAutomaton(nStates, 1 + rng.nextInt(2 * nStates));
+                } else {
+                    pair[0][j] = new TsetlinAutomaton(nStates, nStates + 1); // x_j in
+                    pair[1][j] = new TsetlinAutomaton(nStates, 1);           // ¬x_j out
+                }
             }
             clauses.add(pair);
             polarity.add(c % 2 == 0 ? +1 : -1);

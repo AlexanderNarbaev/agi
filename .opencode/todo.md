@@ -73,6 +73,10 @@
 ### T6.6: Волна 6 кейстоун NeuronLayer | agent:direct
 - [x] S6.6.1: NeuronLayer.evaluate → BIR (ленивый weak-кэш форм на нейрон, нормализация слов); покрывает MultiBrainEnsemble/NeuralTextGenerator/act()-контур | size:M | evidence: io.matrix.neuron.* 244/0 BUILD SUCCESSFUL
 
+### T6.19: Волна 19 H-035 EBL реализация + проба | agent:direct
+- [x] S6.19.1: EblCurriculum (объяснения→приоритизация+контрфакты) + InitStrategy флаг тренера (RANDOM/COMPLEMENTARY) | size:M
+- [x] S6.19.2: Проба XOR/OR c=16 N=12: база 0/5 сходимости, EBL 5/5 (632–1303 примеров) — сильный позитив для карточки (running) | size:M | evidence: EblH035Test зелёный, system-out в XML
+
 ### T6.15: Волна 15 JTMS/ATMS → LineageLedger | agent:direct
 - [x] S6.15.1: Operation.RETRACT + retract() с justification-link (последний contentHash) + latestStatus()/isRetracted() (ATMS label) | size:M | evidence: LineageLedgerTest jtms-тесты зелёные; bir BUILD SUCCESSFUL
 - [x] S6.15.2: commit+push оба remote после fetch-check | size:S
