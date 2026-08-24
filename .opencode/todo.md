@@ -77,6 +77,12 @@
 - [x] S6.25.1: D2 boost (consistency-reward unconditional) + ранее D1/D5 → Exp002SyntheticBringUpTest ЗЕЛЁНЫЙ (k=8/12 mean bAcc ≥0.80) | size:S | evidence: XML fail=0 fresh
 - [x] S6.25.2: Карточка EXP-002 «предэтап ЗАКРЫТ», WAL, push оба | size:S
 
+## M7: Открытый frontier — TM обобщение k≥8 (блокер этапа B доменной фазы) | status: pending | owner: session-next
+### T7.1: Верифицированный порт модели применения | agent:next-session
+- [ ] S7.1.1: Построчная сверка typeOne/Ib/typeTwo с ConvolutionalTsetlinMachine.c (локальная копия: docs/research/reports/reference/pyTsetlinMachine_ConvolutionalTsetlinMachine.c; дельты D1–D5 и verbatim в TM-CONVERGENCE-AUDIT-PLAN.md §3–4)
+- [ ] S7.1.2: Batch-mask модель применения (гипотеза attempt-18) или эквивалент по результатам сверки; критерий — синтетика k=8..20 bAcc ≥0.80 (гарнесс Exp002SyntheticBringUpTest включить)
+- [ ] S7.1.3: Доменная фаза EXP-002 после закрытия stage-1 (MedianThresholdBinarizer готов)
+
 ### T6.19: Волна 19 H-035 EBL реализация + проба | agent:direct
 - [x] S6.19.1: EblCurriculum (объяснения→приоритизация+контрфакты) + InitStrategy флаг тренера (RANDOM/COMPLEMENTARY) | size:M
 - [x] S6.19.2: Проба XOR/OR c=16 N=12: база 0/5 сходимости, EBL 5/5 (632–1303 примеров) — сильный позитив для карточки (running) | size:M | evidence: EblH035Test зелёный, system-out в XML
