@@ -37,7 +37,7 @@
 ### Дизайны
 - DESIGN-01 units → done (bir/) · частично: машина состояний артефакта → W4
 - DESIGN-02 composition → верхние уровни Viewpoint/Persona → W4
-- DESIGN-03 pipeline → прокси /matrix/* + MCP-контур → W7
+- DESIGN-03 pipeline → REST-поверхность существует (api/MatrixResource /api/v1/*, WebSocket, MCP-инструменты) — аудит 2026-08-25; алиасы /matrix/* косметика → done(partial)
 - DESIGN-04 learning → Distiller (W5), интерактив/самонаблюдение → W5
 - DESIGN-05 memory → M4-реплика базовая → W4
 - DESIGN-06 signal-modules → text-embed-hash/audio-events → W7
