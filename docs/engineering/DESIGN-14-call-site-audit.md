@@ -70,3 +70,11 @@ SchemaDescriptor — needs-analysis (тип получателя не подтв
 
 ### A-3c выполнено 2026-08-25
 `neuron/SchemaDescriptor` — 4 сайта table.evaluate → BIR (static FORM_CACHE, перегрузки BitSet/int); тесты neuron зелёные.
+
+### JMH-гейт Batch* выполнен 2026-08-26 (реальные числа)
+`./gradlew :matrix-core:jmh -PjmhBenchmark=BatchEvaluatorBenchmark` (20 итераций):
+- evaluateAll32 **58.73M ops/s ±0.35M**
+- evaluateAll64 **32.27M ops/s ±0.12M**
+- perElementLoop64 **68.66M ops/s ±0.66M**
+
+≈ 15–31 нс/eval — упакованный путь у памяти-предела. **Решение: Batch* оставить как есть** (замена на TtForm.evalBatch не даёт выигрыша в пределах правила ≤10%); item закрыт измерением, не мнением.
