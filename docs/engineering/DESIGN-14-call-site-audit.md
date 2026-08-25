@@ -64,3 +64,6 @@ BatchEvaluator / BatchMemoryAdapter / DecisionTreeBatch — НЕ raw-сайты,
 SchemaDescriptor — needs-analysis (тип получателя не подтверждён).
 
 **Итого DESIGN-14 после волн A:** мигрировано 33, транзитивно-BIR 13, SIMD-утилиты 10 (JMH-гейт), N/A 5, needs-analysis 3, legacy-internal 2.
+
+## INV-1 реализован 2026-08-25
+`matrix-core/src/test/java/io/matrix/bir/Inv1SourceGuardTest.java` — source-scan страж без внешних зависимостей: запрещает `(truthTable|modified|tt|tree|table|*Tree).evaluate(` вне whitelist (bir/, ethics/frozen/, neuron/, compression/TruthTableMinimizer). Выполняется штатным test-таском → действует в CI без изменения FROZEN-workflows.
