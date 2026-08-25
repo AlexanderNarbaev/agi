@@ -1,25 +1,26 @@
-# Project Context — SESSION CONTINUITY (compaction #14)
+# Project Context — SESSION CONTINUITY (compaction #15)
 
 ## Ловушки
-- Целевые прогоны `--tests "io.matrix.<pkg>.*"`; LSP FpgaBackend.java:150 ложная; субагенты недоступны.
-- XML ошибок: grep -oE 'message="[^"]{0,200}' matrix-core/build/test-results/test/TEST-<Класс>.xml
-- ls+grep пакета ДО нового кода. Коммиты: …66ad152→f1c94bd (последний).
+- Целевые прогоны `--tests`; LSP FpgaBackend.java:150 ложная; субагенты недоступны; коммиты до 8cbe22b.
+- НЕ добавлять зависимости в build.gradle (риск сети/сборки): DJL/ONNX учитель = BLOCKED-EXT(pending dep) честно.
 
 ## Mission: волны по docs/engineering/PLAN-FULL-IMPLEMENTATION.md
 
-## DONE (всё зелёное)
-W1-W5,W7 ядро; operator CRD 4 файла (compile EXIT=0 + CrdFactoriesTest); actions.PlanPreprocessor+тест (DESIGN-15 закрыт); журнал плана актуален до этого места.
+## DONE
+W1-W5,W7 ядро+CRD+ElspChannel; DESIGN-02/07(min)/09/11/12/13/15 закрыты; журнал актуален до «DESIGN-07 done». Коммиты ed42fd1→8cbe22b.
 
-## ТЕКУЩИЙ ШАГ: DESIGN-07 сон-цикл (минимум)
-В io.matrix.lifecycle создать `ConsolidationCycle`:
-- record DrainSummary(int routesDrained, long itemsMigrated)
-- поля: Map<String,Integer> routeBacklogs (route→pending), boolean open
-- методы: `open()` (idempotent, бросает IllegalStateException если уже открыт? нет — просто флаг), `drain(String route, int batchSize)` → уменьшает backlog на min(batch,size), возвращает фактически перенесённое; `close()` → DrainSummary(число маршрутов с нулевым остатком после цикла? проще: routesDrained = кол-во маршрутов доведённых до 0 за окно, itemsMigrated = сумма перенесённого) и закрывает.
-Детерминизм, без clock. Тест ConsolidationCycleTest: юнит drain частичный/полный, close суммирует, drain при закрытом окне → IllegalStateException("cycle_closed"); jqwik: суммарный перенесённый ≤ начального backlog.
-Прогон --tests "io.matrix.lifecycle.*".
+## ТЕКУЩИЙ ШАГ: DESIGN-14 остаток — аудит булевых call-sites (аннекс)
+Цель: превратить «~118 прочих call-sites» из оценки в конкретный реестр.
+1. Собрать кандидатов:
+   grep -rn "\.evaluate(" matrix-core/src/main/java --include=*.java | grep -v "/bir/" | grep -v "/ethics/frozen/" 
+   плюс ".eval(" для TtForm/ClauseSetForm вне bir. Посчитать по файлам (sort | uniq -c | sort -rn | head -40).
+2. Создать аннекс `docs/engineering/DESIGN-14-call-site-audit.md`: таблица Файл→кол-во вызовов→категория (runtime-ready/cacheable/frozen-excluded/training-side/needs-analysis) по правилам DESIGN-14 (waves ✅ уже мигрированы — исключить cluster/api/bridge/explain/neuron файлы из «мигрированных», отметить их как done).
+   Честная методология в шапке: статический grep, ручная классификация отложена для файлов с семантикой.
+3. Обновить журнал плана: DESIGN-14 остаток → аудит-аннекс готов (файл), миграция самих sites — следующие заходы по таблице.
+4. git add аннекс+журнал+context.md; commit «WAL: DESIGN-14 audit annex».
 
-## Финал захода
-Журнал: DESIGN-07 сон-цикл done(minimum). git add lifecycle/{ConsolidationCycle.java,+test} + журнал; commit «WAL: DESIGN-07 consolidation cycle minimum». Отчёт пользователю: статус волны + очередь (W6 прогоны JMH, DJL/ONNX учитель, DESIGN-03/06/14 остатки, BLOCKED-EXT список).
+## ЗАТЕМ (если контекст позволит)
+W6: ls matrix-core/src/jmh — есть ли готовый бенчмарк tsetlin/ga; если есть подходящий — запуск фонового JMH (run_background) с последующим разбором. Иначе честная пометка.
 
 ## Правила
-FROZEN/avro/workflows не трогать; детерминизм; forbidden claims избегать.
+FROZEN/avro/workflows не трогать; без новых зависимостей; forbidden claims избегать.
