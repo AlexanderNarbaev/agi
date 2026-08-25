@@ -29,6 +29,30 @@
 - Память M0–M4, ricci-топология знаний, ELSP-федерация с anti-replay и постквант-профилем ML-DSA.
 - Полный реестр: [engineering/PLAN-FULL-IMPLEMENTATION.md](engineering/PLAN-FULL-IMPLEMENTATION.md).
 
+## Гипотезы
+
+| Гипотеза | Вердикт | Ключевые числа |
+|---|---|---|
+| [H-010 WiSARD-producer](research/reports/EXP-010-report.md) | **accepted** (synthetic-scope) | обучение ×242 быстрее Tsetlin (медиана, 9 прогонов), точность 9/9 побед, minAdvantage +5 п.п. |
+| [H-002 CLAUSESET vs MPDT-GA](research/reports/EXP-002-report.md) | refuted-toy | GA быстрее ×5.5, точнее +8.75 п.п., компактнее ×7500 |
+| [H-003 живой обучатель vs Tsetlin](research/reports/EXP-003-report.md) | refuted-toy | GA быстрее ×7–10, точнее +7.9 п.п. в среднем |
+| [H-009 дистилляция BIR](research/reports/EXP-009-report.md) | running (preliminary) | дистиллят BIR ×149 быстрее ONNX-учителя на CPU, согласованность 99.90% |
+
+Реестр карточек и протокол: [research/HYPOTHESES.md](research/HYPOTHESES.md).
+
+## Стек
+
+| Компонент | Версия |
+|---|---|
+| Java | 25 LTS |
+| Quarkus (+BOM) | 3.38.3 |
+| GraalVM native plugin | 1.1.10 |
+| Avro | 1.12.2 |
+| Kafka-clients | 4.3.1 |
+| ONNX Runtime | 1.29.0 |
+| Testcontainers | 1.21.3 |
+| Постквант | ML-DSA (JDK 25 / JEP 497, ELSP v2) |
+
 ## Быстрый старт
 
 ```bash

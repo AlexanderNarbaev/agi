@@ -4,7 +4,7 @@
 
 Каждое решение — проверяемая булева цепочка. Этические и доменные ограничения неизменяемы на уровне FROZEN-слоя и формально верифицируемы. Одинаковое состояние и вход — всегда одинаковый выход.
 
-**1055+ тестов** · **83.7% покрытие (METHOD)** · **Java 25** · **Quarkus 3.37.3** · **Apache Pekko 1.6.0**
+**1055+ тестов** · **83.7% покрытие (METHOD)** · **Java 25** · **Quarkus 3.38.3** · **Apache Pekko 1.6.0**
 
 > Рамка честности: инженерные гарантии этого README подкреплены кодом и бенчмарками либо явно помечены как цели. Долгосрочное исследовательское видение (когнитивные архитектуры общего назначения) вынесено в `docs/vision/OPEN_PROBLEMS.md` и не является обещанием. Правила формулировок — `CONSTITUTION.md`, Статья VI.
 
@@ -15,6 +15,7 @@
 
 - **Ядро BIR**: компилятор + TT/CLAUSESET/BDD, единая точка исполнения (INV-1 страж в CI), миграция 37 call-sites.
 - **Гипотезы**: H-010 **accepted** (WiSARD ×242 быстрее, точнее 9/9); H-002/H-003 refuted-toy с пинами.
+- **Дистилляция**: EXP-009B — дистиллят BIR ~×149 быстрее ONNX-учителя на CPU, согласованность 99.90% (preliminary).
 - **Стек**: Java 25 · Quarkus 3.38.3 · GraalVM plugin 1.1.10 · Avro 1.12.2 · ONNX Runtime 1.29.0 · Kafka-clients 4.3.1 · Postquantum ML-DSA (ELSP v2).
 - **Карта работ**: [docs/engineering/PLAN-FULL-IMPLEMENTATION.md](docs/engineering/PLAN-FULL-IMPLEMENTATION.md) · реестр вызовов: [DESIGN-14 annex](docs/engineering/DESIGN-14-call-site-audit.md).
 
