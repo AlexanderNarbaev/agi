@@ -35,7 +35,7 @@
 - [x] Реестр создан (этот документ)
 - [x] Волна A-1: ExplanationGenerator (24 вызова → BIR через per-instance TtForm-кэш; тесты пакета зелёные; JMH-latency контроль отложен)
 - [x] Волна A-2: NeuralBrain 9 сайтов → BIR (DecisionTreeAdapter); ChatBot/OpenAIChatResource = N/A (не TT-сайты)
-- [ ] Волна A-3: neuron/* остатки
+- [x] Волна A-3: классификация завершена — 13 транзитивно-BIR; Batch* = SIMD-утилиты (JMH-гейт W6); SchemaDescriptor needs-analysis
 - [ ] INV-1 ArchUnit в CI
 
 ## Волна A-2/A-3 — статус 2026-08-25
@@ -58,3 +58,9 @@
 | DecisionTreeBatch (3) | tree.evaluate | raw → миграция A-3b |
 
 **Итог волны A:** мигрировано 33 сайта (A-1:24 + A-2:9); транзитивно-BIR 13; остающихся raw ≈10 (A-3b) + 3 needs-analysis.
+
+### A-3b переклассифицировано 2026-08-25
+BatchEvaluator / BatchMemoryAdapter / DecisionTreeBatch — НЕ raw-сайты, а **SIMD-батчевые утилиты** (evaluateAll64/evaluatePacked/trueCount над int-индексами вершин). Их перевод на `TtForm.evalBatch` требует JMH-гейта ≤10% против текущего упакованного пути — вынесено в W6 (отдельный замер), слепой рерайт запрещён правилом latency.
+SchemaDescriptor — needs-analysis (тип получателя не подтверждён).
+
+**Итого DESIGN-14 после волн A:** мигрировано 33, транзитивно-BIR 13, SIMD-утилиты 10 (JMH-гейт), N/A 5, needs-analysis 3, legacy-internal 2.
