@@ -26,6 +26,30 @@ import java.util.Set;
  */
 public final class SchemaDescriptor {
 
+    /** Per-table BIR form cache (DESIGN-14 wave A-3c): tables are immutable. */
+    private static final java.util.Map<TruthTable, io.matrix.bir.TtForm> FORM_CACHE =
+            new java.util.concurrent.ConcurrentHashMap<>();
+
+    /** BIR-path evaluation, semantically identical to {@code evaluateViaBir(table, BitSet/int)}. */
+    private static boolean evaluateViaBir(TruthTable table, java.util.BitSet input) {
+        io.matrix.bir.TtForm form = FORM_CACHE.computeIfAbsent(table, io.matrix.bir.TruthTableAdapter::toBir);
+        long packed = 0L;
+        for (int b = input.nextSetBit(0); b >= 0 && b < form.k(); b = input.nextSetBit(b + 1)) {
+            packed |= 1L << b;
+        }
+        long[] out = new long[1];
+        form.eval(new long[]{packed}, out);
+        return out[0] != 0L;
+    }
+
+    /** BIR-path evaluation for an integer vertex index. */
+    private static boolean evaluateViaBir(TruthTable table, int vertex) {
+        io.matrix.bir.TtForm form = FORM_CACHE.computeIfAbsent(table, io.matrix.bir.TruthTableAdapter::toBir);
+        long[] out = new long[1];
+        form.eval(new long[]{vertex}, out);
+        return out[0] != 0L;
+    }
+
     public enum SchemaType {
         /** Single boolean output, no schema-level constraints. */
         SCALAR,
@@ -145,7 +169,7 @@ public final class SchemaDescriptor {
     private boolean validateScalar(TruthTable table) {
         // Check test vectors
         for (var entry : testVectors.entrySet()) {
-            boolean actual = table.evaluate(entry.getKey());
+            boolean actual = evaluateViaBir(table, entry.getKey());
             if (actual != entry.getValue()) {
                 if (strict) {
                     throw new SchemaViolationException(
@@ -203,7 +227,7 @@ public final class SchemaDescriptor {
         long bits = 0L;
         int size = Math.min(table.size(), 64);
         for (int i = 0; i < size; i++) {
-            if (table.evaluate(i)) {
+            if (evaluateViaBir(table, i)) {
                 bits |= (1L << i);
             }
         }
@@ -214,7 +238,7 @@ public final class SchemaDescriptor {
         int count = 0;
         int size = table.size();
         for (int i = 0; i < size; i++) {
-            if (table.evaluate(i)) {
+            if (evaluateViaBir(table, i)) {
                 count++;
             }
         }
