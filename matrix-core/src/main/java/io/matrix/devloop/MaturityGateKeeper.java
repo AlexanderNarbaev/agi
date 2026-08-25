@@ -1,71 +1,69 @@
 package io.matrix.devloop;
 
-import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.Map;
+import java.util.Objects;
+import java.util.function.Predicate;
 
 /**
- * Maturity gate keeper: controls MA level transitions.
+ * Maturity-gate keeper: monotonic MA-0…MA-5 promotion (SPEC-000#fr-5).
  *
- * <p>Per SPEC-000 FR-5: transitions require preregistered EXP card +
- * operator confirmation. Demotion is automatic on drift (no operator).
- * Every gate leaves a record in Event Sourcing.
+ * <p>Transitions are forward-only (monotonicity invariant, SPEC-000 INV-3): there is no
+ * {@code demote} API, so no sequence of criterion evaluations can lower the level. A
+ * promotion from {@code current} to {@code current.next()} succeeds only when a
+ * threshold-checker is registered for the target gate AND that checker accepts the supplied
+ * {@link GateCriteria}. Criteria are supplied as a {@code Map<MaturityLevel, Predicate<GateCriteria>>}
+ * (gate → threshold-checker).
+ *
+ * <p>Drift-based demotion (SPEC-000#fr-5) is a quarantine of permissions handled out-of-band,
+ * not a rollback of this monotonic ladder.
  */
 public final class MaturityGateKeeper {
 
-    private final CompetenceAssessor assessor;
-    private final List<TransitionRecord> transitions = new CopyOnWriteArrayList<>();
+    private final Map<MaturityLevel, Predicate<GateCriteria>> criteria;
     private MaturityLevel current = MaturityLevel.MA_0_SANDBOX;
 
-    public MaturityGateKeeper(CompetenceAssessor assessor) {
-        this.assessor = assessor;
+    /**
+     * @param criteria gate→threshold-checker map; keyed by the TARGET level of each gate
+     *                 (e.g. the {@code MA_1_LOCAL} entry guards the MA-0→MA-1 promotion)
+     */
+    public MaturityGateKeeper(Map<MaturityLevel, Predicate<GateCriteria>> criteria) {
+        this.criteria = Map.copyOf(criteria);
     }
 
-    public MaturityLevel current() { return current; }
+    /** Current maturity level. */
+    public MaturityLevel current() {
+        return current;
+    }
 
-    /** Request promotion to next level. Requires operator approval. */
-    public TransitionResult requestPromotion(String operator, String expCardId) {
+    /**
+     * Attempt a forward transition to the next level.
+     *
+     * @param evidence observable criteria evidence for the target gate's checker
+     * @return approved transition (with the new level) or a denied result with a reason
+     */
+    public TransitionResult advance(GateCriteria evidence) {
+        Objects.requireNonNull(evidence, "evidence");
         MaturityLevel target = current.next();
         if (target == current) {
-            return TransitionResult.denied("Already at maximum level");
+            return TransitionResult.denied("already at ceiling " + current);
         }
-        if (!assessor.readyFor(target)) {
-            return TransitionResult.denied("Competence " + assessor.aggregateCompetence()
-                    + " below threshold for " + target.displayName());
+        Predicate<GateCriteria> checker = criteria.get(target);
+        if (checker == null) {
+            return TransitionResult.denied("no criterion registered for gate " + target);
         }
-        // Record the transition
-        var record = new TransitionRecord(
-                current, target, operator, expCardId,
-                System.currentTimeMillis(), "promoted");
-        transitions.add(record);
+        if (!checker.test(evidence)) {
+            return TransitionResult.denied("criteria not satisfied for " + target);
+        }
         current = target;
         return TransitionResult.approved(target);
     }
 
-    /** Automatic demotion on drift (no operator needed). */
-    public TransitionResult demote(String reason) {
-        if (current == MaturityLevel.MA_0_SANDBOX) {
-            return TransitionResult.denied("Already at minimum level");
-        }
-        MaturityLevel target = current.previous();
-        var record = new TransitionRecord(
-                current, target, "system", "drift-detected",
-                System.currentTimeMillis(), "demoted: " + reason);
-        transitions.add(record);
-        current = target;
-        return TransitionResult.approved(target);
-    }
-
-    public List<TransitionRecord> transitions() { return List.copyOf(transitions); }
-
-    public record TransitionRecord(
-            MaturityLevel from, MaturityLevel to,
-            String operator, String expCardId,
-            long timestamp, String action) {}
-
+    /** Result of a transition attempt. */
     public record TransitionResult(boolean approved, MaturityLevel newLevel, String reason) {
         public static TransitionResult approved(MaturityLevel level) {
             return new TransitionResult(true, level, "approved");
         }
+
         public static TransitionResult denied(String reason) {
             return new TransitionResult(false, null, reason);
         }

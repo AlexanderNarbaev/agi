@@ -1,25 +1,31 @@
-# MATRIX Project Context - Session State (актуальный)
+# Project Context — SESSION CONTINUITY (compaction #8, финальная фаза)
 
-## Current Status
-- Сессия: ~33 волны, 7.5ч+. Всё в origin+gitverse, дерево чистое. Критерий A ЗАКРЫТ; этап B: продюсеры+toy-gate; frontier TM k≥8 задокументирован (attempt-21, side-by-side с pyTM — dedicated session)
-- **Wave 33 ЗАВЕРШЕНА**: AC-3 гейт вшит в ExecutablePlanner (executeSteps(goal,steps,cspPrecheck) → fast-fail «unsatisfiable_preconditions»); DESIGN-15 §3 acceptance [x]; полный регресс **626/0** (вкл. agent/planning)
-- H-035 refuted-toy пины; EblH035Test @Disabled superseded
+## Ловушки
+- Целевые прогоны `--tests "io.matrix.<pkg>.*"`; LSP-ошибка FpgaBackend.java:150 ложная; субагенты недоступны.
+- jqwik: `.list()` ок, `Arbitraries.lists/zipWith` нет → Combinators; XML ошибок: grep -oE 'message="[^"]{0,200}' build/test-results/test/TEST-<Класс>.xml
+- Свойства jqwik должны генерировать ЗАВЕДОМО валидные планы (симулировать состояние при генерации).
 
-## Очередь следующей сессии
-1. **TM batch-mask порт** (мандат attempt-18): ref_tm.c локально (/tmp/opencode/ref_tm.c), verbatim §4 audit-plan; синтетика k≥8 после порта
-2. Доменная фаза EXP-002 (Minecraft-перцепт, median-threshold frozen) — после закрытия stage-1
-3. JTMS justification-graph (RETRACT есть; добавить dependency-links между birId)
-4. Dependency upgrades осторожно (Quarkus 3.37.3/Pekko 1.6.0 pinned)
-5. Атлас §95–103 прочитать при планировании REFLEX/Cauldron
+## Mission: план docs/engineering/PLAN-FULL-IMPLEMENTATION.md. Журнал обновлён до W4b-budgeter? — НЕТ: журнал сейчас до «W4 DESIGN-09 done + перечисление остатка». Нужно в конце дописать статусы 11/12/13.
 
-## Ключевые файлы/факты
-- Ac3Solver: io.matrix.agent.planning; тесты Ac3SolverTest+PlannerAc3GateTest (gate fast-fail + pass-through)
-- TsetlinTrainer: InitStrategy(RANDOM/COMPLEMENTARY), s-param, D1' per-clause gating, D2 boost, Ib decay, batch TypeII, D5 empty-no-fire; дистилляция toDecisionClauseSet/Bir
-- Гонки: правки→commit→pull --rebase→push→verify rev-list=0; sed по номеру строки надёжнее текстовых якорей
-- LSP фантомы tsetlin/* — верить gradlew; rm→mv в /tmp/opencode/; полный test OOM — батчи
-- FROZEN: ethics/, CONSTITUTION.md, старые avro, workflows; K_MAX≤20; coverage≥82%; Java-only prod
+## DONE+verified (BUILD SUCCESSFUL)
+W1 (K_MAX, RuntimeLimits+10т, BIR-to-MPS.md) · W2 devloop · W3 ktopo · W4a monotone(6т) · W4b ConjugateBudgeter(11т, фикс dp[0][*]) · W4c DESIGN-13: actions/{VersionedContract(main!),PlanRunner}+PlanRunnerTest зелёные (свойство генерирует валидные планы симуляцией).
 
-[COMPACTION_COMPLETE]
+## ТЕКУЩИЙ ШАГ: W4d DESIGN-12 — РЕШЕНИЕ ПО ОСМОТРУ КОДА
+CauldronProtocol УЖЕ даёт QUARANTINED→PROMOTED с Φ-validate; TaskCell уже есть (State CREATED..DESTROYED, execute(TaskExecutor), isTimeout). Недостающее по DESIGN-12: двухступенчатый гейт SHADOW→CANDIDATE→PROMOTED (+DEMOTED).
+МИНИМАЛЬНАЯ ДОБАВКА в io.matrix.lifecycle: класс `FnlGate`: enum GateState{SHADOW,CANDIDATE,PROMOTED,DEMOTED}; методы: admit(id)->SHADOW; advance(id,double shadowScore,double threshold): SHADOW→CANDIDATE если score≥threshold иначе DEMOTED; CANDIDATE→PROMOTED аналогично; state(id)->Optional; детерминизм. Тест FnlGateTest: переходы юнит + jqwik (монотонность: после PROMOTED/DEMOTED состояние не меняется повторными advance; score<threshold всегда не повышает выше CANDIDATE со стадии SHADOW... точнее: продвижение требует ≥threshold на КАЖДОЙ ступени).
+Прогнать --tests "io.matrix.lifecycle.*". НЕ трогать существующие CauldronProtocol/TaskCell.
 
-## DELTA (финал сессии)
-- Отчёт владельцу выдан (простые термины vs обычный ИИ); новых техфактов нет. Все чекпойнты выше актуальны.
+## Затем закрытие сессии (строгий порядок)
+1. Обновить журнал PLAN-FULL-IMPLEMENTATION.md: W4 = 09✓ 11✓ 13✓(PlanRunner/VersionedContract поверх готового реестра) 12✓(FnlGate; TaskCell уже был); DESIGN-02/05 минимальные ядра → перенос в следующий заход (partial); W5 SPEC-001 этап B → pending; W6 → см.п.2; W7 pending.
+2. Волна 6 честно: СОЗДАТЬ research/reports/EXP-002-report.md и EXP-003-report.md ТОЛЬКО как preregistration-skeletons со статусом running и секцией «Infra ready: producers io.matrix.tsetlin / evolution готовы к JVM-замеру; прогон не выполнялся в этой сессии» — БЕЗ выдуманных чисел (запрещено протоколом и конституцией VI).
+3. git add (см. список ниже + lifecycle/FnlGate*, actions/*, тесты), commit -m "WAL: волны W1-W4 — BIR-to-MPS spec, runtime limits, devloop, ktopo ricci-fingerprint, monotone decoder, conjugate budgeter, hoare plan runner, fnl gate".
+4. Переписать WAL.md по шаблону из файла (Активный фокус/Правила/Что сделано/Следующее действие/Известные проблемы: yosys нет; субагенты Insufficient Balance; полные цепи Ханселя future; EXP-002..022 прогоны pending).
+5. Итоговый отчёт пользователю: что реализовано (по волнам, с путями), что BLOCKED-EXT/pending.
+
+## Файлы для git add
+docs/engineering/PLAN-FULL-IMPLEMENTATION.md; docs/spec/quantum/BIR-to-MPS.md; .opencode/context.md; WAL.md;
+m/src/main/java/io/matrix/: bir/FpgaBackend.java, runtime/RuntimeLimits.java, devloop/*(новые 7: CompetenceAssessor,CurriculumEngine,FeedbackComposer,ScaffoldingManager,ScenarioSpec,Outcome,DifficultyBand,GateCriteria,MaturityGateKeeper,MaturityLevel,Feedback,CompetenceReport — уточнить git status), ktopo/DriftFingerprint.java,FingerprintDistance.java,CurriculumOrderer.java, bir/producers/monotone/*.java, budgeter/ConjugateBudgeter.java, actions/{VersionedContract,PlanRunner}.java, lifecycle/FnlGate.java
+m/src/test/java/io/matrix/: runtime/RuntimeLimitsTest, devloop/{DevLoopTest,DevLoopPropertiesTest}, ktopo/KtopoPropertiesTest, bir/producers/monotone/MonotoneDecoderTest, budgeter/ConjugateBudgeterTest, actions/PlanRunnerTest, lifecycle/FnlGateTest
+
+## Правила
+FROZEN/avro/workflows не трогать; новый код с тестами; детерминизм; никаких непроверенных чисел в отчётах (CONSTITUTION VI).

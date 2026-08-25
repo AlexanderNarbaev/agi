@@ -1,5 +1,7 @@
 package io.matrix.bir;
 
+import io.matrix.neuron.TruthTable;
+
 import java.nio.ByteBuffer;
 import java.util.logging.Logger;
 
@@ -33,8 +35,11 @@ public final class FpgaBackend implements SubstrateBackend {
     /** Bitstream format version. */
     private static final int VERSION = 1;
 
-    /** K_MAX constraint per CONSTITUTION II.3. */
-    private static final int K_MAX = 20;
+    /**
+     * Maximum input arity for FPGA LUT synthesis. Single source of truth:
+     * {@link TruthTable#K_MAX} (per CONSTITUTION II.3).
+     */
+    private static final int K_MAX = TruthTable.K_MAX;
 
     /** Maximum input bits this backend supports (SPEC-002 INV-2, configurable). */
     private static int maxInputBits() {

@@ -1,84 +1,49 @@
 package io.matrix.devloop;
 
-import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
 
 /**
- * Competence assessor: runs scenario battery and produces reports.
+ * Deterministic skill→competence estimation from an ordered outcome history (SPEC-000#fr-1).
  *
- * <p>Per SPEC-000 §3: battery = XOR → GridWorld → craft-graph.
- * Each scenario run produces a CompetenceReport. The assessor tracks
- * aggregate competence and determines MA level readiness.
+ * <p>Competence is estimated with an exponentially-weighted moving average (EWMA) over the
+ * sequence of observed outcomes, one success/failure (1.0/0.0) per {@link #record(Outcome)}.
+ * The smoothing constant {@link #ALPHA} is FIXED; there is no randomness and no wall-clock
+ * anywhere in the decision path (determinism invariant). The initial competence of an
+ * unseen skill is {@code 0.0}.
+ *
+ * <p>EWMA update rule: {@code c' = α·y + (1 − α)·c}, where {@code y ∈ {0,1}} is the latest
+ * outcome. Because {@code c} starts in {@code [0,1]} and {@code α ∈ [0,1]}, every update is
+ * a convex combination, so competence is bounded to {@code [0,1]} for all histories.
  */
 public final class CompetenceAssessor {
 
-    private final List<CompetenceReport> history = new CopyOnWriteArrayList<>();
+    /** Fixed EWMA smoothing constant. Documented, never tuned at runtime. */
+    public static final double ALPHA = 0.3;
 
-    /** Run a single scenario and record the report. */
-    public CompetenceReport assess(ScenarioSpec scenario, ScenarioRunner runner) {
-        long t0 = System.currentTimeMillis();
-        var result = runner.run(scenario);
-        long ms = System.currentTimeMillis() - t0;
+    private final Map<String, Double> competence = new HashMap<>();
 
-        double score = computeScore(scenario, result, ms);
-        var report = new CompetenceReport(
-                scenario.id(), result.success(), result.stepsUsed(), ms, score, result.details());
-        history.add(report);
-        return report;
+    /**
+     * Record one outcome for its skill, updating that skill's EWMA competence.
+     *
+     * @param outcome observed outcome (success → {@code 1.0}, failure → {@code 0.0})
+     */
+    public void record(Outcome outcome) {
+        Objects.requireNonNull(outcome, "outcome");
+        double y = outcome.success() ? 1.0 : 0.0;
+        String skill = outcome.skill();
+        double prev = competence.getOrDefault(skill, 0.0);
+        competence.put(skill, ALPHA * y + (1.0 - ALPHA) * prev);
     }
 
-    /** Run the standard battery. */
-    public List<CompetenceReport> assessBattery(ScenarioRunner runner) {
-        return ScenarioSpec.standardBattery().stream()
-                .map(s -> assess(s, runner))
-                .toList();
+    /** Current competence estimate for a skill, or {@code 0.0} if never observed. */
+    public double competence(String skill) {
+        return competence.getOrDefault(skill, 0.0);
     }
 
-    /** Compute aggregate competence from history. */
-    public double aggregateCompetence() {
-        if (history.isEmpty()) return 0.0;
-        return history.stream()
-                .mapToDouble(CompetenceReport::competenceScore)
-                .average().orElse(0.0);
-    }
-
-    /** Check if ready for MA level transition. */
-    public boolean readyFor(MaturityLevel target) {
-        double threshold = switch (target) {
-            case MA_1_LOCAL -> 0.6;
-            case MA_2_NETWORK -> 0.75;
-            case MA_3_SELF_MODIFY -> 0.85;
-            case MA_4_AUTONOMOUS -> 0.95;
-            default -> 0.0;
-        };
-        return aggregateCompetence() >= threshold;
-    }
-
-    public List<CompetenceReport> history() { return List.copyOf(history); }
-
-    private double computeScore(ScenarioSpec spec, ScenarioResult result, long ms) {
-        if (!result.success()) return 0.0;
-        double base = 1.0;
-        // Efficiency bonus: fewer steps = higher score
-        double efficiency = Math.max(0.0, 1.0 - (double) result.stepsUsed() / spec.maxSteps());
-        // Speed bonus: faster = higher score (capped)
-        double speed = Math.max(0.0, 1.0 - ms / 10_000.0);
-        return base * 0.5 + efficiency * 0.3 + speed * 0.2;
-    }
-
-    /** Functional interface for running a scenario. */
-    @FunctionalInterface
-    public interface ScenarioRunner {
-        ScenarioResult run(ScenarioSpec scenario);
-    }
-
-    /** Result of a single scenario run. */
-    public record ScenarioResult(boolean success, int stepsUsed, String details) {
-        public static ScenarioResult success(int steps, String details) {
-            return new ScenarioResult(true, steps, details);
-        }
-        public static ScenarioResult failure(int steps, String reason) {
-            return new ScenarioResult(false, steps, reason);
-        }
+    /** Immutable snapshot of the whole skill→competence map. */
+    public Map<String, Double> competenceMap() {
+        return Map.copyOf(competence);
     }
 }

@@ -3,85 +3,157 @@ package io.matrix.devloop;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
 
+/**
+ * Unit tests for the SPEC-000 developmental-loop core
+ * ({@code docs/spec/SPEC-000-developmental-loop.md#задачи}).
+ */
 class DevLoopTest {
 
+    // --- MaturityLevel ---
+
     @Test
-    void maturityLevelsOrdered() {
-        assertTrue(MaturityLevel.MA_0_SANDBOX.level() < MaturityLevel.MA_1_LOCAL.level());
-        assertTrue(MaturityLevel.MA_1_LOCAL.level() < MaturityLevel.MA_2_NETWORK.level());
-        assertTrue(MaturityLevel.MA_2_NETWORK.level() < MaturityLevel.MA_3_SELF_MODIFY.level());
-        assertTrue(MaturityLevel.MA_3_SELF_MODIFY.level() < MaturityLevel.MA_4_AUTONOMOUS.level());
+    void maturityLevelsStrictlyOrdered() {
+        assertThat(MaturityLevel.MA_0_SANDBOX.level())
+                .isLessThan(MaturityLevel.MA_1_LOCAL.level())
+                .isLessThan(MaturityLevel.MA_2_NETWORK.level());
+        assertThat(MaturityLevel.MA_2_NETWORK.level())
+                .isLessThan(MaturityLevel.MA_3_SELF_MODIFY.level());
+        assertThat(MaturityLevel.MA_3_SELF_MODIFY.level())
+                .isLessThan(MaturityLevel.MA_4_AUTONOMOUS.level());
+        assertThat(MaturityLevel.MA_4_AUTONOMOUS.level())
+                .isLessThan(MaturityLevel.MA_5_MENTOR.level());
     }
 
     @Test
-    void maturityNextAndPrevious() {
-        assertEquals(MaturityLevel.MA_1_LOCAL, MaturityLevel.MA_0_SANDBOX.next());
-        assertEquals(MaturityLevel.MA_0_SANDBOX, MaturityLevel.MA_1_LOCAL.previous());
-        assertEquals(MaturityLevel.MA_4_AUTONOMOUS, MaturityLevel.MA_4_AUTONOMOUS.next()); // ceiling
-        assertEquals(MaturityLevel.MA_0_SANDBOX, MaturityLevel.MA_0_SANDBOX.previous()); // floor
+    void maturityNextHasCeilingAndPreviousHasFloor() {
+        assertThat(MaturityLevel.MA_0_SANDBOX.next()).isEqualTo(MaturityLevel.MA_1_LOCAL);
+        assertThat(MaturityLevel.MA_4_AUTONOMOUS.next()).isEqualTo(MaturityLevel.MA_5_MENTOR);
+        assertThat(MaturityLevel.MA_5_MENTOR.next()).isEqualTo(MaturityLevel.MA_5_MENTOR);
+        assertThat(MaturityLevel.MA_5_MENTOR.previous()).isEqualTo(MaturityLevel.MA_4_AUTONOMOUS);
     }
 
+    // --- ScenarioSpec acceptance predicate ---
+
     @Test
-    void scenarioSpecBattery() {
-        List<ScenarioSpec> battery = ScenarioSpec.standardBattery();
-        assertEquals(3, battery.size());
-        assertEquals("xor", battery.get(0).id());
-        assertEquals("gridworld", battery.get(1).id());
-        assertEquals("craft", battery.get(2).id());
+    void scenarioAcceptancePredicate() {
+        ScenarioSpec xor = new ScenarioSpec(
+                "a-xor", "logic", "xor",
+                new DifficultyBand(0.0, 0.5),
+                Set.of(),
+                "all effects present",
+                o -> o.effects().contains("table-built") && o.unmetCriteria().isEmpty());
+
+        Outcome good = new Outcome("a-xor", "xor", true,
+                Set.of("table-built"), Set.of());
+        Outcome partial = new Outcome("a-xor", "xor", true,
+                Set.of(), Set.of("table-missing"));
+
+        assertThat(xor.accepts(good)).isTrue();
+        assertThat(xor.accepts(partial)).isFalse();
     }
 
-    @Test
-    void competenceAssessorAggregates() {
-        var assessor = new CompetenceAssessor();
-        var scenario = ScenarioSpec.standardBattery().get(0); // xor
-        var report = assessor.assess(scenario, s ->
-                CompetenceAssessor.ScenarioResult.success(50, "xor solved"));
-        assertTrue(report.success());
-        assertEquals("xor", report.scenarioId());
-        assertTrue(report.competenceScore() > 0);
-        assertTrue(assessor.aggregateCompetence() > 0);
-    }
+    // --- CompetenceAssessor (EWMA) ---
 
     @Test
-    void gateKeeperPromotionFlow() {
-        var assessor = new CompetenceAssessor();
-        var keeper = new MaturityGateKeeper(assessor);
-        assertEquals(MaturityLevel.MA_0_SANDBOX, keeper.current());
-
-        // Not ready — no competence
-        var result = keeper.requestPromotion("op1", "exp-001");
-        assertFalse(result.approved());
-
-        // Build competence
-        var scenario = ScenarioSpec.standardBattery().get(0);
-        for (int i = 0; i < 5; i++) {
-            assessor.assess(scenario, s -> CompetenceAssessor.ScenarioResult.success(30, "ok"));
-        }
-        result = keeper.requestPromotion("op1", "exp-001");
-        // With 5 successes at 30 steps each, competence should be > 0.6
-        assertTrue(result.approved());
-        assertEquals(MaturityLevel.MA_1_LOCAL, keeper.current());
-    }
-
-    @Test
-    void gateKeeperDemotion() {
-        var assessor = new CompetenceAssessor();
-        var keeper = new MaturityGateKeeper(assessor);
-        // Force to MA_1
-        var scenario = ScenarioSpec.standardBattery().get(0);
+    void competenceBoundedAndResponsive() {
+        CompetenceAssessor assessor = new CompetenceAssessor();
+        String skill = "xor";
         for (int i = 0; i < 10; i++) {
-            assessor.assess(scenario, s -> CompetenceAssessor.ScenarioResult.success(10, "ok"));
+            assessor.record(new Outcome("s", skill, true, Set.of("ok"), Set.of()));
         }
-        keeper.requestPromotion("op1", "exp-001");
-        assertEquals(MaturityLevel.MA_1_LOCAL, keeper.current());
+        double afterSuccess = assessor.competence(skill);
+        assertThat(afterSuccess).isBetween(0.0, 1.0).isGreaterThan(0.5);
 
-        // Demote on drift
-        var result = keeper.demote("drift detected");
-        assertTrue(result.approved());
-        assertEquals(MaturityLevel.MA_0_SANDBOX, keeper.current());
-        assertEquals(2, keeper.transitions().size());
+        assessor.record(new Outcome("s", skill, false, Set.of(), Set.of("x")));
+        assertThat(assessor.competence(skill)).isLessThan(afterSuccess);
+        assertThat(assessor.competence("unknown-skill")).isEqualTo(0.0);
+    }
+
+    // --- CurriculumEngine (ZPD selection) ---
+
+    @Test
+    void zpdPicksLowestIdBracketingScenario() {
+        CurriculumEngine engine = new CurriculumEngine();
+        ScenarioSpec easy = new ScenarioSpec("b-easy", "d", "k",
+                new DifficultyBand(0.0, 0.3), Set.of(), "e", o -> true);
+        ScenarioSpec mid = new ScenarioSpec("c-mid", "d", "k",
+                new DifficultyBand(0.3, 0.7), Set.of(), "m", o -> true);
+        ScenarioSpec hard = new ScenarioSpec("a-hard", "d", "k",
+                new DifficultyBand(0.8, 1.0), Set.of(), "h", o -> true);
+
+        Map<String, Double> competence = Map.of("k", 0.5);
+        assertThat(engine.nextScenario(competence, List.of(hard, mid, easy)))
+                .hasValue(mid);
+
+        assertThat(engine.nextScenario(Map.of("k", 0.99), List.of(easy, mid)))
+                .isEmpty();
+    }
+
+    // --- FeedbackComposer ---
+
+    @Test
+    void feedbackTypesMapToOutcomeDiff() {
+        FeedbackComposer composer = new FeedbackComposer();
+        Outcome expected = Outcome.expected("s", "k", Set.of("a", "b"));
+
+        Feedback correct = composer.compose(expected,
+                new Outcome("s", "k", true, Set.of("a", "b"), Set.of()));
+        assertThat(correct.type()).isEqualTo(Feedback.FeedbackType.CORRECT);
+
+        Feedback partial = composer.compose(expected,
+                new Outcome("s", "k", true, Set.of("a"), Set.of()));
+        assertThat(partial.type()).isEqualTo(Feedback.FeedbackType.PARTIAL);
+        assertThat(partial.missingEffects()).containsExactly("b");
+
+        Feedback wrong = composer.compose(expected,
+                new Outcome("s", "k", false, Set.of("zzz"), Set.of()));
+        assertThat(wrong.type()).isEqualTo(Feedback.FeedbackType.COUNTEREXAMPLE);
+    }
+
+    // --- ScaffoldingManager ---
+
+    @Test
+    void scaffoldDecaysAfterStreakAndRaisesOnFailure() {
+        ScaffoldingManager sm = new ScaffoldingManager();
+        assertThat(sm.level("k")).isEqualTo(ScaffoldingManager.INITIAL_LEVEL);
+
+        for (int i = 0; i < ScaffoldingManager.SUCCESSES_TO_DECAY; i++) {
+            sm.recordSuccess("k");
+        }
+        assertThat(sm.level("k")).isEqualTo(ScaffoldingManager.INITIAL_LEVEL - 1);
+
+        for (int i = 0; i < 20; i++) {
+            sm.recordFailure("k");
+        }
+        assertThat(sm.level("k")).isEqualTo(ScaffoldingManager.MAX_LEVEL);
+    }
+
+    // --- MaturityGateKeeper ---
+
+    @Test
+    void gateKeeperAdvancesOnlyWhenCriteriaMetAndNeverBackwardViaAdvance() {
+        // Criteria are keyed by TARGET gate level (see advance(): criteria.get(target)).
+        Map<MaturityLevel, java.util.function.Predicate<GateCriteria>> criteria =
+                Map.of(MaturityLevel.MA_1_LOCAL, g -> g.metric("competence") >= 0.6);
+        MaturityGateKeeper keeper = new MaturityGateKeeper(criteria);
+
+        assertThat(keeper.current()).isEqualTo(MaturityLevel.MA_0_SANDBOX);
+
+        var denied = keeper.advance(new GateCriteria(Map.of("competence", 0.4)));
+        assertThat(denied.approved()).isFalse();
+        assertThat(keeper.current()).isEqualTo(MaturityLevel.MA_0_SANDBOX);
+
+        var approved = keeper.advance(new GateCriteria(Map.of("competence", 0.9)));
+        assertThat(approved.approved()).isTrue();
+        assertThat(keeper.current()).isEqualTo(MaturityLevel.MA_1_LOCAL);
+
+        // Criteria satisfied again must not skip levels or regress.
+        var again = keeper.advance(new GateCriteria(Map.of("competence", 0.9)));
+        assertThat(keeper.current().level()).isGreaterThanOrEqualTo(MaturityLevel.MA_1_LOCAL.level());
     }
 }

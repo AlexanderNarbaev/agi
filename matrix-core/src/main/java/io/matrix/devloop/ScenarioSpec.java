@@ -1,50 +1,50 @@
 package io.matrix.devloop;
 
-import java.util.List;
+import java.util.Objects;
+import java.util.Set;
+import java.util.function.Predicate;
 
 /**
- * Scenario specification for a single learning episode (SPEC-000 FR-6).
+ * Machine-readable scenario specification for a single learning episode (SPEC-000#fr-6).
  *
- * <p>Machine-readable description of proposed circumstances: world, roles,
- * constraints, available actions, success criteria. Each scenario is a
- * testable episode for competence assessment.
+ * <p>Describes the proposed circumstances of a learning episode: the domain, the target
+ * skill being exercised, the difficulty band (zone of proximal development), prerequisite
+ * skills, and a deterministic acceptance predicate over {@link Outcome}. Immutable record.
+ *
+ * <p>The acceptance criterion is stored as a serializable text {@link #acceptanceDescription()}
+ * alongside a deterministic {@link #acceptance()} {@code Predicate<Outcome>} (the "factory"
+ * producing an accept/reject verdict from an outcome). The predicate MUST be pure: no
+ * randomness and no wall-clock (SPEC-000 determinism invariant).
+ *
+ * @param id                    unique scenario identifier (used as the ZPD tie-break key)
+ * @param domain                domain label (e.g. {@code "boolean"}, {@code "craft-graph"})
+ * @param targetSkill           skill this scenario exercises
+ * @param difficultyBand        difficulty interval {@code [min, max]} ⊂ [0, 1]
+ * @param prerequisiteSkills    skills that should be mastered before this scenario
+ * @param acceptanceDescription human-readable, serializable description of acceptance
+ * @param acceptance            deterministic predicate over {@link Outcome}
  */
 public record ScenarioSpec(
         String id,
-        String description,
-        MaturityLevel requiredLevel,
-        List<String> availableActions,
-        List<String> constraints,
-        String successCriterion,
-        int maxSteps,
-        String domain) {
+        String domain,
+        String targetSkill,
+        DifficultyBand difficultyBand,
+        Set<String> prerequisiteSkills,
+        String acceptanceDescription,
+        Predicate<Outcome> acceptance) {
 
     public ScenarioSpec {
-        if (id == null || id.isBlank()) throw new IllegalArgumentException("id required");
-        if (maxSteps < 1) throw new IllegalArgumentException("maxSteps >= 1");
+        Objects.requireNonNull(id, "id");
+        Objects.requireNonNull(domain, "domain");
+        Objects.requireNonNull(targetSkill, "targetSkill");
+        Objects.requireNonNull(difficultyBand, "difficultyBand");
+        prerequisiteSkills = Set.copyOf(prerequisiteSkills);
+        Objects.requireNonNull(acceptanceDescription, "acceptanceDescription");
+        Objects.requireNonNull(acceptance, "acceptance");
     }
 
-    /** Built-in battery: XOR → GridWorld → craft-graph (per SPEC-000 §3). */
-    public static List<ScenarioSpec> standardBattery() {
-        return List.of(
-                new ScenarioSpec("xor", "Learn XOR function",
-                        MaturityLevel.MA_0_SANDBOX,
-                        List.of("evaluate", "mutate"),
-                        List.of("k<=4"),
-                        "accuracy >= 0.95 on XOR truth table",
-                        100, "boolean"),
-                new ScenarioSpec("gridworld", "Navigate grid to goal",
-                        MaturityLevel.MA_0_SANDBOX,
-                        List.of("move_n", "move_s", "move_e", "move_w"),
-                        List.of("no diagonal", "obstacle avoidance"),
-                        "reach goal in < 50 steps",
-                        200, "gridworld"),
-                new ScenarioSpec("craft", "Craft item from components",
-                        MaturityLevel.MA_1_LOCAL,
-                        List.of("gather", "combine", "use_tool"),
-                        List.of("recipe known", "tools available"),
-                        "craft target item",
-                        500, "craft-graph")
-        );
+    /** Evaluate the acceptance predicate against an outcome. */
+    public boolean accepts(Outcome outcome) {
+        return acceptance.test(outcome);
     }
 }
