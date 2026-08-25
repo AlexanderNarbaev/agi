@@ -1,21 +1,25 @@
-# Project Context — SESSION CONTINUITY (compaction #13)
+# Project Context — SESSION CONTINUITY (compaction #14)
 
 ## Ловушки
-- Целевые прогоны `--tests "io.matrix.<pkg>.*"`; LSP FpgaBackend.java:150 ложная; субагенты недоступны; jqwik `.list()`.
-- XML: grep -oE 'message="[^"]{0,200}' matrix-core/build/test-results/test/TEST-<Класс>.xml
-- ls+grep пакета ДО нового кода. Коммиты: ed42fd1→235c984→66ad152.
+- Целевые прогоны `--tests "io.matrix.<pkg>.*"`; LSP FpgaBackend.java:150 ложная; субагенты недоступны.
+- XML ошибок: grep -oE 'message="[^"]{0,200}' matrix-core/build/test-results/test/TEST-<Класс>.xml
+- ls+grep пакета ДО нового кода. Коммиты: …66ad152→f1c94bd (последний).
 
 ## Mission: волны по docs/engineering/PLAN-FULL-IMPLEMENTATION.md
 
-## DONE
-W1-W5,W7 ядро (см. журнал плана — актуален). Конфиг модели 10/10. Только что: operator CRD SignalModuleResource/SignalModuleSpec/TaskCellResource/TaskCellSpec (компиляция :matrix-operator:compileJava EXIT=0); actions.PlanPreprocessor (PlanStep record + AC-3 preprocess, DeclaredArc record implements BinaryConstraint{consistent,vi,vj}) — compileJava EXIT=0. ТЕСТОВ К НИМ ЕЩЁ НЕТ.
+## DONE (всё зелёное)
+W1-W5,W7 ядро; operator CRD 4 файла (compile EXIT=0 + CrdFactoriesTest); actions.PlanPreprocessor+тест (DESIGN-15 закрыт); журнал плана актуален до этого места.
 
-## НЕМЕДЛЕННЫЕ ШАГИ
-1. Написать PlanPreprocessorTest (io.matrix.actions): юнит — happy-path (шаг с 2 переменными domains {2,2}, arcs [[0,1]] → проходит без исключения); противоречие через пустой domain (domainSizes без ключа var) → IllegalStateException "unsatisfiable_preconditions"; bad arc length → IllegalArgumentException. Прогон `--tests "io.matrix.actions.*"`.
-2. Быстрый тест operator? Проверить наличие существующих: ls matrix-operator/src/test — если есть стиль, добавить лёгкий SmokeTest на create()-фабрики (метаданные+spec). Если модуль тестов не имеет инфраструктуры — пропустить (compileJava уже EXIT=0).
-3. Журнал плана: W7-CRD done(compile), DESIGN-15 done(preprocessor+tests).
-4. git add: matrix-operator/src/main/java/io/matrix/operator/{SignalModuleResource,SignalModuleSpec,TaskCellResource,TaskCellSpec}.java; matrix-core/.../actions/PlanPreprocessor.java; matrix-core/src/test/java/io/matrix/actions/PlanPreprocessorTest.java; docs/engineering/PLAN-FULL-IMPLEMENTATION.md; .opencode/context.md. Commit «WAL: W7 CRD + DESIGN-15 plan preprocessing».
-5. Отчёт пользователю кратко.
+## ТЕКУЩИЙ ШАГ: DESIGN-07 сон-цикл (минимум)
+В io.matrix.lifecycle создать `ConsolidationCycle`:
+- record DrainSummary(int routesDrained, long itemsMigrated)
+- поля: Map<String,Integer> routeBacklogs (route→pending), boolean open
+- методы: `open()` (idempotent, бросает IllegalStateException если уже открыт? нет — просто флаг), `drain(String route, int batchSize)` → уменьшает backlog на min(batch,size), возвращает фактически перенесённое; `close()` → DrainSummary(число маршрутов с нулевым остатком после цикла? проще: routesDrained = кол-во маршрутов доведённых до 0 за окно, itemsMigrated = сумма перенесённого) и закрывает.
+Детерминизм, без clock. Тест ConsolidationCycleTest: юнит drain частичный/полный, close суммирует, drain при закрытом окне → IllegalStateException("cycle_closed"); jqwik: суммарный перенесённый ≤ начального backlog.
+Прогон --tests "io.matrix.lifecycle.*".
+
+## Финал захода
+Журнал: DESIGN-07 сон-цикл done(minimum). git add lifecycle/{ConsolidationCycle.java,+test} + журнал; commit «WAL: DESIGN-07 consolidation cycle minimum». Отчёт пользователю: статус волны + очередь (W6 прогоны JMH, DJL/ONNX учитель, DESIGN-03/06/14 остатки, BLOCKED-EXT список).
 
 ## Правила
 FROZEN/avro/workflows не трогать; детерминизм; forbidden claims избегать.
