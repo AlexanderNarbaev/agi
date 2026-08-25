@@ -10,6 +10,14 @@
 
 ---
 
+
+## Статус проекта (2026-08-25)
+
+- **Ядро BIR**: компилятор + TT/CLAUSESET/BDD, единая точка исполнения (INV-1 страж в CI), миграция 37 call-sites.
+- **Гипотезы**: H-010 **accepted** (WiSARD ×242 быстрее, точнее 9/9); H-002/H-003 refuted-toy с пинами.
+- **Стек**: Java 25 · Quarkus 3.38.3 · GraalVM plugin 1.1.10 · Avro 1.12.2 · ONNX Runtime 1.29.0 · Kafka-clients 4.3.1 · Postquantum ML-DSA (ELSP v2).
+- **Карта работ**: [docs/engineering/PLAN-FULL-IMPLEMENTATION.md](docs/engineering/PLAN-FULL-IMPLEMENTATION.md) · реестр вызовов: [DESIGN-14 annex](docs/engineering/DESIGN-14-call-site-audit.md).
+
 ## Документация
 
 | Документ | Содержание |
