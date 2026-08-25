@@ -63,10 +63,32 @@ class Exp010ComparisonTest {
             testY[i] = y[TRAIN + i];
         }
 
-        // --- Tsetlin ---
+        // --- Tsetlin: model selection by TRAIN accuracy (honest tuning) ---
+        int[][] grid = {{20, 5, 4}, {50, 10, 4}, {100, 20, 8}, {50, 20, 8}};
+        TsetlinTrainer best = null;
+        double bestTrainAcc = -1;
+        int[] bestCfg = grid[0];
+        for (int[] cfg : grid) {
+            TsetlinTrainer cand = new TsetlinTrainer(BITS, cfg[0], 100, new Random(SEED));
+            cand.trainBatch(trainWords, trainY, cfg[1]);
+            int hit = 0;
+            for (int i = 0; i < TRAIN; i++) {
+                if (cand.predict(trainWords[i][0]) == trainY[i]) hit++;
+            }
+            double acc = hit / (double) TRAIN;
+            if (acc > bestTrainAcc) {
+                bestTrainAcc = acc;
+                best = cand;
+                bestCfg = cfg;
+            }
+        }
+        System.out.printf("EXP010 tsetlinGridBest: clauses=%d epochs=%d S=%d trainAcc=%.4f%n",
+                bestCfg[0], bestCfg[1], bestCfg[2], bestTrainAcc);
+
+        // --- Tsetlin timed (best config, fresh instance with same seed) ---
         long t0 = System.nanoTime();
-        TsetlinTrainer tsetlin = new TsetlinTrainer(BITS, 20, 100, new Random(SEED));
-        tsetlin.trainBatch(trainWords, trainY, EPOCHS);
+        TsetlinTrainer tsetlin = new TsetlinTrainer(BITS, bestCfg[0], 100, new Random(SEED));
+        tsetlin.trainBatch(trainWords, trainY, bestCfg[1]);
         long t1 = System.nanoTime();
         int correctT = 0;
         for (int i = 0; i < TEST; i++) {
