@@ -2,9 +2,9 @@ plugins {
     id 'java'
     id 'jacoco'
     id 'com.github.spotbugs' version '6.1.7'
-    id 'io.quarkus' version '3.37.3'
+    id 'io.quarkus' version '3.38.3'
     id 'me.champeau.jmh' version '0.7.3'
-    id 'org.graalvm.buildtools.native' version '0.10.4'
+    id 'org.graalvm.buildtools.native' version '1.1.10'
 }
 
 group = 'io.matrix'
@@ -20,7 +20,7 @@ repositories {
 }
 
 dependencies {
-    implementation enforcedPlatform('io.quarkus.platform:quarkus-bom:3.37.3')
+    implementation enforcedPlatform('io.quarkus.platform:quarkus-bom:3.38.3')
     implementation 'io.quarkus:quarkus-arc'
     implementation 'io.quarkus:quarkus-micrometer-registry-prometheus'
     implementation 'io.quarkus:quarkus-opentelemetry'
@@ -39,7 +39,7 @@ dependencies {
 
     implementation 'org.apache.avro:avro:1.12.2'
     implementation 'io.lettuce:lettuce-core:6.5.0.RELEASE'
-    implementation 'org.apache.kafka:kafka-clients:3.9.0'
+    implementation 'org.apache.kafka:kafka-clients:4.3.1'
     implementation 'com.microsoft.onnxruntime:onnxruntime:1.29.0'
 
     implementation platform('org.apache.pekko:pekko-bom_2.13:1.6.0')
