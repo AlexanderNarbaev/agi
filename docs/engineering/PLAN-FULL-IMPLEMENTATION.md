@@ -89,9 +89,9 @@
 | Java | 25.0.4 LTS | ✅ новейшая LTS |
 | Quarkus (+BOM) | 3.37.3 | ✅ заявлена как текущая |
 | GraalVM buildtools | 0.10.4 (Mandrel-контейнер) | ✅ |
-| Avro | 1.12.0 | ✅ |
+| Avro | **1.12.2** ✅ обновлено (patch) |
 | kafka-clients | 3.9.0 | ✅ |
-| ONNX Runtime | 1.17.0 → обновление до свежего патча опционально (сеть) |
+| ONNX Runtime | **1.29.0** ✅ обновлено (было 1.17.0), API совместим |
 | Testcontainers | 1.21.3 | ✅ |
 | PostgreSQL/Redis | через Quarkus BOM/Testcontainers | ✅ |
 Апгрейды patch-уровня требуют сети — выполняются владельцем при доступности; критичных расхождений не обнаружено.
@@ -100,3 +100,7 @@
 - Docker доступен; KafkaIntegrationTest — BLOCKED-EXT(infra): брокер поднят, но метаданные топика не готовы за 60 с на данном хосте (диск/ресурсы); события/ не менялись в серии — флейк инфраструктуры, не регрессия.
 - OnnxActivationTeacher реализован поверх существующего dep onnxruntime 1.17.0 (fail-fast без модели) — SPEC-001 этап B получил подключаемого учителя; реальный .onnx экспорт — следующий шаг.
 - Матрица версий см. §5.
+
+### Постквант v2 — снят с откладки 2026-08-25
+DESIGN-08 планировал ML-DSA в «профиль v2» — реализовано сейчас: `federation.ElspChannelMlDsa` (нативный ML-DSA JDK25/JEP 497, без внешних dep; anti-replay семантика ElspChannel). Тесты roundtrip/tamper/replay зелёные.
+Пропущены осознанно (мажорные/пре-релизы): Quarkus 3.39.0.CR1 (ждать stable), GraalVM buildtools 1.1.10 (мажор), kafka-clients 4.3.1 (мажор 4.x), Testcontainers BOM 2.x (мажор).
