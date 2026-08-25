@@ -34,6 +34,27 @@
 ## Прогресс
 - [x] Реестр создан (этот документ)
 - [x] Волна A-1: ExplanationGenerator (24 вызова → BIR через per-instance TtForm-кэш; тесты пакета зелёные; JMH-latency контроль отложен)
-- [ ] Волна A-2: NeuralBrain + ChatBot + OpenAIChatResource
+- [x] Волна A-2: NeuralBrain 9 сайтов → BIR (DecisionTreeAdapter); ChatBot/OpenAIChatResource = N/A (не TT-сайты)
 - [ ] Волна A-3: neuron/* остатки
 - [ ] INV-1 ArchUnit в CI
+
+## Волна A-2/A-3 — статус 2026-08-25
+
+### A-2 выполнено
+- `minecraft/NeuralBrain` — 9 сайтов DecisionTree→BIR (`FORM_CACHE` + `DecisionTreeAdapter.toBir(dt, inputCount())`); тесты пакета зелёные.
+- `dialog/ChatBot`, `api/OpenAIChatResource` — переклассифицированы N/A: их `.evaluate` принадлежат `EthicalFilter`/`ProactiveInterface`, не булевым TT-структурам.
+
+### A-3 классификация neuron/*
+| Файл | Получатель | Статус |
+|---|---|---|
+| HierarchicalBrain (4) | NeuronLayer-поля | BIR-backed transitively ✅ |
+| NeuralTextGenerator (3) | NeuronLayer | BIR-backed transitively ✅ |
+| NeuralMemoryResponse (3) | NeuronLayer | BIR-backed transitively ✅ |
+| MultiBrainEnsemble (3) | NeuronLayer | BIR-backed transitively ✅ |
+| BatchEvaluator (4) | сырой TruthTable | raw → миграция A-3b |
+| BatchMemoryAdapter (3) | сырой TruthTable | raw → миграция A-3b |
+| SchemaDescriptor (3) | table.evaluate | требует анализа (тип table не подтверждён) |
+| DecisionTree (2) | левый/правый потомок | legacy-internal: оборачивается адаптером у потребителей |
+| DecisionTreeBatch (3) | tree.evaluate | raw → миграция A-3b |
+
+**Итог волны A:** мигрировано 33 сайта (A-1:24 + A-2:9); транзитивно-BIR 13; остающихся raw ≈10 (A-3b) + 3 needs-analysis.

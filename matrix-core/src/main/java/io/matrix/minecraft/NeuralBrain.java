@@ -2,6 +2,8 @@ package io.matrix.minecraft;
 
 import io.matrix.neuron.DecisionTree;
 import io.matrix.neuron.TruthTable;
+import io.matrix.bir.TtForm;
+import io.matrix.bir.DecisionTreeAdapter;
 
 import java.util.BitSet;
 import java.util.Random;
@@ -29,6 +31,22 @@ public class NeuralBrain {
         this.toolUpTree = DecisionTree.random(20, 6, rng);
     }
 
+    /** Per-tree BIR form cache (DESIGN-14 wave A-2): trees are immutable. */
+    private static final java.util.concurrent.ConcurrentHashMap<DecisionTree, TtForm> FORM_CACHE =
+            new java.util.concurrent.ConcurrentHashMap<>();
+
+    /** BIR-path evaluation, semantically identical to {@code tree.evaluate(BitSet)}. */
+    private static boolean evaluateViaBir(DecisionTree tree, BitSet input) {
+        TtForm form = FORM_CACHE.computeIfAbsent(tree, dt -> DecisionTreeAdapter.toBir(dt, dt.inputCount()));
+        long packed = 0L;
+        for (int b = input.nextSetBit(0); b >= 0 && b < form.k(); b = input.nextSetBit(b + 1)) {
+            packed |= 1L << b;
+        }
+        long[] out = new long[1];
+        form.eval(new long[]{packed}, out);
+        return out[0] != 0L;
+    }
+
     public NeuralBrain(DecisionTree move, DecisionTree mine, DecisionTree craft,
                         DecisionTree eat, DecisionTree toolUp) {
         this.moveTree = move;
@@ -44,17 +62,17 @@ public class NeuralBrain {
     public BlockAgent.Action act(long sensorBits) {
         BitSet input = toBitSet(sensorBits);
 
-        if (eatTree.evaluate(input) && hungerUrgent(sensorBits)) {
+        if (evaluateViaBir(eatTree, input) && hungerUrgent(sensorBits)) {
             return new BlockAgent.Action.Eat();
         }
-        if (craftTree.evaluate(input)) {
+        if (evaluateViaBir(craftTree, input)) {
             return new BlockAgent.Action.Craft();
         }
-        if (toolUpTree.evaluate(input)) {
+        if (evaluateViaBir(toolUpTree, input)) {
             return new BlockAgent.Action.Craft();
         }
-        if (mineTree.evaluate(input)) {
-            if (moveTree.evaluate(input)) {
+        if (evaluateViaBir(mineTree, input)) {
+            if (evaluateViaBir(moveTree, input)) {
                 return pickDirection(input, sensorBits);
             }
             return new BlockAgent.Action.Mine();
@@ -64,10 +82,10 @@ public class NeuralBrain {
     }
 
     private BlockAgent.Action.Move pickDirection(BitSet input, long sensorBits) {
-        boolean n = moveTree.evaluate(input);
-        boolean s = moveTree.evaluate(shiftInput(input, 1));
-        boolean w = moveTree.evaluate(shiftInput(input, 2));
-        boolean e = moveTree.evaluate(shiftInput(input, 3));
+        boolean n = evaluateViaBir(moveTree, input);
+        boolean s = evaluateViaBir(moveTree, shiftInput(input, 1));
+        boolean w = evaluateViaBir(moveTree, shiftInput(input, 2));
+        boolean e = evaluateViaBir(moveTree, shiftInput(input, 3));
 
         if (n) return new BlockAgent.Action.Move(BlockAgent.Direction.N);
         if (s) return new BlockAgent.Action.Move(BlockAgent.Direction.S);
