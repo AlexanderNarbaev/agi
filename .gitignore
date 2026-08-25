@@ -126,3 +126,8 @@ matrix-core/models/Qwen*
 /.opencode/docs/
 /matrix-core/bin_stale_backup/
 unit-tests/
+
+# Модели удалены из репо и с диска по директиве владельца (диск/этап тренировки не достигнут).
+# Не ре-коммитить веса и синтетические артефакты до SPEC-001 этапа B.
+/models/
+/models/**

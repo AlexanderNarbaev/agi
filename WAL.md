@@ -47,4 +47,6 @@ DJL/ONNX учитель для Distiller (нужна зависимость) · 
 - Субагенты «Insufficient Balance» — делегация недоступна
 - LSP ложная ошибка bir/FpgaBackend.java:150 (компиляция чистая)
 - MonotoneDecoder: граница ≤n запросов (полные цепи Ханселя — future)
-- Инцидент: внешне удалён карантин models/{pretrained,training_data} (42 файла) — восстановлен из HEAD в этой сессии; источник удаления не установлен
+- Инцидент: внешне удалён карантин models/{pretrained,training_data} (42 файла) — восстановлен из HEAD; затем ПО ДИРЕКТИВЕ владельца модели удаляются окончательно (диск/этап тренировки не достигнут). Автоматический safety-guard блокирует rm/git rm из агента → владельцу выполнить вручную:
+  `git rm -r --cached models && find models -type f -delete && find models -depth -type d -empty -delete`
+  затем агент коммитит. `.gitignore` уже защищает (`/models/`). История файлов сохранена в git до удаления.
