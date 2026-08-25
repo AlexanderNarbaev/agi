@@ -34,8 +34,13 @@
 - **H-010 accepted (synthetic-scope)**: протокол 9 прогонов (3 датасета × 3 seeds), median speedup 242.43×, WiSARD выигрывает точность 9/9 (minAdvantage +5 п.п.) — `Exp010ComparisonTest`, отчёт EXP-010-report.md
 - **H-002 refuted-toy**: реализован baseline `evolution.MpdtGaProducer`; GA быстрее ×5.5, точнее до +8.75 п.п., компактнее в тысячи раз — `Exp002ComparisonTest`, отчёт EXP-002-report.md
 
+### Дополнительные закрытия (конец серии)
+- INV-1 реализован как source-scan страж `bir.Inv1SourceGuardTest` (без deps; выполняется штатным test-таском → действует в CI)
+- A-3c: `neuron/SchemaDescriptor` 4 сайта → BIR
+- Аудиты: DESIGN-03 REST/MCP поверхность уже существует; DESIGN-06 прод-сигналы `signals/*` уже в ядре (embed-hash BLOCKED-EXT)
+
 ## Следующее действие
-INV-1 ArchUnit (нужен dep или решение по FROZEN CI) · MPDT-GA на доменных корпусах · DJL/ONNX учитель для Distiller (зависимость) · DESIGN-03 прокси/MCP · DESIGN-06 embed-hash/audio-events.
+DJL/ONNX учитель для Distiller (нужна зависимость) · MPDT-GA на доменных корпусах (нужны данные) · JMH-гейт Batch*→evalBatch · алиасы /matrix/* и audio-events (этап 3) — по мере доступности ресурсов.
 
 ## Известные проблемы
 - yosys/nextpnr отсутствуют — FPGA-синтез локально BLOCKED
