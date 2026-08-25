@@ -10,16 +10,14 @@ import java.util.Map;
 
 /**
  * OnnxActivationTeacher — activation source for SPEC-001 Этап B distillation,
- * backed by an exported ONNX teacher model (ONNX Runtime is already on the
- * classpath).
+ * backed by an exported ONNX teacher model (ONNX Runtime уже в classpath).
  *
- * <p>Contract: single float output tensor whose scalar value is the teacher's
- * activation for the binarized input vector. The caller (Distiller) binarizes
- * activations against the corpus median.
+ * <p>Contract: модель принимает тензор {@code [batch, inputBits]} float и
+ * возвращает {@code [batch, 1]} — скалярную активацию на строку.
+ * Дистиллятор бинаризует активации порогом.
  *
- * <p>NOTE: a real teacher .onnx must be exported offline (e.g. from a small
- * LLM FFN slice). Until such an artifact exists, construction fails fast with
- * a descriptive error — BLOCKED-EXT(teacher-model), not silently skipped.
+ * <p>NOTE: реальный учитель .onnx экспортируется оффлайн
+ * (scripts/gen_teacher_onnx.py создаёт крошечный FFN для EXP-009B).
  */
 public final class OnnxActivationTeacher implements AutoCloseable {
 
@@ -31,31 +29,38 @@ public final class OnnxActivationTeacher implements AutoCloseable {
         if (!Files.isRegularFile(modelPath)) {
             throw new IllegalArgumentException(
                     "teacher model not found: " + modelPath
-                            + " — export an ONNX teacher first (BLOCKED-EXT: teacher-model)");
+                            + " — сгенерируйте scripts/gen_teacher_onnx.py (BLOCKED-EXT: teacher-model)");
         }
         this.env = OrtEnvironment.getEnvironment();
         this.session = env.createSession(modelPath.toString());
         this.inputName = session.getInputNames().iterator().next();
     }
 
-    /**
-     * Runs the teacher on a packed input word.
-     *
-     * @return scalar activation
-     */
-    public float activations(long packedInput) throws Exception {
-        try (OnnxTensor t = OnnxTensor.createTensor(env, new long[]{packedInput});
+    /** Пакетный инференс: {@code batch[r][c]} float-признаки → активация на строку. */
+    public float[] inferBatch(float[][] batch) throws Exception {
+        try (OnnxTensor t = OnnxTensor.createTensor(env, batch);
              var result = session.run(Map.of(inputName, t))) {
             var out = result.get(0);
-            if (out.getValue() instanceof float[] arr && arr.length > 0) {
-                return arr[0];
+            Object v = out.getValue();
+            if (v instanceof float[][] m) {
+                float[] res = new float[m.length];
+                for (int i = 0; i < m.length; i++) res[i] = m[i][0];
+                return res;
             }
-            if (out.getValue() instanceof Float f) {
-                return f;
+            if (v instanceof float[] flat) {
+                return flat;
             }
-            throw new IllegalStateException(
-                    "unexpected teacher output type: " + out.getValue().getClass());
+            throw new IllegalStateException("unexpected teacher output type: " + v.getClass());
         }
+    }
+
+    /** Признаки из упакованного слова LSB-first: бит i = признак i. */
+    public static float[] unpackFeatures(long packed, int bits) {
+        float[] f = new float[bits];
+        for (int b = 0; b < bits; b++) {
+            f[b] = (packed >>> b) & 1L;
+        }
+        return f;
     }
 
     @Override

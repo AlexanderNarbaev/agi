@@ -1,24 +1,26 @@
-# Project Context — SESSION CONTINUITY (compaction #40)
+# Project Context — SESSION CONTINUITY (compaction #46) — GPU ВОЛНА, разведка готова
 
 ## Ловушки
-- Целевые прогоны --tests; LSP ложные (FpgaBackend150; Exp002 107/117/134); субагенты недоступны. Последний коммит 445440d (запушен).
+- Целевые прогоны --tests; LSP ложные; guard delete-класс; пушить после значимых шагов. Последний коммит 9646501 (запушен).
+- heredoc python PYEOF.
 
-## Данные по версиям (maven-metadata, получено онлайн)
-Quarkus BOM latest=3.39.0.CR1 (ПРЕ-релиз; стабильная линия остаётся 3.37.3) · GraalVM buildtools latest=1.1.10 (мажорный скачок с 0.10.4 — рискованно, пропустить с пометкой) · Avro 1.12.0→**1.12.2** (patch — обновить) · kafka-clients 3.9.0→4.3.1 (МАЖОР 4.x — пропустить с пометкой) · ONNX Runtime 1.17.0→**1.29.0** (попробовать, откат при несовместимости) · Testcontainers BOM 2.0.5 (мажор; у нас явные артефакты 1.21.3 — пропустить с пометкой).
+## ФАКТЫ РАЗВЕДКИ
+GPU: RTX 5070 Ti Laptop 12GB, драйвер 595.84 ✅. nvcc НЕТ, libcudnn/cublas в системе НЕ найдены (0) → **ONNX Runtime CUDA EP на Java-стороне скорее всего не поднимется без CUDA/cuDNN тулчейна** ⇒ GPU-инференс ORT = BLOCKED-EXT(cuda-toolkit), но CPU-инференс и дистилляция — ПОЛНОСТЬЮ РЕАЛИЗУЕМЫ сейчас.
+python3 есть (~/.local/bin), pip3 есть; onnx модуль НЕ установлен → pip3 install --user onnx (сеть есть).
 
-## ТЕКУЩИЙ ШАГ: безопасные апгрейды + постквант v2
-1. matrix-core/build.gradle: avro 1.12.0→1.12.2; onnxruntime 1.17.0→1.29.0.
-2. `./gradlew :matrix-core:compileJava -q` затем `--tests "io.matrix.distill.*" --tests "io.matrix.tsetlin.*"` быстрый; при неудаче резолва/компиляции — откат версий и пометка BLOCKED-EXT(resolution).
-3. Постквант v2 (JDK25 native ML-DSA, JEP 497): io.matrix.federation.ElspChannelMlDsa — копия логики ElspChannel (sign/verifyAndAccept/literal seq) но KeyPairGenerator.getInstance("ML-DSA"), Signature.getInstance("ML-DSA"); тест MlDsaChannelTest roundtrip/tamper/replay + пропуск если алгоритм недоступен (assumeTrue доступность через try{KPG.getInstance("ML-DSA")}catch→assumption fail soft? лучше жёстко: JDK25 обязан иметь; при NoSuchAlgorithm тест падает — это сигнал).
-4. Прогон federation тестов; аннекс/WAL/журнал: матрица версий обновлённая + INV постквант v2 снят (реализован профиль v2 раньше плана).
-5. Commit+push по шагам; финальный отчёт с объяснением откладок.
-
-## Объяснения откладок (для финала владельцу)
-- DJL/ONNX-экспорт учителя: инфраструктура ГОТОВА (класс+dep); отсутствует сам АРТЕФАКТ .onnx (экспорт из LLM FFN-среза требует python-тулчейна/весов) — это про данные модели, не про код. Пайплайн доказан fail-fast тестом.
-- Доменные данные: малые JSON лежат в git-истории (models/training_data до удаления) — восстанавливаются точечно командой при запуске доменного EXP; блокер был в наличии baseline'а, теперь MpdtGaProducer есть → EXP готов к запуску на восстановленных корпусах.
-- JMH-гейт Batch*: правило ≤10% требует честных JMH-замеров (инфраструктура jmh-источников пуста) — предварительный nanoTime-замер возможен, но гейт именно JMH; вынесен в W6-остаток осознанно.
-- Постквант v2: DESIGN-08 планировал «v2» — снимается СЕЙЧАС реализацией ML-DSA профиля нативно в JDK25.
-- audio-events этап 3: приоритизация дорожной карты DESIGN-06 (этап 3), базовый AudioSignalModule уже есть.
+## ТЕКУЩИЙ ШАГ: волна G (учитель + измерения)
+G1: `pip3 install --user onnx` → создать scripts/gen_teacher_onnx.py с header «# MATRIX RESEARCH-ONLY» (генерирует models/teacher/teacher_ffn16.onnx через onnx.helper: input float[1x16] "x", initializer W1[16,64] b1[64] (RandomUniform фикс seed через numpy RandomState? numpy может не быть — использовать onnx.reference? проще: инициализаторы константами из детерминированного списка, генерируемого в python random.seed(42)), Gemm→Gelu→Gemm(64→1)→Identity выход "y" float[1x1]). Запустить скрипт.
+G2: тест io.matrix.distill.Exp009bCpuVsOnnxTest:
+ - Path model=models/teacher/teacher_ffn16.onnx; Assumptions.assumeTrue(Files.exists) чтобы тест не падал в CI без артефакта;
+ - N=2000 входов long packed 16 бит → float[16] распаковка;
+ - Замер 1: ORT CPU — OnnxActivationTeacher.activations по каждому (или batch через общий session.run в цикле), nanoTime суммарно; собрать float[] teacherOut;
+ - Дистилляция: Distiller.capture(long[],float[]) на TRAIN половине (1000), synthesize(prov); BirClassifier? — проще использовать synthesize→Bir и мерить evalBatch через BooleanRuntime? Distiller API: synthesize(String)->Bir; у Bir есть evaluate? Проверить grep "public.*eval" Bir.java быстро перед написанием. Fallback: сравнение через fidelity() самого Distiller (метод fidelity(Bir,long[][],float[][]) принимает float[][] activations!) — использовать его как метрику согласованности ≥0.98 на holdout.
+ - Замер 2: время инференса дистиллята на тех же входах (Bir/BooleanRuntime evalBatch или цикл predict) — nanoTime.
+ - Печать «EXP009B ortCpuMs=… birMs=… fidelity=… speedupBirOverOrtCpu=…×».
+ - CUDA EP попытка: SessionOptions().addCUDA() в try-catch → печать причины недоступности (для честного статуса GPU).
+G3: прогон --tests "io.matrix.distill.*" → извлечь числа → секция в EXP-009-report.md («первые измерения»; пометка single-run).
+G4: субагент-проверка крошечной задачей (баланс рабочий теперь).
+R5: git add код+тест+скрипт (+report); commit «WAL: EXP-009B учитель ONNX + измерения CPU» ; push.
 
 ## Правила
-FROZEN/avro/workflows не трогать; forbidden claims избегать; версии только из metadata.
+Python-скрипт только scripts/ с header research-only; forbidden claims избегать; числа реальные; .onnx не коммитить (/models/ в ignore).
