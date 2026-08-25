@@ -2,6 +2,8 @@ package io.matrix.explainability;
 
 import io.matrix.neuron.TruthTable;
 import io.matrix.neuron.WeightVector;
+import io.matrix.bir.TtForm;
+import io.matrix.bir.TruthTableAdapter;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -26,6 +28,25 @@ import java.util.stream.IntStream;
  * structures. The prototype cache uses {@link ConcurrentHashMap}.
  */
 public final class ExplanationGenerator {
+
+    /** Per-table BIR form cache (DESIGN-14 wave A-1): forms are immutable. */
+    private final Map<TruthTable, TtForm> formCache = new ConcurrentHashMap<>();
+
+    /**
+     * BIR-path evaluation: packs the LSB-first BitSet into a word and
+     * evaluates the cached {@link TtForm}. Semantically identical to
+     * {@code TruthTable.evaluate(BitSet)}.
+     */
+    private boolean evaluateViaBir(TruthTable tt, BitSet input) {
+        TtForm form = formCache.computeIfAbsent(tt, TruthTableAdapter::toBir);
+        long packed = 0L;
+        for (int b = input.nextSetBit(0); b >= 0 && b < form.k(); b = input.nextSetBit(b + 1)) {
+            packed |= 1L << b;
+        }
+        long[] out = new long[1];
+        form.eval(new long[]{packed}, out);
+        return out[0] != 0L;
+    }
 
     private final ConcurrentHashMap<Integer, Map<Integer, Integer>> prototypeCache =
             new ConcurrentHashMap<>();
@@ -125,17 +146,17 @@ public final class ExplanationGenerator {
     public Map<Integer, Double> computeAttribution(TruthTable truthTable, BitSet input) {
         int k = truthTable.k();
         int size = truthTable.size();
-        boolean baseOutput = truthTable.evaluate(input);
+        boolean baseOutput = evaluateViaBir(truthTable, input);
 
         Map<Integer, Double> attribution = new LinkedHashMap<>();
         for (int bit = 0; bit < k; bit++) {
             int flips = 0;
             for (int i = 0; i < size; i++) {
                 BitSet testInput = intToBitSet(i, k);
-                boolean orig = truthTable.evaluate(testInput);
+                boolean orig = evaluateViaBir(truthTable, testInput);
                 BitSet flipped = (BitSet) testInput.clone();
                 flipped.flip(bit);
-                boolean flippedOutput = truthTable.evaluate(flipped);
+                boolean flippedOutput = evaluateViaBir(truthTable, flipped);
                 if (orig != flippedOutput) {
                     flips++;
                 }
@@ -154,7 +175,7 @@ public final class ExplanationGenerator {
             return 0.0;
         }
         WeightVector originalWeights = truthTable.weights();
-        boolean baseOutput = truthTable.evaluate(input);
+        boolean baseOutput = evaluateViaBir(truthTable, input);
         int k = truthTable.k();
         int changes = 0;
         int total = 0;
@@ -166,7 +187,7 @@ public final class ExplanationGenerator {
                 if (w[bit] == newWeight) continue;
                 w[bit] = newWeight;
                 TruthTable modified = TruthTable.of(k, truthTable.table(), new WeightVector(w));
-                if (modified.evaluate(input) != baseOutput) {
+                if (evaluateViaBir(modified, input) != baseOutput) {
                     changes++;
                 }
                 total++;
@@ -187,7 +208,7 @@ public final class ExplanationGenerator {
         for (int bit = 0; bit < k; bit++) {
             BitSet ablated = (BitSet) input.clone();
             ablated.clear(bit);
-            boolean ablatedOutput = truthTable.evaluate(ablated);
+            boolean ablatedOutput = evaluateViaBir(truthTable, ablated);
             ablation.put(bit, ablatedOutput != output);
         }
         return ablation;
@@ -198,12 +219,12 @@ public final class ExplanationGenerator {
      * changes the output for the given input.
      */
     public boolean[] computeBooleanGradient(TruthTable truthTable, BitSet input, int k) {
-        boolean baseOutput = truthTable.evaluate(input);
+        boolean baseOutput = evaluateViaBir(truthTable, input);
         boolean[] gradient = new boolean[k];
         for (int bit = 0; bit < k; bit++) {
             BitSet flipped = (BitSet) input.clone();
             flipped.flip(bit);
-            gradient[bit] = truthTable.evaluate(flipped) != baseOutput;
+            gradient[bit] = evaluateViaBir(truthTable, flipped) != baseOutput;
         }
         return gradient;
     }
@@ -222,7 +243,7 @@ public final class ExplanationGenerator {
             Map<Integer, Integer> patterns = new LinkedHashMap<>();
             for (int i = 0; i < size; i++) {
                 BitSet input = intToBitSet(i, k);
-                if (truthTable.evaluate(input) == targetOutput) {
+                if (evaluateViaBir(truthTable, input) == targetOutput) {
                     patterns.merge(i, 1, Integer::sum);
                 }
             }
@@ -239,7 +260,7 @@ public final class ExplanationGenerator {
         int size = truthTable.size();
         for (int i = 0; i < size; i++) {
             BitSet input = intToBitSet(i, k);
-            if (truthTable.evaluate(input) == targetOutput) {
+            if (evaluateViaBir(truthTable, input) == targetOutput) {
                 for (int bit = 0; bit < k; bit++) {
                     if (input.get(bit)) centroid[bit]++;
                 }
@@ -258,14 +279,14 @@ public final class ExplanationGenerator {
      * Uses Hamming distance.
      */
     public int[] findDecisionBoundaryPrototype(TruthTable truthTable, BitSet input, int k) {
-        boolean baseOutput = truthTable.evaluate(input);
+        boolean baseOutput = evaluateViaBir(truthTable, input);
         int bestDist = k + 1;
         int bestIdx = -1;
         int size = truthTable.size();
 
         for (int i = 0; i < size; i++) {
             BitSet candidate = intToBitSet(i, k);
-            if (truthTable.evaluate(candidate) != baseOutput) {
+            if (evaluateViaBir(truthTable, candidate) != baseOutput) {
                 int dist = hammingDistance(input, candidate, k);
                 if (dist < bestDist) {
                     bestDist = dist;
@@ -337,10 +358,10 @@ public final class ExplanationGenerator {
 
             for (int i = 0; i < size; i++) {
                 BitSet input = intToBitSet(i, k);
-                boolean orig = truthTable.evaluate(input);
+                boolean orig = evaluateViaBir(truthTable, input);
                 BitSet flipped = (BitSet) input.clone();
                 flipped.flip(bit);
-                boolean flippedOutput = truthTable.evaluate(flipped);
+                boolean flippedOutput = evaluateViaBir(truthTable, flipped);
 
                 if (orig != flippedOutput) {
                     total++;
@@ -370,7 +391,7 @@ public final class ExplanationGenerator {
      */
     public int[] findMinimalPerturbation(TruthTable truthTable, BitSet input,
                                           boolean output, int k) {
-        boolean baseOutput = truthTable.evaluate(input);
+        boolean baseOutput = evaluateViaBir(truthTable, input);
         if (baseOutput != output) {
             return bitSetToBits(input, k);
         }
@@ -379,7 +400,7 @@ public final class ExplanationGenerator {
         for (int bit = 0; bit < k; bit++) {
             BitSet flipped = (BitSet) input.clone();
             flipped.flip(bit);
-            if (truthTable.evaluate(flipped) != baseOutput) {
+            if (evaluateViaBir(truthTable, flipped) != baseOutput) {
                 return bitSetToBits(flipped, k);
             }
         }
@@ -390,7 +411,7 @@ public final class ExplanationGenerator {
                 BitSet flipped = (BitSet) input.clone();
                 flipped.flip(i);
                 flipped.flip(j);
-                if (truthTable.evaluate(flipped) != baseOutput) {
+                if (evaluateViaBir(truthTable, flipped) != baseOutput) {
                     return bitSetToBits(flipped, k);
                 }
             }
@@ -405,13 +426,13 @@ public final class ExplanationGenerator {
      */
     public Map<String, Boolean> computeWhatIf(TruthTable truthTable, BitSet input, int k) {
         Map<String, Boolean> whatIf = new LinkedHashMap<>();
-        boolean baseOutput = truthTable.evaluate(input);
+        boolean baseOutput = evaluateViaBir(truthTable, input);
         whatIf.put("original", baseOutput);
 
         for (int bit = 0; bit < k; bit++) {
             BitSet flipped = (BitSet) input.clone();
             flipped.flip(bit);
-            whatIf.put("bit_" + bit + "_flipped", truthTable.evaluate(flipped));
+            whatIf.put("bit_" + bit + "_flipped", evaluateViaBir(truthTable, flipped));
         }
         return whatIf;
     }
@@ -423,10 +444,10 @@ public final class ExplanationGenerator {
     public Map<String, Boolean> computeWeightCounterfactual(TruthTable truthTable,
                                                              BitSet input, int k) {
         if (truthTable.weights() == null) {
-            return Map.of("no_weights", truthTable.evaluate(input));
+            return Map.of("no_weights", evaluateViaBir(truthTable, input));
         }
         Map<String, Boolean> results = new LinkedHashMap<>();
-        results.put("original", truthTable.evaluate(input));
+        results.put("original", evaluateViaBir(truthTable, input));
 
         int[] origWeights = truthTable.weights().toArray();
         for (int bit = 0; bit < k; bit++) {
@@ -436,7 +457,7 @@ public final class ExplanationGenerator {
                 newWeights[bit] = w;
                 TruthTable modified = TruthTable.of(k, truthTable.table(),
                         new WeightVector(newWeights));
-                results.put("bit_" + bit + "_weight_" + w, modified.evaluate(input));
+                results.put("bit_" + bit + "_weight_" + w, evaluateViaBir(modified, input));
             }
         }
         return results;
@@ -457,7 +478,7 @@ public final class ExplanationGenerator {
             if (i > 0) path.append(", ");
             path.append("b").append(i).append("=").append(bit ? 1 : 0);
         }
-        boolean output = truthTable.evaluate(input);
+        boolean output = evaluateViaBir(truthTable, input);
         path.append("] → index=").append(index)
             .append(" → output=").append(output);
         return path.toString();
@@ -472,7 +493,7 @@ public final class ExplanationGenerator {
         List<String> minterms = new ArrayList<>();
         for (int i = 0; i < size; i++) {
             BitSet input = intToBitSet(i, k);
-            if (truthTable.evaluate(input)) {
+            if (evaluateViaBir(truthTable, input)) {
                 minterms.add(formatMinterm(i, k));
             }
         }

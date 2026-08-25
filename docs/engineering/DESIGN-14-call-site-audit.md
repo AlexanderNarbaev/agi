@@ -33,7 +33,7 @@
 
 ## Прогресс
 - [x] Реестр создан (этот документ)
-- [ ] Волна A-1: ExplanationGenerator (24)
+- [x] Волна A-1: ExplanationGenerator (24 вызова → BIR через per-instance TtForm-кэш; тесты пакета зелёные; JMH-latency контроль отложен)
 - [ ] Волна A-2: NeuralBrain + ChatBot + OpenAIChatResource
 - [ ] Волна A-3: neuron/* остатки
 - [ ] INV-1 ArchUnit в CI
