@@ -9,6 +9,7 @@
 | **Спецификации** | `specifications/{INDEX,SPEC-000..003,SPEC-002-quantum}.md` |
 | **Дизайны** | `designs/DESIGN-01..15.md` |
 | **Исследования** | `research/{HYPOTHESES,PROTOCOL}.md` · `research/reports/EXP-{002,003,009,010}-report.md` |
+| **Наука** | `science/{SUBSTRATE-MODELS,FOUNDATIONS,GOALS-REQUIREMENTS,OPEN-PROBLEMS,ALGORITHM-ATLAS-INDEX}.md` · полные ALGORITHM-ATLAS §1-§112 в архиве |
 | **Инженерия** | `engineering/{PLAN,INVARIANTS,STANDARDS-MATRIX,JMH-GATE-EVIDENCE,SDD-COVERAGE,RELEASE-NOTES}.md` |
 | **Операции** | `operations/{RUNBOOK,DEPLOYMENT}.md` |
 
