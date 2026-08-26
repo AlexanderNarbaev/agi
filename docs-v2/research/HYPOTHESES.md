@@ -39,3 +39,10 @@
 | H-036…038 | proposed | следующий research wave |
 
 См. `research/reports/EXP-*.md` для доказательств каждого verified-вердикта.
+
+
+---
+
+## Расширение гипотез (brain wave v1, 2026-08-26)
+
+См. также [HYPOTHESES-NEW.md](HYPOTHESES-NEW.md) — карточки **H-039…H-0NN** по: автономным импульсам (curiosity/integrity/share), dream-cycle подсознания, критериям promotion M2→M3, качеству синтеза decentralized digests, калибровке saliency prediction-error, consciousness budget под нагрузкой, freeze-on-ethics-violation graceful degrade, impulse→gate filter accuracy, latency budget split по столпам, поведенческая устойчивость под повторяющимися циклами.

@@ -19,3 +19,11 @@
 - **H-002/H-003 refuted-toy**: GA быстрее ×5–10, точнее на синтетике.
 - **EXP-009C GPU нога**: дистиллят BIR ×149 быстрее ONNX-CPU при fidelity 0.999; GPU per-call ×276 медленнее BIR на точечных решениях.
 - **JMH-гейт Batch\***: 32–69M ops/s → решение «оставить как есть».
+
+
+**Brain wave v1 (2026-08-26) — добавочные документы для развития системы**:
+- `architecture/REQUEST-{brain-overview,memory-hierarchy,autonomy-impulses,decentralized-digests}.md` — 4 AR-документа по мозгоподобной архитектуре.
+- `specifications/SPEC-004-perception.md`, `SPEC-005-action.md`, `SPEC-006-consciousness-deliberation.md`, `SPEC-007-subconscious.md`.
+- `designs/DESIGN-{16,17,18,19}-*.md` — децентрализация, action arena, consciousness loop, subconscious consolidator.
+- `research/HYPOTHESES-NEW.md` — H-039… карточки brain wave.
+- `science/{SUBSTRATE-MODELS,FOUNDATIONS,GOALS-REQUIREMENTS,OPEN-PROBLEMS,ALGORITHM-ATLAS-INDEX}.md` — полные реестры оснований.
