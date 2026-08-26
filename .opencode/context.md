@@ -1,24 +1,23 @@
-# Project Context — SESSION CONTINUITY (compaction #55)
+# Project Context — SESSION CONTINUITY (compaction #58) — DEEP-DIVE v5 SOLO DRFTS
 
-## Ловушки
-- Compaction-interrupts ложно-положительные — игнорировать.
-- Компактировать ПЕРЕД каждой задачей.
-- Агенты живы на `goal-architect` / `goal-doc-writer` (mimo-v2.5-free).
+## Mission
+Subagents недоступны; subagent API сломано (Goal Guard + Model not found). Solo: 10 small drafts (5 design + 5 ops).
 
-## Current Status
-- 96 docs-v2 файлов в активной структуре (после v3 brain-wave push `3d49968`).
-- Только что: T1+T2+T3 wave v4 levels (L3, L5, L8, L12, L14-16, L18, L20, L22, L23, LONGTERM_PLAN) — все 12 созданы, ≤100 строк каждый.
-- 24 уровня в docs-v2/levels/ теперь покрыты.
+## ПЛАН
+Без AGI/нелжёт/незабывает; ≤100 строк; без markdown-ссылок; TEXT-only "Next:" pointer.
 
-## Pending Tasks
-| # | Задача | Статус |
-|---|---|---|
-| 1 | Commit+push wave v4 levels | сейчас |
-| 2 | MATRIX_агентный_пакет/ (13 файлов) — extract small docs | next wave |
-| 3 | research ss_w* серия (~10 файлов) — small summaries | next wave |
-| 4 | engineering/engineering/ (14 файлов) — small focused docs | next wave |
-| 5 | design расширение по DESIGN-04/05 (concrete алгоритмы из ALGORITHM-ATLAS §1-§112) | next wave |
-| 6 | Vision doc по общей цели архитектуры (мозгоподобная система) | next wave |
+5 design drafts в docs-v2/designs/drafts/:
+1. DRAFT-TsetlinExpansion.md
+2. DRAFT-SDM-Recurrent.md
+3. DRAFT-BrcChain-Primitives.md
+4. DRAFT-ConjugateDP.md
+5. DRAFT-MemoryM4.md
 
-## Правила
-FROZEN/avro/workflows не трогать; без запрещённых формулировок; ≤100 строк; текстовые "Next:" pointer'ы.
+5 ops drafts в docs-v2/operations/drafts/:
+6. DRAFT-Operator-Runbook.md
+7. DRAFT-RFC-Procedure.md
+8. DRAFT-Release-Process.md
+9. DRAFT-Kafka-Integration.md
+10. DRAFT-Native-Build.md
+
+Один commit в конце.
