@@ -1,62 +1,20 @@
-# MATRIX (MENTAT) — детерминированное нейро-символическое ядро
+# INDEX — MATRIX Docs v2
 
-> Каждое решение — проверяемая булева цепочка (BRC). Этика — FROZEN-слой, верифицируемый TLA+.
-> Одинаковое состояние и вход → одинаковый выход.
-
-## Что это
-
-Нейро-символическая система, где «знание» — таблицы истинности и их компилируемые формы
-(TT / CLAUSESET / BDD), а не веса чёрного ящика. Обучение отделено от рантайма:
-рантайм исполняет только BIR-артефакты — детерминированно, без LLM-вызовов и случайности.
-
-## Карта документации
+Структура пересобрана 2026-08-26 (см. `engineering/RELEASE-NOTES.md`). Только актуальные ссылки; исторические документы — `archive/2026-08-pre-v2/`.
 
 | Раздел | Где |
 |---|---|
-| Видение и архитектура | [vision/ARCHITECTURE.md](vision/ARCHITECTURE.md) |
-| Спеки (SPEC-000…003, quantum) | [spec/](spec/) |
-| Дизайны (DESIGN-01…15) | [design/](design/) |
-| Реестр миграции на BIR | [engineering/DESIGN-14-call-site-audit.md](engineering/DESIGN-14-call-site-audit.md) |
-| Мастер-план волн реализации | [engineering/PLAN-FULL-IMPLEMENTATION.md](engineering/PLAN-FULL-IMPLEMENTATION.md) |
-| Гипотезы и эксперименты | [research/HYPOTHESES.md](research/HYPOTHESES.md), [research/reports/](research/reports/) |
-| Формальные модели (TLA+) | репозиторий: `formal/` |
+| **Корень** | `README.md`, `CONSTITUTION.md`, `AGENTS.md`, `WAL.md` |
+| **Архитектура** | `architecture/{OVERVIEW,MODULES,RUNTIME-TOPOLOGY,FORMAL-CONTRACTS}.md` |
+| **Спецификации** | `specifications/{INDEX,SPEC-000..003,SPEC-002-quantum}.md` |
+| **Дизайны** | `designs/DESIGN-01..15.md` |
+| **Исследования** | `research/{HYPOTHESES,PROTOCOL}.md` · `research/reports/EXP-{002,003,009,010}-report.md` |
+| **Инженерия** | `engineering/{PLAN,INVARIANTS,STANDARDS-MATRIX,JMH-GATE-EVIDENCE,SDD-COVERAGE,RELEASE-NOTES}.md` |
+| **Операции** | `operations/{RUNBOOK,DEPLOYMENT}.md` |
 
-## Статус ядра (кратко)
+## Ключевые цифры (см. отчёты)
 
-- BIR-исполнение — единая точка для кластера, API, explain, neuron (INV-1 страж в тестах).
-- Продюсеры знаний: Tsetlin (принят), WiSARD (**H-010 accepted**), MPDT-GA baseline (H-002 refuted-toy).
-- Curriculum-стек SPEC-000: ассессор, движок задач ZPD, гейты MA-0…MA-5.
-- Память M0–M4, ricci-топология знаний, ELSP-федерация с anti-replay и постквант-профилем ML-DSA.
-- Полный реестр: [engineering/PLAN-FULL-IMPLEMENTATION.md](engineering/PLAN-FULL-IMPLEMENTATION.md).
-
-## Гипотезы
-
-| Гипотеза | Вердикт | Ключевые числа |
-|---|---|---|
-| [H-010 WiSARD-producer](research/reports/EXP-010-report.md) | **accepted** (synthetic-scope) | обучение ×242 быстрее Tsetlin (медиана, 9 прогонов), точность 9/9 побед, minAdvantage +5 п.п. |
-| [H-002 CLAUSESET vs MPDT-GA](research/reports/EXP-002-report.md) | refuted-toy | GA быстрее ×5.5, точнее +8.75 п.п., компактнее ×7500 |
-| [H-003 живой обучатель vs Tsetlin](research/reports/EXP-003-report.md) | refuted-toy | GA быстрее ×7–10, точнее +7.9 п.п. в среднем |
-| [H-009 дистилляция BIR](research/reports/EXP-009-report.md) | running (preliminary) | дистиллят BIR ×149 быстрее ONNX-учителя на CPU, согласованность 99.90% |
-
-Реестр карточек и протокол: [research/HYPOTHESES.md](research/HYPOTHESES.md).
-
-## Стек
-
-| Компонент | Версия |
-|---|---|
-| Java | 25 LTS |
-| Quarkus (+BOM) | 3.38.3 |
-| GraalVM native plugin | 1.1.10 |
-| Avro | 1.12.2 |
-| Kafka-clients | 4.3.1 |
-| ONNX Runtime | 1.29.0 |
-| Testcontainers | 1.21.3 |
-| Постквант | ML-DSA (JDK 25 / JEP 497, ELSP v2) |
-
-## Быстрый старт
-
-```bash
-docker compose -f docker-compose.dev.yml up -d   # инфраструктура
-./gradlew test                                    # юнит-тесты
-./gradlew :matrix-core:quarkusDev                 # dev-режим :9091
-```
+- **H-010 accepted**: WiSARD быстрее Tsetlin в **242×** (медиана, 9 прогонов), точность 9/9.
+- **H-002/H-003 refuted-toy**: GA быстрее ×5–10, точнее на синтетике.
+- **EXP-009C GPU нога**: дистиллят BIR ×149 быстрее ONNX-CPU при fidelity 0.999; GPU per-call ×276 медленнее BIR на точечных решениях.
+- **JMH-гейт Batch\***: 32–69M ops/s → решение «оставить как есть».
