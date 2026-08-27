@@ -32,6 +32,42 @@ public interface Crdt<T> {
     T merge(T other);
 
     /**
+     * Causal merge: merges while honouring per-key vector clocks and
+     * tombstone history. The base {@link #merge(Object)} is the lossy
+     * last-resort fallback; {@code mergeCausal} is the safe path used by
+     * the M4 Noosphere mesh.
+     *
+     * <p>Default delegates to {@link #merge(Object)} for CRDTs that don't
+     * track per-key causality (e.g. pure G-Set). CRDTs that do (e.g. M4
+     * causal variants) MUST override.
+     *
+     * @param other the other replica to merge with
+     * @return a new CRDT with causally-consistent merged state
+     */
+    default T mergeCausal(T other) {
+        return merge(other);
+    }
+
+    /**
+     * Mark a key as tombstoned at the given epoch. The tombstone is
+     * irreversible: any subsequent {@link #merge(Object)} or
+     * {@link #mergeCausal(Object)} that would re-introduce the key with
+     * epoch ≤ {@code epoch} is rejected.
+     *
+     * <p>Default throws {@link UnsupportedOperationException} for CRDTs
+     * that do not support deletion (e.g. G-Set). Concrete deletion-aware
+     * CRDTs MUST override.
+     *
+     * @param key   the key to tombstone
+     * @param epoch the logical clock value at which the tombstone is created
+     * @return a new CRDT with the tombstone applied
+     */
+    default T tombstoneAt(String key, long epoch) {
+        throw new UnsupportedOperationException(
+                "tombstoneAt not supported by " + getClass().getSimpleName());
+    }
+
+    /**
      * Serializes this CRDT to a JSON string for wire transfer.
      *
      * @return JSON representation of the current state

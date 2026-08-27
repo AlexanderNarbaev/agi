@@ -28,6 +28,7 @@ public final class GrowOnlySet implements Crdt<GrowOnlySet> {
     private static final ObjectMapper MAPPER = new ObjectMapper();
 
     private final Set<String> elements;
+    private final Set<String> tombstones;
 
     /**
      * Creates a new GrowOnlySet with the given initial elements.
@@ -35,7 +36,16 @@ public final class GrowOnlySet implements Crdt<GrowOnlySet> {
      * @param elements initial elements (defensively copied)
      */
     public GrowOnlySet(Set<String> elements) {
+        this(elements, java.util.Set.of());
+    }
+
+    /**
+     * Creates a new GrowOnlySet with both initial elements and a tombstone
+     * set (W-C, M4 causal extension).
+     */
+    public GrowOnlySet(Set<String> elements, Set<String> tombstones) {
         this.elements = Collections.unmodifiableSet(new HashSet<>(elements));
+        this.tombstones = Collections.unmodifiableSet(new HashSet<>(tombstones));
     }
 
     /**
@@ -43,6 +53,11 @@ public final class GrowOnlySet implements Crdt<GrowOnlySet> {
      */
     public Set<String> elements() {
         return elements;
+    }
+
+    /** Tombstoned keys — never re-introduced by merge or mergeCausal. */
+    public Set<String> tombstones() {
+        return tombstones;
     }
 
     /**
@@ -62,7 +77,40 @@ public final class GrowOnlySet implements Crdt<GrowOnlySet> {
     public GrowOnlySet merge(GrowOnlySet other) {
         Set<String> merged = new HashSet<>(this.elements);
         merged.addAll(other.elements);
-        return new GrowOnlySet(merged);
+        // tombstone irreversibility: filter out any key that is tombstoned
+        // on either side (irreversibility invariant F2 in TLA+ spec)
+        merged.removeAll(this.tombstones);
+        merged.removeAll(other.tombstones);
+        Set<String> mergedTombstones = new HashSet<>(this.tombstones);
+        mergedTombstones.addAll(other.tombstones);
+        return new GrowOnlySet(merged, mergedTombstones);
+    }
+
+    @Override
+    public GrowOnlySet mergeCausal(GrowOnlySet other) {
+        // Causal merge is the same as merge for G-Set (no partial ordering
+        // between inserts); the tombstone filter is what makes this safer
+        // than a blind union. Delegated to merge() which now applies the
+        // tombstone filter.
+        return merge(other);
+    }
+
+    @Override
+    public GrowOnlySet tombstoneAt(String key, long epoch) {
+        if (key == null) {
+            throw new IllegalArgumentException("key must not be null");
+        }
+        // G-Set: tombstone = remove element AND record so future merges
+        // cannot re-introduce it. Tombstones are stored as bare keys
+        // (multiple epochs collapse to one — the epoch argument is
+        // accepted for API symmetry with richer CRDTs but not enforced
+        // at the G-Set layer; this matches the minimal-implementation
+        // direction in Design-DRAFT-MemoryM4.md).
+        Set<String> newElems = new HashSet<>(this.elements);
+        newElems.remove(key);
+        Set<String> newTombstones = new HashSet<>(this.tombstones);
+        newTombstones.add(key);
+        return new GrowOnlySet(newElems, newTombstones);
     }
 
     /**
@@ -98,16 +146,16 @@ public final class GrowOnlySet implements Crdt<GrowOnlySet> {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof GrowOnlySet that)) return false;
-        return elements.equals(that.elements);
+        return elements.equals(that.elements) && tombstones.equals(that.tombstones);
     }
 
     @Override
     public int hashCode() {
-        return elements.hashCode();
+        return elements.hashCode() * 31 + tombstones.hashCode();
     }
 
     @Override
     public String toString() {
-        return "GrowOnlySet" + elements;
+        return "GrowOnlySet" + elements + (tombstones.isEmpty() ? "" : " / tombstones=" + tombstones);
     }
 }

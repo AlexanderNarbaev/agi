@@ -7,9 +7,11 @@
 | TLA+ | Класс(ы) | Инвариант | Статус |
 |---|---|---|---|
 | `BotEthicsPipeline` | `ethics/BotEthicsPipeline`, `ethics/EthicalFilter`, `ethics/frozen/FrozenEthicalFNL` | четыре запрета (Конституция IV) при любых входах | TLA+ CFG; мат. соотв. подтверждено эксп. (EXP-006 FPR 0%, TPR 100%) |
+| `ConjugateBudgeterDP` | `budgeter/ConjugateBudgeter` | монотонность V*, клампинг λ ∈ [0, maxVperC], конечный горизонт | TLA+ spec; unit + EXP-harness (W-B) |
 | `Consensus` | `consensus/ConsensusBenchmark` (внутренний) | Byzantine/дебат: соглашение k-of-n агентов | черновик, без формальной верификации |
 | `FrozenEthicalFNL` | `ethics/frozen/FrozenAxiomNeuron`, `FrozenEthicalFNL`, `TextFeatureExtractor`, `TruthTableUtil` | монотонность запретов | TLA+ (FROZEN) |
 | `HashChain` | `audit/HashChain` | цепная целостность audit-trail | TLA+ CFG |
+| `MemoryM4Causal` | `noosphere/Crdt`, `noosphere/GrowOnlySet` | Monotonicity, TombstoneIrreversible, EventualConsistency, FrozenImmutability | TLA+ spec; unit (W-C) |
 | `MPDTNeuron` | `neuron/MPDTNeuron*` | границы состояний автоматов Цетлина | без TLA+ — карточка Нужна спека |
 | `CellLifecycle` (нет файла — см. needs-spec) | `lifecycle/CauldronProtocol`, `FnlGate` | SHADOW→CANDIDATE→PROMOTED | **отложено: формализация** |
 
