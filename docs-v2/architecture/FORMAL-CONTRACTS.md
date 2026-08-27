@@ -37,8 +37,6 @@
 
 Новые TLA+-спек-кандидаты:
 - `BRC-Step` (atomic preserved step contract) — закрытие пробела reasoning/BrcChain.
-- `ConjugateBudgeter-DP` — инварианты DP: асимптотическая оптимальность, bounded shadow-price range.
 - `MCTS-LATS-Visit` — конвергенция к α-Root (теоретически не записана).
-- `Memory-M4-Causal` — eventual consistency при quorum R/W (draft есть в `noosphere/p2p/`).
 
 Все перечислены как **next-format-contracts** в `engineering/PLAN.md`.

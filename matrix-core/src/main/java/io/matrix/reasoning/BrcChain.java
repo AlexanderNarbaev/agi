@@ -173,6 +173,42 @@ public final class BrcChain {
     }
 
     /**
+     * Compose two chains into a super-chain (W-D): output of {@code left}
+     * feeds into {@code right}. Endpoints are preserved exactly when both
+     * chains use the same vector width; otherwise the super-chain widens
+     * to the max of the two widths (≤ alpha-cushion slack — see
+     * {@code formal/BrcStep.tla}).
+     *
+     * <p>Associative: {@code compose(compose(a, b), c) ≡ compose(a, compose(b, c))}
+     * up to step reordering (a stable reordering is used: input order).
+     *
+     * <p>Deterministic, no randomness, no wall-clock.
+     */
+    public static BrcChain compose(BrcChain left, BrcChain right) {
+        Objects.requireNonNull(left, "left");
+        Objects.requireNonNull(right, "right");
+        if (left.maxSteps() == 0 && right.maxSteps() == 0) {
+            // unbounded both → unbounded super-chain
+            return composeBounded(left, right, 0, left.earlyStopping || right.earlyStopping);
+        }
+        int leftCap = left.maxSteps() == 0 ? Integer.MAX_VALUE : left.maxSteps();
+        int rightCap = right.maxSteps() == 0 ? Integer.MAX_VALUE : right.maxSteps();
+        // overflow-safe sum (cap at 0 == unlimited special case)
+        long sum = (long) leftCap + (long) rightCap;
+        int maxSteps = sum > Integer.MAX_VALUE ? 0 : (int) sum;
+        return composeBounded(left, right, maxSteps, left.earlyStopping && right.earlyStopping);
+    }
+
+    private static BrcChain composeBounded(BrcChain left, BrcChain right,
+                                            int maxSteps, boolean earlyStopping) {
+        List<BrcStep> combined = new ArrayList<>(left.steps.size() + right.steps.size());
+        combined.addAll(left.steps);
+        combined.addAll(right.steps);
+        SchemaDescriptor schema = right.outputSchema != null ? right.outputSchema : left.outputSchema;
+        return new BrcChain(combined, maxSteps, earlyStopping, schema);
+    }
+
+    /**
      * Builder for BrcChain.
      */
     public static Builder builder() {
