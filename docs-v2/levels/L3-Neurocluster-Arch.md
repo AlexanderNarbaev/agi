@@ -6,8 +6,9 @@ scientific tone; archive reference added; aligned with SPEC-002 BIR.
 
 ## 1. Scope
 
-Layer 3 defines how MPDT neurons (L1) compose into a scalable
-execution unit (neurocluster) and a task-specialised group (FNL).
+Layer 3 определяет, как **BirUnit** (атомарная вычислительная единица BirRuntime; см. `specifications/SPEC-002-boolean-compute-layer.md`) компонутся в масштабируемую ячейку исполнения (`neuron/NeuronClusterActor`) и в функциональный нейронный кластер (FNL, DESIGN-12).
+
+Историческая номенклатура «MPDT neurons (L1)» вытеснена BirUnit (см. `levels/L1-BirUnit-Legacy.md` для архивной полноты).
 The cluster is a Pekko actor owning a neuron pool; the FNL is a
 logical group of clusters with a manifest. L1 owns truth-table
 semantics; L2 routing; L4 scheduling; L7 the ethics gate.

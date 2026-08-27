@@ -28,7 +28,7 @@
 | H | Статус | Блокер |
 |---|---|---|
 | H-004 — Ricci-fingerprint detects degradation раньше Recall@5 drop | proposed | EXP-004 на доменном корпусе |
-| H-008 — MPDT proof memory batch mode ≥1000 units/tick | proposed | зависит от производителя |
+| H-008 — BIR proof memory batch mode ≥1000 units/tick | proposed | зависит от производителя |
 | H-012 — TaskCell p99 latency ≤ direct cluster query | proposed | EXP-012 на нагрузке |
 | H-014 — VC estimate предсказывает holdout-window threshold | proposed | next research wave |
 | H-016 — MonotoneDecoder within target accuracy at ≥5× smaller corpus | proposed | EXP-016 (после Hansel chains full) |

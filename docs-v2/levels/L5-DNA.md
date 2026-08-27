@@ -5,9 +5,9 @@
 
 ## 1. Scope
 
-Off-line training: GA on MPDT chromosomes, multi-level compression,
-Cauldron, HADES, FROZEN axioms. On-line code cannot mutate neurons
-(CONSTITUTION I).
+Off-line training: GA на **BIR clause-set genomes** (каждая хромосома = `ClauseSetForm` с набором клауз; см. `evolution/MpdtGaProducer.java`), multi-level compression, Cauldron, HADES, FROZEN axioms. On-line code cannot mutate neurons (CONSTITUTION I).
+
+Примечание по номенклатуре: в ранних документах архива тот же слой назывался «GA on MPDT chromosomes», но после волн миграции DESIGN-14 (см. `engineering/DESIGN-14-call-site-audit.md`) геном эволюционного базлайна оформляется как `ClauseSetForm` — это сохраняет интерпретируемость и позволяет напрямую использовать в `BooleanRuntime`.
 
 ## 2. Chromosome Encoding
 
