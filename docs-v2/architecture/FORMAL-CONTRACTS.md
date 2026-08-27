@@ -7,6 +7,7 @@
 | TLA+ | Класс(ы) | Инвариант | Статус |
 |---|---|---|---|
 | `BotEthicsPipeline` | `ethics/BotEthicsPipeline`, `ethics/EthicalFilter`, `ethics/frozen/FrozenEthicalFNL` | четыре запрета (Конституция IV) при любых входах | TLA+ CFG; мат. соотв. подтверждено эксп. (EXP-006 FPR 0%, TPR 100%) |
+| `BrcStep` | `reasoning/BrcStep`, `reasoning/BrcChain` | атомарный шаг: композиция ассоциативна с α-слаком | TLA+ spec; jqwik property (W-D) |
 | `ConjugateBudgeterDP` | `budgeter/ConjugateBudgeter` | монотонность V*, клампинг λ ∈ [0, maxVperC], конечный горизонт | TLA+ spec; unit + EXP-harness (W-B) |
 | `Consensus` | `consensus/ConsensusBenchmark` (внутренний) | Byzantine/дебат: соглашение k-of-n агентов | черновик, без формальной верификации |
 | `FrozenEthicalFNL` | `ethics/frozen/FrozenAxiomNeuron`, `FrozenEthicalFNL`, `TextFeatureExtractor`, `TruthTableUtil` | монотонность запретов | TLA+ (FROZEN) |
