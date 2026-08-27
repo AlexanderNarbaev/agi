@@ -57,3 +57,106 @@ Java 25 · Quarkus 3.38.3 · GraalVM plugin 1.1.10 · Avro 1.12.2 · ONNX Runtim
 - `vision/BRAIN-LIKE-SYSTEM.md` (архитектура-нарратив).
 - `CONSTITUTION.md` / `AGENTS.md` (singleton FROZEN).
 - `WAL.md` (текущий снапшот сессии).
+
+---
+
+## Раздел III — Полный аудит (SpecDriven) — 2026-08-27
+
+### Реальность кода (matrix-core)
+
+- 455 production-классов в 69 пакетах, 121 test-класс (по списку XML).
+- 11 крупнейших пакетов: api 21 · bir 20 · agent 15 · neuron 14 · rag 13 · evolution 13 · consensus 13 · devloop 12 · cli 12 · simulation 11 · verification 10 · noosphere 10.
+- `compileJava` зелёный; FROZEN-зона `ethics/frozen/` с 4 классами (FrozenAxiomNeuron / FrozenEthicalFNL / TextFeatureExtractor / TruthTableUtil).
+- Ключевые именованные классы проверены grep'ом:
+  `BooleanRuntime` `BirCompiler` `OnnxActivationTeacher` `BrcChain` `FnlGate` `ConjugateBudgeter` `Viewpoint` `MonotoneDecoder` `PlanPreprocessor` `Inv1SourceGuardTest` — все присутствуют.
+
+### Карта SPEC → код
+
+| SPEC | Тема | Реализация в коде | Статус |
+|---|---|---|---|
+| SPEC-000 | Developmental Loop | `devloop/` 12 классов: CompetenceAssessor-EWMA, CurriculumEngine-ZPD, MaturityGateKeeper MA-0..5, MaturityLevel, ScenarioSpec, DifficultyBand, Outcome, Feedback, FeedbackComposer, ScaffoldingManager, GateCriteria | **implemented** |
+| SPEC-001 | Weight conversion (distillation) | `distill/Distiller` (capture/synthesize/fidelity) + `distill/OnnxActivationTeacher` (ONNX Runtime 1.29.0, inferBatch) | **implemented** (teacher-side) |
+| SPEC-002 | Boolean Compute Layer (BIR) | `bir/` 20 классов: `BooleanRuntime` (единая точка исполнения), `Bir/BirForm/TtForm/ClauseSetForm/BddForm` (три формы), `BirCompiler`, `BirRegistry`, `BirLimits` (K_MAX=20), `BirAvroCodec`, `BirMetrics`, `LineageLedger`, `BirClassifier`, `SubstrateBackend`, `JvmSimdBackend`, `FpgaBackend`, `TruthTableAdapter`, `DecisionTreeAdapter` + тест-страж `Inv1SourceGuardTest` | **implemented core** (FPGA-синтез BLOCKED-EXT) |
+| SPEC-002q | Quantum BIR→MPS | спека `docs-v2/specifications/SPEC-002-quantum-bir-mps.md` | **spec-only, code BLOCKED-EXT** |
+| SPEC-003 | Knowledge Topology | `ktopo/` 7 классов: `Graph`, `KnowledgeGraph`, `OllivierRicciCalculator`, `DriftFingerprint`, `FingerprintDistance` (точный 1D Wasserstein), `CurriculumOrderer` | **implemented** |
+| SPEC-004 | Perception | `designs/DESIGN-16-perception-federation.md` + `signals/` 5 модулей (Text/Audio/Image/SignalModule/SignalModuleRegistry) | **partial** (encoder contract drafted, ongoing) |
+| SPEC-005 | Action | `designs/DESIGN-17-action-arena.md` + `actions/PlanRunner` + `actions/PlanPreprocessor` (AC-3) | **partial** (arena arena infrastructure drafted) |
+| SPEC-006 | Consciousness/Deliberation | `designs/DESIGN-18-consciousness-loop.md` + `reasoning/BrcChain` | **partial** (loop draft, primitives not formalized) |
+| SPEC-007 | Subconscious | `designs/DESIGN-19-subconscious-consolidator.md` + `lifecycle/ConsolidationCycle` | **partial** (draft; TR/REM+gossip не реализовано) |
+
+### Карта DESIGN → код
+
+| DESIGN | Реализация | Статус |
+|---|---|---|
+| D-01 units (BirUnit) | `bir/BirUnit`-class group + `levels/L1 — BirUnit` | **implemented** |
+| D-02 viewpoint | `brain/Viewpoint` + `BrainPipeline` + `DefaultBrainPipeline` | **implemented** (L2-L4 контейнеры в `mediator/`, no TLA) |
+| D-03 pipeline | `actions/PlanRunner`, `ethics/EthicalFilter`, `api/OpenAIChatResource`, `mcp/MatrixMcpServer` | **implemented** (прокси `/matrix/*` алиасы — отложено) |
+| D-04 learning | `tsetlin/TsetlinTrainer`, `tsetlin/WisardProducer`, `evolution/MpdtGaProducer` | **implemented** (GATopologySearch — в `nas/`, not promoted) |
+| D-05 memory | `memory/HierarchicalMemory` + `memory/SdmReader` + `noosphere/Crdt` | **implemented** (M4-Causal — next-format-contract) |
+| D-06 signal-modules | `signals/{Text,Audio,Image,SignalModule,SignalModuleRegistry}` + `compression/TruthTableMinimizer` | **implemented** (embed-hash BLOCKED-EXT) |
+| D-07 lifecycle | `lifecycle/CauldronProtocol`, `lifecycle/TaskCell`, `lifecycle/ConsolidationCycle`, `lifecycle/FnlGate` + `lifecycle/MatrixLifecycleManager` | **implemented** |
+| D-08 federation | `federation/ElspChannel` (Ed25519), `ElspChannelMlDsa` (ML-DSA), `ArtifactSigner`, `Anonymizer` | **implemented** |
+| D-09 monotone-decoder | `bir/producers/monotone/MonotoneDecoder` + `MembershipOracle` | **implemented** (полные цепи Ханселя — отложено) |
+| D-10 binary-reservoir | `tsetlin/IntEsNetwork` | **partial** (H-015 running) |
+| D-11 budgeter | `budgeter/ConjugateBudgeter` (DP-оптимальный, shadow price λ) | **implemented** (TLA-спек `ConjugateBudgeter-DP` — next-format-contract) |
+| D-12 taskcell-fnl | `lifecycle/FnlGate` (SHADOW→PROMOTED) | **implemented** |
+| D-13 action-registry | `actions/ActionRegistry` (existing), `PlanRunner` Hoare, `VersionedContract` | **implemented** (BDD-эквивалентность — отложено) |
+| D-14 bir-migration | INV-1 страж + 37 мигрированных сайтов + JMH-гейт Batch* | **implemented** |
+| D-15 plan-preprocessing | `actions/PlanPreprocessor` + `agent.planning.Ac3Solver` | **implemented** (semantic predicate-plugin — отложено) |
+| D-16 perception-federation | draft (brain wave v1) | **draft, в next сессии** |
+| D-17 action-arena | draft (brain wave v1) | **draft** |
+| D-18 consciousness-loop | draft (brain wave v1) | **draft** |
+| D-19 subconscious-consolidator | draft (brain wave v1) | **draft** |
+
+### Карта Brain-Wave → статус
+
+| Волна | Файлов | Статус |
+|---|---|---|
+| v1 AR | 4 REQUEST-файла в `architecture/` | **draft, для next sessions** |
+| v1 SPEC | SPEC-004..007 (4) | **draft, spec-only** |
+| v1 DESIGN | DESIGN-16..19 (4) | **draft, spec-only** |
+| v1 HYPOTHESES-NEW | ~15 карточек H-039..H-0NN | **draft, без реальных прогонов** |
+| v2 algorithms | 6 файлов | **re-факторинг SUBSTRATE в компактный вид** |
+| v2 levels | L0, L1, L7, L10, L11, L13 | **re-факторинг legacy-уровней в измеряемый язык** |
+| v2 protocols | H-005, H-007, H-011, H-015 | **preregistration-карточки, running** |
+| v2 summaries | 5 файлов | **волны-сводки** |
+| v3 protocols | 4 файла | **preregistration для H-002/003/006/009** |
+| v3 levels | 6 файлов (L2/L4/L6/L9/L17/L19) | re-факторинг |
+| v3 algorithms | 6 файлов | re-факторинг |
+| v4 levels | 12 файлов (L3/L5/L8/L12/L14-16/L18/L20/L22/L23/LONGTERM) | re-факторинг |
+| v5 drafts | 10 файлов (5 design + 5 operations) | **drafts, для next сессий** |
+| v5 vision | BRAIN-LIKE-SYSTEM + DECISIONS + FINALSUMMARY | **финальный синтез** |
+| v6 corrections | D-001..D-011 в DECISIONS | **принятые архитектурные решения** |
+
+### Карта HYPOTHESES → EXP
+
+| H | Статус | Доказательство |
+|---|---|---|
+| H-002 | **refuted-toy** | EXP-002: GA ×5.5 быстрее, +7.9 п.п. точнее, ×7500 компактнее |
+| H-003 | **refuted-toy** | EXP-002/003: GA to99 за 346 vs Tsetlin 673 в среднем |
+| H-006 | running (FPR 0%, TPR 100%, P99 0ms) | unit-tests + проба |
+| H-010 | **accepted (synthetic-scope)** | EXP-010: 9 прогонов, median ×242, WiSARD 9/9 |
+| H-005/007/011/015/017 | running | preregistration-карточки, не выполнены |
+
+### Honest Gaps (где docs-v2/ обещает больше, чем в коде)
+
+| Заявлено в docs-v2/ | Что в коде | Gap |
+|---|---|---|
+| M4-M5+ иерархия в `architecture/REQUEST-memory-hierarchy.md` | M0–M4 (noosphere.Crdt) | M5+ anonymized digests — только `federation/Anonymizer` + `ElspChannelMlDsa` подписи; полный pipeline с DP-noise+k-anonymous не реализован (только в drafts `DRAFT-MemoryM4.md`) |
+| 4 autonomy-импульса в `architecture/REQUEST-autonomy-impulses.md` | `lifecycle/ConsolidationCycle` (drain), `federation/Anonymizer` (share-digest) | curiosity/integrity — только идея, не код |
+| 3 столпа brain-like system | perception+consciousness+action drafts | pillars — drafts, не runtime |
+| `algorithms/Mcts-Lats.md` (детальный MCTS/LATS) | `mcts/{MctsTree,LatsNode,LatsReflector,LatsValueFunction}.java` (9 классов) | algorithm-doc новее кода, но обе части существуют |
+
+### Где в docs-v2/ описано «что делать дальше»
+
+- `vision/DECISIONS.md` (D-001..D-011) — 11 принятых решений, каждое с критерием отмены.
+- `engineering/PLAN.md` — 5 секций BLOCKED-EXT + next-format-contracts (`BRC-Step`, `Memory-M4-Causal`, `ConjugateBudgeter-DP`, `MCTS-LATS-Visit`).
+- `engineering/INVARIANTS.md` — нормы и FROZEN-зоны.
+- `designs/DESIGN-16..19` (drafts v1) — perception / action / consciousness / subconscious.
+- `designs/drafts/Design-DRAFT-*.md` (5) + `operations/drafts/DRAFT-*.md` (5) — drafts для next сессий.
+- `research/protocols/H-005/007/011/015.md` — preregistration для невыполненных EXP.
+- `research/HYPOTHESES-NEW.md` — карточки H-039+ для brain-wave v2 (curiosity, integrity, dream-cycle, …).
+
+### Итог
+
+Код (455 классов, 121 tests) полностью покрыт в docs-v2/ на уровне current architecture. Brain-wave v1-v5 заполнил пробелы, которых не хватало в односложной SPEC/DESIGN-таблице (cross-cutting REQUESTS, preregistration protocols, drafts на новое). Honesty-граница — M5/M5+ memory, autonomy-импульсы, brain pillars — оформлены как drafts/requests с явными маршрутами на next sessions. Никаких «исторических» артефактов в active docs-v2/ — clean snapshot.
