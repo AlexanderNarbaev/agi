@@ -3,37 +3,24 @@
 ## Mission
 Implement docs-v2/ backlog in waves (W-A through M-A.T.R.I.X.1+) until empty or BLOCKED-EXT.
 
-## Current Wave
-**W-A: Production hardening** — IN PROGRESS, targeted suite running in background.
-
 ## Wave Status
 
-### W-A: Production hardening — code complete, gate running
-- INV-1 alias detection extended in `Inv1SourceGuardTest.java` — type-aware scan
-  catches `TruthTable`/`DecisionTree`/`Bir`/`BirForm`/`TtForm`/`BddForm`/`ClauseSetForm`
-  typed variables followed by `.evaluate(...)`. Name-based regex preserved for
-  backward compatibility.
-- File-relative whitelist upgraded: prefix entries (`bir/`, `ethics/frozen/`,
-  `neuron/`) plus exact-file entries (`compression/TruthTableMinimizer.java`).
-- New `BirAvroCodecIT.java`: filesystem round-trip across TT/CLAUSESET/BDD forms
-  + 18-input large-payload round-trip.
-- New `Inv1SourceGuardHelpersTest.java`: focused unit tests for the alias logic
-  helpers (collectTypedReceivers, matchesTypedAliasCall, comment-stripping).
-- Targeted run: `./gradlew :matrix-core:test --tests "io.matrix.bir.*" --tests
-  "io.matrix.budgeter.*" --tests "io.matrix.runtime.*"` (job_0ab9f6a5).
+| Wave | Status | Notes |
+|---|---|---|
+| W-A: Production hardening | ✅ done | INV-1 alias detection, BirAvroCodecIT, helper tests |
+| W-B: ConjugateBudgeter-DP | ✅ done | TLA+ spec, step() API, EXP ×1.019 vs greedy (2234W/0L/4166T) |
+| W-C: Memory M4 Causal CRDT | ✅ done | TLA+ spec, mergeCausal, tombstoneAt, FORMAL-CONTRACTS inlined |
+| W-D: BRC-Step atomic contract | ✅ done | TLA+ spec, compose(), jqwik properties |
+| W-E: MCTS/LATS convergence | ✅ done | TLA+ spec, convergence tests |
+| W-F: Perception pipeline | ✅ done | SensorPacket record, FederatedEncoder dispatch, round-trip tests |
+| W-G: Action arena | ✅ done | ActionArena with TaskCell, concurrent arbitration tests |
+| H-H: Consciousness loop | ✅ done | 9-stage orchestrator + concurrent tick tests |
+| H-I: Subconscious consolidator | ✅ done | TR/REM phases + integrity + k-anon gating |
+| H-J: 4 autonomy impulses | ✅ done | FROZEN-gate + budget-bounded fire |
+| H-K: Decentralized digests | ✅ done | Anonymizer DP-noise pipeline |
 
-## Backlog (subsequent waves)
-- W-B: ConjugateBudgeter-DP TLA + per-period extension
-- W-C: Memory M4 Causal CRDT
-- W-D: BRC-Step atomic contract (BrcStep.java already exists, may need jqwik)
-- W-E: MCTS/LATS convergence TLA
-- W-F: Perception pipeline (SPEC-004/DESIGN-16)
-- W-G: Action arena (SPEC-005/DESIGN-17)
-- H-H: Consciousness loop (SPEC-006/DESIGN-18)
-- H-I: Subconscious consolidator (SPEC-007/DESIGN-19)
-- H-J: 4 autonomy impulses
-- H-K: Decentralized digests pipeline
-- EXP-019+: 3-5 hypotheses
+## Remaining Waves
+- EXP-019+: 3-5 hypotheses (brain-wave cards)
 - M-A.T.R.I.X.0: Baseline benchmark vs open-weights
 - M-A.T.R.I.X.1+: Sequential distillation
 
@@ -46,7 +33,5 @@ Implement docs-v2/ backlog in waves (W-A through M-A.T.R.I.X.1+) until empty or 
 ## Disk
 33 GB free (93% used) — within tolerance.
 
-## Notes
-- BrcStep.java already exists at matrix-core/src/main/java/io/matrix/reasoning/
-- BirAvroCodec.java already exists; just needed IT for filesystem round-trip
-- 350 test classes in matrix-core/src/test/
+## EXP Numbers Captured
+- ConjugateBudgeter vs greedy: conjugate=1,888,127 vs greedy=1,853,346, ratio=1.019, 100 epochs × 64 tasks. Conjugate wins 2234, ties 4166, never loses.

@@ -39,6 +39,11 @@ public final class Anonymizer {
     /** Get k threshold. */
     public int kThreshold() { return kThreshold; }
 
+    /** Snapshot of all known content hashes with their counts. */
+    public java.util.Map<String, Integer> snapshotEntries() {
+        return new java.util.HashMap<>(nodeCounts);
+    }
+
     /** Clear all records (for testing). */
     public void clear() { nodeCounts.clear(); }
 }
