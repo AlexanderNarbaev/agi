@@ -1,4 +1,3 @@
-**Статус: normative · singleton** · пересмотр 2026-08-26 (brain wave v5).
 
 # BRAIN-LIKE SYSTEM — архитектурный синтез MATRIX
 

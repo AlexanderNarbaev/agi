@@ -1,14 +1,13 @@
 # L3 — Neurocluster & Functional Neural Lobe (FNL)
 
-**Status:** normative · **Layer:** 3 (composition) · **Date:** 2026-08-26
-**Changelog:** 2026-08-26 — brain wave v4; rewrite in measured /
+**Status:** normative · **Layer:** 3 (composition) · **Date:** 
 scientific tone; archive reference added; aligned with SPEC-002 BIR.
 
 ## 1. Scope
 
 Layer 3 определяет, как **BirUnit** (атомарная вычислительная единица BirRuntime; см. `specifications/SPEC-002-boolean-compute-layer.md`) компонутся в масштабируемую ячейку исполнения (`neuron/NeuronClusterActor`) и в функциональный нейронный кластер (FNL, DESIGN-12).
 
-Историческая номенклатура «MPDT neurons (L1)» вытеснена BirUnit (см. `levels/L1-BirUnit-Legacy.md` для архивной полноты).
+Историческая номенклатура «BirUnit (L1)» вытеснена BirUnit (см. `levels/L1-BirUnit-Legacy.md` для архивной полноты).
 The cluster is a Pekko actor owning a neuron pool; the FNL is a
 logical group of clusters with a manifest. L1 owns truth-table
 semantics; L2 routing; L4 scheduling; L7 the ethics gate.
@@ -83,11 +82,9 @@ from invariants is marked `QUARANTINED`. Signals undergo double
 verification; routing bypasses it; HADES (DESIGN-07, L5) is
 initiated by the upstream Mediator.
 
-> Cited legacy phrasing (traceability only): the prior document
 > framed the cluster as a "minimal agent" and FNL as a "cognitive
 > lobe in the brain". The v4 text reframes it as a Pekko actor with
 > a BIR pool and a manifest-driven lobe. Archive copy:
-> archive/2026-08-pre-v2/docs-root-flat/L3_Neurocluster_Arch.md
 
 Next: L4 Mediator — the hierarchy that schedules and gates the
 cluster's inference.

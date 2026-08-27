@@ -1,13 +1,12 @@
 # L5 — Genome: Evolution, Compression, Cauldron, HADES
 
-**Status:** normative · **Layer:** 5 (learning) · **Date:** 2026-08-26
-**Changelog:** 2026-08-26 — brain wave v4; measured tone; aligned with DESIGN-07 / 09 / 12.
+**Status:** normative · **Layer:** 5 (learning) · **Date:** 
 
 ## 1. Scope
 
 Off-line training: GA на **BIR clause-set genomes** (каждая хромосома = `ClauseSetForm` с набором клауз; см. `evolution/MpdtGaProducer.java`), multi-level compression, Cauldron, HADES, FROZEN axioms. On-line code cannot mutate neurons (CONSTITUTION I).
 
-Примечание по номенклатуре: в ранних документах архива тот же слой назывался «GA on MPDT chromosomes», но после волн миграции DESIGN-14 (см. `engineering/DESIGN-14-call-site-audit.md`) геном эволюционного базлайна оформляется как `ClauseSetForm` — это сохраняет интерпретируемость и позволяет напрямую использовать в `BooleanRuntime`.
+Примечание по номенклатуре: в ранних документах архива тот же слой назывался «GA on clause-set genomes», но после волн миграции DESIGN-14 (см. `engineering/DESIGN-14-call-site-audit.md`) геном эволюционного базлайна оформляется как `ClauseSetForm` — это сохраняет интерпретируемость и позволяет напрямую использовать в `BooleanRuntime`.
 
 ## 2. Chromosome Encoding
 
@@ -39,12 +38,12 @@ the global ledger.
 
 ## 5. Compression Levels
 
-| L | Object     | Method                          | Outcome            |
+| L | Object | Method | Outcome |
 |---|------------|---------------------------------|--------------------|
-| 1 | One neuron | Quine–McCluskey / Espresso      | Minimal DNF / tree |
-| 2 | Chain ≤ 3  | Compose, replace                | Single neuron      |
-| 3 | FNL        | Functional-dependency analysis  | Neuron reduction   |
-| 4 | Topology   | Isomorphic-subgraph pruning     | Cleanup            |
+| 1 | One neuron | Quine–McCluskey / Espresso | Minimal DNF / tree |
+| 2 | Chain ≤ 3 | Compose, replace | Single neuron |
+| 3 | FNL | Functional-dependency analysis | Neuron reduction |
+| 4 | Topology | Isomorphic-subgraph pruning | Cleanup |
 
 The smaller equivalent form is preferred only when validation
 fitness does not regress.
@@ -90,11 +89,9 @@ Chromosome and Cauldron events land on `events.{instanceId}`
 (SPEC-000); snapshots mark each generation and every HADES;
 FROZEN components carry `immutable=true` plus SHA3-256 checksum.
 
-> Cited legacy phrasing (traceability only): the prior document
 > framed compression as "understanding" and the ethical filter as
 > an "insurmountable barrier". The v4 text reframes compression as
 > an operational procedure and the filter as a FROZEN component
 > whose absence is a hazard. Archive copy:
-> archive/2026-08-pre-v2/docs-root-flat/L5_DNA.md
 
 Next: L6 Memory — tiers, journal, snapshots, and the Noosphere.

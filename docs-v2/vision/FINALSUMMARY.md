@@ -1,4 +1,3 @@
-**Статус: normative · singleton** · пересмотр 2026-08-26 (brain wave v5).
 
 # FINALSUMMARY — текущее состояние проекта
 
@@ -16,7 +15,7 @@
 
 - **H-010 accepted (synthetic-scope)**: WiSARD vs Tsetlin, 9 прогонов, median speedup 242.43×, WiSARD 9/9 по точности.
 - **H-002 / H-003 refuted-toy**: GA в среднем ×5.5 быстрее Tsetlin, точнее +7.9 п.п., компактнее ×7500; 3 датасета × 3 seeds протокол сходимости GA to99 за 346 vs Tsetlin 673.
-- **EXP-009B/C**: дистиллят BIR ×149 быстрее ORT-CPU при fidelity .999 на синтетическом FFN16; GPU нога (RTX 5070 Ti, torch cu130) GPU 0.02мс батч / 17.25µс per-call vs BIR ~62нс eval (MATRIX ×276 быстрее GPU на точечных).
+- **EXP-009B/C**: дистиллят BIR ×149 быстрее ORT-CPU при fidelity.999 на синтетическом FFN16; GPU нога (RTX 5070 Ti, torch cu130) GPU 0.02мс батч / 17.25µс per-call vs BIR ~62нс eval (MATRIX ×276 быстрее GPU на точечных).
 - **JMH-гейт Batch***: 32–69M ops/s; решение «оставить как есть».
 
 ## Документация (docs-v2)
@@ -24,12 +23,8 @@
 118 small-docs в следующих разделах:
 - **Корень**: `README.md`, `CONSTITUTION.md` (singleton FROZEN), `AGENTS.md` (singleton FROZEN), `WAL.md`.
 - **INDEX.md** — единая навигация.
-- **architecture/**: OVERVIEW, MODULES, RUNTIME-TOPOLOGY, FORMAL-CONTRACTS + 4 REQUEST-документа brain-wave v1.
-- **specifications/**: SPEC-000..007 (последние 4 — brain wave v1).
-- **designs/**: DESIGN-01..19 + 5 design-drafts (brain wave v5).
 - **research/**: HYPOTHESES, HYPOTHESES-NEW, PROTOCOL + 5 reports (002,003,005,006,009,010,011,015 protocols) + 5 summaries.
 - **engineering/**: PLAN, INVARIANTS, STANDARDS-MATRIX, JMH-GATE-EVIDENCE, SDD-COVERAGE, RELEASE-NOTES.
-- **operations/**: RUNBOOK, DEPLOYMENT + 5 ops-drafts (brain wave v5).
 - **science/**: SUBSTRATE-MODELS, FOUNDATIONS, GOALS-REQUIREMENTS, OPEN-PROBLEMS, ALGORITHM-ATLAS-INDEX.
 - **algorithms/**: 12 small-docs (Tsetlin, WiSARD, GA, Hansel, Ricci, FROZEN-EthicalFNL, BrcChain, ConversationProtocol, FederatedMesh, HashChain-Audit, Legal-Axioms, Mcts-Lats).
 - **levels/**: 24 уровня L0..LONGTERM_PLAN.
@@ -62,5 +57,3 @@ Java 25 · Quarkus 3.38.3 · GraalVM plugin 1.1.10 · Avro 1.12.2 · ONNX Runtim
 - `vision/BRAIN-LIKE-SYSTEM.md` (архитектура-нарратив).
 - `CONSTITUTION.md` / `AGENTS.md` (singleton FROZEN).
 - `WAL.md` (текущий снапшот сессии).
-
-Архив полностью сохранён в `docs-v2/archive/2026-08-pre-v2/` (315 файлов, `git mv` с историей).

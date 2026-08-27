@@ -1,7 +1,5 @@
 # DESIGN-19 — Subconscious Consolidator (консолидатор подсознания)
 
-**Статус: normative** · пересмотр 2026-08-26 (brain wave v1) · changelog 2026-08-26 — brain wave v1.
-
 ## Что
 
 Консолидатор подсознания: TR/REM фазы + Gossip (M3→M4 quorum) + генерация импульсов (curiosity/integrity/share/consolidation). Описывает, как именно работает `subconscious/SubconsciousDaemon` из [SPEC-007](../specifications/SPEC-007-subconscious.md). Связывает [DESIGN-07](../designs/DESIGN-07-lifecycle.md) (базовая sleep-функция) и [DESIGN-12](../designs/DESIGN-12-taskcell-fnl.md) (FnlGate карантин M3).
@@ -9,36 +7,36 @@
 ## Архитектура
 
 ```
-                 ┌───────────────────────────────────────┐
-   M1 episodes ─►│ SubconsciousDaemon (TaskCell)         │
-                 │                                       │
-                 │   ┌─────────┐   ┌─────────┐           │
-                 │   │ TR-phase│──►│REM-phase│           │
-                 │   │ M1→M2   │   │ replay  │           │
-                 │   └─────────┘   └────┬────┘           │
-                 │                      │ prediction-err │
-                 │                      ▼                │
-                 │              ┌──────────────┐         │
-                 │              │ M3 candidate │         │
-                 │              │ (FnlGate     │         │
-                 │              │  SHADOW)     │         │
-                 │              └──────┬───────┘         │
-                 │                     │ IntegrityCheck  │
-                 │                     ▼                 │
-                 │              ┌──────────────┐         │
-                 │              │ Gossip M3→M4 │         │
-                 │              │ (quorum R/W) │         │
-                 │              └──────┬───────┘         │
-                 │                     │                 │
-                 │                     ▼                 │
-                 │              ┌──────────────┐         │
-                 │              │ ImpulseGen   │         │
-                 │              │ (4 classes)  │         │
-                 │              └──────────────┘         │
-                 └───────────────────────────────────────┘
-                                       │
-                                       ▼
-                  consciousness/AttentionRouter (SPEC-006)
+ ┌───────────────────────────────────────┐
+ M1 episodes ─►│ SubconsciousDaemon (TaskCell) │
+ │ │
+ │ ┌─────────┐ ┌─────────┐ │
+ │ │ TR-phase│──►│REM-phase│ │
+ │ │ M1→M2 │ │ replay │ │
+ │ └─────────┘ └────┬────┘ │
+ │ │ prediction-err │
+ │ ▼ │
+ │ ┌──────────────┐ │
+ │ │ M3 candidate │ │
+ │ │ (FnlGate │ │
+ │ │ SHADOW) │ │
+ │ └──────┬───────┘ │
+ │ │ IntegrityCheck │
+ │ ▼ │
+ │ ┌──────────────┐ │
+ │ │ Gossip M3→M4 │ │
+ │ │ (quorum R/W) │ │
+ │ └──────┬───────┘ │
+ │ │ │
+ │ ▼ │
+ │ ┌──────────────┐ │
+ │ │ ImpulseGen │ │
+ │ │ (4 classes) │ │
+ │ └──────────────┘ │
+ └───────────────────────────────────────┘
+ │
+ ▼
+ consciousness/AttentionRouter (SPEC-006)
 ```
 
 ## Фазы
@@ -76,18 +74,18 @@
 
 ```
 open CycleWindow
-  read M1 backlog
-  if backlog >= TR_THRESHOLD:
-    run TR-phase(M1 → M2)
-  for episode in sample(M1, REM_BATCH):
-    run REM-phase(episode)  // fills M3 candidates
-  for candidate in M3 candidates:
-    run IntegrityCheck(candidate)
-    if pass: enqueue(Gossip, candidate)
-  read Gossip results
-  for result in Gossip results:
-    enqueue(Impulse.Share or Impulse.Integrity)
-  emit Impulses to conscious/AttentionRouter
+ read M1 backlog
+ if backlog >= TR_THRESHOLD:
+ run TR-phase(M1 → M2)
+ for episode in sample(M1, REM_BATCH):
+ run REM-phase(episode) // fills M3 candidates
+ for candidate in M3 candidates:
+ run IntegrityCheck(candidate)
+ if pass: enqueue(Gossip, candidate)
+ read Gossip results
+ for result in Gossip results:
+ enqueue(Impulse.Share or Impulse.Integrity)
+ emit Impulses to conscious/AttentionRouter
 close CycleWindow (DrainSummary)
 ```
 

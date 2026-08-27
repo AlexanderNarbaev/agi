@@ -1,7 +1,5 @@
 # REQUEST-memory-hierarchy — иерархия памяти MATRIX
 
-**Статус: normative · singleton AR** · changelog `2026-08-26 — brain wave v1`.
-
 ## Что это
 
 AR-документ: кросс-секционные директивы по иерархии памяти. Текущая норма — [DESIGN-05-memory](../designs/DESIGN-05-memory.md) (5 слоёв M0..M4). Этот AR **расширяет** DESIGN-05 тремя дополнительными слоями (m0, M5, M5+) и фиксирует TLA+-обязательства. Полная спецификация — [SPEC-007-memory-hierarchy](../specifications/SPEC-007-memory-hierarchy.md) (placeholder, ещё не написан).
@@ -9,21 +7,21 @@ AR-документ: кросс-секционные директивы по и�
 ## Слои и физика
 
 ```
-                  Latency        Eviction            Persistence
-   ┌────────────────────────────────────────────────────────────────────┐
- m0 │ working register   <1 µs    overwrite-on-commit   in-proc Map    │
- M0 │ scratchpad buffer  <10 µs   ring-overwrite       off-heap arena │
- M1 │ episodic stream    <50 ms   SDM-decay counter    PG (R2DBC)     │
- M2 │ semantic facts    <5 ms    tombstones + Φ       BIR registry    │
- M3 │ procedural skills <1 ms   versioned swap       BirNet + lineage │
- M4 │ noosphere / pool   async   CRDT-LWW + tombstone federation gossip│
- M5 │ subconscious cache <100 µs  budgeted             Anonymizer + ELSP│
- M5+│ reflexes (fast)   <1 µs   immutable until MA-4 FROZEN after cert│
-   └────────────────────────────────────────────────────────────────────┘
-                          │
-                          ▼
-                audit/HashChain — append-only
-                (x-matrix-trace header на каждом fixed-point)
+ Latency Eviction Persistence
+ ┌────────────────────────────────────────────────────────────────────┐
+ m0 │ working register <1 µs overwrite-on-commit in-proc Map │
+ M0 │ scratchpad buffer <10 µs ring-overwrite off-heap arena │
+ M1 │ episodic stream <50 ms SDM-decay counter PG (R2DBC) │
+ M2 │ semantic facts <5 ms tombstones + Φ BIR registry │
+ M3 │ procedural skills <1 ms versioned swap BirNet + lineage │
+ M4 │ noosphere / pool async CRDT-LWW + tombstone federation gossip│
+ M5 │ subconscious cache <100 µs budgeted Anonymizer + ELSP│
+ M5+│ reflexes (fast) <1 µs immutable until MA-4 FROZEN after cert│
+ └────────────────────────────────────────────────────────────────────┘
+ │
+ ▼
+ audit/HashChain — append-only
+ (x-matrix-trace header на каждом fixed-point)
 ```
 
 ## Короткая память (m0, M0)
@@ -65,10 +63,10 @@ AR-документ: кросс-секционные директивы по и�
 VARIABLES localLog, peerLog, quorumReached, tombstoned
 
 TypeOK ==
-  /\ localLog \in Seq(M4Record)
-  /\ peerLog \in [PeerId -> Seq(M4Record)]
-  /\ quorumReached \in BOOLEAN
-  /\ tombstoned \subseteq M4Record
+ /\ localLog \in Seq(M4Record)
+ /\ peerLog \in [PeerId -> Seq(M4Record)]
+ /\ quorumReached \in BOOLEAN
+ /\ tombstoned \subseteq M4Record
 
 \* M1: локальный append строго монотонен
 Monotonicity == Len(localLog') = Len(localLog) + 1
@@ -79,18 +77,18 @@ TombstoneIrreversible == \A r \in tombstoned: r \notin M4Active'
 \* M3: eventual consistency — каждый peer рано или поздно видит все
 \* не-tombstoned записи после quorum R/W
 EventualConsistency ==
-  [](quorumReached => <>(\A p \in Peers:
-    M4Active \subseteq Image(peerLog[p])))
+ [](quorumReached => <>(\A p \in Peers:
+ M4Active \subseteq Image(peerLog[p])))
 
 \* M4: FROZEN-артефакты (этика) никогда не появляются в M4 как
 \* редактируемые записи — только как подписанные attestations
 FrozenImmutability ==
-  \A r \in M4Record: r.isFROZEN => r \notin EditableSet
+ \A r \in M4Record: r.isFROZEN => r \notin EditableSet
 
 Spec == Init /\ [][Next]_<<localLog, peerLog, quorumReached, tombstoned>>
-          /\ WF_<<...>>(QuorumStep)
-          /\ EventualConsistency
-          /\ FrozenImmutability
+ /\ WF_<<...>>(QuorumStep)
+ /\ EventualConsistency
+ /\ FrozenImmutability
 ```
 
 Полная спека — `formal/MemoryM4Causal.tla` (next-format-contract, не реализовано). Аудит — реализация `noosphere/QuorumChecker` + integration-test на Testcontainers.
@@ -115,5 +113,3 @@ Spec == Init /\ [][Next]_<<localLog, peerLog, quorumReached, tombstoned>>
 - [SPEC-007-memory-hierarchy](../specifications/SPEC-007-memory-hierarchy.md) — формальная спека (placeholder).
 - Расширение `lifecycle/FnlGate` для двойного карантина IMPORT_M4 ↔ DESIGN-08 (отложено в DESIGN-12).
 - M5+ рефлексы после сертификации MA-N — preregistered EXP, не обещание сроков.
-
-Для исторической глубины см. `archive/2026-08-pre-v2/science/science/SUBSTRATE-MODELS.md` §3 (SDM/Каnerва), §4.1 (FCA), §5 (мозжечковый слой → M5+ рефлексы); для онтологии верхнего уровня — `archive/2026-08-pre-v2/vision/vision/ARCHITECTURE.md` §3.3 (консолидация «гиппокамп→неокортекс»).

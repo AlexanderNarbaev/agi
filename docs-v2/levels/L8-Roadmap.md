@@ -1,7 +1,6 @@
 # L8 — Roadmap, Integration, and Development Protocol
 
-**Status:** normative · **Layer:** 8 (process) · **Date:** 2026-08-26
-**Changelog:** 2026-08-26 — brain wave v4; measured tone; phases
+**Status:** normative · **Layer:** 8 (process) · **Date:** 
 reframed against current code state; archive reference added.
 
 ## 1. Scope
@@ -19,23 +18,23 @@ changes require an RFC and review (CONSTITUTION II).
 
 ## 3. Phases
 
-| Phase | Name                  | Window (2026) | Outcome                          |
+| Phase | Name | Window (2026) | Outcome |
 |-------|-----------------------|---------------|----------------------------------|
-| 0     | Spark                 | W01–W04       | MPDT eval; GA trial              |
-| 1     | Cell                  | W05–W10       | Cluster + single Mediator        |
-| 2     | Organism              | W11–W18       | Cluster sharding, hierarchy      |
-| 2.5   | Formal Verification   | W19–W22       | TLA+ for consensus + FROZEN      |
-| 3     | Noosphere             | W23–W32       | Federation, multimodal proxy     |
-| 4     | Digital Shadow        | W33–W40       | User-side protective module      |
-| 5     | Quantum Accelerators  | TBD           | SAT / min-form feasibility       |
-| 6     | Civilisational Bridge | W41–W52       | Cross-cultural protocols         |
-| 7     | Regenerative Economy  | W53–W64       | Credit system, certification     |
+| 0 | Spark | W01–W04 | MPDT eval; GA trial |
+| 1 | Cell | W05–W10 | Cluster + single Mediator |
+| 2 | Organism | W11–W18 | Cluster sharding, hierarchy |
+| 2.5 | Formal Verification | W19–W22 | TLA+ for consensus + FROZEN |
+| 3 | Noosphere | W23–W32 | Federation, multimodal proxy |
+| 4 | Digital Shadow | W33–W40 | User-side protective module |
+| 5 | Quantum Accelerators | TBD | SAT / min-form feasibility |
+| 6 | Civilisational Bridge | W41–W52 | Cross-cultural protocols |
+| 7 | Regenerative Economy | W53–W64 | Credit system, certification |
 
 Each phase ends with a working artefact, tests green, and a WAL checkpoint.
 
 ## 4. Phase Acceptance (excerpt)
 
-Phase 0 — Spark: a single MPDT neuron evolves under the L5 GA on a
+Phase 0 — Spark: a single BirUnit evolves under the L5 GA on a
 synthetic task and improves fitness; coverage ≥ 80 %. Phase 1 —
 Cell: 1k-neuron cluster survives snapshot/restore; Mediator runs
 the driver loop. Phase 2 — Organism: two instances exchange
@@ -72,13 +71,13 @@ verifiable command and its exit code.
 
 ## 7. Success Metrics
 
-| Metric                                | Target     |
+| Metric | Target |
 |---------------------------------------|------------|
-| Test coverage                         | ≥ 82 %     |
-| Single-neuron lookup latency          | < 10 ns    |
-| Cluster throughput                    | > 1e9 sig/s|
-| HADES recovery                        | < 60 s     |
-| Formal verification of FROZEN         | 100 %      |
+| Test coverage | ≥ 82 % |
+| Single-neuron lookup latency | < 10 ns |
+| Cluster throughput | > 1e9 sig/s|
+| HADES recovery | < 60 s |
+| Formal verification of FROZEN | 100 % |
 | Per-generation environment adaptation | ≤ 100 gens |
 
 These are measurable gates, not workload-specific guarantees.
@@ -91,10 +90,8 @@ lethal autonomous systems without a human operator; surveillance
 or coercion that removes voluntary consent; any use that
 contradicts the Three Prohibitions.
 
-> Cited legacy phrasing (traceability only): the prior document
 > framed the system as a "path to AGI". The v4 text reframes the
 > roadmap as a phased engineering plan with measurable gates.
-> Archive copy: archive/2026-08-pre-v2/docs-root-flat/L8_Roadmap.md
 
 Next: L9 Deployment — the operational runtime that hosts phases
 0–7.

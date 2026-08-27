@@ -1,7 +1,5 @@
 # Hash-Chain Audit (SHA-256 tamper-evident append-only log)
 
-**Статус: normative** · changelog 2026-08-26 — brain wave v3 algorithms.
-
 ## Что
 
 Append-only реестр с tamper-evident гарантиями: каждый `HashLink` ссылается на хеш предыдущего; SHA-256 поверх канонической упаковки полей; любая ретроактивная мутация инвалидирует все последующие ссылки. Источник: `matrix-core/src/main/java/io/matrix/audit/HashChain.java` (плюс `HashLink`). Соответствует CONSTITUTION VIII (явность и аудит) и `FORMAL-CONTRACTS.md` (HashChain TLA+ CFG).
@@ -20,12 +18,12 @@ Append-only реестр с tamper-evident гарантиями: каждый `H
 
 ```
 HashLink.extend(previous, payload, extra):
-  previousHash = previous?.hash() ?? "0".repeat(64)   // genesis
-  sequence     = (previous?.sequence ?? -1) + 1
-  timestampMs  = clock.get()                            // System.currentTimeMillis
-  payloadHash  = sha256Hex(payload.utf8Bytes)
-  hash         = computeHash(prevHash, seq, payHash, ts, extra)
-  return new HashLink(...)
+ previousHash = previous?.hash() ?? "0".repeat(64) // genesis
+ sequence = (previous?.sequence ?? -1) + 1
+ timestampMs = clock.get() // System.currentTimeMillis
+ payloadHash = sha256Hex(payload.utf8Bytes)
+ hash = computeHash(prevHash, seq, payHash, ts, extra)
+ return new HashLink(...)
 ```
 
 `genesisHash() = "0".repeat(64)` — известный предшественник для первого звена.

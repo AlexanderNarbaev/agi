@@ -1,10 +1,8 @@
 # H-010 — WiSARD vs TsetlinTrainer preregistration & gates (EXP-010)
 
-**Статус: normative · preregistration card** · пересмотр 2026-08-26 — brain wave v2 protocols · changelog 2026-08-26 — brain wave v2 protocols.
-
 Протокол preregistered EXP-010: single-pass WiSARD WNN vs TsetlinTrainer
 на synthetic-scope. Текущий verdict `accepted (synthetic-scope
-2026-08-25)` зафиксирован на 9 прогонах (3 датасета × 3 seed); карточка
+)` зафиксирован на 9 прогонах (3 датасета × 3 seed); карточка
 preregistration фиксирует gate-критерии для возможного расширения на
 дополнительные датасеты или повторного прогона при изменении продюсеров.
 
@@ -13,13 +11,13 @@ preregistration фиксирует gate-критерии для возможно
 - H-ID: H-010.
 - EXP-ID: EXP-010.
 - Соответствующий дизайн/спека (text-only): DESIGN-04 (продюсеры,
-  `WisardProducer`, `TsetlinTrainer`), CONSTITUTION II (K_MAX=20).
+ `WisardProducer`, `TsetlinTrainer`), CONSTITUTION II (K_MAX=20).
 - Источник вердикта (text-only): research/HYPOTHESES.md row «H-010 —
-  WiSARD WNN vs TsetlinTrainer», статус `accepted (synthetic-scope
-  2026-08-25)`.
+ WiSARD WNN vs TsetlinTrainer», статус `accepted (synthetic-scope
+ )`.
 - Источник чисел (text-only): research/reports/EXP-010-report.md
-  (9 прогонов, median speedup 242.43×, WiSARD 9/9 по точности, min
-  advantage +5.00 п.п.).
+ (9 прогонов, median speedup 242.43×, WiSARD 9/9 по точности, min
+ advantage +5.00 п.п.).
 
 ## Метрики и gates (численные пороги preregistered)
 
@@ -39,16 +37,16 @@ min advantage +5.00 п.п. (gate ≥−2 п.п. ✅, фактически WiSARD
 ## Methodology
 
 - Артефакт: `matrix-core/.../tsetlin/{TsetlinTrainer, TsetlinAutomaton,
-  WisardProducer}` + `Exp010ComparisonTest`.
+ WisardProducer}` + `Exp010ComparisonTest`.
 - Корпус: синтетика seed 42/43/44; BITS=16 (K_MAX-конформная арность);
-  10 информативных бит с классовым смещением p=0.7/0.3, 6 шумовых
-  p=0.5; TRAIN=320, TEST=80; EPOCHS=5.
+ 10 информативных бит с классовым смещением p=0.7/0.3, 6 шумовых
+ p=0.5; TRAIN=320, TEST=80; EPOCHS=5.
 - Процедура: (1) grid-tuning Tsetlin по TRAIN-acc (4 конфигурации
-  clauses×epochs×S); (2) замер wall-clock лучшей конфигурации на
-  новой инстанции с `Random(SEED)`; (3) WiSARD 8 RAM, тот же seed,
-  EPOCHS=5; (4) сравнение на holdout.
+ clauses×epochs×S); (2) замер wall-clock лучшей конфигурации на
+ новой инстанции с `Random(SEED)`; (3) WiSARD 8 RAM, тот же seed,
+ EPOCHS=5; (4) сравнение на holdout.
 - Mini-протокол: 3 датасета × 3 seed = 9 прогонов; расширение до 5×5
-  — отдельный research wave.
+ — отдельный research wave.
 
 ## Prereqs
 
@@ -62,17 +60,17 @@ min advantage +5.00 п.п. (gate ≥−2 п.п. ✅, фактически WiSARD
 
 - Уровни доказательства — см. PROTOCOL.md в той же директории.
 - Полный verdict (`accepted synthetic-scope`) уже зафиксирован; для
-  полного `accepted` нужен production-domain (заблокировано: BLOCKED-
-  EXT: данные — см. EXP-010-report раздел «Ограничения»).
+ полного `accepted` нужен production-domain (заблокировано: BLOCKED-
+ EXT: данные — см. EXP-010-report раздел «Ограничения»).
 
 ## Чего здесь НЕ утверждается (CONSTITUTION VI)
 
 - Synthetic-scope verdict не экстраполируется на prod: «WiSARD всегда
-  быстрее Tsetlin» не публикуется.
+ быстрее Tsetlin» не публикуется.
 - Grid-tuning Tsetlin минимален (4 конфигурации); исчерпывающий grid —
-  отдельный research wave.
+ отдельный research wave.
 - Расширение на доменные корпуса (real images/text/tabular) — отдельный
-  EXP с собственным preregistration.
+ EXP с собственным preregistration.
 
 Next: при изменении продюсеров (`WisardProducer`, `TsetlinTrainer`) —
 повторный 3×3 прогон и проверка gate-таблицы; полный prod-domain verdict —

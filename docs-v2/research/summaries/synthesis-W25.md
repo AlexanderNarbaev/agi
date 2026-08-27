@@ -1,9 +1,6 @@
 ---
 status: normative
-changelog: 2026-08-26 — brain wave v3 summaries
 ---
-
-# synthesis-W25 (summary, brain wave v3)
 
 Сшивка трёх томов исследования в стек механизмов с трассировкой школа → механизм → дизайн → FR/NFR → гипотеза. Версия по состоянию на волну 25.
 

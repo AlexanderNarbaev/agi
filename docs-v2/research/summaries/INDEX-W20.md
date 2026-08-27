@@ -1,9 +1,6 @@
 ---
 status: normative
-changelog: 2026-08-26 — brain wave v3 summaries
 ---
-
-# INDEX-W20 (summary, brain wave v3)
 
 Карта корня документации v2. Сжатие оригинального idx_w20.md до рабочего ориентира.
 
@@ -63,8 +60,6 @@ engineering/ROADMAP.md (G1-G6, этапы 0-5) · C4.md · ARC42-RISKS.md (R-01�
 API.md · DEPLOYMENT.md · GLOSSARY.md
 
 ## Архив
-
-archive/ — прежние спецификации (L0-L23), долгосрочные планы, синтезы. Нормативной силы не имеют; при противоречии действует текущий каркас.
 
 Полная карта (длинные ссылки на конкретные § атласа) — в исходном файле idx_w20.md.
 

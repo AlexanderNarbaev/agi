@@ -1,9 +1,6 @@
 ---
 status: normative
-changelog: 2026-08-26 — brain wave v3 summaries
 ---
-
-# synthesis-W28 (summary, brain wave v3)
 
 Сшивка трёх томов исследования в стек механизмов с трассировкой школа → механизм → дизайн → FR/NFR → гипотеза. Версия по состоянию на волну 28.
 
@@ -45,12 +42,12 @@ changelog: 2026-08-26 — brain wave v3 summaries
 
 - **Полнота экспериментальной рамки**: HYPOTHESES.md фиксирует 38 карточек (H-001…H-038); EXP-002/003 опровергли H-002/H-003 на toy-корпусе; EXP-010 подтвердил H-010 (WiSARD vs TsetlinTrainer: median 242× при парите по точности).
 - **LTL+model checking (H-017)**: реализован LtlModelChecker; CI-проверка INV-* до деплоя.
-- **BIR-classifier parity (H-009)**: предварительно EXP-009B/C — latency ×149 vs ORT-CPU, fidelity .999; полный energy-гейт pending.
+- **BIR-classifier parity (H-009)**: предварительно EXP-009B/C — latency ×149 vs ORT-CPU, fidelity.999; полный energy-гейт pending.
 - **Поток preregistration → EXP → отчёт** — норма разработки (FR-15).
 
 ## 6. Что НЕ подтверждено
 
-- H-035 (EBL ускоряет сходимость ≥2×) — refuted-toy 2026-08-25: EBL ×17 медленнее на XOR.
+- H-035 (EBL ускоряет сходимость ≥2×) — refuted-toy : EBL ×17 медленнее на XOR.
 - H-001/004/005/007/008/011/012/014/015/016/018/021 — running/proposed; см. HYPOTHESES.md.
 - Численные характеристики поведения системы без воспроизводимого EXP-промера не публикуются (CONSTITUTION VI).
 

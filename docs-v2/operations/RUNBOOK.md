@@ -46,7 +46,7 @@ docker compose -f docker-compose.dev.yml up -d
 
 | Симптом | Решение |
 |---|---|
-| `teacher .onnx не найден` | `python3 scripts/gen_teacher_onnx.py` (research-only) |
+| `teacher.onnx не найден` | `python3 scripts/gen_teacher_onnx.py` (research-only) |
 | `cudaEP=unavailable` | поднять системный CUDA 12 + cuDNN9 + `pip install onnxruntime-gpu` |
 | Testcontainers fails | проверить, что Docker daemon жив (`docker info`) |
 | Ошибка покрытия | JaCoCo ≥82% METHOD gate; см. [engineering/INVARIANTS.md](../engineering/INVARIANTS.md) |

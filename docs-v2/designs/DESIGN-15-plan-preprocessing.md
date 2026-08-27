@@ -1,6 +1,6 @@
 # DESIGN-15 — AC-3 планирование (PlanPreprocessor)
 
-**Статус: normative (skeleton → integrated 2026-08-26)** · пересмотр 2026-08-26 (v2 rebuild).
+**Статус: normative (skeleton → integrated )** · пересмотр (v2 rebuild).
 
 ## Что
 

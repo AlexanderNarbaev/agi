@@ -1,4 +1,3 @@
-**Статус: normative · draft** · пересмотр 2026-08-26 (brain wave v5 design drafts).
 
 # Design-DRAFT — Conjugate Budgeter (DP + conjugate gradient/dual)
 
@@ -21,9 +20,9 @@
 
 ```
 io.matrix.budgeter:
-  record SchedulePlan(rows, horizon, kappaFn) — Lagrangian relaxation
-  ConjugateBudgeter.step(epoch: int, observedΛ: double): BudgeterState
-  boundedShadowPrice(): boolean — invariant test
+ record SchedulePlan(rows, horizon, kappaFn) — Lagrangian relaxation
+ ConjugateBudgeter.step(epoch: int, observedΛ: double): BudgeterState
+ boundedShadowPrice(): boolean — invariant test
 ```
 
 ## Метрики

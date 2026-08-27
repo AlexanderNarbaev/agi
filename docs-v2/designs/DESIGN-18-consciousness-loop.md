@@ -1,7 +1,5 @@
 # DESIGN-18 — Consciousness Loop (петля сознания)
 
-**Статус: normative** · пересмотр 2026-08-26 (brain wave v1) · changelog 2026-08-26 — brain wave v1.
-
 ## Что
 
 Полный цикл: perception → attention → deliberation → gate → action → consolidation → subconscious → prediction-error → attention. Включает меры «бдительности» (arousal, saliency weights) и маршрутизацию working-memory (M2 ↔ M0/M1). Реализует [SPEC-006](../specifications/SPEC-006-consciousness-deliberation.md) и связывает [SPEC-007](../specifications/SPEC-007-subconscious.md) через `Impulse → AttentionRouter`.
@@ -9,16 +7,16 @@
 ## Цикл
 
 ```
-        ┌──────► (subconscious → prediction-error) ──┐
-        │                                              │
-        ▼                                              │
-   perception ──► attention(merge) ──► deliberation ──► gate ──► action
-                     ▲   ▲                                   │
-                     │   └── top-down (Impulse, SPEC-007)   │
-                     └────── bottom-up (SaliencyEvent)     │
-                                                            ▼
-                                                    consolidation
-                                                    (TR/REM, DESIGN-19)
+ ┌──────► (subconscious → prediction-error) ──┐
+ │ │
+ ▼ │
+ perception ──► attention(merge) ──► deliberation ──► gate ──► action
+ ▲ ▲ │
+ │ └── top-down (Impulse, SPEC-007) │
+ └────── bottom-up (SaliencyEvent) │
+ ▼
+ consolidation
+ (TR/REM, DESIGN-19)
 ```
 
 Каждый шаг — детерминированная транзакция, журналируется в `x-matrix-trace` ([FORMAL-CONTRACTS](../architecture/FORMAL-CONTRACTS.md)).
@@ -88,7 +86,7 @@
 
 ## Метрики / гейты
 
-- На 2026-08-26 не измерено; см. H-046, H-047, H-050 ([HYPOTHESES-NEW](../research/HYPOTHESES-NEW.md)).
+- На не измерено; см. H-046, H-047, H-050 ([HYPOTHESES-NEW](../research/HYPOTHESES-NEW.md)).
 - Emergence of behavior stability под повторными циклами — H-048.
 
 ## Отложено

@@ -1,7 +1,5 @@
 # MPDT-GA (эволюционный baseline с MDL-давлением)
 
-**Статус: normative** · changelog 2026-08-26 — brain wave v2 algorithms.
-
 ## Что
 
 Генетический алгоритм на DNF-популяции clause-масок. Baseline для EXP-002 (H-002/H-003 refuted-toy): GA быстрее ×5–10 и точнее на синтетике, чем TsetlinTrainer. Источник: `matrix-core/src/main/java/io/matrix/evolution/MpdtGaProducer.java`. Согласовано с DESIGN-04.
@@ -23,13 +21,13 @@
 
 ```
 crossover(p1, p2):
-  point = rng.nextInt(clauses+1)
-  child[c][0/1] = mutate(c < point ? p1[c][0/1] : p2[c][0/1])
+ point = rng.nextInt(clauses+1)
+ child[c][0/1] = mutate(c < point ? p1[c][0/1] : p2[c][0/1])
 
 mutate(word):
-  if rng.nextDouble() < 1/inputBits:
-    word ^= 1L << rng.nextInt(inputBits)
-  return word & mask()
+ if rng.nextDouble() < 1/inputBits:
+ word ^= 1L << rng.nextInt(inputBits)
+ return word & mask()
 ```
 
 Кроссовер — по индексу clause (не по битам): каждый clause ребёнка — целиком от одного из родителей, затем мутируется. Это сохраняет clause-целостность и облегчает интерпретацию. Вероятность мутации — `1/inputBits` на слово (равноценно одному flip'у за поколение на clause в среднем).

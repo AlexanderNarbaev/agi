@@ -1,46 +1,53 @@
-**Статус: LEGACY · normative (archive-completeness)** · пересмотр 2026-08-26 (brain wave v6; primary compute element now BirUnit).
+**Статус: normative · singleton** · пересмотр.
 
-# L1-BirUnit-Legacy — MPDT-Neuron historical definition
+# L1 — BirUnit (atomic compute element)
 
-## ⚠ Корректировка
+## Что
 
-Этот документ сохранён для **исторической полноты архива**. Текущий первичный вычислительный элемент — **BirUnit** (см. спецификацию `specifications/SPEC-002-boolean-compute-layer.md` и дизайн `designs/DESIGN-01-units.md`).
+**BirUnit** — атомарная вычислительная единица MATRIX. Вычисление, кодируемое в одной из трёх BIR-форм (`TT` / `CLAUSESET` / `BDD`), исполняется через `BooleanRuntime.evaluate(Bir, long[]) → long[]`. Всякая логика в рантайм-контуре проходит через BirUnit; альтернативной вычислительной единицы не предусмотрено (CONSTITUTION I, II, V).
 
-В ранней архитектуре MATRIX атомарная вычислительная единица называлась **MPDT-нейрон** (McCulloch–Pitts Decision Tree Neuron). После волн миграции DESIGN-14 (Источник: `engineering/SDD-COVERAGE.md` + аннекс `engineering/DESIGN-14-call-site-audit.md`) этот термин **вытеснен** BirUnit: единая точка исполнения (`BooleanRuntime.evaluate`) гарантирует, что весь рантайм работает в одной из трёх BIR-форм (TT / CLAUSESET / BDD), а не в оригинальной MPDT-семантике.
+## Кортеж
 
-## Содержание (для archive-completeness)
+`BirUnit = (id, k, F, S, meta)` где:
 
-Историческая формальная модель (без изменений):
+- `id`: `UUID v7` + generation counter (immutable через `bir/BirRegistry`).
+- `k`: 1 ≤ k ≤ 20 (CONSTITUTION II).
+- `F`: одна из трёх форм — `TtForm` / `ClauseSetForm` / `BddForm`. Иммутабельный артефакт.
+- `S`: стадия жизненного цикла `DRAFT → CANDIDATE → ACTIVE → FROZEN` (`lifecycle/FnlGate.java`).
+- `meta`: provenance, lineage (`bir/LineageLedger`), эмпирическая `fidelity`, training-hash.
 
-The **MPDT neuron** (McCulloch–Pitts Decision Tree Neuron) — атомарный вычислительный элемент; обобщение порогового нейрона 1943 года через замену линейной ступени на произвольную k-арную булеву функцию, кодируемую таблицей истинности или деревом решений.
+## Контракт исполнения
 
-Кортеж: N = (id, k, F, S, W, meta).
+- `BooleanRuntime.evaluate(Bir, long[]) → long[]` — детерминированный побитовый переход.
+- `BooleanRuntime.eval(long[], long[])` — packed execution (K_MAX=20, один long).
+- `BooleanRuntime.evalBatch(long[][], long[][])` — SIMD-батч.
+- Прямые вызовы легаси-вычислений вне BirUnit запрещены (`bir/Inv1SourceGuardTest` в CI).
 
-| Field | Type | Note |
-|---|---|---|
-| id | NeuronId | UUID + generation counter |
-| k | int | 1 ≤ k ≤ K_MAX (K_MAX = 20) |
-| F | BooleanFunction | truth table or decision tree |
-| S | NeuronState | lifecycle stage |
-| W | WeightVector | w_i ∈ {1,2,3} |
-| meta | Metadata | lineage, accuracy stats |
+## Формы
 
-## Соответствие актуальной системе
+- `TtForm` — truth table (packed, K_MAX=20).
+- `ClauseSetForm` — clause-set с эмиттером FCR F1/F2-минимизации; экспорт из `TssetlinTrainer` / `MpdtGaProducer` (последний — baseline-сравнение).
+- `BddForm` — каноническая BDD-редукция; целевой канонический вид.
 
-| Поле MPDT | Актуальный эквивалент | Где |
-|---|---|---|
-| id | Bir.id (UUID v7 + immutability через BirRegistry) | `bir/Bir.java` |
-| k | Bir.k (≤ 20, CONSTITUTION II) | `bir/TruthTable.K_MAX` |
-| F | BirForm (TT / CLAUSESET / BDD) | `bir/BirForm.java` |
-| S | Stage жизненного цикла BirUnit (DRAFT → CANDIDATE → ACTIVE → FROZEN) | `lifecycle/FnlGate.java` |
-| W | не нужно: веса не входят в компилированный артефакт (см. SPEC-002 §II) | — |
-| meta | `bir/LineageLedger`, `audit/HashChain` | `audit/HashChain.java` |
+## Жизненный цикл
 
-## Куда смотреть дальше
+- `DRAFT` → производитель (Tsetlin / WiSARD / MpdtGaProducer) синтезирует BirUnit.
+- `CANDIDATE` → shadow-run scoring по двум порогам (`lifecycle/FnlGate.advance`).
+- `ACTIVE` → публикуется в реестре `bir/BirRegistry`; доступен для исполнения.
+- `FROZEN` → артефакт нельзя модифицировать; требует RFC-процедуры (см. `operations/drafts/DRAFT-RFC-Procedure.md`).
 
-- Реальное устройство атомарной единицы → `designs/DESIGN-01-units.md`.
-- Формальная BIR-модель → `specifications/SPEC-002-boolean-compute-layer.md`.
-- TLA+-контракты → `architecture/FORMAL-CONTRACTS.md` (`BIR-Step` — кандидат).
-- Корректировки по всем документам → `vision/CONCEPT-CORRECTIONS.md`.
+## Метрики (per BirUnit)
 
-Next: для следующего шага чтения по архитектуре перейдите к `INDEX.md` (единая навигация) или к `vision/BRAIN-LIKE-SYSTEM.md` (нарративный синтез).
+- `fidelity` — измеренная согласованность с учителем на holdout (для DRAFT/CANDIDATE).
+- `latency` (per-call) — замеряется JMH-протоколом; целевая ≤ 1.5 мкс на packed word.
+- `literal_count` — для CLAUSESET; критерий лаконичности.
+- `lineage_hash` — tamper-evident через `audit/HashChain`.
+
+## Где смотреть дальше
+
+- `specifications/SPEC-002-boolean-compute-layer.md` — общая спецификация BIR-слоя.
+- `designs/DESIGN-01-units.md` — текущий дизайн.
+- `algorithms/Tsetlin-Automaton.md`, `algorithms/MPDT-GA.md`, `algorithms/WiSARD-WNN.md` — производители BirUnit.
+- `engineering/INVARIANTS.md` — что защищается, а что нет.
+
+Next: для следующего шага чтения обратитесь к `INDEX.md` (единая навигация) или к `vision/BRAIN-LIKE-SYSTEM.md` (синтез мозгоподобной системы).

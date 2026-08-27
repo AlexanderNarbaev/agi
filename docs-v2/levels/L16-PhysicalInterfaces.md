@@ -1,8 +1,6 @@
 # L16 — Physical Interfaces
 
-**Status:** normative · **Layer:** 16 (hardware) · **Date:** 2026-08-26
-**Changelog:** 2026-08-26 — brain wave v4 levels; densified from archive copy
-archive/2026-08-pre-v2/docs-root-flat/L16_PhysicalInterfaces.md.
+**Status:** normative · **Layer:** 16 (hardware) · **Date:** 
 
 ## 1. Purpose
 L16 defines how Matrix runs on physical devices: microcontrollers,
@@ -20,7 +18,7 @@ energy-efficient at the edge.
 | L3 | Neuromorphic (Loihi, TrueNorth) | MB SRAM | pJ per spike | Ultra-efficient learning |
 
 ## 3. Microcontrollers — `matrix-micro`
-A C/C++ library implementing an MPDT neuron. The truth table
+A C/C++ library implementing an BirUnit. The truth table
 sits in flash as `const uint8_t[]` or `const uint32_t[]`;
 evaluation is bitwise and runs in tens of nanoseconds on ESP32
 cores. Training does not occur on device; a neuron is trained
@@ -46,7 +44,7 @@ against the four prohibitions before deployment, and inference
 on FPGA or MCU extends battery life.
 
 ## 5. FPGA — Direct Logic Mapping
-An MPDT neuron is a truth table; an FPGA is an array of LUTs.
+An BirUnit is a truth table; an FPGA is an array of LUTs.
 A single neuron maps to one or several LUTs, with inference
 latency in fractions of a nanosecond and energy in femtojoules
 per operation, close to the thermodynamic limit. The
@@ -62,7 +60,7 @@ FPGA; a population of 100 evaluates in microseconds.
 Existing platforms: Intel Loihi 2 (programmable neurons, spike-
 based communication, on-chip learning), IBM TrueNorth (one
 million neurons, very low power), SpiNNaker (large-scale spike
-simulation). MPDT neurons are not spike-based, but their
+simulation). BirUnit are not spike-based, but their
 discrete nature maps: truth tables encode into synaptic weights
 and thresholds; batched signal transfer (L2) maps to Address
 Event Representation. Mapping MPDT onto neuromorphic chips is

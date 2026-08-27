@@ -1,7 +1,5 @@
 # Ricci Fingerprint (Ollivier κ → 24-bin drift → Wasserstein-1)
 
-**Статус: normative** · changelog 2026-08-26 — brain wave v2 algorithms.
-
 ## Что
 
 Компактный сигнатурный дескриптор графа знаний: L1-нормированная гистограмма кривизн Ollivier-Ricci по 24 бинам. Используется для отслеживания структурной деградации knowledge graph между снимками. Источник: `matrix-core/src/main/java/io/matrix/ktopo/{Graph,OllivierRicciCalculator,DriftFingerprint,FingerprintDistance}.java`. Соответствует DESIGN-14 (Batch*-метрика структуры).

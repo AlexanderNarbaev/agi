@@ -1,7 +1,5 @@
 # REQUEST-autonomy-impulses — побуждающая активность
 
-**Статус: normative · singleton AR** · changelog `2026-08-26 — brain wave v1`.
-
 ## Что это
 
 AR-документ: директивы по внутренним драйверам, производящим действие **без внешнего сигнала**. Это «intrinsic motivation» в терминах vision GOALS-REQUIREMENTS §FR-09, согласованная с NFR-10 (DEGRADED-режим). Конкретика — [SPEC-008-autonomy-impulses](../specifications/SPEC-008-autonomy-impulses.md) (placeholder). Существующие нормативы: [SPEC-000-devloop](../specifications/SPEC-000-developmental-loop.md), [DESIGN-07-lifecycle](../designs/DESIGN-07-lifecycle.md), [DESIGN-11-budgeter](../designs/DESIGN-11-budgeter.md), [DESIGN-12-taskcell-fnl](../designs/DESIGN-12-taskcell-fnl.md).
@@ -24,34 +22,34 @@ AR-документ: директивы по внутренним драйвер
 ## Цикл импульса
 
 ```
-                  ┌──────────────────────────────────────┐
-                  │  scheduler tick (deterministic)      │
-                  └────────────────┬─────────────────────┘
-                                   ▼
-                       ┌──────────────────────┐
-                       │  collect triggers    │
-                       │  (curiosity/cons/    │
-                       │   integrity/share)   │
-                       └──────────┬───────────┘
-                                  ▼
-              ┌─────────────────────────────────────┐
-              │  ConjugateBudgeter.allocate(rows, E)│
-              │  → Allocation(mode, selected[],     │
-              │                spent, shadowPrice) │
-              └──────────────┬──────────────────────┘
-                             ▼
-        ┌────────────────────────────────────────────────┐
-        │  per selected impulse:                         │
-        │   1. emit TaskCell (DESIGN-12) с бюджетом     │
-        │   2. action → ethics-gate → FROZEN-check      │
-        │   3. исполнение → append audit/HashChain       │
-        │   4. на завершении: emit side-effects          │
-        └──────────────┬─────────────────────────────────┘
-                       ▼
-              ┌──────────────────────┐
-              │  update world-model  │
-              │  emit metrics        │
-              └──────────────────────┘
+ ┌──────────────────────────────────────┐
+ │ scheduler tick (deterministic) │
+ └────────────────┬─────────────────────┘
+ ▼
+ ┌──────────────────────┐
+ │ collect triggers │
+ │ (curiosity/cons/ │
+ │ integrity/share) │
+ └──────────┬───────────┘
+ ▼
+ ┌─────────────────────────────────────┐
+ │ ConjugateBudgeter.allocate(rows, E)│
+ │ → Allocation(mode, selected[], │
+ │ spent, shadowPrice) │
+ └──────────────┬──────────────────────┘
+ ▼
+ ┌────────────────────────────────────────────────┐
+ │ per selected impulse: │
+ │ 1. emit TaskCell (DESIGN-12) с бюджетом │
+ │ 2. action → ethics-gate → FROZEN-check │
+ │ 3. исполнение → append audit/HashChain │
+ │ 4. на завершении: emit side-effects │
+ └──────────────┬─────────────────────────────────┘
+ ▼
+ ┌──────────────────────┐
+ │ update world-model │
+ │ emit metrics │
+ └──────────────────────┘
 ```
 
 ## 1. Curiosity (исследование компетенций)
@@ -121,5 +119,3 @@ AR-документ: директивы по внутренним драйвер
 - Никаких «свободы воли», «воли», «желаний» — это запрещённые формулировки (CONSTITUTION VI).
 - Никаких обещаний, что импульсы «улучшают» систему в абсолютном смысле — только что они **зарегистрированы и бюджетированы**, эффект измеряется через preregistered EXP.
 - Никакого автоматического самомодифицирования FROZEN-артефактов (CONSTITUTION IV; требует RFC + консенсус).
-
-Для исторической глубины см. `archive/2026-08-pre-v2/science/science/SUBSTRATE-MODELS.md` §8.1 (МГУА Ивахненко = правило остановки Cauldron) и §9.2 (VC-теория = составной Φ).

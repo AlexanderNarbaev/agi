@@ -1,7 +1,5 @@
 # Tsetlin Automaton (Granmo Type I/II)
 
-**Статус: normative** · changelog 2026-08-26 — brain wave v2 algorithms.
-
 ## Что
 
 Атомарный двухсторонний автомат (Гранмо, 2018), портированный из `cair/pyTsetlinMachine ConvolutionalTsetlinMachine.c`. Хранит состояние в одном `int`-счётчике `state ∈ [0..2n]`; голос автомата `INCLUDED` iff `state >= n`. Все переходы — направленная арифметика с насыщением; никакой рандомизации внутри самого автомата. Источник: `matrix-core/src/main/java/io/matrix/tsetlin/TsetlinAutomaton.java`. Согласовано с `designs/DESIGN-04-learning.md` (продюсеры).

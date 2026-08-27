@@ -1,8 +1,6 @@
 # L7 — Perception Gate and Ethical Filter (FROZEN)
 
-**Status:** normative · FROZEN core · **Layer:** 7 (boundary) · **Date:** 2026-08-26
-**Changelog:** 2026-08-26 — brain wave v2; densified from archive copy
-archive/2026-08-pre-v2/docs-root-flat/L7_Ethics.md. The frozen
+**Status:** normative · FROZEN core · **Layer:** 7 (boundary) · **Date:** 
 prohibitions here mirror Constitutional Article IV.
 
 ## 1. Scope
@@ -39,16 +37,16 @@ cannot alter it.
 Four interacting FROZEN FNLs:
 
 1. Axiom Core — six axioms: non-harm, truthfulness, privacy,
-   obedience-with-right-of-refusal, bounded self-preservation,
-   LAWS prohibition.
+ obedience-with-right-of-refusal, bounded self-preservation,
+ LAWS prohibition.
 2. Ethical Gradient Tensor — E ∈ [0,1]^k scoring actions along
-   create / destroy, truth / lie, freedom / control,
-   privacy / disclosure, short-term / long-term, autonomy /
-   paternalism.
+ create / destroy, truth / lie, freedom / control,
+ privacy / disclosure, short-term / long-term, autonomy /
+ paternalism.
 3. Context Analyser — modulates thresholds by current drivers and
-   user state.
+ user state.
 4. Ethical Resolver — verdict: APPROVED, REJECTED, ESCALATED,
-   MODIFIED.
+ MODIFIED.
 
 ### 3.2. Pipeline
 

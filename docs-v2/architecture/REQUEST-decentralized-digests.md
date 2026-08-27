@@ -1,7 +1,5 @@
 # REQUEST-decentralized-digests — анонимные дайджесты в noosphere
 
-**Статус: normative · singleton AR** · changelog `2026-08-26 — brain wave v1`.
-
 ## Что это
 
 AR-документ: директивы по топологии «neuron-blocks × near-user × digest-up». Существующая норма — [DESIGN-08-federation](../designs/DESIGN-08-federation.md) (ELSP v1 Ed25519 + ML-DSA v2, `federation/Anonymizer`). Этот AR **расширяет роль** Anonymizer'а с «единичного фильтра исходящих digests» до «границы между локальным контекстом и глобальным пулом знаний». Полная спецификация — [SPEC-009-decentralized-digests](../specifications/SPEC-009-decentralized-digests.md) (placeholder).
@@ -9,40 +7,40 @@ AR-документ: директивы по топологии «neuron-blocks 
 ## Принцип
 
 ```
-                  УЗЕЛ ПОЛЬЗОВАТЕЛЯ (one peer)
-   ┌─────────────────────────────────────────────────────────┐
-   │  ┌──────────────┐   ┌──────────────┐   ┌─────────────┐  │
-   │  │ neuron-block │   │ neuron-block │   │ neuron-block│  │
-   │  │  (context A) │   │  (context B) │   │ (context C) │  │
-   │  └──────┬───────┘   └──────┬───────┘   └──────┬──────┘  │
-   │         │ local cache      │                  │         │
-   │         └──────────┬───────┴──────────────────┘         │
-   │                    ▼                                     │
-   │           ┌──────────────────────┐                       │
-   │           │  Aggregator (M2 Δ)   │                       │
-   │           └──────────┬───────────┘                       │
-   │                      ▼                                   │
-   │   ╔═══════════════════════════════════════════════════╗  │
-   │   ║   Anonymizer  (k-anonymous bucket + DP-noise)     ║  │
-   │   ║   • suppress quasi-identifiers                    ║  │
-   │   ║   • k ≥ K_MIN (config)                            ║  │
-   │   ║   • DP noise ε ≤ ε_BUDGET (audited)               ║  │
-   │   ║   • tombstone on request                          ║  │
-   │   ╚════════════════════════════╤══════════════════════╝  │
-   │                                ▼                         │
-   │                     ┌─────────────────────┐              │
-   │                     │  ELSP sign (ML-DSA) │              │
-   │                     └─────────┬───────────┘              │
-   └───────────────────────────────┼───────────────────────────┘
-                                   ▼
-                          ┌──────────────────┐
-                          │  Gossip to peers │
-                          └─────────┬────────┘
-                                    ▼
-                ╔═══════════════════════════════════════╗
-                ║  NOOSPHERE M5 — anonymized digest pool ║
-                ║   (CRDT LWW; lineage; X-Matrix-Tenant) ║
-                ╚═══════════════════════════════════════╝
+ УЗЕЛ ПОЛЬЗОВАТЕЛЯ (one peer)
+ ┌─────────────────────────────────────────────────────────┐
+ │ ┌──────────────┐ ┌──────────────┐ ┌─────────────┐ │
+ │ │ neuron-block │ │ neuron-block │ │ neuron-block│ │
+ │ │ (context A) │ │ (context B) │ │ (context C) │ │
+ │ └──────┬───────┘ └──────┬───────┘ └──────┬──────┘ │
+ │ │ local cache │ │ │
+ │ └──────────┬───────┴──────────────────┘ │
+ │ ▼ │
+ │ ┌──────────────────────┐ │
+ │ │ Aggregator (M2 Δ) │ │
+ │ └──────────┬───────────┘ │
+ │ ▼ │
+ │ ╔═══════════════════════════════════════════════════╗ │
+ │ ║ Anonymizer (k-anonymous bucket + DP-noise) ║ │
+ │ ║ • suppress quasi-identifiers ║ │
+ │ ║ • k ≥ K_MIN (config) ║ │
+ │ ║ • DP noise ε ≤ ε_BUDGET (audited) ║ │
+ │ ║ • tombstone on request ║ │
+ │ ╚════════════════════════════╤══════════════════════╝ │
+ │ ▼ │
+ │ ┌─────────────────────┐ │
+ │ │ ELSP sign (ML-DSA) │ │
+ │ └─────────┬───────────┘ │
+ └───────────────────────────────┼───────────────────────────┘
+ ▼
+ ┌──────────────────┐
+ │ Gossip to peers │
+ └─────────┬────────┘
+ ▼
+ ╔═══════════════════════════════════════╗
+ ║ NOOSPHERE M5 — anonymized digest pool ║
+ ║ (CRDT LWW; lineage; X-Matrix-Tenant) ║
+ ╚═══════════════════════════════════════╝
 ```
 
 ## Новая роль Anonymizer
@@ -86,26 +84,26 @@ Anonymizer — **единственная** точка, через котору�
 ```text
 Anonymizer.localPublish(record, policy) -> Either<AnonymizedDigest, Rejection>
 
-  policy:
-    kMin          : Nat       (≥ K_MIN config; default 5)
-    epsilonBudget : Real      (≤ ε_BUDGET)
-    deltaBudget   : Real      (≤ δ_BUDGET)
-    schemaRequired: Boolean   (true)
+ policy:
+ kMin : Nat (≥ K_MIN config; default 5)
+ epsilonBudget : Real (≤ ε_BUDGET)
+ deltaBudget : Real (≤ δ_BUDGET)
+ schemaRequired: Boolean (true)
 
-  pre:
-    record.isFROZEN = false       * FROZEN-артефакты не идут через M5
-    schemaRequired => record.ioSchema ≠ null
-    record contains no PII per NFR-9
+ pre:
+ record.isFROZEN = false * FROZEN-артефакты не идут через M5
+ schemaRequired => record.ioSchema ≠ null
+ record contains no PII per NFR-9
 
-  post on success:
-    digest.bucketSize >= kMin
-    digest.noise satisfies (εBudget, δBudget)-DP
-    digest.lineage in audit/HashChain
-    digest.signature valid (ML-DSA v2)
+ post on success:
+ digest.bucketSize >= kMin
+ digest.noise satisfies (εBudget, δBudget)-DP
+ digest.lineage in audit/HashChain
+ digest.signature valid (ML-DSA v2)
 
-  post on failure:
-    Rejection{ reason, auditTraceId }
-    * rejection тоже логируется (для adversarial audit)
+ post on failure:
+ Rejection{ reason, auditTraceId }
+ * rejection тоже логируется (для adversarial audit)
 ```
 
 ## Угрозы и контрмеры
@@ -127,7 +125,6 @@ Anonymizer.localPublish(record, policy) -> Either<AnonymizedDigest, Rejection>
 | `ArtifactSigner` | подпись самих артефактов до aggregation (опц., для reputation) |
 | `Anonymizer` | расширенная роль — см. таблицу выше |
 | `MeshFederation` | gossip + topology |
-| `ElspChannel` (v1 Ed25519) | legacy-совместимость; v2 предпочтительно |
 
 ## Стыковка с этикой
 
@@ -148,5 +145,3 @@ Anonymizer.localPublish(record, policy) -> Either<AnonymizedDigest, Rejection>
 - Никаких абсолютных гарантий приватности — это инженерные инварианты с настраиваемыми порогами (NFR-9).
 - Никаких обещаний, что noosphere «выучит» агрегированное — федерация — это транспорт и пул, не учитель.
 - Никакого PII в M5 в любой форме — это запрещено явно; компрометация Anonymizer — RFC-инцидент.
-
-Для исторической глубины см. `archive/2026-08-pre-v2/vision/vision/ARCHITECTURE.md` §3.4 (Noosphere — 4-слойное решение: governance, доверие, транспорт, устойчивость знания) и `archive/2026-08-pre-v2/vision/vision/GOALS-REQUIREMENTS.md` FR-12, FR-13, NFR-9, NFR-11.

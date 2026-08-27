@@ -1,7 +1,5 @@
 # DESIGN-17 — Action Arena (Transaction & Arbitration)
 
-**Статус: normative** · пересмотр 2026-08-26 (v2 rebuild) · brain wave v1 · changelog 2026-08-26 — brain wave v1.
-
 ## Что
 
 Среда исполнения моторного слоя [SPEC-005](../specifications/SPEC-005-action.md): транзакционная изоляция через `lifecycle/TaskCell` (DESIGN-12 бюджеты), арбитраж concurrent actions, аудит через `events/KafkaEventJournal` + `audit/HashChain`. Каждое исполнение — наблюдаемое, откатываемое, верифицируемое.
@@ -20,14 +18,14 @@
 
 ```
 BRC decision ──→ ethics/FROZEN gate ──→ TaskCell.spawn(budget)
-                                            │
-                                            ▼
-                                    PlanRunner внутри ячейки
-                                            │
-              ┌─────────────────────────────┼──────────────────────┐
-              ▼                             ▼                      ▼
-       KafkaEventJournal           HashChain.append            LieDetector
-       (events/)                  (audit/)                     (post-hoc)
+ │
+ ▼
+ PlanRunner внутри ячейки
+ │
+ ┌─────────────────────────────┼──────────────────────┐
+ ▼ ▼ ▼
+ KafkaEventJournal HashChain.append LieDetector
+ (events/) (audit/) (post-hoc)
 ```
 
 ### TaskCell (DESIGN-12 бюджеты)
@@ -49,14 +47,14 @@ BRC decision ──→ ethics/FROZEN gate ──→ TaskCell.spawn(budget)
 Двойной журнал:
 
 1. **`events/KafkaEventJournal`** (production):
-   - `events/{EventJournal, KafkaEventJournal, R2dbcEventJournal, InMemoryEventJournal, BatchKafkaJournal, KafkaTopics, ClusterEvent, ClusterEventType}`.
-   - Топики per arena: `matrix.arena.{arena-id}.events`.
-   - Retention 72h (см. archive L9 для совместимости), hot-loop для аудита.
+ - `events/{EventJournal, KafkaEventJournal, R2dbcEventJournal, InMemoryEventJournal, BatchKafkaJournal, KafkaTopics, ClusterEvent, ClusterEventType}`.
+ - Топики per arena: `matrix.arena.{arena-id}.events`.
+ - Retention 72h (см. archive L9 для совместимости), hot-loop для аудита.
 
 2. **`audit/HashChain`** (immutable):
-   - `audit/{HashChain, HashLink, FrozenFNLHashChain}` — append-only, thread-safe (внутренний lock).
-   - `HashLink(prevHash, eventDigest, timestamp, signature)` — цепочка фиксируется в журнал.
-   - FROZEN-цепочка отдельно: `FrozenFNLHashChain` — фиксирует, что FROZEN-нейроны не модифицированы.
+ - `audit/{HashChain, HashLink, FrozenFNLHashChain}` — append-only, thread-safe (внутренний lock).
+ - `HashLink(prevHash, eventDigest, timestamp, signature)` — цепочка фиксируется в журнал.
+ - FROZEN-цепочка отдельно: `FrozenFNLHashChain` — фиксирует, что FROZEN-нейроны не модифицированы.
 
 Контракт: для каждого `Action.execute()` пишется пара `(KafkaEvent, HashLink)`; репликация и ретенш определяются per-tier.
 

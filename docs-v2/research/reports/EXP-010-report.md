@@ -1,6 +1,6 @@
 # EXP-010 Report — WiSARD WNN vs TsetlinTrainer
 
-**Статус: running → accepted (synthetic-scope 2026-08-25)** · Гипотеза: H-010 (single-pass WNN в пределах 2 п.п. точности TsetlinTrainer при ≥10× меньшем train wall-clock).
+**Статус: running → accepted (synthetic-scope )** · Гипотеза: H-010 (single-pass WNN в пределах 2 п.п. точности TsetlinTrainer при ≥10× меньшем train wall-clock).
 
 ## Методика
 
@@ -30,7 +30,7 @@
 
 ## Вердикт
 
-**accepted (synthetic-scope 2026-08-25)** — оба preregistered гейта выполнены на всех 9 прогонах. Статус в `HYPOTHESES.md` обновлён, пины в `Exp010ComparisonTest`.
+**accepted (synthetic-scope )** — оба preregistered гейта выполнены на всех 9 прогонах. Статус в `HYPOTHESES.md` обновлён, пины в `Exp010ComparisonTest`.
 
 ## Ограничения
 

@@ -1,7 +1,5 @@
 # MCTS + LATS (Value/Reflection-augmented tree search)
 
-**Статус: normative** · changelog 2026-08-26 — brain wave v3 algorithms.
-
 ## Что
 
 Monte Carlo Tree Search поверх `DecisionTree`-состояний, расширенный LATS-режимом (arXiv:2310.04406): value-function вместо random simulation, self-reflection на провалившихся ветках, PUCT-селекция. Источник: `matrix-core/src/main/java/io/matrix/mcts/{MctsTree,MctsNode,LatsNode,LatsReflector,LatsValueFunction}.java`. Соответствует SPEC-002 (BIR) и DESIGN-03 (Deliberation).
@@ -22,9 +20,9 @@ Monte Carlo Tree Search поверх `DecisionTree`-состояний, расш
 В LATS-режиме (`latsMode == true`) три модификации:
 
 1. **Value-function вместо simulation.** В `runSearch`: `reward = valueFunction.evaluate(expanded.state())`, затем `latsChild.setValueScore(reward)`. Интерфейс `LatsValueFunction<T>` — `@FunctionalInterface` с `evaluate(state) → [0, 1]`. Готовые реализации:
-   - `RewardFunctionAdapter` — оборачивает `ToDoubleFunction<DecisionTree>`.
-   - `HeuristicValueFunction(k, rng)` — структурный скор (`0.4·structural + 0.4·diversity − 0.2·complexity`); `diversity = 1 − 2·|ratio − 0.5|`, где `ratio = truthTable.cardinality() / 2^k`.
-   - `CompositeValueFunction(functions, weights)` — взвешенная сумма (проверяет `Σw ≈ 1.0`).
+ - `RewardFunctionAdapter` — оборачивает `ToDoubleFunction<DecisionTree>`.
+ - `HeuristicValueFunction(k, rng)` — структурный скор (`0.4·structural + 0.4·diversity − 0.2·complexity`); `diversity = 1 − 2·|ratio − 0.5|`, где `ratio = truthTable.cardinality() / 2^k`.
+ - `CompositeValueFunction(functions, weights)` — взвешенная сумма (проверяет `Σw ≈ 1.0`).
 
 2. **Prior + PUCT.** При `expand` создаётся `LatsNode` с `prior = clamp(valueFunction.evaluate(newState), 0.01, 1.0)`. `LatsNode.puct(c)`:
 
@@ -74,5 +72,3 @@ PUCT = meanReward + c · prior · √parentVisits / (1 + visitCount)
 - Параллельный `runSearch` (multi-leaf selection, virtual threads) — отложено.
 - Калибровка `prior` через настоящую `LatsValueFunction` поверх brain-а (сейчас `HeuristicValueFunction` для тестов) — отдельная задача.
 - Merkle-hash дерева для аудита MCTS-прогонов (через hash-chain) — отложено.
-
-Next: конец серии алгоритмов brain wave v3. Дальнейшие документы — в science ALGORITHM-ATLAS-INDEX (см. docs-v2 INDEX).

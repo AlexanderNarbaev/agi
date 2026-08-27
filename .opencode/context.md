@@ -1,19 +1,28 @@
-# Project Context — SESSION CONTINUITY (compaction #61) — REVISION FIXES
+# Project Context — SESSION CONTINUITY (compaction #63) — CLEAN-SNAPSHOT
 
 ## Mission
-Apply minimal correction edits to align docs-v2/ with current architecture (BIR-primary, MPDT superseded as naming).
+Полная зачистка active docs-v2/ от исторических/LEGACY/archive-упоминаний. Только живой слепок.
 
-## Plan (5 file edits + 1 new)
-
-1. docs-v2/levels/L1-MPDT-Neuron.md → переименовать в L1-BirUnit-Legacy.md (git mv) + переписать шапку: «LEGACY — BirUnit is current primary atomic compute element; this file preserves historical MPDT-Neuron definition for archive-completeness». Body остаётся историческим справочником.
-2. docs-v2/levels/L5-DNA.md: заменить «GA on MPDT chromosomes» → «GA on BIR clause-set genomes (each chromosome is a ClauseSetForm)»; добавить ссылку-text на MpdtGaProducer.
-3. docs-v2/levels/L3-Neurocluster-Arch.md: «MPDT neurons (L1)» → «BirUnit» + text-link к SPEC-002.
-4. docs-v2/research/HYPOTHESES.md H-008: «MPDT proof memory batch mode» → «BIR proof memory batch mode».
-5. docs-v2/vision/CONCEPT-CORRECTIONS.md (новый, singleton normative, ≤150 строк) — таблица «устаревший термин → актуальный термин» + статус «LEGACY» для некоторых файлов + явные text-only «Next:» pointer'ы.
+## ПЛАН
+1. Удалить L1-BirUnit-Legacy.md, vision/CONCEPT-CORRECTIONS.md (через `rm`, не `git rm`).
+2. Python batch-скрипт (через heredoc) — regex-замены в оставшихся active файлах:
+   - `archive/...` → удалить (вырезать весь фрагмент, оставив аккуратный текст)
+   - `LEGACY · ...` → удалить целиком строку/абзац с «LEGACY»-маркером
+   - `MPDT-нейрон` (кириллица) → `BirUnit` (только как термин)
+   - `MPDT neuron` / `MPDT-Neuron` → `BirUnit`
+   - `MPDT формы` / `MPDT-форма` → `BIR-формы`
+   - `MPDT chromosomes` → `clause-set genomes`
+   - `устаревший` / `устарел` / `legacy` / `deprecated` / `прежний` / `корректир` → удалить
+   - `для глубины см. archive/...` → удалить
+3. Grep-проверка: 0 совпадений в active docs-v2/.
+4. INDEX.md пересмотреть — убрать legacy-ссылки.
+5. Commit+push.
 
 ## Hard requirements
-- Без запрещённых формулировок.
+- Термин `MpdtGaProducer` (класс) — НЕ трогать (это имя baseline-продюсера, не «устаревший»).
+- Файлы archive/ — НЕ трогать.
 - Без markdown-ссылок.
-- Текстовые "Next:" pointer'ы.
-- L1 rename: git mv сохраняет историю.
-- Без изменений CONSTITUTION/AGENTS/FROZEN-файлов.
+- Без запрещённых формулировок.
+
+## Правила
+- Без новых зависимостей; FROZEN/avro/workflows не трогать.

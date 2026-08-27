@@ -1,7 +1,6 @@
 # L9 — Deployment & Operations
 
-**Status:** normative · **Layer:** 9 (operations) · **Date:** 2026-08-26
-**Changelog:** 2026-08-26 — brain wave v3 levels; rewrite in measured
+**Status:** normative · **Layer:** 9 (operations) · **Date:** 
 /scientific tone; archive reference added.
 
 ## 1. Scope
@@ -17,11 +16,11 @@ on a cluster.
 Kubernetes-native operators or StatefulSets host the dependencies:
 
 - Apache Kafka via Strimzi; 3 replicas; retention 72 h; topic
-  auto-create disabled.
+ auto-create disabled.
 - MinIO via MinIO Operator; pool of 4 servers × 2 volumes of
-  1 TiB; auto-cert enabled.
+ 1 TiB; auto-cert enabled.
 - PostgreSQL (optional) via Cloud Native PG; Pekko Persistence
-  JDBC adapter.
+ JDBC adapter.
 - Prometheus + Grafana via kube-prometheus-stack.
 
 ## 3. Instance Packaging
@@ -47,7 +46,7 @@ A Kubernetes Operator (fabric8 client, Quarkus) reconciles
 MatrixCluster and MatrixLobe CRDs:
 
 - MatrixCluster — replicas, mediator count, Kafka bootstrap,
-  MinIO endpoint, storage, monitoring flags.
+ MinIO endpoint, storage, monitoring flags.
 - MatrixLobe — cluster reference, source `.ldn`, replicas.
 
 The operator creates Deployments, Services, ConfigMaps, Secrets,
@@ -56,11 +55,11 @@ PVCs; reacts to `neuronReplicas`; orchestrates snapshot Jobs.
 ## 6. Autoscaling
 
 - HPA on CPU and the custom metric `matrix_signal_rate`
-  (signals/sec). Min 2, max 100.
+ (signals/sec). Min 2, max 100.
 - VPA on stateless components in Auto mode; Off (recommendation
-  only) for actors with long event-replication history.
+ only) for actors with long event-replication history.
 - Cluster Autoscaler delegated to the cloud provider
-  (EKS / GKE / AKS).
+ (EKS / GKE / AKS).
 
 ## 7. Observability
 
@@ -90,11 +89,9 @@ CronJob-driven snapshot creation into MinIO. Event journal
 retention 72 h; long-term via Kafka Connect sink. Restore: load
 last snapshot, replay events from the stored offset.
 
-> Cited legacy phrasing (traceability only): the prior document
 > framed this layer as "production readiness" with a Quick Start
 > walkthrough. The v3 text compresses the same content into a
 > measured operations contract; the Quick Start remains in
 > `engineering/RUNBOOK.md`. Archive copy:
-> archive/2026-08-pre-v2/docs-root-flat/L9_Deployment.md.
 
 Next: L10 Monitoring — SLOs, alert routing, runbook links.

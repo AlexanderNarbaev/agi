@@ -24,13 +24,13 @@ CRD MATRIX-проекта (см. `architecture/MODULES.md` и `operator/`):
 apiVersion: matrix.io/v1alpha1
 kind: SignalModule
 metadata:
-  name: text-lexicon-v3
-  namespace: matrix
+ name: text-lexicon-v3
+ namespace: matrix
 spec:
-  moduleName: text-lexicon
-  version: v3
-  mediaType: text
-  frozen: true   # FROZEN — изменения только через RFC
+ moduleName: text-lexicon
+ version: v3
+ mediaType: text
+ frozen: true # FROZEN — изменения только через RFC
 ```
 
 ## Native-image

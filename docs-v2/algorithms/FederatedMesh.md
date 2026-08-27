@@ -1,7 +1,5 @@
 # Federated Mesh (Noosphere M4: CRDT + Quorum + Kafka)
 
-**Статус: normative** · changelog 2026-08-26 — brain wave v3 algorithms.
-
 ## Что
 
 Узел федеративной сети Noosphere (M4): `MeshFederation` объединяет CRDT-состояние, real-time exchange и Kafka-канал для распределённой публикации `FnlPackage`-ов между инстансами MATRIX. Источник: `matrix-core/src/main/java/io/matrix/noosphere/MeshFederation.java` (плюс `Crdt`, `QuorumChecker`, `FnlPackage`, `GrowOnlySet`). Соответствует DESIGN-08 (федерация и ELSP).
@@ -10,12 +8,12 @@
 
 ```
 MeshFederation(nodeId, quorumThreshold, kafkaBootstrap, kafkaTopic):
-  knownPeers    = ConcurrentHashMap.newKeySet()    // + nodeId при init
-  exchange      = new RealTimeExchange(nodeId)     // in-process pub/sub
-  kafkaProducer = createKafkaProducer(bootstrap)   // null если bootstrap пуст
-  localState    = ConcurrentHashMap<name, FnlPackage>
-  listeners     = CopyOnWriteArrayList<MeshListener>
-  quorumThreshold
+ knownPeers = ConcurrentHashMap.newKeySet() // + nodeId при init
+ exchange = new RealTimeExchange(nodeId) // in-process pub/sub
+ kafkaProducer = createKafkaProducer(bootstrap) // null если bootstrap пуст
+ localState = ConcurrentHashMap<name, FnlPackage>
+ listeners = CopyOnWriteArrayList<MeshListener>
+ quorumThreshold
 ```
 
 `join()` / `leave()` / `addPeer(peerId)` рассылают уведомления через `notifyListeners(event, data)`. Исключения в листенерах не прерывают рассылку (только WARN-лог).

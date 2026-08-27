@@ -1,4 +1,3 @@
-**Статус: normative · draft** · пересмотр 2026-08-26 (brain wave v5 design drafts).
 
 # Design-DRAFT — BrcChain Primitives
 
@@ -16,10 +15,10 @@
 
 ```
 io.matrix.reasoning:
-  record BrcStep<S>(Predicate<Map<String,S>> pre, Effect<Map<String,S>> effect,
-                    Predicate<Map<String,S>> post)
-  BrcChain.compose(left, right): BrcChain  // preserves endpoints up to unused vars
-  BrcChain.run(initialState): Stream<StepTrace>
+ record BrcStep<S>(Predicate<Map<String,S>> pre, Effect<Map<String,S>> effect,
+ Predicate<Map<String,S>> post)
+ BrcChain.compose(left, right): BrcChain // preserves endpoints up to unused vars
+ BrcChain.run(initialState): Stream<StepTrace>
 ```
 
 ## Метрики / Гейты EXP-019

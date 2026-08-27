@@ -1,4 +1,3 @@
-**Статус: normative · draft** · пересмотр 2026-08-26 (brain wave v5 design drafts).
 
 # Design-DRAFT — Tsetlin Expansion (TypeI/II, multi-clause tuning)
 
@@ -23,9 +22,9 @@
 
 ```
 io.matrix.tsetlin (расширение):
-  TsetlinTrainer(inputBits, clauses, states, rng, initStrategy, tauSchedule)
-  TsetlinMachineState.export() → byte[]; TsetlinTrainer.fromState(byte[])
-  gammaTemperature(t): double[] | ndarray — задаётся вызывающим
+ TsetlinTrainer(inputBits, clauses, states, rng, initStrategy, tauSchedule)
+ TsetlinMachineState.export() → byte[]; TsetlinTrainer.fromState(byte[])
+ gammaTemperature(t): double[] | ndarray — задаётся вызывающим
 ```
 
 ## Метрики

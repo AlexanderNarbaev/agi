@@ -1,6 +1,6 @@
 # DESIGN-04 — Обучение (продюсеры)
 
-**Статус: normative** · пересмотр 2026-08-26 (v2 rebuild).
+**Статус: normative** · пересмотр (v2 rebuild).
 
 ## Что
 
@@ -13,7 +13,7 @@
 
 ## Реализация
 
-`io.matrix.tsetlin.{TsetlinTrainer, TsetlinAutomaton, WisardProducer}` и `io.matrix.evolution.{MpdtGaProducer, EvolutionLoop, ...}`.
+`io.matrix.tsetlin.{TsetlinTrainer, TsetlinAutomaton, WisardProducer}` и `io.matrix.evolution.{MpdtGaProducer, EvolutionLoop,...}`.
 
 Тесты: юнит каждого продюсера; `Exp010ComparisonTest` (WiSARD vs Tsetlin, 9 прогонов); `Exp002Exp003ProtocolTest` (сходимость).
 

@@ -1,8 +1,6 @@
 # L10 — Monitoring, Observability, SRE
 
-**Status:** normative · **Layer:** 10 (operations) · **Date:** 2026-08-26
-**Changelog:** 2026-08-26 — brain wave v2; densified from archive copy
-archive/2026-08-pre-v2/docs-root-flat/L10_Monitoring.md.
+**Status:** normative · **Layer:** 10 (operations) · **Date:** 
 
 ## 1. Scope
 

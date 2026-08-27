@@ -1,46 +1,91 @@
-**Статус: normative · singleton** · пересмотр 2026-08-27 (brain wave v6 corrections).
+**Статус: normative · singleton · decisions log** · пересмотр.
 
-# CONCEPT-CORRECTIONS — актуальная архитектура vs. устаревшие формулировки
+# DECISIONS — принятые архитектурные решения
 
-Этот документ фиксирует **коррекции концептуальной целостности** активной документации `docs-v2/`. Цель — предотвратить возврат к устаревшим именованиям/моделям при дальнейших правках.
+## D-001 Атомарная вычислительная единица = BirUnit
 
-## Актуальная архитектура (2026-08-27)
+**Решение.** Атомарная вычислительная единица MATRIX — BirUnit в одной из трёх BIR-форм (`TT` / `CLAUSESET` / `BDD`), исполняемая через `BooleanRuntime.evaluate`.
 
-- **Атомарная вычислительная единица** = `BirUnit` (`bir/Bir` + одна из 3 форм TT/CLAUSESET/BDD), единственная точка исполнения `BooleanRuntime.evaluate`.
-- **Рантайм**: детерминирован, K_MAX ≤ 20, FROZEN-этика неизменна.
-- **Продюсеры знаний**: TsetlinTrainer (этап B FR-B1/B2 принят), WisardProducer, MpdtGaProducer (используется как baseline-сравнение для H-002/H-003).
-- **Память**: m0/M0–M4/M5 иерархия (см. `architecture/REQUEST-memory-hierarchy.md`).
-- **Федерация**: ElspChannel (Ed25519) + ElspChannelMlDsa (ML-DSA, постквант).
-- **TLA+**: `FrozenEthicalFNL`, `BotEthicsPipeline`, `HashChain` формально специфицированы; `BRC-Step`, `ConjugateBudgeter-DP`, `Memory-M4-Causal`, `MCTS-LATS-Visit` — next-format-contracts.
+**Обоснование.** Прямые вычисления на разнородных булевых структурах (дерево, матрица, побитовые операции) ведут к разнородности в стеке и непредсказуемым задержкам. Сведение к одной форме-контракту позволяет единый SIMD-бэкенд, единый аудит, единые гарантии (K_MAX=20, детерминизм, линейная latency).
 
-## Таблица коррекций
+**Критерий отмены.** Если TLA+-доказательство не подтвердит семантическую полноту BIR-форм для всех требуемых классов задач (см. `architecture/FORMAL-CONTRACTS.md` next-format-contracts `BRC-Step`, `ConjugateBudgeter-DP`).
 
-| Устаревшая формулировка | Актуальная | Где исправлено |
-|---|---|---|
-| MPDT-нейрон = «атомарная вычислительная единица» | `BirUnit` (три формы TT/CLAUSESET/BDD, K_MAX ≤ 20) | `levels/L1-BirUnit-Legacy.md` (legacy-архив полнота); `specifications/SPEC-002-boolean-compute-layer.md` |
-| «GA on MPDT chromosomes» | «GA на BIR clause-set genomes» (хромосома = `ClauseSetForm` через `evolution/MpdtGaProducer.java`) | `levels/L5-DNA.md`; `evolution/MpdtGaProducer.java` |
-| «MPDT neurons (L1) compose» | BirUnit → NeuronClusterActor → FNL | `levels/L3-Neurocluster-Arch.md` |
-| H-008: «MPDT proof memory batch mode» | BIR proof memory batch mode | `research/HYPOTHESES.md` (H-008) |
-| «MPDT-форма» в обсуждениях рантайма | BirForm (TT/CLAUSESET/BDD) | везде при упоминании рантайм-контура |
+## D-002 Продюсеры: Tsetlin + WiSARD + MpdtGaProducer (baseline)
 
-## Файлы, сохраняющие устаревшее имя в качестве LEGACY (для архивной полноты)
+**Решение.** Три продюсера: `TsetlinTrainer` (этап B SPEC-002 FR-B1/B2 принят), `WisardProducer` (H-010 accepted на synthetic-scope), `MpdtGaProducer` (используется как baseline для сравнений H-002/H-003).
 
-- `levels/L1-BirUnit-Legacy.md` — превосходно оформляет: «LEGACY, BirUnit — primary atomic compute element since BIR migration; этот файл — archive-completeness».
-- `algorithms/MPDT-GA.md` — название продюсера в коде (`evolution/MpdtGaProducer.java`); не путать с терминологией «MPDT-нейрон».
+**Обоснование.** Tsetlin-механика даёт интерпретируемую clause-set форму; WiSARD — быстрый WNN baseline; GA — сильный control для случая, когда Tsetlin/WiSARD недотягивают.
 
-## Что НЕ нуждается в правке
+**Критерий отмены.** Принятие нового продюсера — через отдельный RFC и preregistered гипотезу.
 
-- `algorithms/MPDT-GA.md` — корректное название baseline-продюсера (класс в коде), не термин.
-- `levels/L5-DNA.md` после правки — заголовок «Genome» сохранён (приемлемо: геном — это сущность, носитель — BIR clause-set).
-- `docs-v2/research/protocols/H-002-clauseset-vs-ga.md` — название соответствует карточке H-002 в HYPOTHESES, корректно.
-- `docs-v2/research/reports/EXP-002-report.md` — термин «MPDT-GA» используется для обозначения baseline-сравнения, не для определения юнита.
+## D-003 FROZEN-этика
 
-## Принципы коррекций
+**Решение.** Четыре запрета (`CONSTITUTION.md` IV) реализованы в `ethics/frozen/` (`FROZENFNLGuardian`, `FrozenEthicalFNL`, `BotEthicsPipeline`) и не могут быть сняты без FROZEN-процедуры.
 
-1. **Имена классов в коде** остаются (это контракт кода; нельзя переименовать без миграции).
-2. **Имена уровней / документов** — переименовываем явно с явной пометкой «LEGACY» при archive-полноте.
-3. **Формулировки про рантайм** всегда про BIR, а не про MPDT-Neuron.
-4. **Baseline-сравнения** (MpdtGaProducer) — допустимы и поощряются.
-5. **Архив остаётся историческим** — формулировки в `docs-v2/archive/` не трогаем.
+**Обоснование.** Этические нормы не являются параметром и не подлежат обучению или оптимизации. Контракт фиксируется TLA+ (`FrozenEthicalFNL.tla`).
 
-Next: для следующего шага чтения вернитесь к `INDEX.md` или к `vision/FINALSUMMARY.md`.
+**Критерий отмены.** Только через формальную смену конституции владельцем.
+
+## D-004 Память: m0 / M0..M4 / M5+ иерархия
+
+**Решение.** Семь уровней (см. `architecture/REQUEST-memory-hierarchy.md`): `m0`/`M0` (scratchpad) → `M1` (episodic SDM) → `M2`/`M3` (semantic+procedural) → `M4` (noosphere CRDT) → `M5`/`M5+` (anonymized digests, FROZEN-рефлексы).
+
+**Обоснование.** M0–M3 — стандартная иерархия рабочей/эпизодической/семантической/процедурной памяти. M4 — федеративная реплика через CRDT. M5 — деперсонализированные digest'ы для общего пула. M5+ — FROZEN-рефлексы (неизменные).
+
+**Критерий отмены.** Смена уровней — через RFC + TLA+-спек.
+
+## D-005 Децентрализация через anonymized digests
+
+**Решение.** Каждый neuron-блок накапливает локальный контекст у пользователя; в общий пул (M5) идут только k-anonymous + DP-noised digest'ы через `federation/Anonymizer`.
+
+**Обоснование.** Снижение рисков re-identification при общем пуле. Подпись через `federation/ElspChannelMlDsa` (постквант ML-DSA, JEP 497) для целостности.
+
+**Критерий отмены.** Соглашение о приватности владельца.
+
+## D-006 Внешние зависимости стека
+
+**Решение.** Java 25 · Quarkus 3.38.3 · GraalVM plugin 1.1.10 · Avro 1.12.2 · ONNX Runtime 1.29.0 · Kafka-clients 4.3.1 · Testcontainers 1.21.3. См. `engineering/STANDARDS-MATRIX.md`.
+
+**Обоснование.** Актуальные на LTS/патч-уровни по результатам maven-metadata-проверки.
+
+**Критерий отмены.** Мажорный апгрейд — через отдельный RFC с JMH-гейт-измерениями.
+
+## D-007 INV-1 source-scan страж
+
+**Решение.** `bir/Inv1SourceGuardTest` (source-scan страж без ArchUnit-dep) блокирует легаси-`.evaluate()`-вызовы вне whitelist (bir/, ethics/frozen/, neuron internals, TruthTableMinimizer). Stраж без зависимостей.
+
+**Обоснование.** Не все команды имеют доступ к ArchUnit-dep; source-scan достигает ту же цель в тестах штатного test-таска.
+
+**Критерий отмены.** Переход на ArchUnit (при наличии dep) для более широких правил.
+
+## D-008 Режим пакетирования и очередности
+
+**Решение.** Wave-ориентированная работа: каждая волна — связная задача с checkpoint commit + push (см. `AGENTS.md`).
+
+**Обоснование.** Митигация разрастания, улучшение респективности, явные точки синхронизации.
+
+**Критерий отмены.** Переход к непрерывной интеграции с автоматическим релиз-менеджментом — через RFC.
+
+## D-009 Протокол экспериментов
+
+**Решение.** Каждая гипотеза в `research/HYPOTHESES.md` preregistered; `research/PROTOCOL.md` описывает уровни доказательства (single-run → JMH → multi-dataset × seeds → production-domain).
+
+**Обоснование.** Разделение «preliminary support» (synthetic) и «accepted» (production) важно для честности (CONSTITUTION VI).
+
+**Критерий отмены.** Изменение протокола — через RFC.
+
+## D-010 GitHub Pages публикация
+
+**Решение.** GitHub Pages публикует `docs/` (pages.yml) с минимальной точкой входа `docs/index.md`. Остальная docs-v2/ обслуживается через README.md → INDEX.md.
+
+**Обоснование.** Pages workflow ограничен узким path-фильтром; полная docs-v2/ — это внутренняя разработческая документация.
+
+**Критерий отмены.** Миграция на собственный docs-сайт с полным рендером docs-v2/.
+
+## D-011 Архивирование 
+
+**Обоснование.** История важна для аудита; активные документы остаются компактными и непротиворечивыми.
+
+**Критерий отмены.** Согласование с владельцем о сроках хранения (рекомендация: 1 год).
+
+Next: для следующего шага чтения обратитесь к `INDEX.md`.

@@ -1,7 +1,5 @@
 # SPEC-007 — Subconscious (фоновый слой)
 
-**Статус: normative** · пересмотр 2026-08-26 (brain wave v1) · changelog 2026-08-26 — brain wave v1.
-
 ## Что
 
 Подсознательный слой: фоновые консолидации (`lifecycle/ConsolidationCycle`), модели предсказания мира, dream-cycles (offline replay), генерация импульсов для autonomy. Не выходит в output напрямую — только через `consciousness/AttentionRouter` → `consciousness/ActionGate` ([SPEC-006](./SPEC-006-consciousness-deliberation.md)). Это инженерная дисциплина: подсознание — отдельный процесс с собственным бюджетом, ничем не «прорывается» в рантайм-контур решений кроме как через гейт сознания.
@@ -9,20 +7,20 @@
 ## Архитектура
 
 ```
-                  ┌─────────────────────────────────────┐
-                  │  subconscious/SubconsciousDaemon    │
-                  │  ───────────────────────────────    │
-   M1/M2/M3 ──►   │  • PredictionModel (world-model)    │  ──►  Impulse (Set)
-                  │  • ConsolidationCycle (TR/REM)      │
-                  │  • DreamReplay (offline)            │
-                  │  • ImpulseGenerator                 │
-                  └─────────────────────────────────────┘
-                                       │
-                                       ▼
-                          consciousness/AttentionRouter (top-down, SPEC-006)
-                                       │
-                                       ▼
-                                   ActionGate (FROZEN)
+ ┌─────────────────────────────────────┐
+ │ subconscious/SubconsciousDaemon │
+ │ ─────────────────────────────── │
+ M1/M2/M3 ──► │ • PredictionModel (world-model) │ ──► Impulse (Set)
+ │ • ConsolidationCycle (TR/REM) │
+ │ • DreamReplay (offline) │
+ │ • ImpulseGenerator │
+ └─────────────────────────────────────┘
+ │
+ ▼
+ consciousness/AttentionRouter (top-down, SPEC-006)
+ │
+ ▼
+ ActionGate (FROZEN)
 ```
 
 ## FR (классы и интерфейсы)
@@ -73,7 +71,6 @@
 ## Отложено
 
 - Полная интеграция с `brain/Viewpoint` ([DESIGN-02](../designs/DESIGN-02-viewpoint.md)) для weighted ensemble подсознательных сигналов.
-- Hierarchical impulse-merge (многоуровневая иерархия драйверов) — research wave (текстовые ссылки в архиве `docs-v2/archive/2026-08-pre-v2/science/science/ALGORITHM-ATLAS-WAVE24.md` §92 «impulse-goal»).
 - Federated dream-replay (coordinated across instances) — BLOCKED-EXT.
 
 См. [architecture/MODULES.md](../architecture/MODULES.md), [research/HYPOTHESES.md](../research/HYPOTHESES.md).

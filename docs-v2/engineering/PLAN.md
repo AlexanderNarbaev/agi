@@ -2,7 +2,7 @@
 
 Что реализовано и что осталось (synth-only).
 
-## Реализовано в коде (2026-08-26)
+## Реализовано в коде ()
 
 ### Ядро (всё работает, тесты зелёные)
 - BIR-компилятор + 3 формы (TT, CLAUSESET, BDD) + JvmSimd/Fpga-бэкенды.
@@ -18,7 +18,7 @@
 ### Эксперименты (реальные цифры)
 - **H-010 accepted** (EXP-010, 9 прогонов, median ×242, 9/9 точность).
 - **H-002/H-003 refuted-toy** (EXP-002/003, GA быстрее и точнее на синтетике).
-- **EXP-009B/C**: дистиллят BIR ×149 быстрее ORT-CPU на синтетическом FFN, fidelity .999; GPU-нога (RTX 5070 Ti): батч 0.02 мс, per-call 17.25 µs; **MATRIX BIR ×276 быстрее GPU на точечных вызовах**.
+- **EXP-009B/C**: дистиллят BIR ×149 быстрее ORT-CPU на синтетическом FFN, fidelity.999; GPU-нога (RTX 5070 Ti): батч 0.02 мс, per-call 17.25 µs; **MATRIX BIR ×276 быстрее GPU на точечных вызовах**.
 - **JMH-гейт Batch\*** выполнен: 32–69M ops/s, решение «оставить как есть».
 
 ## Стек (актуальный)
@@ -39,10 +39,10 @@ Java 25 · Quarkus 3.38.3 · GraalVM plugin 1.1.10 · Avro 1.12.2 · ONNX Runtim
 ## Следующее (минимально-ценностные шаги)
 
 1. TLA+-спек-кандидаты (см. [architecture/FORMAL-CONTRACTS.md](../architecture/FORMAL-CONTRACTS.md)):
-   - `BRC-Step` (закрывает пробел `reasoning/`),
-   - `ConjugateBudgeter-DP`,
-   - `Memory-M4-Causal`,
-   - `MCTS-LATS-Visit`.
+ - `BRC-Step` (закрывает пробел `reasoning/`),
+ - `ConjugateBudgeter-DP`,
+ - `Memory-M4-Causal`,
+ - `MCTS-LATS-Visit`.
 2. SDD-свип: спеки для топ-`needs-spec` (`reasoning/BrcChain`, `mediator/`, `hades/`, `memory/`, `rag/`).
 3. Production-domain прогоны EXP-010/002/003 на восстановленных корпусах.
 4. CUDA-нога EXP-009 через `onnxruntime_gpu` (Java) при доступности cuDNN-тулчейна.

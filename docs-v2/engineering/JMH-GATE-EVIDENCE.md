@@ -1,6 +1,6 @@
 # JMH-GATE-EVIDENCE
 
-Реальные JMH-замеры 2026-08-26: `./gradlew :matrix-core:jmh -PjmhBenchmark=BatchEvaluatorBenchmark`, 20 итераций, `thrpt` режим.
+Реальные JMH-замеры : `./gradlew :matrix-core:jmh -PjmhBenchmark=BatchEvaluatorBenchmark`, 20 итераций, `thrpt` режим.
 
 | Benchmark | Score | Error | Units |
 |---|---|---|---|

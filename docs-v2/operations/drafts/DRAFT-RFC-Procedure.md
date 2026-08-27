@@ -1,4 +1,3 @@
-**Статус: normative · draft** · пересмотр 2026-08-26 (brain wave v5 operations drafts).
 
 # DRAFT — RFC Procedure
 

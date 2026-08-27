@@ -1,6 +1,6 @@
 # DESIGN-05 — Память (M0…M4)
 
-**Статус: normative** · пересмотр 2026-08-26 (v2 rebuild).
+**Статус: normative** · пересмотр (v2 rebuild).
 
 ## Что
 

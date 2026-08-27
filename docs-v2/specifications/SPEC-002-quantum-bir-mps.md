@@ -1,6 +1,6 @@
 # SPEC-002-quantum — BIR → MPS
 
-**Статус: normative** · пересмотр 2026-08-26 (v2 rebuild) · часть SPEC-002.
+**Статус: normative** · пересмотр (v2 rebuild) · часть SPEC-002.
 
 ## Что
 

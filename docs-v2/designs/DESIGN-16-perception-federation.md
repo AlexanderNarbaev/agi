@@ -1,7 +1,5 @@
 # DESIGN-16 — Perception Federation
 
-**Статус: normative** · пересмотр 2026-08-26 (v2 rebuild) · brain wave v1 · changelog 2026-08-26 — brain wave v1.
-
 ## Что
 
 Федеративный слой восприятия над [SPEC-004](../specifications/SPEC-004-perception.md): каждая модальность работает как локальный sensor-block; агрегация телеметрии и обмен encoder-модулями через ELSP + k-анонимизатор [DESIGN-08](../designs/DESIGN-08-federation.md). EMP-импульсы (energy/precision) настраиваются per modality.
@@ -20,13 +18,13 @@
 
 ```
 ┌────────────────────────────────────────┐
-│ modality M (text | image | audio | …)  │
-│  ┌─────────────────────────────────┐   │
-│  │ SignalModule(encode/decode)     │   │
-│  │ EMP(energy, precision)          │   │  ← per-modality настройка
-│  │ Quantizer / Normalizer          │   │
-│  └─────────────────────────────────┘   │
-│  SensorPacket → [k-flag] → Telemetry   │
+│ modality M (text | image | audio | …) │
+│ ┌─────────────────────────────────┐ │
+│ │ SignalModule(encode/decode) │ │
+│ │ EMP(energy, precision) │ │ ← per-modality настройка
+│ │ Quantizer / Normalizer │ │
+│ └─────────────────────────────────┘ │
+│ SensorPacket → [k-flag] → Telemetry │
 └────────────────────────────────────────┘
 ```
 
@@ -42,10 +40,10 @@ EMP-импульс — пара `(energy, precision) ∈ [0,1]×[0,1]`:
 
 ```
 local SensorPacket ──→ kanonymous batch ──→ ElspChannelMlDsa ──→ peer
-                       (k-anonymizer)         (ML-DSA sign)
-                                              ↓
-                                       seq‖payload verify
-                                       monotonic lastAcceptedSeq (CAS)
+ (k-anonymizer) (ML-DSA sign)
+ ↓
+ seq‖payload verify
+ monotonic lastAcceptedSeq (CAS)
 ```
 
 Реализация (DESIGN-08):

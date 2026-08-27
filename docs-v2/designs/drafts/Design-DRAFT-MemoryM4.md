@@ -1,4 +1,3 @@
-**Статус: normative · draft** · пересмотр 2026-08-26 (brain wave v5 design drafts).
 
 # Design-DRAFT — Memory M4 (Causal CRDT)
 
@@ -16,10 +15,10 @@
 
 ```
 io.matrix.noosphere (расширение):
-  CausalEvent(timestamp, parentHashes, payload)
-  CausalCrdt.merge(other): CausalCrdt       // preserves happens-before
-  TombstoneAt(nodeId, eventId): void       // irreversible
-  Quorum read: monotonic snapshot at version >= barrier
+ CausalEvent(timestamp, parentHashes, payload)
+ CausalCrdt.merge(other): CausalCrdt // preserves happens-before
+ TombstoneAt(nodeId, eventId): void // irreversible
+ Quorum read: monotonic snapshot at version >= barrier
 ```
 
 ## Метрики / Гейты EXP-022

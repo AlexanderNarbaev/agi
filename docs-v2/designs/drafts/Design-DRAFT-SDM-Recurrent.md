@@ -1,4 +1,3 @@
-**Статус: normative · draft** · пересмотр 2026-08-26 (brain wave v5 design drafts).
 
 # Design-DRAFT — SDM-Recurrent (Kanerva)
 
@@ -22,9 +21,9 @@
 
 ```
 io.matrix.memory (расширение):
-  SDMAddresser(hashFamily, sd, q).address(query) → BitSet
-  SDMRead(addressSet).topK(5) → List<TraceId>
-  RecurrentSDM(previousTraceId, currentQuery) → TopK + carry
+ SDMAddresser(hashFamily, sd, q).address(query) → BitSet
+ SDMRead(addressSet).topK(5) → List<TraceId>
+ RecurrentSDM(previousTraceId, currentQuery) → TopK + carry
 ```
 
 ## Метрики

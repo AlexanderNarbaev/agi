@@ -1,7 +1,6 @@
 # L6 — Memory (tiers, event sourcing, snapshots, Noosphere)
 
-**Status:** normative · **Layer:** 6 (storage) · **Date:** 2026-08-26
-**Changelog:** 2026-08-26 — brain wave v3 levels; rewrite in measured
+**Status:** normative · **Layer:** 6 (storage) · **Date:** 
 /scientific tone; archive reference added.
 
 ## 1. Scope
@@ -14,13 +13,13 @@ credit economy is experimental.
 
 ## 2. Five Tiers
 
-| Tier | Type                  | Location             | Lifetime | Example                  |
+| Tier | Type | Location | Lifetime | Example |
 |------|-----------------------|----------------------|----------|--------------------------|
-| L1   | Volatile              | Cluster ring buffer  | ms       | Current batch            |
-| L2   | Session WAL           | Local Kafka          | hours    | Mediator snapshot        |
-| L3   | Long-term             | RocksDB + S3/MinIO   | days–yrs | Stable FNL, truth tables |
-| L4   | Structural (frozen)   | FROZEN FNL bundle    | immutable| Axioms, ethical gradient |
-| L5   | Federated (Noosphere) | S3 + global Kafka    | long     | Anonymised improvements  |
+| L1 | Volatile | Cluster ring buffer | ms | Current batch |
+| L2 | Session WAL | Local Kafka | hours | Mediator snapshot |
+| L3 | Long-term | RocksDB + S3/MinIO | days–yrs | Stable FNL, truth tables |
+| L4 | Structural (frozen) | FROZEN FNL bundle | immutable| Axioms, ethical gradient |
+| L5 | Federated (Noosphere) | S3 + global Kafka | long | Anonymised improvements |
 
 L4 bundles are governed by the frozen-neuron rule (L0 /
 CONSTITUTION III). L5 entries are tagged with origin and weight;
@@ -55,13 +54,13 @@ SIGNATURE.sig. Snapshot types:
 The InstanceMediator decides what crosses the local-global
 boundary based on data class:
 
-| Class                     | Local | Global |
+| Class | Local | Global |
 |---------------------------|-------|--------|
-| Personal facts            | yes   | never  |
-| Stabilised general FNL    | cache | primary after ethical audit |
-| HADES logs                | copy  | anonymised copy for federation |
-| Accuracy-improving mut.   | local | ballot after Instance approval |
-| Raw signal logs           | local | never  |
+| Personal facts | yes | never |
+| Stabilised general FNL | cache | primary after ethical audit |
+| HADES logs | copy | anonymised copy for federation |
+| Accuracy-improving mut. | local | ballot after Instance approval |
+| Raw signal logs | local | never |
 
 Conflict resolution on federated FNL: highest fitness wins;
 runner-up archived as an alternative branch.
@@ -84,10 +83,8 @@ creation time, revocation lookup, local EthicalFilter pass before
 integration. Revocation is a signed ledger event; affected
 instances must roll back or isolate (HADES).
 
-> Cited legacy phrasing (traceability only): the prior document
 > framed the Noosphere as a "collective unconscious". The v3 text
 > reframes it as a federated object store with a signed ledger and
 > weight-attributed access. Archive copy:
-> archive/2026-08-pre-v2/docs-root-flat/L6_Memory.md
 
 Next: L7 Ethics — the gate that all memory writes pass through.

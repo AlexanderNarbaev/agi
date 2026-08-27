@@ -1,6 +1,4 @@
-# HYPOTHESES-NEW — brain wave v1 (H-039…H-050)
 
-**Статус: normative · продолжает [HYPOTHESES.md](HYPOTHESES.md)** · пересмотр 2026-08-26 (brain wave v1) · changelog 2026-08-26 — brain wave v1.
 
 12 новых карточек: сознание/подсознание, импульсы, consolidation gates, gossip, budget, ethics recovery, latency split, emergence. Каждая — **proposed**. Никаких подтверждений до прохождения preregistered EXP по [PROTOCOL.md](PROTOCOL.md). Целевые метрики — proposed; могут быть ужесточены или ослаблены при preregistration.
 

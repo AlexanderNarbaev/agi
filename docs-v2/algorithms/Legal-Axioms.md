@@ -1,7 +1,5 @@
 # Legal Axioms (FrozenEthicalFNL: монотонный слой запретов)
 
-**Статус: normative** · changelog 2026-08-26 — brain wave v3 algorithms.
-
 > **FROZEN-зона.** Изменения только через RFC + отдельный ревьюер (см. CONSTITUTION III, AGENTS.md). Здесь документируется алгоритмическое ядро, а не API-поверхность.
 
 ## Что
@@ -43,10 +41,10 @@ FROZEN-нейрон устроен так, что расширение носи�
 
 ```
 FrozenEthicalFNL.evaluate(features):
-  for neuron in neurons:                // Set.copyOf(LinkedHashMap) — порядок вставки
-    if neuron.activate(features):
-      return Result.rejectedBy(neuron)
-  return Result.approvedResult()
+ for neuron in neurons: // Set.copyOf(LinkedHashMap) — порядок вставки
+ if neuron.activate(features):
+ return Result.rejectedBy(neuron)
+ return Result.approvedResult()
 ```
 
 Один линейный проход; первый сработавший нейрон определяет вердикт. `Result` — record `(approved, firedNeuron)` с методами `violatedAxiom()` и `toString()`. Детерминизм: `Set.copyOf(byAxiom.values())` сохраняет порядок вставки в `LinkedHashMap` — повторные вызовы с идентичным `BitSet` возвращают идентичный `Result`.

@@ -15,16 +15,16 @@
 ## Конвейер кластера (cell)
 
 ```
-[ ingress /api/v1/* ]   ← OpenAI compat + MCP
-        |
-        v
+[ ingress /api/v1/* ] ← OpenAI compat + MCP
+ |
+ v
 [ ai/AgentLoop ] ──► [ brain/Viewpoint ] ──► [ neuron/NeuronLayer.eval → bir/BooleanRuntime ]
-        |                                                  |
-        |                                                  v
-        ├────────► [ events/KafkaEventJournal (append) ]   [ bir/TtForm (cache: actor/federation/FORM_CACHE) ]
-        |                                                  |
-        v                                                  v
-[ dialog/TelegramBotService ]                       [ audit/HashChain (x-matrix-trace) ]
+ | |
+ | v
+ ├────────► [ events/KafkaEventJournal (append) ] [ bir/TtForm (cache: actor/federation/FORM_CACHE) ]
+ | |
+ v v
+[ dialog/TelegramBotService ] [ audit/HashChain (x-matrix-trace) ]
 ```
 
 ## Кластерный cell-akka (Pekko 1.6)
@@ -36,7 +36,6 @@
 | Метрика | Цель | Реальное (synthetic) |
 |---|---|---|
 | BIR eval латентность (per-call, CPU) | ≤ 1 µs | ~62 нс (EXP-009C, FFN16 distilled) |
-| Etienne JMH-нн gate Batch* | ≤10% latency diff vs legacy | 32–69M ops/s (decision: keep) |
 | GPU latency per-call (RTX 5070 Ti, fp32 FFN16) | reference | 17.25 µs (reference) |
 | GPU batch throughput N=2000 | reference | 0.020 ms |
 | ORT-CPU batch N=2000 | reference | 18.68 ms |

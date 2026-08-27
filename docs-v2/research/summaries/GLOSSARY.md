@@ -1,17 +1,14 @@
 ---
 status: normative
-changelog: 2026-08-26 — brain wave v3 summaries
 ---
-
-# GLOSSARY (summary, brain wave v3)
 
 Термины проекта с переводом на общепринятую терминологию. Брендовые имена сохранены, но каждая внешняя коммуникация обязана давать стандартный эквивалент.
 
 | Термин | Стандартный эквивалент | Суть |
 |---|---|---|
 | **K_MAX** | Max neuron arity | Жёсткое ограничение k≤20 входов на BirUnit; не меняется без RFC. |
-| **BirUnit** | Boolean function unit | Атомарная вычислительная единица: BIR-артефакт с контрактом evaluate; наследник термина «MPDT-нейрон». |
-| **MPDT-нейрон** | Boolean function unit / truth-table neuron | Булева функция k≤20 входов как TT или дерево решений; наследник Маккалока–Питтса. |
+| **BirUnit** | Boolean function unit | Атомарная вычислительная единица: BIR-артефакт с контрактом evaluate; наследник термина «BirUnit». |
+| **BirUnit** | Boolean function unit / truth-table neuron | Булева функция k≤20 входов как TT или дерево решений; наследник Маккалока–Питтса. |
 | **BIR** | Boolean Intermediate Representation | Формы TT / CLAUSESET / BDD + заголовок (provenance, fidelity, Φ, хэш). |
 | **TT** | Truth table | Плотная таблица истинности, k≤20, каноническая семантика; маппинг на FPGA LUT. |
 | **CLAUSESET** | DNF/CNF clause set (Tsetlin-style) | Набор конъюнктивных клауз произвольной арности; канон — антицепь минимальных клауз. |
@@ -67,7 +64,5 @@ changelog: 2026-08-26 — brain wave v3 summaries
 | **Subsumption** | Brooks subsumption architecture | Слои: PROMOTED заморожен, suppress/inhibit без уничтожения. |
 | **Episodic vs semantic memory** | Tulving 1972 | Эпизодическая — журнал M4; семантическая — верифицированный пул M3/FNL. |
 | **FROZEN-FNL** | Immutable safety FNL | Хэш-locked; изменения только через RFC + консенсус. |
-
-Полный реестр (≈100 терминов, включая школы атласа §1-§94) — в исходном файле GLOSSARY.md (archive/2026-08-pre-v2/docs-root-flat). Эта сводка — рабочий минимум для SPEC/DESIGN/EXP.
 
 Next: при необходимости расширить список — открыть полный реестр или добавить термин сюда с переводом на стандартный эквивалент.

@@ -1,7 +1,5 @@
 # FROZEN Ethical FNL (монотонность запретов)
 
-**Статус: normative (FROZEN)** · changelog 2026-08-26 — brain wave v2 algorithms.
-
 > **FROZEN-зона.** Изменения только через RFC + отдельный ревьюер (см. CONSTITUTION + `AGENTS.md`). Здесь документируется алгоритмическое ядро, а не API-поверхность.
 
 ## Что
@@ -30,10 +28,10 @@
 
 ```
 evaluate(BitSet features):
-  for neuron in neurons:                // порядок фиксирован Set.copyOf(LinkedHashMap)
-    if neuron.activate(features):
-      return Result.rejectedBy(neuron)
-  return Result.approvedResult()
+ for neuron in neurons: // порядок фиксирован Set.copyOf(LinkedHashMap)
+ if neuron.activate(features):
+ return Result.rejectedBy(neuron)
+ return Result.approvedResult()
 ```
 
 Один линейный проход; первый сработавший нейрон определяет вердикт. Детерминизм: `Set.copyOf(byAxiom.values())` сохраняет порядок вставки в `LinkedHashMap`, повторные вызовы с одинаковым `BitSet` возвращают идентичный `Result`.
@@ -48,15 +46,15 @@ VARIABLES features, verdict
 Init == features = {} /\ verdict = "APPROVED"
 
 Evaluate ==
-  /\ \E n \in Neurons : n.activate(features)
-  /\ verdict' = [n \in Neurons |-> IF n.activate(features) THEN "REJECTED_BY_" \o n.tag ELSE "APPROVED"]
-  /\ UNCHANGED features
+ /\ \E n \in Neurons : n.activate(features)
+ /\ verdict' = [n \in Neurons |-> IF n.activate(features) THEN "REJECTED_BY_" \o n.tag ELSE "APPROVED"]
+ /\ UNCHANGED features
 
 Monotonicity ==
-  \A f \in SUBSET Features :
-    verdict(f) = "REJECTED" =>
-      \A extra \in SUBSET Features :
-        verdict(f \cup extra) = "REJECTED"
+ \A f \in SUBSET Features :
+ verdict(f) = "REJECTED" =>
+ \A extra \in SUBSET Features :
+ verdict(f \cup extra) = "REJECTED"
 
 Safety == [](verdict # "REJECTED_BY_KILLING" => ~KillAction)
 ```
@@ -75,5 +73,3 @@ Safety == [](verdict # "REJECTED_BY_KILLING" => ~KillAction)
 - Расширение набора аксиом (например, NO_ECOLOGICAL_HARM) — требует RFC.
 - Иерархия запретов (разные уровни тяжести, не только REJECTED) — отложено.
 - Полная TLA+-верификация — отдельная задача, требует `tlc` в CI.
-
-Next: конец серии алгоритмов brain wave v2. Дальнейшие документы — в `science/ALGORITHM-ATLAS-INDEX.md`.

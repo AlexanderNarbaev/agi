@@ -1,7 +1,6 @@
 # L4 — Mediator (hierarchy, drivers, proactive engagement)
 
-**Status:** normative · **Layer:** 4 (coordination) · **Date:** 2026-08-26
-**Changelog:** 2026-08-26 — brain wave v3 levels; rewrite in measured
+**Status:** normative · **Layer:** 4 (coordination) · **Date:** 
 /scientific tone; archive reference added.
 
 ## 1. Scope
@@ -17,13 +16,13 @@ consensus rules in L2; the ethics gate in L7.
 Four levels, each with a weight w ∈ [0, 1]:
 
 - LobeMediator (per FNL, w ≈ 0.2): local optimisation, executes
-  commands from the cluster mediator.
+ commands from the cluster mediator.
 - ClusterMediator (per cluster actor, w ≈ 0.5): load balancing,
-  metrics aggregation, instance escalation.
+ metrics aggregation, instance escalation.
 - InstanceMediator (Pekko singleton per deployment, w ≈ 0.8):
-  cross-cluster coordination, driver dynamics, user dialogue.
+ cross-cluster coordination, driver dynamics, user dialogue.
 - GlobalMediator (council of instances, w = 1.0): protocol
-  evolution, large mutation acceptance.
+ evolution, large mutation acceptance.
 
 Weights shift over time according to the same function used in
 Proof-of-Accuracy (L2). Communication uses protected Kafka topics
@@ -73,16 +72,16 @@ reduces D_social weight when initiatives are repeatedly ignored.
 ## 7. Ethical Mechanisms
 
 - Ethical Moment: pre-action self-check against the three
-  prohibitions and the ethical gradient. Logged; blocks on
-  failure.
+ prohibitions and the ethical gradient. Logged; blocks on
+ failure.
 - Reconciliation Circle: neutral facilitator; talking-token;
-  decision by consent, not majority. Skipped on prohibition
-  violations.
+ decision by consent, not majority. Skipped on prohibition
+ violations.
 - Council Protocol: PoA-weighted vote, 2/3 threshold, distributed
-  ledger entry. Falls back to local-only when council unreachable.
+ ledger entry. Falls back to local-only when council unreachable.
 - Right of Refusal (Eleutheria): any instance may veto an action
-  that violates its local policy; the veto requires external
-  cryptographic consensus to override. Frozen rule.
+ that violates its local policy; the veto requires external
+ cryptographic consensus to override. Frozen rule.
 
 ## 8. Cross-Layer Hooks
 
@@ -92,10 +91,8 @@ replays the journal. Snapshot schema: MediatorSnapshot (record:
 mediatorId, level, weight, generation, drivers, goals,
 taskQueue, timestamp).
 
-> Cited legacy phrasing (traceability only): the prior document
 > framed the Mediator as a "hormonal and motivational subsystem".
 > The v3 text reframes it as a weighted scheduler with a driver
 > control loop and a consent-based dispute protocol. Archive
-> copy: archive/2026-08-pre-v2/docs-root-flat/L4_Mediator.md
 
 Next: L5 Cauldron & Evolution — mutation acceptance pipeline.

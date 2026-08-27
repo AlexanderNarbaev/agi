@@ -1,6 +1,6 @@
 # SDD-COVERAGE
 
-Сводка SDD-свипа 2026-08-26 (полная таблица пакет↔спека/дизайн/гипотеза → в [architecture/MODULES.md](../architecture/MODULES.md)).
+Сводка SDD-свипа (полная таблица пакет↔спека/дизайн/гипотеза → в [architecture/MODULES.md](../architecture/MODULES.md)).
 
 ## Счётчики
 
@@ -40,5 +40,3 @@
 - `explain/` ↔ `explainability/` (разные имена, перекрывающееся назначение)
 - `knowledge/` ↔ `ktopo/` (топология vs индекс)
 - `federated/` ↔ `federation/` (mesh vs ELSP-crypto)
-
-Документация-согласование: канонический — `ktopo/`, `explainability/`, `federation/`. Прочие пакеты — исторические псевдонимы/тестовые; оставлены как есть (не синонимы, не переименовываем по CONSTITUTION III FROZEN-правилу).

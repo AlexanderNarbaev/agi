@@ -1,6 +1,6 @@
 # OPEN-PROBLEMS — исследовательское видение
 
-**Статус: living** (inline 2026-08-26 из `vision/vision/OPEN_PROBLEMS.md`).
+**Статус: living** (inline из `vision/vision/OPEN_PROBLEMS.md`).
 
 Это единственное место в документации, где слово «AGI» допустимо — и то исключительно в контексте открытой задачи. Никаких обещаний, сроков, маркетинговых формулировок (CONSTITUTION VI).
 
@@ -29,7 +29,7 @@
 | **Субстратная** | Квантовый MPS-бэкенд (SPEC-002-quantum) | BLOCKED-EXT | ждёт субстрата |
 | **Субстратная** | CUDA-EP для Java-ONNX | needs-dep | `onnxruntime_gpu` + cuDNN9 |
 | **Доменная** | Доменные корпуса для EXP-002/003/009 production-domain verdict | BLOCKED-EXT | данные |
-| **Партнёрская** | Реальный LLM-срез в .onnx для дистилляции | BLOCKED-EXT | python-тулчейн + веса |
+| **Партнёрская** | Реальный LLM-срез в.onnx для дистилляции | BLOCKED-EXT | python-тулчейн + веса |
 
 ## Принципы входа в этот список
 

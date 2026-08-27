@@ -1,6 +1,6 @@
 # SUBSTRATE-MODELS — реестр вычислительных теорий MATRIX
 
-**Статус: living** (inline 2026-08-26 из `vision/vision/SUBSTRATE-MODELS.md` и `science/science/SUBSTRATE-MODELS.md` — единая консолидация).
+**Статус: living** (inline из `vision/vision/SUBSTRATE-MODELS.md` и `science/science/SUBSTRATE-MODELS.md` — единая консолидация).
 
 ## Системная рамка
 
@@ -16,7 +16,7 @@
 
 ## 2. Свёрточные схемы и ядра
 
-- Дистилляция FFN в BIR (SPEC-001 Этап B, `distill/`): редукция точности пропорциональна объёму CLAUSESET-литералов; экспериментально .999 fidelity на синтетическом FFN16.
+- Дистилляция FFN в BIR (SPEC-001 Этап B, `distill/`): редукция точности пропорциональна объёму CLAUSESET-литералов; экспериментально.999 fidelity на синтетическом FFN16.
 - Ядро `BooleanRuntime` (SPEC-002 Этап A): packed long-walks; SIMD-утилиты `Batch*` (32–69M ops/s JMH).
 
 **Граница**: при свёртках высокой размерности оценки показывают, что ёмкость CLAUSESET растёт как ~claudes × literals²; на практике ищем минимальное покрытие.

@@ -1,7 +1,5 @@
 # Hansel Chains (послойное декодирование монотонных функций)
 
-**Статус: normative** · changelog 2026-08-26 — brain wave v2 algorithms.
-
 ## Что
 
 Декодер монотонной булевой функции `f : {0,1}^k → {0,1}` из оракула с оптимальным в худшем случае бюджетом запросов. Источник: `matrix-core/src/main/java/io/matrix/bir/producers/monotone/{MembershipOracle,MonotoneDecoder}.java`. Соответствует DESIGN-09 (Hansel-style layerwise; полные цепи Ханселя отложены в v2).

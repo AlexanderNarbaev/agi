@@ -1,8 +1,6 @@
 # L13 — Pilot Deployments
 
-**Status:** normative · **Layer:** 13 (pilots) · **Date:** 2026-08-26
-**Changelog:** 2026-08-26 — brain wave v2; densified from archive copy
-archive/2026-08-pre-v2/docs-root-flat/L13_Pilot.md.
+**Status:** normative · **Layer:** 13 (pilots) · **Date:** 
 
 ## 1. Purpose
 
@@ -26,7 +24,7 @@ is descoped.
 
 ## 3. P1 — Gridworld Agent
 
-An agent with 4–8 MPDT neurons learns survival via a genetic
+An agent with 4–8 BirUnit learns survival via a genetic
 algorithm. Inputs are binary environment features (food proximity,
 danger, day / night); outputs are primitive actions. Logs show
 chaotic behaviour at generation 0, food seeking by ~50 generations,

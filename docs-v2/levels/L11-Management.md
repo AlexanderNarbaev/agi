@@ -1,8 +1,6 @@
 # L11 — Cell Management, Snapshots, Governance
 
-**Status:** normative · **Layer:** 11 (governance) · **Date:** 2026-08-26
-**Changelog:** 2026-08-26 — brain wave v2; densified from archive copy
-archive/2026-08-pre-v2/docs-root-flat/L11_Mangement.md.
+**Status:** normative · **Layer:** 11 (governance) · **Date:** 
 
 ## 1. Scope
 

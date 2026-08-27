@@ -1,7 +1,5 @@
 # WiSARD WNN (RAM-гранулярность, однопроходное обучение)
 
-**Статус: normative** · changelog 2026-08-26 — brain wave v2 algorithms.
-
 ## Что
 
 Безвесовый нейрон (WNN) в стиле WiSARD (Aleksander, 1984): каждый «нейрон» — это массив RAM-таблиц с детерминированной бит-селекцией. Однопроходовое обучение: на каждом примере в RAM по вычисленному адресу инкрементируется счётчик `+1` (label=1) или `−1` (label=0). Источник: `matrix-core/src/main/java/io/matrix/tsetlin/WisardProducer.java`. Принят как EXP-010 (см. DESIGN-04): медианное ускорение обучения ×242 относительно TsetlinTrainer, точность 9/9 на синтетике.
@@ -17,9 +15,9 @@
 
 ```
 train(input, label):
-  for r in 0..numRams:
-    addr = address(input, r)
-    ramTables[r].merge(addr, label==1 ? +1 : -1, Integer::sum)
+ for r in 0..numRams:
+ addr = address(input, r)
+ ramTables[r].merge(addr, label==1 ? +1 : -1, Integer::sum)
 ```
 
 Сложность — `O(numRams)` на пример; батч — тот же цикл с внешним `for`. Никакого backprop, градиентов, эпох. Один проход по данным достаточен для детерминированной фиксации счётчиков.

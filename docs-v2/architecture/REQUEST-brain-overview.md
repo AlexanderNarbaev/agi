@@ -1,7 +1,5 @@
 # REQUEST-brain-overview — Brain-like Anatomy of MATRIX
 
-**Статус: normative · singleton AR** · changelog `2026-08-26 — brain wave v1`.
-
 ## Что это
 
 AR-документ: кросс-секционные директивы, **как** MATRIX организован в виде brain-like контура. Это не спека и не дизайн — конкретика уходит в [SPEC-004-perception](../specifications/SPEC-004-perception.md), [SPEC-005-deliberation](../specifications/SPEC-005-deliberation.md), [SPEC-006-action](../specifications/SPEC-006-action.md), [SPEC-007-memory-hierarchy](../specifications/SPEC-007-memory-hierarchy.md), [SPEC-008-autonomy-impulses](../specifications/SPEC-008-autonomy-impulses.md), [SPEC-009-decentralized-digests](../specifications/SPEC-009-decentralized-digests.md). Настоящий AR фиксирует **скелет** и инварианты стыков; ничего не добавляет сверх существующего OVERVIEW и DESIGN-03.
@@ -9,47 +7,47 @@ AR-документ: кросс-секционные директивы, **ка�
 ## Анатомия (высокий уровень)
 
 ```
-                     ╔══════════════════════════════════════╗
-                     ║  FROZEN ETHICAL CORE  (CONSTITUTION IV)║
-                     ║  не обходится, не мутируется, не выкл. ║
-                     ╚════════════════════╦═════════════════╝
-                                          ║ каждый шаг — через FROZEN-гейт
-   ┌───────────────────┐                  ║                 ┌──────────────────┐
-   │  PERCEPTION       │  BitSet / packed │                 │      ACTION      │
-   │  (signals/, enc.) ├─────────────────►╬────────────────►│ (actions/, plan) │
-   │  SPEC-004         │                  │                 │   SPEC-006       │
-   └────────┬──────────┘                  │                 └─────────┬────────┘
-            │                             │                           │
-            ▼                             ▼                           ▼
-   ┌────────────────────────────────────────────────────────────────────────┐
-   │                    CONSCIOUSNESS / DELIBERATION                        │
-   │   BRC + Viewpoint + AgentLoop + MCTS/LATS + DevLoop                    │
-   │                          SPEC-005                                      │
-   └────────────────────────────────────────────────────────────────────────┘
-            ▲                             ▲                           ▲
-            │     MEMORY SUBSTRATE        │                           │
-            │  ┌────────────────────────┐  │                           │
-            ├─►│  m0 / M0  short-term   │  │  working + episodic       │
-            │  │  M1..M3  long-term     │  │  semantic + procedural    │
-            │  │  M4..M5+ subconscious  │  │  federated + reflexes     │
-            │  └─────────┬──────────────┘  │                           │
-            │            ▼                 │                           │
-            │   Anonymizer (k-anon + DP)   │                           │
-            │            │                 │                           │
-            └────────────┼─────────────────┼───────────────────────────┘
-                         ▼                 ▼
-              ┌──────────────────────────────────────┐
-              │      AUTONOMY IMPULSES               │
-              │  curiosity · consolidation ·         │
-              │  integrity-check · share-digest      │
-              │           SPEC-008                   │
-              └──────────────────┬───────────────────┘
-                                 ▼
-                ┌─────────────────────────────────────┐
-                │   DECENTRALIZED DIGESTS (noosphere) │
-                │   neuron-blocks × Anonymizer × ELSP │
-                │            SPEC-009                 │
-                └─────────────────────────────────────┘
+ ╔══════════════════════════════════════╗
+ ║ FROZEN ETHICAL CORE (CONSTITUTION IV)║
+ ║ не обходится, не мутируется, не выкл. ║
+ ╚════════════════════╦═════════════════╝
+ ║ каждый шаг — через FROZEN-гейт
+ ┌───────────────────┐ ║ ┌──────────────────┐
+ │ PERCEPTION │ BitSet / packed │ │ ACTION │
+ │ (signals/, enc.) ├─────────────────►╬────────────────►│ (actions/, plan) │
+ │ SPEC-004 │ │ │ SPEC-006 │
+ └────────┬──────────┘ │ └─────────┬────────┘
+ │ │ │
+ ▼ ▼ ▼
+ ┌────────────────────────────────────────────────────────────────────────┐
+ │ CONSCIOUSNESS / DELIBERATION │
+ │ BRC + Viewpoint + AgentLoop + MCTS/LATS + DevLoop │
+ │ SPEC-005 │
+ └────────────────────────────────────────────────────────────────────────┘
+ ▲ ▲ ▲
+ │ MEMORY SUBSTRATE │ │
+ │ ┌────────────────────────┐ │ │
+ ├─►│ m0 / M0 short-term │ │ working + episodic │
+ │ │ M1..M3 long-term │ │ semantic + procedural │
+ │ │ M4..M5+ subconscious │ │ federated + reflexes │
+ │ └─────────┬──────────────┘ │ │
+ │ ▼ │ │
+ │ Anonymizer (k-anon + DP) │ │
+ │ │ │ │
+ └────────────┼─────────────────┼───────────────────────────┘
+ ▼ ▼
+ ┌──────────────────────────────────────┐
+ │ AUTONOMY IMPULSES │
+ │ curiosity · consolidation · │
+ │ integrity-check · share-digest │
+ │ SPEC-008 │
+ └──────────────────┬───────────────────┘
+ ▼
+ ┌─────────────────────────────────────┐
+ │ DECENTRALIZED DIGESTS (noosphere) │
+ │ neuron-blocks × Anonymizer × ELSP │
+ │ SPEC-009 │
+ └─────────────────────────────────────┘
 ```
 
 ## 1. Perception — вход
@@ -105,7 +103,7 @@ AR-документ: кросс-секционные директивы, **ка�
 ## Кросс-секционные инварианты
 
 1. **Детерминизм пути решения** — любые вход → одинаковый выход; Random/wall-clock вне рантайма (CONSTITUTION I; DESIGN-14).
-2. **K_MAX=20** на MPDT-нейрон (`TruthTable.java`); не менять без RFC.
+2. **K_MAX=20** на BirUnit (`TruthTable.java`); не менять без RFC.
 3. **Покрытие тестами ≥ 82%** (JaCoCo gate, CONSTITUTION V).
 4. **Никаких LLM в рантайме** (CONSTITUTION VI) — дистиллят только при загрузке.
 5. **Audit-цепь** (`audit/HashChain`) — каждое решение оставляет witness; tamper-evident.
@@ -123,5 +121,3 @@ AR-документ: кросс-секционные директивы, **ка�
 - SPEC-004..009 — placeholder для спецификаций, которые напишут другие исполнители.
 - TLA+ `BRC-Step` (атомарный preserved-step) — next-format-contract.
 - TLA+ `Memory-M4-Causal` — quorum R/W eventual consistency.
-
-Для исторической глубины (не править, не цитировать как норму) см. `archive/2026-08-pre-v2/vision/vision/ARCHITECTURE.md` (многослойная карта), `archive/2026-08-pre-v2/science/science/SUBSTRATE-MODELS.md` (заимствования из школ Цетлина/Глушкова/Ивахненко/Журавлёва/Вапника/Колмогорова) и `archive/2026-08-pre-v2/docs-root-flat/L0_manifesto.md` (6 аксиом).

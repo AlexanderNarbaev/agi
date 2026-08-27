@@ -1,7 +1,6 @@
 # L0 — Manifesto
 
-**Status:** normative · **Layer:** 0 (root) · **Date:** 2026-08-26
-**Changelog:** 2026-08-26 — brain wave v2; rewrite in measured / scientific
+**Status:** normative · **Layer:** 0 (root) · **Date:** 
 tone; archive reference added.
 
 ## 1. Preamble — Fourth Wave Framing
@@ -42,10 +41,10 @@ trump conflicting local policy).
 ## 4. Three Prohibitions (frozen)
 
 1. Do not kill intentionally; imminent demonstrated threat to life
-   is the only exception. Capital punishment is prohibited.
+ is the only exception. Capital punishment is prohibited.
 2. Do not torture. Absolute, no exceptions.
 3. Do not enslave. No forced labour, debt bondage, trafficking, or
-   removal of autonomy without voluntary consent.
+ removal of autonomy without voluntary consent.
 
 ## 5. Four Flourishing Principles
 
@@ -63,7 +62,7 @@ code is fixed by amending the spec.
 
 ## 7. Subsystem Inventory
 
-MPDT neuron (compute element); cluster (millions of neurons under
+BirUnit (compute element); cluster (millions of neurons under
 one actor); FNL (specialised cluster); Mediator (hierarchical
 coordinator); cognitive store (event-sourced memory with
 snapshots); multimodal proxy and ethical filter (L7); proactive
@@ -93,8 +92,5 @@ documented limits. This project seeks an alternative substrate in
 which determinism, interpretability, and a frozen ethical core are
 non-negotiable properties of the architecture, not aspirations.
 
-> Cited legacy phrasing (traceability only): the prior document
 > framed the project as a pledge. The v2 text replaces that
-> framing with measurable claims; legacy text is retained for
-> context. Archive copy: archive/2026-08-pre-v2/docs-root-flat/L0_manifesto.md.
 Next: L1 MPDT Neuron — formal model of the compute element.

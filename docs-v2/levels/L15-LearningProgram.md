@@ -1,8 +1,6 @@
 # L15 — Learning Program
 
-**Status:** normative · **Layer:** 15 (learning) · **Date:** 2026-08-26
-**Changelog:** 2026-08-26 — brain wave v4 levels; densified from archive copy
-archive/2026-08-pre-v2/docs-root-flat/L15_LearningProgram.md.
+**Status:** normative · **Layer:** 15 (learning) · **Date:** 
 
 ## 1. Purpose
 L15 lowers the entry barrier, transfers architectural
@@ -25,13 +23,13 @@ Five tracks with measurable outcomes.
 | Track | Who | Outcome | Time |
 |---|---|---|---|
 | Explorer | Curious newcomer | 5-minute concept grasp; tries sandbox | 15 min |
-| Beginner developer | Knows basic programming | Writes and runs a first MPDT neuron | 1–2 weeks |
+| Beginner developer | Knows basic programming | Writes and runs a first BirUnit | 1–2 weeks |
 | Developer | Has experience | Becomes contributor; possibly maintainer | 8 weeks |
 | Researcher | Studies theory | Reads formal models, contributes proofs | Self-paced |
 | Educator | Wants to teach others | Certified, runs courses and hackathons | After Developer track plus pedagogy |
 
 Beginner milestones: install and run a test instance; build an
-MPDT neuron; ship a Gridworld agent (Pilot P1); land a first
+BirUnit; ship a Gridworld agent (Pilot P1); land a first
 pull request. Developer milestones: architectural walk-through
 of L1–L8; mutation operators and fitness functions; lab work on
 Pekko, Kafka, and HADES; publish and import an FNL through

@@ -1,6 +1,6 @@
 # SPEC-002 — Boolean Compute Layer (BIR)
 
-**Статус: normative** · пересмотр 2026-08-26 (v2 rebuild) · keystone-спека.
+**Статус: normative** · пересмотр (v2 rebuild) · keystone-спека.
 
 ## Что
 

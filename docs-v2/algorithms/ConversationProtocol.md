@@ -1,7 +1,5 @@
 # Conversation Protocol (Observe → Think → Act цикл)
 
-**Статус: normative** · changelog 2026-08-26 — brain wave v3 algorithms.
-
 ## Что
 
 Детерминированный такт агента: `AgentLoop` исполняет цикл Observe → Think → Act поверх `AgentBrainService`, набора `DriverState[]`, `TaskScheduler` и пары `Sensor`/`Effector`. Источник: `matrix-core/src/main/java/io/matrix/agent/AgentLoop.java`. Соответствует DESIGN-03 (P-E-D контур) и DESIGN-13 (реестр действий).
@@ -10,14 +8,14 @@
 
 ```
 tick():
-  observation    = sensor.read()
-  driverSnapshot = [drivers[i].level() for i in drivers]
-  actionCode     = brain.brain().decide(observation)
-  thought        = actionCodeToThought(actionCode)
-  action         = selectAction(thought, driverSnapshot)
-  result         = effector.execute(action)
-  updateDrivers(result)
-  return AgentState(observation, thought, action.withResult(result), driverSnapshot, tick)
+ observation = sensor.read()
+ driverSnapshot = [drivers[i].level() for i in drivers]
+ actionCode = brain.brain().decide(observation)
+ thought = actionCodeToThought(actionCode)
+ action = selectAction(thought, driverSnapshot)
+ result = effector.execute(action)
+ updateDrivers(result)
+ return AgentState(observation, thought, action.withResult(result), driverSnapshot, tick)
 ```
 
 `THOUGHT_BITS = bitsNeeded(AgentAction.ActionType.values().length)` — ширина thought-вектора выводится из размера enum действий; добавление нового `ActionType` автоматически расширяет вектор без правок этого файла (GAP-019 фикс).
@@ -60,6 +58,5 @@ tick():
 
 - Replay-trace каждого такта в `x-matrix-trace` — частично в `runWithTiming`; полная сериализация `AgentState` не стандартизована.
 - Driver-modulation от результата действия — текущая схема (`-0.01` при успехе, `+0.02` при ошибке) захардкожена; нужна конфигурация.
-- ReAct-контур описан в соседнем документе серии brain wave v3.
 
 Next: см. файл FederatedMesh.md в той же папке для следующей темы.

@@ -1,8 +1,6 @@
 # L14 — Business Model and Sustainability
 
-**Status:** normative · **Layer:** 14 (sustainability) · **Date:** 2026-08-26
-**Changelog:** 2026-08-26 — brain wave v4 levels; densified from archive copy
-archive/2026-08-pre-v2/docs-root-flat/L14_BusinessModel.md.
+**Status:** normative · **Layer:** 14 (sustainability) · **Date:** 
 
 ## 1. Purpose
 L14 defines how Matrix is funded long-term without compromising
@@ -11,7 +9,7 @@ from the four-prohibition domains, decentralised ownership,
 subsidiarity at each tier. Model: open core plus paid services,
 plus cooperative ownership, plus grants.
 ## 2. Sustainability Principles
-Four rules. (i) Open core — runtime, MPDT neurons, clusters, and
+Four rules. (i) Open core — runtime, BirUnit, clusters, and
 protocols stay AGPLv3 and free to run. (ii) Ethics barrier — no
 revenue from any domain conflicting with the four prohibitions;
 partners and contracts pass an ethical audit; repeat violators

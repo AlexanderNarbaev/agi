@@ -1,9 +1,7 @@
 # H-003 — Living-learner vs Tsetlin preregistration & gates (EXP-003)
 
-**Статус: normative · preregistration card** · пересмотр 2026-08-26 — brain wave v2 protocols · changelog 2026-08-26 — brain wave v2 protocols.
-
 Протокол preregistered EXP-003: «живой» обучатель (MpdtGaProducer, GA)
-vs TsetlinTrainer как producer. Текущий verdict `refuted-toy 2026-08-26`:
+vs TsetlinTrainer как producer. Текущий verdict `refuted-toy `:
 на toy-шкале GA оправдан и превосходит Tsetlin на всех трёх датасетах
 (быстрее, точнее, сходится чаще). Карточка фиксирует gate-критерии для
 повторного прогона.
@@ -13,15 +11,15 @@ vs TsetlinTrainer как producer. Текущий verdict `refuted-toy 2026-08-2
 - H-ID: H-003.
 - EXP-ID: EXP-003.
 - Соответствующий дизайн/спека (text-only): DESIGN-04 (продюсеры,
-  `MpdtGaProducer`, `TsetlinTrainer`), CONSTITUTION II (K_MAX=20), III
-  (Φ-functional в обучающем цикле).
+ `MpdtGaProducer`, `TsetlinTrainer`), CONSTITUTION II (K_MAX=20), III
+ (Φ-functional в обучающем цикле).
 - Источник вердикта (text-only): research/HYPOTHESES.md row «H-003 —
-  ни один «живой» обучатель не оправдан против Tsetlin», статус
-  `refuted-toy 2026-08-26`.
+ ни один «живой» обучатель не оправдан против Tsetlin», статус
+ `refuted-toy `.
 - Источник чисел (text-only): research/reports/EXP-003-report.md
-  (3 датасета seed 42; среднее to99 Tsetlin 672.7 / GA 346.3;
-  `reached99` Tsetlin 1/3, GA 2/3; средний testAcc Tsetlin .7833 /
-  GA .8625).
+ (3 датасета seed 42; среднее to99 Tsetlin 672.7 / GA 346.3;
+ `reached99` Tsetlin 1/3, GA 2/3; средний testAcc Tsetlin.7833 /
+ GA.8625).
 
 ## Метрики и gates (численные пороги preregistered)
 
@@ -36,20 +34,20 @@ vs TsetlinTrainer как producer. Текущий verdict `refuted-toy 2026-08-2
 | JaCoCo gate | ≥ 82% | < 80% | CI |
 
 Preliminary числа (см. EXP-003-report): GA выигрывает по to99 в 2/3
-датасетов, holdout GA .8625 vs Tsetlin .7833 — refutes H-003 на toy.
+датасетов, holdout GA.8625 vs Tsetlin.7833 — refutes H-003 на toy.
 
 ## Methodology
 
 - Артефакты: `evolution/MpdtGaProducer` (12 клауз, попул 40, gen 30);
-  `TsetlinTrainer` grid-best; `Exp002Exp003ProtocolTest`.
+ `TsetlinTrainer` grid-best; `Exp002Exp003ProtocolTest`.
 - Корпус: 3 синтетических датасета (16/10, 16/12, 20/14), seed 42;
-  удвоение подвыборок 20→320 для `examplesTo99TrainAcc`.
+ удвоение подвыборок 20→320 для `examplesTo99TrainAcc`.
 - Процедура: (1) grid-tuning Tsetlin по TRAIN-acc; (2) full-train
-  wall-clock; (3) holdout-acc; (4) `examplesTo99TrainAcc` на расширяющейся
-  подвыборке до достижения 0.99 или 320.
+ wall-clock; (3) holdout-acc; (4) `examplesTo99TrainAcc` на расширяющейся
+ подвыборке до достижения 0.99 или 320.
 - Baseline: TsetlinTrainer (grid-best по train-acc).
 - Φ-functional (CONSTITUTION III): монотонный `Φ = trainAcc на расширяющейся
-  подвыборке` — фиксируется до запуска в комментарии теста.
+ подвыборке` — фиксируется до запуска в комментарии теста.
 
 ## Prereqs
 
@@ -63,18 +61,18 @@ Preliminary числа (см. EXP-003-report): GA выигрывает по to99
 
 - Уровни доказательства — см. PROTOCOL.md в той же директории.
 - Полный verdict (`refuted-toy`) уже зафиксирован; для полного `accepted`
-  или `refuted` нужен production-domain (см. EXP-003-report раздел
-  «Ограничения»).
+ или `refuted` нужен production-domain (см. EXP-003-report раздел
+ «Ограничения»).
 
 ## Чего здесь НЕ утверждается (CONSTITUTION VI)
 
 - `refuted-toy` не экстраполируется на prod: «живые обучатели всегда
-  оправданы» не публикуется.
+ оправданы» не публикуется.
 - 3 крошечных синтетических датасета — это честно фиксируется.
 - Tюнинг Tsetlin минимален; исчерпывающий тюнинг — отдельный research
-  wave.
+ wave.
 - Самонаблюдение и GATopologySearch из DESIGN-04 — отложены, не входят в
-  эту карточку.
+ эту карточку.
 
 Next: при изменении `MpdtGaProducer` или `TsetlinTrainer` — повторный
 3-dataset прогон + проверка gate-таблицы; полный prod-domain verdict —

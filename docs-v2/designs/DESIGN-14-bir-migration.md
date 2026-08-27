@@ -1,12 +1,12 @@
 # DESIGN-14 — Миграция потребителей на BIR
 
-**Статус: normative (living)** · пересмотр 2026-08-26 (v2 rebuild).
+**Статус: normative (living)** · пересмотр (v2 rebuild).
 
 ## Что
 
 Стратегия strangler-fig: всё вычисление через `BooleanRuntime.evaluate/evaluateBatch`. INV-1 source-scan-страж блокирует прямые `.evaluate()`-вызовы вне whitelist (bir, ethics/frozen, neuron internals, TruthTableMinimizer).
 
-JMH-гейт Batch*→evalBatch: **выполнен 2026-08-26**, см. [engineering/JMH-GATE-EVIDENCE.md](../engineering/JMH-GATE-EVIDENCE.md) — 32–69M ops/s, решение «оставить как есть» (Batch* SIMD утилиты остаются).
+JMH-гейт Batch*→evalBatch: **выполнен **, см. [engineering/JMH-GATE-EVIDENCE.md](../engineering/JMH-GATE-EVIDENCE.md) — 32–69M ops/s, решение «оставить как есть» (Batch* SIMD утилиты остаются).
 
 ## Реализация
 

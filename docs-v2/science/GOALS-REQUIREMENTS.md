@@ -1,6 +1,6 @@
 # GOALS-REQUIREMENTS — цели и функциональные требования MATRIX
 
-**Статус: normative** (inline 2026-08-26 из `vision/vision/GOALS-REQUIREMENTS.md`).
+**Статус: normative** (inline из `vision/vision/GOALS-REQUIREMENTS.md`).
 
 ## Миссия
 

@@ -1,7 +1,5 @@
 # SPEC-004 — Perception Pillar (Sensor Layer)
 
-**Статус: normative** · пересмотр 2026-08-26 (v2 rebuild) · brain wave v1 · changelog 2026-08-26 — brain wave v1.
-
 ## Что
 
 Сенсорный слой P-стороны brain-контура [DESIGN-03](../designs/DESIGN-03-pipeline.md) P-E-D pipeline. Преобразует непрерывный внешний сигнал в дискретный пакет, пригодный для BIR-ядра [SPEC-002](./SPEC-002-boolean-compute-layer.md) (K_MAX=20, CONSTITUTION II). Единый контракт «sensor packet» для всех модальностей; энкодеры версионируются через `signals/SignalModuleRegistry` [DESIGN-06](../designs/DESIGN-06-signal-modules.md) (правила R1–R5).
@@ -20,12 +18,12 @@
 
 ```
 record SensorPacket(
-  long timestamp,           // монотонный, от clock-proxy (детерминированный источник)
-  String modality,          // "text" | "image" | "audio" | "numeric" | "temporal"
-  Object rawPayload,        // до бинаризации (только для прокси-цепочки)
-  long[] signal,            // 64-bit packed vector (DESIGN-06 §2 контракт)
-  String encoderVersion,    // семантика модуля (SignalModule.version())
-  boolean kanonymous        // тег для телеметрии: участвует в federation batch?
+ long timestamp, // монотонный, от clock-proxy (детерминированный источник)
+ String modality, // "text" | "image" | "audio" | "numeric" | "temporal"
+ Object rawPayload, // до бинаризации (только для прокси-цепочки)
+ long[] signal, // 64-bit packed vector (DESIGN-06 §2 контракт)
+ String encoderVersion, // семантика модуля (SignalModule.version())
+ boolean kanonymous // тег для телеметрии: участвует в federation batch?
 )
 ```
 
@@ -35,9 +33,9 @@ record SensorPacket(
 
 ```
 внеш.мир → [Quantizer] → [Normalizer] → [SignalModule.encode] → SensorPacket
-                                              │
-                                              ▼
-                                       [BIR-ядро / BRC]
+ │
+ ▼
+ [BIR-ядро / BRC]
 ```
 
 - **Quantizer** — адаптивный порог, параметризуется EMP-импульсом (energy/precision; см. [DESIGN-16](../designs/DESIGN-16-perception-federation.md)).

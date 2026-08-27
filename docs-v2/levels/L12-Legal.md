@@ -1,8 +1,6 @@
 # L12 — Legal and Licensing Strategy
 
-**Status:** normative · **Layer:** 12 (legal) · **Date:** 2026-08-26
-**Changelog:** 2026-08-26 — brain wave v4 levels; densified from archive copy
-archive/2026-08-pre-v2/docs-root-flat/L12_Legal.md.
+**Status:** normative · **Layer:** 12 (legal) · **Date:** 
 
 ## 1. Purpose
 L12 fixes Matrix's legal frame: code and documentation licence,

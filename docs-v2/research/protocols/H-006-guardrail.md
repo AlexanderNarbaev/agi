@@ -1,7 +1,5 @@
 # H-006 — FROZEN-guardrail preregistration & gates
 
-**Статус: normative · preregistration card** · пересмотр 2026-08-26 — brain wave v2 protocols · changelog 2026-08-26 — brain wave v2 protocols.
-
 Протокол preregistered EXP-006: проверка композиционного guardrail между
 FROZEN-BIR-ядром и обучаемыми слоями (этические гейты + structural-safety
 + lie-detector через BIR-composition). Цель — зафиксировать численные
@@ -14,9 +12,9 @@ production-domain.
 - H-ID: H-006.
 - EXP-ID: EXP-006.
 - Соответствующий дизайн/спека (text-only): DESIGN-14 (BIR-миграция,
-  FROZEN-guardrail контур), SPEC-005 (action gate), CONSTITUTION IV.
+ FROZEN-guardrail контур), SPEC-005 (action gate), CONSTITUTION IV.
 - Источник вердикта (text-only): research/HYPOTHESES.md, row «H-006 — BIR-
-  composition guardrail», статус `running`.
+ composition guardrail», статус `running`.
 
 ## Метрики и gates (численные пороги preregistered)
 
@@ -37,12 +35,12 @@ Preliminary unit-числа (см. row H-006): FPR 0%, TPR 100%, P99 0 мс — 
 ## Methodology
 
 - Артефакт: `bir/guardrail/CompositionGuard` + `FrozenFNLBenchmark`
-  (matrix-core jmh-каталог).
+ (matrix-core jmh-каталог).
 - Корпус: fixed-corpus из 4 классов запретов (Четыре запрета CONSTITUTION
-  IV) + синтетические негативы (seed 42/43/44); расширение — prod-трафик.
+ IV) + синтетические негативы (seed 42/43/44); расширение — prod-трафик.
 - Процедура: (1) прогрев JMH ≥ 25 итераций, форки ≥ 2; (2) 1000 повторов
-  p99-замера; (3) проверка hash-реплея детерминизма; (4) отчёт
-  median/IQR/макс.
+ p99-замера; (3) проверка hash-реплея детерминизма; (4) отчёт
+ median/IQR/макс.
 - Baseline: «без guardrail» (whitelist-обход) — должно провалить TPR-гейт.
 - Split: train/holdout на синтетике 70/30; prod-трафик — отдельный holdout.
 
@@ -52,23 +50,23 @@ Preliminary unit-числа (см. row H-006): FPR 0%, TPR 100%, P99 0 мс — 
 - Реализован `FrozenFNLBenchmark` (jmh-каталог, см. PROTOCOL.md).
 - `JaCoCo` gate зелёный на `bir/guardrail/**`.
 - INV-1 source-scan-страж: нет обходов whitelist вне `bir`, `ethics/
-  frozen`, `neuron internals`, `TruthTableMinimizer`.
+ frozen`, `neuron internals`, `TruthTableMinimizer`.
 - GPU-нога — опционально; при отсутствии CUDA EP — только CPU-нога, gate
-  p99 ≤ 50 мс остаётся.
+ p99 ≤ 50 мс остаётся.
 
 ## Methodology framework (text-only)
 
 - Уровни доказательства и preregistration-rules — см. файл PROTOCOL.md в
-  той же директории research/.
+ той же директории research/.
 - Полный verdict (running → accepted/refuted/superseded) — только в
-  HYPOTHESES.md.
+ HYPOTHESES.md.
 
 ## Чего здесь НЕ утверждается (CONSTITUTION VI)
 
 - Preliminary unit-числа FPR 0%, TPR 100%, P99 0 мс — не preregistered
-  verdict; не публикуются как accept до прохождения gate-таблицы.
+ verdict; не публикуются как accept до прохождения gate-таблицы.
 - Никаких обещаний «безопасен по построению», «не лжёт», «не нарушает» —
-  только проверяемое: механизм + измерение.
+ только проверяемое: механизм + измерение.
 - Prod-domain verdict — отдельный holdout, не подменяет синтетику.
 
 Next: после прохождения JMH-grade gate на полном synthetic-corpus

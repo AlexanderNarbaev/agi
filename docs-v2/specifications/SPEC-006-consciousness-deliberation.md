@@ -1,7 +1,5 @@
 # SPEC-006 — Consciousness / Deliberation (центральный процессор)
 
-**Статус: normative** · пересмотр 2026-08-26 (brain wave v1) · changelog 2026-08-26 — brain wave v1.
-
 ## Что
 
 Центральный процессор сознания: BRC chain (`reasoning/BrcChain`) + MCTS/LATS поиск (`mcts/MctsTree`, `LatsNode`) + AC-3 preconditions (`actions/PlanPreprocessor`, [DESIGN-15](../designs/DESIGN-15-plan-preprocessing.md)). Top-down внимание от autonomy-impulses (см. [SPEC-007](./SPEC-007-subconscious.md), [DESIGN-19](../designs/DESIGN-19-subconscious-consolidator.md)), bottom-up saliency от perception ([SPEC-004](./SPEC-004-perception.md)). FROZEN этический гейт (`ethics/EthicalFilter` → `StructuralSafetyGuard` → `LieDetector` → `frozen/FROZENFNLGuardian`) обязателен перед каждым action decision.
@@ -10,15 +8,15 @@
 
 ```
 perception ──► attention(merge) ──► deliberation(BRC + MCTS/LATS)
-                                          │
-                                          ▼
-                                 AC-3 preprocess (DESIGN-15)
-                                          │
-                                          ▼
-                                  FROZEN EthicalGate  ◄── CONSTITUTION IV
-                                          │
-                                          ▼
-                                  action (PlanRunner, DESIGN-17)
+ │
+ ▼
+ AC-3 preprocess (DESIGN-15)
+ │
+ ▼
+ FROZEN EthicalGate ◄── CONSTITUTION IV
+ │
+ ▼
+ action (PlanRunner, DESIGN-17)
 ```
 
 ## FR (классы и интерфейсы)
@@ -71,7 +69,7 @@ FROZEN-зона (`matrix-core/.../ethics/frozen/**`) — CONSTITUTION III, мо�
 
 ## Метрики / гейты
 
-- На 2026-08-26 не измерено; EXP-кандидаты — H-046, H-047 ([HYPOTHESES-NEW](../research/HYPOTHESES-NEW.md)).
+- На не измерено; EXP-кандидаты — H-046, H-047 ([HYPOTHESES-NEW](../research/HYPOTHESES-NEW.md)).
 - Per-step JMH: `bir.BooleanRuntime.evaluate` (32–69M ops/s по [DESIGN-14](../designs/DESIGN-14-bir-migration.md)) как baseline per-BRC-step.
 
 ## Отложено

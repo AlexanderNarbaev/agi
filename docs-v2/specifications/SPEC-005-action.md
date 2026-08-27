@@ -1,7 +1,5 @@
 # SPEC-005 — Action Pillar (Motor Layer)
 
-**Статус: normative** · пересмотр 2026-08-26 (v2 rebuild) · brain wave v1 · changelog 2026-08-26 — brain wave v1.
-
 ## Что
 
 Моторный слой P-стороны brain-контура [DESIGN-03](../designs/DESIGN-03-pipeline.md) P-E-D pipeline. Преобразует решения BRC/BIR в исполняемые действия; иерархия effectors: low-level primitives → composite actions. Автономные импульсы проходят через `ethics/FROZEN` + structural-safety gate [DESIGN-14](../designs/DESIGN-14-bir-migration.md) (Критерий A: единственная точка исполнения — `BooleanRuntime.evaluate`).
@@ -18,13 +16,13 @@
 ### Иерархия effectors
 
 ```
-low-level primitives   ← PlanRunner.Step (single-shot, атомарный)
-        ↑
-composite actions      ← PlanRunner (multi-step, AC-3 validated)
-        ↑
-autonomous impulses    ← FROZEN + StructuralSafetyGuard gate
-        ↑
-BIR / BRC decisions     ← продукт deliberative слоя
+low-level primitives ← PlanRunner.Step (single-shot, атомарный)
+ ↑
+composite actions ← PlanRunner (multi-step, AC-3 validated)
+ ↑
+autonomous impulses ← FROZEN + StructuralSafetyGuard gate
+ ↑
+BIR / BRC decisions ← продукт deliberative слоя
 ```
 
 - **Low-level primitives** — атомарные `Action` (DESIGN-13): запись в storage, отправка сообщения, вычисление значения. Каждый — единичный side-effect.
@@ -52,10 +50,10 @@ BIR / BRC decisions     ← продукт deliberative слоя
 
 ```
 impulse → FrozenEthicalFNL ─┐
-                            ├→ approve → PlanRunner → effector
-              FROZENFNLGuardian ─┤
-                            ├→ reject → log + halt
-       StructuralSafetyGuard ─┘
+ ├→ approve → PlanRunner → effector
+ FROZENFNLGuardian ─┤
+ ├→ reject → log + halt
+ StructuralSafetyGuard ─┘
 ```
 
 - `FrozenEthicalFNL`: FROZEN-проверка шести аксиом (см. `ethics/frozen/`).
