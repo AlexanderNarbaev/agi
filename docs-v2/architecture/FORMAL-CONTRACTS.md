@@ -13,6 +13,7 @@
 | `FrozenEthicalFNL` | `ethics/frozen/FrozenAxiomNeuron`, `FrozenEthicalFNL`, `TextFeatureExtractor`, `TruthTableUtil` | монотонность запретов | TLA+ (FROZEN) |
 | `HashChain` | `audit/HashChain` | цепная целостность audit-trail | TLA+ CFG |
 | `MemoryM4Causal` | `noosphere/Crdt`, `noosphere/GrowOnlySet` | Monotonicity, TombstoneIrreversible, EventualConsistency, FrozenImmutability | TLA+ spec; unit (W-C) |
+| `MctsLatsVisit` | `mcts/MctsTree`, `mcts/MctsNode`, `mcts/LatsNode` | α-Root convergence, visits монотонны, tree ацикличен | TLA+ spec; unit (W-E) |
 | `MPDTNeuron` | `neuron/MPDTNeuron*` | границы состояний автоматов Цетлина | без TLA+ — карточка Нужна спека |
 | `CellLifecycle` (нет файла — см. needs-spec) | `lifecycle/CauldronProtocol`, `FnlGate` | SHADOW→CANDIDATE→PROMOTED | **отложено: формализация** |
 
@@ -38,6 +39,5 @@
 
 Новые TLA+-спек-кандидаты:
 - `BRC-Step` (atomic preserved step contract) — закрытие пробела reasoning/BrcChain.
-- `MCTS-LATS-Visit` — конвергенция к α-Root (теоретически не записана).
 
 Все перечислены как **next-format-contracts** в `engineering/PLAN.md`.
