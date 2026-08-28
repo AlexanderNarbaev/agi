@@ -12,7 +12,10 @@ import sys
 import time
 from pathlib import Path
 
-MODEL_DIR = Path("models/external/distilbert-sst2")
+# Default to the real (non-tiny) model; override via $MATRIX_MODEL_DIR for
+# the tiny variant (M-A.T.R.I.X.2).
+MODEL_DIR = Path(os.environ.get("MATRIX_MODEL_DIR",
+                                 "models/external/distilbert-base-sst2"))
 ONNX_PATH = MODEL_DIR / "model.onnx"
 
 # Synthetic SST-2 corpus (5 positive + 5 negative — small but covers both classes)
