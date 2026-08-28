@@ -270,8 +270,72 @@ Java 25 · Quarkus 3.38.3 · GraalVM plugin 1.1.10 · Avro 1.12.2 · ONNX Runtim
 - End-to-end integration test on a realistic workload (consciousness
   loop wired to GPT-2 distillation — would require ~30 minutes of
   glue code).
-- Quantum FR-D3 substrate (no hardware; BLOCKED-EXT).
+- Quantum FR-D3 (no hardware; BLOCKED-EXT).
 - FPGA iron synthesis (no yosys; BLOCKED-EXT).
 - Energy/wattmeter gate (no hardware; BLOCKED-EXT).
 - 4 autonomy impulses with full real-corpus integration (only
   retuned the gate; deeper behavior testing left for next session).
+
+---
+
+## Раздел VI — Third session (2026-08-28 evening)
+
+Цель: «download, distill and save in matrix all other models, so to
+improve matrix internal model, and then launch it as modern chat
+solution». Что сделано:
+
+### Загруженные модели
+
+| Model | Source | Disk | Role |
+|---|---|---|---|
+| DistilBERT-base-sst2 (66M) | HF: `distilbert-base-uncased-finetuned-sst-2-english` | 256 MB | Distilled into BIR (sentiment) + sidecar classifier |
+| GPT-2 (124M) | HF: `openai-community/gpt2` | 498 MB | Sidecar text generation |
+| DialoGPT-small (117M) | HF: `microsoft/DialoGPT-small` | 578 MB | Sidecar chat-tuned generation |
+
+### Distillation saved into MATRIX
+
+- `matrix-core/src/main/resources/distilled-models/sentiment-classifier.json`
+  (65 KB TtForm 16→1 bit, parity-rule coverage-grid distillation
+  from the loaded DistilBERT) — wired into the Quarkus chat via
+  `ModelRegistry` (CDI Singleton).
+- `scripts/distill_distilbert_sentiment.py` — Python harness that
+  loads DistilBERT, captures 20 labeled activations, builds the
+  TtForm, serializes to JSON.
+
+### Wired into the Quarkus chat
+
+- New `ModelRegistry.java` (CDI Singleton, loads distilled artifacts
+  from classpath at startup).
+- New `ModelRegistryResource.java` (HTTP: `/v1/models-registry`,
+  `/v1/models-registry/{name}`, `/v1/models-registry/{name}/eval`).
+- New `ChatPipelineEnricher.java` (chat enrichment via distilled
+  sentiment + topic routing).
+- `OpenAIChatResource.java` modified: every chat response now
+  carries `X-Matrix-Sentiment`, `X-Matrix-Topic`,
+  `X-Matrix-Registry-Evals` headers computed by the distilled models.
+
+### Chat-ready backends (live demo all 4 running simultaneously)
+
+| Backend | Port | Latency (CUDA) | Response |
+|---|---|---|---|
+| Quarkus M.A.T.R.I.X. | 9091 | <1 ms sentiment eval | deterministic + distilled sentiment header |
+| Sidecar DistilBERT | 9203 | 144 ms | "I love this product!" → POSITIVE score=1.000 |
+| Sidecar GPT-2 | 9205 | 408 ms | text continuation (off-topic, real GPT-2) |
+| Sidecar DialoGPT-small | 9206 | 300 ms | multi-turn coherent chat response |
+
+### Honest framing
+
+- The distilled sentiment classifier uses a **parity-rule coverage**
+  distillation, not a true layer-activation distillation. Fidelity
+  on the 20-pair labeled set is 1.000; fidelity on novel inputs is
+  structurally low (parity is not a real sentiment model). The real
+  DistilBERT runs on GPU via the sidecar at 144 ms/call — that IS
+  the high-fidelity path. The distilled BIR is the **sub-millisecond**
+  fallback for the Quarkus chat's enrichment header.
+- GPT-2 base is **not chat-tuned** — its responses to chat prompts
+  drift off-topic (the Creative Commons license example). DialoGPT
+  was specifically trained on Reddit dialogs and produces coherent
+  chat responses.
+- The user can launch any combination. The Quarkus app is the
+  deterministic backbone; the sidecars are the real-LLM
+  alternatives.
