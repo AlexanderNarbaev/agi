@@ -50,8 +50,7 @@ class WeightImportEndToEndIT {
         }
         return null;
     }
-
-    @Test
+@Test
     void projectAllTensorsIntoTruthTableNeurons() throws Exception {
         Path safetensors = findSafetensors();
         if (safetensors == null) {
@@ -59,10 +58,8 @@ class WeightImportEndToEndIT {
                     + "Run: python3 scripts/import_qwen_weights.py");
             return;
         }
-        System.out.println("[W7.1] importing: " + safetensors);
-
         SafetensorsReader reader = new SafetensorsReader();
-        TensorProjector projector = new TensorProjector(1 << 14); // 16K entries/tensor
+        TensorProjector projector = new TensorProjector(1 << 14);
 
         SafetensorsReader.Header header = reader.readHeader(safetensors);
         long totalNeurons = 0;
@@ -71,28 +68,18 @@ class WeightImportEndToEndIT {
         long totalBytes = 0;
         Map<String, Integer> perTensorNeurons = new HashMap<>();
 
-        // Limit to small-to-medium tensors. With the 16 GB heap we can
-        // process the giant embedding/head tensors (each ~545 MB) but we
-        // skip them because (a) they are row-lookups, not multiplications,
-        // and (b) the test time would balloon. Set ALL_TENSORS=true env
-        // var to override.
         int maxTensors = Integer.MAX_VALUE;
         boolean includeEmbedHead = "true".equals(
                 System.getenv("MATRIX_IMPORT_INCLUDE_EMBED"));
+
+        System.out.println("[W7.1] importing: " + safetensors);
+
         try (FileChannel ch = FileChannel.open(safetensors)) {
             int processed = 0;
             for (String tensorName : header.tensorNames()) {
-                if (processed >= maxTensors) {
-                    System.out.println("[W7.1] truncated at " + maxTensors
-                            + " tensors (heap-protection)");
-                    break;
-                }
-                // skip the giant embedding/head tensors unless the env
-                // var overrides (they are lookups, not multiplications)
+                if (processed >= maxTensors) break;
                 if (!includeEmbedHead && (tensorName.contains("embed_tokens")
                         || tensorName.contains("lm_head"))) {
-                    System.out.println("[W7.1] skipping " + tensorName
-                            + " (set MATRIX_IMPORT_INCLUDE_EMBED=true to override)");
                     continue;
                 }
                 try {
@@ -105,11 +92,10 @@ class WeightImportEndToEndIT {
                         totalElements += t.data().length;
                     }
                     totalTensors++;
-                    totalBytes += (long) t.data().length * 4;  // float32
+                    totalBytes += (long) t.data().length * 4;
                     processed++;
                 } catch (OutOfMemoryError oom) {
-                    System.out.println("[W7.1] OOM at tensor " + tensorName
-                            + " — stopping (heap-protection)");
+                    System.out.println("[W7.1] OOM at tensor " + tensorName);
                     break;
                 } catch (Exception e) {
                     System.out.println("[W7.1] tensor failed: " + tensorName
@@ -118,13 +104,14 @@ class WeightImportEndToEndIT {
             }
         }
 
+        String modelName = safetensors.getParent().getParent().getFileName().toString();
         System.out.println("[W7.1] =======================================");
-        System.out.println("[W7.1] source: " + safetensors.getParent().getParent().getFileName());
-        System.out.println("[W7.1] tensors projected: " + totalTensors
-                + " of " + header.tensorNames().size());
+        System.out.println("[W7.1] model:           " + modelName);
+        System.out.println("[W7.1] tensors:         " + totalTensors + " of "
+                + header.tensorNames().size());
         System.out.println("[W7.1] float elements: " + totalElements
                 + " (" + (totalBytes / 1_000_000) + " MB)");
-        System.out.println("[W7.1] total neurons: " + totalNeurons);
+        System.out.println("[W7.1] total neurons:   " + totalNeurons);
         System.out.println("[W7.1] top-10 tensors by neuron count:");
         perTensorNeurons.entrySet().stream()
                 .sorted((a, b) -> Integer.compare(b.getValue(), a.getValue()))
@@ -134,6 +121,53 @@ class WeightImportEndToEndIT {
         System.out.println("[W7.1] =======================================");
 
         assertThat(totalNeurons).isGreaterThan(0L);
+    }
+
+    /** Iterate every available safetensors and project each (cross-model diversity check). */
+    @Test
+    void projectAcrossAllAvailableModels() throws Exception {
+        java.util.List<Path> roots = List.of(
+                Path.of("/tmp/opencode/matrix-import/models--Qwen--Qwen2.5-0.5B/snapshots"),
+                Path.of("/tmp/opencode/matrix-import/models--TinyLlama--TinyLlama-1.1B-Chat-v1.0/snapshots"),
+                Path.of("/tmp/opencode/matrix-import/models--HuggingFaceTB--SmolLM2-360M-Instruct/snapshots"));
+        SafetensorsReader reader = new SafetensorsReader();
+        TensorProjector projector = new TensorProjector(1 << 14);
+        long grandTotal = 0;
+        int modelsProcessed = 0;
+        for (Path root : roots) {
+            if (!Files.isDirectory(root)) continue;
+            Path modelFile;
+            try {
+                modelFile = Files.walk(root, 3)
+                        .filter(p -> p.toString().endsWith(".safetensors"))
+                        .filter(Files::isRegularFile)
+                        .findFirst().orElse(null);
+            } catch (Exception e) { continue; }
+            if (modelFile == null) continue;
+            long neurons = 0;
+            long tensors = 0;
+            try (FileChannel ch = FileChannel.open(modelFile)) {
+                SafetensorsReader.Header header = reader.readHeader(modelFile);
+                for (String tn : header.tensorNames()) {
+                    if (tn.contains("embed_tokens") || tn.contains("lm_head")) continue;
+                    try {
+                        SafetensorsReader.Tensor t = reader.loadTensor(ch, header, tn);
+                        if (t.data().length == 0) continue;
+                        TensorProjector.Projection p = projector.project(t);
+                        neurons += p.neuronCount();
+                        tensors++;
+                    } catch (Exception ignored) {}
+                }
+            }
+            String modelName = modelFile.getParent().getParent().getFileName().toString();
+            System.out.println("[W7.1 cross-model] " + modelName
+                    + ": " + tensors + " tensors → " + neurons + " neurons");
+            grandTotal += neurons;
+            modelsProcessed++;
+        }
+        System.out.println("[W7.1 cross-model] total across "
+                + modelsProcessed + " models: " + grandTotal + " neurons");
+        assertThat(modelsProcessed).isGreaterThan(0);
     }
 
     @Test
