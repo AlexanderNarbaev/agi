@@ -1,0 +1,19 @@
+{
+  "model": "/tmp/opencode/matrix-import/models--Qwen--Qwen2.5-0.5B/snapshots/060db6499f32faf8b98477b0a26969ef7d8b9987",
+  "tasks": [
+    "hellaswag"
+  ],
+  "limit": 25,
+  "elapsed_seconds": 25.48753742199915,
+  "results": {
+    "hellaswag": {
+      "name": "hellaswag",
+      "alias": "hellaswag",
+      "sample_len": 25,
+      "acc,none": 0.36,
+      "acc_stderr,none": 0.09797958971132711,
+      "acc_norm,none": 0.36,
+      "acc_norm_stderr,none": 0.09797958971132711
+    }
+  }
+}

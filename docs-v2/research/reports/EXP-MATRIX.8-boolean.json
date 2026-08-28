@@ -1,0 +1,68 @@
+{
+  "model": "Qwen2.5-0.5B (boolean-distilled via MATRIX)",
+  "task": "hellaswag",
+  "limit": 25,
+  "chain_layers": 6,
+  "chain_neurons": 9642,
+  "projection_ms": 199.34274799925333,
+  "accuracy": 0.4,
+  "correct": 10,
+  "total": 25,
+  "details_first_5": [
+    {
+      "ctx": "A man is sitting on a roof. he",
+      "label": 3,
+      "pred": 3,
+      "scores": [
+        34045,
+        33565,
+        33480,
+        34067
+      ]
+    },
+    {
+      "ctx": "A lady walks to a barbell. She bends down and grabs the pole",
+      "label": 3,
+      "pred": 0,
+      "scores": [
+        34182,
+        33765,
+        33534,
+        33921
+      ]
+    },
+    {
+      "ctx": "Two women in a child are shown in a canoe while a man pulls ",
+      "label": 2,
+      "pred": 2,
+      "scores": [
+        33372,
+        33322,
+        34356,
+        33293
+      ]
+    },
+    {
+      "ctx": "A boy is running down a track. the boy",
+      "label": 2,
+      "pred": 2,
+      "scores": [
+        34101,
+        34286,
+        34340,
+        33488
+      ]
+    },
+    {
+      "ctx": "The boy lifts his body above the height of a pole. The boy l",
+      "label": 1,
+      "pred": 2,
+      "scores": [
+        33642,
+        34037,
+        34508,
+        33339
+      ]
+    }
+  ]
+}
