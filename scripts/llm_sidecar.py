@@ -34,6 +34,7 @@ DEFAULT_MODEL_DIR = {
     "distilbert": "models/external/distilbert-base-sst2",
     "distilbert-tiny": "models/external/distilbert-sst2",
     "gpt2": "models/external/gpt2",
+    "dialogpt": "models/external/dialogpt-small",
 }
 
 
@@ -53,10 +54,10 @@ class LLMSidecar:
         self.tok = AutoTokenizer.from_pretrained(model_dir)
         if self.tok.pad_token is None:
             self.tok.pad_token = self.tok.eos_token
-        # GPT-2 is causal; force the right loader so saved config quirks
-        # (the script that downloads these models saves a Sequence
-        # Classification head even for GPT-2 — we override here).
-        force_causal = model_name.startswith("gpt")
+        # DialoGPT and GPT-2 are causal; force the right loader so
+        # saved config quirks (the download script persists a Sequence
+        # Classification head even for causal models — we override here).
+        force_causal = model_name.startswith("gpt") or model_name.startswith("dialogpt")
         try:
             if force_causal:
                 self.model = AutoModelForCausalLM.from_pretrained(model_dir).eval()
@@ -100,18 +101,38 @@ class LLMSidecar:
             return (f"[distilbert-classifier] sentiment={label} "
                     f"score={score:.3f}  input=\"{last_user[:80]}\"")
         else:
-            # GPT-2: text generation
-            enc = self.tok(last_user, return_tensors="pt",
-                           truncation=True, max_length=64)
+            # GPT-2 / DialoGPT: text generation with multi-turn awareness
+            history = messages[-6:] if len(messages) > 1 else messages
+            prompt_parts = []
+            for m in history:
+                role = m.get("role", "")
+                content = m.get("content", "")
+                if role == "user":
+                    prompt_parts.append(content + self.tok.eos_token)
+                elif role == "assistant":
+                    prompt_parts.append(content + self.tok.eos_token)
+            prompt = "".join(prompt_parts)
+            if not prompt.endswith(self.tok.eos_token):
+                prompt = last_user + self.tok.eos_token
+            enc = self.tok(prompt, return_tensors="pt",
+                           truncation=True, max_length=512)
             enc = {k: v.to(self.device) for k, v in enc.items()}
             with self.torch.no_grad():
                 out = self.model.generate(
-                    **enc, max_new_tokens=40, do_sample=False,
+                    **enc,
+                    max_new_tokens=80,
+                    do_sample=True,
+                    top_k=50,
+                    top_p=0.92,
+                    temperature=0.7,
                     pad_token_id=self.tok.eos_token_id,
                 )
             new_tokens = out[0][enc["input_ids"].shape[1]:]
             text = self.tok.decode(new_tokens, skip_special_tokens=True)
-            return text.strip() or "(no output)"
+            text = text.strip()
+            # DialoGPT produces many <|endoftext|> boundaries; trim
+            text = text.split(self.tok.eos_token)[0].strip()
+            return text or "(no output)"
 
 
 class Handler(http.server.BaseHTTPRequestHandler):

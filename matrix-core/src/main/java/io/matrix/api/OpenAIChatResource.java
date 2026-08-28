@@ -69,6 +69,7 @@ public class OpenAIChatResource {
     private final Random rng;
     private final List<String> responseHistory;
     private int stuckCounter;
+    private ChatPipelineEnricher enricher; // W6.2 — null-safe if CDI is missing
     private final MatrixMetrics metrics;
     private AgentBrainService brainService;
 
@@ -93,7 +94,8 @@ public class OpenAIChatResource {
 
     @Inject
     OpenAIChatResource(MatrixMetrics metrics, AgentBrainService brainService,
-                       Text2VecService text2Vec, EthicalFilter ethicalFilter) {
+                       Text2VecService text2Vec, EthicalFilter ethicalFilter,
+                       io.matrix.model.ModelRegistry modelRegistry) {
         this.metrics = metrics;
         this.brainService = brainService;
         this.text2vec = text2Vec;
@@ -102,6 +104,9 @@ public class OpenAIChatResource {
         this.rng = new Random();
         this.responseHistory = new ArrayList<>();
         this.stuckCounter = 0;
+        // W6.2: pipeline enricher (sentiment + topic routing via distilled BIR models)
+        this.enricher = modelRegistry == null ? null
+                : new ChatPipelineEnricher(modelRegistry);
     }
 
     public OpenAIChatResource() {
@@ -308,9 +313,27 @@ public class OpenAIChatResource {
         result.usage.completion_tokens = estimateTokens(response);
         result.usage.total_tokens = result.usage.prompt_tokens + result.usage.completion_tokens;
 
-        return Response.ok(result)
-                .header("X-Conversation-Id", finalConvId)
-                .build();
+        // W6.2: enrich the response with sentiment + topic routing from
+        // the ModelRegistry (distilled BIR models). The header carries
+        // the metadata; the body stays OpenAI-compatible.
+        java.util.Map<String, Object> enrichMeta = null;
+        if (enricher != null) {
+            try {
+                enrichMeta = enricher.enrich(userText,
+                        new long[]{sensorBits}, response);
+            } catch (Exception e) {
+                log.warn("enricher failed: {}", e.getMessage());
+            }
+        }
+
+        Response.ResponseBuilder rb = Response.ok(result)
+                .header("X-Conversation-Id", finalConvId);
+        if (enrichMeta != null) {
+            rb.header("X-Matrix-Sentiment", enrichMeta.getOrDefault("sentiment", "unknown"))
+              .header("X-Matrix-Topic", enrichMeta.getOrDefault("topic", "unknown"))
+              .header("X-Matrix-Registry-Evals", String.valueOf(enrichMeta.getOrDefault("registryEvals", 0L)));
+        }
+        return rb.build();
     }
 
     /**
