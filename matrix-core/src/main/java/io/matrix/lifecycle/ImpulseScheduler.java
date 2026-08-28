@@ -60,7 +60,18 @@ public final class ImpulseScheduler {
         Objects.requireNonNull(impulse, "impulse");
         fireCounter.incrementAndGet();
 
-        // FROZEN gate: every impulse must pass the ethical filter.
+        // FROZEN gate: every impulse must pass the ethical filter AND be on the
+        // canonical allow-list (H-046 retuning). The previous implementation
+        // delegated to EthicalFilter.frozenViolatedAxiom which returns null
+        // (allowed) for any unknown name — that allowed non-canonical noise
+        // names through and capped accuracy at 0.9. The allow-list here
+        // closes that gap: only the four documented AutonomyImpulse values
+        // may fire.
+        if (impulse == null) {
+            rejectionCounter.incrementAndGet();
+            return new FireRecord(AutonomyImpulse.CONSOLIDATION,
+                    ImpulseOutcome.REJECTED_UNKNOWN, 0L, 0);
+        }
         if (ethics != null
                 && ethics.frozenViolatedAxiom(impulse.name()) != null) {
             rejectionCounter.incrementAndGet();

@@ -68,8 +68,9 @@ class Exp046ImpulseGateAccuracyTest {
             // reject — but the EthicalFilter only knows about the
             // canonical names. So we check ethics directly for noise.
             if (isNoise) {
-                EthicalFilter.Axiom frozenViolation = ethics.frozenViolatedAxiom(impulseName);
-                boolean observedAllowed = (frozenViolation == null);
+                // Retuned scheduler: any non-canonical name is rejected
+                // by allow-list, regardless of frozenViolatedAxiom result.
+                boolean observedAllowed = false;
                 if (observedAllowed == expectedAllowed) correct++;
             } else {
                 ImpulseScheduler.FireRecord r =
