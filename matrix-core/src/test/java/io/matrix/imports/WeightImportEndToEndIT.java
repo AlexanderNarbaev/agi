@@ -71,13 +71,14 @@ class WeightImportEndToEndIT {
         long totalBytes = 0;
         Map<String, Integer> perTensorNeurons = new HashMap<>();
 
-        // Limit to small-to-medium tensors (skip the giant embedding/
-        // head which are typically >100 MB each). For Qwen2.5-0.5B:
-        //   model.embed_tokens.weight ≈ 545 MB (skip)
-        //   lm_head.weight ≈ 545 MB (skip)
-        //   layers.{i}.self_attn.{q,k,v,o}_proj.weight ≈ 3 MB each
-        //   layers.{i}.mlp.{gate,up,down}_proj.weight ≈ 1-3 MB each
-        int maxTensors = 80;
+        // Limit to small-to-medium tensors. With the 16 GB heap we can
+        // process the giant embedding/head tensors (each ~545 MB) but we
+        // skip them because (a) they are row-lookups, not multiplications,
+        // and (b) the test time would balloon. Set ALL_TENSORS=true env
+        // var to override.
+        int maxTensors = Integer.MAX_VALUE;
+        boolean includeEmbedHead = "true".equals(
+                System.getenv("MATRIX_IMPORT_INCLUDE_EMBED"));
         try (FileChannel ch = FileChannel.open(safetensors)) {
             int processed = 0;
             for (String tensorName : header.tensorNames()) {
@@ -86,20 +87,17 @@ class WeightImportEndToEndIT {
                             + " tensors (heap-protection)");
                     break;
                 }
-                // skip the giant embedding/head tensors
-                if (tensorName.contains("embed_tokens")
-                        || tensorName.contains("lm_head")) {
+                // skip the giant embedding/head tensors unless the env
+                // var overrides (they are lookups, not multiplications)
+                if (!includeEmbedHead && (tensorName.contains("embed_tokens")
+                        || tensorName.contains("lm_head"))) {
+                    System.out.println("[W7.1] skipping " + tensorName
+                            + " (set MATRIX_IMPORT_INCLUDE_EMBED=true to override)");
                     continue;
                 }
                 try {
                     SafetensorsReader.Tensor t = reader.loadTensor(ch, header, tensorName);
                     if (t.data().length == 0) continue;
-                    if (t.data().length > 16_000_000) {
-                        // skip tensors > 64 MB; they would OOM
-                        System.out.println("[W7.1] skipping large tensor " + tensorName
-                                + " (" + t.data().length + " floats)");
-                        continue;
-                    }
                     TensorProjector.Projection p = projector.project(t);
                     if (p.neuronCount() > 0) {
                         perTensorNeurons.put(t.name(), p.neuronCount());
