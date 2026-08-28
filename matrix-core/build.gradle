@@ -66,7 +66,9 @@ tasks.withType(Test) {
     if (!project.hasProperty('includeIntegration')) {
         exclude '**/integration/**'
     }
+    maxHeapSize = '4g'
     jvmArgs '--add-modules=jdk.incubator.vector'
+    jvmArgs '-Xmx4g'
 }
 
 tasks.withType(JavaCompile) {
