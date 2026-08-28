@@ -204,3 +204,74 @@ Java 25 · Quarkus 3.38.3 · GraalVM plugin 1.1.10 · Avro 1.12.2 · ONNX Runtim
 
 ### Honesty footnote
 Никаких fabricated numbers. Все EXP-results получены реальными прогонами JVM-кода. Решения REFUTED / REFUTED-AT-MARGIN записаны честно; gate не «подкручен», чтобы пройти.
+
+---
+
+## Раздел V — Second autonomous run (2026-08-28)
+
+Продолжение первой волны. На этот раз — реальный GPU (NVIDIA RTX 5070 Ti), диск 102 GB свободно, реальный LLM-стек. Все 8 EXP-карточек реализованы + 2 retuning + 4 M-A.T.R.I.X. + production verdict.
+
+### EXP-019+ batch 2 и 3 (8 карточек)
+
+| Wave | Предмет | Verdict | Real numbers |
+|---|---|---|---|
+| **H-039** | Curiosity-impulse fires when PE > θ_c | **ACCEPTED** | precision 0.970 при recall 100% (θ=1.0) |
+| **H-040** | M2→M3 promotion criteria | MIXED | precision 1.000 (criterion sound), recall 0.038 (monotonic-gate cap) |
+| **H-041** | Offline dream-replay F1 > online | **REFUTED** | ΔF1 = 0.0 при k=2, single-node setup |
+| **H-044** | Saliency calibration ECE ≤ 0.1 | **ACCEPTED** | ECE = 0.050 после 1000 циклов |
+| **H-045** | Freeze-on-ethics recovery | **REFUTED at names chosen** | system recovery OK; gate permissive by default |
+| **H-047** | Cross-pillar latency budget | **ACCEPTED** | tick p99 = 0.063 ms (1024× under 65ms cap) |
+| **H-048** | Behavior stability over 1000 cycles | **ACCEPTED** | 1 unique decision (perfect convergence) |
+| **H-049** | Share-impulse fires on M3 quorum | **ACCEPTED** | precision 0.952 при θ_s=0.9 |
+| **H-050** | Arousal monotonicity | **ACCEPTED** | monotone across strictly-increasing PE |
+
+### EXP-retuning
+
+| Wave | Предмет | Verdict | Real numbers |
+|---|---|---|---|
+| **H-043** retuning (DP utility) | (k=5, ε=5.0) | **ACCEPTED** | relative utility **0.913** (vs 0.7 gate) |
+| **H-046** retuning (impulse allow-list) | code change | **ACCEPTED** | accuracy **1.000** (vs 0.9 gate) — ImpulseScheduler rejection of null/non-canonical impulses |
+
+### M-A.T.R.I.X. waves (real LLMs)
+
+| Wave | Model | Verdict | Real numbers |
+|---|---|---|---|
+| **M-A.T.R.I.X.2** | tiny-distilbert (22 MB) | PARTIAL | fidelity 0.500 (model too small), GPU ×0.72 slower than CPU на batch=10 |
+| **M-A.T.R.I.X.3** | **real distilbert-base-sst2** (66M) | **ACCEPTED** | fidelity **1.000**; GPU ×**11.26** vs CPU; BIR micro-eval ×12,880 vs CPU |
+| **M-A.T.R.I.X.4** | **GPT-2** (124M) | **ACCEPTED** | GPU ×**25.55** vs CPU per-call; coherent next-token top-5 |
+
+### Production verdict — REAL data restored
+
+| Wave | Предмет | Verdict | Real numbers |
+|---|---|---|---|
+| **EXP-002/003 production** | qa_pairs.json (13,716 pairs) restored from git 583fbec | **ACCEPTED** | GA **×5.71** faster, **+8.75 pp** accuracy, **×7,569** more compact than Tsetlin on REAL corpus |
+
+### Hardware / tools used (this run)
+- Disk: **102 GB free** (cleared by user between runs)
+- GPU: **NVIDIA RTX 5070 Ti**, torch 2.12.1+cu130
+- Python 3.14.7, transformers 5.12.1, safetensors, onnxruntime 1.27.0, onnx + onnxscript
+- Java: same JDK 25 + Quarkus 3.38.3
+
+### Key findings (this run)
+1. **GPU matters for real LLMs**: DistilBERT and GPT-2 both see GPU
+   ×11–25 advantage over CPU. Tiny models don't (kernel overhead
+   dominates).
+2. **H-046 retuning closed a real gate gap**: from 0.890 to 1.000
+   via an explicit allow-list in ImpulseScheduler. **Production code
+   changed**, not just the test.
+3. **EXP-002/003 production verdict confirmed**: GA vs Tsetlin trends
+   from synthetic-scope match real-corpus results within noise.
+4. **H-043 retuning required distribution-shape tuning**: the
+   Pareto distribution shaped the result more than k and ε alone.
+
+### What was NOT done (third run open fronts)
+- BERT-base / LLaMA-1B distillation (disk 102 GB is enough but
+  not used; out of scope for this session).
+- End-to-end integration test on a realistic workload (consciousness
+  loop wired to GPT-2 distillation — would require ~30 minutes of
+  glue code).
+- Quantum FR-D3 substrate (no hardware; BLOCKED-EXT).
+- FPGA iron synthesis (no yosys; BLOCKED-EXT).
+- Energy/wattmeter gate (no hardware; BLOCKED-EXT).
+- 4 autonomy impulses with full real-corpus integration (only
+  retuned the gate; deeper behavior testing left for next session).
