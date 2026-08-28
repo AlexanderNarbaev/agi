@@ -114,6 +114,8 @@ def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--qwen", default=
                     "/tmp/opencode/matrix-import/models--Qwen--Qwen2.5-0.5B/snapshots/060db6499f32faf8b98477b0a26969ef7d8b9987/model.safetensors")
+    ap.add_argument("--task", default="hellaswag",
+                    choices=["hellaswag", "arc_easy", "mmlu_mini"])
     ap.add_argument("--limit", type=int, default=25)
     ap.add_argument("--out", default="docs-v2/research/reports/EXP-MATRIX.8-boolean.json")
     args = ap.parse_args()
@@ -121,10 +123,14 @@ def main() -> int:
     if not qwen.exists():
         print(f"FAIL: {qwen} missing", file=sys.stderr); return 1
 
-    # Load HellaSwag via lm_eval's task format
     from datasets import load_dataset
-    print(f"[W11-boolean] loading HellaSwag from HF…")
-    ds = load_dataset("Rowan/hellaswag", split="validation", trust_remote_code=True)
+    print(f"[W11-boolean] loading {args.task} from HF…")
+    if args.task == "hellaswag":
+        ds = load_dataset("Rowan/hellaswag", split="validation", trust_remote_code=True)
+    elif args.task == "arc_easy":
+        ds = load_dataset("allenai/ai2_arc", "ARC-Easy", split="test", trust_remote_code=True)
+    elif args.task == "mmlu_mini":
+        ds = load_dataset("cais/mmlu", "all", split="test", trust_remote_code=True)
     examples = list(ds.select(range(min(args.limit, len(ds)))))
 
     # Build the MATRIX chain
@@ -135,20 +141,31 @@ def main() -> int:
     n_neurons = sum(len(layer) for layer in chain)
     print(f"[W11-boolean] chain: {len(chain)} layers, {n_neurons} neurons, "
           f"projection took {projMs:.0f} ms")
+    layers = chain
 
     # Score each example
     n_correct = 0
     detail = []
     for ex in examples:
-        ctx = ex["ctx"]
-        endings = ex["endings"]
-        label = int(ex["label"])
-        # score each ending as: total active bits after forward pass
+        # task-specific input formatting
+        if args.task == "hellaswag":
+            ctx = ex["ctx"]
+            endings = ex["endings"]
+            label = int(ex["label"])
+        elif args.task == "arc_easy":
+            ctx = ex["question"]
+            endings = ex["choices"]["text"]
+            label = int(ex["answerKey"]) if ex["answerKey"].isdigit() else 0
+        elif args.task == "mmlu_mini":
+            ctx = ex["question"]
+            choices = ex["choices"]
+            endings = [str(c) for c in choices]
+            label = int(ex["answer"])
         scores = []
         for ending in endings:
             text = ctx + " " + ending
             input_bits = text_to_bits(text, width=n_neurons * 14 if n_neurons > 0 else 14)
-            score = chain_forward(chain, input_bits)
+            score = chain_forward(layers, input_bits)
             scores.append(score)
         pred = int(np.argmax(scores))
         if pred == label:

@@ -1,67 +1,67 @@
 {
   "model": "Qwen2.5-0.5B (boolean-distilled via MATRIX)",
   "task": "hellaswag",
-  "limit": 25,
+  "limit": 30,
   "chain_layers": 6,
   "chain_neurons": 9642,
-  "projection_ms": 199.34274799925333,
-  "accuracy": 0.4,
-  "correct": 10,
-  "total": 25,
+  "projection_ms": 220.50802699959604,
+  "accuracy": 0.2,
+  "correct": 6,
+  "total": 30,
   "details_first_5": [
     {
-      "ctx": "A man is sitting on a roof. he",
+      "ctx": "Find the degree for the given field extension Q(sqrt(2), sqr",
+      "label": 1,
+      "pred": 1,
+      "scores": [
+        34179,
+        34613,
+        33244,
+        33351
+      ]
+    },
+    {
+      "ctx": "Let p = (1, 2, 5, 4)(2, 3) in S_5 . Find the index of <p> in",
+      "label": 2,
+      "pred": 2,
+      "scores": [
+        33860,
+        33709,
+        34537,
+        33445
+      ]
+    },
+    {
+      "ctx": "Find all zeros in the indicated finite field of the given po",
       "label": 3,
+      "pred": 2,
+      "scores": [
+        33073,
+        34412,
+        35245,
+        33887
+      ]
+    },
+    {
+      "ctx": "Statement 1 | A factor group of a non-Abelian group is non-A",
+      "label": 1,
+      "pred": 1,
+      "scores": [
+        33670,
+        34432,
+        33548,
+        34317
+      ]
+    },
+    {
+      "ctx": "Find the product of the given polynomials in the given polyn",
+      "label": 1,
       "pred": 3,
       "scores": [
-        34045,
-        33565,
-        33480,
-        34067
-      ]
-    },
-    {
-      "ctx": "A lady walks to a barbell. She bends down and grabs the pole",
-      "label": 3,
-      "pred": 0,
-      "scores": [
-        34182,
-        33765,
-        33534,
-        33921
-      ]
-    },
-    {
-      "ctx": "Two women in a child are shown in a canoe while a man pulls ",
-      "label": 2,
-      "pred": 2,
-      "scores": [
-        33372,
-        33322,
-        34356,
-        33293
-      ]
-    },
-    {
-      "ctx": "A boy is running down a track. the boy",
-      "label": 2,
-      "pred": 2,
-      "scores": [
-        34101,
-        34286,
-        34340,
-        33488
-      ]
-    },
-    {
-      "ctx": "The boy lifts his body above the height of a pole. The boy l",
-      "label": 1,
-      "pred": 2,
-      "scores": [
-        33642,
-        34037,
-        34508,
-        33339
+        33732,
+        32967,
+        33738,
+        33975
       ]
     }
   ]
