@@ -124,6 +124,11 @@ public final class ConsciousnessLoop {
         long predErr = computePredictionError(raw, lastDecision);
         lastPredictionError = predErr;
         // 9. attention update — implicitly by overwriting lastAttended
+        //    ALSO: if perception is a FeedbackPerception, feed the
+        //    action output back so the next tick sees its own output.
+        if (perception instanceof FeedbackPerception fp) {
+            fp.lastAction(lastDecision);
+        }
         return new TickSnapshot(tickId, attentionScore, predErr,
                 arb.outcome() == ActionArena.Outcome.EXECUTED ? 1 : 0);
     }
