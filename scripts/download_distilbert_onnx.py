@@ -30,9 +30,13 @@ def main() -> int:
         return 1
 
     tok = AutoTokenizer.from_pretrained(MODEL_ID, cache_dir=str(OUT_DIR / ".cache"))
+    if tok.pad_token is None:
+        tok.pad_token = tok.eos_token  # GPT-2 has no pad token by default
     model = AutoModelForSequenceClassification.from_pretrained(
         MODEL_ID, cache_dir=str(OUT_DIR / ".cache"),
-        ignore_mismatched_sizes=True)
+        ignore_mismatched_sizes=True, num_labels=2)
+    # extend embedding if we added a pad token
+    model.resize_token_embeddings(len(tok))
     tok.save_pretrained(str(OUT_DIR))
     model.save_pretrained(str(OUT_DIR))
     print(f"[M-A.T.R.I.X.2] HF model + tokenizer saved")
