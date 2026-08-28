@@ -8,9 +8,16 @@ import os
 import sys
 from pathlib import Path
 
-# canonical small model — ~22 MB on disk
-MODEL_ID = "sshleifer/tiny-distilbert-base-uncased-finetuned-sst-2-english"
-OUT_DIR = Path("models/external/distilbert-sst2")
+# canonical small model — ~22 MB on disk; M-A.T.R.I.X.2 used the tiny
+# variant; M-A.T.R.I.X.3 uses the real (non-tiny) DistilBERT for better
+# fidelity. Pass the model ID as $MODEL_ID env var to override.
+import os
+MODEL_ID = os.environ.get(
+    "MATRIX_MODEL_ID",
+    "distilbert-base-uncased-finetuned-sst-2-english",
+)
+OUT_DIR_NAME = os.environ.get("MATRIX_OUT_DIR", "distilbert-base-sst2")
+OUT_DIR = Path("models/external") / OUT_DIR_NAME
 OUT_DIR.mkdir(parents=True, exist_ok=True)
 
 
