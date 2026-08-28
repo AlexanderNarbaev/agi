@@ -66,6 +66,7 @@ public class OpenAIChatResource {
     private final EthicalFilter ethicalFilter;
     private final Text2VecService text2vec;
     private final PureBirGenerator pureBir;
+    private final io.matrix.imports.BooleanChainRunner chainRunner;
     private final Random rng;
     private final List<String> responseHistory;
     private int stuckCounter;
@@ -95,7 +96,8 @@ public class OpenAIChatResource {
     @Inject
     OpenAIChatResource(MatrixMetrics metrics, AgentBrainService brainService,
                        Text2VecService text2Vec, EthicalFilter ethicalFilter,
-                       io.matrix.model.ModelRegistry modelRegistry) {
+                       io.matrix.model.ModelRegistry modelRegistry,
+                       io.matrix.imports.BooleanChainRunner chainRunner) {
         this.metrics = metrics;
         this.brainService = brainService;
         this.text2vec = text2Vec;
@@ -107,6 +109,12 @@ public class OpenAIChatResource {
         // W6.2: pipeline enricher (sentiment + topic routing via distilled BIR models)
         this.enricher = modelRegistry == null ? null
                 : new ChatPipelineEnricher(modelRegistry);
+        // Wave A: wire the boolean-chain runner (Qwen2.5-0.5B / SmolLM2 / TinyLlama
+        // weights loaded from /tmp/opencode/matrix-import). When empty (no
+        // safetensors found), the chat falls back to PureBirGenerator.
+        this.chainRunner = chainRunner == null
+                ? io.matrix.imports.BooleanChainRunner.empty()
+                : chainRunner;
     }
 
     public OpenAIChatResource() {
@@ -115,6 +123,7 @@ public class OpenAIChatResource {
         this.text2vec = new Text2VecService();
         this.ethicalFilter = new EthicalFilter();
         this.pureBir = new PureBirGenerator();
+        this.chainRunner = io.matrix.imports.BooleanChainRunner.empty();
         this.rng = new Random();
         this.responseHistory = new ArrayList<>();
         this.stuckCounter = 0;
@@ -241,6 +250,32 @@ public class OpenAIChatResource {
             long pureBirBits = pureBir.generate(sensorBits);
             response = text2vec.bitsToResponse(pureBirBits);
             String generated = response;
+
+            // Wave A: if the boolean chain has layers loaded, use it as
+            // the PRIMARY path (overrides the deterministic PureBirGenerator).
+            // The chain is layer-agnostic and runs the imported LLM weights.
+            if (chainRunner.layerCount() > 0) {
+                // convert sensorBits (long) to boolean[] for the chain
+                int inputBits = 64;  // Text2VecService produces a 64-bit vector
+                boolean[] chainInput = new boolean[inputBits];
+                long bitMask = 1L;
+                for (int i = 0; i < inputBits; i++) {
+                    chainInput[i] = (sensorBits & bitMask) != 0;
+                    bitMask <<= 1;
+                }
+                boolean[] chainOutput = chainRunner.evaluate(chainInput);
+                long chainBits = 0L;
+                for (int i = 0; i < Math.min(64, chainOutput.length); i++) {
+                    if (chainOutput[i]) chainBits |= (1L << i);
+                }
+                String chainResponse = text2vec.bitsToResponse(chainBits);
+                if (chainResponse != null && !chainResponse.isBlank()) {
+                    response = chainResponse;
+                    generated = response;
+                    // chain-routed responses are tracked via the
+                    // /v1/chain-status endpoint (chainRunner.totalEvalCount)
+                }
+            }
 
             // Optional flavor: prepend memory context as semantic scaffold
             // (visible to user, but the generation itself is pure boolean)
