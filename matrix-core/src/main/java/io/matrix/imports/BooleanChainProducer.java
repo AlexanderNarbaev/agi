@@ -59,7 +59,8 @@ public class BooleanChainProducer {
             log.warn("matrix.chain.path does not exist: {} — runner empty", p);
             return BooleanChainRunner.empty();
         }
-        return loadSafetensors(p, prefix, budget);
+        // Wave I: load ALL transformer blocks via FullChainLoader
+        return FullChainLoader.loadAll(p, budget, prefix);
     }
 
     private BooleanChainRunner autoDetect() {
@@ -91,8 +92,8 @@ public class BooleanChainProducer {
     }
 
     private static BooleanChainRunner loadSafetensors(Path safetensors, String prefix, int budget) {
-        BooleanChainRunner r = BooleanChainRunner.loadFromSafetensors(
-                safetensors, prefix, budget);
+        // delegate to FullChainLoader for the actual loading (Wave I)
+        BooleanChainRunner r = FullChainLoader.loadAll(safetensors, budget, prefix);
         log.info("loaded BooleanChainRunner: model={} layers={} neurons={} src={}",
                 r.modelName(), r.layerCount(), r.totalNeurons(), r.sourcePath());
         return r;
