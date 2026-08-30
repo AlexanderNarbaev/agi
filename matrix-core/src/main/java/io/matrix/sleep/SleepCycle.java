@@ -37,7 +37,8 @@ public final class SleepCycle {
     public SleepCycle(HierarchicalMemory memory,
                       ConsolidationCycle consolidation,
                       Anonymizer anonymizer) {
-        this.memory = Objects.requireNonNull(memory, "memory");
+        // null-safe: cycle runs even without memory (no promotions)
+        this.memory = memory;
         this.consolidation = consolidation;
         this.anonymizer = anonymizer;
     }
