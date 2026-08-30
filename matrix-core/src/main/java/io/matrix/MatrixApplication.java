@@ -21,6 +21,16 @@ public class MatrixApplication implements QuarkusApplication {
     @Inject
     CommandLine.IFactory factory;
 
+    /**
+     * Static main for native-image entry-point. Quarkus 3.38.3 +
+     * GraalVM 25.x has trouble auto-detecting the main class when it
+     * implements {@link QuarkusApplication}, so we provide an explicit
+     * static main that calls {@link Quarkus#run(Class, String...)}.
+     */
+    public static void main(String... args) {
+        Quarkus.run(MatrixApplication.class, args);
+    }
+
     @Override
     public int run(String... args) {
         if (args.length == 0) {
