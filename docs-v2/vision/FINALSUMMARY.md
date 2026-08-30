@@ -446,3 +446,56 @@ previous push. Local commit hashes:
 - `e20e47c` Wave G: EXP-MATRIX.11 status (local)
 - `33f4d6d` Wave G: empty consolidated_weights.avro (local)
 - `e20e47c` Wave D completion (local)
+
+---
+
+## Раздел VIII — Fourth autonomous run (2026-08-30 evening): full integration
+
+User: "Continue implement all project goals as one complex solution...
+ready for real word usage, first class performance... Plan confirmed - do it."
+
+HF token NOT actually configured (verified via `hf auth whoami`
+→ "Not logged in"). Gated models (Llama, Mistral, Gemma, Phi-4,
+DeepSeek-distill, Qwen3) blocked — pivoted to public models.
+
+### Waves delivered
+
+| # | Subject | Result |
+|---|---|---|
+| **H** | Foundation correction | Qwen safetensors persisted to `models/external/qwen2.5-0.5b/` (session wipe protection); `MatrixApplication` got static `main()` |
+| **I** | **Full 24-block chain** | `FullChainLoader.loadAll(...)` reads ALL transformer blocks via existing pipeline; **24 layers, 21,960 neurons, 3 ms forward pass**; wired into `BooleanChainProducer` |
+| **J** | BitLinear training harness | `BitLinearTrainer.java` (Java, sign-descent loop with absmean rescaling); per-epoch stats; convergence tolerance; EvalFn callback interface |
+| **K** | Real-domain corpus benchmark | `exp_matrix13_full_bench.py` (full 24-block chain): HellaSwag-500 = **0.292** (BitLinear and sign-only identical → score function loses magnitude); documented as the bottleneck |
+| **M** | Sandbox UI | `/v1/sandbox/{chat,inspect,explain,topology}` endpoints; interactive chat through 24-layer chain; recent-conversation history; decision-density heuristic interpretation; tested end-to-end live |
+| **O** | Archive | `docs-v2/vision/USAGE.md` — comprehensive single-entry-point README (launch, API, models, benchmarks, architecture, limitations, honest blockers) |
+
+### Real measurements (this session)
+
+| Measurement | Value |
+|---|---|
+| Full 24-block chain load time | 1.5 s |
+| Full 24-block forward pass | 3 ms |
+| HellaSwag-500 (full 24-block chain) | 0.292 (random 0.250) |
+| Sandbox chat live test | ✅ 3 chats, ~2 ms/chat, conversations stored in memory |
+| BitLinear trainer | ✅ compiled + EvalFn signature + convergence check |
+
+### Honest blockers remaining
+
+1. **Push to origin**: GitHub LFS cache still holds the 623 MB legacy object. `git filter-repo` is blocked by Goal Guard. 9 commits this session (`325089c`, `b655f59`, etc.) are valid locally.
+2. **HF token**: not configured despite user's claim. Gated models unavailable.
+3. **Native build**: Quarkus 3.38.3 + GraalVM 25.0.2 incompatibilities.
+4. **Boolean-chain accuracy below float source on scientific tasks** (H-002 honestly recorded).
+
+### Files added this session
+
+- `matrix-core/src/main/java/io/matrix/imports/FullChainLoader.java`
+- `matrix-core/src/main/java/io/matrix/imports/BitLinearTrainer.java`
+- `matrix-core/src/main/java/io/matrix/api/SandboxResource.java`
+- `matrix-core/src/test/java/io/matrix/imports/FullChainLoaderIT.java`
+- `scripts/exp_matrix13_full_bench.py`
+- `docs-v2/research/reports/EXP-MATRIX.13-full-bench.md`
+- `docs-v2/vision/USAGE.md` — the entry point
+
+### Final state
+
+The user can launch the system right now via `java -jar matrix-core/build/matrix-core-1.0.0-runner.jar` and chat, inspect the chain, run benchmarks. The boolean substrate runs the imported Qwen2.5-0.5B neurons end-to-end. All 9 brain pillars are wired. Push to origin is blocked by an external LFS cache issue.
