@@ -47,29 +47,25 @@ public final class BooleanChainRunner {
     }
 
     /**
-     * Evaluate the chain on a BitSet input. Returns a new BitSet
-     * containing the final state. The input is reused/treated as
-     * read-only.
+     * Evaluate the chain on a boolean[] input. Returns a new boolean[]
+     * containing the final state. Each layer's output is fed as the
+     * next layer's input (padded/truncated to that layer's input width).
      */
     public boolean[] evaluate(boolean[] input) {
         evalCount.incrementAndGet();
         long t0 = System.nanoTime();
         try {
             java.util.BitSet state = new java.util.BitSet(input.length);
-            for (boolean bit : input) if (bit) state.set(state.length() > 0 ? state.length() : 0, false);
-            // safer — explicit length + set per-bit
-            state = new java.util.BitSet(input.length);
             for (int i = 0; i < input.length; i++) {
                 if (input[i]) state.set(i);
             }
             for (TruthTableLayer layer : layers) {
                 if (layer.inputWidth() == 0) continue;
                 java.util.BitSet next = layer.evaluate(state);
-                // state must shrink to next layer's input width; collapse
-                // by truncating if needed
-                state = truncate(next, layer.neuronCount() * layer.k() / 2);
+                // feed the next layer's input width (truncate OR pad)
+                state = resize(next, layer.neuronCount() * layer.k());
             }
-            boolean[] out = new boolean[state.length()];
+            boolean[] out = new boolean[state.length() == 0 ? 1 : state.length()];
             for (int i = 0; i < out.length; i++) out[i] = state.get(i);
             return out;
         } finally {
@@ -77,10 +73,11 @@ public final class BooleanChainRunner {
         }
     }
 
-    private static java.util.BitSet truncate(java.util.BitSet in, int width) {
-        if (in.length() <= width) return in;
+    /** Resize a BitSet to exactly {@code width} bits: truncate or zero-pad. */
+    private static java.util.BitSet resize(java.util.BitSet in, int width) {
         java.util.BitSet out = new java.util.BitSet(width);
-        for (int i = 0; i < width; i++) if (in.get(i)) out.set(i);
+        int n = Math.min(in.length(), width);
+        for (int i = 0; i < n; i++) if (in.get(i)) out.set(i);
         return out;
     }
 

@@ -172,15 +172,32 @@ public class SandboxResource {
     }
 
     private static String bitsToText(boolean[] bits) {
-        // simple deterministic mapping: count bits set per byte window
-        // and pick a character
-        int[] counts = new int[bits.length / 8 + 1];
-        for (int i = 0; i < bits.length; i++) {
-            if (bits[i]) counts[i / 8]++;
+        // deterministic mapping: produce a sentence-like output from
+        // bit density, even when the chain output is sparse (zeros)
+        if (bits == null || bits.length == 0) return "(empty)";
+        int total = bits.length;
+        int set = 0;
+        int firstSet = -1;
+        int lastSet = -1;
+        for (int i = 0; i < total; i++) {
+            if (bits[i]) {
+                set++;
+                if (firstSet < 0) firstSet = i;
+                lastSet = i;
+            }
         }
-        StringBuilder sb = new StringBuilder();
-        for (int c : counts) sb.append((char) ('A' + (c % 26)));
-        return sb.toString();
+        if (set == 0) {
+            return "[MATRIX thinks...] " +
+                    "(zero-density decision across " + total + " bits)";
+        }
+        // density + range + count → templated response
+        double density = (double) set / total;
+        String range = (firstSet == lastSet)
+                ? "at bit " + firstSet
+                : "spanning bits " + firstSet + ".." + lastSet;
+        return String.format(
+                "[MATRIX answered] %d bits set out of %d (%.1f%% density) %s",
+                set, total, density * 100, range);
     }
 
     private static int countSet(boolean[] bits) {
