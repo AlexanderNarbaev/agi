@@ -1,114 +1,25 @@
 [
   {
     "name": "io.matrix.neuron.TruthTable",
-    "allDeclaredMethods": true,
-    "allDeclaredFields": true,
-    "allDeclaredConstructors": true
-  },
-  {
-    "name": "io.matrix.neuron.DecisionTree",
-    "allDeclaredMethods": true,
-    "allDeclaredFields": true,
-    "allDeclaredConstructors": true
-  },
-  {
-    "name": "io.matrix.neuron.NeuronLayer",
+    "allDeclaredConstructors": true,
     "allDeclaredMethods": true,
     "allDeclaredFields": true
   },
   {
-    "name": "io.matrix.neuron.HierarchicalBrain",
+    "name": "io.matrix.neuron.DecisionTree",
+    "allDeclaredConstructors": true,
     "allDeclaredMethods": true,
     "allDeclaredFields": true
   },
   {
     "name": "io.matrix.evolution.Chromosome",
-    "allDeclaredMethods": true,
-    "allDeclaredFields": true,
-    "allDeclaredConstructors": true
-  },
-  {
-    "name": "io.matrix.evolution.Population",
-    "allDeclaredMethods": true,
-    "allDeclaredFields": true
-  },
-  {
-    "name": "io.matrix.evolution.EvolutionLoop",
-    "allDeclaredMethods": true,
-    "allDeclaredFields": true
-  },
-  {
-    "name": "io.matrix.agent.AgentState",
-    "allDeclaredMethods": true,
-    "allDeclaredFields": true
-  },
-  {
-    "name": "io.matrix.agent.AgentAction",
-    "allDeclaredMethods": true,
-    "allDeclaredFields": true
-  },
-  {
-    "name": "io.matrix.agent.AgentGenome",
-    "allDeclaredMethods": true,
-    "allDeclaredFields": true
-  },
-  {
-    "name": "io.matrix.consensus.Vote",
-    "allDeclaredMethods": true,
-    "allDeclaredFields": true
-  },
-  {
-    "name": "io.matrix.consensus.Proposal",
+    "allDeclaredConstructors": true,
     "allDeclaredMethods": true,
     "allDeclaredFields": true
   },
   {
     "name": "io.matrix.events.ClusterEvent",
-    "allDeclaredMethods": true,
-    "allDeclaredFields": true
-  },
-  {
-    "name": "io.matrix.events.ClusterEventType",
-    "allDeclaredMethods": true,
-    "allDeclaredFields": true
-  },
-  {
-    "name": "io.matrix.noosphere.FnlPackage",
-    "allDeclaredMethods": true,
-    "allDeclaredFields": true
-  },
-  {
-    "name": "io.matrix.privacy.Tombstone",
-    "allDeclaredMethods": true,
-    "allDeclaredFields": true
-  },
-  {
-    "name": "io.matrix.ethics.EthicalVerdict",
-    "allDeclaredMethods": true,
-    "allDeclaredFields": true
-  },
-  {
-    "name": "io.matrix.mediator.Task",
-    "allDeclaredMethods": true,
-    "allDeclaredFields": true
-  },
-  {
-    "name": "io.matrix.mediator.Goal",
-    "allDeclaredMethods": true,
-    "allDeclaredFields": true
-  },
-  {
-    "name": "io.matrix.simulation.Position",
-    "allDeclaredMethods": true,
-    "allDeclaredFields": true
-  },
-  {
-    "name": "io.matrix.verification.PropertyViolation",
-    "allDeclaredMethods": true,
-    "allDeclaredFields": true
-  },
-  {
-    "name": "io.matrix.federated.LocalUpdate",
+    "allDeclaredConstructors": true,
     "allDeclaredMethods": true,
     "allDeclaredFields": true
   }
