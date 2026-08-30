@@ -67,6 +67,29 @@ class PersistentHierarchicalMemoryTest {
     }
 
     @Test
+    void roundTripPreservesAllEntryFields(@TempDir Path tmp) throws Exception {
+        Path target = tmp.resolve("ltm.jsonl");
+        // write
+        HierarchicalMemory mem = new HierarchicalMemory(100);
+        var entry = mem.store(HierarchicalMemory.Level.L2_MODULE,
+                "round-trip test", "test-domain",
+                Set.of("alpha", "beta", "gamma"));
+        long expectedId = entry.id().hashCode();  // arbitrary check
+        PersistentHierarchicalMemory.forTest(mem, target.toString()).flushNow();
+
+        // restore
+        HierarchicalMemory mem2 = new HierarchicalMemory(100);
+        PersistentHierarchicalMemory.forTest(mem2, target.toString()).start();
+
+        var restored = mem2.search("round-trip", 1);
+        assertThat(restored).hasSize(1);
+        assertThat(restored.get(0).content()).isEqualTo("round-trip test");
+        assertThat(restored.get(0).domain()).isEqualTo("test-domain");
+        assertThat(restored.get(0).tags()).containsExactlyInAnyOrder(
+                "alpha", "beta", "gamma");
+    }
+
+    @Test
     void restoreOnMissingFileIsNoOp(@TempDir Path tmp) throws Exception {
         Path target = tmp.resolve("missing.jsonl");
         HierarchicalMemory mem = new HierarchicalMemory(100);
@@ -116,6 +139,36 @@ class PersistentHierarchicalMemoryTest {
             assertThat(line).contains("parseable entry");
             assertThat(line).contains("L2_MODULE");
         }
+    }
+
+    @Test
+    void storeListenerMarksDirty(@TempDir Path tmp) throws Exception {
+        // the store→flush path: when HierarchicalMemory.store fires, the
+        // listener registered by PersistentHierarchicalMemory should mark
+        // dirty, and a flushIfDirtyNow should write to disk
+        HierarchicalMemory mem = new HierarchicalMemory(100);
+        Path target = tmp.resolve("ltm.jsonl");
+        PersistentHierarchicalMemory p =
+                PersistentHierarchicalMemory.forTest(mem, target.toString());
+
+        // manually register the listener (skip PostConstruct because
+        // we want explicit control of the persistence path)
+        mem.addStoreListener(entry -> p.markDirty());
+
+        // initially file doesn't exist
+        assertThat(Files.exists(target)).isFalse();
+        // a store marks dirty; flushIfDirtyNow should write
+        mem.store(HierarchicalMemory.Level.L1_PATTERN,
+                "dirty after store", "x", Set.of());
+        assertThat(p.dirtyForTest()).isTrue();
+        p.flushIfDirtyNow();
+        assertThat(Files.exists(target)).isTrue();
+        assertThat(countLines(target)).isEqualTo(1);
+        // second store + flush adds another line
+        mem.store(HierarchicalMemory.Level.L1_PATTERN,
+                "second entry", "x", Set.of());
+        p.flushIfDirtyNow();
+        assertThat(countLines(target)).isEqualTo(2);
     }
 
     private static long countLines(Path p) throws IOException {
