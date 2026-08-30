@@ -77,8 +77,14 @@ public final class BitLinearTrainer {
         Map<String, List<TruthTable>> working = deepCopyNeurons(initialNeurons);
 
         java.util.List<TrainerStats> history = new java.util.ArrayList<>();
-        double prevLoss = Double.POSITIVE_INFINITY;
+        // initial prevLoss = +0 (lower bound for loss) so that
+        // (prevLoss - loss) > tol is false on the first epoch,
+        // avoiding the "hadAnyImprovement = true" bug when prevLoss
+        // is +Infinity (since +Inf - x > tol is always true).
+        double prevLoss = 0.0;
+        double prevLoss2 = 0.0;
         double prevAcc = Double.NaN;
+        boolean hadAnyImprovement = false;
 
         for (int epoch = 0; epoch < epochs; epoch++) {
             StatsCollector stats = new StatsCollector();
@@ -108,10 +114,19 @@ public final class BitLinearTrainer {
             history.add(ts);
             if (epochListener != null) epochListener.accept(ts);
 
-            if (Math.abs(prevLoss - loss) < lossTolerance && epoch > 0) {
-                // convergence: loss stopped improving
+            // convergence check: stop only after loss has actually
+            // decreased at some point (proves we made progress) AND the
+            // loss has been flat for the last two epochs. A flat eval
+            // that never improves never triggers convergence.
+            boolean thisEpochImproved = (prevLoss - loss) > lossTolerance;
+            boolean flatTwoEpochs = epoch >= 2
+                    && Math.abs(prevLoss - loss) < lossTolerance
+                    && Math.abs(prevLoss2 - loss) < lossTolerance;
+            if (thisEpochImproved) hadAnyImprovement = true;
+            if (hadAnyImprovement && flatTwoEpochs) {
                 break;
             }
+            prevLoss2 = prevLoss;
             prevLoss = loss;
             prevAcc = evalAcc;
         }

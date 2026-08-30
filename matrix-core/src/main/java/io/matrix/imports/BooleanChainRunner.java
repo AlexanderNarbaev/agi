@@ -50,11 +50,20 @@ public final class BooleanChainRunner {
      * Evaluate the chain on a boolean[] input. Returns a new boolean[]
      * containing the final state. Each layer's output is fed as the
      * next layer's input (padded/truncated to that layer's input width).
+     *
+     * <p>If the chain has no layers, returns a copy of the input
+     * (preserving length, including trailing zeros).
      */
     public boolean[] evaluate(boolean[] input) {
         evalCount.incrementAndGet();
         long t0 = System.nanoTime();
         try {
+            if (layers.isEmpty()) {
+                // pass-through: return a copy of the input (don't mutate caller state)
+                boolean[] out = new boolean[input.length];
+                System.arraycopy(input, 0, out, 0, input.length);
+                return out;
+            }
             java.util.BitSet state = new java.util.BitSet(input.length);
             for (int i = 0; i < input.length; i++) {
                 if (input[i]) state.set(i);
@@ -148,20 +157,23 @@ public final class BooleanChainRunner {
     }
 
     /**
-     * Parse the layer index from a tensor name. Returns -1 if the
-     * tensor doesn't match the expected {@code <prefix>.layers.{N}.{...}}
-     * pattern.
+     * Parse the layer index from a tensor name. Supports two patterns:
+     *   {@code <prefix>.layers.{N}.{...}}   — Qwen, SmolLM, TinyLlama, GPT-Neo
+     *   {@code <prefix>.h.{N}.{...}}        — Mistral, Llama, Phi
+     * Returns -1 if the tensor doesn't match either pattern.
      */
     static int extractLayerIndex(String tensorName, String prefix) {
-        String needle = prefix + ".layers.";
-        int idx = tensorName.indexOf(needle);
-        if (idx < 0) return -1;
-        int dot = tensorName.indexOf('.', idx + needle.length());
-        if (dot < 0) return -1;
-        try {
-            return Integer.parseInt(tensorName.substring(idx + needle.length(), dot));
-        } catch (NumberFormatException e) {
-            return -1;
+        for (String needle : new String[]{prefix + ".layers.", prefix + ".h."}) {
+            int idx = tensorName.indexOf(needle);
+            if (idx < 0) continue;
+            int dot = tensorName.indexOf('.', idx + needle.length());
+            if (dot < 0) continue;
+            try {
+                return Integer.parseInt(tensorName.substring(idx + needle.length(), dot));
+            } catch (NumberFormatException ignored) {
+                // try the next pattern
+            }
         }
+        return -1;
     }
 }
