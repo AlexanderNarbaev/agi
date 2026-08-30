@@ -38,6 +38,9 @@ public class SandboxResource {
     @Inject
     ModelRegistry modelRegistry;
 
+    @Inject
+    ExpandedTextToBitsService textEncoder;
+
     private final AtomicLong conversationCount = new AtomicLong();
     private final List<Map<String, Object>> recentConversations =
             java.util.Collections.synchronizedList(new ArrayList<>());
@@ -60,8 +63,8 @@ public class SandboxResource {
     public Map<String, Object> chat(Map<String, Object> body) {
         conversationCount.incrementAndGet();
         String input = (String) body.getOrDefault("input", "");
-        // run the chain: bits from the input → forward pass → decision bits
-        boolean[] bits = textToBits(input, 896);  // Qwen 0.5B hidden dim
+        // use the expanded position-aware encoder (896 bits, matches Qwen hidden dim)
+        boolean[] bits = textEncoder.textToBits(input);
         boolean[] decision;
         long t0 = System.nanoTime();
         if (chainRunner.layerCount() > 0) {
