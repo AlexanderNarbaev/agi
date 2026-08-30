@@ -2,9 +2,11 @@ package io.matrix.memory;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.matrix.bir.TtForm;
+import io.quarkus.runtime.StartupEvent;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.event.Observes;
 import jakarta.inject.Inject;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
@@ -53,12 +55,22 @@ public class PersistentHierarchicalMemory {
     private ScheduledExecutorService flushExecutor;
     private volatile boolean dirty = false;
 
-    @PostConstruct
+    /** Quarkus startup hook: ensures persistence is active even if nothing
+     *  @Inject's this bean directly. */
+    void onStart(@Observes StartupEvent ev) {
+        start();
+    }
+
     void start() {
         if (!enabled) {
             log.info("PersistentHierarchicalMemory: persistence disabled by config");
             return;
         }
+        // 0. register a listener so every store() marks the memory dirty
+        memory.addStoreListener(entry -> {
+            dirty = true;
+            log.debugf("LTM marked dirty by store of '%s'", entry.content());
+        });
         // 1. restore from disk if file exists
         try {
             restore();
@@ -90,9 +102,21 @@ public class PersistentHierarchicalMemory {
         if (flushExecutor != null) flushExecutor.shutdownNow();
     }
 
-    /** Mark the memory as dirty (called by HierarchicalMemory wrapper if needed). */
+    /** Mark the memory as dirty — call this after every {@link HierarchicalMemory#store}
+     *  so the periodic flusher picks up the new entries. The flush executor
+     *  runs at the configured interval. */
     public void markDirty() {
         dirty = true;
+    }
+
+    /** Test-only: read the dirty flag. */
+    public boolean dirtyForTest() {
+        return dirty;
+    }
+
+    /** Force-flush synchronously. Use for testing or shutdown paths. */
+    public void flushIfDirtyNow() {
+        flushIfDirty();
     }
 
     /** Force a flush now (e.g. for tests). */

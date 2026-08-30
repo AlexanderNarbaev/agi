@@ -108,6 +108,13 @@ public final class HierarchicalMemory {
 
     private final Map<String, MemoryEntry> entries = new ConcurrentHashMap<>();
     private final Map<Level, Set<String>> levelIndex = new ConcurrentHashMap<>();
+    private final java.util.List<java.util.function.Consumer<MemoryEntry>> storeListeners =
+            new java.util.concurrent.CopyOnWriteArrayList<>();
+
+    /** Register a callback fired on every successful {@link #store}. */
+    public void addStoreListener(java.util.function.Consumer<MemoryEntry> listener) {
+        storeListeners.add(listener);
+    }
     private final Map<String, Set<String>> domainIndex = new ConcurrentHashMap<>();
     private final AtomicLong idCounter = new AtomicLong(0);
     private final int maxEntries;
@@ -138,6 +145,13 @@ public final class HierarchicalMemory {
         entries.put(id, entry);
         levelIndex.get(level).add(id);
         domainIndex.computeIfAbsent(domain, k -> ConcurrentHashMap.newKeySet()).add(id);
+        for (var listener : storeListeners) {
+            try {
+                listener.accept(entry);
+            } catch (Exception ignored) {
+                // listeners must not break the store path
+            }
+        }
 
         // Auto-evict L0 if over capacity
         if (entries.size() > maxEntries) {
