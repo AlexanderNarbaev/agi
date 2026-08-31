@@ -41,6 +41,9 @@ public class SandboxResource {
     @Inject
     ExpandedTextToBitsService textEncoder;
 
+    @Inject
+    BpeTokenizerProvider bpeProvider;
+
     private final AtomicLong conversationCount = new AtomicLong();
     private final List<Map<String, Object>> recentConversations =
             java.util.Collections.synchronizedList(new ArrayList<>());
@@ -63,8 +66,17 @@ public class SandboxResource {
     public Map<String, Object> chat(Map<String, Object> body) {
         conversationCount.incrementAndGet();
         String input = (String) body.getOrDefault("input", "");
-        // use the expanded position-aware encoder (896 bits, matches Qwen hidden dim)
-        boolean[] bits = textEncoder.textToBits(input);
+        // prefer real BPE tokenization when the Qwen tokenizer files are
+        // available; fall back to the position-aware hash encoder
+        boolean[] bits;
+        String encodingMethod;
+        if (bpeProvider.isAvailable()) {
+            bits = bpeProvider.textToBits(input, 896);
+            encodingMethod = "bpe-qwen";
+        } else {
+            bits = textEncoder.textToBits(input);
+            encodingMethod = "hash-fallback";
+        }
         boolean[] decision;
         long t0 = System.nanoTime();
         if (chainRunner.layerCount() > 0) {
@@ -84,6 +96,7 @@ public class SandboxResource {
         record.put("forward_ms", forwardMs);
         record.put("decision_bits_set", countSet(decision));
         record.put("decision_bits_total", decision.length);
+        record.put("encoding", encodingMethod);
         record.put("chain_used", chainRunner.layerCount() > 0);
         record.put("conversation_id", conversationCount.get());
         recentConversations.add(record);
