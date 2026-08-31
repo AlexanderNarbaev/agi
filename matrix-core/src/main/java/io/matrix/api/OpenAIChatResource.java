@@ -2,6 +2,7 @@ package io.matrix.api;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.matrix.agent.AgentBrainService;
+import io.matrix.imports.BooleanChainRunner;
 import io.matrix.bir.PureBirGenerator;
 import io.matrix.brain.BrainPipeline;
 import io.matrix.chat.ConversationRecord;
@@ -262,12 +263,22 @@ public class OpenAIChatResource {
                     chainInput[i] = (sensorBits & bitMask) != 0;
                     bitMask <<= 1;
                 }
-                boolean[] chainOutput = chainRunner.evaluate(chainInput);
+                BooleanChainRunner.ChainResult chainResult =
+                        chainRunner.evaluateWithScore(chainInput);
+                boolean[] chainOutput = chainResult.bits();
                 long chainBits = 0L;
                 for (int i = 0; i < Math.min(64, chainOutput.length); i++) {
                     if (chainOutput[i]) chainBits |= (1L << i);
                 }
-                String chainResponse = text2vec.bitsToResponse(chainBits);
+                // magnitude-aware scoring: even when the chain output
+                // is sparse (e.g. only 1-2 bits set for a benign input),
+                // the weightedScore captures how strongly the chain fired.
+                // Use it to bias the action code rather than only the bits.
+                long chainScore = (long) Math.min(Integer.MAX_VALUE,
+                        Math.max(0, chainResult.weightedScore()));
+                long chainBitsWithScore = chainBits ^ (chainScore << 32);
+
+                String chainResponse = text2vec.bitsToResponse(chainBitsWithScore);
                 if (chainResponse != null && !chainResponse.isBlank()) {
                     response = chainResponse;
                     generated = response;
