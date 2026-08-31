@@ -374,7 +374,7 @@ public class AgentBrainService {
             log.warn("BIR training: no corpus found");
             return;
         }
-        var trainer = new TsetlinTrainer(64, Math.min(10, inputs.size()), 5, new java.util.Random(42));
+        var trainer = new TsetlinTrainer(20, Math.min(10, inputs.size()), 5, new java.util.Random(42));
         long[][] inputArr = inputs.toArray(new long[0][]);
         boolean[] labelArr = new boolean[labels.size()];
         for (int i = 0; i < labels.size(); i++) labelArr[i] = labels.get(i);

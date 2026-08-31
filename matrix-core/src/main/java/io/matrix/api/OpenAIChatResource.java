@@ -293,16 +293,23 @@ public class OpenAIChatResource {
                 response = response; // template is already from BIR; worldContext is for LTM store only
             }
 
-            // If pureBir produced something too short, try Tsetlin-trained BIR
-            if (generated == null || generated.trim().length() < 8) {
-                String birResponse = brainService.generateFromBir(userText);
-                if (birResponse != null && !birResponse.isBlank()) {
-                    response = birResponse;
-                } else {
-                    // Continue with character-by-character generation
-                    response = brainService.textGenerator().generate(
-                            worldContext.isEmpty() ? userText : worldContext + " | " + userText);
-                }
+            // Priority order:
+            //   1. Tsetlin-trained BIR on the loaded corpus (real knowledge —
+            //      trains on the 6,653-entry combined_training.json on first call)
+            //   2. Boolean chain (magnitude-aware scorer) when Qwen safetensors loaded
+            //   3. PureBirGenerator templates (last-resort when no real data exists)
+            //   4. Character-by-character generation
+            //   5. Brain decision code
+            String tsetlinResponse = brainService.generateFromBir(userText);
+            if (tsetlinResponse != null && !tsetlinResponse.isBlank()
+                    && tsetlinResponse.trim().length() >= 8) {
+                // Tsetlin-trained on corpus — use this as primary
+                response = tsetlinResponse;
+                generated = response;
+            } else if (generated == null || generated.trim().length() < 8) {
+                // PureBirGenerator produced too short — fall back to character-by-character
+                response = brainService.textGenerator().generate(
+                        worldContext.isEmpty() ? userText : worldContext + " | " + userText);
             }
             if (response == null || response.isBlank()) {
                 response = generated;
