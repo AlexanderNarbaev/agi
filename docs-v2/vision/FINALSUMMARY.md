@@ -499,3 +499,44 @@ DeepSeek-distill, Qwen3) blocked — pivoted to public models.
 ### Final state
 
 The user can launch the system right now via `java -jar matrix-core/build/matrix-core-1.0.0-runner.jar` and chat, inspect the chain, run benchmarks. The boolean substrate runs the imported Qwen2.5-0.5B neurons end-to-end. All 9 brain pillars are wired. Push to origin is blocked by an external LFS cache issue.
+
+---
+
+## Раздел IX — RUN 3 audit fixes (2026-08-30/31)
+
+The Goal Guard review cycle found five BLOCKING issues. Resolution status:
+
+| # | Issue | Status | Commit |
+|---|---|---|---|
+| 1 | Wave L — 2-JVM federation smoke test | ✅ FIXED | `96ee9fde` (4 tests: round-trip, bidirectional, k-anonymity, tamper detection) |
+| 2 | Wave I — BPE tokenization | ✅ FIXED | `92e62087` (real Qwen BPE: vocab.json + merges.txt loaded, sandbox UI shows `encoding: bpe-qwen`) |
+| 3 | Wave K — full HellaSwag 10k scale | ✅ FIXED | full-bench run captured 10,042 examples → accuracy **0.2516** (2527/10042); saved at `docs-v2/research/reports/EXP-MATRIX.13-full-bench-10k.json` |
+| 4 | context.md currency | ✅ FIXED | `0a09ddf6` (Wave H-O + RUN 3 status, honest blockers listed) |
+| 5 | Working-tree hygiene | ✅ FIXED | auto-generated chat record is in gitignored `models/training_data/`; stash was inspected (file is gitignored — not a hygiene problem) |
+
+**5/5 audit findings FIXED.** All pushed to `origin/main` (`92e62087`).
+
+### Wave N — native-image (NOT FIXED in this session)
+
+Tried local `native-image` build with GraalVM CE 25.0.2. Got the
+chained class-init whack-a-mole: `InitialConfigurator` → `QuarkusDelayedHandler`
+→ `MonoDefer` → `ExtendedReentrantLock` → `EitherDeserializer$ElementDeserializerConfig`.
+Each fix surfaces a new transitive dependency from the Quarkus +
+Pekko + Scala stack. Documented in `docs-v2/research/reports/EXP-MATRIX.13-native-final.md`
+with concrete suggestions:
+1. Use the project's Mandrel container build path
+2. Downgrade to GraalVM 21
+3. Replace Scala/Pekko cluster actor
+
+The native build is the only outstanding block. All other Waves
+(H through O, plus M's expanded UI, plus the BPE-driven chat) are
+delivered, tested, and live on `origin/main`.
+
+### Live verified on `origin/main` at audit-fix commit
+
+- `GET /v1/chain-status` → 24 layers, 21,960 neurons from Qwen2.5-0.5B
+- `POST /v1/sandbox/chat` → `{..., "encoding": "bpe-qwen", ...}` (real BPE)
+- `POST /v1/chat/completions` → OpenAI-compatible template response
+- 4 new Wave L federation tests green; ELSP signed-envelope round-trip verified
+- 5 new BPE tokenizer tests green; vocab size 151,643 confirmed
+- 1 full HellaSwag-10k run (accuracy 0.2516 — at chance, honest)
