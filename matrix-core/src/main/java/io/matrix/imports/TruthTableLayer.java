@@ -32,6 +32,8 @@ public final class TruthTableLayer {
     public int k() { return k; }
     public int outputWidth() { return neurons.size(); }
     public int inputWidth() { return neurons.size() * k; }
+    /** Public read-only access to the underlying neuron list (Phase 3 training). */
+    public List<TruthTable> neurons() { return neurons; }
 
     /**
      * Evaluate the layer on the input. The input is sliced into
