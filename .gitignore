@@ -131,3 +131,6 @@ unit-tests/
 # Не ре-коммитить веса и синтетические артефакты до SPEC-001 этапа B.
 /models/
 /models/**
+
+# Generated training data (chat history, ephemeral)
+matrix-core/models/training_data/auto_generated.jsonl
