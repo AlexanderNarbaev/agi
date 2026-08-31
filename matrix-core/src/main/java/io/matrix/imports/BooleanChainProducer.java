@@ -46,7 +46,10 @@ public class BooleanChainProducer {
     @Produces
     @ApplicationScoped
     public BooleanChainRunner runner() {
-        return build();
+        BooleanChainRunner r = build();
+        log.info("[DEBUG] BooleanChainProducer.runner() — layers={} neurons={}",
+                r.layerCount(), r.totalNeurons());
+        return r;
     }
 
     /** Build the runner (called by CDI and by tests). */
@@ -64,28 +67,22 @@ public class BooleanChainProducer {
     }
 
     private BooleanChainRunner autoDetect() {
-        // scan /tmp/opencode/matrix-import for known models
+        // Wave I + Phase 1: scan the canonical safetensors roots and
+        // combine ALL models into ONE matrix instance. Layer count is
+        // auto-discovered from the loaded models' tensor names — not
+        // hardcoded "24".
         Path[] candidates = {
-                Path.of("/tmp/opencode/matrix-import/models--Qwen--Qwen2.5-0.5B/snapshots"),
-                Path.of("/tmp/opencode/matrix-import/models--Qwen--Qwen2.5-0.5B-Instruct/snapshots"),
-                Path.of("/tmp/opencode/matrix-import/models--TinyLlama--TinyLlama-1.1B-Chat-v1.0/snapshots"),
-                Path.of("/tmp/opencode/matrix-import/models--HuggingFaceTB--SmolLM2-360M-Instruct/snapshots"),
-                Path.of("models/external/qwen2.5-0.5b/snapshots"),
-                Path.of("models/external/qwen2.5-0.5b-instruct/snapshots"),
-                Path.of("models/external/smollm2-360m/snapshots"),
-                Path.of("models/external/tinyllama-1.1b/snapshots"),
+                Path.of("/tmp/opencode/matrix-import"),
+                Path.of("models/external"),
+                Path.of("models/external/qwen2.5-0.5b"),
         };
         for (Path root : candidates) {
             if (!Files.isDirectory(root)) continue;
-            try {
-                Path safetensors = Files.walk(root, 3)
-                        .filter(p -> p.toString().endsWith(".safetensors"))
-                        .filter(Files::isRegularFile)
-                        .findFirst().orElse(null);
-                if (safetensors == null) continue;
-                log.info("auto-detected safetensors: {}", safetensors);
-                return loadSafetensors(safetensors, prefix, budget);
-            } catch (Exception ignored) {}
+            MultiModelLoader.LoadResult result = MultiModelLoader.loadFromDirectory(root);
+            if (result.isEmpty()) continue;
+            log.info("loaded {} model(s) — totalLayers={} totalNeurons={}",
+                    result.entries().size(), result.totalLayers(), result.totalNeurons());
+            return result.chain();
         }
         log.warn("no safetensors found; chain runner empty");
         return BooleanChainRunner.empty();
