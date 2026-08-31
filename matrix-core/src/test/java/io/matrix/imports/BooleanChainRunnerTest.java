@@ -2,19 +2,17 @@ package io.matrix.imports;
 
 import org.junit.jupiter.api.Test;
 
+import java.util.BitSet;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * Wave I tests for BooleanChainRunner.evaluate(): the new resize
- * semantics (truncate OR zero-pad to the next layer's input width),
- * the chain metric tracking, and edge cases.
+ * Wave I-layer-agnostic + magnitude-aware scorer tests.
  */
 class BooleanChainRunnerTest {
 
     @Test
     void emptyRunnerEvaluateReturnsInputBits() {
-        // empty chain (no layers) — should still return boolean[]
-        // matching the input width
         BooleanChainRunner runner = BooleanChainRunner.empty();
         boolean[] input = new boolean[]{true, false, true, false};
         boolean[] out = runner.evaluate(input);
@@ -43,13 +41,10 @@ class BooleanChainRunnerTest {
 
     @Test
     void extractLayerIndexHandlesVariants() {
-        // Qwen pattern
         assertThat(BooleanChainRunner.extractLayerIndex(
                 "model.layers.0.self_attn.q_proj.weight", "model")).isEqualTo(0);
-        // Mistral/transformer-style prefix
         assertThat(BooleanChainRunner.extractLayerIndex(
                 "transformer.h.5.mlp.gate_proj.weight", "transformer")).isEqualTo(5);
-        // high layer index
         assertThat(BooleanChainRunner.extractLayerIndex(
                 "model.layers.23.mlp.down_proj.weight", "model")).isEqualTo(23);
     }
@@ -73,5 +68,34 @@ class BooleanChainRunnerTest {
                 "model", 1024);
         assertThat(result.layerCount()).isZero();
         assertThat(result.totalEvalCount()).isZero();
+    }
+
+    @Test
+    void evaluateWithScoreReturnsChainResult() {
+        BooleanChainRunner runner = BooleanChainRunner.empty();
+        boolean[] input = new boolean[16];
+        for (int i = 0; i < 16; i++) input[i] = (i % 3) == 0;
+        BooleanChainRunner.ChainResult r = runner.evaluateWithScore(input);
+        assertThat(r.bits()).hasSize(16);
+        assertThat(r.weightedScore()).isEqualTo(0.0);
+        assertThat(r.neuronsFired()).isEqualTo(0);
+    }
+
+    @Test
+    void chainResultRecordFieldsAreAccessible() {
+        BooleanChainRunner.ChainResult r =
+                new BooleanChainRunner.ChainResult(
+                        new boolean[]{true, false}, 42.5, 7);
+        assertThat(r.bits()).containsExactly(true, false);
+        assertThat(r.weightedScore()).isEqualTo(42.5);
+        assertThat(r.neuronsFired()).isEqualTo(7);
+    }
+
+    @Test
+    void truthTableLayerBitSetCardinality() {
+        BitSet bs = new BitSet();
+        assertThat(TruthTableLayer.bitSetCardinality(bs)).isZero();
+        bs.set(0); bs.set(7); bs.set(15);
+        assertThat(TruthTableLayer.bitSetCardinality(bs)).isEqualTo(3);
     }
 }

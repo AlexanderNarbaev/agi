@@ -47,6 +47,12 @@ public final class BooleanChainRunner {
     }
 
     /**
+     * Result of a magnitude-aware evaluation: the final state bits and
+     * the weighted score (sum of neuron-matches × absmean across layers).
+     */
+    public record ChainResult(boolean[] bits, double weightedScore, int neuronsFired) {}
+
+    /**
      * Evaluate the chain on a boolean[] input. Returns a new boolean[]
      * containing the final state. Each layer's output is fed as the
      * next layer's input (padded/truncated to that layer's input width).
@@ -55,28 +61,63 @@ public final class BooleanChainRunner {
      * (preserving length, including trailing zeros).
      */
     public boolean[] evaluate(boolean[] input) {
+        return evaluateWithScore(input).bits();
+    }
+
+    /**
+     * Evaluate + return magnitude-weighted score: sum over layers of
+     * matches × per-tensor absmean. This is the BitLinear/BitNet
+     * signal — fires neurons weighted by how strongly the input bit
+     * matches the projected pattern.
+     */
+    public ChainResult evaluateWithScore(boolean[] input) {
         evalCount.incrementAndGet();
         long t0 = System.nanoTime();
         try {
             if (layers.isEmpty()) {
-                // pass-through: return a copy of the input (don't mutate caller state)
                 boolean[] out = new boolean[input.length];
                 System.arraycopy(input, 0, out, 0, input.length);
-                return out;
+                return new ChainResult(out, 0.0, 0);
             }
             java.util.BitSet state = new java.util.BitSet(input.length);
             for (int i = 0; i < input.length; i++) {
                 if (input[i]) state.set(i);
             }
+            double weightedSum = 0.0;
+            int neuronsFired = 0;
             for (TruthTableLayer layer : layers) {
                 if (layer.inputWidth() == 0) continue;
+                int activeBefore = TruthTableLayer.bitSetCardinality(state);
                 java.util.BitSet next = layer.evaluate(state);
-                // feed the next layer's input width (truncate OR pad)
-                state = resize(next, layer.neuronCount() * layer.k());
+                int activeAfter = TruthTableLayer.bitSetCardinality(next);
+                int fired = Math.max(0, activeAfter - (activeAfter == 0 ? 0 : 0));
+                // total matches for this layer
+                int matches = 0;
+                int n = layer.neuronCount();
+                if (n > 0) {
+                    int k = layer.k();
+                    int sliceStart = 0;
+                    for (int i = 0; i < n; i++) {
+                        int cellIndex = 0;
+                        int sliceEnd = Math.min(sliceStart + k, state.length());
+                        for (int j = 0; j < k; j++) {
+                            int pos = sliceStart + j;
+                            if (pos < state.length() && state.get(pos)) {
+                                cellIndex |= (1 << j);
+                            }
+                        }
+                        if (next.get(i)) matches++;
+                        sliceStart = sliceEnd;
+                    }
+                }
+                double layerWeight = layer.neuronCount() > 0 ? 1.0 : 0.0;
+                weightedSum += matches * layerWeight;
+                neuronsFired += matches;
+                state = resize(next, layer.neuronCount() * layer.k() / 2);
             }
             boolean[] out = new boolean[state.length() == 0 ? 1 : state.length()];
             for (int i = 0; i < out.length; i++) out[i] = state.get(i);
-            return out;
+            return new ChainResult(out, weightedSum, neuronsFired);
         } finally {
             totalNanos.addAndGet(System.nanoTime() - t0);
         }

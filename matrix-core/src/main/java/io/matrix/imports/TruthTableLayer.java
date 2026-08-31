@@ -57,4 +57,11 @@ public final class TruthTableLayer {
         }
         return out;
     }
+
+    /** Count bits set in the given BitSet (helper for magnitude scoring). */
+    public static int bitSetCardinality(BitSet bs) {
+        int n = 0;
+        for (int i = 0; i < bs.length(); i++) if (bs.get(i)) n++;
+        return n;
+    }
 }
