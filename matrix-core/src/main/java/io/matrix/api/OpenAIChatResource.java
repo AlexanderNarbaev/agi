@@ -8,7 +8,6 @@ import io.matrix.chat.ConversationRecord;
 import io.matrix.chat.ConversationRecorder;
 import io.matrix.ethics.EthicalFilter;
 import io.matrix.ethics.EthicalVerdict;
-import io.matrix.hades.DerangementDetector;
 import io.matrix.memory.HierarchicalMemory;
 import io.matrix.observability.MatrixMetrics;
 import jakarta.enterprise.context.ApplicationScoped;
