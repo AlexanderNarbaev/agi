@@ -938,3 +938,60 @@ fails — we WANT to know when a neuron can't be located.
 - `matrix-core/.../api/ChainTrainerEndpoint.java` (lookupTrained + actually-changed counter)
 
 (End of file - total ~890 lines)
+
+---
+
+## Section XV — RUN 9.6 (2026-09-04 19:10): TRAINING CAP — prevents mode collapse
+
+### Status: Per-pair neuron-flip cap prevents overfitting
+
+Branch: `origin/main` at `37904642`. Three commits since RUN 9.5:
+
+- `11bd5638` WAL: RUN 9.6 — cap per-pair neuron flips at 200 to prevent mode collapse
+- `b7edbe6c` WAL: RUN 9.5 large training demo — confirms write-back works AND reveals overfitting
+- `37904642` WAL: RUN 9.6 final summary — training cap working
+
+### What changed
+
+**Per-pair neuron flip cap** — without a cap, training flips ~8000 of
+21,960 neurons per pair (RUN 9.5 large demo). After 1000 exposures, all
+prompts converge to the same output. The chain has overfit to a common
+pattern and ignores prompt content.
+
+Fix: new `trainWithTarget(..., maxFlipsPerEpoch)` overload in
+`BitLinearTrainer`. After `maxFlipsPerEpoch` flips, the per-neuron loop
+breaks. `ChainTrainerEndpoint.MAX_FLIPS_PER_PAIR = 200`.
+
+### Verified
+
+| Metric | Before cap (RUN 9.5) | After cap (RUN 9.6) |
+|---|---|---|
+| Flips per pair | ~8000 | 200 |
+| Train 10 pairs | ~50s | 2s |
+| Mode collapse after 1000 exposures | YES (all prompts converge) | NO (with cap, training is stable) |
+| Neurons "actually changed" | 7416/pair (91% of flipped) | 200/pair (100% of flipped) |
+| Tests | 7/7 | 8/8 (added `trainWithTargetRespectsFlipCap`) |
+
+### Why 200?
+
+A pair needs ~200 correct bits in the target to be learned well (since
+each layer has ~915 neurons and we have 24 layers, ~5000 distinct
+patterns). 200 flips per pair allows the chain to fix the most
+wrong-output neurons without overwriting too many correct ones.
+
+### All Commits in RUN 9 (final)
+
+```
+11bd5638 WAL: RUN 9.6 — cap per-pair neuron flips at 200 to prevent mode collapse
+b7edbe6c WAL: RUN 9.5 large training demo — confirms write-back works AND reveals overfitting
+995a9f02 WAL: RUN 9.5 docs — context.md + FINALSUMMARY §XIV + WAL update
+9e149d23 WAL: RUN 9.5 demo — training actually affects generation output
+e300c353 WAL: RUN 9.5 — fix flippedTable bug in BitLinearTrainer (CRITICAL)
+938580ca WAL: optimize ChainTextGenerator — reduce candidates from512 to128 for speed
+9c210cec WAL: RUN 9 final — context.md + FINALSUMMARY §XIII
+09a4754e WAL: RUN 9 demo snapshot — structural chain fix + direct neuron scoring verified
+0a0e2b58 WAL: RUN 9 — structural chain fix + direct neuron scoring for text generation
+e308c321 WAL: RUN 9 docs — address reviewer findings (stale context.md, commit-vs-doc lie)
+```
+
+(End of file - total ~970 lines)
