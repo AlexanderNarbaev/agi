@@ -59,20 +59,69 @@ public class LmHead {
     /**
      * Update weights for a (chain_output, target_token) pair.
      * Called during training from Q&A pairs.
+     *
+     * <p>RUN 11: Added negative sampling. Without it, the LM head
+     * converges on the most common token (e.g., `:` in our corpus)
+     * because every (fingerprint, token) update increments the
+     * target token's weights without ever telling OTHER tokens to
+     * be less likely. Negative sampling picks K random tokens and
+     * decrements their weights for the same fingerprint — this
+     * provides contrast and prevents mode collapse.
+     *
+     * <p>Thread-safety: training is single-threaded (see
+     * {@link LmHeadTrainer#train}), so per-token {@code synchronized}
+     * blocks in {@code TokenWeights} are sufficient. Concurrent
+     * callers from other threads must serialize their calls externally.
      */
     public void update(boolean[] chainOutput, int targetToken) {
+        update(chainOutput, targetToken, 0);
+    }
+
+    public void update(boolean[] chainOutput, int targetToken, int nNegatives) {
         if (chainOutput == null || targetToken < 0) return;
         if (totalNeurons == 0) totalNeurons = chainOutput.length;
 
+        // Positive update: increment target token's weights for firing neurons.
+        // Synchronized on the TokenWeights object so concurrent updates to the
+        // same token don't corrupt the underlying double[].
         TokenWeights tw = weights.computeIfAbsent(targetToken,
                 k -> new TokenWeights(totalNeurons));
         synchronized (tw) {
             for (int i = 0; i < chainOutput.length; i++) {
                 if (i >= totalNeurons) break;
                 if (chainOutput[i]) {
-                    tw.increment(i, increment);
+                    tw.values[i] += increment;
                 } else {
-                    tw.increment(i, -decay);
+                    tw.values[i] -= decay;
+                }
+            }
+        }
+
+        // Negative sampling: pick deterministic-random tokens and decrement
+        // their weights for the same fingerprint. This prevents all tokens
+        // from looking similar (the mode-collapse problem).
+        //
+        // Determinism: seed is derived from targetToken only — no wall-clock
+        // (AGENTS.md forbids wall-clock in decision paths), so training is
+        // reproducible across runs.
+        if (nNegatives > 0) {
+            java.util.Random rng = new java.util.Random((long) targetToken * 0x9E3779B97F4A7C15L);
+            int negMax = Math.min(200000, 100000);
+            for (int n = 0; n < nNegatives; n++) {
+                int negToken;
+                do {
+                    negToken = rng.nextInt(negMax);
+                } while (negToken == targetToken);
+                TokenWeights negTw = weights.computeIfAbsent(negToken,
+                        k -> new TokenWeights(totalNeurons));
+                synchronized (negTw) {
+                    for (int i = 0; i < chainOutput.length; i++) {
+                        if (i >= totalNeurons) break;
+                        if (chainOutput[i]) {
+                            negTw.values[i] -= increment * 0.1;
+                        }
+                        // Don't decrement for non-firing — keeps gradient sparse
+                    }
                 }
             }
         }
@@ -82,6 +131,9 @@ public class LmHead {
     /**
      * Score a candidate token given the chain output.
      * Returns a score in approximately [-1, 1] (unnormalized logit).
+     *
+     * <p>Read-only; synchronized on the per-token TokenWeights so we don't
+     * observe a half-written weight array from a concurrent updater.
      */
     public double score(boolean[] chainOutput, int token) {
         if (chainOutput == null || token < 0) return 0.0;
@@ -91,23 +143,19 @@ public class LmHead {
         queryCount.incrementAndGet();
         double sum = 0.0;
         synchronized (tw) {
-            // Sum weights for firing neurons
-            int nFiring = 0;
-            int nNonFiring = 0;
+            // Sum weights for firing neurons, decay for non-firing
             for (int i = 0; i < chainOutput.length; i++) {
-                double w = tw.get(i);
+                double w = tw.values[i];
                 if (chainOutput[i]) {
                     sum += w;
-                    nFiring++;
                 } else if (w != 0) {
                     sum -= alpha * w;
-                    nNonFiring++;
                 }
             }
-            // Normalize by total neurons so scores are comparable across lengths
-            if (chainOutput.length > 0) {
-                sum /= Math.sqrt(chainOutput.length);
-            }
+        }
+        // Normalize by total neurons so scores are comparable across lengths
+        if (chainOutput.length > 0) {
+            sum /= Math.sqrt(chainOutput.length);
         }
         return sum;
     }

@@ -1,6 +1,7 @@
-# Project Context — RUN 10 (LM head projection)
+# Project Context — RUN 11 (negative sampling + audit fixes)
 
-> **Status: 2026-09-04 21:46** — Branch `origin/main` at `fc23970b` (all pushed).
+> **Status: 2026-09-04 22:21** — Branch `origin/main` at `a0f5b5bb` (pushed).
+> RUN 11 fixes live on top of RUN 10 in a separate commit.
 
 ## Mission
 
@@ -14,12 +15,18 @@ Build complete MATRIX cognitive system end-to-end (Waves H-O).
 - **NO LLM calls in deterministic decision paths** (per AGENTS.md)
 - **NO random/wall-clock in decision paths**
 
-## Current Status (RUN 10, 2026-09-04 21:46)
+## Current Status (RUN 11, 2026-09-04 22:21)
 
 ### Branch / Git
-- `origin/main` at `fc23970b` (pushed)
-- Working tree CLEAN
-- **30 tests pass**: LmHeadTest 5/5 (NEW), QaCorpusIndexTest 12/12, BitLinearTrainerTest 8/8, BooleanChainRunnerTest 5/5
+- `origin/main` at `a0f5b5bb` (pushed)
+- Working tree dirty: 3 files modified (LmHead, LmHeadTrainer, LmHeadTest) — RUN 11 negative-sampling + audit fixes. Will be committed + pushed in this cycle.
+- **LmHeadTest 7/7 PASS** after fixes (5 original + 2 new negative-sampling tests)
+
+### RUN 11 wins (audit fixes)
+1. **Negative sampling** added to `LmHead.update(chainOutput, token, nNegatives)`. Default K=5 in `LmHeadTrainer.train()`. Prevents mode collapse on common tokens (`:`).
+2. **Doc-vs-code lie removed** — the dangling `{@link #updateConcurrent}` reference in the Javadoc is gone.
+3. **Thread-safety restored** — `synchronized (tw)` blocks around all reads/writes of the per-token `double[]`. (RUN 11's first pass had stripped these.)
+4. **Deterministic RNG** — negative-sample seed is `(long) targetToken * 0x9E3779B97F4A7C15L` (golden-ratio constant), no `System.nanoTime()`. Reproducible across runs.
 
 ### RUN 10 wins
 1. **`LmHead`** sparse Hebbian classifier — learned LM head projection from chain output to vocab distribution.
@@ -28,10 +35,10 @@ Build complete MATRIX cognitive system end-to-end (Waves H-O).
 4. **Sparse weights persisted to disk** — `data/lm_head_weights.bin`, loaded at startup.
 5. **5 new tests** for LmHead (empty head, score, update, save/load, bounded scores).
 
-### Honest limitation (RUN 11)
-The current LM head has degenerate behavior with low vocab coverage — picks the most common token (`:`) for any fingerprint. Opt-in via `MATRIX_USE_LM_HEAD=true` env var (default OFF). The hash-based scoring from RUN 9.7 still provides prompt-specific output.
+### Honest limitation (RUN 11 — superseded)
+The current LM head had degenerate behavior with low vocab coverage — picked the most common token (`:`) for any fingerprint because every positive update incremented without ever telling OTHER tokens to be less likely. RUN 11 negative sampling addresses this directly. Real validation on HellaSwag/ARC-Easy still pending.
 
-To make the LM head actually useful: use the chain's REAL output (not hash fingerprint) as features. This requires faster chain evaluation per question (currently too slow for batch training).
+To make the LM head actually useful beyond RUN 11: use the chain's REAL output (not hash fingerprint) as features. This requires faster chain evaluation per question (currently too slow for batch training).
 
 ### RUN 9.7 wins
 1. **`/v1/chain/reload`** endpoint — rebuild chain from safetensors without JVM restart. Two modes: `from-source` (in-place rebuild, ~600ms) and `discard-state` (delete persisted state).

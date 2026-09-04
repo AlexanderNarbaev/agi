@@ -109,4 +109,40 @@ class LmHeadTest {
         assertThat(Double.isFinite(score)).isTrue();
         assertThat(Math.abs(score)).isLessThan(1000.0);  // Sanity bound
     }
+
+    /**
+     * RUN 11 — negative sampling should add negative-example tokens to vocab.
+     * Without negative sampling, only positive tokens get weights and the
+     * LM head collapses on the most common token.
+     */
+    @Test
+    void negativeSamplingAddsNegativeTokensToVocab() {
+        boolean[] fp = new boolean[100];
+        for (int i = 0; i < 50; i++) fp[i] = true;
+        // Train with 3 negatives per positive
+        for (int u = 0; u < 50; u++) {
+            head.update(fp, 42, 3);
+        }
+        // Vocabulary should contain the positive token AND the 3 sampled negatives
+        assertThat(head.vocabularyCoverage()).isGreaterThanOrEqualTo(4);
+    }
+
+    /**
+     * RUN 11 — with negative sampling, the positive token should still score
+     * higher than an untrained token.
+     */
+    @Test
+    void negativeSamplingPreservesPositiveSignal() {
+        boolean[] fp = new boolean[100];
+        for (int i = 0; i < 50; i++) fp[i] = true;
+        // Train positive 42 with negatives
+        for (int u = 0; u < 100; u++) {
+            head.update(fp, 42, 5);
+        }
+        double posScore = head.score(fp, 42);
+        // Untrained token should have score 0
+        double untrained = head.score(fp, 9999);
+        assertThat(posScore).isGreaterThan(untrained);
+        assertThat(posScore).isGreaterThan(0.0);
+    }
 }

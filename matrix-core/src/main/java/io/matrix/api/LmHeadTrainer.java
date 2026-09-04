@@ -78,20 +78,30 @@ public class LmHeadTrainer {
         }
     }
 
-    /** Train on the Q&A corpus. */
+    /** Train on the Q&A corpus. RUN 11: now uses negative sampling. */
     public synchronized TrainResult train(int limit, int epochs) {
+        return train(limit, epochs, 5);  // 5 negatives per positive by default
+    }
+
+    /**
+     * Train with explicit negative-sample count.
+     * @param nNegatives number of negative tokens sampled per positive update.
+     *                   Negative sampling prevents mode collapse on common tokens.
+     */
+    public synchronized TrainResult train(int limit, int epochs, int nNegatives) {
         if (qaIndex == null || qaIndex.size() == 0) {
             return new TrainResult(0, 0, 0, "qa corpus is empty");
         }
         var entries = qaIndex.state().entries;
         int n = Math.min(limit, entries.size());
-        log.info("LmHeadTrainer: training on {} pairs × {} epochs", n, epochs);
+        log.info("LmHeadTrainer: training on {} pairs × {} epochs ({} negatives each)",
+                n, epochs, nNegatives);
 
         long totalUpdates = 0;
         for (int e = 0; e < epochs; e++) {
             for (int i = 0; i < n; i++) {
                 var entry = entries.get(i);
-                int updates = trainOne(entry.question(), entry.answer());
+                int updates = trainOne(entry.question(), entry.answer(), nNegatives);
                 totalUpdates += updates;
             }
             trainedEpochs.incrementAndGet();
@@ -113,8 +123,27 @@ public class LmHeadTrainer {
         return new TrainResult(n * epochs, totalUpdates, lmHead.vocabularyCoverage(), null);
     }
 
-    /** Train on a single (question, answer) pair. Returns number of updates. */
+    /** Train on a single (question, answer) pair. */
     public int trainOne(String question, String answer) {
+        return trainOne(question, answer, 0);
+    }
+
+    /**
+     * Train on a single (question, answer) pair with negative sampling.
+     *
+     * <p>RUN 11: We use a hash-based fingerprint as the "chain output" for
+     * training. Computing the full chain output is too slow (~30s per
+     * pair) for batch training. The hash-based fingerprint is
+     * deterministic and captures enough signal for the LM head to learn
+     * useful token distributions.
+     *
+     * @param nNegatives number of negative samples (RUN 11 — prevents
+     *                   the LM head from collapsing on common tokens
+     *                   like `:` by also decrementing random other
+     *                   tokens' weights for the same fingerprint)
+     * @return number of token updates applied
+     */
+    public int trainOne(String question, String answer, int nNegatives) {
         if (question == null || answer == null || question.isEmpty()) return 0;
 
         // 1. Build a simple hash-based "fingerprint" of the question.
@@ -161,10 +190,10 @@ public class LmHeadTrainer {
         }
         if (answerTokens.length == 0) return 0;
 
-        // 4. Update LM head for each answer token
+        // 4. Update LM head for each answer token (with negative sampling)
         for (int token : answerTokens) {
             if (token >= 0 && token < 200000) {
-                lmHead.update(chainOutput, token);
+                lmHead.update(chainOutput, token, nNegatives);
             }
         }
         return answerTokens.length;

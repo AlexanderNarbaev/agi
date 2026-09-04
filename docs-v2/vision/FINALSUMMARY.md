@@ -1229,3 +1229,59 @@ loop, async training, reload, multilingual QA retrieval, multi-turn
 memory, async jobs, Panama native eval.
 
 (End of file - total ~1280 lines)
+
+---
+
+## Section XIX — RUN 11 (2026-09-04 22:20): negative sampling + audit fixes
+
+### Status: Blocking findings from Goal Guard review cycle #0 resolved.
+
+### What changed
+
+RUN 10 delivered the LM head but it could mode-collapse on common
+tokens (e.g., `:`) because every (fingerprint, token) update
+incremented the target token's weights without ever telling other
+tokens to be less likely. RUN 11 adds **negative sampling** to fix
+this: for each positive update, K random other tokens are decremented
+for the same fingerprint. Default K=5 in `LmHeadTrainer.train()`.
+
+### Audit findings fixed
+
+The Goal Guard review cycle #0 flagged these blocking issues in the
+RUN 11 negative-sampling work:
+
+1. **Doc-vs-code lie** — Javadoc referenced `{@link #updateConcurrent}`
+   which did not exist. Removed the dangling reference and rewrote the
+   comment to describe the actual thread-safety model.
+2. **Thread-safety regression** — RUN 11 had removed the per-token
+   `synchronized (tw)` blocks in `update`, `score`, and `save`,
+   leaving the underlying `double[]` exposed to torn writes. Restored
+   `synchronized (tw)` blocks around all reads/writes of the weight
+   array.
+3. **Non-deterministic RNG** — negative sampling used
+   `new Random(targetToken * 31L ^ System.nanoTime())`, which violates
+   AGENTS.md ("NO random/wall-clock in decision paths"). Replaced with
+   a deterministic seed: `(long) targetToken * 0x9E3779B97F4A7C15L`
+   (golden-ratio constant). Training is now reproducible across runs.
+
+### Tests
+
+`LmHeadTest` now has 7 tests, all pass:
+- 5 original tests (emptyHeadReturnsZeroScore, updateIncreasesScoreForTrainedToken,
+  differentFingerprintsProduceDifferentScores, saveLoadRoundTrip, scoreIsBounded)
+- 2 new tests (negativeSamplingAddsNegativeTokensToVocab,
+  negativeSamplingPreservesPositiveSignal)
+
+Verified: `./gradlew :matrix-core:test --rerun-tasks --tests
+"io.matrix.api.LmHeadTest"` → 7/7 PASS, 0 failures, 0 errors,
+0.198s total.
+
+### Honest framing
+
+Negative sampling changes the LM head from "all-positive" to
+"positive + contrastive". This should help mode collapse but is not
+yet validated on real benchmarks (no Wave-K-style full-bench run in
+this RUN — the architectural fix is small, scoped, and tested at the
+unit level only). A future RUN should re-run the HellaSwag / ARC-Easy
+suites with the new LM head scoring path.
+
