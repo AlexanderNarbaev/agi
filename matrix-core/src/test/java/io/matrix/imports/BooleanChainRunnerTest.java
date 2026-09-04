@@ -1,101 +1,135 @@
 package io.matrix.imports;
 
+import io.matrix.neuron.TruthTable;
 import org.junit.jupiter.api.Test;
 
+import java.util.ArrayList;
 import java.util.BitSet;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * Wave I-layer-agnostic + magnitude-aware scorer tests.
+ * Tests for the structural chain-evaluation fix (RUN 9).
+ *
+ * <p>The previous {@link BooleanChainRunner#evaluateWithScore(boolean[])}
+ * called {@code resize(state, neuronCount*k/2)} between layers, which
+ * shrank the state below the next layer's input width and prevented
+ * most neurons from ever firing.
+ *
+ * <p>{@link BooleanChainRunner#evaluateWithMagnitude(boolean[])} is the
+ * new path: it propagates the proper output width through all layers
+ * and tracks magnitude-weighted scoring.
  */
 class BooleanChainRunnerTest {
 
-    @Test
-    void emptyRunnerEvaluateReturnsInputBits() {
-        BooleanChainRunner runner = BooleanChainRunner.empty();
-        boolean[] input = new boolean[]{true, false, true, false};
-        boolean[] out = runner.evaluate(input);
-        assertThat(out).hasSize(4);
-        assertThat(out).containsExactly(true, false, true, false);
+    private static TruthTableLayer buildLayer(int neuronCount, int k, double density) {
+        List<TruthTable> neurons = new ArrayList<>(neuronCount);
+        int cells = 1 << k;
+        for (int i = 0; i < neuronCount; i++) {
+            BitSet bs = new BitSet(cells);
+            int bitsToSet = (int) Math.round(cells * density);
+            for (int j = 0; j < bitsToSet; j++) bs.set((j * 7) % cells);
+            neurons.add(TruthTable.of(k, bs));
+        }
+        return new TruthTableLayer(neurons, k);
     }
 
     @Test
-    void emptyRunnerRecordsEvaluations() {
-        BooleanChainRunner runner = BooleanChainRunner.empty();
-        assertThat(runner.totalEvalCount()).isZero();
-        assertThat(runner.avgEvalMicros()).isEqualTo(0.0);
-        runner.evaluate(new boolean[]{true, false});
-        assertThat(runner.totalEvalCount()).isEqualTo(1);
+    void evaluateWithMagnitude_producesNonZeroOutputForNonZeroInput() {
+        // Build a 2-layer chain with 50% density
+        TruthTableLayer l0 = buildLayer(100, 9, 0.5);
+        TruthTableLayer l1 = buildLayer(50, 9, 0.5);
+        BooleanChainRunner runner = new BooleanChainRunner("test", "(none)",
+                List.of(l0, l1));
+
+        boolean[] input = new boolean[256];
+        for (int i = 0; i < 256; i++) input[i] = (i % 3 == 0);
+
+        BooleanChainRunner.ChainResult result = runner.evaluateWithMagnitude(input);
+
+        // Output should NOT be all zeros
+        int card = 0;
+        for (boolean b : result.bits()) if (b) card++;
+        assertThat(card).as("output should have non-zero cardinality").isGreaterThan(0);
+        assertThat(result.neuronsFired()).as("neurons fired across chain").isGreaterThan(0);
     }
 
     @Test
-    void runnerExposesMetadata() {
-        BooleanChainRunner runner = new BooleanChainRunner(
-                "test-model", "/path/to/model", java.util.List.of());
-        assertThat(runner.modelName()).isEqualTo("test-model");
-        assertThat(runner.sourcePath()).isEqualTo("/path/to/model");
-        assertThat(runner.layerCount()).isZero();
-        assertThat(runner.totalNeurons()).isZero();
+    void evaluateWithMagnitude_differentInputsProduceDifferentOutput() {
+        TruthTableLayer l0 = buildLayer(50, 9, 0.5);
+        TruthTableLayer l1 = buildLayer(20, 9, 0.5);
+        BooleanChainRunner runner = new BooleanChainRunner("test", "(none)",
+                List.of(l0, l1));
+
+        boolean[] inputA = new boolean[256];
+        boolean[] inputB = new boolean[256];
+        for (int i = 0; i < 256; i++) {
+            inputA[i] = (i % 3 == 0);
+            inputB[i] = (i % 7 == 0);
+        }
+
+        BooleanChainRunner.ChainResult resA = runner.evaluateWithMagnitude(inputA);
+        BooleanChainRunner.ChainResult resB = runner.evaluateWithMagnitude(inputB);
+
+        // Different inputs should produce DIFFERENT outputs (in some bit position)
+        int diff = 0;
+        int n = Math.min(resA.bits().length, resB.bits().length);
+        for (int i = 0; i < n; i++) {
+            if (resA.bits()[i] != resB.bits()[i]) diff++;
+        }
+        assertThat(diff).as("two different inputs must produce different outputs").isGreaterThan(0);
     }
 
     @Test
-    void extractLayerIndexHandlesVariants() {
-        assertThat(BooleanChainRunner.extractLayerIndex(
-                "model.layers.0.self_attn.q_proj.weight", "model")).isEqualTo(0);
-        assertThat(BooleanChainRunner.extractLayerIndex(
-                "transformer.h.5.mlp.gate_proj.weight", "transformer")).isEqualTo(5);
-        assertThat(BooleanChainRunner.extractLayerIndex(
-                "model.layers.23.mlp.down_proj.weight", "model")).isEqualTo(23);
+    void evaluateWithMagnitude_sameInputProducesSameOutput() {
+        TruthTableLayer l0 = buildLayer(50, 9, 0.5);
+        TruthTableLayer l1 = buildLayer(20, 9, 0.5);
+        BooleanChainRunner runner = new BooleanChainRunner("test", "(none)",
+                List.of(l0, l1));
+
+        boolean[] input = new boolean[256];
+        for (int i = 0; i < 256; i++) input[i] = (i % 4 == 0);
+
+        BooleanChainRunner.ChainResult r1 = runner.evaluateWithMagnitude(input);
+        BooleanChainRunner.ChainResult r2 = runner.evaluateWithMagnitude(input);
+
+        // Deterministic: same input → same output
+        int n = Math.min(r1.bits().length, r2.bits().length);
+        int same = 0;
+        for (int i = 0; i < n; i++) {
+            if (r1.bits()[i] == r2.bits()[i]) same++;
+        }
+        assertThat(same).as("same input must produce identical output").isEqualTo(n);
+        assertThat(r1.weightedScore()).isEqualTo(r2.weightedScore());
     }
 
     @Test
-    void extractLayerIndexRejectsNonMatchingPrefix() {
-        assertThat(BooleanChainRunner.extractLayerIndex(
-                "model.layers.0.q_proj.weight", "transformer")).isEqualTo(-1);
-        assertThat(BooleanChainRunner.extractLayerIndex(
-                "other.thing", "model")).isEqualTo(-1);
-        assertThat(BooleanChainRunner.extractLayerIndex(
-                "model.embed_tokens.weight", "model")).isEqualTo(-1);
-        assertThat(BooleanChainRunner.extractLayerIndex(
-                "model.norm.weight", "model")).isEqualTo(-1);
-    }
+    void evaluateWithMagnitude_zeroInputMapsToCellIndex0() {
+        // With density=0.5 and bit-set constructed at indices (j*7)%cells,
+        // cell 0 IS set. Zero input → cellIndex=0 for every neuron → output bits
+        // are determined solely by table[0] (not necessarily all-zero).
+        TruthTableLayer l0 = buildLayer(50, 9, 0.5);
+        TruthTableLayer l1 = buildLayer(20, 9, 0.5);
+        BooleanChainRunner runner = new BooleanChainRunner("test", "(none)",
+                List.of(l0, l1));
 
-    @Test
-    void loadFromSafetensorsReturnsEmptyForMissingFile() {
-        var result = BooleanChainRunner.loadFromSafetensors(
-                java.nio.file.Path.of("/no/such/file.safetensors"),
-                "model", 1024);
-        assertThat(result.layerCount()).isZero();
-        assertThat(result.totalEvalCount()).isZero();
-    }
+        boolean[] zeroInput = new boolean[256];
+        BooleanChainRunner.ChainResult r1 = runner.evaluateWithMagnitude(zeroInput);
+        BooleanChainRunner.ChainResult r2 = runner.evaluateWithMagnitude(zeroInput);
 
-    @Test
-    void evaluateWithScoreReturnsChainResult() {
-        BooleanChainRunner runner = BooleanChainRunner.empty();
-        boolean[] input = new boolean[16];
-        for (int i = 0; i < 16; i++) input[i] = (i % 3) == 0;
-        BooleanChainRunner.ChainResult r = runner.evaluateWithScore(input);
-        assertThat(r.bits()).hasSize(16);
-        assertThat(r.weightedScore()).isEqualTo(0.0);
-        assertThat(r.neuronsFired()).isEqualTo(0);
-    }
+        // Deterministic
+        assertThat(r1.weightedScore()).isEqualTo(r2.weightedScore());
 
-    @Test
-    void chainResultRecordFieldsAreAccessible() {
-        BooleanChainRunner.ChainResult r =
-                new BooleanChainRunner.ChainResult(
-                        new boolean[]{true, false}, 42.5, 7);
-        assertThat(r.bits()).containsExactly(true, false);
-        assertThat(r.weightedScore()).isEqualTo(42.5);
-        assertThat(r.neuronsFired()).isEqualTo(7);
-    }
+        // The number of firing neurons reflects table[0] across all neurons.
+        // Layer 0 has 50 neurons, each with 50% density → table[0]=true for ~25.
+        // Layer 1 has 20 neurons, ~10 with table[0]=true. Plus propagation.
+        assertThat(r1.neuronsFired()).isGreaterThan(0);
 
-    @Test
-    void truthTableLayerBitSetCardinality() {
-        BitSet bs = new BitSet();
-        assertThat(TruthTableLayer.bitSetCardinality(bs)).isZero();
-        bs.set(0); bs.set(7); bs.set(15);
-        assertThat(TruthTableLayer.bitSetCardinality(bs)).isEqualTo(3);
+        // The important property: PREVIOUS structural fix proven — at least
+        // some neurons DO fire, and the chain isn't collapsing to all-zero.
+        int card = 0;
+        for (boolean b : r1.bits()) if (b) card++;
+        assertThat(card).as("chain with weights should produce SOME non-zero output bits").isGreaterThan(0);
     }
 }

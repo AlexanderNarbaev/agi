@@ -121,44 +121,158 @@ public final class BooleanChainRunner {
                 System.arraycopy(input, 0, out, 0, input.length);
                 return new ChainResult(out, 0.0, 0);
             }
-            java.util.BitSet state = new java.util.BitSet(input.length);
-            for (int i = 0; i < input.length; i++) {
-                if (input[i]) state.set(i);
+            return new ChainResult(
+                    boolArrFrom(evaluateForward(bitSetFrom(input)), 256),
+                    0.0,  // weighted score (computed by evaluateWithMagnitude; backward compat)
+                    0);
+        } finally {
+            totalNanos.addAndGet(System.nanoTime() - t0);
+        }
+    }
+
+    /** Convert a boolean[] to a BitSet. */
+    private static java.util.BitSet bitSetFrom(boolean[] input) {
+        java.util.BitSet bs = new java.util.BitSet(input.length);
+        for (int i = 0; i < input.length; i++) if (input[i]) bs.set(i);
+        return bs;
+    }
+
+    /** Convert a BitSet to a boolean[] of the requested width (zero-padded). */
+    private static boolean[] boolArrFrom(java.util.BitSet bs, int width) {
+        boolean[] out = new boolean[Math.max(width, 1)];
+        int limit = Math.min(bs.length(), width);
+        // bs.length() returns highest set bit + 1, so use toLongArray() to walk all
+        for (int i = bs.nextSetBit(0); i >= 0 && i < width; i = bs.nextSetBit(i + 1)) {
+            out[i] = true;
+        }
+        return out;
+    }
+
+    /**
+     * Run the chain forward through all layers, returning the output
+     * BitSet of the final layer. Each layer consumes input
+     * {@code neuronCount*k} bits and produces {@code neuronCount} bits
+     * (one per neuron). Input is zero-padded on the right when shorter
+     * than the layer needs; output is zero-trimmed when longer.
+     *
+     * <p>This replaces the previous implementation that called
+     * {@code resize(state, neuronCount*k/2)} between layers, which
+     * SHRANK the state below the next layer's input width and caused
+     * most neurons to never fire.
+     */
+    public java.util.BitSet evaluateForward(java.util.BitSet inputState) {
+        if (layers.isEmpty()) {
+            // No layers — return input as-is
+            java.util.BitSet out = new java.util.BitSet(inputState.length());
+            for (int i = inputState.nextSetBit(0); i >= 0; i = inputState.nextSetBit(i + 1)) {
+                out.set(i);
             }
-            double weightedSum = 0.0;
-            int neuronsFired = 0;
-            for (TruthTableLayer layer : layers) {
-                if (layer.inputWidth() == 0) continue;
-                int activeBefore = TruthTableLayer.bitSetCardinality(state);
-                java.util.BitSet next = layer.evaluate(state);
-                int activeAfter = TruthTableLayer.bitSetCardinality(next);
-                int fired = Math.max(0, activeAfter - (activeAfter == 0 ? 0 : 0));
-                // total matches for this layer
-                int matches = 0;
-                int n = layer.neuronCount();
-                if (n > 0) {
-                    int k = layer.k();
-                    int sliceStart = 0;
-                    for (int i = 0; i < n; i++) {
-                        int cellIndex = 0;
-                        int sliceEnd = Math.min(sliceStart + k, state.length());
-                        for (int j = 0; j < k; j++) {
-                            int pos = sliceStart + j;
-                            if (pos < state.length() && state.get(pos)) {
-                                cellIndex |= (1 << j);
-                            }
-                        }
-                        if (next.get(i)) matches++;
-                        sliceStart = sliceEnd;
+            return out;
+        }
+
+        // Convert BitSet → boolean[] once, then operate in arrays for speed
+        int maxLayerWidth = 0;
+        for (TruthTableLayer layer : layers) {
+            int w = layer.neuronCount() * layer.k();
+            if (w > maxLayerWidth) maxLayerWidth = w;
+        }
+        // also ensure we capture all the input bits
+        int initWidth = Math.max(maxLayerWidth, inputState.length());
+
+        boolean[] state = boolArrFrom(inputState, initWidth);
+        // Constrain state to bits set in inputState; rest stays false (padded).
+
+        for (TruthTableLayer layer : layers) {
+            int n = layer.neuronCount();
+            int k = layer.k();
+            int inputWidth = n * k;
+            // Pad / truncate state to inputWidth
+            if (state.length < inputWidth) {
+                boolean[] padded = new boolean[inputWidth];
+                System.arraycopy(state, 0, padded, 0, state.length);
+                state = padded;
+            } else if (state.length > inputWidth) {
+                state = java.util.Arrays.copyOf(state, inputWidth);
+            }
+
+            // Evaluate each neuron
+            boolean[] next = new boolean[n];
+            for (int i = 0; i < n; i++) {
+                TruthTable neuron = layer.neurons().get(i);
+                int sliceStart = i * k;
+                int cellIndex = 0;
+                for (int j = 0; j < k; j++) {
+                    if (state[sliceStart + j]) {
+                        cellIndex |= (1 << j);
                     }
                 }
-                double layerWeight = layer.neuronCount() > 0 ? 1.0 : 0.0;
-                weightedSum += matches * layerWeight;
-                neuronsFired += matches;
-                state = resize(next, layer.neuronCount() * layer.k() / 2);
+                // skip if neuron has no table (defensive)
+                if (neuron == null) continue;
+                try {
+                    next[i] = neuron.evaluate(cellIndex);
+                } catch (Throwable t) {
+                    next[i] = false;
+                }
             }
-            boolean[] out = new boolean[state.length() == 0 ? 1 : state.length()];
-            for (int i = 0; i < out.length; i++) out[i] = state.get(i);
+            state = next;
+        }
+
+        // Convert back to BitSet
+        java.util.BitSet out = new java.util.BitSet(state.length);
+        for (int i = 0; i < state.length; i++) if (state[i]) out.set(i);
+        return out;
+    }
+
+    /**
+     * Run the chain forward with weighted-score tracking.
+     * <p>Used by hash scoring in generation; returns magnitude of
+     * activation (sum of set-bits weighted by per-neuron density).
+     */
+    public ChainResult evaluateWithMagnitude(boolean[] input) {
+        evalCount.incrementAndGet();
+        long t0 = System.nanoTime();
+        try {
+            if (layers.isEmpty()) {
+                boolean[] out = new boolean[input.length];
+                System.arraycopy(input, 0, out, 0, input.length);
+                return new ChainResult(out, 0.0, 0);
+            }
+            java.util.BitSet state = bitSetFrom(input);
+            double weightedSum = 0.0;
+            int neuronsFired = 0;
+
+            for (TruthTableLayer layer : layers) {
+                int n = layer.neuronCount();
+                int k = layer.k();
+                int inputWidth = n * k;
+                boolean[] in = boolArrFrom(state, inputWidth);
+                boolean[] next = new boolean[n];
+                for (int i = 0; i < n; i++) {
+                    TruthTable neuron = layer.neurons().get(i);
+                    int sliceStart = i * k;
+                    int cellIndex = 0;
+                    for (int j = 0; j < k; j++) {
+                        if (in[sliceStart + j]) cellIndex |= (1 << j);
+                    }
+                    boolean fired = false;
+                    try { fired = neuron.evaluate(cellIndex); }
+                    catch (Throwable t) { /* defensive */ }
+                    next[i] = fired;
+                    if (fired) {
+                        int cells = 1 << k;
+                        double density = (double) neuron.table().cardinality() / cells;
+                        weightedSum += 0.5 + density;
+                        neuronsFired++;
+                    }
+                }
+                // bitSetFrom-style: copy boolean[] state into a fresh BitSet for next layer
+            {
+                java.util.BitSet bs = new java.util.BitSet(next.length);
+                for (int i = 0; i < next.length; i++) if (next[i]) bs.set(i);
+                state = bs;
+            }
+            }
+            boolean[] out = boolArrFrom(state, state.length());
             return new ChainResult(out, weightedSum, neuronsFired);
         } finally {
             totalNanos.addAndGet(System.nanoTime() - t0);

@@ -106,8 +106,8 @@ public class ChainDebugResource {
     public Map<String, Object> evalJava(@QueryParam("input") String input) {
         boolean[] in = new boolean[input == null ? 0 : input.length()];
         for (int i = 0; i < in.length; i++) in[i] = input.charAt(i) == '1';
-        // force Java path by calling evaluateWithScore directly
-        BooleanChainRunner.ChainResult result = chainRunner.evaluateWithScore(in);
+        // Use the magnitude-aware path (no resize bug)
+        BooleanChainRunner.ChainResult result = chainRunner.evaluateWithMagnitude(in);
         boolean[] out = result.bits();
         int card = 0;
         int total = out.length;
