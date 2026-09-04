@@ -103,7 +103,8 @@ public class ChainTrainerEndpoint {
         return chainRunner == null || chainRunner.layerCount() == 0;
     }
 
-    private Map<String, Object> trainImpl(Map<String, Object> body) {
+    /** RUN 9.8 — exposed for AsyncChainTrainerResource. */
+    public Map<String, Object> trainImpl(Map<String, Object> body) {
         @SuppressWarnings("unchecked")
         List<Map<String, Object>> pairs =
                 (List<Map<String, Object>>) body.getOrDefault("pairs", List.of());
