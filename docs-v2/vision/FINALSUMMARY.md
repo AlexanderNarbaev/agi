@@ -821,3 +821,120 @@ Branch: `origin/main` at `09a4754e`. Three commits since RUN 8:
 - `matrix-core/.../api/ChainDebugResource.java` (uses evaluateWithMagnitude)
 - `matrix-core/.../api/ChainStructureResource.java` (NEW — chain structure inspection)
 - `matrix-core/.../imports/BooleanChainRunnerTest.java` (4 tests)
+
+---
+
+## Section XIV — RUN 9.5 (2026-09-04 18:18): TRAINING FIX — chain learns and generation reflects it
+
+### Status: Training actually changes chain weights and /v1/generate output reflects the change
+
+Branch: `origin/main` at `9e149d23`. Two commits since RUN 9:
+
+- `e300c353` WAL: RUN 9.5 — fix flippedTable bug in BitLinearTrainer (CRITICAL)
+- `9e149d23` WAL: RUN 9.5 demo — training actually affects generation output
+
+### What changed (and why)
+
+**CRITICAL bug in `BitLinearTrainer.flippedTable()`** — the function was
+called with a `flippedBit` (the bit index that `findBestFlip` chose to
+maximize score) but implemented only a "clear cells where this bit is 0"
+operation. This DID NOT match the semantics of `findBestFlip`'s lookup,
+which evaluates `tt.evaluate(cell ^ (1 << flippedBit))` for each cell.
+
+So:
+- Training reported `N neurons flipped` (the count of `flippedTable`
+  calls)
+- The trained neurons were actually identical to the original neurons
+- `/v1/chain-debug/neuron` showed the SAME hash before and after training
+- `/v1/generate` output was unaffected by training
+
+The fix:
+
+```java
+private static TruthTable flippedTable(TruthTable original, int flippedBit) {
+    int k = original.k();
+    int cells = 1 << k;
+    java.util.BitSet newTable = new java.util.BitSet(cells);
+    int flipMask = 1 << flippedBit;
+    for (int cell = 0; cell < cells; cell++) {
+        if (original.evaluate(cell ^ flipMask)) {
+            newTable.set(cell);
+        }
+    }
+    return TruthTable.of(k, newTable, original.weights());
+}
+```
+
+This implements the correct semantics: for each cell, the new output
+comes from evaluating the original table AT ITS PARTNER that differs
+only in the chosen bit. So the trained neuron really does represent a
+"swap-the-pairs-of-cells-that-differ-in-bit-X" transformation.
+
+**`ChainTrainerEndpoint` instrumentation** — added an "actually changed"
+counter that compares the original neuron to the newly written one and
+only increments when they truly differ:
+
+```
+trained on pair → 8156 neurons flipped, 8156 written, 7428 actually changed
+```
+
+Renamed `findTrained` → `lookupTrained` (returns `null` if not found)
+and removed the silent fallback to the chain snapshot when the lookup
+fails — we WANT to know when a neuron can't be located.
+
+### Live verification snapshot
+
+```
+[1] Chain density: 24 layers, 21960 neurons, 449 empty, 46.2% density
+    (was 27.6% after RUN 9 first fix, now 46.2% after multiple training runs)
+
+[2] Chat: "What is REST?" → "REpresentational State Transfer — an architectural
+                              style for web APIs using HTTP methods."
+
+[3] Learn: POST /v1/qa/learn {"question":"What is PostgreSQL?", ...} → id=8605 corpus=8606
+
+[4] Generate BEFORE training:
+    'The capital of France isĠCorrespondĠClementĠflashingĠCorrespondĠflashing...'
+
+[5] Train (3 pairs, 1 epoch) → 24,459 neurons flipped, ~22,000 actually changed
+
+[6] Generate AFTER training:
+    'The capital of France isĠCorrespondĠflashingĠCorrespondĠflashing...'
+                            ^^^^^^^ "Clement" is GONE after training
+
+[7] Neuron hash changes verified:
+    n=50  hash a4934c6ff389463dafa3 → 58638c9ff346893e5f53
+    n=100 hash c9ae46971fc080f362b3 → c65d896b2fc040f39173
+    n=200 hash bcc409efe5e99c1f7c98 → 7cc806dfdad66c2fbc64
+```
+
+### System now satisfies the full LLM loop
+
+1. ✅ **Pre-trained knowledge** — 8,606 Q&A pairs in QaCorpusIndex
+2. ✅ **Distilled weights** — 21,960 boolean neurons across 24 layers
+3. ✅ **Learn on new data** — POST /v1/qa/learn persists to qa_pairs.json
+4. ✅ **Training modifies weights** — POST /v1/train with neuron hash verification
+5. ✅ **Generation uses trained weights** — verified by output diff after training
+6. ✅ **Multi-turn memory** — ConversationMemory with X-Conversation-Id header
+7. ✅ **Panama bridge** — libtruthy.so wired at startup
+8. ✅ **23 tests pass** — QaCorpusIndexTest 12/12, BitLinearTrainerTest 7/7, BooleanChainRunnerTest 4/4
+
+### Honest Caveats
+
+1. **Training is aggressive** — ~8,000 neurons flipped per pair (out of 21,960
+   total). This makes chain density change fast but might overfit. A learning
+   rate cap or per-pair neuron limit would help.
+2. **`AutoTrainer` runs at startup** and can saturate CPU. Disable via
+   `MATRIX_AUTO_TRAIN_ENABLED=false` env var if you need a fast boot.
+3. **Chain-driven text generation is still garbled** — hash-based neuron
+   scoring picks varied tokens but not fluent text. Coherent generation
+   would need a learned LM-head projection.
+4. **The training isn't yet "online"** — training uses CPU lock during the
+   POST /v1/train call. For interactive use, async/streaming is needed.
+
+### Files Changed (2 files, +24/-11 lines)
+
+- `matrix-core/.../imports/BitLinearTrainer.java` (flippedTable fix)
+- `matrix-core/.../api/ChainTrainerEndpoint.java` (lookupTrained + actually-changed counter)
+
+(End of file - total ~890 lines)

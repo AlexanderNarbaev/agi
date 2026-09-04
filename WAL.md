@@ -36,3 +36,36 @@
 - GPU EP: «Failed to find CUDA shared provider» в Java-ONNX; нужен системный CUDA 12 + cuDNN9 для onnxruntime_gpu.
 - Kafka integration test: флейк метаданных брокера на медленном хосте.
 - TLA+-спеки отсутствуют для топ-пакетов (`reasoning`, `mediator`, `hades`, `memory`, `rag`) — в `architecture/FORMAL-CONTRACTS.md` next-format-contracts.
+## RUN 9.5 — 2026-09-04 18:18 — TRAINING FIX
+
+### Root cause
+`BitLinearTrainer.flippedTable()` had a semantics bug. It cleared cells
+where bit `flippedBit` was 0, but `findBestFlip` chooses bit X by scoring
+`tt.evaluate(cell ^ (1 << X))` — completely different semantics.
+
+### Fix
+Replace clear-cells-where-bit-0 loop with proper flip-bit semantics:
+
+```java
+for (int cell = 0; cell < cells; cell++) {
+    if (original.evaluate(cell ^ flipMask)) newTable.set(cell);
+}
+```
+
+### Verification
+- `/v1/chain-debug/neuron` shows DIFFERENT hashes after training (n=50,
+  n=100, n=200 all changed)
+- `/v1/generate` output CHANGES after training: "Clement" disappears
+  from "The capital of France is..." output
+- ChainTrainerEndpoint now logs "N flipped, N written, M actually
+  changed" where M > 0 (typically ~91% of flipped neurons actually
+  changed)
+
+### Commits
+- `e300c353` WAL: RUN 9.5 — fix flippedTable bug in BitLinearTrainer (CRITICAL)
+- `9e149d23` WAL: RUN 9.5 demo — training actually affects generation output
+
+### Chain state
+- Density: 27.6% (RUN 9) → 46.2% (RUN 9.5, after multiple training runs)
+- 449 empty neurons / 21,960 total
+- AutoTrainer disabled at boot via `MATRIX_AUTO_TRAIN_ENABLED=false`
