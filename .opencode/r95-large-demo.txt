@@ -1,0 +1,48 @@
+# MATRIX RUN 9.5 — LARGE-SCALE TRAINING DEMONSTRATION
+# 1000 training exposures (200 pairs × 5 epochs)
+# Demonstrates: training works AND overfitting
+
+## Before training
+- Chain density: 46.2%, 449 empty
+- n=50 hash=a4934c6ff389463dafa3
+- n=100 hash=c9ae46971fc080f362b3
+- n=200 hash=bcc409efe5e99c1f7c98
+- n=300 hash=fffffffffffff7ffffff
+- n=400 hash=ffffffffffffffffffff
+- Generate("The capital of France is", 10):
+  'The capital of France isĠCorrespondĠflashingĠCorrespondĠflashing...'
+
+## Training
+POST /v1/train {"use_corpus":true,"corpus_limit":200,"epochs":5}
+→ 1000 total exposures, all ran for ~1011 actual pair passes
+→ Each pair: ~8000 neurons flipped, ~7400 actually changed
+→ 30 minutes total
+
+## After training
+- Chain density: 46.2%, 449 empty (UNCHANGED - binary neurons can't go above 50%)
+- n=50 hash=58638c9ff346893e5f53 (CHANGED)
+- n=100/200/300/400 hashes unchanged (not in this training's flip set)
+- Generate("The capital of France is", 10):
+  'The capital of France isĠCorrespondĠflashingĠflashing...Clement...'
+- Generate for all prompts converges to: '...Ġëĭ¹ìĭłèĢłĠClementĠbeaucoup...'
+
+## FINDINGS
+
+### Positive
+1. Write-back is REAL — neurons' hashes changed after training
+2. Generation output CHANGES after training (some tokens come/go)
+3. Chat QA retrieval still works (unaffected)
+4. Chain continues to respond to training (no plateaus)
+
+### Negative
+1. **OVERFITTING**: After 1000 exposures, all prompts converge to the same
+   Korean+French+Clement output. The chain has learned a "frequent" pattern
+   from the corpus and doesn't differentiate between prompts.
+2. **Training is too aggressive**: ~8000 of 21960 neurons flipped per pair.
+   Need a learning rate cap or per-pair neuron limit.
+
+### Lessons
+- The training mechanism is correct (neurons change, generation changes)
+- BUT the training is too aggressive, causing mode collapse
+- Next step: add a `maxFlipsPerPair` parameter (e.g., 100) to limit
+  per-pair changes and prevent overfitting
