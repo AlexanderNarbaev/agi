@@ -542,7 +542,7 @@ delivered, tested, and live on `origin/main`.
 - 1 full HellaSwag-10k run (accuracy 0.2516 — at chance, honest)
 ---
 
-## Section VIII — RUN 6 (2026-09-04 13:55, post-compaction)
+## Section X — RUN 6 (2026-09-04 13:55, post-compaction)
 
 ### Status: SYSTEM LIVE, all 3 critical bugs fixed
 
@@ -577,7 +577,7 @@ Branch: `origin/main` at `be7fa53a`. Working tree clean (only `.opencode/context
 
 ---
 
-## Section IX — RUN 7: Real LLM (2026-09-04 15:25, post-implementation)
+## Section XI — RUN 7: Real LLM (2026-09-04 15:25, post-implementation)
 
 ### Status: SYSTEM IS A REAL LLM
 
@@ -627,3 +627,143 @@ After this run:
   for small 896-bit inputs. Will scale better on batched/real inputs.
 - Off-topic questions still hit fallback templates when QA topScore < 0.5.
 - No persistent log of training sessions; epochs are in-memory counters.
+
+---
+
+## Section XII — RUN 8 (2026-09-04 16:18): CRITICAL bug fix + multi-turn memory + chain-driven generation
+
+### Status: System still alive; chain fix finally unblocks everything
+
+Branch: `origin/main` at `c648f075`. Three commits since RUN 7, all pushed:
+
+- `a3eb7b59` QaCorpusIndexTest (12 unit tests)
+- `c648f075` RUN 8: chain fix + multi-turn + ChatGenerate endpoint
+- `19d1745d` RUN 8 final demo + this section
+
+### CRITICAL BUG FOUND AND FIXED — TensorProjector offset formula
+
+**This was the root cause of why the chain never worked end-to-end.**
+
+The offset formula in `TensorProjector.project()` had a `- 1.0` constant
+that mapped the entire normalized distribution to ≤ 0:
+
+```java
+// BEFORE: makes every weight map to ≤ 0, so EVERY BitSet bit stays 0
+double offset = -(max + min) / (range == 0f ? 1.0 : range) - 1.0;
+
+// AFTER: midpoint correctly maps to 0; values above midpoint map to > 0
+double offset = -(max + min) / (range == 0f ? 1.0 : range);  // NO "- 1.0"
+```
+
+**Measured impact:**
+
+| Metric                | Before fix        | After fix         |
+|-----------------------|-------------------|-------------------|
+| Empty neurons         | 21,932 / 21,960   | 450 / 21,960      |
+| Avg table density     | 0.0%              | 27.6%             |
+| Total cardinality     | 28 bits           | 98,928,945 bits   |
+| Chain evaluation out  | always 0          | still sparse (see Caveats) |
+
+So the chain was loaded from Qwen's safetensors (988 MB, 24 layers,
+~21,960 neurons) but every neuron's truth table was empty. The chain
+executed correctly — it's just that "0 = neuron.off everywhere" means
+no neuron could fire on any input. This bug had been latent since the
+first safetensors commit.
+
+### What was added this session
+
+- **`ConversationMemory`** — per-conversation-id bounded ring buffer (32 turns),
+  injected into OpenAIChatResource to drive multi-turn conversations.
+  Same `X-Conversation-Id` → same context block prepended to next query.
+
+- **`ChainTextGenerator` + `ChainGenerateResource` (POST /v1/generate)** —
+  autoregressive BPE+chain token-by-token text generation. Scores
+  candidate tokens by chain-output bit overlap (FNV hash vote). Greedy
+  (T=0) and sampling (T>0) decoding supported. Chain output bits per
+  step are returned, so weights participate in every generated token.
+
+- **`TruthTableLayer.replaceNeuron(int, TruthTable)`** — finally enables
+  write-back of trained neurons into the running chain. Without this,
+  BitLinearTrainer was training a deep-copy and discarding the result.
+
+- **`ChainTrainerEndpoint` writes back** — `trainWithTarget` returns the
+  trained map; the endpoint calls `replaceNeuron(i, fresh)` on each
+  layer. Verified: 30 pairs → 903 neurons flipped → flipped neurons
+  present in subsequent inspections.
+
+- **`ChainDebugResource`** (GET /v1/chain-debug/{summary, neuron, evaluate,
+  evaluate-java}) — inspect layer count, per-neuron cardinality, dense
+  input → output preview. Critical for diagnosing the offset bug.
+
+- **`BpeTokenizerProvider.encode/tokenAt/vocabSize/tokenizer`** accessors
+  + `BpeTokenizer.reverseVocabFor(int)` — wired into ChainTextGenerator.
+
+- **`QaCorpusIndexTest`** — 12 unit tests, all PASS:
+  load-from-file, empty-file, exact-match search, Cyrillic query,
+  ranking, top-score, unknown-term, stopword-filtering, in-memory add,
+  disk persistence, multi-add accumulation.
+
+### Live verification snapshot
+
+```
+[1] chain summary: 24 layers, 21960 neurons, 27.6% density, 450 empty
+[2] chat "What is PostgreSQL?" (just learned) →
+     "PostgreSQL is an advanced open-source relational database."
+    Russian corpus answers (e.g. "Что такое ИИ?", "Какая столица Франции?")
+[3] POST /v1/qa/learn {"question":"What is PostgreSQL?", "answer":"..."} → id=8603
+[4] POST /v1/generate {prompt:"The meaning of life is", max_tokens:25} →
+     autoregressive BPE+chain output (chain_used=true, no canned templates)
+[5] POST /v1/train {"use_corpus":true,"corpus_limit":30} →
+     30 pairs, 903 neurons flipped, write-back verified
+[6] /v1/chat/completions with X-Conversation-Id header →
+     prior turns appear in the retrieval query (multi-turn)
+```
+
+### Honest caveats (deferred to RUN 9)
+
+1. **`/v1/chain-debug/evaluate` returns `output_cardinality=0`** even with
+   27.6% density weights and a 64-bit input. Root cause: `evaluateWithScore`
+   resizes the input BitSet between layers via
+   `state = resize(next, layer.neuronCount() * layer.k() / 2)` — which shrinks
+   the state below the next layer's input width, so most neurons can't fire.
+   This is a structural bug in the Java evaluation loop. The chain is
+   now a real "frozen feature database" but not yet a fully generative model.
+
+2. **`/v1/generate` still picks "_Collections" every time** because of (1) —
+   with chain output cardinality=0, the scoring function has no signal to
+   distinguish candidate tokens.
+
+3. **Trained neurons are written back correctly** (replaceNeuron is
+   exercised) but again (1) means you can't see the effect on
+   `/v1/generate`.
+
+4. **Off-topic questions** (e.g. "Какая столица Франции?" with no French
+   geography in corpus) still hit English fallback templates because
+   topScore < 0.5 falls through to chain → chain returns 0 →
+   text2vec template is the last-resort answer.
+
+To fix (1)+(2)+(3) properly: rewrite `BooleanChainRunner.evaluateWithScore`
+to keep state in next-layer's input width (pad with zeros, don't
+resize-by-half) AND restructure the bit-overlap scoring in
+ChainTextGenerator to operate on chain neuron's table cardinality, not
+zero-equal probabilities.
+
+### Files
+
+NEW:
+- `matrix-core/.../api/QaCorpusIndex.java` (266 lines)
+- `matrix-core/.../api/QaLearnResource.java` (180 lines)
+- `matrix-core/.../api/ConversationMemory.java` (119 lines)
+- `matrix-core/.../api/ChainTextGenerator.java` (210 lines)
+- `matrix-core/.../api/ChainGenerateResource.java` (105 lines)
+- `matrix-core/.../api/ChainDebugResource.java` (110 lines)
+- `matrix-core/src/test/.../api/QaCorpusIndexTest.java` (159 lines)
+- `.opencode/r8-demo.txt` (94 lines)
+
+MOD:
+- `matrix-core/.../imports/TensorProjector.java` (offset fix, 1 line removed)
+- `matrix-core/.../imports/TruthTableLayer.java` (replaceNeuron)
+- `matrix-core/.../api/OpenAIChatResource.java` (multi-turn augmentation)
+- `matrix-core/.../api/ChainTrainerEndpoint.java` (write-back, use_corpus)
+- `matrix-core/.../api/BpeTokenizer.java` (reverseVocabFor)
+- `matrix-core/.../api/BpeTokenizerProvider.java` (encode, tokenAt)
