@@ -26,7 +26,10 @@ import java.util.concurrent.atomic.AtomicLong;
  */
 public final class BooleanChainRunner {
 
-    private final List<TruthTableLayer> layers;
+    // RUN 9.7: layers field is volatile so /v1/chain/reload can replace
+    // them at runtime. The list reference itself is reassigned atomically
+    // (volatile), but the old list is left for GC.
+    private volatile List<TruthTableLayer> layers;
     private final String modelName;
     private final String sourcePath;
     private final AtomicLong evalCount = new AtomicLong();
@@ -74,6 +77,26 @@ public final class BooleanChainRunner {
     /** Enable or disable the native evaluation fast path. */
     public void setUseNative(boolean use) {
         this.useNative = use;
+    }
+
+    /**
+     * Atomically replace the layer list (RUN 9.7 — chain reload).
+     * Used by /v1/chain/reload to rebuild from safetensors without
+     * restarting the JVM. Also recomputes native tables for fast eval.
+     *
+     * @param newLayers the new layers (defensively copied to immutable)
+     */
+    public synchronized void replaceLayers(List<TruthTableLayer> newLayers) {
+        Objects.requireNonNull(newLayers, "newLayers");
+        this.layers = List.copyOf(newLayers);
+        // Recompute native tables for the new chain
+        java.util.List<long[]> tables = new java.util.ArrayList<>(newLayers.size());
+        int k = newLayers.isEmpty() ? 0 : newLayers.get(0).k();
+        for (TruthTableLayer l : newLayers) {
+            tables.addAll(l.exportTablesForNative());
+        }
+        this.tablesForNative = tables;
+        this.kForNative = k;
     }
 
     public String modelName() { return modelName; }

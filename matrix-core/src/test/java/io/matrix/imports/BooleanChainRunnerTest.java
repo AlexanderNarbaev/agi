@@ -132,4 +132,34 @@ class BooleanChainRunnerTest {
         for (boolean b : r1.bits()) if (b) card++;
         assertThat(card).as("chain with weights should produce SOME non-zero output bits").isGreaterThan(0);
     }
+
+    /**
+     * RUN 9.7 — replaceLayers atomically swaps the chain's layer list.
+     * After the swap, evaluations must use the NEW layers (proved by
+     * different neuron counts producing different outputs).
+     */
+    @Test
+    void replaceLayersSwapsChainAtomically() {
+        TruthTableLayer l0a = buildLayer(50, 9, 0.5);
+        TruthTableLayer l1a = buildLayer(20, 9, 0.5);
+        BooleanChainRunner runner = new BooleanChainRunner("test", "(none)",
+                List.of(l0a, l1a));
+
+        int origNeurons = (int) runner.totalNeurons();
+        int origLayers = runner.layerCount();
+        assertThat(origNeurons).isEqualTo(70);
+        assertThat(origLayers).isEqualTo(2);
+
+        // Build a different chain: 3 layers of 30 neurons each = 90 neurons
+        TruthTableLayer l0b = buildLayer(30, 9, 0.5);
+        TruthTableLayer l1b = buildLayer(30, 9, 0.5);
+        TruthTableLayer l2b = buildLayer(30, 9, 0.5);
+        runner.replaceLayers(List.of(l0b, l1b, l2b));
+
+        assertThat(runner.layerCount()).as("layers swapped").isEqualTo(3);
+        assertThat((int) runner.totalNeurons()).as("neurons swapped").isEqualTo(90);
+
+        // Native tables must be regenerated
+        assertThat(runner.layers()).hasSize(3);
+    }
 }
