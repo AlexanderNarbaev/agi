@@ -1,6 +1,6 @@
-# Project Context — RUN 9.5 (training fix: chain learns and /v1/generate reflects it)
+# Project Context — RUN 9.6 (training cap prevents mode collapse)
 
-> **Status: 2026-09-04 18:28** — Branch `origin/main` at `9e149d23` (all pushed).
+> **Status: 2026-09-04 19:11** — Branch `origin/main` at `4a13f64e` (all pushed).
 
 ## Mission
 
@@ -14,12 +14,12 @@ Build complete MATRIX cognitive system end-to-end (Waves H-O).
 - **NO LLM calls in deterministic decision paths** (per AGENTS.md)
 - **NO random/wall-clock in decision paths**
 
-## Current Status (RUN 9.5, 2026-09-04 18:28)
+## Current Status (RUN 9.6, 2026-09-04 19:11)
 
 ### Branch / Git
-- `origin/main` at `9e149d23` (pushed)
+- `origin/main` at `4a13f64e` (pushed)
 - Working tree CLEAN
-- 23 tests pass (QaCorpusIndexTest 12/12, BitLinearTrainerTest 7/7, BooleanChainRunnerTest 4/4)
+- **24 tests pass**: QaCorpusIndexTest 12/12, BitLinearTrainerTest 8/8 (added `trainWithTargetRespectsFlipCap`), BooleanChainRunnerTest 4/4
 
 ### CRITICAL bug fixed (RUN 9.5)
 **`BitLinearTrainer.flippedTable()` had a semantics bug** — it cleared
@@ -29,19 +29,25 @@ but the neurons never actually changed. After fix: neurons 50, 100, 200
 verified to have changed hashes after training; "Clement" disappears from
 `/v1/generate` output after training.
 
+### RUN 9.6 — Training cap
+RUN 9.5 large training (1000 exposures) revealed **mode collapse** — all
+prompts converge to same output because uncapped training flips ~8000 of
+21960 neurons per pair. After fix with `MAX_FLIPS_PER_PAIR = 200`:
+- 200 flips per pair (was 8000)
+- 1s per pair (was 5s)
+- No mode collapse observed
+- 100% of "flipped" neurons actually change (vs 91% before)
+
 ### CRITICAL bugs fixed (RUN 8 + RUN 9)
 - **RUN 8**: `TensorProjector` offset formula had `- 1.0` constant → 21,932/21,960 neurons had `cardinality=0`. After fix: 450 empty neurons, 27.6% density → now 46.2%.
 - **RUN 9**: `evaluateWithScore` shrank state between layers → most neurons never fired. Fixed with `evaluateWithMagnitude()` + direct neuron table scoring in `ChainTextGenerator`.
 
-### Live verified post-RUN 9.5
-- 24 layers, 21,960 neurons, 449 empty, **46.2% density** (up from 27.6%)
+### Live verified post-RUN 9.6
+- 24 layers, 21,960 neurons, 449 empty, **46.2% density**
 - Chat returns real corpus answers (no canned templates)
 - /v1/qa/learn persists new Q&A → immediately retrievable
-- **/v1/generate output CHANGES after training** — verified:
-  - BEFORE: 'The capital of France isĠCorrespondĠClementĠflashing...'
-  - AFTER: 'The capital of France isĠCorrespondĠflashingĠCorrespond...'
-  - "Clement" disappeared because neurons that voted for it were flipped
-- /v1/train reports "N flipped, N written, M actually changed" where M > 0
+- /v1/generate output CHANGES after training (verified RUN 9.5)
+- /v1/train with cap=200: "trained on pair → 200 neurons flipped, 200 written, 200 actually changed"
 - Multi-turn conversations work (X-Conversation-Id header)
 - Panama bridge wired at startup: "Panama bridge wired — native eval enabled (21960 tables, k=14)"
 - Agent endpoint returns fs.list for file goals
@@ -70,35 +76,34 @@ These are KNOWN issues that need architectural work, not bug fixes:
 
 1. **Chain-driven text generation produces garbled output** — the scoring function uses FNV hash alignment, not learned projection. The chain's weights encode real knowledge but the hash-based scoring is too simplistic to produce fluent text. **Training now affects output but the output is still not English.**
 2. **QA retrieval is the primary "LLM behavior"** — it returns real answers from the 8606-entry corpus. Chain-driven generation is a secondary capability that demonstrates the chain's weights participate in every token.
-3. **Training is aggressive** — ~8,000 neurons flipped per pair (out of 21,960). Might overfit. Need learning rate cap or per-pair neuron limit.
-4. **AutoTrainer can saturate CPU** at startup. Disable via `MATRIX_AUTO_TRAIN_ENABLED=false` env var.
+3. **AutoTrainer can saturate CPU** at startup. Disable via `MATRIX_AUTO_TRAIN_ENABLED=false` env var.
 
 To unblock (1): implement a proper LM head that projects chain output to vocab distribution via learned weights (requires training a projection matrix).
 
 ## Pending Tasks (next session)
 
 1. **Implement LM head projection** (2-3h) — train a linear projection from chain output to BPE vocab distribution
-2. **Cap per-pair neuron flips** (30m) — add a `maxFlipsPerPair` config to prevent overfitting
-3. **Online training endpoint** (1-2h) — async training so /v1/train doesn't lock
-4. **HF token setup** (5m user action) — gated models unlock
-5. **Native build retry** (1-2h, requires user RFC) — Mandrel container or drop Pekko
+2. **Online training endpoint** (1-2h) — async training so /v1/train doesn't lock
+3. **HF token setup** (5m user action) — gated models unlock
+4. **Native build retry** (1-2h, requires user RFC) — Mandrel container or drop Pekko
 
 ## Next session start protocol
 
 1. `cat .opencode/context.md` (this file)
-2. `git log --oneline | head -5` (verify `9e149d23` is HEAD)
-3. `cat docs-v2/vision/FINALSUMMARY.md | grep -E "^## "` (verify Sections X-XIV present)
-4. `cat .opencode/r95-demo.txt` (RUN 9.5 honest demo snapshot)
+2. `git log --oneline | head -5` (verify `4a13f64e` is HEAD)
+3. `cat docs-v2/vision/FINALSUMMARY.md | grep -E "^## "` (verify Sections X-XV present)
+4. `cat .opencode/r96-final.txt` (RUN 9.6 honest demo snapshot)
 5. `ps aux | grep "quarkus-run.jar" | grep -v grep` (server up?)
 6. Resume from Pending Task #1 (LM head projection)
 
 ## Test History
 
-- RUN 9.5: No new tests, but `BitLinearTrainerTest` (7) and `BooleanChainRunnerTest` (4) confirm the relevant code paths
+- RUN 9.6: 1 new test (`trainWithTargetRespectsFlipCap`) for the cap — PASS
+- RUN 9.5: No new tests, but `BitLinearTrainerTest` (8) and `BooleanChainRunnerTest` (4) confirm the relevant code paths
 - RUN 9: 4 new unit tests for BooleanChainRunner (evaluateWithMagnitude) — all PASS
 - RUN 8: 12 new unit tests for QaCorpusIndex — all PASS
-- RUN 6: 7 tests for BitLinearTrainer — all PASS
-- Total: 23 tests, 0 failures, 0 errors
+- RUN 6: 7 tests for BitLinearTrainer — all PASS (extended to 8 in RUN 9.6)
+- Total: **24 tests, 0 failures, 0 errors**
 - Earlier: many unrelated tests (BPE tokenizer, federation, etc.) — green
 
 ## Honesty Statement
