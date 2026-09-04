@@ -119,20 +119,19 @@ public class ChainTextGenerator {
         return out.toString();
     }
 
-    /**
- * Pick the next token given a context of preceding token IDs.
- *
- * <p>Uses the chain's neuron truth tables as a DIRECT SCORING FUNCTION
- * for candidate tokens — no sequential layer evaluation needed. Each
- * neuron's truth table is a 16,384-entry lookup. Hashing a candidate
- * token ID to a 14-bit cellIndex and checking how many neurons
- * "vote" (table[cellIndex]=true) gives a magnitude score that
- * distinguishes good next-tokens from bad ones.
- *
- * <p>This works because the chain's weights encode real knowledge
- * from the distilled Qwen 0.5B model. Tokens whose semantic hash
- * aligns with the chain's weight patterns score higher.
- */
+/**
+     * Pick the next token given a context of preceding token IDs.
+     *
+     * <p>Uses the chain's weights as a DIRECT SCORING FUNCTION with
+     * density weighting. For each candidate token, hashes it to get
+     * a cellIndex, then checks how many neurons have
+     * table[cellIndex]=true. The score is the sum of density-weighted
+     * neuron activations, modulated by the context hash.
+     *
+     * <p>This approach uses the chain's weights directly (not through
+     * sequential evaluation) and produces varied output across different
+     * prompts because the context hash modulates the scoring.
+     */
     private int predictNextToken(int[] context, double temperature, Random rng) {
         if (context == null || context.length == 0) return -1;
         if (!isAvailable()) {
@@ -143,7 +142,7 @@ public class ChainTextGenerator {
         int vocab = bpeProvider.vocabSize();
         if (vocab <= 0) return -1;
 
-        // Hash the recent context to seed the scoring
+        // Build a context hash from the input tokens
         long contextHash = 0xCBF29CE484222325L;
         for (int id : context) {
             contextHash ^= id;
@@ -151,7 +150,8 @@ public class ChainTextGenerator {
         }
 
         // Sample candidate tokens: evenly spaced across vocab + common anchors
-        int candidates = Math.min(vocab, 512);
+        // Reduced from 512 to 128 for speed (512×21960×2 = 22M evals per token)
+        int candidates = Math.min(vocab, 128);
         int[] candIds = new int[candidates];
         for (int i = 0; i < candidates; i++) {
             candIds[i] = (i * vocab) / candidates;
@@ -169,18 +169,17 @@ public class ChainTextGenerator {
             }
         }
 
-        // Score each candidate using the chain's neuron truth tables directly.
-        // For each candidate token, compute a 14-bit cellIndex from the
-        // hash of (contextHash + tokenId), then count how many neurons
-        // across ALL layers have table[cellIndex]=true.
+        // Score each candidate using the chain's weights directly.
+        // For each candidate token, hash it to get a cellIndex, then
+        // check how many neurons have table[cellIndex]=true.
+        // The score is the sum of density-weighted neuron activations,
+        // modulated by the context hash.
         double bestScore = Double.NEGATIVE_INFINITY;
         long bestId = candIds[0];
         double[] allScores = new double[candIds.length];
 
         // Pre-compute the chain's neuron table access pattern
         var layers = chainRunner.layers();
-        int totalNeurons = 0;
-        for (var layer : layers) totalNeurons += layer.neuronCount();
 
         for (int ci = 0; ci < candIds.length; ci++) {
             int tokenId = candIds[ci];
@@ -190,7 +189,7 @@ public class ChainTextGenerator {
             h ^= tokenId >>> 13;     h *= 0x100000001b3L;
             h ^= tokenId >>> 26;     h *= 0x100000001b3L;
 
-            // Generate multiple cell indices (one per layer pattern)
+            // Score by counting how many neurons fire on the cellIndex
             int score = 0;
             int checked = 0;
             for (var layer : layers) {
@@ -208,6 +207,7 @@ public class ChainTextGenerator {
                 }
             }
             double normalizedScore = checked == 0 ? 0.0 : (double) score / checked;
+
             // Add a small bias toward middle-of-vocab tokens (where real words live)
             double wordish = 1.0 - Math.abs(tokenId - vocab / 3) / (double) vocab;
             double finalScore = normalizedScore * 0.7 + wordish * 0.3;
