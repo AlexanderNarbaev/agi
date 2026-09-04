@@ -51,6 +51,9 @@ public class ChainTextGenerator {
     @Inject
     BpeTokenizerProvider bpeProvider;
 
+    @Inject
+    LmHeadTrainer lmHeadTrainer;
+
     /** Width of the bit-window fed to the chain. */
     public static final int CHAIN_INPUT_BITS = 256;
 
@@ -142,11 +145,34 @@ public class ChainTextGenerator {
         int vocab = bpeProvider.vocabSize();
         if (vocab <= 0) return -1;
 
+        // RUN 10: If the LM head is trained AND has substantial vocabulary
+        // coverage AND the user opts in via env var, use it for scoring.
+        // Default OFF until the LM head is properly trained with the
+        // chain's actual output (the current hash-fingerprint approach
+        // causes degenerate behavior — all prompts pick the most common
+        // token like `:`).
+        //
+        // Opt-in: set MATRIX_USE_LM_HEAD=true
+        boolean useLmHead = false;
+        if (lmHeadTrainer != null && lmHeadTrainer.isTrained()
+                && lmHeadTrainer.lmHead().vocabularyCoverage() > 1000) {
+            String optIn = System.getenv("MATRIX_USE_LM_HEAD");
+            if (optIn != null && (optIn.equalsIgnoreCase("true") || optIn.equals("1"))) {
+                useLmHead = true;
+            }
+        }
+
         // Build a context hash from the input tokens
         long contextHash = 0xCBF29CE484222325L;
         for (int id : context) {
             contextHash ^= id;
             contextHash *= 0x100000001b3L;
+        }
+
+        // Build a fingerprint for the context (used by LM head)
+        boolean[] contextFingerprint = null;
+        if (useLmHead) {
+            contextFingerprint = computeContextFingerprint(context);
         }
 
         // Sample candidate tokens: evenly spaced across vocab + common anchors
@@ -169,33 +195,33 @@ public class ChainTextGenerator {
             }
         }
 
-        // Score each candidate using the chain's weights directly.
-        // For each candidate token, hash it to get a cellIndex, then
-        // check how many neurons have table[cellIndex]=true.
-        // The score is the sum of density-weighted neuron activations,
-        // modulated by the context hash.
+        // Score each candidate.
+        // - If LM head is trained AND its top score is significantly higher
+        //   than hash score, use LM head scoring.
+        // - Else, fall back to hash-based neuron firings (which is prompt-
+        //   specific but less corpus-aligned).
         double bestScore = Double.NEGATIVE_INFINITY;
         long bestId = candIds[0];
         double[] allScores = new double[candIds.length];
 
-        // Pre-compute the chain's neuron table access pattern
-        var layers = chainRunner.layers();
+        LmHead lmHead = useLmHead ? lmHeadTrainer.lmHead() : null;
 
+        // Compute hash-based scores first (always)
+        double[] hashScores = new double[candIds.length];
+        double maxHash = Double.NEGATIVE_INFINITY;
         for (int ci = 0; ci < candIds.length; ci++) {
             int tokenId = candIds[ci];
-            // FNV-1a hash combining context and token
             long h = contextHash;
             h ^= tokenId;            h *= 0x100000001b3L;
             h ^= tokenId >>> 13;     h *= 0x100000001b3L;
             h ^= tokenId >>> 26;     h *= 0x100000001b3L;
 
-            // Score by counting how many neurons fire on the cellIndex
             int score = 0;
             int checked = 0;
+            var layers = chainRunner.layers();
             for (var layer : layers) {
                 int k = layer.k();
-                int cellIndex = (int) (h & ((1L << k) - 1));  // lower k bits
-                // Also use a rotated hash for diversity
+                int cellIndex = (int) (h & ((1L << k) - 1));
                 int cellIndex2 = (int) ((h >>> 17) & ((1L << k) - 1));
                 for (var neuron : layer.neurons()) {
                     if (neuron == null) continue;
@@ -206,18 +232,37 @@ public class ChainTextGenerator {
                     } catch (Throwable t) { /* defensive */ }
                 }
             }
-            double normalizedScore = checked == 0 ? 0.0 : (double) score / checked;
+            hashScores[ci] = checked == 0 ? 0.0 : (double) score / checked;
+            if (hashScores[ci] > maxHash) maxHash = hashScores[ci];
+        }
 
-            // RUN 9.7: removed wordish bias (was 0.3 weight toward vocab/3).
-            // The old bias dominated: for a token at vocab/3, wordish=1.0
-            // and the final score became 0.46*0.7 + 1.0*0.3 = 0.62 regardless
-            // of the chain's actual score. So every prompt picked the same
-            // token (around vocab/3) and all outputs converged.
-            //
-            // New scoring: chain weight 100%, no prior bias.
-            // This makes outputs DIFFER across prompts (the chain actually
-            // votes per-token), even though quality is still garbled.
-            double finalScore = normalizedScore;
+        // Compute LM head scores
+        double[] lmScores = null;
+        double maxLm = Double.NEGATIVE_INFINITY;
+        if (useLmHead) {
+            lmScores = new double[candIds.length];
+            for (int ci = 0; ci < candIds.length; ci++) {
+                lmScores[ci] = lmHead.score(contextFingerprint, candIds[ci]);
+                if (lmScores[ci] > maxLm) maxLm = lmScores[ci];
+            }
+        }
+
+        // Decide whether to use LM head: its top score must beat hash top by a margin.
+        // Otherwise use pure hash (avoids the degenerate case where LM head picks
+        // one punctuation token for everything).
+        double lmMargin = (lmScores != null) ? (maxLm - maxHash) : Double.NEGATIVE_INFINITY;
+        boolean useLmHeadActive = useLmHead && lmMargin > 0.05;
+
+        for (int ci = 0; ci < candIds.length; ci++) {
+            int tokenId = candIds[ci];
+            double finalScore;
+
+            if (useLmHeadActive) {
+                // Mix LM head and hash scores (LM head gets 0.7 weight)
+                finalScore = 0.7 * lmScores[ci] + 0.3 * hashScores[ci];
+            } else {
+                finalScore = hashScores[ci];
+            }
 
             allScores[ci] = finalScore;
             if (finalScore > bestScore) {
@@ -240,6 +285,31 @@ public class ChainTextGenerator {
             if (acc >= r) return candIds[i];
         }
         return (int) bestId;
+    }
+
+    /**
+     * RUN 10 — Compute a hash-based fingerprint of the context tokens.
+     * Same approach used in training (see {@link LmHeadTrainer#trainOne}),
+     * so the LM head sees a fingerprint it was trained on.
+     */
+    private boolean[] computeContextFingerprint(int[] context) {
+        if (context == null || context.length == 0) return new boolean[0];
+        LmHead lmHead = lmHeadTrainer.lmHead();
+        int totalN = lmHead.totalNeurons();
+        if (totalN <= 0) return new boolean[0];
+
+        boolean[] fingerprint = new boolean[totalN];
+        long qHash = 1469598103934665603L;  // FNV-1a offset basis
+        for (int id : context) {
+            qHash ^= id;
+            qHash *= 1099511628211L;
+        }
+        for (int i = 0; i < totalN; i++) {
+            long h = qHash ^ ((long) i * 0x100000001b3L);
+            h *= 0x100000001b3L;
+            fingerprint[i] = ((h ^ (h >>> 13)) & 0xFF) < 96;  // ~37.5% density
+        }
+        return fingerprint;
     }
 
     /** Build a fixed-size bit array from the last N token IDs. */
