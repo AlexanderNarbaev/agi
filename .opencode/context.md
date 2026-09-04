@@ -1,58 +1,68 @@
-# Project Context — RUN 4 final state
+# Project Context — RUN 6 final state (post-compaction + bug fixes)
 
 ## Mission
-Build complete MATRIX cognitive system end-to-end (Waves H-O, last user request).
+Build complete MATRIX cognitive system end-to-end (Waves H-O).
 
-## Run outcome (RUN 4)
+**User directives (verbatim, MUST respect)**:
+- "Matrix just distill data and forget which model it came from"
+- Chain layer count must be auto-discovered (not hardcoded)
+- "The main activity is overall performance where all planned capabilities are set"
+- System runs as single JVM
+- **NO LLM calls in deterministic decision paths** (per AGENTS.md)
 
-### Verifier findings resolved
-- ✅ **BLOCKING-1**: Wave K full-bench artifact (`docs-v2/research/reports/EXP-MATRIX.13-full-bench-10k.json`) committed and pushed to `origin/main` at `e8ce8c09`
-- ✅ **BLOCKING-2**: `matrix-core/models/training_data/auto_generated.jsonl` restored to HEAD content (2 conversation records preserved)
+## Current Status (RUN 6, 2026-09-04 13:55)
 
-### Pushed commits (this session)
-- `e8ce8c09` Wave K full-bench artifact committed
-- `2cd9b44e` Phase 1+3 multi-model loader (MultiModelLoader combines all safetensors into one BooleanChainRunner; layer count auto-discovered)
-- `1307de47` Shutdown false alarm (bash timeout SIGTERM, not JVM); chat + corpus + training pipeline work; modular split deferred
-- `0ec542b7` Chat uses Tsetlin-trained BIR before PureBir template (real corpus knowledge); TsetlinTrainer fixed (inputBits 64→20)
-- `0fec8c09` OpenAIChatResource uses magnitude-aware chain scoring
-- (prior commits in earlier sessions)
+### Branch / Git
+- `origin/main` at `be7fa53a` (pushed)
+- Working tree clean except `.opencode/context.md` (this file, from compaction)
+- 24 files in the goal-guard changed-files list, all committed
 
-## Current state
+### Critical bugs fixed this session
+1. **AgentBrainService null-path crash** — preload split into 4 Throwable-safe steps. Server now starts in 83s with no path-null error.
+2. **Panama wire-up infrastructure** — `BooleanChainRunner` setters, `TruthTableLayer.exportTablesForNative()`, `BooleanChainProducer.autoDetect()` builds tables via reflection and calls setters. **Live runtime caveat**: bridge init timing means `isLoaded()` returns false at producer call time; pure-Java path stays active.
+3. **Training signal flip** — `BitLinearTrainer` handles k=0 edge case + new `trainWithTarget` method. `BitLinearTrainerTest` (7 tests, all PASS) verifies `flipped>0` and `accuracy>0.5`.
 
-### System works end-to-end
-- `nohup java -jar matrix-core/build/matrix-core-1.0.0-runner.jar &` (port 9091, stable, daemon-threaded)
-- Chat through boolean substrate: `/v1/sandbox/chat` and `/v1/chat/completions` both use `chain_used: true`
-- 13,416 training pairs loaded (corpus + world knowledge)
-- 24 layers × 21,960 neurons combined from Qwen2.5-0.5B-Instruct into ONE matrix instance
-- ConversationRecorder records every chat to `data/conversations/`
-- ChatDrivenTrainer runs online training cycles
-
-### Verified live (latest test)
-```
-$ curl http://localhost:9091/v1/chain-status
-{"model":"MultiModel[qwen2.5-0.5b]","layers":24,"totalNeurons":21960,"empty":false}
-```
+### Live verified
+- Server starts in 83s, no errors
+- chain-status: 24 layers / 21,960 neurons, non-empty
+- state: chain_restored_from_disk=true, LTM L2_MODULE=11
+- agent/plan: returns `fs.list` tool for "search files" goal
+- benchmark (200 ops): chain_eval p50=174μs, p99=191μs
+- bpe_encode: p50=6.8ms
+- BitLinearTrainerTest: 7/7 PASS
 
 ### Architecture (delivered)
-- `MultiModelLoader` scans `models/external/*/model.safetensors`, projects each to TruthTable neurons, concatenates into ONE `BooleanChainRunner`
-- Layer count is auto-discovered (NOT hardcoded "24")
-- `BooleanChainProducer` (CDI bean) loads via `MultiModelLoader.loadFromDirectory()` at startup
-- `BooleanChainRunner` has magnitude-aware scoring (`ChainResult.weightedScore`)
-- `ExpandedTextToBitsService` 896-bit encoder; `BpeTokenizerProvider` real Qwen BPE
-- `PersistentHierarchicalMemory` JSONL store with auto-restore on `StartupEvent`
-- `KnowledgeShare` pluggable `MessageBus` (file-system prod, in-memory tests)
+- `MultiModelLoader` scans `models/external/*/model.safetensors` → ONE `BooleanChainRunner`
+- `BooleanChainProducer` (CDI) loads + builds native tables
+- `BooleanChainRunner` has `setPanamaBridge`, `setNativeTables`, `setUseNative` setters + `useNative` fast path
+- `PanamaNativeBridge` (FFM/JEP 424) wraps `libtruthy.so` (15KB, -O3)
+- `TruthTableLayer.exportTablesForNative()` exposes packed long[] tables
+- `ChainStateStore` persists to `data/chain_state.json` on shutdown
+- `ChatDrivenTrainer`, `AutoTrainer`, `BitLinearTrainer` for online + batch training
+- `ConversationRecorder` records chats
+- `AgentEndpoint` (POST /plan + /tools), `StateEndpoint` (state + compact), `BenchmarkEndpoint` (p50/p95/p99)
 
-## Pending (next session)
+## Pending Tasks (next session)
 
-1. **Phase 2: Persist chain state** (1h) — auto-save/load loaded chain to `data/chain_state.json` so restarts resume from prior state
-2. **Modular split** (1h + user Java cleanup) — `matrix-sim` for Pekko-using packages
-3. **Phase 5: Performance** (2h) — ZGC + lazy loading + batch inference → <50ms chat latency
-4. **Phase 6: Agent mode** (1h) — `/v1/agent` endpoint
-5. **Phase 7: Knowledge UI** (30m) — `POST /v1/knowledge`, `GET /v1/state`
-6. **Real training** (2-3h) — BitLinear trainer on real corpus so chain fires meaningfully
+1. **Panama bridge runtime activation** (1h) — fix the CDI init timing so `isLoaded()` returns true when the producer runs. May need to add `@Startup` priority or move the load into the producer's `build()` rather than relying on `@PostConstruct` of the bridge bean.
+2. **Re-benchmark after Panama activation** (15m) — expect <100μs p50 (vs 174μs pure-Java).
+3. **HF token setup** (5m user action) — `huggingface-cli login` so gated models load. Not a code change.
+4. **Native build retry** (1-2h, requires user RFC) — Mandrel container or drop Pekko.
+5. **Goal Guard review cycles** — when this thread yields, the plugin will run the 13 review gates automatically. No code action needed.
 
 ## Honesty statement
-- Server stable (false alarm shutdown was bash `timeout`)
-- Chat responds with `chain_used: true` but outputs are zero-density (chain neurons don't match BPE bit patterns for benign text) — needs training
-- All session commits pushed to `origin/main` (latest: `e8ce8c09`)
-- Working tree clean
+- 1 commit this session (`be7fa53a`), 7 files, +401/-85 lines
+- All committed and pushed to `origin/main`
+- Server starts in 83s, all 5 endpoints respond, training tests pass
+- Panama bridge is wired in code but does NOT activate at runtime (bean init timing)
+- Chain eval p50 = 174μs (pure Java)
+- BitLinearTrainerTest proves the training signal now flips neurons (7/7 PASS)
+- HF token still missing (gated models unavailable)
+- Goal Guard: 0 review cycles run; plugin auto-runs when main thread yields
+
+## Next session start protocol
+1. `cat .opencode/context.md` (this file)
+2. `git log --oneline | head -3` (verify `be7fa53a`)
+3. `cat docs-v2/vision/FINALSUMMARY.md` (Section VIII for RUN 6)
+4. Check server is running: `ps aux | grep matrix-core-1.0.0-runner | grep -v grep`
+5. Resume from Pending Task #1 (Panama runtime activation)

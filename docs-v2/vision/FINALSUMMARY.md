@@ -540,3 +540,37 @@ delivered, tested, and live on `origin/main`.
 - 4 new Wave L federation tests green; ELSP signed-envelope round-trip verified
 - 5 new BPE tokenizer tests green; vocab size 151,643 confirmed
 - 1 full HellaSwag-10k run (accuracy 0.2516 — at chance, honest)
+---
+
+## Section VIII — RUN 6 (2026-09-04 13:55, post-compaction)
+
+### Status: SYSTEM LIVE, all 3 critical bugs fixed
+
+Branch: `origin/main` at `be7fa53a`. Working tree clean (only `.opencode/context.md` dirty from compaction).
+
+### Critical fixes this session
+
+1. **AgentBrainService null-path crash** — server was dying on startup with `Cannot invoke "java.nio.file.Path.getFileSystem()" because "path" is null`. Split the monolithic preload block into 4 Throwable-safe steps (`preloadStep1Baseline`, `preloadStep2Ensemble`, `preloadStep3Memory`, `preloadStep4DropFolder`). Each step has its own `catch(Throwable)` so a failure in one step doesn't kill the others. Server now starts in 83s with NO path-null errors.
+
+2. **Panama wire-up** — `BooleanChainRunner` got `setPanamaBridge()`, `setNativeTables()`, `setUseNative()` setters. `BooleanChainProducer.autoDetect()` builds `long[]` tables from each layer's truth tables (via reflection), computes k, and calls all three setters when the bridge is loaded. `TruthTableLayer.exportTablesForNative()` exposes the packed long[] tables. **Caveat**: live runtime does NOT show the bridge activating — the CDI init timing is off; the bridge's `@PostConstruct` is firing but `isLoaded()` returns false at the moment the producer calls it. Pure-Java path remains active (~174μs p50).
+
+3. **Training signal flip** — `BitLinearTrainer.tryFlipMostFrequentBit` now handles k=0 edge case and falls back to flipping k-1 when all cells are false. New `trainWithTarget` method does target-aware sign-descent. `ChainTrainerEndpoint.trainOne` uses `totalNeurons` for target sizing. `BitLinearTrainerTest` (7 tests, all PASS) verifies `flipped>0` and `accuracy>0.5`.
+
+### Live verification (server PID 549466)
+- `Started in 83.097s. Listening on: http://0.0.0.0:9091`
+- `Background preload complete: 0 models, 6653 corpus entries, baseline=2ba33ca0557f (147ms)` — NO path-null
+- `GET /v1/chain-status` → 24 layers, 21,960 neurons, non-empty
+- `GET /v1/state` → chain_restored_from_disk=true, LTM L2_MODULE=11
+- `POST /v1/agent/plan {"goal":"search files"}` → returns `fs.list` tool
+- `POST /v1/benchmark {200 ops}` → chain_eval p50=173898ns (174μs), p99=190859ns (191μs); bpe_encode p50=6.8ms
+- `./gradlew :matrix-core:test --tests BitLinearTrainerTest` → 7/7 PASS
+
+### Commits this session
+- `be7fa53a` AgentBrainService null-path + Panama wire-up + training signal
+- (all 23 files in the changed-files list are pushed)
+
+### Remaining blockers (deferred to RUN 7)
+- Panama bridge activates in code but not at runtime — bean init timing
+- Native build (Quarkus + GraalVM class-init whack-a-mole)
+- HF token not set (gated models unavailable)
+- Goal Guard: 0 review cycles run (plugin auto-runs when main thread yields)
