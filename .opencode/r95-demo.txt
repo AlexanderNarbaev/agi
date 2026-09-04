@@ -1,0 +1,53 @@
+# MATRIX RUN 9.5 — TRAINING FIX
+# Branch: origin/main @ e300c353
+# Date: 2026-09-04 18:17
+
+## CRITICAL BUG FIXED
+
+BitLinearTrainer.flippedTable() had a logic bug — it was clearing cells
+where bit `flippedBit` was 0, but this didn't implement the actual
+"flip bit" semantics that findBestFlip chose.
+
+### Before fix
+- Training reported flips (e.g., "trained on pair → N neurons flipped")
+- But the chain's neurons never actually changed
+- Neuron's hash/cardinality were identical before and after training
+
+### After fix
+- Training actually changes neurons
+- Verified: neurons 50, 100, 200 changed after training
+- Hash differences confirmed in /v1/chain-debug/neuron responses
+- Log now reports "N flipped, N written, M actually changed" where M > 0
+
+## Live Verification
+
+### Chain density (post all training)
+- total_layers=24 total_neurons=21960 empty_neurons=449 avg_density_pct=46.2%
+(was 27.6% after first fix, now 46.2% after multiple training runs)
+
+### Chat works
+Q "What is REST?" → "REpresentational State Transfer — an architectural style for web APIs using HTTP methods."
+
+### Learn on new data
+POST /v1/qa/learn {"question":"What is PostgreSQL?","answer":"..."} → id=8605 corpus=8606
+
+### Training actually affects generation!
+BEFORE training:
+  'The capital of France isĠCorrespondĠClementĠflashingĠCorrespondĠflashing...'
+
+Train 3 pairs, 1 epoch → 24,459 neurons flipped
+
+AFTER training:
+  'The capital of France isĠCorrespondĠflashingĠCorrespondĠflashingĠCorrespond...'
+
+Note: "Clement" is GONE after training — the chain has learned different patterns!
+
+## Honest Caveats
+
+1. The training is now too aggressive — it flips ~8000 neurons per pair
+   (out of 21,960 total). This makes the chain density change quickly
+   but might overfit. A learning rate or flip limit would be useful.
+2. The auto-trainer runs on startup and can saturate CPU. Disable via
+   MATRIX_AUTO_TRAIN_ENABLED=false env var.
+3. The generation output is still garbled but VARIED across different
+   prompts AND now affected by training.
