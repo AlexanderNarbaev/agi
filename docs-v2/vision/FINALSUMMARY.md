@@ -1228,8 +1228,6 @@ generation. Everything else is in place: chain evaluation, training
 loop, async training, reload, multilingual QA retrieval, multi-turn
 memory, async jobs, Panama native eval.
 
-(End of file - total ~1280 lines)
-
 ---
 
 ## Section XIX — RUN 11 (2026-09-04 22:20): negative sampling + audit fixes
@@ -1288,7 +1286,7 @@ suites with the new LM head scoring path.
 
 ---
 
-## Section XIX — RUN 11 (2026-09-04 22:34): LM head negative sampling
+## Section XX — RUN 11.1 (2026-09-04 22:34): LM head audit fixes (opt-in nNegatives + vocab bound)
 
 ### Status: Contrastive learning feature added (opt-in via nNegatives param)
 

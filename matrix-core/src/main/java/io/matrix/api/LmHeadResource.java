@@ -18,9 +18,13 @@ import java.util.Map;
  * output to vocabulary distribution. Training uses Q&A pairs from the
  * corpus to learn which neuron activations predict which tokens.
  *
- * <p>POST /v1/lm-head/train?limit=N&epochs=M — train
+ * <p>POST /v1/lm-head/train?limit=N&epochs=M&nNegatives=K — train
+ * <br>  &nbsp;&nbsp;limit       default 500, max 8606
+ * <br>  &nbsp;&nbsp;epochs      default 3,   max 10
+ * <br>  &nbsp;&nbsp;nNegatives  default 0 (off, RUN 10 Hebbian),
+ *                      1-20 to enable contrastive learning (RUN 11)
+ * <br>  &nbsp;&nbsp;returns the actual nNegatives applied + trained/neurons
  * <br>GET  /v1/lm-head/status                  — show training state
- * <br>POST /v1/lm-head/reset                  — clear all weights
  */
 @jakarta.ws.rs.Path("/v1/lm-head")
 @Produces(MediaType.APPLICATION_JSON)

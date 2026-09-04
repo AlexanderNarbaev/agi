@@ -1,9 +1,27 @@
-# Project Context — RUN 11.1 (audit fixes for RUN 11 negative sampling)
+# Project Context — RUN 11.2 (UX doc-vs-code fixes for RUN 11.1)
 
-> **Status: 2026-09-04 22:34** — Branch `origin/main` at `957557e3` (auto-applied
-> audit fixes). RUN 11.1 commit pending on top of `957557e3`.
+> **Status: 2026-09-04 22:45** — Branch `origin/main` at `ff431854` (RUN 11.1
+> pushed). RUN 11.2 commit pending on top: UX doc-vs-code fixes only, no
+> code logic change.
 
-### RUN 11.1 (audit fixes — Goal Guard cycle #0 followup)
+### RUN 11.2 (UX doc-vs-code fixes)
+
+The UX reviewer's strict pass on `ff431854` flagged three doc-vs-code /
+doc-quality issues. All fixed:
+
+1. **Duplicate `## Section XIX` heading in FINALSUMMARY.md**
+   - Second occurrence renamed to `## Section XX — RUN 11.1 (…): LM head audit fixes`
+   - Section sequence is now X, XI, …, XVIII, XIX, XX — no ambiguity
+2. **Stale `(End of file - total ~1280 lines)` annotation** mid-file (line 1231)
+   - Removed. Single end-of-file anchor at the actual file end (~1378 lines).
+3. **LmHeadResource.java Javadoc lied about endpoints**
+   - Old: claimed `POST /v1/lm-head/reset — clear all weights` (no such
+     endpoint exists) and omitted the new `?nNegatives=K` param.
+   - New: Javadoc accurately documents
+     `POST /v1/lm-head/train?limit=N&epochs=M&nNegatives=K` (defaults/max)
+     plus `GET /v1/lm-head/status`.
+
+### RUN 11.1 (audit fixes — Goal Guard cycle #0 followup, already pushed)
 
 Goal Guard cycle #0 auto-applied three audit fixes in `957557e3`:
 1. Doc-vs-code lie — dangling javadoc ref removed
