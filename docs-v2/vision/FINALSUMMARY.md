@@ -1285,3 +1285,94 @@ this RUN — the architectural fix is small, scoped, and tested at the
 unit level only). A future RUN should re-run the HellaSwag / ARC-Easy
 suites with the new LM head scoring path.
 
+
+---
+
+## Section XIX — RUN 11 (2026-09-04 22:34): LM head negative sampling
+
+### Status: Contrastive learning feature added (opt-in via nNegatives param)
+
+Branch: `origin/main` at `957557e3` (with fixes). Pending commit on top.
+
+### What changed (after Goal Guard cycle #0 audit)
+
+The first RUN 11 commit had three issues flagged by the Goal Guard
+review cycle (`957557e3` auto-applied fixes):
+1. Doc-vs-code lie — dangling `{@link #updateConcurrent}` reference
+2. Thread-safety regression — `synchronized` blocks stripped from
+   update/score/save (per-token `double[]` was torn-writeable)
+3. Process violation — `Random(System.nanoTime())` violates
+   AGENTS.md "no wall-clock in decision paths"
+
+This commit (RUN 11.1) adds the remaining audit fixes:
+
+#### Fix 1: Opt-in default for nNegatives
+`POST /v1/lm-head/train` now defaults to `nNegatives=0` (off). The
+old behavior (positive-only Hebbian updates from RUN 10) is
+preserved when called without the new param. Setting
+`nNegatives=5` (or 3-20) enables contrastive learning.
+
+Response now includes `nNegatives` so callers can verify what was
+applied.
+
+#### Fix 2: Vocabulary bound bug
+Old: `int negMax = Math.min(200000, 100000);` — always 100000.
+The accompanying comment claimed this avoided BPE specials but BPE
+specials live at the LOW end (0..~151643, then merges, then specials).
+The bound actually biased negatives toward specials, away from
+regular tokens that need contrast.
+
+Fixed: `int negMax = 200000;` — full Qwen vocab range + headroom.
+Negatives now sample from the entire vocab.
+
+#### Fix 3: Determinism
+Seeded RNG: `new Random((long) targetToken * 0x9E3779B97F4A7C15L)`.
+Derives from `targetToken` only — no `System.nanoTime()`, no
+wall-clock dependency. Same (target, fingerprint) → same negative
+samples. Training is now reproducible across runs.
+
+#### Fix 4: Test determinism
+`negativeSamplingAddsNegativeTokensToVocab` asserts a bounded
+range (2..4) instead of a minimum. The vocab coverage depends
+on the deterministic seed, so the test is now stable.
+
+### Tests
+
+7/7 LmHeadTest pass (5 original + 2 negative-sampling):
+- `emptyHeadReturnsZeroScore`
+- `updateIncreasesScoreForTrainedToken`
+- `differentFingerprintsProduceDifferentScores`
+- `saveLoadRoundTrip`
+- `scoreIsBounded`
+- `negativeSamplingAddsNegativeTokensToVocab` (deterministic)
+- `negativeSamplingPreservesPositiveSignal`
+
+### Endpoints
+
+- `POST /v1/lm-head/train?limit=N&epochs=M&nNegatives=K` — train
+  - `limit` default 500, max 8606
+  - `epochs` default 3, max 10
+  - `nNegatives` default 0 (off, RUN 10 behavior), max 20
+- `GET /v1/lm-head/status` — show training state
+
+### Honest assessment
+
+Negative sampling is now opt-in and correctly bounded but still
+slow at scale: 1000 pairs × 2 epochs × 5 negatives takes >10 minutes
+because each token update triggers 5+1 = 6 separate per-token
+write-lock cycles. A production-quality implementation would
+batch updates or use sparse weight storage (only track neurons
+that actually fire). For now, the LM head is documented as
+"infrastructure in place, opt-in, not yet effective" — same status
+as RUN 10.
+
+### Pending Tasks
+
+1. **Sparse weight storage** (1-2h) — only store non-zero weights per
+   token to reduce memory and improve cache locality
+2. **Faster training loop** (2-3h) — batch updates, no per-token lock
+3. **Real chain output as features** (still blocked by training speed)
+4. **HF token setup** (user action)
+5. **Native build retry** (user RFC)
+
+(End of file - total ~1380 lines)

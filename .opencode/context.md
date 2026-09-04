@@ -1,7 +1,20 @@
-# Project Context — RUN 11 (negative sampling + audit fixes)
+# Project Context — RUN 11.1 (audit fixes for RUN 11 negative sampling)
 
-> **Status: 2026-09-04 22:21** — Branch `origin/main` at `a0f5b5bb` (pushed).
-> RUN 11 fixes live on top of RUN 10 in a separate commit.
+> **Status: 2026-09-04 22:34** — Branch `origin/main` at `957557e3` (auto-applied
+> audit fixes). RUN 11.1 commit pending on top of `957557e3`.
+
+### RUN 11.1 (audit fixes — Goal Guard cycle #0 followup)
+
+Goal Guard cycle #0 auto-applied three audit fixes in `957557e3`:
+1. Doc-vs-code lie — dangling javadoc ref removed
+2. Thread-safety regression — `synchronized` restored on per-token arrays
+3. Process violation — `Random(System.nanoTime())` → deterministic seed
+
+RUN 11.1 adds more fixes flagged in the review verdict:
+1. **Default nNegatives=0** — opt-in via query param, preserves RUN 10 behavior
+2. **Vocab bound fix** — `negMax = 200000` (was hardcoded 100000 → biased toward specials)
+3. **Deterministic tests** — assert bounded range, not minimum
+4. **Status exposes nNegatives** — callers can verify what was applied
 
 ## Mission
 

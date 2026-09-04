@@ -78,9 +78,19 @@ public class LmHeadTrainer {
         }
     }
 
-    /** Train on the Q&A corpus. RUN 11: now uses negative sampling. */
+    /**
+     * Train on the Q&A corpus with default nNegatives=0 (no negative sampling).
+     *
+     * <p>RUN 11: This 2-arg overload defaults to nNegatives=0 to preserve
+     * the original (RUN 10) behavior. The 3-arg overload {@link #train(int, int, int)}
+     * takes an explicit nNegatives for users who want contrastive learning.
+     *
+     * <p>The HTTP endpoint {@code POST /v1/lm-head/train} accepts an
+     * {@code nNegatives} query parameter (default 0) and exposes the
+     * actual count in the response.
+     */
     public synchronized TrainResult train(int limit, int epochs) {
-        return train(limit, epochs, 5);  // 5 negatives per positive by default
+        return train(limit, epochs, 0);  // 0 negatives by default for API stability
     }
 
     /**

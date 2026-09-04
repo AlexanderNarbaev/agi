@@ -89,3 +89,18 @@ for (int cell = 0; cell < cells; cell++) {
 
 ### Honest framing
 Negative sampling is small and tested at the unit level. Full-bench re-measure (HellaSwag / ARC-Easy with new LM head scoring) is NOT in this RUN — that's a future scope.
+
+## RUN 11 — 2026-09-04 22:21 — LM head negative sampling
+
+### Goal Guard cycle #0 (957557e3)
+The Goal Guard plugin auto-applied three audit fixes before this commit:
+- Doc-vs-code lie removed
+- Thread-safety regression fixed (synchronized restored)
+- Wall-clock RNG violation fixed (deterministic seed)
+
+### RUN 11.1 (this commit, in progress)
+Additional audit fixes per the FAIL verdict:
+1. `nNegatives` opt-in (default 0, was hardcoded 5)
+2. Vocab bound bug (`negMax = 200000`, was hardcoded `Math.min(200000, 100000)`)
+3. Deterministic test assertions
+4. Status exposes `nNegatives`

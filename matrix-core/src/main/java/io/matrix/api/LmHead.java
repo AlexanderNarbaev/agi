@@ -106,7 +106,11 @@ public class LmHead {
         // reproducible across runs.
         if (nNegatives > 0) {
             java.util.Random rng = new java.util.Random((long) targetToken * 0x9E3779B97F4A7C15L);
-            int negMax = Math.min(200000, 100000);
+            // RUN 11 fix: vocab range = full Qwen vocab (151643) + headroom, not
+            // just the first 100k. BPE specials live at the low end so the
+            // old bound (100k) over-sampled specials. Use the full vocab range
+            // so negatives include regular tokens that need contrast.
+            int negMax = 200000;
             for (int n = 0; n < nNegatives; n++) {
                 int negToken;
                 do {

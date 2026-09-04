@@ -33,13 +33,18 @@ public class LmHeadResource {
     @Path("/train")
     public Map<String, Object> train(
             @QueryParam("limit") Integer limit,
-            @QueryParam("epochs") Integer epochs) {
+            @QueryParam("epochs") Integer epochs,
+            @QueryParam("nNegatives") Integer nNegatives) {
         int l = limit != null ? Math.min(limit, 8606) : 500;
         int e = epochs != null ? Math.min(epochs, 10) : 3;
-        LmHeadTrainer.TrainResult result = trainer.train(l, e);
+        // RUN 11: nNegatives defaults to 0 (off) to preserve RUN 10 behavior.
+        // Set to 5+ to enable contrastive learning (slower but better convergence).
+        int n = nNegatives != null ? Math.max(0, Math.min(nNegatives, 20)) : 0;
+        LmHeadTrainer.TrainResult result = trainer.train(l, e, n);
         Map<String, Object> body = result.toMap();
         body.put("totalNeurons", trainer.lmHead().totalNeurons());
         body.put("trained", trainer.isTrained());
+        body.put("nNegatives", n);
         body.put("cumulative_pairs", trainer.trainedPairs());
         body.put("cumulative_epochs", trainer.trainedEpochs());
         body.put("last_trained_at", trainer.lastTrainedAt());
