@@ -31,10 +31,10 @@ public final class BooleanChainRunner {
     private final String sourcePath;
     private final AtomicLong evalCount = new AtomicLong();
     private final AtomicLong totalNanos = new AtomicLong();
-    private final java.util.List<long[]> tablesForNative;
-    private final int kForNative;
-    private final boolean useNative;
-    private final io.matrix.imports.PanamaNativeBridge panamaBridge;
+    private volatile java.util.List<long[]> tablesForNative;
+    private volatile int kForNative;
+    private volatile boolean useNative;
+    private volatile io.matrix.imports.PanamaNativeBridge panamaBridge;
 
     public BooleanChainRunner(String modelName, String sourcePath,
                               List<TruthTableLayer> layers) {
@@ -62,9 +62,25 @@ public final class BooleanChainRunner {
         this.panamaBridge = null;  // inject via BooleanChainProducer or set later
     }
 
+    /** Inject the Panama native bridge for fast C-level evaluation. */
+    public void setPanamaBridge(io.matrix.imports.PanamaNativeBridge bridge) {
+        this.panamaBridge = bridge;
+    }
+    /** Set pre-computed native tables and k value for fast evaluation. */
+    public void setNativeTables(java.util.List<long[]> tables, int k) {
+        this.tablesForNative = tables;
+        this.kForNative = k;
+    }
+    /** Enable or disable the native evaluation fast path. */
+    public void setUseNative(boolean use) {
+        this.useNative = use;
+    }
+
     public String modelName() { return modelName; }
     public String sourcePath() { return sourcePath; }
     public int layerCount() { return layers.size(); }
+    /** Public read-only access to the underlying layer list (used by Panama wire-up). */
+    public List<TruthTableLayer> layers() { return layers; }
     public long totalNeurons() {
         return layers.stream().mapToLong(TruthTableLayer::neuronCount).sum();
     }

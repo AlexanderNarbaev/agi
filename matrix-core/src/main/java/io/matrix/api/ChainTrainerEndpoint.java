@@ -136,59 +136,32 @@ public class ChainTrainerEndpoint {
         boolean[] in = encodeText(input);
         boolean[] target = encodeText("_target_" + expected);
         if (in.length == 0) return 0;
-        // resize target to match chain input width for stable scoring
-        if (target.length < in.length) {
-            boolean[] padded = new boolean[in.length];
-            System.arraycopy(target, 0, padded, 0, target.length);
-            target = padded;
-        } else if (target.length > in.length) {
-            boolean[] truncated = new boolean[in.length];
-            System.arraycopy(target, 0, truncated, 0, in.length);
-            target = truncated;
+        // resize target to match the number of neurons (one bit per neuron output)
+        int totalNeurons = (int) chainRunner.totalNeurons();
+        if (totalNeurons <= 0) return 0;
+
+        // Build target bits: one per neuron. If target is shorter, pad with false.
+        boolean[] targetBits = new boolean[totalNeurons];
+        for (int i = 0; i < totalNeurons && i < target.length; i++) {
+            targetBits[i] = target[i];
         }
 
-        final boolean[] targetFinal = target;
-        final boolean[] inFinal = in;
-        EvalFn evalFn = new EvalFn() {
-            @Override
-            public int exampleCount() { return 1; }
-            @Override
-            public double evaluate(Map<String, List<TruthTable>> neurons) {
-                BooleanChainRunner tmp = new BooleanChainRunner(
-                        "training-tmp", "in-memory",
-                        snapshotLayers(neurons.get("external-corpus")));
-                boolean[] out = tmp.evaluate(inFinal);
-                int n = Math.min(out.length, targetFinal.length);
-                if (n == 0) return 0.0;
+        // Build input bits: pad input to cover all neuron k-slices
+        int inputWidth = totalNeurons * getLayerK();
+        boolean[] inputBits = new boolean[inputWidth];
+        for (int i = 0; i < in.length && i < inputWidth; i++) {
+            inputBits[i] = in[i];
+        }
 
-                // Signal: correctly_fired − wrongly_fired, normalized by max
-                // possible gain. Range: -1 to +1. The all-zeros output
-                // against an all-zeros target now scores 0 (not 1), so
-                // sign-descent has real signal to work with.
-                int correctlyFired = 0;   // target=1 AND output=1
-                int wronglyFired   = 0;   // target=0 AND output=1
-                int targetOnCount   = 0;   // target bits that are 1
-                for (int i = 0; i < n; i++) {
-                    if (targetFinal[i]) targetOnCount++;
-                    if (out[i] && targetFinal[i]) correctlyFired++;
-                    else if (out[i] && !targetFinal[i]) wronglyFired++;
-                }
-                // Best case: all "on" bits fire, no "off" bits fire
-                // score = (correctlyFired − wronglyFired) / max(1, targetOnCount)
-                // normalized so range is roughly [−1, +1]
-                int denom = Math.max(1, targetOnCount);
-                return ((double) (correctlyFired - wronglyFired)) / denom;
-            }
-        };
-
+        List<Integer> layerKs = getLayerKs();
         List<TruthTable> snapshot = snapshotNeurons();
         BitLinearTrainer trainer = new BitLinearTrainer();
-        TrainerState state = trainer.train(
+        TrainerState state = trainer.trainWithTarget(
                 wrapAsMap(snapshot),
-                evalFn,
-                1,    // one epoch per pair (cheap; users can pass epochs in body)
-                0.0,  // no early-stopping tolerance
-                null);
+                layerKs,
+                inputBits,
+                targetBits,
+                1);    // one epoch per pair
         long flipped = state.history().stream()
                 .mapToLong(TrainerStats::neuronsFlipped)
                 .sum();
@@ -196,6 +169,23 @@ public class ChainTrainerEndpoint {
             log.debug("trained on '{}' → '{}' — {} neurons flipped", input, expected, flipped);
         }
         return flipped;
+    }
+
+    /** Get k value from the first layer. */
+    private int getLayerK() {
+        for (TruthTableLayer layer : currentLayers()) {
+            return layer.k();
+        }
+        return 14; // fallback
+    }
+
+    /** Get k values for each layer. */
+    private List<Integer> getLayerKs() {
+        List<Integer> ks = new ArrayList<>();
+        for (TruthTableLayer layer : currentLayers()) {
+            ks.add(layer.k());
+        }
+        return ks;
     }
 
     /** Snapshot all neurons across all chain layers. */
@@ -266,14 +256,6 @@ public class ChainTrainerEndpoint {
         Map<String, List<TruthTable>> out = new LinkedHashMap<>();
         out.put("external-corpus", neurons);
         return out;
-    }
-
-    /** Wrap a flat neuron list as a single layer for the temp runner. */
-    private List<TruthTableLayer> snapshotLayers(List<TruthTable> neurons) {
-        // snapshot neurons are passed by the trainer; build a single layer
-        if (neurons.isEmpty()) return List.of();
-        int k = 14;  // standard cell size for Qwen projection
-        return List.of(new TruthTableLayer(neurons, k));
     }
 
     private boolean[] encodeText(String text) {

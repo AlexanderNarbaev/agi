@@ -3,6 +3,7 @@ package io.matrix.imports;
 import io.quarkus.arc.properties.IfBuildProperty;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Produces;
+import jakarta.inject.Inject;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,6 +44,9 @@ public class BooleanChainProducer {
     @ConfigProperty(name = "matrix.chain.budget", defaultValue = "16384")
     int budget;
 
+    @Inject
+    PanamaNativeBridge panamaBridge;
+
     @Produces
     @ApplicationScoped
     public BooleanChainRunner runner() {
@@ -82,7 +86,43 @@ public class BooleanChainProducer {
             if (result.isEmpty()) continue;
             log.info("loaded {} model(s) — totalLayers={} totalNeurons={}",
                     result.entries().size(), result.totalLayers(), result.totalNeurons());
-            return result.chain();
+            BooleanChainRunner chain = result.chain();
+            // Wire Panama native bridge for fast evaluation
+            try {
+                if (panamaBridge != null && panamaBridge.isLoaded()) {
+                    java.util.List<long[]> tables = new java.util.ArrayList<>();
+                    int k = 0;
+                    // Read layers via reflection (same pattern as MultiModelLoader)
+                    var f = BooleanChainRunner.class.getDeclaredField("layers");
+                    f.setAccessible(true);
+                    @SuppressWarnings("unchecked")
+                    java.util.List<TruthTableLayer> layers =
+                            (java.util.List<TruthTableLayer>) f.get(chain);
+                    for (TruthTableLayer layer : layers) {
+                        k = layer.k();
+                        for (io.matrix.neuron.TruthTable neuron : layer.neurons()) {
+                            java.util.BitSet bs = neuron.table();
+                            int cells = 1 << neuron.k();
+                            int longs = (cells + 63) / 64;
+                            long[] packed = new long[longs];
+                            for (int i = 0; i < cells; i++) {
+                                if (bs.get(i)) packed[i / 64] |= (1L << (i % 64));
+                            }
+                            tables.add(packed);
+                        }
+                    }
+                    chain.setPanamaBridge(panamaBridge);
+                    chain.setNativeTables(tables, k);
+                    chain.setUseNative(true);
+                    log.info("Panama bridge wired — native eval enabled ({} tables, k={})",
+                            tables.size(), k);
+                } else {
+                    log.info("Panama bridge not available — using pure-Java eval");
+                }
+            } catch (Throwable t) {
+                log.warn("Panama bridge wiring skipped: {}", t.getMessage());
+            }
+            return chain;
         }
         log.warn("no safetensors found; chain runner empty");
         return BooleanChainRunner.empty();

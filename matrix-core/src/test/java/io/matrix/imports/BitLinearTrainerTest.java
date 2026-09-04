@@ -161,6 +161,68 @@ class BitLinearTrainerTest {
         return out;
     }
 
+    @Test
+    void trainWithTargetFlipsNeurons() {
+        // Synthetic chain: 5 layers, k=8, 64 neurons per layer = 320 neurons
+        int numLayers = 5;
+        int k = 8;
+        int neuronsPerLayer = 64;
+        int totalNeurons = numLayers * neuronsPerLayer;
+
+        Map<String, List<TruthTable>> initial = new LinkedHashMap<>();
+        List<Integer> layerKs = new ArrayList<>();
+        for (int l = 0; l < numLayers; l++) {
+            String name = "layer" + l;
+            List<TruthTable> neurons = new ArrayList<>();
+            for (int n = 0; n < neuronsPerLayer; n++) {
+                // each neuron: k inputs → one bit output
+                // initialize with a random-ish truth table
+                long table = 0;
+                for (int cell = 0; cell < (1 << k); cell++) {
+                    if (((cell * 31 + l * 17 + n * 7) & 3) == 0) {
+                        table |= (1L << cell);
+                    }
+                }
+                neurons.add(TruthTable.fromLong(k, table));
+            }
+            initial.put(name, neurons);
+            layerKs.add(k);
+        }
+
+        BitLinearTrainer trainer = new BitLinearTrainer();
+        long totalFlipped = 0;
+        double lastAccuracy = 0;
+
+        // Train 100 random pairs for 3 epochs each
+        for (int p = 0; p < 100; p++) {
+            boolean[] input = new boolean[totalNeurons * k];
+            boolean[] target = new boolean[totalNeurons];
+            for (int i = 0; i < input.length; i++) {
+                input[i] = ((i * 31 + p * 17) & 3) == 0;
+            }
+            for (int i = 0; i < target.length; i++) {
+                target[i] = ((i * 7 + p * 13) & 3) == 0;
+            }
+
+            BitLinearTrainer.TrainerState state = trainer.trainWithTarget(
+                    initial, layerKs, input, target, 3);
+            long flipped = state.history().stream()
+                    .mapToLong(BitLinearTrainer.TrainerStats::neuronsFlipped)
+                    .sum();
+            totalFlipped += flipped;
+            lastAccuracy = state.finalEvalAccuracy();
+            // update initial with the trained neurons for next pair
+            initial = state.trainedNeurons();
+        }
+
+        assertThat(totalFlipped)
+                .as("at least some neurons should flip during 100 pairs × 3 epochs")
+                .isGreaterThan(0);
+        assertThat(lastAccuracy)
+                .as("final accuracy should be above 50% after training")
+                .isGreaterThan(0.5);
+    }
+
     /** Reflective call to the private static flippedTable. */
     private static TruthTable invokeFlipped(TruthTable original, int flippedBit) {
         try {

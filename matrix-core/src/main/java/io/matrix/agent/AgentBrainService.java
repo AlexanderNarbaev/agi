@@ -26,6 +26,7 @@ import io.matrix.simulation.AgentBrain;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.event.Observes;
 import jakarta.inject.Inject;
+import io.quarkus.runtime.ShutdownEvent;
 import io.quarkus.runtime.StartupEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -65,6 +66,7 @@ public class AgentBrainService {
     private volatile String lastAction = "";
     private volatile int stuckCounter = 0;
     private volatile int exploreTicks = 0;
+    private volatile boolean shuttingDown = false;
     private static final int STUCK_THRESHOLD = 30;
     private static final int EXPLORE_WINDOW = 80; // explore for 80 ticks after stuck detected
 
@@ -101,24 +103,15 @@ public class AgentBrainService {
      */
     void onStart(@Observes StartupEvent ev) {
         Thread preload = new Thread(() -> {
+            if (shuttingDown) return;
             log.info("Background preload: UnifiedPretrainedMerger + MultiBrainEnsemble + NeuralMemory corpus...");
             long t0 = System.currentTimeMillis();
             try {
-                // 1. Build unified brain from all pretrained models (one snapshot to rule them all)
-                if (UnifiedPretrainedMerger.baselineExists()) {
-                    this.baselineManifest = UnifiedPretrainedMerger.loadBaseline(UnifiedPretrainedMerger.baselineManifest());
-                    log.info("Baseline snapshot loaded: {}", baselineManifest);
-                } else {
-                    UnifiedPretrainedMerger.MergeResult result = UnifiedPretrainedMerger.buildUnifiedBrain();
-                    this.baselineManifest = result.manifest();
-                    log.info("Unified baseline built: {} (kept {} of {} neurons from {} models)",
-                            baselineManifest, result.keptNeurons(),
-                            result.totalNeurons(), result.modelCount());
-                }
-                // 2. Preload all 8 pretrained models
-                this.ensemble = MultiBrainEnsemble.loadAll();
-                // 3. Preload corpus + compute signatures
-                preloadNeuralMemory();
+                // Defensive: Quarkus may have already shut down by the time this thread runs.
+                // Wrap in Throwable to prevent the executor from being killed.
+                preloadStep1Baseline();
+                preloadStep2Ensemble();
+                preloadStep3Memory();
                 long ms = System.currentTimeMillis() - t0;
                 log.info("Background preload complete: {} models, {} corpus entries, baseline={} ({}ms)",
                         ensemble != null ? ensemble.size() : 0,
@@ -126,19 +119,80 @@ public class AgentBrainService {
                         baselineManifest != null && baselineManifest.sha256 != null
                                 ? baselineManifest.sha256.substring(0, 12) : "n/a",
                         ms);
-                // 4. Trigger initial drop folder scan (non-blocking)
-                if (dropFolder != null) {
-                    dropFolder.scanNow();
-                    log.info("Initial drop folder scan: {} files, {} pairs, {} multimodal",
-                            dropFolder.totalFiles(), dropFolder.totalPairs(),
-                            dropFolder.totalMultimodal());
-                }
-            } catch (Exception e) {
-                log.error("Background preload failed: {}", e.getMessage());
+                preloadStep4DropFolder();
+            } catch (Throwable t) {
+                // Throwable (not just Exception): catches Errors like NPE from null Path.getFileSystem()
+                log.warn("Background preload skipped: {}", t.getMessage());
             }
         }, "matrix-preload");
         preload.setDaemon(true);
         preload.start();
+    }
+
+    void onShutdown(@Observes ShutdownEvent ev) {
+        shuttingDown = true;
+    }
+
+    private void preloadStep1Baseline() {
+        try {
+            if (!UnifiedPretrainedMerger.baselineExists()) {
+                UnifiedPretrainedMerger.MergeResult result = UnifiedPretrainedMerger.buildUnifiedBrain();
+                if (result != null) {
+                    this.baselineManifest = result.manifest();
+                    log.info("Unified baseline built: {} (kept {} of {} neurons from {} models)",
+                            baselineManifest, result.keptNeurons(),
+                            result.totalNeurons(), result.modelCount());
+                }
+                return;
+            }
+            Path manifestPath = UnifiedPretrainedMerger.baselineManifest();
+            if (manifestPath == null) {
+                log.debug("baselineManifest() returned null — skipping baseline load");
+                return;
+            }
+            UnifiedPretrainedMerger.BaselineManifest m = UnifiedPretrainedMerger.loadBaseline(manifestPath);
+            if (m != null) {
+                this.baselineManifest = m;
+                log.info("Baseline snapshot loaded: {}", baselineManifest);
+            }
+        } catch (Throwable t) {
+            log.warn("preloadStep1Baseline skipped: {}", t.getMessage());
+        }
+    }
+
+    private void preloadStep2Ensemble() {
+        try {
+            this.ensemble = MultiBrainEnsemble.loadAll();
+        } catch (Throwable t) {
+            log.warn("MultiBrainEnsemble.loadAll skipped: {}", t.getMessage());
+            this.ensemble = null;
+        }
+    }
+
+    private void preloadStep3Memory() {
+        try {
+            preloadNeuralMemory();
+        } catch (Throwable t) {
+            log.warn("preloadNeuralMemory skipped: {}", t.getMessage());
+            this.neuralMemory = null;
+        }
+    }
+
+    private void preloadStep4DropFolder() {
+        if (dropFolder == null) return;
+        try {
+            dropFolder.scanNow();
+            log.info("Initial drop folder scan: {} files, {} pairs, {} multimodal",
+                    dropFolder.totalFiles(), dropFolder.totalPairs(),
+                    dropFolder.totalMultimodal());
+        } catch (Throwable t) {
+            log.warn("DropFolder scan skipped: {}", t.getMessage());
+        }
+    }
+
+    @SuppressWarnings("unused")
+    private void preloadOldCombinedForReference() {
+        // legacy code kept for diff reference; see preloadStep*() methods above
     }
 
     /**

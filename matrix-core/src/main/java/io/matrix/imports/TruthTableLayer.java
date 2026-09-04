@@ -36,6 +36,17 @@ public final class TruthTableLayer {
     public List<TruthTable> neurons() { return neurons; }
 
     /**
+     * Export the packed truth tables for native evaluation.
+     * Each entry is a {@code long[]} from {@link TruthTable#table().toLongArray()}.
+     * Used by {@link BooleanChainRunner#evaluateNative} via Project Panama.
+     */
+    public List<long[]> exportTablesForNative() {
+        return neurons.stream()
+                .map(tt -> tt.table().toLongArray())
+                .toList();
+    }
+
+    /**
      * Evaluate the layer on the input. The input is sliced into
      * {@code neuronCount} chunks of {@code k} bits; each chunk is fed
      * to its neuron; the bits are concatenated into the output.
