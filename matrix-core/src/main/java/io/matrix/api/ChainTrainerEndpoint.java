@@ -210,26 +210,55 @@ public class ChainTrainerEndpoint {
     private List<TruthTableLayer> currentLayers() {
         // The BooleanChainRunner holds layers privately. Read via reflection
         // — try declared fields first, then walk superclasses if needed.
+        // Resolve CDI proxy first (Quarkus client proxies don't expose
+        // the real fields).
+        Object target = resolveCdiTarget(chainRunner);
         try {
-            Class<?> c = chainRunner.getClass();
+            Class<?> c = target.getClass();
             while (c != null && c != Object.class) {
                 try {
                     var f = c.getDeclaredField("layers");
                     f.setAccessible(true);
                     @SuppressWarnings("unchecked")
-                    List<TruthTableLayer> ls = (List<TruthTableLayer>) f.get(chainRunner);
+                    List<TruthTableLayer> ls = (List<TruthTableLayer>) f.get(target);
                     if (ls != null) return ls;
                 } catch (NoSuchFieldException ignored) {
                     // try next class
                 }
                 c = c.getSuperclass();
             }
-            log.warn("layers field not found in chainRunner class hierarchy");
             return List.of();
         } catch (Exception e) {
             log.warn("cannot read chain layers: {}", e.getMessage());
             return List.of();
         }
+    }
+
+    /** Unwrap Quarkus CDI client proxy to get the real instance. */
+    private Object resolveCdiTarget(Object proxy) {
+        if (proxy == null) return null;
+        // Quarkus 3.x exposes the target via readWriteTarget / context
+        try {
+            var m = proxy.getClass().getMethod("getTarget");
+            Object t = m.invoke(proxy);
+            if (t != null && t != proxy) return t;
+        } catch (Exception ignored) {
+            // try next approach
+        }
+        // Alternative: ArcContainer proxies have a "arcInstance" or
+        // unwrap via ClientProxy
+        for (var f : proxy.getClass().getDeclaredFields()) {
+            f.setAccessible(true);
+            try {
+                Object v = f.get(proxy);
+                if (v != null && v != proxy && v.getClass().getName().contains("BooleanChainRunner")) {
+                    return v;
+                }
+            } catch (Exception ignored) {
+                // try next
+            }
+        }
+        return proxy;
     }
 
     /** Wrap a flat neuron list as the multi-key map the trainer expects. */
