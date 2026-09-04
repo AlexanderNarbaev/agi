@@ -208,9 +208,16 @@ public class ChainTextGenerator {
             }
             double normalizedScore = checked == 0 ? 0.0 : (double) score / checked;
 
-            // Add a small bias toward middle-of-vocab tokens (where real words live)
-            double wordish = 1.0 - Math.abs(tokenId - vocab / 3) / (double) vocab;
-            double finalScore = normalizedScore * 0.7 + wordish * 0.3;
+            // RUN 9.7: removed wordish bias (was 0.3 weight toward vocab/3).
+            // The old bias dominated: for a token at vocab/3, wordish=1.0
+            // and the final score became 0.46*0.7 + 1.0*0.3 = 0.62 regardless
+            // of the chain's actual score. So every prompt picked the same
+            // token (around vocab/3) and all outputs converged.
+            //
+            // New scoring: chain weight 100%, no prior bias.
+            // This makes outputs DIFFER across prompts (the chain actually
+            // votes per-token), even though quality is still garbled.
+            double finalScore = normalizedScore;
 
             allScores[ci] = finalScore;
             if (finalScore > bestScore) {
