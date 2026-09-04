@@ -1143,3 +1143,89 @@ behavior (only one mutation at a time) and avoids introducing new
 race conditions.
 
 (End of file - total ~1180 lines)
+
+---
+
+## Section XVIII — RUN 10 (2026-09-04 21:44): LM head projection infrastructure
+
+### Status: Sparse Hebbian LM head implemented (opt-in until properly trained)
+
+Branch: `origin/main` at `3c96c284`. One commit:
+
+- `3c96c284` WAL: RUN 10 — LM head projection (Hebbian sparse classifier)
+
+### What changed
+
+Implemented a learned LM head projection from chain output to
+vocabulary distribution:
+
+- **`LmHead`** — sparse Hebbian classifier. One weight vector per
+  vocab token (sparse storage, only non-zero weights). Score = sum of
+  weights for firing neurons, minus decay for non-firing.
+- **`LmHeadTrainer`** — trains from Q&A corpus. For each pair,
+  compute hash fingerprint of question, then increment weights for
+  firing neurons for each answer token.
+- **`LmHeadResource`** — `POST /v1/lm-head/train?limit=N&epochs=M` and
+  `GET /v1/lm-head/status`.
+- **`ChainTextGenerator`** — uses LM head when trained (opt-in via
+  `MATRIX_USE_LM_HEAD=true` env var AND vocab_coverage > 1000).
+
+### Tests
+
+5 new tests in `LmHeadTest`:
+- `emptyHeadReturnsZeroScore` — untrained tokens return 0
+- `updateIncreasesScoreForTrainedToken` — score increases after training
+- `differentFingerprintsProduceDifferentScores` — fingerprint matters
+- `saveLoadRoundTrip` — weights persist across restarts
+- `scoreIsBounded` — no NaN/Infinity
+
+**Total tests: 30/30 PASS** (was 25; added 5 LmHeadTest).
+
+### Honest limitation
+
+The current LM head implementation has a degenerate behavior when
+used with low vocab coverage: it learns to pick the most common
+token (`:` in our corpus) for any fingerprint, causing all prompts
+to converge on that token. This is because:
+
+1. The fingerprint is a hash of the question (not the chain's
+   actual output), so different questions can map to similar
+   fingerprints
+2. The Hebbian update creates strong positive weights for tokens
+   that appear often in answers (like `:` after most sentences)
+
+**Mitigation**: LM head is opt-in via env var. Default is OFF. The
+hash-based scoring (RUN 9.7) provides prompt-specific output.
+
+### What's needed for a real LM head
+
+To make the LM head actually improve generation quality, the next
+step would be to use the chain's REAL output as the feature vector
+(not a hash fingerprint). This requires:
+
+1. Run the full chain evaluation per question (currently too slow
+   for batch training — ~30s/pair)
+2. Use that as features instead of the hash
+3. Train via proper gradient descent instead of Hebbian update
+
+This is the architectural gap that would close the loop on fluent
+generation. RUN 11 candidates.
+
+### Architectural state
+
+```
+RUN 8:  TensorProjector offset fix (CRITICAL — neurons no longer empty)
+RUN 9:  Structural chain eval fix + direct neuron scoring
+RUN 9.5: flippedTable bug fix (training actually modifies chain)
+RUN 9.6: per-pair neuron flip cap (prevents mode collapse)
+RUN 9.7: wordish bias removal + /v1/chain/reload (prompt-specific)
+RUN 9.8: /v1/train/async (server stays responsive during training)
+RUN 10:  LM head projection infrastructure (opt-in, not yet effective)
+```
+
+The LM head is the LAST architectural piece needed for fluent
+generation. Everything else is in place: chain evaluation, training
+loop, async training, reload, multilingual QA retrieval, multi-turn
+memory, async jobs, Panama native eval.
+
+(End of file - total ~1280 lines)
