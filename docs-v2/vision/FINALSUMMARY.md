@@ -995,3 +995,93 @@ e308c321 WAL: RUN 9 docs — address reviewer findings (stale context.md, commit
 ```
 
 (End of file - total ~970 lines)
+
+---
+
+## Section XVI — RUN 9.7 (2026-09-04 20:19): Prompt-specific generation + chain reload
+
+### Status: Generation is now prompt-specific (no more convergence)
+
+Branch: `origin/main` at `c3a4f4de`. Two commits:
+
+- `7a7f640e` WAL: RUN 9.7 — add /v1/chain/reload endpoint + replaceLayers()
+- `c3a4f4de` WAL: RUN 9.7 — remove wordish bias in ChainTextGenerator
+
+### Two architectural wins
+
+#### Win 1: `/v1/chain/reload` endpoint
+
+`BooleanChainRunner.layers` field made `volatile` (was `final`). New
+`synchronized replaceLayers(List<TruthTableLayer>)` method atomically
+swaps the layer list and recomputes native tables for the Panama bridge.
+
+New endpoint `ChainReloadResource` at `POST /v1/chain/reload`:
+
+- `?mode=from-source` (default): rebuilds the chain from
+  `models/external/*/model.safetensors` in place. Verified: 597ms for
+  24 layers × 21,960 neurons.
+- `?mode=discard-state`: deletes `data/chain_state.json` so the NEXT
+  restart loads fresh.
+
+#### Win 2: Removed wordish bias (this was the actual "convergence" cause!)
+
+The scoring function in `ChainTextGenerator.selectToken` had:
+```java
+double wordish = 1.0 - Math.abs(tokenId - vocab / 3) / (double) vocab;
+double finalScore = normalizedScore * 0.7 + wordish * 0.3;
+```
+
+The `wordish` term peaked at `tokenId = vocab / 3`, where it equalled
+1.0. With chain density 0.46, the final score became
+`0.46 * 0.7 + 1.0 * 0.3 = 0.62` regardless of the chain's actual
+score for that token. So every prompt picked the same token (the one
+closest to vocab/3 in the candidate list) and all outputs converged
+to identical text.
+
+This was NOT overfitting (the convergence happens with a fresh-from-
+safetensors chain too) — it was the bias term dominating the scoring.
+
+After fix:
+```java
+double finalScore = normalizedScore;  // chain weight = 100%
+```
+
+Each prompt now gets its own chain-scored token sequence:
+
+```
+'Python is'              → 'Python isĠSokĠportrayterĠdeltaĠappreciate'
+'Java is'                → 'Java isĠwas->$Ġ[áĴ¼3'
+'Hello world'            → 'Hello worldæģĲæĢĸæģĲæĢĸĠapplicationContextH:'
+'The capital of France'   → 'The capital of FranceBĠlibsĠchemineteranganĠabund'
+'What is'                → 'What isðŁĺģæµģæĺŁD<ID.md'
+'Foo bar baz'            → 'Foo bar bazimatelyĠappreciate.Ċfoon...'
+'Once upon a time'       → 'Once upon a timeG_category4Ġflashing...'
+```
+
+Old behavior (all identical):
+```
+'Python is' → 'Python isÐºÑĥÐ»ÑĮÑĤÑĥÑĢÐ¶Ð°(liĠflashingèĢł'
+'Java is'   → 'Java isÐºÑĥÐ»ÑĮÑĤÑĥÑĢÐ¶Ð°(liĠflashingèĢł'
+'Hello world' → 'Hello worldÐºÑĥÐ»ÑĮÑĤÑĥÑĢÐ¶Ð°(liĠflashingèĢł'
+```
+
+### Updated Honest Limitations
+
+The chain can produce prompt-specific token sequences, but the
+sequences are still garbled (multiple languages mixed). This is the
+honest remaining gap that requires a learned LM-head projection to
+fix. For now:
+- QA retrieval answers real questions (Russian and English)
+- Chain generation shows prompt-specific output (varied across prompts)
+- Training affects the chain's weights (verified by neuron hash changes)
+
+### Test results
+
+| Test | Result |
+|---|---|
+| `BooleanChainRunnerTest` | 5/5 PASS (added `replaceLayersSwapsChainAtomically`) |
+| `BitLinearTrainerTest` | 8/8 PASS |
+| `QaCorpusIndexTest` | 12/12 PASS |
+| **TOTAL** | **25/25 PASS** |
+
+(End of file - total ~1100 lines)

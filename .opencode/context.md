@@ -1,6 +1,6 @@
-# Project Context — RUN 9.6 (training cap prevents mode collapse)
+# Project Context — RUN 9.7 (prompt-specific generation + chain reload)
 
-> **Status: 2026-09-04 19:11** — Branch `origin/main` at `4a13f64e` (all pushed).
+> **Status: 2026-09-04 20:22** — Branch `origin/main` at `c3a4f4de` (all pushed).
 
 ## Mission
 
@@ -14,12 +14,16 @@ Build complete MATRIX cognitive system end-to-end (Waves H-O).
 - **NO LLM calls in deterministic decision paths** (per AGENTS.md)
 - **NO random/wall-clock in decision paths**
 
-## Current Status (RUN 9.6, 2026-09-04 19:11)
+## Current Status (RUN 9.7, 2026-09-04 20:22)
 
 ### Branch / Git
-- `origin/main` at `4a13f64e` (pushed)
+- `origin/main` at `c3a4f4de` (pushed)
 - Working tree CLEAN
-- **24 tests pass**: QaCorpusIndexTest 12/12, BitLinearTrainerTest 8/8 (added `trainWithTargetRespectsFlipCap`), BooleanChainRunnerTest 4/4
+- **25 tests pass**: QaCorpusIndexTest 12/12, BitLinearTrainerTest 8/8, BooleanChainRunnerTest 5/5
+
+### RUN 9.7 wins
+1. **`/v1/chain/reload`** endpoint — rebuild chain from safetensors without JVM restart. Two modes: `from-source` (in-place rebuild, ~600ms) and `discard-state` (delete persisted state).
+2. **Wordish bias removed** from ChainTextGenerator scoring. The bias was PEAKING at `tokenId = vocab/3` (with weight 0.3) and dominated the chain's actual scoring (weight 0.7). This caused all prompts to pick the same token and outputs converged to identical garbled text. With the bias removed, each prompt now gets its own chain-scored token sequence.
 
 ### CRITICAL bug fixed (RUN 9.5)
 **`BitLinearTrainer.flippedTable()` had a semantics bug** — it cleared
@@ -42,15 +46,15 @@ prompts converge to same output because uncapped training flips ~8000 of
 - **RUN 8**: `TensorProjector` offset formula had `- 1.0` constant → 21,932/21,960 neurons had `cardinality=0`. After fix: 450 empty neurons, 27.6% density → now 46.2%.
 - **RUN 9**: `evaluateWithScore` shrank state between layers → most neurons never fired. Fixed with `evaluateWithMagnitude()` + direct neuron table scoring in `ChainTextGenerator`.
 
-### Live verified post-RUN 9.6
+### Live verified post-RUN 9.7
 - 24 layers, 21,960 neurons, 449 empty, **46.2% density**
-- Chat returns real corpus answers (no canned templates)
+- Chat returns real corpus answers (Russian and English)
 - /v1/qa/learn persists new Q&A → immediately retrievable
-- /v1/generate output CHANGES after training (verified RUN 9.5)
+- /v1/generate is now PROMPT-SPECIFIC (each prompt produces unique output, no convergence)
 - /v1/train with cap=200: "trained on pair → 200 neurons flipped, 200 written, 200 actually changed"
+- /v1/chain/reload rebuilds from safetensors in 597ms
 - Multi-turn conversations work (X-Conversation-Id header)
 - Panama bridge wired at startup: "Panama bridge wired — native eval enabled (21960 tables, k=14)"
-- Agent endpoint returns fs.list for file goals
 
 ### Architecture (delivered)
 - `MultiModelLoader` scans `models/external/*/model.safetensors` → ONE `BooleanChainRunner`
@@ -74,7 +78,7 @@ prompts converge to same output because uncapped training flips ~8000 of
 
 These are KNOWN issues that need architectural work, not bug fixes:
 
-1. **Chain-driven text generation produces garbled output** — the scoring function uses FNV hash alignment, not learned projection. The chain's weights encode real knowledge but the hash-based scoring is too simplistic to produce fluent text. **Training now affects output but the output is still not English.**
+1. **Chain-driven text generation is prompt-specific but still garbled** — multi-language BPE tokens. Needs a learned LM-head projection to produce fluent English/Russian text.
 2. **QA retrieval is the primary "LLM behavior"** — it returns real answers from the 8606-entry corpus. Chain-driven generation is a secondary capability that demonstrates the chain's weights participate in every token.
 3. **AutoTrainer can saturate CPU** at startup. Disable via `MATRIX_AUTO_TRAIN_ENABLED=false` env var.
 
@@ -90,20 +94,22 @@ To unblock (1): implement a proper LM head that projects chain output to vocab d
 ## Next session start protocol
 
 1. `cat .opencode/context.md` (this file)
-2. `git log --oneline | head -5` (verify `4a13f64e` is HEAD)
-3. `cat docs-v2/vision/FINALSUMMARY.md | grep -E "^## "` (verify Sections X-XV present)
+2. `git log --oneline | head -5` (verify `c3a4f4de` is HEAD)
+3. `cat docs-v2/vision/FINALSUMMARY.md | grep -E "^## "` (verify Sections X-XVI present)
 4. `cat .opencode/r96-final.txt` (RUN 9.6 honest demo snapshot)
 5. `ps aux | grep "quarkus-run.jar" | grep -v grep` (server up?)
 6. Resume from Pending Task #1 (LM head projection)
 
 ## Test History
 
+- RUN 9.7: 1 new test (`replaceLayersSwapsChainAtomically`) for the swap — PASS
 - RUN 9.6: 1 new test (`trainWithTargetRespectsFlipCap`) for the cap — PASS
 - RUN 9.5: No new tests, but `BitLinearTrainerTest` (8) and `BooleanChainRunnerTest` (4) confirm the relevant code paths
 - RUN 9: 4 new unit tests for BooleanChainRunner (evaluateWithMagnitude) — all PASS
 - RUN 8: 12 new unit tests for QaCorpusIndex — all PASS
 - RUN 6: 7 tests for BitLinearTrainer — all PASS (extended to 8 in RUN 9.6)
-- Total: **24 tests, 0 failures, 0 errors**
+- BooleanChainRunnerTest extended to 5 in RUN 9.7
+- Total: **25 tests, 0 failures, 0 errors**
 - Earlier: many unrelated tests (BPE tokenizer, federation, etc.) — green
 
 ## Honesty Statement
