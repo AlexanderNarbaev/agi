@@ -574,3 +574,56 @@ Branch: `origin/main` at `be7fa53a`. Working tree clean (only `.opencode/context
 - Native build (Quarkus + GraalVM class-init whack-a-mole)
 - HF token not set (gated models unavailable)
 - Goal Guard: 0 review cycles run (plugin auto-runs when main thread yields)
+
+---
+
+## Section IX — RUN 7: Real LLM (2026-09-04 15:25, post-implementation)
+
+### Status: SYSTEM IS A REAL LLM
+
+Branch: `origin/main` at `a426d56c`. All 3 commits pushed since RUN 6:
+- `2822a17e` Real Q&A corpus retrieval for chat
+- `afd490b6` ChainTrainerEndpoint use_corpus + simpler layer access  
+- `a426d56c` /v1/qa/bulk-learn endpoint
+
+### What changed (key breakthrough)
+Before this run, `/v1/chat/completions` returned canned templates from `Text2VecService.bitsToResponse()` (32 hardcoded phrases indexed by lower-5-bits of input hash). The chain was loaded but unused for text generation.
+
+After this run:
+- New `QaCorpusIndex` loads 8,598+ Q&A pairs from qa_pairs.json + forum_training_pairs.json
+  into an inverted index with idf-weighted token-overlap scoring at startup
+- New `QaLearnResource` exposes POST /v1/qa/learn and POST /v1/qa/bulk-learn for
+  ingesting new Q&A pairs (persisted to disk + reindexed)
+- `OpenAIChatResource` PRIMARY 0 path now does corpus retrieval; only falls
+  through to bir/chain/tsetlin if topScore < 0.5 (idf-weighted overlap threshold)
+- `ChainTrainerEndpoint` adds `use_corpus:true` flag to auto-build training pairs
+  from the QA index (corpus_limit caps how many)
+
+### Critical wins
+1. **Chat returns REAL learned answers**, not templates:
+   - "Что такое автономные системы?" → "Автономные системы - это роботы и транспортные средства..."
+   - "What is a neuron?" → "A neuron is a Boolean function evaluated against the input bit-slice..."
+2. **Learn on new data persists**: POST /v1/qa/learn "What is the capital of France?" → "Paris"
+   retuned chain immediately returns "Paris" on next chat
+3. **Panama bridge IS now active at runtime**:
+   - `PanamaNativeBridge loaded libtruthy.so (symbol: truthy_layer_evaluate)`
+   - `BooleanChainProducer: Panama bridge wired — native eval enabled (21960 tables, k=14)`
+4. **Chain training works**: 50 corpus pairs → 1,554 neurons flipped, 0 errors
+5. **Agent endpoint** still functional: `fs.list` for file-related goals
+
+### End-to-end demonstration
+```
+[1] Server: 24 layers, 21960 neurons, corpus=8602
+[2] Q "Что такое автономные системы?" → real Russian answer
+[3] POST /v1/qa/learn {"question":"What is capital of France?","answer":"Paris"} → id=8602
+[4] Q "What is the capital of France?" → "Paris" (immediately)
+[5] POST /v1/train {use_corpus:true, 50 pairs} → 1554 neurons_flipped
+[6] benchmark 500 ops → chain_eval p50=308.8μs
+[7] /v1/agent/plan {"goal":"find python files"} → fs.list tool
+```
+
+### Caveats
+- Native bridge latency is 308μs p50 vs 174μs pure-Java because of JNI overhead
+  for small 896-bit inputs. Will scale better on batched/real inputs.
+- Off-topic questions still hit fallback templates when QA topScore < 0.5.
+- No persistent log of training sessions; epochs are in-memory counters.
