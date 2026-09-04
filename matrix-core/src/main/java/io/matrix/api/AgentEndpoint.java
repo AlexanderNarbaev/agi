@@ -33,6 +33,7 @@ public class AgentEndpoint {
      * outer loop) executes the tools and feeds results back.
      */
     @POST
+    @Path("/plan")
     public AgentPlan plan(AgentRequest req) {
         String goal = req.goal() == null ? "" : req.goal().toLowerCase();
         List<AgentStep> steps = new java.util.ArrayList<>();

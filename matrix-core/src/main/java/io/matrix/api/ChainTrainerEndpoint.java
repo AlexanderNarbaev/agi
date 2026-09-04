@@ -61,6 +61,7 @@ public class ChainTrainerEndpoint {
     @GET
     @Path("/status")
     public Map<String, Object> status() {
+        // No-op marker for ordering
         Map<String, Object> body = new LinkedHashMap<>();
         body.put("chain_layers", chainRunner.layerCount());
         body.put("chain_neurons", chainRunner.totalNeurons());
@@ -81,6 +82,15 @@ public class ChainTrainerEndpoint {
      */
     @POST
     public Map<String, Object> train(Map<String, Object> body) {
+        return trainImpl(body);
+    }
+
+    /** True when no chain layers are loaded — auto-trainer can skip. */
+    public boolean isEmpty() {
+        return chainRunner == null || chainRunner.layerCount() == 0;
+    }
+
+    private Map<String, Object> trainImpl(Map<String, Object> body) {
         @SuppressWarnings("unchecked")
         List<Map<String, Object>> pairs =
                 (List<Map<String, Object>>) body.getOrDefault("pairs", List.of());
@@ -148,10 +158,26 @@ public class ChainTrainerEndpoint {
                         "training-tmp", "in-memory",
                         snapshotLayers(neurons.get("external-corpus")));
                 boolean[] out = tmp.evaluate(inFinal);
-                int same = 0;
                 int n = Math.min(out.length, targetFinal.length);
-                for (int i = 0; i < n; i++) if (out[i] == targetFinal[i]) same++;
-                return n == 0 ? 0.0 : (double) same / n;
+                if (n == 0) return 0.0;
+
+                // Signal: correctly_fired − wrongly_fired, normalized by max
+                // possible gain. Range: -1 to +1. The all-zeros output
+                // against an all-zeros target now scores 0 (not 1), so
+                // sign-descent has real signal to work with.
+                int correctlyFired = 0;   // target=1 AND output=1
+                int wronglyFired   = 0;   // target=0 AND output=1
+                int targetOnCount   = 0;   // target bits that are 1
+                for (int i = 0; i < n; i++) {
+                    if (targetFinal[i]) targetOnCount++;
+                    if (out[i] && targetFinal[i]) correctlyFired++;
+                    else if (out[i] && !targetFinal[i]) wronglyFired++;
+                }
+                // Best case: all "on" bits fire, no "off" bits fire
+                // score = (correctlyFired − wronglyFired) / max(1, targetOnCount)
+                // normalized so range is roughly [−1, +1]
+                int denom = Math.max(1, targetOnCount);
+                return ((double) (correctlyFired - wronglyFired)) / denom;
             }
         };
 
