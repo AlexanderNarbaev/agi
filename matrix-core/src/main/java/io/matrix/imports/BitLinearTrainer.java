@@ -189,6 +189,19 @@ public final class BitLinearTrainer {
                                          List<Integer> layerKs,
                                          boolean[] input, boolean[] target,
                                          int epochs) {
+        return trainWithTarget(initialNeurons, layerKs, input, target, epochs, 0);
+    }
+
+    /**
+     * Variant with a per-epoch neuron-flip cap to prevent mode collapse.
+     * After {@code maxFlipsPerEpoch} flips, stop flipping for that epoch.
+     * Set {@code maxFlipsPerEpoch} to 0 (or less) to disable the cap.
+     */
+    public TrainerState trainWithTarget(Map<String, List<TruthTable>> initialNeurons,
+                                         List<Integer> layerKs,
+                                         boolean[] input, boolean[] target,
+                                         int epochs,
+                                         int maxFlipsPerEpoch) {
         Objects.requireNonNull(initialNeurons, "initialNeurons");
         Objects.requireNonNull(input, "input");
         Objects.requireNonNull(target, "target");
@@ -232,6 +245,10 @@ public final class BitLinearTrainer {
 
             // Compare output vs target and flip wrong neurons
             for (int i = 0; i < allNeurons.size(); i++) {
+                // Honor per-epoch flip cap to prevent mode collapse
+                if (maxFlipsPerEpoch > 0 && stats.neuronsFlipped >= maxFlipsPerEpoch) {
+                    break;
+                }
                 boolean tgt = (i < target.length) && target[i];
                 if (currentOutput[i] != tgt) {
                     // Neuron is wrong — find best bit flip to correct it

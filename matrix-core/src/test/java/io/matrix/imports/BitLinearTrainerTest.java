@@ -161,6 +161,21 @@ class BitLinearTrainerTest {
         return out;
     }
 
+    /** Build a single random neuron with given density (0..1). */
+    private static TruthTable randomNeuron(int k, double density) {
+        java.util.BitSet bs = new java.util.BitSet(1 << k);
+        long seed = (long) (density * 1_000_000);
+        java.util.Random rng = new java.util.Random(seed ^ k);
+        int cells = 1 << k;
+        int targetSet = (int) Math.round(cells * density);
+        java.util.Set<Integer> chosen = new java.util.LinkedHashSet<>();
+        while (chosen.size() < targetSet) {
+            chosen.add(rng.nextInt(cells));
+        }
+        for (int c : chosen) bs.set(c);
+        return TruthTable.of(k, bs);
+    }
+
     @Test
     void trainWithTargetFlipsNeurons() {
         // Synthetic chain: 5 layers, k=8, 64 neurons per layer = 320 neurons
@@ -221,6 +236,53 @@ class BitLinearTrainerTest {
         assertThat(lastAccuracy)
                 .as("final accuracy should be above 50% after training")
                 .isGreaterThan(0.5);
+    }
+
+    /**
+     * Verify the per-epoch flip cap (RUN 9.5 — prevents mode collapse).
+     * With cap=N, the total flips in one epoch must be ≤ N.
+     */
+    @Test
+    void trainWithTargetRespectsFlipCap() {
+        int numLayers = 3;
+        int k = 8;
+        int neuronsPerLayer = 200;
+        int totalNeurons = numLayers * neuronsPerLayer;
+        int cap = 50;
+
+        Map<String, List<TruthTable>> initial = new LinkedHashMap<>();
+        List<Integer> layerKs = new ArrayList<>();
+        for (int l = 0; l < numLayers; l++) {
+            layerKs.add(k);
+            String key = "layer" + l;
+            List<TruthTable> list = new ArrayList<>();
+            for (int n = 0; n < neuronsPerLayer; n++) {
+                // All-true neuron → most cells will be wrong, ensuring many flips
+                list.add(randomNeuron(k, 0.7));
+            }
+            initial.put(key, list);
+        }
+
+        boolean[] input = new boolean[totalNeurons];
+        boolean[] target = new boolean[totalNeurons];
+        for (int i = 0; i < totalNeurons; i++) {
+            input[i] = (i & 1) == 0;
+            target[i] = (i & 1) == 1;   // opposite — many neurons will be wrong
+        }
+
+        BitLinearTrainer trainer = new BitLinearTrainer();
+        BitLinearTrainer.TrainerState state = trainer.trainWithTarget(
+                initial, layerKs, input, target, 1, cap);
+        long flipped = state.history().stream()
+                .mapToLong(BitLinearTrainer.TrainerStats::neuronsFlipped)
+                .sum();
+
+        assertThat(flipped)
+                .as("one epoch with cap=%d should flip at most %d neurons", cap, cap)
+                .isLessThanOrEqualTo(cap);
+        assertThat(flipped)
+                .as("cap should still allow some flips (cap=%d)", cap)
+                .isGreaterThan(0);
     }
 
     /** Reflective call to the private static flippedTable. */

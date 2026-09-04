@@ -43,6 +43,14 @@ public class ChainTrainerEndpoint {
 
     private static final Logger log = LoggerFactory.getLogger(ChainTrainerEndpoint.class);
 
+    /**
+     * Per-pair neuron-flip cap (RUN 9.5).
+     * Uncapped training flips ~8000/21960 neurons per pair and causes
+     * all prompts to converge after ~1000 exposures (mode collapse).
+     * 200 flips/pair gives stable learning without collapse.
+     */
+    private static final int MAX_FLIPS_PER_PAIR = 200;
+
     @Inject
     BooleanChainRunner chainRunner;
 
@@ -210,12 +218,17 @@ public class ChainTrainerEndpoint {
         List<TruthTable> snapshot = snapshotNeurons();
         Map<String, List<TruthTable>> before = wrapAsMap(snapshot);
         BitLinearTrainer trainer = new BitLinearTrainer();
+        // Cap per-pair neuron flips at 200 to prevent mode collapse.
+        // Verified in RUN 9.5: uncapped training flips ~8000/pair and
+        // makes all prompts converge after ~1000 exposures.
+        int perPairCap = MAX_FLIPS_PER_PAIR;
         TrainerState state = trainer.trainWithTarget(
                 before,
                 layerKs,
                 inputBits,
                 targetBits,
-                1);    // one epoch per pair
+                1,        // one epoch per pair
+                perPairCap);
         long flipped = state.history().stream()
                 .mapToLong(TrainerStats::neuronsFlipped)
                 .sum();
