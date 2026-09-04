@@ -47,6 +47,10 @@ public class QaLearnResource {
                                 String category, String source,
                                 int corpusSize, String message) {}
 
+    public record BulkLearnRequest(List<LearnRequest> pairs) {}
+
+    public record BulkLearnResponse(int added, int totalCorpus, String message) {}
+
     @POST
     @Path("/learn")
     public Response learn(LearnRequest req) {
@@ -97,6 +101,34 @@ public class QaLearnResource {
                 e.category(), e.source(), index.size(),
                 "QA learned. Retrieval index updated on disk.");
         return Response.ok(body).build();
+    }
+
+    @POST
+    @Path("/bulk-learn")
+    public Response bulkLearn(BulkLearnRequest req) {
+        if (req == null || req.pairs == null || req.pairs.isEmpty()) {
+            return Response.status(400)
+                    .entity(Map.of("error", Map.of(
+                            "message", "pairs array is required and must not be empty",
+                            "type", "invalid_request_error",
+                            "code", "missing_pairs")))
+                    .build();
+        }
+        int added = 0;
+        for (LearnRequest pair : req.pairs) {
+            if (pair == null || pair.question == null || pair.question.isBlank()
+                    || pair.answer == null || pair.answer.isBlank()) {
+                continue;
+            }
+            index.add(pair.question.trim(), pair.answer.trim(),
+                    pair.category, pair.source);
+            added++;
+        }
+        return Response.ok(Map.of(
+                "added", added,
+                "total_corpus", index.size(),
+                "message", "QA pairs learned and persisted on disk"
+        )).build();
     }
 
     @GET
