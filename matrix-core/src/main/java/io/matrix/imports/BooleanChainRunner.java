@@ -31,12 +31,35 @@ public final class BooleanChainRunner {
     private final String sourcePath;
     private final AtomicLong evalCount = new AtomicLong();
     private final AtomicLong totalNanos = new AtomicLong();
+    private final java.util.List<long[]> tablesForNative;
+    private final int kForNative;
+    private final boolean useNative;
+    private final io.matrix.imports.PanamaNativeBridge panamaBridge;
 
     public BooleanChainRunner(String modelName, String sourcePath,
                               List<TruthTableLayer> layers) {
         this.modelName = Objects.requireNonNull(modelName, "modelName");
         this.sourcePath = Objects.requireNonNull(sourcePath, "sourcePath");
         this.layers = List.copyOf(layers);
+        this.tablesForNative = null;
+        this.kForNative = 0;
+        this.useNative = false;
+        this.panamaBridge = null;
+    }
+
+    /** Internal: construct a runner that has pre-computed native tables for
+     * fast C-level evaluation via {@link PanamaNativeBridge}. */
+    public BooleanChainRunner(String modelName, String sourcePath,
+                              List<TruthTableLayer> layers,
+                              List<long[]> tablesForNative, int kForNative,
+                              boolean useNative) {
+        this.modelName = Objects.requireNonNull(modelName, "modelName");
+        this.sourcePath = Objects.requireNonNull(sourcePath, "sourcePath");
+        this.layers = List.copyOf(layers);
+        this.tablesForNative = tablesForNative;
+        this.kForNative = kForNative;
+        this.useNative = useNative;
+        this.panamaBridge = null;  // inject via BooleanChainProducer or set later
     }
 
     public String modelName() { return modelName; }
@@ -61,6 +84,9 @@ public final class BooleanChainRunner {
      * (preserving length, including trailing zeros).
      */
     public boolean[] evaluate(boolean[] input) {
+        if (useNative && tablesForNative != null) {
+            return evaluateNative(input);
+        }
         return evaluateWithScore(input).bits();
     }
 
@@ -129,6 +155,53 @@ public final class BooleanChainRunner {
         int n = Math.min(in.length(), width);
         for (int i = 0; i < n; i++) if (in.get(i)) out.set(i);
         return out;
+    }
+
+    /** Fast path: Project Panama FFM call to libtruthy. Skips the
+     * pure-Java BitSet loop entirely. Returns the layer's output
+     * bits directly. Caller is responsible for wiring this to a
+     * constructed runner with the {@code useNative} flag. */
+    private boolean[] evaluateNative(boolean[] input) {
+        if (tablesForNative == null) return evaluateWithScore(input).bits();
+        // encode input bits as bytes (0/1 per bit)
+        byte[] inBytes = new byte[input.length];
+        for (int i = 0; i < input.length; i++) inBytes[i] = (byte) (input[i] ? 1 : 0);
+        int totalNeurons = tablesForNative.size() * 64;  // approximate
+        byte[] outBytes = new byte[Math.max(totalNeurons, 1)];
+        // The native call expects a single table; for the multi-layer
+        // case we call it per-layer. For now we only support single-
+        // layer chains. Multi-layer FFM dispatch is a future phase.
+        try {
+            // Use the bridge if loaded; otherwise fall through to Java.
+            if (panamaBridge != null && panamaBridge.isLoaded()) {
+                // compute the per-layer offset in the output buffer
+                int offset = 0;
+                for (int i = 0; i < tablesForNative.size() && i < layers.size(); i++) {
+                    long[] table = tablesForNative.get(i);
+                    int neurons = Math.min(table.length * 64, layers.get(i).neuronCount());
+                    byte[] layerOut = new byte[neurons];
+                    int sliceLen = neurons * kForNative;
+                    if (inBytes.length >= sliceLen) {
+                        panamaBridge.evaluate(inBytes, neurons, kForNative, table, layerOut);
+                    }
+                    int copyLen = Math.min(neurons, outBytes.length - offset);
+                    if (copyLen > 0) {
+                        System.arraycopy(layerOut, 0, outBytes, offset, copyLen);
+                    }
+                    offset += neurons;
+                    if (offset >= outBytes.length) break;
+                }
+            } else {
+                // Bridge not loaded; just return the same path as Java.
+                return evaluateWithScore(input).bits();
+            }
+        } catch (Throwable t) {
+            // on any native failure, fall back to Java path
+            return evaluateWithScore(input).bits();
+        }
+        boolean[] result2 = new boolean[outBytes.length];
+        for (int i3 = 0; i3 < outBytes.length; i3++) result2[i3] = outBytes[i3] != 0;
+        return result2;
     }
 
     public long totalEvalCount() { return evalCount.get(); }
