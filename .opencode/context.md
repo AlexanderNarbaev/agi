@@ -1,6 +1,6 @@
-# Project Context — RUN 9.8 (async training)
+# Project Context — RUN 10 (LM head projection)
 
-> **Status: 2026-09-04 20:48** — Branch `origin/main` at `6c64e45e` (all pushed).
+> **Status: 2026-09-04 21:46** — Branch `origin/main` at `fc23970b` (all pushed).
 
 ## Mission
 
@@ -14,17 +14,24 @@ Build complete MATRIX cognitive system end-to-end (Waves H-O).
 - **NO LLM calls in deterministic decision paths** (per AGENTS.md)
 - **NO random/wall-clock in decision paths**
 
-## Current Status (RUN 9.8, 2026-09-04 20:48)
+## Current Status (RUN 10, 2026-09-04 21:46)
 
 ### Branch / Git
-- `origin/main` at `6c64e45e` (pushed)
+- `origin/main` at `fc23970b` (pushed)
 - Working tree CLEAN
-- **25 tests pass**: QaCorpusIndexTest 12/12, BitLinearTrainerTest 8/8, BooleanChainRunnerTest 5/5
+- **30 tests pass**: LmHeadTest 5/5 (NEW), QaCorpusIndexTest 12/12, BitLinearTrainerTest 8/8, BooleanChainRunnerTest 5/5
 
-### RUN 9.8 wins
-1. **`/v1/train/async`** endpoint — submit training jobs that run in the background. Server stays responsive during long training (50 pairs × 3 epochs = 34s without locking). Job queuing via single-thread executor (chain state is mutated; serial avoids races).
-2. **Endpoints**: POST /v1/train/async (submit), GET /v1/train/async/{jobId} (status), GET /v1/train/async (list)
-3. **Verified**: 4 jobs submitted in quick succession all queue and complete; chat/generate work during training
+### RUN 10 wins
+1. **`LmHead`** sparse Hebbian classifier — learned LM head projection from chain output to vocab distribution.
+2. **`/v1/lm-head/train`** endpoint — train the LM head from Q&A corpus (Hebbian updates on chain_output fingerprint).
+3. **`/v1/lm-head/status`** endpoint — show training state.
+4. **Sparse weights persisted to disk** — `data/lm_head_weights.bin`, loaded at startup.
+5. **5 new tests** for LmHead (empty head, score, update, save/load, bounded scores).
+
+### Honest limitation (RUN 11)
+The current LM head has degenerate behavior with low vocab coverage — picks the most common token (`:`) for any fingerprint. Opt-in via `MATRIX_USE_LM_HEAD=true` env var (default OFF). The hash-based scoring from RUN 9.7 still provides prompt-specific output.
+
+To make the LM head actually useful: use the chain's REAL output (not hash fingerprint) as features. This requires faster chain evaluation per question (currently too slow for batch training).
 
 ### RUN 9.7 wins
 1. **`/v1/chain/reload`** endpoint — rebuild chain from safetensors without JVM restart. Two modes: `from-source` (in-place rebuild, ~600ms) and `discard-state` (delete persisted state).
@@ -79,42 +86,41 @@ prompts converge to same output because uncapped training flips ~8000 of
 - `QaLearnResource` — POST /v1/qa/learn and /bulk-learn, GET /search and /stats, POST /reload
 - `ChainTrainerEndpoint.lookupTrained()` (returns null if not found) + "actually changed" counter (RUN 9.5)
 
-## Honest Limitations (RUN 10 candidates)
+## Honest Limitations (RUN 11 candidates)
 
 These are KNOWN issues that need architectural work, not bug fixes:
 
-1. **Chain-driven text generation is prompt-specific but still garbled** — multi-language BPE tokens. Needs a learned LM-head projection to produce fluent English/Russian text.
-2. **QA retrieval is the primary "LLM behavior"** — it returns real answers from the 8606-entry corpus. Chain-driven generation is a secondary capability that demonstrates the chain's weights participate in every token.
-3. **AutoTrainer can saturate CPU** at startup. Disable via `MATRIX_AUTO_TRAIN_ENABLED=false` env var.
-
-To unblock (1): implement a proper LM head that projects chain output to vocab distribution via learned weights (requires training a projection matrix).
+1. **LM head has degenerate behavior with low coverage** — picks `:` for any fingerprint. Need chain's REAL output as features (not hash fingerprint), trained via gradient descent.
+2. **Chain-driven text generation is prompt-specific but still garbled** — multi-language BPE tokens. Hash-based scoring is prompt-aware but not corpus-aligned.
+3. **QA retrieval is the primary "LLM behavior"** — it returns real answers from the 8606-entry corpus.
+4. **AutoTrainer can saturate CPU** at startup. Disable via `MATRIX_AUTO_TRAIN_ENABLED=false` env var.
 
 ## Pending Tasks (next session)
 
-1. **Implement LM head projection** (2-3h) — train a linear projection from chain output to BPE vocab distribution
-2. **Online training endpoint** (1-2h) — async training so /v1/train doesn't lock
+1. **Wire LM head to chain's real output** (2-3h) — run full chain on each Q&A question, use output as LM head features
+2. **Train LM head with proper gradient descent** (2-3h) — replace Hebbian with SGD/Adam on cross-entropy loss
 3. **HF token setup** (5m user action) — gated models unlock
 4. **Native build retry** (1-2h, requires user RFC) — Mandrel container or drop Pekko
 
 ## Next session start protocol
 
 1. `cat .opencode/context.md` (this file)
-2. `git log --oneline | head -5` (verify `c3a4f4de` is HEAD)
-3. `cat docs-v2/vision/FINALSUMMARY.md | grep -E "^## "` (verify Sections X-XVI present)
-4. `cat .opencode/r96-final.txt` (RUN 9.6 honest demo snapshot)
+2. `git log --oneline | head -5` (verify `fc23970b` is HEAD)
+3. `cat docs-v2/vision/FINALSUMMARY.md | grep -E "^## "` (verify Sections X-XVIII present)
+4. `cat .opencode/r98-final-demo.txt` (RUN 9.8 honest demo snapshot)
 5. `ps aux | grep "quarkus-run.jar" | grep -v grep` (server up?)
-6. Resume from Pending Task #1 (LM head projection)
+6. Resume from Pending Task #1 (wire LM head to real chain output)
 
 ## Test History
 
+- RUN 10: 5 new tests for LmHead (empty head, score, update, save/load, bounded) — all PASS
 - RUN 9.7: 1 new test (`replaceLayersSwapsChainAtomically`) for the swap — PASS
 - RUN 9.6: 1 new test (`trainWithTargetRespectsFlipCap`) for the cap — PASS
-- RUN 9.5: No new tests, but `BitLinearTrainerTest` (8) and `BooleanChainRunnerTest` (4) confirm the relevant code paths
 - RUN 9: 4 new unit tests for BooleanChainRunner (evaluateWithMagnitude) — all PASS
 - RUN 8: 12 new unit tests for QaCorpusIndex — all PASS
 - RUN 6: 7 tests for BitLinearTrainer — all PASS (extended to 8 in RUN 9.6)
 - BooleanChainRunnerTest extended to 5 in RUN 9.7
-- Total: **25 tests, 0 failures, 0 errors**
+- Total: **30 tests, 0 failures, 0 errors**
 - Earlier: many unrelated tests (BPE tokenizer, federation, etc.) — green
 
 ## Honesty Statement
