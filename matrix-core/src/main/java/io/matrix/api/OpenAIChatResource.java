@@ -67,6 +67,7 @@ public class OpenAIChatResource {
     private final Text2VecService text2vec;
     private final PureBirGenerator pureBir;
     private final io.matrix.imports.BooleanChainRunner chainRunner;
+    private final QaCorpusIndex qaIndex;
     private final Random rng;
     private final List<String> responseHistory;
     private int stuckCounter;
@@ -97,7 +98,8 @@ public class OpenAIChatResource {
     OpenAIChatResource(MatrixMetrics metrics, AgentBrainService brainService,
                        Text2VecService text2Vec, EthicalFilter ethicalFilter,
                        io.matrix.model.ModelRegistry modelRegistry,
-                       io.matrix.imports.BooleanChainRunner chainRunner) {
+                       io.matrix.imports.BooleanChainRunner chainRunner,
+                       QaCorpusIndex qaIndex) {
         this.metrics = metrics;
         this.brainService = brainService;
         this.text2vec = text2Vec;
@@ -106,6 +108,7 @@ public class OpenAIChatResource {
         this.rng = new Random();
         this.responseHistory = new ArrayList<>();
         this.stuckCounter = 0;
+        this.qaIndex = qaIndex;
         // W6.2: pipeline enricher (sentiment + topic routing via distilled BIR models)
         this.enricher = modelRegistry == null ? null
                 : new ChatPipelineEnricher(modelRegistry);
@@ -124,6 +127,7 @@ public class OpenAIChatResource {
         this.ethicalFilter = new EthicalFilter();
         this.pureBir = new PureBirGenerator();
         this.chainRunner = io.matrix.imports.BooleanChainRunner.empty();
+        this.qaIndex = null;
         this.rng = new Random();
         this.responseHistory = new ArrayList<>();
         this.stuckCounter = 0;
@@ -230,8 +234,39 @@ public class OpenAIChatResource {
         //   2. Tsetlin-trained BIR (legacy) — kept for backward compatibility.
         //   3. TextGenerator.forwardPass() — character-by-character continuation.
         //   4. Brain decision code (last-resort).
-        String response;
+        //   5. QA corpus retrieval — index search over Q&A pairs (NEW primary path).
+        String response = null;
+        String generated = null;
+        boolean qaHit = false;
         try {
+            // PRIMARY 0: QA corpus retrieval — find the best-matching trained Q
+            // and return the real learned A. This is the chain's "trained knowledge".
+            if (qaIndex != null && qaIndex.size() > 0) {
+                var hits = qaIndex.search(userText, 3);
+                double top = qaIndex.topScore(userText);
+                // Threshold: require at least 0.5 idf-weighted token overlap to consider it a hit.
+                // Below this, the match is too weak to be confident — fall through to bir path.
+                final double QA_HIT_THRESHOLD = 0.5;
+                if (!hits.isEmpty() && top >= QA_HIT_THRESHOLD) {
+                    QaCorpusIndex.Entry best = hits.get(0);
+                    response = best.answer();
+                    generated = response;
+                    qaHit = true;
+                    log.info("QA retrieval hit: qaId={} score={} question='{}...'", best.id(),
+                            String.format("%.3f", top),
+                            best.question().substring(0, Math.min(40, best.question().length())));
+                } else {
+                    log.info("QA retrieval miss: topScore={} < threshold {} — falling through to bir path",
+                            String.format("%.3f", top), QA_HIT_THRESHOLD);
+                }
+                if (response != null && !response.isBlank()) {
+                    // fall through to world-model write-back
+                }
+            }
+            // Skip birPath if QA already gave us a real answer
+            if (qaHit) {
+                log.info("QA-only path: skipping pureBir/chain/tsetlin (retrieved response >= 8 chars)");
+            }
             // Pre-load world model + long-term memory as semantic seed (not as response)
             StringBuilder context = new StringBuilder();
             if (longTermMemory != null) {
@@ -247,14 +282,18 @@ public class OpenAIChatResource {
 
             // PRIMARY: PURE BIR generation — deterministic boolean function composition.
             // NO corpus retrieval. NO training. NO ML weights. Same input → same output.
-            long pureBirBits = pureBir.generate(sensorBits);
-            response = text2vec.bitsToResponse(pureBirBits);
-            String generated = response;
+            // (SKIPPED when QA retrieval already produced a hit.)
+            if (!qaHit) {
+                long pureBirBits = pureBir.generate(sensorBits);
+                response = text2vec.bitsToResponse(pureBirBits);
+                generated = response;
+            }
 
             // Wave A: if the boolean chain has layers loaded, use it as
             // the PRIMARY path (overrides the deterministic PureBirGenerator).
             // The chain is layer-agnostic and runs the imported LLM weights.
-            if (chainRunner.layerCount() > 0) {
+            // (SKIPPED when QA retrieval already produced a hit.)
+            if (chainRunner.layerCount() > 0 && !qaHit) {
                 // convert sensorBits (long) to boolean[] for the chain
                 int inputBits = 64;  // Text2VecService produces a 64-bit vector
                 boolean[] chainInput = new boolean[inputBits];
@@ -300,7 +339,7 @@ public class OpenAIChatResource {
             //   3. PureBirGenerator templates (last-resort when no real data exists)
             //   4. Character-by-character generation
             //   5. Brain decision code
-            String tsetlinResponse = brainService.generateFromBir(userText);
+            String tsetlinResponse = qaHit ? null : brainService.generateFromBir(userText);
             if (tsetlinResponse != null && !tsetlinResponse.isBlank()
                     && tsetlinResponse.trim().length() >= 8) {
                 // Tsetlin-trained on corpus — use this as primary
