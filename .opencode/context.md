@@ -1,6 +1,6 @@
-# Project Context — RUN 9.7 (prompt-specific generation + chain reload)
+# Project Context — RUN 9.8 (async training)
 
-> **Status: 2026-09-04 20:22** — Branch `origin/main` at `c3a4f4de` (all pushed).
+> **Status: 2026-09-04 20:48** — Branch `origin/main` at `6c64e45e` (all pushed).
 
 ## Mission
 
@@ -14,12 +14,17 @@ Build complete MATRIX cognitive system end-to-end (Waves H-O).
 - **NO LLM calls in deterministic decision paths** (per AGENTS.md)
 - **NO random/wall-clock in decision paths**
 
-## Current Status (RUN 9.7, 2026-09-04 20:22)
+## Current Status (RUN 9.8, 2026-09-04 20:48)
 
 ### Branch / Git
-- `origin/main` at `c3a4f4de` (pushed)
+- `origin/main` at `6c64e45e` (pushed)
 - Working tree CLEAN
 - **25 tests pass**: QaCorpusIndexTest 12/12, BitLinearTrainerTest 8/8, BooleanChainRunnerTest 5/5
+
+### RUN 9.8 wins
+1. **`/v1/train/async`** endpoint — submit training jobs that run in the background. Server stays responsive during long training (50 pairs × 3 epochs = 34s without locking). Job queuing via single-thread executor (chain state is mutated; serial avoids races).
+2. **Endpoints**: POST /v1/train/async (submit), GET /v1/train/async/{jobId} (status), GET /v1/train/async (list)
+3. **Verified**: 4 jobs submitted in quick succession all queue and complete; chat/generate work during training
 
 ### RUN 9.7 wins
 1. **`/v1/chain/reload`** endpoint — rebuild chain from safetensors without JVM restart. Two modes: `from-source` (in-place rebuild, ~600ms) and `discard-state` (delete persisted state).

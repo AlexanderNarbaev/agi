@@ -1085,3 +1085,61 @@ fix. For now:
 | **TOTAL** | **25/25 PASS** |
 
 (End of file - total ~1100 lines)
+
+---
+
+## Section XVII — RUN 9.8 (2026-09-04 20:46): Async training endpoint
+
+### Status: Long training jobs no longer lock the server
+
+Branch: `origin/main` at `6c64e45e`. One commit:
+
+- `6c64e45e` WAL: RUN 9.8 — async training endpoint /v1/train/async
+
+### What changed
+
+`POST /v1/train` is synchronous and blocks the request thread. For a
+50-pair × 3-epoch job (~150 exposures at ~200ms each), that's 30
+seconds of blocking. For 200 pairs × 5 epochs, it's 3+ minutes —
+during which no other endpoint can serve requests.
+
+`AsyncChainTrainerResource` at `POST /v1/train/async`:
+- Accepts the same body as `/v1/train`
+- Returns immediately with `{jobId, seq, status: "queued", ...}`
+- Runs the actual training on a single-thread executor
+- Single-thread because chain state is mutated (parallel jobs would race)
+
+### Endpoints
+
+- `POST /v1/train/async`         — submit job, returns immediately
+- `GET  /v1/train/async/{jobId}` — get status/result
+- `GET  /v1/train/async`         — list all jobs
+
+### Verified
+
+- 50 pairs × 3 epochs completes in 34.6s (30,000 flips, 200/pair)
+- POST returns in <1s with jobId and `queued` status
+- Server still serves `/v1/chat` during training (no lock)
+- 3 jobs submitted in quick succession: all queue and complete (serial)
+- After training: `/v1/generate` is still prompt-specific
+- `/v1/chat/completions` still works for QA retrieval
+
+### Job lifecycle
+
+```
+queued → running → completed | failed
+```
+
+Submitted jobs accumulate and you can list all of them via
+`GET /v1/train/async`. There's currently no cancellation endpoint
+(a future RUN).
+
+### Architectural note
+
+The single-thread executor is conservative. We could safely have
+multiple threads if training were on a snapshot, then committed
+atomically. But for now, serialization matches the synchronous
+behavior (only one mutation at a time) and avoids introducing new
+race conditions.
+
+(End of file - total ~1180 lines)
