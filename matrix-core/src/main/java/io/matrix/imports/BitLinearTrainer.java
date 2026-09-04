@@ -158,10 +158,14 @@ public final class BitLinearTrainer {
     private static TruthTable flippedTable(TruthTable original, int flippedBit) {
         int k = original.k();
         int cells = 1 << k;
-        java.util.BitSet newTable = (java.util.BitSet) original.table().clone();
+        java.util.BitSet newTable = new java.util.BitSet(cells);
+        // For each cell, the new output comes from evaluating the original table
+        // at position (cell ^ (1 << flippedBit)). This is the correct semantics of
+        // "swap outputs of cells that differ only in bit `flippedBit`".
+        int flipMask = 1 << flippedBit;
         for (int cell = 0; cell < cells; cell++) {
-            if (original.evaluate(cell) && ((cell >>> flippedBit) & 1) == 0) {
-                newTable.set(cell, false);
+            if (original.evaluate(cell ^ flipMask)) {
+                newTable.set(cell);
             }
         }
         return TruthTable.of(k, newTable, original.weights());

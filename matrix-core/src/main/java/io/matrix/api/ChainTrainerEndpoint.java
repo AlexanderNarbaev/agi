@@ -225,20 +225,30 @@ public class ChainTrainerEndpoint {
         if (flipped > 0) {
             try {
                 Map<String, List<TruthTable>> after = state.trainedNeurons();
-                // Traverse layers and write each trained neuron
+                // Traverse layers and write each trained neuron.
+                // Directly use the trained map's neurons (not findTrained) so we
+                // don't accidentally write back the ORIGINAL neuron instead of
+                // the trained one.
                 int neuronIdx = 0;
                 int written = 0;
+                int actuallyChanged = 0;
                 for (TruthTableLayer layer : currentLayers()) {
                     int n = layer.neuronCount();
                     for (int i = 0; i < n && neuronIdx < snapshot.size(); i++) {
-                        TruthTable trained = findTrained(after, snapshot, neuronIdx);
+                        TruthTable trained = lookupTrained(after, neuronIdx);
+                        if (trained == null) continue;
                         TruthTable prev = layer.replaceNeuron(i, trained);
                         if (prev != trained) written++;
+                        // Verify the trained neuron is actually different
+                        if (prev.table().cardinality() != trained.table().cardinality()
+                                || !prev.table().equals(trained.table())) {
+                            actuallyChanged++;
+                        }
                         neuronIdx++;
                     }
                 }
-                log.info("trained on pair → {} neurons flipped, {} written back to layers",
-                        flipped, written);
+                log.info("trained on pair → {} neurons flipped, {} written, {} actually changed",
+                        flipped, written, actuallyChanged);
             } catch (Throwable t) {
                 log.warn("write-back failed: {}", t.getMessage());
             }
@@ -248,9 +258,8 @@ public class ChainTrainerEndpoint {
     }
 
     /** Look up a single trained neuron by index in the trained map. */
-    private TruthTable findTrained(Map<String, List<TruthTable>> trained,
-                                   List<TruthTable> snapshot, int idx) {
-        if (trained == null) return snapshot.get(idx);
+    private TruthTable lookupTrained(Map<String, List<TruthTable>> trained, int idx) {
+        if (trained == null) return null;
         int total = 0;
         for (List<TruthTable> list : trained.values()) {
             if (idx < total + list.size()) {
@@ -258,7 +267,7 @@ public class ChainTrainerEndpoint {
             }
             total += list.size();
         }
-        return snapshot.get(idx);
+        return null;
     }
 
     /** Get k value from the first layer. */
