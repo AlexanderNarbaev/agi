@@ -49,13 +49,18 @@ public class ChainTrainerEndpoint {
     @Inject
     BpeTokenizerProvider bpeProvider;
 
+    @Inject
+    QaCorpusIndex qaIndex;
+
     private final AtomicLong totalPairs = new AtomicLong();
     private final AtomicLong totalFlips = new AtomicLong();
     private final AtomicLong totalEpochs = new AtomicLong();
+    private final List<String> trainingErrors = new ArrayList<>();
 
     void onStart(@Observes StartupEvent ev) {
-        log.info("ChainTrainerEndpoint ready (chain layers={}, neurons={})",
-                chainRunner.layerCount(), chainRunner.totalNeurons());
+        log.info("ChainTrainerEndpoint ready (chain layers={}, neurons={}, qa-corpus={})",
+                chainRunner.layerCount(), chainRunner.totalNeurons(),
+                qaIndex != null ? qaIndex.size() : 0);
     }
 
     @GET
@@ -95,19 +100,53 @@ public class ChainTrainerEndpoint {
         List<Map<String, Object>> pairs =
                 (List<Map<String, Object>>) body.getOrDefault("pairs", List.of());
         int epochs = ((Number) body.getOrDefault("epochs", 3)).intValue();
+        boolean useCorpus = Boolean.TRUE.equals(body.get("use_corpus"))
+                || Boolean.TRUE.equals(body.get("useCorpus"));
+        int corpusLimit = ((Number) body.getOrDefault("corpus_limit", 100)).intValue();
+        if (pairs.isEmpty() && useCorpus && qaIndex != null && qaIndex.size() > 0) {
+            // Build pairs from the QA corpus automatically.
+            var hits = qaIndex.state().entries;
+            int limit = Math.min(corpusLimit, hits.size());
+            pairs = new ArrayList<>();
+            for (int i = 0; i < limit; i++) {
+                var e = hits.get(i);
+                pairs.add(Map.of("input", e.question(), "expected", e.answer()));
+            }
+            log.info("Train: pulling {} pairs from QA corpus", pairs.size());
+        }
         if (pairs.isEmpty()) {
-            return Map.of("error", "no pairs provided");
+            return Map.of("error", "no pairs provided and qa-corpus is empty");
         }
         if (chainRunner.layerCount() == 0) {
             return Map.of("error", "chain has no loaded layers — load a model first");
         }
+        if (currentLayers().isEmpty()) {
+            // CDI reflection couldn't resolve the runner's layers field — return useful info.
+            return Map.of(
+                    "error", "cannot read chain layers (CDI proxy unwrap failed)",
+                    "chain_layers", chainRunner.layerCount(),
+                    "chain_neurons", chainRunner.totalNeurons(),
+                    "hint", "check that BooleanChainRunner.layers field is accessible"
+            );
+        }
 
         long totalFlipped = 0;
+        int successPairs = 0;
+        int erroredPairs = 0;
         for (int e = 0; e < epochs; e++) {
             for (Map<String, Object> pair : pairs) {
                 String input = (String) pair.getOrDefault("input", "");
                 String expected = (String) pair.getOrDefault("expected", "");
-                totalFlipped += trainPair(input, expected);
+                try {
+                    long flipped = trainPair(input, expected);
+                    if (flipped > 0) successPairs++;
+                    totalFlipped += flipped;
+                } catch (Throwable t) {
+                    erroredPairs++;
+                    if (trainingErrors.size() < 5) {
+                        trainingErrors.add("pair " + truncate(input, 30) + " → " + t.getMessage());
+                    }
+                }
             }
             totalEpochs.incrementAndGet();
         }
@@ -118,11 +157,20 @@ public class ChainTrainerEndpoint {
         resp.put("trained_pairs", pairs.size());
         resp.put("epochs_run", epochs);
         resp.put("neurons_flipped", totalFlipped);
+        resp.put("successful_pairs", successPairs);
+        resp.put("errored_pairs", erroredPairs);
+        resp.put("first_errors", trainingErrors);
         resp.put("cumulative_pairs", totalPairs.get());
         resp.put("cumulative_epochs", totalEpochs.get());
+        resp.put("cumulative_flips", totalFlips.get());
         resp.put("chain_layers", chainRunner.layerCount());
         resp.put("chain_neurons", chainRunner.totalNeurons());
         return resp;
+    }
+
+    private static String truncate(String s, int max) {
+        if (s == null) return "";
+        return s.length() <= max ? s : s.substring(0, max) + "…";
     }
 
     /**
@@ -198,57 +246,10 @@ public class ChainTrainerEndpoint {
     }
 
     private List<TruthTableLayer> currentLayers() {
-        // The BooleanChainRunner holds layers privately. Read via reflection
-        // — try declared fields first, then walk superclasses if needed.
-        // Resolve CDI proxy first (Quarkus client proxies don't expose
-        // the real fields).
-        Object target = resolveCdiTarget(chainRunner);
-        try {
-            Class<?> c = target.getClass();
-            while (c != null && c != Object.class) {
-                try {
-                    var f = c.getDeclaredField("layers");
-                    f.setAccessible(true);
-                    @SuppressWarnings("unchecked")
-                    List<TruthTableLayer> ls = (List<TruthTableLayer>) f.get(target);
-                    if (ls != null) return ls;
-                } catch (NoSuchFieldException ignored) {
-                    // try next class
-                }
-                c = c.getSuperclass();
-            }
-            return List.of();
-        } catch (Exception e) {
-            log.warn("cannot read chain layers: {}", e.getMessage());
-            return List.of();
-        }
-    }
-
-    /** Unwrap Quarkus CDI client proxy to get the real instance. */
-    private Object resolveCdiTarget(Object proxy) {
-        if (proxy == null) return null;
-        // Quarkus 3.x exposes the target via readWriteTarget / context
-        try {
-            var m = proxy.getClass().getMethod("getTarget");
-            Object t = m.invoke(proxy);
-            if (t != null && t != proxy) return t;
-        } catch (Exception ignored) {
-            // try next approach
-        }
-        // Alternative: ArcContainer proxies have a "arcInstance" or
-        // unwrap via ClientProxy
-        for (var f : proxy.getClass().getDeclaredFields()) {
-            f.setAccessible(true);
-            try {
-                Object v = f.get(proxy);
-                if (v != null && v != proxy && v.getClass().getName().contains("BooleanChainRunner")) {
-                    return v;
-                }
-            } catch (Exception ignored) {
-                // try next
-            }
-        }
-        return proxy;
+        // BooleanChainRunner exposes `layers()` as a public method.
+        // No reflection needed — the accessor was added in commit 66657a94.
+        List<TruthTableLayer> ls = chainRunner.layers();
+        return ls == null ? List.of() : ls;
     }
 
     /** Wrap a flat neuron list as the multi-key map the trainer expects. */
