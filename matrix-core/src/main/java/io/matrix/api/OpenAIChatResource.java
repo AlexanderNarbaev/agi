@@ -68,6 +68,7 @@ public class OpenAIChatResource {
     private final PureBirGenerator pureBir;
     private final io.matrix.imports.BooleanChainRunner chainRunner;
     private final QaCorpusIndex qaIndex;
+    private final ConversationMemory conversationMemory;
     private final Random rng;
     private final List<String> responseHistory;
     private int stuckCounter;
@@ -99,7 +100,8 @@ public class OpenAIChatResource {
                        Text2VecService text2Vec, EthicalFilter ethicalFilter,
                        io.matrix.model.ModelRegistry modelRegistry,
                        io.matrix.imports.BooleanChainRunner chainRunner,
-                       QaCorpusIndex qaIndex) {
+                       QaCorpusIndex qaIndex,
+                       ConversationMemory conversationMemory) {
         this.metrics = metrics;
         this.brainService = brainService;
         this.text2vec = text2Vec;
@@ -109,6 +111,7 @@ public class OpenAIChatResource {
         this.responseHistory = new ArrayList<>();
         this.stuckCounter = 0;
         this.qaIndex = qaIndex;
+        this.conversationMemory = conversationMemory;
         // W6.2: pipeline enricher (sentiment + topic routing via distilled BIR models)
         this.enricher = modelRegistry == null ? null
                 : new ChatPipelineEnricher(modelRegistry);
@@ -128,6 +131,7 @@ public class OpenAIChatResource {
         this.pureBir = new PureBirGenerator();
         this.chainRunner = io.matrix.imports.BooleanChainRunner.empty();
         this.qaIndex = null;
+        this.conversationMemory = null;
         this.rng = new Random();
         this.responseHistory = new ArrayList<>();
         this.stuckCounter = 0;
@@ -206,6 +210,15 @@ public class OpenAIChatResource {
                     model)).build();
         }
 
+        // Multi-turn memory: prepend prior context for this conversation.
+        // Same conversation_id -> same context.
+        String convContext = conversationMemory != null
+                ? conversationMemory.contextBlock(finalConvId)
+                : "";
+        String augmentedText = convContext.isEmpty()
+                ? userText
+                : convContext + "user (latest): " + userText;
+
         // ─── Streaming SSE support ───
         if (request.stream) {
             return handleStreaming(model, userText);
@@ -242,8 +255,8 @@ public class OpenAIChatResource {
             // PRIMARY 0: QA corpus retrieval — find the best-matching trained Q
             // and return the real learned A. This is the chain's "trained knowledge".
             if (qaIndex != null && qaIndex.size() > 0) {
-                var hits = qaIndex.search(userText, 3);
-                double top = qaIndex.topScore(userText);
+                var hits = qaIndex.search(augmentedText, 3);
+                double top = qaIndex.topScore(augmentedText);
                 // Threshold: require at least 0.5 idf-weighted token overlap to consider it a hit.
                 // Below this, the match is too weak to be confident — fall through to bir path.
                 final double QA_HIT_THRESHOLD = 0.5;
@@ -387,6 +400,13 @@ public class OpenAIChatResource {
 
         log.info("Chat completion: model={} inputLen={} verdict={} responseLen={}",
                 model, userText.length(), verdict, response.length());
+
+        // Multi-turn memory: append this turn so the next chat in the same
+        // conversation sees the prior context. Bounded by ConversationMemory.
+        if (conversationMemory != null) {
+            conversationMemory.append(finalConvId, "user", userText);
+            conversationMemory.append(finalConvId, "assistant", response);
+        }
 
         // Record the assistant turn so the training pipeline can later join
         // (user, assistant) pairs from the same conversation.

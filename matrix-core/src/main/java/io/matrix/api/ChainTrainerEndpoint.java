@@ -178,6 +178,11 @@ public class ChainTrainerEndpoint {
      * sign-descent. The EvalFn evaluates the chain on the input and
      * measures bit-match accuracy against the expected target.
      *
+     * <p>This method actually mutates the chain's neurons via
+     * {@link TruthTableLayer#replaceNeuron(int, TruthTable)} so
+     * subsequent /v1/generate and /v1/chat calls see the trained
+     * weights. Training is persistent within the JVM until restart.
+     *
      * @return number of neurons flipped
      */
     private long trainPair(String input, String expected) {
@@ -203,9 +208,10 @@ public class ChainTrainerEndpoint {
 
         List<Integer> layerKs = getLayerKs();
         List<TruthTable> snapshot = snapshotNeurons();
+        Map<String, List<TruthTable>> before = wrapAsMap(snapshot);
         BitLinearTrainer trainer = new BitLinearTrainer();
         TrainerState state = trainer.trainWithTarget(
-                wrapAsMap(snapshot),
+                before,
                 layerKs,
                 inputBits,
                 targetBits,
@@ -213,10 +219,46 @@ public class ChainTrainerEndpoint {
         long flipped = state.history().stream()
                 .mapToLong(TrainerStats::neuronsFlipped)
                 .sum();
+
+        // WRITE-BACK: copy the trained neurons back into the actual chain layers
+        // so future evaluations see the updated weights.
         if (flipped > 0) {
-            log.debug("trained on '{}' → '{}' — {} neurons flipped", input, expected, flipped);
+            try {
+                Map<String, List<TruthTable>> after = state.trainedNeurons();
+                // Traverse layers and write each trained neuron
+                int neuronIdx = 0;
+                int written = 0;
+                for (TruthTableLayer layer : currentLayers()) {
+                    int n = layer.neuronCount();
+                    for (int i = 0; i < n && neuronIdx < snapshot.size(); i++) {
+                        TruthTable trained = findTrained(after, snapshot, neuronIdx);
+                        TruthTable prev = layer.replaceNeuron(i, trained);
+                        if (prev != trained) written++;
+                        neuronIdx++;
+                    }
+                }
+                log.info("trained on pair → {} neurons flipped, {} written back to layers",
+                        flipped, written);
+            } catch (Throwable t) {
+                log.warn("write-back failed: {}", t.getMessage());
+            }
         }
+
         return flipped;
+    }
+
+    /** Look up a single trained neuron by index in the trained map. */
+    private TruthTable findTrained(Map<String, List<TruthTable>> trained,
+                                   List<TruthTable> snapshot, int idx) {
+        if (trained == null) return snapshot.get(idx);
+        int total = 0;
+        for (List<TruthTable> list : trained.values()) {
+            if (idx < total + list.size()) {
+                return list.get(idx - total);
+            }
+            total += list.size();
+        }
+        return snapshot.get(idx);
     }
 
     /** Get k value from the first layer. */

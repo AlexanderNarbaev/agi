@@ -45,6 +45,27 @@ public class BpeTokenizerProvider {
         return t.textToBits(text, width);
     }
 
+    /** BPE-encode a string into token ids. Returns empty int[] when tokenizer unavailable. */
+    public int[] encode(String text) {
+        BpeTokenizer t = loadIfPossible();
+        return t == null ? new int[0] : t.encode(text == null ? "" : text);
+    }
+
+    /** Look up a single token's text by id. */
+    public String tokenAt(int id) {
+        BpeTokenizer t = loadIfPossible();
+        return t == null ? null : t.reverseVocabFor(id);
+    }
+
+    /** BPE-vocabulary size (0 when tokenizer unavailable). */
+    public int vocabSize() {
+        BpeTokenizer t = loadIfPossible();
+        return t == null ? 0 : t.vocabSize();
+    }
+
+    /** Underlying BpeTokenizer (for tests / direct manipulation). */
+    public BpeTokenizer tokenizer() { return loadIfPossible(); }
+
     private BpeTokenizer loadIfPossible() {
         BpeTokenizer c = cached.get();
         if (c != null) return c;

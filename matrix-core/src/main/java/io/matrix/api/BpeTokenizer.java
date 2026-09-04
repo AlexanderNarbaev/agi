@@ -264,4 +264,14 @@ public final class BpeTokenizer {
     }
 
     public int vocabSize() { return vocab.size(); }
+
+    /** Public accessor — exposes the reverse-vocab table (id → text). */
+    public Map<Integer, String> reverseVocabForPublic() {
+        return reverseVocab;
+    }
+
+    /** Look up a single token id. */
+    public String reverseVocabFor(int id) {
+        return reverseVocab.get(id);
+    }
 }

@@ -36,6 +36,25 @@ public final class TruthTableLayer {
     public List<TruthTable> neurons() { return neurons; }
 
     /**
+     * Replace the neuron at {@code index} with a freshly-trained
+     * {@link TruthTable}. Triggers a re-export of the native tables
+     * on the next native evaluation by invalidating the cached
+     * export. Returns the previously-held neuron for diff/debug.
+     *
+     * <p>Used by {@link io.matrix.api.ChainTrainerEndpoint} to write
+     * trained weights back into the live chain so subsequent
+     * evaluations reflect the training.
+     */
+    public TruthTable replaceNeuron(int index, TruthTable fresh) {
+        if (index < 0 || index >= neurons.size()) {
+            throw new IndexOutOfBoundsException("neuron index " + index);
+        }
+        TruthTable prev = neurons.get(index);
+        neurons.set(index, Objects.requireNonNull(fresh, "fresh"));
+        return prev;
+    }
+
+    /**
      * Export the packed truth tables for native evaluation.
      * Each entry is a {@code long[]} from {@link TruthTable#table().toLongArray()}.
      * Used by {@link BooleanChainRunner#evaluateNative} via Project Panama.

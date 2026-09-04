@@ -73,8 +73,12 @@ public final class TensorProjector {
         float max = tensor.max();
         // Avoid dividing by zero for constant tensors — assign midpoint.
         float range = (max - min);
-        double scale = (range == 0f) ? 1.0 : 2.0 / range;  // → maps to [-1, +1]
-        double offset = -(max + min) / (range == 0f ? 1.0 : range) - 1.0;
+        double scale = (range == 0f) ? 1.0 : 2.0 / range;  // → maps min,max to [-1,+1]
+        // FIX (RUN 8): the previous code had "- 1.0" here, which mapped the
+        // ENTIRE distribution to ≤0 (so bit-cardinality was 0 for every
+        // table). The correct offset for the affine map data*scale + offset
+        // sending min → -1 and max → +1 is just -(max+min)/(max-min).
+        double offset = -(max + min) / (range == 0f ? 1.0 : range);
 
         // Pick k = min(floor(log2(budget)), floor(log2(data.length)), K_MAX).
         // Each neuron spans 2^k input bits → total payload is neurons × 2^k = N
