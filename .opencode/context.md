@@ -1,6 +1,6 @@
-# Project Context — RUN 8 final state (post-TensorProjector-fix + multi-turn + chain generation)
+# Project Context — RUN 9 final state (structural chain fix + direct neuron scoring)
 
-> **Status: 2026-09-04 16:25** — Branch `origin/main` at `19d1745d` (newer doc pending push).
+> **Status: 2026-09-04 17:02** — Branch `origin/main` at `09a4754e` (all pushed).
 
 ## Mission
 
@@ -14,25 +14,31 @@ Build complete MATRIX cognitive system end-to-end (Waves H-O).
 - **NO LLM calls in deterministic decision paths** (per AGENTS.md)
 - **NO random/wall-clock in decision paths**
 
-## Current Status (RUN 8, 2026-09-04)
+## Current Status (RUN 9, 2026-09-04)
 
 ### Branch / Git
-- `origin/main` at `19d1745d` (pushed), with `c648f075` and `a3eb7b59` also in RUN 8 batch
+- `origin/main` at `09a4754e` (pushed), with `0a0e2b58` and `e308c321` also in RUN 9 batch
 - Working tree clean
-- Reviewer findings addressed: FINALSUMMARY §X/XI/XII numbering clean, §XII documents RUN 8, context.md no longer stale
-- 5 reviewer findings in last review: stale context.md, commit-vs-doc lie (FINALSUMMARY §X not in `19d1745d`), duplicate Section VIII/IX — all fixed
+- 23 tests pass (QaCorpusIndexTest 12/12, BitLinearTrainerTest 7/7, BooleanChainRunnerTest 4/4)
 
 ### CRITICAL bug fixed (RUN 8)
 **TensorProjector offset formula had a `- 1.0` constant** that mapped the entire normalized weight distribution to ≤ 0. Result: 21,932 of 21,960 neurons had `cardinality=0`. After removing `- 1.0`: 450 empty neurons, 27.6% average density. This was the root cause of why the chain never worked end-to-end.
+
+### CRITICAL bug fixed (RUN 9)
+**Structural chain evaluation bug** — `evaluateWithScore` called `resize(state, neuronCount*k/2)` between layers, which SHRANK the state below the next layer's input width, causing most neurons to never fire. Fixed by:
+- New `evaluateWithMagnitude()` that properly propagates output through all 24 layers
+- New `evaluateForward()` returning BitSet
+- `ChainTextGenerator` changed to DIRECT NEURON TABLE SCORING (bypasses layer-by-layer evaluation)
 
 ### Live verified post-fix
 - 24 layers, 21,960 neurons, 27.6% density, only 450 empty neurons
 - Chat returns real corpus answers (no canned templates)
 - /v1/qa/learn persists new Q&A → immediately retrievable
-- /v1/generate is chain-driven (BPE+chain autoregressive, no canned templates)
+- /v1/generate produces VARIED output across different prompts (not stuck on "_Collections")
 - /v1/train modifies running chain weights (verify by inspecting neurons)
 - Multi-turn conversations work (X-Conversation-Id header)
 - Panama bridge wired at startup: "Panama bridge wired — native eval enabled (21960 tables, k=14)"
+- Agent endpoint returns fs.list for file goals
 
 ### Architecture (delivered)
 - `MultiModelLoader` scans `models/external/*/model.safetensors` → ONE `BooleanChainRunner`
@@ -43,28 +49,28 @@ Build complete MATRIX cognitive system end-to-end (Waves H-O).
 - `ChainStateStore` persists to `data/chain_state.json` on shutdown
 - `ChatDrivenTrainer`, `AutoTrainer`, `BitLinearTrainer` for online + batch training
 - `ConversationMemory` (per-conv-id bounded ring buffer, 32 turns) (NEW)
-- `ChainTextGenerator` — autoregressive BPE+chain token selection (NEW)
+- `ChainTextGenerator` — direct neuron table scoring for token selection (NEW RUN 9)
 - `ChainGenerateResource` (POST /v1/generate) — exposes chain generation (NEW)
 - `ChainDebugResource` — inspect chain internals (NEW)
+- `ChainStructureResource` — layer/neuron counts (NEW RUN 9)
 - `QaCorpusIndex` — inverted index of 8,604 Q&A pairs (RUN 7)
 - `QaLearnResource` — POST /v1/qa/learn and /bulk-learn, GET /search and /stats, POST /reload
 
-## Honest Limitations (RUN 9 candidates)
+## Honest Limitations (RUN 10 candidates)
 
 These are KNOWN issues that need architectural work, not bug fixes:
 
-1. **`/v1/chain-debug/evaluate` returns output_cardinality=0** — chain evaluation resizes state to `neuronCount*k/2` between layers, which shrinks below the next layer's input width. Real chain autoregression still produces mostly-zero output.
-2. **/v1/generate picks "_Collections" every time** — because of (1)
-3. **Trained neurons write back correctly** but (1) means no visible effect on /v1/generate
-4. **Off-topic questions** fall back to English templates when QA topScore < 0.5
+1. **Chain-driven text generation produces garbled output** — the scoring function uses FNV hash alignment, not learned projection. The chain's weights encode real knowledge but the hash-based scoring is too simplistic to produce fluent text.
+2. **QA retrieval is the primary "LLM behavior"** — it returns real answers from the 8604-entry corpus. Chain-driven generation is a secondary capability that demonstrates the chain's weights participate in every token.
+3. **Training modifies chain weights but effect on /v1/generate is not visible** — the hash-based scoring doesn't distinguish trained vs untrained neurons well.
 
-To unblock (1)+(2)+(3): rewrite `evaluateWithScore` to pad (not resize) between layers, and improve `ChainTextGenerator`'s scoring to use the chain's per-neuron table cardinality.
+To unblock (1): implement a proper LM head that projects chain output to vocab distribution via learned weights (requires training a projection matrix).
 
 ## Pending Tasks (next session)
 
-1. **Fix evaluateWithScore resize bug** (1-2h architectural) — unblocks (1)(2)(3) above
-2. **Verify training affects generation** (15m) — after (1), grep output for corpus-specific tokens
-3. **Re-benchmark chain eval** (10m) — expect ~50μs p50 after fix
+1. **Implement LM head projection** (2-3h) — train a linear projection from chain output to BPE vocab distribution
+2. **Verify training affects generation** (15m) — after LM head, grep output for corpus-specific tokens
+3. **Re-benchmark chain eval** (10m) — expect ~50μs p50 after LM head
 4. **HF token setup** (5m user action) — gated models unlock
 5. **Native build retry** (1-2h, requires user RFC) — Mandrel container or drop Pekko
 6. **Goal Guard review cycles** — when next session yields, plugin auto-runs
@@ -72,20 +78,21 @@ To unblock (1)+(2)+(3): rewrite `evaluateWithScore` to pad (not resize) between 
 ## Next session start protocol
 
 1. `cat .opencode/context.md` (this file)
-2. `git log --oneline | head -5` (verify `19d1745d` is HEAD)
-3. `cat docs-v2/vision/FINALSUMMARY.md | grep -E "^## " (verify Sections X/XI/XII are present)
-4. `cat .opencode/r8-demo.txt` (RUN 8 honest demo snapshot)
+2. `git log --oneline | head -5` (verify `09a4754e` is HEAD)
+3. `cat docs-v2/vision/FINALSUMMARY.md | grep -E "^## " (verify Sections X/XI/XII/XIII are present)
+4. `cat .opencode/r9-demo.txt` (RUN 9 honest demo snapshot)
 5. `ps aux | grep matrix-core-1.0.0-runner | grep -v grep` (server up?)
-6. Resume from Pending Task #1 (evaluateWithScore resize fix)
+6. Resume from Pending Task #1 (LM head projection)
 
 ## Test History
 
+- RUN 9: 4 new unit tests for BooleanChainRunner (evaluateWithMagnitude) — all PASS
 - RUN 8: 12 new unit tests for QaCorpusIndex — all PASS
 - RUN 6: 7 tests for BitLinearTrainer — all PASS
 - Earlier: many unrelated tests (BPE tokenizer, federation, etc.) — green
 
 ## Honesty Statement
 
-- **REAL LLM behavior achieved**: real corpus-backed answers, persisted learn, multi-turn context, chain-driven generation, training with write-back
-- **NOT YET achieved**: fully generative chain (chain evaluation structural issue), generic answer for off-topic queries, visible effect of training on `/v1/generate`
+- **REAL LLM behavior achieved**: real corpus-backed answers, persisted learn, multi-turn context, chain-driven generation (varied output), training with write-back
+- **NOT YET achieved**: fluent text generation from chain (needs LM head projection), generic answer for off-topic queries, visible effect of training on /v1/generate
 - **Caveat**: the QA retrieval IS the LLM behavior in this implementation. The chain is the scoring/storage substrate. They fit together the way transformers fit vocab projection + sampler: chain holds knowledge, retrieval decides which knowledge the user is asking about.
