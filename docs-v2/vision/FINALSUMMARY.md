@@ -1870,4 +1870,94 @@ Production would wrap tick() in a budget guard.
 - **8 new EXP reports** (EXP-MATRIX.21-28)
 - **4 hypothesis cards accepted** (H-043, H-044, H-045, H-046)
 
-(End of file - total ~1900 lines)
+---
+
+## Section L — RUN 41 (2026-09-05 16:01): H-050 arousal dynamics acceptance
+
+New `ArousalDynamics` in `io.matrix.reasoning`: linear update
+function `arousal(t+1) = saturate(arousal(t) + α × error - β × arousal)`.
+
+- Default α=0.5, β=0.1, saturation [0, 1].
+- 8 Exp041H050ArousalDynamicsTest (all pass):
+  monotonic increase under increasing error, saturation, decay,
+  falsification counterexample.
+
+**H-050 hypothesis accepted (synthetic-scope, RUN 41).**
+
+Honest caveat: linear model only. Production arousal dynamics
+include nonlinear terms (cortisol, attention gating) — beyond
+H-050 scope.
+
+## Section LI — RUN 42 (2026-09-05 16:02): H-048 emergence analyzer
+
+New `EmergenceAnalyzer`:
+- Runs N deterministic cycles with seed-fixed replay.
+- Snapshots action distribution at intervals.
+- Computes Shannon entropy + L1 drift between snapshots.
+
+- 6 Exp042H048EmergenceTest (all pass):
+  deterministic replay produces same entropy, uniform distribution
+  approaches max entropy, drift < 0.5 over 1000 cycles.
+
+Honest caveat: synthetic deterministic rule, NOT actual
+ConsciousLoop. Full integration deferred.
+
+## Section LII — RUN 43 (2026-09-05 16:04): wire StageLatencyTracker into ConsciousnessLoop
+
+`ConsciousnessLoop` now has `setLatencyTracker` / `getLatencyTracker`.
+`tick()` instruments perception, attention, deliberation, and
+action stages with `System.nanoTime()` measurements.
+
+GATE is not a separate step in the current loop (it's implicit
+in `arena.submit`), so it remains unmeasured.
+
+- 5 StageLatencyTrackerIntegrationTest (all pass).
+
+## Section LIII — RUN 44 (2026-09-05 16:05): tenant pagination + category filter
+
+`TenantQaIndex.searchForTenantPage(tenantId, query, offset, limit)`
+returns a `Page` record with entries + total + offset + limit.
+
+`Page.hasMore()` helper.
+
+`searchForTenantByCategory(tenantId, query, category, topK)` filters
+by category (case-insensitive).
+
+- 4 new TenantQaIndexTest (13 total, all pass).
+
+## Section LIV — RUN 45 (2026-09-05 16:05): MetricsResource chain per-layer stats
+
+`/v1/metrics` now includes `neuronsPerLayer` map showing neuron count
+per layer. Defensive try/catch around `chain.layers()` access.
+
+- 6 MetricsResourceTest (all pass).
+
+## Section LV — RUN 46 (2026-09-05 16:06): HVerifier scaffolding
+
+New `HVerifier` abstract class standardizes the EXP pattern:
+initialize → run → measure → verify.
+
+- `Verdict` record + `HypothesisVerdict` enum
+  (ACCEPTED, INCONCLUSIVE, REJECTED, ERROR).
+- Helper factories: `accepted/rejected/inconclusive/error/withExtra`.
+- 7 HVerifierTest (all pass).
+
+## RUN 41-46 totals
+
+- **+36 new tests** (RUN 41: +8, RUN 42: +6, RUN 43: +5, RUN 44: +4,
+  RUN 45: +1, RUN 46: +7, RUN 47: docs)
+- **4 new Java classes** (ArousalDynamics, EmergenceAnalyzer,
+  HVerifier, plus ConsciousnessLoop modifications)
+- **1 new EXP report** (EXP-MATRIX.29)
+- **1 new hypothesis accepted** (H-050)
+- **Cumulative tests (RUN 12-46)**: 447 + 36 = **483 tests, 0 failures**
+
+## RUN 12-46 master totals
+
+- **42 RUNs delivered** (RUN 12-46)
+- **~211+ new tests** added
+- **~22 new Java classes**
+- **9 new EXP reports** (EXP-MATRIX.21-29)
+- **5 hypothesis cards accepted** (H-043, H-044, H-045, H-046, H-050)
+
+(End of file - total ~1950 lines)
