@@ -39,11 +39,11 @@ Java 25 · Quarkus 3.38.3 · GraalVM plugin 1.1.10 · Avro 1.12.2 · ONNX Runtim
 ## Следующее (минимально-ценностные шаги)
 
 1. TLA+-спек-кандидаты (см. [architecture/FORMAL-CONTRACTS.md](../architecture/FORMAL-CONTRACTS.md)):
- - `BRC-Step` (закрывает пробел `reasoning/`),
- - `ConjugateBudgeter-DP`,
- - `Memory-M4-Causal`,
- - `MCTS-LATS-Visit`.
-2. SDD-свип: спеки для топ-`needs-spec` (`reasoning/BrcChain`, `mediator/`, `hades/`, `memory/`, `rag/`).
+  - `BRC-Step` (закрывает пробел `reasoning/`),
+  - `ConjugateBudgeter-DP`,
+  - `Memory-M4-Causal`,
+  - `MCTS-LATS-Visit`.
+2. ~~SDD-свип: спеки для топ-`needs-spec` (`reasoning/BrcChain`, `mediator/`, `hades/`, `memory/`, `rag/`).~~ ✅ **RUN 13 done**: SPEC-008/009/010/011/012.
 3. Production-domain прогоны EXP-010/002/003 на восстановленных корпусах.
 4. CUDA-нога EXP-009 через `onnxruntime_gpu` (Java) при доступности cuDNN-тулчейна.
 5. Research-only Python: `scripts/bench_gpu_vs_bir.py` v2 с батчем (полные пороги).
