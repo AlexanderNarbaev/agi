@@ -265,3 +265,36 @@ Total tests after RUN 12-21: 79/79 pass.
 - 11 SemanticExpanderTest + 6 Exp025SemanticRetrievalTest (all pass).
 - EXP-MATRIX.25 documents the Cyrillic regex bug (?U flag required).
 - Honest caveat: cheap heuristic, NOT a substitute for true embeddings.
+
+## RUN 31 — wire SemanticExpander into QaCorpusIndex (2026-09-05 15:15)
+
+- New QaCorpusIndex.searchWithExpansion(query, topK) uses SemanticExpander.
+- Existing search() unchanged (backward compatible).
+- semanticExpansionEnabled flag (default true) lets callers opt out.
+- 4 new Exp025SemanticRetrievalTest (10 total, all pass).
+
+## RUN 32 — wire OutputSafetyFilter into ChainTextGenerator (2026-09-05 15:16)
+
+- ChainTextGenerator now applies OutputSafetyFilter during generation.
+- Token-level: skippedForbiddenTokens counter; control bytes/surrogates
+  dropped from output.
+- String-level: forbidden phrases filtered via isStringAllowed.
+- 7 ChainTextGeneratorSafetyTest (all pass).
+
+## RUN 33 — tenant-scoped QA endpoint (2026-09-05 15:17)
+
+- New TenantQaResource (REST): GET/POST /v1/tenant/{id}/...
+- 8 TenantQaResourceTest (all pass).
+
+## RUN 34 — batch training loop (2026-09-05 15:19)
+
+- New LmHeadTrainer.trainBatch(List<Pair>, int nNegatives).
+- Pre-fetches chain outputs for unique questions.
+- Telemetry: batchOps(), singleOps() counters.
+- 7 LmHeadTrainerBatchTest (all pass).
+
+## RUN 35 — H-044 calibration acceptance (2026-09-05 15:20)
+
+- EXP-MATRIX.27: real LmHead ECE = 0.049 ≤ 0.10 (H-044 acceptance).
+- 3 Exp035H044CalibrationTest (all pass).
+- HYPOTHESES-NEW.md updated: H-044 accepted (synthetic-scope, RUN 35).
