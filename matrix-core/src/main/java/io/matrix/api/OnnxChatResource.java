@@ -49,6 +49,7 @@ public class OnnxChatResource {
     private volatile long totalInferences = 0;
     private final long startTimeMs = System.currentTimeMillis();
     private final TokenUsageTracker tracker = new TokenUsageTracker();
+    private final RequestCounter requestCounter = new RequestCounter();
 
     /** Load bridge on startup if configured. */
     void onStart(@Observes StartupEvent ev) {
@@ -174,6 +175,11 @@ public class OnnxChatResource {
     /** Visible-for-testing accessor for the token usage tracker. */
     public TokenUsageTracker getTracker() {
         return tracker;
+    }
+
+    /** Visible-for-testing accessor for the request counter. */
+    public RequestCounter getRequestCounter() {
+        return requestCounter;
     }
 
     @GET

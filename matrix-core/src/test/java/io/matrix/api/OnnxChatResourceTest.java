@@ -266,4 +266,13 @@ class OnnxChatResourceTest {
         String json = resource.route(null);
         assertThat(json).contains("\"error\"");
     }
+
+    @Test
+    void requestCounterAccessible() {
+        OnnxChatResource resource = new OnnxChatResource();
+        assertThat(resource.getRequestCounter()).isNotNull();
+        assertThat(resource.getRequestCounter().totalRequests()).isZero();
+        resource.getRequestCounter().recordRequest("/test");
+        assertThat(resource.getRequestCounter().totalRequests()).isEqualTo(1);
+    }
 }
