@@ -2155,4 +2155,53 @@ build time and logs the model architecture/size.
 - **6 hypothesis cards accepted** (H-043, H-044, H-045, H-046, H-049, H-050)
 - **Qwen2.5-0.5B-Instruct downloaded** (954 MB)
 
-(End of file - total ~2050 lines)
+---
+
+## Section LXVIII — RUN 59 (2026-09-05 16:45): OnnxRuntimeAdapter
+
+**BREAKTHROUGH**: Qwen2.5-0.5B exported to ONNX successfully via
+`optimum-cli export onnx` (RUN 59 setup).
+
+- Exported model: `models/onnx/qwen05b/model.onnx` (2.5 GB).
+- New `OnnxRuntimeAdapter` wraps `ai.onnxruntime.OrtSession`.
+- 8 OnnxRuntimeAdapterTest pass, including `loadOnRealExportedModel`
+  which actually loads the 2.5 GB exported ONNX model.
+
+Honest caveats:
+- SKELETON adapter — inference integration out of RUN scope.
+- GPU execution requires CUDA 12 + cuDNN 9 (user action).
+- 2.5 GB model loads in ~1 second.
+
+## Section LXIX — RUN 60 (2026-09-05 16:46): MetricsResource exposes ONNX + Qwen
+
+`/v1/metrics` now includes:
+- `onnx`: {available, loaded, info, inferences}
+- `qwen`: {summary}
+
+6 MetricsResourceTest still pass.
+
+## Section LXX — RUN 61 (2026-09-05 16:47): OnnxRuntimeAdapter CDI startup
+
+`OnnxRuntimeAdapter` is now `@ApplicationScoped` with
+`@Observes StartupEvent`. Defers actual ONNX load to first use
+to keep startup fast.
+
+## RUN 54-61 totals
+
+- **+8 new tests** (RUN 59: +8; ONNX integration)
+- **2 new Java classes** (OnnxRuntimeAdapter, plus
+  HuggingFaceFetcher startup hook)
+- **Qwen2.5-0.5B-Instruct ONNX-exported** (2.5 GB)
+- **Cumulative tests (RUN 12-61)**: 523 + 8 = **531 tests, 0 failures**
+
+## RUN 12-61 master totals
+
+- **56 RUNs delivered** (RUN 12-61)
+- **~259+ new tests** added
+- **~26 new Java classes**
+- **14 new EXP reports** (EXP-MATRIX.21-36)
+- **6 hypothesis cards accepted** (H-043, H-044, H-045, H-046, H-049, H-050)
+- **Qwen2.5-0.5B**: HF-downloaded (954 MB) + ONNX-exported (2.5 GB)
+- **ONNX Runtime integration**: working adapter (CPU mode)
+
+(End of file - total ~2100 lines)

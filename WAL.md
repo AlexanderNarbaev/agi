@@ -419,3 +419,18 @@ Total tests after RUN 12-21: 79/79 pass.
 
 - BooleanChainProducer logs Qwen metadata at build time.
 - New config matrix.qwen.model-path.
+
+## RUN 59 — OnnxRuntimeAdapter (2026-09-05 16:45)
+
+- BREAKTHROUGH: Qwen2.5-0.5B exported to ONNX via optimum-cli (2.5 GB).
+- New OnnxRuntimeAdapter wraps ai.onnxruntime.OrtSession.
+- 8 tests pass (including loadOnRealExportedModel).
+
+## RUN 60 — MetricsResource exposes ONNX + Qwen (2026-09-05 16:46)
+
+- /v1/metrics includes onnx: {available, loaded, info, inferences}.
+
+## RUN 61 — OnnxRuntimeAdapter CDI startup (2026-09-05 16:47)
+
+- @ApplicationScoped + @Observes StartupEvent hook.
+- Deferred load to first use.
