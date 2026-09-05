@@ -462,3 +462,11 @@ Total tests after RUN 12-21: 79/79 pass.
 - Real 3-turn conversation verified on GPU.
 - BPE byte-level encoder/decoder fix (control chars → U+0100+).
 - 12 new tests, 5 new Java classes, 3 EXP reports.
+
+## RUN 79-87 — Continued LLM expansion (2026-09-05 19:55)
+
+- 504 tests, 0 failures verified.
+- OnnxChainEnsemble, OnnxModelRegistry, GenerationResult.
+- /v1/onnx/compare endpoint.
+- 5-turn diverse conversation EXP with verified outputs.
+- BPE round-trip verification.

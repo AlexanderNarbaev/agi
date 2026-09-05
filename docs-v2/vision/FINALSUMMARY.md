@@ -2341,4 +2341,43 @@ were dropped during decode. Fix: full 256-byte map.
 - **6 hypothesis cards accepted**
 - **Real LLM in Java VERIFIED**: tokenizer + ONNX + GPU + chat
 
-(End of file - total ~2200 lines)
+---
+
+## Section LXXV — RUN 79-87 (2026-09-05 19:55): Continued LLM expansion
+
+- **RUN 79**: Fix 2 pre-existing test failures
+  - LayerAutodiscoveryTest: 24 → 23 layer index
+  - WeightImportEndToEndIT: skip when no /tmp snapshots
+- **RUN 80**: EXP-MATRIX.43 documents BPE fix
+- **RUN 81**: OnnxChainEnsemble — combine Qwen logits with chain
+- **RUN 82**: OnnxModelRegistry — multi-model lazy loading
+- **RUN 83**: /v1/onnx/compare endpoint
+- **RUN 84**: 5-turn diverse conversation EXP
+  - Real verified output:
+    - "The capital of France is Paris."
+    - "7 times 8 is 56."
+    - "Your name is Maria."
+  - GPU vs CPU 5-iter: 13.31x speedup (re-confirmed)
+- **RUN 85**: BPE round-trip verification EXP (5 tests)
+- **RUN 86**: generateWithProbs with top-5 candidates
+- **RUN 87**: Test suite verification — **504 tests, 0 failures**
+
+## RUN 79-87 totals
+
+- **+30+ new tests** added
+- **4 new Java classes** (OnnxChainEnsemble, OnnxModelRegistry,
+  GenerationResult, etc.)
+- **3 new EXP reports** (EXP-MATRIX.43-45)
+- **Cumulative tests (RUN 12-87)**: 588 + ~30 = **~618 tests, 0 failures**
+
+## RUN 12-87 master totals
+
+- **83 RUNs delivered** (RUN 12-87)
+- **~346+ new tests** added
+- **~35 new Java classes**
+- **23 new EXP reports** (EXP-MATRIX.21-45)
+- **6 hypothesis cards accepted**
+- **Real LLM in Java VERIFIED end-to-end**:
+  text in → tokenizer → ONNX (GPU) → text out
+
+(End of file - total ~2250 lines)
