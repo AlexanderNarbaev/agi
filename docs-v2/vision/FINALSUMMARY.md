@@ -1817,4 +1817,57 @@ Honest caveat: health is point-in-time snapshot, not a deep probe.
 - **7 new EXP reports** (EXP-MATRIX.21-27)
 - **3 hypothesis cards accepted** (H-043, H-044, H-046)
 
-(End of file - total ~1870 lines)
+---
+
+## Section XLVIII — RUN 39 (2026-09-05 15:27): H-045 ethics recovery
+
+New `FreezeRecoveryManager` in `io.matrix.ethics` implements the
+state machine NORMAL → FROZEN → RECOVERING → NORMAL.
+
+- `reportViolation()` enters FROZEN, blocks actions.
+- `isActionAllowed()` checks cooldown; auto-transitions to
+  RECOVERING when elapsed.
+- `manualRecover()` bypasses cooldown (ops use only).
+- 10 Exp045H045FreezeRecoveryTest (all pass).
+
+**H-045 hypothesis accepted (synthetic-scope, RUN 39):**
+- 100% action-block during FROZEN.
+- 100% auto-recovery after cooldown.
+- Multiple violations tracked.
+
+Honest caveat: standalone state tracker, NOT yet integrated into
+ConsciousLoop tick logic. Future work: wire into the loop.
+
+## Section XLIX — RUN 40 (2026-09-05 15:29): per-stage latency tracker
+
+New `StageLatencyTracker` in `io.matrix.reasoning` records
+wall-clock nanoseconds for each canonical loop stage.
+
+- Per-stage count, sum, min, max, mean tracked.
+- Configured budgets: perception<5ms, attention<5ms, deliberation<50ms,
+  gate<5ms, action<10ms (p99 targets).
+- 10 StageLatencyTrackerTest (all pass).
+
+**H-047 acceptance (light-load):** all stage max within budget for
+synthetic light-load data. JMH-grade stress test deferred.
+
+Honest caveat: tracker measures widths but doesn't enforce budgets.
+Production would wrap tick() in a budget guard.
+
+## RUN 39-40 totals
+
+- **+20 new tests** (RUN 39: +10, RUN 40: +10)
+- **2 new Java classes** (FreezeRecoveryManager, StageLatencyTracker)
+- **1 new EXP report** (EXP-MATRIX.28)
+- **1 new hypothesis accepted** (H-045)
+- **Cumulative tests (RUN 12-40)**: 427 + 20 = **447 tests, 0 failures**
+
+## RUN 12-40 master totals
+
+- **37 RUNs delivered** (RUN 12-40)
+- **~175+ new tests** added
+- **~19 new Java classes**
+- **8 new EXP reports** (EXP-MATRIX.21-28)
+- **4 hypothesis cards accepted** (H-043, H-044, H-045, H-046)
+
+(End of file - total ~1900 lines)

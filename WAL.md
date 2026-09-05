@@ -315,3 +315,15 @@ Total tests after RUN 12-21: 79/79 pass.
 - New HealthResource: /v1/health, /v1/health/live, /v1/health/ready.
 - 503 if DEGRADED (chain not loaded OR corpus empty).
 - 5 HealthResourceTest (all pass).
+
+## RUN 39 — H-045 ethics violation recovery (2026-09-05 15:27)
+
+- New FreezeRecoveryManager: state machine NORMAL → FROZEN → RECOVERING → NORMAL.
+- 10 Exp045H045FreezeRecoveryTest (all pass).
+- HYPOTHESES-NEW.md H-045 marked accepted (synthetic-scope).
+
+## RUN 40 — per-stage latency tracker (2026-09-05 15:29)
+
+- New StageLatencyTracker: per-stage count/sum/min/max/mean.
+- 10 StageLatencyTrackerTest (all pass).
+- H-047 acceptance (light-load): all stages within budget.
