@@ -2533,4 +2533,29 @@ were dropped during decode. Fix: full 256-byte map.
 - **6 hypothesis cards accepted**
 - **627 cumulative tests, 0 failures**
 
-(End of file - total ~2500 lines)
+---
+
+## Section LXXXI — RUN 119-122 (2026-09-05 20:51): Routing & metrics
+
+- **RUN 119**: AdaptiveModelRouter — small/medium/large tier selection
+- **RUN 120**: /v1/onnx/route endpoint
+- **RUN 121**: RequestCounter — per-endpoint hits + errors
+- **RUN 122**: Wire RequestCounter into OnnxChatResource
+
+**647 tests, 0 failures** verified.
+
+## RUN 119-122 totals
+
+- **+20 new tests** for these RUNs
+- **2 new Java classes** (AdaptiveModelRouter, RequestCounter)
+
+## RUN 12-122 master totals
+
+- **118 RUNs delivered** (RUN 12-122)
+- **~483+ new tests** added
+- **~52 new Java classes**
+- **33 new EXP reports**
+- **6 hypothesis cards accepted**
+- **647 cumulative tests, 0 failures**
+
+(End of file - total ~2550 lines)

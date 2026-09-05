@@ -502,3 +502,9 @@ Total tests after RUN 12-21: 79/79 pass.
 
 - TokenUsageTracker, /v1/onnx/usage, CostCalculator.
 - 627 cumulative tests, 0 failures.
+
+## RUN 119-122 — Routing & metrics (2026-09-05 20:51)
+
+- AdaptiveModelRouter, /v1/onnx/route.
+- RequestCounter wired into resource.
+- 647 cumulative tests, 0 failures.
