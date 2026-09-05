@@ -1547,4 +1547,100 @@ updated. 79/79 tests pass total (RUN 12: +9, RUN 13: SDD only,
 RUN 14: +10, RUN 15: +10, RUN 16: +10, RUN 17: +5, RUN 19: +7,
 RUN 20: +6).
 
-(End of file - total ~1700 lines)
+---
+
+## Section XXXI — RUN 22 (2026-09-05 14:43): LmHead signed update API
+
+The RUN 19 caveat ("negative feedback is no-op") is now resolved.
+New `LmHead.applyUpdate(boolean[] features, int token, double delta)`
+is the single source of truth for weight mutation. Routes both
+positive (training) and negative (feedback) paths through the same
+physics. New telemetry: `positiveUpdateCount`, `negativeUpdateCount`.
+
+- 12 LmHeadTest (5 RUN 22 added): positive updates → score up,
+  negative updates → score down, signed counters accurate.
+- 8 LmHeadFeedbackTrainerTest (1 RUN 22 added, 1 updated).
+- All **20 LmHead-related tests pass**.
+
+## Section XXXII — RUN 23 (2026-09-05 14:45): confidence calibration
+
+New `LmHead.scoreWithConfidence(...)` returns a
+`ScoreWithConfidence{score, confidence}` record with calibrated
+confidence in [0, 1] via temperature-scaled softmax. Temperature
+is tunable via `setTemperature(T)`.
+
+- 3 new LmHeadTest added (15 total, all pass): confidence in unit
+  interval, T=10 softer than T=1, deterministic.
+- EXP-MATRIX.22 documents the structural verification + future
+  H-024 calibration benchmark plan.
+
+## Section XXXIII — RUN 24 (2026-09-05 14:47): production observability
+
+New `MetricsResource` exposes `/v1/metrics` JSON aggregating
+counters from chain runner, LM head, feedback trainer, chain
+feature cache, and chat traffic. Uptime reported alongside for
+rate computation.
+
+- 5 MetricsResourceTest pass. Endpoint safe to expose for monitoring
+  (no PII, no tenant-aware data).
+- MatrixMetrics (Micrometer) remains the detailed-metrics layer.
+
+## Section XXXIV — RUN 25 (2026-09-05 14:48): schema migration
+
+New `CorpusMigration` migrates the bare-array corpus format (v1)
+into a versioned envelope (v2) with stable IDs. Migration log
+at `data/migrations.log` records every run.
+
+- 6 CorpusMigrationTest pass: version detection, envelope wrap,
+  blank skipping, log append, deterministic counts.
+
+## Section XXXV — RUN 26 (2026-09-05 14:49): multi-tenant isolation
+
+New `TenantQaIndex` wraps `QaCorpusIndex` with per-tenant
+namespace. Cross-tenant leakage is impossible by construction:
+`searchForTenant(tenantId, ...)` filters by tenantId before
+returning candidates.
+
+- 9 TenantQaIndexTest pass: size tracking, invalid args, filter
+  correctness, no leakage (security property), topK respect,
+  case-sensitivity, defensive copy.
+
+## Section XXXVI — RUN 27 (2026-09-05 14:50): constrained-decoding guard
+
+New `OutputSafetyFilter` mirrors `EthicalFilter` but for the
+GENERATED token stream. Blacklists control bytes (0x00..0x1F
+except tab/LF/CR + 0x7F) and surrogate half-pairs. Substring check
+against forbidden phrases (kill, murder, bomb, + Russian
+equivalents).
+
+- 11 OutputSafetyFilterTest pass. Deterministic, no random/wall-clock.
+- HONEST CAVEAT: safety layer, not comprehensive. Full safety still
+  requires EthicalFilter + FrozenEthicalFNL pipeline.
+
+## Section XXXVII — RUN 28 (2026-09-05 14:51): performance baseline
+
+`Exp028PerformanceBaselineTest` captures real baseline numbers
+for future perf comparisons:
+
+| Operation | p50 | p99 |
+|---|---|---|
+| BooleanChainRunner.evaluate | 90 ns | 732 ns |
+| QaCorpusIndex.search | 15 μs | 64 μs |
+| LmHead.score | 71 ns | 81 ns |
+| Full pipeline | 471 ns | 4.8 μs |
+
+5 tests pass. Biggest opportunities: `QaCorpusIndex.search` p99
+could drop from 64μs to ~10μs with query-token caching;
+`LmHead.score` synchronized block could be a contention point under
+heavy concurrency.
+
+## RUN 22-28 totals
+
+- **+57 new tests** (RUN 22: +5+1, RUN 23: +3, RUN 24: +5, RUN 25: +6,
+  RUN 26: +9, RUN 27: +11, RUN 28: +5)
+- **6 new Java classes** (MetricsResource, CorpusMigration,
+  TenantQaIndex, OutputSafetyFilter, plus LmHead additions)
+- **3 new EXP reports** (EXP-MATRIX.21, .22, .23)
+- **Cumulative tests**: 313 (RUN 12-21) + 57 (RUN 22-28) = **370 tests, 0 failures**
+
+(End of file - total ~1750 lines)

@@ -201,3 +201,48 @@ No code logic changed; only docs and Javadoc. All targeted tests still green:
 - INDEX.md, PLAN.md, FORMAL-CONTRACTS.md, HYPOTHESES-NEW.md all updated.
 
 Total tests after RUN 12-21: 79/79 pass.
+
+## RUN 22 — LmHead signed update API (2026-09-05 14:43)
+
+- New LmHead.applyUpdate(boolean[], int, double) — single source of truth
+  for weight mutation. Both positive (training) and negative (feedback)
+  paths route through it.
+- New telemetry: positiveUpdateCount, negativeUpdateCount.
+- LmHeadFeedbackTrainer.decrementForToken now calls
+  applyUpdate(features, token, -0.1) — replaces RUN 19 no-op placeholder.
+- 12 LmHeadTest (5 RUN 22 added) + 8 LmHeadFeedbackTrainerTest
+  (1 RUN 22 added, 1 updated). All 20 pass.
+
+## RUN 23 — confidence calibration (2026-09-05 14:45)
+
+- New LmHead.scoreWithConfidence(boolean[], int, int[]) returns
+  ScoreWithConfidence{score, confidence} with softmax-calibrated confidence.
+- Temperature scaling via setTemperature(T); default T=1.0.
+- 3 new LmHeadTest (15 total, all pass).
+
+## RUN 24 — production observability metrics endpoint (2026-09-05 14:47)
+
+- New /v1/metrics JSON endpoint (MetricsResource) aggregates counters.
+- 5 MetricsResourceTest pass.
+
+## RUN 25 — schema migration (2026-09-05 14:48)
+
+- New CorpusMigration migrates bare-array corpus (v1) into versioned
+  envelope (v2) with stable IDs.
+- 6 CorpusMigrationTest pass.
+
+## RUN 26 — multi-tenant data isolation (2026-09-05 14:49)
+
+- New TenantQaIndex wraps QaCorpusIndex with per-tenant namespace.
+- 9 TenantQaIndexTest pass; no cross-tenant leakage (security property).
+
+## RUN 27 — constrained-decoding output safety filter (2026-09-05 14:50)
+
+- New OutputSafetyFilter mirrors EthicalFilter but for generated tokens.
+- 11 OutputSafetyFilterTest pass.
+
+## RUN 28 — performance baseline (2026-09-05 14:51)
+
+- Exp028PerformanceBaselineTest captures real baseline numbers:
+  chain p50=90ns, qa p50=15us, lmhead p50=71ns, full p50=471ns.
+- 5 tests pass.
