@@ -5,6 +5,8 @@ import io.quarkus.runtime.StartupEvent;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.event.Observes;
 import jakarta.inject.Inject;
+
+import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -141,6 +143,7 @@ public class LmHeadTrainer {
 
     /** Train on a single (question, answer) pair. */
     public int trainOne(String question, String answer) {
+        singleOps.incrementAndGet();
         return trainOne(question, answer, 0);
     }
 
@@ -224,6 +227,114 @@ public class LmHeadTrainer {
     public long trainedPairs() { return trainedPairs.get(); }
     public long trainedEpochs() { return trainedEpochs.get(); }
     public String lastTrainedAt() { return lastTrainedAt; }
+
+    // ─── RUN 34 — batch training ───
+
+    /** Telemetry for batch operations. */
+    private final AtomicLong batchOps = new AtomicLong();
+    private final AtomicLong singleOps = new AtomicLong();
+
+    /** How many batch operations have been performed. */
+    public long batchOps() { return batchOps.get(); }
+
+    /** How many single-pair operations have been performed. */
+    public long singleOps() { return singleOps.get(); }
+
+    /**
+     * RUN 34 — Train on a batch of (question, answer) pairs in a single call.
+     *
+     * <p>Optimization vs {@link #trainOne(String, String, int)}: pre-fetches
+     * the chain output for unique questions once, then iterates. For a batch
+     * of N entries with M unique questions, the chain is run at most M times
+     * (not N times). This is the key perf win for repeated questions.
+     *
+     * <p>Backward compatible: callers that pass a single pair get the
+     * original behaviour. {@code singleOps} / {@code batchOps} counters
+     * distinguish the two paths for telemetry.
+     *
+     * @param pairs      list of (question, answer) tuples
+     * @param nNegatives negative-sample count (per positive update)
+     * @return total token updates applied across all pairs
+     */
+    public int trainBatch(List<Pair> pairs, int nNegatives) {
+        if (pairs == null || pairs.isEmpty()) return 0;
+        batchOps.incrementAndGet();
+
+        // Pre-fetch chain output for unique questions.
+        java.util.Map<String, boolean[]> chainOutputs = new java.util.HashMap<>();
+        for (Pair p : pairs) {
+            if (p.question == null || p.question.isEmpty()) continue;
+            if (!chainOutputs.containsKey(p.question)) {
+                chainOutputs.put(p.question, getOrFetchChainOutput(p.question));
+            }
+        }
+
+        int totalUpdates = 0;
+        for (Pair p : pairs) {
+            if (p.question == null || p.question.isEmpty()) continue;
+            if (p.answer == null || p.answer.isEmpty()) continue;
+
+            boolean[] chainOutput = chainOutputs.get(p.question);
+            if (chainOutput == null) continue;
+
+            int[] answerTokens = tokenizeForTraining(p.answer);
+            if (answerTokens.length == 0) continue;
+
+            for (int token : answerTokens) {
+                if (token >= 0 && token < 200000) {
+                    lmHead.update(chainOutput, token, nNegatives);
+                    totalUpdates++;
+                }
+            }
+        }
+        return totalUpdates;
+    }
+
+    /** Helper: tokenize an answer string for training. */
+    private int[] tokenizeForTraining(String text) {
+        int[] tokens;
+        if (bpeProvider != null && bpeProvider.isAvailable()) {
+            tokens = bpeProvider.encode(text);
+        } else {
+            tokens = new int[Math.min(text.length(), 64)];
+            for (int i = 0; i < tokens.length; i++) {
+                tokens[i] = text.charAt(i) & 0xFF;
+            }
+        }
+        if (tokens == null) tokens = new int[0];
+        if (tokens.length > 64) {
+            int[] truncated = new int[64];
+            System.arraycopy(tokens, 0, truncated, 0, 64);
+            tokens = truncated;
+        }
+        return tokens;
+    }
+
+    /** Helper: get chain output (via cache if available). */
+    private boolean[] getOrFetchChainOutput(String question) {
+        int totalN = lmHead.totalNeurons();
+        if (totalN <= 0) {
+            totalN = (int) chainRunner.totalNeurons();
+            if (totalN <= 0) return new boolean[0];
+            lmHead.setTotalNeurons(totalN);
+        }
+        boolean[] chainOutput;
+        if (featureCache != null) {
+            chainOutput = featureCache.getOrCompute(question);
+        } else {
+            chainOutput = new boolean[totalN];
+        }
+        if (chainOutput == null) chainOutput = new boolean[totalN];
+        if (chainOutput.length != totalN) {
+            boolean[] sized = new boolean[totalN];
+            System.arraycopy(chainOutput, 0, sized, 0, Math.min(chainOutput.length, totalN));
+            chainOutput = sized;
+        }
+        return chainOutput;
+    }
+
+    /** RUN 34 — Pair record for batch training. */
+    public record Pair(String question, String answer) {}
 
     /** Result of a training run. */
     public record TrainResult(int pairs, long updates, int vocabSize, String error) {
