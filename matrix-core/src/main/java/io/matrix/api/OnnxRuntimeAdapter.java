@@ -4,6 +4,7 @@ import ai.onnxruntime.OrtEnvironment;
 import ai.onnxruntime.OrtException;
 import ai.onnxruntime.OrtSession;
 import ai.onnxruntime.OrtSession.SessionOptions;
+import ai.onnxruntime.OnnxTensor;
 import ai.onnxruntime.providers.OrtCUDAProviderOptions;
 import io.quarkus.runtime.StartupEvent;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -140,6 +141,55 @@ public class OnnxRuntimeAdapter {
 
     /** Get the model path. */
     public Path modelPath() { return modelPath; }
+
+    /**
+     * Run greedy next-token inference.
+     *
+     * <p>Given a sequence of input token ids, returns the argmax
+     * of the logits at the LAST position. This is what you want
+     * for autoregressive generation.
+     *
+     * @param tokenIds full token sequence (e.g., prompt + already-generated tokens)
+     * @return argmax of last-position logits
+     * @throws OrtException if inference fails
+     */
+    public synchronized long greedyNextToken(long[] tokenIds) throws OrtException {
+        if (!isLoaded()) {
+            throw new IllegalStateException("OnnxRuntimeAdapter: session not loaded");
+        }
+        long seqLen = tokenIds.length;
+        long[] attentionMask = new long[(int) seqLen];
+        long[] positionIds = new long[(int) seqLen];
+        for (int i = 0; i < seqLen; i++) {
+            attentionMask[i] = 1L;
+            positionIds[i] = i;
+        }
+        try (OnnxTensor inputIds = OnnxTensor.createTensor(
+                    environment, java.nio.LongBuffer.wrap(tokenIds), new long[]{1, seqLen});
+             OnnxTensor attnMask = OnnxTensor.createTensor(
+                    environment, java.nio.LongBuffer.wrap(attentionMask), new long[]{1, seqLen});
+             OnnxTensor posIds = OnnxTensor.createTensor(
+                    environment, java.nio.LongBuffer.wrap(positionIds), new long[]{1, seqLen})) {
+
+            try (var results = session.run(java.util.Map.of(
+                    "input_ids", inputIds,
+                    "attention_mask", attnMask,
+                    "position_ids", posIds))) {
+                inferenceCount.incrementAndGet();
+                float[][][] logits = (float[][][]) results.get(0).getValue();
+                float[] lastLogits = logits[0][(int) seqLen - 1];
+                int bestIdx = 0;
+                float bestVal = lastLogits[0];
+                for (int i = 1; i < lastLogits.length; i++) {
+                    if (lastLogits[i] > bestVal) {
+                        bestVal = lastLogits[i];
+                        bestIdx = i;
+                    }
+                }
+                return bestIdx;
+            }
+        }
+    }
 
     /** Get model info string for diagnostics. */
     public synchronized String info() {
