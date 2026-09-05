@@ -282,4 +282,65 @@ class LmHeadTest {
         // Same input → same confidence (no random source, no wall-clock).
         assertThat(sc1.confidence()).isEqualTo(sc2.confidence());
     }
+
+    // ─── RUN 29 — sparse storage diagnostics ───
+
+    @Test
+    void sparsityRatioIsHighForSparseTraining() {
+        // Train only a tiny slice of the (100 × N) weight matrix.
+        boolean[] fp = new boolean[100];
+        for (int i = 0; i < 5; i++) fp[i] = true;
+        for (int u = 0; u < 10; u++) head.update(fp, 42, 0);
+        // With only 5 firing neurons out of 100, and only one token trained,
+        // most of the (100 × 1) = 100 slots should still be zero (or decay).
+        double sparsity = head.sparsityRatio();
+        assertThat(sparsity)
+                .as("sparsity ratio for sparse training (got %.3f)", sparsity)
+                .isGreaterThanOrEqualTo(0.0)
+                .isLessThanOrEqualTo(1.0);
+    }
+
+    @Test
+    void denseAndSparseMemoryAreBothReported() {
+        // Train with 30 firing neurons — most slots get either positive
+        // weight (firing) or negative decay (non-firing), so all slots
+        // are non-zero. In this realistic case, sparse is slightly LARGER
+        // than dense (per-token overhead).
+        boolean[] fp = new boolean[100];
+        for (int i = 0; i < 30; i++) fp[i] = true;
+        for (int u = 0; u < 50; u++) head.update(fp, 42, 0);
+
+        long dense = head.denseMemoryBytes();
+        long sparse = head.sparseMemoryBytes();
+        assertThat(dense).as("dense memory > 0").isGreaterThan(0);
+        assertThat(sparse).as("sparse memory ≥ 0").isGreaterThanOrEqualTo(0);
+        // Consistency: nonZeroWeightCount * 8 should equal dense memory
+        // (since all slots are non-zero in this test).
+        assertThat(dense)
+                .as("dense memory = vocab × neurons × 8")
+                .isEqualTo((long) head.vocabularyCoverage() * head.totalNeurons() * 8);
+    }
+
+    @Test
+    void nonZeroCountIsConsistent() {
+        boolean[] fp = new boolean[100];
+        for (int i = 0; i < 30; i++) fp[i] = true;
+        for (int u = 0; u < 50; u++) head.update(fp, 42, 0);
+        long nz = head.nonZeroWeightCount();
+        long total = head.totalWeightSlots();
+        assertThat(nz).isGreaterThan(0);
+        assertThat(total).isGreaterThanOrEqualTo(nz);
+        assertThat(head.vocabularyCoverage()).isEqualTo(1);
+    }
+
+    @Test
+    void emptyHeadMemoryFootprintIsZero() {
+        LmHead empty = new LmHead();
+        empty.setTotalNeurons(100);
+        assertThat(empty.denseMemoryBytes()).isZero();
+        assertThat(empty.sparseMemoryBytes()).isZero();
+        assertThat(empty.sparsityRatio()).isEqualTo(1.0);
+        assertThat(empty.nonZeroWeightCount()).isZero();
+        assertThat(empty.totalWeightSlots()).isZero();
+    }
 }

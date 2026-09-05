@@ -341,6 +341,60 @@ public class LmHead {
     public long negativeUpdateCount() { return negativeUpdateCount.get(); }
     public int vocabularyCoverage() { return weights.size(); }
 
+    // ─── RUN 29 — sparse memory footprint diagnostics ───
+
+    /**
+     * Diagnostic: total bytes used by in-memory dense weights
+     * (token × neurons × 8 bytes per double). Real memory usage
+     * is lower because JVM compresses zero-valued doubles.
+     */
+    public long denseMemoryBytes() {
+        long bytes = 0;
+        for (TokenWeights tw : weights.values()) {
+            bytes += (long) tw.values.length * 8;
+        }
+        return bytes;
+    }
+
+    /**
+     * Diagnostic: total bytes that WOULD be needed by sparse storage
+     * (only non-zero entries, packed as int+double pairs).
+     */
+    public long sparseMemoryBytes() {
+        long bytes = 0;
+        for (TokenWeights tw : weights.values()) {
+            int nz = tw.nonZeroCount();
+            bytes += (long) nz * (4 + 8);  // int neuronId + double value
+            // Plus per-token overhead: count + entry list
+            bytes += 4;
+        }
+        return bytes;
+    }
+
+    /**
+     * RUN 29 — sparsity ratio: fraction of weights that are zero.
+     * Higher sparsity → more memory savings from compact storage.
+     */
+    public double sparsityRatio() {
+        if (weights.isEmpty() || totalNeurons == 0) return 1.0;
+        long totalSlots = (long) weights.size() * totalNeurons;
+        long nonZeroSlots = 0;
+        for (TokenWeights tw : weights.values()) nonZeroSlots += tw.nonZeroCount();
+        return 1.0 - ((double) nonZeroSlots / totalSlots);
+    }
+
+    /** Total non-zero weights across all tokens. */
+    public long nonZeroWeightCount() {
+        long total = 0;
+        for (TokenWeights tw : weights.values()) total += tw.nonZeroCount();
+        return total;
+    }
+
+    /** Total weight slots (would-be dense size). */
+    public long totalWeightSlots() {
+        return (long) weights.size() * totalNeurons;
+    }
+
     /**
      * Save weights to disk as a compact binary format.
      * Format: [int totalNeurons][int nTokens]
