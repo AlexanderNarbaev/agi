@@ -497,3 +497,8 @@ Total tests after RUN 12-21: 79/79 pass.
 - /v1/onnx/{registry,embed,version} endpoints.
 - TextEmbedder, BeamSearchGenerator, GenerationHistory.
 - 601 cumulative tests, 0 failures.
+
+## RUN 116-118 — Cost & usage tracking (2026-09-05 20:42)
+
+- TokenUsageTracker, /v1/onnx/usage, CostCalculator.
+- 627 cumulative tests, 0 failures.

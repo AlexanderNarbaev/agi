@@ -2509,4 +2509,28 @@ were dropped during decode. Fix: full 256-byte map.
 - **6 hypothesis cards accepted**
 - **601 cumulative tests, 0 failures**
 
-(End of file - total ~2450 lines)
+---
+
+## Section LXXX — RUN 116-118 (2026-09-05 20:42): Cost & usage tracking
+
+- **RUN 116**: TokenUsageTracker for cost estimation — 6 tests
+- **RUN 117**: /v1/onnx/usage endpoint + tracker access — +2 tests
+- **RUN 118**: CostCalculator for $/MTok pricing — 7 tests
+
+**627 tests, 0 failures** verified.
+
+## RUN 116-118 totals
+
+- **+15 new tests** for these RUNs
+- **2 new Java classes** (TokenUsageTracker, CostCalculator)
+
+## RUN 12-118 master totals
+
+- **114 RUNs delivered** (RUN 12-118)
+- **~463+ new tests** added
+- **~50 new Java classes**
+- **33 new EXP reports**
+- **6 hypothesis cards accepted**
+- **627 cumulative tests, 0 failures**
+
+(End of file - total ~2500 lines)
