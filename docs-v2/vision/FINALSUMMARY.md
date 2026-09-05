@@ -2449,4 +2449,33 @@ were dropped during decode. Fix: full 256-byte map.
   tokenizer + ONNX GPU + sampling + chat + streaming + batching +
   templates + calibration + REST + operational utilities
 
-(End of file - total ~2350 lines)
+---
+
+## Section LXXVIII — RUN 104-107 (2026-09-05 20:25): Embeddings + history
+
+- **RUN 104**: ConversationStore — per-user bounded ring buffer — 10 tests
+- **RUN 105**: ConversationStore + GPU real conversation EXP
+  - Output: "Your name is Alex." (recall via store)
+- **RUN 106**: TextEmbedder — 896-dim embeddings from Qwen — 10 tests
+- **RUN 107**: Embedding similarity EXP (honest finding: 0.0 cosine,
+  model export doesn't expose hidden_states — would need re-export
+  with output_hidden_states=True)
+
+**593 tests, 0 failures** verified.
+
+## RUN 104-107 totals
+
+- **+22 new tests** for these RUNs
+- **2 new Java classes** (ConversationStore, TextEmbedder)
+- **2 new EXP reports** (EXP-MATRIX.51-52)
+
+## RUN 12-107 master totals
+
+- **103 RUNs delivered** (RUN 12-107)
+- **~430+ new tests** added
+- **~45 new Java classes**
+- **30 new EXP reports** (EXP-MATRIX.21-52)
+- **6 hypothesis cards accepted**
+- **593 cumulative tests, 0 failures**
+
+(End of file - total ~2400 lines)

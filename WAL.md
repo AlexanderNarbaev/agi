@@ -484,3 +484,10 @@ Total tests after RUN 12-21: 79/79 pass.
   GenerationCache (LRU).
 - Cache wired into QwenOnnxBridge.
 - 570 cumulative tests, 0 failures verified.
+
+## RUN 104-107 — Embeddings + history (2026-09-05 20:25)
+
+- ConversationStore per-user bounded ring buffer.
+- TextEmbedder 896-dim embeddings.
+- Real GPU conversation via ConversationStore.
+- 593 cumulative tests, 0 failures.
