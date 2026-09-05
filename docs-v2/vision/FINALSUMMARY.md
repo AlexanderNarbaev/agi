@@ -2558,4 +2558,33 @@ were dropped during decode. Fix: full 256-byte map.
 - **6 hypothesis cards accepted**
 - **647 cumulative tests, 0 failures**
 
-(End of file - total ~2550 lines)
+---
+
+## Section LXXXII — RUN 123-127 (2026-09-05 21:00): Determinism + bridge
+
+- **RUN 123**: Determinism verification — greedy is reproducible
+- **RUN 124**: ContextWindowManager — token-budgeting for chat
+- **RUN 125**: EXP-MATRIX.57 documents context window
+- **RUN 126**: ChainBridgeAdapter — bridges chain to Qwen
+- **RUN 127**: ChainBridgeAdapter real GPU EXP
+  - "2+2 is equal to 4." ✓
+  - "Your name is Sam." ✓ (multi-turn recall)
+
+**658 tests, 0 failures** verified.
+
+## RUN 123-127 totals
+
+- **+17 new tests** for these RUNs
+- **2 new Java classes** (ContextWindowManager, ChainBridgeAdapter)
+- **2 new EXP reports** (EXP-MATRIX.57-58)
+
+## RUN 12-127 master totals
+
+- **123 RUNs delivered** (RUN 12-127)
+- **~500+ new tests** added
+- **~54 new Java classes**
+- **35 new EXP reports**
+- **6 hypothesis cards accepted**
+- **658 cumulative tests, 0 failures**
+
+(End of file - total ~2600 lines)

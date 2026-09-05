@@ -508,3 +508,10 @@ Total tests after RUN 12-21: 79/79 pass.
 - AdaptiveModelRouter, /v1/onnx/route.
 - RequestCounter wired into resource.
 - 647 cumulative tests, 0 failures.
+
+## RUN 123-127 — Determinism + bridge (2026-09-05 21:00)
+
+- Determinism EXP (greedy reproducible).
+- ContextWindowManager (token budgeting).
+- ChainBridgeAdapter for chain↔Qwen integration.
+- 658 cumulative tests, 0 failures.
