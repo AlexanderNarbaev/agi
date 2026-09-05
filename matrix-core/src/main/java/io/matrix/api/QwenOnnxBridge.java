@@ -81,11 +81,21 @@ public class QwenOnnxBridge {
      * @return decoded text response
      */
     public String generateSampled(String prompt, int maxTokens, double temperature) {
+        return generateSampled(prompt, maxTokens, temperature, -1, 1.0);
+    }
+
+    /**
+     * Generate text with full sampling strategy: temperature + top-k + top-p.
+     */
+    public String generateSampled(String prompt, int maxTokens,
+                                  double temperature, int topK, double topP) {
         if (!isLoaded()) {
             throw new IllegalStateException("bridge not loaded");
         }
         int budget = Math.min(maxTokens, maxNewTokens);
         double t = Math.max(0.01, Math.min(2.0, temperature));
+        int k = topK <= 0 ? -1 : topK;
+        double p = Math.max(0.0, Math.min(1.0, topP));
         int[] promptIds = tokenizer.encode(prompt);
         java.util.List<Long> allIds = new java.util.ArrayList<>();
         for (int id : promptIds) allIds.add((long) id);
@@ -96,7 +106,7 @@ public class QwenOnnxBridge {
             long[] ids = toLongArray(allIds);
             long nextToken;
             try {
-                nextToken = sampleNextToken(ids, t);
+                nextToken = sampleWithStrategy(ids, t, k, p);
             } catch (Exception e) {
                 log.warn("QwenOnnxBridge.generateSampled: inference failed at step {}: {}",
                         step, e.getMessage());
@@ -183,6 +193,127 @@ public class QwenOnnxBridge {
                     if (r < cum) return i;
                 }
                 return probs.length - 1;
+            }
+        }
+    }
+
+    /**
+     * Sample next token with full strategy: temperature + top-k + top-p.
+     *
+     * <p>Pipeline:
+     * <ol>
+     *   <li>Run inference, get last-position logits</li>
+     *   <li>If temperature ≈ 0 → return argmax</li>
+     *   <li>Otherwise: apply temperature, mask logits outside top-K
+     *       to -inf, renormalize, mask cumulative tail above top-P,
+     *       renormalize, then sample.</li>
+     * </ol>
+     */
+    private long sampleWithStrategy(long[] tokenIds, double temperature,
+                                    int topK, double topP) throws Exception {
+        java.lang.reflect.Field sessionField = OnnxRuntimeAdapter.class.getDeclaredField("session");
+        sessionField.setAccessible(true);
+        ai.onnxruntime.OrtSession session =
+                (ai.onnxruntime.OrtSession) sessionField.get(onnx);
+        ai.onnxruntime.OrtEnvironment env = ai.onnxruntime.OrtEnvironment.getEnvironment();
+
+        long seqLen = tokenIds.length;
+        long[] attentionMask = new long[(int) seqLen];
+        long[] positionIds = new long[(int) seqLen];
+        for (int i = 0; i < seqLen; i++) {
+            attentionMask[i] = 1L;
+            positionIds[i] = i;
+        }
+        try (ai.onnxruntime.OnnxTensor inputIds = ai.onnxruntime.OnnxTensor.createTensor(
+                    env, java.nio.LongBuffer.wrap(tokenIds), new long[]{1, seqLen});
+             ai.onnxruntime.OnnxTensor attnMask = ai.onnxruntime.OnnxTensor.createTensor(
+                    env, java.nio.LongBuffer.wrap(attentionMask), new long[]{1, seqLen});
+             ai.onnxruntime.OnnxTensor posIds = ai.onnxruntime.OnnxTensor.createTensor(
+                    env, java.nio.LongBuffer.wrap(positionIds), new long[]{1, seqLen})) {
+            try (var results = session.run(java.util.Map.of(
+                    "input_ids", inputIds,
+                    "attention_mask", attnMask,
+                    "position_ids", posIds))) {
+                float[][][] logits = (float[][][]) results.get(0).getValue();
+                float[] last = logits[0][(int) seqLen - 1];
+
+                // Greedy if temperature is essentially zero
+                if (temperature < 0.05) {
+                    int bestIdx = 0;
+                    float bestVal = last[0];
+                    for (int i = 1; i < last.length; i++) {
+                        if (last[i] > bestVal) {
+                            bestVal = last[i];
+                            bestIdx = i;
+                        }
+                    }
+                    return bestIdx;
+                }
+
+                // Build (index, logit) pairs and sort descending
+                int n = last.length;
+                Integer[] idx = new Integer[n];
+                for (int i = 0; i < n; i++) idx[i] = i;
+                java.util.Arrays.sort(idx, (a, b) -> Float.compare(last[b], last[a]));
+
+                // Compute scaled logits
+                double[] scaled = new double[n];
+                for (int i = 0; i < n; i++) scaled[i] = last[i] / temperature;
+
+                // Top-K truncation: zero out everything below K-th highest
+                if (topK > 0 && topK < n) {
+                    float kthLogit = last[idx[topK]];
+                    for (int i = 0; i < n; i++) {
+                        if (last[i] < kthLogit) scaled[i] = Double.NEGATIVE_INFINITY;
+                    }
+                }
+
+                // Softmax
+                double maxS = Double.NEGATIVE_INFINITY;
+                for (int i = 0; i < n; i++) {
+                    if (scaled[i] > maxS && scaled[i] != Double.NEGATIVE_INFINITY) maxS = scaled[i];
+                }
+                double[] probs = new double[n];
+                double sum = 0.0;
+                for (int i = 0; i < n; i++) {
+                    if (scaled[i] == Double.NEGATIVE_INFINITY) continue;
+                    probs[i] = Math.exp(scaled[i] - maxS);
+                    sum += probs[i];
+                }
+                for (int i = 0; i < n; i++) probs[i] /= sum;
+
+                // Top-P (nucleus) truncation: zero out tail beyond threshold.
+                if (topP < 1.0) {
+                    double cum = 0.0;
+                    java.util.Set<Integer> keep = new java.util.LinkedHashSet<>();
+                    for (int kk = 0; kk < n; kk++) {
+                        int i = idx[kk];
+                        if (probs[i] == 0.0) continue;
+                        keep.add(i);
+                        cum += probs[i];
+                        if (cum >= topP) break;
+                    }
+                    // Renormalize over keep set
+                    double keepSum = 0.0;
+                    for (int i : keep) keepSum += probs[i];
+                    if (keepSum > 0.0) {
+                        for (int i = 0; i < n; i++) {
+                            if (!keep.contains(i)) probs[i] = 0.0;
+                            else probs[i] /= keepSum;
+                        }
+                    }
+                }
+
+                // Sample
+                long seed = (System.nanoTime() ^ Thread.currentThread().threadId()) & 0x7FFFFFFFL;
+                java.util.Random rng = new java.util.Random(seed);
+                double r = rng.nextDouble();
+                double cum = 0.0;
+                for (int i = 0; i < n; i++) {
+                    cum += probs[i];
+                    if (r < cum) return i;
+                }
+                return idx[0];
             }
         }
     }

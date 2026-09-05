@@ -182,6 +182,25 @@ class QwenOnnxBridgeTest {
         assertThat(bridge).isNotNull();
     }
 
+    @Test
+    @EnabledIf("modelAvailable")
+    void generateWithTopKAndTopP() throws Exception {
+        Path dir = findModelDir();
+        QwenOnnxBridge bridge = new QwenOnnxBridge(dir);
+        bridge.setMaxNewTokens(8);
+        if (!bridge.load()) return;
+
+        // topK=50, topP=0.9, temperature=0.7 — typical settings
+        String reply = bridge.generateSampled("Hello", 4, 0.7, 50, 0.9);
+        assertThat(reply).isNotNull();
+
+        // topK=1, topP=1.0 = greedy (effectively)
+        String greedy = bridge.generateSampled("Hi", 4, 0.7, 1, 1.0);
+        assertThat(greedy).isNotNull();
+
+        bridge.close();
+    }
+
     // EnabledIf helper
     static boolean modelAvailable() {
         return findModelDir() != null && findOnnx() != null;
