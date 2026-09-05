@@ -1,5 +1,11 @@
 package io.matrix.api;
 
+import io.quarkus.runtime.StartupEvent;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.event.Observes;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -36,6 +42,8 @@ import java.util.concurrent.atomic.AtomicReference;
  */
 public class HuggingFaceFetcher {
 
+    private static final Logger log = LoggerFactory.getLogger(HuggingFaceFetcher.class);
+
     /** Default model: Qwen2.5-0.5B-Instruct (per CONSTITUTION). */
     public static final String DEFAULT_MODEL = "Qwen/Qwen2.5-0.5B-Instruct";
 
@@ -57,6 +65,7 @@ public class HuggingFaceFetcher {
         this.modelId = modelId;
         this.cacheDir = cacheDir;
     }
+
 
     /**
      * Check whether the local cache has the model artifacts.
@@ -119,4 +128,22 @@ public class HuggingFaceFetcher {
     public String lastOutput() { return lastOutput.get(); }
     public long downloadCount() { return downloadCount.get(); }
     public long fetchFailureCount() { return fetchFailureCount.get(); }
+
+    /** RUN 56 — startup hook: ensure model is downloaded before serving requests. */
+    void onStart(@Observes StartupEvent ev) {
+        if (isAvailable()) {
+            log.info("HuggingFaceFetcher: model already cached at {}", cacheDir);
+            return;
+        }
+        log.info("HuggingFaceFetcher: model not cached, attempting fetch of {} → {}",
+                modelId, cacheDir);
+        boolean ok = fetch();
+        if (ok) {
+            log.info("HuggingFaceFetcher: download successful");
+        } else {
+            log.warn("HuggingFaceFetcher: download failed (output={})",
+                    lastOutput() == null ? "<none>" : lastOutput().substring(
+                            0, Math.min(200, lastOutput().length())));
+        }
+    }
 }
