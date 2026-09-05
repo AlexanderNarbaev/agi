@@ -101,6 +101,48 @@ public class OnnxChatResource {
         return reloadBridge();
     }
 
+    @POST
+    @Path("/compare")
+    @Produces(MediaType.APPLICATION_JSON)
+    public String compare(@QueryParam("prompt") String prompt,
+                          @QueryParam("max_tokens") Integer maxTokens) {
+        if (bridge == null || !bridge.isLoaded()) {
+            return "{\"error\":\"ONNX bridge not loaded\"}";
+        }
+        if (prompt == null || prompt.isBlank()) {
+            return "{\"error\":\"empty prompt\"}";
+        }
+        int tokens = maxTokens == null ? 32 : Math.max(1, Math.min(128, maxTokens));
+        long t0 = System.nanoTime();
+        String onnxReply = bridge.generate(prompt, tokens);
+        long onnxMs = (System.nanoTime() - t0) / 1_000_000L;
+
+        StringBuilder sb = new StringBuilder();
+        sb.append("{");
+        sb.append("\"prompt\":\"").append(jsonEscape(prompt)).append("\",");
+        sb.append("\"onnx\":{");
+        sb.append("\"reply\":\"").append(jsonEscape(onnxReply)).append("\",");
+        sb.append("\"latencyMs\":").append(onnxMs).append(",");
+        sb.append("\"gpu\":").append(bridge.isGpuEnabled());
+        sb.append("},");
+        sb.append("\"info\":\"").append(bridge.info().replace("\"", "'")).append("\"");
+        sb.append("}");
+        return sb.toString();
+    }
+
+    private static String jsonEscape(String s) {
+        if (s == null) return "";
+        return s.replace("\\", "\\\\")
+                .replace("\"", "\\\"")
+                .replace("\n", "\\n")
+                .replace("\r", "\\r");
+    }
+
+    /** Visible-for-testing wrapper around jsonEscape. */
+    static String jsonEscapePublic(String s) {
+        return jsonEscape(s);
+    }
+
     @GET
     @Path("/metrics")
     @Produces(MediaType.APPLICATION_JSON)

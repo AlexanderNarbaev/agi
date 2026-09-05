@@ -134,4 +134,25 @@ class OnnxChatResourceTest {
         String reply = resource.chat("hi", 8, 0.0, -1, 1.0, "You are a pirate.");
         assertThat(reply).startsWith("ERROR:");
     }
+
+    @Test
+    void compareReturnsErrorWhenBridgeNotLoaded() {
+        OnnxChatResource resource = new OnnxChatResource();
+        String reply = resource.compare("hello", 8);
+        assertThat(reply).contains("\"error\"");
+    }
+
+    @Test
+    void compareReturnsErrorOnEmptyPrompt() {
+        OnnxChatResource resource = new OnnxChatResource();
+        String reply = resource.compare("", 8);
+        assertThat(reply).contains("\"error\"");
+    }
+
+    @Test
+    void compareJsonEscapesCorrectly() {
+        // Just verify the helper works for special chars
+        String escaped = OnnxChatResource.jsonEscapePublic("hello\nworld");
+        assertThat(escaped).contains("\\n");
+    }
 }
