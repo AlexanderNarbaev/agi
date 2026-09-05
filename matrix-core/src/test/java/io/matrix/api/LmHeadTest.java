@@ -343,4 +343,61 @@ class LmHeadTest {
         assertThat(empty.nonZeroWeightCount()).isZero();
         assertThat(empty.totalWeightSlots()).isZero();
     }
+
+    // ─── RUN 51 — floor-at-zero decay ───
+
+    @Test
+    void floorDecayDefaultIsFalse() {
+        LmHead head = new LmHead();
+        assertThat(head.isFloorDecay()).isFalse();
+    }
+
+    @Test
+    void floorDecayProducesSparseMatrix() {
+        // Train sparsely: 3 firing neurons out of 100.
+        // Without floor: all 100 slots end up non-zero (decay → small negative).
+        // With floor: 97 slots stay at 0.
+        LmHead head = new LmHead();
+        head.setTotalNeurons(100);
+        head.setFloorDecay(true);
+        boolean[] fp = new boolean[100];
+        for (int i = 0; i < 3; i++) fp[i] = true;
+        for (int u = 0; u < 10; u++) head.update(fp, 42, 0);
+
+        // With floor-decay, non-firing slots stay at 0.
+        // Sparsity should be high (~97%).
+        double sparsity = head.sparsityRatio();
+        assertThat(sparsity)
+                .as("floor-decay sparsity ≥ 0.5 (got %.3f)", sparsity)
+                .isGreaterThanOrEqualTo(0.5);
+    }
+
+    @Test
+    void noFloorDecayProducesDenseMatrix() {
+        LmHead head = new LmHead();
+        head.setTotalNeurons(100);
+        // Default: floorDecay = false → dense.
+        boolean[] fp = new boolean[100];
+        for (int i = 0; i < 3; i++) fp[i] = true;
+        for (int u = 0; u < 10; u++) head.update(fp, 42, 0);
+        // Sparsity should be low (decay keeps non-firing slots non-zero).
+        double sparsity = head.sparsityRatio();
+        assertThat(sparsity)
+                .as("no-floor sparsity < 0.5 (got %.3f)", sparsity)
+                .isLessThan(0.5);
+    }
+
+    @Test
+    void floorDecayDoesNotAffectPositiveUpdates() {
+        // Firing neurons always increment, regardless of floor.
+        LmHead head = new LmHead();
+        head.setTotalNeurons(100);
+        head.setFloorDecay(true);
+        boolean[] fp = new boolean[100];
+        for (int i = 0; i < 30; i++) fp[i] = true;
+        for (int u = 0; u < 10; u++) head.update(fp, 42, 0);
+        // Score should still be positive (firing neurons got incremented).
+        double score = head.score(fp, 42);
+        assertThat(score).isGreaterThan(0.0);
+    }
 }

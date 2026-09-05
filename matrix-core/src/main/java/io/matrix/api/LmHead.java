@@ -38,6 +38,9 @@ public class LmHead {
     /** Decay rate for non-firing neurons (when token is target). */
     private final double decay = 0.01;
 
+    /** RUN 51 — when true, non-firing slots decay but stop at 0 (floor-at-zero). */
+    private volatile boolean floorDecay = false;
+
     /** Score mixing factor: how much to weight firing vs non-firing neurons. */
     private final double alpha = 0.1;
 
@@ -159,6 +162,7 @@ public class LmHead {
 
         TokenWeights tw = weights.computeIfAbsent(token,
                 k -> new TokenWeights(totalNeurons));
+        boolean floor = this.floorDecay;
         synchronized (tw) {
             // RUN 22: signed update for Firing neurons uses full delta.
             // For non-firing neurons, scale by decayRatio (0.1). Symmetric
@@ -170,6 +174,7 @@ public class LmHead {
                     tw.values[i] += delta;
                 } else {
                     tw.values[i] += delta * nonFiringScale;
+                    if (floor && tw.values[i] < 0) tw.values[i] = 0;
                 }
             }
         }
@@ -185,10 +190,15 @@ public class LmHead {
      * path. Equivalent to {@code applyUpdate(chainOutput, token, +increment)}
      * but matches the RUN 10/11 physics exactly (firing-neuron gets full
      * increment, non-firing gets the configured decay).
+     *
+     * <p>RUN 51: when {@link #isFloorDecay()} is true, non-firing slots
+     * decay toward 0 but stop there (floor-at-zero). This produces
+     * sparse weight matrices that benefit from sparse storage.
      */
     private void applyPositiveUpdate(boolean[] chainOutput, int targetToken) {
         TokenWeights tw = weights.computeIfAbsent(targetToken,
                 k -> new TokenWeights(totalNeurons));
+        boolean floor = this.floorDecay;
         synchronized (tw) {
             for (int i = 0; i < chainOutput.length; i++) {
                 if (i >= totalNeurons) break;
@@ -196,11 +206,20 @@ public class LmHead {
                     tw.values[i] += increment;
                 } else {
                     tw.values[i] -= decay;
+                    if (floor && tw.values[i] < 0) tw.values[i] = 0;
                 }
             }
         }
         positiveUpdateCount.incrementAndGet();
     }
+
+    /** RUN 51 — enable/disable floor-at-zero decay for sparse storage. */
+    public void setFloorDecay(boolean enabled) {
+        this.floorDecay = enabled;
+    }
+
+    /** RUN 51 — current floor-decay setting. */
+    public boolean isFloorDecay() { return floorDecay; }
 
     /**
      * Score a candidate token given the chain output.
