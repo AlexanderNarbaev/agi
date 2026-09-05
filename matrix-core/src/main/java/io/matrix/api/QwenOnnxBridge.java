@@ -68,6 +68,119 @@ public class QwenOnnxBridge {
         return useGpu;
     }
 
+    /**
+     * Generate text using temperature sampling instead of greedy argmax.
+     *
+     * @param prompt input text
+     * @param maxTokens maximum tokens
+     * @param temperature sampling temperature (0.0 = greedy, 1.0 = uniform).
+     *                    Values outside [0.0, 2.0] are clamped.
+     * @return decoded text response
+     */
+    public String generateSampled(String prompt, int maxTokens, double temperature) {
+        if (!isLoaded()) {
+            throw new IllegalStateException("bridge not loaded");
+        }
+        int budget = Math.min(maxTokens, maxNewTokens);
+        double t = Math.max(0.01, Math.min(2.0, temperature));
+        int[] promptIds = tokenizer.encode(prompt);
+        java.util.List<Long> allIds = new java.util.ArrayList<>();
+        for (int id : promptIds) allIds.add((long) id);
+
+        for (int step = 0; step < budget; step++) {
+            long[] ids = toLongArray(allIds);
+            long nextToken;
+            try {
+                nextToken = sampleNextToken(ids, t);
+            } catch (Exception e) {
+                log.warn("QwenOnnxBridge.generateSampled: inference failed at step {}: {}",
+                        step, e.getMessage());
+                break;
+            }
+            if (nextToken == eosToken) break;
+            allIds.add(nextToken);
+        }
+
+        int generated = allIds.size() - promptIds.length;
+        int[] genIds = new int[generated];
+        for (int i = 0; i < generated; i++) {
+            genIds[i] = allIds.get(promptIds.length + i).intValue();
+        }
+        return tokenizer.decode(genIds);
+    }
+
+    /**
+     * Sample next token from softmax(logits / temperature).
+     * For temperature = 0, returns argmax.
+     */
+    private long sampleNextToken(long[] tokenIds, double temperature) throws Exception {
+        // We re-run inference and get raw logits via reflection.
+        java.lang.reflect.Field sessionField = OnnxRuntimeAdapter.class.getDeclaredField("session");
+        sessionField.setAccessible(true);
+        ai.onnxruntime.OrtSession session =
+                (ai.onnxruntime.OrtSession) sessionField.get(onnx);
+        ai.onnxruntime.OrtEnvironment env = ai.onnxruntime.OrtEnvironment.getEnvironment();
+
+        long seqLen = tokenIds.length;
+        long[] attentionMask = new long[(int) seqLen];
+        long[] positionIds = new long[(int) seqLen];
+        for (int i = 0; i < seqLen; i++) {
+            attentionMask[i] = 1L;
+            positionIds[i] = i;
+        }
+        try (ai.onnxruntime.OnnxTensor inputIds = ai.onnxruntime.OnnxTensor.createTensor(
+                    env, java.nio.LongBuffer.wrap(tokenIds), new long[]{1, seqLen});
+             ai.onnxruntime.OnnxTensor attnMask = ai.onnxruntime.OnnxTensor.createTensor(
+                    env, java.nio.LongBuffer.wrap(attentionMask), new long[]{1, seqLen});
+             ai.onnxruntime.OnnxTensor posIds = ai.onnxruntime.OnnxTensor.createTensor(
+                    env, java.nio.LongBuffer.wrap(positionIds), new long[]{1, seqLen})) {
+            try (var results = session.run(java.util.Map.of(
+                    "input_ids", inputIds,
+                    "attention_mask", attnMask,
+                    "position_ids", posIds))) {
+                float[][][] logits = (float[][][]) results.get(0).getValue();
+                float[] last = logits[0][(int) seqLen - 1];
+                if (temperature < 0.05) {
+                    // Greedy
+                    int bestIdx = 0;
+                    float bestVal = last[0];
+                    for (int i = 1; i < last.length; i++) {
+                        if (last[i] > bestVal) {
+                            bestVal = last[i];
+                            bestIdx = i;
+                        }
+                    }
+                    return bestIdx;
+                }
+                // Temperature sampling: softmax with temperature
+                double maxLogit = last[0];
+                for (int i = 1; i < last.length; i++) {
+                    if (last[i] > maxLogit) maxLogit = last[i];
+                }
+                double sum = 0.0;
+                double[] probs = new double[last.length];
+                for (int i = 0; i < last.length; i++) {
+                    probs[i] = Math.exp((last[i] - maxLogit) / temperature);
+                    sum += probs[i];
+                }
+                for (int i = 0; i < probs.length; i++) probs[i] /= sum;
+                // Sample using deterministic PRNG so tests are reproducible
+                double r = ((java.util.Random) null == null ? 0.0 : 0.5);
+                // Use System.nanoTime() — non-deterministic but real sampling.
+                // For reproducible tests, caller should use greedy.
+                long seed = (System.nanoTime() ^ Thread.currentThread().threadId()) & 0x7FFFFFFFL;
+                java.util.Random rng = new java.util.Random(seed);
+                r = rng.nextDouble();
+                double cum = 0.0;
+                for (int i = 0; i < probs.length; i++) {
+                    cum += probs[i];
+                    if (r < cum) return i;
+                }
+                return probs.length - 1;
+            }
+        }
+    }
+
     public boolean load() {
         try {
             tokenizer = BpeTokenizer.fromModelDir(modelDir);
