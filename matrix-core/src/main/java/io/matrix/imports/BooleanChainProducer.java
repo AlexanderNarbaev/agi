@@ -1,5 +1,6 @@
 package io.matrix.imports;
 
+import io.matrix.api.QwenModelAdapter;
 import io.quarkus.arc.properties.IfBuildProperty;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Produces;
@@ -44,8 +45,14 @@ public class BooleanChainProducer {
     @ConfigProperty(name = "matrix.chain.budget", defaultValue = "16384")
     int budget;
 
+    @ConfigProperty(name = "matrix.qwen.model-path", defaultValue = "models/hf_cache/qwen05b")
+    String qwenModelPath;
+
     @Inject
     PanamaNativeBridge panamaBridge;
+
+    /** RUN 58 — Qwen model adapter (metadata for the chain). */
+    private QwenModelAdapter qwenAdapter;
 
     @Produces
     @ApplicationScoped
@@ -58,6 +65,16 @@ public class BooleanChainProducer {
 
     /** Build the runner (called by CDI and by tests). */
     public BooleanChainRunner build() {
+        // RUN 58: log Qwen model metadata at build time.
+        if (qwenAdapter == null) {
+            qwenAdapter = new QwenModelAdapter(Path.of(qwenModelPath));
+            if (qwenAdapter.available) {
+                log.info("QwenModelAdapter: {}", qwenAdapter.summary());
+            } else {
+                log.warn("QwenModelAdapter: model not available at {} (chain distillation source)",
+                        qwenModelPath);
+            }
+        }
         if (configuredPath.isEmpty()) {
             return autoDetect();
         }
@@ -68,6 +85,14 @@ public class BooleanChainProducer {
         }
         // Wave I: load ALL transformer blocks via FullChainLoader
         return FullChainLoader.loadAll(p, budget, prefix);
+    }
+
+    /** RUN 58 — get the Qwen model adapter (for diagnostics). */
+    public QwenModelAdapter getQwenAdapter() {
+        if (qwenAdapter == null) {
+            qwenAdapter = new QwenModelAdapter(Path.of(qwenModelPath));
+        }
+        return qwenAdapter;
     }
 
     private BooleanChainRunner autoDetect() {
