@@ -521,3 +521,8 @@ Total tests after RUN 12-21: 79/79 pass.
 - Latency benchmark (286-376ms per generation).
 - HealthCheckService periodic monitor.
 - 674 cumulative tests, 0 failures.
+
+## RUN 130-131 — Conversation export (2026-09-05 21:10)
+
+- ConversationExporter (text/markdown/JSON).
+- /v1/onnx/export endpoint.

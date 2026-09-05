@@ -2612,4 +2612,25 @@ were dropped during decode. Fix: full 256-byte map.
 - **6 hypothesis cards accepted**
 - **674 cumulative tests, 0 failures**
 
-(End of file - total ~2650 lines)
+---
+
+## Section LXXXIV — RUN 130-131 (2026-09-05 21:10): Conversation export
+
+- **RUN 130**: ConversationExporter (text/markdown/JSON formats) — 7 tests
+- **RUN 131**: /v1/onnx/export endpoint — +2 tests
+
+## RUN 130-131 totals
+
+- **+9 new tests** for these RUNs
+- **1 new Java class** (ConversationExporter)
+
+## RUN 12-131 master totals
+
+- **127 RUNs delivered** (RUN 12-131)
+- **~517+ new tests** added
+- **~56 new Java classes**
+- **36 new EXP reports**
+- **6 hypothesis cards accepted**
+- **683 cumulative tests, 0 failures** (34 OnnxChatResource + 7 export + 642 others)
+
+(End of file - total ~2700 lines)
