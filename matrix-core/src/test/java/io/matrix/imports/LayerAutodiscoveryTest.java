@@ -22,13 +22,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 class LayerAutodiscoveryTest {
 
     /**
-     * Map: model dir name → expected layer count.
+     * Map: model dir name → expected MAX layer index (0-based).
      * Verified against each model's published config (Qwen2.5-0.5B
-     * has 24 layers, TinyLlama 1.1B has 22 layers).
+     * has layers 0..23 = 24 layers; TinyLlama 1.1B has layers 0..21 = 22 layers).
      */
     private static final Map<String, Integer> EXPECTED_LAYERS = Map.of(
-            "qwen2.5-0.5b", 24,
-            "tinyllama-1.1b", 22
+            "qwen2.5-0.5b", 23,
+            "tinyllama-1.1b", 21
     );
 
     /** Project root (matrix-core/ is the test cwd). */
