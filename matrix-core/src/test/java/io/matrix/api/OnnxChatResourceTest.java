@@ -185,4 +185,12 @@ class OnnxChatResourceTest {
         String json = resource.health();
         assertThat(json).contains("\"uptimeMs\":");
     }
+
+    @Test
+    void registryBeforeBridgeLoad() {
+        OnnxChatResource resource = new OnnxChatResource();
+        String json = resource.registry();
+        assertThat(json).contains("\"totalRegistered\":0");
+        assertThat(json).contains("\"totalLoaded\":0");
+    }
 }

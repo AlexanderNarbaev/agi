@@ -205,6 +205,31 @@ public class OnnxChatResource {
     }
 
     @GET
+    @Path("/registry")
+    @Produces(MediaType.APPLICATION_JSON)
+    public String registry() {
+        // For now, expose the bridge's model info as a single registration
+        StringBuilder sb = new StringBuilder();
+        sb.append("{");
+        sb.append("\"registered\":[");
+        if (bridge != null) {
+            sb.append("{");
+            sb.append("\"id\":\"qwen:0.5b:bf16\",");
+            sb.append("\"name\":\"Qwen2.5-0.5B-Instruct\",");
+            sb.append("\"size\":\"0.5b\",");
+            sb.append("\"precision\":\"bf16\",");
+            sb.append("\"loaded\":").append(bridge.isLoaded());
+            sb.append(",\"gpu\":").append(bridge.isGpuEnabled());
+            sb.append("}");
+        }
+        sb.append("],");
+        sb.append("\"totalRegistered\":").append(bridge != null ? 1 : 0);
+        sb.append(",\"totalLoaded\":").append(bridge != null && bridge.isLoaded() ? 1 : 0);
+        sb.append("}");
+        return sb.toString();
+    }
+
+    @GET
     @Path("/health")
     @Produces(MediaType.APPLICATION_JSON)
     public String health() {
