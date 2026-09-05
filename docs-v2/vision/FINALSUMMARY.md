@@ -2420,4 +2420,33 @@ were dropped during decode. Fix: full 256-byte map.
   tokenizer + ONNX GPU + chat + streaming + batching +
   templates + calibration + REST API
 
-(End of file - total ~2300 lines)
+---
+
+## Section LXXVII — RUN 99-103 (2026-09-05 20:17): Operational utilities
+
+- **RUN 99**: RateLimiter (token-bucket per key) — 10 tests
+- **RUN 100**: BackoffPolicy (exponential + jitter) — 10 tests
+- **RUN 101**: GenerationCache (LRU) — 10 tests
+- **RUN 102**: Wire cache into QwenOnnxBridge — +2 tests
+- **RUN 103**: EXP-MATRIX.50 documents full capability stack
+
+**570 tests, 0 failures** verified.
+
+## RUN 99-103 totals
+
+- **+32 new tests** for these RUNs
+- **3 new Java classes** (RateLimiter, BackoffPolicy, GenerationCache)
+- **1 new EXP report** (EXP-MATRIX.50)
+
+## RUN 12-103 master totals
+
+- **99 RUNs delivered** (RUN 12-103)
+- **~408+ new tests** added
+- **~43 new Java classes**
+- **28 new EXP reports** (EXP-MATRIX.21-50)
+- **6 hypothesis cards accepted**
+- **Complete LLM capability stack DELIVERED**:
+  tokenizer + ONNX GPU + sampling + chat + streaming + batching +
+  templates + calibration + REST + operational utilities
+
+(End of file - total ~2350 lines)

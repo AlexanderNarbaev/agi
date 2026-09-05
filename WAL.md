@@ -477,3 +477,10 @@ Total tests after RUN 12-21: 79/79 pass.
 - /v1/onnx/{stream,health} endpoints.
 - Real GPU verified: translations, summaries, math reasoning.
 - 523 tests, 0 failures verified.
+
+## RUN 99-103 — Operational utilities (2026-09-05 20:17)
+
+- RateLimiter (token bucket), BackoffPolicy (exponential + jitter),
+  GenerationCache (LRU).
+- Cache wired into QwenOnnxBridge.
+- 570 cumulative tests, 0 failures verified.
