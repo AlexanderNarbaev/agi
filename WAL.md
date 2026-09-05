@@ -526,3 +526,8 @@ Total tests after RUN 12-21: 79/79 pass.
 
 - ConversationExporter (text/markdown/JSON).
 - /v1/onnx/export endpoint.
+
+## RUN 132-134 — Performance tooling (2026-09-05 21:13)
+
+- StopWatch, StressTestRunner.
+- GPU stress: 10 reqs/4 threads = 3.4s, 2.92 rps, 10/10 ok.
