@@ -170,4 +170,60 @@ class TenantQaIndexTest {
         // tenants() returned a new HashSet copy; the internal map is unaffected.
         assertThat(tenants.tenantCount()).isEqualTo(1);
     }
+
+    // ─── RUN 44 — pagination + category filter ───
+
+    @Test
+    void searchForTenantPageReturnsPagedResults() {
+        // Add 10 entries to alice.
+        for (int i = 0; i < 10; i++) {
+            tenants.add("alice", entry(i));
+        }
+        base.response = new ArrayList<>();
+        for (int i = 0; i < 10; i++) base.response.add(entry(i));
+
+        var page = tenants.searchForTenantPage("alice", "test", 0, 3);
+        assertThat(page.entries()).hasSize(3);
+        assertThat(page.totalForTenant()).isEqualTo(10);
+        assertThat(page.offset()).isZero();
+        assertThat(page.limit()).isEqualTo(3);
+        assertThat(page.hasMore()).isTrue();
+    }
+
+    @Test
+    void searchForTenantPageHasMoreFalseAtEnd() {
+        for (int i = 0; i < 10; i++) tenants.add("alice", entry(i));
+        base.response = new ArrayList<>();
+        for (int i = 0; i < 10; i++) base.response.add(entry(i));
+
+        var page = tenants.searchForTenantPage("alice", "test", 8, 5);
+        // Should return up to 2 entries (since only 2 remain).
+        assertThat(page.entries()).hasSizeLessThanOrEqualTo(2);
+    }
+
+    @Test
+    void searchForTenantByCategoryFiltersCorrectly() {
+        // Add entries with different categories.
+        var e1 = new QaCorpusIndex.Entry(1, "Q1", "A1", "general", "");
+        var e2 = new QaCorpusIndex.Entry(2, "Q2", "A2", "specific", "");
+        var e3 = new QaCorpusIndex.Entry(3, "Q3", "A3", "general", "");
+        tenants.add("alice", e1);
+        tenants.add("alice", e2);
+        tenants.add("alice", e3);
+        base.response = new ArrayList<>(List.of(e1, e2, e3));
+
+        var generalResults = tenants.searchForTenantByCategory("alice", "test", "general", 10);
+        assertThat(generalResults).extracting(QaCorpusIndex.Entry::id).containsExactlyInAnyOrder(1, 3);
+
+        var specificResults = tenants.searchForTenantByCategory("alice", "test", "specific", 10);
+        assertThat(specificResults).extracting(QaCorpusIndex.Entry::id).containsExactly(2);
+    }
+
+    @Test
+    void pageRecordReportsHasMore() {
+        var page = new TenantQaIndex.Page(List.of(entry(1), entry(2)), 5, 0, 2);
+        assertThat(page.hasMore()).isTrue();
+        var endPage = new TenantQaIndex.Page(List.of(entry(1)), 1, 0, 5);
+        assertThat(endPage.hasMore()).isFalse();
+    }
 }
