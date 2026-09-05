@@ -1,6 +1,7 @@
 package io.matrix.chat;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import io.matrix.api.LmHeadFeedbackTrainer;
 import jakarta.inject.Inject;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.DecimalMax;
@@ -15,6 +16,7 @@ import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
@@ -43,6 +45,10 @@ public class ConversationFeedbackResource {
     @Inject
     ConversationFeedbackStore store;
 
+    /** RUN 19: continuous LM head trainer consumes feedback events. */
+    @Inject
+    LmHeadFeedbackTrainer lmHeadFeedbackTrainer;
+
     /**
      * Generic feedback submission. Body:
      * <pre>{@code
@@ -69,13 +75,24 @@ public class ConversationFeedbackResource {
         ConversationFeedback fb = new ConversationFeedback(
                 null, req.conversationId, req.rating, req.comment, req.userId, null);
         store.submit(fb);
-        return Response.ok(Map.of(
-                "status", "accepted",
-                "conversationId", req.conversationId,
-                "rating", req.rating,
-                "cumulativeRating", store.ratingFor(req.conversationId),
-                "feedbackCount", store.feedbackCountFor(req.conversationId)
-        )).build();
+        // RUN 19: trigger continuous LM-head update.
+        int updates = 0;
+        if (lmHeadFeedbackTrainer != null) {
+            try {
+                updates = lmHeadFeedbackTrainer.onFeedback(req.conversationId, req.rating);
+            } catch (RuntimeException re) {
+                // Best-effort; never let feedback feedback-path fail
+                // because of LM-head update issues.
+            }
+        }
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("status", "accepted");
+        body.put("conversationId", req.conversationId);
+        body.put("rating", req.rating);
+        body.put("cumulativeRating", store.ratingFor(req.conversationId));
+        body.put("feedbackCount", store.feedbackCountFor(req.conversationId));
+        body.put("lmHeadUpdates", updates);
+        return Response.ok(body).build();
     }
 
     /** Convenience: thumbs-up = 1.0. */
