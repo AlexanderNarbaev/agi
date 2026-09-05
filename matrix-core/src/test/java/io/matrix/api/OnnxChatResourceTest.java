@@ -193,4 +193,25 @@ class OnnxChatResourceTest {
         assertThat(json).contains("\"totalRegistered\":0");
         assertThat(json).contains("\"totalLoaded\":0");
     }
+
+    @Test
+    void embedReturnsErrorWhenBridgeNotLoaded() {
+        OnnxChatResource resource = new OnnxChatResource();
+        String reply = resource.embed("hello");
+        assertThat(reply).startsWith("ERROR:");
+    }
+
+    @Test
+    void embedReturnsErrorOnEmptyText() {
+        OnnxChatResource resource = new OnnxChatResource();
+        String reply = resource.embed("");
+        assertThat(reply).startsWith("ERROR:");
+    }
+
+    @Test
+    void embedReturnsErrorOnNullText() {
+        OnnxChatResource resource = new OnnxChatResource();
+        String reply = resource.embed(null);
+        assertThat(reply).startsWith("ERROR:");
+    }
 }

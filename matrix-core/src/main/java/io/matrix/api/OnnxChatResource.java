@@ -204,6 +204,32 @@ public class OnnxChatResource {
         return reply == null ? "" : reply;
     }
 
+    @POST
+    @Path("/embed")
+    @Produces(MediaType.TEXT_PLAIN)
+    public String embed(@QueryParam("text") String text) {
+        if (bridge == null || !bridge.isLoaded()) {
+            return "ERROR: ONNX bridge not loaded";
+        }
+        if (text == null || text.isBlank()) {
+            return "ERROR: empty text";
+        }
+        try {
+            TextEmbedder embedder = new TextEmbedder(bridge);
+            float[] vec = embedder.embed(text);
+            // Return as comma-separated
+            StringBuilder sb = new StringBuilder();
+            sb.append(vec.length).append(":");
+            for (int i = 0; i < vec.length; i++) {
+                if (i > 0) sb.append(",");
+                sb.append(vec[i]);
+            }
+            return sb.toString();
+        } catch (Exception e) {
+            return "ERROR: " + e.getMessage();
+        }
+    }
+
     @GET
     @Path("/registry")
     @Produces(MediaType.APPLICATION_JSON)
