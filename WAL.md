@@ -537,3 +537,8 @@ Total tests after RUN 12-21: 79/79 pass.
 - TokenType enum (6 types).
 - TokenAnalyzer with counts/ratios.
 - Real GPU analysis: 16 tokens, 0 special, 0 punct.
+
+## RUN 138-139 — Quality heuristics (2026-09-05 21:22)
+
+- GenerationQuality: char/word/unique counts + repetition.
+- 719 cumulative tests, 0 failures.

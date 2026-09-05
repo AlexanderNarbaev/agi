@@ -2682,4 +2682,28 @@ were dropped during decode. Fix: full 256-byte map.
 - **6 hypothesis cards accepted**
 - **710 cumulative tests, 0 failures**
 
-(End of file - total ~2800 lines)
+---
+
+## Section LXXXVII — RUN 138-139 (2026-09-05 21:22): Quality heuristics
+
+- **RUN 138**: GenerationQuality — char/word/unique counts + repetition detection — 8 tests
+- **RUN 139**: Real GPU quality EXP
+  - 104 chars, 15 words, 11 unique, 0.73 ratio, 3 lines
+
+**719 tests, 0 failures** verified.
+
+## RUN 138-139 totals
+
+- **+9 new tests** for these RUNs
+- **1 new Java class** (GenerationQuality)
+
+## RUN 12-139 master totals
+
+- **135 RUNs delivered** (RUN 12-139)
+- **~553+ new tests** added
+- **~61 new Java classes**
+- **38 new EXP reports**
+- **6 hypothesis cards accepted**
+- **719 cumulative tests, 0 failures**
+
+(End of file - total ~2850 lines)
