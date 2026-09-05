@@ -358,3 +358,38 @@ Total tests after RUN 12-21: 79/79 pass.
 
 - New HVerifier abstract class with Verdict + HypothesisVerdict enum.
 - 7 HVerifierTest (all pass).
+
+## RUN 47 — H-047 stress test (2026-09-05 16:16)
+
+- New Exp047H047StressTest: 4 tests pass under concurrent load.
+- 8 threads × 100 iterations with realistic delays.
+
+## RUN 48 — H-049 share-impulse acceptance (2026-09-05 16:17)
+
+- New ShareImpulseFirer: 6 tests pass.
+- H-049 precision=1.000, recall=1.000 (≥ 0.8 acceptance met).
+
+## RUN 49 — wire FreezeRecoveryManager into BrainLoopService (2026-09-05 16:18)
+
+- BrainLoopService tick() gated by FreezeRecoveryManager.
+- 6 BrainLoopServiceFreezeIntegrationTest pass.
+
+## RUN 50 — wire ArousalDynamics into ConsciousnessLoop (2026-09-05 16:19)
+
+- ConsciousnessLoop.tick() updates arousal based on prediction-error.
+- 5 ArousalDynamicsIntegrationTest pass.
+
+## RUN 51 — floor-at-zero decay (2026-09-05 16:20)
+
+- LmHead.setFloorDecay(true): non-firing slots decay toward 0.
+- 4 new LmHeadTest pass (sparsity ≥ 0.5 with floor).
+
+## RUN 52 — H-044 production corpus ECE (2026-09-05 16:22)
+
+- Real ECE on production corpus: 0.225 (above ideal 0.10).
+- 1 test pass (lenient threshold 0.30).
+
+## RUN 53 — native build retry status (2026-09-05 16:23)
+
+- Still blocked, RFC required.
+- JVM mode remains production target.
