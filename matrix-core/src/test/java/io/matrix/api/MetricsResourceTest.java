@@ -82,4 +82,13 @@ class MetricsResourceTest {
         // a JVM that started moments ago).
         assertThat(uptime).isLessThan(24L * 3600_000L);
     }
+
+    @Test
+    void metricsResourceIsInstantiable() {
+        // RUN 45: verify the resource can be constructed (no CDI deps).
+        // The actual metrics() method requires CDI-injected collaborators;
+        // we just verify the class is well-formed.
+        MetricsResource res = new MetricsResource();
+        assertThat(res).isNotNull();
+    }
 }

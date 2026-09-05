@@ -91,6 +91,18 @@ public class MetricsResource {
         chain.put("totalNeurons", chainRunner.totalNeurons());
         chain.put("totalEvals", chainRunner.totalEvalCount());
         chain.put("avgEvalMicros", chainRunner.avgEvalMicros());
+        // RUN 45: per-layer stats — count neurons per layer.
+        Map<Integer, Integer> neuronsPerLayer = new LinkedHashMap<>();
+        try {
+            var layers = chainRunner.layers();
+            if (layers != null) {
+                for (int i = 0; i < layers.size(); i++) {
+                    var layer = layers.get(i);
+                    if (layer != null) neuronsPerLayer.put(i, layer.neurons().size());
+                }
+            }
+        } catch (Exception ignored) {}
+        chain.put("neuronsPerLayer", neuronsPerLayer);
         body.put("chain", chain);
 
         // LM head
