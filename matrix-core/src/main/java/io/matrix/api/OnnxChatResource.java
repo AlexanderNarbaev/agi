@@ -47,6 +47,7 @@ public class OnnxChatResource {
     private volatile QwenOnnxBridge bridge;
     private volatile long lastLoadMs = 0;
     private volatile long totalInferences = 0;
+    private final long startTimeMs = System.currentTimeMillis();
 
     /** Load bridge on startup if configured. */
     void onStart(@Observes StartupEvent ev) {
@@ -201,6 +202,28 @@ public class OnnxChatResource {
         String reply = bridge.generateSampled(prompt, tokens, temp, k, p);
         totalInferences++;
         return reply == null ? "" : reply;
+    }
+
+    @GET
+    @Path("/health")
+    @Produces(MediaType.APPLICATION_JSON)
+    public String health() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("{");
+        sb.append("\"status\":");
+        if (bridge == null) {
+            sb.append("\"uninitialized\"");
+        } else if (bridge.isLoaded()) {
+            sb.append("\"healthy\"");
+        } else {
+            sb.append("\"not_loaded\"");
+        }
+        sb.append(",\"gpu\":").append(bridge != null && bridge.isGpuEnabled());
+        sb.append(",\"inferences\":").append(totalInferences);
+        sb.append(",\"uptimeMs\":").append(
+                System.currentTimeMillis() - startTimeMs);
+        sb.append("}");
+        return sb.toString();
     }
 
     @POST

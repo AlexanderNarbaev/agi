@@ -169,4 +169,20 @@ class OnnxChatResourceTest {
         String reply = resource.stream("", 8);
         assertThat(reply).startsWith("ERROR:");
     }
+
+    @Test
+    void healthBeforeBridgeLoad() {
+        OnnxChatResource resource = new OnnxChatResource();
+        String json = resource.health();
+        assertThat(json).contains("\"status\":\"uninitialized\"");
+        assertThat(json).contains("\"gpu\":false");
+        assertThat(json).contains("\"inferences\":0");
+    }
+
+    @Test
+    void healthIncludesUptime() {
+        OnnxChatResource resource = new OnnxChatResource();
+        String json = resource.health();
+        assertThat(json).contains("\"uptimeMs\":");
+    }
 }
