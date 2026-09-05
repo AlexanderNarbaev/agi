@@ -69,6 +69,9 @@ public final class ConsciousnessLoop {
     private volatile BitSet lastDecision;
     private volatile long lastPredictionError;
 
+    /** RUN 43 — optional per-stage latency tracker. */
+    private volatile StageLatencyTracker latencyTracker;
+
     public ConsciousnessLoop(BrcChain deliberation,
                              ActionArena arena,
                              ConsolidationCycle consolidation,
@@ -95,15 +98,28 @@ public final class ConsciousnessLoop {
      */
     public TickSnapshot tick() {
         long tickId = tickCounter.incrementAndGet();
+        StageLatencyTracker tracker = this.latencyTracker;
+        long stageStart;
+
         // 1. perception
+        stageStart = tracker != null ? System.nanoTime() : 0L;
         BitSet raw = perception.get();
+        if (tracker != null) tracker.recordElapsed(StageLatencyTracker.Stage.PERCEPTION, stageStart);
+
         // 2. attention (weighted Hamming distance to last attended)
+        stageStart = tracker != null ? System.nanoTime() : 0L;
         long attentionScore = score(raw);
         lastAttended = raw;
+        if (tracker != null) tracker.recordElapsed(StageLatencyTracker.Stage.ATTENTION, stageStart);
+
         // 3. deliberation
+        stageStart = tracker != null ? System.nanoTime() : 0L;
         BrcState decision = deliberation.evaluate(raw, raw.length());
         lastDecision = decision.vector();
+        if (tracker != null) tracker.recordElapsed(StageLatencyTracker.Stage.DELIBERATION, stageStart);
+
         // 4. gate + 5. action
+        stageStart = tracker != null ? System.nanoTime() : 0L;
         TaskCell cell = new TaskCell("loop-tick-" + tickId,
                 java.util.Map.of("decision", lastDecision), 5_000L);
         ActionArena.Arbitration arb;
@@ -112,6 +128,8 @@ public final class ConsciousnessLoop {
         } catch (Exception e) {
             throw new IllegalStateException("arena submit failed", e);
         }
+        if (tracker != null) tracker.recordElapsed(StageLatencyTracker.Stage.ACTION, stageStart);
+
         // 6. consolidation (no-op if cycle closed; safe to skip)
         if (consolidation != null) {
             try {
@@ -157,6 +175,16 @@ public final class ConsciousnessLoop {
     }
 
     public long totalTicks() { return tickCounter.get(); }
+
+    /** RUN 43 — set the latency tracker (or null to disable). */
+    public void setLatencyTracker(StageLatencyTracker tracker) {
+        this.latencyTracker = tracker;
+    }
+
+    /** RUN 43 — get the current latency tracker (or null). */
+    public StageLatencyTracker getLatencyTracker() {
+        return latencyTracker;
+    }
     public long lastPredictionError() { return lastPredictionError; }
     public BitSet lastDecision() { return lastDecision; }
 
