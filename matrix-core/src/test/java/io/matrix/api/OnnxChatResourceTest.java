@@ -226,4 +226,20 @@ class OnnxChatResourceTest {
         assertThat(json).contains("\"chat\"");
         assertThat(json).contains("\"embed\"");
     }
+
+    @Test
+    void usageEndpointReturnsJson() {
+        OnnxChatResource resource = new OnnxChatResource();
+        String json = resource.usage();
+        assertThat(json).contains("\"totalTokens\":");
+        assertThat(json).contains("\"totalRequests\":0");
+    }
+
+    @Test
+    void tokenUsageTrackerAccessible() {
+        OnnxChatResource resource = new OnnxChatResource();
+        // Tracker should be non-null and accessible
+        assertThat(resource.getTracker()).isNotNull();
+        assertThat(resource.getTracker().totalRequests()).isZero();
+    }
 }

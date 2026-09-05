@@ -48,6 +48,7 @@ public class OnnxChatResource {
     private volatile long lastLoadMs = 0;
     private volatile long totalInferences = 0;
     private final long startTimeMs = System.currentTimeMillis();
+    private final TokenUsageTracker tracker = new TokenUsageTracker();
 
     /** Load bridge on startup if configured. */
     void onStart(@Observes StartupEvent ev) {
@@ -170,6 +171,11 @@ public class OnnxChatResource {
         return jsonEscape(s);
     }
 
+    /** Visible-for-testing accessor for the token usage tracker. */
+    public TokenUsageTracker getTracker() {
+        return tracker;
+    }
+
     @GET
     @Path("/metrics")
     @Produces(MediaType.APPLICATION_JSON)
@@ -228,6 +234,17 @@ public class OnnxChatResource {
         } catch (Exception e) {
             return "ERROR: " + e.getMessage();
         }
+    }
+
+    @GET
+    @Path("/usage")
+    @Produces(MediaType.APPLICATION_JSON)
+    public String usage() {
+        TokenUsageTracker t = tracker;
+        if (t == null) {
+            return "{\"totalTokens\":0}";
+        }
+        return t.toJson();
     }
 
     @GET
