@@ -470,3 +470,10 @@ Total tests after RUN 12-21: 79/79 pass.
 - /v1/onnx/compare endpoint.
 - 5-turn diverse conversation EXP with verified outputs.
 - BPE round-trip verification.
+
+## RUN 88-98 — Advanced features (2026-09-05 20:08)
+
+- ContinuousBatchScheduler, TokenEvent, PromptTemplates.
+- /v1/onnx/{stream,health} endpoints.
+- Real GPU verified: translations, summaries, math reasoning.
+- 523 tests, 0 failures verified.
