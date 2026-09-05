@@ -44,6 +44,9 @@ public class QwenOnnxBridge {
     private int maxNewTokens = 64;
     private long eosToken = EOS_TOKEN_DEFAULT;
 
+    /** RUN 69 — inference metrics aggregator. */
+    private final OnnxInferenceMetrics metrics = new OnnxInferenceMetrics();
+
     public QwenOnnxBridge(Path modelDir) {
         this.modelDir = modelDir;
     }
@@ -87,6 +90,8 @@ public class QwenOnnxBridge {
         java.util.List<Long> allIds = new java.util.ArrayList<>();
         for (int id : promptIds) allIds.add((long) id);
 
+        long t0 = System.nanoTime();
+        int generated = 0;
         for (int step = 0; step < budget; step++) {
             long[] ids = toLongArray(allIds);
             long nextToken;
@@ -99,9 +104,10 @@ public class QwenOnnxBridge {
             }
             if (nextToken == eosToken) break;
             allIds.add(nextToken);
+            generated++;
         }
+        metrics.record(generated, System.nanoTime() - t0, useGpu);
 
-        int generated = allIds.size() - promptIds.length;
         int[] genIds = new int[generated];
         for (int i = 0; i < generated; i++) {
             genIds[i] = allIds.get(promptIds.length + i).intValue();
@@ -242,7 +248,9 @@ public class QwenOnnxBridge {
             allIds.add(nextToken);
             generated++;
         }
-        long elapsedMs = (System.nanoTime() - t0) / 1_000_000L;
+        long elapsedNanos = System.nanoTime() - t0;
+        metrics.record(generated, elapsedNanos, useGpu);
+        long elapsedMs = elapsedNanos / 1_000_000L;
         log.debug("QwenOnnxBridge.generate: produced {} tokens in {}ms ({}tok/s)",
                 generated, elapsedMs,
                 elapsedMs > 0 ? (generated * 1000L / elapsedMs) : 0);
@@ -275,6 +283,11 @@ public class QwenOnnxBridge {
 
     public int vocabSize() {
         return tokenizer == null ? 0 : tokenizer.vocabSize();
+    }
+
+    /** RUN 69 — get the inference metrics aggregator. */
+    public OnnxInferenceMetrics metrics() {
+        return metrics;
     }
 
     private static long[] toLongArray(List<Long> list) {

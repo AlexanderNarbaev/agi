@@ -101,6 +101,17 @@ public class OnnxChatResource {
         return reloadBridge();
     }
 
+    @GET
+    @Path("/metrics")
+    @Produces(MediaType.APPLICATION_JSON)
+    public String metrics() {
+        if (bridge == null) {
+            return "{\"loaded\":false}";
+        }
+        return "{\"loaded\":" + bridge.isLoaded()
+                + ",\"inference\":" + bridge.metrics().toJson() + "}";
+    }
+
     private synchronized String reloadBridge() {
         long t0 = System.nanoTime();
         if (bridge != null) {
