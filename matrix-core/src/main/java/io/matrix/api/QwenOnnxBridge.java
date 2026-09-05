@@ -28,7 +28,7 @@ import java.util.List;
  * String reply = bridge.generate("What is 2+2?", 64);
  * }</pre>
  */
-public final class QwenOnnxBridge {
+public class QwenOnnxBridge {
 
     private static final Logger log = LoggerFactory.getLogger(QwenOnnxBridge.class);
 
