@@ -1,5 +1,9 @@
 package io.matrix.api;
 
+import io.quarkus.runtime.StartupEvent;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.event.Observes;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -25,36 +29,55 @@ import java.nio.file.Path;
  *       to know the vocabulary size, hidden dimensions, etc.</li>
  * </ul>
  */
+@ApplicationScoped
 public class QwenModelAdapter {
+
+    @ConfigProperty(name = "matrix.qwen.model-path", defaultValue = "models/hf_cache/qwen05b")
+    String configuredPath;
+
+    /** CDI constructor. */
+    public QwenModelAdapter() {
+        // Constructor invoked by CDI; the configuredPath field is
+        // injected separately. Initialize fields defensively.
+        this.modelPath = null;  // Set in onStart
+        this.architecture = null;
+        this.hiddenSize = 0;
+        this.numHiddenLayers = 0;
+        this.numAttentionHeads = 0;
+        this.vocabSize = 0;
+        this.maxPositionEmbeddings = 0;
+        this.torchDtype = null;
+        this.available = false;
+    }
 
     private static final Logger log = LoggerFactory.getLogger(QwenModelAdapter.class);
 
     /** Architecture identifier (e.g., "Qwen2ForCausalLM"). */
-    public final String architecture;
+    public String architecture;
 
     /** Hidden dimension (e.g., 896 for Qwen2.5-0.5B). */
-    public final int hiddenSize;
+    public int hiddenSize;
 
     /** Number of hidden layers (e.g., 24 for Qwen2.5-0.5B). */
-    public final int numHiddenLayers;
+    public int numHiddenLayers;
 
     /** Number of attention heads (e.g., 14 for Qwen2.5-0.5B). */
-    public final int numAttentionHeads;
+    public int numAttentionHeads;
 
     /** Vocabulary size (e.g., 151,936 for Qwen2.5-0.5B). */
-    public final int vocabSize;
+    public int vocabSize;
 
     /** Maximum sequence length (e.g., 32768 for Qwen2.5-0.5B). */
-    public final int maxPositionEmbeddings;
+    public int maxPositionEmbeddings;
 
     /** Model data type (e.g., "bfloat16"). */
-    public final String torchDtype;
+    public String torchDtype;
 
     /** Path to the model artifacts directory. */
-    public final Path modelPath;
+    public Path modelPath;
 
     /** True if the model artifacts are present. */
-    public final boolean available;
+    public boolean available;
 
     public QwenModelAdapter(Path modelPath) {
         this.modelPath = modelPath;
@@ -97,6 +120,29 @@ public class QwenModelAdapter {
         this.maxPositionEmbeddings = maxPos;
         this.torchDtype = dtype;
         this.available = true;
+    }
+
+    /** Initialize from configured path on startup. */
+    void onStart(@Observes StartupEvent ev) {
+        // Lazy: defer until first call to modelPath() to avoid touching
+        // filesystem during build-time analysis.
+        if (this.modelPath == null && configuredPath != null) {
+            // Re-init from configuredPath
+            QwenModelAdapter tmp = new QwenModelAdapter(Path.of(configuredPath));
+            copyFrom(tmp);
+        }
+    }
+
+    private void copyFrom(QwenModelAdapter other) {
+        this.modelPath = other.modelPath;
+        this.architecture = other.architecture;
+        this.hiddenSize = other.hiddenSize;
+        this.numHiddenLayers = other.numHiddenLayers;
+        this.numAttentionHeads = other.numAttentionHeads;
+        this.vocabSize = other.vocabSize;
+        this.maxPositionEmbeddings = other.maxPositionEmbeddings;
+        this.torchDtype = other.torchDtype;
+        this.available = other.available;
     }
 
     /** Compact summary for logging. */
