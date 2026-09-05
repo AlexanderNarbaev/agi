@@ -76,6 +76,9 @@ public class BrainLoopService {
     private final AtomicLong totalTicks = new AtomicLong();
     private volatile Trace lastTrace = new Trace(0L, "uninitialised", 0L, 0L, 0);
 
+    /** RUN 49 — optional freeze manager. When set, ticks gated by it. */
+    private volatile io.matrix.ethics.FreezeRecoveryManager freezeManager;
+
     /** Boot trace. */
     void onStart(@Observes StartupEvent ev) {
         log.info("BrainLoopService ready (loop-stages={})", PHASES.length);
@@ -112,6 +115,19 @@ public class BrainLoopService {
      */
     public Trace tick(BitSet input) {
         Objects.requireNonNull(input, "input");
+        // RUN 49: gate via freeze manager if set.
+        io.matrix.ethics.FreezeRecoveryManager freeze = this.freezeManager;
+        if (freeze != null && !freeze.isActionAllowed()) {
+            // Frozen: return a noop trace indicating the freeze.
+            Trace frozen = new Trace(
+                    -1L,
+                    "frozen",
+                    0L,
+                    0L,
+                    0);
+            lastTrace = frozen;
+            return frozen;
+        }
         // Defensive copy because the loop may use it across phases.
         BitSet snapshot = (BitSet) input.clone();
         // Install the latest snapshot in the holder the loop reads.
@@ -126,6 +142,24 @@ public class BrainLoopService {
                 snap.actionsSubmitted());
         lastTrace = t;
         return t;
+    }
+
+    /** RUN 49 — set the freeze manager. */
+    public void setFreezeManager(io.matrix.ethics.FreezeRecoveryManager manager) {
+        this.freezeManager = manager;
+    }
+
+    /** RUN 49 — get the current freeze manager (or null). */
+    public io.matrix.ethics.FreezeRecoveryManager getFreezeManager() {
+        return freezeManager;
+    }
+
+    /** RUN 49 — report an ethics violation (forwards to the manager if set). */
+    public boolean reportViolation(String source, String reason) {
+        io.matrix.ethics.FreezeRecoveryManager freeze = this.freezeManager;
+        if (freeze == null) return false;
+        long tickId = totalTicks.get();
+        return freeze.reportViolation(source, reason, tickId);
     }
 
     public Trace lastTrace() {
