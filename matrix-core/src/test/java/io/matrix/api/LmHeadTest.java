@@ -237,4 +237,49 @@ class LmHeadTest {
         assertThat(head.positiveUpdateCount()).isEqualTo(10);
         assertThat(head.negativeUpdateCount()).isEqualTo(30);
     }
+
+    // ─── RUN 23 — confidence calibration ───
+
+    @Test
+    void confidenceIsInUnitInterval() {
+        boolean[] fp = new boolean[100];
+        for (int i = 0; i < 50; i++) fp[i] = true;
+        head.update(fp, 42, 3);
+        int[] candidates = new int[]{42, 100, 200, 300};
+        var sc = head.scoreWithConfidence(fp, 42, candidates);
+        assertThat(sc.confidence()).isBetween(0.0, 1.0);
+        assertThat(Double.isFinite(sc.confidence())).isTrue();
+    }
+
+    @Test
+    void higherTemperatureMakesConfidenceSofter() {
+        // Train tokens so the LM head has a sharp winner.
+        boolean[] fp = new boolean[100];
+        for (int i = 0; i < 50; i++) fp[i] = true;
+        for (int u = 0; u < 200; u++) head.update(fp, 42, 0);
+        // Weakly train an alternative.
+        for (int u = 0; u < 20; u++) head.update(fp, 100, 0);
+
+        int[] candidates = new int[]{42, 100, 200, 300};
+        head.setTemperature(1.0);
+        double conf1 = head.scoreWithConfidence(fp, 42, candidates).confidence();
+
+        head.setTemperature(10.0);
+        double conf10 = head.scoreWithConfidence(fp, 42, candidates).confidence();
+
+        // Higher T should reduce the peak confidence (softer distribution).
+        assertThat(conf10).as("T=10 (softer) vs T=1 (sharper)").isLessThan(conf1);
+    }
+
+    @Test
+    void confidenceIsDeterministic() {
+        boolean[] fp = new boolean[100];
+        for (int i = 0; i < 30; i++) fp[i] = true;
+        head.update(fp, 42, 0);
+        int[] candidates = new int[]{42, 100, 200};
+        var sc1 = head.scoreWithConfidence(fp, 42, candidates);
+        var sc2 = head.scoreWithConfidence(fp, 42, candidates);
+        // Same input → same confidence (no random source, no wall-clock).
+        assertThat(sc1.confidence()).isEqualTo(sc2.confidence());
+    }
 }

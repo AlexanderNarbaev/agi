@@ -259,6 +259,80 @@ public class LmHead {
         return result;
     }
 
+    // ─── RUN 23 — confidence calibration ───
+
+    /** Calibration temperature (RUN 23 — H-024). Higher T = softer distribution. */
+    private volatile double temperature = 1.0;
+
+    /** Set calibration temperature (RUN 23). */
+    public void setTemperature(double t) {
+        if (t <= 0) return;
+        this.temperature = t;
+    }
+
+    /** Get current calibration temperature. */
+    public double temperature() { return temperature; }
+
+    /**
+     * RUN 23 — Score with calibrated confidence.
+     *
+     * <p>Returns a {@link ScoreWithConfidence} record containing the raw
+     * LM head score (unnormalized logit) and a calibrated confidence in
+     * [0, 1] for this token BEING the next token, computed by:
+     *
+     * <pre>
+     *   softmax(score / T) over a candidate distribution
+     * </pre>
+     *
+     * <p>The confidence is computed against a candidate set supplied via
+     * {@code candidateTokens}. If the caller has a known candidate set
+     * (e.g., BPE vocabulary), use {@link #scoreWithConfidence(boolean[], int, int[])}.
+     * Otherwise use {@link #scoreWithConfidence(boolean[], int)} which
+     * uses the trained vocabulary as the candidate set.
+     *
+     * <p>Calibration assumption: when the model is well-calibrated, the
+     * expected accuracy of "predict the token with the highest confidence"
+     * equals that confidence. EXP-MATRIX.22 measures this on a held-out set.
+     */
+    public ScoreWithConfidence scoreWithConfidence(boolean[] chainOutput, int token) {
+        int[] vocab = new int[weights.size()];
+        int idx = 0;
+        for (Integer t : weights.keySet()) vocab[idx++] = t;
+        return scoreWithConfidence(chainOutput, token, vocab);
+    }
+
+    public ScoreWithConfidence scoreWithConfidence(boolean[] chainOutput, int token, int[] candidates) {
+        if (chainOutput == null || token < 0) return new ScoreWithConfidence(0.0, 0.0);
+        double rawScore = score(chainOutput, token);
+        if (candidates == null || candidates.length == 0) {
+            return new ScoreWithConfidence(rawScore, 0.0);
+        }
+        // Compute softmax over candidates
+        double[] logits = new double[candidates.length];
+        double maxLogit = Double.NEGATIVE_INFINITY;
+        for (int i = 0; i < candidates.length; i++) {
+            logits[i] = score(chainOutput, candidates[i]) / Math.max(temperature, 1e-6);
+            if (logits[i] > maxLogit) maxLogit = logits[i];
+        }
+        double sum = 0.0;
+        for (double l : logits) sum += Math.exp(l - maxLogit);
+        double conf = 0.0;
+        for (int i = 0; i < candidates.length; i++) {
+            if (candidates[i] == token) {
+                conf = Math.exp(logits[i] - maxLogit) / sum;
+                break;
+            }
+        }
+        return new ScoreWithConfidence(rawScore, conf);
+    }
+
+    /**
+     * RUN 23 — Result record for {@link #scoreWithConfidence}.
+     */
+    public record ScoreWithConfidence(double score, double confidence) {
+        public boolean isConfident() { return confidence >= 0.5; }
+    }
+
     public long updateCount() { return updateCount.get(); }
     public long queryCount() { return queryCount.get(); }
     /** RUN 22 — number of positive (delta > 0) updates. */
