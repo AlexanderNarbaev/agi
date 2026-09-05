@@ -46,6 +46,9 @@ public class LmHeadTrainer {
     @Inject
     QaCorpusIndex qaIndex;
 
+    @Inject
+    ChainFeatureCache featureCache;
+
     /** The trained LM head. CDI-managed. */
     private final LmHead lmHead = new LmHead();
 
@@ -61,6 +64,9 @@ public class LmHeadTrainer {
         // Initialize the LM head's neuron count from the chain
         int n = (int) chainRunner.totalNeurons();
         lmHead.setTotalNeurons(n);
+        // RUN 15: expose the LM head to ChainFeatureCache so it can
+        // produce features with the right dimension.
+        ChainFeatureCache.LmHeadTrainerHolder.lmHead(lmHead);
         log.info("LmHeadTrainer: ready (neurons={})", n);
 
         // Try to load saved weights
@@ -141,11 +147,13 @@ public class LmHeadTrainer {
     /**
      * Train on a single (question, answer) pair with negative sampling.
      *
-     * <p>RUN 11: We use a hash-based fingerprint as the "chain output" for
-     * training. Computing the full chain output is too slow (~30s per
-     * pair) for batch training. The hash-based fingerprint is
-     * deterministic and captures enough signal for the LM head to learn
-     * useful token distributions.
+     * <p>RUN 15: features are the chain's actual output for the question,
+     * cached in {@link ChainFeatureCache}. RUN 11 previously used a hash
+     * pseudo-fingerprint as a fast proxy; that proxy was prompt-aware
+     * but not corpus-aligned. RUN 15 swaps in the real chain output,
+     * which makes the LM head learn "given what the chain actually
+     * produced for this question, which tokens follow" instead of
+     * "given a random fingerprint".
      *
      * @param nNegatives number of negative samples (RUN 11 — prevents
      *                   the LM head from collapsing on common tokens
@@ -156,13 +164,8 @@ public class LmHeadTrainer {
     public int trainOne(String question, String answer, int nNegatives) {
         if (question == null || answer == null || question.isEmpty()) return 0;
 
-        // 1. Build a simple hash-based "fingerprint" of the question.
-        //    RUN 10: We don't run the full chain here (too slow for batch
-        //    training — would take hours). Instead, we use a hash-based
-        //    pseudo chain output that has the same shape (boolean vector
-        //    over all "neurons") and is a deterministic function of the
-        //    question. This is enough for the LM head to learn which
-        //    tokens follow which questions.
+        // 1. Use the chain's real output as features (RUN 15).
+        //    ChainFeatureCache provides question -> boolean[totalN] mapping.
         int totalN = lmHead.totalNeurons();
         if (totalN <= 0) {
             totalN = (int) chainRunner.totalNeurons();
@@ -170,16 +173,19 @@ public class LmHeadTrainer {
             lmHead.setTotalNeurons(totalN);
         }
 
-        boolean[] chainOutput = new boolean[totalN];
-        long qHash = 1469598103934665603L;  // FNV-1a offset basis
-        for (int i = 0; i < question.length(); i++) {
-            qHash ^= question.charAt(i);
-            qHash *= 1099511628211L;        // FNV-1a prime
+        boolean[] chainOutput;
+        if (featureCache != null) {
+            chainOutput = featureCache.getOrCompute(question);
+        } else {
+            // Fallback for tests where CDI didn't wire the cache.
+            chainOutput = new boolean[totalN];  // zero vector (no signal)
         }
-        for (int i = 0; i < totalN; i++) {
-            long h = qHash ^ ((long) i * 0x100000001b3L);
-            h *= 0x100000001b3L;
-            chainOutput[i] = ((h ^ (h >>> 13)) & 0xFF) < 96;  // ~37.5% density
+        if (chainOutput == null) chainOutput = new boolean[totalN];
+        // Ensure correct length (cache returns a sized vector, but be defensive).
+        if (chainOutput.length != totalN) {
+            boolean[] sized = new boolean[totalN];
+            System.arraycopy(chainOutput, 0, sized, 0, Math.min(chainOutput.length, totalN));
+            chainOutput = sized;
         }
 
         // 2. Tokenize answer → tokens
@@ -200,7 +206,7 @@ public class LmHeadTrainer {
         }
         if (answerTokens.length == 0) return 0;
 
-        // 4. Update LM head for each answer token (with negative sampling)
+        // 3. Update LM head for each answer token (with negative sampling)
         for (int token : answerTokens) {
             if (token >= 0 && token < 200000) {
                 lmHead.update(chainOutput, token, nNegatives);
