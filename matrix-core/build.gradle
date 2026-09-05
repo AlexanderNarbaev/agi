@@ -40,6 +40,7 @@ dependencies {
     implementation 'org.apache.avro:avro:1.12.2'
     implementation 'io.lettuce:lettuce-core:6.5.0.RELEASE'
     implementation 'org.apache.kafka:kafka-clients:4.3.1'
+    implementation 'com.microsoft.onnxruntime:onnxruntime_gpu:1.29.0'
     implementation 'com.microsoft.onnxruntime:onnxruntime:1.29.0'
 
     implementation platform('org.apache.pekko:pekko-bom_2.13:1.6.0')
@@ -69,6 +70,14 @@ tasks.withType(Test) {
     maxHeapSize = '16g'
     jvmArgs '--add-modules=jdk.incubator.vector'
     jvmArgs '-Xmx16g'
+    // RUN 62: enable native access for ONNX runtime GPU
+    jvmArgs '--enable-native-access=ALL-UNNAMED'
+    // RUN 62: provide NVIDIA CUDA 12 library path for ONNX runtime GPU
+    def nvidiaLibs = fileTree('/home/alexandr-narbaev/Projects/agi/.venv/lib/python3.14/site-packages') {
+        include 'nvidia/*/lib'
+    }
+    def nvidiaPaths = nvidiaLibs.collect { it.absolutePath }.join(':')
+    systemProperty 'java.library.path', "${nvidiaPaths}:/usr/local/cuda-13.1/lib64"
 }
 
 tasks.withType(JavaCompile) {
