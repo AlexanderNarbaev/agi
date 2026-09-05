@@ -4,6 +4,9 @@ import ai.onnxruntime.OrtEnvironment;
 import ai.onnxruntime.OrtException;
 import ai.onnxruntime.OrtSession;
 import ai.onnxruntime.OrtSession.SessionOptions;
+import io.quarkus.runtime.StartupEvent;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.event.Observes;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,6 +35,7 @@ import java.util.concurrent.atomic.AtomicLong;
  *   <li>GPU execution requires CUDA 12 + cuDNN 9 (user action).</li>
  * </ul>
  */
+@ApplicationScoped
 public class OnnxRuntimeAdapter {
 
     private static final Logger log = LoggerFactory.getLogger(OnnxRuntimeAdapter.class);
@@ -50,6 +54,18 @@ public class OnnxRuntimeAdapter {
 
     public OnnxRuntimeAdapter(Path modelPath) {
         this.modelPath = modelPath;
+    }
+
+    /** RUN 61 — startup hook: lazily load ONNX model on first use. */
+    void onStart(@Observes StartupEvent ev) {
+        if (!isAvailable()) {
+            log.info("OnnxRuntimeAdapter: ONNX model not available at {} (skipped)",
+                    modelPath);
+            return;
+        }
+        // Defer actual load to first inference call — keeps startup fast.
+        log.info("OnnxRuntimeAdapter: ONNX model present at {} (lazy load)",
+                modelPath);
     }
 
     /** Whether the ONNX model file is present. */
