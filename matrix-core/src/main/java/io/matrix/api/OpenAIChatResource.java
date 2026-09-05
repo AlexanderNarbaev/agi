@@ -11,6 +11,7 @@ import io.matrix.ethics.EthicalFilter;
 import io.matrix.ethics.EthicalVerdict;
 import io.matrix.memory.HierarchicalMemory;
 import io.matrix.observability.MatrixMetrics;
+import io.matrix.reasoning.BrainLoopService;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
@@ -24,6 +25,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.BitSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -75,6 +77,7 @@ public class OpenAIChatResource {
     private ChatPipelineEnricher enricher; // W6.2 — null-safe if CDI is missing
     private final MatrixMetrics metrics;
     private AgentBrainService brainService;
+    private BrainLoopService brainLoop; // RUN 12: brain loop wiring (null-safe)
 
     // Optional injection: null-safe in case the chat recorder is not on the classpath
     @Inject
@@ -101,7 +104,8 @@ public class OpenAIChatResource {
                        io.matrix.model.ModelRegistry modelRegistry,
                        io.matrix.imports.BooleanChainRunner chainRunner,
                        QaCorpusIndex qaIndex,
-                       ConversationMemory conversationMemory) {
+                       ConversationMemory conversationMemory,
+                       BrainLoopService brainLoop) {
         this.metrics = metrics;
         this.brainService = brainService;
         this.text2vec = text2Vec;
@@ -112,6 +116,9 @@ public class OpenAIChatResource {
         this.stuckCounter = 0;
         this.qaIndex = qaIndex;
         this.conversationMemory = conversationMemory;
+        // RUN 12: brain loop (per-tick nine-stage orchestration). Optional:
+        // tests use the no-arg constructor and skip this entirely.
+        this.brainLoop = brainLoop;
         // W6.2: pipeline enricher (sentiment + topic routing via distilled BIR models)
         this.enricher = modelRegistry == null ? null
                 : new ChatPipelineEnricher(modelRegistry);
@@ -135,6 +142,8 @@ public class OpenAIChatResource {
         this.rng = new Random();
         this.responseHistory = new ArrayList<>();
         this.stuckCounter = 0;
+        // RUN 12: no brain loop in no-arg constructor (test seam).
+        this.brainLoop = null;
     }
 
     /**
@@ -236,6 +245,25 @@ public class OpenAIChatResource {
 
         // ─── Text → Binary Vector ───
         long sensorBits = text2vec.textToBits(userText);
+
+        // ─── Brain loop tick (RUN 12) ───
+        // Drive the canonical nine-stage loop with the user observation
+        // BEFORE the generation pipeline runs. The trace is reflected
+        // back via the X-Matrix-Trace header.
+        BrainLoopService.Trace brainTrace = null;
+        if (brainLoop != null) {
+            try {
+                BitSet observation = new BitSet(64);
+                for (int i = 0; i < 64; i++) {
+                    if (((sensorBits >>> i) & 1L) != 0L) observation.set(i);
+                }
+                brainTrace = brainLoop.tick(observation);
+            } catch (RuntimeException re) {
+                // The brain loop is best-effort telemetry; never block
+                // the chat response on a tick failure.
+                log.warn("BrainLoop tick failed: {}", re.getMessage());
+            }
+        }
 
         // ─── Generate response using PURE BIR (deterministic boolean algebra) ───
         // Pipeline:
@@ -443,6 +471,9 @@ public class OpenAIChatResource {
             rb.header("X-Matrix-Sentiment", enrichMeta.getOrDefault("sentiment", "unknown"))
               .header("X-Matrix-Topic", enrichMeta.getOrDefault("topic", "unknown"))
               .header("X-Matrix-Registry-Evals", String.valueOf(enrichMeta.getOrDefault("registryEvals", 0L)));
+        }
+        if (brainTrace != null) {
+            rb.header("X-Matrix-Trace", brainTrace.headerValue());
         }
         return rb.build();
     }

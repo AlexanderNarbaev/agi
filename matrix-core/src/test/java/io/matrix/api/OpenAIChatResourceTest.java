@@ -343,4 +343,60 @@ class OpenAIChatResourceTest {
         assertThat(entity.choices.get(0).message.content).isNotEmpty();
         assertThat(entity.choices.get(0).finish_reason).isEqualTo("stop");
     }
+
+    /**
+     * RUN 12: when the BrainLoopService is wired (CDI constructor),
+     * every chat response carries an {@code X-Matrix-Trace} header
+     * reflecting the nine-stage brain loop trace.
+     */
+    @Test
+    void testBrainLoopTraceHeaderPresentWhenWired() {
+        io.matrix.reasoning.BrainLoopService loop = new io.matrix.reasoning.BrainLoopService();
+        resource = new io.matrix.api.OpenAIChatResource(
+                null,
+                new io.matrix.agent.AgentBrainService(),
+                new io.matrix.api.Text2VecService(),
+                new io.matrix.ethics.EthicalFilter(),
+                null,
+                io.matrix.imports.BooleanChainRunner.empty(),
+                null,
+                null,
+                loop);
+
+        var msg = new ChatCompletionRequest.Message();
+        msg.role = "user";
+        msg.content = "Hello MATRIX";
+
+        var request = new ChatCompletionRequest();
+        request.model = "M.A.T.R.I.X.";
+        request.messages = List.of(msg);
+
+        var response = resource.chatCompletions(null, request);
+        assertThat(response.getStatus()).isEqualTo(200);
+
+        String trace = response.getHeaderString("X-Matrix-Trace");
+        assertThat(trace).isNotNull();
+        assertThat(trace).startsWith("tick=");
+        assertThat(trace).contains("phases=perception->attention->deliberation->gate->action->consolidation->subconscious->prediction-error->attention-update");
+        assertThat(loop.totalTicks()).isEqualTo(1L);
+    }
+
+    /**
+     * RUN 12: when no BrainLoopService is wired (no-arg constructor
+     * used by legacy tests), the trace header is absent.
+     */
+    @Test
+    void testBrainLoopTraceHeaderAbsentWhenNotWired() {
+        var msg = new ChatCompletionRequest.Message();
+        msg.role = "user";
+        msg.content = "No loop";
+
+        var request = new ChatCompletionRequest();
+        request.model = "M.A.T.R.I.X.";
+        request.messages = List.of(msg);
+
+        var response = resource.chatCompletions(null, request);
+        assertThat(response.getStatus()).isEqualTo(200);
+        assertThat(response.getHeaderString("X-Matrix-Trace")).isNull();
+    }
 }
