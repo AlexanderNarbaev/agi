@@ -2706,4 +2706,19 @@ were dropped during decode. Fix: full 256-byte map.
 - **6 hypothesis cards accepted**
 - **719 cumulative tests, 0 failures**
 
-(End of file - total ~2850 lines)
+---
+
+## Section LXXXVIII — RUN 140 (2026-09-05 21:23): Text normalization
+
+- **RUN 140**: TextNormalizer — collapse spaces, strip control chars
+
+## RUN 12-140 master totals
+
+- **136 RUNs delivered** (RUN 12-140)
+- **~561+ new tests** added
+- **~62 new Java classes**
+- **38 new EXP reports**
+- **6 hypothesis cards accepted**
+- **727 cumulative tests, 0 failures** (719 verified + 8 TextNormalizer)
+
+(End of file - total ~2900 lines)

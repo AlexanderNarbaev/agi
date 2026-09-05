@@ -542,3 +542,8 @@ Total tests after RUN 12-21: 79/79 pass.
 
 - GenerationQuality: char/word/unique counts + repetition.
 - 719 cumulative tests, 0 failures.
+
+## RUN 140 — Text normalization (2026-09-05 21:23)
+
+- TextNormalizer: collapse spaces, strip control chars.
+- 8 normalizer tests pass.
