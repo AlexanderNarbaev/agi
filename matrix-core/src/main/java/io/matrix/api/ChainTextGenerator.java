@@ -1,5 +1,6 @@
 package io.matrix.api;
 
+import io.matrix.ethics.OutputSafetyFilter;
 import io.matrix.imports.BooleanChainRunner;
 import io.matrix.imports.BooleanChainRunner.ChainResult;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -57,6 +58,21 @@ public class ChainTextGenerator {
     /** Width of the bit-window fed to the chain. */
     public static final int CHAIN_INPUT_BITS = 256;
 
+    /** RUN 32 — output safety filter applied during generation. */
+    private final OutputSafetyFilter safetyFilter = new OutputSafetyFilter();
+
+    /** RUN 32 — counter for skipped forbidden tokens. */
+    private long skippedForbiddenTokens = 0;
+
+    /** RUN 32 — get the safety filter (for tests / diagnostics). */
+    public OutputSafetyFilter safetyFilter() { return safetyFilter; }
+
+    /** RUN 32 — how many forbidden tokens were skipped during generation. */
+    public long skippedForbiddenTokens() { return skippedForbiddenTokens; }
+
+    /** RUN 32 — reset the safety counter (call before generate()). */
+    public void resetSafetyStats() { skippedForbiddenTokens = 0; }
+
     /** Whether real chain-driven generation is active. */
     public boolean isAvailable() {
         return bpeProvider != null && bpeProvider.isAvailable()
@@ -104,6 +120,16 @@ public class ChainTextGenerator {
         for (int i = 0; i < maxTokens; i++) {
             int nextToken = predictNextToken(context, temperature, rng);
             if (nextToken < 0) break;  // stop signal
+
+            // RUN 32: skip forbidden tokens (control bytes, surrogates).
+            // If the predicted token is forbidden, just append it to context
+            // for autoregressive continuity but don't emit it to the output.
+            if (safetyFilter.isTokenForbidden(nextToken)) {
+                skippedForbiddenTokens++;
+                context = appendToArray(context, nextToken);
+                continue;
+            }
+
             context = appendToArray(context, nextToken);
             String piece = bpeProvider != null ? bpeProvider.tokenAt(nextToken) : null;
             if (piece == null) {
@@ -112,6 +138,8 @@ public class ChainTextGenerator {
             }
             // Skip pure whitespace / control character expansions
             if (piece.chars().allMatch(Character::isISOControl)) continue;
+            // RUN 32: also check string-level safety (forbidden phrases).
+            if (!safetyFilter.isStringAllowed(piece)) continue;
             out.append(piece);
             // Stop conditions: end-of-sentence punctuation after a few tokens
             if (i >= 4 && (piece.equals(".") || piece.equals("!") || piece.equals("?")
