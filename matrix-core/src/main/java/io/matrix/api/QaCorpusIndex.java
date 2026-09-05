@@ -80,7 +80,27 @@ public class QaCorpusIndex {
         State s = new State(t0);
         try {
             if (Files.isRegularFile(Path.of(qaPath))) {
-                loadQaPairs(Path.of(qaPath), s);
+                // RUN 37: auto-migrate legacy v1 (bare array) → v2 (envelope)
+                // if the loader hasn't migrated yet. Migration writes to a
+                // sibling file so the original is preserved until reload completes.
+                Path qaFile = Path.of(qaPath);
+                CorpusMigration migration = new CorpusMigration();
+                int detected = migration.detectVersion(qaFile);
+                if (detected == CorpusMigration.LEGACY_VERSION) {
+                    Path migrated = qaFile.resolveSibling("qa_pairs_v2.json");
+                    try {
+                        CorpusMigration.MigrationResult mr = migration.migrate(qaFile, migrated);
+                        log.info("QaCorpusIndex: auto-migrated {} → {} (records={})",
+                                qaFile, migrated, mr.migratedCount());
+                        loadQaPairs(migrated, s);
+                    } catch (Exception migEx) {
+                        log.warn("QaCorpusIndex: auto-migration failed ({}), falling back to plain load",
+                                migEx.getMessage());
+                        loadQaPairs(qaFile, s);
+                    }
+                } else {
+                    loadQaPairs(qaFile, s);
+                }
             }
         } catch (Exception e) {
             log.warn("Failed to load qa_pairs: {}", e.getMessage());
@@ -100,9 +120,11 @@ public class QaCorpusIndex {
 
     private void loadQaPairs(Path file, State s) throws IOException {
         JsonNode root = mapper.readTree(file.toFile());
-        if (!root.isArray()) return;
+        // RUN 37: handle both bare-array (v1) and envelope (v2) formats.
+        JsonNode pairs = root.isArray() ? root : root.get("pairs");
+        if (pairs == null || !pairs.isArray()) return;
         int nextId = s.size();
-        for (JsonNode n : root) {
+        for (JsonNode n : pairs) {
             String q = textOrNull(n, "question");
             String a = textOrNull(n, "answer");
             if (q == null || a == null || q.isBlank() || a.isBlank()) continue;
