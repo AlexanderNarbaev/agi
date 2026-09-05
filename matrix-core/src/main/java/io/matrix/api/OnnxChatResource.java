@@ -135,6 +135,35 @@ public class OnnxChatResource {
         return reply == null ? "" : reply;
     }
 
+    @POST
+    @Path("/chat")
+    @Produces(MediaType.TEXT_PLAIN)
+    public String chat(@QueryParam("user") String user,
+                       @QueryParam("max_tokens") Integer maxTokens,
+                       @QueryParam("temperature") Double temperature,
+                       @QueryParam("top_k") Integer topK,
+                       @QueryParam("top_p") Double topP,
+                       @QueryParam("system") String systemPrompt) {
+        if (bridge == null || !bridge.isLoaded()) {
+            return "ERROR: ONNX bridge not loaded";
+        }
+        if (user == null || user.isBlank()) {
+            return "ERROR: empty user message";
+        }
+        int tokens = maxTokens == null ? 64 : Math.max(1, Math.min(256, maxTokens));
+        double temp = temperature == null ? 0.0 : temperature;
+        int k = topK == null ? -1 : Math.max(-1, topK);
+        double p = topP == null ? 1.0 : Math.max(0.0, Math.min(1.0, topP));
+
+        java.util.List<QwenChatTemplate.Message> history = new java.util.ArrayList<>();
+        if (systemPrompt != null && !systemPrompt.isBlank()) {
+            history.add(QwenChatTemplate.Message.system(systemPrompt));
+        }
+        String reply = bridge.chatWithHistory(history, user, tokens, temp, k, p);
+        totalInferences++;
+        return reply == null ? "" : reply;
+    }
+
     private synchronized String reloadBridge() {
         long t0 = System.nanoTime();
         if (bridge != null) {
