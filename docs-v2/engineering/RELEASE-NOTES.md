@@ -38,4 +38,40 @@ Java 25 · Quarkus 3.38.3 · GraalVM plugin 1.1.10 · Avro 1.12.2 · ONNX Runtim
 
 ## Известные пробелы SDD-свипа (см. SDD-COVERAGE.md)
 
-- `reasoning/`, `mediator/`, `hades/`, `memory/`, `rag/` — нужны TLA+-спек (следующая сессия).
+~~- `reasoning/`, `mediator/`, `hades/`, `memory/`, `rag/` — нужны TLA+-спек (следующая сессия).~~ ✅ **RUN 13 (2026-09-05)**: SPEC-008..012 закрыли SDD-sweep.
+
+## RUN 12–21 (2026-09-05)
+
+### Что реализовано за RUN 12–21
+
+- **RUN 12** — `BrainLoopService` подключён к `/v1/chat`: каждый запрос проходит через
+  девятистадийный `ConsciousnessLoop`; в ответе приходит заголовок `X-Matrix-Trace`.
+- **RUN 13** — SDD-sweep: SPEC-008..012 (reasoning/BrcChain, mediator/, hades/, memory/,
+  rag/) — 633 строки нормативной документации.
+- **RUN 14** — `TlaSpecSmokeTest` (10 тестов): структурная валидация 7 TLA+-спеков в
+  `formal/`. Проверяются Init/Next/safety-invariants для каждого.
+- **RUN 15** — `ChainFeatureCache` (SHA-256 keyed, диск-бэкенд 24 MB); LM head теперь
+  тренируется на реальных chain-фичах, а не на FNV-1a хеш-псевдофингерпринте.
+- **RUN 16** — H-043 + H-046: accuracy=0.915, utility=1.000. Обе гипотезы приняты на
+  synthetic-scope.
+- **RUN 17** — production-corpus EXP reruns: 6607 пар, 99.7% кириллица, 0.030 ms/пара.
+- **RUN 18** — native build: class-init лист расширен с 5 до 17 записей; каскадные
+  ошибки. RFC required.
+- **RUN 19** — `LmHeadFeedbackTrainer`: `/v1/chat/feedback` инкрементально обучает LM head.
+  Negative-feedback пока no-op (LmHead не имеет signed update API).
+- **RUN 20** — E2E stress test 1000 запросов: p99 = 2 μs; honest hit-rate = 0.000
+  (disjoint-sample setup).
+- **RUN 21** — documentation stabilization: FINALSUMMARY grew to 1700 строк,
+  Sections XXI-XXX.
+
+### Научные результаты
+
+- **H-043 accepted (synthetic-scope)**: utility = 1.000 ≥ 0.7 при k=100, ε=1.0.
+- **H-046 accepted (synthetic-scope)**: accuracy = 0.915 ≥ 0.9, precision = 1.000.
+
+### Состояние тестов
+
+- 79/79 unit + integration тестов проходят (RUN 12: +9, RUN 14: +10, RUN 15: +10,
+  RUN 16: +10, RUN 17: +5, RUN 19: +7, RUN 20: +6).
+- BrainLoopServiceTest, ChainFeatureCacheTest, LmHeadFeedbackTrainerTest,
+  TlaSpecSmokeTest, Exp043/046, Exp016, Exp020 — все green.

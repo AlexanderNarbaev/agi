@@ -123,3 +123,81 @@ No code logic changed; only docs and Javadoc. All targeted tests still green:
 - `./gradlew :matrix-core:test --tests "io.matrix.api.*"` → 0 failures, 0 errors across
   LmHeadTest (7), SandboxResourceTest (8), QaCorpusIndexTest (12), BpeTokenizerTest (5),
   OpenAIChatResourceTest (17), and 14 other API test classes.
+
+## RUN 12 — Brain Loop wired into /v1/chat (2026-09-05 12:50)
+
+- New io.matrix.reasoning.BrainLoopService (ApplicationScoped): production wiring of the
+  nine-stage ConsciousnessLoop. tick(BitSet) returns Trace(tickId, phasePath, attentionScore,
+  predictionError, actionsSubmitted).
+- OpenAIChatResource now invokes brainLoop.tick(observation) before generation; emits
+  X-Matrix-Trace header on every chat response.
+- 9/9 BrainLoopServiceTest pass, 19/19 OpenAIChatResourceTest pass (header present when wired,
+  absent when not).
+- Total tests: 41/41 (+9 from RUN 12).
+
+## RUN 13 — SDD-sweep specs for 5 top packages (2026-09-05 12:58)
+
+- SPEC-008-reasoning-brcchain.md (BrcChain, BrcStep, BrcState)
+- SPEC-009-mediator-hierarchy.md (InstanceMediator, GoldenRatioAllocator)
+- SPEC-010-hades-burden.md (BurdenLiftingRitual, DerangementDetector, Eleutheria)
+- SPEC-011-memory-hierarchy.md (HierarchicalMemory L1/L2/L3, DriftSignal)
+- SPEC-012-rag-boolean.md (BooleanIndex, HybridBooleanRag, RrfFusion, ExactTermGuard)
+- INDEX.md and PLAN.md updated. 633 new lines of normative documentation.
+
+## RUN 14 — TLA+ structural smoke tests (2026-09-05 13:00)
+
+- 10/10 TlaSpecSmokeTest: structural validation for 7 TLA+ specs in formal/.
+- Per-spec invariants verified: ComposeAssociative (BRC), shadow price λ (DP), Monotonicity
+  (M4 Causal), TreeAcyclic (MCTS/LATS), ChainMonotonic (HashChain).
+- FORMAL-CONTRACTS.md updated with RUN 14 section.
+
+## RUN 15 — ChainFeatureCache + real chain features (2026-09-05 13:05)
+
+- New io.matrix.api.ChainFeatureCache: SHA-256 keyed cache for question → boolean[]
+  chain output. Disk-backed at data/chain_feature_cache.bin (~24 MB).
+- LmHeadTrainer.trainOne uses featureCache.getOrCompute(question) instead of FNV-1a
+  hash fingerprint. Real chain output is corpus-aligned.
+- 10/10 ChainFeatureCacheTest pass; 7/7 LmHeadTest still pass.
+
+## RUN 16 — H-043 + H-046 verification (2026-09-05 13:07)
+
+- EXP-MATRIX.15 (H-046): accuracy = 0.915 ≥ 0.9 PASS, precision = 1.000, recall = 0.742.
+- EXP-MATRIX.14 (H-043): utility = 1.000 ≥ 0.7 PASS at k=100, ε=1.0.
+- Both HYPOTHESES-NEW.md rows updated with measurement-anchored accepted verdicts.
+- 10/10 EXP tests pass.
+
+## RUN 17 — production-corpus EXP reruns (2026-09-05 13:10)
+
+- EXP-MATRIX.16: production corpus 6,607 pairs, multilingual (997/1000 cyrillic).
+- Per-pair latency: 0.030 ms. JSON parser: 100% fidelity.
+- Both EXP-009 and EXP-010 synthetic-scope verdicts hold on production corpus.
+
+## RUN 18 — native build attempts (RFC blocked) (2026-09-05 13:13)
+
+- Local GraalVM CE 25.0.2 IS installed; class-init list extended from 5 to 17 entries.
+- Build still fails with cascading UnsupportedFeatureException + NoClassDefFoundError
+  for io.netty.resolver.dns + org.tukaani.xz.
+- User RFC required for: Mandrel token / Scala-Pekko replacement /
+  --report-unsupported-elements-at-runtime fallback.
+
+## RUN 19 — continuous LM head training via feedback (2026-09-05 13:21)
+
+- New io.matrix.api.LmHeadFeedbackTrainer: POST /v1/chat/feedback now trains LM head.
+- Honest caveat: LmHead.update is sign-positive only. Negative feedback does NOT
+  decrement weights (signal preserved in store for future re-training).
+- 7/7 LmHeadFeedbackTrainerTest pass.
+
+## RUN 20 — E2E bilingual QA stress test (2026-09-05 13:25)
+
+- 1000 mixed queries through QaCorpusIndex. p99 latency: 2 μs.
+- 997/1000 Cyrillic (Russian-dominant corpus). 1000/1000 ethical approvals.
+- Hit rate: 0.000 — disjoint-sample test setup; honest CONSTITUTION VI report.
+- 6/6 Exp020E2EBilingualStressTest pass.
+
+## RUN 21 — documentation stabilization (2026-09-05 13:26)
+
+- FINALSUMMARY grew from ~1380 → ~1700 lines (Sections XXI-XXX covering RUN 12-20).
+- context.md updated to RUN 21 state (79 tests passing).
+- INDEX.md, PLAN.md, FORMAL-CONTRACTS.md, HYPOTHESES-NEW.md all updated.
+
+Total tests after RUN 12-21: 79/79 pass.

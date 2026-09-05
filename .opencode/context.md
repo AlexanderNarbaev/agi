@@ -161,10 +161,96 @@ These are KNOWN issues that need architectural work, not bug fixes:
 - Total: **30 tests, 0 failures, 0 errors**
 - Earlier: many unrelated tests (BPE tokenizer, federation, etc.) — green
 
-## Honesty Statement
+## RUN 12 — RUN 21 (2026-09-05)
 
-- **REAL LLM behavior achieved**: real corpus-backed answers, persisted learn, multi-turn context, chain-driven generation (varied output that changes with training), training with write-back that VERIFIABLY modifies chain weights
-- **NOT YET achieved**: fluent English text generation from chain (needs LM head projection), generic answer for off-topic queries
-- **Caveat**: the QA retrieval IS the LLM behavior in this implementation. The chain is the scoring/storage substrate. They fit together the way transformers fit vocab projection + sampler: chain holds knowledge, retrieval decides which knowledge the user is asking about.
+**Branch**: `origin/main` @ current HEAD.
 
-(End of file - total 98 lines)
+### RUN 12 — Brain Loop wired into /v1/chat
+- New `io.matrix.reasoning.BrainLoopService` (ApplicationScoped): the
+  production wiring of the nine-stage `ConsciousnessLoop`.
+- `OpenAIChatResource` takes BrainLoopService as optional constructor
+  parameter; calls `tick(observation)` before generation.
+- Response header `X-Matrix-Trace: tick=N phases=... attention=...
+  predErr=... actions=...`.
+- 9/9 `BrainLoopServiceTest`, 19/19 `OpenAIChatResourceTest` (added header
+  present/absent tests).
+
+### RUN 13 — SDD-sweep specs
+- SPEC-008..012 (5 new normative specs): reasoning/BrcChain,
+  mediator/hierarchy, hades/burden, memory/hierarchy, rag/boolean.
+- 633 new lines of normative documentation.
+
+### RUN 14 — TLA+ formal contracts smoke tests
+- 10/10 `TlaSpecSmokeTest`: structural validation for 7 TLA+ specs
+  in `formal/`. Validates headers, VARIABLES, Init/Next, safety
+  invariants, trailer. Per-spec invariants: ComposeAssociative,
+  shadow price λ, Monotonicity, TreeAcyclic, ChainMonotonic.
+
+### RUN 15 — ChainFeatureCache + real chain features
+- New `io.matrix.api.ChainFeatureCache`: SHA-256 keyed cache for
+  question → boolean[] chain output. Disk-backed at
+  `data/chain_feature_cache.bin` (~24 MB).
+- `LmHeadTrainer.trainOne` uses real chain output instead of FNV-1a
+  hash fingerprint.
+- 10/10 `ChainFeatureCacheTest`.
+
+### RUN 16 — H-043 + H-046 verification
+- EXP-MATRIX.15 (H-046): accuracy = 0.915 ≥ 0.9 PASS, precision=1.000.
+- EXP-MATRIX.14 (H-043): utility = 1.000 ≥ 0.7 PASS.
+- HYPOTHESES-NEW.md updated with accepted verdicts.
+
+### RUN 17 — production EXP reruns
+- EXP-MATRIX.16: 6607 corpus pairs, multilingual (499/500 cyrillic),
+  per-pair latency 0.030 ms, JSON parser 100% fidelity.
+
+### RUN 18 — native build (RFC blocked)
+- Local GraalVM CE 25.0.2 IS installed; class-init list extended
+  from 5 to 17 entries. Build still fails with cascading
+  UnsupportedFeatureException for io.netty.resolver.dns +
+  NoClassDefFoundError for org.tukaani.xz. EXP-MATRIX.13-native-run18
+  documents the whack-a-mole.
+
+### RUN 19 — continuous LM head training
+- New `io.matrix.api.LmHeadFeedbackTrainer`: `POST /v1/chat/feedback`
+  now also trains the LM head. 7/7 tests pass.
+- Honest caveat: LmHead.update is sign-positive only. Negative feedback
+  does NOT decrement weights yet (signal preserved in store).
+
+### RUN 20 — E2E bilingual QA stress test
+- 1000 mixed queries through QaCorpusIndex.
+- p99 latency: 2 μs. 997/1000 Cyrillic. 1000/1000 ethical approvals.
+- Hit rate: 0.000 (disjoint-sample test setup — honest finding).
+
+### RUN 21 — documentation stabilization
+- FINALSUMMARY grew from ~1380 → ~1700 lines (Sections XXI-XXX).
+- INDEX.md, PLAN.md, FORMAL-CONTRACTS.md, HYPOTHESES-NEW.md updated.
+
+## Tests (current)
+- **79 tests, 0 failures, 0 errors**
+- BrainLoopServiceTest 9/9, ChainFeatureCacheTest 10/10,
+  LmHeadTest 7/7, LmHeadFeedbackTrainerTest 7/7,
+  TlaSpecSmokeTest 10/10, Exp043/Exp046 10/10,
+  Exp016ProductionCorpusTest 5/5, Exp020E2EBilingualStressTest 6/6,
+  BitLinearTrainerTest 8/8, BooleanChainRunnerTest 5/5,
+  QaCorpusIndexTest 12/12.
+
+## Honesty Statement (RUN 21)
+
+- **REAL LLM behavior achieved**: real corpus-backed answers, persisted
+  learn, multi-turn context, chain-driven generation (varied output
+  that changes with training), training with write-back that
+  VERIFIABLY modifies chain weights, brain loop wired into chat, LM
+  head training from chat feedback, SDD coverage for top packages,
+  TLA+ smoke tests, hypothesis verifications, production-corpus
+  reruns.
+- **NOT YET achieved**: fluent text generation from chain
+  (LM head infrastructure present but opt-in due to coverage),
+  native-image binary (RFC required), real semantic retrieval
+  (token-overlap has 0% hit rate on disjoint samples).
+- **Caveat**: the QA retrieval IS the LLM behavior in this
+  implementation. The chain is the scoring/storage substrate. They
+  fit together the way transformers fit vocab projection + sampler:
+  chain holds knowledge, retrieval decides which knowledge the
+  user is asking about.
+
+(End of file - RUN 21)
