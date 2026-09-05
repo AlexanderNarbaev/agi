@@ -275,4 +275,18 @@ class OnnxChatResourceTest {
         resource.getRequestCounter().recordRequest("/test");
         assertThat(resource.getRequestCounter().totalRequests()).isEqualTo(1);
     }
+
+    @Test
+    void exportMissingUserReturnsError() {
+        OnnxChatResource resource = new OnnxChatResource();
+        String reply = resource.exportConversation(null, "text");
+        assertThat(reply).startsWith("ERROR:");
+    }
+
+    @Test
+    void exportUnknownUserReturnsError() {
+        OnnxChatResource resource = new OnnxChatResource();
+        String reply = resource.exportConversation("nobody", "text");
+        assertThat(reply).startsWith("ERROR:");
+    }
 }

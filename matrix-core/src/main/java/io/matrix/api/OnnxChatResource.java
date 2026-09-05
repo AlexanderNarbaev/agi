@@ -50,6 +50,8 @@ public class OnnxChatResource {
     private final long startTimeMs = System.currentTimeMillis();
     private final TokenUsageTracker tracker = new TokenUsageTracker();
     private final RequestCounter requestCounter = new RequestCounter();
+    private final java.util.Map<String, ConversationStore> userStores =
+            new java.util.concurrent.ConcurrentHashMap<>();
 
     /** Load bridge on startup if configured. */
     void onStart(@Observes StartupEvent ev) {
@@ -251,6 +253,40 @@ public class OnnxChatResource {
             return "{\"totalTokens\":0}";
         }
         return t.toJson();
+    }
+
+    @POST
+    @Path("/export")
+    @Produces(MediaType.TEXT_PLAIN)
+    public String exportConversation(@QueryParam("user") String user,
+                                     @QueryParam("format") String format) {
+        if (user == null || user.isBlank()) {
+            return "ERROR: missing user parameter";
+        }
+        ConversationStore store = userStores.get(user);
+        if (store == null) {
+            return "ERROR: no history for user " + user;
+        }
+        var messages = store.get(user);
+        // Adapt to ChatMessage interface
+        java.util.List<ConversationExporter.ChatMessage> adapted =
+                new java.util.ArrayList<>();
+        for (var m : messages) {
+            adapted.add(new ConversationExporter.ChatMessage() {
+                @Override public String role() { return m.role().name(); }
+                @Override public String content() { return m.content(); }
+            });
+        }
+        String fmt = format == null ? "text" : format.toLowerCase();
+        switch (fmt) {
+            case "json":
+                return ConversationExporter.toJson(adapted);
+            case "markdown":
+                return ConversationExporter.toMarkdown(adapted);
+            case "text":
+            default:
+                return ConversationExporter.toText(adapted);
+        }
     }
 
     @GET
