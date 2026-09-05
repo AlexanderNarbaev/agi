@@ -112,6 +112,29 @@ public class OnnxChatResource {
                 + ",\"inference\":" + bridge.metrics().toJson() + "}";
     }
 
+    @POST
+    @Path("/generate")
+    @Produces(MediaType.TEXT_PLAIN)
+    public String generate(@QueryParam("prompt") String prompt,
+                            @QueryParam("max_tokens") Integer maxTokens,
+                            @QueryParam("temperature") Double temperature,
+                            @QueryParam("top_k") Integer topK,
+                            @QueryParam("top_p") Double topP) {
+        if (bridge == null || !bridge.isLoaded()) {
+            return "ERROR: ONNX bridge not loaded";
+        }
+        if (prompt == null || prompt.isBlank()) {
+            return "ERROR: empty prompt";
+        }
+        int tokens = maxTokens == null ? 32 : Math.max(1, Math.min(256, maxTokens));
+        double temp = temperature == null ? 0.0 : temperature;
+        int k = topK == null ? -1 : Math.max(-1, topK);
+        double p = topP == null ? 1.0 : Math.max(0.0, Math.min(1.0, topP));
+        String reply = bridge.generateSampled(prompt, tokens, temp, k, p);
+        totalInferences++;
+        return reply == null ? "" : reply;
+    }
+
     private synchronized String reloadBridge() {
         long t0 = System.nanoTime();
         if (bridge != null) {

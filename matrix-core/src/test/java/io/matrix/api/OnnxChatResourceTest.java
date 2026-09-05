@@ -76,4 +76,33 @@ class OnnxChatResourceTest {
         // Either ERROR or failure message is acceptable.
         assertThat(result).isNotBlank();
     }
+
+    @Test
+    void generateReturnsErrorWhenBridgeNotLoaded() {
+        OnnxChatResource resource = new OnnxChatResource();
+        String reply = resource.generate("hello", 8, 0.7, 50, 0.9);
+        assertThat(reply).startsWith("ERROR:");
+    }
+
+    @Test
+    void generateReturnsErrorOnEmptyPrompt() {
+        OnnxChatResource resource = new OnnxChatResource();
+        String reply = resource.generate("", 8, 0.7, 50, 0.9);
+        assertThat(reply).startsWith("ERROR:");
+    }
+
+    @Test
+    void generateHandlesNullParams() {
+        OnnxChatResource resource = new OnnxChatResource();
+        // No bridge loaded: should still error gracefully
+        String reply = resource.generate("hi", null, null, null, null);
+        assertThat(reply).startsWith("ERROR:");
+    }
+
+    @Test
+    void metricsBeforeBridgeLoad() {
+        OnnxChatResource resource = new OnnxChatResource();
+        String json = resource.metrics();
+        assertThat(json).contains("\"loaded\":false");
+    }
 }
