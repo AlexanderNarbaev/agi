@@ -444,3 +444,12 @@ Total tests after RUN 12-21: 79/79 pass.
 - EXP-MATRIX.37 documents verification.
 - User installed CUDA 13.1 toolkit (3.2 GB) + started cuDNN.
 - Need CUDA 12 libs (CUDA 13 ABI incompatible with onnxruntime 1.29).
+
+## RUN 64 — QwenModelAdapter CDI compatible (2026-09-05 18:26)
+
+- Fixed UnsatisfiedResolutionException for native build.
+- Removed 'final', added @ConfigProperty + onStart().
+
+## RUN 65 — GPU vs CPU benchmark (2026-09-05 18:27)
+
+- EXP-MATRIX.38: GPU p50=5ms, CPU p50=77ms. **Speedup: 15.40x**.

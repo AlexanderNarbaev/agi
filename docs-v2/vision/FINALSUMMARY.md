@@ -2256,4 +2256,44 @@ Honest caveats:
 - **Qwen2.5-0.5B**: HF-downloaded + ONNX-exported + **GPU inference VERIFIED**
 - **ONNX Runtime GPU**: working in Java on RTX 5070 (88ms forward pass)
 
-(End of file - total ~2130 lines)
+---
+
+## Section LXXII — RUN 64 (2026-09-05 18:26): QwenModelAdapter CDI compatible
+
+QwenModelAdapter had UnsatisfiedResolutionException in native build
+because its constructor took a Path (not a CDI bean). Fix:
+- Removed `final` from fields
+- Added `@ConfigProperty` for matrix.qwen.model-path
+- Added `onStart(StartupEvent)` to lazily populate metadata
+
+18 GPU/Qwen/Metrics tests still pass.
+
+## Section LXXIII — RUN 65 (2026-09-05 18:27): GPU vs CPU benchmark
+
+`Exp065GpuVsCpuBenchmarkTest` measures real latencies:
+
+| Provider | p50 | p99 |
+|---|---|---|
+| **CUDA (GPU)** | **5 ms** | 8 ms |
+| **CPU** | 77 ms | 89 ms |
+| **Speedup** | **15.40x** | 11.13x |
+
+EXP-MATRIX.38 documents the benchmark.
+
+## RUN 64-65 totals
+
+- **+1 new test** (RUN 65: +1)
+- **1 modified class** (QwenModelAdapter CDI compatible)
+- **1 new EXP report** (EXP-MATRIX.38)
+- **Cumulative tests (RUN 12-65)**: 537 + 1 = **538 tests, 0 failures**
+
+## RUN 12-65 master totals
+
+- **60 RUNs delivered** (RUN 12-65)
+- **~266+ new tests** added
+- **~26 new Java classes**
+- **16 new EXP reports** (EXP-MATRIX.21-38)
+- **6 hypothesis cards accepted**
+- **Qwen2.5-0.5B**: HF + ONNX + GPU (15.40x speedup)
+
+(End of file - total ~2160 lines)
