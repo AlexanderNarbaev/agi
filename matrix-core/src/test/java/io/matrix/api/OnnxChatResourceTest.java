@@ -155,4 +155,18 @@ class OnnxChatResourceTest {
         String escaped = OnnxChatResource.jsonEscapePublic("hello\nworld");
         assertThat(escaped).contains("\\n");
     }
+
+    @Test
+    void streamReturnsErrorWhenBridgeNotLoaded() {
+        OnnxChatResource resource = new OnnxChatResource();
+        String reply = resource.stream("hello", 8);
+        assertThat(reply).startsWith("ERROR:");
+    }
+
+    @Test
+    void streamReturnsErrorOnEmptyPrompt() {
+        OnnxChatResource resource = new OnnxChatResource();
+        String reply = resource.stream("", 8);
+        assertThat(reply).startsWith("ERROR:");
+    }
 }

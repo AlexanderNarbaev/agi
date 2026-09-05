@@ -102,8 +102,34 @@ public class OnnxChatResource {
     }
 
     @POST
+    @Path("/stream")
+    @Produces(MediaType.TEXT_PLAIN)
+    public String stream(@QueryParam("prompt") String prompt,
+                         @QueryParam("max_tokens") Integer maxTokens) {
+        if (bridge == null || !bridge.isLoaded()) {
+            return "ERROR: ONNX bridge not loaded";
+        }
+        if (prompt == null || prompt.isBlank()) {
+            return "ERROR: empty prompt";
+        }
+        int tokens = maxTokens == null ? 32 : Math.max(1, Math.min(256, maxTokens));
+        StringBuilder sb = new StringBuilder();
+        for (TokenEvent e : bridge.streamGenerate(prompt, tokens)) {
+            if (e.isContent()) {
+                sb.append(e.text());
+            }
+            if (e.isEos()) {
+                sb.append("\n[EOS]");
+                break;
+            }
+        }
+        totalInferences++;
+        return sb.toString();
+    }
+
+    @POST
     @Path("/compare")
-    @Produces(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.TEXT_PLAIN)
     public String compare(@QueryParam("prompt") String prompt,
                           @QueryParam("max_tokens") Integer maxTokens) {
         if (bridge == null || !bridge.isLoaded()) {
