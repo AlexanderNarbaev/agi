@@ -248,6 +248,23 @@ public class OnnxChatResource {
     }
 
     @GET
+    @Path("/route")
+    @Produces(MediaType.APPLICATION_JSON)
+    public String route(@QueryParam("prompt") String prompt) {
+        if (prompt == null) {
+            return "{\"error\":\"empty prompt\"}";
+        }
+        AdaptiveModelRouter router = AdaptiveModelRouter.defaultRouter();
+        int tokenCount = prompt.length() / 4;  // rough estimate
+        return "{"
+                + "\"promptLength\":" + prompt.length()
+                + ",\"estimatedTokens\":" + tokenCount
+                + ",\"tier\":\"" + router.tierFor(tokenCount) + "\""
+                + ",\"model\":\"" + router.modelFor(tokenCount) + "\""
+                + "}";
+    }
+
+    @GET
     @Path("/version")
     @Produces(MediaType.APPLICATION_JSON)
     public String version() {

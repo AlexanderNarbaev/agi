@@ -242,4 +242,28 @@ class OnnxChatResourceTest {
         assertThat(resource.getTracker()).isNotNull();
         assertThat(resource.getTracker().totalRequests()).isZero();
     }
+
+    @Test
+    void routeShortPrompt() {
+        OnnxChatResource resource = new OnnxChatResource();
+        String json = resource.route("hi");
+        assertThat(json).contains("\"tier\":\"SMALL\"");
+        assertThat(json).contains("\"model\":\"qwen:0.5b\"");
+    }
+
+    @Test
+    void routeLongPrompt() {
+        OnnxChatResource resource = new OnnxChatResource();
+        String longPrompt = "a".repeat(2000);  // ~500 tokens → medium tier
+        String json = resource.route(longPrompt);
+        assertThat(json).contains("\"tier\":\"LARGE\"");
+        assertThat(json).contains("\"model\":\"qwen:7b\"");
+    }
+
+    @Test
+    void routeEmptyPrompt() {
+        OnnxChatResource resource = new OnnxChatResource();
+        String json = resource.route(null);
+        assertThat(json).contains("\"error\"");
+    }
 }
