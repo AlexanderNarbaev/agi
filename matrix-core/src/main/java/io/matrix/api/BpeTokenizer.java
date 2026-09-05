@@ -63,12 +63,123 @@ public final class BpeTokenizer {
     public static BpeTokenizer fromModelDir(Path modelDir) throws IOException {
         Path vocabFile = findFile(modelDir, "vocab.json");
         Path mergesFile = findFile(modelDir, "merges.txt");
+        Path tokenizerConfigFile = findFile(modelDir, "tokenizer_config.json");
         if (vocabFile == null || mergesFile == null) {
             throw new IOException("vocab.json and merges.txt required at " + modelDir);
         }
         Map<String, Integer> vocab = readVocabJson(vocabFile);
+        // Add special tokens from tokenizer_config.json if present
+        if (tokenizerConfigFile != null) {
+            addSpecialTokens(tokenizerConfigFile, vocab);
+        }
         List<String[]> merges = readMergesTxt(mergesFile);
         return new BpeTokenizer(vocab, merges);
+    }
+
+    /**
+     * Parse the added_tokens_decoder section of tokenizer_config.json and
+     * add special tokens to the vocab map. Each entry is keyed by id and
+     * contains a "content" string.
+     */
+    private static void addSpecialTokens(Path configFile, Map<String, Integer> vocab)
+            throws IOException {
+        String text = Files.readString(configFile, StandardCharsets.UTF_8);
+        // Find "added_tokens_decoder" block
+        int idx = text.indexOf("\"added_tokens_decoder\"");
+        if (idx < 0) return;
+        int braceStart = text.indexOf('{', idx);
+        if (braceStart < 0) return;
+        // Match braces to find the end
+        int depth = 0;
+        int end = -1;
+        for (int i = braceStart; i < text.length(); i++) {
+            char c = text.charAt(i);
+            if (c == '{') depth++;
+            else if (c == '}') {
+                depth--;
+                if (depth == 0) {
+                    end = i;
+                    break;
+                }
+            }
+        }
+        if (end < 0) return;
+        String block = text.substring(braceStart, end + 1);
+        // Walk through entries: "id": { "content": "..." ... }
+        int p = 0;
+        while (p < block.length()) {
+            // Skip whitespace and commas
+            while (p < block.length()
+                    && (Character.isWhitespace(block.charAt(p))
+                            || block.charAt(p) == ',')) {
+                p++;
+            }
+            if (p >= block.length()) break;
+            if (block.charAt(p) != '"') { p++; continue; }
+            int q1 = p;
+            int q2 = block.indexOf('"', q1 + 1);
+            if (q2 < 0) break;
+            String idStr = block.substring(q1 + 1, q2);
+            int id;
+            try {
+                id = Integer.parseInt(idStr);
+            } catch (NumberFormatException nfe) {
+                p = q2 + 1;
+                continue;
+            }
+            // Find the entry's opening brace
+            int entryStart = block.indexOf('{', q2);
+            if (entryStart < 0) break;
+            int depthEntry = 0;
+            int entryEnd = -1;
+            for (int i = entryStart; i < block.length(); i++) {
+                char c = block.charAt(i);
+                if (c == '{') depthEntry++;
+                else if (c == '}') {
+                    depthEntry--;
+                    if (depthEntry == 0) {
+                        entryEnd = i;
+                        break;
+                    }
+                }
+            }
+            if (entryEnd < 0) break;
+            String entry = block.substring(entryStart, entryEnd + 1);
+            // Look for "content" inside this entry
+            int contentIdx = entry.indexOf("\"content\"");
+            if (contentIdx >= 0) {
+                int colon = entry.indexOf(':', contentIdx);
+                int c1 = entry.indexOf('"', colon);
+                int c2 = entry.indexOf('"', c1 + 1);
+                if (c1 >= 0 && c2 > c1) {
+                    String content = unescapeJson(entry.substring(c1 + 1, c2));
+                    if (!content.isEmpty()) {
+                        vocab.putIfAbsent(content, id);
+                    }
+                }
+            }
+            p = entryEnd + 1;
+        }
+    }
+
+    private static String unescapeJson(String s) {
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < s.length(); i++) {
+            char c = s.charAt(i);
+            if (c == '\\' && i + 1 < s.length()) {
+                char next = s.charAt(i + 1);
+                if (next == 'n') sb.append('\n');
+                else if (next == 't') sb.append('\t');
+                else if (next == 'r') sb.append('\r');
+                else if (next == '"') sb.append('"');
+                else if (next == '\\') sb.append('\\');
+                else sb.append(next);
+                i++;
+            } else {
+                sb.append(c);
+            }
+        }
+        return sb.toString();
     }
 
     private static Path findFile(Path dir, String name) throws IOException {
@@ -148,17 +259,58 @@ public final class BpeTokenizer {
     /** BPE-encode a string into a list of token ids. */
     public int[] encode(String text) {
         if (text == null || text.isEmpty()) return new int[0];
+        List<Integer> ids = new ArrayList<>();
+        // Walk through text, looking for special tokens (<|...|>) and
+        // encoding each segment with BPE.
+        int i = 0;
+        while (i < text.length()) {
+            int specialStart = text.indexOf("<|", i);
+            if (specialStart < 0) {
+                ids.addAll(encodeSegment(text.substring(i)));
+                break;
+            }
+            // Encode the prefix before the special token
+            if (specialStart > i) {
+                ids.addAll(encodeSegment(text.substring(i, specialStart)));
+            }
+            // Find the matching closing |>
+            int specialEnd = text.indexOf("|>", specialStart);
+            if (specialEnd < 0) {
+                ids.addAll(encodeSegment(text.substring(specialStart)));
+                break;
+            }
+            String specialToken = text.substring(specialStart, specialEnd + 2);
+            Integer specialId = vocab.get(specialToken);
+            if (specialId != null) {
+                ids.add(specialId);
+            } else {
+                // Fallback: BPE-encode the literal text
+                ids.addAll(encodeSegment(specialToken));
+            }
+            i = specialEnd + 2;
+        }
+        return ids.stream().mapToInt(Integer::intValue).toArray();
+    }
+
+    /** BPE-encode a single segment (no special tokens assumed). */
+    private List<Integer> encodeSegment(String text) {
+        if (text == null || text.isEmpty()) return new ArrayList<>();
+        List<Integer> ids = new ArrayList<>();
         // 1. pre-tokenize
         List<String> preTokens = new ArrayList<>();
         var m = PRE_TOKENIZE.matcher(text);
         while (m.find()) preTokens.add(m.group());
         // 2. for each pre-token, get byte-level chars and apply BPE merges
-        List<Integer> ids = new ArrayList<>();
         for (String pre : preTokens) {
             int[] byteIds = bytesToBase(pre);
             ids.addAll(applyBpe(byteIds));
         }
-        return ids.stream().mapToInt(Integer::intValue).toArray();
+        return ids;
+    }
+
+    /** Look up the vocab token for a given id (raw, no decode). */
+    public String reverseToken(int id) {
+        return reverseVocab.get(id);
     }
 
     /** Decode ids back to string. */
@@ -166,7 +318,19 @@ public final class BpeTokenizer {
         StringBuilder sb = new StringBuilder();
         for (int id : ids) {
             String tok = reverseVocab.get(id);
-            if (tok != null) sb.append(tok);
+            if (tok == null) continue;
+            // If it's a special token (e.g. <|im_end|>), emit it literally
+            if (tok.startsWith("<|") && tok.endsWith("|>")) {
+                sb.append(tok);
+                continue;
+            }
+            // GPT-2 byte-level BPE uses Ġ (U+0120) as whitespace marker.
+            // Replace it with a real space at the start of each subword.
+            if (tok.startsWith("Ġ")) {
+                sb.append(' ').append(tok.substring(1));
+            } else {
+                sb.append(tok);
+            }
         }
         // un-byte-decode the GPT-2 byte-level mapping (latin-1 fallback)
         String raw = sb.toString();
@@ -210,37 +374,59 @@ public final class BpeTokenizer {
     /** GPT-2 byte-level char map (256 → printable unicode). */
     private static final String[] BYTE_CHARS = new String[256];
     static {
+        // Standard GPT-2 byte-level encoding: printable bytes map to themselves;
+        // non-printable bytes (including space=0x20) map to chars in U+0100+.
+        // Reference: https://huggingface.co/gpt2/raw/main/vocab.json
+        // bs = ord("!")..ord("~") + ord("¡")..ord("¬") + ord("®")..ord("ÿ")
+        // Non-printable bytes get assigned U+0100..U+0143 in order.
         for (int i = 0; i < 256; i++) BYTE_CHARS[i] = String.valueOf((char) i);
-        // standard GPT-2 byte-level encoding remapping (only the differences
-        // from raw latin-1 — controls / spaces / etc.)
-        int[] bs = {'!','"','#','$','%','&','\'','(',')','*','+',',','-','.','/',
-                    '0','1','2','3','4','5','6','7','8','9',':',';','<','=','>','?',
-                    '@','A','B','C','D','E','F','G','H','I','J','K','L','M','N','O',
-                    'P','Q','R','S','T','U','V','W','X','Y','Z','[','\\',']','^','_',
-                    '`','a','b','c','d','e','f','g','h','i','j','k','l','m','n','o',
-                    'p','q','r','s','t','u','v','w','x','y','z','{','|','}','~'};
-        for (int c : bs) BYTE_CHARS[c] = String.valueOf((char) c);
-        // printable ranges
-        for (int c = 0x21; c <= 0x7E; c++) BYTE_CHARS[c] = String.valueOf((char) c);
-        // latin-1 supplement (0xA1-0xAC, 0xAE-0xFF)
-        for (int c = 0xA1; c <= 0xFF; c++) BYTE_CHARS[c] = String.valueOf((char) c);
-        // GPT-2 specific remaps for control chars
-        BYTE_CHARS[0xA0] = "Ġ";  // 256 (Ġ)
-        BYTE_CHARS[0xA1] = "¡";
-        BYTE_CHARS[0xA2] = "¢";
-        BYTE_CHARS[0xA3] = "£";
-        // (full GPT-2 remap omitted for brevity — covers latin-1 already)
+        // The printable set used in GPT-2 vocab (bytes that map to themselves):
+        java.util.Set<Integer> printable = new java.util.HashSet<>();
+        for (int c = '!'; c <= '~'; c++) printable.add(c);
+        for (int c = 0xA1; c <= 0xAC; c++) printable.add(c);
+        for (int c = 0xAE; c <= 0xFF; c++) printable.add(c);
+        // Non-printable bytes (including 0x20 space) get assigned codepoints in
+        // U+0100..U+0143, skipping the ones already used.
+        int codepoint = 0x100;
+        for (int b = 0; b < 256; b++) {
+            if (printable.contains(b)) {
+                BYTE_CHARS[b] = String.valueOf((char) b);
+            } else {
+                BYTE_CHARS[b] = String.valueOf((char) codepoint);
+                codepoint++;
+            }
+        }
     }
 
     private static String byteLevelChar(int b) {
         return BYTE_CHARS[b];
     }
 
+    /** Inverse of byteLevelChar: convert display chars back to original bytes. */
     private static String unbyteDecode(String s) {
-        // for our tests we use the simple latin-1 path; the G-symbol
-        // decoding would need the full inverse map. Most test inputs
-        // are ASCII so this is sufficient.
-        return s.replace('Ġ', ' ');
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < s.length(); ) {
+            int cp = s.codePointAt(i);
+            if (cp < 256) {
+                sb.append((char) cp);
+            } else {
+                // Find the byte that this codepoint maps from.
+                int mapped = -1;
+                for (int b = 0; b < 256; b++) {
+                    if (BYTE_CHARS[b].codePointAt(0) == cp) {
+                        mapped = b;
+                        break;
+                    }
+                }
+                if (mapped >= 0) {
+                    sb.append((char) mapped);
+                } else {
+                    sb.appendCodePoint(cp);
+                }
+            }
+            i += Character.charCount(cp);
+        }
+        return sb.toString();
     }
 
     /** Convert text to a fixed-width bit array via BPE → ids → bits.
