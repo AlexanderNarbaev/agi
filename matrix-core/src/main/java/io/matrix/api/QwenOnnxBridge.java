@@ -441,6 +441,113 @@ public class QwenOnnxBridge {
         return 0;  // placeholder; testable via generate() return value
     }
 
+    /**
+     * RUN 86 — generate with per-token probability logging.
+     *
+     * <p>Returns a {@link GenerationResult} that includes the generated
+     * text plus per-step probabilities (top-5 candidates each step).
+     */
+    public GenerationResult generateWithProbs(String prompt, int maxTokens) {
+        if (!isLoaded()) {
+            throw new IllegalStateException("bridge not loaded");
+        }
+        int budget = Math.min(maxTokens, maxNewTokens);
+        int[] promptIds = tokenizer.encode(prompt);
+        java.util.List<Long> allIds = new java.util.ArrayList<>();
+        for (int id : promptIds) allIds.add((long) id);
+
+        java.util.List<GenerationResult.TokenStep> steps = new java.util.ArrayList<>();
+
+        long t0 = System.nanoTime();
+        int generated = 0;
+        try {
+            java.lang.reflect.Field sessionField = OnnxRuntimeAdapter.class.getDeclaredField("session");
+            sessionField.setAccessible(true);
+            ai.onnxruntime.OrtSession session =
+                    (ai.onnxruntime.OrtSession) sessionField.get(onnx);
+            ai.onnxruntime.OrtEnvironment env = ai.onnxruntime.OrtEnvironment.getEnvironment();
+
+            for (int step = 0; step < budget; step++) {
+                long[] ids = toLongArray(allIds);
+                long seqLen = ids.length;
+                long[] attentionMask = new long[(int) seqLen];
+                long[] positionIds = new long[(int) seqLen];
+                for (int i = 0; i < seqLen; i++) {
+                    attentionMask[i] = 1L;
+                    positionIds[i] = i;
+                }
+                try (ai.onnxruntime.OnnxTensor inputIds = ai.onnxruntime.OnnxTensor.createTensor(
+                            env, java.nio.LongBuffer.wrap(ids), new long[]{1, seqLen});
+                     ai.onnxruntime.OnnxTensor attnMask = ai.onnxruntime.OnnxTensor.createTensor(
+                            env, java.nio.LongBuffer.wrap(attentionMask), new long[]{1, seqLen});
+                     ai.onnxruntime.OnnxTensor posIds = ai.onnxruntime.OnnxTensor.createTensor(
+                            env, java.nio.LongBuffer.wrap(positionIds), new long[]{1, seqLen})) {
+                    try (var results = session.run(java.util.Map.of(
+                            "input_ids", inputIds,
+                            "attention_mask", attnMask,
+                            "position_ids", posIds))) {
+                        float[][][] logits = (float[][][]) results.get(0).getValue();
+                        float[] last = logits[0][(int) seqLen - 1];
+
+                        // Softmax
+                        double maxL = last[0];
+                        for (int i = 1; i < last.length; i++) {
+                            if (last[i] > maxL) maxL = last[i];
+                        }
+                        double sum = 0.0;
+                        double[] probs = new double[last.length];
+                        for (int i = 0; i < last.length; i++) {
+                            probs[i] = Math.exp(last[i] - maxL);
+                            sum += probs[i];
+                        }
+                        for (int i = 0; i < probs.length; i++) probs[i] /= sum;
+
+                        // Argmax
+                        int bestIdx = 0;
+                        double bestVal = probs[0];
+                        for (int i = 1; i < probs.length; i++) {
+                            if (probs[i] > bestVal) {
+                                bestVal = probs[i];
+                                bestIdx = i;
+                            }
+                        }
+
+                        // Top-5 candidates
+                        Integer[] idx = new Integer[probs.length];
+                        for (int i = 0; i < idx.length; i++) idx[i] = i;
+                        java.util.Arrays.sort(idx, (a, b) -> Double.compare(probs[b], probs[a]));
+                        int topN = Math.min(5, idx.length);
+                        java.util.List<GenerationResult.Candidate> top =
+                                new java.util.ArrayList<>();
+                        for (int i = 0; i < topN; i++) {
+                            int ii = idx[i];
+                            String tok = tokenizer.reverseToken(ii);
+                            top.add(new GenerationResult.Candidate(ii, tok, probs[ii]));
+                        }
+
+                        steps.add(new GenerationResult.TokenStep(bestIdx,
+                                tokenizer.reverseToken(bestIdx), probs[bestIdx], top));
+
+                        if (bestIdx == eosToken) break;
+                        allIds.add((long) bestIdx);
+                        generated++;
+                    }
+                }
+            }
+        } catch (Exception e) {
+            log.warn("QwenOnnxBridge.generateWithProbs: failed: {}", e.getMessage());
+        }
+        metrics.record(generated, System.nanoTime() - t0, useGpu);
+
+        int[] genIds = new int[generated];
+        for (int i = 0; i < generated; i++) {
+            genIds[i] = allIds.get(promptIds.length + i).intValue();
+        }
+        String text = tokenizer.decode(genIds);
+        long elapsedMs = (System.nanoTime() - t0) / 1_000_000L;
+        return new GenerationResult(text, generated, elapsedMs, steps);
+    }
+
     public String info() {
         if (onnx == null) return "QwenOnnxBridge(unloaded)";
         return "QwenOnnxBridge(gpu=" + useGpu
