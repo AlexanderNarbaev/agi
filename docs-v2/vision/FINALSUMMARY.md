@@ -2657,4 +2657,29 @@ were dropped during decode. Fix: full 256-byte map.
 - **6 hypothesis cards accepted**
 - **697 cumulative tests, 0 failures**
 
-(End of file - total ~2750 lines)
+---
+
+## Section LXXXVI — RUN 135-137 (2026-09-05 21:16): Token analysis
+
+- **RUN 135**: TokenType enum (WORD/PUNCTUATION/NUMBER/WHITESPACE/SPECIAL/UNKNOWN) — 7 tests
+- **RUN 136**: TokenAnalyzer (per-type counts + ratios) — 5 tests
+- **RUN 137**: Real GPU token analysis EXP
+  - 16-token generation: 0 special, 0 punct
+  - Real text: "I'm a beginner in Python..."
+
+## RUN 135-137 totals
+
+- **+13 new tests** for these RUNs
+- **2 new Java classes** (TokenType, TokenAnalyzer)
+- **1 new EXP report** (EXP-MATRIX.61)
+
+## RUN 12-137 master totals
+
+- **133 RUNs delivered** (RUN 12-137)
+- **~544+ new tests** added
+- **~60 new Java classes**
+- **38 new EXP reports**
+- **6 hypothesis cards accepted**
+- **710 cumulative tests, 0 failures**
+
+(End of file - total ~2800 lines)

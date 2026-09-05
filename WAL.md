@@ -531,3 +531,9 @@ Total tests after RUN 12-21: 79/79 pass.
 
 - StopWatch, StressTestRunner.
 - GPU stress: 10 reqs/4 threads = 3.4s, 2.92 rps, 10/10 ok.
+
+## RUN 135-137 — Token analysis (2026-09-05 21:16)
+
+- TokenType enum (6 types).
+- TokenAnalyzer with counts/ratios.
+- Real GPU analysis: 16 tokens, 0 special, 0 punct.
