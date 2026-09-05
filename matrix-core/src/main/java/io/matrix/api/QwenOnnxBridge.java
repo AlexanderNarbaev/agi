@@ -683,6 +683,16 @@ public class QwenOnnxBridge {
         return cache;
     }
 
+    /** RUN 106 — get the tokenizer. */
+    public BpeTokenizer getTokenizer() {
+        return tokenizer;
+    }
+
+    /** RUN 106 — get the underlying ONNX adapter. */
+    public OnnxRuntimeAdapter getOnnx() {
+        return onnx;
+    }
+
     private static long[] toLongArray(List<Long> list) {
         long[] out = new long[list.size()];
         for (int i = 0; i < out.length; i++) out[i] = list.get(i);
