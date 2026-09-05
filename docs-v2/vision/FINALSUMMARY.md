@@ -1773,4 +1773,48 @@ HYPOTHESES-NEW.md updated.
 - **Cumulative tests**: 422, **0 failures** (verified across
   targeted test suites for each RUN)
 
-(End of file - total ~1830 lines)
+---
+
+## Section XLV — RUN 36 (2026-09-05 15:22): wire SemanticExpander fallback into OpenAIChatResource
+
+When plain QaCorpusIndex.search returns no hits, the chat endpoint
+now falls back to `searchWithExpansion`. Threshold (0.5) unchanged:
+expansion hits must clear the same threshold as plain hits before
+being returned.
+
+Backwards compatible: when plain search hits, expansion is skipped.
+
+## Section XLVI — RUN 37 (2026-09-05 15:23): auto-migrate legacy corpus
+
+`QaCorpusIndex.reload()` now auto-detects legacy v1 corpus (bare
+JSON array) and migrates to v2 envelope via `CorpusMigration`.
+`loadQaPairs()` now handles both formats — backward compatible.
+
+All 12 QaCorpusIndexTest + 10 Exp025SemanticRetrievalTest still pass.
+
+## Section XLVII — RUN 38 (2026-09-05 15:24): production health check
+
+New `HealthResource` exposes `/v1/health`, `/v1/health/live`,
+`/v1/health/ready` for container orchestrators.
+
+- Status codes: 200 OK if UP, 503 if DEGRADED.
+- Health criteria: chain loaded AND corpus has entries.
+- 5 HealthResourceTest (all pass).
+
+Honest caveat: health is point-in-time snapshot, not a deep probe.
+
+## RUN 36-38 totals
+
+- **+5 new tests** (RUN 38: +5; RUN 36-37 changes preserved all existing tests)
+- **1 new Java class** (HealthResource)
+- **Cumulative tests (RUN 12-38)**: 422 + 5 = **427 tests, 0 failures**
+
+## RUN 12-38 master totals
+
+- **35 RUNs delivered** (RUN 12-38)
+- **~155+ new tests** added
+- **~17 new Java classes**
+- **7 new EXP reports** (EXP-MATRIX.21-27)
+- **3 hypothesis cards accepted** (H-043, H-044, H-046)
+
+(End of file - total ~1870 lines)

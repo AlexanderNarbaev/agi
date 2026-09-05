@@ -298,3 +298,20 @@ Total tests after RUN 12-21: 79/79 pass.
 - EXP-MATRIX.27: real LmHead ECE = 0.049 ≤ 0.10 (H-044 acceptance).
 - 3 Exp035H044CalibrationTest (all pass).
 - HYPOTHESES-NEW.md updated: H-044 accepted (synthetic-scope, RUN 35).
+
+## RUN 36 — wire SemanticExpander fallback into OpenAIChatResource (2026-09-05 15:22)
+
+- Plain QaCorpusIndex.search returns no hits → fallback to searchWithExpansion.
+- Threshold (0.5) unchanged; backward compatible.
+
+## RUN 37 — auto-migrate legacy corpus on reload (2026-09-05 15:23)
+
+- QaCorpusIndex.reload() auto-detects v1 corpus and migrates via CorpusMigration.
+- loadQaPairs() handles both v1 (bare array) and v2 (envelope) formats.
+- All 12 QaCorpusIndexTest + 10 Exp025SemanticRetrievalTest still pass.
+
+## RUN 38 — production health check endpoint (2026-09-05 15:24)
+
+- New HealthResource: /v1/health, /v1/health/live, /v1/health/ready.
+- 503 if DEGRADED (chain not loaded OR corpus empty).
+- 5 HealthResourceTest (all pass).
