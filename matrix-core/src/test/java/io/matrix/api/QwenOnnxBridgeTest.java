@@ -201,6 +201,34 @@ class QwenOnnxBridgeTest {
         bridge.close();
     }
 
+    @Test
+    @EnabledIf("modelAvailable")
+    void chatMethodAppliesTemplate() throws Exception {
+        Path dir = findModelDir();
+        QwenOnnxBridge bridge = new QwenOnnxBridge(dir);
+        bridge.setMaxNewTokens(8);
+        if (!bridge.load()) return;
+
+        String reply = bridge.chat("What is 2+2?", 8);
+        // reply should not contain raw <|im_start|> etc.
+        assertThat(reply).doesNotContain("<|im_start|>");
+        assertThat(reply).doesNotContain("<|im_end|>");
+        bridge.close();
+    }
+
+    @Test
+    @EnabledIf("modelAvailable")
+    void chatMethodWithSampling() throws Exception {
+        Path dir = findModelDir();
+        QwenOnnxBridge bridge = new QwenOnnxBridge(dir);
+        bridge.setMaxNewTokens(8);
+        if (!bridge.load()) return;
+
+        String reply = bridge.chat("Hello", 8, 0.7, 50, 0.9);
+        assertThat(reply).doesNotContain("<|im_end|>");
+        bridge.close();
+    }
+
     // EnabledIf helper
     static boolean modelAvailable() {
         return findModelDir() != null && findOnnx() != null;

@@ -85,6 +85,29 @@ public class QwenOnnxBridge {
     }
 
     /**
+     * RUN 73 — chat-style generation with Qwen2.5-Instruct template.
+     *
+     * <p>Builds a ChatML-formatted prompt using {@link QwenChatTemplate},
+     * runs greedy autoregressive generation, then strips the trailing
+     * {@code <|im_end|>} marker.
+     */
+    public String chat(String userMessage, int maxTokens) {
+        String formatted = QwenChatTemplate.buildUserPrompt(userMessage);
+        String raw = generate(formatted, maxTokens);
+        return QwenChatTemplate.cleanReply(raw);
+    }
+
+    /**
+     * Chat with sampling strategy.
+     */
+    public String chat(String userMessage, int maxTokens,
+                       double temperature, int topK, double topP) {
+        String formatted = QwenChatTemplate.buildUserPrompt(userMessage);
+        String raw = generateSampled(formatted, maxTokens, temperature, topK, topP);
+        return QwenChatTemplate.cleanReply(raw);
+    }
+
+    /**
      * Generate text with full sampling strategy: temperature + top-k + top-p.
      */
     public String generateSampled(String prompt, int maxTokens,
