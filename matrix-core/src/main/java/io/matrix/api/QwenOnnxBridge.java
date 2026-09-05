@@ -47,6 +47,9 @@ public class QwenOnnxBridge {
     /** RUN 69 — inference metrics aggregator. */
     private final OnnxInferenceMetrics metrics = new OnnxInferenceMetrics();
 
+    /** RUN 102 — generation cache (optional, lazy init). */
+    private GenerationCache cache;
+
     public QwenOnnxBridge(Path modelDir) {
         this.modelDir = modelDir;
     }
@@ -400,6 +403,13 @@ public class QwenOnnxBridge {
         if (!isLoaded()) {
             throw new IllegalStateException("bridge not loaded");
         }
+        // RUN 102: check cache first
+        if (cache != null) {
+            String cached = cache.get(prompt + "|" + maxTokens);
+            if (cached != null) {
+                return cached;
+            }
+        }
         int budget = Math.min(maxTokens, maxNewTokens);
         int[] promptIds = tokenizer.encode(prompt);
         List<Long> allIds = new ArrayList<>();
@@ -433,7 +443,12 @@ public class QwenOnnxBridge {
         for (int i = 0; i < generated; i++) {
             genIds[i] = allIds.get(promptIds.length + i).intValue();
         }
-        return tokenizer.decode(genIds);
+        String result = tokenizer.decode(genIds);
+        // RUN 102: cache result
+        if (cache != null) {
+            cache.put(prompt + "|" + maxTokens, result);
+        }
+        return result;
     }
 
     /** Returns the number of new tokens the most recent generate() call produced. */
@@ -651,6 +666,21 @@ public class QwenOnnxBridge {
     /** RUN 69 — get the inference metrics aggregator. */
     public OnnxInferenceMetrics metrics() {
         return metrics;
+    }
+
+    /** RUN 102 — enable generation cache with the given capacity. */
+    public void enableCache(long capacity) {
+        this.cache = new GenerationCache(capacity);
+    }
+
+    /** RUN 102 — disable generation cache. */
+    public void disableCache() {
+        this.cache = null;
+    }
+
+    /** RUN 102 — get the cache (or null if disabled). */
+    public GenerationCache cache() {
+        return cache;
     }
 
     private static long[] toLongArray(List<Long> list) {

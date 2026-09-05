@@ -173,6 +173,37 @@ class QwenOnnxBridgeTest {
     }
 
     @Test
+    @EnabledIf("modelAvailable")
+    void cacheStoresAndReturnsSameResult() throws Exception {
+        Path dir = findModelDir();
+        QwenOnnxBridge bridge = new QwenOnnxBridge(dir);
+        bridge.setMaxNewTokens(8);
+        if (!bridge.load()) return;
+
+        bridge.enableCache(16);
+        // First call: cache miss
+        String r1 = bridge.generate("Hi", 4);
+        assertThat(bridge.cache().misses()).isEqualTo(1);
+        // Second call with same prompt: cache hit
+        String r2 = bridge.generate("Hi", 4);
+        assertThat(bridge.cache().hits()).isEqualTo(1);
+        assertThat(r1).isEqualTo(r2);
+        bridge.disableCache();
+        bridge.close();
+    }
+
+    @Test
+    void enableCacheCreatesCache() {
+        QwenOnnxBridge bridge = new QwenOnnxBridge(Path.of("models/hf_cache/qwen05b"));
+        assertThat(bridge.cache()).isNull();
+        bridge.enableCache(50);
+        assertThat(bridge.cache()).isNotNull();
+        assertThat(bridge.cache().capacity()).isEqualTo(50);
+        bridge.disableCache();
+        assertThat(bridge.cache()).isNull();
+    }
+
+    @Test
     void temperatureClampingImplicitInApi() {
         // The sampling function clamps temperature to [0.01, 2.0]
         // We can verify indirectly by calling with extreme values.
