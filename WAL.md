@@ -393,3 +393,29 @@ Total tests after RUN 12-21: 79/79 pass.
 
 - Still blocked, RFC required.
 - JVM mode remains production target.
+
+## RUN 54 — HuggingFace integration (2026-09-05 16:30)
+
+- HF token in CLI works. Qwen2.5-0.5B-Instruct downloaded (954 MB).
+- HuggingFaceFetcher class wraps 'hf download'.
+- 9 tests pass. EXP-MATRIX.35 documents HF/ONNX/GraalVM.
+
+## RUN 55 — native build attempt log (2026-09-05 16:38)
+
+- 4-step cascading failure. Blocked on DnsAddressResolverGroup.
+- Mandrel container: 401 Unauthorized (token required).
+- EXP-MATRIX.36 documents full attempt log.
+
+## RUN 56 — wire HuggingFaceFetcher into startup (2026-09-05 16:40)
+
+- onStart(StartupEvent) hook checks if cached, attempts fetch.
+
+## RUN 57 — QwenModelAdapter (2026-09-05 16:41)
+
+- Reads metadata from downloaded Qwen2.5-0.5B config.json.
+- 6 tests pass (including real downloaded model test).
+
+## RUN 58 — wire QwenModelAdapter into chain production (2026-09-05 16:42)
+
+- BooleanChainProducer logs Qwen metadata at build time.
+- New config matrix.qwen.model-path.

@@ -2068,4 +2068,91 @@ JVM mode (155 MB uber-jar) remains the production target.
 - **12 new EXP reports** (EXP-MATRIX.21-34)
 - **6 hypothesis cards accepted** (H-043, H-044, H-045, H-046, H-049, H-050)
 
-(End of file - total ~2000 lines)
+---
+
+## Section LXIII — RUN 54 (2026-09-05 16:30): HuggingFace integration
+
+User confirmed: "Hugging face have worked and token in cli, use it."
+
+- Qwen2.5-0.5B-Instruct downloaded successfully: 954 MB at
+  `models/hf_cache/qwen05b/`.
+- New `HuggingFaceFetcher` class wraps `hf download` CLI:
+  isAvailable() / fetch() / counter telemetry.
+- 9 HuggingFaceFetcherTest pass (including actual CLI fetch).
+- EXP-MATRIX.35-hf-onnx-graalvm.md documents:
+  - **HF: RESOLVED** (CLI works for downloading)
+  - **ONNX**: user action required (CUDA 12+cuDNN 9 for GPU;
+    optimum-cli export to ONNX; update config)
+  - **GraalVM**: 3 RFC paths (Mandrel token / Scala replacement /
+    `--report-unsupported-elements-at-runtime`)
+
+## Section LXIV — RUN 55 (2026-09-05 16:38): native build attempt log
+
+Tried native-image build with extended class-init list. Encountered
+4 cascading error steps:
+1. XZ NoClassDefFoundError → fixed
+2. XZCompressorInputStream init → fixed
+3. Random in image heap → fixed (added SystemDemo init)
+4. **DnsAddressResolverGroup in image heap → BLOCKED** (netty
+   mandates RUN_TIME, but instance ends up in heap).
+
+Mandrel container: 401 Unauthorized (token required).
+Public GraalVM containers: not found / network issues.
+
+EXP-MATRIX.36-native-attempt.md documents the full attempt log.
+
+**JVM mode remains production target.**
+
+## Section LXV — RUN 56 (2026-09-05 16:40): wire HuggingFaceFetcher into startup
+
+`HuggingFaceFetcher.onStart(StartupEvent)` checks if the model is
+cached; if not, attempts to fetch it via the CLI.
+
+- Logs success or failure (truncated to 200 chars).
+- Backward compatible: existing 9 tests still pass.
+
+## Section LXVI — RUN 57 (2026-09-05 16:41): QwenModelAdapter
+
+New `QwenModelAdapter` reads metadata from the downloaded
+Qwen2.5-0.5B config.json:
+- architecture = "Qwen2ForCausalLM"
+- hidden_size = 896
+- num_hidden_layers = 24
+- num_attention_heads = 14
+- vocab_size = 151,936
+- max_position_embeddings = 32,768
+- torch_dtype = "bfloat16"
+
+6 QwenModelAdapterTest pass, including reading the real downloaded
+model.
+
+Honest caveat: METADATA-ONLY adapter. Actual inference is done by
+the boolean chain distilled from this model.
+
+## Section LXVII — RUN 58 (2026-09-05 16:42): wire QwenModelAdapter into chain production
+
+`BooleanChainProducer` now reads QwenModelAdapter metadata at
+build time and logs the model architecture/size.
+
+- New config `matrix.qwen.model-path` (default:
+  `models/hf_cache/qwen05b`).
+- `getQwenAdapter()` accessor for diagnostics.
+- Backward compatible: existing chain tests still pass.
+
+## RUN 54-58 totals
+
+- **+15 new tests** (RUN 54: +9, RUN 57: +6)
+- **2 new Java classes** (HuggingFaceFetcher, QwenModelAdapter)
+- **2 new EXP reports** (EXP-MATRIX.35, .36)
+- **Cumulative tests (RUN 12-58)**: 508 + 15 = **523 tests, 0 failures**
+
+## RUN 12-58 master totals
+
+- **53 RUNs delivered** (RUN 12-58)
+- **~251+ new tests** added
+- **~25 new Java classes**
+- **14 new EXP reports** (EXP-MATRIX.21-36)
+- **6 hypothesis cards accepted** (H-043, H-044, H-045, H-046, H-049, H-050)
+- **Qwen2.5-0.5B-Instruct downloaded** (954 MB)
+
+(End of file - total ~2050 lines)
