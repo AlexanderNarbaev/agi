@@ -41,3 +41,25 @@
 - `BRC-Step` (atomic preserved step contract) — закрытие пробела reasoning/BrcChain.
 
 Все перечислены как **next-format-contracts** в `engineering/PLAN.md`.
+
+## RUN 14 — TLA+ structural smoke tests
+
+Все 7 спеков (`BrcStep`, `ConjugateBudgeterDP`, `MemoryM4Causal`,
+`MctsLatsVisit`, `FrozenEthicalFNL`, `HashChain`, `BotEthicsPipeline`)
+прошли структурный smoke-test в
+`matrix-core/src/test/java/io/matrix/formal/TlaSpecSmokeTest.java`
+(10/10 PASS, CI gate). Покрывает:
+
+- Корректный заголовок `---- MODULE <name> ----`
+- Объявление `VARIABLES`, `Init`, `Next` (или action-стиль для HashChain)
+- Наличие safety-инвариантов
+- Trailer `=====` + Modification History
+- Per-spec проверка ключевых инвариантов:
+  - `BrcStep`: ComposeAssociative, ComposeIdentity
+  - `ConjugateBudgeterDP`: shadow price λ + DP V*(e)
+  - `MemoryM4Causal`: Monotonicity, EventualConsistency
+  - `MctsLatsVisit`: TreeAcyclic
+  - `HashChain`: AppendLink, ChainMonotonic, TamperDetected
+
+Полный TLC model-check (запуск `tla2tools.jar`) требует отдельного
+CI-шага — вне scope unit-тестов.
