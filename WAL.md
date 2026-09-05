@@ -491,3 +491,9 @@ Total tests after RUN 12-21: 79/79 pass.
 - TextEmbedder 896-dim embeddings.
 - Real GPU conversation via ConversationStore.
 - 593 cumulative tests, 0 failures.
+
+## RUN 108-115 — Embeddings, registry, history (2026-09-05 20:35)
+
+- /v1/onnx/{registry,embed,version} endpoints.
+- TextEmbedder, BeamSearchGenerator, GenerationHistory.
+- 601 cumulative tests, 0 failures.

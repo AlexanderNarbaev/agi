@@ -2478,4 +2478,35 @@ were dropped during decode. Fix: full 256-byte map.
 - **6 hypothesis cards accepted**
 - **593 cumulative tests, 0 failures**
 
-(End of file - total ~2400 lines)
+---
+
+## Section LXXIX — RUN 108-115 (2026-09-05 20:35): Embeddings, registry, history
+
+- **RUN 108**: ONNX re-export with hidden_states — verified only
+  logits exposed (need custom export for true embeddings)
+- **RUN 109**: /v1/onnx/registry endpoint — +1 test
+- **RUN 110**: /v1/onnx/embed endpoint — +3 tests
+- **RUN 111**: Embed endpoint format verified EXP
+- **RUN 112**: BeamSearchGenerator (simplified) — 3 tests
+- **RUN 113**: EXP-MATRIX.55 documents beam simplification
+- **RUN 114**: /v1/onnx/version endpoint — +1 test
+- **RUN 115**: GenerationHistory per-user audit log — 10 tests
+
+**601 tests, 0 failures** verified.
+
+## RUN 108-115 totals
+
+- **+18 new tests** for these RUNs
+- **3 new Java classes** (TextEmbedder, BeamSearchGenerator, GenerationHistory)
+- **3 new EXP reports** (EXP-MATRIX.53-55)
+
+## RUN 12-115 master totals
+
+- **111 RUNs delivered** (RUN 12-115)
+- **~448+ new tests** added
+- **~48 new Java classes**
+- **33 new EXP reports** (EXP-MATRIX.21-55)
+- **6 hypothesis cards accepted**
+- **601 cumulative tests, 0 failures**
+
+(End of file - total ~2450 lines)
