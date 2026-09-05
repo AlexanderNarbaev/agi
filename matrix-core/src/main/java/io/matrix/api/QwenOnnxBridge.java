@@ -548,6 +548,88 @@ public class QwenOnnxBridge {
         return new GenerationResult(text, generated, elapsedMs, steps);
     }
 
+    /**
+     * RUN 90 — streaming generation. Yields each token as it's produced.
+     *
+     * <p>Caller receives a stream of (tokenId, decodedText) pairs and
+     * can decide when to stop (e.g., on EOS or max tokens).
+     *
+     * @param prompt input text
+     * @param maxTokens maximum new tokens
+     * @return iterable of TokenEvent records
+     */
+    public Iterable<TokenEvent> streamGenerate(String prompt, int maxTokens) {
+        java.util.List<TokenEvent> events = new java.util.ArrayList<>();
+        if (!isLoaded()) {
+            events.add(TokenEvent.error("bridge not loaded"));
+            return events;
+        }
+        int budget = Math.min(maxTokens, maxNewTokens);
+        int[] promptIds = tokenizer.encode(prompt);
+        java.util.List<Long> allIds = new java.util.ArrayList<>();
+        for (int id : promptIds) allIds.add((long) id);
+
+        long t0 = System.nanoTime();
+        int generated = 0;
+        try {
+            java.lang.reflect.Field sessionField = OnnxRuntimeAdapter.class.getDeclaredField("session");
+            sessionField.setAccessible(true);
+            ai.onnxruntime.OrtSession session =
+                    (ai.onnxruntime.OrtSession) sessionField.get(onnx);
+            ai.onnxruntime.OrtEnvironment env = ai.onnxruntime.OrtEnvironment.getEnvironment();
+
+            for (int step = 0; step < budget; step++) {
+                long[] ids = toLongArray(allIds);
+                long seqLen = ids.length;
+                long[] attentionMask = new long[(int) seqLen];
+                long[] positionIds = new long[(int) seqLen];
+                for (int i = 0; i < seqLen; i++) {
+                    attentionMask[i] = 1L;
+                    positionIds[i] = i;
+                }
+                long tokenId;
+                try (ai.onnxruntime.OnnxTensor inputIds = ai.onnxruntime.OnnxTensor.createTensor(
+                            env, java.nio.LongBuffer.wrap(ids), new long[]{1, seqLen});
+                     ai.onnxruntime.OnnxTensor attnMask = ai.onnxruntime.OnnxTensor.createTensor(
+                            env, java.nio.LongBuffer.wrap(attentionMask), new long[]{1, seqLen});
+                     ai.onnxruntime.OnnxTensor posIds = ai.onnxruntime.OnnxTensor.createTensor(
+                            env, java.nio.LongBuffer.wrap(positionIds), new long[]{1, seqLen})) {
+                    try (var results = session.run(java.util.Map.of(
+                            "input_ids", inputIds,
+                            "attention_mask", attnMask,
+                            "position_ids", posIds))) {
+                        float[][][] logits = (float[][][]) results.get(0).getValue();
+                        float[] last = logits[0][(int) seqLen - 1];
+                        int bestIdx = 0;
+                        float bestVal = last[0];
+                        for (int i = 1; i < last.length; i++) {
+                            if (last[i] > bestVal) {
+                                bestVal = last[i];
+                                bestIdx = i;
+                            }
+                        }
+                        tokenId = bestIdx;
+                    }
+                }
+                String tok = tokenizer.reverseToken((int) tokenId);
+                String text = (tok != null && tok.startsWith("Ġ"))
+                        ? " " + tok.substring(1)
+                        : (tok != null && tok.startsWith("<|") ? tok : (tok == null ? "" : tok));
+                events.add(new TokenEvent((int) tokenId, text, false, step));
+                if (tokenId == eosToken) {
+                    events.add(TokenEvent.eos(step + 1));
+                    break;
+                }
+                allIds.add(tokenId);
+                generated++;
+            }
+        } catch (Exception e) {
+            events.add(TokenEvent.error(e.getMessage()));
+        }
+        metrics.record(generated, System.nanoTime() - t0, useGpu);
+        return events;
+    }
+
     public String info() {
         if (onnx == null) return "QwenOnnxBridge(unloaded)";
         return "QwenOnnxBridge(gpu=" + useGpu
