@@ -515,3 +515,9 @@ Total tests after RUN 12-21: 79/79 pass.
 - ContextWindowManager (token budgeting).
 - ChainBridgeAdapter for chain↔Qwen integration.
 - 658 cumulative tests, 0 failures.
+
+## RUN 128-129 — Benchmark + health (2026-09-05 21:07)
+
+- Latency benchmark (286-376ms per generation).
+- HealthCheckService periodic monitor.
+- 674 cumulative tests, 0 failures.

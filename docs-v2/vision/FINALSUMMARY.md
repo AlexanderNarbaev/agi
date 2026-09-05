@@ -2587,4 +2587,29 @@ were dropped during decode. Fix: full 256-byte map.
 - **6 hypothesis cards accepted**
 - **658 cumulative tests, 0 failures**
 
-(End of file - total ~2600 lines)
+---
+
+## Section LXXXIII — RUN 128-129 (2026-09-05 21:07): Benchmark + health
+
+- **RUN 128**: chain vs Qwen latency benchmark — 2 tests
+  - Real per-inference latency: 286-376ms (greedy, 4 tokens)
+- **RUN 129**: HealthCheckService — periodic bridge monitor — 6 tests
+
+**674 tests, 0 failures** verified.
+
+## RUN 128-129 totals
+
+- **+8 new tests** for these RUNs
+- **1 new Java class** (HealthCheckService)
+- **1 new EXP report** (EXP-MATRIX.59)
+
+## RUN 12-129 master totals
+
+- **125 RUNs delivered** (RUN 12-129)
+- **~508+ new tests** added
+- **~55 new Java classes**
+- **36 new EXP reports**
+- **6 hypothesis cards accepted**
+- **674 cumulative tests, 0 failures**
+
+(End of file - total ~2650 lines)
