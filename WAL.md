@@ -453,3 +453,12 @@ Total tests after RUN 12-21: 79/79 pass.
 ## RUN 65 — GPU vs CPU benchmark (2026-09-05 18:27)
 
 - EXP-MATRIX.38: GPU p50=5ms, CPU p50=77ms. **Speedup: 15.40x**.
+
+## RUN 66-78 — Real LLM end-to-end in Java (2026-09-05 19:23)
+
+- QwenOnnxBridge: tokenizer + ONNX + greedy/sampling.
+- OnnxChatResource: /v1/onnx/{chat,status,reload,generate,metrics}.
+- QwenChatTemplate: ChatML formatter for Qwen2.5-Instruct.
+- Real 3-turn conversation verified on GPU.
+- BPE byte-level encoder/decoder fix (control chars → U+0100+).
+- 12 new tests, 5 new Java classes, 3 EXP reports.

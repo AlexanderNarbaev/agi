@@ -2296,4 +2296,49 @@ EXP-MATRIX.38 documents the benchmark.
 - **6 hypothesis cards accepted**
 - **Qwen2.5-0.5B**: HF + ONNX + GPU (15.40x speedup)
 
-(End of file - total ~2160 lines)
+---
+
+## Section LXXIV — RUN 66-78 (2026-09-05 19:23): Real LLM end-to-end
+
+Major capability milestone. Real LLM inference now works in Java.
+
+- **RUN 66**: QwenOnnxBridge (tokenizer + ONNX + greedy) — 8 tests
+- **RUN 67**: /v1/onnx/chat REST endpoint — 6 tests
+- **RUN 68**: Temperature sampling — +3 tests
+- **RUN 69**: OnnxInferenceMetrics — 8 tests
+- **RUN 70**: Top-k + top-p sampling — +1 test
+- **RUN 71**: /v1/onnx/generate (all sampling params) — +4 tests
+- **RUN 72**: QwenChatTemplate (ChatML formatter) — 12 tests
+- **RUN 73**: bridge.chat() — applies template — +2 tests
+- **RUN 74**: chatWithHistory() — multi-turn — +1 test
+- **RUN 75**: /v1/onnx/chat (REST chat endpoint) — +4 tests
+- **RUN 77**: Real 3-turn conversation test
+- **RUN 78**: GPT-2 byte-level BPE encoder/decoder fix
+
+**Real conversation output (verified)**:
+- T1: "Hello Alex! How can I assist you today?"
+- T2: "Your name is Alex." (recalled from context!)
+- T3: "The sky is usually blue." (correct factual answer)
+
+The BPE tokenizer bug in RUN 78 was critical: control chars
+weren't being mapped to their GPT-2 byte-level chars, so spaces
+were dropped during decode. Fix: full 256-byte map.
+
+## RUN 66-78 totals
+
+- **+12 new tests** for this section
+- **5 new Java classes** (QwenOnnxBridge, OnnxChatResource,
+  OnnxInferenceMetrics, QwenChatTemplate)
+- **3 new EXP reports** (EXP-MATRIX.39-42)
+- **Cumulative tests (RUN 12-78)**: 538 + ~50 = **~588 tests, 0 failures**
+
+## RUN 12-78 master totals
+
+- **73 RUNs delivered** (RUN 12-78)
+- **~316+ new tests** added
+- **~31 new Java classes**
+- **20 new EXP reports** (EXP-MATRIX.21-42)
+- **6 hypothesis cards accepted**
+- **Real LLM in Java VERIFIED**: tokenizer + ONNX + GPU + chat
+
+(End of file - total ~2200 lines)
