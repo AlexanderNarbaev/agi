@@ -57,6 +57,12 @@ public class MetricsResource {
     @Inject
     ChainFeatureCache featureCache;
 
+    @Inject
+    OnnxRuntimeAdapter onnxAdapter;
+
+    @Inject
+    QwenModelAdapter qwenAdapter;
+
     /**
      * Increment the chat request counter (called from OpenAIChatResource).
      * Package-private static so any resource in the same package can call.
@@ -152,6 +158,22 @@ public class MetricsResource {
                 ? (double) chatErrorCount() / chatRequestCount()
                 : 0.0);
         body.put("chat", chat);
+
+        // RUN 59: ONNX runtime + Qwen model metadata.
+        Map<String, Object> onnx = new LinkedHashMap<>();
+        if (onnxAdapter != null) {
+            onnx.put("available", onnxAdapter.isAvailable());
+            onnx.put("loaded", onnxAdapter.isLoaded());
+            onnx.put("info", onnxAdapter.info());
+            onnx.put("inferences", onnxAdapter.inferenceCount());
+        }
+        body.put("onnx", onnx);
+
+        Map<String, Object> qwen = new LinkedHashMap<>();
+        if (qwenAdapter != null) {
+            qwen.put("summary", qwenAdapter.summary());
+        }
+        body.put("qwen", qwen);
 
         return body;
     }
