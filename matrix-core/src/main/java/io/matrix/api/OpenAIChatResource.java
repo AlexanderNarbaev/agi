@@ -283,11 +283,23 @@ public class OpenAIChatResource {
             // PRIMARY 0: QA corpus retrieval — find the best-matching trained Q
             // and return the real learned A. This is the chain's "trained knowledge".
             if (qaIndex != null && qaIndex.size() > 0) {
+                // RUN 36: try plain search first; if no hit, try semantic expansion.
                 var hits = qaIndex.search(augmentedText, 3);
                 double top = qaIndex.topScore(augmentedText);
                 // Threshold: require at least 0.5 idf-weighted token overlap to consider it a hit.
                 // Below this, the match is too weak to be confident — fall through to bir path.
                 final double QA_HIT_THRESHOLD = 0.5;
+                if (hits.isEmpty() || top < QA_HIT_THRESHOLD) {
+                    // Fallback: semantic expansion (char trigrams).
+                    // May find related entries on morphological variants.
+                    var expHits = qaIndex.searchWithExpansion(augmentedText, 3);
+                    double expTop = qaIndex.topScore(augmentedText);  // for log
+                    if (!expHits.isEmpty()) {
+                        hits = expHits;
+                        top = expTop;
+                        log.info("QA retrieval via semantic expansion: {} candidates", expHits.size());
+                    }
+                }
                 if (!hits.isEmpty() && top >= QA_HIT_THRESHOLD) {
                     QaCorpusIndex.Entry best = hits.get(0);
                     response = best.answer();
