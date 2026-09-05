@@ -72,6 +72,9 @@ public final class ConsciousnessLoop {
     /** RUN 43 — optional per-stage latency tracker. */
     private volatile StageLatencyTracker latencyTracker;
 
+    /** RUN 50 — optional arousal dynamics. Updated by tick() based on prediction-error. */
+    private volatile ArousalDynamics arousalDynamics;
+
     public ConsciousnessLoop(BrcChain deliberation,
                              ActionArena arena,
                              ConsolidationCycle consolidation,
@@ -141,6 +144,12 @@ public final class ConsciousnessLoop {
         // 7. subconscious / 8. prediction-error
         long predErr = computePredictionError(raw, lastDecision);
         lastPredictionError = predErr;
+
+        // RUN 50: update arousal dynamics if configured.
+        if (arousalDynamics != null) {
+            double errorNormalized = Math.min(1.0, predErr / 100.0);
+            arousalDynamics.update(errorNormalized);
+        }
         // 9. attention update — implicitly by overwriting lastAttended
         //    ALSO: if perception is a FeedbackPerception, feed the
         //    action output back so the next tick sees its own output.
@@ -184,6 +193,16 @@ public final class ConsciousnessLoop {
     /** RUN 43 — get the current latency tracker (or null). */
     public StageLatencyTracker getLatencyTracker() {
         return latencyTracker;
+    }
+
+    /** RUN 50 — set the arousal dynamics (or null to disable). */
+    public void setArousalDynamics(ArousalDynamics dynamics) {
+        this.arousalDynamics = dynamics;
+    }
+
+    /** RUN 50 — get the current arousal dynamics (or null). */
+    public ArousalDynamics getArousalDynamics() {
+        return arousalDynamics;
     }
     public long lastPredictionError() { return lastPredictionError; }
     public BitSet lastDecision() { return lastDecision; }
