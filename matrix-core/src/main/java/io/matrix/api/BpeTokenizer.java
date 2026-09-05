@@ -51,7 +51,8 @@ public final class BpeTokenizer {
                     + " ?\\p{N}+|"
                     + " ?[^\\s\\p{L}\\p{N}]+|\\s+(?!\\S)|\\s+");
 
-    private BpeTokenizer(Map<String, Integer> vocab, List<String[]> merges) {
+    /** Visible-for-testing constructor. Use {@link #fromModelDir} in production. */
+    BpeTokenizer(Map<String, Integer> vocab, List<String[]> merges) {
         this.vocab = Collections.unmodifiableMap(new HashMap<>(vocab));
         this.merges = List.copyOf(merges);
         Map<Integer, String> rev = new HashMap<>();
