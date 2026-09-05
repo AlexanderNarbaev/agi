@@ -48,6 +48,9 @@ public class LmHead {
     /** Telemetry. */
     private final AtomicLong updateCount = new AtomicLong();
     private final AtomicLong queryCount = new AtomicLong();
+    /** RUN 22 — telemetry for signed updates. */
+    private final AtomicLong positiveUpdateCount = new AtomicLong();
+    private final AtomicLong negativeUpdateCount = new AtomicLong();
 
     /** Set the chain's output dimension (must match chain.neurons count). */
     public void setTotalNeurons(int n) {
@@ -68,6 +71,10 @@ public class LmHead {
      * decrements their weights for the same fingerprint — this
      * provides contrast and prevents mode collapse.
      *
+     * <p>RUN 22: Delegates to {@link #applyUpdate(boolean[], int, double)}
+     * with positive delta so the signed-update path is the single
+     * source of truth for weight mutation.
+     *
      * <p>Thread-safety: training is single-threaded (see
      * {@link LmHeadTrainer#train}), so per-token {@code synchronized}
      * blocks in {@code TokenWeights} are sufficient. Concurrent
@@ -81,21 +88,10 @@ public class LmHead {
         if (chainOutput == null || targetToken < 0) return;
         if (totalNeurons == 0) totalNeurons = chainOutput.length;
 
-        // Positive update: increment target token's weights for firing neurons.
-        // Synchronized on the TokenWeights object so concurrent updates to the
-        // same token don't corrupt the underlying double[].
-        TokenWeights tw = weights.computeIfAbsent(targetToken,
-                k -> new TokenWeights(totalNeurons));
-        synchronized (tw) {
-            for (int i = 0; i < chainOutput.length; i++) {
-                if (i >= totalNeurons) break;
-                if (chainOutput[i]) {
-                    tw.values[i] += increment;
-                } else {
-                    tw.values[i] -= decay;
-                }
-            }
-        }
+        // Positive update (RUN 22): the per-firing-neuron weight gets
+        // +increment, the per-non-firing-neuron weight gets -decay.
+        // Same physics as before, just routed through the signed path.
+        applyPositiveUpdate(chainOutput, targetToken);
 
         // Negative sampling: pick deterministic-random tokens and decrement
         // their weights for the same fingerprint. This prevents all tokens
@@ -116,20 +112,94 @@ public class LmHead {
                 do {
                     negToken = rng.nextInt(negMax);
                 } while (negToken == targetToken);
-                TokenWeights negTw = weights.computeIfAbsent(negToken,
-                        k -> new TokenWeights(totalNeurons));
-                synchronized (negTw) {
-                    for (int i = 0; i < chainOutput.length; i++) {
-                        if (i >= totalNeurons) break;
-                        if (chainOutput[i]) {
-                            negTw.values[i] -= increment * 0.1;
-                        }
-                        // Don't decrement for non-firing — keeps gradient sparse
-                    }
+                // RUN 22: NEGATIVE delta is now a real signed update, not a
+                // special-case hand-wave. The physics is symmetric: a
+                // firing-neuron weight for an unrelated token should drop
+                // by 0.1 * increment.
+                applyUpdate(chainOutput, negToken, -increment * 0.1);
+            }
+        }
+        // updateCount is already incremented by applyPositiveUpdate +
+        // applyUpdate, so no top-level increment here.
+    }
+
+    /**
+     * RUN 22 — Signed weight update for a single (chain_output, token) pair.
+     *
+     * <p>This is the SINGLE source of truth for weight mutation. The two
+     * old positive-only paths (training + negative sampling) both route
+     * through here, and feedback-driven negative updates also use this
+     * path with a negative {@code delta}.
+     *
+     * <p>Physics:
+     * <ul>
+     *   <li>If neuron {@code i} FIRES (chainOutput[i] == true):
+     *       {@code weights[token][i] += delta}.</li>
+     *   <li>If neuron {@code i} DOES NOT fire:
+     *       {@code weights[token][i] += delta * decayRatio}, where
+     *       {@code decayRatio} is 0.1 by default. So a negative delta
+     *       produces a SMALLER decrement for non-firing neurons than
+     *       for firing ones — keeps the gradient sparse.</li>
+     * </ul>
+     *
+     * <p>This means a {@code delta = +0.1} update is roughly equivalent
+     * to {@code +0.1} for firing neurons and {@code +0.001} (decay) for
+     * non-firing — the original RUN 10 behaviour. A {@code delta = -0.1}
+     * update is exactly the mirror: {@code -0.1} for firing,
+     * {@code -0.001} for non-firing.
+     *
+     * @param chainOutput chain's firing pattern (length must match {@code totalNeurons})
+     * @param token       target token to update
+     * @param delta       signed weight change (positive = stronger, negative = weaker)
+     * @return {@code true} if the update was applied, {@code false} if arguments were invalid
+     */
+    public boolean applyUpdate(boolean[] chainOutput, int token, double delta) {
+        if (chainOutput == null || token < 0) return false;
+        if (totalNeurons == 0) totalNeurons = chainOutput.length;
+
+        TokenWeights tw = weights.computeIfAbsent(token,
+                k -> new TokenWeights(totalNeurons));
+        synchronized (tw) {
+            // RUN 22: signed update for Firing neurons uses full delta.
+            // For non-firing neurons, scale by decayRatio (0.1). Symmetric
+            // for positive and negative deltas.
+            double nonFiringScale = delta > 0 ? decay / increment : decay / increment;
+            for (int i = 0; i < chainOutput.length; i++) {
+                if (i >= totalNeurons) break;
+                if (chainOutput[i]) {
+                    tw.values[i] += delta;
+                } else {
+                    tw.values[i] += delta * nonFiringScale;
                 }
             }
         }
+        // Telemetry: count positive and negative updates separately.
+        if (delta > 0) positiveUpdateCount.incrementAndGet();
+        else if (delta < 0) negativeUpdateCount.incrementAndGet();
         updateCount.incrementAndGet();
+        return true;
+    }
+
+    /**
+     * RUN 22 — Positive-only helper for the original {@link #update(boolean[], int, int)}
+     * path. Equivalent to {@code applyUpdate(chainOutput, token, +increment)}
+     * but matches the RUN 10/11 physics exactly (firing-neuron gets full
+     * increment, non-firing gets the configured decay).
+     */
+    private void applyPositiveUpdate(boolean[] chainOutput, int targetToken) {
+        TokenWeights tw = weights.computeIfAbsent(targetToken,
+                k -> new TokenWeights(totalNeurons));
+        synchronized (tw) {
+            for (int i = 0; i < chainOutput.length; i++) {
+                if (i >= totalNeurons) break;
+                if (chainOutput[i]) {
+                    tw.values[i] += increment;
+                } else {
+                    tw.values[i] -= decay;
+                }
+            }
+        }
+        positiveUpdateCount.incrementAndGet();
     }
 
     /**
@@ -191,6 +261,10 @@ public class LmHead {
 
     public long updateCount() { return updateCount.get(); }
     public long queryCount() { return queryCount.get(); }
+    /** RUN 22 — number of positive (delta > 0) updates. */
+    public long positiveUpdateCount() { return positiveUpdateCount.get(); }
+    /** RUN 22 — number of negative (delta < 0) updates. */
+    public long negativeUpdateCount() { return negativeUpdateCount.get(); }
     public int vocabularyCoverage() { return weights.size(); }
 
     /**

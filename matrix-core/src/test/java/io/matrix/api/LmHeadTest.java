@@ -155,4 +155,86 @@ class LmHeadTest {
         // Score should be a finite, reasonable value
         assertThat(Double.isFinite(posScore)).isTrue();
     }
+
+    // ─── RUN 22 — signed update API ───
+
+    @Test
+    void applyUpdatePositiveIncreasesScore() {
+        boolean[] fp = new boolean[100];
+        for (int i = 0; i < 50; i++) fp[i] = true;
+        // Apply 50 positive updates with delta = +0.1
+        for (int u = 0; u < 50; u++) {
+            head.applyUpdate(fp, 7, +0.1);
+        }
+        double score = head.score(fp, 7);
+        assertThat(score).as("positive signed update increases score").isGreaterThan(0.0);
+        assertThat(head.positiveUpdateCount()).isEqualTo(50);
+        assertThat(head.negativeUpdateCount()).isZero();
+    }
+
+    @Test
+    void applyUpdateNegativeDecreasesScore() {
+        // Train token 7 positively first.
+        boolean[] fp = new boolean[100];
+        for (int i = 0; i < 50; i++) fp[i] = true;
+        for (int u = 0; u < 50; u++) {
+            head.applyUpdate(fp, 7, +0.1);
+        }
+        double scoreAfterPositive = head.score(fp, 7);
+        assertThat(scoreAfterPositive).isGreaterThan(0.0);
+
+        // Now apply 100 negative updates with delta = -0.1.
+        for (int u = 0; u < 100; u++) {
+            head.applyUpdate(fp, 7, -0.1);
+        }
+        double scoreAfterNegative = head.score(fp, 7);
+
+        // The negative delta should drive the score DOWN significantly.
+        assertThat(scoreAfterNegative)
+                .as("negative signed update reduces score (positive=%.4f, negative=%.4f)",
+                        scoreAfterPositive, scoreAfterNegative)
+                .isLessThan(scoreAfterPositive);
+        assertThat(head.positiveUpdateCount()).isEqualTo(50);
+        assertThat(head.negativeUpdateCount()).isEqualTo(100);
+    }
+
+    @Test
+    void applyUpdateRejectsInvalidArgs() {
+        boolean[] fp = new boolean[100];
+        for (int i = 0; i < 30; i++) fp[i] = true;
+        // null chain output → false
+        assertThat(head.applyUpdate(null, 42, 0.1)).isFalse();
+        // negative token → false
+        assertThat(head.applyUpdate(fp, -1, 0.1)).isFalse();
+        // valid call → true
+        assertThat(head.applyUpdate(fp, 42, 0.1)).isTrue();
+        assertThat(head.positiveUpdateCount()).isEqualTo(1);
+    }
+
+    @Test
+    void applyUpdateZeroDeltaDoesNotIncrementCounters() {
+        boolean[] fp = new boolean[100];
+        for (int i = 0; i < 30; i++) fp[i] = true;
+        // delta = 0 should not be counted as positive or negative
+        head.applyUpdate(fp, 99, 0.0);
+        assertThat(head.positiveUpdateCount()).isZero();
+        assertThat(head.negativeUpdateCount()).isZero();
+        // updateCount still increments (since the path was traversed)
+        assertThat(head.updateCount()).isEqualTo(1);
+    }
+
+    @Test
+    void updateWithNegativesCountsAsNegativeUpdates() {
+        // RUN 22: when update(features, token, nNegatives) is called, each
+        // negative sample now goes through applyUpdate(features, negToken, -0.01),
+        // which IS counted in negativeUpdateCount.
+        boolean[] fp = new boolean[100];
+        for (int i = 0; i < 50; i++) fp[i] = true;
+        // 10 positives with 3 negatives each = 30 negative updates applied
+        for (int u = 0; u < 10; u++) {
+            head.update(fp, 42, 3);
+        }
+        assertThat(head.positiveUpdateCount()).isEqualTo(10);
+        assertThat(head.negativeUpdateCount()).isEqualTo(30);
+    }
 }

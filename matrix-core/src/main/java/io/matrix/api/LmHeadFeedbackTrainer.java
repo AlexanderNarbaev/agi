@@ -48,6 +48,8 @@ public class LmHeadFeedbackTrainer {
     public static final double POSITIVE_THRESHOLD = 0.7;
     /** Rating < this value counts as negative (thumbs-down). */
     public static final double NEGATIVE_THRESHOLD = 0.3;
+    /** RUN 22 — magnitude of negative weight updates (per token, per chain feature). */
+    public static final double NEGATIVE_DELTA = -0.1;
 
     @Inject
     ConversationMemory conversationMemory;
@@ -134,15 +136,12 @@ public class LmHeadFeedbackTrainer {
                 lmHead.update(chainOutput, token, 0);
                 positiveUpdates.incrementAndGet();
             } else if (sign < 0) {
-                // Negative: decrementForToken is a no-op (no signed LmHead
-                // API yet), so we DON'T increment negativeUpdates either —
-                // the skip counter captures this case at the entry guard.
+                // RUN 22: real signed update via LmHead.applyUpdate with
+                // negative delta. This DECREMENTS the firing-neuron weights
+                // by NEGATIVE_DELTA per token, weakening the link between
+                // this chain output and this token.
                 decrementForToken(lmHead, chainOutput, token);
-                // negativeUpdates is intentionally NOT incremented here:
-                // the LmHead has no signed update path, so there is no
-                // real "negative update" happening. The signal is
-                // preserved in the ConversationFeedbackStore for future
-                // re-training. See EXP-MATRIX.19.
+                negativeUpdates.incrementAndGet();
             }
         }
 
@@ -155,25 +154,18 @@ public class LmHeadFeedbackTrainer {
     /**
      * Decrement weights for a (chainOutput, token) pair.
      *
-     * <p>RUN 19 honest caveat: {@link LmHead#update(boolean[], int, int)}
-     * is sign-positive only. To decrement weights we apply a small
-     * "weight penalty" by calling update on a no-firing chain (all-zero
-     * fingerprint), which leaves the original token's weights unchanged
-     * but exposes the asymmetry in the weight HashMap. This is a coarse
-     * approximation documented in EXP-MATRIX.19 — for true negative
-     * updates, the LmHead would need a signed update API.
+     * <p>RUN 22: now uses the signed {@link LmHead#applyUpdate(boolean[], int, double)}
+     * API. This is a real negative update — firing neurons get
+     * {@code weights -= |NEGATIVE_DELTA|}, non-firing get the scaled
+     * negative decay.
      *
-     * <p>For now, negative feedback is logged and tracked but does not
-     * produce a per-token weight decrement. The signal is preserved in
-     * the conversation feedback store for future re-training.
+     * <p>Compared to RUN 19: the negative feedback signal is no longer
+     * just captured in the feedback store; it directly mutates the
+     * LM head weights so subsequent scoring reflects the negative
+     * signal. EXP-MATRIX.21 quantifies the score reduction.
      */
     private void decrementForToken(LmHead lmHead, boolean[] chainOutput, int token) {
-        // No-op for the current LmHead API. Negative feedback is
-        // captured at the store level (see conversationMemory +
-        // feedbackStore.ratingFor) and surfaced in EXP-MATRIX.19.
-        // The skip counter (skippedUpdates) is incremented elsewhere
-        // when rating crosses NEGATIVE_THRESHOLD — this method exists
-        // to keep the code path uniform for future expansion.
+        lmHead.applyUpdate(chainOutput, token, NEGATIVE_DELTA);
     }
 
     private static int[] tokenize(String text) {
