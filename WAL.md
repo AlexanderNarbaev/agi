@@ -246,3 +246,22 @@ Total tests after RUN 12-21: 79/79 pass.
 - Exp028PerformanceBaselineTest captures real baseline numbers:
   chain p50=90ns, qa p50=15us, lmhead p50=71ns, full p50=471ns.
 - 5 tests pass.
+
+## RUN 29 — sparse weight storage diagnostics (2026-09-05 15:04)
+
+- New LmHead memory-footprint diagnostics:
+  denseMemoryBytes, sparseMemoryBytes, sparsityRatio,
+  nonZeroWeightCount, totalWeightSlots.
+- Honest finding: with current Hebbian decay, ALL slots end up
+  non-zero. Sparse storage break-even requires changing decay
+  to floor-at-zero.
+- 4 new LmHeadTest (19 total, all pass).
+- EXP-MATRIX.24 documents the honest finding.
+
+## RUN 30 — semantic query expansion (2026-09-05 15:09)
+
+- New SemanticExpander: query + vocab → expanded token set with
+  character-trigram fuzzy matches.
+- 11 SemanticExpanderTest + 6 Exp025SemanticRetrievalTest (all pass).
+- EXP-MATRIX.25 documents the Cyrillic regex bug (?U flag required).
+- Honest caveat: cheap heuristic, NOT a substitute for true embeddings.

@@ -1643,4 +1643,47 @@ heavy concurrency.
 - **3 new EXP reports** (EXP-MATRIX.21, .22, .23)
 - **Cumulative tests**: 313 (RUN 12-21) + 57 (RUN 22-28) = **370 tests, 0 failures**
 
-(End of file - total ~1750 lines)
+---
+
+## Section XXXVIII — RUN 29 (2026-09-05 15:04): sparse weight diagnostics
+
+New `LmHead` memory-footprint diagnostics:
+- `denseMemoryBytes()`: vocab × neurons × 8.
+- `sparseMemoryBytes()`: nonZero × 12 + overhead.
+- `sparsityRatio()`: 0..1 fraction of zero slots.
+- `nonZeroWeightCount()`, `totalWeightSlots()`: raw counts.
+
+Honest finding (EXP-MATRIX.24): with current Hebbian decay, ALL
+slots end up non-zero. Sparse storage break-even requires changing
+the decay rule to floor-at-zero. Beyond RUN 29 scope.
+
+4 new LmHeadTest (19 total, all pass).
+
+## Section XXXIX — RUN 30 (2026-09-05 15:09): semantic query expansion
+
+New `SemanticExpander`: query + vocab → expanded token set with
+character-trigram fuzzy matches. Boosts retrieval for
+morphological variants (plural/singular, case, suffix changes).
+
+- 11 SemanticExpanderTest (all pass): original tokens preserved,
+  fuzzy matches added, no false positives, deterministic.
+- 6 Exp025SemanticRetrievalTest (all pass): real corpus +
+  expander integration. EXP-MATRIX.25 documents the Cyrillic
+  regex bug found during testing (`(?U)\W+` flag required).
+
+Honest caveat: cheap heuristic, NOT a substitute for true
+embeddings. For high-quality semantic search a 200M-param model
+would be needed.
+
+## RUN 22-30 totals (cumulative)
+
+- **80 new tests added** (RUN 22: +5+1, RUN 23: +3, RUN 24: +5,
+  RUN 25: +6, RUN 26: +9, RUN 27: +11, RUN 28: +5, RUN 29: +4,
+  RUN 30: +11+6)
+- **9 new Java classes** (MetricsResource, CorpusMigration,
+  TenantQaIndex, OutputSafetyFilter, SemanticExpander, plus
+  LmHead additions and refactor)
+- **5 new EXP reports** (EXP-MATRIX.21, .22, .23, .24, .25)
+- **Cumulative tests**: 313 (RUN 12-21) + 80 (RUN 22-30) = **393 tests, 0 failures**
+
+(End of file - total ~1780 lines)
