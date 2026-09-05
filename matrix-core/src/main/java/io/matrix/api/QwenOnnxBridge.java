@@ -108,6 +108,25 @@ public class QwenOnnxBridge {
     }
 
     /**
+     * RUN 74 — multi-turn chat with explicit history.
+     *
+     * <p>Takes a list of prior messages (system/user/assistant), appends
+     * the new user message, runs generation, and returns the cleaned
+     * reply. This is the canonical multi-turn entry point.
+     */
+    public String chatWithHistory(java.util.List<QwenChatTemplate.Message> history,
+                                   String userMessage,
+                                   int maxTokens,
+                                   double temperature, int topK, double topP) {
+        java.util.List<QwenChatTemplate.Message> full =
+                new java.util.ArrayList<>(history);
+        full.add(QwenChatTemplate.Message.user(userMessage));
+        String formatted = QwenChatTemplate.buildPrompt(full);
+        String raw = generateSampled(formatted, maxTokens, temperature, topK, topP);
+        return QwenChatTemplate.cleanReply(raw);
+    }
+
+    /**
      * Generate text with full sampling strategy: temperature + top-k + top-p.
      */
     public String generateSampled(String prompt, int maxTokens,

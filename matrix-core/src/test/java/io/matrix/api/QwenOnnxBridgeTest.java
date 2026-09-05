@@ -229,6 +229,25 @@ class QwenOnnxBridgeTest {
         bridge.close();
     }
 
+    @Test
+    @EnabledIf("modelAvailable")
+    void chatWithHistoryAcceptsPriorMessages() throws Exception {
+        Path dir = findModelDir();
+        QwenOnnxBridge bridge = new QwenOnnxBridge(dir);
+        bridge.setMaxNewTokens(8);
+        if (!bridge.load()) return;
+
+        java.util.List<QwenChatTemplate.Message> history = java.util.List.of(
+                QwenChatTemplate.Message.system("You are a helpful assistant."),
+                QwenChatTemplate.Message.user("My name is Alex."),
+                QwenChatTemplate.Message.assistant("Hello Alex, nice to meet you.")
+        );
+        String reply = bridge.chatWithHistory(history, "What's my name?", 8, 0.0, -1, 1.0);
+        assertThat(reply).doesNotContain("<|im_start|>");
+        assertThat(reply).doesNotContain("<|im_end|>");
+        bridge.close();
+    }
+
     // EnabledIf helper
     static boolean modelAvailable() {
         return findModelDir() != null && findOnnx() != null;
