@@ -169,6 +169,65 @@ public class QaCorpusIndex {
                 .toList();
     }
 
+    /** RUN 31 — flag to enable semantic expansion by default. */
+    private volatile boolean semanticExpansionEnabled = true;
+
+    /** RUN 31 — set whether semantic expansion is enabled (default true). */
+    public void setSemanticExpansionEnabled(boolean enabled) {
+        this.semanticExpansionEnabled = enabled;
+    }
+
+    public boolean isSemanticExpansionEnabled() { return semanticExpansionEnabled; }
+
+    /**
+     * RUN 31 — Search with semantic expansion.
+     *
+     * <p>Uses {@link SemanticExpander} to expand the query with
+     * character-trigram fuzzy matches against the indexed vocabulary,
+     * then re-runs the same idf-weighted token-overlap scoring over
+     * the expanded token set.
+     *
+     * <p>This finds related entries when the user's query is a
+     * morphological variant of the indexed question (e.g., plural
+     * vs singular, or a slightly different word).
+     *
+     * <p>Same input → same output (deterministic, no LLM call).
+     */
+    public List<Entry> searchWithExpansion(String query, int topK) {
+        if (query == null || query.isBlank()) return List.of();
+        if (!semanticExpansionEnabled) return search(query, topK);
+        State s = stateRef.get();
+        if (s.entries.isEmpty()) return List.of();
+
+        // Build vocab from indexed tokens
+        Set<String> vocab = s.inverted.keySet();
+
+        // Expand query
+        SemanticExpander expander = new SemanticExpander();
+        Set<String> expanded = expander.expand(query, vocab);
+        if (expanded.isEmpty()) return List.of();
+
+        // Score using expanded tokens
+        Map<Integer, Double> scores = new HashMap<>();
+        int totalDocs = s.entries.size();
+        for (String qt : expanded) {
+            List<int[]> post = s.inverted.get(qt);
+            if (post == null || post.isEmpty()) continue;
+            double idf = Math.log(1.0 + totalDocs / (1.0 + s.docFreq.getOrDefault(qt, 0)));
+            for (int[] hit : post) {
+                int docId = hit[0];
+                int docLen = hit[1];
+                double tfBoost = 1.0 / (1.0 + docLen);
+                scores.merge(docId, idf * tfBoost, Double::sum);
+            }
+        }
+        return scores.entrySet().stream()
+                .sorted(Map.Entry.<Integer, Double>comparingByValue().reversed())
+                .limit(topK)
+                .map(e -> s.entries.get(e.getKey()))
+                .toList();
+    }
+
     /** Score of the best match for query (idf-weighted overlap), or 0 if no overlap. */
     public double topScore(String query) {
         if (query == null || query.isBlank()) return 0.0;

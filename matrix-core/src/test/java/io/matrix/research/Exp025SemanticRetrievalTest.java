@@ -146,4 +146,37 @@ class Exp025SemanticRetrievalTest {
                 .isNotEmpty();
         assertThat(results.get(0).answer()).isEqualTo(entry.answer());
     }
+
+    // ─── RUN 31 — wired-in searchWithExpansion ───
+
+    @Test
+    void searchWithExpansionFindsExactMatches() {
+        // On the small test corpus, exact-match should still work.
+        List<QaCorpusIndex.Entry> results = corpus.searchWithExpansion("квантовый компьютер", 3);
+        assertThat(results).isNotEmpty();
+        assertThat(results.get(0).answer()).isEqualTo("A1");
+    }
+
+    @Test
+    void searchWithExpansionHandlesUnrelatedQueries() {
+        List<QaCorpusIndex.Entry> results = corpus.searchWithExpansion("морковный сок", 3);
+        assertThat(results).isEmpty();
+    }
+
+    @Test
+    void searchWithExpansionCanBeDisabled() {
+        corpus.setSemanticExpansionEnabled(false);
+        List<QaCorpusIndex.Entry> results = corpus.searchWithExpansion("квантовый компьютер", 3);
+        // Should still work for exact matches (falls back to plain search).
+        assertThat(results).isNotEmpty();
+        corpus.setSemanticExpansionEnabled(true);  // restore for other tests
+    }
+
+    @Test
+    void searchWithExpansionIsDeterministic() {
+        List<QaCorpusIndex.Entry> r1 = corpus.searchWithExpansion("квантовый компьютер", 3);
+        List<QaCorpusIndex.Entry> r2 = corpus.searchWithExpansion("квантовый компьютер", 3);
+        assertThat(r1.size()).isEqualTo(r2.size());
+        assertThat(r1.get(0).id()).isEqualTo(r2.get(0).id());
+    }
 }
