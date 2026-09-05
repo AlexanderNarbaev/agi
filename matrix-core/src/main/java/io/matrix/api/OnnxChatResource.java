@@ -231,6 +231,24 @@ public class OnnxChatResource {
     }
 
     @GET
+    @Path("/version")
+    @Produces(MediaType.APPLICATION_JSON)
+    public String version() {
+        return "{"
+                + "\"name\":\"matrix-onnx\","
+                + "\"version\":\"1.0.0\","
+                + "\"build\":\"" + (System.getenv("MATRIX_BUILD") != null
+                        ? System.getenv("MATRIX_BUILD") : "dev") + "\","
+                + "\"runtime\":\"java-" + System.getProperty("java.version") + "\","
+                + "\"features\":["
+                + "\"chat\",\"generate\",\"stream\",\"embed\","
+                + "\"compare\",\"metrics\",\"health\",\"registry\","
+                + "\"cache\",\"batch\",\"calibration\""
+                + "]"
+                + "}";
+    }
+
+    @GET
     @Path("/registry")
     @Produces(MediaType.APPLICATION_JSON)
     public String registry() {

@@ -214,4 +214,16 @@ class OnnxChatResourceTest {
         String reply = resource.embed(null);
         assertThat(reply).startsWith("ERROR:");
     }
+
+    @Test
+    void versionEndpointReturnsJson() {
+        OnnxChatResource resource = new OnnxChatResource();
+        String json = resource.version();
+        assertThat(json).contains("\"name\":\"matrix-onnx\"");
+        assertThat(json).contains("\"version\":\"1.0.0\"");
+        assertThat(json).contains("\"runtime\":\"java-");
+        assertThat(json).contains("\"features\":[");
+        assertThat(json).contains("\"chat\"");
+        assertThat(json).contains("\"embed\"");
+    }
 }
