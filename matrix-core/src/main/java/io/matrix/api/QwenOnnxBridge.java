@@ -693,6 +693,16 @@ public class QwenOnnxBridge {
         return onnx;
     }
 
+    /** RUN 112 — get the EOS token id. */
+    public long eosToken() {
+        return eosToken;
+    }
+
+    /** RUN 112 — get the max new tokens limit. */
+    public int maxNewTokens() {
+        return maxNewTokens;
+    }
+
     private static long[] toLongArray(List<Long> list) {
         long[] out = new long[list.size()];
         for (int i = 0; i < out.length; i++) out[i] = list.get(i);
