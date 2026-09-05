@@ -96,4 +96,35 @@ class OnnxInferenceMetricsTest {
         m.record(1, 90_000_000L, true);
         assertThat(m.avgLatencyNanos()).isEqualTo(60_000_000L);
     }
+
+    @Test
+    void recordArgmaxProbabilityUpdatesAverage() {
+        OnnxInferenceMetrics m = new OnnxInferenceMetrics();
+        m.recordArgmaxProbability(0.5);
+        m.recordArgmaxProbability(0.7);
+        m.recordArgmaxProbability(0.9);
+        assertThat(m.avgArgmaxProbability()).isCloseTo(0.7, org.assertj.core.data.Offset.offset(0.01));
+    }
+
+    @Test
+    void emptyArgmaxAverage() {
+        OnnxInferenceMetrics m = new OnnxInferenceMetrics();
+        assertThat(m.avgArgmaxProbability()).isZero();
+    }
+
+    @Test
+    void resetClearsArgmax() {
+        OnnxInferenceMetrics m = new OnnxInferenceMetrics();
+        m.recordArgmaxProbability(0.8);
+        m.reset();
+        assertThat(m.avgArgmaxProbability()).isZero();
+    }
+
+    @Test
+    void jsonIncludesArgmaxProb() {
+        OnnxInferenceMetrics m = new OnnxInferenceMetrics();
+        m.recordArgmaxProbability(0.5);
+        String json = m.toJson();
+        assertThat(json).contains("\"avgArgmaxProb\":");
+    }
 }

@@ -20,6 +20,8 @@ public final class OnnxInferenceMetrics {
     private final AtomicLong maxLatencyNanos = new AtomicLong();
     private final AtomicLong totalGpuCalls = new AtomicLong();
     private final AtomicLong totalCpuCalls = new AtomicLong();
+    private final AtomicLong totalArgmaxProbSum = new AtomicLong();
+    private final AtomicLong totalArgmaxProbCount = new AtomicLong();
 
     private volatile long firstInferenceNanos = 0;
 
@@ -34,6 +36,19 @@ public final class OnnxInferenceMetrics {
         if (firstInferenceNanos == 0) {
             firstInferenceNanos = System.nanoTime();
         }
+    }
+
+    /** RUN 92 — record argmax probability for ECE-style calibration. */
+    public void recordArgmaxProbability(double prob) {
+        // Store fixed-point: multiply by 1e6
+        totalArgmaxProbSum.addAndGet((long) (prob * 1_000_000.0));
+        totalArgmaxProbCount.incrementAndGet();
+    }
+
+    public double avgArgmaxProbability() {
+        long n = totalArgmaxProbCount.get();
+        if (n == 0) return 0.0;
+        return (totalArgmaxProbSum.get() / 1_000_000.0) / n;
     }
 
     private static void updateMax(AtomicLong holder, long value) {
@@ -76,6 +91,8 @@ public final class OnnxInferenceMetrics {
         maxLatencyNanos.set(0);
         totalGpuCalls.set(0);
         totalCpuCalls.set(0);
+        totalArgmaxProbSum.set(0);
+        totalArgmaxProbCount.set(0);
         firstInferenceNanos = 0;
     }
 
@@ -90,6 +107,7 @@ public final class OnnxInferenceMetrics {
                 + ",\"totalCpuCalls\":" + totalCpuCalls.get()
                 + ",\"tokensPerSecond\":" + tokensPerSecond()
                 + ",\"gpuRatio\":" + gpuRatio()
+                + ",\"avgArgmaxProb\":" + avgArgmaxProbability()
                 + ",\"uptimeMs\":" + uptimeMs()
                 + "}";
     }

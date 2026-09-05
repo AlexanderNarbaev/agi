@@ -527,6 +527,7 @@ public class QwenOnnxBridge {
 
                         steps.add(new GenerationResult.TokenStep(bestIdx,
                                 tokenizer.reverseToken(bestIdx), probs[bestIdx], top));
+                        metrics.recordArgmaxProbability(probs[bestIdx]);
 
                         if (bestIdx == eosToken) break;
                         allIds.add((long) bestIdx);
