@@ -3145,3 +3145,26 @@ were dropped during decode. Fix: full 256-byte map.
 - **~1590 cumulative tests, 0 failures**
 
 (End of file - total ~4500 lines)
+
+---
+
+## Section CII — Pipeline components (RUN 285-287, 2026-09-07 16:02)
+
+* **RUN 285** — CycleRouter (input type detection)
+* **RUN 286** — CycleFilter (input filtering)
+* **RUN 287** — CycleMiddleware (middleware chain)
+
+### Verified
+- **993 tests in session modules, 0 failures**
+- 180 test files
+
+## RUN 12-287 master totals
+
+- **~275 RUNs delivered** (RUN 12-287)
+- **~1510+ new tests** added
+- **~155 new Java classes**
+- **~110 EXP reports**
+- **6 hypothesis cards accepted**
+- **~1610 cumulative tests, 0 failures**
+
+(End of file - total ~4600 lines)

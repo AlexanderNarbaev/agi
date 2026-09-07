@@ -704,3 +704,12 @@ Phase α CLOSED. Moving to Phase β.
 
 ### Project totals (RUN 12-283)
 * ~271 RUNs, ~1590 cumulative tests.
+
+## RUN 285-287 — Pipeline components (2026-09-07 16:02)
+
+* CycleRouter, CycleFilter, CycleMiddleware.
+* 19 new tests across 3 components.
+* **993 session module tests, 0 failures.**
+
+### Project totals (RUN 12-287)
+* ~275 RUNs, ~1610 cumulative tests.
