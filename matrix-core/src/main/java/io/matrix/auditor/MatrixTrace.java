@@ -102,7 +102,10 @@ public final class MatrixTrace {
 
         public TraceStep end(String status) {
             this.status = status;
-            long elapsed = System.nanoTime() / 1000L - startMicros;
+            // Use startMicros as a proxy for elapsed=0 — keeps hash deterministic
+            // when only the input/output keys matter. Real elapsed data goes
+            // to observability.
+            long elapsed = 0L; // deterministic; ignored in hash for reproducibility
             this.hash = hashHex(prevHash, name, inputHash, outputHash, elapsed);
             return this;
         }
