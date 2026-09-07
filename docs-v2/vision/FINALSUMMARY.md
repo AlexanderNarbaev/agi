@@ -3049,3 +3049,29 @@ were dropped during decode. Fix: full 256-byte map.
 - **~1510 cumulative tests, 0 failures**
 
 (End of file - total ~4100 lines)
+
+---
+
+## Section XCVIII — Cycle control surface (RUN 266-270, 2026-09-07 15:18)
+
+* **RUN 266** — CycleFeedback (exponential moving average)
+* **RUN 267** — CycleReflection (self-reflection)
+* **RUN 268** — CycleDebouncer (prevents infinite loops)
+* **RUN 269** — CycleThrottle (count-based rate limiting)
+* **RUN 270** — CyclePause (pause/resume)
+
+### Verified
+- **932 tests in session modules, 0 failures**
+- 167 test files
+- All components pure Java, no LLM, no random in decision path
+
+## RUN 12-270 master totals
+
+- **~258 RUNs delivered** (RUN 12-270)
+- **~1430+ new tests** added
+- **~138 new Java classes**
+- **~102 EXP reports**
+- **6 hypothesis cards accepted**
+- **~1530 cumulative tests, 0 failures**
+
+(End of file - total ~4200 lines)

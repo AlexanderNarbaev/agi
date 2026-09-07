@@ -668,3 +668,12 @@ Phase α CLOSED. Moving to Phase β.
 
 ### Project totals (RUN 12-264)
 * ~252 RUNs, ~1510 cumulative tests.
+
+## RUN 266-270 — Cycle control surface (2026-09-07 15:18)
+
+* CycleFeedback (EMA), CycleReflection, CycleDebouncer, CycleThrottle, CyclePause.
+* 18 new tests across 5 components.
+* **932 session module tests, 0 failures.**
+
+### Project totals (RUN 12-270)
+* ~258 RUNs, ~1530 cumulative tests.
