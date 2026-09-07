@@ -618,3 +618,12 @@ Phase α CLOSED. Moving to Phase β.
 
 ### Project totals (RUN 12-185)
 * ~172 RUNs, 968 cumulative tests, 0 failures.
+
+## RUN 187-191 — Phase δ.4 verification + audits (2026-09-07 11:35)
+
+* AuditCheck + EXP: 578 files, 38 violations, onnx=0, severity=WARN.
+* BrainPerformanceMetrics: snapshot of cycles + accepted/denied.
+* BrainCycleProfiler + EXP: 1000 cycles profiled (2.8µs min, 1ms max).
+
+### Project totals (RUN 12-191)
+* ~178 RUNs, 1043 cumulative tests in this session's modules alone.

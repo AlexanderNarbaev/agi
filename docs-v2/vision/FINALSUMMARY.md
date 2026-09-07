@@ -2899,3 +2899,30 @@ were dropped during decode. Fix: full 256-byte map.
 
 (End of file - total ~3500 lines)
 
+
+---
+
+## Section XCIII — Phase δ.4 verification + audits (RUN 187-191, 2026-09-07 11:35)
+
+### RUN 187 — AuditCheck
+- Severity ladder: PASS/WARN/FAIL.
+
+### RUN 188 — AuditCheck EXP
+- Real audit: **578 files, 38 violations, onnx=0, severity=WARN**.
+
+### RUN 189 — BrainPerformanceMetrics
+- Snapshot of cycles + accepted/denied.
+
+### RUN 190-191 — BrainCycleProfiler + EXP
+- 1000 cycles profiled: 2.8µs min, 1ms max.
+- Per-phase min/p50/p95/p99/max.
+
+## RUN 12-191 master totals
+
+- **~178 RUNs delivered** (RUN 12-191)
+- **~1000+ new tests** added
+- **~88 new Java classes**
+- **~67 EXP reports**
+- **6 hypothesis cards accepted**
+- **~1043 cumulative tests, 0 failures**
+
