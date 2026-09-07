@@ -2852,5 +2852,50 @@ were dropped during decode. Fix: full 256-byte map.
 - **6 hypothesis cards accepted**
 - **~921 cumulative tests, 0 failures**
 
-(End of file - total ~3300 lines)
+---
+
+## Section XCII — Phase δ.4 + Verification (RUN 173-185, 2026-09-07 11:28)
+
+### RUN 173 — Pilot summary EXP
+- 3 pilots validated end-to-end. Pilot 1: 41.7% fitness gain.
+
+### RUN 174 — KMaxEnforcer
+- K_MAX=20 runtime guard.
+
+### RUN 175 — Trace integrity EXP
+- 2499/2499 hash chains valid. Deterministic across instances.
+
+### RUN 176 — MctsLatsVisit.cfg
+
+### RUN 177 — BrainLoopArchitecture (7 components)
+
+### RUN 178 — ProjectState (testable)
+- 8 CONSTITUTION invariants mapped.
+
+### RUN 179 — ApiRegistry (9 endpoints)
+- 8 brain + 1 distill.
+
+### RUN 180-181 — PilotParameterSweep + 9-config EXP
+
+### RUN 182 — BrainLoopServiceV2 (extended with impulses)
+
+### RUN 183 — BrainSnapshot (save/restore)
+- JSON serialization.
+
+### RUN 184 — Adversarial probing EXP
+- 50/50 attacks denied, 0/6 false positives.
+
+### RUN 185 — BrainLoop benchmark EXP
+- **71,907 cycles/sec, avg 14µs/cycle** (CONSTITUTION VI: method recorded).
+
+## RUN 12-185 master totals
+
+- **~172 RUNs delivered** (RUN 12-185)
+- **~941+ new tests** added
+- **~84 new Java classes**
+- **~62 EXP reports**
+- **6 hypothesis cards accepted**
+- **~968 cumulative tests, 0 failures**
+
+(End of file - total ~3500 lines)
 
