@@ -722,3 +722,12 @@ Phase α CLOSED. Moving to Phase β.
 
 ### Project totals (RUN 12-291)
 * ~279 RUNs, ~1630 cumulative tests.
+
+## RUN 293-294 — Buffer components (2026-09-07 16:13)
+
+* CycleInputBuffer, CycleOutputBuffer.
+* 10 new tests across 2 components.
+* **1017 session module tests, 0 failures.**
+
+### Project totals (RUN 12-294)
+* ~282 RUNs, ~1650 cumulative tests.

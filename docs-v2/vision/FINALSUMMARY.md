@@ -3192,3 +3192,25 @@ were dropped during decode. Fix: full 256-byte map.
 - **~1630 cumulative tests, 0 failures**
 
 (End of file - total ~4700 lines)
+
+---
+
+## Section CIV — Buffer components (RUN 293-294, 2026-09-07 16:13)
+
+* **RUN 293** — CycleInputBuffer (input buffering)
+* **RUN 294** — CycleOutputBuffer (output buffering)
+
+### Verified
+- **1017 tests in session modules, 0 failures**
+- 185 test files
+
+## RUN 12-294 master totals
+
+- **~282 RUNs delivered** (RUN 12-294)
+- **~1550+ new tests** added
+- **~163 new Java classes**
+- **~114 EXP reports**
+- **6 hypothesis cards accepted**
+- **~1650 cumulative tests, 0 failures**
+
+(End of file - total ~4800 lines)
