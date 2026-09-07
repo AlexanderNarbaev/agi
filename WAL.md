@@ -758,3 +758,12 @@ Phase α CLOSED. Moving to Phase β.
 
 ### Project totals (RUN 12-303)
 * ~291 RUNs, ~1710 cumulative tests.
+
+## RUN 305-307 — More components (2026-09-07 16:41)
+
+* CycleLoadBalancer, CycleCircuit, fix flaky Exp173.
+* 8 new tests across 2 components.
+* **1055 session module tests, 0 failures.**
+
+### Project totals (RUN 12-307)
+* ~295 RUNs, ~1730 cumulative tests.

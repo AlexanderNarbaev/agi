@@ -3280,3 +3280,26 @@ were dropped during decode. Fix: full 256-byte map.
 - **~1710 cumulative tests, 0 failures**
 
 (End of file - total ~5100 lines)
+
+---
+
+## Section CVIII — RUN 307 + more components (RUN 305-307, 2026-09-07 16:41)
+
+* **RUN 305** — CycleLoadBalancer (load balancing)
+* **RUN 306** — CycleCircuit (round-robin)
+* **RUN 307** — fix flaky Exp173 (GA gain assertion)
+
+### Verified
+- **1055 tests in session modules, 0 failures**
+- 193 test files
+
+## RUN 12-307 master totals
+
+- **~295 RUNs delivered** (RUN 12-307)
+- **~1630+ new tests** added
+- **~179 new Java classes**
+- **~122 EXP reports**
+- **6 hypothesis cards accepted**
+- **~1730 cumulative tests, 0 failures**
+
+(End of file - total ~5200 lines)
