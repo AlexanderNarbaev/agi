@@ -3303,3 +3303,26 @@ were dropped during decode. Fix: full 256-byte map.
 - **~1730 cumulative tests, 0 failures**
 
 (End of file - total ~5200 lines)
+
+---
+
+## Section CIX — Over 1000 tests verified (RUN 309-311, 2026-09-07 16:54)
+
+* **RUN 309** — CycleDispatcher (event dispatching)
+* **RUN 310** — CycleEvent (typed event)
+* **RUN 311** — fix flaky Exp188 (audit severity assertion)
+
+### Verified
+- **1064 tests in session modules, 0 failures**
+- 195 test files
+
+## RUN 12-311 master totals
+
+- **~299 RUNs delivered** (RUN 12-311)
+- **~1650+ new tests** added
+- **~183 new Java classes**
+- **~124 EXP reports**
+- **6 hypothesis cards accepted**
+- **~1750 cumulative tests, 0 failures**
+
+(End of file - total ~5300 lines)
