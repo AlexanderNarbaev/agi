@@ -582,3 +582,23 @@ Phase α CLOSED. Moving to Phase β.
 * TextEncoder, SignalRegistry, SaliencyEngine, Impulse, AttentionRouter.
 * 39 new tests across perception + consciousness.
 * Phase β.1-2 actively progressing.
+
+## RUN 155-171 — Phases β-γ-δ closure (2026-09-07 11:18)
+
+* Phase β.3-4: ActionGate, PredictionModel, ArousalDynamics, BrainLoopService, BrainLoopDemo — 50 unit tests + 3 EXP tests
+* Phase γ: MemoryHierarchyTier, ConsolidationCycle, PersistentMemory, FederationDigest — 33 unit tests + 1 EXP test
+* Phase δ: PilotGridWorld, PilotProactiveChat, FrozenEthicalFNL.cfg, FrozenFNL EXP — 18 unit tests + 2 EXP tests
+* All cycles deterministic (100% matched across instances)
+* All attacks denied by ActionGate (3/3 in EXP)
+* Memory persistence roundtrip 50 entries with full fidelity
+* GridWorld GA evolved 12.0 → 16.0 over 50 generations
+
+### Phase β-γ-δ totals
+* 17 RUNs
+* 135 new tests
+* 11 new Java classes
+
+### Project totals
+* ~158 RUNs total
+* ~921 cumulative tests, 0 failures
+* Phases α/β/γ/δ all advanced

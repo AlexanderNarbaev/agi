@@ -2808,3 +2808,49 @@ were dropped during decode. Fix: full 256-byte map.
 - **6 hypothesis cards accepted**
 - **~786 cumulative tests, 0 failures**
 
+---
+
+## Section XCI — Phase β-γ-δ (2026-09-07 11:18): Cognition loop + Memory + Pilots
+
+### Phase β.3-4 — Action gate + BrainLoop (RUN 155-160)
+- **RUN 155**: ActionGate (4-cascade)
+- **RUN 156**: PredictionModel (self-prediction)
+- **RUN 157**: ArousalDynamics (vigilance)
+- **RUN 158**: BrainLoopService (cognitive cycle end-to-end)
+- **RUN 159**: BrainLoopDemo (plain Java CLI)
+- **RUN 160**: BrainLoop EXP
+
+### Phase γ.1-2 — Memory hierarchy (RUN 161-164)
+- **RUN 161**: MemoryHierarchyTier (M0/M1/M2)
+- **RUN 162**: ConsolidationCycle (TR/REM)
+- **RUN 163**: PersistentMemory (JSONL backend)
+- **RUN 164**: Memory persistence EXP
+
+### Phase γ.4 — Federation (RUN 165)
+- **RUN 165**: FederationDigest (SHA-256 digests)
+
+### Phase δ.1-3 — Pilots (RUN 166-170)
+- **RUN 166**: PilotGridWorld (4-neuron agent)
+- **RUN 167**: GridWorld 50-gen GA EXP (fitness 12→16)
+- **RUN 168**: PilotProactiveChat (BrainLoopService-backed)
+- **RUN 169**: FrozenEthicalFNL.cfg (TLC config)
+- **RUN 170**: FrozenFNL prohibitions EXP
+
+### RUN 171 (fix) — Exp167 determinism seed
+
+### Phase β-γ-δ totals
+- **17 RUNs delivered** (RUN 155-171)
+- **+135 new tests** (this session modules)
+- **11 NEW Java classes**
+
+## RUN 12-171 master totals
+
+- **~158 RUNs delivered** (RUN 12-171)
+- **~894+ new tests** added
+- **~76 new Java classes**
+- **~55 EXP reports**
+- **6 hypothesis cards accepted**
+- **~921 cumulative tests, 0 failures**
+
+(End of file - total ~3300 lines)
+
