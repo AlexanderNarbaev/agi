@@ -686,3 +686,12 @@ Phase α CLOSED. Moving to Phase β.
 
 ### Project totals (RUN 12-275)
 * ~263 RUNs, ~1550 cumulative tests.
+
+## RUN 277-279 — Data flow utilities (2026-09-07 15:47)
+
+* CycleCombiner, CycleSplitter, CycleAssembler.
+* 14 new tests across 3 components.
+* **957 session module tests, 0 failures.**
+
+### Project totals (RUN 12-279)
+* ~267 RUNs, ~1570 cumulative tests.

@@ -3099,3 +3099,26 @@ were dropped during decode. Fix: full 256-byte map.
 - **~1550 cumulative tests, 0 failures**
 
 (End of file - total ~4300 lines)
+
+---
+
+## Section C — Data flow utilities (RUN 277-279, 2026-09-07 15:47)
+
+* **RUN 277** — CycleCombiner (merge inputs)
+* **RUN 278** — CycleSplitter (chunk long inputs)
+* **RUN 279** — CycleAssembler (reassemble chunks)
+
+### Verified
+- **957 tests in session modules, 0 failures**
+- 174 test files
+
+## RUN 12-279 master totals
+
+- **~267 RUNs delivered** (RUN 12-279)
+- **~1470+ new tests** added
+- **~147 new Java classes**
+- **~106 EXP reports**
+- **6 hypothesis cards accepted**
+- **~1570 cumulative tests, 0 failures**
+
+(End of file - total ~4400 lines)
