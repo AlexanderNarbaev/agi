@@ -2926,3 +2926,29 @@ were dropped during decode. Fix: full 256-byte map.
 - **6 hypothesis cards accepted**
 - **~1043 cumulative tests, 0 failures**
 
+
+---
+
+## Section XCIV — Conversation + Ablation + Analysis (RUN 194-203, 2026-09-07 11:44)
+
+* **RUN 194** — ConversationRecorder (M0 working memory)
+* **RUN 195** — BrainLoop conversation wiring
+* **RUN 196** — Conversation EXP (20 turns, 19/20 accepted)
+* **RUN 197** — BrainStateCompact (24-byte serialization)
+* **RUN 198** — Compact state EXP (5 snapshots, 4 transitions)
+* **RUN 199** — ExperimentalPipeline (sequential stages)
+* **RUN 200** — AblationStudy (component toggle)
+* **RUN 201** — Ablation EXP (all 6 components, 100/100 each)
+* **RUN 202** — CycleAnalyzer (post-mortem of trace)
+* **RUN 203** — CycleAnalyzer EXP (200 cycles, 1000 steps, 10/10 adversarial denied)
+
+## RUN 12-203 master totals
+
+- **~190 RUNs delivered** (RUN 12-203)
+- **~1090+ new tests** added
+- **~94 new Java classes**
+- **~73 EXP reports**
+- **6 hypothesis cards accepted**
+- **~1133 cumulative tests, 0 failures**
+
+(End of file - total ~3700 lines)

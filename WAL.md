@@ -627,3 +627,11 @@ Phase α CLOSED. Moving to Phase β.
 
 ### Project totals (RUN 12-191)
 * ~178 RUNs, 1043 cumulative tests in this session's modules alone.
+
+## RUN 194-203 — Conversation + Ablation + Analysis (2026-09-07 11:44)
+
+* ConversationRecorder + BrainLoop wiring (8 + 3 + 1 EXP tests).
+* BrainStateCompact (24-byte serialization, 5 unit + 1 EXP).
+* ExperimentalPipeline + AblationStudy (6+5 unit, 1+1 EXP).
+* CycleAnalyzer post-mortem (5 unit + 2 EXP).
+* **Project totals**: ~190 RUNs, ~1133 cumulative tests, 0 failures.
