@@ -2722,3 +2722,18 @@ were dropped during decode. Fix: full 256-byte map.
 - **727 cumulative tests, 0 failures** (719 verified + 8 TextNormalizer)
 
 (End of file - total ~2900 lines)
+
+
+---
+
+## Section LXXXIX — Phase α RUN 141 (2026-09-07 09:56): matrix-tools-distill skeleton
+
+- Created `matrix-tools-distill/` Gradle subproject as offline distillation CLI.
+- `DistillCli` with picocli args.
+- No compile-time dep on matrix-core.
+- ONNX Runtime deps, no Quarkus.
+- 4 CLI tests pass.
+
+### Статус Phase α
+- RUN 141: ✅ done
+- RUN 142-149: planned
