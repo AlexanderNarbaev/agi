@@ -55,7 +55,7 @@ class Exp167GridWorldEvoTest {
     @Test
     void deterministicReplay() {
         // Run twice with same seed — same trajectory
-        long seed = 0x12345678L;
+        long seed = 0x5A5A5A5AL;
         double fitA = runWithSeed(seed);
         double fitB = runWithSeed(seed);
         assertThat(fitA).isEqualTo(fitB);
