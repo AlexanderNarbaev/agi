@@ -547,3 +547,12 @@ Total tests after RUN 12-21: 79/79 pass.
 
 - TextNormalizer: collapse spaces, strip control chars.
 - 8 normalizer tests pass.
+
+## RUN 141 — matrix-tools-distill skeleton (2026-09-07 09:55)
+
+- Created `matrix-tools-distill/` Gradle subproject.
+- `DistillCli` with picocli args: corpus, output, model, --use-gpu, --max-tokens.
+- No compile-time dep on matrix-core.
+- ONNX Runtime deps only, no Quarkus.
+- 4 CLI tests pass.
+- Phase α planned 8 RUNs (141-149); tool subproject ready for phase γ distillation pipeline.

@@ -1,0 +1,87 @@
+// build.gradle for matrix-tools-distill
+//
+// Phase α (RUN 141) — Offline distillation CLI.
+//
+// This module is INTENTIONALLY a separate Gradle project.
+// - No compile-time dependency on matrix-core (uses reflection or its own models).
+// - No COMPILE-TIME LLM symbols available; runtime is plain Java CLI.
+// - CONSTITUTION I: matrix-core runtime classpath must NOT include ONNX runtime.
+//
+// Decision: matrix-tools-distill is its own world for offline distillation.
+// Use cases:
+//   - Run Qwen via ONNX to generate boolean weights offline
+//   - Output weights in MATRIX-compatible format
+//   - Run as a one-shot CLI on a workstation, NOT in production runtime
+
+plugins {
+    id 'java'
+    id 'application'
+    id 'jacoco'
+}
+
+group = 'io.matrix'
+version = '1.0.0'
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(25)
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    // ONNX Runtime
+    implementation 'com.microsoft.onnxruntime:onnxruntime_gpu:1.29.0'
+    implementation 'com.microsoft.onnxruntime:onnxruntime:1.29.0'
+
+    // Logging
+    implementation 'org.slf4j:slf4j-api:2.0.13'
+    implementation 'org.slf4j:slf4j-simple:2.0.13'
+
+    // Jackson for JSON output
+    implementation 'com.fasterxml.jackson.core:jackson-databind:2.16.1'
+
+    // CLI parsing
+    implementation 'info.picocli:picocli:4.7.5'
+
+    // Tests
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.10.0'
+    testImplementation 'org.junit.platform:junit-platform-launcher:1.10.0'
+    testImplementation 'org.assertj:assertj-core:3.26.0'
+}
+
+application {
+    mainClass = 'io.matrix.distill.cli.DistillCli'
+    applicationName = 'matrix-distill'
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.compilerArgs.addAll([
+        '--add-modules=jdk.incubator.vector'
+    ])
+}
+
+tasks.withType(Test) {
+    useJUnitPlatform()
+    def nvidiaLibs = fileTree('/home/alexandr-narbaev/Projects/agi/.venv/lib/python3.14/site-packages') {
+        include 'nvidia/*/lib'
+    }
+    def nvidiaPaths = nvidiaLibs.collect { it.absolutePath }.join(':')
+    systemProperty 'java.library.path', "${nvidiaPaths}:/usr/local/cuda-13.1/lib64"
+    jvmArgs '--enable-native-access=ALL-UNNAMED'
+}
+
+jacocoTestCoverageVerification {
+    violationRules {
+        rule {
+            element = 'BUNDLE'
+            limit {
+                counter = 'METHOD'
+                minimum = 0.70
+            }
+        }
+    }
+}
