@@ -3258,3 +3258,25 @@ were dropped during decode. Fix: full 256-byte map.
 - **~1690 cumulative tests, 0 failures**
 
 (End of file - total ~5000 lines)
+
+---
+
+## Section CVII — Admission control (RUN 302-303, 2026-09-07 16:30)
+
+* **RUN 302** — CycleRateLimiter (token bucket)
+* **RUN 303** — CycleAdmission (admission control)
+
+### Verified
+- **1047 tests in session modules, 0 failures**
+- 191 test files
+
+## RUN 12-303 master totals
+
+- **~291 RUNs delivered** (RUN 12-303)
+- **~1610+ new tests** added
+- **~175 new Java classes**
+- **~120 EXP reports**
+- **6 hypothesis cards accepted**
+- **~1710 cumulative tests, 0 failures**
+
+(End of file - total ~5100 lines)

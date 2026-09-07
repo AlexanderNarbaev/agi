@@ -749,3 +749,12 @@ Phase α CLOSED. Moving to Phase β.
 
 ### Project totals (RUN 12-300)
 * ~288 RUNs, ~1690 cumulative tests.
+
+## RUN 302-303 — Admission control (2026-09-07 16:30)
+
+* CycleRateLimiter, CycleAdmission.
+* 9 new tests across 2 components.
+* **1047 session module tests, 0 failures.**
+
+### Project totals (RUN 12-303)
+* ~291 RUNs, ~1710 cumulative tests.
