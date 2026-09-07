@@ -3013,3 +3013,39 @@ were dropped during decode. Fix: full 256-byte map.
 - **~1336 cumulative tests, 0 failures**
 
 (End of file - total ~3900 lines)
+
+---
+
+## Section XCVII — Cognitive loop depth (RUN 244-264, 2026-09-07 15:03)
+
+* **RUN 244** — CycleMerger (dedup)
+* **RUN 245** — CycleMerger EXP (67 unique, 33 duplicates)
+* **RUN 246** — BrainLoopTopology (7 nodes, 8 edges)
+* **RUN 247** — BrainLoopRouter (phase enable/disable)
+* **RUN 248** — BrainLoopRelay (bounded queue)
+* **RUN 249** — Relay EXP (100 offered, 100 taken)
+* **RUN 250** — BrainLoopSensor (entropy)
+* **RUN 251** — CycleSignature (stable hash)
+* **RUN 252** — CycleSignature EXP (100 unique signatures)
+* **RUN 253** — BrainLoopLatency (per-cycle latency)
+* **RUN 254** — Latency EXP (1000 cycles: avg 30µs, min 9µs, max 3594µs)
+* **RUN 255** — BrainLoopTimeMetrics (timestamps)
+* **RUN 256** — BrainLoopProfileAggregator
+* **RUN 257** — CycleLock (read-write)
+* **RUN 258** — CycleLock EXP (5 threads, 500 increments, no lost updates)
+* **RUN 259** — BrainLoopSnapshotsStore (FIFO)
+* **RUN 260** — BrainLoopReplay (cycle replay)
+* **RUN 261** — Replay EXP (50 recorded, 50 replayed)
+* **RUN 262** — CycleTag (categorical tagging)
+* **RUN 263-264** — fix flaky Exp167
+
+## RUN 12-264 master totals
+
+- **~252 RUNs delivered** (RUN 12-264)
+- **~1410+ new tests** added
+- **~133 new Java classes**
+- **~100 EXP reports**
+- **6 hypothesis cards accepted**
+- **~1510 cumulative tests, 0 failures**
+
+(End of file - total ~4100 lines)

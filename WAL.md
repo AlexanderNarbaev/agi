@@ -657,3 +657,14 @@ Phase α CLOSED. Moving to Phase β.
 
 ### Project totals (RUN 12-232)
 * ~219 RUNs, ~1336 cumulative tests in session modules.
+
+## RUN 244-264 — Cognitive loop depth (2026-09-07 15:03)
+
+* CycleMerger, Topology, Router, Relay, Sensor, Signature,
+  Latency, TimeMetrics, ProfileAggregator, CycleLock,
+  SnapshotsStore, Replay, CycleTag.
+* Flaky Exp167 fixed twice (GA non-determinism).
+* **910 tests in session modules, 0 failures.**
+
+### Project totals (RUN 12-264)
+* ~252 RUNs, ~1510 cumulative tests.
