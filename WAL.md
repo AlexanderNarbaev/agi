@@ -677,3 +677,12 @@ Phase α CLOSED. Moving to Phase β.
 
 ### Project totals (RUN 12-270)
 * ~258 RUNs, ~1530 cumulative tests.
+
+## RUN 272-275 — Factory/Builder/Config (2026-09-07 15:25)
+
+* CycleReset, Config roundtrip EXP, Builder, Factory.
+* 11 new tests across 4 components.
+* **943 session module tests, 0 failures.**
+
+### Project totals (RUN 12-275)
+* ~263 RUNs, ~1550 cumulative tests.

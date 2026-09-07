@@ -3075,3 +3075,27 @@ were dropped during decode. Fix: full 256-byte map.
 - **~1530 cumulative tests, 0 failures**
 
 (End of file - total ~4200 lines)
+
+---
+
+## Section XCIX — Factory/Builder/Config patterns (RUN 272-275, 2026-09-07 15:25)
+
+* **RUN 272** — CycleReset (clean-slate factory)
+* **RUN 273** — Config roundtrip EXP (JSON 0.4 → 0.4)
+* **RUN 274** — BrainLoopServiceBuilder (builder pattern)
+* **RUN 275** — BrainLoopServiceFactory (factory pattern)
+
+### Verified
+- **943 tests in session modules, 0 failures**
+- 171 test files
+
+## RUN 12-275 master totals
+
+- **~263 RUNs delivered** (RUN 12-275)
+- **~1450+ new tests** added
+- **~143 new Java classes**
+- **~104 EXP reports**
+- **6 hypothesis cards accepted**
+- **~1550 cumulative tests, 0 failures**
+
+(End of file - total ~4300 lines)
