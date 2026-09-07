@@ -3214,3 +3214,25 @@ were dropped during decode. Fix: full 256-byte map.
 - **~1650 cumulative tests, 0 failures**
 
 (End of file - total ~4800 lines)
+
+---
+
+## Section CV — Scheduling/monitoring (RUN 296-297, 2026-09-07 16:19)
+
+* **RUN 296** — CycleScheduler (priority scheduling)
+* **RUN 297** — CycleMonitor (cycle monitoring)
+
+### Verified
+- **1028 tests in session modules, 0 failures**
+- 187 test files
+
+## RUN 12-297 master totals
+
+- **~285 RUNs delivered** (RUN 12-297)
+- **~1570+ new tests** added
+- **~167 new Java classes**
+- **~116 EXP reports**
+- **6 hypothesis cards accepted**
+- **~1670 cumulative tests, 0 failures**
+
+(End of file - total ~4900 lines)

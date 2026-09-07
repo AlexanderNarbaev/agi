@@ -731,3 +731,12 @@ Phase α CLOSED. Moving to Phase β.
 
 ### Project totals (RUN 12-294)
 * ~282 RUNs, ~1650 cumulative tests.
+
+## RUN 296-297 — Scheduling/monitoring (2026-09-07 16:19)
+
+* CycleScheduler, CycleMonitor.
+* 11 new tests across 2 components.
+* **1028 session module tests, 0 failures.**
+
+### Project totals (RUN 12-297)
+* ~285 RUNs, ~1670 cumulative tests.
