@@ -2976,3 +2976,40 @@ were dropped during decode. Fix: full 256-byte map.
 - **~1186 cumulative tests, 0 failures**
 
 (End of file - total ~3800 lines)
+
+---
+
+## Section XCVI — Architect-supportive tooling (RUN 212-232, 2026-09-07 13:26)
+
+* **RUN 212** — SaliencyRanker (top-K + diversity)
+* **RUN 213** — MediatorBus (pub/sub bus)
+* **RUN 214** — Mediator + BrainLoop EXP
+* **RUN 215** — GoalTracker (active goals)
+* **RUN 216** — GoalTracker EXP (50 goals)
+* **RUN 217** — ReflexEngine (fast-path)
+* **RUN 218** — Reflex + Brain EXP (60% reflex)
+* **RUN 219** — Workspace (kv store)
+* **RUN 220** — Workspace EXP (101 entries)
+* **RUN 221** — Identity (frozen node id)
+* **RUN 222** — SystemClock (fake clock)
+* **RUN 223** — RandomSource (deterministic RNG)
+* **RUN 224** — AuditCheckRunner (CI-friendly)
+* **RUN 225** — ActionGatePolicy (typed cascade)
+* **RUN 226** — BrainLoopSaturation
+* **RUN 227** — BrainLoopCompliance (CONSTITUTION checks)
+* **RUN 228** — Compliance EXP (0 ONNX, 17 Random, 20 wallClock)
+* **RUN 229** — BrainLoopStateComparator
+* **RUN 230** — BrainLoopReportGenerator (composite report)
+* **RUN 231** — Report EXP (real report, 500 trace steps, hash captured)
+* **RUN 232** — CycleTickScheduler (rate-limited dispatch)
+
+## RUN 12-232 master totals
+
+- **~219 RUNs delivered** (RUN 12-232)
+- **~1290+ new tests** added
+- **~113 new Java classes**
+- **~89 EXP reports**
+- **6 hypothesis cards accepted**
+- **~1336 cumulative tests, 0 failures**
+
+(End of file - total ~3900 lines)

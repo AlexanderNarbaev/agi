@@ -645,3 +645,15 @@ Phase α CLOSED. Moving to Phase β.
 ### Test totals
 * **592 unit tests pass** across session's 11 modules.
 * 99 test files.
+
+## RUN 212-232 — Architect-supportive tooling (2026-09-07 13:26)
+
+* SaliencyRanker + MediatorBus + GoalTracker + ReflexEngine + Workspace + Identity +
+  SystemClock + RandomSource + AuditCheckRunner + ActionGatePolicy + Saturation +
+  Compliance + Comparator + ReportGenerator + TickScheduler.
+* Compliance EXP: production source COMPLIANT (0 ONNX).
+* Report EXP: real report after 100 cycles, hash chain captured.
+* **Tests**: 21 RUNs, all tests pass.
+
+### Project totals (RUN 12-232)
+* ~219 RUNs, ~1336 cumulative tests in session modules.
