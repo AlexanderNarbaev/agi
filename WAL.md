@@ -740,3 +740,12 @@ Phase α CLOSED. Moving to Phase β.
 
 ### Project totals (RUN 12-297)
 * ~285 RUNs, ~1670 cumulative tests.
+
+## RUN 299-300 — Reliability components (2026-09-07 16:25)
+
+* CycleWatchdog, CycleCircuitBreaker.
+* 10 new tests across 2 components.
+* **1038 session module tests, 0 failures.**
+
+### Project totals (RUN 12-300)
+* ~288 RUNs, ~1690 cumulative tests.

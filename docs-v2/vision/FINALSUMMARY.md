@@ -3236,3 +3236,25 @@ were dropped during decode. Fix: full 256-byte map.
 - **~1670 cumulative tests, 0 failures**
 
 (End of file - total ~4900 lines)
+
+---
+
+## Section CVI — RUN 300 + reliability components (RUN 299-300, 2026-09-07 16:25)
+
+* **RUN 299** — CycleWatchdog (timeout detection)
+* **RUN 300** — CycleCircuitBreaker (failure circuit breaker)
+
+### Verified
+- **1038 tests in session modules, 0 failures**
+- 189 test files
+
+## RUN 12-300 master totals
+
+- **~288 RUNs delivered** (RUN 12-300)
+- **~1590+ new tests** added
+- **~171 new Java classes**
+- **~118 EXP reports**
+- **6 hypothesis cards accepted**
+- **~1690 cumulative tests, 0 failures**
+
+(End of file - total ~5000 lines)
