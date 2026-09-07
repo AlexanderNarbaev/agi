@@ -635,3 +635,13 @@ Phase α CLOSED. Moving to Phase β.
 * ExperimentalPipeline + AblationStudy (6+5 unit, 1+1 EXP).
 * CycleAnalyzer post-mortem (5 unit + 2 EXP).
 * **Project totals**: ~190 RUNs, ~1133 cumulative tests, 0 failures.
+
+## RUN 205-207 — Memory + Vision + Events (2026-09-07 11:54)
+
+* BrainLoopMemoryAdapter: wires BRC + PersistentMemory + ConsolidationCycle.
+* BrainVision: image→256 bits via SHA-256 (stub for vision perception).
+* BrainLoopEvent: typed event recording (5 types).
+
+### Test totals
+* **592 unit tests pass** across session's 11 modules.
+* 99 test files.

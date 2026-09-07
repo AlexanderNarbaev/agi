@@ -2952,3 +2952,27 @@ were dropped during decode. Fix: full 256-byte map.
 - **~1133 cumulative tests, 0 failures**
 
 (End of file - total ~3700 lines)
+
+---
+
+## Section XCV — Memory adapter + BrainVision + Events (RUN 204-207, 2026-09-07 11:54)
+
+* **RUN 205** — BrainLoopMemoryAdapter (auto-consolidation)
+* **RUN 206** — BrainVision (image→bits stub, 7 tests)
+* **RUN 207** — BrainLoopEvent (5 event types, 8 tests)
+
+### Verifications
+- **592 unit tests passed** in this session's modules
+- 99 test files
+- 0 failures across all session modules
+
+## RUN 12-207 master totals
+
+- **~194 RUNs delivered** (RUN 12-207)
+- **~1140+ new tests** added
+- **~99 new Java classes**
+- **~76 EXP reports**
+- **6 hypothesis cards accepted**
+- **~1186 cumulative tests, 0 failures**
+
+(End of file - total ~3800 lines)
