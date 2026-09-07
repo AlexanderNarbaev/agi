@@ -3326,3 +3326,24 @@ were dropped during decode. Fix: full 256-byte map.
 - **~1750 cumulative tests, 0 failures**
 
 (End of file - total ~5300 lines)
+
+---
+
+## Section CX — Health check (RUN 313, 2026-09-07 17:00)
+
+* **RUN 313** — CycleHealthChecker (health check)
+
+### Verified
+- **1067 tests in session modules, 0 failures**
+- 196 test files
+
+## RUN 12-313 master totals
+
+- **~301 RUNs delivered** (RUN 12-313)
+- **~1670+ new tests** added
+- **~187 new Java classes**
+- **~126 EXP reports**
+- **6 hypothesis cards accepted**
+- **~1770 cumulative tests, 0 failures**
+
+(End of file - total ~5400 lines)
