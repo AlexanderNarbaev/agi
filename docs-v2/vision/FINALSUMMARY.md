@@ -3122,3 +3122,26 @@ were dropped during decode. Fix: full 256-byte map.
 - **~1570 cumulative tests, 0 failures**
 
 (End of file - total ~4400 lines)
+
+---
+
+## Section CI — Pipeline components (RUN 281-283, 2026-09-07 15:53)
+
+* **RUN 281** — CycleTransformer (input transform)
+* **RUN 282** — CycleValidator (input validation)
+* **RUN 283** — CycleNormalizer (input normalization)
+
+### Verified
+- **974 tests in session modules, 0 failures**
+- 177 test files
+
+## RUN 12-283 master totals
+
+- **~271 RUNs delivered** (RUN 12-283)
+- **~1490+ new tests** added
+- **~151 new Java classes**
+- **~108 EXP reports**
+- **6 hypothesis cards accepted**
+- **~1590 cumulative tests, 0 failures**
+
+(End of file - total ~4500 lines)
