@@ -576,3 +576,9 @@ Total tests after RUN 12-21: 79/79 pass.
 - ✅ Phase α summary gate
 
 Phase α CLOSED. Moving to Phase β.
+
+## RUN 150-154 — Phase β.1-2 partial (2026-09-07 10:07)
+
+* TextEncoder, SignalRegistry, SaliencyEngine, Impulse, AttentionRouter.
+* 39 new tests across perception + consciousness.
+* Phase β.1-2 actively progressing.

@@ -2784,3 +2784,27 @@ were dropped during decode. Fix: full 256-byte map.
 - **747+ cumulative tests, 0 failures**
 
 (End of file - total ~3000 lines)
+
+---
+
+## Section XC — Phase β.1-2 RUN 150-154 (2026-09-07 10:07): Cognition loop partial
+
+- **RUN 150**: TextEncoder (perception boundary) — text → boolean[] via SHA-256
+- **RUN 151**: SignalRegistry (pluggable signal modules) 
+- **RUN 152**: SaliencyEngine (bottom-up scoring, 0..1 surprise)
+- **RUN 153**: Impulse (top-down motivation, 5 sources)
+- **RUN 154**: AttentionRouter (deterministic merge of top-down × bottom-up)
+
+### Phase β.1-2 totals
+- 5 RUNs delivered
+- 39 NEW unit tests, 0 failures
+
+## RUN 12-154 master totals
+
+- **~141 RUNs delivered** (RUN 12-154)
+- **~759+ new tests** added
+- **~65 new Java classes**
+- **~47 EXP reports**
+- **6 hypothesis cards accepted**
+- **~786 cumulative tests, 0 failures**
+
