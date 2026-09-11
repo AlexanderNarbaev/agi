@@ -832,3 +832,66 @@ Working tree clean. Three commits pushed locally. Phase 0 closed; proceeding
 to Phase 1 (Wave H: foundation hard-correction — LTM persistence + native
 build blocker doc + state archive snapshot).
 
+## WAVE H — Foundation hard-correction (2026-09-11 09:36)
+
+### RUN 319 — Wave H.1 LTM roundtrip across JVM restart
+
+* `PersistentHierarchicalMemory.start()` → public (was package-private)
+  so cross-package EXP test can drive the restore path.
+* New `Exp319LtmRestartRoundtripTest` (3 tests, 0.019s, 0 failures):
+  - `fiftyEntriesRoundtripAcrossJvmRestart`: 50 entries written + flushed +
+    fresh `PersistentHierarchicalMemory` restored = exact 50, contents match,
+    domain/tags preserved.
+  - `emptyFileRestoresToZero`.
+  - `restartTwiceKeepsData`: 10 + 5 across 3 simulated JVM sessions.
+* Commit: 2c22c51d, +131/-1.
+
+### RUN 320 — Wave H.2 state archive snapshot
+
+* New `scripts/snapshot_state.sh`: bundles chain metadata + LM head weights
+  (176 MB raw) + LTM persistence + conversation history into a single tarball
+  with manifest.json (git head + branch + status).
+* `data/state-snapshot-2026-09-11.tar.gz` — 42195493 bytes (42 MB compressed),
+  SHA-256 `06ff55765b8a777d9d43a0e770af72ca89c5fd008db1d571fbdd4c1703d228c3`.
+* `data/state-snapshot-2026-09-11.SHA256` — checksum sidecar.
+* Archive contents: manifest.json, chain_state.json, lm_head_weights.bin,
+  hierarchical_memory.jsonl, conversations/{2026-07-20..2026-09-04}.ndjson
+  + .last_training_run.
+* Commits: a11ebd8c, 0069cb7f.
+
+### RUN 321 — Wave H.3 native build blocker doc
+
+* `docs-v2/operations/RUNBOOK.md` — new "Native Build Status" section
+  documents the blocker with concrete fix paths:
+  1. Mandrel subscription token (preferred)
+  2. Replace Pekko with raw Akka 2.6.x (heavy refactor, 2-4 weeks)
+  3. `--report-unsupported-elements-at-runtime` fallback (dev only)
+  4. JVM-mode production target (current choice)
+* Documents RUN 18 / 53 / 55 / 64 attempts: DnsAddressResolverGroup,
+  org.tukaani.xz.NoClassDefFoundError, Mandrel 401 Unauthorized.
+* Cross-references EXP-MATRIX.36-native-attempt.md.
+* Commit: 3b6b8d07, +66/-1.
+
+### Wave H verification
+* `./gradlew :matrix-core:test --tests "io.matrix.research.Exp319*" \
+   --tests "io.matrix.memory.PersistentMemoryTest" \
+   --tests "io.matrix.memory.PersistentHierarchicalMemoryTest"` → BUILD SUCCESSFUL
+* 16 tests, 0 failures, 0 errors
+* State archive SHA-256 verified against stored checksum
+
+### Project totals (RUN 12-321)
+* ~307 RUNs, ~2416 cumulative tests, 0 failures.
+
+## CHECKPOINT 2 — Wave H complete (2026-09-11 09:36)
+
+Wave H acceptance criteria MET:
+1. ✅ native-build path resolved OR documented blocker with concrete fix
+   (RUNBOOK §Native Build Status — 4 paths documented, JVM-mode chosen)
+2. ✅ LTM persisted (RUN 319 — 50-entry roundtrip across simulated JVM restart,
+   3 test cases, all green)
+3. ✅ state archive saved (RUN 320 — 42 MB tarball with chain weights,
+   LM head, LTM, conversations, manifest + SHA-256)
+
+Pending Phase 2 (Waves I + J): 24-block chain validation, BPE integration,
+end-to-end forward pass latency, BitNet training + benchmark re-measure.
+
