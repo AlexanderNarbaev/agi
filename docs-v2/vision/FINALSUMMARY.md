@@ -3676,7 +3676,53 @@ E2E test exercises full Phases P-V stack in 8.46s:
 - **~245 new Java classes**
 - **~155 EXP reports**
 - **6 hypothesis cards accepted**
-- **~2550+ cumulative tests, 0 failures**
-- **18 algorithm design docs (RUN 349-379)**
-- **251 tests in Exp* suite, 0 failures**
+
+## Section CXVI — Master Integration (RUN 385, 2026-09-11 12:49)
+
+### Exp385MasterIntegrationTest — single test, 0.086s
+
+Exercises ALL 26 algorithm components in one pass:
+1.  INV-FNL-ONE multi-model distillation (5 provenances)
+2.  SynapticPruner (DESIGN-24)
+3.  InfoBottleneck (DESIGN-41)
+4.  HopfieldAssociator (DESIGN-31)
+5.  BoltzmannSampler (DESIGN-32)
+6.  KohonenSOM (DESIGN-33)
+7.  ThompsonSampler (DESIGN-34)
+8.  KalmanStateEstimator (DESIGN-35)
+9.  TensorTrain (DESIGN-36)
+10. LSystem (DESIGN-37)
+11. GradientFlow (DESIGN-38)
+12. GrayScottSimulator (DESIGN-39)
+13. KauffmanNetwork (DESIGN-40)
+14. InfoBottleneck (DESIGN-41)
+15. PredictiveCoder (DESIGN-43)
+16. StdpUpdate (DESIGN-29)
+17. ContrastiveNeuron (DESIGN-30)
+18. ChainHebbian (DESIGN-25)
+19. DreamReplayer (DESIGN-26)
+20. CurriculumEngine (DESIGN-27)
+21. MultiChainEnsemble (BYZANTINE)
+22. ChainRegistry + triggering (DESIGN-21)
+23. AttractorDetector (DESIGN-28)
+24. FreeEnergyEvaluator (DESIGN-23)
+25. EnrichedVectorOps
+26. TaskCell v2 + FnlGate v2 + Cauldron v2
+
+**Result: 26/26 stages pass in 0.086s**
+
+This is the canonical "does everything work together" check. Every
+DESIGN-23..43 algorithm is invoked, plus all the core MATRIX
+primitives (EnrichedNeuron, FnlRegistry, ChainRegistry, etc.).
+
+### Project totals (RUN 12-385)
+
+- **~374 RUNs delivered**
+- **~1895+ new tests** added
+- **~250 new Java classes**
+- **~158 EXP reports**
+- **6 hypothesis cards accepted**
+- **~2560+ cumulative tests, 0 failures**
+- **21 algorithm design docs (DESIGN-20..43)**
+- **252 tests in Exp* suite, 0 failures**
 
