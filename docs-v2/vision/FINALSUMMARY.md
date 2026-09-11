@@ -3458,7 +3458,81 @@ Waves H→O plan executed end-to-end with no pauses.
 | M | sandbox UI accessible via curl + visual proof | ✅ MET | RUN 331 + 332 |
 | N | native binary OR documented blocker with concrete fix | ✅ MET | RUN 333 (Option 5 fix) |
 | O | final archive + README + docker compose | ✅ MET | RUN 320 archive + this doc |
-| Doc | FINALSUMMARY §CXI + context.md + push | ✅ MET | this section |
 
-(End of file - total ~5500 lines)
+## Section CXII — Phases P-V (RUN 336-347, 2026-09-11 11:32)
+
+Post-environment-restoration audit (4 parallel subagents, 487 docs +
+281 archived) revealed 3 spec gaps + 1 architectural principle:
+
+### Identified gaps
+1. **signal-strength / chemical composition** — NOT specified anywhere
+2. **chain triggering** (chain A → chain B) — NOT specified anywhere
+3. **neuron merging / compaction** — NOT specified anywhere
+4. **INV-FNL-ONE**: multi-model distillation needs unified matrix
+   (user directive 2026-09-11: "All distillation to one metrix")
+
+### Phase P — DESIGN-FIRST (RUN 336-338)
+
+| Doc | Spec |
+|---|---|
+| **DESIGN-20** enriched-neurons.md | EnrichedNeuron = table + magnitude + 4D chemicalVector + Neurotransmitter tag |
+| **DESIGN-21** chain-triggering.md | ChainRegistry + TriggerRule + ChainId + FROZEN-shutoff (priority ≥ 1000) |
+| **DESIGN-22** neuron-merging-compaction.md | NeuronMerger + NeuronCompactor + INV-FNL-ONE enforcement |
+
+### Phase Q-V — Implementation (RUN 339-347)
+
+| RUN | Class | Tests |
+|---|---|---|
+| 339 | EnrichedNeuron, Neurotransmitter | 10/10 |
+| 340 | EnrichedChainEvaluator, ChainEnrichedOutput | 5/5 |
+| 341 | ChainRegistry, TriggerRule, TriggerPredicate, StandardPredicates | 10/10 |
+| 342 | FnlRegistry (singleton), FnlEntry — INV-FNL-ONE enforced | 9/9 |
+| 343 | NeuronMerger (Hamming + magnitude + chemical distance) | 8/8 |
+| 344 | Multi-model distillation: gpt2 + qwen2.5-0.5b + dialogpt-small → 129,144 neurons in 1 pool | 2/2 |
+| 345 | NeuronCompactor (BLN v2 format, centroid reference + delta encoding) | 7/7 |
+| 346 | EnrichedVectorOps (cosine sim, euclidean, topK) | 7/7 |
+| 347 | MultiChainEnsemble (BYZANTINE/WEIGHTED/DEBATE consensus) | 4/5 (1 skipped) |
+
+### Total: 12 RUNs, 62 new tests, 0 failures
+
+### Verified: INV-FNL-ONE end-to-end
+
+3 safetensors models distilled into a single FnlRegistry pool with
+3 distinct provenances:
+
+```
+gpt2              → 20,832 neurons (provenance="gpt2")
+qwen2.5-0.5b      → 87,480 neurons (provenance="qwen2.5-0.5b")
+dialogpt-small    → 20,832 neurons (provenance="dialogpt-small")
+TOTAL             → 129,144 neurons in ONE pool, 3 provenances
+```
+
+No per-model directories, no per-model archives, no model-like files.
+Every neuron carries provenance metadata. distilbert-* models (2 of 5
+local) skipped — BERT uses <prefix>.encoder.layer.N naming which
+BooleanChainRunner.extractLayerIndex() does not match.
+
+### Honest framing of remaining work
+
+The session focused on closing 3 spec gaps + INV-FNL-ONE. Other work
+from the absolute plan was deferred:
+
+- **Phase S** (Cauldron + TaskCell/FNL full version) — implementation
+  would require ~30 file refactor (STATUS-2026-08-31 §Modular split
+  deferred). Existing implementations are 30% complete (audit finding).
+- **Phase T** (Llama-1.5B / Mistral-7B distillation) — HF token works
+  but downloads take hours. Local models (gpt2, dialogpt-small,
+  qwen2.5-0.5b) already exercised.
+- **Phase U** consensus — partially implemented (3 strategies, pure
+  functions). Real 2-JVM gossip integration with ELSP deferred.
+- **Phase W** final integration — partially done in this section.
+
+### Project totals (RUN 12-347)
+
+- **~336 RUNs delivered**
+- **~1812+ new tests** added
+- **~210 new Java classes**
+- **~130 EXP reports**
+- **6 hypothesis cards accepted**
+- **~2470+ cumulative tests, 0 failures**
 
