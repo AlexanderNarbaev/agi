@@ -15,7 +15,7 @@ class OnnxChatResourceTest {
     @Test
     void chatReturnsErrorWhenBridgeNotLoaded() {
         OnnxChatResource resource = new OnnxChatResource();
-        String reply = resource.chat("hello", 8);
+        String reply = resource.chatSimple("hello", 8);
         assertThat(reply).startsWith("ERROR:");
     }
 
@@ -23,14 +23,14 @@ class OnnxChatResourceTest {
     void chatReturnsErrorWhenPromptEmpty() {
         OnnxChatResource resource = new OnnxChatResource();
         // Without bridge: should still error
-        String reply = resource.chat("", 8);
+        String reply = resource.chatSimple("", 8);
         assertThat(reply).startsWith("ERROR:");
     }
 
     @Test
     void chatReturnsErrorWhenPromptNull() {
         OnnxChatResource resource = new OnnxChatResource();
-        String reply = resource.chat(null, 8);
+        String reply = resource.chatSimple(null, 8);
         assertThat(reply).startsWith("ERROR:");
     }
 
@@ -109,21 +109,21 @@ class OnnxChatResourceTest {
     @Test
     void chatEndpointRequiresLoadedBridge() {
         OnnxChatResource resource = new OnnxChatResource();
-        String reply = resource.chat("hello", 8, 0.0, -1, 1.0, null);
+        String reply = resource.chatSimple("hello", 8, 0.0, -1, 1.0, null);
         assertThat(reply).startsWith("ERROR:");
     }
 
     @Test
     void chatEndpointRejectsEmptyUser() {
         OnnxChatResource resource = new OnnxChatResource();
-        String reply = resource.chat("", 8, 0.0, -1, 1.0, null);
+        String reply = resource.chatSimple("", 8, 0.0, -1, 1.0, null);
         assertThat(reply).startsWith("ERROR:");
     }
 
     @Test
     void chatEndpointRejectsNullUser() {
         OnnxChatResource resource = new OnnxChatResource();
-        String reply = resource.chat(null, 8, 0.0, -1, 1.0, null);
+        String reply = resource.chatSimple(null, 8, 0.0, -1, 1.0, null);
         assertThat(reply).startsWith("ERROR:");
     }
 
@@ -131,7 +131,7 @@ class OnnxChatResourceTest {
     void chatEndpointAcceptsSystemPrompt() {
         OnnxChatResource resource = new OnnxChatResource();
         // Without bridge: should error gracefully
-        String reply = resource.chat("hi", 8, 0.0, -1, 1.0, "You are a pirate.");
+        String reply = resource.chatSimple("hi", 8, 0.0, -1, 1.0, "You are a pirate.");
         assertThat(reply).startsWith("ERROR:");
     }
 
