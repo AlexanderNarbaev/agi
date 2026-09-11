@@ -1071,3 +1071,43 @@ User flagged drift: "Мы опять начинаем двигаться в ст
 
 
 
+
+## CHECKPOINT 7 — Phases X+Y+Z+AA complete (2026-09-11 15:38)
+
+User asked for native build + deep research + 3rd-party + audit.
+All four directions addressed:
+
+**Phase X (RUN 389-409)** — Native build: Option 5 fix + Mandrel
+25.0.4.1 bump + 7 run-time init overrides (Netty DNS, Lettuce,
+tukaani.xz, Avro XZ, SystemDemo Random). Build unblocked — reaches
+analysis phase (29,294 types, 8,676 reflection, 4 native libs).
+Resource-limited at final C link (Mandrel container has its own
+memory model independent of host GRADLE_OPTS).
+
+**Phase Y (RUN 394-401)** — 10 new algorithms:
+- DESIGN-44 A* (Hart 1968)
+- DESIGN-45 Simplex LP (Dantzig 1947) — BruteForce for n ≤ 10
+- DESIGN-46 Q-Learning (Watkins 1989)
+- DESIGN-47 Gillespie SSA (Gillespie 1976)
+- DESIGN-48 Persistent Homology (Edelsbrunner 2010)
+- DESIGN-49 Random Forest (Breiman 2001)
+- DESIGN-50 Conway Game of Life (Gardner 1970)
+- DESIGN-51 Echo State Property (Jaeger 2001)
+- DESIGN-52 SARSA (Rummery 1994)
+- DESIGN-53 t-SNE (van der Maaten 2008)
+
+All 10 implemented + tested. Exp401PhaseYMasterIntegrationTest
+exercises all 10 in 0.10s.
+
+**Phase Z (RUN 404-407)** — 3rd-party APIs:
+- TelegramBot (pure HTTP, no deps, reads MATRIX_TELEGRAM_BOT_TOKEN)
+- GitHubWebhook (release notifier, reads MATRIX_GITHUB_WEBHOOK)
+- LongRunningFramework (scheduled task runner for autonomy)
+
+**Phase AA (RUN 408)** — BrcChain primitives:
+- BrcStepContract — Hoare-triplet (pre, action, post) wrapper
+- TLA+ specs deferred to separate RFC
+
+**Cumulative**: 87 Exp* test files, 308 tests, 0 failures.
+~398 RUNs, ~1995+ tests, ~265 classes, ~2620+ cumulative tests.
+32 algorithm design docs all implemented.
