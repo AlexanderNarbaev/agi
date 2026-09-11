@@ -1111,3 +1111,25 @@ exercises all 10 in 0.10s.
 **Cumulative**: 87 Exp* test files, 308 tests, 0 failures.
 ~398 RUNs, ~1995+ tests, ~265 classes, ~2620+ cumulative tests.
 32 algorithm design docs all implemented.
+
+**Phase AB (RUN 419-425)** — Algorithm library expansion + native C-via-FFM:
+RUN 419: UCB Bandit, Thompson Sampling, Bloom Filter, PageRank (4 algos)
+RUN 420: Dijkstra (shortest paths), KdTree (k-nearest-neighbour)
+RUN 421: RLE (run-length), Levenshtein edit-distance
+RUN 422: BellmanFord (negative-weight shortest paths + cycle detection),
+        FloydWarshall (all-pairs, negative-cycle detection)
+RUN 423: NaiveBayes classifier, K-means clustering, BoyerMoore search
+RUN 424: Sort — quickSort, mergeSort, heapSort, Fisher-Yates shuffle
+RUN 425: Master integration test — all 14 algos in 0.07s
+
+**Phase X native-image (RUN 415-418)** — C extension via Project Panama FFM:
+RUN 415: FINALSUMMARY §CXX
+RUN 416: `libtruthy_hamming.so` (C, uses `__builtin_popcountll` intrinsic),
+        `io.matrix.imports.HammingNative` Java wrapper with bitCount fallback
+RUN 417: Wire HammingNative into EnrichedNeuron hot path; broadened run-time
+        init in native-image.properties (pekko, com.typesafe, lifecycle)
+RUN 418: Grand master integration test — 20+ components in 1 test, 0.13s
+
+**Cumulative**: 98 Exp* test files, 360 tests, 0 failures.
+~425 RUNs, ~2050+ tests, ~270 classes, ~2720+ cumulative tests.
+46 algorithm classes total, all pure (no Random / wall-clock in runtime).
