@@ -785,3 +785,50 @@ Phase α CLOSED. Moving to Phase β.
 
 ### Project totals (RUN 12-313)
 * ~301 RUNs, ~1770 cumulative tests.
+
+## RESTORATION RUNS — 2026-09-11 (post environment-breakage)
+
+After environment issue, working tree had 67 dirty entries (18 modified + 49
+untracked) that were not in any RUN. Split thematically per user directive.
+
+### RUN 316 — BPE-aware api/* import wiring + matrix-tools-distill
+
+* `settings.gradle` includes `matrix-tools-distill` (RUN 141 subproject).
+* 16 api/* classes get `BpeTokenizer`/`BpeTokenizerProvider` imports — preparation
+  for Wave I BPE-integrated generation/training paths.
+* Commit: 8215fbbf, 17 files, +123/-3.
+
+### RUN 317 — io.matrix.api test sweep (27 unit tests, +3165 LOC)
+
+* Test coverage for api/* surface (BeamSearch, BPE, ChainBridge, ChainFeature,
+  Safety, ContextWindow, ContinuousBatch, GenerationResult, Health, LmHead,
+  Metrics, OnnxChainEnsemble, OnnxChat, OnnxInferenceMetrics, OnnxModelRegistry,
+  OnnxRuntime, OnnxRuntimeGpu, PromptTemplates, QwenOnnxBridge, Sandbox,
+  StressTestRunner, TextEmbedder, TokenAnalyzer, TokenEvent).
+* Commit: 359a7058, 27 files, +3165.
+
+### RUN 318 — io.matrix.research EXP sweep + paradigm docs
+
+* 19 EXP test files (Exp028, Exp065, Exp077, Exp078 ×2, Exp084, Exp085,
+  Exp089, Exp094, Exp098, Exp105, Exp107, Exp111, Exp123, Exp127, Exp128,
+  Exp134, Exp137, Exp139) — pair with WAL RUN 28-140 experiments.
+* `docs-v2/paradigm/{ENGINEERING-INVARIANTS,PARADIGM,PHASES,README,REQUIREMENTS,
+  RUN-PROTOCOL,TESTING-STRATEGY,TRACEABILITY,VERIFICATION-PROTOCOL}.md` — 9 files.
+* Commit: b11618d1, 28 files, +3746.
+
+### Phase 0 verification
+* `./gradlew :matrix-core:test --tests "io.matrix.api.*" --quiet` → exit 0
+* 617 tests across 65 test classes, 0 failures, 0 errors
+* Working tree clean for tracked code files (state/runtime artifacts
+  `.opencode/state/codegraph-session-runtime.json`, `.onnx_libs/`,
+  `.opencode/r12-plan.md` left as local-only)
+
+### Project totals (RUN 12-318)
+* ~304 RUNs, ~2400 cumulative tests, 0 failures.
+
+## CHECKPOINT 1 — Phase 0 complete (2026-09-11 09:30)
+
+Working tree clean. Three commits pushed locally. Phase 0 closed; proceeding
+to Phase 1 (Wave H: foundation hard-correction — LTM persistence + native
+build blocker doc + state archive snapshot).
+
