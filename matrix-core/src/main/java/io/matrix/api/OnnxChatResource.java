@@ -63,10 +63,10 @@ public class OnnxChatResource {
     }
 
     @POST
-    @Path("/chat")
+    @Path("/chat-simple")
     @Produces(MediaType.TEXT_PLAIN)
-    public String chat(@QueryParam("prompt") String prompt,
-                       @QueryParam("max_tokens") Integer maxTokens) {
+    public String chatSimple(@QueryParam("prompt") String prompt,
+                             @QueryParam("max_tokens") Integer maxTokens) {
         if (bridge == null || !bridge.isLoaded()) {
             return "ERROR: ONNX bridge not loaded. Call /v1/onnx/reload first.";
         }
