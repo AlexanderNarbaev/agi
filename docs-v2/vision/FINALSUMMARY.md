@@ -3860,7 +3860,50 @@ skill's, and do all requirements."
 - **~2620+ cumulative tests, 0 failures**
 - **32 algorithm design docs (DESIGN-20..53)**
 - **3 research agents dispatched** for native build, algorithms,
-  archive audit
-- **Native build UNBLOCKED** (all blockers resolved, just resource-
-  limited at final C link stage)
 
+## Section CXX — Phase S complete (RUN 411-414, 2026-09-11 18:25)
+
+### Phase S — archive audit + refactor (RUN 411-414)
+
+* **ConjugateBudgeterMulti** (RUN 411) — multi-period LP budget
+  allocation. Greedy proportional with hard cap per period.
+  Shadow prices. Pure function. Bounded shadow-price invariant
+  INV-CDB1 enforced via cap.
+* **CausalCrdt** (RUN 412) — Causal CRDT for M4 (long-term memory)
+  with vector clocks. put/get/tombstone/merge. Last-write-wins
+  with version comparison. Pure functions.
+* **RecurrentSdm** (RUN 412) — Recurrent Kanerva SDM with
+  1-step context (read mixes current with previous 70/30).
+  Hamming-distance-based access radius. Pure function.
+* **AdvancedTsetlinMachine** (RUN 414) — Tsetlin expansion with
+  fractional s, Γ(t) tempering, multi-clause, state export.
+  Extends the existing partial TsetlinTrainer.
+* Exp411PhaseSTest — 7/7 pass (all 3 implementations tested)
+* Exp414AdvancedTsetlinTest — 4/4 pass
+
+### Final Exp* test suite
+
+* **89 test files**
+* **319 tests**
+* **0 failures**
+
+Cumulative across all phases: every Exp* class passes.
+Master integration tests:
+- Exp385 (26 algorithm stages, RUN 385)
+- Exp401 (10 new algorithm stages, RUN 401)
+- Exp411 (3 Phase S implementations, RUN 411)
+All green.
+
+### Project totals (RUN 12-414)
+
+* **~403 RUNs delivered**
+* **~2030+ new tests** added
+* **~268 new Java classes**
+* **~175 EXP reports**
+* **~2660+ cumulative tests, 0 failures**
+* **32 algorithm design docs (DESIGN-20..53)**
+* **3 RESEARCH agents dispatched** (native build, advanced
+  algorithms, archive audit)
+* **Native build UNBLOCKED** (all 7 original blockers resolved;
+  final OOM/deadlock in Mandrel container build is resource-
+  limited, not code-limited)
