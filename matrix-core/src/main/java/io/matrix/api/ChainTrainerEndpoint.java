@@ -1,30 +1,56 @@
 package io.matrix.api;
 
 import io.matrix.imports.BitLinearTrainer;
+
+import io.matrix.api.BpeTokenizer;
+import io.matrix.api.BpeTokenizerProvider;
 import io.matrix.imports.BitLinearTrainer.EvalFn;
+
 import io.matrix.imports.BitLinearTrainer.TrainerStats;
+
 import io.matrix.imports.BitLinearTrainer.TrainerState;
+
 import io.matrix.imports.BooleanChainRunner;
+
 import io.matrix.imports.BooleanChainRunner.ChainResult;
+
 import io.matrix.imports.TruthTableLayer;
+
 import io.matrix.neuron.TruthTable;
+
 import io.quarkus.runtime.StartupEvent;
+
 import jakarta.enterprise.context.ApplicationScoped;
+
 import jakarta.enterprise.event.Observes;
+
 import jakarta.inject.Inject;
+
 import jakarta.ws.rs.GET;
+
 import jakarta.ws.rs.POST;
+
 import jakarta.ws.rs.Path;
+
 import jakarta.ws.rs.Produces;
+
 import jakarta.ws.rs.core.MediaType;
+
 import org.slf4j.Logger;
+
 import org.slf4j.LoggerFactory;
 
+
 import java.util.ArrayList;
+
 import java.util.LinkedHashMap;
+
 import java.util.List;
+
 import java.util.Map;
+
 import java.util.concurrent.atomic.AtomicLong;
+
 
 /**
  * Chain trainer endpoint (Phase 3 — real training on real corpus).

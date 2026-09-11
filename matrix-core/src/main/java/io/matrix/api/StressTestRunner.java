@@ -1,6 +1,7 @@
 package io.matrix.api;
 
 import java.util.ArrayList;
+import io.matrix.api.QwenOnnxBridge;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;

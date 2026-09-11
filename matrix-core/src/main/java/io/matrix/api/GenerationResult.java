@@ -1,6 +1,7 @@
 package io.matrix.api;
 
 import java.util.List;
+import io.matrix.api.QwenOnnxBridge;
 
 /**
  * RUN 86 — GenerationResult record returned by

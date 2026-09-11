@@ -1,6 +1,7 @@
 package io.matrix.api;
 
 import java.util.concurrent.Executors;
+import io.matrix.api.QwenOnnxBridge;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;

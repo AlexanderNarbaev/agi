@@ -1,6 +1,8 @@
 package io.matrix.api;
 
 import java.util.concurrent.atomic.AtomicLong;
+import io.matrix.api.QwenOnnxBridge;
+import io.matrix.api.QwenChatTemplate;
 
 /**
  * RUN 126 — Adapter connecting QwenOnnxBridge to the existing

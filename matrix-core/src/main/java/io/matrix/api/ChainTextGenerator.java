@@ -1,17 +1,30 @@
 package io.matrix.api;
 
 import io.matrix.ethics.OutputSafetyFilter;
+
+import io.matrix.api.BpeTokenizer;
+import io.matrix.api.BpeTokenizerProvider;
 import io.matrix.imports.BooleanChainRunner;
+
 import io.matrix.imports.BooleanChainRunner.ChainResult;
+
 import jakarta.enterprise.context.ApplicationScoped;
+
 import jakarta.inject.Inject;
+
 import org.slf4j.Logger;
+
 import org.slf4j.LoggerFactory;
 
+
 import java.util.ArrayList;
+
 import java.util.Arrays;
+
 import java.util.List;
+
 import java.util.Random;
+
 
 /**
  * Real LLM-style text generation using the boolean chain as a

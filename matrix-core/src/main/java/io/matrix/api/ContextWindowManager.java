@@ -2,6 +2,8 @@ package io.matrix.api;
 
 import java.util.List;
 
+import io.matrix.api.QwenChatTemplate;
+
 /**
  * RUN 124 — Context window manager.
  *

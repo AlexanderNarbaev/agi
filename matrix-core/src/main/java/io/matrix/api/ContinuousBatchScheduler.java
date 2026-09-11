@@ -1,6 +1,7 @@
 package io.matrix.api;
 
 import org.slf4j.Logger;
+import io.matrix.api.QwenOnnxBridge;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayDeque;

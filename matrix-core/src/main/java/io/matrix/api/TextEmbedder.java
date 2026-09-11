@@ -1,6 +1,9 @@
 package io.matrix.api;
 
 import ai.onnxruntime.OnnxTensor;
+import io.matrix.api.QwenOnnxBridge;
+import io.matrix.api.OnnxRuntimeAdapter;
+import io.matrix.api.QwenChatTemplate;
 import ai.onnxruntime.OrtSession;
 
 import java.util.Arrays;

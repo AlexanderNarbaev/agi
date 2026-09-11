@@ -1,26 +1,48 @@
 package io.matrix.api;
 
 import io.matrix.imports.BooleanChainRunner;
+
+import io.matrix.api.BpeTokenizer;
+import io.matrix.api.BpeTokenizerProvider;
 import io.matrix.imports.BooleanChainProducer;
+
 import io.matrix.model.ModelRegistry;
+
 import io.quarkus.runtime.StartupEvent;
+
 import jakarta.enterprise.event.Observes;
+
 import jakarta.inject.Inject;
+
 import jakarta.ws.rs.GET;
+
 import jakarta.ws.rs.POST;
+
 import jakarta.ws.rs.Path;
+
 import jakarta.ws.rs.PathParam;
+
 import jakarta.ws.rs.Produces;
+
 import jakarta.ws.rs.QueryParam;
+
 import jakarta.ws.rs.core.MediaType;
+
 import org.jboss.resteasy.reactive.RestForm;
+
 import org.jboss.resteasy.reactive.RestQuery;
 
+
 import java.util.ArrayList;
+
 import java.util.LinkedHashMap;
+
 import java.util.List;
+
 import java.util.Map;
+
 import java.util.concurrent.atomic.AtomicLong;
+
 
 /**
  * Interactive sandbox (Wave M): lets the user chat with MATRIX

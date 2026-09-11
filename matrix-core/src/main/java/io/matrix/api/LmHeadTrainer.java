@@ -1,19 +1,33 @@
 package io.matrix.api;
 
 import io.matrix.imports.BooleanChainRunner;
+
+import io.matrix.api.BpeTokenizer;
+import io.matrix.api.BpeTokenizerProvider;
 import io.quarkus.runtime.StartupEvent;
+
 import jakarta.enterprise.context.ApplicationScoped;
+
 import jakarta.enterprise.event.Observes;
+
 import jakarta.inject.Inject;
 
+
 import java.util.List;
+
 import org.slf4j.Logger;
+
 import org.slf4j.LoggerFactory;
 
+
 import java.util.LinkedHashMap;
+
 import java.util.Map;
+
 import java.util.concurrent.atomic.AtomicBoolean;
+
 import java.util.concurrent.atomic.AtomicLong;
+
 
 /**
  * RUN 10 — LM head trainer.
