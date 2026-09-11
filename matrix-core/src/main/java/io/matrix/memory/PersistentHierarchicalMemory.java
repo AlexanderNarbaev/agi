@@ -61,7 +61,7 @@ public class PersistentHierarchicalMemory {
         start();
     }
 
-    void start() {
+    public void start() {
         if (!enabled) {
             log.info("PersistentHierarchicalMemory: persistence disabled by config");
             return;
