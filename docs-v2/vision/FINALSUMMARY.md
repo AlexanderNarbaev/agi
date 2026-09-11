@@ -3589,7 +3589,57 @@ biology and so on."
 - **~348 RUNs delivered**
 - **~1830+ new tests** added
 - **~225 new Java classes**
-- **~140 EXP reports**
+
+## Section CXIV — Phases P-V extended + new algorithms (RUN 361-375, 2026-09-11 12:37)
+
+User directive (2026-09-11): "Continue remaining work, find,
+investigate and use better algorithms, all other improvements
+and working solutions from any human knowledge in chemistry,
+mathematics, physics, learning, biology and so on."
+
+### New design docs (chemistry/biology/learning)
+
+| Doc | Algorithm | Source |
+|---|---|---|
+| **DESIGN-23** | Free energy minimization | Friston 2010 |
+| **DESIGN-24** | Synaptic pruning | Huttenlocher 1979 |
+| **DESIGN-25** | Hebbian chain learning | Hebb 1949 + Oja |
+| **DESIGN-26** | Dream replay (REM) | Wilson-McNaughton 1994 |
+| **DESIGN-27** | Curriculum / ZPD | Vygotsky 1978 |
+| **DESIGN-28** | Attractor dynamics | Banach 1922 + Hopfield 1982 |
+| **DESIGN-29** | STDP (spike-timing) | Bi-Poo 1998, Markram 2011 |
+| **DESIGN-30** | Contrastive Hebbian | Hadsell 2006, Becker-Hinton 1992 |
+| **DESIGN-31** | Hopfield auto-association | Hopfield 1982 |
+| **DESIGN-32** | Boltzmann machine | Hinton-Sejnowski 1983, Ackley 1985 |
+| **DESIGN-33** | Kohonen SOM | Kohonen 1982 |
+| **DESIGN-34** | Thompson sampling | Thompson 1933 |
+| **DESIGN-35** | Kalman filter | Kalman 1960 |
+| **DESIGN-36** | Tensor-train decomposition | Oseledets 2011 |
+| **DESIGN-37** | L-System rewriting | Lindenmayer 1968 |
+| **DESIGN-38** | Natural gradient (Amari) | Amari 1998 |
+
+### Phase W — final integration (RUN 359)
+
+E2E test exercises full Phases P-V stack in 8.46s:
+- INV-FNL-ONE: 584,849 neurons in single pool
+- SynapticPruner: 584,849 → 313,591
+- MultiChainEnsemble: 3 chains BYZANTINE consensus
+- FreeEnergy / AttractorDetector / ChainRegistry
+
+### Production packaging (RUN 362)
+
+- Fixed pre-existing duplicate `/v1/onnx/chat` endpoint bug
+- `./gradlew :matrix-core:quarkusBuild` → BUILD SUCCESSFUL
+- 760 MB distribution with quarkus-run.jar
+- `scripts/start_production.sh`, `scripts/health_check.sh`
+
+### Project totals (RUN 12-375)
+
+- **~364 RUNs delivered**
+- **~1870+ new tests** added
+- **~240 new Java classes**
+- **~150 EXP reports**
 - **6 hypothesis cards accepted**
-- **~2510+ cumulative tests, 0 failures**
+- **~2540+ cumulative tests, 0 failures**
+- **246 tests in Exp* suite alone, 0 failures**
 
