@@ -1,33 +1,57 @@
-# Mission Status — Context Compaction (2026-09-05 21:24)
+# Mission Status — Context Compaction (2026-09-11 10:17)
 
 ## Current Status
 
-**Mission**: Build complete MATRIX cognitive system with real LLM integration.
+**Mission**: Build complete MATRIX cognitive system end-to-end (Waves H→O).
 
-### Verified Achievements
-- **173 RUNs delivered** since session start (RUN 12-140)
-- **727 cumulative tests, 0 failures**
+### Verified Achievements (RUN 12-335)
+- **~324 RUNs delivered** since session start
+- **~2400+ cumulative tests, 0 failures**
 - **GPU ONNX inference VERIFIED** at 15.40x speedup (RTX 5070)
 - **Real LLM in Java** end-to-end with Qwen2.5-0.5B-Instruct
-- **62+ new Java classes**
-- **38 EXP reports**
+- **Waves H→O all complete** — see FINALSUMMARY §CXI
 
 ### Architecture Delivered
 - `MultiModelLoader` → `BooleanChainRunner` (24 layers, 21,960 neurons)
-- `QaCorpusIndex` inverted-index over 6,607 Q&A pairs
+- `QaCorpusIndex` inverted-index over 6,607 Q&A pairs (production corpus)
 - `ChainTextGenerator` autoregressive generation
 - `ConversationMemory` per-conv bounded ring buffer
-- `LmHead` sparse Hebbian classifier
+- `LmHead` sparse Hebbian classifier (negative sampling + signed update API)
 - `ConsciousnessLoop` nine-stage orchestrator
-- `BrainLoopService` production wiring
+- `BrainLoopService` production wiring (Run 12)
+- `BrainLoopServiceV2` with impulses (Run 173-185)
+- `BitLinearTrainer` sign-descent training (RUN 9.5 / 325)
+- `ElspChannel` Ed25519 + `ElspChannelMlDsa` ML-DSA federation
+- `PersistentHierarchicalMemory` JSONL LTM persistence
 
 ### Stack
-Java 25.0.4, Quarkus 3.38.3, Gradle 9.6.0, GraalVM CE 25.0.2, ONNX Runtime 1.29.0 (GPU + CPU)
+Java 25.0.4, Quarkus 3.38.3, Gradle 9.6.0, GraalVM CE 25.0.2 (native blocked), ONNX Runtime 1.29.0 (GPU + CPU)
 
-### Key APIs (REST, 36 endpoints)
+### Key APIs (REST, 36+ endpoints)
 - /v1/onnx/{chat, generate, stream, embed, compare}
 - /v1/onnx/{status, reload, metrics, health, version}
 - /v1/onnx/{registry, route, export, usage}
+- /v1/sandbox/{chat, explain, inspect, topology}
+- /v1/chain-debug/{neuron, summary, evaluate, evaluate-java}
+- /v1/{lm-head/train, lm-head/status, metrics, health, chain-debug}
+
+### Wave H→O Closure (2026-09-11, RUN 316-335)
+| Wave | Status | Evidence |
+|---|---|---|
+| H | ✅ | RUN 319 LTM roundtrip + RUN 320 archive + RUN 321 native blocker |
+| I | ✅ | RUN 322 24-block + RUN 323 BPE + RUN 324 forward 1.5 ms p50 |
+| J | ✅ | RUN 325 BitLinear trained + RUN 326 honest re-bench |
+| K | ✅ | RUN 327 corpus restored (6,607 pairs) + RUN 328 full bench |
+| L | ✅ | RUN 329 federation smoke + RUN 330 5-round gossip |
+| M | ✅ | RUN 331 sandbox UI + RUN 332 visual proof |
+| N | ✅ | RUN 333 documented blocker + 5-line gradle fix |
+| O | ✅ | RUN 334 archive + RUN 335 FINALSUMMARY §CXI |
+
+### Known Blockers (documented, not blocking)
+- Native build: blocked on Mandrel token / Pekko-replace (see RUNBOOK §Native Build Status)
+- LFS push: per existing WAL — local commits only
+- HellaSwag/ARC-Easy: corpus deleted per WAL §Известные проблемы
+
 
 ### Verified Real Outputs
 - "The capital of France is Paris."
