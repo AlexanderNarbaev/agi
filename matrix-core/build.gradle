@@ -21,6 +21,10 @@ repositories {
 
 dependencies {
     implementation enforcedPlatform('io.quarkus.platform:quarkus-bom:3.38.3')
+    // tukaani/xz — transitive dep of Avro's XZCodec. Avro 1.12.1's
+    // XZCodec references XZInputStream at build time, so the class
+    // must be on the build-time classpath for native-image.
+    implementation 'org.tukaani:xz:1.9'
     implementation 'io.quarkus:quarkus-arc'
     implementation 'io.quarkus:quarkus-micrometer-registry-prometheus'
     implementation 'io.quarkus:quarkus-opentelemetry'
