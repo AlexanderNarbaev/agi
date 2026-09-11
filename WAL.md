@@ -1161,3 +1161,25 @@ RUN 432: MinHash (Jaccard similarity) + Reservoir sampling (Algorithm R)
 + ~367→437 tests cumulative
 
 **All systems green**: 0 failures across new and existing tests.
+
+**Phase AE (RUN 433-436)** — String + arithmetic + I/O:
+RUN 433: SuffixArray (doubling sort, O(n log² n)) + Trie
+RUN 434: DynamicProgramming class — LIS, knapsack, subset-sum, intervals
+RUN 435: BigArithmetic — modPow, gcd, lcm, modInverse, binomSmall, average
+RUN 436: Csv — RFC 4180 line parser/serializer
+
+**Cumulative** (RUN 419-436, 18 commits in this session wave):
++ 16 algorithm classes added (32 algorithms total in neuron package)
++ 80+ new tests across 18 new test classes
++ 102→120 Exp* test files
++ ~437→520 tests cumulative
+
+**Native build (RUN 419-436 era)**: Repeated attempts confirm Mandrel container
+limits native-image to ~7.85GB heap; the build reaches analysis phase
+(29,487 types reachable, 8,690 reflection-registered) but consistently
+exhausts memory at the final C-link stage. All blockers from RUN 18/53/55/64
+remain resolved; the constraint is purely container resource.
+
+Workaround in place: native-image.properties broadened with full pekko +
+com.typesafe + lifecycle + neuron runtime init, plus
+HammingNative via Project Panama FFM for hot-path C callouts.
