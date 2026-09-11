@@ -1133,3 +1133,14 @@ RUN 418: Grand master integration test — 20+ components in 1 test, 0.13s
 **Cumulative**: 98 Exp* test files, 360 tests, 0 failures.
 ~425 RUNs, ~2050+ tests, ~270 classes, ~2720+ cumulative tests.
 46 algorithm classes total, all pure (no Random / wall-clock in runtime).
+
+**Phase AC (RUN 426-429)** — ML classics:
+RUN 426: LinearRegression (closed-form OLS + Ridge), LogisticRegression (SGD with shuffle),
+        TfIdf (L2-normalised cosine similarity)
+RUN 427: XXH3-64 (XxHash class)
+RUN 428: MultiLayerPerceptron (ReLU hidden, sigmoid output, mini-batch SGD backprop)
+RUN 429: Final stress test — all 20 algorithms from RUN 419-428 in 0.07s
+
+**Cumulative**: 102 Exp* test files, 367+ tests, 0 failures.
+~430 RUNs, ~2050+ tests, ~270 classes, ~2720+ cumulative tests.
+~52 algorithm classes total.
