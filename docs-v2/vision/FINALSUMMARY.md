@@ -3722,7 +3722,29 @@ primitives (EnrichedNeuron, FnlRegistry, ChainRegistry, etc.).
 - **~250 new Java classes**
 - **~158 EXP reports**
 - **6 hypothesis cards accepted**
-- **~2560+ cumulative tests, 0 failures**
-- **21 algorithm design docs (DESIGN-20..43)**
-- **252 tests in Exp* suite, 0 failures**
+
+## Section CXVII — DESIGN-42 SparseCoder implementation (RUN 387, 2026-09-11 12:58)
+
+* SparseCoder.encode — matching-pursuit greedy sparse coding +
+  soft-threshold. Pure function. Recovers signal from dictionary
+  with controlled sparsity.
+* Exp387SparseCoderTest — 3/3 pass
+
+### Cumulative Exp* test suite
+
+- **75 test files**
+- **260 tests**
+- **0 failures**
+
+### Project totals (RUN 12-387)
+
+- **~376 RUNs delivered**
+- **~1905+ new tests** added
+- **~252 new Java classes**
+- **~160 EXP reports**
+- **6 hypothesis cards accepted**
+- **~2570+ cumulative tests, 0 failures**
+- **22 algorithm design docs (DESIGN-20..43)**
+- **All 22 implemented**
+- **260 tests in Exp* suite, 0 failures**
 
