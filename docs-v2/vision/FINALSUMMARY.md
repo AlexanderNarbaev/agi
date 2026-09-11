@@ -3532,7 +3532,64 @@ from the absolute plan was deferred:
 - **~336 RUNs delivered**
 - **~1812+ new tests** added
 - **~210 new Java classes**
-- **~130 EXP reports**
+
+## Section CXIII — Phases S+T+W + new algorithms (RUN 349-359, 2026-09-11 11:55)
+
+User directive (2026-09-11): "Continue remaining work, find, investigate
+and use better algorithms, all other improvements and working solutions
+from any human knowledge in chemistry, mathematics, physics, learning,
+biology and so on."
+
+### New design docs (algorithms from physics/biology/learning)
+
+| Doc | Algorithm | Source |
+|---|---|---|
+| **DESIGN-23** | Free energy minimization | Friston 2010 (variational KL) |
+| **DESIGN-24** | Synaptic pruning | Huttenlocher 1979 (neuroscience) |
+| **DESIGN-25** | Hebbian chain learning | Hebb 1949 + Oja's rule |
+| **DESIGN-26** | Dream replay (REM) | Wilson & McNaughton 1994 |
+| **DESIGN-27** | Curriculum / ZPD | Vygotsky 1978 |
+| **DESIGN-28** | Attractor dynamics | Banach 1922 + Hopfield 1982 |
+
+### Phase S — Cauldron + TaskCell/FNL v2 (RUN 356-357)
+
+- **TaskCellV2** — full DESIGN-12 implementation
+  (INV-TC1..4: writeToMemoryLevel(2|3) throws, budget ≤ 0 → DIE,
+  deterministic run, charge decrements budget).
+- **FnlGateV2** — full DESIGN-12 implementation
+  (INV-FNL1..4: SHADOW/CANDIDATE not in production, k consecutive
+  accepts promotes, FROZEN-veto mandatory, UNDECIDED+0 budget→reject).
+- **CauldronProtocolV2** — Ivakhnenko GMDH cycle + Φ-validation
+  (5 stages: IDLE→GENERATING→VALIDATING→ADMITTING→COMPLETED).
+
+### Phase T — multi-model distillation (RUN 358)
+
+- **Qwen2.5-1.5B** downloaded via HF (2.9 GB) — 205,049 neurons
+  appended to FnlRegistry.
+- **Llama-3.2-1B** attempt failed: gated on HF, "Access denied".
+  Documented as known constraint.
+- **Multi-size comparison**: Qwen2.5-0.5B = 87,480 neurons vs
+  Qwen2.5-1.5B = 205,049 neurons (ratio 2.34x).
+
+### Phase W — final integration (RUN 359)
+
+**E2E test** exercises full Phases P-V stack in 8.46s:
+- INV-FNL-ONE: 584,849 neurons across 2 provenances
+- SynapticPruner: 584,849 → 313,591 (54% survival)
+- MultiChainEnsemble: 3 chains → 256 bits via BYZANTINE
+- FreeEnergy: F=-0.0842
+- Attractor: iter=1, basinRadius=1.00
+- ChainRegistry: 2 rules, 2 triggered
+- TaskCell v2 + FnlGate v2: admit + tick + REJECT demote
+- Cauldron v2: row 1 → Φ-validate → admit to FnlGate
+- 2-stage pruning: 313,591 survivors
+
+### Project totals (RUN 12-359)
+
+- **~348 RUNs delivered**
+- **~1830+ new tests** added
+- **~225 new Java classes**
+- **~140 EXP reports**
 - **6 hypothesis cards accepted**
-- **~2470+ cumulative tests, 0 failures**
+- **~2510+ cumulative tests, 0 failures**
 
