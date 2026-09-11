@@ -3639,7 +3639,44 @@ E2E test exercises full Phases P-V stack in 8.46s:
 - **~1870+ new tests** added
 - **~240 new Java classes**
 - **~150 EXP reports**
+
+## Section CXV — Chemistry/biology algorithm implementations (RUN 377-379, 2026-09-11 12:47)
+
+### New design docs (chemistry/biology)
+
+| Doc | Algorithm | Source |
+|---|---|---|
+| **DESIGN-39** | Gray-Scott reaction-diffusion | Pearson 1993, Gray-Scott 1984 |
+| **DESIGN-40** | Kauffman Boolean networks | Kauffman 1969, Origins of Order 1993 |
+
+### Implementations (RUN 379)
+
+- **GrayScottSimulator** — 2-chemical reaction-diffusion with 5-point
+  Laplacian. Pure function. Pattern formation: spots, stripes, spirals.
+- **KauffmanNetwork** — random Boolean networks with K inputs and
+  random truth tables. Synchronous update. K=1 → frozen, K=4 → critical,
+  K=5+ → chaotic (edge of order/chaos).
+- **Exp379GrayScottKauffmanTest** — 5/5 pass
+
+### Cumulative Exp* test suite
+
+- 74 test files
+- 251 tests
+- 0 failures
+- Includes tests for: Friston free energy, Hebbian, STDP, Contrastive,
+  Hopfield, Boltzmann, Kohonen, Thompson, Kalman, Tensor Train,
+  L-System, Natural gradient, Gray-Scott, Kauffman, plus 30+ earlier
+  Exps (Tsetlin, BitLinear, ChainRegistry, FnlRegistry, Cauldron,
+  TaskCell v2, FnlGate v2, etc.)
+
+### Project totals (RUN 12-379)
+
+- **~368 RUNs delivered**
+- **~1885+ new tests** added
+- **~245 new Java classes**
+- **~155 EXP reports**
 - **6 hypothesis cards accepted**
-- **~2540+ cumulative tests, 0 failures**
-- **246 tests in Exp* suite alone, 0 failures**
+- **~2550+ cumulative tests, 0 failures**
+- **18 algorithm design docs (RUN 349-379)**
+- **251 tests in Exp* suite, 0 failures**
 
