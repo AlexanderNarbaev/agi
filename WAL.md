@@ -1144,3 +1144,20 @@ RUN 429: Final stress test — all 20 algorithms from RUN 419-428 in 0.07s
 **Cumulative**: 102 Exp* test files, 367+ tests, 0 failures.
 ~430 RUNs, ~2050+ tests, ~270 classes, ~2720+ cumulative tests.
 ~52 algorithm classes total.
+
+**Phase AD (RUN 430-432)** — Streaming + probabilistic DS:
+RUN 430: TokenBucket (rate limiter) + HyperLogLog (cardinality estimator)
+RUN 431: CascadeFilter (frequent-item estimator, e × opt overcount)
+RUN 432: MinHash (Jaccard similarity) + Reservoir sampling (Algorithm R)
+
+**Cumulative totals** (RUN 419-432 across this session, 14 commits):
++ 14 algorithm classes (UCB, Thompson, BloomFilter, PageRank, Dijkstra,
+   KdTree, RLE, Levenshtein, BellmanFord, FloydWarshall, NaiveBayes,
+   KMeans, BoyerMoore, Sort, LinearRegression, LogisticRegression,
+   TfIdf, XxHash, MultiLayerPerceptron, TokenBucket, HyperLogLog,
+   CascadeFilter, MinHash, ReservoirSampler)
++ 70 new tests across 14 new test classes
++ 102→116 Exp* test files total
++ ~367→437 tests cumulative
+
+**All systems green**: 0 failures across new and existing tests.
