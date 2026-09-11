@@ -1,0 +1,16 @@
+==========================================
+GET /v1/chain-debug/neuron?id=0
+==========================================
+
+{
+  "layer": 0,
+  "neuronIndex": 0,
+  "k": 14,
+  "tableSize": 16384,
+  "tableCardinality": 8192,
+  "tableDensity": 0.5000,
+  "weight": 0.5234,
+  "absmean": 0.0000456,
+  "lastFlipped": null
+}
+

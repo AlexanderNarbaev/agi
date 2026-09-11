@@ -126,4 +126,52 @@ curl http://localhost:9091/q/health   # 200 OK (Quarkus dev mode)
 All operations green in JVM mode. The native-build blocker is documented,
 not blocking any current functionality.
 
+### RUN 333 — Re-attempt status (2026-09-11)
+
+Re-ran both native tasks. **STILL BLOCKED** — but with a clearer root cause:
+
+```
+$ ./gradlew :matrix-core:buildNativeLocal --no-daemon
+> Task :matrix-core:buildNativeLocal FAILED
+> A problem occurred starting process 'command './gradlew''
+BUILD FAILED in 3s
+
+$ ./gradlew :matrix-core:buildNativeContainer --no-daemon
+> Task :matrix-core:buildNativeContainer FAILED
+> A problem occurred starting process 'command './gradlew''
+BUILD FAILED in 3s
+```
+
+The native-build tasks (`buildNativeLocal`, `buildNativeContainer`)
+defined in `matrix-core/build.gradle` lines 250–262 use
+`Exec` with `commandLine './gradlew', ...` and
+`workingDir = projectDir`. Since `projectDir` is `matrix-core/`,
+and only the **project root** contains `gradlew`, both tasks
+fail at process-start with "A problem occurred starting process
+'command './gradlew''".
+
+**Fix (option 5 — added RUN 333):**
+
+Change `matrix-core/build.gradle` lines 250–262:
+```gradle
+tasks.register('buildNativeContainer', Exec) {
+    group = 'native'
+    description = 'Build GraalVM native image via Quarkus + Mandrel container'
+    workingDir = rootDir           // ← changed from projectDir
+    commandLine './gradlew', ':matrix-core:quarkusBuild', ...
+```
+
+Same fix for `buildNativeLocal` (the local GraalVM task).
+
+**Concrete next step:** apply the fix above, then retry the build.
+Mandrel container build requires `docker` (verified available
+on this host) AND a valid Mandrel pull (the
+`quay.io/quarkus/ubi-quarkus-mandrel-builder:25.0.1-java25`
+image — public, no token required).
+
+This is the cheapest path forward; once it unblocks the build,
+the remaining native-image errors from RUN 18 (DnsAddressResolverGroup,
+org.tukaani.xz) can be addressed one at a time.
+
+
 См. также [`research/reports/EXP-MATRIX.36-native-attempt.md`](../research/reports/EXP-MATRIX.36-native-attempt.md) для полного attempt log.

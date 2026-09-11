@@ -1,0 +1,20 @@
+==========================================
+POST /v1/sandbox/explain
+==========================================
+
+{
+  "input": "What is the capital of France?",
+  "chainOutput": [false, true, false, true, ...],
+  "topCandidates": [
+    {"token": "Paris", "id": 12345, "score": 0.87},
+    {"token": "London", "id": 16789, "score": 0.05}
+  ],
+  "winningNeurons": [42, 87, 142, 256, 891],
+  "trace": [
+    "layer 0: 915 neurons fired, density 0.95",
+    "layer 1: 892 neurons fired, density 0.93",
+    "...",
+    "layer 23: 1 neuron fired (decision)"
+  ]
+}
+

@@ -1,0 +1,13 @@
+==========================================
+GET /v1/sandbox/inspect
+==========================================
+
+{
+  "modelName": "qwen2.5-0.5b",
+  "source": "models/external/qwen2.5-0.5b/model.safetensors",
+  "layers": 24,
+  "neurons": 21960,
+  "evals": 0,
+  "timestamp": 1757547890123
+}
+
