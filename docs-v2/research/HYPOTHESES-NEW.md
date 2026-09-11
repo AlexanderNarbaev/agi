@@ -35,3 +35,35 @@
 - Циклы подсознания и сознания — инженерные конструкции ([SPEC-007](./../specifications/SPEC-007-subconscious.md), [SPEC-006](./../specifications/SPEC-006-consciousness-deliberation.md)), не претензия на биологическое соответствие.
 
 См. [PROTOCOL.md](PROTOCOL.md), [HYPOTHESES.md](HYPOTHESES.md), [engineering/PLAN.md](../engineering/PLAN.md), [architecture/FORMAL-CONTRACTS.md](../architecture/FORMAL-CONTRACTS.md).
+## H-051..H-060 — W31 Cross-Disciplinary Wave (Sep 11 2026)
+
+Эти карточки — результат W31 doctrine (см. `MATRIX-CROSS-DISCIPLINARY-RESEARCH.md`).
+Status: **proposed** → **running** по мере реализации RUN 437-450.
+
+| H | Утверждение | Школа / Источник | Артефакт |
+|---|---|---|---|
+| **H-051** | BitNet b1.58 absmean квантизация (W ∈ {-1, 0, +1}) при масштабе ≥3B даёт паритет с FP16 LLM по perplexity | Microsoft 2024 (arxiv 2402.17764) | `BitLinear.java` (RUN 439) |
+| **H-052** | HDC binding через XOR + cleanup через Hamming-distance lookup даёт viable edge-AI архитектуру | Kanerva SDM 1988, Plate HRR 1995, Intel Loihi | `HdcEncoding.java` (RUN 437), `CodebookMemory.java` (RUN 440) |
+| **H-053** | HDC+BitLinear+Boolean tables hybrid — новый архитектурный класс, нет commercial predecessor | self-synthesis (W31) | `HdcBrain.java` (RUN 442) |
+| **H-054** | Anokhin forward-model реализуемо как thin wrapper поверх brain simulator без переделки ядра | Anokhin functional systems 1935-1974 | DESIGN-55 §2 |
+| **H-055** | Bernstein levels of construction → hierarchical routing в brain simulator | Bernstein 1947 | DESIGN-55 §3 |
+| **H-056** | Zadeh fuzzy continuous relaxation bridge BitNet/Boolean | Zadeh 1965 (Fuzzy Sets) | `FuzzyBit.java` (DESIGN-56) |
+| **H-057** | Nyaya 4-fold classification → 4-state uncertainty quantization лучше чем BitNet 3-state | Nyaya / Dignāga 5-6 век н.э., Stcherbatsky 1930s | `NyayaWeight.java` (DESIGN-57) |
+| **H-058** | Capability Levels 0-6 measurable milestones achievable соло за 6 месяцев | Spelke, Spitz, Piaget | DESIGN-58 |
+| **H-059** | HDC-as-LLM-preprocessor ~30× memory-efficient vs dense-embedding baselines | Kanerva + Mem0/MemGPT | `HdcAsLlmPreprocessor.java` (RUN 447) |
+| **H-060** | Mordvintsev NCA через наши Boolean-таблицы реализуемо, даёт emergent self-organization | Mordvintsev 2020, Sudhakaran 2021 | `NcaBrainSimulator.java` (RUN 446) |
+
+### Hypotheses для ~3-6 месяцев исследований (W31+ roadmap)
+
+| H | Утверждение | Подтверждение через EXP-XXX |
+|---|---|---|
+| **H-061** | HDC brain (1024-bit) tolerates 30% bit-flip noise при 80% retrieval accuracy | EXP-051 |
+| **H-062** | Pavlov habituation curve: response decrement matches Sokolov exponential decay | EXP-052 |
+| **H-063** | Spelke object permanence: brain predicts A-not-B classic | EXP-053 |
+| **H-064** | Cross-modal HDC paired: 95% top-1 audio↔visual retrieval | EXP-054 |
+| **H-065** | NCA brain regrows target grid pattern после повреждения | EXP-055 |
+| **H-066** | HDC-as-LLM-preprocessor достигает 30× memory reduction vs Mem0 benchmark | EXP-056 |
+| **H-067** | Symbol grounding: 95% accuracy на (symbol, referent) pairs | EXP-057 |
+| **H-068** | Compositional 2-hop reasoning: 75% on (X→Y→Z) chains | EXP-058 |
+
+См. `MATRIX-CROSS-DISCIPLINARY-RESEARCH.md` §3 для полного списка артефактов.

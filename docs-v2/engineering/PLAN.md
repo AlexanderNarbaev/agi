@@ -2,6 +2,40 @@
 
 Что реализовано и что осталось (synth-only).
 
+## W31 Cross-Disciplinary Wave (Sep 11 2026) — направление следующих 6 месяцев
+
+**Trigger:** пользователь дал директиву формализовать cross-disciplinary research как AGENTS-правила и архитектурные документы. Запущена wave 31.
+
+**Результаты wave:**
+- Документация ядра: `docs-v2/research/MATRIX-CROSS-DISCIPLINARY-RESEARCH.md` (доктрина, META-R1..R5).
+- 6 design-документов: `DESIGN-54` (HDC × BitLinear × Boolean brain), `DESIGN-55` (Russian/Asian cybernetics integration), `DESIGN-56` (fuzzy bit continuous relaxation), `DESIGN-57` (Nyaya 4-state logic), `DESIGN-58` (capability levels roadmap), `DESIGN-59` (NCA brain).
+- Hypotheses H-051..H-068 в `HYPOTHESES-NEW.md`.
+
+**Стратегия следующих 6 месяцев:**
+
+Capability Levels (DESIGN-58) — measurable developmental milestones:
+- **Level 0**: Fabric (78 классов + brain) — DONE.
+- **Level 1**: Pavlov operant conditioning (Sokolov 1963, Spitz 1957) — 1-2 недели.
+- **Level 2**: Spelke 4-set core knowledge — 3-5 недель.
+- **Level 3**: Cross-modal HDC paired (Mithen 1996) — 6-8 недель.
+- **Level 4**: Piaget sensorimotor stage (Bernstein 1947 levels) — 9-12 недель.
+- **Level 5**: Symbol grounding (Bloom 2000, Pinker 2007) — 13-18 недель.
+- **Level 6**: Compositional reasoning (Tomasello 2003) — 19-26 недель.
+
+RUN plan:
+- 437-442 (1-2 недели): HDC core classes.
+- 443-444 (3-4 недели): Pavlov + Spelke.
+- 445-446 (4-6 недель): Cross-modal + NCA.
+- 447-448 (6-8 недель): HDC-as-LLM integration.
+- 449-450 (8-10 недель): Synthetic grammar + Sokolov habituation.
+
+Compute reality:
+- $0 на текущей машине (32GB RAM, no GPU): Levels 1-3 achievable соло.
+- $300/мес Lambda Labs: full experimental cycle.
+- $30K AWS spot: publication-grade validation.
+
+Edge-AI brain on CPU, not AGI. Это нишевая позиция без прямых конкурентов.
+
 ## Реализовано в коде ()
 
 ### Ядро (всё работает, тесты зелёные)
@@ -14,12 +48,15 @@
 - RicCI-топология знаний (ktopo).
 - BirClassifier, Distiller, OnnxActivationTeacher (onnxruntime 1.29.0).
 - CRD SignalModule/TaskCell в operator.
+- **Algorithm library** (RUN 419-436): 78+ pure-function classes — bandits, BloomFilter, PageRank, Dijkstra, KdTree, RLE, Levenshtein, BellmanFord, FloydWarshall, NaiveBayes, KMeans, BoyerMoore, Sort, LinearRegression, LogisticRegression, TfIdf, XxHash, MultiLayerPerceptron, TokenBucket, HyperLogLog, CascadeFilter, MinHash, ReservoirSampler, SuffixArray, Trie, DynamicProgramming, BigArithmetic, Csv.
+- **Native-image C-extension**: `HammingNative` через Project Panama FFM (`libtruthy_hamming.so`).
 
 ### Эксперименты (реальные цифры)
 - **H-010 accepted** (EXP-010, 9 прогонов, median ×242, 9/9 точность).
 - **H-002/H-003 refuted-toy** (EXP-002/003, GA быстрее и точнее на синтетике).
 - **EXP-009B/C**: дистиллят BIR ×149 быстрее ORT-CPU на синтетическом FFN, fidelity.999; GPU-нога (RTX 5070 Ti): батч 0.02 мс, per-call 17.25 µs; **MATRIX BIR ×276 быстрее GPU на точечных вызовах**.
 - **JMH-гейт Batch\*** выполнен: 32–69M ops/s, решение «оставить как есть».
+- **Native build**: analysis phase complete (~30K types reachable), final C-link exhausts Mandrel container 7.85GB heap. Workaround: HammingNative C-extension через Project Panama FFM.
 
 ## Стек (актуальный)
 Java 25 · Quarkus 3.38.3 · GraalVM plugin 1.1.10 · Avro 1.12.2 · ONNX Runtime 1.29.0 · Kafka-clients 4.3.1 · Testcontainers 1.21.3 · ML-DSA postquantum (JEP 497). См. [STANDARDS-MATRIX.md](STANDARDS-MATRIX.md).
@@ -35,15 +72,18 @@ Java 25 · Quarkus 3.38.3 · GraalVM plugin 1.1.10 · Avro 1.12.2 · ONNX Runtim
 | Квантовый код FR-D3 (BIR-to-MPS) | квантовый субстрат |
 | FPGA-синтез | yosys/nextpnr |
 | Полные цепи Ханселя (DESIGN-09 v2) | research wave |
+| Native-image full build | Mandrel container >=10GB heap memory (W31 Phase X workaround sufficient) |
 
 ## Следующее (минимально-ценностные шаги)
 
-1. TLA+-спек-кандидаты (см. [architecture/FORMAL-CONTRACTS.md](../architecture/FORMAL-CONTRACTS.md)):
-  - `BRC-Step` (закрывает пробел `reasoning/`),
-  - `ConjugateBudgeter-DP`,
-  - `Memory-M4-Causal`,
-  - `MCTS-LATS-Visit`.
-2. ~~SDD-свип: спеки для топ-`needs-spec` (`reasoning/BrcChain`, `mediator/`, `hades/`, `memory/`, `rag/`).~~ ✅ **RUN 13 done**: SPEC-008/009/010/011/012.
-3. Production-domain прогоны EXP-010/002/003 на восстановленных корпусах.
-4. CUDA-нога EXP-009 через `onnxruntime_gpu` (Java) при доступности cuDNN-тулчейна.
-5. Research-only Python: `scripts/bench_gpu_vs_bir.py` v2 с батчем (полные пороги).
+1. **W31 RUN 437-450** (см. секцию выше): HDC+BitLinear+Boolean brain до Capability Level 3.
+2. TLA+-спек-кандидаты (см. [architecture/FORMAL-CONTRACTS.md](../architecture/FORMAL-CONTRACTS.md)):
+   - `BRC-Step` (закрывает пробел `reasoning/`),
+   - `ConjugateBudgeter-DP`,
+   - `Memory-M4-Causal`,
+   - `MCTS-LATS-Visit`.
+3. ~~SDD-свип: спеки для топ-`needs-spec` (`reasoning/BrcChain`, `mediator/`, `hades/`, `memory/`, `rag/`).~~ ✅ **RUN 13 done**: SPEC-008/009/010/011/012.
+4. Production-domain прогоны EXP-010/002/003 на восстановленных корпусах.
+5. CUDA-нога EXP-009 через `onnxruntime_gpu` (Java) при доступности cuDNN-тулчейна.
+6. Research-only Python: `scripts/bench_gpu_vs_bir.py` v2 с батчем (полные пороги).
+7. **W31 publication prep**: arXiv preprint "Boolean+HDC+BitNet hybrid brain on CPU" after Level 3 demo.
