@@ -246,16 +246,16 @@ graalvmNative {
     }
 }
 
-// Native build via Mandrel container (recommended for CI/CD)
+// Native build via Mandrel container (RUN 389: workingDir fix, RUN 390: image bump)
 tasks.register('buildNativeContainer', Exec) {
     group = 'native'
     description = 'Build GraalVM native image via Quarkus + Mandrel container'
-    workingDir = projectDir
+    workingDir = rootDir
     commandLine './gradlew', ':matrix-core:quarkusBuild',
             '-Dquarkus.native.enabled=true',
             '-Dquarkus.package.type=native',
             '-Dquarkus.native.container-build=true',
-            '-Dquarkus.native.builder-image=quay.io/quarkus/ubi-quarkus-mandrel-builder:25.0.1-java25',
+            '-Dquarkus.native.builder-image=quay.io/quarkus/ubi-quarkus-mandrel-builder-image:jdk-25',
             '--no-daemon'
 }
 
@@ -263,7 +263,7 @@ tasks.register('buildNativeContainer', Exec) {
 tasks.register('buildNativeLocal', Exec) {
     group = 'native'
     description = 'Build GraalVM native image locally (requires GraalVM/Mandrel)'
-    workingDir = projectDir
+    workingDir = rootDir
     commandLine './gradlew', ':matrix-core:quarkusBuild',
             '-Dquarkus.native.enabled=true',
             '-Dquarkus.package.type=native',
@@ -275,7 +275,7 @@ tasks.register('runNative', Exec) {
     dependsOn 'buildNative'
     group = 'native'
     description = 'Run the native binary'
-    workingDir = projectDir
+    workingDir = rootDir
     commandLine "${project.layout.buildDirectory.get()}/matrix-core-${project.version}-runner"
 }
 
