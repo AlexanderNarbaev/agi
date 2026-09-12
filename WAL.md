@@ -1609,3 +1609,20 @@ io/matrix/research/
 **HEAD: fa99d921**
 
 **Status: W31 plan fully delivered and verified.**
+
+## CHECKPOINT 20 — Wave 11-12: ADR + MPDT × HDC bridge (2026-09-12)
+
+**Wave 11 — ADR-2026-09-12-001:**
+- HDC × BitLinear hybrid brain принят как архитектурный примитив
+- STANDARDS-MATRIX обновлён (W31 Brain + libtruthy_hamming + BitNet b1.58 ref)
+- 2 docs файла, 0 новых тестов
+
+**Wave 12 — RUN 451 MpdtHdcBridge:**
+- Integration MPDT (existing HierarchicalBrain) × HDC (W31 HdcBrain)
+- decideAndRemember: MPDT → store in HDC
+- decideWithMemory: try HDC, fall back to MPDT if low similarity
+- benchmark: train + test with accuracy and memory hit rate
+- 11 tests, 0 fails
+- HEAD: 2a669b70
+
+**W31 wave extended:** 15 brain classes + ADR + integration bridge.
