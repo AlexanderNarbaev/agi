@@ -49,6 +49,37 @@ public final class BitNetRmsNorm {
      * @param hidden hidden size (must match weight.length)
      * @return normalized hidden states [batch, seq, hidden_size]
      */
+    /**
+     * Forward for a sequence [seq_len, hidden_size] (variable seq_len per row).
+     */
+    public float[][] forwardSeq(float[][] hiddenStates) {
+        if (hiddenStates == null || hiddenStates.length == 0) {
+            throw new IllegalArgumentException("empty hiddenStates");
+        }
+        int hidden = weight.length;
+        float[][] out = new float[hiddenStates.length][];
+        float invHidden = 1.0f / hidden;
+        for (int s = 0; s < hiddenStates.length; s++) {
+            float[] in = hiddenStates[s];
+            if (in.length != hidden) {
+                throw new IllegalArgumentException("seq " + s + " hidden=" + in.length
+                        + " != weight.length " + hidden);
+            }
+            double sumSq = 0.0;
+            for (int d = 0; d < hidden; d++) {
+                sumSq += (double) in[d] * in[d];
+            }
+            double meanSq = sumSq * invHidden;
+            float rms = (float) (1.0 / Math.sqrt(meanSq + eps));
+            float[] outS = new float[hidden];
+            for (int d = 0; d < hidden; d++) {
+                outS[d] = in[d] * rms * weight[d];
+            }
+            out[s] = outS;
+        }
+        return out;
+    }
+
     public float[] forward(float[] hidden_states, int batch, int seq, int hidden) {
         if (hidden_states == null) throw new IllegalArgumentException("null hidden_states");
         if (hidden != weight.length) {
