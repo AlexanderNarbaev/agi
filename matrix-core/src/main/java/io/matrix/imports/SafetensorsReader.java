@@ -112,9 +112,54 @@ public final class SafetensorsReader {
             pos += n;
         }
         raw.flip();
+        return decodeTensor(meta, raw);
+    }
 
+    /**
+     * Load raw tensor bytes without dtype conversion. Useful for tensors
+     * with custom encoding (e.g., BitNet b1.58 packed uint8 weights).
+     *
+     * @param ch   open FileChannel for the safetensors file
+     * @param h    parsed header (from {@link #readHeader})
+     * @param name tensor name to load
+     * @return raw byte array of size {@code meta.endOffset - meta.startOffset}
+     */
+    public byte[] loadTensorBytes(FileChannel ch, Header h, String name) throws IOException {
+        TensorMeta meta = h.tensors().get(name);
+        if (meta == null) throw new IOException("Unknown tensor: " + name + " in " + h.file());
+
+        long byteLen = meta.endOffset() - meta.startOffset();
+        if (byteLen < 0 || byteLen > Integer.MAX_VALUE) {
+            throw new IOException("Invalid tensor byte length: " + byteLen);
+        }
+        byte[] data = new byte[(int) byteLen];
+        int pos = 0;
+        while (pos < byteLen) {
+            int n = ch.read(ByteBuffer.wrap(data, pos, (int) (byteLen - pos)),
+                    meta.startOffset() + pos);
+            if (n < 0) throw new IOException("EOF reading tensor " + name);
+            pos += n;
+        }
+        return data;
+    }
+
+    /**
+     * Read bf16 scale tensor (single scalar). Returns the float32 value.
+     */
+    public float loadBf16Scale(FileChannel ch, Header h, String name) throws IOException {
+        byte[] bytes = loadTensorBytes(ch, h, name);
+        if (bytes.length < 2) {
+            throw new IOException("Scale tensor " + name + " too small");
+        }
+        // bf16 is little-endian 16-bit
+        int bits = (bytes[0] & 0xFF) | ((bytes[1] & 0xFF) << 8);
+        return Float.intBitsToFloat(bits << 16);
+    }
+
+    /** Decode raw tensor bytes into float values (existing helper). */
+    private Tensor decodeTensor(TensorMeta meta, ByteBuffer raw) {
         float[] data = decode(raw, meta.dtype(), (int) meta.elementCount());
-        return new Tensor(name, meta.dtype(), meta.shape(), data);
+        return new Tensor(meta.dtype(), meta.dtype(), meta.shape(), data);
     }
 
     /** Parses the JSON header into typed metadata. */
