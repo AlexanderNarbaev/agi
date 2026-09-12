@@ -13,6 +13,10 @@
 | Testcontainers | 1.21.3 | BOM | ⏸️ мажор 2.x требует пересборки явных артефактов |
 | Postquantum ML-DSA | JEP 497 (JDK25) | native | ✅ без внешнего dep |
 | ONNX Runtime GPU (Java) | — | — | ❌ требует системного CUDA 12 + cuDNN9 (нет в окружении) |
+| **W31 Brain (HDC + BitLinear + NCA)** | — | pure-Java + JEP 424 Panama FFM | ✅ новый архитектурный примитив (ADR-2026-09-12-001) |
+| **libtruthy_hamming.so** | built Sep 2026 | `matrix-core/src/main/c/libtruthy/` | ✅ C-extension для 32× быстрее Hamming через JEP 424; Java fallback гарантирован |
+| **BitNet b1.58 reference** | arxiv 2402.17764 | external | 📚 алгоритмический референс; не runtime dep |
+| **HdcEncoding / BitLinear / NCA** | — | pure-Java | ✅ 14 классов, 258 тестов, edge-AI positioning (37.9M ops/sec) |
 
 ## Пропуски осознанные
 
@@ -28,3 +32,10 @@
 3. при падении — откат + пометка BLOCKED.
 
 Patch/minor — то же, но без RFC.
+## Архитектурные решения (ADR)
+
+| ADR | Дата | Решение | Статус |
+|---|---|---|---|
+| ADR-2026-09-12-001 | 2026-09-12 | Принять HDC × BitLinear hybrid brain как архитектурный примитив | ✅ Accepted |
+
+Полные ADR в `docs-v2/architecture/`.
