@@ -1,0 +1,7 @@
+[tasks.test]
+description = "Run tests"
+run = "echo 'Add test command'"
+
+[tasks.lint]
+description = "Run linter"
+run = "echo 'Add lint command'"
