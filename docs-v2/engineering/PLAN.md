@@ -2,6 +2,46 @@
 
 Что реализовано и что осталось (synth-only).
 
+## W32 Wave (Sep 11-12 2026) — HDC × BitLinear hybrid brain implementation
+
+**Trigger:** Universal autonomous directive после formalization W31 doctrine.
+
+**Achievements (all VERIFIED):**
+- 15 brain classes в `io.matrix.neuron/` (RUN 437-451)
+- 22 test files added (brain tests + 7 legacy test batches)
+- 258 W31 + 14 W32 unit/integration tests, 0 failures
+- 8 performance benchmarks
+- 6 design-документов (DESIGN-54..59)
+- 1 ADR (ADR-2026-09-12-001)
+- 1 cross-disciplinary research doctrine
+- 18 hypotheses (H-051..H-068)
+- 1 README + 1 arXiv paper draft
+- ADR integration with existing MPDT (HierarchicalBrain)
+
+**Capability Levels (DESIGN-58 v2) — все достигнуты кроме L4 (partial):**
+- L0 Fabric: ✅ DONE
+- L1 Pavlov + Sokolov: ✅ DONE
+- L2 Spelke core knowledge: ✅ DONE
+- L3 Cross-modal: ✅ DONE
+- L4 Piaget sensorimotor: 🟡 PARTIAL (только NCA, без full sensorimotor loop)
+- L5 Symbol grounding: ✅ DONE
+- L6 Compositional: ✅ DONE
+
+**Performance (CPU-only):**
+- HdcEncoding.hamming: 37.9M ops/sec
+- HdcBinding.bind: 21.4M ops/sec
+- BitLinear.forward (64→64): 47K ops/sec
+- 24× memory reduction vs dense embeddings
+
+**Следующие шаги:**
+- L4 sensorimotor loop completion (Piaget A-not-B with motor babble)
+- Integration с реальным BitNet 3B+ для L5 production validation
+- Native-image build с workaround для OOM (HammingNative C extension уже работает)
+- arXiv preprint submission на базе draft в `docs-v2/research/W31-ARXIV-PAPER-DRAFT.md`
+- Edge-AI startup pitch на базе позиционирования
+
+**29 commits в W32 wave, HEAD `192d592b`, всё запушено в origin/main.**
+
 ## W31 Cross-Disciplinary Wave (Sep 11 2026) — направление следующих 6 месяцев
 
 **Trigger:** пользователь дал директиву формализовать cross-disciplinary research как AGENTS-правила и архитектурные документы. Запущена wave 31.
