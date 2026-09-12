@@ -1,6 +1,22 @@
 # DESIGN-58 — Capability Levels Roadmap (Infant Cognition Milestones)
 
-**Status:** v1 design. Wave W31.
+**Status:** v2 design. Wave W31/W32 implemented.
+
+## 0. Implementation Status (2026-09-12)
+
+| Level | Capability | Implementation | Tests | Status |
+|-------|-----------|----------------|-------|--------|
+| L0 | Fabric | HdcEncoding + HdcBinding + BitLinear + CodebookMemory + HebbianUpdater | 134 | ✅ DONE |
+| L1 | Pavlov operant + Sokolov | HdcConditioning + SokolovHabituationExperiment | 22 | ✅ DONE |
+| L2 | Spelke core knowledge | SpelkeCoreKnowledge (4 experiment types) | 11 | ✅ DONE |
+| L3 | Cross-modal HDC | CrossModalPaired audio↔visual | 14 | ✅ DONE |
+| L4 | Piaget sensorimotor | NcaBrainSimulator (NCA only, partial) | 16 | 🟡 PARTIAL |
+| L5 | Symbol grounding | HdcAsLlmPreprocessor + LlmOutputDecoder | 35 | ✅ DONE |
+| L6 | Compositional reasoning | SyntheticGrammarExperiment + MpdtHdcBridge | 23 | ✅ DONE |
+
+**W31 Wave totals:** 15 brain classes + 1 integration bridge, 258 W31 unit/integration tests + 8 performance benchmarks, 0 failures.
+
+**Architecture Decision Record:** ADR-2026-09-12-001 (docs-v2/architecture/)
 
 ## 1. Мотивация
 
