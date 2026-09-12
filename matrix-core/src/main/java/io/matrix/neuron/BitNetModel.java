@@ -88,6 +88,40 @@ public final class BitNetModel {
     }
 
     /**
+     * Generate tokens autoregressively with sampling.
+     *
+     * <p>Uses single-token forward (simplified, no KV cache reuse) with
+     * TokenSampler for non-greedy decoding. Each generated token depends
+     * on the previous token only — this is a simplified approximation that
+     * doesn't use true context windows.
+     *
+     * @param promptIds token IDs to start from
+     * @param maxNewTokens maximum number of new tokens to generate
+     * @param samplerConfig sampling config (temperature, top-p, etc.)
+     * @param rng random source
+     * @return generated token IDs (excludes prompt)
+     */
+    public int[] generate(int[] promptIds, int maxNewTokens,
+                           TokenSampler.Config samplerConfig, java.util.Random rng) {
+        int currentToken = promptIds[promptIds.length - 1];
+        int position = promptIds.length - 1;
+        int[] generated = new int[maxNewTokens];
+        int genCount = 0;
+        for (int step = 0; step < maxNewTokens; step++) {
+            float[] logits = forwardSingleToken(currentToken, position);
+            int nextToken = TokenSampler.sample(logits, samplerConfig, rng);
+            // Stop on EOS
+            if (nextToken == 128001 || nextToken == 128009) break;
+            generated[genCount++] = nextToken;
+            currentToken = nextToken;
+            position++;
+        }
+        int[] result = new int[genCount];
+        System.arraycopy(generated, 0, result, 0, genCount);
+        return result;
+    }
+
+    /**
      * Argmax of logits — greedy token prediction.
      */
     public static int argmax(float[] logits) {
