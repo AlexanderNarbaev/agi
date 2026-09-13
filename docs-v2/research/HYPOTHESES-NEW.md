@@ -66,4 +66,18 @@ Status: **proposed** → **running** по мере реализации RUN 437-
 | **H-067** | Symbol grounding: 95% accuracy на (symbol, referent) pairs | EXP-057 |
 | **H-068** | Compositional 2-hop reasoning: 75% on (X→Y→Z) chains | EXP-058 |
 
+## H-069..H-077 — W60+ consciousness/memory/emergence hypotheses (2026-09-13)
+
+| H | Утверждение | Школа | Status |
+|---|---|---|---|
+| **H-069** | BitLinear (1.58-bit) wake-sleep algorithm (Hinton 1995) successfully consolidates representations; fantasy activations naturally fall in {-1, 0, +1} matching biological low-firing-rate regime | Hinton wake-sleep + MATRIX BitLinear | running |
+| **H-070** | Two-stage hippocampus↔neocortex replay (Squire-Alvarez 1995 + CLS McClelland 1995) consolidates memories via interleaved offline replay; replay reduces prediction error over cycles | Neuroscience + MATRIX HDC | running |
+| **H-071** | Free-energy minimization (Friston 2010) unifies training across BitLinear + HebbianUpdater + PredictiveCoder; single loss function for wake + sleep + consolidation | FEP + MATRIX | running |
+| **H-072** | Hofstadter-style "I" loop on top of MATRIX's viewpoint architecture: second-order brain observing first-order brain produces measurable self-model signatures | Hofstadter strange loops | running |
+| **H-073** | Stigmergic pheromone-like M3 traces enable federated ensemble coordination without central control (ACO-style) | Grassé 1959 + MATRIX federation | running |
+| **H-074** | Embodied NCA with HDC-per-cell state produces Lenia-like continuous-time lifeforms with semantic memory | Lenia (Chan 2019) + MATRIX NCA + HDC | running |
+| **H-075** | Explicit "wu wei" no-op action primitive reduces surprise-driven actions to zero when below threshold; Taoist non-action as engineering discipline | Taoism + FEP | running |
+| **H-076** | Hermeneutic interpretation as HDC majority-vote merge produces consensus across heterogeneous brains (Gadamer horizon-merge as HDC bind+vote) | Hermeneutics (Gadamer) + HDC | running |
+| **H-077** | Pragmatic meaning test: action succeeds → meaning assigned to percept that preceded it; James-Dewey pragmatic meaning as engineering signal | Pragmatism (James 1907) + Hebbian | running |
+
 См. `MATRIX-CROSS-DISCIPLINARY-RESEARCH.md` §3 для полного списка артефактов.
