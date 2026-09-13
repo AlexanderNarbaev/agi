@@ -53,28 +53,47 @@ public final class BitNetModel {
     }
 
     /**
-     * Forward pass for a single token (no batch, single position).
-     *
-     * @param tokenId input token id
-     * @param positionId position in sequence (for RoPE)
-     * @return logits over vocab [vocab_size]
+     * Forward pass for a single token.
      */
     public float[] forwardSingleToken(int tokenId, int positionId) {
-        // 1. Embedding lookup
         int hiddenSize = blocks[0].hiddenSize;
         int vocabSize = embedding.length / hiddenSize;
         float[] hidden = new float[hiddenSize];
         System.arraycopy(embedding, tokenId * hiddenSize, hidden, 0, hiddenSize);
-
-        // 2. Run decoder stack
         for (BitNetBlock block : blocks) {
             hidden = block.forwardSingle(hidden, rope);
         }
-
-        // 3. Final RMSNorm
         hidden = modelNorm.forward(hidden, 1, 1, hiddenSize);
+        return logitsFromHidden(hidden);
+    }
 
-        // 4. lm_head: logits = hidden @ embedding.T (tied weights)
+    /**
+     * Forward pass for a sequence of tokens (uses BitNetBlockSequence per block).
+     * This is the proper multi-token forward with causal attention.
+     */
+    public float[][] forwardSequence(int[] tokenIds) {
+        int hiddenSize = blocks[0].hiddenSize;
+        int seqLen = tokenIds.length;
+        float[][] hidden = new float[seqLen][hiddenSize];
+        for (int s = 0; s < seqLen; s++) {
+            System.arraycopy(embedding, tokenIds[s] * hiddenSize, hidden[s], 0, hiddenSize);
+        }
+        for (BitNetBlock block : blocks) {
+            hidden = BitNetBlockSequence.forwardSequence(block, hidden, rope, 0);
+        }
+        for (int s = 0; s < seqLen; s++) {
+            float[] normed = modelNorm.forward(hidden[s], 1, 1, hiddenSize);
+            hidden[s] = normed;
+        }
+        return hidden;
+    }
+
+    /**
+     * Compute logits from hidden state (lm_head = hidden @ embedding.T, tied).
+     */
+    public float[] logitsFromHidden(float[] hidden) {
+        int hiddenSize = blocks[0].hiddenSize;
+        int vocabSize = embedding.length / hiddenSize;
         float[] logits = new float[vocabSize];
         for (int v = 0; v < vocabSize; v++) {
             float sum = 0;
@@ -88,21 +107,10 @@ public final class BitNetModel {
     }
 
     /**
-     * Generate tokens autoregressively with sampling.
-     *
-     * <p>Uses single-token forward (simplified, no KV cache reuse) with
-     * TokenSampler for non-greedy decoding. Each generated token depends
-     * on the previous token only — this is a simplified approximation that
-     * doesn't use true context windows.
-     *
-     * @param promptIds token IDs to start from
-     * @param maxNewTokens maximum number of new tokens to generate
-     * @param samplerConfig sampling config (temperature, top-p, etc.)
-     * @param rng random source
-     * @return generated token IDs (excludes prompt)
+     * Generate autoregressively with sampling (single-token forward).
      */
     public int[] generate(int[] promptIds, int maxNewTokens,
-                           TokenSampler.Config samplerConfig, java.util.Random rng) {
+                           TokenSampler.Config samplerConfig, Random rng) {
         int currentToken = promptIds[promptIds.length - 1];
         int position = promptIds.length - 1;
         int[] generated = new int[maxNewTokens];
@@ -110,7 +118,6 @@ public final class BitNetModel {
         for (int step = 0; step < maxNewTokens; step++) {
             float[] logits = forwardSingleToken(currentToken, position);
             int nextToken = TokenSampler.sample(logits, samplerConfig, rng);
-            // Stop on EOS
             if (nextToken == 128001 || nextToken == 128009) break;
             generated[genCount++] = nextToken;
             currentToken = nextToken;
@@ -122,8 +129,44 @@ public final class BitNetModel {
     }
 
     /**
-     * Argmax of logits — greedy token prediction.
+     * Generate autoregressively using prefill + decode pattern.
+     * Prefill: process full prompt via sequence forward.
+     * Decode: use last hidden state for first generated token.
+     * Subsequent tokens use single-token forward.
      */
+    public int[] generateWithPrefill(int[] promptIds, int maxNewTokens,
+                                       TokenSampler.Config cfg, Random rng) {
+        // Prefill: forward full prompt with causal attention
+        float[][] promptHidden = forwardSequence(promptIds);
+
+        // Get logits from last prompt position
+        float[] logits = logitsFromHidden(promptHidden[promptHidden.length - 1]);
+
+        int[] generated = new int[maxNewTokens];
+        int genCount = 0;
+
+        // First token from prefill
+        int currentToken = TokenSampler.sample(logits, cfg, rng);
+        if (currentToken == 128001 || currentToken == 128009) {
+            return new int[0];
+        }
+        generated[genCount++] = currentToken;
+        int position = promptIds.length;
+
+        // Continue with single-token forward (simplification)
+        for (int step = 1; step < maxNewTokens; step++) {
+            logits = forwardSingleToken(currentToken, position);
+            currentToken = TokenSampler.sample(logits, cfg, rng);
+            if (currentToken == 128001 || currentToken == 128009) break;
+            generated[genCount++] = currentToken;
+            position++;
+        }
+
+        int[] result = new int[genCount];
+        System.arraycopy(generated, 0, result, 0, genCount);
+        return result;
+    }
+
     public static int argmax(float[] logits) {
         int maxIdx = 0;
         float maxVal = logits[0];
@@ -136,9 +179,6 @@ public final class BitNetModel {
         return maxIdx;
     }
 
-    /**
-     * Number of decoder layers.
-     */
     public int layerCount() {
         return blocks.length;
     }
