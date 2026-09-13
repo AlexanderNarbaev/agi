@@ -1,5 +1,9 @@
 package io.matrix.neuron;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -7,47 +11,28 @@ import java.util.List;
  * RUN 464 — KV cache for autoregressive generation (DESIGN-54 §14).
  *
  * <p>Stores per-layer K and V tensors across tokens to avoid recomputation.
- * Standard transformer KV cache layout:
- * <pre>
- *   shape per layer: [batch, n_kv_heads, max_seq_len, head_dim]
- *   dtype: float32 (we use float for Java; bf16 in real inference)
- * </pre>
+ * Each layer's storage is shaped as [maxSeqLen × (numKvHeads × headDim)]
+ * per position, supporting multi-head KV (e.g., GQA in BitNet).
  *
  * <h2>Memory budget (BitNet b1.58-2B-4T, batch=1)</h2>
  * <pre>
- *   per layer: 2 (K+V) × 5 (kv_heads) × 4096 (max_seq) × 128 (head_dim) × 4 bytes = 20 MB
+ *   per layer: 2 (K+V) × 4096 × 5 × 128 × 4 bytes = 20 MB
  *   × 30 layers = 600 MB
  * </pre>
  *
- * <h2>Usage</h2>
- * <pre>
- *   KvCache cache = new KvCache(30, 5, 128, 4096);
- *   // For each layer: get K, V slots
- *   float[] kSlot = cache.kSlot(layerIdx, position);
- *   float[] vSlot = cache.vSlot(layerIdx, position);
- * </pre>
- *
  * <h2>CONSTITUTION I</h2>
- * Pure data structure. No RNG, no wall-clock. Caller manages state.
+ * Pure data structure. No RNG, no wall-clock.
  */
 public final class KvCache {
 
-    /** Number of decoder layers. */
     public final int numLayers;
-    /** Number of key-value heads (5 for BitNet GQA). */
     public final int numKvHeads;
-    /** Dimension of each head (128 for BitNet). */
     public final int headDim;
-    /** Maximum sequence length to pre-allocate. */
     public final int maxSeqLen;
 
-    /**
-     * Per-layer K, V storage. Layout: storage[layer][kvIdx] → float[maxSeqLen * headDim]
-     * (kvIdx = 0 for K, 1 for V).
-     */
+    /** Per-layer storage: storage[layer][kvIdx] → float[maxSeqLen × numKvHeads × headDim]. */
     private final float[][][] storage;
 
-    /** Current sequence length filled (cached positions: 0..seqLength-1). */
     private int seqLength;
 
     public KvCache(int numLayers, int numKvHeads, int headDim, int maxSeqLen) {
@@ -58,82 +43,69 @@ public final class KvCache {
         this.numKvHeads = numKvHeads;
         this.headDim = headDim;
         this.maxSeqLen = maxSeqLen;
-        // layers × (K, V) × maxSeqLen × headDim
-        this.storage = new float[numLayers][2][maxSeqLen * headDim];
+        this.storage = new float[numLayers][2][maxSeqLen * numKvHeads * headDim];
         this.seqLength = 0;
     }
 
-    /**
-     * Get the K buffer for a specific layer and sequence position. Returns a
-     * slice of the pre-allocated storage (length = headDim) where the caller
-     * writes K values for this position.
-     *
-     * @param layerIdx layer index [0, numLayers)
-     * @param position sequence position to write K for
-     * @return slice of headDim floats (caller writes here)
-     */
+    private int perPos() {
+        return numKvHeads * headDim;
+    }
+
     public float[] kSlot(int layerIdx, int position) {
         checkPosition(position);
-        int offset = position * headDim;
+        int offset = position * perPos();
         return java.util.Arrays.copyOfRange(
-                storage[layerIdx][0], offset, offset + headDim);
+                storage[layerIdx][0], offset, offset + perPos());
     }
 
-    /**
-     * Get the V buffer for a specific layer and sequence position.
-     */
     public float[] vSlot(int layerIdx, int position) {
         checkPosition(position);
-        int offset = position * headDim;
+        int offset = position * perPos();
         return java.util.Arrays.copyOfRange(
-                storage[layerIdx][1], offset, offset + headDim);
+                storage[layerIdx][1], offset, offset + perPos());
     }
 
-    /**
-     * Append K and V for a new position. Returns the new sequence length.
-     */
     public int append(int layerIdx, float[] k, float[] v) {
         if (k == null || v == null) throw new IllegalArgumentException("null k/v");
-        if (k.length != headDim || v.length != headDim) {
-            throw new IllegalArgumentException("k/v must be length " + headDim);
+        int p = perPos();
+        if (k.length != p || v.length != p) {
+            throw new IllegalArgumentException("k/v must be length " + p
+                    + " (got k=" + k.length + ", v=" + v.length + ")");
+        }
+        if (layerIdx < 0 || layerIdx >= numLayers) {
+            throw new IllegalArgumentException("layerIdx " + layerIdx
+                    + " out of range [0, " + numLayers + ")");
         }
         int pos = seqLength;
         if (pos >= maxSeqLen) {
             throw new IllegalStateException("cache full at seqLength=" + pos);
         }
-        System.arraycopy(k, 0, storage[layerIdx][0], pos * headDim, headDim);
-        System.arraycopy(v, 0, storage[layerIdx][1], pos * headDim, headDim);
+        System.arraycopy(k, 0, storage[layerIdx][0], pos * p, p);
+        System.arraycopy(v, 0, storage[layerIdx][1], pos * p, p);
         seqLength++;
         return seqLength;
     }
 
-    /**
-     * Append to all layers at once with the same K, V (rare — usually each
-     * layer has different K, V). Useful for testing.
-     */
     public int appendAll(float[][] kPerLayer, float[][] vPerLayer) {
         if (kPerLayer.length != numLayers || vPerLayer.length != numLayers) {
             throw new IllegalArgumentException("need one K/V per layer");
         }
         int pos = seqLength;
         if (pos >= maxSeqLen) throw new IllegalStateException("cache full");
+        int p = perPos();
         for (int l = 0; l < numLayers; l++) {
-            System.arraycopy(kPerLayer[l], 0, storage[l][0], pos * headDim, headDim);
-            System.arraycopy(vPerLayer[l], 0, storage[l][1], pos * headDim, headDim);
+            System.arraycopy(kPerLayer[l], 0, storage[l][0], pos * p, p);
+            System.arraycopy(vPerLayer[l], 0, storage[l][1], pos * p, p);
         }
         seqLength++;
         return seqLength;
     }
 
-    /**
-     * Get all cached K positions for a layer (for attention computation).
-     * Returns a list of float arrays, one per position up to seqLength.
-     */
     public List<float[]> cachedK(int layerIdx) {
         List<float[]> result = new ArrayList<>(seqLength);
         for (int p = 0; p < seqLength; p++) {
-            float[] k = new float[headDim];
-            System.arraycopy(storage[layerIdx][0], p * headDim, k, 0, headDim);
+            float[] k = new float[perPos()];
+            System.arraycopy(storage[layerIdx][0], p * perPos(), k, 0, perPos());
             result.add(k);
         }
         return result;
@@ -142,16 +114,13 @@ public final class KvCache {
     public List<float[]> cachedV(int layerIdx) {
         List<float[]> result = new ArrayList<>(seqLength);
         for (int p = 0; p < seqLength; p++) {
-            float[] v = new float[headDim];
-            System.arraycopy(storage[layerIdx][1], p * headDim, v, 0, headDim);
+            float[] v = new float[perPos()];
+            System.arraycopy(storage[layerIdx][1], p * perPos(), v, 0, perPos());
             result.add(v);
         }
         return result;
     }
 
-    /**
-     * Reset the cache (start new sequence).
-     */
     public void reset() {
         seqLength = 0;
     }
@@ -178,10 +147,7 @@ public final class KvCache {
         }
     }
 
-    /**
-     * Memory usage in bytes for the cache.
-     */
     public long memoryBytes() {
-        return (long) numLayers * 2 * maxSeqLen * headDim * 4;
+        return (long) numLayers * 2 * maxSeqLen * numKvHeads * headDim * 4;
     }
 }
