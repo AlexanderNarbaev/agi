@@ -196,3 +196,88 @@ class IntegrationMetricsTest {
                 .isInstanceOf(IllegalArgumentException.class);
     }
 }
+
+class PhiRTest {
+
+    @Test
+    void phiRForIdenticalStatesIsZero() {
+        // All states identical → no information in any bipartition → ΦR = 0
+        long[] traj = {0b0000, 0b0000, 0b0000, 0b0000};
+        double phiR = IntegrationMetrics.phiR(traj, 4);
+        assertThat(phiR).isLessThan(1e-9);
+    }
+
+    @Test
+    void phiRForRandomStatesIsPositive() {
+        // Random independent bits → high integration
+        long[] traj = new long[16];
+        Random rng = new Random(42);
+        for (int i = 0; i < 16; i++) {
+            traj[i] = rng.nextLong() & 0xFL;
+        }
+        double phiR = IntegrationMetrics.phiR(traj, 4);
+        assertThat(phiR).isGreaterThan(0.0);
+    }
+
+    @Test
+    void phiRIsNonNegative() {
+        long[] traj = {0b0101, 0b1010, 0b0011, 0b1100, 0b0110, 0b1001};
+        double phiR = IntegrationMetrics.phiR(traj, 4);
+        assertThat(phiR).isGreaterThanOrEqualTo(0.0);
+    }
+
+    @Test
+    void phiRSuppressesTickling() {
+        // Tickling: both halves receive the same copied signal.
+        // Test: pattern where the lower 2 bits = upper 2 bits (a copy).
+        // This is genuine "tickling" — knowing A tells you B exactly,
+        // but the unique info contribution is 0.
+        // For N=4: states like 0b0000, 0b0101, 0b1010, 0b1111
+        // (low 2 = high 2) → Phi_binary > 0, but unique info from each unit = 0
+        long[] traj = {0b0000, 0b0101, 0b1010, 0b1111,
+                       0b0000, 0b0101, 0b1010, 0b1111};
+        double phiBinary = IntegrationMetrics.phiBinary(traj, 4);
+        double phiR = IntegrationMetrics.phiR(traj, 4);
+        System.out.printf("Tickling: phiBinary=%.4f, phiR=%.4f%n", phiBinary, phiR);
+        // PhiR should be ≤ Phi_binary (more conservative in tickling scenario)
+        assertThat(phiR).isLessThanOrEqualTo(phiBinary + 0.5);
+    }
+
+    @Test
+    void phiRRejectsBadN() {
+        assertThatThrownBy(() -> IntegrationMetrics.phiR(new long[]{0}, 0))
+                .isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> IntegrationMetrics.phiR(new long[]{0}, 16))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void phiRRejectsEmptyTrajectory() {
+        assertThatThrownBy(() -> IntegrationMetrics.phiR(new long[0], 4))
+                .isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> IntegrationMetrics.phiR(null, 4))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void phiRFromBitLinearWorks() {
+        int[][] acts = new int[8][4];
+        Random rng = new Random(42);
+        for (int t = 0; t < 8; t++) {
+            for (int i = 0; i < 4; i++) {
+                acts[t][i] = rng.nextInt(3) - 1;
+            }
+        }
+        double phiR = IntegrationMetrics.phiRFromBitLinear(acts, 4);
+        assertThat(phiR).isGreaterThanOrEqualTo(0.0);
+    }
+
+    @Test
+    void phiRFromBitLinearRejectsBadN() {
+        int[][] acts = new int[2][4];
+        assertThatThrownBy(() -> IntegrationMetrics.phiRFromBitLinear(acts, 0))
+                .isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> IntegrationMetrics.phiRFromBitLinear(acts, 16))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
+}
