@@ -13,7 +13,7 @@
 | L4 | Piaget sensorimotor | NcaBrainSimulator + SensorimotorLoop (motor babble + contingency) | 29 | ✅ DONE |
 | L5 | Symbol grounding | HdcAsLlmPreprocessor + LlmOutputDecoder | 35 | ✅ DONE |
 | L6 | Compositional reasoning | SyntheticGrammarExperiment + MpdtHdcBridge | 23 | ✅ DONE |
-| **L7** | **Conscious Integration** | **ConsciousBrain** + BitLinearDreamer + TwoStageConsolidator + FreeEnergyLoss + SelfModel + WuWeiPolicy + StigmergicFederation + EmbodiedNcaCortex + HermeneuticLoop + PragmaticTest | **80** | **✅ DONE** |
+| **L7** | **Conscious Integration** | **ConsciousBrain** + BitLinearDreamer + TwoStageConsolidator + FreeEnergyLoss + SelfModel + WuWeiPolicy + StigmergicFederation + EmbodiedNcaCortex + HermeneuticLoop + PragmaticTest + **IntegrationMetrics** (Φ_binary + ΦF + C_N) | **85+** | **✅ DONE** |
 
 **W31 Wave totals:** 16 brain classes + 1 integration bridge, 285 W31 unit/integration tests + 8 performance benchmarks, 0 failures. **All 7 Capability Levels implemented.**
 
