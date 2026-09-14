@@ -13,6 +13,7 @@ import java.util.Random;
  *   <li>PhiF (EMD-based): 1 - W1(forward, backward) on Hamming cube</li>
  *   <li>PhiR (Mediano 2022): redundancy-suppressing Phi</li>
  *   <li>C_N (neural complexity): cheap integration proxy</li>
+ *   <li>Phi_linGauss (W89): closed-form linear-Gaussian Phi via covariance ln-determinant</li>
  * </ul>
  */
 public final class IntegrationMetrics {
@@ -417,5 +418,198 @@ public final class IntegrationMetrics {
             backwardDist[i] /= sumB;
         }
         return phiF(forwardDist, backwardDist);
+    }
+
+    // ============ Phi_linGauss (W89 closed-form linear-Gaussian Phi) ============
+    //
+    // Closed-form integration for systems modelled as multivariate Gaussian.
+    // Each binary state in `trajectory` is converted to a continuous N-dim vector
+    // (bits ∈ {0, 1}); the empirical correlation matrix is computed, then for
+    // each bipartition (mask), the mutual information is the closed-form
+    //   I(A; B) = (1/2) ln( det(C_AA) * det(C_BB) / det(C_AB) )
+    // where C_AA, C_BB are marginal correlation matrices and C_AB is the joint
+    // correlation restricted to A∪B.
+    //
+    // Φ_linGauss = min over all non-trivial bipartitions of I(A; B).
+    //
+    // Reference: Barrett & Seth (2011) "Practical measures of integrated
+    // information for neural systems"; Tononi (2008) "Consciousness as
+    // integrated information: a provisional manifesto".
+    //
+    // Notes:
+    // - Complexity: O(2^N · N^3) for the bipartition enumeration + matrix ops.
+    // - For N ≤ 8 we enumerate masks 1..(1<<N)-1 (Tononi-style MIP).
+    // - Singular matrices (degenerate covariance) are handled by adding a small
+    //   ridge (1e-10) to the diagonal before ln(det).
+
+    public static double phiLinGauss(long[] trajectory, int N) {
+        if (N < 1 || N > 16) {
+            throw new IllegalArgumentException("N in [1, 16] for phiLinGauss, got " + N);
+        }
+        if (trajectory == null || trajectory.length < 2) {
+            throw new IllegalArgumentException("trajectory must have ≥ 2 samples");
+        }
+        // Build continuous representation: each long → ±1 vector of length N.
+        double[][] samples = new double[trajectory.length][N];
+        for (int t = 0; t < trajectory.length; t++) {
+            long s = trajectory[t];
+            for (int i = 0; i < N; i++) {
+                int bit = (int) ((s >> i) & 1L);
+                samples[t][i] = bit == 1 ? 1.0 : -1.0;
+            }
+        }
+        // Compute correlation matrix
+        double[][] corr = correlationMatrix(samples, N);
+        // Ridge for numerical stability
+        for (int i = 0; i < N; i++) corr[i][i] += 1e-10;
+        // Enumerate bipartitions: masks 1..(1<<N)-1 exclude the trivial whole/empty
+        // partitions. For N=1 the range is empty (no valid bipartition), so Φ = 0.
+        if (N < 2) return 0.0;
+        double minPhi = Double.POSITIVE_INFINITY;
+        for (int mask = 1; mask < (1 << N) - 1; mask++) {
+            double mi = bipartitionMi(corr, mask, N);
+            if (mi < minPhi) minPhi = mi;
+        }
+        return Math.max(0.0, minPhi);
+    }
+
+    /** Pearson correlation matrix from samples[time][var]. */
+    private static double[][] correlationMatrix(double[][] samples, int N) {
+        int T = samples.length;
+        double[][] corr = new double[N][N];
+        double[] mean = new double[N];
+        for (int t = 0; t < T; t++) {
+            for (int i = 0; i < N; i++) mean[i] += samples[t][i];
+        }
+        for (int i = 0; i < N; i++) mean[i] /= T;
+        double[] std = new double[N];
+        for (int t = 0; t < T; t++) {
+            for (int i = 0; i < N; i++) {
+                double d = samples[t][i] - mean[i];
+                std[i] += d * d;
+            }
+        }
+        for (int i = 0; i < N; i++) std[i] = Math.sqrt(std[i] / Math.max(1, T - 1));
+        for (int i = 0; i < N; i++) {
+            for (int j = i; j < N; j++) {
+                double cov = 0;
+                for (int t = 0; t < T; t++) {
+                    cov += (samples[t][i] - mean[i]) * (samples[t][j] - mean[j]);
+                }
+                cov /= Math.max(1, T - 1);
+                double denom = std[i] * std[j];
+                double r = denom > 1e-12 ? cov / denom : 0;
+                if (i == j) r = 1.0;
+                r = Math.max(-1.0, Math.min(1.0, r));
+                corr[i][j] = corr[j][i] = r;
+            }
+        }
+        return corr;
+    }
+
+    /** Bipartition MI for mask: returns I(A; B) = 0.5 * ln(det(C_AA) * det(C_BB) / det(C_AB)). */
+    private static double bipartitionMi(double[][] corr, int mask, int N) {
+        // Extract subsets A (mask) and B (~mask & ((1<<N)-1))
+        int bMask = ((1 << N) - 1) ^ mask;
+        int aSize = Integer.bitCount(mask);
+        int bSize = Integer.bitCount(bMask);
+        if (aSize == 0 || bSize == 0) return 0.0;
+        int[] aIdx = new int[aSize];
+        int[] bIdx = new int[bSize];
+        int ai = 0, bi = 0;
+        for (int i = 0; i < N; i++) {
+            if ((mask & (1 << i)) != 0) aIdx[ai++] = i;
+            if ((bMask & (1 << i)) != 0) bIdx[bi++] = i;
+        }
+        // C_AA, C_BB, C_AB
+        double[][] cAA = subMatrix(corr, aIdx);
+        double[][] cBB = subMatrix(corr, bIdx);
+        int[] abIdx = new int[aSize + bSize];
+        System.arraycopy(aIdx, 0, abIdx, 0, aSize);
+        System.arraycopy(bIdx, 0, abIdx, aSize, bSize);
+        double[][] cAB = subMatrix(corr, abIdx);
+        double lnDetAA = logDeterminant(cAA);
+        double lnDetBB = logDeterminant(cBB);
+        double lnDetAB = logDeterminant(cAB);
+        return 0.5 * (lnDetAA + lnDetBB - lnDetAB);
+    }
+
+    /** Sub-matrix indexed by rows/cols. */
+    private static double[][] subMatrix(double[][] m, int[] idx) {
+        int n = idx.length;
+        double[][] s = new double[n][n];
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < n; j++) {
+                s[i][j] = m[idx[i]][idx[j]];
+            }
+        }
+        return s;
+    }
+
+    /** ln(det(M)) via LU decomposition. Returns 0 for singular matrix. */
+    private static double logDeterminant(double[][] m) {
+        int n = m.length;
+        if (n == 0) return 0.0;
+        double[][] lu = new double[n][n];
+        for (int i = 0; i < n; i++) System.arraycopy(m[i], 0, lu[i], 0, n);
+        int sign = 1;
+        for (int k = 0; k < n; k++) {
+            // Find pivot
+            int piv = k;
+            double maxAbs = Math.abs(lu[k][k]);
+            for (int i = k + 1; i < n; i++) {
+                if (Math.abs(lu[i][k]) > maxAbs) {
+                    maxAbs = Math.abs(lu[i][k]);
+                    piv = i;
+                }
+            }
+            if (maxAbs < 1e-15) return 0.0; // singular
+            if (piv != k) {
+                double[] tmp = lu[k]; lu[k] = lu[piv]; lu[piv] = tmp;
+                sign = -sign;
+            }
+            double pivot = lu[k][k];
+            for (int i = k + 1; i < n; i++) {
+                lu[i][k] /= pivot;
+                double lik = lu[i][k];
+                for (int j = k + 1; j < n; j++) {
+                    lu[i][j] -= lik * lu[k][j];
+                }
+            }
+        }
+        double lnDet = 0.0;
+        for (int i = 0; i < n; i++) {
+            double d = lu[i][i];
+            if (d <= 0) return 0.0;
+            lnDet += Math.log(d);
+        }
+        return sign > 0 ? lnDet : -lnDet;
+    }
+
+    /**
+     * Phi_linGauss from raw continuous samples: each row is one time step.
+     * Convenience for non-binary data.
+     */
+    public static double phiLinGaussFromSamples(double[][] samples, int N) {
+        if (N < 1 || N > 16) {
+            throw new IllegalArgumentException("N in [1, 16] for phiLinGauss");
+        }
+        if (samples == null || samples.length < 2) {
+            throw new IllegalArgumentException("samples must have ≥ 2 rows");
+        }
+        for (double[] row : samples) {
+            if (row == null || row.length < N) {
+                throw new IllegalArgumentException("row length < N");
+            }
+        }
+        double[][] corr = correlationMatrix(samples, N);
+        for (int i = 0; i < N; i++) corr[i][i] += 1e-10;
+        if (N < 2) return 0.0;
+        double minPhi = Double.POSITIVE_INFINITY;
+        for (int mask = 1; mask < (1 << N) - 1; mask++) {
+            double mi = bipartitionMi(corr, mask, N);
+            if (mi < minPhi) minPhi = mi;
+        }
+        return Math.max(0.0, minPhi);
     }
 }
