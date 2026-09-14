@@ -281,3 +281,54 @@ class PhiRTest {
                 .isInstanceOf(IllegalArgumentException.class);
     }
 }
+
+class PhiRFromHdcTest {
+
+    @Test
+    void phiRFromHdcCodesWorks() {
+        // Generate fake HDC trajectory (random sparse)
+        int dim = 1024; // 16 longs
+        long[][] traj = new long[10][16];
+        Random rng = new Random(42);
+        for (int t = 0; t < 10; t++) {
+            for (int j = 0; j < 16; j++) {
+                traj[t][j] = rng.nextLong();
+            }
+        }
+        double phiR = IntegrationMetrics.phiRFromHdcCodes(traj, 4);
+        assertThat(phiR).isGreaterThanOrEqualTo(0.0);
+    }
+
+    @Test
+    void phiRFromHdcCodesRejectsBadN() {
+        long[][] traj = new long[1][16];
+        assertThatThrownBy(() -> IntegrationMetrics.phiRFromHdcCodes(traj, 0))
+                .isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> IntegrationMetrics.phiRFromHdcCodes(traj, 16))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void phiRFromHdcMatchesDirectCall() {
+        // Direct call should give same result as extracting trajectory
+        long[][] hdcCodes = new long[5][4];
+        Random rng = new Random(7);
+        for (int t = 0; t < 5; t++) {
+            for (int j = 0; j < 4; j++) {
+                hdcCodes[t][j] = rng.nextLong();
+            }
+        }
+        long[] direct = new long[5];
+        for (int t = 0; t < 5; t++) {
+            int state = 0;
+            for (int i = 0; i < 4; i++) {
+                int bit = ((hdcCodes[t][i >>> 6] >>> (i & 63)) & 1L) != 0 ? 1 : 0;
+                state |= (bit << i);
+            }
+            direct[t] = state;
+        }
+        double phiRviaHelper = IntegrationMetrics.phiRFromHdcCodes(hdcCodes, 4);
+        double phiRdirect = IntegrationMetrics.phiR(direct, 4);
+        assertThat(phiRviaHelper).isCloseTo(phiRdirect, within(1e-9));
+    }
+}

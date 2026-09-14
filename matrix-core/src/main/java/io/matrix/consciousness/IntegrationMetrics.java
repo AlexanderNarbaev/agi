@@ -358,6 +358,23 @@ public final class IntegrationMetrics {
         return phiR(trajectory, N);
     }
 
+    /**
+     * PhiR on HDC trajectory: coarse-grain to density, then apply PhiR.
+     */
+    public static double phiRFromHdcCodes(long[][] hdcCodes, int N) {
+        if (N < 1 || N > 8) throw new IllegalArgumentException("N in [1, 8]");
+        long[] trajectory = new long[hdcCodes.length];
+        for (int t = 0; t < hdcCodes.length; t++) {
+            int state = 0;
+            for (int i = 0; i < N; i++) {
+                int bit = ((hdcCodes[t][i >>> 6] >>> (i & 63)) & 1L) != 0 ? 1 : 0;
+                state |= (bit << i);
+            }
+            trajectory[t] = state;
+        }
+        return phiR(trajectory, N);
+    }
+
     public static double cNFromHdcCodes(long[][] hdcCodes, int N) {
         if (N < 1 || N > 16) {
             throw new IllegalArgumentException("N in [1, 16]");
