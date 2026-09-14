@@ -21,6 +21,12 @@ public final class ConsciousBrain {
     private final SelfModel.SelfModelResult[] selfHistory = new SelfModel.SelfModelResult[100];
     private int selfHistoryIdx = 0;
     private long cycleCount = 0;
+    /** Trajectory buffer for multi-timestep integration metrics. */
+    private final long[] trajectory;
+    private int trajectoryIdx = 0;
+    /** Trajectory threshold before computing multi-state metrics. */
+    private static final int TRAJECTORY_LEN = 8;
+    private static final int N_METRICS = 8;
 
     public ConsciousBrain(int dims, long seed) {
         if (dims < 1) throw new IllegalArgumentException("dims must be ≥ 1");
@@ -30,6 +36,7 @@ public final class ConsciousBrain {
         this.hdc = new HdcBrain(100, rng);
         this.hippocampus = new TwoStageConsolidator.HdcMemoryStore(dims);
         this.neocortex = new TwoStageConsolidator.HdcMemoryStore(dims);
+        this.trajectory = new long[TRAJECTORY_LEN];
     }
 
     public CycleReport cycle(float[] observation) {
@@ -48,11 +55,12 @@ public final class ConsciousBrain {
                 toDouble(observation), toDouble(observation));
         double surprise = error.magnitude();
 
-        // 2b. Compute integration metrics periodically
-        io.matrix.consciousness.IntegrationMetricsResult metrics = null;
-        if (cycleCount % 10 == 0 && cycleCount > 0) {
-            metrics = computeIntegrationMetrics(observation);
-        }
+        // 2b. Compute integration metrics — trajectory is updated on every cycle so that
+        // by the time metrics are computed we have a multi-timestep history.
+        // Always record into the trajectory buffer; emit metrics once buffer has ≥2 entries.
+        appendTrajectory(observation);
+        io.matrix.consciousness.IntegrationMetricsResult metrics =
+                computeIntegrationMetrics(observation);
 
         // 3. Self-model (simplified: all vectors same dims)
         float[] primaryAction = new float[dims];
@@ -98,24 +106,68 @@ public final class ConsciousBrain {
     }
 
     /**
-     * Compute integration metrics from a current observation.
-     * Uses N=8 bits of the observation for tractability.
+     * Append the current observation to the trajectory buffer.
+     * Called on every cycle so the trajectory accumulates multi-timestep history.
+     */
+    private void appendTrajectory(float[] observation) {
+        int N = Math.min(N_METRICS, dims);
+        trajectory[trajectoryIdx % trajectory.length] = extractBits(observation, N);
+        trajectoryIdx++;
+    }
+
+    /**
+     * Compute integration metrics from multi-timestep trajectory.
+     * Returns null if fewer than 2 timesteps have been recorded.
      */
     private io.matrix.consciousness.IntegrationMetricsResult computeIntegrationMetrics(
             float[] observation) {
-        // Use first 8 bits of observation for Φ_binary
-        int N = Math.min(8, dims);
-        long[] trajectory = new long[]{extractBits(observation, N)};
-        // For multi-step trajectory, use last few observations; for now single-step
+        // N: bits used for state representation (max 8 for Phi metrics)
+        int N = Math.min(N_METRICS, dims);
+        // Need at least 2 timesteps for meaningful entropy
+        int actualLen = Math.min(trajectoryIdx, trajectory.length);
+        if (actualLen < 2) {
+            return null; // Skip metrics until we have history
+        }
+        // Use the actual filled portion of the buffer, ordered by recency
+        long[] traj;
+        if (trajectoryIdx <= trajectory.length) {
+            traj = new long[actualLen];
+            System.arraycopy(trajectory, 0, traj, 0, actualLen);
+        } else {
+            // Circular: read from oldest at trajectoryIdx%length to end, then start to that point
+            traj = new long[trajectory.length];
+            int start = trajectoryIdx % trajectory.length;
+            int firstLen = trajectory.length - start;
+            System.arraycopy(trajectory, start, traj, 0, firstLen);
+            System.arraycopy(trajectory, 0, traj, firstLen, start);
+        }
         try {
-            double phi = io.matrix.consciousness.IntegrationMetrics.phiBinary(trajectory, N);
-            double phiR = io.matrix.consciousness.IntegrationMetrics.phiR(trajectory, N);
-            double cN = io.matrix.consciousness.IntegrationMetrics.neuralComplexity(trajectory, N);
-            // For ΦF, need at least 2 timesteps; use simple 1-step placeholder
-            double[] forward = new double[]{0.5, 0.5};
-            double[] backward = new double[]{0.5, 0.5};
+            double phi = io.matrix.consciousness.IntegrationMetrics.phiBinary(traj, N);
+            double phiR = io.matrix.consciousness.IntegrationMetrics.phiR(traj, N);
+            double cN = io.matrix.consciousness.IntegrationMetrics.neuralComplexity(traj, N);
+            // ΦF: compute density distribution forward and backward over the trajectory.
+            // For phiF (Hamming-cube W1), distribution size must be a power of 2;
+            // we round N+1 up to the next power of 2 (matching phiFFromBitLinear).
+            int nBinsF = nextPow2(N + 1);
+            double[] forward = new double[nBinsF];
+            double[] backward = new double[nBinsF];
+            for (int t = 0; t < traj.length; t++) {
+                int density = Long.bitCount(traj[t]);
+                if (density < nBinsF) forward[density] += 1.0;
+            }
+            for (int t = traj.length - 1; t >= 0; t--) {
+                int density = Long.bitCount(traj[t]);
+                if (density < nBinsF) backward[density] += 1.0;
+            }
+            double sumF = 0, sumB = 0;
+            for (double v : forward) sumF += v;
+            for (double v : backward) sumB += v;
+            for (int i = 0; i < forward.length; i++) {
+                forward[i] /= sumF;
+                backward[i] /= sumB;
+            }
             double phiF = io.matrix.consciousness.IntegrationMetrics.phiF(forward, backward);
-            // Compute tickling flag: is apparent integration just redundant transmission?
+            // Compute tickling flag
             io.matrix.consciousness.TicklingDetector.TicklingResult tickling =
                     io.matrix.consciousness.TicklingDetector.detect(phi, phiR);
             return new io.matrix.consciousness.IntegrationMetricsResult(
@@ -123,6 +175,13 @@ public final class ConsciousBrain {
         } catch (IllegalArgumentException e) {
             return null;
         }
+    }
+
+    /** Smallest power of 2 ≥ n, with floor of 2. */
+    private static int nextPow2(int n) {
+        int p = 2;
+        while (p < n) p <<= 1;
+        return Math.max(p, 2);
     }
 
     /**
