@@ -89,11 +89,12 @@ public final class ConsciousBrain {
         Double phiR = metrics != null ? metrics.phiR() : null;
         Double phiF = metrics != null ? metrics.phiF() : null;
         Double cN = metrics != null ? metrics.neuralComplexity() : null;
+        Boolean tickling = metrics != null ? metrics.ticklingFlag() : null;
         return new CycleReport(label,
                 recall != null ? recall.label : null,
                 surprise, decision.shouldAct(),
                 selfMod.selfRepresentation(), pragmatic.success(),
-                phi, phiR, phiF, cN);
+                phi, phiR, phiF, cN, tickling);
     }
 
     /**
@@ -114,7 +115,11 @@ public final class ConsciousBrain {
             double[] forward = new double[]{0.5, 0.5};
             double[] backward = new double[]{0.5, 0.5};
             double phiF = io.matrix.consciousness.IntegrationMetrics.phiF(forward, backward);
-            return new io.matrix.consciousness.IntegrationMetricsResult(phi, phiR, phiF, cN);
+            // Compute tickling flag: is apparent integration just redundant transmission?
+            io.matrix.consciousness.TicklingDetector.TicklingResult tickling =
+                    io.matrix.consciousness.TicklingDetector.detect(phi, phiR);
+            return new io.matrix.consciousness.IntegrationMetricsResult(
+                    phi, phiR, phiF, cN, tickling.ticklingFlag());
         } catch (IllegalArgumentException e) {
             return null;
         }
@@ -176,5 +181,6 @@ public final class ConsciousBrain {
             Double phiBinary,
             Double phiR,
             Double phiF,
-            Double neuralComplexity) {}
+            Double neuralComplexity,
+            Boolean ticklingFlag) {}
 }

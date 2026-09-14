@@ -95,7 +95,7 @@ class ConsciousBrainTest {
         ConsciousBrain.CycleReport r =
                 new ConsciousBrain.CycleReport("obs_0", "obs_0", 0.1, true,
                         new float[]{0.1f, 0.2f, 0.3f, 0.4f}, true,
-                        0.5, 0.55, 0.6, 0.7);
+                        0.5, 0.55, 0.6, 0.7, false);
         assertThat(r.observationLabel()).isEqualTo("obs_0");
         assertThat(r.predictionLabel()).isEqualTo("obs_0");
         assertThat(r.predictionError()).isEqualTo(0.1);
