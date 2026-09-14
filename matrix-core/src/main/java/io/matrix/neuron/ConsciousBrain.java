@@ -48,6 +48,12 @@ public final class ConsciousBrain {
                 toDouble(observation), toDouble(observation));
         double surprise = error.magnitude();
 
+        // 2b. Compute integration metrics periodically
+        io.matrix.consciousness.IntegrationMetricsResult metrics = null;
+        if (cycleCount % 10 == 0 && cycleCount > 0) {
+            metrics = computeIntegrationMetrics(observation);
+        }
+
         // 3. Self-model (simplified: all vectors same dims)
         float[] primaryAction = new float[dims];
         SelfModel.SelfModelResult selfMod = SelfModel.modelStep(
@@ -78,10 +84,50 @@ public final class ConsciousBrain {
         meaningStore.putAll(tempStore);
 
         cycleCount++;
+        // Build extended report
+        Double phi = metrics != null ? metrics.phiBinary() : null;
+        Double phiF = metrics != null ? metrics.phiF() : null;
+        Double cN = metrics != null ? metrics.neuralComplexity() : null;
         return new CycleReport(label,
                 recall != null ? recall.label : null,
                 surprise, decision.shouldAct(),
-                selfMod.selfRepresentation(), pragmatic.success());
+                selfMod.selfRepresentation(), pragmatic.success(),
+                phi, phiF, cN);
+    }
+
+    /**
+     * Compute integration metrics from a current observation.
+     * Uses N=8 bits of the observation for tractability.
+     */
+    private io.matrix.consciousness.IntegrationMetricsResult computeIntegrationMetrics(
+            float[] observation) {
+        // Use first 8 bits of observation for Φ_binary
+        int N = Math.min(8, dims);
+        long[] trajectory = new long[]{extractBits(observation, N)};
+        // For multi-step trajectory, use last few observations; for now single-step
+        try {
+            double phi = io.matrix.consciousness.IntegrationMetrics.phiBinary(trajectory, N);
+            double cN = io.matrix.consciousness.IntegrationMetrics.neuralComplexity(trajectory, N);
+            // For ΦF, need at least 2 timesteps; use simple 1-step placeholder
+            double[] forward = new double[]{0.5, 0.5};
+            double[] backward = new double[]{0.5, 0.5};
+            double phiF = io.matrix.consciousness.IntegrationMetrics.phiF(forward, backward);
+            return new io.matrix.consciousness.IntegrationMetricsResult(phi, phiF, cN);
+        } catch (IllegalArgumentException e) {
+            return null;
+        }
+    }
+
+    /**
+     * Extract first N bits from a float[] observation as bit-packed long.
+     */
+    private static long extractBits(float[] obs, int N) {
+        long state = 0;
+        for (int i = 0; i < N; i++) {
+            int bit = obs[i] > 0 ? 1 : 0;
+            state |= ((long) bit << i);
+        }
+        return state;
     }
 
     public void consolidate(int replayCount) {
@@ -124,5 +170,8 @@ public final class ConsciousBrain {
             double predictionError,
             boolean acted,
             float[] selfRepresentation,
-            boolean success) {}
+            boolean success,
+            Double phiBinary,
+            Double phiF,
+            Double neuralComplexity) {}
 }

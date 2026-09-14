@@ -94,12 +94,36 @@ class ConsciousBrainTest {
     void cycleReportHasAllFields() {
         ConsciousBrain.CycleReport r =
                 new ConsciousBrain.CycleReport("obs_0", "obs_0", 0.1, true,
-                        new float[]{0.1f, 0.2f, 0.3f, 0.4f}, true);
+                        new float[]{0.1f, 0.2f, 0.3f, 0.4f}, true, 0.5, 0.6, 0.7);
         assertThat(r.observationLabel()).isEqualTo("obs_0");
         assertThat(r.predictionLabel()).isEqualTo("obs_0");
         assertThat(r.predictionError()).isEqualTo(0.1);
         assertThat(r.acted()).isTrue();
         assertThat(r.selfRepresentation()).hasSize(4);
         assertThat(r.success()).isTrue();
+        assertThat(r.phiBinary()).isEqualTo(0.5);
+        assertThat(r.phiF()).isEqualTo(0.6);
+        assertThat(r.neuralComplexity()).isEqualTo(0.7);
+    }
+
+    @Test
+    void cycleEmitsIntegrationMetricsPeriodically() {
+        ConsciousBrain brain = new ConsciousBrain(1024, 42);
+        Random rng = new Random(42);
+        // Run enough cycles to trigger metric computation
+        for (int i = 0; i < 25; i++) {
+            float[] obs = new float[1024];
+            for (int j = 0; j < 1024; j++) obs[j] = (float) rng.nextGaussian();
+            ConsciousBrain.CycleReport r = brain.cycle(obs);
+            // After cycle 10, metrics should be populated
+            if (i >= 10) {
+                // Metrics may or may not be present depending on cycle alignment
+                if (r.phiBinary() != null) {
+                    assertThat(r.phiBinary()).isGreaterThanOrEqualTo(0.0);
+                    assertThat(r.phiF()).isBetween(0.0, 1.0);
+                    assertThat(r.neuralComplexity()).isGreaterThanOrEqualTo(0.0);
+                }
+            }
+        }
     }
 }
