@@ -108,11 +108,11 @@ The relationship between observed Φ in stochastic subsystems and intrinsic Φ o
 | Algorithm | N limit | Complexity | Implementation | License |
 |---|---|---|---|---|
 | Φ_binary (Tononi 2004) | ≤ 8 | O(2ᴺ · N) | `IntegrationMetrics.phiBinary` | derived |
+| ΦR (Mediano 2022) | ≤ 8 | O(N·2^(3N-1)) | `IntegrationMetrics.phiR` (RUN 482) | derived |
 | ΦF (Toker-Sommer) | ≤ 14 | O(2²ᴺ) cost + W1 | `IntegrationMetrics.phiF` | derived |
 | C_N (1994) | ≤ 16 | O(N·2ᴺ) | `IntegrationMetrics.neuralComplexity` | derived |
 | Φ_linGauss (Tononi-Sporns 2003) | ≤ 8 | O(2ᴺ · N³) | future | derived |
 | ΦID (Williams-Beer 2010) | ~10 vars | O(T · k²) | JIDT (GPL v3, check) | verified |
-| ΦR (Mediano 2022) | ≤ 10 | O(2ᴺ · N²) | future | derived |
 
 ## 10. W69-W70 Project State
 

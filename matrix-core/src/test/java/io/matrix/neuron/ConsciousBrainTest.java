@@ -94,7 +94,8 @@ class ConsciousBrainTest {
     void cycleReportHasAllFields() {
         ConsciousBrain.CycleReport r =
                 new ConsciousBrain.CycleReport("obs_0", "obs_0", 0.1, true,
-                        new float[]{0.1f, 0.2f, 0.3f, 0.4f}, true, 0.5, 0.6, 0.7);
+                        new float[]{0.1f, 0.2f, 0.3f, 0.4f}, true,
+                        0.5, 0.55, 0.6, 0.7);
         assertThat(r.observationLabel()).isEqualTo("obs_0");
         assertThat(r.predictionLabel()).isEqualTo("obs_0");
         assertThat(r.predictionError()).isEqualTo(0.1);
@@ -102,6 +103,7 @@ class ConsciousBrainTest {
         assertThat(r.selfRepresentation()).hasSize(4);
         assertThat(r.success()).isTrue();
         assertThat(r.phiBinary()).isEqualTo(0.5);
+        assertThat(r.phiR()).isEqualTo(0.55);
         assertThat(r.phiF()).isEqualTo(0.6);
         assertThat(r.neuralComplexity()).isEqualTo(0.7);
     }
@@ -121,6 +123,7 @@ class ConsciousBrainTest {
                 if (r.phiBinary() != null) {
                     assertThat(r.phiBinary()).isGreaterThanOrEqualTo(0.0);
                     assertThat(r.phiF()).isBetween(0.0, 1.0);
+                    assertThat(r.phiR()).isGreaterThanOrEqualTo(0.0);
                     assertThat(r.neuralComplexity()).isGreaterThanOrEqualTo(0.0);
                 }
             }

@@ -86,13 +86,14 @@ public final class ConsciousBrain {
         cycleCount++;
         // Build extended report
         Double phi = metrics != null ? metrics.phiBinary() : null;
+        Double phiR = metrics != null ? metrics.phiR() : null;
         Double phiF = metrics != null ? metrics.phiF() : null;
         Double cN = metrics != null ? metrics.neuralComplexity() : null;
         return new CycleReport(label,
                 recall != null ? recall.label : null,
                 surprise, decision.shouldAct(),
                 selfMod.selfRepresentation(), pragmatic.success(),
-                phi, phiF, cN);
+                phi, phiR, phiF, cN);
     }
 
     /**
@@ -107,12 +108,13 @@ public final class ConsciousBrain {
         // For multi-step trajectory, use last few observations; for now single-step
         try {
             double phi = io.matrix.consciousness.IntegrationMetrics.phiBinary(trajectory, N);
+            double phiR = io.matrix.consciousness.IntegrationMetrics.phiR(trajectory, N);
             double cN = io.matrix.consciousness.IntegrationMetrics.neuralComplexity(trajectory, N);
             // For ΦF, need at least 2 timesteps; use simple 1-step placeholder
             double[] forward = new double[]{0.5, 0.5};
             double[] backward = new double[]{0.5, 0.5};
             double phiF = io.matrix.consciousness.IntegrationMetrics.phiF(forward, backward);
-            return new io.matrix.consciousness.IntegrationMetricsResult(phi, phiF, cN);
+            return new io.matrix.consciousness.IntegrationMetricsResult(phi, phiR, phiF, cN);
         } catch (IllegalArgumentException e) {
             return null;
         }
@@ -172,6 +174,7 @@ public final class ConsciousBrain {
             float[] selfRepresentation,
             boolean success,
             Double phiBinary,
+            Double phiR,
             Double phiF,
             Double neuralComplexity) {}
 }
