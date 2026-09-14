@@ -28,6 +28,37 @@
 | **Hypotheses H-051..H-068** | `research/HYPOTHESES-NEW.md` |
 | **Meta-rules META-R1..R5** | `AGENTS.md` |
 
+## Wave 60-W86 — Deep Research Integration Metrics (Sep 13 2026)
+
+Применяется при архитектурных изменениях ядра mind/consciousness:
+
+| Аспект | Документ |
+|---|---|
+| **Deep research synthesis** | `research/summaries/W60-W64-DEEP-RESEARCH-SYNTHESIS.md`, `W69-W72-INTEGRATION-METRICS-SYNTHESIS.md` |
+| **Deep research wave design** | `designs/DESIGN-60-deep-research-wave.md` |
+| **Φ family integration metrics** | `designs/DESIGN-61-integration-metrics.md` |
+| **PatternGenerator empirical validation** | `designs/DESIGN-62-pattern-generator.md` |
+| **Tickling + noise ceiling** | `designs/DESIGN-63-tickling-noise.md` |
+| **Comprehensive summary** | `research/W51-W74-COMPREHENSIVE-SUMMARY.md` |
+| **W80 final synthesis** | `research/W80-FINAL-SYNTHESIS-REPORT.md` |
+| **Hypotheses H-069..H-084** | `research/HYPOTHESES-NEW.md` |
+
+## Wave 87-W91 — Multi-Timestep Integration & PhiID (Sep 14 2026)
+
+Расширение Φ family до multi-timestep + closed-form linear-Gaussian:
+
+| Аспект | Документ |
+|---|---|
+| **Multi-timestep ConsciousBrain** | `matrix-core/src/main/java/io/matrix/neuron/ConsciousBrain.java` (long[8] trajectory buffer) |
+| **Φ_linGauss closed-form** | `matrix-core/src/main/java/io/matrix/consciousness/IntegrationMetrics.java::phiLinGauss` (Barrett-Seth 2011) |
+| **PhiID 4-atom decomposition** | `matrix-core/src/main/java/io/matrix/consciousness/PhiId.java` (Mediano 2020) |
+| **Multi-timestep test** | `matrix-core/src/test/java/io/matrix/research/MultiTimestepIntegrationTest.java` |
+| **Noise-floor re-validation** | `matrix-core/src/test/java/io/matrix/research/W88MultiTimestepNoiseFloorTest.java` |
+| **Φ_linGauss test** | `matrix-core/src/test/java/io/matrix/consciousness/PhiLinGaussTest.java` |
+| **PhiID test** | `matrix-core/src/test/java/io/matrix/consciousness/PhiIdTest.java` |
+| **W87-W91 synthesis** | `research/W87-W91-FINAL-SYNTHESIS-REPORT.md` |
+| **Hypotheses H-078..H-084** | `research/HYPOTHESES-NEW.md` |
+
 ## Ключевые цифры (см. отчёты)
 
 - **H-010 accepted**: WiSARD быстрее Tsetlin в **242×** (медиана, 9 прогонов), точность 9/9.

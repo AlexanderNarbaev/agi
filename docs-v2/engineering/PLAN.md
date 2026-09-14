@@ -127,3 +127,18 @@ Java 25 · Quarkus 3.38.3 · GraalVM plugin 1.1.10 · Avro 1.12.2 · ONNX Runtim
 5. CUDA-нога EXP-009 через `onnxruntime_gpu` (Java) при доступности cuDNN-тулчейна.
 6. Research-only Python: `scripts/bench_gpu_vs_bir.py` v2 с батчем (полные пороги).
 7. **W31 publication prep**: arXiv preprint "Boolean+HDC+BitNet hybrid brain on CPU" after Level 3 demo.
+
+## Wave W87-W91 — Multi-timestep integration metrics + Φ_linGauss + PhiID (Sep 14 2026)
+- **W87** ConsciousBrain `appendTrajectory` + circular `long[8]` buffer + multi-timestep Φ/ΦR/ΦF/C_N/tickling. MultiTimestepIntegrationTest 4/4 PASS.
+- **W88** Multi-timestep noise-floor re-validation. W88MultiTimestepNoiseFloorTest 5/5 PASS. **H-081 partially refuted** (multi-timestep inverts W76 signal-vs-noise claim).
+- **W89** Φ_linGauss closed-form via covariance ln-determinant (Barrett-Seth 2011). PhiLinGaussTest 9/9 PASS. O(2^N · N³) for N ≤ 16.
+- **W90** PhiID 4-atom decomposition (Mediano-Seth-Barrett 2020) — no external JIDT dep. PhiIdTest 9/9 PASS.
+- **W91** Final synthesis report `docs-v2/research/W87-W91-FINAL-SYNTHESIS-REPORT.md` (610 lines). H-078..H-084 added. INDEX.md + WAL.md CHECKPOINT 32 updated.
+- 27 new tests, 0 failures. All 4 commits pushed to `origin/main`.
+
+## W92+ Future work (see §8 of W87-W91 synthesis report)
+- W76 hypothesis revalidation with corrected noise-floor (autocorrelated-random vs iid-random)
+- Φ_linGauss + PhiID integration into ConsciousBrain (one-line change, defer to W92)
+- PhiID for discrete/binary systems (Icard-Finn-Mediano formulas)
+- Cross-disciplinary R-B (cybernetic) R-C (Soviet/Asian) R-D (learning) R-E (substrate) R-F (creativity) research waves for integration metrics
+- JNI/FFM acceleration of bipartitionMi / logDeterminant (~100× speedup)

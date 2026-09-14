@@ -80,4 +80,16 @@ Status: **proposed** → **running** по мере реализации RUN 437-
 | **H-076** | Hermeneutic interpretation as HDC majority-vote merge produces consensus across heterogeneous brains (Gadamer horizon-merge as HDC bind+vote) | Hermeneutics (Gadamer) + HDC | running |
 | **H-077** | Pragmatic meaning test: action succeeds → meaning assigned to percept that preceded it; James-Dewey pragmatic meaning as engineering signal | Pragmatism (James 1907) + Hebbian | running |
 
+## H-078..H-084 — W82-W91 integration-metrics deep research (2026-09-14)
+
+| H | Утверждение | Школа | Status |
+|---|---|---|---|
+| **H-078** | TicklingDetector detects "interesting" minima in surprise dynamics (Φ-vs-surprise non-monotonicity) honestly distinguishing structured surprise from noise | Tononi + Mediano + neuroscience | running |
+| **H-079** | Noise-floor benchmark on 8-bit integration metrics: random binary trajectory ⇒ Φ_binary = 0 (single-state marginal entropy zero); multi-state structured patterns ⇒ Φ_binary > 0 | Tononi 2004 BMC formalism | **CONFIRMED** (W85 NoiseCeilingBenchmarkTest) |
+| **H-080** | ΦR (Mediano 2022 redundancy-suppressing Phi) detects genuine integration independent of marginal entropy; differs from Φ_binary on systems with global redundancy | Mediano 2022 PhiR | **CONFIRMED** (W83 PhiR-on-HDC, W84 multi-timestep) |
+| **H-081** | W76 empirical validation: structured patterns (PERIODIC) yield higher Φ_binary than random noise (GAUSSIAN) — the canonical H-082a claim | Tononi + Tononi-Sporns-Edelman | **PARTIALLY REFUTED** (W88: GAUSSIAN Φ_binary=0.65 vs PERIODIC Φ_binary=0.0; multi-timestep shows OPPOSITE because random 8-bit states have more diversity than deterministic patterns) |
+| **H-082** | Integration metrics (Φ_binary, ΦR, ΦF, C_N) on multi-timestep trajectory buffer (8 timesteps) produce non-zero values for Gaussian inputs; previously gated to cycleCount % 10 == 0 produced only single-state snapshots | Tononi + Mediano | **CONFIRMED** (W87 MultiTimestepIntegrationTest: Φ_binary=0.51, ΦR=0.49, C_N=0.43 for Gaussian) |
+| **H-083** | Φ_linGauss (closed-form linear-Gaussian integration via covariance ln-determinant) is computable in O(2^N · N³) for N ≤ 16, complements discrete Φ_binary which is O(2^N · 2^N) | Barrett-Seth 2011 + Tononi 2008 | **CONFIRMED** (W89 PhiLinGaussTest: 9/9 PASS, partial-corr Φ=0.13, independent Φ=0.006) |
+| **H-084** | PhiID 4-atom decomposition (redundancy / synergy / unqX / unqY) for Gaussian triples via Mediano 2020 closed-form: synergy-positive for XOR-like chains, redundancy-positive for shared-source chains | Mediano, Seth, Barrett 2020 PID | **CONFIRMED** (W90 PhiIdTest: 9/9 PASS, trivariate XOR synergy positive, redundant chain r=4.68) |
+
 См. `MATRIX-CROSS-DISCIPLINARY-RESEARCH.md` §3 для полного списка артефактов.
