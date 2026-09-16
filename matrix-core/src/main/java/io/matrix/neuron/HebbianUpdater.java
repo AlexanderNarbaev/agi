@@ -135,6 +135,78 @@ public final class HebbianUpdater {
     }
 
     /**
+     * W100 — Anti-Hebbian update: weaken existing bindings by applying
+     * REVERSED delta (sign-flipped Hebbian). Same logic as update(), but
+     * delta = -1 where standard update would be +1, and vice versa.
+     *
+     * <p>Used by {@link io.matrix.cognitive.ErrorDrivenLearner} to weaken
+     * the binding associated with a recorded error (DESIGN-64 §4).
+     *
+     * <p>Same parameter constraints as update(); eta ∈ (0, 1], lambda ∈ [0, 1].
+     */
+    public static State antiUpdate(State state, long[] pre, long[] post,
+                                    float eta, float lambda) {
+        return antiUpdate(state, pre, post, eta, lambda, DEFAULT_THRESHOLD);
+    }
+
+    /**
+     * Anti-Hebbian update with explicit threshold.
+     */
+    public static State antiUpdate(State state, long[] pre, long[] post,
+                                    float eta, float lambda, float threshold) {
+        if (state == null) throw new IllegalArgumentException("null state");
+        if (state.weights == null || state.weights.length != HdcEncoding.WORDS) {
+            throw new IllegalArgumentException("state.weights wrong length");
+        }
+        if (state.accumulator == null || state.accumulator.length != HdcEncoding.DIM) {
+            throw new IllegalArgumentException("state.accumulator wrong length");
+        }
+        if (pre == null || pre.length != HdcEncoding.WORDS) {
+            throw new IllegalArgumentException("pre wrong length");
+        }
+        if (post == null || post.length != HdcEncoding.WORDS) {
+            throw new IllegalArgumentException("post wrong length");
+        }
+        if (eta <= 0.0f || eta > 1.0f) {
+            throw new IllegalArgumentException("eta must be in (0, 1]");
+        }
+        if (lambda < 0.0f || lambda > 1.0f) {
+            throw new IllegalArgumentException("lambda must be in [0, 1]");
+        }
+        if (threshold < 0.0f) {
+            throw new IllegalArgumentException("threshold must be ≥ 0");
+        }
+
+        long[] weights = state.weights;
+        float[] acc = state.accumulator;
+
+        for (int w = 0; w < HdcEncoding.WORDS; w++) {
+            long wp = pre[w];
+            long wq = post[w];
+            long disagree = wp ^ wq;
+            long outWord = 0L;
+            for (int b = 0; b < 64; b++) {
+                int pos = (w << 6) + b;
+                boolean agree = ((disagree >>> b) & 1L) == 0L;
+                // SIGN-FLIPPED delta: opposite of standard Hebbian
+                float delta = agree ? -1.0f : 1.0f;
+                float updated = (acc[pos] + eta * delta) * (1.0f - lambda);
+                acc[pos] = updated;
+                if (updated > threshold) {
+                    outWord |= (1L << b);  // +1
+                } else if (updated < -threshold) {
+                    // -1: leave bit clear
+                } else {
+                    // Within deadband — keep prior sign
+                    outWord |= ((weights[w] >>> b) & 1L) << b;
+                }
+            }
+            weights[w] = outWord;
+        }
+        return state;
+    }
+
+    /**
      * Get the current bipolar weight vector (read-only).
      */
     public static long[] weights(State state) {
