@@ -151,3 +151,21 @@ META-R1 R-C: 5 schools applied to MATRIX integration architecture.
 - `designs/DESIGN-{16,17,18,19}-*.md` — децентрализация, action arena, consciousness loop, subconscious consolidator.
 - `research/HYPOTHESES-NEW.md` — H-039..H-068 карточки brain wave и W31.
 - `science/{SUBSTRATE-MODELS,FOUNDATIONS,GOALS-REQUIREMENTS,OPEN-PROBLEMS,ALGORITHM-ATLAS-INDEX}.md` — полные реестры оснований.
+## Wave 104-111 (2026-09-16) — Cross-Disciplinary Completion
+
+W104 — Kolmogorov Complexity (CTM estimator): matrix-core/src/main/java/io/matrix/consciousness/KolmogorovComplexity.java
+W105 — Analogical Consistency (Nyaya Upamana): matrix-core/src/main/java/io/matrix/consciousness/AnalogicalConsistency.java
+W106 — Conceptual Exclusion (Dignāga apoha): matrix-core/src/main/java/io/matrix/consciousness/ConceptualExclusion.java
+W107 — Property-Based Tests (Wu Wenjun mechanization): matrix-core/src/test/java/io/matrix/consciousness/PropertyBasedMetricsTest.java
+W108 — NK Boolean Networks (Kauffman edge of chaos): matrix-core/src/main/java/io/matrix/consciousness/NKBooleanNetwork.java
+W109 — Memristor Switch (Chua 1971, HP 2008): matrix-core/src/main/java/io/matrix/consciousness/MemristorSwitch.java
+W110 — L-systems (Lindenmayer 1968): matrix-core/src/main/java/io/matrix/consciousness/LSystem.java
+W111 — Cognitive Genesis Profile: matrix-core/src/main/java/io/matrix/consciousness/CognitiveGenesisProfile.java
+
+Cross-Disciplinary Synthesis Reports:
+- W95-CYBERNETIC-RESEARCH-REPORT.md (R-B: Anokhin, Bernstein, Ashby, Minsky, Simon)
+- W103-SOVIET-ASIAN-RESEARCH-REPORT.md (R-C: Glushkov, Kolmogorov, Nyaya, Dignāga, Wu Wenjun)
+- Plus 6 new schools integrated into MATRIX consciousness package
+
+Tests added: 61 (compile-verified)
+Properties verified: 19 × 1000 cases = 19,000 executions (W107)
