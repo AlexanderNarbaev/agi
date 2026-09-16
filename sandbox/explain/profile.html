@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>MATRIX — Cognitive Genesis Profile View</title>
+<style>
+  body {
+    font-family: 'JetBrains Mono', 'Courier New', monospace;
+    background: #0a0e27;
+    color: #e0e0e0;
+    padding: 24px;
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+  h1 {
+    color: #5fb3d4;
+    border-bottom: 2px solid #5fb3d4;
+    padding-bottom: 8px;
+  }
+  h2 {
+    color: #a8d8a8;
+    margin-top: 24px;
+  }
+  .regime {
+    display: inline-block;
+    padding: 8px 16px;
+    border-radius: 4px;
+    font-weight: bold;
+    margin: 8px 0;
+  }
+  .regime-frozen { background: #4a6fa5; color: white; }
+  .regime-edge { background: #d4af37; color: black; }
+  .regime-chaotic { background: #c44536; color: white; }
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 16px 0;
+  }
+  th, td {
+    border: 1px solid #2a3a55;
+    padding: 8px 12px;
+    text-align: left;
+  }
+  th {
+    background: #1a2a45;
+    color: #5fb3d4;
+  }
+  td.value {
+    font-family: monospace;
+    text-align: right;
+    color: #b8e0d2;
+  }
+  .bar-container {
+    width: 200px;
+    height: 16px;
+    background: #1a2a45;
+    border: 1px solid #2a3a55;
+    position: relative;
+    display: inline-block;
+    margin-left: 8px;
+    vertical-align: middle;
+  }
+  .bar-fill {
+    height: 100%;
+    background: linear-gradient(to right, #4a6fa5, #d4af37, #c44536);
+  }
+  .school-tag {
+    display: inline-block;
+    background: #2a3a55;
+    color: #5fb3d4;
+    padding: 2px 8px;
+    border-radius: 3px;
+    font-size: 0.85em;
+    margin-right: 8px;
+  }
+  .footer {
+    margin-top: 32px;
+    padding-top: 16px;
+    border-top: 1px solid #2a3a55;
+    color: #6a6a6a;
+    font-size: 0.9em;
+  }
+</style>
+</head>
+<body>
+  <h1>MATRIX — Cognitive Genesis Profile</h1>
+  <p>Unified cross-disciplinary synthesis of 13 measurements from 8 research schools, computed per brain cycle.</p>
+
+  <h2>Regime</h2>
+  <div id="regime-display" class="regime regime-edge">EDGE_OF_CHAOS</div>
+
+  <h2>Profile Fields</h2>
+  <table>
+    <thead>
+      <tr><th>School</th><th>Field</th><th>Value</th><th>Visualization</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><span class="school-tag">R-A ML/DL</span></td><td>Phi_binary</td><td class="value">0.4321</td><td><div class="bar-container"><div class="bar-fill" style="width: 43.21%"></div></div></td></tr>
+      <tr><td><span class="school-tag">R-A ML/DL</span></td><td>PhiF</td><td class="value">0.2891</td><td><div class="bar-container"><div class="bar-fill" style="width: 28.91%"></div></div></td></tr>
+      <tr><td><span class="school-tag">R-A ML/DL</span></td><td>PhiR</td><td class="value">0.1523</td><td><div class="bar-container"><div class="bar-fill" style="width: 15.23%"></div></div></td></tr>
+      <tr><td><span class="school-tag">R-A ML/DL</span></td><td>Phi_linGauss</td><td class="value">0.5802</td><td><div class="bar-container"><div class="bar-fill" style="width: 58.02%"></div></div></td></tr>
+      <tr><td><span class="school-tag">R-B Cybernetic</span></td><td>InterAgentPhi</td><td class="value">0.0234</td><td><div class="bar-container"><div class="bar-fill" style="width: 2.34%"></div></div></td></tr>
+      <tr><td><span class="school-tag">R-B Cybernetic</span></td><td>StabilityPhi</td><td class="value">1.0000</td><td><div class="bar-container"><div class="bar-fill" style="width: 100%"></div></div></td></tr>
+      <tr><td><span class="school-tag">R-B Cybernetic</span></td><td>CrossLevelPhi</td><td class="value">0.4112</td><td><div class="bar-container"><div class="bar-fill" style="width: 41.12%"></div></div></td></tr>
+      <tr><td><span class="school-tag">R-C Soviet/Asian</span></td><td>K (Kolmogorov)</td><td class="value">42.50</td><td><div class="bar-container"><div class="bar-fill" style="width: 42.5%"></div></div></td></tr>
+      <tr><td><span class="school-tag">R-C Soviet/Asian</span></td><td>Analogical Sim.</td><td class="value">0.5000</td><td><div class="bar-container"><div class="bar-fill" style="width: 50%"></div></div></td></tr>
+      <tr><td><span class="school-tag">R-C Soviet/Asian</span></td><td>Concept Excl.</td><td class="value">0.5000</td><td><div class="bar-container"><div class="bar-fill" style="width: 50%"></div></div></td></tr>
+      <tr><td><span class="school-tag">R-D Neurosci.</span></td><td>NK edge K</td><td class="value">2</td><td><div class="bar-container"><div class="bar-fill" style="width: 25%"></div></div></td></tr>
+      <tr><td><span class="school-tag">R-E Physical</span></td><td>Memristor G</td><td class="value">0.500005</td><td><div class="bar-container"><div class="bar-fill" style="width: 50%"></div></div></td></tr>
+      <tr><td><span class="school-tag">R-F Math</span></td><td>L-system Ratio</td><td class="value">1.0000</td><td><div class="bar-container"><div class="bar-fill" style="width: 100%"></div></div></td></tr>
+    </tbody>
+  </table>
+
+  <h2>Unified Complexity Score</h2>
+  <p style="font-size: 1.5em; color: #d4af37;">0.4792</p>
+
+  <h2>Cross-Disciplinary Synthesis</h2>
+  <table>
+    <thead><tr><th>School</th><th>Foundational Work</th><th>Year</th><th>MATRIX Class</th></tr></thead>
+    <tbody>
+      <tr><td>R-A Modern ML/DL</td><td>Tononi, PhiF</td><td>2008</td><td>IntegrationMetrics</td></tr>
+      <tr><td>R-A Modern ML/DL</td><td>Barrett-Seth, Phi_linGauss</td><td>2011</td><td>IntegrationMetrics</td></tr>
+      <tr><td>R-A Modern ML/DL</td><td>Mediano-Seth-Barrett, PhiID</td><td>2020</td><td>PhiId</td></tr>
+      <tr><td>R-A Modern ML/DL</td><td>Mediano, PhiR</td><td>2022</td><td>IntegrationMetrics</td></tr>
+      <tr><td>R-B Cybernetic</td><td>Ashby, Ultrastability</td><td>1960</td><td>StabilityPhi</td></tr>
+      <tr><td>R-B Cybernetic</td><td>Bernstein, Levels of Construction</td><td>1947</td><td>CrossLevelPhi</td></tr>
+      <tr><td>R-B Cybernetic</td><td>Minsky, Society of Mind</td><td>1986</td><td>InterAgentPhi</td></tr>
+      <tr><td>R-C Soviet/Asian</td><td>Kolmogorov, Algorithmic Complexity</td><td>1965</td><td>KolmogorovComplexity</td></tr>
+      <tr><td>R-C Soviet/Asian</td><td>Nyaya, Upamana</td><td>~2c BCE</td><td>AnalogicalConsistency</td></tr>
+      <tr><td>R-C Soviet/Asian</td><td>Dignaga, Apoha</td><td>~5c CE</td><td>ConceptualExclusion</td></tr>
+      <tr><td>R-C Soviet/Asian</td><td>Wu Wenjun, Mechanized Math</td><td>1977</td><td>PropertyBasedMetricsTest</td></tr>
+      <tr><td>R-D Neurosci.</td><td>Kauffman, NK Networks</td><td>1969/1993</td><td>NKBooleanNetwork</td></tr>
+      <tr><td>R-E Physical</td><td>Chua / Williams HP, Memristor</td><td>1971/2008</td><td>MemristorSwitch</td></tr>
+      <tr><td>R-F Math</td><td>Lindenmayer, L-systems</td><td>1968</td><td>LSystem</td></tr>
+    </tbody>
+  </table>
+
+  <div class="footer">
+    MATRIX cognitive architecture — W87-W113 cross-disciplinary synthesis.
+    <br>CONSTITUTION VI: integration metrics are measurement substrates, not phenomenal consciousness claims.
+  </div>
+</body>
+</html>

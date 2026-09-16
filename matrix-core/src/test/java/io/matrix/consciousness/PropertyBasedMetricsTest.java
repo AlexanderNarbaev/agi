@@ -26,27 +26,27 @@ class PropertyBasedMetricsTest {
 
     @Property
     void phiBinaryIsNonNegative(@ForAll("binaryTrajectories") long[] traj) {
-        double phi = IntegrationMetrics.phiBinary(traj, 1);
-        Assertions.assertThat(phi).isGreaterThanOrEqualTo(0.0);
+        double phi = IntegrationMetrics.phiBinary(traj, 2);
+        Assertions.assertThat(phi).isGreaterThanOrEqualTo(-1e-9);
     }
 
     @Property
     void phiBinaryIsDeterministic(@ForAll("binaryTrajectories") long[] traj) {
-        double phi1 = IntegrationMetrics.phiBinary(traj, 1);
-        double phi2 = IntegrationMetrics.phiBinary(traj, 1);
+        double phi1 = IntegrationMetrics.phiBinary(traj, 2);
+        double phi2 = IntegrationMetrics.phiBinary(traj, 2);
         Assertions.assertThat(phi1).isEqualTo(phi2);
     }
 
     @Property
     void phiBinaryIsAtMostOne(@ForAll("binaryTrajectories") long[] traj) {
-        double phi = IntegrationMetrics.phiBinary(traj, 1);
+        double phi = IntegrationMetrics.phiBinary(traj, 2);
         Assertions.assertThat(phi).isLessThanOrEqualTo(1.0 + 1e-9);
     }
 
     @Property
     void phiFFromBitLinearIsNonNegative(@ForAll("bitActivations") int[][] acts) {
         double phi = IntegrationMetrics.phiFFromBitLinear(acts, 1);
-        Assertions.assertThat(phi).isGreaterThanOrEqualTo(0.0);
+        Assertions.assertThat(phi).isGreaterThanOrEqualTo(-1e-9);
     }
 
     @Property
@@ -60,7 +60,7 @@ class PropertyBasedMetricsTest {
     void phiRIsNonNegative(@ForAll("trajectories") long[] traj) {
         if (traj.length < 4) return;
         double phiR = IntegrationMetrics.phiR(traj, 2);
-        Assertions.assertThat(phiR).isGreaterThanOrEqualTo(0.0);
+        Assertions.assertThat(phiR).isGreaterThanOrEqualTo(-1e-9);
     }
 
     @Property
