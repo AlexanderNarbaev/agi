@@ -92,6 +92,34 @@ META-R1 R-B: 5 schools of cybernetic / constructivist thought applied to integra
 | **R-B synthesis** | `research/W95-CYBERNETIC-RESEARCH-REPORT.md` |
 | **Hypotheses H-085..H-088** | `research/HYPOTHESES-NEW.md` |
 
+## Wave 100-W102 — Cognitive Learning & InterAgentPhi Wiring (Sep 16 2026)
+
+| Аспект | Документ |
+|---|---|
+| **ErrorDrivenLearner** | `matrix-core/src/main/java/io/matrix/cognitive/ErrorDrivenLearner.java` |
+| **InterAgentPhiSnapshot** | `matrix-core/src/main/java/io/matrix/consciousness/InterAgentPhiSnapshot.java` |
+| **ConsciousBrain inter-agent buffer** | `matrix-core/src/main/java/io/matrix/neuron/ConsciousBrain.java` (32-snapshot ring) |
+| **W100 ErrorDrivenLearner test** | `matrix-core/src/test/java/io/matrix/cognitive/ErrorDrivenLearnerTest.java` (6 tests) |
+| **W102 wiring test** | `matrix-core/src/test/java/io/matrix/research/W102InterAgentPhiWiringTest.java` (5 tests) |
+| **CONSTITUTION v3 amendment** | `CONSTITUTION.md` Article I: stratified stochasticity (W101) |
+
+## Wave 103 — Soviet / Asian Cross-Disciplinary Research (Sep 16 2026)
+
+META-R1 R-C: 5 schools applied to MATRIX integration architecture.
+
+| Школа | Ключевая идея | Где в MATRIX |
+|---|---|---|
+| **Glushkov** (constructive cybernetics) | Constructive math = foundation of cybernetics | Already enforced — all metrics constructive |
+| **Kolmogorov** (algorithmic complexity) | K(x) = shortest program length | Future CTM block-decomposition method |
+| **Nyaya** (4 pramanas) | Multi-source verification: perception + inference + analogy + testimony | ConsciousBrain's 4 info sources align |
+| **Dignāga** (apoha) | Concepts defined by exclusion, not inclusion | BitLinear ternary {-1,0,+1} encoding |
+| **Wu Wenjun** (math mechanization) | Every proof algorithmically verifiable | Property-based tests (future) |
+
+| Аспект | Документ |
+|---|---|
+| **R-C synthesis** | `research/W103-SOVIET-ASIAN-RESEARCH-REPORT.md` |
+| **Hypotheses H-089..H-091** | `research/HYPOTHESES-NEW.md` |
+
 ## Wave 96-W99 — Cross-Cutting Integration Metrics (Sep 16 2026)
 
 | Аспект | Документ |

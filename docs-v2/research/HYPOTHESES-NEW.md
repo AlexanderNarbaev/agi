@@ -101,4 +101,12 @@ Status: **proposed** → **running** по мере реализации RUN 437-
 | **H-087** | Inter-agent Φ across HdcBrain / SelfModel / WuWeiPolicy sub-systems becomes non-zero during action selection, near-zero during rest | Minsky Society of Mind | **CONFIRMED** (W96 InterAgentPhiTest 6/6 PASS: single-snapshot/timeseries) |
 | **H-088** | Anokhin result-feedback (cognitive error rate) mediates the conscious ↔ unconscious threshold: high error rate → explicit action; low → implicit pattern completion | Anokhin functional systems | **CONFIRMED** (W94 W94CognitiveErrorAccumulationTest 4/4 PASS: 8 errors in 30 Gaussian cycles, deterministic) |
 
+## H-089..H-091 — W103 Soviet/Asian cross-disciplinary research (2026-09-16)
+
+| H | Утверждение | Школа | Status |
+|---|---|---|---|
+| **H-089** | Analogical consistency signal (Nyaya Upamana): HdcBrain recall similarity is consistent across semantically-related observations | Nyaya 4 pramanas | running |
+| **H-090** | Conceptual exclusion metric (Dignāga apoha): measures how distinct HDC encodings of different observations are | Dignāga Buddhist logic | running |
+| **H-091** | Property-based tests (Wu mechanization) prove statistical invariants of integration metrics over many random inputs | Wu Wenjun mathematics | running |
+
 См. `MATRIX-CROSS-DISCIPLINARY-RESEARCH.md` §3 для полного списка артефактов.
