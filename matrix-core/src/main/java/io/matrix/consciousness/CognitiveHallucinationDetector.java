@@ -74,8 +74,11 @@ public final class CognitiveHallucinationDetector {
             }
             histCons = maxSim;
         }
-        boolean hallucinated = (kbSim < threshold && knowledgeBase != null && !knowledgeBase.isEmpty())
-                                 || (histCons < threshold && history != null && !history.isEmpty());
+        boolean kbEmpty = knowledgeBase == null || knowledgeBase.isEmpty();
+        boolean histEmpty = history == null || history.isEmpty();
+        boolean hallucinated = (!kbEmpty && kbSim < threshold)
+                                 || (!histEmpty && histCons < threshold)
+                                 || (kbEmpty && histEmpty);
         String reason = hallucinated ? "LOW_SUPPORT" : "SUPPORTED";
         double confidence = (kbSim + histCons) / 2.0;
         if (Double.isNaN(confidence)) confidence = 0.0;
