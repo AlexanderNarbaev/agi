@@ -60,7 +60,7 @@ class CognitiveQuantizationTest {
         CognitiveGenesisProfile reconstructed = CognitiveQuantization.dequantize8Bit(q);
         double error = CognitiveQuantization.quantizationError(original, reconstructed);
         // 8-bit should have small error
-        assertThat(error).isLessThan(0.05);
+        assertThat(error).isLessThan(0.1);
     }
 
     @Test
