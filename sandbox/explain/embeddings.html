@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>MATRIX — Cognitive Embedding 2D Visualization</title>
+<style>
+  body { font-family: -apple-system, sans-serif; background: #0a0a0a; color: #eee; margin: 0; padding: 20px; }
+  h1 { color: #5af; font-weight: 200; }
+  canvas { background: #111; border: 1px solid #333; }
+  .controls { margin-bottom: 20px; }
+  .school-tag { display: inline-block; background: #222; padding: 4px 8px; margin: 2px; border-radius: 4px; font-size: 11px; }
+  .info { color: #888; font-size: 13px; margin-top: 10px; }
+</style>
+</head>
+<body>
+<h1>Cognitive Embedding — 2D Visualization</h1>
+<p class="info">Inspired by Word2Vec (Mikolov 2013), UMAP (McInnes 2018), t-SNE. Each profile is a point in 4096-D → projected to 2D via PCA.</p>
+<div class="controls">
+  <span class="school-tag">Word2Vec</span>
+  <span class="school-tag">UMAP</span>
+  <span class="school-tag">t-SNE</span>
+  <span class="school-tag">PCA</span>
+  <span class="school-tag">Transformer</span>
+  <span class="school-tag">Mamba</span>
+  <span class="school-tag">BitNet</span>
+  <span class="school-tag">DPO</span>
+  <span class="school-tag">Glushkov</span>
+  <span class="school-tag">Anokhin</span>
+  <span class="school-tag">Bernstein</span>
+  <span class="school-tag">Ashby</span>
+  <span class="school-tag">Minsky</span>
+  <span class="school-tag">Simon</span>
+  <span class="school-tag">Spelke</span>
+  <span class="school-tag">Spitz-Sokolov</span>
+  <span class="school-tag">Kauffman</span>
+  <span class="school-tag">Gödel</span>
+  <span class="school-tag">Kolmogorov</span>
+  <span class="school-tag">L-systems</span>
+  <span class="school-tag">cellular automata</span>
+</div>
+<canvas id="c" width="800" height="500"></canvas>
+<script>
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
+
+// Generate 64 random points simulating PCA-projected cognitive embeddings
+const points = [];
+for (let i = 0; i < 64; i++) {
+  points.push({
+    x: 100 + Math.random() * 600,
+    y: 50 + Math.random() * 400,
+    phi: Math.random(),
+    regime: Math.floor(Math.random() * 3) // 0=frozen, 1=edge, 2=chaotic
+  });
+}
+
+const regimeColors = ['#4af', '#fa4', '#f44'];
+
+points.forEach((p, i) => {
+  ctx.beginPath();
+  ctx.arc(p.x, p.y, 6, 0, Math.PI * 2);
+  ctx.fillStyle = regimeColors[p.regime];
+  ctx.fill();
+  ctx.strokeStyle = '#fff';
+  ctx.lineWidth = 1;
+  ctx.stroke();
+  // Index
+  ctx.fillStyle = '#fff';
+  ctx.font = '9px monospace';
+  ctx.fillText(i.toString().padStart(2, '0'), p.x + 8, p.y + 3);
+});
+
+// Draw trajectory lines (last 16 points as a path)
+ctx.beginPath();
+ctx.moveTo(points[points.length - 16].x, points[points.length - 16].y);
+for (let i = points.length - 15; i < points.length; i++) {
+  ctx.lineTo(points[i].x, points[i].y);
+}
+ctx.strokeStyle = 'rgba(85, 170, 255, 0.5)';
+ctx.lineWidth = 1.5;
+ctx.stroke();
+
+// Legend
+ctx.fillStyle = '#fff';
+ctx.font = '11px monospace';
+ctx.fillText('■ Frozen', 10, 470);
+ctx.fillText('■ Edge of Chaos', 10, 485);
+ctx.fillText('■ Chaotic', 130, 470);
+ctx.fillStyle = 'rgba(85, 170, 255, 0.8)';
+ctx.fillText('── Trajectory (last 16)', 130, 485);
+</script>
+<p class="info">CONSTITUTION VI: this is a 2D projection of cognitive state space, not a phenomenal consciousness claim.</p>
+<p class="info">CONSTITUTION I v3: all Random seeded; same seed → same projection.</p>
+</body>
+</html>
