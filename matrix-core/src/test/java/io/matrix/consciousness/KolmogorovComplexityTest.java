@@ -77,4 +77,66 @@ class KolmogorovComplexityTest {
         double k = KolmogorovComplexity.estimateBinary(seq);
         assertThat(k).isGreaterThan(20.0);  // random binary ≈ 100 bits
     }
+
+    // ─── Property-based tests (jqwik) for Quarkus XML verification ───
+
+    @net.jqwik.api.Property
+    void propertyKolmogorovEmptyIsZero(@net.jqwik.api.ForAll("intSeeds") int seed) {
+        // Any number of empty trajectories → K=0
+        long[] empty = new long[0];
+        assertThat(KolmogorovComplexity.estimate(empty)).isEqualTo(0.0);
+        assertThat(KolmogorovComplexity.estimate((long[]) null)).isEqualTo(0.0);
+    }
+
+    @net.jqwik.api.Property
+    void propertyKolmogorovSingleIs64(@net.jqwik.api.ForAll("longValues") long value) {
+        long[] single = {value};
+        assertThat(KolmogorovComplexity.estimate(single)).isEqualTo(64.0);
+    }
+
+    @net.jqwik.api.Property
+    void propertyKolmogorovConstantIsLow(@net.jqwik.api.ForAll("trajectoryLengths") int length) {
+        long[] constant = new long[length];
+        double k = KolmogorovComplexity.estimate(constant);
+        // All zeros → 1 unique symbol → K should be small (just model overhead)
+        assertThat(k).isLessThan(20.0);
+    }
+
+    @net.jqwik.api.Property
+    void propertyKolmogorovBinaryConstantIsLow(@net.jqwik.api.ForAll("bools") boolean value) {
+        boolean[] seq = new boolean[10];
+        for (int i = 0; i < 10; i++) seq[i] = value;
+        double k = KolmogorovComplexity.estimateBinary(seq);
+        assertThat(k).isLessThan(2.0);
+    }
+
+    @net.jqwik.api.Property
+    void propertyKolmogorovRandomBinaryIsHigher(@net.jqwik.api.ForAll("intSeeds") int seed) {
+        Random rng = new Random(seed);
+        boolean[] seq = new boolean[100];
+        for (int i = 0; i < 100; i++) seq[i] = rng.nextBoolean();
+        double k = KolmogorovComplexity.estimateBinary(seq);
+        // Random binary sequence has K near its length (100 bits)
+        assertThat(k).isGreaterThan(20.0);
+    }
+
+    @net.jqwik.api.Provide
+    net.jqwik.api.Arbitrary<Integer> intSeeds() {
+        return net.jqwik.api.Arbitraries.integers().between(0, Integer.MAX_VALUE);
+    }
+
+    @net.jqwik.api.Provide
+    net.jqwik.api.Arbitrary<Long> longValues() {
+        return net.jqwik.api.Arbitraries.longs().between(Long.MIN_VALUE / 2, Long.MAX_VALUE / 2);
+    }
+
+    @net.jqwik.api.Provide
+    net.jqwik.api.Arbitrary<Integer> trajectoryLengths() {
+        return net.jqwik.api.Arbitraries.integers().between(1, 32);
+    }
+
+    @net.jqwik.api.Provide
+    net.jqwik.api.Arbitrary<Boolean> bools() {
+        return net.jqwik.api.Arbitraries.of(true, false);
+    }
 }
