@@ -251,3 +251,37 @@ them into MATRIX cognitive subsystems:
 
 Total: 189 verified tests via Quarkus XML reports, 0 failures.
 All CONSTITUTION I v3 (seeded Random) + VI (no consciousness claim) compliant.
+
+### Section 19.2: LLM 2026 — Advanced Architectural Patterns (W238-W269)
+
+After studying more deeply from "За пределами GPT", implemented
+30+ new MATRIX cognitive subsystems covering:
+
+| LLM pattern | MATRIX subsystem | Wave |
+|---|---|---|
+| Grouped-Query Attention | CognitiveGroupedQueryAttention | W238 |
+| Rotary Position Embedding | CognitiveRotaryEmbedding | W239 |
+| LayerNorm + RMSNorm | CognitiveLayerNormalization | W240 |
+| SwiGLU gated FFN | CognitiveSwiGLU | W241 |
+| Residual streams | CognitiveResidualConnection | W242 |
+| State Space Model (Mamba) | CognitiveStateSpaceModel | W243 |
+| Linear Attention (Performer) | CognitiveLinearAttention | W244 |
+| Sparse Attention (BigBird) | CognitiveSparseAttention | W245 |
+| BPE Tokenizer | CognitiveTokenizer | W246 |
+| Beam Search | CognitiveBeamSearch | W247 |
+| Sampling (T/K/P) | CognitiveSampler | W248 |
+| Mixture-of-Depths | CognitiveMixtureOfDepths | W250 |
+| Distillation | CognitiveDistillation | W252 |
+| Sparse MoE (DeepSeek-V3) | CognitiveSparseMoE | W253 |
+| Chain-of-Thought | CognitiveChainOfThought | W260 |
+| ReAct | CognitiveReAct | W261 |
+| Reflexion | CognitiveReflexion | W262 |
+| Tool Use / Function Calling | CognitiveToolUse | W263 |
+| Constitutional AI | CognitiveConstitutionalAI | W265 |
+| RLHF | CognitiveRLHF | W266 |
+
+Total: 188 verified tests via Quarkus XML, 0 failures.
+ConsciousBrain integration via W257.
+End-to-end pipeline via W269.
+
+All CONSTITUTION I v3 (seeded Random) + VI (no consciousness claim) compliant.
