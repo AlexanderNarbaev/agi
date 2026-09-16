@@ -110,3 +110,17 @@ Status: **proposed** → **running** по мере реализации RUN 437-
 | **H-091** | Property-based tests (Wu mechanization) prove statistical invariants of integration metrics over many random inputs | Wu Wenjun mathematics | running |
 
 См. `MATRIX-CROSS-DISCIPLINARY-RESEARCH.md` §3 для полного списка артефактов.
+
+## W104-W111 — New Hypotheses (running)
+
+- **H-092**: Φ measurements peak at Kauffman edge of chaos (K≈2 for large N).
+  *Status*: RUNNING — NKBooleanNetwork attractor benchmark in progress.
+- **H-093**: Attractor structure of NK networks benchmarks integration metric behaviors.
+  *Status*: RUNNING — CycleRecord measurements feed into Φ computation pipeline.
+- **H-094**: Memristor dynamics produce phase transitions analogous to those at Kauffman edge of chaos.
+  *Status*: RUNNING — MemristorSwitch.simulateCrossbar() under investigation.
+- **H-095**: L-system complexity correlates with integration metric trajectories during generative cognition.
+  *Status*: RUNNING — fractalDimension() measure in W110 available for cross-correlation.
+- **H-096**: Cognitive regime classification (FROZEN/EDGE_OF_CHAOS/CHAOTIC) corresponds to behavioral signatures.
+  *Status*: RUNNING — CognitiveGenesisProfile.regime() in W111.
+
