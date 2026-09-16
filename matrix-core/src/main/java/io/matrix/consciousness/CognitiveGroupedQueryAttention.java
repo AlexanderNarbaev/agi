@@ -10,13 +10,6 @@ import java.util.Random;
  * shared Key/Value heads across query groups. Reduces KV cache size by
  * 2-8x while preserving quality.
  *
- * <p>Architecture:
- * - H_q query heads (full)
- * - H_kv key/value heads (shared, H_kv < H_q)
- * - Group size G = H_q / H_kv
- *
- * <p>Benefits: smaller memory footprint, faster inference.
- *
  * <p>CONSTITUTION VI compliance: GQA cognitive attention, not
  * phenomenal consciousness claim.
  *
@@ -27,18 +20,13 @@ public final class CognitiveGroupedQueryAttention {
     private final int dim;
     private final int numQueryHeads;
     private final int numKVHeads;
+    private final int headDim;
     private final long seed;
     private final double[][] qProj; // [dim × dim]
-    private final double[][] kProj; // [dim × numKVHeads × headDim]
-    private final double[][] vProj; // [dim × numKVHeads × headDim]
+    private final double[][] kProj; // [dim × numKVHeads * headDim]
+    private final double[][] vProj; // [dim × numKVHeads * headDim]
     private final double[][] oProj; // [dim × dim]
 
-    /**
-     * @param dim model dimension
-     * @param numQueryHeads number of query heads
-     * @param numKVHeads number of KV heads (must divide numQueryHeads)
-     * @param seed RNG seed
-     */
     public CognitiveGroupedQueryAttention(int dim, int numQueryHeads,
                                             int numKVHeads, long seed) {
         if (dim < 1 || numQueryHeads < 1 || numKVHeads < 1) {
@@ -47,48 +35,59 @@ public final class CognitiveGroupedQueryAttention {
         if (numQueryHeads % numKVHeads != 0) {
             throw new IllegalArgumentException("numQueryHeads must be divisible by numKVHeads");
         }
+        if (dim % numQueryHeads != 0) {
+            throw new IllegalArgumentException("dim must be divisible by numQueryHeads");
+        }
         this.dim = dim;
         this.numQueryHeads = numQueryHeads;
         this.numKVHeads = numKVHeads;
+        this.headDim = dim / numQueryHeads;
         this.seed = seed;
         Random rng = new Random(seed);
-        int headDim = dim / numQueryHeads;
         double std = 1.0 / Math.sqrt((double) dim);
         this.qProj = randomMatrix(dim, dim, rng, std);
-        this.kProj = randomMatrix(dim, numKVHeads * headDim, rng, std);
-        this.vProj = randomMatrix(dim, numKVHeads * headDim, rng, std);
+        // K, V projections: full [dim × dim], then split into KV heads
+        this.kProj = randomMatrix(dim, dim, rng, std);
+        this.vProj = randomMatrix(dim, dim, rng, std);
         this.oProj = randomMatrix(dim, dim, rng, std);
     }
 
     /**
      * Compute GQA attention output.
-     *
-     * @param query vector of length dim
-     * @return attended vector of length dim
      */
     public double[] attend(double[] query) {
         if (query == null || query.length != dim) return query;
-        int headDim = dim / numQueryHeads;
-        // Project to Q, K, V
-        double[][] qHeads = projectHeads(query, qProj, numQueryHeads, headDim);
-        double[][] kHeads = projectHeads(query, kProj, numKVHeads, headDim);
-        double[][] vHeads = projectHeads(query, vProj, numKVHeads, headDim);
-        // Group queries share KV
+        // Project to Q, K, V (all size dim)
+        double[] qFlat = matVecMul(qProj, query);
+        double[] kFlat = matVecMul(kProj, query);
+        double[] vFlat = matVecMul(vProj, query);
+        // For K/V, use headDim = dim / numKVHeads (so all KV heads fit in dim)
+        int kvHeadDim = dim / numKVHeads;
         int groupSize = numQueryHeads / numKVHeads;
         double[] output = new double[dim];
-        double scale = 1.0 / Math.sqrt((double) headDim);
+        double scale = 1.0 / Math.sqrt((double) kvHeadDim);
         for (int g = 0; g < numKVHeads; g++) {
-            double[] kHead = kHeads[g];
-            double[] vHead = vHeads[g];
+            // Extract K, V for this KV head
+            double[] kHead = new double[kvHeadDim];
+            double[] vHead = new double[kvHeadDim];
+            System.arraycopy(kFlat, g * kvHeadDim, kHead, 0, kvHeadDim);
+            System.arraycopy(vFlat, g * kvHeadDim, vHead, 0, kvHeadDim);
+            // Each groupSize query heads share this KV head
             for (int gi = 0; gi < groupSize; gi++) {
                 int qh = g * groupSize + gi;
-                double[] qHead = qHeads[qh];
+                // Extract Q for this query head
+                double[] qHead = new double[headDim];
+                System.arraycopy(qFlat, qh * headDim, qHead, 0, headDim);
+                // Use first kvHeadDim dimensions of qHead for dot product
+                // Use min of headDim and kvHeadDim for dot product
+                int attDim = Math.min(headDim, kvHeadDim);
                 double score = 0;
-                for (int d = 0; d < headDim; d++) {
+                for (int d = 0; d < attDim; d++) {
                     score += qHead[d] * kHead[d];
                 }
                 double weight = Math.exp(score * scale);
-                for (int d = 0; d < headDim; d++) {
+                // Place output for this query head starting at qh * headDim
+                for (int d = 0; d < kvHeadDim && qh * headDim + d < dim; d++) {
                     output[qh * headDim + d] += weight * vHead[d];
                 }
             }
@@ -97,9 +96,6 @@ public final class CognitiveGroupedQueryAttention {
         return matVecMul(oProj, output);
     }
 
-    /**
-     * Compute GQA over a profile sequence.
-     */
     public double[][] attendSequence(List<CognitiveGenesisProfile> profiles) {
         if (profiles == null || profiles.isEmpty()) return new double[0][0];
         CognitiveEmbedding embedder = new CognitiveEmbedding(dim, seed);
@@ -112,11 +108,7 @@ public final class CognitiveGroupedQueryAttention {
         return result;
     }
 
-    /** Compression ratio vs MHA. */
     public double compressionRatio() {
-        // Standard MHA: dim × numQueryHeads for K + V = 2 × dim²
-        // GQA: 2 × dim × numKVHeads × headDim = 2 × dim × numKVHeads × dim/numQueryHeads
-        //       = 2 × dim² × numKVHeads / numQueryHeads
         return (double) numQueryHeads / numKVHeads;
     }
 
@@ -133,19 +125,6 @@ public final class CognitiveGroupedQueryAttention {
             }
         }
         return m;
-    }
-
-    private static double[][] projectHeads(double[] input, double[][] proj,
-                                              int numHeads, int headDim) {
-        // project: [input] * [proj] -> [numHeads × headDim]
-        double[][] heads = new double[numHeads][headDim];
-        double[] full = matVecMul(proj, input);
-        for (int h = 0; h < numHeads; h++) {
-            for (int d = 0; d < headDim; d++) {
-                heads[h][d] = full[h * headDim + d];
-            }
-        }
-        return heads;
     }
 
     private static double[] matVecMul(double[][] m, double[] v) {

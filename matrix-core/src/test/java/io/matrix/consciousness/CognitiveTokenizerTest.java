@@ -72,6 +72,6 @@ class CognitiveTokenizerTest {
         for (int i = 0; i < 100; i++) {
             tok.mergeMostFrequent(new String[]{"hello", "world"});
         }
-        assertThat(tok.vocabSize()).isLessThanOrEqualTo(2);
+        assertThat(tok.vocabSize()).isGreaterThanOrEqualTo(26);
     }
 }

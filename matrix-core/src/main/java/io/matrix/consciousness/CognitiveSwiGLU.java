@@ -44,23 +44,44 @@ public final class CognitiveSwiGLU {
 
     /**
      * Apply SwiGLU to a vector.
+     * SwiGLU(x) = (Swish(xW1) ⊙ xW2) W3
      */
     public double[] apply(double[] input) {
         if (input == null || input.length != dim) return input;
-        // gate = Swish(input @ w1)
-        double[] gate = matVecMul(w1, input);
+        // gate = Swish(input^T @ w1): w1 is [dim × hiddenDim]
+        // result is [hiddenDim]
+        double[] gate = new double[hiddenDim];
         for (int i = 0; i < hiddenDim; i++) {
-            double x = gate[i];
+            double sum = 0;
+            for (int j = 0; j < dim; j++) {
+                sum += input[j] * w1[j][i];
+            }
+            double x = sum;
             gate[i] = x * sigmoid(x);
         }
-        // value = input @ w2
-        double[] value = matVecMul(w2, input);
+        // value = input^T @ w2
+        double[] value = new double[hiddenDim];
+        for (int i = 0; i < hiddenDim; i++) {
+            double sum = 0;
+            for (int j = 0; j < dim; j++) {
+                sum += input[j] * w2[j][i];
+            }
+            value[i] = sum;
+        }
         // elementwise multiply
         for (int i = 0; i < hiddenDim; i++) {
             gate[i] *= value[i];
         }
-        // output = gate @ w3
-        return matVecMul(w3, gate);
+        // output = gate^T @ w3: w3 is [hiddenDim × dim]
+        double[] output = new double[dim];
+        for (int i = 0; i < dim; i++) {
+            double sum = 0;
+            for (int j = 0; j < hiddenDim; j++) {
+                sum += gate[j] * w3[j][i];
+            }
+            output[i] = sum;
+        }
+        return output;
     }
 
     /**
