@@ -92,4 +92,13 @@ Status: **proposed** → **running** по мере реализации RUN 437-
 | **H-083** | Φ_linGauss (closed-form linear-Gaussian integration via covariance ln-determinant) is computable in O(2^N · N³) for N ≤ 16, complements discrete Φ_binary which is O(2^N · 2^N) | Barrett-Seth 2011 + Tononi 2008 | **CONFIRMED** (W89 PhiLinGaussTest: 9/9 PASS, partial-corr Φ=0.13, independent Φ=0.006) |
 | **H-084** | PhiID 4-atom decomposition (redundancy / synergy / unqX / unqY) for Gaussian triples via Mediano 2020 closed-form: synergy-positive for XOR-like chains, redundancy-positive for shared-source chains | Mediano, Seth, Barrett 2020 PID | **CONFIRMED** (W90 PhiIdTest: 9/9 PASS, trivariate XOR synergy positive, redundant chain r=4.68) |
 
+## H-085..H-088 — W95 cybernetic/constructivist deep research (2026-09-16)
+
+| H | Утверждение | Школа | Status |
+|---|---|---|---|
+| **H-085** | CognitiveErrorStream snapshotHash change-rate correlates with "stability" (Ashby) — peaks during ultrastable phase entry | Ashby ultrastability | running |
+| **H-086** | Cross-level Φ (L6 ↔ L7 integration) predicts performance on integration-heavy tasks better than within-level Φ | Bernstein levels of construction | running |
+| **H-087** | Inter-agent Φ across HdcBrain / SelfModel / WuWeiPolicy sub-systems becomes non-zero during action selection, near-zero during rest | Minsky Society of Mind | running |
+| **H-088** | Anokhin result-feedback (cognitive error rate) mediates the conscious ↔ unconscious threshold: high error rate → explicit action; low → implicit pattern completion | Anokhin functional systems | running |
+
 См. `MATRIX-CROSS-DISCIPLINARY-RESEARCH.md` §3 для полного списка артефактов.

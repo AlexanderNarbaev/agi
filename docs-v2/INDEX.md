@@ -59,6 +59,39 @@
 | **W87-W91 synthesis** | `research/W87-W91-FINAL-SYNTHESIS-REPORT.md` |
 | **Hypotheses H-078..H-084** | `research/HYPOTHESES-NEW.md` |
 
+## Wave 92-W94 — Controlled Stochasticity & Cognitive Errors (Sep 16 2026)
+
+DESIGN-64: stratified stochasticity + error-driven learning primitives.
+
+| Аспект | Документ |
+|---|---|
+| **DESIGN-64 spec** | `designs/DESIGN-64-controlled-stochasticity.md` |
+| **CognitiveError record** | `matrix-core/src/main/java/io/matrix/cognitive/CognitiveError.java` |
+| **CognitiveErrorStream** | `matrix-core/src/main/java/io/matrix/cognitive/CognitiveErrorStream.java` |
+| **ExploratoryActionSampler** | `matrix-core/src/main/java/io/matrix/cognitive/ExploratoryActionSampler.java` |
+| **W92 extended metrics** | `matrix-core/src/main/java/io/matrix/consciousness/ExtendedIntegrationMetrics.java` |
+| **ConsciousBrain extended** | `matrix-core/src/main/java/io/matrix/neuron/ConsciousBrain.java` (continuousTrajectory[32], cognitiveErrors stream) |
+| **W92 test** | `matrix-core/src/test/java/io/matrix/research/W92ExtendedMetricsTest.java` (4 tests) |
+| **W94 test** | `matrix-core/src/test/java/io/matrix/research/W94CognitiveErrorAccumulationTest.java` (4 tests) |
+| **Cognitive tests** | `matrix-core/src/test/java/io/matrix/cognitive/` (16 tests across 3 classes) |
+
+## Wave 95 — Cybernetic / Constructivist Cross-Disciplinary Research (Sep 16 2026)
+
+META-R1 R-B: 5 schools of cybernetic / constructivist thought applied to integration metrics.
+
+| Школа | Ключевая идея | Где в MATRIX |
+|---|---|---|
+| **Anokhin** (functional systems) | Reverse-afferent: result feedback drives next decision | CognitiveErrorStream |
+| **Bernstein** (levels of construction) | Multi-level coordination, not reducible | L0-L7 capability levels |
+| **Ashby** (homeostasis) | Essential variables + ultrastability | W94 threshold-based errors |
+| **Minsky** (society of mind) | Integration emerges from agent interaction | Future W96: inter-agent Φ |
+| **Simon** (bounded rationality) | Hierarchies of nearly-decomposable sub-systems | DESIGN-58 hierarchy |
+
+| Аспект | Документ |
+|---|---|
+| **R-B synthesis** | `research/W95-CYBERNETIC-RESEARCH-REPORT.md` |
+| **Hypotheses H-085..H-088** | `research/HYPOTHESES-NEW.md` |
+
 ## Ключевые цифры (см. отчёты)
 
 - **H-010 accepted**: WiSARD быстрее Tsetlin в **242×** (медиана, 9 прогонов), точность 9/9.
