@@ -1,7 +1,10 @@
 package io.matrix.neuron;
 
 import io.matrix.consciousness.CognitiveGenesisProfile;
+import io.matrix.consciousness.CognitiveGroupedQueryAttention;
 import io.matrix.consciousness.CognitiveProcessor;
+import io.matrix.consciousness.CognitiveRotaryEmbedding;
+import io.matrix.consciousness.CognitiveSwiGLU;
 import io.matrix.consciousness.ExtendedIntegrationMetrics;
 import io.matrix.consciousness.IntegrationMetrics;
 import io.matrix.consciousness.PhiId;
@@ -416,6 +419,37 @@ public final class ConsciousBrain {
             llmProcessor = new CognitiveProcessor();
         }
         return llmProcessor;
+    }
+
+    /**
+     * W257: Apply RoPE positional encoding to cognitive profile.
+     */
+    public double[] applyRoPEToProfile(CognitiveGenesisProfile profile, int position) {
+        if (profile == null) return null;
+        // Use embedding then apply RoPE
+        io.matrix.consciousness.CognitiveEmbedding emb =
+            new io.matrix.consciousness.CognitiveEmbedding(64, 42L);
+        double[] vec = emb.embed(profile);
+        return CognitiveRotaryEmbedding.apply(vec, position);
+    }
+
+    /**
+     * W257: Apply SwiGLU gated MLP to profile.
+     */
+    public double[] applySwiGLUToProfile(CognitiveGenesisProfile profile) {
+        if (profile == null) return null;
+        CognitiveSwiGLU glu = new CognitiveSwiGLU(64, 128, 42L);
+        return glu.applyToProfile(profile);
+    }
+
+    /**
+     * W257: GQA attention over profile history.
+     */
+    public double[] applyGQAToProfile(CognitiveGenesisProfile profile) {
+        if (profile == null || getLLMProcessor().kvCacheContents().isEmpty()) return null;
+        CognitiveGroupedQueryAttention gqa =
+            new CognitiveGroupedQueryAttention(64, 8, 2, 42L);
+        return gqa.attendSequence(getLLMProcessor().kvCacheContents())[0];
     }
 
     private CognitiveProcessor llmProcessor;
