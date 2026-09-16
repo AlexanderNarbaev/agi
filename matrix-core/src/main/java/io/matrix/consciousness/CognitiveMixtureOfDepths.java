@@ -54,10 +54,19 @@ public final class CognitiveMixtureOfDepths {
             scores[i] = profiles.get(i).unifiedComplexityScore() + rng.nextGaussian() * 0.01;
         }
         // Determine threshold for top K%
+        // Sort descending; thresholdIdx-th element is the lowest score that still passes
         double[] sorted = scores.clone();
         java.util.Arrays.sort(sorted);
-        int thresholdIdx = Math.max(0, (int) (n * (1 - topKPercent / 100.0)));
-        double threshold = sorted[thresholdIdx];
+        int thresholdIdx = (int) (n * (1 - topKPercent / 100.0));
+        // thresholdIdx in [0, n]; sorted[thresholdIdx] if in range else use sentinel
+        double threshold;
+        if (thresholdIdx <= 0) {
+            threshold = sorted[0] - 1; // all pass (topKPercent=100)
+        } else if (thresholdIdx >= n) {
+            threshold = sorted[n - 1] + 1; // all skip (topKPercent=0)
+        } else {
+            threshold = sorted[thresholdIdx];
+        }
         java.util.List<DepthDecision> decisions = new java.util.ArrayList<>();
         for (int i = 0; i < n; i++) {
             boolean skip = scores[i] < threshold;
