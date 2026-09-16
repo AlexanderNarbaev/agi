@@ -61,6 +61,15 @@ public final class ConsciousBrain {
      * below the integration floor. Snapshot hash exposed in CycleReport.
      */
     private final CognitiveErrorStream cognitiveErrors;
+    /**
+     * W102 — Ring buffer of inter-agent snapshots for InterAgentPhi.measure().
+     * Each cycle appends one 8-dim state vector (SelfModel + HdcBrain + WuWeiPolicy).
+     */
+    private final io.matrix.consciousness.InterAgentPhiSnapshot[] interAgentSnapshots;
+    private int interAgentSnapshotsIdx = 0;
+    private int interAgentSnapshotsCount = 0;
+    /** Capacity for inter-agent snapshot buffer. Must be > N (8) for Φ_linGauss. */
+    private static final int INTER_AGENT_SNAPSHOT_CAPACITY = 32;
     /** Default capacity for cognitive error stream. */
     private static final int COGNITIVE_ERROR_CAPACITY = 16;
     /** Surprise threshold above which a PREDICTION_ERROR is recorded. */
@@ -79,6 +88,7 @@ public final class ConsciousBrain {
         this.trajectory = new long[TRAJECTORY_LEN];
         this.continuousTrajectory = new double[CONTINUOUS_TRAJECTORY_LEN][N_METRICS];
         this.cognitiveErrors = new CognitiveErrorStream(COGNITIVE_ERROR_CAPACITY);
+        this.interAgentSnapshots = new io.matrix.consciousness.InterAgentPhiSnapshot[INTER_AGENT_SNAPSHOT_CAPACITY];
     }
 
     public CycleReport cycle(float[] observation) {
@@ -168,6 +178,12 @@ public final class ConsciousBrain {
         // W94 — record cognitive errors when thresholds are exceeded
         recordCognitiveErrors(cycleCount, surprise, phi, observation);
 
+        // W102 — capture inter-agent snapshot for InterAgentPhi time-series
+        io.matrix.consciousness.InterAgentPhiSnapshot interAgentSnapshot =
+                io.matrix.consciousness.InterAgentPhiSnapshot.of(
+                        selfMod, recall, decision, cycleCount);
+        captureInterAgentSnapshot(interAgentSnapshot);
+
         return new CycleReport(label,
                 recall != null ? recall.label : null,
                 surprise, decision.shouldAct(),
@@ -209,6 +225,39 @@ public final class ConsciousBrain {
     /** W94 — Cognitive error stream size (current error count, ≤ capacity). */
     public int cognitiveErrorCount() {
         return cognitiveErrors.size();
+    }
+
+    /** W102 — Append one snapshot to the inter-agent ring buffer. */
+    private void captureInterAgentSnapshot(io.matrix.consciousness.InterAgentPhiSnapshot s) {
+        if (s == null) return;
+        interAgentSnapshots[interAgentSnapshotsIdx % INTER_AGENT_SNAPSHOT_CAPACITY] = s;
+        interAgentSnapshotsIdx++;
+        if (interAgentSnapshotsCount < INTER_AGENT_SNAPSHOT_CAPACITY) interAgentSnapshotsCount++;
+    }
+
+    /** W102 — Number of captured inter-agent snapshots. */
+    public int interAgentSnapshotCount() {
+        return interAgentSnapshotsCount;
+    }
+
+    /**
+     * W102 — Compute InterAgentPhi over the most recent snapshots.
+     * Requires ≥ 2 snapshots for non-trivial value; returns 0 otherwise.
+     */
+    public double interAgentPhi() {
+        if (interAgentSnapshotsCount < 2) return 0.0;
+        java.util.List<io.matrix.consciousness.InterAgentPhiSnapshot> ordered =
+                new java.util.ArrayList<>(interAgentSnapshotsCount);
+        int start = (interAgentSnapshotsCount < INTER_AGENT_SNAPSHOT_CAPACITY) ? 0 :
+                interAgentSnapshotsIdx % INTER_AGENT_SNAPSHOT_CAPACITY;
+        for (int i = 0; i < interAgentSnapshotsCount; i++) {
+            ordered.add(interAgentSnapshots[(start + i) % INTER_AGENT_SNAPSHOT_CAPACITY]);
+        }
+        try {
+            return io.matrix.consciousness.InterAgentPhiSnapshot.measure(ordered);
+        } catch (IllegalArgumentException e) {
+            return 0.0;
+        }
     }
 
     /**
