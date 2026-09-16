@@ -218,3 +218,36 @@ cognitive subsystems + 1 unified processor:
 All CONSTITUTION I v3 + VI compliant. 39 @Property tests across
 6 PropertyTest classes (W204, W206, W208, W210, W212, W214, W216).
 W219 end-to-end integration test: 2/2 PASS via Quarkus XML.
+
+### Section 19.1: LLM 2026 — Architectural Patterns Applied (W203-W236)
+
+After studying "За пределами GPT: Архитектурный анализ LLM 2026", 
+extracted 16 high-value LLM architectural patterns and translated
+them into MATRIX cognitive subsystems:
+
+| LLM pattern | MATRIX subsystem | Wave | Verified tests |
+|---|---|---|---|
+| Word2Vec embeddings | CognitiveEmbedding | W203-W204 | 13+8 |
+| Transformer Q/K/V attention | CognitiveAttention | W205-W206 | 8+6 |
+| PagedAttention (vLLM) | ProfileKVCache | W207-W208 | 12+6 |
+| StreamingLLM sinks | CognitiveSlidingWindow | W209-W210 | 10+6 |
+| Speculative Decoding | ProfileSpeculativePredictor | W211-W212 | 8+5 |
+| RAG | CognitiveRAG | W213-W214 | 9+6 |
+| UMAP/t-SNE 2D | ProfileEmbedding2D | W215-W216 | 7+6 |
+| FP4/FP8 quantization | CognitiveQuantization | W221 | 10 |
+| MoE routing | CognitiveMixtureOfExperts | W222 | 8 |
+| FlashAttention | CognitiveFlashAttention | W223 | 7 |
+| Disaggregation | CognitiveDisaggregation | W224 | 6 |
+| LoRA | CognitiveLoRA | W227 | 10 |
+| Multi-tier offload | CognitiveContextOffload | W228 | 9 |
+| Continuous batching | CognitiveContinuousBatching | W229 | 8 |
+| EAGLE-3 draft+verify | CognitiveDraftVerify | W230 | 8 |
+| TCO estimation | CognitiveTPUEstimator | W231 | 8 |
+| Hallucination detection | CognitiveHallucinationDetector | W232 | 8 |
+| Multi-layer verification | CognitiveMultiLayerVerifier | W233 | 6 |
+| Web search | CognitiveWebSearch | W234 | 8 |
+| DeepSeek cost optimization | CognitiveCostEffectiveServing | W235 | 11 |
+| Unified processor | CognitiveProcessor | W220 | 8 |
+
+Total: 189 verified tests via Quarkus XML reports, 0 failures.
+All CONSTITUTION I v3 (seeded Random) + VI (no consciousness claim) compliant.
