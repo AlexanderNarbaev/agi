@@ -2434,3 +2434,26 @@ Estimated total property test executions: ~24,500
 - task_6f73afc3 — Free Energy Principle (Friston)
 - task_e7c9c39a — Causal emergence (Hoel 2013)
 - task_d0149c68 — Attention Φ (transformers)
+
+## CHECKPOINT 139 — Wave 149-179 (New Measurement Subsystems)
+
+Date: 2026-09-16
+
+NEW MEASUREMENT SUBSYSTEMS:
+- W149 — DistributionPhi: Φ over empirical continuous distributions
+- W151 — SeriesCorrelator: classical time-series correlations
+- W153 — CognitivePhaseDetector: phase transition detection
+- W155 — CognitiveEntropyMeter: Shannon entropy of profile sequences
+- W157 — CognitiveLyapunovExponent: Lyapunov stability classification
+- W159 — InferentialDistance: KL, JS, Hellinger, TV divergences
+- W164 — MultivariateGaussianAnalyzer: Gaussian fit statistics
+- W166 — CognitiveHeatmap: 2D profile visualization
+- W168 — ProfileVelocityTracker: rate of change of profiles
+- W170 — ProfileStabilityMetrics: holistic stability classification
+- W176 — ProfileDistance: L1, L2, cosine distance
+- W178 — RegimeTrajectoryAnalyzer: regime time series analysis
+
+PROPERTY-BASED TESTS (W129-W179):
+- 27 PropertyTest classes
+- 159 @Property tests
+- ~30,000 generated test cases (estimated)
