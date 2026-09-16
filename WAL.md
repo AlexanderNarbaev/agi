@@ -1989,7 +1989,7 @@ REAL BitNet 2B results:
 
 HEAD: e0283d21 in origin/main.
 
-## CHECKPOINT 29 — W65-W68: ConsciousBrain integration + L7 + final summary (2026-09-13)
+## CHECKPOINT 129 — W65-W68: ConsciousBrain integration + L7 + final summary (2026-09-13)
 
 ### W65 RUN 477 — ConsciousBrain (L7 Capability Level integration)
 
@@ -2068,7 +2068,7 @@ no phenomenological claims about consciousness (CONSTITUTION VI), the
 algorithmic substrate implements measurable correlates of consciousness
 in biological systems.
 
-## CHECKPOINT 30 — W60-W80 FINAL: consciousness substrate complete (2026-09-13/14)
+## CHECKPOINT 130 — W60-W80 FINAL: consciousness substrate complete (2026-09-13/14)
 
 **Sub-agent research produced:**
 - W76 Empirical Validation Research (733 lines, 15 primary sources)
@@ -2119,7 +2119,7 @@ in biological systems.
 
 **Head:** 9959b97e
 
-## CHECKPOINT 31 — W82-W86: ticklingFlag + noise-ceiling + DESIGN-63 (2026-09-14)
+## CHECKPOINT 131 — W82-W86: ticklingFlag + noise-ceiling + DESIGN-63 (2026-09-14)
 
 **W82 RUN 483 — TicklingDetector:**
 - Detects "tickling" (apparent integration that's actually redundant)
@@ -2150,7 +2150,7 @@ W60+ total: 985 tests including all previous work.
 
 HEAD: 3bad1413 → ready for W86 commit.
 
-## CHECKPOINT 32 — W87-W91: Multi-timestep integration metrics + Φ_linGauss + PhiID (2026-09-14)
+## CHECKPOINT 133 — W87-W91: Multi-timestep integration metrics + Φ_linGauss + PhiID (2026-09-14)
 
 **W87 — ConsciousBrain multi-timestep integration metrics:**
 - Added `appendTrajectory(observation)` called every cycle, populating `long[8]` circular buffer

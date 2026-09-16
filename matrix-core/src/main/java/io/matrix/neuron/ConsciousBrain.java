@@ -1,5 +1,9 @@
 package io.matrix.neuron;
 
+import io.matrix.consciousness.ExtendedIntegrationMetrics;
+import io.matrix.consciousness.IntegrationMetrics;
+import io.matrix.consciousness.PhiId;
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
@@ -27,6 +31,28 @@ public final class ConsciousBrain {
     /** Trajectory threshold before computing multi-state metrics. */
     private static final int TRAJECTORY_LEN = 8;
     private static final int N_METRICS = 8;
+    /**
+     * Continuous ring buffer for Φ_linGauss. Must be larger than N_METRICS so the
+     * T×N sample matrix has rank N (T &gt; N required for non-singular correlation).
+     * 32 gives 4× headroom over N=8.
+     */
+    private static final int CONTINUOUS_TRAJECTORY_LEN = 32;
+    /** Continuous ±1 samples, ring-buffered. */
+    private final double[][] continuousTrajectory;
+    private int continuousIdx = 0;
+    private int continuousCount = 0;
+    /**
+     * Cadence for extended integration metrics (Φ_linGauss + PhiID). Discrete metrics
+     * are computed every cycle; extended metrics every EXTENDED_EVERY cycles to amortize
+     * the LU-decomposition cost.
+     */
+    private static final int EXTENDED_EVERY = 10;
+    /** Last valid trajectory snapshot, used to feed extended metrics. */
+    private long[] lastTrajectory = new long[0];
+    private int lastTrajectoryLen = 0;
+    /** Snapshot of continuous trajectory (double[][] samples × variables) for extended metrics. */
+    private double[][] lastContinuousSnapshot;
+    private int lastContinuousLen = 0;
 
     public ConsciousBrain(int dims, long seed) {
         if (dims < 1) throw new IllegalArgumentException("dims must be ≥ 1");
@@ -37,6 +63,7 @@ public final class ConsciousBrain {
         this.hippocampus = new TwoStageConsolidator.HdcMemoryStore(dims);
         this.neocortex = new TwoStageConsolidator.HdcMemoryStore(dims);
         this.trajectory = new long[TRAJECTORY_LEN];
+        this.continuousTrajectory = new double[CONTINUOUS_TRAJECTORY_LEN][N_METRICS];
     }
 
     public CycleReport cycle(float[] observation) {
@@ -61,6 +88,30 @@ public final class ConsciousBrain {
         appendTrajectory(observation);
         io.matrix.consciousness.IntegrationMetricsResult metrics =
                 computeIntegrationMetrics(observation);
+        // Extended metrics (Φ_linGauss + PhiID 4-atom) computed on slower cadence.
+        // We only run the expensive LU decomposition every EXTENDED_EVERY cycles.
+        // Snapshot the continuous trajectory (32 samples × 8 dims) in chronological order.
+        io.matrix.consciousness.ExtendedIntegrationMetrics extended = null;
+        if (cycleCount % EXTENDED_EVERY == 0 && cycleCount > 0 && continuousCount >= 2) {
+            int snapLen = Math.min(continuousCount, CONTINUOUS_TRAJECTORY_LEN);
+            int N = Math.min(N_METRICS, dims);
+            // Compute the start index for the oldest sample in the ring buffer.
+            // When the buffer is full (continuousCount == CONTINUOUS_TRAJECTORY_LEN),
+            // the oldest sample is at continuousIdx (the next slot to write).
+            int start;
+            if (continuousCount < CONTINUOUS_TRAJECTORY_LEN) {
+                start = 0;  // Buffer not full: samples start from 0
+            } else {
+                start = continuousIdx % CONTINUOUS_TRAJECTORY_LEN;
+            }
+            lastContinuousSnapshot = new double[snapLen][N];
+            for (int i = 0; i < snapLen; i++) {
+                System.arraycopy(continuousTrajectory[(start + i) % CONTINUOUS_TRAJECTORY_LEN],
+                        0, lastContinuousSnapshot[i], 0, N);
+            }
+            lastContinuousLen = snapLen;
+            extended = computeExtendedMetrics(lastContinuousSnapshot, N);
+        }
 
         // 3. Self-model (simplified: all vectors same dims)
         float[] primaryAction = new float[dims];
@@ -102,17 +153,28 @@ public final class ConsciousBrain {
                 recall != null ? recall.label : null,
                 surprise, decision.shouldAct(),
                 selfMod.selfRepresentation(), pragmatic.success(),
-                phi, phiR, phiF, cN, tickling);
+                phi, phiR, phiF, cN, tickling,
+                extended);
     }
 
     /**
-     * Append the current observation to the trajectory buffer.
-     * Called on every cycle so the trajectory accumulates multi-timestep history.
+     * Append the current observation to the trajectory buffers.
+     * Called on every cycle so both the discrete (long[]) and continuous (double[][])
+     * trajectories accumulate multi-timestep history.
      */
     private void appendTrajectory(float[] observation) {
         int N = Math.min(N_METRICS, dims);
         trajectory[trajectoryIdx % trajectory.length] = extractBits(observation, N);
         trajectoryIdx++;
+        // Continuous samples: convert first N dims to ±1 (sign-bit representation).
+        // This is what the original observation "looks like" in the brain's continuous
+        // workspace, suitable for Φ_linGauss (closed-form linear-Gaussian) and PhiID.
+        int slot = continuousIdx % CONTINUOUS_TRAJECTORY_LEN;
+        for (int i = 0; i < N; i++) {
+            continuousTrajectory[slot][i] = observation[i] > 0 ? 1.0 : -1.0;
+        }
+        continuousIdx++;
+        if (continuousCount < CONTINUOUS_TRAJECTORY_LEN) continuousCount++;
     }
 
     /**
@@ -141,6 +203,10 @@ public final class ConsciousBrain {
             System.arraycopy(trajectory, start, traj, 0, firstLen);
             System.arraycopy(trajectory, 0, traj, firstLen, start);
         }
+        // Cache the trajectory snapshot for extended metrics (Φ_linGauss + PhiID) computed
+        // on a slower cadence by the calling cycle(). The snapshot is in chronological order.
+        lastTrajectory = traj;
+        lastTrajectoryLen = traj.length;
         try {
             double phi = io.matrix.consciousness.IntegrationMetrics.phiBinary(traj, N);
             double phiR = io.matrix.consciousness.IntegrationMetrics.phiR(traj, N);
@@ -182,6 +248,34 @@ public final class ConsciousBrain {
         int p = 2;
         while (p < n) p <<= 1;
         return Math.max(p, 2);
+    }
+
+    /**
+     * W92 — Compute extended integration metrics: Φ_linGauss + PhiID 4-atom decomposition.
+     *
+     * <p>Operates on the same multi-timestep trajectory as computeIntegrationMetrics().
+     * Computed on a separate cadence (every 10 cycles) because LU decomposition over
+     * 2^(N-1) bipartitions is more expensive than the discrete Φ_binary enumeration.
+     *
+     * <p>PhiID uses a Gaussian model: bits are converted to ±1 samples, then
+     * PhiId.system() averages pairwise atoms across all C(N,2) pairs.
+     *
+     * <p>For Φ_linGauss, we use the trajectory buffer of continuous ±1 samples
+     * (T=8, N=8). With T=N the correlation matrix is mathematically singular, so
+     * the bipartition MI collapses to 0. This is a known property of Φ_linGauss
+     * (closed-form linear-Gaussian formula requires T >> N). For the brain to
+     * emit non-trivial Φ_linGauss, the trajectory buffer must be longer than N.
+     * We record both numbers and let consumers decide which interpretation fits.
+     */
+    private io.matrix.consciousness.ExtendedIntegrationMetrics computeExtendedMetrics(double[][] samples, int N) {
+        if (samples == null || samples.length < 2) return null;
+        try {
+            Double phiLinGauss = IntegrationMetrics.phiLinGaussFromSamples(samples, N);
+            PhiId.PhiIdSystem system = PhiId.system(samples);
+            return ExtendedIntegrationMetrics.of(phiLinGauss, system);
+        } catch (IllegalArgumentException e) {
+            return null;
+        }
     }
 
     /**
@@ -241,5 +335,6 @@ public final class ConsciousBrain {
             Double phiR,
             Double phiF,
             Double neuralComplexity,
-            Boolean ticklingFlag) {}
+            Boolean ticklingFlag,
+            io.matrix.consciousness.ExtendedIntegrationMetrics extended) {}
 }
