@@ -3,6 +3,8 @@ package io.matrix.neuron;
 import io.matrix.consciousness.ExtendedIntegrationMetrics;
 import io.matrix.consciousness.IntegrationMetrics;
 import io.matrix.consciousness.PhiId;
+import io.matrix.cognitive.CognitiveError;
+import io.matrix.cognitive.CognitiveErrorStream;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -53,6 +55,18 @@ public final class ConsciousBrain {
     /** Snapshot of continuous trajectory (double[][] samples × variables) for extended metrics. */
     private double[][] lastContinuousSnapshot;
     private int lastContinuousLen = 0;
+    /**
+     * W94 — Cognitive error stream (DESIGN-64): bounded ring buffer of failure
+     * records. Updated when surprise exceeds the dynamic threshold or Φ drops
+     * below the integration floor. Snapshot hash exposed in CycleReport.
+     */
+    private final CognitiveErrorStream cognitiveErrors;
+    /** Default capacity for cognitive error stream. */
+    private static final int COGNITIVE_ERROR_CAPACITY = 16;
+    /** Surprise threshold above which a PREDICTION_ERROR is recorded. */
+    private static final double SURPRISE_THRESHOLD = 1.0;
+    /** Φ_binary below which an INTEGRATION_VIOLATION is recorded. */
+    private static final double INTEGRATION_FLOOR = 0.05;
 
     public ConsciousBrain(int dims, long seed) {
         if (dims < 1) throw new IllegalArgumentException("dims must be ≥ 1");
@@ -64,6 +78,7 @@ public final class ConsciousBrain {
         this.neocortex = new TwoStageConsolidator.HdcMemoryStore(dims);
         this.trajectory = new long[TRAJECTORY_LEN];
         this.continuousTrajectory = new double[CONTINUOUS_TRAJECTORY_LEN][N_METRICS];
+        this.cognitiveErrors = new CognitiveErrorStream(COGNITIVE_ERROR_CAPACITY);
     }
 
     public CycleReport cycle(float[] observation) {
@@ -149,12 +164,51 @@ public final class ConsciousBrain {
         Double phiF = metrics != null ? metrics.phiF() : null;
         Double cN = metrics != null ? metrics.neuralComplexity() : null;
         Boolean tickling = metrics != null ? metrics.ticklingFlag() : null;
+
+        // W94 — record cognitive errors when thresholds are exceeded
+        recordCognitiveErrors(cycleCount, surprise, phi, observation);
+
         return new CycleReport(label,
                 recall != null ? recall.label : null,
                 surprise, decision.shouldAct(),
                 selfMod.selfRepresentation(), pragmatic.success(),
                 phi, phiR, phiF, cN, tickling,
-                extended);
+                extended,
+                cognitiveErrors.snapshotHash());
+    }
+
+    /**
+     * W94 — Record one or more CognitiveError records based on threshold
+     * violations: high surprise, low Φ, or ineffective action.
+     *
+     * <p>Deterministic — same inputs + state produce same error sequence.
+     */
+    private void recordCognitiveErrors(long cycleCount, double surprise,
+                                         Double phi, float[] observation) {
+        if (surprise > SURPRISE_THRESHOLD) {
+            cognitiveErrors.record(new CognitiveError(
+                    cycleCount,
+                    CognitiveError.ErrorKind.PREDICTION_ERROR,
+                    observation.clone(),
+                    "surprise=" + surprise + " > " + SURPRISE_THRESHOLD));
+        }
+        if (phi != null && phi < INTEGRATION_FLOOR) {
+            cognitiveErrors.record(new CognitiveError(
+                    cycleCount,
+                    CognitiveError.ErrorKind.INTEGRATION_VIOLATION,
+                    observation.clone(),
+                    "phi=" + phi + " < " + INTEGRATION_FLOOR));
+        }
+    }
+
+    /** W94 — Public read-only access to cognitive error stream snapshot hash. */
+    public long cognitiveErrorsSnapshotHash() {
+        return cognitiveErrors.snapshotHash();
+    }
+
+    /** W94 — Cognitive error stream size (current error count, ≤ capacity). */
+    public int cognitiveErrorCount() {
+        return cognitiveErrors.size();
     }
 
     /**
@@ -336,5 +390,6 @@ public final class ConsciousBrain {
             Double phiF,
             Double neuralComplexity,
             Boolean ticklingFlag,
-            io.matrix.consciousness.ExtendedIntegrationMetrics extended) {}
+            io.matrix.consciousness.ExtendedIntegrationMetrics extended,
+            long cognitiveErrorsSnapshotHash) {}
 }
