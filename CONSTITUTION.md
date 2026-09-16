@@ -1,10 +1,22 @@
 # CONSTITUTION — MATRIX
 
-**Статус: normative · singleton** · пересмотр 2026-08-26 (v2 rebuild). Любые изменения — отдельный норматив через коммит серии «WAL: CONST amend».
+**Статус: normative · singleton** · пересмотр 2026-09-16 (v3 — Article I: stratified stochasticity). Любые изменения — отдельный норматив через коммит серии «WAL: CONST amend».
 
-## I. Детерминизм
+## I. Stratified Stochasticity (amended W101, 2026-09-16)
 
-Система MATRIX — детерминированная нейро-символическая. Любой запрос при фиксированном состоянии даёт фиксированный ответ. Рантайм-контур решений НЕ вызывает LLM, НЕ использует случайность и wall-clock в путях решений. Обучение стохастично и существует вне рантайм-контура.
+Система MATRIX — нейро-символическая с stratified stochasticity. Любой запрос при фиксированном состоянии и фиксированном seed даёт фиксированный ответ.
+
+**Численный субстрат** (numerical substrate) — integration metrics, integration weights, weight inference, deterministic kernels — РЕАЛИЗУЕТСЯ как pure functions без Random и без wall-clock.
+
+**Когнитивный слой** (cognitive layer) — error-driven learning, exploration sampling, hypothesis generation — МОЖЕТ использовать seeded Random где seed есть pure function от state hash (episode ID, prior trajectory hash, deterministic context). Производный seed сам по себе — pure function.
+
+**Адверсариальный режим** (adversarial mode) — red-teaming, robustness testing — может использовать unbounded Random, но ТОЛЬКО за build flag `-Pexperimental=true` или в тестах с явной маркировкой.
+
+LLM в путях решений остаётся ЗАПРЕЩЁН. Wall-clock в путях решений остаётся ЗАПРЕЩЁН (deterministic replay requirement для отладки и аудита).
+
+Обучение стохастично и существует вне рантайм-контура.
+
+См. также: `docs-v2/designs/DESIGN-64-controlled-stochasticity.md`, `docs-v2/designs/CONST-AMEND-I-W101.md` (история).
 
 ## II. K_MAX = 20
 
