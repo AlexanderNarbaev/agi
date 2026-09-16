@@ -1,5 +1,7 @@
 package io.matrix.neuron;
 
+import io.matrix.consciousness.CognitiveGenesisProfile;
+import io.matrix.consciousness.CognitiveProcessor;
 import io.matrix.consciousness.ExtendedIntegrationMetrics;
 import io.matrix.consciousness.IntegrationMetrics;
 import io.matrix.consciousness.PhiId;
@@ -396,6 +398,27 @@ public final class ConsciousBrain {
     public void consolidate(int replayCount) {
         TwoStageConsolidator.consolidate(hippocampus, neocortex, replayCount, rng);
     }
+
+    /**
+     * W225: Run cognitive profile through LLM-inspired processing pipeline.
+     * Uses CognitiveProcessor for embedding + attention + cache + window + speculation.
+     */
+    public CognitiveProcessor.ProcessingResult processProfileWithLLMPipeline(CognitiveGenesisProfile profile) {
+        if (profile == null) return null;
+        if (llmProcessor == null) {
+            llmProcessor = new CognitiveProcessor();
+        }
+        return llmProcessor.process(profile);
+    }
+
+    public CognitiveProcessor getLLMProcessor() {
+        if (llmProcessor == null) {
+            llmProcessor = new CognitiveProcessor();
+        }
+        return llmProcessor;
+    }
+
+    private CognitiveProcessor llmProcessor;
 
     public double freeEnergy(float[] observation) {
         float[] pred = new float[dims];
