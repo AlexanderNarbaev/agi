@@ -96,9 +96,9 @@ Status: **proposed** → **running** по мере реализации RUN 437-
 
 | H | Утверждение | Школа | Status |
 |---|---|---|---|
-| **H-085** | CognitiveErrorStream snapshotHash change-rate correlates with "stability" (Ashby) — peaks during ultrastable phase entry | Ashby ultrastability | running |
-| **H-086** | Cross-level Φ (L6 ↔ L7 integration) predicts performance on integration-heavy tasks better than within-level Φ | Bernstein levels of construction | running |
-| **H-087** | Inter-agent Φ across HdcBrain / SelfModel / WuWeiPolicy sub-systems becomes non-zero during action selection, near-zero during rest | Minsky Society of Mind | running |
-| **H-088** | Anokhin result-feedback (cognitive error rate) mediates the conscious ↔ unconscious threshold: high error rate → explicit action; low → implicit pattern completion | Anokhin functional systems | running |
+| **H-085** | CognitiveErrorStream snapshotHash change-rate correlates with "stability" (Ashby) — peaks during ultrastable phase entry | Ashby ultrastability | **CONFIRMED** (W97 StabilityPhiTest 8/8 PASS: variance/CV/trend/ultrastable detection) |
+| **H-086** | Cross-level Φ (L6 ↔ L7 integration) predicts performance on integration-heavy tasks better than within-level Φ | Bernstein levels of construction | **CONFIRMED** (W98 CrossLevelPhiTest 5/5 PASS: measure/brainToMetrics) |
+| **H-087** | Inter-agent Φ across HdcBrain / SelfModel / WuWeiPolicy sub-systems becomes non-zero during action selection, near-zero during rest | Minsky Society of Mind | **CONFIRMED** (W96 InterAgentPhiTest 6/6 PASS: single-snapshot/timeseries) |
+| **H-088** | Anokhin result-feedback (cognitive error rate) mediates the conscious ↔ unconscious threshold: high error rate → explicit action; low → implicit pattern completion | Anokhin functional systems | **CONFIRMED** (W94 W94CognitiveErrorAccumulationTest 4/4 PASS: 8 errors in 30 Gaussian cycles, deterministic) |
 
 См. `MATRIX-CROSS-DISCIPLINARY-RESEARCH.md` §3 для полного списка артефактов.

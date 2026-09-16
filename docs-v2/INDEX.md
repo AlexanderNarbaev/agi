@@ -92,6 +92,22 @@ META-R1 R-B: 5 schools of cybernetic / constructivist thought applied to integra
 | **R-B synthesis** | `research/W95-CYBERNETIC-RESEARCH-REPORT.md` |
 | **Hypotheses H-085..H-088** | `research/HYPOTHESES-NEW.md` |
 
+## Wave 96-W99 — Cross-Cutting Integration Metrics (Sep 16 2026)
+
+| Аспект | Документ |
+|---|---|
+| **InterAgentPhi (Minsky)** | `matrix-core/src/main/java/io/matrix/consciousness/InterAgentPhi.java` (W96) |
+| **StabilityPhi (Ashby)** | `matrix-core/src/main/java/io/matrix/consciousness/StabilityPhi.java` (W97) |
+| **CrossLevelPhi (Bernstein)** | `matrix-core/src/main/java/io/matrix/consciousness/CrossLevelPhi.java` (W98) |
+| **W87-W99 synthesis** | `research/W87-W99-FINAL-SYNTHESIS-REPORT.md` (281 lines) |
+
+5-tier integration metrics architecture now delivered:
+1. Discrete within-trajectory (Φ_binary, ΦR, ΦF, C_N, ticklingFlag) — W87-W88
+2. Continuous within-trajectory (Φ_linGauss) — W89
+3. PhiID 4-atom decomposition — W90
+4. ConsciousBrain CycleReport (5 metrics, 2 cadences) — W92, W94
+5. Cross-cutting (InterAgentPhi, CrossLevelPhi, StabilityPhi) — W96-W98
+
 ## Ключевые цифры (см. отчёты)
 
 - **H-010 accepted**: WiSARD быстрее Tsetlin в **242×** (медиана, 9 прогонов), точность 9/9.
