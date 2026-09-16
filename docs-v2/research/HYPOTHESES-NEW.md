@@ -124,3 +124,19 @@ Status: **proposed** → **running** по мере реализации RUN 437-
 - **H-096**: Cognitive regime classification (FROZEN/EDGE_OF_CHAOS/CHAOTIC) corresponds to behavioral signatures.
   *Status*: RUNNING — CognitiveGenesisProfile.regime() in W111.
 
+
+## W118-W124 — Hypothesis Status Updates
+
+- **H-088** (Φ_binary ↔ K): CONFIRMED — 18/18 properties pass; W113/W122 integration tests verify
+- **H-091** (Property-based invariants): CONFIRMED — 19 properties × 1000 cases each = 19,000+ test executions
+- **H-092** (Φ at edge of chaos): PARTIALLY VERIFIED — W118 confirms regime classification empirically
+- **H-094** (Memristor phase transitions): PARTIALLY VERIFIED — W121 5/5 pass, STDP works correctly
+
+## W127+ — New Hypotheses
+
+- **H-097**: Sub-agent research findings will surface concrete next-wave directions
+  *Status*: RUNNING — 3 deep-research agents in flight
+- **H-098**: Hardware-accelerated Φ reduces per-cycle latency below 1ms for N=1024
+  *Status*: PROPOSED — depends on hardware-Φ research findings
+- **H-099**: Real-world EEG input can drive MATRIX cognitive state without retraining
+  *Status*: PROPOSED — depends on EEG integration research findings
