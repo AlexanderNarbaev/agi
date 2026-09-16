@@ -197,3 +197,24 @@ W128 — Neuron Visualization HTML: sandbox/explain/neurons.html
 - Cross-disciplinary integration tests in W113, W118, W121, W122, W124
 - 8 cross-disciplinary schools integrated: R-A ML/DL, R-B Cybernetic,
   R-C Soviet/Asian, R-D Early Learning Neurosci., R-E Physical, R-F Math
+
+### Section 19: LLM-Inspired Cognitive Subsystems (W203-W220)
+
+After studying "За пределами GPT: Архитектурный анализ LLM 2026",
+extracted 10 high-value ideas and translated them into 7 MATRIX
+cognitive subsystems + 1 unified processor:
+
+| LLM concept | MATRIX subsystem | Wave | Status |
+|---|---|---|---|
+| Word2Vec distributed embeddings | CognitiveEmbedding | W203 | ✓ |
+| Transformer Q/K/V attention | CognitiveAttention | W205 | ✓ |
+| PagedAttention (vLLM) | ProfileKVCache | W207 | ✓ |
+| StreamingLLM attention sinks | CognitiveSlidingWindow | W209 | ✓ |
+| Speculative Decoding (EAGLE) | ProfileSpeculativePredictor | W211 | ✓ |
+| RAG retrieval augmentation | CognitiveRAG | W213 | ✓ |
+| UMAP/t-SNE 2D projection | ProfileEmbedding2D | W215 | ✓ |
+| Unified pipeline | CognitiveProcessor | W220 | ✓ |
+
+All CONSTITUTION I v3 + VI compliant. 39 @Property tests across
+6 PropertyTest classes (W204, W206, W208, W210, W212, W214, W216).
+W219 end-to-end integration test: 2/2 PASS via Quarkus XML.
