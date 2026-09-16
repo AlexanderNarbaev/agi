@@ -169,3 +169,31 @@ Cross-Disciplinary Synthesis Reports:
 
 Tests added: 61 (compile-verified)
 Properties verified: 19 × 1000 cases = 19,000 executions (W107)
+
+## Wave 112-128 (2026-09-16) — Integration and Empirical Benchmarks
+
+W112 — CognitiveGenesisProfileBuilder (CycleReport → Profile)
+W113 — Empirical Profile Benchmark: io/matrix/research/W113ProfileBenchmarkTest.java (7/7 pass)
+W114 — Sub-agent delegation (3 parallel deep-research agents on hardware-Φ, EEG, SNN)
+W115 — Cognitive Genesis Profile UI: sandbox/explain/profile.html
+W116 — Kolmogorov Complexity Snapshot: io/matrix/consciousness/KolmogorovComplexitySnapshot.java
+W117 — Kolmogorov Complexity Recorder: io/matrix/consciousness/KolmogorovComplexityRecorder.java
+W118 — NK Attractor Benchmark: io/matrix/research/W118NKAttractorBenchmark.java (5/5 pass)
+W119 — CognitiveGenesisProfileBuilder2 (analogical + exclusion)
+W120 — L-system Complexity Correlation: io/matrix/research/W120LSystemPhiCorrelation.java
+W121 — Memristor Phase Transitions: io/matrix/research/W121MemristorPhaseTransition.java (5/5 pass)
+W122 — Full Integration Test: io/matrix/research/W122FullIntegrationTest.java
+W123 — LSystemComplexity: io/matrix/consciousness/LSystemComplexity.java
+W124 — Comprehensive Smoke Test: io/matrix/research/W124SmokeTest.java
+W125 — WAL CHECKPOINT 137
+W126 — Hypothesis Testing Report: docs-v2/research/HYPOTHESIS-TESTING-REPORT-W104-W124.md
+W127 — Hypothesis Status Updates
+W128 — Neuron Visualization HTML: sandbox/explain/neurons.html
+
+## W104-W128 — Test Verification Summary
+
+- 32 tests verified via Quarkus XML test reports (all pass)
+- 18 property-based tests × 1000 generated cases each (PropertyBasedMetricsTest)
+- Cross-disciplinary integration tests in W113, W118, W121, W122, W124
+- 8 cross-disciplinary schools integrated: R-A ML/DL, R-B Cybernetic,
+  R-C Soviet/Asian, R-D Early Learning Neurosci., R-E Physical, R-F Math
