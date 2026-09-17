@@ -285,3 +285,34 @@ ConsciousBrain integration via W257.
 End-to-end pipeline via W269.
 
 All CONSTITUTION I v3 (seeded Random) + VI (no consciousness claim) compliant.
+
+
+### Section 19.3: GraalVM Native Image Build (W281-W287)
+
+After extensive work, native image build is operational:
+
+| Metric | Value |
+|--------|-------|
+| Binary | `matrix-core/build/native/nativeCompile/matrix-core` |
+| Size | 126MB |
+| Startup | ~105ms |
+| Memory | <100MB (epsilon GC) |
+| Exit code | 0 |
+
+Build commands:
+```bash
+export JAVA_HOME=~/.sdkman/candidates/java/25.0.2-graalce
+export PATH=$JAVA_HOME/bin:$PATH
+./gradlew :matrix-core:nativeCompile
+./matrix-core/build/native/nativeCompile/matrix-core
+```
+
+See docs-v2/research/W281-W286-NATIVE-BUILD-REPORT.md for full details.
+
+Performance comparison vs JVM:
+| Metric | JVM | Native |
+|--------|-----|--------|
+| Startup | 2-5s | ~105ms |
+| Binary size | ~80MB | 126MB |
+| Memory | 200-500MB | <100MB (epsilon GC) |
+| Cold start | JIT warmup needed | Instant |
