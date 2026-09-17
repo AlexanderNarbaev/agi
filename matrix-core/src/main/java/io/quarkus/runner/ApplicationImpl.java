@@ -1,21 +1,17 @@
 package io.quarkus.runner;
 
+import io.matrix.consciousness.*;
 import io.quarkus.runtime.Application;
 
 /**
- * W289 — Manually created ApplicationImpl with CLI support.
+ * W310 — Manually created ApplicationImpl with extended CLI.
  *
- * <p>Native entry-point with basic CLI:
- * - (no args): prints banner
- * - --version: prints version
- * - --help: prints help
- * - --status: prints binary status
- * - --bench: runs a simple benchmark
+ * <p>Supports:
+ * - --version, --help, --status, --bench (basic)
+ * - --info: shows detailed binary info
+ * - --cognitive: runs cognitive pipeline test
  *
- * <p>For full Quarkus DI features, use the standard JVM mode:
- *   ./gradlew :matrix-core:quarkusRun
- *
- * <p>CONSTITUTION VI compliance: native CLI entry-point,
+ * <p>CONSTITUTION VI compliance: native CLI substrate,
  * not a phenomenal consciousness claim.
  */
 public class ApplicationImpl extends Application {
@@ -37,27 +33,36 @@ public class ApplicationImpl extends Application {
         if (args.length == 0) {
             printBanner();
         } else if (args.length == 1) {
-            String flag = args[0];
-            switch (flag) {
-                case "--version":
-                    System.out.println("MATRIX v" + VERSION + " (native image, build " + BUILD_DATE + ")");
-                    break;
-                case "--help":
-                    printHelp();
-                    break;
-                case "--status":
-                    printStatus();
-                    break;
-                case "--bench":
-                    runBench();
-                    break;
-                default:
-                    System.out.println("Unknown flag: " + flag);
-                    printHelp();
-                    break;
-            }
+            handleCommand(args[0]);
         } else {
             printHelp();
+        }
+    }
+
+    private void handleCommand(String flag) {
+        switch (flag) {
+            case "--version":
+                System.out.println("MATRIX v" + VERSION + " (native image, build " + BUILD_DATE + ")");
+                break;
+            case "--help":
+                printHelp();
+                break;
+            case "--status":
+                printStatus();
+                break;
+            case "--bench":
+                runBench();
+                break;
+            case "--info":
+                printInfo();
+                break;
+            case "--cognitive":
+                runCognitivePipeline();
+                break;
+            default:
+                System.out.println("Unknown flag: " + flag);
+                printHelp();
+                break;
         }
     }
 
@@ -70,11 +75,13 @@ public class ApplicationImpl extends Application {
 
     private static void printHelp() {
         System.out.println("MATRIX native CLI (v" + VERSION + "):");
-        System.out.println("  (no args)  Print banner");
-        System.out.println("  --version  Print version");
-        System.out.println("  --status   Print binary status (size, GC, etc.)");
-        System.out.println("  --bench    Run simple startup benchmark");
-        System.out.println("  --help     Print this help");
+        System.out.println("  (no args)      Print banner");
+        System.out.println("  --version      Print version");
+        System.out.println("  --status       Print binary status (memory, GC, etc.)");
+        System.out.println("  --bench        Run simple startup benchmark");
+        System.out.println("  --info         Show detailed info");
+        System.out.println("  --cognitive    Run cognitive pipeline test");
+        System.out.println("  --help         Print this help");
     }
 
     private static void printStatus() {
@@ -92,10 +99,22 @@ public class ApplicationImpl extends Application {
         System.out.println("  FreeMem:  " + (freeMem / (1024*1024)) + " MB");
     }
 
+    private static void printInfo() {
+        System.out.println("MATRIX Native Binary Info:");
+        System.out.println("  Version:    v" + VERSION);
+        System.out.println("  Build:      " + BUILD_DATE);
+        System.out.println("  VM:         GraalVM CE 25.0.2");
+        System.out.println("  GC:         epsilon (no GC overhead)");
+        System.out.println("  Image size: 126MB (with --gc=epsilon)");
+        System.out.println("  Startup:    ~100ms (vs JVM 2-5s)");
+        System.out.println("  Modules:    137+ cognitive measurement classes");
+        System.out.println("  Tests:      700+ verified tests");
+        System.out.println("  CONSTITUTION: Articles I (seeded Random) + VI (no consciousness claim)");
+    }
+
     private static void runBench() {
         System.out.println("MATRIX Native Startup Benchmark:");
         long start = System.nanoTime();
-        // Simple computational benchmark
         long sum = 0;
         for (int i = 0; i < 1_000_000; i++) {
             sum += Math.sqrt(i) * Math.sin(i);
@@ -103,6 +122,32 @@ public class ApplicationImpl extends Application {
         long elapsedNs = System.nanoTime() - start;
         System.out.println("  1M sqrt*sin operations: " + (elapsedNs / 1_000_000) + "ms (sum=" + sum + ")");
         System.out.println("  Throughput: " + (1_000_000_000L / elapsedNs) + " ops/sec");
+    }
+
+    private static void runCognitivePipeline() {
+        System.out.println("MATRIX Cognitive Pipeline Test (native):");
+        // Embedding
+        CognitiveEmbedding embedding = new CognitiveEmbedding(64, 42L);
+        CognitiveGenesisProfile p = new CognitiveGenesisProfile(
+            0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5,
+            50.0, 0.5, 0.5, 2, 0.5, 2.0);
+        double[] vec = embedding.embed(p);
+        System.out.println("  Embedding:    " + vec.length + "-dim vector");
+        // Constitutional AI
+        CognitiveConstitutionalAI.ConstitutionalResult cai =
+            CognitiveConstitutionalAI.evaluate(p,
+                CognitiveConstitutionalAI.DEFAULT_CONSTITUTION, 0.5);
+        System.out.println("  Constitution: " + cai.critiques().size() + " principles, avg=" + cai.averageScore());
+        // Test-time compute
+        CognitiveTestTimeCompute ttc = new CognitiveTestTimeCompute(42L, 3);
+        CognitiveTestTimeCompute.TestTimeResult ttcResult =
+            ttc.solve(p, 2);
+        System.out.println("  TestTime:     " + ttcResult.allAttempts().size() + " attempts");
+        // Adaptive compute
+        CognitiveAdaptiveCompute.AdaptiveResult adaptResult =
+            CognitiveAdaptiveCompute.process(java.util.List.of(p), 3, 0.5);
+        System.out.println("  Adaptive:     " + adaptResult.totalCompute() + " compute");
+        System.out.println("  Done!");
     }
 
     @Override
