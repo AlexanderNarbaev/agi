@@ -262,5 +262,11 @@
     "name": "com.fasterxml.jackson.databind.SerializationFeature",
     "allDeclaredConstructors": true,
     "allDeclaredMethods": true
+  },
+  {
+    "name": "io.quarkus.runner.ApplicationImpl",
+    "allDeclaredConstructors": true,
+    "allDeclaredMethods": true,
+    "allDeclaredFields": true
   }
 ]
