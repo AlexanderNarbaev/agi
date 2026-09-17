@@ -34,6 +34,7 @@ dependencies {
     implementation 'io.quarkus:quarkus-rest'
     implementation 'io.quarkus:quarkus-rest-jackson'
     implementation 'io.quarkus:quarkus-hibernate-validator'
+    implementation 'joda-time:joda-time:2.12.7'
     implementation 'io.quarkus:quarkus-websockets'
     implementation 'io.quarkus:quarkus-reactive-pg-client'
     implementation 'io.quarkus:quarkus-jdbc-postgresql'
@@ -234,8 +235,73 @@ graalvmNative {
                 '--no-fallback',
                 '-H:+RemoveSaturatedTypeFlows',
                 '--initialize-at-build-time=org.jboss.logmanager',
+                '--initialize-at-build-time=org.jboss.logging.JDKLevel',
+                '--initialize-at-build-time=org.jboss.logging',
                 '--initialize-at-build-time=org.slf4j',
                 '--initialize-at-build-time=org.apache.avro',
+                '--initialize-at-build-time=org.sqlite.util.ProcessRunner',
+
+                '--initialize-at-build-time=scala.math.Ordering$Short$',
+
+                '--initialize-at-build-time=scala.math.Ordering$DeprecatedFloatOrdering$',
+
+                '--initialize-at-build-time=scala.math.Ordering$Reverse',
+
+                '--initialize-at-build-time=scala.math.Ordering$Boolean$',
+
+                '--initialize-at-build-time=scala.math.Ordering$Unit$',
+
+                '--initialize-at-build-time=scala.math.Ordering$Int$',
+
+                '--initialize-at-build-time=scala.math.Ordering$String$',
+
+                '--initialize-at-build-time=scala.math.Ordering$Char$',
+
+                '--initialize-at-build-time=scala.math.Ordering$Long$',
+
+                '--initialize-at-build-time=scala.math.Ordering$DeprecatedDoubleOrdering$',
+
+                '--initialize-at-build-time=scala.math.Ordering$Byte$',
+
+                '--initialize-at-build-time=scala.math.Ordering$BigDecimal$',
+
+                '--initialize-at-build-time=scala.math.Ordering$BigInt$',
+
+                '--initialize-at-build-time=scala.collection.immutable.BitmapIndexedMapNode',
+
+                '--initialize-at-build-time=com.thoughtworks.paranamer.BytecodeReadingParanamer$1',
+
+                '--initialize-at-build-time=scala.collection.immutable.HashMap',
+
+                '--initialize-at-build-time=com.thoughtworks.paranamer.BytecodeReadingParanamer',
+
+                '--initialize-at-build-time=scala.collection.mutable.HashMap',
+
+                '--initialize-at-build-time=scala.math.BigDecimal',
+
+                '--initialize-at-build-time=scala.collection.immutable.Nil$',
+
+                '--initialize-at-build-time=scala.collection.immutable.$colon$colon',
+
+                '--initialize-at-build-time=scala.math.BigInt',
+
+                '--initialize-at-build-time=scala.collection.mutable.ListBuffer',
+
+                '--initialize-at-build-time=com.thoughtworks.paranamer.CachingParanamer',
+
+                '--initialize-at-build-time=scala.None$',
+
+                '--initialize-at-build-time=com.fasterxml.jackson.module.scala.deser.EitherDeserializer$ElementDeserializerConfig',
+
+                '--initialize-at-build-time=io.quarkus.bootstrap.logging.InitialConfigurator',
+                '--initialize-at-build-time=io.quarkus.bootstrap.logging.QuarkusDelayedHandler',
+                '--initialize-at-build-time=io.quarkus.bootstrap.logging',
+                '--initialize-at-build-time=io.quarkus.vertx.mdc.provider.LateBoundMDCProvider',
+                '--initialize-at-build-time=io.quarkus.vertx.mdc.provider',
+                '--initialize-at-build-time=io.quarkus.vertx',
+                '--initialize-at-build-time=io.quarkus.bootstrap',
+                '--initialize-at-build-time=io.quarkus.runtime',
+                '--initialize-at-build-time=io.quarkus.arc',
                 '--initialize-at-run-time=io.netty',
                 '--initialize-at-run-time=io.netty.handler.codec.compression.Brotli',
                 '--initialize-at-build-time=com.fasterxml',
