@@ -13,10 +13,12 @@ class CognitiveNewArchitecturesPropertyTest {
     @Property(tries = 20)
     void propertyMLACompressionRatio(@ForAll("anyDim") int dim,
                                        @ForAll("anyLatentDim") int latentDim) {
-        if (dim < 8 || latentDim < 1 || latentDim > dim) return;
-        CognitiveLatentAttention mla = new CognitiveLatentAttention(dim, 8, latentDim, 42L);
+        // MLA requires dim divisible by numHeads (8)
+        int validDim = (dim < 8) ? 8 : ((dim + 7) / 8) * 8;
+        if (latentDim < 1 || latentDim > validDim) return;
+        CognitiveLatentAttention mla = new CognitiveLatentAttention(validDim, 8, latentDim, 42L);
         double ratio = mla.compressionRatio();
-        // Ratio = 2 × numHeads × headDim / latentDim = 2 × 8 × (dim/8) / latentDim = 2*dim/latentDim
+        // Ratio = 2 × numHeads × headDim / latentDim
         assertThat(ratio).isGreaterThan(0.0);
     }
 
