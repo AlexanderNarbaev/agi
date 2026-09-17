@@ -234,6 +234,8 @@ graalvmNative {
                 '-J-Xmx8g',
                 '--no-fallback',
                 '-H:+RemoveSaturatedTypeFlows',
+                // W284: image size optimization
+                '--gc=epsilon',  // epsilon GC: no GC overhead, smallest size
                 '--initialize-at-build-time=org.jboss.logmanager',
                 '--initialize-at-build-time=org.jboss.logging.JDKLevel',
                 '--initialize-at-build-time=org.jboss.logging',
