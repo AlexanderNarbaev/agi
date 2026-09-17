@@ -147,6 +147,10 @@ public class ApplicationImpl extends Application {
         CognitiveAdaptiveCompute.AdaptiveResult adaptResult =
             CognitiveAdaptiveCompute.process(java.util.List.of(p), 3, 0.5);
         System.out.println("  Adaptive:     " + adaptResult.totalCompute() + " compute");
+        // MLA (latent attention)
+        CognitiveLatentAttention mla = new CognitiveLatentAttention(64, 8, 16, 42L);
+        double[] latent = mla.compress(vec, true);
+        System.out.println("  MLA:          " + latent.length + "-dim latent (" + mla.compressionRatio() + "x compression)");
         System.out.println("  Done!");
     }
 
