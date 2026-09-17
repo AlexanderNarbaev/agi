@@ -72,4 +72,22 @@ class NativeBinaryCLITest {
         assertThat(out).contains("Unknown flag");
         assertThat(out).contains("--help");
     }
+
+    @Test
+    void infoFlagWorks() throws Exception {
+        String out = run("--info");
+        assertThat(out).contains("GraalVM");
+        assertThat(out).contains("epsilon");
+        assertThat(out).contains("CONSTITUTION");
+    }
+
+    @Test
+    void cognitiveFlagWorks() throws Exception {
+        String out = run("--cognitive");
+        assertThat(out).contains("Embedding");
+        assertThat(out).contains("Constitution");
+        assertThat(out).contains("TestTime");
+        assertThat(out).contains("Adaptive");
+        assertThat(out).contains("Done!");
+    }
 }
