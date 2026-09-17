@@ -23,22 +23,12 @@ public final class CognitiveMultiResolutionAttention {
 
     private int numResolutions;
     private long seed;
-    private double[][] projections; // [resolutions × dim]
-
     public CognitiveMultiResolutionAttention(int dim, int numResolutions, long seed) {
         if (dim < 1 || numResolutions < 1) {
             throw new IllegalArgumentException("dims must be >= 1");
         }
         this.numResolutions = numResolutions;
         this.seed = seed;
-        Random rng = new Random(seed);
-        double std = 1.0 / Math.sqrt((double) dim);
-        this.projections = new double[numResolutions][dim];
-        for (int r = 0; r < numResolutions; r++) {
-            for (int d = 0; d < dim; d++) {
-                projections[r][d] = rng.nextGaussian() * std;
-            }
-        }
     }
 
     /**
