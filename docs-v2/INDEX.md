@@ -361,4 +361,4 @@ docker run --rm matrix-core-native:v1 --version
 - Build: `matrix-core/build/native/nativeCompile/matrix-core` (126MB)
 - Startup: ~100ms (vs JVM 2-5s)
 - Memory: <100MB (epsilon GC)
-- All 137+ cognitive classes accessible via CLI
+- All 171+ cognitive classes accessible via CLI
