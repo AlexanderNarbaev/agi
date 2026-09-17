@@ -17,7 +17,6 @@ public final class CognitiveYaRN {
     private CognitiveYaRN() {}
 
     private static final double DEFAULT_BASE = 10000.0;
-    private static final double SCALE_FACTOR = 16.0; // 16x context extension
 
     /**
      * Apply YaRN frequency scaling.
