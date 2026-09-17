@@ -151,6 +151,22 @@ public class ApplicationImpl extends Application {
         CognitiveLatentAttention mla = new CognitiveLatentAttention(64, 8, 16, 42L);
         double[] latent = mla.compress(vec, true);
         System.out.println("  MLA:          " + latent.length + "-dim latent (" + mla.compressionRatio() + "x compression)");
+        // YaRN (extended RoPE)
+        double[] extended = CognitiveYaRN.apply(vec, 100, 16.0);
+        System.out.println("  YaRN:         " + extended.length + "-dim extended (16x scale)");
+        // MRA (multi-resolution)
+        CognitiveMultiResolutionAttention mra = new CognitiveMultiResolutionAttention(64, 4, 42L);
+        double[] result = mra.attendMultiResolution(vec, java.util.List.of(vec), java.util.List.of(vec));
+        System.out.println("  MRA:          " + result.length + "-dim multi-res output");
+        // QLoRA
+        CognitiveQLoRA qlora = new CognitiveQLoRA(64, 16, 42L);
+        CognitiveQLoRA.QuantizedWeights qw = qlora.quantize(vec);
+        double[] adapted = qlora.apply(vec, qw);
+        System.out.println("  QLoRA:        " + adapted.length + "-dim adapted");
+        // HyperNetwork
+        CognitiveHyperNetwork hn = new CognitiveHyperNetwork(64, 32, 16, 42L);
+        CognitiveHyperNetwork.GeneratedWeights gw = hn.generate(vec);
+        System.out.println("  HyperNet:     " + gw.weights().length + "x" + gw.weights()[0].length + " generated weights");
         System.out.println("  Done!");
     }
 
