@@ -1,0 +1,35 @@
+# MATRIX Native Image Dockerfile
+# Built from the GraalVM native binary at build/native/nativeCompile/matrix-core
+
+# Stage 1: Build native image (requires GraalVM 25+)
+FROM container-registry.oracle.com/graalvm/graalvm-ce:25.0.2 AS builder
+
+WORKDIR /build
+
+# Copy the native binary (already built)
+COPY build/native/nativeCompile/matrix-core /build/matrix-core
+
+# Make executable
+RUN chmod +x /build/matrix-core
+
+# Stage 2: Minimal runtime (just enough to run native binary)
+FROM gcr.io/distroless/base-debian12:nonroot
+
+LABEL org.opencontainers.image.title="matrix-core-native"
+LABEL org.opencontainers.image.description="MATRIX Cognitive Architecture - GraalVM Native Image"
+LABEL org.opencontainers.image.licenses="Apache-2.0"
+LABEL org.opencontainers.image.source="https://github.com/AlexanderNarbaev/agi"
+LABEL org.opencontainers.image.version="2.0.0"
+
+# Copy native binary from builder
+COPY --from=builder /build/matrix-core /usr/local/bin/matrix-core
+
+# Native binary runs as non-root
+USER nonroot:nonroot
+
+# Default to showing version
+ENTRYPOINT ["/usr/local/bin/matrix-core"]
+CMD ["--version"]
+
+# Expose ports for Quarkus HTTP mode
+EXPOSE 9091

@@ -1,0 +1,14 @@
+# MATRIX Native Image - Slim Dockerfile
+# Single stage: assumes native binary already built
+
+FROM debian:bookworm-slim
+
+LABEL org.opencontainers.image.title="matrix-core-native-slim"
+LABEL org.opencontainers.image.description="MATRIX Native - slim"
+LABEL org.opencontainers.image.version="2.0.0"
+
+COPY build/native/nativeCompile/matrix-core /usr/local/bin/matrix-core
+RUN chmod +x /usr/local/bin/matrix-core
+
+ENTRYPOINT ["/usr/local/bin/matrix-core"]
+CMD ["--version"]
