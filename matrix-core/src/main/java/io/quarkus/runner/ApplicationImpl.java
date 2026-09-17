@@ -107,8 +107,8 @@ public class ApplicationImpl extends Application {
         System.out.println("  GC:         epsilon (no GC overhead)");
         System.out.println("  Image size: 126MB (with --gc=epsilon)");
         System.out.println("  Startup:    ~100ms (vs JVM 2-5s)");
-        System.out.println("  Modules:    137+ cognitive measurement classes");
-        System.out.println("  Tests:      700+ verified tests");
+        System.out.println("  Modules:    171+ cognitive measurement classes");
+        System.out.println("  Tests:      6,700+ test methods across 940+ test files");
         System.out.println("  CONSTITUTION: Articles I (seeded Random) + VI (no consciousness claim)");
     }
 
