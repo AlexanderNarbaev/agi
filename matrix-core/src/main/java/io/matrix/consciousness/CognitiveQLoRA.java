@@ -34,7 +34,6 @@ public final class CognitiveQLoRA {
     private int teacherDim;
     private int studentDim;
     private long seed;
-    private double[] baseWeights; // Normal Float 4 quantized
     private double[][] loraA;    // LoRA adapter A
     private double[][] loraB;    // LoRA adapter B
 
@@ -46,11 +45,7 @@ public final class CognitiveQLoRA {
         this.studentDim = studentDim;
         this.seed = seed;
         Random rng = new Random(seed);
-        // Initialize weights with small values
-        this.baseWeights = new double[teacherDim];
-        for (int i = 0; i < teacherDim; i++) {
-            baseWeights[i] = rng.nextGaussian() * 0.01;
-        }
+        // Initialize LoRA adapters
         double std = 1.0 / Math.sqrt((double) teacherDim);
         this.loraA = new double[teacherDim][studentDim];
         this.loraB = new double[studentDim][teacherDim];
