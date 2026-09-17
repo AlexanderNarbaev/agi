@@ -316,3 +316,29 @@ Performance comparison vs JVM:
 | Binary size | ~80MB | 126MB |
 | Memory | 200-500MB | <100MB (epsilon GC) |
 | Cold start | JIT warmup needed | Instant |
+
+### Section 19.4: Native Build Scripts (W297-W298)
+
+Build and launch scripts for the native binary:
+
+| Script | Purpose |
+|--------|---------|
+| `scripts/build-native.sh` | Auto-set GraalVM JAVA_HOME, build native image |
+| `scripts/native-launch.sh` | Wrapper around binary CLI commands |
+
+Usage:
+```bash
+# Build (requires GraalVM 25.0.2 CE)
+./matrix-core/scripts/build-native.sh
+
+# Launch
+./matrix-core/scripts/native-launch.sh version
+./matrix-core/scripts/native-launch.sh status
+./matrix-core/scripts/native-launch.sh bench
+```
+
+Docker:
+```bash
+docker build -f matrix-core/Dockerfile.native-slim -t matrix-core-native:v1 matrix-core
+docker run --rm matrix-core-native:v1 --version
+```
