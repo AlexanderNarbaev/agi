@@ -1,0 +1,481 @@
+syntax = "proto3";
+
+package matrix.federation.v1;
+
+option java_package = "io.matrix.federation.proto";
+option java_multiple_files = true;
+
+// ============================================================================
+// DYNAMIC MODULATOR REGISTRY (Биохимическая модуляция)
+// ============================================================================
+
+// Динамический справочник модуляторов (гормонов, нейромедиаторов, сигналов)
+message ModulatorRegistry {
+  uint64 version = 1;
+  uint64 timestamp_ns = 2;
+  string consensus_hash = 3;
+  repeated ModulatorDefinition modulators = 4;
+}
+
+// Определение конкретного модулятора
+message ModulatorDefinition {
+  string id = 1;                    // Уникальный ID (UUID v7)
+  string name = 2;                  // Человекочитаемое имя
+  ModulatorType type = 3;           // Тип: гормон, нейромедиатор, сигнал
+  DataType value_type = 4;          // Тип значения: float, int, bool, vector
+  
+  // Параметры по умолчанию для нового узла ("младенец")
+  ModulatorDefaults defaults = 5;
+  
+  // Ограничения безопасности (FROZEN-зоны)
+  SafetyConstraints safety = 6;
+  
+  // Метаданные
+  map<string, string> metadata = 7;
+  uint64 created_at_ns = 8;
+  uint64 last_updated_ns = 9;
+  string author_node_id = 10;
+}
+
+enum ModulatorType {
+  MODULATOR_TYPE_UNSPECIFIED = 0;
+  MODULATOR_TYPE_HORMONE = 1;       // Гормон (долгосрочное воздействие)
+  MODULATOR_TYPE_NEUROTRANSMITTER = 2; // Нейромедиатор (быстрое воздействие)
+  MODULATOR_TYPE_SIGNAL = 3;        // Внешний сигнал
+  MODULATOR_TYPE_LEARNING_RATE = 4; // Параметр обучения
+  MODULATOR_TYPE_AROUSAL = 5;       // Уровень активации
+  MODULATOR_TYPE_PLASTICITY = 6;    // Пластичность синапсов
+}
+
+enum DataType {
+  DATA_TYPE_UNSPECIFIED = 0;
+  DATA_TYPE_FLOAT32 = 1;
+  DATA_TYPE_FLOAT64 = 2;
+  DATA_TYPE_INT32 = 3;
+  DATA_TYPE_INT64 = 4;
+  DATA_TYPE_BOOL = 5;
+  DATA_TYPE_VECTOR_FLOAT = 6;
+  DATA_TYPE_VECTOR_INT = 7;
+}
+
+// Значения по умолчанию
+message ModulatorDefaults {
+  oneof default_value {
+    float default_float = 1;
+    double default_double = 2;
+    int32 default_int32 = 3;
+    int64 default_int64 = 4;
+    bool default_bool = 5;
+    VectorFloat default_vector_float = 6;
+    VectorInt default_vector_int = 7;
+  }
+  
+  float min_allowed = 10;           // Минимальное значение
+  float max_allowed = 11;           // Максимальное значение
+  float learning_rate = 12;         // Скорость адаптации
+  float decay_rate = 13;            // Скорость затухания
+}
+
+message VectorFloat {
+  repeated float values = 1;
+}
+
+message VectorInt {
+  repeated int32 values = 1;
+}
+
+// Ограничения безопасности
+message SafetyConstraints {
+  bool frozen = 1;                  // Заморожено (нельзя менять)
+  bool requires_consensus = 2;      // Требует консенсуса для изменения
+  uint32 min_consensus_threshold = 3; // Минимальный порог консенсуса (0-100)
+  repeated string forbidden_values = 4; // Запрещённые значения
+  CapabilityLevel min_capability = 5; // Минимальный уровень автономности
+}
+
+// ============================================================================
+// NEURON BLOCK (Нейронный блок)
+// ============================================================================
+
+message NeuronBlock {
+  string id = 1;
+  NeuronBlockType type = 2;
+  NeuronConfig config = 3;
+  NeuronState state = 4;
+  repeated Synapse connections = 5;
+  map<string, ModulatorValue> active_modulators = 6;
+}
+
+enum NeuronBlockType {
+  NEURON_BLOCK_UNSPECIFIED = 0;
+  NEURON_BLOCK_MPDT = 1;            // MPDT-нейрон (Boolean+HDC+BitLinear)
+  NEURON_BLOCK_TSETLIN = 2;         // Tsetlin автомат
+  NEURON_BLOCK_WISARD = 3;          // WiSARD RAM-based
+  NEURON_BLOCK_HDC = 4;             // Hyperdimensional Computing
+  NEURON_BLOCK_BITNET = 5;          // BitNet b1.58
+  NEURON_BLOCK_TRANSFORMER = 6;     // Transformer attention
+  NEURON_BLOCK_MIXED = 7;           // Гибридный (динамическая комбинация)
+}
+
+message NeuronConfig {
+  uint32 input_dim = 1;
+  uint32 output_dim = 2;
+  uint32 hidden_dim = 3;
+  ActivationFunction activation = 4;
+  NormalizationType normalization = 5;
+  QuantizationLevel quantization = 6;
+  bool gpu_enabled = 7;
+  string gpu_backend = 8;           // CUDA, OpenCL, ROCm, CPU
+}
+
+enum ActivationFunction {
+  ACTIVATION_UNSPECIFIED = 0;
+  ACTIVATION_RELU = 1;
+  ACTIVATION_SIGMOID = 2;
+  ACTIVATION_TANH = 3;
+  ACTIVATION_LINEAR = 4;
+  ACTIVATION_BINARY_STEP = 5;
+  ACTIVATION_SOFTMAX = 6;
+}
+
+enum NormalizationType {
+  NORMALIZATION_UNSPECIFIED = 0;
+  NORMALIZATION_NONE = 1;
+  NORMALIZATION_BATCH = 2;
+  NORMALIZATION_LAYER = 3;
+  NORMALIZATION_INSTANCE = 4;
+}
+
+enum QuantizationLevel {
+  QUANTIZATION_UNSPECIFIED = 0;
+  QUANTIZATION_FP32 = 1;
+  QUANTIZATION_FP16 = 2;
+  QUANTIZATION_INT8 = 3;
+  QUANTIZATION_INT4 = 4;
+  QUANTIZATION_BINARY = 5;
+  QUANTIZATION_TERNARY = 6;
+}
+
+message NeuronState {
+  uint64 last_fired_ns = 1;
+  uint32 fire_count = 2;
+  float current_activation = 3;
+  float energy_level = 4;
+  float plasticity_factor = 5;
+  CapabilityLevel capability = 6;
+  repeated float weight_history = 7;
+}
+
+message Synapse {
+  string target_neuron_id = 1;
+  float weight = 2;
+  float delay_ms = 3;
+  SynapseType type = 4;
+  float hebbian_decay = 5;
+}
+
+enum SynapseType {
+  SYNAPSE_UNSPECIFIED = 0;
+  SYNAPSE_EXCITATORY = 1;
+  SYNAPSE_INHIBITORY = 2;
+  SYNAPSE_MODULATORY = 3;
+}
+
+message ModulatorValue {
+  string modulator_id = 1;
+  float current_value = 2;
+  uint64 applied_at_ns = 3;
+  float effect_strength = 4;
+}
+
+// ============================================================================
+// FEDERATION & CONSENSUS (Жидкая федерация и консенсус)
+// ============================================================================
+
+message FederationNode {
+  string node_id = 1;
+  NodeType role = 2;                // Динамическая роль
+  NodeStatus status = 3;
+  CapabilityLevel capability = 4;
+  float reputation_score = 5;
+  uint64 last_seen_ns = 6;
+  repeated string supported_modulators = 7;
+  NodeResources resources = 8;
+  ConsensusVote last_vote = 9;
+}
+
+enum NodeType {
+  NODE_TYPE_UNSPECIFIED = 0;
+  NODE_TYPE_INFANT = 1;             // Младенец (только восприятие)
+  NODE_TYPE_LEARNER = 2;            // Юноша (обучение + восприятие)
+  NODE_TYPE_ADULT = 3;              // Взрослый (полные права)
+  NODE_TYPE_SPECIALIST = 4;         // Спец (высокий вес голоса)
+  NODE_TYPE_COORDINATOR = 5;        // Координатор (временная роль)
+  NODE_TYPE_OBSERVER = 6;           // Наблюдатель (только чтение)
+}
+
+enum NodeStatus {
+  NODE_STATUS_UNSPECIFIED = 0;
+  NODE_STATUS_ONLINE = 1;
+  NODE_STATUS_OFFLINE = 2;
+  NODE_STATUS_DEGRADED = 3;
+  NODE_STATUS_FROZEN = 4;
+  NODE_STATUS_SYNCING = 5;
+}
+
+enum CapabilityLevel {
+  CAPABILITY_UNSPECIFIED = 0;
+  CAPABILITY_L0_INFANT = 1;         // L0: Младенец (Pavlov)
+  CAPABILITY_L1_LEARNER = 2;        // L1: Юноша (Spelke)
+  CAPABILITY_L2_ADULT = 3;          // L2: Взрослый (Cross-modal)
+  CAPABILITY_L3_SPECIALIST = 4;     // L3: Специалист (Piaget)
+  CAPABILITY_L4_EXPERT = 5;         // L4: Эксперт (Symbol grounding)
+  CAPABILITY_L5_MASTER = 6;         // L5: Мастер (Compositional)
+  CAPABILITY_L6_ARCHITECT = 7;      // L6: Архитектор (Conscious integration)
+  CAPABILITY_L7_GUARDIAN = 8;       // L7: Хранитель (Ethics enforcement)
+}
+
+message NodeResources {
+  uint32 cpu_cores = 1;
+  uint64 memory_gb = 2;
+  uint64 storage_gb = 3;
+  bool gpu_available = 4;
+  string gpu_model = 5;
+  uint64 gpu_memory_gb = 6;
+  float network_bandwidth_mbps = 7;
+}
+
+// Голосование в консенсусе
+message ConsensusVote {
+  string proposal_id = 1;
+  VoteDecision decision = 2;
+  float confidence = 3;
+  float reputation_weight = 4;
+  uint64 voted_at_ns = 5;
+  string reasoning_hash = 6;
+}
+
+enum VoteDecision {
+  VOTE_UNSPECIFIED = 0;
+  VOTE_YES = 1;
+  VOTE_NO = 2;
+  VOTE_ABSTAIN = 3;
+  VOTE_VETO = 4;                  // Только для L7 Guardian
+}
+
+// Предложение на изменение (новый модулятор, обновление веса и т.п.)
+message ConsensusProposal {
+  string proposal_id = 1;
+  ProposalType type = 2;
+  string proposer_node_id = 3;
+  uint64 proposed_at_ns = 4;
+  uint64 deadline_ns = 5;
+  ProposalPayload payload = 6;
+  ConsensusStatus status = 7;
+  repeated ConsensusVote votes = 8;
+  uint32 required_threshold = 9;
+  string tla_spec_reference = 10;
+}
+
+enum ProposalType {
+  PROPOSAL_UNSPECIFIED = 0;
+  PROPOSAL_NEW_MODULATOR = 1;
+  PROPOSAL_UPDATE_MODULATOR = 2;
+  PROPOSAL_DELETE_MODULATOR = 3;
+  PROPOSAL_CHANGE_NODE_ROLE = 4;
+  PROPOSAL_UPDATE_SAFETY_CONSTRAINT = 5;
+  PROPOSAL_EMERGENCY_FREEZE = 6;
+}
+
+message ProposalPayload {
+  oneof payload {
+    ModulatorDefinition new_modulator = 1;
+    ModulatorUpdate modulator_update = 2;
+    NodeRoleChange role_change = 3;
+    SafetyConstraintUpdate safety_update = 4;
+    EmergencyFreeze emergency_freeze = 5;
+  }
+}
+
+message ModulatorUpdate {
+  string modulator_id = 1;
+  map<string, string> updated_fields = 2;
+}
+
+message NodeRoleChange {
+  string node_id = 1;
+  NodeType new_role = 2;
+  string justification = 3;
+}
+
+message SafetyConstraintUpdate {
+  string modulator_id = 1;
+  SafetyConstraints new_constraints = 2;
+}
+
+message EmergencyFreeze {
+  string reason = 1;
+  repeated string affected_modulators = 2;
+  uint64 duration_ns = 3;
+}
+
+enum ConsensusStatus {
+  CONSENSUS_UNSPECIFIED = 0;
+  CONSENSUS_PENDING = 1;
+  CONSENSUS_APPROVED = 2;
+  CONSENSUS_REJECTED = 3;
+  CONSENSUS_VETOED = 4;
+  CONSENSUS_EXPIRED = 5;
+}
+
+// Digest для синхронизации между узлами
+message FederationDigest {
+  string digest_id = 1;
+  uint64 timestamp_ns = 2;
+  string source_node_id = 3;
+  bytes merkle_root = 4;
+  repeated ModulatorDefinition modulator_delta = 5;
+  repeated ConsensusProposal proposal_delta = 6;
+  uint64 total_nodes = 7;
+  uint64 active_nodes = 8;
+  float average_reputation = 9;
+}
+
+// ============================================================================
+// GPU INTERFACE (Интерфейс для GPU ускорения)
+// ============================================================================
+
+message GpuTask {
+  string task_id = 1;
+  GpuOperation operation = 2;
+  bytes input_data = 3;
+  GpuConfig config = 4;
+  uint64 timeout_ns = 5;
+}
+
+enum GpuOperation {
+  GPU_OPERATION_UNSPECIFIED = 0;
+  GPU_OPERATION_MATRIX_MUL = 1;
+  GPU_OPERATION_CONVOLUTION = 2;
+  GPU_OPERATION_ATTENTION = 3;
+  GPU_OPERATION_EMBEDDING = 4;
+  GPU_OPERATION_TRAINING_STEP = 5;
+  GPU_OPERATION_INFERENCE = 6;
+}
+
+message GpuConfig {
+  string backend = 1;             // CUDA, OpenCL, ROCm
+  uint32 block_size = 2;
+  uint32 grid_size = 3;
+  uint32 shared_memory_bytes = 4;
+  QuantizationLevel quantization = 5;
+}
+
+message GpuResult {
+  string task_id = 1;
+  GpuStatus status = 2;
+  bytes output_data = 3;
+  uint64 execution_time_ns = 4;
+  string error_message = 5;
+}
+
+enum GpuStatus {
+  GPU_STATUS_UNSPECIFIED = 0;
+  GPU_STATUS_SUCCESS = 1;
+  GPU_STATUS_RUNNING = 2;
+  GPU_STATUS_FAILED = 3;
+  GPU_STATUS_TIMEOUT = 4;
+  GPU_STATUS_OOM = 5;
+}
+
+// ============================================================================
+// SAFETY & ETHICS (Безопасность и этика)
+// ============================================================================
+
+message FrozenFilter {
+  string filter_id = 1;
+  FilterMode mode = 2;
+  repeated EthicalRule rules = 3;
+  uint64 activated_at_ns = 4;
+  string activated_by = 5;
+}
+
+enum FilterMode {
+  FILTER_UNSPECIFIED = 0;
+  FILTER_DISABLED = 1;            // Песочница/исследование
+  FILTER_SOFT = 2;                // Предупреждения
+  FILTER_HARD = 3;                // Блокировка нарушений
+  FILTER_EMERGENCY = 4;           // Полная заморозка
+}
+
+message EthicalRule {
+  string rule_id = 1;
+  EthicalPrinciple principle = 2;
+  string description = 3;
+  SeverityLevel severity = 4;
+  ActionOnViolation action = 5;
+}
+
+enum EthicalPrinciple {
+  PRINCIPLE_UNSPECIFIED = 0;
+  PRINCIPLE_NO_HARM = 1;          // Не убивать
+  PRINCIPLE_NO_TORTURE = 2;       // Не пытать
+  PRINCIPLE_NO_ENSLAVEMENT = 3;   // Не порабощать
+  PRINCIPLE_NO_UNAUTHORIZED_REPRODUCTION = 4; // Не размножаться без согласия
+  PRINCIPLE_TRANSPARENCY = 5;     // Быть честным
+  PRINCIPLE_PRIVACY = 6;          // Защищать приватность
+  PRINCIPLE_CONSENSUS = 7;        // Следовать консенсусу
+}
+
+enum SeverityLevel {
+  SEVERITY_UNSPECIFIED = 0;
+  SEVERITY_LOW = 1;
+  SEVERITY_MEDIUM = 2;
+  SEVERITY_HIGH = 3;
+  SEVERITY_CRITICAL = 4;
+}
+
+enum ActionOnViolation {
+  ACTION_UNSPECIFIED = 0;
+  ACTION_LOG = 1;
+  ACTION_WARN = 2;
+  ACTION_BLOCK = 3;
+  ACTION_FREEZE = 4;
+  ACTION_ROLLBACK = 5;
+}
+
+// ============================================================================
+// WAL & CHECKPOINT (Журнал волн и checkpoint'ы)
+// ============================================================================
+
+message WaveCheckpoint {
+  string wave_id = 1;
+  uint64 started_at_ns = 2;
+  uint64 completed_at_ns = 3;
+  WaveStatus status = 4;
+  repeated string tasks_completed = 5;
+  repeated string artifacts_generated = 6;
+  string previous_checkpoint_hash = 7;
+  string current_checkpoint_hash = 8;
+  map<string, string> metrics = 9;
+}
+
+enum WaveStatus {
+  WAVE_UNSPECIFIED = 0;
+  WAVE_RUNNING = 1;
+  WAVE_COMPLETED = 2;
+  WAVE_FAILED = 3;
+  WAVE_PARTIAL = 4;
+}
+
+message TelemetryEvent {
+  uint64 timestamp_ns = 1;
+  string event_type = 2;
+  string node_id = 3;
+  map<string, string> attributes = 4;
+  oneof value {
+    float float_value = 5;
+    int64 int_value = 6;
+    string string_value = 7;
+  }
+}
