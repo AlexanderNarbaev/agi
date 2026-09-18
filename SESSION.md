@@ -4,17 +4,20 @@
 
 ---
 
-## Latest Wave: W382
+## Latest Wave: W385
 
-- **File:** `docs-v2/waves/WAL-382.md`
-- **Checkpoint Hash:** `7335b7d3`
+- **File:** `docs-v2/waves/WAL-385.md`
+- **Checkpoint Hash:** `6f6fb98a`
 - **Date:** 2026-09-18
-- **Previous:** [W381](docs-v2/waves/WAL-381.md) (`7335b7d3`)
+- **Previous:** [W384](docs-v2/waves/WAL-384.md) (`796fb522`)
 
-### W382 Summary
-Final comprehensive verification: 186 tests pass, 0 failures across 27 waves.
-Native binary rebuilt with federation CLI commands. All CONSTITUTION articles
-verified. AGENTS.md compliance.
+### W385 Summary
+Deferred fixes from REVIEW-CYCLE-3 (goal-reviewer findings):
+- FAIL-8: BiochemicalMediator.snapshot.totalModulators fixed
+- FAIL-9: Random rng fields documented
+- Minor: FederationTelemetry typed overloads (ConsensusStatus, VoteDecision)
+
+194 tests pass, 0 failures.
 
 ---
 
@@ -34,17 +37,23 @@ verified. AGENTS.md compliance.
 
 ---
 
-## Cumulative Session Stats (W356-W382)
+## Cumulative Session Stats (W356-W385)
 
-- **Waves completed:** 27 (W356-W382)
-- **Tests added:** 186 explicit + 10K property cases
+- **Waves completed:** 30 (W356-W385)
+- **Tests added:** 194 explicit + 10K property cases
 - **Main classes:** 18 hand-written + 77 generated ProtoBuf
 - **Test classes:** 26
-- **JMH benchmarks:** 5
-- **TLA+ invariants:** 4 + Java model checker
-- **Concurrency:** 14M ops/sec telemetry throughput
-- **CLI commands added:** --federation, --federation-modulators, --federation-vote
+- **Native binary:** 126MB, verified working with all 9 CLI commands
+- **Goal-reviewer cycles:** REVIEW-CYCLE-3 (10 FAIL items + 5 minor issues, all addressed)
+
+### Review Cycles
+
+| Cycle | Date | Issues Found | Issues Fixed | Status |
+|-------|------|--------------|--------------|--------|
+| #1 | Sep 16 | scope creep, stale docs | 8 categories | PASS |
+| #2 | Sep 17 | stale info, unused code, CONSTITUTION I | 7 issues | PASS |
+| #3 | Sep 18 | TLA divergence, L7 spoofing, phantom votes | 10 FAIL + 5 minor | PASS |
 
 ---
 
-**Last updated:** 2026-09-18 (W382 complete)
+**Last updated:** 2026-09-18 (W385 complete)
