@@ -17,6 +17,11 @@ sourceSets {
             srcDir 'src/generated/java'
         }
     }
+    jmh {
+        java {
+            srcDir 'src/jmh/java'
+        }
+    }
 }
 
 
