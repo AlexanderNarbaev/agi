@@ -4,16 +4,17 @@
 
 ---
 
-## Latest Wave: W376
+## Latest Wave: W382
 
-- **File:** `docs-v2/waves/WAL-376.md`
-- **Checkpoint Hash:** `4baf6fa3`
+- **File:** `docs-v2/waves/WAL-382.md`
+- **Checkpoint Hash:** `7335b7d3`
 - **Date:** 2026-09-18
-- **Previous:** [W375](docs-v2/waves/WAL-375.md) (`4baf6fa3`)
+- **Previous:** [W381](docs-v2/waves/WAL-381.md) (`7335b7d3`)
 
-### W376 Summary
-Cumulative verification: 167 tests pass, 0 failures across 21 waves
-(W356-W375). All CONSTITUTION articles verified. AGENTS.md compliance.
+### W382 Summary
+Final comprehensive verification: 186 tests pass, 0 failures across 27 waves.
+Native binary rebuilt with federation CLI commands. All CONSTITUTION articles
+verified. AGENTS.md compliance.
 
 ---
 
@@ -33,15 +34,17 @@ Cumulative verification: 167 tests pass, 0 failures across 21 waves
 
 ---
 
-## Cumulative Session Stats (W356-W376)
+## Cumulative Session Stats (W356-W382)
 
-- **Waves completed:** 21 (W356-W376)
-- **Tests added:** 167 explicit + 10K property cases
-- **Main classes:** 16 hand-written + 77 generated ProtoBuf
+- **Waves completed:** 27 (W356-W382)
+- **Tests added:** 186 explicit + 10K property cases
+- **Main classes:** 18 hand-written + 77 generated ProtoBuf
+- **Test classes:** 26
 - **JMH benchmarks:** 5
-- **TLA+ invariants:** 4 + Java model checker (5 invariants)
+- **TLA+ invariants:** 4 + Java model checker
 - **Concurrency:** 14M ops/sec telemetry throughput
+- **CLI commands added:** --federation, --federation-modulators, --federation-vote
 
 ---
 
-**Last updated:** 2026-09-18 (W376 complete)
+**Last updated:** 2026-09-18 (W382 complete)
