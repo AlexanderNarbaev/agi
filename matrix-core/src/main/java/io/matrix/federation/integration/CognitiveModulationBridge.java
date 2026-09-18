@@ -18,7 +18,6 @@ public final class CognitiveModulationBridge {
     /** Modulator IDs that affect cognitive processing. */
     public static final String MOD_CORTISOL = "cortisol_like_stress";
     public static final String MOD_DOPAMINE = "dopamine_reward";
-    public static final String MOD_NOREPINEPHRINE = "norepinephrine_arousal";
     
     private final BiochemicalMediator mediator;
     
@@ -39,11 +38,9 @@ public final class CognitiveModulationBridge {
         
         Optional<Float> cortisol = mediator.getValue(MOD_CORTISOL);
         Optional<Float> dopamine = mediator.getValue(MOD_DOPAMINE);
-        Optional<Float> norepinephrine = mediator.getValue(MOD_NOREPINEPHRINE);
         
         double cortisolVal = cortisol.orElse(0.5f);
         double dopamineVal = dopamine.orElse(0.5f);
-        double norepinephrineVal = norepinephrine.orElse(0.5f);
         
         // High cortisol → lower phiBinary (stress impairs integration)
         double modulatedPhi = profile.phiBinary() * (1.0 - 0.3 * cortisolVal);

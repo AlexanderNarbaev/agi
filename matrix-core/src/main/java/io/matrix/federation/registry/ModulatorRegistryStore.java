@@ -128,9 +128,11 @@ public final class ModulatorRegistryStore {
      * Export to ProtoBuf registry message.
      */
     public ModulatorRegistry exportProto() {
+        // FIX (FAIL-6): Use 0 timestamp for deterministic export.
+        // Previously used System.nanoTime() which made exports non-reproducible.
         return ModulatorRegistry.newBuilder()
             .setVersion(version)
-            .setTimestampNs(System.nanoTime())
+            .setTimestampNs(0L)
             .setConsensusHash(calculateHash())
             .addAllModulators(getAll())
             .build();

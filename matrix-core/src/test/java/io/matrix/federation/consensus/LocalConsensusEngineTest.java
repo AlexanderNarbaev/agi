@@ -140,6 +140,28 @@ class LocalConsensusEngineTest {
     }
     
     @Test
+    void testAbstainDoesNotCountInTotal() {
+        // FAIL-1 fix: ABSTAIN votes should not affect yesRatio
+        LocalConsensusEngine engine = new LocalConsensusEngine(42L);
+        
+        // 1 YES (weight 5.0) + 5 ABSTAIN (weight 1.0 each)
+        engine.addVote(engine.createVote("p1", VoteDecision.VOTE_YES, 
+            CapabilityLevel.CAPABILITY_L6_ARCHITECT, 1.0));
+        for (int i = 0; i < 5; i++) {
+            engine.addVote(engine.createVote("p1", VoteDecision.VOTE_ABSTAIN, 
+                CapabilityLevel.CAPABILITY_L3_SPECIALIST, 1.0));
+        }
+        
+        var result = engine.evaluate(ConsensusProposal.newBuilder().setProposalId("p1").build());
+        
+        // totalWeight should be only 5.0 (the YES), not 10.0 (including abstains)
+        // yesRatio = 5.0/5.0 = 1.0 → APPROVED
+        assertEquals(ConsensusStatus.CONSENSUS_APPROVED, result.status());
+        assertEquals(5.0, result.yesWeight(), 0.001);
+        assertEquals(0.0, result.noWeight(), 0.001);
+    }
+    
+    @Test
     void testThresholds() {
         // Verify standard threshold is 67%
         assertEquals(0.67, LocalConsensusEngine.STANDARD_THRESHOLD, 0.001);

@@ -57,7 +57,6 @@ public final class LocalConsensusEngine {
     
     private final Random rng;
     private final List<ConsensusVote> votes = new ArrayList<>();
-    private final List<String> l7Confirmations = new ArrayList<>();
     
     public LocalConsensusEngine(long seed) {
         this.rng = new Random(seed);
@@ -71,13 +70,9 @@ public final class LocalConsensusEngine {
             throw new IllegalArgumentException("vote cannot be null");
         }
         votes.add(vote);
-        
-        // Track L7 confirmations for emergency threshold
-        if (vote.getDecision() == VoteDecision.VOTE_YES &&
-            vote.getReputationWeight() >= VOTING_WEIGHTS.get(8)) {
-            // Note: would need to track voter ID; using weight as proxy
-            l7Confirmations.add("voter-" + votes.size());
-        }
+        // Note: L7 confirmation tracking removed - the weight-based proxy
+        // was spoofable by setting reputationWeight >= 10 on a non-L7 vote.
+        // Emergency threshold feature deferred until voter ID is added.
     }
     
     /**
@@ -94,21 +89,24 @@ public final class LocalConsensusEngine {
         int vetoCount = 0;
         
         for (ConsensusVote v : votes) {
-            totalWeight += v.getReputationWeight();
+            double w = v.getReputationWeight();
             
             switch (v.getDecision()) {
                 case VOTE_YES:
-                    yesWeight += v.getReputationWeight();
+                    yesWeight += w;
+                    totalWeight += w;
                     break;
                 case VOTE_NO:
-                    noWeight += v.getReputationWeight();
+                    noWeight += w;
+                    totalWeight += w;
                     break;
                 case VOTE_VETO:
                     vetoCount++;
+                    // VETO has weight but does not affect yes/no/total ratio
                     break;
                 case VOTE_ABSTAIN:
                 default:
-                    // No weight contribution
+                    // ABSTAIN does not contribute to weight
                     break;
             }
         }
@@ -169,16 +167,12 @@ public final class LocalConsensusEngine {
     /**
      * Get number of L7 confirmations (for emergency threshold).
      */
-    public int getL7ConfirmationCount() {
-        return l7Confirmations.size();
-    }
-    
+
     /**
      * Reset votes (start new proposal).
      */
     public void reset() {
         votes.clear();
-        l7Confirmations.clear();
     }
     
     /**

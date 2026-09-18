@@ -31,6 +31,9 @@ public final class FederationRuntime {
     private final Random rng;
     
     public FederationRuntime(long nodeId, CapabilityLevel nodeCapability, long seed) {
+        if (nodeCapability == null) {
+            throw new IllegalArgumentException("nodeCapability cannot be null");
+        }
         this.nodeId = nodeId;
         this.nodeCapability = nodeCapability;
         this.registry = new ModulatorRegistryStore(seed);
@@ -43,9 +46,20 @@ public final class FederationRuntime {
      */
     public Optional<ModulatorDefinition> proposeAdd(ModulatorDefinition def, 
                                                       long proposerCapabilityOrdinal) {
+        // Reset consensus for new proposal (FIX: avoid phantom votes from prior operations)
+        consensus.reset();
+        
         // Check proposer can mutate (must be L2+)
         if (!registry.canMutate(CapabilityLevel.forNumber(Math.toIntExact(proposerCapabilityOrdinal)))) {
             return Optional.empty();
+        }
+        
+        // Check per-modulator min capability requirement (FIX: was missing)
+        if (def.hasSafety()) {
+            int requiredOrdinal = def.getSafety().getMinCapability().getNumber();
+            if (proposerCapabilityOrdinal < requiredOrdinal) {
+                return Optional.empty();  // Proposer doesn't meet per-modulator requirement
+            }
         }
         
         // Create proposal
@@ -81,11 +95,28 @@ public final class FederationRuntime {
      */
     public Optional<ModulatorDefinition> proposeUpdate(ModulatorDefinition def,
                                                           long proposerCapabilityOrdinal) {
+        // Reset consensus for new proposal
+        consensus.reset();
+        
         if (!registry.canMutate(CapabilityLevel.forNumber(Math.toIntExact(proposerCapabilityOrdinal)))) {
             return Optional.empty();
         }
         
         Optional<ModulatorDefinition> existing = registry.get(def.getId());
+        if (existing.isEmpty()) {
+            return Optional.empty();
+        }
+        if (existing.get().getSafety().getFrozen()) {
+            return Optional.empty();  // FROZEN: cannot update
+        }
+        // Check per-modulator min capability for the existing def
+        if (def.hasSafety()) {
+            int requiredOrdinal = def.getSafety().getMinCapability().getNumber();
+            if (proposerCapabilityOrdinal < requiredOrdinal) {
+                return Optional.empty();
+            }
+        }
+
         if (existing.isEmpty()) {
             return Optional.empty();
         }
@@ -122,6 +153,9 @@ public final class FederationRuntime {
      * Propose removing a modulator.
      */
     public boolean proposeRemove(String id, long proposerCapabilityOrdinal) {
+        // Reset consensus for new proposal
+        consensus.reset();
+        
         if (!registry.canMutate(CapabilityLevel.forNumber(Math.toIntExact(proposerCapabilityOrdinal)))) {
             return false;
         }
