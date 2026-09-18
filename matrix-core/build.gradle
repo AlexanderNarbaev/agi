@@ -10,6 +10,17 @@ plugins {
 group = 'io.matrix'
 version = '1.0.0'
 
+// W357: Add generated proto sources
+sourceSets {
+    main {
+        java {
+            srcDir 'src/generated/java'
+        }
+    }
+}
+
+
+
 java {
     sourceCompatibility = JavaVersion.VERSION_25
     targetCompatibility = JavaVersion.VERSION_25
@@ -64,6 +75,8 @@ dependencies {
     testImplementation 'org.testcontainers:postgresql:1.21.3'
     testImplementation 'org.testcontainers:junit-jupiter:1.21.3'
     testImplementation 'net.jqwik:jqwik:1.9.2'
+    // W357: ProtoBuf support
+    implementation 'com.google.protobuf:protobuf-java:3.25.5'
 }
 
 tasks.withType(Test) {
