@@ -134,3 +134,14 @@ unit-tests/
 
 # Generated training data (chat history, ephemeral)
 matrix-core/models/training_data/auto_generated.jsonl
+
+# Archive formats (added by SPEC-014 WAL split W347-W351)
+*.tar.gz
+*.tar
+*.tgz
+*.gz
+*.bz2
+*.xz
+*.7z
+*.zip
+*.rar
