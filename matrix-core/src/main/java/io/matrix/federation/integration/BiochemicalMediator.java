@@ -35,6 +35,8 @@ public final class BiochemicalMediator {
     
     private final FederationRuntime runtime;
     private final Map<String, Float> activeValues = new HashMap<>();
+    /** Deterministic RNG (seeded). Reserved for tie-breaking and downstream
+     *  stochastic sampling. Exposed via getRng() for callers that need it. */
     private final Random rng;
     private long lastUpdateNs = 0L;
     private int updateCount = 0;
@@ -105,12 +107,15 @@ public final class BiochemicalMediator {
             }
         }
         
+        // FIX (FAIL-8): totalModulators = registry.size() (not activeValues.size()
+        // which includes local-only overrides from setLocalValue).
+        int registrySize = runtime.getRegistryStore().size();
         return new MediatorSnapshot(
             hormones,
             neurotransmitters,
             signals,
             lastUpdateNs,
-            activeValues.size()
+            registrySize
         );
     }
     

@@ -135,6 +135,25 @@ class BiochemicalMediatorTest {
     }
     
     @Test
+    void testTotalModulatorsReflectsRegistryNotLocalOverrides() {
+        // FIX (FAIL-8): totalModulators should be registry size, not activeValues.size()
+        FederationRuntime runtime = new FederationRuntime(1L, CapabilityLevel.CAPABILITY_L5_MASTER, 100L);
+        BiochemicalMediator mediator = new BiochemicalMediator(runtime, 42L);
+        
+        // Add 1 to registry
+        runtime.getRegistryStore().add(sample("m1", ModulatorType.MODULATOR_TYPE_HORMONE, 0.5f));
+        mediator.refreshFromRegistry();
+        
+        // Set a local-only override (not in registry)
+        mediator.setLocalValue("ghost-mod", 0.7f);
+        
+        // totalModulators reflects registry size (not activeValues)
+        assertEquals(1, mediator.snapshot().totalModulators());
+        // getAllValues includes both registry and local-only overrides
+        assertEquals(2, mediator.getAllValues().size());
+    }
+    
+    @Test
     void testRuntimeAccessor() {
         FederationRuntime runtime = new FederationRuntime(99L, CapabilityLevel.CAPABILITY_L4_EXPERT, 100L);
         BiochemicalMediator mediator = new BiochemicalMediator(runtime, 42L);

@@ -69,9 +69,9 @@ class FederationTelemetryTest {
         FederationRuntime runtime = new FederationRuntime(1L, CapabilityLevel.CAPABILITY_L5_MASTER, 100L);
         FederationTelemetry tel = new FederationTelemetry(runtime, 42L);
         
-        tel.recordProposal(null);
+        tel.recordProposal((String) null);
         tel.recordProposal("");
-        tel.recordVote(null);
+        tel.recordVote((String) null);
         
         // No events should be recorded
         assertEquals(0, tel.getTotalEventCount());
@@ -126,6 +126,44 @@ class FederationTelemetryTest {
         
         // Same seed → same value
         assertNotEquals(tel1.getRng().nextLong(), tel2.getRng().nextLong());
+    }
+    
+    @Test
+    void testTypedProposalOverload() {
+        FederationRuntime runtime = new FederationRuntime(1L, CapabilityLevel.CAPABILITY_L5_MASTER, 42L);
+        FederationTelemetry tel = new FederationTelemetry(runtime, 42L);
+        
+        tel.recordProposal(io.matrix.federation.proto.ConsensusStatus.CONSENSUS_APPROVED);
+        tel.recordProposal(io.matrix.federation.proto.ConsensusStatus.CONSENSUS_REJECTED);
+        
+        var snap = tel.snapshot();
+        assertEquals(1, snap.proposalCountsByStatus().get("CONSENSUS_APPROVED"));
+        assertEquals(1, snap.proposalCountsByStatus().get("CONSENSUS_REJECTED"));
+    }
+    
+    @Test
+    void testTypedVoteOverload() {
+        FederationRuntime runtime = new FederationRuntime(1L, CapabilityLevel.CAPABILITY_L5_MASTER, 42L);
+        FederationTelemetry tel = new FederationTelemetry(runtime, 42L);
+        
+        tel.recordVote(io.matrix.federation.proto.VoteDecision.VOTE_YES);
+        tel.recordVote(io.matrix.federation.proto.VoteDecision.VOTE_NO);
+        
+        var snap = tel.snapshot();
+        assertEquals(1, snap.voteCountsByDecision().get("VOTE_YES"));
+        assertEquals(1, snap.voteCountsByDecision().get("VOTE_NO"));
+    }
+    
+    @Test
+    void testTypedNullDoesNotThrow() {
+        FederationRuntime runtime = new FederationRuntime(1L, CapabilityLevel.CAPABILITY_L5_MASTER, 42L);
+        FederationTelemetry tel = new FederationTelemetry(runtime, 42L);
+        
+        // Null should be safely ignored, not throw
+        tel.recordProposal((io.matrix.federation.proto.ConsensusStatus) null);
+        tel.recordVote((io.matrix.federation.proto.VoteDecision) null);
+        
+        assertEquals(0, tel.getTotalEventCount());
     }
     
     @Test

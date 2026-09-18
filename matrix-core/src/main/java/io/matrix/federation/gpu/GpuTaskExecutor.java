@@ -34,6 +34,8 @@ public final class GpuTaskExecutor {
         int oomCount
     ) {}
     
+    /** Deterministic RNG (seeded). Reserved for tie-breaking and downstream
+     *  stochastic sampling. Exposed via getRng() for callers that need it. */
     private final Random rng;
     private final boolean gpuEnabled;
     private final Map<GpuOperation, Integer> opCounts = new ConcurrentHashMap<>();

@@ -29,6 +29,8 @@ import java.util.Random;
 public final class ModulatorRegistryStore {
     
     private final Map<String, ModulatorDefinition> modulators = new HashMap<>();
+    /** Deterministic RNG (seeded). Reserved for tie-breaking and downstream
+     *  stochastic sampling. Exposed via getRng() for callers that need it. */
     private final Random rng;
     private long version = 0L;
     

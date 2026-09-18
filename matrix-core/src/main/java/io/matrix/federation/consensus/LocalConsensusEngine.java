@@ -55,6 +55,8 @@ public final class LocalConsensusEngine {
         VOTING_WEIGHTS.put(8, 10.0); // L7_GUARDIAN + VETO
     }
     
+    /** Deterministic RNG (seeded). Reserved for tie-breaking and downstream
+     *  stochastic sampling. Exposed via getRng() for callers that need it. */
     private final Random rng;
     private final List<ConsensusVote> votes = new ArrayList<>();
     

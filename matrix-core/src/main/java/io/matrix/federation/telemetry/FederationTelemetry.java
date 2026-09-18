@@ -8,6 +8,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
+import io.matrix.federation.proto.ConsensusStatus;
+import io.matrix.federation.proto.VoteDecision;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -34,6 +36,8 @@ public final class FederationTelemetry {
         long snapshotTimestampNs
     ) {}
     
+    /** Deterministic RNG (seeded). Reserved for tie-breaking and downstream
+     *  stochastic sampling. Exposed via getRng() for callers that need it. */
     private final Random rng;
     private final FederationRuntime runtime;
     private final AtomicInteger totalEvents = new AtomicInteger(0);
@@ -61,6 +65,14 @@ public final class FederationTelemetry {
     }
     
     /**
+     * Record a proposal event using ConsensusStatus enum (type-safe alternative).
+     */
+    public void recordProposal(ConsensusStatus status) {
+        if (status == null) return;
+        recordProposal(status.name());
+    }
+    
+    /**
      * Record a vote event.
      */
     public void recordVote(String decision) {
@@ -68,6 +80,14 @@ public final class FederationTelemetry {
         totalEvents.incrementAndGet();
         eventCountsByType.merge("vote", 1, Integer::sum);
         voteCountsByDecision.merge(decision, 1, Integer::sum);
+    }
+    
+    /**
+     * Record a vote event using VoteDecision enum (type-safe alternative).
+     */
+    public void recordVote(VoteDecision decision) {
+        if (decision == null) return;
+        recordVote(decision.name());
     }
     
     /**
