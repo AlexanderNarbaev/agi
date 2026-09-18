@@ -69,8 +69,12 @@ public final class RegistryBackup {
     public static boolean verify(Path source) {
         try {
             byte[] bytes = Files.readAllBytes(source);
+            if (bytes.length == 0) {
+                return false;  // Empty file is not a valid backup
+            }
             ModulatorRegistry proto = ModulatorRegistry.parseFrom(bytes);
-            return proto.getModulatorsCount() > 0 || bytes.length > 0;
+            // Valid if: non-empty file AND parses AND has either modulators or version > 0
+            return proto.getModulatorsCount() > 0 || proto.getVersion() > 0;
         } catch (Exception e) {
             return false;
         }

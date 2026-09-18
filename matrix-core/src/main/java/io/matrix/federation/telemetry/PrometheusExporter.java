@@ -15,6 +15,20 @@ public final class PrometheusExporter {
     private PrometheusExporter() {}
     
     /**
+     * Escape Prometheus label values per spec:
+     * - Backslash → \
+     * - Newline → \n
+     * - Double quote → \"
+     */
+    private static String escapeLabel(String value) {
+        if (value == null) return "";
+        return value
+            .replace("\\", "\\\\")
+            .replace("\n", "\\n")
+            .replace("\"", "\\\"");
+    }
+    
+    /**
      * Render telemetry snapshot as Prometheus metrics.
      */
     public static String render(FederationTelemetry telemetry) {
@@ -35,7 +49,7 @@ public final class PrometheusExporter {
         sb.append("# HELP federation_events_by_type Events by type\n");
         sb.append("# TYPE federation_events_by_type counter\n");
         for (Map.Entry<String, Integer> entry : snap.eventCountsByType().entrySet()) {
-            sb.append("federation_events_by_type{type=\"").append(entry.getKey()).append("\"} ")
+            sb.append("federation_events_by_type{type=\"").append(escapeLabel(entry.getKey())).append("\"} ")
               .append(entry.getValue()).append("\n");
         }
         sb.append("\n");
@@ -44,7 +58,7 @@ public final class PrometheusExporter {
         sb.append("# HELP federation_proposals_by_status Proposals by status\n");
         sb.append("# TYPE federation_proposals_by_status counter\n");
         for (Map.Entry<String, Integer> entry : snap.proposalCountsByStatus().entrySet()) {
-            sb.append("federation_proposals_by_status{status=\"").append(entry.getKey()).append("\"} ")
+            sb.append("federation_proposals_by_status{status=\"").append(escapeLabel(entry.getKey())).append("\"} ")
               .append(entry.getValue()).append("\n");
         }
         sb.append("\n");
@@ -53,7 +67,7 @@ public final class PrometheusExporter {
         sb.append("# HELP federation_votes_by_decision Votes by decision\n");
         sb.append("# TYPE federation_votes_by_decision counter\n");
         for (Map.Entry<String, Integer> entry : snap.voteCountsByDecision().entrySet()) {
-            sb.append("federation_votes_by_decision{decision=\"").append(entry.getKey()).append("\"} ")
+            sb.append("federation_votes_by_decision{decision=\"").append(escapeLabel(entry.getKey())).append("\"} ")
               .append(entry.getValue()).append("\n");
         }
         

@@ -70,17 +70,7 @@ class ConsensusModelCheckerTest {
                 var result = engine.evaluate(
                     ConsensusProposal.newBuilder().setProposalId("p1").build());
                 
-                // Invariant: VetoInvariance
-                if (engine.getVoteCount() > 0) {
-                    boolean hasVeto = false;
-                    // We can't directly check, but if status is VETOED then invariant holds
-                    if (result.status() != ConsensusStatus.CONSENSUS_VETOED) {
-                        // Not vetoed, so no vetoes in votes (or this is wrong)
-                        assertFalse(hasVeto);
-                    }
-                }
-                
-                // Invariant: VetoOverridesApproval
+// Invariant: VetoOverridesApproval
                 assertFalse(result.status() == ConsensusStatus.CONSENSUS_VETOED &&
                            result.status() == ConsensusStatus.CONSENSUS_APPROVED);
                 

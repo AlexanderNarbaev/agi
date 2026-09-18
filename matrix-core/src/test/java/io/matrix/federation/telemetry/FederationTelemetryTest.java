@@ -119,7 +119,7 @@ class FederationTelemetryTest {
     }
     
     @Test
-    void testRngDeterministic() {
+    void testRngDifferentSeedsDiffer() {
         FederationRuntime runtime = new FederationRuntime(1L, CapabilityLevel.CAPABILITY_L5_MASTER, 100L);
         FederationTelemetry tel1 = new FederationTelemetry(runtime, 42L);
         FederationTelemetry tel2 = new FederationTelemetry(runtime, 99L);  // different seed
