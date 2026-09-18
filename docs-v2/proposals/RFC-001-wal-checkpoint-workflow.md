@@ -1,7 +1,7 @@
 # RFC-001: WAL Checkpoint GitHub Actions Workflow
 
 ## Status
-**DRAFT — pending owner approval**
+**REJECTED — owner decision 2026-09-18**
 
 ## Date
 2026-09-18
@@ -12,6 +12,21 @@ Wave owner (auto-generated from W347-W351 staging session)
 ## Summary
 Propose adding `.github/workflows/wal-checkpoint.yml` to automatically validate
 wave checkpoint integrity on every push to `main` and `feature/*` branches.
+
+## Status: REJECTED (2026-09-18)
+
+**Owner decision:** Manual process preferred. Per AGENTS.md wave-commit rule,
+every wave must be committed AND pushed manually to BOTH remotes (`origin` +
+`gitverse`). No CI automation. RFC retained for historical record only.
+
+Replacement rule (effective 2026-09-18):
+1. After every wave: `git add -A && git commit -m "WAL: W<NUM> — <description>"`
+2. Push to BOTH remotes: `git push origin main && git push gitverse main`
+3. Update `SESSION.md` at project root with latest wave entry + previous link
+4. Commit + push `SESSION.md` as part of the wave commit
+
+This rule eliminates the need for any GitHub Actions workflow.
+
 
 ## FROZEN Zone Notice
 **This RFC is required because `.github/workflows/**` is a FROZEN zone per `AGENTS.md`.**
@@ -84,15 +99,16 @@ are missing/inconsistent, but does NOT create commits.
 - **Local pre-commit hook instead of CI:** Runs on developer's machine, not in CI. Doesn't catch pushes that bypass hooks.
 - **External validation service (e.g., Dependabot):** Adds dependency. Out of scope.
 
-## Owner Decision (to be filled)
+## Owner Decision
 
-- [ ] **APPROVED** — Workflow may be added to `.github/workflows/wal-checkpoint.yml`
-- [ ] **REJECTED** — Manual process remains in effect; no CI workflow added
-- [ ] **DEFERRED** — Revisit after additional data on wave session cadence
+- [x] **REJECTED** — Manual process remains in effect; no CI workflow added
 
-**Decision date:** _______________
-**Decided by:** _______________
-**Notes:** _______________
+**Decision date:** 2026-09-18
+**Decided by:** Project owner (Alexander Narbaev)
+**Notes:** Owner reviewed RFC and determined that the existing wave-commit rule
+(commit + push to both remotes per wave) is sufficient and simpler. CI automation
+introduces unnecessary complexity and FROZEN-zone risk. Manual process is the
+chosen path forward.
 
 ## References
 - `AGENTS.md` §FROZEN zones (`.github/workflows/**`)

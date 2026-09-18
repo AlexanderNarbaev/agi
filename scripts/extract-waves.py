@@ -122,10 +122,10 @@ def format_wave(wave: dict) -> tuple:
     safe_title = re.sub(r'[^\w\s-]', '', wave['title'])[:50]
     safe_title = re.sub(r'\s+', '-', safe_title).lower()
 
-    filename = f"wave-{wave['number']:03d}-{safe_title}.md"
+    filename = f"WAL-{wave['number']:03d}-{safe_title}.md"
 
     # Create formatted content
-    formatted = f"""# WAL: Wave {wave['number']} \u2014 {wave['title']}
+    formatted = f"""# WAL {wave['number']} \u2014 {wave['title']}
 
 **Date:** {date}
 **Branch:** `{branch}`
@@ -141,7 +141,7 @@ This wave was automatically extracted from the monolithic WAL.md file.
 
 **Checkpoint Hash:** `{checkpoint_hash}` (current HEAD at extraction time)
 **Previous Checkpoint:** see git log -1
-**Next Wave:** W{wave['number'] + 1} (verify exists before linking)
+**Next Wave:** W{wave['number'] + 1}
 
 *Auto-extracted by extract-waves.py*
 """
