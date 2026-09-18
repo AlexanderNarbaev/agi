@@ -91,7 +91,7 @@ public final class LocalConsensusEngine {
         double totalWeight = 0.0;
         double yesWeight = 0.0;
         double noWeight = 0.0;
-        boolean vetoed = false;
+        int vetoCount = 0;
         
         for (ConsensusVote v : votes) {
             totalWeight += v.getReputationWeight();
@@ -104,7 +104,7 @@ public final class LocalConsensusEngine {
                     noWeight += v.getReputationWeight();
                     break;
                 case VOTE_VETO:
-                    vetoed = true;
+                    vetoCount++;
                     break;
                 case VOTE_ABSTAIN:
                 default:
@@ -114,10 +114,10 @@ public final class LocalConsensusEngine {
         }
         
         // Veto always wins
-        if (vetoed) {
+        if (vetoCount > 0) {
             return new ConsensusResult(
                 ConsensusStatus.CONSENSUS_VETOED,
-                yesWeight, noWeight, votes.size(), 1);
+                yesWeight, noWeight, votes.size(), vetoCount);
         }
         
         // Determine threshold based on proposal type
