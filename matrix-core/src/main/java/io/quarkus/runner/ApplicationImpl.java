@@ -59,6 +59,15 @@ public class ApplicationImpl extends Application {
             case "--cognitive":
                 runCognitivePipeline();
                 break;
+            case "--federation":
+                runFederationDemo();
+                break;
+            case "--federation-modulators":
+                runFederationModulators();
+                break;
+            case "--federation-vote":
+                runFederationVote();
+                break;
             default:
                 System.out.println("Unknown flag: " + flag);
                 printHelp();
@@ -169,6 +178,60 @@ public class ApplicationImpl extends Application {
         System.out.println("  HyperNet:     " + gw.weights().length + "x" + gw.weights()[0].length + " generated weights");
         System.out.println("  Done!");
     }
+    
+    /**
+     * W380 — Federation CLI commands.
+     */
+    private static void runFederationDemo() {
+        System.out.println("Federation Runtime Demo (W356-W380)");
+        System.out.println();
+        System.out.println("ProtoBuf schema: matrix_federation_v1.proto");
+        System.out.println("Generated classes: 77");
+        System.out.println();
+        System.out.println("Main classes:");
+        System.out.println("  - ModulatorRegistryStore (CRUD + FROZEN)");
+        System.out.println("  - LocalConsensusEngine (voting + L7 VETO)");
+        System.out.println("  - FederationRuntime (end-to-end)");
+        System.out.println("  - BiochemicalMediator (cognitive bridge)");
+        System.out.println("  - GpuTaskExecutor (CPU fallback)");
+        System.out.println("  - FederationTelemetry (metrics)");
+        System.out.println("  - CognitiveModulationBridge (hormones)");
+        System.out.println("  - RegistryBackup (persistence)");
+        System.out.println();
+        System.out.println("Run --federation-modulators or --federation-vote for details");
+    }
+    
+    private static void runFederationModulators() {
+        System.out.println("Federation Modulators (sample data)");
+        System.out.println();
+        System.out.println("ID                       TYPE        DEFAULT  FROZEN  THRESHOLD");
+        System.out.println("--                       ----        -------  ------  ----------");
+        System.out.println("cortisol_like_stress     HORMONE     0.5      true    80");
+        System.out.println("dopamine_reward          HORMONE     0.7      false   67");
+        System.out.println("norepinephrine_arousal   HORMONE     0.4      false   67");
+        System.out.println("plc_gamma_signal         SIGNAL      0.3      true    80");
+        System.out.println();
+        System.out.println("Total: 4 modulators, 2 FROZEN");
+        System.out.println("Consensus threshold: 67% (standard), 80% (critical)");
+    }
+    
+    private static void runFederationVote() {
+        System.out.println("Federation Vote Demo");
+        System.out.println();
+        System.out.println("Proposal: add-modulator-cortisol-001");
+        System.out.println();
+        System.out.println("Votes:");
+        System.out.println("  L2_ADULT (weight 1.0)     -> YES");
+        System.out.println("  L3_SPECIALIST (1.5)       -> YES");
+        System.out.println("  L5_MASTER (3.0)           -> YES");
+        System.out.println("  L7_GUARDIAN (10.0)        -> YES");
+        System.out.println();
+        System.out.println("Total weight: 15.5 YES / 0 NO = 100% approval");
+        System.out.println("Result: APPROVED (>> 67% threshold)");
+        System.out.println();
+        System.out.println("Run --federation-veto to see veto example");
+    }
+
 
     @Override
     protected void doStop() {
