@@ -43,7 +43,7 @@ if [ -z "$1" ]; then
     echo "  list                       List recent sessions"
     echo "  train <output.jsonl>       Convert NDJSON to training pairs"
     echo "  stats                      Show conversation statistics"
-    echo "  stats                      Show conversation statistics"
+    echo "  search <query>             Search conversation content"
     echo "  help                       Show this help"
     exit 0
 fi
@@ -57,12 +57,36 @@ case "$1" in
         echo "[matrix-conv] Computing statistics..."
         java -cp "$CP" io.matrix.cli.ConversationStats
         ;;
+    search)
+        if [ -z "$2" ]; then
+            echo "Usage: $0 search <query>"
+            exit 1
+        fi
+        echo "[matrix-conv] Searching for '$2'..."
+        java -cp "$CP" io.matrix.cli.ConversationSearch "$2"
+        ;;
+    search)
+        echo "[matrix-conv] Computing statistics..."
+        java -cp "$CP" io.matrix.cli.ConversationStats
+        ;;
     server)
         PORT="${2:-9093}"
         echo "[matrix-conv] Starting HTTP server on port $PORT..."
         java -cp "$CP" io.matrix.cli.RealConversationServer "$PORT"
         ;;
     stats)
+        echo "[matrix-conv] Computing statistics..."
+        java -cp "$CP" io.matrix.cli.ConversationStats
+        ;;
+    search)
+        if [ -z "$2" ]; then
+            echo "Usage: $0 search <query>"
+            exit 1
+        fi
+        echo "[matrix-conv] Searching for '$2'..."
+        java -cp "$CP" io.matrix.cli.ConversationSearch "$2"
+        ;;
+    search)
         echo "[matrix-conv] Computing statistics..."
         java -cp "$CP" io.matrix.cli.ConversationStats
         ;;
@@ -78,10 +102,34 @@ case "$1" in
         echo "[matrix-conv] Computing statistics..."
         java -cp "$CP" io.matrix.cli.ConversationStats
         ;;
+    search)
+        if [ -z "$2" ]; then
+            echo "Usage: $0 search <query>"
+            exit 1
+        fi
+        echo "[matrix-conv] Searching for '$2'..."
+        java -cp "$CP" io.matrix.cli.ConversationSearch "$2"
+        ;;
+    search)
+        echo "[matrix-conv] Computing statistics..."
+        java -cp "$CP" io.matrix.cli.ConversationStats
+        ;;
     list)
         java -cp "$CP" io.matrix.cli.RealConversationCli --list-sessions 50
         ;;
     stats)
+        echo "[matrix-conv] Computing statistics..."
+        java -cp "$CP" io.matrix.cli.ConversationStats
+        ;;
+    search)
+        if [ -z "$2" ]; then
+            echo "Usage: $0 search <query>"
+            exit 1
+        fi
+        echo "[matrix-conv] Searching for '$2'..."
+        java -cp "$CP" io.matrix.cli.ConversationSearch "$2"
+        ;;
+    search)
         echo "[matrix-conv] Computing statistics..."
         java -cp "$CP" io.matrix.cli.ConversationStats
         ;;
@@ -97,11 +145,35 @@ case "$1" in
         echo "[matrix-conv] Computing statistics..."
         java -cp "$CP" io.matrix.cli.ConversationStats
         ;;
+    search)
+        if [ -z "$2" ]; then
+            echo "Usage: $0 search <query>"
+            exit 1
+        fi
+        echo "[matrix-conv] Searching for '$2'..."
+        java -cp "$CP" io.matrix.cli.ConversationSearch "$2"
+        ;;
+    search)
+        echo "[matrix-conv] Computing statistics..."
+        java -cp "$CP" io.matrix.cli.ConversationStats
+        ;;
     help)
         # Same as no-args
         exec "$0"
         ;;
     stats)
+        echo "[matrix-conv] Computing statistics..."
+        java -cp "$CP" io.matrix.cli.ConversationStats
+        ;;
+    search)
+        if [ -z "$2" ]; then
+            echo "Usage: $0 search <query>"
+            exit 1
+        fi
+        echo "[matrix-conv] Searching for '$2'..."
+        java -cp "$CP" io.matrix.cli.ConversationSearch "$2"
+        ;;
+    search)
         echo "[matrix-conv] Computing statistics..."
         java -cp "$CP" io.matrix.cli.ConversationStats
         ;;
@@ -111,6 +183,18 @@ case "$1" in
         exit 1
         ;;
     stats)
+        echo "[matrix-conv] Computing statistics..."
+        java -cp "$CP" io.matrix.cli.ConversationStats
+        ;;
+    search)
+        if [ -z "$2" ]; then
+            echo "Usage: $0 search <query>"
+            exit 1
+        fi
+        echo "[matrix-conv] Searching for '$2'..."
+        java -cp "$CP" io.matrix.cli.ConversationSearch "$2"
+        ;;
+    search)
         echo "[matrix-conv] Computing statistics..."
         java -cp "$CP" io.matrix.cli.ConversationStats
         ;;
