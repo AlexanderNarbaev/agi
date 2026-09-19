@@ -50,6 +50,8 @@ if [ -z "$1" ]; then
     echo "  report                     Generate aggregate report"
     echo "  test                       Run model sanity test"
     echo "  eval [jsonl]               Run full model evaluation"
+    echo "  backup <output-zip>         Backup all sessions"
+    echo "  restore <input-zip>        Restore from backup"
     echo "  help                       Show this help"
     exit 0
 fi
@@ -77,6 +79,8 @@ case "$1" in
     compact) [ -z "$2" ] && { echo "Usage: $0 compact <session> [max-chars]"; exit 1; }; java -cp "$CP" io.matrix.cli.ConversationCompact "${@:2}" ;;
     diff) [ -z "$2" ] || [ -z "$3" ] && { echo "Usage: $0 diff <session1> <session2>"; exit 1; }; java -cp "$CP" io.matrix.cli.ConversationDiff "${@:2}" ;;
     report) java -cp "$CP" io.matrix.cli.ConversationReport "${@:2}" ;;
+    backup) [ -z "$2" ] && { echo "Usage: $0 backup <output-zip>"; exit 1; }; java -cp "$CP" io.matrix.cli.ConversationBackup "${@:2}" ;;
+    restore) [ -z "$2" ] && { echo "Usage: $0 restore <input-zip>"; exit 1; }; java -cp "$CP" io.matrix.cli.ConversationRestore "${@:2}" ;;
     eval) java -cp "$CP" io.matrix.cli.ConversationModelEval "${@:2}" ;;
     test) java -cp "$CP" io.matrix.cli.ConversationModelTest ;;
     help) exec "$0" ;;
