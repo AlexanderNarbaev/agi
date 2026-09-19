@@ -4,33 +4,36 @@
 
 ---
 
-## Latest Wave: W464
+## Latest Wave: W471
 
-- **Checkpoint Hash:** `ebc14eb5`
+- **Checkpoint Hash:** `b3d2faad`
 - **Date:** 2026-09-19
-- **Previous:** [W463](docs-v2/waves/WAL-463.md) (`66b7b649`)
+- **Previous:** [W470](docs-v2/waves/WAL-470.md) (`7db8dee3`)
 
-### W464 Summary
+### W471 Summary
 Final verification: 264 tests pass, 0 fail.
 - 48 CLI tests
 - 216 Federation tests
-- 41 tools total
+- 48 tools total
 
 ---
 
-## MILESTONE: 109 Waves + 41 Tools + 264 Tests
+## MILESTONE: 116 Waves + 48 Tools + 264 Tests
 
-### Wave Range: W356-W464 (109 waves total)
+### Wave Range: W356-W471 (116 waves total)
 
 #### Phase 1: Federation (W356-W385) - 30 waves
-#### Phase 2: Real Conversation (W386-W464) - 79 waves
+#### Phase 2: Real Conversation (W386-W471) - 86 waves
 
-### 41 Tools Delivered
+### 48 Tools Delivered
 
-**Latest additions (W461-W463):**
-- W461: `ConversationBatch` (bulk operations)
-- W462: `ConversationEdgeTest` (12 edge cases)
-- W463: `ConversationTimeline` (chronological view)
+**Latest additions (W465-W470):**
+- W465: `ConversationPatterns` (behavioral analysis)
+- W466: `ConversationArchive` (daily zip)
+- W467: `ConversationGenerate` (synthetic data)
+- W468: `ConversationTag` (free-form tags)
+- W469: `ConversationPerplexity` (entropy)
+- W470: `ConversationPrompt` (single-shot test)
 
 ### Test Results
 
@@ -57,4 +60,4 @@ Final verification: 264 tests pass, 0 fail.
 
 ---
 
-**Last updated:** 2026-09-19 (W464 complete)
+**Last updated:** 2026-09-19 (W471 complete)
