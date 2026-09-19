@@ -4,84 +4,66 @@
 
 ---
 
-## Latest Wave: W413
+## Latest Wave: W420
 
-- **File:** `docs-v2/waves/WAL-413.md`
-- **Checkpoint Hash:** `774706f2`
+- **File:** `docs-v2/waves/WAL-420.md`
+- **Checkpoint Hash:** `d14e3049`
 - **Date:** 2026-09-19
-- **Previous:** [W411](docs-v2/waves/WAL-411.md) (`60d480f8`)
+- **Previous:** [W419](docs-v2/waves/WAL-419.md) (`79f9cfe7`)
 
-### W413 Summary
-Added `ConversationHead` CLI (first N turns). Launcher now has 11 commands.
+### W420 Summary
+Added JUnit tests for ConversationCompact (2) and ConversationDiff (5).
+30 CLI tests pass, 0 fail.
 
 ---
 
-## CUMULATIVE MILESTONE: 58 Waves of Continuous Delivery
+## CUMULATIVE MILESTONE: 65 Waves + Full Real Conversation Stack + Web UI
 
-### Federation Stack (W356-W385) - 30 waves
-- ProtoBuf codegen, registry, consensus, runtime, mediator, GPU, telemetry
-- TLA+ spec + Java model checker
-- Chaos tests, property tests, security audit
-- All reviewer findings addressed
+### Wave Range: W356-W420 (65 waves total)
 
-### Real Conversation Stack (W386-W413) - 28 waves
-- **W392**: `RealConversationCli` - real Qwen2.5-0.5B ONNX model
-- **W393**: Multi-session continuity via NDJSON
-- **W394**: `RealConversationServer` - HTTP REST endpoints
-- **W395**: `RealConversationReplay` - transcript review
-- **W396**: 8 edge-case tests
-- **W399**: `NdjsonToTraining` - convert to training pairs
-- **W400**: Launcher script with 5 commands
-- **W401**: `ConversationStats` - aggregate statistics
-- **W402-W405**: stats, search, delete, export
-- **W407**: `ConversationExport` (json/csv/txt)
-- **W409**: `ConversationMerge` - combine sessions
-- **W411**: `ConversationTail` - last N turns
-- **W412**: `ConversationHead` - first N turns
-- **W413**: Launcher with 11 commands
+#### Phase 1: Federation (W356-W385) - 30 waves
+ProtoBuf codegen, registry, consensus, runtime, mediator, GPU, telemetry, TLA+ spec, goal-reviewer fixes
 
-## Verified Working
+#### Phase 2: Real Conversation (W386-W420) - 35 waves
+**CLI Tools (15 total):**
+- `RealConversationCli` (W392) - interactive CLI
+- `RealConversationServer` (W394, W416, W417) - HTTP server + web UI
+- `RealConversationReplay` (W395) - full transcript
+- `NdjsonToTraining` (W399) - training pairs
+- `ConversationStats` (W401) - aggregate stats
+- `ConversationSearch` (W405) - keyword search
+- `ConversationDelete` (W406) - delete with safety
+- `ConversationExport` (W407) - json/csv/txt
+- `ConversationMerge` (W409) - merge sessions
+- `ConversationTail` (W411) - last N turns
+- `ConversationHead` (W413) - first N turns
+- `ConversationCompact` (W414) - one-line-per-turn
+- `ConversationDiff` (W415) - compare two sessions
+- `ConversationCount` (W419) - line count
 
-```
-$ echo "What is 2+2?" | java io.matrix.cli.RealConversationCli
-[MATRIX] 2+2 is equal to 4.
+**Web UI (W416, W418):** Terminal-styled HTML/JS interface with history loading
 
-$ curl -X POST -d '{"message":"Tell me a joke"}' http://localhost:9093/chat
-{"reply":"Why did the programmer break up with the IDE?\nBecause it was too slow!"}
+**Launcher Script:** `matrix-conv.sh` with 11 commands
 
-$ ./matrix-conv.sh stats
-Sessions: 8
-Total turns: 215
+## Test Results
 
-$ ./matrix-conv.sh search "joke"
-Found 1 match
-```
-
-## Cumulative Test Count
-
-- **Federation tests:** 167 pass (W356-W389)
-- **CLI tests:** 23 pass (W396-W404)
-- **Total this session:** 190+ tests
+- **Federation tests:** 167 pass
+- **CLI tests:** 30 pass
+- **Total this session:** 197+ tests
 
 ## Native Binary
 
 - 126MB
 - All 9 CLI commands work
-- Rebuilt in W397
+- Rebuilt in W397, no regressions
 
 ## Wave Commit Rule
 
-**At end of every wave session:**
-
 1. Stage all wave artifacts: `git add -A`
 2. Commit: `git commit -m "WAL: W<NUM> — <description>"`
-3. Push to BOTH remotes:
-   ```bash
-   git push origin main
-   git push gitverse main
-   ```
-4. Update this `SESSION.md` with the new wave number + commit hash.
+3. Push to BOTH remotes: `git push origin main` and `git push gitverse main`
+4. Update this `SESSION.md` with the new wave number + commit hash
 
 ---
 
-**Last updated:** 2026-09-19 (W413 complete)
+**Last updated:** 2026-09-19 (W420 complete)
