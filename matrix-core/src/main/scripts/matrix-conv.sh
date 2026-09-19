@@ -44,6 +44,7 @@ if [ -z "$1" ]; then
     echo "  train <output.jsonl>       Convert NDJSON to training pairs"
     echo "  stats                      Show conversation statistics"
     echo "  search <query>             Search conversation content"
+    echo "  delete <session> [--force] Delete a session"
     echo "  help                       Show this help"
     exit 0
 fi
@@ -65,6 +66,15 @@ case "$1" in
         echo "[matrix-conv] Searching for '$2'..."
         java -cp "$CP" io.matrix.cli.ConversationSearch "$2"
         ;;
+    delete)
+        if [ -z "$2" ]; then
+            echo "Usage: $0 delete <session-id> [--force]"
+            exit 1
+        fi
+        echo "[matrix-conv] Deleting session $2..."
+        shift
+        java -cp "$CP" io.matrix.cli.ConversationDelete "$@"
+        ;;
     search)
         echo "[matrix-conv] Computing statistics..."
         java -cp "$CP" io.matrix.cli.ConversationStats
@@ -85,6 +95,15 @@ case "$1" in
         fi
         echo "[matrix-conv] Searching for '$2'..."
         java -cp "$CP" io.matrix.cli.ConversationSearch "$2"
+        ;;
+    delete)
+        if [ -z "$2" ]; then
+            echo "Usage: $0 delete <session-id> [--force]"
+            exit 1
+        fi
+        echo "[matrix-conv] Deleting session $2..."
+        shift
+        java -cp "$CP" io.matrix.cli.ConversationDelete "$@"
         ;;
     search)
         echo "[matrix-conv] Computing statistics..."
@@ -110,6 +129,15 @@ case "$1" in
         echo "[matrix-conv] Searching for '$2'..."
         java -cp "$CP" io.matrix.cli.ConversationSearch "$2"
         ;;
+    delete)
+        if [ -z "$2" ]; then
+            echo "Usage: $0 delete <session-id> [--force]"
+            exit 1
+        fi
+        echo "[matrix-conv] Deleting session $2..."
+        shift
+        java -cp "$CP" io.matrix.cli.ConversationDelete "$@"
+        ;;
     search)
         echo "[matrix-conv] Computing statistics..."
         java -cp "$CP" io.matrix.cli.ConversationStats
@@ -128,6 +156,15 @@ case "$1" in
         fi
         echo "[matrix-conv] Searching for '$2'..."
         java -cp "$CP" io.matrix.cli.ConversationSearch "$2"
+        ;;
+    delete)
+        if [ -z "$2" ]; then
+            echo "Usage: $0 delete <session-id> [--force]"
+            exit 1
+        fi
+        echo "[matrix-conv] Deleting session $2..."
+        shift
+        java -cp "$CP" io.matrix.cli.ConversationDelete "$@"
         ;;
     search)
         echo "[matrix-conv] Computing statistics..."
@@ -153,6 +190,15 @@ case "$1" in
         echo "[matrix-conv] Searching for '$2'..."
         java -cp "$CP" io.matrix.cli.ConversationSearch "$2"
         ;;
+    delete)
+        if [ -z "$2" ]; then
+            echo "Usage: $0 delete <session-id> [--force]"
+            exit 1
+        fi
+        echo "[matrix-conv] Deleting session $2..."
+        shift
+        java -cp "$CP" io.matrix.cli.ConversationDelete "$@"
+        ;;
     search)
         echo "[matrix-conv] Computing statistics..."
         java -cp "$CP" io.matrix.cli.ConversationStats
@@ -172,6 +218,15 @@ case "$1" in
         fi
         echo "[matrix-conv] Searching for '$2'..."
         java -cp "$CP" io.matrix.cli.ConversationSearch "$2"
+        ;;
+    delete)
+        if [ -z "$2" ]; then
+            echo "Usage: $0 delete <session-id> [--force]"
+            exit 1
+        fi
+        echo "[matrix-conv] Deleting session $2..."
+        shift
+        java -cp "$CP" io.matrix.cli.ConversationDelete "$@"
         ;;
     search)
         echo "[matrix-conv] Computing statistics..."
@@ -193,6 +248,15 @@ case "$1" in
         fi
         echo "[matrix-conv] Searching for '$2'..."
         java -cp "$CP" io.matrix.cli.ConversationSearch "$2"
+        ;;
+    delete)
+        if [ -z "$2" ]; then
+            echo "Usage: $0 delete <session-id> [--force]"
+            exit 1
+        fi
+        echo "[matrix-conv] Deleting session $2..."
+        shift
+        java -cp "$CP" io.matrix.cli.ConversationDelete "$@"
         ;;
     search)
         echo "[matrix-conv] Computing statistics..."
