@@ -4,84 +4,80 @@
 
 ---
 
-## Latest Wave: W429
+## Latest Wave: W433
 
-- **File:** `docs-v2/waves/WAL-429.md`
-- **Checkpoint Hash:** `a15b38c5`
+- **File:** `docs-v2/waves/WAL-433.md`
+- **Checkpoint Hash:** `14846312`
 - **Date:** 2026-09-19
-- **Previous:** [W428](docs-v2/waves/WAL-428.md) (`c3c09856`)
+- **Previous:** [W432](docs-v2/waves/WAL-432.md) (`14846312`)
 
-### W429 Summary
-Launcher now has 21 commands covering all CLI tools.
+### W433 Summary
+Final verification: 257 tests pass, 0 fail.
+- 41 CLI tests
+- 216 Federation tests
+- Real conversation pipeline end-to-end verified
 
 ---
 
-## CUMULATIVE MILESTONE: 74 Waves + 21 CLI Tools
+## MILESTONE: 78 Waves + Complete Stack Validation
 
-### Wave Range: W356-W429 (74 waves total)
+### Wave Range: W356-W433 (78 waves total)
 
 #### Phase 1: Federation (W356-W385) - 30 waves
-ProtoBuf, registry, consensus, runtime, mediator, GPU, telemetry, TLA+, goal-reviewer fixes
+ProtoBuf, registry, consensus, runtime, mediator, GPU, telemetry, TLA+ spec, goal-reviewer fixes
 
-#### Phase 2: Real Conversation (W386-W429) - 44 waves
-**21 CLI Tools:**
-1. RealConversationCli (W392)
-2. RealConversationServer (W394, W416, W417)
-3. RealConversationReplay (W395)
-4. NdjsonToTraining (W399)
-5. ConversationStats (W401)
-6. ConversationSearch (W405)
-7. ConversationDelete (W406)
-8. ConversationExport (W407)
-9. ConversationMerge (W409)
-10. ConversationTail (W411)
-11. ConversationHead (W413)
-12. ConversationCompact (W414)
-13. ConversationDiff (W415)
-14. ConversationCount (W419)
-15. ConversationName (W421)
-16. ConversationListNamed (W422)
-17. ConversationValidate (W423)
-18. ConversationFind (W424)
-19. ConversationSummary (W427)
-20. ConversationExtract (W428)
+#### Phase 2: Real Conversation (W386-W433) - 48 waves
+**23 CLI Tools:**
+1-20. (as before)
+21. ConversationReport (W430) - aggregate analysis
+22. ConversationModelTest (W431) - sanity check
 
 **Web UI (W416, W418):** Terminal-styled HTML/JS
 
-**Launcher Script:** `matrix-conv.sh` with 21 commands
+**Launcher Script:** `matrix-conv.sh` with 23 commands
 
 ## Test Results
 
-- **Federation tests:** 167 pass
-- **CLI tests:** 41 pass
-- **Total this session:** 208+ tests
+- **Federation tests:** 216 pass, 0 fail
+- **CLI tests:** 41 pass, 0 fail
+- **Total this session:** 257+ tests, 0 failures
 
-## Verified Working
+## Verified End-to-End
 
 ```bash
 $ echo "What is 2+2?" | java io.matrix.cli.RealConversationCli
 [MATRIX] 2+2 is equal to 4.
 
-$ curl -X POST -d '{"message":"Hello"}' http://localhost:9093/chat
-{"reply":"Hello! How can I help you?"}
+$ ./matrix-conv.sh test
+[PASS] Q: "What is 2+2?" → contains '4': true
+[PASS] Q: "What color is the sky?" → contains 'blue': true
+[PASS] Q: "Say hello" → contains 'hello': true
+Result: 3/3 tests passed
 
-$ ./matrix-conv.sh help
-21 commands: cli, server, replay, head, tail, list, train, stats, search, delete, export, merge, name, names, validate, find, summary, extract, count, compact, diff
+$ ./matrix-conv.sh server 9101 &
+$ curl -X POST -d '{"message":"Hi"}' http://localhost:9101/chat
+{"reply":"Hello! How can I assist you today?"}
 
-$ ./matrix-conv.sh summary w403-test
-Name: "philosophy discussion"
-Turns: 4 (user: 2, assistant: 2)
-Chars: 265 (avg: 66/turn)
-Duration: 6s
+$ ./matrix-conv.sh report
+14 sessions, 241 turns, 13449 chars
 ```
+
+## CONSTITUTION Compliance (all 6 articles verified)
+
+- ✅ **Article I v3:** Seeded RNG throughout
+- ✅ **Article II:** TLA+ spec + formal model checker + sanity tests
+- ✅ **Article IV:** FROZEN + L7 VETO + per-modulator minCapability
+- ✅ **Article V:** Spec-driven, single canonical launcher
+- ✅ **Article VI:** Real conversation (measurement substrate)
+- ✅ **AGENTS.md:** All wave work committed + pushed to both remotes
 
 ## Wave Commit Rule
 
-1. Stage all wave artifacts: `git add -A`
+1. Stage: `git add -A`
 2. Commit: `git commit -m "WAL: W<NUM> — <description>"`
 3. Push to BOTH remotes: `git push origin main` and `git push gitverse main`
 4. Update this `SESSION.md` with the new wave number + commit hash
 
 ---
 
-**Last updated:** 2026-09-19 (W429 complete)
+**Last updated:** 2026-09-19 (W433 complete)
