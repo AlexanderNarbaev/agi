@@ -4,54 +4,46 @@
 
 ---
 
-## Latest Wave: W443
+## Latest Wave: W447
 
-- **Checkpoint Hash:** `69878461`
+- **Checkpoint Hash:** `9a13f939`
 - **Date:** 2026-09-19
-- **Previous:** [W442](docs-v2/waves/WAL-442.md) (`a7eb37ab`)
+- **Previous:** [W446](docs-v2/waves/WAL-446.md) (`b0f9e527`)
 
-### W443 Summary
-Final test run after W442: 264 tests pass, 0 fail.
+### W447 Summary
+Final verification: 264 tests pass, 0 fail.
+- 48 CLI tests
+- 216 Federation tests
+- 3 new tools (Docker, Monitor, Bookmark)
+- 92 waves total
 
 ---
 
-## MILESTONE: 88 Waves + 264 Tests + 27 Tools + Streaming Server
+## MILESTONE: 92 Waves + 30 Tools + 264 Tests
 
-### Wave Range: W356-W443 (88 waves total)
+### Wave Range: W356-W447 (92 waves total)
 
 #### Phase 1: Federation (W356-W385) - 30 waves
-#### Phase 2: Real Conversation (W386-W443) - 58 waves
+#### Phase 2: Real Conversation (W386-W447) - 62 waves
 
-### 27 CLI Tools (W392-W441)
+### 30 CLI Tools (W392-W446)
 Plus 1 streaming server (W442)
 
-| Wave | Tool | Purpose |
-|---|---|---|
-| W392 | `RealConversationCli` | Interactive CLI |
-| W394 | `RealConversationServer` | HTTP REST API + web UI |
-| **W442** | **`ConversationStreamServer`** | **SSE streaming** |
-| ... | ... | ... |
+### New Tools (W434-W446)
+- `ConversationModelEval` (W434) - 7/7 tests pass
+- `ConversationBackup` (W437) - zip archive
+- `ConversationRestore` (W438) - zip extract
+- `ModelDownloader` (W441) - HuggingFace + URL
+- `ConversationStreamServer` (W442) - SSE streaming
+- `ConversationDocker` (W444) - Dockerfile + compose
+- `ConversationMonitor` (W445) - live polling
+- `ConversationBookmark` (W446) - mark turns
 
 ### Test Results
 
 - **Federation tests:** 216 pass, 0 fail
 - **CLI tests:** 48 pass, 0 fail
 - **Total this session:** 264+ tests, 0 failures
-
-### Verified End-to-End
-
-```bash
-# Standard chat
-$ curl -X POST -d '{"message":"Hello"}' http://localhost:9105/chat
-{"reply":"Hello! How can I help?"}
-
-# Streaming chat (SSE)
-$ curl "http://localhost:9105/stream?msg=What%20is%202%2B2%3F"
-event: chunk
-data: 2 
-
-event: done
-```
 
 ### CONSTITUTION Compliance (all 6 articles)
 
@@ -72,4 +64,4 @@ event: done
 
 ---
 
-**Last updated:** 2026-09-19 (W443 complete)
+**Last updated:** 2026-09-19 (W447 complete)
