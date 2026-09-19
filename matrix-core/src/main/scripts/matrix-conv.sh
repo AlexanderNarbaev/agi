@@ -1,9 +1,10 @@
 #!/bin/bash
-# W429 — Matrix Conversation Launcher
+# W431 — Matrix Conversation Launcher
 # 
 # All-in-one launcher for the MATRIX conversation stack.
-# 18 commands total: cli, server, replay, head, tail, list, train, stats, search, 
-# delete, export, merge, name, names, validate, find, summary, extract
+# 23 commands total: cli, server, replay, head, tail, list, train, stats, search, 
+# delete, export, merge, name, names, validate, find, summary, extract, 
+# count, compact, diff, report, test
 
 set -e
 
@@ -21,9 +22,9 @@ PROTOBUF=$(find ~/.gradle/caches -name "protobuf-java-3.25.5.jar" | head -1)
 CP="$PROJECT_ROOT/matrix-core/build/classes/java/main:$SLF4J:$JACKSON_DATABIND:$JACKSON_CORE:$JACKSON_ANN:$ONNX:$PROTOBUF"
 
 if [ -z "$1" ]; then
-    echo "Matrix Conversation Launcher (W429)"
+    echo "Matrix Conversation Launcher (W431)"
     echo ""
-    echo "Usage: $0 {cli|server|replay|head|tail|list|train|stats|search|delete|export|merge|name|names|validate|find|summary|extract}"
+    echo "Usage: $0 {cli|server|replay|head|tail|list|train|stats|search|delete|export|merge|name|names|validate|find|summary|extract|count|compact|diff|report|test}"
     echo ""
     echo "  cli                        Interactive CLI (real Qwen2.5-0.5B model)"
     echo "  server [port]              HTTP REST server (default port 9093)"
@@ -46,6 +47,8 @@ if [ -z "$1" ]; then
     echo "  count <session>            Count lines/turns/bytes"
     echo "  compact <session> [n]      One-line-per-turn view"
     echo "  diff <s1> <s2>             Compare two sessions"
+    echo "  report                     Generate aggregate report"
+    echo "  test                       Run model sanity test"
     echo "  help                       Show this help"
     exit 0
 fi
@@ -72,6 +75,8 @@ case "$1" in
     count) [ -z "$2" ] && { echo "Usage: $0 count <session>"; exit 1; }; java -cp "$CP" io.matrix.cli.ConversationCount "${@:2}" ;;
     compact) [ -z "$2" ] && { echo "Usage: $0 compact <session> [max-chars]"; exit 1; }; java -cp "$CP" io.matrix.cli.ConversationCompact "${@:2}" ;;
     diff) [ -z "$2" ] || [ -z "$3" ] && { echo "Usage: $0 diff <session1> <session2>"; exit 1; }; java -cp "$CP" io.matrix.cli.ConversationDiff "${@:2}" ;;
+    report) java -cp "$CP" io.matrix.cli.ConversationReport "${@:2}" ;;
+    test) java -cp "$CP" io.matrix.cli.ConversationModelTest ;;
     help) exec "$0" ;;
     *) echo "Unknown command: $1"; echo "Run '$0 help' for usage"; exit 1 ;;
 esac
