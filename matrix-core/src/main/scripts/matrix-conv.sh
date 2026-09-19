@@ -42,6 +42,8 @@ if [ -z "$1" ]; then
     echo "  replay <session>           Replay recorded conversation"
     echo "  list                       List recent sessions"
     echo "  train <output.jsonl>       Convert NDJSON to training pairs"
+    echo "  stats                      Show conversation statistics"
+    echo "  stats                      Show conversation statistics"
     echo "  help                       Show this help"
     exit 0
 fi
@@ -51,10 +53,18 @@ case "$1" in
         echo "[matrix-conv] Starting CLI..."
         java -cp "$CP" io.matrix.cli.RealConversationCli "${@:2}"
         ;;
+    stats)
+        echo "[matrix-conv] Computing statistics..."
+        java -cp "$CP" io.matrix.cli.ConversationStats
+        ;;
     server)
         PORT="${2:-9093}"
         echo "[matrix-conv] Starting HTTP server on port $PORT..."
         java -cp "$CP" io.matrix.cli.RealConversationServer "$PORT"
+        ;;
+    stats)
+        echo "[matrix-conv] Computing statistics..."
+        java -cp "$CP" io.matrix.cli.ConversationStats
         ;;
     replay)
         if [ -z "$2" ]; then
@@ -64,8 +74,16 @@ case "$1" in
         echo "[matrix-conv] Replaying session $2..."
         java -cp "$CP" io.matrix.cli.RealConversationReplay "$2"
         ;;
+    stats)
+        echo "[matrix-conv] Computing statistics..."
+        java -cp "$CP" io.matrix.cli.ConversationStats
+        ;;
     list)
         java -cp "$CP" io.matrix.cli.RealConversationCli --list-sessions 50
+        ;;
+    stats)
+        echo "[matrix-conv] Computing statistics..."
+        java -cp "$CP" io.matrix.cli.ConversationStats
         ;;
     train)
         if [ -z "$2" ]; then
@@ -75,13 +93,25 @@ case "$1" in
         echo "[matrix-conv] Converting NDJSON to training pairs..."
         java -cp "$CP" io.matrix.cli.NdjsonToTraining "$2"
         ;;
+    stats)
+        echo "[matrix-conv] Computing statistics..."
+        java -cp "$CP" io.matrix.cli.ConversationStats
+        ;;
     help)
         # Same as no-args
         exec "$0"
+        ;;
+    stats)
+        echo "[matrix-conv] Computing statistics..."
+        java -cp "$CP" io.matrix.cli.ConversationStats
         ;;
     *)
         echo "Unknown command: $1"
         echo "Run '$0 help' for usage"
         exit 1
+        ;;
+    stats)
+        echo "[matrix-conv] Computing statistics..."
+        java -cp "$CP" io.matrix.cli.ConversationStats
         ;;
 esac
