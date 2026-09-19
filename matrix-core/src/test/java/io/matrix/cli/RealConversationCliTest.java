@@ -73,4 +73,17 @@ class RealConversationCliTest {
         assertEquals("Hello", content);
         assertNull(missing);
     }
+    
+    @Test
+    void testRealConversationServerClassExists() {
+        // W394: HTTP server class exists
+        assertNotNull(RealConversationServer.class);
+    }
+    
+    @Test
+    void testRealConversationServerHasMain() throws NoSuchMethodException {
+        // W394: HTTP server has main method
+        var method = RealConversationServer.class.getMethod("main", String[].class);
+        assertNotNull(method);
+    }
 }
