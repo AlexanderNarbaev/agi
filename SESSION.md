@@ -4,58 +4,76 @@
 
 ---
 
-## Latest Wave: W420
+## Latest Wave: W429
 
-- **File:** `docs-v2/waves/WAL-420.md`
-- **Checkpoint Hash:** `d14e3049`
+- **File:** `docs-v2/waves/WAL-429.md`
+- **Checkpoint Hash:** `a15b38c5`
 - **Date:** 2026-09-19
-- **Previous:** [W419](docs-v2/waves/WAL-419.md) (`79f9cfe7`)
+- **Previous:** [W428](docs-v2/waves/WAL-428.md) (`c3c09856`)
 
-### W420 Summary
-Added JUnit tests for ConversationCompact (2) and ConversationDiff (5).
-30 CLI tests pass, 0 fail.
+### W429 Summary
+Launcher now has 21 commands covering all CLI tools.
 
 ---
 
-## CUMULATIVE MILESTONE: 65 Waves + Full Real Conversation Stack + Web UI
+## CUMULATIVE MILESTONE: 74 Waves + 21 CLI Tools
 
-### Wave Range: W356-W420 (65 waves total)
+### Wave Range: W356-W429 (74 waves total)
 
 #### Phase 1: Federation (W356-W385) - 30 waves
-ProtoBuf codegen, registry, consensus, runtime, mediator, GPU, telemetry, TLA+ spec, goal-reviewer fixes
+ProtoBuf, registry, consensus, runtime, mediator, GPU, telemetry, TLA+, goal-reviewer fixes
 
-#### Phase 2: Real Conversation (W386-W420) - 35 waves
-**CLI Tools (15 total):**
-- `RealConversationCli` (W392) - interactive CLI
-- `RealConversationServer` (W394, W416, W417) - HTTP server + web UI
-- `RealConversationReplay` (W395) - full transcript
-- `NdjsonToTraining` (W399) - training pairs
-- `ConversationStats` (W401) - aggregate stats
-- `ConversationSearch` (W405) - keyword search
-- `ConversationDelete` (W406) - delete with safety
-- `ConversationExport` (W407) - json/csv/txt
-- `ConversationMerge` (W409) - merge sessions
-- `ConversationTail` (W411) - last N turns
-- `ConversationHead` (W413) - first N turns
-- `ConversationCompact` (W414) - one-line-per-turn
-- `ConversationDiff` (W415) - compare two sessions
-- `ConversationCount` (W419) - line count
+#### Phase 2: Real Conversation (W386-W429) - 44 waves
+**21 CLI Tools:**
+1. RealConversationCli (W392)
+2. RealConversationServer (W394, W416, W417)
+3. RealConversationReplay (W395)
+4. NdjsonToTraining (W399)
+5. ConversationStats (W401)
+6. ConversationSearch (W405)
+7. ConversationDelete (W406)
+8. ConversationExport (W407)
+9. ConversationMerge (W409)
+10. ConversationTail (W411)
+11. ConversationHead (W413)
+12. ConversationCompact (W414)
+13. ConversationDiff (W415)
+14. ConversationCount (W419)
+15. ConversationName (W421)
+16. ConversationListNamed (W422)
+17. ConversationValidate (W423)
+18. ConversationFind (W424)
+19. ConversationSummary (W427)
+20. ConversationExtract (W428)
 
-**Web UI (W416, W418):** Terminal-styled HTML/JS interface with history loading
+**Web UI (W416, W418):** Terminal-styled HTML/JS
 
-**Launcher Script:** `matrix-conv.sh` with 11 commands
+**Launcher Script:** `matrix-conv.sh` with 21 commands
 
 ## Test Results
 
 - **Federation tests:** 167 pass
-- **CLI tests:** 30 pass
-- **Total this session:** 197+ tests
+- **CLI tests:** 41 pass
+- **Total this session:** 208+ tests
 
-## Native Binary
+## Verified Working
 
-- 126MB
-- All 9 CLI commands work
-- Rebuilt in W397, no regressions
+```bash
+$ echo "What is 2+2?" | java io.matrix.cli.RealConversationCli
+[MATRIX] 2+2 is equal to 4.
+
+$ curl -X POST -d '{"message":"Hello"}' http://localhost:9093/chat
+{"reply":"Hello! How can I help you?"}
+
+$ ./matrix-conv.sh help
+21 commands: cli, server, replay, head, tail, list, train, stats, search, delete, export, merge, name, names, validate, find, summary, extract, count, compact, diff
+
+$ ./matrix-conv.sh summary w403-test
+Name: "philosophy discussion"
+Turns: 4 (user: 2, assistant: 2)
+Chars: 265 (avg: 66/turn)
+Duration: 6s
+```
 
 ## Wave Commit Rule
 
@@ -66,4 +84,4 @@ ProtoBuf codegen, registry, consensus, runtime, mediator, GPU, telemetry, TLA+ s
 
 ---
 
-**Last updated:** 2026-09-19 (W420 complete)
+**Last updated:** 2026-09-19 (W429 complete)
