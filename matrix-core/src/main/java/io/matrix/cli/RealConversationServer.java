@@ -62,6 +62,7 @@ public final class RealConversationServer {
         server.createContext("/health", new HealthHandler());
         server.createContext("/sessions", new SessionsHandler());
         server.createContext("/chat", new ChatHandler(bridge));
+        server.createContext("/history", new HistoryHandler());  // W417
         server.createContext("/", new StaticFileHandler());  // W416: Web UI
         server.setExecutor(Executors.newFixedThreadPool(4));
         server.start();
@@ -132,6 +133,52 @@ public final class RealConversationServer {
             for (int i = 0; i < sessions.size(); i++) {
                 if (i > 0) sb.append(",");
                 sb.append("\"").append(sessions.get(i)).append("\"");
+            }
+            sb.append("]}");
+            sendJson(ex, 200, sb.toString());
+        }
+    }
+    
+    static class HistoryHandler implements HttpHandler {
+        public void handle(HttpExchange ex) throws IOException {
+            String query = ex.getRequestURI().getQuery();
+            String sessionId = null;
+            int limit = 50;
+            
+            // Parse query string: sessionId=xxx&limit=N
+            if (query != null) {
+                for (String param : query.split("&")) {
+                    int eq = param.indexOf('=');
+                    if (eq < 0) continue;
+                    String k = param.substring(0, eq);
+                    String v = param.substring(eq + 1);
+                    if (k.equals("sessionId")) sessionId = v;
+                    if (k.equals("limit")) try { limit = Integer.parseInt(v); } catch (Exception e) {}
+                }
+            }
+            
+            if (sessionId == null || sessionId.isEmpty()) {
+                sendJson(ex, 400, "{\"error\":\"sessionId required\"}");
+                return;
+            }
+            
+            java.nio.file.Path sessionFile = java.nio.file.Paths.get(DEFAULT_DATA_DIR, sessionId + ".ndjson");
+            if (!Files.exists(sessionFile)) {
+                sendJson(ex, 404, "{\"error\":\"session not found\"}");
+                return;
+            }
+            
+            StringBuilder sb = new StringBuilder("{\"sessionId\":\"");
+            sb.append(sessionId).append("\",\"turns\":[");
+            
+            List<String> allLines = new ArrayList<>();
+            try (java.util.stream.Stream<String> lines = Files.lines(sessionFile)) {
+                lines.forEach(allLines::add);
+            }
+            int startIdx = Math.max(0, allLines.size() - limit);
+            for (int i = startIdx; i < allLines.size(); i++) {
+                if (i > startIdx) sb.append(",");
+                sb.append(allLines.get(i));
             }
             sb.append("]}");
             sendJson(ex, 200, sb.toString());
