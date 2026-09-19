@@ -19,7 +19,7 @@ JACKSON_ANN=$(find ~/.gradle/caches -name "jackson-annotations-2*.jar" -not -nam
 ONNX=$(find ~/.gradle/caches -name "onnxruntime-1.29.0.jar" | head -1)
 PROTOBUF=$(find ~/.gradle/caches -name "protobuf-java-3.25.5.jar" | head -1)
 
-CP="$PROJECT_ROOT/matrix-core/build/classes/java/main:$SLF4J:$JACKSON_DATABIND:$JACKSON_CORE:$JACKSON_ANN:$ONNX:$PROTOBUF"
+CP="$PROJECT_ROOT/matrix-core/build/classes/java/main:$PROJECT_ROOT/matrix-core/build/resources/main:$SLF4J:$JACKSON_DATABIND:$JACKSON_CORE:$JACKSON_ANN:$ONNX:$PROTOBUF"
 
 if [ -z "$1" ]; then
     echo "Matrix Conversation Launcher (W431)"
