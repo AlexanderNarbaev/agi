@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>MATRIX Conversation</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { 
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', monospace;
+    background: #0a0a0a; color: #00ff88; line-height: 1.5;
+    max-width: 800px; margin: 0 auto; padding: 20px;
+}
+h1 { color: #00ffff; border-bottom: 1px solid #003322; padding-bottom: 10px; }
+.session-input { 
+    display: flex; gap: 10px; margin: 20px 0; 
+}
+.session-input input { 
+    flex: 1; padding: 10px; background: #1a1a1a; color: #00ff88;
+    border: 1px solid #003322; font-family: monospace;
+}
+.session-input button { 
+    padding: 10px 20px; background: #003322; color: #00ff88;
+    border: 1px solid #00ff88; cursor: pointer; font-family: monospace;
+}
+.session-input button:hover { background: #004433; }
+.chat { 
+    margin-top: 20px; 
+}
+.message { 
+    margin: 10px 0; padding: 10px; border-left: 3px solid;
+}
+.user { 
+    background: #0a1a0a; border-left-color: #00aaff; 
+}
+.assistant { 
+    background: #001a0a; border-left-color: #00ff88; 
+}
+.role { 
+    font-weight: bold; color: #ffff00; margin-bottom: 5px;
+}
+.input { 
+    display: flex; gap: 10px; margin-top: 20px; 
+}
+.input textarea { 
+    flex: 1; min-height: 60px; padding: 10px; background: #1a1a1a;
+    color: #00ff88; border: 1px solid #003322; font-family: monospace;
+    resize: vertical;
+}
+.input button { 
+    padding: 10px 20px; background: #00ff88; color: #000;
+    border: none; cursor: pointer; font-weight: bold;
+}
+.input button:hover { background: #00cc66; }
+.input button:disabled { 
+    background: #444; color: #888; cursor: not-allowed;
+}
+.status { 
+    color: #888; font-size: 0.9em; margin: 10px 0;
+}
+.prior-info { 
+    color: #ffaa00; font-size: 0.8em;
+}
+</style>
+</head>
+<body>
+<h1>► MATRIX CONVERSATION ◄</h1>
+<p>Local Qwen2.5-0.5B ONNX inference · Session continuity · NDJSON persistence</p>
+
+<div class="session-input">
+    <input id="sessionInput" placeholder="session-id (leave empty for new)" />
+    <button onclick="loadSession()">Load</button>
+    <button onclick="newSession()">New</button>
+</div>
+
+<div class="status" id="status">Ready</div>
+
+<div class="chat" id="chat"></div>
+
+<div class="input">
+    <textarea id="messageInput" placeholder="Type your message..."></textarea>
+    <button id="sendButton" onclick="sendMessage()">SEND</button>
+</div>
+
+<script>
+const API = '';  // same origin
+let sessionId = localStorage.getItem('matrixSession') || '';
+let priorTurns = 0;
+let isLoading = false;
+
+document.getElementById('sessionInput').value = sessionId;
+
+function updateStatus(msg) {
+    document.getElementById('status').textContent = msg;
+}
+
+function loadSession() {
+    sessionId = document.getElementById('sessionInput').value.trim();
+    localStorage.setItem('matrixSession', sessionId);
+    fetchChatHistory();
+}
+
+function newSession() {
+    sessionId = '';
+    document.getElementById('sessionInput').value = '';
+    localStorage.removeItem('matrixSession');
+    document.getElementById('chat').innerHTML = '<p class="status">New session. Type your first message.</p>';
+    updateStatus('New session');
+}
+
+async function fetchChatHistory() {
+    updateStatus('Loading session ' + sessionId + '...');
+    // No GET history endpoint yet - just start fresh
+    document.getElementById('chat').innerHTML = '<p class="status">Session: ' + sessionId + '</p>';
+    updateStatus('Session loaded: ' + sessionId);
+}
+
+async function sendMessage() {
+    if (isLoading) return;
+    const msgEl = document.getElementById('messageInput');
+    const msg = msgEl.value.trim();
+    if (!msg) return;
+    
+    if (!sessionId) {
+        sessionId = 'web-' + Date.now();
+        document.getElementById('sessionInput').value = sessionId;
+        localStorage.setItem('matrixSession', sessionId);
+    }
+    
+    isLoading = true;
+    const sendBtn = document.getElementById('sendButton');
+    sendBtn.disabled = true;
+    
+    // Add user message to UI
+    addMessage('user', msg);
+    msgEl.value = '';
+    updateStatus('Thinking...');
+    
+    try {
+        const response = await fetch(API + '/chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message: msg, sessionId: sessionId })
+        });
+        const data = await response.json();
+        
+        addMessage('assistant', data.reply);
+        priorTurns = data.priorTurns;
+        updateStatus('Prior turns loaded: ' + priorTurns);
+    } catch (e) {
+        updateStatus('Error: ' + e.message);
+    } finally {
+        isLoading = false;
+        sendBtn.disabled = false;
+    }
+}
+
+function addMessage(role, content) {
+    const chat = document.getElementById('chat');
+    const div = document.createElement('div');
+    div.className = 'message ' + role;
+    div.innerHTML = '<div class="role">' + role.toUpperCase() + '</div><div>' + escapeHtml(content) + '</div>';
+    chat.appendChild(div);
+    div.scrollIntoView({ behavior: 'smooth' });
+}
+
+function escapeHtml(s) {
+    return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+// Allow Enter to send (Ctrl+Enter for newline)
+document.getElementById('messageInput').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !e.ctrlKey && !e.shiftKey) {
+        e.preventDefault();
+        sendMessage();
+    }
+});
+</script>
+</body>
+</html>

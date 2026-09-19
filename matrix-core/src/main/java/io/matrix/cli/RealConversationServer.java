@@ -9,6 +9,7 @@ import com.sun.net.httpserver.HttpHandler;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
@@ -61,6 +62,7 @@ public final class RealConversationServer {
         server.createContext("/health", new HealthHandler());
         server.createContext("/sessions", new SessionsHandler());
         server.createContext("/chat", new ChatHandler(bridge));
+        server.createContext("/", new StaticFileHandler());  // W416: Web UI
         server.setExecutor(Executors.newFixedThreadPool(4));
         server.start();
         
@@ -72,6 +74,49 @@ public final class RealConversationServer {
             server.stop(0);
             bridge.close();
         }));
+    }
+    
+    /**
+     * W416 — Static file handler for the web UI.
+     * Serves files from classpath:web/ directory.
+     */
+    static class StaticFileHandler implements HttpHandler {
+        public void handle(HttpExchange ex) throws IOException {
+            String path = ex.getRequestURI().getPath();
+            if (path.equals("/") || path.isEmpty()) {
+                path = "/index.html";
+            }
+            
+            // Security: prevent path traversal
+            if (path.contains("..")) {
+                sendJson(ex, 403, "{\"error\":\"forbidden\"}");
+                return;
+            }
+            
+            String resourcePath = "/web" + path;
+            try (InputStream is = RealConversationServer.class.getResourceAsStream(resourcePath)) {
+                if (is == null) {
+                    sendJson(ex, 404, "{\"error\":\"not found\"}");
+                    return;
+                }
+                byte[] bytes = is.readAllBytes();
+                String contentType = contentTypeFor(path);
+                ex.getResponseHeaders().set("Content-Type", contentType);
+                ex.getResponseHeaders().set("Cache-Control", "no-cache");
+                ex.sendResponseHeaders(200, bytes.length);
+                try (OutputStream os = ex.getResponseBody()) {
+                    os.write(bytes);
+                }
+            }
+        }
+        
+        private String contentTypeFor(String path) {
+            if (path.endsWith(".html")) return "text/html; charset=utf-8";
+            if (path.endsWith(".css")) return "text/css; charset=utf-8";
+            if (path.endsWith(".js")) return "application/javascript; charset=utf-8";
+            if (path.endsWith(".json")) return "application/json; charset=utf-8";
+            return "application/octet-stream";
+        }
     }
     
     static class HealthHandler implements HttpHandler {
