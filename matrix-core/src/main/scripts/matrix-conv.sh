@@ -1,16 +1,23 @@
 #!/bin/bash
-# W398 — Matrix Conversation Launcher
+# W400 — Matrix Conversation Launcher
 # 
-# Builds and launches the real conversation CLI/HTTP server.
+# All-in-one launcher for the MATRIX conversation stack:
+#   - cli: Interactive CLI (real Qwen2.5-0.5B model)
+#   - server: HTTP REST server (default port 9093)
+#   - replay: Replay recorded conversation
+#   - list: List recent sessions
+#   - train: Convert NDJSON to training pairs
+# 
 # Usage:
-#   ./matrix-conv.sh cli    # Interactive CLI
-#   ./matrix-conv.sh server # HTTP server (port 9093)
-#   ./matrix-conv.sh replay <session-id>  # Replay session
-#   ./matrix-conv.sh list  # List sessions
+#   ./matrix-conv.sh cli
+#   ./matrix-conv.sh server [port]
+#   ./matrix-conv.sh replay <session-id>
+#   ./matrix-conv.sh list
+#   ./matrix-conv.sh train <output.jsonl>
 
 set -e
 
-# Find project root (the matrix-conv.sh is in matrix-core/src/main/scripts)
+# Find project root (script is in matrix-core/src/main/scripts)
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/../../../.." && pwd)"
 cd "$PROJECT_ROOT"
@@ -23,16 +30,20 @@ JACKSON_ANN=$(find ~/.gradle/caches -name "jackson-annotations-2*.jar" -not -nam
 ONNX=$(find ~/.gradle/caches -name "onnxruntime-1.29.0.jar" | head -1)
 PROTOBUF=$(find ~/.gradle/caches -name "protobuf-java-3.25.5.jar" | head -1)
 
-CP="/home/alexandr-narbaev/Projects/agi/matrix-core/build/classes/java/main:$SLF4J:$JACKSON_DATABIND:$JACKSON_CORE:$JACKSON_ANN:$ONNX:$PROTOBUF"
+CP="$PROJECT_ROOT/matrix-core/build/classes/java/main:$SLF4J:$JACKSON_DATABIND:$JACKSON_CORE:$JACKSON_ANN:$ONNX:$PROTOBUF"
 
 if [ -z "$1" ]; then
-    echo "Usage: $0 {cli|server|replay|list}"
+    echo "Matrix Conversation Launcher (W400)"
     echo ""
-    echo "  cli               Interactive CLI (real Qwen2.5-0.5B model)"
-    echo "  server [port]     HTTP REST server (default port 9093)"
-    echo "  replay <session>  Replay recorded conversation"
-    echo "  list              List recent sessions"
-    exit 1
+    echo "Usage: $0 {cli|server|replay|list|train}"
+    echo ""
+    echo "  cli                        Interactive CLI (real Qwen2.5-0.5B model)"
+    echo "  server [port]              HTTP REST server (default port 9093)"
+    echo "  replay <session>           Replay recorded conversation"
+    echo "  list                       List recent sessions"
+    echo "  train <output.jsonl>       Convert NDJSON to training pairs"
+    echo "  help                       Show this help"
+    exit 0
 fi
 
 case "$1" in
@@ -46,14 +57,31 @@ case "$1" in
         java -cp "$CP" io.matrix.cli.RealConversationServer "$PORT"
         ;;
     replay)
+        if [ -z "$2" ]; then
+            echo "Usage: $0 replay <session-id>"
+            exit 1
+        fi
         echo "[matrix-conv] Replaying session $2..."
         java -cp "$CP" io.matrix.cli.RealConversationReplay "$2"
         ;;
     list)
         java -cp "$CP" io.matrix.cli.RealConversationCli --list-sessions 50
         ;;
+    train)
+        if [ -z "$2" ]; then
+            echo "Usage: $0 train <output.jsonl>"
+            exit 1
+        fi
+        echo "[matrix-conv] Converting NDJSON to training pairs..."
+        java -cp "$CP" io.matrix.cli.NdjsonToTraining "$2"
+        ;;
+    help)
+        # Same as no-args
+        exec "$0"
+        ;;
     *)
         echo "Unknown command: $1"
+        echo "Run '$0 help' for usage"
         exit 1
         ;;
 esac
