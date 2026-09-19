@@ -12,6 +12,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.Optional;
 import java.util.Random;
 
@@ -145,17 +147,41 @@ public final class ModulatorRegistryStore {
      * Returns simple XOR-based hash (not cryptographic, but deterministic).
      */
     public String calculateHash() {
-        long h = 0L;
-        for (ModulatorDefinition def : getAll()) {
-            h ^= def.getId().hashCode();
-            h = h * 31 + def.getName().hashCode();
-            h = h * 31 + def.getTypeValue();
-            h = h * 31 + def.getValueTypeValue();
-            if (def.hasDefaults()) {
-                h = h * 31 + Float.floatToIntBits(def.getDefaults().getDefaultFloat());
+        // FIX (FAIL-6 followup): Use SHA-256 for cryptographic hash
+        // Previously used XOR-based hash, not collision-resistant
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            for (ModulatorDefinition def : getAll()) {
+                digest.update(def.getId().getBytes());
+                digest.update(def.getName().getBytes());
+                digest.update(intToBytes(def.getTypeValue()));
+                digest.update(intToBytes(def.getValueTypeValue()));
+                if (def.hasDefaults()) {
+                    digest.update(intToBytes(Float.floatToIntBits(def.getDefaults().getDefaultFloat())));
+                }
             }
+            byte[] hash = digest.digest();
+            StringBuilder hex = new StringBuilder();
+            for (byte b : hash) {
+                hex.append(String.format("%02x", b));
+            }
+            return hex.toString();
+        } catch (NoSuchAlgorithmException e) {
+            // SHA-256 is required by JRE, this should never happen
+            throw new RuntimeException("SHA-256 not available", e);
         }
-        return Long.toHexString(h);
+    }
+    
+    /**
+     * Convert int to 4-byte big-endian bytes.
+     */
+    private static byte[] intToBytes(int value) {
+        return new byte[] {
+            (byte) ((value >> 24) & 0xFF),
+            (byte) ((value >> 16) & 0xFF),
+            (byte) ((value >> 8) & 0xFF),
+            (byte) (value & 0xFF)
+        };
     }
     
     /**
