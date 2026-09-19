@@ -97,7 +97,8 @@ public class OnnxRuntimeAdapter {
             SessionOptions options = new SessionOptions();
             // Conservative: 1 thread for safety. Production would use
             // environment.getAvailableProcessors().
-            options.setIntraOpNumThreads(1);
+            options.setIntraOpNumThreads(Runtime.getRuntime().availableProcessors());
+            // RUN 475: enable all graph optimizations
 
             // RUN 62: configure GPU execution if requested and available.
             if (useGpu) {
