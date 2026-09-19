@@ -67,6 +67,12 @@ public final class LocalConsensusEngine {
     /**
      * Add a vote for the current proposal.
      */
+/**
+     * Add a vote to the consensus engine.
+     *
+     * @param vote the vote to add (must not be null)
+     * @throws IllegalArgumentException if vote is null
+     */
     public void addVote(ConsensusVote vote) {
         if (vote == null) {
             throw new IllegalArgumentException("vote cannot be null");
@@ -79,6 +85,12 @@ public final class LocalConsensusEngine {
     
     /**
      * Compute consensus result based on collected votes.
+     */
+/**
+     * Evaluate the current votes against the proposal.
+     *
+     * @param proposal the proposal being voted on (only id is used in single-node mode)
+     * @return ConsensusResult with status (APPROVED/REJECTED/VETOED/PENDING) and counts
      */
     public ConsensusResult evaluate(ConsensusProposal proposal) {
         if (votes.isEmpty()) {
@@ -140,7 +152,16 @@ public final class LocalConsensusEngine {
     /**
      * Get voting weight for a capability level.
      */
+/**
+     * Get the voting weight for a capability level.
+     *
+     * Weights: L0/L1=0 (no vote), L2=1.0, L3=1.5, L4=2.0, L5=3.0, L6=5.0, L7=10.0.
+     *
+     * @param level the voter's capability level
+     * @return voting weight (0.0 for L0/L1, &gt;0 for L2+)
+     */
     public static double getVotingWeight(CapabilityLevel level) {
+        if (level == null) return 0.0;
         return VOTING_WEIGHTS.getOrDefault(level.getNumber(), 0.0);
     }
     

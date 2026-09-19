@@ -44,8 +44,21 @@ public final class FederationRuntime {
     /**
      * Propose adding a modulator. Returns the proposal if accepted by consensus.
      */
+    /**
+     * Propose adding a modulator to the federation.
+     *
+     * Performs consensus flow: proposer self-votes YES, then evaluates.
+     * Requires proposer capability >= L2 AND >= modulator's safety.min_capability.
+     *
+     * @param def the modulator definition to add
+     * @param proposerCapabilityOrdinal capability ordinal of the proposer (e.g., L2=3)
+     * @return Optional.of(def) if approved, Optional.empty() if rejected or unauthorized
+     */
     public Optional<ModulatorDefinition> proposeAdd(ModulatorDefinition def, 
                                                       long proposerCapabilityOrdinal) {
+        if (def == null) {
+            return Optional.empty();
+        }
         // Reset consensus for new proposal (FIX: avoid phantom votes from prior operations)
         consensus.reset();
         
@@ -95,6 +108,9 @@ public final class FederationRuntime {
      */
     public Optional<ModulatorDefinition> proposeUpdate(ModulatorDefinition def,
                                                           long proposerCapabilityOrdinal) {
+        if (def == null) {
+            return Optional.empty();
+        }
         // Reset consensus for new proposal
         consensus.reset();
         
@@ -153,6 +169,9 @@ public final class FederationRuntime {
      * Propose removing a modulator.
      */
     public boolean proposeRemove(String id, long proposerCapabilityOrdinal) {
+        if (id == null || id.isEmpty()) {
+            return false;
+        }
         // Reset consensus for new proposal
         consensus.reset();
         

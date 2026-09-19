@@ -30,6 +30,15 @@ public final class CognitiveModulationBridge {
     
     /**
      * Apply hormonal modulation to a cognitive profile.
+     *
+     * Reads cortisol/dopamine values from BiochemicalMediator and adjusts:
+     * - phiBinary = phiBinary * (1 - 0.3 * cortisol) [stress reduces integration]
+     * - phiF = phiF * (1 + 0.2 * dopamine) [reward enhances feedback]
+     * Values are clamped to [0, 1].
+     *
+     * @param profile input cognitive profile (not mutated)
+     * @return new cognitive profile with hormonal modulation applied
+     * @throws IllegalArgumentException if profile is null
      */
     public CognitiveGenesisProfile modulate(CognitiveGenesisProfile profile) {
         if (profile == null) {
