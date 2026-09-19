@@ -32,6 +32,14 @@ public final class RegistryBackup {
     /**
      * Create a backup of the registry at the given path.
      */
+    /**
+     * Create a backup of the registry at the given path.
+     *
+     * @param store the registry to back up (read-only access)
+     * @param target the file path to write the backup to (overwrites existing)
+     * @return BackupResult describing the written file
+     * @throws IOException if the file cannot be written
+     */
     public static BackupResult backup(ModulatorRegistryStore store, Path target) throws IOException {
         ModulatorRegistry proto = store.exportProto();
         byte[] bytes = proto.toByteArray();
@@ -47,9 +55,11 @@ public final class RegistryBackup {
     
     /**
      * Restore registry from a backup file.
-     * 
-     * Returns a new store. Caller is responsible for replacing any
-     * existing runtime's store with the restored one.
+     *
+     * @param source the backup file to read
+     * @param seed deterministic seed for the restored store's RNG
+     * @return a new ModulatorRegistryStore populated with the backup's modulators
+     * @throws IOException if the file cannot be read or parsed
      */
     public static ModulatorRegistryStore restore(Path source, long seed) throws IOException {
         byte[] bytes = Files.readAllBytes(source);
@@ -64,7 +74,15 @@ public final class RegistryBackup {
     }
     
     /**
-     * Verify backup file integrity (parseable, has data).
+     * Verify backup file integrity.
+     *
+     * A file is considered valid if:
+     * - It is non-empty (size > 0)
+     * - It parses as a ModulatorRegistry ProtoBuf message
+     * - It contains modulators OR has version > 0
+     *
+     * @param source the file to verify
+     * @return true if the file is a valid backup, false otherwise
      */
     public static boolean verify(Path source) {
         try {

@@ -56,6 +56,16 @@ public final class GpuTaskExecutor {
      * If gpuEnabled = false, uses CPU fallback (still produces valid result).
      * Real GPU dispatch would replace this with kernel launch.
      */
+    /**
+     * Execute a GPU task and return a result.
+     *
+     * If gpuEnabled=false (CPU fallback), simulates the operation in CPU.
+     * Real GPU dispatch would replace simulateOperation() with a kernel launch.
+     *
+     * @param task the GPU task to execute
+     * @return GpuResult with status (SUCCESS/TIMEOUT/OOM/FAILED), output, and timing
+     * @throws IllegalArgumentException if task is null
+     */
     public GpuResult execute(GpuTask task) {
         if (task == null) {
             throw new IllegalArgumentException("task cannot be null");

@@ -29,7 +29,19 @@ public final class PrometheusExporter {
     }
     
     /**
-     * Render telemetry snapshot as Prometheus metrics.
+     * Render telemetry snapshot as Prometheus text exposition format (v0.0.4).
+     *
+     * Output includes:
+     * - federation_total_events (counter)
+     * - federation_registry_mutations (counter)
+     * - federation_events_by_type (counter, labels: proposal/vote/mutation)
+     * - federation_proposals_by_status (counter)
+     * - federation_votes_by_decision (counter)
+     *
+     * Label values are escaped per Prometheus spec (\, \n, \").
+     *
+     * @param telemetry the telemetry instance to render
+     * @return Prometheus-formatted text
      */
     public static String render(FederationTelemetry telemetry) {
         FederationTelemetry.TelemetrySnapshot snap = telemetry.snapshot();

@@ -41,6 +41,16 @@ public final class BiochemicalMediator {
     private long lastUpdateNs = 0L;
     private int updateCount = 0;
     
+    /**
+     * Construct a mediator for the given runtime.
+     *
+     * The constructor immediately calls refreshFromRegistry() to populate
+     * initial values from any modulators already in the registry.
+     *
+     * @param runtime the federation runtime to read modulators from
+     * @param seed deterministic seed for the RNG
+     * @throws IllegalArgumentException if runtime is null
+     */
     public BiochemicalMediator(FederationRuntime runtime, long seed) {
         if (runtime == null) {
             throw new IllegalArgumentException("runtime cannot be null");
@@ -52,6 +62,11 @@ public final class BiochemicalMediator {
     
     /**
      * Re-read all modulators from the federation registry and rebuild local caches.
+     */
+    /**
+     * Re-read all modulators from the registry and rebuild local value caches.
+     *
+     * Note: this clears any local-only values set via {@link #setLocalValue}.
      */
     public synchronized void refreshFromRegistry() {
         activeValues.clear();
