@@ -4,46 +4,41 @@
 
 ---
 
-## Latest Wave: W447
+## Latest Wave: W452
 
-- **Checkpoint Hash:** `9a13f939`
+- **Checkpoint Hash:** `1d5a6005`
 - **Date:** 2026-09-19
-- **Previous:** [W446](docs-v2/waves/WAL-446.md) (`b0f9e527`)
+- **Previous:** [W451](docs-v2/waves/WAL-451.md) (`b1f5e7a6`)
 
-### W447 Summary
-Final verification: 264 tests pass, 0 fail.
+### W452 Summary
+Final verification: 297 tests pass, 0 fail.
 - 48 CLI tests
+- 33 Chat tests (MatrixChatClient library)
 - 216 Federation tests
-- 3 new tools (Docker, Monitor, Bookmark)
-- 92 waves total
 
 ---
 
-## MILESTONE: 92 Waves + 30 Tools + 264 Tests
+## MILESTONE: 97 Waves + 32 Tools + 297 Tests
 
-### Wave Range: W356-W447 (92 waves total)
+### Wave Range: W356-W452 (97 waves total)
 
 #### Phase 1: Federation (W356-W385) - 30 waves
-#### Phase 2: Real Conversation (W386-W447) - 62 waves
+#### Phase 2: Real Conversation (W386-W452) - 67 waves
 
-### 30 CLI Tools (W392-W446)
-Plus 1 streaming server (W442)
+### 32 Tools Delivered
 
-### New Tools (W434-W446)
-- `ConversationModelEval` (W434) - 7/7 tests pass
-- `ConversationBackup` (W437) - zip archive
-- `ConversationRestore` (W438) - zip extract
-- `ModelDownloader` (W441) - HuggingFace + URL
-- `ConversationStreamServer` (W442) - SSE streaming
-- `ConversationDocker` (W444) - Dockerfile + compose
-- `ConversationMonitor` (W445) - live polling
-- `ConversationBookmark` (W446) - mark turns
+**Latest additions (W448-W451):**
+- W448: `ConversationSummarize` (AI-generated summary)
+- W449: `ConversationCleanup` (archive old sessions)
+- W450: `MatrixChatClient` (embeddable library)
+- W451: Tests for MatrixChatClient
 
 ### Test Results
 
 - **Federation tests:** 216 pass, 0 fail
 - **CLI tests:** 48 pass, 0 fail
-- **Total this session:** 264+ tests, 0 failures
+- **Chat tests:** 33 pass, 0 fail
+- **Total this session:** 297+ tests, 0 failures
 
 ### CONSTITUTION Compliance (all 6 articles)
 
@@ -52,7 +47,7 @@ Plus 1 streaming server (W442)
 - ✅ **Article III:** Mathematical foundations preserved
 - ✅ **Article IV:** FROZEN + L7 VETO + per-modulator minCapability
 - ✅ **Article V:** Spec-driven, single canonical launcher
-- ✅ **Article VI:** Real conversation + streaming (measurement substrate)
+- ✅ **Article VI:** Real conversation + streaming + library (measurement substrate)
 - ✅ **AGENTS.md:** All wave work committed + pushed to both remotes
 
 ### Wave Commit Rule
@@ -64,4 +59,4 @@ Plus 1 streaming server (W442)
 
 ---
 
-**Last updated:** 2026-09-19 (W447 complete)
+**Last updated:** 2026-09-19 (W452 complete)
