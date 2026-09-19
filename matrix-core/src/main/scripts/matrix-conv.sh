@@ -1,12 +1,7 @@
 #!/bin/bash
-# W400 — Matrix Conversation Launcher
+# W408 — Matrix Conversation Launcher
 # 
-# All-in-one launcher for the MATRIX conversation stack:
-#   - cli: Interactive CLI (real Qwen2.5-0.5B model)
-#   - server: HTTP REST server (default port 9093)
-#   - replay: Replay recorded conversation
-#   - list: List recent sessions
-#   - train: Convert NDJSON to training pairs
+# All-in-one launcher for the MATRIX conversation stack.
 # 
 # Usage:
 #   ./matrix-conv.sh cli
@@ -14,6 +9,11 @@
 #   ./matrix-conv.sh replay <session-id>
 #   ./matrix-conv.sh list
 #   ./matrix-conv.sh train <output.jsonl>
+#   ./matrix-conv.sh stats
+#   ./matrix-conv.sh search <query>
+#   ./matrix-conv.sh delete <session-id> [--force]
+#   ./matrix-conv.sh export <session-id|all> <format> [output-file]
+#   ./matrix-conv.sh help
 
 set -e
 
@@ -33,9 +33,9 @@ PROTOBUF=$(find ~/.gradle/caches -name "protobuf-java-3.25.5.jar" | head -1)
 CP="$PROJECT_ROOT/matrix-core/build/classes/java/main:$SLF4J:$JACKSON_DATABIND:$JACKSON_CORE:$JACKSON_ANN:$ONNX:$PROTOBUF"
 
 if [ -z "$1" ]; then
-    echo "Matrix Conversation Launcher (W400)"
+    echo "Matrix Conversation Launcher (W408)"
     echo ""
-    echo "Usage: $0 {cli|server|replay|list|train}"
+    echo "Usage: $0 {cli|server|replay|list|train|stats|search|delete|export}"
     echo ""
     echo "  cli                        Interactive CLI (real Qwen2.5-0.5B model)"
     echo "  server [port]              HTTP REST server (default port 9093)"
@@ -45,6 +45,7 @@ if [ -z "$1" ]; then
     echo "  stats                      Show conversation statistics"
     echo "  search <query>             Search conversation content"
     echo "  delete <session> [--force] Delete a session"
+    echo "  export <id|all> <format>   Export to json/csv/txt"
     echo "  help                       Show this help"
     exit 0
 fi
@@ -54,60 +55,10 @@ case "$1" in
         echo "[matrix-conv] Starting CLI..."
         java -cp "$CP" io.matrix.cli.RealConversationCli "${@:2}"
         ;;
-    stats)
-        echo "[matrix-conv] Computing statistics..."
-        java -cp "$CP" io.matrix.cli.ConversationStats
-        ;;
-    search)
-        if [ -z "$2" ]; then
-            echo "Usage: $0 search <query>"
-            exit 1
-        fi
-        echo "[matrix-conv] Searching for '$2'..."
-        java -cp "$CP" io.matrix.cli.ConversationSearch "$2"
-        ;;
-    delete)
-        if [ -z "$2" ]; then
-            echo "Usage: $0 delete <session-id> [--force]"
-            exit 1
-        fi
-        echo "[matrix-conv] Deleting session $2..."
-        shift
-        java -cp "$CP" io.matrix.cli.ConversationDelete "$@"
-        ;;
-    search)
-        echo "[matrix-conv] Computing statistics..."
-        java -cp "$CP" io.matrix.cli.ConversationStats
-        ;;
     server)
         PORT="${2:-9093}"
         echo "[matrix-conv] Starting HTTP server on port $PORT..."
         java -cp "$CP" io.matrix.cli.RealConversationServer "$PORT"
-        ;;
-    stats)
-        echo "[matrix-conv] Computing statistics..."
-        java -cp "$CP" io.matrix.cli.ConversationStats
-        ;;
-    search)
-        if [ -z "$2" ]; then
-            echo "Usage: $0 search <query>"
-            exit 1
-        fi
-        echo "[matrix-conv] Searching for '$2'..."
-        java -cp "$CP" io.matrix.cli.ConversationSearch "$2"
-        ;;
-    delete)
-        if [ -z "$2" ]; then
-            echo "Usage: $0 delete <session-id> [--force]"
-            exit 1
-        fi
-        echo "[matrix-conv] Deleting session $2..."
-        shift
-        java -cp "$CP" io.matrix.cli.ConversationDelete "$@"
-        ;;
-    search)
-        echo "[matrix-conv] Computing statistics..."
-        java -cp "$CP" io.matrix.cli.ConversationStats
         ;;
     replay)
         if [ -z "$2" ]; then
@@ -117,58 +68,8 @@ case "$1" in
         echo "[matrix-conv] Replaying session $2..."
         java -cp "$CP" io.matrix.cli.RealConversationReplay "$2"
         ;;
-    stats)
-        echo "[matrix-conv] Computing statistics..."
-        java -cp "$CP" io.matrix.cli.ConversationStats
-        ;;
-    search)
-        if [ -z "$2" ]; then
-            echo "Usage: $0 search <query>"
-            exit 1
-        fi
-        echo "[matrix-conv] Searching for '$2'..."
-        java -cp "$CP" io.matrix.cli.ConversationSearch "$2"
-        ;;
-    delete)
-        if [ -z "$2" ]; then
-            echo "Usage: $0 delete <session-id> [--force]"
-            exit 1
-        fi
-        echo "[matrix-conv] Deleting session $2..."
-        shift
-        java -cp "$CP" io.matrix.cli.ConversationDelete "$@"
-        ;;
-    search)
-        echo "[matrix-conv] Computing statistics..."
-        java -cp "$CP" io.matrix.cli.ConversationStats
-        ;;
     list)
         java -cp "$CP" io.matrix.cli.RealConversationCli --list-sessions 50
-        ;;
-    stats)
-        echo "[matrix-conv] Computing statistics..."
-        java -cp "$CP" io.matrix.cli.ConversationStats
-        ;;
-    search)
-        if [ -z "$2" ]; then
-            echo "Usage: $0 search <query>"
-            exit 1
-        fi
-        echo "[matrix-conv] Searching for '$2'..."
-        java -cp "$CP" io.matrix.cli.ConversationSearch "$2"
-        ;;
-    delete)
-        if [ -z "$2" ]; then
-            echo "Usage: $0 delete <session-id> [--force]"
-            exit 1
-        fi
-        echo "[matrix-conv] Deleting session $2..."
-        shift
-        java -cp "$CP" io.matrix.cli.ConversationDelete "$@"
-        ;;
-    search)
-        echo "[matrix-conv] Computing statistics..."
-        java -cp "$CP" io.matrix.cli.ConversationStats
         ;;
     train)
         if [ -z "$2" ]; then
@@ -199,67 +100,21 @@ case "$1" in
         shift
         java -cp "$CP" io.matrix.cli.ConversationDelete "$@"
         ;;
-    search)
-        echo "[matrix-conv] Computing statistics..."
-        java -cp "$CP" io.matrix.cli.ConversationStats
+    export)
+        if [ -z "$2" ]; then
+            echo "Usage: $0 export <session-id|all> <format> [output-file]"
+            echo "Formats: json, csv, txt"
+            exit 1
+        fi
+        echo "[matrix-conv] Exporting $1 to $2..."
+        java -cp "$CP" io.matrix.cli.ConversationExport "${@:2}"
         ;;
     help)
-        # Same as no-args
         exec "$0"
-        ;;
-    stats)
-        echo "[matrix-conv] Computing statistics..."
-        java -cp "$CP" io.matrix.cli.ConversationStats
-        ;;
-    search)
-        if [ -z "$2" ]; then
-            echo "Usage: $0 search <query>"
-            exit 1
-        fi
-        echo "[matrix-conv] Searching for '$2'..."
-        java -cp "$CP" io.matrix.cli.ConversationSearch "$2"
-        ;;
-    delete)
-        if [ -z "$2" ]; then
-            echo "Usage: $0 delete <session-id> [--force]"
-            exit 1
-        fi
-        echo "[matrix-conv] Deleting session $2..."
-        shift
-        java -cp "$CP" io.matrix.cli.ConversationDelete "$@"
-        ;;
-    search)
-        echo "[matrix-conv] Computing statistics..."
-        java -cp "$CP" io.matrix.cli.ConversationStats
         ;;
     *)
         echo "Unknown command: $1"
         echo "Run '$0 help' for usage"
         exit 1
-        ;;
-    stats)
-        echo "[matrix-conv] Computing statistics..."
-        java -cp "$CP" io.matrix.cli.ConversationStats
-        ;;
-    search)
-        if [ -z "$2" ]; then
-            echo "Usage: $0 search <query>"
-            exit 1
-        fi
-        echo "[matrix-conv] Searching for '$2'..."
-        java -cp "$CP" io.matrix.cli.ConversationSearch "$2"
-        ;;
-    delete)
-        if [ -z "$2" ]; then
-            echo "Usage: $0 delete <session-id> [--force]"
-            exit 1
-        fi
-        echo "[matrix-conv] Deleting session $2..."
-        shift
-        java -cp "$CP" io.matrix.cli.ConversationDelete "$@"
-        ;;
-    search)
-        echo "[matrix-conv] Computing statistics..."
-        java -cp "$CP" io.matrix.cli.ConversationStats
         ;;
 esac
