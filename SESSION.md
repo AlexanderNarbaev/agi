@@ -4,33 +4,33 @@
 
 ---
 
-## Latest Wave: W456
+## Latest Wave: W460
 
-- **Checkpoint Hash:** `a6c7fbd5`
+- **Checkpoint Hash:** `d060003e`
 - **Date:** 2026-09-19
-- **Previous:** [W455](docs-v2/waves/WAL-455.md) (`a6c7fbd5`)
+- **Previous:** [W459](docs-v2/waves/WAL-459.md) (`d060003e`)
 
-### W456 Summary
-Final verification: 264+ tests pass, 0 fail.
+### W460 Summary
+Final verification: 264 tests pass, 0 fail.
 - 48 CLI tests
 - 216 Federation tests
-- 35 tools total
+- 38 tools total
 
 ---
 
-## MILESTONE: 101 Waves + 35 Tools + 264+ Tests
+## MILESTONE: 105 Waves + 38 Tools + 264 Tests
 
-### Wave Range: W356-W456 (101 waves total)
+### Wave Range: W356-W460 (105 waves total)
 
 #### Phase 1: Federation (W356-W385) - 30 waves
-#### Phase 2: Real Conversation (W386-W456) - 71 waves
+#### Phase 2: Real Conversation (W386-W460) - 75 waves
 
-### 35 Tools Delivered
+### 38 Tools Delivered
 
-**Latest additions (W453-W456):**
-- W453: `ConversationBenchmark` (inference speed)
-- W454: `ConversationToSql` (NDJSON to SQL)
-- W455: `ConversationFavorite` (star/like)
+**Latest additions (W457-W459):**
+- W457: `ConversationHtmlExport` (styled HTML)
+- W458: `ConversationDedup` (duplicate detection)
+- W459: `ConversationShare` (URL with embedded data)
 
 ### Test Results
 
@@ -57,4 +57,4 @@ Final verification: 264+ tests pass, 0 fail.
 
 ---
 
-**Last updated:** 2026-09-19 (W456 complete)
+**Last updated:** 2026-09-19 (W460 complete)
