@@ -24,7 +24,8 @@ h1 { color: #00ffff; border-bottom: 1px solid #003322; padding-bottom: 10px; }
 }
 .session-input button:hover { background: #004433; }
 .chat { 
-    margin-top: 20px; 
+    margin-top: 20px; min-height: 200px;
+    border: 1px solid #003322; padding: 10px; background: #050505;
 }
 .message { 
     margin: 10px 0; padding: 10px; border-left: 3px solid;
@@ -57,8 +58,8 @@ h1 { color: #00ffff; border-bottom: 1px solid #003322; padding-bottom: 10px; }
 .status { 
     color: #888; font-size: 0.9em; margin: 10px 0;
 }
-.prior-info { 
-    color: #ffaa00; font-size: 0.8em;
+.empty { 
+    color: #555; font-style: italic; text-align: center; margin: 30px 0;
 }
 </style>
 </head>
@@ -70,6 +71,7 @@ h1 { color: #00ffff; border-bottom: 1px solid #003322; padding-bottom: 10px; }
     <input id="sessionInput" placeholder="session-id (leave empty for new)" />
     <button onclick="loadSession()">Load</button>
     <button onclick="newSession()">New</button>
+    <button onclick="listSessions()">List</button>
 </div>
 
 <div class="status" id="status">Ready</div>
@@ -82,36 +84,94 @@ h1 { color: #00ffff; border-bottom: 1px solid #003322; padding-bottom: 10px; }
 </div>
 
 <script>
-const API = '';  // same origin
 let sessionId = localStorage.getItem('matrixSession') || '';
-let priorTurns = 0;
 let isLoading = false;
 
 document.getElementById('sessionInput').value = sessionId;
+if (sessionId) {
+    loadSession();
+}
 
 function updateStatus(msg) {
     document.getElementById('status').textContent = msg;
 }
 
-function loadSession() {
+function escapeHtml(s) {
+    return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+function addMessage(role, content) {
+    const chat = document.getElementById('chat');
+    if (chat.querySelector('.empty')) chat.innerHTML = '';
+    const div = document.createElement('div');
+    div.className = 'message ' + role;
+    div.innerHTML = '<div class="role">' + role.toUpperCase() + '</div><div>' + escapeHtml(content) + '</div>';
+    chat.appendChild(div);
+    div.scrollIntoView({ behavior: 'smooth' });
+}
+
+function clearChat() {
+    document.getElementById('chat').innerHTML = '<p class="empty">No messages yet. Start the conversation!</p>';
+}
+
+async function loadSession() {
     sessionId = document.getElementById('sessionInput').value.trim();
+    if (!sessionId) {
+        updateStatus('Enter a session ID');
+        return;
+    }
     localStorage.setItem('matrixSession', sessionId);
-    fetchChatHistory();
+    clearChat();
+    updateStatus('Loading session: ' + sessionId + '...');
+    
+    try {
+        const response = await fetch('/history?sessionId=' + encodeURIComponent(sessionId) + '&limit=50');
+        if (response.status === 404) {
+            updateStatus('Session not found: ' + sessionId + ' (new session)');
+            return;
+        }
+        const data = await response.json();
+        const turns = data.turns || [];
+        if (turns.length === 0) {
+            updateStatus('Session loaded (empty): ' + sessionId);
+            return;
+        }
+        turns.forEach(turn => {
+            try {
+                const parsed = JSON.parse(turn);
+                addMessage(parsed.role || '?', parsed.content || '');
+            } catch (e) {
+                // ignore parse errors
+            }
+        });
+        updateStatus('Loaded ' + turns.length + ' turns from: ' + sessionId);
+    } catch (e) {
+        updateStatus('Error: ' + e.message);
+    }
 }
 
 function newSession() {
     sessionId = '';
     document.getElementById('sessionInput').value = '';
     localStorage.removeItem('matrixSession');
-    document.getElementById('chat').innerHTML = '<p class="status">New session. Type your first message.</p>';
-    updateStatus('New session');
+    clearChat();
+    updateStatus('New session. Type your first message.');
 }
 
-async function fetchChatHistory() {
-    updateStatus('Loading session ' + sessionId + '...');
-    // No GET history endpoint yet - just start fresh
-    document.getElementById('chat').innerHTML = '<p class="status">Session: ' + sessionId + '</p>';
-    updateStatus('Session loaded: ' + sessionId);
+async function listSessions() {
+    try {
+        const response = await fetch('/sessions');
+        const data = await response.json();
+        const sessions = data.sessions || [];
+        if (sessions.length === 0) {
+            updateStatus('No sessions found');
+        } else {
+            const list = sessions.slice(0, 10).join(', ');
+            updateStatus('Recent: ' + list);
+        }
+    } catch (e) {
+        updateStatus('Error: ' + e.message);
+    }
 }
 
 async function sendMessage() {
@@ -124,28 +184,26 @@ async function sendMessage() {
         sessionId = 'web-' + Date.now();
         document.getElementById('sessionInput').value = sessionId;
         localStorage.setItem('matrixSession', sessionId);
+        clearChat();
     }
     
     isLoading = true;
     const sendBtn = document.getElementById('sendButton');
     sendBtn.disabled = true;
     
-    // Add user message to UI
     addMessage('user', msg);
     msgEl.value = '';
     updateStatus('Thinking...');
     
     try {
-        const response = await fetch(API + '/chat', {
+        const response = await fetch('/chat', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ message: msg, sessionId: sessionId })
         });
         const data = await response.json();
-        
-        addMessage('assistant', data.reply);
-        priorTurns = data.priorTurns;
-        updateStatus('Prior turns loaded: ' + priorTurns);
+        addMessage('assistant', data.reply || '[empty]');
+        updateStatus('OK · ' + (data.priorTurns || 0) + ' prior turns');
     } catch (e) {
         updateStatus('Error: ' + e.message);
     } finally {
@@ -154,20 +212,7 @@ async function sendMessage() {
     }
 }
 
-function addMessage(role, content) {
-    const chat = document.getElementById('chat');
-    const div = document.createElement('div');
-    div.className = 'message ' + role;
-    div.innerHTML = '<div class="role">' + role.toUpperCase() + '</div><div>' + escapeHtml(content) + '</div>';
-    chat.appendChild(div);
-    div.scrollIntoView({ behavior: 'smooth' });
-}
-
-function escapeHtml(s) {
-    return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-}
-
-// Allow Enter to send (Ctrl+Enter for newline)
+// Enter to send
 document.getElementById('messageInput').addEventListener('keydown', (e) => {
     if (e.key === 'Enter' && !e.ctrlKey && !e.shiftKey) {
         e.preventDefault();
