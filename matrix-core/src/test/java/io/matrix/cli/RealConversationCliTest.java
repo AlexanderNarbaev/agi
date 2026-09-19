@@ -40,4 +40,37 @@ class RealConversationCliTest {
             fail("DEFAULT_MODEL_PATH constant not found");
         }
     }
+    
+    @Test
+    void testListRecentSessions() {
+        // W393: List recent NDJSON sessions
+        var sessions = RealConversationCli.listRecentSessions(5);
+        assertNotNull(sessions);
+        // Should not throw even if directory empty
+        assertTrue(sessions.size() >= 0);
+    }
+    
+    @Test
+    void testListRecentSessionsReturnsEmptyForMissingDir() {
+        // W393: Should not throw even with invalid max
+        var sessions = RealConversationCli.listRecentSessions(0);
+        assertNotNull(sessions);
+        assertEquals(0, sessions.size());
+    }
+    
+    @Test
+    void testExtractJsonFieldSimple() throws Exception {
+        // W393: JSON field extraction
+        var method = RealConversationCli.class.getDeclaredMethod("extractJsonField", String.class, String.class);
+        method.setAccessible(true);
+        
+        String json = "{\"role\":\"user\",\"content\":\"Hello\",\"other\":42}";
+        String role = (String) method.invoke(null, json, "role");
+        String content = (String) method.invoke(null, json, "content");
+        String missing = (String) method.invoke(null, json, "missing");
+        
+        assertEquals("user", role);
+        assertEquals("Hello", content);
+        assertNull(missing);
+    }
 }

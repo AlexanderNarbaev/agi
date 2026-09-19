@@ -13,51 +13,51 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
+import java.util.stream.Stream;
 
 /**
- * W392 — Real Conversation CLI.
+ * W393 — Real Conversation CLI with multi-session continuity.
  * 
  * Self-contained command-line tool that:
  * - Loads Qwen2.5-0.5B ONNX model locally (CPU)
  * - Conducts multi-turn conversation with full context
- * - Records every turn to NDJSON via ConversationRecorder
- * - Maintains conversation history within the session
+ * - Records every turn to NDJSON via local writer
+ * - Loads prior history for the same session ID (continuity across runs)
+ * - Lists recent sessions
  * 
  * Usage:
  *   java io.matrix.cli.RealConversationCli [model-path] [session-id]
- * 
- * Default model-path: ./models/onnx/qwen05b
- * Default session-id: timestamp
- * 
- * Example:
- *   java -cp target/classes:libs/* io.matrix.cli.RealConversationCli
- * 
- * This is the missing entry point that ties together:
- * - QwenOnnxBridge (real LLM inference)
- * - QwenChatTemplate (ChatML formatting)
- * - ConversationRecorder (NDJSON persistence)
- * - BrainLoopService (could be integrated, currently bypassed)
+ *   java io.matrix.cli.RealConversationCli --list-sessions
  */
 public final class RealConversationCli {
 
     private static final String DEFAULT_MODEL_PATH = "models/onnx/qwen05b";
     private static final String DEFAULT_DATA_DIR = "data/conversations";
-    private static final int MAX_HISTORY_TURNS = 10;  // last N turns to keep in context
+    private static final int MAX_HISTORY_TURNS = 10;
     private static final int MAX_NEW_TOKENS = 128;
     
     public static void main(String[] args) {
+        // W393: Support --list-sessions flag
+        if (args.length > 0 && args[0].equals("--list-sessions")) {
+            int max = args.length > 1 ? Integer.parseInt(args[1]) : 10;
+            System.out.println("[real-conv] Recent sessions:");
+            for (String s : listRecentSessions(max)) {
+                System.out.println("  " + s);
+            }
+            return;
+        }
+        
         String modelPath = args.length > 0 ? args[0] : DEFAULT_MODEL_PATH;
         String sessionId = args.length > 1 ? args[1] : generateSessionId();
         
-        System.out.println("[real-conv] MATRIX Real Conversation CLI (W392)");
+        System.out.println("[real-conv] MATRIX Real Conversation CLI (W392+W393)");
         System.out.println("[real-conv] model=" + modelPath);
         System.out.println("[real-conv] session=" + sessionId);
         System.out.println("[real-conv] type 'quit' to exit, 'reset' to clear history, 'info' for status");
         System.out.println();
         
-        // Initialize model
         QwenOnnxBridge bridge = new QwenOnnxBridge(Paths.get(modelPath));
-        bridge.useGpu(false);  // CPU for portability
+        bridge.useGpu(false);
         bridge.setMaxNewTokens(MAX_NEW_TOKENS);
         
         System.out.println("[real-conv] Loading model...");
@@ -67,13 +67,12 @@ public final class RealConversationCli {
         
         if (!loaded) {
             System.err.println("[real-conv] FATAL: Model failed to load from " + modelPath);
-            System.err.println("[real-conv] Check that model.onnx and tokenizer files exist in that directory.");
+            System.err.println("[real-conv] Check that model.onnx and tokenizer files exist.");
             System.exit(1);
         }
         System.out.println("[real-conv] Model loaded in " + loadMs + "ms (CPU mode)");
         System.out.println();
         
-        // Initialize simple NDJSON writer (no Quarkus dependency)
         Path sessionFile = Paths.get(DEFAULT_DATA_DIR, sessionId + ".ndjson");
         try {
             Files.createDirectories(Paths.get(DEFAULT_DATA_DIR));
@@ -91,14 +90,18 @@ public final class RealConversationCli {
         }
         long sessionStartNs = System.nanoTime();
         
-        // Initial system prompt
         List<QwenChatTemplate.Message> history = new ArrayList<>();
         history.add(QwenChatTemplate.Message.system(
             "You are MATRIX, a cognitive AI built on a deterministic neural architecture. "
             + "You answer questions about yourself, your design, and general knowledge clearly and concisely."
         ));
         
-        // Read input
+        // W393: Load prior history for this session if exists
+        int priorTurns = loadPriorHistory(sessionId, history);
+        if (priorTurns > 0) {
+            System.out.println("[real-conv] Loaded " + priorTurns + " prior turns from session " + sessionId);
+        }
+        
         try (Scanner sc = new Scanner(System.in)) {
             while (sc.hasNextLine()) {
                 String line = sc.nextLine().trim();
@@ -119,15 +122,13 @@ public final class RealConversationCli {
                     System.out.println("[real-conv] model=" + modelPath 
                         + " loaded=" + bridge.isLoaded() 
                         + " gpu=" + bridge.isGpuEnabled()
-                        + " history=" + (history.size() - 1) + " turns"  // exclude system
+                        + " history=" + (history.size() - 1) + " turns"
                         + " lastTokens=" + bridge.lastGeneratedTokens());
                     continue;
                 }
                 
-                // Add user message
                 history.add(QwenChatTemplate.Message.user(line));
                 
-                // Generate response
                 String reply = bridge.chat(line, MAX_NEW_TOKENS);
                 if (reply == null || reply.isBlank()) {
                     reply = "[model returned empty]";
@@ -135,32 +136,125 @@ public final class RealConversationCli {
                 System.out.println("[MATRIX] " + reply);
                 System.out.println();
                 
-                // Add assistant response to history
                 history.add(QwenChatTemplate.Message.assistant(reply));
                 
-                // Trim history if too long (keep system + last N turns)
                 if (history.size() > 2 * MAX_HISTORY_TURNS + 1) {
                     List<QwenChatTemplate.Message> trimmed = new ArrayList<>();
-                    trimmed.add(history.get(0));  // keep system
+                    trimmed.add(history.get(0));
                     for (int i = history.size() - 2 * MAX_HISTORY_TURNS; i < history.size(); i++) {
                         trimmed.add(history.get(i));
                     }
                     history = trimmed;
                 }
                 
-                // Record this turn as NDJSON
                 recordTurn(writer, sessionId, "user", line, System.nanoTime() - sessionStartNs);
                 recordTurn(writer, sessionId, "assistant", reply, System.nanoTime() - sessionStartNs);
             }
         }
         
-        try {
-            writer.close();
+        try { writer.close(); } catch (IOException e) { /* ignore */ }
+        bridge.close();
+        System.out.println("[real-conv] Session " + sessionId + " recorded to " + sessionFile);
+    }
+    
+    /**
+     * W393: Load prior conversation history for a session from NDJSON files.
+     */
+    private static int loadPriorHistory(String sessionId, List<QwenChatTemplate.Message> history) {
+        Path dataDir = Paths.get(DEFAULT_DATA_DIR);
+        if (!Files.exists(dataDir)) return 0;
+        
+        Path sessionFile = dataDir.resolve(sessionId + ".ndjson");
+        if (!Files.exists(sessionFile)) return 0;
+        
+        int loaded = 0;
+        List<String> lines = new ArrayList<>();
+        try (Stream<String> stream = Files.lines(sessionFile)) {
+            stream.filter(line -> !line.isBlank()).forEach(lines::add);
+        } catch (IOException e) {
+            System.err.println("[real-conv] Failed to load prior history: " + e.getMessage());
+            return 0;
+        }
+        
+        // Only keep last MAX_HISTORY_TURNS*2 lines (user+assistant pairs)
+        int startIdx = Math.max(0, lines.size() - MAX_HISTORY_TURNS * 2);
+        for (int i = startIdx; i < lines.size(); i++) {
+            try {
+                String role = extractJsonField(lines.get(i), "role");
+                String content = extractJsonField(lines.get(i), "content");
+                if (role != null && content != null && !content.isEmpty()) {
+                    QwenChatTemplate.Role r = QwenChatTemplate.Role.valueOf(role.toUpperCase());
+                    history.add(new QwenChatTemplate.Message(r, content));
+                    loaded++;
+                }
+            } catch (Exception e) {
+                // Skip malformed lines
+            }
+        }
+        return loaded;
+    }
+    
+    /**
+     * Extract a string field from simple JSON like {"key":"value"}.
+     */
+    private static String extractJsonField(String json, String fieldName) {
+        String needle = "\"" + fieldName + "\":\"";
+        int idx = json.indexOf(needle);
+        if (idx < 0) return null;
+        int start = idx + needle.length();
+        StringBuilder sb = new StringBuilder();
+        boolean escaped = false;
+        for (int i = start; i < json.length(); i++) {
+            char c = json.charAt(i);
+            if (escaped) {
+                if (c == 'n') sb.append('\n');
+                else if (c == 'r') sb.append('\r');
+                else if (c == 't') sb.append('\t');
+                else if (c == '"') sb.append('"');
+                else if (c == '\\') sb.append('\\');
+                else sb.append(c);
+                escaped = false;
+            } else if (c == '\\') {
+                escaped = true;
+            } else if (c == '"') {
+                return sb.toString();
+            } else {
+                sb.append(c);
+            }
+        }
+        return sb.toString();
+    }
+    
+    /**
+     * W393: List recent NDJSON sessions sorted by modification time.
+     */
+    public static List<String> listRecentSessions(int max) {
+        List<String> sessions = new ArrayList<>();
+        Path dataDir = Paths.get(DEFAULT_DATA_DIR);
+        if (!Files.exists(dataDir)) return sessions;
+        
+        try (Stream<Path> stream = Files.list(dataDir)) {
+            List<Path> files = new ArrayList<>();
+            stream
+                .filter(p -> p.toString().endsWith(".ndjson"))
+                .filter(p -> !p.getFileName().toString().startsWith("."))
+                .forEach(files::add);
+            
+            files.sort((a, b) -> {
+                try {
+                    return Files.getLastModifiedTime(b).compareTo(Files.getLastModifiedTime(a));
+                } catch (IOException e) {
+                    return 0;
+                }
+            });
+            
+            for (int i = 0; i < Math.min(max, files.size()); i++) {
+                sessions.add(files.get(i).getFileName().toString().replace(".ndjson", ""));
+            }
         } catch (IOException e) {
             // ignore
         }
-        bridge.close();
-        System.out.println("[real-conv] Session " + sessionId + " recorded to " + sessionFile);
+        return sessions;
     }
     
     /**
