@@ -49,6 +49,7 @@ if [ -z "$1" ]; then
     echo "  diff <s1> <s2>             Compare two sessions"
     echo "  report                     Generate aggregate report"
     echo "  test                       Run model sanity test"
+    echo "  eval [jsonl]               Run full model evaluation"
     echo "  help                       Show this help"
     exit 0
 fi
@@ -76,6 +77,7 @@ case "$1" in
     compact) [ -z "$2" ] && { echo "Usage: $0 compact <session> [max-chars]"; exit 1; }; java -cp "$CP" io.matrix.cli.ConversationCompact "${@:2}" ;;
     diff) [ -z "$2" ] || [ -z "$3" ] && { echo "Usage: $0 diff <session1> <session2>"; exit 1; }; java -cp "$CP" io.matrix.cli.ConversationDiff "${@:2}" ;;
     report) java -cp "$CP" io.matrix.cli.ConversationReport "${@:2}" ;;
+    eval) java -cp "$CP" io.matrix.cli.ConversationModelEval "${@:2}" ;;
     test) java -cp "$CP" io.matrix.cli.ConversationModelTest ;;
     help) exec "$0" ;;
     *) echo "Unknown command: $1"; echo "Run '$0 help' for usage"; exit 1 ;;
