@@ -28,7 +28,7 @@ import java.util.List;
  * 
  * Wires the actual Qwen2.5-0.5B model into the cognitive cycle.
  */
-public final class LlmBrainLoopService {
+public final class LlmBrainLoopService implements BrainPipeline {
     
     private final TextEncoder encoder;
     private final SaliencyEngine saliency;
@@ -156,6 +156,32 @@ public final class LlmBrainLoopService {
     public QwenOnnxBridge getLlm() { return llm; }
     public HashChain getAudit() { return audit; }
     public SafetyMonitor getSafety() { return safety; }
+    
+    /**
+     * Run the full 3-block pipeline on a single input.
+     * Implements BrainPipeline interface.
+     */
+    @Override
+    public BrainOutput run(BrainInput input) {
+        long start = System.nanoTime();
+        CycleResult r = cycle(input.text());
+        long latency = System.nanoTime() - start;
+        
+        return new BrainOutput(
+            r.reply(),
+            new BlockExecutions("LlmBrainLoopService", r.action(), "QwenLLM", 0, 0),
+            latency / 1000);
+    }
+    
+    public static CycleResult fromBrainOutput(BrainOutput out) {
+        // Helper for reverse conversion
+        return new CycleResult(
+            !out.content().isEmpty(),
+            "BRAIN:" + out.content(),
+            out.content(),
+            0.0, 0, 0.0, 0.5, 0, 0
+        );
+    }
     
     public static void main(String[] args) throws Exception {
         String input;
