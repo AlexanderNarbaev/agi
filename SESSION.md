@@ -4,9 +4,9 @@
 
 ---
 
-## Latest Wave: W533
+## Latest Wave: W535
 
-- **Checkpoint Hash:** `b3fd11a8`
+- **Checkpoint Hash:** `fb4c8fc9`
 - **Date:** 2026-09-20
 
 ### Summary
@@ -22,15 +22,24 @@
 | Self-initiation | AutonomyEngine | Cycles every 30s/120s/300s |
 | Learning | ConversationLearner | Learns from NDJSON history |
 | Self-improvement | BrainImprover | Continuous KB growth |
-| Interactive | BrainRunner | Interactive chat + learn + stats
-| Sensor input | BrainSensorBridge | stdin + files + polling
+| Interactive | BrainRunner | Interactive chat + learn + stats |
+| Sensor input | BrainSensorBridge | stdin + files + polling |
 | HTTP | BrainHttpServer | 6 endpoints + web UI |
 | Quarkus | BrainQuarkusResource | /v1/brain/* |
 | Telemetry | BrainTelemetry | Prometheus metrics
 | Startup | BrainServerStartup | Auto-start on Quarkus boot |
 | Launcher | matrix-brain.sh | 7 commands |
 
-## Verified End-to-End
+## Endpoints
+
+- `/v1/brain/chat` — POST, RAG response
+- `/v1/brain/learn` — POST, trigger learning
+- `/v1/brain/stats` — GET, brain statistics
+- `/v1/brain/health` — GET, health check
+- `/v1/brain/metrics` — GET, Prometheus format
+- `/v1/brain/knowledge?q=` — GET, search KB
+
+## Verified
 
 ```
 $ java LlmBrainLoopService "What is the capital of France?" models/onnx/qwen05b
@@ -39,9 +48,6 @@ Confidence: 0.72
 
 $ curl -X POST -d '{"message":"What is 2+2?"}' http://localhost:9200/chat
 {"reply":"The answer is 4...","confidence":0.91,"accepted":true}
-
-$ curl http://localhost:9200/learn
-{"learned":120,"kb_size":124}
 
 $ echo "What is 2+2?" | java io.matrix.cli.RealConversationCli
 The answer is 4.
@@ -64,4 +70,4 @@ cli, server, replay, head, tail, list, train, stats, search, delete, export, mer
 
 ---
 
-**Last updated:** 2026-09-20 (W533, 81 brain tests, 0 failures, real conversation works)
+**Last updated:** 2026-09-20 (W535, 81 brain tests, 0 failures, real conversation works)
