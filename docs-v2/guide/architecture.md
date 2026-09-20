@@ -248,3 +248,75 @@ graph LR
 - [Mathematical Foundations](../science-v2/math-foundations.md) — Formal definitions
 - [API Reference](api-reference.md) — All endpoints
 - [Forking Paths](../science-v2/forking-paths.md) — Why these modules?
+
+---
+
+## Brain Cycle Flow
+
+The complete flow from input to output:
+
+```mermaid
+flowchart TD
+    A[User Input] --> B[TextEncoder]
+    B --> C[Boolean Vector]
+    C --> D{Ethical?}
+    D -->|No| E[Reject]
+    D -->|Yes| F[Modulator State]
+    F --> G{Mode Selection}
+    G -->|Efficiency| H[BIR Engine]
+    G -->|Deep| I[HDC Brain]
+    G -->|Planning| J[MCTS Planner]
+    H --> K[Response]
+    I --> K
+    J --> K
+    K --> L[Confidence Check]
+    L -->|High| M[Return Response]
+    L -->|Low| N[Request Clarification]
+    
+    style D fill:#ffd43b,stroke:#e67700
+    style E fill:#ff6b6b,stroke:#c92a2a
+    style M fill:#51cf66,stroke:#2b8a3e
+```
+
+---
+
+## Module Dependency Graph
+
+```mermaid
+graph LR
+    subgraph Core
+        BIR[BIR Engine]
+        HDC[HDC Brain]
+        MCTS[MCTS Planner]
+    end
+    
+    subgraph Biochemistry
+        NET[Biochemical Network]
+        ORCH[Orchestrator]
+        KIN[Kinetic Modulator]
+    end
+    
+    subgraph Federation
+        REG[Modulator Registry]
+        STIG[Stigmergy Protocol]
+        HOME[Homeostat]
+    end
+    
+    BIR --> HDC
+    BIR --> MCTS
+    ORCH --> NET
+    ORCH --> KIN
+    REG --> ORCH
+    STIG --> REG
+    HOME --> ORCH
+    
+    style BIR fill:#74c0fc,stroke:#1971c2
+    style HDC fill:#74c0fc,stroke:#1971c2
+    style MCTS fill:#74c0fc,stroke:#1971c2
+    style NET fill:#b197fc,stroke:#6741d9
+    style ORCH fill:#b197fc,stroke:#6741d9
+    style KIN fill:#b197fc,stroke:#6741d9
+    style REG fill:#ffd43b,stroke:#e67700
+    style STIG fill:#ffd43b,stroke:#e67700
+    style HOME fill:#ffd43b,stroke:#e67700
+```

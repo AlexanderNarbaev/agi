@@ -152,3 +152,32 @@ Expected: All tests pass. FROZEN modulators cannot be removed.
 - [Architecture: Modulator Registry](../guide/architecture.md) — How FROZEN enforcement works
 - [Forking Paths: Why These Laws?](../science-v2/forking-paths.md) — Alternatives we considered
 - [Wave Logs: CONSTITUTION](../waves/) — How the laws evolved
+
+---
+
+## The Four Laws (Visual)
+
+```mermaid
+flowchart TD
+    subgraph CONSTITUTION
+        L1[Law I: No LLM in Runtime]
+        L2[Law II: Frozen Ethics]
+        L3[Law III: No Consciousness Claims]
+        L4[Law IV: Deterministic Seeds]
+    end
+    
+    subgraph FROZEN_MODULATORS
+        ETH[ETHICAL_FILTER]
+        SAFE[SAFETY_MONITOR]
+        LIE[LIE_DETECTOR]
+        CON[CONSISTENCY_CHECKER]
+    end
+    
+    L2 -->|protects| FROZEN_MODULATORS
+    L1 -->|ensures| DET[Deterministic Output]
+    L4 -->|guarantees| DET
+    L3 -->|prevents| CLAIMS[False Claims]
+    
+    style L2 fill:#ff6b6b,stroke:#c92a2a
+    style FROZEN_MODULATORS fill:#ffd43b,stroke:#e67700
+```

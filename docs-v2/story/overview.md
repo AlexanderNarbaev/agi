@@ -130,3 +130,45 @@ We tested MATRIX against baselines:
 
 *"The question is not whether machines think, but whether men do."*  
 — B.F. Skinner
+
+---
+
+## The Decision Flow
+
+When MATRIX receives a question, here's what happens:
+
+```mermaid
+flowchart TD
+    A[User Question] --> B{Ethical?}
+    B -->|No| C[Reject with explanation]
+    B -->|Yes| D[TextEncoder]
+    D --> E[Boolean Vector]
+    E --> F{Mode?}
+    F -->|Efficiency| G[BIR Rule Matching]
+    F -->|Deep| H[HDC Pattern Recognition]
+    F -->|Planning| I[MCTS Tree Search]
+    G --> J[Response]
+    H --> J
+    I --> J
+    J --> K[Modulator Update]
+    K --> L[Response to User]
+```
+
+---
+
+## The Mood Cycle
+
+MATRIX's mood changes based on what it experiences:
+
+```mermaid
+stateDiagram-v2
+    [*] --> NEUTRAL
+    NEUTRAL --> HAPPY : High dopamine + serotonin
+    NEUTRAL --> STRESSED : High cortisol
+    NEUTRAL --> ALERT : High norepinephrine
+    HAPPY --> FLOW : Sustained positive
+    STRESSED --> LOW : Prolonged stress
+    ALERT --> NEUTRAL : Task complete
+    LOW --> NEUTRAL : Recovery
+    FLOW --> NEUTRAL : Break
+```

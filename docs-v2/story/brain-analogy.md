@@ -139,3 +139,45 @@ MATRIX copies this architecture because it works. Not because we're trying to bu
 - [SleepEngine](../science-v2/math-foundations.md) — The consolidation algorithm
 - [Federation Roles](../guide/extending.md) — How to add new node roles
 - [Forking Paths: Why Biology?](../science-v2/forking-paths.md) — Why we chose this over other approaches
+
+---
+
+## The Stress Cascade (Visual)
+
+Here's how cortisol suppresses other modulators:
+
+```mermaid
+flowchart LR
+    subgraph Stress Response
+        NE[Norepinephrine 🔴] -->|catalyzes| C[Cortisol 🔴]
+        C -->|suppresses| D[Dopamine 🔵]
+        C -->|suppresses| S[Serotonin 🔵]
+        S -->|inhibits| NE
+    end
+    
+    style C fill:#ff6b6b,stroke:#c92a2a
+    style D fill:#74c0fc,stroke:#1971c2
+    style S fill:#74c0fc,stroke:#1971c2
+    style NE fill:#ff6b6b,stroke:#c92a2a
+```
+
+---
+
+## The Sleep Cycle
+
+What happens when MATRIX sleeps:
+
+```mermaid
+flowchart TD
+    A[100 Patterns] --> B{Strength > 0.3?}
+    B -->|Yes| C[Keep Pattern]
+    B -->|No| D[Prune Pattern]
+    C --> E[78 Patterns]
+    E --> F[Rehearse Strong]
+    F --> G[Inject Noise]
+    G --> H[Generalize]
+    H --> I[Improved Accuracy +19%]
+    
+    style D fill:#ff6b6b,stroke:#c92a2a
+    style I fill:#51cf66,stroke:#2b8a3e
+```

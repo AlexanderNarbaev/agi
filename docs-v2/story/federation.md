@@ -169,3 +169,52 @@ The federation outperforms a single agent by 18%.
 - [StigmergyProtocol](../science-v2/math-foundations.md) — The math behind pheromones
 - [BENCHMARK-REPORT-W620.md](../research/BENCHMARK-REPORT-W620.md) — Full benchmark data
 - [FEDERATION-SCALE-REPORT-W635.md](../research/FEDERATION-SCALE-REPORT-W635.md) — Scaling results
+
+---
+
+## Node Role Transitions
+
+How nodes get promoted or demoted:
+
+```mermaid
+stateDiagram-v2
+    [*] --> INFANT
+    INFANT --> LEARNER : accuracy > 0.7
+    LEARNER --> ADULT : accuracy > 0.8
+    ADULT --> SPECIALIST : domain expertise
+    SPECIALIST --> GUARDIAN : ethics + capability
+    GUARDIAN --> GUARDIAN : Cannot be demoted
+    
+    ADULT --> LEARNER : performance drop
+    LEARNER --> INFANT : poor performance
+    
+    note right of GUARDIAN : FROZEN: Cannot be removed
+```
+
+---
+
+## Consensus Flow
+
+How decisions are made:
+
+```mermaid
+sequenceDiagram
+    participant P as Proposer
+    participant G as Guardian
+    participant A as Adults
+    participant L as Learners
+    
+    P->>G: Submit Proposal
+    P->>A: Submit Proposal
+    P->>L: Submit Proposal
+    
+    G->>G: Ethics Check
+    alt Violates Ethics
+        G-->>P: VETO (Rejected)
+    else Ethical
+        A->>G: Vote YES (weight: 0.7)
+        L->>G: Vote YES (weight: 0.3)
+        G->>G: Sum Weights
+        G-->>P: APPROVED (1.0 > 0.5)
+    end
+```
