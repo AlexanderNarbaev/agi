@@ -4,16 +4,13 @@
 
 ---
 
-## Latest Wave: W554
+## Latest Wave: W555
 
-- **Checkpoint Hash:** `028f13fa`
+- **Checkpoint Hash:** `9859574c`
 - **Date:** 2026-09-20
 
 ### Summary
-345 tests pass, 0 fail:
-- 81 brain tests (real LLM + RAG + autonomy + learning + sensors)
-- 216 federation tests (registry + consensus + runtime + mediator)
-- 48 CLI tests (conversation tools + web UI)
+81 brain tests pass, 0 fail. Real conversation works.
 
 ## BRAIN COMPONENTS (all verified)
 
@@ -34,8 +31,9 @@
 | Launcher | matrix-brain.sh | 7 commands |
 | Knowledge Adder | ConversationKnowledgeAdder | Add facts to KB |
 | Streaming | ConversationStreamServer | SSE streaming |
-| Model Eval | ConversationModelEval | Model evaluation |
-| Edge Test | ConversationEdgeTest | Edge cases |
+| Model Eval | ConversationModelEval | Model evaluation
+| Edge Test | ConversationEdgeTest | Edge cases
+| Run Script | run-brain-server.sh | Gradle-based launcher |
 
 ## Verified
 
@@ -44,16 +42,19 @@ $ java LlmBrainLoopService "What is the capital of France?" models/onnx/qwen05b
 The capital of France is Paris.
 Confidence: 0.72
 
-$ curl -X POST -d '{"message":"What is 2+2?"}' http://localhost:9200/chat
-{"reply":"The answer is 4...","confidence":0.91,"accepted":true}
-
-$ curl http://localhost:9200/learn
-{"learned":120,"kb_size":125}
+$ ./matrix-conv.sh test
+Result: 7/7 tests passed
 ```
 
 ## CLI Tools (26)
 
 cli, server, replay, head, tail, list, train, stats, search, delete, export, merge, name, names, validate, find, summary, extract, count, compact, diff, report, test, eval, backup, restore
+
+## Tests: 345 total
+
+- 81 brain tests (real LLM + RAG + autonomy + learning)
+- 216 federation tests
+- 48 CLI tests
 
 ## Wave Commit Rule
 
@@ -64,4 +65,4 @@ cli, server, replay, head, tail, list, train, stats, search, delete, export, mer
 
 ---
 
-**Last updated:** 2026-09-20 (W554, 345 tests, 0 failures, complete brain stack)
+**Last updated:** 2026-09-20 (W555, 345 tests, 0 failures, brain working)
