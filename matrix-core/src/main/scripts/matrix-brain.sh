@@ -1,13 +1,6 @@
 #!/bin/bash
-# MATRIX Brain Launcher — runs the real brain
-#
-# Usage:
-#   ./matrix-brain.sh brain          # Start brain HTTP server
-#   ./matrix-brain.sh autonomy       # Start self-improving engine
-#   ./matrix-brain.sh learn          # Learn from conversations
-#   ./matrix-brain.sh eval           # Evaluate model
-#   ./matrix-brain.sh stats          # Show brain stats
-#   ./matrix-brain.sh <message>      # Talk to brain once
+# MATRIX Brain Launcher
+# Starts the real brain with all features: RAG, confidence filter, learning, HTTP server
 
 set -e
 
@@ -31,44 +24,46 @@ CP="$CP:$SLF4J_API:$SLF4J_SIMPLE:$JACKSON_DATABIND:$JACKSON_CORE:$JACKSON_ANN:$O
 if [ -z "$1" ]; then
     echo "MATRIX Brain Launcher"
     echo ""
-    echo "Usage: $0 {brain|autonomy|learn|eval|stats|<message>}"
+    echo "Usage: $0 {runner|server|telemetry|learn|eval|test|<message>}"
     echo ""
-    echo "  brain       Start brain HTTP server (port 9200)"
-    echo "  autonomy    Start self-improving engine"
-    echo "  learn       Learn from recorded conversations"
-    echo "  eval        Evaluate model on test prompts"
-    echo "  stats       Show brain statistics"
-    echo "  <message>   Talk to brain once (echo mode)"
+    echo "  runner     Interactive brain (talk + learn loop)"
+    echo "  server     HTTP server on port 9200"
+    echo "  telemetry  Prometheus metrics server on port 9201"
+    echo "  learn      Learn from recorded conversations"
+    echo "  eval       Evaluate model (quick test)"
+    echo "  test       Run all brain tests"
+    echo "  <message>  Talk to brain once"
     exit 0
 fi
 
 case "$1" in
-    brain)
-        echo "[brain] Starting brain server..."
-        java -cp "$CP" io.matrix.brain.BrainHttpServer 9200 models/onnx/qwen05b
+    runner)
+        echo "Starting interactive brain..."
+        java -cp "$CP" io.matrix.brain.BrainRunner models/onnx/qwen05b
         ;;
-    autonomy)
-        echo "[brain] Starting self-improving engine..."
-        java -cp "$CP" io.matrix.autonomy.SelfImprovingEngine models/onnx/qwen05b
+    server)
+        PORT=${2:-9200}
+        echo "Starting brain server on port $PORT..."
+        java -cp "$CP" io.matrix.brain.BrainHttpServer $PORT models/onnx/qwen05b
+        ;;
+    telemetry)
+        echo "Starting telemetry server on port 9201..."
+        java -cp "$CP" io.matrix.brain.BrainTelemetry
         ;;
     learn)
-        echo "[brain] Learning from conversations..."
-        java -cp "$CP" io.matrix.brain.BrainLearningLoop models/onnx/qwen05b
+        echo "Learning from recorded conversations..."
+        java -cp "$CP" io.matrix.brain.BrainImprover data/conversations
         ;;
     eval)
-        echo "[brain] Evaluating model..."
+        echo "Evaluating model..."
         java -cp "$CP" io.matrix.cli.ConversationModelEval
         ;;
-    stats)
-        echo "[brain] Statistics:"
-        java -cp "$CP" io.matrix.brain.BrainHttpServer 9200 models/onnx/qwen05b &
-        sleep 30
-        curl -s http://localhost:9200/stats
-        echo ""
-        kill %1
+    test)
+        echo "Running brain tests..."
+        ./gradlew :matrix-core:test --tests "io.matrix.brain.*" --no-daemon
         ;;
     *)
-        echo "[brain] Talking to brain..."
-        echo "$*" | java -cp "$CP" io.matrix.brain.LlmBrainLoopRag models/onnx/qwen05b
+        echo "Talking to brain..."
+        echo "$1" | java -cp "$CP" io.matrix.brain.BrainRunner models/onnx/qwen05b
         ;;
 esac

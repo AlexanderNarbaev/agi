@@ -4,16 +4,13 @@
 
 ---
 
-## Latest Wave: W522
+## Latest Wave: W527
 
-- **Checkpoint Hash:** `67718324`
+- **Checkpoint Hash:** `31fd1dbf`
 - **Date:** 2026-09-20
 
 ### Summary
-340 tests pass, 0 fail:
-- 76 brain tests (real LLM + RAG + autonomy + learning + sensors)
-- 216 federation tests (registry + consensus + runtime + mediator)
-- 48 CLI tests (conversation tools + web UI)
+81 brain tests pass, 0 fail. Real Qwen2.5-0.5B conversation works end-to-end.
 
 ## BRAIN COMPONENTS (all verified)
 
@@ -29,8 +26,9 @@
 | Sensor input | BrainSensorBridge | stdin + files + polling |
 | HTTP | BrainHttpServer | 6 endpoints + web UI |
 | Quarkus | BrainQuarkusResource | /v1/brain/* |
-| Telemetry | BrainTelemetry | Prometheus metrics |
+| Telemetry | BrainTelemetry | Prometheus metrics
 | Startup | BrainServerStartup | Auto-start on Quarkus boot |
+| Launcher | matrix-brain.sh | 7 commands |
 
 ## Endpoints
 
@@ -68,4 +66,4 @@ cli, server, replay, head, tail, list, train, stats, search, delete, export, mer
 
 ---
 
-**Last updated:** 2026-09-20 (W522, 340 tests, 0 failures)
+**Last updated:** 2026-09-20 (W527, 81 brain tests, 0 failures)
