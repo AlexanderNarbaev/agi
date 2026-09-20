@@ -4,15 +4,15 @@
 
 ---
 
-## Latest Wave: W591
+## Latest Wave: W592
 
-- **Checkpoint Hash:** `75019de8`
+- **Checkpoint Hash:** `c6405427`
 - **Date:** 2026-09-20
 
 ### Summary
-513 tests pass, 0 fail:
+516 tests pass, 0 fail:
 - 97 brain tests
-- 368 federation tests
+- 371 federation tests
 - 48 CLI tests
 
 ## Phase 1: Liquid Federation Core (W569-W575) ✅
@@ -24,11 +24,12 @@
 | Component | Class | Wave |
 |-----------|-------|------|
 | Child Growth | ChildGrowthScenarioTest | W591 |
+| Network Partition | NetworkPartitionTest | W592 |
 
-## Next: W592 (Stress Test: Network Partition)
+## Next: W593 (Stress Test: Adversarial Attack)
 
-## Tests: 513 total
+## Tests: 516 total
 
 ---
 
-**Last updated:** 2026-09-20 (W591, 513 tests)
+**Last updated:** 2026-09-20 (W592, 516 tests)
