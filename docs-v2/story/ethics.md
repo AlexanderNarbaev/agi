@@ -181,3 +181,6 @@ flowchart TD
     style L2 fill:#ff6b6b,stroke:#c92a2a
     style FROZEN_MODULATORS fill:#ffd43b,stroke:#e67700
 ```
+
+---
+*[Edit this page](https://github.com/AlexanderNarbaev/agi/edit/main/docs-v2/story/ethics.md)*

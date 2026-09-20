@@ -223,3 +223,6 @@ xychart-beta
     line "Random" [0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25]
     line "HDC" [0.3, 0.5, 0.6, 0.75, 0.85, 0.88, 0.9]
 ```
+
+---
+*[Edit this page](https://github.com/AlexanderNarbaev/agi/edit/main/docs-v2/science-v2/benchmarks.md)*

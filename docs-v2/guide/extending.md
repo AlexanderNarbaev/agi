@@ -269,3 +269,6 @@ flowchart TD
     
     style K fill:#51cf66,stroke:#2b8a3e
 ```
+
+---
+*[Edit this page](https://github.com/AlexanderNarbaev/agi/edit/main/docs-v2/guide/extending.md)*

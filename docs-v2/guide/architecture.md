@@ -320,3 +320,6 @@ graph LR
     style STIG fill:#ffd43b,stroke:#e67700
     style HOME fill:#ffd43b,stroke:#e67700
 ```
+
+---
+*[Edit this page](https://github.com/AlexanderNarbaev/agi/edit/main/docs-v2/guide/architecture.md)*

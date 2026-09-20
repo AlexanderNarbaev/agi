@@ -259,3 +259,6 @@ sequenceDiagram
     
     Note over C,S: JWT Required for /federation/*
 ```
+
+---
+*[Edit this page](https://github.com/AlexanderNarbaev/agi/edit/main/docs-v2/guide/api-reference.md)*

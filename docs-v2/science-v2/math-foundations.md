@@ -239,3 +239,6 @@ flowchart TD
         CAT --> SUM
     end
 ```
+
+---
+*[Edit this page](https://github.com/AlexanderNarbaev/agi/edit/main/docs-v2/science-v2/math-foundations.md)*

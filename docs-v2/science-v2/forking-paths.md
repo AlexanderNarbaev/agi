@@ -240,3 +240,6 @@ Heuristic was chosen for now because:
 ---
 
 *This document is updated whenever a major decision is made. See [archive/decisions/](../archive/decisions/) for full ADRs.*
+
+---
+*[Edit this page](https://github.com/AlexanderNarbaev/agi/edit/main/docs-v2/science-v2/forking-paths.md)*

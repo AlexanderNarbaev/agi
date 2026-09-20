@@ -172,3 +172,6 @@ stateDiagram-v2
     LOW --> NEUTRAL : Recovery
     FLOW --> NEUTRAL : Break
 ```
+
+---
+*[Edit this page](https://github.com/AlexanderNarbaev/agi/edit/main/docs-v2/story/overview.md)*

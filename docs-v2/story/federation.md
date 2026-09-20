@@ -218,3 +218,6 @@ sequenceDiagram
         G-->>P: APPROVED (1.0 > 0.5)
     end
 ```
+
+---
+*[Edit this page](https://github.com/AlexanderNarbaev/agi/edit/main/docs-v2/story/federation.md)*
