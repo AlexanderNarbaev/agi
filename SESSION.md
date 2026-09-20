@@ -4,9 +4,9 @@
 
 ---
 
-## Latest Wave: W558
+## Latest Wave: W563
 
-- **Checkpoint Hash:** `76b87914`
+- **Checkpoint Hash:** `58775b6b`
 - **Date:** 2026-09-20
 
 ### Summary
@@ -68,4 +68,4 @@ cli, server, replay, head, tail, list, train, stats, search, delete, export, mer
 
 ---
 
-**Last updated:** 2026-09-20 (W558, 345 tests, 0 failures, brain working)
+**Last updated:** 2026-09-20 (W563, 345 tests, 0 failures, brain working)
