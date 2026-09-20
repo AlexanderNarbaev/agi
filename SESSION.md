@@ -4,40 +4,34 @@
 
 ---
 
-## Latest Wave: W571
+## Latest Wave: W573
 
-- **Checkpoint Hash:** `b16837ad`
+- **Checkpoint Hash:** `3756f09a`
 - **Date:** 2026-09-20
 
 ### Summary
-405 tests pass, 0 fail:
+416 tests pass, 0 fail:
 - 97 brain tests (BIR + LLM + RAG + autonomy + learning)
-- 260 federation tests (registry + consensus + runtime + liquid roles + scheduler)
+- 271 federation tests (registry + consensus + runtime + liquid roles + scheduler + homeostat)
 - 48 CLI tests
 
-## NEW: Liquid Federation (W569-W571)
+## Liquid Federation (W569-W573)
 
 | Component | Class | Status |
 |-----------|-------|--------|
 | Node Roles | NodeRole | INFANT→LEARNER→ADULT→SPECIALIST→GUARDIAN |
-| Role Assigner | LiquidNodeRoleAssigner | Auto-promotion/demotion based on metrics |
-| Consensus | CapabilityConsensusEngine | Weighted voting by role |
-| Scheduler | LevinScheduler | Task allocation ∝ 2^-l |
+| Role Assigner | LiquidNodeRoleAssigner | Auto-promotion/demotion |
+| Consensus | CapabilityConsensusEngine | Weighted voting |
+| Scheduler | LevinScheduler | Budget ∝ 2^-l |
+| Conjugate DP | ConjugateDPBudgeter | Federated optimization |
+| Homeostat | CorridorHomeostat | Negative feedback |
 
-## Brain Stack
-
-| Component | Class | Status |
-|-----------|-------|--------|
-| BIR Brain | BirBrainCycle | DEFAULT — no LLM |
-| Dynamic Modulators | DynamicModulatorRegistry | FROZEN enforcement |
-| HTTP Server | BrainHttpServer | 6 endpoints |
-
-## Tests: 405 total
+## Tests: 416 total
 
 - 97 brain tests
-- 260 federation tests
+- 271 federation tests
 - 48 CLI tests
 
 ---
 
-**Last updated:** 2026-09-20 (W571, 405 tests, 0 failures)
+**Last updated:** 2026-09-20 (W573, 416 tests, 0 failures)
