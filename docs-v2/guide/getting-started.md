@@ -165,3 +165,23 @@ export MATRIX_FEDERATION_NODES=3
 - [API Reference](api-reference.md) — All endpoints
 - [Extending MATRIX](extending.md) — Add new modulators, roles, rules
 - [Story Layer](../story/overview.md) — Understand the concepts
+
+---
+
+## Quick Start Flow
+
+```mermaid
+flowchart LR
+    A[Clone Repo] --> B{Choose Mode}
+    B -->|Docker| C[docker-compose up]
+    B -->|Native| D[./gradlew nativeCompile]
+    B -->|JVM| E[./gradlew run]
+    C --> F[Health Check]
+    D --> F
+    E --> F
+    F --> G[Send Query]
+    G --> H[View Dashboard]
+    
+    style B fill:#ffd43b,stroke:#e67700
+    style F fill:#51cf66,stroke:#2b8a3e
+```

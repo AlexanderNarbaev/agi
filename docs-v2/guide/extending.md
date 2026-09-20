@@ -244,3 +244,28 @@ void testMyBrainCycle() {
 3. **Document interactions** — New modulators need interaction documentation
 4. **Check CONSTITUTION** — Ensure no violations of the Four Laws
 5. **Update SUMMARY.md** — Add new modules to the table of contents
+
+---
+
+## Extension Points
+
+```mermaid
+flowchart TD
+    A[Extension Point] --> B{Type}
+    B -->|Modulator| C[Create KineticModulator]
+    B -->|Role| D[Add to NodeRole enum]
+    B -->|Interaction| E[Add to InteractionType]
+    B -->|Pheromone| F[Add to PheromoneType]
+    
+    C --> G[Register with Orchestrator]
+    D --> H[Update Role Assigner]
+    E --> I[Implement Effect Logic]
+    F --> J[Use in Federation]
+    
+    G --> K[Add Tests]
+    H --> K
+    I --> K
+    J --> K
+    
+    style K fill:#51cf66,stroke:#2b8a3e
+```

@@ -237,3 +237,25 @@ curl -X POST http://localhost:8080/auth/login \
 curl -H "Authorization: Bearer <token>" \
   http://localhost:8080/federation/nodes
 ```
+
+---
+
+## API Flow
+
+```mermaid
+sequenceDiagram
+    participant C as Client
+    participant S as Server
+    participant B as Brain
+    participant F as Federation
+    
+    C->>S: POST /brain/query
+    S->>B: Process Input
+    B->>F: Get Modulator State
+    F-->>B: State
+    B->>B: Apply Rules
+    B-->>S: Response
+    S-->>C: JSON Response
+    
+    Note over C,S: JWT Required for /federation/*
+```
