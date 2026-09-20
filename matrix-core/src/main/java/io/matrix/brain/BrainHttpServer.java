@@ -15,19 +15,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 /**
- * W499 — Production Brain HTTP Server.
- * 
- * Complete brain server with:
- * - /health: health check
- * - /chat: send message, get response (with RAG)
- * - /learn: trigger learning from conversations
- * - /stats: brain statistics
- * - /knowledge: search knowledge base
- * 
- * Usage:
- *   java io.matrix.brain.BrainHttpServer [port] [model-path]
- *   Default port: 9200
- *   Default model: models/onnx/qwen05b
+ * W502 — Production Brain HTTP Server with Anti-Hallucination.
  */
 public final class BrainHttpServer {
     
@@ -37,6 +25,7 @@ public final class BrainHttpServer {
     private final LlmBrainLoopRag brain;
     private final SimpleKnowledgeBase knowledgeBase;
     private final ConversationLearner learner;
+    private final ConfidenceFilter confidenceFilter;
     private final int port;
     
     public BrainHttpServer(int port, String modelPath) {
@@ -44,6 +33,7 @@ public final class BrainHttpServer {
         this.knowledgeBase = new SimpleKnowledgeBase();
         this.brain = new LlmBrainLoopRag(modelPath, knowledgeBase);
         this.learner = new ConversationLearner(knowledgeBase, Paths.get("data/conversations"));
+        this.confidenceFilter = new ConfidenceFilter(0.3);
     }
     
     public void start() throws IOException {
@@ -59,14 +49,13 @@ public final class BrainHttpServer {
         
         System.out.println("[brain-server] Started on port " + port);
         System.out.println("[brain-server] Endpoints:");
-        System.out.println("  GET /health - Health check");
-        System.out.println("  POST /chat - Send message (JSON: {\"message\": \"...\"})");
-        System.out.println("  POST /learn - Learn from conversations");
-        BrainCycle.CycleResult r = brain.cycle("test");
-        System.out.println("  GET /stats - Brain statistics");
-        System.out.println("  GET /knowledge?q=query - Search KB");
+        System.out.println("  GET /health");
+        System.out.println("  POST /chat");
+        System.out.println("  POST /learn");
+        System.out.println("  GET /stats");
+        System.out.println("  GET /knowledge?q=query");
         System.out.println();
-        System.out.println("Brain ready. KB: " + knowledgeBase.size() + " docs");
+        System.out.println("Anti-hallucination: min confidence = " + confidenceFilter.getMinConfidence());
     }
     
     // ====== HTTP Handlers ======
@@ -79,40 +68,28 @@ public final class BrainHttpServer {
     
     class RootHandler implements HttpHandler {
         public void handle(HttpExchange ex) throws IOException {
-            String html = """
-                <!DOCTYPE html>
-                <html><head><title>MATRIX Brain</title>
-                <style>
-                body { font-family: monospace; background: #0a0a0a; color: #00ff88; padding: 20px; }
-                h1 { color: #00ffff; }
-                pre { background: #111; padding: 10px; }
-                </style></head>
-                <body>
-                <h1>MATRIX Brain Server</h1>
-                <p>Endpoints:</p>
-                <ul>
-                <li><a href="/health">/health</a> - Health check</li>
-                <li><a href="/stats">/stats</a> - Brain statistics</li>
-                <li><a href="/knowledge?q=matrix">/knowledge?q=matrix</a> - Search KB</li>
-                <li>POST /chat {"message": "..."} - Talk to brain</li>
-                <li>POST /learn - Learn from conversations</li>
-                </ul>
-                <h2>Test Chat</h2>
-                <form id="chat"><input id="msg" placeholder="Ask..." size=50><button>Send</button></form>
-                <pre id="out"></pre>
-                <script>
-                document.getElementById('chat').addEventListener('submit', async (e) => {
-                    e.preventDefault();
-                    const msg = document.getElementById('msg').value;
-                    document.getElementById('out').textContent = 'Thinking...';
-                    const r = await fetch('/chat', {method:'POST', headers:{'Content-Type':'application/json'},
-                        body: JSON.stringify({message: msg})});
-                    const j = await r.json();
-                    document.getElementById('out').textContent = j.reply;
-                });
-                </script>
-                </body></html>
-                """;
+            String html = "<!DOCTYPE html>\n<html><head><title>MATRIX Brain</title>\n" +
+                "<style>body{font-family:monospace;background:#0a0a0a;color:#00ff88;padding:20px;}\n" +
+                "h1{color:#00ffff;}pre{background:#111;padding:10px;white-space:pre-wrap;}\n" +
+                "button{padding:8px 16px;background:#003322;color:#00ff88;border:1px solid #00ff88;cursor:pointer;}\n" +
+                "button:hover{background:#004433;}</style></head>\n<body>\n" +
+                "<h1>MATRIX Brain Server</h1>\n" +
+                "<p>Endpoints: /health, /chat, /learn, /stats, /knowledge?q=query</p>\n" +
+                "<h2>Chat</h2>\n" +
+                "<form id='chat'><input id='msg' placeholder='Ask the brain...' size=50><button>Send</button></form>\n" +
+                "<pre id='out'></pre>\n" +
+                "<script>\n" +
+                "document.getElementById('chat').addEventListener('submit', async (e) => {\n" +
+                "    e.preventDefault();\n" +
+                "    const msg = document.getElementById('msg').value;\n" +
+                "    document.getElementById('out').textContent = 'Thinking...';\n" +
+                "    const r = await fetch('/chat', {method:'POST', headers:{'Content-Type':'application/json'},\n" +
+                "        body: JSON.stringify({message: msg})});\n" +
+                "    const j = await r.json();\n" +
+                "    document.getElementById('out').textContent = 'Reply: ' + j.reply + '\\nConfidence: ' + \n" +
+                "        (j.confidence*100).toFixed(1) + '%\\nDuration: ' + j.duration_ms + 'ms\\nAccepted: ' + j.accepted;\n" +
+                "});\n" +
+                "</script>\n</body></html>";
             ex.getResponseHeaders().set("Content-Type", "text/html; charset=utf-8");
             ex.sendResponseHeaders(200, html.length());
             try (var os = ex.getResponseBody()) {
@@ -135,10 +112,19 @@ public final class BrainHttpServer {
             }
             
             BrainCycle.CycleResult result = brain.cycle(message);
-            String response = String.format(
-                "{\"reply\":\"%s\",\"confidence\":%.4f,\"duration_ms\":%d,\"accepted\":%s}",
-                escape(result.reply()), result.confidence(), result.durationMs(), result.accepted());
-            sendJson(ex, 200, response);
+            
+            String filtered = confidenceFilter.filter(result.reply(), result.confidence());
+            if (filtered == null) {
+                String refusal = confidenceFilter.rejectionMessage(result.confidence());
+                sendJson(ex, 200, "{\"reply\":\"" + escape(refusal) + 
+                    "\",\"confidence\":" + result.confidence() + 
+                    ",\"duration_ms\":" + result.durationMs() + ",\"accepted\":false}");
+                return;
+            }
+            
+            sendJson(ex, 200, "{\"reply\":\"" + escape(result.reply()) + 
+                "\",\"confidence\":" + result.confidence() + 
+                ",\"duration_ms\":" + result.durationMs() + ",\"accepted\":true}");
         }
     }
     
@@ -148,17 +134,20 @@ public final class BrainHttpServer {
                 sendJson(ex, 405, "{\"error\":\"POST only\"}");
                 return;
             }
-            int learned = learner.learnAll();
-            sendJson(ex, 200, "{\"learned\":" + learned + ",\"kb_size\":" + knowledgeBase.size() + "}");
+            try {
+                int learned = learner.learnAll();
+                sendJson(ex, 200, "{\"learned\":" + learned + ",\"kb_size\":" + knowledgeBase.size() + "}");
+            } catch (Exception e) {
+                sendJson(ex, 500, "{\"error\":\"" + escape(e.getMessage()) + "\"}");
+            }
         }
     }
     
     class StatsHandler implements HttpHandler {
         public void handle(HttpExchange ex) throws IOException {
-            String stats = String.format(
-                "{\"kb_size\":%d,\"model\":\"qwen2.5-0.5b\",\"status\":\"running\"}",
-                knowledgeBase.size());
-            sendJson(ex, 200, stats);
+            sendJson(ex, 200, "{\"kb_size\":" + knowledgeBase.size() + 
+                ",\"model\":\"qwen2.5-0.5b\",\"status\":\"running\",\"min_confidence\":" + 
+                confidenceFilter.getMinConfidence() + "}");
         }
     }
     
@@ -195,6 +184,7 @@ public final class BrainHttpServer {
     }
     
     private static String escape(String s) {
+        if (s == null) return "";
         return s.replace("\\", "\\\\").replace("\"", "\\\"").replace("\n", "\\n").replace("\r", "\\r");
     }
     
@@ -239,7 +229,6 @@ public final class BrainHttpServer {
             System.exit(0);
         }));
         
-        // Keep alive
         Thread.currentThread().join();
     }
 }
