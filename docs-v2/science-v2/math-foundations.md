@@ -194,3 +194,48 @@ $$\text{confidence}(R, \mathbf{x}) = \frac{|\{i : x_i = R_i\}|}{n}$$
 - [BENCHMARK-REPORT-W620.md](../research/BENCHMARK-REPORT-W620.md) — Empirical results
 - [SLEEP-CONSOLIDATION-STUDY-W650.md](../research/SLEEP-CONSOLIDATION-STUDY-W650.md) — Sleep metrics
 - [FEDERATION-SCALE-REPORT-W635.md](../research/FEDERATION-SCALE-REPORT-W635.md) — Consensus scaling
+
+---
+
+## HDC Operations (Visual)
+
+```mermaid
+flowchart LR
+    subgraph HDC Operations
+        A[Vector A] --> XOR[Binding: XOR]
+        B[Vector B] --> XOR
+        XOR --> C[Bound Vector]
+        
+        D[Vector D] --> MAJ[Bundling: Majority]
+        E[Vector E] --> MAJ
+        MAJ --> F[Bundled Vector]
+        
+        G[Vector G] --> PERM[Permutation: Shift]
+        PERM --> H[Permuted Vector]
+    end
+```
+
+---
+
+## Biochemical Network Dynamics
+
+```mermaid
+flowchart TD
+    subgraph Modulator i
+        Mi[Level Mi] --> SUM[Sum Effects]
+        Ri[Receptor Sensitivity] --> PROD[Production]
+        PROD --> SUM
+        Mi --> DECAY[Decay]
+        DECAY --> SUM
+        SUM --> Mi_new[New Level]
+    end
+    
+    subgraph Network Effects
+        Mj[Modulator j] --> SYN[Synergy]
+        Mj --> ANT[Antagonism]
+        Mj --> CAT[Catalysis]
+        SYN --> SUM
+        ANT --> SUM
+        CAT --> SUM
+    end
+```

@@ -146,3 +146,15 @@ Use the hypothesis template:
 
 **Source:** [Link to test/benchmark]
 ```
+
+---
+
+## Status Dashboard
+
+```mermaid
+pie title Hypothesis Status
+    "Accepted" : 7
+    "Refuted" : 1
+    "Running" : 3
+    "Parked" : 1
+```

@@ -202,3 +202,24 @@ Sleep improves accuracy by 19.4% while reducing memory footprint by 22%. The pru
 # Sleep study
 ./gradlew :matrix-core:test --tests "io.matrix.federation.liquid.simulation.SleepConsolidationStudyTest"
 ```
+
+---
+
+## Benchmark Results (Visual)
+
+```mermaid
+xychart-beta
+    title "Logic Benchmark: Accuracy Comparison"
+    x-axis ["Random", "Heuristic", "BIR"]
+    y-axis "Accuracy (%)" 0 --> 100
+    bar [30, 75, 75]
+```
+
+```mermaid
+xychart-beta
+    title "Sample Efficiency: Learning Curves"
+    x-axis [1, 5, 10, 25, 50, 100, 150]
+    y-axis "Accuracy" 0 --> 1
+    line "Random" [0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25]
+    line "HDC" [0.3, 0.5, 0.6, 0.75, 0.85, 0.88, 0.9]
+```
