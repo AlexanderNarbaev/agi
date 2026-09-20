@@ -1,7 +1,10 @@
 package io.matrix.autonomy;
 import io.matrix.budgeter.ConjugateBudgeter;
+import io.matrix.brain.BrainCycle;
+import io.matrix.brain.LlmBrainLoopRag;
+import io.matrix.knowledge.SimpleKnowledgeBase;
 
-import io.matrix.brain.LlmBrainLoopService;
+import io.matrix.brain.BrainCycle;
 import io.matrix.ethics.EthicalFilter;
 import io.matrix.lifecycle.AutonomyImpulse;
 import io.matrix.lifecycle.ImpulseScheduler;
@@ -18,7 +21,7 @@ import java.util.concurrent.atomic.AtomicReference;
  */
 public final class AutonomyEngine {
     
-    private final LlmBrainLoopService brain;
+    private final BrainCycle brain;
     private final ImpulseScheduler scheduler;
     private final ScheduledExecutorService clock;
     private final AtomicLong cycleCount = new AtomicLong();
@@ -27,7 +30,7 @@ public final class AutonomyEngine {
     private final MatrixTrace trace = new MatrixTrace();
     private volatile boolean running = false;
     
-    public AutonomyEngine(LlmBrainLoopService brain, ImpulseScheduler scheduler) {
+    public AutonomyEngine(BrainCycle brain, ImpulseScheduler scheduler) {
         this.brain = brain;
         this.scheduler = scheduler;
         this.clock = Executors.newScheduledThreadPool(2);
@@ -49,7 +52,7 @@ public final class AutonomyEngine {
     void idleCycle() {
         cycleCount.incrementAndGet();
         try (var span = trace.begin("autonomy.idle")) {
-            LlmBrainLoopService.CycleResult r = brain.cycle(
+            BrainCycle.CycleResult r = brain.cycle(
                 "Reflect briefly on what you might want to do next.");
             totalReflections.incrementAndGet();
             lastReflection.set(r.reply());
@@ -68,7 +71,7 @@ public final class AutonomyEngine {
                 "What is worth remembering?"
             };
             String q = questions[(int) (cycleCount.get() % questions.length)];
-            LlmBrainLoopService.CycleResult r = brain.cycle(q);
+            BrainCycle.CycleResult r = brain.cycle(q);
             lastReflection.set(r.reply());
             scheduler.fire(AutonomyImpulse.CURIOSITY, 50, java.util.Map.of());
         }
@@ -96,11 +99,11 @@ public final class AutonomyEngine {
         String modelPath = args[0];
         int durationSec = args.length > 1 ? Integer.parseInt(args[1]) : 35;
         
-        LlmBrainLoopService brain = new LlmBrainLoopService(modelPath);
         io.matrix.budgeter.ConjugateBudgeter budgeter = new ConjugateBudgeter();
         EthicalFilter ethics = new EthicalFilter();
         ImpulseScheduler scheduler = new ImpulseScheduler(budgeter, ethics);
         
+        LlmBrainLoopRag brain = new LlmBrainLoopRag(modelPath, new SimpleKnowledgeBase());
         AutonomyEngine engine = new AutonomyEngine(brain, scheduler);
         engine.start();
         

@@ -30,9 +30,9 @@ import java.util.List;
  * This is critical for anti-hallucination: grounds the LLM in
  * known facts rather than parametric memory.
  */
-public final class LlmBrainLoopRag {
+public final class LlmBrainLoopRag implements BrainCycle {
     
-    private final LlmBrainLoopService brain;
+    private final BrainCycle brain;
     private final SimpleKnowledgeBase knowledgeBase;
     private final MatrixTrace trace = new MatrixTrace();
     
@@ -44,7 +44,7 @@ public final class LlmBrainLoopRag {
     /**
      * Run one cognitive cycle with RAG augmentation.
      */
-    public LlmBrainLoopService.CycleResult cycle(String input) {
+    public BrainCycle.CycleResult cycle(String input) {
         // RAG: retrieve context
         String context = knowledgeBase.buildContext(input, 3);
         
@@ -59,7 +59,7 @@ public final class LlmBrainLoopRag {
         // Track RAG usage
         try (var span = trace.begin("brain.rag")) {
             span.output("context=" + context.length() + " chars, input=" + input.length() + " chars");
-            LlmBrainLoopService.CycleResult result = brain.cycle(augmentedInput);
+            BrainCycle.CycleResult result = brain.cycle(augmentedInput);
             span.output("accepted=" + result.accepted() + ", reply=" + result.reply().length() + " chars");
             return result;
         }
@@ -68,7 +68,7 @@ public final class LlmBrainLoopRag {
     /**
      * Run cycle with custom KB.
      */
-    public LlmBrainLoopService.CycleResult cycle(String input, SimpleKnowledgeBase kb) {
+    public BrainCycle.CycleResult cycle(String input, SimpleKnowledgeBase kb) {
         String context = kb.buildContext(input, 3);
         String augmentedInput = context.isEmpty() ? input : context + "\nUser question: " + input;
         return brain.cycle(augmentedInput);
@@ -78,7 +78,7 @@ public final class LlmBrainLoopRag {
         brain.close();
     }
     
-    public LlmBrainLoopService getBrain() { return brain; }
+    public BrainCycle getBrain() { return brain; }
     public SimpleKnowledgeBase getKnowledgeBase() { return knowledgeBase; }
     
     public static void main(String[] args) throws Exception {
@@ -94,7 +94,7 @@ public final class LlmBrainLoopRag {
         System.out.println("Knowledge base size: " + kb.size());
         
         LlmBrainLoopRag rag = new LlmBrainLoopRag(modelPath, kb);
-        LlmBrainLoopService.CycleResult r = rag.cycle(input);
+        BrainCycle.CycleResult r = rag.cycle(input);
         
         System.out.println("===== RAG Brain Cycle Result =====");
         System.out.println("Input:       " + input);

@@ -28,7 +28,7 @@ import java.util.List;
  * 
  * Wires the actual Qwen2.5-0.5B model into the cognitive cycle.
  */
-public final class LlmBrainLoopService implements BrainPipeline {
+public final class LlmBrainLoopService implements BrainPipeline, BrainCycle {
     
     private final TextEncoder encoder;
     private final SaliencyEngine saliency;
@@ -97,17 +97,6 @@ public final class LlmBrainLoopService implements BrainPipeline {
         return bridge;
     }
     
-    public record CycleResult(
-        boolean accepted,
-        String action,
-        String reply,
-        double arousal,
-        int focusCount,
-        double predictionError,
-        double confidence,
-        long auditIndex,
-        long durationMs
-    ) {}
     
     public CycleResult cycle(String input) {
         long start = System.currentTimeMillis();
@@ -145,9 +134,6 @@ public final class LlmBrainLoopService implements BrainPipeline {
         );
     }
     
-    public CycleResult chat(String sessionId, String userMessage) {
-        return cycle(userMessage);
-    }
     
     public void close() {
         if (llm != null) llm.close();
