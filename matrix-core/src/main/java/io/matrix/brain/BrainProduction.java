@@ -50,6 +50,9 @@ public final class BrainProduction {
         
         // HTTP server
         this.server = HttpServer.create(new InetSocketAddress(port), 0);
+        // Serve web UI at /
+        server.createContext("/", new WebUiHandler());
+
         server.createContext("/health", new HealthHandler());
         server.createContext("/chat", new ChatHandler(filteredBrain));
         server.createContext("/stats", new StatsHandler());
@@ -185,3 +188,42 @@ public final class BrainProduction {
         Thread.currentThread().join();
     }
 }
+
+    /**
+     * Serve web UI at /.
+     */
+    class WebUiHandler implements HttpHandler {
+        public void handle(HttpExchange ex) throws IOException {
+            // Serve the HTML file from resources
+            String path = ex.getRequestURI().getPath();
+            if ("/".equals(path) || "/index.html".equals(path)) {
+                try (var is = BrainProduction.class.getResourceAsStream("/brain/index-prod.html")) {
+                    if (is == null) {
+                        // Fallback: serve a simple HTML
+                        String html = "<!DOCTYPE html><html><head><title>MATRIX Brain</title></head><body>" +
+                            "<h1>MATRIX Brain Production</h1>" +
+                            "<p>Status: <a href='/health'>health</a> | <a href='/stats'>stats</a></p>" +
+                            "<form id='chat' onsubmit='send()'>" +
+                            "<input id='msg' type='text' placeholder='Ask the brain...' size='50'>" +
+                            "</form>" +
+                            "<pre id='out'></pre>" +
+                            "</body></html>";
+                        ex.getResponseHeaders().set("Content-Type", "text/html; charset=utf-8");
+                        ex.sendResponseHeaders(200, html.length());
+                        try (var os = ex.getResponseBody()) {
+                            os.write(html.getBytes(StandardCharsets.UTF_8));
+                        }
+                    } else {
+                        byte[] bytes = is.readAllBytes();
+                        ex.getResponseHeaders().set("Content-Type", "text/html; charset=utf-8");
+                        ex.sendResponseHeaders(200, bytes.length);
+                        try (var os = ex.getResponseBody()) {
+                            os.write(bytes);
+                        }
+                    }
+                }
+            } else {
+                ex.sendResponseHeaders(404, 0);
+            }
+        }
+    }
