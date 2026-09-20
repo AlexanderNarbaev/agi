@@ -123,3 +123,42 @@
 ---
 
 *This document is updated whenever a significant failure occurs. See [wave logs](../waves/) for detailed context.*
+
+---
+
+## Failure Timeline
+
+```mermaid
+timeline
+    title Failure Timeline
+    2026-08 : LLM in Runtime : Violated CONSTITUTION I
+    2026-08 : Fixed Modulators : Inflexible
+    2026-08 : EBL on XOR : 17x slower
+    2026-09 : Linear Cross-Talk : Boring behavior
+    2026-09 : Native Image : Random in heap
+    2026-09 : Flaky Tests : 5 unreliable
+```
+
+---
+
+## Failure Resolution Flow
+
+```mermaid
+flowchart TD
+    A[Failure Detected] --> B{Type}
+    B -->|Performance| C[Optimize Algorithm]
+    B -->|Design| D[Redesign Component]
+    B -->|Testing| E[Fix or Remove Test]
+    B -->|Build| F[Update Configuration]
+    
+    C --> G[Run Benchmarks]
+    D --> G
+    E --> H[Run Test Suite]
+    F --> I[Verify Build]
+    
+    G --> J[Document Lesson]
+    H --> J
+    I --> J
+    
+    style J fill:#51cf66,stroke:#2b8a3e
+```
