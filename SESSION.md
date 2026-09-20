@@ -4,14 +4,14 @@
 
 ---
 
-## Latest Wave: W516
+## Latest Wave: W522
 
-- **Checkpoint Hash:** `3b70b88f`
+- **Checkpoint Hash:** `67718324`
 - **Date:** 2026-09-20
 
 ### Summary
-323 tests pass, 0 fail:
-- 59 brain tests (real LLM + RAG + autonomy + learning)
+340 tests pass, 0 fail:
+- 76 brain tests (real LLM + RAG + autonomy + learning + sensors)
 - 216 federation tests (registry + consensus + runtime + mediator)
 - 48 CLI tests (conversation tools + web UI)
 
@@ -25,6 +25,8 @@
 | Self-initiation | AutonomyEngine | Cycles every 30s/120s/300s |
 | Learning | ConversationLearner | Learns from NDJSON history |
 | Self-improvement | BrainImprover | Continuous KB growth |
+| Interactive | BrainRunner | Interactive chat + learn + stats |
+| Sensor input | BrainSensorBridge | stdin + files + polling |
 | HTTP | BrainHttpServer | 6 endpoints + web UI |
 | Quarkus | BrainQuarkusResource | /v1/brain/* |
 | Telemetry | BrainTelemetry | Prometheus metrics |
@@ -53,27 +55,7 @@ $ curl -X POST -d '{"message":"What is 2+2?"}' http://localhost:9200/chat
 {"reply":"The answer is 4...","confidence":0.91,"accepted":true}
 ```
 
-## Architecture
-
-```
-io.matrix.brain/
-├── LlmBrainLoopService        [BrainCycle, BrainPipeline] Real LLM
-├── LlmBrainLoopRag            [BrainCycle] RAG-augmented
-├── ConfidenceFilter            Anti-hallucination (30% min)
-├── ConfidenceFilteredBrain     [BrainCycle] Filtered brain
-├── AutonomyEngine              Self-initiating cycles
-├── BrainHttpServer             HTTP API + web UI
-├── BrainTelemetry              Prometheus metrics
-├── BrainServerStartup          Quarkus auto-start
-├── BrainQuarkusResource        /v1/brain/* endpoints
-├── LearningMemory              Persist learned facts
-├── BrainImprover               Self-improvement loop
-├── BrainIntegrated             Full integrated brain
-├── BrainCycle                  Interface
-├── BrainPipeline               Interface
-```
-
-## CLI Tools (24 + web UI)
+## CLI Tools (26)
 
 cli, server, replay, head, tail, list, train, stats, search, delete, export, merge, name, names, validate, find, summary, extract, count, compact, diff, report, test, eval, backup, restore
 
@@ -86,4 +68,4 @@ cli, server, replay, head, tail, list, train, stats, search, delete, export, mer
 
 ---
 
-**Last updated:** 2026-09-20 (W516, 323 tests, 0 failures)
+**Last updated:** 2026-09-20 (W522, 340 tests, 0 failures)
