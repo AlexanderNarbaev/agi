@@ -74,7 +74,7 @@ public final class KineticModulator {
     }
 
     /**
-     * Apply cross-talk from another modulator.
+     * Apply cross-talk from another modulator (legacy linear mode).
      *
      * @param sourceId   source modulator ID
      * @param sourceLevel source modulator level
@@ -83,8 +83,17 @@ public final class KineticModulator {
         Double weight = crossTalkMap.get(sourceId);
         if (weight == null) return;
 
-        // Cross-talk effect: weight * sourceLevel * dt
         double effect = weight * sourceLevel;
+        currentLevel = Math.max(minLevel, Math.min(maxLevel, currentLevel + effect));
+    }
+
+    /**
+     * Apply a network interaction effect directly.
+     * Used by BiochemicalNetwork for non-linear interactions.
+     *
+     * @param effect the interaction effect (positive = excitation, negative = inhibition)
+     */
+    public void applyNetworkEffect(double effect) {
         currentLevel = Math.max(minLevel, Math.min(maxLevel, currentLevel + effect));
     }
 
