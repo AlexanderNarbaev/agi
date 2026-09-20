@@ -7,21 +7,22 @@ import com.sun.net.httpserver.HttpServer;
 import io.matrix.knowledge.SimpleKnowledgeBase;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
 
 /**
- * W479 — HTTP Server for the brain.
+ * W483 — HTTP Server for the brain with web UI.
  * 
- * Exposes the LlmBrainLoopRag as an HTTP endpoint:
- * - POST /chat - Send a message, get response
+ * Endpoints:
+ * - GET / - Web UI (HTML)
  * - GET /health - Health check
- * - GET /info - Brain info
+ * - GET /info - Brain info  
+ * - POST /chat - Real Qwen response with RAG
  * 
  * Usage:
  *   java io.matrix.brain.BrainServer [port] [model-path]
- *   Default port: 9100
  */
 public final class BrainServer {
     
@@ -29,11 +30,11 @@ public final class BrainServer {
         int port = args.length > 0 ? Integer.parseInt(args[0]) : 9100;
         String modelPath = args.length > 1 ? args[1] : "models/onnx/qwen05b";
         
-        // Setup brain with RAG
         SimpleKnowledgeBase kb = new SimpleKnowledgeBase();
         LlmBrainLoopRag brain = new LlmBrainLoopRag(modelPath, kb);
         
         HttpServer server = HttpServer.create(new InetSocketAddress(port), 0);
+        server.createContext("/", new UiHandler());
         server.createContext("/health", new HealthHandler());
         server.createContext("/info", new InfoHandler(kb));
         server.createContext("/chat", new ChatHandler(brain));
@@ -41,9 +42,9 @@ public final class BrainServer {
         server.start();
         
         System.out.println("[brain-server] Started on http://localhost:" + port);
+        System.out.println("[brain-server] Web UI at /");
         System.out.println("[brain-server] Model: " + modelPath);
         System.out.println("[brain-server] KB: " + kb.size() + " documents");
-        System.out.println("[brain-server] Endpoints: /health, /info, /chat");
         
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             System.out.println("[brain-server] Shutting down");
@@ -52,9 +53,30 @@ public final class BrainServer {
         }));
     }
     
+    static class UiHandler implements HttpHandler {
+        public void handle(HttpExchange ex) throws IOException {
+            if (!"/".equals(ex.getRequestURI().getPath())) {
+                ex.sendResponseHeaders(404, 0);
+                return;
+            }
+            try (InputStream is = BrainServer.class.getResourceAsStream("/brain/index.html")) {
+                if (is == null) {
+                    ex.sendResponseHeaders(404, 0);
+                    return;
+                }
+                byte[] bytes = is.readAllBytes();
+                ex.getResponseHeaders().set("Content-Type", "text/html; charset=utf-8");
+                ex.sendResponseHeaders(200, bytes.length);
+                try (OutputStream os = ex.getResponseBody()) {
+                    os.write(bytes);
+                }
+            }
+        }
+    }
+    
     static class HealthHandler implements HttpHandler {
         public void handle(HttpExchange ex) throws IOException {
-            String body = "{\"status\":\"ok\",\"service\":\"brain-server\"}";
+            String body = "{\"status\":\"ok\",\"service\":\"brain\"}";
             ex.getResponseHeaders().set("Content-Type", "application/json");
             ex.sendResponseHeaders(200, body.length());
             try (OutputStream os = ex.getResponseBody()) {
@@ -84,21 +106,15 @@ public final class BrainServer {
                 ex.sendResponseHeaders(405, 0);
                 return;
             }
-            
             String body = new String(ex.getRequestBody().readAllBytes(), StandardCharsets.UTF_8);
             String message = extractField(body, "message");
-            if (message == null) {
-                message = "Hello";
-            }
+            if (message == null) message = "Hello";
             
-            LlmBrainLoopService.CycleResult result = brain.cycle(message);
+            BrainCycle.CycleResult result = brain.cycle(message);
             
-            String response = "{\"message\":\"" + escape(message) + "\"," +
-                "\"reply\":\"" + escape(result.reply()) + "\"," +
-                "\"accepted\":" + result.accepted() + "," +
+            String response = "{\"reply\":\"" + escape(result.reply()) + "\"," +
                 "\"confidence\":" + result.confidence() + "," +
                 "\"duration_ms\":" + result.durationMs() + "}";
-            
             ex.getResponseHeaders().set("Content-Type", "application/json");
             ex.sendResponseHeaders(200, response.length());
             try (OutputStream os = ex.getResponseBody()) {
