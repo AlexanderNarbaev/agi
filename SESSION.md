@@ -4,13 +4,16 @@
 
 ---
 
-## Latest Wave: W555
+## Latest Wave: W558
 
-- **Checkpoint Hash:** `9859574c`
+- **Checkpoint Hash:** `76b87914`
 - **Date:** 2026-09-20
 
 ### Summary
-81 brain tests pass, 0 fail. Real conversation works.
+345 tests pass, 0 fail:
+- 81 brain tests (real LLM + RAG + autonomy + learning + sensors)
+- 216 federation tests (registry + consensus + runtime + mediator)
+- 48 CLI tests (conversation tools + web UI)
 
 ## BRAIN COMPONENTS (all verified)
 
@@ -31,8 +34,8 @@
 | Launcher | matrix-brain.sh | 7 commands |
 | Knowledge Adder | ConversationKnowledgeAdder | Add facts to KB |
 | Streaming | ConversationStreamServer | SSE streaming |
-| Model Eval | ConversationModelEval | Model evaluation
-| Edge Test | ConversationEdgeTest | Edge cases
+| Model Eval | ConversationModelEval | Model evaluation |
+| Edge Test | ConversationEdgeTest | Edge cases |
 | Run Script | run-brain-server.sh | Gradle-based launcher |
 
 ## Verified
@@ -65,4 +68,4 @@ cli, server, replay, head, tail, list, train, stats, search, delete, export, mer
 
 ---
 
-**Last updated:** 2026-09-20 (W555, 345 tests, 0 failures, brain working)
+**Last updated:** 2026-09-20 (W558, 345 tests, 0 failures, brain working)
