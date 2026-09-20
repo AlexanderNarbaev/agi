@@ -1,6 +1,6 @@
 #!/bin/bash
-# MATRIX Brain Full Startup
-# Runs brain HTTP server + autonomy engine
+# MATRIX Brain — Full Startup
+# Runs brain HTTP server, telemetry, and monitoring
 
 set -e
 
@@ -21,18 +21,21 @@ AVRO=$(find ~/.gradle/caches -name "avro-*.jar" -not -name "*sources*" 2>/dev/nu
 CP="$PROJECT_ROOT/matrix-core/build/classes/java/main:$PROJECT_ROOT/matrix-core/build/resources/main"
 CP="$CP:$SLF4J_API:$SLF4J_SIMPLE:$JACKSON_DATABIND:$JACKSON_CORE:$JACKSON_ANN:$ONNX_JAR:$PROTOBUF:$AVRO"
 
-PORT=${1:-9200}
+BRAIN_PORT=${1:-9200}
+TELEMETRY_PORT=${2:-9201}
 
 echo "MATRIX Brain — Full Startup"
+echo "Brain: port $BRAIN_PORT"
+echo "Telemetry: port $TELEMETRY_PORT"
 echo "Model: models/onnx/qwen05b"
-echo "Port: $PORT"
-echo ""
-echo "Starting brain server..."
-echo "  /health   - health check"
-echo "  /chat     - send message"
-echo "  /learn    - learn from conversations"
-echo "  /stats    - brain stats"
-echo "  /knowledge?q=query - search KB"
 echo ""
 
-java -cp "$CP" io.matrix.brain.BrainHttpServer $PORT models/onnx/qwen05b
+# Start telemetry in background
+echo "[1/2] Starting telemetry server..."
+nohup java -cp "$CP" io.matrix.brain.BrainTelemetry > /tmp/matrix-telemetry.log 2>&1 &
+TELEMETRY_PID=$!
+sleep 3
+
+# Start brain server in foreground
+echo "[2/2] Starting brain server..."
+java -cp "$CP" io.matrix.brain.BrainHttpServer $BRAIN_PORT models/onnx/qwen05b
