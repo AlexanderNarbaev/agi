@@ -4,15 +4,15 @@
 
 ---
 
-## Latest Wave: W581
+## Latest Wave: W582
 
-- **Checkpoint Hash:** `611ecce5`
+- **Checkpoint Hash:** `a73cb07d`
 - **Date:** 2026-09-20
 
 ### Summary
-469 tests pass, 0 fail:
+474 tests pass, 0 fail:
 - 97 brain tests
-- 324 federation tests
+- 329 federation tests
 - 48 CLI tests
 
 ## Phase 1: Liquid Federation Core (W569-W575) ✅
@@ -22,11 +22,12 @@
 | Component | Class | Wave |
 |-----------|-------|------|
 | Rule Importer | RuleImporter | W581 |
+| Dataset Connector | DatasetConnector | W582 |
 
-## Next: W582 (HuggingFace Dataset Connector)
+## Next: W583 (Matrix Benchmark Suite)
 
-## Tests: 469 total
+## Tests: 474 total
 
 ---
 
-**Last updated:** 2026-09-20 (W581, 469 tests)
+**Last updated:** 2026-09-20 (W582, 474 tests)
