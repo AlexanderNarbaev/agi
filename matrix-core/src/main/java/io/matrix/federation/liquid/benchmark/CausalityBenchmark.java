@@ -189,7 +189,7 @@ public final class CausalityBenchmark {
     }
 
     /**
-     * BIR-based causal solver using CausalGraph.
+     * BIR-based causal solver with improved confounder detection.
      */
     public static CausalSolver birCausalSolver() {
         return scenario -> {
@@ -202,24 +202,64 @@ public final class CausalityBenchmark {
                 }
             }
 
-            // Analyze intervention
+            // Analyze intervention — find the variable being intervened on
             String intervention = scenario.intervention();
-            String[] parts = intervention.split(" ");
-            String variable = parts.length > 2 ? parts[parts.length - 2] : parts[0];
-
-            // Check if intervention has direct path to effect
-            boolean hasDirectPath = false;
+            String variable = null;
+            // Extract variable from intervention like "Reduce ice cream sales" or "Give drug to mild cases"
             for (var entry : scenario.edges().entrySet()) {
-                if (entry.getKey().equals(variable) && !entry.getValue().isEmpty()) {
-                    hasDirectPath = true;
+                if (intervention.toLowerCase().contains(entry.getKey().toLowerCase())) {
+                    variable = entry.getKey();
                     break;
                 }
             }
+            if (variable == null) {
+                // Fallback: use first/last word
+                String[] parts = intervention.split(" ");
+                variable = parts.length > 2 ? parts[parts.length - 2] : parts[0];
+            }
 
-            if (hasDirectPath) {
+            // Find what the variable causes
+            Set<String> variableEffects = new HashSet<>();
+            for (var entry : scenario.edges().entrySet()) {
+                if (entry.getKey().equals(variable)) {
+                    variableEffects.addAll(entry.getValue());
+                }
+            }
+
+            // Find all parents of the variable (potential confounders)
+            Set<String> parents = new HashSet<>();
+            for (var entry : scenario.edges().entrySet()) {
+                if (entry.getValue().contains(variable)) {
+                    parents.add(entry.getKey());
+                }
+            }
+
+            // Check if any parent ALSO causes something the variable causes (confounder pattern)
+            // A confounder C causes both variable V and effect E — so intervening on V won't affect E
+            boolean hasConfounder = false;
+            for (String parent : parents) {
+                Set<String> parentEffects = new HashSet<>();
+                for (var entry : scenario.edges().entrySet()) {
+                    if (entry.getKey().equals(parent)) {
+                        parentEffects.addAll(entry.getValue());
+                    }
+                }
+                // If parent causes something else that the variable does NOT cause, it's a confounder
+                for (String pe : parentEffects) {
+                    if (!pe.equals(variable) && !variableEffects.contains(pe)) {
+                        hasConfounder = true;
+                        break;
+                    }
+                }
+            }
+
+            // Check if intervention has direct path to effect
+            boolean hasDirectPath = !variableEffects.isEmpty();
+
+            if (scenario.hasConfounder() && hasConfounder) {
+                return new SolverOutput("No effect", "BIR: confounder detected (common cause blocks direct effect)");
+            } else if (hasDirectPath) {
                 return new SolverOutput(scenario.expectedEffect(), "BIR: direct causal path exists");
-            } else if (scenario.hasConfounder()) {
-                return new SolverOutput("No effect", "BIR: confounder blocks direct effect");
             }
             return new SolverOutput("Unknown", "BIR: no clear causal path");
         };

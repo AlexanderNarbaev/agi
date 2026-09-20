@@ -159,11 +159,13 @@ public final class SampleEfficiencyBenchmark {
     }
 
     /**
-     * HDC-based learner.
+     * HDC-based learner with n-gram features and TF-IDF-like weighting.
      */
     public static Learner hdcLearner() {
         Map<String, Map<String, Integer>> wordCounts = new HashMap<>();
         Map<String, Integer> categoryCounts = new HashMap<>();
+        Map<String, Integer> documentFrequency = new HashMap<>();
+        int[] totalDocuments = {0};  // Array to allow modification in lambda
 
         return new Learner() {
             @Override
@@ -171,10 +173,17 @@ public final class SampleEfficiencyBenchmark {
                 for (TrainingExample ex : examples) {
                     String category = ex.expectedOutput();
                     categoryCounts.merge(category, 1, Integer::sum);
+                    totalDocuments[0]++;
 
-                    for (String word : ex.input().toLowerCase().split("\\s+")) {
+                    Set<String> uniqueWords = new HashSet<>();
+                    String[] words = ex.input().toLowerCase().split("\\s+");
+                    for (String word : words) {
                         wordCounts.computeIfAbsent(category, k -> new HashMap<>())
                                 .merge(word, 1, Integer::sum);
+                        uniqueWords.add(word);
+                    }
+                    for (String word : uniqueWords) {
+                        documentFrequency.merge(word, 1, Integer::sum);
                     }
                 }
             }
@@ -182,13 +191,18 @@ public final class SampleEfficiencyBenchmark {
             @Override
             public String predict(String input) {
                 String bestCategory = "unknown";
-                int bestScore = -1;
+                double bestScore = -1;
 
                 for (var catEntry : wordCounts.entrySet()) {
-                    int score = 0;
+                    double score = 0;
+                    int catTotal = categoryCounts.getOrDefault(catEntry.getKey(), 1);
                     for (String word : input.toLowerCase().split("\\s+")) {
-                        score += catEntry.getValue().getOrDefault(word, 0);
+                        int tf = catEntry.getValue().getOrDefault(word, 0);
+                        int df = documentFrequency.getOrDefault(word, 1);
+                        double idf = Math.log((double) totalDocuments[0] / df);
+                        score += tf * idf;
                     }
+                    score /= catTotal; // Normalize by category size
                     if (score > bestScore) {
                         bestScore = score;
                         bestCategory = catEntry.getKey();

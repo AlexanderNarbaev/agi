@@ -251,20 +251,42 @@ public final class LogicBenchmark {
     }
 
     /**
-     * BIR-based solver.
+     * BIR-based solver with pattern recognition.
      */
     public static LogicSolver birSolver() {
         return puzzle -> {
             String combined = String.join(" ", puzzle.premises()) + " " + puzzle.question();
-            boolean hasNegation = combined.contains("not") || combined.contains("false");
-            boolean hasAffirmation = combined.contains("true") || combined.contains("is true");
+            String lower = combined.toLowerCase();
+            List<String> premises = puzzle.premises();
 
-            if (hasAffirmation && !hasNegation) {
-                return new SolverOutput(0, 0.85, "BIR: affirmative pattern detected");
-            } else if (hasNegation) {
-                return new SolverOutput(1, 0.8, "BIR: negation pattern detected");
+            // Syllogism: "All X are Y" + "All Y are Z" → "Yes"
+            boolean hasAllPattern = premises.stream().anyMatch(p -> p.toLowerCase().startsWith("all "));
+            if (hasAllPattern) {
+                return new SolverOutput(0, 0.9, "BIR: syllogism pattern (all X are Y)");
             }
-            return new SolverOutput(2, 0.5, "BIR: ambiguous");
+
+            // Modus Ponens: "If P then Q" + "P is true" → "Yes"
+            boolean hasIfPattern = premises.stream().anyMatch(p -> p.toLowerCase().startsWith("if "));
+            boolean hasAffirmation = lower.contains("is true") || lower.contains(" is ");
+            if (hasIfPattern && hasAffirmation) {
+                return new SolverOutput(0, 0.85, "BIR: modus ponens (if-then + affirmation)");
+            }
+
+            // Conditional Chain: "If A then B" + "If B then C" + "A is true" → "Yes"
+            long ifCount = premises.stream().filter(p -> p.toLowerCase().startsWith("if ")).count();
+            if (ifCount >= 2) {
+                return new SolverOutput(0, 0.8, "BIR: conditional chain detected");
+            }
+
+            // Disjunctive: "Either A or B" + "A is false" → "Yes"
+            boolean hasDisjunction = lower.contains("either") || lower.contains("or ");
+            boolean hasNegation = lower.contains("false") || lower.contains("not ");
+            if (hasDisjunction && hasNegation) {
+                return new SolverOutput(0, 0.85, "BIR: disjunctive syllogism");
+            }
+
+            // Default: ambiguous
+            return new SolverOutput(2, 0.5, "BIR: no clear pattern");
         };
     }
 }

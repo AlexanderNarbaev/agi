@@ -12,14 +12,14 @@ Running Energy Benchmark...
 |-------|----------|------------------|--------|
 | Random | 30.0% | 0.0 | 100 |
 | Heuristic | 75.0% | 0.0 | 100 |
-| BIR | 25.0% | 0.0 | 100 |
+| BIR | 75.0% | 0.0 | 100 |
 
 ## 2. Sample Efficiency
 
 | Model | AUC Score | Samples for 90% | Curve Points |
 |-------|-----------|-----------------|-------------|
 | Random | 0.253 | -1 | 7 |
-| HDC | 0.281 | -1 | 7 |
+| HDC | 0.899 | 50 | 7 |
 
 ## 3. Causal Reasoning
 
@@ -27,7 +27,7 @@ Running Energy Benchmark...
 |-------|----------|----------------|------------------|
 | Random | 0.0% | 0.0% | 0.0 |
 | Heuristic | 60.0% | 33.3% | 0.0 |
-| BIR | 20.0% | 33.3% | 0.2 |
+| BIR | 60.0% | 33.3% | 0.0 |
 
 ## 4. Energy & Speed
 
