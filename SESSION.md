@@ -4,50 +4,40 @@
 
 ---
 
-## Latest Wave: W568
+## Latest Wave: W571
 
-- **Checkpoint Hash:** `95ea16ce`
+- **Checkpoint Hash:** `b16837ad`
 - **Date:** 2026-09-20
 
 ### Summary
-373 tests pass, 0 fail:
-- 97 brain tests (BIR + LLM + RAG + autonomy + learning + sensors)
-- 228 federation tests (registry + consensus + runtime + mediator + DynamicModulatorRegistry)
-- 48 CLI tests (conversation tools + web UI)
+405 tests pass, 0 fail:
+- 97 brain tests (BIR + LLM + RAG + autonomy + learning)
+- 260 federation tests (registry + consensus + runtime + liquid roles + scheduler)
+- 48 CLI tests
 
-## NEW: BIR Brain (CONSTITUTION I compliant)
+## NEW: Liquid Federation (W569-W571)
 
 | Component | Class | Status |
 |-----------|-------|--------|
-| BIR Brain Cycle | BirBrainCycle | HDC cosine similarity, no LLM |
-| Dynamic Modulators | DynamicModulatorRegistry | Extensible, FROZEN enforcement |
-| HTTP Server | BrainHttpServer | Defaults to BirBrainCycle |
+| Node Roles | NodeRole | INFANT→LEARNER→ADULT→SPECIALIST→GUARDIAN |
+| Role Assigner | LiquidNodeRoleAssigner | Auto-promotion/demotion based on metrics |
+| Consensus | CapabilityConsensusEngine | Weighted voting by role |
+| Scheduler | LevinScheduler | Task allocation ∝ 2^-l |
 
 ## Brain Stack
 
 | Component | Class | Status |
 |-----------|-------|--------|
-| BIR Brain | BirBrainCycle | DEFAULT — no LLM, HDC inference |
-| Real LLM | LlmBrainLoopService | DEPRECATED — Qwen ONNX |
-| RAG | SimpleKnowledgeBase | 125 docs |
-| Anti-hallucination | ConfidenceFilter | Min 30% confidence |
-| Self-initiation | AutonomyEngine | Cycles every 30s/120s/300s |
-| Learning | ConversationLearner | Learns from NDJSON |
-| HTTP | BrainHttpServer | 6 endpoints + web UI |
+| BIR Brain | BirBrainCycle | DEFAULT — no LLM |
+| Dynamic Modulators | DynamicModulatorRegistry | FROZEN enforcement |
+| HTTP Server | BrainHttpServer | 6 endpoints |
 
-## Tests: 373 total
+## Tests: 405 total
 
-- 97 brain tests (BIR + LLM + RAG + autonomy + learning)
-- 228 federation tests (registry + consensus + runtime + modulators)
+- 97 brain tests
+- 260 federation tests
 - 48 CLI tests
-
-## Wave Commit Rule
-
-1. `git add -A`
-2. `git commit -m "WAL: W<NUM> — <description>"`
-3. `git push origin main && git push gitverse main`
-4. Update SESSION.md
 
 ---
 
-**Last updated:** 2026-09-20 (W568, 373 tests, 0 failures, BIR brain working)
+**Last updated:** 2026-09-20 (W571, 405 tests, 0 failures)
