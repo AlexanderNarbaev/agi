@@ -4,9 +4,9 @@
 
 ---
 
-## Latest Wave: W543
+## Latest Wave: W548
 
-- **Checkpoint Hash:** `b3fd11a8`
+- **Checkpoint Hash:** `3345ed69`
 - **Date:** 2026-09-20
 
 ### Summary
@@ -33,6 +33,9 @@
 | Startup | BrainServerStartup | Auto-start on Quarkus boot |
 | Launcher | matrix-brain.sh | 7 commands |
 | Knowledge Adder | ConversationKnowledgeAdder | Add facts to KB |
+| Streaming | ConversationStreamServer | SSE streaming |
+| Model Eval | ConversationModelEval | Model evaluation |
+| Edge Test | ConversationEdgeTest | Edge cases
 
 ## Verified
 
@@ -61,4 +64,4 @@ cli, server, replay, head, tail, list, train, stats, search, delete, export, mer
 
 ---
 
-**Last updated:** 2026-09-20 (W543, 345 tests, 0 failures, real brain works)
+**Last updated:** 2026-09-20 (W548, 345 tests, 0 failures, complete brain stack)
