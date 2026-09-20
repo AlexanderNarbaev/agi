@@ -4,15 +4,15 @@
 
 ---
 
-## Latest Wave: W586
+## Latest Wave: W587
 
-- **Checkpoint Hash:** `9481227b`
+- **Checkpoint Hash:** `7f8a6ed9`
 - **Date:** 2026-09-20
 
 ### Summary
-488 tests pass, 0 fail:
+491 tests pass, 0 fail:
 - 97 brain tests
-- 343 federation tests
+- 346 federation tests
 - 48 CLI tests
 
 ## Phase 1: Liquid Federation Core (W569-W575) ✅
@@ -23,11 +23,12 @@
 | Component | Class | Wave |
 |-----------|-------|------|
 | Telemetry Server | WebSocketTelemetryServer | W586 |
+| Biochemical Dashboard | BiochemicalDashboard | W587 |
 
-## Next: W587 (Biochemical Dashboard)
+## Next: W588 (Federation Map)
 
-## Tests: 488 total
+## Tests: 491 total
 
 ---
 
-**Last updated:** 2026-09-20 (W586, 488 tests)
+**Last updated:** 2026-09-20 (W587, 491 tests)
