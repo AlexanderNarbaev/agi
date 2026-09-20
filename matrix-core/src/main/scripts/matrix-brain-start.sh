@@ -1,6 +1,6 @@
 #!/bin/bash
-# MATRIX Brain — Full Startup
-# Runs brain HTTP server, telemetry, and monitoring
+# MATRIX Brain — Production Startup Script
+# Runs the brain HTTP server with all features
 
 set -e
 
@@ -22,20 +22,18 @@ CP="$PROJECT_ROOT/matrix-core/build/classes/java/main:$PROJECT_ROOT/matrix-core/
 CP="$CP:$SLF4J_API:$SLF4J_SIMPLE:$JACKSON_DATABIND:$JACKSON_CORE:$JACKSON_ANN:$ONNX_JAR:$PROTOBUF:$AVRO"
 
 BRAIN_PORT=${1:-9200}
-TELEMETRY_PORT=${2:-9201}
 
-echo "MATRIX Brain — Full Startup"
-echo "Brain: port $BRAIN_PORT"
-echo "Telemetry: port $TELEMETRY_PORT"
-echo "Model: models/onnx/qwen05b"
+echo "MATRIX Brain — Production Startup"
+echo "  Model: models/onnx/qwen05b"
+echo "  Port: $BRAIN_PORT"
+echo "  Endpoints:"
+echo "    /health - Health check"
+echo "    /chat - Send message (POST JSON)"
+echo "    /learn - Learn from conversations (POST)"
+echo "    /stats - Brain statistics"
+echo "    /knowledge?q=query - Search KB"
+echo "    /metrics - Prometheus metrics"
+echo "    / - Web UI"
 echo ""
 
-# Start telemetry in background
-echo "[1/2] Starting telemetry server..."
-nohup java -cp "$CP" io.matrix.brain.BrainTelemetry > /tmp/matrix-telemetry.log 2>&1 &
-TELEMETRY_PID=$!
-sleep 3
-
-# Start brain server in foreground
-echo "[2/2] Starting brain server..."
 java -cp "$CP" io.matrix.brain.BrainHttpServer $BRAIN_PORT models/onnx/qwen05b
