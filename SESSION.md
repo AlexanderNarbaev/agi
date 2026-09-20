@@ -4,9 +4,9 @@
 
 ---
 
-## Latest Wave: W551
+## Latest Wave: W554
 
-- **Checkpoint Hash:** `86e9721d`
+- **Checkpoint Hash:** `028f13fa`
 - **Date:** 2026-09-20
 
 ### Summary
@@ -34,8 +34,8 @@
 | Launcher | matrix-brain.sh | 7 commands |
 | Knowledge Adder | ConversationKnowledgeAdder | Add facts to KB |
 | Streaming | ConversationStreamServer | SSE streaming |
-| Model Eval | ConversationModelEval | Model evaluation
-| Edge Test | ConversationEdgeTest | Edge cases
+| Model Eval | ConversationModelEval | Model evaluation |
+| Edge Test | ConversationEdgeTest | Edge cases |
 
 ## Verified
 
@@ -64,4 +64,4 @@ cli, server, replay, head, tail, list, train, stats, search, delete, export, mer
 
 ---
 
-**Last updated:** 2026-09-20 (W551, 345 tests, 0 failures, complete brain stack)
+**Last updated:** 2026-09-20 (W554, 345 tests, 0 failures, complete brain stack)
