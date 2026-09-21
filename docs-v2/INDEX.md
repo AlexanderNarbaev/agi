@@ -10,6 +10,8 @@
 | **Наука** | `science/{SUBSTRATE-MODELS,FOUNDATIONS,GOALS-REQUIREMENTS,OPEN-PROBLEMS,ALGORITHM-ATLAS-INDEX}.md` |
 | **Инженерия** | `engineering/{PLAN,INVARIANTS,STANDARDS-MATRIX,JMH-GATE-EVIDENCE,SDD-COVERAGE,RELEASE-NOTES}.md` |
 | **Операции** | `operations/{RUNBOOK,DEPLOYMENT}.md` |
+| **Экосистема** | `ecosystem/{index,concept,quickstart,api,sdks,xai,architecture,constitution,algorithms}.md` (T-03, W1500+) |
+| **Экосистема RU** | `ru/ecosystem/{index,concept,quickstart,api,sdks,xai,architecture,constitution,algorithms}.md` |
 
 ## Wave 31 — Cross-Disciplinary Research Doctrine (Sep 11 2026)
 
