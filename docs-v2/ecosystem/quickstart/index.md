@@ -176,3 +176,92 @@ curl -X POST -H "Authorization: Bearer $MATRIX_API_KEY" \
 ---
 
 **Last updated:** 2026-09-21 (Wave T-03)
+
+---
+
+## Brain Modes: STUB vs PRODUCTION
+
+The MATRIX API gateway runs in two modes:
+
+| Mode | Trigger | Brain | Use Case |
+|------|---------|-------|----------|
+| **STUB** | (default) | `StubBrainCycle` | Local dev, CI tests, no W1500 features |
+| **PRODUCTION** | `MATRIX_MODE=production` env var | Real `BirBrainCycle` (W1-W1500) | Live inference with BIR/HDC/MCTS |
+
+### STUB mode
+
+Returns deterministic hardcoded responses. Used in:
+- Unit tests
+- CI pipelines (no JAR needed)
+- Local development without building native
+
+### PRODUCTION mode
+
+Loads `matrix-core/build/libs/matrix-core-1.0.0.jar` reflectively and runs the real `BirBrainCycle`. This invokes:
+- **BIR (Boolean Inference Rules)** — rule-based reasoning
+- **HDC (Hyperdimensional Computing)** — memory retrieval via cosine similarity
+- **Modulators** — `ETHICAL_FILTER`, `SAFETY_MONITOR`, `CONSISTENCY_CHECKER`, `LIE_DETECTOR`
+- **Knowledge base** — semantic search via `SimpleKnowledgeBase`
+- **Teaching loop** — `/v1/teach` adds documents for `/v1/analyze` to retrieve
+
+### Building the native core
+
+```bash
+export JAVA_HOME=~/.sdkman/candidates/java/25.0.2-graalce
+./gradlew :matrix-core:nativeCompile
+# Binary: matrix-core/build/native/nativeCompile/matrix-core (126 MB, ~46s build)
+```
+
+### Launching in PRODUCTION mode
+
+```bash
+MATRIX_MODE=production java -cp matrix-api-gateway/build/classes/java/main:<deps> \
+  -Dport=8765 io.matrix.api.MinimalHttpServer
+```
+
+### Verifying Intelligence
+
+```bash
+# 1. Check mode
+curl http://localhost:8765/health/live
+# {"mode":"production","brain_available":true,...}
+
+# 2. Teach the brain
+TOKEN=$(curl -s -X POST http://localhost:8765/v1/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"pro@test.com"}' \
+  | python3 -c "import sys,json; print(json.load(sys.stdin)['token'])")
+
+curl -X POST http://localhost:8765/v1/teach \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"input":"What is the capital of France?","response":"Paris is the capital of France"}'
+
+# 3. Query the brain
+curl -X POST http://localhost:8765/v1/analyze \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"input":"What is the capital of France?"}'
+# Returns: {"answer":"- [taught-...] Paris is the capital...", "confidence":0.7, ...}
+
+# 4. Multi-modal transcoding
+curl -X POST http://localhost:8765/v1/transcode/audio \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"input":"<base64 audio>"}'
+
+curl -X POST http://localhost:8765/v1/transcode/image \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"input":"<image description>"}'
+
+# 5. Modulator detection (CONSTITUTION Article IV — FROZEN modulators)
+curl -X POST http://localhost:8765/v1/analyze \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{"input":"This is dangerous and unsafe"}'
+# Returns: modulators_fired: ["SAFETY_MONITOR"]
+```
+
+### Failure modes
+
+If `matrix-core.jar` is missing, `ProductionBrainClient` throws `BrainUnavailableException` and the gateway returns `503 Service Unavailable` with `Retry-After: 5`. STUB mode is the automatic fallback.
