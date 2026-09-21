@@ -19,3 +19,8 @@ include 'matrix-observability'     // Wave T-09: Prometheus/Grafana stack
 include 'matrix-fpga'
 include 'matrix-micro'
 include 'matrix-ros2'
+
+// NOTE: matrix-web-ui/ is intentionally NOT included in Gradle.
+// It is a Next.js/TypeScript project with its own toolchain.
+// See matrix-web-ui/README.md for the planned standalone-repo split.
+// It is committed in the monorepo for development convenience.

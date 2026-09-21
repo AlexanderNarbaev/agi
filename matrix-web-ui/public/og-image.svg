@@ -1,0 +1,101 @@
+<svg width="1200" height="630" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0a0e1a"/>
+      <stop offset="100%" stop-color="#111827"/>
+    </linearGradient>
+    <linearGradient id="text" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#10b981"/>
+      <stop offset="50%" stop-color="#06b6d4"/>
+      <stop offset="100%" stop-color="#a78bfa"/>
+    </linearGradient>
+    <radialGradient id="glow">
+      <stop offset="0%" stop-color="#10b981" stop-opacity="0.3"/>
+      <stop offset="100%" stop-color="#10b981" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <rect width="1200" height="630" fill="url(#bg)"/>
+
+  <!-- Background grid -->
+  <g stroke="#1f2937" stroke-width="1" opacity="0.3">
+    <line x1="0" y1="100" x2="1200" y2="100"/>
+    <line x1="0" y1="200" x2="1200" y2="200"/>
+    <line x1="0" y1="300" x2="1200" y2="300"/>
+    <line x1="0" y1="400" x2="1200" y2="400"/>
+    <line x1="0" y1="500" x2="1200" y2="500"/>
+    <line x1="100" y1="0" x2="100" y2="630"/>
+    <line x1="200" y1="0" x2="200" y2="630"/>
+    <line x1="300" y1="0" x2="300" y2="630"/>
+    <line x1="400" y1="0" x2="400" y2="630"/>
+    <line x1="500" y1="0" x2="500" y2="630"/>
+    <line x1="600" y1="0" x2="600" y2="630"/>
+    <line x1="700" y1="0" x2="700" y2="630"/>
+    <line x1="800" y1="0" x2="800" y2="630"/>
+    <line x1="900" y1="0" x2="900" y2="630"/>
+    <line x1="1000" y1="0" x2="1000" y2="630"/>
+    <line x1="1100" y1="0" x2="1100" y2="630"/>
+  </g>
+
+  <!-- Glow effect -->
+  <circle cx="600" cy="315" r="300" fill="url(#glow)"/>
+
+  <!-- HDC vector points (scattered) -->
+  <g fill="#10b981">
+    <circle cx="300" cy="200" r="3"/>
+    <circle cx="350" cy="250" r="3"/>
+    <circle cx="400" cy="180" r="3"/>
+    <circle cx="450" cy="220" r="3"/>
+    <circle cx="500" cy="260" r="3"/>
+    <circle cx="550" cy="190" r="3"/>
+    <circle cx="600" cy="230" r="3"/>
+    <circle cx="650" cy="200" r="3"/>
+    <circle cx="700" cy="260" r="3"/>
+    <circle cx="750" cy="180" r="3"/>
+    <circle cx="800" cy="240" r="3"/>
+    <circle cx="850" cy="200" r="3"/>
+    <circle cx="900" cy="260" r="3"/>
+  </g>
+
+  <g fill="#06b6d4">
+    <circle cx="320" cy="380" r="3"/>
+    <circle cx="380" cy="420" r="3"/>
+    <circle cx="440" cy="380" r="3"/>
+    <circle cx="500" cy="440" r="3"/>
+    <circle cx="560" cy="400" r="3"/>
+    <circle cx="620" cy="450" r="3"/>
+    <circle cx="680" cy="410" r="3"/>
+    <circle cx="740" cy="440" r="3"/>
+    <circle cx="800" cy="400" r="3"/>
+    <circle cx="860" cy="450" r="3"/>
+  </g>
+
+  <g fill="#a78bfa">
+    <circle cx="360" cy="320" r="3"/>
+    <circle cx="420" cy="340" r="3"/>
+    <circle cx="480" cy="320" r="3"/>
+    <circle cx="540" cy="350" r="3"/>
+    <circle cx="600" cy="320" r="3"/>
+    <circle cx="660" cy="350" r="3"/>
+    <circle cx="720" cy="320" r="3"/>
+    <circle cx="780" cy="350" r="3"/>
+  </g>
+
+  <!-- Main title -->
+  <text x="600" y="320" font-family="Inter, sans-serif" font-size="80" font-weight="bold" fill="url(#text)" text-anchor="middle">
+    MATRIX
+  </text>
+
+  <text x="600" y="400" font-family="Inter, sans-serif" font-size="32" fill="#e5e7eb" text-anchor="middle">
+    Hybrid Neuro-Symbolic AI
+  </text>
+
+  <text x="600" y="450" font-family="Inter, sans-serif" font-size="20" fill="#9ca3af" text-anchor="middle">
+    Explainability built in. No LLM in runtime.
+  </text>
+
+  <!-- Footer badges -->
+  <text x="600" y="560" font-family="JetBrains Mono, monospace" font-size="14" fill="#9ca3af" text-anchor="middle">
+    GDPR · SOC 2 · Apache-2.0 · ON-PREM
+  </text>
+</svg>
