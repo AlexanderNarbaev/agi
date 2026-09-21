@@ -1,6 +1,73 @@
 # SESSION
 
-**Status:** T-05 XAI DASHBOARD COMPLETE — TRANSFORMATION IN PROGRESS
+**Status:** T-06 AUDIT & COMPLIANCE COMPLETE — TRANSFORMATION IN PROGRESS
+
+---
+
+## T-06: Audit & Compliance System
+
+**Date:** 2026-09-21
+**Checkpoint:** `9306868a` (merged to develop)
+
+### What Was Built
+
+Replaces T-01 placeholder with full hash-chained audit + GDPR + compliance reporting.
+
+**Core Components:**
+- `AuditEvent` — Immutable Java record (event_id, timestamp, prev_hash, hash, ...)
+- `HashChainedLog` — Append-only SHA-256 chain with `verify()` for tamper detection
+- `GdprPruner` — GDPR Article 17 "Right to be Forgotten" via tombstone entries
+- `ComplianceReporter` — SOX/HIPAA/GDPR/ISO27001 reports with JSON rendering
+- `AnomalyDetector` — 4 detector types (burst, failure rate, GDPR abuse, replay attack)
+- `AuditModule` — Facade with singleton log + pruner + reporter + detector
+
+### Stats
+
+- **9 new files** (5 main + 4 test)
+- **~900 lines** total
+- **40/40 tests passing**, 0 failing
+- **38 new tests** added (was 2 in T-01)
+
+### Test Coverage
+
+| Test File | Tests |
+|-----------|-------|
+| `HashChainedLogTest` | 11 |
+| `GdprPrunerTest` | 8 |
+| `ComplianceReporterTest` | 6 |
+| `AnomalyDetectorTest` | 8 |
+| `AuditModuleTest` | 7 |
+| **T-06 added** | **40 tests** |
+
+### CONSTITUTION Compliance
+
+| Article | Status |
+|---------|--------|
+| I: No LLM in Runtime | ✅ All audit ops are structural |
+| V: Privacy | ✅ GDPR pruner honors right to be forgotten |
+| VI: No Consciousness Claims | ✅ Pure structural ops |
+
+### Architecture
+
+```
+┌─────────────────────────────────────────────┐
+│ matrix-audit                                │
+├─────────────────────────────────────────────┤
+│ HashChainedLog (SHA-256 chain, append-only) │
+│       ↑                                     │
+│   GdprPruner (tombstones preserve chain)    │
+│       ↑                                     │
+│   ComplianceReporter (SOX/HIPAA/GDPR/ISO)    │
+│       ↑                                     │
+│   AnomalyDetector (4 detector types)         │
+│       ↑                                     │
+│   AuditModule (facade)                       │
+└─────────────────────────────────────────────┘
+            ↑
+            │ wired into matrix-api-gateway in T-06.5
+```
+
+### Next: T-07 (Economic Model & Monetization)
 
 ---
 
