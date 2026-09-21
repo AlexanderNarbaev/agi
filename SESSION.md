@@ -1,6 +1,86 @@
 # SESSION
 
-**Status:** T-03 BILINGUAL DOCS COMPLETE — TRANSFORMATION IN PROGRESS
+**Status:** T-04 LANDING PAGE COMPLETE — TRANSFORMATION IN PROGRESS
+
+---
+
+## T-04: Landing Page & Marketing Platform
+
+**Date:** 2026-09-21
+**Checkpoint:** `cab81766` (merged to develop)
+
+### What Was Built
+
+Production landing page (`matrix-web-ui/`) with 6 sections:
+- **Hero** — WebGL HDC vector space visualization (256 10,000-bit HDC vectors projected to 3D)
+- **Features** — 6 core capabilities + MATRIX vs Pure LLM comparison table
+- **LiveDemo** — Interactive playground with deterministic responses (no LLM, no API key)
+- **Pricing** — 3 tiers (FREE $0, PRO $49/mo, ENTERPRISE custom)
+- **Trust** — Compliance badges + audit chain example
+- **Contact** — Partner inquiry form
+
+### Stack
+
+- **Next.js 14** (App Router)
+- **React 18** + TypeScript strict mode
+- **Tailwind CSS** with custom MATRIX palette
+- **Three.js + react-three-fiber** for WebGL hero
+- **Plausible Analytics** (privacy-friendly, GDPR-compliant)
+- **Jest + Testing Library** (16 component tests)
+
+### Stats
+
+- **31 files** in `matrix-web-ui/`
+- **1,819 lines** (TypeScript, CSS, config, tests, docs)
+- **16 component tests** (Features 4, Pricing 6, LiveDemo 6)
+- **SEO complete**: robots.txt, sitemap.xml, OpenGraph, Twitter card
+- **OG image**: Custom SVG with HDC point cloud + brand colors
+
+### CONSTITUTION Compliance
+
+| Article | Status |
+|---------|--------|
+| I: No LLM in Runtime | ✅ Demo is deterministic stub |
+| III: Reproducibility | ✅ Seeded LCG in WebGL viz |
+| VI: No Consciousness Claims | ✅ "Engine/pipeline" language |
+| VIII: Open Source | ✅ Apache-2.0 noted |
+
+### Files Structure
+
+```
+matrix-web-ui/
+├── app/                  # Next.js App Router
+│   ├── layout.tsx        # Root layout with SEO metadata
+│   ├── page.tsx          # Landing page
+│   ├── globals.css       # Tailwind + custom utilities
+│   ├── sitemap.ts        # SEO sitemap
+│   └── robots.ts         # SEO robots
+├── components/
+│   ├── Navbar.tsx
+│   ├── Footer.tsx
+│   ├── sections/
+│   │   ├── Hero.tsx
+│   │   ├── Features.tsx
+│   │   ├── LiveDemo.tsx
+│   │   ├── Pricing.tsx
+│   │   ├── Trust.tsx
+│   │   └── Contact.tsx
+│   ├── three/
+│   │   └── HDCVectorSpace.tsx  # WebGL component
+│   └── analytics/
+│       └── Plausible.tsx
+├── public/
+│   └── og-image.svg
+├── __tests__/            # Component tests
+└── config files (package.json, tsconfig, etc.)
+```
+
+### Note on Repo Strategy
+
+matrix-web-ui is **intentionally NOT in settings.gradle** (separate JS toolchain).
+README documents the planned standalone-repo split (will happen in T-09).
+
+### Next: T-05 (XAI Dashboard — Client-Facing)
 
 ---
 
