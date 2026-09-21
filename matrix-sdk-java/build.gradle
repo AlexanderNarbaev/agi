@@ -26,6 +26,9 @@ dependencies {
 
     // JDK HTTP client used directly (java.net.http.HttpClient) — no extra deps
 
+    // Bean Validation (jakarta.validation) for @NotBlank, @Size
+    implementation 'jakarta.validation:jakarta.validation-api:3.1.0'
+
     // Optional: WebSocket support for T-05 XAI Dashboard
     implementation 'org.java-websocket:Java-WebSocket:1.5.6'
 
