@@ -1,0 +1,38 @@
+// matrix-observability/build.gradle — Wave T-09
+// Prometheus metrics exporter, Grafana dashboards, Loki log shipping
+// Note: matrix-core already exposes /q/metrics via quarkus-micrometer-registry-prometheus
+// This module adds the dashboards + alerting rules + OpenTelemetry trace propagation
+
+plugins {
+    id 'java'
+}
+
+group = 'io.matrix'
+version = '0.1.0-T09-SNAPSHOT'
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_25
+    targetCompatibility = JavaVersion.VERSION_25
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation 'io.opentelemetry:opentelemetry-api:1.45.0'
+    implementation 'io.opentelemetry:opentelemetry-sdk:1.45.0'
+    implementation 'io.opentelemetry:opentelemetry-exporter-otlp:1.45.0'
+    implementation 'io.prometheus:simpleclient:0.16.0'
+    implementation 'io.prometheus:simpleclient_hotspot:0.16.0'
+
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.11.4'
+    testImplementation 'org.junit.platform:junit-platform-launcher:1.11.4'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher:1.11.4'
+    testImplementation 'org.assertj:assertj-core:3.26.0'
+}
+
+tasks.withType(Test) {
+    useJUnitPlatform()
+    maxHeapSize = '2g'
+}
