@@ -41,6 +41,9 @@ nav_enabled: true
 search_enabled: true
 search.button: true
 
+# Custom CSS
+custom_css: "/assets/css/custom.css"
+
 footer_content: "MATRIX Hybrid Intelligence &mdash; Built with <a href=\"https://just-the-docs.com\">Just the Docs</a>."
 
 callouts:
