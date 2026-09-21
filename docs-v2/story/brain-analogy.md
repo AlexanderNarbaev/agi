@@ -184,3 +184,52 @@ flowchart TD
 
 ---
 *[Edit this page](https://github.com/AlexanderNarbaev/agi/edit/main/docs-v2/story/brain-analogy.md)*
+
+---
+
+## Try It: Interactive Modulator Demo
+
+Adjust the sliders to see how modulators interact in real-time:
+
+<div id="modulator-demo" style="border: 1px solid #ccc; padding: 16px; border-radius: 8px; margin: 16px 0;">
+  <h4>Modulator Levels</h4>
+  
+  <label>DOPAMINE: <span id="dop-val">0.5</span></label>
+  <input type="range" id="dop-slider" min="0" max="1" step="0.05" value="0.5" oninput="updateMood()">
+  
+  <label>CORTISOL: <span id="cor-val">0.2</span></label>
+  <input type="range" id="cor-slider" min="0" max="1" step="0.05" value="0.2" oninput="updateMood()">
+  
+  <label>SEROTONIN: <span id="ser-val">0.5</span></label>
+  <input type="range" id="ser-slider" min="0" max="1" step="0.05" value="0.5" oninput="updateMood()">
+  
+  <label>NOREPINEPHRINE: <span id="nor-val">0.3</span></label>
+  <input type="range" id="nor-slider" min="0" max="1" step="0.05" value="0.3" oninput="updateMood()">
+  
+  <div style="margin-top: 16px; padding: 12px; background: #f5f5f5; border-radius: 4px;">
+    <strong>Current Mood: <span id="mood">NEUTRAL</span></strong>
+  </div>
+</div>
+
+<script>
+function updateMood() {
+  const dop = parseFloat(document.getElementById('dop-slider').value);
+  const cor = parseFloat(document.getElementById('cor-slider').value);
+  const ser = parseFloat(document.getElementById('ser-slider').value);
+  const nor = parseFloat(document.getElementById('nor-slider').value);
+  
+  document.getElementById('dop-val').textContent = dop.toFixed(2);
+  document.getElementById('cor-val').textContent = cor.toFixed(2);
+  document.getElementById('ser-val').textContent = ser.toFixed(2);
+  document.getElementById('nor-val').textContent = nor.toFixed(2);
+  
+  let mood = "NEUTRAL";
+  if (cor > 0.7 && ser < 0.3) mood = "STRESSED";
+  else if (dop > 0.7 && ser > 0.6) mood = "HAPPY";
+  else if (dop < 0.3 && ser < 0.3) mood = "LOW";
+  else if (nor > 0.7) mood = "ALERT";
+  else if (dop > 0.5 && nor > 0.5) mood = "FLOW";
+  
+  document.getElementById('mood').textContent = mood;
+}
+</script>
