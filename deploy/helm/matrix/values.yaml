@@ -1,0 +1,46 @@
+# Default values for MATRIX deployment
+replicaCount: 3
+
+image:
+  repository: alexandernarbaev/matrix-api-gateway
+  tag: 0.1.0-T09
+  pullPolicy: IfNotPresent
+
+service:
+  type: ClusterIP
+  port: 8080
+
+ingress:
+  enabled: true
+  className: nginx
+  annotations: {}
+  hosts:
+    - host: api.matrix.ai
+      paths:
+        - path: /
+          pathType: Prefix
+
+resources:
+  requests:
+    cpu: 500m
+    memory: 512Mi
+  limits:
+    cpu: 2000m
+    memory: 2Gi
+
+autoscaling:
+  enabled: true
+  minReplicas: 3
+  maxReplicas: 20
+  targetCPUUtilizationPercentage: 70
+
+# Observability
+monitoring:
+  prometheusScrape: true
+  grafanaDashboards: true
+  jaegerTracing: true
+
+# Secrets (override via --set)
+secrets:
+  stripeWebhookSecret: "REPLACE_ME"
+  licenseSigningSecret: "REPLACE_ME"

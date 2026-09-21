@@ -1,0 +1,14 @@
+# WAVE T-09 — Multi-stage Dockerfile for matrix-api-gateway
+# Stage 1: Build with Gradle + Mandrel (GraalVM)
+FROM gradle:8.10-jdk25 AS build
+WORKDIR /home/gradle/src
+COPY --chown=gradle:gradle . .
+RUN ./gradlew :matrix-api-gateway:nativeCompile --no-daemon
+
+# Stage 2: Minimal runtime image
+FROM ghcr.io/graalvm/native-image:25
+COPY --from=build /home/gradle/src/matrix-api-gateway/build/native/nativeCompile/matrix-api-gateway /app/matrix-api-gateway
+EXPOSE 8080
+ENV JAVA_OPTS="-XX:+UseG1GC"
+HEALTHCHECK --interval=30s --timeout=5s CMD curl -f http://localhost:8080/q/health || exit 1
+ENTRYPOINT ["/app/matrix-api-gateway"]

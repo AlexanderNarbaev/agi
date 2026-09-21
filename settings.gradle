@@ -1,6 +1,36 @@
-rootProject.name = 'matrix'
+rootProject.name = 'matrix-ecosystem'
 
+// === RESEARCH CORE (FROZEN at W1500) ===
+// matrix-core holds BIR/HDC/MCTS/transcoders/federation/life/scaling/recording/research
+// DO NOT modify in T-01. 1,119 tests must remain green.
 include 'matrix-core'
 include 'matrix-tools-distill'
 include 'matrix-spigot'
 include 'matrix-operator'
+
+// === ECOSYSTEM MODULES (NEW in WAVE T-01, populated in subsequent waves) ===
+include 'matrix-api-gateway'       // Wave T-02: REST/GraphQL + JWT/OAuth2 + OpenAPI
+include 'matrix-sdk-java'          // Wave T-08: Java SDK for Maven Central publish
+include 'matrix-audit'             // Wave T-06: Hash-chained logs + GDPR pruning
+include 'matrix-billing'           // Wave T-07: Stripe + credits + license engine
+include 'matrix-observability'     // Wave T-09: Prometheus/Grafana stack
+
+// === EXPERIMENTAL MODULES (already present, not modified in T-01) ===
+include 'matrix-fpga'
+include 'matrix-micro'
+include 'matrix-ros2'
+
+// NOTE: matrix-web-ui/ is intentionally NOT included in Gradle.
+// It is a Next.js/TypeScript project with its own toolchain.
+// See matrix-web-ui/README.md for the planned standalone-repo split.
+// It is committed in the monorepo for development convenience.
+
+// === PILOT PACKAGES (Wave T-08) ===
+include 'pilots:smart-home-agent'
+include 'pilots:edu-assessor'
+include 'pilots:compliance-bot'
+
+// === POLYGLOT SDKs (Wave T-08, will split to separate repos in T-09) ===
+// matrix-sdk-python and matrix-sdk-js are NOT included in Gradle (different toolchains)
+// === QUALITY ASSURANCE (Wave T-10) ===
+include 'matrix-quality'

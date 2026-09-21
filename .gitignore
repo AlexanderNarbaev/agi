@@ -147,3 +147,7 @@ matrix-core/models/training_data/auto_generated.jsonl
 *.rar
 
 # DO NOT ignore docs-v2/ — it is published to GitHub Pages (analysis branch tried to ignore it; reverted)
+
+# LibreOffice / desktop app lock files (T-01 cleanup)
+.~lock.*
+.\#*

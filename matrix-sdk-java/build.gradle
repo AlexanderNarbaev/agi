@@ -1,0 +1,67 @@
+// matrix-sdk-java/build.gradle — Wave T-08
+// Java SDK published to Maven Central as: io.matrix:matrix-sdk-java
+
+plugins {
+    id 'java'
+    id 'java-library'
+    id 'maven-publish'
+}
+
+group = 'io.matrix'
+version = '0.1.0-T08-SNAPSHOT'
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_25
+    targetCompatibility = JavaVersion.VERSION_25
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    // API client (minimal HTTP, no transitive dep on Quarkus)
+    implementation 'com.fasterxml.jackson.core:jackson-databind:2.18.2'
+    implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.18.2'
+
+    // JDK HTTP client used directly (java.net.http.HttpClient) — no extra deps
+
+    // Bean Validation (jakarta.validation) for @NotBlank, @Size
+    implementation 'jakarta.validation:jakarta.validation-api:3.1.0'
+
+    // Optional: WebSocket support for T-05 XAI Dashboard
+    implementation 'org.java-websocket:Java-WebSocket:1.5.6'
+
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.11.4'
+    testImplementation 'org.junit.platform:junit-platform-launcher:1.11.4'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher:1.11.4'
+    testImplementation 'org.assertj:assertj-core:3.26.0'
+    testImplementation 'org.mockito:mockito-core:5.14.2'
+}
+
+// Maven Central publication (T-08 will finalize)
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
+            groupId = 'io.matrix'
+            artifactId = 'matrix-sdk-java'
+            pom {
+                name = 'matrix-sdk-java'
+                description = 'Java SDK for the MATRIX Hybrid Neuro-Symbolic AI API'
+                url = 'https://github.com/AlexanderNarbaev/agi'
+                licenses {
+                    license {
+                        name = 'Apache-2.0'
+                        url = 'https://www.apache.org/licenses/LICENSE-2.0'
+                    }
+                }
+            }
+        }
+    }
+}
+
+tasks.withType(Test) {
+    useJUnitPlatform()
+    maxHeapSize = '2g'
+}

@@ -1,0 +1,63 @@
+groups:
+  - name: matrix.rules
+    interval: 30s
+    rules:
+      # Critical: Audit chain tampered
+      - alert: MatrixAuditChainTampered
+        expr: matrix_audit_chain_integrity == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "MATRIX audit chain integrity compromised"
+          description: "The hash-chained audit log has been tampered with. Investigate immediately."
+
+      # Critical: API latency p95 > 1s
+      - alert: MatrixHighLatency
+        expr: histogram_quantile(0.95, rate(matrix_analyze_duration_ms_bucket[5m])) > 1000
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "MATRIX API p95 latency > 1s"
+          description: "p95 latency is {{ $value }}ms over the last 5 minutes."
+
+      # Warning: Federation nodes dropping
+      - alert: MatrixFederationDegraded
+        expr: matrix_federation_nodes < 3
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "MATRIX federation degraded"
+          description: "Only {{ $value }} federation nodes active (target: 3+)."
+
+      # Warning: Rate limit rejections spike
+      - alert: MatrixRateLimitSpike
+        expr: rate(matrix_rate_limit_rejections_total[5m]) > 10
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "MATRIX rate limit rejection spike"
+          description: "{{ $value }} req/s being rate-limited. Users may need to upgrade plans."
+
+      # Warning: No requests in last 5min (potential outage)
+      - alert: MatrixNoTraffic
+        expr: rate(matrix_analyze_requests_total[5m]) == 0
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "MATRIX API receiving no traffic"
+          description: "No /v1/analyze requests in last 5 minutes. Possible outage."
+
+      # Info: GDPR erasure spike (potential abuse)
+      - alert: MatrixGdprErasureSpike
+        expr: increase(matrix_gdpr_erasures_total[1h]) > 50
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "MATRIX GDPR erasure spike"
+          description: "{{ $value }} erasures in last hour. Possible abuse or compliance event."

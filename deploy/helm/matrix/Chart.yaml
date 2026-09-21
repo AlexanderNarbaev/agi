@@ -1,0 +1,13 @@
+apiVersion: v2
+name: matrix
+description: MATRIX Hybrid Neuro-Symbolic Civilization
+type: application
+version: 0.1.0
+appVersion: "0.1.0-T09"
+keywords:
+  - ai
+  - neuro-symbolic
+  - hybrid
+home: https://matrix.ai
+sources:
+  - https://github.com/AlexanderNarbaev/agi

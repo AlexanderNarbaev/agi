@@ -1,0 +1,23 @@
+{
+  "name": "@matrix/sdk",
+  "version": "0.1.0-T08",
+  "description": "JavaScript/TypeScript SDK for the MATRIX Hybrid Neuro-Symbolic AI API",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "license": "Apache-2.0",
+  "scripts": {
+    "build": "tsc",
+    "test": "jest",
+    "lint": "eslint src"
+  },
+  "engines": { "node": ">=18" },
+  "dependencies": {},
+  "devDependencies": {
+    "@types/jest": "^29.5.0",
+    "@types/node": "^20.0.0",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.1.0",
+    "typescript": "^5.0.0"
+  },
+  "files": ["dist", "README.md"]
+}
