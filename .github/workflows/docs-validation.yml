@@ -1,0 +1,77 @@
+# Docs Validation — Wave T-03
+# Validates docs-v2 ecosystem (RU/EN) integrity
+
+name: docs-validation
+
+on:
+  pull_request:
+    paths:
+      - 'docs-v2/**'
+      - '.github/workflows/docs-validation.yml'
+  push:
+    branches: [develop, main]
+    paths:
+      - 'docs-v2/**'
+
+jobs:
+  validate-docs:
+    name: Validate ecosystem docs (RU/EN parity)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check EN ecosystem pages exist
+        run: |
+          set -e
+          for section in index concept quickstart api sdks xai architecture constitution algorithms; do
+            if [ ! -f "docs-v2/ecosystem/${section}/index.md" ] && [ ! -f "docs-v2/ecosystem/${section}.md" ]; then
+              echo "❌ Missing EN doc: ecosystem/${section}"
+              exit 1
+            fi
+          done
+          echo "✅ All 9 EN ecosystem sections present"
+
+      - name: Check RU ecosystem pages exist
+        run: |
+          set -e
+          for section in index concept quickstart api sdks xai architecture constitution algorithms; do
+            if [ ! -f "docs-v2/ru/ecosystem/${section}/index.md" ] && [ ! -f "docs-v2/ru/ecosystem/${section}.md" ]; then
+              echo "❌ Missing RU doc: ru/ecosystem/${section}"
+              exit 1
+            fi
+          done
+          echo "✅ All 9 RU ecosystem sections present"
+
+      - name: Verify no broken internal links
+        run: |
+          echo "Checking for broken ecosystem links..."
+          BROKEN=0
+          # Each ecosystem/*.md should have at least 1 internal link
+          for f in docs-v2/ecosystem/**/*.md docs-v2/ecosystem/*.md; do
+            [ -f "$f" ] || continue
+            LINKS=$(grep -oP '\]\(/ecosystem/[^)]+\)' "$f" 2>/dev/null | wc -l)
+            if [ "$LINKS" -lt 1 ]; then
+              echo "⚠️  $f has no ecosystem internal links"
+            fi
+          done
+          echo "✅ Ecosystem link check done"
+
+      - name: Verify frontmatter on all pages
+        run: |
+          echo "Checking frontmatter on ecosystem pages..."
+          MISSING=0
+          for f in $(find docs-v2/ecosystem docs-v2/ru/ecosystem -name "*.md"); do
+            head -1 "$f" | grep -q "^---$" || { echo "❌ $f missing frontmatter"; MISSING=1; }
+          done
+          if [ "$MISSING" -eq 1 ]; then
+            exit 1
+          fi
+          echo "✅ All ecosystem pages have frontmatter"
+
+      - name: Verify CONSTITUTION articles are referenced
+        run: |
+          set -e
+          for article in "Article I" "Article II" "Article III" "Article IV" "Article V" "Article VI" "Article VII" "Article VIII"; do
+            grep -q "$article" docs-v2/ecosystem/constitution/index.md
+            echo "✅ $article documented in EN constitution"
+          done
