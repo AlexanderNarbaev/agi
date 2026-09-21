@@ -1,0 +1,109 @@
+apiVersion: kafka.strimzi.io/v1beta2
+kind: Kafka
+metadata:
+  name: matrix-kafka
+  namespace: matrix
+  labels:
+    app.kubernetes.io/part-of: matrix
+spec:
+  kafka:
+    version: 4.2.0
+    replicas: 3
+    listeners:
+      - name: plain
+        port: 9092
+        type: internal
+        tls: false
+      - name: tls
+        port: 9093
+        type: internal
+        tls: true
+    config:
+      offsets.topic.replication.factor: 3
+      transaction.state.log.replication.factor: 3
+      transaction.state.log.min.isr: 2
+      default.replication.factor: 3
+      min.insync.replicas: 2
+    storage:
+      type: jbod
+      volumes:
+        - id: 0
+          type: persistent-claim
+          size: 10Gi
+          deleteClaim: false
+    template:
+      pod:
+        affinity:
+          podAntiAffinity:
+            requiredDuringSchedulingIgnoredDuringExecution:
+              - topologyKey: kubernetes.io/hostname
+                labelSelector:
+                  matchLabels:
+                    strimzi.io/name: matrix-kafka-kafka
+  zookeeper:
+    replicas: 3
+    storage:
+      type: persistent-claim
+      size: 5Gi
+      deleteClaim: false
+  entityOperator:
+    topicOperator: {}
+    userOperator: {}
+
+---
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
+metadata:
+  name: neuron-events
+  namespace: matrix
+  labels:
+    strimzi.io/cluster: matrix-kafka
+spec:
+  partitions: 6
+  replicas: 3
+  config:
+    retention.ms: 604800000
+    segment.bytes: 1073741824
+
+---
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
+metadata:
+  name: neuron-snapshots
+  namespace: matrix
+  labels:
+    strimzi.io/cluster: matrix-kafka
+spec:
+  partitions: 3
+  replicas: 3
+  config:
+    retention.ms: 2592000000
+    cleanup.policy: compact
+
+---
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
+metadata:
+  name: mediator-commands
+  namespace: matrix
+  labels:
+    strimzi.io/cluster: matrix-kafka
+spec:
+  partitions: 6
+  replicas: 3
+  config:
+    retention.ms: 86400000
+
+---
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
+metadata:
+  name: audit-log
+  namespace: matrix
+  labels:
+    strimzi.io/cluster: matrix-kafka
+spec:
+  partitions: 3
+  replicas: 3
+  config:
+    retention.ms: 7776000000

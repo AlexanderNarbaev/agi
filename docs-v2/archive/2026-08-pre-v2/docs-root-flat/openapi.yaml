@@ -1,0 +1,178 @@
+openapi: "3.0.3"
+info:
+  title: MATRIX Cognitive Architecture API
+  description: REST API for MATRIX — MPDT neuron evolution, simulation, Cauldron FNL generation, snapshots, and ethical filtering.
+  version: "2.0.0"
+  license:
+    name: AGPL-3.0
+    url: https://www.gnu.org/licenses/agpl-3.0.html
+
+servers:
+  - url: http://localhost:9091
+    description: Local development
+
+paths:
+  /api/v1/health:
+    get:
+      summary: Health check
+      operationId: health
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthResponse"
+
+  /api/v1/simulate:
+    post:
+      summary: Run MPDT evolution simulation
+      operationId: simulate
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SimulateRequest"
+      responses:
+        "200":
+          description: Simulation result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SimulateResponse"
+
+  /api/v1/evolve:
+    post:
+      summary: Start evolution (returns loopId for polling)
+      operationId: evolve
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EvolveRequest"
+      responses:
+        "200":
+          description: Evolution started
+
+  /api/v1/evolve/{loopId}:
+    get:
+      summary: Check evolution status
+      operationId: evolveStatus
+      parameters:
+        - name: loopId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Evolution status
+
+  /api/v1/cauldron:
+    post:
+      summary: Generate FNL via Cauldron GA
+      operationId: cauldron
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CauldronRequest"
+      responses:
+        "200":
+          description: Generated FNL
+
+  /api/v1/snapshot:
+    post:
+      summary: Create cluster snapshot
+      operationId: createSnapshot
+      responses:
+        "200":
+          description: Snapshot created
+
+  /api/v1/snapshot/latest:
+    get:
+      summary: Get latest snapshot
+      operationId: latestSnapshot
+      responses:
+        "200":
+          description: Latest snapshot info
+
+  /api/v1/truth-table:
+    post:
+      summary: Evaluate a random truth table
+      operationId: evaluateTruthTable
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TruthTableRequest"
+      responses:
+        "200":
+          description: Evaluation result
+
+components:
+  schemas:
+    HealthResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          example: UP
+        version:
+          type: string
+          example: 2.0.0
+        activeLoops:
+          type: integer
+
+    SimulateRequest:
+      type: object
+      properties:
+        generations:
+          type: integer
+          default: 20
+        population:
+          type: integer
+          default: 30
+        k:
+          type: integer
+          default: 8
+
+    SimulateResponse:
+      type: object
+      properties:
+        status:
+          type: string
+        generations:
+          type: integer
+        bestFitness:
+          type: integer
+
+    EvolveRequest:
+      type: object
+      properties:
+        generations:
+          type: integer
+          default: 10
+        population:
+          type: integer
+          default: 20
+        k:
+          type: integer
+          default: 8
+
+    CauldronRequest:
+      type: object
+      properties:
+        task:
+          type: string
+          example: navigation
+
+    TruthTableRequest:
+      type: object
+      properties:
+        k:
+          type: integer
+          default: 4
+        input:
+          type: integer
+          default: 0

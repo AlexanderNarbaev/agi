@@ -1,0 +1,6 @@
+rootProject.name = 'matrix'
+
+include 'matrix-core'
+include 'matrix-tools-distill'
+include 'matrix-spigot'
+include 'matrix-operator'

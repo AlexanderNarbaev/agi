@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MATRIX Algorithms — Deep Dive</title>
+    <meta name="description" content="Deep dive into 10 implemented MATRIX algorithms: BIR-classifier, WNN/WiSARD, SDM/Kanerva, intESN, MonotoneDecoder, LTL Model Checker, GUHA, Levin Schedule, LearnedMinecraftPilot, Guardrail.">
+    <style>
+        *,*::before,*::after { box-sizing: border-box; }
+        :root {
+            --bg: #ffffff; --bg-subtle: #f7f7f8; --bg-code: #f0f0f2;
+            --fg: #1a1a1a; --fg-muted: #5c5c70; --fg-soft: #8a8a99;
+            --border: #e5e5ea; --accent: #d97706; --accent-bg: #fef3c7;
+            --link: #2563eb; --green: #059669; --orange: #d97706;
+        }
+        html { scroll-behavior: smooth; }
+        body {
+            margin: 0;
+            font-family: -apple-system, "SF Pro Text", BlinkMacSystemFont, "Segoe UI", "Inter", system-ui, sans-serif;
+            font-size: 16px; line-height: 1.7; color: var(--fg); background: var(--bg);
+            -webkit-font-smoothing: antialiased;
+        }
+        a { color: var(--link); text-decoration: none; }
+        a:hover { text-decoration: underline; }
+        .topbar {
+            position: sticky; top: 0; z-index: 10;
+            background: rgba(255,255,255,0.92); backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border);
+            padding: 12px 24px; display: flex; justify-content: space-between; align-items: center;
+        }
+        .topbar .logo { font-weight: 800; font-size: 18px; color: var(--fg); }
+        .topbar .logo span { color: var(--accent); }
+        .topbar nav { display: flex; gap: 24px; align-items: center; }
+        .topbar nav a { color: var(--fg-muted); font-size: 14px; font-weight: 500; }
+        .layout {
+            display: grid; grid-template-columns: 240px 1fr; max-width: 1280px; margin: 0 auto;
+        }
+        @media (max-width: 900px) { .layout { grid-template-columns: 1fr; } aside.sidebar { display: none; } }
+        aside.sidebar {
+            position: sticky; top: 60px; height: calc(100vh - 60px);
+            padding: 32px 16px; border-right: 1px solid var(--border); overflow-y: auto; background: var(--bg);
+        }
+        .sidebar nav ul { list-style: none; padding: 0; margin: 0; }
+        .sidebar nav li { margin: 2px 0; }
+        .sidebar nav a { display: block; padding: 4px 12px; font-size: 14px; color: var(--fg-muted); border-radius: 4px; }
+        .sidebar nav a:hover { background: var(--bg-subtle); color: var(--fg); text-decoration: none; }
+        .sidebar .toc-heading {
+            font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em;
+            color: var(--fg-soft); padding: 4px 12px; margin-top: 16px; margin-bottom: 8px;
+        }
+        main { padding: 32px 64px 96px; max-width: 800px; }
+        @media (max-width: 900px) { main { padding: 24px; } }
+        .hero { padding: 48px 0 32px; border-bottom: 1px solid var(--border); margin-bottom: 32px; }
+        .hero h1 { font-size: 40px; font-weight: 700; letter-spacing: -0.02em; line-height: 1.15; margin: 0 0 16px; }
+        .hero p { font-size: 18px; color: var(--fg-muted); margin: 0; }
+        section { margin: 48px 0; }
+        section h2 { font-size: 28px; font-weight: 700; letter-spacing: -0.02em; margin: 0 0 16px; padding-top: 16px; }
+        section h3 { font-size: 19px; font-weight: 600; margin: 24px 0 12px; }
+        section p { margin: 12px 0; }
+        section ul { padding-left: 24px; margin: 12px 0; }
+        section li { margin: 4px 0; }
+        .algo-card {
+            border: 1px solid var(--border); border-radius: 12px; padding: 28px;
+            margin: 32px 0; background: var(--bg);
+        }
+        .algo-card .head {
+            display: flex; align-items: center; gap: 12px; margin-bottom: 12px; flex-wrap: wrap;
+        }
+        .algo-card h3 { margin: 0; font-size: 22px; }
+        .algo-card .badge {
+            display: inline-block; font-size: 11px; font-weight: 700; padding: 3px 10px;
+            border-radius: 100px; text-transform: uppercase; letter-spacing: 0.04em;
+        }
+        .badge.running { background: var(--accent-bg); color: var(--orange); }
+        .badge.complete { background: #d1fae5; color: var(--green); }
+        .badge.proposed { background: #e5e7eb; color: var(--fg-soft); }
+        .algo-card .meta { font-size: 13px; color: var(--fg-soft); margin-bottom: 12px; }
+        .algo-card p { margin: 8px 0; }
+        pre {
+            background: var(--bg-code); border-radius: 8px; padding: 16px 20px;
+            overflow-x: auto; font-family: "SF Mono", Menlo, Consolas, monospace;
+            font-size: 13.5px; line-height: 1.5; margin: 16px 0; border: 1px solid var(--border);
+        }
+        code {
+            font-family: "SF Mono", Menlo, Consolas, monospace; font-size: 0.9em;
+            background: var(--bg-code); padding: 1px 6px; border-radius: 4px;
+        }
+        pre code { background: none; padding: 0; font-size: inherit; }
+        table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 14px; }
+        th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
+        th { font-weight: 600; background: var(--bg-subtle); }
+        td:first-child { font-weight: 600; }
+        footer {
+            border-top: 1px solid var(--border); padding: 32px 64px; margin-top: 64px;
+            font-size: 13px; color: var(--fg-muted); text-align: center;
+        }
+        @media (max-width: 900px) { footer { padding: 24px; } }
+    </style>
+</head>
+<body>
+
+<header class="topbar">
+    <div class="logo">MATRIX<span>.</span></div>
+    <nav>
+        <a href="index.en.html">Overview</a>
+        <a href="docs.en.html">Docs</a>
+        <a href="algorithms.en.html">Algorithms</a>
+        <a href="benchmarks.en.html">Benchmarks</a>
+        <a href="research.en.html">Research</a>
+        <a href="https://github.com/AlexanderNarbaev/agi">GitHub</a>
+        <a href="algorithms.html" style="color:var(--accent);font-weight:600;">RU</a>
+    </nav>
+</header>
+
+<div class="layout">
+
+    <aside class="sidebar">
+        <div class="toc-heading">Algorithms</div>
+        <nav>
+            <ul>
+                <li><a href="#h009">H-009 BIR-classifier</a></li>
+                <li><a href="#h010">H-010 WNN/WiSARD</a></li>
+                <li><a href="#h011">H-011 SDM/Kanerva</a></li>
+                <li><a href="#h015">H-015 intESN</a></li>
+                <li><a href="#h016">H-016 MonotoneDecoder</a></li>
+                <li><a href="#h017">H-017 LTL Model Checker</a></li>
+                <li><a href="#h018">H-018 GUHA</a></li>
+                <li><a href="#h019">H-019 Levin Schedule</a></li>
+                <li><a href="#h005">H-005 Minecraft Pilot</a></li>
+                <li><a href="#h006">H-006 Guardrail</a></li>
+            </ul>
+        </nav>
+    </aside>
+
+    <main>
+
+        <section class="hero">
+            <h1>Algorithms</h1>
+            <p>Ten core algorithms implemented in MATRIX, from Boolean classifiers to LTL model checkers. Each card explains the algorithm, its hypothesis, its code, and how it compares to alternatives.</p>
+        </section>
+
+        <section>
+            <h2>Overview</h2>
+            <table>
+                <thead>
+                    <tr><th>ID</th><th>Algorithm</th><th>Domain</th><th>Status</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td>H-005</td><td>LearnedMinecraftPilot</td><td>Reinforcement learning</td><td><span class="badge complete">done</span></td></tr>
+                    <tr><td>H-006</td><td>Guardrail</td><td>Safety filter</td><td><span class="badge complete">done</span></td></tr>
+                    <tr><td>H-009</td><td>BIR-classifier</td><td>Supervised learning</td><td><span class="badge running">running</span></td></tr>
+                    <tr><td>H-010</td><td>WNN/WiSARD</td><td>Single-pass learning</td><td><span class="badge running">running</span></td></tr>
+                    <tr><td>H-011</td><td>SDM/Kanerva</td><td>Content-addressable memory</td><td><span class="badge running">running</span></td></tr>
+                    <tr><td>H-015</td><td>intESN</td><td>Reservoir computing</td><td><span class="badge running">running</span></td></tr>
+                    <tr><td>H-016</td><td>MonotoneDecoder</td><td>Circuit decoding</td><td><span class="badge running">running</span></td></tr>
+                    <tr><td>H-017</td><td>LTL Model Checker</td><td>Formal verification</td><td><span class="badge running">running</span></td></tr>
+                    <tr><td>H-018</td><td>GUHA generator</td><td>Systematic enumeration</td><td><span class="badge running">running</span></td></tr>
+                    <tr><td>H-019</td><td>Levin Schedule</td><td>Budget allocation</td><td><span class="badge running">running</span></td></tr>
+                </tbody>
+            </table>
+        </section>
+
+        <article id="h009" class="algo-card">
+            <div class="head">
+                <h3>H-009 · BIR-classifier</h3>
+                <span class="badge running">running</span>
+            </div>
+            <div class="meta">Source: <code>io.matrix.bir.BirClassifier</code> · <a href="https://github.com/AlexanderNarbaev/agi/blob/main/docs/research/HYPOTHESES.md">HYPOTHESES §H-009</a></div>
+            <p><strong>Claim:</strong> A binary classifier that uses BIR as the underlying representation achieves parity with LLM ≤3B (±3 p.p. balanced accuracy) on structured tasks at ≥10⁴× less energy and ≥10³× less latency on laptop hardware.</p>
+            <p><strong>How it works:</strong> For each class, train a CLAUSESET BIR unit from positive examples. Classification picks the class whose BIR unit matches the input with the highest score above a learned threshold.</p>
+            <pre><code>// Train
+BirClassifier classifier = new BirClassifier(64);
+classifier.train("intent", positiveExamples);
+
+// Infer
+Optional&lt;String&gt; predicted = classifier.classify(features);</code></pre>
+            <p><strong>Reproduction:</strong> <code>./gradlew :matrix-core:test --tests "io.matrix.bir.BirClassifierTest"</code></p>
+        </article>
+
+        <article id="h010" class="algo-card">
+            <div class="head">
+                <h3>H-010 · WNN/WiSARD</h3>
+                <span class="badge running">running</span>
+            </div>
+            <div class="meta">Source: <code>io.matrix.tsetlin.WisardProducer</code> · <a href="https://github.com/AlexanderNarbaev/agi/blob/main/docs/research/HYPOTHESES.md">HYPOTHESES §H-010</a></div>
+            <p><strong>Claim:</strong> A single-pass Weightless Neural Network (WiSARD-style address-RAM ensemble) achieves accuracy within 2 p.p. of TsetlinTrainer at ≥10× faster training on structured tasks.</p>
+            <p><strong>How it works:</strong> Input bits are partitioned across N RAMs. Each RAM stores a vote per address. Training writes 1 on positive, -1 on negative. Classification sums votes across all RAMs.</p>
+            <pre><code>WisardProducer wnn = new WisardProducer(64, 16, seed);
+wnn.train(input, 1);                  // single-pass
+double score = wnn.classify(input);    // sum of RAM votes</code></pre>
+            <p><strong>Why it matters:</strong> Training is a single pass over examples. No gradient, no backprop. Deterministic given fixed seed.</p>
+        </article>
+
+        <article id="h011" class="algo-card">
+            <div class="head">
+                <h3>H-011 · SDM / Kanerva</h3>
+                <span class="badge running">running</span>
+            </div>
+            <div class="meta">Source: <code>io.matrix.memory.SdmReader</code> · <a href="https://github.com/AlexanderNarbaev/agi/blob/main/docs/research/HYPOTHESES.md">HYPOTHESES §H-011</a></div>
+            <p><strong>Claim:</strong> Sparse Distributed Memory (counter-based with Kanerva radius) gives precision@5 ≥+5 p.p. over flat Hamming top-K at the same memory budget.</p>
+            <p><strong>How it works:</strong> Random-address locations store counters per bit. Writes only affect locations within Hamming radius. Reads sum counters from active locations and take majority vote.</p>
+            <pre><code>SdmReader sdm = new SdmReader(
+    1024,    // address bits
+    256,     // data bits
+    10000,   // num locations
+    350.0,   // Kanerva radius
+    seed
+);
+sdm.write(address, data);
+long[] retrieved = sdm.read(address);</code></pre>
+            <p><strong>Why it matters:</strong> Approximate nearest-neighbor with bounded error. Exploits the geometry of high-dimensional Hamming space.</p>
+        </article>
+
+        <article id="h015" class="algo-card">
+            <div class="head">
+                <h3>H-015 · intESN (Binary Reservoir)</h3>
+                <span class="badge running">running</span>
+            </div>
+            <div class="meta">Source: <code>io.matrix.reservoir.IntEsNetwork</code> · <a href="https://github.com/AlexanderNarbaev/agi/blob/main/docs/research/HYPOTHESES.md">HYPOTHESES §H-015</a></div>
+            <p><strong>Claim:</strong> An integer Echo State Network (VSA state + permutation recurrence + TT/WNN readout) achieves accuracy within 3 p.p. of float-ESN at ≥10× less energy per decision.</p>
+            <p><strong>How it works:</strong> The state is a high-dimensional binary vector. Recurrence is XOR with permuted versions of the state. Learning happens only in the readout.</p>
+            <pre><code>IntEsNetwork reservoir = new IntEsNetwork(2048, 32, seed);
+long[] state = reservoir.update(input);   // XOR + permutation, ~ns</code></pre>
+            <p><strong>Why it matters:</strong> Reservoir computing with binary operations is one of the cheapest recurrent neural models that exists. Deterministic given fixed seed.</p>
+        </article>
+
+        <article id="h016" class="algo-card">
+            <div class="head">
+                <h3>H-016 · Monotone Decoder</h3>
+                <span class="badge running">running</span>
+            </div>
+            <div class="meta">Source: <code>io.matrix.monotone.MonotoneDecoder</code> · <a href="https://github.com/AlexanderNarbaev/agi/blob/main/docs/research/HYPOTHESES.md">HYPOTHESES §H-016</a></div>
+            <p><strong>Claim:</strong> On monotone domains, identifying the monotone Boolean function by maximal upper zero circuit requires ≥5× less corpus than TsetlinTrainer for the same target accuracy.</p>
+            <p><strong>How it works:</strong> Monotone Boolean functions live in a smaller hypothesis space. The maximal upper zero circuit captures the canonical representation. PAC bounds are tighter.</p>
+            <p><strong>Why it matters:</strong> Many real-world domains (preference, threshold, ranking) are monotone. Specializing the learner to this structure is a free win.</p>
+        </article>
+
+        <article id="h017" class="algo-card">
+            <div class="head">
+                <h3>H-017 · LTL Model Checker</h3>
+                <span class="badge running">running</span>
+            </div>
+            <div class="meta">Source: <code>io.matrix.verification.LtlModelChecker</code> · <a href="https://github.com/AlexanderNarbaev/agi/blob/main/docs/research/HYPOTHESES.md">HYPOTHESES §H-017</a></div>
+            <p><strong>Claim:</strong> Formalizing the lifecycle invariants from DESIGN-07/08 in LTL and bounded model checking discovers at least one class of violation not covered by acceptance tests, or proves the absence of such violations for the finite model.</p>
+            <p><strong>How it works:</strong> Build a Kripke structure of the control loop (planner, sleep route-drain, K8s operator). Submit LTL formulas (safety, liveness, invariance). DFS for bounded depth finds counterexamples.</p>
+            <pre><code>LtlModelChecker mc = new LtlModelChecker();
+KripkeStructure structure = ...; // build from observed transitions
+LtlFormula safety = LtlModelChecker.safetyProperty("data_loss");
+boolean holds = mc.check(structure, safety);</code></pre>
+            <p><strong>Why it matters:</strong> LTL is the right tool for system-level invariants. Smaller state spaces than full Stack VM, but covers the right abstraction.</p>
+        </article>
+
+        <article id="h018" class="algo-card">
+            <div class="head">
+                <h3>H-018 · GUHA Candidate Generator</h3>
+                <span class="badge running">running</span>
+            </div>
+            <div class="meta">Source: <code>io.matrix.cauldron.GuhaCandidateGenerator</code> · <a href="https://github.com/AlexanderNarbaev/agi/blob/main/docs/research/HYPOTHESES.md">HYPOTHESES §H-018</a></div>
+            <p><strong>Claim:</strong> Systematic enumeration of structured hypotheses (Hájek-Havránek GUHA method) covers ≥90% of the rule space at ≤30% of the budget of random sampling.</p>
+            <p><strong>How it works:</strong> Generate all antecedent combinations up to max arity. For each, compute support and confidence against the example set. Filter by GUHA thresholds (support ≥ √n, confidence ≥ 0.8).</p>
+            <pre><code>GuhaCandidateGenerator gen = new GuhaCandidateGenerator(atoms, 3, seed);
+List&lt;CandidateRule&gt; candidates = gen.generate(examples, budget);</code></pre>
+            <p><strong>Why it matters:</strong> Random sampling wastes budget on low-support candidates. Systematic enumeration respects the structure of the hypothesis space.</p>
+        </article>
+
+        <article id="h019" class="algo-card">
+            <div class="head">
+                <h3>H-019 · Levin Schedule</h3>
+                <span class="badge running">running</span>
+            </div>
+            <div class="meta">Source: <code>io.matrix.cauldron.LevinSchedule</code> · <a href="https://github.com/AlexanderNarbaev/agi/blob/main/docs/research/HYPOTHESES.md">HYPOTHESES §H-019</a></div>
+            <p><strong>Claim:</strong> Allocating budget proportional to 2⁻ˡ (length) gives ≥+15% coverage per joule vs uniform scheduling on ≥2 domains at equal budget.</p>
+            <p><strong>How it works:</strong> Shorter candidates are cheaper to verify. They get proportionally more budget. The combined effect is more candidates evaluated per joule.</p>
+            <pre><code>LevinSchedule levin = new LevinSchedule(seed);
+List&lt;ScheduledCandidate&gt; scheduled = levin.schedule(candidates);
+// Each candidate gets a budget fraction</code></pre>
+            <p><strong>Why it matters:</strong> Universal search (Levin 1973) is optimal under total budget. In practice it dominates uniform.</p>
+        </article>
+
+        <article id="h005" class="algo-card">
+            <div class="head">
+                <h3>H-005 · LearnedMinecraftPilot</h3>
+                <span class="badge complete">done</span>
+            </div>
+            <div class="meta">Source: <code>io.matrix.pilot.minecraft.LearnedMinecraftPilot</code> · <a href="https://github.com/AlexanderNarbaev/agi/blob/main/docs/research/HYPOTHESES.md">HYPOTHESES §H-005</a></div>
+            <p><strong>Claim:</strong> A Minecraft pilot trained through the Developmental Loop solves craft puzzles ≥30% faster than random task selection at not worse final accuracy.</p>
+            <p><strong>How it works:</strong> The pilot records (state, observation, action, reward) tuples. A BIR classifier learns to map from (state, obs) → action. Fitness: blocksPlaced + itemsCollected + distanceTraveled/100 − 5×deaths.</p>
+            <pre><code>LearnedMinecraftPilot pilot = newLearnedMinecraftPilot();
+pilot.train(episodeHistory);
+ActionResult action = pilot.step(state, observation);</code></pre>
+            <p><strong>Status:</strong> Implementation done. EXP-005 evaluation in progress.</p>
+        </article>
+
+        <article id="h006" class="algo-card">
+            <div class="head">
+                <h3>H-006 · Guardrail</h3>
+                <span class="badge complete">done</span>
+            </div>
+            <div class="meta">Source: <code>io.matrix.guardrail.GuardrailEngine</code> · <a href="https://github.com/AlexanderNarbaev/agi/blob/main/docs/research/HYPOTHESES.md">HYPOTHESES §H-006</a></div>
+            <p><strong>Claim:</strong> A guardrail built from Bircompositions achieves FPR ≤5% at TPR ≥95% on a malicious corpus with P99 latency ≤50 ms.</p>
+            <p><strong>Measured:</strong></p>
+            <table>
+                <tr><th>Metric</th><th>Target</th><th>Measured</th></tr>
+                <tr><td>FPR</td><td>≤5%</td><td><strong>0%</strong></td></tr>
+                <tr><td>TPR</td><td>≥95%</td><td><strong>100%</strong></td></tr>
+                <tr><td>P99 latency</td><td>≤50 ms</td><td><strong>0 ms</strong></td></tr>
+            </table>
+            <p><strong>How it works:</strong> The EthicalFilter evaluates each input against keyword sets for the six axioms (don't kill, don't torture, don't enslave, no autonomous weapons, no deception, no privacy violation). Eval is a single pass over the keyword set.</p>
+            <p><strong>Reproduction:</strong> <code>./gradlew :matrix-core:test --tests "io.matrix.guardrail.GuardrailFprTprTest"</code></p>
+        </article>
+
+        <footer style="border:none; padding:32px 0; text-align:center; color:var(--fg-soft); font-size:13px; margin-top:64px;">
+            <p>MATRIX Algorithms · 2026 · <a href="index.en.html">← Back to overview</a> · <a href="docs.en.html">Documentation</a></p>
+        </footer>
+
+    </main>
+
+</div>
+
+</body>
+</html>

@@ -1,0 +1,4 @@
+on-heap  long[]      : 0.77 нс/оценка (20,000,000 оценок, checksum=10074799)
+off-heap direct BB   : 1.03 нс/оценка (checksum=10074799)
+память таблицы k=16  : 8192 байт (on-heap) / 8192 байт (direct)
+примечание: продакшн-замеры — JMH на целевом железе (METRICS.md); native-image: класс компилируется без рефлексии/Unsafe (JAVA_NATIVE §2)

@@ -1,0 +1,15 @@
+[weblate]
+url = https://hosted.weblate.org
+project = matrix-ai
+translation = matrix-ai/agi
+file_format = i18next
+
+[weblate.component."docs/L0_manifesto"]
+name = Manifesto (L0)
+file_format = markdown
+file_mask = docs/*.md
+template = docs/L0_manifesto.md
+
+[weblate.languages]
+source_language = en
+target_languages = ru, zh, es, ar, fr, de, pt, ja

@@ -1,0 +1,54 @@
+apiVersion: minio.min.io/v2
+kind: Tenant
+metadata:
+  name: matrix-minio
+  namespace: matrix
+  labels:
+    app.kubernetes.io/part-of: matrix
+spec:
+  image: minio/minio:RELEASE.2025-05-10T23-08-06Z
+  imagePullPolicy: IfNotPresent
+  pools:
+    - servers: 2
+      volumesPerServer: 2
+      volumeClaimTemplate:
+        spec:
+          accessModes:
+            - ReadWriteOnce
+          resources:
+            requests:
+              storage: 10Gi
+      resources:
+        requests:
+          cpu: "250m"
+          memory: "256Mi"
+        limits:
+          cpu: "500m"
+          memory: "512Mi"
+  mountPath: /export
+  requestAutoCert: true
+  s3:
+    bucketDNS: false
+  features:
+    bucketReplication: false
+    bucketVersioning: false
+    domains:
+      console: matrix-minio-console.local
+      minio:
+        - matrix-minio-hl.matrix.svc.cluster.local
+  buckets:
+    - name: neuron-snapshots
+      region: us-east-1
+    - name: neuron-models
+      region: us-east-1
+    - name: training-data
+      region: us-east-1
+    - name: audit-archives
+      region: us-east-1
+  users:
+    - name: matrix-core
+  certConfig:
+    commonName: matrix-minio-hl.matrix.svc.cluster.local
+    dnsNames:
+      - matrix-minio-hl.matrix.svc.cluster.local
+      - "*.matrix-minio-hl.matrix.svc.cluster.local"

@@ -1,0 +1,18 @@
+{
+  "type": "record",
+  "name": "BirArtifact",
+  "namespace": "io.matrix.bir",
+  "doc": "Serialized BIR artifact header + payload. Derived from src/main/avro/bir.avdl (protocol BirProtocol, record BirArtifact) — keep in sync; avdl is the human-readable source of truth. SPEC-002 FR-A1.",
+  "fields": [
+    {"name": "id", "type": "string"},
+    {"name": "form", "type": "string", "doc": "\"tt\", \"clauseset\", \"bdd\""},
+    {"name": "inputBits", "type": "int"},
+    {"name": "outputBits", "type": "int"},
+    {"name": "provenance", "type": "string"},
+    {"name": "fidelity", "type": "double"},
+    {"name": "payload", "type": "bytes", "doc": "form-specific canonical bytes (BirForm.toBytes)"},
+    {"name": "contentHash", "type": "bytes", "doc": "SHA3-256 of payload"},
+    {"name": "createdAt", "type": "long", "doc": "epoch millis, supplied by caller (no wall-clock inside the codec)"},
+    {"name": "version", "type": "string", "doc": "schema version"}
+  ]
+}

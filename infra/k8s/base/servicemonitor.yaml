@@ -1,0 +1,17 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: matrix-core
+  namespace: matrix
+  labels:
+    app: matrix-core
+    release: prometheus
+spec:
+  selector:
+    matchLabels:
+      app: matrix-core
+  endpoints:
+    - port: http
+      path: /metrics
+      interval: 15s
+      scrapeTimeout: 10s

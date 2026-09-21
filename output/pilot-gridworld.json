@@ -1,0 +1,264 @@
+{
+  "pilot" : "GridWorld #1",
+  "version" : "1.2.0",
+  "timestamp" : "2026-06-26T10:13:00.807693220Z",
+  "config" : {
+    "population" : 20,
+    "seed" : 42,
+    "walls" : 15,
+    "worldWidth" : 20,
+    "worldHeight" : 20,
+    "resources" : 10,
+    "maxSteps" : 200,
+    "k" : 8,
+    "trials" : 3,
+    "generations" : 50
+  },
+  "results" : {
+    "improvement" : 467,
+    "finalAvg" : 106,
+    "elapsedMs" : 436,
+    "initialBest" : 133,
+    "finalBest" : 600,
+    "generationsPerSecond" : 114.6788990825688
+  },
+  "bestLogic" : {
+    "north" : {
+      "leaves" : 15,
+      "splits" : 14,
+      "depth" : 8,
+      "paths" : [ "[0, 3]", "[0, 2, 3, 6]", "[0, 1, 2, 3, 4, 6, 7]", "[0, 1, 2, 3, 4, 5, 6, 7]", "[0, 1, 2, 3, 4, 5, 6, 7]", "[0, 2, 3, 4, 6, 7]", "[0, 2, 3, 6, 7]", "[0, 2, 3]", "[0, 4, 5]", "[0, 4, 5, 7]", "[0, 4, 5, 7]", "[0, 1, 4, 5]", "[0, 1, 4, 5]", "[0, 4, 5, 7]", "[0, 4, 5, 7]" ]
+    },
+    "south" : {
+      "leaves" : 5,
+      "splits" : 4,
+      "depth" : 3,
+      "paths" : [ "[1, 4, 6]", "[1, 4, 6]", "[1, 4]", "[1, 4]", "[1, 4]" ]
+    },
+    "west" : {
+      "leaves" : 19,
+      "splits" : 18,
+      "depth" : 7,
+      "paths" : [ "[0, 2, 3, 4, 6, 7]", "[0, 2, 3, 4, 6, 7]", "[0, 3, 4, 5, 6, 7]", "[0, 2, 3, 4, 5, 6, 7]", "[0, 2, 3, 4, 5, 6, 7]", "[3, 4, 6, 7]", "[1, 3, 4, 6, 7]", "[1, 3, 4, 6, 7]", "[2, 3, 4, 5, 6, 7]", "[2, 3, 4, 5, 6, 7]", "[3, 4, 5, 6, 7]", "[1, 3, 4, 6]", "[1, 3, 4, 6]", "[3, 4, 6]", "[1, 4, 6]", "[1, 4, 6]", "[0, 4, 5, 6]", "[0, 4, 5, 6]", "[0, 4, 6]" ]
+    },
+    "east" : {
+      "leaves" : 4,
+      "splits" : 3,
+      "depth" : 3,
+      "paths" : [ "[6]", "[0, 3, 6]", "[0, 3, 6]", "[0, 6]" ]
+    }
+  },
+  "generations" : [ {
+    "generation" : 0,
+    "best" : 133,
+    "avg" : -49
+  }, {
+    "generation" : 1,
+    "best" : 138,
+    "avg" : -45
+  }, {
+    "generation" : 2,
+    "best" : 140,
+    "avg" : -30
+  }, {
+    "generation" : 3,
+    "best" : 133,
+    "avg" : -23
+  }, {
+    "generation" : 4,
+    "best" : 133,
+    "avg" : -24
+  }, {
+    "generation" : 5,
+    "best" : 133,
+    "avg" : -21
+  }, {
+    "generation" : 6,
+    "best" : 166,
+    "avg" : 11
+  }, {
+    "generation" : 7,
+    "best" : 640,
+    "avg" : 31
+  }, {
+    "generation" : 8,
+    "best" : 613,
+    "avg" : 47
+  }, {
+    "generation" : 9,
+    "best" : 273,
+    "avg" : 27
+  }, {
+    "generation" : 10,
+    "best" : 400,
+    "avg" : 55
+  }, {
+    "generation" : 11,
+    "best" : 266,
+    "avg" : 53
+  }, {
+    "generation" : 12,
+    "best" : 513,
+    "avg" : 60
+  }, {
+    "generation" : 13,
+    "best" : 486,
+    "avg" : 85
+  }, {
+    "generation" : 14,
+    "best" : 506,
+    "avg" : 116
+  }, {
+    "generation" : 15,
+    "best" : 466,
+    "avg" : 90
+  }, {
+    "generation" : 16,
+    "best" : 646,
+    "avg" : 96
+  }, {
+    "generation" : 17,
+    "best" : 333,
+    "avg" : 69
+  }, {
+    "generation" : 18,
+    "best" : 386,
+    "avg" : 84
+  }, {
+    "generation" : 19,
+    "best" : 800,
+    "avg" : 98
+  }, {
+    "generation" : 20,
+    "best" : 373,
+    "avg" : 98
+  }, {
+    "generation" : 21,
+    "best" : 626,
+    "avg" : 97
+  }, {
+    "generation" : 22,
+    "best" : 373,
+    "avg" : 77
+  }, {
+    "generation" : 23,
+    "best" : 793,
+    "avg" : 114
+  }, {
+    "generation" : 24,
+    "best" : 693,
+    "avg" : 117
+  }, {
+    "generation" : 25,
+    "best" : 406,
+    "avg" : 121
+  }, {
+    "generation" : 26,
+    "best" : 366,
+    "avg" : 115
+  }, {
+    "generation" : 27,
+    "best" : 566,
+    "avg" : 133
+  }, {
+    "generation" : 28,
+    "best" : 320,
+    "avg" : 134
+  }, {
+    "generation" : 29,
+    "best" : 580,
+    "avg" : 122
+  }, {
+    "generation" : 30,
+    "best" : 700,
+    "avg" : 141
+  }, {
+    "generation" : 31,
+    "best" : 653,
+    "avg" : 128
+  }, {
+    "generation" : 32,
+    "best" : 493,
+    "avg" : 144
+  }, {
+    "generation" : 33,
+    "best" : 560,
+    "avg" : 133
+  }, {
+    "generation" : 34,
+    "best" : 520,
+    "avg" : 149
+  }, {
+    "generation" : 35,
+    "best" : 406,
+    "avg" : 116
+  }, {
+    "generation" : 36,
+    "best" : 793,
+    "avg" : 164
+  }, {
+    "generation" : 37,
+    "best" : 553,
+    "avg" : 143
+  }, {
+    "generation" : 38,
+    "best" : 600,
+    "avg" : 122
+  }, {
+    "generation" : 39,
+    "best" : 813,
+    "avg" : 141
+  }, {
+    "generation" : 40,
+    "best" : 740,
+    "avg" : 169
+  }, {
+    "generation" : 41,
+    "best" : 513,
+    "avg" : 132
+  }, {
+    "generation" : 42,
+    "best" : 626,
+    "avg" : 157
+  }, {
+    "generation" : 43,
+    "best" : 913,
+    "avg" : 150
+  }, {
+    "generation" : 44,
+    "best" : 380,
+    "avg" : 102
+  }, {
+    "generation" : 45,
+    "best" : 546,
+    "avg" : 139
+  }, {
+    "generation" : 46,
+    "best" : 533,
+    "avg" : 116
+  }, {
+    "generation" : 47,
+    "best" : 640,
+    "avg" : 128
+  }, {
+    "generation" : 48,
+    "best" : 506,
+    "avg" : 149
+  }, {
+    "generation" : 49,
+    "best" : 593,
+    "avg" : 101
+  }, {
+    "generation" : 50,
+    "best" : 600,
+    "avg" : 106
+  } ],
+  "demo" : {
+    "steps" : 120,
+    "food" : 1,
+    "collisions" : 0,
+    "initialEnergy" : 100,
+    "finalEnergy" : 0,
+    "score" : 100
+  }
+}

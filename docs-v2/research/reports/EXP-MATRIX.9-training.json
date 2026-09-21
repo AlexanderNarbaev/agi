@@ -1,0 +1,43 @@
+{
+  "model": "Qwen2.5-0.5B (boolean-distilled, fine-tuned via W12 hill-climbing)",
+  "task": "hellaswag",
+  "limit": 25,
+  "epochs": 5,
+  "samples_per_epoch": 15,
+  "perturb_rate": 0.05,
+  "accuracy_before": 0.36,
+  "accuracy_after": 0.4,
+  "delta": 0.040000000000000036,
+  "history": [
+    {
+      "epoch": 0,
+      "sample_acc": 0.26666666666666666,
+      "eval_acc": 0.36,
+      "ms": 1122.0046850012295
+    },
+    {
+      "epoch": 1,
+      "sample_acc": 0.3333333333333333,
+      "eval_acc": 0.36,
+      "ms": 1023.7601450007787
+    },
+    {
+      "epoch": 2,
+      "sample_acc": 0.13333333333333333,
+      "eval_acc": 0.4,
+      "ms": 1046.651822000058
+    },
+    {
+      "epoch": 3,
+      "sample_acc": 0.26666666666666666,
+      "eval_acc": 0.4,
+      "ms": 1041.8196159989748
+    },
+    {
+      "epoch": 4,
+      "sample_acc": 0.26666666666666666,
+      "eval_acc": 0.4,
+      "ms": 1052.4007349995372
+    }
+  ]
+}

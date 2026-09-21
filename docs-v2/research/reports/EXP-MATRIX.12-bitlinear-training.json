@@ -1,0 +1,46 @@
+{
+  "model": "Qwen2.5-0.5B-Instruct",
+  "task": "hellaswag",
+  "limit": 30,
+  "projection": "BitLinear (absmean-rescaled sign-of-weight)",
+  "layers": 6,
+  "neurons": 9642,
+  "epochs": 5,
+  "samples_per_epoch": 15,
+  "perturb_rate": 0.05,
+  "accuracy_before": 0.26666666666666666,
+  "accuracy_after": 0.3333333333333333,
+  "delta": 0.06666666666666665,
+  "history": [
+    {
+      "epoch": 0,
+      "sample_acc": 0.26666666666666666,
+      "eval_acc": 0.26666666666666666,
+      "ms": 1018.356256000061
+    },
+    {
+      "epoch": 1,
+      "sample_acc": 0.3333333333333333,
+      "eval_acc": 0.3,
+      "ms": 1129.2074809998667
+    },
+    {
+      "epoch": 2,
+      "sample_acc": 0.2,
+      "eval_acc": 0.3,
+      "ms": 1046.5413439997064
+    },
+    {
+      "epoch": 3,
+      "sample_acc": 0.26666666666666666,
+      "eval_acc": 0.3333333333333333,
+      "ms": 1064.5822159999625
+    },
+    {
+      "epoch": 4,
+      "sample_acc": 0.2,
+      "eval_acc": 0.3333333333333333,
+      "ms": 1067.0254139999997
+    }
+  ]
+}

@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MATRIX Documentation — Specs, Designs, Research</title>
+    <meta name="description" content="Complete MATRIX documentation index: 4 specs, 13 designs, 6 ADRs, 34 hypotheses, JMH benchmarks, training scripts, and scientific papers.">
+    <style>
+        *,*::before,*::after { box-sizing: border-box; }
+        :root {
+            --bg: #ffffff;
+            --bg-subtle: #f7f7f8;
+            --bg-code: #f0f0f2;
+            --fg: #1a1a1a;
+            --fg-muted: #5c5c70;
+            --fg-soft: #8a8a99;
+            --border: #e5e5ea;
+            --accent: #d97706;
+            --accent-bg: #fef3c7;
+            --link: #2563eb;
+        }
+        html { scroll-behavior: smooth; }
+        body {
+            margin: 0;
+            font-family: -apple-system, "SF Pro Text", BlinkMacSystemFont, "Segoe UI", "Inter", system-ui, sans-serif;
+            font-size: 16px;
+            line-height: 1.7;
+            color: var(--fg);
+            background: var(--bg);
+            -webkit-font-smoothing: antialiased;
+        }
+        a { color: var(--link); text-decoration: none; }
+        a:hover { text-decoration: underline; }
+
+        .topbar {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            background: rgba(255,255,255,0.92);
+            backdrop-filter: saturate(180%) blur(20px);
+            border-bottom: 1px solid var(--border);
+            padding: 12px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .topbar .logo {
+            font-weight: 800;
+            font-size: 18px;
+            color: var(--fg);
+        }
+        .topbar .logo span { color: var(--accent); }
+        .topbar nav { display: flex; gap: 24px; align-items: center; }
+        .topbar nav a { color: var(--fg-muted); font-size: 14px; font-weight: 500; }
+
+        .layout {
+            display: grid;
+            grid-template-columns: 240px 1fr;
+            max-width: 1280px;
+            margin: 0 auto;
+        }
+        @media (max-width: 900px) {
+            .layout { grid-template-columns: 1fr; }
+            aside.sidebar { display: none; }
+        }
+        aside.sidebar {
+            position: sticky;
+            top: 60px;
+            height: calc(100vh - 60px);
+            padding: 32px 16px;
+            border-right: 1px solid var(--border);
+            overflow-y: auto;
+            background: var(--bg);
+        }
+        .sidebar nav ul { list-style: none; padding: 0; margin: 0; }
+        .sidebar nav li { margin: 2px 0; }
+        .sidebar nav a {
+            display: block;
+            padding: 4px 12px;
+            font-size: 14px;
+            color: var(--fg-muted);
+            border-radius: 4px;
+        }
+        .sidebar nav a:hover {
+            background: var(--bg-subtle);
+            color: var(--fg);
+            text-decoration: none;
+        }
+        .sidebar .toc-heading {
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--fg-soft);
+            padding: 4px 12px;
+            margin-top: 16px;
+            margin-bottom: 8px;
+        }
+
+        main {
+            padding: 32px 64px 96px;
+            max-width: 800px;
+        }
+        @media (max-width: 900px) {
+            main { padding: 24px 24px 96px; }
+        }
+
+        .hero {
+            padding: 48px 0 32px;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 32px;
+        }
+        .hero h1 {
+            font-size: 40px;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            line-height: 1.15;
+            margin: 0 0 16px;
+        }
+        .hero p {
+            font-size: 18px;
+            color: var(--fg-muted);
+            margin: 0;
+        }
+
+        section { margin: 48px 0; }
+        section h2 {
+            font-size: 28px;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            margin: 0 0 16px;
+            padding-top: 16px;
+        }
+        section h3 {
+            font-size: 19px;
+            font-weight: 600;
+            margin: 24px 0 12px;
+        }
+        section p { margin: 12px 0; }
+        section ul { padding-left: 24px; margin: 12px 0; }
+        section li { margin: 4px 0; }
+
+        .doc-category {
+            margin: 32px 0;
+            padding: 24px;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            background: var(--bg);
+        }
+        .doc-category h3 {
+            margin: 0 0 12px;
+            font-size: 18px;
+            font-weight: 700;
+        }
+        .doc-category .meta {
+            color: var(--fg-soft);
+            font-size: 13px;
+            margin-bottom: 12px;
+        }
+        .doc-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 12px;
+            margin-top: 16px;
+        }
+        .doc-item {
+            padding: 14px 16px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: var(--bg-subtle);
+        }
+        .doc-item a {
+            font-weight: 600;
+            color: var(--fg);
+            display: block;
+            margin-bottom: 4px;
+        }
+        .doc-item a:hover { color: var(--link); }
+        .doc-item p {
+            margin: 0;
+            font-size: 13px;
+            color: var(--fg-muted);
+            line-height: 1.5;
+        }
+        .doc-item .id {
+            display: inline-block;
+            font-family: "SF Mono", monospace;
+            font-size: 11px;
+            background: var(--bg-code);
+            color: var(--fg-muted);
+            padding: 1px 6px;
+            border-radius: 4px;
+            margin-right: 6px;
+        }
+
+        footer {
+            border-top: 1px solid var(--border);
+            padding: 32px 64px;
+            margin-top: 64px;
+            font-size: 13px;
+            color: var(--fg-muted);
+            text-align: center;
+        }
+        @media (max-width: 900px) {
+            footer { padding: 24px; }
+        }
+    </style>
+</head>
+<body>
+
+<header class="topbar">
+    <div class="logo">MATRIX<span>.</span></div>
+    <nav>
+        <a href="index.en.html">Overview</a>
+        <a href="docs.en.html">Docs</a>
+        <a href="algorithms.en.html">Algorithms</a>
+        <a href="benchmarks.en.html">Benchmarks</a>
+        <a href="research.en.html">Research</a>
+        <a href="https://github.com/AlexanderNarbaev/agi">GitHub</a>
+        <a href="index.html" style="color:var(--accent);font-weight:600;">RU</a>
+    </nav>
+</header>
+
+<div class="layout">
+
+    <aside class="sidebar">
+        <div class="toc-heading">Sections</div>
+        <nav>
+            <ul>
+                <li><a href="#for-researchers">For researchers</a></li>
+                <li><a href="#for-engineers">For engineers</a></li>
+                <li><a href="#specs">Specifications</a></li>
+                <li><a href="#designs">Design documents</a></li>
+                <li><a href="#adrs">Architecture decisions</a></li>
+                <li><a href="#research">Research</a></li>
+                <li><a href="#algorithms">Algorithms</a></li>
+                <li><a href="#benchmarks">Benchmarks</a></li>
+                <li><a href="#training">Training scripts</a></li>
+                <li><a href="#papers">Papers</a></li>
+                <li><a href="#api">API</a></li>
+            </ul>
+        </nav>
+    </aside>
+
+    <main>
+
+        <section class="hero">
+            <h1>Documentation</h1>
+            <p>161 documents covering the full MATRIX stack. Pick what matches your role — researchers, engineers, and integrators each get a starting point.</p>
+        </section>
+
+        <section id="for-researchers">
+            <h2>For researchers</h2>
+            <p>If you came here for the math, start with these:</p>
+            <ul>
+                <li><a href="#papers">PAPER-01</a> — formal analysis of the Boolean compute layer (capacity, latency, energy vs LLMs)</li>
+                <li><a href="research.en.html">HYPOTHESES.md</a> — 34 preregistered hypotheses with success and falsification criteria</li>
+                <li><a href="#algorithms">Algorithms page</a> — deep dive into 10 implemented algorithms</li>
+                <li><a href="#benchmarks">Benchmarks page</a> — JMH performance numbers, reproducible</li>
+                <li><a href="#adrs">ADRs</a> — why the architecture is what it is (6 decisions)</li>
+            </ul>
+        </section>
+
+        <section id="for-engineers">
+            <h2>For engineers</h2>
+            <p>If you came here to integrate or contribute:</p>
+            <ul>
+                <li><a href="index.en.html#quickstart">Quick start</a> — clone, build, test in three commands</li>
+                <li><a href="#specs">Specifications</a> — feature specs (SPEC-000..003)</li>
+                <li><a href="#designs">Design documents</a> — module-by-module design (DESIGN-01..13)</li>
+                <li><a href="#api">API reference</a> — REST endpoints, WebSocket, MCP</li>
+                <li><a href="https://github.com/AlexanderNarbaev/agi/blob/main/CONTRIBUTING.md">CONTRIBUTING.md</a> — contribution guidelines</li>
+            </ul>
+        </section>
+
+        <section id="specs">
+            <h2>Specifications (4)</h2>
+            <div class="doc-category">
+                <h3>Feature specifications</h3>
+                <div class="meta">4 documents · normative · subject to change only with changelog</div>
+                <div class="doc-list">
+                    <div class="doc-item">
+                        <a href="https://github.com/AlexanderNarbaev/agi/blob/main/docs/spec/SPEC-000-developmental-loop.md"><span class="id">SPEC-000</span>Developmental Loop</a>
+                        <p>Closed-loop training between simulations and BIR-based neural clusters. The agent improves itself across generations.</p>
+                    </div>
+                    <div class="doc-item">
+                        <a href="https://github.com/AlexanderNarbaev/agi/blob/main/docs/spec/SPEC-001-weight-conversion.md"><span class="id">SPEC-001</span>Weight Conversion</a>
+                        <p>Distillation of HuggingFace weights into BIR neurons. Quantile binarization, importance features, TREPAN-style extraction.</p>
+                    </div>
+                    <div class="doc-item">
+                        <a href="https://github.com/AlexanderNarbaev/agi/blob/main/docs/spec/SPEC-002-boolean-compute-layer.md"><span class="id">SPEC-002</span>Boolean Compute Layer</a>
+                        <p>The BIR core: three forms (TT, CLAUSESET, BDD), compiler, equivalence verification, runtime contracts.</p>
+                    </div>
+                    <div class="doc-item">
+                        <a href="https://github.com/AlexanderNarbaev/agi/blob/main/docs/spec/SPEC-003-knowledge-topology.md"><span class="id">SPEC-003</span>Knowledge Topology</a>
+                        <p>Knowledge stack: Boolean index, embeddings, graph, sparse. RRF fusion across four strategies.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="designs">
+            <h2>Design documents (13)</h2>
+            <div class="doc-category">
+                <h3>Module-by-module design</h3>
+                <div class="meta">13 documents · normative</div>
+                <div class="doc-list">
+                    <div class="doc-item">
+                        <a href="https://github.com/AlexanderNarbaev/agi/blob/main/docs/design/DESIGN-01-units.md"><span class="id">DESIGN-01</span>Units</a>
+                        <p>BIR unit definition, form selection, payload formats, header contract.</p>
+                    </div>
+                    <div class="doc-item">
+                        <a href="https://github.com/AlexanderNarbaev/agi/blob/main/docs/design/DESIGN-02-composition.md"><span class="id">DESIGN-02</span>Composition</a>
+                        <p>How BIR units compose: serial, parallel, conditional, feedback. Algebraic laws.</p>
+                    </div>
+                    <div class="doc-item">
+                        <a href="https://github.com/AlexanderNarbaev/agi/blob/main/docs/design/DESIGN-03-pipeline.md"><span class="id">DESIGN-03</span>Pipeline</a>
+                        <p>Inference pipeline: input encoding → form selection → evaluation → output decoding.</p>
+                    </div>
+                    <div class="doc-item">
+                        <a href="https://github.com/AlexanderNarbaev/agi/blob/main/docs/design/DESIGN-04-learning.md"><span class="id">DESIGN-04</span>Learning</a>
+                        <p>Tsetlin training loop, fitness function, exploration vs exploitation.</p>
+                    </div>
+                    <div class="doc-item">
+                        <a href="https://github.com/AlexanderNarbaev/agi/blob/main/docs/design/DESIGN-05-memory.md"><span class="id">DESIGN-05</span>Memory</a>
+                        <p>Memory hierarchy: L1 in-process, L2 SSD, L3 federation. FNL versioning.</p>
+                    </div>
+                    <div class="doc-item">
+                        <a href="https://github.com/AlexanderNarbaev/agi/blob/main/docs/design/DESIGN-06-signal-modules.md"><span class="id">DESIGN-06</span>Signal Modules</a>
+                        <p>Signal/module contract: input schema, output schema, lifecycle, registration.</p>
+                    </div>
+                    <div class="doc-item">
+                        <a href="https://github.com/AlexanderNarbaev/agi/blob/main/docs/design/DESIGN-07-lifecycle.md"><span class="id">DESIGN-07</span>Lifecycle</a>
+                        <p>Process lifecycle: spawn, idle, active, drain, sleep, terminate. Invariants.</p>
+                    </div>
+                    <div class="doc-item">
+                        <a href="https://github.com/AlexanderNarbaev/agi/blob/main/docs/design/DESIGN-08-federation.md"><span class="id">DESIGN-08</span>Federation</a>
+                        <p>Mesh federation: CRDT sync, 3/5 BFT quorum, Kafka + WebSocket transport.</p>
+                    </div>
+                    <div class="doc-item">
+                        <a href="https://github.com/AlexanderNarbaev/agi/blob/main/docs/design/DESIGN-09-monotone-decoder.md"><span class="id">DESIGN-09</span>Monotone Decoder</a>
+                        <p>Decoding monotone Boolean functions by maximal upper zero circuit.</p>
+                    </div>
+                    <div class="doc-item">
+                        <a href="https://github.com/AlexanderNarbaev/agi/blob/main/docs/design/DESIGN-10-binary-reservoir.md"><span class="id">DESIGN-10</span>Binary Reservoir</a>
+                        <p>Binary echo-state network: VSA state + permutation recurrence + TT/WNN readout.</p>
+                    </div>
+                    <div class="doc-item">
+                        <a href="https://github.com/AlexanderNarbaev/agi/blob/main/docs/design/DESIGN-11-budgeter-homeostat.md"><span class="id">DESIGN-11</span>Budgeter Homeostat</a>
+                        <p>Resource budgeting: energy, time, memory per BIR evaluation. Self-tuning.</p>
+                    </div>
+                    <div class="doc-item">
+                        <a href="https://github.com/AlexanderNarbaev/agi/blob/main/docs/design/DESIGN-12-fnl-taskcell.md"><span class="id">DESIGN-12</span>FNL TaskCell</a>
+                        <p>Ephemeral compute instance: context slice, isolation, resource limits.</p>
+                    </div>
+                    <div class="doc-item">
+                        <a href="https://github.com/AlexanderNarbaev/agi/blob/main/docs/design/DESIGN-13-action-registry.md"><span class="id">DESIGN-13</span>Action Registry</a>
+                        <p>Action registration, validation, FROZEN-ethics gating, audit trail.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="adrs">
+            <h2>Architecture Decision Records (6)</h2>
+            <div class="doc-category">
+                <h3>Why the architecture is what it is</h3>
+                <div class="meta">6 documents · normative</div>
+                <div class="doc-list">
+                    <div class="doc-item">
+                        <a href="https://github.com/AlexanderNarbaev/agi/blob/main/docs/engineering/ADR-001-matrix-vs-rag-system-roles.md"><span class="id">ADR-001</span>MATRIX vs RAG system roles</a>
+                        <p>MATRIX is the deterministic kernel; RAG is the untrusted peripheral. Each does what it is good at.</p>
+                    </div>
+                    <div class="doc-item">
+                        <a href="https://github.com/AlexanderNarbaev/agi/blob/main/docs/engineering/ADR-002-bir-canonical-representation.md"><span class="id">ADR-002</span>BIR as canonical representation</a>
+                        <p>Why three equivalent forms instead of one. Capacity, evaluation cost, verifiability trade-offs.</p>
+                    </div>
+                    <div class="doc-item">
+                        <a href="https://github.com/AlexanderNarbaev/agi/blob/main/docs/engineering/ADR-003-tsetlin-producers-over-living-mechanisms.md"><span class="id">ADR-003</span>Tsetlin producers over living mechanisms</a>
+                        <p>Why Tsetlin automata, not gradient-based learning, for BIR producers.</p>
+                    </div>
+                    <div class="doc-item">
+                        <a href="https://github.com/AlexanderNarbaev/agi/blob/main/docs/engineering/ADR-004-cauldron-budget-scheduling.md"><span class="id">ADR-004</span>Cauldron budget scheduling</a>
+                        <p>Why Levin 2⁻ˡ schedule, not uniform, for candidate budget allocation.</p>
+                    </div>
+                    <div class="doc-item">
+                        <a href="https://github.com/AlexanderNarbaev/agi/blob/main/docs/engineering/ADR-005-three-valued-gate-verdicts.md"><span class="id">ADR-005</span>Three-valued gate verdicts</a>
+                        <p>Why gates return ALLOW/DENY/UNDECIDED, not boolean. How undecided propagates to higher levels.</p>
+                    </div>
+                    <div class="doc-item">
+                        <a href="https://github.com/AlexanderNarbaev/agi/blob/main/docs/engineering/ADR-006-llm-and-external-stores-not-dependencies.md"><span class="id">ADR-006</span>LLM and external stores are not dependencies</a>
+                        <p>MATRIX does not depend on an LLM or external datastore. They are peripheral services verified at the boundary.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="research">
+            <h2>Research</h2>
+            <div class="doc-category">
+                <h3>Hypotheses and analysis</h3>
+                <div class="meta">34 preregistered hypotheses · 9 running · 25 proposed</div>
+                <ul>
+                    <li><a href="https://github.com/AlexanderNarbaev/agi/blob/main/docs/research/HYPOTHESES.md">HYPOTHESES.md</a> — full table with preregistration, falsification criteria, current status</li>
+                    <li><a href="https://github.com/AlexanderNarbaev/agi/blob/main/docs/research/METRICS.md">METRICS.md</a> — registry of metrics: TT eval, FPR, TPR, energy, etc.</li>
+                    <li><a href="https://github.com/AlexanderNarbaev/agi/blob/main/docs/research/ANALYSIS-laptop-feasibility.md">ANALYSIS-laptop-feasibility.md</a> — analytical estimates for consumer hardware</li>
+                    <li><a href="https://github.com/AlexanderNarbaev/agi/blob/main/docs/research/SINV_ANALYSIS_REPORT.md">SINV_ANALYSIS_REPORT.md</a> — synthetic-invariant analysis</li>
+                    <li><a href="https://github.com/AlexanderNarbaev/agi/blob/main/docs/research/AI_AGENT_SYSTEMS_RESEARCH_2026_Q3.md">AI_AGENT_SYSTEMS_RESEARCH_2026_Q3.md</a> — competitive landscape</li>
+                </ul>
+            </div>
+        </section>
+
+        <section id="algorithms">
+            <h2>Algorithm deep dives</h2>
+            <p>See the <a href="algorithms.en.html">algorithms page</a> for detailed coverage of each implemented algorithm, including code, complexity, and use cases.</p>
+        </section>
+
+        <section id="benchmarks">
+            <h2>Benchmarks</h2>
+            <p>See the <a href="benchmarks.en.html">benchmarks page</a> for JMH methodology, raw numbers, and reproduction instructions.</p>
+        </section>
+
+        <section id="training">
+            <h2>Training scripts</h2>
+            <div class="doc-category">
+                <h3>HuggingFace distillation</h3>
+                <div class="meta">3 scripts · Python (allowed in docs/research/)</div>
+                <ul>
+                    <li><a href="https://github.com/AlexanderNarbaev/agi/blob/main/scripts/pretrain_neurons.py">scripts/pretrain_neurons.py</a> — distill HF weights into BIR neurons (917 lines, 7 architectures)</li>
+                    <li><a href="https://github.com/AlexanderNarbaev/agi/blob/main/scripts/train_local.sh">scripts/train_local.sh</a> — run training locally without minikube</li>
+                    <li><a href="https://github.com/AlexanderNarbaev/agi/blob/main/scripts/merge_pretrained_neurons.py">scripts/merge_pretrained_neurons.py</a> — consolidate multiple distilled models</li>
+                </ul>
+                <p style="margin-top:12px;">Trained models: SmolLM2-135M/360M, Qwen2.5-0.5B/1.5B, Qwen3-0.6B/1.7B, DeepSeek-R1-Distill-Qwen-1.5B.</p>
+            </div>
+        </section>
+
+        <section id="papers">
+            <h2>Papers</h2>
+            <div class="doc-category">
+                <h3>Scientific publications</h3>
+                <div class="meta">1 published · 3 planned</div>
+                <div class="doc-list">
+                    <div class="doc-item">
+                        <a href="https://github.com/AlexanderNarbaev/agi/blob/main/docs/research/papers/PAPER-01-hybrid-boolean-compute-laptop.md"><span class="id">PAPER-01</span>Hybrid Boolean Compute on Laptop</a>
+                        <p>Capacity, latency, and energy analysis of BIR vs local LLMs. Draft, draft v1, 2026-08-01.</p>
+                    </div>
+                    <div class="doc-item">
+                        <a href="research.en.html#papers"><span class="id">PAPER-02</span>Planned</a>
+                        <p>BIR forms on identical inputs (H-002): CLAUSESET vs MPDT-GA comparison. Triggers EXP-002.</p>
+                    </div>
+                    <div class="doc-item">
+                        <a href="research.en.html#papers"><span class="id">PAPER-03</span>Planned</a>
+                        <p>Developmental Loop (H-005): measured −30% time-to-solution on Minecraft craft puzzles.</p>
+                    </div>
+                    <div class="doc-item">
+                        <a href="research.en.html#papers"><span class="id">PAPER-04</span>Planned</a>
+                        <p>Ricci-fingerprint for graph-of-knowledge degradation detection (H-004).</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="api">
+            <h2>API</h2>
+            <p>MATRIX exposes a REST API, a WebSocket interface, and an MCP server. See:</p>
+            <ul>
+                <li><a href="https://github.com/AlexanderNarbaev/agi/blob/main/docs/API.md">API.md</a> — full reference</li>
+                <li><a href="https://github.com/AlexanderNarbaev/agi/blob/main/docs/openapi.yaml">openapi.yaml</a> — OpenAPI 3 spec</li>
+                <li><a href="https://github.com/AlexanderNarbaev/agi/blob/main/docs/agents/AGENTS-MODULES.md">AGENTS-MODULES.md</a> — signal module contract for integration</li>
+            </ul>
+        </section>
+
+        <footer style="border:none; padding:32px 0; text-align:center; color:var(--fg-soft); font-size:13px; margin-top:64px;">
+            <p>MATRIX Documentation · 2026 · <a href="index.en.html">← Back to overview</a></p>
+        </footer>
+
+    </main>
+
+</div>
+
+</body>
+</html>

@@ -1,0 +1,69 @@
+# matrix-fpga/Makefile
+# Build automation for FPGA synthesis
+
+.PHONY: generate simulate synth clean
+
+# Default parameters
+K ?= 4
+TABLE ?= 0x6A9C
+NAME ?= xor4
+SNAPSHOT ?=
+
+# Directories
+SRC_DIR = src
+TB_DIR = testbench
+OUTPUT_DIR = output
+SYNTH_DIR = vivado_project
+
+# Generate Verilog from direct parameters
+generate:
+	@mkdir -p $(SRC_DIR) $(TB_DIR)
+	python3 ldn2v.py --direct --k=$(K) --table=$(TABLE) --name=$(NAME) -o $(SRC_DIR)
+	python3 testbench_generator.py --direct --k=$(K) --table=$(TABLE) --name=$(NAME) -o $(TB_DIR)
+	@echo "Generated: $(SRC_DIR)/mpdt_$(NAME).v"
+	@echo "Testbench: $(TB_DIR)/mpdt_$(NAME)_tb.v"
+
+# Generate from snapshot file
+generate-snapshot:
+	@mkdir -p $(SRC_DIR) $(TB_DIR)
+ifdef SNAPSHOT
+	python3 ldn2v.py $(SNAPSHOT) $(SRC_DIR)
+	python3 testbench_generator.py $(SNAPSHOT) $(TB_DIR) --batch
+else
+	@echo "ERROR: SNAPSHOT variable required"
+	@exit 1
+endif
+
+# Simulate with Icarus Verilog
+simulate: generate
+	@mkdir -p $(OUTPUT_DIR)
+	iverilog -o $(OUTPUT_DIR)/sim $(SRC_DIR)/mpdt_$(NAME).v $(TB_DIR)/mpdt_$(NAME)_tb.v
+	cd $(OUTPUT_DIR) && vvp sim
+	@echo "Simulation complete. Waveform: $(OUTPUT_DIR)/mpdt_$(NAME)_tb.vcd"
+
+# Synthesize with Vivado
+synth: generate-snapshot
+	@mkdir -p $(OUTPUT_DIR)
+	vivado -mode batch -source synth_xilinx.tcl
+	@echo "Synthesis complete. Bitstream: $(OUTPUT_DIR)/mpdt_neuron.bit"
+
+# Lint Verilog
+lint:
+	verilator --lint-only $(SRC_DIR)/*.v 2>&1 | head -50
+
+# Clean build artifacts
+clean:
+	rm -rf $(SRC_DIR) $(TB_DIR) $(OUTPUT_DIR) $(SYNTH_DIR)
+	rm -f *.vcd *.vvp
+
+# Help
+help:
+	@echo "Matrix FPGA Build System"
+	@echo ""
+	@echo "Usage:"
+	@echo "  make generate K=4 TABLE=0x6A9C NAME=xor4"
+	@echo "  make simulate K=4 TABLE=0x6A9C NAME=xor4"
+	@echo "  make generate-snapshot SNAPSHOT=snapshot.ldn"
+	@echo "  make synth SNAPSHOT=snapshot.ldn"
+	@echo "  make lint"
+	@echo "  make clean"

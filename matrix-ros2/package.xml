@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>matrix_ros2</name>
+  <version>3.58.0</version>
+  <description>ROS2 bridge for M.A.T.R.I.X. cognitive architecture</description>
+  <maintainer email="alexander@narbaev.io">Alexander Narbaev</maintainer>
+  <license>AGPL-3.0</license>
+
+  <exec_depend>rclpy</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+  <exec_depend>sensor_msgs</exec_depend>
+  <exec_depend>geometry_msgs</exec_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>

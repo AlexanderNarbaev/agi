@@ -1,0 +1,172 @@
+services:
+  # ─── PostgreSQL (Event Journal persistence) ───
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: matrix
+      POSTGRES_USER: matrix
+      POSTGRES_PASSWORD: matrix
+    ports:
+      - "5433:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U matrix -d matrix"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  # ─── Redis (cache + pub/sub) ───
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  # ─── Kafka (KRaft mode, single node) ───
+  kafka:
+    image: apache/kafka:3.7.0
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_LOG_DIRS: /tmp/kraft-combined-logs
+    user: root
+    volumes:
+      - kafkadata:/tmp/kraft-combined-logs
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/kafka/bin/kafka-broker-api-versions.sh --bootstrap-server localhost:9092 > /dev/null 2>&1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  # ─── MATRIX Core (full build inside container) ───
+  matrix-core:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    ports:
+      - "8080:8080"
+      - "9091:9091"
+    environment:
+      QUARKUS_PROFILE: prod
+      QUARKUS_HTTP_PORT: 8080
+      # PostgreSQL
+      QUARKUS_DATASOURCE_JDBC_URL: jdbc:postgresql://postgres:5432/matrix
+      QUARKUS_DATASOURCE_USERNAME: matrix
+      QUARKUS_DATASOURCE_PASSWORD: matrix
+      # Redis
+      QUARKUS_REDIS_HOSTS: redis:6379
+      # Kafka
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      # Micrometer / Prometheus
+      QUARKUS_MICROMETER_EXPORT_PROMETHEUS_HOST: 0.0.0.0
+      QUARKUS_MICROMETER_EXPORT_PROMETHEUS_PORT: 9091
+      # OpenTelemetry
+      QUARKUS_OPENTELEMETRY_TRACER_EXPORTER_OTLP_ENDPOINT: http://jaeger:4317
+      # Model paths (inside container)
+      MATRIX_MODELS_PRETRAINED_DIR: /app/models/pretrained
+    volumes:
+      - ./models/pretrained:/app/models/pretrained:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://localhost:8080/q/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  # ─── MATRIX Core Native (GraalVM native binary) ───
+  matrix-core-native:
+    build:
+      context: .
+      dockerfile: Dockerfile.native
+    ports:
+      - "8081:8080"
+      - "9092:9091"
+    environment:
+      QUARKUS_PROFILE: prod
+      QUARKUS_HTTP_PORT: 8080
+      # PostgreSQL
+      QUARKUS_DATASOURCE_JDBC_URL: jdbc:postgresql://postgres:5432/matrix
+      QUARKUS_DATASOURCE_USERNAME: matrix
+      QUARKUS_DATASOURCE_PASSWORD: matrix
+      # Redis
+      QUARKUS_REDIS_HOSTS: redis:6379
+      # Kafka
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      # Micrometer / Prometheus
+      QUARKUS_MICROMETER_EXPORT_PROMETHEUS_HOST: 0.0.0.0
+      QUARKUS_MICROMETER_EXPORT_PROMETHEUS_PORT: 9091
+      # OpenTelemetry
+      QUARKUS_OPENTELEMETRY_TRACER_EXPORTER_OTLP_ENDPOINT: http://jaeger:4317
+      # Model paths (inside container)
+      MATRIX_MODELS_PRETRAINED_DIR: /app/models/pretrained
+    volumes:
+      - ./models/pretrained:/app/models/pretrained:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://localhost:8080/q/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
+    profiles:
+      - native
+
+  # ─── Paper Server (Minecraft 1.20.4) ───
+  paper-server:
+    image: itzg/minecraft-server:java21
+    ports:
+      - "25565:25565"
+    environment:
+      EULA: "TRUE"
+      TYPE: PAPER
+      VERSION: "1.20.4"
+      MEMORY: 1G
+      ENABLE_RCON: "false"
+    volumes:
+      - mcdata:/data
+    depends_on:
+      matrix-core:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "mc-health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+volumes:
+  pgdata:
+  redisdata:
+  kafkadata:
+  mcdata:

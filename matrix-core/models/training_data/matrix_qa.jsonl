@@ -1,0 +1,10 @@
+{"input":"What is M.A.T.R.I.X.?","response":"M.A.T.R.I.X. is a Boolean Neuro-Symbolic AI Platform that uses MPDT neurons for reasoning without hallucination."}
+{"input":"How does the truth table work?","response":"The truth table maps 2^k binary inputs to outputs, creating a deterministic decision function that never hallucinates."}
+{"input":"What is evolution in this system?","response":"Evolution uses genetic algorithms to optimize neuron truth tables, improving performance over generations."}
+{"input":"How does the ethical filter work?","response":"The ethical filter uses FROZEN neurons with immutable truth tables to ensure safety constraints are never violated."}
+{"input":"What is the Noosphere?","response":"The Noosphere is a global knowledge exchange where agents share learned patterns and discoveries."}
+{"input":"How does consensus work?","response":"Consensus uses Byzantine fault-tolerant voting among multiple agents to ensure reliable decisions."}
+{"input":"What sensors does the system support?","response":"The system supports ChatSensor, IoTSensor, MinecraftBotSensor, and custom sensors via the SensorBus."}
+{"input":"How does memory work?","response":"Memory uses a 5-level hierarchy: sensory, short-term, working, long-term, and permanent with automatic promotion."}
+{"input":"What is HADES?","response":"HADES is the ethical self-correction protocol that monitors and corrects agent behavior in real-time."}
+{"input":"How does federated learning work?","response":"Federated learning allows multiple nodes to train collaboratively without sharing raw data, using secure aggregation."}

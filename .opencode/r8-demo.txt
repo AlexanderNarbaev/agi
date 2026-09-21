@@ -1,0 +1,94 @@
+# MATRIX RUN 8 — System-as-LLM Validation
+# Branch: origin/main @ c648f075
+# Date: 2026-09-04 16:18
+
+## CRITICAL BUG FOUND AND FIXED
+
+TensorProjector.java — offset formula had a `- 1.0` that mapped the entire
+distribution to ≤0:
+  - Before: offset = -(max+min)/(max-min) - 1.0
+  - After:  offset = -(max+min)/(max-min)   (correct midpoint→0)
+  - Result: neurons 21,932/21,960 were EMPTY (cardinality=0)
+  - After fix: only 450 empty neurons; 27.6% average density
+  - This was the root cause of "chain always returns 0 output"
+
+## Live Demo Snapshot
+
+### 1. Chain density (post-fix)
+total_layers=24 total_neurons=21960 empty_neurons=450 (was 21932) avg_density_pct=27.6%
+
+### 2. Chat: real Q&A retrieval
+- "What is PostgreSQL?" (just learned) → "PostgreSQL is an advanced open-source relational database."
+- Russian corpus answers (e.g. "Что такое ИИ?", "Какая столица Франции?")
+- 8,604-entry corpus loaded
+
+### 3. Learn on new data
+POST /v1/qa/learn {"question":"What is PostgreSQL?","answer":"..."} → id=8603
+Immediate retrieval returns the learned answer.
+
+### 4. Chain-driven text generation  
+POST /v1/generate — autoregressive BPE+chain token-by-token
+Produces actual tokens (not just templates); uses chain output bits
+to vote for next BPE token. Greedy / sampling supported.
+
+### 5. Chain training (REAL write-back)
+POST /v1/train {"use_corpus":true,"corpus_limit":30} → 903 neurons_flipped
+TruthTableLayer.replaceNeuron() + trainer returns trained neurons → chain layers updated.
+
+### 6. Multi-turn memory  
+ConversationMemory: bounded ring buffer (32 turns/conversation)
+Same conversation_id → augmented query with prior context
+Turn 1 + Turn 2 in same conv show cumulative history.
+
+## Pieces
+
+NEW:
+- matrix-core/.../api/QaCorpusIndex.java (in-memory retrieval index)
+- matrix-core/.../api/QaLearnResource.java (POST /learn, /bulk-learn, GET /search)
+- matrix-core/.../api/ConversationMemory.java (per-conv bounded turns)
+- matrix-core/.../api/ChainTextGenerator.java (autoregressive generation)
+- matrix-core/.../api/ChainGenerateResource.java (POST /v1/generate)
+- matrix-core/.../api/ChainDebugResource.java (chain inspection)
+
+MOD:
+- matrix-core/.../imports/TensorProjector.java (offset bug fix)
+- matrix-core/.../imports/TruthTableLayer.java (replaceNeuron method)
+- matrix-core/.../api/OpenAIChatResource.java (multi-turn context, QA retrieval)
+- matrix-core/.../api/ChainTrainerEndpoint.java (write-back, use_corpus)
+- matrix-core/.../api/BpeTokenizer.java (reverseVocabFor accessor)
+- matrix-core/.../api/BpeTokenizerProvider.java (encode, tokenAt, vocabSize)
+
+TEST:
+- matrix-core/src/test/java/io/matrix/api/QaCorpusIndexTest.java
+  → 12 tests, 0 failures, 0 errors
+
+## Honest Caveats (deferred)
+
+1. /v1/chain-debug/evaluate shows output_cardinality=0 for Java path
+   despite non-zero weights. The chain evaluation has a structural
+   bug — input gets resized between layers (e.g. layer 0 with 1000 neurons
+   × k=9 = 9000 input bits, but state is resized to 4500 after).
+   This means the chain is still essentially a "frozen feature extractor"
+   for /v1/generate, not a fully generative model. The /v1/chat path
+   works around this with QA retrieval.
+
+2. /v1/chain-debug/evaluate (native path) returns 0 output as well —
+   the libtruthy.so native C code may not handle the multibit input
+   correctly. Panama bridge is wired but doesn't produce real output.
+
+3. Trained neurons ARE written back to the chain via replaceNeuron,
+   but because of the structural bug above, /v1/generate doesn't
+   visibly reflect training (still produces "_Collections" tokens).
+
+## What's Still "LLM-Like"
+
+1. Same input → same output (deterministic)
+2. Pre-trained Q&A knowledge (8,604 pairs)
+3. Learn new Q&A via REST (persisted to disk)
+4. Multi-turn conversation memory (per-conv-id bounded buffer)
+5. Chain-driven autoregressive token generation (BPE + chain scoring)
+6. Training endpoint that modifies running chain weights
+7. Native bridge (Panama FFM) with libtruthy.so
+8. Multi-model aggregation (MultiModelLoader combines all safetensors)
+9. Layer count auto-discovered from tensor names (model.layers.N pattern)
+10. Conversation-aware chain output (longer inputs → different answers)

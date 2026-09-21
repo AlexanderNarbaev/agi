@@ -1,0 +1,14 @@
+# MATRIX Spigot Plugin Configuration
+# Controls the connection to matrix-core and bot behaviour.
+
+# URL of the matrix-core REST + WebSocket server
+matrix-core-url: http://localhost:9091
+
+# Agent identifier sent to matrix-core
+agent-id: MatrixBot1
+
+# Tick interval in server ticks (20 ticks = 1 second)
+tick-interval: 20
+
+# Automatically connect to matrix-core on plugin startup
+auto-connect: true

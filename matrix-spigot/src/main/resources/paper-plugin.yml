@@ -1,0 +1,18 @@
+name: MatrixSpigot
+version: '2.2.0'
+main: io.matrix.spigot.MatrixPlugin
+api-version: '1.20'
+description: MATRIX neural bot controlled via matrix-core WebSocket/REST API
+author: MATRIX Project
+bootstrapper: io.matrix.spigot.MatrixPlugin
+loader: io.matrix.spigot.MatrixPlugin
+
+dependencies:
+  server:
+    matrix-core:
+      required: false
+
+commands:
+  matrix:
+    description: MATRIX neural bot control
+    usage: /matrix <connect|start|stop|status|train|save>

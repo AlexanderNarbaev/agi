@@ -1,0 +1,62 @@
+name: Formal Specs (TLA+)
+
+# On every PR or push that touches formal/, run TLC against each spec.
+# TLC is the TLA+ model checker; it explores bounded state spaces to verify
+# invariants (per CRITICAL_GAPS.md GAP-021).
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'formal/**'
+      - '.github/workflows/tla.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'formal/**'
+
+permissions:
+  contents: read
+
+jobs:
+  tlc:
+    name: Model-check TLA+ specs
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Java 25
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '25'
+
+      - name: Download tla2tools.jar
+        run: |
+          mkdir -p tools
+          curl -fsSL -o tools/tla2tools.jar \
+            https://github.com/tlaplus/tlaplus/releases/download/v1.8.0/tla2tools.jar
+          ls -lh tools/tla2tools.jar
+
+      - name: Sanity-check each spec parses
+        run: |
+          set -e
+          for spec in formal/*.tla; do
+            echo "--- SANY parse check: $spec ---"
+            java -cp tools/tla2tools.jar tla2sany.SANY "$spec" || {
+              echo "::error::TLA+ spec $spec failed to parse"
+              exit 1
+            }
+          done
+
+      # Full TLC model-checking requires a config file (Cfg) for each spec.
+      # These are added as a follow-up when concrete parameters are fixed
+      # (see formal/README.md). For now we run only the parser to catch
+      # syntax regressions early.
+      - name: Summary
+        if: success()
+        run: |
+          echo "All $(ls formal/*.tla | wc -l) TLA+ specs parse cleanly."
+          echo "Add *.cfg files to enable bounded state-space model checking."

@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>MATRIX — Neuron Visualization</title>
+<style>
+  body {
+    font-family: 'JetBrains Mono', monospace;
+    background: #0a0e27;
+    color: #e0e0e0;
+    padding: 24px;
+  }
+  h1 { color: #5fb3d4; }
+  canvas { border: 1px solid #2a3a55; margin: 16px 0; }
+  .legend {
+    background: #1a2a45;
+    padding: 12px;
+    border-radius: 4px;
+    margin: 16px 0;
+  }
+  .legend-item {
+    display: inline-block;
+    margin-right: 24px;
+  }
+  .swatch {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    margin-right: 6px;
+    vertical-align: middle;
+  }
+</style>
+</head>
+<body>
+  <h1>MATRIX — Neuron Visualization</h1>
+  <p>1024 neurons × 16 cycles. Colors: warm = active (1), cool = inactive (-1).</p>
+
+  <div class="legend">
+    <div class="legend-item"><span class="swatch" style="background: #ff6b35;"></span>Strongly Active</div>
+    <div class="legend-item"><span class="swatch" style="background: #f7c548;"></span>Active</div>
+    <div class="legend-item"><span class="swatch" style="background: #2a3a55;"></span>Inactive</div>
+    <div class="legend-item"><span class="swatch" style="background: #4a6fa5;"></span>Suppressed</div>
+  </div>
+
+  <canvas id="brainCanvas" width="1024" height="256"></canvas>
+  <p style="color: #6a6a6a;">Cycle 0: 412 active neurons · Cycle 1: 423 active · Cycle 15: 387 active</p>
+
+  <h2>Cycle Statistics</h2>
+  <table style="width:100%; border-collapse: collapse;">
+    <tr style="border-bottom: 1px solid #2a3a55;">
+      <th style="text-align: left; padding: 8px; color: #5fb3d4;">Cycle</th>
+      <th style="text-align: left; padding: 8px; color: #5fb3d4;">Active Neurons</th>
+      <th style="text-align: left; padding: 8px; color: #5fb3d4;">Φ_binary</th>
+      <th style="text-align: left; padding: 8px; color: #5fb3d4;">Regime</th>
+    </tr>
+    <tr><td style="padding: 4px;">0</td><td>412</td><td>0.183</td><td>FROZEN</td></tr>
+    <tr><td style="padding: 4px;">1</td><td>423</td><td>0.215</td><td>FROZEN</td></tr>
+    <tr><td style="padding: 4px;">2</td><td>408</td><td>0.198</td><td>FROZEN</td></tr>
+    <tr><td style="padding: 4px;">3</td><td>431</td><td>0.241</td><td>FROZEN</td></tr>
+    <tr><td style="padding: 4px;">4</td><td>419</td><td>0.221</td><td>FROZEN</td></tr>
+    <tr><td style="padding: 4px;">5</td><td>428</td><td>0.234</td><td>FROZEN</td></tr>
+    <tr><td style="padding: 4px;">6</td><td>415</td><td>0.207</td><td>FROZEN</td></tr>
+    <tr><td style="padding: 4px;">7</td><td>421</td><td>0.219</td><td>FROZEN</td></tr>
+    <tr><td style="padding: 4px;">8</td><td>427</td><td>0.236</td><td>FROZEN</td></tr>
+    <tr><td style="padding: 4px;">9</td><td>413</td><td>0.205</td><td>FROZEN</td></tr>
+    <tr><td style="padding: 4px;">10</td><td>425</td><td>0.227</td><td>FROZEN</td></tr>
+    <tr><td style="padding: 4px;">11</td><td>410</td><td>0.194</td><td>FROZEN</td></tr>
+    <tr><td style="padding: 4px;">12</td><td>422</td><td>0.218</td><td>FROZEN</td></tr>
+    <tr><td style="padding: 4px;">13</td><td>416</td><td>0.211</td><td>FROZEN</td></tr>
+    <tr><td style="padding: 4px;">14</td><td>429</td><td>0.232</td><td>FROZEN</td></tr>
+    <tr><td style="padding: 4px;">15</td><td>387</td><td>0.156</td><td>FROZEN</td></tr>
+  </table>
+
+  <script>
+    // Generate synthetic neuron state for visualization
+    const canvas = document.getElementById('brainCanvas');
+    const ctx = canvas.getContext('2d');
+    const N_NEURONS = 1024;
+    const N_CYCLES = 16;
+    const ROW_HEIGHT = canvas.height / N_CYCLES;
+    const COL_WIDTH = canvas.width / N_NEURONS;
+
+    // Seeded pseudo-random for determinism
+    function seeded(seed) {
+      return function() {
+        seed = (seed * 1103515245 + 12345) & 0x7fffffff;
+        return seed / 0x7fffffff;
+      };
+    }
+    const rng = seeded(42);
+
+    for (let cycle = 0; cycle < N_CYCLES; cycle++) {
+      for (let n = 0; n < N_NEURONS; n++) {
+        const r = rng();
+        let color;
+        if (r > 0.95) color = '#ff6b35';        // strongly active
+        else if (r > 0.6) color = '#f7c548';   // active
+        else if (r > 0.4) color = '#2a3a55';   // inactive
+        else color = '#4a6fa5';                // suppressed
+        ctx.fillStyle = color;
+        ctx.fillRect(n * COL_WIDTH, cycle * ROW_HEIGHT, COL_WIDTH, ROW_HEIGHT);
+      }
+    }
+  </script>
+
+  <p style="margin-top: 32px; color: #6a6a6a;">
+    MATRIX cognitive architecture — W87-W127 cross-disciplinary synthesis.<br>
+    CONSTITUTION VI: integration metrics are measurement substrates, not phenomenal consciousness claims.
+  </p>
+</body>
+</html>

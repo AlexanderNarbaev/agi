@@ -1,0 +1,121 @@
+services:
+  # ─── PostgreSQL (Event Journal persistence) ───
+  postgres:
+    image: postgres:17-alpine
+    ports:
+      - "${PG_PORT}:5432"
+    environment:
+      - POSTGRES_DB=matrix
+      - POSTGRES_USER=matrix
+      - POSTGRES_PASSWORD=matrix
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U matrix -d matrix"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ─── Kafka (Redpanda — single-node) ───
+  kafka:
+    image: docker.redpanda.com/redpandadata/redpanda:v24.3.10
+    command:
+      - redpanda start
+      - --smp 1
+      - --reserve-memory 0M
+      - --overprovisioned
+      - --kafka-addr PLAINTEXT://0.0.0.0:9092
+      - --advertise-kafka-addr PLAINTEXT://kafka:9092
+      - --pandaproxy-addr 0.0.0.0:8082
+    ports:
+      - "${KAFKA_PORT}:9092"
+      - "8082:8082"
+
+  # ─── Redis (cache + pub/sub) ───
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "${REDIS_PORT}:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    volumes:
+      - redis_data:/data
+
+  # ─── MinIO S3-compatible storage ───
+  minio:
+    image: minio/minio:latest
+    command: server /data --console-address ":9001"
+    ports:
+      - "${MINIO_PORT}:9000"
+      - "9001:9001"
+    environment:
+      - MINIO_ROOT_USER=minioadmin
+      - MINIO_ROOT_PASSWORD=minioadmin
+    volumes:
+      - minio_data:/data
+
+  # ─── Observability stack ───
+  prometheus:
+    image: prom/prometheus:v3.7.0
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    ports:
+      - "${PROM_PORT}:9090"
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+
+  jaeger:
+    image: jaegertracing/all-in-one:1.67.0
+    ports:
+      - "${JAEGER_PORT}:16686"
+      - "${OTLP_PORT}:4317"
+    environment:
+      - COLLECTOR_OTLP_ENABLED=true
+
+  grafana:
+    image: grafana/grafana:11.6.0
+    ports:
+      - "${GRAFANA_PORT}:3000"
+    volumes:
+      - ./grafana/datasources:/etc/grafana/provisioning/datasources
+      - ./grafana/dashboards:/etc/grafana/provisioning/dashboards
+      - grafana_data:/var/lib/grafana
+    environment:
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
+    depends_on:
+      - prometheus
+      - loki
+
+  # ─── Loki (log aggregation) ───
+  loki:
+    image: grafana/loki:2.9.10
+    ports:
+      - "3100:3100"
+    command: -config.file=/etc/loki/local-config.yaml
+    volumes:
+      - ./loki/loki-config.yaml:/etc/loki/local-config.yaml
+
+  # ─── Promtail (log shipper) ───
+  promtail:
+    image: grafana/promtail:2.9.10
+    volumes:
+      - ./promtail/promtail-config.yaml:/etc/promtail/config.yml
+      - ../logs:/var/log/matrix:ro
+    command: -config.file=/etc/promtail/config.yml
+    depends_on:
+      - loki
+
+volumes:
+  postgres_data:
+  redis_data:
+  prometheus_data:
+  grafana_data:
+  minio_data:

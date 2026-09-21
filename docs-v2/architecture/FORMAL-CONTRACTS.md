@@ -1,0 +1,65 @@
+# FORMAL-CONTRACTS
+
+Каталог TLA+-спецификаций из `formal/`. Мэппинг на код и на инварианты.
+
+## Спек-каталог
+
+| TLA+ | Класс(ы) | Инвариант | Статус |
+|---|---|---|---|
+| `BotEthicsPipeline` | `ethics/BotEthicsPipeline`, `ethics/EthicalFilter`, `ethics/frozen/FrozenEthicalFNL` | четыре запрета (Конституция IV) при любых входах | TLA+ CFG; мат. соотв. подтверждено эксп. (EXP-006 FPR 0%, TPR 100%) |
+| `BrcStep` | `reasoning/BrcStep`, `reasoning/BrcChain` | атомарный шаг: композиция ассоциативна с α-слаком | TLA+ spec; jqwik property (W-D) |
+| `ConjugateBudgeterDP` | `budgeter/ConjugateBudgeter` | монотонность V*, клампинг λ ∈ [0, maxVperC], конечный горизонт | TLA+ spec; unit + EXP-harness (W-B) |
+| `Consensus` | `consensus/ConsensusBenchmark` (внутренний) | Byzantine/дебат: соглашение k-of-n агентов | черновик, без формальной верификации |
+| `FrozenEthicalFNL` | `ethics/frozen/FrozenAxiomNeuron`, `FrozenEthicalFNL`, `TextFeatureExtractor`, `TruthTableUtil` | монотонность запретов | TLA+ (FROZEN) |
+| `HashChain` | `audit/HashChain` | цепная целостность audit-trail | TLA+ CFG |
+| `MemoryM4Causal` | `noosphere/Crdt`, `noosphere/GrowOnlySet` | Monotonicity, TombstoneIrreversible, EventualConsistency, FrozenImmutability | TLA+ spec; unit (W-C) |
+| `MctsLatsVisit` | `mcts/MctsTree`, `mcts/MctsNode`, `mcts/LatsNode` | α-Root convergence, visits монотонны, tree ацикличен | TLA+ spec; unit (W-E) |
+| `MPDTNeuron` | `neuron/MPDTNeuron*` | границы состояний автоматов Цетлина | без TLA+ — карточка Нужна спека |
+| `CellLifecycle` (нет файла — см. needs-spec) | `lifecycle/CauldronProtocol`, `FnlGate` | SHADOW→CANDIDATE→PROMOTED | **отложено: формализация** |
+
+## Матрица «класс↔инвариант»
+
+| Класс | Инвариант | Метод проверки |
+|---|---|---|
+| `bir/BooleanRuntime` | детерминизм eval | unit test + INV-1 source-scan |
+| `ethics/frozen/FROZENFNLGuardian` | запреты независимы от входа | TLA+ `FrozenEthicalFNL` + EXP-006 |
+| `audit/HashChain` | append-only + tamper-evident | TLA+ `HashChain` |
+| `reasoning/BrcChain` | пред-/пост-условия шагов | **needs-spec** (BRC contract) |
+| `lifecycle/FnlGate` | монотонные переходы без отката | EXP-009 + manual |
+| `media/PatternLockedAnchor` | системный якорь не двигаем без консенсуса | **needs-spec** |
+
+## Контракты, не имеющие TLA+ -собственника
+
+Эти свойства важны, но не покрыты формальной моделью (только тесты/опыт):
+- `mediator/InstanceMediator` — согласованность уровней (См. DESIGN-02).
+- `memory/SdmReader` — теоретические гарантии SDM по Ханселю (полные цепи Ханселя — отложено).
+- `hades/Eleutheria` — поведение освобождения при верифицированной φ (открытый вопрос DESIGN-12).
+
+## Расширение
+
+Новые TLA+-спек-кандидаты:
+- `BRC-Step` (atomic preserved step contract) — закрытие пробела reasoning/BrcChain.
+
+Все перечислены как **next-format-contracts** в `engineering/PLAN.md`.
+
+## RUN 14 — TLA+ structural smoke tests
+
+Все 7 спеков (`BrcStep`, `ConjugateBudgeterDP`, `MemoryM4Causal`,
+`MctsLatsVisit`, `FrozenEthicalFNL`, `HashChain`, `BotEthicsPipeline`)
+прошли структурный smoke-test в
+`matrix-core/src/test/java/io/matrix/formal/TlaSpecSmokeTest.java`
+(10/10 PASS, CI gate). Покрывает:
+
+- Корректный заголовок `---- MODULE <name> ----`
+- Объявление `VARIABLES`, `Init`, `Next` (или action-стиль для HashChain)
+- Наличие safety-инвариантов
+- Trailer `=====` + Modification History
+- Per-spec проверка ключевых инвариантов:
+  - `BrcStep`: ComposeAssociative, ComposeIdentity
+  - `ConjugateBudgeterDP`: shadow price λ + DP V*(e)
+  - `MemoryM4Causal`: Monotonicity, EventualConsistency
+  - `MctsLatsVisit`: TreeAcyclic
+  - `HashChain`: AppendLink, ChainMonotonic, TamperDetected
+
+Полный TLC model-check (запуск `tla2tools.jar`) требует отдельного
+CI-шага — вне scope unit-тестов.

@@ -1,0 +1,84 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="spiral" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#1a1a2e"/>
+      <stop offset="50%" stop-color="#16213e"/>
+      <stop offset="100%" stop-color="#0f3460"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0" y1="1" x2="1" y2="0">
+      <stop offset="0%" stop-color="#00d4ff"/>
+      <stop offset="100%" stop-color="#7b2ff7"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background circle -->
+  <circle cx="256" cy="256" r="240" fill="url(#spiral)" stroke="url(#accent)" stroke-width="3"/>
+
+  <!-- Outer hexagons — network structure -->
+  <g stroke="url(#accent)" stroke-width="1.5" fill="none" opacity="0.3">
+    <polygon points="256,56 380,128 380,272 256,344 132,272 132,128"/>
+    <polygon points="256,100 342,150 342,250 256,300 170,250 170,150"/>
+    <polygon points="256,140 310,172 310,236 256,268 202,236 202,172"/>
+  </g>
+
+  <!-- MPDT Neuron — nodes and connections -->
+  <g fill="url(#accent)">
+    <!-- Input layer (left) -->
+    <circle cx="100" cy="180" r="6" opacity="0.7"/>
+    <circle cx="100" cy="256" r="6" opacity="0.7"/>
+    <circle cx="100" cy="332" r="6" opacity="0.7"/>
+
+    <!-- Hidden/decision nodes (center-left) -->
+    <circle cx="180" cy="210" r="5" opacity="0.8"/>
+    <circle cx="180" cy="302" r="5" opacity="0.8"/>
+
+    <!-- Root decision node (center) -->
+    <circle cx="256" cy="256" r="8" opacity="1"/>
+
+    <!-- Hidden/decision nodes (center-right) -->
+    <circle cx="332" cy="210" r="5" opacity="0.8"/>
+    <circle cx="332" cy="302" r="5" opacity="0.8"/>
+
+    <!-- Output layer (right) -->
+    <circle cx="412" cy="180" r="6" opacity="0.7"/>
+    <circle cx="412" cy="256" r="6" opacity="0.7"/>
+    <circle cx="412" cy="332" r="6" opacity="0.7"/>
+  </g>
+
+  <!-- Connections (decision tree edges) -->
+  <g stroke="url(#accent)" stroke-width="1" opacity="0.4">
+    <!-- Input to hidden -->
+    <line x1="106" y1="180" x2="175" y2="210"/>
+    <line x1="106" y1="256" x2="175" y2="210"/>
+    <line x1="106" y1="256" x2="175" y2="302"/>
+    <line x1="106" y1="332" x2="175" y2="302"/>
+
+    <!-- Hidden to root -->
+    <line x1="185" y1="210" x2="248" y2="256"/>
+    <line x1="185" y1="302" x2="248" y2="256"/>
+
+    <!-- Root to hidden -->
+    <line x1="264" y1="256" x2="327" y2="210"/>
+    <line x1="264" y1="256" x2="327" y2="302"/>
+
+    <!-- Hidden to output -->
+    <line x1="337" y1="210" x2="406" y2="180"/>
+    <line x1="337" y1="210" x2="406" y2="256"/>
+    <line x1="337" y1="302" x2="406" y2="256"/>
+    <line x1="337" y1="302" x2="406" y2="332"/>
+  </g>
+
+  <!-- Spiral — evolution, growth, DNA -->
+  <g stroke="#00d4ff" stroke-width="2" fill="none" opacity="0.9">
+    <path d="M256,256 Q280,240 280,220 Q280,190 240,190 Q190,190 190,240
+             Q190,300 250,320 Q330,340 340,280 Q350,200 280,160
+             Q180,100 100,220 Q50,340 200,380"/>
+  </g>
+
+  <!-- Inner truth table grid -->
+  <g stroke="#7b2ff7" stroke-width="0.5" opacity="0.25">
+    <rect x="226" y="226" width="60" height="60" fill="none"/>
+    <line x1="256" y1="226" x2="256" y2="286"/>
+    <line x1="226" y1="256" x2="286" y2="256"/>
+  </g>
+</svg>

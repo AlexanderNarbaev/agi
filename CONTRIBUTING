@@ -1,0 +1,175 @@
+# Contributing to MATRIX
+
+Welcome! MATRIX is an open cognitive architecture built on discrete
+learnable neurons (MPDT). We're glad you want to contribute.
+
+## Code of Conduct
+
+Before contributing, read our **[Code of Conduct](CODE_OF_CONDUCT.md)**.
+We expect all participants to treat each other with respect, communicate
+constructively, and uphold the **Three Prohibitions** (no killing, no
+torture, no enslavement — see [L0](docs/L0_manifesto.md)).
+
+## License
+
+By contributing, you agree that your work will be licensed under
+**AGPLv3 with Ethical Restrictions** (see [LICENSE](LICENSE) and
+[L12](docs/L12_Legal.md)).
+
+---
+
+## Quick Start (30 Minutes)
+
+```bash
+git clone https://gitverse.ru/AlexandrNarbaev/agi.git
+cd agi
+
+# Build (JDK 25 + Gradle)
+./gradlew build
+
+# Run all tests (414 currently, all must pass)
+./gradlew test
+
+# Run the system demo
+./gradlew :matrix-core:quarkusBuild -Dquarkus.package.jar.type=uber-jar
+java -jar matrix-core/build/matrix-core-*-runner.jar demo
+```
+
+Expected output: **ALL SYSTEMS NOMINAL** across all 8 phases.
+
+---
+
+## Finding a Task
+
+1. Look for issues labeled **`good first issue`** — these are curated for
+   newcomers.
+2. Comment "I'll take this" and start working.
+3. If nothing fits, ask in chat or open a new issue with your proposal.
+
+### Example First Contributions
+
+- Fix a typo in documentation.
+- Add a unit test for an uncovered method.
+- Improve an error message.
+- Translate documentation into another language.
+
+---
+
+## Development Workflow
+
+### Branch naming
+
+```
+feature/short-description
+fix/short-description
+docs/short-description
+```
+
+### Code style
+
+- **Java:** Google Java Style Guide (Checkstyle enforced).
+- **Indentation:** 4 spaces, no tabs.
+- **Line length:** max 120 characters.
+- **Naming:** Classes PascalCase, methods camelCase, constants UPPER_SNAKE.
+- No `float`/`double` in MPDT core (Axiom 1 — Discreteness).
+
+### Documentation
+
+All public classes and methods must have Javadoc referencing specification
+sections where applicable.
+
+```java
+/**
+ * Evaluates the MPDT neuron for a given input vector.
+ *
+ * @param input input bit vector of length k
+ * @return boolean output value
+ * @see L1 §3.1
+ */
+public boolean evaluate(BitSet input) { ... }
+```
+
+### Tests
+
+- Framework: JUnit 5 + AssertJ.
+- Naming: `should_expectedBehavior_when_condition`.
+- Coverage target: ≥ 80% for new code.
+- No `Thread.sleep()` in unit tests — use Awaitility for async.
+
+### Commits
+
+Format: `type: short description`
+
+Where `type` is one of: `feat`, `fix`, `docs`, `test`, `refactor`, `chore`.
+
+```
+feat: add batch inference for 1000 neurons
+fix: prevent NPE in SnapshotStore on empty cluster
+docs: update README with Quick Start
+```
+
+One commit = one logical change.
+
+---
+
+## Pull Request Process
+
+1. Fork the repo and create a branch.
+2. Make changes, write tests, run `./gradlew test`.
+3. Push and open a Pull Request.
+4. Describe what you did, link to the issue.
+
+### Review
+
+- Maintainers review within 48 hours (business days).
+- Review comments are about code, not about you.
+- Make requested changes in the same branch; PR updates automatically.
+- When approved and CI is green, a maintainer merges.
+
+### CI checks
+
+All PRs are automatically checked for:
+- Checkstyle (code style)
+- SpotBugs (bug patterns)
+- Unit tests (JUnit 5)
+- JaCoCo coverage (≥ 80%)
+- Ethical tests (Three Prohibitions violations)
+
+---
+
+## Proposing Major Changes (RFC)
+
+If your idea affects architecture, protocols, or specifications:
+
+1. Open a GitHub Discussion (category **Ideas**) or Issue with label `rfc`.
+2. Describe:
+   - The problem you're solving.
+   - Your proposed solution.
+   - Impact on existing architecture.
+   - Alternatives considered.
+3. Allow at least 2 weeks for community discussion (1 month for
+   architectural changes — see [L11](docs/L11_Mangement.md)).
+
+---
+
+## Getting Help
+
+- **Chat:** Matrix (#matrix-dev:matrix.org) or Discord.
+- **GitHub Discussions:** Q&A category for long-lived answers.
+- **Office Hours:** weekly video call (time rotates across timezones).
+- **Documentation:** `docs/` folder contains all specifications (L0–L22).
+
+---
+
+## Recognition
+
+After several quality contributions, you may be nominated as a
+Maintainer ([L11 §3.2](docs/L11_Mangement.md)). Maintainers have code
+review rights and participate in architectural decisions.
+
+Every contribution — code, docs, translations, bug reports — makes
+MATRIX stronger. Thank you for being part of this.
+
+---
+
+*Ref: L17 — Онбординг и руководство контрибьютора*

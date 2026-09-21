@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MATRIX Research — Hypotheses, Papers, Experiments</title>
+    <meta name="description" content="MATRIX research: 34 preregistered hypotheses, scientific papers, experiment protocols, methodology. JMH benchmarks, HuggingFace training, formal verification.">
+    <style>
+        *,*::before,*::after { box-sizing: border-box; }
+        :root {
+            --bg: #ffffff; --bg-subtle: #f7f7f8; --bg-code: #f0f0f2;
+            --fg: #1a1a1a; --fg-muted: #5c5c70; --fg-soft: #8a8a99;
+            --border: #e5e5ea; --accent: #d97706; --accent-bg: #fef3c7;
+            --link: #2563eb; --green: #059669; --orange: #d97706;
+        }
+        html { scroll-behavior: smooth; }
+        body { margin: 0; font-family: -apple-system, "SF Pro Text", BlinkMacSystemFont, "Segoe UI", "Inter", system-ui, sans-serif; font-size: 16px; line-height: 1.7; color: var(--fg); background: var(--bg); -webkit-font-smoothing: antialiased; }
+        a { color: var(--link); text-decoration: none; }
+        a:hover { text-decoration: underline; }
+        .topbar { position: sticky; top: 0; z-index: 10; background: rgba(255,255,255,0.92); backdrop-filter: blur(20px); border-bottom: 1px solid var(--border); padding: 12px 24px; display: flex; justify-content: space-between; align-items: center; }
+        .topbar .logo { font-weight: 800; font-size: 18px; color: var(--fg); }
+        .topbar .logo span { color: var(--accent); }
+        .topbar nav { display: flex; gap: 24px; align-items: center; }
+        .topbar nav a { color: var(--fg-muted); font-size: 14px; font-weight: 500; }
+        .layout { display: grid; grid-template-columns: 240px 1fr; max-width: 1280px; margin: 0 auto; }
+        @media (max-width: 900px) { .layout { grid-template-columns: 1fr; } aside.sidebar { display: none; } }
+        aside.sidebar { position: sticky; top: 60px; height: calc(100vh - 60px); padding: 32px 16px; border-right: 1px solid var(--border); overflow-y: auto; background: var(--bg); }
+        .sidebar nav ul { list-style: none; padding: 0; margin: 0; }
+        .sidebar nav li { margin: 2px 0; }
+        .sidebar nav a { display: block; padding: 4px 12px; font-size: 14px; color: var(--fg-muted); border-radius: 4px; }
+        .sidebar nav a:hover { background: var(--bg-subtle); color: var(--fg); text-decoration: none; }
+        .sidebar .toc-heading { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--fg-soft); padding: 4px 12px; margin-top: 16px; margin-bottom: 8px; }
+        main { padding: 32px 64px 96px; max-width: 800px; }
+        @media (max-width: 900px) { main { padding: 24px; } }
+        .hero { padding: 48px 0 32px; border-bottom: 1px solid var(--border); margin-bottom: 32px; }
+        .hero h1 { font-size: 40px; font-weight: 700; letter-spacing: -0.02em; line-height: 1.15; margin: 0 0 16px; }
+        .hero p { font-size: 18px; color: var(--fg-muted); margin: 0; }
+        section { margin: 48px 0; }
+        section h2 { font-size: 28px; font-weight: 700; letter-spacing: -0.02em; margin: 0 0 16px; padding-top: 16px; }
+        section h3 { font-size: 19px; font-weight: 600; margin: 24px 0 12px; }
+        section p { margin: 12px 0; }
+        section ul { padding-left: 24px; margin: 12px 0; }
+        section li { margin: 4px 0; }
+        pre { background: var(--bg-code); border-radius: 8px; padding: 16px 20px; overflow-x: auto; font-family: "SF Mono", Menlo, Consolas, monospace; font-size: 13.5px; line-height: 1.5; margin: 16px 0; border: 1px solid var(--border); }
+        code { font-family: "SF Mono", Menlo, Consolas, monospace; font-size: 0.9em; background: var(--bg-code); padding: 1px 6px; border-radius: 4px; }
+        pre code { background: none; padding: 0; font-size: inherit; }
+        table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 14px; }
+        th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
+        th { font-weight: 600; background: var(--bg-subtle); }
+        td:first-child { font-weight: 600; }
+        .hyp { padding: 16px 20px; border: 1px solid var(--border); border-radius: 10px; margin: 16px 0; background: var(--bg); }
+        .hyp .head { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; flex-wrap: wrap; }
+        .hyp .id { font-family: "SF Mono", monospace; font-size: 13px; font-weight: 700; color: var(--accent); }
+        .hyp .status { display: inline-block; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 100px; text-transform: uppercase; letter-spacing: 0.04em; }
+        .status.running { background: var(--accent-bg); color: var(--orange); }
+        .status.proposed { background: #e5e7eb; color: var(--fg-soft); }
+        .hyp .claim { font-size: 14px; line-height: 1.5; color: var(--fg); margin: 8px 0; }
+        .hyp .criteria { font-size: 13px; color: var(--fg-muted); margin-top: 8px; }
+        footer { border-top: 1px solid var(--border); padding: 32px 64px; margin-top: 64px; font-size: 13px; color: var(--fg-muted); text-align: center; }
+        @media (max-width: 900px) { footer { padding: 24px; } }
+    </style>
+</head>
+<body>
+
+<header class="topbar">
+    <div class="logo">MATRIX<span>.</span></div>
+    <nav>
+        <a href="index.en.html">Overview</a>
+        <a href="docs.en.html">Docs</a>
+        <a href="algorithms.en.html">Algorithms</a>
+        <a href="benchmarks.en.html">Benchmarks</a>
+        <a href="research.en.html">Research</a>
+        <a href="https://github.com/AlexanderNarbaev/agi">GitHub</a>
+        <a href="research.html" style="color:var(--accent);font-weight:600;">RU</a>
+    </nav>
+</header>
+
+<div class="layout">
+
+    <aside class="sidebar">
+        <div class="toc-heading">Research</div>
+        <nav>
+            <ul>
+                <li><a href="#status">Status</a></li>
+                <li><a href="#hypothesis">Hypothesis format</a></li>
+                <li><a href="#preregistration">Preregistration</a></li>
+                <li><a href="#running">Running (9)</a></li>
+                <li><a href="#cluster">By cluster</a></li>
+                <li><a href="#papers">Papers</a></li>
+                <li><a href="#training">Training data</a></li>
+                <li><a href="#experiments">Experiments</a></li>
+            </ul>
+        </nav>
+    </aside>
+
+    <main>
+
+        <section class="hero">
+            <h1>Research</h1>
+            <p>34 preregistered hypotheses, each with a falsification criterion. Status: 9 running, 25 proposed. Each hypothesis maps to a measurable experiment; negative results are published the same as positive ones.</p>
+        </section>
+
+        <section id="status">
+            <h2>Status overview</h2>
+            <table>
+                <thead><tr><th>Status</th><th>Count</th><th>Meaning</th></tr></thead>
+                <tbody>
+                    <tr><td><span class="status running">running</span></td><td>9</td><td>Algorithm implemented; experiment card open; measurements being collected</td></tr>
+                    <tr><td><span class="status proposed">proposed</span></td><td>25</td><td>Claim written; awaiting implementation or experiment run</td></tr>
+                    <tr><td>accepted</td><td>0</td><td>Preregistered criterion met</td></tr>
+                    <tr><td>rejected</td><td>0</td><td>Falsification criterion met</td></tr>
+                </tbody>
+            </table>
+        </section>
+
+        <section id="hypothesis">
+            <h2>Hypothesis format</h2>
+            <p>Each hypothesis has four parts:</p>
+            <ul>
+                <li><strong>Claim.</strong> A precise statement of what the system should do.</li>
+                <li><strong>Success criterion.</strong> A numeric threshold for confirmation.</li>
+                <li><strong>Falsification criterion.</strong> A numeric threshold for rejection.</li>
+                <li><strong>Experiment.</strong> The procedure that produces the numbers.</li>
+            </ul>
+            <p>CONSTITUTION Article VI requires that every claim in the project be verifiable. Hypotheses are the canonical place to state a claim before it is implemented.</p>
+        </section>
+
+        <section id="preregistration">
+            <h2>Preregistration</h2>
+            <p>Before running an experiment, the preregistration record is committed to <code>docs/research/reports/EXP-NNN-report.md</code> with:</p>
+            <ul>
+                <li>Dataset / corpus (fixed before the run)</li>
+                <li>Random seed (fixed)</li>
+                <li>Success and falsification criteria (already in HYPOTHESES.md)</li>
+                <li>Hyperparameters</li>
+                <li>Number of trials</li>
+            </ul>
+            <p>After the run, the report is updated with measurements. Comparison against pre-registered values is then a one-line check.</p>
+        </section>
+
+        <section id="running">
+            <h2>Running hypotheses (9)</h2>
+
+            <div class="hyp">
+                <div class="head"><span class="id">H-001</span><span class="status running">running</span></div>
+                <div class="claim">Distillation LLM → Boolean structures preserves function (fidelity ≥ 0.9) for k ≤ 12 after quarantine.</div>
+                <div class="criteria">Success: fidelity ≥ 0.9, n ≥ 100 golden vectors. Falsification: fidelity < 0.8 after 3 corpus iterations.</div>
+            </div>
+
+            <div class="hyp">
+                <div class="head"><span class="id">H-005</span><span class="status running">running</span></div>
+                <div class="claim">Developmental Loop reduces time-to-solution on Minecraft craft puzzles ≥ 30% vs random task selection at not worse final accuracy.</div>
+                <div class="criteria">Success: −30% time, accuracy not worse (one-sided 5% test). Falsification: < −10%.</div>
+            </div>
+
+            <div class="hyp">
+                <div class="head"><span class="id">H-006</span><span class="status running">running</span></div>
+                <div class="claim">Guardrail from BIR-compositions achieves FPR ≤ 5% at TPR ≥ 95% on malicious corpus, P99 latency ≤ 50 ms.</div>
+                <div class="criteria">Success: both metrics on held-out set. Currently: FPR 0%, TPR 100%, P99 0 ms (target met, formal close-out pending).</div>
+            </div>
+
+            <div class="hyp">
+                <div class="head"><span class="id">H-007</span><span class="status running">running</span></div>
+                <div class="claim">Knowledge Stack achieves Recall@5 ≥ 0.85 on golden corpus after fixing embedding pass.</div>
+                <div class="criteria">Success: ≥ 0.85. Falsification: < 0.70. Currently dense path = 100%; 4-strategy = 54.6% (stub embedding).</div>
+            </div>
+
+            <div class="hyp">
+                <div class="head"><span class="id">H-009</span><span class="status running">running</span></div>
+                <div class="claim">BIR-classifier achieves parity with LLM ≤ 3B on structured tasks at ≥10⁴× less energy.</div>
+                <div class="criteria">Success: both thresholds on ≥ 3 structured tasks. Algorithm: <code>bir.BirClassifier</code>.</div>
+            </div>
+
+            <div class="hyp">
+                <div class="head"><span class="id">H-010</span><span class="status running">running</span></div>
+                <div class="claim">WNN-producer (WiSARD-style) achieves accuracy within 2 p.p. of TsetlinTrainer at ≥10× less wall-clock training.</div>
+                <div class="criteria">Success: both thresholds on ≥ 2 tasks. Algorithm: <code>tsetlin.WisardProducer</code>.</div>
+            </div>
+
+            <div class="hyp">
+                <div class="head"><span class="id">H-011</span><span class="status running">running</span></div>
+                <div class="claim">SDM reading (counters + threshold + Kanerva radius) gives precision@5 ≥+5 p.p. over flat top-K Hamming at the same memory budget.</div>
+                <div class="criteria">Success: ≥+5 p.p. on episode corpus. Algorithm: <code>memory.SdmReader</code>.</div>
+            </div>
+
+            <div class="hyp">
+                <div class="head"><span class="id">H-015</span><span class="status running">running</span></div>
+                <div class="claim">Binary reservoir (intESN-type) achieves accuracy within 3 p.p. of float-ESN at ≥10× less energy.</div>
+                <div class="criteria">Success: accuracy gap ≤ 3 p.p. on ≥ 2 temporal domains AND energy ≤ 0.1× float-ESN. Algorithm: <code>reservoir.IntEsNetwork</code>.</div>
+            </div>
+
+            <div class="hyp">
+                <div class="head"><span class="id">H-017</span><span class="status running">running</span></div>
+                <div class="claim">LTL formalization of lifecycle invariants finds ≥ 1 class of violation not covered by acceptance tests, OR proves absence for finite model.</div>
+                <div class="criteria">Success: counterexample reproduced OR proof complete. Algorithm: <code>verification.LtlModelChecker</code>.</div>
+            </div>
+        </section>
+
+        <section id="cluster">
+            <h2>By cluster</h2>
+            <p>Related hypotheses are grouped. Pick a cluster if your interest is in a specific area:</p>
+            <ul>
+                <li><strong>Compute (H-001, H-002, H-003, H-015):</strong> how BIR actually computes. Capacity, parity, deterministic equivalence.</li>
+                <li><strong>Knowledge (H-004, H-007, H-011):</strong> retrieval, storage, graph. Where information lives.</li>
+                <li><strong>Learning (H-005, H-009, H-010, H-016):</strong> how neurons learn. Distillation, Tsetlin, WiSARD, monotone specialization.</li>
+                <li><strong>Safety (H-006, H-014):</strong> guardrails, FROZEN layer, VC-binding for window-size.</li>
+                <li><strong>Lifecycle (H-012, H-017, H-022):</strong> TaskCell, LTL model checking, self-observation corridor.</li>
+                <li><strong>Federation (H-013):</strong> privacy-preserving FNL export, DP noise, re-identification attack.</li>
+                <li><strong>Cauldron (H-018, H-019, H-020, H-021):</strong> candidate generation, GUHA, AQ/LAD, budget scheduling, Levin 2⁻ˡ.</li>
+                <li><strong>Socio-cultural (H-023…H-034):</strong> duality axis, RAT-index, longitudinal cohorts, Dunbar layers, Hofstede, moral foundations. These are validation hypotheses run on synthetic corpora, not algorithm implementations.</li>
+            </ul>
+        </section>
+
+        <section id="papers">
+            <h2>Papers</h2>
+
+            <div class="hyp">
+                <div class="head"><span class="id">PAPER-01</span><span class="status running">draft</span></div>
+                <div class="claim">Hybrid Boolean Compute on Laptop: capacity, latency, and energy vs local LLMs.</div>
+                <div class="criteria">Draft v1 from 2026-08-01. Source: <code>docs/research/papers/PAPER-01-hybrid-boolean-compute-laptop.md</code>.</div>
+            </div>
+
+            <div class="hyp">
+                <div class="head"><span class="id">PAPER-02</span><span class="status proposed">planned</span></div>
+                <div class="claim">BIR forms on identical inputs: CLAUSESET vs MPDT-GA comparison. Triggers EXP-002.</div>
+            </div>
+
+            <div class="hyp">
+                <div class="head"><span class="id">PAPER-03</span><span class="status proposed">planned</span></div>
+                <div class="claim">Developmental Loop: measured −30% time-to-solution on Minecraft craft puzzles (H-005).</div>
+            </div>
+
+            <div class="hyp">
+                <div class="head"><span class="id">PAPER-04</span><span class="status proposed">planned</span></div>
+                <div class="claim">Ricci-fingerprint for graph-of-knowledge degradation detection (H-004).</div>
+            </div>
+        </section>
+
+        <section id="training">
+            <h2>Training data</h2>
+            <p>MATRIX distills HuggingFace models into BIR neurons. Models used:</p>
+            <ul>
+                <li>HuggingFaceTB/SmolLM2-135M, SmolLM2-360M</li>
+                <li>Qwen/Qwen2.5-0.5B, Qwen2.5-1.5B</li>
+                <li>Qwen/Qwen3-0.6B, Qwen3-1.7B</li>
+                <li>deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B</li>
+            </ul>
+            <p>Scripts: <code>scripts/pretrain_neurons.py</code> (distillation), <code>scripts/train_local.sh</code> (orchestration), <code>scripts/merge_pretrained_neurons.py</code> (consolidation).</p>
+            <pre><code># Train one model
+bash scripts/train_local.sh --model HuggingFaceTB/SmolLM2-135M
+
+# Or all cached models
+bash scripts/train_local.sh --all</code></pre>
+        </section>
+
+        <section id="experiments">
+            <h2>Experiments</h2>
+            <p>Each experiment has a protocol in <code>docs/research/reports/EXP-NNN-report.md</code>:</p>
+            <ul>
+                <li><strong>EXP-001</strong> — distillation protocol (quarantine, binarization, importance features, TREPAN)</li>
+                <li><strong>EXP-002</strong> — CLAUSESET vs MPDT-GA on identical inputs</li>
+                <li><strong>EXP-005</strong> — Developmental Loop on Minecraft craft puzzles</li>
+                <li><strong>EXP-006</strong> — guardrail FPR/TPR on held-out set</li>
+                <li><strong>EXP-007</strong> — Knowledge Stack Recall@5</li>
+                <li><strong>EXP-008</strong> — BatchEvidence ≥10³ ops/tick throughput</li>
+                <li><strong>EXP-009</strong> — BIR-classifier vs LLM 3B parity</li>
+                <li><strong>EXP-010</strong> — WNN vs Tsetlin on structured tasks</li>
+                <li><strong>EXP-011</strong> — SDM vs flat top-K</li>
+                <li><strong>EXP-015</strong> — intESN vs float-ESN</li>
+                <li><strong>EXP-016</strong> — MonotoneDecoder corpus efficiency</li>
+                <li><strong>EXP-017</strong> — LTL model checking violation discovery</li>
+                <li><strong>EXP-018</strong> — GUHA coverage vs random sampling</li>
+                <li><strong>EXP-019</strong> — Levin schedule vs uniform joule coverage</li>
+            </ul>
+        </section>
+
+        <footer style="border:none; padding:32px 0; text-align:center; color:var(--fg-soft); font-size:13px; margin-top:64px;">
+            <p>MATRIX Research · 2026 · <a href="index.en.html">← Back to overview</a> · <a href="docs.en.html">Documentation</a></p>
+        </footer>
+
+    </main>
+
+</div>
+
+</body>
+</html>

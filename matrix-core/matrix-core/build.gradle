@@ -1,0 +1,12 @@
+
+// Enable zip64 for JMH jar (large number of entries)
+tasks.named('jmhJar') {
+    zip64 = true
+}
+
+// Enable zip64 for JMH jar (large number of entries)
+    zip64 = true
+}
+
+// Enable zip64 for JMH jar
+tasks.named("jmhJar") { zip64 = true }

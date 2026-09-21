@@ -1,0 +1,39 @@
+# MATRIX E2E Demo — RUN 7 (after chain runtime activation)
+# Date: 2026-09-04 15:25
+# Branch: origin/main @ a426d56c
+
+## Server
+- Started in 74.958s
+- Listening on: http://0.0.0.0:9091
+- MultiModelLoader: qwen2.5-0.5b → 24 layers / 21960 neurons
+- PanamaNativeBridge: libtruthy.so loaded
+- BooleanChainProducer: Panama bridge wired — native eval enabled (21960 tables, k=14)
+- QaCorpusIndex: 8602 entries, 7360 unique tokens
+
+## Working as an LLM
+1. /v1/chain-status → 24 layers, 21960 neurons, non-empty
+2. /v1/qa/stats → corpus_size=8602, unique_tokens=7360
+3. /v1/chat/completions:
+   - "Что такое автономные системы?" → real Russian answer from corpus
+   - "Как ИИ помогает в инновациях?" → real answer
+   - "What is a neuron?" → real answer (learned via /v1/qa/learn earlier)
+4. /v1/qa/learn {"question":"What is the capital of France?","answer":"Paris"} → id=8602
+5. /v1/chat/completions "What is the capital of France?" → "Paris" (immediately)
+6. /v1/train {"use_corpus":true,"corpus_limit":50,"epochs":1} → 1554 neurons_flipped, 0 errors
+7. /v1/benchmark 500 ops → chain_eval p50=308.8μs, p99=840.8μs
+8. /v1/agent/plan {"goal":"find all python files"} → returns fs.list tool
+
+## Pieces
+- New: QaCorpusIndex.java (in-memory inverted-index retrieval)
+- New: QaLearnResource.java (POST /learn, /bulk-learn, GET /search, /stats, POST /reload)
+- Modified: OpenAIChatResource.java (primary path = QA retrieval)
+- Modified: ChainTrainerEndpoint.java (use_corpus mode + simpler layer access)
+
+## Honest caveats
+- Benchmark is ~308μs p50 instead of <100μs expected for native.
+  Cause: JNI dispatch overhead with 896-bit inputs outweighs gain at small sizes.
+- Empty untrained chain neurons still drift; offline /v1/train patches them.
+- Off-topic questions still fall through to canned templates (need more training).
+
+## Branch / Git
+- origin/main @ a426d56c (pushed)

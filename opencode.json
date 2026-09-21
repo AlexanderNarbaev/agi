@@ -1,0 +1,184 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "model": "deepseek/deepseek-v4-pro",
+  "small_model": "deepseek/deepseek-v4-flash",
+  "provider": {
+    "deepseek": {
+      "options": {
+        "timeout": 600000,
+        "chunkTimeout": 60000,
+        "setCacheKey": true
+      },
+      "fallback": [
+        "opencode",
+        "minimax",
+        "mimo"
+      ]
+    },
+    "opencode": {
+      "fallback": [
+        "deepseek",
+        "minimax",
+        "mimo"
+      ]
+    },
+    "opencode-go": {
+      "fallback": [
+        "deepseek",
+        "minimax",
+        "mimo"
+      ]
+    },
+    "minimax": {
+      "options": {
+        "timeout": 600000,
+        "chunkTimeout": 60000,
+        "setCacheKey": true,
+        "baseURL": "https://api.minimax.io/v1",
+        "apiKey": "{env:MINIMAX_API_KEY}"
+      },
+      "fallback": [
+        "deepseek",
+        "opencode-go"
+      ]
+    },
+    "mimo": {
+      "options": {
+        "timeout": 600000,
+        "chunkTimeout": 60000,
+        "setCacheKey": true,
+        "apiKey": "{env:MIMO_API_KEY}"
+      },
+      "fallback": [
+        "deepseek",
+        "opencode-go"
+      ]
+    }
+  },
+  "instructions": [
+    "AGENTS.md"
+  ],
+  "compaction": {
+    "auto": true,
+    "prune": true,
+    "tail_turns": 2,
+    "reserved": 10000
+  },
+  "tool_output": {
+    "max_lines": 2000,
+    "max_bytes": 51200
+  },
+  "watcher": {
+    "ignore": [
+      "node_modules/**",
+      "dist/**",
+      ".git/**",
+      "target/**",
+      "__pycache__/**"
+    ]
+  },
+  "plugin": [
+    "opencode-codegraph"
+  ],
+  "mcp": {
+    "filesystem": {
+      "type": "local",
+      "command": [
+        "/home/alexandr-narbaev/.bun/bin/mcp-server-filesystem",
+        "/home/alexandr-narbaev/Projects/agi"
+      ],
+      "enabled": true
+    },
+    "context7": {
+      "type": "local",
+      "command": [
+        "/home/alexandr-narbaev/.bun/bin/c7-mcp-server"
+      ],
+      "enabled": true
+    },
+    "sequential-thinking": {
+      "type": "local",
+      "command": [
+        "/home/alexandr-narbaev/.bun/bin/mcp-server-sequential-thinking"
+      ],
+      "enabled": true
+    },
+    "codegraph": {
+      "type": "local",
+      "command": [
+        "codegraph",
+        "serve",
+        "--mcp"
+      ],
+      "enabled": true
+    },
+    "agentic-tools": {
+      "type": "local",
+      "command": [
+        "/home/alexandr-narbaev/.bun/bin/agentic-tools-mcp"
+      ],
+      "enabled": true
+    },
+    "memorylayer": {
+      "type": "local",
+      "command": [
+        "/home/alexandr-narbaev/.bun/bin/memorylayer-mcp"
+      ],
+      "enabled": true
+    },
+    "fetch": {
+      "type": "local",
+      "command": [
+        "uvx",
+        "mcp-server-fetch"
+      ],
+      "enabled": true
+    },
+    "playwright": {
+      "type": "local",
+      "command": [
+        "/home/alexandr-narbaev/.bun/bin/playwright-mcp"
+      ],
+      "enabled": true
+    },
+    "github": {
+      "type": "local",
+      "command": [
+        "/home/alexandr-narbaev/.bun/bin/mcp-server-github"
+      ],
+      "enabled": true,
+      "env": {
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "${GITHUB_TOKEN}"
+      }
+    },
+    "chrome-devtools": {
+      "type": "local",
+      "command": [
+        "/home/alexandr-narbaev/.npm-global/bin/chrome-devtools-mcp"
+      ],
+      "enabled": true
+    },
+    "context7-official": {
+      "type": "local",
+      "command": [
+        "/home/alexandr-narbaev/.npm-global/bin/context7-mcp"
+      ],
+      "enabled": true
+    },
+    "excalidraw": {
+      "type": "local",
+      "command": [
+        "uvx",
+        "excalidraw-architect-mcp"
+      ],
+      "enabled": true
+    }
+  },
+  "agent": {
+    "build": {
+      "mode": "primary",
+      "model": "deepseek/deepseek-v4-pro",
+      "temperature": 0.2
+    }
+  }
+}

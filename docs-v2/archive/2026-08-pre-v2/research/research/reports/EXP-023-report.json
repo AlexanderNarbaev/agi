@@ -1,0 +1,141 @@
+{
+  "protocol": "DUALITY",
+  "preregistration_timestamp": "2026-08-10",
+  "seed_hex": "0xD04C",
+  "n_total_judgments": 600,
+  "baselines": {
+    "random_auc": {
+      "auc_mean": 0.5003019152866809,
+      "auc_ci_low": 0.45430216123575495,
+      "auc_ci_high": 0.5466774617165242
+    },
+    "majority": {
+      "accuracy": 0.52,
+      "majority_class": 1
+    }
+  },
+  "h_023": {
+    "per_corpus": {
+      "modernist_western": {
+        "n_masculine": 100,
+        "n_feminine": 100,
+        "n_neutral": 0,
+        "chi2": 100.0,
+        "p_chi2": 0.0,
+        "cohens_h": 0.0,
+        "cohens_h_ci_low": -0.2809228294197115,
+        "cohens_h_ci_high": 0.2809228294197115,
+        "auc": 0.5200722601364913,
+        "effect_direction": "feminine"
+      },
+      "collectivist_east": {
+        "n_masculine": 100,
+        "n_feminine": 100,
+        "n_neutral": 0,
+        "chi2": 100.0,
+        "p_chi2": 0.0,
+        "cohens_h": 0.0,
+        "cohens_h_ci_low": -0.2809228294197115,
+        "cohens_h_ci_high": 0.2809228294197115,
+        "auc": 0.5,
+        "effect_direction": "feminine"
+      },
+      "traditional_african": {
+        "n_masculine": 100,
+        "n_feminine": 100,
+        "n_neutral": 0,
+        "chi2": 100.0,
+        "p_chi2": 0.0,
+        "cohens_h": 0.0,
+        "cohens_h_ci_low": -0.2809228294197115,
+        "cohens_h_ci_high": 0.2809228294197115,
+        "auc": 0.4797979797979798,
+        "effect_direction": "feminine"
+      }
+    },
+    "fdr": [
+      {
+        "corpus": "modernist_western",
+        "p_raw": 0.0,
+        "rejected": 0
+      },
+      {
+        "corpus": "collectivist_east",
+        "p_raw": 0.0,
+        "rejected": 1
+      },
+      {
+        "corpus": "traditional_african",
+        "p_raw": 0.0,
+        "rejected": 2
+      }
+    ],
+    "n_significant_after_fdr": 3,
+    "same_direction": true,
+    "verdict": "accepted"
+  },
+  "h_024": {
+    "spearman_rho": {
+      "rho": 0.045839182886619124,
+      "p_value": 0.2622563781553627,
+      "ci_low": -0.03304982487941001,
+      "ci_high": 0.12254481852114331
+    },
+    "median_rat": 0.17588774981059654,
+    "accuracy_low_rat": 0.5933333333333334,
+    "accuracy_high_rat": 0.5866666666666667,
+    "delta_accuracy": 0.00666666666666671,
+    "verdict": "rejected"
+  },
+  "h_025": {
+    "per_corpus": {
+      "modernist_western": {
+        "cohens_h": 0.0,
+        "var": 0.02,
+        "n_effective": 200
+      },
+      "collectivist_east": {
+        "cohens_h": 0.0,
+        "var": 0.02,
+        "n_effective": 200
+      },
+      "traditional_african": {
+        "cohens_h": 0.0,
+        "var": 0.02,
+        "n_effective": 200
+      }
+    },
+    "meta_analysis": {
+      "k": 3,
+      "cochrans_q": 0.0,
+      "p_q": 1.0,
+      "i2_percent": 0.0,
+      "tau2": 0.0,
+      "theta_fixed": 0.0,
+      "theta_random": 0.0,
+      "se_random": 0.08164965809277261,
+      "ci_low_random": -0.1600333298618343,
+      "ci_high_random": 0.1600333298618343,
+      "same_direction": true
+    },
+    "verdict": "accepted"
+  },
+  "h_026": {
+    "cosine_similarity": 0.9992383912666831,
+    "cosine_bootstrap_ci": {
+      "mean": 0.9968886332369818,
+      "ci_low": 0.9849205009423415,
+      "ci_high": 0.9999964077030074
+    },
+    "permutation_p": 1.0,
+    "contingency_table": {
+      "naturalizing_essentialist": 71,
+      "naturalizing_constructionist": 62,
+      "socializing_essentialist": 61,
+      "socializing_constructionist": 72
+    },
+    "chi2_statistic": 1.2181139755766621,
+    "chi2_p_value": 0.26973110285962126,
+    "verdict": "inconclusive"
+  }
+}

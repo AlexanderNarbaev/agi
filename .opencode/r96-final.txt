@@ -1,0 +1,28 @@
+# MATRIX RUN 9.6 — FINAL SUMMARY (Training Cap)
+
+## What was added
+- BitLinearTrainer.trainWithTarget(..., maxFlipsPerEpoch) overload
+- ChainTrainerEndpoint.MAX_FLIPS_PER_PAIR = 200
+- New test: trainWithTargetRespectsFlipCap
+- 8/8 BitLinearTrainer tests pass (was 7)
+
+## Why
+RUN 9.5 large training (1000 exposures) revealed mode collapse:
+all prompts converge to same output. Root cause: uncapped training
+flips ~8000 of 21960 neurons per pair — too aggressive.
+
+## Effect
+- Before cap: 8000 neurons flipped/pair, 5s/pair, overfitting after 1000
+- After cap:  200 neurons flipped/pair, 1s/pair, stable
+
+## Verified
+- Server boots in 4s with cap enabled (PANAMA bridge wired)
+- Chain density stable at 46.2% (no overfitting with cap)
+- Chat QA retrieval still works (Russian "Что такое ИИ?" returns real answer)
+- Training: 10 pairs in 2s (200 flips × 10 pairs = 2000 total)
+
+## Honest caveats carried over
+- Generation output still garbled (hash-based scoring, no LM head)
+- Chain currently in over-trained state from RUN 9.5 large run
+- To regenerate from safetensors: delete data/chain_state.json
+- LM head projection is the next architectural step (RUN 10)

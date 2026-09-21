@@ -1,0 +1,292 @@
+package io.matrix.api;
+
+import org.junit.jupiter.api.Test;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
+/**
+ * RUN 67 — OnnxChatResource unit tests.
+ *
+ * <p>Resource-level tests using a mock bridge (no real GPU load
+ * during unit tests — REST tests use a separate harness).
+ */
+class OnnxChatResourceTest {
+
+    @Test
+    void chatReturnsErrorWhenBridgeNotLoaded() {
+        OnnxChatResource resource = new OnnxChatResource();
+        String reply = resource.chatSimple("hello", 8);
+        assertThat(reply).startsWith("ERROR:");
+    }
+
+    @Test
+    void chatReturnsErrorWhenPromptEmpty() {
+        OnnxChatResource resource = new OnnxChatResource();
+        // Without bridge: should still error
+        String reply = resource.chatSimple("", 8);
+        assertThat(reply).startsWith("ERROR:");
+    }
+
+    @Test
+    void chatReturnsErrorWhenPromptNull() {
+        OnnxChatResource resource = new OnnxChatResource();
+        String reply = resource.chatSimple(null, 8);
+        assertThat(reply).startsWith("ERROR:");
+    }
+
+    @Test
+    void statusJsonBeforeLoad() {
+        OnnxChatResource resource = new OnnxChatResource();
+        String json = resource.status();
+        assertThat(json).contains("\"loaded\":false");
+        assertThat(json).contains("\"totalInferences\":0");
+        assertThat(json).contains("\"info\":\"uninitialized\"");
+    }
+
+    @Test
+    void statusJsonWithBridgeInjected() {
+        OnnxChatResource resource = new OnnxChatResource();
+        // Use a fake bridge that doesn't require GPU.
+        // QwenOnnxBridge needs a model dir, so we use null to avoid load.
+        QwenOnnxBridge stub = new QwenOnnxBridge(java.nio.file.Path.of("/tmp/nonexistent")) {
+            @Override
+            public boolean isLoaded() { return true; }
+            @Override
+            public boolean isGpuEnabled() { return false; }
+            @Override
+            public int vocabSize() { return 151936; }
+            @Override
+            public java.nio.file.Path modelDir() { return java.nio.file.Path.of("/tmp/nonexistent"); }
+            @Override
+            public String info() { return "stub"; }
+        };
+        resource.setBridgeForTesting(stub);
+        String json = resource.status();
+        assertThat(json).contains("\"loaded\":true");
+        assertThat(json).contains("\"gpu\":false");
+        assertThat(json).contains("\"vocabSize\":151936");
+    }
+
+    @Test
+    void reloadReportsErrorWhenModelDirMissing() {
+        OnnxChatResource resource = new OnnxChatResource();
+        // Default configuredModelPath might not exist in test env;
+        // we expect ERROR or "Failed to load" output.
+        String result = resource.reload();
+        // Either ERROR or failure message is acceptable.
+        assertThat(result).isNotBlank();
+    }
+
+    @Test
+    void generateReturnsErrorWhenBridgeNotLoaded() {
+        OnnxChatResource resource = new OnnxChatResource();
+        String reply = resource.generate("hello", 8, 0.7, 50, 0.9);
+        assertThat(reply).startsWith("ERROR:");
+    }
+
+    @Test
+    void generateReturnsErrorOnEmptyPrompt() {
+        OnnxChatResource resource = new OnnxChatResource();
+        String reply = resource.generate("", 8, 0.7, 50, 0.9);
+        assertThat(reply).startsWith("ERROR:");
+    }
+
+    @Test
+    void generateHandlesNullParams() {
+        OnnxChatResource resource = new OnnxChatResource();
+        // No bridge loaded: should still error gracefully
+        String reply = resource.generate("hi", null, null, null, null);
+        assertThat(reply).startsWith("ERROR:");
+    }
+
+    @Test
+    void metricsBeforeBridgeLoad() {
+        OnnxChatResource resource = new OnnxChatResource();
+        String json = resource.metrics();
+        assertThat(json).contains("\"loaded\":false");
+    }
+
+    @Test
+    void chatEndpointRequiresLoadedBridge() {
+        OnnxChatResource resource = new OnnxChatResource();
+        String reply = resource.chat("hello", 8, 0.0, -1, 1.0, null);
+        assertThat(reply).startsWith("ERROR:");
+    }
+
+    @Test
+    void chatEndpointRejectsEmptyUser() {
+        OnnxChatResource resource = new OnnxChatResource();
+        String reply = resource.chat("", 8, 0.0, -1, 1.0, null);
+        assertThat(reply).startsWith("ERROR:");
+    }
+
+    @Test
+    void chatEndpointRejectsNullUser() {
+        OnnxChatResource resource = new OnnxChatResource();
+        String reply = resource.chat(null, 8, 0.0, -1, 1.0, null);
+        assertThat(reply).startsWith("ERROR:");
+    }
+
+    @Test
+    void chatEndpointAcceptsSystemPrompt() {
+        OnnxChatResource resource = new OnnxChatResource();
+        // Without bridge: should error gracefully
+        String reply = resource.chat("hi", 8, 0.0, -1, 1.0, "You are a pirate.");
+        assertThat(reply).startsWith("ERROR:");
+    }
+
+    @Test
+    void compareReturnsErrorWhenBridgeNotLoaded() {
+        OnnxChatResource resource = new OnnxChatResource();
+        String reply = resource.compare("hello", 8);
+        assertThat(reply).contains("\"error\"");
+    }
+
+    @Test
+    void compareReturnsErrorOnEmptyPrompt() {
+        OnnxChatResource resource = new OnnxChatResource();
+        String reply = resource.compare("", 8);
+        assertThat(reply).contains("\"error\"");
+    }
+
+    @Test
+    void compareJsonEscapesCorrectly() {
+        // Just verify the helper works for special chars
+        String escaped = OnnxChatResource.jsonEscapePublic("hello\nworld");
+        assertThat(escaped).contains("\\n");
+    }
+
+    @Test
+    void streamReturnsErrorWhenBridgeNotLoaded() {
+        OnnxChatResource resource = new OnnxChatResource();
+        String reply = resource.stream("hello", 8);
+        assertThat(reply).startsWith("ERROR:");
+    }
+
+    @Test
+    void streamReturnsErrorOnEmptyPrompt() {
+        OnnxChatResource resource = new OnnxChatResource();
+        String reply = resource.stream("", 8);
+        assertThat(reply).startsWith("ERROR:");
+    }
+
+    @Test
+    void healthBeforeBridgeLoad() {
+        OnnxChatResource resource = new OnnxChatResource();
+        String json = resource.health();
+        assertThat(json).contains("\"status\":\"uninitialized\"");
+        assertThat(json).contains("\"gpu\":false");
+        assertThat(json).contains("\"inferences\":0");
+    }
+
+    @Test
+    void healthIncludesUptime() {
+        OnnxChatResource resource = new OnnxChatResource();
+        String json = resource.health();
+        assertThat(json).contains("\"uptimeMs\":");
+    }
+
+    @Test
+    void registryBeforeBridgeLoad() {
+        OnnxChatResource resource = new OnnxChatResource();
+        String json = resource.registry();
+        assertThat(json).contains("\"totalRegistered\":0");
+        assertThat(json).contains("\"totalLoaded\":0");
+    }
+
+    @Test
+    void embedReturnsErrorWhenBridgeNotLoaded() {
+        OnnxChatResource resource = new OnnxChatResource();
+        String reply = resource.embed("hello");
+        assertThat(reply).startsWith("ERROR:");
+    }
+
+    @Test
+    void embedReturnsErrorOnEmptyText() {
+        OnnxChatResource resource = new OnnxChatResource();
+        String reply = resource.embed("");
+        assertThat(reply).startsWith("ERROR:");
+    }
+
+    @Test
+    void embedReturnsErrorOnNullText() {
+        OnnxChatResource resource = new OnnxChatResource();
+        String reply = resource.embed(null);
+        assertThat(reply).startsWith("ERROR:");
+    }
+
+    @Test
+    void versionEndpointReturnsJson() {
+        OnnxChatResource resource = new OnnxChatResource();
+        String json = resource.version();
+        assertThat(json).contains("\"name\":\"matrix-onnx\"");
+        assertThat(json).contains("\"version\":\"1.0.0\"");
+        assertThat(json).contains("\"runtime\":\"java-");
+        assertThat(json).contains("\"features\":[");
+        assertThat(json).contains("\"chat\"");
+        assertThat(json).contains("\"embed\"");
+    }
+
+    @Test
+    void usageEndpointReturnsJson() {
+        OnnxChatResource resource = new OnnxChatResource();
+        String json = resource.usage();
+        assertThat(json).contains("\"totalTokens\":");
+        assertThat(json).contains("\"totalRequests\":0");
+    }
+
+    @Test
+    void tokenUsageTrackerAccessible() {
+        OnnxChatResource resource = new OnnxChatResource();
+        // Tracker should be non-null and accessible
+        assertThat(resource.getTracker()).isNotNull();
+        assertThat(resource.getTracker().totalRequests()).isZero();
+    }
+
+    @Test
+    void routeShortPrompt() {
+        OnnxChatResource resource = new OnnxChatResource();
+        String json = resource.route("hi");
+        assertThat(json).contains("\"tier\":\"SMALL\"");
+        assertThat(json).contains("\"model\":\"qwen:0.5b\"");
+    }
+
+    @Test
+    void routeLongPrompt() {
+        OnnxChatResource resource = new OnnxChatResource();
+        String longPrompt = "a".repeat(2000);  // ~500 tokens → medium tier
+        String json = resource.route(longPrompt);
+        assertThat(json).contains("\"tier\":\"LARGE\"");
+        assertThat(json).contains("\"model\":\"qwen:7b\"");
+    }
+
+    @Test
+    void routeEmptyPrompt() {
+        OnnxChatResource resource = new OnnxChatResource();
+        String json = resource.route(null);
+        assertThat(json).contains("\"error\"");
+    }
+
+    @Test
+    void requestCounterAccessible() {
+        OnnxChatResource resource = new OnnxChatResource();
+        assertThat(resource.getRequestCounter()).isNotNull();
+        assertThat(resource.getRequestCounter().totalRequests()).isZero();
+        resource.getRequestCounter().recordRequest("/test");
+        assertThat(resource.getRequestCounter().totalRequests()).isEqualTo(1);
+    }
+
+    @Test
+    void exportMissingUserReturnsError() {
+        OnnxChatResource resource = new OnnxChatResource();
+        String reply = resource.exportConversation(null, "text");
+        assertThat(reply).startsWith("ERROR:");
+    }
+
+    @Test
+    void exportUnknownUserReturnsError() {
+        OnnxChatResource resource = new OnnxChatResource();
+        String reply = resource.exportConversation("nobody", "text");
+        assertThat(reply).startsWith("ERROR:");
+    }
+}

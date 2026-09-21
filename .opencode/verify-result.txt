@@ -1,0 +1,45 @@
+# MATRIX Goal Verification — RUN 6 (post-fix)
+# Date: 2026-09-04 13:57
+# Branch: origin/main @ be7fa53a
+
+## Server startup
+- Started in 83.097s
+- Listening on: http://0.0.0.0:9091
+- Background preload complete: 0 models, 6653 corpus entries, baseline=2ba33ca0557f
+- NO "path is null" error (FIXED)
+
+## /v1/chain-status
+{"model":"MultiModel[qwen2.5-0.5b]","source":"models/external/qwen2.5-0.5b/model.safetensors","layers":24,"totalNeurons":21960,"empty":false}
+
+## /v1/state
+chain_layers=24, chain_neurons=21960, chain_restored_from_disk=true
+ltm_corpus_size=11, ltm_levels.L2_MODULE=11
+
+## /v1/agent/plan
+{"goal":"search files","reasoning":"file-related goal: enumerate","steps":[{"args":{"path":"/"},"index":0,"tool":"fs.list"}]}
+
+## /v1/benchmark (200 ops, chain)
+chain_eval_ns: p50=173898, p99=190859
+bpe_encode_ns: p50=6825736
+
+## BitLinearTrainerTest (7 tests)
+- flippedTableHasFewerOnes()  PASS
+- trainingStopsEarlyOnConvergence()  PASS
+- finalStateHasTrainedNeurons()  PASS
+- trainingDoesNotMutateInput()  PASS
+- (3 more)  PASS
+- 0 failures, 0 errors
+- Verifies neurons_flipped > 0 and accuracy > 0.5
+
+## Commits this session
+- be7fa53a: AgentBrainService null-path fix + Panama wire-up + training signal
+- dd597880: Panama useNative fast path (prior)
+- 66657a94: CDI proxy unwrap fix (prior)
+- 2688af99: libtruthy.so + PanamaNativeBridge (prior)
+
+## Caveats
+- Panama bridge is wired in code but does NOT activate at runtime — bean
+  init timing issue. Live benchmark is on pure-Java path (~174μs p50).
+  Native bridge load itself works (libtruthy.so is at expected path).
+- HF token still missing; gated models unavailable.
+- Goal Guard: 0 review cycles run; manual verification done above.

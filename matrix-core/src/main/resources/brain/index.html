@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>MATRIX Brain</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { 
+    font-family: -apple-system, monospace; 
+    background: #0a0a0a; color: #00ff88; 
+    line-height: 1.5; max-width: 800px; margin: 0 auto; padding: 20px;
+    display: flex; flex-direction: column; height: 100vh;
+}
+h1 { color: #00ffff; border-bottom: 1px solid #003322; padding-bottom: 10px; }
+.status { color: #888; font-size: 0.9em; margin: 10px 0; }
+.chat { 
+    flex: 1; overflow-y: auto; 
+    border: 1px solid #003322; padding: 10px; 
+    background: #050505; margin: 10px 0;
+}
+.turn { margin: 10px 0; padding: 8px; border-left: 3px solid; }
+.user { background: #0a1a0a; border-left-color: #00aaff; }
+.brain { background: #001a0a; border-left-color: #00ff88; }
+.role { font-weight: bold; color: #ffff00; margin-bottom: 3px; font-size: 0.9em; }
+.content { white-space: pre-wrap; }
+.meta { color: #666; font-size: 0.75em; margin-top: 3px; }
+.input { display: flex; gap: 10px; }
+.input textarea { 
+    flex: 1; min-height: 60px; padding: 8px; background: #1a1a1a;
+    color: #00ff88; border: 1px solid #003322; font-family: monospace;
+    resize: vertical;
+}
+.input button { 
+    padding: 8px 16px; background: #00ff88; color: #000;
+    border: none; cursor: pointer; font-weight: bold;
+}
+.input button:hover { background: #00cc66; }
+.input button:disabled { background: #444; color: #888; cursor: not-allowed; }
+.autonomy { 
+    background: #001a1a; padding: 8px; margin: 5px 0; 
+    border-left: 3px solid #00aaff; font-size: 0.85em;
+}
+</style>
+</head>
+<body>
+<h1>► MATRIX Brain (real LLM, RAG, self-initiating)</h1>
+<div class="status" id="status">Starting...</div>
+<div class="chat" id="chat"></div>
+<div class="input">
+    <textarea id="input" placeholder="Ask the brain..."></textarea>
+    <button id="send" onclick="send()">SEND</button>
+</div>
+
+<script>
+const status = document.getElementById('status');
+const chat = document.getElementById('chat');
+const input = document.getElementById('input');
+const send = document.getElementById('send');
+
+async function checkStatus() {
+    try {
+        const r = await fetch('/health');
+        const j = await r.json();
+        status.textContent = 'Status: ' + j.status + ' | Service: ' + j.service;
+    } catch (e) {
+        status.textContent = 'Brain not reachable';
+    }
+}
+
+function addMessage(role, content, meta) {
+    const div = document.createElement('div');
+    div.className = 'turn ' + role;
+    div.innerHTML = '<div class="role">' + role.toUpperCase() + '</div>' +
+                    '<div class="content">' + escapeHtml(content) + '</div>' +
+                    (meta ? '<div class="meta">' + meta + '</div>' : '');
+    chat.appendChild(div);
+    div.scrollIntoView({ behavior: 'smooth' });
+}
+
+function escapeHtml(s) {
+    return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+async function send() {
+    const msg = input.value.trim();
+    if (!msg) return;
+    
+    addMessage('user', msg);
+    input.value = '';
+    send.disabled = true;
+    addMessage('brain', 'Thinking...');
+    
+    try {
+        const r = await fetch('/chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message: msg })
+        });
+        const j = await r.json();
+        
+        // Remove "thinking" message
+        chat.lastChild.remove();
+        
+        const meta = 'confidence: ' + j.confidence.toFixed(2) + 
+                     ' | duration: ' + j.duration_ms + 'ms';
+        addMessage('brain', j.reply, meta);
+    } catch (e) {
+        chat.lastChild.remove();
+        addMessage('brain', 'Error: ' + e.message);
+    } finally {
+        send.disabled = false;
+    }
+}
+
+input.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        send();
+    }
+});
+
+checkStatus();
+setInterval(checkStatus, 30000);
+
+// Show initial autonomous reflection
+setTimeout(() => {
+    addMessage('autonomy', 'Brain started. Self-initiating cycles every 30s/120s/300s. I will reflect on your questions and the world.', '');
+}, 2000);
+</script>
+</body>
+</html>
