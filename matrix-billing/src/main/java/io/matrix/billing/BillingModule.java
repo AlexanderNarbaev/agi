@@ -1,33 +1,50 @@
 package io.matrix.billing;
 
 /**
- * WAVE T-01 placeholder — Wave T-07 will implement Stripe + credit ledger.
+ * WAVE T-07 — Billing Module facade.
  *
- * <p>Final design (T-07):</p>
+ * Singleton access point for matrix-api-gateway integration.
+ * Replaces T-01 placeholder.
+ *
+ * <p>Modules exposed:</p>
  * <ul>
- *   <li>{@code SubscriptionService}: Stripe-backed plan management.</li>
- *   <li>{@code CreditLedger}: Internal token-based API quota tracking.</li>
- *   <li>{@code LicenseValidator}: Cryptographic license key validation (Ed25519).</li>
+ *   <li>{@link CreditLedger} — internal currency accounting</li>
+ *   <li>{@link SubscriptionService} — customer lifecycle</li>
+ *   <li>{@link LicenseValidator} — cryptographic license checks</li>
+ *   <li>{@link StripeWebhookHandler} — Stripe event processing</li>
  * </ul>
  *
- * <p><b>CONSTITUTION compliance:</b> No inference, no LLM. Pure billing/business logic.</p>
+ * <p><b>CONSTITUTION compliance:</b> All billing ops are transactional.
+ * No LLM.</p>
  */
 public final class BillingModule {
 
     /** Module version. */
-    public static final String VERSION = "0.1.0-T01";
+    public static final String VERSION = "0.1.0-T07";
 
     /** Currency unit for API credits (display). */
-    public static final String CREDIT_UNIT = "MCR"; // MATRIX Credit
+    public static final String CREDIT_UNIT = "MCR";
 
-    /** Stripe publishable key prefix check (do not store secret in code). */
-    public static final String STRIPE_KEY_PREFIX = "pk_live_";
+    /** Stripe webhook secret prefix check (do not store real secret in code). */
+    public static final String STRIPE_KEY_PREFIX = "whsec_";
 
-    private BillingModule() {
-        // static facade only
-    }
+    private static final CreditLedger LEDGER = new CreditLedger();
+    private static final LicenseValidator VALIDATOR = new LicenseValidator("t07-dev-signing-secret");
+    private static final SubscriptionService SUBSCRIPTIONS = new SubscriptionService(
+        LEDGER, VALIDATOR, "t07-dev-signing-secret");
+    private static final StripeWebhookHandler WEBHOOK = new StripeWebhookHandler(
+        "t07-dev-webhook-secret", SUBSCRIPTIONS, LEDGER);
+
+    private BillingModule() {}
 
     public static String status() {
-        return "matrix-billing:" + VERSION + ":credit=" + CREDIT_UNIT;
+        return "matrix-billing:" + VERSION
+            + ":credit=" + CREDIT_UNIT
+            + ":customers=" + SUBSCRIPTIONS.customerCount();
     }
+
+    public static CreditLedger ledger() { return LEDGER; }
+    public static SubscriptionService subscriptions() { return SUBSCRIPTIONS; }
+    public static LicenseValidator validator() { return VALIDATOR; }
+    public static StripeWebhookHandler webhook() { return WEBHOOK; }
 }
