@@ -8,10 +8,21 @@ class ObservabilityModuleTest {
     @Test
     void testStatus() {
         String status = ObservabilityModule.status();
-        assertTrue(status.contains("matrix-observability:0.1.0-T01"));
-        assertTrue(status.contains(":prom=9090:"));
-        assertTrue(status.contains(":grafana=3000:"));
-        assertTrue(status.contains(":jaeger=16686"));
+        assertTrue(status.startsWith("matrix-observability:0.1.0-T09"));
+    }
+
+    @Test
+    void testHasStandardMetrics() {
+        assertNotNull(ObservabilityModule.metrics().get("matrix_analyze_requests_total"));
+        assertNotNull(ObservabilityModule.metrics().get("matrix_analyze_duration_ms"));
+        assertNotNull(ObservabilityModule.metrics().get("matrix_explain_lookups_total"));
+        assertNotNull(ObservabilityModule.metrics().get("matrix_federation_nodes"));
+        assertNotNull(ObservabilityModule.metrics().get("matrix_audit_chain_integrity"));
+    }
+
+    @Test
+    void testHasHealthChecks() {
+        assertTrue(ObservabilityModule.health().probeCount() >= 1);
     }
 
     @Test

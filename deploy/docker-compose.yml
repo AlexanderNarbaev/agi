@@ -1,0 +1,54 @@
+# WAVE T-09 — Local development stack
+# Brings up: matrix-api-gateway, matrix-web-ui, prometheus, grafana, alertmanager
+
+version: '3.8'
+
+services:
+  matrix-api-gateway:
+    build:
+      context: .
+      dockerfile: deploy/docker/Dockerfile.api-gateway
+    ports:
+      - "8080:8080"
+    environment:
+      STRIPE_WEBHOOK_SECRET: whsec_dev_secret
+      LICENSE_SIGNING_SECRET: dev_signing_secret
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/q/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  matrix-web-ui:
+    build:
+      context: .
+      dockerfile: deploy/docker/Dockerfile.web-ui
+    ports:
+      - "3000:3000"
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:8080
+      NEXT_PUBLIC_PLAUSIBLE_DOMAIN: matrix.local
+    depends_on:
+      - matrix-api-gateway
+
+  prometheus:
+    image: prom/prometheus:v2.55.1
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./deploy/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./deploy/prometheus/matrix-alerts.yml:/etc/prometheus/matrix-alerts.yml:ro
+
+  grafana:
+    image: grafana/grafana:11.3.0
+    ports:
+      - "3001:3000"
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: admin
+    volumes:
+      - ./deploy/grafana/matrix-dashboard.json:/var/lib/grafana/dashboards/matrix.json:ro
+
+  alertmanager:
+    image: prom/alertmanager:v0.27.0
+    ports:
+      - "9093:9093"

@@ -1,0 +1,76 @@
+{
+  "title": "MATRIX Civilization",
+  "uid": "matrix-main",
+  "tags": ["matrix", "neuro-symbolic", "ai"],
+  "timezone": "browser",
+  "refresh": "30s",
+  "schemaVersion": 39,
+  "version": 1,
+  "panels": [
+    {
+      "title": "Analyze Requests / sec",
+      "type": "timeseries",
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0},
+      "targets": [{
+        "expr": "rate(matrix_analyze_requests_total[5m])",
+        "legendFormat": "{{plan}}"
+      }]
+    },
+    {
+      "title": "Analyze Latency p95 (ms)",
+      "type": "timeseries",
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0},
+      "targets": [{
+        "expr": "histogram_quantile(0.95, rate(matrix_analyze_duration_ms_bucket[5m]))",
+        "legendFormat": "p95"
+      }]
+    },
+    {
+      "title": "Federation Nodes (active)",
+      "type": "stat",
+      "gridPos": {"h": 4, "w": 6, "x": 0, "y": 8},
+      "targets": [{
+        "expr": "matrix_federation_nodes"
+      }]
+    },
+    {
+      "title": "Audit Chain Integrity",
+      "type": "stat",
+      "gridPos": {"h": 4, "w": 6, "x": 6, "y": 8},
+      "targets": [{
+        "expr": "matrix_audit_chain_integrity"
+      }],
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [{"type": "value", "options": {"0": {"text": "TAMPERED", "color": "red"}, "1": {"text": "OK", "color": "green"}}}]
+        }
+      }
+    },
+    {
+      "title": "Rate Limit Rejections / 5min",
+      "type": "timeseries",
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 8},
+      "targets": [{
+        "expr": "increase(matrix_rate_limit_rejections_total[5m])",
+        "legendFormat": "{{plan}}"
+      }]
+    },
+    {
+      "title": "GDPR Erasures (last 24h)",
+      "type": "stat",
+      "gridPos": {"h": 4, "w": 6, "x": 0, "y": 12},
+      "targets": [{
+        "expr": "increase(matrix_gdpr_erasures_total[24h])"
+      }]
+    },
+    {
+      "title": "Explain Lookups / sec",
+      "type": "timeseries",
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 16},
+      "targets": [{
+        "expr": "rate(matrix_explain_lookups_total[5m])",
+        "legendFormat": "{{plan}}"
+      }]
+    }
+  ]
+}
