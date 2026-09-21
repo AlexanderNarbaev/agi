@@ -1,43 +1,55 @@
 package io.matrix.observability;
 
 /**
- * WAVE T-01 placeholder — Wave T-09 will implement the observability stack.
+ * WAVE T-09 — Observability Module facade.
  *
- * <p>Final design (T-09):</p>
- * <ul>
- *   <li>Prometheus exporter: pulls metrics from {@code matrix-core}'s
- *       {@code quarkus-micrometer-registry-prometheus} endpoint.</li>
- *   <li>Grafana dashboards: BIR/HDC inference latency, modulator state,
- *       federation health, credit consumption.</li>
- *   <li>Loki log aggregation: JSON-structured logs from all ecosystem modules.</li>
- *   <li>Jaeger tracing: OpenTelemetry spans across HTTP gateway → SDK → core.</li>
- * </ul>
+ * Replaces T-01 placeholder with real Prometheus + health + alerting.
  *
- * <p><b>CONSTITUTION compliance:</b> Telemetry only. No user data leaves the
- * trust boundary; aggregate metrics only.</p>
+ * <p><b>CONSTITUTION compliance:</b> No LLM. Pure telemetry.</p>
  */
 public final class ObservabilityModule {
 
-    /** Module version. */
-    public static final String VERSION = "0.1.0-T01";
+    public static final String VERSION = "0.1.0-T09";
 
-    /** Default Prometheus scrape port (matches matrix-core Quarkus default). */
     public static final int DEFAULT_PROMETHEUS_PORT = 9090;
-
-    /** Default Grafana UI port. */
     public static final int DEFAULT_GRAFANA_PORT = 3000;
-
-    /** Default Jaeger UI port. */
     public static final int DEFAULT_JAEGER_PORT = 16686;
 
-    private ObservabilityModule() {
-        // static facade only
+    private static final MetricsRegistry METRICS = new MetricsRegistry();
+    private static final HealthCheck HEALTH = new HealthCheck();
+    private static final AlertDispatcher ALERTS = new AlertDispatcher();
+
+    // Standard MATRIX metrics — registered on class init
+    static {
+        METRICS.registerCounter("matrix_analyze_requests_total",
+            "Total number of /v1/analyze requests");
+        METRICS.registerHistogram("matrix_analyze_duration_ms",
+            "Latency of /v1/analyze requests in milliseconds");
+        METRICS.registerCounter("matrix_explain_lookups_total",
+            "Total number of /v1/explain lookups");
+        METRICS.registerGauge("matrix_federation_nodes",
+            "Current number of active federation nodes");
+        METRICS.registerGauge("matrix_audit_chain_integrity",
+            "1 if hash chain intact, 0 if tampered");
+        METRICS.registerCounter("matrix_rate_limit_rejections_total",
+            "Total requests rejected by rate limiter");
+        METRICS.registerCounter("matrix_gdpr_erasures_total",
+            "Total GDPR erasure operations performed");
+
+        // Default health checks
+        HEALTH.registerSupplier("process_uptime", () -> true);
     }
+
+    private ObservabilityModule() {}
 
     public static String status() {
         return "matrix-observability:" + VERSION
-            + ":prom=" + DEFAULT_PROMETHEUS_PORT
-            + ":grafana=" + DEFAULT_GRAFANA_PORT
-            + ":jaeger=" + DEFAULT_JAEGER_PORT;
+            + ":metrics=" + METRICS.size()
+            + ":probes=" + HEALTH.probeCount()
+            + ":channels=" + ALERTS.channelCount();
     }
+
+    public static MetricsRegistry metrics() { return METRICS; }
+    public static HealthCheck health() { return HEALTH; }
+    public static AlertDispatcher alerts() { return ALERTS; }
 }
