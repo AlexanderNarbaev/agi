@@ -1,6 +1,66 @@
 # SESSION
 
-**Status:** T-08 SDKs & PILOTS COMPLETE — TRANSFORMATION IN PROGRESS
+**Status:** T-09 CI/CD & OBSERVABILITY COMPLETE — TRANSFORMATION IN PROGRESS
+
+---
+
+## T-09: CI/CD & Observability Infrastructure
+
+**Date:** 2026-09-21
+**Checkpoint:** `4f667d67` (merged to develop)
+
+### What Was Built
+
+**matrix-observability module** (was T-01 placeholder):
+- `PrometheusMetric` — Counter/Gauge/Histogram with text rendering
+- `MetricsRegistry` — Thread-safe metric registry
+- `HealthCheck` — Liveness/readiness probes
+- `AlertDispatcher` — Multi-channel routing with rate limiting
+- `ObservabilityModule` — Facade with 7 standard metrics
+
+**Deployment Artifacts (`deploy/`)**:
+- 2 multi-stage Dockerfiles (api-gateway, web-ui)
+- Helm chart with Deployment, Service, HPA (3-20 replicas), Secret
+- Local docker-compose stack
+- Grafana dashboard with 7 panels
+- Prometheus config + 6 alert rules
+- 5-stage CI/CD pipeline in GitHub Actions
+
+### Test Results
+
+| Module | Tests |
+|--------|-------|
+| `MetricsRegistryTest` | 6 |
+| `HealthCheckTest` | 6 |
+| `AlertDispatcherTest` | 6 |
+| `ObservabilityModuleTest` | 4 |
+| **T-09 added** | **22 tests** |
+
+### Six Production Alerts
+
+- `MatrixAuditChainTampered` (critical) — hash chain integrity lost
+- `MatrixHighLatency` (critical) — p95 > 1s for 5min
+- `MatrixFederationDegraded` (warning) — < 3 active nodes
+- `MatrixRateLimitSpike` (warning) — > 10 req/s rejected
+- `MatrixNoTraffic` (critical) — no requests for 5min (outage)
+- `MatrixGdprErasureSpike` (warning) — > 50 erasures/hour
+
+### CI/CD Pipeline (5 Stages)
+
+1. **build-test** — compile + test + CONSTITUTION guard + native compile
+2. **security** — SpotBugs + TruffleHog + OWASP dep check
+3. **docker** — build + push to Docker Hub (matrix.{api-gateway,web-ui})
+4. **deploy-staging** — Helm install on develop (auto)
+5. **deploy-prod** — Helm install on main (manual approval)
+
+### CONSTITUTION Compliance
+
+| Article | Status |
+|---------|--------|
+| I: No LLM in Runtime | ✅ All metrics are structural |
+| VI: No Consciousness Claims | ✅ Engineering telemetry |
+
+### Next: T-10 (Goal Guard & Quality Assurance — final wave!)
 
 ---
 
