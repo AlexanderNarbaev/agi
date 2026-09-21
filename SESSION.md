@@ -1,6 +1,86 @@
 # SESSION
 
-**Status:** T-07 ECONOMIC MODEL COMPLETE — TRANSFORMATION IN PROGRESS
+**Status:** T-08 SDKs & PILOTS COMPLETE — TRANSFORMATION IN PROGRESS
+
+---
+
+## T-08: SDK Development & Pilot Packages
+
+**Date:** 2026-09-21
+**Checkpoint:** `71bfccfc` (merged to develop)
+
+### What Was Built
+
+**Java SDK** (matrix-sdk-java):
+- Full MatrixClient with builder pattern + fluent AnalyzeCall API
+- DTOs: AnalyzeRequest/Response, ExplainResponse, Federate*, AuditEntry, Plan
+- Async (CompletableFuture) + streaming (polling-based)
+- Bean Validation (@NotBlank, @Size)
+- Maven Central publication config (T-08.5)
+
+**Polyglot SDKs** (will split to separate repos in T-09):
+- matrix-sdk-python/: pip install matrix-ai — Pydantic models, sync+async clients
+- matrix-sdk-js/: npm install @matrix/sdk — TypeScript, AbortController-based polling
+
+**Pilot Packages** (pre-built solutions):
+- pilots/smart-home-agent/ — Energy optimization + Z-score anomaly detection
+- pilots/edu-assessor/ — Privacy-preserving student progress (SHA-256 hashed PII)
+- pilots/compliance-bot/ — GDPR/SOX/HIPAA regulatory checking with audit trail
+
+### Stats
+
+- **~2500 lines** total
+- **29/29 Java tests passing**, 0 failing
+- Python: pytest suite with mocked HTTP
+- JS: jest suite with TypeScript
+
+### Test Coverage
+
+| Test File | Tests |
+|-----------|-------|
+| `MatrixClientTest` | 10 |
+| `PlanTest` | 2 |
+| `SmartHomeAgentTest` | 5 |
+| `EduAssessorTest` | 5 |
+| `ComplianceBotTest` | 6 |
+| **T-08 Java total** | **29 tests** |
+
+### CONSTITUTION Compliance
+
+| Article | Status |
+|---------|--------|
+| I: No LLM in Runtime | ✅ All SDKs are pure transport |
+| V: Privacy | ✅ Edu-assessor hashes PII before any network call |
+| VIII: Open Source | ✅ Apache-2.0 across all SDKs |
+
+### Architecture
+
+```
+┌────────────────────────────────────────────┐
+│ matrix-sdk-java (Maven Central)             │
+│   client.analyze().text("...").call()      │
+│   client.explain(explainId)                  │
+│   client.streamExplain(id, callbacks)        │
+└────────────────────────────────────────────┘
+                ↑ HTTP/JSON
+┌────────────────────────────────────────────┐
+│ matrix-sdk-python (PyPI)                    │
+│ matrix-sdk-js     (NPM)                     │
+└────────────────────────────────────────────┘
+                ↓
+┌────────────────────────────────────────────┐
+│ matrix-api-gateway (Quarkus REST)            │
+└────────────────────────────────────────────┘
+                ↓
+┌────────────────────────────────────────────┐
+│ Pilot Packages                              │
+│   smart-home-agent: energy optimization     │
+│   edu-assessor:      privacy-preserving     │
+│   compliance-bot:    regulatory checking    │
+└────────────────────────────────────────────┘
+```
+
+### Next: T-09 (CI/CD & Observability Infrastructure)
 
 ---
 
