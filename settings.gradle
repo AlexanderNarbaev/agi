@@ -24,3 +24,11 @@ include 'matrix-ros2'
 // It is a Next.js/TypeScript project with its own toolchain.
 // See matrix-web-ui/README.md for the planned standalone-repo split.
 // It is committed in the monorepo for development convenience.
+
+// === PILOT PACKAGES (Wave T-08) ===
+include 'pilots:smart-home-agent'
+include 'pilots:edu-assessor'
+include 'pilots:compliance-bot'
+
+// === POLYGLOT SDKs (Wave T-08, will split to separate repos in T-09) ===
+// matrix-sdk-python and matrix-sdk-js are NOT included in Gradle (different toolchains)
