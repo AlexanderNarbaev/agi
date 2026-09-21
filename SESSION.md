@@ -79,4 +79,40 @@
 
 ---
 
-**Last updated:** 2026-09-21 (W1500, Civilization Complete)
+## History: Previous Major Milestone (W565 Brain)
+
+351 tests passed in Brain-era milestone (analysis branch predecessor):
+- 87 brain tests (real LLM + RAG + autonomy + learning + sensors + real-world)
+- 216 federation tests (registry + consensus + runtime + mediator)
+- 48 CLI tests (conversation tools + web UI)
+
+### Brain Components (legacy baseline)
+
+| Component | Class | Status |
+|-----------|-------|--------|
+| Real LLM | LlmBrainLoopService | Qwen2.5-0.5B via ONNX |
+| RAG | LlmBrainLoopRag | SimpleKnowledgeBase (125 docs) |
+| Anti-hallucination | ConfidenceFilter | Min 30% confidence |
+| Self-initiation | AutonomyEngine | Cycles every 30s/120s/300s |
+| Learning | ConversationLearner | Learns from NDJSON history |
+| Self-improvement | BrainImprover | Continuous KB growth |
+| Interactive | BrainRunner | Interactive chat + learn + stats |
+| Sensor input | BrainSensorBridge | stdin + files + polling |
+| HTTP | BrainHttpServer | 6 endpoints + web UI |
+| Quarkus | BrainQuarkusResource | /v1/brain/* |
+| Telemetry | BrainTelemetry | Prometheus metrics |
+| Startup | BrainServerStartup | Auto-start on Quarkus boot |
+| Launcher | matrix-brain.sh | 7 commands |
+
+---
+
+## Wave Commit Rule
+
+1. `git add -A`
+2. `git commit -m "WAL: W<NUM> — <description>"` (or `feat:` / `docs:` / `fix:` / `chore:`)
+3. `git push origin main && git push gitverse main`
+4. Update SESSION.md
+
+---
+
+**Last updated:** 2026-09-21 (W1500, Civilization Complete, 1,119+ tests)

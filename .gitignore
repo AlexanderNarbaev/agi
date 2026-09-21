@@ -145,3 +145,5 @@ matrix-core/models/training_data/auto_generated.jsonl
 *.7z
 *.zip
 *.rar
+
+# DO NOT ignore docs-v2/ — it is published to GitHub Pages (analysis branch tried to ignore it; reverted)
