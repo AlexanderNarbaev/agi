@@ -7,11 +7,30 @@ remote_theme: just-the-docs/just-the-docs@v0.7.0
 
 color_scheme: dark
 
+# Exclude raw/draft files from build
+exclude:
+  - _raw/
+  - _raw/**
+  - _drafts/
+  - _drafts/**
+  - node_modules/
+  - vendor/
+  - Gemfile
+  - Gemfile.lock
+
 mermaid:
   version: "10.7.0"
 
 mathjax:
   version: "3.2.2"
+
+# Markdown engine settings
+markdown: kramdown
+kramdown:
+  input: GFM
+  syntax_highlighter: rouge
+  syntax_highlighter_opts:
+    css_class: 'highlight'
 
 aux_links:
   - title: GitHub
