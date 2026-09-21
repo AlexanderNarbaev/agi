@@ -1,0 +1,236 @@
+openapi: 3.0.3
+info:
+  title: MATRIX API
+  description: |
+    Hybrid Neuro-Symbolic AI API for the MATRIX ecosystem.
+    All inference happens server-side (BIR + HDC + MCTS).
+    No LLM is invoked in the runtime path (CONSTITUTION I compliant).
+
+  version: 0.1.0-T02
+  contact:
+    name: MATRIX Team
+    url: https://github.com/AlexanderNarbaev/agi
+  license:
+    name: Apache-2.0
+    url: https://www.apache.org/licenses/LICENSE-2.0
+
+servers:
+  - url: https://api.matrix.ai
+    description: Production
+  - url: http://localhost:8080
+    description: Local development
+
+security:
+  - bearerAuth: []
+
+paths:
+  /v1/analyze:
+    post:
+      tags: [Analyze]
+      summary: Run hybrid inference on text/audio/image input
+      operationId: analyze
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AnalyzeRequest'
+      responses:
+        '200':
+          description: Successful inference
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnalyzeResponse'
+        '400':
+          description: Invalid input
+        '401':
+          description: Missing or invalid bearer token
+        '403':
+          description: Insufficient role
+        '429':
+          description: Rate limit exceeded
+
+  /v1/explain/{id}:
+    get:
+      tags: [Explain]
+      summary: Retrieve XAI breakdown for a previous decision
+      operationId: explain
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            minLength: 8
+            maxLength: 64
+          description: Opaque explain_id from a previous analyze response
+      responses:
+        '200':
+          description: Successful explanation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExplainResponse'
+        '404':
+          description: Unknown explain_id
+
+  /v1/federate:
+    post:
+      tags: [Federate]
+      summary: Join a federation node
+      operationId: federate
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/JoinRequest'
+      responses:
+        '201':
+          description: Node joined
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JoinResponse'
+    get:
+      tags: [Federate]
+      summary: List all federation nodes
+      operationId: listNodes
+      responses:
+        '200':
+          description: List of nodes
+
+  /v1/audit/logs:
+    get:
+      tags: [Audit]
+      summary: Retrieve immutable action log (admin only)
+      operationId: auditLogs
+      parameters:
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            default: 100
+            minimum: 1
+            maximum: 1000
+      responses:
+        '200':
+          description: List of audit entries
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: matrix-jwt
+
+  schemas:
+    AnalyzeRequest:
+      type: object
+      required: [input]
+      properties:
+        input:
+          type: string
+          maxLength: 1048576
+        content_type:
+          type: string
+          enum: [text, audio, image]
+          default: text
+        context:
+          type: string
+          maxLength: 65536
+        model:
+          type: string
+          default: default
+
+    AnalyzeResponse:
+      type: object
+      properties:
+        reply:
+          type: string
+        confidence:
+          type: number
+          minimum: 0
+          maximum: 1
+        duration_ms:
+          type: integer
+        accepted:
+          type: boolean
+        explain_id:
+          type: string
+        modulators_fired:
+          type: array
+          items:
+            type: string
+
+    ExplainResponse:
+      type: object
+      properties:
+        explain_id:
+          type: string
+        steps:
+          type: array
+          items:
+            type: object
+            properties:
+              stage:
+                type: string
+              action:
+                type: string
+              duration_ms:
+                type: integer
+        modulator_snapshot:
+          type: object
+          properties:
+            ethical_filter:
+              type: number
+            safety_monitor:
+              type: number
+            consistency_checker:
+              type: number
+            lie_detector:
+              type: number
+        hdc_memory_hits:
+          type: array
+          items:
+            type: string
+        confidence_breakdown:
+          type: object
+          properties:
+            bir_confidence:
+              type: number
+            hdc_confidence:
+              type: number
+            mcts_confidence:
+              type: number
+            aggregate:
+              type: number
+
+    JoinRequest:
+      type: object
+      required: [region]
+      properties:
+        region:
+          type: string
+          maxLength: 1048576
+        shard_capacity:
+          type: integer
+          minimum: 1
+          maximum: 100000
+          default: 100
+
+    JoinResponse:
+      type: object
+      properties:
+        node_id:
+          type: string
+        region:
+          type: string
+        shard_capacity:
+          type: integer
+        joined_at:
+          type: string
+          format: date-time
+        total_nodes:
+          type: integer
