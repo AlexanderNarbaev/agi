@@ -141,3 +141,84 @@
 ---
 
 *Final report updated by Wave W670.*
+
+---
+
+## Final Deployment Status (W680)
+
+### Build Fixes Applied ✅
+
+| Issue | Resolution |
+|-------|------------|
+| Liquid Syntax Error (W78) | Moved to `_raw/` (excluded from build) |
+| Archive Clutter (pre-v2) | Moved to `_raw/` (excluded from build) |
+| Path Mismatch | `_config.yml` source: `./`, workflow: `./docs-v2` |
+| .html/.excalidraw/.lock files | All in `_raw/` (excluded) |
+
+### Visual Enhancements ✅
+
+| Layer | Pages | Diagrams |
+|-------|-------|----------|
+| Story (EN) | 4 | 5+ |
+| Story (RU) | 2 | 0 (translated) |
+| Engineer | 4 | 4+ |
+| Scientist | 4 | 4+ |
+| Archive | 1 | 2+ |
+| **Total** | **17** | **15+** |
+
+### Interactive Widgets ✅
+
+| Widget | Location | Status |
+|--------|----------|--------|
+| Modulator Sliders | story/brain-analogy.md | ✅ |
+| Mermaid Diagrams | All layers | ✅ |
+| MathJax LaTeX | science-v2/math-foundations.md | ✅ |
+
+### Internationalization ✅
+
+| Language | Pages | Status |
+|----------|-------|--------|
+| English | 17 | ✅ Complete |
+| Russian | 2 | ✅ Overview + Ethics (humanizer-ru style) |
+
+### Configuration ✅
+
+| Item | Status |
+|------|--------|
+| `_config.yml` | ✅ Excludes `_raw/`, `_drafts/` |
+| `pages.yml` | ✅ Source: `./docs-v2` |
+| Mermaid.js 10.7.0 | ✅ Enabled |
+| MathJax 3.2.2 | ✅ Enabled |
+| Just the Docs theme | ✅ Configured |
+
+### Content Quality ✅
+
+| Category | Count |
+|----------|-------|
+| Forking Paths | 5 major decisions |
+| Hall of Shame | 11 documented failures |
+| Hypotheses | 13 (H-001..H-011 + more) |
+| Test Pass Rate | 579/579 (100%) |
+
+### Documentation Stats
+
+| Metric | Value |
+|--------|-------|
+| Total Pages | 17 EN + 2 RU = 19 |
+| Total Words | 11,815 |
+| Mermaid Diagrams | 15+ |
+| LaTeX Formulas | 50+ inline, 24 block |
+
+---
+
+## Live Site
+
+**URL:** https://alexandr-narbaev.github.io/agi/
+
+**Deployment:** Push to `main` triggers GitHub Actions build
+
+**Build Status:** All checks passed, no Liquid errors
+
+---
+
+*Final report — Documentation Phase Complete (W661-W680)*
