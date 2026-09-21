@@ -1,0 +1,64 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    color-scheme: dark;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    font-feature-settings: 'rlig' 1, 'calt' 1;
+  }
+
+  ::selection {
+    background-color: rgb(16 185 129 / 0.3);
+    color: rgb(229 231 235);
+  }
+}
+
+@layer components {
+  .container-narrow {
+    @apply mx-auto max-w-5xl px-6;
+  }
+
+  .container-wide {
+    @apply mx-auto max-w-7xl px-6;
+  }
+
+  .btn-primary {
+    @apply inline-flex items-center justify-center rounded-md bg-matrix-primary px-6 py-3 text-sm font-semibold text-matrix-bg transition hover:bg-emerald-400 focus:outline-none focus:ring-2 focus:ring-matrix-primary focus:ring-offset-2 focus:ring-offset-matrix-bg;
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center justify-center rounded-md border border-matrix-border bg-matrix-surface px-6 py-3 text-sm font-semibold text-matrix-text transition hover:border-matrix-primary hover:text-matrix-primary focus:outline-none focus:ring-2 focus:ring-matrix-primary focus:ring-offset-2 focus:ring-offset-matrix-bg;
+  }
+
+  .card {
+    @apply rounded-lg border border-matrix-border bg-matrix-surface p-6 transition hover:border-matrix-primary/50;
+  }
+
+  .badge {
+    @apply inline-flex items-center rounded-full border border-matrix-border bg-matrix-bg px-3 py-1 text-xs font-medium text-matrix-muted;
+  }
+}
+
+@layer utilities {
+  .text-gradient {
+    background: linear-gradient(135deg, #10b981 0%, #06b6d4 50%, #a78bfa 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .bg-grid {
+    background-image:
+      linear-gradient(to right, rgb(31 41 55 / 0.3) 1px, transparent 1px),
+      linear-gradient(to bottom, rgb(31 41 55 / 0.3) 1px, transparent 1px);
+    background-size: 32px 32px;
+  }
+}
