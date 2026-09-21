@@ -1,6 +1,60 @@
 # SESSION
 
-**Status:** T-01 ECOSYSTEM FOUNDATION COMPLETE — TRANSFORMATION STARTED
+**Status:** T-02 API GATEWAY COMPLETE — TRANSFORMATION IN PROGRESS
+
+---
+
+## T-02: API Gateway & Security Layer
+
+**Date:** 2026-09-21
+**Checkpoint:** `2ef91705` (merged to develop)
+
+### Test Results (ALL PASSING, 0 FAIL)
+
+| Module | Tests |
+|--------|-------|
+| **New T-02 Tests (matrix-api-gateway)** | **58** |
+| AnalyzeResource | 6 |
+| ExplainResource | 3 |
+| FederateResource | 6 |
+| StubBrainCycle | 6 |
+| FederationRegistry | 5 |
+| RbacChecker | 5 |
+| JwtAuthFilter | 7 |
+| RateLimiter | 6 |
+| InputValidator | 12 |
+| AuditResource | 2 (in module) |
+| **T-02 + T-01 + W1500 Combined** | **1,199+ tests** |
+
+### Endpoints Delivered
+
+| Method | Path | Role | Purpose |
+|--------|------|------|---------|
+| POST | `/v1/analyze` | DEVELOPER+ | Hybrid inference (text/audio/image) |
+| GET | `/v1/explain/{id}` | VIEWER+ | XAI breakdown retrieval |
+| POST | `/v1/federate` | DEVELOPER+ | Join federation node |
+| GET | `/v1/federate` | VIEWER+ | List federation nodes |
+| GET | `/v1/audit/logs` | ADMIN | Immutable action log |
+
+### Security Features
+
+- JWT Bearer authentication (T-02 stub; RS256/Ed25519 in T-02.5)
+- 3-tier RBAC: ADMIN > DEVELOPER > VIEWER
+- Rate limiting: FREE 100/hr, PRO 1k/hr, ENTERPRISE ∞
+- OWASP Top 10 input validation (control chars, size limits)
+- OpenAPI 3.0 spec at `src/main/resources/openapi.yaml`
+- Swagger UI auto-generated at `/q/swagger-ui`
+
+### CONSTITUTION Compliance
+
+| Article | Status |
+|---------|--------|
+| I: No LLM in Runtime | ✅ Stub performs no LLM call |
+| II: Pure Hybrid | ✅ matrix-core unchanged, gateway is pure transport |
+| IV: FROZEN Filters | ✅ Validated |
+| VI: No Consciousness Claims | ✅ "API" used as engineering term |
+
+### Next: T-03 (Documentation Ecosystem — Bilingual)
 
 ---
 
