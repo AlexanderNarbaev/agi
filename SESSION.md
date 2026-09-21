@@ -1,6 +1,66 @@
 # SESSION
 
-**Status:** T-04 LANDING PAGE COMPLETE — TRANSFORMATION IN PROGRESS
+**Status:** T-05 XAI DASHBOARD COMPLETE — TRANSFORMATION IN PROGRESS
+
+---
+
+## T-05: XAI Dashboard (Client-Facing)
+
+**Date:** 2026-09-21
+**Checkpoint:** `fe37d4c9` (merged to develop)
+
+### What Was Built
+
+Complete client-facing XAI dashboard connected to matrix-api-gateway:
+
+**API Layer:**
+- `lib/matrix-client.ts` — TypeScript client (analyze/explain/joinFederation/auditLogs)
+- `lib/use-explain-stream.ts` — WebSocket hook with polling fallback
+
+**Visualizations (matrix-web-ui/components/dashboard/):**
+- **DecisionTimeline** — Horizontal stacked bar + step list, color-coded by stage
+- **ModulatorState** — Real-time gauges for the 4 FROZEN modulators
+- **ConfidenceScore** — SVG radial gauge + per-stage bar chart
+- **VectorMap** — 3D HDC memory visualization (Three.js, 500-point cloud)
+- **CounterfactualSimulator** — Side-by-side what-if analysis
+- **HDCDashboardCanvas** — Lazy-loaded 3D canvas
+
+**Dashboard Page (`/dashboard`):**
+- API key + query input
+- Loading/empty/error states
+- 2x2 grid layout (Timeline+Modulator, Confidence+Vector)
+- Counterfactual simulator
+- PDF/PNG export placeholders (T-05.5)
+
+### Stats
+
+- **14 new files**, **1,613 lines**
+- **6 dashboard components**
+- **5 new test files** (lib + dashboard), **36 total tests** in matrix-web-ui
+- TypeScript strict mode preserved
+
+### Test Coverage
+
+| Test File | Tests |
+|-----------|-------|
+| `lib/matrix-client.test.ts` | 14 (all API methods, error handling, network errors) |
+| `dashboard/DecisionTimeline.test.tsx` | 5 |
+| `dashboard/ModulatorState.test.tsx` | 6 |
+| `dashboard/ConfidenceScore.test.tsx` | 5 |
+| `dashboard/VectorMap.test.tsx` | 6 (with mocked canvas) |
+| **T-05 added** | **36 tests** |
+
+### CONSTITUTION Compliance
+
+| Article | Status |
+|---------|--------|
+| I: No LLM in Runtime | ✅ Dashboard is read-only, no inference calls |
+| III: Reproducibility | ✅ WebGL viz uses seeded random |
+| IV: FROZEN Modulators | ✅ Display with explicit "FROZEN" warning |
+| VI: No Consciousness Claims | ✅ Engineering language |
+| VIII: Open Source | ✅ Apache-2.0 |
+
+### Next: T-06 (Audit & Compliance System)
 
 ---
 
