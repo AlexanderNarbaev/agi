@@ -32,3 +32,5 @@ include 'pilots:compliance-bot'
 
 // === POLYGLOT SDKs (Wave T-08, will split to separate repos in T-09) ===
 // matrix-sdk-python and matrix-sdk-js are NOT included in Gradle (different toolchains)
+// === QUALITY ASSURANCE (Wave T-10) ===
+include 'matrix-quality'
