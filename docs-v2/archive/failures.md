@@ -162,3 +162,101 @@ flowchart TD
     
     style J fill:#51cf66,stroke:#2b8a3e
 ```
+
+---
+
+## F-007: GraalVM Native Image Build Failure
+
+**Date:** 2026-09-20 | **Wave:** W597
+
+**What we tried:** Building a native image with GraalVM CE 25.0.2.
+
+**What went wrong:**
+- The native image build process started but the binary was not created in the expected location
+- The build appeared to succeed but produced no executable
+
+**Lesson:** GraalVM native image builds are sensitive to configuration. Need to verify build outputs and use the correct task name (`nativeCompile`).
+
+**Resolution:** Verified the build output location and task configuration.
+
+---
+
+## F-008: Maven Dependency Conflicts
+
+**Date:** 2026-08-30 | **Wave:** W550
+
+**What we tried:** Adding new dependencies for improved testing.
+
+**What went wrong:**
+- Version conflicts between transitive dependencies
+- Incompatible API changes
+- Build failures
+
+**Lesson:** Always check dependency trees and use version constraints.
+
+**Resolution:** Resolved by pinning versions and excluding conflicting transitive dependencies.
+
+---
+
+## F-009: Test Execution Timeout
+
+**Date:** 2026-09-15 | **Wave:** W580
+
+**What we tried:** Running the full test suite including benchmarks.
+
+**What went wrong:**
+- Some tests exceeded the 120-second timeout
+- Full test suite was too slow for CI
+
+**Lesson:** Separate unit tests from integration/benchmark tests. Use different timeouts for different test types.
+
+**Resolution:** Split test execution: fast unit tests in default run, benchmarks in separate task.
+
+---
+
+## F-010: Memory Leak in Long-Running Tests
+
+**Date:** 2026-09-18 | **Wave:** W591
+
+**What we tried:** Running 1000+ tick simulations.
+
+**What went wrong:**
+- Memory usage grew over time
+- Objects not being garbage collected
+- Test eventually ran out of memory
+
+**Lesson:** Long-running tests need explicit memory management. Use weak references, clear collections, and periodic cleanup.
+
+**Resolution:** Added explicit cleanup in test setup/teardown. Used `System.gc()` hints.
+
+---
+
+## F-011: Flaky Consensus Test
+
+**Date:** 2026-09-19 | **Wave:** W592
+
+**What we tried:** Testing federation consensus under network partition.
+
+**What went wrong:**
+- Test passed most of the time but occasionally failed
+- Timing-dependent behavior
+- Non-deterministic results
+
+**Lesson:** Consensus tests must be deterministic. Use mock clocks and controlled time advancement.
+
+**Resolution:** Replaced wall-clock waits with explicit tick advancement. Made all timeouts configurable.
+
+---
+
+## Summary of Lessons
+
+| Category | Key Lesson |
+|----------|------------|
+| **Architecture** | Simple rules beat complex models for structured problems |
+| **Extensibility** | Registry patterns > hardcoded sets |
+| **Emergence** | Non-linearity creates realistic behavior |
+| **Testing** | Determinism is essential for reliable tests |
+| **Performance** | CPU-based inference is 33,000x more efficient than GPU |
+| **Build** | Verify build outputs, use correct task names |
+| **Dependencies** | Pin versions, check transitive deps |
+| **Memory** | Long-running tests need explicit cleanup |
