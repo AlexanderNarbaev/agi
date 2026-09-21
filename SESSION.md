@@ -1,6 +1,79 @@
 # SESSION
 
-**Status:** T-06 AUDIT & COMPLIANCE COMPLETE — TRANSFORMATION IN PROGRESS
+**Status:** T-07 ECONOMIC MODEL COMPLETE — TRANSFORMATION IN PROGRESS
+
+---
+
+## T-07: Economic Model & Monetization
+
+**Date:** 2026-09-21
+**Checkpoint:** `ef7cb41a` (merged to develop)
+
+### What Was Built
+
+Replaces T-01 placeholder with full billing implementation (JDK-only — no Stripe SDK yet).
+
+**Core Components:**
+- `Plan` — 3-tier enum (FREE/PRO/ENTERPRISE) with credits/hour + price
+- `LicenseType` — 4 license types (COMMUNITY/COMMERCIAL/ENTERPRISE/PARTNER)
+- `Customer` — Immutable record with subscription state
+- `CreditTransaction` — Double-entry bookkeeping
+- `CreditLedger` — Thread-safe in-memory ledger with idempotency
+- `LicenseKey` — Base64-encoded signed key (payload.signature)
+- `LicenseValidator` — Signature verification + expiration check
+- `SubscriptionService` — Customer lifecycle (signup/changePlan/cancel)
+- `StripeWebhookHandler` — HMAC-SHA256 signature verification + idempotency
+- `BillingModule` — Singleton facade
+
+### Stats
+
+- **10 new files** (8 main + 6 test), 2 modified
+- **~1300 lines** total
+- **55/55 tests passing**, 0 failing
+
+### Test Coverage
+
+| Test File | Tests |
+|-----------|-------|
+| `PlanTest` | 6 |
+| `CreditLedgerTest` | 14 |
+| `LicenseValidatorTest` | 7 |
+| `SubscriptionServiceTest` | 10 |
+| `StripeWebhookHandlerTest` | 10 |
+| `BillingModuleTest` | 8 |
+| **T-07 added** | **55 tests** |
+
+### CONSTITUTION Compliance
+
+| Article | Status |
+|---------|--------|
+| I: No LLM in Runtime | ✅ Pure transactional logic |
+| III: Reproducibility | ✅ Deterministic given signed license |
+| VIII: Open Source | ✅ Community license = Apache-2.0 |
+
+### Architecture
+
+```
+┌─────────────────────────────────────────┐
+│ matrix-billing                          │
+├─────────────────────────────────────────┤
+│ Plan + LicenseType + Customer            │
+│   ↑                                     │
+│ CreditLedger (double-entry bookkeeping) │
+│   ↑                                     │
+│ SubscriptionService (lifecycle)          │
+│   ↑                                     │
+│ LicenseValidator (signature verify)      │
+│   ↑                                     │
+│ StripeWebhookHandler (HMAC + idempotent) │
+│   ↑                                     │
+│ BillingModule (facade)                   │
+└─────────────────────────────────────────┘
+            ↑
+            │ wired into matrix-api-gateway in T-07.5
+```
+
+### Next: T-08 (SDK Development & Pilot Packages)
 
 ---
 
