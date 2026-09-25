@@ -7,27 +7,40 @@
 - ✅ MIND-W2: Persistent Mind                  PR #18 → develop MERGED
 - ✅ MIND-W3: Sleep & Consolidation Engine     PR #20 → develop MERGED
 - ✅ MIND-W4: Autonomy, Goals & Stimuli        PR #22 → develop MERGED
+- ✅ MIND-W5: Distillation Factory             PR #23 → develop MERGED
+
+## MIND-W5 Sub-tasks (ALL DONE)
+- [x] S5.1: ModelToMatrix pipeline (ONNX + dataset + text corpus distillation)
+- [x] S5.2: DistillationLedger (NDJSON persistence + summary aggregation)
+- [x] S5.3: CI guard test: RuntimeLlmGuardTest scans runtime sources for forbidden legacy LLM imports
+- [x] S5.4: Super-additivity test (merged matrix scores >= max(A, B))
+- [x] S5.5: 12 distillation tests
 
 ## Current Pipeline
 - main @ 10da39a7
 - release/v1.0 @ 678b7091
-- develop @ ef433cd9 (W1+W2+W3+W4 merged)
-- 259/259 ecosystem tests
+- develop @ 985941f4 (W1+W2+W3+W4+W5 merged)
+- 271/271 ecosystem tests
 - Goal Guard 100/100 (13/13 reviewers green)
 
-## MIND-W5: Distillation Factory — [ACTIVE]
+## MIND-W6: GPU Acceleration — [ACTIVE]
 
 ### Goal
-Upgrade io/matrix/distill/* into a factory: ONNX → HDC codebook + BIR clauses + Tsetlin automata. Multi-source ingestion. CI guard against runtime LLM imports.
+Harden `federation/gpu/GpuTaskExecutor` into a general kernel engine for
+MATRIX-native math (HDC bit-XOR, Tsetlin batch updates, MCTS rollouts).
+Auto-detect device; benchmark CPU vs GPU; adaptive dispatch.
 
 ### Sub-tasks
-- [ ] S5.1: Implement ModelToMatrix stub (parse ONNX graph metadata)
-- [ ] S5.2: Add DistillationLedger (NDJSON of runs: inputs, sizes, eval deltas)
-- [ ] S5.3: Add CI guard test: scan runtime paths for `io.matrix.api.*` LLM imports
-- [ ] S5.4: Super-additivity test: matrix from A + B scores ≥ max(A,B)
-- [ ] S5.5: 10+ distillation tests
+- [ ] S6.1: Implement GpuKernelEngine (auto-detect CPU/GPU)
+- [ ] S6.2: HDC bit-cosine kernel (10k-bit vectors)
+- [ ] S6.3: Tsetlin batch clause-update kernel
+- [ ] S6.4: Adaptive dispatch (small inputs → CPU)
+- [ ] S6.5: Prometheus metrics: gpu_utilization, kernels_per_sec, speedup_ratio
+- [ ] S6.6: 10+ tests (kernels, correctness, dispatch logic)
 
-## MIND-W6: GPU Acceleration — [QUEUED]
+### PASS checklist
+- [ ] HDC search of 1M vectors >= 5x faster with GPU than CPU (or simulation harness)
+- [ ] identical results CPU == GPU (bit-exact or tolerance-tested)
 
 ## MIND-W7: Audit/Billing/Federation wired for real — [QUEUED]
 
