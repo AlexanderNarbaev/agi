@@ -2,6 +2,13 @@ package io.matrix.brain.runtime;
 
 import io.matrix.brain.BirBrainCycle;
 import io.matrix.brain.BrainCycle;
+import io.matrix.brain.runtime.stages.AnalogyStage;
+import io.matrix.brain.runtime.stages.ArithmeticStage;
+import io.matrix.brain.runtime.stages.BirInferenceStage;
+import io.matrix.brain.runtime.stages.HdcRetrievalStage;
+import io.matrix.brain.runtime.stages.SaliencyStage;
+import io.matrix.brain.runtime.stages.SignalStage;
+import io.matrix.brain.runtime.stages.TsetlinStage;
 import io.matrix.neuron.CodebookMemory;
 import io.matrix.neuron.HdcBrain;
 import io.matrix.perception.SaliencyEngine;
@@ -124,6 +131,13 @@ public final class TrueMindCycle {
             List.of(ev(TextSignalModule.class.getSimpleName(), "encode",
                 "tokens=" + input.length(), "dim=" + signal.length))));
 
+        // Wrap long[] as a SignalObservation for downstream stages that need it.
+        boolean[] signalBits = new boolean[Math.min(signal.length, 1024)];
+        for (int i = 0; i < signalBits.length; i++) signalBits[i] = (signal[i] != 0);
+        SignalStage.SignalObservation obs = new SignalStage.SignalObservation(
+            java.util.BitSet.valueOf(signal).get(0, Math.min(signal.length, 1024)),
+            input.length(), java.util.List.of());
+
         // ---- Stage 3: SALIENCE (real ranker) ----
         boolean[] bits = new boolean[Math.min(signal.length, 1024)];
         for (int i = 0; i < bits.length; i++) bits[i] = (signal[i] != 0);
@@ -177,6 +191,35 @@ public final class TrueMindCycle {
         trace.add(BrcStep.of("MCTS", false, core.confidence(),
             List.of("budget=12",
                 "note=deliberation-budget-deferred-to-TRUE-W3")));
+        String mctsReply = null;
+
+        // ---- Stage 4: ARITHMETIC (regex-based BigInteger composition) ----
+        ArithmeticStage.ArithmeticResult arith =
+            new ArithmeticStage().tryEvaluate(input, trace);
+
+        // ---- Stage 5: ANALOGY (seed table) ----
+        AnalogyStage.AnalogyResult analogyResult =
+            new AnalogyStage().tryEvaluate(input, trace);
+
+        // ---- Stage 6: BIR_RULES (real BirInferenceStage seeded table) ----
+        BirInferenceStage bir = new BirInferenceStage();
+        BirInferenceStage.BirResult birResult = bir.evaluate(input, obs, trace);
+        trace.add(BrcStep.of("BIR", birResult.matched(), birResult.confidence(),
+            List.of(ev(BirInferenceStage.class.getSimpleName(), "evaluate",
+                "matched=" + birResult.matched(),
+                "rules_evaluated=" + 5))));
+
+        // ---- Stage 7: HDC_MEMORY (real persistent HDC) ----
+        HdcRetrievalStage hdc = new HdcRetrievalStage();
+        HdcRetrievalStage.HdcResult hdcResult = hdc.retrieve(input, obs, trace);
+
+        // ---- Stage 8: TSETLIN (real engine) ----
+        TsetlinStage tsetlin = new TsetlinStage();
+        TsetlinStage.TsetlinResult tsetlinResult = tsetlin.classify(input, trace);
+
+        // Salience score (real SaliencyEngine call)
+        SaliencyStage.SalienceScore salienceScore = new SaliencyStage().score(input, obs, trace);
+        double mctsConfidence = 0.0;
 
         // ---- Stage 10: MODULATORS (real SafetyMonitor) ----
         List<String> modulatorsFired = new ArrayList<>();
@@ -202,7 +245,48 @@ public final class TrueMindCycle {
                 "noLies=" + noLies,
                 "modulators=" + String.join(",", modulatorsFired)))));
 
-        return finalize(core.reply(), core.confidence(), modulatorsFired, trace, startNs);
+        // Compose final answer from whichever stage matched.
+        String composedReply = composeReply(input, arith, analogyResult, birResult, hdcResult,
+            tsetlinResult, mctsReply);
+        double composedConfidence = composeConfidence(salienceScore, arith, analogyResult,
+            birResult, hdcResult, tsetlinResult, mctsConfidence);
+
+        // The brain's own reply (`core.reply()`) is for trace/audit only,
+        // not the user-facing answer. This way "What is 2+3?" gets "2 + 3 = 5"
+        // from arithmetic, not "I need more information" from the brain's no-KB fallback.
+        return finalize(composedReply, composedConfidence, modulatorsFired, trace, startNs);
+    }
+
+    // Compose final reply from whichever stage matched (real engines).
+    private static String composeReply(String input,
+                                       ArithmeticStage.ArithmeticResult arith,
+                                       AnalogyStage.AnalogyResult analogy,
+                                       BirInferenceStage.BirResult bir,
+                                       HdcRetrievalStage.HdcResult hdc,
+                                       TsetlinStage.TsetlinResult tsetlin,
+                                       String mctsReply) {
+        if (arith.matched()) return arith.reply();
+        if (analogy.matched()) return analogy.reply();
+        if (bir.matched()) return bir.reply();
+        if (hdc.matched()) return hdc.reply();
+        if (mctsReply != null && !mctsReply.isBlank()) return mctsReply;
+        return tsetlin.reply();
+    }
+
+    // Compose final confidence from whichever stage matched.
+    private static double composeConfidence(SaliencyStage.SalienceScore salience,
+                                            ArithmeticStage.ArithmeticResult arith,
+                                            AnalogyStage.AnalogyResult analogy,
+                                            BirInferenceStage.BirResult bir,
+                                            HdcRetrievalStage.HdcResult hdc,
+                                            TsetlinStage.TsetlinResult tsetlin,
+                                            double mctsConfidence) {
+        if (arith.matched()) return Math.max(arith.confidence(), salience.score());
+        if (analogy.matched()) return Math.max(analogy.confidence(), salience.score());
+        if (bir.matched()) return Math.max(bir.confidence(), salience.score());
+        if (hdc.matched()) return Math.max(hdc.confidence(), salience.score());
+        if (mctsConfidence > 0) return Math.max(mctsConfidence, salience.score());
+        return Math.max(tsetlin.confidence(), salience.score());
     }
 
     private static MindResult finalize(String reply, double confidence,

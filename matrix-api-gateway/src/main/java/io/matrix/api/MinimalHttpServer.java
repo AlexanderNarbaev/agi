@@ -774,7 +774,15 @@ public final class MinimalHttpServer {
     }
 
     public static void main(String[] args) throws Exception {
-        int port = Integer.parseInt(System.getProperty("port", "8080"));
+        // Accept port via args[0] OR -Dport system property OR default 8765.
+        int port = 8765;
+        String sysProp = System.getProperty("port");
+        if (sysProp != null && !sysProp.isBlank()) {
+            port = Integer.parseInt(sysProp);
+        } else if (args != null && args.length > 0) {
+            try { port = Integer.parseInt(args[0]); }
+            catch (NumberFormatException ignored) { /* keep default */ }
+        }
         MinimalHttpServer srv = new MinimalHttpServer(port);
         srv.start();
         Runtime.getRuntime().addShutdownHook(new Thread(srv::stop));

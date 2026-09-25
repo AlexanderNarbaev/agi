@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # TRUE-W10 — Start the MATRIX mind.
-# Builds, starts gateway (MATRIX_MODE=production), web-ui, and prints URLs.
+# Builds, starts gateway (MATRIX_MODE=production), and prints URLs.
 set -e
 
 echo "============================================="
@@ -15,17 +15,19 @@ if ! command -v java >/dev/null 2>&1; then
 fi
 
 # Discover JAVA_HOME if unset
-if [ -z "$JAVA_HOME" ] && [ -d "$HOME/.sdkman/candidates/java/25.0.2-graalce" ]; then
-    export JAVA_HOME="$HOME/.sdkman/candidates/java/25.0.2-graalce"
+if [ -z "$JAVA_HOME" ]; then
+    if [ -d "$HOME/.sdkman/candidates/java/25.0.2-graalce" ]; then
+        export JAVA_HOME="$HOME/.sdkman/candidates/java/25.0.2-graalce"
+    elif [ -d "$HOME/.sdkman/candidates/java/current" ]; then
+        export JAVA_HOME="$HOME/.sdkman/candidates/java/current"
+    fi
 fi
-echo "[1/4] JAVA_HOME=$JAVA_HOME"
-
-# Build everything
-echo "[2/4] Building MATRIX..."
-./gradlew :matrix-brain-runtime:compileJava :matrix-api-gateway:compileJava :matrix-tools-distill:nativeCompile --no-daemon --console=plain 2>&1 | tail -10
+export PATH="$JAVA_HOME/bin:$PATH"
+echo "[1/5] JAVA_HOME=$JAVA_HOME"
+echo "       java: $(java -version 2>&1 | head -1)"
 
 # Disk check
-echo "[3/4] Disk check..."
+echo "[2/5] Disk check..."
 FREE_GB=$(df -BG . | tail -1 | awk '{print $4}' | sed 's/G//')
 echo "  free=$FREE_GB GB"
 if [ "$FREE_GB" -lt 10 ]; then
@@ -33,13 +35,15 @@ if [ "$FREE_GB" -lt 10 ]; then
     exit 1
 fi
 
-# Start gateway in production mode
-echo "[4/4] Starting gateway on :8765 (MATRIX_MODE=production)..."
-export MATRIX_MODE=production
-export MATRIX_MIND_DIR="${MATRIX_MIND_DIR:-$PWD/data/mind}"
-mkdir -p "$MATRIX_MIND_DIR"
+# Build only the modules we need
+echo "[3/5] Building MATRIX (api-gateway + brain-runtime)..."
+cd "$(dirname "$0")/.."
+./gradlew :matrix-brain-runtime:compileJava :matrix-api-gateway:compileJava --no-daemon --console=plain 2>&1 | tail -5 || {
+    echo "WARNING: gradle build returned non-zero; trying to continue anyway"
+}
 
-# Build classpath
+# Build classpath including all runtime dependencies
+echo "[4/5] Assembling classpath..."
 CP="matrix-brain-runtime/build/classes/java/main"
 CP="$CP:matrix-core/build/classes/java/main"
 CP="$CP:matrix-api-gateway/build/classes/java/main"
@@ -47,14 +51,77 @@ CP="$CP:matrix-audit/build/classes/java/main"
 CP="$CP:matrix-billing/build/classes/java/main"
 CP="$CP:matrix-observability/build/classes/java/main"
 CP="$CP:matrix-quality/build/classes/java/main"
-CP="$CP:$(find ~/.gradle/caches/modules-2/files-2.1 -name 'jackson-*.jar' 2>/dev/null | head -5 | paste -sd:)"
+CP="$CP:matrix-tools-distill/build/classes/java/main"
 
-java -cp "$CP" io.matrix.api.MinimalHttpServer 8765 &
+# Add ALL relevant runtime jars from gradle cache
+for jar in \
+    "jackson-databind" \
+    "jackson-core" \
+    "jackson-annotations" \
+    "jackson-datatype-jsr310" \
+    "slf4j-api" \
+    "slf4j-simple" \
+    "logback-classic" \
+    "logback-core" \
+    "netty-buffer" \
+    "netty-common" \
+    "netty-transport" \
+    "netty-codec-http" \
+    "netty-handler" \
+    "vertx-core" \
+    "vertx-web" \
+    "smallrye-mutiny-vertx-core" \
+    "smallrye-mutiny" \
+    "micrometer-core" \
+    "sqlite-jdbc" \
+    "avro" \
+    "xz"; do
+    found=$(find ~/.gradle/caches/modules-2/files-2.1 -name "${jar}-*.jar" 2>/dev/null | grep -v sources | grep -v javadoc | head -1)
+    if [ -n "$found" ]; then
+        CP="$CP:$found"
+    fi
+done
+
+# Wildcard: include ALL jar files in cache (broad fallback for missing deps).
+EXTRA=$(find ~/.gradle/caches/modules-2/files-2.1 -name "*.jar" 2>/dev/null \
+    | grep -v sources | grep -v javadoc | grep -v "agent-attach" | head -200)
+CP="$CP:$(echo "$EXTRA" | paste -sd:)"
+
+echo "  classpath entries: $(echo $CP | tr ':' '\n' | wc -l)"
+
+# Start gateway in production mode
+echo "[5/5] Starting gateway on :8765 (MATRIX_MODE=production)..."
+export MATRIX_MODE=production
+export MATRIX_MIND_DIR="${MATRIX_MIND_DIR:-$PWD/data/mind}"
+mkdir -p "$MATRIX_MIND_DIR"
+
+# Kill any previous gateway
+if [ -f .gateway.pid ]; then
+    OLD_PID=$(cat .gateway.pid 2>/dev/null)
+    if kill -0 "$OLD_PID" 2>/dev/null; then
+        echo "  killing previous gateway pid=$OLD_PID"
+        kill "$OLD_PID" 2>/dev/null || true
+        sleep 1
+    fi
+    rm -f .gateway.pid
+fi
+
+java -Dport=8765 -cp "$CP" io.matrix.api.MinimalHttpServer > "$MATRIX_MIND_DIR/gateway.log" 2>&1 &
 GATEWAY_PID=$!
 echo "  gateway pid=$GATEWAY_PID"
 echo "$GATEWAY_PID" > .gateway.pid
+disown $GATEWAY_PID 2>/dev/null || true
 
-sleep 3
+# Wait for health check
+sleep 5
+for i in 1 2 3 4 5; do
+    if curl -s http://localhost:8765/health/live > /dev/null 2>&1; then
+        echo "  health: OK"
+        break
+    fi
+    echo "  waiting for gateway... ($i)"
+    sleep 2
+done
 
 echo ""
 echo "============================================="
@@ -70,8 +137,13 @@ echo "  status:      GET  http://localhost:8765/v1/status"
 echo "============================================="
 echo ""
 echo "Try a query:"
-echo "  curl -X POST http://localhost:8765/v1/auth/login -H 'Content-Type: application/json' -d '{\"email\":\"pro@test.com\"}'"
-echo "  TOKEN=\$(... | python3 -c 'import sys,json; print(json.load(sys.stdin)[\"token\"])')"
-echo "  curl -X POST http://localhost:8765/v1/analyze -H \"Authorization: Bearer \$TOKEN\" -H 'Content-Type: application/json' -d '{\"input\":\"What is 2+3?\"}'"
+echo "  TOKEN=\$(curl -s -X POST http://localhost:8765/v1/auth/login \\"
+echo "    -H 'Content-Type: application/json' \\"
+echo "    -d '{\"email\":\"pro@test.com\"}' | python3 -c 'import sys,json; print(json.load(sys.stdin)[\"token\"])')"
+echo "  curl -X POST http://localhost:8765/v1/analyze \\"
+echo "    -H \"Authorization: Bearer \$TOKEN\" \\"
+echo "    -H 'Content-Type: application/json' \\"
+echo "    -d '{\"input\":\"What is 2+3?\"}'"
 echo ""
+echo "Logs: tail -f $MATRIX_MIND_DIR/gateway.log"
 echo "Stop with: $0 stop"
