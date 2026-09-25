@@ -1,8 +1,10 @@
 package io.matrix.api.brain;
 
+import io.matrix.brain.runtime.EpisodicLog;
 import io.matrix.brain.runtime.MindCycle;
 import io.matrix.brain.runtime.MindResult;
 import io.matrix.brain.runtime.PersistentHdcStore;
+import io.matrix.brain.runtime.SleepScheduler;
 
 import java.io.File;
 import java.lang.reflect.Constructor;
@@ -78,14 +80,30 @@ public final class ProductionBrainClient implements BrainCycle {
      */
     private final PersistentHdcStore hdcStore;
 
+    /** MIND-W3: optional episodic log + sleep scheduler (one or both may be set). */
+    private final EpisodicLog episodicLog;
+    private final SleepScheduler sleepScheduler;
+
     /** Default in-memory constructor (used by tests and the gateway default). */
     public ProductionBrainClient() {
-        this(null);
+        this(null, null, null);
     }
 
     /** Persistent constructor — pass a {@link PersistentHdcStore} for W2 durability. */
     public ProductionBrainClient(PersistentHdcStore hdcStore) {
+        this(hdcStore, null, null);
+    }
+
+    /**
+     * Full constructor — wire HDC + episodic log + sleep scheduler.
+     * MIND-W3: the scheduler is optional (pass null to disable sleep).
+     */
+    public ProductionBrainClient(PersistentHdcStore hdcStore,
+                                 EpisodicLog episodicLog,
+                                 SleepScheduler sleepScheduler) {
         this.hdcStore = hdcStore;
+        this.episodicLog = episodicLog;
+        this.sleepScheduler = sleepScheduler;
         // Resolve core jar + load classes via init helper
         InitResult init = tryInit();
         this.classLoader = init.classLoader;
@@ -248,6 +266,13 @@ public final class ProductionBrainClient implements BrainCycle {
                 long dur = System.currentTimeMillis() - t0;
                 // Cache modulator/step confidences for the next buildExplain() call.
                 cacheExplainConfidences(mr);
+                // MIND-W3: append to episodic log + bump sleep-scheduler activity.
+                if (episodicLog != null) {
+                    try { episodicLog.append(input, mr.reply(), mr.confidence(),
+                        mr.accepted(), mr.modulatorsFired()); }
+                    catch (Throwable ignored) { /* logging is best-effort */ }
+                }
+                if (sleepScheduler != null) sleepScheduler.noteActivity();
                 return new CycleResult(
                     mr.reply(),
                     mr.confidence(),
