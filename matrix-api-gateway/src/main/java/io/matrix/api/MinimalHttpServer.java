@@ -65,11 +65,28 @@ public final class MinimalHttpServer {
         String mode = System.getenv().getOrDefault("MATRIX_MODE",
             System.getProperty("matrix.mode", "stub"));
         if ("production".equalsIgnoreCase(mode)) {
-            ProductionBrainClient prod = new ProductionBrainClient();
+            // MIND-W2: persistent HDC store. Path from MATRIX_MIND_DIR env var
+            // (default data/mind/ relative to CWD).
+            String mindDir = System.getenv().getOrDefault(
+                "MATRIX_MIND_DIR", "data/mind");
+            java.nio.file.Path hdcPath = java.nio.file.Path.of(
+                mindDir, "hdc_kb.ndjson");
+            io.matrix.brain.runtime.PersistentHdcStore hdcStore = null;
+            try {
+                java.nio.file.Files.createDirectories(java.nio.file.Path.of(mindDir));
+                hdcStore = new io.matrix.brain.runtime.PersistentHdcStore(hdcPath, 256);
+            } catch (Throwable t) {
+                LOG.log(Level.WARNING,
+                    "Could not open PersistentHdcStore at {0}: {1}; falling back to in-memory",
+                    new Object[]{hdcPath, t.getMessage()});
+            }
+            ProductionBrainClient prod = new ProductionBrainClient(hdcStore);
             if (prod.isAvailable()) {
                 this.brain = prod;
                 this.prodBrain = prod;
-                LOG.log(Level.INFO, "MATRIX_MODE=production — using REAL BirBrainCycle (W1500)");
+                LOG.log(Level.INFO,
+                    "MATRIX_MODE=production — using MindCycle + BirBrainCycle (W1500) + PersistentHdcStore({0})",
+                    hdcPath);
             } else {
                 LOG.log(Level.WARNING, "MATRIX_MODE=production requested but matrix-core JAR not found; falling back to StubBrainCycle");
                 this.brain = new StubBrainCycle();
