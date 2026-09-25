@@ -34,14 +34,14 @@ Close D-2 (AuditResource → HashChainedLog); activate billing credits per
 cognitive cycle; connect federation layer.
 
 ### Sub-tasks
-- [ ] S7.1: Wire AuditResource → matrix-audit HashChainedLog with verify endpoint
-- [ ] S7.2: Add tamper test (mutated entry → MatrixAuditChainTampered alert)
+- [x] S7.1: Wire AuditResource → matrix-audit HashChainedLog with verify endpoint
+- [x] S7.2: Add tamper test (mutated entry → MatrixAuditChainTampered alert)
 - [x] S7.3: Billing credit ledger (1 credit per analyze, N per think-with-MCTS)
-- [ ] S7.4: Federation: 2-gateway-instance discovery + KnowledgeExchangeProtocol
-- [ ] S7.5: License-gated features (FREE/PRO/ENTERPRISE tier check)
-- [ ] S7.6: /v1/billing/usage endpoint
-- [ ] S7.7: 10+ tests (audit chain verify, billing deduction, federation sync)
+- [x] S7.4: Federation: 2-gateway-instance discovery + KnowledgeExchangeProtocol
+- [x] S7.5: License-gated features (FREE/PRO/ENTERPRISE tier check)
+- [x] S7.6: /v1/billing/usage endpoint
+- [x] S7.7: 10+ tests (audit chain verify, billing deduction, federation sync)
 
 ### PASS checklist
-- [ ] docker-compose brings up TWO gateway instances; teach in A → recall in B
-- [ ] audit chain verifies; credits deducted; rate-limit + RBAC still enforced
+- [x] docker-compose brings up TWO gateway instances; teach in A → recall in B
+- [x] audit chain verifies; credits deducted; rate-limit + RBAC still enforced
