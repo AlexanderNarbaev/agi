@@ -23,15 +23,23 @@ public final class SignalStage {
     }
 
     public SignalObservation encode(String input, List<BrcStep> trace) {
+        if (input == null) {
+            BrcStep step = BrcStep.of("SIGNAL", true, 0.95,
+                List.of("tokens=0", "dim=" + DIM));
+            trace.add(step);
+            return new SignalObservation(new BitSet(DIM), 0, List.of());
+        }
         String[] tokens = input.toLowerCase()
             .replaceAll("[^a-z0-9+\\-*/= а-яё\\s]", " ")
             .trim()
             .split("\\s+");
-        BitSet bits = new BitSet(DIM);
-        int nonEmpty = 0;
+        // Filter out empty tokens that split() may produce from leading/trailing spaces.
+        List<String> tokenList = new java.util.ArrayList<>();
         for (String t : tokens) {
-            if (t.isBlank()) continue;
-            nonEmpty++;
+            if (!t.isBlank()) tokenList.add(t);
+        }
+        BitSet bits = new BitSet(DIM);
+        for (String t : tokenList) {
             // FNV-1a 32-bit hash, modulo DIM
             int h = 0x811c9dc5;
             for (int i = 0; i < t.length(); i++) {
@@ -41,8 +49,8 @@ public final class SignalStage {
             bits.set((h & 0x7fffffff) % DIM);
         }
         BrcStep step = BrcStep.of("SIGNAL", true, 0.95,
-            List.of("tokens=" + nonEmpty, "dim=" + DIM));
+            List.of("tokens=" + tokenList.size(), "dim=" + DIM));
         trace.add(step);
-        return new SignalObservation(bits, nonEmpty, List.of(tokens).get(0) == null ? List.of() : List.of(tokens));
+        return new SignalObservation(bits, tokenList.size(), List.copyOf(tokenList));
     }
 }
