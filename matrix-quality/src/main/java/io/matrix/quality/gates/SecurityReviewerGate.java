@@ -16,8 +16,9 @@ import java.util.stream.Stream;
  */
 public final class SecurityReviewerGate implements Gate {
 
+    // Match hardcoded secrets, excluding Javadoc/example-style lines (starting with * or //)
     private static final Pattern HARDCODED_SECRET = Pattern.compile(
-        "(?i)(api[_-]?key|password|secret|token)\\s*=\\s*['\"][^'\"\\$\\{]{16,}['\"]"
+        "^[^*/]\\s*(?i)(api[_-]?key|password|secret|token)\\s*[=:]\\s*['\"][^'\"\\$\\{]{16,}['\"]"
     );
 
     @Override
