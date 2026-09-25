@@ -1,5 +1,8 @@
 package io.matrix.api.brain;
 
+import io.matrix.brain.runtime.MindCycle;
+import io.matrix.brain.runtime.MindResult;
+
 import java.io.File;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
@@ -20,13 +23,12 @@ import java.util.logging.Logger;
  * modulators pipeline runs from {@code io.matrix.brain.BirBrainCycle},
  * the same engine that powers the native binary.</p>
  *
- * <p><b>How it works</b></p>
- * <ol>
- *   <li>On first call, scans for the matrix-core JAR (multiple locations).</li>
- *   <li>Adds the JAR to a private URLClassLoader.</li>
- *   <li>Reflectively loads {@code BirBrainCycle}, calls {@code cycle()}.</li>
- *   <li>Maps the result to the gateway's {@link BrainCycle.CycleResult}.</li>
- * </ol>
+ * <p><b>MIND-W1 update</b>: the gateway also runs {@link MindCycle}
+ * (matrix-brain-runtime) so every {@code cycle()} call is a full
+ * 10-stage cognitive cycle: REFLEX → SIGNAL → SALIENCE → ARITHMETIC
+ * → ANALOGY → BIR → HDC → TSETLIN → MCTS → MODULATORS. The BRC trace
+ * is preserved for XAI explanations. The legacy {@code BirBrainCycle}
+ * path remains as a fallback when matrix-brain-runtime is missing.</p>
  *
  * <p><b>Fallback</b>: if matrix-core JAR is not reachable, throws
  * {@link BrainUnavailableException} which the gateway surfaces as 503.</p>
@@ -57,6 +59,9 @@ public final class ProductionBrainClient implements BrainCycle {
     private final URLClassLoader classLoader;
     private final boolean available;
 
+    /** MIND-W1: dedicated runtime cognitive cycle. */
+    private final MindCycle mindCycle;
+
     public ProductionBrainClient() {
         // Resolve core jar + load classes via init helper
         InitResult init = tryInit();
@@ -65,6 +70,9 @@ public final class ProductionBrainClient implements BrainCycle {
         this.knowledgeBase = init.kb;
         this.conversationLearner = init.learner;
         this.available = init.success;
+        // MIND-W1: always-on cognitive conductor (uses pure in-memory stages).
+        // It is always "available" because the stages are pure MATRIX-native code.
+        this.mindCycle = new MindCycle();
     }
 
     /** Init helper - performs loading and returns a result bundle. */
@@ -161,11 +169,40 @@ public final class ProductionBrainClient implements BrainCycle {
 
     @Override
     public CycleResult cycle(String input, String context, String model) {
+        if (input == null) {
+            return new CycleResult("", 0.0, 0L, false,
+                List.of("ETHICAL_FILTER", "CONSISTENCY_CHECKER"));
+        }
+        long t0 = System.currentTimeMillis();
+
+        // MIND-W1: primary path is the cognitive conductor MindCycle.
+        // It runs the full 10-stage pipeline (REFLEX, SIGNAL, SALIENCE,
+        // ARITHMETIC, ANALOGY, BIR, HDC, TSETLIN, MCTS, MODULATORS) and
+        // produces a BRC trace. Falls back to legacy BirBrainCycle path
+        // when matrix-core JAR is unavailable.
+        if (mindCycle != null) {
+            try {
+                MindResult mr = mindCycle.think(input);
+                long dur = System.currentTimeMillis() - t0;
+                return new CycleResult(
+                    mr.reply(),
+                    mr.confidence(),
+                    dur,
+                    mr.accepted(),
+                    mr.modulatorsFired()
+                );
+            } catch (Throwable t) {
+                LOG.log(Level.WARNING,
+                    "MindCycle failed, falling back to legacy BirBrainCycle: {0}",
+                    t.getMessage());
+                // fall through to legacy path
+            }
+        }
+
         if (!available) {
             throw new BrainUnavailableException(
                 "matrix-core JAR not loaded; cannot run real inference");
         }
-        long t0 = System.currentTimeMillis();
         try {
             Method cycleMethod = birBrainCycle.getClass()
                 .getMethod("cycle", String.class);

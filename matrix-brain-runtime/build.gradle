@@ -1,0 +1,49 @@
+// matrix-brain-runtime/build.gradle — MIND-W1
+// Cognitive Orchestration Layer: MindCycle (the conductor) +
+// BRC reasoning trace + arithmetic composition + analogy by HDC similarity
+//
+// CONSTITUTION Article I: NO LLM in runtime. Pure deterministic MATRIX-native.
+
+plugins {
+    id 'java'
+    id 'application'
+}
+
+group = 'io.matrix'
+version = '0.1.0-MIND-W1'
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_25
+    targetCompatibility = JavaVersion.VERSION_25
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    // FROZEN research core (article V: read-only, no mutation)
+    implementation project(':matrix-core')
+
+    // Audit chain (matrix-audit HashChainedLog + GdprPruner)
+    implementation project(':matrix-audit')
+
+    // Prometheus metrics + healthchecks
+    implementation project(':matrix-observability')
+
+    // JSON for REST DTO
+    implementation 'com.fasterxml.jackson.core:jackson-databind:2.18.2'
+
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.11.4'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher:1.11.4'
+    testImplementation 'org.assertj:assertj-core:3.26.0'
+}
+
+application {
+    mainClass = 'io.matrix.brain.runtime.MindRuntimeCli'
+}
+
+tasks.withType(Test) {
+    useJUnitPlatform()
+    maxHeapSize = '2g'
+}
