@@ -56,6 +56,9 @@ public final class MinimalHttpServer {
     private final RateLimiter rateLimiter;
     /** MIND-W3: optional sleep scheduler (null in stub mode). */
     private io.matrix.brain.runtime.SleepScheduler sleepScheduler;
+    /** MIND-W4: optional goal tracker + inbox watcher (null in stub mode). */
+    private io.matrix.brain.runtime.GoalTracker goalTracker;
+    private io.matrix.brain.runtime.InboxWatcher inboxWatcher;
 
     /** Ring buffer of recent analyze IDs and explanations */
     private final Map<String, StoredExplain> explanations = new ConcurrentHashMap<>();
@@ -100,11 +103,21 @@ public final class MinimalHttpServer {
             }
             ProductionBrainClient prod = new ProductionBrainClient(
                 hdcStore, episodicLog, sleepScheduler);
+            // MIND-W4: goal tracker + inbox watcher
+            try {
+                this.goalTracker = new io.matrix.brain.runtime.GoalTracker();
+                this.inboxWatcher = new io.matrix.brain.runtime.InboxWatcher(
+                    java.nio.file.Path.of(mindDir, "inbox"), hdcStore);
+                int ingested = this.inboxWatcher.scan();
+                LOG.log(Level.INFO, "MIND-W4: GoalTracker + InboxWatcher armed (ingested={0})", ingested);
+            } catch (Throwable t) {
+                LOG.log(Level.WARNING, "MIND-W4 init failed: {0}", t.getMessage());
+            }
             if (prod.isAvailable()) {
                 this.brain = prod;
                 this.prodBrain = prod;
                 LOG.log(Level.INFO,
-                    "MATRIX_MODE=production — MindCycle + BirBrainCycle + HDCStore + SleepScheduler");
+                    "MATRIX_MODE=production — MindCycle + BirBrainCycle + HDCStore + SleepScheduler + Goals + Inbox");
             } else {
                 LOG.log(Level.WARNING, "MATRIX_MODE=production requested but matrix-core JAR not found; falling back to StubBrainCycle");
                 this.brain = new StubBrainCycle();
@@ -140,6 +153,8 @@ public final class MinimalHttpServer {
         http.createContext("/v1/teach", this::handleTeach);
         http.createContext("/v1/sleep", this::handleSleep);
         http.createContext("/v1/status", this::handleStatus);
+        http.createContext("/v1/goals", this::handleGoals);
+        http.createContext("/v1/inbox/scan", this::handleInboxScan);
         http.createContext("/health/live", exchange -> writeJson(exchange, 200,
             "{\"status\":\"UP\",\"service\":\"matrix-api-gateway\","
             + "\"mode\":\"" + (prodBrain != null ? "production" : "stub") + "\","
@@ -569,6 +584,18 @@ public final class MinimalHttpServer {
         return sb.append("]").toString();
     }
 
+    /** Extract a string field from a flat JSON body (best-effort). */
+    private static String extractJsonField(String body, String key) {
+        if (body == null) return null;
+        String marker = "\"" + key + "\":\"";
+        int i = body.indexOf(marker);
+        if (i < 0) return null;
+        int s = i + marker.length();
+        int e = body.indexOf('"', s);
+        if (e < 0) return null;
+        return body.substring(s, e);
+    }
+
     private static String abbreviate(String s, int max) {
         if (s == null) return "";
         if (s.length() <= max) return s;
@@ -636,11 +663,114 @@ public final class MinimalHttpServer {
             } else {
                 sb.append(",\"sleep_cycles\":0,\"last_dream\":null");
             }
+            // MIND-W4: goals + inbox
+            if (goalTracker != null) {
+                sb.append(",\"goals\":");
+                Map<String, Object> gs = goalTracker.snapshot();
+                sb.append("{").append("\"count\":").append(gs.get("count"))
+                  .append(",\"items\":").append(jsonMapArray((java.util.List<?>) gs.get("goals")))
+                  .append("}");
+            } else {
+                sb.append(",\"goals\":null");
+            }
+            if (inboxWatcher != null) {
+                Map<String, Object> ib = inboxWatcher.statusSnapshot();
+                sb.append(",\"inbox\":");
+                sb.append("{").append("\"lastIngest\":\"")
+                  .append(esc((String) ib.get("lastIngest")))
+                  .append("\",\"trackedFiles\":").append(ib.get("trackedFiles"))
+                  .append("}");
+            } else {
+                sb.append(",\"inbox\":null");
+            }
             sb.append("}");
             writeJson(ex, 200, sb.toString());
         } catch (Throwable t) {
             writeJson(ex, 500, "{\"error\":\"status failed: " + esc(t.getMessage()) + "\"}");
         }
+    }
+
+    /**
+     * MIND-W4 — /v1/goals handler.
+     * GET: list goals. POST: add new goal ({"name": "...", "description": "..."}).
+     */
+    private void handleGoals(com.sun.net.httpserver.HttpExchange ex) throws IOException {
+        try {
+            String method = ex.getRequestMethod();
+            if (goalTracker == null) {
+                writeJson(ex, 503,
+                    "{\"error\":\"goals not available\",\"reason\":\"MATRIX_MODE != production\"}");
+                return;
+            }
+            if ("GET".equalsIgnoreCase(method)) {
+                Map<String, Object> snap = goalTracker.snapshot();
+                StringBuilder sb = new StringBuilder();
+                sb.append("{\"count\":").append(snap.get("count"))
+                  .append(",\"goals\":").append(jsonMapArray((java.util.List<?>) snap.get("goals")))
+                  .append("}");
+                writeJson(ex, 200, sb.toString());
+            } else if ("POST".equalsIgnoreCase(method)) {
+                String body = readBody(ex);
+                String name = extractJsonField(body, "name");
+                String desc = extractJsonField(body, "description");
+                if (name == null || name.isBlank()) {
+                    writeJson(ex, 400, "{\"error\":\"name required\"}");
+                    return;
+                }
+                io.matrix.brain.runtime.GoalTracker.Goal g = goalTracker.addGoal(name, desc);
+                writeJson(ex, 201,
+                    "{\"id\":\"" + esc(g.id()) + "\",\"name\":\""
+                    + esc(g.name()) + "\",\"status\":\""
+                    + g.status().name() + "\",\"progress\":" + g.progress() + "}");
+            } else {
+                writeJson(ex, 405, "{\"error\":\"method not allowed\"}");
+            }
+        } catch (Throwable t) {
+            writeJson(ex, 500, "{\"error\":\"goals failed: " + esc(t.getMessage()) + "\"}");
+        }
+    }
+
+    /**
+     * MIND-W4 — /v1/inbox/scan handler.
+     * Triggers an immediate inbox scan; returns the count of newly-ingested files.
+     */
+    private void handleInboxScan(com.sun.net.httpserver.HttpExchange ex) throws IOException {
+        try {
+            if (inboxWatcher == null) {
+                writeJson(ex, 503, "{\"error\":\"inbox not available\"}");
+                return;
+            }
+            int n = inboxWatcher.scan();
+            writeJson(ex, 200, "{\"ingested\":" + n + "}");
+        } catch (Throwable t) {
+            writeJson(ex, 500, "{\"error\":\"inbox scan failed: " + esc(t.getMessage()) + "\"}");
+        }
+    }
+
+    private static String jsonMapArray(java.util.List<?> list) {
+        if (list == null || list.isEmpty()) return "[]";
+        StringBuilder sb = new StringBuilder("[");
+        boolean first = true;
+        for (Object item : list) {
+            if (!first) sb.append(',');
+            first = false;
+            if (item instanceof java.util.Map<?, ?> m) {
+                sb.append("{");
+                boolean f2 = true;
+                for (Map.Entry<?, ?> e : m.entrySet()) {
+                    if (!f2) sb.append(',');
+                    f2 = false;
+                    sb.append("\"").append(esc(String.valueOf(e.getKey()))).append("\":");
+                    Object v = e.getValue();
+                    if (v instanceof Number || v instanceof Boolean) sb.append(v);
+                    else sb.append("\"").append(esc(String.valueOf(v))).append("\"");
+                }
+                sb.append("}");
+            } else {
+                sb.append("\"").append(esc(String.valueOf(item))).append("\"");
+            }
+        }
+        return sb.append("]").toString();
     }
 
     public static void main(String[] args) throws Exception {
