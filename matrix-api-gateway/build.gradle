@@ -19,8 +19,11 @@ repositories {
 }
 
 dependencies {
-    // Will depend on matrix-core in T-02
-    // implementation project(':matrix-core')
+    // MIND-W1: Cognitive Orchestration Layer
+    // MindCycle + BRC trace + arithmetic + analogy + FROZEN modulators.
+    // (Brings in matrix-core transitively; we now WANT direct linkage since
+    // matrix-brain-runtime is the dedicated runtime module.)
+    implementation project(':matrix-brain-runtime')
 
     // Quarkus REST stack (matches matrix-core for consistency)
     implementation enforcedPlatform('io.quarkus.platform:quarkus-bom:3.38.3')

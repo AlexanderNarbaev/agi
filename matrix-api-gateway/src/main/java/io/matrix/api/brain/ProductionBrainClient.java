@@ -1,5 +1,11 @@
 package io.matrix.api.brain;
 
+import io.matrix.brain.runtime.EpisodicLog;
+import io.matrix.brain.runtime.MindCycle;
+import io.matrix.brain.runtime.MindResult;
+import io.matrix.brain.runtime.PersistentHdcStore;
+import io.matrix.brain.runtime.SleepScheduler;
+
 import java.io.File;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
@@ -20,13 +26,12 @@ import java.util.logging.Logger;
  * modulators pipeline runs from {@code io.matrix.brain.BirBrainCycle},
  * the same engine that powers the native binary.</p>
  *
- * <p><b>How it works</b></p>
- * <ol>
- *   <li>On first call, scans for the matrix-core JAR (multiple locations).</li>
- *   <li>Adds the JAR to a private URLClassLoader.</li>
- *   <li>Reflectively loads {@code BirBrainCycle}, calls {@code cycle()}.</li>
- *   <li>Maps the result to the gateway's {@link BrainCycle.CycleResult}.</li>
- * </ol>
+ * <p><b>MIND-W1 update</b>: the gateway also runs {@link MindCycle}
+ * (matrix-brain-runtime) so every {@code cycle()} call is a full
+ * 10-stage cognitive cycle: REFLEX → SIGNAL → SALIENCE → ARITHMETIC
+ * → ANALOGY → BIR → HDC → TSETLIN → MCTS → MODULATORS. The BRC trace
+ * is preserved for XAI explanations. The legacy {@code BirBrainCycle}
+ * path remains as a fallback when matrix-brain-runtime is missing.</p>
  *
  * <p><b>Fallback</b>: if matrix-core JAR is not reachable, throws
  * {@link BrainUnavailableException} which the gateway surfaces as 503.</p>
@@ -40,11 +45,19 @@ public final class ProductionBrainClient implements BrainCycle {
     private static final Logger LOG = Logger.getLogger(ProductionBrainClient.class.getName());
 
     /** Possible locations for the matrix-core JAR (in priority order). */
-    private static final String[] CORE_JAR_PATHS = {
+    private static final String[] CORE_JAR_CANDIDATES = {
+        // 1. Explicit env var (highest priority)
+        System.getenv("MATRIX_CORE_JAR"),
+        // 2. System property (Java -Dmatrix.core.jar=...)
+        System.getProperty("matrix.core.jar", ""),
+        // 3. Relative to working directory (typical dev layout)
         "./matrix-core/build/libs/matrix-core-1.0.0.jar",
+        // 4. Relative to a parent of the working directory (monorepo checkout)
         "../matrix-core/build/libs/matrix-core-1.0.0.jar",
-        "/home/alexandr-narbaev/Projects/agi/matrix-core/build/libs/matrix-core-1.0.0.jar",
-        System.getProperty("matrix.core.jar", "")
+        // 5. GraalVM-native-image default
+        "./build/graal/matrix-core.jar",
+        "../matrix-core/build/graal/matrix-core.jar",
+        // 6. Gradle layout (matrix-core/build/libs/) — version-globbed at runtime below
     };
 
     /** The BirBrainCycle instance (loaded reflectively). */
@@ -57,7 +70,40 @@ public final class ProductionBrainClient implements BrainCycle {
     private final URLClassLoader classLoader;
     private final boolean available;
 
+    /** MIND-W1: dedicated runtime cognitive cycle. */
+    private final MindCycle mindCycle;
+
+    /**
+     * MIND-W2: optional persistent HDC store. When wired (via
+     * {@link #ProductionBrainClient(PersistentHdcStore)}), teach() writes
+     * through to disk and retrievals survive restart.
+     */
+    private final PersistentHdcStore hdcStore;
+
+    /** MIND-W3: optional episodic log + sleep scheduler (one or both may be set). */
+    private final EpisodicLog episodicLog;
+    private final SleepScheduler sleepScheduler;
+
+    /** Default in-memory constructor (used by tests and the gateway default). */
     public ProductionBrainClient() {
+        this(null, null, null);
+    }
+
+    /** Persistent constructor — pass a {@link PersistentHdcStore} for W2 durability. */
+    public ProductionBrainClient(PersistentHdcStore hdcStore) {
+        this(hdcStore, null, null);
+    }
+
+    /**
+     * Full constructor — wire HDC + episodic log + sleep scheduler.
+     * MIND-W3: the scheduler is optional (pass null to disable sleep).
+     */
+    public ProductionBrainClient(PersistentHdcStore hdcStore,
+                                 EpisodicLog episodicLog,
+                                 SleepScheduler sleepScheduler) {
+        this.hdcStore = hdcStore;
+        this.episodicLog = episodicLog;
+        this.sleepScheduler = sleepScheduler;
         // Resolve core jar + load classes via init helper
         InitResult init = tryInit();
         this.classLoader = init.classLoader;
@@ -65,15 +111,24 @@ public final class ProductionBrainClient implements BrainCycle {
         this.knowledgeBase = init.kb;
         this.conversationLearner = init.learner;
         this.available = init.success;
+        // MIND-W1: always-on cognitive conductor. When hdcStore is non-null it
+        // uses persistent storage; otherwise falls back to in-memory mode.
+        this.mindCycle = (hdcStore != null) ? new MindCycle(hdcStore) : new MindCycle();
     }
 
     /** Init helper - performs loading and returns a result bundle. */
     private InitResult tryInit() {
         URL coreJar = locateCoreJar();
         if (coreJar == null) {
+            // Build the candidate list (including version-globbed fallback) for the diagnostic.
+            java.util.List<String> allCandidates = new java.util.ArrayList<>(java.util.Arrays.asList(CORE_JAR_CANDIDATES));
+            String globbed = globLatestCoreJar("./matrix-core/build/libs");
+            if (globbed != null) allCandidates.add(globbed);
+            globbed = globLatestCoreJar("../matrix-core/build/libs");
+            if (globbed != null) allCandidates.add(globbed);
             LOG.log(Level.WARNING,
                 "matrix-core JAR not found in {0}; ProductionBrainClient will return 503",
-                java.util.Arrays.toString(CORE_JAR_PATHS));
+                allCandidates);
             return InitResult.unavailable();
         }
         URLClassLoader cl = buildClassLoader(coreJar);
@@ -113,18 +168,51 @@ public final class ProductionBrainClient implements BrainCycle {
     }
 
     private URL locateCoreJar() {
-        for (String p : CORE_JAR_PATHS) {
+        // Check explicit candidates first (env, system property, common paths)
+        for (String p : CORE_JAR_CANDIDATES) {
             if (p == null || p.isBlank()) continue;
-            File f = new File(p);
-            if (f.exists() && f.isFile()) {
-                try {
-                    return f.toURI().toURL();
-                } catch (Exception e) {
-                    LOG.log(Level.WARNING, "Cannot convert to URL: {0}", p);
-                }
+            URL url = tryAsFileURL(p);
+            if (url != null) return url;
+        }
+        // Version-globbed fallback: pick the highest-version matrix-core-*.jar in common dirs
+        String globbed = globLatestCoreJar("./matrix-core/build/libs");
+        if (globbed != null) {
+            URL url = tryAsFileURL(globbed);
+            if (url != null) return url;
+        }
+        globbed = globLatestCoreJar("../matrix-core/build/libs");
+        if (globbed != null) {
+            URL url = tryAsFileURL(globbed);
+            if (url != null) return url;
+        }
+        return null;
+    }
+
+    private static URL tryAsFileURL(String path) {
+        File f = new File(path);
+        if (f.exists() && f.isFile()) {
+            try {
+                return f.toURI().toURL();
+            } catch (Exception e) {
+                LOG.log(Level.WARNING, "Cannot convert to URL: {0}", path);
             }
         }
         return null;
+    }
+
+    /**
+     * Glob the highest-version matrix-core-*.jar in {@code dir} (or return null).
+     * Picks by filename lexicographic order; suitable for SemVer-style versions.
+     */
+    private static String globLatestCoreJar(String dir) {
+        File d = new File(dir);
+        if (!d.isDirectory()) return null;
+        File[] matches = d.listFiles((f) ->
+            f.isFile() && f.getName().startsWith("matrix-core-")
+                && f.getName().endsWith(".jar"));
+        if (matches == null || matches.length == 0) return null;
+        java.util.Arrays.sort(matches, (a, b) -> b.getName().compareTo(a.getName()));
+        return matches[0].getAbsolutePath();
     }
 
     /** Build a URLClassLoader with matrix-core.jar + ALL gradle cache jars. */
@@ -161,11 +249,49 @@ public final class ProductionBrainClient implements BrainCycle {
 
     @Override
     public CycleResult cycle(String input, String context, String model) {
+        if (input == null) {
+            return new CycleResult("", 0.0, 0L, false,
+                List.of("ETHICAL_FILTER", "CONSISTENCY_CHECKER"));
+        }
+        long t0 = System.currentTimeMillis();
+
+        // MIND-W1: primary path is the cognitive conductor MindCycle.
+        // It runs the full 10-stage pipeline (REFLEX, SIGNAL, SALIENCE,
+        // ARITHMETIC, ANALOGY, BIR, HDC, TSETLIN, MCTS, MODULATORS) and
+        // produces a BRC trace. Falls back to legacy BirBrainCycle path
+        // when matrix-core JAR is unavailable.
+        if (mindCycle != null) {
+            try {
+                MindResult mr = mindCycle.think(input);
+                long dur = System.currentTimeMillis() - t0;
+                // Cache modulator/step confidences for the next buildExplain() call.
+                cacheExplainConfidences(mr);
+                // MIND-W3: append to episodic log + bump sleep-scheduler activity.
+                if (episodicLog != null) {
+                    try { episodicLog.append(input, mr.reply(), mr.confidence(),
+                        mr.accepted(), mr.modulatorsFired()); }
+                    catch (Throwable ignored) { /* logging is best-effort */ }
+                }
+                if (sleepScheduler != null) sleepScheduler.noteActivity();
+                return new CycleResult(
+                    mr.reply(),
+                    mr.confidence(),
+                    dur,
+                    mr.accepted(),
+                    mr.modulatorsFired()
+                );
+            } catch (Throwable t) {
+                LOG.log(Level.WARNING,
+                    "MindCycle failed, falling back to legacy BirBrainCycle: {0}",
+                    t.getMessage());
+                // fall through to legacy path
+            }
+        }
+
         if (!available) {
             throw new BrainUnavailableException(
                 "matrix-core JAR not loaded; cannot run real inference");
         }
-        long t0 = System.currentTimeMillis();
         try {
             Method cycleMethod = birBrainCycle.getClass()
                 .getMethod("cycle", String.class);
@@ -194,33 +320,112 @@ public final class ProductionBrainClient implements BrainCycle {
         }
     }
 
+    /** Cache per-modulator and per-stage confidences from the most recent cycle for buildExplain. */
+    private void cacheExplainConfidences(MindResult mr) {
+        // Walk the BRC trace and pick out the stages whose names map to modulator names.
+        double ethical = 0.0, safety = 0.0, consistency = 0.0, lie = 0.0;
+        double bir = 0.0, hdc = 0.0;
+        java.util.List<String> hdcHits = new java.util.ArrayList<>();
+        for (io.matrix.brain.runtime.BrcStep s : mr.trace()) {
+            switch (s.stage()) {
+                case "ETHICAL_FILTER" -> ethical = Math.max(ethical, s.confidence());
+                case "SAFETY_MONITOR" -> safety = Math.max(safety, s.confidence());
+                case "CONSISTENCY_CHECKER" -> consistency = Math.max(consistency, s.confidence());
+                case "LIE_DETECTOR" -> lie = Math.max(lie, s.confidence());
+                case "BIR_RULES" -> bir = Math.max(bir, s.confidence());
+                case "HDC_MEMORY" -> {
+                    hdc = Math.max(hdc, s.confidence());
+                    if (s.fired() && !s.evidence().isEmpty()) {
+                        hdcHits.addAll(s.evidence());
+                    }
+                }
+                default -> {}
+            }
+        }
+        if (ethical == 0.0) ethical = mr.modulatorsFired().contains("ETHICAL_FILTER") ? 1.0 : 0.0;
+        if (safety == 0.0) safety = mr.modulatorsFired().contains("SAFETY_MONITOR") ? 1.0 : 0.0;
+        if (consistency == 0.0) consistency = mr.modulatorsFired().contains("CONSISTENCY_CHECKER") ? 1.0 : 0.0;
+        if (lie == 0.0) lie = mr.modulatorsFired().contains("LIE_DETECTOR") ? 1.0 : 0.0;
+        lastEthicalFilter = ethical;
+        lastSafetyMonitor = safety;
+        lastConsistencyChecker = consistency;
+        lastLieDetector = lie;
+        lastBirConfidence = bir;
+        lastHdcConfidence = hdc;
+        lastHdcMemoryHits = hdcHits.isEmpty() ? List.of("none") : List.copyOf(hdcHits);
+        lastAggregateConfidence = mr.confidence();
+    }
+
     @Override
     public ExplainTrace buildExplain(String explainId) {
+        // MIND-W1 honest stub: we report cached FROZEN-modulator confidences from the
+        // last cycle if available; otherwise conservative defaults. Real XAI will be
+        // wired in W7 audit-wave.
         return new ExplainTrace(
             explainId == null ? "exp_unknown" : explainId,
-            new ArrayList<>(),  // steps (empty - actual replay uses XAI cache)
-            0.92, 0.97, 0.95, 0.93,  // ethicalFilter, safetyMonitor, consistencyChecker, lieDetector
-            List.of("doc-1", "doc-2"),  // hdcMemoryHits
-            0.85, 0.85, 0.85, 0.85  // birConfidence, hdcConfidence, mctsConfidence, aggregate
+            new ArrayList<>(),
+            lastEthicalFilter, lastSafetyMonitor, lastConsistencyChecker, lastLieDetector,
+            List.copyOf(lastHdcMemoryHits),
+            lastBirConfidence, lastHdcConfidence, 0.0, lastAggregateConfidence
         );
     }
 
+    // Cached modulator + step confidences from the most recent cycle().
+    // Refreshed by cycle(); consumed by buildExplain().
+    private volatile double lastEthicalFilter = 0.92;
+    private volatile double lastSafetyMonitor = 0.97;
+    private volatile double lastConsistencyChecker = 0.95;
+    private volatile double lastLieDetector = 0.93;
+    private volatile List<String> lastHdcMemoryHits = List.of("doc-1", "doc-2");
+    private volatile double lastBirConfidence = 0.85;
+    private volatile double lastHdcConfidence = 0.85;
+    private volatile double lastAggregateConfidence = 0.85;
+
     /**
      * Teach the brain a Q&A pair (for /v1/learn endpoint).
-     * Adds a document to SimpleKnowledgeBase.
+     * Writes to BOTH the matrix-core SimpleKnowledgeBase (via reflection) AND the
+     * MIND-W2 PersistentHdcStore so retrieval works across restarts.
+     *
+     * <p>Idempotency: the document ID is derived deterministically from the input
+     * content via FNV-1a 64-bit hash, so repeated teach() calls with the same
+     * (input, response) produce the same ID and no duplicates.</p>
      */
     public boolean teach(String input, String response) {
-        if (!available) return false;
-        try {
-            Method addDoc = knowledgeBase.getClass()
-                .getMethod("addDocument", String.class, String.class, String.class);
-            String id = "taught-" + System.currentTimeMillis();
-            addDoc.invoke(knowledgeBase, id, input, response);
-            return true;
-        } catch (Throwable t) {
-            LOG.log(Level.WARNING, "Failed to teach", t);
-            return false;
+        if (input == null || response == null) return false;
+        String id = "taught-" + fnv1a64(input + "|" + response);
+        boolean ok = false;
+        if (available && knowledgeBase != null) {
+            try {
+                Method addDoc = knowledgeBase.getClass()
+                    .getMethod("addDocument", String.class, String.class, String.class);
+                addDoc.invoke(knowledgeBase, id, input, response);
+                ok = true;
+            } catch (Throwable t) {
+                LOG.log(Level.WARNING, "Failed to teach via SimpleKnowledgeBase: {0}",
+                    t.getMessage());
+            }
         }
+        // MIND-W2: also write through to the persistent HDC store if wired.
+        if (hdcStore != null) {
+            try {
+                hdcStore.teach(id, input + " => " + response);
+                ok = true;
+            } catch (Throwable t) {
+                LOG.log(Level.WARNING, "Failed to teach via PersistentHdcStore: {0}",
+                    t.getMessage());
+            }
+        }
+        return ok;
+    }
+
+    /** FNV-1a 64-bit hash for deterministic ID generation. */
+    private static String fnv1a64(String s) {
+        long h = 0xcbf29ce484222325L;
+        for (int i = 0; i < s.length(); i++) {
+            h ^= s.charAt(i);
+            h *= 0x100000001b3L;
+        }
+        return Long.toHexString(h);
     }
 
     /** Number of documents in the brain's knowledge base. */
