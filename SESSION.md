@@ -1,9 +1,26 @@
 # SESSION
 
-**Status:** 🧠 TRUE-MIND REALIZATION IN PROGRESS (TRUE-W0 hygiene baseline; TRUE-W1 wire real cores is next)
+**Status:** 🧠 TRUE-MIND REALIZATION IN PROGRESS (TRUE-W0 done; TRUE-W1 wire real cores is next)
 
 **Date:** 2026-09-26
 **Branch:** `develop` @ `3ac66cfe` (post-MIND-W7 remainder)
+
+## Mission goal & acceptance criteria
+
+**Goal**: transform MATRIX from infrastructure draft into a living
+hybrid neuro-symbolic mind with real core engines wired (NOT simulacra).
+
+**Acceptance criteria** (deliverables):
+
+1. Every MindCycle stage invokes a real core engine class — verified by
+   `BrcStep.evidence()` string format `engine=<ClassName>.<method>(...)`.
+2. The runtime module imports from `matrix-core` (zero non-runtime imports
+   is a defect).
+3. Tests verify engine identity, not canned values.
+4. Determinism: same input ⇒ identical BRC trace structure.
+5. CONSTITUTION Article VIII: every decision is a BRC, no shadow logic.
+6. CONSTITUTION Article IV: FROZEN modulators (ETHICAL_FILTER,
+   SAFETY_MONITOR, LIE_DETECTOR, CONSISTENCY_CHECKER) gate every answer.
 
 ---
 
