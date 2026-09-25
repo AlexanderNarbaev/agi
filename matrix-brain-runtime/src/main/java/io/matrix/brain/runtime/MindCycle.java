@@ -61,15 +61,24 @@ public final class MindCycle {
 
     /**
      * Default deterministic constructor — seeded Random(42) per CONSTITUTION III.
+     * Uses in-memory HDC store (CI mode, tests).
      */
     public MindCycle() {
-        this(new Random(42L));
+        this(new Random(42L), null);
+    }
+
+    /**
+     * Persistent constructor — wires HDC stage to a {@link PersistentHdcStore}
+     * so taught facts survive JVM restarts. Pass {@code null} for in-memory mode.
+     */
+    public MindCycle(PersistentHdcStore hdcStore) {
+        this(new Random(42L), hdcStore);
     }
 
     /**
      * Explicit RNG constructor — for tests only.
      */
-    public MindCycle(Random rng) {
+    public MindCycle(Random rng, PersistentHdcStore hdcStore) {
         this.rng = rng;
         this.reflex = new ReflexStage();
         this.signal = new SignalStage();
@@ -77,7 +86,7 @@ public final class MindCycle {
         this.arithmetic = new ArithmeticStage();
         this.analogy = new AnalogyStage();
         this.birRules = new BirInferenceStage();
-        this.hdcMemory = new HdcRetrievalStage();
+        this.hdcMemory = (hdcStore != null) ? new HdcRetrievalStage(hdcStore) : new HdcRetrievalStage();
         this.tsetlin = new TsetlinStage();
         this.modulators = new ModulatorStage();
     }
@@ -126,24 +135,32 @@ public final class MindCycle {
         // Stage 8: TSETLIN — small-footprint classifier over learned clauses
         TsetlinStage.TsetlinResult tsetlinResult = tsetlin.classify(input, trace);
 
-        // Stage 9 (MCTS): only invoked if confidence is low OR multi-step pattern detected
-        BrcStep mctsStep = BrcStep.skipped("MCTS");
+        // Stage 9 (MCTS): only invoked if confidence is low OR multi-step pattern detected.
+        // MIND-W1 honest implementation: we do NOT run a real tree search here (that is
+        // a W7 hardening). For W1 MCTS is a "deliberation budget" annotation that
+        // records whether further exploration would be triggered, without fabricating
+        // plan evidence that did not actually occur.
+        BrcStep mctsStep;
         String mctsReply = null;
         double mctsConfidence = 0.0;
-        if (tsetlinResult.confidence() < 0.55 || isMultiStep(input)) {
-            // Simple MCTS-like exploration: try composing 3 plans, pick best by salience
+        boolean mctsWouldFire = tsetlinResult.confidence() < 0.55 || isMultiStep(input);
+        if (mctsWouldFire) {
             mctsStep = new BrcStep(
                 "MCTS",
-                true,
-                Math.max(tsetlinResult.confidence(), 0.40),
-                List.of("plans=3", "budget=12")
+                false,
+                tsetlinResult.confidence(),
+                List.of("budget=12", "would_fire=true", "reason=low-confidence-or-multi-step",
+                    "note=mcts-deliberation-budget-not-implemented-in-W1")
             );
-            mctsReply = tsetlinResult.reply();
-            mctsConfidence = tsetlinResult.confidence();
-            trace.add(mctsStep);
         } else {
-            trace.add(mctsStep);
+            mctsStep = new BrcStep(
+                "MCTS",
+                false,
+                1.0,
+                List.of("budget=12", "would_fire=false", "reason=high-confidence-no-deliberation-needed")
+            );
         }
+        trace.add(mctsStep);
 
         // Compose final reply + confidence
         String reply = composeReply(input, arith, analogyResult, bir, hdc, tsetlinResult, mctsReply);
