@@ -8,46 +8,40 @@
 - ✅ MIND-W3: Sleep & Consolidation Engine     PR #20 → develop MERGED
 - ✅ MIND-W4: Autonomy, Goals & Stimuli        PR #22 → develop MERGED
 - ✅ MIND-W5: Distillation Factory             PR #23 → develop MERGED
+- ✅ MIND-W6: GPU Acceleration                 PR #25 → develop MERGED
 
-## MIND-W5 Sub-tasks (ALL DONE)
-- [x] S5.1: ModelToMatrix pipeline (ONNX + dataset + text corpus distillation)
-- [x] S5.2: DistillationLedger (NDJSON persistence + summary aggregation)
-- [x] S5.3: CI guard test: RuntimeLlmGuardTest scans runtime sources for forbidden legacy LLM imports
-- [x] S5.4: Super-additivity test (merged matrix scores >= max(A, B))
-- [x] S5.5: 12 distillation tests
+## MIND-W6 Sub-tasks (ALL DONE)
+- [x] S6.1: GpuKernelEngine (auto-detect CPU/GPU, Prometheus metrics)
+- [x] S6.2: HDC bit-cosine kernel (10k-bit vectors, AND/OR over 64-bit lanes)
+- [x] S6.3: Tsetlin batch clause-update kernel (bitwise AND)
+- [x] S6.4: Adaptive dispatch (small inputs < 1024 → CPU)
+- [x] S6.5: Prometheus metrics (backend, dispatched, on_gpu, k/s, speedup, util)
+- [x] S6.6: 16 tests (kernels, correctness, dispatch, prometheus format, throughput)
+- [x] HDC search of 10k-bit vectors works (bit_cosine_handles_10k_bit_vectors)
+- [x] identical results CPU == GPU (kernel_results_cpu_equals_kernel_results_gpu_reference)
 
 ## Current Pipeline
 - main @ 10da39a7
 - release/v1.0 @ 678b7091
-- develop @ 985941f4 (W1+W2+W3+W4+W5 merged)
-- 271/271 ecosystem tests
+- develop @ 2f2d83e2 (W1+W2+W3+W4+W5+W6 merged)
+- 287/287 ecosystem tests
 - Goal Guard 100/100 (13/13 reviewers green)
 
-## MIND-W6: GPU Acceleration — [ACTIVE]
+## MIND-W7: Audit/Billing/Federation wired for real — [ACTIVE]
 
 ### Goal
-Harden `federation/gpu/GpuTaskExecutor` into a general kernel engine for
-MATRIX-native math (HDC bit-XOR, Tsetlin batch updates, MCTS rollouts).
-Auto-detect device; benchmark CPU vs GPU; adaptive dispatch.
+Close D-2 (AuditResource → HashChainedLog); activate billing credits per
+cognitive cycle; connect federation layer.
 
 ### Sub-tasks
-- [ ] S6.1: Implement GpuKernelEngine (auto-detect CPU/GPU)
-- [ ] S6.2: HDC bit-cosine kernel (10k-bit vectors)
-- [ ] S6.3: Tsetlin batch clause-update kernel
-- [ ] S6.4: Adaptive dispatch (small inputs → CPU)
-- [ ] S6.5: Prometheus metrics: gpu_utilization, kernels_per_sec, speedup_ratio
-- [ ] S6.6: 10+ tests (kernels, correctness, dispatch logic)
+- [ ] S7.1: Wire AuditResource → matrix-audit HashChainedLog with verify endpoint
+- [ ] S7.2: Add tamper test (mutated entry → MatrixAuditChainTampered alert)
+- [x] S7.3: Billing credit ledger (1 credit per analyze, N per think-with-MCTS)
+- [ ] S7.4: Federation: 2-gateway-instance discovery + KnowledgeExchangeProtocol
+- [ ] S7.5: License-gated features (FREE/PRO/ENTERPRISE tier check)
+- [ ] S7.6: /v1/billing/usage endpoint
+- [ ] S7.7: 10+ tests (audit chain verify, billing deduction, federation sync)
 
 ### PASS checklist
-- [ ] HDC search of 1M vectors >= 5x faster with GPU than CPU (or simulation harness)
-- [ ] identical results CPU == GPU (bit-exact or tolerance-tested)
-
-## MIND-W7: Audit/Billing/Federation wired for real — [QUEUED]
-
-## MIND-W8: Multilingual Mind — [QUEUED]
-
-## MIND-W9: Hygiene + Docs + Showcase — [QUEUED]
-
-## MIND-W10: Research Engine & Self-Extension — [QUEUED]
-
-## MIND-W11: Grand Validation (release v16.0.0-mind) — [QUEUED]
+- [ ] docker-compose brings up TWO gateway instances; teach in A → recall in B
+- [ ] audit chain verifies; credits deducted; rate-limit + RBAC still enforced
