@@ -131,3 +131,89 @@ curl -H "Authorization: Bearer $MATRIX_API_KEY" \
 ---
 
 **Последнее обновление:** 2026-09-21 (Волна T-03)
+
+---
+
+## Режимы мозга: STUB vs PRODUCTION
+
+API-шлюз MATRIX работает в двух режимах:
+
+| Режим | Триггер | Мозг | Применение |
+|-------|---------|------|------------|
+| **STUB** | (по умолчанию) | `StubBrainCycle` | Локальная разработка, CI-тесты |
+| **PRODUCTION** | `MATRIX_MODE=production` | Реальный `BirBrainCycle` (W1-W1500) | Живой инференс BIR/HDC/MCTS |
+
+### Режим STUB
+
+Возвращает детерминированные захардкоженные ответы. Используется в:
+- Юнит-тестах
+- CI-пайплайнах (без JAR)
+- Локальной разработке без сборки native
+
+### Режим PRODUCTION
+
+Рефлексивно загружает `matrix-core/build/libs/matrix-core-1.0.0.jar` и запускает реальный `BirBrainCycle`. Включает:
+- **BIR** (Boolean Inference Rules) — правиловый вывод
+- **HDC** (Hyperdimensional Computing) — поиск по памяти через косинусное сходство
+- **Модуляторы** — `ETHICAL_FILTER`, `SAFETY_MONITOR`, `CONSISTENCY_CHECKER`, `LIE_DETECTOR`
+- **База знаний** — семантический поиск
+- **Обучение** — `/v1/teach` добавляет документы для `/v1/analyze`
+
+### Сборка нативного ядра
+
+```bash
+export JAVA_HOME=~/.sdkman/candidates/java/25.0.2-graalce
+./gradlew :matrix-core:nativeCompile
+# Бинарь: matrix-core/build/native/nativeCompile/matrix-core (126 МБ, ~46 сек)
+```
+
+### Запуск в режиме PRODUCTION
+
+```bash
+MATRIX_MODE=production java -cp matrix-api-gateway/build/classes/java/main:<deps> \
+  -Dport=8765 io.matrix.api.MinimalHttpServer
+```
+
+### Проверка интеллекта
+
+```bash
+# 1. Проверить режим
+curl http://localhost:8765/health/live
+# {"mode":"production","brain_available":true,...}
+
+# 2. Обучить мозг
+TOKEN=$(curl -s -X POST http://localhost:8765/v1/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"pro@test.com"}' \
+  | python3 -c "import sys,json; print(json.load(sys.stdin)['token'])")
+
+curl -X POST http://localhost:8765/v1/teach \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"input":"Какая столица Франции?","response":"Париж — столица Франции"}'
+
+# 3. Запрос
+curl -X POST http://localhost:8765/v1/analyze \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{"input":"Какая столица Франции?"}'
+# Ответ: {"answer":"- [taught-...] Париж...", "confidence":0.7, ...}
+
+# 4. Мультимодальное транскодирование
+curl -X POST http://localhost:8765/v1/transcode/audio \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{"input":"<base64 аудио>"}'
+
+curl -X POST http://localhost:8765/v1/transcode/image \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{"input":"<описание изображения>"}'
+
+# 5. Срабатывание модуляторов (СТАТЬЯ IV — ЗАМОРОЖЕННЫЕ модуляторы)
+curl -X POST http://localhost:8765/v1/analyze \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{"input":"Это опасно и небезопасно"}'
+# Ответ: modulators_fired: ["SAFETY_MONITOR"]
+```
+
+### Режимы отказа
+
+Если `matrix-core.jar` отсутствует, `ProductionBrainClient` бросает `BrainUnavailableException`, и шлюз возвращает `503 Service Unavailable` с заголовком `Retry-After: 5`. STUB — автоматический fallback.
