@@ -54,6 +54,11 @@ public final class MinimalHttpServer {
     private ProductionBrainClient prodBrain; // null if stub mode
     private final JwtAuthFilter jwt;
     private final RateLimiter rateLimiter;
+    /** MIND-W3: optional sleep scheduler (null in stub mode). */
+    private io.matrix.brain.runtime.SleepScheduler sleepScheduler;
+    /** MIND-W4: optional goal tracker + inbox watcher (null in stub mode). */
+    private io.matrix.brain.runtime.GoalTracker goalTracker;
+    private io.matrix.brain.runtime.InboxWatcher inboxWatcher;
 
     /** Ring buffer of recent analyze IDs and explanations */
     private final Map<String, StoredExplain> explanations = new ConcurrentHashMap<>();
@@ -65,11 +70,54 @@ public final class MinimalHttpServer {
         String mode = System.getenv().getOrDefault("MATRIX_MODE",
             System.getProperty("matrix.mode", "stub"));
         if ("production".equalsIgnoreCase(mode)) {
-            ProductionBrainClient prod = new ProductionBrainClient();
+            // MIND-W2: persistent HDC store. Path from MATRIX_MIND_DIR env var
+            // (default data/mind/ relative to CWD).
+            String mindDir = System.getenv().getOrDefault(
+                "MATRIX_MIND_DIR", "data/mind");
+            java.nio.file.Path hdcPath = java.nio.file.Path.of(
+                mindDir, "hdc_kb.ndjson");
+            io.matrix.brain.runtime.PersistentHdcStore hdcStore = null;
+            try {
+                java.nio.file.Files.createDirectories(java.nio.file.Path.of(mindDir));
+                hdcStore = new io.matrix.brain.runtime.PersistentHdcStore(hdcPath, 256);
+            } catch (Throwable t) {
+                LOG.log(Level.WARNING,
+                    "Could not open PersistentHdcStore at {0}: {1}; falling back to in-memory",
+                    new Object[]{hdcPath, t.getMessage()});
+            }
+            // MIND-W3: episodic log + sleep scheduler
+            io.matrix.brain.runtime.EpisodicLog episodicLog = null;
+            io.matrix.brain.runtime.SleepScheduler sleepScheduler = null;
+            try {
+                java.nio.file.Path episodicPath = java.nio.file.Path.of(
+                    mindDir, "episodic.ndjson");
+                episodicLog = new io.matrix.brain.runtime.EpisodicLog(episodicPath);
+                sleepScheduler = new io.matrix.brain.runtime.SleepScheduler(
+                    episodicLog, hdcStore,
+                    new io.matrix.brain.runtime.ConsolidationCycle(),
+                    5 /* idleMinutes */);
+                this.sleepScheduler = sleepScheduler;
+                LOG.log(Level.INFO, "MIND-W3: EpisodicLog + SleepScheduler armed");
+            } catch (Throwable t) {
+                LOG.log(Level.WARNING, "MIND-W3 init failed: {0}", t.getMessage());
+            }
+            ProductionBrainClient prod = new ProductionBrainClient(
+                hdcStore, episodicLog, sleepScheduler);
+            // MIND-W4: goal tracker + inbox watcher
+            try {
+                this.goalTracker = new io.matrix.brain.runtime.GoalTracker();
+                this.inboxWatcher = new io.matrix.brain.runtime.InboxWatcher(
+                    java.nio.file.Path.of(mindDir, "inbox"), hdcStore);
+                int ingested = this.inboxWatcher.scan();
+                LOG.log(Level.INFO, "MIND-W4: GoalTracker + InboxWatcher armed (ingested={0})", ingested);
+            } catch (Throwable t) {
+                LOG.log(Level.WARNING, "MIND-W4 init failed: {0}", t.getMessage());
+            }
             if (prod.isAvailable()) {
                 this.brain = prod;
                 this.prodBrain = prod;
-                LOG.log(Level.INFO, "MATRIX_MODE=production — using REAL BirBrainCycle (W1500)");
+                LOG.log(Level.INFO,
+                    "MATRIX_MODE=production — MindCycle + BirBrainCycle + HDCStore + SleepScheduler + Goals + Inbox");
             } else {
                 LOG.log(Level.WARNING, "MATRIX_MODE=production requested but matrix-core JAR not found; falling back to StubBrainCycle");
                 this.brain = new StubBrainCycle();
@@ -103,6 +151,10 @@ public final class MinimalHttpServer {
         http.createContext("/v1/transcode/audio", this::handleTranscodeAudio);
         http.createContext("/v1/transcode/image", this::handleTranscodeImage);
         http.createContext("/v1/teach", this::handleTeach);
+        http.createContext("/v1/sleep", this::handleSleep);
+        http.createContext("/v1/status", this::handleStatus);
+        http.createContext("/v1/goals", this::handleGoals);
+        http.createContext("/v1/inbox/scan", this::handleInboxScan);
         http.createContext("/health/live", exchange -> writeJson(exchange, 200,
             "{\"status\":\"UP\",\"service\":\"matrix-api-gateway\","
             + "\"mode\":\"" + (prodBrain != null ? "production" : "stub") + "\","
@@ -532,10 +584,193 @@ public final class MinimalHttpServer {
         return sb.append("]").toString();
     }
 
+    /** Extract a string field from a flat JSON body (best-effort). */
+    private static String extractJsonField(String body, String key) {
+        if (body == null) return null;
+        String marker = "\"" + key + "\":\"";
+        int i = body.indexOf(marker);
+        if (i < 0) return null;
+        int s = i + marker.length();
+        int e = body.indexOf('"', s);
+        if (e < 0) return null;
+        return body.substring(s, e);
+    }
+
     private static String abbreviate(String s, int max) {
         if (s == null) return "";
         if (s.length() <= max) return s;
         return s.substring(0, max - 3) + "...";
+    }
+
+    /**
+     * MIND-W3 — POST /v1/sleep handler.
+     * Triggers a manual consolidation cycle and returns the dream report.
+     */
+    private void handleSleep(com.sun.net.httpserver.HttpExchange ex) throws IOException {
+        try {
+            if (!"POST".equalsIgnoreCase(ex.getRequestMethod())) {
+                writeJson(ex, 405, "{\"error\":\"method not allowed\"}");
+                return;
+            }
+            if (sleepScheduler == null) {
+                writeJson(ex, 503,
+                    "{\"error\":\"sleep not available\",\"reason\":\"MATRIX_MODE != production\"}");
+                return;
+            }
+            io.matrix.brain.runtime.ConsolidationCycle.DreamReport report =
+                sleepScheduler.triggerNow();
+            StringBuilder sb = new StringBuilder(256);
+            sb.append("{\"status\":\"ok\",\"dream\":{")
+              .append("\"entriesReplayed\":").append(report.entriesReplayed)
+              .append(",\"distinctPatterns\":").append(report.distinctPatterns)
+              .append(",\"hdcSizeBefore\":").append(report.hdcSizeBefore)
+              .append(",\"hdcSizeAfter\":").append(report.hdcSizeAfter)
+              .append(",\"promoted\":").append(jsonArr(report.promoted))
+              .append(",\"merged\":").append(jsonArr(report.merged))
+              .append(",\"forgotten\":").append(report.tombstoned)
+              .append(",\"durationMs\":").append(report.durationMs())
+              .append(",\"startedAt\":").append(report.startedAtMillis)
+              .append(",\"finishedAt\":").append(report.finishedAtMillis)
+              .append("}}");
+            writeJson(ex, 200, sb.toString());
+        } catch (Throwable t) {
+            writeJson(ex, 500, "{\"error\":\"sleep failed: " + esc(t.getMessage()) + "\"}");
+        }
+    }
+
+    /**
+     * MIND-W3 — GET /v1/status handler.
+     * Reports uptime cycles, last dream summary, sleep cycles completed,
+     * episodic-log size, HDC size, etc.
+     */
+    private void handleStatus(com.sun.net.httpserver.HttpExchange ex) throws IOException {
+        try {
+            StringBuilder sb = new StringBuilder(512);
+            sb.append("{");
+            sb.append("\"uptime_cycles\":").append(auditEvents.size());
+            sb.append(",\"audit_events\":").append(auditEvents.size());
+            if (sleepScheduler != null) {
+                io.matrix.brain.runtime.ConsolidationCycle.DreamReport d = sleepScheduler.lastDream();
+                sb.append(",\"sleep_cycles\":").append(sleepScheduler.cycleCount());
+                sb.append(",\"episodic_size\":").append(d.entriesReplayed);
+                sb.append(",\"hdc_size\":").append(d.hdcSizeAfter);
+                sb.append(",\"last_dream\":{")
+                  .append("\"entriesReplayed\":").append(d.entriesReplayed)
+                  .append(",\"distinctPatterns\":").append(d.distinctPatterns)
+                  .append(",\"startedAt\":").append(d.startedAtMillis)
+                  .append(",\"finishedAt\":").append(d.finishedAtMillis)
+                  .append("}");
+            } else {
+                sb.append(",\"sleep_cycles\":0,\"last_dream\":null");
+            }
+            // MIND-W4: goals + inbox
+            if (goalTracker != null) {
+                sb.append(",\"goals\":");
+                Map<String, Object> gs = goalTracker.snapshot();
+                sb.append("{").append("\"count\":").append(gs.get("count"))
+                  .append(",\"items\":").append(jsonMapArray((java.util.List<?>) gs.get("goals")))
+                  .append("}");
+            } else {
+                sb.append(",\"goals\":null");
+            }
+            if (inboxWatcher != null) {
+                Map<String, Object> ib = inboxWatcher.statusSnapshot();
+                sb.append(",\"inbox\":");
+                sb.append("{").append("\"lastIngest\":\"")
+                  .append(esc((String) ib.get("lastIngest")))
+                  .append("\",\"trackedFiles\":").append(ib.get("trackedFiles"))
+                  .append("}");
+            } else {
+                sb.append(",\"inbox\":null");
+            }
+            sb.append("}");
+            writeJson(ex, 200, sb.toString());
+        } catch (Throwable t) {
+            writeJson(ex, 500, "{\"error\":\"status failed: " + esc(t.getMessage()) + "\"}");
+        }
+    }
+
+    /**
+     * MIND-W4 — /v1/goals handler.
+     * GET: list goals. POST: add new goal ({"name": "...", "description": "..."}).
+     */
+    private void handleGoals(com.sun.net.httpserver.HttpExchange ex) throws IOException {
+        try {
+            String method = ex.getRequestMethod();
+            if (goalTracker == null) {
+                writeJson(ex, 503,
+                    "{\"error\":\"goals not available\",\"reason\":\"MATRIX_MODE != production\"}");
+                return;
+            }
+            if ("GET".equalsIgnoreCase(method)) {
+                Map<String, Object> snap = goalTracker.snapshot();
+                StringBuilder sb = new StringBuilder();
+                sb.append("{\"count\":").append(snap.get("count"))
+                  .append(",\"goals\":").append(jsonMapArray((java.util.List<?>) snap.get("goals")))
+                  .append("}");
+                writeJson(ex, 200, sb.toString());
+            } else if ("POST".equalsIgnoreCase(method)) {
+                String body = readBody(ex);
+                String name = extractJsonField(body, "name");
+                String desc = extractJsonField(body, "description");
+                if (name == null || name.isBlank()) {
+                    writeJson(ex, 400, "{\"error\":\"name required\"}");
+                    return;
+                }
+                io.matrix.brain.runtime.GoalTracker.Goal g = goalTracker.addGoal(name, desc);
+                writeJson(ex, 201,
+                    "{\"id\":\"" + esc(g.id()) + "\",\"name\":\""
+                    + esc(g.name()) + "\",\"status\":\""
+                    + g.status().name() + "\",\"progress\":" + g.progress() + "}");
+            } else {
+                writeJson(ex, 405, "{\"error\":\"method not allowed\"}");
+            }
+        } catch (Throwable t) {
+            writeJson(ex, 500, "{\"error\":\"goals failed: " + esc(t.getMessage()) + "\"}");
+        }
+    }
+
+    /**
+     * MIND-W4 — /v1/inbox/scan handler.
+     * Triggers an immediate inbox scan; returns the count of newly-ingested files.
+     */
+    private void handleInboxScan(com.sun.net.httpserver.HttpExchange ex) throws IOException {
+        try {
+            if (inboxWatcher == null) {
+                writeJson(ex, 503, "{\"error\":\"inbox not available\"}");
+                return;
+            }
+            int n = inboxWatcher.scan();
+            writeJson(ex, 200, "{\"ingested\":" + n + "}");
+        } catch (Throwable t) {
+            writeJson(ex, 500, "{\"error\":\"inbox scan failed: " + esc(t.getMessage()) + "\"}");
+        }
+    }
+
+    private static String jsonMapArray(java.util.List<?> list) {
+        if (list == null || list.isEmpty()) return "[]";
+        StringBuilder sb = new StringBuilder("[");
+        boolean first = true;
+        for (Object item : list) {
+            if (!first) sb.append(',');
+            first = false;
+            if (item instanceof java.util.Map<?, ?> m) {
+                sb.append("{");
+                boolean f2 = true;
+                for (Map.Entry<?, ?> e : m.entrySet()) {
+                    if (!f2) sb.append(',');
+                    f2 = false;
+                    sb.append("\"").append(esc(String.valueOf(e.getKey()))).append("\":");
+                    Object v = e.getValue();
+                    if (v instanceof Number || v instanceof Boolean) sb.append(v);
+                    else sb.append("\"").append(esc(String.valueOf(v))).append("\"");
+                }
+                sb.append("}");
+            } else {
+                sb.append("\"").append(esc(String.valueOf(item))).append("\"");
+            }
+        }
+        return sb.append("]").toString();
     }
 
     public static void main(String[] args) throws Exception {
