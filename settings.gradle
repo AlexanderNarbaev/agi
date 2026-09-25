@@ -15,10 +15,10 @@ include 'matrix-audit'             // Wave T-06: Hash-chained logs + GDPR prunin
 include 'matrix-billing'           // Wave T-07: Stripe + credits + license engine
 include 'matrix-observability'     // Wave T-09: Prometheus/Grafana stack
 
-// === EXPERIMENTAL MODULES (already present, not modified in T-01) ===
-include 'matrix-fpga'
-include 'matrix-micro'
-include 'matrix-ros2'
+// === EXPERIMENTAL MODULES (TRUE-W0: deregistered — see docs-v2/research/TRUE-MIND-AUDIT-2026-09-26.md) ===
+// include 'matrix-fpga'
+// include 'matrix-micro'
+// include 'matrix-ros2'
 
 // NOTE: matrix-web-ui/ is intentionally NOT included in Gradle.
 // It is a Next.js/TypeScript project with its own toolchain.
