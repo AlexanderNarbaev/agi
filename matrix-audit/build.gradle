@@ -1,0 +1,36 @@
+// matrix-audit/build.gradle — Wave T-06
+// Immutable hash-chained audit logs + GDPR pruning + compliance reports
+// T-01: minimal skeleton using JDK MessageDigest for SHA-256
+
+plugins {
+    id 'java'
+}
+
+group = 'io.matrix'
+version = '0.1.0-T06-SNAPSHOT'
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation 'com.fasterxml.jackson.core:jackson-databind:2.18.2'
+    // SHA-256 hashing via java.security.MessageDigest (JDK built-in)
+    // PDFBox for compliance reports — added in T-06 proper
+    implementation 'org.apache.pdfbox:pdfbox:3.0.3'
+
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.11.4'
+    testImplementation 'org.junit.platform:junit-platform-launcher:1.11.4'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher:1.11.4'
+    testImplementation 'org.assertj:assertj-core:3.26.0'
+}
+
+tasks.withType(Test) {
+    useJUnitPlatform()
+    maxHeapSize = '2g'
+}

@@ -1,0 +1,55 @@
+title: MATRIX Encyclopedia
+description: The AI That Thinks Like a Brain
+baseurl: /agi
+url: https://alexandr-narbaev.github.io
+
+remote_theme: just-the-docs/just-the-docs@v0.7.0
+
+color_scheme: dark
+
+# Exclude raw/draft files from build
+exclude:
+  - _raw/
+  - _raw/**
+  - _drafts/
+  - _drafts/**
+  - node_modules/
+  - vendor/
+  - Gemfile
+  - Gemfile.lock
+
+mermaid:
+  version: "10.7.0"
+
+mathjax:
+  version: "3.2.2"
+
+# Markdown engine settings
+markdown: kramdown
+kramdown:
+  input: GFM
+  syntax_highlighter: rouge
+  syntax_highlighter_opts:
+    css_class: 'highlight'
+
+aux_links:
+  - title: GitHub
+    url: https://github.com/AlexanderNarbaev/agi
+
+nav_enabled: true
+
+search_enabled: true
+search.button: true
+
+# Custom CSS
+custom_css: "/assets/css/custom.css"
+
+footer_content: "MATRIX Hybrid Intelligence &mdash; Built with <a href=\"https://just-the-docs.com\">Just the Docs</a>."
+
+callouts:
+  warning:
+    title: Warning
+    color: yellow
+  note:
+    title: Note
+    color: blue

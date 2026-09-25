@@ -1,0 +1,47 @@
+// matrix-api-gateway/build.gradle — Wave T-02 entry point
+// Quarkus REST as primary choice (CONSTITUTION-aligned: same stack as matrix-core)
+// Spring Boot support added in T-02 if benchmark shows need
+
+plugins {
+    id 'java'
+}
+
+group = 'io.matrix'
+version = '0.1.0-T02-SNAPSHOT'
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    // Will depend on matrix-core in T-02
+    // implementation project(':matrix-core')
+
+    // Quarkus REST stack (matches matrix-core for consistency)
+    implementation enforcedPlatform('io.quarkus.platform:quarkus-bom:3.38.3')
+    implementation 'io.quarkus:quarkus-arc'
+    implementation 'io.quarkus:quarkus-rest'
+    implementation 'io.quarkus:quarkus-rest-jackson'
+    implementation 'io.quarkus:quarkus-hibernate-validator'
+    implementation 'io.quarkus:quarkus-smallrye-health'
+    implementation 'io.quarkus:quarkus-micrometer-registry-prometheus'
+    implementation 'io.quarkus:quarkus-websockets'
+    implementation 'io.quarkus:quarkus-oidc'
+    implementation 'io.quarkus:quarkus-redis-client'
+
+    // OpenAPI
+    implementation 'io.quarkus:quarkus-smallrye-openapi'
+
+    testImplementation 'io.quarkus:quarkus-junit5'
+    testImplementation 'org.assertj:assertj-core:3.26.0'
+}
+
+tasks.withType(Test) {
+    useJUnitPlatform()
+    maxHeapSize = '4g'
+}

@@ -1,4 +1,3 @@
-```
-# Documentation files
-docs-v2/prompts/
-```
+# Gradle
+.gradle/
+build/

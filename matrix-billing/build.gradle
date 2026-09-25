@@ -1,0 +1,35 @@
+// matrix-billing/build.gradle — Wave T-07
+// Subscription management + credit ledger + license validation
+// T-01: minimal skeleton — Stripe + Postgres deps deferred to T-07
+
+plugins {
+    id 'java'
+}
+
+group = 'io.matrix'
+version = '0.1.0-T07-SNAPSHOT'
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation 'com.fasterxml.jackson.core:jackson-databind:2.18.2'
+
+    // Ed25519 license key validation via JDK 15+ java.security (no extra deps)
+
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.11.4'
+    testImplementation 'org.junit.platform:junit-platform-launcher:1.11.4'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher:1.11.4'
+    testImplementation 'org.assertj:assertj-core:3.26.0'
+}
+
+tasks.withType(Test) {
+    useJUnitPlatform()
+    maxHeapSize = '2g'
+}

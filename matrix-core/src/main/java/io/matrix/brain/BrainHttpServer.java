@@ -13,27 +13,59 @@ import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Random;
 
 /**
- * W504 — Production Brain HTTP Server with All Endpoints.
+ * W567 — Production Brain HTTP Server (BIR-based, no LLM).
  * 
  * Complete brain server with confidence filtering and all endpoints.
+ * Uses BirBrainCycle by default (CONSTITUTION I compliant).
+ * 
+ * @deprecated LlmBrainLoopRag constructor kept for backward compat only.
  */
 public final class BrainHttpServer {
     
-    private static final String DEFAULT_MODEL = "models/onnx/qwen05b";
     private static final int DEFAULT_PORT = 9200;
     
-    private final LlmBrainLoopRag brain;
+    private final BrainCycle brain;
     private final SimpleKnowledgeBase knowledgeBase;
     private final ConversationLearner learner;
     private final ConfidenceFilter confidenceFilter;
     private final int port;
     
+    /**
+     * Create with BIR brain (default, no LLM).
+     */
+    public BrainHttpServer(int port) {
+        this.port = port;
+        this.knowledgeBase = new SimpleKnowledgeBase();
+        Random rng = new Random(42);
+        BirBrainCycle birBrain = new BirBrainCycle(rng, knowledgeBase);
+        birBrain.learnFromKnowledgeBase();
+        this.brain = birBrain;
+        this.learner = new ConversationLearner(knowledgeBase, Paths.get("data/conversations"));
+        this.confidenceFilter = new ConfidenceFilter(0.3);
+    }
+    
+    /**
+     * @deprecated Use {@link #BrainHttpServer(int)} instead. LLM path will be removed.
+     */
+    @Deprecated
     public BrainHttpServer(int port, String modelPath) {
         this.port = port;
         this.knowledgeBase = new SimpleKnowledgeBase();
         this.brain = new LlmBrainLoopRag(modelPath, knowledgeBase);
+        this.learner = new ConversationLearner(knowledgeBase, Paths.get("data/conversations"));
+        this.confidenceFilter = new ConfidenceFilter(0.3);
+    }
+    
+    /**
+     * Create with any BrainCycle implementation.
+     */
+    public BrainHttpServer(int port, BrainCycle brain, SimpleKnowledgeBase kb) {
+        this.port = port;
+        this.knowledgeBase = kb != null ? kb : new SimpleKnowledgeBase();
+        this.brain = brain;
         this.learner = new ConversationLearner(knowledgeBase, Paths.get("data/conversations"));
         this.confidenceFilter = new ConfidenceFilter(0.3);
     }
@@ -50,12 +82,13 @@ public final class BrainHttpServer {
         server.start();
         
         System.out.println("[brain-server] Started on port " + port);
+        System.out.println("[brain-server] Brain type: " + brain.getClass().getSimpleName());
         System.out.println("[brain-server] Anti-hallucination: min confidence = " + confidenceFilter.getMinConfidence());
     }
     
     class HealthHandler implements HttpHandler {
         public void handle(HttpExchange ex) throws IOException {
-            sendJson(ex, 200, "{\"status\":\"ok\",\"version\":\"1.0\"}");
+            sendJson(ex, 200, "{\"status\":\"ok\",\"version\":\"2.0\",\"brain\":\"" + brain.getClass().getSimpleName() + "\"}");
         }
     }
     
@@ -66,7 +99,8 @@ public final class BrainHttpServer {
                 "h1{color:#00ffff;}pre{background:#111;padding:10px;white-space:pre-wrap;}" +
                 "button{padding:8px 16px;background:#003322;color:#00ff88;border:1px solid #00ff88;cursor:pointer;}" +
                 "button:hover{background:#004433;}</style></head><body>" +
-                "<h1>MATRIX Brain Server</h1>" +
+                "<h1>MATRIX Brain Server (BIR)</h1>" +
+                "<p>Brain: " + brain.getClass().getSimpleName() + "</p>" +
                 "<p>Endpoints: /health, /chat, /learn, /stats, /knowledge?q=query</p>" +
                 "<h2>Chat</h2>" +
                 "<form id='c'><input id='m' size=50 placeholder='Ask...'><button>Send</button></form>" +
@@ -118,7 +152,8 @@ public final class BrainHttpServer {
     class StatsHandler implements HttpHandler {
         public void handle(HttpExchange ex) throws IOException {
             sendJson(ex, 200, "{\"kb_size\":" + knowledgeBase.size() +
-                ",\"model\":\"qwen2.5-0.5b\",\"status\":\"running\",\"min_confidence\":" +
+                ",\"brain\":\"" + brain.getClass().getSimpleName() + "\"" +
+                ",\"status\":\"running\",\"min_confidence\":" +
                 confidenceFilter.getMinConfidence() + "}");
         }
     }
@@ -180,8 +215,7 @@ public final class BrainHttpServer {
     
     public static void main(String[] args) throws Exception {
         int port = args.length > 0 ? Integer.parseInt(args[0]) : DEFAULT_PORT;
-        String modelPath = args.length > 1 ? args[1] : DEFAULT_MODEL;
-        BrainHttpServer server = new BrainHttpServer(port, modelPath);
+        BrainHttpServer server = new BrainHttpServer(port);
         server.start();
         Runtime.getRuntime().addShutdownHook(new Thread(() -> { System.out.println("[brain-server] Shutting down"); System.exit(0); }));
         Thread.currentThread().join();

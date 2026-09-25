@@ -1,0 +1,38 @@
+// matrix-quality/build.gradle — Wave T-10
+// Goal Guard gates: 14 review gates + automated QA
+
+plugins {
+    id 'java'
+    id 'application'
+}
+
+group = 'io.matrix'
+version = '0.1.0-T10'
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation 'com.fasterxml.jackson.core:jackson-databind:2.18.2'
+    implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.18.2'
+
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.11.4'
+    testImplementation 'org.junit.platform:junit-platform-launcher:1.11.4'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher:1.11.4'
+    testImplementation 'org.assertj:assertj-core:3.26.0'
+}
+
+application {
+    mainClass = 'io.matrix.quality.cli.QualityCli'
+}
+
+tasks.withType(Test) {
+    useJUnitPlatform()
+    maxHeapSize = '2g'
+}
