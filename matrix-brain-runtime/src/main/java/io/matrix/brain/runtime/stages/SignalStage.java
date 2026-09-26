@@ -22,10 +22,24 @@ public final class SignalStage {
         }
     }
 
+
+    /** Build an engine-identity trace entry per CONSTITUTION Article VIII. */
+    private static String ev(String engineClass, String method, Object... args) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("engine=").append(engineClass).append('.').append(method).append('(');
+        for (int i = 0; i < args.length; i++) {
+            if (i > 0) sb.append(", ");
+            sb.append(args[i]);
+            if (i % 2 == 0 && i + 1 < args.length) sb.append("=");
+        }
+        sb.append(')');
+        return sb.toString();
+    }
+
     public SignalObservation encode(String input, List<BrcStep> trace) {
         if (input == null) {
             BrcStep step = BrcStep.of("SIGNAL", true, 0.95,
-                List.of("tokens=0", "dim=" + DIM));
+                List.of(ev("SignalStage", "encode", "empty")));
             trace.add(step);
             return new SignalObservation(new BitSet(DIM), 0, List.of());
         }
@@ -49,7 +63,7 @@ public final class SignalStage {
             bits.set((h & 0x7fffffff) % DIM);
         }
         BrcStep step = BrcStep.of("SIGNAL", true, 0.95,
-            List.of("tokens=" + tokenList.size(), "dim=" + DIM));
+            List.of(ev("SignalStage", "encode", "tokens", tokenList.size(), "dim", DIM)));
         trace.add(step);
         return new SignalObservation(bits, tokenList.size(), List.copyOf(tokenList));
     }

@@ -1,7 +1,7 @@
 package io.matrix.api.brain;
 
 import io.matrix.brain.runtime.EpisodicLog;
-import io.matrix.brain.runtime.MindCycle;
+import io.matrix.brain.runtime.TrueMindCycle;
 import io.matrix.brain.runtime.MindResult;
 import io.matrix.brain.runtime.PersistentHdcStore;
 import io.matrix.brain.runtime.SleepScheduler;
@@ -71,7 +71,7 @@ public final class ProductionBrainClient implements BrainCycle {
     private final boolean available;
 
     /** MIND-W1: dedicated runtime cognitive cycle. */
-    private final MindCycle mindCycle;
+    private final TrueMindCycle mindCycle;
 
     /**
      * MIND-W2: optional persistent HDC store. When wired (via
@@ -111,9 +111,12 @@ public final class ProductionBrainClient implements BrainCycle {
         this.knowledgeBase = init.kb;
         this.conversationLearner = init.learner;
         this.available = init.success;
-        // MIND-W1: always-on cognitive conductor. When hdcStore is non-null it
-        // uses persistent storage; otherwise falls back to in-memory mode.
-        this.mindCycle = (hdcStore != null) ? new MindCycle(hdcStore) : new MindCycle();
+        // TRUE-W1: use TrueMindCycle (real core engines), not the legacy
+        // hand-coded MindCycle. When hdcStore is non-null it threads through
+        // persistent storage; otherwise falls back to in-memory mode.
+        this.mindCycle = (hdcStore != null)
+            ? new TrueMindCycle(new java.util.Random(42L), hdcStore)
+            : new TrueMindCycle(new java.util.Random(42L), null);
     }
 
     /** Init helper - performs loading and returns a result bundle. */

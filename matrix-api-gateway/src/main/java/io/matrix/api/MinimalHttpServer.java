@@ -51,6 +51,8 @@ public final class MinimalHttpServer {
     private final int port;
     private final HttpServer http;
     private final BrainCycle brain;
+    /** TRUE-W14: persistent HDC store, kept as instance field so /v1/federate can dump/load. */
+    private io.matrix.brain.runtime.PersistentHdcStore hdcStore;
     private ProductionBrainClient prodBrain; // null if stub mode
     private final JwtAuthFilter jwt;
     private final RateLimiter rateLimiter;
@@ -76,15 +78,16 @@ public final class MinimalHttpServer {
                 "MATRIX_MIND_DIR", "data/mind");
             java.nio.file.Path hdcPath = java.nio.file.Path.of(
                 mindDir, "hdc_kb.ndjson");
-            io.matrix.brain.runtime.PersistentHdcStore hdcStore = null;
+            this.hdcStore = null;
             try {
                 java.nio.file.Files.createDirectories(java.nio.file.Path.of(mindDir));
-                hdcStore = new io.matrix.brain.runtime.PersistentHdcStore(hdcPath, 256);
+                this.hdcStore = new io.matrix.brain.runtime.PersistentHdcStore(hdcPath, 256);
             } catch (Throwable t) {
                 LOG.log(Level.WARNING,
                     "Could not open PersistentHdcStore at {0}: {1}; falling back to in-memory",
                     new Object[]{hdcPath, t.getMessage()});
             }
+            io.matrix.brain.runtime.PersistentHdcStore hdcStore = this.hdcStore;
             // MIND-W3: episodic log + sleep scheduler
             io.matrix.brain.runtime.EpisodicLog episodicLog = null;
             io.matrix.brain.runtime.SleepScheduler sleepScheduler = null;
@@ -321,16 +324,85 @@ public final class MinimalHttpServer {
     }
 
     private void handleFederate(HttpExchange ex) throws IOException {
+        // TRUE-W14: real federation dual-node protocol.
+        // GET /v1/federate            → list known peers
+        // GET /v1/federate?action=dump → dump local KB as JSON
+        // POST /v1/federate           → receive share batch (KnowledgeExchangeProtocol)
+        String query = ex.getRequestURI().getQuery();
         if ("GET".equalsIgnoreCase(ex.getRequestMethod())) {
-            writeJson(ex, 200,
-                "{\"peers\":[],\"local\":\"matrix-node-1\","
-                + "\"invites\":{\"alice\":\"@open\",\"bob\":\"@private\"}}");
+            if (query != null && query.contains("action=dump")) {
+                io.matrix.brain.runtime.KnowledgeExchangeProtocol.Batch b =
+                    io.matrix.brain.runtime.KnowledgeExchangeProtocol.snapshotToBatch(
+                        hdcStore, "matrix-node-1");
+                writeJson(ex, 200, b.toJsonArray());
+            } else {
+                writeJson(ex, 200,
+                    "{\"peers\":[],\"local\":\"matrix-node-1\","
+                    + "\"invites\":{\"alice\":\"@open\",\"bob\":\"@private\"},"
+                    + "\"endpoints\":{"
+                    + "\"dump\":\"GET /v1/federate?action=dump\","
+                    + "\"share\":\"POST /v1/federate  (body: KnowledgeExchangeProtocol.Batch JSON)\"}}");
+            }
         } else if ("POST".equalsIgnoreCase(ex.getRequestMethod())) {
-            writeJson(ex, 200,
-                "{\"status\":\"invitation queued\",\"accepted\":true}");
+            try {
+                String body = readBody(ex);
+                // Parse minimal Batch JSON: {"source":"...","facts":[{"id":..,"input":..,"answer":..,"confidence":..,"ts":..},...]}
+                String source = "unknown";
+                int srcIdx = body.indexOf("\"source\":\"");
+                if (srcIdx >= 0) {
+                    int s = srcIdx + 10;
+                    int e = s;
+                    while (e < body.length() && body.charAt(e) != '"') e++;
+                    source = body.substring(s, e);
+                }
+                java.util.List<io.matrix.brain.runtime.KnowledgeExchangeProtocol.Fact> facts = new java.util.ArrayList<>();
+                int factsStart = body.indexOf("\"facts\":[");
+                if (factsStart > 0) {
+                    int cursor = factsStart + 9;
+                    int arrayEnd = findMatchingBracket(body, cursor - 1);
+                    while (cursor < arrayEnd) {
+                        int objStart = body.indexOf('{', cursor);
+                        if (objStart < 0 || objStart > arrayEnd) break;
+                        int objEnd = body.indexOf('}', objStart);
+                        if (objEnd < 0 || objEnd > arrayEnd) break;
+                        String factJson = body.substring(objStart, objEnd + 1);
+                        facts.add(io.matrix.brain.runtime.KnowledgeExchangeProtocol.Fact
+                            .fromJsonLine(factJson));
+                        cursor = objEnd + 1;
+                    }
+                }
+                io.matrix.brain.runtime.KnowledgeExchangeProtocol.Batch batch =
+                    new io.matrix.brain.runtime.KnowledgeExchangeProtocol.Batch(source, facts);
+                int added = io.matrix.brain.runtime.KnowledgeExchangeProtocol
+                    .mergeInto(hdcStore, batch);
+                writeJson(ex, 200, "{\"status\":\"accepted\",\"source\":\""
+                    + esc(source) + "\",\"added\":" + added + "}");
+            } catch (Throwable t) {
+                writeJson(ex, 400, "{\"error\":\"" + esc(t.getMessage()) + "\"}");
+            }
         } else {
             writeJson(ex, 405, "{\"error\":\"method not allowed\"}");
         }
+    }
+
+    /** Find the matching closing bracket/brace for an opening at position {@code from}. */
+    private static int findMatchingBracket(String s, int from) {
+        char open = s.charAt(from);
+        char close = open == '[' ? ']' : open == '{' ? '}' : open == '(' ? ')' : 0;
+        if (close == 0) return s.length();
+        int depth = 0;
+        boolean inStr = false;
+        boolean esc = false;
+        for (int i = from; i < s.length(); i++) {
+            char c = s.charAt(i);
+            if (esc) { esc = false; continue; }
+            if (c == '\\') { esc = true; continue; }
+            if (c == '"') { inStr = !inStr; continue; }
+            if (inStr) continue;
+            if (c == open) depth++;
+            else if (c == close) { depth--; if (depth == 0) return i; }
+        }
+        return s.length();
     }
 
     private void handleLogin(HttpExchange ex) throws IOException {
@@ -774,7 +846,15 @@ public final class MinimalHttpServer {
     }
 
     public static void main(String[] args) throws Exception {
-        int port = Integer.parseInt(System.getProperty("port", "8080"));
+        // Accept port via args[0] OR -Dport system property OR default 8765.
+        int port = 8765;
+        String sysProp = System.getProperty("port");
+        if (sysProp != null && !sysProp.isBlank()) {
+            port = Integer.parseInt(sysProp);
+        } else if (args != null && args.length > 0) {
+            try { port = Integer.parseInt(args[0]); }
+            catch (NumberFormatException ignored) { /* keep default */ }
+        }
         MinimalHttpServer srv = new MinimalHttpServer(port);
         srv.start();
         Runtime.getRuntime().addShutdownHook(new Thread(srv::stop));

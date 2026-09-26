@@ -44,7 +44,7 @@ class TrueMindCycleIntegrationTest {
         MindResult r = mind.think("What is the capital of France?");
         var evidence = traceEvidence(r);
         // Every stage must name a real engine
-        assertThat(evidence).anyMatch(e -> e.contains("TextSignalModule.encode"));
+        assertThat(evidence).anyMatch(e -> e.contains("SignalStage.encode"));
         assertThat(evidence).anyMatch(e -> e.contains("SaliencyEngine.score"));
         assertThat(evidence).anyMatch(e -> e.contains("BirBrainCycle.cycle"));
         assertThat(evidence).anyMatch(e -> e.contains("HdcBrain.search-cosine"));
@@ -92,8 +92,8 @@ class TrueMindCycleIntegrationTest {
     void signal_module_returns_real_dimension() {
         TrueMindCycle mind = new TrueMindCycle();
         MindResult r = mind.think("hello world test");
-        // TextSignalModule reports its real dimension
-        assertThat(traceEvidence(r)).anyMatch(e -> e.contains("TextSignalModule.encode(")
+        // SignalStage reports its real dimension
+        assertThat(traceEvidence(r)).anyMatch(e -> e.contains("SignalStage.encode(")
             && e.contains("dim="));
     }
 
@@ -118,8 +118,8 @@ class TrueMindCycleIntegrationTest {
 
     @Test
     void determinism_same_input_same_output_and_same_trace_structure() {
-        TrueMindCycle m1 = new TrueMindCycle(new Random(42L));
-        TrueMindCycle m2 = new TrueMindCycle(new Random(42L));
+        TrueMindCycle m1 = new TrueMindCycle(new Random(42L), null);
+        TrueMindCycle m2 = new TrueMindCycle(new Random(42L), null);
         MindResult r1 = m1.think("What is 1+1?");
         MindResult r2 = m2.think("What is 1+1?");
         assertThat(r1.reply()).isEqualTo(r2.reply());
