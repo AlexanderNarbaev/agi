@@ -25,15 +25,17 @@ import static org.assertj.core.api.Assertions.assertThat;
 class MindCycleIntegrationTest {
 
     @org.junit.jupiter.api.BeforeEach
-    void enableBirSimulacrum() {
-        // RECON-W1: enable BIR simulacrum for legacy tests.
-        // Production path (default) is tested by BirInferenceStageSimulacrumTest.
+    void enableSimulacra() {
+        // RECON-W1: enable BIR + Tsetlin simulacra for legacy tests.
+        // Production path (default off) is tested by their SimulacrumTest classes.
         io.matrix.brain.runtime.stages.BirInferenceStage.simulacrumEnabled = true;
+        io.matrix.brain.runtime.stages.TsetlinStage.simulacrumEnabled = true;
     }
 
     @org.junit.jupiter.api.AfterEach
-    void resetBirSimulacrum() {
+    void resetSimulacra() {
         io.matrix.brain.runtime.stages.BirInferenceStage.simulacrumEnabled = false;
+        io.matrix.brain.runtime.stages.TsetlinStage.simulacrumEnabled = false;
     }
 
 

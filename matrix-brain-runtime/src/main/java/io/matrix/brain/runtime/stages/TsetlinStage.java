@@ -13,6 +13,17 @@ import java.util.List;
  */
 public final class TsetlinStage {
 
+    /**
+     * RECON-W1 — D-3 truthfulness guard.
+     *
+     * <p>The legacy hardcoded clauses (chitchat/acknowledge/meta) are
+     * NOT real Tsetlin predictions; they are string-matching canned
+     * replies. The default production path returns {@link TsetlinResult#miss()}
+     * and marks the stage as a SIMULACRUM. Real Tsetlin training is
+     * wired in RECON-W3 (sleep-driven rule induction).</p>
+     */
+    public static boolean simulacrumEnabled = false;
+
     /** Clause predicates: matched = positive feedback, fallback reply. */
     private static final List<TsetlinClause> CLAUSES = List.of(
         new TsetlinClause("chitchat",
@@ -41,6 +52,16 @@ public final class TsetlinStage {
     }
 
     public TsetlinResult classify(String input, List<BrcStep> trace) {
+        if (!simulacrumEnabled) {
+            // SIMULACRUM: real Tsetlin inference is wired in RECON-W3.
+            if (trace != null) {
+                trace.add(BrcStep.of("TSETLIN_SIMULACRUM", false, 0.0,
+                    List.of("simulacrum=true",
+                            "note=D-3 real Tsetlin inference deferred to RECON-W3")));
+            }
+            return TsetlinResult.miss();
+        }
+        // Legacy demo path (simulacrumEnabled=true):
         for (TsetlinClause c : CLAUSES) {
             try {
                 if (c.match.test(input)) {
