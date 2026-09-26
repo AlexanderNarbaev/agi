@@ -114,7 +114,9 @@ public final class ProductionBrainClient implements BrainCycle {
         // TRUE-W1: use TrueMindCycle (real core engines), not the legacy
         // hand-coded MindCycle. When hdcStore is non-null it threads through
         // persistent storage; otherwise falls back to in-memory mode.
-        this.mindCycle = (hdcStore != null) ? new TrueMindCycle(new java.util.Random(42L)) : new TrueMindCycle(new java.util.Random(42L));
+        this.mindCycle = (hdcStore != null)
+            ? new TrueMindCycle(new java.util.Random(42L), hdcStore)
+            : new TrueMindCycle(new java.util.Random(42L), null);
     }
 
     /** Init helper - performs loading and returns a result bundle. */

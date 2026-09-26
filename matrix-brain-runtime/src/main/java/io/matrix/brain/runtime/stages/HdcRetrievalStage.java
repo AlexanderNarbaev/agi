@@ -87,14 +87,22 @@ public final class HdcRetrievalStage {
             }
             if (topIds.size() < 3) topIds.add(e.getKey() + ":" + String.format("%.2f", sim));
         }
-        if (bestScore < 0.55 || bestId == null) {
+        if (bestScore < 0.40 || bestId == null) {
             trace.add(BrcStep.of("HDC_MEMORY", false, bestScore,
                 List.of("mode=persistent", "best=" + bestScore, "top=" + topIds)));
             return HdcResult.miss();
         }
+        // Split content on " => " separator; if absent treat full content as answer.
+        String hReply;
+        if (bestContent != null) {
+            int sep = bestContent.indexOf(" => ");
+            hReply = (sep > 0) ? bestContent.substring(sep + 4) : bestContent;
+        } else {
+            hReply = "";
+        }
         trace.add(BrcStep.of("HDC_MEMORY", true, bestScore,
             List.of("mode=persistent", "best=" + bestId, "top=" + topIds)));
-        return HdcResult.hit(bestContent, bestScore);
+        return HdcResult.hit(hReply, bestScore);
     }
 
     // -----------------------------------------------------------------
@@ -151,13 +159,20 @@ public final class HdcRetrievalStage {
             }
             if (topIds.size() < 3) topIds.add(e.getKey() + ":" + String.format("%.2f", sim));
         }
-        if (bestScore < 0.55 || bestId == null) {
+        if (bestScore < 0.40 || bestId == null) {
             trace.add(BrcStep.of("HDC_MEMORY", false, bestScore,
                 List.of("mode=in-memory", "best=" + bestScore, "top=" + topIds)));
             return HdcResult.miss();
         }
+        String hReply;
+        if (bestContent != null) {
+            int sep = bestContent.indexOf(" => ");
+            hReply = (sep > 0) ? bestContent.substring(sep + 4) : bestContent;
+        } else {
+            hReply = "";
+        }
         trace.add(BrcStep.of("HDC_MEMORY", true, bestScore,
             List.of("mode=in-memory", "best=" + bestId, "top=" + topIds)));
-        return HdcResult.hit(bestContent, bestScore);
+        return HdcResult.hit(hReply, bestScore);
     }
 }

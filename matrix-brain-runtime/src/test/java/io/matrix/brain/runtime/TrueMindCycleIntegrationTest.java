@@ -118,8 +118,8 @@ class TrueMindCycleIntegrationTest {
 
     @Test
     void determinism_same_input_same_output_and_same_trace_structure() {
-        TrueMindCycle m1 = new TrueMindCycle(new Random(42L));
-        TrueMindCycle m2 = new TrueMindCycle(new Random(42L));
+        TrueMindCycle m1 = new TrueMindCycle(new Random(42L), null);
+        TrueMindCycle m2 = new TrueMindCycle(new Random(42L), null);
         MindResult r1 = m1.think("What is 1+1?");
         MindResult r2 = m2.think("What is 1+1?");
         assertThat(r1.reply()).isEqualTo(r2.reply());

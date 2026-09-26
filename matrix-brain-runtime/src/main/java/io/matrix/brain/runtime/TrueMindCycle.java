@@ -67,15 +67,18 @@ public final class TrueMindCycle {
     private final BirBrainCycle brain;
     private final SafetyMonitor safety;
     private final CodebookMemory codebook;
+    /** TRUE-W14: optional persistent HDC store for retrieval across queries. */
+    private final io.matrix.brain.runtime.PersistentHdcStore hdcStore;
 
     /** Default deterministic constructor — seeded Random(42L). */
     public TrueMindCycle() {
-        this(new Random(42L));
+        this(new Random(42L), null);
     }
 
-    /** Explicit-seed constructor for tests. */
-    public TrueMindCycle(Random rng) {
+    /** Explicit-seed constructor with optional persistent HDC store. */
+    public TrueMindCycle(Random rng, io.matrix.brain.runtime.PersistentHdcStore hdcStore) {
         this.rng = rng;
+        this.hdcStore = hdcStore;
         this.reflex = new ReflexEngine();
         // Register reflexive substring patterns (ReflexEngine uses String.contains).
         reflex.register("harm",
@@ -216,7 +219,9 @@ public final class TrueMindCycle {
                 "rules_evaluated=" + 5))));
 
         // ---- Stage 7: HDC_MEMORY (real persistent HDC) ----
-        HdcRetrievalStage hdc = new HdcRetrievalStage();
+        HdcRetrievalStage hdc = (hdcStore != null)
+            ? new HdcRetrievalStage(hdcStore)
+            : new HdcRetrievalStage();
         HdcRetrievalStage.HdcResult hdcResult = hdc.retrieve(input, obs, trace);
 
         // ---- Stage 8: TSETLIN (real engine) ----
