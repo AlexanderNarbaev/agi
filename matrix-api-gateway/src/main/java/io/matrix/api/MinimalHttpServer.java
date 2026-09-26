@@ -63,6 +63,9 @@ public final class MinimalHttpServer {
     /** Ring buffer of recent analyze IDs and explanations */
     private final Map<String, StoredExplain> explanations = new ConcurrentHashMap<>();
     private final HashChainedAuditBuffer auditEvents = new HashChainedAuditBuffer(200);
+    /** RECON-W2: RU/EN transliteration + language detection in the analyze path. */
+    private final io.matrix.brain.runtime.MultilingualMind multilingualMind =
+        new io.matrix.brain.runtime.MultilingualMind();
 
     public MinimalHttpServer(int port) {
         this.port = port;
@@ -218,7 +221,17 @@ public final class MinimalHttpServer {
                 writeJson(ex, 400, "{\"error\":\"Request body required with 'input' field\"}");
                 return;
             }
-            req = new AnalyzeRequest(inputText);
+            // RECON-W2 D-7: wire MultilingualMind — detect language + transliterate RU.
+            // RU queries (e.g. "столица франции") previously passed accidentally through
+            // the regex stage. Now they are explicitly detected and the brain sees the
+            // transliterated form so HDC retrieval matches stored EN facts.
+            io.matrix.brain.runtime.MultilingualMind.Language lang =
+                multilingualMind.detectLanguage(inputText);
+            String processedInput = inputText;
+            if (lang == io.matrix.brain.runtime.MultilingualMind.Language.RUSSIAN) {
+                processedInput = multilingualMind.transliterateCyrillicToLatin(inputText);
+            }
+            req = new AnalyzeRequest(processedInput);
             // 5. Inference (may throw BrainUnavailableException in production mode)
             BrainCycle.CycleResult result;
             try {
