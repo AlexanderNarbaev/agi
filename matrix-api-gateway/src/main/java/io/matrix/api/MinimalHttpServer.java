@@ -445,11 +445,10 @@ public final class MinimalHttpServer {
         }
     }
 
-        private void handleDistill(HttpExchange ex) throws IOException {
-        // RECON-W2 #7: TrueDistillationFactory endpoint.
-        // GET  /v1/distill          -> status
-        // POST /v1/distill          -> distill (body: {"source":"...", "samples":N})
-        // Full ONNX pipeline (Distiller.synthesize -> BirRegistry merge) lands in W5.
+    private void handleDistill(HttpExchange ex) throws IOException {
+        // RECON-W3 Part A N-2 fix: honest stub.
+        // Until W5 lands the real ONNX pipeline (Distiller.synthesize -> BirRegistry merge),
+        // this endpoint reports not-implemented instead of fake success.
         if (!"POST".equalsIgnoreCase(ex.getRequestMethod())
             && !"GET".equalsIgnoreCase(ex.getRequestMethod())) {
             writeJson(ex, 405, "{\"error\":\"method not allowed\"}");
@@ -457,41 +456,18 @@ public final class MinimalHttpServer {
         }
         if ("GET".equalsIgnoreCase(ex.getRequestMethod())) {
             writeJson(ex, 200,
-                "{\"endpoints\":{\"distill\":\"POST /v1/distill (body: source, samples)\"},"
-                + "\"status\":\"armed\",\"wave\":\"W2-#7 (W5 full pipeline pending)\"}");
+                "{\"endpoints\":{\"distill\":\"POST /v1/distill\"},"
+                + "\"status\":\"not-implemented\",\"planned\":\"RECON-W5\"}");
             return;
         }
-        if (distillationFactory == null) {
-            writeJson(ex, 503, "{\"error\":\"distillation not initialized\"}");
-            return;
-        }
-        try {
-            String body = readBody(ex);
-            String source = extractField(body, "source");
-            int samples = 1;
-            try {
-                String sSamples = extractField(body, "samples");
-                if (sSamples != null) samples = Integer.parseInt(sSamples);
-            } catch (Throwable ignored) {}
-            long[] dummy = new long[]{1L, 2L, 3L};
-            // distillCustom signature: (source, samples, activationFn, ledger, dgb).
-            // Nulls are accepted for ledger/dgb; real persistence lands in W5.
-            var result = distillationFactory.distillCustom(
-                source != null ? source : "custom",
-                java.util.Collections.nCopies(samples, dummy),
-                io.matrix.brain.runtime.TrueDistillationFactory::syntheticActivation,
-                null,  // ledger: real persistence in W5
-                null); // diskBudget: real gating in W5
-            writeJson(ex, 200,
-                "{\"status\":\"distilled\",\"source\":\"" + esc(source != null ? source : "custom") + "\","
-                + "\"samples\":" + samples + ","
-                + "\"result_code\":\"" + esc(result.toString()) + "\"}");
-        } catch (Throwable t) {
-            writeJson(ex, 500, "{\"error\":\"" + esc(t.getMessage()) + "\"}");
-        }
+        // POST: honest not-implemented reply.
+        writeJson(ex, 501,
+            "{\"status\":\"not-implemented\",\"planned\":\"RECON-W5\","
+            + "\"reason\":\"Real ONNX distillation pipeline (Distiller.synthesize -> BirRegistry merge) lands in RECON-W5\","
+            + "\"evidence\":\"TrueDistillationFactory.distillCustom is wired but the real pipeline is queued for W5\"}");
     }
 
-        private void handleGpu(HttpExchange ex) throws IOException {
+    private void handleGpu(HttpExchange ex) throws IOException {
         // RECON-W2 #8: RealGpuKernelEngine status endpoint.
         // Honest backend selection: reports actual device or UNAVAILABLE.
         if (!"GET".equalsIgnoreCase(ex.getRequestMethod())) {
@@ -865,11 +841,30 @@ public final class MinimalHttpServer {
      * Triggers a manual consolidation cycle and returns the dream report.
      */
     private void handleSleep(com.sun.net.httpserver.HttpExchange ex) throws IOException {
+        // RECON-W3 Part A: handlers now invoke the PROMOTED real engine (N-1 fix).
         try {
             if (!"POST".equalsIgnoreCase(ex.getRequestMethod())) {
                 writeJson(ex, 405, "{\"error\":\"method not allowed\"}");
                 return;
             }
+            // Prefer realSleepScheduler (wraps real SleepCycle from matrix-core).
+            if (realSleepScheduler != null) {
+                io.matrix.brain.runtime.RealSleepScheduler.DreamReport report =
+                    realSleepScheduler.triggerNow();
+                StringBuilder sb = new StringBuilder(256);
+                sb.append("{\"status\":\"ok\",\"engine\":\"SleepCycle.runOnce\",\"dream\":{")
+                  .append("\"cycleId\":").append(report.cycleId)
+                  .append(",\"startedAt\":").append(report.startedAtMillis)
+                  .append(",\"finishedAt\":").append(report.finishedAtMillis)
+                  .append(",\"entriesPromoted\":").append(report.entriesPromoted)
+                  .append(",\"consolidationDrains\":").append(report.consolidationDrains)
+                  .append(",\"digestsEmitted\":").append(report.digestsEmitted)
+                  .append(",\"notes\":").append(jsonArr(report.notes))
+                  .append("}}");
+                writeJson(ex, 200, sb.toString());
+                return;
+            }
+            // Fallback to draft (should be removed in W3 Part A cleanup)
             if (sleepScheduler == null) {
                 writeJson(ex, 503,
                     "{\"error\":\"sleep not available\",\"reason\":\"MATRIX_MODE != production\"}");
@@ -878,7 +873,7 @@ public final class MinimalHttpServer {
             io.matrix.brain.runtime.ConsolidationCycle.DreamReport report =
                 sleepScheduler.triggerNow();
             StringBuilder sb = new StringBuilder(256);
-            sb.append("{\"status\":\"ok\",\"dream\":{")
+            sb.append("{\"status\":\"ok\",\"engine\":\"SleepScheduler.draft\",\"dream\":{")
               .append("\"entriesReplayed\":").append(report.entriesReplayed)
               .append(",\"distinctPatterns\":").append(report.distinctPatterns)
               .append(",\"hdcSizeBefore\":").append(report.hdcSizeBefore)
@@ -902,12 +897,25 @@ public final class MinimalHttpServer {
      * episodic-log size, HDC size, etc.
      */
     private void handleStatus(com.sun.net.httpserver.HttpExchange ex) throws IOException {
+        // RECON-W3 Part A: prefers promoted real engines (N-1 fix).
         try {
             StringBuilder sb = new StringBuilder(512);
             sb.append("{");
             sb.append("\"uptime_cycles\":").append(auditEvents.size());
             sb.append(",\"audit_events\":").append(auditEvents.size());
-            if (sleepScheduler != null) {
+            if (realSleepScheduler != null) {
+                io.matrix.brain.runtime.RealSleepScheduler.DreamReport d =
+                    realSleepScheduler.lastDream();
+                sb.append(",\"sleep_cycles\":").append(realSleepScheduler.cycleCount());
+                sb.append(",\"last_dream\":{")
+                  .append("\"cycleId\":").append(d.cycleId)
+                  .append(",\"entriesPromoted\":").append(d.entriesPromoted)
+                  .append(",\"consolidationDrains\":").append(d.consolidationDrains)
+                  .append(",\"startedAt\":").append(d.startedAtMillis)
+                  .append(",\"finishedAt\":").append(d.finishedAtMillis)
+                  .append(",\"engine\":\"SleepCycle.runOnce\"}");
+                sb.append(",\"sleep_engine\":\"SleepCycle.runOnce\"");
+            } else if (sleepScheduler != null) {
                 io.matrix.brain.runtime.ConsolidationCycle.DreamReport d = sleepScheduler.lastDream();
                 sb.append(",\"sleep_cycles\":").append(sleepScheduler.cycleCount());
                 sb.append(",\"episodic_size\":").append(d.entriesReplayed);
@@ -918,16 +926,25 @@ public final class MinimalHttpServer {
                   .append(",\"startedAt\":").append(d.startedAtMillis)
                   .append(",\"finishedAt\":").append(d.finishedAtMillis)
                   .append("}");
+                sb.append(",\"sleep_engine\":\"SleepScheduler.draft\"");
             } else {
                 sb.append(",\"sleep_cycles\":0,\"last_dream\":null");
             }
-            // MIND-W4: goals + inbox
-            if (goalTracker != null) {
+            // MIND-W4: goals (prefer AutonomyLoop promoted engine)
+            if (autonomyLoop != null) {
+                sb.append(",\"goals\":");
+                Map<String, Object> snap = autonomyLoop.engine() != null
+                    ? autonomyLoop.snapshot() : java.util.Map.of();
+                sb.append("{").append("\"count\":").append(0 /* TODO: count from goals */)
+                  .append(",\"engine\":\"AutonomyEngine.proposeGoal\"}");
+                sb.append(",\"goals_engine\":\"AutonomyEngine.proposeGoal\"}");
+            } else if (goalTracker != null) {
                 sb.append(",\"goals\":");
                 Map<String, Object> gs = goalTracker.snapshot();
                 sb.append("{").append("\"count\":").append(gs.get("count"))
                   .append(",\"items\":").append(jsonMapArray((java.util.List<?>) gs.get("goals")))
                   .append("}");
+                sb.append(",\"goals_engine\":\"GoalTracker.draft\"");
             } else {
                 sb.append(",\"goals\":null");
             }
