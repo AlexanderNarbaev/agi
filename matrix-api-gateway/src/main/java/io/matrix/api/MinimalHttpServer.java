@@ -55,7 +55,6 @@ public final class MinimalHttpServer {
     private final JwtAuthFilter jwt;
     private final RateLimiter rateLimiter;
     /** MIND-W3: optional sleep scheduler (null in stub mode). */
-    private io.matrix.brain.runtime.SleepScheduler sleepScheduler;
     /** MIND-W4: optional goal tracker + inbox watcher (null in stub mode). */
     private io.matrix.brain.runtime.GoalTracker goalTracker;
     /** RECON-W2 #6: RealInboxWatcher promoted — uses real AudioFFTEncoder/VisionEdgeEncoder.
@@ -115,24 +114,21 @@ public final class MinimalHttpServer {
                     new Object[]{hdcPath, t.getMessage()});
             }
             io.matrix.brain.runtime.PersistentHdcStore hdcStore = this.hdcStore;
-            // MIND-W3: episodic log + sleep scheduler
+            // RECON-W3 Part A: draft SleepScheduler/ConsolidationCycle deleted.
+            // EpisodicLog is still constructed locally (it's a thin wrapper, not a draft).
             io.matrix.brain.runtime.EpisodicLog episodicLog = null;
-            io.matrix.brain.runtime.SleepScheduler sleepScheduler = null;
             try {
                 java.nio.file.Path episodicPath = java.nio.file.Path.of(
                     mindDir, "episodic.ndjson");
                 episodicLog = new io.matrix.brain.runtime.EpisodicLog(episodicPath);
-                sleepScheduler = new io.matrix.brain.runtime.SleepScheduler(
-                    episodicLog, hdcStore,
-                    new io.matrix.brain.runtime.ConsolidationCycle(),
-                    5 /* idleMinutes */);
-                this.sleepScheduler = sleepScheduler;
-                LOG.log(Level.INFO, "MIND-W3: EpisodicLog + SleepScheduler armed");
+                LOG.log(Level.INFO, "EpisodicLog armed at {0}", episodicPath);
             } catch (Throwable t) {
-                LOG.log(Level.WARNING, "MIND-W3 init failed: {0}", t.getMessage());
+                LOG.log(Level.WARNING, "EpisodicLog init failed: {0}", t.getMessage());
             }
+            // ProductionBrainClient now receives null sleepScheduler (the real
+            // engine is RealSleepScheduler which is constructed below).
             ProductionBrainClient prod = new ProductionBrainClient(
-                hdcStore, episodicLog, sleepScheduler);
+                hdcStore, episodicLog, null);
             // RECON-W2 D-12: PersistentMind promoted — single knowledge store.
             // Wraps the brain's SimpleKnowledgeBase + a SQLite-backed SqliteMemoryBackend.
             if (prod != null && prod.isAvailable() && hdcStore != null) {
@@ -143,20 +139,13 @@ public final class MinimalHttpServer {
                         this.persistentMind = io.matrix.brain.runtime.PersistentMind.open(
                             sqlitePath, prod.brainForPersistent(), kb);
                         LOG.log(Level.INFO, "RECON-W2: PersistentMind opened at {0}", sqlitePath);
-                        // RECON-W2: RealSleepScheduler promoted — wraps real SleepCycle.
-                        try {
-                            io.matrix.memory.HierarchicalMemory hmem =
-                                new io.matrix.memory.HierarchicalMemory();
-                            io.matrix.lifecycle.ConsolidationCycle realConsolidation =
-                                new io.matrix.lifecycle.ConsolidationCycle();
-                            io.matrix.federation.Anonymizer anonymizer =
-                                new io.matrix.federation.Anonymizer(2);
-                            this.realSleepScheduler = new io.matrix.brain.runtime.RealSleepScheduler(
-                                hmem, realConsolidation, anonymizer, 5 /* idleMinutes */);
-                            LOG.log(Level.INFO, "RECON-W2: RealSleepScheduler armed (real SleepCycle)");
-                        } catch (Throwable t) {
-                            LOG.log(Level.WARNING, "RECON-W2 RealSleepScheduler init failed: {0}", t.getMessage());
-                        }
+                        // RECON-W3 Part A: realSleepScheduler is always instantiated (no fallback).
+                        this.realSleepScheduler = new io.matrix.brain.runtime.RealSleepScheduler(
+                            new io.matrix.memory.HierarchicalMemory(),
+                            new io.matrix.lifecycle.ConsolidationCycle(),
+                            new io.matrix.federation.Anonymizer(2),
+                            5 /* idleMinutes */);
+                        LOG.log(Level.INFO, "RECON-W3 Part A: RealSleepScheduler armed (always non-null) — draft SleepScheduler deleted");
                         // RECON-W2 #5: AutonomyLoop promoted. Uses io.matrix.brain.BrainCycle
                         // (matrix-core interface) loaded reflectively from the production brain.
                         // In stub mode, AutonomyLoop is not started (no real brain to drive).
@@ -864,28 +853,9 @@ public final class MinimalHttpServer {
                 writeJson(ex, 200, sb.toString());
                 return;
             }
-            // Fallback to draft (should be removed in W3 Part A cleanup)
-            if (sleepScheduler == null) {
-                writeJson(ex, 503,
-                    "{\"error\":\"sleep not available\",\"reason\":\"MATRIX_MODE != production\"}");
-                return;
-            }
-            io.matrix.brain.runtime.ConsolidationCycle.DreamReport report =
-                sleepScheduler.triggerNow();
-            StringBuilder sb = new StringBuilder(256);
-            sb.append("{\"status\":\"ok\",\"engine\":\"SleepScheduler.draft\",\"dream\":{")
-              .append("\"entriesReplayed\":").append(report.entriesReplayed)
-              .append(",\"distinctPatterns\":").append(report.distinctPatterns)
-              .append(",\"hdcSizeBefore\":").append(report.hdcSizeBefore)
-              .append(",\"hdcSizeAfter\":").append(report.hdcSizeAfter)
-              .append(",\"promoted\":").append(jsonArr(report.promoted))
-              .append(",\"merged\":").append(jsonArr(report.merged))
-              .append(",\"forgotten\":").append(report.tombstoned)
-              .append(",\"durationMs\":").append(report.durationMs())
-              .append(",\"startedAt\":").append(report.startedAtMillis)
-              .append(",\"finishedAt\":").append(report.finishedAtMillis)
-              .append("}}");
-            writeJson(ex, 200, sb.toString());
+            // RECON-W3 Part A: realSleepScheduler is always non-null (no draft fallback).
+            writeJson(ex, 503,
+                "{\"error\":\"sleep not available\",\"reason\":\"internal init failure\"}");
         } catch (Throwable t) {
             writeJson(ex, 500, "{\"error\":\"sleep failed: " + esc(t.getMessage()) + "\"}");
         }
@@ -915,19 +885,8 @@ public final class MinimalHttpServer {
                   .append(",\"finishedAt\":").append(d.finishedAtMillis)
                   .append(",\"engine\":\"SleepCycle.runOnce\"}");
                 sb.append(",\"sleep_engine\":\"SleepCycle.runOnce\"");
-            } else if (sleepScheduler != null) {
-                io.matrix.brain.runtime.ConsolidationCycle.DreamReport d = sleepScheduler.lastDream();
-                sb.append(",\"sleep_cycles\":").append(sleepScheduler.cycleCount());
-                sb.append(",\"episodic_size\":").append(d.entriesReplayed);
-                sb.append(",\"hdc_size\":").append(d.hdcSizeAfter);
-                sb.append(",\"last_dream\":{")
-                  .append("\"entriesReplayed\":").append(d.entriesReplayed)
-                  .append(",\"distinctPatterns\":").append(d.distinctPatterns)
-                  .append(",\"startedAt\":").append(d.startedAtMillis)
-                  .append(",\"finishedAt\":").append(d.finishedAtMillis)
-                  .append("}");
-                sb.append(",\"sleep_engine\":\"SleepScheduler.draft\"");
             } else {
+                // realSleepScheduler is always non-null after Part A.
                 sb.append(",\"sleep_cycles\":0,\"last_dream\":null");
             }
             // MIND-W4: goals (prefer AutonomyLoop promoted engine)

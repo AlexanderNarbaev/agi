@@ -24,9 +24,10 @@ class SingleInstanceGuardTest {
         int draftRefs = countOccurrences(src, "sleepScheduler.triggerNow");
         assertThat(realRefs).as("handleSleep must call realSleepScheduler.triggerNow()")
             .isGreaterThanOrEqualTo(1);
-        // Draft reference must be inside a fallback block (preceded by "// Fallback")
-        // Verify the draft call exists but is preceded by fallback marker
-        assertThat(src).contains("// Fallback to draft");
+        // After Part A cleanup, no draft SleepScheduler reference remains.
+        assertThat(draftRefs)
+            .as("draft SleepScheduler.triggerNow() must be deleted after Part A")
+            .isEqualTo(0);
     }
 
     @Test
@@ -71,7 +72,7 @@ class SingleInstanceGuardTest {
 
     private static String readSource() throws Exception {
         // Read the source file to check for code references
-        var path = java.nio.file.Path.of("src/main/java/io/matrix/api/MinimalHttpServer.java");
+        var path = java.nio.file.Path.of("/home/alexandr-narbaev/Projects/agi/matrix-api-gateway/src/main/java/io/matrix/api/MinimalHttpServer.java");
         return java.nio.file.Files.readString(path);
     }
 
