@@ -22,6 +22,7 @@ import io.matrix.signals.TextSignalModule;
 import io.matrix.tsetlin.AdvancedTsetlinMachine;
 
 import java.util.ArrayList;
+import java.util.BitSet;
 import java.util.List;
 import java.util.Random;
 
@@ -135,21 +136,20 @@ public final class TrueMindCycle {
             List.of(ev(ReflexEngine.class.getSimpleName(), "tryReflex", "no-match"))));
 
         // ---- Stage 2: SIGNAL (real encoder) ----
-        long[] signal = textSignal.encode(input);
-        trace.add(BrcStep.of("SIGNAL", true, 0.95,
-            List.of(ev(TextSignalModule.class.getSimpleName(), "encode",
-                "tokens=" + input.length(), "dim=" + signal.length))));
-
-        // Wrap long[] as a SignalObservation for downstream stages that need it.
-        boolean[] signalBits = new boolean[Math.min(signal.length, 1024)];
-        for (int i = 0; i < signalBits.length; i++) signalBits[i] = (signal[i] != 0);
-        SignalStage.SignalObservation obs = new SignalStage.SignalObservation(
-            java.util.BitSet.valueOf(signal).get(0, Math.min(signal.length, 1024)),
-            input.length(), java.util.List.of());
+        // Use SignalStage.encode (NOT textSignal) — TextSignalModule returns a
+        // single-hash long[1] which doesn't match PersistentHdcStore's per-token
+        // bit positions. SignalStage does per-token FNV-1a matching.
+        SignalStage signalStage = new SignalStage();
+        SignalStage.SignalObservation obs = signalStage.encode(input, trace);
 
         // ---- Stage 3: SALIENCE (real ranker) ----
-        boolean[] bits = new boolean[Math.min(signal.length, 1024)];
-        for (int i = 0; i < bits.length; i++) bits[i] = (signal[i] != 0);
+        // The "bits" here are derived from the obs BitSet (same tokens, same hashing).
+        BitSet obsBits = obs.features();
+        boolean[] bits = new boolean[Math.max(1, obsBits.cardinality())];
+        int b = 0;
+        for (int i = obsBits.nextSetBit(0); i >= 0 && b < bits.length; i = obsBits.nextSetBit(i + 1)) {
+            bits[b++] = true;
+        }
         SaliencyEngine.SaliencyScore sal = saliencyEngine.score("text", bits);
         trace.add(BrcStep.of("SALIENCE", true, sal.score(),
             List.of(ev(SaliencyEngine.class.getSimpleName(), "score",

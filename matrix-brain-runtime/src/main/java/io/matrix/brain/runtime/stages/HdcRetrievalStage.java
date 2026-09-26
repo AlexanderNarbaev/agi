@@ -75,8 +75,11 @@ public final class HdcRetrievalStage {
         Map<String, BitSet> vectors = store.vectors();
         Map<String, String> contents = store.snapshot();
         double bestScore = 0.0;
+        double bestAnsweredScore = 0.0;
         String bestId = null;
         String bestContent = null;
+        String bestAnsweredId = null;
+        String bestAnsweredContent = null;
         List<String> topIds = new ArrayList<>();
         for (Map.Entry<String, BitSet> e : vectors.entrySet()) {
             double sim = PersistentHdcStore.cosine(query, e.getValue());
@@ -85,9 +88,22 @@ public final class HdcRetrievalStage {
                 bestId = e.getKey();
                 bestContent = contents.get(e.getKey());
             }
+            // Prefer entries that actually have an answer (contain " => ").
+            String c = contents.get(e.getKey());
+            if (c != null && c.contains(" => ") && sim > bestAnsweredScore) {
+                bestAnsweredScore = sim;
+                bestAnsweredId = e.getKey();
+                bestAnsweredContent = c;
+            }
             if (topIds.size() < 3) topIds.add(e.getKey() + ":" + String.format("%.2f", sim));
         }
-        if (bestScore < 0.40 || bestId == null) {
+        // Prefer an answered match; fall back to highest similarity.
+        if (bestAnsweredId != null) {
+            bestId = bestAnsweredId;
+            bestContent = bestAnsweredContent;
+            bestScore = bestAnsweredScore;
+        }
+        if (bestScore < 0.20 || bestId == null) {
             trace.add(BrcStep.of("HDC_MEMORY", false, bestScore,
                 List.of("mode=persistent", "best=" + bestScore, "top=" + topIds)));
             return HdcResult.miss();
@@ -159,7 +175,7 @@ public final class HdcRetrievalStage {
             }
             if (topIds.size() < 3) topIds.add(e.getKey() + ":" + String.format("%.2f", sim));
         }
-        if (bestScore < 0.40 || bestId == null) {
+        if (bestScore < 0.20 || bestId == null) {
             trace.add(BrcStep.of("HDC_MEMORY", false, bestScore,
                 List.of("mode=in-memory", "best=" + bestScore, "top=" + topIds)));
             return HdcResult.miss();
