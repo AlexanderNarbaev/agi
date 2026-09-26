@@ -89,6 +89,9 @@ public final class MinimalHttpServer {
     /** RECON-W2 #7: TrueDistillationFactory promoted — endpoint /v1/distill wired.
      *  Full ONNX pipeline (Distiller.synthesize → BirRegistry merge) lands in W5. */
     private io.matrix.brain.runtime.TrueDistillationFactory distillationFactory;
+    /** RECON-W2 #8: RealGpuKernelEngine promoted — honest backend selection.
+     *  Reports UNAVAILABLE when no GPU device; never simulated success. */
+    private io.matrix.brain.runtime.RealGpuKernelEngine gpuKernelEngine;
 
     public MinimalHttpServer(int port) {
         this.port = port;
@@ -178,6 +181,11 @@ public final class MinimalHttpServer {
                         } catch (Throwable t) {
                             LOG.log(Level.WARNING, "RECON-W2 #7 TrueDistillationFactory init failed: {0}", t.getMessage());
                         }
+                        // RECON-W2 #8: RealGpuKernelEngine promoted. gpuEnabled=false
+                        // by default; can be flipped by JVM property matrix.gpu.enabled.
+                        boolean gpuEnabled = Boolean.getBoolean("matrix.gpu.enabled");
+                        this.gpuKernelEngine = new io.matrix.brain.runtime.RealGpuKernelEngine(gpuEnabled);
+                        LOG.log(Level.INFO, "RECON-W2 #8: RealGpuKernelEngine armed (gpuEnabled={0})", gpuEnabled);
                     }
                 } catch (Throwable t) {
                     LOG.log(Level.WARNING, "RECON-W2 PersistentMind init failed: {0}", t.getMessage());
@@ -225,6 +233,7 @@ public final class MinimalHttpServer {
         http.createContext("/v1/audit/logs", this::handleAuditLogs);
         http.createContext("/v1/audit/verify", this::handleAuditVerify);
         http.createContext("/v1/distill", this::handleDistill);
+        http.createContext("/v1/gpu", this::handleGpu);
         http.createContext("/v1/audit", exchange -> writeJson(exchange, 200,
             "{\"audit\":\"" + auditEvents.size() + " events\"}"));
         http.createContext("/v1/federate", this::handleFederate);
@@ -482,7 +491,25 @@ public final class MinimalHttpServer {
         }
     }
 
-        private void handleFederate(HttpExchange ex) throws IOException {
+        private void handleGpu(HttpExchange ex) throws IOException {
+        // RECON-W2 #8: RealGpuKernelEngine status endpoint.
+        // Honest backend selection: reports actual device or UNAVAILABLE.
+        if (!"GET".equalsIgnoreCase(ex.getRequestMethod())) {
+            writeJson(ex, 405, "{\"error\":\"method not allowed\"}");
+            return;
+        }
+        if (gpuKernelEngine == null) {
+            writeJson(ex, 503, "{\"error\":\"GPU engine not initialized\"}");
+            return;
+        }
+        var snap = gpuKernelEngine.snapshot();
+        writeJson(ex, 200, "{\"backend\":\"" + esc(String.valueOf(snap.getOrDefault("backend", "unknown"))) + "\","
+            + "\"status\":\"" + esc(String.valueOf(snap.getOrDefault("status", "unknown"))) + "\","
+            + "\"gpu_enabled\":" + snap.getOrDefault("gpu_enabled", false) + ","
+            + "\"stats\":" + (snap.containsKey("stats") ? snap.get("stats").toString() : "{}") + "}");
+    }
+
+    private void handleFederate(HttpExchange ex) throws IOException {
         // TRUE-W14: real federation dual-node protocol.
         // GET /v1/federate            → list known peers
         // GET /v1/federate?action=dump → dump local KB as JSON
