@@ -34,7 +34,7 @@ public final class KnowledgeExchangeProtocol {
             long ts = 0L;
             try {
                 int i = line.indexOf("\"ts\":");
-                if (i >= 0) ts = Long.parseLong(line.substring(i + 6).replaceAll("[^0-9].*", ""));
+                if (i >= 0) ts = Long.parseLong(line.substring(i + 5).replaceAll("[^0-9].*", ""));
             } catch (NumberFormatException ignore) {}
             return new Fact(id, input, answer, conf, ts);
         }
