@@ -86,6 +86,9 @@ public final class MinimalHttpServer {
     /** RECON-W2 #5: AutonomyLoop promoted — wraps real AutonomyEngine/ArousalDynamics.
      *  Replaces gateway's local goalTracker + inboxWatcher drafts (D-8 cleanup). */
     private io.matrix.brain.runtime.AutonomyLoop autonomyLoop;
+    /** RECON-W2 #7: TrueDistillationFactory promoted — endpoint /v1/distill wired.
+     *  Full ONNX pipeline (Distiller.synthesize → BirRegistry merge) lands in W5. */
+    private io.matrix.brain.runtime.TrueDistillationFactory distillationFactory;
 
     public MinimalHttpServer(int port) {
         this.port = port;
@@ -167,6 +170,14 @@ public final class MinimalHttpServer {
                         } catch (Throwable t) {
                             LOG.log(Level.WARNING, "RECON-W2 #5 AutonomyLoop init failed: {0}", t.getMessage());
                         }
+                        // RECON-W2 #7: TrueDistillationFactory promoted (endpoint-only).
+                        try {
+                            this.distillationFactory =
+                                new io.matrix.brain.runtime.TrueDistillationFactory();
+                            LOG.log(Level.INFO, "RECON-W2 #7: TrueDistillationFactory armed");
+                        } catch (Throwable t) {
+                            LOG.log(Level.WARNING, "RECON-W2 #7 TrueDistillationFactory init failed: {0}", t.getMessage());
+                        }
                     }
                 } catch (Throwable t) {
                     LOG.log(Level.WARNING, "RECON-W2 PersistentMind init failed: {0}", t.getMessage());
@@ -213,6 +224,7 @@ public final class MinimalHttpServer {
             "{\"explainments\":" + explanations.size() + "}"));
         http.createContext("/v1/audit/logs", this::handleAuditLogs);
         http.createContext("/v1/audit/verify", this::handleAuditVerify);
+        http.createContext("/v1/distill", this::handleDistill);
         http.createContext("/v1/audit", exchange -> writeJson(exchange, 200,
             "{\"audit\":\"" + auditEvents.size() + " events\"}"));
         http.createContext("/v1/federate", this::handleFederate);
@@ -421,6 +433,52 @@ public final class MinimalHttpServer {
             writeJson(ex, 200,
                 "{\"verified\":false,\"first_bad_index\":" + firstBad
                 + ",\"size\":" + auditEvents.size() + "}");
+        }
+    }
+
+        private void handleDistill(HttpExchange ex) throws IOException {
+        // RECON-W2 #7: TrueDistillationFactory endpoint.
+        // GET  /v1/distill          -> status
+        // POST /v1/distill          -> distill (body: {"source":"...", "samples":N})
+        // Full ONNX pipeline (Distiller.synthesize -> BirRegistry merge) lands in W5.
+        if (!"POST".equalsIgnoreCase(ex.getRequestMethod())
+            && !"GET".equalsIgnoreCase(ex.getRequestMethod())) {
+            writeJson(ex, 405, "{\"error\":\"method not allowed\"}");
+            return;
+        }
+        if ("GET".equalsIgnoreCase(ex.getRequestMethod())) {
+            writeJson(ex, 200,
+                "{\"endpoints\":{\"distill\":\"POST /v1/distill (body: source, samples)\"},"
+                + "\"status\":\"armed\",\"wave\":\"W2-#7 (W5 full pipeline pending)\"}");
+            return;
+        }
+        if (distillationFactory == null) {
+            writeJson(ex, 503, "{\"error\":\"distillation not initialized\"}");
+            return;
+        }
+        try {
+            String body = readBody(ex);
+            String source = extractField(body, "source");
+            int samples = 1;
+            try {
+                String sSamples = extractField(body, "samples");
+                if (sSamples != null) samples = Integer.parseInt(sSamples);
+            } catch (Throwable ignored) {}
+            long[] dummy = new long[]{1L, 2L, 3L};
+            // distillCustom signature: (source, samples, activationFn, ledger, dgb).
+            // Nulls are accepted for ledger/dgb; real persistence lands in W5.
+            var result = distillationFactory.distillCustom(
+                source != null ? source : "custom",
+                java.util.Collections.nCopies(samples, dummy),
+                io.matrix.brain.runtime.TrueDistillationFactory::syntheticActivation,
+                null,  // ledger: real persistence in W5
+                null); // diskBudget: real gating in W5
+            writeJson(ex, 200,
+                "{\"status\":\"distilled\",\"source\":\"" + esc(source != null ? source : "custom") + "\","
+                + "\"samples\":" + samples + ","
+                + "\"result_code\":\"" + esc(result.toString()) + "\"}");
+        } catch (Throwable t) {
+            writeJson(ex, 500, "{\"error\":\"" + esc(t.getMessage()) + "\"}");
         }
     }
 
