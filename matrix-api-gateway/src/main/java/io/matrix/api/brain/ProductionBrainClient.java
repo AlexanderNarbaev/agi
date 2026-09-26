@@ -248,6 +248,34 @@ public final class ProductionBrainClient implements BrainCycle {
         }
     }
 
+    /**
+     * RECON-W2 — accessors for PersistentMind promotion.
+     * Returns the loaded SimpleKnowledgeBase (from matrix-core) for
+     * wrapping in PersistentMind, or null if not loaded.
+     */
+    public io.matrix.knowledge.SimpleKnowledgeBase knowledgeBase() {
+        if (knowledgeBase == null) return null;
+        try {
+            return (io.matrix.knowledge.SimpleKnowledgeBase) knowledgeBase;
+        } catch (ClassCastException cce) {
+            return null;
+        }
+    }
+
+    /**
+     * RECON-W2 — accessor for the loaded BirBrainCycle (from matrix-core).
+     * Returns the loaded BirBrainCycle for wrapping in PersistentMind,
+     * or null if not loaded.
+     */
+    public io.matrix.brain.BirBrainCycle brainForPersistent() {
+        if (birBrainCycle == null) return null;
+        try {
+            return (io.matrix.brain.BirBrainCycle) birBrainCycle;
+        } catch (ClassCastException cce) {
+            return null;
+        }
+    }
+
     public boolean isAvailable() { return available; }
 
     @Override

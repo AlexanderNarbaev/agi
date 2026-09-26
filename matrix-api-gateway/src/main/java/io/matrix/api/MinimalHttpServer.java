@@ -72,6 +72,11 @@ public final class MinimalHttpServer {
     private final io.matrix.brain.runtime.RealAuditService realAuditService =
         new io.matrix.brain.runtime.RealAuditService(
             new io.matrix.safety.SafetyMonitor(new io.matrix.ethics.EthicalFilter()));
+    /** RECON-W2: D-7 orphan promoted — PersistentMind wraps SqliteMemoryBackend.
+     *  When prodBrain is null this is null too (stub mode). When prodBrain is
+     *  real, persistentMind is the SINGLE knowledge store object shared by
+     *  analyze/sleep/federation paths (D-12 closure). */
+    private io.matrix.brain.runtime.PersistentMind persistentMind;
 
     public MinimalHttpServer(int port) {
         this.port = port;
@@ -113,6 +118,21 @@ public final class MinimalHttpServer {
             }
             ProductionBrainClient prod = new ProductionBrainClient(
                 hdcStore, episodicLog, sleepScheduler);
+            // RECON-W2 D-12: PersistentMind promoted — single knowledge store.
+            // Wraps the brain's SimpleKnowledgeBase + a SQLite-backed SqliteMemoryBackend.
+            if (prod != null && prod.isAvailable() && hdcStore != null) {
+                try {
+                    java.nio.file.Path sqlitePath = java.nio.file.Path.of(mindDir, "mind.sqlite");
+                    io.matrix.knowledge.SimpleKnowledgeBase kb = prod.knowledgeBase();
+                    if (kb != null) {
+                        this.persistentMind = io.matrix.brain.runtime.PersistentMind.open(
+                            sqlitePath, prod.brainForPersistent(), kb);
+                        LOG.log(Level.INFO, "RECON-W2: PersistentMind opened at {0}", sqlitePath);
+                    }
+                } catch (Throwable t) {
+                    LOG.log(Level.WARNING, "RECON-W2 PersistentMind init failed: {0}", t.getMessage());
+                }
+            }
             // MIND-W4: goal tracker + inbox watcher
             try {
                 this.goalTracker = new io.matrix.brain.runtime.GoalTracker();
