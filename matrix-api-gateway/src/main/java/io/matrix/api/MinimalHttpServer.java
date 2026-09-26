@@ -56,7 +56,6 @@ public final class MinimalHttpServer {
     private final RateLimiter rateLimiter;
     /** MIND-W3: optional sleep scheduler (null in stub mode). */
     /** MIND-W4: optional goal tracker + inbox watcher (null in stub mode). */
-    private io.matrix.brain.runtime.GoalTracker goalTracker;
     /** RECON-W2 #6: RealInboxWatcher promoted — uses real AudioFFTEncoder/VisionEdgeEncoder.
     *  Replaces local InboxWatcher draft (D-8). */
     private io.matrix.brain.runtime.RealInboxWatcher inboxWatcher;
@@ -182,7 +181,6 @@ public final class MinimalHttpServer {
             }
             // MIND-W4: goal tracker + inbox watcher
             try {
-                this.goalTracker = new io.matrix.brain.runtime.GoalTracker();
                 this.inboxWatcher = new io.matrix.brain.runtime.RealInboxWatcher(
                     java.nio.file.Path.of(mindDir, "inbox"), hdcStore);
                 int ingested = this.inboxWatcher.scan();
@@ -889,21 +887,13 @@ public final class MinimalHttpServer {
                 // realSleepScheduler is always non-null after Part A.
                 sb.append(",\"sleep_cycles\":0,\"last_dream\":null");
             }
-            // MIND-W4: goals (prefer AutonomyLoop promoted engine)
-            if (autonomyLoop != null) {
-                sb.append(",\"goals\":");
-                Map<String, Object> snap = autonomyLoop.engine() != null
-                    ? autonomyLoop.snapshot() : java.util.Map.of();
-                sb.append("{").append("\"count\":").append(0 /* TODO: count from goals */)
-                  .append(",\"engine\":\"AutonomyEngine.proposeGoal\"}");
-                sb.append(",\"goals_engine\":\"AutonomyEngine.proposeGoal\"}");
-            } else if (goalTracker != null) {
-                sb.append(",\"goals\":");
-                Map<String, Object> gs = goalTracker.snapshot();
-                sb.append("{").append("\"count\":").append(gs.get("count"))
-                  .append(",\"items\":").append(jsonMapArray((java.util.List<?>) gs.get("goals")))
-                  .append("}");
-                sb.append(",\"goals_engine\":\"GoalTracker.draft\"");
+            // MIND-W4: goals (always via AutonomyLoop -> core GoalTracker)
+            if (autonomyLoop != null && autonomyLoop.goals() != null) {
+                io.matrix.goals.GoalTracker gs = autonomyLoop.goals();
+                List<?> items = gs.activeGoals();
+                sb.append(",\"goals\":{\"count\":").append(items.size())
+                  .append(",\"items\":").append(jsonMapArray(items))
+                  .append(",\"goals_engine\":\"GoalTracker (matrix-core/goals/)\"}");
             } else {
                 sb.append(",\"goals\":null");
             }
@@ -931,17 +921,18 @@ public final class MinimalHttpServer {
     private void handleGoals(com.sun.net.httpserver.HttpExchange ex) throws IOException {
         try {
             String method = ex.getRequestMethod();
-            if (goalTracker == null) {
+            if (autonomyLoop == null || autonomyLoop.goals() == null) {
                 writeJson(ex, 503,
-                    "{\"error\":\"goals not available\",\"reason\":\"MATRIX_MODE != production\"}");
+                    "{\"error\":\"goals not available\",\"reason\":\"AutonomyLoop not initialized\"}");
                 return;
             }
+            io.matrix.goals.GoalTracker gt = autonomyLoop.goals();
             if ("GET".equalsIgnoreCase(method)) {
-                Map<String, Object> snap = goalTracker.snapshot();
+                List<?> items = gt.activeGoals();
                 StringBuilder sb = new StringBuilder();
-                sb.append("{\"count\":").append(snap.get("count"))
-                  .append(",\"goals\":").append(jsonMapArray((java.util.List<?>) snap.get("goals")))
-                  .append("}");
+                sb.append("{\"count\":").append(items.size())
+                  .append(",\"goals\":").append(jsonMapArray(items))
+                  .append(",\"engine\":\"GoalTracker.allGoals (matrix-core/goals/)\"}");
                 writeJson(ex, 200, sb.toString());
             } else if ("POST".equalsIgnoreCase(method)) {
                 String body = readBody(ex);
@@ -951,12 +942,11 @@ public final class MinimalHttpServer {
                     writeJson(ex, 400, "{\"error\":\"name required\"}");
                     return;
                 }
-                io.matrix.brain.runtime.GoalTracker.Goal g = goalTracker.addGoal(name, desc);
+                io.matrix.goals.GoalTracker.Goal g = autonomyLoop.goals().add(
+                    name + (desc != null ? ": " + desc : ""), 1);
                 writeJson(ex, 201,
-                    "{\"id\":\"" + esc(g.id()) + "\",\"name\":\""
-                    + esc(g.name()) + "\",\"status\":\""
-                    + g.status().name() + "\",\"progress\":" + g.progress() + "}");
-            } else {
+                    "{\"id\":\"" + esc(String.valueOf(g.id())) + "\",\"description\":\""
+                    + esc(g.description()) + "\",\"status\":\"active\",\"engine\":\"GoalTracker.add (matrix-core/goals/)\"}");
                 writeJson(ex, 405, "{\"error\":\"method not allowed\"}");
             }
         } catch (Throwable t) {

@@ -48,7 +48,7 @@ class AutonomyLoopWiringTest {
         // The AutonomyLoop is documented to wrap GoalTracker from matrix-core.
         // Verify by importing a reflection check.
         try {
-            Class<?> goalTrackerCls = Class.forName("io.matrix.brain.runtime.GoalTracker");
+            Class<?> goalTrackerCls = Class.forName("io.matrix.goals.GoalTracker");
             assertThat(goalTrackerCls).isNotNull();
         } catch (ClassNotFoundException e) {
             org.junit.jupiter.api.Assertions.fail("GoalTracker from matrix-core not found");

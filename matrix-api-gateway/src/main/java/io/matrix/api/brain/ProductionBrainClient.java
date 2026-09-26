@@ -1,10 +1,10 @@
 package io.matrix.api.brain;
 
 import io.matrix.brain.runtime.EpisodicLog;
+import io.matrix.brain.runtime.SleepScheduler;
 import io.matrix.brain.runtime.TrueMindCycle;
 import io.matrix.brain.runtime.MindResult;
 import io.matrix.brain.runtime.PersistentHdcStore;
-import io.matrix.brain.runtime.SleepScheduler;
 
 import java.io.File;
 import java.lang.reflect.Constructor;
@@ -79,10 +79,10 @@ public final class ProductionBrainClient implements BrainCycle {
      * through to disk and retrievals survive restart.
      */
     private final PersistentHdcStore hdcStore;
+    private final SleepScheduler sleepScheduler;
 
     /** MIND-W3: optional episodic log + sleep scheduler (one or both may be set). */
     private final EpisodicLog episodicLog;
-    private final SleepScheduler sleepScheduler;
 
     /** Default in-memory constructor (used by tests and the gateway default). */
     public ProductionBrainClient() {
@@ -303,7 +303,7 @@ public final class ProductionBrainClient implements BrainCycle {
                         mr.accepted(), mr.modulatorsFired()); }
                     catch (Throwable ignored) { /* logging is best-effort */ }
                 }
-                if (sleepScheduler != null) sleepScheduler.noteActivity();
+                
                 return new CycleResult(
                     mr.reply(),
                     mr.confidence(),

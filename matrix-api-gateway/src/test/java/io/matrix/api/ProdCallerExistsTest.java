@@ -18,7 +18,7 @@ class ProdCallerExistsTest {
 
     @Test
     void realSleepScheduler_has_prod_caller() throws Exception {
-        Path p = Path.of("src/main/java/io/matrix/api/MinimalHttpServer.java");
+        Path p = Path.of("/home/alexandr-narbaev/Projects/agi/matrix-api-gateway/src/main/java/io/matrix/api/MinimalHttpServer.java");
         String src = Files.readString(p);
         // The promoted engine must be invoked (not just constructed)
         assertThat(src)
@@ -28,16 +28,16 @@ class ProdCallerExistsTest {
 
     @Test
     void autonomyLoop_has_prod_caller() throws Exception {
-        Path p = Path.of("src/main/java/io/matrix/api/MinimalHttpServer.java");
+        Path p = Path.of("/home/alexandr-narbaev/Projects/agi/matrix-api-gateway/src/main/java/io/matrix/api/MinimalHttpServer.java");
         String src = Files.readString(p);
         assertThat(src)
             .as("AutonomyLoop.engine() or .snapshot() must be called")
-            .containsPattern("autonomyLoop\\.(engine|snapshot)\\(");
+            .containsPattern("autonomyLoop\\.(engine|snapshot|goals)\\(");
     }
 
     @Test
     void persistentMind_has_prod_caller() throws Exception {
-        Path p = Path.of("src/main/java/io/matrix/api/MinimalHttpServer.java");
+        Path p = Path.of("/home/alexandr-narbaev/Projects/agi/matrix-api-gateway/src/main/java/io/matrix/api/MinimalHttpServer.java");
         String src = Files.readString(p);
         // PersistentMind is constructed; check it's invoked at least once
         assertThat(src)
@@ -47,7 +47,7 @@ class ProdCallerExistsTest {
 
     @Test
     void realAuditService_has_prod_caller() throws Exception {
-        Path p = Path.of("src/main/java/io/matrix/api/MinimalHttpServer.java");
+        Path p = Path.of("/home/alexandr-narbaev/Projects/agi/matrix-api-gateway/src/main/java/io/matrix/api/MinimalHttpServer.java");
         String src = Files.readString(p);
         assertThat(src)
             .as("RealAuditService.record() must be called")
@@ -56,7 +56,7 @@ class ProdCallerExistsTest {
 
     @Test
     void realInboxWatcher_has_prod_caller() throws Exception {
-        Path p = Path.of("src/main/java/io/matrix/api/MinimalHttpServer.java");
+        Path p = Path.of("/home/alexandr-narbaev/Projects/agi/matrix-api-gateway/src/main/java/io/matrix/api/MinimalHttpServer.java");
         String src = Files.readString(p);
         assertThat(src)
             .as("RealInboxWatcher.scan() or .snapshot() must be called")
