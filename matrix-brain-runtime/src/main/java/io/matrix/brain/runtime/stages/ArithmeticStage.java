@@ -20,9 +20,14 @@ import java.util.regex.Pattern;
  */
 public final class ArithmeticStage {
 
-    /** Pattern: optional whitespace, integer, op, integer, optional whitespace. */
+    /** Pattern: matches "<digit> <op> <digit>" anywhere in the input.
+     *  Anchors aren't used because users say things like "What is 2+3?" —
+     *  we want to find the embedded arithmetic expression.
+     *  Optional capture of "what is"/"equals"/etc. natural-language prefix. */
     private static final Pattern BINARY = Pattern.compile(
-        "\\s*(-?\\d+)\\s*([+\\-*/])\\s*(-?\\d+)\\s*"
+        "(?i)(?:.*\\b(?:what(?:'s| is)?|compute|calculate|equals?)\\b\\s*)?" +
+        "(-?\\d+)\\s*([+\\-*/])\\s*(-?\\d+)" +
+        "(?:\\s*\\??)?"
     );
 
     public record ArithmeticResult(boolean matched, String reply, double confidence) {
@@ -36,7 +41,7 @@ public final class ArithmeticStage {
 
     public ArithmeticResult tryEvaluate(String input, List<BrcStep> trace) {
         Matcher m = BINARY.matcher(input);
-        if (!m.matches()) {
+        if (!m.find()) {
             trace.add(BrcStep.of("ARITHMETIC", false, 0.50, List.of("reason=no-binary-expr")));
             return ArithmeticResult.miss();
         }
