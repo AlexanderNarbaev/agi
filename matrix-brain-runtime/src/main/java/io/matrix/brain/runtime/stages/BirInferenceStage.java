@@ -74,7 +74,34 @@ public final class BirInferenceStage {
         }
     }
 
+    /**
+     * RECON-W1 — This stage is documented as a SIMULACRUM (D-2).
+     *
+     * <p>The hardcoded BirRules here are legacy demo code from MIND-W1.
+     * They are NOT real Boolean Inference Rule execution; they are
+     * string-matching predicates that produce canned replies.</p>
+     *
+     * <p>From RECON-W1 onward, this method returns {@link BirResult#miss()}
+     * by default. The real BIR engine (BooleanRuntime / BirCompiler /
+     * ClauseSetForm from matrix-core) will be wired in RECON-W3.</p>
+     *
+     * <p>Callers that want the legacy demo behaviour for tests may set
+     * {@link #simulacrumEnabled} to <code>true</code> BEFORE invoking
+     * this stage; production callers must NOT enable it.</p>
+     */
+    public static boolean simulacrumEnabled = false;
+
     public BirResult evaluate(String input, SignalStage.SignalObservation obs, List<BrcStep> trace) {
+        if (!simulacrumEnabled) {
+            // SIMULACRUM: real BIR inference is wired in RECON-W3.
+            if (trace != null) {
+                trace.add(BrcStep.of("BIR_SIMULACRUM", false, 0.0,
+                    List.of("simulacrum=true",
+                            "note=D-2 real BIR inference deferred to RECON-W3")));
+            }
+            return BirResult.miss();
+        }
+        // Legacy demo path (simulacrumEnabled=true):
         for (BirRule r : RULES) {
             try {
                 if (r.match.test(input)) {

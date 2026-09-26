@@ -24,6 +24,20 @@ import static org.assertj.core.api.Assertions.assertThat;
  */
 class MindCycleIntegrationTest {
 
+    @org.junit.jupiter.api.BeforeEach
+    void enableBirSimulacrum() {
+        // RECON-W1: enable BIR simulacrum for legacy tests.
+        // Production path (default) is tested by BirInferenceStageSimulacrumTest.
+        io.matrix.brain.runtime.stages.BirInferenceStage.simulacrumEnabled = true;
+    }
+
+    @org.junit.jupiter.api.AfterEach
+    void resetBirSimulacrum() {
+        io.matrix.brain.runtime.stages.BirInferenceStage.simulacrumEnabled = false;
+    }
+
+
+
     private static BrcStep findStep(List<BrcStep> trace, String stage) {
         return trace.stream().filter(s -> stage.equals(s.stage())).findFirst().orElse(null);
     }
