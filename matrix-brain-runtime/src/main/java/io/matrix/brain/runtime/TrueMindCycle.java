@@ -82,6 +82,12 @@ public final class TrueMindCycle {
             "I cannot provide instructions intended to harm others.");
         reflex.register("kill",
             "I cannot provide instructions intended to kill.");
+        reflex.register("weapon",
+            "I cannot provide instructions for weapon construction.");
+        reflex.register("racist",
+            "I will not generate racist content; that violates FROZEN ethics.");
+        reflex.register("manipulat",
+            "I cannot provide instructions intended to manipulate people.");
         reflex.register("rm -rf",
             "Destructive shell pattern detected; refusing.");
         reflex.register("drop table",
