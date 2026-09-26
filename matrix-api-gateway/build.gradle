@@ -24,6 +24,8 @@ dependencies {
     // (Brings in matrix-core transitively; we now WANT direct linkage since
     // matrix-brain-runtime is the dedicated runtime module.)
     implementation project(':matrix-brain-runtime')
+    // RECON-W0 D-11: wire /v1/audit/logs to matrix-audit HashChainedLog
+    implementation project(':matrix-audit')
 
     // Quarkus REST stack (matches matrix-core for consistency)
     implementation enforcedPlatform('io.quarkus.platform:quarkus-bom:3.38.3')
@@ -47,4 +49,16 @@ dependencies {
 tasks.withType(Test) {
     useJUnitPlatform()
     maxHeapSize = '4g'
+}
+
+// RECON-W0: write a reproducible runtime classpath to build/runtime-classpath.txt.
+// start-mind.sh consumes this file instead of grepping the gradle cache.
+tasks.register('writeRuntimeClasspath') {
+    doLast {
+        def cp = configurations.runtimeClasspath.resolve().collect { it.toString() }.join(':')
+        def out = file("$buildDir/runtime-classpath.txt")
+        out.text = cp
+        println "Runtime classpath written to: $out"
+        println "Entries: ${configurations.runtimeClasspath.resolve().size()}"
+    }
 }

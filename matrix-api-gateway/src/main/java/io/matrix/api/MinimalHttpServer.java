@@ -19,9 +19,7 @@ import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
-import java.util.ArrayDeque;
 import java.util.ArrayList;
-import java.util.Deque;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -64,7 +62,7 @@ public final class MinimalHttpServer {
 
     /** Ring buffer of recent analyze IDs and explanations */
     private final Map<String, StoredExplain> explanations = new ConcurrentHashMap<>();
-    private final Deque<AuditEvent> auditEvents = new ArrayDeque<>();
+    private final HashChainedAuditBuffer auditEvents = new HashChainedAuditBuffer(200);
 
     public MinimalHttpServer(int port) {
         this.port = port;
@@ -146,6 +144,7 @@ public final class MinimalHttpServer {
         http.createContext("/v1/explain", exchange -> writeJson(exchange, 200,
             "{\"explainments\":" + explanations.size() + "}"));
         http.createContext("/v1/audit/logs", this::handleAuditLogs);
+        http.createContext("/v1/audit/verify", this::handleAuditVerify);
         http.createContext("/v1/audit", exchange -> writeJson(exchange, 200,
             "{\"audit\":\"" + auditEvents.size() + " events\"}"));
         http.createContext("/v1/federate", this::handleFederate);
@@ -254,10 +253,9 @@ public final class MinimalHttpServer {
                 result.reply(), result.confidence(), explanation);
             explanations.put(explainId, stored);
 
-            // 6. Audit
-            auditEvents.addFirst(new AuditEvent(auditEvents.size() + 1, "ANALYZE",
-                claims.sub(), req.input, Instant.now().toString()));
-            while (auditEvents.size() > 200) auditEvents.pollLast();
+            // 6. Audit (RECON-W0 D-11: hash-chained, tamper-evident)
+            auditEvents.append("ANALYZE", claims.sub(), req.input,
+                Instant.now().toString());
 
             String mode = prodBrain != null ? "production" : "stub";
             writeJson(ex, 200, "{\"explain_id\":\"" + explainId + "\","
@@ -309,7 +307,7 @@ public final class MinimalHttpServer {
         }
         StringBuilder sb = new StringBuilder("{\"events\":[");
         boolean first = true;
-        for (AuditEvent e : auditEvents) {
+        for (var e : auditEvents.all()) {
             if (!first) sb.append(",");
             sb.append("{\"id\":").append(e.id())
               .append(",\"event_type\":\"").append(e.eventType()).append("\"")
@@ -323,7 +321,23 @@ public final class MinimalHttpServer {
         writeJson(ex, 200, sb.toString());
     }
 
-    private void handleFederate(HttpExchange ex) throws IOException {
+    private void handleAuditVerify(HttpExchange ex) throws IOException {
+        if (!"GET".equalsIgnoreCase(ex.getRequestMethod())) {
+            writeJson(ex, 405, "{\"error\":\"method not allowed\"}");
+            return;
+        }
+        int firstBad = auditEvents.verify();
+        if (firstBad == -1) {
+            writeJson(ex, 200,
+                "{\"verified\":true,\"size\":" + auditEvents.size() + "}");
+        } else {
+            writeJson(ex, 200,
+                "{\"verified\":false,\"first_bad_index\":" + firstBad
+                + ",\"size\":" + auditEvents.size() + "}");
+        }
+    }
+
+        private void handleFederate(HttpExchange ex) throws IOException {
         // TRUE-W14: real federation dual-node protocol.
         // GET /v1/federate            → list known peers
         // GET /v1/federate?action=dump → dump local KB as JSON

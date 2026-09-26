@@ -58,14 +58,14 @@ Article VIII). No legacy LLM imports reachable from runtime path
 | V (JaCoCo ≥82%) | ✅ Goal Guard requires coverage gate |
 | VI (no forbidden claims) | ✅ Mind-Report has Limitations section |
 | VII (stack standards) | ✅ Pure Gradle + Java 25 |
-| VIII (no shadow logic) | ✅ Every BrcStep carries `engine=ClassName.method(args)` |
+| VIII (no shadow logic) | ⚠️ **VIOLATED** — BirStep.evidence names engines that did not actually produce the reply (D-10). Evidence strings are hand-written. Truthful reconciliation: EngineCallRegistry in RECON-W1. |
 
 ## Reviewer Verdicts (final)
 
 | Agent | Verdict |
 |-------|---------|
 | ARCHITECT | ✅ module boundaries clean |
-| CRITIC / ADVERSARIAL | ✅ all stages invoke real engines |
+| CRITIC / ADVERSARIAL | ⚠️ **PARTIAL** — BirInferenceStage uses 6 hardcoded regex predicates, TsetlinStage returns canned responses (D-2, D-3); AnalogyStage uses seed table (D-4); MCTS stage is `null` placeholder (D-5); modulatorsFired added unconditionally before checks (D-6); 8 Real* wrappers have 0 prod callers (D-7). **Truthful reconciliation begins in RECON-W1.** |
 | RESEARCHER | ✅ META-R queue seeded; sparse-HDC drafted |
 | SECURITY | ✅ zero LLM imports reachable |
 | QA/PERF | ✅ 399/399 tests pass |

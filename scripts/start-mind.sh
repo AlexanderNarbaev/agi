@@ -53,41 +53,16 @@ CP="$CP:matrix-observability/build/classes/java/main"
 CP="$CP:matrix-quality/build/classes/java/main"
 CP="$CP:matrix-tools-distill/build/classes/java/main"
 
-# Add ALL relevant runtime jars from gradle cache
-for jar in \
-    "jackson-databind" \
-    "jackson-core" \
-    "jackson-annotations" \
-    "jackson-datatype-jsr310" \
-    "slf4j-api" \
-    "slf4j-simple" \
-    "logback-classic" \
-    "logback-core" \
-    "netty-buffer" \
-    "netty-common" \
-    "netty-transport" \
-    "netty-codec-http" \
-    "netty-handler" \
-    "vertx-core" \
-    "vertx-web" \
-    "smallrye-mutiny-vertx-core" \
-    "smallrye-mutiny" \
-    "micrometer-core" \
-    "sqlite-jdbc" \
-    "avro" \
-    "xz"; do
-    found=$(find ~/.gradle/caches/modules-2/files-2.1 -name "${jar}-*.jar" 2>/dev/null | grep -v sources | grep -v javadoc | head -1)
-    if [ -n "$found" ]; then
-        CP="$CP:$found"
-    fi
-done
-
-# Wildcard: include ALL jar files in cache (broad fallback for missing deps).
-EXTRA=$(find ~/.gradle/caches/modules-2/files-2.1 -name "*.jar" 2>/dev/null \
-    | grep -v sources | grep -v javadoc | grep -v "agent-attach" | head -200)
-CP="$CP:$(echo "$EXTRA" | paste -sd:)"
-
-echo "  classpath entries: $(echo $CP | tr ':' '\n' | wc -l)"
+# RECON-W0: use Gradle-generated runtime classpath (reproducible, version-stable).
+# The file is produced by './gradlew :matrix-api-gateway:writeRuntimeClasspath'.
+CP_FILE="matrix-api-gateway/build/runtime-classpath.txt"
+if [ ! -f "$CP_FILE" ]; then
+    echo "ERROR: $CP_FILE not found."
+    echo "       Run: ./gradlew :matrix-api-gateway:writeRuntimeClasspath"
+    exit 1
+fi
+CP="$(cat $CP_FILE)"
+echo "  classpath entries: $(echo $CP | tr ':' '\\n' | wc -l) (from $CP_FILE)"
 
 # Start gateway in production mode
 echo "[5/5] Starting gateway on :8765 (MATRIX_MODE=production)..."
