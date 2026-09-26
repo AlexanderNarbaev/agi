@@ -18,12 +18,12 @@ method invoked, making every decision auditable (CONSTITUTION Article VIII).
 
 | Metric | Value |
 |--------|-------|
-| **Total tests** | **434 / 434** |
+| **Total tests** | **439 / 439** |
 | **Pass rate (BenchmarkRunner)** | **97.1 %** (33/34 probes) |
 | **Mean confidence** | 0.92 |
 | **Mean gateway latency** | 1.1 ms |
 | **Total HTTP round-trip** | 5–6 ms |
-| **Tests in `matrix-brain-runtime`** | 236 / 236 |
+| **Tests in `matrix-brain-runtime`** | 241 / 241** (added BloomFilter, KnowledgeExchangeProtocol fixes, GatewayIntegrationSmokeTest) |
 
 ---
 
@@ -68,12 +68,12 @@ All 26 real engines are reachable from the runtime path; no LLM imports
 | Module | Tests | Status |
 |--------|-------|--------|
 | matrix-api-gateway | 58 | ✅ |
-| matrix-brain-runtime | **236** | ✅ |
+| matrix-brain-runtime | **241** | ✅ |
 | matrix-audit | 40 | ✅ |
 | matrix-billing | 55 | ✅ |
 | matrix-quality | 23 | ✅ |
 | matrix-observability | 22 | ✅ |
-| **TOTAL** | **434** | ✅ |
+| **TOTAL** | **439** | ✅ |
 
 ---
 
