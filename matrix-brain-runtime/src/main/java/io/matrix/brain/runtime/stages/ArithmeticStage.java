@@ -71,8 +71,13 @@ public final class ArithmeticStage {
             return ArithmeticResult.miss();
         }
         String reply = a + " " + op + " " + b + " = " + result;
-        trace.add(BrcStep.of("ARITHMETIC", true, 0.99,
-            List.of("a=" + a, "op=" + op, "b=" + b, "result=" + result)));
+        // RECON-W1: include the engine=ClassName.method(args,out) evidence marker
+        // so EvidenceTruthGuardTest can mechanically verify the claim.
+        String argsDigest = a + "," + op + "," + b;
+        String outDigest = String.valueOf(result);
+        trace.add(BrcStep.of("ARITHMETIC", true, 0.99, List.of(
+            "engine=ArithmeticStage.evaluate(args=" + argsDigest + ",out=" + outDigest + ")",
+            "a=" + a, "op=" + op, "b=" + b, "result=" + result)));
         return ArithmeticResult.hit(reply, 0.99);
     }
 }

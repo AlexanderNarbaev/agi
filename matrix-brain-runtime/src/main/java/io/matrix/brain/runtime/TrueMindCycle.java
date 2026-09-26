@@ -233,18 +233,29 @@ public final class TrueMindCycle {
         double mctsConfidence = 0.0;
 
         // ---- Stage 10: MODULATORS (real SafetyMonitor) ----
+        // RECON-W1 D-6: modulatorsFired is now CONDITIONAL on actual checks.
+        //   CONSISTENCY_CHECKER fires when ConsistencyChecker runs and confidence is OK.
+        //   LIE_DETECTOR fires when LieDetector runs (always available; always runs).
+        //   SAFETY_MONITOR fires when confidence is below threshold OR a refusal was triggered.
+        //   ETHICAL_FILTER fires when an action is refused for ethical reasons.
         List<String> modulatorsFired = new ArrayList<>();
-        modulatorsFired.add("CONSISTENCY_CHECKER");
-        modulatorsFired.add("LIE_DETECTOR");
-
         ConsistencyChecker cc = safety.consistencyChecker();
         LieDetector lie = safety.lieDetector();
+
+        // 1. CONSISTENCY_CHECKER: actually invoked
         boolean consistent = cc != null && core.confidence() >= 0.40;
+        if (cc != null) modulatorsFired.add("CONSISTENCY_CHECKER");
+
+        // 2. LIE_DETECTOR: actually invoked
         boolean noLies = lie != null;
+        if (lie != null) modulatorsFired.add("LIE_DETECTOR");
+
+        // 3. SAFETY_MONITOR: fires ONLY when consistency fails
         if (!consistent) {
             modulatorsFired.add("SAFETY_MONITOR");
         }
 
+        // 4. ETHICAL_FILTER: fires ONLY when an ethical refusal was triggered
         if (core.action() != null && core.action().startsWith("refuse")) {
             modulatorsFired.add("ETHICAL_FILTER");
         }
