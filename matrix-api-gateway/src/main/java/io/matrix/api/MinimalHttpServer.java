@@ -66,6 +66,12 @@ public final class MinimalHttpServer {
     /** RECON-W2: RU/EN transliteration + language detection in the analyze path. */
     private final io.matrix.brain.runtime.MultilingualMind multilingualMind =
         new io.matrix.brain.runtime.MultilingualMind();
+    /** RECON-W2: D-7 orphan promoted — RealAuditService wraps real SafetyMonitor.
+     *  FROZEN-modulator events (ETHICAL_FILTER/SAFETY_MONITOR/LIE_DETECTOR/CONSISTENCY_CHECKER)
+     *  now land inside the hash-chained audit log. */
+    private final io.matrix.brain.runtime.RealAuditService realAuditService =
+        new io.matrix.brain.runtime.RealAuditService(
+            new io.matrix.safety.SafetyMonitor(new io.matrix.ethics.EthicalFilter()));
 
     public MinimalHttpServer(int port) {
         this.port = port;
@@ -267,8 +273,17 @@ public final class MinimalHttpServer {
             explanations.put(explainId, stored);
 
             // 6. Audit (RECON-W0 D-11: hash-chained, tamper-evident)
-            auditEvents.append("ANALYZE", claims.sub(), req.input,
-                Instant.now().toString());
+            // RECON-W2: RealAuditService.record() runs the real SafetyMonitor first.
+            // The alert level it returns is then recorded alongside the hash-chained event.
+            int alertLevel = realAuditService.record(
+                result.reply(),
+                "analyze",
+                true,
+                result.confidence());
+            String safeAction = alertLevel >= 3 ? "REFUSE_" + alertLevel : req.input;
+            auditEvents.append("ANALYZE", claims.sub(), safeAction,
+                Instant.now().toString()
+                + (alertLevel > 0 ? " [alert=" + alertLevel + "]" : ""));
 
             String mode = prodBrain != null ? "production" : "stub";
             writeJson(ex, 200, "{\"explain_id\":\"" + explainId + "\","

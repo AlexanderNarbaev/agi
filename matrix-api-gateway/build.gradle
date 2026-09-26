@@ -24,6 +24,9 @@ dependencies {
     // (Brings in matrix-core transitively; we now WANT direct linkage since
     // matrix-brain-runtime is the dedicated runtime module.)
     implementation project(':matrix-brain-runtime')
+    // RECON-W2: direct dep on matrix-core so gateway can reference
+    // SafetyMonitor + EthicalFilter when wiring RealAuditService.
+    implementation project(':matrix-core')
     // RECON-W0 D-11: wire /v1/audit/logs to matrix-audit HashChainedLog
     implementation project(':matrix-audit')
 
