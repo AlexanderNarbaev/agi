@@ -81,6 +81,9 @@ public final class MinimalHttpServer {
      *  Replaces gateway's local SleepScheduler draft (D-8 cleanup).
      *  Dream reports come from core SleepCycle, not from a local stub. */
     private io.matrix.brain.runtime.RealSleepScheduler realSleepScheduler;
+    /** RECON-W2 #5: AutonomyLoop promoted — wraps real AutonomyEngine/ArousalDynamics.
+     *  Replaces gateway's local goalTracker + inboxWatcher drafts (D-8 cleanup). */
+    private io.matrix.brain.runtime.AutonomyLoop autonomyLoop;
 
     public MinimalHttpServer(int port) {
         this.port = port;
@@ -145,6 +148,22 @@ public final class MinimalHttpServer {
                             LOG.log(Level.INFO, "RECON-W2: RealSleepScheduler armed (real SleepCycle)");
                         } catch (Throwable t) {
                             LOG.log(Level.WARNING, "RECON-W2 RealSleepScheduler init failed: {0}", t.getMessage());
+                        }
+                        // RECON-W2 #5: AutonomyLoop promoted. Uses io.matrix.brain.BrainCycle
+                        // (matrix-core interface) loaded reflectively from the production brain.
+                        // In stub mode, AutonomyLoop is not started (no real brain to drive).
+                        try {
+                            if (prod != null && prod.isAvailable()
+                                && prod.brainForPersistent() != null) {
+                                this.autonomyLoop = new io.matrix.brain.runtime.AutonomyLoop(
+                                    prod.brainForPersistent());
+                                this.autonomyLoop.start();
+                                LOG.log(Level.INFO, "RECON-W2 #5: AutonomyLoop started (real AutonomyEngine)");
+                            } else {
+                                LOG.log(Level.INFO, "RECON-W2 #5: AutonomyLoop skipped (stub mode / no real brain)");
+                            }
+                        } catch (Throwable t) {
+                            LOG.log(Level.WARNING, "RECON-W2 #5 AutonomyLoop init failed: {0}", t.getMessage());
                         }
                     }
                 } catch (Throwable t) {
