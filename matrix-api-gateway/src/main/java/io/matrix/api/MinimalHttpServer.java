@@ -58,7 +58,9 @@ public final class MinimalHttpServer {
     private io.matrix.brain.runtime.SleepScheduler sleepScheduler;
     /** MIND-W4: optional goal tracker + inbox watcher (null in stub mode). */
     private io.matrix.brain.runtime.GoalTracker goalTracker;
-    private io.matrix.brain.runtime.InboxWatcher inboxWatcher;
+    /** RECON-W2 #6: RealInboxWatcher promoted — uses real AudioFFTEncoder/VisionEdgeEncoder.
+    *  Replaces local InboxWatcher draft (D-8). */
+    private io.matrix.brain.runtime.RealInboxWatcher inboxWatcher;
 
     /** Ring buffer of recent analyze IDs and explanations */
     private final Map<String, StoredExplain> explanations = new ConcurrentHashMap<>();
@@ -173,7 +175,7 @@ public final class MinimalHttpServer {
             // MIND-W4: goal tracker + inbox watcher
             try {
                 this.goalTracker = new io.matrix.brain.runtime.GoalTracker();
-                this.inboxWatcher = new io.matrix.brain.runtime.InboxWatcher(
+                this.inboxWatcher = new io.matrix.brain.runtime.RealInboxWatcher(
                     java.nio.file.Path.of(mindDir, "inbox"), hdcStore);
                 int ingested = this.inboxWatcher.scan();
                 LOG.log(Level.INFO, "MIND-W4: GoalTracker + InboxWatcher armed (ingested={0})", ingested);
@@ -845,7 +847,7 @@ public final class MinimalHttpServer {
                 sb.append(",\"goals\":null");
             }
             if (inboxWatcher != null) {
-                Map<String, Object> ib = inboxWatcher.statusSnapshot();
+                Map<String, Object> ib = inboxWatcher.snapshot();
                 sb.append(",\"inbox\":");
                 sb.append("{").append("\"lastIngest\":\"")
                   .append(esc((String) ib.get("lastIngest")))
