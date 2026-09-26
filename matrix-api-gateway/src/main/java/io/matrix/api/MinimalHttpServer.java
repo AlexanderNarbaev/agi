@@ -77,6 +77,10 @@ public final class MinimalHttpServer {
      *  real, persistentMind is the SINGLE knowledge store object shared by
      *  analyze/sleep/federation paths (D-12 closure). */
     private io.matrix.brain.runtime.PersistentMind persistentMind;
+    /** RECON-W2: D-7 orphan promoted — RealSleepScheduler wraps real SleepCycle.
+     *  Replaces gateway's local SleepScheduler draft (D-8 cleanup).
+     *  Dream reports come from core SleepCycle, not from a local stub. */
+    private io.matrix.brain.runtime.RealSleepScheduler realSleepScheduler;
 
     public MinimalHttpServer(int port) {
         this.port = port;
@@ -128,6 +132,20 @@ public final class MinimalHttpServer {
                         this.persistentMind = io.matrix.brain.runtime.PersistentMind.open(
                             sqlitePath, prod.brainForPersistent(), kb);
                         LOG.log(Level.INFO, "RECON-W2: PersistentMind opened at {0}", sqlitePath);
+                        // RECON-W2: RealSleepScheduler promoted — wraps real SleepCycle.
+                        try {
+                            io.matrix.memory.HierarchicalMemory hmem =
+                                new io.matrix.memory.HierarchicalMemory();
+                            io.matrix.lifecycle.ConsolidationCycle realConsolidation =
+                                new io.matrix.lifecycle.ConsolidationCycle();
+                            io.matrix.federation.Anonymizer anonymizer =
+                                new io.matrix.federation.Anonymizer(2);
+                            this.realSleepScheduler = new io.matrix.brain.runtime.RealSleepScheduler(
+                                hmem, realConsolidation, anonymizer, 5 /* idleMinutes */);
+                            LOG.log(Level.INFO, "RECON-W2: RealSleepScheduler armed (real SleepCycle)");
+                        } catch (Throwable t) {
+                            LOG.log(Level.WARNING, "RECON-W2 RealSleepScheduler init failed: {0}", t.getMessage());
+                        }
                     }
                 } catch (Throwable t) {
                     LOG.log(Level.WARNING, "RECON-W2 PersistentMind init failed: {0}", t.getMessage());
