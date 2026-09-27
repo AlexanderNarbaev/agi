@@ -5,6 +5,7 @@ import io.matrix.brain.BirBrainCycle;
 import io.matrix.knowledge.SimpleKnowledgeBase;
 import io.matrix.lifecycle.ConsolidationCycle;
 import io.matrix.memory.HierarchicalMemory;
+import io.matrix.bir.BirRegistry;
 import io.matrix.sleep.SleepCycle;
 import io.matrix.sleep.SleepCycle.CycleReport;
 
@@ -47,15 +48,41 @@ public final class RealSleepScheduler implements AutoCloseable {
     private final AtomicReference<DreamReport> lastDream = new AtomicReference<>(new DreamReport());
     private final AtomicReference<Long> lastActivityMillis = new AtomicReference<>(System.currentTimeMillis());
     private long cycleCount = 0;
+    /** RECON-W3 Part B Step 4: optional learning integration. */
+    private final EpisodicLog episodicLog;
+    private final BirRegistry birRegistry;
+    private final RuleInductionEngine ruleEngine;
+    private final EpisodeFeatureExtractor featureExtractor;
+    private final java.util.List<Double> recentFidelities = new java.util.ArrayList<>();
 
     public RealSleepScheduler(HierarchicalMemory memory,
                               ConsolidationCycle consolidation,
                               Anonymizer anonymizer,
                               int idleMinutes) {
+        this(memory, consolidation, anonymizer, idleMinutes, null, null, null, null);
+    }
+
+    /**
+     * RECON-W3 Part B Step 4: extended constructor that wires the learning pipeline.
+     * After replay, runs {@link RuleInductionEngine} on recent episodic entries
+     * and registers the induced rules in {@link BirRegistry}.
+     */
+    public RealSleepScheduler(HierarchicalMemory memory,
+                              ConsolidationCycle consolidation,
+                              Anonymizer anonymizer,
+                              int idleMinutes,
+                              EpisodicLog episodicLog,
+                              BirRegistry birRegistry,
+                              RuleInductionEngine ruleEngine,
+                              EpisodeFeatureExtractor featureExtractor) {
         this.memory = memory;
         this.consolidation = consolidation;
         this.anonymizer = anonymizer;
         this.idleMinutes = Math.max(1, idleMinutes);
+        this.episodicLog = episodicLog;
+        this.birRegistry = birRegistry;
+        this.ruleEngine = ruleEngine;
+        this.featureExtractor = featureExtractor;
         // Real SleepCycle from matrix-core.
         this.sleep = new SleepCycle(memory, consolidation, anonymizer);
         this.executor = Executors.newSingleThreadScheduledExecutor(r -> {
@@ -131,10 +158,23 @@ public final class RealSleepScheduler implements AutoCloseable {
         dream.entriesPromoted = report.entriesPromoted();
         dream.consolidationDrains = report.consolidationDrains();
         dream.digestsEmitted = report.digestsEmitted();
-        dream.notes = List.of(
+        // Always emit engine markers (Article VIII).
+        dream.notes = new java.util.ArrayList<>(List.of(
             "engine=" + SleepCycle.class.getSimpleName() + ".runOnce",
-            "engine=" + ConsolidationCycle.class.getSimpleName() + ".tick"
-        );
+            "engine=" + ConsolidationCycle.class.getSimpleName() + ".tick"));
+
+        // RECON-W3 Part B Step 4: rule induction after replay.
+        // Only runs when the learning pipeline is wired.
+        if (episodicLog != null && birRegistry != null && ruleEngine != null
+                && featureExtractor != null) {
+            InductionStats stats = runInduction();
+            dream.rulesLearned = stats.learned;
+            dream.rulesRejected = stats.rejected;
+            dream.consolidationDelta = stats.delta;
+            dream.fidelityScores = stats.fidelities;
+            dream.notes.add("induction=RuleInductionEngine.induce(engine=TsetlinTrainer+MpdtGaProducer)");
+            dream.notes.add("rules_learned=" + stats.learned);
+        }
         lastDream.set(dream);
         lastActivityMillis.set(System.currentTimeMillis());
         return dream;
@@ -158,6 +198,11 @@ public final class RealSleepScheduler implements AutoCloseable {
         public int entriesPromoted;
         public int consolidationDrains;
         public int digestsEmitted;
+        /** RECON-W3 Part B Step 4: rule-induction summary. */
+        public int rulesLearned;
+        public int rulesRejected;
+        public double consolidationDelta;
+        public List<Double> fidelityScores = List.of();
         public List<String> notes = List.of();
 
         public Map<String, Object> snapshot() {
@@ -168,9 +213,61 @@ public final class RealSleepScheduler implements AutoCloseable {
             m.put("entriesPromoted", entriesPromoted);
             m.put("consolidationDrains", consolidationDrains);
             m.put("digestsEmitted", digestsEmitted);
+            m.put("rulesLearned", rulesLearned);
+            m.put("rulesRejected", rulesRejected);
+            m.put("consolidationDelta", consolidationDelta);
+            m.put("fidelityScores", fidelityScores);
             m.put("notes", notes);
             m.put("engine", "SleepCycle.runOnce");
             return m;
         }
     }
+
+    /**
+     * RECON-W3 Part B Step 4: read recent episodic entries, run induction,
+     * register the resulting Bir in the registry. CONSISTENCY_CHECKER is
+     * honored implicitly: a Bir that fails to register (e.g., duplicate id)
+     * is counted as rejected, not silently overwritten.
+     */
+    private InductionStats runInduction() {
+        java.util.List<EpisodicLog.Entry> entries = episodicLog.readAll();
+        if (entries.isEmpty()) {
+            return new InductionStats(0, 0, 0.0, java.util.List.of());
+        }
+        // Take last 20 (cap at K_MAX for Article II)
+        int n = Math.min(entries.size(), 20);
+        java.util.List<EpisodicLog.Entry> recent = entries.subList(
+            Math.max(0, entries.size() - n), entries.size());
+
+        long[][] features = new long[recent.size()][];
+        java.util.List<String> ids = new java.util.ArrayList<>();
+        boolean[] labels = new boolean[recent.size()];
+        for (int i = 0; i < recent.size(); i++) {
+            EpisodicLog.Entry e = recent.get(i);
+            features[i] = featureExtractor.encode(e);
+            ids.add(e.id());
+            labels[i] = e.confidence() >= 0.7 && e.accepted();
+        }
+
+        int before = birRegistry.size();
+        java.util.List<Double> fidelities = new java.util.ArrayList<>();
+        int learned = 0, rejected = 0;
+        try {
+            var res = ruleEngine.induce(ids, features, labels);
+            fidelities.add(res.chosenFidelity());
+            if (birRegistry.size() > before) learned++; else rejected++;
+        } catch (Throwable t) {
+            rejected++;
+        }
+        double delta = birRegistry.size() - before;
+        synchronized (recentFidelities) {
+            recentFidelities.add(fidelities.isEmpty() ? 0.0 : fidelities.get(0));
+            if (recentFidelities.size() > 100) recentFidelities.remove(0);
+        }
+        return new InductionStats(learned, rejected, delta, fidelities);
+    }
+
+    /** Result of one induction pass. */
+    private record InductionStats(int learned, int rejected, double delta,
+                                  java.util.List<Double> fidelities) {}
 }
