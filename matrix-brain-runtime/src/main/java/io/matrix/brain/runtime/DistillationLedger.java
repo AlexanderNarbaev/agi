@@ -81,8 +81,17 @@ public final class DistillationLedger {
         int k = json.indexOf("\"" + key + "\"");
         if (k < 0) return "";
         int colon = json.indexOf(':', k);
-        int start = json.indexOf('"', colon + 1);
-        int end = json.indexOf('"', start + 1);
-        return json.substring(start + 1, end);
+        // Skip past opening quote (string value) OR start at digit (numeric value)
+        int start = colon + 1;
+        if (json.charAt(start) == ' ') start++;
+        if (json.charAt(start) == '"') start++;
+        // Find end: comma, closing brace, or end of input
+        int end = json.length();
+        for (int i = start; i < json.length(); i++) {
+            char c = json.charAt(i);
+            if (c == ',' || c == '}') { end = i; break; }
+            if (c == '"' && json.charAt(i - 1) != '\\') { end = i; break; }
+        }
+        return json.substring(start, end);
     }
 }
