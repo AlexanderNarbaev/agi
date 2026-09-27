@@ -172,6 +172,18 @@ public final class MinimalHttpServer {
                         } catch (Throwable t) {
                             LOG.log(Level.WARNING, "RECON-W2 #7 TrueDistillationFactory init failed: {0}", t.getMessage());
                         }
+                        // RECON-W15: persistent BirRegistry (L-2 closure).
+                        // Load-on-boot: existing rules replayed from disk.
+                        try {
+                            java.nio.file.Path birPath = java.nio.file.Path.of(mindDir, "bir.ndjson");
+                            this.birKnowledgeBase = new io.matrix.brain.runtime.BirKnowledgeBase(
+                                new io.matrix.bir.BirRegistry(), birPath);
+                            LOG.log(Level.INFO, "RECON-W15: BirKnowledgeBase opened at {0} (loaded=" + 
+                                this.birKnowledgeBase.size() + ", disk_lines=" + 
+                                this.birKnowledgeBase.onDiskLineCount() + ")", birPath);
+                        } catch (Throwable t) {
+                            LOG.log(Level.WARNING, "RECON-W15 BirKnowledgeBase init failed: {0}", t.getMessage());
+                        }
                         // RECON-W2 #8: RealGpuKernelEngine promoted. gpuEnabled=false
                         // by default; can be flipped by JVM property matrix.gpu.enabled.
                         boolean gpuEnabled = Boolean.getBoolean("matrix.gpu.enabled");
@@ -223,6 +235,8 @@ public final class MinimalHttpServer {
         http.createContext("/v1/audit/logs", this::handleAuditLogs);
         http.createContext("/v1/audit/verify", this::handleAuditVerify);
         http.createContext("/v1/distill", this::handleDistill);
+        http.createContext("/v1/bir", this::handleBir);
+        http.createContext("/v1/conflicts", this::handleConflicts);
         http.createContext("/v1/gpu", this::handleGpu);
         http.createContext("/v1/audit", exchange -> writeJson(exchange, 200,
             "{\"audit\":\"" + auditEvents.size() + " events\"}"));
@@ -455,6 +469,104 @@ public final class MinimalHttpServer {
             "{\"status\":\"not-implemented\",\"planned\":\"RECON-W5\","
             + "\"reason\":\"Real ONNX distillation pipeline (Distiller.synthesize -> BirRegistry merge) lands in RECON-W5\","
             + "\"evidence\":\"TrueDistillationFactory.distillCustom is wired but the real pipeline is queued for W5\"}");
+    }
+
+    /** RECON-W15: BirKnowledgeBase persistent bridge (closes L-2). */
+    private io.matrix.brain.runtime.BirKnowledgeBase birKnowledgeBase;
+
+    /** RECON-W15: GET /v1/bir — return registry stats; POST /v1/bir — register with contradiction check. */
+    private void handleBir(HttpExchange ex) throws IOException {
+        if ("GET".equalsIgnoreCase(ex.getRequestMethod())) {
+            StringBuilder sb = new StringBuilder("{\"engine\":\"BirRegistry+BirRegistryPersistence\"");
+            if (birKnowledgeBase != null) {
+                sb.append(",\"registry_size\":").append(birKnowledgeBase.size());
+                try { sb.append(",\"on_disk_lines\":").append(birKnowledgeBase.onDiskLineCount()); }
+                catch (Exception e) { sb.append(",\"on_disk_lines\":-1"); }
+                int qSize = birKnowledgeBase.quarantined().size();
+                sb.append(",\"quarantine_size\":").append(qSize);
+                sb.append(",\"persistence\":\"load-on-boot + append-on-register; "
+                    + "deterministic re-derivation retained as repair path\"");
+            } else {
+                sb.append(",\"registry_size\":0,\"on_disk_lines\":-1,\"quarantine_size\":0");
+                sb.append(",\"persistence\":\"not-initialized\"");
+            }
+            sb.append("}");
+            writeJson(ex, 200, sb.toString());
+            return;
+        }
+        if (!"POST".equalsIgnoreCase(ex.getRequestMethod())) {
+            writeJson(ex, 405, "{\"error\":\"method not allowed\"}");
+            return;
+        }
+        // POST: register a rule with contradiction check
+        if (birKnowledgeBase == null) {
+            writeJson(ex, 503, "{\"error\":\"BirKnowledgeBase not initialized\"}");
+            return;
+        }
+        // Minimal parsing
+        String body = readBody(ex);
+        String id = "live-rule-" + System.nanoTime();
+        int idIdx = body.indexOf("\"id\":\"");
+        if (idIdx >= 0) {
+            int s = idIdx + 6;
+            int e = s;
+            while (e < body.length() && body.charAt(e) != '"') e++;
+            id = body.substring(s, e);
+        }
+        // Synthesize a tiny Bir for the test path: this is the demo /v1/bir
+        // endpoint that proves load/save round-trip + contradiction detection
+        // without requiring the full distillation stack.
+        try {
+            var clause = new io.matrix.bir.ClauseSetForm.Clause(
+                new long[]{(long)(body.hashCode() & 0xFL)}, new long[]{0L});
+            var bir = io.matrix.bir.ClauseSetForm.lossy(4,
+                java.util.List.of(clause), "from_http", 0.5);
+            io.matrix.brain.runtime.BirKnowledgeBase.RegisterResult r =
+                birKnowledgeBase.register(id, bir, id, 0.5,
+                    body.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+            StringBuilder resp = new StringBuilder("{\"engine\":\"BirRegistryPersistence+BirKnowledgeBase\"");
+            resp.append(",\"accepted\":").append(r.accepted());
+            if (r.quarantined() != null) {
+                resp.append(",\"quarantined\":true");
+                resp.append(",\"contradiction\":{\"new_rule\":\"").append(esc(r.quarantined().newRuleId()))
+                    .append("\",\"existing_rule\":\"").append(esc(r.quarantined().existingRuleId()))
+                    .append("\",\"overlap\":").append(r.quarantined().preconditionOverlap())
+                    .append(",\"detail\":\"").append(esc(r.quarantined().detail())).append("\"}");
+            } else {
+                resp.append(",\"registered_id\":\"").append(esc(r.entry().id())).append("\"");
+            }
+            resp.append(",\"registry_size\":").append(birKnowledgeBase.size());
+            resp.append("}");
+            writeJson(ex, 200, resp.toString());
+        } catch (Exception ex2) {
+            writeJson(ex, 500, "{\"error\":\"" + esc(ex2.getMessage()) + "\"}");
+        }
+    }
+
+    /** RECON-W15: GET /v1/conflicts — return list of quarantined contradictions. */
+    private void handleConflicts(HttpExchange ex) throws IOException {
+        if (!"GET".equalsIgnoreCase(ex.getRequestMethod())) {
+            writeJson(ex, 405, "{\"error\":\"method not allowed\"}");
+            return;
+        }
+        if (birKnowledgeBase == null) {
+            writeJson(ex, 503, "{\"error\":\"BirKnowledgeBase not initialized\"}");
+            return;
+        }
+        var qs = birKnowledgeBase.quarantined();
+        StringBuilder sb = new StringBuilder("{\"engine\":\"BirKnowledgeBase.contradiction\",\"count\":"
+            + qs.size() + ",\"conflicts\":[");
+        boolean first = true;
+        for (var c : qs) {
+            if (!first) sb.append(",");
+            first = false;
+            sb.append("{\"new_rule\":\"").append(esc(c.newRuleId())).append("\"")
+              .append(",\"existing_rule\":\"").append(esc(c.existingRuleId())).append("\"")
+              .append(",\"overlap\":").append(c.preconditionOverlap())
+              .append(",\"detail\":\"").append(esc(c.detail())).append("\"}");
+        }
+        sb.append("]}");
+        writeJson(ex, 200, sb.toString());
     }
 
     private void handleGpu(HttpExchange ex) throws IOException {

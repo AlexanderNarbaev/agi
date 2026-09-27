@@ -42,6 +42,13 @@ public final class ClauseSetForm extends BirForm {
     private final int kWords;
     private final List<Clause> clauses;
 
+    /** Package-private access for {@link BirRegistryPersistence}. */
+    int kWordsForPersistence() { return kWords; }
+
+    /** Package-private access for {@link BirRegistryPersistence}. */
+    List<Clause> clausesForPersistence() { return clauses; }
+
+
     public ClauseSetForm(int inputBits, List<Clause> clauses, String provenance, double fidelity) {
         this(inputBits, clauses, provenance, fidelity, false);
     }

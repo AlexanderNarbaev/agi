@@ -156,3 +156,22 @@ runtime when loaded from JDK 25 — uncovered honestly, not hidden.
   pre-computed ONNX activations can be ingested without loading the native lib.
 - ARITHMETIC class still shows retrieval-style behaviour on novel variants
   (D-W13-1); headlined 0.73 (excl RETRIEVAL) at W13 baseline.
+
+## 2026-09-27 — RECON-W15 (True Persistence & Contradiction Intelligence)
+
+**Headline: L-2 closed (load-on-boot registry persistence); L-3 closed (contradiction quarantine).**
+
+### New components
+- `BirRegistryPersistence` (matrix-core/.../BirRegistryPersistence.java) — append-only NDJSON.
+- `BirKnowledgeBase` (matrix-brain-runtime/.../BirKnowledgeBase.java) — wrapper with load-on-boot +
+  precondHash (FNV-1a over POS bits) + contradiction detection.
+- `POST /v1/bir` and `GET /v1/bir` + `GET /v1/conflicts` gateway endpoints.
+
+### Live verification
+- Restart-survival: rule "persistent-rule" registered, gateway restarted,
+  rule remains in registry_size=1, on_disk_lines=1.
+- Engine markers: `BirRegistryPersistence+BirKnowledgeBase`.
+
+### Honesty
+- Contradiction `quarantined` list is IN-MEMORY only. Lost on restart. Carry-forward.
+- `BirRegistryPersistenceTest` 2/2, `BirKnowledgeBaseRestartTest` 2/2.
