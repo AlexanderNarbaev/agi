@@ -237,6 +237,7 @@ public final class MinimalHttpServer {
         http.createContext("/v1/distill", this::handleDistill);
         http.createContext("/v1/bir", this::handleBir);
         http.createContext("/v1/conflicts", this::handleConflicts);
+        http.createContext("/v1/generalize", this::handleGeneralize);
         http.createContext("/v1/gpu", this::handleGpu);
         http.createContext("/v1/audit", exchange -> writeJson(exchange, 200,
             "{\"audit\":\"" + auditEvents.size() + " events\"}"));
@@ -567,6 +568,38 @@ public final class MinimalHttpServer {
         }
         sb.append("]}");
         writeJson(ex, 200, sb.toString());
+    }
+
+    private void handleGeneralize(HttpExchange ex) throws IOException {
+        // RECON-W19+: /v1/generalize - tries to ground symbolic variables in query.
+        if (!"POST".equalsIgnoreCase(ex.getRequestMethod())) {
+            writeJson(ex, 405, "{\"error\":\"method not allowed\"}");
+            return;
+        }
+        String body = readBody(ex);
+        String input = "";
+        int sIdx = body.indexOf("\"input\":\"");
+        if (sIdx >= 0) {
+            int s = sIdx + 9;
+            int e = s;
+            while (e < body.length() && body.charAt(e) != '"') e++;
+            input = body.substring(s, e);
+        }
+        if (input.isEmpty()) {
+            writeJson(ex, 400, "{\"error\":\"missing input\"}");
+            return;
+        }
+        io.matrix.brain.runtime.SymbolicNumberGrounder g =
+            new io.matrix.brain.runtime.SymbolicNumberGrounder();
+        io.matrix.brain.runtime.SymbolicNumberGrounder.GroundResult r =
+            g.tryGeneralize(input, q -> false);
+        writeJson(ex, 200,
+            "{\"status\":\"ok\",\"engine\":\"SymbolicNumberGrounder\","
+            + "\"original_query\":\"" + esc(r.originalQuery()) + "\","
+            + "\"substituted_query\":\"" + esc(r.substitutedQuery()) + "\","
+            + "\"substituted_value\":\"" + esc(r.substitutedValue()) + "\","
+            + "\"candidates_tried\":" + r.candidatesTried() + ","
+            + "\"generalized\":" + r.generalized() + "}");
     }
 
     private void handleGpu(HttpExchange ex) throws IOException {
