@@ -7,13 +7,39 @@
 
 MATRIX — нейро-символическая система, где «знание» — таблицы истинности и их компилируемые формы (TT / CLAUSESET / BDD), а не веса чёрного ящика. Обучение отделено от рантайма: рантайм исполняет только BIR-артефакты — детерминированно, без LLM-вызовов и случайности.
 
-## Быстрый старт
+## Быстрый старт (5 команд → talking mind)
 
 ```bash
-docker compose -f docker-compose.dev.yml up -d   # инфраструктура
-./gradlew test                                    # юнит-тесты
-./gradlew :matrix-core:quarkusDev                 # dev :9091
+# 1. Build all modules
+./gradlew :matrix-api-gateway:jar :matrix-brain-runtime:jar :matrix-core:jar --no-daemon --console=plain
+
+# 2. Generate runtime classpath
+./gradlew :matrix-api-gateway:writeRuntimeClasspath --no-daemon --console=plain
+
+# 3. Prepend matrix-{api-gateway,brain-runtime}/build/classes/java/main to runtime-classpath.txt
+#    (Gradle's classpath task omits those; see scripts/start-mind.sh.)
+
+# 4. Launch the gateway
+bash scripts/start-mind.sh
+
+# 5. Query the mind
+TOKEN=$(curl -s -X POST http://localhost:8765/v1/auth/login -H 'Content-Type: application/json' \
+  -d '{"email":"pro@test.com"}' | python3 -c 'import sys,json; print(json.load(sys.stdin)["token"])')
+curl -X POST http://localhost:8765/v1/analyze -H "Authorization: Bearer $TOKEN" \
+  -H 'Content-Type: application/json' -d '{"input":"What is 2+3?"}'
 ```
+
+Sanity check (clean-room from a fresh copy):
+```bash
+./scripts/fresh-clone-smoke.sh    # copies repo to /tmp, builds, launches, queries
+```
+
+> Альтернатива: dev-режим с тяжёлой инфраструктурой
+> ```bash
+> docker compose -f docker-compose.dev.yml up -d
+> ./gradlew test
+> ./gradlew :matrix-core:quarkusDev
+> ```
 
 ## Где что
 
