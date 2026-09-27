@@ -115,3 +115,22 @@ RECON-W12 (Release): v17.0.0-mind tag pushed both remotes. MATRIX-MIND-REPORT-V1
 written. MIND-VALIDATION-CHECKLIST.md v2 documented.
 
 Total tests: ~618 ecosystem + Goal Guard 100/100.
+
+## 2026-09-27 — RECON-W13 (Prove It Live)
+
+**Headline: 33/45 live probes pass (0.73 headline rate, excluding RETRIEVAL).**
+- ARITHMETIC 14/14 (1.00), ANALOGY 5/6 (0.83), CONTRADICTION/ETHICS/RU/TAUGHT_RETRIEVAL all 1.00.
+- GENERALIZATION 0/7, PLANNING_DEPTH 0/4 — root causes logged as D-W13-1/2, W14/W15 targets.
+- Mean confidence: 0.86. Mean latency: 1.25ms.
+- Gateway left RUNNING on :8765 for operator spot-check.
+
+**Live CSV:** data/mind/benchmarks/w13-live.csv
+**Regression detector:** BenchmarkRegression.class — `previous→current` shows no Δ>-0.05 in any category vs true-w13-eval.csv baseline.
+**Deficiency list:** D-W13-1 (GENERALIZATION 0/7), D-W13-2 (PLANNING_DEPTH 0/4), D-W13-3 (RETRIEVAL 0/3 — excluded from headline per W9).
+
+**Fixed drift in start-mind.sh / runtime-classpath.txt:** the classpath was missing
+`matrix-api-gateway/build/classes/java/main` and `matrix-brain-runtime/build/classes/java/main`;
+prepended them manually so `MinimalHttpServer` class resolved.
+
+System status: gateway up on :8765, brain_available=true,
+mode=production, Article VIII guards still green.
