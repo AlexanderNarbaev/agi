@@ -89,3 +89,29 @@ Article VIII). No legacy LLM imports reachable from runtime path
 | 2026-09-26 | Deregistered empty modules | matrix-fpga, matrix-micro, matrix-ros2 had 0 source files |
 | 2026-09-26 | Mind-W1..W7 renamed "skeleton" | Real core wiring deferred to TRUE-W1..W12 |
 | 2026-09-26 | Real core engines required for runtime | All BRC steps must declare engine identity |
+
+## 2026-09-27 — RECON Campaign W6-W12 Complete
+
+RECON-W6 (Honest Acceleration): MatrixNativeMath + RealGpuKernelEngine rewritten
+to detect JDK Vector API at runtime. Three backends (CPU_VECTOR/CPU_SCALAR/UNAVAILABLE)
+reported honestly. N-6 closed structurally.
+
+RECON-W7 (Federation): FedShardManager added to /v1/status; Prometheus metric
+matrix_federation_shard_hits_total exposed. ShardedFederation now has prod caller.
+
+RECON-W8 (Autonomy): OvernightRunner drives SelfImprovingEngine + AutonomyLoop;
+RunResult record exposes accepted/rejected/adversarial counts.
+
+RECON-W9 (Benchmarks): SuperAdditivityStudy verifies structural super-additivity
+(W5-Limit-4 fixed numerically). rulesFromAB >= max(rulesFromA, rulesFromB).
+
+RECON-W10 (Showcase): scripts/demo-mind.sh shows status, federation, distillation,
+and test counts in one shot.
+
+RECON-W11 (Research): 3 new iterations — CategoricalFunctor (R-F math doctrine),
+HippocampalReplayScheduler, SymbolicSimplifier (3-pass simplification).
+
+RECON-W12 (Release): v17.0.0-mind tag pushed both remotes. MATRIX-MIND-REPORT-V17.md
+written. MIND-VALIDATION-CHECKLIST.md v2 documented.
+
+Total tests: ~618 ecosystem + Goal Guard 100/100.
