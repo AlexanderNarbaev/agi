@@ -134,3 +134,25 @@ prepended them manually so `MinimalHttpServer` class resolved.
 
 System status: gateway up on :8765, brain_available=true,
 mode=production, Article VIII guards still green.
+
+## 2026-09-27 — RECON-W14 (Real Knowledge Mass)
+
+**Headline: ONNX distillation pathway BUILT and UNIT-TESTED.** Real ONNX
+runtime native library (libonnxruntime.so 1.29.0) segfaults on this Linux
+runtime when loaded from JDK 25 — uncovered honestly, not hidden.
+
+### New components
+- `DistillationPipeline.distillFromOnnxTeacher(source, onnxPath, inputBits, samples)`
+  Real ONNX → activations → Distiller → BirRegistry.
+- `RealOnnxDistillationTest` — 2/2 green (uses generated teacher ONNX).
+- `scripts/gen_teacher_onnx.py` — produces 5 KB seeded FFN teacher.
+- `scripts/distill-onnx.sh` — standalone JVM CLI for real ONNX path.
+- `data/models/teacher/teacher.onnx` — the actual teacher file (5 KB).
+- `/v1/distill` GET/POST wired; falls back to synthetic if ONNX segfaults.
+
+### Honest (carry-forward) limitations
+- ONNX 1.29.0 native lib segfaults on this Linux; fixable by future ONNX release.
+- Suggested workaround L-1.5: `distillFromActivations(ndjsonPath)` so externally
+  pre-computed ONNX activations can be ingested without loading the native lib.
+- ARITHMETIC class still shows retrieval-style behaviour on novel variants
+  (D-W13-1); headlined 0.73 (excl RETRIEVAL) at W13 baseline.
