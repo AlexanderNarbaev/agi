@@ -31,7 +31,15 @@ public final class DistillationLedger {
         long durationMs,
         long timestampMs,
         String artifactHash
-    ) {}
+    ) {
+        // Back-compat aliases for older callers (renamed fields).
+        public String source() { return sourceId; }
+        public int samples() { return samplesUsed; }
+        public double evalDelta() { return fidelity; }
+        public int birClauses() { return birClausesSynthesized; }
+        public int inputsCount() { return samplesUsed; }
+        public int birClausesInduced() { return birClausesSynthesized; }
+    }
 
     private final Path ledgerPath;
 
@@ -41,7 +49,55 @@ public final class DistillationLedger {
 
     public Path path() { return ledgerPath; }
 
+    /** Number of recorded entries (line count in the ledger NDJSON file). */
+    /** Aggregate summary: runs count + total inputs_bytes.
+     * Returns a Map so callers can index by key. */
+    public synchronized java.util.Map<String, Object> summary() {
+        java.util.Map<String, Object> out = new java.util.LinkedHashMap<>();
+        int runs = 0;
+        long totalBytes = 0;
+        try {
+            if (Files.exists(ledgerPath)) {
+                for (String line : Files.readAllLines(ledgerPath)) {
+                    if (line.isBlank() || !line.startsWith("{")) continue;
+                    runs++;
+                    int idx = line.indexOf("\"samplesUsed\":");
+                    if (idx >= 0) {
+                        int colon = line.indexOf(':', idx);
+                        int comma = line.indexOf(',', colon);
+                        try { totalBytes += Long.parseLong(line.substring(colon + 1, comma).trim()); }
+                        catch (Throwable ignored) {}
+                    }
+                }
+            }
+        } catch (java.io.IOException ignored) {
+            // ledger read failure is non-fatal for summary; counts remain partial.
+        }
+        out.put("runs", runs);
+        out.put("total_inputs_bytes", totalBytes);
+        out.put("path", ledgerPath.toString());
+        return out;
+    }
+
+    public synchronized int size() {
+        if (!Files.exists(ledgerPath)) return 0;
+        try {
+            int count = 0;
+            for (String line : Files.readAllLines(ledgerPath)) {
+                if (line.isBlank() || !line.startsWith("{")) continue;
+                count++;
+            }
+            return count;
+        } catch (java.io.IOException t) {
+            return -1;
+        }
+    }
+
     public synchronized void record(Entry e) throws java.io.IOException {
+        append(e);
+    }
+
+    public synchronized void append(Entry e) throws java.io.IOException {
         String json = String.format(
             "{\"sourceId\":\"%s\",\"datasetOrPattern\":\"%s\",\"inputBits\":%d,"
                 + "\"samplesUsed\":%d,\"hdcPromoted\":%d,\"birClausesSynthesized\":%d,"

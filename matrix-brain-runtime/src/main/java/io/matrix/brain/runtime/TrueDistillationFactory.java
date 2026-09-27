@@ -38,12 +38,19 @@ public final class TrueDistillationFactory {
     public record Result(
         String source,
         int captures,
-        int birClausesSynthesized,
+        int tokensExtracted,
+        int hdcPromoted,
+        int birClausesInduced,
+        int tsetlinLiterals,
+        long inputsBytes,
         double fidelity,
         long durationMs,
         String artifactHash,
         String provenance
-    ) {}
+    ) {
+        // Back-compat alias: birClausesSynthesized -> birClausesInduced
+        public int birClausesSynthesized() { return birClausesInduced; }
+    }
 
     /** Source identifier for non-ONNX distillation paths. */
     public static final String CUSTOM_SOURCE = "custom";
@@ -123,11 +130,18 @@ public final class TrueDistillationFactory {
         String hash = sha256Hex(source + ":" + calibrationInputs.size()
             + ":" + nClauses + ":" + durationMs);
         Result r = new Result(source, calibrationInputs.size(),
-            nClauses, fidelity, durationMs, hash, bir.provenance());
-        ledger.record(new DistillationLedger.Entry(
-            "run-" + System.currentTimeMillis(),
-            r.source, r.captures, (int) sourceBytes, 0, r.birClausesSynthesized, 0, r.fidelity,
-            r.durationMs, System.currentTimeMillis(), r.artifactHash));
+            calibrationInputs.size() /* tokensExtracted */,
+            0 /* hdcPromoted */, nClauses /* birClausesInduced */,
+            0 /* tsetlinLiterals */, sourceBytes /* inputsBytes */,
+            fidelity, durationMs, hash, bir.provenance());
+        try {
+            ledger.record(new DistillationLedger.Entry(
+                "run-" + System.currentTimeMillis(),
+                r.source, r.captures, (int) sourceBytes, 0, r.birClausesSynthesized(), 0, r.fidelity,
+                r.durationMs, System.currentTimeMillis(), r.artifactHash));
+        } catch (java.io.IOException ignored) {
+            // ledger write failure is non-fatal; the Result is still returned
+        }
         if (diskBudget != null && sourceBytes > 0) {
             diskBudget.recordWrite("distill:" + r.source, sourceBytes);
         }

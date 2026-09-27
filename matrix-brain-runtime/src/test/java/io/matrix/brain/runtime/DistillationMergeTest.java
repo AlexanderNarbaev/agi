@@ -72,8 +72,8 @@ class DistillationMergeTest {
     void ledger_records_run_artifacts(@TempDir Path tmp) throws Exception {
         Path ledger = tmp.resolve("distill.ndjson");
         DistillationLedger l = new DistillationLedger(ledger);
-        l.record(new DistillationLedger.Entry("src-1", "and", 8, 16, 0.95, 42, "abcd", true, "2026-01-01"));
-        l.record(new DistillationLedger.Entry("src-2", "or", 4, 8, 0.80, 17, "efgh", true, "2026-01-01"));
+        l.record(new DistillationLedger.Entry("src-1", "and", 8, 16, 0, 5, 0, 0.95, 42, 1000L, "abcd"));
+        l.record(new DistillationLedger.Entry("src-2", "or", 4, 8, 0, 3, 0, 0.80, 17, 2000L, "efgh"));
         List<DistillationLedger.Entry> all = l.readAll();
         assertThat(all).hasSize(2);
         assertThat(all.get(0).sourceId()).isEqualTo("src-1");

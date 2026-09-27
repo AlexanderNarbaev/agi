@@ -1,7 +1,7 @@
 package io.matrix.api.brain;
 
 import io.matrix.brain.runtime.EpisodicLog;
-import io.matrix.brain.runtime.SleepScheduler;
+import io.matrix.brain.runtime.RealSleepScheduler;
 import io.matrix.brain.runtime.TrueMindCycle;
 import io.matrix.brain.runtime.MindResult;
 import io.matrix.brain.runtime.PersistentHdcStore;
@@ -79,7 +79,7 @@ public final class ProductionBrainClient implements BrainCycle {
      * through to disk and retrievals survive restart.
      */
     private final PersistentHdcStore hdcStore;
-    private final SleepScheduler sleepScheduler;
+    private final RealSleepScheduler sleepScheduler;
 
     /** MIND-W3: optional episodic log + sleep scheduler (one or both may be set). */
     private final EpisodicLog episodicLog;
@@ -100,7 +100,7 @@ public final class ProductionBrainClient implements BrainCycle {
      */
     public ProductionBrainClient(PersistentHdcStore hdcStore,
                                  EpisodicLog episodicLog,
-                                 SleepScheduler sleepScheduler) {
+                                 RealSleepScheduler sleepScheduler) {
         this.hdcStore = hdcStore;
         this.episodicLog = episodicLog;
         this.sleepScheduler = sleepScheduler;
