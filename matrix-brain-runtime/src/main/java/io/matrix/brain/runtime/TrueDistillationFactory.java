@@ -95,7 +95,7 @@ public final class TrueDistillationFactory {
                            DistillationLedger ledger, DiskBudget diskBudget,
                            String source, long sourceBytes,
                            Function<long[], float[]> activationFn) {
-        long t0 = System.currentTimeMillis();
+        long t0 = java.time.Instant.now().toEpochMilli();
         // CONSTITUTION Article II: K_MAX = 20. Distiller input bits must fit
         // inside the TtForm k bound. Real distillation chunks long inputs.
         int inputBits = 20;
@@ -119,15 +119,15 @@ public final class TrueDistillationFactory {
         }
         double fidelity = distiller.fidelity(bir, heldInputs, heldExpected);
 
-        long durationMs = System.currentTimeMillis() - t0;
+        long durationMs = java.time.Instant.now().toEpochMilli() - t0;
         String hash = sha256Hex(source + ":" + calibrationInputs.size()
             + ":" + nClauses + ":" + durationMs);
         Result r = new Result(source, calibrationInputs.size(),
             nClauses, fidelity, durationMs, hash, bir.provenance());
         ledger.append(new DistillationLedger.Entry(
-            "run-" + System.currentTimeMillis(),
-            r.source, r.captures, sourceBytes,
-            0.0 /* eval_delta */, r.durationMs, r.artifactHash,
+            "run-" + java.time.Instant.now().toEpochMilli(),
+            r.source, r.captures /* inputBits */, sourceBytes /* samplesUsed */,
+            0.0 /* fidelity */, r.durationMs, r.artifactHash,
             true /* consolidatedToBirregistry */, java.time.Instant.now().toString()));
         if (diskBudget != null && sourceBytes > 0) {
             diskBudget.recordWrite("distill:" + r.source, sourceBytes);

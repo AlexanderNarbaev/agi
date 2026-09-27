@@ -71,7 +71,7 @@ public final class ModelToMatrix {
      */
     public Report distillOnnx(Path onnxPath, PersistentHdcStore hdcStore,
                               DistillationLedger ledger) throws IOException {
-        long t0 = System.currentTimeMillis();
+        long t0 = java.time.Instant.now().toEpochMilli();
         byte[] bytes = Files.readAllBytes(onnxPath);
         String text = new String(bytes, StandardCharsets.UTF_8);
         // ONNX is protobuf; we extract quoted strings as a coarse token stream.
@@ -89,7 +89,7 @@ public final class ModelToMatrix {
      */
     public Report distillDataset(List<String> lines, PersistentHdcStore hdcStore,
                                  DistillationLedger ledger) {
-        long t0 = System.currentTimeMillis();
+        long t0 = java.time.Instant.now().toEpochMilli();
         long totalBytes = 0;
         for (String l : lines) totalBytes += l.length();
         return finalizeRun("dataset:inline", lines, totalBytes, t0, hdcStore, ledger);
@@ -133,16 +133,16 @@ public final class ModelToMatrix {
         // 3) Tsetlin literals: just count unique tokens (placeholder for W6)
         int tsetlinLiterals = seenTokens.size();
 
-        long durationMs = System.currentTimeMillis() - t0;
+        long durationMs = java.time.Instant.now().toEpochMilli() - t0;
         String artifactHash = sha256Hex(source + ":" + hdcPromoted + ":"
             + birClauses + ":" + tsetlinLiterals + ":" + inputsBytes);
 
         Report r = new Report(source, tokens.size(), hdcPromoted,
             birClauses, tsetlinLiterals, inputsBytes, durationMs, artifactHash);
         ledger.append(new DistillationLedger.Entry(
-            "run-" + System.currentTimeMillis() + "-" + Long.toHexString(fnv1a64(source)),
-            source, tokens.size(), inputsBytes,
-            0.0 /* eval_delta filled by caller */, durationMs, artifactHash,
+            "run-" + java.time.Instant.now().toEpochMilli() + "-" + Long.toHexString(fnv1a64(source)),
+            source, tokens.size() /* inputBits */, inputsBytes /* samplesUsed */,
+            0.0 /* fidelity */, durationMs, artifactHash,
             true /* consolidatedToBirregistry */, java.time.Instant.now().toString()));
         return r;
     }
