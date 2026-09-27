@@ -24,6 +24,11 @@ import static org.assertj.core.api.Assertions.assertThat;
  */
 class EvidenceTruthGuardTest {
 
+    @org.junit.jupiter.api.BeforeEach
+    void resetSimulacrum() {
+        io.matrix.brain.runtime.stages.BirInferenceStage.simulacrumEnabled = false;
+    }
+
     @Test
     void every_evidence_in_mindCycle_trace_names_a_registered_call() {
         TrueMindCycle mind = new TrueMindCycle();

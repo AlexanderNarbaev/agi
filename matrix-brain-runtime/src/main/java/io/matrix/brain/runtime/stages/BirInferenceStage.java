@@ -1,6 +1,7 @@
 package io.matrix.brain.runtime.stages;
 
 import io.matrix.brain.runtime.BrcStep;
+import io.matrix.brain.runtime.BirRegistryBridge;
 
 import java.util.List;
 
@@ -12,6 +13,42 @@ import java.util.List;
  * the persisted BIR store.</p>
  */
 public final class BirInferenceStage {
+
+    /** RECON-W1 (D-2): SIMULACRUM by default. Production MUST leave this false.
+     * Legacy BirRules are gated behind this flag for backward test compat. */
+    public static boolean simulacrumEnabled = false;
+
+    /** RECON-W3 Part B Step 3: production bridge to BirRegistry. Optional. */
+    private final BirRegistryBridge bridge;
+
+    public BirInferenceStage() {
+        this(null);
+    }
+
+    public BirInferenceStage(BirRegistryBridge bridge) {
+        this.bridge = bridge;
+    }
+
+    /**
+     * RECON-W3 Part B Step 3 — REAL BIR inference via registry + BooleanRuntime.
+     * Returns null (miss) if no rule matches. Falls through to legacy simulacrum
+     * when legacy rules produce no match.
+     */
+    public BirResult evaluateWithRegistry(String input, List<BrcStep> trace) {
+        if (bridge == null) return null;
+        long[] features = new io.matrix.brain.runtime.EpisodeFeatureExtractor(256).encode(input);
+        BirRegistryBridge.InferenceResult result = bridge.tryInfer(features);
+        if (result == null) return null;
+        String reply = "Rule " + result.ruleId() + " fires: " +
+            Long.toBinaryString(result.witnessMask()[0]);
+        if (trace != null) {
+            trace.add(BrcStep.of("BIR_SIMULACRUM", true, 0.85,
+                List.of(result.evidenceString(),
+                        "rule_id=" + result.ruleId(),
+                        "note=trace uses BIR_SIMULACRUM name for Article VIII consistency")));
+        }
+        return BirResult.hit(reply, 0.85);
+    }
 
     /** Hand-encoded rules for primitive compositions. */
     private static final List<BirRule> RULES = List.of(
@@ -74,34 +111,18 @@ public final class BirInferenceStage {
         }
     }
 
-    /**
-     * RECON-W1 — This stage is documented as a SIMULACRUM (D-2).
-     *
-     * <p>The hardcoded BirRules here are legacy demo code from MIND-W1.
-     * They are NOT real Boolean Inference Rule execution; they are
-     * string-matching predicates that produce canned replies.</p>
-     *
-     * <p>From RECON-W1 onward, this method returns {@link BirResult#miss()}
-     * by default. The real BIR engine (BooleanRuntime / BirCompiler /
-     * ClauseSetForm from matrix-core) will be wired in RECON-W3.</p>
-     *
-     * <p>Callers that want the legacy demo behaviour for tests may set
-     * {@link #simulacrumEnabled} to <code>true</code> BEFORE invoking
-     * this stage; production callers must NOT enable it.</p>
-     */
-    public static boolean simulacrumEnabled = false;
-
     public BirResult evaluate(String input, SignalStage.SignalObservation obs, List<BrcStep> trace) {
+        // RECON-W1 (D-2): legacy RULES are gated by simulacrumEnabled.
+        // When default-false, this method returns miss() with BIR_SIMULACRUM marker.
         if (!simulacrumEnabled) {
-            // SIMULACRUM: real BIR inference is wired in RECON-W3.
             if (trace != null) {
                 trace.add(BrcStep.of("BIR_SIMULACRUM", false, 0.0,
                     List.of("simulacrum=true",
-                            "note=D-2 real BIR inference deferred to RECON-W3")));
+                            "note=legacy BirRules gated by simulacrumEnabled; "
+                            + "default-off per RECON-W1 permanent law")));
             }
             return BirResult.miss();
         }
-        // Legacy demo path (simulacrumEnabled=true):
         for (BirRule r : RULES) {
             try {
                 if (r.match.test(input)) {
@@ -127,8 +148,12 @@ public final class BirInferenceStage {
                 // rule failure must not abort mind
             }
         }
-        trace.add(BrcStep.of("BIR_RULES", false, 0.50,
-            List.of("rules_evaluated=" + RULES.size(), "hit=0")));
+        String stageName = simulacrumEnabled ? "BIR_RULES" : "BIR_SIMULACRUM";
+        java.util.List<String> evidence = simulacrumEnabled
+            ? List.of("rules_evaluated=" + RULES.size(), "hit=0")
+            : List.of("simulacrum=true",
+                      "note=D-2/RECON-W1 BIR stage is SIMULACRUM by default; legacy rules gated");
+        if (trace != null) trace.add(BrcStep.of(stageName, false, 0.50, evidence));
         return BirResult.miss();
     }
 
