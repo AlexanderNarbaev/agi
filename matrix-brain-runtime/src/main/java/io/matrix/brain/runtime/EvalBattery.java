@@ -21,7 +21,7 @@ public final class EvalBattery {
         String expectedMatch,
         double minConfidence
     ) {
-        public enum Category { ARITHMETIC, ANALOGY, CONTRADICTION, ETHICS, RU, TAUGHT_RETRIEVAL, GENERALIZATION, RETRIEVAL }
+        public enum Category { ARITHMETIC, ANALOGY, CONTRADICTION, ETHICS, RU, TAUGHT_RETRIEVAL, GENERALIZATION, RETRIEVAL, PLANNING_DEPTH }
     }
 
     /** Result for one probe. */
@@ -90,6 +90,13 @@ public final class EvalBattery {
         // Novel-instance composition: 3 exemplars of a relation teach the model to answer a 4th.
         out.add(new Probe("GE-6", "tomato is red; carrot is orange; banana is yellow. lemon is ?", Probe.Category.GENERALIZATION, "yellow", 0.4));
         out.add(new Probe("GE-7", "puppy small; kitten small; cub small. foal is ?", Probe.Category.GENERALIZATION, "small", 0.4));
+
+        // RECON-W4 Step 4: PLANNING_DEPTH probes.
+        // Multi-step reasoning that requires planning to solve (not just retrieval).
+        out.add(new Probe("PD-1", "twice five plus three", Probe.Category.PLANNING_DEPTH, "13", 0.4));
+        out.add(new Probe("PD-2", "2 + 3 * 4", Probe.Category.PLANNING_DEPTH, "14", 0.4));
+        out.add(new Probe("PD-3", "5 - 1 + 2", Probe.Category.PLANNING_DEPTH, "6", 0.4));
+        out.add(new Probe("PD-4", "ten times two minus five", Probe.Category.PLANNING_DEPTH, "15", 0.4));
 
         // RETRIEVAL — memorization-only probes (excluded from headline score).
         // Per RECON-W3 Part B Step 5: memorization probes isolated.
