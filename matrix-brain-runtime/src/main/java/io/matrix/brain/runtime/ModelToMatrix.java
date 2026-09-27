@@ -88,7 +88,7 @@ public final class ModelToMatrix {
      * @param ledger    ledger
      */
     public Report distillDataset(List<String> lines, PersistentHdcStore hdcStore,
-                                 DistillationLedger ledger) {
+                                 DistillationLedger ledger) throws IOException {
         long t0 = java.time.Instant.now().toEpochMilli();
         long totalBytes = 0;
         for (String l : lines) totalBytes += l.length();
@@ -98,7 +98,7 @@ public final class ModelToMatrix {
     /** Common path: turn a token stream into HDC + BIR + Tsetlin entries. */
     private Report finalizeRun(String source, List<String> tokens, long inputsBytes,
                                long t0, PersistentHdcStore hdcStore,
-                               DistillationLedger ledger) {
+                               DistillationLedger ledger) throws IOException {
         // 1) HDC promotion: every non-trivial token gets an entry.
         int hdcPromoted = 0;
         java.util.Set<String> seenTokens = new java.util.HashSet<>();
@@ -139,11 +139,10 @@ public final class ModelToMatrix {
 
         Report r = new Report(source, tokens.size(), hdcPromoted,
             birClauses, tsetlinLiterals, inputsBytes, durationMs, artifactHash);
-        ledger.append(new DistillationLedger.Entry(
-            "run-" + java.time.Instant.now().toEpochMilli() + "-" + Long.toHexString(fnv1a64(source)),
-            source, tokens.size() /* inputBits */, inputsBytes /* samplesUsed */,
-            0.0 /* fidelity */, durationMs, artifactHash,
-            true /* consolidatedToBirregistry */, java.time.Instant.now().toString()));
+        ledger.record(new DistillationLedger.Entry(
+            "run-" + System.currentTimeMillis() + "-" + Long.toHexString(fnv1a64(source)),
+            source, tokens.size(), (int) inputsBytes, hdcPromoted, birClauses,
+            tsetlinLiterals, 0.0, durationMs, System.currentTimeMillis(), artifactHash));
         return r;
     }
 

@@ -124,11 +124,10 @@ public final class TrueDistillationFactory {
             + ":" + nClauses + ":" + durationMs);
         Result r = new Result(source, calibrationInputs.size(),
             nClauses, fidelity, durationMs, hash, bir.provenance());
-        ledger.append(new DistillationLedger.Entry(
-            "run-" + java.time.Instant.now().toEpochMilli(),
-            r.source, r.captures /* inputBits */, sourceBytes /* samplesUsed */,
-            0.0 /* fidelity */, r.durationMs, r.artifactHash,
-            true /* consolidatedToBirregistry */, java.time.Instant.now().toString()));
+        ledger.record(new DistillationLedger.Entry(
+            "run-" + System.currentTimeMillis(),
+            r.source, r.captures, (int) sourceBytes, 0, r.birClausesSynthesized, 0, r.fidelity,
+            r.durationMs, System.currentTimeMillis(), r.artifactHash));
         if (diskBudget != null && sourceBytes > 0) {
             diskBudget.recordWrite("distill:" + r.source, sourceBytes);
         }
