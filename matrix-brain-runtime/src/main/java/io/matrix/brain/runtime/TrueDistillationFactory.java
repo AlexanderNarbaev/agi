@@ -127,8 +127,8 @@ public final class TrueDistillationFactory {
         ledger.append(new DistillationLedger.Entry(
             "run-" + System.currentTimeMillis(),
             r.source, r.captures, sourceBytes,
-            0, r.birClausesSynthesized, 0, r.fidelity,
-            r.durationMs, System.currentTimeMillis(), r.artifactHash));
+            0.0 /* eval_delta */, r.durationMs, r.artifactHash,
+            true /* consolidatedToBirregistry */, java.time.Instant.now().toString()));
         if (diskBudget != null && sourceBytes > 0) {
             diskBudget.recordWrite("distill:" + r.source, sourceBytes);
         }

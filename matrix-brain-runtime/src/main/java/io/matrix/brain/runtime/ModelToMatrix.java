@@ -141,9 +141,9 @@ public final class ModelToMatrix {
             birClauses, tsetlinLiterals, inputsBytes, durationMs, artifactHash);
         ledger.append(new DistillationLedger.Entry(
             "run-" + System.currentTimeMillis() + "-" + Long.toHexString(fnv1a64(source)),
-            source, tokens.size(), inputsBytes, hdcPromoted, birClauses,
-            tsetlinLiterals, 0.0 /* eval_delta filled by caller */,
-            durationMs, System.currentTimeMillis(), artifactHash));
+            source, tokens.size(), inputsBytes,
+            0.0 /* eval_delta filled by caller */, durationMs, artifactHash,
+            true /* consolidatedToBirregistry */, java.time.Instant.now().toString()));
         return r;
     }
 
