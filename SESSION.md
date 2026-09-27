@@ -175,3 +175,18 @@ runtime when loaded from JDK 25 — uncovered honestly, not hidden.
 ### Honesty
 - Contradiction `quarantined` list is IN-MEMORY only. Lost on restart. Carry-forward.
 - `BirRegistryPersistenceTest` 2/2, `BirKnowledgeBaseRestartTest` 2/2.
+
+## 2026-09-27 — RECON-W17 (Live Two-Node Federation)
+
+**Headline: W17 federation smoke script written; L-6 closure: PARTIAL.**
+
+### Built
+- scripts/w17-federation-smoke.sh — sequential two-node demonstration
+  (Node A teaches → dumps KB → Node B ingests → queries).
+- Verified: /v1/federate accepts POST batches and merges into local HDC
+  store with `KnowledgeExchangeProtocol.mergeInto` (feed-<source>-<id> prefix).
+
+### Honest limitations
+- Full smoke end-to-end run was not completed during this session due to
+  /tmp quota + gateway restart cycles.
+- Federation of contradictions across nodes not yet tested (planned for W19+).
