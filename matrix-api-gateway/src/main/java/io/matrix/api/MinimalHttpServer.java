@@ -59,6 +59,9 @@ public final class MinimalHttpServer {
     /** RECON-W2 #6: RealInboxWatcher promoted — uses real AudioFFTEncoder/VisionEdgeEncoder.
     *  Replaces local InboxWatcher draft (D-8). */
     private io.matrix.brain.runtime.RealInboxWatcher inboxWatcher;
+    /** RECON-W7: ShardedFederation production caller. */
+    private final io.matrix.brain.runtime.FedShardManager fedShardManager =
+        new io.matrix.brain.runtime.FedShardManager();
 
     /** Ring buffer of recent analyze IDs and explanations */
     private final Map<String, StoredExplain> explanations = new ConcurrentHashMap<>();
@@ -710,6 +713,11 @@ public final class MinimalHttpServer {
         StringBuilder sb = new StringBuilder("# HELP matrix_requests_total Total requests\n");
         sb.append("# TYPE matrix_requests_total counter\n");
         sb.append("matrix_requests_total{path=\"/v1/analyze\"} ").append(auditEvents.size()).append('\n');
+            // RECON-W7: federation shard stats
+            var shardSnap = fedShardManager.snapshot();
+            for (var e : ((Map<String, Integer>) shardSnap.get("shard_hits")).entrySet()) {
+                sb.append("matrix_federation_shard_hits_total{shard=\"").append(e.getKey()).append("\"} ").append(e.getValue()).append('\n');
+            }
         sb.append("matrix_requests_total{path=\"/v1/explain\"} ").append(explanations.size()).append('\n');
         sb.append("# HELP matrix_explanations_cached Total cached explanations\n");
         sb.append("# TYPE matrix_explanations_cached gauge\n");
