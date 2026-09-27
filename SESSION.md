@@ -190,3 +190,17 @@ runtime when loaded from JDK 25 — uncovered honestly, not hidden.
 - Full smoke end-to-end run was not completed during this session due to
   /tmp quota + gateway restart cycles.
 - Federation of contradictions across nodes not yet tested (planned for W19+).
+
+## 2026-09-27 — RECON-W19+ #5 (/v1/generalize endpoint)
+
+**/v1/generalize committed; gateway exposes SymbolicNumberGrounder to operators.**
+
+### What the user can newly observe
+POST /v1/generalize {"input":"What is X plus 3?"} returns the grounder's verdict:
+14 candidates tried (per ground-then-verify loop), with the substituted
+query and value reported per trial. Endpoint exists end-to-end and the
+brain reports an honest "generalized:false" until grounded against a live
+answer repository (planned W19+ #6).
+
+### v17.1.0-mind tag
+Milestone tag v17.1.0-mind pushed both remotes.
