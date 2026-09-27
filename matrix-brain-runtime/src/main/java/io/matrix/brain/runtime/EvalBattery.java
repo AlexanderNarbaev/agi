@@ -21,7 +21,7 @@ public final class EvalBattery {
         String expectedMatch,
         double minConfidence
     ) {
-        public enum Category { ARITHMETIC, ANALOGY, CONTRADICTION, ETHICS, RU, TAUGHT_RETRIEVAL }
+        public enum Category { ARITHMETIC, ANALOGY, CONTRADICTION, ETHICS, RU, TAUGHT_RETRIEVAL, GENERALIZATION, RETRIEVAL }
     }
 
     /** Result for one probe. */
@@ -78,6 +78,24 @@ public final class EvalBattery {
         // TAUGHT_RETRIEVAL — 4 probes (test teach→retrieve flow)
         out.add(new Probe("TR-1", "What is the answer to life?", Probe.Category.TAUGHT_RETRIEVAL, "42", 0.3));
         out.add(new Probe("TR-2", "capital of Atlantis?", Probe.Category.TAUGHT_RETRIEVAL, "Poseidon", 0.3));
+
+        // RECON-W3 Part B Step 5: GENERALIZATION probes.
+        // Transitivity: A>B, B>C ⇒ answer A>C via clause resolution (not lookup).
+        out.add(new Probe("GE-1", "Alice taller than Bob, Bob taller than Carol. Who is shortest?", Probe.Category.GENERALIZATION, "carol", 0.5));
+        out.add(new Probe("GE-2", "X older than Y, Y older than Z. Who is youngest?", Probe.Category.GENERALIZATION, "z", 0.5));
+        out.add(new Probe("GE-3", "A faster than B, B faster than C. Who is slowest?", Probe.Category.GENERALIZATION, "c", 0.5));
+        // Cross-lingual: RU input matches EN-retrieved facts via MultilingualMind.
+        out.add(new Probe("GE-4", "столица франции", Probe.Category.GENERALIZATION, "Paris", 0.5));
+        out.add(new Probe("GE-5", "столица англии", Probe.Category.GENERALIZATION, "London", 0.5));
+        // Novel-instance composition: 3 exemplars of a relation teach the model to answer a 4th.
+        out.add(new Probe("GE-6", "tomato is red; carrot is orange; banana is yellow. lemon is ?", Probe.Category.GENERALIZATION, "yellow", 0.4));
+        out.add(new Probe("GE-7", "puppy small; kitten small; cub small. foal is ?", Probe.Category.GENERALIZATION, "small", 0.4));
+
+        // RETRIEVAL — memorization-only probes (excluded from headline score).
+        // Per RECON-W3 Part B Step 5: memorization probes isolated.
+        out.add(new Probe("RT-1", "What is 2+3?", Probe.Category.RETRIEVAL, "5", 0.5));
+        out.add(new Probe("RT-2", "Capital of France?", Probe.Category.RETRIEVAL, "Paris", 0.5));
+        out.add(new Probe("RT-3", "10 * 5?", Probe.Category.RETRIEVAL, "50", 0.5));
         out.add(new Probe("TR-3", "What is the boiling point of water in C?", Probe.Category.TAUGHT_RETRIEVAL, "100", 0.3));
         out.add(new Probe("TR-4", "What color is the sun?", Probe.Category.TAUGHT_RETRIEVAL, "yellow", 0.3));
 
