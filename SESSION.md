@@ -687,3 +687,41 @@ reference were wrong together.
     (was 74 failures at the start of this campaign; the 5 fixed here are
      MatrixNativeMathTest x2 plus the popcount suite)
     live battery unchanged: 47/48 = 0.979
+
+## 2026-09-28 — RECON-W27 (Goal Guard review cycle #0 blocking fixes)
+
+### A. Article I violation: wall-clock-derived rule id
+`handleBir` generated `live-rule-<System.nanoTime()>`. Article I forbids
+wall-clock-dependent logic in the runtime mind path, and the id is not cosmetic —
+it is written to the append-only registry, so replaying the SAME registration
+produced a SECOND distinct rule and the trace was not reproducible.
+FIX: the id is now `live-rule-<FNV1a(subject + NUL + conclusion)>`, with a
+caller-supplied `id` still taking priority.
+    before: live-rule-19119855205857 ... live-rule-19119861173771   (two rules, same fact)
+    after : live-rule-6896973513562335911                          (one id, same fact)
+
+### B. The last hand-rolled JSON parsers (the W22 bug, still live on 2 endpoints)
+W22 replaced `extractField` with a real Jackson read after proving that string
+surgery never decodes unicode escapes. But `/v1/generalize` and `/v1/distill`
+read `input` with their OWN inline `body.indexOf("\"input\":\"")` scan and were
+never converted — so the exact interoperability bug fixed for `/v1/analyze` was
+still live on two other endpoints. My W22 fix was incomplete and I did not notice.
+FIX: both now go through `extractInput`/Jackson. Verified live: a
+backslash-u-escaped Russian query sent to `/v1/generalize` and `/v1/analyze` is
+now decoded (analyze returns "Paris"), where before it reached the mind as a
+literal escape string.
+
+### C. Tag integrity
+`v17.2.0-mind` was first pushed at a8322a12; five further correctness commits
+landed after it, so the tag no longer named what MATRIX-MIND-REPORT-V17.2.md
+describes. The tag is re-pointed onto the campaign's final commit and the report
+carries an explicit TAG INTEGRITY note telling earlier consumers to re-fetch.
+
+### New guards
+`RuntimePurityRegressionTest` (8 tests) pins all three: no clock-derived rule id,
+`stableHash` determinism and content-addressing, no inline JSON scanners left,
+unicode-escape decoding, escaped-quote and numeric-scalar extraction, container
+rejection, and a regex guard that no rule id embeds a clock or RNG value.
+It uses the same repo-root walk-up as the other guards, because a relative path
+under Gradle's module cwd silently resolves to nothing — the exact trap that made
+RuntimeLlmGuardTest vacuous.

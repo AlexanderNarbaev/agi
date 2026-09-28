@@ -521,14 +521,21 @@ public final class MinimalHttpServer {
         }
         // Minimal parsing
         String body = readBody(ex);
-        String id = "live-rule-" + System.nanoTime();
-        int idIdx = body.indexOf("\"id\":\"");
-        if (idIdx >= 0) {
-            int s = idIdx + 6;
-            int e = s;
-            while (e < body.length() && body.charAt(e) != '"') e++;
-            id = body.substring(s, e);
-        }
+        // RECON-W27 FIX — Article I: "No wall-clock-dependent logic in the runtime
+        // mind path." The rule id was `live-rule-<System.nanoTime()>`, so identical
+        // input produced a DIFFERENT id on every call: the trace was not
+        // reproducible and the id is part of persisted state, so replaying the
+        // same registration produced a second distinct rule. The id is now derived
+        // deterministically from the content that identifies the rule
+        // (subject + conclusion), with a caller-supplied id still taking priority.
+        String subjectText = extractInput(body);
+        String conclusionText = extractField(body, "response");
+        if (conclusionText == null) conclusionText = extractField(body, "answer");
+        String id = "live-rule-" + stableHash(
+            (subjectText == null ? "" : subjectText) + "\u0000"
+            + (conclusionText == null ? "" : conclusionText));
+        String callerId = extractField(body, "id");
+        if (callerId != null && !callerId.isBlank()) id = callerId;
         // Synthesize a tiny Bir for the test path: this is the demo /v1/bir
         // endpoint that proves load/save round-trip + contradiction detection
         // without requiring the full distillation stack.
@@ -625,14 +632,13 @@ public final class MinimalHttpServer {
             return;
         }
         String body = readBody(ex);
-        String input = "";
-        int sIdx = body.indexOf("\"input\":\"");
-        if (sIdx >= 0) {
-            int s = sIdx + 9;
-            int e = s;
-            while (e < body.length() && body.charAt(e) != '"') e++;
-            input = body.substring(s, e);
-        }
+        // RECON-W27 FIX — this endpoint was the LAST one still hand-parsing JSON.
+        // W22 proved that string surgery never decodes unicode escapes, so any
+        // client using the JSON default delivered a literal backslash-u string to
+        // the mind. extractInput goes through Jackson, so the same guarantee now
+        // holds here as it does for /v1/analyze.
+        String input = extractInput(body);
+        if (input == null) input = "";
         if (input.isEmpty()) {
             writeJson(ex, 400, "{\"error\":\"missing input\"}");
             return;

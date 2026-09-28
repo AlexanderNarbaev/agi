@@ -1,6 +1,13 @@
 # MATRIX MIND REPORT v17.2 — "Truthfully Fixed"
 
 > Date: 2026-09-28 · Tag `v17.2.0-mind` · supersedes `v17.0.0-mind`
+>
+> **TAG INTEGRITY (RECON-W27).** This tag was first pushed at `a8322a12`. Four
+> further correctness commits landed afterwards — the popcount revisit, the HDC
+> distance fix, the two-node transcript, and the Article I / JSON fixes — so the
+> tag no longer described the tip. The tag is being re-pointed onto the final
+> commit of the campaign so that "v17.2.0-mind" names exactly what this report
+> describes. Any earlier consumer of `v17.2.0-mind` should re-fetch.
 > Campaign: RECON-W20 → W24
 > Headline: **33/45 (0.733) → 47/48 (0.979)**
 
