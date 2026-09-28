@@ -75,14 +75,30 @@ public final class KolmogorovComplexity {
     /**
      * Logarithmic encoding length: how many bits to encode a positive
      * integer n (Kraft-McMillan). Approximately log2(n) + log2(log2(n)) + ...
+     *
+     * <p><b>RECON-W20 BUGFIX — non-terminating loop.</b> BEFORE:
+     * {@code x = (int)(log2(x)) + 1}. For {@code x == 2} this yields
+     * {@code (int)1 + 1 == 2} — the same value — so the loop spun forever.
+     * Any {@link #estimate} call over a trajectory with an alphabet of exactly
+     * two distinct states hung the caller indefinitely. This was discovered by
+     * {@code AnalogicalConsistencyPropertyTest.propertyCompressionAnalogyIdenticalCompresses},
+     * which burned 4+ minutes of CPU before the suite timeout.</p>
+     *
+     * <p>AFTER: the contraction uses {@code floor(log2(x))}, which strictly
+     * decreases for every {@code x > 1} (2 → 1 → terminate). A hard iteration
+     * bound remains as a belt-and-braces guard so a future arithmetic change
+     * cannot reintroduce a hang.</p>
      */
     private static double logarithmicEncoding(int n) {
         if (n < 1) return 0;
         double bits = 0;
         int x = n;
-        while (x > 1) {
+        // log*(n) <= 5 for any 32-bit int; the bound is a termination guarantee.
+        for (int guard = 0; x > 1 && guard < 32; guard++) {
             bits += Math.log(x) / Math.log(2);
-            x = (int) (Math.log((double)x) / Math.log(2)) + 1;
+            int next = (int) (Math.log((double) x) / Math.log(2)); // floor, strictly decreasing
+            if (next >= x) { next = x - 1; }                       // defensive: force progress
+            x = next;
         }
         return bits;
     }

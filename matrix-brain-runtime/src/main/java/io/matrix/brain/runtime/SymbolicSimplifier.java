@@ -10,8 +10,8 @@ import java.util.List;
  *
  * <p>Symbolic algebra heuristics for clause simplification: removes
  * trivially-true clauses (empty mask), duplicates (identical pos/neg),
- * subsumed clauses (clause A subsumes B if A's pos ⊇ B's pos and
- * A's neg ⊇ B's neg).</p>
+ * subsumed clauses (RECON-W20: A subsumes B iff A.pos ⊆ B.pos and
+ * A's neg ⊆ B's neg, derived from Clause.matches()).</p>
  */
 public final class SymbolicSimplifier {
 
@@ -51,15 +51,33 @@ public final class SymbolicSimplifier {
             if (dup) removedDup++;
             else pass2.add(c);
         }
-        // Step 3: remove subsumed (c1 subsumes c2 if pos1⊇pos2 AND neg1⊇neg2)
-        List<ClauseSetForm.Clause> pass3 = new ArrayList<>(pass2);
-        for (int i = 0; i < pass3.size(); i++) {
-            ClauseSetForm.Clause ci = pass3.get(i);
-            for (int j = 0; j < pass3.size(); j++) {
+        // Step 3: remove subsumed clauses.
+        //
+        // RECON-W20 BUGFIX. BEFORE: the rule was "A.pos ⊇ B.pos AND A.neg ⊇ B.neg",
+        // with an inner index-mutating delete loop. That relation is inverted with
+        // respect to Clause.matches(), whose match set is
+        //     Match(c) = { x : (x & c.pos) == c.pos  AND  (x & c.neg) == 0 }.
+        // For Match(A) to CONTAIN Match(B) we need A's positive requirements to be
+        // no stronger and A's exclusions to be no broader, i.e.
+        //     A.pos ⊆ B.pos   AND   A.neg ⊆ B.neg.
+        // The old rule let a MORE constrained clause delete a LESS constrained one
+        // (c3 = {pos 1111, NOT x0} wrongly deleted c1 = {pos 1111}), which is the
+        // exact opposite of minimisation and loses knowledge mass.
+        //
+        // AFTER: the predicate is the provable Match-inclusion relation, and the
+        // pass is rewritten as a single "keep iff not strictly covered" filter,
+        // which is order-independent and idempotent (no index mutation while
+        // iterating).
+        List<ClauseSetForm.Clause> pass3 = new ArrayList<>();
+        for (int i = 0; i < pass2.size(); i++) {
+            ClauseSetForm.Clause ci = pass2.get(i);
+            boolean covered = false;
+            for (int j = 0; j < pass2.size(); j++) {
                 if (i == j) continue;
-                ClauseSetForm.Clause cj = pass3.get(j);
-                if (subsumes(ci, cj)) { removedSub++; pass3.remove(j); j--; i--; break; }
+                if (subsumes(pass2.get(j), ci)) { covered = true; break; }
             }
+            if (covered) removedSub++;
+            else pass3.add(ci);
         }
         int output = pass3.size();
         return new SimplificationResult(input, output,
@@ -72,11 +90,22 @@ public final class SymbolicSimplifier {
         return true;
     }
 
+    /**
+     * RECON-W20 — corrected subsumption relation.
+     *
+     * <p>Returns true when every input matched by {@code b} is also matched by
+     * {@code a} (Match(a) ⊇ Match(b)), i.e. {@code b} is redundant given
+     * {@code a}. Derived directly from {@code Clause.matches}: A covers B iff
+     * A requires no more bits set ({@code a.pos ⊆ b.pos}) and forbids no fewer
+     * bits ({@code a.neg ⊆ b.neg}).</p>
+     */
     private boolean subsumes(ClauseSetForm.Clause a, ClauseSetForm.Clause b) {
         if (a.pos.length != b.pos.length) return false;
         for (int i = 0; i < a.pos.length; i++) {
-            if ((a.pos[i] & b.pos[i]) != b.pos[i]) return false;
-            if ((a.neg[i] & b.neg[i]) != b.neg[i]) return false;
+            // a's required bits must be a subset of b's required bits.
+            if ((a.pos[i] & ~b.pos[i]) != 0L) return false;
+            // a's forbidden bits must be a subset of b's forbidden bits.
+            if ((a.neg[i] & ~b.neg[i]) != 0L) return false;
         }
         return true;
     }

@@ -151,3 +151,8 @@ matrix-core/models/training_data/auto_generated.jsonl
 # LibreOffice / desktop app lock files (T-01 cleanup)
 .~lock.*
 .\#*
+.gateway.pid
+.w13-token
+matrix-api-gateway/logs/
+data/mind/gateway.log
+data/smoke-old/

@@ -38,6 +38,15 @@ fi
 # Build only the modules we need
 echo "[3/5] Building MATRIX (api-gateway + brain-runtime)..."
 cd "$(dirname "$0")/.."
+
+# RECON-W20 pre-flight: disk hygiene + DiskBudget tier gate. Idempotent.
+# Exits non-zero (REFUSE) below 10 GB so heavy operations are blocked honestly.
+echo "[pre-flight] disk hygiene..."
+bash scripts/disk-hygiene.sh >/dev/null 2>&1 || {
+    echo "REFUSED: disk below REFUSE tier (<10GB free). Clean up before starting."
+    exit 3
+}
+
 ./gradlew :matrix-brain-runtime:compileJava :matrix-api-gateway:compileJava --no-daemon --console=plain 2>&1 | tail -5 || {
     echo "WARNING: gradle build returned non-zero; trying to continue anyway"
 }

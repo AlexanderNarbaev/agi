@@ -52,6 +52,13 @@ dependencies {
 tasks.withType(Test) {
     useJUnitPlatform()
     maxHeapSize = '4g'
+    // RECON-W20: matrix-brain-runtime's RealGpuKernelEngine -> MatrixNativeMath
+    // loads the jdk.incubator.vector module at class-init. Without this flag the
+    // gateway test JVM throws NoClassDefFoundError(jdk/incubator/vector/Vector)
+    // and 4 wiring tests fail for a reason unrelated to what they assert.
+    // matrix-core already sets this for its own test task; the gateway did not.
+    jvmArgs '--add-modules=jdk.incubator.vector'
+    jvmArgs '--enable-native-access=ALL-UNNAMED'
 }
 
 // RECON-W0: write a reproducible runtime classpath to build/runtime-classpath.txt.

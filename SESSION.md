@@ -204,3 +204,75 @@ answer repository (planned W19+ #6).
 
 ### v17.1.0-mind tag
 Milestone tag v17.1.0-mind pushed both remotes.
+
+## 2026-09-28 — RECON-W20 (Disk Forensics & Hygiene) + BASELINE CORRECTION
+
+**The §0 baseline was materially wrong on three counts. Corrected before any edit.**
+
+Measured baseline (clean 3-module run, XML-summed, 16m51s):
+`8569 tests · 70 failures · 8499 passing` — NOT the "~630 green" that §0 asserted (13.6× off).
+Disk: `132 GB free, HEALTHY` — NOT "23 GB WARN"; the 109 GB `nested-smoke` dir was removed
+out-of-band between sessions, so DISK-WARN was already closed on arrival.
+Gateway: DEAD on arrival, not "RUNNING".
+
+### Two CRITICAL production non-terminating loops found and fixed
+
+Both were silently preventing the `matrix-core` test suite from EVER completing, which is
+how 70 failures stayed hidden behind a green-looking build.
+
+1. **`KolmogorovComplexity.logarithmicEncoding` — infinite loop.**
+   `x = (int)log2(x) + 1` maps `x=2 → 2`. Any `estimate()` over a trajectory whose alphabet
+   is exactly 2 distinct states hangs the caller forever. Found via
+   `AnalogicalConsistencyPropertyTest` (4+ min CPU, no completion).
+   FIX: `x = (int)log2(x)` (floor, strictly decreasing) + 32-iteration guard.
+   LOCK: `KolmogorovComplexityTerminationTest` 5/5, incl. a 10 s hard-timeout probe.
+
+2. **`DebateAgent.adjustConfidence` — unbounded CAS livelock.**
+   `do { read; compute } while(!compareAndSet)` with no retry bound. Confidence is clamped
+   to [0,1]; at a saturation boundary an incrementer and a decrementer compute different
+   targets and neither CAS can ever win — both spin forever. Found via
+   `DebateAgentTest.shouldAdjustConfidence` (30+ min CPU).
+   FIX: bounded 64-retry CAS, then an unconditional commit. The update
+   `clamp(current+delta)` is order-independent, so no update is lost, only serialized.
+   LOCK: `DebateAgentConfidenceTerminationTest` 4/4, incl. 8 threads × 20 000 opposing deltas.
+
+### A real logic bug, fixed in the code (not the test)
+
+**`SymbolicSimplifier.subsumes()` was inverted relative to `Clause.matches()`.**
+`Match(c) = {x : (x&c.pos)==c.pos AND (x&c.neg)==0}`. The old rule `A.pos ⊇ B.pos AND
+A.neg ⊇ B.neg` lets a MORE constrained clause delete a LESS constrained one — the exact
+opposite of minimisation, i.e. knowledge loss. Correct rule derived from `matches()`:
+`A.pos ⊆ B.pos AND A.neg ⊆ B.neg`. The delete loop also mutated the list while iterating
+it; rewritten as an order-independent "keep iff not covered" filter.
+`ResearchEngineW11Test` amended from `outputClauses()==2` to a STRONGER provable assertion
+(1 clause, survivor identified, input count and removal accounting asserted) — rationale
+recorded in the test source itself, per the anti-regression law's malformation-proof rule.
+Added 2 new regression guards (direction + order-independence). 8/8 green.
+
+### Also this wave
+- `RealGpuKernelEngineWiringTest`: 4 pre-existing failures. Root cause was a missing
+  `--add-modules=jdk.incubator.vector` on the gateway test JVM (added), then two genuinely
+  stale assertions — a hand-copied backend allowlist `{"GPU","CPU","unavailable"}` that was
+  wrong in BOTH directions (now derived from `MatrixNativeMath.Backend.values()` so it cannot
+  drift again), and a `tasks_executed` key `snapshot()` never produced (really
+  `stats.totalTasks`). 7/7 green.
+- Disk: `DiskHygienePolicy` (matrix-core, 190 LOC) + `DiskHygienePolicyTest` 12/12 +
+  `scripts/disk-hygiene.sh` (idempotent, proven by double execution) + pre-flight gate in
+  `start-mind.sh` that exits 3 below the 10 GB REFUSE tier.
+
+### New disclosed defects (carried forward)
+- **D-W20-1** — 70 pre-existing test failures across 39 classes, never triaged because the
+  suite could not complete. Clusters: `io.matrix.research.BitNet*` (21), jqwik
+  `*PropertyTest` argument-type/empty-generator defects (~20), `ModelRegistryTest` (3),
+  `MatrixNativeMathTest` (2), `RegimeTrajectoryAnalyzerTest` (2). **OPEN.**
+- **D-W20-2** — `SimulacrumDefaultOffTest` is claimed "green" in
+  `MATRIX-MIND-REPORT-V17.md:49` but NO SUCH CLASS EXISTS in the repository. Five of six
+  Article VIII guards are real and verified green; the sixth is documentation fiction.
+  **OPEN — implement or retract the claim.**
+
+### What still fails after W20
+1. 70 pre-existing failures (D-W20-1). Not fixed; the two hangs that masked them are.
+2. `SimulacrumDefaultOffTest` does not exist (D-W20-2).
+3. `data/smoke-old` still occupies 8.8 GB (Goal Guard blocks `rm -rf`); harmless at 132 GB.
+4. `fresh-clone-smoke.sh` has no retention policy — that is the actual cause of (3).
+5. GENERALIZATION 0/7 and PLANNING_DEPTH 0/4 are untouched; W22/W23 have not started.

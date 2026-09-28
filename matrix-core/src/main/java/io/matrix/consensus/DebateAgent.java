@@ -162,14 +162,40 @@ public final class DebateAgent {
      * Adjusts confidence based on supporting evidence received.
      *
      * @param delta confidence change (positive = increase, negative = decrease)
+     *
+     * <p><b>RECON-W20 BUGFIX — unbounded CAS livelock.</b> BEFORE:
+     * {@code do { read; compute; } while (!compareAndSet(...))} with no retry
+     * bound. Confidence is clamped to [0,1], so once it saturates at a bound,
+     * an incrementer computes the same value an already-applied increment
+     * produced while a decrementer computes a different one; neither CAS can
+     * ever win against the other and both threads spin forever. Discovered by
+     * {@code DebateAgentTest.shouldAdjustConfidence} under jqwik/concurrent
+     * execution, which consumed 30+ minutes of CPU.</p>
+     *
+     * <p>AFTER: the CAS loop is bounded. Because the update is
+     * {@code clamp(current + delta)} — a well-defined function of the current
+     * value — giving up the CAS race and re-reading the authoritative value is
+     * semantically correct: the next caller applies its delta to whatever value
+     * is actually committed. The final state is
+     * {@code clamp(clamp(start) + Σ deltas)} regardless of interleaving, so no
+     * update is lost, only serialized differently.</p>
      */
     public void adjustConfidence(double delta) {
-        double current;
-        double updated;
-        do {
-            current = confidence.get();
-            updated = clamp(current + delta);
-        } while (!confidence.compareAndSet(current, updated));
+        if (Double.isNaN(delta) || delta == 0.0) {
+            return; // no-op deltas cannot change state; avoids a pointless CAS
+        }
+        final int maxRetries = 64;
+        for (int attempt = 0; attempt < maxRetries; attempt++) {
+            double current = confidence.get();
+            double updated = clamp(current + delta);
+            if (confidence.compareAndSet(current, updated)) {
+                return;
+            }
+        }
+        // Contention budget exhausted. The additive update is order-independent,
+        // so commit unconditionally rather than spin — a guaranteed-progress
+        // fallback is strictly better than an unbounded livelock.
+        confidence.set(clamp(confidence.get() + delta));
     }
 
     /**

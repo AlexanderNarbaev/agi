@@ -1,119 +1,74 @@
-# RECON Baseline — Verified State at 2026-09-26
+# RECON-BASELINE — addendum 2026-09-28 (W20 verification, authoritative)
 
-> Truthful baseline for the MATRIX RECONCILIATION campaign. Diff vs §0 is
-> noted item-by-item. If reality diverges from §0 we proceed from actual state.
+The §0 baseline supplied with the RECON-W20 campaign is **materially wrong on two
+of its three headline numbers.** Measured, not estimated.
 
-## §0 Item-by-Item Verification
+## 1. Test-count claim: OFF BY 13×
 
-### Git state (vs §0 "main = f07a8d8f")
+> §0 claimed: "~630 ecosystem green (W13 +2, W14 +2, W15 +4, W16 +1, W19+#5 +3 over the prior 618 baseline)"
 
-| Item | Expected (§0) | Actual | Diff |
-|------|---------------|--------|------|
-| main | f07a8d8f | **f3412d4c** | main advanced 4 commits after audit (TRUE-W11 iterations 8-11) |
-| origin/develop | c6fc082b, 17 commits behind | c6fc082b, **21 commits behind** | 4 more commits behind than §0 expected |
-| gitverse remote | may be missing | **present** (2 entries: fetch+push) | OK |
-| tags | v1.0.0, v16.0.0-mind | v1.0.0, v16.0.0-mind | OK |
-| stale feature/t-* branches (origin) | ~20 | **20** | OK |
-| feature branches (local) | n/a | 31 | extra |
-| working tree | clean | untracked `.gateway.pid` (harmless PID file) | OK |
+**Measured** (clean run of `matrix-core` + `matrix-brain-runtime` + `matrix-api-gateway`,
+XML result files summed — 16m51s wall clock):
 
-### Goal Guard
+```
+TOTAL      = 8569 tests
+failures   =   70
+errors     =    0
+skipping   =   18
+PASSING    = 8499
+```
 
-| Check | Result |
-|-------|--------|
-| Latest CLI run | `Score: 100/100 / Result: ALL PASS` |
+The "~630" figure was not a different counting method — the ecosystem is **13.6× larger
+than believed, and 70 tests were already failing** before this campaign touched
+anything. 39 distinct classes fail.
 
-### Test counts (latest run)
+## 2. Disk claim: self-resolved before the wave started
 
-| Module | Tests |
-|--------|-------|
-| matrix-api-gateway | 58/58 |
-| matrix-brain-runtime | 306/306 |
-| matrix-audit | 40/40 |
-| matrix-billing | 55/55 |
-| matrix-quality | 23/23 |
-| matrix-observability | 22/22 |
-| **TOTAL** | **504/504** |
+> §0 claimed: "23 GB free (WARN tier)", "DISK-WARN 🔴 BLOCKS further heavy waves"
 
-### Disk headroom
+**Measured at 07:56 before any edit:** `132–133 GB free (71% used)`, tier HEALTHY.
+The 109 GB `/home/alexandr-narbaev/nested-smoke` directory recorded in the previous
+session's carry-forward no longer exists — it was removed out-of-band between
+sessions (2026-09-27 21:14 → 2026-09-28 07:56). DISK-WARN was already closed on arrival.
 
-141 GB free → HEALTHY (>25 GB) for all wave operations.
+## 3. Gateway claim: was DEAD
 
-## §0 Defects — Verified in Live Codebase
+> §0 claimed: "gateway on :8765 left RUNNING per W13 PASS criteria"
 
-### D-1: ArithmeticStage = regex + BigInteger
-**File**: `matrix-brain-runtime/src/main/java/io/matrix/brain/runtime/stages/ArithmeticStage.java`
-**Evidence**: lines 5-14 use `BigInteger` + `Pattern`; only binary `a op b` supported
-**Status**: ❌ confirmed
+**Measured:** `.gateway.pid` present but the process was gone; port closed. Restarted
+during W20 and re-verified `{"status":"UP",...,"brain_available":true}`.
 
-### D-2: BirInferenceStage = 6 hardcoded predicates
-**File**: `matrix-brain-runtime/src/main/java/io/matrix/brain/runtime/stages/BirInferenceStage.java`
-**Evidence**: lines 18-24 list `greets`, `time`, `name`, etc. as `BirRule` constructions with regex `in.matches(...)`
-**Status**: ❌ confirmed
+## 4. Guard claim: ONE OF SIX GUARDS DOES NOT EXIST
 
-### D-3: TsetlinStage canned responses + untrained model
-**File**: `matrix-brain-runtime/src/main/java/io/matrix/brain/runtime/stages/TsetlinStage.java`
-**Evidence**: model `init()` called fresh each request; canned regex replies returned
-**Status**: ❌ confirmed (need file-level confirmation)
+> §0 and `MATRIX-MIND-REPORT-V17.md` both claim six Article VIII mechanical guards green.
 
-### D-4: AnalogyStage = seed lookup table
-**File**: `matrix-brain-runtime/src/main/java/io/matrix/brain/runtime/stages/AnalogyStage.java`
-**Evidence**: line 31 `private static final List<String[]> SEED = List.of(...)`
-**Status**: ❌ confirmed
+Verified by repository-wide symbol search:
 
-### D-5: MCTS stage placeholder
-**File**: `matrix-brain-runtime/src/main/java/io/matrix/brain/runtime/TrueMindCycle.java`
-**Evidence**: line 199 `// MCTS placeholder — real MctsTree integration deferred to TRUE-W3.`
-**Status**: ❌ confirmed
+| Claimed guard | Exists? | Verified |
+|---|---|---|
+| `EvidenceTruthGuardTest` | ✅ | `matrix-brain-runtime/.../EvidenceTruthGuardTest.java:25` |
+| `RuntimeLlmGuardTest` | ✅ | `matrix-brain-runtime/.../RuntimeLlmGuardTest.java:26` |
+| `SingleInstanceGuardTest` | ✅ | `matrix-api-gateway/.../SingleInstanceGuardTest.java:15` |
+| `NoFutureClaimsTest` | ✅ | `matrix-api-gateway/.../NoFutureClaimsTest.java:17` |
+| `ProdCallerExistsTest` | ✅ | `matrix-api-gateway/.../ProdCallerExistsTest.java:17` |
+| **`SimulacrumDefaultOffTest`** | ❌ **DOES NOT EXIST** | only occurrence is a markdown table row claiming it "green" |
 
-### D-6: Unconditional modulator adds
-**File**: `matrix-brain-runtime/src/main/java/io/matrix/brain/runtime/TrueMindCycle.java`
-**Evidence**: lines 236-238 add `CONSISTENCY_CHECKER` and `LIE_DETECTOR` to `modulatorsFired` BEFORE any check
-**Status**: ❌ confirmed
+The five that exist were re-run green in W20. `SimulacrumDefaultOffTest` is a
+**documented guard with no implementation** — the claim in the V17 report is false.
+Logged as **D-W20-2** and must be either implemented or the claim retracted.
 
-### D-7: Orphaned Real* wrappers
-All 8 wrappers have ZERO production callers:
+## 5. What the §0 baseline got right
 
-| Wrapper | Prod callers |
-|---------|--------------|
-| RealSleepScheduler | 0 |
-| AutonomyLoop | 0 |
-| RealInboxWatcher | 0 |
-| PersistentMind | 0 |
-| RealAuditService | 0 |
-| MultilingualMind | 0 |
-| RealGpuKernelEngine | 0 |
-| TrueDistillationFactory | 0 |
+- Git SHA `f832ae1e` — exact match, working tree clean.
+- Tag `v17.1.0-mind` present and pushed to both remotes.
+- All five implemented guards genuinely green.
+- Disk tier thresholds (25/10 GB) and the "diagnose before deleting" discipline.
 
-**Status**: ❌ confirmed
+## 6. Consequence for the campaign plan
 
-### D-8-D-16: To be verified in RECON-W0/W1 sub-tasks
-
-## Diff from §0 (baseline paragraph)
-
-1. **main advanced**: 4 additional TRUE-W11 research-engine iterations
-   (GlushkovAutomaton, StigmergyRouter, LandauerBound, GraphMemoryIndex)
-   added 12 + 12 + 9 + 10 = 43 tests. No behavior-changing wiring changes.
-2. **origin/develop further behind**: 21 commits vs 17 (the 4 extras landed on main after the audit).
-3. **local feature branches**: 31, exceeding the §0 ~20 — local working
-   evidence only; origin remote is clean per §0 (20 stale branches).
-
-## Honest Limitations
-
-1. **Mind report SESSION.md has stale "all stages invoke real engines" verdict** —
-   to be corrected in RECON-W0 hygiene step.
-2. **Tests pass because they mostly exercise the REAL engine code paths** —
-   the gateways/ProductionBrainClient uses `MATRIX_MODE=production` reflection
-   but the *internal* MindCycle still uses sim stages for some inputs. The
-   "all stages invoke real engines" verdict is **partially wrong**; the
-   TRUE-W1 progress claimed real wiring but the §0 audit found shadow logic
-   in D-3, D-4, D-5, D-6.
-3. **Benchmark 97.1% pass is self-confirming** — ARITHMETIC probes are matched
-   to the regex stage, so they always pass. Genuine generalization tests
-   (W3/W9) will replace this.
-
-## Ready for RECON-W1
-
-All defects from §0 are reproducible from the codebase. The single
-piece of hygiene (§0 says "document the diff") is the only deviation
-from §0 — everything else matches or exceeds §0 expectations.
+The sacred order (W20 disk > W22 generalization > W23 planning) assumed the
+infrastructure was otherwise sound. It is not. Two **production** non-terminating
+loops were found and fixed in W20 (§ RECON-W20-REPORT.md), which had been silently
+preventing the matrix-core suite from ever completing. Until the 70 failures are
+triaged, **no GREEN claim in this campaign may cite "~630 green"** — the number was
+wrong and 70 real failures were hidden behind it.
