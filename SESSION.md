@@ -571,3 +571,42 @@ with no similarity floor. Real, reproducible, still present.
 
 NOT done and NOT claimed: DP-noise federation, independent audit-chain verification
 across both nodes, RBAC/rate-limit re-verification.
+
+## 2026-09-28 — RECON-W25b (D-W25-1 FIXED): the contradiction gate now actually gates
+
+**The Article IV violation the two-node transcript exposed is closed.**
+
+### What was wrong (three independent defects stacked)
+1. **`handleBir` derived the precondition from `body.hashCode()`.** A hash of the
+   ENTIRE request body means any two registrations have different preconditions,
+   so `BirKnowledgeBase`'s collision check could NEVER fire. Two facts giving
+   different answers for the same subject were both merged — while the response
+   still advertised `engine: BirKnowledgeBase.contradiction`.
+   FIX: the precondition now hashes the SUBJECT (`input`) and the conclusion
+   hashes the ANSWER (`response`/`answer`).
+2. **`ClauseSetForm.Clause` had no `equals`/`hashCode`.** It inherited identity
+   semantics from Object, so `List<Clause>.equals` compared element REFERENCES
+   and two logically identical clauses never compared equal. Consequence:
+   `conclusionsMatch` reported "conclusions differ" for EVERY pair, so after
+   fix (1) the gate over-fired and quarantined even a faithful re-assertion of
+   the same fact. FIX: value equality over the pos/neg masks.
+3. **Article II constrains the fingerprint domain.** `ClauseSetForm` validates
+   that every clause literal lies inside `inputBits`, and K_MAX=20, so a raw
+   64-bit hash throws "clause literal out of range". The fingerprint is masked to
+   20 bits. Stated honestly: 20 bits means spurious subject collisions become
+   likely past ~1k entries, but the failure direction is SAFE — a collision is
+   only quarantined when the conclusions actually differ, so the mind would
+   rather quarantine a coincidence than merge a contradiction.
+
+### Proof (live, clean registry)
+    1) first fact          -> accepted:true,  registry_size=5
+    2) SAME fact again     -> accepted:true,  registry_size=6     (NOT quarantined)
+    3) CONTRADICTION       -> accepted:false, quarantined:true
+       {"detail":"precondition fingerprint collision; conclusions differ"}
+    4) different question  -> accepted:true,  registry_size=7
+    5) /v1/conflicts       -> count:1  (exactly the one real contradiction)
+
+9 new tests in ClauseValueEqualityTest pin value equality, the compatible
+re-assertion case, the contradiction case, the different-subject case, and the
+Article II literal-range constraint. Full brain-runtime + gateway suite green;
+live benchmark unchanged at 47/48 = 0.979.

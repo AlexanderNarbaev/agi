@@ -533,9 +533,42 @@ public final class MinimalHttpServer {
         // endpoint that proves load/save round-trip + contradiction detection
         // without requiring the full distillation stack.
         try {
+            // RECON-W25 FIX (D-W25-1). The precondition was
+            //     body.hashCode() & 0xFL
+            // i.e. a hash of the ENTIRE request body, so any two registrations
+            // produced different preconditions and the contradiction check in
+            // BirKnowledgeBase could never fire. A W25 two-node transcript proved
+            // this: two facts giving different answers for the SAME question were
+            // both accepted, and /v1/conflicts reported count:0, while the
+            // response still named engine:BirKnowledgeBase.contradiction.
+            //
+            // The precondition must express the SUBJECT (the question), and the
+            // conclusion must express the ANSWER. Two registrations sharing a
+            // subject but differing in their conclusion now collide on the
+            // precondition and are quarantined, which is what Article IV requires.
+            String subject = extractInput(body);
+            if (subject == null || subject.isBlank()) {
+                writeJson(ex, 400, "{\"error\":\"missing input\"}");
+                return;
+            }
+            String answer = extractField(body, "response");
+            if (answer == null) answer = extractField(body, "answer");
+            // Article II: K_MAX = 20 inputs per boolean artifact, and
+            // ClauseSetForm validates that every clause literal lies inside
+            // inputBits. The precondition fingerprint is therefore 20 bits wide,
+            // not 64. A 64-bit hash throws "clause literal out of range".
+            //
+            // The cost is honest and stated: 20 bits means spurious subject
+            // collisions are possible (birthday bound ~1k entries before a 50%
+            // chance of one). The failure direction is SAFE — a collision routes
+            // to conclusionsMatch, and is quarantined only when the conclusions
+            // actually differ. The mind would rather quarantine a coincidence than
+            // merge a contradiction (Article IV).
+            long subjectKey = stableHash(subject) & SUBJECT_MASK;
+            long answerKey = stableHash(answer == null ? "" : answer) & ANSWER_MASK;
             var clause = new io.matrix.bir.ClauseSetForm.Clause(
-                new long[]{(long)(body.hashCode() & 0xFL)}, new long[]{0L});
-            var bir = io.matrix.bir.ClauseSetForm.lossy(4,
+                new long[]{subjectKey | 1L}, new long[]{answerKey & ANSWER_MASK});
+            var bir = io.matrix.bir.ClauseSetForm.lossy(20,
                 java.util.List.of(clause), "from_http", 0.5);
             io.matrix.brain.runtime.BirKnowledgeBase.RegisterResult r =
                 birKnowledgeBase.register(id, bir, id, 0.5,
@@ -945,6 +978,26 @@ public final class MinimalHttpServer {
     /** Internal record kept for the explain endpoint. */
     private record StoredExplain(String user, String input, String answer,
                                  double confidence, ExplainResponse explanation) {}
+
+    /** Article II: 20-bit fingerprint domain (K_MAX). */
+    private static final long SUBJECT_MASK = 0xFFFFFL;
+    private static final long ANSWER_MASK   = 0xFFFFEL;
+
+    /**
+     * RECON-W25 — deterministic 64-bit string key (FNV-1a).
+     *
+     * <p>Article III: a pure function of the characters, no clock, no randomness,
+     * so the same question always produces the same precondition and the
+     * contradiction check is reproducible across restarts.</p>
+     */
+    private static long stableHash(String s) {
+        long h = 0xcbf29ce484222325L;
+        for (int i = 0; i < s.length(); i++) {
+            h ^= (s.charAt(i) & 0xFF);
+            h *= 0x100000001b3L;
+        }
+        return h;
+    }
 
     private static String extractInput(String body) {
         return extractField(body, "input");

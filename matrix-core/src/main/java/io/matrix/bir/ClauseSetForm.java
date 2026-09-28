@@ -22,6 +22,43 @@ public final class ClauseSetForm extends BirForm {
             this.neg = neg.clone();
         }
 
+        /**
+         * RECON-W25 — VALUE equality.
+         *
+         * <p>This class had no {@code equals}/{@code hashCode}, so it inherited
+         * identity semantics from {@code Object}. Every consumer that compared
+         * clauses by value was therefore silently wrong: {@code
+         * ca.clauses().equals(cb.clauses())} on a {@code List<Clause>} compares
+         * element REFERENCES, so two logically identical clauses always compared
+         * unequal. The visible symptom was in
+         * {@code BirKnowledgeBase.conclusionsMatch}, where every pair of
+         * clauses was reported as "conclusions differ" and therefore every
+         * registration was quarantined as a contradiction — including a faithful
+         * re-assertion of the very same fact.</p>
+         *
+         * <p>Article III: equality is a pure function of the two masks, with no
+         * wall-clock and no randomness.</p>
+         */
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (!(o instanceof Clause other)) return false;
+            return java.util.Arrays.equals(pos, other.pos)
+                && java.util.Arrays.equals(neg, other.neg);
+        }
+
+        @Override
+        public int hashCode() {
+            return 31 * java.util.Arrays.hashCode(pos)
+                 + java.util.Arrays.hashCode(neg);
+        }
+
+        @Override
+        public String toString() {
+            return "Clause[pos=" + java.util.Arrays.toString(pos)
+                 + ", neg=" + java.util.Arrays.toString(neg) + "]";
+        }
+
         /** Fires on input x (little-endian words). */
         public boolean fires(long[] x) {
             for (int w = 0; w < pos.length; w++) {
