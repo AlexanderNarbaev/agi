@@ -112,7 +112,7 @@ explicit refusal, and the BRC trace names the stage that declined and why.
 | **D-W13-2** PLANNING_DEPTH 0/4 | ✅ **4/4** | W4's documented "limitation #1" was the real cause. |
 | **D-W13-3** remaining misses | ✅ **TRIAGED** | Both survivors explained below with measured root cause. |
 | **DISK-WARN** | ✅ **CLOSED** | Self-resolved on arrival (132 GB free). Durable policy added: rotation, ledger, REFUSE gate. |
-| **L-5** Vector 0.18× | ✅ honest, unchanged | Follow-up popcount benchmark **not performed** — see §5. |
+| **L-5** Vector 0.18× | ✅ **CLOSED-ON-SCALAR, twice** | W16: Vector API 0.18×. W24 follow-up executed: unroll 0.52×, nibble-LUT 0.31×. Neither clears 1.5×, so scalar stays. The attempt also found a **correctness** bug: the distance kernel folded all words into one long and took a single popcount, which is not the Hamming distance its Javadoc specifies. Fixed. |
 | **L-6** two-node federation | ✅ **CLOSED** | Full adversarial two-node transcript captured (`two-node-transcript-002.txt`): B refuses before federation, accepts the pushed batch, and answers correctly after — A registry 0, B registry 2, no shared state. |
 | **D-W25-1** contradiction gate | ✅ **CLOSED** | Proven broken by the W25 transcript, then fixed: precondition now hashes the subject (not the whole body), `Clause` gained value equality, fingerprint bounded to the Article II 20-bit domain. Same fact re-asserted → accepted; same question with a different answer → quarantined; `/v1/conflicts` count:1. |
 | **L-7** fresh-clone | 🟡 **PARTIAL** | Script exists; not executed literally in a clean temp dir; no CI job installed. |
@@ -129,7 +129,8 @@ knowing lemons are yellow — world knowledge, not inference. A rule that return
 "yellow" here would be fitting the probe, so it was not written. The mind answers
 with an explicit refusal instead of a guess.
 
-**74 pre-existing test failures across 41 classes (D-W20-1).** None are in any
+**69 pre-existing test failures across ~39 classes (D-W20-1), down from 74 at
+campaign start.** None are in any
 class this campaign touched. Clusters: `io.matrix.research.BitNet*` (21),
 jqwik `*PropertyTest` (argument-type mismatch and empty-generator defects, ~28),
 `ModelRegistryTest` (3), `MatrixNativeMathTest` (2). The count drifts between
@@ -152,9 +153,25 @@ its scan root relative to the working directory; Gradle runs module tests with t
 module dir as cwd, so it scanned nothing and reported success. Now it locates the
 repo root properly and actually enforces.
 
-**The popcount follow-up was not performed.** W24's L-5 revisit (Long.bitCount
-unrolled and nibble-LUT variants vs scalar) was not run. L-5 remains closed on the
-W16 measurement only. **Not claimed as done.**
+**A 2.30× speedup was measured, adopted, and then retracted.** During the W24
+popcount work a 4-way unrolled fold measured 2.30× against the 1.5× bar and was
+adopted in production. It was then found to be an artifact: the unroll and the
+original were both benchmarking the *wrong function* (XOR-fold instead of Hamming
+distance), and the fold is cheap for exactly that reason — one popcount instead of
+one per word. Measured against the corrected function the unroll is 0.52×, i.e.
+slower, and was reverted. The verdict is pinned by a test so the wrong number
+cannot return. This is the clearest evidence in the campaign for the rule
+"adopt only with bit-equivalence proof": equivalence to a *wrong* reference proves
+nothing, because production and the reference were wrong together.
+
+**The HDC distance kernel was wrong until this wave.** `vectorXorPopCount` and
+`scalarXorPopCount` XOR-folded all words into one long and took a single popcount.
+XOR-ing two words cancels bits, so `vectorXorPopCount(zero, one)` returned **0**
+where the true Hamming distance is **128**. `RealGpuKernelEngine` uses this to
+score HDC search distance, so HDC similarity has been systematically wrong since
+the kernel was written. Both now sum per-word popcounts; `scalarPopCount` is also
+null-safe. Two long-standing test failures in `MatrixNativeMathTest` were exactly
+this and are now green.
 
 **Distilled knowledge is not yet answerable in chat.** W21 puts real,
 provenance-carrying artifacts into the registry, but the retrieval path that would
@@ -198,7 +215,7 @@ curl localhost:8765/health/live
 |---|---|
 | `bash scripts/w13-live-benchmark.sh data/mind/benchmarks/w24-live.csv` | 47/48 = 0.979 |
 | `bash scripts/disk-hygiene.sh` (×2) | idempotent; 132 GB free, HEALTHY |
-| `./gradlew :matrix-core:test :matrix-brain-runtime:test :matrix-api-gateway:test` | 8071 tests, 74 fail (all pre-existing, none in touched classes) |
+| `./gradlew :matrix-core:test :matrix-brain-runtime:test :matrix-api-gateway:test` | 8653 tests, 69 fail, 8584 passing (74 fail at campaign start) |
 | `python3 scripts/capture_activations.py …` | 8 records, no segfault |
 | `RunActivationDistill data/activations/capacities-8.ndjson` | 8 samples, fidelity 1.0, hash `623cb895`, A+B=+2 |
 | `curl localhost:8765/health/live` | `{"status":"UP","brain_available":true}` |
