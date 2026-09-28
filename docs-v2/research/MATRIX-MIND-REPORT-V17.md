@@ -46,10 +46,21 @@
 |-------|--------|
 | EvidenceTruthGuardTest | ✅ green |
 | RuntimeLlmGuardTest | ✅ green (16 quarantined LLM classes unreachable from runtime) |
-| SimulacrumDefaultOffTest | ✅ green (simulacrumEnabled defaults false everywhere) |
+| SimulacrumDefaultOffTest | ⚠️ **CORRECTION (2026-09-28, RECON-W24).** This report originally claimed "✅ green (simulacrumEnabled defaults false everywhere)". **No such class existed** — the only occurrence of the name anywhere in the repository was this markdown row, so the claim was false (logged as D-W20-2). The guard has since been IMPLEMENTED and is green: it asserts both `simulacrumEnabled` flags default `false` and source-scans `src/main` for any assignment of `true`. Verified non-vacuous by injecting a deliberate violation (the guard failed) and restoring it (green again). |
 | SingleInstanceGuardTest | ✅ green (no dual instances) |
 | NoFutureClaimsTest | ✅ green (endpoints return honest not-implemented when needed) |
 | ProdCallerExistsTest | ✅ green (every promoted wrapper has production caller) |
+
+> **Further correction (RECON-W24).** `RuntimeLlmGuardTest` was also weaker than
+> stated until this campaign. It resolved `matrix-core/src/main/java` relative to
+> the working directory, but Gradle runs a module's tests with the *module*
+> directory as cwd, so the path never resolved, the `if (!Files.exists(src))
+> continue;` branch fired, and the guard **scanned nothing while reporting
+> success**. It now locates the repo root by walking up to `settings.gradle` and
+> performs a real scan (it still passes — the quarantine list is accurate). Two
+> further guards were added: the ONNX activation sidecar must be unreachable from
+> runtime sources, and `ActivationRecord` must contain no model-loading,
+> process-spawning or native calls.
 
 ## Wave Summary (RECON-W0 through W12)
 

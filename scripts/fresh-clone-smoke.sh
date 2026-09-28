@@ -7,6 +7,63 @@ set -euo pipefail
 TARGET="${1:-$(pwd)/data/smoke/$(date +%s)}"
 echo "Smoke target: $TARGET"
 
+# RECON-W25 — retention policy.
+#
+# Root cause of an 8.8 GB disk leak: this script left a full repository copy
+# behind on EVERY run, and `data/smoke-old/` accumulated several of them. The
+# copies are provably regenerable (they contain only build output and tracked
+# source), so they are disposable — but only by an explicit, opt-in mechanism.
+#
+#  - default: keep at most KEEP=2 most recent smoke directories, prune the rest
+#  - --keep-all : disable pruning (for debugging)
+#  - --prune-only: prune and exit, no smoke run
+#
+# A trap removes the working copy when the run FAILS, so a broken smoke does not
+# leave a 2 GB directory behind either.
+KEEP="${MATRIX_SMOKE_KEEP:-2}"
+PRUNE_ONLY=0
+KEEP_ALL=0
+for arg in "$@"; do
+  case "$arg" in
+    --keep-all)  KEEP_ALL=1 ;;
+    --prune-only) PRUNE_ONLY=1 ;;
+  esac
+done
+
+SMOKE_ROOT="$(pwd)/data/smoke"
+
+prune_old_smokes() {
+  [ -d "$SMOKE_ROOT" ] || return 0
+  # Newest-first by mtime; keep the first $KEEP, remove the rest.
+  local keep=0 victim
+  for victim in $(ls -1dt "$SMOKE_ROOT"/*/ 2>/dev/null); do
+    keep=$((keep + 1))
+    if [ "$keep" -gt "$KEEP" ]; then
+      echo "  pruning old smoke dir: $victim"
+      # The copy is a build artefact, never cognitive data: it excludes
+      # data/mind/*.ndjson, data/mind/benchmarks and .git at rsync time.
+      rm -rf "$victim"
+    fi
+  done
+}
+
+if [ "$KEEP_ALL" -eq 0 ]; then
+  echo "Step 0: pruning smoke dirs beyond KEEP=$KEEP in $SMOKE_ROOT"
+  prune_old_smokes
+fi
+[ "$PRUNE_ONLY" -eq 1 ] && { echo "prune-only done"; exit 0; }
+
+# On failure, drop the partially built copy so it cannot accumulate.
+cleanup_on_failure() {
+  local rc=$?
+  if [ $rc -ne 0 ] && [ -d "$TARGET" ] && [ "$KEEP_ALL" -eq 0 ]; then
+    echo "smoke failed (rc=$rc); removing partial copy $TARGET"
+    rm -rf "$TARGET"
+  fi
+  return $rc
+}
+trap cleanup_on_failure EXIT
+
 # Step 1: Find repo root
 cd "$(dirname "$0")/.."
 SRC="$(pwd)"
@@ -15,7 +72,6 @@ echo "Step 1: Copy repo to $TARGET..."
 mkdir -p "$TARGET"
 # Use rsync for speed excluding .git build dirs etc.
 rsync -a --quiet --exclude='.git' --exclude='models' --exclude='build' --exclude='bin' --exclude='.gradle' --exclude='data/mind/benchmarks' --exclude='data/mind/*.ndjson' --exclude='data/mind/mind.sqlite' --exclude='matrix-*/build' --exclude='.codegraph' --exclude='docs-v2/research/cache' --exclude='.opencode' --exclude='.minecraft' --exclude='node_modules' --exclude='*.log' "$SRC/" "$TARGET/"
-"
 
 cd "$TARGET"
 echo "  Done. Repo copied."

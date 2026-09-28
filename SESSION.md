@@ -493,3 +493,38 @@ Two new guards added: sidecar-unreachable-from-runtime, and ActivationRecord-pur
 - Two-node federation transcript (L-6) and literal fresh-clone + CI job (L-7) partial
 - Distilled knowledge not yet answerable in chat (retrieval path not wired)
 - `data/smoke-old` 8.8 GB retained; fresh-clone-smoke.sh has no cleanup trap
+
+## 2026-09-28 — RECON-W25 (Guard truth + disk leak root cause)
+
+### D-W20-2 CLOSED — the guard that did not exist now does
+`MATRIX-MIND-REPORT-V17.md` claimed `SimulacrumDefaultOffTest` was "green". No such
+class existed anywhere; the only occurrence of the name was that markdown row — a
+false claim in a shipped report. Implemented it rather than retracting the claim:
+- both `simulacrumEnabled` flags default `false` (reflective read of the declared
+  default, not whatever a prior test left in the JVM)
+- both are non-final so the default can be re-asserted
+- a source scan over matrix-{core,brain-runtime,api-gateway}/src/main finds no
+  assignment of `true` to any simulacrum switch
+**Verified non-vacuous by negative control:** injecting
+`static boolean simulacrumEnabledX = true;` into a production file made the guard
+FAIL; restoring the file made it green again. 4/4.
+
+The first version of the guard produced two false positives because the production
+trace messages contain the DATA string "simulacrum=true"; the scan now blanks
+string-literal contents and reads code structure only.
+
+### V17 report corrected in place
+The guard table now carries an explicit CORRECTION row rather than being quietly
+rewritten, so the record of what was falsely claimed is preserved. The same edit
+records that RuntimeLlmGuardTest was itself weaker than claimed until this campaign
+(it scanned nothing because of a working-directory bug).
+
+### Disk leak root cause fixed
+`data/smoke-old` (8.8 GB) was three repository copies left behind by
+`fresh-clone-smoke.sh`, which had no retention policy. The script now:
+- prunes to the newest KEEP=2 (MATRIX_SMOKE_KEEP) before running,
+- `--prune-only` prunes and exits, `--keep-all` disables pruning,
+- installs an EXIT trap that removes a PARTIAL copy when the smoke fails, so a
+  broken run cannot leave 2 GB behind.
+Also fixed a stray unbalanced `"` on line 75 that made the script fail
+`bash -n` — it had been silently broken.
