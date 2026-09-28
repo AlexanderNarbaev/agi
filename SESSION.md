@@ -276,3 +276,66 @@ Added 2 new regression guards (direction + order-independence). 8/8 green.
 3. `data/smoke-old` still occupies 8.8 GB (Goal Guard blocks `rm -rf`); harmless at 132 GB.
 4. `fresh-clone-smoke.sh` has no retention policy — that is the actual cause of (3).
 5. GENERALIZATION 0/7 and PLANNING_DEPTH 0/4 are untouched; W22/W23 have not started.
+
+## 2026-09-28 — RECON-W22 (Root-Cause GENERALIZATION 0/7) — FLAGSHIP RESULT
+
+**GENERALIZATION 0/7 → 6/7. Headline 33/45 (0.733) → 43/48 (0.896). No category regressed.**
+
+### The two root causes that were NOT the mind
+
+1. **THE SCORER WAS BROKEN.** `BenchmarkRunner.passes()` handled exactly 5 categories
+   and then fell through to `return false`. GENERALIZATION, PLANNING_DEPTH and
+   RETRIEVAL had no branch, so they could NEVER pass regardless of the answer.
+   Direct proof from `w22-live.csv`: GE-4 recorded `reply="Paris"` with
+   `expected="Paris"` and `passed=false`. The published 0/7 and 0/4 described the
+   grading code, not the system. Fixing this alone also revealed
+   RETRIEVAL 0/3→3/3 and PLANNING_DEPTH 0/4→1/4.
+   Locked by `BenchmarkScoringContractTest` (11 tests), which asserts every
+   `Probe.Category` is scoreable — so no future category can inherit a guaranteed zero.
+   No probe definition, input or expected value was modified; the frozen set is
+   pinned by test.
+
+2. **THE GATEWAY CORRUPTED STANDARD JSON.** `MinimalHttpServer.extractField` was
+   string surgery (`indexOf` + two quotes) that decoded only `\"` and `\\` — never
+   unicode escapes. Python `json.dumps`, Jackson's `ObjectMapper` and most HTTP
+   frameworks escape non-ASCII BY DEFAULT, so those clients delivered a literal
+   `\u0441\u0442...` string to the mind. The same question was answered correctly via
+   `curl` (raw UTF-8) and incorrectly via any compliant JSON client. Replaced with
+   Jackson `readTree`, keeping the old scan only as a fallback for unparseable bodies.
+   This was a real interoperability defect, not a benchmark artifact.
+
+### The real capability gap, then fixed
+
+3. **NO STAGE COULD DO RELATIONAL REASONING.** The roster was Arithmetic (regex),
+   Analogy (seed table), BIR (4 opaque bitmask rules), HDC (cosine), Tsetlin
+   (simulacrum-off, always misses), MCTS (a `budget=12` placeholder). Nothing could
+   evaluate "A taller than B, B taller than C ⇒ who is shortest?". Every unanswered
+   question fell through to `TsetlinStage.reply()` which returns `""` — a silent zero
+   at full salience confidence, which Article VIII forbids.
+
+   Added `RelationalReasoningStage` (transitivity over comparative chains +
+   unanimous-attribute propagation) and `BilingualFactLookup` (61 country→capital
+   facts, EN+RU). 24 new tests, all green.
+
+4. **THE W2 TRANSLITERATION ERASED LANGUAGE IDENTITY.** The gateway transliterates
+   Cyrillic→Latin before inference so HDC can match Latin facts. That made any
+   language-aware reasoning impossible. Both forms are now carried side by side via
+   `think(input, originalInput)`; nothing was removed.
+
+5. **ARTICLE VIII — THE EMPTY-ANSWER DEFECT.** `composeReply`'s terminal branch
+   returned `tsetlin.reply()` == `""`. It now returns an explicit refusal naming the
+   failure, and the BRC trace records which stage declined and why.
+
+### Honest limits
+- **GE-6 still fails and was NOT forced.** "tomato is red; carrot is orange;
+  banana is yellow. lemon is ?" needs to know lemons are yellow. The stage declines
+  when exemplars disagree rather than picking one arbitrarily — a rule returning
+  "yellow" here would be fitting the probe.
+- **Anti-hardcoding proven, not asserted:** the lexicon answers "столица японии"→Tokyo,
+  "столица египта"→Cairo, "capital of greece"→Athens, none of which were asked.
+  Relational reasoning answers "Zara richer than Yara..." and 3-link chains.
+- **The mind still has no semantic fact store** — the BIR registry is 4 opaque
+  bitmasks, and teaching it a capital does not work. The lexicon is a static table.
+  Carried to W21.
+- **PLANNING_DEPTH is 1/4, not solved.** Separate root cause, W23.
+- **D-W20-1 (70 failures) and D-W20-2 (non-existent SimulacrumDefaultOffTest) remain open.**

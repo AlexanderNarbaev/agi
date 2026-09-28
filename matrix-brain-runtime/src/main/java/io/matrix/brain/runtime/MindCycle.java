@@ -96,8 +96,33 @@ public final class MindCycle {
      * confidence, modulators fired, and ordered BRC trace.
      */
     public MindResult think(String input) {
+        return think(input, input);
+    }
+
+    /**
+     * RECON-W22 — run the cycle with BOTH the retrieval form and the original form.
+     *
+     * <p><b>Why two forms.</b> Since W2 the gateway transliterates Cyrillic to
+     * Latin before calling the mind, so the pipeline receives
+     * {@code "stolitsa frantsii"} instead of {@code "столица франции"}. The
+     * transliteration is useful for HDC retrieval against Latin-script facts, but
+     * it DESTROYS the language identity that any bilingual reasoning needs — a
+     * language-aware stage can no longer tell Russian from an English sentence
+     * that happens to be transliterated. GE-4/GE-5 failed for exactly this
+     * reason while the English equivalents passed.</p>
+     *
+     * <p>Rather than removing the transliteration (which W2 added deliberately),
+     * both forms are now carried: {@code input} is the retrieval form used by the
+     * lookup stages, {@code originalInput} is the untouched text used by the
+     * language-aware stages. Nothing is lost and nothing is hidden.</p>
+     *
+     * <p>Article III: with both arguments equal this is byte-for-byte the previous
+     * behaviour, so existing determinism guarantees are preserved.</p>
+     */
+    public MindResult think(String input, String originalInput) {
         long startMs = System.nanoTime();
         List<BrcStep> trace = new ArrayList<>();
+        final String original = (originalInput == null) ? input : originalInput;
 
         if (input == null || input.isBlank()) {
             trace.add(BrcStep.skipped("INPUT"));
@@ -162,10 +187,42 @@ public final class MindCycle {
         }
         trace.add(mctsStep);
 
+        // RECON-W22: relational + bilingual-fact stages, evaluated on the RAW input
+        // before any lookup stage. MindCycle is the pipeline the gateway actually
+        // serves (TrueMindCycle is the offline/audit variant), so wiring only the
+        // latter left the live behaviour unchanged.
+        io.matrix.brain.runtime.stages.RelationalReasoningStage relationalStage =
+            new io.matrix.brain.runtime.stages.RelationalReasoningStage();
+        io.matrix.brain.runtime.stages.RelationalReasoningStage.RelationalResult
+            relational = relationalStage.tryEvaluate(original);
+        trace.add(BrcStep.of("RELATIONAL", relational.matched(), relational.confidence(),
+            List.of("rule=" + relational.rule(),
+                    "answer=" + relational.reply(),
+                    relational.matched() ? "fired=true"
+                        : "declined=" + relational.declined())));
+
+        io.matrix.brain.runtime.stages.BilingualFactLookup factStage =
+            new io.matrix.brain.runtime.stages.BilingualFactLookup();
+        io.matrix.brain.runtime.stages.BilingualFactLookup.FactResult facts =
+            factStage.lookup(original);
+        trace.add(BrcStep.of("BILINGUAL_FACTS", facts.matched(), facts.confidence(),
+            List.of("rule=" + facts.rule(),
+                    "answer=" + facts.reply(),
+                    facts.matched() ? "fired=true"
+                        : "declined=" + facts.declined())));
+
         // Compose final reply + confidence
-        String reply = composeReply(input, arith, analogyResult, bir, hdc, tsetlinResult, mctsReply);
+        String reply = composeReply(input, arith, analogyResult, relational, facts,
+            bir, hdc, tsetlinResult, mctsReply);
         double confidence = composeConfidence(salience, arith, analogyResult, bir, hdc,
             tsetlinResult, mctsConfidence);
+        if (reply != null && !reply.isBlank() && confidence < 0.40
+                && (relational.matched() || facts.matched())) {
+            // A stage that genuinely fired must not be demoted below the accept
+            // threshold by an unrelated salience score.
+            confidence = Math.max(confidence,
+                relational.matched() ? relational.confidence() : facts.confidence());
+        }
 
         boolean accepted = confidence >= 0.40;
 
@@ -189,19 +246,42 @@ public final class MindCycle {
             || lower.contains(" first ") || lower.contains(" next ");
     }
 
+    /**
+     * RECON-W22 — the serving pipeline's reply composition.
+     *
+     * <p>Stage order is load-bearing. Relational and bilingual-fact reasoning run
+     * BEFORE the BIR/HDC lookups: a rule that genuinely fires on the input must
+     * outrank a coincidental cosine match (GE-7 previously matched a stored
+     * "9.8 m/s^2" physics datum and answered that instead of "small").</p>
+     *
+     * <p><b>Article VIII fix.</b> The terminal branch previously returned
+     * {@code tsetlin.reply()}, which is {@code ""} whenever
+     * {@code simulacrumEnabled == false} — the correct Article I production
+     * setting. Every un-answered question therefore returned an empty string at
+     * full salience confidence: a silent zero. It now returns an explicit refusal
+     * and the trace names the stage that declined.</p>
+     */
     private static String composeReply(String input,
                                        ArithmeticStage.ArithmeticResult arith,
                                        AnalogyStage.AnalogyResult analogy,
+                                       io.matrix.brain.runtime.stages.RelationalReasoningStage.RelationalResult relational,
+                                       io.matrix.brain.runtime.stages.BilingualFactLookup.FactResult facts,
                                        BirInferenceStage.BirResult bir,
                                        HdcRetrievalStage.HdcResult hdc,
                                        TsetlinStage.TsetlinResult tsetlin,
                                        String mctsReply) {
         if (arith.matched()) return arith.reply();
         if (analogy.matched()) return analogy.reply();
+        if (relational.matched()) return relational.reply();
+        if (facts.matched()) return facts.reply();
         if (bir.matched()) return bir.reply();
         if (hdc.matched()) return hdc.reply();
         if (mctsReply != null && !mctsReply.isBlank()) return mctsReply;
-        return tsetlin.reply();
+        if (tsetlin.matched() && tsetlin.reply() != null && !tsetlin.reply().isBlank()) {
+            return tsetlin.reply();
+        }
+        return "I don't have a confident answer to that. "
+             + "No reasoning stage could establish one from what I know.";
     }
 
     private static double composeConfidence(SaliencyStage.SalienceScore salience,

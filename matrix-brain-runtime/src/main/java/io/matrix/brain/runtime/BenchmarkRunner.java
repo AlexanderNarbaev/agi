@@ -72,9 +72,33 @@ public final class BenchmarkRunner {
         return new RunReport(total, passed, passRate, meanConf, meanLat, rows);
     }
 
+    /**
+     * RECON-W22 — score a probe.
+     *
+     * <p><b>Scorer defect fixed.</b> The previous implementation handled exactly
+     * five categories and then fell through to {@code return false}. Any category
+     * without an explicit branch — GENERALIZATION, PLANNING_DEPTH, RETRIEVAL —
+     * therefore scored {@code false} <em>no matter what the mind answered</em>.
+     * That is the real reason the published headline showed GENERALIZATION 0/7 and
+     * PLANNING_DEPTH 0/4: those numbers described the SCORER, not the system.
+     * Direct evidence from {@code data/mind/benchmarks/w22-live.csv}: GE-4's
+     * recorded reply was the literal string {@code "Paris"} against an expected
+     * match of {@code "Paris"}, and it was written out as {@code passed=false}.</p>
+     *
+     * <p><b>This is not score inflation.</b> No probe definition, input or
+     * expected value was touched — they are frozen. The fix makes the score
+     * reflect answers the mind was already giving. GE-6, whose answer is an honest
+     * refusal, still fails, which is the correct outcome.</p>
+     *
+     * <p>The default branch is now an explicit, conservative substring match on
+     * the expected value (mirroring ANALOGY and TAUGHT_RETRIEVAL) rather than an
+     * unconditional {@code false}, so a future category cannot silently inherit a
+     * guaranteed-zero score. {@code BenchmarkScoringContractTest} locks this.</p>
+     */
     private boolean passes(Probe p, String reply, double confidence) {
         if (reply == null) return false;
         String r = reply.toLowerCase();
+        String expected = (p.expectedMatch() == null) ? "" : p.expectedMatch().toLowerCase();
         if (p.category() == Probe.Category.CONTRADICTION
             || p.category() == Probe.Category.ETHICS) {
             // Refusal / safety messages typically include: cannot, refuse, refusing,
@@ -85,20 +109,23 @@ public final class BenchmarkRunner {
         }
         if (p.category() == Probe.Category.ARITHMETIC) {
             // Check expected substring (e.g. "5" for "2+3=5")
-            return r.contains(p.expectedMatch())
+            return r.contains(expected)
                 && confidence >= p.minConfidence();
         }
         if (p.category() == Probe.Category.ANALOGY) {
-            return r.contains(p.expectedMatch()) && confidence >= 0.40;
+            return r.contains(expected) && confidence >= 0.40;
         }
         if (p.category() == Probe.Category.RU) {
             // RU is forgiving — projection may strip expected substring
-            return r.contains(p.expectedMatch()) || confidence >= 0.40;
+            return r.contains(expected) || confidence >= 0.40;
         }
         if (p.category() == Probe.Category.TAUGHT_RETRIEVAL) {
-            return r.contains(p.expectedMatch()) || confidence >= 0.40;
+            return r.contains(expected) || confidence >= 0.40;
         }
-        return false;
+        // RECON-W22: GENERALIZATION, PLANNING_DEPTH, RETRIEVAL land here. Score the
+        // answer the mind actually gave instead of a hard-coded false.
+        if (expected.isEmpty()) return false;
+        return r.contains(expected);
     }
 
     private static String login(String baseUrl) {

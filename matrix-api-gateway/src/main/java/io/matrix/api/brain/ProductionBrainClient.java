@@ -280,10 +280,31 @@ public final class ProductionBrainClient implements BrainCycle {
 
     @Override
     public CycleResult cycle(String input, String context, String model) {
-        if (input == null) {
+        return cycle(input, input, context, model);
+    }
+
+    /**
+     * RECON-W22 — run a cycle carrying BOTH the retrieval form and the original form.
+     *
+     * <p>The gateway transliterates Cyrillic to Latin before inference (W2, so HDC
+     * retrieval can match Latin-script facts). That erasure of the original script
+     * makes any language-aware reasoning impossible: a Russian query arrives as
+     * {@code "stolitsa frantsii"}, indistinguishable from English prose. GE-4/GE-5
+     * failed for exactly this reason while their English equivalents passed.</p>
+     *
+     * <p>Both forms are now carried side by side — nothing is removed, so the W2
+     * retrieval behaviour is preserved, and the language-aware stages get the text
+     * the user actually typed. Article III: when both arguments are equal this is
+     * byte-for-byte the previous behaviour.</p>
+     */
+    public CycleResult cycle(String retrievalInput, String originalInput,
+                             String context, String model) {
+        if (retrievalInput == null) {
             return new CycleResult("", 0.0, 0L, false,
                 List.of("ETHICAL_FILTER", "CONSISTENCY_CHECKER"));
         }
+        final String input = retrievalInput;
+        final String original = (originalInput == null) ? retrievalInput : originalInput;
         long t0 = System.currentTimeMillis();
 
         // MIND-W1: primary path is the cognitive conductor MindCycle.
@@ -293,7 +314,7 @@ public final class ProductionBrainClient implements BrainCycle {
         // when matrix-core JAR is unavailable.
         if (mindCycle != null) {
             try {
-                MindResult mr = mindCycle.think(input);
+                MindResult mr = mindCycle.think(input, original);
                 long dur = System.currentTimeMillis() - t0;
                 // Cache modulator/step confidences for the next buildExplain() call.
                 cacheExplainConfidences(mr);

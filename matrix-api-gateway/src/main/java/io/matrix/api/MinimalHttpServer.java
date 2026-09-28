@@ -46,6 +46,14 @@ public final class MinimalHttpServer {
 
     private static final Logger LOG = Logger.getLogger(MinimalHttpServer.class.getName());
 
+    /**
+     * RECON-W22 — shared, thread-safe JSON reader for request-body field extraction.
+     * {@code ObjectMapper} is thread-safe once configured, and this one is never
+     * reconfigured after construction.
+     */
+    private static final com.fasterxml.jackson.databind.ObjectMapper JSON_MAPPER =
+        new com.fasterxml.jackson.databind.ObjectMapper();
+
     private final int port;
     private final HttpServer http;
     private final BrainCycle brain;
@@ -326,7 +334,14 @@ public final class MinimalHttpServer {
             // 5. Inference (may throw BrainUnavailableException in production mode)
             BrainCycle.CycleResult result;
             try {
-                result = brain.cycle(req.input, req.context, req.model);
+                // RECON-W22: carry the ORIGINAL text alongside the transliterated
+                // retrieval form. The transliteration alone erases the language
+                // identity that bilingual reasoning needs.
+                if (brain instanceof io.matrix.api.brain.ProductionBrainClient pbc) {
+                    result = pbc.cycle(processedInput, inputText, req.context, req.model);
+                } else {
+                    result = brain.cycle(processedInput, req.context, req.model);
+                }
             } catch (ProductionBrainClient.BrainUnavailableException bue) {
                 LOG.log(Level.WARNING, "Brain unavailable: {0}", bue.getMessage());
                 ex.getResponseHeaders().set("Retry-After", "5");
@@ -935,8 +950,50 @@ public final class MinimalHttpServer {
         return extractField(body, "input");
     }
 
-    /** Extract any string field from a simple JSON body. */
+    /**
+     * Extract a string field from a JSON body.
+     *
+     * <p><b>RECON-W22 — real JSON parsing.</b> The previous implementation was
+     * string surgery: locate {@code "field"}, take the next two quote characters,
+     * then un-escape only {@code \"} and {@code \\}. That silently corrupted two
+     * whole classes of legitimate request:</p>
+     * <ul>
+     *   <li><b>Unicode escapes.</b> The backslash-u escape was never decoded, so a
+     *       client that escapes non-ASCII — which is the DEFAULT for Python
+     *       {@code json.dumps}, Java's Jackson {@code ObjectMapper}, and most HTTP
+     *       frameworks — delivered a literal backslash-u-backslash-u-digit string
+     *       to the mind instead of the real Cyrillic text.</li>
+     *   <li><b>Escaped quotes and non-string values.</b> A value containing
+     *       {@code \"} was truncated at the escape, and a numeric or object value
+     *       was read as garbage.</li>
+     * </ul>
+     *
+     * <p>Both are real interoperability failures, not benchmark cosmetics: the
+     * system answered correctly to {@code curl} (raw UTF-8) and incorrectly to any
+     * standards-compliant JSON client for the same question.</p>
+     *
+     * <p>Now parsed with Jackson (already on the classpath), falling back to the
+     * legacy scan only if the document is unparseable, so no previously-working
+     * request regresses. Article VII: no new dependency.</p>
+     */
     private static String extractField(String body, String fieldName) {
+        if (body == null || body.isBlank()) return null;
+        try {
+            com.fasterxml.jackson.databind.JsonNode root =
+                JSON_MAPPER.readTree(body);
+            com.fasterxml.jackson.databind.JsonNode node = root.get(fieldName);
+            if (node == null || node.isNull()) return null;
+            // Scalars render as their literal text; containers are not a string field.
+            return node.isValueNode() ? node.asText() : null;
+        } catch (Exception parseFailure) {
+            // Malformed or non-JSON body: fall back to the legacy scan so existing
+            // lenient behaviour is preserved rather than regressed.
+            return extractFieldLegacy(body, fieldName);
+        }
+    }
+
+    /** Legacy lenient scan. Kept as a fallback for unparseable bodies. */
+    private static String extractFieldLegacy(String body, String fieldName) {
         String needle = "\"" + fieldName + "\"";
         int idx = body.indexOf(needle);
         if (idx < 0) return null;
