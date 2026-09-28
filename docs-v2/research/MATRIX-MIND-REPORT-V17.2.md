@@ -2,12 +2,14 @@
 
 > Date: 2026-09-28 · Tag `v17.2.0-mind` · supersedes `v17.0.0-mind`
 >
-> **TAG INTEGRITY (RECON-W27).** This tag was first pushed at `a8322a12`. Four
-> further correctness commits landed afterwards — the popcount revisit, the HDC
-> distance fix, the two-node transcript, and the Article I / JSON fixes — so the
-> tag no longer described the tip. The tag is being re-pointed onto the final
-> commit of the campaign so that "v17.2.0-mind" names exactly what this report
-> describes. Any earlier consumer of `v17.2.0-mind` should re-fetch.
+> **TAG INTEGRITY (RECON-W27).** `v17.2.0-mind` was cut at `a8322a12`. Nine
+> correctness commits landed after it — the HDC distance fix, the Clause value
+> equality fix, the Article I rule-id fix, the remaining JSON parsers, the second
+> teacher, the smoke-test root cause and their guards. A published tag is
+> immutable and force-pushing a correction is denied by policy, so rather than
+> move it, the corrected state is published as **`v17.2.1-mind` at `28adab68`**,
+> which is this report's true subject. `v17.2.0-mind` is retained unchanged and
+> marked superseded. If you fetched `v17.2.0-mind`, use `v17.2.1-mind`.
 > Campaign: RECON-W20 → W24
 > Headline: **33/45 (0.733) → 47/48 (0.979)**
 

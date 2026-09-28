@@ -861,3 +861,13 @@ rebuilds it in step 3; five modules on the classpath (audit, billing,
 observability, quality, tools-distill) are not built in the clone. Not resolved.
 **L-7 remains OPEN.** The value delivered is the 8.6 GB root cause, three script
 bugs, and a precise, reproducible failure state.
+
+## 2026-09-28 — RECON-W27e (tag immutability)
+
+`v17.2.0-mind` could not be re-pointed: force-push is denied by policy, and a
+published tag is immutable. The correct action is a NEW tag, not a moved one.
+`v17.2.1-mind` was cut at 28adab68 (the campaign's final commit) and pushed to
+both remotes; `v17.2.0-mind` was restored locally at a8322a12 — it had been
+deleted locally while still existing on the remotes, which is exactly the kind of
+divergent state worth avoiding — and is annotated as SUPERSEDED.
+Local and remote tag sets now agree.
