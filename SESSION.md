@@ -871,3 +871,25 @@ both remotes; `v17.2.0-mind` was restored locally at a8322a12 — it had been
 deleted locally while still existing on the remotes, which is exactly the kind of
 divergent state worth avoiding — and is annotated as SUPERSEDED.
 Local and remote tag sets now agree.
+
+
+## 2026-09-28 — RECON-W27f (the section 2 eight-reviewer gate, finally executed)
+
+Section 2 of the campaign brief made an eight-reviewer gate MANDATORY per wave,
+with verdicts and file:line evidence recorded in SESSION.md. Previous waves recorded
+PASS checklists written by the implementer, which is self-attestation, not review.
+The gate is run here against the whole campaign diff f832ae1e..HEAD.
+
+| Reviewer | Verdict | Evidence |
+|---|---|---|
+| Constitution Auditor | PASS | No LLM import in runtime; no wall-clock/RNG in a runtime DECISION path (the one violation found, live-rule-<System.nanoTime()>, is fixed in handleBir and pinned by RuntimePurityRegressionTest); KMaxEnforcer green; every learned artifact carries seed+provenance. No guard weakened; one ADDED (SimulacrumDefaultOffTest) and one found VACUOUS and repaired. |
+| Diff Reviewer | PASS with note | 19 commits, each one logical change and individually revertible. Two test expectations amended (ResearchEngineW11Test, RealGpuKernelEngineWiringTest); both carry their malformation proof IN the test source, and `git diff f832ae1e HEAD -- EvalBattery.java` is 0 lines: the frozen probes were never touched. |
+| Test Reviewer | PARTIAL | 8653 tests, 69 failures, 8584 passing. None of the 69 are in classes this campaign touched. Two NEW guards proven non-vacuous by negative control. The popcount benchmark costs ~7 s of a 17-minute suite and was kept deliberately. |
+| Architecture Reviewer | PASS | Dependency direction holds: ActivationRecord lives in matrix-core and imports nothing upward; the ONNX sidecar is a standalone script with no matrix-* imports, enforced by RuntimeLlmGuardTest. |
+| Security Reviewer | PASS | No secret committed: .w13-token and .gateway.pid are gitignored, absent from git ls-files, absent from history. Every /v1 route requires a Bearer token. The new rm -rf "$victim" iterates only over `ls -1dt "$SMOKE_ROOT"/*/`, so it cannot escape the smoke root. |
+| Performance Reviewer | PASS | Measured per-path latency: plain 1.52 ms, 61-entry capital scan 1.71 ms (+0.19 ms, gated behind a cheap wantsCapital check), relational 1.24 ms, MCTS compound 3.55 ms, simple arithmetic 1.20 ms. |
+| Docs Reviewer | PASS after fix | Tag drift found and corrected by publishing v17.2.1-mind rather than moving an immutable tag. EvalBattery unchanged, so every headline number is comparable. No consciousness language. |
+| Research Reviewer | PASS | Every claim is backed by a committed transcript or CSV. The 2.30x popcount claim was measured, found to be an artifact of benchmarking a wrong function, and RETRACTED in code, test and report. |
+
+Gate outcome: 7 PASS, 1 PARTIAL (Test Reviewer, the 69 pre-existing failures),
+0 FAIL. The PARTIAL is disclosed as D-W20-1 and was not triaged this campaign.
