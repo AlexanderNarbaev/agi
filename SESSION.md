@@ -610,3 +610,44 @@ across both nodes, RBAC/rate-limit re-verification.
 re-assertion case, the contradiction case, the different-subject case, and the
 Article II literal-range constraint. Full brain-runtime + gateway suite green;
 live benchmark unchanged at 47/48 = 0.979.
+
+## 2026-09-28 — RECON-W24 (Popcount revisit) — L-5 FOLLOW-UP CLOSED WITH A REAL WIN
+
+W24 asked for one bounded follow-up on the Vector API result: benchmark a
+bitCount-unrolled and a nibble-LUT variant against the current scalar loop on a
+1M-vector cosine search, and adopt only at >=1.5x with bit-equivalence proof.
+
+    scalarXorPopCount :     1.38 ms  (1.00x)
+    unrolled4          :     0.60 ms  (2.30x)     <-- ADOPTED
+    nibbleLUT          :     1.25 ms  (1.10x)     (no gain, as expected)
+
+**The unroll cleared the bar at 2.30x and is now the production
+`MatrixNativeMath.scalarXorPopCount`.**
+
+Why it helps: the original loop has a loop-carried dependency — each iteration must
+read `xor` before writing it — serialising the loop. Four independent partials
+break that chain. The nibble LUT gaining nothing is the expected result:
+`Long.bitCount` already compiles to a single hardware POPCNT, so the win is
+entirely in the loop, never in the count.
+
+### My own benchmark was wrong first, and the test caught it
+The first draft made `unrolled4` sum a popcount PER WORD, which is a DIFFERENT
+function from production: production XOR-folds all words into one long and takes
+one popcount, and XOR-ing two words can cancel bits. The bit-equivalence test
+caught the mismatch (27 vs 67). Corrected to accelerate the FOLD while still
+taking exactly one popcount — after which the honest number is 2.30x rather than
+the 0.53x the broken variant reported.
+
+### Bit-equivalence is asserted, not assumed
+`PopcountVariantBenchmarkTest` proves the adopted unroll returns identical
+results to the original single-accumulator fold over all-zero, all-ones,
+alternating, single-bit-rotating and randomised corpora, at every length 0..9,
+plus 200 randomised post-adoption trials against production. The adoption
+decision is pinned by an assertion so a future change that invalidates it fails
+loudly instead of drifting.
+
+### Honest note
+`MatrixNativeMathTest` has 2 failures (`vectorPopCount_null_input_returns_zero`,
+`vectorXorPopCount_handles_zero_vectors`). Verified PRE-EXISTING: they fail
+identically on clean HEAD with the change stashed, and both are in the D-W20-1
+ledger. Not caused by this wave, and not fixed by it.

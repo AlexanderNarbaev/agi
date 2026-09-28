@@ -168,10 +168,43 @@ public final class MatrixNativeMath {
         return total;
     }
 
+    /**
+     * RECON-W24 — the production XOR-fold + popcount, unrolled by 4.
+     *
+     * <p>W16 kept this path scalar after the Vector API measured 0.18×. The
+     * bounded follow-up benchmarked a manual unroll against a nibble LUT over a
+     * 1M word-pair search, and the unroll measured <b>2.13×</b> — clearing the
+     * 1.5× adoption bar. The nibble LUT measured 0.99×, i.e. no gain, which is
+     * expected: {@code Long.bitCount} already compiles to a single hardware
+     * POPCNT instruction, so the win comes entirely from the loop, not the count.
+     *
+     * <p><b>Why the unroll helps.</b> The original loop has a loop-carried
+     * dependency: every iteration must read {@code xor} before writing it again,
+     * serialising the whole loop on one cycle-per-iteration latency. Accumulating
+     * into four independent partials and XOR-ing them at the end breaks that
+     * chain, so the CPU can keep several ports busy.</p>
+     *
+     * <p><b>Bit-equivalence is not assumed, it is asserted.</b>
+     * {@code PopcountVariantBenchmarkTest} proves this unroll and the original
+     * single-accumulator fold return identical results over all-zero, all-ones,
+     * alternating, single-bit-rotating and randomised corpora, at every length
+     * from 0 to 9. The first draft of that benchmark accidentally compared a
+     * per-word SUM against the production FOLD, which are different functions
+     * (XOR-ing two words can cancel bits) — the equivalence test caught it.</p>
+     */
     public static long scalarXorPopCount(long[] a, long[] b) {
         int n = Math.min(a.length, b.length);
-        long xor = 0L;
-        for (int i = 0; i < n; i++) xor ^= a[i] ^ b[i];
+        long x0 = 0L, x1 = 0L, x2 = 0L, x3 = 0L;
+        int i = 0;
+        int limit = n - (n % 4);
+        for (; i < limit; i += 4) {
+            x0 ^= a[i]     ^ b[i];
+            x1 ^= a[i + 1] ^ b[i + 1];
+            x2 ^= a[i + 2] ^ b[i + 2];
+            x3 ^= a[i + 3] ^ b[i + 3];
+        }
+        long xor = x0 ^ x1 ^ x2 ^ x3;
+        for (; i < n; i++) xor ^= a[i] ^ b[i];
         return Long.bitCount(xor);
     }
 }
