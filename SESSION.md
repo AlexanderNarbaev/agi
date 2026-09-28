@@ -768,3 +768,51 @@ the artifact.
    two different models captured at the same width shared a batch id and their
    registry provenance was indistinguishable. It is now
    `<model stem>-<domain>-<dims>`.
+
+## 2026-09-28 — RECON-W27c (perf evidence + precise list of unmet criteria)
+
+### Measured hot-path cost of the stages added this campaign
+    plain text (no stage fires)        median   1.52 ms
+    capital lookup (61-entry scan)     median   1.71 ms   (+0.19 ms)
+    relational chain                   median   1.24 ms
+    compound arithmetic (MCTS)         median   3.55 ms
+    simple arithmetic (fast path)      median   1.20 ms
+`BilingualFactLookup` scans up to 61 entries with `String.contains`, but only
+after a cheap `wantsCapital` gate, so a non-capital question never pays for the
+scan. The 61-entry table costs ~0.19 ms on the queries that do reach it. MCTS on
+compound arithmetic is the most expensive path at 3.55 ms, which is the honest
+cost of the W23 fix that made PLANNING_DEPTH reachable at all.
+
+`PopcountVariantBenchmarkTest` costs ~7 s of wall time including Gradle overhead,
+against a 17-minute 3-module suite. Kept in the default suite deliberately: a
+performance claim whose benchmark can be silently skipped is not a claim.
+
+### NEGATIVE CONTROLS — proof the new guards are not vacuous
+`RuntimePurityRegressionTest`: reintroducing `System.nanoTime()` into the rule id
+made `no_wall_clock_derived_rule_id_in_the_gateway` and
+`gateway_uses_no_random_or_wall_clock_for_rule_identity` FAIL; restoring the file
+made both green. `SimulacrumDefaultOffTest`: injecting a `= true` simulacrum switch
+into a production file made the guard fail; restoring made it green. Both guards
+detect the regression they exist for.
+
+### .github/workflows NOT touched
+`git diff --name-only f832ae1e HEAD -- .github/` returns ZERO files. The W25 spec
+asked for a weekly CI job, but `.github/workflows/**` is a FROZEN zone under
+AGENTS.md and adding a job requires an explicit RFC mandate. **Not added, and
+that is the correct refusal, not an omission.**
+
+### Acceptance criteria NOT met, stated precisely
+1. **W25 clean-room fresh-clone**: `fresh-clone-smoke.sh` was NOT executed
+   literally end-to-end in a clean temp dir. Its retention policy and a stray
+   syntax error were fixed, and `--prune-only` was exercised, but the full
+   rsync-build-launch-query path was not run. **OPEN.**
+2. **W25 weekly CI job**: not added, FROZEN zone, needs an RFC. **OPEN by design.**
+3. **W22 regression lock "diffed against w13-live.csv every subsequent wave"**:
+   `BenchmarkScoringContractTest` pins the frozen expectations and the
+   scoreability of every category, and every wave archived its own CSV, but no
+   automated diff against `w13-live.csv` was wired. **PARTIAL.**
+4. **W23 "routing table documented"**: the routing decision is documented in code
+   comments and in RECON-W22/W23 reports as prose, not as a table. **PARTIAL.**
+5. **The distillation path does not yet learn from the teacher** (RECON-W27b).
+   Two structurally different teachers produce byte-identical artifacts. **OPEN.**
+6. **69 pre-existing test failures** across ~39 classes (D-W20-1). **OPEN.**
