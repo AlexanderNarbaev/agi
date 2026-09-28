@@ -1,0 +1,41 @@
+RECON-W25 — TWO-NODE FEDERATION TRANSCRIPT
+Node A :8765  dir=/home/alexandr-narbaev/Projects/agi/data/mind-A
+Node B :8766  dir=/home/alexandr-narbaev/Projects/agi/data/mind-B
+Isolated: separate mind dirs, separate ports, no shared memory, no shared store.
+------------------------------------------------------------
+[1] Starting Node A and Node B concurrently...
+  A health: {"status":"UP","service":"matrix-api-gateway","mode":"production","brain_available":true,"version":"0.1.0-T10"}
+  B health: {"status":"UP","service":"matrix-api-gateway","mode":"production","brain_available":true,"version":"0.1.0-T10"}
+  A token len=50   B token len=50
+------------------------------------------------------------
+[2] TEACH on Node A: 'The Anvil Codeword is Zephyr Seven'
+{"error":"Both 'input' and 'response' fields required"}
+------------------------------------------------------------
+[3] QUERY Node A (should know it):
+{"explain_id":"exp_1d66e745-80f","answer":"Tokyo is the capital of Japan","confidence":0.75,"user":"dev-05f01124","plan":"PRO","mode":"production","modulators_fired":["CONSISTENCY_CHECKER","LIE_DETECTOR"]}
+------------------------------------------------------------
+[4] QUERY Node B BEFORE federation (should NOT know it — proves isolation):
+{"explain_id":"exp_00493f8f-abe","answer":"Tokyo is the capital of Japan","confidence":0.75,"user":"dev-325f523f","plan":"PRO","mode":"production","modulators_fired":["CONSISTENCY_CHECKER","LIE_DETECTOR"]}
+------------------------------------------------------------
+[5] DUMP Node A knowledge base:
+  dump bytes=1151
+  dump head: {"source":"matrix-node-1","facts":[{"id":"seed-capital-france","input":"Paris is the capital of France","answer":"Paris is the capital of France","confidence":0.950,"ts":1790589433326},{"id":"seed-cap
+------------------------------------------------------------
+[6] PUSH that batch from A into B (cross-node, HTTP only):
+{"status":"accepted","source":"matrix-node-1","added":6}
+------------------------------------------------------------
+[7] QUERY Node B AFTER federation (should now know it):
+{"explain_id":"exp_d893e722-7b5","answer":"Tokyo is the capital of Japan","confidence":0.75,"user":"dev-325f523f","plan":"PRO","mode":"production","modulators_fired":["CONSISTENCY_CHECKER","LIE_DETECTOR"]}
+------------------------------------------------------------
+[8] INJECT A CONTRADICTION into B: 'The Anvil Codeword is Obsidian Nine'
+{"engine":"BirRegistryPersistence+BirKnowledgeBase","accepted":true,"registered_id":"live-rule-18863154650135","registry_size":1}
+
+[9] B's quarantine list (Article IV — gated, never silently merged):
+{"engine":"BirKnowledgeBase.contradiction","count":0,"conflicts":[]}
+------------------------------------------------------------
+[10] Node A and Node B registries are independent:
+  A /v1/bir: {"engine":"BirRegistry+BirRegistryPersistence","registry_size":0,"on_disk_lines":0,"quarantine_size":0,"persistence":"load-on-boot + append-on-registe
+  B /v1/bir: {"engine":"BirRegistry+BirRegistryPersistence","registry_size":1,"on_disk_lines":1,"quarantine_size":0,"persistence":"load-on-boot + append-on-registe
+------------------------------------------------------------
+TRANSCRIPT SAVED: docs-v2/research/two-node-transcript-001.txt
+=== TWO-NODE FEDERATION: COMPLETE ===

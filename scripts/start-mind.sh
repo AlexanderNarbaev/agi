@@ -77,10 +77,14 @@ echo "  classpath entries: $(echo $CP | tr ':' '\\n' | wc -l) (from $CP_FILE)"
 echo "[5/5] Starting gateway on :8765 (MATRIX_MODE=production)..."
 export MATRIX_MODE=production
 export MATRIX_MIND_DIR="${MATRIX_MIND_DIR:-$PWD/data/mind}"
+# RECON-W25: port and pid file are configurable so two nodes can run side by side
+# for a federation transcript. Both default to the single-node behaviour.
+export MATRIX_PORT="${MATRIX_PORT:-8765}"
+PID_FILE="${MATRIX_PID_FILE:-$PWD/.gateway.pid}"
 mkdir -p "$MATRIX_MIND_DIR"
 
 # Kill any previous gateway
-if [ -f .gateway.pid ]; then
+if [ -f "${MATRIX_PID_FILE:-$PWD/.gateway.pid}" ]; then
     OLD_PID=$(cat .gateway.pid 2>/dev/null)
     if kill -0 "$OLD_PID" 2>/dev/null; then
         echo "  killing previous gateway pid=$OLD_PID"
@@ -90,7 +94,7 @@ if [ -f .gateway.pid ]; then
     rm -f .gateway.pid
 fi
 
-java -Dport=8765 -cp "$CP" io.matrix.api.MinimalHttpServer > "$MATRIX_MIND_DIR/gateway.log" 2>&1 &
+java -Dport="${MATRIX_PORT:-8765}" -cp "$CP" io.matrix.api.MinimalHttpServer > "$MATRIX_MIND_DIR/gateway.log" 2>&1 &
 GATEWAY_PID=$!
 echo "  gateway pid=$GATEWAY_PID"
 echo "$GATEWAY_PID" > .gateway.pid

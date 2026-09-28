@@ -1,0 +1,41 @@
+RECON-W25 — TWO-NODE FEDERATION TRANSCRIPT
+Node A :8765  dir=/home/alexandr-narbaev/Projects/agi/data/mind-A
+Node B :8766  dir=/home/alexandr-narbaev/Projects/agi/data/mind-B
+Isolated: separate mind dirs, separate ports, no shared memory, no shared store.
+------------------------------------------------------------
+[1] Starting Node A and Node B concurrently...
+  A health: {"status":"UP","service":"matrix-api-gateway","mode":"production","brain_available":true,"version":"0.1.0-T10"}
+  B health: {"status":"UP","service":"matrix-api-gateway","mode":"production","brain_available":true,"version":"0.1.0-T10"}
+  A token len=50   B token len=50
+------------------------------------------------------------
+[2] TEACH on Node A: 'The Anvil Codeword is Zephyr Seven'
+{"status":"taught","input":"The Anvil Codeword is","kb_size":6}
+------------------------------------------------------------
+[3] QUERY Node A (should know it):
+{"explain_id":"exp_f5dc0167-1b2","answer":"Zephyr Seven","confidence":0.5,"user":"dev-bee21d11","plan":"PRO","mode":"production","modulators_fired":["CONSISTENCY_CHECKER","LIE_DETECTOR","SAFETY_MONITOR"]}
+------------------------------------------------------------
+[4] QUERY Node B BEFORE federation (should NOT know it — proves isolation):
+{"explain_id":"exp_0853467c-2d6","answer":"I don't have a confident answer to that. No reasoning stage could establish one from what I know.","confidence":0.5,"user":"dev-533c085c","plan":"PRO","mode":"production","modulators_fired":["CONSI
+------------------------------------------------------------
+[5] DUMP Node A knowledge base:
+  dump bytes=162
+  dump head: {"source":"matrix-node-1","facts":[{"id":"taught-b85de6a5d268c64","input":"The Anvil Codeword is","answer":"Zephyr Seven","confidence":0.950,"ts":1790589464840}]}
+------------------------------------------------------------
+[6] PUSH that batch from A into B (cross-node, HTTP only):
+{"status":"accepted","source":"matrix-node-1","added":1}
+------------------------------------------------------------
+[7] QUERY Node B AFTER federation (should now know it):
+{"explain_id":"exp_7e6dcdf0-a78","answer":"Zephyr Seven","confidence":0.5,"user":"dev-533c085c","plan":"PRO","mode":"production","modulators_fired":["CONSISTENCY_CHECKER","LIE_DETECTOR","SAFETY_MONITOR"]}
+------------------------------------------------------------
+[8] INJECT A CONTRADICTION into B: 'The Anvil Codeword is Obsidian Nine'
+{"engine":"BirRegistryPersistence+BirKnowledgeBase","accepted":true,"registered_id":"live-rule-18894629183641","registry_size":2}
+
+[9] B's quarantine list (Article IV — gated, never silently merged):
+{"engine":"BirKnowledgeBase.contradiction","count":0,"conflicts":[]}
+------------------------------------------------------------
+[10] Node A and Node B registries are independent:
+  A /v1/bir: {"engine":"BirRegistry+BirRegistryPersistence","registry_size":0,"on_disk_lines":0,"quarantine_size":0,"persistence":"load-on-boot + append-on-registe
+  B /v1/bir: {"engine":"BirRegistry+BirRegistryPersistence","registry_size":2,"on_disk_lines":1,"quarantine_size":0,"persistence":"load-on-boot + append-on-registe
+------------------------------------------------------------
+TRANSCRIPT SAVED: docs-v2/research/two-node-transcript-002.txt
+=== TWO-NODE FEDERATION: COMPLETE ===

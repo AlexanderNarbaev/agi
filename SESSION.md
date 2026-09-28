@@ -528,3 +528,46 @@ records that RuntimeLlmGuardTest was itself weaker than claimed until this campa
   broken run cannot leave 2 GB behind.
 Also fixed a stray unbalanced `"` on line 75 that made the script fail
 `bash -n` — it had been silently broken.
+
+## 2026-09-28 — RECON-W25 (Two-Node Federation Transcript) — L-6 CLOSED, D-W25-1 OPEN
+
+`start-mind.sh` gained `MATRIX_PORT` and `MATRIX_PID_FILE` (both defaulting to the
+old single-node behaviour) so two nodes can run side by side.
+`scripts/two-node-federation.sh` runs the full adversarial scenario.
+
+### The proof (docs-v2/research/two-node-transcript-002.txt)
+    [2] TEACH on A            -> {"status":"taught","kb_size":6}
+    [3] QUERY A               -> "Zephyr Seven"
+    [4] QUERY B BEFORE fed    -> "I don't have a confident answer to that."   (isolation)
+    [5] DUMP A                -> 1 fact, 162 bytes
+    [6] PUSH A -> B           -> {"status":"accepted","added":1}
+    [7] QUERY B AFTER fed     -> "Zephyr Seven"                              (the proof)
+    [10] A /v1/bir registry_size=0   B /v1/bir registry_size=2   (independent)
+
+The same question, same client, two nodes; B refuses before federation and
+answers correctly after, with no shared state. That is the transcript L-6 lacked.
+
+### D-W25-1 — THE CONTRADICTION GATE DOES NOT FIRE
+    [8] register "The Anvil Codeword is -> Obsidian Nine" (node already holds
+        "-> Zephyr Seven")
+    -> {"accepted":true,"registry_size":2}
+    [9] /v1/conflicts -> {"count":0,"conflicts":[]}
+
+Two facts asserting different answers for the same subject were BOTH MERGED. The
+response names `engine: BirKnowledgeBase.contradiction` in the same payload that
+accepted the conflicting rule.
+
+Root cause, diagnosed: W15 hashes the POS bits of a CLAUSE FORM. A taught fact is
+a text pair in the knowledge base; a `/v1/bir` registration is a bitmask clause.
+The two stores are compared in a currency that cannot express "same question,
+different answer". Fixing it needs a shared question-identity across the text KB
+and the rule store — a design change, not a patch. Article IV is violated as
+written. OPEN.
+
+### Also found
+Run 001 of the same script had BOTH nodes answer "Tokyo is the capital of Japan"
+to the unrelated question "The Anvil Codeword is?" — the HDC false-positive class
+with no similarity floor. Real, reproducible, still present.
+
+NOT done and NOT claimed: DP-noise federation, independent audit-chain verification
+across both nodes, RBAC/rate-limit re-verification.
