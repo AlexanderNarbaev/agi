@@ -339,3 +339,60 @@ Added 2 new regression guards (direction + order-independence). 8/8 green.
   Carried to W21.
 - **PLANNING_DEPTH is 1/4, not solved.** Separate root cause, W23.
 - **D-W20-1 (70 failures) and D-W20-2 (non-existent SimulacrumDefaultOffTest) remain open.**
+
+## 2026-09-28 — RECON-W23 (Root-Cause PLANNING_DEPTH 0/4)
+
+**PLANNING_DEPTH 0/4 → 4/4. Headline 43/48 (0.896) → 46/48 (0.958). No category regressed.**
+
+### Root cause (W4's own "limitation #1", confirmed exactly as predicted)
+
+1. **GREEDY BINARY MISROUTING.** `ArithmeticStage.tryEvaluate` ran the single-pair
+   regex `(-?\d+)\s*([+\-*/])\s*(-?\d+)` with `find()`, which returns the FIRST pair
+   and discards the rest:
+       "2 + 3 * 4" -> matched "2 + 3" -> answered "2 + 3 = 5"   (expected 14)
+       "5 - 1 + 2" -> matched "5 - 1" -> answered "5 - 1 = 4"   (expected 6)
+   The `tryCompoundViaPlanning` branch written for exactly these inputs sat below
+   `if (!m.find())` — i.e. it was UNREACHABLE for every input it was written for.
+   FIX: compound detection (>=2 operators) now runs FIRST; the regex is the fast
+   path only for unambiguous single-operation input.
+
+2. **NO OPERATOR PRECEDENCE.** The compound path computed "left-to-right (matches
+   regex semantics)" — arithmetically wrong: 2+3*4 gave 20, not 14.
+   FIX: `evaluateWithPrecedence` — two passes, * and / bind tighter than + and -,
+   equal precedence associates left to right. Non-exact or zero division DECLINES
+   (returns null) rather than truncating and reporting a fabricated integer.
+
+3. **WORD NUMERALS WERE UNTOKENISABLE.** "twice five plus three" and "ten times two
+   minus five" carry the whole expression in words, so the numeric tokeniser found
+   <3 tokens and the stage missed.
+   FIX: `normalizeWordArithmetic` — number words expanded first, then multiplier
+   PREFIXES rewritten by capturing the following number ("twice 5" -> "5 * 2";
+   a bare "twice"->"2" produced the nonsense stream "2 5 + 3" and the answer 8).
+   Then word operators -> symbols.
+
+4. **THE COMPOUND PATH CRASHED ON A NULL PLANNER.** `new ArithmeticStage()` is what
+   the serving pipeline constructs, so `planningStage.plan(...)` was a null
+   dereference and every compound expression died before being evaluated.
+   FIX: the answer no longer depends on the planner. MCTS contributes deliberative
+   EVIDENCE, not correctness; when absent the evaluation still runs and the trace
+   records `planning=unavailable-no-planner` (Article VIII: honest, not silent).
+   A real PlanningStage is now also wired in so the evidence is present.
+
+### Measured
+    CAT PLANNING_DEPTH  4/4 (1.00)   [was 1/4 after the W22 scorer fix, 0/4 before]
+    TOTAL=48 PASSED=46 PASSRATE=0.9583
+    latency: 2+3 = 4.1ms, "2 + 3 * 4" = 2.9ms, "twice five plus three" = 2.5ms
+    ARITHMETIC 14/14, ANALOGY 5/6, CONTRADICTION 4/4, ETHICS 3/3, RU 3/3,
+    TAUGHT_RETRIEVAL 4/4, GENERALIZATION 6/7, RETRIEVAL 3/3 — all unchanged.
+
+17 new tests in ArithmeticCompoundRoutingTest, including the four frozen PD probes,
+precedence unit tests, and negative tests (non-exact division, divide-by-zero,
+malformed streams, non-arithmetic input not hijacked).
+
+### Honest caveats
+- **Latency rose 0.94ms -> 3.04ms mean** because MCTS now actually runs on compound
+  input (previously it was skipped because the path was unreachable). Well inside
+  the FREE tier budget, but it is a real cost and is recorded as such.
+- **GE-6 still fails** (needs world knowledge, deliberately not forced).
+- **ANALOGY is 5/6** — unchanged, not yet triaged.
+- D-W20-1 (70 pre-existing failures) and D-W20-2 (SimulacrumDefaultOffTest absent) remain open.

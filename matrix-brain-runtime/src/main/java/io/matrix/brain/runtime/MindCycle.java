@@ -83,7 +83,10 @@ public final class MindCycle {
         this.reflex = new ReflexStage();
         this.signal = new SignalStage();
         this.saliency = new SaliencyStage();
-        this.arithmetic = new ArithmeticStage();
+        // RECON-W23: pass a real PlanningStage so compound arithmetic carries MCTS
+        // deliberation evidence. The stage no longer REQUIRES it (the answer is
+        // arithmetic, not planning), but the evidence is worth having.
+        this.arithmetic = new ArithmeticStage(new io.matrix.brain.runtime.stages.PlanningStage());
         this.analogy = new AnalogyStage();
         this.birRules = new BirInferenceStage();
         this.hdcMemory = (hdcStore != null) ? new HdcRetrievalStage(hdcStore) : new HdcRetrievalStage();

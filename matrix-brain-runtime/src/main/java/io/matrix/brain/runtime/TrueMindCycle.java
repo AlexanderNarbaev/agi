@@ -219,7 +219,7 @@ public final class TrueMindCycle {
 
         // ---- Stage 4: ARITHMETIC (regex-based BigInteger composition) ----
         ArithmeticStage.ArithmeticResult arith =
-            new ArithmeticStage().tryEvaluate(input, trace);
+            new ArithmeticStage(new io.matrix.brain.runtime.stages.PlanningStage()).tryEvaluate(input, trace);
 
         // ---- Stage 5: ANALOGY (seed table) ----
         AnalogyStage.AnalogyResult analogyResult =
