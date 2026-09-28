@@ -816,3 +816,48 @@ that is the correct refusal, not an omission.**
 5. **The distillation path does not yet learn from the teacher** (RECON-W27b).
    Two structurally different teachers produce byte-identical artifacts. **OPEN.**
 6. **69 pre-existing test failures** across ~39 classes (D-W20-1). **OPEN.**
+
+## 2026-09-28 — RECON-W27d (fresh-clone smoke: EXECUTED, root cause found, still failing)
+
+I said last entry that the clean-room smoke had not been run. That was the
+biggest named gap, so I ran it — literally, on port 8799 so the live gateway the
+operator is using was never displaced. It failed, and the failure was informative.
+
+### THE 8.8 GB "LEAK" WAS NEVER BUILD OUTPUT
+Running the script immediately produced `No space left on device (28)` while
+rsync was writing:
+    .../data/smoke-old/1790530492/.venv/lib/python3.14/site-packages/nvidia/cu13/lib/libcublasLt.so.13
+`data/smoke-old` is 8.8 GB of which **8.6 GB is a Python virtualenv containing
+NVIDIA CUDA shared libraries**. Every previous wave (including mine) attributed it
+to "uncompressed build artifacts". It was a venv, and the rsync exclusion list
+never covered it.
+FIX: `--exclude=.venv --exclude=venv --exclude=__pycache__` and, critically,
+`--exclude=data/smoke*` — without the latter the clone recursively copies PREVIOUS
+smoke directories, so a smoke run nests another smoke run inside itself (the log
+showed `data/smoke/...` repeating eight levels deep). With the fix the same
+directory clones to **238 MB instead of 8.6 GB**.
+
+### Two more real bugs the run exposed
+- The script bound port 8765 and wrote `.gateway.pid` unconditionally, so running
+  it would have taken the live gateway down. Now honours `MATRIX_PORT` and
+  `MATRIX_PID_FILE`.
+- It queried `/v1/auth/login` immediately after a script that backgrounds the JVM,
+  racing the listener. Two of three attempts died with an empty body reported as
+  `Expecting value: line 1 column 1`. Now polls `/health/live` for up to 60 s and
+  prints the gateway log if it never comes up.
+- The EXIT trap I added in W25 worked exactly as designed: every failed run
+  removed its own partial copy, so four failed attempts left nothing behind.
+
+### STILL FAILING — not claimed as fixed
+The smoke now completes steps 0-4 (copy, build, classpath, launch) and fails at
+step 5 with:
+    Error: Could not find or load main class io.matrix.api.MinimalHttpServer
+    Caused by: java.lang.ClassNotFoundException: io.matrix.api.MinimalHttpServer
+despite `:matrix-core:classes :matrix-brain-runtime:classes
+:matrix-api-gateway:classes` reporting `BUILD SUCCESSFUL` and the class file
+being produced. The suspect is the `$CP_FILE`-based classpath assembly in
+start-mind.sh, which reads `matrix-api-gateway/build/runtime-classpath.txt` and
+rebuilds it in step 3; five modules on the classpath (audit, billing,
+observability, quality, tools-distill) are not built in the clone. Not resolved.
+**L-7 remains OPEN.** The value delivered is the 8.6 GB root cause, three script
+bugs, and a precise, reproducible failure state.

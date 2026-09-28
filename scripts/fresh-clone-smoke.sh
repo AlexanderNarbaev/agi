@@ -71,13 +71,27 @@ echo ""
 echo "Step 1: Copy repo to $TARGET..."
 mkdir -p "$TARGET"
 # Use rsync for speed excluding .git build dirs etc.
-rsync -a --quiet --exclude='.git' --exclude='models' --exclude='build' --exclude='bin' --exclude='.gradle' --exclude='data/mind/benchmarks' --exclude='data/mind/*.ndjson' --exclude='data/mind/mind.sqlite' --exclude='matrix-*/build' --exclude='.codegraph' --exclude='docs-v2/research/cache' --exclude='.opencode' --exclude='.minecraft' --exclude='node_modules' --exclude='*.log' "$SRC/" "$TARGET/"
-
+# RECON-W27 — exclusions whose absence caused a real failure, verified by running
+# this script (which the previous wave had not done).
+#  * data/smoke*  : without it the clone recursively copies PREVIOUS smoke dirs,
+#    nesting a smoke run inside itself; the failure log showed data/smoke/...
+#    repeating eight levels deep.
+#  * .venv / venv : data/smoke-old holds an 8.6 GB Python virtualenv containing
+#    NVIDIA CUDA shared libraries (libcublasLt.so.13). Copying it filled the disk
+#    and aborted the clone with ENOSPC. That — not build output — was the true
+#    source of the 8.8 GB previously blamed on build artifacts.
+EXCLUDE_ARGS="--exclude=.git --exclude=models --exclude=build --exclude=bin --exclude=.gradle --exclude=data/mind/benchmarks --exclude=data/mind/*.ndjson --exclude=data/mind/mind.sqlite --exclude=matrix-*/build --exclude=.codegraph --exclude=docs-v2/research/cache --exclude=.opencode --exclude=.minecraft --exclude=node_modules --exclude=*.log --exclude=data/smoke* --exclude=.venv --exclude=venv --exclude=__pycache__"
+# shellcheck disable=SC2086  # deliberate word-splitting of the exclude list
+rsync -a --quiet $EXCLUDE_ARGS "$SRC/" "$TARGET/"
 cd "$TARGET"
 echo "  Done. Repo copied."
 echo ""
 echo "Step 2: Build all required modules..."
-./gradlew :matrix-api-gateway:jar :matrix-brain-runtime:jar :matrix-core:jar --no-daemon --console=plain >/tmp/matrix-build.log 2>&1 || {
+# RECON-W27 FIX: build `classes`, not just `jar`. start-mind.sh assembles its
+# runtime classpath from */build/classes/java/main, and the `jar` task alone
+# does not guarantee those directories exist in a clean clone — the gateway
+# died with ClassNotFoundException: io.matrix.api.MinimalHttpServer.
+./gradlew :matrix-core:classes :matrix-brain-runtime:classes :matrix-api-gateway:classes --no-daemon --console=plain >/tmp/matrix-build.log 2>&1 || {
     echo "Build failed; tail of /tmp/matrix-build.log:"
     tail -20 /tmp/matrix-build.log
     exit 1
@@ -103,7 +117,14 @@ echo "  Done. Classpath ready."
 
 echo ""
 echo "Step 4: Launch the gateway..."
-bash scripts/start-mind.sh > /tmp/matrix-start.log 2>&1 || {
+# RECON-W27: honour MATRIX_PORT and MATRIX_PID_FILE so a clean-room smoke can run
+# on its own port and its own pid file WITHOUT displacing the live gateway the
+# operator is using. Previously this script always bound 8765 and always wrote
+# .gateway.pid, so running it would take the live system down.
+SMOKE_PORT="${MATRIX_PORT:-8765}"
+MATRIX_PORT="$SMOKE_PORT" \
+MATRIX_PID_FILE="${MATRIX_PID_FILE:-$PWD/.smoke-gateway.pid}" \
+  bash scripts/start-mind.sh > /tmp/matrix-start.log 2>&1 || {
     echo "Gateway failed to start:"
     tail -20 /tmp/matrix-start.log
     exit 1
@@ -112,8 +133,27 @@ echo "  Done. Gateway up."
 
 echo ""
 echo "Step 5: Query the mind..."
-TOKEN=$(curl -s -X POST http://localhost:8765/v1/auth/login -H 'Content-Type: application/json' -d '{"email":"pro@test.com"}' | python3 -c 'import sys,json; print(json.load(sys.stdin)["token"])')
-RESP=$(curl -s -X POST http://localhost:8765/v1/analyze -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' -d '{"input":"What is 2+3?"}')
+# RECON-W27 FIX — start-mind.sh backgrounds the JVM and returns immediately, so
+# step 5 raced the listener. Two of the three attempts failed here with an
+# empty body from /v1/auth/login, which the JSON parse then reported as
+# "Expecting value: line 1 column 1". Poll /health/live until it answers.
+echo "  Waiting for $SMOKE_PORT to accept requests..."
+READY=0
+for _ in $(seq 1 60); do
+  if curl -s -m 2 "http://localhost:$SMOKE_PORT/health/live" | grep -q '"status":"UP"'; then
+    READY=1; break
+  fi
+  sleep 1
+done
+if [ "$READY" -ne 1 ]; then
+  echo "  gateway did not become ready on port $SMOKE_PORT; last 20 log lines:"
+  tail -20 "$TARGET/data/mind/gateway.log" 2>/dev/null || true
+  exit 1
+fi
+echo "  Gateway ready."
+
+TOKEN=$(curl -s -X POST "http://localhost:$SMOKE_PORT/v1/auth/login" -H 'Content-Type: application/json' -d '{"email":"pro@test.com"}' | python3 -c 'import sys,json; print(json.load(sys.stdin)["token"])')
+RESP=$(curl -s -X POST "http://localhost:$SMOKE_PORT/v1/analyze" -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' -d '{"input":"What is 2+3?"}')
 echo "  /v1/analyze → $RESP"
 
 echo ""
@@ -124,6 +164,6 @@ echo "Repro commands (5 total):"
 echo "  1. ./gradlew :matrix-api-gateway:jar :matrix-brain-runtime:jar :matrix-core:jar"
 echo "  2. ./gradlew :matrix-api-gateway:writeRuntimeClasspath"
 echo "  3. (prepend matrix-{api-gateway,brain-runtime}/build/classes/java/main to runtime-classpath.txt)"
-echo "  4. bash scripts/start-mind.sh"
+echo "  4. MATRIX_PORT=$SMOKE_PORT bash scripts/start-mind.sh"
 echo "  5. TOKEN=\$(curl -s -X POST http://localhost:8765/v1/auth/login ...)"
 echo "     curl -X POST http://localhost:8765/v1/analyze -d '{\"input\":\"What is 2+3?\"}'"
