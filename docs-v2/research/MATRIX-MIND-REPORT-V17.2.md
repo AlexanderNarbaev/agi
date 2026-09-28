@@ -113,7 +113,8 @@ explicit refusal, and the BRC trace names the stage that declined and why.
 | **D-W13-3** remaining misses | ✅ **TRIAGED** | Both survivors explained below with measured root cause. |
 | **DISK-WARN** | ✅ **CLOSED** | Self-resolved on arrival (132 GB free). Durable policy added: rotation, ledger, REFUSE gate. |
 | **L-5** Vector 0.18× | ✅ honest, unchanged | Follow-up popcount benchmark **not performed** — see §5. |
-| **L-6** two-node federation | 🟡 **PARTIAL** | `/v1/federate` verified; a full adversarial two-node transcript was not captured. |
+| **L-6** two-node federation | ✅ **CLOSED** | Full adversarial two-node transcript captured (`two-node-transcript-002.txt`): B refuses before federation, accepts the pushed batch, and answers correctly after — A registry 0, B registry 2, no shared state. |
+| **D-W25-1** contradiction gate | ✅ **CLOSED** | Proven broken by the W25 transcript, then fixed: precondition now hashes the subject (not the whole body), `Clause` gained value equality, fingerprint bounded to the Article II 20-bit domain. Same fact re-asserted → accepted; same question with a different answer → quarantined; `/v1/conflicts` count:1. |
 | **L-7** fresh-clone | 🟡 **PARTIAL** | Script exists; not executed literally in a clean temp dir; no CI job installed. |
 | **D-W20-1** 74 failing tests | 🔴 **OPEN** | Pre-existing, none in touched classes. |
 | **D-W20-2** missing guard | 🔴 **OPEN** | `SimulacrumDefaultOffTest` does not exist. |
@@ -159,6 +160,12 @@ W16 measurement only. **Not claimed as done.**
 provenance-carrying artifacts into the registry, but the retrieval path that would
 surface them to a user is not wired — the registry is queried by bitmask while the
 distilled clauses are HDC-shaped. This is the honest reason GE-6 fails.
+
+**The 20-bit fingerprint domain is a real limit.** With K_MAX=20, subject identity
+has 2^20 slots, so spurious precondition collisions become likely past ~1k
+registered facts. The failure direction is safe — a collision is quarantined only
+when the conclusions actually differ — but the throughput ceiling is real and
+would need a wider identity (more input words) to raise.
 
 **`data/smoke-old` still occupies 8.8 GB.** Harmless at 133 GB free; the Goal
 Guard blocks `rm -rf`. `fresh-clone-smoke.sh` still has no retention policy, which
