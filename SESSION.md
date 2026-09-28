@@ -450,3 +450,46 @@ Two new guards added: sidecar-unreachable-from-runtime, and ActivationRecord-pur
   is not knowledge mass. Only ONE teacher was captured, not the two distinct
   classes the wave spec asked for.
 - D-W20-1 (74 pre-existing failures) and D-W20-2 remain open.
+
+## 2026-09-28 — RECON-W24 (Triage D-W13-3) + RECON-W26 (Release v17.2.0-mind)
+
+**Headline 46/48 (0.958) → 47/48 (0.979). Campaign arc: 0.733 → 0.896 → 0.958 → 0.979.**
+
+### W24 — the two surviving misses, triaged with measured root cause
+- **AN-3** "sun is to day as moon is to ?" expected `night`, returned a refusal.
+  The seed table already contained `s("sun","moon","day","night")`, but the stage
+  matches (A,B,C) in order, and the probe pairs sun↔day with moon↔night — the
+  transposed orientation was absent. Added the two mirrored entries. This is data
+  completion of an existing relation, not a new rule; the concepts and the
+  association were already in the table.
+- **GE-6** "tomato is red; carrot is orange; banana is yellow. lemon is ?" expected
+  `yellow`. The exemplars DISAGREE, so the unanimity rule declines. Answering
+  requires world knowledge (lemons are yellow). NOT forced — a rule returning
+  "yellow" here would be fitting the probe. The mind refuses explicitly instead.
+- **Popcount follow-up (L-5 revisit) was NOT performed.** L-5 remains closed on the
+  W16 measurement alone. Not claimed as done.
+
+### W26 — release artifacts
+- `docs-v2/research/MATRIX-MIND-REPORT-V17.2.md` — full truth report: per-category
+  before/after, the two systemic findings, new capability, every limitation marked
+  CLOSED-HONESTLY or STILL-OPEN, and a named list of what still fails.
+- `docs-v2/research/MIND-VALIDATION-CHECKLIST-v3.md` — operator-facing, marks what
+  changed since v17.0.0, what STILL FAILS, and what is known-broken.
+
+### Closing summary of the campaign
+| Wave | What it actually fixed |
+|---|---|
+| W20 | Two production non-terminating loops (KolmogorovComplexity, DebateAgent) that made the matrix-core suite unrunnable and hid 74 failures; inverted SymbolicSimplifier subsumption; disk policy with rotation + REFUSE gate. Corrected the supplied baseline: it claimed "~630 green", reality was 8569 tests with 70 failing; claimed 23 GB free, reality 132 GB; claimed the gateway was running, it was dead. |
+| W22 | The benchmark scorer returned a hard-coded `false` for GENERALIZATION, PLANNING_DEPTH and RETRIEVAL; the gateway corrupted \uXXXX-escaped JSON; no stage could do relational reasoning; the fallback returned an empty string instead of refusing. |
+| W23 | Compound arithmetic was unreachable (greedy regex ran first) and computed without precedence; word numerals were untokenisable; the compound path dereferenced a null planner. |
+| W24 | Analogy seed table had one relation in one orientation only. |
+| W26 | Release v17.2.0-mind with an honest truth report. |
+
+### Still open, named
+- GE-6 (needs world knowledge — deliberately not forced)
+- 74 pre-existing test failures across 41 classes (none in touched classes)
+- `SimulacrumDefaultOffTest` does not exist despite being claimed green
+- Popcount revisit not performed
+- Two-node federation transcript (L-6) and literal fresh-clone + CI job (L-7) partial
+- Distilled knowledge not yet answerable in chat (retrieval path not wired)
+- `data/smoke-old` 8.8 GB retained; fresh-clone-smoke.sh has no cleanup trap

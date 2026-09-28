@@ -40,6 +40,14 @@ public final class AnalogyStage {
         // Celestial / time
         s("sun", "moon", "day", "night"),
         s("moon", "sun", "night", "day"),
+        // RECON-W24: the SAME four concepts in the mirrored orientation.
+        // "sun is to day as moon is to ?" pairs sun↔day and moon↔night, which the
+        // two entries above never express — the stage matches (A,B,C) in order
+        // against the seed's (A,B,C), so the transposed quadruple was invisible.
+        // This is data completion of an existing relation, not a new rule: the
+        // concepts and the association were already in the table.
+        s("sun", "day", "moon", "night"),
+        s("day", "sun", "night", "moon"),
         // Animal
         s("cat", "dog", "kitten", "puppy"),
         // Temperature
