@@ -221,6 +221,137 @@ public final class DistillationPipeline {
         }
     }
 
+    /**
+     * RECON-W21 — distil from ACTIVATIONS CAPTURED OUT OF PROCESS.
+     *
+     * <p><b>Why this method exists.</b> {@link #distillFromOnnxTeacher} is wired
+     * and correct, but ONNX Runtime 1.29.0's Java binding SEGFAULTS on this host
+     * (JDK 25 + this Linux), so calling it from inside the JVM kills the process
+     * before any distillation happens. That made L-1 look unfixable while the
+     * actual capability was fine.</p>
+     *
+     * <p><b>The escape hatch.</b> Activations are captured in a SEPARATE process
+     * by {@code scripts/capture_activations.py} (Python onnxruntime), written as
+     * NDJSON, and replayed here. The ONNX dependency is now confined to an
+     * offline tool and is unreachable from analyze/chat/think — which is exactly
+     * what Article I requires of it.</p>
+     *
+     * <p><b>Article III (provenance).</b> The provenance string records the sidecar
+     * script, the NDJSON path, the seed, the bit width, the sample count and the
+     * batch id carried in the capture, so a learned artifact can always be traced
+     * back to the offline run that produced it.</p>
+     *
+     * <p><b>Article II.</b> {@code inputBits} is still enforced by
+     * {@link KMaxEnforcer}; the sidecar does not widen K_MAX.</p>
+     *
+     * <p>Malformed lines are skipped and counted, never silently ignored: the
+     * number consumed is reported in the provenance so a partial capture is
+     * visible rather than looking like a complete one.</p>
+     */
+    public RunResult distillFromActivations(
+            String sourceId, String ndjsonPath, int inputBits)
+            throws java.io.IOException {
+        return distillFromActivations(sourceId, java.nio.file.Path.of(ndjsonPath), inputBits);
+    }
+
+    /**
+     * RECON-W21 — content-addressed artifact hash.
+     *
+     * <p>Article III violation found by a determinism test: hashing
+     * {@code Bir.toString()} mixed in the registry timestamp and the per-run entry
+     * id, so two identical distillations of the same capture produced different
+     * hashes. The hash must depend only on the LEARNED STRUCTURE, so it is
+     * computed over arity, form kind and clause masks — never over a clock or a
+     * generated identifier.</p>
+     */
+    private static String contentHash(io.matrix.bir.Bir distilled) {
+        StringBuilder sb = new StringBuilder();
+        sb.append(distilled.inputBits()).append('/').append(distilled.outputBits())
+          .append('/').append(distilled.form());
+        if (distilled instanceof io.matrix.bir.ClauseSetForm cs) {
+            for (var c : cs.clauses()) {
+                sb.append('|');
+                for (long w : c.pos) sb.append(Long.toHexString(w)).append(':');
+                sb.append('/');
+                for (long w : c.neg) sb.append(Long.toHexString(w)).append(':');
+            }
+        }
+        return Integer.toHexString(sb.toString().hashCode());
+    }
+
+    /** Path-taking overload. */
+    public RunResult distillFromActivations(
+            String sourceId, java.nio.file.Path ndjsonPath, int inputBits)
+            throws java.io.IOException {
+        KMaxEnforcer.enforce(inputBits);
+        if (!java.nio.file.Files.isRegularFile(ndjsonPath)) {
+            throw new java.io.IOException("activation capture not found: " + ndjsonPath
+                + " — generate via: python3 scripts/capture_activations.py"
+                + " --model data/models/teacher/teacher.onnx"
+                + " --out " + ndjsonPath + " --dims 8");
+        }
+        long startNs = System.nanoTime();
+        int before = registry.size();
+        Distiller distiller = new Distiller(inputBits, 0.5);
+
+        int consumed = 0;
+        int skipped = 0;
+        String batchId = "unknown";
+        long[] firstInput = null;
+        float[] firstActivation = null;
+
+        java.util.List<String> lines = java.nio.file.Files.readAllLines(
+            ndjsonPath, java.nio.charset.StandardCharsets.UTF_8);
+        for (String line : lines) {
+            if (line == null || line.isBlank()) continue;
+            io.matrix.distill.ActivationRecord rec =
+                io.matrix.distill.ActivationRecord.parse(line);
+            if (rec == null || rec.activation() == null || rec.activation().length == 0) {
+                skipped++;
+                continue;   // counted, not silently dropped
+            }
+            if ("unknown".equals(batchId) && rec.batchId() != null) {
+                batchId = rec.batchId();
+            }
+            long[] input = rec.toBitVector(inputBits);
+            distiller.capture(input, rec.activation());
+            if (firstInput == null) {
+                firstInput = input;
+                firstActivation = rec.activation();
+            }
+            consumed++;
+        }
+
+        if (consumed == 0) {
+            throw new java.io.IOException(
+                "no usable activation records in " + ndjsonPath
+                + " (lines=" + lines.size() + ", skipped=" + skipped + ")");
+        }
+
+        String provenance = String.format(
+            "engine=ActivationRecord.replay,engine=Distiller.synthesize,"
+            + "engine=BirRegistry.register,source=%s,capture=%s,"
+            + "captureTool=scripts/capture_activations.py,onnxRuntime=out-of-process,"
+            + "batch=%s,seed=%d,inputBits=%d,samples=%d,skipped=%d",
+            sourceId, ndjsonPath.toString(), batchId, seed, inputBits, consumed, skipped);
+
+        Bir distilled = distiller.synthesize(provenance);
+        double fidelity = distiller.fidelity(distilled,
+            new long[][]{firstInput}, new float[][]{firstActivation});
+
+        BirRegistry.Entry entry = registry.register(
+            "distill-activations-" + sourceId + "-" + seed, distilled,
+            sourceId, fidelity,
+            provenance.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+
+        long durationMs = (System.nanoTime() - startNs) / 1_000_000L;
+        String artifactHash = contentHash(distilled);
+        int after = registry.size();
+        return new RunResult(entry.bir(), sourceId, consumed, fidelity, durationMs,
+            artifactHash, provenance + ",consolidationDelta=" + (after - before)
+            + ",registered=" + (after > before));
+    }
+
     /** Pack a long[] fingerprint back to a single long (first element only). */
     private long packInputToLong(long[] input) {
         if (input == null || input.length == 0) return 0L;

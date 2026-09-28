@@ -396,3 +396,57 @@ malformed streams, non-arithmetic input not hijacked).
 - **GE-6 still fails** (needs world knowledge, deliberately not forced).
 - **ANALOGY is 5/6** — unchanged, not yet triaged.
 - D-W20-1 (70 pre-existing failures) and D-W20-2 (SimulacrumDefaultOffTest absent) remain open.
+
+## 2026-09-28 — RECON-W21 (Activation Sidecar) — L-1 / L-1.5 CLOSED
+
+**ONNX Runtime's Java binding segfaults on this host (JDK 25 + this Linux). The
+workaround is to run the model OUT OF PROCESS. That is now implemented, tested,
+and proven end-to-end on a real capture.**
+
+### Evidence
+    $ python3 scripts/capture_activations.py --model data/models/teacher/teacher.onnx \
+          --out data/activations/capacities-8.ndjson --dims 8
+    captured 8 activation records -> data/activations/capacities-8.ndjson
+
+    A samples=8 fidelity=1.0 hash=623cb895 delta=1 ms=18
+    A prov=engine=ActivationRecord.replay,engine=Distiller.synthesize,
+           engine=BirRegistry.register,source=capacities-8,
+           captureTool=scripts/capture_activations.py,onnxRuntime=out-of-process,
+           batch=capacities-8,seed=42,inputBits=8,samples=8,skipped=0,
+           consolidationDelta=1,registered=true
+    B samples=8 hash=623cb895 registryNow=2 (super-additive A+B=2)
+
+### Three real bugs the new tests caught
+1. **Article III violation.** `artifactHash` hashed `Bir.toString()`, which mixes in
+   the registry timestamp and per-run entry id, so two identical distillations gave
+   different hashes (6ab3f3b0 vs 346ff931). Replaced with `contentHash` over arity,
+   form kind and clause masks — never a clock or a generated id.
+2. **Nested-array parsing dropped the first element.** `layer_activations` is
+   `[[...]]`; only the OUTER brackets were stripped, leaving `"[0.9,0.5..."`, so
+   element 0 was unparseable and silently discarded. THE EXISTING TEST PASSED
+   ANYWAY because it asserted only "non-empty", never the count. ActivationRecordTest
+   now pins the length (8 in, 8 out) — the gap that let this through is closed.
+3. **Whitespace after the JSON colon rejected every real record.** Python's
+   `json.dumps` writes `"key": value`; the field lookups required adjacency, so all
+   8 genuine captures were skipped. jsonArray is now whitespace-aware.
+
+### An Article VIII guard was passing VACUOUSLY
+`RuntimeLlmGuardTest.no_runtime_source_imports_legacy_llm_classes` resolved
+`matrix-core/src/main/java` relative to the working directory. Gradle runs a module's
+tests with the MODULE dir as cwd, so the path did not resolve, the
+`if (!Files.exists(src)) continue;` branch fired, and the guard scanned NOTHING
+while reporting success. Root is now located by walking up to settings.gradle. It
+still passes (the quarantine list is accurate) but it is now actually enforced.
+Two new guards added: sidecar-unreachable-from-runtime, and ActivationRecord-pure-data.
+
+### Honest limits
+- The Java ONNX path is STILL broken on this host; distillFromOnnxTeacher is
+  retained for platforms where it works and is NOT claimed to work here.
+- **Distilled knowledge is not yet answerable in chat.** The registry holds real
+  learned artifacts with provenance, but the RETRIEVAL path that would surface
+  them is not wired — the registry is queried by bitmask while distilled clauses are
+  HDC-shaped. This is the honest reason GE-6 still fails.
+- The teacher is a 5 KB synthetic FFN: it exercises the mechanism honestly but it
+  is not knowledge mass. Only ONE teacher was captured, not the two distinct
+  classes the wave spec asked for.
+- D-W20-1 (74 pre-existing failures) and D-W20-2 remain open.
