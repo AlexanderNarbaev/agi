@@ -725,3 +725,46 @@ rejection, and a regex guard that no rule id embeds a clock or RNG value.
 It uses the same repo-root walk-up as the other guards, because a relative path
 under Gradle's module cwd silently resolves to nothing — the exact trap that made
 RuntimeLlmGuardTest vacuous.
+
+## 2026-09-28 — RECON-W27b (W21 second teacher) — criterion MET, and a limitation SURFACED
+
+W21's acceptance criterion was ">=2 real teachers (embeddings-class +
+boolean-logic-class) with numeric deltas". Only one teacher existed. Added
+`scripts/gen_teacher_bool.py` (OR/AND/NOT -> threshold, a different function
+class), captured it out of process, and distilled both.
+
+    == teacher A (embeddings-class: MLP -> scalar) ==
+      samples=8 fidelity=1.0 hash=623cb895 delta=1 batch=teacher-capacity-8
+    == teacher B (boolean-logic: OR/AND -> threshold) ==
+      samples=8 fidelity=1.0 hash=623cb895 delta=1 batch=teacher-bool-boolean-8
+    SUPER-ADDITIVITY  A=1  B=1  A+B=2   distinct_hashes=false
+
+**The two artifacts are byte-identical, and that is the honest finding.**
+Investigated rather than assumed: `contentHash` IS in use and ClauseSetForm
+clauses for different inputs DO differ, so the Distiller is genuinely producing
+the same artifact from two structurally different teachers. The distilled clause
+structure is not sensitive to the teacher's activation values.
+
+**LIMITATION, stated plainly: the current distillation path does not yet learn
+from the teacher.** Two teachers with different architectures, different output
+ranges (a soft MLP score vs a hard boolean decision) and different calibration
+prompts yield the same learned artifact. Fidelity reports 1.0 for both, which
+means the fidelity metric is not discriminating either. Anyone claiming
+"real knowledge distilled from a model" on this evidence would be overclaiming.
+What IS proven: the capture-and-replay transport works out of process, produces
+schema-valid, provenance-carrying, deterministically-hashed, persisted registry
+entries with correct numeric deltas. What is NOT proven: that the teacher shapes
+the artifact.
+
+### Three real bugs found while doing this
+1. The boolean teacher's `Greater(logit, 0)` never fired for any calibration
+   input (logits were all negative), so every activation was 0.0 and it learned
+   nothing. A teacher that never fires is not a teacher.
+2. The capture sidecar took `outputs[0]` unconditionally. A boolean teacher
+   exposes a BOOL output first, and a bool carries no distillation signal — the
+   capture succeeded with eight all-zero "activations". The sidecar now selects
+   real-valued tensors only.
+3. `batch_id` was `capacities-<dims>`, derived from the dimension count alone, so
+   two different models captured at the same width shared a batch id and their
+   registry provenance was indistinguishable. It is now
+   `<model stem>-<domain>-<dims>`.
