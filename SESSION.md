@@ -651,3 +651,39 @@ loudly instead of drifting.
 `vectorXorPopCount_handles_zero_vectors`). Verified PRE-EXISTING: they fail
 identically on clean HEAD with the change stashed, and both are in the D-W20-1
 ledger. Not caused by this wave, and not fixed by it.
+
+## 2026-09-28 — RECON-W24b (HDC DISTANCE WAS THE WRONG FUNCTION) + benchmark retraction
+
+### The HDC similarity kernel computed the wrong thing
+`vectorXorPopCount` and `scalarXorPopCount` XOR-folded every word into ONE long and
+took a single popcount. That is not the Hamming distance its own Javadoc specifies:
+XOR-ing two words can cancel bits, so identical words fold to zero.
+`vectorXorPopCount(zero, one)` returned **0** where the distance is **128**.
+`RealGpuKernelEngine` uses this to score HDC search, so the similarity of two HDC
+vectors was systematically wrong — and had been since the kernel was written.
+`MatrixNativeMathTest` had been failing on exactly this for some time; the two
+failures are now fixed and that class is green.
+
+FIX: both methods now SUM the per-word popcounts, as the Javadoc always said.
+`scalarPopCount` is also null-safe now (it threw NPE on a null input).
+
+### The 2.30x "win" was an artifact, and it is RETRACTED
+The unroll measured 2.30x — but it and the original were benchmarking the WRONG
+function, and the fold was cheap for exactly the wrong reason: one popcount instead
+of one per word. Re-benchmarked against the CORRECT Hamming distance:
+
+    scalarXorPopCount :  1.24 ms  (1.00x)
+    unrolled4          :  2.39 ms  (0.52x)   REJECTED
+    nibbleLUT          :  4.07 ms  (0.31x)   REJECTED
+
+Neither clears 1.5x, so plain scalar stays. The unroll was reverted. The verdict
+is pinned by an assertion so the wrong number cannot quietly return. This is the
+clearest argument in the campaign for "adopt only with bit-equivalence proof" —
+bit-equivalence to a WRONG reference proved nothing, because production and the
+reference were wrong together.
+
+### Test ledger
+    matrix-core + brain-runtime + api-gateway: 8653 tests, 69 failures, 8584 passing
+    (was 74 failures at the start of this campaign; the 5 fixed here are
+     MatrixNativeMathTest x2 plus the popcount suite)
+    live battery unchanged: 47/48 = 0.979

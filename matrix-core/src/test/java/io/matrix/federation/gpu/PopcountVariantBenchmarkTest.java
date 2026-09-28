@@ -33,11 +33,20 @@ class PopcountVariantBenchmarkTest {
 
     // ---- variants ----------------------------------------------------------
 
-    /** Current production implementation. */
+    /**
+     * Reference implementation: TRUE Hamming distance.
+     *
+     * <p>RECON-W24: this started as the XOR-fold-then-single-popcount form,
+     * matching what production actually did. That form is NOT the Hamming
+     * distance — XOR-ing words cancels bits, so {@code vectorXorPopCount(zero,
+     * one)} returned 0 where the distance is 128, and RealGpuKernelEngine used it
+     * to score HDC similarity. Production and this reference were both wrong
+     * together, which is why no equivalence test could catch it.</p>
+     */
     private static long scalar(long[] a, long[] b, int n) {
-        long xor = 0L;
-        for (int i = 0; i < n; i++) xor ^= a[i] ^ b[i];
-        return Long.bitCount(xor);
+        long total = 0L;
+        for (int i = 0; i < n; i++) total += Long.bitCount(a[i] ^ b[i]);
+        return total;
     }
 
     /**
@@ -52,17 +61,18 @@ class PopcountVariantBenchmarkTest {
      * accelerates the fold, and still takes exactly one popcount at the end.</p>
      */
     private static long unrolled4(long[] a, long[] b, int n) {
-        long xor = 0L;
+        long t0 = 0L, t1 = 0L, t2 = 0L, t3 = 0L;
         int i = 0;
         int limit = n - (n % 4);
         for (; i < limit; i += 4) {
-            xor ^= a[i] ^ b[i];
-            xor ^= a[i + 1] ^ b[i + 1];
-            xor ^= a[i + 2] ^ b[i + 2];
-            xor ^= a[i + 3] ^ b[i + 3];
+            t0 += Long.bitCount(a[i]     ^ b[i]);
+            t1 += Long.bitCount(a[i + 1] ^ b[i + 1]);
+            t2 += Long.bitCount(a[i + 2] ^ b[i + 2]);
+            t3 += Long.bitCount(a[i + 3] ^ b[i + 3]);
         }
-        for (; i < n; i++) xor ^= a[i] ^ b[i];
-        return Long.bitCount(xor);
+        long total = t0 + t1 + t2 + t3;
+        for (; i < n; i++) total += Long.bitCount(a[i] ^ b[i]);
+        return total;
     }
 
     /**
@@ -82,13 +92,14 @@ class PopcountVariantBenchmarkTest {
     }
 
     private static long nibbleLut(long[] a, long[] b, int n) {
-        // Same fold-then-count structure as production; only the final count
-        // differs (4 bits at a time via the table instead of one hardware POPCNT).
-        long xor = 0L;
-        for (int i = 0; i < n; i++) xor ^= a[i] ^ b[i];
+        // True Hamming distance, but counting 4 bits at a time through the table
+        // instead of one hardware POPCNT per 64-bit word.
         int total = 0;
-        for (int s = 0; s < 64; s += 4) {
-            total += NIBBLE[(int) ((xor >>> s) & 0xFL)];
+        for (int i = 0; i < n; i++) {
+            long x = a[i] ^ b[i];
+            for (int s = 0; s < 64; s += 4) {
+                total += NIBBLE[(int) ((x >>> s) & 0xFL)];
+            }
         }
         return total;
     }
@@ -204,7 +215,7 @@ class PopcountVariantBenchmarkTest {
         boolean adopt = unrolledSpeedup >= 1.5 || lutSpeedup >= 1.5;
 
         if (adopt) {
-            System.out.println("VERDICT: a variant cleared the 1.5x bar and is adopted.");
+            System.out.println("VERDICT: a variant cleared the 1.5x bar.");
         } else {
             System.out.println("VERDICT: NEITHER variant cleared the 1.5x bar.");
             System.out.println("         Long.bitCount already compiles to a single hardware");
@@ -218,15 +229,20 @@ class PopcountVariantBenchmarkTest {
         assertThat(unrolledMs).isPositive();
         assertThat(lutMs).isPositive();
 
-        // RECON-W24 OUTCOME: the unroll cleared the bar and WAS adopted, so
-        // MatrixNativeMath.scalarXorPopCount now carries the unrolled form. This
-        // assertion pins that outcome. If a future wave changes the production
-        // loop and the measured speedup stops justifying the adoption, this fails
-        // and forces the decision to be re-made deliberately.
+        // RECON-W24 FINAL OUTCOME: NEITHER variant clears the bar once both are
+        // computing the CORRECT function. An earlier revision of this wave
+        // adopted the unroll at a reported 2.30x, but that number came from
+        // benchmarking the XOR-fold form, which is not the Hamming distance —
+        // it takes ONE popcount instead of one per word, so it was cheap for the
+        // wrong reason. Measured correctly, the unroll is 0.51x (slower) and the
+        // LUT is 0.30x. Both were rejected and plain scalar was kept.
+        //
+        // This assertion pins that retraction so the wrong number cannot quietly
+        // return.
         assertThat(adopt)
-            .as("the unrolled fold is in production; if this is now false the "
-                + "adoption must be revisited and this test updated")
-            .isTrue();
+            .as("no variant clears 1.5x on the CORRECT function; the earlier "
+                + "2.30x was measured against a wrong function and was retracted")
+            .isFalse();
 
         // And the adopted production method must be bit-equivalent to the
         // original single-accumulator reference it replaced.

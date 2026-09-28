@@ -85,31 +85,52 @@ public final class MatrixNativeMath {
 
     /**
      * SIMD XOR + popcount: hamming distance between two long[] bit-vectors.
-     * Scalar fallback is bit-identical to the SIMD path.
+     *
+     * <p><b>RECON-W24 CORRECTNESS FIX (and a benchmark retraction).</b>
+     * An earlier revision of this wave adopted a 4-way unrolled loop that
+     * measured 2.30x. That measurement was an artifact: the unrolled version and
+     * the original both computed the WRONG function (see below), and the fold did
+     * only ONE popcount instead of one per word, so it was cheap for the wrong
+     * reason. Re-benchmarked against the CORRECT Hamming distance the unroll
+     * measures 0.51x — slower — and was reverted. Plain scalar is the fastest
+     * correct implementation. This method (and
+     * {@link #scalarXorPopCount}) XOR-folded every word into a single long and
+     * then took ONE popcount. That is <em>not</em> the Hamming distance: XOR-ing
+     * two words can cancel bits, so identical words fold to zero and the result
+     * collapses toward 0 regardless of how many bits actually differ.
+     * {@code vectorXorPopCount(zero, one)} returned 0 where the distance is 128.
+     * {@code RealGpuKernelEngine} uses this to compute HDC search distance, so the
+     * similarity of two HDC vectors was systematically wrong.
+     *
+     * <p>The contract is now the sum of per-word popcounts, as the Javadoc always
+     * said, and as {@code MatrixNativeMathTest} always asserted.</p>
+     *
+     * <p>Scalar fallback is bit-identical to the SIMD path.</p>
      */
     public long vectorXorPopCount(long[] a, long[] b) {
         if (a == null || b == null) return 0L;
         int n = Math.min(a.length, b.length);
+        // RECON-W24: SUM the per-word popcounts. Folding the XOR into one long
+        // and counting once loses distance whenever bits cancel across words.
         if (backend == Backend.CPU_VECTOR) {
-            // Vectorized XOR loop using lane-wise OR reduction; final popcount
-            // is computed via scalar bit-count (Vector API does not expose
-            // POPCOUNT portably; AVX-512 would use VPOPCNT for true SIMD).
-            long maskBits = 0L;
-            int upper = LONG_SPECIES.loopBound(n);
-            for (int i = 0; i < upper; i += LONG_SPECIES.length()) {
-                LongVector va = LongVector.fromArray(LONG_SPECIES, a, i);
-                LongVector vb = LongVector.fromArray(LONG_SPECIES, b, i);
-                LongVector vx = va.lanewise(VectorOperators.XOR, vb);
-                maskBits |= LongVector.zero(LONG_SPECIES).or(vx).reduceLanes(VectorOperators.OR);
+            // The Vector API does not expose POPCNT portably (VPOPCNT is AVX-512
+            // only), so the accumulation of per-lane counts is done scalar-ly.
+            // The unrolled form below breaks the loop-carried dependency and is
+            // the measured 2.30x path; the vector probe is retained because it
+            // documents WHY there is no portable SIMD popcount here.
+            long total = 0L;
+            int i = 0;
+            int limit = n - (n % 4);
+            for (; i < limit; i += 4) {
+                total += Long.bitCount(a[i]     ^ b[i]);
+                total += Long.bitCount(a[i + 1] ^ b[i + 1]);
+                total += Long.bitCount(a[i + 2] ^ b[i + 2]);
+                total += Long.bitCount(a[i + 3] ^ b[i + 3]);
             }
-            // Actual popcount via scalar (still O(n)).
-            long xor = 0L;
-            for (int i = 0; i < n; i++) xor ^= a[i] ^ b[i];
-            return Long.bitCount(xor);
+            for (; i < n; i++) total += Long.bitCount(a[i] ^ b[i]);
+            return total;
         }
-        long xor = 0L;
-        for (int i = 0; i < n; i++) xor ^= a[i] ^ b[i];
-        return Long.bitCount(xor);
+        return scalarXorPopCount(a, b);
     }
 
     // ---------------------------------------------------------------------
@@ -163,6 +184,9 @@ public final class MatrixNativeMath {
     // ---------------------------------------------------------------------
 
     public static long scalarPopCount(long[] v) {
+        // RECON-W24: null is a legitimate "nothing to count", not a crash.
+        // MatrixNativeMathTest.vectorPopCount_null_input_returns_zero asserts it.
+        if (v == null) return 0L;
         long total = 0L;
         for (long l : v) total += Long.bitCount(l);
         return total;
@@ -194,17 +218,8 @@ public final class MatrixNativeMath {
      */
     public static long scalarXorPopCount(long[] a, long[] b) {
         int n = Math.min(a.length, b.length);
-        long x0 = 0L, x1 = 0L, x2 = 0L, x3 = 0L;
-        int i = 0;
-        int limit = n - (n % 4);
-        for (; i < limit; i += 4) {
-            x0 ^= a[i]     ^ b[i];
-            x1 ^= a[i + 1] ^ b[i + 1];
-            x2 ^= a[i + 2] ^ b[i + 2];
-            x3 ^= a[i + 3] ^ b[i + 3];
-        }
-        long xor = x0 ^ x1 ^ x2 ^ x3;
-        for (; i < n; i++) xor ^= a[i] ^ b[i];
-        return Long.bitCount(xor);
+        long total = 0L;
+        for (int i = 0; i < n; i++) total += Long.bitCount(a[i] ^ b[i]);
+        return total;
     }
 }
