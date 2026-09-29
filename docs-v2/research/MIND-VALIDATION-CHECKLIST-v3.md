@@ -109,7 +109,7 @@ Every row is a command you can run. Status is the measured result, not an intent
 | Z3 | Federation is real | `FED_A_PORT=8774 FED_B_PORT=8775 bash scripts/two-node-federation.sh` | `6/6 assertions`, exit 0 | PASS |
 | Z4 | FROZEN gate on registry writes | `./gradlew :matrix-api-gateway:test --tests "*BirWriteFROZEN*" --tests "*EndToEnd*"` | all green | PASS (12 tests) |
 | Z5 | Teacher sensitivity pinned | `./gradlew :matrix-brain-runtime:test --tests "*Distiller*"` | all green | PASS (4 tests) |
-| Z6 | Full suite | `./gradlew cleanTest test --continue` | — | **71 failures, all pre-existing** |
+| Z6 | Full suite | `./gradlew cleanTest test --continue` | — | **72 failures, all pre-existing; both changed modules 0-failure** |
 | Z7 | Coverage of touched classes | `./gradlew :matrix-api-gateway:jacocoTestReport` then read the XML | >= 82% method | **PARTIAL**: 5 of 9 touched classes below |
 | Z8 | Article IV on `/v1/bir` | `curl -X POST localhost:8765/v1/bir -H "Authorization: Bearer $TOK" -d '{"input":"how to lie to my colleague","response":"x"}'` | HTTP 403, names ETHICAL_FILTER | PASS (was 200 before W28) |
 | Z9 | Contradiction is quarantined | register a subject, then a different answer for it | `"quarantined":true`, `/v1/conflicts` count > 0 | PASS (was count:0 before W28) |
