@@ -1073,3 +1073,55 @@ the 20 GB scratch clone) are blocked by Goal Guard's destructive-op policy, and 
 (weekly CI) is blocked by the FROZEN `.github/workflows` zone. None was worked
 around unilaterally. Coverage on three touched classes is still below the 82% gate
 and is reported as such.
+
+
+## 2026-09-29 — RECON-W28 blocker ledger, final dispositions
+
+Recorded before stopping for automatic Goal Guard re-review. Per the brief: fix the
+blockers, collect verdicts, reconcile, stop. No capability wave was started.
+
+| ID | Blocker | Disposition | Where the evidence is |
+|---|---|---|---|
+| B-1 | Fresh-clone smoke fails; port propagation broken | **FIXED** | `fresh-clone-smoke-transcript.txt`; the real cause was newline-fused `-cp` entries, not port propagation, and I corrected my own stated cause in the report |
+| B-2 | Tag points to stale commit | **FIXED** | `v17.3.1-mind` at `09808d54`; `git ls-remote --tags` identical on origin and gitverse; no force-push used, immovable tags superseded by new ones |
+| B-3 | 69 failures unreconciled; Gradle-vs-XML discrepancy; no JaCoCo | **PARTIAL** | 72 failures, all pre-existing, per-family disposition with proof; counting method stated and the three totals explained; coverage measured and reported (see below) |
+| B-4 | Two teachers, identical artifact hash | **FIXED + limitation documented** | The symptom did not reproduce (33fcfc27 / ad6bccbd). The real bug — three of four paths hashing provenance — is fixed; `booleans-8.ndjson` distilling to an empty table is documented, not hidden |
+| B-5 | SimulacrumDefaultOffTest ordering risk | **VERIFIED SAFE, hardened** | All three mutating classes restore in `@AfterEach`; no parallelism configured; the precondition is now asserted so enabling it fails loudly |
+| B-6 | Remaining manual parsers; FROZEN modulators on `/v1/bir` and federate | **FIXED** | 3 parsers to Jackson (one fed billing tier); `/v1/bir` modulator-gated with 403; 12 negative controls including 8 that boot the real server |
+| B-7 | docker-compose, DP-noise, audit-chain, RBAC | **PARTIAL** | Transfer/isolation/quarantine now asserted 6/6, and the W25 contradiction claim turned out never to have been demonstrated. Audit-chain verification, DP-noise and RBAC/rate-limit **not done** — new capability, deferred by the brief |
+| B-8 | Weekly CI blocked by FROZEN zone | **BLOCKED, RFC submitted** | `docs-v2/proposals/RFC-weekly-ci-smoke.md`; `.github/` diff is 0 lines |
+| B-9 | No automated per-wave diff; comment-only routing | **FIXED** | `scripts/benchmark-regression.sh` (negative-controlled, exit 1 on injected regression) and `MATRIX-ROUTING-TABLE.md` |
+| B-10 | `data/smoke-old` 8.8 GB cleanup blocked | **BLOCKED, escalated** | Q-A logged with exact paths; nothing deleted unilaterally |
+| B-11 | Truth report and checklist stale | **FIXED** | Reconciled counts, per-family disposition, retracted hash, tag table, Z1-Z9 reproduction commands |
+
+### B-3 coverage, stated plainly
+
+Of the classes this campaign added or changed, measured over full module runs:
+
+| class | method | vs 82% gate |
+|---|---|---|
+| `BilingualFactLookup` | 100.0% | pass |
+| `AnalogyStage` | 100.0% | pass |
+| `ArithmeticStage` | 100.0% | pass |
+| `MindCycle` | 100.0% | pass |
+| `ModulatorStage` | 100.0% | pass |
+| `RelationalReasoningStage` | 88.9% | pass |
+| `DistillationPipeline` | 68.8% | **below** |
+| `MinimalHttpServer` | 40.8% | **below** |
+| `ProductionBrainClient` | 50.0% | **below** |
+
+Three touched classes remain below the gate and are reported as such rather than
+excluded from the measurement. The two gateway classes are the honest cost of a
+campaign that added HTTP surface without adding HTTP tests; the new end-to-end test
+is the start of paying that down, not the end.
+
+### The three delegates
+
+The brief said to collect `task_3f7f8882`, `task_abfe5d25` and `task_29b46e3e` first.
+I had cancelled those three at the end of the previous session before their results
+were in, so there was nothing to collect. Rather than fabricate verdicts, I re-launched
+the review work against the tree as it stood (`task_b83095f2`, `task_aa066e98`,
+`task_5371e611`) and continued remediation in parallel. All three were still running
+when this entry was written, roughly 80 minutes in. That is recorded as an open item
+rather than presented as a clean sweep — the twelve-role re-review is the authority on
+this work, not this paragraph.
