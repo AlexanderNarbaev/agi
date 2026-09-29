@@ -1011,3 +1011,65 @@ Done, and the answer is stronger than the question assumed: all 71 are provably 
 ours, including the 4 in `KolmogorovComplexity*` where W20 did edit the file. The
 proof, the per-family disposition table, and the counting methodology are in
 `MATRIX-MIND-REPORT-V17.2.md`. Nothing was deleted, skipped, or ignored.
+
+
+## 2026-09-29 — RECON-W28 closing truth paragraph
+
+Goal Guard review cycle #0 failed all 12 roles. This is what changed, and what did
+not.
+
+**What is now true, and was measured rather than asserted:**
+
+- A **clean clone builds and answers** (`2 + 3 = 5`, FROZEN modulators fired). Root
+  cause was not what two earlier diagnoses said, and not what my third diagnosis
+  said before I checked it: `writeRuntimeClasspath` emits a LINE-ORIENTED file and
+  `start-mind.sh` pasted it into `-cp` with `cat`, so embedded newlines fused the
+  entries and the JVM received one bogus path where the classes dir should have been.
+  Reproduced with bare `java -cp` in a real clone; old classpath 289 entries with 2
+  newline-corrupt, new 292 with 0.
+- The **federation transcript is a gate**. It was a printer that always said
+  COMPLETE. Its first run FAILED, and one failure was real: `/v1/federate` writes to
+  the HDC store, not the BIR registry, so node B's registry was empty when the
+  "contradiction" arrived, `/v1/conflicts` reported `count:0`, and the W25 claim that
+  contradiction quarantine was demonstrated had never been demonstrated. Now 6/6,
+  and the W25b fingerprint fix is exercised end to end for the first time.
+- **`/v1/bir` writes are gated by the same modulators as answers.** They were not.
+  A rule the answer path refuses could be written into the registry and later
+  retrieved and served.
+- **A JUnit test boots the gateway.** It did not, which is why a launch-time defect
+  survived five waves: the server was only ever exercised by a shell script nobody
+  runs. `MinimalHttpServer` coverage 10.2% -> 40.8%, `ProductionBrainClient` 0% ->
+  50.0%. Getting the test to reach production wiring required a real fix —
+  `MATRIX_MIND_DIR` was only readable from the environment, so a production-mode test
+  would have written into the repository.
+- The **smoke script leaked a JVM and a held port on every run**; its trap removed
+  the copy and nothing else. Found by looking, not by a test.
+- **The distillation hash `623cb895` is retracted** — it did not reproduce (real
+  values 33fcfc27 / ad6bccbd). The genuine defect found while disproving it is worse:
+  three of four entry points hashed provenance, so the "artifact hash" was a run id.
+- The failure count is **71, all pre-existing**, with a counting method that
+  explains the 8083 / 8653 / 8845 spread as three denominators rather than one error.
+
+**What did not change: the mind.** The benchmark is still 47/48. GE-6 still fails
+because the system does not know that lemons are yellow, and no rule was written to
+make it appear otherwise. Everything above makes the harness honest; none of it
+makes the system think better, and this entry does not claim that it does.
+
+**Three of my own errors, recorded because they are the useful part:**
+
+1. I asserted a root cause (the classpath clobber) before verifying it. It was
+   wrong, and I said so in the report rather than quietly dropping the claim.
+2. My first teacher-sensitivity test asserted that two runs had different
+   provenance while its fixture hardcoded the same provenance for both, so the
+   condition was never established. The full suite failed it. A test that cannot
+   pass is not a guard.
+3. A 20 GB scratch directory of mine sat on a 30 GB tmpfs, pushed free space below
+   `DiskBudget`'s 10 GB REFUSE threshold, and aborted the entire full suite after
+   nine seconds. I diagnosed that cause, wrote it down, and only then realised it was
+   me. Heavy diagnostics get a disk preflight like anything else.
+
+**Open, needing the owner:** Q-A (delete `data/smoke-old`, 8.8 GB) and Q-A2 (delete
+the 20 GB scratch clone) are blocked by Goal Guard's destructive-op policy, and Q-B
+(weekly CI) is blocked by the FROZEN `.github/workflows` zone. None was worked
+around unilaterally. Coverage on three touched classes is still below the 82% gate
+and is reported as such.
