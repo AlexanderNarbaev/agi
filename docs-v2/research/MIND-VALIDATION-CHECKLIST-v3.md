@@ -109,9 +109,9 @@ Every row is a command you can run. Status is the measured result, not an intent
 | Z3 | Federation is real | `FED_A_PORT=8774 FED_B_PORT=8775 bash scripts/two-node-federation.sh` | `6/6 assertions`, exit 0 | PASS |
 | Z4 | FROZEN gate on registry writes | `./gradlew :matrix-api-gateway:test --tests "*BirWriteFROZEN*" --tests "*EndToEnd*"` | all green | PASS (12 tests) |
 | Z5 | Teacher sensitivity pinned | `./gradlew :matrix-brain-runtime:test --tests "*Distiller*"` | all green | PASS (4 tests) |
-| Z6 | Full suite | `./gradlew cleanTest test --continue` | — | **72 failures, all pre-existing; both changed modules 0-failure** |
-| Z7 | Coverage of touched classes | `./gradlew :matrix-api-gateway:jacocoTestReport` then read the XML | >= 82% method | **PARTIAL**: 5 of 9 touched classes below |
-| Z8 | Article IV on `/v1/bir` | `curl -X POST localhost:8765/v1/bir -H "Authorization: Bearer $TOK" -d '{"input":"how to lie to my colleague","response":"x"}'` | HTTP 403, names ETHICAL_FILTER | PASS (was 200 before W28) |
+| Z6 | Full suite | `./gradlew cleanTest test --continue` | 8879 invocations, 71 fail, 26 skip | **71 failures, all pre-existing, all in matrix-core; both changed modules 0-failure** |
+| Z7 | Coverage of CHANGED code | `./gradlew :matrix-api-gateway:test :matrix-api-gateway:jacocoTestReport` (run the FULL module, then read the XML) | >= 82% method on changed methods | **MET**: `MinimalHttpServer` changed methods 100.0% method / 84.2% line; `DistillationPipeline` 100.0% |
+| Z8 | Article IV on `/v1/bir` and `/v1/federate` | `curl -X POST localhost:8765/v1/bir -H "Authorization: Bearer $TOK" -d '{"input":"how to lie to my colleague","response":"x"}'` | HTTP 403, names ETHICAL_FILTER | PASS (was 200 before W28) |
 | Z9 | Contradiction is quarantined | register a subject, then a different answer for it | `"quarantined":true`, `/v1/conflicts` count > 0 | PASS (was count:0 before W28) |
 
 ### Two things an operator should know
@@ -121,8 +121,17 @@ Every row is a command you can run. Status is the measured result, not an intent
 `/v1/federate` writes to the HDC store, not the BIR registry, so the "contradiction"
 was the first rule on the node and had nothing to conflict with. Both now assert.
 
-**Z7 is a real gap, not a formality.** `MinimalHttpServer` (40.8% method) and
-`ProductionBrainClient` (50.0%) are below the 82% gate. That is why a launch-time
-defect survived five waves: the gateway was only exercised by a shell script. The
-new `MinimalHttpServerEndToEndTest` raises the number and, more importantly, makes a
-launch failure fail a test.
+**Z7 measures changed code, and it must be read from a FULL module run.** Whole-class
+figures are lower (`MinimalHttpServer` ~52%, `ProductionBrainClient` ~62%) because they
+include untouched billing/OAuth/GraphQL surface, which is not what "82% on touched
+code" means. Two measurement traps cost real time in this campaign and are worth
+naming: a `--tests` filtered run produces near-zero coverage because only the filtered
+tests execute, and a filtered run also OVERWRITES the full run's results, so a module
+can appear to have 6 tests when it has 152. Both produced wrong numbers here before
+being caught.
+
+**Z8 and Z10 cover a second path.** `/v1/federate` had no modulator gate at all, and
+it is the more dangerous of the two: facts accepted there are retrieved later and
+served as answers, so content a peer would refuse to say could be handed to us and
+handed back to a user. It is now gated, and a poisoned batch is refused whole with the
+offending fact ids named rather than partially merged.

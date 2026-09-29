@@ -178,11 +178,11 @@ knowing lemons are yellow — world knowledge, not inference. A rule that return
 "yellow" here would be fitting the probe, so it was not written. The mind answers
 with an explicit refusal instead of a guess.
 
-**72 pre-existing test failures (D-W20-1), reconciled in RECON-W28. None are caused
+**71 pre-existing test failures (D-W20-1), reconciled in RECON-W28. None are caused
 by this campaign; none were deleted or skipped.**
 
 The two modules this campaign changed are **fully green**: `matrix-brain-runtime`
-419 tests / 0 failures, `matrix-api-gateway` 137 tests / 0 failures. All 72 failures
+425 tests / 0 failures, `matrix-api-gateway` 152 tests / 0 failures. All 71 failures
 are in `matrix-core`, untouched by this campaign.
 
 The count is not stable, and that is now demonstrated rather than asserted: two
@@ -198,12 +198,12 @@ across **all** modules and count `<testcase>` elements.
 
 | Module | invocations | fail | skip |
 |---|---|---|---|
-| matrix-core | 8087 | 72 | 22 |
-| matrix-brain-runtime | 419 | **0** | 2 |
-| matrix-api-gateway | 137 | **0** | 0 |
+| matrix-core | 8087 | 71 | 22 |
+| matrix-brain-runtime | 425 | **0** | 2 |
+| matrix-api-gateway | 152 | **0** | 0 |
 | matrix-audit / billing / observability / operator / quality / sdk-java / spigot / tools-distill | 198 | 0 | 4 |
 | pilots (3) | 16 | 0 | 0 |
-| **TOTAL** | **8858** | **72** | **26** |
+| **TOTAL** | **8879** | **71** | **26** |
 
 This resolves the "8083 vs 8653" discrepancy, which was three different numbers for
 three different reasons, not one wrong number:
@@ -220,17 +220,17 @@ three different reasons, not one wrong number:
   teacher-sensitivity, 1 ordering precondition), so the count moved for a reason
   that is visible rather than mysterious.
 
-**Disposition of all 72 failures (Q-C: documented, never hidden).**
+**Disposition of all 71 failures (Q-C: documented, never hidden).**
 
 | Family | Count | Verdict |
 |---|---|---|
 | `io.matrix.consciousness` (jqwik properties, entropy, phase, phi) | 37 | pre-existing, untouched |
-| `io.matrix.research.BitNet*` (model load / prefill / KV-cache / sampling) | 31 | pre-existing, untouched |
+| `io.matrix.research.BitNet*` (model load / prefill / KV-cache / sampling) | 30 | pre-existing, untouched |
 | `io.matrix.model.ModelRegistryTest` | 3 | pre-existing, untouched |
 | `io.matrix.federation.liquid.simulation.SleepConsolidationStudyTest` | 1 | pre-existing, untouched |
 | **`io.matrix.consciousness.KolmogorovComplexity*`** | **4** | **pre-existing — proven, see below** |
 
-All 72 are in `matrix-core`. Neither module this campaign modified has a single
+All 71 are in `matrix-core`. Neither module this campaign modified has a single
 failure.
 
 The 4 Kolmogorov failures needed proof, because `KolmogorovComplexity.java` lives in
@@ -358,7 +358,7 @@ both inspectable, both deterministic, neither a language model.
 | **B-8 weekly CI** | **BLOCKED, needs operator** | `docs-v2/proposals/RFC-weekly-ci-smoke.md`; `.github/` byte-identical |
 | **B-9 per-wave diff + routing table** | **FIXED** | `scripts/benchmark-regression.sh` (negative-controlled), `MATRIX-ROUTING-TABLE.md` |
 | **B-10 `data/smoke-old` 8.8 GB** | **BLOCKED, needs operator** | Goal Guard denies `rm -rf` and `find -delete`; escalated in SESSION.md per Q-A |
-| **72 test failures** | **OPEN, all pre-existing** | triaged by family above; both changed modules are 0-failure |
+| **71 test failures** | **OPEN, all pre-existing** | triaged by family above; both changed modules are 0-failure |
 | **GE-6 world knowledge** | **OPEN by design** | deliberate refusal, not fitted to the probe |
 
 ### The thing most likely to be misread
