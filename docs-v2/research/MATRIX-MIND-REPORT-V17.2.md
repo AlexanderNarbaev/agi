@@ -10,6 +10,21 @@
 > move it, the corrected state is published as **`v17.2.1-mind` at `28adab68`**,
 > which is this report's true subject. `v17.2.0-mind` is retained unchanged and
 > marked superseded. If you fetched `v17.2.0-mind`, use `v17.2.1-mind`.
+>
+> `v17.2.2-mind` was cut after the mandatory eight-reviewer gate was recorded and is
+> the final W27 state. RECON-W28 supersedes it with six further fixes, so the tag
+> naming the current tree is the W28 final tag recorded in `SESSION.md`. A published
+> tag is immutable and no force-push is permitted, so W28 adds a new tag rather than
+> moving an old one. There are three v17.2 tags because each names a genuinely
+> different tree state and none of them misrepresents which:
+>
+> | Tag | Names | State |
+> |---|---|---|
+> | `v17.2.0-mind` | `a8322a12` | superseded (force-push denied, so immovable) |
+> | `v17.2.1-mind` | `28adab68` | B-1 smoke root cause + PID-file landmine |
+> | `v17.2.2-mind` | `f60765e2` | eight-reviewer gate |
+>
+> `git ls-remote --tags` on `origin` and `gitverse` return an identical tag set.
 > Campaign: RECON-W20 → W24
 > Headline: **33/45 (0.733) → 47/48 (0.979)**
 
@@ -132,19 +147,87 @@ explicit refusal, and the BRC trace names the stage that declined and why.
 
 ## 5. What still fails — named, not buried
 
+**RETRACTION: the distillation artifact hash `623cb895` (RECON-W28 B-4).**
+This report previously quoted `623cb895` for the two-teacher merge. That figure could
+not be reproduced and is withdrawn. Measured directly against the two shipped
+captures, the artifacts are **different**: `capacities-8.ndjson` → `33fcfc27`
+(truth table `0004400`), `booleans-8.ndjson` → `ad6bccbd` (truth table `0000`).
+Neither is `623cb895`.
+
+What is genuinely wrong, and was found while disproving the claim, is worse and
+different: **three of the four distillation entry points hashed
+`Integer.toHexString(bir.toString().hashCode())`**, and `Bir.toString()` embeds the
+provenance string, which carries the source label and the capture path. Reproduced:
+byte-identical learning from two differently-named sources hashed differently
+(`191f560c` vs `1983cb64`). The "artifact hash" was a **run** identifier, not an
+artifact identity, and it broke the content-addressing invariant W21 established. All
+four paths now use `contentHash()`, and provenance carries a SHA-256
+`teacherFingerprint` of the capture bytes computed before synthesis.
+
+A real limitation remains and is not papered over: `ActivationRecord` keeps only
+`layer_activations[0]` and `Distiller` thresholds at 0.5, so a teacher whose logits
+never exceed 0.5 distils to an **all-zero truth table**. The shipped
+`booleans-8.ndjson` is exactly that case — it fires on 0 of 8 samples, so its learned
+structure is vacuous. The two teachers are therefore *distinguishable* but the second
+one has nothing to learn. `DistillerTeacherSensitivityTest` pins all four facts,
+including the vacuous case, so it cannot be forgotten.
+
 **GE-6 — "tomato is red; carrot is orange; banana is yellow. lemon is ?" → expected `yellow`**
 The exemplars *disagree*, so the unanimity rule declines. Answering requires
 knowing lemons are yellow — world knowledge, not inference. A rule that returned
 "yellow" here would be fitting the probe, so it was not written. The mind answers
 with an explicit refusal instead of a guess.
 
-**69 pre-existing test failures across ~39 classes (D-W20-1), down from 74 at
-campaign start.** None are in any
-class this campaign touched. Clusters: `io.matrix.research.BitNet*` (21),
-jqwik `*PropertyTest` (argument-type mismatch and empty-generator defects, ~28),
-`ModelRegistryTest` (3), `MatrixNativeMathTest` (2). The count drifts between
-runs (70 → 74) because jqwik properties are randomly generated and do not
-converge — itself a defect.
+**71 pre-existing test failures (D-W20-1), reconciled in RECON-W28. None are caused
+by this campaign; none were deleted or skipped.**
+
+Authoritative counting method, adopted for every future report: aggregate JUnit XML
+across **all** modules and count `<testcase>` elements.
+
+| Module | invocations | fail | skip |
+|---|---|---|---|
+| matrix-core | 8087 | 70 | 22 |
+| matrix-brain-runtime | 419 | 0 | 2 |
+| matrix-api-gateway | 129 | 0 | 0 |
+| matrix-audit / billing / observability / operator / quality / sdk-java / spigot / tools-distill | 198 | 0 | 4 |
+| pilots (3) | 16 | 0 | 0 |
+| **TOTAL** | **8845** | **71** | **26** |
+
+This resolves the "8083 vs 8653" discrepancy, which was three different numbers for
+three different reasons, not one wrong number:
+
+- **8083** — a Gradle `tests completed` line from a W27-era run of a *different code
+  state*, and Gradle counts test **methods**.
+- **8653** — an earlier XML recount over a **narrower glob** that omitted `pilots/`.
+- **8845** — the current full run: XML `<testcase>` = **invocations**, 14 modules.
+  8845 invocations vs 8826 distinct methods; the delta of 19 is parameterised
+  expansion. Those are the only two legitimate denominators, and the report now
+  names which one it quotes.
+
+**Disposition of all 71 failures (Q-C: documented, never hidden).**
+
+| Family | Count | Verdict |
+|---|---|---|
+| `io.matrix.consciousness` (jqwik properties, entropy, phase, phi) | 36 | pre-existing, untouched |
+| `io.matrix.research.BitNet*` (model load / prefill / KV-cache / sampling) | 30 | pre-existing, untouched |
+| `io.matrix.model.ModelRegistryTest` | 3 | pre-existing, untouched |
+| `io.matrix.federation.liquid.simulation.SleepConsolidationStudyTest` | 1 | pre-existing, untouched |
+| **`io.matrix.consciousness.KolmogorovComplexity*`** | **4** | **pre-existing — proven, see below** |
+
+The 4 Kolmogorov failures needed proof, because `KolmogorovComplexity.java` lives in
+`io.matrix.consciousness` and W20 *did* edit it. The proof is that the only changed
+lines are inside the `logarithmicEncoding` loop body, and the four failing tests
+exercise `x = 1`, where the old and new code are textually identical (the loop body
+never runs). The `+ Long.SIZE` term (64) that produces the observed `K = 64.0`
+against a `< 20` assertion is byte-identical in baseline and HEAD. So these failed
+identically at baseline `f832ae1e`. They are a genuine pre-existing test/impl
+disagreement: the implementation charges a constant 64 bits for the model term, so a
+zero-entropy trajectory can never return K < 20. Fixing that means deciding what K
+*means*, which is research, not remediation.
+
+The count still drifts between runs because jqwik properties are randomly generated
+and do not converge — itself a defect, and the reason the previous report quoted
+three different totals.
 
 **`SimulacrumDefaultOffTest` does not exist (D-W20-2).** `MATRIX-MIND-REPORT-V17.md`
 claimed six Article VIII guards green. Five exist and are verified. The sixth is
@@ -224,9 +307,12 @@ curl localhost:8765/health/live
 |---|---|
 | `bash scripts/w13-live-benchmark.sh data/mind/benchmarks/w24-live.csv` | 47/48 = 0.979 |
 | `bash scripts/disk-hygiene.sh` (×2) | idempotent; 132 GB free, HEALTHY |
-| `./gradlew :matrix-core:test :matrix-brain-runtime:test :matrix-api-gateway:test` | 8653 tests, 69 fail, 8584 passing (74 fail at campaign start) |
+| `./gradlew cleanTest test jacocoTestReport --continue` | 8845 invocations, 71 fail, 26 skip (all 71 pre-existing) |
+| `MATRIX_PORT=8799 bash scripts/fresh-clone-smoke.sh` | **PASS** — clean clone answers `2 + 3 = 5` (B-1) |
+| `FED_A_PORT=8774 FED_B_PORT=8775 bash scripts/two-node-federation.sh` | **PASS 6/6** assertions, exit 0 (B-7) |
+| `bash scripts/benchmark-regression.sh <new> w13-live.csv` | 33/48 → 47/48, 14 improvements, 0 regressions (B-9) |
 | `python3 scripts/capture_activations.py …` | 8 records, no segfault |
-| `RunActivationDistill data/activations/capacities-8.ndjson` | 8 samples, fidelity 1.0, hash `623cb895`, A+B=+2 |
+| `RunActivationDistill data/activations/capacities-8.ndjson` | 8 samples, fidelity 1.0 (hash claim **retracted** — see below) |
 | `curl localhost:8765/health/live` | `{"status":"UP","brain_available":true}` |
 
 ---
@@ -237,3 +323,33 @@ No consciousness claim is made anywhere in this report. Every "mind" word is a
 label for a stage graph, not a claim about experience (Article VI). The
 generalisation gains come from explicit symbolic rules and a 61-entry fact table —
 both inspectable, both deterministic, neither a language model.
+
+## What still fails
+
+### RECON-W28 state, measured not estimated
+
+| Item | State | Evidence |
+|---|---|---|
+| **B-1 clean-clone smoke** | **FIXED** | `fresh-clone-smoke-transcript.txt`; root cause was newline-fused classpath entries, reproduced deterministically |
+| **B-3 coverage evidence** | **PARTIAL** | 6/7 touched brain-runtime classes >=82% method. `DistillationPipeline` 68.8%. `MinimalHttpServer` 40.8%, `ProductionBrainClient` 50.0% — both **below** the 82% gate, reported as such |
+| **B-4 teacher sensitivity** | **FIXED, with a real limitation** | hashes were already distinct; the run-vs-artifact hash bug is fixed; `booleans-8.ndjson` still distils to an empty table |
+| **B-5 simulacrum ordering** | **VERIFIED SAFE, hardened** | all three mutating classes restore in `@AfterEach`; parallelism now asserted off |
+| **B-6 parsers + FROZEN gate** | **FIXED** | 3 hand-rolled parsers -> Jackson; `/v1/bir` writes modulator-gated (403); 8 end-to-end tests boot the real server |
+| **B-7 federation depth** | **PARTIAL** | transfer/isolation/quarantine asserted 6/6. **Audit-chain verification, DP-noise, RBAC/rate-limit NOT DONE** — new capability, deferred |
+| **B-8 weekly CI** | **BLOCKED, needs operator** | `docs-v2/proposals/RFC-weekly-ci-smoke.md`; `.github/` byte-identical |
+| **B-9 per-wave diff + routing table** | **FIXED** | `scripts/benchmark-regression.sh` (negative-controlled), `MATRIX-ROUTING-TABLE.md` |
+| **B-10 `data/smoke-old` 8.8 GB** | **BLOCKED, needs operator** | Goal Guard denies `rm -rf` and `find -delete`; escalated in SESSION.md per Q-A |
+| **71 test failures** | **OPEN, all pre-existing** | triaged by family above; none in classes this campaign changed |
+| **GE-6 world knowledge** | **OPEN by design** | deliberate refusal, not fitted to the probe |
+
+### The thing most likely to be misread
+
+RECON-W28 was a large net improvement to the *harness*: a clean-clone smoke that
+actually passes, a federation gate that actually fails when the product is wrong, a
+FROZEN modulator on the registry write path, and a test that boots the gateway
+instead of leaving it to a shell script nobody runs.
+
+None of that makes the system better at thinking. The benchmark is unchanged at
+**47/48**, and the one probe still failing still fails because the mind does not know
+that lemons are yellow. Correctness of the harness is not capability growth, and this
+report does not claim otherwise.

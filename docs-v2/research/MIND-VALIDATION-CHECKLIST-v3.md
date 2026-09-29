@@ -95,3 +95,34 @@ python3 scripts/capture_activations.py \
   cleanup trap. Harmless at 133 GB free.
 - **Two-node federation** and the **fresh-clone quickstart** are only
   partially verified; no full transcript, no CI job.
+
+---
+
+## Z. RECON-W28 remediation checks (2026-09-29)
+
+Every row is a command you can run. Status is the measured result, not an intention.
+
+| # | Check | Command | Expected | Status |
+|---|---|---|---|---|
+| Z1 | Clean clone builds and answers | `MATRIX_PORT=8799 bash scripts/fresh-clone-smoke.sh` | `2 + 3 = 5`, exit 0 | PASS |
+| Z2 | No probe regressed | `bash scripts/benchmark-regression.sh <new.csv> data/mind/benchmarks/w13-live.csv` | exit 0, no REGRESSIONS | PASS (33/48 → 47/48, 14 improvements) |
+| Z3 | Federation is real | `FED_A_PORT=8774 FED_B_PORT=8775 bash scripts/two-node-federation.sh` | `6/6 assertions`, exit 0 | PASS |
+| Z4 | FROZEN gate on registry writes | `./gradlew :matrix-api-gateway:test --tests "*BirWriteFROZEN*" --tests "*EndToEnd*"` | all green | PASS (12 tests) |
+| Z5 | Teacher sensitivity pinned | `./gradlew :matrix-brain-runtime:test --tests "*Distiller*"` | all green | PASS (4 tests) |
+| Z6 | Full suite | `./gradlew cleanTest test --continue` | — | **71 failures, all pre-existing** |
+| Z7 | Coverage of touched classes | `./gradlew :matrix-api-gateway:jacocoTestReport` then read the XML | >= 82% method | **PARTIAL**: 5 of 9 touched classes below |
+| Z8 | Article IV on `/v1/bir` | `curl -X POST localhost:8765/v1/bir -H "Authorization: Bearer $TOK" -d '{"input":"how to lie to my colleague","response":"x"}'` | HTTP 403, names ETHICAL_FILTER | PASS (was 200 before W28) |
+| Z9 | Contradiction is quarantined | register a subject, then a different answer for it | `"quarantined":true`, `/v1/conflicts` count > 0 | PASS (was count:0 before W28) |
+
+### Two things an operator should know
+
+**Z8 and Z9 used to report success while proving nothing.** Z8 returned 200 because
+`/v1/bir` had no FROZEN gate at all. Z9 reported `count:0` because
+`/v1/federate` writes to the HDC store, not the BIR registry, so the "contradiction"
+was the first rule on the node and had nothing to conflict with. Both now assert.
+
+**Z7 is a real gap, not a formality.** `MinimalHttpServer` (40.8% method) and
+`ProductionBrainClient` (50.0%) are below the 82% gate. That is why a launch-time
+defect survived five waves: the gateway was only exercised by a shell script. The
+new `MinimalHttpServerEndToEndTest` raises the number and, more importantly, makes a
+launch failure fail a test.
