@@ -893,3 +893,61 @@ The gate is run here against the whole campaign diff f832ae1e..HEAD.
 
 Gate outcome: 7 PASS, 1 PARTIAL (Test Reviewer, the 69 pre-existing failures),
 0 FAIL. The PARTIAL is disclosed as D-W20-1 and was not triaged this campaign.
+
+
+## 2026-09-29 — RECON-W28 B-1: fresh-clone smoke FAILS no more (root cause verified by reproduction)
+
+**B-1 is FIXED.** `scripts/fresh-clone-smoke.sh` now passes end to end on :8799,
+and the live gateway on :8765 was never displaced. Transcript in
+`/tmp/w28-smoke1.log`; the clone answered `2 + 3 = 5` at confidence 1.0 with
+`modulators_fired: [CONSISTENCY_CHECKER, LIE_DETECTOR, SAFETY_MONITOR]`.
+
+### I got the first diagnosis wrong, twice, and said so
+I initially blamed (a) the `.venv` copy and (b) the health-wait race. The first
+was right about the 8.8 GB. The second was a real race but not the blocker.
+
+Then I claimed the root cause was `CP="$(cat $CP_FILE)"` clobbering the eight
+`build/classes/java/main` entries. I checked that claim and it did not hold up:
+the generated file DOES list the api-gateway classes dir. I should have checked
+before asserting it, and I am recording that rather than quietly dropping it.
+
+### The actual root cause, measured
+`writeRuntimeClasspath` emits a LINE-ORIENTED file: line 1 and line 2 are the two
+project classes dirs, line 3 is the colon-separated dependency list. `cat` pasted
+all three into `-cp`, so the embedded newlines FUSED entries. The first entry the
+JVM received was one bogus path:
+
+    matrix-api-gateway/build/classes/java/main\nmatrix-brain-runtime/build/classes/java/main\n/home/alexandr-narbaev/.../some.jar
+
+so `matrix-api-gateway/build/classes/java/main` was never a valid classpath entry
+at all. Measured on a real clone:
+
+| classpath | entries | newline-corrupt entries | resolvable on disk |
+|---|---|---|---|
+| `cat $CP_FILE` (old) | 289 | **2** | 288 |
+| `tr '\n' ':' < $CP_FILE` (new) | 292 | **0** | 291 |
+
+Deterministic reproduction, in the clone, with no launcher involved:
+`java -cp "$(cat matrix-api-gateway/build/runtime-classpath.txt)" io.matrix.api.MinimalHttpServer`
+-> `ClassNotFoundException: io.matrix.api.MinimalHttpServer`, with the .class file
+sitting right there and the build reporting BUILD SUCCESSFUL. The same command
+with newlines translated to colons starts normally. Fix at
+`scripts/start-mind.sh`: `CP="$CP:$(tr '\n' ':' < "$CP_FILE")"`, with the project
+classes still prepended so freshly compiled code wins over a stale jar.
+
+### A second, latent bug found on the way: the pid-file landmine
+The kill-previous-gateway guard tested `${MATRIX_PID_FILE:-$PWD/.gateway.pid}` but
+its body read and deleted and rewrote the HARDCODED `.gateway.pid`. With
+`MATRIX_PID_FILE` pointed at a smoke dir (as it is during the smoke run), a SECOND
+smoke run in the same directory would have read the live gateway's pid from the
+repo root and KILLED THE OPERATOR'S GATEWAY, while never cleaning up its own
+predecessor. It only survived the first run because the smoke pid file did not yet
+exist, so the guard short-circuited. All three references now use `$PID_FILE`.
+This was a real cross-node hazard for the W25 federation script too, which starts
+two nodes on 8765/8766.
+
+### Not claimed
+- No jar is dropped any more (the intermediate `cat`-based fix silently lost the
+  first jar in the list; the `tr` fix does not).
+- L-7 may now be closable, but the closure is re-reviewed by Goal Guard, not by me.
+- `data/smoke-old/` (8.8 GB) still exists; deletion is still operator-gated (B-10).

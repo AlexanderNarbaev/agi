@@ -70,8 +70,19 @@ if [ ! -f "$CP_FILE" ]; then
     echo "       Run: ./gradlew :matrix-api-gateway:writeRuntimeClasspath"
     exit 1
 fi
-CP="$(cat $CP_FILE)"
-echo "  classpath entries: $(echo $CP | tr ':' '\\n' | wc -l) (from $CP_FILE)"
+# RECON-W28 B-1 ROOT CAUSE (verified by reproduction, not inference):
+# writeRuntimeClasspath emits a LINE-ORIENTED file - line 1 and 2 are the two
+# project classes dirs, line 3 is the colon-separated dependency list. The old
+# `CP="$(cat $CP_FILE)"` pasted that straight into -cp, so the embedded newlines
+# fused entries together: java received ONE bogus entry of the form
+#   matrix-api-gateway/build/classes/java/main\nmatrix-brain-runtime/...\n<first-jar>
+# and reported ClassNotFoundException: io.matrix.api.MinimalHttpServer while the
+# build printed BUILD SUCCESSFUL and the .class file sat right there. Reproduced
+# deterministically: java -cp "$(cat runtime-classpath.txt)" in a clean clone
+# fails; the same command with '\n' translated to ':' starts. The project classes
+# are also prepended explicitly so freshly compiled code always wins over a jar.
+CP="$CP:$(tr '\n' ':' < "$CP_FILE")"
+echo "  classpath entries: $(echo $CP | tr ':' '\n' | wc -l) (project classes + $CP_FILE, newlines normalised to ':')"
 
 # Start gateway in production mode
 echo "[5/5] Starting gateway on :8765 (MATRIX_MODE=production)..."
@@ -84,20 +95,20 @@ PID_FILE="${MATRIX_PID_FILE:-$PWD/.gateway.pid}"
 mkdir -p "$MATRIX_MIND_DIR"
 
 # Kill any previous gateway
-if [ -f "${MATRIX_PID_FILE:-$PWD/.gateway.pid}" ]; then
-    OLD_PID=$(cat .gateway.pid 2>/dev/null)
+if [ -f "$PID_FILE" ]; then
+    OLD_PID=$(cat "$PID_FILE" 2>/dev/null || true)
     if kill -0 "$OLD_PID" 2>/dev/null; then
-        echo "  killing previous gateway pid=$OLD_PID"
+        echo "  killing previous gateway pid=$OLD_PID (from $PID_FILE)"
         kill "$OLD_PID" 2>/dev/null || true
         sleep 1
     fi
-    rm -f .gateway.pid
+    rm -f "$PID_FILE"
 fi
 
 java -Dport="${MATRIX_PORT:-8765}" -cp "$CP" io.matrix.api.MinimalHttpServer > "$MATRIX_MIND_DIR/gateway.log" 2>&1 &
 GATEWAY_PID=$!
 echo "  gateway pid=$GATEWAY_PID"
-echo "$GATEWAY_PID" > .gateway.pid
+echo "$GATEWAY_PID" > "$PID_FILE"
 disown $GATEWAY_PID 2>/dev/null || true
 
 # Wait for health check
