@@ -53,9 +53,35 @@ if [ "$KEEP_ALL" -eq 0 ]; then
 fi
 [ "$PRUNE_ONLY" -eq 1 ] && { echo "prune-only done"; exit 0; }
 
-# On failure, drop the partially built copy so it cannot accumulate.
+# RECON-W28: the trap used to remove the working copy and nothing else, so the
+# gateway this script started stayed alive after the run, holding its port. A
+# retained (KEEP=1) run left a JVM listening on 8799 indefinitely, and a later run
+# would then have failed to bind for a reason that had nothing to do with the code
+# under test. Stop the process we started - and ONLY the process recorded in our own
+# pid file; a pattern kill could take out the operator's live gateway.
+stop_smoke_gateway() {
+  local pf="${1:-}"
+  [ -n "$pf" ] && [ -f "$pf" ] || return 0
+  local pid; pid="$(cat "$pf" 2>/dev/null || true)"
+  if [ -n "$pid" ] && kill -0 "$pid" 2>/dev/null; then
+    kill "$pid" 2>/dev/null || true
+    # Give it a moment to release the port before anyone rebinds.
+    for _ in 1 2 3 4 5 6 7 8 9 10; do
+      kill -0 "$pid" 2>/dev/null || break
+      sleep 0.3
+    done
+    kill -9 "$pid" 2>/dev/null || true
+    echo "  stopped smoke gateway pid=$pid"
+  fi
+  rm -f "$pf"
+}
+
+# On exit: stop the gateway, then drop the partially built copy on failure so it
+# cannot accumulate. The copy is KEPT on success when KEEP_ALL=1, but the process is
+# always stopped - a retained copy is useful, a retained process is a leak.
 cleanup_on_failure() {
   local rc=$?
+  stop_smoke_gateway "$SMOKE_PID_FILE"
   if [ $rc -ne 0 ] && [ -d "$TARGET" ] && [ "$KEEP_ALL" -eq 0 ]; then
     echo "smoke failed (rc=$rc); removing partial copy $TARGET"
     rm -rf "$TARGET"
@@ -123,7 +149,12 @@ echo "Step 4: Launch the gateway..."
 # .gateway.pid, so running it would take the live system down.
 SMOKE_PORT="${MATRIX_PORT:-8765}"
 MATRIX_PORT="$SMOKE_PORT" \
-MATRIX_PID_FILE="${MATRIX_PID_FILE:-$PWD/.smoke-gateway.pid}" \
+# RECON-W28: this used to default to "$PWD/.smoke-gateway.pid", and PWD is the REPO
+# ROOT at this point (the script cd'd there in step 1), so every smoke run dropped a
+# pid file into the repository. Point it at the copy instead, so the artefact and the
+# process it names live together.
+SMOKE_PID_FILE="${MATRIX_PID_FILE:-$TARGET/.smoke-gateway.pid}"
+export MATRIX_PID_FILE="$SMOKE_PID_FILE"
   bash scripts/start-mind.sh > /tmp/matrix-start.log 2>&1 || {
     echo "Gateway failed to start:"
     tail -20 /tmp/matrix-start.log
