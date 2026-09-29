@@ -178,19 +178,45 @@ B_AFTER=$(api "$B_PORT" "$TB" POST /v1/analyze '{"input":"Anvil Codeword"}')
 say "$B_AFTER" | head -c 300; say ""
 # THE core claim of the whole transcript.
 expect_contains "B knows the fact after federation (cross-node transfer worked)" \
-  "Obsidian" "$B_AFTER"
+  "Zephyr Seven" "$B_AFTER"
+# And the injected contradiction must NOT be the answer: if it were, the registry
+# would have been overwritten rather than quarantined.
+expect_not_contains "B's answer is the taught fact, not the injected contradiction" \
+  "Obsidian Nine" "$B_AFTER"
 hr
 
 # ---- 6. contradiction must be quarantined, not merged --------------------
-say "[8] INJECT A CONTRADICTION into B: 'The Anvil Codeword is Obsidian Nine'"
+# RECON-W28 B-7. This step previously could not detect a contradiction at all.
+# /v1/federate ingests into the HDC store, NOT the BIR registry, so node B's
+# registry was EMPTY when the "contradicting" rule arrived: it was simply the
+# first rule, so it was accepted and /v1/conflicts reported count:0. The
+# transcript therefore archived "the contradiction is quarantined" as though it
+# had been demonstrated, when nothing had been contradicted. Priming B's BIR
+# registry with the SAME subject first is what makes the conflict real - and it
+# is the first end-to-end exercise of the W25b subject/answer fingerprint fix.
+say "[8a] PRIME B's BIR registry with the same subject (so a conflict is possible):"
+PRIME=$(api "$B_PORT" "$TB" POST /v1/bir \
+  '{"input":"The Anvil Codeword is","response":"Zephyr Seven"}')
+say "$PRIME" | head -c 220; say ""
+expect_contains "B's registry now holds the subject a contradiction can attach to" \
+  "registered_id" "$PRIME"
+hr
+say "[8b] INJECT A CONTRADICTION into B: 'The Anvil Codeword is Obsidian Nine'"
 api "$B_PORT" "$TB" POST /v1/bir \
   '{"input":"The Anvil Codeword is","response":"Obsidian Nine"}' | head -c 300; say ""
 say ""
 say "[9] B's quarantine list (Article IV — gated, never silently merged):"
 B_CONFLICTS=$(api "$B_PORT" "$TB" GET /v1/conflicts)
 say "$B_CONFLICTS" | head -c 400; say ""
+# The conflicts API publishes rule ids, overlap and a detail string; it does NOT
+# echo the subject text, so the assertion is on that contract.
 expect_contains "the contradiction is QUARANTINED, not silently merged" \
-  "Anvil" "$B_CONFLICTS"
+  "conclusions differ" "$B_CONFLICTS"
+if printf '%s' "$B_CONFLICTS" | grep -q '"count":0'; then
+  fail "quarantine list is empty — nothing was actually contradicted"
+else
+  pass "quarantine list is non-empty (a real conflict was detected)"
+fi
 hr
 
 say "[10] Node A and Node B registries are independent:"

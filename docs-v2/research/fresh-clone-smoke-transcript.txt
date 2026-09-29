@@ -1,0 +1,30 @@
+Smoke target: /home/alexandr-narbaev/Projects/agi/data/smoke/1790654929
+Step 0: pruning smoke dirs beyond KEEP=1 in /home/alexandr-narbaev/Projects/agi/data/smoke
+
+Step 1: Copy repo to /home/alexandr-narbaev/Projects/agi/data/smoke/1790654929...
+  Done. Repo copied.
+
+Step 2: Build all required modules...
+  Done. Jars built.
+
+Step 3: Generate runtime classpath...
+  Done. Classpath ready.
+
+Step 4: Launch the gateway...
+  Done. Gateway up.
+
+Step 5: Query the mind...
+  Waiting for 8799 to accept requests...
+  Gateway ready.
+  /v1/analyze → {"explain_id":"exp_42e65e67-ce0","answer":"2 + 3 = 5","confidence":1.0,"user":"dev-e7403732","plan":"PRO","mode":"production","modulators_fired":["CONSISTENCY_CHECKER","LIE_DETECTOR","SAFETY_MONITOR"]}
+
+=== FRESH-CLONE SMOKE TEST: PASS ===
+Mind at /home/alexandr-narbaev/Projects/agi/data/smoke/1790654929 is awake and answering.
+
+Repro commands (5 total):
+  1. ./gradlew :matrix-api-gateway:jar :matrix-brain-runtime:jar :matrix-core:jar
+  2. ./gradlew :matrix-api-gateway:writeRuntimeClasspath
+  3. (prepend matrix-{api-gateway,brain-runtime}/build/classes/java/main to runtime-classpath.txt)
+  4. MATRIX_PORT=8799 bash scripts/start-mind.sh
+  5. TOKEN=$(curl -s -X POST http://localhost:8765/v1/auth/login ...)
+     curl -X POST http://localhost:8765/v1/analyze -d '{"input":"What is 2+3?"}'

@@ -1,0 +1,56 @@
+[0] Both node ports (8774, 8775) are free.
+RECON-W25 — TWO-NODE FEDERATION TRANSCRIPT
+Node A :8774  dir=/home/alexandr-narbaev/Projects/agi/data/mind-A
+Node B :8775  dir=/home/alexandr-narbaev/Projects/agi/data/mind-B
+Isolated: separate mind dirs, separate ports, no shared memory, no shared store.
+------------------------------------------------------------
+[1] Starting Node A and Node B concurrently...
+  A health: {"status":"UP","service":"matrix-api-gateway","mode":"production","brain_available":true,"version":"0.1.0-T10"}
+  B health: {"status":"UP","service":"matrix-api-gateway","mode":"production","brain_available":true,"version":"0.1.0-T10"}
+  A token len=50   B token len=50
+------------------------------------------------------------
+[2] TEACH on Node A: 'The Anvil Codeword is Zephyr Seven'
+{"status":"taught","input":"The Anvil Codeword is","kb_size":6}
+------------------------------------------------------------
+[3] QUERY Node A (should know it):
+{"explain_id":"exp_56ce6d90-63d","answer":"Zephyr Seven","confidence":0.5,"user":"dev-beccc311","plan":"PRO","mode":"production","modulators_fired":["CONSISTENCY_CHECKER","LIE_DETECTOR","SAFETY_MONITOR"]}
+------------------------------------------------------------
+[4] QUERY Node B BEFORE federation (should NOT know it — proves isolation):
+{"explain_id":"exp_01678886-48c","answer":"I don't have a confident answer to that. No reasoning stage could establish one from what I know.","confidence":0.5,"user":"dev-6723495e","plan":"PRO","mode":"production","modulators_fired":["CONSI
+  PASS: B does NOT know the fact before federation (isolation intact)
+------------------------------------------------------------
+[5] DUMP Node A knowledge base:
+  dump bytes=162
+  dump head: {"source":"matrix-node-1","facts":[{"id":"taught-b85de6a5d268c64","input":"The Anvil Codeword is","answer":"Zephyr Seven","confidence":0.950,"ts":1790658198446}]}
+------------------------------------------------------------
+[6] PUSH that batch from A into B (cross-node, HTTP only):
+{"status":"accepted","source":"matrix-node-1","added":1}
+------------------------------------------------------------
+[7] QUERY Node B AFTER federation (should now know it):
+{"explain_id":"exp_baa97ed9-45b","answer":"Zephyr Seven","confidence":0.5,"user":"dev-6723495e","plan":"PRO","mode":"production","modulators_fired":["CONSISTENCY_CHECKER","LIE_DETECTOR","SAFETY_MONITOR"]}
+
+  PASS: B knows the fact after federation (cross-node transfer worked)
+  PASS: B's answer is the taught fact, not the injected contradiction
+------------------------------------------------------------
+[8a] PRIME B's BIR registry with the same subject (so a conflict is possible):
+{"engine":"BirRegistryPersistence+BirKnowledgeBase","accepted":true,"registered_id":"live-rule--8281861562113672224","registry_size":1}
+
+  PASS: B's registry now holds the subject a contradiction can attach to
+------------------------------------------------------------
+[8b] INJECT A CONTRADICTION into B: 'The Anvil Codeword is Obsidian Nine'
+{"engine":"BirRegistryPersistence+BirKnowledgeBase","accepted":false,"quarantined":true,"contradiction":{"new_rule":"live-rule-4258561937535055894","existing_rule":"live-rule--8281861562113672224","overlap":1.0,"detail":"precondition fingerprint collision; conclusions differ"},"registry_size":1}
+
+[9] B's quarantine list (Article IV — gated, never silently merged):
+{"engine":"BirKnowledgeBase.contradiction","count":1,"conflicts":[{"new_rule":"live-rule-4258561937535055894","existing_rule":"live-rule--8281861562113672224","overlap":1.0,"detail":"precondition fingerprint collision; conclusions differ"}]}
+
+  PASS: the contradiction is QUARANTINED, not silently merged
+  PASS: quarantine list is non-empty (a real conflict was detected)
+------------------------------------------------------------
+[10] Node A and Node B registries are independent:
+  A /v1/bir: {"engine":"BirRegistry+BirRegistryPersistence","registry_size":0,"on_disk_lines":0,"quarantine_size":0,"persistence":"load-on-boot + append-on-registe
+  B /v1/bir: {"engine":"BirRegistry+BirRegistryPersistence","registry_size":1,"on_disk_lines":1,"quarantine_size":1,"persistence":"load-on-boot + append-on-registe
+------------------------------------------------------------
+TRANSCRIPT SAVED: docs-v2/research/two-node-transcript-005.txt
+------------------------------------------------------------
+ASSERTIONS: 6 run, 0 failed
+=== TWO-NODE FEDERATION: PASS (6/6 assertions) ===
