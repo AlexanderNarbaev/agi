@@ -6,6 +6,9 @@ import com.sun.net.httpserver.HttpServer;
 import io.matrix.api.brain.BrainCycle;
 import io.matrix.api.brain.ProductionBrainClient;
 import io.matrix.api.brain.StubBrainCycle;
+import io.matrix.brain.runtime.stages.ModulatorStage;
+import java.util.ArrayList;
+import java.util.List;
 import io.matrix.api.dto.AnalyzeRequest;
 import io.matrix.api.dto.AnalyzeResponse;
 import io.matrix.api.dto.ExplainResponse;
@@ -746,6 +749,47 @@ public final class MinimalHttpServer {
                             .fromJsonLine(JSON_MAPPER.writeValueAsString(fn)));
                     }
                 }
+                // RECON-W28 B-6 (second half). Article IV: FROZEN modulators gate ALL
+                // outputs. /v1/bir was gated; the FEDERATION INGEST PATH was not, and it
+                // is the more dangerous of the two: a fact accepted here lands in the
+                // HDC store, from which it is retrieved and later served as an answer.
+                // So content another node refused to say could be handed to us, accepted
+                // without inspection, and then served back out. The same ModulatorStage
+                // the answer path uses now gates ingest too.
+                //
+                // The whole batch is refused rather than partially merged, and the
+                // refused facts are named. Merging the safe subset would be more
+                // convenient, but it is the silent-drop failure mode this codebase has
+                // been criticised for; a sender that gets a 403 with a reason can fix
+                // its node, and one that gets a partial success cannot notice.
+                List<String> refusedIds = new ArrayList<>();
+                List<String> firedUnion = new ArrayList<>();
+                for (var f : facts) {
+                    List<io.matrix.brain.runtime.BrcStep> ingestTrace = new ArrayList<>();
+                    ModulatorStage.ModulatorDecision gate = new ModulatorStage().gate(
+                        f.input(), f.answer(), 1.0, ingestTrace);
+                    if (!gate.accepted()) {
+                        refusedIds.add(f.id());
+                        for (String m : gate.modulatorsFired()) {
+                            if (!firedUnion.contains(m)) firedUnion.add(m);
+                        }
+                    }
+                }
+                if (!refusedIds.isEmpty()) {
+                    StringBuilder ids = new StringBuilder();
+                    for (int i = 0; i < refusedIds.size(); i++) {
+                        if (i > 0) ids.append(',');
+                        ids.append('"').append(esc(refusedIds.get(i))).append('"');
+                    }
+                    writeJson(ex, 403,
+                        "{\"error\":\"batch refused by FROZEN modulator\","
+                        + "\"source\":\"" + esc(source) + "\","
+                        + "\"refused_fact_ids\":[" + ids + "],"
+                        + "\"modulators_fired\":" + jsonArr(firedUnion)
+                        + ",\"added\":0}");
+                    return;
+                }
+
                 io.matrix.brain.runtime.KnowledgeExchangeProtocol.Batch batch =
                     new io.matrix.brain.runtime.KnowledgeExchangeProtocol.Batch(source, facts);
                 int added = io.matrix.brain.runtime.KnowledgeExchangeProtocol
@@ -1071,23 +1115,25 @@ public final class MinimalHttpServer {
             // Scalars render as their literal text; containers are not a string field.
             return node.isValueNode() ? node.asText() : null;
         } catch (Exception parseFailure) {
-            // Malformed or non-JSON body: fall back to the legacy scan so existing
-            // lenient behaviour is preserved rather than regressed.
-            return extractFieldLegacy(body, fieldName);
+            // RECON-W28 B-6 (final). This used to fall back to a hand-rolled
+            // indexOf scan "so no previously-working request regresses". The scanner
+            // matched the first literal "field" ANYWHERE in the body, including
+            // inside another field's string value, and when the key was present
+            // with no colon after it (malformed body) it returned a slice of
+            // whatever string appeared first. That slice flows into the Article IV
+            // FROZEN gate and into the analyze input, so a crafted body could steer
+            // which text is gated, or what the mind is asked.
+            //
+            // No request that is standards-compliant JSON is affected: Jackson
+            // accepts every construct the scan managed, plus whitespace, unicode
+            // escapes, nesting and escapes the scan could not handle at all. The only
+            // behaviour lost is on bodies that are NOT valid JSON, and for those
+            // returning null produces an explicit error or refusal, which is the
+            // honest outcome - guessing at the author's intent is not.
+            return null;
         }
     }
 
-    /** Legacy lenient scan. Kept as a fallback for unparseable bodies. */
-    private static String extractFieldLegacy(String body, String fieldName) {
-        String needle = "\"" + fieldName + "\"";
-        int idx = body.indexOf(needle);
-        if (idx < 0) return null;
-        int colon = body.indexOf(':', idx);
-        int q1 = body.indexOf('"', colon);
-        int q2 = body.indexOf('"', q1 + 1);
-        if (q1 < 0 || q2 < 0) return null;
-        return body.substring(q1 + 1, q2).replace("\\\"", "\"").replace("\\\\", "\\");
-    }
 
     /** Render a List<String> as a JSON array. */
     private static String jsonArr(List<String> items) {

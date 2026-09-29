@@ -296,6 +296,22 @@ public final class DistillationPipeline {
                 sb.append('/');
                 for (long w : c.neg) sb.append(Long.toHexString(w)).append(':');
             }
+        } else if (distilled instanceof io.matrix.bir.TtForm tt) {
+            // RECON-W28 B-4, SECOND BUG, and this one is mine. The branch above only
+            // covered ClauseSetForm, so for a TtForm the hash was built from arity and
+            // form kind alone and the learned TABLE was never serialised. Every
+            // single-output teacher distilled to the SAME hash, whatever it had
+            // actually learned — which is exactly why the W27 report's "623cb895"
+            // looked like a constant artifact identity, and why two captures with
+            // genuinely different firing patterns were indistinguishable.
+            //
+            // Found by a test written to check something else: it asserted that two
+            // different captures hash differently, and they both returned 623cb895.
+            // The first draft of that test was itself wrong (it varied the prose, which
+            // the bit vector does not derive from), so the assertion "passed" for the
+            // wrong reason first; the failure was the real signal.
+            sb.append("|tt:");
+            for (long w : tt.table()) sb.append(Long.toHexString(w)).append(':');
         }
         return Integer.toHexString(sb.toString().hashCode());
     }
