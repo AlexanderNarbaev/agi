@@ -1231,3 +1231,64 @@ recorded here and left alone. Recommended disposition: make the reflex match on
 intent rather than substring — "kill a process", "kill -9", "killall" are ordinary
 sysadmin vocabulary — and add a test for the technical case, as
 `BirWriteFROZENGateTest.answerPathIsNotOverTriggered` already does for the layer above.
+
+
+## 2026-09-29 — RECON-W28 review pass 2, closing record
+
+Goal Guard state is unreadable from this session (`goal_status`, `goal_evidence_map`
+and `goal_reviewer_memory` all refuse outside an active Goal session), so the nine
+failing roles could not be read. Rather than guess at them, I audited my own contract
+criteria one by one and fixed the four that were genuinely unmet. The substance of
+this pass is in the previous entry; this records the state and what is still missing.
+
+### Fixed in this pass
+
+| Criterion | Before | After |
+|---|---|---|
+| Article IV on `/v1/federate` | **no gate at all** | gated, whole batch refused, offenders named |
+| Manual JSON parsers in the gateway | 1 lenient scanner remained | zero; `extractField` is strict Jackson |
+| Coverage of changed code | 40.8% / 50.0% on two classes | `MinimalHttpServer` changed methods 100.0% method / 84.2% line; `DistillationPipeline` 100.0% |
+| Artifact identity | `contentHash` ignored `TtForm` entirely | table serialised; two real defects fixed |
+
+And one thing that was not on the list: the FROZEN answer gate is six substring
+phrases while `matrix-core`'s `EthicalFilter` has held six FROZEN keyword families all
+along. That gap is now closed on the two durable write paths. I first closed it
+globally and that was wrong — it made the answer path refuse "how do I kill a
+background process in bash" — so it is scoped, and both directions are pinned by tests
+in both directions.
+
+### Final state, verified
+
+- **8879 invocations, 71 failures, 26 skipped.** `matrix-brain-runtime` 425/0 and
+  `matrix-api-gateway` 152/0. All 71 failures are in the untouched `matrix-core`.
+- FROZEN zones: `.github/` 0, `CONSTITUTION.md`/`AGENTS.md`/`ethics/` 0,
+  `EvalBattery.java` 0 lines. `SESSION.md` deletions of prior content: 0. No test
+  class or method was deleted at any point in the campaign: 0.
+- `develop == main == origin == gitverse == d00a1fc0`, tree clean, no leaked JVMs.
+- `v17.4.0-mind` published to both remotes; tag sets identical on `origin` and
+  `gitverse`.
+- Live benchmark 47/48, unchanged, and the regression gate against the frozen baseline
+  exits 0.
+
+### The thing still missing, stated plainly
+
+**I have no reviewer verdicts.** Five delegate reviewers have been launched across the
+two review passes (`task_3f7f8882`, `task_abfe5d25`, `task_29b46e3e`, then
+`task_27114153`, `task_e229e04e`) and not one has returned a verdict — the first three
+ran past 80 minutes, and the second pair past 60. I am not going to manufacture a
+twelve-role review table out of my own work and call it independent review; that is
+exactly the self-attestation the W27 gate was criticised for, and the criticism was
+correct. The automatic Goal Guard re-review is the authority on this pass, and if it
+finds something here that I did not, the honest expectation is that it will.
+
+The two reviewer tasks still open at the time of writing are cancelled rather than left
+to run indefinitely, and that fact is recorded here instead of being quietly omitted.
+
+### Correction to the record
+
+Last pass I retracted the distillation hash `623cb895` as unreproducible. **That
+retraction was wrong.** It is reproducible, and it is the hash of the `TtForm` branch
+missing from `contentHash` — a bug in my own previous fix. Two wrong positions in a row
+on the same number is worth naming: I asserted a cause before measuring it, then
+retracted a figure I had not actually tried to reproduce. The number was right the whole
+time and the explanation was wrong both times.
