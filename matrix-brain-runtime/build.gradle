@@ -6,6 +6,7 @@
 
 plugins {
     id 'java'
+    id 'jacoco'
     id 'application'
 }
 
@@ -47,4 +48,17 @@ application {
 tasks.withType(Test) {
     useJUnitPlatform()
     maxHeapSize = '2g'
+}
+
+// RECON-W28 B-3: this module has no JaCoCo plugin, so the campaign produced NO
+// coverage evidence for code it changed. matrix-core already measures an 82%
+// METHOD gate; without the same measurement here, "coverage >= 82% on touched
+// modules" was an unverifiable claim. Reports only - the 82% gate stays in
+// matrix-core, which owns the bundle-level contract, so a module-wide number
+// here cannot silently fail the build for pre-existing untested surface.
+jacocoTestReport {
+    reports {
+        xml.required = true
+        html.required = true
+    }
 }

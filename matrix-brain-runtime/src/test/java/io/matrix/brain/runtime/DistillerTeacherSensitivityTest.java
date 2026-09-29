@@ -68,7 +68,15 @@ class DistillerTeacherSensitivityTest {
             + "\"seed\":42}";
     }
 
-    private static Bir distill(Path ndjson, int bits) throws Exception {
+    /**
+     * @param sourceLabel the provenance string, i.e. the SOURCE IDENTITY. It is a
+     *   parameter rather than a constant because "provenance must not leak into the
+     *   artifact hash" is only testable when the two runs actually differ in
+     *   provenance. An earlier revision of this test hardcoded the label and then
+     *   asserted the provenances differed - a test that could never pass and, worse,
+     *   one whose failure would have been misread as a production bug.
+     */
+    private static Bir distill(Path ndjson, int bits, String sourceLabel) throws Exception {
         Distiller d = new Distiller(bits, 0.5);
         for (String line : Files.readAllLines(ndjson)) {
             if (line == null || line.isBlank()) continue;
@@ -76,7 +84,7 @@ class DistillerTeacherSensitivityTest {
             if (r == null || r.activation() == null || r.activation().length == 0) continue;
             d.capture(r.toBitVector(bits), r.activation());
         }
-        return d.synthesize("test");
+        return d.synthesize(sourceLabel);
     }
 
     @Test
@@ -101,8 +109,8 @@ class DistillerTeacherSensitivityTest {
         Files.write(fa, a, StandardCharsets.UTF_8);
         Files.write(fb, b, StandardCharsets.UTF_8);
 
-        Bir ba = distill(fa, 8);
-        Bir bb = distill(fb, 8);
+        Bir ba = distill(fa, 8, "source=teacher-a");
+        Bir bb = distill(fb, 8, "source=teacher-b");
 
         assertNotEquals(structuralHash(ba), structuralHash(bb),
             "distiller is teacher-blind: two teachers with different firing sets "
@@ -121,8 +129,8 @@ class DistillerTeacherSensitivityTest {
         Path f = dir.resolve("teacher-gamma.ndjson");
         Files.write(f, rows, StandardCharsets.UTF_8);
 
-        String h1 = structuralHash(distill(f, 8));
-        String h2 = structuralHash(distill(f, 8));
+        String h1 = structuralHash(distill(f, 8, "source=gamma"));
+        String h2 = structuralHash(distill(f, 8, "source=gamma"));
         assertEquals(h1, h2, "Article III: identical capture produced two different artifacts");
     }
 
@@ -143,8 +151,8 @@ class DistillerTeacherSensitivityTest {
         Files.write(f1, rows, StandardCharsets.UTF_8);
         Files.write(f2, rows, StandardCharsets.UTF_8);
 
-        Bir b1 = distill(f1, 8);
-        Bir b2 = distill(f2, 8);
+        Bir b1 = distill(f1, 8, "source=delta-one,capture=" + f1);
+        Bir b2 = distill(f2, 8, "source=delta-two,capture=" + f2);
 
         // provenance genuinely differs...
         assertNotEquals(b1.provenance(), b2.provenance(),
@@ -168,7 +176,7 @@ class DistillerTeacherSensitivityTest {
         Path f = dir.resolve("silent-teacher.ndjson");
         Files.write(f, rows, StandardCharsets.UTF_8);
 
-        Bir bir = distill(f, 8);
+        Bir bir = distill(f, 8, "source=epsilon");
         assertTrue(bir instanceof io.matrix.bir.TtForm,
             "single-output capture should synthesise a truth table");
         for (long w : ((io.matrix.bir.TtForm) bir).table()) {

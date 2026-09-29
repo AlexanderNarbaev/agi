@@ -110,8 +110,13 @@ public final class MinimalHttpServer {
         if ("production".equalsIgnoreCase(mode)) {
             // MIND-W2: persistent HDC store. Path from MATRIX_MIND_DIR env var
             // (default data/mind/ relative to CWD).
-            String mindDir = System.getenv().getOrDefault(
-                "MATRIX_MIND_DIR", "data/mind");
+            // RECON-W28 B-3: the system property now takes precedence over the env
+            // var, matching how `mode` and `port` are already resolved. Without it
+            // there was NO way to point a test JVM at a temp directory: the env var
+            // is set once at process start, so a test in production mode wrote its
+            // HDC store and BIR registry into the repository's data/mind.
+            String mindDir = System.getProperty("matrix.mind.dir",
+                System.getenv().getOrDefault("MATRIX_MIND_DIR", "data/mind"));
             java.nio.file.Path hdcPath = java.nio.file.Path.of(
                 mindDir, "hdc_kb.ndjson");
             this.hdcStore = null;
