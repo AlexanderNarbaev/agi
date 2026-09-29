@@ -104,7 +104,14 @@ public final class DistillationPipeline {
             ruleId, distilled, ruleId, fidelity, provenance.getBytes(java.nio.charset.StandardCharsets.UTF_8));
         long durationMs = (System.nanoTime() - startNs) / 1_000_000L;
         // Artifact hash: simple deterministic digest.
-        String artifactHash = Integer.toHexString(distilled.toString().hashCode());
+        // RECON-W28 B-4: was Integer.toHexString(distilled.toString().hashCode()).
+        // Bir.toString() embeds the provenance string, which carries the source label
+        // and the capture path, so two runs that learned BYTE-IDENTICAL structure from
+        // differently-named sources produced different "artifact hashes" - proven by
+        // reproduction. That makes the value a run identifier, not an artifact identity,
+        // and it broke the content-addressing invariant W21 established. contentHash()
+        // covers arity, form and clause/table masks only.
+        String artifactHash = contentHash(distilled);
         int after = registry.size();
         return new RunResult(entry.bir(), sourceId, captured, fidelity, durationMs,
             artifactHash, provenance + ",consolidationDelta=" + (after - before)
@@ -138,7 +145,14 @@ public final class DistillationPipeline {
             "distill-" + datasetType + "-" + seed + "-" + sourceId,
             distilled, sourceId, 0.5, provenance.getBytes(java.nio.charset.StandardCharsets.UTF_8));
         long durationMs = (System.nanoTime() - startNs) / 1_000_000L;
-        String artifactHash = Integer.toHexString(distilled.toString().hashCode());
+        // RECON-W28 B-4: was Integer.toHexString(distilled.toString().hashCode()).
+        // Bir.toString() embeds the provenance string, which carries the source label
+        // and the capture path, so two runs that learned BYTE-IDENTICAL structure from
+        // differently-named sources produced different "artifact hashes" - proven by
+        // reproduction. That makes the value a run identifier, not an artifact identity,
+        // and it broke the content-addressing invariant W21 established. contentHash()
+        // covers arity, form and clause/table masks only.
+        String artifactHash = contentHash(distilled);
         int after = registry.size();
         return new RunResult(entry.bir(), sourceId, captured, 0.5, durationMs,
             artifactHash, provenance + ",registered=" + (after > before));
@@ -209,7 +223,14 @@ public final class DistillationPipeline {
                 sourceId, fidelity,
                 provenance.getBytes(java.nio.charset.StandardCharsets.UTF_8));
             long durationMs = (System.nanoTime() - startNs) / 1_000_000L;
-            String artifactHash = Integer.toHexString(distilled.toString().hashCode());
+            // RECON-W28 B-4: was Integer.toHexString(distilled.toString().hashCode()).
+        // Bir.toString() embeds the provenance string, which carries the source label
+        // and the capture path, so two runs that learned BYTE-IDENTICAL structure from
+        // differently-named sources produced different "artifact hashes" - proven by
+        // reproduction. That makes the value a run identifier, not an artifact identity,
+        // and it broke the content-addressing invariant W21 established. contentHash()
+        // covers arity, form and clause/table masks only.
+        String artifactHash = contentHash(distilled);
             int after = registry.size();
             return new RunResult(entry.bir(), sourceId, captured, fidelity, durationMs,
                 artifactHash, provenance + ",consolidationDelta=" + (after - before)
@@ -279,6 +300,23 @@ public final class DistillationPipeline {
         return Integer.toHexString(sb.toString().hashCode());
     }
 
+    /**
+     * RECON-W28 B-4 — SHA-256 over the capture bytes, so provenance names the exact
+     * offline run that produced the artifact, not merely a path that can be rewritten
+     * in place. Truncated to 8 bytes: this is provenance, not a security boundary.
+     */
+    private static String sha256(java.nio.file.Path p) throws java.io.IOException {
+        try {
+            java.security.MessageDigest md = java.security.MessageDigest.getInstance("SHA-256");
+            byte[] d = md.digest(java.nio.file.Files.readAllBytes(p));
+            StringBuilder sb = new StringBuilder(16);
+            for (int i = 0; i < 8; i++) sb.append(String.format("%02x", d[i]));
+            return "sha256:" + sb;
+        } catch (java.security.NoSuchAlgorithmException e) {
+            throw new java.io.IOException("SHA-256 unavailable", e);
+        }
+    }
+
     /** Path-taking overload. */
     public RunResult distillFromActivations(
             String sourceId, java.nio.file.Path ndjsonPath, int inputBits)
@@ -328,12 +366,19 @@ public final class DistillationPipeline {
                 + " (lines=" + lines.size() + ", skipped=" + skipped + ")");
         }
 
+        // RECON-W28 B-4: source identity recorded BEFORE synthesis, so it becomes part
+        // of the learned Bir rather than a side-channel. A structural content hash alone
+        // cannot distinguish two teachers that induce the same structure, so the
+        // fingerprint of the exact capture bytes is carried in provenance as well.
+        String teacherFingerprint = sha256(ndjsonPath) + "/" + batchId;
         String provenance = String.format(
             "engine=ActivationRecord.replay,engine=Distiller.synthesize,"
             + "engine=BirRegistry.register,source=%s,capture=%s,"
             + "captureTool=scripts/capture_activations.py,onnxRuntime=out-of-process,"
+            + "teacherFingerprint=%s,"
             + "batch=%s,seed=%d,inputBits=%d,samples=%d,skipped=%d",
-            sourceId, ndjsonPath.toString(), batchId, seed, inputBits, consumed, skipped);
+            sourceId, ndjsonPath.toString(), teacherFingerprint,
+            batchId, seed, inputBits, consumed, skipped);
 
         Bir distilled = distiller.synthesize(provenance);
         double fidelity = distiller.fidelity(distilled,

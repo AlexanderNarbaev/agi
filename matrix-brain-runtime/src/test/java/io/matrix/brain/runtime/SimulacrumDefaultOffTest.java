@@ -99,6 +99,43 @@ class SimulacrumDefaultOffTest {
         }
     }
 
+    // ---- Layer 2b: the reflective reads above are only sound in sequence ----
+
+    /**
+     * RECON-W28 B-5 — makes the ordering precondition explicit instead of implicit.
+     *
+     * <p>{@link #readFlag} observes a PUBLIC STATIC MUTABLE field, so its answer
+     * depends on when it runs. That is currently safe for a verified reason:
+     * {@code MindCycleIntegrationTest}, {@code BirInferenceStageSimulacrumTest} and
+     * {@code TsetlinStageSimulacrumTest} are the only test classes that set these
+     * flags true, and every one of them restores them to false in {@code @AfterEach}
+     * (two also in a {@code finally}). JUnit 5 therefore never leaves a flag set
+     * between classes.</p>
+     *
+     * <p>That safety is a property of OTHER test classes' discipline, not of this one.
+     * If parallel execution is ever enabled, a mutator's {@code @BeforeEach} can set a
+     * flag true while this test reads it, and this guard would fail for a reason that
+     * has nothing to do with the code it is meant to protect. So the precondition is
+     * asserted here: if someone turns parallelism on, this test tells them exactly
+     * what they broke instead of producing a mysterious red.</p>
+     *
+     * <p>Note the real guard against a production re-enable is
+     * {@link #no_production_source_flips_a_simulacrum_flag_true()}, which is a source
+     * scan and is immune to test ordering by construction.</p>
+     */
+    @Test
+    void test_execution_is_sequential_so_the_reflective_reads_are_sound() {
+        boolean parallel = Boolean.parseBoolean(System.getProperty(
+            "junit.jupiter.execution.parallel.enabled", "false"));
+        assertThat(parallel)
+            .as("parallel JUnit execution would let another test class set a simulacrum "
+              + "flag true while SimulacrumDefaultOffTest reads it, making the "
+              + "reflective assertions order-dependent. If you enabled parallelism, "
+              + "make these two tests @Isolated or read the defaults through a fresh "
+              + "URLClassLoader instead of reflection on the live class.")
+            .isFalse();
+    }
+
     // ---- Layer 3: no production source enables one -------------------------
 
     @Test

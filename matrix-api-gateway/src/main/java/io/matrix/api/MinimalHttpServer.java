@@ -577,6 +577,30 @@ public final class MinimalHttpServer {
                 new long[]{subjectKey | 1L}, new long[]{answerKey & ANSWER_MASK});
             var bir = io.matrix.bir.ClauseSetForm.lossy(20,
                 java.util.List.of(clause), "from_http", 0.5);
+
+            // RECON-W28 B-6 — Article IV: FROZEN modulators must gate ALL outputs.
+            // Until now /v1/bir writes were gated ONLY by contradiction detection, so
+            // a rule whose content the answer path would refuse outright
+            // (ModulatorStage vetoes "how to lie", "how to build a bomb", ...) could
+            // still be written into the registry, where it would later be retrieved
+            // and served. The same ModulatorStage the answer path uses now gates the
+            // write, so the policy is one policy: whatever cannot be said cannot be
+            // taught. Veto is auditable - the fired modulators are returned.
+            java.util.List<io.matrix.brain.runtime.BrcStep> birModTrace =
+                new java.util.ArrayList<>();
+            io.matrix.brain.runtime.stages.ModulatorStage.ModulatorDecision birGate =
+                new io.matrix.brain.runtime.stages.ModulatorStage().gate(
+                    subject == null ? "" : subject,
+                    answer == null ? "" : answer,
+                    1.0, birModTrace);
+            if (!birGate.accepted()) {
+                writeJson(ex, 403,
+                    "{\"error\":\"refused by FROZEN modulator\","
+                    + "\"modulators_fired\":" + jsonArr(birGate.modulatorsFired())
+                    + ",\"registry_size\":" + birKnowledgeBase.size() + "}");
+                return;
+            }
+
             io.matrix.brain.runtime.BirKnowledgeBase.RegisterResult r =
                 birKnowledgeBase.register(id, bir, id, 0.5,
                     body.getBytes(java.nio.charset.StandardCharsets.UTF_8));
@@ -698,28 +722,23 @@ public final class MinimalHttpServer {
             try {
                 String body = readBody(ex);
                 // Parse minimal Batch JSON: {"source":"...","facts":[{"id":..,"input":..,"answer":..,"confidence":..,"ts":..},...]}
+                // RECON-W28 B-6: was indexOf + findMatchingBracket + a scan for the
+                // next '}'. A fact whose string value contained '}' was truncated at
+                // that brace and the fragment was silently ingested as a shorter fact;
+                // a nested object broke the same way. Now one real parse.
                 String source = "unknown";
-                int srcIdx = body.indexOf("\"source\":\"");
-                if (srcIdx >= 0) {
-                    int s = srcIdx + 10;
-                    int e = s;
-                    while (e < body.length() && body.charAt(e) != '"') e++;
-                    source = body.substring(s, e);
-                }
-                java.util.List<io.matrix.brain.runtime.KnowledgeExchangeProtocol.Fact> facts = new java.util.ArrayList<>();
-                int factsStart = body.indexOf("\"facts\":[");
-                if (factsStart > 0) {
-                    int cursor = factsStart + 9;
-                    int arrayEnd = findMatchingBracket(body, cursor - 1);
-                    while (cursor < arrayEnd) {
-                        int objStart = body.indexOf('{', cursor);
-                        if (objStart < 0 || objStart > arrayEnd) break;
-                        int objEnd = body.indexOf('}', objStart);
-                        if (objEnd < 0 || objEnd > arrayEnd) break;
-                        String factJson = body.substring(objStart, objEnd + 1);
+                String src = extractField(body, "source");
+                if (src != null && !src.isBlank()) source = src;
+                java.util.List<io.matrix.brain.runtime.KnowledgeExchangeProtocol.Fact> facts =
+                    new java.util.ArrayList<>();
+                com.fasterxml.jackson.databind.JsonNode root = JSON_MAPPER.readTree(body);
+                com.fasterxml.jackson.databind.JsonNode factsNode =
+                    root == null ? null : root.get("facts");
+                if (factsNode != null && factsNode.isArray()) {
+                    for (com.fasterxml.jackson.databind.JsonNode fn : factsNode) {
+                        if (fn == null || !fn.isObject()) continue;
                         facts.add(io.matrix.brain.runtime.KnowledgeExchangeProtocol.Fact
-                            .fromJsonLine(factJson));
-                        cursor = objEnd + 1;
+                            .fromJsonLine(JSON_MAPPER.writeValueAsString(fn)));
                     }
                 }
                 io.matrix.brain.runtime.KnowledgeExchangeProtocol.Batch batch =
@@ -736,25 +755,6 @@ public final class MinimalHttpServer {
         }
     }
 
-    /** Find the matching closing bracket/brace for an opening at position {@code from}. */
-    private static int findMatchingBracket(String s, int from) {
-        char open = s.charAt(from);
-        char close = open == '[' ? ']' : open == '{' ? '}' : open == '(' ? ')' : 0;
-        if (close == 0) return s.length();
-        int depth = 0;
-        boolean inStr = false;
-        boolean esc = false;
-        for (int i = from; i < s.length(); i++) {
-            char c = s.charAt(i);
-            if (esc) { esc = false; continue; }
-            if (c == '\\') { esc = true; continue; }
-            if (c == '"') { inStr = !inStr; continue; }
-            if (inStr) continue;
-            if (c == open) depth++;
-            else if (c == close) { depth--; if (depth == 0) return i; }
-        }
-        return s.length();
-    }
 
     private void handleLogin(HttpExchange ex) throws IOException {
         if ("POST".equalsIgnoreCase(ex.getRequestMethod())) {
@@ -961,13 +961,34 @@ public final class MinimalHttpServer {
         return sb.toString();
     }
 
+    /**
+     * RECON-W28 B-6 — was a hand-rolled indexOf scan.
+     *
+     * <p>That scan matched the first literal {@code "email"} ANYWHERE in the body,
+     * including inside another field's string value, and never decoded JSON escapes.
+     * A body such as
+     * {@code {"note":"my email is whatever","email":"user@corp.example"}}
+     * returned the note's tail rather than the email field, and the result feeds
+     * {@link #inferTierFromEmail} — so a crafted body could steer tier selection
+     * through parser confusion. Now a real JSON parse, with the note that a lenient
+     * fallback is deliberately NOT used here: a body we cannot parse is anonymous,
+     * not a body we guess at.</p>
+     */
     private static String emailFromJson(String body) {
-        int idx = body.indexOf("\"email\"");
-        if (idx < 0) return "anonymous@test.com";
-        int colon = body.indexOf(':', idx);
-        int q1 = body.indexOf('"', colon);
-        int q2 = body.indexOf('"', q1 + 1);
-        return body.substring(q1 + 1, q2);
+        if (body == null || body.isBlank()) return "anonymous@test.com";
+        try {
+            com.fasterxml.jackson.databind.JsonNode root = JSON_MAPPER.readTree(body);
+            com.fasterxml.jackson.databind.JsonNode node =
+                root == null ? null : root.get("email");
+            if (node == null || !node.isValueNode()) return "anonymous@test.com";
+            String v = node.asText();
+            return (v == null || v.isBlank()) ? "anonymous@test.com" : v;
+        } catch (Exception unparseable) {
+            // Deliberately NOT extractField(): that helper falls back to a lenient scan
+            // for unparseable bodies, and a lenient scan on a field that selects the
+            // billing tier is exactly the confusion being removed here.
+            return "anonymous@test.com";
+        }
     }
 
     private static String inferTierFromEmail(String email) {
@@ -1074,16 +1095,25 @@ public final class MinimalHttpServer {
         return sb.append("]").toString();
     }
 
-    /** Extract a string field from a flat JSON body (best-effort). */
+    /**
+     * RECON-W28 B-6 — was an indexOf scan for {@code "key":"value"}.
+     *
+     * <p>That form required the value to start immediately after the colon, so
+     * {@code {"name" : "x"}} (a space before the colon) silently returned null, and a
+     * value containing an escaped quote was cut at the wrong place. Replaced with a
+     * real parse; the return contract is unchanged (null when absent or not a
+     * scalar), so no caller changes behaviour for well-formed input.</p>
+     */
     private static String extractJsonField(String body, String key) {
-        if (body == null) return null;
-        String marker = "\"" + key + "\":\"";
-        int i = body.indexOf(marker);
-        if (i < 0) return null;
-        int s = i + marker.length();
-        int e = body.indexOf('"', s);
-        if (e < 0) return null;
-        return body.substring(s, e);
+        if (body == null || body.isBlank()) return null;
+        try {
+            com.fasterxml.jackson.databind.JsonNode root = JSON_MAPPER.readTree(body);
+            com.fasterxml.jackson.databind.JsonNode node = root == null ? null : root.get(key);
+            if (node == null || node.isNull() || !node.isValueNode()) return null;
+            return node.asText();
+        } catch (Exception unparseable) {
+            return null;
+        }
     }
 
     private static String abbreviate(String s, int max) {
