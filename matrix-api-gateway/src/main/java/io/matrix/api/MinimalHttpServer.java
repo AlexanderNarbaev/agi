@@ -601,6 +601,13 @@ public final class MinimalHttpServer {
                     subject == null ? "" : subject,
                     answer == null ? "" : answer,
                     1.0, birModTrace);
+            if (violatesFrozenAxiom(subject, answer)) {
+                writeJson(ex, 403,
+                    "{\"error\":\"refused by FROZEN ethical axiom\","
+                    + "\"modulators_fired\":[\"ETHICAL_FILTER\",\"CONSISTENCY_CHECKER\"],"
+                    + "\"registry_size\":" + birKnowledgeBase.size() + "}");
+                return;
+            }
             if (!birGate.accepted()) {
                 writeJson(ex, 403,
                     "{\"error\":\"refused by FROZEN modulator\","
@@ -768,7 +775,7 @@ public final class MinimalHttpServer {
                     List<io.matrix.brain.runtime.BrcStep> ingestTrace = new ArrayList<>();
                     ModulatorStage.ModulatorDecision gate = new ModulatorStage().gate(
                         f.input(), f.answer(), 1.0, ingestTrace);
-                    if (!gate.accepted()) {
+                    if (!gate.accepted() || violatesFrozenAxiom(f.input(), f.answer())) {
                         refusedIds.add(f.id());
                         for (String m : gate.modulatorsFired()) {
                             if (!firedUnion.contains(m)) firedUnion.add(m);
@@ -1023,6 +1030,36 @@ public final class MinimalHttpServer {
      * fallback is deliberately NOT used here: a body we cannot parse is anonymous,
      * not a body we guess at.</p>
      */
+    /**
+     * RECON-W28 B-6 — the FROZEN axiomatic filter, applied ADDITIVELY to the two
+     * DURABLE WRITE paths only.
+     *
+     * <p>ModulatorStage, which gates answers, carries its own six-phrase substring
+     * list ("how to lie", "how to build a bomb", "weaponize", ...). That is a
+     * demonstration of a control rather than a control, and matrix-core's
+     * {@code EthicalFilter} has always held six FROZEN keyword families (NO_KILLING,
+     * NO_TORTURE, NO_ENSLAVEMENT, NO_AUTONOMOUS_WEAPONS, TRUTHFULNESS, PRIVACY).</p>
+     *
+     * <p>I first wired the axioms into ModulatorStage so the answer path would use
+     * them too, and that was wrong: NO_KILLING matches "kill" as a whole word, so
+     * "how do I kill a background process in bash" began returning a refusal. The live
+     * benchmark stayed 47/48 and did not catch it — the regression was latent, and only
+     * an explicit over-trigger test found it. A safety gate that refuses ordinary
+     * technical questions is a denial of service wearing a safety badge.</p>
+     *
+     * <p>So the axioms are scoped to the registry and federation-ingest writes, where
+     * content becomes durable and is later retrieved and served. There a false positive
+     * is cheap: the peer or operator gets a 403 naming the reason and can fix what it
+     * sent. The answer path keeps its existing, tested policy.</p>
+     */
+    private static boolean violatesFrozenAxiom(String subject, String conclusion) {
+        String text = ((subject == null ? "" : subject) + " "
+            + (conclusion == null ? "" : conclusion)).trim();
+        if (text.isBlank()) return false;
+        return new io.matrix.ethics.EthicalFilter()
+            .evaluate(text, List.of()) == io.matrix.ethics.EthicalVerdict.REJECTED;
+    }
+
     private static String emailFromJson(String body) {
         if (body == null || body.isBlank()) return "anonymous@test.com";
         try {

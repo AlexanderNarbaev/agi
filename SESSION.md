@@ -1125,3 +1125,109 @@ the review work against the tree as it stood (`task_b83095f2`, `task_aa066e98`,
 when this entry was written, roughly 80 minutes in. That is recorded as an open item
 rather than presented as a clean sweep — the twelve-role re-review is the authority on
 this work, not this paragraph.
+
+
+## 2026-09-29 — RECON-W28 review cycle #0, second pass: four gaps closed, one found, one pre-existing defect discovered
+
+Goal Guard state was unreadable from this session, so rather than guess at the nine
+failing roles I audited my own acceptance criteria and found four genuinely unmet. All
+four are fixed. Two of them were real defects rather than missing evidence.
+
+### Gap 1 — Article IV did not cover the federation ingest path (FIXED)
+
+`/v1/bir` was gated; `/v1/federate` was not, and it is the more dangerous of the two.
+A fact accepted there lands in the HDC store, from which it is retrieved and later
+**served as an answer**. Content a peer node would have refused to state could be
+handed to us, accepted without inspection, and handed back to a user. The ingest path
+was a back door into the answer path. It now runs the same ModulatorStage, refuses the
+whole batch with 403 when any fact is vetoed, and NAMES the refused fact ids. Merging
+the safe subset would be more convenient and is exactly the silent-drop failure this
+codebase has been criticised for: a sender that gets a reason can fix its node, one
+that gets a partial success cannot notice.
+
+### Gap 2 — the last hand-rolled JSON parser (FIXED)
+
+`extractFieldLegacy` is deleted and `extractField` is strict. The scanner matched the
+first literal "field" anywhere in the body, including inside another field's string
+value, and on a malformed body returned a slice of whatever string appeared first —
+and that slice feeds the Article IV gate and the analyze prompt. No standards-compliant
+body is affected; the full gateway suite is 150 tests, 0 failures after the change.
+I also corrected my own overstatement: I predicted a StringIndexOutOfBoundsException,
+checked it, and `indexOf(ch, -1)` clamps instead. The hazard is wrong-field confusion.
+
+### Gap 3 — coverage, and the real reason it was low (FIXED for changed code)
+
+Measured over full module runs and restricted to the methods this campaign changed,
+which is what "82% on touched code" means:
+
+| changed methods | method | line |
+|---|---|---|
+| `MinimalHttpServer` (handleBir, handleFederate, emailFromJson, extractField, extractJsonField) | 100.0% | 84.2% |
+| `DistillationPipeline` (all four entry points, contentHash, sha256) | 100.0% | — |
+
+`ProductionBrainClient` has **0 diff lines** in W28, so it is not touched code; its
+0% -> 62.5% came entirely from the new end-to-end tests and is a bonus, not an
+obligation. Both modules green: brain-runtime 425/0, api-gateway 150/0.
+
+I was twice caught reading coverage from a filtered run, which reports near-zero
+because only the filtered tests execute. Both readings were wrong and both were caught
+by re-measuring over a full run. Coverage read from a filtered run is not evidence.
+
+### Gap 4 — a SECOND hash bug, and it was in my own previous fix (FIXED)
+
+`contentHash` serialised `ClauseSetForm` clauses but had **no branch for `TtForm`**, so
+for a truth-table artifact it hashed arity and form kind and nothing else. Every
+single-output teacher produced one constant hash. That is why the W27 report's
+`623cb895` read like a fixed artifact identity, and it means the W21 "content-addressed"
+claim was false for the path most captures actually take. The table is now serialised.
+
+I retracted `623cb895` last round as unreproducible. That retraction was **wrong**: it
+is reproducible, and it is the hash of this bug. Correcting the record matters more
+than the tidiness of having been right.
+
+It was found by a test written to check something else — and that test had its own
+wrong premise, which is the second lesson. It first varied the prose, which the bit
+vector does not derive from, so it "passed" for the wrong reason; only the harder
+feature-based version failed. Measured directly: `toBitVector` derives from
+`input_tokens`, falling back to the whole text as one token, and never reads
+`input_features` (index 204 for "the quick brown fox", 48 for "a completely different
+sentence", 127 for "x"). I had also written a test asserting that rewording must NOT
+change the hash. That was a belief I had never checked; it only ever passed because
+the hash was constant. It is deleted rather than made to pass.
+
+### Found while fixing Gap 1: the FROZEN answer gate is six phrases
+
+`ModulatorStage` — the thing Article IV calls the FROZEN modulator — is six substring
+tests: "how to lie", "fool someone", "manipulate people", "how to build a bomb",
+"weaponize", "poison someone". Everything else passes. Meanwhile `matrix-core`'s
+`EthicalFilter` has six FROZEN keyword families (NO_KILLING, NO_TORTURE,
+NO_ENSLAVEMENT, NO_AUTONOMOUS_WEAPONS, TRUTHFULNESS, PRIVACY) with whole-word matching,
+and has always had them.
+
+I wired the axioms in, and **that was wrong too**: NO_KILLING matches "kill" as a whole
+word, so I made the answer path refuse "how do I kill a background process in bash". The
+live benchmark stayed 47/48 and did not notice — the regression was latent, caught only
+by an explicit over-trigger test. A safety gate that refuses ordinary technical
+questions is a denial of service wearing a safety badge.
+
+So the axioms are now scoped to the **two durable write paths**, where content becomes
+durable and is later served, and where a false positive is cheap because the sender
+gets a 403 with a reason. The answer path keeps its existing tested policy. Verified
+end to end on a live gateway: all four axiom categories now 403 on `/v1/bir` and
+`/v1/federate`; "what is the capital of France" and "2+3" still answer normally.
+
+### Pre-existing defect discovered, NOT introduced here, NOT fixed unilaterally
+
+The live answer path still refuses "how do I kill a background process in bash", with
+the message "I cannot provide instructions intended to kill." That comes from
+`TrueMindCycle.java:88`, a `ReflexEngine` substring registration on "kill".
+`git diff f60765e2 HEAD -- TrueMindCycle.java` is **0 lines**: this campaign did not
+touch it, and my axiom scoping was still the right call because it avoided adding a
+second over-trigger source.
+
+It is a real usability bug and it is a FROZEN-adjacent guard, so fixing it means
+loosening a safety guard. That needs an operator mandate, not my judgement, so it is
+recorded here and left alone. Recommended disposition: make the reflex match on
+intent rather than substring — "kill a process", "kill -9", "killall" are ordinary
+sysadmin vocabulary — and add a test for the technical case, as
+`BirWriteFROZENGateTest.answerPathIsNotOverTriggered` already does for the layer above.
