@@ -1,0 +1,410 @@
+# MATRIX RECON-W30 performance probe
+# run at        : 2026-10-02T13:29:58+0300
+# host          : JIAOLONG Series
+# cpu           : AMD Ryzen 9 9955HX 16-Core Processor
+# physical cores: 16 x 1
+# logical cpus  : 32
+# isa           : avx2=yes avx512f=yes
+# jvm           : openjdk version "25.0.2" 2026-01-20
+# gc            : true
+# warmup        : 1 x 1s
+# measurement   : 2 x 1s, 1 fork
+# include       : TsetlinClause
+# disk free     : 115816685568 bytes
+
+WARNING: A terminally deprecated method in sun.misc.Unsafe has been called
+WARNING: sun.misc.Unsafe::objectFieldOffset has been called by org.openjdk.jmh.util.Utils (file:/home/alexandr-narbaev/Projects/agi/matrix-core/build/libs/matrix-core-1.0.0-jmh.jar)
+WARNING: Please consider reporting this to the maintainers of class org.openjdk.jmh.util.Utils
+WARNING: sun.misc.Unsafe::objectFieldOffset will be removed in a future release
+# JMH version: 1.37
+# VM version: JDK 25.0.2, OpenJDK 64-Bit Server VM, 25.0.2+10-jvmci-b01
+# VM invoker: /home/alexandr-narbaev/.sdkman/candidates/java/25.0.2-graalce/bin/java
+# VM options: -XX:ThreadPriorityPolicy=1 -XX:+UnlockExperimentalVMOptions -XX:+EnableJVMCIProduct -XX:+EnableJVMCI -XX:-UnlockExperimentalVMOptions --add-modules=jdk.incubator.vector
+# Blackhole mode: compiler (auto-detected, use -Djmh.blackhole.autoDetect=false to disable)
+# Warmup: 1 iterations, 1 s each
+# Measurement: 2 iterations, 1 s each
+# Timeout: 10 min per iteration
+# Threads: 1 thread, will synchronize iterations
+# Benchmark mode: Average time, time/op
+# Benchmark: io.matrix.perf.TsetlinClauseBenchmark.predict
+# Parameters: (batchSize = 1, density = 0.05, nClauses = 1024, nFeatures = 1024)
+
+# Run progress: 0.00% complete, ETA 00:00:36
+# Fork: 1 of 1
+OpenJDK 64-Bit Server VM warning: -XX:ThreadPriorityPolicy=1 may require system level permission, e.g., being the root user. If the necessary permission is not possessed, changes to priority will be silently ignored.
+WARNING: Using incubator modules: jdk.incubator.vector
+WARNING: A terminally deprecated method in sun.misc.Unsafe has been called
+WARNING: sun.misc.Unsafe::objectFieldOffset has been called by org.openjdk.jmh.util.Utils (file:/home/alexandr-narbaev/Projects/agi/matrix-core/build/libs/matrix-core-1.0.0-jmh.jar)
+WARNING: Please consider reporting this to the maintainers of class org.openjdk.jmh.util.Utils
+WARNING: sun.misc.Unsafe::objectFieldOffset will be removed in a future release
+# Warmup Iteration   1: 2124.065 ns/op
+Iteration   1: 2291.447 ns/op
+Iteration   2: 2174.771 ns/op
+
+
+Result "io.matrix.perf.TsetlinClauseBenchmark.predict":
+  2233.109 ns/op
+
+
+# JMH version: 1.37
+# VM version: JDK 25.0.2, OpenJDK 64-Bit Server VM, 25.0.2+10-jvmci-b01
+# VM invoker: /home/alexandr-narbaev/.sdkman/candidates/java/25.0.2-graalce/bin/java
+# VM options: -XX:ThreadPriorityPolicy=1 -XX:+UnlockExperimentalVMOptions -XX:+EnableJVMCIProduct -XX:+EnableJVMCI -XX:-UnlockExperimentalVMOptions --add-modules=jdk.incubator.vector
+# Blackhole mode: compiler (auto-detected, use -Djmh.blackhole.autoDetect=false to disable)
+# Warmup: 1 iterations, 1 s each
+# Measurement: 2 iterations, 1 s each
+# Timeout: 10 min per iteration
+# Threads: 1 thread, will synchronize iterations
+# Benchmark mode: Average time, time/op
+# Benchmark: io.matrix.perf.TsetlinClauseBenchmark.predict
+# Parameters: (batchSize = 1, density = 0.05, nClauses = 8192, nFeatures = 1024)
+
+# Run progress: 8.33% complete, ETA 00:00:35
+# Fork: 1 of 1
+OpenJDK 64-Bit Server VM warning: -XX:ThreadPriorityPolicy=1 may require system level permission, e.g., being the root user. If the necessary permission is not possessed, changes to priority will be silently ignored.
+WARNING: Using incubator modules: jdk.incubator.vector
+WARNING: A terminally deprecated method in sun.misc.Unsafe has been called
+WARNING: sun.misc.Unsafe::objectFieldOffset has been called by org.openjdk.jmh.util.Utils (file:/home/alexandr-narbaev/Projects/agi/matrix-core/build/libs/matrix-core-1.0.0-jmh.jar)
+WARNING: Please consider reporting this to the maintainers of class org.openjdk.jmh.util.Utils
+WARNING: sun.misc.Unsafe::objectFieldOffset will be removed in a future release
+# Warmup Iteration   1: 32999.061 ns/op
+Iteration   1: 32546.110 ns/op
+Iteration   2: 31773.630 ns/op
+
+
+Result "io.matrix.perf.TsetlinClauseBenchmark.predict":
+  32159.870 ns/op
+
+
+# JMH version: 1.37
+# VM version: JDK 25.0.2, OpenJDK 64-Bit Server VM, 25.0.2+10-jvmci-b01
+# VM invoker: /home/alexandr-narbaev/.sdkman/candidates/java/25.0.2-graalce/bin/java
+# VM options: -XX:ThreadPriorityPolicy=1 -XX:+UnlockExperimentalVMOptions -XX:+EnableJVMCIProduct -XX:+EnableJVMCI -XX:-UnlockExperimentalVMOptions --add-modules=jdk.incubator.vector
+# Blackhole mode: compiler (auto-detected, use -Djmh.blackhole.autoDetect=false to disable)
+# Warmup: 1 iterations, 1 s each
+# Measurement: 2 iterations, 1 s each
+# Timeout: 10 min per iteration
+# Threads: 1 thread, will synchronize iterations
+# Benchmark mode: Average time, time/op
+# Benchmark: io.matrix.perf.TsetlinClauseBenchmark.predict
+# Parameters: (batchSize = 256, density = 0.05, nClauses = 1024, nFeatures = 1024)
+
+# Run progress: 16.67% complete, ETA 00:00:32
+# Fork: 1 of 1
+OpenJDK 64-Bit Server VM warning: -XX:ThreadPriorityPolicy=1 may require system level permission, e.g., being the root user. If the necessary permission is not possessed, changes to priority will be silently ignored.
+WARNING: Using incubator modules: jdk.incubator.vector
+WARNING: A terminally deprecated method in sun.misc.Unsafe has been called
+WARNING: sun.misc.Unsafe::objectFieldOffset has been called by org.openjdk.jmh.util.Utils (file:/home/alexandr-narbaev/Projects/agi/matrix-core/build/libs/matrix-core-1.0.0-jmh.jar)
+WARNING: Please consider reporting this to the maintainers of class org.openjdk.jmh.util.Utils
+WARNING: sun.misc.Unsafe::objectFieldOffset will be removed in a future release
+# Warmup Iteration   1: 2086.433 ns/op
+Iteration   1: 2359.443 ns/op
+Iteration   2: 2229.385 ns/op
+
+
+Result "io.matrix.perf.TsetlinClauseBenchmark.predict":
+  2294.414 ns/op
+
+
+# JMH version: 1.37
+# VM version: JDK 25.0.2, OpenJDK 64-Bit Server VM, 25.0.2+10-jvmci-b01
+# VM invoker: /home/alexandr-narbaev/.sdkman/candidates/java/25.0.2-graalce/bin/java
+# VM options: -XX:ThreadPriorityPolicy=1 -XX:+UnlockExperimentalVMOptions -XX:+EnableJVMCIProduct -XX:+EnableJVMCI -XX:-UnlockExperimentalVMOptions --add-modules=jdk.incubator.vector
+# Blackhole mode: compiler (auto-detected, use -Djmh.blackhole.autoDetect=false to disable)
+# Warmup: 1 iterations, 1 s each
+# Measurement: 2 iterations, 1 s each
+# Timeout: 10 min per iteration
+# Threads: 1 thread, will synchronize iterations
+# Benchmark mode: Average time, time/op
+# Benchmark: io.matrix.perf.TsetlinClauseBenchmark.predict
+# Parameters: (batchSize = 256, density = 0.05, nClauses = 8192, nFeatures = 1024)
+
+# Run progress: 25.00% complete, ETA 00:00:29
+# Fork: 1 of 1
+OpenJDK 64-Bit Server VM warning: -XX:ThreadPriorityPolicy=1 may require system level permission, e.g., being the root user. If the necessary permission is not possessed, changes to priority will be silently ignored.
+WARNING: Using incubator modules: jdk.incubator.vector
+WARNING: A terminally deprecated method in sun.misc.Unsafe has been called
+WARNING: sun.misc.Unsafe::objectFieldOffset has been called by org.openjdk.jmh.util.Utils (file:/home/alexandr-narbaev/Projects/agi/matrix-core/build/libs/matrix-core-1.0.0-jmh.jar)
+WARNING: Please consider reporting this to the maintainers of class org.openjdk.jmh.util.Utils
+WARNING: sun.misc.Unsafe::objectFieldOffset will be removed in a future release
+# Warmup Iteration   1: 32206.553 ns/op
+Iteration   1: 31475.821 ns/op
+Iteration   2: 31336.301 ns/op
+
+
+Result "io.matrix.perf.TsetlinClauseBenchmark.predict":
+  31406.061 ns/op
+
+
+# JMH version: 1.37
+# VM version: JDK 25.0.2, OpenJDK 64-Bit Server VM, 25.0.2+10-jvmci-b01
+# VM invoker: /home/alexandr-narbaev/.sdkman/candidates/java/25.0.2-graalce/bin/java
+# VM options: -XX:ThreadPriorityPolicy=1 -XX:+UnlockExperimentalVMOptions -XX:+EnableJVMCIProduct -XX:+EnableJVMCI -XX:-UnlockExperimentalVMOptions --add-modules=jdk.incubator.vector
+# Blackhole mode: compiler (auto-detected, use -Djmh.blackhole.autoDetect=false to disable)
+# Warmup: 1 iterations, 1 s each
+# Measurement: 2 iterations, 1 s each
+# Timeout: 10 min per iteration
+# Threads: 1 thread, will synchronize iterations
+# Benchmark mode: Average time, time/op
+# Benchmark: io.matrix.perf.TsetlinClauseBenchmark.updateClauseBatch
+# Parameters: (batchSize = 1, density = 0.05, nClauses = 1024, nFeatures = 1024)
+
+# Run progress: 33.33% complete, ETA 00:00:26
+# Fork: 1 of 1
+OpenJDK 64-Bit Server VM warning: -XX:ThreadPriorityPolicy=1 may require system level permission, e.g., being the root user. If the necessary permission is not possessed, changes to priority will be silently ignored.
+WARNING: Using incubator modules: jdk.incubator.vector
+WARNING: A terminally deprecated method in sun.misc.Unsafe has been called
+WARNING: sun.misc.Unsafe::objectFieldOffset has been called by org.openjdk.jmh.util.Utils (file:/home/alexandr-narbaev/Projects/agi/matrix-core/build/libs/matrix-core-1.0.0-jmh.jar)
+WARNING: Please consider reporting this to the maintainers of class org.openjdk.jmh.util.Utils
+WARNING: sun.misc.Unsafe::objectFieldOffset will be removed in a future release
+# Warmup Iteration   1: 5040.654 ns/op
+Iteration   1: 4423.457 ns/op
+Iteration   2: 4745.875 ns/op
+
+
+Result "io.matrix.perf.TsetlinClauseBenchmark.updateClauseBatch":
+  4584.666 ns/op
+
+
+# JMH version: 1.37
+# VM version: JDK 25.0.2, OpenJDK 64-Bit Server VM, 25.0.2+10-jvmci-b01
+# VM invoker: /home/alexandr-narbaev/.sdkman/candidates/java/25.0.2-graalce/bin/java
+# VM options: -XX:ThreadPriorityPolicy=1 -XX:+UnlockExperimentalVMOptions -XX:+EnableJVMCIProduct -XX:+EnableJVMCI -XX:-UnlockExperimentalVMOptions --add-modules=jdk.incubator.vector
+# Blackhole mode: compiler (auto-detected, use -Djmh.blackhole.autoDetect=false to disable)
+# Warmup: 1 iterations, 1 s each
+# Measurement: 2 iterations, 1 s each
+# Timeout: 10 min per iteration
+# Threads: 1 thread, will synchronize iterations
+# Benchmark mode: Average time, time/op
+# Benchmark: io.matrix.perf.TsetlinClauseBenchmark.updateClauseBatch
+# Parameters: (batchSize = 1, density = 0.05, nClauses = 8192, nFeatures = 1024)
+
+# Run progress: 41.67% complete, ETA 00:00:22
+# Fork: 1 of 1
+OpenJDK 64-Bit Server VM warning: -XX:ThreadPriorityPolicy=1 may require system level permission, e.g., being the root user. If the necessary permission is not possessed, changes to priority will be silently ignored.
+WARNING: Using incubator modules: jdk.incubator.vector
+WARNING: A terminally deprecated method in sun.misc.Unsafe has been called
+WARNING: sun.misc.Unsafe::objectFieldOffset has been called by org.openjdk.jmh.util.Utils (file:/home/alexandr-narbaev/Projects/agi/matrix-core/build/libs/matrix-core-1.0.0-jmh.jar)
+WARNING: Please consider reporting this to the maintainers of class org.openjdk.jmh.util.Utils
+WARNING: sun.misc.Unsafe::objectFieldOffset will be removed in a future release
+# Warmup Iteration   1: 52908.166 ns/op
+Iteration   1: 44058.015 ns/op
+Iteration   2: 44487.540 ns/op
+
+
+Result "io.matrix.perf.TsetlinClauseBenchmark.updateClauseBatch":
+  44272.778 ns/op
+
+
+# JMH version: 1.37
+# VM version: JDK 25.0.2, OpenJDK 64-Bit Server VM, 25.0.2+10-jvmci-b01
+# VM invoker: /home/alexandr-narbaev/.sdkman/candidates/java/25.0.2-graalce/bin/java
+# VM options: -XX:ThreadPriorityPolicy=1 -XX:+UnlockExperimentalVMOptions -XX:+EnableJVMCIProduct -XX:+EnableJVMCI -XX:-UnlockExperimentalVMOptions --add-modules=jdk.incubator.vector
+# Blackhole mode: compiler (auto-detected, use -Djmh.blackhole.autoDetect=false to disable)
+# Warmup: 1 iterations, 1 s each
+# Measurement: 2 iterations, 1 s each
+# Timeout: 10 min per iteration
+# Threads: 1 thread, will synchronize iterations
+# Benchmark mode: Average time, time/op
+# Benchmark: io.matrix.perf.TsetlinClauseBenchmark.updateClauseBatch
+# Parameters: (batchSize = 256, density = 0.05, nClauses = 1024, nFeatures = 1024)
+
+# Run progress: 50.00% complete, ETA 00:00:19
+# Fork: 1 of 1
+OpenJDK 64-Bit Server VM warning: -XX:ThreadPriorityPolicy=1 may require system level permission, e.g., being the root user. If the necessary permission is not possessed, changes to priority will be silently ignored.
+WARNING: Using incubator modules: jdk.incubator.vector
+WARNING: A terminally deprecated method in sun.misc.Unsafe has been called
+WARNING: sun.misc.Unsafe::objectFieldOffset has been called by org.openjdk.jmh.util.Utils (file:/home/alexandr-narbaev/Projects/agi/matrix-core/build/libs/matrix-core-1.0.0-jmh.jar)
+WARNING: Please consider reporting this to the maintainers of class org.openjdk.jmh.util.Utils
+WARNING: sun.misc.Unsafe::objectFieldOffset will be removed in a future release
+# Warmup Iteration   1: 1554449.323 ns/op
+Iteration   1: 1347201.149 ns/op
+Iteration   2: 1338347.070 ns/op
+
+
+Result "io.matrix.perf.TsetlinClauseBenchmark.updateClauseBatch":
+  1342774.109 ns/op
+
+
+# JMH version: 1.37
+# VM version: JDK 25.0.2, OpenJDK 64-Bit Server VM, 25.0.2+10-jvmci-b01
+# VM invoker: /home/alexandr-narbaev/.sdkman/candidates/java/25.0.2-graalce/bin/java
+# VM options: -XX:ThreadPriorityPolicy=1 -XX:+UnlockExperimentalVMOptions -XX:+EnableJVMCIProduct -XX:+EnableJVMCI -XX:-UnlockExperimentalVMOptions --add-modules=jdk.incubator.vector
+# Blackhole mode: compiler (auto-detected, use -Djmh.blackhole.autoDetect=false to disable)
+# Warmup: 1 iterations, 1 s each
+# Measurement: 2 iterations, 1 s each
+# Timeout: 10 min per iteration
+# Threads: 1 thread, will synchronize iterations
+# Benchmark mode: Average time, time/op
+# Benchmark: io.matrix.perf.TsetlinClauseBenchmark.updateClauseBatch
+# Parameters: (batchSize = 256, density = 0.05, nClauses = 8192, nFeatures = 1024)
+
+# Run progress: 58.33% complete, ETA 00:00:16
+# Fork: 1 of 1
+OpenJDK 64-Bit Server VM warning: -XX:ThreadPriorityPolicy=1 may require system level permission, e.g., being the root user. If the necessary permission is not possessed, changes to priority will be silently ignored.
+WARNING: Using incubator modules: jdk.incubator.vector
+WARNING: A terminally deprecated method in sun.misc.Unsafe has been called
+WARNING: sun.misc.Unsafe::objectFieldOffset has been called by org.openjdk.jmh.util.Utils (file:/home/alexandr-narbaev/Projects/agi/matrix-core/build/libs/matrix-core-1.0.0-jmh.jar)
+WARNING: Please consider reporting this to the maintainers of class org.openjdk.jmh.util.Utils
+WARNING: sun.misc.Unsafe::objectFieldOffset will be removed in a future release
+# Warmup Iteration   1: 28171415.917 ns/op
+Iteration   1: 22838371.159 ns/op
+Iteration   2: 21777425.638 ns/op
+
+
+Result "io.matrix.perf.TsetlinClauseBenchmark.updateClauseBatch":
+  22307898.399 ns/op
+
+
+# JMH version: 1.37
+# VM version: JDK 25.0.2, OpenJDK 64-Bit Server VM, 25.0.2+10-jvmci-b01
+# VM invoker: /home/alexandr-narbaev/.sdkman/candidates/java/25.0.2-graalce/bin/java
+# VM options: -XX:ThreadPriorityPolicy=1 -XX:+UnlockExperimentalVMOptions -XX:+EnableJVMCIProduct -XX:+EnableJVMCI -XX:-UnlockExperimentalVMOptions --add-modules=jdk.incubator.vector
+# Blackhole mode: compiler (auto-detected, use -Djmh.blackhole.autoDetect=false to disable)
+# Warmup: 1 iterations, 1 s each
+# Measurement: 2 iterations, 1 s each
+# Timeout: 10 min per iteration
+# Threads: 1 thread, will synchronize iterations
+# Benchmark mode: Average time, time/op
+# Benchmark: io.matrix.perf.TsetlinClauseBenchmark.updateSingleClause
+# Parameters: (batchSize = 1, density = 0.05, nClauses = 1024, nFeatures = 1024)
+
+# Run progress: 66.67% complete, ETA 00:00:13
+# Fork: 1 of 1
+OpenJDK 64-Bit Server VM warning: -XX:ThreadPriorityPolicy=1 may require system level permission, e.g., being the root user. If the necessary permission is not possessed, changes to priority will be silently ignored.
+WARNING: Using incubator modules: jdk.incubator.vector
+WARNING: A terminally deprecated method in sun.misc.Unsafe has been called
+WARNING: sun.misc.Unsafe::objectFieldOffset has been called by org.openjdk.jmh.util.Utils (file:/home/alexandr-narbaev/Projects/agi/matrix-core/build/libs/matrix-core-1.0.0-jmh.jar)
+WARNING: Please consider reporting this to the maintainers of class org.openjdk.jmh.util.Utils
+WARNING: sun.misc.Unsafe::objectFieldOffset will be removed in a future release
+# Warmup Iteration   1: 5157.097 ns/op
+Iteration   1: 4441.240 ns/op
+Iteration   2: 4413.843 ns/op
+
+
+Result "io.matrix.perf.TsetlinClauseBenchmark.updateSingleClause":
+  4427.542 ns/op
+
+
+# JMH version: 1.37
+# VM version: JDK 25.0.2, OpenJDK 64-Bit Server VM, 25.0.2+10-jvmci-b01
+# VM invoker: /home/alexandr-narbaev/.sdkman/candidates/java/25.0.2-graalce/bin/java
+# VM options: -XX:ThreadPriorityPolicy=1 -XX:+UnlockExperimentalVMOptions -XX:+EnableJVMCIProduct -XX:+EnableJVMCI -XX:-UnlockExperimentalVMOptions --add-modules=jdk.incubator.vector
+# Blackhole mode: compiler (auto-detected, use -Djmh.blackhole.autoDetect=false to disable)
+# Warmup: 1 iterations, 1 s each
+# Measurement: 2 iterations, 1 s each
+# Timeout: 10 min per iteration
+# Threads: 1 thread, will synchronize iterations
+# Benchmark mode: Average time, time/op
+# Benchmark: io.matrix.perf.TsetlinClauseBenchmark.updateSingleClause
+# Parameters: (batchSize = 1, density = 0.05, nClauses = 8192, nFeatures = 1024)
+
+# Run progress: 75.00% complete, ETA 00:00:09
+# Fork: 1 of 1
+OpenJDK 64-Bit Server VM warning: -XX:ThreadPriorityPolicy=1 may require system level permission, e.g., being the root user. If the necessary permission is not possessed, changes to priority will be silently ignored.
+WARNING: Using incubator modules: jdk.incubator.vector
+WARNING: A terminally deprecated method in sun.misc.Unsafe has been called
+WARNING: sun.misc.Unsafe::objectFieldOffset has been called by org.openjdk.jmh.util.Utils (file:/home/alexandr-narbaev/Projects/agi/matrix-core/build/libs/matrix-core-1.0.0-jmh.jar)
+WARNING: Please consider reporting this to the maintainers of class org.openjdk.jmh.util.Utils
+WARNING: sun.misc.Unsafe::objectFieldOffset will be removed in a future release
+# Warmup Iteration   1: 59430.827 ns/op
+Iteration   1: 52701.753 ns/op
+Iteration   2: 45973.436 ns/op
+
+
+Result "io.matrix.perf.TsetlinClauseBenchmark.updateSingleClause":
+  49337.594 ns/op
+
+
+# JMH version: 1.37
+# VM version: JDK 25.0.2, OpenJDK 64-Bit Server VM, 25.0.2+10-jvmci-b01
+# VM invoker: /home/alexandr-narbaev/.sdkman/candidates/java/25.0.2-graalce/bin/java
+# VM options: -XX:ThreadPriorityPolicy=1 -XX:+UnlockExperimentalVMOptions -XX:+EnableJVMCIProduct -XX:+EnableJVMCI -XX:-UnlockExperimentalVMOptions --add-modules=jdk.incubator.vector
+# Blackhole mode: compiler (auto-detected, use -Djmh.blackhole.autoDetect=false to disable)
+# Warmup: 1 iterations, 1 s each
+# Measurement: 2 iterations, 1 s each
+# Timeout: 10 min per iteration
+# Threads: 1 thread, will synchronize iterations
+# Benchmark mode: Average time, time/op
+# Benchmark: io.matrix.perf.TsetlinClauseBenchmark.updateSingleClause
+# Parameters: (batchSize = 256, density = 0.05, nClauses = 1024, nFeatures = 1024)
+
+# Run progress: 83.33% complete, ETA 00:00:06
+# Fork: 1 of 1
+OpenJDK 64-Bit Server VM warning: -XX:ThreadPriorityPolicy=1 may require system level permission, e.g., being the root user. If the necessary permission is not possessed, changes to priority will be silently ignored.
+WARNING: Using incubator modules: jdk.incubator.vector
+WARNING: A terminally deprecated method in sun.misc.Unsafe has been called
+WARNING: sun.misc.Unsafe::objectFieldOffset has been called by org.openjdk.jmh.util.Utils (file:/home/alexandr-narbaev/Projects/agi/matrix-core/build/libs/matrix-core-1.0.0-jmh.jar)
+WARNING: Please consider reporting this to the maintainers of class org.openjdk.jmh.util.Utils
+WARNING: sun.misc.Unsafe::objectFieldOffset will be removed in a future release
+# Warmup Iteration   1: 5194.852 ns/op
+Iteration   1: 4449.587 ns/op
+Iteration   2: 4408.753 ns/op
+
+
+Result "io.matrix.perf.TsetlinClauseBenchmark.updateSingleClause":
+  4429.170 ns/op
+
+
+# JMH version: 1.37
+# VM version: JDK 25.0.2, OpenJDK 64-Bit Server VM, 25.0.2+10-jvmci-b01
+# VM invoker: /home/alexandr-narbaev/.sdkman/candidates/java/25.0.2-graalce/bin/java
+# VM options: -XX:ThreadPriorityPolicy=1 -XX:+UnlockExperimentalVMOptions -XX:+EnableJVMCIProduct -XX:+EnableJVMCI -XX:-UnlockExperimentalVMOptions --add-modules=jdk.incubator.vector
+# Blackhole mode: compiler (auto-detected, use -Djmh.blackhole.autoDetect=false to disable)
+# Warmup: 1 iterations, 1 s each
+# Measurement: 2 iterations, 1 s each
+# Timeout: 10 min per iteration
+# Threads: 1 thread, will synchronize iterations
+# Benchmark mode: Average time, time/op
+# Benchmark: io.matrix.perf.TsetlinClauseBenchmark.updateSingleClause
+# Parameters: (batchSize = 256, density = 0.05, nClauses = 8192, nFeatures = 1024)
+
+# Run progress: 91.67% complete, ETA 00:00:03
+# Fork: 1 of 1
+OpenJDK 64-Bit Server VM warning: -XX:ThreadPriorityPolicy=1 may require system level permission, e.g., being the root user. If the necessary permission is not possessed, changes to priority will be silently ignored.
+WARNING: Using incubator modules: jdk.incubator.vector
+WARNING: A terminally deprecated method in sun.misc.Unsafe has been called
+WARNING: sun.misc.Unsafe::objectFieldOffset has been called by org.openjdk.jmh.util.Utils (file:/home/alexandr-narbaev/Projects/agi/matrix-core/build/libs/matrix-core-1.0.0-jmh.jar)
+WARNING: Please consider reporting this to the maintainers of class org.openjdk.jmh.util.Utils
+WARNING: sun.misc.Unsafe::objectFieldOffset will be removed in a future release
+# Warmup Iteration   1: 48395.019 ns/op
+Iteration   1: 44344.250 ns/op
+Iteration   2: 63339.485 ns/op
+
+
+Result "io.matrix.perf.TsetlinClauseBenchmark.updateSingleClause":
+  53841.867 ns/op
+
+
+# Run complete. Total time: 00:00:39
+
+REMEMBER: The numbers below are just data. To gain reusable insights, you need to follow up on
+why the numbers are the way they are. Use profilers (see -prof, -lprof), design factorial
+experiments, perform baseline and negative tests that provide experimental control, make sure
+the benchmarking environment is safe on JVM/OS/HW level, ask for reviews from the domain experts.
+Do not assume the numbers tell you what you want them to tell.
+
+NOTE: Current JVM experimentally supports Compiler Blackholes, and they are in use. Please exercise
+extra caution when trusting the results, look into the generated code to check the benchmark still
+works, and factor in a small probability of new VM bugs. Additionally, while comparisons between
+different JVMs are already problematic, the performance difference caused by different Blackhole
+modes can be very significant. Please make sure you use the consistent Blackhole mode for comparisons.
+
+Benchmark                                  (batchSize)  (density)  (nClauses)  (nFeatures)  Mode  Cnt         Score   Error  Units
+TsetlinClauseBenchmark.predict                       1       0.05        1024         1024  avgt    2      2233.109          ns/op
+TsetlinClauseBenchmark.predict                       1       0.05        8192         1024  avgt    2     32159.870          ns/op
+TsetlinClauseBenchmark.predict                     256       0.05        1024         1024  avgt    2      2294.414          ns/op
+TsetlinClauseBenchmark.predict                     256       0.05        8192         1024  avgt    2     31406.061          ns/op
+TsetlinClauseBenchmark.updateClauseBatch             1       0.05        1024         1024  avgt    2      4584.666          ns/op
+TsetlinClauseBenchmark.updateClauseBatch             1       0.05        8192         1024  avgt    2     44272.778          ns/op
+TsetlinClauseBenchmark.updateClauseBatch           256       0.05        1024         1024  avgt    2   1342774.109          ns/op
+TsetlinClauseBenchmark.updateClauseBatch           256       0.05        8192         1024  avgt    2  22307898.399          ns/op
+TsetlinClauseBenchmark.updateSingleClause            1       0.05        1024         1024  avgt    2      4427.542          ns/op
+TsetlinClauseBenchmark.updateSingleClause            1       0.05        8192         1024  avgt    2     49337.594          ns/op
+TsetlinClauseBenchmark.updateSingleClause          256       0.05        1024         1024  avgt    2      4429.170          ns/op
+TsetlinClauseBenchmark.updateSingleClause          256       0.05        8192         1024  avgt    2     53841.867          ns/op
+
+Benchmark result is saved to docs-v2/operations/bench/w30-perf-20261002-132958.json
+
+# exit status: 0
+# json: docs-v2/operations/bench/w30-perf-20261002-132958.json

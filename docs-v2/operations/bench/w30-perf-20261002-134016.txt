@@ -1,0 +1,350 @@
+# MATRIX RECON-W30 performance probe
+# run at        : 2026-10-02T13:40:16+0300
+# host          : JIAOLONG Series
+# cpu           : AMD Ryzen 9 9955HX 16-Core Processor
+# physical cores: 16 x 1
+# logical cpus  : 32
+# isa           : avx2=yes avx512f=yes
+# jvm           : openjdk version "25.0.2" 2026-01-20
+# gc            : true
+# warmup        : 3 x 1s
+# measurement   : 5 x 1s, 1 fork
+# include       : MctsRollout
+# disk free     : 115802066944 bytes
+
+WARNING: A terminally deprecated method in sun.misc.Unsafe has been called
+WARNING: sun.misc.Unsafe::objectFieldOffset has been called by org.openjdk.jmh.util.Utils (file:/home/alexandr-narbaev/Projects/agi/matrix-core/build/libs/matrix-core-1.0.0-jmh.jar)
+WARNING: Please consider reporting this to the maintainers of class org.openjdk.jmh.util.Utils
+WARNING: sun.misc.Unsafe::objectFieldOffset will be removed in a future release
+# JMH version: 1.37
+# VM version: JDK 25.0.2, OpenJDK 64-Bit Server VM, 25.0.2+10-jvmci-b01
+# VM invoker: /home/alexandr-narbaev/.sdkman/candidates/java/25.0.2-graalce/bin/java
+# VM options: -XX:ThreadPriorityPolicy=1 -XX:+UnlockExperimentalVMOptions -XX:+EnableJVMCIProduct -XX:+EnableJVMCI -XX:-UnlockExperimentalVMOptions --add-modules=jdk.incubator.vector
+# Blackhole mode: compiler (auto-detected, use -Djmh.blackhole.autoDetect=false to disable)
+# Warmup: 3 iterations, 1 s each
+# Measurement: 5 iterations, 1 s each
+# Timeout: 10 min per iteration
+# Threads: 1 thread, will synchronize iterations
+# Benchmark mode: Throughput, ops/time
+# Benchmark: io.matrix.perf.MctsRolloutBenchmark.rolloutThroughput
+# Parameters: (iterations = 100, k = 8, simulationDepth = 4)
+
+# Run progress: 0.00% complete, ETA 00:01:04
+# Fork: 1 of 1
+OpenJDK 64-Bit Server VM warning: -XX:ThreadPriorityPolicy=1 may require system level permission, e.g., being the root user. If the necessary permission is not possessed, changes to priority will be silently ignored.
+WARNING: Using incubator modules: jdk.incubator.vector
+WARNING: A terminally deprecated method in sun.misc.Unsafe has been called
+WARNING: sun.misc.Unsafe::objectFieldOffset has been called by org.openjdk.jmh.util.Utils (file:/home/alexandr-narbaev/Projects/agi/matrix-core/build/libs/matrix-core-1.0.0-jmh.jar)
+WARNING: Please consider reporting this to the maintainers of class org.openjdk.jmh.util.Utils
+WARNING: sun.misc.Unsafe::objectFieldOffset will be removed in a future release
+# Warmup Iteration   1: 7066.992 ops/s
+# Warmup Iteration   2: 9573.551 ops/s
+# Warmup Iteration   3: 9938.957 ops/s
+Iteration   1: 10141.314 ops/s
+Iteration   2: 10126.576 ops/s
+Iteration   3: 10096.157 ops/s
+Iteration   4: 9232.520 ops/s
+Iteration   5: [MctsRollout] k=8 depth=4 searches=75445 rollouts=7544500
+9247.774 ops/s
+
+
+Result "io.matrix.perf.MctsRolloutBenchmark.rolloutThroughput":
+  9768.868 ±(99.9%) 1859.701 ops/s [Average]
+  (min, avg, max) = (9232.520, 9768.868, 10141.314), stdev = 482.959
+  CI (99.9%): [7909.167, 11628.570] (assumes normal distribution)
+
+
+# JMH version: 1.37
+# VM version: JDK 25.0.2, OpenJDK 64-Bit Server VM, 25.0.2+10-jvmci-b01
+# VM invoker: /home/alexandr-narbaev/.sdkman/candidates/java/25.0.2-graalce/bin/java
+# VM options: -XX:ThreadPriorityPolicy=1 -XX:+UnlockExperimentalVMOptions -XX:+EnableJVMCIProduct -XX:+EnableJVMCI -XX:-UnlockExperimentalVMOptions --add-modules=jdk.incubator.vector
+# Blackhole mode: compiler (auto-detected, use -Djmh.blackhole.autoDetect=false to disable)
+# Warmup: 3 iterations, 1 s each
+# Measurement: 5 iterations, 1 s each
+# Timeout: 10 min per iteration
+# Threads: 1 thread, will synchronize iterations
+# Benchmark mode: Throughput, ops/time
+# Benchmark: io.matrix.perf.MctsRolloutBenchmark.rolloutThroughput
+# Parameters: (iterations = 100, k = 8, simulationDepth = 16)
+
+# Run progress: 12.50% complete, ETA 00:00:58
+# Fork: 1 of 1
+OpenJDK 64-Bit Server VM warning: -XX:ThreadPriorityPolicy=1 may require system level permission, e.g., being the root user. If the necessary permission is not possessed, changes to priority will be silently ignored.
+WARNING: Using incubator modules: jdk.incubator.vector
+WARNING: A terminally deprecated method in sun.misc.Unsafe has been called
+WARNING: sun.misc.Unsafe::objectFieldOffset has been called by org.openjdk.jmh.util.Utils (file:/home/alexandr-narbaev/Projects/agi/matrix-core/build/libs/matrix-core-1.0.0-jmh.jar)
+WARNING: Please consider reporting this to the maintainers of class org.openjdk.jmh.util.Utils
+WARNING: sun.misc.Unsafe::objectFieldOffset will be removed in a future release
+# Warmup Iteration   1: 2140.556 ops/s
+# Warmup Iteration   2: 2700.169 ops/s
+# Warmup Iteration   3: 2747.517 ops/s
+Iteration   1: 2553.832 ops/s
+Iteration   2: 2800.743 ops/s
+Iteration   3: 2440.624 ops/s
+Iteration   4: 2577.898 ops/s
+Iteration   5: [MctsRollout] k=8 depth=16 searches=20772 rollouts=2077200
+2794.650 ops/s
+
+
+Result "io.matrix.perf.MctsRolloutBenchmark.rolloutThroughput":
+  2633.549 ±(99.9%) 610.600 ops/s [Average]
+  (min, avg, max) = (2440.624, 2633.549, 2800.743), stdev = 158.571
+  CI (99.9%): [2022.950, 3244.149] (assumes normal distribution)
+
+
+# JMH version: 1.37
+# VM version: JDK 25.0.2, OpenJDK 64-Bit Server VM, 25.0.2+10-jvmci-b01
+# VM invoker: /home/alexandr-narbaev/.sdkman/candidates/java/25.0.2-graalce/bin/java
+# VM options: -XX:ThreadPriorityPolicy=1 -XX:+UnlockExperimentalVMOptions -XX:+EnableJVMCIProduct -XX:+EnableJVMCI -XX:-UnlockExperimentalVMOptions --add-modules=jdk.incubator.vector
+# Blackhole mode: compiler (auto-detected, use -Djmh.blackhole.autoDetect=false to disable)
+# Warmup: 3 iterations, 1 s each
+# Measurement: 5 iterations, 1 s each
+# Timeout: 10 min per iteration
+# Threads: 1 thread, will synchronize iterations
+# Benchmark mode: Throughput, ops/time
+# Benchmark: io.matrix.perf.MctsRolloutBenchmark.rolloutThroughput
+# Parameters: (iterations = 1000, k = 8, simulationDepth = 4)
+
+# Run progress: 25.00% complete, ETA 00:00:49
+# Fork: 1 of 1
+OpenJDK 64-Bit Server VM warning: -XX:ThreadPriorityPolicy=1 may require system level permission, e.g., being the root user. If the necessary permission is not possessed, changes to priority will be silently ignored.
+WARNING: Using incubator modules: jdk.incubator.vector
+WARNING: A terminally deprecated method in sun.misc.Unsafe has been called
+WARNING: sun.misc.Unsafe::objectFieldOffset has been called by org.openjdk.jmh.util.Utils (file:/home/alexandr-narbaev/Projects/agi/matrix-core/build/libs/matrix-core-1.0.0-jmh.jar)
+WARNING: Please consider reporting this to the maintainers of class org.openjdk.jmh.util.Utils
+WARNING: sun.misc.Unsafe::objectFieldOffset will be removed in a future release
+# Warmup Iteration   1: 485.683 ops/s
+# Warmup Iteration   2: 615.593 ops/s
+# Warmup Iteration   3: 618.062 ops/s
+Iteration   1: 621.574 ops/s
+Iteration   2: 551.727 ops/s
+Iteration   3: 553.651 ops/s
+Iteration   4: 622.617 ops/s
+Iteration   5: [MctsRollout] k=8 depth=4 searches=4693 rollouts=4693000
+620.480 ops/s
+
+
+Result "io.matrix.perf.MctsRolloutBenchmark.rolloutThroughput":
+  594.010 ±(99.9%) 145.302 ops/s [Average]
+  (min, avg, max) = (551.727, 594.010, 622.617), stdev = 37.734
+  CI (99.9%): [448.708, 739.312] (assumes normal distribution)
+
+
+# JMH version: 1.37
+# VM version: JDK 25.0.2, OpenJDK 64-Bit Server VM, 25.0.2+10-jvmci-b01
+# VM invoker: /home/alexandr-narbaev/.sdkman/candidates/java/25.0.2-graalce/bin/java
+# VM options: -XX:ThreadPriorityPolicy=1 -XX:+UnlockExperimentalVMOptions -XX:+EnableJVMCIProduct -XX:+EnableJVMCI -XX:-UnlockExperimentalVMOptions --add-modules=jdk.incubator.vector
+# Blackhole mode: compiler (auto-detected, use -Djmh.blackhole.autoDetect=false to disable)
+# Warmup: 3 iterations, 1 s each
+# Measurement: 5 iterations, 1 s each
+# Timeout: 10 min per iteration
+# Threads: 1 thread, will synchronize iterations
+# Benchmark mode: Throughput, ops/time
+# Benchmark: io.matrix.perf.MctsRolloutBenchmark.rolloutThroughput
+# Parameters: (iterations = 1000, k = 8, simulationDepth = 16)
+
+# Run progress: 37.50% complete, ETA 00:00:41
+# Fork: 1 of 1
+OpenJDK 64-Bit Server VM warning: -XX:ThreadPriorityPolicy=1 may require system level permission, e.g., being the root user. If the necessary permission is not possessed, changes to priority will be silently ignored.
+WARNING: Using incubator modules: jdk.incubator.vector
+WARNING: A terminally deprecated method in sun.misc.Unsafe has been called
+WARNING: sun.misc.Unsafe::objectFieldOffset has been called by org.openjdk.jmh.util.Utils (file:/home/alexandr-narbaev/Projects/agi/matrix-core/build/libs/matrix-core-1.0.0-jmh.jar)
+WARNING: Please consider reporting this to the maintainers of class org.openjdk.jmh.util.Utils
+WARNING: sun.misc.Unsafe::objectFieldOffset will be removed in a future release
+# Warmup Iteration   1: 154.447 ops/s
+# Warmup Iteration   2: 195.239 ops/s
+# Warmup Iteration   3: 188.777 ops/s
+Iteration   1: 183.586 ops/s
+Iteration   2: 176.547 ops/s
+Iteration   3: 195.157 ops/s
+Iteration   4: 196.044 ops/s
+Iteration   5: [MctsRollout] k=8 depth=16 searches=1491 rollouts=1491000
+196.804 ops/s
+
+
+Result "io.matrix.perf.MctsRolloutBenchmark.rolloutThroughput":
+  189.628 ±(99.9%) 35.021 ops/s [Average]
+  (min, avg, max) = (176.547, 189.628, 196.804), stdev = 9.095
+  CI (99.9%): [154.607, 224.649] (assumes normal distribution)
+
+
+# JMH version: 1.37
+# VM version: JDK 25.0.2, OpenJDK 64-Bit Server VM, 25.0.2+10-jvmci-b01
+# VM invoker: /home/alexandr-narbaev/.sdkman/candidates/java/25.0.2-graalce/bin/java
+# VM options: -XX:ThreadPriorityPolicy=1 -XX:+UnlockExperimentalVMOptions -XX:+EnableJVMCIProduct -XX:+EnableJVMCI -XX:-UnlockExperimentalVMOptions --add-modules=jdk.incubator.vector
+# Blackhole mode: compiler (auto-detected, use -Djmh.blackhole.autoDetect=false to disable)
+# Warmup: 3 iterations, 1 s each
+# Measurement: 5 iterations, 1 s each
+# Timeout: 10 min per iteration
+# Threads: 1 thread, will synchronize iterations
+# Benchmark mode: Throughput, ops/time
+# Benchmark: io.matrix.perf.MctsRolloutBenchmark.ucb1Selection
+# Parameters: (iterations = 100, k = 8, simulationDepth = 4)
+
+# Run progress: 50.00% complete, ETA 00:00:32
+# Fork: 1 of 1
+OpenJDK 64-Bit Server VM warning: -XX:ThreadPriorityPolicy=1 may require system level permission, e.g., being the root user. If the necessary permission is not possessed, changes to priority will be silently ignored.
+WARNING: Using incubator modules: jdk.incubator.vector
+WARNING: A terminally deprecated method in sun.misc.Unsafe has been called
+WARNING: sun.misc.Unsafe::objectFieldOffset has been called by org.openjdk.jmh.util.Utils (file:/home/alexandr-narbaev/Projects/agi/matrix-core/build/libs/matrix-core-1.0.0-jmh.jar)
+WARNING: Please consider reporting this to the maintainers of class org.openjdk.jmh.util.Utils
+WARNING: sun.misc.Unsafe::objectFieldOffset will be removed in a future release
+# Warmup Iteration   1: 7507.329 ops/s
+# Warmup Iteration   2: 9085.751 ops/s
+# Warmup Iteration   3: 9054.118 ops/s
+Iteration   1: 8905.114 ops/s
+Iteration   2: 9637.609 ops/s
+Iteration   3: 9650.814 ops/s
+Iteration   4: 9704.849 ops/s
+Iteration   5: [MctsRollout] k=8 depth=4 searches=0 rollouts=0
+9681.395 ops/s
+
+
+Result "io.matrix.perf.MctsRolloutBenchmark.ucb1Selection":
+  9515.956 ±(99.9%) 1318.762 ops/s [Average]
+  (min, avg, max) = (8905.114, 9515.956, 9704.849), stdev = 342.478
+  CI (99.9%): [8197.194, 10834.718] (assumes normal distribution)
+
+
+# JMH version: 1.37
+# VM version: JDK 25.0.2, OpenJDK 64-Bit Server VM, 25.0.2+10-jvmci-b01
+# VM invoker: /home/alexandr-narbaev/.sdkman/candidates/java/25.0.2-graalce/bin/java
+# VM options: -XX:ThreadPriorityPolicy=1 -XX:+UnlockExperimentalVMOptions -XX:+EnableJVMCIProduct -XX:+EnableJVMCI -XX:-UnlockExperimentalVMOptions --add-modules=jdk.incubator.vector
+# Blackhole mode: compiler (auto-detected, use -Djmh.blackhole.autoDetect=false to disable)
+# Warmup: 3 iterations, 1 s each
+# Measurement: 5 iterations, 1 s each
+# Timeout: 10 min per iteration
+# Threads: 1 thread, will synchronize iterations
+# Benchmark mode: Throughput, ops/time
+# Benchmark: io.matrix.perf.MctsRolloutBenchmark.ucb1Selection
+# Parameters: (iterations = 100, k = 8, simulationDepth = 16)
+
+# Run progress: 62.50% complete, ETA 00:00:24
+# Fork: 1 of 1
+OpenJDK 64-Bit Server VM warning: -XX:ThreadPriorityPolicy=1 may require system level permission, e.g., being the root user. If the necessary permission is not possessed, changes to priority will be silently ignored.
+WARNING: Using incubator modules: jdk.incubator.vector
+WARNING: A terminally deprecated method in sun.misc.Unsafe has been called
+WARNING: sun.misc.Unsafe::objectFieldOffset has been called by org.openjdk.jmh.util.Utils (file:/home/alexandr-narbaev/Projects/agi/matrix-core/build/libs/matrix-core-1.0.0-jmh.jar)
+WARNING: Please consider reporting this to the maintainers of class org.openjdk.jmh.util.Utils
+WARNING: sun.misc.Unsafe::objectFieldOffset will be removed in a future release
+# Warmup Iteration   1: 2134.619 ops/s
+# Warmup Iteration   2: 2341.954 ops/s
+# Warmup Iteration   3: 2362.493 ops/s
+Iteration   1: 2710.038 ops/s
+Iteration   2: 2706.805 ops/s
+Iteration   3: 2669.764 ops/s
+Iteration   4: 2649.882 ops/s
+Iteration   5: [MctsRollout] k=8 depth=16 searches=0 rollouts=0
+2703.844 ops/s
+
+
+Result "io.matrix.perf.MctsRolloutBenchmark.ucb1Selection":
+  2688.067 ±(99.9%) 103.249 ops/s [Average]
+  (min, avg, max) = (2649.882, 2688.067, 2710.038), stdev = 26.813
+  CI (99.9%): [2584.818, 2791.315] (assumes normal distribution)
+
+
+# JMH version: 1.37
+# VM version: JDK 25.0.2, OpenJDK 64-Bit Server VM, 25.0.2+10-jvmci-b01
+# VM invoker: /home/alexandr-narbaev/.sdkman/candidates/java/25.0.2-graalce/bin/java
+# VM options: -XX:ThreadPriorityPolicy=1 -XX:+UnlockExperimentalVMOptions -XX:+EnableJVMCIProduct -XX:+EnableJVMCI -XX:-UnlockExperimentalVMOptions --add-modules=jdk.incubator.vector
+# Blackhole mode: compiler (auto-detected, use -Djmh.blackhole.autoDetect=false to disable)
+# Warmup: 3 iterations, 1 s each
+# Measurement: 5 iterations, 1 s each
+# Timeout: 10 min per iteration
+# Threads: 1 thread, will synchronize iterations
+# Benchmark mode: Throughput, ops/time
+# Benchmark: io.matrix.perf.MctsRolloutBenchmark.ucb1Selection
+# Parameters: (iterations = 1000, k = 8, simulationDepth = 4)
+
+# Run progress: 75.00% complete, ETA 00:00:16
+# Fork: 1 of 1
+OpenJDK 64-Bit Server VM warning: -XX:ThreadPriorityPolicy=1 may require system level permission, e.g., being the root user. If the necessary permission is not possessed, changes to priority will be silently ignored.
+WARNING: Using incubator modules: jdk.incubator.vector
+WARNING: A terminally deprecated method in sun.misc.Unsafe has been called
+WARNING: sun.misc.Unsafe::objectFieldOffset has been called by org.openjdk.jmh.util.Utils (file:/home/alexandr-narbaev/Projects/agi/matrix-core/build/libs/matrix-core-1.0.0-jmh.jar)
+WARNING: Please consider reporting this to the maintainers of class org.openjdk.jmh.util.Utils
+WARNING: sun.misc.Unsafe::objectFieldOffset will be removed in a future release
+# Warmup Iteration   1: 7168.975 ops/s
+# Warmup Iteration   2: 8121.071 ops/s
+# Warmup Iteration   3: 9366.621 ops/s
+Iteration   1: 9306.326 ops/s
+Iteration   2: 9367.874 ops/s
+Iteration   3: 9407.166 ops/s
+Iteration   4: 9409.153 ops/s
+Iteration   5: [MctsRollout] k=8 depth=4 searches=0 rollouts=0
+9262.978 ops/s
+
+
+Result "io.matrix.perf.MctsRolloutBenchmark.ucb1Selection":
+  9350.699 ±(99.9%) 247.792 ops/s [Average]
+  (min, avg, max) = (9262.978, 9350.699, 9409.153), stdev = 64.351
+  CI (99.9%): [9102.907, 9598.492] (assumes normal distribution)
+
+
+# JMH version: 1.37
+# VM version: JDK 25.0.2, OpenJDK 64-Bit Server VM, 25.0.2+10-jvmci-b01
+# VM invoker: /home/alexandr-narbaev/.sdkman/candidates/java/25.0.2-graalce/bin/java
+# VM options: -XX:ThreadPriorityPolicy=1 -XX:+UnlockExperimentalVMOptions -XX:+EnableJVMCIProduct -XX:+EnableJVMCI -XX:-UnlockExperimentalVMOptions --add-modules=jdk.incubator.vector
+# Blackhole mode: compiler (auto-detected, use -Djmh.blackhole.autoDetect=false to disable)
+# Warmup: 3 iterations, 1 s each
+# Measurement: 5 iterations, 1 s each
+# Timeout: 10 min per iteration
+# Threads: 1 thread, will synchronize iterations
+# Benchmark mode: Throughput, ops/time
+# Benchmark: io.matrix.perf.MctsRolloutBenchmark.ucb1Selection
+# Parameters: (iterations = 1000, k = 8, simulationDepth = 16)
+
+# Run progress: 87.50% complete, ETA 00:00:08
+# Fork: 1 of 1
+OpenJDK 64-Bit Server VM warning: -XX:ThreadPriorityPolicy=1 may require system level permission, e.g., being the root user. If the necessary permission is not possessed, changes to priority will be silently ignored.
+WARNING: Using incubator modules: jdk.incubator.vector
+WARNING: A terminally deprecated method in sun.misc.Unsafe has been called
+WARNING: sun.misc.Unsafe::objectFieldOffset has been called by org.openjdk.jmh.util.Utils (file:/home/alexandr-narbaev/Projects/agi/matrix-core/build/libs/matrix-core-1.0.0-jmh.jar)
+WARNING: Please consider reporting this to the maintainers of class org.openjdk.jmh.util.Utils
+WARNING: sun.misc.Unsafe::objectFieldOffset will be removed in a future release
+# Warmup Iteration   1: 1814.802 ops/s
+# Warmup Iteration   2: 2738.320 ops/s
+# Warmup Iteration   3: 2745.089 ops/s
+Iteration   1: 2737.949 ops/s
+Iteration   2: 2721.301 ops/s
+Iteration   3: 2772.382 ops/s
+Iteration   4: 2752.114 ops/s
+Iteration   5: [MctsRollout] k=8 depth=16 searches=0 rollouts=0
+2377.801 ops/s
+
+
+Result "io.matrix.perf.MctsRolloutBenchmark.ucb1Selection":
+  2672.309 ±(99.9%) 638.056 ops/s [Average]
+  (min, avg, max) = (2377.801, 2672.309, 2772.382), stdev = 165.701
+  CI (99.9%): [2034.253, 3310.366] (assumes normal distribution)
+
+
+# Run complete. Total time: 00:01:05
+
+REMEMBER: The numbers below are just data. To gain reusable insights, you need to follow up on
+why the numbers are the way they are. Use profilers (see -prof, -lprof), design factorial
+experiments, perform baseline and negative tests that provide experimental control, make sure
+the benchmarking environment is safe on JVM/OS/HW level, ask for reviews from the domain experts.
+Do not assume the numbers tell you what you want them to tell.
+
+NOTE: Current JVM experimentally supports Compiler Blackholes, and they are in use. Please exercise
+extra caution when trusting the results, look into the generated code to check the benchmark still
+works, and factor in a small probability of new VM bugs. Additionally, while comparisons between
+different JVMs are already problematic, the performance difference caused by different Blackhole
+modes can be very significant. Please make sure you use the consistent Blackhole mode for comparisons.
+
+Benchmark                               (iterations)  (k)  (simulationDepth)   Mode  Cnt     Score      Error  Units
+MctsRolloutBenchmark.rolloutThroughput           100    8                  4  thrpt    5  9768.868 ± 1859.701  ops/s
+MctsRolloutBenchmark.rolloutThroughput           100    8                 16  thrpt    5  2633.549 ±  610.600  ops/s
+MctsRolloutBenchmark.rolloutThroughput          1000    8                  4  thrpt    5   594.010 ±  145.302  ops/s
+MctsRolloutBenchmark.rolloutThroughput          1000    8                 16  thrpt    5   189.628 ±   35.021  ops/s
+MctsRolloutBenchmark.ucb1Selection               100    8                  4  thrpt    5  9515.956 ± 1318.762  ops/s
+MctsRolloutBenchmark.ucb1Selection               100    8                 16  thrpt    5  2688.067 ±  103.249  ops/s
+MctsRolloutBenchmark.ucb1Selection              1000    8                  4  thrpt    5  9350.699 ±  247.792  ops/s
+MctsRolloutBenchmark.ucb1Selection              1000    8                 16  thrpt    5  2672.309 ±  638.056  ops/s
+
+Benchmark result is saved to docs-v2/operations/bench/w30-perf-20261002-134016.json
+
+# exit status: 0
+# json: docs-v2/operations/bench/w30-perf-20261002-134016.json

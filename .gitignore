@@ -156,3 +156,9 @@ matrix-core/models/training_data/auto_generated.jsonl
 matrix-api-gateway/logs/
 data/mind/gateway.log
 data/smoke-old/
+
+# RECON-W30: the JMH result file from the run that exposed the --include filter bug.
+# It holds 230 results from the whole jar while its own log claimed a filter was applied,
+# so committing it would put a misleading measurement in the evidence directory. Kept
+# locally only; docs-v2/operations/bench/README.md names it explicitly.
+docs-v2/operations/bench/w30-perf-20261002-122937.json

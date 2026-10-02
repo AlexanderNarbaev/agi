@@ -1457,3 +1457,109 @@ the new tuning flags. No leaked listeners.
 **What the user can newly observe:** `scripts/hardware-probe.sh` prints this machine's real
 inventory, and `scripts/perf-probe.sh` will tell you — with the environment stamped in —
 that the retrieval hot path has an unused ~3x on the table.
+
+
+## 2026-10-02 — RECON-W30 review-cycle-0 remediation
+
+Goal Guard reported all 11 gates failing. The `goal_*` tools still refuse to return
+findings from this session, so I audited against the Goal Contract's own acceptance
+criteria rather than guessing at reviewer intent. Five criteria were genuinely unmet.
+
+### C4 — three of five required benchmark kernels did not exist
+
+The wave plan named five kernels. RECON-W30 delivered two (HDC Jaccard, GC). I have now
+built and measured the other three against the **real** production classes, not strawmen:
+
+- `TsetlinClauseBenchmark` → `io.matrix.tsetlin.AdvancedTsetlinMachine`
+- `MctsRolloutBenchmark` → `io.matrix.mcts.MctsTree` (via its `Builder`, because
+  `MctsNode`'s constructor rejects a null state and a null action list)
+- `SqliteMemoryBenchmark` → `io.matrix.memory.SqliteMemoryBackend`
+
+Full-budget numbers, all in `TUNING-PARAMETERS.md` §6b. Two are operationally important
+for RECON-W31 rather than merely interesting:
+
+- **Tsetlin clause update is worse than linear in clause count** — 8x the clauses costs
+  ~11x the time (4.15 µs → 47.7 µs), and a 256-update batch at 8192 clauses takes 22.7 ms.
+  At ~48 µs per update, a sleep cycle doing 100k clause updates spends ~4.8 s in
+  induction alone. **Clause count, not knowledge count, is the first thing to watch when
+  the dataset scales 10x.**
+- **SQLite sustains ~30 000 rows/s** on the NVMe tier. A 300 000-row knowledge base costs
+  ~10 s of pure insert time per rebuild. Not yet a bottleneck; the number to re-measure
+  after W31.
+
+### C8 — no static-analysis config existed. Now there is one, and it was buggy three times
+
+`scripts/quality-gate.sh`, with four checks: MAGIC-1 (shell literals outside constants),
+MAGIC-2 (Java literals outside named constants), CFG-1 (the tuning env file is
+provenance-tagged), FROZEN-1 (five frozen zones at 0 diff).
+
+Building it was more instructive than running it, because the first version **could not
+fail**:
+
+1. **166 "violations" that were mostly protocol constants** — HTTP status codes
+   (200/401/403/500) and the FNV-64 prime basis. A gate that reports a published standard
+   as a tunable trains its reader to ignore it, which is the same as no gate. Narrowed
+   the exempt set; 166 → 123.
+2. **The baseline reader parsed the wrong number.** `grep -oE '[0-9]+' | head -1` matched
+   the **year in the header comment**, so the accepted baseline silently became 2026 and
+   the gate could never block anything. Now parses the keyed `literal_candidates=N` field.
+   There were also two `--update-baseline` blocks and the first one — which wrote a
+   header with no count — exited before the count was ever written.
+3. **It counted flagged FILES, not literal occurrences.** So appending a new magic number
+   to a file that already had one changed nothing and the gate passed. That is precisely
+   the case the gate exists to catch. Now counts occurrences (121 → 270 accepted).
+
+Verified by negative test: injecting `injected_tuning_default=987654` into
+`disk-hygiene.sh`, an already-flagged file, moves the count 270 → 271 and exits **1**;
+reverting returns it to exit **0**.
+
+**What this gate is not:** it cannot tell a tunable from a specification constant. It
+locates *candidates*. So it blocks on an increase over an accepted baseline rather than
+pretending 270 inherited literals are 270 problems, and it says so in its own output.
+A true positive it found and I am leaving for a later wave: `disk-hygiene.sh:61` sets a
+file-size cap inline as `CAP=2097152` in a lowercase variable.
+
+### C10 — the B-4 correction existed only in the truth report
+
+My contract required the corrected three-stage chain in the checklist as well as the
+report. It was in the report only. A corrected fact that appears in one document and not
+the operator-facing one is not corrected. Added as checklist row **Z11**. Also added
+**Z12** (clean-code gate) and **Z13** (benchmark kernels), and corrected **Z6** to state
+the failure count as the range it actually is.
+
+### C16 — the disk ledger was not updated for any W30 operation
+
+`data/DISK-LEDGER.ndjson` was still at seq 38 from `w20-hygiene` after I had run two
+18-minute full suites, five JMH builds and six benchmark runs. Appended seq 39–45 with
+the disk state actually observed (108 GB free, HEALTHY throughout, `audit_only: true` —
+nothing was deleted). Sequence verified monotonic across all 44 seq-bearing entries.
+
+The one entry without a `seq` is a pre-existing `W14-gen-teacher` line; the append-only
+rule says do not rewrite history, so it stays.
+
+**A gap I am recording rather than fixing:** `data/` is gitignored, so the ledger is
+**not version-controlled**. A fresh clone has no disk history at all. Force-adding it is
+a scope change to `.gitignore` that belongs to whoever owns the ignore policy, so it is
+escalated rather than taken unilaterally.
+
+### C17 — tree was not clean
+
+`w30-perf-20261002-122937.json` is deliberately uncommitted (the 230-entry run that
+exposed the filter bug). Added a `.gitignore` entry naming it and why, rather than leaving
+an untracked file to be swept into some future `git add`.
+
+### A benchmark of mine that measures the wrong thing, named honestly
+
+`ucb1Selection` does not isolate UCB1: it builds a tree and runs a 100-rollout search
+before reading `ucb1()` off the root, so it is dominated by construction. I left the name
+alone and documented the mismatch, because renaming a benchmark to match its measurement
+breaks comparability with the run that produced the previous numbers. It is called out in
+the tuning doc rather than quietly fixed.
+
+### Still not met
+
+- **Reviewer verdicts: none.** Delegate reviewers cannot run in Goal Mode; the guard runs
+  gates at stop. No self-authored sign-off table — the W27 self-attestation failure mode
+  is not something to repeat.
+- **Tsetlin/MCTS/SQLite mutations, BDD scenarios, pitest, deploy artifacts** — W32/W33
+  scope, not W30.

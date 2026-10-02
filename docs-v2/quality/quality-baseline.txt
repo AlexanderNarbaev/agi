@@ -1,0 +1,4 @@
+literal_candidates=270
+# quality-baseline.txt — accepted state for scripts/quality-gate.sh
+# updated: 2026-10-02T13:48:33+0300   ref=b144563e
+# The gate blocks when this number increases. Lower it by extracting constants.

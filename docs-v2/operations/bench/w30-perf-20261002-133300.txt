@@ -1,0 +1,326 @@
+# MATRIX RECON-W30 performance probe
+# run at        : 2026-10-02T13:33:00+0300
+# host          : JIAOLONG Series
+# cpu           : AMD Ryzen 9 9955HX 16-Core Processor
+# physical cores: 16 x 1
+# logical cpus  : 32
+# isa           : avx2=yes avx512f=yes
+# jvm           : openjdk version "25.0.2" 2026-01-20
+# gc            : true
+# warmup        : 1 x 1s
+# measurement   : 2 x 1s, 1 fork
+# include       : SqliteMemory
+# disk free     : 115812204544 bytes
+
+WARNING: A terminally deprecated method in sun.misc.Unsafe has been called
+WARNING: sun.misc.Unsafe::objectFieldOffset has been called by org.openjdk.jmh.util.Utils (file:/home/alexandr-narbaev/Projects/agi/matrix-core/build/libs/matrix-core-1.0.0-jmh.jar)
+WARNING: Please consider reporting this to the maintainers of class org.openjdk.jmh.util.Utils
+WARNING: sun.misc.Unsafe::objectFieldOffset will be removed in a future release
+# JMH version: 1.37
+# VM version: JDK 25.0.2, OpenJDK 64-Bit Server VM, 25.0.2+10-jvmci-b01
+# VM invoker: /home/alexandr-narbaev/.sdkman/candidates/java/25.0.2-graalce/bin/java
+# VM options: -XX:ThreadPriorityPolicy=1 -XX:+UnlockExperimentalVMOptions -XX:+EnableJVMCIProduct -XX:+EnableJVMCI -XX:-UnlockExperimentalVMOptions --add-modules=jdk.incubator.vector
+# Blackhole mode: compiler (auto-detected, use -Djmh.blackhole.autoDetect=false to disable)
+# Warmup: 1 iterations, 1 s each
+# Measurement: 2 iterations, 1 s each
+# Timeout: 10 min per iteration
+# Threads: 1 thread, will synchronize iterations
+# Benchmark mode: Throughput, ops/time
+# Benchmark: io.matrix.perf.SqliteMemoryBenchmark.readBack
+# Parameters: (batchSize = 100, contentBytes = 256)
+
+# Run progress: 0.00% complete, ETA 00:00:18
+# Fork: 1 of 1
+OpenJDK 64-Bit Server VM warning: -XX:ThreadPriorityPolicy=1 may require system level permission, e.g., being the root user. If the necessary permission is not possessed, changes to priority will be silently ignored.
+WARNING: Using incubator modules: jdk.incubator.vector
+WARNING: A terminally deprecated method in sun.misc.Unsafe has been called
+WARNING: sun.misc.Unsafe::objectFieldOffset has been called by org.openjdk.jmh.util.Utils (file:/home/alexandr-narbaev/Projects/agi/matrix-core/build/libs/matrix-core-1.0.0-jmh.jar)
+WARNING: Please consider reporting this to the maintainers of class org.openjdk.jmh.util.Utils
+WARNING: sun.misc.Unsafe::objectFieldOffset will be removed in a future release
+# Warmup Iteration   1: <failure>
+
+java.lang.RuntimeException: SQLite backend init failed: /tmp/matrix-perf-sqlite17714112286963613516/memory.db
+	at io.matrix.memory.SqliteMemoryBackend.init(SqliteMemoryBackend.java:63)
+	at io.matrix.memory.SqliteMemoryBackend.<init>(SqliteMemoryBackend.java:35)
+	at io.matrix.perf.SqliteMemoryBenchmark.setup(SqliteMemoryBenchmark.java:80)
+	at io.matrix.perf.jmh_generated.SqliteMemoryBenchmark_readBack_jmhTest._jmh_tryInit_f_sqlitememorybenchmark0_0(SqliteMemoryBenchmark_readBack_jmhTest.java:351)
+	at io.matrix.perf.jmh_generated.SqliteMemoryBenchmark_readBack_jmhTest.readBack_Throughput(SqliteMemoryBenchmark_readBack_jmhTest.java:71)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:104)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:565)
+	at org.openjdk.jmh.runner.BenchmarkHandler$BenchmarkTask.call(BenchmarkHandler.java:527)
+	at org.openjdk.jmh.runner.BenchmarkHandler$BenchmarkTask.call(BenchmarkHandler.java:504)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:328)
+	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:545)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:328)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1090)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:614)
+	at java.base/java.lang.Thread.run(Thread.java:1474)
+Caused by: java.sql.SQLException: No suitable driver found for jdbc:sqlite:/tmp/matrix-perf-sqlite17714112286963613516/memory.db
+	at java.sql/java.sql.DriverManager.getConnection(DriverManager.java:638)
+	at java.sql/java.sql.DriverManager.getConnection(DriverManager.java:222)
+	at io.matrix.memory.SqliteMemoryBackend.init(SqliteMemoryBackend.java:40)
+	... 14 more
+
+
+
+
+# JMH version: 1.37
+# VM version: JDK 25.0.2, OpenJDK 64-Bit Server VM, 25.0.2+10-jvmci-b01
+# VM invoker: /home/alexandr-narbaev/.sdkman/candidates/java/25.0.2-graalce/bin/java
+# VM options: -XX:ThreadPriorityPolicy=1 -XX:+UnlockExperimentalVMOptions -XX:+EnableJVMCIProduct -XX:+EnableJVMCI -XX:-UnlockExperimentalVMOptions --add-modules=jdk.incubator.vector
+# Blackhole mode: compiler (auto-detected, use -Djmh.blackhole.autoDetect=false to disable)
+# Warmup: 1 iterations, 1 s each
+# Measurement: 2 iterations, 1 s each
+# Timeout: 10 min per iteration
+# Threads: 1 thread, will synchronize iterations
+# Benchmark mode: Throughput, ops/time
+# Benchmark: io.matrix.perf.SqliteMemoryBenchmark.readBack
+# Parameters: (batchSize = 1000, contentBytes = 256)
+
+# Run progress: 16.67% complete, ETA 00:00:00
+# Fork: 1 of 1
+OpenJDK 64-Bit Server VM warning: -XX:ThreadPriorityPolicy=1 may require system level permission, e.g., being the root user. If the necessary permission is not possessed, changes to priority will be silently ignored.
+WARNING: Using incubator modules: jdk.incubator.vector
+WARNING: A terminally deprecated method in sun.misc.Unsafe has been called
+WARNING: sun.misc.Unsafe::objectFieldOffset has been called by org.openjdk.jmh.util.Utils (file:/home/alexandr-narbaev/Projects/agi/matrix-core/build/libs/matrix-core-1.0.0-jmh.jar)
+WARNING: Please consider reporting this to the maintainers of class org.openjdk.jmh.util.Utils
+WARNING: sun.misc.Unsafe::objectFieldOffset will be removed in a future release
+# Warmup Iteration   1: <failure>
+
+java.lang.RuntimeException: SQLite backend init failed: /tmp/matrix-perf-sqlite13118257312501287296/memory.db
+	at io.matrix.memory.SqliteMemoryBackend.init(SqliteMemoryBackend.java:63)
+	at io.matrix.memory.SqliteMemoryBackend.<init>(SqliteMemoryBackend.java:35)
+	at io.matrix.perf.SqliteMemoryBenchmark.setup(SqliteMemoryBenchmark.java:80)
+	at io.matrix.perf.jmh_generated.SqliteMemoryBenchmark_readBack_jmhTest._jmh_tryInit_f_sqlitememorybenchmark0_0(SqliteMemoryBenchmark_readBack_jmhTest.java:351)
+	at io.matrix.perf.jmh_generated.SqliteMemoryBenchmark_readBack_jmhTest.readBack_Throughput(SqliteMemoryBenchmark_readBack_jmhTest.java:71)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:104)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:565)
+	at org.openjdk.jmh.runner.BenchmarkHandler$BenchmarkTask.call(BenchmarkHandler.java:527)
+	at org.openjdk.jmh.runner.BenchmarkHandler$BenchmarkTask.call(BenchmarkHandler.java:504)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:328)
+	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:545)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:328)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1090)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:614)
+	at java.base/java.lang.Thread.run(Thread.java:1474)
+Caused by: java.sql.SQLException: No suitable driver found for jdbc:sqlite:/tmp/matrix-perf-sqlite13118257312501287296/memory.db
+	at java.sql/java.sql.DriverManager.getConnection(DriverManager.java:638)
+	at java.sql/java.sql.DriverManager.getConnection(DriverManager.java:222)
+	at io.matrix.memory.SqliteMemoryBackend.init(SqliteMemoryBackend.java:40)
+	... 14 more
+
+
+
+
+# JMH version: 1.37
+# VM version: JDK 25.0.2, OpenJDK 64-Bit Server VM, 25.0.2+10-jvmci-b01
+# VM invoker: /home/alexandr-narbaev/.sdkman/candidates/java/25.0.2-graalce/bin/java
+# VM options: -XX:ThreadPriorityPolicy=1 -XX:+UnlockExperimentalVMOptions -XX:+EnableJVMCIProduct -XX:+EnableJVMCI -XX:-UnlockExperimentalVMOptions --add-modules=jdk.incubator.vector
+# Blackhole mode: compiler (auto-detected, use -Djmh.blackhole.autoDetect=false to disable)
+# Warmup: 1 iterations, 1 s each
+# Measurement: 2 iterations, 1 s each
+# Timeout: 10 min per iteration
+# Threads: 1 thread, will synchronize iterations
+# Benchmark mode: Throughput, ops/time
+# Benchmark: io.matrix.perf.SqliteMemoryBenchmark.readByDomain
+# Parameters: (batchSize = 100, contentBytes = 256)
+
+# Run progress: 33.33% complete, ETA 00:00:00
+# Fork: 1 of 1
+OpenJDK 64-Bit Server VM warning: -XX:ThreadPriorityPolicy=1 may require system level permission, e.g., being the root user. If the necessary permission is not possessed, changes to priority will be silently ignored.
+WARNING: Using incubator modules: jdk.incubator.vector
+WARNING: A terminally deprecated method in sun.misc.Unsafe has been called
+WARNING: sun.misc.Unsafe::objectFieldOffset has been called by org.openjdk.jmh.util.Utils (file:/home/alexandr-narbaev/Projects/agi/matrix-core/build/libs/matrix-core-1.0.0-jmh.jar)
+WARNING: Please consider reporting this to the maintainers of class org.openjdk.jmh.util.Utils
+WARNING: sun.misc.Unsafe::objectFieldOffset will be removed in a future release
+# Warmup Iteration   1: <failure>
+
+java.lang.RuntimeException: SQLite backend init failed: /tmp/matrix-perf-sqlite13214451576129797704/memory.db
+	at io.matrix.memory.SqliteMemoryBackend.init(SqliteMemoryBackend.java:63)
+	at io.matrix.memory.SqliteMemoryBackend.<init>(SqliteMemoryBackend.java:35)
+	at io.matrix.perf.SqliteMemoryBenchmark.setup(SqliteMemoryBenchmark.java:80)
+	at io.matrix.perf.jmh_generated.SqliteMemoryBenchmark_readByDomain_jmhTest._jmh_tryInit_f_sqlitememorybenchmark0_0(SqliteMemoryBenchmark_readByDomain_jmhTest.java:351)
+	at io.matrix.perf.jmh_generated.SqliteMemoryBenchmark_readByDomain_jmhTest.readByDomain_Throughput(SqliteMemoryBenchmark_readByDomain_jmhTest.java:71)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:104)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:565)
+	at org.openjdk.jmh.runner.BenchmarkHandler$BenchmarkTask.call(BenchmarkHandler.java:527)
+	at org.openjdk.jmh.runner.BenchmarkHandler$BenchmarkTask.call(BenchmarkHandler.java:504)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:328)
+	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:545)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:328)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1090)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:614)
+	at java.base/java.lang.Thread.run(Thread.java:1474)
+Caused by: java.sql.SQLException: No suitable driver found for jdbc:sqlite:/tmp/matrix-perf-sqlite13214451576129797704/memory.db
+	at java.sql/java.sql.DriverManager.getConnection(DriverManager.java:638)
+	at java.sql/java.sql.DriverManager.getConnection(DriverManager.java:222)
+	at io.matrix.memory.SqliteMemoryBackend.init(SqliteMemoryBackend.java:40)
+	... 14 more
+
+
+
+
+# JMH version: 1.37
+# VM version: JDK 25.0.2, OpenJDK 64-Bit Server VM, 25.0.2+10-jvmci-b01
+# VM invoker: /home/alexandr-narbaev/.sdkman/candidates/java/25.0.2-graalce/bin/java
+# VM options: -XX:ThreadPriorityPolicy=1 -XX:+UnlockExperimentalVMOptions -XX:+EnableJVMCIProduct -XX:+EnableJVMCI -XX:-UnlockExperimentalVMOptions --add-modules=jdk.incubator.vector
+# Blackhole mode: compiler (auto-detected, use -Djmh.blackhole.autoDetect=false to disable)
+# Warmup: 1 iterations, 1 s each
+# Measurement: 2 iterations, 1 s each
+# Timeout: 10 min per iteration
+# Threads: 1 thread, will synchronize iterations
+# Benchmark mode: Throughput, ops/time
+# Benchmark: io.matrix.perf.SqliteMemoryBenchmark.readByDomain
+# Parameters: (batchSize = 1000, contentBytes = 256)
+
+# Run progress: 50.00% complete, ETA 00:00:00
+# Fork: 1 of 1
+OpenJDK 64-Bit Server VM warning: -XX:ThreadPriorityPolicy=1 may require system level permission, e.g., being the root user. If the necessary permission is not possessed, changes to priority will be silently ignored.
+WARNING: Using incubator modules: jdk.incubator.vector
+WARNING: A terminally deprecated method in sun.misc.Unsafe has been called
+WARNING: sun.misc.Unsafe::objectFieldOffset has been called by org.openjdk.jmh.util.Utils (file:/home/alexandr-narbaev/Projects/agi/matrix-core/build/libs/matrix-core-1.0.0-jmh.jar)
+WARNING: Please consider reporting this to the maintainers of class org.openjdk.jmh.util.Utils
+WARNING: sun.misc.Unsafe::objectFieldOffset will be removed in a future release
+# Warmup Iteration   1: <failure>
+
+java.lang.RuntimeException: SQLite backend init failed: /tmp/matrix-perf-sqlite4324369185826127541/memory.db
+	at io.matrix.memory.SqliteMemoryBackend.init(SqliteMemoryBackend.java:63)
+	at io.matrix.memory.SqliteMemoryBackend.<init>(SqliteMemoryBackend.java:35)
+	at io.matrix.perf.SqliteMemoryBenchmark.setup(SqliteMemoryBenchmark.java:80)
+	at io.matrix.perf.jmh_generated.SqliteMemoryBenchmark_readByDomain_jmhTest._jmh_tryInit_f_sqlitememorybenchmark0_0(SqliteMemoryBenchmark_readByDomain_jmhTest.java:351)
+	at io.matrix.perf.jmh_generated.SqliteMemoryBenchmark_readByDomain_jmhTest.readByDomain_Throughput(SqliteMemoryBenchmark_readByDomain_jmhTest.java:71)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:104)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:565)
+	at org.openjdk.jmh.runner.BenchmarkHandler$BenchmarkTask.call(BenchmarkHandler.java:527)
+	at org.openjdk.jmh.runner.BenchmarkHandler$BenchmarkTask.call(BenchmarkHandler.java:504)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:328)
+	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:545)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:328)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1090)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:614)
+	at java.base/java.lang.Thread.run(Thread.java:1474)
+Caused by: java.sql.SQLException: No suitable driver found for jdbc:sqlite:/tmp/matrix-perf-sqlite4324369185826127541/memory.db
+	at java.sql/java.sql.DriverManager.getConnection(DriverManager.java:638)
+	at java.sql/java.sql.DriverManager.getConnection(DriverManager.java:222)
+	at io.matrix.memory.SqliteMemoryBackend.init(SqliteMemoryBackend.java:40)
+	... 14 more
+
+
+
+
+# JMH version: 1.37
+# VM version: JDK 25.0.2, OpenJDK 64-Bit Server VM, 25.0.2+10-jvmci-b01
+# VM invoker: /home/alexandr-narbaev/.sdkman/candidates/java/25.0.2-graalce/bin/java
+# VM options: -XX:ThreadPriorityPolicy=1 -XX:+UnlockExperimentalVMOptions -XX:+EnableJVMCIProduct -XX:+EnableJVMCI -XX:-UnlockExperimentalVMOptions --add-modules=jdk.incubator.vector
+# Blackhole mode: compiler (auto-detected, use -Djmh.blackhole.autoDetect=false to disable)
+# Warmup: 1 iterations, 1 s each
+# Measurement: 2 iterations, 1 s each
+# Timeout: 10 min per iteration
+# Threads: 1 thread, will synchronize iterations
+# Benchmark mode: Throughput, ops/time
+# Benchmark: io.matrix.perf.SqliteMemoryBenchmark.writeThroughput
+# Parameters: (batchSize = 100, contentBytes = 256)
+
+# Run progress: 66.67% complete, ETA 00:00:00
+# Fork: 1 of 1
+OpenJDK 64-Bit Server VM warning: -XX:ThreadPriorityPolicy=1 may require system level permission, e.g., being the root user. If the necessary permission is not possessed, changes to priority will be silently ignored.
+WARNING: Using incubator modules: jdk.incubator.vector
+WARNING: A terminally deprecated method in sun.misc.Unsafe has been called
+WARNING: sun.misc.Unsafe::objectFieldOffset has been called by org.openjdk.jmh.util.Utils (file:/home/alexandr-narbaev/Projects/agi/matrix-core/build/libs/matrix-core-1.0.0-jmh.jar)
+WARNING: Please consider reporting this to the maintainers of class org.openjdk.jmh.util.Utils
+WARNING: sun.misc.Unsafe::objectFieldOffset will be removed in a future release
+# Warmup Iteration   1: <failure>
+
+java.lang.RuntimeException: SQLite backend init failed: /tmp/matrix-perf-sqlite18074503896575703239/memory.db
+	at io.matrix.memory.SqliteMemoryBackend.init(SqliteMemoryBackend.java:63)
+	at io.matrix.memory.SqliteMemoryBackend.<init>(SqliteMemoryBackend.java:35)
+	at io.matrix.perf.SqliteMemoryBenchmark.setup(SqliteMemoryBenchmark.java:80)
+	at io.matrix.perf.jmh_generated.SqliteMemoryBenchmark_writeThroughput_jmhTest._jmh_tryInit_f_sqlitememorybenchmark0_0(SqliteMemoryBenchmark_writeThroughput_jmhTest.java:351)
+	at io.matrix.perf.jmh_generated.SqliteMemoryBenchmark_writeThroughput_jmhTest.writeThroughput_Throughput(SqliteMemoryBenchmark_writeThroughput_jmhTest.java:71)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:104)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:565)
+	at org.openjdk.jmh.runner.BenchmarkHandler$BenchmarkTask.call(BenchmarkHandler.java:527)
+	at org.openjdk.jmh.runner.BenchmarkHandler$BenchmarkTask.call(BenchmarkHandler.java:504)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:328)
+	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:545)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:328)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1090)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:614)
+	at java.base/java.lang.Thread.run(Thread.java:1474)
+Caused by: java.sql.SQLException: No suitable driver found for jdbc:sqlite:/tmp/matrix-perf-sqlite18074503896575703239/memory.db
+	at java.sql/java.sql.DriverManager.getConnection(DriverManager.java:638)
+	at java.sql/java.sql.DriverManager.getConnection(DriverManager.java:222)
+	at io.matrix.memory.SqliteMemoryBackend.init(SqliteMemoryBackend.java:40)
+	... 14 more
+
+
+
+
+# JMH version: 1.37
+# VM version: JDK 25.0.2, OpenJDK 64-Bit Server VM, 25.0.2+10-jvmci-b01
+# VM invoker: /home/alexandr-narbaev/.sdkman/candidates/java/25.0.2-graalce/bin/java
+# VM options: -XX:ThreadPriorityPolicy=1 -XX:+UnlockExperimentalVMOptions -XX:+EnableJVMCIProduct -XX:+EnableJVMCI -XX:-UnlockExperimentalVMOptions --add-modules=jdk.incubator.vector
+# Blackhole mode: compiler (auto-detected, use -Djmh.blackhole.autoDetect=false to disable)
+# Warmup: 1 iterations, 1 s each
+# Measurement: 2 iterations, 1 s each
+# Timeout: 10 min per iteration
+# Threads: 1 thread, will synchronize iterations
+# Benchmark mode: Throughput, ops/time
+# Benchmark: io.matrix.perf.SqliteMemoryBenchmark.writeThroughput
+# Parameters: (batchSize = 1000, contentBytes = 256)
+
+# Run progress: 83.33% complete, ETA 00:00:00
+# Fork: 1 of 1
+OpenJDK 64-Bit Server VM warning: -XX:ThreadPriorityPolicy=1 may require system level permission, e.g., being the root user. If the necessary permission is not possessed, changes to priority will be silently ignored.
+WARNING: Using incubator modules: jdk.incubator.vector
+WARNING: A terminally deprecated method in sun.misc.Unsafe has been called
+WARNING: sun.misc.Unsafe::objectFieldOffset has been called by org.openjdk.jmh.util.Utils (file:/home/alexandr-narbaev/Projects/agi/matrix-core/build/libs/matrix-core-1.0.0-jmh.jar)
+WARNING: Please consider reporting this to the maintainers of class org.openjdk.jmh.util.Utils
+WARNING: sun.misc.Unsafe::objectFieldOffset will be removed in a future release
+# Warmup Iteration   1: <failure>
+
+java.lang.RuntimeException: SQLite backend init failed: /tmp/matrix-perf-sqlite10813318248600697746/memory.db
+	at io.matrix.memory.SqliteMemoryBackend.init(SqliteMemoryBackend.java:63)
+	at io.matrix.memory.SqliteMemoryBackend.<init>(SqliteMemoryBackend.java:35)
+	at io.matrix.perf.SqliteMemoryBenchmark.setup(SqliteMemoryBenchmark.java:80)
+	at io.matrix.perf.jmh_generated.SqliteMemoryBenchmark_writeThroughput_jmhTest._jmh_tryInit_f_sqlitememorybenchmark0_0(SqliteMemoryBenchmark_writeThroughput_jmhTest.java:351)
+	at io.matrix.perf.jmh_generated.SqliteMemoryBenchmark_writeThroughput_jmhTest.writeThroughput_Throughput(SqliteMemoryBenchmark_writeThroughput_jmhTest.java:71)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:104)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:565)
+	at org.openjdk.jmh.runner.BenchmarkHandler$BenchmarkTask.call(BenchmarkHandler.java:527)
+	at org.openjdk.jmh.runner.BenchmarkHandler$BenchmarkTask.call(BenchmarkHandler.java:504)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:328)
+	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:545)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:328)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1090)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:614)
+	at java.base/java.lang.Thread.run(Thread.java:1474)
+Caused by: java.sql.SQLException: No suitable driver found for jdbc:sqlite:/tmp/matrix-perf-sqlite10813318248600697746/memory.db
+	at java.sql/java.sql.DriverManager.getConnection(DriverManager.java:638)
+	at java.sql/java.sql.DriverManager.getConnection(DriverManager.java:222)
+	at io.matrix.memory.SqliteMemoryBackend.init(SqliteMemoryBackend.java:40)
+	... 14 more
+
+
+
+
+# Run complete. Total time: 00:00:00
+
+REMEMBER: The numbers below are just data. To gain reusable insights, you need to follow up on
+why the numbers are the way they are. Use profilers (see -prof, -lprof), design factorial
+experiments, perform baseline and negative tests that provide experimental control, make sure
+the benchmarking environment is safe on JVM/OS/HW level, ask for reviews from the domain experts.
+Do not assume the numbers tell you what you want them to tell.
+
+NOTE: Current JVM experimentally supports Compiler Blackholes, and they are in use. Please exercise
+extra caution when trusting the results, look into the generated code to check the benchmark still
+works, and factor in a small probability of new VM bugs. Additionally, while comparisons between
+different JVMs are already problematic, the performance difference caused by different Blackhole
+modes can be very significant. Please make sure you use the consistent Blackhole mode for comparisons.
+
+Benchmark  Mode  Cnt  Score   Error  Units
+
+Benchmark result is saved to docs-v2/operations/bench/w30-perf-20261002-133300.json
+
+# exit status: 0
+# json: docs-v2/operations/bench/w30-perf-20261002-133300.json

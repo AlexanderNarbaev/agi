@@ -181,6 +181,90 @@ store kept in sync with the `BitSet` one is exactly that. The right move is a re
 migration in a later wave with its own spec, not a benchmark-driven edit. This document
 records the number so that decision is informed rather than rediscovered.
 
+## 6b. The other three hot kernels
+
+**MEASURED**, JMH full budget (3 warmup + 5 measurement x 1s, 1 fork), same machine, each
+run filter-verified. Sources in `bench/`.
+
+### Tsetlin clause update — the induction bottleneck
+
+`AdvancedTsetlinMachine.updateClause` is pure and allocates a fresh `Random(seed)` plus a
+fresh `Clause[nClauses]` array **per call**, so it is allocation-bound as well as
+compute-bound. It is also **linear in clause count**:
+
+| nClauses | `updateSingleClause` | `predict` |
+|---|---|---|
+| 1024 | 4.15 µs ± 0.21 | 2.23 µs ± 0.21 |
+| 8192 | 47.7 µs ± 26.1 | 34.9 µs ± 5.2 |
+
+An 8x increase in clauses costs **~11x** in update time — worse than linear, consistent
+with the per-call array copy dominating. A 256-update batch at 8192 clauses takes
+**22.7 ms**, i.e. ~89 µs per update.
+
+**Why this matters for RECON-W31:** rule induction is what turns captured activations
+into executable clauses. At 8192 clauses a single clause update costs ~48 µs, so a sleep
+cycle that performs 100k updates spends ~4.8 s in clause updates alone — and that is
+before a 10x knowledge scale multiplies the update count. **Clause count, not knowledge
+count, is the first thing to watch when the dataset scales.**
+
+### MCTS rollout throughput
+
+| iterations | simDepth | searches/s | implied rollouts/s |
+|---|---|---|---|
+| 100 | 4 | 9769 ± 1860 | ~977 000 |
+| 1000 | 4 | 594 ± 145 | ~594 000 |
+| 100 | 16 | 2634 ± 611 | ~263 000 |
+| 1000 | 16 | 190 ± 35 | ~190 000 |
+
+Rollout cost scales with simulation depth far more than with iteration count, which is
+the expected shape: depth multiplies work per rollout, iterations only add rollouts.
+
+**A caveat on my own benchmark naming.** The variant called `ucb1Selection` does **not**
+isolate UCB1 — it builds a tree and runs a 100-rollout search before reading `ucb1()`
+off the root, so it is dominated by construction, not by selection. The name overclaims
+and the numbers should be read as "tree setup plus a short search". I have left it in
+place rather than silently renaming, because a benchmark renamed to match its
+measurement is a benchmark nobody can compare against the earlier run of.
+
+### SQLite memory tier
+
+| operation | rate |
+|---|---|
+| `writeThroughput` (100 rows x 256 B) | 360 batches/s ± 54 → **~36 000 rows/s** |
+| `writeThroughput` (1000 rows x 256 B) | 28.8 batches/s ± 2.9 → **~28 800 rows/s** |
+| `readBack` (load all) | ~115 000/s |
+| `readByDomain` | ~52 000/s |
+
+Writes run roughly **3-4x slower than reads**, and sustained-write throughput is flat
+between the 100-row and 1000-row batches (~36k vs ~29k rows/s), which says the bottleneck
+is per-row commit cost rather than batch overhead.
+
+**This is the ceiling RECON-W31 has to fit inside.** A 10x knowledge scale means roughly
+10x the rows, and at ~30 000 rows/s a 300 000-row knowledge base costs ~10 s of pure
+insert time per full rebuild. Ingestion is not the bottleneck yet; it is the one to
+measure again after the dataset grows.
+
+**Device specificity:** the database sits on whichever NVMe backs `/tmp`. This machine
+has two different drives (KINGSTON SFYRS1000G and YMTC PC41Q-1TB-B) and sustained-write
+behaviour differs between them, so this number is specific to the device it ran on. The
+benchmark's teardown prints the resolved path for that reason.
+
+### A build defect the SQLite benchmark exposed
+
+The `jmh` source set does not inherit `implementation`, so `org.xerial:sqlite-jdbc` was
+absent from the benchmark classpath. Deeper than that: the JMH fat jar contains **five
+colliding `META-INF/services/java.sql.Driver` resources** — one per JDBC driver — and jar
+assembly overwrites duplicates rather than merging them, so ServiceLoader never saw the
+SQLite driver. The benchmark failed in `@Setup`, and **JMH exited 0 with an empty result
+JSON**: a kernel benchmark that measured nothing and reported success.
+
+The `perf-probe.sh` filter post-condition is what caught it (`0 of 0 results match`).
+Fixed by declaring `jmhImplementation` explicitly and loading the driver class directly,
+which bypasses ServiceLoader. **Production is unaffected** — the gateway runs on a normal
+module classpath where each driver keeps its own services file. This is a fat-jar
+artefact, not a product defect, and it is recorded as such rather than filed as a bug
+against the memory tier.
+
 ## 7. Reproducing every number here
 
 ```bash
@@ -189,6 +273,15 @@ scripts/hardware-probe.sh
 
 # HDC retrieval kernel
 scripts/perf-probe.sh --include HdcRetrievalBenchmark
+
+# Tsetlin clause update
+scripts/perf-probe.sh --include TsetlinClause
+
+# MCTS rollouts
+scripts/perf-probe.sh --include MctsRollout
+
+# SQLite memory tier
+scripts/perf-probe.sh --include SqliteMemory
 
 # GC comparison, both collectors
 scripts/perf-probe.sh --include GcPressure

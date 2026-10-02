@@ -55,6 +55,13 @@ dependencies {
     implementation 'io.quarkus:quarkus-reactive-pg-client'
     implementation 'io.quarkus:quarkus-jdbc-postgresql'
     implementation 'org.xerial:sqlite-jdbc:3.43.0.0'
+    // RECON-W30: the `jmh` source set does not inherit `implementation`, so benchmarks
+    // touching the SQLite memory tier failed at @Setup with "No suitable driver found
+    // for jdbc:sqlite:" and produced ZERO results. That failure was silent in the sense
+    // that the benchmark exited cleanly with an empty JSON — only the filter
+    // post-condition in perf-probe.sh caught it. Declared explicitly so a kernel
+    // benchmark cannot compile and then quietly measure nothing.
+    jmhImplementation 'org.xerial:sqlite-jdbc:3.43.0.0'
     implementation 'org.apache.commons:commons-imaging:1.0.0-alpha5'
     implementation 'org.jsoup:jsoup:1.17.2'
 

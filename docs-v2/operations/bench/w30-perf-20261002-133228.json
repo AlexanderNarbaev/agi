@@ -1,0 +1,476 @@
+[
+    {
+        "jmhVersion" : "1.37",
+        "benchmark" : "io.matrix.perf.MctsRolloutBenchmark.rolloutThroughput",
+        "mode" : "thrpt",
+        "threads" : 1,
+        "forks" : 1,
+        "jvm" : "/home/alexandr-narbaev/.sdkman/candidates/java/25.0.2-graalce/bin/java",
+        "jvmArgs" : [
+            "-XX:ThreadPriorityPolicy=1",
+            "-XX:+UnlockExperimentalVMOptions",
+            "-XX:+EnableJVMCIProduct",
+            "-XX:+EnableJVMCI",
+            "-XX:-UnlockExperimentalVMOptions",
+            "--add-modules=jdk.incubator.vector"
+        ],
+        "jdkVersion" : "25.0.2",
+        "vmName" : "OpenJDK 64-Bit Server VM",
+        "vmVersion" : "25.0.2+10-jvmci-b01",
+        "warmupIterations" : 1,
+        "warmupTime" : "1 s",
+        "warmupBatchSize" : 1,
+        "measurementIterations" : 2,
+        "measurementTime" : "1 s",
+        "measurementBatchSize" : 1,
+        "params" : {
+            "iterations" : "100",
+            "k" : "8",
+            "simulationDepth" : "4"
+        },
+        "primaryMetric" : {
+            "score" : 10322.554950798065,
+            "scoreError" : "NaN",
+            "scoreConfidence" : [
+                "NaN",
+                "NaN"
+            ],
+            "scorePercentiles" : {
+                "0.0" : 10174.604817489007,
+                "50.0" : 10322.554950798065,
+                "90.0" : 10470.505084107122,
+                "95.0" : 10470.505084107122,
+                "99.0" : 10470.505084107122,
+                "99.9" : 10470.505084107122,
+                "99.99" : 10470.505084107122,
+                "99.999" : 10470.505084107122,
+                "99.9999" : 10470.505084107122,
+                "100.0" : 10470.505084107122
+            },
+            "scoreUnit" : "ops/s",
+            "rawData" : [
+                [
+                    10174.604817489007,
+                    10470.505084107122
+                ]
+            ]
+        },
+        "secondaryMetrics" : {
+        }
+    },
+    {
+        "jmhVersion" : "1.37",
+        "benchmark" : "io.matrix.perf.MctsRolloutBenchmark.rolloutThroughput",
+        "mode" : "thrpt",
+        "threads" : 1,
+        "forks" : 1,
+        "jvm" : "/home/alexandr-narbaev/.sdkman/candidates/java/25.0.2-graalce/bin/java",
+        "jvmArgs" : [
+            "-XX:ThreadPriorityPolicy=1",
+            "-XX:+UnlockExperimentalVMOptions",
+            "-XX:+EnableJVMCIProduct",
+            "-XX:+EnableJVMCI",
+            "-XX:-UnlockExperimentalVMOptions",
+            "--add-modules=jdk.incubator.vector"
+        ],
+        "jdkVersion" : "25.0.2",
+        "vmName" : "OpenJDK 64-Bit Server VM",
+        "vmVersion" : "25.0.2+10-jvmci-b01",
+        "warmupIterations" : 1,
+        "warmupTime" : "1 s",
+        "warmupBatchSize" : 1,
+        "measurementIterations" : 2,
+        "measurementTime" : "1 s",
+        "measurementBatchSize" : 1,
+        "params" : {
+            "iterations" : "100",
+            "k" : "8",
+            "simulationDepth" : "16"
+        },
+        "primaryMetric" : {
+            "score" : 2498.942516048629,
+            "scoreError" : "NaN",
+            "scoreConfidence" : [
+                "NaN",
+                "NaN"
+            ],
+            "scorePercentiles" : {
+                "0.0" : 2432.424656163653,
+                "50.0" : 2498.942516048629,
+                "90.0" : 2565.4603759336055,
+                "95.0" : 2565.4603759336055,
+                "99.0" : 2565.4603759336055,
+                "99.9" : 2565.4603759336055,
+                "99.99" : 2565.4603759336055,
+                "99.999" : 2565.4603759336055,
+                "99.9999" : 2565.4603759336055,
+                "100.0" : 2565.4603759336055
+            },
+            "scoreUnit" : "ops/s",
+            "rawData" : [
+                [
+                    2565.4603759336055,
+                    2432.424656163653
+                ]
+            ]
+        },
+        "secondaryMetrics" : {
+        }
+    },
+    {
+        "jmhVersion" : "1.37",
+        "benchmark" : "io.matrix.perf.MctsRolloutBenchmark.rolloutThroughput",
+        "mode" : "thrpt",
+        "threads" : 1,
+        "forks" : 1,
+        "jvm" : "/home/alexandr-narbaev/.sdkman/candidates/java/25.0.2-graalce/bin/java",
+        "jvmArgs" : [
+            "-XX:ThreadPriorityPolicy=1",
+            "-XX:+UnlockExperimentalVMOptions",
+            "-XX:+EnableJVMCIProduct",
+            "-XX:+EnableJVMCI",
+            "-XX:-UnlockExperimentalVMOptions",
+            "--add-modules=jdk.incubator.vector"
+        ],
+        "jdkVersion" : "25.0.2",
+        "vmName" : "OpenJDK 64-Bit Server VM",
+        "vmVersion" : "25.0.2+10-jvmci-b01",
+        "warmupIterations" : 1,
+        "warmupTime" : "1 s",
+        "warmupBatchSize" : 1,
+        "measurementIterations" : 2,
+        "measurementTime" : "1 s",
+        "measurementBatchSize" : 1,
+        "params" : {
+            "iterations" : "1000",
+            "k" : "8",
+            "simulationDepth" : "4"
+        },
+        "primaryMetric" : {
+            "score" : 616.7713825999795,
+            "scoreError" : "NaN",
+            "scoreConfidence" : [
+                "NaN",
+                "NaN"
+            ],
+            "scorePercentiles" : {
+                "0.0" : 613.8811654978641,
+                "50.0" : 616.7713825999795,
+                "90.0" : 619.6615997020947,
+                "95.0" : 619.6615997020947,
+                "99.0" : 619.6615997020947,
+                "99.9" : 619.6615997020947,
+                "99.99" : 619.6615997020947,
+                "99.999" : 619.6615997020947,
+                "99.9999" : 619.6615997020947,
+                "100.0" : 619.6615997020947
+            },
+            "scoreUnit" : "ops/s",
+            "rawData" : [
+                [
+                    613.8811654978641,
+                    619.6615997020947
+                ]
+            ]
+        },
+        "secondaryMetrics" : {
+        }
+    },
+    {
+        "jmhVersion" : "1.37",
+        "benchmark" : "io.matrix.perf.MctsRolloutBenchmark.rolloutThroughput",
+        "mode" : "thrpt",
+        "threads" : 1,
+        "forks" : 1,
+        "jvm" : "/home/alexandr-narbaev/.sdkman/candidates/java/25.0.2-graalce/bin/java",
+        "jvmArgs" : [
+            "-XX:ThreadPriorityPolicy=1",
+            "-XX:+UnlockExperimentalVMOptions",
+            "-XX:+EnableJVMCIProduct",
+            "-XX:+EnableJVMCI",
+            "-XX:-UnlockExperimentalVMOptions",
+            "--add-modules=jdk.incubator.vector"
+        ],
+        "jdkVersion" : "25.0.2",
+        "vmName" : "OpenJDK 64-Bit Server VM",
+        "vmVersion" : "25.0.2+10-jvmci-b01",
+        "warmupIterations" : 1,
+        "warmupTime" : "1 s",
+        "warmupBatchSize" : 1,
+        "measurementIterations" : 2,
+        "measurementTime" : "1 s",
+        "measurementBatchSize" : 1,
+        "params" : {
+            "iterations" : "1000",
+            "k" : "8",
+            "simulationDepth" : "16"
+        },
+        "primaryMetric" : {
+            "score" : 189.16310722889014,
+            "scoreError" : "NaN",
+            "scoreConfidence" : [
+                "NaN",
+                "NaN"
+            ],
+            "scorePercentiles" : {
+                "0.0" : 187.99702777295906,
+                "50.0" : 189.16310722889014,
+                "90.0" : 190.32918668482122,
+                "95.0" : 190.32918668482122,
+                "99.0" : 190.32918668482122,
+                "99.9" : 190.32918668482122,
+                "99.99" : 190.32918668482122,
+                "99.999" : 190.32918668482122,
+                "99.9999" : 190.32918668482122,
+                "100.0" : 190.32918668482122
+            },
+            "scoreUnit" : "ops/s",
+            "rawData" : [
+                [
+                    190.32918668482122,
+                    187.99702777295906
+                ]
+            ]
+        },
+        "secondaryMetrics" : {
+        }
+    },
+    {
+        "jmhVersion" : "1.37",
+        "benchmark" : "io.matrix.perf.MctsRolloutBenchmark.ucb1Selection",
+        "mode" : "thrpt",
+        "threads" : 1,
+        "forks" : 1,
+        "jvm" : "/home/alexandr-narbaev/.sdkman/candidates/java/25.0.2-graalce/bin/java",
+        "jvmArgs" : [
+            "-XX:ThreadPriorityPolicy=1",
+            "-XX:+UnlockExperimentalVMOptions",
+            "-XX:+EnableJVMCIProduct",
+            "-XX:+EnableJVMCI",
+            "-XX:-UnlockExperimentalVMOptions",
+            "--add-modules=jdk.incubator.vector"
+        ],
+        "jdkVersion" : "25.0.2",
+        "vmName" : "OpenJDK 64-Bit Server VM",
+        "vmVersion" : "25.0.2+10-jvmci-b01",
+        "warmupIterations" : 1,
+        "warmupTime" : "1 s",
+        "warmupBatchSize" : 1,
+        "measurementIterations" : 2,
+        "measurementTime" : "1 s",
+        "measurementBatchSize" : 1,
+        "params" : {
+            "iterations" : "100",
+            "k" : "8",
+            "simulationDepth" : "4"
+        },
+        "primaryMetric" : {
+            "score" : 9174.165404103598,
+            "scoreError" : "NaN",
+            "scoreConfidence" : [
+                "NaN",
+                "NaN"
+            ],
+            "scorePercentiles" : {
+                "0.0" : 8768.737862946959,
+                "50.0" : 9174.165404103598,
+                "90.0" : 9579.592945260238,
+                "95.0" : 9579.592945260238,
+                "99.0" : 9579.592945260238,
+                "99.9" : 9579.592945260238,
+                "99.99" : 9579.592945260238,
+                "99.999" : 9579.592945260238,
+                "99.9999" : 9579.592945260238,
+                "100.0" : 9579.592945260238
+            },
+            "scoreUnit" : "ops/s",
+            "rawData" : [
+                [
+                    8768.737862946959,
+                    9579.592945260238
+                ]
+            ]
+        },
+        "secondaryMetrics" : {
+        }
+    },
+    {
+        "jmhVersion" : "1.37",
+        "benchmark" : "io.matrix.perf.MctsRolloutBenchmark.ucb1Selection",
+        "mode" : "thrpt",
+        "threads" : 1,
+        "forks" : 1,
+        "jvm" : "/home/alexandr-narbaev/.sdkman/candidates/java/25.0.2-graalce/bin/java",
+        "jvmArgs" : [
+            "-XX:ThreadPriorityPolicy=1",
+            "-XX:+UnlockExperimentalVMOptions",
+            "-XX:+EnableJVMCIProduct",
+            "-XX:+EnableJVMCI",
+            "-XX:-UnlockExperimentalVMOptions",
+            "--add-modules=jdk.incubator.vector"
+        ],
+        "jdkVersion" : "25.0.2",
+        "vmName" : "OpenJDK 64-Bit Server VM",
+        "vmVersion" : "25.0.2+10-jvmci-b01",
+        "warmupIterations" : 1,
+        "warmupTime" : "1 s",
+        "warmupBatchSize" : 1,
+        "measurementIterations" : 2,
+        "measurementTime" : "1 s",
+        "measurementBatchSize" : 1,
+        "params" : {
+            "iterations" : "100",
+            "k" : "8",
+            "simulationDepth" : "16"
+        },
+        "primaryMetric" : {
+            "score" : 2610.7057835083706,
+            "scoreError" : "NaN",
+            "scoreConfidence" : [
+                "NaN",
+                "NaN"
+            ],
+            "scorePercentiles" : {
+                "0.0" : 2544.7248892524935,
+                "50.0" : 2610.7057835083706,
+                "90.0" : 2676.6866777642476,
+                "95.0" : 2676.6866777642476,
+                "99.0" : 2676.6866777642476,
+                "99.9" : 2676.6866777642476,
+                "99.99" : 2676.6866777642476,
+                "99.999" : 2676.6866777642476,
+                "99.9999" : 2676.6866777642476,
+                "100.0" : 2676.6866777642476
+            },
+            "scoreUnit" : "ops/s",
+            "rawData" : [
+                [
+                    2544.7248892524935,
+                    2676.6866777642476
+                ]
+            ]
+        },
+        "secondaryMetrics" : {
+        }
+    },
+    {
+        "jmhVersion" : "1.37",
+        "benchmark" : "io.matrix.perf.MctsRolloutBenchmark.ucb1Selection",
+        "mode" : "thrpt",
+        "threads" : 1,
+        "forks" : 1,
+        "jvm" : "/home/alexandr-narbaev/.sdkman/candidates/java/25.0.2-graalce/bin/java",
+        "jvmArgs" : [
+            "-XX:ThreadPriorityPolicy=1",
+            "-XX:+UnlockExperimentalVMOptions",
+            "-XX:+EnableJVMCIProduct",
+            "-XX:+EnableJVMCI",
+            "-XX:-UnlockExperimentalVMOptions",
+            "--add-modules=jdk.incubator.vector"
+        ],
+        "jdkVersion" : "25.0.2",
+        "vmName" : "OpenJDK 64-Bit Server VM",
+        "vmVersion" : "25.0.2+10-jvmci-b01",
+        "warmupIterations" : 1,
+        "warmupTime" : "1 s",
+        "warmupBatchSize" : 1,
+        "measurementIterations" : 2,
+        "measurementTime" : "1 s",
+        "measurementBatchSize" : 1,
+        "params" : {
+            "iterations" : "1000",
+            "k" : "8",
+            "simulationDepth" : "4"
+        },
+        "primaryMetric" : {
+            "score" : 8681.573876314318,
+            "scoreError" : "NaN",
+            "scoreConfidence" : [
+                "NaN",
+                "NaN"
+            ],
+            "scorePercentiles" : {
+                "0.0" : 8318.843722431771,
+                "50.0" : 8681.573876314318,
+                "90.0" : 9044.304030196865,
+                "95.0" : 9044.304030196865,
+                "99.0" : 9044.304030196865,
+                "99.9" : 9044.304030196865,
+                "99.99" : 9044.304030196865,
+                "99.999" : 9044.304030196865,
+                "99.9999" : 9044.304030196865,
+                "100.0" : 9044.304030196865
+            },
+            "scoreUnit" : "ops/s",
+            "rawData" : [
+                [
+                    8318.843722431771,
+                    9044.304030196865
+                ]
+            ]
+        },
+        "secondaryMetrics" : {
+        }
+    },
+    {
+        "jmhVersion" : "1.37",
+        "benchmark" : "io.matrix.perf.MctsRolloutBenchmark.ucb1Selection",
+        "mode" : "thrpt",
+        "threads" : 1,
+        "forks" : 1,
+        "jvm" : "/home/alexandr-narbaev/.sdkman/candidates/java/25.0.2-graalce/bin/java",
+        "jvmArgs" : [
+            "-XX:ThreadPriorityPolicy=1",
+            "-XX:+UnlockExperimentalVMOptions",
+            "-XX:+EnableJVMCIProduct",
+            "-XX:+EnableJVMCI",
+            "-XX:-UnlockExperimentalVMOptions",
+            "--add-modules=jdk.incubator.vector"
+        ],
+        "jdkVersion" : "25.0.2",
+        "vmName" : "OpenJDK 64-Bit Server VM",
+        "vmVersion" : "25.0.2+10-jvmci-b01",
+        "warmupIterations" : 1,
+        "warmupTime" : "1 s",
+        "warmupBatchSize" : 1,
+        "measurementIterations" : 2,
+        "measurementTime" : "1 s",
+        "measurementBatchSize" : 1,
+        "params" : {
+            "iterations" : "1000",
+            "k" : "8",
+            "simulationDepth" : "16"
+        },
+        "primaryMetric" : {
+            "score" : 2653.8914764298693,
+            "scoreError" : "NaN",
+            "scoreConfidence" : [
+                "NaN",
+                "NaN"
+            ],
+            "scorePercentiles" : {
+                "0.0" : 2633.6745621017103,
+                "50.0" : 2653.8914764298693,
+                "90.0" : 2674.1083907580282,
+                "95.0" : 2674.1083907580282,
+                "99.0" : 2674.1083907580282,
+                "99.9" : 2674.1083907580282,
+                "99.99" : 2674.1083907580282,
+                "99.999" : 2674.1083907580282,
+                "99.9999" : 2674.1083907580282,
+                "100.0" : 2674.1083907580282
+            },
+            "scoreUnit" : "ops/s",
+            "rawData" : [
+                [
+                    2633.6745621017103,
+                    2674.1083907580282
+                ]
+            ]
+        },
+        "secondaryMetrics" : {
+        }
+    }
+]
+
+

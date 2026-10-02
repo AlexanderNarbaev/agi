@@ -17,6 +17,13 @@ this directory is the provenance for the whole tuning document.
 | `w30-perf-20261002-131739.json` / `.txt` | `GcPressureBenchmark`, quick budget | GC baseline run |
 | `w30-perf-20261002-125114.json` | `GcPressureBenchmark`, quick budget | GC baseline run |
 | `w30-perf-20261002-125514.json` | `GcPressureBenchmark`, quick budget | probe self-test after the filter fix |
+| `w30-perf-20261002-133831.json` | `TsetlinClauseBenchmark`, **full budget** | clause-update numbers in `TUNING-PARAMETERS.md` §6b |
+| `w30-perf-20261002-134016.json` | `MctsRolloutBenchmark`, **full budget** | MCTS numbers in §6b |
+| `w30-perf-20261002-134128.json` | `SqliteMemoryBenchmark`, **full budget** | SQLite numbers in §6b |
+
+Earlier `20261002-1329*` / `1332*` / `1333*` / `1334*` / `1336*` files are the `--quick`
+smoke runs that validated each kernel before the full-budget pass; the full-budget files
+above supersede them.
 
 ## Deliberately not committed
 
@@ -30,6 +37,23 @@ from `PerformanceBenchmark`, none of which the log said it was running.
 It is kept locally only as evidence of the defect. `perf-probe.sh` now verifies after
 every filtered run that the JSON contains only matching benchmarks and exits non-zero
 otherwise, so this class of silent mismatch cannot recur unnoticed.
+
+## A benchmark that measured nothing and reported success
+
+`SqliteMemoryBenchmark` is worth a separate note because the failure mode is the one this
+whole wave keeps meeting. Its first run failed in `@Setup` with `No suitable driver found
+for jdbc:sqlite:` — and **JMH still exited 0, writing a valid but empty result JSON.** A
+kernel can be added, compile cleanly, and produce no measurement at all while every
+available signal says it worked.
+
+It was caught by the filter post-condition in `perf-probe.sh` (`0 of 0 results match`),
+which exists because of the earlier `-p include=` bug in this same file. The post-condition
+paid for itself within the same wave it was written.
+
+Root cause was two-layered: the `jmh` source set does not inherit `implementation`, and
+the JMH fat jar holds five colliding `META-INF/services/java.sql.Driver` resources that
+jar assembly overwrites rather than merges. Production is unaffected — this is a fat-jar
+artefact.
 
 ## The methodology fix that changed a conclusion
 
