@@ -265,6 +265,69 @@ module classpath where each driver keeps its own services file. This is a fat-ja
 artefact, not a product defect, and it is recorded as such rather than filed as a bug
 against the memory tier.
 
+## 6c. Retrieval threshold and confidence (RECON-W31.2, EPI-2/EPI-3)
+
+**MEASURED, not tuned.** Regenerate with `python3 scripts/knowledge_forge/sim_roc.py`,
+which prints the AUC for every candidate function on the same labeled set and refuses to
+quote a threshold from a function with no signal.
+
+Labeled set: 28 paraphrases of the 10 clean facts (positive) x 20 questions the clean
+store cannot answer (negative). The negatives span the failure modes seen live —
+unrelated-domain questions, and near-miss entities like "capital of Australia" that look
+like a stored capital fact but are absent.
+
+| function | ROC-AUC | negatives served at floor 0.20 | best zero-FPR point |
+|---|---|---|---|
+| A. BitSet Jaccard over all tokens (production before W31.2) | **0.502** | **12 / 20** | 0.600 (TPR 0.11) |
+| B. Jaccard over content tokens | 0.713 | 4 / 20 | 0.333 (TPR 0.25) |
+| C. content coverage x precision (adopted) | **0.716** | **0 / 20** | 0.250 (TPR 0.29) |
+
+**AUC 0.502 is the headline finding.** Function A was a coin flip: a positive paraphrase
+scored 0.100 while three negatives scored 0.300-0.333. No threshold can rescue a
+function with no signal, so the fix had to be in the function, and the gate boundary
+coincidence was a symptom rather than the cause.
+
+The specific live fabrication: "What is the chemical formula of water?" scored **exactly
+0.200** against the stored fact `What is gravity? => 9.8 m/s^2` under function A, and the
+stage gate was `bestScore < 0.20`, so a boundary-coincident match was served as a
+confident answer. Under C the same pair scores **0.000**.
+
+**Floor = 0.20.** Not hand-chosen: the worst unknowable question under C reaches 0.167,
+and the floor sits above that maximum (rounded up to the next 0.05 so float drift cannot
+push a known-bad score over it). Placing it above the observed negative maximum rather
+than at the ROC midpoint is deliberate — a refusal is truthful and a fabrication is not,
+so the asymmetry is the point.
+
+**The cost, stated plainly: recall drops to ~0.29.** Function C mostly works by refusing.
+At a 10-fact store that is the right trade, and it will need revisiting at 1000+ facts;
+claiming otherwise would be the plateau this wave exists to break.
+
+### Why the old score was chance-level
+
+`hashToVector` hashes every token, so interrogative scaffolding dominated the vector.
+"What is the chemical formula of water?" and "Paris is the capital of France" share
+`what, is, the` and scored 0.300 against a 0.20 floor. The retrieval was matching the
+question's grammar, not its subject.
+
+### Confidence is now measured, and varies
+
+`ContentSimilarity.confidenceFor(score)` maps the score monotonically into [0.5, 1.0]
+over the usable band, so two different retrieved answers no longer report the same
+number. Live before W31.2: 0.75 on everything, including fabrications. Live after:
+0.79 for "capital of France", 1.00 for "gravity", 0.75 for refusals.
+
+`ConfidenceEvidence` carries a `Source` of `MEASURED` or `DEFAULTED`, so a constant can
+never be reported as though it were earned (EPI-2). The value is a rescaling of a real
+score, not an outcome-calibrated probability — with 10 clean facts any calibration curve
+would be fitted to noise. Outcome calibration is owed once the store is large enough.
+
+### Dimension ceiling (W31.4 planning input)
+
+At dim 512 a random query collides with **4.6%** of all facts. At 10 000 facts that is
+~460 spurious matches before the floor is even applied. Scaling the knowledge store
+requires raising the vector dimension; this is a hard constraint on W31.4, not a tuning
+knob.
+
 ## 7. Reproducing every number here
 
 ```bash
@@ -282,6 +345,13 @@ scripts/perf-probe.sh --include MctsRollout
 
 # SQLite memory tier
 scripts/perf-probe.sh --include SqliteMemory
+
+# Retrieval ROC + threshold calibration (W31.2)
+python3 scripts/knowledge_forge/sim_roc.py
+
+# Contamination audit (W31.1, reversible)
+python3 scripts/knowledge_forge/episode_audit.py
+python3 scripts/knowledge_forge/kb_audit.py
 
 # GC comparison, both collectors
 scripts/perf-probe.sh --include GcPressure

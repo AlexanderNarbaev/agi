@@ -1720,3 +1720,118 @@ ROC rather than placed at a round number, and a confidence that varies with evid
 - brain-runtime 449->**451** tests, 0 failures. api-gateway **152**, 0 failures.
 - quality-gate exit 0 at baseline 270. FROZEN 5/5 at 0 diff. 0 tests deleted.
   SESSION.md 0 deletions. Ledger seq 51-55.
+
+
+## 2026-10-02 — RECON-W31.2: Epistemic Integrity, sub-wave 2 of 5 (SIM-1, EPI-2, EPI-3, STAT-1)
+
+**What the user can newly observe since the last sub-wave:** the mind stops answering
+"what is the chemical formula of water?" with a number from a physics fact, and the
+confidence it reports now changes with the evidence instead of repeating 0.75. Two cold
+questions that were answered confidently before W31.2 now return "I don't have a
+confident answer", and `/v1/status` finally shows what the mind actually knows.
+
+### The finding that reframed the sub-wave: retrieval was at chance level
+
+The W31.2 plan asked for an "ROC-calibrated threshold, not manually tuned". Before
+choosing a threshold I measured whether one could exist. Over 28 paraphrases of the 10
+clean facts and 20 questions the clean store cannot answer, the production function
+`PersistentHdcStore.cosine` scored:
+
+**ROC-AUC 0.502** — a coin flip — and served **12 of 20** unknowable questions as
+confident answers.
+
+A positive paraphrase scored 0.100 while three negatives scored 0.300-0.333. There is no
+threshold that separates those. Tuning the 0.20 floor would have been fitting a gate to
+a test, which is exactly what the W31 plan warned against, so the fix went into the
+function instead.
+
+Cause: `hashToVector` hashes every token, so interrogative scaffolding dominated.
+"What is the chemical formula of water?" and "Paris is the capital of France" share
+`what, is, the` and scored 0.300 against a 0.20 floor. The retrieval was matching
+question grammar, not subject.
+
+### Adopted: content coverage x precision
+
+| function | ROC-AUC | negatives served | best zero-FPR |
+|---|---|---|---|
+| A. BitSet Jaccard, all tokens (before) | 0.502 | 12/20 | 0.600 (TPR 0.11) |
+| B. content-token Jaccard | 0.713 | 4/20 | 0.333 (TPR 0.25) |
+| **C. coverage x precision (adopted)** | **0.716** | **0/20** | 0.250 (TPR 0.29) |
+
+Floor 0.20 is not hand-chosen: the worst unknowable question under C reaches 0.167 and
+the floor sits above that maximum, rounded up to the next 0.05. It is placed above the
+negative maximum rather than at the ROC midpoint because a refusal is truthful and a
+fabrication is not.
+
+**The cost is stated rather than hidden: recall drops to ~0.29.** Function C mostly works
+by refusing. At a 10-fact store that is the right trade and it must be revisited at
+1000+ facts.
+
+The live fabrication was boundary-coincident, which is why it read as a threshold
+problem: "What is the chemical formula of water?" scored **exactly 0.200** against
+`What is gravity? => 9.8 m/s^2` under the old `bestScore < 0.20` test. Under C it scores
+0.000. My first test asserted the precondition using the fact string `gravity => 9.8
+m/s^2`, which scores 0.000 under the old function; the record actually served is the
+longer form, and the test now names it.
+
+### Both retrieval paths were fixed, deliberately
+
+`HdcRetrievalStage` has a persistent and an in-memory path, and the in-memory one is
+what CI mode and several tests exercise. Fixing only the persistent path would have
+passed those tests and shipped a chance-level scorer to production — the same shape of
+error as W31.1, where auditing the episodic log missed the HDC store. Both now use the
+content-aware function and both emit the EPI-3 evidence trail.
+
+### EPI-2: confidence is measured and labelled
+
+`ConfidenceEvidence` carries `Source.MEASURED` or `Source.DEFAULTED`, so a constant
+cannot be reported as though earned. `confidenceFor(score)` maps the score
+monotonically into [0.5, 1.0]. Live: 0.79 for "capital of France", 1.00 for "gravity",
+0.75 for refusals — a spread where there was a single constant.
+
+Honest limit: this is a rescaling of a measured score, NOT an outcome-calibrated
+probability. With 10 clean facts any calibration curve is fitted to noise. Outcome
+calibration is owed when the store is big enough to fit, and is recorded as such.
+
+### STAT-1: /v1/status was reporting nothing about knowledge
+
+It had no knowledge section at all. An operator could not see that the KB held 10
+records, nor that a quarantine had moved 1058 episodes and 42 poisoned records out of
+the learning feed. It now reports per-store counts with the backing file named, and
+states plainly that `mind.sqlite`'s `memory` table is NOT the active store — it is empty,
+and the three "tiers" in the class javadoc are NDJSON files. Quarantine counts are shown
+rather than hidden; hiding them would make the numbers look healthier than the system is.
+
+Live:
+```
+hdc_kb 10 | hdc_kb_quarantined 42 | episodic 58 | episodic_quarantined 1058
+bir_rules 8 | backend ndjson
+```
+
+### A correction to my own W31.1 report
+
+I previously described "capital of Australia -> Canberra" as a surviving fabrication. It
+is not. It is answered correctly from `BilingualFactLookup`, a hardcoded table of 61 EN +
+29 RU country-capital pairs — real knowledge I had not counted when I said the mind knew
+"52 facts" then "10 facts". Total real knowledge is ~100 entries across three stores, not
+10. The W31.1 transcript showed a correct answer and I mislabelled it.
+
+### Dimension ceiling — a hard constraint on W31.4
+
+At dim 512 a random query collides with **4.6%** of all facts. At 10 000 facts that is
+~460 spurious matches before any floor applies. Scaling the knowledge store requires
+raising the vector dimension. This is arithmetic, not a tuning preference, and W31.4
+must confront it rather than discovering it after ingesting.
+
+### W31.2 counts
+
+- `ContentSimilarity.java` (new): content tokens, scoring, floor, ConfidenceEvidence
+- `ContentSimilarityTest` (new): 20 tests
+- `HdcRetrievalStage`: both paths rewired, HdcResult now carries source + trace
+- `MinimalHttpServer`: `knowledgeStatusJson` + record counting
+- `sim_roc.py` (new): the measurement tool, prints AUC even when embarrassing
+- brain-runtime 451 -> **471** tests, 0 failures. api-gateway **152**, 0 failures.
+- quality-gate: caught my own StringBuilder capacity literal 160 during verification
+  (270 -> 271), extracted to a named constant, back to exit 0. Negative re-test on the
+  current tree: injected literal -> exit 1, revert -> exit 0. FROZEN 5/5 at 0 diff.
+  0 tests deleted. SESSION.md 0 deletions.

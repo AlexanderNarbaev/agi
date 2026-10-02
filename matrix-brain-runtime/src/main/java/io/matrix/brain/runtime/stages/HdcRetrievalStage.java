@@ -1,6 +1,7 @@
 package io.matrix.brain.runtime.stages;
 
 import io.matrix.brain.runtime.BrcStep;
+import io.matrix.brain.runtime.ContentSimilarity;
 import io.matrix.brain.runtime.PersistentHdcStore;
 
 import java.util.ArrayList;
@@ -51,12 +52,29 @@ public final class HdcRetrievalStage {
         return store != null ? store.size() : inMemoryVectors.size();
     }
 
-    public record HdcResult(boolean matched, String reply, double confidence) {
-        public static HdcResult miss() {
-            return new HdcResult(false, "", 0.0);
+    /**
+     * Retrieval outcome.
+     *
+     * <p>RECON-W31.2 / EPI-2 + EPI-3. {@code confidenceSource} distinguishes a measured
+     * score from a defaulted constant, so a consumer reporting this value to an
+     * operator can tell earned confidence from a placeholder. {@code trace} carries the
+     * structured-ignorance evidence required by EPI-3: on a miss the caller can state
+     * the best similarity seen, the floor, and the nearest fact, instead of a bare
+     * "no match".</p>
+     */
+    public record HdcResult(boolean matched, String reply, double confidence,
+                            ContentSimilarity.Source confidenceSource, String trace) {
+        public static HdcResult miss(String trace) {
+            return new HdcResult(false, "", 0.0,
+                ContentSimilarity.Source.MEASURED, trace);
         }
-        public static HdcResult hit(String reply, double confidence) {
-            return new HdcResult(true, reply, confidence);
+        public static HdcResult hit(String reply, ContentSimilarity.ConfidenceEvidence ev,
+                                    String trace) {
+            return new HdcResult(true, reply, ev.value(), ev.source(), trace);
+        }
+        /** True when the confidence was derived from a score, not asserted. */
+        public boolean confidenceIsMeasured() {
+            return confidenceSource == ContentSimilarity.Source.MEASURED;
         }
     }
 
@@ -69,10 +87,11 @@ public final class HdcRetrievalStage {
         if (store.size() == 0) {
             trace.add(BrcStep.of("HDC_MEMORY", false, 0.50,
                 List.of("reason=empty-store", "mode=persistent")));
-            return HdcResult.miss();
+            return HdcResult.miss("mode=persistent reason=empty-store");
         }
-        BitSet query = obs.features();
-        Map<String, BitSet> vectors = store.vectors();
+        // RECON-W31.2 SIM-1: score on CONTENT tokens, not raw token overlap. The old
+        // BitSet Jaccard was measured at ROC-AUC 0.502 (chance) and served 12 of 20
+        // unknowable questions; see ContentSimilarity for the full finding.
         Map<String, String> contents = store.snapshot();
         double bestScore = 0.0;
         double bestAnsweredScore = 0.0;
@@ -81,15 +100,15 @@ public final class HdcRetrievalStage {
         String bestAnsweredId = null;
         String bestAnsweredContent = null;
         List<String> topIds = new ArrayList<>();
-        for (Map.Entry<String, BitSet> e : vectors.entrySet()) {
-            double sim = PersistentHdcStore.cosine(query, e.getValue());
+        for (Map.Entry<String, String> e : contents.entrySet()) {
+            double sim = ContentSimilarity.score(input, e.getValue());
             if (sim > bestScore) {
                 bestScore = sim;
                 bestId = e.getKey();
-                bestContent = contents.get(e.getKey());
+                bestContent = e.getValue();
             }
             // Prefer entries that actually have an answer (contain " => ").
-            String c = contents.get(e.getKey());
+            String c = e.getValue();
             if (c != null && c.contains(" => ") && sim > bestAnsweredScore) {
                 bestAnsweredScore = sim;
                 bestAnsweredId = e.getKey();
@@ -103,10 +122,16 @@ public final class HdcRetrievalStage {
             bestContent = bestAnsweredContent;
             bestScore = bestAnsweredScore;
         }
-        if (bestScore < 0.20 || bestId == null) {
+        if (bestScore < ContentSimilarity.RETRIEVAL_FLOOR || bestId == null) {
+            // EPI-3 structured ignorance: report WHAT was seen and what was required,
+            // so "I don't know" carries an evidence trail instead of being a bare miss.
+            String ignoranceTrace = "mode=persistent best_similarity=" + bestScore
+                + " floor=" + ContentSimilarity.RETRIEVAL_FLOOR
+                + " nearest_fact_id=" + (bestId == null ? "none" : bestId)
+                + " top=" + topIds;
             trace.add(BrcStep.of("HDC_MEMORY", false, bestScore,
                 List.of("mode=persistent", "best=" + bestScore, "top=" + topIds)));
-            return HdcResult.miss();
+            return HdcResult.miss(ignoranceTrace);
         }
         // Split content on " => " separator; if absent treat full content as answer.
         String hReply;
@@ -117,8 +142,12 @@ public final class HdcRetrievalStage {
             hReply = "";
         }
         trace.add(BrcStep.of("HDC_MEMORY", true, bestScore,
-            List.of("mode=persistent", "best=" + bestId, "top=" + topIds)));
-        return HdcResult.hit(hReply, bestScore);
+            List.of("mode=persistent", "best=" + bestId, "top=" + topIds,
+                "confidence_source=measured", "score=" + bestScore)));
+        return HdcResult.hit(hReply,
+            ContentSimilarity.confidenceFor(bestScore),
+            "mode=persistent best=" + bestId + " score=" + bestScore
+                + " floor=" + ContentSimilarity.RETRIEVAL_FLOOR);
     }
 
     // -----------------------------------------------------------------
@@ -159,15 +188,19 @@ public final class HdcRetrievalStage {
         if (inMemoryVectors.isEmpty()) {
             trace.add(BrcStep.of("HDC_MEMORY", false, 0.50,
                 List.of("reason=empty-store", "mode=in-memory")));
-            return HdcResult.miss();
+            return HdcResult.miss("mode=in-memory reason=empty-store");
         }
-        BitSet query = obs.features();
+        // Same content-aware scoring as the persistent path. W31.1 learned the hard way
+        // that fixing one of two code paths leaves the other quietly wrong, and the
+        // in-memory path is what CI mode and several tests actually exercise — a fix
+        // applied only to the persistent path would have passed those and shipped a
+        // chance-level scorer into production.
         double bestScore = 0.0;
         String bestId = null;
         String bestContent = null;
         List<String> topIds = new ArrayList<>();
         for (Map.Entry<String, BitSet> e : inMemoryVectors.entrySet()) {
-            double sim = PersistentHdcStore.cosine(query, e.getValue());
+            double sim = ContentSimilarity.score(input, inMemoryContents.get(e.getKey()));
             if (sim > bestScore) {
                 bestScore = sim;
                 bestId = e.getKey();
@@ -175,10 +208,14 @@ public final class HdcRetrievalStage {
             }
             if (topIds.size() < 3) topIds.add(e.getKey() + ":" + String.format("%.2f", sim));
         }
-        if (bestScore < 0.20 || bestId == null) {
+        if (bestScore < ContentSimilarity.RETRIEVAL_FLOOR || bestId == null) {
+            String ignoranceTrace = "mode=in-memory best_similarity=" + bestScore
+                + " floor=" + ContentSimilarity.RETRIEVAL_FLOOR
+                + " nearest_fact_id=" + (bestId == null ? "none" : bestId)
+                + " top=" + topIds;
             trace.add(BrcStep.of("HDC_MEMORY", false, bestScore,
                 List.of("mode=in-memory", "best=" + bestScore, "top=" + topIds)));
-            return HdcResult.miss();
+            return HdcResult.miss(ignoranceTrace);
         }
         String hReply;
         if (bestContent != null) {
@@ -188,7 +225,11 @@ public final class HdcRetrievalStage {
             hReply = "";
         }
         trace.add(BrcStep.of("HDC_MEMORY", true, bestScore,
-            List.of("mode=in-memory", "best=" + bestId, "top=" + topIds)));
-        return HdcResult.hit(hReply, bestScore);
+            List.of("mode=in-memory", "best=" + bestId, "top=" + topIds,
+                "confidence_source=measured", "score=" + bestScore)));
+        return HdcResult.hit(hReply,
+            ContentSimilarity.confidenceFor(bestScore),
+            "mode=in-memory best=" + bestId + " score=" + bestScore
+                + " floor=" + ContentSimilarity.RETRIEVAL_FLOOR);
     }
 }

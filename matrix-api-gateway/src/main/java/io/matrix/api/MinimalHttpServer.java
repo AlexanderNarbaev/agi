@@ -1251,6 +1251,67 @@ public final class MinimalHttpServer {
      * Reports uptime cycles, last dream summary, sleep cycles completed,
      * episodic-log size, HDC size, etc.
      */
+    /**
+     * STAT-1: report the memory stores the operator's questions actually read.
+     *
+     * <p>Before W31.2 {@code /v1/status} reported no knowledge section at all, so an
+     * operator had no way to see that the knowledge base held 10 records, or that a
+     * quarantine had moved 1058 episodes and 42 poisoned KB records out of the learning
+     * feed. Worse, {@code mind.sqlite} exists and its {@code memory} table is EMPTY — the
+     * three "tiers" the class javadoc describes are NDJSON files. This reports what is
+     * really on disk, and names the backing file per tier so a stale count cannot be
+     * mistaken for a live one.</p>
+     *
+     * <p>Counts are of RECORDS, not bytes, and each entry names its store so the numbers
+     * are auditable from the filesystem. Quarantine is reported alongside the live
+     * stores rather than hidden: hiding it would make the counts look healthier than the
+     * system is.</p>
+     *
+     * @return JSON object body (without surrounding braces)
+     */
+    /**
+     * Initial StringBuilder capacity for the knowledge status block.
+     * Unit: characters. Sized for the six count fields plus a note of ~90 characters;
+     * generous enough that no field is truncated at construction.
+     */
+    private static final int KNOWLEDGE_STATUS_CAPACITY = 256;
+
+    private String knowledgeStatusJson() {
+        // Resolved the same way the constructor resolves it, so the reported counts and
+        // the files actually in use cannot drift apart.
+        java.nio.file.Path dir = java.nio.file.Path.of(
+            System.getProperty("matrix.mind.dir",
+                System.getenv().getOrDefault("MATRIX_MIND_DIR", "data/mind")));
+        StringBuilder k = new StringBuilder(KNOWLEDGE_STATUS_CAPACITY);
+        k.append("{");
+        k.append("\"hdc_kb\":").append(countRecords(dir.resolve("hdc_kb.ndjson")));
+        k.append(",\"hdc_kb_quarantined\":")
+         .append(countRecords(dir.resolve("hdc_kb.quarantine.ndjson")));
+        k.append(",\"episodic\":").append(countRecords(dir.resolve("episodic.ndjson")));
+        k.append(",\"episodic_quarantined\":")
+         .append(countRecords(dir.resolve("quarantine.ndjson")));
+        k.append(",\"bir_rules\":").append(countRecords(dir.resolve("bir.ndjson")));
+        k.append(",\"backend\":\"ndjson\"");
+        k.append(",\"note\":\"counts are records in the named NDJSON files; "
+                 + "mind.sqlite memory table is not the active store\"");
+        k.append("}");
+        return k.toString();
+    }
+
+    /** Number of non-blank lines in an NDJSON file; 0 when the file is absent. */
+    private static int countRecords(java.nio.file.Path p) {
+        try {
+            if (!java.nio.file.Files.exists(p)) return 0;
+            int n = 0;
+            for (String line : java.nio.file.Files.readAllLines(p)) {
+                if (!line.isBlank()) n++;
+            }
+            return n;
+        } catch (java.io.IOException e) {
+            return 0;
+        }
+    }
+
     private void handleStatus(com.sun.net.httpserver.HttpExchange ex) throws IOException {
         // RECON-W3 Part A: prefers promoted real engines (N-1 fix).
         try {
@@ -1294,6 +1355,7 @@ public final class MinimalHttpServer {
             } else {
                 sb.append(",\"inbox\":null");
             }
+            sb.append(",\"knowledge\":").append(knowledgeStatusJson());
             sb.append("}");
             writeJson(ex, 200, sb.toString());
         } catch (Throwable t) {
