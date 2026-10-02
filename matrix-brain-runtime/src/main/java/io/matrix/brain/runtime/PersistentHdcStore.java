@@ -148,13 +148,19 @@ public final class PersistentHdcStore {
     public ContradictionReport checkContradiction(String newId, String newContent) {
         lock.readLock().lock();
         try {
-            BitSet query = hashToVector(newContent, dim);
+            // RECON-W31.3 HW-1: the HdcVector kernel replaces the per-comparison BitSet
+            // clone. This method runs on every teach() and scores the whole store, so
+            // bulk ingest is O(n^2) — at 10k facts roughly 50M comparisons, which is
+            // what W31.4 needs to survive. Value is bit-exact with cosine() (proved by
+            // HdcVectorTest over randomized and adversarial inputs), so the
+            // DUPLICATE / POTENTIAL_CONFLICT / NOVEL decision is unchanged.
+            HdcVector query = HdcVector.from(hashToVector(newContent, dim));
             double bestSim = 0.0;
             String bestId = null;
             String bestContent = null;
             for (Map.Entry<String, BitSet> e : vectors.entrySet()) {
                 if (e.getKey().equals(newId)) continue;
-                double sim = cosine(query, e.getValue());
+                double sim = HdcVector.jaccard(query, HdcVector.from(e.getValue()));
                 if (sim > bestSim) {
                     bestSim = sim;
                     bestId = e.getKey();
@@ -245,7 +251,15 @@ public final class PersistentHdcStore {
         return bs;
     }
 
-    /** Jaccard cosine on bit sets. */
+    /**
+     * Jaccard cosine on bit sets — the reference implementation.
+     *
+     * <p>RECON-W31.3: no longer on any hot path. {@link #checkContradiction} now scores
+     * via {@link HdcVector}, which is bit-exact with this method. Retained deliberately
+     * as the <em>oracle</em> for the equivalence tests: replacing it would remove the
+     * only statement of what the kernel is supposed to compute, leaving the tests to
+     * assert agreement with themselves. Do not use it in new code.</p>
+     */
     public static double cosine(BitSet a, BitSet b) {
         if (a == null || b == null) return 0.0;
         BitSet inter = (BitSet) a.clone();

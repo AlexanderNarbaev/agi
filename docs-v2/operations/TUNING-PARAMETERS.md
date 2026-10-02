@@ -328,6 +328,71 @@ At dim 512 a random query collides with **4.6%** of all facts. At 10 000 facts t
 requires raising the vector dimension; this is a hard constraint on W31.4, not a tuning
 knob.
 
+## 6d. The bitCount kernel, adopted — and the 3x claim, corrected (RECON-W31.3, HW-1)
+
+**ADOPTED.** `HdcVector` replaces `BitSet.clone()` in `PersistentHdcStore.checkContradiction`.
+Values are **bit-exact** with the previous implementation, proved by `HdcVectorTest` over
+2000 randomized trials plus adversarial densities and non-word-aligned dimensions.
+
+### Where it is actually hot — which is not where W30 said
+
+W30 measured this as the "retrieval hot path". After W31.2 that is no longer true:
+retrieval now uses `ContentSimilarity`, because the BitSet cosine scored ROC-AUC 0.502.
+What remains is `checkContradiction`, which runs on **every `teach()`** and scores the
+whole store, making bulk ingest O(n²). The speedup is needed for W31.4's ingest, not
+because a single query felt slow.
+
+### Allocation: the mechanism, measured
+
+1 000 000 pair comparisons, dim 512:
+
+| kernel | allocated | per pair |
+|---|---|---|
+| `PersistentHdcStore.cosine` (BitSet.clone) | 167 217 120 B | **167 B** |
+| `HdcVector.jaccard` | 32 032 B | **0.0 B** |
+
+Three backing-array allocations per comparison, eliminated by construction. This is
+asserted in `HdcVectorTest.repeatedScoringAllocatesNothing`, because a kernel that
+allocates is not faster at scale and the benchmark would be measuring the allocator.
+
+### Speedup: the W30 "3x" does not hold at scale
+
+Measured with **alternating A/B order, 9 repetitions, median**, pre-hashed corpus (so
+scoring is timed, not re-hashing):
+
+| corpus | cosine | HdcVector | speedup |
+|---|---|---|---|
+| 100 | 1.1 ms | 0.2 ms | 6.95x |
+| 1 000 | 27.2 ms | 12.4 ms | 2.19x |
+| 5 000 | 566.3 ms | 294.2 ms | 1.92x |
+| 10 000 | 2 241.5 ms | 1 204.4 ms | **1.86x** |
+
+**The speedup DECREASES as the corpus grows.** At n=100 everything fits in L1/L2 and the
+zero-allocation win dominates. By n=10 000 the working set exceeds cache and memory
+bandwidth dominates, so the algorithmic advantage is largely masked.
+
+So the honest number for the scale W31.4 targets is **~1.9x, not 2.5-3.4x**. The W30
+figure came from a single isolated pair comparison, which flatters any kernel: it
+measures cache-resident work, not a corpus scan. An earlier run of mine that re-hashed
+the corpus inside the inner loop reported 1.05x at n=5000 — that was a flawed harness
+timing the hash, not the score, and it is recorded here because it is the more likely
+error to repeat.
+
+**W31.3 PASS bar was ">=2.5x measured end-to-end": NOT MET at corpus scale.** The kernel
+is adopted anyway because it is bit-exact, provably zero-allocation, and ~1.9x faster
+where it matters — but claiming 2.5x would be quoting the small-corpus number to sell a
+large-corpus result.
+
+### An equivalence bug this found
+
+`BitSet.toLongArray()` pads to the **highest set bit**, not the declared dimension, so
+two vectors of the same nominal width can pack to different lengths. The first
+implementation returned 0.0 on a length mismatch — a *wrong* answer rather than a
+conservative one, and on the contradiction path a wrong answer files a duplicate fact as
+novel. Fixed by scanning to the longer length and treating the missing tail as zero.
+The test that caught it asserts bit-exactness over random dimensions for exactly this
+reason.
+
 ## 7. Reproducing every number here
 
 ```bash
@@ -348,6 +413,9 @@ scripts/perf-probe.sh --include SqliteMemory
 
 # Retrieval ROC + threshold calibration (W31.2)
 python3 scripts/knowledge_forge/sim_roc.py
+
+# bitCount kernel: equivalence + allocation (W31.3)
+./gradlew :matrix-brain-runtime:test --tests "io.matrix.brain.runtime.HdcVectorTest"
 
 # Contamination audit (W31.1, reversible)
 python3 scripts/knowledge_forge/episode_audit.py

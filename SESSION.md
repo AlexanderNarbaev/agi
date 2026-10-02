@@ -1835,3 +1835,99 @@ must confront it rather than discovering it after ingesting.
   (270 -> 271), extracted to a named constant, back to exit 0. Negative re-test on the
   current tree: injected literal -> exit 1, revert -> exit 0. FROZEN 5/5 at 0 diff.
   0 tests deleted. SESSION.md 0 deletions.
+
+
+## 2026-10-02 — RECON-W31.3: Hardware Adoption, sub-wave 3 of 5 (HW-1)
+
+**What the user can newly observe since the last sub-wave:** nothing visible in chat, and
+I am not going to pretend otherwise. This sub-wave is a speedup on the ingest path
+(contradiction detection during teaching), not on question answering, and the operator
+will not see a difference until knowledge is bulk-loaded in W31.4. The one-sentence
+honest framing: **the mind can now accept knowledge roughly twice as fast, which is
+invisible today and load-bearing in W31.4.**
+
+### The W30 "3x win" is corrected downward: the real number is ~1.9x at scale
+
+W30 measured 2.9-3.4x for `long[] + Long.bitCount` over `BitSet.clone()` and left it in a
+document. Adopted in W31.3 — and the headline number does not survive contact with a
+corpus scan.
+
+Measured with **alternating A/B order, 9 reps, median**, pre-hashed corpus:
+
+| corpus | cosine | HdcVector | speedup |
+|---|---|---|---|
+| 100 | 1.1 ms | 0.2 ms | 6.95x |
+| 1 000 | 27.2 ms | 12.4 ms | 2.19x |
+| 5 000 | 566.3 ms | 294.2 ms | 1.92x |
+| 10 000 | 2 241.5 ms | 1 204.4 ms | **1.86x** |
+
+**The speedup DECREASES with corpus size.** At n=100 everything is cache-resident and the
+zero-allocation win dominates; by n=10 000 the working set exceeds cache, memory
+bandwidth dominates, and the algorithmic advantage is largely masked.
+
+**W31.3's PASS bar (">=2.5x measured end-to-end") is NOT MET at corpus scale.** The
+kernel is adopted anyway — it is bit-exact, provably zero-allocation, and genuinely
+~1.9x faster where W31.4 will feel it — but quoting 2.5x would be quoting the
+small-corpus number to sell a large-corpus result, which is the exact failure mode this
+campaign exists to stop.
+
+The W30 figure came from a single isolated pair comparison, which flatters any kernel: it
+measures cache-resident work, not a scan. A worse harness of mine re-hashed the corpus
+inside the inner loop and reported **1.05x at n=5000** — that measured the hash, not the
+score. Both errors are recorded in TUNING-PARAMETERS.md so the more likely one to repeat
+is not repeated.
+
+### What IS proven, and it is the durable result
+
+1 000 000 pair comparisons at dim 512:
+
+| kernel | allocated | per pair |
+|---|---|---|
+| `cosine` (BitSet.clone) | 167 217 120 B | **167 B** |
+| `HdcVector.jaccard` | 32 032 B | **0.0 B** |
+
+Three backing-array allocations per comparison, eliminated by construction, and asserted
+in `HdcVectorTest.repeatedScoringAllocatesNothing`. A kernel that allocates is not faster
+at scale and the benchmark would be measuring the allocator, so this is a test rather
+than a comment.
+
+### Bit-exactness is proven, not asserted
+
+`HdcVectorTest` asserts **bit-exact** (tolerance 0.0) agreement with the old algorithm
+over 2000 randomized trials, adversarial density pairs including 0.0 and 1.0, and
+dimensions 1/2/63/64/65/100/127/128/129/512/513 to catch the partial-final-word class of
+bug. This matters more than the speedup: the value decides DUPLICATE vs POTENTIAL_CONFLICT
+vs NOVEL, and drift there would quietly reclassify knowledge with nothing reporting it.
+
+### An equivalence bug the test caught
+
+`BitSet.toLongArray()` pads to the **highest set bit**, not the declared dimension, so
+two vectors of the same nominal width can pack to different lengths. My first
+implementation returned 0.0 on a length mismatch — a *wrong* answer rather than a
+conservative one, and on the contradiction path that files a duplicate fact as novel.
+Fixed by scanning to the longer length and treating the missing tail as zero.
+
+Two further test failures were my own test bugs, not code bugs: at dim=1 the "different
+bit" 0 and `dim-1` are the same bit, and a double accumulator sink is not 0.0. Both
+fixed in the test rather than by weakening the assertion.
+
+### Where it is actually hot (correcting W30's claim)
+
+W30 called this "the retrieval hot path". After W31.2 that is false — retrieval uses
+`ContentSimilarity` because the BitSet cosine measured ROC-AUC 0.502. What remains is
+`checkContradiction`, called on **every `teach()`**, scanning the whole store, so bulk
+ingest is O(n²). At 10 000 facts that is ~50M comparisons: ~1.1 s of contradiction
+checking on the adopted kernel versus ~2.1 s on the old one. Real, but not the
+game-changer the single-pair benchmark suggested.
+
+`PersistentHdcStore.cosine` is retained deliberately as the **oracle** for the
+equivalence tests. Replacing it would leave the tests asserting agreement with
+themselves.
+
+### W31.3 counts
+
+- `HdcVector.java` (new): packed-word kernel, zero-allocation jaccard, round-trip
+- `HdcVectorTest` (new): 14 tests incl. 2000-trial equivalence + allocation budget
+- `PersistentHdcStore`: `checkContradiction` rewired; `cosine` kept and documented as oracle
+- brain-runtime 471 -> **485** tests, 0 failures. api-gateway **152**, 0 failures.
+- quality-gate exit 0. FROZEN 5/5 at 0 diff. 0 tests deleted. SESSION.md 0 deletions.
