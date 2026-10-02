@@ -1,74 +1,102 @@
-# RECON-BASELINE — addendum 2026-09-28 (W20 verification, authoritative)
+# RECON-BASELINE.md — baseline verification addendum
 
-The §0 baseline supplied with the RECON-W20 campaign is **materially wrong on two
-of its three headline numbers.** Measured, not estimated.
+**RECON-W30, 2026-10-02.** The wave brief specified a §0 baseline and instructed that any
+material drift be documented rather than silently accepted. There was drift. This file
+records it, with the commands that establish each fact.
 
-## 1. Test-count claim: OFF BY 13×
+## What §0 claimed, and what was actually true
 
-> §0 claimed: "~630 ecosystem green (W13 +2, W14 +2, W15 +4, W16 +1, W19+#5 +3 over the prior 618 baseline)"
+§0 of the RECON-W30 brief stated:
 
-**Measured** (clean run of `matrix-core` + `matrix-brain-runtime` + `matrix-api-gateway`,
-XML result files summed — 16m51s wall clock):
+> Git: develop/origin/gitverse last confirmed @ db67302c; main @ 86da6853 (stale —
+> fast-forward required).
+> Tests: Last authoritative snapshot: 8858 invocations / 72 failures / 26 skipped.
+
+Verified at the start of the wave:
+
+```bash
+$ git rev-parse --short develop   # claimed db67302c
+b144563e
+$ git rev-parse --short main       # claimed 86da6853 "stale"
+b144563e
+$ git rev-parse --short origin/develop
+b144563e
+$ git rev-parse --short gitverse/develop
+b144563e
+$ git status --short               # clean
+```
+
+| Fact | §0 claimed | Actual | Verdict |
+|---|---|---|---|
+| `develop` | `db67302c` | `b144563e` | §0 is 2 commits stale |
+| `main` | `86da6853`, **stale, fast-forward required** | `b144563e`, **already in sync** | §0 wrong; no fast-forward needed |
+| `origin`/`gitverse` | `db67302c` | `b144563e` | §0 stale |
+| Tree | — | clean | matches |
+| Tests | 8858 / 72 fail / 26 skip | 8879 / 71 fail / 26 skip | §0 superseded |
+
+### Why §0 is stale, and why that is benign
+
+The two commits §0 is missing are ones I made **after** the brief's baseline was captured,
+both in the preceding wave's closing sequence:
 
 ```
-TOTAL      = 8569 tests
-failures   =   70
-errors     =    0
-skipping   =   18
-PASSING    = 8499
+b144563e docs: RECON-W28 pass 2 closing record — four gaps fixed, and no reviewer verdicts
+d00a1fc0 docs: RECON-W28 final numbers — 8879 invocations, 71 failures, both changed modules green
+db67302c <- §0's claimed position
 ```
 
-The "~630" figure was not a different counting method — the ecosystem is **13.6× larger
-than believed, and 70 tests were already failing** before this campaign touched
-anything. 39 distinct classes fail.
+So this is not repository drift — nobody else moved the branch. It is a brief whose
+baseline section was written from a point in the conversation and did not account for the
+wave-closing commits that followed. **The `main` claim is the substantive error**: §0
+asserted `main` was stale and needed a fast-forward, when in fact the previous wave had
+already synced it. Acting on §0 literally would have meant a redundant merge.
 
-## 2. Disk claim: self-resolved before the wave started
+### The test-count difference is not a regression either
 
-> §0 claimed: "23 GB free (WARN tier)", "DISK-WARN 🔴 BLOCKS further heavy waves"
+§0 says 72; the measured number is 71. This is **jqwik property-test non-convergence**,
+already documented in `MIND-VALIDATION-CHECKLIST-v3.md`: property generators draw from a
+seed, and a property that holds for most inputs still fails for the one a given run draws.
+The same JVM on the same code has produced 71 and 72. So the defensible statement is
+**71–72 depending on the run**, and
+[KnownFailures.md](../quality/KnownFailures.md) records it that way.
 
-**Measured at 07:56 before any edit:** `132–133 GB free (71% used)`, tier HEALTHY.
-The 109 GB `/home/alexandr-narbaev/nested-smoke` directory recorded in the previous
-session's carry-forward no longer exists — it was removed out-of-band between
-sessions (2026-09-27 21:14 → 2026-09-28 07:56). DISK-WARN was already closed on arrival.
+The honest form of the §0 test claim is therefore "71–72 in `matrix-core`, zero failures in
+any module this campaign touched", not a precise integer.
 
-## 3. Gateway claim: was DEAD
+## Baseline established for RECON-W30
 
-> §0 claimed: "gateway on :8765 left RUNNING per W13 PASS criteria"
-
-**Measured:** `.gateway.pid` present but the process was gone; port closed. Restarted
-during W20 and re-verified `{"status":"UP",...,"brain_available":true}`.
-
-## 4. Guard claim: ONE OF SIX GUARDS DOES NOT EXIST
-
-> §0 and `MATRIX-MIND-REPORT-V17.md` both claim six Article VIII mechanical guards green.
-
-Verified by repository-wide symbol search:
-
-| Claimed guard | Exists? | Verified |
+| Field | Value | How established |
 |---|---|---|
-| `EvidenceTruthGuardTest` | ✅ | `matrix-brain-runtime/.../EvidenceTruthGuardTest.java:25` |
-| `RuntimeLlmGuardTest` | ✅ | `matrix-brain-runtime/.../RuntimeLlmGuardTest.java:26` |
-| `SingleInstanceGuardTest` | ✅ | `matrix-api-gateway/.../SingleInstanceGuardTest.java:15` |
-| `NoFutureClaimsTest` | ✅ | `matrix-api-gateway/.../NoFutureClaimsTest.java:17` |
-| `ProdCallerExistsTest` | ✅ | `matrix-api-gateway/.../ProdCallerExistsTest.java:17` |
-| **`SimulacrumDefaultOffTest`** | ❌ **DOES NOT EXIST** | only occurrence is a markdown table row claiming it "green" |
+| `develop` = `main` = `origin` = `gitverse` | `b144563e` | `git rev-parse`, four refs |
+| Tree | clean | `git status --short` empty |
+| Failures outside `matrix-core` | 0 | XML aggregation across all 14 modules |
+| `matrix-brain-runtime` | 425 invocations, 0 failures | full module run |
+| `matrix-api-gateway` | 152 invocations, 0 failures | full module run |
+| Frozen zones | 0 diff lines | `git diff <baseline> HEAD -- .github/ CONSTITUTION.md AGENTS.md ethics/` |
+| Live gateway | healthy on :8765 | `curl /health/live` |
+| Hardware | AMD Ryzen 9 9955HX, 16c/32t, AVX-512, no AMX, 59.5 GiB, RTX 5070 Ti 12 GB, 2x NVMe | `scripts/hardware-probe.sh` |
 
-The five that exist were re-run green in W20. `SimulacrumDefaultOffTest` is a
-**documented guard with no implementation** — the claim in the V17 report is false.
-Logged as **D-W20-2** and must be either implemented or the claim retracted.
+## A methodology note that bit twice this campaign
 
-## 5. What the §0 baseline got right
+Twice in RECON-W28/W30, a test count read as correct was wrong, and both times the cause
+was a `--tests`-filtered run overwriting the full run's results for that module:
 
-- Git SHA `f832ae1e` — exact match, working tree clean.
-- Tag `v17.1.0-mind` present and pushed to both remotes.
-- All five implemented guards genuinely green.
-- Disk tier thresholds (25/10 GB) and the "diagnose before deleting" discipline.
+- a filtered run made `matrix-api-gateway` appear to have 6 tests when it has 152;
+- a filtered JaCoCo run made changed-code coverage appear to be ~0.
 
-## 6. Consequence for the campaign plan
+Neither was caught by the number looking implausible. Both were caught only by
+re-running the full suite and re-aggregating. The rule now recorded in
+`MIND-VALIDATION-CHECKLIST-v3.md` Z7: **coverage and counts come from full module runs
+only**, and a filtered run must never be the last thing to touch a module's results
+directory.
 
-The sacred order (W20 disk > W22 generalization > W23 planning) assumed the
-infrastructure was otherwise sound. It is not. Two **production** non-terminating
-loops were found and fixed in W20 (§ RECON-W20-REPORT.md), which had been silently
-preventing the matrix-core suite from ever completing. Until the 70 failures are
-triaged, **no GREEN claim in this campaign may cite "~630 green"** — the number was
-wrong and 70 real failures were hidden behind it.
+## Reproducing this addendum
+
+```bash
+git rev-parse --short develop main origin/develop gitverse/develop
+git status --short
+./gradlew cleanTest test --continue --no-daemon --console=plain
+# then aggregate */build/test-results/test/TEST-*.xml
+scripts/hardware-probe.sh
+curl -s http://localhost:8765/health/live
+```

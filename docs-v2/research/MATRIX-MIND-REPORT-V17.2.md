@@ -147,24 +147,44 @@ explicit refusal, and the BRC trace names the stage that declined and why.
 
 ## 5. What still fails — named, not buried
 
-**RETRACTION: the distillation artifact hash `623cb895` (RECON-W28 B-4).**
-This report previously quoted `623cb895` for the two-teacher merge. That figure could
-not be reproduced and is withdrawn. Measured directly against the two shipped
-captures, the artifacts are **different**: `capacities-8.ndjson` → `33fcfc27`
-(truth table `0004400`), `booleans-8.ndjson` → `ad6bccbd` (truth table `0000`).
-Neither is `623cb895`.
+**The distillation artifact hash `623cb895` (RECON-W28 B-4) — the full chain.**
 
-What is genuinely wrong, and was found while disproving the claim, is worse and
-different: **three of the four distillation entry points hashed
-`Integer.toHexString(bir.toString().hashCode())`**, and `Bir.toString()` embeds the
-provenance string, which carries the source label and the capture path. Reproduced:
-byte-identical learning from two differently-named sources hashed differently
-(`191f560c` vs `1983cb64`). The "artifact hash" was a **run** identifier, not an
-artifact identity, and it broke the content-addressing invariant W21 established. All
-four paths now use `contentHash()`, and provenance carries a SHA-256
-`teacherFingerprint` of the capture bytes computed before synthesis.
+This took three attempts and two of my statements about it were wrong. The whole sequence
+is recorded because the errors are the instructive part.
 
-A real limitation remains and is not papered over: `ActivationRecord` keeps only
+**Stage 1 — the original symptom was real.** `623cb895` appeared twice, for two different
+teachers (`capacities-8` and `booleans-8`), which should not happen. Three of the four
+distillation entry points hashed `Integer.toHexString(bir.toString().hashCode())`, and
+`Bir.toString()` embeds the provenance string, which carries the source label and the
+capture path. So byte-identical learning from two differently-named sources hashed
+differently: reproduced as `191f560c` vs `1983cb64`. The "artifact hash" was a **run**
+identifier, not an artifact identity, and it broke the content-addressing invariant W21
+established.
+
+**Stage 2 — my retraction, which was wrong.** After fixing stage 1, I measured against
+the two shipped captures and got different values — `capacities-8` → `33fcfc27`
+(truth table `0004400`), `booleans-8` → `ad6bccbd` (truth table `0000`) — neither equal
+to `623cb895`. I concluded `623cb895` was unreproducible and retracted it.
+
+That conclusion was wrong, and the reason it was wrong is a process failure rather than a
+technical one: **I asserted a cause before measuring it, then retracted a figure I had
+not actually tried to reproduce.** The `33fcfc27` and `ad6bccbd` values came from a
+custom scratch harness that recomputed a hash including data the production path did not
+include, so the two numbers were never comparable. `623cb895` was reproducible the whole
+time.
+
+**Stage 3 — the real second bug.** `623cb895` is the hash of my own stage-1 fix. The new
+`contentHash()` serialised `ClauseSetForm` clauses correctly but had **no branch at all for
+`TtForm`**, so every single-output teacher — every teacher in these two captures — produced
+one constant hash. A function that ignores part of its input is not a content hash; it is
+a hash of whatever it happened to look at. `TtForm.table()` is now serialised, and
+`DistillationArtifactIdentityTest` exists specifically to catch a constant-hash regression
+of exactly this shape.
+
+Provenance now carries a truncated SHA-256 `teacherFingerprint` of the capture bytes,
+computed before synthesis, so identity is traceable to the source as well as the content.
+
+**What remains a real limitation, not papered over:** `ActivationRecord` keeps only
 `layer_activations[0]` and `Distiller` thresholds at 0.5, so a teacher whose logits
 never exceed 0.5 distils to an **all-zero truth table**. The shipped
 `booleans-8.ndjson` is exactly that case — it fires on 0 of 8 samples, so its learned

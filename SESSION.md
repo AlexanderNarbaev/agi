@@ -1292,3 +1292,168 @@ missing from `contentHash` — a bug in my own previous fix. Two wrong positions
 on the same number is worth naming: I asserted a cause before measuring it, then
 retracted a figure I had not actually tried to reproduce. The number was right the whole
 time and the explanation was wrong both times.
+
+## 2026-10-02 — RECON-W30: hardware inventory & tuning baseline
+
+### Baseline drift (§0 was wrong in a way that mattered)
+
+The brief's §0 said `develop` @ `db67302c` and `main` @ `86da6853` **stale, fast-forward
+required**. Verified: `develop == main == origin == gitverse == b144563e`, tree clean.
+§0 was two commits stale — the two being my own wave-closing commits from the previous
+session — and its claim that `main` needed a fast-forward was simply wrong, the previous
+wave had already synced it. Acting on §0 literally would have meant a redundant merge.
+Documented in `docs-v2/research/RECON-BASELINE.md`; not silently absorbed.
+
+The test count also drifted: §0 says 8858/72, measured 8879/**71–72**. See below.
+
+### The machine (never previously inventoried)
+
+AMD Ryzen 9 9955HX, 16 physical / 32 logical, **AVX-512F/BW/VL/DQ/CD**, FMA, F16C, SHA-NI,
+**no AMX**; L1d 768 KiB, L1i 512 KiB, L2 16 MiB, L3 64 MiB; 59.5 GiB RAM, 37.8 GiB swap;
+single NUMA node; **NVIDIA RTX 5070 Ti Laptop, 12227 MiB, driver 595.91.07, CUDA 13.2**;
+2x NVMe. `nvme` and `sysbench` are absent; the probe records that rather than guessing.
+
+The GPU is the notable surprise: §3 and the W33 profile discussion both assumed this might
+be a CPU-only box, and a discrete card with CUDA 13.2 is present. No MATRIX kernel is
+validated against it and the tuning table leaves the GPU section **empty** on purpose.
+
+### Three bugs in my own probe, each producing a confident wrong number
+
+1. **MiB labelled as GiB.** `/proc/meminfo` is KiB; dividing by 1024 once too few reported
+   **60928.3 "GiB" on a 59.5 GiB machine**.
+2. **Locale-dependent decimal separator.** awk followed the ambient locale and printed
+   `60928,3` even though `LANG` read `en_US`. Fixed by pinning `LC_ALL=C` script-wide.
+3. **A regex that silently matched nothing.** `lscpu | awk '/Core.s per socket/'` returned
+   nothing, so the profile said `unavailable` for a field the machine reports as 16. The
+   real text is `Core(s) per socket` — the `)` sits where the pattern wants a space.
+   Fragile pattern-matching over a formatted human-readable table was the actual mistake;
+   replaced with label-before-first-colon matching.
+
+Plus an mawk incompatibility: `match()` with three arguments is a gawk extension, and this
+host runs mawk, so every cache instance count was empty while the script still exited 0.
+
+**The common failure mode is worth naming: all four produced output, exited 0, and looked
+finished.** Only checking values against reality caught them.
+
+### What the hardware actually said about performance
+
+`PersistentHdcStore.cosine(BitSet, BitSet)` is the retrieval hot path — it clones BOTH
+operands for the intersection and again for the union, three BitSet allocations per
+comparison, once per stored memory per query. Measured (JMH, full run, verified filter):
+
+| Variant | dim=1024 | dim=10000 | Alloc/call |
+|---|---|---|---|
+| `cosineCloneJaccard` — **current production** | 22.53 ± 1.07 ns | 223.36 ± 4.35 ns | 3 BitSet |
+| `cosineReusedScratch` | 26.29 ± 4.58 ns | 169.62 ± 8.84 ns | 0 |
+| `cosineLongWordScan` | **7.81 ± 0.27 ns** | **66.29 ± 5.05 ns** | 0 |
+
+**~2.9x at dim=1024 and ~3.4x at dim=10000** for a `long[]` encoding with
+`Long.bitCount` — and **no AVX-512 needed**. The vectorised version is the uninteresting
+part; the encoding change is the win. Reproduced across two independent runs: ratios moved
+2.88/3.37 vs 2.98/3.59, so the ~3x holds outside error bars but absolute ns figures move
+~7% and must not be quoted as if stable.
+
+**Deliberately not applied.** Changing `PersistentHdcStore`'s encoding is a schema
+migration, and Article VIII forbids shadow logic — keeping a `long[]` store synced with
+the `BitSet` one is exactly that. Recorded for a wave that can do the migration properly.
+
+Scratch reuse is a wash at dim=1024 and 1.3x at dim=10000: at the production width it is
+*slower* than `clone()`, because `BitSet.clone()` is a fast array copy while
+`clear()`+`or()` is two passes.
+
+**A benchmark of mine that measured the wrong thing.** The first run reported scratch reuse
+at 27.9 ns and I was about to conclude it is a pessimisation. The variant allocated its
+scratch set *inside* the timed region, so it measured allocation rather than reuse — the
+very thing it existed to avoid. Fixed and re-run; the table above is the corrected run.
+
+### GC: the measurement does not support a conclusion
+
+G1 vs ZGC, retention-heavy and churn workloads, full JMH runs:
+
+| Workload | G1 | ZGC |
+|---|---|---|
+| `allocHeavySweep` | 188.3 ± 12.6 ops/s | 202.7 ± 13.8 ops/s |
+| `allocChurnOnly` | 4043.0 ± 520.8 ops/s | 4237.5 ± 474.7 ops/s |
+
+ZGC is nominally +7.7% and +4.8%, but **the error bars overlap on both rows**. On this
+hardware the collector choice does not measurably change throughput. ZGC is recommended on
+*documented pause behaviour*, which this harness did not measure, and §5 of
+TUNING-PARAMETERS.md says so and flags it as the entry most likely to be overturned.
+
+### Two false-success bugs in my own tooling, same class
+
+1. **`start-mind.sh` health check.** It polled a hardcoded `:8765` while the server
+   honoured `MATRIX_PORT`, and the loop had **no failure path** — when the probe never
+   succeeded it fell through and printed "MATRIX is awake" anyway. Verified both
+   directions after the fix: non-default port reports `health: OK (…:8791)`, and a
+   deliberately broken classpath now exits **1**, prints no false success, and leaks no
+   listener. This is the second time this campaign a health check that could not fail was
+   hiding a real failure; the first was the W28 PID_FILE defect.
+2. **`perf-probe.sh --include` did not filter.** JMH 1.37 does not honour `-p include=` as
+   a run filter: it set a property and ran the **entire jar** — 230 result entries across 6
+   benchmark classes, 116 of them `PerformanceBenchmark`, none of which the log claimed to
+   be running. The filter is the *positional* regex. The script now **verifies after every
+   filtered run that the JSON contains only matching benchmarks** and exits non-zero
+   otherwise (`filter verified: 20/20`).
+
+Both are the same defect: **a check that cannot fail is not a check.** Both were caught only
+because I insisted a passing result be provable.
+
+### Tuning moved out of the script
+
+`scripts/matrix.env` now holds every JVM/threading/batch constant, each tagged MEASURED or
+DERIVED with its basis, and `start-mind.sh` sources it via `MATRIX_ENV_FILE`. Heap 16g,
+ZGC, 16 worker threads (physical cores, not 32 logical), chunk 8192. A deployment profile
+is now an env file rather than a patch.
+
+The thread count is labelled a **ceiling, not a tuned value**: no MATRIX workload in this
+repo is parallel enough to saturate a pool, so "pools size to physical cores" is untested
+folklore here, and saying otherwise would be the kind of untagged tuning number this wave
+exists to eliminate.
+
+### Failure ledger: the count is a range, and I was wrong about why
+
+Two full runs, same tree, same JVM, hours apart: **71** and **72**. The delta is entirely
+in KF-2 (jqwik property assertions, 31 → 32). KF-1/KF-3/KF-4 identical.
+
+`docs-v2/quality/KnownFailures.md` triages all of them into five families by root cause.
+The largest — **KF-1, 27 failures, 38% of the total — is one missing directory**
+(`/tmp/hf_cache/…bitnet-b1.58-2B-4T`). That is an environment dependency, not a code
+defect, and it means the BitNet inference path has **effectively zero coverage on this
+machine**: 27 tests that would exercise it do not run. The honest reading is "unverified",
+not "known-good".
+
+**A speculation I withdrew.** I attributed the 71/72 variation to the intermittent
+federation test (KF-5) and wrote that into the ledger. The two-run comparison does not
+support it: KF-5 was 0 in both runs. The intermittent family is KF-2. Corrected in the
+ledger rather than left, because a wrong root cause in a failure ledger is worse than a
+missing one — it sends the fix to the wrong owner.
+
+Also corrected there: a first draft of the triage table summed to 75 against a live count
+of 71, and I had papered the gap with a story about classes spanning two families. The
+real cause was double-counting; the table is now a **disjoint partition computed from the
+XML**, and reconciling it changed two conclusions (KF-4 is 2 not 3; KF-5 is unreproduced,
+not intermittent).
+
+### B-4 narrative: the full three-stage chain
+
+`623cb895` was retracted last wave as unreproducible. **That retraction was wrong.** The
+chain: (1) the original symptom was real — `Bir.toString()` embeds provenance, so the hash
+was a *run* id not an artifact id; (2) my retraction came from comparing a scratch harness
+that hashed data the production path did not, so the numbers were never comparable — I
+asserted a cause before measuring it, then retracted a figure I had not tried to
+reproduce; (3) `623cb895` is the hash of my own stage-1 fix, because the new `contentHash`
+had **no branch for `TtForm`**, so every single-output teacher produced one constant hash.
+A function that ignores part of its input is not a content hash.
+
+### State
+
+8879 invocations, 71–72 failures (all in untouched `matrix-core`), 26 skipped. Zero
+failures outside `matrix-core`; `matrix-brain-runtime` 425/0 and `matrix-api-gateway` 152/0.
+FROZEN zones 0 diff. `SESSION.md` append-only. No test class or method deleted: 0.
+Benchmark unchanged at 47/48; regression gate exit 0. Live gateway healthy on :8765 with
+the new tuning flags. No leaked listeners.
+
+**What the user can newly observe:** `scripts/hardware-probe.sh` prints this machine's real
+inventory, and `scripts/perf-probe.sh` will tell you — with the environment stamped in —
+that the retrieval hot path has an unused ~3x on the table.
