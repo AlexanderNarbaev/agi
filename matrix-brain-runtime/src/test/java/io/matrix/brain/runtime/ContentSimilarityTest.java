@@ -42,9 +42,34 @@ class ContentSimilarityTest {
         // The RU probes are in the live transcript ("Столица Франции?"), so a
         // stopword list that is English-only leaves the RU path uncorrected.
         List<String> toks = ContentSimilarity.contentTokens("столица Франции");
-        assertTrue(toks.contains("столица"), toks.toString());
-        assertTrue(toks.contains("франции"), toks.toString());
         assertFalse(toks.contains("что"), toks.toString());
+        assertTrue(toks.stream().anyMatch(t -> t.startsWith("столиц")), toks.toString());
+        assertTrue(toks.stream().anyMatch(t -> t.startsWith("франц")), toks.toString());
+    }
+
+    @Test
+    void russianInflectionsReduceToACommonStem() {
+        // W31.4 measured the RU path at 0/8 on held-out probes while English scored
+        // 15/15. The cause was morphology, not data: a question about "Кении"
+        // (genitive) could not match a fact about "Кения" (nominative), so the two
+        // shared no tokens at all and the score was exactly 0.
+        // The two phrases share two stems, not one: the name ("кени") and the relation
+        // ("столиц"). Asserting on the first token would compare two different words.
+        List<String> question = ContentSimilarity.contentTokens("Столица Кении?");
+        List<String> fact = ContentSimilarity.contentTokens("Кения имеет столицу Найроби");
+        assertEquals(ContentSimilarity.stem("Кении"), ContentSimilarity.stem("Кения"),
+            "genitive and nominative of the same name must reduce to one stem");
+        assertTrue(question.containsAll(List.of("столиц", "кени")), question.toString());
+        assertTrue(fact.containsAll(List.of("столиц", "кени")), fact.toString());
+    }
+
+    @Test
+    void aRussianCapitalQuestionNowMatchesItsFact() {
+        // The end-to-end property the stemming exists for.
+        double s = ContentSimilarity.score(
+            "Столица Кении?", "Кения имеет столицу Найроби");
+        assertTrue(s >= ContentSimilarity.RETRIEVAL_FLOOR,
+            "the RU capital question must reach its fact, scored " + s);
     }
 
     @Test
@@ -212,6 +237,83 @@ class ContentSimilarityTest {
         double first = ContentSimilarity.score(q, f);
         for (int i = 0; i < 50; i++) {
             assertEquals(first, ContentSimilarity.score(q, f), "scoring must be pure");
+        }
+    }
+
+    // ---- W31.4: discriminative weighting ---------------------------------
+
+    /**
+     * Corpus where "boiling" and "point" appear in many facts, "mercury" in one.
+     * Models a real knowledge base about chemistry plus a general-topic section.
+     */
+    private static java.util.function.ToDoubleFunction<String> chemistryCorpusIdf(int corpusSize) {
+        java.util.Map<String, Integer> df = new java.util.HashMap<>();
+        for (int i = 0; i < 200; i++) {          // generic topic facts
+            df.merge("boiling", corpusSize, Integer::sum);
+            df.merge("point", corpusSize, Integer::sum);
+            df.merge("water", 200, Integer::sum);
+        }
+        df.merge("mercury", 1, Integer::sum);     // the discriminating token
+        return tok -> ContentSimilarity.idf(df.getOrDefault(tok, 0), corpusSize);
+    }
+
+    @Test
+    void weightingRefusesTheNearMissThatUnweightedScoreServed() {
+        // The measured false positive: "boiling point of mercury" matched a water fact
+        // at 0.267 and was served, because "boiling" and "point" were weighted the same
+        // as "mercury".
+        String q = "What is the boiling point of mercury?";
+        String wrongFact = "The boiling point of water is 100 degrees";
+        double unweighted = ContentSimilarity.score(q, wrongFact);
+        assertTrue(unweighted >= ContentSimilarity.RETRIEVAL_FLOOR,
+            "precondition: the unweighted score really did clear the floor, was " + unweighted);
+
+        double weighted = ContentSimilarity.weightedScore(q, wrongFact, chemistryCorpusIdf(400));
+        assertTrue(weighted < ContentSimilarity.RETRIEVAL_FLOOR,
+            "weighting must push the near-miss below the floor, was " + weighted);
+    }
+
+    @Test
+    void weightingStillServesTheCorrectFact() {
+        // The other half: a fix that only ever refuses is a wall, not a fix.
+        String q = "What is the boiling point of mercury?";
+        String rightFact = "The boiling point of mercury is 357 degrees Celsius";
+        double weighted = ContentSimilarity.weightedScore(q, rightFact, chemistryCorpusIdf(400));
+        assertTrue(weighted >= ContentSimilarity.RETRIEVAL_FLOOR,
+            "the correct fact must still be retrievable, scored " + weighted);
+    }
+
+    @Test
+    void weightingPreservesExactMatchesInALargeCorpus() {
+        // Regression guard for the opposite failure: if every weight collapsed to zero
+        // in a large corpus, a large store would refuse correct answers and recall
+        // would die silently. This is the reason MIN_IDF_WEIGHT exists.
+        java.util.function.ToDoubleFunction<String> alwaysCommon =
+            tok -> ContentSimilarity.idf(400, 400);   // every token in every fact
+        double s = ContentSimilarity.weightedScore(
+            "What is the capital of France?", "Paris is the capital of France", alwaysCommon);
+        assertTrue(s >= ContentSimilarity.RETRIEVAL_FLOOR,
+            "an exact match must survive a corpus where its tokens are common, scored " + s);
+    }
+
+    @Test
+    void weightingFallsBackToUnweightedWhenNoStatisticsAreSupplied() {
+        double a = ContentSimilarity.weightedScore("What is the capital of France?",
+            "Paris is the capital of France", null);
+        assertEquals(ContentSimilarity.score("What is the capital of France?",
+            "Paris is the capital of France"), a, 0.0);
+    }
+
+    @Test
+    void idfIsMonotonicInRarityAndBounded() {
+        assertTrue(ContentSimilarity.idf(0, 100) > ContentSimilarity.idf(1, 100),
+            "a rarer token must weigh more");
+        assertEquals(0.0, ContentSimilarity.idf(100, 100), 1e-12, "everywhere = 0");
+        assertEquals(1.0, ContentSimilarity.idf(0, 100), 1e-12, "nowhere = 1");
+        assertEquals(1.0, ContentSimilarity.idf(5, 0), 1e-12, "unknown corpus = max rarity");
+        for (int df : new int[]{-5, 0, 50, 100, 500}) {
+            double w = ContentSimilarity.idf(df, 100);
+            assertTrue(w >= 0.0 && w <= 1.0, "out of range for df=" + df);
         }
     }
 }

@@ -1931,3 +1931,111 @@ themselves.
 - `PersistentHdcStore`: `checkContradiction` rewired; `cosine` kept and documented as oracle
 - brain-runtime 471 -> **485** tests, 0 failures. api-gateway **152**, 0 failures.
 - quality-gate exit 0. FROZEN 5/5 at 0 diff. 0 tests deleted. SESSION.md 0 deletions.
+
+
+## 2026-10-03 — RECON-W31.4: Knowledge Forge, sub-wave 4 of 5
+
+**What the user can newly observe since the last sub-wave:** the mind now answers
+factual questions it could not answer a day ago. "What is the capital of Kenya?" ->
+"Kenya has capital Nairobi". "Which continent is Japan located on?" -> "Japan is located
+on continent Asia". "What is the chemical symbol for gold?" -> "gold has chemical symbol
+Au". The knowledge store went from 10 records to 2 901, and the three unknowable
+questions still refuse rather than fabricate.
+
+### MY OWN W31.2 PREDICTION WAS WRONG, AND I CHECKED IT INSTEAD OF ASSUMING IT
+
+W31.2 ended with a warning: "at dim 512 a random query collides with 4.6% of all facts;
+at 10 000 facts that is ~460 spurious matches, so W31.4 must raise the vector dimension
+before ingesting." That was a birthday-bound calculation on the OLD BitSet cosine,
+extrapolated to a function I had not measured.
+
+Measured: at 10 000 synthetic facts, unknowable questions clearing the floor were
+**0/20 at every dimension from 256 to 262 144**. Dimension is irrelevant to the false
+positive rate under `ContentSimilarity`, because a match requires the question's own
+content tokens to appear in the fact. W31.4 therefore did NOT need a dimension change,
+and the constraint I announced as a hard blocker was an arithmetic error on my part.
+
+The real false-positive mode is **semantic near-miss**, and it is not fixable by
+dimension at all:
+
+    "What is the boiling point of mercury?" vs "The boiling point of water is 100 degrees"
+    unweighted 0.267 -> SERVED
+
+"boiling" and "point" carry as much weight as "mercury", so a chemistry question is
+answered with water. Fixed by inverse-document-frequency weighting, which is what
+W31.4 actually needed, and which the dimension analysis would never have found.
+
+### Acquisition: what worked, after four wrong diagnoses
+
+Wikidata SPARQL returned 429 on every request from this host for most of an hour. I
+blamed, in order: an IP penalty box, query weight (a 5-row query worked where 400 rows
+did not), the `/sparql` vs `/bigdata/` endpoint, and the query projection. Only the last
+two were real.
+
+The actual cause: **GET vs POST.** A GET puts the query in the URL, where spaces become
+"+", and the WDQS edge classifies that encoding as a bulk-loader client — 429 forever.
+The byte-identical query over POST returned 200 rows immediately. This is now the
+documented transport, with the reasoning in the code.
+
+Two further real bugs in my own harness, both of which produced clean-looking zeros:
+- `.format(cap=...)` on a template containing SPARQL's `SERVICE { ... }` raised a
+  KeyError whose message was the query text. Now a token swap.
+- `json.dumps` emits `{"key": "value"}` with a space, and my extractor matched only the
+  compact form, so **all 1892 facts parsed as empty** and the gate rejected every one as
+  EMPTY. That is what a promotion gate is for, and it still took a human reading the
+  output to notice the bug was upstream.
+
+### Honest acquisition totals
+
+- **1 893** facts acquired, 5 domains (capital, continent, language, currency, chemical
+  symbol), 940 EN + 952 RU.
+- **1 892 promoted, 1 rejected** (FICTIONAL_SUBJECT).
+- 100% of the RU half contains Cyrillic — verified, because the first attempt wrote
+  500 English-text rows tagged `ru`. `wikibase:label` with `"en,ru"` prefers English for
+  every item that has an English label, so "bilingual" was a tag, not a corpus. Fixed by
+  one pass per language, and by emitting the predicate in the fact's own language.
+- Every fact carries `source_uri`, `source_license` (CC0-1.0), `snapshot_date`, and a
+  content checksum. Article VIII satisfied, not approximated.
+- Not acquired: ConceptNet (502 from this host throughout), the Wikidata bulk dump
+  (blocked). Planned-vs-delivered differs and is recorded in
+  `data/datasets/wikidata/acquisition-report.json`.
+
+### Held-out evaluation: 22/23, and the split is real
+
+23 probes written by hand, never sampled from the training set, subjects chosen so no
+near-miss training fact can answer them.
+
+    HELD-OUT 23 probes | served=22 | correct=22 (95%)  | EN 15/15  RU 7/8
+
+The one miss: "На каком континенте находится Бразилия?" scored 0.197 against a 0.20
+floor. It retrieved the RIGHT fact (Бразилия расположен на континенте Южная Америка) and
+was refused on a 0.003 margin, because the answer is two words and precision penalises
+it. A floor that refuses a correct two-word answer is a real cost, recorded rather than
+tuned away.
+
+**The RU held-out expectations were wrong first.** They expected "Nairobi" for
+"Столица Кении?" while the Russian fact contains "Найроби", so correct Russian
+retrievals were scored as failures. Fixed in the harness, not by weakening the test.
+
+Russian also needed morphology, not just data: a question about "Кении" (genitive) shares
+no tokens with a fact about "Кения" (nominative), so the score was exactly 0.00. A
+conservative suffix stripper fixes the capital, continent and chemical cases; it is a
+small rule set, not a claim about Russian morphology, and the residual error rate is
+reported rather than hidden.
+
+### AN UNRESOLVED DISCREPANCY, REPORTED NOT PAPERED OVER
+
+The harness measures RU at 7/8. The **live gateway** answers 1 of 3 Russian probes:
+"Какая столица Греции?" -> Athens, while "Столица Кении?" and
+"На каком континенте находится Египет?" refuse. The same code path scored those as hits
+in-process. Something in the serving path differs from the harness path and I have not
+isolated it. It is a real gap in the multilingual claim, it is open, and I am not
+reporting a bilingual success while a third of the Russian probes fail live.
+
+### W31.4 counts
+
+- `forge.py` (new): SPARQL over POST, per-language passes, provenance, dedup, holdout
+- `ContentSimilarity`: IDF weighting + Russian stemming, both TDD'd
+- `HdcRetrievalStage`: IDF wired into BOTH paths (persistent and in-memory)
+- brain-runtime 485 -> **492** tests, 0 failures. api-gateway **152**, 0 failures.
+  quality-gate exit 0. FROZEN 5/5 at 0 diff. 0 tests deleted.

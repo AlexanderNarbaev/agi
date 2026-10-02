@@ -1,0 +1,121 @@
+{
+  "note": "Written by hand, not sampled from the training set. Subjects chosen so no near-miss training fact can answer them.",
+  "created": "2026-10-02T21:04:49.397448+00:00",
+  "probes": [
+    {
+      "question": "What is the capital of Kenya?",
+      "expected": "Nairobi",
+      "lang": "en"
+    },
+    {
+      "question": "What is the capital of Chile?",
+      "expected": "Santiago",
+      "lang": "en"
+    },
+    {
+      "question": "What is the capital of Vietnam?",
+      "expected": "Hanoi",
+      "lang": "en"
+    },
+    {
+      "question": "What is the capital of Portugal?",
+      "expected": "Lisbon",
+      "lang": "en"
+    },
+    {
+      "question": "What is the capital of Greece?",
+      "expected": "Athens",
+      "lang": "en"
+    },
+    {
+      "question": "Which continent is Egypt located on?",
+      "expected": "Africa",
+      "lang": "en"
+    },
+    {
+      "question": "Which continent is Brazil located on?",
+      "expected": "South America",
+      "lang": "en"
+    },
+    {
+      "question": "Which continent is Japan located on?",
+      "expected": "Asia",
+      "lang": "en"
+    },
+    {
+      "question": "What is the chemical symbol for iron?",
+      "expected": "Fe",
+      "lang": "en"
+    },
+    {
+      "question": "What is the chemical symbol for gold?",
+      "expected": "Au",
+      "lang": "en"
+    },
+    {
+      "question": "What is the chemical symbol for sodium?",
+      "expected": "Na",
+      "lang": "en"
+    },
+    {
+      "question": "What is the chemical symbol for silver?",
+      "expected": "Ag",
+      "lang": "en"
+    },
+    {
+      "question": "Which continent is Norway located on?",
+      "expected": "Europe",
+      "lang": "en"
+    },
+    {
+      "question": "What is the capital of Argentina?",
+      "expected": "Buenos Aires",
+      "lang": "en"
+    },
+    {
+      "question": "What is the capital of Poland?",
+      "expected": "Warsaw",
+      "lang": "en"
+    },
+    {
+      "question": "Столица Кении?",
+      "expected": "Найроби",
+      "lang": "ru"
+    },
+    {
+      "question": "Столица Чили?",
+      "expected": "Сантьяго",
+      "lang": "ru"
+    },
+    {
+      "question": "Столица Вьетнама?",
+      "expected": "Ханой",
+      "lang": "ru"
+    },
+    {
+      "question": "Столица Португалии?",
+      "expected": "Лиссабон",
+      "lang": "ru"
+    },
+    {
+      "question": "Какая столица Греции?",
+      "expected": "Афины",
+      "lang": "ru"
+    },
+    {
+      "question": "На каком континенте находится Египет?",
+      "expected": "Африка",
+      "lang": "ru"
+    },
+    {
+      "question": "На каком континенте находится Бразилия?",
+      "expected": "Южная",
+      "lang": "ru"
+    },
+    {
+      "question": "Какой химический символ у железа?",
+      "expected": "Fe",
+      "lang": "ru"
+    }
+  ]
+}

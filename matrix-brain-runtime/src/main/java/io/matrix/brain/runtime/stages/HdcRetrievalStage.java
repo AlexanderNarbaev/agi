@@ -27,6 +27,39 @@ public final class HdcRetrievalStage {
 
     private final PersistentHdcStore store;
 
+    /**
+     * Corpus document-frequency statistics, for discriminative scoring.
+     *
+     * <p>W31.4 measured the real false-positive mode: unweighted scoring treats "boiling"
+     * and "point" as equal evidence to "mercury", so "What is the boiling point of
+     * mercury?" matched a water fact at 0.267 and was served. Weighting shared tokens by
+     * inverse document frequency pushes that below the floor, because the tokens that
+     * actually discriminate are exactly the ones a water fact lacks.</p>
+     *
+     * <p>Recomputed on construction and after a bulk teach, never on a cache timer:
+     * stale statistics would silently change every score.</p>
+     */
+    private java.util.Map<String, Integer> documentFrequency = java.util.Map.of();
+
+    /** Rebuild DF statistics from the store contents. Unit: token -> fact count. */
+    private void refreshDocumentFrequency() {
+        java.util.Map<String, Integer> df = new java.util.HashMap<>();
+        if (store != null) {
+            for (String content : store.snapshot().values()) {
+                for (String tok : ContentSimilarity.contentTokens(content)) {
+                    df.merge(tok, 1, Integer::sum);
+                }
+            }
+        }
+        documentFrequency = df;
+    }
+
+    /** IDF over the current corpus; a token absent from the map is maximally rare. */
+    private java.util.function.ToDoubleFunction<String> corpusIdf() {
+        final int corpus = store == null ? 0 : store.size();
+        return tok -> ContentSimilarity.idf(documentFrequency.getOrDefault(tok, 0), corpus);
+    }
+
     /** In-memory mode (no persistence) — used by CI mode and tests. */
     public HdcRetrievalStage() {
         this.store = null;
@@ -37,6 +70,7 @@ public final class HdcRetrievalStage {
     public HdcRetrievalStage(PersistentHdcStore store) {
         this.store = store;
         if (store != null && store.size() == 0) seedPersistent();
+        refreshDocumentFrequency();
     }
 
     /** Teach a fact to the persistent store. Returns the contradiction report. */
@@ -100,8 +134,9 @@ public final class HdcRetrievalStage {
         String bestAnsweredId = null;
         String bestAnsweredContent = null;
         List<String> topIds = new ArrayList<>();
+        java.util.function.ToDoubleFunction<String> idf = corpusIdf();
         for (Map.Entry<String, String> e : contents.entrySet()) {
-            double sim = ContentSimilarity.score(input, e.getValue());
+            double sim = ContentSimilarity.weightedScore(input, e.getValue(), idf);
             if (sim > bestScore) {
                 bestScore = sim;
                 bestId = e.getKey();
@@ -200,7 +235,8 @@ public final class HdcRetrievalStage {
         String bestContent = null;
         List<String> topIds = new ArrayList<>();
         for (Map.Entry<String, BitSet> e : inMemoryVectors.entrySet()) {
-            double sim = ContentSimilarity.score(input, inMemoryContents.get(e.getKey()));
+            double sim = ContentSimilarity.weightedScore(input, inMemoryContents.get(e.getKey()),
+                corpusIdf());
             if (sim > bestScore) {
                 bestScore = sim;
                 bestId = e.getKey();

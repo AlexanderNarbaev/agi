@@ -1,0 +1,62 @@
+{
+  "acquired": "2026-10-02T21:02:47.530761+00:00",
+  "domains": {
+    "en:capital": {
+      "status": "ok",
+      "facts": 198,
+      "seconds": 1.3
+    },
+    "en:continent": {
+      "status": "ok",
+      "facts": 199,
+      "seconds": 1.1
+    },
+    "en:language": {
+      "status": "ok",
+      "facts": 198,
+      "seconds": 1.7
+    },
+    "en:currency": {
+      "status": "ok",
+      "facts": 172,
+      "seconds": 2.1
+    },
+    "en:chemical_element": {
+      "status": "ok",
+      "facts": 174,
+      "seconds": 1.1
+    },
+    "ru:capital": {
+      "status": "ok",
+      "facts": 193,
+      "seconds": 6.7
+    },
+    "ru:continent": {
+      "status": "ok",
+      "facts": 197,
+      "seconds": 4.3
+    },
+    "ru:language": {
+      "status": "ok",
+      "facts": 196,
+      "seconds": 7.3
+    },
+    "ru:currency": {
+      "status": "ok",
+      "facts": 199,
+      "seconds": 9.6
+    },
+    "ru:chemical_element": {
+      "status": "ok",
+      "facts": 167,
+      "seconds": 1.2
+    }
+  },
+  "requested_limit": 2000,
+  "languages": [
+    "en",
+    "ru"
+  ],
+  "written": 1893,
+  "out_file": "data/datasets/wikidata/wikidata-facts.ndjson"
+}

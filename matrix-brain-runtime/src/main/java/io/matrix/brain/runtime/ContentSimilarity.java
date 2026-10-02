@@ -116,6 +116,63 @@ public final class ContentSimilarity {
     )));
 
     /**
+     * Suffixes stripped to stem a Russian token, longest first.
+     *
+     * <p>Unit: lowercase suffixes. W31.4 measured the Russian path at 0/8 on held-out
+     * probes while English scored 15/15, and the cause was morphology, not data: the
+     * question asks about "Кении" (genitive) while the fact is "Кения" (nominative).
+     * Without stemming the two share nothing and the score is 0.</p>
+     *
+     * <p>This is a small hand-written rule set, not a linguistic claim. It is
+     * deliberately conservative: only endings that reliably change a noun or adjective
+     * while leaving a short stem are removed, because over-stemming collapses distinct
+     * words and creates the near-miss confabulations this whole wave exists to
+     * prevent. Russian morphology in general is not solved by this, and the residual
+     * failure rate is reported rather than hidden.</p>
+     */
+    private static final List<String> RU_SUFFIXES = List.of(
+        // Two-char endings first: without them "столице" strips only "це" and no longer
+        // matches "столица", which is exactly the capital question the RU probes ask.
+        "ами", "ями", "ими", "ыми", "ие", "ые", "ая", "яя", "ое", "ее",
+        "ую", "юю", "ой", "ей", "ов", "ев", "ах", "ях", "ам", "ям",
+        "ий", "ый", "ем", "им", "ут", "ют", "ат", "ят", "ла", "ло",
+        "ли", "ть", "ся", "сь", "ая", "яя", "ов", "ев",
+        // Single-char accusative/dative endings, applied only when the stem survives.
+        "а", "я", "у", "ю", "ы", "и", "е", "о", "ь", "й");
+
+    /**
+     * Strip a Russian inflectional suffix.
+     *
+     * <p>Requires the remaining stem to stay at least {@link #MIN_STEM_LENGTH}
+     * characters, so short words are left intact rather than stemmed to nonsense.</p>
+     *
+     * @param tok a token, lowercased
+     * @return the stem, or the token unchanged when it is not Russian or too short
+     */
+    public static String stem(String tok) {
+        if (tok == null || tok.isEmpty()) return tok;
+        boolean cyrillic = false;
+        for (int i = 0; i < tok.length(); i++) {
+            char c = tok.charAt(i);
+            if (c >= '\u0400' && c <= '\u04FF') { cyrillic = true; break; }
+        }
+        if (!cyrillic) return tok;
+        for (String suf : RU_SUFFIXES) {
+            if (tok.length() > suf.length() && tok.endsWith(suf)) {
+                String stem = tok.substring(0, tok.length() - suf.length());
+                if (stem.length() >= MIN_STEM_LENGTH) return stem;
+            }
+        }
+        return tok;
+    }
+
+    /**
+     * Shortest stem retained after suffix stripping. Unit: characters.
+     * Below this, stemming produces noise rather than a root.
+     */
+    public static final int MIN_STEM_LENGTH = 4;
+
+    /**
      * Content tokens of an input, in order of first appearance, stopwords removed.
      *
      * @param text input text, may be null
@@ -130,7 +187,13 @@ public final class ContentSimilarity {
         for (String raw : parts) {
             String tok = raw.trim();
             if (tok.length() < MIN_TOKEN_LENGTH) continue;
-            if (STOPWORDS.contains(tok)) continue;
+            String preStem = tok;
+            tok = stem(tok);
+            if (STOPWORDS.contains(preStem) || STOPWORDS.contains(tok)) continue;
+            // Russian inflections must reach a common stem before the dedup below, or
+            // "Кения" and "Кении" are two distinct tokens and neither matches the other.
+            tok = stem(tok);
+            if (tok.length() < MIN_TOKEN_LENGTH) continue;
             if (!seen.add(tok)) continue;
             out.add(tok);
             if (++taken >= MAX_TOKENS) break;
@@ -180,6 +243,89 @@ public final class ContentSimilarity {
     public static boolean isConfident(String query, String fact) {
         return score(query, fact) >= RETRIEVAL_FLOOR;
     }
+
+    // ---- Discriminative weighting (W31.4) ----------------------------------
+
+    /**
+     * Inverse document frequency of a token, from corpus statistics.
+     *
+     * <p>Unit: a weight in [0,1], higher meaning rarer and therefore more
+     * discriminating. Computed as {@code 1 - df/N} over the supplied corpus, so a token
+     * in every document scores 0 and one unique to a single fact scores ~1.</p>
+     *
+     * @param documentFrequency how many facts contain the token
+     * @param corpusSize        total facts scored, or 0 when unknown
+     * @return weight in [0,1]; 1.0 (maximally rare) when the corpus size is unknown
+     */
+    public static double idf(int documentFrequency, int corpusSize) {
+        if (corpusSize <= 0) return 1.0;
+        double df = Math.max(0, Math.min(documentFrequency, corpusSize));
+        return 1.0 - (df / (double) corpusSize);
+    }
+
+    /**
+     * Discriminative similarity: {@link #score}, but shared tokens count by their
+     * corpus rarity.
+     *
+     * <p><b>Why this exists.</b> W31.4 measured the real false-positive mode and it is
+     * not what the dimension analysis predicted. Unweighted scoring treats "boiling"
+     * and "point" as much as "mercury", so:</p>
+     *
+     * <pre>
+     *   "What is the boiling point of mercury?" vs "The boiling point of water is 100 degrees"
+     *   unweighted 0.267 -> SERVED, a confabulation
+     * </pre>
+     *
+     * <p>Both sides share only generic topic words; the one token that actually
+     * discriminates — "mercury" — is absent from the fact, and the unweighted score
+     * cannot see that. Weighting shared tokens by inverse document frequency makes the
+     * generic overlap insufficient, so the question falls below the floor and is
+     * refused. This is the difference between a knowledge base that helps and one that
+     * confabulates at scale, which is exactly what W31.4's ingest would have built.</p>
+     *
+     * <p>Unmatched query tokens are weighted the same way, so a specific question
+     * cannot be satisfied by matching only its vaguest words.</p>
+     *
+     * @param query     the question
+     * @param fact      the stored fact
+     * @param idf       inverse document frequency per token, from the corpus
+     * @return score in [0,1]; 0.0 when either side has no content
+     */
+    public static double weightedScore(String query, String fact,
+                                       java.util.function.ToDoubleFunction<String> idf) {
+        if (idf == null) return score(query, fact);
+        List<String> q = contentTokens(query);
+        List<String> f = contentTokens(fact);
+        if (q.isEmpty() || f.isEmpty()) return 0.0;
+        java.util.Set<String> fSet = new LinkedHashSet<>(f);
+
+        double sharedWeight = 0.0;
+        double queryWeight = 0.0;
+        for (String tok : q) {
+            double w = weight(idf, tok);
+            queryWeight += w;
+            if (fSet.contains(tok)) sharedWeight += w;
+        }
+        if (sharedWeight == 0.0 || queryWeight == 0.0) return 0.0;
+        double fWeight = 0.0;
+        for (String tok : f) fWeight += weight(idf, tok);
+        if (fWeight == 0.0) return 0.0;
+        return (sharedWeight / queryWeight) * (sharedWeight / fWeight);
+    }
+
+    /** IDF lookup with a floor, so a token present in every document still counts a
+     *  little rather than making a legitimate exact match score zero. Unit: weight. */
+    private static double weight(java.util.function.ToDoubleFunction<String> idf, String tok) {
+        return Math.max(MIN_IDF_WEIGHT, idf.applyAsDouble(tok));
+    }
+
+    /**
+     * Lower bound on a token's weight, applied even at maximum document frequency.
+     * Unit: weight in [0,1]. Prevents an exact-token match from scoring 0 purely
+     * because the corpus is large, which would make a large store refuse correct
+     * answers — the failure mode that would silently destroy recall.
+     */
+    public static final double MIN_IDF_WEIGHT = 0.05;
 
     // ---- EPI-2: measured confidence ---------------------------------------
 

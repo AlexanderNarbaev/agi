@@ -162,3 +162,10 @@ data/smoke-old/
 # so committing it would put a misleading measurement in the evidence directory. Kept
 # locally only; docs-v2/operations/bench/README.md names it explicitly.
 docs-v2/operations/bench/w30-perf-20261002-122937.json
+
+# RECON-W31.4: the acquired Wikidata corpus (1 893 facts) is NOT committed. It is
+# regenerable byte-for-byte from scripts/knowledge_forge/forge.py against a public
+# endpoint, and pinning a snapshot of someone else's encyclopedia in this repo buys
+# little. The two files that ARE force-added are the ones a result depends on:
+# holdout.json (the evaluation contract) and acquisition-report.json (what was actually
+# obtained, including the failures).
