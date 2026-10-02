@@ -158,7 +158,10 @@ public final class MindCycle {
         BirInferenceStage.BirResult bir = birRules.evaluate(input, obs, trace);
 
         // Stage 7: HDC MEMORY — vector cosine similarity over taught facts
-        HdcRetrievalStage.HdcResult hdc = hdcMemory.retrieve(input, obs, trace);
+        // RECON-W31.4: score BOTH forms. The store now holds genuinely Cyrillic facts
+        // (952 of them), and the transliterated query shares no tokens with them, so
+        // retrieval on `input` alone left the whole Russian corpus unreachable.
+        HdcRetrievalStage.HdcResult hdc = hdcMemory.retrieve(input, original, obs, trace);
 
         // Stage 8: TSETLIN — small-footprint classifier over learned clauses
         TsetlinStage.TsetlinResult tsetlinResult = tsetlin.classify(input, trace);

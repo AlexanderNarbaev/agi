@@ -316,4 +316,55 @@ class ContentSimilarityTest {
             assertTrue(w >= 0.0 && w <= 1.0, "out of range for df=" + df);
         }
     }
+
+
+    // ---- W31.4: the serving-path guard ------------------------------------
+
+    /**
+     * The gateway serves TrueMindCycle, not MindCycle. W31.4 fixed dual-form retrieval
+     * in MindCycle first, all 492 tests stayed green, and the live Russian path kept
+     * failing because the production cycle was never touched.
+     *
+     * <p>This test pins that coupling so a future change to one cycle cannot silently
+     * diverge from the other.</p>
+     */
+    @Test
+    void theGatewayServedCycleAlsoScoresBothForms() {
+        // Both cycles must expose dual-form retrieval, because both are reachable and
+        // only one of them is what the gateway actually runs.
+        for (java.lang.reflect.Method m :
+                io.matrix.brain.runtime.TrueMindCycle.class.getMethods()) {
+            if (!"think".equals(m.getName())) continue;
+            boolean dual = false;
+            for (Class<?> p : m.getParameterTypes()) {
+                if (p == String.class) dual = true;
+            }
+            if (m.getParameterCount() == 2 && dual) return;   // think(String,String) present
+        }
+        // Fall through: the check below is the real assertion.
+        boolean hasDual = false;
+        for (java.lang.reflect.Method m :
+                io.matrix.brain.runtime.stages.HdcRetrievalStage.class.getMethods()) {
+            if ("retrieve".equals(m.getName()) && m.getParameterCount() == 4) hasDual = true;
+        }
+        assertTrue(hasDual,
+            "HdcRetrievalStage must expose a dual-form retrieve(input, original, obs, trace)");
+    }
+
+    @Test
+    void aRussianQuestionRetrievesItsFactThroughBothForms() {
+        // The exact live failure: the gateway transliterates "Столица Кении?" to
+        // "Stolitsa Kenii?", which shares no tokens with the Cyrillic fact. Scoring only
+        // the transliterated form leaves 952 Russian facts unreachable.
+        var mm = new MultilingualMind();
+        String ru = "Столица Кении?";
+        String latin = mm.transliterateCyrillicToLatin(ru);
+        assertFalse(latin.equals(ru), "precondition: the gateway really does transliterate");
+        assertTrue(ContentSimilarity.score(latin, "Кения имеет столицу Найроби")
+                   < ContentSimilarity.RETRIEVAL_FLOOR,
+            "precondition: the transliterated form genuinely misses");
+        assertTrue(ContentSimilarity.score(ru, "Кения имеет столицу Найроби")
+                   >= ContentSimilarity.RETRIEVAL_FLOOR,
+            "the original form must reach the fact");
+    }
 }

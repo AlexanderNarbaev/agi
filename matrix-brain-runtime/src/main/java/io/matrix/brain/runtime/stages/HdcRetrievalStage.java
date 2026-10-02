@@ -117,6 +117,40 @@ public final class HdcRetrievalStage {
         return retrieveInMemory(input, obs, trace);
     }
 
+    /**
+     * RECON-W31.4 — retrieve using BOTH the transliterated and the original form.
+     *
+     * <p><b>Why two forms are now mandatory rather than optional.</b> Since W2 the
+     * gateway transliterates Cyrillic to Latin before the mind sees the input, so
+     * "Столица Кении?" arrives here as "Stolitsa Kenii?". That was correct while the
+     * knowledge store was Latin-only. W31.4 ingested 952 genuinely Cyrillic facts, and
+     * a transliterated query shares no tokens with them — so the entire Russian half of
+     * the corpus became unreachable, and the live gateway answered 1 of 3 Russian
+     * probes while an in-process harness measuring the same store scored 7 of 8.</p>
+     *
+     * <p>W22 already solved this for language-aware reasoning by carrying both strings
+     * through the cycle; this stage was simply not given the second one. The fix is to
+     * score both forms and keep the better match, which costs one extra pass and makes
+     * neither script lose.</p>
+     *
+     * @param input          the retrieval form (possibly transliterated)
+     * @param originalInput  the untouched text; equal to {@code input} when identical
+     * @param obs            signal observation for the trace
+     * @param trace          receives the scoring step
+     * @return the better of the two retrievals
+     */
+    public HdcResult retrieve(String input, String originalInput,
+                              SignalStage.SignalObservation obs, List<BrcStep> trace) {
+        HdcResult primary = retrieve(input, obs, trace);
+        if (originalInput == null || originalInput.equals(input)) return primary;
+        HdcResult secondary = retrieve(originalInput, obs, trace);
+        // Keep the stronger match. Ties go to the retrieval form, so a Latin question
+        // behaves exactly as it did before this change.
+        return (secondary.matched() && !primary.matched())
+            || (secondary.matched() && secondary.confidence() > primary.confidence())
+            ? secondary : primary;
+    }
+
     private HdcResult retrievePersistent(String input, SignalStage.SignalObservation obs, List<BrcStep> trace) {
         if (store.size() == 0) {
             trace.add(BrcStep.of("HDC_MEMORY", false, 0.50,

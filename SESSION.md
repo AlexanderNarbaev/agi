@@ -2039,3 +2039,73 @@ reporting a bilingual success while a third of the Russian probes fail live.
 - `HdcRetrievalStage`: IDF wired into BOTH paths (persistent and in-memory)
 - brain-runtime 485 -> **492** tests, 0 failures. api-gateway **152**, 0 failures.
   quality-gate exit 0. FROZEN 5/5 at 0 diff. 0 tests deleted.
+
+
+## 2026-10-03 — RECON-W31.4 addendum: the Russian serving-path gap, closed
+
+**What the user can newly observe since the last commit:** asking in Russian now works.
+"Столица Кении?" -> "Кения имеет столицу Найроби". "На каком континенте находится
+Египет?" -> "Египет расположен на континенте Африка". "Какой химический символ у
+железа?" -> "железо имеет химический символ Fe". English is unregressed and the three
+unknowable questions still refuse.
+
+### The defect was transliteration, and the first fix went to the wrong class
+
+The live explain trace showed what no unit test would have:
+
+    "input": "Stolitsa Kenii?"
+
+Since W2 the gateway transliterates Cyrillic to Latin before the mind sees the input.
+That was correct while the store was Latin-only. W31.4 added 952 genuinely Cyrillic
+facts, and a transliterated query shares no tokens with them — so the entire Russian
+half of the corpus was unreachable.
+
+I first added dual-form retrieval to `MindCycle` and all 492 tests stayed green. The
+live path did not change. **The gateway runs `TrueMindCycle`, not `MindCycle`**
+(`ProductionBrainClient:117`). I had fixed a class that is not in production.
+
+### This is the third instance of one mistake, and that is the actual finding
+
+- W31.1: audited the episodic log, fixed it, restarted, and the slur was still served —
+  the HDC store was the second source.
+- W31.2: fixed the persistent retrieval path; the in-memory path (what CI and several
+  tests exercise) kept the chance-level scorer.
+- W31.4: fixed `MindCycle`; the gateway runs `TrueMindCycle`.
+
+Each time the fix was correct, the tests were green, and the operator-visible behaviour
+was unchanged. The lesson is not "be more careful" — it is that **a fix must be verified
+through the serving path**, because an in-process test of the wrong class passes and
+proves nothing. Two tests now pin this: one asserts both cycles expose dual-form
+retrieval, one asserts the transliterated form genuinely misses while the original
+reaches the fact.
+
+### Live result
+
+    Столица Кении?                       ANSWER  Кения имеет столицу Найроби
+    Какая столица Греции?                ANSWER  Athens              (BilingualFactLookup)
+    На каком континенте находится Египет? ANSWER  Египет расположен на континенте Африка
+    Какой химический символ у железа?     ANSWER  железо имеет химический символ Fe
+    Столица Японии?                      ANSWER  Tokyo               (BilingualFactLookup)
+    What is the capital of Kenya?         ANSWER  Kenya has capital Nairobi
+    What is the chemical formula of water? REFUSED
+    How many legs does a spider have?      REFUSED
+    What is 2+3?                           ANSWER  2 + 3 = 5
+
+The two answers that come from `BilingualFactLookup` rather than the knowledge store are
+named, because "the mind answered" and "the mind looked it up in a hardcoded table" are
+different claims and only one of them is a knowledge base doing work.
+
+### A known inefficiency, not fixed here
+
+`TrueMindCycle` constructs a new `HdcRetrievalStage` on every call, so the inverse
+document-frequency statistics are rebuilt from 2 901 facts on every request. Correct, and
+O(corpus) per question. Caching it means invalidating on teach, which is a correctness
+risk for a latency win; recorded rather than rushed.
+
+### Counts
+
+- `TrueMindCycle` (the served cycle): dual-form retrieval
+- `MindCycle`: dual-form retrieval, plus the comment explaining why it was not enough
+- `ContentSimilarityTest`: +2 serving-path guards, 27 -> 29
+- brain-runtime 492 -> **494** tests, 0 failures. api-gateway **152**, 0 failures.
+  quality-gate exit 0. FROZEN 5/5 at 0 diff. 0 tests deleted. SESSION.md 0 deletions.

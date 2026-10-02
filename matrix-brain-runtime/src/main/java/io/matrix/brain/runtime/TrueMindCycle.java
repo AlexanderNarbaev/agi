@@ -269,10 +269,19 @@ public final class TrueMindCycle {
                 "rules_evaluated=" + 5))));
 
         // ---- Stage 7: HDC_MEMORY (real persistent HDC) ----
+        //
+        // RECON-W31.4: the gateway serves THIS cycle, not MindCycle. An earlier fix
+        // wired dual-form retrieval into MindCycle only, and the live Russian path kept
+        // failing because this line was never reached. Third instance of one mistake:
+        // W31.1 audited the episodic log and missed the HDC store; W31.2 fixed the
+        // persistent retrieval path and left the in-memory one; W31.4 fixed MindCycle
+        // and left the cycle the gateway actually runs. The lesson is not "be careful"
+        // — it is that a fix must be verified THROUGH the serving path, because
+        // in-process tests of the wrong class are green and meaningless.
         HdcRetrievalStage hdc = (hdcStore != null)
             ? new HdcRetrievalStage(hdcStore)
             : new HdcRetrievalStage();
-        HdcRetrievalStage.HdcResult hdcResult = hdc.retrieve(input, obs, trace);
+        HdcRetrievalStage.HdcResult hdcResult = hdc.retrieve(input, original, obs, trace);
 
         // ---- Stage 8: TSETLIN (real engine) ----
         TsetlinStage tsetlin = new TsetlinStage();
