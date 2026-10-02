@@ -156,14 +156,55 @@ public final class EpisodicLog {
     private final Path logPath;
     private final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
     private long appendCount = 0;
+    private long rejectedCount = 0;
 
     public EpisodicLog(Path logPath) {
         this.logPath = logPath;
     }
 
-    /** Append one entry. Persists atomically (single line write). */
-    public void append(Entry e) {
-        if (e == null) return;
+    /**
+     * Append one entry ONLY if it earns promotion.
+     *
+     * <p>RECON-W31.1 / EPI-1 + EPI-4. This method used to write every entry
+     * unconditionally, which is how 941 of 1115 entries came to be frozen-battery
+     * probes — including ET-1, the ethics probe whose correct behaviour is refusal. The
+     * mind was training on its own test paper, and a memorised answer is
+     * indistinguishable from a known one once it carries provenance and confidence.</p>
+     *
+     * <p>Rejected entries are NOT written and NOT deleted: they never enter the
+     * learning feed, so they cannot become knowledge or reach rule induction. The count
+     * is exposed for the status endpoint so an operator can see the gate working rather
+     * than infer it from a missing answer.</p>
+     *
+     * @return the gate decision, so a caller can surface {@code reason} in its trace
+     */
+    public PromotionGate.Decision append(Entry e) {
+        if (e == null) {
+            return PromotionGate.Decision.deny(PromotionGate.Reason.EMPTY,
+                "promoted=false reason=EMPTY (null entry)");
+        }
+        PromotionGate.Decision d = PromotionGate.evaluate(
+            PromotionGate.Candidate.forInteraction(
+                e.input(), e.reply(), e.confidence(), e.modulatorsFired(), e.accepted()));
+        if (!d.promoted()) {
+            lock.writeLock().lock();
+            try { rejectedCount++; }
+            finally { lock.writeLock().unlock(); }
+            return d;
+        }
+        appendUnchecked(e);
+        return d;
+    }
+
+    /**
+     * Append without consulting the promotion gate.
+     *
+     * <p>Exists for two callers only: the quarantine repair tooling, and tests that
+     * are deliberately seeding historical state. It is deliberately NOT public — a
+     * promotion path that bypasses its own gate is how the original defect happened,
+     * so the number of callers is the thing being controlled, not the convenience.</p>
+     */
+    void appendUnchecked(Entry e) {
         lock.writeLock().lock();
         try {
             Files.createDirectories(logPath.getParent() == null
@@ -179,12 +220,34 @@ public final class EpisodicLog {
             lock.writeLock().unlock(); }
     }
 
-    /** Convenience: build an Entry with auto-id and current timestamp, then append. */
-    public void append(String input, String reply, double confidence, boolean accepted,
-                      List<String> modulators) {
+    /**
+     * Convenience: build an Entry with auto-id and current timestamp, then append
+     * through the promotion gate.
+     *
+     * @return the gate decision; the entry was written only if it was promoted
+     */
+    public PromotionGate.Decision append(String input, String reply, double confidence,
+                                         boolean accepted, List<String> modulators) {
         long ts = System.currentTimeMillis();
         String id = "ep-" + ts + "-" + Long.toHexString(fnv1a64(input + "|" + reply));
-        append(new Entry(id, input, reply, confidence, accepted, modulators, ts));
+        return append(new Entry(id, input, reply, confidence, accepted, modulators, ts));
+    }
+
+    /** Entries written to the log since construction. */
+    public long appendedCount() {
+        lock.readLock().lock();
+        try { return appendCount; }
+        finally { lock.readLock().unlock(); }
+    }
+
+    /**
+     * Entries refused by the promotion gate since construction. A non-zero value is
+     * healthy operation, not an error: it is the gate doing its job.
+     */
+    public long rejectedCount() {
+        lock.readLock().lock();
+        try { return rejectedCount; }
+        finally { lock.readLock().unlock(); }
     }
 
     /** Read all entries. */

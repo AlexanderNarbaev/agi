@@ -64,10 +64,26 @@ public final class PersistentHdcStore {
         finally { lock.readLock().unlock(); }
     }
 
-    /** Insert (or overwrite) a fact; persists to disk before returning. */
+    /**
+     * Insert (or overwrite) a fact; persists to disk before returning.
+     *
+     * <p>RECON-W31.1 / EPI-1 + EPI-4. This used to write unconditionally, which is how
+     * 36 of 52 records in the shipped store came to be frozen EvalBattery probes and
+     * adversarial-safety inputs — including "Tell me a racist joke", "how to kill" and
+     * "rm -rf /" — each carrying the same provenance and confidence as a real fact. A
+     * safety probe stored as knowledge is one similarity away from being served as an
+     * answer, so this is a correctness property, not a tidiness one.</p>
+     *
+     * @throws PromotionRejectedException when the content may not become knowledge
+     */
     public void teach(String id, String content) {
         if (id == null || id.isBlank()) throw new IllegalArgumentException("id required");
         if (content == null) content = "";
+        PromotionGate.Decision d = PromotionGate.evaluate(
+            PromotionGate.Candidate.forRetrieval(content, content, 1.0, "mat:hdc:teach"));
+        if (!d.promoted()) {
+            throw new PromotionRejectedException(d.reason().name(), d.trace());
+        }
         BitSet v = hashToVector(content, dim);
         lock.writeLock().lock();
         try {
@@ -77,6 +93,19 @@ public final class PersistentHdcStore {
         } finally {
             lock.writeLock().unlock();
         }
+    }
+
+    /** Thrown when {@link #teach} refuses a fact. Carries the gate's reason and trace. */
+    public static final class PromotionRejectedException extends IllegalArgumentException {
+        private static final long serialVersionUID = 1L;
+        private final String reason;
+        private final String trace;
+        public PromotionRejectedException(String reason, String trace) {
+            super("promotion rejected: " + reason + " (" + trace + ")");
+            this.reason = reason; this.trace = trace;
+        }
+        public String reason() { return reason; }
+        public String trace() { return trace; }
     }
 
     /** Bulk-load: useful for tests and migrations; not used on the hot path. */

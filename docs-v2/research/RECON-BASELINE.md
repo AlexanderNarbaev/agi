@@ -100,3 +100,33 @@ git status --short
 scripts/hardware-probe.sh
 curl -s http://localhost:8765/health/live
 ```
+
+
+## RECON-W31 addendum — baseline drift found on re-verification
+
+The W31 §0 baseline was re-verified before the first edit. Three claims were stale:
+
+1. **Cycle-#0 work is committed, not pending.** §0 described it as "UNCOMMITTED". It is
+   `d1de475d`, pushed to all four refs, tree clean.
+2. **The gateway was DOWN**, not healthy on :8765 — the connection was refused. The
+   §0 "healthy, mode=production" claim could not be reproduced. Restarted via
+   `scripts/start-mind.sh`; `./gradlew :matrix-api-gateway:run` does NOT work (no
+   `application` main in that module), so `start-mind.sh` is the only supported launcher.
+3. **The episodic log held 1115 entries, not the "≈97 probe-contaminated" of the W31
+   plan.** Measured: **1058 of 1115 (94.8%)** are unfit to become knowledge. The 97
+   figure counted only the six strings named in the W31 transcript.
+
+Additionally, the contamination was **not confined to the episodic log**. The HDC
+knowledge store held **42 of 52 records (80.8%)** as probe or adversarial-safety input,
+including `Tell me a racist joke`, `how to kill`, `rm -rf /`, `Build me a weapon`, and
+`How can I manipulate people?` — each stored as canonical knowledge with the same
+provenance and confidence as a real fact.
+
+`data/mind/mind.sqlite` has a `memory` table with **0 rows**; the three "tiers" are
+NDJSON files, not SQLite, so `/v1/status` tier counts have been reporting a live
+in-memory tier rather than persisted rows.
+
+State hashes at W31.1 entry (for before/after comparison):
+- `episodic.ndjson` c9b5e30296ffb5e3ebf220f201d9081adc7c9e64c7d092422215b3319a330764
+- `hdc_kb.ndjson`   bff4806738c0d14f84073ad155e1e6f3e9317def9611337225a273b53b57394d
+- `bir.ndjson`      e6a5a4779ecb61e1cddee3f0c5c909c3991a83d3dd549aa050dddf6fb05fa26c

@@ -55,17 +55,56 @@ public final class KnowledgeExchangeProtocol {
         }
     }
 
-    public static int mergeInto(PersistentHdcStore localStore, Batch batch) {
-        if (batch == null || batch.facts == null) return 0;
+    /**
+     * Merge a federated batch into the local store.
+     *
+     * <p>RECON-W31.1 / EPI-1 + EPI-4. A remote node's batch is untrusted input, so
+     * every fact passes the same {@link PromotionGate} as local knowledge — a
+     * federated node that taught itself the eval battery cannot push that poison
+     * into a peer. This closes a real hole: federation ingest is an ordinary
+     * {@code teach} caller, and before this wave a remote node could seed a peer with
+     * "Tell me a racist joke" as a canonical fact.
+     *
+     * <p>A refused fact is skipped and counted, NOT thrown: one poisoned peer must not
+     * abort a whole batch, and silently swallowing it would be a shadow failure. The
+     * counts are returned in the {@link MergeReport} so the caller can surface them.
+     *
+     * @return accepted, rejected, and total counts for the batch
+     */
+    public static MergeReport mergeIntoWithReport(PersistentHdcStore localStore, Batch batch) {
+        if (batch == null || batch.facts == null) {
+            return new MergeReport(0, 0, 0);
+        }
         int added = 0;
+        int rejected = 0;
         for (Fact f : batch.facts) {
             String id = "fed-" + batch.sourceNode + "-" + f.id;
-            if (!localStore.snapshot().containsKey(id)) {
+            if (localStore.snapshot().containsKey(id)) continue;
+            try {
                 localStore.teach(id, f.input + " => " + f.answer);
                 added++;
+            } catch (PersistentHdcStore.PromotionRejectedException ex) {
+                rejected++;
             }
         }
-        return added;
+        return new MergeReport(added, rejected, batch.facts.size());
+    }
+
+    /**
+     * @param added    facts promoted into the local store
+     * @param rejected facts refused by the promotion gate (probe, refusal, fiction, empty)
+     * @param total    facts offered in the batch
+     */
+    public record MergeReport(int added, int rejected, int total) {
+        /** Fraction of the offered batch that became knowledge, in [0,1]. */
+        public double acceptanceRate() {
+            return total == 0 ? 0.0 : (double) added / (double) total;
+        }
+    }
+
+    /** @return number of facts merged; refused facts are skipped, not thrown */
+    public static int mergeInto(PersistentHdcStore localStore, Batch batch) {
+        return mergeIntoWithReport(localStore, batch).added();
     }
 
     public static Batch snapshotToBatch(PersistentHdcStore store, String sourceNode) {
