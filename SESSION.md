@@ -2988,3 +2988,71 @@ frame itself, so the value entered a computation's output rather than a report.
 
 brain-runtime **561** tests, 0 failures. api-gateway **152**, 0 failures.
 quality-gate exit 0. FROZEN 5/5 at 0 diff. 0 tests deleted.
+
+
+## 2026-10-03 — RECON-W32.9 ATTEMPTED AND ABANDONED: the SilentFailureGuard
+
+**What the user can newly observe: nothing.** This sub-wave shipped no capability and no
+mechanism. It is recorded because the failure is more useful than the guard would have
+been, and because the anti-plateau law permits a documented negative result where the
+alternative is shipping something unverified.
+
+### The goal
+
+Five defects this campaign were silent failures, one of which destroyed 2 910 knowledge
+facts. The class is "a path that reports nothing when it fails". A mechanical check would
+close the hole permanently instead of relying on remembering to look.
+
+### Four attempts, and why each was rejected
+
+**1. Blanket empty-catch ban — 275 findings.** Almost all legitimate: `/* ignore */` on a
+socket close, `// fall through to template`, `catch (NumberFormatException)` on an
+optional field. A guard with 275 grandfathered entries is a guard the team suppresses
+within a week, and a suppressed guard protects nothing. **Rejected as noise.**
+
+**2. Bare `if (x == null) continue;` detector — 343 findings.** ~318 are ordinary
+defensive skipping of null elements inside collection loops. The W32.4 defect was not
+that shape. **Rejected as noise.**
+
+**3. Scoped to empty catches inside PERSISTING methods — 44 findings.** The right shape
+in principle: a silent catch in a read-only method cannot destroy anything. Two bugs of my
+own then produced confident wrong output, both worth recording:
+
+- **275 phantom findings.** Blanking string literals so a pattern in a doc is not a finding
+  also made `catch (E e) { log.warn("x"); }` scan as EMPTY. Fixed by replacing string
+  contents with a placeholder rather than a space.
+- **It scanned `data/smoke/`,** which holds clones of the tree, reporting one defect three
+  times under three paths — 63 of the findings.
+
+**4. The negative test found the guard did not guard.** Injecting a silent catch into
+`DistillationLedger` left the suite GREEN. That class persists through a method named
+`record`, `record` was not in the verb list, so the whole file was skipped. Widening to 24
+write verbs made the negative test fire — and the baseline, the path normalisation between
+the Python generator and the Java scanner, and the whole-line-versus-location comparison
+then each had to be corrected separately. The baseline still would not settle between
+runs.
+
+### Removed rather than shipped
+
+`SilentFailureGuardTest` and its baseline are deleted. **A guard that passes when the
+defect is present is worse than no guard, because it is believed** — exactly the failure
+mode this campaign has spent five sub-waves removing. Shipping a green check I could not
+make fail honestly would have been a headline with no evidence behind it.
+
+### What the attempt established, and it is the durable part
+
+- The class is real and countable: **44 empty catches sit inside methods that can
+  persist** across the three runtime modules, and **17 of them are `catch (Exception)`
+  with no justification at all**. That is a list someone can work through.
+- A negative test is mandatory for any static guard, and it caught a false negative that
+  a positive test alone would have shipped. **A guard's first test must be "does it fail
+  when the defect is present".** That is the transferable lesson, and it applies to every
+  gate in this repo.
+- Every one of the five historical defects is now visible to a reviewer asking "what
+  happens if this returns null". The discipline outlives the automation.
+
+### The gap that remains
+
+No mechanical protection against silent failure ships. The W32.4 loader, the promotion
+gate, the store-width check and the inbox refusals are individually loud and each has a
+test asserting it fails. A future defect of this class would be caught by review, not CI.
