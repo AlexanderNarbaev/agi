@@ -2109,3 +2109,100 @@ risk for a latency win; recorded rather than rushed.
 - `ContentSimilarityTest`: +2 serving-path guards, 27 -> 29
 - brain-runtime 492 -> **494** tests, 0 failures. api-gateway **152**, 0 failures.
   quality-gate exit 0. FROZEN 5/5 at 0 diff. 0 tests deleted. SESSION.md 0 deletions.
+
+
+## 2026-10-03 — RECON-W31.5: Wave close
+
+**What the user can newly observe since the last sub-wave:** the mind now LEARNS while
+sleeping, durably. Before this sub-wave a sleep cycle reported nothing and left
+`bir.ndjson` byte-identical; now it reports `rules_learned=1`, the file hash changes, and
+the rule is still there after a restart. That is the first time rule induction has ever
+executed in this system.
+
+### BIR-1: induction had never run, and the "re-induction" was hiding it
+
+W31.1 listed BIR-1 as "not re-induced from the clean base". Investigating rather than
+re-running it produced a bigger finding: **rule induction has never executed in
+production.**
+
+The gateway constructed `RealSleepScheduler` with the 4-argument constructor, leaving
+`episodicLog`, `birRegistry`, `ruleEngine` and `featureExtractor` null. The scheduler
+guards induction on all four being present, so the mind slept, consolidated and emitted
+digests but never learned a rule. All 8 rules in `bir.ndjson` carry
+`provenance: from_http` — none was ever induced. The proof is that a real
+`POST /v1/sleep` left the file hash byte-identical.
+
+Wired with the 8-argument constructor using the SAME `BirRegistry` that retrieval and
+distillation already use, so induced rules are visible rather than vanishing into a
+second store. `episodicLog` was a block-scoped local and had to be promoted to a field:
+the scheduler is constructed in a later try-block (after `BirKnowledgeBase`, so the
+registry is shared) and could not see a local from the earlier one.
+
+### "rules_learned=1" was still a lie, and the hash said so
+
+With induction armed, the dream trace reported `rules_learned=1` — and `bir.ndjson` was
+STILL byte-identical. `RuleInductionEngine` called `registry.register()` directly,
+which is memory-only; persistence lives behind `BirKnowledgeBase`, which applies the
+contradiction check and appends to disk. So the mind reported learning a rule during
+sleep and forgot it on the next boot.
+
+Fixed by giving the engine an optional `BirKnowledgeBase` and routing registration
+through it, with `RegisterResult.accepted` recorded so a quarantined rule is reported as
+refused rather than learned (Article VIII). A persistence failure falls back to the
+in-memory registry and increments a counter instead of losing the induction silently.
+
+BIR-1 evidence, end to end:
+
+    before      e6a5a4779ecb61e1cddee3f0c5c909c3991a83d3dd549aa050dddf6fb05fa26c   8 rules
+    after sleep ffd7de09020e2bdebf7a7239022bdab2c1dc27d5d82dc04a8e49f38b49f3afcb   9 rules
+    after restart  BirKnowledgeBase opened (loaded=9)
+
+The induced rule carries real provenance: `seed=42,
+episodeRange=ep-1790595787583-…-ep-1790976102257-…, fidelity=0.2500`. **That fidelity is
+low**, and it should be read as "one weak rule learned from very few episodes", not as
+evidence that induction works well. A larger episodic corpus is the obvious next input.
+
+### Verification for the wave close
+
+| check | result |
+|---|---|
+| brain-runtime, full module run | **494 tests, 0 failures**, 2 skipped |
+| api-gateway, full module run | **152 tests, 0 failures** |
+| quality-gate clean | exit 0 at baseline 270 |
+| quality-gate NEGATIVE re-test | injected -> 270->271 exit 1; reverted -> exit 0 |
+| FROZEN zones | 0/5 with diff |
+| SESSION.md append-only | 0 deletions of prior content |
+| tests deleted | 0 |
+| benchmark (real battery, live gateway) | **47/48 = 97.9%**, no probe regressed, gate exit 0 |
+| gateway health | UP, mode=production, brain_available=true |
+| disk | 111 GB free, HEALTHY; ledger seq 89, monotonic |
+
+**The all-module full suite was NOT re-run this sub-wave** — it takes ~18 minutes and was
+interrupted. The two modules this wave touched were run in full, which is the correct
+evidence for changed code; the last authoritative all-module number remains the prior
+recorded 8 879 / 72 / 26 and is not restated as if measured today.
+
+I initially reported a 33/48 benchmark score and it was my own error: I passed two
+DIFFERENT historical CSVs (w13-postw15 vs w13-live) to the regression script and read the
+cross-wave difference as a regression. Measured against the correct baseline with the
+current battery, it is 47/48 and the gate passes. Recording this because a 14-probe
+"regression" would have been a serious false alarm, and because it is the same failure
+shape as the rest of this wave: a number from the wrong comparison, confidently reported.
+
+### What still fails (mandatory)
+
+1. **Induced-rule fidelity is 0.25.** Induction runs and persists, but one weak rule from
+   ~70 episodes is not a knowledge base of learned structure. The episodic log is thin
+   because W31.1 quarantined 1 058 of 1 115 episodes, which was correct and leaves less to
+   learn from.
+2. **GE-6 remains an intentional gap.** Perception grounding is W32.
+3. **72 pre-existing matrix-core research failures** remain triaged, not fixed.
+4. **All-module full suite not re-measured this sub-wave** (above).
+5. `TrueMindCycle` rebuilds IDF statistics per request; O(corpus) per question.
+6. Operator-gated and untouched: disk cleanup, ethics-config reflex, CI RFC.
+
+### No tag created
+
+`v17.5.0-mind` is deliberately NOT pushed. The release plan conditions the tag on Goal
+Guard re-review passing, and the `goal_*` tools refuse to run from this session. Tagging
+an unverified release is exactly the kind of headline this campaign exists to avoid.

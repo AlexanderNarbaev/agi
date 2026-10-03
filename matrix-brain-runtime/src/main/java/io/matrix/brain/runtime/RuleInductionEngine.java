@@ -37,17 +37,60 @@ public final class RuleInductionEngine {
     private final TsetlinTrainer tsetlin;
     private final MpdtGaProducer mpdt;
 
+    /**
+     * Optional persistence bridge. When set, induced rules are appended to disk as well
+     * as held in memory. RECON-W31.5 (BIR-1).
+     */
+    private final BirKnowledgeBase knowledgeBase;
+
+    /** Rules the knowledge base refused (contradiction quarantine). RECON-W31.5. */
+    private int quarantineCount;
+
+    /** Rules the knowledge base quarantined rather than storing. RECON-W31.5. */
+    public int quarantineCount() {
+        return quarantineCount;
+    }
+
+    /** Rules learned but NOT written to disk, because persistence threw. */
+    private int persistFailed;
+
+    /** Number of induced rules that could not be persisted. */
+    public int persistFailedCount() {
+        return persistFailed;
+    }
+
     public RuleInductionEngine(BirRegistry registry) {
-        this(42L, registry);
+        this(42L, registry, null);
     }
 
     public RuleInductionEngine(long seed, BirRegistry registry) {
+        this(seed, registry, null);
+    }
+
+    /**
+     * WIRING-CRITICAL CONSTRUCTOR — this is the one the gateway uses.
+     *
+     * <p>Pass the SAME {@link BirKnowledgeBase} that owns {@code bir.ndjson}. A bare
+     * registry is memory-only: rules induced during sleep are registered, reported as
+     * learned, and then lost on the next restart, with the file hash unchanged to prove
+     * it. That is how "rules_learned=1" shipped alongside a byte-identical bir.ndjson.</p>
+     *
+     * <p>All constructors funnel here so the seed, RNG and engines are initialised in
+     * exactly one place; an earlier version had a 2-arg constructor that bypassed the
+     * shared initialisation and left {@code random} and {@code knowledgeBase} unset.</p>
+     */
+    public RuleInductionEngine(long seed, BirRegistry registry, BirKnowledgeBase knowledgeBase) {
         if (registry == null) throw new IllegalArgumentException("registry required");
         this.seed = seed;
         this.random = new Random(seed);
         this.registry = registry;
+        this.knowledgeBase = knowledgeBase;
         this.tsetlin = new TsetlinTrainer(16, 64, 200, new Random(seed));
         this.mpdt = new MpdtGaProducer(16, 64, 100, seed);
+    }
+
+    public RuleInductionEngine(BirRegistry registry, BirKnowledgeBase knowledgeBase) {
+        this(42L, registry, knowledgeBase);
     }
 
     /**
@@ -113,10 +156,40 @@ public final class RuleInductionEngine {
         ClauseSetForm bir = ClauseSetForm.lossy(features.length * 64, clauses,
             provenance, chosenFidelity);
 
-        // Register in the registry
+        // Register in the registry.
+        //
+        // RECON-W31.5 (BIR-1): persist through BirKnowledgeBase when one is supplied.
+        // A direct registry.register() updates memory only, so an induced rule vanished
+        // on restart — the mind learned during sleep and forgot on the next boot, with
+        // bir.ndjson's hash unchanged to prove it. The persistence layer is
+        // append-on-register, so routing through it is what makes learning durable.
         String ruleId = "rule-" + seed + "-" + firstId;
-        BirRegistry.Entry entry = registry.register(ruleId, bir, ruleId,
-            chosenFidelity, provenance.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+        BirRegistry.Entry entry;
+        if (knowledgeBase != null) {
+            // BirKnowledgeBase.register applies the contradiction check and appends to
+            // disk, returning a RegisterResult rather than a bare Entry. A quarantined
+            // result is still returned: the caller learns the rule was refused instead of
+            // believing it was learned, which is the Article VIII behaviour.
+            try {
+                BirKnowledgeBase.RegisterResult r = knowledgeBase.register(
+                    ruleId, bir, ruleId, chosenFidelity,
+                    provenance.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+                entry = r.entry();
+                if (!r.accepted()) {
+                    quarantineCount++;
+                }
+            } catch (java.io.IOException ioe) {
+                // Persistence is a durability concern, not a learning one: fall back to
+                // the in-memory registry rather than losing the induction entirely, and
+                // let the caller's trace show the rule was not durable.
+                entry = registry.register(ruleId, bir, ruleId, chosenFidelity,
+                    provenance.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+                persistFailed++;
+            }
+        } else {
+            entry = registry.register(ruleId, bir, ruleId, chosenFidelity,
+                provenance.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+        }
 
         return new RuleInductionResult(entry, tsetlinFidelity, mpdtFidelity, chosenFidelity, provenance);
     }

@@ -77,6 +77,13 @@ public final class MinimalHttpServer {
     /** Ring buffer of recent analyze IDs and explanations */
     private final Map<String, StoredExplain> explanations = new ConcurrentHashMap<>();
     private final HashChainedAuditBuffer auditEvents = new HashChainedAuditBuffer(200);
+    /**
+     * Episodic log, shared with the sleep scheduler so rule induction has real input.
+     * RECON-W31.5 (BIR-1). Null when the log could not be opened; induction then stays
+     * disarmed rather than silently learning from nothing.
+     */
+    private io.matrix.brain.runtime.EpisodicLog episodicLog;
+
     /** RECON-W2: RU/EN transliteration + language detection in the analyze path. */
     private final io.matrix.brain.runtime.MultilingualMind multilingualMind =
         new io.matrix.brain.runtime.MultilingualMind();
@@ -134,11 +141,14 @@ public final class MinimalHttpServer {
             io.matrix.brain.runtime.PersistentHdcStore hdcStore = this.hdcStore;
             // RECON-W3 Part A: draft SleepScheduler/ConsolidationCycle deleted.
             // EpisodicLog is still constructed locally (it's a thin wrapper, not a draft).
-            io.matrix.brain.runtime.EpisodicLog episodicLog = null;
             try {
                 java.nio.file.Path episodicPath = java.nio.file.Path.of(
                     mindDir, "episodic.ndjson");
-                episodicLog = new io.matrix.brain.runtime.EpisodicLog(episodicPath);
+                // RECON-W31.5 (BIR-1): assigned to the FIELD, not a local. Rule
+                // induction needs this log, but the scheduler is constructed in a LATER
+                // try block (after BirKnowledgeBase, so the registry is shared), and
+                // that block cannot see a local declared inside this one.
+                this.episodicLog = new io.matrix.brain.runtime.EpisodicLog(episodicPath);
                 LOG.log(Level.INFO, "EpisodicLog armed at {0}", episodicPath);
             } catch (Throwable t) {
                 LOG.log(Level.WARNING, "EpisodicLog init failed: {0}", t.getMessage());
@@ -158,11 +168,10 @@ public final class MinimalHttpServer {
                             sqlitePath, prod.brainForPersistent(), kb);
                         LOG.log(Level.INFO, "RECON-W2: PersistentMind opened at {0}", sqlitePath);
                         // RECON-W3 Part A: realSleepScheduler is always instantiated (no fallback).
-                        this.realSleepScheduler = new io.matrix.brain.runtime.RealSleepScheduler(
-                            new io.matrix.memory.HierarchicalMemory(),
-                            new io.matrix.lifecycle.ConsolidationCycle(),
-                            new io.matrix.federation.Anonymizer(2),
-                            5 /* idleMinutes */);
+                        // RECON-W31.5 (BIR-1): the scheduler is constructed AFTER
+                        // BirKnowledgeBase below, so induction shares the same registry
+                        // that retrieval and distillation use.
+
                         LOG.log(Level.INFO, "RECON-W3 Part A: RealSleepScheduler armed (always non-null) — draft SleepScheduler deleted");
                         // RECON-W2 #5: AutonomyLoop promoted. Uses io.matrix.brain.BrainCycle
                         // (matrix-core interface) loaded reflectively from the production brain.
@@ -197,6 +206,43 @@ public final class MinimalHttpServer {
                             LOG.log(Level.INFO, "RECON-W15: BirKnowledgeBase opened at {0} (loaded=" + 
                                 this.birKnowledgeBase.size() + ", disk_lines=" + 
                                 this.birKnowledgeBase.onDiskLineCount() + ")", birPath);
+
+                        // RECON-W31.5 (BIR-1): wire rule induction for real.
+                        //
+                        // The 4-arg constructor left episodicLog, birRegistry, ruleEngine
+                        // and featureExtractor all null, and RealSleepScheduler guards
+                        // induction on all four being present — so the mind slept,
+                        // consolidated and emitted digests but NEVER learned a rule. Every
+                        // one of the 8 rules in bir.ndjson carries provenance "from_http";
+                        // none was ever induced. A sleep cycle triggered before this change
+                        // left the BIR file hash byte-identical, which is the proof.
+                        //
+                        // Wired with the SAME registry the distillation path already owns,
+                        // so induced rules are visible to retrieval rather than vanishing
+                        // into a second store.
+                        io.matrix.bir.BirRegistry inductionRegistry =
+                            (this.birKnowledgeBase != null)
+                                ? this.birKnowledgeBase.registry()
+                                : new io.matrix.bir.BirRegistry();
+                        // The engine MUST receive the knowledge base that owns bir.ndjson,
+                        // not just the registry: registry.register() is memory-only, and a
+                        // rule induced during sleep would be lost on the next restart.
+                        io.matrix.brain.runtime.RuleInductionEngine inductionEngine =
+                            new io.matrix.brain.runtime.RuleInductionEngine(
+                                inductionRegistry, this.birKnowledgeBase);
+                        this.realSleepScheduler = new io.matrix.brain.runtime.RealSleepScheduler(
+                            new io.matrix.memory.HierarchicalMemory(),
+                            new io.matrix.lifecycle.ConsolidationCycle(),
+                            new io.matrix.federation.Anonymizer(2),
+                            5 /* idleMinutes */,
+                            this.episodicLog,
+                            inductionRegistry,
+                            inductionEngine,
+                            new io.matrix.brain.runtime.EpisodeFeatureExtractor());
+                        LOG.log(Level.INFO,
+                            "RECON-W31.5 BIR-1: rule induction ARMED (episodicLog="
+                                + (this.episodicLog != null)
+                                + ", registry=shared, engine=RuleInductionEngine)");
                         } catch (Throwable t) {
                             LOG.log(Level.WARNING, "RECON-W15 BirKnowledgeBase init failed: {0}", t.getMessage());
                         }
