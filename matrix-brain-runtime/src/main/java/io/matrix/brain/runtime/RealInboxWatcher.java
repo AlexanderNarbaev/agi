@@ -18,9 +18,20 @@ import java.util.logging.Logger;
  * TRUE-W4 — Inbox watcher with REAL transcoders.
  *
  * <p>Polls {@code data/inbox/} for new files. Text/CSV files are ingested
- * via the persistent HDC store. Audio files ({@code .wav}, {@code .raw})
+ * via the persistent HDC store.
+ *
+ * <p><b>RECON-W32.11 — JPEG and BMP are ROUTED but not DECODED.</b> The extension filter
+ * still sends {@code .jpg} and {@code .bmp} to the image transcoder, which refuses them
+ * with an accurate reason ("unrecognised content and no supported decoder for it") — so
+ * an operator is not misled. But the earlier javadoc claimed those formats were handled,
+ * and that claim was false: {@link MediaDecoding} implements PNG only. The
+ * documentation is corrected here rather than left to describe a capability that does not
+ * exist. Adding JPEG means adding a decoder and its own test fixtures, not widening a
+ * string match.</p>
+ *
+ * <p>Audio files ({@code .wav}, {@code .raw})
  * are processed by the real {@link AudioFFTEncoder} (DFT → frequency
- * bands → HDC). Image files ({@code .png}, {@code .jpg}, {@code .bmp})
+ * bands → HDC). Image files ({@code .png} ONLY — see the format note below)
  * are processed by the real {@link VisionEdgeEncoder} (Sobel edge
  * detection → shape primitives → HDC).</p>
  *
