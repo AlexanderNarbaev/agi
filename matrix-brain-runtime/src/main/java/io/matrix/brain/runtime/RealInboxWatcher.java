@@ -41,6 +41,12 @@ public final class RealInboxWatcher {
      * simply did not ingest it and said nothing. An operator who drops a file into an
      * inbox and gets silence has no way to learn the system rejected it.</p>
      */
+    /**
+     * Fixed timestamp for audio frames, so a re-scan of the same file is byte-identical.
+     * Unit: milliseconds. Any constant works; the value is not a claim about time.
+     */
+    private static final long FIXED_FRAME_CLOCK_MS = 0L;
+
     private final java.util.List<String> rejected = java.util.Collections.synchronizedList(
         new java.util.ArrayList<>());
 
@@ -59,7 +65,11 @@ public final class RealInboxWatcher {
     public RealInboxWatcher(Path inboxDir, PersistentHdcStore hdcStore) {
         this.inboxDir = inboxDir;
         this.hdcStore = hdcStore;
-        this.audioEncoder = new AudioFFTEncoder(256, 8, 42L);
+        // RECON-W32.5: a FIXED clock, not the system clock. The watcher's perceptions
+        // are persisted with a content hash, so a moving timestamp would make two scans
+        // of the same file disagree and defeat deduplication.
+        this.audioEncoder = new AudioFFTEncoder(256, 8, 42L,
+            io.matrix.transcoders.AudioFFTEncoder.fixedClock(FIXED_FRAME_CLOCK_MS));
         this.imageEncoder = new VisionEdgeEncoder(256, 32);
     }
 

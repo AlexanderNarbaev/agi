@@ -68,4 +68,36 @@ class AudioFFTEncoderTest {
         for (boolean b : hdc) if (b) trueCount++;
         assertTrue(trueCount > 0);
     }
+
+    /**
+     * RECON-W32.5 — Article III: a frame must be a deterministic function of its input.
+     *
+     * <p>The encoder stamped frames with System.currentTimeMillis(), so two runs over the
+     * same audio produced different SpectralFrames. Anything that compared or hashed a
+     * frame — content dedup in the inbox watcher, a test asserting a frame's contents —
+     * was comparing noise.</p>
+     */
+    @org.junit.jupiter.api.Test
+    void aFixedClockMakesTheFrameByteIdenticalAcrossRuns() {
+        AudioFFTEncoder a = new AudioFFTEncoder(256, 8, 42L,
+            AudioFFTEncoder.fixedClock(1234L));
+        AudioFFTEncoder b = new AudioFFTEncoder(256, 8, 42L,
+            AudioFFTEncoder.fixedClock(1234L));
+        float[] samples = new float[64];
+        for (int i = 0; i < samples.length; i++) {
+            samples[i] = (float) Math.sin(2 * Math.PI * 5 * i / samples.length);
+        }
+        var fa = a.computeDFT(samples, 8000);
+        var fb = b.computeDFT(samples, 8000);
+        org.junit.jupiter.api.Assertions.assertArrayEquals(fa.magnitudes(), fb.magnitudes());
+        org.junit.jupiter.api.Assertions.assertArrayEquals(fa.phases(), fb.phases());
+        org.junit.jupiter.api.Assertions.assertEquals(fa.timestamp(), fb.timestamp());
+        org.junit.jupiter.api.Assertions.assertEquals(1234L, fa.timestamp());
+    }
+
+    @org.junit.jupiter.api.Test
+    void aNullClockIsRefused() {
+        org.junit.jupiter.api.Assertions.assertThrows(IllegalArgumentException.class,
+            () -> new AudioFFTEncoder(256, 8, 42L, null));
+    }
 }

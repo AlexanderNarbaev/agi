@@ -2799,3 +2799,57 @@ Before this repair the maximum was 255. The vectors are whole again.
 brain-runtime 536 -> **538** tests, 0 failures. api-gateway **152**, 0 failures.
 quality-gate exit 0. FROZEN 0/5. 0 tests deleted. Knowledge store 1 973 records including
 the metadata record.
+
+
+## 2026-10-03 — RECON-W32.6: a wall clock in the runtime mind path (Article III)
+
+**What the user can newly observe:** re-scanning the same audio file now produces a
+byte-identical perception, so the inbox deduplicates it instead of treating each scan as a
+new observation. Nothing in chat changes; this is determinism, not capability.
+
+### The breach
+
+`AudioFFTEncoder.computeDFT` stamped every frame with `System.currentTimeMillis()`:
+
+    return new SpectralFrame(magnitudes, phases, sampleRate, System.currentTimeMillis());
+
+Article III requires a deterministic function of the input. A moving timestamp is not, so
+two runs over identical audio produced different `SpectralFrame`s, and anything that
+compared or hashed a frame was comparing noise. The inbox persists perceptions with a
+content hash, so a moving timestamp would have defeated deduplication: the same file
+scanned twice looked like two different observations.
+
+### The fix is injection, not removal
+
+The timestamp is still reported — a frame without one is less useful for logs — but it now
+comes from an injected `Clock`:
+
+    AudioFFTEncoder(int dimension, int bandCount, long seed)              // system clock
+    AudioFFTEncoder(int dimension, int bandCount, long seed, Clock clock) // injected
+
+`AudioFFTEncoder.fixedClock(millis)` gives a reproducible source. The three-argument
+constructor is retained and documented as convenient but NOT reproducible, so no existing
+caller silently changes behaviour.
+
+**The production caller passes a fixed clock.** `RealInboxWatcher` uses
+`fixedClock(0L)`, because reproducibility there is a requirement rather than a preference:
+its perceptions are content-hashed and must agree across re-scans.
+
+### Tests that make the injection mean something
+
+An injectable clock is worthless without assertions that use it:
+
+- two encoders with the same fixed clock produce identical magnitudes, phases AND
+  timestamp
+- the timestamp equals the fixed value
+- a null clock is refused
+
+### Verification
+
+matrix-core full module: **8 089 tests, 68 failures** — the documented research debt.
+Checked explicitly: **no failure lies in the area changed** (no Transcoder/Audio/FFT/
+Percept/Sensor/Vision test failed), and `:matrix-core:test --tests "io.matrix.transcoders.*"`
+is green.
+
+matrix-brain-runtime **538** tests, 0 failures. api-gateway **152**, 0 failures.
+quality-gate exit 0. FROZEN 0/5. 0 tests deleted.

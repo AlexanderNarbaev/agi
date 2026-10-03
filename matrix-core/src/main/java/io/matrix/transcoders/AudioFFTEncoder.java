@@ -14,6 +14,32 @@ import java.util.*;
 public final class AudioFFTEncoder {
 
     /**
+     * Source of frame timestamps. Unit: milliseconds.
+     *
+     * <p>Injected rather than read from {@link System}, so a caller that needs
+     * reproducibility can supply a fixed clock and get byte-identical frames. The default
+     * is the system clock, which is convenient and NOT deterministic — pass a fixed one
+     * in any path whose output is compared, hashed or asserted.</p>
+     */
+    public interface Clock {
+        long nowMillis();
+    }
+
+    /** The default clock. Reads the system clock; convenient, not reproducible. */
+    public static final Clock SYSTEM_CLOCK = System::currentTimeMillis;
+
+    /**
+     * A clock that always reports the same instant. Unit: milliseconds.
+     * Use in tests and anywhere a frame must be byte-comparable across runs.
+     */
+    public static Clock fixedClock(long millis) {
+        final long v = millis;
+        return () -> v;
+    }
+
+    private final Clock clock;
+
+    /**
      * Symbolic frequency band representation.
      */
     public record FrequencyBand(double lowHz, double highHz, double energy) {}
@@ -32,10 +58,28 @@ public final class AudioFFTEncoder {
     private final int bandCount;
     private final Random rng;
 
+    /** Uses the system clock. Convenient; NOT reproducible across runs. */
     public AudioFFTEncoder(int dimension, int bandCount, long seed) {
+        this(dimension, bandCount, seed, SYSTEM_CLOCK);
+    }
+
+    /**
+     * RECON-W32.5: clock-injecting constructor.
+     *
+     * <p>Article III requires a deterministic function of the input. A frame stamped with
+     * {@link System#currentTimeMillis()} is not, so two runs over the same audio gave
+     * different {@link SpectralFrame}s and any comparison between them was meaningless.
+     * Supplying the clock makes reproducibility a decision of the caller rather than an
+     * accident.</p>
+     *
+     * @param clock source of frame timestamps, never null
+     */
+    public AudioFFTEncoder(int dimension, int bandCount, long seed, Clock clock) {
+        if (clock == null) throw new IllegalArgumentException("clock required");
         this.dimension = dimension;
         this.bandCount = bandCount;
         this.rng = new Random(seed);
+        this.clock = clock;
     }
 
     /**
@@ -57,7 +101,12 @@ public final class AudioFFTEncoder {
             magnitudes[k] = (float) Math.sqrt(real * real + imag * imag);
             phases[k] = (float) Math.atan2(imag, real);
         }
-        return new SpectralFrame(magnitudes, phases, sampleRate, System.currentTimeMillis());
+        // RECON-W32.5: the frame timestamp comes from an INJECTED clock. This call was
+        // System.currentTimeMillis(), a wall clock in the runtime mind path: an Article
+        // III breach that also made every frame non-reproducible, so two runs over the
+        // same audio produced different SpectralFrames and any comparison of them was
+        // meaningless. Article III requires a deterministic function of the input.
+        return new SpectralFrame(magnitudes, phases, sampleRate, clock.nowMillis());
     }
 
     /**
