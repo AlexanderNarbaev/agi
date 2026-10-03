@@ -2282,3 +2282,84 @@ Turn measurements into nameable facts through the existing promotion gate, in th
 
 Steps 1-3 all write facts; none of them needs a new store or a new retrieval path, and
 all of them must go through the gate or W31.1's work is undone.
+
+
+## 2026-10-03 — RECON-W32.1 SCOPE CHANGE: the perception pipeline is fabricated
+
+**What the user can newly observe: nothing new was built, deliberately.** The planned
+W32.1 sensor adapter was NOT written, because the measurement it would have fed into is
+not a measurement. Recording the finding instead of stacking a new sensor pipeline on top
+of it.
+
+### A text file named .wav is "heard"
+
+    data/mind/inbox/fake.wav   -> "I am not audio" (plain text)
+    mind stores: inbox:fake.wav audio:frame=8 hdc_dim=256 total_energy=18.74766463657823
+
+A file containing no audio at all produced a valid-looking audio perception, with
+provenance and a confidence the system is willing to report.
+
+### A text file named .png is "seen"
+
+    data/mind/inbox/fake.png   -> plain text
+    mind stores: inbox:fake.png image:primitives=64 hdc_dim=256 total_magnitude=15282.36
+
+### The cause is in the transcoders, and it is not a small bug
+
+`RealInboxWatcher.transcodeAudio` (line ~120):
+
+    int len = Math.min(raw.length, 1024);
+    for (int i = 0; i < len; i++) samples[i] = (raw[i] - 128) / 128.0f;
+
+It does not decode WAV. There is no RIFF chunk parsing, no PCM sample extraction, not
+even header-skipping. It takes the first 1024 BYTES of the file and treats each byte as
+one audio sample — so a 44-byte RIFF header is "heard" as 44 samples, and the two bytes of
+each 16-bit sample are heard as two samples an octave apart.
+
+`RealInboxWatcher.transcodeImage` (line ~143):
+
+    pixels[i] = i < raw.length ? raw[i] : (byte) (i % 256);
+
+It does not decode PNG. It copies file bytes into a 32x32 grayscale buffer and pads with
+`i % 256`. There is no zlib inflate, no PNG chunk parsing, no colour type handling. A
+solid-red 64x64 PNG and a text file differ only in their bytes.
+
+**The encoders are real. Their inputs are not.** A real DFT runs over fabricated samples
+and a real edge detector runs over fabricated pixels, then the HDC vectors are DISCARDED
+and a text digest is persisted. The measured 440 Hz tone and the 100 Hz tone differ
+(218.73 vs 231.07) only because their file bytes differ.
+
+### Why 494 tests never caught it
+
+`RealInboxWatcherWiringTest` asserts wiring only: the watcher is constructed, the
+transcoder fields are named "AudioFFTEncoder" and "VisionEdgeEncoder", and `scan()`
+returns at least 1. **No test anywhere feeds a real media file and asserts a value.** A
+test that passed a text file and required rejection would have failed on the first run,
+and it does not exist.
+
+This is the same defect shape as the rest of W31, one level deeper: a subsystem that
+reports confident, provenance-stamped results derived from something other than the thing
+it claims to measure. W31.1 caught it in knowledge, W31.2 in retrieval, and it is present
+in perception.
+
+### What this invalidates, stated plainly
+
+- The W31 "GE-6 via perception" plan assumes a working image path. There is none.
+- Any earlier claim that the inbox "ingests audio" or "detects image primitives" is
+  unsupported. `data/mind/hdc_kb.ndjson` now contains four perception facts derived from
+  file bytes; they should be quarantined on the same reasoning as the W31.1 probe poison,
+  because they are provenance-stamped assertions the system cannot support.
+- The W32.1 order changes. The honest first step is not a sensor adapter; it is:
+  1. **Reject what cannot be decoded** — a file whose magic bytes do not match its
+     extension must be refused and reported, not perceived. This is small and it is the
+     difference between "I heard something" and "I heard a 440 Hz tone".
+  2. **Real WAV decode** (RIFF chunk walk, PCM to float, honest sample rate) so the DFT
+     sees a waveform.
+  3. **Real PNG decode** (chunk walk, zlib inflate, colour type) so edges see pixels.
+  4. **A test per transcoder that asserts a VALUE** for a known input — e.g. a synthesised
+     440 Hz tone must yield a dominant band at 440 Hz. A wiring test cannot substitute.
+  5. **Quarantine the four fabricated perception facts** already in the store.
+  6. Only then: sensor adapter, frequency naming, colour attributes, GE-6 by perception.
+
+Steps 1-4 are small and mechanical. They are also the difference between the system
+perceiving and the system appearing to.
