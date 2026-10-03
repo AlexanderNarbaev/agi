@@ -84,6 +84,14 @@ public final class MinimalHttpServer {
      */
     private io.matrix.brain.runtime.EpisodicLog episodicLog;
 
+    /**
+     * HDC store width in bits. Must match the dimension the store file was written at;
+     * a mismatch is now a loud load failure rather than silent truncation.
+     * Unit: bits. Matches KnowledgeForgeIngest.DEFAULT_DIM.
+     */
+    private static final int HDC_STORE_DIM =
+        io.matrix.brain.runtime.KnowledgeForgeIngest.DEFAULT_DIM;
+
     /** RECON-W2: RU/EN transliteration + language detection in the analyze path. */
     private final io.matrix.brain.runtime.MultilingualMind multilingualMind =
         new io.matrix.brain.runtime.MultilingualMind();
@@ -132,7 +140,12 @@ public final class MinimalHttpServer {
             this.hdcStore = null;
             try {
                 java.nio.file.Files.createDirectories(java.nio.file.Path.of(mindDir));
-                this.hdcStore = new io.matrix.brain.runtime.PersistentHdcStore(hdcPath, 256);
+                // RECON-W32.5: the store width must match the file, and the file now
+                // carries its own dimension. 256 here silently truncated every bit at or
+                // above 256 when the corpus was written at 512, which changed contradiction
+                // detection with no visible error.
+                this.hdcStore = new io.matrix.brain.runtime.PersistentHdcStore(
+                    hdcPath, HDC_STORE_DIM);
             } catch (Throwable t) {
                 LOG.log(Level.WARNING,
                     "Could not open PersistentHdcStore at {0}: {1}; falling back to in-memory",

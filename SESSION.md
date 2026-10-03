@@ -2732,3 +2732,70 @@ discard.
 brain-runtime 533 -> **536** tests, 0 failures. api-gateway **152**, 0 failures.
 quality-gate exit 0. FROZEN 0/5. 0 tests deleted. Knowledge store 1 972 records.
 Gateway UP.
+
+
+## 2026-10-03 — RECON-W32.5: the store had no recorded width, and the mismatch was already destructive
+
+**What the user can newly observe:** nothing new in chat, and the honest framing is that
+this sub-wave is a durability repair. The user-visible effect is that the knowledge base
+can no longer be silently truncated by a configuration mismatch — the same class of
+defect that destroyed 2 910 facts an hour earlier.
+
+### What was wrong
+
+The store's vector width lived only in a constructor argument. Nothing in the file
+recorded it, so a file written at 512 and opened at 256 loaded without complaint:
+`r.toBitSet(dim)` silently dropped every bit at or above 256. The gateway constructed its
+store at 256; the corpus had been ingested at 512.
+
+**It had already happened.** Before this sub-wave the maximum bit index across all 1 972
+records was exactly 255 — the signature of a store that had been truncated and then
+rewritten at the narrower width. Contradiction detection was running on corrupted
+vectors with no error anywhere.
+
+### Three changes
+
+**1. The store file is now self-describing.** The width travels with the data as an
+ordinary record — `{"id":"__hdc_meta__","content":"dim=512","bits":[]}` — rather than a
+header line of a different shape. A header would have broken the format's only
+invariant, which an existing test correctly enforces: every line of the file is a
+readable, independently parseable record. The metadata record keeps that true, and a test
+now asserts the file still contains exactly one such record and that its dim is 256 in a
+256-wide store.
+
+**2. A width mismatch is a loud refusal.** Verified live:
+
+    Refusing to load data/mind/hdc_kb.ndjson: record wd-en-2537b2a6-has capital has bit
+    index 427 but the store is configured for dim 256 while the file declares dim 512.
+    The file has NOT been modified.
+    file untouched: true
+
+The message names the record, the offending bit, the configured width and the declared
+one, and leaves the file alone. A test asserts the refusal AND that the file is
+byte-identical afterwards, because a refusal that damages the file is worse than no
+refusal.
+
+**3. The gateway opens at the width the data actually has**, sourced from
+`KnowledgeForgeIngest.DEFAULT_DIM` rather than a second literal that could drift from
+the ingest.
+
+### Re-ingested at full width
+
+    max bit index across all records: 511  (dim 512 allows 0..511)
+
+Before this repair the maximum was 255. The vectors are whole again.
+
+### Live after the change
+
+    HDC store loaded 1,972 records
+    What is the capital of Kenya?          ANSWER  Kenya capital Nairobi
+    What is the chemical symbol for gold?  ANSWER  gold symbol Au
+    Столица Кении?                         ANSWER  Кения имеет столицу Найроби
+    What is the temperature?               ANSWER  temperature_c rose 20 to 22.8
+    What is the chemical formula of water? REFUSED
+
+### Verification
+
+brain-runtime 536 -> **538** tests, 0 failures. api-gateway **152**, 0 failures.
+quality-gate exit 0. FROZEN 0/5. 0 tests deleted. Knowledge store 1 973 records including
+the metadata record.

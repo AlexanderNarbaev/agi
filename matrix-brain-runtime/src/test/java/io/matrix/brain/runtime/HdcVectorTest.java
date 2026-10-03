@@ -1,10 +1,14 @@
 package io.matrix.brain.runtime;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.BitSet;
+import java.util.List;
 import java.util.Random;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -190,5 +194,42 @@ class HdcVectorTest {
         // is scored as novel) or over-reads (another vector's bits, so unrelated facts
         // look similar). It is asserted explicitly for this reason.
         assertEquals((dim + 63) / 64, HdcVector.wordCount(dim));
+    }
+
+    // ---- RECON-W32.5: the store must be self-describing --------------------
+
+    @Test
+    void aStoreFileRecordsItsOwnDimension(@TempDir Path dir) throws java.io.IOException {
+        PersistentHdcStore s = new PersistentHdcStore(dir.resolve("kb.ndjson"), 512);
+        s.teach("a", "Paris capital France");
+        List<String> lines = Files.readAllLines(dir.resolve("kb.ndjson"));
+        assertTrue(lines.stream().anyMatch(l ->
+                l.contains(PersistentHdcStore.META_ID) && l.contains("dim=512")),
+            "the file must carry its width, got: " + lines.get(0));
+        // Uniform NDJSON: every line, including the metadata record, is a record.
+        for (String l : lines) {
+            assertTrue(l.startsWith("{") && l.endsWith("}"), "not a record: " + l);
+        }
+        assertEquals(512, new PersistentHdcStore(dir.resolve("kb.ndjson"), 512)
+            .storedDimension());
+    }
+
+    @Test
+    void openingAStoreAtTheWrongWidthIsALoudFailureNotSilentTruncation(@TempDir Path dir)
+            throws java.io.IOException {
+        // The gateway once built its store at 256 while the corpus was written at 512.
+        // Every bit at or above 256 was dropped, which changes contradiction detection
+        // and reports nothing. Now it refuses and leaves the file alone.
+        Path kb = dir.resolve("kb.ndjson");
+        PersistentHdcStore wide = new PersistentHdcStore(kb, 512);
+        wide.teach("a", "Paris capital France");
+        String before = Files.readString(kb);
+
+        IllegalStateException ex = org.junit.jupiter.api.Assertions.assertThrows(
+            IllegalStateException.class, () -> new PersistentHdcStore(kb, 128));
+        assertTrue(ex.getMessage().contains("bit index"),
+            "the failure must name the problem, got: " + ex.getMessage());
+        assertEquals(before, Files.readString(kb),
+            "a refused load must leave the file untouched");
     }
 }

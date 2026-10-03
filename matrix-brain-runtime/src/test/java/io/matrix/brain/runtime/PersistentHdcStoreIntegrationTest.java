@@ -149,15 +149,22 @@ class PersistentHdcStoreIntegrationTest {
         store.teach("with-quote", "He said \"hi\"");
         store.teach("with-newline", "Line1\nLine2");
         String content = Files.readString(storePath);
-        // Each line is independent JSON.
+        // Each line is independent JSON. RECON-W32.5 added one metadata record
+        // carrying the store width, so the file now has 3 knowledge records plus that
+        // one. It is an ordinary record, not a header of a different shape, precisely so
+        // the loop below still holds for every line.
         String[] lines = content.split("\n");
-        assertThat(lines.length).isEqualTo(3);
+        assertThat(lines.length).isEqualTo(4);
+        int meta = 0;
         for (String l : lines) {
             assertThat(l).startsWith("{").endsWith("}");
             assertThat(l).contains("\"id\":");
             assertThat(l).contains("\"content\":");
             assertThat(l).contains("\"bits\":");
+            if (l.contains(PersistentHdcStore.META_ID)) meta++;
         }
+        assertThat(meta).isEqualTo(1);
+        assertThat(content).contains("dim=256");
         // Quotes must be escaped in content
         assertThat(content).contains("\\\"").contains("\\n");
     }

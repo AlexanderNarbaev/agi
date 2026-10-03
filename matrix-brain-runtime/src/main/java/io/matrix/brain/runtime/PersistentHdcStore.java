@@ -221,18 +221,46 @@ public final class PersistentHdcStore {
             int loaded = 0;
             int skipped = 0;
             int firstBadLine = -1;
+            int firstOverlongBit = -1;
+            String firstOverlongId = null;
             for (int i = 0; i < lines.size(); i++) {
                 String line = lines.get(i);
                 if (line.isBlank()) continue;
+                if (isDimensionHeader(line)) {
+                    storedDim = parseDimensionHeader(line);
+                    continue;
+                }
                 Record r = Record.fromJson(line);
                 if (r == null) {
                     skipped++;
                     if (firstBadLine < 0) firstBadLine = i + 1;
                     continue;
                 }
+                // RECON-W32.5: refuse to load a record whose bits do not fit the
+                // configured width. Silently dropping the overflow truncates vectors,
+                // which changes contradiction detection without any visible error — the
+                // gateway builds its store at 256 while an ingest may have written 512,
+                // and the mismatch was invisible in both directions.
+                for (int b : r.bits) {
+                    if (b >= dim) {
+                        firstOverlongBit = b;
+                        firstOverlongId = r.id;
+                        break;
+                    }
+                }
+                if (firstOverlongId != null) break;
                 vectors.put(r.id, r.toBitSet(dim));
                 contents.put(r.id, r.content);
                 loaded++;
+            }
+            if (firstOverlongId != null) {
+                throw new IllegalStateException(
+                    "Refusing to load " + storagePath + ": record " + firstOverlongId
+                        + " has bit index " + firstOverlongBit + " but the store is "
+                        + "configured for dim " + dim
+                        + (storedDim > 0 ? " while the file declares dim " + storedDim : "")
+                        + ". The file has NOT been modified. Load the store at the "
+                        + "dimension the file was written at, or re-ingest at " + dim + ".");
             }
             if (skipped > 0) {
                 throw new IllegalStateException(
@@ -249,6 +277,52 @@ public final class PersistentHdcStore {
         }
     }
 
+    /**
+     * The dimension the file declares, or -1 when it declares none.
+     * Unit: bits.
+     *
+     * <p>Written as a header line so the store file is SELF-DESCRIBING. Before this, the
+     * width lived only in the constructor argument: a file written at 512 and opened at
+     * 256 was indistinguishable from a correct load right up until the vectors were
+     * truncated and a contradiction check silently changed its answer.</p>
+     */
+    private int storedDim = -1;
+
+    /** The dimension this store's file was written at, or -1 if unrecorded. */
+    public int storedDimension() {
+        return storedDim;
+    }
+
+    /**
+     * Id of the self-describing metadata record. Unit: record identifier.
+     *
+     * <p>The dimension is written as an ordinary record rather than a special line, so
+     * the file stays uniformly-shaped NDJSON: every line parses as a record and a human
+     * can read it. A header line of a different shape would have broken the format's
+     * only invariant.</p>
+     */
+    public static final String META_ID = "__hdc_meta__";
+
+    /** Content marker of the metadata record. Unit: text. */
+    private static final String META_DIM_MARKER = "dim=";
+
+    private static boolean isDimensionHeader(String line) {
+        return line.contains("\"" + META_ID + "\"");
+    }
+
+    private static int parseDimensionHeader(String line) {
+        int i = line.indexOf(META_DIM_MARKER);
+        if (i < 0) return -1;
+        int j = i + META_DIM_MARKER.length();
+        StringBuilder sb = new StringBuilder();
+        while (j < line.length() && Character.isDigit(line.charAt(j))) sb.append(line.charAt(j++));
+        try {
+            return sb.length() == 0 ? -1 : Integer.parseInt(sb.toString());
+        } catch (NumberFormatException e) {
+            return -1;
+        }
+    }
+
     /** Atomic write: serialize to .tmp then rename. */
     private void persistAtomically() {
         try {
@@ -256,6 +330,11 @@ public final class PersistentHdcStore {
                 ? Path.of(".") : storagePath.getParent());
             Path tmp = storagePath.resolveSibling(storagePath.getFileName() + ".tmp");
             StringBuilder sb = new StringBuilder();
+            // Self-describing: the width travels with the data, as an ordinary record so
+            // the file stays uniform NDJSON.
+            sb.append("{\"id\":\"").append(META_ID)
+              .append("\",\"content\":\"").append(META_DIM_MARKER).append(dim)
+              .append("\",\"bits\":[]}\n");
             for (Map.Entry<String, String> e : contents.entrySet()) {
                 Record r = new Record(e.getKey(), e.getValue(),
                     bitSetToIndices(vectors.get(e.getKey()), dim));
@@ -332,7 +411,7 @@ public final class PersistentHdcStore {
         String toJson() {
             // Stable, minimal JSON. We avoid Jackson here to keep the persistence
             // path dependency-free for the runtime module.
-            StringBuilder sb = new StringBuilder(64 + content.length() + bits.size() * 4);
+            StringBuilder sb = new StringBuilder(80 + content.length() + bits.size() * 4);
             sb.append("{\"id\":\"").append(escape(id))
               .append("\",\"content\":\"").append(escape(content))
               .append("\",\"bits\":[");
