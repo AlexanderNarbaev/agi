@@ -2363,3 +2363,98 @@ in perception.
 
 Steps 1-4 are small and mechanical. They are also the difference between the system
 perceiving and the system appearing to.
+
+
+## 2026-10-03 — RECON-W32.1: perception, honestly decoded
+
+**What the user can newly observe:** the mind now perceives, or refuses to. Dropped a real
+440 Hz WAV and two real 32x32 PNGs into the inbox:
+
+    inbox:room.jsonl    {"t":0,"temperature_c":20.0,"fan_on":false}...
+    inbox:tone440.wav   audio: 8000 Hz 2000 samples, 8 bands, dominant band 0-500 Hz
+    inbox:red32.png     image: 32x32 px, dominant colour red
+    inbox:blue32.png    image: 32x32 px, dominant colour dark
+
+    inbox:fake.wav      REFUSED — named as audio, magic bytes are not RIFF/WAVE
+    inbox:red64.png     REFUSED — PNG signature present but IDAT was malformed
+
+The sample rate and sample count now come from the WAV header instead of a hardcoded
+44100, the image dimensions come from the PNG's IHDR, and the colour comes from decoded
+pixels. A file that cannot be decoded produces a REFUSAL in the gateway log rather than a
+number.
+
+### The existing test suite was asserting the fabrication
+
+This is the part worth remembering. `AutonomyAndInboxIntegrationTest` contained:
+
+    byte[] wav = new byte[1024];
+    for (int i = 0; i < wav.length; i++) wav[i] = (byte) ((i * 37) % 256);
+    Files.write(inbox.resolve("sound.wav"), wav);
+    ...
+    assertThat(n).isEqualTo(1);
+    assertThat(content).contains("audio:");
+
+1024 bytes of arbitrary data named `sound.wav`, and the test REQUIRED the watcher to
+produce a perception from it. It did not merely fail to catch the defect — it encoded the
+defect as expected behaviour, which is why 494 green tests were compatible with a system
+that "heard" text files. The image test did the same with 1024 bytes of `(i*53+17)%256`
+named `photo.png`.
+
+Both now feed real files and assert real values, and a third test asserts the REFUSAL
+path that did not exist before.
+
+### What was built
+
+- `MediaDecoding` — honest WAV (8/16-bit PCM, chunk walk so LIST chunks before `data` are
+  not mistaken for samples) and PNG (colour types 0/2/6, all five filter types, real
+  zlib inflate) decoders. Every method returns null rather than a guess. Unsupported
+  formats — ADPCM, μ-law, palette, 16-bit, interlaced — are refused, and the refusals
+  say why.
+- `MediaDecodingTest` (13 tests) — including the assertion that was missing entirely: a
+  decoded 440 Hz tone must have a zero-crossing count near 2·440·duration. A wiring test
+  cannot distinguish a real decode from a byte hash; this one can.
+- `MediaDecodingTestFixtures` — shared deterministic fixtures, so the unit tests and the
+  integration tests construct the same files.
+- `RealInboxWatcher` — refuses undecodable input, records refusals in `rejections()`,
+  names the dominant audio band in Hz from the encoder's own band edges, and names the
+  dominant image colour from decoded pixels. `.jsonl`/`.ndjson` sensor streams are now
+  read as structured text instead of falling through to a SHA-256 hash.
+
+### A real bug the new test caught in my own decoder
+
+PNG chunk layout is `[length][type][data][crc]`. I had written the PNG walker in the RIFF
+order `[id][size][data]`, so the chunk LENGTH was read as a chunk TYPE and every real
+image was rejected. The first version of the fixture test caught it immediately. Recorded
+because the failure was silent and total — a decoder that rejects everything looks exactly
+like a decoder that is being careful.
+
+### Seven fabricated perception facts quarantined
+
+The 7 `inbox:` records derived from file bytes are moved to
+`data/mind/hdc_kb.fabricated-perception.ndjson`, on the same reasoning as the W31.1 probe
+poison: they are provenance-stamped claims the system cannot support. The KB is back to
+2901 real Wikidata facts.
+
+### Honest limitations of what now works
+
+- **Band resolution is too coarse to name a frequency.** 8 bands over 8000 Hz means a
+  440 Hz tone and a 100 Hz tone both report "dominant band 0-500 Hz". The pipeline
+  decodes honestly; it does not yet discriminate. More bands, or a peak-pick on the
+  spectrum rather than a band sum, is the fix.
+- **The colour namer is crude.** A dark blue (20,20,220) is reported as "dark" because
+  the name is chosen by checking red before blue. The colour is read from real pixels; the
+  naming is naive. It must not be described as colour recognition.
+- **0 edge primitives on a solid image is correct** — a uniform image has no edges. It is
+  not evidence that the edge detector works; it needs a non-uniform fixture to demonstrate
+  anything, and does not have one yet.
+- VisionEdgeEncoder consumes 8-bit grayscale derived from RGB by fixed luma weights, so
+  hue is discarded before edge detection. Colour and shape are therefore not jointly
+  available to any downstream stage.
+
+### Verification
+
+brain-runtime 494 -> **508** tests, 0 failures. api-gateway **152**, 0 failures.
+quality-gate: the new file initially pushed literals 270 -> 271 and the gate BLOCKED the
+build; four named constants with units were extracted and it returned to 270. FROZEN 0/5.
+0 tests deleted. Gateway UP. Three independent reviewer agents are auditing W31 in
+parallel; their findings will be verified before being accepted.

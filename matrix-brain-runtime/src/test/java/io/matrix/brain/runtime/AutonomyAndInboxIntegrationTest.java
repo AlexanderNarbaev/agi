@@ -132,14 +132,17 @@ class AutonomyAndInboxIntegrationTest {
         assertThat(content).contains("inbox:note.txt");
     }
 
+    /**
+     * RECON-W32.1 — this test previously wrote 1024 bytes of {@code (i*37)%256} into a
+     * file named {@code sound.wav} and REQUIRED the watcher to produce a perception from
+     * it. It did not just fail to catch the fabrication, it asserted that the fabrication
+     * worked. The test now feeds a real 440 Hz WAV and requires a real frequency.
+     */
     @Test
     void real_inbox_transcodes_audio_via_AudioFFTEncoder(@TempDir Path tmp) throws IOException {
         Path inbox = tmp.resolve("inbox");
         Files.createDirectories(inbox);
-        // Write 1024 bytes of varying values to act as a synthetic .wav file
-        byte[] wav = new byte[1024];
-        for (int i = 0; i < wav.length; i++) wav[i] = (byte) ((i * 37) % 256);
-        Files.write(inbox.resolve("sound.wav"), wav);
+        Files.write(inbox.resolve("tone.wav"), MediaDecodingTestFixtures.synthWav(440.0, 8000, 0.25));
 
         PersistentHdcStore store = new PersistentHdcStore(tmp.resolve("kb.ndjson"), 256);
         RealInboxWatcher w = new RealInboxWatcher(inbox, store);
@@ -147,20 +150,20 @@ class AutonomyAndInboxIntegrationTest {
         int n = w.scan();
         assertThat(n).isEqualTo(1);
         String content = store.snapshot().values().iterator().next();
-        // Real transcoder produces "audio:frame=N hdc_dim=256 total_energy=X"
         assertThat(content).contains("audio:");
-        assertThat(content).contains("hdc_dim=256");
-        assertThat(content).contains("total_energy=");
+        // The declared rate must come from the WAV header, not a hardcoded 44100.
+        assertThat(content).contains("8000 Hz");
+        assertThat(content).contains("dominant band");
     }
 
+    /** RECON-W32.1 — same correction for the image path. */
     @Test
     void real_inbox_transcodes_image_via_VisionEdgeEncoder(@TempDir Path tmp) throws IOException {
         Path inbox = tmp.resolve("inbox");
         Files.createDirectories(inbox);
-        // Write 1024 bytes as synthetic image data
-        byte[] img = new byte[1024];
-        for (int i = 0; i < img.length; i++) img[i] = (byte) ((i * 53 + 17) % 256);
-        Files.write(inbox.resolve("photo.png"), img);
+        // A real 16x16 solid-red PNG, previously 1024 arbitrary bytes called photo.png.
+        Files.write(inbox.resolve("photo.png"),
+            MediaDecodingTestFixtures.synthPng(16, 16, 220, 20, 20));
 
         PersistentHdcStore store = new PersistentHdcStore(tmp.resolve("kb.ndjson"), 256);
         RealInboxWatcher w = new RealInboxWatcher(inbox, store);
@@ -169,8 +172,32 @@ class AutonomyAndInboxIntegrationTest {
         assertThat(n).isEqualTo(1);
         String content = store.snapshot().values().iterator().next();
         assertThat(content).contains("image:");
-        assertThat(content).contains("primitives=");
-        assertThat(content).contains("hdc_dim=256");
+        // Dimensions must be the PNG's own, decoded from IHDR.
+        assertThat(content).contains("16x16");
+        assertThat(content).contains("dominant colour");
+    }
+
+    /**
+     * RECON-W32.1 — the refusal case, which is the assertion that was missing entirely.
+     * A text file named .wav must be REFUSED and the refusal must be visible, not
+     * silently indistinguishable from an absent file.
+     */
+    @Test
+    void real_inbox_refusesATextFileNamedWavAndSaysWhy(@TempDir Path tmp) throws IOException {
+        Path inbox = tmp.resolve("inbox");
+        Files.createDirectories(inbox);
+        Files.writeString(inbox.resolve("fake.wav"),
+            "I am not audio, I am text pretending to be a wav file");
+
+        PersistentHdcStore store = new PersistentHdcStore(tmp.resolve("kb.ndjson"), 256);
+        RealInboxWatcher w = new RealInboxWatcher(inbox, store);
+
+        assertThat(w.scan()).isEqualTo(0);
+        assertThat(store.snapshot()).isEmpty();
+        assertThat(w.rejections()).hasSize(1);
+        assertThat(w.rejections().get(0)).contains("fake.wav");
+        // The reason must be specific enough to act on.
+        assertThat(w.rejections().get(0).toLowerCase()).contains("magic");
     }
 
     @Test

@@ -34,6 +34,23 @@ public final class RealInboxWatcher {
     private final PersistentHdcStore hdcStore;
     private final AudioFFTEncoder audioEncoder;
     private final VisionEdgeEncoder imageEncoder;
+    /**
+     * Files refused during the most recent scans, with the reason.
+     *
+     * <p>RECON-W32.1. A refused file used to look identical to an absent one: the scan
+     * simply did not ingest it and said nothing. An operator who drops a file into an
+     * inbox and gets silence has no way to learn the system rejected it.</p>
+     */
+    private final java.util.List<String> rejected = java.util.Collections.synchronizedList(
+        new java.util.ArrayList<>());
+
+    /** Refusals from recent scans. Unit: one entry per rejected file, newest last. */
+    public java.util.List<String> rejections() {
+        synchronized (rejected) {
+            return java.util.List.copyOf(rejected);
+        }
+    }
+
     /** Path → last seen modified-time (for change detection). */
     private final Map<String, Long> lastSeenMTime = new ConcurrentHashMap<>();
     /** Last ingest summary for /v1/status. */
@@ -83,14 +100,36 @@ public final class RealInboxWatcher {
                 transcoder = "text";
             } else if (name.endsWith(".wav") || name.endsWith(".raw")) {
                 content = transcodeAudio(path);
-                transcoder = "AudioFFTEncoder.computeDFT+extractBands+encodeToHDC";
+                transcoder = "MediaDecoding.decodeWav+AudioFFTEncoder";
             } else if (name.endsWith(".png") || name.endsWith(".jpg") || name.endsWith(".bmp")) {
                 content = transcodeImage(path);
-                transcoder = "VisionEdgeEncoder.detectPrimitives+encodeToHDC";
+                transcoder = "MediaDecoding.decodePng+VisionEdgeEncoder";
+            } else if (name.endsWith(".jsonl") || name.endsWith(".ndjson")) {
+                // RECON-W32.1: a sensor stream is structured text, not an opaque blob.
+                // Previously it fell through to the SHA-256 fallback and was stored as a
+                // hash, which is how "What is the temperature?" had nothing to answer with.
+                content = readText(path);
+                transcoder = "text:sensor-stream";
             } else {
-                // Default: SHA-256 fingerprint fallback
-                content = sha256Hex(path);
+                // Default: SHA-256 fingerprint fallback. Honest about what it is: a
+                // fingerprint, NOT a perception, and named as such so it cannot be
+                // confused with something the mind decoded and understood.
+                content = "unreadable content, SHA-256 fingerprint " + sha256Hex(path)
+                    + " (not a perception: no decoder for this format)";
                 transcoder = "SHA-256-fallback";
+            }
+
+            // RECON-W32.1: refuse rather than persist a measurement that does not exist.
+            // A null content means the decoder declined — a text file named .wav, a
+            // truncated stream, an unsupported colour type. Persisting anything here is
+            // exactly the W32 fabrication.
+            if (content == null || content.isBlank()) {
+                MediaDecoding.Classification c = MediaDecoding.classify(path, Files.readAllBytes(path));
+                rejected.add(name + " -> " + (c == null ? "undecodable" : c.reason()));
+                LOG.log(Level.WARNING,
+                    "Inbox: REFUSED {0} ({1}); nothing is perceived from a file that "
+                        + "cannot be decoded", new Object[]{path, c == null ? "undecodable" : c.reason()});
+                return false;
             }
 
             String id = "inbox-" + Long.toHexString(fnv1a64(path.toString()));
@@ -113,40 +152,106 @@ public final class RealInboxWatcher {
         return new String(bytes, java.nio.charset.StandardCharsets.UTF_8);
     }
 
-    /** Audio transcoding: load bytes, build synthetic samples, run real AudioFFTEncoder. */
+    /**
+     * Audio transcoding: DECODE the file, then run the real AudioFFTEncoder.
+     *
+     * <p>RECON-W32.1. This used to read the first 1024 BYTES and map each byte to one
+     * sample, so a 44-byte RIFF header was "heard" as 44 samples and a plain text file
+     * produced a confident audio perception with provenance. Now the file is decoded
+     * through {@link MediaDecoding} and anything undecodable is REFUSED — see
+     * {@link #transcode(Path, byte[])}.</p>
+     */
     private String transcodeAudio(Path path) throws IOException {
         byte[] raw = Files.readAllBytes(path);
-        // Convert raw bytes to float samples in [-1, 1] (deterministic linear mapping).
-        int len = Math.min(raw.length, 1024);
-        float[] samples = new float[len];
-        for (int i = 0; i < len; i++) {
-            samples[i] = (raw[i] - 128) / 128.0f;
-        }
-        // Run the REAL audio transcoder pipeline.
-        var frame = audioEncoder.computeDFT(samples, 44100);
+        MediaDecoding.Audio audio = MediaDecoding.decodeWav(raw);
+        if (audio == null) return null;          // refuse rather than invent
+        // Feed the decoder's REAL waveform and the header's REAL sample rate.
+        var frame = audioEncoder.computeDFT(audio.samples(), audio.sampleRate());
         var bands = audioEncoder.extractBands(frame);
         boolean[] hdc = audioEncoder.encodeToHDC(bands);
-        // Sum band energies for a numeric signal of overall loudness.
-        double totalEnergy = bands.stream()
-            .mapToDouble(b -> b.energy()).sum();
-        return "audio:frame=" + bands.size() + " hdc_dim=" + hdc.length
-            + " total_energy=" + totalEnergy;
+        double totalEnergy = bands.stream().mapToDouble(b -> b.energy()).sum();
+        // Name the dominant band in Hz so the fact is a perception, not a float.
+        io.matrix.transcoders.AudioFFTEncoder.FrequencyBand dominant = dominantBand(bands);
+        return "audio: " + audio.sampleRate() + " Hz " + audio.samples().length
+            + " samples, " + bands.size() + " bands, dominant band "
+            + (int) Math.round(dominant.lowHz()) + "-" + (int) Math.round(dominant.highHz())
+            + " Hz, total energy " + String.format(java.util.Locale.ROOT, "%.4f", totalEnergy);
     }
 
-    /** Image transcoding: load bytes, build synthetic pixel buffer, run real VisionEdgeEncoder. */
+    /**
+     * The highest-energy band, or a silent band when the signal carries no energy.
+     *
+     * <p>Uses the encoder's own Hz bounds rather than re-deriving them from a band index,
+     * because the band edges are the encoder's business and assuming a uniform layout is
+     * how a frequency ends up mis-reported by an octave.</p>
+     */
+    private static io.matrix.transcoders.AudioFFTEncoder.FrequencyBand dominantBand(
+            java.util.List<io.matrix.transcoders.AudioFFTEncoder.FrequencyBand> bands) {
+        io.matrix.transcoders.AudioFFTEncoder.FrequencyBand best =
+            new io.matrix.transcoders.AudioFFTEncoder.FrequencyBand(0, 0, 0);
+        for (var b : bands) {
+            if (b.energy() > best.energy()) best = b;
+        }
+        return best;
+    }
+
+    /**
+     * Image transcoding: DECODE the PNG, then run the real VisionEdgeEncoder.
+     *
+     * <p>RECON-W32.1. This used to copy file bytes into a 32x32 buffer and pad with
+     * {@code i % 256}, so a solid-red PNG and a text file produced the same kind of
+     * "image primitives" and the colour was a property of zlib compression rather than
+     * of the image. Undecodable input is now REFUSED.</p>
+     */
     private String transcodeImage(Path path) throws IOException {
         byte[] raw = Files.readAllBytes(path);
-        // Build a synthetic 32x32 grayscale image from the file bytes.
-        int w = 32, h = 32;
-        byte[] pixels = new byte[w * h];
-        for (int i = 0; i < pixels.length; i++) {
-            pixels[i] = i < raw.length ? raw[i] : (byte) (i % 256);
+        MediaDecoding.Image img = MediaDecoding.decodePng(raw);
+        if (img == null) return null;          // refuse rather than invent
+        // VisionEdgeEncoder wants 8-bit grayscale; derive it from the DECODED colour.
+        int w = img.width(), h = img.height();
+        byte[] gray = new byte[w * h];
+        for (int y = 0; y < h; y++) {
+            for (int x = 0; x < w; x++) {
+                gray[y * w + x] = (byte) ((img.r(x, y) * 77 + img.g(x, y) * 151
+                                        + img.b(x, y) * 28) >> 8);
+            }
         }
-        // Run the REAL vision edge-detection pipeline.
-        var prims = imageEncoder.detectPrimitives(pixels, w, h);
+        var prims = imageEncoder.detectPrimitives(gray, w, h);
         boolean[] hdc = imageEncoder.encodeToHDC(prims);
-        return "image:primitives=" + prims.size() + " hdc_dim=" + hdc.length
-            + " total_magnitude=" + prims.stream().mapToDouble(p -> p.magnitude()).sum();
+        return "image: " + w + "x" + h + " px, dominant colour " + dominantColour(img)
+            + ", " + prims.size() + " edge primitives, total magnitude "
+            + String.format(java.util.Locale.ROOT, "%.4f",
+                prims.stream().mapToDouble(p -> p.magnitude()).sum());
+    }
+
+    /**
+     * The most frequent colour name among a small palette, computed from DECODED pixels.
+     *
+     * <p>Names are coarse on purpose. A vision encoder that cannot segment regions should
+     * not claim to; "red" and "dark red" are claims the pixel data supports, "a red
+     * circle" is not.</p>
+     */
+    private static String dominantColour(MediaDecoding.Image img) {
+        long[] buckets = new long[64];          // 4x4x4 colour cube
+        for (int y = 0; y < img.height(); y++) {
+            for (int x = 0; x < img.width(); x++) {
+                int r = img.r(x, y) >> 6, g = img.g(x, y) >> 6, b = img.b(x, y) >> 6;
+                buckets[(r << 4) | (g << 2) | b]++;
+            }
+        }
+        int best = 0;
+        for (int i = 1; i < buckets.length; i++) {
+            if (buckets[i] > buckets[best]) best = i;
+        }
+        int r = ((best >> 4) & 3) * 64 + 32;
+        int g = ((best >> 2) & 3) * 64 + 32;
+        int b = (best & 3) * 64 + 32;
+        StringBuilder name = new StringBuilder();
+        name.append(r >= 96 ? "red" : r <= 48 ? "dark" : g >= 96 ? "green" : b >= 96 ? "blue" : "grey");
+        if (g >= 96 && r >= 96 && b <= 64) name.append("-yellow");
+        if (r < 64 && g < 64 && b < 64) name.append(" black");
+        if (r > 200 && g > 200 && b > 200) return "white";
+        return name.toString().trim();
     }
 
     private String sha256Hex(Path path) throws IOException {
