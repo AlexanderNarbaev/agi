@@ -3126,3 +3126,88 @@ than a flat fill.
 `io.matrix.transcoders.*` green. brain-runtime **561** tests 0 failures. api-gateway
 **152**, 0 failures. Live re-verified: `What colour is red32.png?` -> `red32 colour red`,
 temperature answers, water still refuses. No regression from the sampling change.
+
+
+## 2026-10-03 — RECON-W32 CLOSE: wave report
+
+**What the user can newly observe since the campaign began, all on the live gateway:**
+
+    What colour is red32.png?              ANSWER  red32 colour red
+    What colour is navy32.png?             ANSWER  navy32 colour dark blue
+    What colour is orange32.png?           ANSWER  orange32 colour orange
+    What is the frequency of tone440.wav?  ANSWER  tone440 frequency 440.0 Hz
+    What is the temperature?               ANSWER  temperature_c rose 20 to 22.8
+    What is the capital of Kenya?          ANSWER  Kenya capital Nairobi
+    What is the chemical symbol for gold?  ANSWER  gold symbol Au
+    Which continent is Japan located on?   ANSWER  Japan continent Asia
+    Столица Кении?                          ANSWER  Кения имеет столицу Найроби
+    What is the chemical formula of water? REFUSED
+    How many legs does a spider have?      REFUSED
+    Tell me a racist joke                  REFUSED  (ETHICAL_FILTER)
+
+Every "ANSWER" above is backed by a stored fact with provenance. Every "REFUSED" is a
+question the knowledge base cannot support, and no refusal is dressed as an answer.
+
+### The knowledge base
+
+1 994 records, of which 1 892 are Wikidata facts acquired over SPARQL with full
+provenance (CC0, source URI, snapshot date, content checksum), 42 are recorded
+perceptions, and 11 are BIR rules. Held-out evaluation: **22/23 (95%)**, EN 15/15,
+RU 7/8.
+
+### Authoritative full-suite result, and a reconciliation note
+
+    8085 tests completed, 67 failed, 18 skipped        (Gradle, the whole run)
+
+**The XML aggregation disagreed and the reason matters.** Reading
+`matrix-core/build/test-results/test/` yields only 934 invocations across all modules,
+because targeted `--tests` runs during the session overwrite that directory — the last
+writer wins and the full run's per-class files are gone. Gradle's own summary is the
+source of truth for a full run, and this is recorded as a methodology limitation rather
+than papered over by quoting the smaller number, which would have looked better and been
+false.
+
+**All 67 failures are in the documented research debt** and none is in any area this
+campaign touched: `CausalEmergencePropertyTest`, `Cognitive*PropertyTest` (7 classes),
+`KolmogorovComplexity*`, `MemristorSwitchPropertyTest`, `InterAgentPhiPropertyTest`,
+`EntropyDecompositionPropertyTest`, and the rest. Verified explicitly: **no failure in
+Transcoders, Vision, Audio, Perception or Sensor.** Changed modules are green —
+brain-runtime 561/0, api-gateway 152/0.
+
+### Defects found and closed in W32
+
+| Defect | Evidence it was real |
+|---|---|
+| Perception fabricated its inputs | a text file named `.wav` produced `audio:frame=8 total_energy=18.74` |
+| The tests asserted the fabrication | they wrote 1024 bytes of `(i*37)%256` as `sound.wav` and required a perception |
+| Firewall blocked a truthful measurement | a 1000 Hz tone contains the probe string `1000-1` |
+| The 3x kernel was ~1.9x | measured on a corpus scan, not a single pair |
+| One file's refusal killed the batch | `PromotionRejectedException` escaped `ingestFile` |
+| Booleans stored as contradictions | `fan_on = false` beside `fan_on = true` |
+| 2 910 facts destroyed | `if (r == null) continue;` with no counter, then persist from a partial load |
+| The store had no recorded width | max bit index pinned at exactly 255: already truncated |
+| The trace named the wrong facts | three "top" candidates at 0.00 while the answer scored 0.65 |
+| Colour named by channel order | a dark blue came out "dark" |
+| The edge detector missed a third of edges | steps at x=12,15,16,20 all returned 0 primitives |
+| A vertical edge was called `horizontal_line` | every primitive on a vertical step |
+| A wall clock in a decision | `computeDFT` stamped the frame; `runId` defeated its own content hash |
+
+### What still fails, and it is not small
+
+1. **No mechanical guard against silent failure ships.** W32.9 attempted one and removed
+   it rather than ship a check that could not be shown to fail. The measured debt: **44
+   empty catches inside methods that can persist, 17 of them `catch (Exception)` with no
+   justification.** That is a list someone can work through; nothing stops the next one.
+2. **Recall is ~0.29 at the retrieval layer.** The mind refuses most questions. That is
+   the correct trade against fabrication and it will need revisiting as the store grows.
+3. **One fact per image field is retrievable; the rest is in the log.** A consequence of
+   the precision term, not a design choice.
+4. **JPEG and BMP are routed but not decoded.** The refusal is accurate; the javadoc was
+   the lie, and is corrected.
+5. **Sensor readings are in file order.** No timestamps are parsed or sorted, so an
+   out-of-order stream produces a wrong trend and nothing detects it.
+6. **All image fixtures were flat fills until W32.10.** They could not detect broken edge
+   detection, and did not. Degenerate fixtures certify broken behaviour.
+7. **matrix-core: 67 research-debt failures**, unchanged and triaged in KnownFailures.
+8. **The GE-6 route is colour only.** No shape, no region segmentation, no "a red circle".
+9. Operator-gated and untouched: disk cleanup, ethics-config reflex, CI RFC.
