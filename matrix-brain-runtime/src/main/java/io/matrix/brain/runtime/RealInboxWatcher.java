@@ -92,6 +92,8 @@ public final class RealInboxWatcher {
     public boolean ingest(Path path) {
         try {
             String name = path.getFileName().toString().toLowerCase();
+            // Nullable by design: a transcoder returns null to REFUSE, which the
+            // null check below turns into a recorded rejection rather than a stored claim.
             String content;
             String transcoder;
 
@@ -105,11 +107,24 @@ public final class RealInboxWatcher {
                 content = transcodeImage(path);
                 transcoder = "MediaDecoding.decodePng+VisionEdgeEncoder";
             } else if (name.endsWith(".jsonl") || name.endsWith(".ndjson")) {
-                // RECON-W32.1: a sensor stream is structured text, not an opaque blob.
-                // Previously it fell through to the SHA-256 fallback and was stored as a
-                // hash, which is how "What is the temperature?" had nothing to answer with.
-                content = readText(path);
-                transcoder = "text:sensor-stream";
+                // RECON-W32.3: a sensor stream is TREND data, not an opaque blob. Stored
+                // raw, "What is the temperature?" had nothing to match; before W32.1 it
+                // fell through to a SHA-256 fingerprint, so the temperature existed only
+                // as a hash of a file containing it.
+                SensorStreamDecoder.Stream stream =
+                    SensorStreamDecoder.decode(readText(path));
+                // ingestFile returns boolean, so a refusal is `return false`, not null.
+                if (stream == null) return false;
+                content = stream.fact(path.getFileName().toString());
+                transcoder = "SensorStreamDecoder.decode+trends";
+                if (content == null) {
+                    // Well-formed but with nothing honest to state (a single reading, or
+                    // no numeric field). Not an error; there is simply no perception.
+                    rejected.add(name + " -> no trend: the stream is well formed but has "
+                        + "fewer than two readings of any numeric field, so no direction "
+                        + "can be established");
+                    return false;
+                }
             } else {
                 // Default: SHA-256 fingerprint fallback. Honest about what it is: a
                 // fingerprint, NOT a perception, and named as such so it cannot be

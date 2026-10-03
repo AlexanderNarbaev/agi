@@ -2528,3 +2528,68 @@ because it was found while reading the encoder and would otherwise be lost.
 brain-runtime 508 -> **515** tests, 0 failures. api-gateway **152**, 0 failures.
 quality-gate exit 0. FROZEN 0/5. 0 tests deleted. Gateway UP. Refusals remain visible in
 the log for both classes: undecodable content and gate-refused content.
+
+
+## 2026-10-03 — RECON-W32.3: sensor streams become trends
+
+**What the user can newly observe:** the mind reports a measured change over time instead
+of storing a file's contents. Live, from three JSON-lines readings:
+
+    sensor room.jsonl: temperature_c rose from 20 to 22.8 across 3 readings;
+                       observed fan_on = false; observed fan_on = true
+
+Before this, the same file was stored as its literal text, so "What is the temperature?"
+had nothing to match and refused — and before W32.1 it fell through to a SHA-256
+fingerprint, so the temperature existed only as a hash of a file containing it.
+
+### A limitation measured rather than hidden
+
+**A sensor trend is NOT answerable by "What is the temperature?" today, and this is now a
+test rather than a hope.**
+
+`ContentSimilarity.score` is coverage x precision. A one-content-token question scores
+1.0 for coverage, so a fact retrievable by it must be about five content tokens or fewer
+to clear the 0.20 floor. A truthful trend sentence is about nine, because "20.0"
+tokenises to two tokens and so does "22.8". The measured score is 0.059.
+
+The two honest options are to change the scoring function or to emit a much shorter fact.
+Both belong to a later sub-wave. What matters is that the number is asserted in
+`SensorStreamDecoderTest`, so the limitation cannot be forgotten while the feature is
+described as "the mind now understands sensor data" — which it does not yet.
+
+### Honesty rules the decoder enforces
+
+- **One reading has no trend.** A direction cannot come from a single point. Verified
+  live: a one-reading stream is refused and stored count is 0.
+- **A constant field is stable**, not rising and not falling.
+- **A field missing from any reading has an UNKNOWN direction.** My first test fixture
+  omitted `pressure_hpa` from the first reading and expected a trend anyway; the rule was
+  right and the fixture was wrong, so the fixture was fixed and the rule kept.
+- **An index is not a measurement.** The first version reported "t rose from 0 to 2
+  across 3 readings" as a headline trend — true and about nothing, and it would have led
+  every sensor fact. Index-like field names are excluded.
+- **Co-occurrence is never causation.** `fan_on = true` is reported as OBSERVED, and a
+  test asserts the strings contain none of "caused", "because", "due to". The data cannot
+  support a causal claim and the wording is not allowed to hint at one.
+- **A malformed line voids the whole stream.** A half-read record is indistinguishable
+  from a real one once it is a fact, so partial parsing is refused rather than done.
+
+### Scope, stated plainly
+
+This is not temporal reasoning. Readings are taken in FILE ORDER; no timestamps are
+parsed or ordered. A stream whose lines are out of chronological order will produce a
+wrong trend, and the class does not attempt to detect that. The JSON parser is
+deliberately small — flat objects of numbers, booleans and strings — and refuses nested
+structures rather than partially reading them.
+
+### Two errors of my own, recorded
+
+`return null` inside `ingestFile`, which returns `boolean` — a refusal is `return false`.
+And an index field named `h` in a test fixture, which the decoder correctly refused to
+treat as an index. Both were mine; neither was the code's fault.
+
+### Verification
+
+brain-runtime 515 -> **528** tests, 0 failures. api-gateway **152**, 0 failures.
+quality-gate exit 0. FROZEN 0/5. 0 tests deleted. One-reading stream confirmed NOT stored
+(live count 0). Gateway UP.
