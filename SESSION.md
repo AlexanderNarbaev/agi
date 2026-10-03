@@ -2853,3 +2853,35 @@ is green.
 
 matrix-brain-runtime **538** tests, 0 failures. api-gateway **152**, 0 failures.
 quality-gate exit 0. FROZEN 0/5. 0 tests deleted.
+
+
+## 2026-10-03 — RECON-W32.6b: the trace was showing the wrong facts
+
+**What the user can newly observe:** the explanation for an answer now names the facts
+that actually scored, instead of whichever three happened to be read first. A `/v1/explain`
+trace is how an operator checks a claim, and this one was quietly untrustworthy.
+
+### The defect
+
+`HdcRetrievalStage` labelled three entries `top=` while collecting the **first three
+ITERATED**, which is a different thing. Observed live on a correct retrieval:
+
+    best=wd-en-4ea1f69e-has capital  score=0.654
+    top=[inbox-t100.wav:0.00, inbox-tone440b.wav:0.00, inbox-blue32.png:0.00]
+
+The three "top" candidates all scored **zero** while the fact that answered the question
+scored 0.65. Anyone reading that trace would conclude the retrieval was matching noise, and
+would have been looking at a real observation doing exactly what it claims.
+
+**Evidence that looks wrong is evidence nobody trusts**, and a trace that always shows zeros
+is a trace nobody reads. Fixed in both the persistent and the in-memory path with a running
+top-N ordered by score.
+
+The same fix surfaced a second, quieter problem the earlier live test had hidden: the
+`nearest_fact_id` in a MISS trace was also drawn from the iteration, not the score, so a
+structured-ignorance trace pointed at an unrelated fact.
+
+### Verification
+
+brain-runtime 538 -> **540** tests, 0 failures (two new: the trace must name what matched,
+and a miss must still rank by score). api-gateway **152**, 0 failures. quality-gate exit 0.

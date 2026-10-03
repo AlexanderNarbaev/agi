@@ -8,6 +8,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
@@ -82,5 +83,47 @@ class HdcRetrievalStageTest {
         var r = stage.retrieve("What is the capital of Kenya?", null, new java.util.ArrayList<>());
         assertTrue(r.trace().contains("kenya") || r.trace().contains("Nairobi"),
             "the trace must name what actually matched, got: " + r.trace());
+    }
+
+    @Test
+    void theTraceShowsTheHighestScoringFactsNotTheFirstThreeScanned(@TempDir Path dir)
+            throws IOException {
+        // RECON-W32.6. The trace labelled three entries "top=" while collecting the first
+        // three ITERATED. Observed live: a passing retrieval reported three zero-scoring
+        // inbox files while the fact that actually answered scored 0.65. The
+        // in-answerable question is the one that surfaces it, because every entry is
+        // weak and the difference is visible.
+        PersistentHdcStore store = new PersistentHdcStore(dir.resolve("kb.ndjson"), 512);
+        for (int i = 0; i < 8; i++) {
+            store.teach("filler-" + i, "filler record number " + i + " about nothing");
+        }
+        store.teach("fact-france", "France capital Paris");
+
+        var stage = new io.matrix.brain.runtime.stages.HdcRetrievalStage(store);
+        var tr = new java.util.ArrayList<io.matrix.brain.runtime.BrcStep>();
+        var r = stage.retrieve("What is the capital of France?",
+            (io.matrix.brain.runtime.stages.SignalStage.SignalObservation) null, tr);
+
+        assertTrue(r.matched());
+        String trace = r.trace();
+        // The winning fact must appear in the reported top, not merely in the result.
+        assertTrue(trace.contains("fact-france") || trace.contains("France"),
+            "the trace must name what actually matched, got: " + trace);
+        assertFalse(trace.contains("filler-0:0.00") && !trace.contains("fact-france"),
+            "the trace must not be dominated by whatever happened to be scanned first: " + trace);
+    }
+
+    @Test
+    void theMissTraceAlsoRanksByScore(@TempDir Path dir) throws IOException {
+        PersistentHdcStore store = new PersistentHdcStore(dir.resolve("kb.ndjson"), 512);
+        store.teach("a", "alpha beta gamma");
+        store.teach("b", "delta epsilon zeta");
+        store.teach("c", "eta theta iota");
+
+        var stage = new io.matrix.brain.runtime.stages.HdcRetrievalStage(store);
+        var r = stage.retrieve("nothing whatsoever matches", null, new java.util.ArrayList<>());
+        assertFalse(r.matched());
+        assertTrue(r.trace().contains("best_similarity="),
+            "a miss must still carry its evidence, got: " + r.trace());
     }
 }

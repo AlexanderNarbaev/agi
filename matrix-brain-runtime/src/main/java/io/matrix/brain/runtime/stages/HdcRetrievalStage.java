@@ -5,6 +5,7 @@ import io.matrix.brain.runtime.ContentSimilarity;
 import io.matrix.brain.runtime.PersistentHdcStore;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.BitSet;
 import java.util.List;
 import java.util.Map;
@@ -24,6 +25,35 @@ import java.util.Map;
 public final class HdcRetrievalStage {
 
     public static final int DIM = 256;
+
+    /**
+     * A running top-N of scored candidates, for the trace.
+     *
+     * <p>RECON-W32.6. The trace used to label three entries "top=" while collecting the
+     * first three ITERATED, which is not the same thing. Observed live: a passing
+     * retrieval reported {@code top=[t100.wav:0.00, tone440b.wav:0.00, blue32.png:0.00]}
+     * while the fact that actually answered scored 0.65. Evidence that looks wrong is
+     * evidence nobody trusts, and a trace that always shows zeros is a trace nobody reads.
+     *
+     * @param capacity entries to keep, smallest count wins ties
+     */
+    private static final class TopScored {
+        private final int capacity;
+        private final java.util.List<String> entries = new java.util.ArrayList<>();
+
+        TopScored(int capacity) { this.capacity = capacity; }
+
+        void offer(String id, double score) {
+            String line = id + ":" + String.format(java.util.Locale.ROOT, "%.2f", score);
+            entries.add(line);
+            entries.sort(Comparator.comparingDouble(l -> -Double.parseDouble(
+                l.substring(l.lastIndexOf(':') + 1))));
+            while (entries.size() > capacity) entries.remove(entries.size() - 1);
+        }
+
+        java.util.List<String> asList() { return java.util.List.copyOf(entries); }
+        int size() { return entries.size(); }
+    }
 
     private final PersistentHdcStore store;
 
@@ -167,7 +197,7 @@ public final class HdcRetrievalStage {
         String bestContent = null;
         String bestAnsweredId = null;
         String bestAnsweredContent = null;
-        List<String> topIds = new ArrayList<>();
+        TopScored top = new TopScored(3);
         java.util.function.ToDoubleFunction<String> idf = corpusIdf();
         for (Map.Entry<String, String> e : contents.entrySet()) {
             double sim = ContentSimilarity.weightedScore(input, e.getValue(), idf);
@@ -183,8 +213,9 @@ public final class HdcRetrievalStage {
                 bestAnsweredId = e.getKey();
                 bestAnsweredContent = c;
             }
-            if (topIds.size() < 3) topIds.add(e.getKey() + ":" + String.format("%.2f", sim));
+            top.offer(e.getKey(), sim);
         }
+        java.util.List<String> topIds = top.asList();
         // Prefer an answered match ONLY when it is actually the better match.
         //
         // This used to be unconditional, and it silently discarded the best candidate
@@ -277,7 +308,7 @@ public final class HdcRetrievalStage {
         double bestScore = 0.0;
         String bestId = null;
         String bestContent = null;
-        List<String> topIds = new ArrayList<>();
+        TopScored top = new TopScored(3);
         for (Map.Entry<String, BitSet> e : inMemoryVectors.entrySet()) {
             double sim = ContentSimilarity.weightedScore(input, inMemoryContents.get(e.getKey()),
                 corpusIdf());
@@ -286,8 +317,9 @@ public final class HdcRetrievalStage {
                 bestId = e.getKey();
                 bestContent = inMemoryContents.get(e.getKey());
             }
-            if (topIds.size() < 3) topIds.add(e.getKey() + ":" + String.format("%.2f", sim));
+            top.offer(e.getKey(), sim);
         }
+        java.util.List<String> topIds = top.asList();
         if (bestScore < ContentSimilarity.RETRIEVAL_FLOOR || bestId == null) {
             String ignoranceTrace = "mode=in-memory best_similarity=" + bestScore
                 + " floor=" + ContentSimilarity.RETRIEVAL_FLOOR
