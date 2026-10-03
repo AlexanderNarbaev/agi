@@ -171,6 +171,11 @@ public final class RealInboxWatcher {
             }
 
             hdcStore.teach(inboxId(path), content);
+            // The same perception, addressable by file name. See addressablePerception().
+            String addressable = addressablePerception(path.getFileName().toString(), content);
+            if (addressable != null && !addressable.equals(content)) {
+                hdcStore.teach(inboxId(path) + "-addr", addressable);
+            }
             LOG.log(Level.INFO, "Inbox: ingested {0} via {1} ({2} chars)",
                 new Object[]{path.getFileName(), transcoder, content.length()});
             return true;
@@ -304,21 +309,74 @@ public final class RealInboxWatcher {
         }
         var prims = imageEncoder.detectPrimitives(gray, w, h);
         boolean[] hdc = imageEncoder.encodeToHDC(prims);
-        return "image: " + w + "x" + h + " px, dominant colour " + dominantColour(img)
+        String colour = dominantColour(img);
+        return "image: " + w + "x" + h + " px, dominant colour " + colour
             + ", " + prims.size() + " edge primitives, total magnitude "
             + String.format(java.util.Locale.ROOT, "%.4f",
                 prims.stream().mapToDouble(p -> p.magnitude()).sum());
     }
 
     /**
-     * The most frequent colour name among a small palette, computed from DECODED pixels.
+     * An ADDRESSABLE restatement of a perception: which file, what was seen in it.
      *
-     * <p>Names are coarse on purpose. A vision encoder that cannot segment regions should
-     * not claim to; "red" and "dark red" are claims the pixel data supports, "a red
-     * circle" is not.</p>
+     * <p>RECON-W32.7. The descriptive fact ("image: 32x32 px, dominant colour red") and
+     * the source of that perception live in different places: the description in the fact
+     * text, the source in the record id. That is deliberate — putting the filename in the
+     * text costs three content tokens, and {@code ContentSimilarity} punishes length
+     * enough that "What colour is red32.png?" scored 0.07 against a 0.20 floor and the
+     * mind refused a question it could answer.</p>
+     *
+     * <p>So the perception is indexed TWICE: once descriptively for a question about what
+     * was seen, and once addressably for a question about a named file. Two facts per
+     * image, and that duplication is the price of a scorer whose precision term makes
+     * long facts unfindable. Recorded rather than hidden.</p>
+     *
+     * @param fileName source file name
+     * @param summary  the descriptive fact
+     * @return a short claim naming the file and its dominant attribute
      */
-    private static String dominantColour(MediaDecoding.Image img) {
-        long[] buckets = new long[64];          // 4x4x4 colour cube
+    static String addressablePerception(String fileName, String summary) {
+        String stem = fileName == null ? "" : fileName;
+        int dot = stem.lastIndexOf('.');
+        if (dot > 0) stem = stem.substring(0, dot);
+        String colour = between(summary, "dominant colour ", ",");
+        if (colour != null) return stem + " colour " + colour;
+        String band = between(summary, "dominant frequency ", " Hz");
+        if (band != null) return stem + " frequency " + band + " Hz";
+        return null;
+    }
+
+    /** Text between two markers, or null when either marker is absent. */
+    private static String between(String text, String open, String close) {
+        int a = text.indexOf(open);
+        if (a < 0) return null;
+        int b = text.indexOf(close, a + open.length());
+        if (b < 0) return null;
+        String v = text.substring(a + open.length(), b).trim();
+        return v.isEmpty() ? null : v;
+    }
+
+    /**
+     * The most frequent colour name, computed from DECODED pixels.
+     *
+     * <p>Classified by hue, saturation and brightness rather than by comparing channels
+     * pairwise. The first version was a chain of nested ternaries that tested red before
+     * blue, so a dark blue (20, 20, 220) was reported as "dark": the shape of the code
+     * was the bug. Hue is the quantity that actually names a colour, and a
+     * bright-saturated-blue versus a dark-desaturated-blue distinction falls out of the
+     * saturation and brightness tests instead of needing its own branch.</p>
+     *
+     * <p>Names are coarse on purpose. An encoder that cannot segment regions must not
+     * imply it: "red" and "dark red" are claims the pixels support, "a red circle" is
+     * not.</p>
+     *
+     * @param img decoded image
+     * @return a colour name, one of white, black, grey, red, green, blue, yellow, cyan,
+     *         magenta, orange, or a lightness-qualified variant
+     */
+    static String dominantColour(MediaDecoding.Image img) {
+        // 4x4x4 colour cube: cheap, and coarse enough not to invent precision.
+        long[] buckets = new long[COLOUR_CUBE_EDGE * COLOUR_CUBE_EDGE * COLOUR_CUBE_EDGE];
         for (int y = 0; y < img.height(); y++) {
             for (int x = 0; x < img.width(); x++) {
                 int r = img.r(x, y) >> 6, g = img.g(x, y) >> 6, b = img.b(x, y) >> 6;
@@ -329,16 +387,95 @@ public final class RealInboxWatcher {
         for (int i = 1; i < buckets.length; i++) {
             if (buckets[i] > buckets[best]) best = i;
         }
-        int r = ((best >> 4) & 3) * 64 + 32;
-        int g = ((best >> 2) & 3) * 64 + 32;
-        int b = (best & 3) * 64 + 32;
-        StringBuilder name = new StringBuilder();
-        name.append(r >= 96 ? "red" : r <= 48 ? "dark" : g >= 96 ? "green" : b >= 96 ? "blue" : "grey");
-        if (g >= 96 && r >= 96 && b <= 64) name.append("-yellow");
-        if (r < 64 && g < 64 && b < 64) name.append(" black");
-        if (r > 200 && g > 200 && b > 200) return "white";
-        return name.toString().trim();
+        int r = (((best >> 4) & 3) * 64) + 32;
+        int g = (((best >> 2) & 3) * 64) + 32;
+        int b = ((best & 3) * 64) + 32;
+        return colourName(r, g, b);
     }
+
+    /** Edge length of the colour cube along one axis. Unit: buckets. */
+    static final int COLOUR_CUBE_EDGE = 4;
+
+    /** Brightness at or above which a colour is called white. Unit: 0-255. */
+    static final int WHITE_THRESHOLD = 200;
+
+    /** Brightness at or below which a colour is called black. Unit: 0-255. */
+    static final int BLACK_THRESHOLD = 55;
+
+    /** Saturation below which a colour is called grey. Unit: 0-255 spread. */
+    static final int GREY_SPREAD = 40;
+
+    /**
+     * Name a colour from its RGB value, by hue.
+     *
+     * @param r red, 0-255
+     * @param g green, 0-255
+     * @param b blue, 0-255
+     * @return the colour name
+     */
+    static String colourName(int r, int g, int b) {
+        int max = Math.max(r, Math.max(g, b));
+        int min = Math.min(r, Math.min(g, b));
+        int spread = max - min;
+
+        if (max >= WHITE_THRESHOLD && spread <= GREY_SPREAD) return "white";
+        if (max <= BLACK_THRESHOLD) return "black";
+        if (spread <= GREY_SPREAD) return "grey";
+
+        double hue;
+        if (max == r) {
+            hue = 60.0 * (((g - b) / (double) spread) % 6);
+        } else if (max == g) {
+            hue = 60.0 * (((b - r) / (double) spread) + 2);
+        } else {
+            hue = 60.0 * (((r - g) / (double) spread) + 4);
+        }
+        if (hue < 0) hue += 360.0;
+
+        String base = switch (Math.round((float) (hue / HUE_SECTOR_DEGREES))) {
+            case 0 -> "red";
+            case 1 -> "yellow";
+            case 2 -> "green";
+            case 3 -> "cyan";
+            case 4 -> "blue";
+            case 5 -> "magenta";
+            default -> "red";
+        };
+        // Orange is a HUE BAND, not a sector, and it straddles the 30-degree boundary
+        // between the red and yellow sectors: 33 degrees is in the yellow sector but is
+        // unambiguously orange to any reader. Testing the sector name instead of the hue
+        // meant (235,140,20) came out "yellow". Range-checked on hue instead.
+        if (hue >= ORANGE_HUE_DEGREES && hue < YELLOW_HUE_DEGREES) base = "orange";
+        // Lightness is the HSL mid-point, NOT max/255. Using max made a vivid orange
+        // (235,140,20) come out as "light yellow" simply because one channel was high,
+        // which is a statement about the channel, not about how pale the colour looks.
+        // (max+min)/2 is the conventional measure and gives the right answers.
+        double lightness = (max + min) / 2.0 / 255.0;
+        if (lightness <= DARK_LIGHTNESS) return "dark " + base;
+        if (lightness >= LIGHT_LIGHTNESS) return "light " + base;
+        return base;
+    }
+
+    /** Degrees of hue per named sector. Unit: degrees. 360/6. */
+    static final double HUE_SECTOR_DEGREES = 60.0;
+
+    /** Lower bound of the orange hue band. Unit: degrees, 0-360. */
+    static final int ORANGE_HUE_DEGREES = 15;
+
+    /** Upper bound of the orange hue band, where yellow begins. Unit: degrees, 0-360. */
+    static final int YELLOW_HUE_DEGREES = 45;
+
+    /**
+     * HSL lightness at or below which a hue is qualified as dark. Unit: ratio in [0,1].
+     * A saturated navy (40,40,110) lands at 0.29; a mid blue at 0.47.
+     */
+    static final double DARK_LIGHTNESS = 0.35;
+
+    /**
+     * HSL lightness at or above which a hue is qualified as light. Unit: ratio in [0,1].
+     * A pale blue (180,180,250) lands at 0.84; a vivid orange at 0.50.
+     */
+    static final double LIGHT_LIGHTNESS = 0.80;
 
     private String sha256Hex(Path path) throws IOException {
         try {

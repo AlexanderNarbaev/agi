@@ -2885,3 +2885,68 @@ structured-ignorance trace pointed at an unrelated fact.
 
 brain-runtime 538 -> **540** tests, 0 failures (two new: the trace must name what matched,
 and a miss must still rank by score). api-gateway **152**, 0 failures. quality-gate exit 0.
+
+
+## 2026-10-03 — RECON-W32.7: the mind perceives colour, and can say which file
+
+**What the user can newly observe** — it can drop an image in the inbox and then ask
+which colour it was:
+
+    What colour is red32.png?              ANSWER  red32 colour red
+    What colour is navy32.png?             ANSWER  navy32 colour dark blue
+    What colour is orange32.png?           ANSWER  orange32 colour orange
+    What is the frequency of tone440.wav?  ANSWER  tone440 frequency 440.0 Hz
+    What is the chemical formula of water? REFUSED
+
+All eight solid-colour images were named correctly from DECODED pixels: red, blue, dark
+blue, green, orange, white, black, yellow. This is the GE-6 route — world knowledge
+acquired through perception rather than as a hardcoded trivia answer.
+
+### The colour namer was a chain of ternaries, and the SHAPE was the bug
+
+The first implementation tested red before blue, so a dark blue (20, 20, 220) came out as
+"dark". No reordering fixes that: naming a colour by comparing channels pairwise cannot
+express hue. It is now classified by hue, saturation and lightness, with the contract
+expressed as a table rather than as an observation about one image.
+
+Two real errors surfaced in my own rewrite, both found by the table rather than by looking:
+
+- **Lightness was `max/255`**, so a vivid orange (235,140,20) came out "light yellow"
+  because one channel was high. That is a statement about a channel, not about how pale a
+  colour looks. Lightness is the HSL mid-point `(max+min)/2`.
+- **Orange is a hue BAND (15–45°), not a sector**, and it straddles the 30° boundary
+  between the red and yellow sectors. 33° lands in the yellow sector but is
+  unambiguously orange, so testing the sector name missed it. Range-checked on hue.
+
+One expectation of mine was simply wrong and the fixture was corrected: (60,60,200) has
+HSL lightness 0.51, a mid blue, not a dark one.
+
+### Perception must be indexed twice, and the price is stated
+
+The descriptive fact says what was seen; the source lives in the record id. That split is
+deliberate — putting the filename in the text costs three content tokens, and the
+precision term punishes length enough that "What colour is red32.png?" scored **0.07**
+against a 0.20 floor. The mind refused a question it could answer.
+
+So each perception is now indexed twice: descriptively for "what did you see", and
+addressably for "what colour is THIS file". **That is two facts per image**, and the
+duplication is the price of a scorer whose precision term makes long facts unfindable.
+Recorded rather than hidden; changing the scorer is the other option and is a separate
+decision.
+
+An ambiguous "What colour did you see?" still refuses, which is CORRECT after eight
+different coloured images have been perceived — there is no single answer, and refusing is
+the honest response rather than picking one.
+
+### Scope, still not claimed
+
+Flat fills only. No region segmentation, no shape recognition, no "a red circle". The
+perception text deliberately does not imply any of it, and `VisionEdgeEncoder` still
+receives 8-bit grayscale, so hue is discarded before edge detection.
+
+### Verification
+
+brain-runtime 558 -> **561** tests, 0 failures (a 13-row colour table, the two regressions
+above as their own assertions, determinism, an end-to-end decode, and three
+addressable-form tests). api-gateway **152**, 0 failures. quality-gate exit 0.
+Knowledge store 1 994 records.
