@@ -2206,3 +2206,79 @@ shape as the rest of this wave: a number from the wrong comparison, confidently 
 `v17.5.0-mind` is deliberately NOT pushed. The release plan conditions the tag on Goal
 Guard re-review passing, and the `goal_*` tools refuse to run from this session. Tagging
 an unverified release is exactly the kind of headline this campaign exists to avoid.
+
+
+## 2026-10-03 — RECON-W32.0: perception reality check (diagnosis only, no feature yet)
+
+**What the user can newly observe: nothing yet.** This entry is a diagnosis, and it is
+the most useful thing this sub-wave produced. No capability is claimed.
+
+### RECON-W31 closed and verified
+
+`33a093eb`, four refs equal, tree clean. brain-runtime 494/0, api-gateway 152/0,
+quality-gate exit 0 with a verified negative test, benchmark 47/48 against the live
+gateway, FROZEN 0/5, 0 tests deleted, ledger monotonic. `v17.5.0-mind` is NOT tagged:
+Goal Guard re-review has not been observed to pass, and the `goal_*` tools still refuse
+to run from this session. Tagging an unverified release is the headline this campaign
+exists to refuse.
+
+### W32 finding: the inbox ingests, but it is semantically EMPTY
+
+Dropped three real files into `data/mind/inbox/` and ran `POST /v1/inbox/scan`:
+
+    {"ingested": 3}   hdc_kb 2901 -> 2904
+
+Ingestion works. What it learned is the problem:
+
+    inbox:tone440.wav  audio:frame=8 hdc_dim=256 total_energy=218.72625493168528
+    inbox:red64.png    image:primitives=64 hdc_dim=256 total_magnitude=19313.62782713603
+    inbox:room-sensor.jsonl sha256:46a4b54c...
+
+These are **measurement digests, not perceptions**. The pipeline runs a real DFT and a
+real edge encoder and then stores floating-point totals and a hash. The operator cannot
+ask about any of it:
+
+    "What did you hear?"          REFUSED
+    "What did you see?"           REFUSED
+    "What color did you see?"     REFUSED
+    "What is the temperature?"    REFUSED
+    "audio:frame=8 hdc_dim=256"   ANSWER  <- only by echoing the digest back
+
+The last line is the honest characterisation: the mind can retrieve what it computed, and
+cannot say what it perceived. A 440 Hz tone is stored as an energy sum with no frequency;
+a solid red 64x64 image as a primitive count with no colour; a sensor stream as a SHA-256
+with no temperature in it.
+
+### Two concrete defects behind it
+
+1. **No semantic projection.** `RealInboxWatcher` calls
+   `audioEncoder.encodeToHDC(bands)` and `imageEncoder.encodeToHDC(prims)` and persists a
+   summary string. Nothing converts bands to a frequency name or primitives to a colour
+   and shape. The HDC vectors ARE computed and then thrown away — the persisted content
+   is text, not the vector, so retrieval can only match on the numbers.
+2. **`.jsonl` is not in the ingest filter.** The scan accepts
+   `.txt .md .csv .wav .raw .png .jpg .bmp`. A sensor stream in JSON-lines — the format the
+   W32 plan names — is silently ignored, with no error. An unsupported input that is
+   dropped into an inbox should be reported, not swallowed.
+
+Also worth recording: my first test placed files in `data/inbox/` and got
+`{"ingested": 0}`. The watcher reads `data/mind/inbox/`. There is no `data/inbox`, and
+no error either — an operator following the natural convention would get the same silent
+zero I did. That is a third instance in this campaign of a path that fails silently.
+
+### What W32.1 should be
+
+Turn measurements into nameable facts through the existing promotion gate, in this order:
+
+1. **Sensor adapter** (cheapest, most honest win): parse JSON-lines into typed facts —
+   "temperature rose from 20.0 C to 22.8 C while fan_on was true" — and promote them
+   through `PromotionGate` with provenance. Deterministic, testable, and it is the
+   canonical "it perceived something and can now say so" demo.
+2. **Audio frequency naming**: dominant band -> Hz -> a nameable claim. Reuses the DFT
+   that already runs.
+3. **Image attributes**: dominant colour and primitive counts -> "solid red 64x64",
+   which is the perception route to closing GE-6.
+4. **Unsupported input must be reported**, and the inbox directory made discoverable.
+
+Steps 1-3 all write facts; none of them needs a new store or a new retrieval path, and
+all of them must go through the gate or W31.1's work is undone.
