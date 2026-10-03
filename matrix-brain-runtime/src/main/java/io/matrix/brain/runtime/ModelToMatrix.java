@@ -139,8 +139,15 @@ public final class ModelToMatrix {
 
         Report r = new Report(source, tokens.size(), hdcPromoted,
             birClauses, tsetlinLiterals, inputsBytes, durationMs, artifactHash);
+        // RECON-W32.8: the run id is derived from the artifact hash, not the clock.
+        //
+        // The hash beside it is deliberately content-only, so the same input yields the
+        // same hash — and then a wall-clock run id defeated exactly that: two runs over
+        // identical input produced two different run ids, so the ledger could not answer
+        // "did anything change?". The timestamp still goes in the timestamp field, which
+        // is what an audit log is for; the identity is content-addressed.
         ledger.record(new DistillationLedger.Entry(
-            "run-" + System.currentTimeMillis() + "-" + Long.toHexString(fnv1a64(source)),
+            "run-" + artifactHash,
             source, tokens.size(), (int) inputsBytes, hdcPromoted, birClauses,
             tsetlinLiterals, 0.0, durationMs, System.currentTimeMillis(), artifactHash));
         return r;

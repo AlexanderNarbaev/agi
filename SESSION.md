@@ -2950,3 +2950,41 @@ brain-runtime 558 -> **561** tests, 0 failures (a 13-row colour table, the two r
 above as their own assertions, determinism, an end-to-end decode, and three
 addressable-form tests). api-gateway **152**, 0 failures. quality-gate exit 0.
 Knowledge store 1 994 records.
+
+
+## 2026-10-03 — RECON-W32.8: a wall clock inside a content-addressed identity
+
+**What the user can newly observe:** nothing in chat. This is a reproducibility repair:
+re-running distillation over identical input now produces the same run identity, so the
+ledger can answer "did anything change?".
+
+### The finding
+
+`ModelToMatrix` computes `artifactHash` from content only — source, counters, byte count —
+which is exactly right and exactly why a content hash exists. Immediately afterwards it
+recorded the run under
+
+    "run-" + System.currentTimeMillis() + "-" + hash(source)
+
+so a content-addressed identity was being carried inside a clock-stamped one. Two runs over
+identical input produced two different run ids, and the ledger could not distinguish "the
+model changed" from "the clock moved".
+
+The run id is now `"run-" + artifactHash`. The timestamp still goes into the timestamp
+field, which is what an audit log is for; the *identity* is content-addressed.
+
+### The rest of the Article III sweep, and what it found
+
+Every other wall-clock call in the runtime path was checked individually and is legitimate:
+latency measurement (BenchmarkRunner, MindCycle, GpuKernelEngine, DistillationPipeline,
+guardrail), uptime reporting, JWT expiry, rate limiting, inactivity detection, and audit
+timestamps. None of them reaches a cognitive decision — they measure or label, and the
+labels are not decisions.
+
+`AudioFFTEncoder.computeDFT` was the real one and was fixed in W32.6: it stamped the
+frame itself, so the value entered a computation's output rather than a report.
+
+### Verification
+
+brain-runtime **561** tests, 0 failures. api-gateway **152**, 0 failures.
+quality-gate exit 0. FROZEN 5/5 at 0 diff. 0 tests deleted.
