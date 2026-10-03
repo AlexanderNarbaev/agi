@@ -3056,3 +3056,73 @@ make fail honestly would have been a headline with no evidence behind it.
 No mechanical protection against silent failure ships. The W32.4 loader, the promotion
 gate, the store-width check and the inbox refusals are individually loud and each has a
 test asserting it fails. A future defect of this class would be caught by review, not CI.
+
+
+## 2026-10-03 — RECON-W32.10: the edge detector missed a third of all edges
+
+**What the user can newly observe:** nothing in chat yet — the colour naming, which is
+what the operator sees, is unaffected. What changed is that a reported edge count is now
+meaningful instead of sometimes being a sampling artefact.
+
+### How it was found: my own fixtures were too weak
+
+Every image fixture I had written was a **flat solid fill**. A flat fill has no edge at
+any position, so every one of them reported "0 edge primitives" and I recorded that as
+correct. It proved nothing. Replacing them with a single step edge immediately produced
+the wrong answer:
+
+    step at x=10  -> 8 primitives
+    step at x=12  -> 0 primitives    <-- missed
+    step at x=13  -> 8 primitives
+    step at x=14  -> 8 primitives
+    step at x=15  -> 0 primitives    <-- missed
+    step at x=16  -> 0 primitives    <-- missed
+    step at x=17  -> 8 primitives
+    step at x=18  -> 8 primitives
+    step at x=20  -> 0 primitives    <-- missed
+
+**Roughly one edge in three was invisible.**
+
+### The cause was the sampling grid, not the operator
+
+`detectPrimitives` looped `x += 4, y += 4`. A Sobel window spans 3x3, so a boundary
+falling BETWEEN two samples was never measured. The Sobel operator itself is correct —
+`pixel()` masks with `& 0xFF` and the kernel is right. The GRID aliased it.
+
+The failure was quiet in the worst way: "0 edge primitives" reads as "there are no edges
+here", when the truth is "nobody looked there".
+
+### Second defect, found by the same test
+
+A vertical step was classified as **`horizontal_line`**. `classifyPrimitive` named the
+shape after the Sobel GRADIENT — the direction intensity changes — which is perpendicular
+to the edge. A name that reads backwards is worse than no name, because anything
+reasoning about shapes downstream reasons about them upside down. The labels now describe
+the edge: a gradient running along x is a vertical boundary, and says so.
+
+### The fix and its cost
+
+Sampling every pixel rather than every fourth. Measured on the 32x32 probe: 8 primitives
+detected where the old code found 8, and now also finds the positions it previously
+skipped, at 60 primitives for a clear step. That is the honest cost statement — roughly
+16x the Sobel evaluations — and it is stated rather than assumed, because the previous
+version was cheaper only by not looking.
+
+### The transferable part
+
+**A test whose fixtures are all degenerate cannot detect a defect in the dimension the
+fixtures degenerate in.** Flat-fill images cannot detect broken edge detection. The
+control that makes "0 edges" meaningful is one input that DOES have an edge, and I had
+none. Adding a negative case without a positive case is how a broken detector gets
+certified as correct — the same shape as the W32.1 test that named 1024 arbitrary bytes a
+.wav and required a perception.
+
+Four tests now: a step at EVERY position from 4 to 27, a uniform image (the control), a
+vertical step classified as vertical, and a checkerboard producing far more primitives
+than a flat fill.
+
+### Verification
+
+`io.matrix.transcoders.*` green. brain-runtime **561** tests 0 failures. api-gateway
+**152**, 0 failures. Live re-verified: `What colour is red32.png?` -> `red32 colour red`,
+temperature answers, water still refuses. No regression from the sampling change.

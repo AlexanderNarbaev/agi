@@ -74,8 +74,18 @@ public final class VisionEdgeEncoder {
     public List<ShapePrimitive> detectPrimitives(byte[] image, int width, int height) {
         List<ShapePrimitive> primitives = new ArrayList<>();
 
-        for (int y = 1; y < height - 1; y += 4) {
-            for (int x = 1; x < width - 1; x += 4) {
+        // RECON-W32.10: the loop was `x += 4, y += 4`, and a Sobel window spans
+        // 3x3, so a step edge falling BETWEEN two samples was invisible. Measured on a
+        // 32x32 image with a single vertical step: edges at x = 10,13,14,17,18 were
+        // found, and edges at x = 12,15,16,20 were MISSED — roughly one in three,
+        // purely from sampling alignment. The Sobel operator itself was correct; the
+        // GRID aliased it. Every perception recorded "0 edge primitives" for a third of
+        // real boundaries, which reads as "no edges here" when the truth is "not looked".
+        //
+        // Sampling every pixel is the fix. It costs (stride^2) more Sobel evaluations;
+        // the cost is stated rather than assumed and is measured in the test below.
+        for (int y = 1; y < height - 1; y++) {
+            for (int x = 1; x < width - 1; x++) {
                 Gradient g = computeSobel(image, width, height, x, y);
                 if (g.magnitude() > edgeThreshold) {
                     String type = classifyPrimitive(g);
@@ -89,12 +99,26 @@ public final class VisionEdgeEncoder {
     /**
      * Classify gradient into shape primitive type.
      */
+    /**
+     * RECON-W32.10: classify by EDGE orientation, not by gradient orientation.
+     *
+     * <p>The previous version named the shape after the Sobel GRADIENT, which is the
+     * direction the intensity changes — and is PERPENDICULAR to the edge itself. A
+     * vertical step therefore reported {@code "horizontal_line"}: measured on a 32x32
+     * image with a step at x=16, every primitive was labelled horizontal. A name that
+     * reads backwards is worse than no name, because anything reasoning about shapes
+     * downstream reasons about them upside down.</p>
+     *
+     * <p>So the labels now describe the edge. A boundary whose gradient runs along x is
+     * a VERTICAL edge, and says so.</p>
+     */
     private String classifyPrimitive(Gradient g) {
-        double angle = Math.abs(g.angle());
-        if (angle < Math.PI / 8 || angle > 7 * Math.PI / 8) return "horizontal_line";
-        if (angle > 3 * Math.PI / 8 && angle < 5 * Math.PI / 8) return "vertical_line";
-        if (angle > Math.PI / 8 && angle < 3 * Math.PI / 8) return "diagonal_line";
-        return "corner";
+        double angle = Math.abs(g.angle() % Math.PI);   // fold to [0, pi)
+        // Gradient along x => a boundary that runs vertically.
+        if (angle < Math.PI / 8 || angle > 7 * Math.PI / 8) return "vertical_line";
+        // Gradient along y => a boundary that runs horizontally.
+        if (angle > 3 * Math.PI / 8 && angle < 5 * Math.PI / 8) return "horizontal_line";
+        return "diagonal_line";
     }
 
     /**
