@@ -115,7 +115,13 @@ public final class RealInboxWatcher {
                     SensorStreamDecoder.decode(readText(path));
                 // ingestFile returns boolean, so a refusal is `return false`, not null.
                 if (stream == null) return false;
+                // The store gets the SHORT claim so retrieval can find it; the log gets
+                // the full reading so nothing is lost to the scorer's length penalty.
                 content = stream.fact(path.getFileName().toString());
+                String detail = stream.detail(path.getFileName().toString());
+                if (detail != null) {
+                    LOG.log(Level.INFO, "Inbox: sensor detail {0}", new Object[]{detail});
+                }
                 transcoder = "SensorStreamDecoder.decode+trends";
                 if (content == null) {
                     // Well-formed but with nothing honest to state (a single reading, or
@@ -147,8 +153,7 @@ public final class RealInboxWatcher {
                 return false;
             }
 
-            String id = "inbox-" + Long.toHexString(fnv1a64(path.toString()));
-            hdcStore.teach(id, "inbox:" + path.getFileName() + " " + content);
+            hdcStore.teach(inboxId(path), content);
             LOG.log(Level.INFO, "Inbox: ingested {0} via {1} ({2} chars)",
                 new Object[]{path.getFileName(), transcoder, content.length()});
             return true;
@@ -169,6 +174,17 @@ public final class RealInboxWatcher {
                 new Object[]{path, ex.reason()});
             return false;
         }
+    }
+
+    /**
+     * Stable, human-readable id for an ingested file: name plus a content-path hash.
+     *
+     * <p>Article III: derived from the path, not the clock, so the same file always
+     * produces the same id.</p>
+     */
+    private static String inboxId(Path path) {
+        return "inbox-" + path.getFileName() + "-"
+            + Long.toHexString(fnv1a64(path.toString()));
     }
 
     private String readText(Path path) throws IOException {

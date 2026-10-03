@@ -2593,3 +2593,59 @@ treat as an index. Both were mine; neither was the code's fault.
 brain-runtime 515 -> **528** tests, 0 failures. api-gateway **152**, 0 failures.
 quality-gate exit 0. FROZEN 0/5. 0 tests deleted. One-reading stream confirmed NOT stored
 (live count 0). Gateway UP.
+
+
+## 2026-10-03 — RECON-W32.3 addendum: the perception loop, closed
+
+**What the user can newly observe:** the mind answers a question about something it
+perceived earlier in this session.
+
+    Q: "What is the temperature?"
+    A: "temperature_c rose 20 to 22.8"
+
+Asked after a scan of `room.jsonl` — three JSON-lines readings — and the answer is the
+measurement, not a refusal. The unknowable questions still refuse:
+"What is the chemical formula of water?" and "How many legs does a spider have?" both
+return "I don't have a confident answer to that."
+
+### Two constraints the loop ran into, both measured rather than guessed
+
+**The retrievable fact is about five content tokens.** `ContentSimilarity.score` is
+coverage x precision, and a one-content-token question scores 1.0 for coverage, so
+precision alone decides. Measured:
+
+    "temperature rose 20 to 22.8"                              4 tokens -> 0.250 PASS
+    "temperature_c rose from 20 to 22.8 across 3 readings"      6 tokens -> 0.167 fail
+
+So the stored claim is the headline trend and nothing else. The reading count, the source
+and the remaining trends go to `detail()`, which the watcher logs. Nothing is dropped; the
+retrievable surface is kept inside the budget the scorer imposes.
+
+**Provenance in the fact text made the fact unanswerable.** The store was receiving
+"inbox:room.jsonl temperature_c rose 20 to 22.8" — seven content tokens, scoring 0.143,
+below the floor. The prefix was three tokens the fact did not need, and precision punished
+the length. Measured both ways: the same claim without the prefix scores 0.250.
+
+Provenance now lives in the record ID: `inbox-room.jsonl-b6b43155e43dd251`. Still
+human-readable, still unique, and the fact is answerable. The existing test asserted the
+source was in the VALUE; it now asserts it is in the KEY, so the property cannot silently
+regress.
+
+### What this cost, stated plainly
+
+**Only the first trend is retrievable.** "What is the humidity?" refuses, because
+`fact()` returns the first trend and `humidity_pct rose 45 to 49` is in the log, not the
+store. The two constraints above fight each other: a short fact fits the scorer's budget,
+but a sensor stream usually has several fields.
+
+The honest options are to change the scoring function, to store one fact per field, or to
+store one fact per field AND make the question name the field. None is done yet, and
+until one is, the mind reports one trend per stream and is silent about the rest. That is
+better than storing a long fact that can never be retrieved, but it is not "understands
+sensor data" and must not be described as such.
+
+### Verification
+
+brain-runtime 528 -> **529** tests, 0 failures. api-gateway **152**, 0 failures.
+quality-gate exit 0. FROZEN 0/5. 0 tests deleted. End-to-end live: the temperature
+question is answered; the three unknowable questions refuse.

@@ -129,7 +129,12 @@ class AutonomyAndInboxIntegrationTest {
         assertThat(store.size()).isEqualTo(1);
         String content = store.snapshot().values().iterator().next();
         assertThat(content).contains("capital of France");
-        assertThat(content).contains("inbox:note.txt");
+        // RECON-W32.3: provenance lives in the record ID, not the fact text. Keeping it
+        // in the text cost three content tokens and dropped the score from 0.250 to
+        // 0.143, i.e. below the retrieval floor — the source was making the fact
+        // unanswerable. Asserted on the KEY so the property cannot silently regress.
+        assertThat(store.snapshot().keySet())
+            .anyMatch(k -> k.startsWith("inbox-note.txt-"));
     }
 
     /**

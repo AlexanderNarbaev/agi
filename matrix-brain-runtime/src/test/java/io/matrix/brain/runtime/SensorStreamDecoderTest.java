@@ -155,30 +155,45 @@ class SensorStreamDecoderTest {
     // ---- the resulting fact must be worth storing ---------------------------
 
     @Test
-    void theRenderedFactIsCurrentlyNOTRetrievableByAGenericQuestionAndThatIsRecorded() {
+    void theRenderedFactIsRetrievableByAGenericQuestionBecauseItIsKeptShort() {
         // MEASURED LIMITATION, asserted so it cannot be quietly forgotten.
         //
         // ContentSimilarity.score is coverage x precision. A one-content-token question
-        // scores 1/1 for coverage, so a fact retrievable by it must be about 5 content
-        // tokens or fewer to clear the 0.20 floor. A truthful trend sentence —
-        // "temperature_c rose from 20.0 to 22.8 across 3 readings" — is about 9, because
-        // "20.0" tokenises to two tokens and so does "22.8".
+        // scores 1.0 for coverage, so a fact it can retrieve must be about five content
+        // tokens or fewer to clear the 0.20 floor. Measured live:
         //
-        // So a sensor trend is NOT answerable by "What is the temperature?" today. The
-        // honest options are to change the scoring function or to emit a much shorter
-        // fact, and both belong to a later sub-wave. What matters here is that the
-        // limitation is measured and named rather than papered over by rewording the
-        // fact until it happens to match.
+        //   "temperature rose 20 to 22.8"                          4 tokens -> 0.250 PASS
+        //   "temperature_c rose from 20 to 22.8 across 3 readings"  6 tokens -> 0.167 fail
+        //
+        // So the persisted claim is the headline trend ONLY, and the reading count, the
+        // source and the remaining trends live in detail(), which the log keeps. Nothing
+        // is dropped; the retrievable surface is simply kept inside the budget the
+        // current scorer imposes.
         SensorStreamDecoder.Stream s = SensorStreamDecoder.decode(ROOM);
         String fact = s.fact("room-sensor.jsonl");
         assertNotNull(fact);
         double score = ContentSimilarity.score("What is the temperature?", fact);
         int factTokens = ContentSimilarity.contentTokens(fact).size();
-        assertTrue(factTokens > 5,
-            "precondition: the fact is longer than the ~5-token retrievable budget");
-        assertTrue(score < ContentSimilarity.RETRIEVAL_FLOOR,
-            "the limitation is recorded as a measurement, not a hope: fact has "
-                + factTokens + " content tokens and scores " + score);
+        assertTrue(factTokens <= 5,
+            "the claim must fit the ~5-token retrievable budget, has " + factTokens);
+        assertTrue(score >= ContentSimilarity.RETRIEVAL_FLOOR,
+            "and must therefore be retrievable, scored " + score);
+    }
+
+    @Test
+    void theLongFormIsPreservedInTheDetailEvenThoughTheFactIsShort() {
+        // Nothing is lost to the length budget: the full reading including every trend,
+        // every observed boolean and the source is still available.
+        SensorStreamDecoder.Stream s = SensorStreamDecoder.decode(ROOM);
+        String fact = s.fact("room-sensor.jsonl");
+        String detail = s.detail("room-sensor.jsonl");
+        assertNotNull(detail);
+        assertTrue(detail.contains("room-sensor.jsonl"), detail);
+        assertTrue(detail.contains("across 3 readings"), detail);
+        assertTrue(detail.contains("humidity_pct"), detail);
+        assertTrue(detail.contains("fan_on"), detail);
+        assertTrue(fact.length() < detail.length(),
+            "the claim must be the shorter of the two");
     }
 
     @Test

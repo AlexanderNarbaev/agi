@@ -124,8 +124,7 @@ public final class SensorStreamDecoder {
                     double delta = last - first;
                     if (Math.abs(delta) < MIN_TREND_DELTA) continue;   // stable
                     String direction = delta > 0 ? "rose" : "fell";
-                    out.add(field + " " + direction + " from " + fmt(first)
-                        + " to " + fmt(last) + " across " + v.size() + " readings");
+                    out.add(field + " " + direction + " " + fmt(first) + " to " + fmt(last));
                 }
             }
             return out;
@@ -150,25 +149,65 @@ public final class SensorStreamDecoder {
         }
 
         /**
-         * The fact to persist for this stream, or null when there is nothing honest
-         * to say.
+         * The SHORT claim to persist, or null when there is nothing honest to say.
          *
-         * @param source file name, recorded as provenance
-         * @return a natural-language fact, or null when the stream has no trend, no
-         *         boolean observation, and no reading at all worth stating
+         * <p><b>Deliberately short, and the reason is measured.</b>
+         * {@code ContentSimilarity.score} is coverage x precision. A one-content-token
+         * question scores 1.0 for coverage, so a fact it can retrieve must be about five
+         * content tokens or fewer to clear the 0.20 floor. Verified live:</p>
+         *
+         * <pre>
+         *   "temperature rose 20 to 22.8"                                4 tokens -> 0.250 PASS
+         *   "temperature_c rose from 20 to 22.8 across 3 readings"        6 tokens -> 0.167 fail
+         * </pre>
+         *
+         * <p>So the persisted claim is the headline trend and nothing else. The full
+         * detail — every trend, every observed boolean, the source — is preserved in
+         * {@link #detail}, which the watcher logs. Nothing is lost; the retrievable
+         * surface is kept small enough that the current scorer can find it. The other
+         * honest option is to change the scorer, and that is a separate decision.</p>
+         *
+         * @param source file name, recorded in the detail and in the record id
+         * @return a short natural-language claim, or null when there is nothing to state
          */
         public String fact(String source) {
             if (readings == null || readings.isEmpty()) return null;
             List<String> t = trends();
             List<String> c = coOccurrences();
             if (t.isEmpty() && c.isEmpty()) return null;
+            return t.isEmpty() ? c.get(0) : t.get(0);
+        }
+
+        /**
+         * The complete reading of this stream: source, every trend, every observation.
+         *
+         * <p>Written to the log rather than the store. The store holds the short claim
+         * so retrieval can find it; the log holds the whole story so nothing is lost to
+         * a length limit in a scorer.</p>
+         *
+         * @param source file name
+         * @return the full description, or null when there is nothing to describe
+         */
+        public String detail(String source) {
+            if (readings == null || readings.isEmpty()) return null;
+            List<String> t = trends();
+            List<String> c = coOccurrences();
+            if (t.isEmpty() && c.isEmpty()) return null;
             StringBuilder sb = new StringBuilder();
-            sb.append("sensor ").append(source).append(": ");
-            if (!t.isEmpty()) sb.append(String.join("; ", t));
-            if (!t.isEmpty() && !c.isEmpty()) sb.append("; ");
+            sb.append("sensor ").append(source).append(": ").append(readings.size())
+              .append(" readings; ");
+            if (t.isEmpty()) {
+                sb.append("no numeric trend established");
+            } else {
+                // Re-attach the reading count here, where there is no length budget.
+                for (int i = 0; i < t.size(); i++) {
+                    sb.append(t.get(i)).append(" across ").append(readings.size())
+                      .append(" readings");
+                    if (i < t.size() - 1) sb.append("; ");
+                }
+            }
             if (!c.isEmpty()) {
-                Set<String> distinct = new LinkedHashSet<>(c);
-                sb.append(String.join("; ", distinct));
+                sb.append("; ").append(String.join("; ", new LinkedHashSet<>(c)));
             }
             return sb.toString();
         }
