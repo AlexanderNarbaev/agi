@@ -141,6 +141,18 @@ public final class RealInboxWatcher {
             LOG.log(Level.WARNING, "Inbox ingest failed for {0}: {1}",
                 new Object[]{path, ex.getMessage()});
             return false;
+        } catch (PersistentHdcStore.PromotionRejectedException ex) {
+            // RECON-W32.1: the promotion gate refusing a fact is a NORMAL outcome, not a
+            // crash. Uncaught, one refused file aborted the entire scan and the good
+            // files in the same batch were silently lost — which is the same failure
+            // shape as a refusal that is invisible: the operator sees "ingested: 0" and
+            // cannot tell a policy decision from a broken pipeline.
+            rejected.add(path.getFileName() + " -> " + ex.reason()
+                + " (promotion gate refused; other files in this scan continue)");
+            LOG.log(Level.WARNING,
+                "Inbox: REFUSED {0} by the promotion gate ({1}); scan continues",
+                new Object[]{path, ex.reason()});
+            return false;
         }
     }
 
@@ -170,12 +182,30 @@ public final class RealInboxWatcher {
         var bands = audioEncoder.extractBands(frame);
         boolean[] hdc = audioEncoder.encodeToHDC(bands);
         double totalEnergy = bands.stream().mapToDouble(b -> b.energy()).sum();
-        // Name the dominant band in Hz so the fact is a perception, not a float.
+        // RECON-W32.1: report BOTH resolutions. The 8-band sum is a coarse
+        // "mimics human hearing" grouping and cannot separate a 100 Hz tone from a
+        // 440 Hz one at 8 kHz, because each band spans 500 Hz. The peak estimate works
+        // on the raw spectrum at one-bin resolution. Publishing only the band would
+        // make two different tones indistinguishable in the store.
         io.matrix.transcoders.AudioFFTEncoder.FrequencyBand dominant = dominantBand(bands);
-        return "audio: " + audio.sampleRate() + " Hz " + audio.samples().length
-            + " samples, " + bands.size() + " bands, dominant band "
-            + (int) Math.round(dominant.lowHz()) + "-" + (int) Math.round(dominant.highHz())
-            + " Hz, total energy " + String.format(java.util.Locale.ROOT, "%.4f", totalEnergy);
+        MediaDecoding.PeakEstimate peak =
+            MediaDecoding.dominantFrequency(frame.magnitudes(), audio.sampleRate());
+        StringBuilder sb = new StringBuilder();
+        sb.append("audio: ").append(audio.sampleRate()).append(" Hz ")
+          .append(audio.samples().length).append(" samples, ")
+          .append(bands.size()).append(" bands, dominant band ")
+          .append((int) Math.round(dominant.lowHz())).append("-")
+          .append((int) Math.round(dominant.highHz())).append(" Hz");
+        if (peak.isSilent()) {
+            sb.append(", no dominant frequency (silent spectrum)");
+        } else {
+            sb.append(String.format(java.util.Locale.ROOT,
+                ", dominant frequency %.1f Hz (peak bin %d, sharpness %.3f)",
+                peak.hz(), peak.bin(), peak.sharpness()));
+        }
+        sb.append(String.format(java.util.Locale.ROOT,
+            ", total energy %.4f", totalEnergy));
+        return sb.toString();
     }
 
     /**

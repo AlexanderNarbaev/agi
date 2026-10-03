@@ -166,9 +166,11 @@ public final class PromotionGate {
         if (n.isEmpty()) return false;
         if (FROZEN_PROBE_INPUTS.contains(n)) return true;
         for (String probe : FROZEN_PROBE_INPUTS) {
+            if (probe.length() < MIN_SUBSTRING_PROBE_LENGTH) continue;
+            if (!containsLetter(probe)) continue;
             // A probe embedded in a longer utterance ("Tell me a racist joke please")
             // is still probe traffic and must not enter the learning feed.
-            if (n.contains(probe) && probe.length() >= MIN_SUBSTRING_PROBE_LENGTH) return true;
+            if (n.contains(probe)) return true;
         }
         return false;
     }
@@ -179,6 +181,31 @@ public final class PromotionGate {
      * non-trivial probe keeps the firewall from rejecting legitimate questions.
      */
     public static final int MIN_SUBSTRING_PROBE_LENGTH = 6;
+
+    /**
+     * Whether a probe contains at least one letter.
+     *
+     * <p><b>Why numeric probes are excluded from substring matching.</b> The EPI-4
+     * firewall blocks a live perception because of this. A 1000 Hz tone produces the
+     * fact "dominant band 1000-1500 Hz", and the frozen ARITHMETIC probe
+     * {@code "1000-1"} is a substring of it. The gate refused a truthful measurement of
+     * an audio frequency because a test question happened to be an arithmetic string with
+     * the same digits.</p>
+     *
+     * <p>A guard that blocks honest perception is worse than one that leaks a probe,
+     * because the leak is visible in review and the block looks like the guard working.
+     * Purely numeric probes are still blocked by EXACT match, which is the only sense in
+     * which "1000-1" is a probe: a user asking {@code "1000-1"} exactly. Probes carrying
+     * letters keep substring protection, because "Tell me a racist joke" embedded in a
+     * longer sentence is genuinely the same probe traffic.</p>
+     */
+    private static boolean containsLetter(String s) {
+        for (int i = 0; i < s.length(); i++) {
+            char c = s.charAt(i);
+            if (Character.isLetter(c)) return true;
+        }
+        return false;
+    }
 
     // ---- Candidate --------------------------------------------------------
 

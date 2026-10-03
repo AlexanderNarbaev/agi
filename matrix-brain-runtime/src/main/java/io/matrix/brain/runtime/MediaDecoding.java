@@ -393,6 +393,82 @@ public final class MediaDecoding {
         }
     }
 
+    // ---- spectral analysis -------------------------------------------------
+
+    /**
+     * A frequency estimate from a spectrum, with the evidence that produced it.
+     *
+     * @param hz        estimated dominant frequency, or NaN for a silent spectrum
+     * @param bin       index of the peak bin
+     * @param sharpness peak prominence over the mean magnitude, in [0,1]-ish; higher
+     *                  means a cleaner tone and a more trustworthy estimate
+     * @param note      human-readable basis, for the trace
+     */
+    public record PeakEstimate(double hz, int bin, double sharpness, String note) {
+        public boolean isSilent() { return Double.isNaN(hz); }
+    }
+
+    /**
+     * Estimate the dominant frequency of a magnitude spectrum by peak-picking.
+     *
+     * <p><b>Why not use the band sum.</b> {@code extractBands} produces 8 bands, so over
+     * 8 kHz each band spans 500 Hz: a 100 Hz tone and a 440 Hz tone both report
+     * "0-500 Hz" and are indistinguishable. That is a resolution limit of the band
+     * decomposition, not a property of the signal. This works on the raw magnitudes,
+     * where the resolution is one FFT bin.</p>
+     *
+     * <p>Parabolic interpolation is applied around the peak bin. Without it the estimate
+     * is quantised to the bin width, and at 2048 bins over 8 kHz that is ~3.9 Hz — fine
+     * here, but the same code at a lower sample rate would report 440 Hz as 437 Hz and
+     * the error would be invisible without the interpolation.</p>
+     *
+     * <p>Bin k maps to {@code k * sampleRate / (2 * bins)}, matching
+     * {@code AudioFFTEncoder.extractBands}.</p>
+     *
+     * @param magnitudes magnitude spectrum, DC bin first
+     * @param sampleRate samples per second
+     * @return the estimate; silent when the spectrum carries no usable energy
+     */
+    public static PeakEstimate dominantFrequency(float[] magnitudes, int sampleRate) {
+        if (magnitudes == null || magnitudes.length < 3 || sampleRate <= 0) {
+            return new PeakEstimate(Double.NaN, -1, 0.0, "no spectrum");
+        }
+        int n = magnitudes.length;
+        // Bin 0 is DC and the top bins are the mirrored negative frequencies; neither
+        // carries pitch information, so both ends are excluded.
+        int lo = 1;
+        int hi = n / 2 - 1;
+        if (hi <= lo) return new PeakEstimate(Double.NaN, -1, 0.0, "spectrum too short");
+
+        int peak = lo;
+        double peakVal = 0.0;
+        double sum = 0.0;
+        for (int k = lo; k <= hi; k++) {
+            sum += magnitudes[k];
+            if (magnitudes[k] > peakVal) { peakVal = magnitudes[k]; peak = k; }
+        }
+        if (peakVal <= 0.0) return new PeakEstimate(Double.NaN, -1, 0.0, "silent spectrum");
+
+        // Parabolic refinement around the peak.
+        double delta = 0.0;
+        if (peak > lo && peak < hi) {
+            double a = magnitudes[peak - 1];
+            double b = magnitudes[peak];
+            double c = magnitudes[peak + 1];
+            double denom = a - 2 * b + c;
+            if (denom != 0.0) delta = 0.5 * (a - c) / denom;
+            if (delta < -1.0) delta = -1.0;
+            if (delta > 1.0) delta = 1.0;
+        }
+        double hz = (peak + delta) * sampleRate / (2.0 * n);
+        double mean = sum / (hi - lo + 1);
+        double sharpness = mean > 0 ? (peakVal - mean) / peakVal : 0.0;
+        return new PeakEstimate(hz, peak, sharpness,
+            String.format(java.util.Locale.ROOT,
+                "peak bin %d of %d usable, %s Hz at %d Hz, sharpness %.3f",
+                peak, n, String.format(java.util.Locale.ROOT, "%.1f", hz), sampleRate, sharpness));
+    }
+
     // ---- little-endian helpers --------------------------------------------
 
     private static int le16(byte[] b, int off) {

@@ -194,4 +194,59 @@ class MediaDecodingTest {
             "the refusal must say why, got: " + c.reason());
     }
 
+    // ---- RECON-W32.1: frequency discrimination ---------------------------
+
+    /**
+     * The 8-band decomposition cannot separate these tones: at 8 kHz each band spans
+     * 500 Hz, so both land in "0-500 Hz". Peak-picking on the raw spectrum must.
+     */
+    @Test
+    void peakEstimateSeparatesTonesTheBandDecompositionCannot() {
+        var enc = new io.matrix.transcoders.AudioFFTEncoder(2048, 8, 42L);
+        double hz100 = estimate(enc, 100.0);
+        double hz440 = estimate(enc, 440.0);
+        assertTrue(Math.abs(hz100 - 100.0) < 15.0,
+            "100 Hz must be estimated near 100, got " + hz100);
+        assertTrue(Math.abs(hz440 - 440.0) < 15.0,
+            "440 Hz must be estimated near 440, got " + hz440);
+        assertTrue(Math.abs(hz440 - hz100) > 100.0,
+            "the two estimates must differ by far more than the tolerance, got "
+                + hz100 + " and " + hz440);
+    }
+
+    private static double estimate(io.matrix.transcoders.AudioFFTEncoder enc, double hz) {
+        MediaDecoding.Audio a =
+            MediaDecoding.decodeWav(MediaDecodingTestFixtures.synthWav(hz, 8000, 0.25));
+        var frame = enc.computeDFT(a.samples(), a.sampleRate());
+        return MediaDecoding.dominantFrequency(frame.magnitudes(), a.sampleRate()).hz();
+    }
+
+    @Test
+    void aSilentSpectrumIsReportedAsSilentRatherThanZeroHertz() {
+        // Reporting 0 Hz for silence would be a fabricated perception: a claim of a
+        // frequency where none exists.
+        MediaDecoding.PeakEstimate p = MediaDecoding.dominantFrequency(
+            new float[2048], 8000);
+        assertTrue(p.isSilent(), "an all-zero spectrum must not yield a frequency");
+        assertTrue(Double.isNaN(p.hz()));
+        assertTrue(p.note().contains("silent"), p.note());
+    }
+
+    @Test
+    void degenerateInputsAreRefusedRatherThanEstimated() {
+        assertTrue(MediaDecoding.dominantFrequency(null, 8000).isSilent());
+        assertTrue(MediaDecoding.dominantFrequency(new float[0], 8000).isSilent());
+        assertTrue(MediaDecoding.dominantFrequency(new float[2], 8000).isSilent());
+        assertTrue(MediaDecoding.dominantFrequency(new float[512], 0).isSilent());
+    }
+
+    @Test
+    void theEstimateIsDeterministic() {
+        var enc = new io.matrix.transcoders.AudioFFTEncoder(2048, 8, 42L);
+        double first = estimate(enc, 440.0);
+        for (int i = 0; i < 10; i++) {
+            assertEquals(first, estimate(enc, 440.0), 1e-9,
+                "Article III: same input, same estimate");
+        }
+    }
 }

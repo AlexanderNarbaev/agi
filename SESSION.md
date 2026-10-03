@@ -2458,3 +2458,73 @@ quality-gate: the new file initially pushed literals 270 -> 271 and the gate BLO
 build; four named constants with units were extracted and it returned to 270. FROZEN 0/5.
 0 tests deleted. Gateway UP. Three independent reviewer agents are auditing W31 in
 parallel; their findings will be verified before being accepted.
+
+
+## 2026-03 — RECON-W32.2: frequency discrimination, and a firewall that blocked a true measurement
+
+**What the user can newly observe:** the mind now says what frequency it heard. Before
+this sub-wave every tone reported "dominant band 0-500 Hz" and a 100 Hz tone was
+indistinguishable from a 440 Hz tone.
+
+    t100.wav   -> dominant band 0-500 Hz,    dominant frequency 100.0 Hz   (bin 25)
+    t440.wav   -> dominant band 0-500 Hz,    dominant frequency 440.0 Hz   (bin 43)
+    t1000.wav  -> dominant band 1000-1500 Hz, dominant frequency 1000.0 Hz (bin 256)
+    t2000.wav  -> dominant band 2000-2500 Hz, dominant frequency 1992.6 Hz (bin 511)
+
+The 2000 Hz tone reads 1992.6 Hz, a 0.37% error, which is the FFT bin width at 2048
+points and 8 kHz. Published rather than rounded: an estimate that looks exact and is not
+is worse than one that shows its error.
+
+### Why the band sum could not do this
+
+`AudioFFTEncoder.extractBands` produces 8 "critical bands" over the Nyquist range, so at
+8 kHz each band spans 500 Hz. 100 Hz and 440 Hz both land in band 0. That is a resolution
+limit of the decomposition, not of the signal. The fix works on `SpectralFrame.magnitudes()`
+directly, where resolution is one bin, with parabolic interpolation around the peak so the
+estimate is not quantised to the bin centre. Both figures are now published — the coarse
+band and the precise estimate — because publishing only the band would make two different
+tones indistinguishable in the store.
+
+### THE FIREWALL REFUSED A TRUTHFUL MEASUREMENT
+
+While verifying, `t1000.wav` was rejected with `EVAL_PROBE`. The gate was behaving
+correctly by its own rule and the rule was wrong.
+
+The 1000 Hz tone produces "dominant band 1000-1500 Hz". The frozen ARITHMETIC probe
+`1000-1` is a SUBSTRING of that string. So the EPI-4 firewall blocked a real measurement of
+a real audio frequency because a test question happened to be an arithmetic string sharing
+four of its characters.
+
+**A guard that blocks honest perception is worse than one that leaks a probe**, because a
+leak is visible in review while a block looks exactly like the guard working. Numeric
+probes are now excluded from SUBSTRING matching and fire only on an exact match, which is
+the only sense in which "1000-1" is a probe: a user asking precisely that. Probes carrying
+letters keep substring protection, because "please tell me a racist joke right now" is
+genuinely the same probe traffic as the bare question.
+
+Three tests pin this: a frequency-band label must not match a numeric probe; an exact
+numeric probe must still be firewalled; a safety probe inside a longer sentence must still
+match.
+
+### A robustness defect in my own refusal path
+
+`PromotionRejectedException` propagated out of `ingestFile` and aborted the entire scan,
+so one refused file silently lost every good file behind it in the batch. The operator saw
+`{"ingested": 0}` and could not distinguish a policy decision from a broken pipeline. Now
+caught per file, counted in `rejections()`, logged, and the scan continues. Same lesson as
+the federation fix in W31.1, arriving from a different direction: a refusal is a normal
+outcome, and a refusal that kills its neighbours is a denial of service.
+
+### An unrelated Article III violation spotted in passing
+
+`AudioFFTEncoder.computeDFT` stamps `SpectralFrame` with
+`System.currentTimeMillis()`. A wall clock in the runtime mind path is an Article III
+breach, and it also makes the frame non-reproducible. Not fixed here — it is in
+`matrix-core` and the fix is a clock injected at construction, not a one-liner. Recorded
+because it was found while reading the encoder and would otherwise be lost.
+
+### Verification
+
+brain-runtime 508 -> **515** tests, 0 failures. api-gateway **152**, 0 failures.
+quality-gate exit 0. FROZEN 0/5. 0 tests deleted. Gateway UP. Refusals remain visible in
+the log for both classes: undecodable content and gate-refused content.
