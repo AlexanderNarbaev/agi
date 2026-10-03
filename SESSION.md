@@ -2649,3 +2649,86 @@ sensor data" and must not be described as such.
 brain-runtime 528 -> **529** tests, 0 failures. api-gateway **152**, 0 failures.
 quality-gate exit 0. FROZEN 0/5. 0 tests deleted. End-to-end live: the temperature
 question is answered; the three unknowable questions refuse.
+
+
+## 2026-10-03 — RECON-W32.4: a data-loss incident, and three fixes
+
+**What the user can newly observe:** the knowledge base survived being destroyed. It
+held 2 901 acquired facts; it now holds 1 892 again, restored by a committed command
+rather than by memory, and every refusal that caused the loss is now impossible to
+repeat silently.
+
+### WHAT HAPPENED
+
+A record-id reformatting script rewrote `data/mind/hdc_kb.ndjson` using Python's
+`json.dumps`, which emits `{"id": "x"}` WITH A SPACE. The Java reader matches `"id":"`.
+It parsed 17 of 2 927 lines and — this is the part that matters — **did not say so**:
+
+    if (r == null) continue;      // no counter, no log
+
+The next `persistAtomically()` then rewrote the file from the partial in-memory map.
+**2 910 facts were destroyed, with no error anywhere.** Zero copies survived on disk.
+
+Two compounding mistakes, both mine:
+
+- A tolerant reader is a data-loss mechanism, not a tolerance. I fixed exactly this
+  pattern in W31.1 (federation) and W32.1 (inbox refusals) and then wrote it fresh into
+  the store loader.
+- The acquisition had been a scratch program, so "re-fetch and re-ingest" was not a
+  command anyone could run. Recovery depended on me remembering how to redo it.
+
+### FIX 1 — the loader now refuses to load a partial file
+
+`loadFromDisk` counts unparseable lines and throws, naming the file, the count and the
+first bad line, leaving the file untouched. A load that cannot be trusted must not be
+allowed to become a truncate-and-overwrite. It also logs the record count on success, so
+a silent drop is no longer possible.
+
+### FIX 2 — ingest is a committed, idempotent tool
+
+`KnowledgeForgeIngest` replaces the scratch program:
+
+    java -cp ... io.matrix.brain.runtime.KnowledgeForgeIngest \
+         data/datasets/wikidata/wikidata-facts.ndjson data/mind/hdc_kb.ndjson 512
+    -> promoted=1892 rejected=1 total=1893 reasons={FICTIONAL_SUBJECT=1}
+    -> store now holds 1972 records at dim 512
+
+Ids are content-derived, so a second run **overwrites rather than duplicating** — verified
+live, 1 972 records before and after. Every fact still passes the promotion gate; the one
+refusal is the same `FICTIONAL_SUBJECT` the original ingest logged.
+
+### FIX 3 — a retrieval bug the incident exposed
+
+After restore, "What is the capital of Kenya?" REFUSED, though the fact was present and
+scored 0.654. The cause: `HdcRetrievalStage` replaced the best candidate with the best
+**answered** (`" => "`) candidate *unconditionally*, whenever any such fact existed
+anywhere in the store. A leftover artefact scoring 0.146 displaced the correct fact
+scoring 0.654.
+
+**Answered-ness is a tie-breaker, not a trump card.** Three tests hold it, including one
+that the stronger answered fact still wins — so the original intent is not disabled.
+
+Live after the fix:
+
+    What is the capital of Kenya?           ANSWER  Kenya capital Nairobi
+    What is the capital of Chile?           ANSWER  Chile capital Santiago
+    What is the chemical symbol for gold?   ANSWER  gold symbol Au
+    Which continent is Japan located on?    ANSWER  Japan continent Asia
+    Столица Кении?                          ANSWER  Кения имеет столицу Найроби
+    What is the temperature?                ANSWER  temperature_c rose 20 to 22.8
+
+### The recurring shape, stated once more
+
+Four times in this campaign a defect was a *silent* failure: the HDC store missed while
+the episodic log was audited (W31.1); the in-memory retrieval path kept the
+chance-level scorer (W31.2); `TrueMindCycle` kept the wrong retrieval form (W31.4); a
+refused inbox file looked identical to an absent one (W32.1). This one destroyed data.
+The common cause is a path that reports nothing on failure. Every fix here makes the
+failure loud: a count in a log, an exception instead of a skip, a report instead of a
+discard.
+
+### Verification
+
+brain-runtime 533 -> **536** tests, 0 failures. api-gateway **152**, 0 failures.
+quality-gate exit 0. FROZEN 0/5. 0 tests deleted. Knowledge store 1 972 records.
+Gateway UP.

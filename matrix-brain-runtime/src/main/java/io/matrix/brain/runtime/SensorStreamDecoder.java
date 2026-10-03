@@ -171,11 +171,79 @@ public final class SensorStreamDecoder {
          * @return a short natural-language claim, or null when there is nothing to state
          */
         public String fact(String source) {
-            if (readings == null || readings.isEmpty()) return null;
-            List<String> t = trends();
-            List<String> c = coOccurrences();
-            if (t.isEmpty() && c.isEmpty()) return null;
-            return t.isEmpty() ? c.get(0) : t.get(0);
+            List<String> all = facts();
+            return all.isEmpty() ? null : all.get(0);
+        }
+
+        /**
+         * ONE SHORT CLAIM PER FIELD, so every field in the stream is answerable.
+         *
+         * <p>This is the fix for the limitation measured in the previous sub-wave: only
+         * the first trend was retrievable, because a single multi-field fact cannot fit
+         * the ~5-content-token budget that {@code ContentSimilarity} imposes. Storing one
+         * fact per field keeps every claim individually retrievable.</p>
+         *
+         * <p>Order is deterministic: trends in first-seen field order, then observed
+         * booleans in first-seen order. Each element is a complete, self-contained
+         * sentence and each is short enough to be found by a question naming its
+         * subject.</p>
+         *
+         * @return one claim per field; empty when the stream has nothing to state
+         */
+        public List<String> facts() {
+            List<String> out = new ArrayList<>();
+            if (readings == null || readings.isEmpty()) return out;
+            for (String t : trends()) out.add(t);
+            for (String c : distinctObservations()) out.add(c);
+            return out;
+        }
+
+        /**
+         * Boolean fields as STATE, not as a bag of observations.
+         *
+         * <p>Storing "observed fan_on = false" and "observed fan_on = true" as two facts
+         * presents the operator with what looks like a contradiction. The stream is not
+         * self-contradictory: the fan SWITCHED. A field that never changed is reported
+         * once as "fan_on was false"; a field that changed is reported once as
+         * "fan_on changed from false to true".</p>
+         *
+         * <p>Still co-occurrence only: "changed" describes the values, not a mechanism,
+         * and never a cause.</p>
+         *
+         * @return one statement per boolean field, in first-seen order
+         */
+        public List<String> distinctObservations() {
+            List<String> out = new ArrayList<>();
+            for (String field : booleanFieldsInOrder()) {
+                Boolean first = null, last = null;
+                for (Map<String, Object> r : readings) {
+                    Boolean b = (Boolean) r.get(field);
+                    if (b == null) continue;
+                    if (first == null) first = b;
+                    last = b;
+                }
+                if (first == null) continue;
+                if (first.equals(last)) {
+                    out.add("observed " + field + " was " + first);
+                } else {
+                    out.add("observed " + field + " changed from " + first + " to " + last);
+                }
+            }
+            return out;
+        }
+
+        /** Boolean field names, first-seen order, index fields excluded. */
+        private List<String> booleanFieldsInOrder() {
+            List<String> out = new ArrayList<>();
+            Set<String> seen = new LinkedHashSet<>();
+            for (Map<String, Object> r : readings) {
+                for (Map.Entry<String, Object> e : r.entrySet()) {
+                    if (!(e.getValue() instanceof Boolean)) continue;
+                    if (INDEX_FIELDS.contains(e.getKey().toLowerCase(Locale.ROOT))) continue;
+                    if (seen.add(e.getKey())) out.add(e.getKey());
+                }
+            }
+            return out;
         }
 
         /**
@@ -207,7 +275,7 @@ public final class SensorStreamDecoder {
                 }
             }
             if (!c.isEmpty()) {
-                sb.append("; ").append(String.join("; ", new LinkedHashSet<>(c)));
+                sb.append("; ").append(String.join("; ", distinctObservations()));
             }
             return sb.toString();
         }

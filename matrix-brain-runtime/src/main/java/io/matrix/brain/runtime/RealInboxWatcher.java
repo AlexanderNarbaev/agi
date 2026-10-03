@@ -117,12 +117,19 @@ public final class RealInboxWatcher {
                 if (stream == null) return false;
                 // The store gets the SHORT claim so retrieval can find it; the log gets
                 // the full reading so nothing is lost to the scorer's length penalty.
-                content = stream.fact(path.getFileName().toString());
+                // ONE FACT PER FIELD. Each claim is short enough for the current scorer
+                // to retrieve, so every field in the stream is answerable rather than
+                // only the first. The full reading still goes to the log.
+                java.util.List<String> claims = stream.facts();
                 String detail = stream.detail(path.getFileName().toString());
                 if (detail != null) {
                     LOG.log(Level.INFO, "Inbox: sensor detail {0}", new Object[]{detail});
                 }
+                for (String claim : claims) {
+                    hdcStore.teach(inboxId(path) + "-" + claimToken(claim), claim);
+                }
                 transcoder = "SensorStreamDecoder.decode+trends";
+                content = claims.isEmpty() ? null : claims.get(0);
                 if (content == null) {
                     // Well-formed but with nothing honest to state (a single reading, or
                     // no numeric field). Not an error; there is simply no perception.
@@ -182,6 +189,14 @@ public final class RealInboxWatcher {
      * <p>Article III: derived from the path, not the clock, so the same file always
      * produces the same id.</p>
      */
+    /**
+     * Short deterministic suffix distinguishing two claims about the same file.
+     * Unit: hex digest prefix. Derived from the claim text, not the clock.
+     */
+    private static String claimToken(String claim) {
+        return Long.toHexString(fnv1a64(claim));
+    }
+
     private static String inboxId(Path path) {
         return "inbox-" + path.getFileName() + "-"
             + Long.toHexString(fnv1a64(path.toString()));

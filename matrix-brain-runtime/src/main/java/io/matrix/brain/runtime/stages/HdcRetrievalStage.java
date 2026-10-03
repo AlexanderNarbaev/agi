@@ -185,8 +185,18 @@ public final class HdcRetrievalStage {
             }
             if (topIds.size() < 3) topIds.add(e.getKey() + ":" + String.format("%.2f", sim));
         }
-        // Prefer an answered match; fall back to highest similarity.
-        if (bestAnsweredId != null) {
+        // Prefer an answered match ONLY when it is actually the better match.
+        //
+        // This used to be unconditional, and it silently discarded the best candidate
+        // whenever any " => " fact existed anywhere in the store: the overall best was
+        // overwritten by the best ANSWERED one, even when that was far weaker. Measured
+        // live after a corpus re-ingest: "Kenya capital Nairobi" scores 0.654 and is the
+        // right answer, but a leftover "capital of Atlantis => Poseidon" scored 0.146,
+        // so the override discarded the correct fact and the mind refused a question it
+        // could answer.
+        //
+        // Answered-ness is a tie-breaker, not a trump card.
+        if (bestAnsweredId != null && bestAnsweredScore > bestScore) {
             bestId = bestAnsweredId;
             bestContent = bestAnsweredContent;
             bestScore = bestAnsweredScore;

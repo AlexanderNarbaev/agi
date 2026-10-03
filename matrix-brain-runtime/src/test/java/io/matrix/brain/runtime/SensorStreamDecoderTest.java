@@ -152,7 +152,59 @@ class SensorStreamDecoderTest {
         }
     }
 
+    @Test
+    void aBooleanThatChangesIsReportedAsAChangeNotAsTwoContradictoryFacts() {
+        // "observed fan_on = false" beside "observed fan_on = true" looks to an operator
+        // like a self-contradictory store. The stream is not contradictory: the fan
+        // switched, and that is one fact.
+        SensorStreamDecoder.Stream s = SensorStreamDecoder.decode(ROOM);
+        List<String> obs = s.distinctObservations();
+        assertEquals(1, obs.size(), "one statement per boolean field, got " + obs);
+        assertTrue(obs.get(0).contains("fan_on") && obs.get(0).contains("changed"),
+            "a switched field must be reported as changing, got " + obs);
+    }
+
+    @Test
+    void aConstantBooleanIsReportedOnceWithNoChange() {
+        SensorStreamDecoder.Stream s = SensorStreamDecoder.decode(
+            "{\"t\":0,\"pump_on\":true}\n{\"t\":1,\"pump_on\":true}");
+        List<String> obs = s.distinctObservations();
+        assertEquals(1, obs.size(), obs.toString());
+        assertTrue(obs.get(0).contains("pump_on") && obs.get(0).contains("was true")
+                && !obs.get(0).contains("changed"), obs.toString());
+    }
+
     // ---- the resulting fact must be worth storing ---------------------------
+
+    @Test
+    void everyFieldInTheStreamGetsItsOwnRetrievableFact() {
+        // The limitation fixed in this sub-wave: one multi-field fact cannot fit the
+        // ~5-token budget, so only the FIRST trend was answerable. One fact per field
+        // makes every field answerable.
+        SensorStreamDecoder.Stream s = SensorStreamDecoder.decode(ROOM);
+        List<String> facts = s.facts();
+        assertTrue(facts.stream().anyMatch(f -> f.contains("temperature_c")), facts.toString());
+        assertTrue(facts.stream().anyMatch(f -> f.contains("humidity_pct")), facts.toString());
+        assertTrue(facts.stream().anyMatch(f -> f.contains("fan_on")), facts.toString());
+        for (String f : facts) {
+            assertTrue(ContentSimilarity.contentTokens(f).size() <= 6,
+                "each claim must fit the retrievable budget, got " + f);
+        }
+    }
+
+    @Test
+    void everyFieldClaimIsRetrievableByAQuestionNamingIt() {
+        SensorStreamDecoder.Stream s = SensorStreamDecoder.decode(ROOM);
+        assertTrue(ContentSimilarity.score("What is the temperature?", s.fact("room.jsonl"))
+                   >= ContentSimilarity.RETRIEVAL_FLOOR, "temperature must be answerable");
+        String humidity = s.facts().stream()
+            .filter(f -> f.contains("humidity_pct")).findFirst().orElse(null);
+        assertNotNull(humidity);
+        assertTrue(ContentSimilarity.score("What is the humidity?", humidity)
+                   >= ContentSimilarity.RETRIEVAL_FLOOR,
+            "humidity must be answerable too, scored "
+                + ContentSimilarity.score("What is the humidity?", humidity));
+    }
 
     @Test
     void theRenderedFactIsRetrievableByAGenericQuestionBecauseItIsKeptShort() {

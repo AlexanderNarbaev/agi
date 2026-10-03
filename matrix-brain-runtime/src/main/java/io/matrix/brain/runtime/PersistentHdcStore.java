@@ -2,6 +2,8 @@ package io.matrix.brain.runtime;
 
 import java.io.IOException;
 import java.nio.file.Files;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.nio.file.Path;
 import java.util.BitSet;
 import java.util.LinkedHashMap;
@@ -28,6 +30,8 @@ import java.util.stream.Collectors;
  * same NDJSON byte-for-byte across processes.</p>
  */
 public final class PersistentHdcStore {
+
+    private static final Logger LOG = Logger.getLogger(PersistentHdcStore.class.getName());
 
     /** Schema version for forward compat. */
     public static final int SCHEMA_VERSION = 1;
@@ -193,19 +197,53 @@ public final class PersistentHdcStore {
     // ------------------------------------------------------------------
 
     /** Load all records from the NDJSON file (if any). */
+    /**
+     * Load every record, and REFUSE to run if any line could not be parsed.
+     *
+     * <p><b>Why this is now fatal rather than lenient.</b> The previous version did
+     * {@code if (r == null) continue;} with no counter and no log, then let
+     * {@link #persistAtomically()} overwrite the file with whatever had loaded. During
+     * W32 a record reformatting wrote 2 927 lines that this parser did not accept; the
+     * load silently kept 17 of them and the next persist destroyed the other 2 910.
+     *
+     * <p>A skip that is invisible is a data-loss mechanism, not a tolerance. The
+     * pattern recurs across this campaign — W31.1 the HDC store missed while the
+     * episodic log was audited, W32.1 a refused file that looked like an absent one —
+     * and this instance destroyed real data rather than merely hiding it.</p>
+     *
+     * @throws IllegalStateException when any non-blank line fails to parse, naming the
+     *         file and the count, so the file is left untouched and recoverable
+     */
     private void loadFromDisk() {
         if (!Files.exists(storagePath)) return;
         try {
             List<String> lines = Files.readAllLines(storagePath);
             int loaded = 0;
-            for (String line : lines) {
+            int skipped = 0;
+            int firstBadLine = -1;
+            for (int i = 0; i < lines.size(); i++) {
+                String line = lines.get(i);
                 if (line.isBlank()) continue;
                 Record r = Record.fromJson(line);
-                if (r == null) continue;
+                if (r == null) {
+                    skipped++;
+                    if (firstBadLine < 0) firstBadLine = i + 1;
+                    continue;
+                }
                 vectors.put(r.id, r.toBitSet(dim));
                 contents.put(r.id, r.content);
                 loaded++;
             }
+            if (skipped > 0) {
+                throw new IllegalStateException(
+                    "Refusing to load " + storagePath + ": " + skipped + " of "
+                        + lines.size() + " lines failed to parse (first at line "
+                        + firstBadLine + "). The file has NOT been modified. Repair or "
+                        + "quarantine the offending lines; loading a subset and then "
+                        + "persisting it would destroy the records that did parse.");
+            }
+            LOG.log(Level.INFO, "HDC store loaded {0} records from {1}",
+                new Object[]{loaded, storagePath});
         } catch (IOException e) {
             throw new RuntimeException("Failed to load HDC store from " + storagePath, e);
         }
