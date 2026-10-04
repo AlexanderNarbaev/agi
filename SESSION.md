@@ -3567,3 +3567,57 @@ me from losing my own work, and the smaller design was better than the one I was
 
 brain-runtime 570 -> **574** tests, 0 failures. api-gateway **152**, 0 failures.
 quality-gate exit 0. FROZEN 5/5 at 0 diff.
+
+
+## 2026-10-04 — RECON-W32.20: a rule lost to a torn write is now visible
+
+**What the user can newly observe:** if a BIR rule is missing after a restart, the reason
+is now printed where an operator can see it, instead of the mind silently having
+forgotten it.
+
+### The defect
+
+`BirRegistryPersistence.replayInto` skipped a malformed line with a bare
+
+    } catch (Exception ignored) {
+        // Skip malformed lines (file may have legacy or torn-write entries).
+    }
+
+So a rule lost to a torn write or a legacy format vanished from the registry with no
+error and no count, and a rule missing from the registry looked identical to a rule that
+was never created.
+
+This is the same SHAPE as the loader that destroyed 2 910 HDC facts in W32.4. The only
+difference is that this file is append-only, so nothing is overwritten — the loss is
+invisible rather than catastrophic, **which is not a defence of the silence.**
+
+### Skipping stays; the silence does not
+
+Refusing to load would be wrong here: a torn trailing line is expected in an append-only
+log, and refusing would turn a recoverable file into an unusable one. So the behaviour
+stays and the reporting changes: skipped lines are counted, the first ten are printed with
+their reason, and a summary states the consequence in words — "those rules are absent
+from the registry" — rather than merely that something happened.
+
+The count covers BOTH failure shapes, which the first version missed: a line that throws
+**and** a line that parses to null or to a bean with no `op`. A torn write usually takes
+the second path, so counting only exceptions would have left the common case silent —
+which is precisely what the original code did.
+
+### The test I got wrong twice before it was right
+
+The first version hand-wrote the JSON fixture and loaded 0 of 2 records, because the real
+format needs `inputBits`/`kWords`/`clauses` for `reconstructBir` and my guess omitted
+them. **A test that invents a fixture instead of using the producer tests its own
+guess.** The fixture is now built by `registry.register()` with a real `ClauseSetForm`,
+exactly as production builds them, so it cannot drift from the format.
+
+Two tests: a file with a torn line loads its good records, counts exactly one skip, and
+says so; a clean file counts zero and prints nothing — because a counter that is always
+positive is a counter nobody reads.
+
+### Verification
+
+matrix-core full module: **8 094 tests, 68 failures** — the same 68 as the documented
+baseline, **zero in the BIR package**. brain-runtime 574, api-gateway 152, 0 failures.
+quality-gate exit 0. FROZEN 5/5 at 0 diff.

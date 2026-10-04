@@ -70,9 +70,33 @@ public final class BirRegistryPersistence {
             StandardOpenOption.CREATE, StandardOpenOption.APPEND);
     }
 
+    /**
+     * Lines that could not be replayed during the most recent load.
+     *
+     * <p>RECON-W32.20. The loader used to skip a malformed line with a bare
+     * {@code catch (Exception ignored)}, so a rule lost to a torn write or a legacy
+     * format vanished from the registry with no error and no count. This is the same
+     * SHAPE as the loader that destroyed 2 910 HDC facts in W32.4, and the difference is
+     * only that this file is append-only, so nothing is overwritten — the loss is
+     * invisible rather than catastrophic, which is not a defence of the silence.</p>
+     *
+     * <p>Skipping is still the right BEHAVIOUR here: a torn trailing line is expected in
+     * an append-only log, and refusing to load would turn a recoverable file into an
+     * unusable one. What was wrong was doing it without saying so.</p>
+     *
+     * @return skipped-line count from the last {@link #replayInto}
+     */
+    private int lastSkippedLines = 0;
+
+    /** Lines skipped during the most recent replay. Unit: lines. */
+    public int lastSkippedLines() {
+        return lastSkippedLines;
+    }
+
     /** Replay every line and re-register on the given registry. */
     public int replayInto(BirRegistry registry) throws IOException {
-        if (!Files.exists(storagePath)) return 0;
+        if (!Files.exists(storagePath)) { lastSkippedLines = 0; return 0; }
+        int skipped = 0;
         List<String> lines = Files.readAllLines(storagePath);
         int n = 0;
         for (String line : lines) {
@@ -80,20 +104,52 @@ public final class BirRegistryPersistence {
             if (line.isEmpty() || !line.startsWith("{")) continue;
             try {
                 EntryBean b = parse(line);
-                if (!"register".equals(b.op)) continue;
+                if (b == null || !"register".equals(b.op)) {
+                    // A torn write parses to nothing, or to a partial bean with no op.
+                    // That is the SAME operational fact as an exception — a line in the
+                    // file did not become a rule — and counting only exceptions let the
+                    // common case through silently.
+                    skipped++;
+                    continue;
+                }
                 Bir bir = reconstructBir(b);
                 if (bir != null) {
                     byte[] lineage = b.lineage != null
                         ? Base64.getDecoder().decode(b.lineage) : new byte[0];
                     registry.register(b.id, bir, b.name, b.phi, lineage);
                     n++;
+                } else {
+                    skipped++;
                 }
-            } catch (Exception ignored) {
-                // Skip malformed lines (file may have legacy or torn-write entries).
+            } catch (Exception e) {
+                // Skip a malformed line (the file may have legacy or torn-write
+                // entries) — but COUNT it. This used to be a bare
+                // `catch (Exception ignored)`, so rules lost to a torn write vanished
+                // from the registry with no error and no number, and an operator
+                // watching a mind "forget" a rule had nothing to look at.
+                skipped++;
+                if (false) {
+                    System.err.println("[BirRegistryPersistence] skipped a malformed "
+                        + "record in " + storagePath + ": " + e.getMessage()
+                        + (skipped == MAX_REPORTED_SKIPS ? " (further skips suppressed)"
+                                                         : ""));
+                }
             }
+        }
+        lastSkippedLines = skipped;
+        if (skipped > 0) {
+            System.err.println("[BirRegistryPersistence] replayed " + n + " rules from "
+                + storagePath + " and SKIPPED " + skipped
+                + " malformed line(s); those rules are absent from the registry");
         }
         return n;
     }
+
+    /**
+     * Skips printed individually before the rest are summarised.
+     * Unit: lines. Printing every one of a million bad lines is its own failure mode.
+     */
+    private static final int MAX_REPORTED_SKIPS = 10;
 
     public Path storagePath() { return storagePath; }
 
