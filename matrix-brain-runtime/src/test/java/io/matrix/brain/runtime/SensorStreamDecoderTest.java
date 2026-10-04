@@ -1,6 +1,7 @@
 package io.matrix.brain.runtime;
 
 import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import org.junit.jupiter.api.io.TempDir;
 
 import java.nio.charset.StandardCharsets;
@@ -274,5 +275,60 @@ class SensorStreamDecoderTest {
             "the stream must become a semantic fact, got: " + content);
         assertFalse(content.startsWith("inbox:room.jsonl {"),
             "the raw blob must not be what gets stored");
+    }
+
+    // ---- RECON-W32.19: a trend needs an ordering, and file order is not one ----
+
+    @Test
+    void theSameReadingsGiveTheSameTrendWhateverTheirFileOrder() {
+        // The measured defect: 20.0, 22.8, 21.0 delivered in two different orders
+        // produced "rose 20 to 21" and "rose 20 to 22.8" — two claims from one physical
+        // event, no error anywhere. Ordering by the time field is what makes the
+        // statement a property of the DATA rather than of the file.
+        String a = "{\"t\":0,\"temperature_c\":20.0}\n"
+                 + "{\"t\":1,\"temperature_c\":22.8}\n"
+                 + "{\"t\":2,\"temperature_c\":21.0}";
+        String b = "{\"t\":0,\"temperature_c\":20.0}\n"
+                 + "{\"t\":2,\"temperature_c\":21.0}\n"
+                 + "{\"t\":1,\"temperature_c\":22.8}";
+        org.junit.jupiter.api.Assertions.assertEquals(
+            SensorStreamDecoder.decode(a).facts(),
+            SensorStreamDecoder.decode(b).facts(),
+            "the trend must depend on the readings, not on the order they were written in");
+    }
+
+    @Test
+    void aStreamWithoutATimeFieldIsLeftInFileOrderAndSaysSo() {
+        // Sorting a stream with no time field would be inventing an ordering. The
+        // fallback is file order, and timeOrdered() reports which basis was used.
+        var s = SensorStreamDecoder.decode(
+            "{\"temperature_c\":20.0}\n{\"temperature_c\":22.0}");
+        assertFalse(s.timeOrdered(),
+            "no time field means the ordering is line order, and that must be visible");
+        assertNotNull(s.ordered());
+    }
+
+    @Test
+    void aStreamWithATimeFieldIsReportedAsTimeOrdered() {
+        var s = SensorStreamDecoder.decode(
+            "{\"t\":0,\"temperature_c\":20.0}\n{\"t\":1,\"temperature_c\":22.0}");
+        assertTrue(s.timeOrdered(), "a numeric t in every reading is a real ordering");
+    }
+
+    @Test
+    void aFirstToLastTrendCannotExpressAPeakAndThatIsStatedNotHidden() {
+        // 20.0 -> 22.8 -> 21.0 peaks in the middle. A first-to-last comparison can only
+        // say "rose 20 to 21", which is TRUE and INCOMPLETE. The honest position is that
+        // the metric is endpoint-based, and this test records the incompleteness so it
+        // is not mistaken for a full description of the signal.
+        var s = SensorStreamDecoder.decode(
+            "{\"t\":0,\"temperature_c\":20.0}\n"
+            + "{\"t\":1,\"temperature_c\":22.8}\n"
+            + "{\"t\":2,\"temperature_c\":21.0}");
+        String claim = String.join("; ", s.facts());
+        assertTrue(claim.contains("rose 20 to 21"), claim);
+        assertFalse(claim.contains("22.8"),
+            "the stored claim is endpoint-only: the 22.8 peak is NOT represented, and "
+                + "that incompleteness is why this test exists rather than being deleted");
     }
 }

@@ -1,6 +1,7 @@
 package io.matrix.brain.runtime;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -87,9 +88,39 @@ public final class SensorStreamDecoder {
          * @return the numeric values, or an empty list when the field is absent or
          *         non-numeric in any reading
          */
+        /**
+         * Readings in TIME ORDER when the data supports it, in file order otherwise.
+         *
+         * <p>RECON-W32.19. A trend is a claim about CHANGE, so it needs an ordering, and
+         * file order is not one. Measured on the readings 20.0, 22.8, 21.0: delivering
+         * them in a different order produced "temperature_c rose 20 to 21" and
+         * "rose 20 to 22.8" — two different claims from one physical event, no error
+         * anywhere. The first is not merely wrong in magnitude: the temperature peaked
+         * in the middle, so a first-to-last comparison is not a direction at all.</p>
+         *
+         * @return readings in time order if every reading carries a recognised numeric
+         *         time field, otherwise exactly as they appeared
+         */
+        public List<Map<String, Object>> ordered() {
+            return TimeOrdered.sorted(readings);
+        }
+
+        /** True when the ordering rests on a time field rather than on line order. */
+        public boolean timeOrdered() {
+            for (String f : TimeOrdered.TIME_FIELDS) {
+                if (readings.isEmpty()) return false;
+                boolean all = true;
+                for (Map<String, Object> r : readings) {
+                    if (!(r.get(f) instanceof Number)) { all = false; break; }
+                }
+                if (all) return true;
+            }
+            return false;
+        }
+
         public List<Double> numeric(String field) {
             List<Double> out = new ArrayList<>();
-            for (Map<String, Object> r : readings) {
+            for (Map<String, Object> r : ordered()) {
                 Object v = r.get(field);
                 if (!(v instanceof Number n)) return List.of();
                 out.add(n.doubleValue());
@@ -113,7 +144,7 @@ public final class SensorStreamDecoder {
         public List<String> trends() {
             List<String> out = new ArrayList<>();
             Set<String> seen = new LinkedHashSet<>();
-            for (Map<String, Object> r : readings) {
+            for (Map<String, Object> r : ordered()) {
                 for (String field : r.keySet()) {
                     if (!seen.add(field)) continue;
                     if (INDEX_FIELDS.contains(field.toLowerCase(Locale.ROOT))) continue;
@@ -216,7 +247,7 @@ public final class SensorStreamDecoder {
             List<String> out = new ArrayList<>();
             for (String field : booleanFieldsInOrder()) {
                 Boolean first = null, last = null;
-                for (Map<String, Object> r : readings) {
+                for (Map<String, Object> r : ordered()) {
                     Boolean b = (Boolean) r.get(field);
                     if (b == null) continue;
                     if (first == null) first = b;
@@ -383,5 +414,48 @@ public final class SensorStreamDecoder {
         if (s.indexOf('\\') < 0) return s;
         return s.replace("\\n", "\n").replace("\\t", "\t")
                 .replace("\\\"", "\"").replace("\\\\", "\\");
+    }
+
+    /**
+     * Sorts readings into time order when the data supports it, and leaves them alone
+     * when it does not.
+     *
+     * <p>RECON-W32.19. Sorting a stream with NO time field would be inventing an
+     * ordering, so the fallback is file order, and {@link Stream#timeOrdered()} lets a
+     * caller tell which basis a trend rests on. The trend TEXT is unchanged by this: a
+     * claim about which field moved and by how much is the same either way, and the
+     * ordering only decides which endpoint is the start.
+     *
+     * <p>Ties keep original position, so repeated timestamps give a deterministic order
+     * rather than depending on a sort's stability.</p>
+     */
+    static final class TimeOrdered {
+
+        /** Field names recognised as a reading time. Unit: lowercase field names. */
+        static final List<String> TIME_FIELDS = List.of(
+            "t", "ts", "time", "timestamp", "epoch", "seq", "index", "step");
+
+        private TimeOrdered() {}
+
+        static List<Map<String, Object>> sorted(List<Map<String, Object>> readings) {
+            if (readings == null || readings.size() < MIN_READINGS_FOR_TREND) return readings;
+            for (String field : TIME_FIELDS) {
+                if (numericInEveryReading(readings, field)) return byField(readings, field);
+            }
+            return readings;
+        }
+
+        private static boolean numericInEveryReading(List<Map<String, Object>> rs, String f) {
+            for (Map<String, Object> r : rs) {
+                if (!(r.get(f) instanceof Number)) return false;
+            }
+            return true;
+        }
+
+        private static List<Map<String, Object>> byField(List<Map<String, Object>> rs, String f) {
+            List<Map<String, Object>> out = new ArrayList<>(rs);
+            out.sort(Comparator.comparingDouble(r -> ((Number) r.get(f)).doubleValue()));
+            return List.copyOf(out);
+        }
     }
 }
