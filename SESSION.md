@@ -3352,3 +3352,55 @@ than smuggled in here. Recorded as open, not claimed as done.
 
 brain-runtime **568** tests 0 failures. api-gateway **152**, 0 failures. quality-gate
 exit 0. FROZEN 5/5 at 0 diff.
+
+
+## 2026-10-04 — RECON-W32.16: my own recovery put 39 probe records back into the store
+
+**What the user can newly observe:** the store no longer echoes a question back as its
+own answer. Asked "What is the capital of France?" the retrieval stage was returning the
+question itself; it now returns the fact, and answers 8 of 8 capital questions from the
+store with no help from the hardcoded table.
+
+### The causal chain, and every link is mine
+
+1. **W32.4 — I destroyed 2 910 facts.** The store fell to 17 records.
+2. **I recovered by merging every surviving copy** — `hdc_kb.ndjson`,
+   `hdc_kb.superseded-sensor.ndjson`, `hdc_kb.fabricated-perception.ndjson`,
+   `hdc_kb.quarantine.ndjson` and `hdc_kb.ndjson.pre-w31.1.*` — and re-emitted them
+   **without passing the result through the promotion gate.**
+3. That pre-W31.1 backup still contained probe records from the original contamination,
+   so **39 test-set probes re-entered the knowledge base**: `What is 2+3?`,
+   `1000*12345`, `Привет мир`, `What is 2+3? => 2 + 3 = 5`, and 34 more.
+
+The recovery was correct in intent and incomplete in execution. A restore that rebuilds
+a store MUST run the same admission rules the store would have applied, or it is an
+opening rather than a repair.
+
+### Today's gate would have blocked all 39
+
+Feeding the 2 055 stored facts through `PromotionGate` as they stand:
+
+    blocked: 39   allowed: 2 016
+      EVAL_PROBE = 37
+      FICTIONAL_SUBJECT = 2
+
+So the guard is intact and the records were residue, not a new hole. They are quarantined
+to `hdc_kb.reingested-probes.ndjson`; the store holds 2 016 records and an independent
+Python check confirms **zero** probe-containing records remain.
+
+### What surfaced it
+
+Not a test. I was measuring whether the store could answer capital questions WITHOUT the
+hardcoded table — the duplication question from W32.15 — and one of eight returned the
+question instead of an answer. A self-retrieval is visible in a way a count never is.
+
+### Duplication status, measured
+
+The store now answers 8/8 on its own:
+
+    Peru -> Lima   Germany -> Berlin   Kenya -> Nairobi   France -> Paris
+    Australia -> Canberra   Japan -> Tokyo   RU: Кения -> Найроби, Франция -> Париж
+
+So the hardcoded table is no longer load-bearing for correctness; it remains a fast path
+consulted FIRST in `composeReply`. Removing it is now a latency decision with a measured
+floor rather than a correctness risk, which is the right way round.
