@@ -363,9 +363,21 @@ public final class TrueMindCycle {
         if (arith.matched()) return arith.reply();
         if (analogy.matched()) return analogy.reply();
         if (relational.matched()) return relational.reply();
+        // RECON-W32.18: the STORE is consulted before the hardcoded table.
+        //
+        // Until now BilingualFactLookup was checked first, so the 61 facts seeded into
+        // the store at W32.15 were never used to answer anything — the table answered
+        // first and the seeded copy was dead weight, plus a chance for the two to
+        // disagree.
+        //
+        // The cost was measured rather than assumed: one /v1/analyze is ~23 ms end to
+        // end, and the store's ranked scan is 372 us — 1.6% of the request. Making the
+        // store the authority costs almost nothing and leaves ONE source of truth, so
+        // the table becomes a fallback for the case where retrieval misses rather than
+        // a parallel answer that can contradict the store.
+        if (hdc.matched()) return hdc.reply();
         if (facts.matched()) return facts.reply();
         if (bir.matched()) return bir.reply();
-        if (hdc.matched()) return hdc.reply();
         if (mctsReply != null && !mctsReply.isBlank()) return mctsReply;
         if (tsetlin.matched() && tsetlin.reply() != null && !tsetlin.reply().isBlank()) {
             return tsetlin.reply();

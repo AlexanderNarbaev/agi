@@ -3464,3 +3464,49 @@ gap is inherent: ranked retrieval over a store is a different operation from exa
 in a map, and it grows linearly with store size. Removing the table is therefore a latency
 trade to be revisited when the store is large enough for the trade to flip — not a
 correctness fix, which is what I had assumed at W32.15.
+
+
+## 2026-10-04 — RECON-W32.18: the store is now the single authority; the duplication is closed
+
+**What the user can newly observe:** the capital answers now come FROM the knowledge
+store rather than from a hardcoded table. The reply format is the evidence —
+`Kenya capital Nairobi` is a retrieved fact; the bare `Nairobi` was the table. Nothing in
+chat is faster and nothing is slower; what changed is that there is one source of truth
+rather than two that could disagree.
+
+### Why the cost was measured before the change
+
+One `/v1/analyze` is ~23 ms end to end. The store's ranked scan is 372 us — **1.6% of
+the request**. The reordering therefore costs almost nothing, which is the only reason
+it is defensible: at W32.15 I recorded it as a correctness risk and declined to take it
+because the store was 3.5 ms. The risk evaporated when the store got fast, and I would
+have been wrong to defer it on a number that had since stopped being true.
+
+### What the duplication actually was costing
+
+Until now `BilingualFactLookup` was checked BEFORE the store in `composeReply`, so the
+61 facts seeded into the store at W32.15 were **never used to answer anything**. The
+table answered first and the seeded copy was dead weight — plus a standing chance for
+the two to disagree, which is how "capital of Peru" got answered from one source while
+`/v1/status` counted a store that had never been consulted for it.
+
+The table is not removed; it is demoted to a fallback for the case where retrieval
+misses. One authority, one count, and a path that can still answer when ranking fails.
+
+### Held at 100% after the change
+
+    UNKNOWN_ACK: 18/18 = 100.0%   fabrications: 0
+      unknowable refused: 10/10    answerable answered: 8/8
+
+Reordering the authority is exactly the kind of change that would silently cost honesty
+if the second half of the category regressed, so the whole category was re-run rather
+than a spot check. It did not regress.
+
+### The honest closing of a thread
+
+W32.15 left this as open work with the reasoning "removing the table is a latency
+decision belonging with the recall work". W32.17 made the store fast enough that the
+decision flipped, and W32.18 took it. **The reason I deferred it was a measurement, and
+the measurement changed — so deferring on it was correct, and acting on the same
+measurement later was correct too.** What would not have been correct is either treating
+the deferral as permanent, or taking the change without re-measuring.
