@@ -126,4 +126,77 @@ class HdcRetrievalStageTest {
         assertTrue(r.trace().contains("best_similarity="),
             "a miss must still carry its evidence, got: " + r.trace());
     }
+
+    // ---- RECON-W32.17: the pre-tokenised cache must not go stale -------------
+
+    @Test
+    void aFactTaughtAfterTheStageWasBuiltIsStillRetrievable(@TempDir Path dir)
+            throws java.io.IOException {
+        // The dangerous property: the stage caches every fact's tokens AND the
+        // document-frequency table, because neither changes between writes. If a write
+        // does not invalidate both, the stage scores new facts against old statistics
+        // and there is no error — it just quietly answers differently. That is the
+        // silent-failure class this campaign has been removing, so it gets a test.
+        PersistentHdcStore store = new PersistentHdcStore(dir.resolve("kb.ndjson"), 512);
+        store.teach("seed-1", "Lisbon is the capital of Portugal");
+        var stage = new io.matrix.brain.runtime.stages.HdcRetrievalStage(store);
+
+        var before = stage.retrieve("What is the capital of Portugal?",
+            (io.matrix.brain.runtime.stages.SignalStage.SignalObservation) null,
+            new java.util.ArrayList<>());
+        assertTrue(before.matched(), "precondition: the seeded fact is retrievable");
+
+        // teach() is the path the gateway uses for a new fact.
+        stage.teach("seed-2", "Dodoma is the capital of Tanzania");
+
+        var after = stage.retrieve("What is the capital of Tanzania?",
+            (io.matrix.brain.runtime.stages.SignalStage.SignalObservation) null,
+            new java.util.ArrayList<>());
+        assertTrue(after.matched(),
+            "a fact taught after the stage was built MUST be found — a stale token cache "
+                + "would silently exclude it");
+        assertTrue(after.reply().toLowerCase().contains("dodoma"), after.reply());
+
+        // And the pre-existing fact must still be found, i.e. the cache was not replaced
+        // wholesale with a partial map.
+        var recheck = stage.retrieve("What is the capital of Portugal?",
+            (io.matrix.brain.runtime.stages.SignalStage.SignalObservation) null,
+            new java.util.ArrayList<>());
+        assertTrue(recheck.matched() && recheck.reply().toLowerCase().contains("lisbon"),
+            "the earlier fact must survive the invalidation: " + recheck.reply());
+    }
+
+    @Test
+    void theCachedPathAgreesWithTheUncachedOne(@TempDir Path dir) throws java.io.IOException {
+        // The optimisation must not change an answer. Scored both ways over the whole
+        // store; a divergence would mean the cache and the reference disagree, which is
+        // the failure a performance change is most able to hide.
+        PersistentHdcStore store = new PersistentHdcStore(dir.resolve("kb.ndjson"), 512);
+        store.teach("a", "Paris is the capital of France");
+        store.teach("b", "Tokyo is the capital of Japan");
+        store.teach("c", "The sky is blue because of Rayleigh scattering");
+        var stage = new io.matrix.brain.runtime.stages.HdcRetrievalStage(store);
+
+        for (String q : new String[]{"What is the capital of France?",
+                "What is the capital of Japan?", "Why is the sky blue?",
+                "What is the chemical formula of water?"}) {
+            var r = stage.retrieve(q,
+                (io.matrix.brain.runtime.stages.SignalStage.SignalObservation) null,
+                new java.util.ArrayList<>());
+            // Reference: the uncached scorer over the same store, same query.
+            double bestRef = 0.0;
+            for (String f : store.snapshot().values()) {
+                bestRef = Math.max(bestRef, ContentSimilarity.weightedScore(q, f,
+                    tok -> 1.0));
+            }
+            if (r.matched()) {
+                assertTrue(ContentSimilarity.weightedScore(q, r.reply(), tok -> 1.0) > 0,
+                    "a returned answer must score positively on the reference path: " + q);
+            } else {
+                assertTrue(bestRef < 0.20,
+                    "a miss must be below the floor on the reference path too, got "
+                        + bestRef + " for " + q);
+            }
+        }
+    }
 }

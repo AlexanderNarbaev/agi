@@ -3404,3 +3404,63 @@ The store now answers 8/8 on its own:
 So the hardcoded table is no longer load-bearing for correctness; it remains a fast path
 consulted FIRST in `composeReply`. Removing it is now a latency decision with a measured
 floor rather than a correctness risk, which is the right way round.
+
+
+## 2026-10-04 — RECON-W32.17: retrieval 6.7x faster, and two bugs the speedup hid
+
+**What the user can newly observe:** nothing in chat. This is latency work: question
+answering is measurably faster, and a fact taught at runtime is now actually findable.
+
+### The measurement that motivated it
+
+To decide whether the hardcoded table could be removed as a second knowledge source, I
+measured both paths over 1 800 queries against the 2 016-fact store:
+
+    BilingualFactLookup (map hit)      2.0 us/query    hits 300/1800
+    HdcRetrievalStage   (2016 facts)  3509   us/query  hits 1500/1800   = 1733x
+
+The table was not slow; the STORE was slow. So the work was to make the store
+competitive, not to delete the table.
+
+### Where the time went, and the first fix that did not work
+
+Profiling attributed 38% of the per-pair cost to tokenising the QUESTION — the same
+question, re-tokenised 2 016 times. A cache for the fact tokens took 3 509 -> 603 us.
+Then caching the token SET as well (rather than rebuilding a `LinkedHashSet` per fact per
+query — the same allocation mistake one level down) changed **nothing**: 603 -> 607 us.
+
+An optimisation that does not move the profile is a signal that the profile was wrong
+about the bottleneck. It was: `TopScored.offer` appended and RE-SORTED its whole list on
+every offer — 2 016 sorts per query, with a string parse per comparison. O(1) insertion
+into a bounded sorted list took 603 -> 372 us, and the token work finally showed.
+
+    3 509 -> 603 (token cache) -> 607 (set cache: no effect) -> 372 (O(1) tracker)
+    Total 9.4x, with correctness held at 7/8 throughout.
+
+### Two real bugs the speedup would have hidden
+
+**1. An int where a double was required.** `scorePreTokenised` took the fact's token count
+as an `int`, but the IDF-weighted total is fractional — a fact whose tokens all carry a
+small weight sums to something like 0.15, which truncated to ZERO, and the score then
+divided by zero. Symptoms: a retrievable fact became unretrievable whenever the store was
+small. The visible artefact was a trace reporting **score 1.111 — a coverage-times-
+precision product cannot exceed 1.0**, which is what finally made it obvious.
+
+**2. A fact taught at runtime was permanently invisible.** The scoring loop skips facts
+with no token-cache entry, and `teach()` did not rebuild the cache — so a new fact had no
+entry, was skipped, and could never be found again. No error anywhere.
+
+**Both were found by the test I wrote to assert the cache invalidates, not by any
+performance measurement.** A benchmark would have reported both as a FASTER loop. That is
+the sharpest version of the lesson this campaign keeps arriving at: **an optimisation
+that changes behaviour will hide its own breakage, so the correctness test must exist
+BEFORE the speedup is measured.**
+
+### Where the duplication question stands now
+
+The store answers 8/8 capital questions unaided (Peru, Germany, Kenya, France, Australia,
+Japan, and two Russian forms) at 372-523 us against the table's 0.7-2.0 us. The remaining
+gap is inherent: ranked retrieval over a store is a different operation from exact match
+in a map, and it grows linearly with store size. Removing the table is therefore a latency
+trade to be revisited when the store is large enough for the trade to flip — not a
+correctness fix, which is what I had assumed at W32.15.

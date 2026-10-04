@@ -43,12 +43,36 @@ public final class HdcRetrievalStage {
 
         TopScored(int capacity) { this.capacity = capacity; }
 
+        /**
+         * Keep the best {@code capacity} candidates seen so far.
+         *
+         * <p>RECON-W32.17: this used to append and RE-SORT the whole list on every
+         * offer. With 2 016 facts that is 2 016 sorts of a growing list per query, and
+         * it dominated the retrieval cost even after the token cache landed — the
+         * profile did not move, which is what pointed at the tracker rather than at
+         * scoring. Only the worst candidate is ever evicted, so the list stays sorted
+         * and the work is O(1) per offer instead of O(n log n).</p>
+         *
+         * @param id    candidate id
+         * @param score its score; NaN scores are ignored rather than sorted
+         */
         void offer(String id, double score) {
+            if (Double.isNaN(score)) return;
             String line = id + ":" + String.format(java.util.Locale.ROOT, "%.2f", score);
-            entries.add(line);
-            entries.sort(Comparator.comparingDouble(l -> -Double.parseDouble(
-                l.substring(l.lastIndexOf(':') + 1))));
-            while (entries.size() > capacity) entries.remove(entries.size() - 1);
+            if (entries.size() < capacity) {
+                int i = entries.size();
+                while (i > 0 && scoreOf(entries.get(i - 1)) < score) i--;
+                entries.add(i, line);
+            } else if (score > scoreOf(entries.get(entries.size() - 1))) {
+                int i = entries.size() - 1;
+                while (i > 0 && scoreOf(entries.get(i - 1)) < score) i--;
+                entries.remove(entries.size() - 1);
+                entries.add(i, line);
+            }
+        }
+
+        private static double scoreOf(String line) {
+            return Double.parseDouble(line.substring(line.lastIndexOf(':') + 1));
         }
 
         java.util.List<String> asList() { return java.util.List.copyOf(entries); }
@@ -71,17 +95,62 @@ public final class HdcRetrievalStage {
      */
     private java.util.Map<String, Integer> documentFrequency = java.util.Map.of();
 
+    /**
+     * Pre-tokenised facts, rebuilt with {@link #documentFrequency}.
+     *
+     * <p>RECON-W32.17. Scoring 2 016 facts re-tokenised the same query 2 016 times and
+     * re-tokenised every fact on every question. The facts are static between writes, so
+     * both are tokenised once. Measured effect is in the test; the point of recording it
+     * here is that the cache and the DF table MUST be invalidated together, or the
+     * scores would be computed against statistics from a different store.</p>
+     */
+    private java.util.Map<String, java.util.List<String>> factTokens = java.util.Map.of();
+
+    /** Weighted token count per fact, matching {@link #factTokens}. */
+    private java.util.Map<String, Double> factTokenWeight = java.util.Map.of();
+
+    /**
+     * Fact tokens as a SET, for O(1) membership.
+     *
+     * <p>The first version of the cache stored a List and built a fresh
+     * {@code LinkedHashSet} per fact per query — 2 016 allocations per question, which
+     * is the same mistake one level down from the one being fixed. Caching the set
+     * removes the allocation entirely: the tokens of a fact do not change between
+     * writes, so the set does not either.</p>
+     */
+    private java.util.Map<String, java.util.Set<String>> factTokenSet = java.util.Map.of();
+
     /** Rebuild DF statistics from the store contents. Unit: token -> fact count. */
     private void refreshDocumentFrequency() {
         java.util.Map<String, Integer> df = new java.util.HashMap<>();
+        java.util.Map<String, java.util.List<String>> tokens = new java.util.HashMap<>();
+        java.util.Map<String, Double> weights = new java.util.HashMap<>();
         if (store != null) {
-            for (String content : store.snapshot().values()) {
-                for (String tok : ContentSimilarity.contentTokens(content)) {
-                    df.merge(tok, 1, Integer::sum);
-                }
+            for (java.util.Map.Entry<String, String> e : store.snapshot().entrySet()) {
+                java.util.List<String> toks = ContentSimilarity.contentTokens(e.getValue());
+                tokens.put(e.getKey(), toks);
+                for (String tok : toks) df.merge(tok, 1, Integer::sum);
             }
         }
-        documentFrequency = df;
+        // Weights need the final DF counts, so they are computed after the first pass.
+        final java.util.Map<String, Integer> counts = df;
+        final int corpus = store == null ? 0 : store.size();
+        for (java.util.Map.Entry<String, java.util.List<String>> e : tokens.entrySet()) {
+            double w = 0.0;
+            for (String tok : e.getValue()) {
+                w += Math.max(ContentSimilarity.MIN_IDF_WEIGHT,
+                    ContentSimilarity.idf(counts.getOrDefault(tok, 0), corpus));
+            }
+            weights.put(e.getKey(), w);
+        }
+        java.util.Map<String, java.util.Set<String>> sets = new java.util.HashMap<>();
+        for (java.util.Map.Entry<String, java.util.List<String>> e : tokens.entrySet()) {
+            sets.put(e.getKey(), java.util.Set.copyOf(e.getValue()));
+        }
+        documentFrequency = java.util.Map.copyOf(df);
+        factTokens = java.util.Map.copyOf(tokens);
+        factTokenSet = java.util.Map.copyOf(sets);
+        factTokenWeight = java.util.Map.copyOf(weights);
     }
 
     /** IDF over the current corpus; a token absent from the map is maximally rare. */
@@ -108,6 +177,12 @@ public final class HdcRetrievalStage {
         if (store == null) throw new IllegalStateException("teach requires persistent store");
         PersistentHdcStore.ContradictionReport r = store.checkContradiction(id, content);
         store.teach(id, content);
+        // RECON-W32.17: rebuild the token cache here. Without this the new fact has no
+        // cache entry, the scoring loop SKIPS it, and a fact taught at runtime becomes
+        // permanently invisible to retrieval — with no error. A test asserting cache
+        // invalidation is what caught it: the symptom was a correct fact being missed,
+        // which a performance measurement would have reported as a faster loop.
+        refreshDocumentFrequency();
         return r;
     }
 
@@ -199,8 +274,15 @@ public final class HdcRetrievalStage {
         String bestAnsweredContent = null;
         TopScored top = new TopScored(3);
         java.util.function.ToDoubleFunction<String> idf = corpusIdf();
+        // Tokenise the question ONCE, then score every fact from the cache.
+        java.util.List<String> qTokens = ContentSimilarity.contentTokens(input);
         for (Map.Entry<String, String> e : contents.entrySet()) {
-            double sim = ContentSimilarity.weightedScore(input, e.getValue(), idf);
+            java.util.Set<String> fSet = factTokenSet.get(e.getKey());
+            Double fw = factTokenWeight.get(e.getKey());
+            if (fSet == null) continue;
+            double sim = (fw == null || fw == 0.0)
+                ? 0.0
+                : ContentSimilarity.scorePreTokenised(qTokens, fSet, fw, idf);
             if (sim > bestScore) {
                 bestScore = sim;
                 bestId = e.getKey();
