@@ -6,6 +6,8 @@ import java.nio.file.Path;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
@@ -19,6 +21,8 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  * reproducibility across machines; entries are immutable.</p>
  */
 public final class EpisodicLog {
+
+    private static final Logger LOG = Logger.getLogger(EpisodicLog.class.getName());
 
     /** One episodic entry: a mind interaction. */
     public record Entry(
@@ -49,7 +53,16 @@ public final class EpisodicLog {
             return sb.toString();
         }
         static Entry fromJson(String line) {
-            // Lightweight parser sufficient for our schema (no nested objects, no escapes).
+            // RECON-W32.21: reject a line that is not a COMPLETE record. This parser is
+            // a lenient field-extractor, so a torn trailing line — the one an
+            // append-only log actually produces — used to parse into a plausible Entry
+            // with whatever fields happened to precede the tear. That entry then went
+            // into the read set and was offered for rule induction, so the mind learned
+            // from a fragment. Shape is checked first, because a field extractor cannot
+            // tell a truncated record from a complete one.
+            if (line == null) return null;
+            String t = line.trim();
+            if (!t.startsWith("{") || !t.endsWith("}")) return null;
             String id = extractString(line, "id");
             String input = extractString(line, "input");
             String reply = extractString(line, "reply");
@@ -251,22 +264,85 @@ public final class EpisodicLog {
     }
 
     /** Read all entries. */
+    /**
+     * Malformed lines skipped by the most recent {@link #readAll()}.
+     *
+     * <p>RECON-W32.21. An episode that cannot be read cannot be learned from, so this is
+     * a learning-capacity number and not merely a parse statistic. A skipped episode
+     * used to vanish with no count and no log, which meant the mind had silently lost
+     * the interaction and nothing recorded that it ever had it.</p>
+     *
+     * <p>Unit: lines. Zero after a clean read.</p>
+     */
+    private volatile int lastSkippedLines = 0;
+
+    /** Malformed lines skipped by the most recent read. Unit: lines. */
+    public int lastSkippedLines() {
+        return lastSkippedLines;
+    }
+
+    /** Skips printed individually before the rest are summarised. Unit: lines. */
+    private static final int MAX_REPORTED_SKIPS = 10;
+
+    /**
+     * Malformed lines skipped by the most recent {@link #readAll()}.
+     *
+     * <p>RECON-W32.21. An episode that cannot be read cannot be learned from, so this is
+     * a learning-capacity number and not merely a parse statistic. A skipped episode
+     * used to vanish with no count and no log, which meant the mind had silently lost
+     * the interaction and nothing recorded that it ever had it.</p>
+     *
+     * <p>Unit: lines. Zero after a clean read.</p>
+     */
+
+    /** Malformed lines skipped by the most recent read. Unit: lines. */
+
+    /** Skips printed individually before the rest are summarised. Unit: lines. */
+
     public List<Entry> readAll() {
         lock.readLock().lock();
         try {
-            if (!Files.exists(logPath)) return List.of();
+            if (!Files.exists(logPath)) { lastSkippedLines = 0; return List.of(); }
             List<String> lines = Files.readAllLines(logPath);
             List<Entry> out = new ArrayList<>();
+            int skipped = 0;
             for (String l : lines) {
                 if (l.isBlank()) continue;
-                try { out.add(Entry.fromJson(l)); }
-                catch (RuntimeException ignored) { /* skip malformed */ }
+                Entry parsed = null;
+                try {
+                    // RECON-W32.21: fromJson rejects an incomplete record by shape, so a
+                    // torn trailing line — the thing an append-only log actually
+                    // produces — yields null instead of a plausible Entry built from
+                    // whatever fields preceded the tear. Adding that null would put a
+                    // null episode into the read set, and RealSleepScheduler reads this
+                    // to induce rules: the mind would learn from a fragment.
+                    parsed = Entry.fromJson(l);
+                } catch (RuntimeException e) {
+                    if (skipped < MAX_REPORTED_SKIPS) {
+                        LOG.log(Level.WARNING,
+                            "EpisodicLog: malformed episode in {0}: {1}",
+                            new Object[]{logPath, e.getMessage()});
+                    }
+                }
+                if (parsed == null) {
+                    skipped++;
+                } else {
+                    out.add(parsed);
+                }
+            }
+            lastSkippedLines = skipped;
+            if (skipped > 0) {
+                LOG.log(Level.WARNING,
+                    "EpisodicLog: read {0} episodes from {1} and SKIPPED {2} malformed "
+                        + "line(s); those interactions are NOT available for rule induction",
+                    new Object[]{out.size(), logPath, skipped});
             }
             return out;
         } catch (IOException ex) {
             throw new RuntimeException("EpisodicLog read failed: " + logPath, ex);
         } finally {
-            lock.readLock().unlock(); }
+            lock.readLock().unlock();
+        }
     }
 
     public int size() {

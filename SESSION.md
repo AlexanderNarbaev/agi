@@ -3621,3 +3621,66 @@ positive is a counter nobody reads.
 matrix-core full module: **8 094 tests, 68 failures** — the same 68 as the documented
 baseline, **zero in the BIR package**. brain-runtime 574, api-gateway 152, 0 failures.
 quality-gate exit 0. FROZEN 5/5 at 0 diff.
+
+
+## 2026-10-04 - RECON-W32.21: a silently skipped line in a LEARNING path is a lost lesson
+
+**What the user can newly observe:** if an episode or a ledger line cannot be read, the
+mind now says so in words - including the consequence - instead of quietly carrying on
+with less than it was given.
+
+### Two sites, and they are not like ordinary loaders
+
+- `EpisodicLog.readAll()` is what `RealSleepScheduler` reads to induce rules. **A dropped
+  episode is a dropped opportunity to learn**, and nothing recorded that the mind ever had
+  the interaction.
+- `DistillationLedger.summary()` returns `runs` and `total_inputs_bytes` together. A
+  silently short byte total looks exactly like a run that consumed no input - a claim
+  about work that was done.
+
+Skipping remains correct in both (a torn trailing line is expected in an append-only
+log; refusing would turn a recoverable file into an unusable one). What changed is the
+reporting: counted, first ten with a reason, and a summary that states the consequence -
+"those interactions are NOT available for rule induction".
+
+### The catch was the wrong instrument, twice over
+
+The obvious fix - add a counter inside `catch` - **did not catch anything**, because
+`Entry.fromJson` does not throw on a torn line. It is a lenient field-extractor, so a
+truncated record parsed into a plausible `Entry` built from whatever fields preceded the
+tear, and that fragment went into the read set and was offered for rule induction.
+
+So the fix is validation, not catching: `fromJson` now requires a complete record
+(`{` ... `}`) before it extracts anything, and `readAll` counts a null parse. **The same
+lesson as W32.20, where a torn line parsed to a bean with no `op`: a catch-based counter
+is blind to the failure that is most common.**
+
+I then made it worse for a few minutes - the shape check landed while the `readAll`
+rewrite did not, so `out.add(null)` put a null episode into the list. Fixed by rewriting
+the whole method rather than patching it further, and by noticing it because the scratch
+probe still reported `read size = 1`.
+
+### Fixtures invented rather than produced - twice, in this block
+
+1. `BirRegistryPersistenceSkipTest` hand-wrote JSON and loaded 0 of 2 records, because
+   the real format needs `inputBits`/`kWords`/`clauses`.
+2. The ledger test put `samplesUsed` last, but the real record is 11 fields and the
+   summary's comma-delimited reader cannot terminate on a value with no trailing comma.
+
+Both looked like code errors and were fixture errors. **A test that invents a fixture
+instead of using the producer tests its own guess** - the same conclusion as (1), reached
+a second time in the same sub-wave.
+
+### What this cost, honestly
+
+This block took far more iterations than the change warranted: several failed string
+anchors left half-landed edits, and I spent a long time repairing structure I had already
+broken. The method that would have avoided all of it: **when a surgical patch chain fails
+twice, rewrite the method instead of continuing to patch.** Goal Guard also blocked a
+`git checkout` I reached for, correctly.
+
+### Verification
+
+brain-runtime 574 -> **578** tests, 0 failures. api-gateway **152**, 0 failures.
+quality-gate exit 0. Live regression: capital of Kenya, temperature, colour and 2+3 all
+answer; water formula still refuses. Knowledge store 2 016 facts, 16 BIR rules.

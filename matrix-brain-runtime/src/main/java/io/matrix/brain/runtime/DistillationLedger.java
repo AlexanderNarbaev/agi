@@ -56,6 +56,9 @@ public final class DistillationLedger {
         java.util.Map<String, Object> out = new java.util.LinkedHashMap<>();
         int runs = 0;
         long totalBytes = 0;
+        // RECON-W32.21: a partial summary is marked, not returned bare.
+        int unparsed = 0;
+        boolean readFailed = false;
         try {
             if (Files.exists(ledgerPath)) {
                 for (String line : Files.readAllLines(ledgerPath)) {
@@ -65,17 +68,36 @@ public final class DistillationLedger {
                     if (idx >= 0) {
                         int colon = line.indexOf(':', idx);
                         int comma = line.indexOf(',', colon);
-                        try { totalBytes += Long.parseLong(line.substring(colon + 1, comma).trim()); }
-                        catch (Throwable ignored) {}
+                        // RECON-W32.21: an unparseable byte count is not cosmetic. This
+                        // summary returns "runs" and "total_inputs_bytes" together, and a
+                        // silently short total looks exactly like a run that consumed no
+                        // input — a claim about work that was done.
+                        try {
+                            totalBytes += Long.parseLong(
+                                line.substring(colon + 1, comma).trim());
+                        } catch (RuntimeException e) {
+                            unparsed++;
+                        }
                     }
                 }
             }
-        } catch (java.io.IOException ignored) {
-            // ledger read failure is non-fatal for summary; counts remain partial.
+        } catch (java.io.IOException e) {
+            // Non-fatal for the summary, but NOT silent: the counts are partial and a
+            // reader cannot otherwise tell a partial total from a real one.
+            readFailed = true;
         }
         out.put("runs", runs);
         out.put("total_inputs_bytes", totalBytes);
         out.put("path", ledgerPath.toString());
+        if (unparsed > 0 || readFailed) {
+            out.put("partial", true);
+            out.put("unparsed_lines", unparsed);
+            out.put("read_failed", readFailed);
+            System.err.println("[DistillationLedger] summary of " + ledgerPath
+                + " is PARTIAL: " + unparsed + " unparseable line(s), read failure="
+                + readFailed + " — total_inputs_bytes=" + totalBytes
+                + " understates what was actually consumed");
+        }
         return out;
     }
 
