@@ -3733,3 +3733,59 @@ the jqwik property and BitNet research tests, with zero in the brain package - b
 one-test delta is exactly the kind of thing that should be MEASURED rather than argued
 about. A full re-run of matrix-core is owed before the release tag, and this entry is
 the record that it is outstanding rather than swept.
+
+
+## 2026-10-04 - RECON-W32.23: a refusal must name what IS supported, not just what is not
+
+**What the user can newly observe:** dropping a valid JPEG into the inbox now produces
+an actionable message instead of a puzzling one.
+
+    refused: the file looks like JPEG, and MATRIX decodes PNG ONLY. The file may be
+    perfectly valid - it is the FORMAT that is unsupported. Convert it to PNG, or add a
+    decoder; no image perception will be invented from it.
+
+Previously the same file produced "refused: unrecognised content and no supported
+decoder for it", which reads as **the operator's file is corrupt**. It is not; we simply
+have no decoder for the format, and that is a different problem with a different fix.
+
+### Claiming support we do not have is what W32.1 did
+
+The javadoc once said JPEG and BMP were handled. The honest alternative to writing a
+JPEG decoder is not to pretend, and not to leave the operator guessing - it is to name the
+gap precisely so the decision to close it is informed. Recording that as the deliberate
+choice rather than shipping a stub.
+
+### Two of my own errors in the same change
+
+**The check was unreachable.** I first put the format branch beside the extension tests,
+where a real JPEG never goes: it is binary, so it fails `looksLikeText` and lands in the
+generic fallback. Found by running the classifier, not by reading the diff.
+
+**The test asserted the wrong thing.** `everyRefusalReasonIsActionable` demanded that
+EVERY classification be a refusal, and failed on `x.jpg` containing text. The test was
+wrong: that file is text, so reading it as text is correct - what matters is that it is
+not reported as a decoded image. The two are now separate tests, and `Kind.TEXT` is
+asserted so the classification cannot drift.
+
+## 2026-10-04 - the 68 -> 69 question, MEASURED rather than argued
+
+W32.22 left this open: a full matrix-core run reported 69 failures against the 68
+recorded in W32.5, and I wrote that it should be measured rather than assumed to be
+drift. It has now been re-run.
+
+    8 093 tests completed, 69 failed, 18 skipped    (identical count on the repeat)
+
+So **69 is stable, not a fluke of one run** - which means "jqwik drift" is not a
+sufficient explanation and I am not offering it as one. What the measurement does show:
+
+- 40 classes fail, and **every one of them is BitNet, a jqwik property test, or
+  research code** - the documented research debt.
+- **Zero failures in any area this campaign touched**: no brain, LearningMemory,
+  EpisodicLog, Inbox, Sensor or MediaDecoding test fails.
+- The +1 versus W32.5 sits inside that same property-test set, whose counts have been
+  observed at 67, 68 and 69 across runs on essentially unchanged code.
+
+So: not caused by W32.22, and not proven innocent of it either. The honest position is
+that the debt total moved by one inside a set that does not hold still, with nothing
+failing near the change. Recorded as such, and the release tag still waits on a clean
+attribution rather than on my assurance.

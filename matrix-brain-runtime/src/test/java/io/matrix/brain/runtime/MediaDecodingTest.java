@@ -249,4 +249,56 @@ class MediaDecodingTest {
                 "Article III: same input, same estimate");
         }
     }
+
+    // ---- RECON-W32.23: a refusal must name what IS supported ----------------
+
+    @Test
+    void anUnsupportedImageFormatSaysSoRatherThanBlamingTheFile() {
+        // "unrecognised content" tells an operator their JPEG is corrupt. It is not; we
+        // simply have no decoder for it, and that is a different problem with a
+        // different fix. My first attempt put this check beside the extension tests,
+        // where it was UNREACHABLE - a real JPEG is binary, so it never reaches
+        // looksLikeText and falls through to the generic message.
+        byte[] realJpeg = new byte[]{(byte) 0xFF, (byte) 0xD8, (byte) 0xFF, (byte) 0xE0,
+            0x00, 0x10, 'J', 'F', 'I', 'F', 0, 1, 1, 0, 0, 1, 0, 1, 0, 0};
+        var c = MediaDecoding.classify("photo.jpg", realJpeg);
+        assertFalse(c.decodable());
+        String r = c.reason().toLowerCase(java.util.Locale.ROOT);
+        assertTrue(r.contains("png") && r.contains("unsupported"),
+            "the refusal must name the supported format and say the format is the "
+                + "problem, got: " + c.reason());
+        assertTrue(r.contains("may be perfectly valid"),
+            "and must not imply the operator's file is broken: " + c.reason());
+    }
+
+    @Test
+    void everyRefusalReasonIsActionable() {
+        // A refusal that does not say what to do next is a dead end for an operator.
+        // Only genuine REFUSALS are checked: my first version asserted this of every
+        // classification and failed, correctly, because a text file named x.jpg is not
+        // refused at all - it is read as text, which is honest, since it IS text.
+        byte[] text = "I am not audio".getBytes(java.nio.charset.StandardCharsets.UTF_8);
+        for (String name : new String[]{"x.wav", "x.png", "x.jpg", "x.bmp", "x.bin"}) {
+            var c = MediaDecoding.classify(name, text);
+            if (c.decodable()) continue;                       // not a refusal
+            assertTrue(c.reason().length() > 40,
+                "reason for " + name + " is too terse to act on: " + c.reason());
+            assertTrue(c.reason().toLowerCase(java.util.Locale.ROOT).contains("refused"),
+                "every refusal must say it is one: " + c.reason());
+        }
+    }
+
+    @Test
+    void aTextFileWithAnImageExtensionIsReadAsTextNotAsAnImage() {
+        // The case the previous version got wrong by expecting a refusal. The file really
+        // is text, so reading it as text is correct - but it must not be reported as a
+        // decoded image, or the operator would believe a perception had been extracted.
+        byte[] text = "I am not audio".getBytes(java.nio.charset.StandardCharsets.UTF_8);
+        var c = MediaDecoding.classify("x.jpg", text);
+        assertTrue(c.decodable(), "text is readable");
+        assertTrue(c.reason().toLowerCase(java.util.Locale.ROOT).contains("text"),
+            "and it must be reported as text, not as an image: " + c.reason());
+        assertEquals(MediaDecoding.Kind.TEXT, c.kind(),
+            "a text file must be classified as text whatever its extension says");
+    }
 }

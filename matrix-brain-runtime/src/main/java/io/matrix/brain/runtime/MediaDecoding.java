@@ -110,12 +110,28 @@ public final class MediaDecoding {
                     "refused: file is named as audio but its magic bytes are not a RIFF/WAVE "
                         + "signature; the system will not invent an audio perception from text");
             }
-            if (name.endsWith(".png") || name.endsWith(".jpg") || name.endsWith(".bmp")) {
+            if (name.endsWith(".png")) {
                 return new Classification(Kind.UNKNOWN, false,
-                    "refused: file is named as an image but its magic bytes are not a PNG "
+                    "refused: file is named as a PNG but its magic bytes are not the PNG "
                         + "signature; the system will not invent an image perception from text");
             }
             return new Classification(Kind.TEXT, true, "text content, read directly");
+        }
+        // RECON-W32.23: name the SUPPORT, not just the refusal. "unrecognised content"
+        // tells an operator their file is corrupt; this says the system has no decoder
+        // for the format, which is a different problem with a different fix. My first
+        // attempt put this check beside the extension tests, where it was unreachable —
+        // a real JPEG is binary, so it never reaches looksLikeText and falls here.
+        if (name.endsWith(".jpg") || name.endsWith(".jpeg") || name.endsWith(".bmp")
+                || name.endsWith(".gif") || name.endsWith(".webp") || name.endsWith(".tiff")) {
+            String fmt = name.endsWith(".bmp") ? "BMP" : name.endsWith(".gif") ? "GIF"
+                    : name.endsWith(".webp") ? "WebP" : name.endsWith(".tiff") ? "TIFF"
+                    : "JPEG";
+            return new Classification(Kind.UNKNOWN, false,
+                "refused: the file looks like " + fmt + ", and MATRIX decodes PNG ONLY. "
+                    + "The file may be perfectly valid - it is the FORMAT that is "
+                    + "unsupported. Convert it to PNG, or add a decoder; no image "
+                    + "perception will be invented from it.");
         }
         return new Classification(Kind.UNKNOWN, false,
             "refused: unrecognised content and no supported decoder for it");
