@@ -1326,6 +1326,15 @@ public final class MinimalHttpServer {
      * stores rather than hidden: hiding it would make the counts look healthier than the
      * system is.</p>
      *
+     * <p><b>RECON-W32.14 — {@code hardcoded_table}.</b> W32.12 found a FOURTH knowledge
+     * source nobody had counted: {@link io.matrix.brain.runtime.stages.BilingualFactLookup}
+     * holds country-&gt;capital pairs in a static map, consulted directly at query time,
+     * outside the promotion gate, the quarantine pipeline and this report. So the
+     * operator asking "what does the mind know?" was told a smaller number than the
+     * truth. Its size is now reported. It is still a hardcoded table rather than
+     * learned knowledge, and it is labelled as such — reporting it under a
+     * knowledge-sounding name would be the dishonest half of an honest fix.</p>
+     *
      * @return JSON object body (without surrounding braces)
      */
     /**
@@ -1350,6 +1359,8 @@ public final class MinimalHttpServer {
         k.append(",\"episodic_quarantined\":")
          .append(countRecords(dir.resolve("quarantine.ndjson")));
         k.append(",\"bir_rules\":").append(countRecords(dir.resolve("bir.ndjson")));
+        k.append(",\"hardcoded_table\":")
+         .append(io.matrix.brain.runtime.stages.BilingualFactLookup.knowledgeSize());
         k.append(",\"backend\":\"ndjson\"");
         k.append(",\"note\":\"counts are records in the named NDJSON files; "
                  + "mind.sqlite memory table is not the active store\"");

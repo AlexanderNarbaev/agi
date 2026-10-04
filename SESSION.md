@@ -3281,3 +3281,30 @@ exactly the confident-but-empty headline this campaign exists to refuse.
 3. Everything from W32.10 onward still stands: no mechanical silent-failure guard, recall
    ~0.29, JPEG/BMP routed but not decoded, sensor readings in file order, 67 core
    research failures, GE-6 is colour only.
+
+
+## 2026-10-04 — RECON-W32.14: the fourth knowledge source is now visible
+
+**What the user can newly observe:** `/v1/status` no longer under-reports what the mind
+knows.
+
+    hdc_kb                   1994
+    hdc_kb_quarantined         42
+    episodic                   86
+    episodic_quarantined     1058
+    bir_rules                  13
+    hardcoded_table             61      <- was invisible
+    backend                  ndjson
+
+W32.12 found `BilingualFactLookup` — 61 country->capital pairs in a static map, consulted
+directly at query time, outside the promotion gate, the quarantine pipeline and the status
+report. An operator asking "what does the mind know?" was told a smaller number than the
+truth, and nothing in the system would have told them otherwise.
+
+It is now reported, and reported as `hardcoded_table` rather than folded into a
+knowledge-sounding field. It is a hardcoded lookup, not learned knowledge, and the honest
+fix is half reporting it and half naming it for what it is.
+
+**It is still not migrated.** 61 pairs still bypass the gate, which means they cannot be
+quarantined, cannot carry provenance, and cannot be re-derived if the table is wrong. That
+is recorded as open work, not claimed as fixed.
