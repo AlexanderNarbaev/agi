@@ -1,5 +1,6 @@
 package io.matrix.brain.runtime.stages;
 
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
@@ -163,5 +164,29 @@ public final class BilingualFactLookup {
     /** Size of the fact table, used by the anti-hardcoding test. */
     public static int knowledgeSize() {
         return COUNTRY_TO_CAPITAL.size() + RU_COUNTRY_TO_CAPITAL.size();
+    }
+
+    /**
+     * The table as {@code subject, object, lang} triples, so it can be SEEDED into the
+     * knowledge store rather than living only here.
+     *
+     * <p>RECON-W32.15. Until W32.14 these 61 pairs were invisible to the store: no
+     * provenance, no quarantine, no way to correct a wrong entry, and a
+     * {@code /v1/status} that under-reported what the mind knew. Exposing them lets the
+     * gateway seed them through the normal promotion path, so they become counted,
+     * provenance-carrying and quarantine-able facts while this class stays a fast path
+     * for a lookup that needs no ranking.</p>
+     *
+     * @return one triple per entry, deterministic order
+     */
+    public static List<String[]> asFactTriples() {
+        List<String[]> out = new ArrayList<>(knowledgeSize());
+        for (Map.Entry<String, String> e : COUNTRY_TO_CAPITAL.entrySet()) {
+            out.add(new String[]{e.getKey(), e.getValue(), "en"});
+        }
+        for (Map.Entry<String, String> e : RU_COUNTRY_TO_CAPITAL.entrySet()) {
+            out.add(new String[]{e.getKey(), e.getValue(), "ru"});
+        }
+        return out;
     }
 }

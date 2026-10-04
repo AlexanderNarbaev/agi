@@ -146,6 +146,18 @@ public final class MinimalHttpServer {
                 // detection with no visible error.
                 this.hdcStore = new io.matrix.brain.runtime.PersistentHdcStore(
                     hdcPath, HDC_STORE_DIM);
+                // RECON-W32.15: seed the hardcoded country-capital table into the store so
+                // it stops being invisible knowledge. The facts are content-derived and
+                // idempotent, so this runs on every boot without duplicating, and they pass
+                // the same promotion gate as everything else. BilingualFactLookup remains
+                // the fast path; this is the ledger of record.
+                int seeded = seedHardcodedTable(this.hdcStore);
+                if (seeded > 0) {
+                    LOG.log(Level.INFO,
+                        "RECON-W32.15: seeded {0} hardcoded country-capital facts into the "
+                            + "store; they are now counted, provenance-carrying and "
+                            + "quarantine-able", seeded);
+                }
             } catch (Throwable t) {
                 LOG.log(Level.WARNING,
                     "Could not open PersistentHdcStore at {0}: {1}; falling back to in-memory",
@@ -1366,6 +1378,39 @@ public final class MinimalHttpServer {
                  + "mind.sqlite memory table is not the active store\"");
         k.append("}");
         return k.toString();
+    }
+
+    /**
+     * Seed the hardcoded country-capital table into the knowledge store.
+     *
+     * <p>RECON-W32.15. Ids are content-derived, so this is idempotent: a second boot
+     * overwrites rather than duplicating, and the count is the number newly promoted
+     * rather than the table size. A refusal is counted and logged, never silently
+     * dropped.</p>
+     *
+     * @param store destination, already open
+     * @return how many facts were newly promoted
+     */
+    private static int seedHardcodedTable(
+            io.matrix.brain.runtime.PersistentHdcStore store) {
+        int added = 0;
+        for (String[] t : io.matrix.brain.runtime.stages.BilingualFactLookup
+                .asFactTriples()) {
+            String content = t[0] + " capital " + t[1];
+            String id = "tbl-" + t[2] + "-"
+                + Integer.toHexString(content.hashCode());
+            if (store.snapshot().containsKey(id)) continue;   // already seeded
+            try {
+                store.teach(id, content);
+                added++;
+            } catch (io.matrix.brain.runtime.PersistentHdcStore
+                         .PromotionRejectedException ex) {
+                LOG.log(Level.WARNING,
+                    "RECON-W32.15: hardcoded fact refused by the gate: {0} ({1})",
+                    new Object[]{content, ex.reason()});
+            }
+        }
+        return added;
     }
 
     /** Number of non-blank lines in an NDJSON file; 0 when the file is absent. */

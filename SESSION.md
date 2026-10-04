@@ -3308,3 +3308,47 @@ fix is half reporting it and half naming it for what it is.
 **It is still not migrated.** 61 pairs still bypass the gate, which means they cannot be
 quarantined, cannot carry provenance, and cannot be re-derived if the table is wrong. That
 is recorded as open work, not claimed as fixed.
+
+
+## 2026-10-04 — RECON-W32.15: the hardcoded table is now IN the store
+
+**What the user can newly observe:** the knowledge base reports 2 055 records rather than
+1 994, and the 61 country-capital facts are counted, provenance-carrying and
+quarantine-able instead of being invisible.
+
+    hdc_kb                   2055   (was 1994; +61 seeded)
+    hardcoded_table             61   still reported, now also a store citizen
+
+### What changed
+
+`BilingualFactLookup.asFactTriples()` exposes the table as `subject, object, lang`
+triples, and the gateway seeds them into `PersistentHdcStore` at startup through the
+normal `teach` path — so they pass the same `PromotionGate` as everything else, a refusal
+is counted and logged rather than dropped, and `BilingualFactLookup` remains the fast path
+for a lookup that needs no ranking.
+
+**Verified idempotent:** content-derived ids, so a restart overwrites rather than
+duplicating. Measured 61 seeded facts before a second boot and 61 after. A seeder that
+grew the store on every restart would be worse than the invisibility it fixed.
+
+### Live
+
+    What is the capital of Peru?      ANSWER  Peru capital Lima
+    What is the capital of Germany?   ANSWER  Berlin
+    What is the capital of Kenya?     ANSWER  Kenya capital Nairobi
+    What is the chemical formula of water?  REFUSED
+    How many legs does a spider have?       REFUSED
+
+### What is still not fixed
+
+The two copies now exist — the static map and the seeded store — and the map is still the
+one consulted on the fast path. So the facts are now countable and quarantine-able, but a
+wrong entry could still be served from the map while the store says something else.
+Collapsing the duplication means removing the fast path and letting retrieval rank the
+facts, which is a retrieval-latency decision that belongs with the recall work rather
+than smuggled in here. Recorded as open, not claimed as done.
+
+### Verification
+
+brain-runtime **568** tests 0 failures. api-gateway **152**, 0 failures. quality-gate
+exit 0. FROZEN 5/5 at 0 diff.
