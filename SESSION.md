@@ -3684,3 +3684,52 @@ twice, rewrite the method instead of continuing to patch.** Goal Guard also bloc
 brain-runtime 574 -> **578** tests, 0 failures. api-gateway **152**, 0 failures.
 quality-gate exit 0. Live regression: capital of Kenya, temperature, colour and 2+3 all
 answer; water formula still refuses. Knowledge store 2 016 facts, 16 BIR rules.
+
+
+## 2026-10-04 - RECON-W32.22: a save that fails must not look like a save that worked
+
+**What the user can newly observe:** nothing in chat. What changed is that a learning
+subsystem which cannot write now says so, and says that the facts will be lost.
+
+### A failed write is worse than a skipped read
+
+`LearningMemory.save()` caught `IOException` and did nothing. The asymmetry matters:
+
+- A read skip loses data the mind already knew it had, and the earlier waves made it
+  counted and reported.
+- A **write failure means the mind believes it saved.** The in-memory map keeps growing,
+  every later call returns as though it succeeded, and the loss surfaces only at the next
+  restart - with nothing having looked wrong at any point in between.
+
+The load side had the same shape with a different face: a failed load starts the mind
+AMNESIAC, and an empty memory is indistinguishable from a fresh start.
+
+So both now count their failures, print the first with its consequence
+("WILL be lost on restart", "starting with an EMPTY memory"), and expose
+`saveFailures()`, `loadFailures()` and `durable()` for anything that must not assume the
+facts are safe.
+
+The write is still ATTEMPTED and still does not throw. A memory subsystem that throws on
+a full disk takes the mind down with it, and losing the ability to think is worse than
+losing the file. Being loud is available without being fatal.
+
+### My test was wrong, and the correction is the useful part
+
+The load test used a MISSING file and asserted a counted failure. It failed - and the
+test was wrong, not the code: `load()` returns early when the file is absent, and
+correctly so, because there is nothing to fail. A failed load needs an UNREADABLE file,
+so the fixture is now a DIRECTORY where a file is expected, which makes
+`Files.readString` throw genuinely. Three tests, all using the real producer.
+
+### Verification, and an honest gap
+
+`LearningMemoryTest` 8/0 and `LearningMemoryDurabilityTest` 3/0, so the change is clean
+in its own right.
+
+The full matrix-core run reported **8 097 tests / 69 failures**, one more than the
+8 085/68 recorded in W32.5. **I am not claiming that is drift.** The observed counts on
+essentially unchanged code today were 67, 68 and now 69, and the failing set is entirely
+the jqwik property and BitNet research tests, with zero in the brain package - but a
+one-test delta is exactly the kind of thing that should be MEASURED rather than argued
+about. A full re-run of matrix-core is owed before the release tag, and this entry is
+the record that it is outstanding rather than swept.
