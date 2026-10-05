@@ -4326,3 +4326,93 @@ Exactly four files differ. `ProfileEmbedding2DPropertyTest` and
 they are the audit's R6 (NaN from a one-sample projection) and R11 (an unguarded RoPE table
 overrun), and my word-filter flagged them only because their names contain a word I edited
 elsewhere. Verified by name against `git status` rather than assumed.
+
+
+## 2026-10-05 - RECON-W32.31: RoPE, and a fix that was only half a fix
+
+### The audit named the wrong mechanism
+
+The attribution reported the failure as "RoPE indexes past the position table" in
+`CognitiveRotaryEmbedding.apply:43`. There is **no position table in that method**. The
+loop was
+
+    for (int i = 0; i < dim; i += 2) { ... double x1 = vector[i + 1]; ... }
+
+so an **odd-length** vector read one element past its own end: `Index 3 out of bounds for
+length 3`, reproduced for dim 3 and dim 5 and fine at dim 4. The audit was right about the
+exception and wrong about the cause, which is a reminder that a stack trace identifies
+where a read happened, not why it was invalid.
+
+Fixed by rotating only complete pairs, `i + 1 < dim`.
+
+**Why the unpaired tail is left alone rather than "handled":** RoPE rotates PAIRS of
+adjacent components. An unpaired component has no partner, and there is no honest
+half-rotation to invent — any value chosen would be arbitrary and would silently differ
+from what a caller rotating the full vector expects. It passes through unchanged, and that
+is asserted in a test rather than left to be discovered. Real models use an even head
+dimension, which is exactly why this survived until a property test generated odd ones.
+
+### A half fix, caught by the round-trip property
+
+Fixing `apply()` alone left `propertyRoPEInverseUndoes` still throwing the identical
+exception — because `inverse()` carries **the same loop and the same bug**. A round-trip
+property exercises both halves, so it is precisely the test that catches a partial fix, and
+it caught this one. Both are fixed; 9/0 in the class.
+
+This is worth stating as a general lesson: when one half of a symmetric pair has a
+defect, check the other half before declaring victory, and prefer a test that crosses the
+symmetry boundary over one that exercises a single method.
+
+### SHAPE-1: a negative result, which is the answer
+
+SHAPE-1 was designed and spiked by a separate agent, and its conclusion is that **the
+classifier cannot be shipped as a fact source yet**. Three confident-wrong classifications,
+documented as failures rather than tuned away:
+
+1. **A square rotated 10° was classified CIRCLE** at margin 0.058. Not a threshold problem:
+   a square's axis-aligned fill is exactly `1/(cosθ + sinθ)`, whose **minimum over all
+   rotations is 0.7071** and which passes through the disk value 0.785 at θ=19.2°. The
+   entire "circle" fill band is a rotated-square signature. Resolved structurally with
+   radial solidity (disk 1.010 vs square 0.729–0.774 at every rotation, a gap of 0.24).
+2. **A disk with a blob punched out was classified CIRCLE** (fill 0.711 against 0.790 clean —
+   0.079 apart, inside the antialiasing margin). Resolved with an enclosure count, which is
+   exact rather than statistical.
+3. **An 8×8-blocked disk was classified SQUARE** (fill jumps to 1.000).
+
+Two implementation bugs in the spike were caught the same way: a malformed 4-neighbour
+table, exposed only because the corner count came out at 3592 on a 2000-pixel square, and
+two self-referential owner maps that silently returned zero. A measurement that looks
+reasonable is not evidence that the code producing it is right.
+
+**And the reason it is not shipped:** the same disk, antialiased, gives margin 0.047 on a
+white background (`AMBIGUOUS`) and 0.055 on blue (`CIRCLE`) — **the decision depends on the
+backdrop, not the shape**. The agent noted it could make all eight cases pass by moving one
+gate from 0.05 to 0.04, and declined to, because that fits the gate to the last synthetic
+case built rather than to the phenomenon. The honest statement: **this classifier is
+undecided on soft edges, not right on hard ones.** Every glossy object would be refused (a
+highlight reads as a hole), every rotated square would be refused, and a gradient turns two
+regions into ten.
+
+**One concrete, reusable finding.** The natural fact phrasing from the brief,
+`red32 has a circle region`, **scores 0.167 against the 0.20 floor and fails the W32.25
+evidence rule** — `has` and `a` are stopwords, so it is unretrievable by the most natural
+question anyone would ask. The working form is `red32 shape circle` (0.667, evidence-clean,
+0.813 under the live IDF path), which is exactly why `red32 colour red` works today. This
+is a design constraint discovered by measurement, and it applies to every future fact
+template.
+
+### GE-6 stays open, and the reasoning is sharper than "not done yet"
+
+SHAPE-1 adds region geometry and **no object prior**; the last hop, region → object, *is*
+GE-6. Two further reasons the agent gave, both from its own measurements: the classifier
+returns `AMBIGUOUS` on the photo-like lemon case anyway (margin 0.034), and a confirmed
+`shape circle` would yield `"lemon shape circle"` — the probe asks **what colour a lemon
+is**, and nothing in region geometry can reach the noun. GE-6's real closure condition is a
+demonstrable object prior, not a better shape classifier. Recorded as an open design gap
+with a stated closure condition, which is the honest disposition.
+
+### Verification
+
+matrix-core **8 111 / 55** (was 60; failing classes 37 → 34) ·
+matrix-brain-runtime **597 / 0** · matrix-api-gateway **152 / 0** ·
+quality gate **exit 0** · FROZEN **0** diff.

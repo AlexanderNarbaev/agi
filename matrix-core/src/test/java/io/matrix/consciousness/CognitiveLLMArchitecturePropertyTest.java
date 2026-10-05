@@ -1,6 +1,7 @@
 package io.matrix.consciousness;
 
 import net.jqwik.api.*;
+import net.jqwik.api.constraints.IntRange;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -77,6 +78,21 @@ class CognitiveLLMArchitecturePropertyTest {
         assertThat(r.topBeams().size()).isLessThanOrEqualTo(bw);
     }
 
+    /**
+     * RECON-W32.31: an EVEN-length vector, which is what a real model head uses and
+     * therefore the behaviour that must not change.
+     */
+    @Provide
+    Arbitrary<double[]> evenVector() {
+        return Arbitraries.integers().between(2, 16).flatMap(dim ->
+            Arbitraries.integers().between(1, 12).flatMap(scale ->
+                Arbitraries.doubles().between(-1.0, 1.0).array(double[].class).ofSize(dim)
+                    .map(v -> {
+                        for (int i = 0; i < v.length; i++) v[i] *= scale;
+                        return v;
+                    })));
+    }
+
     @Provide
     Arbitrary<double[]> anyVector() {
         return Arbitraries.integers().between(2, 16).flatMap(len ->
@@ -127,5 +143,40 @@ class CognitiveLLMArchitecturePropertyTest {
 
     private static org.assertj.core.data.Offset<Double> offset(double tol) {
         return org.assertj.core.data.Offset.offset(tol);
+    }
+    // ---- RECON-W32.31: RoPE must not read past the end of an odd vector -------
+
+    @Property(tries = 200)
+    void anOddLengthVectorIsRotatedOnlyInCompletePairs(@ForAll("anyVector") double[] v) {
+        // The loop stepped i += 2 and read vector[i + 1], so an odd length read one past
+        // the end. The audit called it "indexes past the position table"; there is no
+        // table here — the real cause is a pair-wise rotation on an unpaired component.
+        double[] out = CognitiveRotaryEmbedding.apply(v, 3);
+        assertThat(out).hasSameSizeAs(v);
+        if (v.length % 2 == 1) {
+            // RoPE rotates PAIRS. An unpaired trailing component has no partner, and
+            // inventing a half-rotation would be arbitrary — so it passes through
+            // unchanged, and that is asserted rather than left to be discovered.
+            assertThat(out[v.length - 1]).as("unpaired tail of an odd vector")
+                    .isEqualTo(v[v.length - 1]);
+        }
+    }
+
+    @Property(tries = 100)
+    void everyLengthFromOneToTwelveIsHandled(@ForAll @IntRange(min = 1, max = 12) int dim) {
+        double[] v = new double[dim];
+        for (int i = 0; i < dim; i++) v[i] = i + 1.0;
+        assertThat(CognitiveRotaryEmbedding.apply(v, 2)).hasSize(dim);
+        assertThat(CognitiveRotaryEmbedding.inverse(v, 2)).hasSize(dim);
+    }
+
+    @Property(tries = 100)
+    void anEvenLengthIsStillRotated(@ForAll("evenVector") double[] v) {
+        // The fix must not alter the behaviour every real model head depends on.
+        double[] out = CognitiveRotaryEmbedding.apply(v, 5);
+        assertThat(out).hasSameSizeAs(v);
+        boolean anyMoved = false;
+        for (int i = 0; i < out.length; i++) if (out[i] != v[i]) anyMoved = true;
+        assertThat(anyMoved).as("a non-zero vector at a non-zero position must rotate");
     }
 }
