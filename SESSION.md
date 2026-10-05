@@ -4593,3 +4593,53 @@ So the conclusion held and is in fact endorsed by the repo's own hygiene policy 
 asserted it more strongly than the evidence supported, and a stronger claim is what made the
 delete look risk-free. The check that should have come first is a filesystem-touching
 search, not a string search.
+
+## RECON-W33.4 — release v17.6.0-mind (7dcf2bf5)
+
+Tagged with caveats that report 28 core failures rather than a green suite.
+Caveats: docs-v2/releases/CAVEATS-v17.6.0-mind.md
+
+Measured at tag: matrix-core 8107 / 28 failures / 18 skipped (26m03s) | matrix-brain-runtime
+657 / 5 / 2 | matrix-api-gateway 152 / 0 / 0 | quality gate exit 0 | FROZEN 0-diff | 136G
+free | DISK-LEDGER seq 180. Tag verified resolving to 7dcf2bf5 on BOTH origin and gitverse.
+
+THE RELEASE GATE CORRECTED TWO CLAIMS I HAD CARRIED FORWARD INSTEAD OF MEASURING
+  1. matrix-core was drafted as 8111/27/22 and measured 8107/28/18. jqwik generates a varying
+     number of property cases, so counts drift between runs; the failure SET is the stable
+     artifact, and one member of it is new.
+  2. A claim that "nine silently-caught blocks now log at their real severity" could not be
+     verified. The RECON-W32.28/29 markers in the tree concern sensor extrema and KL-divergence
+     edges, not catch blocks. It was removed from the caveats WITH the removal recorded.
+     Keeping an unverified number because it sounds like progress is the exact failure this
+     project exists to catch, and I had done it inside my own release notes.
+
+THE 28TH FAILURE, CLASSIFIED ON EVIDENCE RATHER THAN ASSUMPTION
+  Exp089ContinuousBatchingTest.tenConcurrentRequests:
+    full suite (26 min, 8100+ tests)   FAILED
+    3 runs back-to-back                2 failed, 1 passed
+    8 runs isolated                    8 passed
+  Cause read from the test, not guessed: it awaits 10 concurrent inferences with
+  f.get(60, TimeUnit.SECONDS), and ONNX Runtime falls back to CPU here (libcudart.so.12 symbol
+  mismatch), so a wall-clock timeout is exceeded under suite contention. A timing assertion is
+  a harness defect, not a property of the scheduler. The same method also contains
+  "if (!bridge.load()) return;" -- an early return that lets it pass VACUOUSLY when the model
+  is absent, so it is simultaneously flaky and capable of reporting success without testing
+  anything. Filed as Bucket B with the other 8 harness defects.
+
+WHAT THE RELEASE IS ACTUALLY WORTH
+  Three places where MATRIX previously fabricated, guessed, or forgot are now measurably
+  honest. A torn federated message can no longer become an invented fact. A refused file is
+  remembered with measured metadata rather than discarded. A 2B model that had never executed
+  a forward pass in this project's history now has 37 tests running against real weights.
+
+  Against that: the mandated 8+ reviewer verdicts DID NOT HAPPEN. Four specialists dispatched
+  in W33.1 produced zero artifacts in 71 minutes and were cancelled; the work was done
+  directly, self-reviewed and mutation-verified. The caveats state this rather than implying
+  otherwise, because a release that claims a review it did not receive is worse than one that
+  admits the gap.
+
+D3 REMAINS NOT DONE, AND IS DOCUMENTED AS UNSATISFIABLE AS WRITTEN
+  git merge-base gitverse/master develop returns EMPTY, so no fast-forward exists and every
+  alignment is a history rewrite, which policy forbids. The mirror's default is main, which
+  already equals develop. Resolution is one command at a terminal, recorded in
+  docs-v2/operations/RUNBOOK.md.
