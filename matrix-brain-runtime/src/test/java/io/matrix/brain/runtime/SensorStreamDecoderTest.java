@@ -318,17 +318,123 @@ class SensorStreamDecoderTest {
     @Test
     void aFirstToLastTrendCannotExpressAPeakAndThatIsStatedNotHidden() {
         // 20.0 -> 22.8 -> 21.0 peaks in the middle. A first-to-last comparison can only
-        // say "rose 20 to 21", which is TRUE and INCOMPLETE. The honest position is that
-        // the metric is endpoint-based, and this test records the incompleteness so it
-        // is not mistaken for a full description of the signal.
+        // say "rose 20 to 21", which is TRUE and INCOMPLETE.
+        //
+        // RECON-W32.28: this test's second assertion FLIPPED, and that is the point. It
+        // used to assert the 22.8 peak was NOT represented, recording the incompleteness
+        // so it could not be mistaken for a full description. W32.28 fixed the
+        // incompleteness, so the honest claim is no longer "this is endpoint-only" but
+        // "the endpoint part is still endpoint-only, and the peak is now stated
+        // separately rather than being left out".
+        //
+        // It was UPDATED rather than deleted, and the flip is the evidence that the
+        // original limitation was real: a test that documented an incompleteness should
+        // break when the incompleteness is closed.
         var s = SensorStreamDecoder.decode(
             "{\"t\":0,\"temperature_c\":20.0}\n"
             + "{\"t\":1,\"temperature_c\":22.8}\n"
             + "{\"t\":2,\"temperature_c\":21.0}");
         String claim = String.join("; ", s.facts());
-        assertTrue(claim.contains("rose 20 to 21"), claim);
-        assertFalse(claim.contains("22.8"),
-            "the stored claim is endpoint-only: the 22.8 peak is NOT represented, and "
-                + "that incompleteness is why this test exists rather than being deleted");
+        assertTrue(claim.contains("rose 20 to 21"),
+            "the endpoint trend is still endpoint-based and must still be stated: " + claim);
+        assertTrue(claim.contains("peaked 22.8"),
+            "and since W32.28 the peak must be represented too: " + claim);
+        assertTrue(s.trends().get(0).contains("rose 20 to 21"),
+            "precondition: the TREND alone is still endpoint-only — extrema are a separate "
+                + "claim, and must not be folded into the trend string: " + s.trends());
+    }
+
+    // ---- RECON-W32.28 / SENSOR-1: extrema, not just first-to-last ----------
+    //
+    // A trend is first-to-last, so on 20.0, 22.8, 20.0 there is NO trend: the field
+    // starts and ends where it began. Before this the peak was not under-described, it
+    // was absent from the retrievable surface entirely, and no threshold could recover
+    // it from a pair of endpoints.
+
+    private static String ts(double... v) {
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < v.length; i++) {
+            sb.append("{\"ts\":").append(i).append(",\"temperature_c\":").append(v[i]).append("}\n");
+        }
+        return sb.toString();
+    }
+
+    @Test
+    void aPeakWithNoNetTrendIsStillStored() {
+        var st = io.matrix.brain.runtime.SensorStreamDecoder.decode(ts(20.0, 22.8, 20.0));
+        assertTrue(st.trends().isEmpty(),
+            "precondition: 20 -> 22.8 -> 20 establishes NO first-to-last trend");
+        List<String> x = st.extrema();
+        assertEquals(1, x.size(), "but the peak is a real observation: " + x);
+        assertTrue(x.get(0).contains("peaked 22.8"), "got: " + x.get(0));
+        assertTrue(x.get(0).contains("reading 2 of 3"),
+            "and it must be checkable against the data, not merely asserted: " + x.get(0));
+    }
+
+    @Test
+    void anExtremaClaimIsRetrievable() {
+        // The claim has to survive the scorer's ~5-content-token budget and the W32.25
+        // evidence rule, or it exists and cannot be found - which is the same as not
+        // existing as far as an operator is concerned.
+        var st = io.matrix.brain.runtime.SensorStreamDecoder.decode(ts(20.0, 22.8, 20.0));
+        String claim = st.extrema().get(0);
+        assertTrue(ContentSimilarity.isConfident("temperature peaked", claim),
+            "the claim must be findable by a question naming its subject: " + claim);
+    }
+
+    @Test
+    void anExtremeAtAnEndpointIsNotReported() {
+        // It would add nothing to the trend and facts() is a one-fact-per-field budget.
+        // "peaked 23" alongside "rose 20 to 23" is the trend wearing a hat.
+        var st = io.matrix.brain.runtime.SensorStreamDecoder.decode(ts(20.0, 22.8, 23.0));
+        assertEquals(1, st.trends().size(), "precondition: there is a real trend");
+        assertTrue(st.extrema().isEmpty(),
+            "a maximum at the last reading must not be restated as a peak: " + st.extrema());
+    }
+
+    @Test
+    void aDeepInteriorDipIsReportedEvenWhenTheTrendIsUp() {
+        // The asymmetry that a first-to-last pair cannot express: the field ended higher
+        // than it started, and still spent most of the window far below.
+        var st = io.matrix.brain.runtime.SensorStreamDecoder.decode(ts(20.0, 17.0, 21.0));
+        assertTrue(st.trends().get(0).contains("rose"), "precondition: net trend is up");
+        assertTrue(st.extrema().get(0).contains("bottomed 17"),
+            "and the dip must still be stated: " + st.extrema());
+    }
+
+    @Test
+    void aConstantFieldHasNoExtrema() {
+        var st = io.matrix.brain.runtime.SensorStreamDecoder.decode(ts(20.0, 20.0, 20.0));
+        assertTrue(st.extrema().isEmpty(), "a flat field has nothing to report: " + st.extrema());
+        assertTrue(st.trends().isEmpty(), "and no trend either");
+    }
+
+    @Test
+    void twoReadingsCannotHaveAnInteriorExtreme() {
+        var st = io.matrix.brain.runtime.SensorStreamDecoder.decode(ts(20.0, 22.8));
+        assertTrue(st.extrema().isEmpty(),
+            "with two readings neither extreme can be interior, so claiming one would be "
+                + "an invention: " + st.extrema());
+    }
+
+    @Test
+    void theDetailLogNoLongerSaysNoTrendWhenAPeakExists() {
+        // The log is the one place with no length budget, so it is the one place where an
+        // omission is actually visible to an operator reading the log.
+        var st = io.matrix.brain.runtime.SensorStreamDecoder.decode(ts(20.0, 22.8, 20.0));
+        String d = st.detail("rose.jsonl");
+        assertNotNull(d, "there is something to say");
+        assertFalse(d.contains("no numeric trend established"),
+            "that string is true but incomplete, and the peak was the whole story: " + d);
+        assertTrue(d.contains("22.8"), "the extremum must appear in the detail: " + d);
+    }
+
+    @Test
+    void extremaIsDeterministicForTheSameInput() {
+        // Article II: no Random in a decision path, and a claim that varies run to run
+        // cannot be checked against anything.
+        var a = io.matrix.brain.runtime.SensorStreamDecoder.decode(ts(20.0, 22.8, 21.0, 19.0, 20.5));
+        var b = io.matrix.brain.runtime.SensorStreamDecoder.decode(ts(20.0, 22.8, 21.0, 19.0, 20.5));
+        assertEquals(a.extrema(), b.extrema(), "the same input must give the same claim");
     }
 }

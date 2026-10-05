@@ -54,7 +54,14 @@ public final class InferentialDistance {
         }
         double[] m = new double[p.length];
         for (int i = 0; i < p.length; i++) m[i] = (p[i] + q[i]) / 2;
-        return 0.5 * klDivergence(p, m) + 0.5 * klDivergence(q, m);
+        double js = 0.5 * klDivergence(p, m) + 0.5 * klDivergence(q, m);
+        // RECON-W32.29: returned -1.99e-17 when P == Q. KL is built from log ratios, so
+        // summing them in floating point can undershoot zero by an ULP or two, and a
+        // DIVERGENCE is non-negative by definition. -1.99e-17 is not a small divergence,
+        // it is a meaningless one, and a caller taking a square root of it would get NaN.
+        // The test was right and the implementation was wrong.
+        if (js < 0.0) return 0.0;
+        return js;
     }
 
     /**

@@ -54,7 +54,14 @@ class InferentialDistancePropertyTest {
     }
 
     @Property(tries = 50)
-    void propertyIdenticalKLIsZero(@ForAll("distributions") double[] p) {
+    void propertyIdenticalKLIsZero(
+            // RECON-W32.29: was @ForAll("distributions"), a PAIR-shaped provider, for a
+            // SCALAR parameter — so jqwik threw "argument type mismatch" before any
+            // assertion ran. A correct single-distribution provider already existed in
+            // this file, unused; KL of a distribution against itself is exactly what it
+            // generates. A test that cannot be invoked is not a failing test, it is a
+            // test that was never running.
+            @ForAll("distribution") double[] p) {
         double kl = InferentialDistance.klDivergence(p, p);
         // KL(P || P) = 0 (or infinity if P has zeros)
         if (!Double.isInfinite(kl)) {

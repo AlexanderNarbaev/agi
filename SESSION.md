@@ -4125,3 +4125,111 @@ and 73 across this campaign. The excursions to 70+ included at least one regress
 introduced and then reverted, which is the only case I can actually attribute. I am not
 calling the remaining movement drift, and the release tag stays blocked on a real
 attribution rather than on a number I can explain away.
+
+
+## 2026-10-05 - RECON-W32.28/29: SENSOR-1 closed, and the 67 finally attributed
+
+Two separate pieces of work, one of which changes what this campaign believes about its
+own long-standing "research debt".
+
+### SENSOR-1: a peak is not a first-to-last pair
+
+`trends()` is first-to-last, so on readings 20.0, 22.8, 21.0 it stored only
+"rose 20 to 21" and the fact that the temperature reached 22.8 **in the middle** and came
+back down was not stored anywhere. Worse, on 20.0, 22.8, 20.0 there is **no trend at all** —
+the field starts and ends where it began — so the peak was not under-described, it was
+absent from the retrievable surface entirely, and no threshold or gate can recover it from a
+pair of endpoints. That is what distinguishes a transient spike from a sustained change.
+
+`extrema()` now reports the interior maximum or trough, as a fact. Two deliberate
+constraints:
+
+- **Only an interior extremum is reported.** When the maximum is the last reading,
+  "peaked at 23" alongside "rose 20 to 23" says the same thing twice, and `facts()` is a
+  one-fact-per-field budget by design. Measured across six shapes: interior peak reported,
+  endpoint maximum not, deep dip reported even when the net trend is up, constant field
+  silent, two readings silent (neither extreme can be interior), deterministic across
+  repeated decodes.
+- **The claim is retrievable**, which is not automatic. The class's own javadoc records a
+  measured budget of ~5 content tokens per fact, so a peak claim that could not be found
+  would exist and be invisible — the same as not existing. It is tested with
+  `ContentSimilarity.isConfident` rather than assumed.
+
+`detail()` no longer logs "no numeric trend established" for a stream that peaked — that
+string was true and was the whole story with the peak left out.
+
+**A W32.19 test flipped, and that is the evidence.** `aFirstToLastTrendCannotExpressAPeakAndThatIsStatedNotHidden`
+asserted the 22.8 peak was NOT represented, deliberately recording an incompleteness. W32.28
+closed the incompleteness, so the test broke. It was **updated, not deleted**, and now
+asserts both halves: the trend is still endpoint-only, and the peak is now stated
+separately rather than omitted. A test that documented a real gap *should* fail when the gap
+is closed.
+
+### The 67 attributed: it was never research debt
+
+A read-only audit parsed the 1 101 result XMLs and reported **26 distinct causes behind 67
+failures** — not 40 unrelated ones — and found my standing suspicion to be wrong in both
+directions.
+
+**CUDA causes ZERO failures.** The ONNX Runtime CUDA EP is built for CUDA 12
+(`libcudart.so.12`) on a CUDA 13.2 box, so it cannot load `cudaLibraryGetKernel` — real,
+loud, and completely absorbed by the adapter's CPU fallback. `OnnxRuntimeGpuTest` passes
+6/6 while printing `[CPUExecutionProvider]`, and no CUDA string appears in a single
+`<failure>` element across the whole run. I have been suspecting the GPU for weeks. It was
+never involved.
+
+**28 of the 67 are one missing file.** `BitNetModelLoadTest.java:28-30` hardcodes
+`/tmp/hf_cache/models--microsoft--bitnet-b1.58-2B-4T/.../model.safetensors`. That path does
+not exist, `/tmp` does not survive reboot, and no Gradle task, script or CI step provisions
+it. About twenty other test classes reference `hf_cache` and pass — because they carry skip
+guards. The ten BitNet classes are the ones missing the guard. This is a **test-infrastructure
+defect that has been reported as a number for weeks because nobody attributed it.**
+
+The honest headline, and the reason the tag was worth blocking on:
+
+> 39 of 67 are test-harness defects (a missing fixture guard, two wrong jqwik provider
+> types, two index bugs in the generators). 14 are genuine defects, several in SHIPPING code
+> — `ModelRegistry` missing a documented default, an unguarded RoPE overrun, and
+> `CognitiveEmbedding` returning `0.0` for vectors it cannot compare, which is a silently
+> wrong answer rather than merely a test-contract problem. 11 are tolerance/generator issues
+> and are individually flaky, which is the mechanism behind the 67↔73 movement. 3 are
+> genuine open research questions. 0 are CUDA.
+
+The flakiness mechanism is now understood too: about eight property methods have firing
+probabilities in the 84–99% band, so each can independently flip either way per run while
+the set of classes stays fixed. That is exactly the 67/68/69/70/72/73 pattern observed on
+unchanged code — and it means the movement was never a mystery, only unattributed.
+
+### Four fixed in this entry, all verified by the tests that caught them
+
+1. **`uniformSizes()` provided `Arbitrary<int[]>` for a scalar `@ForAll ... int n`** — jqwik
+   threw `argument type mismatch` at `Method.invoke` and the test never reached an
+   assertion. It could not pass or fail on its claim; it simply was not running.
+2. **`propertyIdenticalKLIsZero` asked for a scalar from a PAIR-shaped provider.** A correct
+   single-distribution provider already existed in that file, unused.
+3. **`jointMatrices` indexed `arr[-1]`.** `.ofSize(cols)` constrains the *inner* arbitrary,
+   so the outer array was unconstrained and could be empty. Fixing the outer was my first
+   attempt and produced **byte-identical failures**, which is what said the diagnosis was
+   incomplete rather than the fix wrong — the inner array was empty too. Both axes pinned,
+   and with them the clamping can be deleted entirely rather than left as a papering-over.
+4. **JS divergence returned −1.99e-17 when P == Q.** A divergence is non-negative by
+   definition; a caller taking its square root would get NaN. The test was right and the
+   implementation was wrong, and it is clamped now.
+
+**matrix-core 8 106 / 61**, down from 67, failing classes 39 → 37.
+
+### What is deliberately NOT done, and needs an operator decision
+
+The 28 BitNet failures can be silenced with `Assume` guards in ten classes, taking the
+suite to ~33. **I have not done it**, because the standing constraint is that skipping tests
+is forbidden, and a guard that converts "red" into "not executed" is a disposition change,
+not a fix. It also needs saying plainly: those tests have **never run**. No BitNet forward
+pass, prefill, KV-cache or sampling behaviour has been validated, so BitNet should be
+described as **untested**, not as failing for a known reason. That is an operator call, and
+it is queued with options rather than taken.
+
+### Verification
+
+matrix-core **8 106 / 61** (was 67) · matrix-brain-runtime **597 / 0** (was 589) ·
+matrix-api-gateway **152 / 0** · quality gate **exit 0** · FROZEN **0** diff ·
+zero failures in any area touched.

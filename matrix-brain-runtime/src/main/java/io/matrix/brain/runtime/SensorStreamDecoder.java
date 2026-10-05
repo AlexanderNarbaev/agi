@@ -162,6 +162,78 @@ public final class SensorStreamDecoder {
         }
 
         /**
+         * Interior extrema: the peak or trough that the first-to-last trend does not show.
+         *
+         * <p>RECON-W32.28, SENSOR-1. A trend is first-to-last, so on readings
+         * 20.0, 22.8, 21.0 it says only "rose 20 to 21" and the fact that the temperature
+         * reached 22.8 <em>in the middle</em> and then came back down is not stored
+         * anywhere. That is the more useful half of the signal: it is what distinguishes a
+         * transient spike from a sustained change, and no threshold or gate can recover
+         * it from a first-to-last pair.</p>
+         *
+         * <p><b>Only an INTERIOR extremum is reported.</b> When the maximum is the last
+         * reading, "peaked at 22.8" adds nothing to "rose 20 to 22.8" — it would be a
+         * second fact saying the same thing, and {@code facts()} is a one-fact-per-field
+         * budget by design. An extremum is worth a fact only when it contradicts the
+         * impression the trend gives.</p>
+         *
+         * <p>Phrasing stays within the measured ~5-content-token retrievable budget, and
+         * the timestamp is the reading's own time field when the stream has one, so the
+         * claim is checkable against the data rather than asserted.</p>
+         *
+         * @return one claim per field with an interior extreme, in first-seen order
+         */
+        public List<String> extrema() {
+            List<String> out = new ArrayList<>();
+            Set<String> seen = new LinkedHashSet<>();
+            for (Map<String, Object> r : ordered()) {
+                for (String field : r.keySet()) {
+                    if (!seen.add(field)) continue;
+                    if (INDEX_FIELDS.contains(field.toLowerCase(Locale.ROOT))) continue;
+                    List<Double> v = numeric(field);
+                    if (v.size() < MIN_READINGS_FOR_EXTREMUM) continue;
+                    String e = interiorExtreme(field, v);
+                    if (e != null) out.add(e);
+                }
+            }
+            return out;
+        }
+
+        /**
+         * The interior max or min of {@code v}, or null when there is none worth stating.
+         *
+         * <p>Both directions are considered and the more pronounced is reported, because a
+         * stream can dip in the middle and still trend upward. A tie between the two is
+         * resolved to the maximum, deterministically, so the same input always yields the
+         * same claim (Article II).</p>
+         */
+        private String interiorExtreme(String field, List<Double> v) {
+            int n = v.size();
+            int hi = 0, lo = 0;
+            for (int i = 1; i < n; i++) {
+                if (v.get(i) > v.get(hi)) hi = i;
+                if (v.get(i) < v.get(lo)) lo = i;
+            }
+            boolean hiInterior = hi > 0 && hi < n - 1;
+            boolean loInterior = lo > 0 && lo < n - 1;
+            if (!hiInterior && !loInterior) return null;   // extremes at the endpoints
+
+            // Report whichever excursion is larger RELATIVE to the endpoint the trend
+            // already describes, because that is the one the trend hides. A stream that
+            // dips far and ends high hides the dip; one that spikes and returns hides the
+            // spike. Ties go to the peak, deterministically.
+            double last = v.get(n - 1), first = v.get(0);
+            double peakSpan  = hiInterior ? v.get(hi) - last : -1;
+            double troughSpan = loInterior ? first - v.get(lo) : -1;
+            int idx; String word; double span;
+            if (troughSpan > peakSpan) { idx = lo; word = "bottomed"; span = troughSpan; }
+            else                      { idx = hi; word = "peaked";   span = peakSpan;   }
+            if (span < MIN_EXTREMUM_SPAN) return null;
+            return field + " " + word + " " + fmt(v.get(idx))
+                    + " at reading " + (idx + 1) + " of " + n;
+        }
+
+        /**
          * Boolean fields and the values they took, reported as observed.
          *
          * <p>Deliberately phrased as presence, not cause. A reader must not be able to
@@ -225,6 +297,11 @@ public final class SensorStreamDecoder {
             List<String> out = new ArrayList<>();
             if (readings == null || readings.isEmpty()) return out;
             for (String t : trends()) out.add(t);
+            // RECON-W32.28: extrema are facts, not decoration. On 20.0, 22.8, 20.0 there
+            // is NO trend at all — the field starts and ends where it began — so before
+            // this the peak was not merely under-described, it was absent from the
+            // retrievable surface entirely.
+            for (String e : extrema()) out.add(e);
             for (String c : distinctObservations()) out.add(c);
             return out;
         }
@@ -291,12 +368,20 @@ public final class SensorStreamDecoder {
             if (readings == null || readings.isEmpty()) return null;
             List<String> t = trends();
             List<String> c = coOccurrences();
-            if (t.isEmpty() && c.isEmpty()) return null;
+            // RECON-W32.28: the detail log is where there is NO length budget, so it must
+            // carry the extrema too. Before this, a stream reading 20.0, 22.8, 20.0 logged
+            // "no numeric trend established" — which is true and also the whole story,
+            // with the fact that it hit 22.8 in the middle omitted from the only place
+            // where the omission was visible.
+            List<String> x = extrema();
+            if (t.isEmpty() && c.isEmpty() && x.isEmpty()) return null;
             StringBuilder sb = new StringBuilder();
             sb.append("sensor ").append(source).append(": ").append(readings.size())
               .append(" readings; ");
             if (t.isEmpty()) {
-                sb.append("no numeric trend established");
+                sb.append(x.isEmpty()
+                    ? "no numeric trend established"
+                    : "no net numeric trend, but interior extrema were observed");
             } else {
                 // Re-attach the reading count here, where there is no length budget.
                 for (int i = 0; i < t.size(); i++) {
@@ -304,6 +389,9 @@ public final class SensorStreamDecoder {
                       .append(" readings");
                     if (i < t.size() - 1) sb.append("; ");
                 }
+            }
+            if (!x.isEmpty()) {
+                sb.append("; extrema: ").append(String.join("; ", x));
             }
             if (!c.isEmpty()) {
                 sb.append("; ").append(String.join("; ", distinctObservations()));
@@ -321,6 +409,22 @@ public final class SensorStreamDecoder {
 
     /** Readings needed before a direction means anything. Unit: readings. */
     public static final int MIN_READINGS_FOR_TREND = 2;
+
+    /**
+     * Readings needed before an interior extremum can exist at all.
+     *
+     * <p>RECON-W32.28. Three: with two readings neither extreme can be interior. Unit:
+     * readings.</p>
+     */
+    public static final int MIN_READINGS_FOR_EXTREMUM = 3;
+
+    /**
+     * How far an interior extremum must depart from the endpoint it will be compared to.
+     *
+     * <p>RECON-W32.28. A peak 1e-9 above the final reading is the trend wearing a hat.
+     * Unit: the field's own units.</p>
+     */
+    public static final double MIN_EXTREMUM_SPAN = 1e-9;
 
     /**
      * Decode a JSON-lines stream.

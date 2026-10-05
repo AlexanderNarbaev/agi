@@ -81,20 +81,45 @@ class EntropyDecompositionPropertyTest {
             Arbitraries.doubles().between(0.01, 1.0).array(double[].class).ofSize(n));
     }
 
+    /**
+     * RECON-W32.29: was {@code Arbitraries.integers().between(2,8)
+     * .array(int[].class).ofSize(1)}, an {@code Arbitrary<int[]>}, while both consumers
+     * declare {@code @ForAll("uniformSizes") int n} — a scalar. jqwik cannot invoke the
+     * method at all: it throws {@code argument type mismatch} at {@code Method.invoke}
+     * before reaching a single assertion, so the test could never pass or fail on its
+     * claim. A one-element array of integers is just an integer; nothing was gained.
+     */
     @Provide
-    Arbitrary<int[]> uniformSizes() {
-        return Arbitraries.integers().between(2, 8).array(int[].class).ofSize(1);
+    Arbitrary<Integer> uniformSizes() {
+        return Arbitraries.integers().between(2, 8);
     }
 
     @Provide
     Arbitrary<double[][]> jointMatrices() {
         return Arbitraries.integers().between(2, 4).flatMap(rows ->
             Arbitraries.integers().between(2, 4).flatMap(cols ->
-                Arbitraries.doubles().between(0.01, 1.0).array(double[].class).array(double[][].class).ofSize(cols).map(arr -> {
+                // RECON-W32.29: `.ofSize(cols)` constrains the INNER arbitrary, so the
+                // OUTER array was unconstrained and jqwik could produce a length-0 one.
+                // The clamping below then computed Math.min(0, -1) = -1 and indexed
+                // arr[-1] — "Index -1 out of bounds for length 0" — a crash in the
+                // generator, not a property being violated. The clamps were papering over
+                // a shape the generator was not actually producing; fixing the shape is
+                // the fix, and then the array is exactly rows x cols with no clamping
+                // needed at all.
+                // RECON-W32.29, second attempt. Constraining the OUTER array was not
+                // enough: the INNER double[] was still unconstrained, so arr[i] could
+                // itself have length 0 and arr[i].length - 1 became -1. Measured: the
+                // failure was identical after the first fix, which is what said the
+                // diagnosis was incomplete rather than the fix being wrong.
+                // Both axes are now pinned, and NO clamping is needed: arr is exactly
+                // rows x cols, so arr[i][j] is always in range.
+                Arbitraries.doubles().between(0.01, 1.0)
+                    .array(double[].class).ofMinSize(cols).ofMaxSize(cols)
+                    .array(double[][].class).ofMinSize(rows).ofMaxSize(rows).map(arr -> {
                     double[][] result = new double[rows][cols];
                     for (int i = 0; i < rows; i++) {
                         for (int j = 0; j < cols; j++) {
-                            result[i][j] = arr[Math.min(i, arr.length - 1)][Math.min(j, arr[0].length - 1)];
+                            result[i][j] = arr[i][j];
                         }
                     }
                     return result;
