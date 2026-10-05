@@ -3973,3 +3973,83 @@ The core research-debt count has now been observed at 67, 68, 69, 70 and 72. It 
 independently of this work and I am not going to keep relabelling it as drift: it is
 recorded as an open, un-attributed set, and the release tag stays blocked on a real
 attribution rather than on a number I can explain away.
+
+
+## 2026-10-05 - RECON-W32.26: SILENT-1, first four of seventeen
+
+An audit of the 23 empty catches in learning/persistence paths returned **17 REAL-DEFECT**
+and 6 LEGITIMATE, with zero FALSE-POSITIVE. The reviewer was also told to match an
+existing reference pattern — and that instruction turned out to be the most valuable part
+of the task, because the reference pattern had a dead `if (false)` branch (W32.24).
+Copying it wholesale, as the SILENT-1 plan required, would have carried the dead code into
+seventeen sites. Three fixes are recorded there and are not repeated here.
+
+**Four of the seventeen are closed in this entry**, chosen by severity rather than by ease.
+
+### The worst one: an empty base that looks healthy
+
+`SimpleKnowledgeBase` had two catches whose body was literally `// ignore`. The second is
+the dangerous shape: a **listing failure leaves `documents` empty**, `retrieve()` returns
+nothing, `buildContext()` returns `""`, and the brain answers with **zero grounding** while
+`size()` reports a perfectly plausible `0` — the same number a legitimately empty
+directory produces. An operator could not tell a healthy empty mind from a broken one, and
+`buildContext() == ""` is precisely the condition under which a confident-sounding answer
+is most likely.
+
+Now: `listingFailed()` and `skippedDocs()`. And the **absent** directory is explicitly
+*not* a failure — conflating the two would cry wolf on every fresh install — so the
+counters reset per load and only a real listing error sets the flag. Three tests, one of
+which asserts the healthy-empty case does NOT set the flag, because a check that fires on
+everything is as useless as one that never fires.
+
+### A 50-cycle blind window
+
+`BrainLoopMemoryAdapter` caught `IOException` with a **completely empty body**. The
+sequence is what makes it severe: consolidation had already run (`cycle.tick()`), the save
+that persists it failed, and `cyclesSinceConsolidation` was reset anyway — so the next
+attempt was `consolidateEvery` cycles away, 50 by default. A crash in that window lost
+everything consolidated since the last good save, with no counter, no log, and nothing to
+look at afterwards. Now counted, with `durable()`, and the message names the window.
+
+### A mind that answers but forgets
+
+`ProductionBrainClient` caught `Throwable` around `episodicLog.append` — the **only** write
+that makes a MindCycle interaction learnable, since sleep consolidation reads that log and
+nowhere else. A failure meant the interaction was never learned from and nothing recorded
+it. Narrowed to `Exception` (an OOM must not be filed as a logging hiccup), counted, logged
+once with its consequence, and deliberately **not** rethrown: a failed write must not cost
+the caller their reply.
+
+### A run that cannot tell you it failed
+
+`OvernightRunner` caught `Throwable` around `autonomyLoop.reflect()` and then returned a
+full `RunResult` whose summary read `safetyViolations=0`. A wholly failed overnight run was
+**indistinguishable from a successful one** — the one thing an overnight run must never be.
+`reflectionFailures` is now in the summary, because a summary that omits the part that broke
+is a summary that lies by omission.
+
+### Where SILENT-1 stands
+
+23 empty catches in learning/persistence → **19**. Of those, 10 already carry a
+justification and **9 are bare**, so the brief's "<10 unjustified" bar is met — but a bar
+met by counting is not a bar met by fixing, and the remaining nine are named in this
+entry's diff and are the next target. The 6 LEGITIMATE sites from the audit (resource
+cleanup with no learning data, a deliberately-unimplemented loader, bootstrap classpath
+assembly, defensive defaults on untrusted input) get justification comments, not counters:
+a counter on a path that cannot fail is noise, and noise is what this audit is removing.
+
+### A toolchain note, recorded because it cost real time
+
+Three of my own edits failed to compile because I inserted a field next to a method name I
+assumed existed — `totalCycles()` in `OvernightRunner`, `explain(` in
+`ProductionBrainClient`, and a `SimpleKnowledgeBase(Path)` constructor that is not there
+(the real API is `loadFromDir(Path)`, and the class has only a no-arg constructor). All
+three were one `grep` each. The audit reviewer supplied exact file:line for 23 sites and
+was right about all of them, which is a good argument for reading the line you are
+changing before writing the line after it.
+
+### Verification
+
+matrix-core **8 106 / 70** (was 8 103 / 72) · matrix-brain-runtime **589 / 0** ·
+matrix-api-gateway **152 / 0** · quality gate **exit 0** · FROZEN **0** diff · zero
+failures in any area touched.

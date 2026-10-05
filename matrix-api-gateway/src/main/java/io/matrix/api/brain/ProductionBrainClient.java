@@ -84,6 +84,17 @@ public final class ProductionBrainClient implements BrainCycle {
     /** MIND-W3: optional episodic log + sleep scheduler (one or both may be set). */
     private final EpisodicLog episodicLog;
 
+    /**
+     * Episodic writes that failed since the last success. Unit: calls.
+     *
+     * <p>RECON-W32.26. Non-zero means interactions are being ANSWERED but not LEARNED
+     * from — a mind that talks and forgets, which is worse than one that stays quiet,
+     * and which until now left no trace at all.</p>
+     */
+    private int episodicWriteFailures = 0;
+
+    public int episodicWriteFailures() { return episodicWriteFailures; }
+
     /** Default in-memory constructor (used by tests and the gateway default). */
     public ProductionBrainClient() {
         this(null, null, null);
@@ -320,9 +331,26 @@ public final class ProductionBrainClient implements BrainCycle {
                 cacheExplainConfidences(mr);
                 // MIND-W3: append to episodic log + bump sleep-scheduler activity.
                 if (episodicLog != null) {
-                    try { episodicLog.append(input, mr.reply(), mr.confidence(),
-                        mr.accepted(), mr.modulatorsFired()); }
-                    catch (Throwable ignored) { /* logging is best-effort */ }
+                    // RECON-W32.26: was `catch (Throwable ignored)` on the ONE write
+                    // that makes a MindCycle interaction learnable — sleep consolidation
+                    // reads from this log and nowhere else. A failure meant the
+                    // interaction was never learned from and NOTHING recorded it.
+                    // catch (Exception), not Throwable: an OOM must not be filed as a
+                    // logging hiccup. Not rethrown either — a failed write must not cost
+                    // the caller their reply.
+                    try {
+                        episodicLog.append(input, mr.reply(), mr.confidence(),
+                            mr.accepted(), mr.modulatorsFired());
+                        episodicWriteFailures = 0;
+                    } catch (Exception e) {
+                        episodicWriteFailures++;
+                        if (episodicWriteFailures == 1) {
+                            LOG.log(java.util.logging.Level.WARNING,
+                                "episodic write FAILED: " + e
+                                    + " - this interaction will NOT be available to sleep "
+                                    + "consolidation; further failures are counted", e);
+                        }
+                    }
                 }
                 
                 return new CycleResult(

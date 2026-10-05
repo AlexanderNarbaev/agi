@@ -31,6 +31,18 @@ public final class OvernightRunner {
     private final SelfImprovingEngine selfImprovingEngine;
     private final RealAuditService realAuditService;
 
+    /**
+     * Reflection passes that threw. Unit: calls.
+     *
+     * <p>RECON-W32.26. Non-zero means the overnight run is INCOMPLETE: the parts that
+     * did not throw are real, and the parts that did are absent. Without a count the
+     * summary claimed a clean run either way.</p>
+     */
+    private int reflectionFailures = 0;
+
+    /** Reflection failures in the most recent run. Unit: calls. */
+    public int reflectionFailures() { return reflectionFailures; }
+
     public OvernightRunner(AutonomyLoop autonomyLoop,
                            SelfImprovingEngine selfImprovingEngine,
                            RealAuditService realAuditService) {
@@ -53,7 +65,22 @@ public final class OvernightRunner {
 
         // Run autonomy loop reflection (no BrainCycle needed)
         if (autonomyLoop != null) {
-            try { autonomyLoop.reflect(); } catch (Throwable ignored) {}
+            // RECON-W32.26: was `catch (Throwable ignored)`. A thrown reflect() still
+            // returned a full RunResult whose summary read "safetyViolations=0" and
+            // "rejected=0" — a wholly failed overnight run was indistinguishable from a
+            // successful one, which is the one thing an overnight run must never be.
+            // catch (Exception) rather than Throwable, so an OOM is not reported as a
+            // completed run.
+            try {
+                autonomyLoop.reflect();
+            } catch (Exception e) {
+                reflectionFailures++;
+                if (reflectionFailures == 1) {
+                    System.err.println("[OvernightRunner] autonomy reflect() FAILED: " + e
+                        + " - the overnight run is INCOMPLETE and its gains do not "
+                        + "include any reflection work");
+                }
+            }
         }
 
         // Adversarial check: ensure no unfiltered outputs were emitted.
@@ -63,9 +90,11 @@ public final class OvernightRunner {
         // report zero violations since the test environment is clean.)
 
         boolean gain = accepted > rejected;
+        // RECON-W32.26: reflectionFailures is now in the summary, because a summary that
+        // omits the one part that broke is a summary that lies by omission.
         String summary = String.format(
-            "accepted=%d rejected=%d safetyViolations=%d",
-            accepted, rejected, violations.size());
+            "accepted=%d rejected=%d safetyViolations=%d reflectionFailures=%d",
+            accepted, rejected, violations.size(), reflectionFailures);
         return new RunResult(gain, accepted, rejected, violations, summary);
     }
 }

@@ -34,9 +34,16 @@ public final class SimpleKnowledgeBase {
     
     public void loadFromDir(Path dir) {
         if (!Files.exists(dir)) {
-            // Create with empty docs
+            // RECON-W32.26: an ABSENT directory is a legitimate empty base, and it is
+            // NOT a failure — conflating the two would cry wolf on every fresh install.
+            // The counters are reset so a previous broken load cannot be mistaken for
+            // this one, which is the difference this whole change is about.
+            listingFailed = false;
+            skippedDocs = 0;
             return;
         }
+        listingFailed = false;
+        skippedDocs = 0;
         try (Stream<Path> files = Files.list(dir)) {
             files.filter(p -> p.toString().endsWith(".md") || p.toString().endsWith(".txt"))
                  .forEach(p -> {
@@ -46,13 +53,54 @@ public final class SimpleKnowledgeBase {
                          String title = id.replaceAll("\\.(md|txt)$", "");
                          documents.put(id, new Document(id, title, content));
                      } catch (IOException e) {
-                         // ignore
+                         // RECON-W32.26: was `// ignore`. An unreadable document was
+                         // silently dropped from RAG grounding, and size() then reported
+                         // a smaller knowledge base with no reason given.
+                         noteSkippedDoc(p, e);
                      }
                  });
         } catch (IOException e) {
-            // ignore
+            // RECON-W32.26: the worst silent case found in this audit. A listing failure
+            // leaves `documents` EMPTY, retrieve() returns nothing, buildContext() returns
+            // "", and the brain answers with ZERO grounding while stats() reports a
+            // perfectly plausible "KB: 0" — which is indistinguishable from a directory
+            // that legitimately holds no documents. An empty memory and a broken memory
+            // must not look the same.
+            listingFailed = true;
+            System.err.println("[SimpleKnowledgeBase] LISTING FAILED for " + dir
+                + ": " + e + " - the knowledge base is EMPTY and every answer will be "
+                + "ungrounded; check the path before trusting any reply");
         }
     }
+
+    /**
+     * Documents that could not be read, and whether the directory itself could be listed.
+     *
+     * <p>RECON-W32.26. Unit: files, plus a boolean. Both are non-zero/true only after a
+     * real failure, and both are the difference between "no documents" and "documents
+     * we cannot see".</p>
+     */
+    private int skippedDocs = 0;
+    private boolean listingFailed = false;
+
+    private void noteSkippedDoc(Path p, Exception e) {
+        skippedDocs++;
+        if (skippedDocs == 1) {
+            System.err.println("[SimpleKnowledgeBase] skipped unreadable document " + p
+                + ": " + e + " - it will NOT appear in retrieval; further skips are counted");
+        }
+    }
+
+    /** Documents dropped because they could not be read. Unit: files. */
+    public int skippedDocs() { return skippedDocs; }
+
+    /**
+     * True when the document directory could not be listed at all.
+     *
+     * <p>Unit: a boolean. This is the one to check before believing an empty knowledge
+     * base, because an empty base and an unreadable directory look identical otherwise.</p>
+     */
+    public boolean listingFailed() { return listingFailed; }
     
     public void addDocument(String id, String title, String content) {
         documents.put(id, new Document(id, title, content));
