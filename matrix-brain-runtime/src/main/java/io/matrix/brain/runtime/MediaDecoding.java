@@ -1,6 +1,8 @@
 package io.matrix.brain.runtime;
 
 import java.io.ByteArrayInputStream;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.io.IOException;
 import java.util.zip.Inflater;
 
@@ -140,6 +142,321 @@ public final class MediaDecoding {
         }
         return new Classification(Kind.UNKNOWN, false,
             "refused: unrecognised content and no supported decoder for it");
+    }
+
+    // =================================================================
+    // RECON-W33.3 -- Architecture-General: metadata for ANY binary stream.
+    //
+    // Before this, a refusal was a dead end. classify() correctly refused
+    // a JPEG and honestly said why, but the observation -- this is 4096
+    // bytes beginning FF D8 -- was discarded with the verdict. The system
+    // knew and then forgot, so a later question ("what was in that file?")
+    // was unanswerable even though the answer had been in hand at ingest.
+    //
+    // probe() is the complement of classify(), not its replacement.
+    //   classify  answers: can you show me the contents?   (decodable)
+    //   probe     answers: what did you see?               (metadata)
+    // They are different questions and collapsing them into one flag is how
+    // "decodable" became ambiguous in the first place.
+    //
+    // probe() NEVER throws (rule R1). That is the architectural point: a
+    // probe that rejects input is a hardcoded gate with a friendlier name.
+    // =================================================================
+
+    /**
+     * What was observable about a file, regardless of whether it could be decoded.
+     *
+     * <p>Every field is either measured or {@code null}. Nothing here is inferred from the
+     * filename: a file called {@code photo.jpg} that is really an ELF binary reports ELF,
+     * because Article VI forbids a measurement the system cannot support.</p>
+     *
+     * @param fileName       the name as presented; used only for reporting
+     * @param sizeBytes      length of the input in bytes; 0 when no bytes were supplied
+     * @param detectedMime   MIME derived from magic bytes, or {@code null} if none matched
+     * @param signatureHex   leading bytes as lowercase hex, or {@code null} if no bytes were supplied
+     * @param printableRatio fraction of a bounded sample of bytes that are printable ASCII, 0.0..1.0
+     * @param headerFields   container-specific fields read from fixed offsets; never null, possibly empty
+     */
+    public record MediaMetadata(
+            String fileName,
+            long sizeBytes,
+            String detectedMime,
+            String signatureHex,
+            double printableRatio,
+            Map<String, String> headerFields) {
+
+        /**
+         * Whether any container signature matched.
+         *
+         * <p>Unit: a boolean. False means "these bytes are real but unrecognised", which is a
+         * different statement from "there were no bytes".</p>
+         *
+         * @return true when {@link #detectedMime()} is non-null
+         */
+        public boolean signatureRecognised() {
+            return detectedMime != null;
+        }
+    }
+
+    /** Number of leading bytes rendered into {@link MediaMetadata#signatureHex()}. Unit: bytes. */
+    private static final int SIGNATURE_BYTES = 8;
+
+    /** Upper bound on printable-ratio sampling, so a huge file costs a fixed amount of work. */
+    private static final int PRINTABLE_SAMPLE_BYTES = 4096;
+
+    /** Ceiling on rendered description length, in characters. Bounds knowledge-store growth. */
+    private static final int MAX_DESCRIPTION_CHARS = 1200;
+
+    /**
+     * Measure what is observable about any byte sequence, without decoding it.
+     *
+     * <p>Pure and total: no I/O, no clock, no randomness (Article I), and no exception escapes
+     * for any input including {@code null}. Container-specific fields are read from fixed
+     * offsets with every read bounds-checked first, because this method is reached with
+     * whatever a user dropped into the inbox.</p>
+     *
+     * @param fileName the name as presented, for reporting only; may be null
+     * @param bytes    the content to measure; may be null
+     * @return a populated record, never null, with nulls exactly where nothing was measurable
+     */
+    public static MediaMetadata probe(String fileName, byte[] bytes) {
+        byte[] data = bytes == null ? new byte[0] : bytes;
+        return new MediaMetadata(
+                fileName == null ? "" : fileName,
+                data.length,
+                detectMime(data),
+                hexPrefix(data),
+                printableRatio(data),
+                headerFields(data));
+    }
+
+    /**
+     * Render metadata as a sentence for a knowledge store or a status line.
+     *
+     * <p>Says what was seen AND that contents were not read, because a metadata line alone
+     * invites the reader to assume the contents were perceived. Truncated to a fixed ceiling so
+     * hostile input cannot grow stored prose without bound.</p>
+     *
+     * @param metadata the metadata to render; null is rendered as a refusal to say
+     * @return a bounded, human-readable description
+     */
+    public static String describe(MediaMetadata metadata) {
+        if (metadata == null) {
+            return "No media metadata is available: nothing was probed.";
+        }
+        StringBuilder sb = new StringBuilder();
+        sb.append("File ").append(metadata.fileName().isEmpty() ? "(unnamed)" : metadata.fileName())
+          .append(" is ").append(metadata.sizeBytes()).append(" bytes.");
+        if (metadata.signatureRecognised()) {
+            sb.append(" Signature ").append(metadata.signatureHex())
+              .append(" matches ").append(metadata.detectedMime()).append('.');
+        } else {
+            sb.append(" No container signature matched; the bytes are opaque to MATRIX.");
+        }
+        if (!metadata.headerFields().isEmpty()) {
+            sb.append(" Header fields:");
+            metadata.headerFields().forEach((k, v) -> sb.append(' ').append(k).append('=').append(v));
+            sb.append('.');
+        }
+        sb.append(" MATRIX did not read the CONTENTS of this file.");
+        return sb.length() <= MAX_DESCRIPTION_CHARS
+                ? sb.toString()
+                : sb.substring(0, MAX_DESCRIPTION_CHARS) + "...";
+    }
+
+    /**
+     * The MIME type implied by leading magic bytes, or null when nothing is recognised.
+     *
+     * <p>Byte signatures only. A filename never participates, so an ELF binary named
+     * {@code photo.jpg} is reported as ELF rather than as an image.</p>
+     *
+     * @param data content to inspect; assumed non-null
+     * @return a MIME string, or null if no known signature matches
+     */
+    private static String detectMime(byte[] data) {
+        if (startsWith(data, 0x89, 'P', 'N', 'G', 0x0D, 0x0A, 0x1A, 0x0A)) return "image/png";
+        if (startsWith(data, 0xFF, 0xD8, 0xFF)) return "image/jpeg";
+        if (startsWith(data, 0x47, 0x49, 0x46, 0x38)) return "image/gif";
+        if (startsWith(data, 'R', 'I', 'F', 'F')) return "audio/wav";
+        if (startsWith(data, 0x1F, 0x8B)) return "application/gzip";
+        if (startsWith(data, '%', 'P', 'D', 'F')) return "application/pdf";
+        if (startsWith(data, 0x7F, 'E', 'L', 'F')) return "application/x-elf";
+        if (startsWith(data, 'B', 'M')) return "image/bmp";
+        if (startsWith(data, 0x00, 0x00, 0x01, 0x00)) return "image/x-icon";
+        return null;
+    }
+
+    /**
+     * Container-specific fields readable from fixed offsets.
+     *
+     * <p>Deliberately conservative: JPEG segment contents are counted but not parsed, and no
+     * dimension is reported for a format whose layout this code has not verified. A missing
+     * field is honest; an invented one is not.</p>
+     *
+     * @param data content to inspect; assumed non-null
+     * @return an unmodifiable map, empty when the container is unknown or too short
+     */
+    private static Map<String, String> headerFields(byte[] data) {
+        Map<String, String> fields = new LinkedHashMap<>();
+        if (startsWith(data, 0x89, 'P', 'N', 'G', 0x0D, 0x0A, 0x1A, 0x0A)) {
+            readPngHeader(data, fields);
+        } else if (startsWith(data, 0xFF, 0xD8, 0xFF)) {
+            readJpegHeader(data, fields);
+        } else if (startsWith(data, 0x7F, 'E', 'L', 'F')) {
+            readElfHeader(data, fields);
+        } else if (startsWith(data, 'R', 'I', 'F', 'F')) {
+            putIfLongEnough(data, 4, fields, "riffSize");
+        } else if (startsWith(data, 0x1F, 0x8B)) {
+            fields.put("compression", "gzip");
+        } else if (startsWith(data, '%', 'P', 'D', 'F')) {
+            putIfLongEnough(data, 5, fields, "version");
+        }
+        return java.util.Collections.unmodifiableMap(fields);
+    }
+
+    /**
+     * Read width, height, bit depth and colour type from a PNG IHDR chunk.
+     *
+     * <p>IHDR data begins at offset 16. Each field is read only after confirming the buffer is
+     * long enough, so a PNG signature with no chunk behind it yields no fields rather than an
+     * index-out-of-bounds.</p>
+     *
+     * @param data   PNG content
+     * @param fields destination map
+     */
+    private static void readPngHeader(byte[] data, Map<String, String> fields) {
+        putIfLongEnough(data, 16, fields, "width");
+        putIfLongEnough(data, 20, fields, "height");
+        putIfLongEnough(data, 24, fields, "bitDepth");
+        putIfLongEnough(data, 25, fields, "colorType");
+    }
+
+    /**
+     * Record a JPEG SOI marker and count the marker segments that follow.
+     *
+     * <p>Only the count is claimed. Segment payloads are not parsed and no dimensions are
+     * reported, because deriving those requires a SOF scan this class has not implemented, and
+     * reporting them without it would be a guess presented as a measurement.</p>
+     *
+     * @param data   JPEG content
+     * @param fields destination map
+     */
+    private static void readJpegHeader(byte[] data, Map<String, String> fields) {
+        fields.put("marker", "SOI");
+        int segments = 0;
+        for (int i = 2; i + 1 < data.length; i++) {
+            if ((data[i] & 0xFF) == 0xFF && (data[i + 1] & 0xF0) == 0xE0) {
+                segments++;
+            }
+        }
+        fields.put("appSegments", Integer.toString(segments));
+    }
+
+    /**
+     * Read class, endianness and machine from an ELF header.
+     *
+     * <p>Present chiefly so that a binary misnamed as an image can be reported for what it is.
+     * That was a real observation in the RECON-W33.2 review of the media refusal path.</p>
+     *
+     * @param data   ELF content
+     * @param fields destination map
+     */
+    private static void readElfHeader(byte[] data, Map<String, String> fields) {
+        if (data.length > 4) {
+            int cls = data[4] & 0xFF;
+            fields.put("class", cls == 2 ? "ELF64" : cls == 1 ? "ELF32" : "unknown");
+        }
+        if (data.length > 5) {
+            int endian = data[5] & 0xFF;
+            fields.put("endianness",
+                    endian == 1 ? "little" : endian == 2 ? "big" : "unknown");
+        }
+        if (data.length > 18) {
+            fields.put("machine", Integer.toString((data[16] & 0xFF) | ((data[17] & 0xFF) << 8)));
+        }
+    }
+
+    /**
+     * Read a big-endian 4-byte value if the buffer reaches it.
+     *
+     * <p>Unit: bytes. Width and height use this rather than a direct cast so a short buffer is
+     * detected before any read, not after.</p>
+     *
+     * @param data   content to read from
+     * @param offset index of the first byte
+     * @param fields destination map
+     * @param name   key to store the value under
+     */
+    private static void putIfLongEnough(byte[] data, int offset, Map<String, String> fields, String name) {
+        if (data.length >= offset + 4) {
+            long v = ((long) (data[offset] & 0xFF) << 24)
+                    | ((long) (data[offset + 1] & 0xFF) << 16)
+                    | ((long) (data[offset + 2] & 0xFF) << 8)
+                    | (data[offset + 3] & 0xFF);
+            fields.put(name, Long.toString(v));
+        }
+    }
+
+    /**
+     * Whether the content starts with the given byte pattern.
+     *
+     * @param data    content to inspect
+     * @param pattern expected leading bytes
+     * @return true when the content is long enough and matches exactly
+     */
+    private static boolean startsWith(byte[] data, int... pattern) {
+        if (data.length < pattern.length) {
+            return false;
+        }
+        for (int i = 0; i < pattern.length; i++) {
+            if ((data[i] & 0xFF) != (pattern[i] & 0xFF)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * Leading bytes as lowercase hex, or null when there is nothing to show.
+     *
+     * @param data content to inspect
+     * @return up to {@link #SIGNATURE_BYTES} bytes as hex, or null for empty input
+     */
+    private static String hexPrefix(byte[] data) {
+        if (data.length == 0) {
+            return null;
+        }
+        int n = Math.min(data.length, SIGNATURE_BYTES);
+        StringBuilder sb = new StringBuilder(n * 2);
+        for (int i = 0; i < n; i++) {
+            sb.append(String.format("%02x", data[i] & 0xFF));
+        }
+        return sb.toString();
+    }
+
+    /**
+     * Fraction of a bounded sample of the content that is printable ASCII.
+     *
+     * <p>The cheapest honest "this is not an image" signal available for arbitrary bytes, and
+     * computable without knowing the format. Sampling is capped at
+     * {@link #PRINTABLE_SAMPLE_BYTES} so cost is independent of file size.</p>
+     *
+     * @param data content to sample
+     * @return printable fraction in 0.0..1.0; 0.0 for empty input
+     */
+    private static double printableRatio(byte[] data) {
+        if (data.length == 0) {
+            return 0.0;
+        }
+        int n = Math.min(data.length, PRINTABLE_SAMPLE_BYTES);
+        int printable = 0;
+        for (int i = 0; i < n; i++) {
+            int b = data[i] & 0xFF;
+            if (b == 0x09 || b == 0x0A || b == 0x0D || (b >= 0x20 && b <= 0x7E)) {
+                printable++;
+            }
+        }
+        return (double) printable / (double) n;
     }
 
     /** Convenience overload for a path-free name. */
