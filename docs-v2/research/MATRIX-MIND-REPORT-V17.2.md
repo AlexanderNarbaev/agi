@@ -392,3 +392,69 @@ None of that makes the system better at thinking. The benchmark is unchanged at
 **47/48**, and the one probe still failing still fails because the mind does not know
 that lemons are yellow. Correctness of the harness is not capability growth, and this
 report does not claim otherwise.
+
+
+---
+
+# Addendum — RECON-W32.22 → W33.3 (supersedes sections 1-5 above)
+
+This file was written at v17.2 and is **append-only**. Everything above describes the system as
+it was then. What follows is the state at `fa8c3b6a`, tagged `v17.6.0-mind`. Where the two
+disagree, the addendum is correct and the earlier text is history.
+
+## The headline, stated without rounding
+
+**BitNet 1.58 2B-4T had never executed a single forward pass** at any point in this file's
+history. Its tests failed for weeks with no attributed cause, then were converted to skips
+pointing at `/tmp` — a directory that does not survive a reboot. The skip was honest and
+permanent. It took an actual `/tmp` wipe to reveal that the "28 failures became 32 skips"
+story had become a skip that could never become a pass.
+
+```bash
+bash scripts/provision-bitnet.sh
+./gradlew :matrix-core:test --tests 'io.matrix.research.BitNet*'
+# 37 tests, 0 skipped, 0 failed — real 1,178,623,988-byte checkpoint
+```
+
+Three capabilities are now measurably more honest than they were:
+
+1. **A torn federated transmission can no longer become an invented fact.**
+   `fromJsonLine` had no shape validation, so a truncated line produced `Fact("","","",0,0)`,
+   which merged and rendered as `fed-<node>- => `. Blank subject, blank answer, learned from a
+   message that never arrived — with no crash and no assertion, so nothing alerted.
+2. **A refused file is remembered instead of discarded.**
+   `MediaDecoding.probe` measures any byte sequence: size, magic-byte signature, printable
+   ratio, bounded container headers. The mind can now answer *"what was that file?"* about
+   content it deliberately did not read.
+3. **A whole production class became reachable from its own tests.**
+   `RealGpuKernelEngine` needed `--add-modules=jdk.incubator.vector`. Two other modules had the
+   flag; the module that owns the class did not.
+
+## Numbers at fa8c3b6a
+
+| module | tests | failures | skipped |
+|---|---|---|---|
+| matrix-core | 8107 | 28 | 18 |
+| matrix-brain-runtime | 657 | 5 | 2 |
+| matrix-api-gateway | 152 | 0 | 0 |
+
+Full caveats, including the two capabilities lost without notice and the review protocol that
+did not happen: `docs-v2/releases/CAVEATS-v17.6.0-mind.md`.
+
+## What the user can newly observe, at v17.6.0
+
+- Ask MATRIX what it did with a file it could not read. It answers with measured facts about
+  the file and states plainly that it did not read the contents.
+- Send it a deliberately malformed federation line. It names the missing field instead of
+  learning an empty lesson from it.
+- Observe that BitNet 1.58 actually generates text, because the tests now say so with weights
+  in hand rather than with a skip reason.
+
+## Commitments this addendum deliberately does not make
+
+- Not that the suite is green. 28 core failures and 5 runtime findings stand. One of the 28
+  is a newly observed load-dependent flake (`Exp089ContinuousBatchingTest`), reproduced
+  failing in the full suite and passing 8/8 in isolation.
+- Not that 22 skipped core tests "passed". They are environment-blocked and labelled so.
+- Not that a green BitNet run reproduces anywhere. It needs 1.2 GB that is not in the repo.
+- Not that the mandated multi-agent review happened. It did not, and the caveats say so.
