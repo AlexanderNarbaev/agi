@@ -46,6 +46,32 @@ import java.util.concurrent.locks.ReentrantLock;
 public class AgentBrainService {
 
     private static final Logger log = LoggerFactory.getLogger(AgentBrainService.class);
+
+    /**
+     * Malformed corpus lines dropped from BIR training, and candidate corpus files that
+     * existed but could not be read.
+     *
+     * <p>RECON-W32.27. Unit: lines / files. Both are non-zero only after a real failure,
+     * and {@code unreadableCorpora} is what separates "there is no corpus" from "there is
+     * a corpus we cannot read" — two states that previously shared one log line.</p>
+     */
+    private int skippedCorpusLines = 0;
+    private int unreadableCorpora = 0;
+    private String lastCorpusReadFailure = "";
+
+    /** Malformed corpus lines dropped from BIR training. Unit: lines. */
+    public int skippedCorpusLines() { return skippedCorpusLines; }
+
+    /**
+     * Candidate corpus files that existed but could not be read. Unit: files.
+     *
+     * <p>Non-zero with an empty input set means the mind had data and could not use it,
+     * which is a different problem from having no data and a different fix.</p>
+     */
+    public int unreadableCorpora() { return unreadableCorpora; }
+
+    /** The last corpus read failure. Unit: a message. Empty when there was none. */
+    public String lastCorpusReadFailure() { return lastCorpusReadFailure; }
     private static final int K = 20;
     private static final String PRETRAINED_DIR = "models/pretrained";
     private static final String PRETRAINED_MODEL = "SmolLM2-135M-synth";
@@ -419,13 +445,34 @@ public class AgentBrainService {
                             inputs.add(new long[]{encodeText(q)});
                             labels.add(true);
                         }
-                    } catch (Exception ignored) {}
+                    } catch (Exception e) {
+                    // RECON-W32.27: a failed read of a candidate corpus was invisible, and
+                    // the only downstream signal said "no corpus found" — which is a
+                    // MISLEADING diagnostic when the real cause was an unreadable file.
+                    // The reason is now carried forward so the log stops lying.
+                    unreadableCorpora++;
+                    lastCorpusReadFailure = String.valueOf(e);
+                }
                 }
                 if (!inputs.isEmpty()) break;
-            } catch (Exception ignored) {}
+            } catch (Exception e) {
+                // RECON-W32.27: a candidate corpus that existed but could not be READ was
+                // invisible, and the only downstream signal said "no corpus found" — a
+                // MISLEADING diagnostic when the corpus is sitting right there. Counted
+                // and the reason carried forward, so the log stops lying.
+                unreadableCorpora++;
+                lastCorpusReadFailure = String.valueOf(e);
+            }
         }
         if (inputs.isEmpty()) {
-            log.warn("BIR training: no corpus found");
+            // RECON-W32.27: this used to say only "no corpus found" even when a corpus
+            // WAS present and merely unreadable. An operator reading that concludes the
+            // wrong thing, and would go looking for data that is sitting right there.
+            log.warn(unreadableCorpora > 0
+                ? "BIR training: corpus not usable - " + unreadableCorpora
+                    + " candidate corpus file(s) could not be READ (last: "
+                    + lastCorpusReadFailure + "). This is not the same as having no corpus."
+                : "BIR training: no corpus found");
             return;
         }
         var trainer = new TsetlinTrainer(20, Math.min(10, inputs.size()), 5, new java.util.Random(42));

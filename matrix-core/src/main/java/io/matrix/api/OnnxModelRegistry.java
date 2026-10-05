@@ -121,7 +121,11 @@ public final class OnnxModelRegistry {
     public synchronized void closeAll() {
         for (ModelEntry e : registry.values()) {
             if (e.bridge != null) {
-                try { e.bridge.close(); } catch (Exception ignored) {}
+                // LEGITIMATE to swallow, per the W32.26 audit: native resource cleanup on
+                // a path holding no learning data, and loadedCount() is the observable
+                // channel. The consequence is worth stating — a failed close leaks the
+                // native session, so the registry may report fewer models than it believes.
+                try { e.bridge.close(); } catch (Exception ignored) { /* native cleanup */ }
                 e.bridge = null;
             }
             e.loadAttempted = false;  // allow re-load

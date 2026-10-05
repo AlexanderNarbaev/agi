@@ -253,8 +253,12 @@ public final class ProductionBrainClient implements BrainCycle {
                 walkJars(f, out);
             } else if (f.getName().endsWith(".jar") && !f.getName().contains("sources")
                 && !f.getName().contains("javadoc")) {
+                // LEGITIMATE to swallow, per the W32.26 audit: bootstrap classpath
+                // assembly, not a learning or persistence path, and toURI().toURL() cannot
+                // fail for a file: URI. A dropped jar surfaces later as
+                // NoClassDefFoundError naming the missing class.
                 try { out.add(f.toURI().toURL()); }
-                catch (Exception ignored) {}
+                    catch (Exception ignored) { /* bootstrap classpath; see above */ }
             }
         }
     }

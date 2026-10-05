@@ -4053,3 +4053,75 @@ changing before writing the line after it.
 matrix-core **8 106 / 70** (was 8 103 / 72) · matrix-brain-runtime **589 / 0** ·
 matrix-api-gateway **152 / 0** · quality gate **exit 0** · FROZEN **0** diff · zero
 failures in any area touched.
+
+
+## 2026-10-05 - RECON-W32.27: SILENT-1 continued, and one reviewer recommendation refuted
+
+The audit's remaining sites, worked in the same order it ranked them. Two outcomes worth
+recording: one recommendation was **wrong and the tests said so**, and my own tooling
+**reported fixes it never applied**.
+
+### Refuted: "delete the inner catch in parseLongArray"
+
+The audit was confident this was a one-line free fix: a bad long in a clause mask silently
+became `0`, zeroing a literal WEAKENS a rule that is then registered and used for
+inference, and `replayInto` already counts a thrown parse. All of that is true.
+
+Applied, it broke three tests. `aCleanFileReportsNoSkips` expected **0** skips and got
+**2** — a CLEAN file was reporting skips. My first explanation was an empty mask array
+(`"" .split(",")` yields `[""]`, so `parseLong("")` throws); I fixed for that case
+explicitly, and the identical three failures remained. Measuring the real serialised form
+showed the masks are well-formed — `{"pos":[15],"neg":[1]}` — so my theory was wrong too.
+
+**Reverted.** Trading a silently weakened rule for a missing one is not a fix, and the
+audit's reasoning was sound about the risk while incomplete about the input. The site stays
+open and honestly labelled: the silent zero is a real hazard, the proposed remedy is wrong,
+and nobody has yet found the case that actually triggers it. That is the state, rather than
+a plausible story about empty arrays.
+
+### A misleading diagnostic, fixed because it sends the operator the wrong way
+
+`AgentBrainService` counted no corpus-read failures, and the only downstream signal was
+`log.warn("BIR training: no corpus found")` — emitted **whether or not** a corpus was
+present. An operator reading that concludes there is no training data, and goes looking for
+data that is sitting right there, readable, in the expected path. Now `unreadableCorpora`
+and `lastCorpusReadFailure` are counted and carried into the message, which says
+`corpus not usable - N candidate corpus file(s) could not be READ` instead. Torn corpus
+lines are counted too, since they contributed no training signal and were dropped in
+silence.
+
+### My tooling reported fixes it never made
+
+Three `s.replace` calls silently failed to match — I had hand-counted indentation and was
+wrong by 4 and 8 spaces — and my script printed `fixed` **unconditionally**, because the
+`print` sat outside any check. I believed four sites were done. The verification step
+caught it by grepping for the pattern instead of trusting my own report.
+
+The replacement helper now refuses to claim a fix when the anchor is absent, and reports
+`ANCHOR NOT FOUND` rather than success. The one lesson that generalises: **a script that
+reports success without checking is worse than no script**, because it manufactures
+confidence.
+
+### Counted honestly, with comments stripped before counting
+
+The scan now removes comments before matching, so a note *about* the anti-pattern cannot be
+mistaken for the anti-pattern. That changed the number: 23 → **15** genuinely empty-bodied
+catches in learning/persistence paths. Six of the fifteen are the audit's LEGITIMATE set
+and receive justification comments rather than counters — a counter on a path that cannot
+fail is noise, and noise is what this audit exists to remove. The other nine are REAL-DEFECT
+and remain open: `HierarchicalMemory`, `MultiBrainEnsemble`, `BrainRunner`,
+`ActivationRecord`, `LLMKnowledgeDistiller`, `TrueDistillationFactory`, `BirInferenceStage`,
+`PlanningStage`, `TsetlinStage`.
+
+### Verification
+
+matrix-core **8 106 / 67** — and 67 is the figure the brief itself recorded, reached again
+now that the BirRegistry regression is gone. Every failure is a jqwik property or BitNet
+research test; **zero** in any area touched. matrix-brain-runtime **589 / 0** ·
+matrix-api-gateway **152 / 0** · quality gate **exit 0** · FROZEN **0** diff.
+
+Worth stating plainly: I have now recorded this research-debt total as 67, 68, 69, 70, 72
+and 73 across this campaign. The excursions to 70+ included at least one regression I
+introduced and then reverted, which is the only case I can actually attribute. I am not
+calling the remaining movement drift, and the release tag stays blocked on a real
+attribution rather than on a number I can explain away.
