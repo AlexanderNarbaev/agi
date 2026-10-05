@@ -5,6 +5,7 @@ import io.matrix.imports.SafetensorsReader;
 import io.matrix.neuron.BitNetBlock;
 import io.matrix.neuron.BitNetModel;
 import io.matrix.neuron.BitNetRope;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -30,9 +31,20 @@ import static org.assertj.core.api.Assertions.assertThat;
  */
 class BitNetModelFullForwardTest {
 
+    /**
+     * RECON-W32.34, operator decision D1 (option A): the real 1.1 GB BitNet
+     * checkpoint is not present, so every test in this class previously failed at
+     * the file check without reaching an assertion. This converts FAILURE into
+     * SKIPPED, which is the honest description: BitNet has NEVER been executed and is
+     * UNTESTED, not failing for a known reason. See BitNetRealModelFixture.
+     */
+    @BeforeEach
+    void requireRealCheckpoint() {
+        BitNetRealModelFixture.assumeAvailable();
+    }
+
     private static final String MODEL_PATH =
-            "/tmp/hf_cache/models--microsoft--bitnet-b1.58-2B-4T/snapshots/"
-                    + "04c3b9ad9361b824064a1f25ea60a8be9599b127/model.safetensors";
+            BitNetRealModelFixture.MODEL_PATH;
 
     private static final int NUM_LAYERS = 30;
     private static final int HIDDEN = 2560;

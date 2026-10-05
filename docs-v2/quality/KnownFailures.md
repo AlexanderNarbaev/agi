@@ -205,3 +205,76 @@ is intermittent, see below).
 - Every added row needs a root cause, an owner and a disposition. "Pre-existing" is not a
   root cause.
 - If a number here disagrees with a live test run, the run wins and this file is wrong.
+
+
+---
+
+# RECON-W32.34 — full attribution of the research-core failures (operator decision D8)
+
+**Produced by:** parsing all 1 101 JUnit XML result files of a full `matrix-core` run, then
+grouping by root-cause family. **Owner:** unassigned — this section is the request for an
+owner, and until one exists these failures are owned by nobody, which is stated rather than
+glossed.
+
+## Verified totals at commit `7e006c48`
+
+```
+matrix-core            8 111 tests   27 failures   54 skipped
+matrix-brain-runtime     597 tests     0 failures
+matrix-api-gateway       152 tests     0 failures
+```
+
+**28 failures were removed by D1, not by fixing anything.** They are now 32 **skips**, and
+the correct description of them is *"environment-blocked, never executed"*. BitNet is
+**untested**, not passing.
+
+## The finding that mattered: 0 of these are caused by CUDA
+
+The ONNX Runtime CUDA execution provider is built against CUDA 12
+(`libcudart.so.12`) and this machine runs a CUDA 13.2 driver, so loading it fails with
+`undefined symbol: cudaLibraryGetKernel`. That is real and it is loud on every run.
+
+**It causes no test failure.** `OnnxRuntimeGpuTest` passes 6/6 while printing
+`[CPUExecutionProvider]`, because the adapter catches the load failure and falls back to CPU.
+Across all 1 101 XML files, no CUDA string appears inside a single `<failure>` element. The
+campaign had suspected the GPU for weeks. It was never involved.
+
+Separately, `Exp228ComplianceTest` mentions ONNX but is a **static source scan**, not a
+runtime load, and has no causal relationship to the CUDA state.
+
+## 27 failures, 8 root-cause families
+
+| family | classes | n | cause | disposition |
+|---|---|---|---|---|
+| **F4 Kolmogorov 64-bit floor** | `KolmogorovComplexityTest`(2), `KolmogorovComplexityPropertyTest`, `KolmogorovComplexitySnapshotTest`, `W120LSystemPhiCorrelation` | **5** | `KolmogorovComplexity.java:52` adds `+ Long.SIZE` unconditionally, so the estimator has a hard floor of 64 bits for every input, constant or not. A constant trajectory scores the same as noise. | **OWNER REQUIRED — scientific, not a test bug.** Either the `+64` is wrong or the `< 20.0` thresholds are. The four tests cannot all be right. **Do not adjust thresholds until green**: that settles a live claim by editing its test. |
+| **F5 causal emergence, unnormalised input** | `CausalEmergencePropertyTest`, `CausalEmergenceTest` | 2 | The test builds `uniform[i] = 1.0` for `n` entries — sum `n`, not `1`. The entropy and information terms then disagree. | **fix-in-next-wave.** Either normalise the fixture or make `CausalEmergence` normalise defensively. Decide which; the test comment and the implementation disagree about the contract. |
+| **F9 regime / stability classifier** | `RegimeTrajectoryAnalyzerTest`(2), `ProfileStabilityMetricsTest` | 3 | The tests encode the hypothesis "alternating profile ⇒ OSCILLATORY"; `transitionRate` does not support it. | **accepted-as-research-debt.** This is an open research question, not a defect. The property is aspirational. |
+| **F6 / F7 tolerance and exact equality** | `SeriesCorrelatorPropertyTest`, `MultivariateGaussianAnalyzerPropertyTest`, `CognitiveHeatmapTest`, `MemristorSwitchPropertyTest` | 5 | Floating-point overshoot and exact-equality assertions: `1.0000000000000002` asserted `<= 1.0`, `exp(-dt/tau)` asserted `isEqualTo(w)`. | **flaky-with-evidence.** Individually 1-ULP class. Needs an epsilon per assertion. |
+| **F3 jqwik generator shape** | `CognitivePhaseDetectorPropertyTest` | 2 | `between(0, 16)` allows `n == 0`, then `seeds[0]` on a length-0 array. Firing probability ≈ 84%/run. | **fix-in-next-wave.** Change to `between(1, 16)`. Cheap, and it is the clearest flakiness contributor. |
+| **F10 zero-norm / length convention** | *(resolved in W32.30)* | 0 | — | **CLOSED.** `l2Distance`/`cosineSimilarity` now return `NaN` for incomparable vectors instead of `0.0`, and the property generators share a dimension so the properties are not vacuous. Mutation-verified. |
+| **F12 isolated single-cause defects** | `LSystemTest`, `QuantumEmulatorTest`, `PhiMaxCalculatorPropertyTest`, `VariationalFreeEnergyPropertyTest`, `InterAgentPhiPropertyTest`, `SleepConsolidationStudyTest`, `CognitiveGroupedQueryAttentionPropertyTest`, `CognitiveGenesisProfilePropertyTest`, `PhiComplexityFingerprintPropertyTest` | 9 | Individually distinct. `LSystemTest`'s own expected string is arithmetically wrong (`FXY`→`FFXY`→`FFFFXY`). `CognitiveGroupedQueryAttention` rejects a config its own generator produces. | **split.** `LSystemTest` and the GQA config are trivial corrections. The other seven need an owner decision because their production code was not read during attribution. |
+
+## Why the total used to move (67, 68, 69, 70, 72, 73)
+
+About eight property methods have firing probabilities in the **84–99%** band. Each can
+independently flip either way per run while the *set of classes* stays fixed. That is the
+mechanism, and it is now known rather than guessed at — but it is worth recording that for
+weeks this looked like an unexplained mystery in a number nobody had attributed.
+
+## The 54 skips, which are not failures and not invisible either
+
+| cause | n | meaning |
+|---|---|---|
+| BitNet real-checkpoint guard (D1) | **32** | **environment-blocked, NEVER EXECUTED.** BitNet is untested. Option B of D1 — provisioning the 1.1 GB checkpoint — is the only thing that changes this. |
+| pre-existing guards in sibling classes | 22 | long-standing, already justified in their own files |
+
+A skip is a legitimate disposition **only when the reason is written down**, which is why
+D1's guard carries its explanation in `BitNetRealModelFixture` rather than as a bare
+`assumeTrue`.
+
+## Standing rule this section establishes
+
+`matrix-core` failing 27 tests is an **accepted, attributed, owned-pending** state. It is
+not "research debt" in the sense of "nobody looked". Every one of the 27 has a family, a
+cause and a named next step above. A *new* failure is still a regression, and the rule from
+the top of this file still holds: anything failing that is not in this file is a regression.
