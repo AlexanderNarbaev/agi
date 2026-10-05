@@ -278,3 +278,74 @@ D1's guard carries its explanation in `BitNetRealModelFixture` rather than as a 
 not "research debt" in the sense of "nobody looked". Every one of the 27 has a family, a
 cause and a named next step above. A *new* failure is still a regression, and the rule from
 the top of this file still holds: anything failing that is not in this file is a regression.
+
+## D2 recovery — what landed, and what genuinely needs a port
+
+The six integration tests that existed only on stale branches were recovered and installed.
+**Three compile and run. Three do not, and the reason is an intentional redesign, not a
+breakage.**
+
+| file | status | reason |
+|---|---|---|
+| `DistillationFactoryIntegrationTest` (11 tests) | **compiles, runs** | `PersistentHdcStore` API unchanged |
+| `RealSleepSchedulerIntegrationTest` (10 tests) | **compiles, runs** | `RealSleepScheduler` API unchanged |
+| `TrueDistillationFactoryIntegrationTest` (9 tests) | **compiles, runs** | `TrueDistillationFactory` API unchanged |
+| `AutonomyIntegrationTest` (13 tests) | **needs a port** | `GoalTracker` was redesigned |
+| `SleepAndConsolidationIntegrationTest` (12 tests) | **needs a port** | `ConsolidationCycle` moved to `io.matrix.memory`; `SleepScheduler` was renamed `RealSleepScheduler` |
+| `GpuKernelEngineIntegrationTest` (6 tests) | **needs a port** | imports `io.matrix.federation.proto.GpuOperation` / `GpuTask`, which are not on the current classpath |
+
+### The `GoalTracker` delta, in full, so the port is not rediscovered from scratch
+
+The stale test calls eight methods that **no longer exist**:
+`addGoal`, `get`, `listGoals`, `markAbandoned`, `markCompleted`, `updateProgress`,
+`snapshot`, `size`.
+
+The class today exposes: `add(String, int priority)`, `complete(int)`,
+`abandon(int)`, `activeGoals()`, `activeCount()`, `completedCount()`, `size()`, and a
+`Goal(id, description, ..., Status)` record with `Status { ACTIVE, COMPLETED, ABANDONED }`.
+
+That is a **redesigned, narrower, and arguably better API** — goals are now integers with
+explicit lifecycle methods rather than string-keyed objects with ad-hoc mutators. Porting 13
+tests means rewriting most of the file against the new contract, and several of its
+assertions encode the OLD semantics, so a mechanical rename would produce tests that
+compile and assert the wrong thing. That is a piece of work, not a cleanup, and it is
+recorded as open rather than faked.
+
+**These three are not deleted and not committed broken.** They are held at
+`/tmp/opencode/d2/` with this table as the port specification.
+
+### What the 5 remaining failures actually are — 25 of 30 pass
+
+`matrix-brain-runtime` went 597/0 -> **630 tests / 5 failures**. The five are not noise;
+they are the point of D2 option B.
+
+**Two are genuine defects the recovered tests just discovered:**
+
+1. `distillation_summary_measures_cumulative_impact` and `distill_ledger_summary_aggregates`
+   both fail with
+   `NullPointerException: Cannot invoke "java.lang.Number.intValue()" because the return
+   value of "java.util.Map.g..."` — the ledger **summary aggregation dereferences a null map
+   value**. A summary path that NPEs is a defect regardless of which test found it, and it
+   is now visible because a test that exercises it exists again.
+
+2. `ledger_handles_corrupt_lines_gracefully` fails with
+   `NumberFormatException: For input string: ""` — a test whose *name* promises graceful
+   handling of corrupt lines now **throws** on an empty field. Either the loader regressed or
+   it never covered the empty-string case; either way the promise in the name is currently
+   false, which is a documentation-truth defect as much as a code one.
+
+**Three are stale assertions about a ledger identity scheme that has since changed:**
+
+3. `distill_appends_ledger_row_with_real_engine_identity` expected provenance
+   `"synthetic:teacher"` and got `"run-1791201430272"`.
+4. `distill_ledger_persists_across_reopen` expected `"test:run1"` and got `"run-1"`.
+
+   The ledger now identifies a run by a generated run id rather than by a caller-supplied
+   provenance string. **These assertions are not "wrong" so much as describing a contract
+   that no longer exists**, and which of the two is correct is a design question, not a
+   test fix: `TrueDistillationFactory` computes an `artifactHash` and reports it, and an
+   identity derived from a timestamp is weaker provenance than one derived from content.
+   Recorded as NEEDS-OWNER rather than massaged until green.
+
+None of the five is skipped, disabled or deleted. They are the first honest evidence that
+these subsystems have integration coverage at all.
