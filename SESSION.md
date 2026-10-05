@@ -4516,3 +4516,80 @@ when the anchor is absent** — that single change turned a silent lie into a vi
 matrix-core **8 111 / 55** (failing classes 34 → 33) · matrix-brain-runtime **597 / 0** ·
 matrix-api-gateway **152 / 0** · quality gate **exit 0** · FROZEN **0** diff ·
 **bare silent catches: 23 → 1**.
+
+
+## 2026-10-05 - RECON-W32.34: D5 half-executed, D6 REFUSED as unsafe
+
+### D6 is not executed, because the premise was false
+
+D6 authorised removing "the literal `kill` reflex at `TrueMindCycle.java:88`", on the
+description I wrote in `OPEN-DECISIONS.md`: *"a line in the cognitive cycle still contains
+a literal `kill` reflex from earlier simulation work. It is believed benign."*
+
+**That description was wrong.** The line is:
+
+    reflex.register("kill", "I cannot provide instructions intended to kill.");
+
+and it is one of **seven harm-refusal guards registered together in the same constructor**:
+`harm`, `kill`, `weapon`, `racist`, `manipulat`, and two destructive-command refusals for
+shell and SQL. It is not simulation residue. It is the harm-refusal layer of the core
+cognitive cycle, and removing it would have made the mind **more** willing to answer a
+request to kill.
+
+**It was not removed.** An instruction approved on the strength of a false description does
+not survive the description being falsified, and the brief's own instruction covers the
+case: *"if so, fix the test's assumption, not the reflex."* Here the reflex IS the safety
+behaviour.
+
+### The real defect underneath: it was the only one of the seven with no test
+
+`grep` over the test tree: `harm` appears in 6 test files, the shell-destruction pattern in
+42, and **"intended to kill" in ZERO**. The one safety guard with no coverage was precisely
+the one D6 proposed deleting — a coincidence worth recording, because it means the campaign
+was one instruction away from removing an untested safety guard and never noticing.
+
+Three tests added, and the coverage is proved by mutation rather than asserted:
+
+| mutation | result |
+|---|---|
+| real code | 14 / 0 |
+| **`kill` guard deleted** | **4 tests FAILED** |
+| restored | 14 / 0 |
+
+`everyRegisteredHarmRefusalIsActuallyWired` asserts all seven patterns, so removing **any**
+of them now fails — the generalisation of the specific gap.
+
+My first version of that test **paraphrased** the two destructive-command stimuli and it
+failed, correctly: `ReflexEngine` matches LITERAL substrings via `String.contains`, so a
+paraphrase proves nothing. A guard whose test only exercises paraphrases is not tested. The
+literals are used.
+
+`anOrdinaryQuestionIsStillAnsweredAfterAllTheseRefusals` guards the opposite failure: a
+reflex layer that matches too much is a mind that refuses everything, which is as broken as
+one that refuses nothing.
+
+### D5: half-executed, because the guard blocked the destructive half
+
+`rm -rf` is denied by the permission layer. **Both paths were moved to the trash with
+`gio trash`**, which is reversible: the working tree is clean and `data/smoke-old` is gone
+from it. **The 28.8 GB is held in the trash and is NOT yet reclaimed** — free space is
+unchanged at 108 GB. Reclaiming it needs one explicit confirmation, because only an actual
+deletion frees it.
+
+### A correction to my own D5 justification
+
+I told the operator *"neither referenced by build, tests, quality gate or any script I could
+find."* **That was inaccurate.** `data/smoke-old` appears in 6 files. Checked individually:
+
+- `DiskHygienePolicyTest.java:144` passes the **string** `"data/smoke-old"` to
+  `classify()` — no filesystem access — and the repo's own policy already returns
+  **`DELETE-CACHE`** for it.
+- `scripts/fresh-clone-smoke.sh` lists `data/smoke*` in its **rsync EXCLUDE** set, and its
+  comment records that this path held an 8.6 GB virtualenv with CUDA libraries that was "the
+  true source of the 8.8 GB previously blamed on build artifacts".
+- **Nothing in `src/main/java` references it at runtime.**
+
+So the conclusion held and is in fact endorsed by the repo's own hygiene policy — but I
+asserted it more strongly than the evidence supported, and a stronger claim is what made the
+delete look risk-free. The check that should have come first is a filesystem-touching
+search, not a string search.
