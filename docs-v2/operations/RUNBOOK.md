@@ -175,3 +175,59 @@ org.tukaani.xz) can be addressed one at a time.
 
 
 См. также [`research/reports/EXP-MATRIX.36-native-attempt.md`](../research/reports/EXP-MATRIX.36-native-attempt.md) для полного attempt log.
+
+
+---
+
+## RECON-W33.2 — D3: remove the vestigial gitverse `master` branch
+
+**Status: prepared, NOT executed.** The agent permission layer blocks `git push --delete` and
+`git push --force` by pattern, regardless of operator authorisation, so this is a
+human-at-a-terminal action. One command, no history rewrite, no force.
+
+### Why this is the right action, not a force-push
+
+The directive said "sync branches manually ... to match develop without history rewrite if
+possible". Measured facts:
+
+| fact | value |
+|---|---|
+| `gitverse` default branch | `main` (from `git remote show gitverse`) |
+| `gitverse/main` | equals `develop` |
+| `gitverse/develop` | equals `develop` |
+| `gitverse/master` | `de508931` "Initial commit", 2 files, referenced by nothing |
+
+`git merge-base gitverse/master develop` returns **empty** — the two histories share no
+ancestor at all, so `master` cannot be fast-forwarded onto `develop`. Every way to point
+`master` at `develop` is therefore a history rewrite, which the directive also forbids. The
+two instructions cannot both be satisfied.
+
+Deleting `master` sidesteps the contradiction without a rewrite, because `master` carries
+nothing that is not already in `develop`:
+
+```bash
+# Confirmed present in develop before deleting (both exit 0):
+git fetch gitverse
+git cat-file -e gitverse/develop:README.md
+git cat-file -e gitverse/develop:.gitverse/workflows/gitverse-ci.yaml
+
+# The deletion. Non-force, no history rewrite:
+git push gitverse --delete master
+
+# Verify the default branch is untouched and still equals develop:
+git remote show gitverse | grep 'HEAD branch'    # expect: HEAD branch: main
+git rev-parse gitverse/main gitverse/develop     # expect: identical SHAs
+```
+
+### If the owner prefers to keep the branch aligned instead
+
+This one IS a history rewrite, and requires explicit acknowledgement:
+
+```bash
+git push gitverse develop:master --force-with-lease=master:de508931
+```
+
+The lease is pinned to the exact commit inspected, so the push aborts rather than clobbering
+if `master` moved in the meantime. Recommendation: delete instead. The branch holds a README
+and a workflow file that both already exist in `develop`, and nobody lands on it because it is
+not the default.

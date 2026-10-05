@@ -17,10 +17,45 @@ public final class KnowledgeExchangeProtocol {
                 + "\",\"confidence\":" + String.format("%.3f", confidence)
                 + ",\"ts\":" + timestamp + "}";
         }
+        /**
+         * Parse one federated JSON line into a {@link Fact}.
+         *
+         * <p><b>RECON-W33.2 — shape validation added.</b> Lenient field extraction over
+         * untrusted input is correct and stays: a missing or malformed {@code confidence} or
+         * {@code ts} still degrades to 0.0 / 0, because "not stated" is the truthful answer
+         * and the fact may still carry a real subject and a real answer.</p>
+         *
+         * <p>What was missing was a check that the line is a FACT at all. Before this, a line
+         * truncated mid-write produced {@code Fact("", "", "", 0.0, 0)}: a well-formed Java
+         * object carrying no content, indistinguishable downstream from a genuine fact.
+         * {@code mergeIntoWithReport} merged it and the store came to hold a fact rendering as
+         * {@code fed-<node>- => } — blank subject mapped to blank answer, learned from a
+         * message that never arrived. That is the fabrication shape, entering through the
+         * federation door. It does not crash, so nothing alerts; it does not assert, so nothing
+         * goes red. A knowledge store accumulates invented facts quietly.</p>
+         *
+         * <p>So: {@code id}, {@code input} and {@code answer} are required and must be
+         * non-blank. Numeric fields remain optional.</p>
+         *
+         * @param line one JSON object as a line of text; may be null
+         * @return the parsed fact, never one with a blank required field
+         * @throws IllegalArgumentException if the line is absent, blank, or missing any of
+         *     {@code id}, {@code input} or {@code answer}; the message names the offending field
+         */
         public static Fact fromJsonLine(String line) {
+            if (line == null || line.isBlank()) {
+                throw new IllegalArgumentException(
+                        "rejected federated line: line is null or blank, so it carries no fact");
+            }
             String id = extract(line, "id");
             String input = extract(line, "input");
             String answer = extract(line, "answer");
+            // RECON-W33.2. Each required field is checked by name, so the rejection says which
+            // one is missing instead of leaving an operator to diff the JSON by eye. Blanks are
+            // rejected, not trimmed into existence: "" and "   " produce the same empty lesson.
+            requirePresent("id", id, line);
+            requirePresent("input", input, line);
+            requirePresent("answer", answer, line);
             double conf = 0.0;
             try {
                 int i = line.indexOf("\"confidence\":");
@@ -38,31 +73,58 @@ public final class KnowledgeExchangeProtocol {
                     // is actually taught. A malformed confidence becoming 0.0 is the
                     // correct answer for "not stated", not a lost lesson.
                     //
-                    // The defect that IS real in this class is separate and NOT handled
-                    // here: fromJsonLine does no shape validation, so a TORN line yields a
-                    // Fact with empty id/input/answer that is then taught as
-                    // "fed-<node>- => ". That is a fabrication-shaped defect in a method,
-                    // not in this catch, and it is listed as its own open item.
+                    // RECON-W33.2: the fabrication-shaped defect in this class was NOT here
+                    // but in the absence of shape validation above, and it is now fixed. This
+                    // catch is deliberately left lenient.
                 }
             long ts = 0L;
             try {
                 int i = line.indexOf("\"ts\":");
                 if (i >= 0) ts = Long.parseLong(line.substring(i + 5).replaceAll("[^0-9].*", ""));
             } catch (NumberFormatException e) {
-                    // RECON-W32.33. LEGITIMATE to swallow, per the W32.26 audit: this is a
-                    // lenient field extractor over UNTRUSTED federated input, and its
-                    // defaults (conf = 0.0, ts = 0) are inert — no consumer reads them as
-                    // a real confidence or a real timestamp, and PromotionGate decides what
-                    // is actually taught. A malformed confidence becoming 0.0 is the
-                    // correct answer for "not stated", not a lost lesson.
+                    // RECON-W32.33, retained unchanged. Rationale identical to the confidence
+                    // catch above: an unstated timestamp is 0, not a reason to discard a fact.
                     //
-                    // The defect that IS real in this class is separate and NOT handled
-                    // here: fromJsonLine does no shape validation, so a TORN line yields a
-                    // Fact with empty id/input/answer that is then taught as
-                    // "fed-<node>- => ". That is a fabrication-shaped defect in a method,
-                    // not in this catch, and it is listed as its own open item.
+                    // RECON-W33.2: the fabrication-shaped defect was the missing shape check,
+                    // now fixed above. This catch stays lenient.
                 }
             return new Fact(id, input, answer, conf, ts);
+        }
+
+        /**
+         * Reject a line whose required field is absent or blank.
+         *
+         * <p>Unit: a field name, its extracted value, and the originating line for context.</p>
+         *
+         * @param field the JSON key that must be present, e.g. {@code id}
+         * @param value the extracted value, possibly null or blank
+         * @param line the original line, quoted and truncated in the message
+         * @throws IllegalArgumentException when {@code value} is null, empty or whitespace
+         */
+        private static void requirePresent(String field, String value, String line) {
+            if (value == null || value.isBlank()) {
+                throw new IllegalArgumentException(
+                        "rejected federated line: required field '" + field
+                            + "' is absent or blank, so this line is not a teachable fact. "
+                            + "Line was: " + abbreviate(line));
+            }
+        }
+
+        /**
+         * Shorten a line for inclusion in an error message.
+         *
+         * <p>Unit: characters. Bounded so an attacker-supplied megabyte of "line" cannot turn
+         * a rejection message into a denial-of-service vector.</p>
+         *
+         * @param line the line to quote
+         * @return the line, truncated to 120 characters with an ellipsis marker
+         */
+        private static String abbreviate(String line) {
+            int maxChars = 120;
+            if (line == null || line.length() <= maxChars) {
+                return String.valueOf(line);
+            }
+            return line.substring(0, maxChars) + "...";
         }
     }
 

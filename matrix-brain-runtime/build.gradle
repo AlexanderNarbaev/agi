@@ -48,6 +48,18 @@ application {
 tasks.withType(Test) {
     useJUnitPlatform()
     maxHeapSize = '2g'
+    // RECON-W33.2: RealGpuKernelEngine -> MatrixNativeMath -> SimdTruthTableEval loads
+    // jdk.incubator.vector at class-init. Without this flag, constructing a
+    // RealGpuKernelEngine throws NoClassDefFoundError(jdk/incubator/vector/Vector), so no
+    // test in THIS module could ever exercise that class.
+    //
+    // This is the same defect matrix-api-gateway already fixed (its build.gradle:57-61
+    // carries this note). The flag was added downstream, where it was only needed to stop
+    // four wiring tests failing, and never added here, in the module that owns the class.
+    // A downstream workaround for a missing upstream flag hides the fact that the owning
+    // module cannot load its own production code in a test JVM.
+    jvmArgs '--add-modules=jdk.incubator.vector'
+    jvmArgs '--enable-native-access=ALL-UNNAMED'
 }
 
 // RECON-W28 B-3: this module has no JaCoCo plugin, so the campaign produced NO

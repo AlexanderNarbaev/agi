@@ -484,3 +484,79 @@ nothing, and 0 `.class` files were produced. The tell was available and ignored:
 whether the compiler emitted output is not the same as checking whether it succeeded. The
 corrected counts came from re-running with an argfile and counting `\.java:[0-9]+: error`
 directly.
+
+---
+
+## RECON-W33.2 — Science-debt triage of the remaining 27 core failures
+
+Applying the operator's 3-approach limit. I did **not** attempt three fixes on each: the limit
+is a ceiling on effort, not a quota, and burning three attempts on a Kolmogorov bound is
+exactly the time-wasting the directive forbids. Instead each failure was classified by
+reading the assertion against the code it exercises, then bucketed. Where a claim is a true
+statement about the algorithm, retrying is pointless.
+
+### Bucket A — RESEARCH_OPEN_QUESTION (scientific/unproven claims). 12 failures.
+
+Not bugs. The tests assert properties that are either open questions or statements about
+floating-point reality that no tolerance can rescue. Retrying cannot make them pass.
+
+| test | claim that cannot currently be met |
+|---|---|
+| `CausalEmergencePropertyTest.propertyMaxCausalEmergenceForUniformIsZero` | uniform input yields 0.06303440583379408, asserted < 1e-9. Is "uniform input implies zero emergence" true, or is the measure entropy-biased? |
+| `CausalEmergenceTest.maxCausalEmergenceNonNegativeForUniform` | same measure, non-negativity expectation |
+| `KolmogorovComplexityTest.propertyKolmogorovConstantIsLow` | asks a complexity constant to be small with no defined threshold |
+| `KolmogorovComplexityTest.constant_trajectoryLowComplexity` | constant trajectory should be low-K; depends on the estimator |
+| `KolmogorovComplexityPropertyTest.propertyConstantTrajectoryLowK` | same |
+| `KolmogorovComplexitySnapshotTest.normalizedKBoundedZeroOne` | normalisation must land in [0,1]; currently outside |
+| `W120LSystemPhiCorrelation.constantOutputHasLowComplexity` | constant output should show low phi-complexity |
+| `PhiComplexityFingerprintPropertyTest.propertySequenceFingerprintBounded` | fingerprint bounds depend on the encoding, which is unspecified |
+| `PhiMaxCalculatorPropertyTest.propertyPhiMaxGreedyNonNegative` | greedy phi-max non-negativity |
+| `VariationalFreeEnergyPropertyTest.propertyELBOFiniteForList` | ELBO finiteness for a degenerate list |
+| `MultivariateGaussianAnalyzerPropertyTest.propertyCorrelationBounded` | correlation range under degenerate covariance |
+| `SeriesCorrelatorPropertyTest.propertyPearsonRandomIndependentIsSmall` | Pearson r must be small for independent series; false for near-constant series, where r is undefined or +/-1 |
+
+Evidence that resolves these: a defined estimator and a stated tolerance, or an explicit
+statement that the property is empirical and given a percentile band. Until then a red test
+here is a research note, not a defect. **Owner: unassigned.**
+
+### Bucket B — TEST-HARNESS DEFECT (the oracle is wrong). 8 failures.
+
+The production code is probably fine; the test asserts something unachievable or is
+mis-wired. These are the cheapest real fixes.
+
+| test | defect |
+|---|---|
+| `MemristorSwitchPropertyTest.propertyStdpLargeDtNoChange` | expects exactly 0.0, measured 9.64e-24. Float noise asserted as zero. Tolerance absent |
+| `SeriesCorrelatorPropertyTest.propertyAutocorrelationZeroIsOne` | lag-0 autocorrelation must be 1; fails when the series is constant (zero variance) |
+| `RegimeTrajectoryAnalyzerTest.alternatingRegimesHaveMultipleRuns` | an alternating regime is counted as one run; definition conflict |
+| `RegimeTrajectoryAnalyzerTest.stabilityForAlternatingIsZero` | maximum instability asserted on an alternating series; definition conflict |
+| `ProfileStabilityMetricsTest.alternatingProfileIsOscillatory` | same class of definition conflict |
+| `CognitivePhaseDetectorPropertyTest.propertyTransitionRateBounded` | transition rate can exceed the assumed bound for short series |
+| `CognitivePhaseDetectorPropertyTest.propertyDominantRegimeValid` | dominant regime falls outside the assumed enum for degenerate series |
+| `CognitiveGenesisProfilePropertyTest.propertyUnifiedScoreBounded` | unified score escapes the assumed range on edge input |
+
+**Disposition: fix-in-wave W33.3.** Bucket B is where the 3-attempt budget belongs, because
+these have a defensible oracle and a known wrong one.
+
+### Bucket C — SHAPE / STRUCTURAL, likely REAL-DEFECT. 7 failures.
+
+| test | finding |
+|---|---|
+| `CognitiveGroupedQueryAttentionPropertyTest.propertyCompressionRatio` | **throws `IllegalArgumentException: dim must be divisible by numQueryHeads`** — a hard throw inside a property test. Config generation produces incompatible shapes |
+| `CognitiveHeatmapTest.profileFieldsMappedToHeatmap` | mapping incomplete |
+| `QuantumEmulatorTest.testHadamardGate` | simulator correctness |
+| `LSystemTest.unknownSymbolsPassThrough` | unknown-symbol behaviour |
+| `InterAgentPhiPropertyTest.propertyMeasureTimeSeriesBounded` | inter-agent measure escapes bounds |
+| `Exp228ComplianceTest.realProjectCompliance` | an EXP-228 compliance assertion is false. Highest severity: it is a *compliance* test, and it fails |
+| `SleepConsolidationStudyTest.testSleepImprovesRetention` | sleep does not improve retention in the tested setup. Either the feature is ineffective or the study is mis-specified |
+
+**Disposition:** `CognitiveGroupedQueryAttentionPropertyTest` is the clearest defect — a
+property test that throws rather than asserts is a generator bug. `Exp228ComplianceTest` is
+the most consequential and should be triaged first.
+
+### What was NOT done, deliberately
+
+No test was deleted, skipped, or weakened. No tolerance was loosened to turn red green. The
+two tests this session touched were touched because they were **untested**, not because they
+were inconvenient: the GPU test asserted enum members that never existed, and the federation
+test asserted no validation at all.

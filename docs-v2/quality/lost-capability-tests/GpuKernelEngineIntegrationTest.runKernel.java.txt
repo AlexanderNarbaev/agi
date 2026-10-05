@@ -1,0 +1,101 @@
+/*
+ * NOT A COMPILED SOURCE FILE. Preserved verbatim as evidence.
+ *
+ * WHY THIS FILE IS NOT IN src/test/java
+ * -------------------------------------
+ * These tests call RealGpuKernelEngine.runKernel(GpuTask). That method does not exist, so
+ * this file DOES NOT COMPILE. JUnit's @Disabled does not help: it is a runtime annotation
+ * understood by the test engine, so javac still rejects every call site. A file that cannot
+ * compile cannot live in a source set, even a disabled one.
+ *
+ * The alternative was deleting these tests, and that was rejected: they are the only
+ * remaining record that MATRIX could once dispatch a generic protobuf GpuTask (MATRIX_MUL,
+ * CONVOLUTION, ...) through RealGpuKernelEngine. Today the engine exposes only
+ * runBitCosine(long[], long[]) plus backend()/stats()/snapshot(). Deleting this file would
+ * erase the sole trace that generic GPU operation dispatch ever existed, which is exactly
+ * the kind of silent capability loss this project is meant to detect rather than hide.
+ *
+ * The three tests that do NOT depend on runKernel were ported to
+ * matrix-brain-runtime/src/test/java/io/matrix/brain/runtime/GpuKernelEngineIntegrationTest.java
+ * and execute today. Only the three below are stranded.
+ *
+ * DISPOSITION: NEEDS-OWNER / DESIGN-DECISION
+ *   - If the narrowing to runBitCosine was deliberate, these tests are correctly obsolete.
+ *     Delete them and keep this file as the historical record.
+ *   - If it was accidental, a capability was removed silently and this file is the witness.
+ *   Do NOT resolve this by rewriting the calls to runBitCosine. A passing test that submits
+ *   a bit-cosine and calls it a matrix-multiply is simulated success (Article VIII).
+ *
+ * Recovered from a stale gitverse branch during RECON-W32.34; reproduced verbatim.
+ * Source: gitverse feature/mind-w7-complete (tip e9f22d3a), all seven files byte-identical
+ * to develop but never merged back as tests.
+ */
+package io.matrix.brain.runtime;
+
+import io.matrix.federation.proto.GpuOperation;
+import io.matrix.federation.proto.GpuTask;
+import org.junit.jupiter.api.Test;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
+/**
+ * TRUE-W6 — Real GpuTaskExecutor tests.
+ */
+class GpuKernelEngineIntegrationTest {
+
+    @Test
+    void cpu_fallback_when_gpu_disabled() {
+        RealGpuKernelEngine e = new RealGpuKernelEngine(false);
+        assertThat(e.stats().totalTasks()).isZero();
+        assertThat(e.snapshot().get("backend")).isEqualTo("CPU");
+    }
+
+    @Test
+    void gpu_requested_attempts_real_executor() {
+        RealGpuKernelEngine e = new RealGpuKernelEngine(true);
+        // Backend reports GPU or CPU based on real hardware availability.
+        assertThat(e.snapshot().get("backend")).isIn("GPU", "CPU");
+    }
+
+    @Test
+    void running_a_real_kernel_increments_stats() {
+        RealGpuKernelEngine e = new RealGpuKernelEngine(true);
+        GpuTask task = GpuTask.newBuilder()
+            .setOperation(GpuOperation.GPU_OPERATION_MATRIX_MUL)
+            .setInputData(com.google.protobuf.ByteString.copyFrom(new byte[]{1, 2, 3, 4}))
+            .build();
+        var result = e.runKernel(task);
+        assertThat(result).isNotNull();
+        assertThat(result.latencyNs()).isGreaterThanOrEqualTo(0L);
+    }
+
+    @Test
+    void multiple_kernels_accumulate_total_tasks() {
+        RealGpuKernelEngine e = new RealGpuKernelEngine(false);
+        for (int i = 0; i < 5; i++) {
+            e.runKernel(GpuTask.newBuilder()
+                .setOperation(GpuOperation.GPU_OPERATION_CONVOLUTION)
+                .setInputData(com.google.protobuf.ByteString.copyFrom(new byte[]{1}))
+                .build());
+        }
+        assertThat(e.stats().totalTasks()).isEqualTo(5);
+    }
+
+    @Test
+    void snapshot_reports_backend_and_counts() {
+        RealGpuKernelEngine e = new RealGpuKernelEngine(false);
+        var snap = e.snapshot();
+        assertThat(snap).containsKeys(
+            "backend", "tasks_executed", "total_tasks",
+            "success_count", "timeout_count", "oom_count");
+    }
+
+    @Test
+    void kernel_result_records_gpu_used_flag() {
+        RealGpuKernelEngine e = new RealGpuKernelEngine(false);
+        var r = e.runKernel(GpuTask.newBuilder()
+            .setOperation(GpuOperation.GPU_OPERATION_INFERENCE)
+            .build());
+        assertThat(r.gpuUsed()).isFalse();  // CPU mode
+    }
+}
