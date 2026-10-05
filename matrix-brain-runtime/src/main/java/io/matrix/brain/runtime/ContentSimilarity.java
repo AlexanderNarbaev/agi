@@ -283,9 +283,56 @@ public final class ContentSimilarity {
         return coverage * precision;
     }
 
-    /** True when the score clears {@link #RETRIEVAL_FLOOR}. */
+    /**
+     * The number of DISTINCT content tokens a query and fact have in common.
+     *
+     * <p>Unit: tokens. Counted on content tokens, so stopwords do not buy evidence.</p>
+     */
+    public static int sharedContentTokens(String query, String fact) {
+        Set<String> q = new LinkedHashSet<>(contentTokens(query));
+        Set<String> f = new LinkedHashSet<>(contentTokens(fact));
+        Set<String> both = new LinkedHashSet<>(q);
+        both.retainAll(f);
+        return both.size();
+    }
+
+    /**
+     * How many shared content tokens constitute EVIDENCE rather than coincidence.
+     *
+     * <p>RECON-W32.25, measured on the real 2 015-fact store. A one-word overlap is a
+     * coincidence often enough that a constant score floor cannot separate it from an
+     * answer: queries built from one real word of a fact cleared the 0.20 floor in
+     * <b>1 831 of 2 011 cases (91%)</b>. Two words cleared it in 97.2%, three in 100%.
+     * The score DOES separate - p50 was 0.250 / 0.500 / 0.750 for one / two / three
+     * words - but no single threshold can do it, because a one-word match against a
+     * one-token fact scores 1.0. The missing condition is not a better number; it is a
+     * count.</p>
+     */
+    public static final int MIN_EVIDENCE_TOKENS = 2;
+
+    /**
+     * True when the score clears {@link #RETRIEVAL_FLOOR} <em>and</em> the overlap is
+     * large enough to be evidence.
+     *
+     * <p>The single exception is a fact that IS one content token: then a single shared
+     * token is a complete match, not a coincidence, and refusing it would be refusing
+     * the most exact answer the store can hold.</p>
+     */
     public static boolean isConfident(String query, String fact) {
-        return score(query, fact) >= RETRIEVAL_FLOOR;
+        return hasEvidence(query, fact) && score(query, fact) >= RETRIEVAL_FLOOR;
+    }
+
+    /**
+     * True when the query and fact share enough content to be evidence.
+     *
+     * <p>Separated from {@link #isConfident} so a caller can see WHY a candidate was
+     * refused, rather than only that a number was too low.</p>
+     */
+    public static boolean hasEvidence(String query, String fact) {
+        int shared = sharedContentTokens(query, fact);
+        if (shared >= MIN_EVIDENCE_TOKENS) return true;
+        // A one-token fact matched in full is an exact answer, not an overlap.
+        return shared >= 1 && contentTokens(fact).size() == 1;
     }
 
     // ---- Discriminative weighting (W31.4) ----------------------------------

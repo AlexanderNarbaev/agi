@@ -199,4 +199,53 @@ class HdcRetrievalStageTest {
             }
         }
     }
+
+    // ---- RECON-W32.25: the evidence rule, through the REAL stage ------------
+    //
+    // Measured on the real 2 015-fact store: a query sharing ONE content word with a
+    // fact cleared the score floor in 1 831 of 2 011 cases (91%). This drives the real
+    // HdcRetrievalStage over a real PersistentHdcStore, so the gate is proven where it
+    // actually runs rather than only in the scorer.
+    //
+    // A live gateway probe was attempted first and was NOT evidence: the jar launched
+    // into stub mode and every answer came back "(stub)". Recorded rather than quoted.
+
+    @Test
+    void oneWordOverlapIsRefusedThroughTheRealStage(@TempDir Path dir) {
+        PersistentHdcStore store = new PersistentHdcStore(dir.resolve("kb.ndjson"), 512);
+        store.teach("f-temp", "sensor: temperature_c rose 20 to 22.8");
+        store.teach("f-hum", "sensor: humidity_pct rose 45 to 47");
+        var stage = new io.matrix.brain.runtime.stages.HdcRetrievalStage(store);
+
+        // A one-word query matches BOTH facts on that single word. Serving either would
+        // be answering "what is the temperature?" with a humidity reading.
+        var one = stage.retrieve("rose", null, new java.util.ArrayList<>());
+        assertFalse(one.matched(),
+            "a single shared word must not produce a served answer; got a reply: "
+                + one.reply());
+
+        // Two words still work, which is the whole point: the rule costs no recall.
+        var two = stage.retrieve("temperature rose", null, new java.util.ArrayList<>());
+        assertTrue(two.matched(),
+            "two shared content words must still be served; the rule must not cost recall");
+        assertTrue(two.reply().contains("temperature"),
+            "and the answer must be the temperature fact, not the humidity one: "
+                + two.reply());
+    }
+
+    @Test
+    void theRetrievedFactIsTheOneTheQueryActuallyNamed(@TempDir Path dir) {
+        // The fabrication shape this campaign exists to prevent: a query that overlaps
+        // two facts, where the wrong one scores higher.
+        PersistentHdcStore store = new PersistentHdcStore(dir.resolve("kb.ndjson"), 512);
+        store.teach("f-temp", "temperature_c rose 20 to 22.8");
+        store.teach("f-hum", "humidity_pct rose 45 to 47");
+        var stage = new io.matrix.brain.runtime.stages.HdcRetrievalStage(store);
+        var r = stage.retrieve("temperature rose", null, new java.util.ArrayList<>());
+        assertTrue(r.matched(), "the two-word query must be answered");
+        assertTrue(r.reply().contains("temperature"),
+            "and it must be the temperature fact, not the humidity one: " + r.reply());
+        assertFalse(r.reply().contains("humidity"),
+            "a humidity reading must never answer a temperature question: " + r.reply());
+    }
 }

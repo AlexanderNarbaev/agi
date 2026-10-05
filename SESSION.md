@@ -3886,3 +3886,90 @@ essentially unchanged research code. I measured 69 twice and reproduced it exact
 "drift" is not a sufficient explanation and is not offered as one. Recorded as a moving
 number in a known-debt set, with zero failures near the change, and the release tag still
 waits on a real attribution rather than on my assurance.
+
+
+## 2026-10-05 - RECON-W32.25: RECALL-1 was the wrong diagnosis, and the real one was worse
+
+The brief carried RECALL-1 as "recall stuck at ~0.29, improve without reopening
+fabrication". I measured against the real 2 015-fact store before changing anything, and
+**the framing is wrong in both directions.**
+
+### What the store actually does
+
+Queries built from real words of a real fact, scored with the shipped `ContentSimilarity`:
+
+| words in query | cleared the 0.20 floor | verdict |
+|---|---|---|
+| 1 | **92.0%** | a coincidence was being served as an answer |
+| 2 | 98.1% | fine |
+| 3 | 99.6% | fine |
+| 4 | 100.0% | fine |
+
+So genuine multi-word retrieval is at **98–100%**, not 0.29. The 0.29 came from a
+labelled set that an independent reviewer showed is mislabelled — 5 of its 20 "unknowable"
+questions are now correctly answerable, because W31.4 ingested those countries — and whose
+harness never called the production scorer at all. The number was measuring the yardstick,
+not the model.
+
+**The real defect is the opposite of the one I was sent to fix: one shared word is
+currently enough to produce an answer, 91% of the time.**
+
+### Why no threshold could have fixed it
+
+The score DOES separate word counts — p50 was **0.250 / 0.500 / 0.750** for one / two /
+three words. But a one-word match against a one-token fact scores **1.0**, so no constant
+floor can separate "one word" from "one word that happens to be everything". The missing
+condition was never a better number. It was a **count**.
+
+`isConfident` now requires the score AND at least **2 distinct content tokens** of
+overlap. Content tokens, so stopwords cannot buy evidence: `"what is the"` against `"rose"`
+shares **zero** counted tokens and is refused however many filler words are added.
+
+### Measured, before and after, on the real store
+
+| | before | after |
+|---|---|---|
+| 1-word overlap served | **1 831 / 2 011 (91.1%)** | **0 / 2 011 (0.0%)** |
+| 2-word retrieval | 98.1% | **98.1%** — unchanged |
+| 3-word retrieval | 99.6% | **99.6%** — unchanged |
+| 4-word retrieval | 100.0% | **100.0%** — unchanged |
+
+Zero unintended leaks: the only 1-word cases still served are the designed exception, a
+fact that IS a single content token matched in full (`gravity => 9.8 m/s^2`), where one
+shared token is a complete answer rather than a coincidence. Four real facts in the store
+depend on it, and refusing them would be refusing exact matches.
+
+**This is a pure safety win at zero recall cost**, which is the opposite trade the brief
+anticipated, and it is why measuring before fixing was worth the time.
+
+### The one place I could not get evidence, said so
+
+A live gateway probe was attempted first and is **not** evidence: the jar launched into
+stub mode and every answer came back `(stub)`. Rather than quote it, the gate is proven
+where it actually runs — through the real `HdcRetrievalStage` over a real
+`PersistentHdcStore`, including the fabrication shape: a one-word query matching both
+`temperature_c rose 20 to 22.8` and `humidity_pct rose 45 to 47` is now **refused**, and
+the two-word query answers with the temperature fact and never the humidity reading.
+
+### Four more of my own errors, because the tests were written from imagination
+
+1. `dominant total` — a pair sampled during measurement, whose fact contains no token
+   `total`, so it shares one word, scores 0.071, and is correctly refused. I had asserted
+   a measurement taken on a different string.
+2. The independence case needed a 12-token fact to score 0.167; my 8-token version scored
+   0.25 and served. The rule was right and my example was not.
+3. I invented `store.put(id, long[])` and `result.topScored()`; the real API is
+   `store.teach(id, content)` and `HdcResult.matched()/reply()`. Reading the test file
+   first would have cost one command.
+4. The stub gateway was left running after it proved useless.
+
+### Verification
+
+matrix-core **8 103 / 72** (property-test set; **none** in any area touched) ·
+matrix-brain-runtime **589 / 0** · matrix-api-gateway **152 / 0** · quality gate **exit 0** ·
+FROZEN **0** diff.
+
+The core research-debt count has now been observed at 67, 68, 69, 70 and 72. It moves
+independently of this work and I am not going to keep relabelling it as drift: it is
+recorded as an open, un-attributed set, and the release tag stays blocked on a real
+attribution rather than on a number I can explain away.

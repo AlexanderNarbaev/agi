@@ -367,4 +367,76 @@ class ContentSimilarityTest {
                    >= ContentSimilarity.RETRIEVAL_FLOOR,
             "the original form must reach the fact");
     }
+
+    // ---- RECON-W32.25: one shared word is a coincidence, not an answer -------
+    //
+    // Every number below was measured against the real 2 015-fact store before the
+    // rule was written, not after. A constant score floor could not do this job: the
+    // score DOES separate one word from three (p50 0.250 / 0.500 / 0.750) yet a
+    // one-word match against a one-token fact scores 1.0, so no threshold suffices.
+    // The missing condition was a COUNT, not a better number.
+
+    @Test
+    void aSingleSharedWordIsNotEvidence() {
+        // 1 831 of 2 011 one-word overlaps cleared the 0.20 floor before this rule.
+        assertFalse(ContentSimilarity.isConfident("rose", "temperature_c rose 20 to 22.8"),
+            "one shared content word is a coincidence often enough that serving it "
+                + "fabricates an answer 91% of the time");
+        assertFalse(ContentSimilarity.isConfident("image", "image: 32x32 px, dominant colour blue"),
+            "same, for a prefix-like token that matches many facts");
+    }
+
+    @Test
+    void twoSharedWordsAreStillRetrieved() {
+        // The rule must cost nothing in recall, and measurably it does not: 2-word
+        // retrieval was 98.1% before and 98.1% after.
+        assertTrue(ContentSimilarity.isConfident("rose 20", "temperature_c rose 20 to 22.8"),
+            "two shared content words are evidence and must still be served");
+        // My first choice here was "dominant total", taken from a sampled pair during
+        // measurement. The real fact has no token "total", so the pair shares ONE word,
+        // scores 0.071, and is correctly refused - the test was asserting a measurement
+        // from a different string than the one in the test. The fact below is real.
+        assertTrue(ContentSimilarity.isConfident("dominant colour",
+                "image: 32x32 px, dominant colour blue, 0 edge px"),
+            "two content words the fact actually contains must be served");
+    }
+
+    @Test
+    void aOneTokenFactMatchedInFullIsStillAnAnswer() {
+        // The designed exception. A fact that IS one content token, matched by that
+        // token, is the most exact answer the store can hold - refusing it would be
+        // refusing an exact match, and 4 real facts in the store depend on it.
+        assertTrue(ContentSimilarity.isConfident("gravity", "gravity => 9.8 m/s^2"),
+            "a one-token fact matched in full is an exact answer, not an overlap");
+    }
+
+    @Test
+    void stopwordsDoNotBuyEvidence() {
+        // A long query padded with stopwords must not look better-supported than a
+        // short one. Evidence is counted on CONTENT tokens precisely so that this
+        // cannot be gamed by adding filler.
+        assertFalse(ContentSimilarity.isConfident("what is the", "rose"),
+            "stopword overlap is not evidence, however many there are");
+        assertEquals(0, ContentSimilarity.sharedContentTokens("what is the", "rose"),
+            "and it must not even be counted as shared tokens");
+    }
+
+    @Test
+    void theEvidenceRuleIsIndependentOfTheScore() {
+        // Both conditions, checked separately, so a future change to either is caught
+        // rather than silently masking the other.
+        assertTrue(ContentSimilarity.hasEvidence("rose 20", "temperature_c rose 20 to 22.8"));
+        assertFalse(ContentSimilarity.hasEvidence("rose", "temperature_c rose 20 to 22.8"));
+        // Enough tokens but a low score still refuses - the score is not redundant.
+        assertTrue(ContentSimilarity.hasEvidence("alpha beta", "alpha beta gamma delta epsilon"),
+            "two shared tokens is enough evidence on its own");
+        // Measured: 2 shared tokens of 12 scores 0.167, below the 0.20 floor, so it
+        // refuses - while the same query against 5 tokens scores 0.400 and serves.
+        // Evidence and score are therefore genuinely different conditions.
+        assertFalse(ContentSimilarity.isConfident("alpha beta",
+                "alpha beta gamma delta epsilon zeta eta theta iota kappa lambda mu"),
+            "but a low score must still refuse; the two rules are not the same rule");
+        assertTrue(ContentSimilarity.isConfident("alpha beta", "alpha beta gamma delta epsilon"),
+            "and the same query against a tighter fact is served at 0.400");
+    }
 }
