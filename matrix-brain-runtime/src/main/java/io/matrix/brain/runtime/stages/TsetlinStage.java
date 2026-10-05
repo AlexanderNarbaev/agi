@@ -69,8 +69,11 @@ public final class TsetlinStage {
                         List.of("clause=" + c.id)));
                     return TsetlinResult.hit(c.reply, 0.75);
                 }
-            } catch (RuntimeException ignore) {
-                // never abort the mind
+            } catch (RuntimeException e) {
+                // RECON-W32.33. Same shape as BirInferenceStage: the fall-through emitted
+                // "clauses_evaluated=N, hit=0" without checking the clauses actually ran,
+                // so the trace claimed N evaluations that never happened.
+                clauseFailures.incrementAndGet();
             }
         }
         trace.add(BrcStep.of("TSETLIN", false, 0.40,
@@ -85,4 +88,13 @@ public final class TsetlinStage {
             || l.contains("good morning") || l.contains("good afternoon")
             || l.contains("good evening");
     }
+
+    /** Clauses that threw, so clauses_evaluated in the evidence trace is an overstatement.
+     *
+     * <p>Unit: calls. RECON-W32.33.</p>
+     */
+    private final java.util.concurrent.atomic.AtomicInteger clauseFailures =
+            new java.util.concurrent.atomic.AtomicInteger();
+
+    public int clauseFailures() { return clauseFailures.get(); }
 }

@@ -134,7 +134,17 @@ public final class LLMKnowledgeDistiller {
             batch.addAll(parseRules(response, context));
             extractedRules.addAll(batch);
         } catch (Exception e) {
-            // Distillation failed for this context — return empty
+            // RECON-W32.33. "Return empty" is the problem, not the solution: a throwing
+            // backend makes the whole context yield [], which is indistinguishable from
+            // "no rules were found" — and the rules are lost permanently, not absent.
+            // catch (Exception) also masked NullPointerExceptions inside parseRules as
+            // "no rules", so a code bug looked like an empty result.
+            contextFailures.incrementAndGet();
+            if (contextFailures.get() == 1) {
+                System.err.println("[LLMKnowledgeDistiller] a context FAILED: " + e
+                    + " - its rules were NOT distilled, and the empty result is "
+                    + "indistinguishable from 'no rules found'; further failures counted");
+            }
         }
         return batch;
     }
@@ -263,4 +273,13 @@ public final class LLMKnowledgeDistiller {
         extractedRules.clear();
         contradictions.clear();
     }
+
+    /** Contexts whose distillation threw, so rules were lost and the empty result is indistinguishable from 'no rules found'.
+     *
+     * <p>Unit: calls. RECON-W32.33.</p>
+     */
+    private final java.util.concurrent.atomic.AtomicInteger contextFailures =
+            new java.util.concurrent.atomic.AtomicInteger();
+
+    public int contextFailures() { return contextFailures.get(); }
 }

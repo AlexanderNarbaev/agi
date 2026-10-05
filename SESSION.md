@@ -4416,3 +4416,103 @@ with a stated closure condition, which is the honest disposition.
 matrix-core **8 111 / 55** (was 60; failing classes 37 → 34) ·
 matrix-brain-runtime **597 / 0** · matrix-api-gateway **152 / 0** ·
 quality gate **exit 0** · FROZEN **0** diff.
+
+
+## 2026-10-05 - RECON-W32.32/33: SILENT-1 closed, and one site that resisted three attempts
+
+### R6: a covariance computed with a divisor of zero
+
+`ProfileEmbedding2D.project` divided by `(n - 1)`. With **n == 1** that is division by
+zero, and because the single centred vector is exactly zero the result was `0/0 = NaN` —
+which propagated into the projection and from there into `boundingBox`, which compared NaN
+with `<` and `>` (both false) and returned `{+Inf, ..., -Inf}` for a one-point set.
+
+Two fixes, and the second is the more interesting one. A single sample has no spread to
+project along, so `project` now returns the origin for all points rather than NaN. And
+`boundingBox` **skips non-finite coordinates instead of comparing them** — a skipped point
+is not an infinite bound, and conflating the two is how a bad number becomes a confident
+geometric claim. 13/0.
+
+### The nine REAL-DEFECT silent catches, all closed
+
+23 empty catch bodies in learning/persistence at the start of this session; **1 bare catch
+remains**, which is under the brief's "<10 unjustified" bar, and the remaining sites are
+the audit's LEGITIMATE set carrying written justifications.
+
+Every one of the nine had a comment, and that turned out to be the actual finding: **the
+comments stated POLICY, not CONSEQUENCE.**
+
+| site | the comment said | what was actually lost |
+|---|---|---|
+| `HierarchicalMemory` | "listeners must not break the store path" | the listener IS the persistence hook; it sets `dirty`, and without it the entry is never flushed and dies at restart |
+| `MultiBrainEnsemble` | "skip failing brains silently" | a 2-brain signature looked exactly like a 4-brain one |
+| `BrainRunner` | "ignore" | conversations never learned from, while `stats()` reported the same `0` as an empty directory — three states, one output |
+| `ActivationRecord` | "Skip a non-numeric element rather than failing the whole record" | the array is **SHORTER** and every later index **SHIFTED** — a corrupted training tensor |
+| `LLMKnowledgeDistiller` | "Distillation failed for this context — return empty" | `[]` is indistinguishable from "no rules found", and the rules are lost, not absent |
+| `TrueDistillationFactory` | "ledger write failure is non-fatal" | an artefact exists whose hash **no ledger entry vouches for** |
+| `BirInferenceStage` | "rule failure must not abort mind" | the trace emitted `rules_evaluated=N, hit=0` when N rules never ran — and that trace IS the explainability artefact |
+| `TsetlinStage` | "never abort the mind" | same: `clauses_evaluated=N` with no check that the clauses ran |
+| `PlanningStage` | `catch (Throwable ignored)` | OOM hidden as "no reflection happened", and the search ran on a tree with an unknown subset never reflected on |
+
+Each is now counted, with the first failure printed carrying its consequence, and an
+accessor so anything that must not assume can check. `catch (Throwable)` became
+`catch (Exception)` in two places, so an OOM is no longer filed as a logging hiccup.
+
+**`PlanningStage` also contained a trace that lied about its own work:**
+
+    int rolloutsCompleted = budget.iterations;   // the REQUESTED count
+
+When `runSearch` throws it is caught above and `iterationsRun` stays 0 — while this line
+still reported the full budget, so the trace claimed N rollouts having completed none. The
+outer catch does set `planned=false` honestly; this line contradicted it three lines later
+in the same record. Now `= iterationsRun`, and the evidence reads
+`rolloutsCompleted=<achieved> of <requested> requested`, with `reflectionFailures` added
+when non-zero.
+
+### The one site that resisted three attempts, and what I did about it
+
+`BirRegistryPersistence.parseLongArray` — a bad clause-mask literal becomes a silent `0`,
+and zeroing a value inside a mask **weakens a rule** that is then registered and used for
+inference as though it were the one that was written. This is the same silent-0 hazard the
+W32.27 audit recommended deleting the catch for.
+
+I tried three times:
+
+1. Delete the inner catch so the parse failure reaches `replayInto`, which already counts
+   it. **Broke three tests** — `aCleanFileReportsNoSkips` expected 0 skips and got 2.
+2. Theory: an empty mask array, since `"".split(",")` yields `[""]`. Implemented
+   explicitly. **Byte-identical failures**, and the real serialised form is well-formed
+   (`{"pos":[15]}`).
+3. Rethrow as a narrowed `IllegalArgumentException`. **Same three tests, same way.**
+
+Three identical reproductions are now evidence in themselves: the parse genuinely fails on
+valid data, and the mechanism is undiagnosed. What is shipped is the part that is safe —
+the exception type is narrowed to `NumberFormatException`, so a genuine bug in the
+arithmetic can no longer be absorbed as "malformed data" — plus a comment recording all
+three attempts, the hazard, and the fact that the root cause is unknown. It still swallows,
+because trading a silently weakened rule for missing rules is not an improvement. This site
+needs **diagnosis, not a fourth remedy attempt.**
+
+### Toolchain: my own tooling lied four more times, and I have the receipts
+
+- A "presence check" using `field_decl.split()[1]` returned `final`, which always exists,
+  so **no counter fields were added** and the compile failed on missing symbols.
+- Fixing that with `<name>` was fooled again, because the name appears in the catch
+  body I had just written. Had to check for the `AtomicInteger <name>` **declaration**.
+- An "applied and verified" message fired while the file was **never written** — the guard
+  returned before the write, which was correct behaviour and a correct report, on a check
+  that was too broad to be right.
+- Line numbers taken from a **comment-stripped** scan do not address the real file; three
+  anchors missed for that reason.
+- `e` was already a local in `parseLongArray`; `ActivationRecord` is a **record with a
+  static `parse`**, so its counter must be static.
+
+Five instances of the same root cause: writing a script without reading what it was
+pointing at. The one that actually helped was making the helper **refuse to claim a fix
+when the anchor is absent** — that single change turned a silent lie into a visible one.
+
+### Verification
+
+matrix-core **8 111 / 55** (failing classes 34 → 33) · matrix-brain-runtime **597 / 0** ·
+matrix-api-gateway **152 / 0** · quality gate **exit 0** · FROZEN **0** diff ·
+**bare silent catches: 23 → 1**.

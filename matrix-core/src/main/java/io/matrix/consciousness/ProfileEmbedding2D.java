@@ -41,6 +41,22 @@ public final class ProfileEmbedding2D {
         for (int i = 0; i < n; i++) {
             vectors[i] = embedder.embed(profiles.get(i));
         }
+        // RECON-W32.32. A covariance needs at least TWO samples, and this divided by
+        // (n - 1) below. With n == 1 that is division by zero, and because the single
+        // centred vector is exactly zero the result was 0/0 = NaN — which then propagated
+        // into the projection, and from there into boundingBox, which compared NaN with
+        // < and > (both false) and returned {+Inf, ..., -Inf} for a one-point set.
+        //
+        // A single sample has no spread to project along, so there is nothing to compute.
+        // Returning the origin for every point is the honest answer: all samples coincide
+        // in a zero-variance direction. The alternative — returning the raw point — would
+        // claim a position the projection did not produce.
+        if (n < 2) {
+            Point2D[] degenerate = new Point2D[n];
+            java.util.Arrays.fill(degenerate, new Point2D(0.0, 0.0));
+            return degenerate;
+        }
+
         // Subtract mean
         double[] mean = new double[64];
         for (int i = 0; i < n; i++) {
@@ -142,17 +158,40 @@ public final class ProfileEmbedding2D {
 
     /**
      * Compute bounding box of points.
+     *
+     * <p>RECON-W32.32. A non-finite coordinate is <b>skipped</b>, not compared. This
+     * used to compare every coordinate against {@code min}/{@code max} initialised to
+     * infinity, and NaN fails both {@code <} and {@code >} — so a single NaN point left
+     * the box at its initial value and the method returned
+     * {@code {+Inf, -Inf, +Inf, -Inf}}: a box that was infinite in every direction, which
+     * reads as "the points are spread everywhere" rather than "the input was not a
+     * number". Infinity is a real bound; a skipped point is not, and conflating them is
+     * how a bad number becomes a confident geometric claim.</p>
+     *
+     * <p>If every coordinate is non-finite the result is the zero box, matching the
+     * empty-input case, rather than an infinite one.</p>
+     *
+     * @return {@code {minX, minY, maxX, maxY}}, all zeros when no finite point was found
      */
     public static double[] boundingBox(Point2D[] points) {
         if (points == null || points.length == 0) return new double[]{0, 0, 0, 0};
         double minX = Double.POSITIVE_INFINITY, maxX = Double.NEGATIVE_INFINITY;
         double minY = Double.POSITIVE_INFINITY, maxY = Double.NEGATIVE_INFINITY;
+        boolean anyFinite = false;
         for (Point2D p : points) {
-            if (p.x() < minX) minX = p.x();
-            if (p.x() > maxX) maxX = p.x();
-            if (p.y() < minY) minY = p.y();
-            if (p.y() > maxY) maxY = p.y();
+            if (p == null) continue;
+            if (Double.isFinite(p.x())) {
+                anyFinite = true;
+                if (p.x() < minX) minX = p.x();
+                if (p.x() > maxX) maxX = p.x();
+            }
+            if (Double.isFinite(p.y())) {
+                anyFinite = true;
+                if (p.y() < minY) minY = p.y();
+                if (p.y() > maxY) maxY = p.y();
+            }
         }
+        if (!anyFinite) return new double[]{0, 0, 0, 0};
         return new double[]{minX, minY, maxX, maxY};
     }
 }

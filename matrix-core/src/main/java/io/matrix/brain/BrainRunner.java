@@ -50,7 +50,16 @@ public final class BrainRunner {
             int learned = improver.improveOnce();
             totalLearned.addAndGet(learned);
         } catch (IOException e) {
-            // ignore
+            // RECON-W32.33. "ignore" on a startup learning pass means conversations on disk
+            // are never learned from, and stats() then reports "Learned: 0" — the same
+            // number a directory of unreadable files produces, and the same number a
+            // genuinely empty one does. Three states, one output.
+            startupLearnFailures.incrementAndGet();
+            if (startupLearnFailures.get() == 1) {
+                System.err.println("[BrainRunner] startup learning FAILED: " + e
+                    + " - existing conversations were NOT learned from, and stats() will "
+                    + "report 0 learned either way; further failures are counted");
+            }
         }
     }
     
@@ -149,4 +158,13 @@ public final class BrainRunner {
         System.out.println(runner.stats());
         runner.close();
     }
+
+    /** Startup learning passes that failed, while stats() reports the same 0 as an empty directory.
+     *
+     * <p>Unit: calls. RECON-W32.33.</p>
+     */
+    private final java.util.concurrent.atomic.AtomicInteger startupLearnFailures =
+            new java.util.concurrent.atomic.AtomicInteger();
+
+    public int startupLearnFailures() { return startupLearnFailures.get(); }
 }

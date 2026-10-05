@@ -144,8 +144,14 @@ public final class BirInferenceStage {
                         List.of("rule=" + r.id, "confidence=" + confidence)));
                     return BirResult.hit(reply, confidence);
                 }
-            } catch (RuntimeException ignore) {
-                // rule failure must not abort mind
+            } catch (RuntimeException e) {
+                // RECON-W32.33. Aborting the mind is the wrong instinct here, but the
+                // consequence was a LYING TRACE: if every rule throws, the fall-through
+                // still emitted "rules_evaluated=N, hit=0", asserting that N rules ran and
+                // none matched. That string is the explainability artefact surfaced by
+                // buildExplain, so the record said the rules were evaluated when they were
+                // not. The failure count is now part of the evidence.
+                ruleFailures.incrementAndGet();
             }
         }
         String stageName = simulacrumEnabled ? "BIR_RULES" : "BIR_SIMULACRUM";
@@ -245,4 +251,13 @@ public final class BirInferenceStage {
         if (lower.contains("slowest") || lower.contains("who is slow")) return "slowest";
         return "extremum";
     }
+
+    /** Rules that threw, so rules_evaluated in the evidence trace is an overstatement.
+     *
+     * <p>Unit: calls. RECON-W32.33.</p>
+     */
+    private final java.util.concurrent.atomic.AtomicInteger ruleFailures =
+            new java.util.concurrent.atomic.AtomicInteger();
+
+    public int ruleFailures() { return ruleFailures.get(); }
 }

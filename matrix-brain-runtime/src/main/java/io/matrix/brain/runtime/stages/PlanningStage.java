@@ -132,7 +132,15 @@ public final class PlanningStage {
                 if (n instanceof LatsNode lats && !lats.hasReflection()) {
                     try {
                         if (lats.parent() instanceof LatsNode) { reflector.reflect(lats, (LatsNode) lats.parent()); }
-                    } catch (Throwable ignored) {}
+                    } catch (Exception e) {
+                        // RECON-W32.33. catch (Throwable) here hid OOM and
+                        // StackOverflowError behind "no reflection happened", and the
+                        // reflection pass is LATS meta-learning: a failed reflection means
+                        // the tree was searched with an UNKNOWN SUBSET of nodes never
+                        // reflected on, which is a silently degraded search rather than a
+                        // failed one. Counted, and reported in the evidence below.
+                        reflectionFailures.incrementAndGet();
+                    }
                 }
             }
         }
@@ -140,7 +148,12 @@ public final class PlanningStage {
         int nodesAfter = tree.exportJson().length();
         long durationMs = (System.nanoTime() - startNs) / 1_000_000L;
         int nodesExpanded = Math.max(0, nodesAfter - nodesBefore);
-        int rolloutsCompleted = budget.iterations;
+        // RECON-W32.33. This was `= budget.iterations`, i.e. the REQUESTED count, not
+        // the achieved one. When runSearch throws it is caught above and iterationsRun
+        // stays 0, while this line still reported the full budget — so the trace claimed N
+        // rollouts completed having completed none. The outer catch does set planned=false
+        // honestly; this line contradicted it three lines later, in the same record.
+        int rolloutsCompleted = iterationsRun;
         int bestPathDepth = (best == null) ? 0 : bestPathDepth(tree.root(), best);
         boolean planned = best != null;
 
@@ -153,7 +166,12 @@ public final class PlanningStage {
             ev.add("tier=" + tier);
             ev.add("durationMs=" + durationMs);
             ev.add("nodesExpanded=" + nodesExpanded);
-            ev.add("rolloutsCompleted=" + rolloutsCompleted);
+            ev.add("rolloutsCompleted=" + rolloutsCompleted
+                       + " of " + budget.iterations + " requested");
+            if (reflectionFailures.get() > 0) {
+                ev.add("reflectionFailures=" + reflectionFailures.get()
+                    + " (the search ran on a tree where those nodes were NOT reflected)");
+            }
             ev.add("bestPathDepth=" + bestPathDepth);
             ev.add("planned=" + planned);
             trace.add(BrcStep.of("MCTS", planned, planned ? 0.85 : 0.30, ev));
@@ -192,4 +210,15 @@ public final class PlanningStage {
         }
         return 1;
     }
+
+    /**
+     * Reflection passes that threw during the last search. Unit: calls. RECON-W32.33.
+     *
+     * <p>Non-zero means the tree was searched with an unknown subset of nodes never
+     * reflected on — a degraded search that used to look identical to a clean one.</p>
+     */
+    private final java.util.concurrent.atomic.AtomicInteger reflectionFailures =
+            new java.util.concurrent.atomic.AtomicInteger();
+
+    public int reflectionFailures() { return reflectionFailures.get(); }
 }

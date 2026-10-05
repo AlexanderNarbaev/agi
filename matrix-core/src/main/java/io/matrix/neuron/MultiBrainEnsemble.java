@@ -125,9 +125,19 @@ public final class MultiBrainEnsemble {
                 if (brainSig != null) {
                     allWords.add(brainSig);
                 }
-            } catch (Exception e) {
-                // skip failing brains silently
-            }
+                } catch (Exception e) {
+                    // RECON-W32.33. "Skip failing brains silently" is how a 2-brain result
+                    // came to look exactly like a 4-brain one. The ensemble concatenates
+                    // contributions into a signature and a brain that throws is dropped,
+                    // so the signature is silently SHORTER and the caller cannot tell a
+                    // degraded answer from a full one.
+                    failedBrains.incrementAndGet();
+                    if (failedBrains.get() == 1) {
+                        System.err.println("[MultiBrainEnsemble] a brain FAILED and was "
+                            + "excluded: " + e + " - the signature is DEGRADED and shorter "
+                            + "than a full ensemble's, which previously went unsaid");
+                    }
+                }
         }
 
         // Flatten into a single long[]
@@ -208,4 +218,13 @@ public final class MultiBrainEnsemble {
     }
 
     record BrainEntry(String modelName, HierarchicalBrain brain) {}
+
+    /** Brains excluded from the last signature, which is therefore shorter than a full ensemble's.
+     *
+     * <p>Unit: calls. RECON-W32.33.</p>
+     */
+    private final java.util.concurrent.atomic.AtomicInteger failedBrains =
+            new java.util.concurrent.atomic.AtomicInteger();
+
+    public int failedBrains() { return failedBrains.get(); }
 }

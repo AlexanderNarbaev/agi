@@ -145,9 +145,22 @@ public record ActivationRecord(
             if (t.isEmpty()) continue;
             try {
                 vals.add(Float.parseFloat(t));
-            } catch (NumberFormatException ignored) {
-                // Skip a non-numeric element rather than failing the whole record.
+        } catch (NumberFormatException e) {
+            // RECON-W32.33. Skipping a non-numeric element was defensible as POLICY, and
+            // indefensible as SILENCE: dropping an element SHRINKS the output and SHIFTS
+            // every later index, so a malformed value silently corrupts the tensor that
+            // distillation will learn from. This file's own RECON-W21 note records a
+            // sibling defect of exactly this shape — a wrong-length tensor that shipped
+            // because a test asserted only that the array was non-empty, never its length.
+            // Counted now, and the count is what tells a caller the length is not what
+            // the caller asked for.
+            droppedElements.incrementAndGet();
+            if (droppedElements.get() == 1) {
+                System.err.println("[ActivationRecord] dropped a non-numeric element: " + e
+                    + " - the result is SHORTER than requested and every later index is "
+                    + "SHIFTED, so downstream consumers see shifted values");
             }
+        }
         }
         float[] out = new float[vals.size()];
         for (int i = 0; i < out.length; i++) out[i] = vals.get(i);
@@ -219,4 +232,22 @@ public record ActivationRecord(
         if (close < 0) return null;
         return s.substring(open + 1, close).trim();
     }
+
+    /** Non-numeric elements dropped: the array is SHORTER than requested and every later index is shifted.
+     *
+     * <p>Unit: calls. RECON-W32.33.</p>
+     */
+    private static final java.util.concurrent.atomic.AtomicInteger droppedElements =
+            new java.util.concurrent.atomic.AtomicInteger();
+
+    /**
+     * Non-numeric elements dropped from any record read by {@link #parse}, ever.
+     *
+     * <p>RECON-W32.33. Static because {@code parse} is static and this class is a record,
+     * so there is no instance to hang a counter on. Unit: elements. Non-zero means a
+     * parsed record was SHORTER than its input and every later index in it is
+     * SHIFTED relative to the source — so a consumer must not assume positional
+     * correspondence.</p>
+     */
+    public static int droppedElements() { return droppedElements.get(); }
 }

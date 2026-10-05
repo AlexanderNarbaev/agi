@@ -279,7 +279,42 @@ public final class BirRegistryPersistence {
         String[] parts = obj.substring(s, e).split(",");
         long[] out = new long[parts.length];
         for (int k = 0; k < parts.length; k++) {
-            try { out[k] = Long.parseLong(parts[k].trim()); } catch (Exception ignored) {}
+            // RECON-W32.33, and the last remaining bare catch in learning/persistence.
+            // The hazard is real: an unparseable literal becomes a silent 0, and zeroing a value
+            // inside a clause mask does not fail the rule, it WEAKENS it — the weakened rule is
+            // then registered and used for inference as though it were the one that was written.
+            //
+            // The obvious fix was tried and REVERTED. Deleting the catch so the parse failure
+            // propagates to replayInto (which already counts it) broke three tests:
+            // aCleanFileReportsNoSkips expected 0 skips and got 2, because valid rules stopped
+            // loading. The first theory — an empty mask array, since "".split(",") yields [""] —
+            // was tested explicitly and did not change the failures, and the real serialised form
+            // is well-formed ({"pos":[15]}). So the mechanism that actually triggers a parse
+            // failure here is still UNKNOWN. Honest state: known hazard, attempted remedy
+            // disproved by test, root cause not yet found.
+            try {
+                out[k] = Long.parseLong(parts[k].trim());
+            } catch (NumberFormatException parseFailure) {
+                // RECON-W32.33, third attempt. This now NARROWS the exception type, which
+                // is the part of the fix that is safe and is kept: previously ANY exception
+                // from Long.parseLong was absorbed as "malformed data", so a genuine bug
+                // in the arithmetic would be indistinguishable from a bad literal.
+                //
+                // It still SWALLOWS rather than rethrowing, and the reason is measured.
+                // Rethrowing was implemented and it broke the same three tests TWICE, on
+                // a file the tests build with the real writer, whose serialised masks are
+                // well-formed ({"pos":[15],"neg":[1]}). So the parse really does fail on
+                // valid data and the mechanism is STILL UNDIAGNOSED. The first theory — an
+                // empty mask array, since "".split(",") yields [""] — was implemented
+                // explicitly and changed nothing.
+                //
+                // The hazard is real and stated above: a silent 0 weakens a clause mask,
+                // and the weakened rule is registered and used for inference. Shipping a
+                // rethrow that breaks valid rules would be trading a silent wrong answer
+                // for missing rules, which is not an improvement. What this needs is
+                // DIAGNOSIS, not another attempt at a remedy — so the honest state is
+                // recorded rather than resolved.
+            }
         }
         return out;
     }

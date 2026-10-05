@@ -148,9 +148,22 @@ public final class HierarchicalMemory {
         for (var listener : storeListeners) {
             try {
                 listener.accept(entry);
-            } catch (Exception ignored) {
-                // listeners must not break the store path
+                    } catch (Exception e) {
+            // RECON-W32.33. The comment said "listeners must not break the store path",
+            // which is POLICY, and said nothing about the CONSEQUENCE. The listener is the
+            // persistence hook: PersistentHierarchicalMemory registers one that sets
+            // dirty = true, and that flag is the only thing that drives the flush. A
+            // throwing listener therefore leaves the entry in the in-memory map (never
+            // lost while running) and never marked dirty — so it is never written, and
+            // is gone at the next restart. Keeping the store path alive is correct;
+            // losing the write in silence is not.
+            listenerFailures.incrementAndGet();
+            if (listenerFailures.get() == 1) {
+                System.err.println("[HierarchicalMemory] a store listener FAILED: " + e
+                    + " - the entry is in memory ONLY and WILL be lost on restart; "
+                    + "further listener failures are counted");
             }
+        }
         }
 
         // Auto-evict L0 if over capacity
@@ -345,4 +358,13 @@ public final class HierarchicalMemory {
         }
         return Math.min(1.0, (double) count / Math.max(words.length, 1) * 5);
     }
+
+    /** Store listeners that threw: an entry stored in memory and never marked for flush, so it will be absent after a restart.
+     *
+     * <p>Unit: calls. RECON-W32.33.</p>
+     */
+    private final java.util.concurrent.atomic.AtomicInteger listenerFailures =
+            new java.util.concurrent.atomic.AtomicInteger();
+
+    public int listenerFailures() { return listenerFailures.get(); }
 }

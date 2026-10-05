@@ -30,12 +30,38 @@ public final class KnowledgeExchangeProtocol {
                     while (e < line.length() && line.charAt(e) != ',' && line.charAt(e) != '}') e++;
                     conf = Double.parseDouble(line.substring(s, e).trim());
                 }
-            } catch (NumberFormatException ignore) {}
+            } catch (NumberFormatException e) {
+                    // RECON-W32.33. LEGITIMATE to swallow, per the W32.26 audit: this is a
+                    // lenient field extractor over UNTRUSTED federated input, and its
+                    // defaults (conf = 0.0, ts = 0) are inert — no consumer reads them as
+                    // a real confidence or a real timestamp, and PromotionGate decides what
+                    // is actually taught. A malformed confidence becoming 0.0 is the
+                    // correct answer for "not stated", not a lost lesson.
+                    //
+                    // The defect that IS real in this class is separate and NOT handled
+                    // here: fromJsonLine does no shape validation, so a TORN line yields a
+                    // Fact with empty id/input/answer that is then taught as
+                    // "fed-<node>- => ". That is a fabrication-shaped defect in a method,
+                    // not in this catch, and it is listed as its own open item.
+                }
             long ts = 0L;
             try {
                 int i = line.indexOf("\"ts\":");
                 if (i >= 0) ts = Long.parseLong(line.substring(i + 5).replaceAll("[^0-9].*", ""));
-            } catch (NumberFormatException ignore) {}
+            } catch (NumberFormatException e) {
+                    // RECON-W32.33. LEGITIMATE to swallow, per the W32.26 audit: this is a
+                    // lenient field extractor over UNTRUSTED federated input, and its
+                    // defaults (conf = 0.0, ts = 0) are inert — no consumer reads them as
+                    // a real confidence or a real timestamp, and PromotionGate decides what
+                    // is actually taught. A malformed confidence becoming 0.0 is the
+                    // correct answer for "not stated", not a lost lesson.
+                    //
+                    // The defect that IS real in this class is separate and NOT handled
+                    // here: fromJsonLine does no shape validation, so a TORN line yields a
+                    // Fact with empty id/input/answer that is then taught as
+                    // "fed-<node>- => ". That is a fabrication-shaped defect in a method,
+                    // not in this catch, and it is listed as its own open item.
+                }
             return new Fact(id, input, answer, conf, ts);
         }
     }

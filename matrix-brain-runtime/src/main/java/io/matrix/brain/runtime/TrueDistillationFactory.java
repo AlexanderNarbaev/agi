@@ -139,8 +139,19 @@ public final class TrueDistillationFactory {
                 "run-" + System.currentTimeMillis(),
                 r.source, r.captures, (int) sourceBytes, 0, r.birClausesSynthesized(), 0, r.fidelity,
                 r.durationMs, System.currentTimeMillis(), r.artifactHash));
-        } catch (java.io.IOException ignored) {
-            // ledger write failure is non-fatal; the Result is still returned
+        } catch (java.io.IOException e) {
+            // RECON-W32.33. Non-fatal is right; invisible is not. The DistillationLedger
+            // is the audit trail for a run that ALREADY synthesised a BIR and computed an
+            // artifactHash which the returned Result exposes. A failed write yields an
+            // artefact whose hash no ledger entry vouches for — a lost write in the one
+            // subsystem whose entire job is to prove what happened.
+            ledgerWriteFailures.incrementAndGet();
+            if (ledgerWriteFailures.get() == 1) {
+                System.err.println("[TrueDistillationFactory] LEDGER WRITE FAILED for "
+                    + "source=" + r.source + " hash=" + r.artifactHash + ": " + e
+                    + " - the artefact was produced and its hash is NOT recorded, so "
+                    + "nothing vouches for it; further failures are counted");
+            }
         }
         if (diskBudget != null && sourceBytes > 0) {
             diskBudget.recordWrite("distill:" + r.source, sourceBytes);
@@ -200,5 +211,14 @@ public final class TrueDistillationFactory {
             return "no-sha256";
         }
     }
+
+    /** Ledger writes that failed, so an artefact exists with no ledger entry vouching for it.
+     *
+     * <p>Unit: calls. RECON-W32.33.</p>
+     */
+    private final java.util.concurrent.atomic.AtomicInteger ledgerWriteFailures =
+            new java.util.concurrent.atomic.AtomicInteger();
+
+    public int ledgerWriteFailures() { return ledgerWriteFailures.get(); }
 }
 
