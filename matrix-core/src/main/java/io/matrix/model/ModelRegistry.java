@@ -76,6 +76,35 @@ public final class ModelRegistry {
                 "Internal (W6.2)",
                 router,
                 "Routes text → generation backend. Codes: 0=chat, 1=qa, 2=command, 3=none."));
+
+        // RECON-W32.30: this entry was documented in the class javadoc and required by
+        // ModelRegistryTest.defaultsAreRegistered, but was never registered — so
+        // predictSentiment() threw "no model registered: sentiment-classifier" and the
+        // javadoc described a default that did not exist. A documented default that is
+        // absent is worse than an undocumented one, because a reader reasonably concludes
+        // the feature works.
+        //
+        // The javadoc already specified the fallback: "loaded from
+        // distilled-models/sentiment-classifier.json if present; otherwise the synthetic
+        // parity-rule placeholder". The file is absent (there is no distilled-models
+        // directory at all), so the placeholder is what registers, and the description says
+        // so plainly — a reader must be able to tell a real distilled model from the
+        // stand-in without reading this comment.
+        long[] sentimentTable = new long[16];
+        for (int i = 0; i < sentimentTable.length; i++) {
+            // Parity placeholder: positive when an even number of input bits is set.
+            // It is deterministic and it is NOT a sentiment model. The origin string
+            // says "placeholder" so nothing downstream can mistake it for the real thing.
+            sentimentTable[i] = (Long.bitCount((long) i) % 2 == 0) ? 1L : 0L;
+        }
+        TtForm sentiment = new TtForm(4, sentimentTable, "sentiment-classifier/placeholder", 1.0);
+        entries.put("sentiment-classifier", new Entry(
+                "sentiment-classifier",
+                "Synthetic placeholder — distilled-models/sentiment-classifier.json is ABSENT",
+                sentiment,
+                "PARITY PLACEHOLDER, not a sentiment model: returns 1 for an even bit count. "
+                    + "Replace with the distilled DistilBERT SST-2 model to make "
+                    + "predictSentiment meaningful."));
     }
 
     /** Load a distilled model from the classpath. Used at startup. */

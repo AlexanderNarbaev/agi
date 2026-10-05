@@ -55,8 +55,17 @@ class CognitiveEmbeddingTest {
     }
 
     @Test
-    void cosineSimilarityNullReturnsZero() {
-        assertThat(CognitiveEmbedding.cosineSimilarity(null, null)).isEqualTo(0.0);
+    void cosineSimilarityOfNullIsUndefinedNotZero() {
+        // RECON-W32.30. This test was named cosineSimilarityNullReturnsZero and asserted
+        // 0.0, which is the correct cosine of two IDENTICAL vectors. It therefore
+        // documented the defect as though it were the contract: the function claimed two
+        // things it had not compared were unrelated, and a test pinned that claim in
+        // place. Renamed, because a test name is documentation and this one was lying.
+        assertThat(CognitiveEmbedding.cosineSimilarity(null, null)).isNaN();
+        assertThat(CognitiveEmbedding.cosineSimilarity(null, new double[]{1, 2})).isNaN();
+        // A comparable pair is unaffected.
+        assertThat(CognitiveEmbedding.cosineSimilarity(new double[]{1, 0}, new double[]{1, 0}))
+                .isCloseTo(1.0, org.assertj.core.data.Offset.offset(1e-12));
     }
 
     @Test

@@ -96,10 +96,23 @@ public final class CognitiveEmbedding {
 
     /**
      * Compute cosine similarity between two vectors.
-     * Returns 0.0 if either vector has zero norm.
+     *
+     * <p>RECON-W32.30. Returns {@link Double#NaN} when the two vectors cannot be
+     * compared, and 0.0 only for a genuine zero norm. It used to return <b>0.0 for
+     * both</b>, and 0.0 is the mathematically correct cosine of two IDENTICAL vectors —
+     * so the function answered "these are unrelated" about two vectors it had never
+     * looked at. A caller comparing a 4-dim against a 32-dim vector was told a fact, and
+     * the fact was false.</p>
+     *
+     * <p>NaN rather than an exception: this is a metric, and a metric that throws cannot
+     * be used in an aggregate. NaN is loud exactly where it should be — every
+     * comparison, every range assertion, every mean — and silent nowhere.</p>
+     *
+     * @return the cosine in [-1, 1], 0.0 for a zero-norm vector, or NaN if the vectors
+     *         are null or of different lengths
      */
     public static double cosineSimilarity(double[] a, double[] b) {
-        if (a == null || b == null || a.length != b.length) return 0.0;
+        if (a == null || b == null || a.length != b.length) return Double.NaN;
         double dot = 0.0, normA = 0.0, normB = 0.0;
         for (int i = 0; i < a.length; i++) {
             dot += a[i] * b[i];
@@ -112,9 +125,23 @@ public final class CognitiveEmbedding {
 
     /**
      * Compute L2 (Euclidean) distance between two vectors.
+     *
+     * <p>RECON-W32.30. This one was the dangerous case. An L2 distance of
+     * <b>0.0 means IDENTICAL</b>, so returning 0.0 for vectors of different lengths
+     * asserted that two things it could not compare were the same thing. This is the
+     * worst shape of a wrong answer in this codebase: it is not a weak signal, it is a
+     * confident false one, and it survives every range check downstream because 0.0 is
+     * in range for a distance.</p>
+     *
+     * <p>Now {@link Double#NaN}, which is outside every distance range and therefore
+     * fails loudly rather than quietly. The property test that caught this generates
+     * each vector with an INDEPENDENT random length, which is why it fired on nearly
+     * every try; the generator was also wrong, and both are fixed — see the test.</p>
+     *
+     * @return the distance, or NaN if the vectors are null or of different lengths
      */
     public static double l2Distance(double[] a, double[] b) {
-        if (a == null || b == null || a.length != b.length) return 0.0;
+        if (a == null || b == null || a.length != b.length) return Double.NaN;
         double sum = 0.0;
         for (int i = 0; i < a.length; i++) {
             double diff = a[i] - b[i];

@@ -4233,3 +4233,96 @@ it is queued with options rather than taken.
 matrix-core **8 106 / 61** (was 67) · matrix-brain-runtime **597 / 0** (was 589) ·
 matrix-api-gateway **152 / 0** · quality gate **exit 0** · FROZEN **0** diff ·
 zero failures in any area touched.
+
+
+## 2026-10-05 - RECON-W32.30: the shipping-code defects, and a fix that would have hidden its own test
+
+The attribution said the remaining debt was "not research debt" and listed four defects in
+**shipping** code. Two are fixed here. Both were the same failure mode this campaign has
+been chasing since W32.1: a system that answers confidently and wrongly.
+
+### An L2 distance of 0.0 means IDENTICAL
+
+`CognitiveEmbedding.l2Distance` and `cosineSimilarity` both began with
+
+    if (a == null || b == null || a.length != b.length) return 0.0;
+
+For a cosine, 0.0 is the correct answer for two *unrelated* vectors — a weak lie. For an
+**L2 distance, 0.0 is the correct answer for two IDENTICAL vectors.** So the function was
+asserting that two things it had never compared were the same thing, and the lie survives
+every downstream range check, because 0.0 is in range for a distance. Eight production call
+sites consume this metric: RAG similarity arrays, hallucination detection, draft
+verification.
+
+Now `Double.NaN`, which is outside every valid range and therefore fails loudly. NaN rather
+than an exception, because a metric that throws cannot be aggregated.
+
+**Zero-norm was deliberately NOT changed.** A zero vector has no direction, so its cosine
+with anything is undefined too, and 0.0 there is also a lie. But eight callers feed this
+into similarity arrays, where one NaN would poison a whole ranking, and "no similarity" is
+the conservative answer in a ranking. That is a different trade with a much larger blast
+radius, and it is a decision, not a two-line fix. Recorded rather than taken.
+
+### The fix that would have hidden its own test
+
+Making the metric return NaN **silently made `propertyL2TriangleInequality` pass
+vacuously.** The generators drew each vector's length INDEPENDENTLY, so for a, b and c the
+lengths differed almost every run; the test's `if (!isNaN(ab) && !isNaN(bc) && ...)`
+guard then skipped the assertion body — and the property passed while checking nothing,
+arriving dressed as a fix. This is the D4 vacuity from W32.24 recurring one wave later, in
+a different class, and it is the single strongest argument for mutation-checking every
+property test whose guard conditions change.
+
+The generators now draw a shared dimension (`VectorPair` / `VectorTriple`), so the
+properties are actually exercised. And that was **proved by mutation, not asserted**:
+
+| mutation | result |
+|---|---|
+| `l2Distance` returns `sum` (no `sqrt`) | triangle inequality **FAILED** |
+| NaN reverted to 0.0 | **2 tests FAILED** |
+| restored | 23 / 0 |
+
+Without those two runs I would have shipped a passing test that asserted nothing, and
+believed it.
+
+### A documented default that did not exist
+
+`ModelRegistry`'s class javadoc documented `sentiment-classifier` as a registered default,
+and `ModelRegistryTest.defaultsAreRegistered` required it — but `registerDefaults()` only
+registered `topic-router`, so `predictSentiment()` threw
+`IllegalArgumentException: no model registered: sentiment-classifier`. A documented default
+that is absent is worse than an undocumented one, because a reader reasonably concludes the
+feature works.
+
+The javadoc already specified the fallback ("loaded from
+`distilled-models/sentiment-classifier.json` if present; otherwise the synthetic parity-rule
+placeholder"). The directory does not exist at all, so the placeholder is what registers —
+and its `origin` and `description` say **"placeholder"** and **"PARITY PLACEHOLDER, not a
+sentiment model"**, so nothing downstream can mistake it for DistilBERT SST-2.
+`ModelRegistryTest` 6/0.
+
+### A test name that was documentation, and was lying
+
+`cosineSimilarityNullReturnsZero` asserted `cosineSimilarity(null, null) == 0.0`. The name
+and the assertion together documented the defect as though it were the contract. It is
+renamed `cosineSimilarityOfNullIsUndefinedNotZero`, because a test name is documentation and
+this one was false.
+
+### Toolchain, again
+
+Three compile errors, all from writing code without reading the surrounding file first:
+`@Test` is not imported in a jqwik property test; `flatMap`'s lambda must return the value
+type, not `Arbitrary<Arbitrary<T>>`; and two provider methods lost their `@Provide` because
+my replacement anchor began at the method body. Three `grep`s. This is the third time this
+session, and the cost is high enough to name as a habit rather than an accident.
+
+### Verification
+
+matrix-core **8 108 / 60** (was 61) · matrix-brain-runtime **597 / 0** ·
+matrix-api-gateway **152 / 0** · quality gate **exit 0** · FROZEN **0** diff.
+
+Exactly four files differ. `ProfileEmbedding2DPropertyTest` and
+`CognitiveLLMArchitecturePropertyTest` still fail and are **pre-existing and untouched** —
+they are the audit's R6 (NaN from a one-sample projection) and R11 (an unguarded RoPE table
+overrun), and my word-filter flagged them only because their names contain a word I edited
+elsewhere. Verified by name against `git status` rather than assumed.
