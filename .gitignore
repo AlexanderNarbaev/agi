@@ -169,3 +169,9 @@ docs-v2/operations/bench/w30-perf-20261002-122937.json
 # little. The two files that ARE force-added are the ones a result depends on:
 # holdout.json (the evaluation contract) and acquisition-report.json (what was actually
 # obtained, including the failures).
+
+# RECON-W33.1: real BitNet checkpoint (1178.6 MB), provisioned by
+# scripts/provision-bitnet.sh. Weights are downloaded, not committed.
+data/models/bitnet-checkpoint/
+data/models/**/*.safetensors
+data/models/**/*.safetensors.sha256

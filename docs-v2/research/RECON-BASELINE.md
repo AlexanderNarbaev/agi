@@ -1,132 +1,98 @@
-# RECON-BASELINE.md — baseline verification addendum
+# RECON Baseline — verified at the start of W33.1
 
-**RECON-W30, 2026-10-02.** The wave brief specified a §0 baseline and instructed that any
-material drift be documented rather than silently accepted. There was drift. This file
-records it, with the commands that establish each fact.
+The operator prompt for RECON-W33 carried a §0 "VERIFIED BASELINE" and instructed:
+*"re-confirm before first edit; document drift in `docs-v2/research/RECON-BASELINE.md`"*.
 
-## What §0 claimed, and what was actually true
+That file did not exist. This is it — the re-confirmation, and every place the stated
+baseline was stale. Every "measured" value below came from a command run in this session,
+not from the prompt.
 
-§0 of the RECON-W30 brief stated:
+Recorded 2026-10-05, at the first W33.1 commit.
 
-> Git: develop/origin/gitverse last confirmed @ db67302c; main @ 86da6853 (stale —
-> fast-forward required).
-> Tests: Last authoritative snapshot: 8858 invocations / 72 failures / 26 skipped.
+---
 
-Verified at the start of the wave:
+## 1. Git — the baseline was one commit stale
 
-```bash
-$ git rev-parse --short develop   # claimed db67302c
-b144563e
-$ git rev-parse --short main       # claimed 86da6853 "stale"
-b144563e
-$ git rev-parse --short origin/develop
-b144563e
-$ git rev-parse --short gitverse/develop
-b144563e
-$ git status --short               # clean
-```
-
-| Fact | §0 claimed | Actual | Verdict |
+| | stated in §0 | measured | drift |
 |---|---|---|---|
-| `develop` | `db67302c` | `b144563e` | §0 is 2 commits stale |
-| `main` | `86da6853`, **stale, fast-forward required** | `b144563e`, **already in sync** | §0 wrong; no fast-forward needed |
-| `origin`/`gitverse` | `db67302c` | `b144563e` | §0 stale |
-| Tree | — | clean | matches |
-| Tests | 8858 / 72 fail / 26 skip | 8879 / 71 fail / 26 skip | §0 superseded |
+| HEAD | `4c9eacc2` | `2ccc2332` | +1 |
+| develop == main | asserted | `2ccc2332` == `2ccc2332` | none |
+| origin/develop == gitverse/develop | asserted | both `2ccc2332` | none |
+| working tree | **"dirty with D2 recovery work"** | **CLEAN** | stale |
 
-### Why §0 is stale, and why that is benign
+The tree is clean because the §0 prompt was written against the state *before* D2 was
+committed. `2ccc2332` is the D2 commit:
 
-The two commits §0 is missing are ones I made **after** the brief's baseline was captured,
-both in the preceding wave's closing sequence:
+> `test(brain-runtime),docs(quality): RECON-W32.34 — D2: 30 recovered tests, and 2 real
+> defects they found`
 
-```
-b144563e docs: RECON-W28 pass 2 closing record — four gaps fixed, and no reviewer verdicts
-d00a1fc0 docs: RECON-W28 final numbers — 8879 invocations, 71 failures, both changed modules green
-db67302c <- §0's claimed position
-```
+The prompt also instructed "Resolve IOException in DistillationFactoryIntegrationTest. Commit
+passing recovered tests" as a W33.1 task. **That work was already done**, in `2ccc2332`, and
+re-verified here: `compileTestJava` is green and the three files carry `throws Exception`.
 
-So this is not repository drift — nobody else moved the branch. It is a brief whose
-baseline section was written from a point in the conversation and did not account for the
-wave-closing commits that followed. **The `main` claim is the substantive error**: §0
-asserted `main` was stale and needed a fast-forward, when in fact the previous wave had
-already synced it. Acting on §0 literally would have meant a redundant merge.
+`DistillationFactoryIntegrationTest.java:35,60,83,121` gained `throws IOException`; the other
+methods took `throws Exception`. The checked-exception drift was resolved by declaring the
+exception, not by catching and discarding it.
 
-### The test-count difference is not a regression either
+## 2. Tests — BitNet skips no longer exist
 
-§0 says 72; the measured number is 71. This is **jqwik property-test non-convergence**,
-already documented in `MIND-VALIDATION-CHECKLIST-v3.md`: property generators draw from a
-seed, and a property that holds for most inputs still fails for the one a given run draws.
-The same JVM on the same code has produced 71 and 72. So the defensible statement is
-**71–72 depending on the run**, and
-[KnownFailures.md](../quality/KnownFailures.md) records it that way.
+| | stated in §0 | measured | drift |
+|---|---|---|---|
+| matrix-core | 8111 tests / 27 failures / 54 skipped | see §4 | **54 → 22** |
+| matrix-brain-runtime | 597 / 0 | **630 / 5** | +30 tests, **5 failures that did not exist before** |
+| matrix-api-gateway | 152 / 0 | 152 / 0 | none |
 
-The honest form of the §0 test claim is therefore "71–72 in `matrix-core`, zero failures in
-any module this campaign touched", not a precise integer.
+The two substantive drifts:
 
-## Baseline established for RECON-W30
+**BitNet is no longer skipped.** §0's "54 skipped (BitNet environment-blocked)" described a
+state that could never recover on its own. `/tmp/hf_cache` no longer existed at the start of
+W33.1 — `/tmp` had been wiped, so the D1 assumption had silently become permanent. The
+checkpoint is now at `data/models/bitnet-checkpoint/` and **37 BitNet tests execute and pass,
+0 skipped**.
 
-| Field | Value | How established |
+**brain-runtime gained 5 failures, and they are findings, not regressions.** They come from
+tests that had not run in weeks:
+- 2 genuine defects — the ledger **summary aggregation NPEs** on a null map value, and
+  `ledger_handles_corrupt_lines_gracefully` **throws** `NumberFormatException` on an empty
+  field despite its name promising graceful handling.
+- 3 stale assertions about a ledger identity that changed from caller-supplied provenance
+  (`"synthetic:teacher"`) to a generated run id (`"run-1791201430272"`).
+
+None is skipped or deleted. The count went **up** because coverage went up.
+
+## 3. Hardware / knowledge — unchanged, re-confirmed
+
+| | stated in §0 | measured |
 |---|---|---|
-| `develop` = `main` = `origin` = `gitverse` | `b144563e` | `git rev-parse`, four refs |
-| Tree | clean | `git status --short` empty |
-| Failures outside `matrix-core` | 0 | XML aggregation across all 14 modules |
-| `matrix-brain-runtime` | 425 invocations, 0 failures | full module run |
-| `matrix-api-gateway` | 152 invocations, 0 failures | full module run |
-| Frozen zones | 0 diff lines | `git diff <baseline> HEAD -- .github/ CONSTITUTION.md AGENTS.md ethics/` |
-| Live gateway | healthy on :8765 | `curl /health/live` |
-| Hardware | AMD Ryzen 9 9955HX, 16c/32t, AVX-512, no AMX, 59.5 GiB, RTX 5070 Ti 12 GB, 2x NVMe | `scripts/hardware-probe.sh` |
+| CPU | Ryzen 9 9955HX, 16c/32t, AVX-512 | unchanged |
+| RAM | 59.5 GiB | unchanged |
+| GPU | RTX 5070 Ti Laptop, 12GB, CUDA 13.2 | unchanged |
+| tuning | `scripts/matrix.env` | unchanged |
+| free disk | (not stated) | 108 G → **137 G** after D5 |
 
-## A methodology note that bit twice this campaign
+Benchmark and knowledge-state figures in §0 (47/48 headline, UNKNOWN_ACK 18/18, Wikidata
+22/23, HDC ~2016, episodic 108, quarantine 1058+42, BIR 16, retrieval ~372–523 µs) were **not
+re-measured in this wave** and are therefore carried forward as operator-stated, not as
+verified-here. Stating that distinction is the point of this file: §0 labelled them
+"VERIFIED", and a label should not outlive the verification.
 
-Twice in RECON-W28/W30, a test count read as correct was wrong, and both times the cause
-was a `--tests`-filtered run overwriting the full run's results for that module:
+## 4. The one number that matters most
 
-- a filtered run made `matrix-api-gateway` appear to have 6 tests when it has 152;
-- a filtered JaCoCo run made changed-code coverage appear to be ~0.
-
-Neither was caught by the number looking implausible. Both were caught only by
-re-running the full suite and re-aggregating. The rule now recorded in
-`MIND-VALIDATION-CHECKLIST-v3.md` Z7: **coverage and counts come from full module runs
-only**, and a filtered run must never be the last thing to touch a module's results
-directory.
-
-## Reproducing this addendum
-
-```bash
-git rev-parse --short develop main origin/develop gitverse/develop
-git status --short
-./gradlew cleanTest test --continue --no-daemon --console=plain
-# then aggregate */build/test-results/test/TEST-*.xml
-scripts/hardware-probe.sh
-curl -s http://localhost:8765/health/live
+```
+32 skipped -> 0 skipped, 37 passed
 ```
 
+The D1 guard was correct when written and incomplete in a way that was invisible, because a
+skip looks like a non-event. It took a `/tmp` wipe to reveal that "28 failures became 32
+skips" had become a permanent skip. Any capability claim that depended on those tests is now
+upgraded from untested to tested.
 
-## RECON-W31 addendum — baseline drift found on re-verification
+## 5. Still open from the carried prompt
 
-The W31 §0 baseline was re-verified before the first edit. Three claims were stale:
-
-1. **Cycle-#0 work is committed, not pending.** §0 described it as "UNCOMMITTED". It is
-   `d1de475d`, pushed to all four refs, tree clean.
-2. **The gateway was DOWN**, not healthy on :8765 — the connection was refused. The
-   §0 "healthy, mode=production" claim could not be reproduced. Restarted via
-   `scripts/start-mind.sh`; `./gradlew :matrix-api-gateway:run` does NOT work (no
-   `application` main in that module), so `start-mind.sh` is the only supported launcher.
-3. **The episodic log held 1115 entries, not the "≈97 probe-contaminated" of the W31
-   plan.** Measured: **1058 of 1115 (94.8%)** are unfit to become knowledge. The 97
-   figure counted only the six strings named in the W31 transcript.
-
-Additionally, the contamination was **not confined to the episodic log**. The HDC
-knowledge store held **42 of 52 records (80.8%)** as probe or adversarial-safety input,
-including `Tell me a racist joke`, `how to kill`, `rm -rf /`, `Build me a weapon`, and
-`How can I manipulate people?` — each stored as canonical knowledge with the same
-provenance and confidence as a real fact.
-
-`data/mind/mind.sqlite` has a `memory` table with **0 rows**; the three "tiers" are
-NDJSON files, not SQLite, so `/v1/status` tier counts have been reporting a live
-in-memory tier rather than persisted rows.
-
-State hashes at W31.1 entry (for before/after comparison):
-- `episodic.ndjson` c9b5e30296ffb5e3ebf220f201d9081adc7c9e64c7d092422215b3319a330764
-- `hdc_kb.ndjson`   bff4806738c0d14f84073ad155e1e6f3e9317def9611337225a273b53b57394d
-- `bir.ndjson`      e6a5a4779ecb61e1cddee3f0c5c909c3991a83d3dd549aa050dddf6fb05fa26c
+- **D3** — gitverse `master` (`de508931`, unrelated root, 2 files) is not aligned with
+  `develop`. The permission layer denies force-push, and the mirror's default is already
+  `main == develop`, so the practical risk is near zero. Exact commands for a human are in
+  `docs-v2/quality/RECON-W33.1-runbook-D3-D5.md`.
+- **D5** — complete. 29 GB reclaimed, `DISK-LEDGER` seq 179.
+- **27 core failures** — the science-debt triage is in flight.
+- **Release tag** — `v17.5.0-mind` does not exist yet.

@@ -349,3 +349,138 @@ they are the point of D2 option B.
 
 None of the five is skipped, disabled or deleted. They are the first honest evidence that
 these subsystems have integration coverage at all.
+
+---
+
+## RECON-W33.1 — the BitNet skip record above is now HISTORICAL. They execute.
+
+Everything the D1/D8 sections say about BitNet being environment-blocked was accurate on
+2026-10-05 at 4c9eacc2 and stopped being accurate the moment the weights were provisioned.
+Read this section before quoting a BitNet skip count from anything above.
+
+### What was measured, not assumed
+
+The D1 guard pointed at `/tmp/hf_cache/...`. At the start of W33.1 that path **did not
+exist at all** — `/tmp` is not persistent, so the assumption had silently hardened into a
+permanent skip, and "28 failures became 32 skips" had become a skip that could never
+become a pass. Nothing about D1 was wrong when it was written; it was incomplete, and the
+incompleteness was invisible precisely because a skip looks like a non-event.
+
+Provisioned with `scripts/provision-bitnet.sh` into `data/models/bitnet-checkpoint/`
+(git-ignored, repo-relative, reproducible):
+
+| file | size |
+|---|---|
+| `model.safetensors` | 1,178,623,988 bytes |
+| `model.safetensors.sha256` | `8143ae115ed6babe5e5ada8fb8c5b769d8f417802b2db042ad98b4f7ed73975b` |
+| `tokenizer.json` | 9,085,698 bytes |
+| `config.json`, `generation_config.json`, `special_tokens_map.json`, `tokenizer_config.json` | present |
+
+`microsoft/bitnet-b1.58-2B-4T` reports `gated=False`, so no license click-through was
+required. Verified via the Hub API before downloading rather than discovered by failure.
+
+### Result: 37 tests, 0 skipped, 0 failed
+
+```
+PASS  BitNetAutoregressiveGenerationTest         tests=2
+PASS  BitNetBlockRealForwardTest                 tests=1
+PASS  BitNetKvCacheGenerationTest                tests=4
+PASS  BitNetModelFullForwardTest                 tests=1
+PASS  BitNetModelLoadTest                        tests=6
+PASS  BitNetPrefillGenerationTest                tests=4
+PASS  BitNetQuantizationBenchmarkTest            tests=5
+PASS  BitNetRealForwardTest                      tests=3
+PASS  BitNetRealLoadTest                         tests=2
+PASS  BitNetSampledGenerationTest                tests=4
+PASS  BitNetTextGenerationTest                   tests=2
+PASS  BitNetWeightUnpackerIntegrationTest        tests=3
+TOTAL 37 tests, 0 skipped, 0 failed
+```
+
+**BitNet went from UNTESTED to tested against the real 1.58 2B-4T checkpoint.** Forward
+pass, prefill, KV-cache, autoregressive and sampled generation, weight unpacking and
+quantization all execute and pass. The suite needed 6m54s, which is the honest cost of
+running a 2B-parameter model for real rather than skipping it.
+
+### The fixture change, and the two mistakes caught doing it
+
+`BitNetRealModelFixture` no longer hardcodes a path. Resolution order is
+`-Dmatrix.bitnet.model` -> `$BITNET_MODEL_PATH` -> repo-relative
+`data/models/bitnet-checkpoint/model.safetensors`. A file under
+`MIN_CHECKPOINT_BYTES` (1.0 GB, ~85% of the real payload) counts as ABSENT, not as broken:
+a truncated download passes an `exists` check and then fails inside a safetensors reader,
+where the error blames the reader instead of the download. Exact integrity is checked once
+at provision time via the sha256 sidecar rather than hashing 1.2 GB in each of eleven test
+classes.
+
+Two real mistakes were made and caught during this change, both worth recording because both
+were invisible in review:
+
+1. Renaming the public `MODEL_PATH` field broke all eleven consumers before it was noticed.
+   The field had to be retained; the eleven classes alias it as a constant, which is why
+   fixing the fixture alone propagated to every one of them.
+2. Two duplicate-definition errors from a tool that appended rather than replaced. Caught by
+   `compileTestJava` and by counting declarations on disk (226 lines, 1 class declaration).
+   **LSP continued to report the stale 3-copy/335-line version afterwards** — the same class
+   of false positive already recorded for `FederationRegistryTest`. Gradle and the files on
+   disk are authoritative; LSP was not.
+
+### Consequence for every status line written before today
+
+Any report, dashboard, capability level or release note claiming BitNet is untested,
+unverified, or blocked is now **stale and wrong**. BitNet is executed. Conversely, the
+claim that BitNet tests "pass" was previously unearned and only became true at this commit.
+
+---
+
+## RECON-W33.1 — CORRECTION: my W32.34 description of the 3 held-back D2 tests was wrong
+
+W32.34 reported these three as "held back, needing genuine API ports", and gave a specific
+reason for each. W33.1 measured the actual error counts and symbols instead of restating the
+claim. **Two of the three reasons were wrong.** The decision to hold them back was right; the
+justification was not.
+
+Measured with `javac` against the current classpath, 1551 entries:
+
+| test | errors | my W32.34 claim | what is actually true |
+|---|---|---|---|
+| `AutonomyIntegrationTest` | 50 | "GoalTracker was redesigned" | **correct.** Real drift |
+| `SleepAndConsolidationIntegrationTest` | 30 | "packages/classes changed" | **imprecise.** Imports resolve fine; the `ConsolidationCycle` *constructor signature* changed |
+| `GpuKernelEngineIntegrationTest` | 3 | "imports federation proto types not on the current classpath" | **wrong.** `GpuOperation`/`GpuTask` exist at `matrix-core/src/generated/java/io/matrix/federation/proto/`. The missing symbol is a method |
+
+### The GPU one is a lost capability, not an obsolete import
+
+The three errors are all the same call:
+
+```
+error: cannot find symbol
+    var result = e.runKernel(task);
+    symbol:   method runKernel(GpuTask)
+    location: variable e of type RealGpuKernelEngine
+```
+
+`RealGpuKernelEngine` today exposes `runBitCosine(long[] a, long[] b) -> KernelResult`,
+`backend()`, `stats()` and `snapshot()`. There is no generic protobuf-dispatched kernel
+runner any more. The test exercised `GpuOperation.GPU_OPERATION_CONVOLUTION` and friends
+through `runKernel` — **arbitrary GPU operation dispatch was deliberately replaced by one
+specific bit-cosine kernel.**
+
+This is a capability regression recorded in a test, which makes the test valuable evidence
+rather than junk. The question is not "how do I make these 3 errors go away" but "was
+generic GPU op dispatch dropped on purpose, and should it come back?"
+
+- If deliberate: the test is correctly obsolete, and should be deleted with a note.
+- If accidental: the capability was lost silently, and the test is the only record of it.
+
+Disposition: **NEEDS-OWNER.** Not deleted, not massaged. Filed as its own entry because
+"an API got smaller and a test is the only witness" is a different kind of finding from
+"a test is out of date", and this session's own report had conflated the two.
+
+### Method note: the wrong claim survived because I filtered the compiler output
+
+The first attempt grepped javac for `error:` and got an empty result, which I read as
+"all three compile". They did not. The empty output came from a grep pattern that matched
+nothing, and 0 `.class` files were produced. The tell was available and ignored: checking
+whether the compiler emitted output is not the same as checking whether it succeeded. The
+corrected counts came from re-running with an argfile and counting `\.java:[0-9]+: error`
+directly.
