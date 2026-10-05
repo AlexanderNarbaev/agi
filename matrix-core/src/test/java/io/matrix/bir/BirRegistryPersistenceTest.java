@@ -3,6 +3,10 @@ package io.matrix.bir;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
+import java.io.ByteArrayOutputStream;
+import java.io.PrintStream;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 
@@ -46,5 +50,33 @@ class BirRegistryPersistenceTest {
         BirRegistryPersistence pers = new BirRegistryPersistence(file);
         BirRegistry r = new BirRegistry();
         assertThat(pers.replayInto(r)).isEqualTo(0);
+    }
+
+    // ---- RECON-W32.24: the first-skip report must ACTUALLY PRINT ------------
+
+    @Test
+    void aSkippedRuleIsReportedNotOnlyCounted(@TempDir Path dir) throws Exception {
+        // The per-skip print was guarded by a never-true condition, so it had never run.
+        // This drives the real producer with a genuinely torn line and captures stderr.
+        Path store = dir.resolve("bir.ndjson");
+        // A TRUNCATED line, so parse() genuinely throws and the catch block is the
+        // code under test. My first fixture was {"not":"a rule"}, which parses fine and
+        // takes the op != "register" path - so the test exercised the OTHER skipped++
+        // and passed for the wrong reason, which is the trap this whole change is about.
+        Files.writeString(store, "{\"op\":\"register\",\"phi\":\n");
+        ByteArrayOutputStream err = new ByteArrayOutputStream();
+        PrintStream original = System.err;
+        int replayed;
+        try {
+            System.setErr(new PrintStream(err, true, StandardCharsets.UTF_8));
+            replayed = new BirRegistryPersistence(store).replayInto(new BirRegistry());
+        } finally {
+            System.setErr(original);
+        }
+        assertThat(replayed).as("a torn line must yield no rules").isEqualTo(0);
+        String printed = err.toString(StandardCharsets.UTF_8);
+        assertThat(printed)
+            .as("the first skip must be printed with its consequence; stderr was: %s", printed)
+            .contains("ABSENT from the registry");
     }
 }

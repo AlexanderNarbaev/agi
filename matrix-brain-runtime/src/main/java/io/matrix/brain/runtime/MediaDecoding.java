@@ -122,16 +122,21 @@ public final class MediaDecoding {
         // for the format, which is a different problem with a different fix. My first
         // attempt put this check beside the extension tests, where it was unreachable —
         // a real JPEG is binary, so it never reaches looksLikeText and falls here.
-        if (name.endsWith(".jpg") || name.endsWith(".jpeg") || name.endsWith(".bmp")
-                || name.endsWith(".gif") || name.endsWith(".webp") || name.endsWith(".tiff")) {
-            String fmt = name.endsWith(".bmp") ? "BMP" : name.endsWith(".gif") ? "GIF"
-                    : name.endsWith(".webp") ? "WebP" : name.endsWith(".tiff") ? "TIFF"
-                    : "JPEG";
+        // RECON-W32.24: the FORMAT is now read from the magic bytes, not from the
+        // filename. The first version said "the file looks like JPEG" on the strength of
+        // the name alone, so an ELF binary named photo.jpg was told it looked like a
+        // JPEG and might well be valid. This class's own rule is never to return a
+        // measurement you cannot support, and a filename is not a measurement. What we
+        // know for certain is the NAME says image and the CONTENT is neither PNG nor
+        // text - so we say exactly that, and name what IS supported.
+        String claimed = imageFormatFromName(name);
+        if (claimed != null) {
             return new Classification(Kind.UNKNOWN, false,
-                "refused: the file looks like " + fmt + ", and MATRIX decodes PNG ONLY. "
-                    + "The file may be perfectly valid - it is the FORMAT that is "
-                    + "unsupported. Convert it to PNG, or add a decoder; no image "
-                    + "perception will be invented from it.");
+                "refused: named as " + claimed + ", but its bytes are neither a PNG nor a "
+                    + "recognisable " + claimed + " header. That FORMAT is unsupported: "
+                    + "MATRIX decodes PNG only. The file may be perfectly valid in a "
+                    + "format we cannot read - convert it to PNG, or add a decoder; no "
+                    + "image perception will be invented from it.");
         }
         return new Classification(Kind.UNKNOWN, false,
             "refused: unrecognised content and no supported decoder for it");
@@ -185,6 +190,23 @@ public final class MediaDecoding {
      * Heuristic: mostly printable bytes with no NULs. Used only to tell text from binary,
      * never to decode media.
      */
+    /**
+     * The image format a filename CLAIMS, or null if the name claims none.
+     *
+     * <p>RECON-W32.24. Including {@code .tif} alongside {@code .tiff}, which the first
+     * version omitted - its own sibling. Returning the claim is honest; it is not a
+     * statement that the bytes are of that format.</p>
+     */
+    private static String imageFormatFromName(String name) {
+        String n = name.toLowerCase(java.util.Locale.ROOT);
+        if (n.endsWith(".jpg") || n.endsWith(".jpeg")) return "JPEG";
+        if (n.endsWith(".bmp")) return "BMP";
+        if (n.endsWith(".gif")) return "GIF";
+        if (n.endsWith(".webp")) return "WebP";
+        if (n.endsWith(".tif") || n.endsWith(".tiff")) return "TIFF";
+        return null;
+    }
+
     private static boolean looksLikeText(byte[] b) {
         if (b == null || b.length == 0) return false;
         int limit = Math.min(b.length, TEXT_SNIFF_BYTES);

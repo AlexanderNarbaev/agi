@@ -1,5 +1,8 @@
 package io.matrix.brain;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -11,6 +14,7 @@ import java.nio.file.Path;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
@@ -109,5 +113,101 @@ class LearningMemoryDurabilityTest {
         assertTrue(out.contains("EMPTY"),
             "and reported as starting empty, which is indistinguishable from a fresh "
                 + "start without it: " + out);
+    }
+
+    // ---- RECON-W32.24: durable() must not lie --------------------------------
+    //
+    // Each of these encodes a MEASURED reproduction from an independent code review,
+    // not a hypothetical. The reviewer ran them and got 15 737 escaped
+    // ConcurrentModificationExceptions and 3 792 lost counter updates; these tests are
+    // the same attacks, so a regression is a test failure rather than a surprise.
+
+    @Test
+    void durableIsFalseWhenTheFileWasNeverCreated(@TempDir Path dir) {
+        // getParent() is null for a bare filename, so Files.createDirectories(null) NPEs
+        // inside save(). The old save() caught IOException only, so the NPE escaped and
+        // durable() -- then saveFailures == 0 -- answered "everything is on disk".
+        Path bare = dir.getFileSystem().getPath("learned-facts.json");
+        LearningMemory m = new LearningMemory(bare);
+        try {
+            m.store("k", "v");
+        } catch (RuntimeException expected) {
+            // acceptable: the caller is told. What is NOT acceptable is a silent lie.
+        }
+        assertFalse(m.durable(),
+            "durable() must not report every fact is on disk when no file was written");
+    }
+
+    @Test
+    void aNullFactIsRejectedWithAMessageRatherThanInsideSave(@TempDir Path dir) {
+        // A null value used to reach escape() and NPE from INSIDE save(), walking past
+        // the failure counter. durable() then said all-clear for an unwritten fact.
+        LearningMemory m = new LearningMemory(dir.resolve("m.json"));
+        assertThrows(NullPointerException.class, () -> m.store("k", null),
+            "a null fact must be refused at the door, with the counter untouched");
+        assertEquals(0, m.saveFailures(),
+            "an argument error is not a save failure and must not be counted as one");
+        assertTrue(m.durable(),
+            "nothing was written and nothing failed, so the (empty) memory is durable");
+    }
+
+    @Test
+    void concurrentStoresLoseNothingAndDoNotEscape(@TempDir Path dir) throws Exception {
+        // The HashMap iteration race. 4 threads x 40k stores threw 15 737
+        // ConcurrentModificationExceptions, each losing facts, each saying durable().
+        int threads = 4, perThread = 4000;
+        LearningMemory m = new LearningMemory(dir.resolve("m.json"));
+        List<Throwable> escaped = Collections.synchronizedList(new ArrayList<>());
+        List<Thread> workers = new ArrayList<>();
+        for (int t = 0; t < threads; t++) {
+            final int id = t;
+            Thread w = new Thread(() -> {
+                for (int i = 0; i < perThread; i++) {
+                    try { m.store("t" + id + "-f" + i, "v" + i); }
+                    catch (Throwable e) { escaped.add(e); }
+                }
+            });
+            workers.add(w); w.start();
+        }
+        for (Thread w : workers) w.join();
+        assertEquals(0, escaped.size(),
+            "no store() may throw: " + escaped.stream().findFirst().orElse(null));
+        assertEquals(threads * perThread, m.size(),
+            "every concurrent fact must survive in memory");
+    }
+
+    @Test
+    void theFailureCounterDoesNotLoseUpdatesUnderConcurrency(@TempDir Path dir) throws Exception {
+        // volatile int is not atomic. 8 threads x 20k lost 3 792 of 160 000 updates, and
+        // a counter that under-counts failures under-reports data loss.
+        int threads = 8, perThread = 2000;
+        LearningMemory m = new LearningMemory(dir.resolve("m.json"));
+        // A DIRECTORY where a file is expected: createDirectories succeeds on its
+        // parent, and writeString then throws for real. My first version passed a plain
+        // filename here, every write SUCCEEDED, and the test reported 0 failures - which
+        // is what a green-looking zero is worth.
+        Path blocked = Files.createDirectories(dir.resolve("blocked.json"));
+        List<Thread> workers = new ArrayList<>();
+        for (int t = 0; t < threads; t++) {
+            Thread w = new Thread(() -> {
+                for (int i = 0; i < perThread; i++) m.saveTo(blocked);
+            });
+            workers.add(w); w.start();
+        }
+        for (Thread w : workers) w.join();
+        assertEquals(threads * perThread, m.saveFailures(),
+            "every failed save must be counted exactly once");
+    }
+
+    @Test
+    void durableIsFalseWheneverAnyWriteHasFailed(@TempDir Path dir) throws Exception {
+        // The end-to-end statement of intent: after a failed write, nothing may claim
+        // the facts are safe.
+        Path asDir = dir.resolve("m.json");
+        Files.createDirectories(asDir);
+        LearningMemory m = new LearningMemory(asDir);
+        m.store("k", "v");
+        assertTrue(m.saveFailures() > 0, "the write must have failed");
+        assertFalse(m.durable(), "and durable() must say so");
     }
 }

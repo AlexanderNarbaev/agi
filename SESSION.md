@@ -3789,3 +3789,100 @@ So: not caused by W32.22, and not proven innocent of it either. The honest posit
 that the debt total moved by one inside a set that does not hold still, with nothing
 failing near the change. Recorded as such, and the release tag still waits on a clean
 attribution rather than on my assurance.
+
+
+## 2026-10-04/05 - RECON-W32.24: the review of my own honesty, which found three lies
+
+W32.22 shipped a `durable()` accessor and called it honest. An adversarial reviewer ran
+it. `durable()` was `saveFailures == 0` — a fact about a COUNTER presented as an answer
+about the DISK — and it returned `true` in three reproducible situations where the facts
+were never written. Fixing that is the whole entry, because the defect class here is
+indistinguishable from the one this campaign exists to kill.
+
+### Measured, not imagined
+
+Every reproduction below is a number the reviewer obtained, and each is now a test:
+
+| | |
+|---|---|
+| `store("bad", null)` | NPE inside `save()`, walked past the counter, `durable()==true`, fact never on disk |
+| bare-filename path | `Files.createDirectories(null)` NPEs, escapes, `durable()==true` |
+| 4 threads x 40k stores | **15 737** `ConcurrentModificationException`s escaped, 15 501 facts in memory vs ~15 349 on disk, `durable()==true` |
+| 8 threads x 20k saves | **3 792 of 160 000** counter updates lost — `volatile int++` is not atomic |
+
+**The counter only ever saw `IOException`.** An NPE and a `ConcurrentModificationException`
+are not IOExceptions, so they left by the door the counter was guarding. IOException was
+never the only thing that can go wrong; it was the only thing handled.
+
+Fixes, in the order the reviewer ranked them:
+- `HashMap` -> `ConcurrentHashMap`. A degraded signature is no longer silently short.
+- `volatile int` -> `AtomicInteger`. A counter that under-counts failures under-reports
+  data loss, which is worse than none, because it is believed.
+- `catch (IOException)` -> `catch (Exception)` on both paths, with the reasoning in-line.
+- `durable()` now asks about the disk: `saveFailures == 0 && Files.exists(memoryFile)`,
+  and an EMPTY memory is `true` because an empty memory has nothing to lose. Saying
+  false there would be its own lie, and would train callers to ignore the accessor.
+- null fact rejected at the door with a message, not by an NPE from inside `save()`.
+
+### Four errors of my own, found by making the tests real
+
+1. **The reflection seam was clever and wrong.** First version redirected the private
+   `memoryFile` field to force a save failure. Replaced by a real `saveTo(Path)` method —
+   reflection makes a test lie about the code it tests.
+2. **`durableIsFalseWhenTheFileWasNeverCreated` asserted a lie.** I wrote
+   `assertTrue(m.durable())` for an empty, never-written memory, and it failed. The test
+   was wrong: nothing failed, so nothing is at risk. The accessor changed to suit reality.
+3. **A green-looking zero.** `theFailureCounterDoesNotLoseUpdatesUnderConcurrency` passed a
+   plain filename as the failure target, every write SUCCEEDED, and the test reported
+   **0 failures** — while passing. It needed a DIRECTORY where a file is expected.
+4. **A test that exercised the wrong branch.** `aSkippedRuleIsReportedNotOnlyCounted`
+   first used `{"not":"a rule"}`, which parses cleanly and takes the `op != "register"`
+   path — it passed for the wrong reason. A TRUNCATED line is needed to reach the catch.
+
+### `if (false)`: the reference pattern had a dead branch
+
+`BirRegistryPersistence.java:131` guarded its per-skip print with a never-true condition.
+It had **never once run in this repository's history**, and it was the only such guard in
+any `*.java`. This mattered more than the bug: that file is the REFERENCE pattern for
+"count it and say so", three other fixes copied its counting half, and copying it
+wholesale — which the SILENT-1 plan required — would have carried the dead branch into
+all seventeen sites.
+
+The logic inside was also wrong, so deleting the guard would have been a fix that only
+looked like one: `skipped == MAX_REPORTED_SKIPS` makes "further skips suppressed" fire
+once at skip 10 while the individual messages print forever, the exact opposite of what
+the message claims. Now: the first skip prints WITH ITS CONSEQUENCE, `MAX` more print for
+detail, the rest are counted, and the summary states what is absent. Zero executable
+instances of the anti-pattern remain.
+
+### D4: a test that verified nothing, caught by mutation
+
+`everyRefusalReasonIsActionable` had a `continue` guard: for text input, 3 of 5 inputs
+were decodable, so the body ran for 2, and both hit the PRE-EXISTING text branch. The
+reviewer deleted the entire W32.23 branch and **the test still passed.** A test that can
+execute its assertions zero times is not a test.
+
+Fixed with a `checked > 0` counter, and then proven: the branch was deleted again and the
+suite **FAILED**, then passed on restore. That mutation check is now the evidence, not
+the assertion count.
+
+### D7: the refusal asserted a format it never checked
+
+The message said *"the file looks like JPEG"* on the strength of the filename. An ELF
+binary named `photo.jpg` was told it looked like a JPEG and might well be valid — against
+this class's own rule, never return a measurement you cannot support. The format is now
+read as a **claim** (`named as JPEG, but its bytes are neither a PNG nor a recognisable
+JPEG header`), `.tif` is no longer missing next to `.tiff`, and the wording states the
+FORMAT is unsupported rather than the file being broken.
+
+### Verification
+
+matrix-core **8 103 / 70** (six of those tests are new; +1 failure, again in the jqwik
+property set, **none** in any area this campaign touched) · matrix-brain-runtime
+**582 / 0** · matrix-api-gateway **152 / 0** · quality gate **exit 0** · FROZEN **0** diff.
+
+The core failure count has now been observed at 67, 68, 69 and 70 across runs on
+essentially unchanged research code. I measured 69 twice and reproduced it exactly, so
+"drift" is not a sufficient explanation and is not offered as one. Recorded as a moving
+number in a known-debt set, with zero failures near the change, and the release tag still
+waits on a real attribution rather than on my assurance.

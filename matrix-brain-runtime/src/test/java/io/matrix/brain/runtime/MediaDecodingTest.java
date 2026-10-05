@@ -274,18 +274,45 @@ class MediaDecodingTest {
     @Test
     void everyRefusalReasonIsActionable() {
         // A refusal that does not say what to do next is a dead end for an operator.
-        // Only genuine REFUSALS are checked: my first version asserted this of every
-        // classification and failed, correctly, because a text file named x.jpg is not
-        // refused at all - it is read as text, which is honest, since it IS text.
+        //
+        // RECON-W32.24: this test was VACUOUS and a mutation check proved it - deleting
+        // the entire W32.23 branch left it PASSING. The cause was the `continue` guard:
+        // for text input, x.jpg/x.bmp/x.bin are all decodable, so 3 of 5 inputs skipped
+        // the body, and the 2 that did not both hit the PRE-EXISTING text branch rather
+        // than the new code. With no counter, a future change that made every input
+        // decodable would run the body ZERO times and JUnit would still report PASSED.
+        //
+        // The fix is the counter below. A test that can execute its assertions zero times
+        // is not a test, and the mutation check is the only reason that was caught.
+        int checked = 0;
         byte[] text = "I am not audio".getBytes(java.nio.charset.StandardCharsets.UTF_8);
         for (String name : new String[]{"x.wav", "x.png", "x.jpg", "x.bmp", "x.bin"}) {
             var c = MediaDecoding.classify(name, text);
             if (c.decodable()) continue;                       // not a refusal
+            checked++;
             assertTrue(c.reason().length() > 40,
                 "reason for " + name + " is too terse to act on: " + c.reason());
             assertTrue(c.reason().toLowerCase(java.util.Locale.ROOT).contains("refused"),
                 "every refusal must say it is one: " + c.reason());
         }
+        assertTrue(checked > 0, "the loop checked nothing, so nothing was verified");
+    }
+
+    // ---- RECON-W32.24: the D7 defect - the message must not assert a format it
+    // never checked. An ELF binary named photo.jpg is not a JPEG, and saying
+    // "the file looks like JPEG... may be perfectly valid" is a small violation of
+    // this class's own doctrine: never return a measurement you cannot support.
+
+    @Test
+    void aBinaryWithAnImageNameDoesNotGetToldItLooksLikeAnImage() {
+        byte[] elf = new byte[]{0x7F, 'E', 'L', 'F', 0x02, 0x01, 0x01, 0x00,
+            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+        var c = MediaDecoding.classify("photo.jpg", elf);
+        assertFalse(c.decodable(), "an ELF is not an image and must not decode");
+        String r = c.reason().toLowerCase(java.util.Locale.ROOT);
+        assertFalse(r.contains("looks like jpeg"),
+            "the refusal must not claim a format it never verified: " + c.reason());
+        assertTrue(r.contains("refused"), "and it must still be a refusal: " + c.reason());
     }
 
     @Test

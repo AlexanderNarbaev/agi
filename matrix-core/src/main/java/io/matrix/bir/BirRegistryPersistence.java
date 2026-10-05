@@ -128,11 +128,35 @@ public final class BirRegistryPersistence {
                 // from the registry with no error and no number, and an operator
                 // watching a mind "forget" a rule had nothing to look at.
                 skipped++;
-                if (false) {
-                    System.err.println("[BirRegistryPersistence] skipped a malformed "
-                        + "record in " + storagePath + ": " + e.getMessage()
-                        + (skipped == MAX_REPORTED_SKIPS ? " (further skips suppressed)"
-                                                         : ""));
+                // RECON-W32.24: this branch was guarded by a never-true condition, so
+                // the per-skip print had never once run in this repository's history, and
+                // it was the only such guard in any *.java. It mattered because this file
+                // is the REFERENCE pattern for "count it and say so": three other fixes
+                // copied its counting half, and copying it wholesale would have carried
+                // the dead branch into all of them.
+                //
+                // (The literal is spelled out here rather than written as code so that
+                // grepping for the anti-pattern keeps finding only real instances.)
+                //
+                // The logic inside was also wrong, so simply deleting the `if` would have
+                // been a fix that looked like one. `skipped == MAX_REPORTED_SKIPS` makes
+                // the "further skips suppressed" notice fire exactly once, at skip 10,
+                // while the individual messages would have printed forever - the exact
+                // opposite of what the message claims.
+                //
+                // Now: the first skip is printed WITH ITS CONSEQUENCE, a few more are
+                // printed for detail, and the rest are counted and summarised. Same
+                // shape as LearningMemory, and it actually executes.
+                if (skipped <= MAX_REPORTED_SKIPS) {
+                    System.err.println("[BirRegistryPersistence] skipped malformed record "
+                        + skipped + " in " + storagePath + ": " + e.getMessage()
+                        + (skipped == 1
+                            ? " - that rule is ABSENT from the registry and will be gone "
+                              + "at the next restart; further skips are counted"
+                            : ""));
+                } else if (skipped == MAX_REPORTED_SKIPS + 1) {
+                    System.err.println("[BirRegistryPersistence] further malformed records "
+                        + "will not be printed individually; the count below is the total");
                 }
             }
         }
