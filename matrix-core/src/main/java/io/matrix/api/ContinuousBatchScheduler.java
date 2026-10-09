@@ -115,10 +115,9 @@ public final class ContinuousBatchScheduler {
                     batch.add(next);
                 }
 
-                totalBatches.incrementAndGet();
-                processBatch(batch);
-                totalProcessed.addAndGet(batch.size());
-            } catch (InterruptedException ie) {
+totalBatches.incrementAndGet();
+                  processBatch(batch);
+              } catch (InterruptedException ie) {
                 Thread.currentThread().interrupt();
                 break;
             } catch (Exception e) {
@@ -128,16 +127,32 @@ public final class ContinuousBatchScheduler {
         log.info("ContinuousBatchScheduler: worker exiting");
     }
 
-    private void processBatch(List<Request> batch) {
-        for (Request req : batch) {
-            try {
-                String response = bridge.generate(req.prompt, req.maxTokens);
-                req.future.complete(response);
-            } catch (Exception e) {
-                req.future.completeExceptionally(e);
-            }
-        }
-    }
+private void processBatch(List<Request> batch) {
+          for (Request req : batch) {
+              // RECON-W34.8: the counter is incremented HERE, immediately before the future
+              // completes, rather than once per batch in the caller afterwards.
+              //
+              // It used to be `totalProcessed.addAndGet(batch.size())` AFTER processBatch
+              // returned. That is a race: processBatch completes each request's future as it
+              // goes, so a caller awaiting all the futures could wake up and read the counter
+              // before the increment that publishes their completion had run. The observable
+              // symptom was Exp089ContinuousBatchingTest reporting totalProcessed() == 8 for
+              // ten submitted requests -- work that had demonstrably completed, because the
+              // futures it awaited had all resolved.
+              //
+              // Counting at the point of completion makes the counter consistent with the
+              // futures by construction: if future.isDone() is true, the count includes it.
+              // Any caller that awaits futures and then reads totalProcessed() now sees a
+              // value that can only be too high on failure, never too low on success.
+              try {
+                  String response = bridge.generate(req.prompt, req.maxTokens);
+                  totalProcessed.incrementAndGet();
+                  req.future.complete(response);
+              } catch (Exception e) {
+                  req.future.completeExceptionally(e);
+              }
+          }
+      }
 
     private static final class Request {
         final String prompt;

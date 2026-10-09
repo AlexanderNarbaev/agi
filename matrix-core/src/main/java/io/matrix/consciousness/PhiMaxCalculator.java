@@ -86,19 +86,41 @@ public final class PhiMaxCalculator {
         }
         if (total == 0) return 0.0;
 
-        double hLeft = entropy(left, total);
-        double hRight = entropy(right, total);
-        double hJoint = 0;
-        for (java.util.Map.Entry<Integer, Integer> entry : counts.entrySet()) {
-            int state = entry.getKey();
-            int count = entry.getValue();
-            double p = (double) count / total;
-            if (p > 0) hJoint -= p * Math.log(p);
-        }
-        // H(L,R) - H(L) - H(R) = -I(L;R)
-        double mi = hLeft + hRight - hJoint;
-        return mi / Math.log(2);
-    }
+double hLeft = entropy(left, total);
+          double hRight = entropy(right, total);
+          // RECON-W34.8: H(L,R) was computed over the RAW state values, while H(L) and H(R)
+          // were computed over the PROJECTED indices. The identity
+          //
+          //     I(L;R) = H(L) + H(R) - H(L,R)
+          //
+          // requires all three terms to come from the SAME random variable. Mixing them does
+          // not produce mutual information; it produces an arbitrary number, and sometimes a
+          // NEGATIVE one. Reproduced on a 2-element sequence [4, 0]:
+          //
+          //     left  = {0: 1}    (both states project to index 0)   -> H(L) = 0
+          //     right = {0: 1}    (both states project to index 0)   -> H(R) = 0
+          //     joint over RAW states {4:1, 0:1}                      -> H(L,R) = log 2
+          //     => mi = 0 + 0 - 0.693 = -0.693,  / log 2 = -1.0
+          //
+          // Mutual information is a KL divergence and cannot be negative (Gibbs' inequality),
+          // so a negative result is not a rounding curiosity -- it is proof that the three
+          // terms described different variables. PhiMaxCalculatorPropertyTest caught it as
+          // "expected >= 0.0 but was -1.0".
+          //
+          // The joint term is now taken over the SAME projected pairs the marginals use.
+          java.util.Map<Long, Integer> joint = new java.util.HashMap<>();
+          for (java.util.Map.Entry<Integer, Integer> entry : counts.entrySet()) {
+              int state = entry.getKey();
+              int count = entry.getValue();
+              int l = projectState(state, mask, n);
+              int r = projectState(state, ~mask & ((1 << n) - 1), n);
+              long key = ((long) l << 32) | (r & 0xffffffffL);
+              joint.merge(key, count, Integer::sum);
+          }
+          double hJoint = entropy(joint, total);
+          double mi = hLeft + hRight - hJoint;
+          return mi / Math.log(2);
+      }
 
     private static int projectState(int state, int mask, int n) {
         int result = 0;
@@ -112,14 +134,27 @@ public final class PhiMaxCalculator {
         return result;
     }
 
-    private static double entropy(java.util.Map<Integer, Integer> counts, int total) {
-        double h = 0;
-        for (int c : counts.values()) {
-            if (c > 0) {
-                double p = (double) c / total;
-                h -= p * Math.log(p);
-            }
-        }
-        return h;
-    }
+/**
+     * Shannon entropy of a count distribution.
+     *
+     * <p>RECON-W34.8: the key type was narrowed from {@code Integer} to {@code Object}. The
+     * joint term of the mutual-information identity is keyed by a packed {@code (left, right)}
+     * pair, which does not fit in an {@code Integer}. Rather than duplicate this method for the
+     * one call site, entropy depends only on the counts and never on the key, so the key type
+     * was generalised to reflect that.</p>
+     *
+     * @param counts symbol -> occurrence count
+     * @param total  total observations, used as the denominator
+     * @return entropy in nats
+     */
+      private static double entropy(java.util.Map<?, Integer> counts, int total) {
+          double h = 0;
+          for (int c : counts.values()) {
+              if (c > 0) {
+                  double p = (double) c / total;
+                  h -= p * Math.log(p);
+              }
+          }
+          return h;
+      }
 }

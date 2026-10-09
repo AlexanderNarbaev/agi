@@ -987,3 +987,67 @@ heatmap **re-derives a physical model from stored data**, which is not what a pr
 wrong assertions and two were real defects, and the real ones were found by reading the failure
 *value* — 1.0000000000000002, a total of 0.5000, an exception from a constructor — rather than
 the failure message.
+
+---
+
+## RECON-W34.8 — mutual information computed across mismatched random variables
+
+`PhiMaxCalculator.propertyPhiMaxGreedyNonNegative` failed with `expected >= 0.0 but was -1.0`.
+Mutual information is a KL divergence and is **non-negative by Gibbs' inequality**, so a negative
+value is not a tolerance question — it is proof that the terms being combined did not belong
+together.
+
+### The bug
+
+The identity in use is
+
+```
+I(L;R) = H(L) + H(R) - H(L,R)
+```
+
+which requires all three terms to come from the **same random variable**. In the code:
+
+- `H(L)` and `H(R)` were computed over **projected** indices (`projectState(state, mask, n)`)
+- `H(L,R)` was computed over the **raw** state values
+
+So `H(L,R)` described a different variable from `H(L)` and `H(R)`, and the identity evaluated
+to an arbitrary number — sometimes negative.
+
+### Reproduced exactly
+
+For the 2-element sequence `[4, 0]`, the low two bits of `4` are `00`, identical to `0`, so both
+states project to the same index while remaining distinct raw values:
+
+```
+left  = {0: 1}                          -> H(L)   = 0
+right = {0: 1}                          -> H(R)   = 0
+joint over RAW states {4:1, 0:1}        -> H(L,R) = log 2
+=> mi = 0 + 0 - 0.693 = -0.693;  / log 2 = -1.0
+```
+
+After the fix `[4, 0]` returns `0.0`, and a sweep over the property's own generated range
+(lengths 2..8, values 0..7) yields no negatives.
+
+The joint term is now taken over the same projected `(left, right)` pairs the marginals use.
+`entropy`'s key type was generalised from `Integer` to `Object` rather than duplicating the
+method, since entropy depends only on the counts and never on the key — the packed pair key
+does not fit in an `Integer`.
+
+### A second real defect: the batch counter raced its own futures
+
+`ContinuousBatchScheduler.totalProcessed()` returned **8 for 10 submitted requests**. Requests
+whose futures had demonstrably completed were not yet counted, because `processBatch` completes
+each future as it goes while the counter was incremented **once per batch, after the whole batch
+returned**. Any caller that awaited all futures and then read the counter could observe
+completion before the increment that publishes it had run.
+
+This was exposed, not caused, by the W34.2 harness fix: the test previously returned early via
+`if (!bridge.load()) return;` — a vacuous PASS — so it rarely ran at all. Counting now happens at
+the point of completion, immediately before `future.complete()`, which makes the counter
+consistent with the futures by construction: **if `future.isDone()` then the count includes it.**
+Verified stable across three consecutive runs.
+
+**Both defects share a signature.** In each case a quantity was computed from a subtly wrong
+input — mismatched variables in one, a stale read in the other — and the resulting wrongness was
+a *plausible* number rather than an obvious garbage value. Neither would have been caught by a
+sanity check that only asked "is this a number".
