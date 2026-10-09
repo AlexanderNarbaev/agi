@@ -113,7 +113,15 @@ class DistillationFactoryIntegrationTest {
         // size is the append count tracked in memory; readAll() reads from disk
         List<DistillationLedger.Entry> all = l2.readAll();
         assertThat(all).hasSize(2);
-        assertThat(all.get(0).source()).isEqualTo("test:run1");
+        // RECON-W34.1: this read the WRONG SLOT. The fixture appends
+        //   new Entry("run-1", "test:run1", ...)
+        // so "test:run1" is the SECOND constructor argument (datasetOrPattern) while
+        // source() returns the FIRST (sourceId). The assertion could only ever have failed,
+        // and its failure was reported as a ledger-identity defect when it was really a
+        // slot mismatch. What "persists across reopen" actually means is round-trip
+        // fidelity, so both fields are now checked against what was written.
+        assertThat(all.get(0).source()).isEqualTo("run-1");
+        assertThat(all.get(0).datasetOrPattern()).isEqualTo("test:run1");
         assertThat(all.get(1).hdcPromoted()).isEqualTo(80);
     }
 
@@ -231,14 +239,24 @@ class DistillationFactoryIntegrationTest {
     @Test
     void ledger_handles_corrupt_lines_gracefully(@TempDir Path tmp) throws Exception {
         Path led = tmp.resolve("ledger.ndjson");
+        // RECON-W34.1: this fixture wrote the OLD snake_case on-disk schema (inputs_count,
+        // bir_clauses_induced, duration_ms, ts, artifact_hash). DistillationLedger.append now
+        // writes camelCase (samplesUsed, birClausesSynthesized, durationMs, timestampMs,
+        // artifactHash), so every field here extracted as "" and ALL THREE lines were
+        // skipped -- the test was asserting "a malformed line is skipped" while actually
+        // measuring schema drift, and it read size 0 as a pass on a different defect.
+        // Rewritten to the current schema so the assertion means what its name says: one
+        // genuinely malformed line between two readable ones, both of which survive.
         Files.writeString(led,
-            "{\"id\":\"a\",\"source\":\"s\",\"inputs_count\":1,\"inputs_bytes\":1,"
-          + "\"hdc_promoted\":1,\"bir_clauses_induced\":1,\"tsetlin_automata_updated\":1,"
-          + "\"eval_delta\":0.1,\"duration_ms\":1,\"ts\":1,\"artifact_hash\":\"x\"}\n"
+            "{\"sourceId\":\"s\",\"datasetOrPattern\":\"p\",\"inputBits\":1,"
+          + "\"samplesUsed\":1,\"hdcPromoted\":1,\"birClausesSynthesized\":1,"
+          + "\"tsetlinLiterals\":1,\"fidelity\":0.1,\"durationMs\":1,"
+          + "\"timestampMs\":1,\"artifactHash\":\"x\"}\n"
           + "this is not json\n"
-          + "{\"id\":\"b\",\"source\":\"s2\",\"inputs_count\":2,\"inputs_bytes\":2,"
-          + "\"hdc_promoted\":2,\"bir_clauses_induced\":2,\"tsetlin_automata_updated\":2,"
-          + "\"eval_delta\":0.2,\"duration_ms\":2,\"ts\":2,\"artifact_hash\":\"y\"}\n");
+          + "{\"sourceId\":\"s2\",\"datasetOrPattern\":\"p\",\"inputBits\":2,"
+          + "\"samplesUsed\":2,\"hdcPromoted\":2,\"birClausesSynthesized\":2,"
+          + "\"tsetlinLiterals\":2,\"fidelity\":0.2,\"durationMs\":2,"
+          + "\"timestampMs\":2,\"artifactHash\":\"y\"}\n");
         DistillationLedger l = new DistillationLedger(led);
         List<DistillationLedger.Entry> all = l.readAll();
         assertThat(all).hasSize(2);  // malformed line skipped

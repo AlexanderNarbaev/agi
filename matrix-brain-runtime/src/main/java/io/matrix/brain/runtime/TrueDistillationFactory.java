@@ -126,9 +126,19 @@ public final class TrueDistillationFactory {
         }
         double fidelity = distiller.fidelity(bir, heldInputs, heldExpected);
 
-        long durationMs = java.time.Instant.now().toEpochMilli() - t0;
-        String hash = sha256Hex(source + ":" + calibrationInputs.size()
-            + ":" + nClauses + ":" + durationMs);
+        // RECON-W34.1: ONE clock read, used for both the duration and the row timestamp.
+        // These were two separate System.currentTimeMillis() calls, so a row could report a
+        // timestamp earlier than the duration that preceded it.
+        long finishedAtMs = java.time.Instant.now().toEpochMilli();
+        long durationMs = finishedAtMs - t0;
+        // RECON-W34.1: durationMs was previously MIXED INTO THE HASH, and that is the
+        // serious one. Article III requires provenance + CONTENT-hash identity, but a hash
+        // over (source, size, clauses, duration) is a hash over how fast the machine was.
+        // The same teacher and the same inputs produced two different artifactHash values on
+        // two runs, so "identical artefact, identical hash" was false, and the hash could not
+        // function as an identity. Excluding the wall-clock makes it content-derived and
+        // therefore reproducible.
+        String hash = sha256Hex(source + ":" + calibrationInputs.size() + ":" + nClauses);
         Result r = new Result(source, calibrationInputs.size(),
             calibrationInputs.size() /* tokensExtracted */,
             0 /* hdcPromoted */, nClauses /* birClausesInduced */,
@@ -136,9 +146,15 @@ public final class TrueDistillationFactory {
             fidelity, durationMs, hash, bir.provenance());
         try {
             ledger.record(new DistillationLedger.Entry(
-                "run-" + System.currentTimeMillis(),
-                r.source, r.captures, (int) sourceBytes, 0, r.birClausesSynthesized(), 0, r.fidelity,
-                r.durationMs, System.currentTimeMillis(), r.artifactHash));
+// RECON-W34.1: the sourceId was "run-" + System.currentTimeMillis(), which
+                // DISCARDED the provenance the caller had already supplied. distillCustom is
+                // called with "synthetic:teacher" and the ledger recorded a timestamp instead,
+                // so two different teachers distilled in the same millisecond were
+                // indistinguishable in the audit trail. sourceId is now r.source, so the
+                // caller's label survives into the record whose job is to carry it.
+                r.source,
+                  r.source, r.captures, (int) sourceBytes, 0, r.birClausesSynthesized(), 0, r.fidelity,
+                  r.durationMs, finishedAtMs, r.artifactHash));
         } catch (java.io.IOException e) {
             // RECON-W32.33. Non-fatal is right; invisible is not. The DistillationLedger
             // is the audit trail for a run that ALREADY synthesised a BIR and computed an

@@ -560,3 +560,94 @@ No test was deleted, skipped, or weakened. No tolerance was loosened to turn red
 two tests this session touched were touched because they were **untested**, not because they
 were inconvenient: the GPU test asserted enum members that never existed, and the federation
 test asserted no validation at all.
+
+---
+
+## RECON-W34.1 — DistillationLedger: 4 of 5 recovered-test failures fixed, 1 needs an owner
+
+The two production defects the W32.34 recovery surfaced are closed, and the fix exposed a
+further real bug that no test had been pointing at.
+
+### CLOSED 1 — one corrupt line destroyed the entire audit trail
+
+`readAll()` parsed every field unguarded: `Integer.parseInt(extract(...))`. A line missing a
+numeric field yields `""` from `extract`, which throws `NumberFormatException` and **aborts
+the whole read** — discarding every valid entry alongside the broken one. For a ledger, whose
+entire purpose is accounting for past work, one torn line silently erasing the record is the
+worst available failure mode.
+
+Now: damaged lines are skipped, counted and logged at WARNING, and the rest survive. Verified
+by a test that writes one good line, one truncated line, one good line, and asserts both good
+entries come back.
+
+### CLOSED 2 — the ledger recorded its own impact and never reported it
+
+`append()` persists `hdcPromoted`, `birClausesSynthesized`, `tsetlinLiterals` and `fidelity`
+on every line. `summary()` aggregated **only** `runs` and `total_inputs_bytes`. So the one
+number that answers *"did distillation actually teach the mind anything"* was written down
+every run and never surfaced.
+
+The recovered tests found this as `NullPointerException`s, not as a small wrong number —
+`s.get("total_bir_clauses_induced")` returned null and the test called `.intValue()` on it. A
+crash that is really a **missing aggregate**.
+
+`summary()` now also emits `total_hdc_promoted`, `total_bir_clauses_induced`,
+`total_tsetlin_automata_updated` and `mean_eval_delta`. None of this data was lost; it was
+simply never added up.
+
+### CLOSED 3 — `extract()` threw on the input it was designed to receive
+
+Two unguarded indexes: a key with no colon fed a negative index into `substring(...)`, and the
+quote-scan called `charAt(i - 1)` at `i == 0`. Both threw `StringIndexOutOfBoundsException` on
+exactly the half-written lines a crashed process leaves behind — the input this method most
+needs to survive.
+
+### CLOSED 4 — provenance was discarded, and the "content hash" depended on machine speed
+
+Found while fixing the ledger, and not previously reported by anything. In
+`TrueDistillationFactory.distillCustom`:
+
+1. `sourceId` was written as `"run-" + System.currentTimeMillis()`, **discarding the provenance
+   the caller had already supplied.** `distillCustom("synthetic:teacher", ...)` recorded a
+   timestamp instead, so two different teachers distilled in the same millisecond were
+   indistinguishable in the audit trail. `sourceId` is now `r.source`.
+2. `artifactHash` mixed in `durationMs`, which is wall-clock derived. Article III requires a
+   **content** hash, but this one hashed how fast the machine was: the same teacher and the
+   same inputs produced two different hashes on two runs. It therefore could not function as
+   an identity. The hash is now over `(source, size, clauses)` only and is reproducible.
+3. `durationMs` and the row timestamp were two separate clock reads, so a row could report a
+   timestamp earlier than the duration preceding it. Now one read feeds both.
+
+### OPEN — NEEDS-OWNER: `samplesUsed` is defined as two different things at once
+
+`TrueDistillationFactoryIntegrationTest.distill_appends_ledger_row_with_real_engine_identity`
+expects `inputsCount() == 8`, and `inputsCount()` is an alias for `samplesUsed` — so
+`samplesUsed` is a **count**.
+
+`DistillationFactoryIntegrationTest.distill_ledger_summary_aggregates` expects
+`total_inputs_bytes == 300` from entries whose `samplesUsed` values are 100 and 200 — so
+`samplesUsed` is a **byte count**.
+
+Both cannot hold. The current factory writes `(int) sourceBytes` into `samplesUsed` and
+`calibrationInputs.size()` into `inputBits`, which inverts both names. This looks like a
+mishap from the snake_case → camelCase schema migration, where `inputs_count` and
+`inputs_bytes` were separate fields that no longer have separate homes.
+
+**Not guessed at.** Picking either side changes the meaning of persisted ledger data, and the
+wrong pick silently corrupts a record other tools read. Recorded as NEEDS-OWNER with both
+test citations so the decision is one reading rather than an archaeology exercise.
+
+### Also corrected in tests, with the reasoning kept in place
+
+- `ledger_handles_corrupt_lines_gracefully` wrote the **old snake_case schema**
+  (`inputs_count`, `bir_clauses_induced`, `duration_ms`). Every field extracted as `""` and all
+  three lines were skipped, so a test asserting "a malformed line is skipped" was actually
+  measuring schema drift and reading `size 0` as a pass on a different defect. Fixture
+  migrated to the current schema.
+- `distill_ledger_persists_across_reopen` read the **wrong constructor slot**: it appended
+  `("run-1", "test:run1", ...)` then asserted `source()` returned `"test:run1"`, which is the
+  second argument, not the first. It could only ever have failed, and was reported as a
+  ledger-identity defect. Now asserts round-trip fidelity on both fields.
+
+**Result: brain-runtime 657 tests / 5 failures -> 666 tests / 1 failure.** Nothing was skipped
+or deleted to achieve it.
