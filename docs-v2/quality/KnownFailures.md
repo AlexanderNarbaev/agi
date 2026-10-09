@@ -651,3 +651,47 @@ test citations so the decision is one reading rather than an archaeology exercis
 
 **Result: brain-runtime 657 tests / 5 failures -> 666 tests / 1 failure.** Nothing was skipped
 or deleted to achieve it.
+
+---
+
+## RECON-W34.3 — `AdvancedTsetlinMachine.init()` produces a model that can never fire
+
+Found while building the monotone-tightening classifier. It is a defect in the existing class,
+not a misuse of it, and it is recorded here because "the Tsetlin machine was not used for the
+safety gate" is a claim that needs its reason stated.
+
+### Measured
+
+```
+avg includes per clause at init : 255.2   (of 512 features)
+active features in one sample   : 43
+predict at init                 : class=0, confidence=0.000
+```
+
+`predict` votes for a class only when a clause's **every** `include` feature is present in the
+input. With ~255 required features and 43 present, no clause can match any real sample. The
+model therefore returns class 0 with zero total votes and confidence 0.0, for every input,
+forever, unless training first thins the include sets.
+
+### Why training does not rescue it
+
+`updateClause` can clear includes only on the **anti-reinforce** branch, which fires when
+`predict(model, features).predicted() != actualLabel`. That is a real mechanism and it does
+eventually thin the harmful class — but the benign class is reinforced on every benign sample,
+adding includes, so the two classes start from opposite pathologies: harmful clauses are far
+too dense to fire, benign clauses drift toward vacuous "include everything" clauses that match
+everything. Convergence is slow and, at the confidence threshold a safety gate needs,
+unreliable.
+
+### Disposition
+
+**Not fixed here.** Changing a core Tsetlin engine's initialisation is a behaviour change to a
+class other subsystems use, and it deserves its own wave with its own evidence. The classifier
+built for W34.3 therefore uses a transparent indicator score over the same trigram features,
+and says so in its own Javadoc, so nobody later assumes a trained Tsetlin model is behind the
+safety gate when it is not.
+
+This is the second time in two waves that a shipped component turned out to be inert for its
+stated purpose — `ReflexEngine` ordering being the first. A component that is present,
+plausible, and never fires is more dangerous than one that is absent, because the code reads
+as if the capability exists.
