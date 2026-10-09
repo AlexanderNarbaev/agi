@@ -1214,3 +1214,74 @@ not in `develop` and in the reflog, so the deletion is cosmetic and the guard co
 operator can run:
 
     git branch --merged develop | grep -vE '^(develop|main)$' | xargs -n1 git branch -d
+
+---
+
+## Exp228ComplianceTest.realProjectCompliance — awaiting an operator ruling, and the gate is narrower than the constitution
+
+`Exp228ComplianceTest` runs `BrainLoopCompliance.check` over `matrix-core/src/main/java` and
+asserts `compliant()`. That method computes:
+
+    boolean compliant = onnx == 0;
+
+so the test fails on exactly two files. What the auditor actually reports on that directory,
+measured directly rather than read off the failure message:
+
+    files scanned:  1043
+    ONNX              2 violations across  2 files
+    Random           73 violations across 57 files
+    wall-clock       48 violations across 26 files
+    TOTAL           123 violations
+
+Every one of those 123 carries the reason string
+`"Forbidden runtime call in decision-path (CONSTITUTION I)"`.
+
+**The gate counts 121 of them and then ignores them.** `ComplianceResult` carries `randomCalls`
+and `wallClockCalls` fields, prints them, and neither appears in the `compliant` computation.
+A green run of this test therefore certifies only that ONNX is absent, while presenting a report
+that contains 121 other CONSTITUTION I violations the reader is invited to treat as acceptable.
+
+### The two that do fail the gate
+
+    io/matrix/brain/LlmBrainLoopRag.java
+    io/matrix/brain/LlmBrainLoopService.java
+
+Both are explicitly LLM integration points, not incidental ONNX use:
+
+    LlmBrainLoopService — "W473 — LLM-Backed Brain Loop. Wires the actual Qwen2.5-0.5B model
+                          into the cognitive cycle."
+    LlmBrainLoopRag    — "W478 — RAG-enhanced LLM Brain Loop."
+
+Both `import io.matrix.api.QwenOnnxBridge`, and `LlmBrainLoopService implements BrainPipeline,
+BrainCycle` — so the LLM-backed loop is wired in as a brain loop rather than sitting beside one.
+That is the substance of the violation, and it is why this cannot be closed by editing an
+assertion: the test is reporting something real.
+
+### Why the test was left red
+
+Two honest resolutions, both requiring an operator decision:
+
+1. **Move the LLM loop out of `matrix-core`.** `LlmBrainLoopService` and `LlmBrainLoopRag` into
+   `matrix-brain-runtime` or a dedicated module, leaving the deterministic core free of ONNX as
+   CONSTITUTION I intends. No constitution change needed. Cost: the LLM brain loop stops being
+   reachable from the core's own API.
+
+2. **Amend CONSTITUTION I to exempt an explicit learner loop.** Requires an RFC and touches a
+   FROZEN file, so it is out of scope for this campaign without a mandate.
+
+Option 1 is the smaller change and preserves the constitution as written, but it relocates real
+capability, so it is not mine to choose.
+
+### A second question this exposes, unresolved either way
+
+Whether `compliant()` should also fail on the 73 Random and 48 wall-clock violations is a
+separate decision, and a larger one. Many are legitimately off the decision path — ML training
+code such as `DecisionTree`, `RandomForest`, `QLearning`, `KohonenSOM` and `TSNE` use
+`new Random(...)` and `ThreadLocalRandom` for model fitting, which is not a runtime decision
+and is not what CONSTITUTION I forbids. Tightening the gate to fail on all 123 would make it
+fail on correct code.
+
+That means the real gap is that `DecisionPathAuditor` classifies by symbol name rather than by
+whether the call is reachable from a decision path, and the honest fix is precision in the
+auditor rather than a wider net. That is a real piece of work and is recorded here rather than
+attempted under a failing-suite deadline.

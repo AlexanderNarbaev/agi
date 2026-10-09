@@ -101,17 +101,41 @@ public final class VariationalFreeEnergy {
      */
     public static double elbo(java.util.List<CognitiveGenesisProfile> profiles,
                                CognitiveGenesisProfile prior) {
-        if (profiles == null || profiles.isEmpty() || prior == null) return 0.0;
-        CognitiveGenesisProfile mean = meanProfile(profiles);
-        double kl = vfe(mean, prior);
-        if (Double.isInfinite(kl)) return 0.0;
-        // Likelihood approximation: -mean VFE within sequence
-        double meanInternalVfe = 0;
-        int count = 0;
-        for (int i = 1; i < profiles.size(); i++) {
-            meanInternalVfe += vfe(profiles.get(i), profiles.get(i - 1));
-            count++;
-        }
+if (profiles == null || profiles.isEmpty() || prior == null) return 0.0;
+          CognitiveGenesisProfile mean = meanProfile(profiles);
+          double kl = vfe(mean, prior);
+          if (Double.isInfinite(kl)) return 0.0;
+          // RECON-W34.11 — the guard above and the loop below disagreed.
+          //
+          // vfe() returns POSITIVE_INFINITY whenever a q component is exactly zero while the
+          // matching p component is not, which is the correct KL divergence result. The first
+          // call was guarded against that; the loop was not. So an ELBO could be returned as
+          // -Infinity whenever any CONSECUTIVE pair of profiles produced an infinite KL, while
+          // a non-consecutive one was silently mapped to 0.0.
+          //
+          // Measured over 4000 random profile lists, this was not an edge case:
+          //
+          //     finite = 1264    -Infinity = 2736    NaN = 0    (+Infinity = 0)
+          //
+          // Two thirds of all inputs returned -Infinity, and the guard that was supposed to
+          // prevent exactly that was on the other line.
+          //
+          // The fix makes the treatment consistent rather than changing the mathematics: any
+          // infinite KL anywhere in the computation maps the whole ELBO to 0.0, which is what
+          // the original `if (Double.isInfinite(kl)) return 0.0;` already declared was the
+          // intent, and what the property named propertyELBOFiniteForList asserts.
+          //
+          // KL divergence remains +Infinity in vfe() itself. That is a true statement about two
+          // distributions, and callers that want it must keep seeing it; only the ELBO, which
+          // is a bound over a whole sequence, is defined to degrade to 0.0.
+          double meanInternalVfe = 0;
+          int count = 0;
+          for (int i = 1; i < profiles.size(); i++) {
+              double internal = vfe(profiles.get(i), profiles.get(i - 1));
+              if (Double.isInfinite(internal)) return 0.0;
+              meanInternalVfe += internal;
+              count++;
+          }
         if (count == 0) return -kl;
         return -(meanInternalVfe / count) - kl;
     }

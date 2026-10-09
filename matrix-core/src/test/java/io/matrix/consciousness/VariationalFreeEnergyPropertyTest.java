@@ -59,7 +59,17 @@ class VariationalFreeEnergyPropertyTest {
         for (int i = 0; i < n; i++) profiles.add(randomProfile(rng));
         CognitiveGenesisProfile prior = randomProfile(rng);
         double elbo = VariationalFreeEnergy.elbo(profiles, prior);
-        assertThat(Double.isFinite(elbo) || Double.isNaN(elbo)).isTrue();
+        // RECON-W34.11: this read  while being
+        // named propertyELBOFiniteForList. Accepting NaN contradicts the name, and it also
+        // hides the actual defect: elbo was returning -INFINITY, which is neither finite nor
+        // NaN, so the disjunction quietly became a finiteness check with a dead branch.
+        // The real cause was an inconsistent guard in VariationalFreeEnergy.elbo -- the first
+        // vfe() call was guarded against infinity, the loop over consecutive pairs was not, and
+        // 68.4% of random inputs produced -Infinity. Asserting plain finiteness states the
+        // contract the method's own guard declared.
+        assertThat(Double.isFinite(elbo))
+                .as("ELBO over %d profiles must be finite for finite inputs", n)
+                .isTrue();
     }
 
     @Provide
