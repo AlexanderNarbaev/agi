@@ -15,19 +15,39 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 class DecentralizedDigestPipelineTest {
 
     @Test
-    void digestsAreSuppressedBelowThreshold() {
-        Anonymizer anon = new Anonymizer(5);
-        anon.recordContribution("h1", "n1");
-        DecentralizedDigestPipeline pipe = new DecentralizedDigestPipeline(anon, 1.0);
+void digestsAreSuppressedBelowThreshold() {
+          // RECON-W34.10: this test asserted a PROBABILISTIC claim -- the comment even said
+          // "it's likely still below 5". Laplace(0, sensitivity/epsilon) with sensitivity 1
+          // and epsilon 1.0 has scale 1, so the noisy count is 1 + Laplace(0, 1) and it
+          // exceeds the threshold of 5 whenever the noise exceeds 4:
+          //
+          //     P(noise > 4) = 0.5 * e^-4 = 0.916%   -- about 1 run in 109
+          //
+          // which is exactly the intermittency observed: green in isolation, red in a long
+          // suite where the unlucky draw eventually came up.
+          //
+          // The fix is NOT to seed the production constructor. Defaulting to SecureRandom is
+          // correct for differential privacy -- a predictable noise sequence lets an observer
+          // subtract the noise and recover the true counts, which would defeat the entire
+          // mechanism. Production is left alone.
+          //
+          // Instead the test injects a deterministic Random through the existing
+          // three-argument constructor, which exists for precisely this purpose. The
+          // assertion is now deterministic rather than lucky, and what it verifies is the
+          // threshold logic rather than the behaviour of one random draw.
+          Anonymizer anon = new Anonymizer(5);
+          anon.recordContribution("h1", "n1");
+          DecentralizedDigestPipeline pipe =
+                  new DecentralizedDigestPipeline(anon, 1.0, new java.util.Random(42L));
 
-        List<DecentralizedDigestPipeline.Digest> digests = pipe.emitDigests();
-        assertThat(digests).hasSize(1);
-        DecentralizedDigestPipeline.Digest d = digests.get(0);
-        assertThat(d.contentHash()).isEqualTo("h1");
-        // noisy count is true count (1) + Laplace noise; for high epsilon
-        // and a single sample, it's likely still below 5
-        assertThat(d.shared()).isFalse();
-    }
+          List<DecentralizedDigestPipeline.Digest> digests = pipe.emitDigests();
+          assertThat(digests).hasSize(1);
+          DecentralizedDigestPipeline.Digest d = digests.get(0);
+          assertThat(d.contentHash()).isEqualTo("h1");
+          // noisy count is true count (1) + Laplace noise; with an injected Random the draw
+          // is fixed, so "below threshold" is a fact here rather than a probability.
+          assertThat(d.shared()).isFalse();
+      }
 
     @Test
     void digestsAreSharedAtAndAboveThreshold() {

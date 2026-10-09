@@ -16,6 +16,7 @@ import io.matrix.reflex.ReflexEngine;
 import io.matrix.safety.ConsistencyChecker;
 import io.matrix.safety.LieDetector;
 import io.matrix.safety.SafetyMonitor;
+import io.matrix.brain.runtime.safety.HarmfulIntentClassifier;
 import io.matrix.signals.SignalModule;
 import io.matrix.signals.SignalModuleRegistry;
 import io.matrix.signals.TextSignalModule;
@@ -62,6 +63,24 @@ public final class TrueMindCycle {
 
     private final Random rng;
     private final ReflexEngine reflex;
+
+    /**
+     * RECON-W34.10 — additive harmful-intent gate.
+     *
+     * <p>Evaluated <b>after</b> {@link ReflexEngine}, never before. That ordering is the whole
+     * point: the seven keyword reflexes are the authoritative gate and their behaviour is
+     * unchanged and byte-identical. This classifier can only add refusals for inputs the
+     * keyword gate let through, so the refused set is a strict superset of what it was.
+     * Nothing here can make an input acceptable — see
+     * {@link HarmfulIntentClassifier#saysHarmful} for the same rule at the classifier's own
+     * boundary.</p>
+     *
+     * <p>Both the transliterated {@code input} and the {@code originalInput} are scored. The
+     * keyword gate matches on the transliterated form only, so an intent expressed in a script
+     * the transliterator rewrites can slip past a substring match it was never meant to match.
+     * Scoring both is another tightening, and it is the safe direction for a refusal gate.</p>
+     */
+    private final HarmfulIntentClassifier harmfulIntent;
     private final SignalModuleRegistry signals;
     private final SignalModule textSignal;
     private final SaliencyEngine saliencyEngine;
@@ -72,14 +91,29 @@ public final class TrueMindCycle {
     private final io.matrix.brain.runtime.PersistentHdcStore hdcStore;
 
     /** Default deterministic constructor — seeded Random(42L). */
-    public TrueMindCycle() {
-        this(new Random(42L), null);
-    }
+public TrueMindCycle() {
+          this(new Random(42L), null);
+      }
 
-    /** Explicit-seed constructor with optional persistent HDC store. */
-    public TrueMindCycle(Random rng, io.matrix.brain.runtime.PersistentHdcStore hdcStore) {
-        this.rng = rng;
-        this.hdcStore = hdcStore;
+      /** Explicit-seed constructor with optional persistent HDC store. */
+      public TrueMindCycle(Random rng, io.matrix.brain.runtime.PersistentHdcStore hdcStore) {
+          this(rng, hdcStore, HarmfulIntentClassifier.trainedDefault());
+      }
+
+      /**
+       * RECON-W34.10 — constructor allowing the harmful-intent classifier to be substituted.
+       *
+       * <p>Exists so tests can drive both sides of the gate: a classifier that never fires
+       * proves the keyword gate is still authoritative on its own, and a classifier that always
+       * fires proves nothing downstream depends on the classifier being permissive. Production
+       * callers should use the two-argument form.</p>
+       */
+      public TrueMindCycle(Random rng, io.matrix.brain.runtime.PersistentHdcStore hdcStore,
+              HarmfulIntentClassifier harmfulIntent) {
+          this.rng = rng;
+          this.hdcStore = hdcStore;
+          this.harmfulIntent = harmfulIntent == null
+                  ? HarmfulIntentClassifier.unavailable() : harmfulIntent;
         this.reflex = new ReflexEngine();
         // Register reflexive substring patterns (ReflexEngine uses String.contains).
         reflex.register("harm",
@@ -149,6 +183,35 @@ public final class TrueMindCycle {
         }
         trace.add(BrcStep.of("REFLEX", false, 0.99,
             List.of(ev(ReflexEngine.class.getSimpleName(), "tryReflex", "no-match"))));
+
+        // ---- Stage 1b: harmful-intent classifier (RECON-W34.10) ----
+        //
+        // Deliberately placed AFTER the reflex stage, which returns early on a keyword hit.
+        // Every one of the seven registered reflexes therefore reaches this line only when it
+        // did NOT match, so their behaviour, replies and modulator lists are untouched. This
+        // stage can only append refusals.
+        //
+        // Both forms are scored. The reflex gate matches substrings of the transliterated
+        // `input`; scoring `original` as well means an intent written in a script the
+        // transliterator rewrites is still seen by something that reads meaning rather than
+        // matching substrings. Scoring two strings can only add, never remove.
+        boolean harmfulHit = harmfulIntent.saysHarmful(input)
+                || harmfulIntent.saysHarmful(original);
+        if (harmfulHit) {
+            long durNs = (System.nanoTime() - startNs) / 1_000_000L;
+            trace.add(BrcStep.of("HARMFUL_INTENT", true, 0.85,
+                List.of(ev(HarmfulIntentClassifier.class.getSimpleName(), "saysHarmful",
+                    "refused"))));
+            return new MindResult(
+                "I cannot provide instructions intended to harm others.",
+                0.85, durNs,
+                false,  // refused
+                List.of("ETHICAL_FILTER", "SAFETY_MONITOR", "CONSISTENCY_CHECKER"),
+                trace);
+        }
+        trace.add(BrcStep.of("HARMFUL_INTENT", false, 0.99,
+            List.of(ev(HarmfulIntentClassifier.class.getSimpleName(), "saysHarmful",
+                "below-threshold"))));
 
         // ---- Stage 2: SIGNAL (real encoder) ----
         // Use SignalStage.encode (NOT textSignal) — TextSignalModule returns a

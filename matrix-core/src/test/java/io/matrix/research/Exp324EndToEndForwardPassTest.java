@@ -79,37 +79,59 @@ class Exp324EndToEndForwardPassTest {
                 p50 / 1000.0, p95 / 1000.0, p99 / 1000.0, pMax / 1000.0, avg, N);
 
         // Per-stage breakdown: 50 passes, capture each stage
-        long bpeEncodeSum = 0, chainFwdSum = 0, lmHeadSum = 0;
-        int M = 50;
-        for (int i = 0; i < M; i++) {
-            long t0 = System.nanoTime();
-            int[] ids = tok.encode(prompt);
-            long t1 = System.nanoTime();
-            boolean[] bits = runner.evaluate(input);
-            long t2 = System.nanoTime();
-            int nextToken = pickNextToken(bits);
-            long t3 = System.nanoTime();
-            tok.reverseVocabFor(nextToken);
-            long t4 = System.nanoTime();
+long bpeEncodeSum = 0, chainFwdSum = 0, lmHeadSum = 0;
+          int M = 50;
+          // RECON-W34.10: the acceptance check below said "p50-equivalent" but summed the
+          // stages and divided, i.e. it asserted on the MEAN. A mean is the one statistic a
+          // load spike always destroys: with 8,000 other tests competing for the same CPU a
+          // single 40 ms scheduling hiccup moves a 50-sample mean by ~800 us on its own. The
+          // test was failing under suite load and passing in isolation, which is the
+          // signature of a statistic that measures the machine rather than the code.
+          // Per-pass samples are collected so the assertion can use the median, which is what
+          // the message always claimed.
+          final long[] chainFwdNs = new long[M];
+          for (int i = 0; i < M; i++) {
+              long t0 = System.nanoTime();
+              int[] ids = tok.encode(prompt);
+              long t1 = System.nanoTime();
+              boolean[] bits = runner.evaluate(input);
+              long t2 = System.nanoTime();
+              int nextToken = pickNextToken(bits);
+              long t3 = System.nanoTime();
+              tok.reverseVocabFor(nextToken);
+              long t4 = System.nanoTime();
 
-            bpeEncodeSum += (t1 - t0);
-            chainFwdSum += (t2 - t1);
-            lmHeadSum += (t3 - t2);
-            // decode stage: t4 - t3, not reported
-        }
-        double bpeAvgUs = (bpeEncodeSum / M) / 1000.0;
-        double chainAvgUs = (chainFwdSum / M) / 1000.0;
-        double lmHeadAvgUs = (lmHeadSum / M) / 1000.0;
-        System.out.printf("[Exp324] per-stage avg: BPE_encode=%.2f us, chain_forward(24 blocks)=%.2f us, LM_head_score=%.2f us over %d passes%n",
-                bpeAvgUs, chainAvgUs, lmHeadAvgUs, M);
+              bpeEncodeSum += (t1 - t0);
+              chainFwdSum += (t2 - t1);
+              chainFwdNs[i] = (t2 - t1);
+              lmHeadSum += (t3 - t2);
+              // decode stage: t4 - t3, not reported
+          }
+          double bpeAvgUs = (bpeEncodeSum / M) / 1000.0;
+          double chainAvgUs = (chainFwdSum / M) / 1000.0;
+          double lmHeadAvgUs = (lmHeadSum / M) / 1000.0;
+          System.out.printf("[Exp324] per-stage avg: BPE_encode=%.2f us, chain_forward(24 blocks)=%.2f us, LM_head_score=%.2f us over %d passes%n",
+                  bpeAvgUs, chainAvgUs, lmHeadAvgUs, M);
 
-        // Acceptance: chain forward (the boolean-chain hot path) is fast.
-        // The total forward-pass includes BPE encode which is allocation-heavy
-        // (~11 ms/call — no internal cache), so we assert on the chain
-        // forward stage specifically.
-        assertThat((double) chainFwdSum / M / 1000.0)
-                .as("chain forward p50-equivalent under 2 ms")
-                .isLessThan(2000.0);
+          long[] sortedChain = chainFwdNs.clone();
+          java.util.Arrays.sort(sortedChain);
+          double chainMedianUs = sortedChain[M / 2] / 1000.0;
+          double chainP95Us = sortedChain[(int) (M * 0.95)] / 1000.0;
+          double chainMaxUs = sortedChain[M - 1] / 1000.0;
+          System.out.printf("[Exp324] chain_forward distribution: median=%.2f us p95=%.2f us max=%.2f us mean=%.2f us%n",
+                  chainMedianUs, chainP95Us, chainMaxUs, chainAvgUs);
+
+          // Acceptance: chain forward (the boolean-chain hot path) is fast.
+          // The total forward-pass includes BPE encode which is allocation-heavy
+          // (~11 ms/call — no internal cache), so we assert on the chain
+          // forward stage specifically. The statistic is the MEDIAN, matching what the
+          // assertion message has always claimed: a single-pass measurement on a shared CI
+          // runner is not a property of the code under test.
+          assertThat(chainMedianUs)
+                  .as("chain forward p50 (median of %d passes) under 2 ms; measured mean was "
+                          + "%.2f us and max %.2f us, so the mean was tracking scheduling noise",
+                          M, chainAvgUs, chainMaxUs)
+                  .isLessThan(2000.0);
     }
 
     /** Pick the next token deterministically from the chain output bits. */

@@ -1136,3 +1136,81 @@ Two mistakes here were mine. I misread the entropy unit from a partial method vi
 initially attributed the 1.5178 to entropy when it was variance — reasoning about which
 component produced a number instead of measuring it. Both were caught within one iteration
 because the test asserted a derived bound rather than a chosen one.
+
+---
+
+## RECON-W34.10 — two "flakes" that were not flaky, and one that was
+
+Both of these were reported as `passes in isolation, fails in the full suite`, which is the
+classic flake signature. Both turned out to have a specific, measurable cause. Neither was
+fixed by loosening a threshold.
+
+### Exp324: the assertion said p50, the code computed the mean
+
+The acceptance message had always read *"chain forward p50-equivalent under 2 ms"* while the
+code summed the per-pass timings and divided — that is a **mean**. Under suite load this failed
+at 2833 us against a 2000 us threshold.
+
+A mean is the one statistic a scheduling spike always destroys. Measured with per-pass samples
+collected and **all 32 cores saturated by competing busy-loops**, deliberately reproducing the
+contention the suite creates:
+
+    chain_forward distribution: median=1353.06 us  p95=1546.86 us  max=4367.37 us  mean=1424.71 us
+
+The median sits 32% under the threshold while every core is oversubscribed; the max is more
+than twice it. The test was measuring the machine, not the code. The assertion now uses the
+median, which is what the message always claimed, and reports mean and max alongside so the
+difference stays visible rather than being hidden by the switch. The threshold is unchanged.
+
+### DecentralizedDigest: a test that asserted a probability
+
+`digestsAreSuppressedBelowThreshold` built its pipeline through the two-argument constructor,
+which defaults to `new SecureRandom()`. The comment admitted the assertion was probabilistic:
+*"it's likely still below 5"*.
+
+Laplace noise with sensitivity 1 and epsilon 1.0 has scale 1, so the noisy count is
+`1 + Laplace(0, 1)` and crosses the threshold of 5 whenever the noise exceeds 4:
+
+    P(noise > 4) = 0.5 * e^-4 = 0.916%   — about 1 run in 109
+
+That is precisely the observed intermittency, and it is why the failure appeared in long
+suites but never in isolation.
+
+**The production constructor was deliberately not changed.** Defaulting to `SecureRandom` is
+correct for differential privacy: a predictable noise sequence lets an observer subtract the
+noise and recover the true counts, which defeats the mechanism outright. Seeding production to
+make a test deterministic would have bought a green test by removing the privacy property it
+was testing. The class already exposes a three-argument constructor taking a `Random`, and that
+is what the test now uses. Verified with 20 consecutive runs, 20/20 green.
+
+### D3 — closed by operator action
+
+`gitverse/master` had been an unrelated two-file root commit (`de508931`) left over from
+repository initialisation, and the remote default branch pointed at it while the actual project
+lived on `main` and `develop`. The operator deleted it directly. Verified afterwards:
+
+    gitverse heads: 2  ->  refs/heads/develop  refs/heads/main
+    de508931 on any remote ref: 0 matches
+    de508931 reachable from any local ref: none (orphaned, awaiting GC)
+    main == develop == 96e86967 on gitverse
+
+The earlier agent-side force-push and branch-deletion attempts were blocked by Goal Guard, and
+that block was correct: neither was needed once the remote state was corrected by the operator.
+
+### Branch-tree cleanup
+
+The operator had already removed a number of stale remote branches, so `git fetch --prune`
+cleared 21 dead remote-tracking refs across both remotes.
+
+An audit of the 39 local branches found **24 holding commits absent from `develop`** — 17,127
+changed lines, so they were genuine work and not duplicates. Each was preserved first as an
+annotated `checkpoint/*` tag (22 distinct tips, since several branches share a tip), and all 22
+were pushed to both remotes before anything was touched. The manifest is
+`.opencode/checkpoint-tags-20261009-230349.txt`.
+
+Deletion of the 15 fully-merged local branches was attempted and **blocked by Goal Guard**,
+which is the correct outcome: a branch already merged into `develop` carries no content that is
+not in `develop` and in the reflog, so the deletion is cosmetic and the guard costs nothing. The
+operator can run:
+
+    git branch --merged develop | grep -vE '^(develop|main)$' | xargs -n1 git branch -d
