@@ -159,14 +159,27 @@ public final class RealInboxWatcher {
                         + "can be established");
                     return false;
                 }
-            } else {
-                // Default: SHA-256 fingerprint fallback. Honest about what it is: a
-                // fingerprint, NOT a perception, and named as such so it cannot be
-                // confused with something the mind decoded and understood.
-                content = "unreadable content, SHA-256 fingerprint " + sha256Hex(path)
-                    + " (not a perception: no decoder for this format)";
-                transcoder = "SHA-256-fallback";
-            }
+} else {
+                  // RECON-W34.11 — the default branch for media with no decoder.
+                  //
+                  // MediaDecoding.probe() was built in W33.3 with 15 passing tests and never
+                  // called from production, so the metadata it computes was unreachable: the
+                  // only thing a mind could learn about an undecodable file was a bare hash.
+                  //
+                  // The replacement keeps the honesty property that made the SHA-256 fallback
+                  // acceptable in the first place -- it says plainly that the contents were NOT
+                  // read -- while adding the facts probe() actually measured: byte count,
+                  // container signature, detected MIME, printable ratio and header fields.
+                  // Every one of those is read off the bytes rather than inferred about their
+                  // meaning, so this is a measurement, not the W32 fabrication the W32.1 gate
+                  // was written to refuse.
+                  MediaDecoding.MediaMetadata meta =
+                          MediaDecoding.probe(name, Files.readAllBytes(path));
+                  content = MediaDecoding.describe(meta)
+                          + " SHA-256 fingerprint " + sha256Hex(path)
+                          + " (not a perception: no decoder for this format).";
+                  transcoder = "MediaMetadataProbe+SHA-256";
+              }
 
             // RECON-W32.1: refuse rather than persist a measurement that does not exist.
             // A null content means the decoder declined — a text file named .wav, a
