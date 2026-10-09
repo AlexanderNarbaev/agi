@@ -816,3 +816,82 @@ more dangerous than one that is absent, because the code reads as though the cap
 exists. Here it was a constant masquerading as a measurement; there it was a model that could
 not classify anything. Both were found by a test asserting a value and getting a suspiciously
 round one.
+
+---
+
+## RECON-W34.6 — four more oracles were wrong, not four defects in production code
+
+All four of these were property tests whose ASSERTION was the problem. In each case the
+production code was either correct or correctly documented, and changing it to satisfy the
+test would have made it worse. That is the distinction this wave exists to establish, and it
+is not always obvious from a red test.
+
+### 1. `CognitiveGroupedQueryAttentionPropertyTest.propertyCompressionRatio` — a generator bug
+
+A property test that **throws** is not testing a property. It was constructing
+`CognitiveGroupedQueryAttention(64, qh, kvh, seed)` with a fixed dim of 64 while drawing
+`qh` from 1..16, and its guard checked only `qh % kvh`. It never checked `64 % qh`, so every
+head count not dividing 64 — 5, 6, 7, 9, 11, 13, 14, 15 — threw
+`IllegalArgumentException` from the constructor and failed the test.
+
+Worse in the other direction: the early `return` meant most of the 30 tries asserted nothing
+at all, so the property was **silently vacuous** for the majority of its budget while also
+failing on the tries that did construct. Providers now generate valid configurations only
+(query heads from the divisors of 64, KV heads intersected against the drawn qh), so every
+try asserts. The production precondition is legitimate and unchanged.
+
+### 2. `MemristorSwitchPropertyTest.propertyStdpLargeDtNoChange` — bit-exact equality on a float
+
+Measured failure: `expected 0.0 but was 9.64374923981959E-24`.
+
+The update computes `exp(-|dt|/tau)` = `exp(-2000)`, which underflows toward zero but leaves a
+residue. `"exp(-2000) == 0.0 exactly"` is **not a property of IEEE-754 doubles**, and asserting
+it makes the test sensitive to the last bit of a result already indistinguishable from zero
+at any working precision. The claim the property means is "a spike 2000 tau out leaves the
+weight unchanged", so the assertion is now a tolerance on that claim.
+
+### 3. `SeriesCorrelatorPropertyTest.propertyAutocorrelationZeroIsOne` — asserted past the definition
+
+Autocorrelation at lag 0 of a **constant** series is mathematically undefined — every point
+equals every other, so the normalised quantity is 0/0. `SeriesCorrelator` resolves this
+deliberately and documents it: *"Returns 0 if either has zero variance."* Verified directly:
+
+```
+autocorrelation({5,5,5,5,5,5}, 2)[0] = 0.0
+autocorrelation({1,2,3,4,5,6}, 2)[0] = 1.0
+```
+
+The production behaviour was right and the property contradicted its own documentation. The
+property is narrowed to the domain where it is defined, and a new test pins the documented
+zero-variance answer so the boundary is explicit rather than incidental.
+
+### 4. `SeriesCorrelatorPropertyTest.propertyPearsonRandomIndependentIsSmall` — a statistical claim as a hard bound
+
+Asserted `|r| < 0.5` for independent Gaussians, over a deterministic seed generator. Measured
+on this machine across 19,600 draws, lengths 16..64:
+
+```
+draws with |r| >= 0.5 : 117
+worst observed |r|    : 0.6587  (at length 16)
+```
+
+The property was **false about mathematics**, not unlucky. For n independent normal samples
+the sampling distribution of r has standard deviation ~`1/sqrt(n-2)`, which at n = 16 is
+0.286 — so `|r| >= 0.5` is roughly a 1.7-sigma event and WILL occur on some seeds. A fixed 0.5
+also cannot hold at every length, since the bound must widen as n shrinks.
+
+The threshold is now the **derived** 4-sigma value, `4/sqrt(n-2)`: 1.03 at n = 16 (beyond the
+mathematical maximum, so vacuously satisfied) and 0.50 at n = 64. The honest statement is made
+explicit in the assertion message — this checks that correlation does not **scale** with n,
+not that it is small in absolute terms. A property that cannot be falsified is not useful, so
+that limitation is stated rather than hidden.
+
+### The pattern, now four instances deep
+
+`AdvancedTsetlinMachine.init()` (a model that can never classify), `KolmogorovComplexity`
+(a constant masquerading as a measurement), and now two generators that produced invalid
+inputs and one oracle that demanded a value IEEE-754 does not promise.
+
+**All four were found by reading the failure VALUE rather than the failure message.** A
+message says *what* failed; a suspiciously round number, an exception from a constructor, or a
+threshold that no statistic can honour, says *why it was never going to pass*.
