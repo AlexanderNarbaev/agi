@@ -35,8 +35,14 @@ class LSystemTest {
         Map<Character, String> rules = new HashMap<>();
         rules.put('F', "FF");
         String result = LSystem.generate("FXY", rules, 2);
-        // FX+Y → FF + XY = FFXXY
-        assertThat(result).isEqualTo("FFXXY");
+        // RECON-W34.7: the original comment read "FX+Y -> FF + XY = FFXXY" and that is
+        // arithmetically wrong -- no X is conjured along the way. The generations are:
+        //   gen 0: F X Y
+        //   gen 1: (F->FF) + X + Y          = FF X Y
+        //   gen 2: (F->FF)(F->FF) + X + Y    = FFFF X Y
+        // so "FFFFXY" was correct all along and the expectation was the thing that was wrong.
+        // The step-by-step derivation is recorded so the intent is checkable.
+        assertThat(result).isEqualTo("FFFFXY");
     }
 
     @Test

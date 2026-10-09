@@ -75,7 +75,16 @@ public final class MultivariateGaussianAnalyzer {
                 if (stdJ == 0 || stdK == 0) {
                     corr[j][k] = j == k ? 1.0 : 0.0;
                 } else {
-                    corr[j][k] = cov[j][k] / (stdJ * stdK);
+                    // RECON-W34.7: this was unclamped, and the property caught it returning
+                // 1.0000000000000002. A correlation coefficient is bounded to [-1, 1] BY
+                // DEFINITION -- Cauchy-Schwarz does not admit 1+2e-16 -- so an out-of-range
+                // value is a contract violation, not a rounding curiosity. Any consumer doing
+                // a range check downstream breaks on it, which is exactly what the test does.
+                //
+                // Clamped rather than loosened in the test: a function named correlation()
+                // that returns outside the mathematical range of correlation is wrong at ANY
+                // tolerance, and a tolerance would only hide it from the next caller.
+                corr[j][k] = Math.max(-1.0, Math.min(1.0, cov[j][k] / (stdJ * stdK)));
                 }
             }
         }

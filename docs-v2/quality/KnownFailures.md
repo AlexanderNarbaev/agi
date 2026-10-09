@@ -895,3 +895,95 @@ inputs and one oracle that demanded a value IEEE-754 does not promise.
 **All four were found by reading the failure VALUE rather than the failure message.** A
 message says *what* failed; a suspiciously round number, an exception from a constructor, or a
 threshold that no statistic can honour, says *why it was never going to pass*.
+
+---
+
+## RECON-W34.7 — a Hadamard gate that was not a Hadamard gate
+
+The most consequential defect found in this debt-burn-down, and the only one where the
+production code was genuinely wrong rather than the test being unfair.
+
+**Found by an existing test that was only half right.** `QuantumEmulatorTest.testHadamardGate`
+asserts `probabilityZero == 0.5` first, which the broken implementation DOES satisfy, and then
+`probabilityOne == 0.5`, which it does not. So the failure presented as "expected 0.5 but was
+0.0" with no indication that a fundamental invariant had been violated underneath it.
+
+**What the code did.** For `|alpha, beta>` it computed:
+
+```
+alpha' = alpha / sqrt(2)      beta' = beta / sqrt(2)      <- scaling, not mixing
+```
+
+**What Hadamard is.** The mixing gate:
+
+```
+alpha' = (alpha + beta) / sqrt(2)
+beta'  = (alpha - beta) / sqrt(2)
+```
+
+**Why scaling is dangerous rather than merely wrong.** For `|0> = (1, 0)` the two agree on
+`alpha' = 1/sqrt(2)`, which is why the first assertion passed and the bug hid. They disagree
+on `beta'`, and the error is not small:
+
+```
+measured, after H on |0>:   p0 = 0.5000   p1 = 0.0000   TOTAL = 0.5000
+```
+
+A quantum state must satisfy `p0 + p1 == 1`. This one totals **0.5**: the simulator was
+silently discarding half the probability mass on every Hadamard. Since `measure()` samples from
+`p0` without renormalising, **every collapse was biased toward the wrong outcome** — and the
+outputs still looked plausible, which is the worst way for a simulator to fail.
+
+It compounded too: `H(H(|0>))` gave `p0 = 0.25` instead of `1.0`, because each application
+multiplied the mass by 0.5 again. A scaling operation can never satisfy `H = NOT`.
+
+Fixed to the mixing form, which is unitary and therefore preserves normalisation by
+construction. `QuantumGateNormalisationTest` now pins all four gates' `p0 + p1 == 1`, both
+superpositions, and involution.
+
+### Two more in the same wave
+
+`MultivariateGaussianAnalyzer.correlation` divided covariance by `stdJ * stdK` **without
+clamping**, and a property caught it returning `1.0000000000000002`. A correlation
+coefficient is bounded to [-1, 1] by Cauchy-Schwarz, so this is a contract violation, not a
+rounding curiosity — and any consumer doing a downstream range check breaks on it. Clamped in
+production rather than loosened in the test: a function named `correlation` that returns
+outside the mathematical range of correlation is wrong at **any** tolerance, and a tolerance
+would only hide it from the next caller.
+
+`LSystemTest.unknownSymbolsPassThrough` expected `"FFXXY"` from `F->"FF"` on `"FXY"` at depth
+2, with the comment `FX+Y -> FF + XY = FFXXY` — which conjures an extra X. The generations are:
+
+```
+gen 0: F X Y
+gen 1: FF X Y
+gen 2: FFFF X Y
+```
+
+`"FFFFXY"` was correct throughout. The expectation was wrong, and the derivation is now
+recorded in the test so the intent is checkable rather than merely asserted.
+
+### Two generators that crashed before reaching the code under test
+
+`CognitivePhaseDetectorPropertyTest` seeded its RNG with `seeds[0]` while its provider drew
+sizes 0..16 — so an empty list threw `ArrayIndexOutOfBoundsException` inside the generator,
+before `CognitivePhaseDetector` was ever called. Production was already correct and untouched:
+`dominantRegime` returns `"UNKNOWN"` for empty, and the property already accepted `"UNKNOWN"`.
+The test was failing on its own fixture.
+
+`InterAgentPhiPropertyTest` guarded `dim < 1` but `measureTimeSeries(trajectory, 2)` requires
+every row to have at least `N = 2` columns. So `dim == 1` built a trajectory the production
+method is right to refuse, and the property reported that refusal as a failure of
+`InterAgentPhi`. The precondition is now stated where the call is made.
+
+### `CognitiveHeatmapTest` compared two different quantities
+
+It asserted the heatmap cell equals `MemristorSwitch.conductance(0.5)` = `0.5000005`, while
+the heatmap holds `0.5` — the value written into the profile. One is the field as recorded,
+the other is the memristor model applied to it a second time. The test was asserting that the
+heatmap **re-derives a physical model from stored data**, which is not what a projection does.
+
+**The running theme is unchanged from W34.5 and W34.6:** eight of the failures so far were
+wrong assertions and two were real defects, and the real ones were found by reading the failure
+*value* — 1.0000000000000002, a total of 0.5000, an exception from a constructor — rather than
+the failure message.

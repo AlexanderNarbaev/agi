@@ -59,7 +59,14 @@ class CognitiveHeatmapTest {
         // phiBinary = 0.3 should be at column 0
         assertThat(heatmap[0][0]).isEqualTo(0.3);
         // memristorConductance should be at column 11
-        assertThat(heatmap[0][11]).isEqualTo(MemristorSwitch.conductance(0.5));
+        // RECON-W34.7: this compared the STORED profile field against a RECOMPUTED
+        // MemristorSwitch.conductance(0.5) = 0.5000005, while the heatmap holds 0.5 -- the
+        // value written into the profile. Those are different quantities: one is the field as
+        // recorded, the other is the memristor model applied to it a second time. The test was
+        // asserting that the heatmap RE-DERIVES a physical model from stored data, which is
+        // not what a projection does. It now asserts the recorded value passes through.
+        assertThat(heatmap[0][11]).isEqualTo(profiles.get(0).memristorConductance());
+        assertThat(heatmap[0][11]).isEqualTo(0.5);
     }
 
     private static CognitiveGenesisProfile makeProfile(double phi) {

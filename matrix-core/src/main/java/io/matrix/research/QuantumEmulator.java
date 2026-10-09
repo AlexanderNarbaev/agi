@@ -44,10 +44,35 @@ public final class QuantumEmulator {
         Qubit q = qubits.get(qubitIndex);
         Qubit result;
         if (gate == Gate.HADAMARD) {
-            // H|0⟩ = (|0⟩ + |1⟩) / √2
+            // RECON-W34.7. This was:
+            //
+            //   alpha' = alpha / sqrt(2)    beta' = beta / sqrt(2)
+            //
+            // which SCALES both amplitudes instead of MIXING them, and is not the Hadamard
+            // gate. Measured on |0>:
+            //
+            //   before : p0 = 1.0000  p1 = 0.0000
+            //   after  : p0 = 0.5000  p1 = 0.0000   TOTAL = 0.5000
+            //
+            // A quantum state must satisfy p0 + p1 == 1. This one totals 0.5, so the simulator
+            // was silently discarding half the probability mass on every Hadamard. Since
+            // measure() samples from p0 without renormalising, every collapse was biased
+            // toward the wrong outcome -- and the results still looked plausible, which is the
+            // most dangerous way for a simulator to fail.
+            //
+            // It also compounded: H(H(|0>)) gave p0 = 0.25 rather than 1.0, because each
+            // application multiplied the mass by 0.5 again.
+            //
+            // Hadamard is the mixing gate. For |alpha, beta>:
+            //   alpha' = (alpha + beta) / sqrt(2)
+            //   beta'  = (alpha - beta) / sqrt(2)
+            // which is unitary, so it preserves normalisation by construction.
             double invSqrt2 = 1.0 / Math.sqrt(2);
-            result = new Qubit(q.alphaReal() * invSqrt2, q.alphaImag() * invSqrt2,
-                               q.betaReal() * invSqrt2, q.betaImag() * invSqrt2);
+            double newAlphaReal = (q.alphaReal() + q.betaReal()) * invSqrt2;
+            double newAlphaImag = (q.alphaImag() + q.betaImag()) * invSqrt2;
+            double newBetaReal = (q.alphaReal() - q.betaReal()) * invSqrt2;
+            double newBetaImag = (q.alphaImag() - q.betaImag()) * invSqrt2;
+            result = new Qubit(newAlphaReal, newAlphaImag, newBetaReal, newBetaImag);
         } else if (gate == Gate.PAULI_X) {
             result = new Qubit(q.betaReal(), q.betaImag(), q.alphaReal(), q.alphaImag());
         } else if (gate == Gate.PAULI_Z) {

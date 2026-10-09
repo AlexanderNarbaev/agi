@@ -12,7 +12,13 @@ class InterAgentPhiPropertyTest {
     @Property(tries = 50)
     void propertyMeasureTimeSeriesBounded(@ForAll("trajectoryLengths") int length,
                                             @ForAll("numDimensions") int dim) {
-        if (length < 4 || dim < 1) return;
+        // RECON-W34.7: the guard checked `dim < 1`, but measureTimeSeries(trajectory, 2) requires
+        // every row to have at least N = 2 columns -- phiLinGaussFromSamples rejects anything
+        // shorter with "row length < N". So dim == 1 built a trajectory the production method
+        // is RIGHT to refuse, and the property reported that refusal as a failure of
+        // InterAgentPhi. The precondition is now stated where the call is made.
+        final int N = 2;
+        if (length < 4 || dim < N) return;
         Random rng = new Random(length);
         double[][] trajectory = new double[length][dim];
         for (int i = 0; i < length; i++) {
@@ -20,7 +26,7 @@ class InterAgentPhiPropertyTest {
                 trajectory[i][j] = rng.nextDouble() * 2 - 1;
             }
         }
-        double phi = InterAgentPhi.measureTimeSeries(trajectory, 2);
+        double phi = InterAgentPhi.measureTimeSeries(trajectory, N);
         assertThat(Double.isFinite(phi)).isTrue();
     }
 

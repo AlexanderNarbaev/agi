@@ -70,7 +70,7 @@ class CognitivePhaseDetectorPropertyTest {
             Arbitraries.longs().between(0, Long.MAX_VALUE / 2).array(long[].class).ofSize(n)
                 .map(seeds -> {
                     List<CognitiveGenesisProfile> list = new ArrayList<>();
-                    Random rng = new Random(seeds[0]);
+                    Random rng = new Random(n);
                     for (int i = 0; i < seeds.length; i++) {
                         double phiB = rng.nextDouble();
                         double phiF = rng.nextDouble();
