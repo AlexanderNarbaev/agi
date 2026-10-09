@@ -94,12 +94,16 @@ class LearningPathVisibilityTest {
     @Test
     void aPartialLedgerSummaryIsMarkedPartial(@TempDir Path dir) throws Exception {
         Path ledger = dir.resolve("ledger.ndjson");
-        // The real record is 11 fields, so samplesUsed is always followed by another
+        // RECON-W34.4: inputBits is the BYTE field and is what total_inputs_bytes sums;
+        // samplesUsed is the COUNT field. This fixture previously wrote byte-sized values
+        // into samplesUsed and count-sized values into inputBits -- the inverse of the
+        // field names -- so the values were migrated rather than the expectation weakened.
+        // The real record is 11 fields, so the count field is always followed by another
         // field. My first fixture put it last, which the summary's comma-delimited
         // reader cannot terminate — a fixture error that looked like a code error.
         Files.writeString(ledger,
-            "{\"sourceId\":\"a\",\"samplesUsed\":1024,\"inputBits\":4}\n"
-            + "{\"sourceId\":\"b\",\"samplesUsed\":NOT_A_NUMBER,\"inputBits\":4}\n",
+            "{\"sourceId\":\"a\",\"inputBits\":1024,\"samplesUsed\":4}\n"
+            + "{\"sourceId\":\"b\",\"inputBits\":NOT_A_NUMBER,\"samplesUsed\":4}\n",
             StandardCharsets.UTF_8);
 
         PrintStream realErr = System.err;
@@ -123,8 +127,8 @@ class LearningPathVisibilityTest {
     void aCleanLedgerSummaryIsNotMarkedPartial(@TempDir Path dir) throws Exception {
         Path ledger = dir.resolve("ledger.ndjson");
         Files.writeString(ledger,
-            "{\"sourceId\":\"a\",\"samplesUsed\":1024,\"inputBits\":4}\n"
-            + "{\"sourceId\":\"b\",\"samplesUsed\":2048,\"inputBits\":4}\n",
+            "{\"sourceId\":\"a\",\"inputBits\":1024,\"samplesUsed\":4}\n"
+            + "{\"sourceId\":\"b\",\"inputBits\":2048,\"samplesUsed\":4}\n",
             StandardCharsets.UTF_8);
         PrintStream realErr = System.err;
         ByteArrayOutputStream captured = new ByteArrayOutputStream();

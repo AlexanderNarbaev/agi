@@ -148,7 +148,10 @@ public final class ModelToMatrix {
         // is what an audit log is for; the identity is content-addressed.
         ledger.record(new DistillationLedger.Entry(
             "run-" + artifactHash,
-            source, tokens.size(), (int) inputsBytes, hdcPromoted, birClauses,
+            // RECON-W34.4: inputBits is BYTES and samplesUsed is a COUNT. These two were
+            // passed the other way round here exactly as in TrueDistillationFactory, so this
+            // writer reported a byte total of "token count" and a count of "byte count".
+            source, (int) inputsBytes, tokens.size(), hdcPromoted, birClauses,
             tsetlinLiterals, 0.0, durationMs, System.currentTimeMillis(), artifactHash));
         return r;
     }

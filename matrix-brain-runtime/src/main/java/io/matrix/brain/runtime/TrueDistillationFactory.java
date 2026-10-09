@@ -153,7 +153,11 @@ public final class TrueDistillationFactory {
                 // indistinguishable in the audit trail. sourceId is now r.source, so the
                 // caller's label survives into the record whose job is to carry it.
                 r.source,
-                  r.source, r.captures, (int) sourceBytes, 0, r.birClausesSynthesized(), 0, r.fidelity,
+                  // RECON-W34.4: these two were INVERTED. inputBits carries BYTES and samplesUsed
+                // carries a COUNT; they were passed the other way round, so
+                // inputsCount() reported a byte count and total_inputs_bytes reported a
+                // sample count. Operator ruling: each field reports its own real unit.
+                r.source, (int) sourceBytes, r.captures, 0, r.birClausesSynthesized(), 0, r.fidelity,
                   r.durationMs, finishedAtMs, r.artifactHash));
         } catch (java.io.IOException e) {
             // RECON-W32.33. Non-fatal is right; invisible is not. The DistillationLedger

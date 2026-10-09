@@ -19,7 +19,20 @@ public final class DistillationLedger {
     private static final java.util.logging.Logger LOG =
             java.util.logging.Logger.getLogger(DistillationLedger.class.getName());
 
-    /** 11-field record: sourceId, datasetOrPattern, inputBits, samplesUsed,
+    /**
+     * RECON-W34.4 UNITS. This record mixes quantities in different units and the names alone
+     * were not enough to stop them being swapped:
+     *
+     * <ul>
+     *   <li>{@code inputBits} — BYTES of input data consumed by the run.</li>
+     *   <li>{@code samplesUsed} — COUNT of samples the run consumed. NOT bytes.</li>
+     * </ul>
+     *
+     * {@code total_inputs_bytes} sums {@code inputBits}. {@code inputsCount()} returns
+     * {@code samplesUsed}. An earlier revision had both writers passing them the other way
+     * round, which made a byte total report a sample count and vice versa.
+     *
+     * <p>11-field record: sourceId, datasetOrPattern, inputBits, samplesUsed,
      * hdcPromoted, birClausesSynthesized, tsetlinLiterals, fidelity,
      * durationMs, timestamp (epoch ms), artifactHash. */
     public record Entry(
@@ -79,7 +92,7 @@ public final class DistillationLedger {
                         continue;
                     }
                     try {
-                        totalBytes += readLong(line, "samplesUsed");
+                        totalBytes += readLong(line, "inputBits");
                         runs++;
                     } catch (RuntimeException e) {
                         // RECON-W32.21: an unparseable byte count is not cosmetic. This
@@ -113,6 +126,11 @@ public final class DistillationLedger {
         // teach the mind anything", which is the question a distillation ledger exists for.
         out.put("runs", runs);
         out.put("total_inputs_bytes", totalBytes);
+        // RECON-W34.4: added alongside total_inputs_bytes so each field's unit is visible in
+        // the summary itself. Before this, only a byte-looking key existed and it was fed the
+        // count, so a reader had no way to tell from the summary that the two had been
+        // transposed. Two clearly-named keys is cheaper to keep honest than one ambiguous one.
+        out.put("total_inputs_count", sumField("samplesUsed"));
         out.put("total_hdc_promoted", sumField("hdcPromoted"));
         out.put("total_bir_clauses_induced", sumField("birClausesSynthesized"));
         out.put("total_tsetlin_automata_updated", sumField("tsetlinLiterals"));
@@ -214,7 +232,7 @@ public final class DistillationLedger {
             if (!Files.exists(ledgerPath)) return 0.0;
             for (String line : Files.readAllLines(ledgerPath)) {
                 if (line.isBlank() || !line.startsWith("{")) continue;
-                if (line.indexOf("\"samplesUsed\":") < 0) continue;
+                if (line.indexOf("\"inputBits\":") < 0) continue;
                 try {
                     sum += readDouble(line, field);
                     counted++;

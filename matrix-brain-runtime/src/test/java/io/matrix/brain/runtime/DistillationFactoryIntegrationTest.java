@@ -136,7 +136,15 @@ class DistillationFactoryIntegrationTest {
 
         var s = l.summary();
         assertThat(((Number) s.get("runs")).intValue()).isEqualTo(2);
-        assertThat(((Number) s.get("total_inputs_bytes")).longValue()).isEqualTo(300L);
+        // RECON-W34.4: the two entry lines above carry inputBits=10/20 (BYTES) and
+        // samplesUsed=100/200 (COUNTS). This assertion used to read 300 from samplesUsed,
+        // which is a sample total reported under a byte key. The operator ruled that each
+        // field reports its own unit, so the byte total is 30 and the count total is 300.
+        // Both are asserted so neither field can drift back into the other again.
+        assertThat(((Number) s.get("total_inputs_bytes")).longValue())
+                .as("bytes: sum of inputBits").isEqualTo(30L);
+        assertThat(((Number) s.get("total_inputs_count")).longValue())
+                .as("counts: sum of samplesUsed").isEqualTo(300L);
         assertThat(((Number) s.get("total_hdc_promoted")).intValue()).isEqualTo(15);
         assertThat(((Number) s.get("total_bir_clauses_induced")).intValue()).isEqualTo(3);
         assertThat(((Number) s.get("total_tsetlin_automata_updated")).intValue()).isEqualTo(6);

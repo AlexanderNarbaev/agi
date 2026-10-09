@@ -695,3 +695,50 @@ This is the second time in two waves that a shipped component turned out to be i
 stated purpose — `ReflexEngine` ordering being the first. A component that is present,
 plausible, and never fires is more dangerous than one that is absent, because the code reads
 as if the capability exists.
+
+---
+
+## RECON-W34.4 — RESOLVED: `samplesUsed` unit ambiguity, by operator ruling
+
+Escalated rather than guessed at in W34.1. The operator ruled (2026-10-09):
+
+> `total_inputs_bytes` must report the real byte value; `inputsCount()` must return a count,
+> not bytes. Fix both.
+
+So **each field reports its own unit**, and the ambiguity is resolved by disambiguation rather
+than by picking a winner and discarding the other meaning.
+
+| field | unit | read by |
+|---|---|---|
+| `inputBits` | **bytes** of input consumed | `summary().total_inputs_bytes` |
+| `samplesUsed` | **count** of samples consumed | `Entry.inputsCount()` |
+
+### What was actually wrong
+
+Both writers passed these arguments **inverted**:
+
+```
+TrueDistillationFactory : inputBits <- r.captures (count), samplesUsed <- sourceBytes (bytes)
+ModelToMatrix           : inputBits <- tokens.size(), samplesUsed <- (int) inputsBytes
+```
+
+and `summary()` summed `samplesUsed` into a key called `total_inputs_bytes`. The consequence
+was exactly as diagnosed: a ledger reporting a **sample count under a byte key**, and
+`inputsCount()` returning bytes.
+
+### Disposition of already-written ledger files (Article VII)
+
+Field *names* and *positions* in the NDJSON line are unchanged — `inputBits` was always the
+third numeric field and `samplesUsed` the fourth. **No file needs rewriting**, and no
+migration is required, because what changed is which quantity each writer supplies for those
+fields, not the schema itself.
+
+Files written by an earlier build DO carry inverted values: their `inputBits` holds a count
+and their `samplesUsed` holds bytes. They remain readable, and `readAll()` reproduces the
+values as stored. For such a file `total_inputs_bytes` now reports the older count value.
+
+That is recorded rather than silently corrected, because rewriting a number in an audit trail
+after the fact is exactly the kind of edit this ledger exists to make impossible. **Owner
+action:** re-distil, or accept that pre-W34.4 ledger rows carry inverted units. No file in the
+repository currently holds such a row — the ledgers found on disk are the DISK-LEDGER, which
+uses a different shape entirely.
