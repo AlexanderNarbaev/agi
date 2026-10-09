@@ -464,3 +464,95 @@ that block is not accepted as evidence.
   `none`) barely matters here. Not tuned; the setting is recorded.
 - **NUMA.** Single node, so there is nothing to pin. On a multi-socket machine this whole
   document's thread section would need re-deriving.
+
+---
+
+## RECON-W34.2 — GPU activation: measured, and the cause was not the hardware
+
+### The finding
+
+For months the runtime logged
+
+```
+OnnxRuntimeAdapter: CUDA not available, falling back to CPU
+```
+
+and that was reported as an environment fact. **It was neither environment nor fact.** It was
+four symlinks committed to git that published a CUDA 12 name for a CUDA 13 binary:
+
+```
+.onnx_libs/libcudart.so.12   -> /usr/local/cuda-13.1/lib64/libcudart.so.13
+.onnx_libs/libcublas.so.12   -> /usr/local/cuda-13.1/lib64/libcublas.so.13
+.onnx_libs/libcublasLt.so.12 -> /usr/local/cuda-13.1/lib64/libcublasLt.so.13
+```
+
+The loader resolved `libcudart.so.12` to a CUDA 13 binary, looked for
+`cudaLibraryGetKernel`, did not find the version it needed, and ONNX reported
+`undefined symbol: cudaLibraryGetKernel, version libcudart.so.12`. Each target published its
+real SONAME as `lib*.so.13`, which is the check `scripts/diagnose-cuda.sh` now automates.
+
+So "CUDA is unavailable on this machine" was a conclusion drawn from a broken symlink. **The
+hardware was fine throughout.**
+
+### What is genuinely wrong with the machine
+
+| component | state | matters for inference? |
+|---|---|---|
+| CUDA driver API (`cuInit`) | **CUDA_SUCCESS**, RTX 5070 Ti visible | no — this is what inference uses |
+| NVML / `nvidia-smi` | **Driver/library version mismatch** | **no** — monitoring only |
+| kernel module | 595.91.07 loaded | — |
+| userspace `libcuda` | 595.99.02 | — |
+| CUDA toolkit | 13.1 at `/usr/local/cuda-13.1` | build only |
+
+`nvidia-smi` fails because the loaded kernel module (595.91.07) predates the userspace
+libraries (595.99.02). A newer driver was installed without a reboot. **A reboot fixes
+`nvidia-smi`; it is not required for inference** and it was not performed — rebooting the
+operator's machine unasked is not an agent's call.
+
+### The fix
+
+Genuine CUDA 12 libraries already exist on this host, shipped by the `nvidia` pip packages:
+
+```
+.venv/.../nvidia/cuda_runtime/lib/libcudart.so.12      SONAME=libcudart.so.12
+.venv/.../nvidia/cublas/lib/libcublas.so.12            SONAME=libcublas.so.12
+.venv/.../nvidia/cublas/lib/libcublasLt.so.12         SONAME=libcublasLt.so.12
+```
+
+`.onnx_libs/*.so.12` now point at those instead of at CUDA 13. Each SONAME matches the name
+it is published under. **Unresolved dependencies of `libonnxruntime_providers_cuda.so`: 0.**
+
+### Measured result
+
+512x512 two-matmul ONNX graph (opset 13), best of 100, identical seeded input for both
+providers:
+
+| provider | best latency |
+|---|---|
+| CPU | **9.68 ms** |
+| CUDA (RTX 5070 Ti) | **6.55 ms** |
+
+**1.48x.** Reproduce with `scripts/diagnose-cuda.sh`.
+
+### Why this is not a silent fallback
+
+A provider that loads and then quietly executes on the CPU is worse than one that fails
+loudly, because it reports success while delivering no benefit. The control experiment is
+therefore part of the evidence:
+
+| condition | result |
+|---|---|
+| GPU visible | CUDA EP **6.55 ms** |
+| `CUDA_VISIBLE_DEVICES=""` | CUDA EP **FAILS** — `ORT_FAIL` from `cuda_call.cc` |
+
+If the CUDA path were falling back, the second row would have succeeded at CPU speed. It
+fails outright, which is only possible if the run genuinely requires the device.
+
+### Reproducing
+
+```bash
+bash scripts/diagnose-cuda.sh            # diagnose only
+bash scripts/diagnose-cuda.sh --repair   # repoint masquerading symlinks at genuine CUDA 12
+
+LD_LIBRARY_PATH=.onnx_libs ./gradlew :matrix-core:test   # run with GPU available
+```

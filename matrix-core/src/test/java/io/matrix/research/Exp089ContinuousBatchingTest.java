@@ -54,7 +54,15 @@ class Exp089ContinuousBatchingTest {
         Path dir = findModelDir();
         QwenOnnxBridge bridge = new QwenOnnxBridge(dir);
         bridge.setMaxNewTokens(8);
-        if (!bridge.load()) return;
+        // RECON-W34.2: this was `if (!bridge.load()) return;` -- an early return that JUnit
+        // records as a PASS. A bridge that loaded nothing and produced nothing therefore
+        // produced a green test. Model absence is already declared by @EnabledIf(modelAvailable)
+        // above, so reaching here means a model WAS found; if it then fails to load, that is a
+        // genuine failure and must be reported as one.
+        assertThat(bridge.load())
+                .as("a model directory was located and @EnabledIf passed, so load() must succeed. "
+                        + "An early return here would report PASS for a bridge that did nothing")
+                .isTrue();
 
         ContinuousBatchScheduler sched =
                 new ContinuousBatchScheduler(bridge, 4, 50);
@@ -64,8 +72,15 @@ class Exp089ContinuousBatchingTest {
         for (int i = 0; i < 10; i++) {
             futures.add(sched.submit("Hi " + i, 4));
         }
+        // RECON-W34.2: this was f.get(60, TimeUnit.SECONDS), a wall-clock deadline that made
+        // the verdict depend on machine speed. Measured evidence: this test FAILED in the
+        // 26-minute full suite, failed 2 of 3 back-to-back runs, and passed 8 of 8 isolated.
+        // Under suite contention ten concurrent inferences contend for a saturated CPU -- and
+        // ONNX Runtime falls back to CPU here -- so correct code could exceed 60s on a machine
+        // doing nothing wrong. Unbounded get() waits for the real result; the assertions below
+        // are what constitute the correctness claim, not how long it took.
         for (var f : futures) {
-            f.get(60, TimeUnit.SECONDS);
+            f.get();
         }
         long elapsedMs = (System.nanoTime() - t0) / 1_000_000L;
         double rps = futures.size() / (elapsedMs / 1000.0);
@@ -82,7 +97,11 @@ class Exp089ContinuousBatchingTest {
         Path dir = findModelDir();
         QwenOnnxBridge bridge = new QwenOnnxBridge(dir);
         bridge.setMaxNewTokens(4);
-        if (!bridge.load()) return;
+        // RECON-W34.2: same vacuous pass as tenConcurrentRequests -- an early return recorded
+        // as PASS. Absence is already declared by @EnabledIf; a load failure here is real.
+        assertThat(bridge.load())
+                .as("@EnabledIf passed, so a model was located and load() must succeed")
+                .isTrue();
 
         // Batch size 1 (effectively serial)
         ContinuousBatchScheduler small =
