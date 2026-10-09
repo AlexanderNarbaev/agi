@@ -62,9 +62,29 @@ class PhiComplexityFingerprintPropertyTest {
         List<CognitiveGenesisProfile> profiles = new ArrayList<>();
         for (int i = 0; i < n; i++) profiles.add(randomProfile(rng));
         double[] fp = PhiComplexityFingerprint.sequenceFingerprint(profiles);
-        for (double v : fp) {
-            assertThat(v).isBetween(0.0, 1.5);
-        }
+        // RECON-W34.9: this asserted a SINGLE bound of [0, 1.5] on all four returned
+        // components, which are four different quantities with four different ranges:
+        //
+        //   [0] meanEntropy      Shannon entropy over 4 bins. EntropyDecomposition.entropy computes
+        //                        in nats and DIVIDES BY log(2), so it returns BITS and the true
+        //                        maximum is log2(4) = 2.0. (An earlier revision of this comment
+        //                        claimed nats and a 1.386 ceiling; that was wrong, read from a
+        //                        partial view of the method, and the corrected bound is below.)
+        //   [1] meanVariance     variance of the 13 profile fields -- UNBOUNDED. The measured
+        //                        1.5178 is this component, not entropy.
+        //   [2] regimeComplexity CognitiveEntropyMeter.normalizedRegimeEntropy, in [0, 1]
+        //   [3] composite        the mean of the three above, so also effectively unbounded
+        //
+        // A blanket bound across heterogeneous metrics is not a weak test, it is a meaningless
+        // one: it passed while entropy was still well under its true maximum, and would fail
+        // for any field set with real spread. Each component is now asserted against the range
+        // its own definition implies.
+        assertThat(fp[0])
+                .as("entropy over 4 bins in bits, max log2(4) = 2.0")
+                .isBetween(0.0, 2.0 + 1e-9);
+        assertThat(fp[1]).as("variance is non-negative and unbounded").isGreaterThanOrEqualTo(0.0);
+        assertThat(fp[2]).as("normalized regime entropy").isBetween(0.0, 1.0);
+        assertThat(fp[3]).as("composite is non-negative").isGreaterThanOrEqualTo(0.0);
     }
 
     @Property(tries = 30)

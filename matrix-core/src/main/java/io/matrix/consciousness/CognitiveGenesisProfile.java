@@ -58,15 +58,53 @@ public record CognitiveGenesisProfile(
     /**
      * Compute a unified complexity score, weighted combination of all
      * information-content measures.
+     *
+     * <p>RECON-W34.9: the previous version divided eight components by 8 while clamping only
+     * {@code kolmogorovK}. The javadoc claimed "each component normalized to [0, 1] roughly"
+     * -- and the word "roughly" was load-bearing, because nothing enforced it. A component
+     * above 1.0 pushed the mean above 1.0, and
+     * {@code CognitiveGenesisProfilePropertyTest.propertyUnifiedScoreBounded} caught it at
+     * <b>1.0816</b>.</p>
+     *
+     * <p>Every component is now clamped to [0, 1]. That makes the documented contract true
+     * rather than approximate, and it matters because callers use this score comparatively:
+     * {@code W174EmpiricalBenchmark} asserts it lands in [0, 1] over real cycles, so a value
+     * above 1 breaks that contract for everyone downstream.</p>
+     *
+     * <p>The clamping is per-component rather than on the final sum, so one oversized input
+     * cannot drag the others toward saturation. That is the same reasoning already applied to
+     * {@code kolmogorovK}, now applied consistently.</p>
+     *
+     * @return a complexity score in [0, 1]
      */
     public double unifiedComplexityScore() {
-        // Each component normalized to [0, 1] roughly
-        double phiScore = (phiBinary + phiF + phiR + phiLinGauss) / 4.0;
-        return (phiScore + interAgentPhi + stabilityPhi + crossLevelPhi
+        double phiScore = unit(phiBinary + phiF + phiR + phiLinGauss, 4.0);
+        return (phiScore
+                + unit(interAgentPhi, 1.0)
+                + unit(stabilityPhi, 1.0)
+                + unit(crossLevelPhi, 1.0)
                 + Math.min(1.0, kolmogorovK / 100.0)
-                + analogicalSimilarity
-                + conceptualExclusion
-                + lSystemComplexityRatio) / 8.0;
+                + unit(analogicalSimilarity, 1.0)
+                + unit(conceptualExclusion, 1.0)
+                + unit(lSystemComplexityRatio, 1.0)) / 8.0;
+    }
+
+    /**
+     * Clamp a normalised component into [0, 1].
+     *
+     * <p>Unit: a value already expressed in the target range. Non-finite input collapses to 0
+     * rather than propagating NaN through a score that callers compare against 1.</p>
+     *
+     * @param value  the component value
+     * @param divisor factor by which to scale the value first
+     * @return the value clamped to [0, 1], or 0.0 when it is not finite
+     */
+    private static double unit(double value, double divisor) {
+        double scaled = divisor == 0.0 ? 0.0 : value / divisor;
+        if (Double.isNaN(scaled) || Double.isInfinite(scaled)) {
+            return 0.0;
+        }
+        return Math.max(0.0, Math.min(1.0, scaled));
     }
 
     /**

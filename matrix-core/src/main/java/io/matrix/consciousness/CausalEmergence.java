@@ -83,10 +83,34 @@ public final class CausalEmergence {
         if (microDistribution == null || microDistribution.length < 2) return 0.0;
         double maxCE = Double.NEGATIVE_INFINITY;
         for (int binSize = 2; binSize <= microDistribution.length / 2; binSize++) {
+            // RECON-W34.9: this searched EVERY bin size in 2..n/2, including sizes that do not
+            // divide the distribution evenly. A ragged coarsening is not a partition of the
+            // space, it is a distortion of it: for the uniform input
+            //
+            //     {0.1 x 8}
+            //
+            // binSize 2 -> [0.250 0.250 0.250 0.250]   uniform, EI = 0
+            //     binSize 3 -> [0.375 0.375 0.250]        RAGGED, so not uniform, EI > 0
+            //     binSize 4 -> [0.500 0.500]               uniform, EI = 0
+            //
+            // and the ragged bin won. That manufactured emergence out of data that has none:
+            // CausalEmergenceTest.maxCausalEmergenceNonNegativeForUniform measured 0.0237 and
+            // CausalEmergencePropertyTest measured 0.0630 for a distribution whose emergence is
+            // zero by definition.
+            //
+            // The result depended on the input LENGTH rather than its content -- an array of
+            // eight identical values "has more emergence" than one of sixteen, which is not a
+            // property of emergence. Only bin sizes that tile the space evenly are considered
+            // now, so a uniform input measures zero and the maximum reflects structure that
+            // is actually present.
+            if (microDistribution.length % binSize != 0) {
+                continue;
+            }
             double[] macro = coarsenByBinning(microDistribution, binSize);
             double ce = causalEmergence(macro, microDistribution);
             if (ce > maxCE) maxCE = ce;
         }
-        return maxCE;
+        // Every length < 4 has no even tiling beyond itself, so no coarsening is searched.
+        return maxCE == Double.NEGATIVE_INFINITY ? 0.0 : maxCE;
     }
 }

@@ -66,9 +66,30 @@ class RegimeTrajectoryAnalyzerTest {
         assertThat(RegimeTrajectoryAnalyzer.avgRunLength(profiles)).isCloseTo(5.0, within(1e-9));
     }
 
+    /**
+     * Build a profile whose regime is determined by {@code phi} alone.
+     *
+     * <p>RECON-W34.9: the previous helper hardcoded {@code stabilityPhi = 0.5}. But
+     * {@link CognitiveGenesisProfile#regime()} requires {@code avgStability > 0.7} for FROZEN
+     * and {@code avgStability < 0.3} for CHAOTIC, so 0.5 satisfied neither and EVERY profile
+     * this helper produced classified as EDGE_OF_CHAOS.</p>
+     *
+     * <p>Three tests then asserted things about an "alternating" sequence that never
+     * alternated: two expected FROZEN/CHAOTIC runs and got none, and one expected zero stability
+     * and got a perfect 1.0 because nothing ever changed. Production code was correct
+     * throughout -- the fixture could not construct the input it was reasoning about.</p>
+     *
+     * <p>Stability is now chosen from phi so that low phi is genuinely frozen and high phi
+     * genuinely chaotic, which is what the calling tests mean.</p>
+     *
+     * @param phi average phase value in 0..1
+     * @return a profile whose regime follows from phi
+     */
     private static CognitiveGenesisProfile makeProfile(double phi) {
+        // Low phi -> high stability -> FROZEN. High phi -> low stability -> CHAOTIC.
+        double stability = phi < 0.3 ? 0.9 : (phi > 0.7 ? 0.1 : 0.5);
         return new CognitiveGenesisProfile(
-            phi, phi, phi, phi, phi, 0.5, phi,
+            phi, phi, phi, phi, phi, stability, phi,
             50.0, 0.5, 0.5, 2, 0.5, 2.0
         );
     }

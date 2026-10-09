@@ -1051,3 +1051,88 @@ Verified stable across three consecutive runs.
 input — mismatched variables in one, a stale read in the other — and the resulting wrongness was
 a *plausible* number rather than an obvious garbage value. Neither would have been caught by a
 sanity check that only asked "is this a number".
+
+---
+
+## RECON-W34.9 — seven closed: three fixtures that could not build their own input, four real defects
+
+### A fixture that could not construct the regimes it reasoned about
+
+`makeProfile(phi)` hardcoded `stabilityPhi = 0.5`. But `CognitiveGenesisProfile.regime()`
+requires **> 0.7 for FROZEN** and **< 0.3 for CHAOTIC** — 0.5 satisfies neither, so *every*
+profile built by either helper classified as EDGE_OF_CHAOS. Three tests were asserting things
+about an "alternating" sequence that never alternated:
+
+| test | expected | got |
+|---|---|---|
+| `alternatingRegimesHaveMultipleRuns` | 3 FROZEN + 3 CHAOTIC runs | 0 and 0 |
+| `stabilityForAlternatingIsZero` | 0.0 | 1.0 (nothing ever changed) |
+| `alternatingProfileIsOscillatory` | OSCILLATORY | DRIFTING |
+
+`ProfileStabilityMetrics.classify` reads `transitionRate` and `normalizedRegimeEntropy`, both
+derived from `regime()`, so with one regime throughout both were 0 and no oscillatory branch
+could fire — a perfectly alternating series was reported as DRIFTING. Production code was
+correct throughout; the fixture could not build the input it was reasoning about.
+
+Fixing the fixture then surfaced a **genuine second finding**: with real regimes, the drift
+test's 0.1→1.0 ramp crossed both regime boundaries, and `classify` checks OSCILLATORY *before*
+drift, so a monotonically rising signal was reported as oscillatory. Both observations were
+true and the test conflated them. The ramp is now confined to 0.35..0.65 — inside the
+EDGE_OF_CHAOS band — so a test named for drift isolates drift.
+
+### Real defect: causal emergence was manufactured from ragged binning
+
+`maxCausalEmergence` searched every bin size in `2..n/2`, including sizes that do not divide
+the distribution evenly. For the uniform input `{0.1 x 8}`:
+
+```
+binSize=2 -> [0.250 0.250 0.250 0.250]   uniform, EI = 0
+binSize=3 -> [0.375 0.375 0.250]          RAGGED, not uniform, EI > 0   <- won
+binSize=4 -> [0.500 0.500]               uniform, EI = 0
+```
+
+A ragged coarsening is not a partition of the space, it is a distortion of it. The result
+depended on the input **length** rather than its content — an array of eight identical values
+"had more emergence" than one of sixteen, which is not a property of emergence. Measured 0.0237
+and 0.0630 for data whose emergence is zero by definition.
+
+Only bin sizes that tile the space evenly are searched now.
+
+### Real defect: `unifiedComplexityScore` was bounded only on paper
+
+The javadoc said "each component normalized to [0, 1] **roughly**" — and the word "roughly" was
+load-bearing, because only `kolmogorovK` was clamped. A component above 1.0 pushed the mean
+above 1.0; measured **1.0816**. Every component is now clamped per-component, which also stops
+one oversized input dragging the others toward saturation.
+
+This mattered because callers compare the result against 1: `W174EmpiricalBenchmark` asserts it
+lands in [0, 1] over real cycles, so the approximate contract was already breaking for
+downstream users.
+
+### A blanket bound across heterogeneous metrics
+
+`PhiComplexityFingerprintPropertyTest` asserted **one** bound of [0, 1.5] on all four
+components of `sequenceFingerprint`, which are four different quantities:
+
+| index | quantity | true range |
+|---|---|---|
+| 0 | `meanEntropy` over 4 bins, in **bits** | [0, log2(4)] = [0, 2.0] |
+| 1 | `meanVariance` of 13 fields | **unbounded** |
+| 2 | `normalizedRegimeEntropy` | [0, 1] |
+| 3 | `composite` (mean of the above) | effectively unbounded |
+
+The measured 1.5178 was `meanVariance`, not entropy — a value with no natural ceiling of 1.5.
+Each component is now asserted against the range its own definition implies.
+
+**A correction of my own, made mid-investigation.** I first wrote a `ln(4) = 1.386` ceiling on
+the entropy component after reading `EntropyDecomposition.entropy` only as far as the
+accumulation loop. The method ends `return h / Math.log(2)` — it converts to **bits**, and the
+correct ceiling is 2.0. The test caught my error immediately. Worth recording because it is the
+same failure as the original: asserting a bound derived from a partial reading of the code.
+
+### An error of mine, and what it cost
+
+Two mistakes here were mine. I misread the entropy unit from a partial method view, and I
+initially attributed the 1.5178 to entropy when it was variance — reasoning about which
+component produced a number instead of measuring it. Both were caught within one iteration
+because the test asserted a derived bound rather than a chosen one.
