@@ -742,3 +742,77 @@ after the fact is exactly the kind of edit this ledger exists to make impossible
 action:** re-distil, or accept that pre-W34.4 ledger rows carry inverted units. No file in the
 repository currently holds such a row — the ledgers found on disk are the DISK-LEDGER, which
 uses a different shape entirely.
+
+---
+
+## RECON-W34.5 — KolmogorovComplexity: a constant tax that looked like a measurement
+
+Five red tests across four files shared one cause, and the number that revealed it was
+**exactly 64.0** — not 63.9, not 65.1. That is `Long.SIZE`, added unconditionally:
+
+```java
+double modelBits = logarithmicEncoding(alphabet) + Long.SIZE;
+```
+
+A constant trajectory therefore scored 64.0 regardless of length or content. A compile-time
+constant had been given the appearance of a measurement, and four unrelated tests were
+reporting it as one.
+
+### Why it was wrong, from the class's own contract
+
+`estimate` documents *"bounded by 8·trajectory.length"*, and the failing test's own comment
+reads *"much less than 8*20=160 raw bits"*. Both models treat a state as costing at most 8
+bits. A flat 64 bits per **sequence** is 3.2 bits per state at length 20, and more than 3 at
+any length below 8 — so the model cost dominated the quantity it was meant to be a rounding
+error within, and a maximally compressible sequence could never score below it.
+
+Naming one representative state is a real cost, but it is a **model** cost: it does not grow
+with N. Adding it to a per-symbol measure distorts the comparison the estimator exists to
+support. The fix removed it. `logarithmicEncoding(alphabet)` — which does vary with the data
+— is now the whole model cost.
+
+### A second, genuine contradiction inside the suite
+
+Removing the tax was not sufficient, and the reason is worth more than the fix.
+
+| contract | asserted by | count |
+|---|---|---|
+| `estimate([x]) == 64.0` | `singleStateReturnsOneLong`, `propertySingleStateIs64`, `propertyKolmogorovSingleIs64`, `propertySingleStateReturns64`, `degenerate_inputs_are_handled` | 5 |
+| constant trajectory has K < 20 for lengths **1..32** | `propertyKolmogorovConstantIsLow`, `propertyConstantTrajectoryLowK` | 2 |
+
+At length 1 these demand 64.0 and <20 of the same input. **No implementation can satisfy
+both**, so this was a contradiction in the specification, not a bug in the code.
+
+Resolved on the merits rather than by picking a side: at N = 1 a "constant sequence" is not a
+pattern at all — there is no repetition to exploit, because there is nothing after the first
+element. You are naming one specific 64-bit value, and that costs 64 bits. The five-test
+contract is correct and the single-element early return was **restored** as deliberate. The
+two property providers were drawing `1..32` and are now `2..32`, with the reason recorded at
+the property itself.
+
+Note the trap: the flat tax had been **masking** the boundary. With it in place, every
+constant scored 64.0 and no test could tell a real boundary from a bug. Fixing the tax is what
+made the boundary visible, and fixing the tax is what made it look like a regression.
+
+### A third, in a test outside this package
+
+`W120LSystemPhiCorrelation.constantOutputHasLowComplexity` used the L-system rule `F -> "F"`,
+which is a **fixed point**: ten generations of `"F"` yield the one-character string `"F"`. The
+test asserted *"single character repeating"* over a string that never repeated, so it fed a
+length-1 sequence into the boundary case above. The rule is now `F -> "FF"` at depth 3, which
+produces `"FFFFFFFF"`, and the test **asserts the output length is 8** so the fixture cannot
+silently go vacuous again.
+
+### What this cost and bought
+
+Five failures closed, and the estimator now behaves as documented: constant data is cheap,
+structured data sits between, and random data is expensive. A new contract test
+(`KolmogorovEstimatorContractTest`) pins the boundary from both sides, so the flat tax cannot
+return unnoticed — its fingerprint is the exact value 64.0, which the test asserts against.
+
+**Generalisable lesson, now the second time in two waves** (the first was
+`AdvancedTsetlinMachine.init()`): a component that is present, plausible and never fires is
+more dangerous than one that is absent, because the code reads as though the capability
+exists. Here it was a constant masquerading as a measurement; there it was a model that could
+not classify anything. Both were found by a test asserting a value and getting a suspiciously
+round one.

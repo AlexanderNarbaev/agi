@@ -87,7 +87,7 @@ class KolmogorovComplexityPropertyTest {
 
     @Provide
     Arbitrary<Integer> trajectoryLength() {
-        return Arbitraries.integers().between(1, 32);
+        return Arbitraries.integers().between(2, 32);
     }
 
     @Provide

@@ -68,14 +68,29 @@ class W120LSystemPhiCorrelation {
         assertThat(dim).isBetween(0.5, 2.5);
     }
 
+    /**
+     * A constant L-system output should score low, because repetition is compressible.
+     *
+     * <p>RECON-W34.5: the rule was {@code F -> "F"}, which is a FIXED POINT. Ten generations
+     * of {@code "F"} produce the one-character string {@code "F"}, so the sequence handed to
+     * the estimator had length 1 — and a single element is the documented boundary where a
+     * value costs 64 bits to name. The test therefore asserted "single character repeating"
+     * over a string that never repeated, and failed for a reason that had nothing to do with
+     * complexity estimation.</p>
+     *
+     * <p>{@code F -> "FF"} at depth 3 yields {@code "FFFFFFFF"}: genuinely constant, genuinely
+     * length 8, and genuinely exercising the property the test is named for.</p>
+     */
     @Test
     void constantOutputHasLowComplexity() {
         Map<Character, String> rules = new HashMap<>();
-        rules.put('F', "F");
-        String output = LSystem.generate("F", rules, 10);
+        rules.put('F', "FF");
+        String output = LSystem.generate("F", rules, 3);
+        assertThat(output.length())
+                .as("the L-system must actually produce repetition, or this test is vacuous")
+                .isEqualTo(8);
         long[] traj = stringToLongs(output);
         double k = KolmogorovComplexity.estimate(traj);
-        // Single character repeating — K should be small
         assertThat(k).isLessThan(20.0);
     }
 

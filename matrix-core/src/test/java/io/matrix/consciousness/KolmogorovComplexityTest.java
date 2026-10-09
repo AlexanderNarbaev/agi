@@ -98,7 +98,12 @@ class KolmogorovComplexityTest {
     void propertyKolmogorovConstantIsLow(@net.jqwik.api.ForAll("trajectoryLengths") int length) {
         long[] constant = new long[length];
         double k = KolmogorovComplexity.estimate(constant);
-        // All zeros → 1 unique symbol → K should be small (just model overhead)
+        // RECON-W34.5: lengths start at 2, not 1. At N = 1 there is no repetition to
+        // exploit -- the sequence simply IS one 64-bit value -- and naming it costs 64 bits,
+        // which five separate tests assert (singleStateReturnsOneLong and friends). This
+        // provider drew 1..32, so it was demanding both 64.0 and <20 of the same input. The
+        // property was never about the degenerate case; it is excluded now, explicitly,
+        // rather than by quietly widening the threshold.
         assertThat(k).isLessThan(20.0);
     }
 
@@ -132,7 +137,7 @@ class KolmogorovComplexityTest {
 
     @net.jqwik.api.Provide
     net.jqwik.api.Arbitrary<Integer> trajectoryLengths() {
-        return net.jqwik.api.Arbitraries.integers().between(1, 32);
+        return net.jqwik.api.Arbitraries.integers().between(2, 32);
     }
 
     @net.jqwik.api.Provide

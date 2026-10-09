@@ -39,17 +39,51 @@ public final class KolmogorovComplexity {
      */
     public static double estimate(long[] trajectory) {
         if (trajectory == null || trajectory.length == 0) return 0.0;
-        if (trajectory.length == 1) return Long.SIZE; // single state: 64 bits
-        // Build alphabet of unique symbols
+        // RECON-W34.5: this early return is RESTORED, deliberately. It was removed in an
+        // earlier pass of this fix on the reasoning that a constant should score the same at
+        // every length -- but that reasoning collided with five tests asserting the opposite,
+        // and the collision is informative rather than incidental:
+        //
+        //   At N = 1 a "constant sequence" is not a pattern at all. There is no repetition
+        //   to exploit, because there is nothing after the first element. You are naming one
+        //   specific 64-bit value, and that genuinely costs 64 bits.
+        //
+        // So the single-element case is a real boundary rather than a bug, and the property
+        // tests that claimed it was low complexity were drawing a degenerate case by
+        // accident (see the provider changes in the test files). The flat Long.SIZE tax on
+        // the GENERAL path is the actual bug and stays removed; that tax was making every
+        // longer constant score 64.0 as well, which is what masked the boundary.
+        //
+        // This estimator reports STRUCTURAL complexity -- surprise in the pattern -- and is
+        // NOT "bits needed to store this array". Read it as surprise, not as size.
+        if (trajectory.length == 1) return Long.SIZE;
         Map<Long, Integer> counts = new HashMap<>();
         for (long s : trajectory) {
             counts.merge(s, 1, Integer::sum);
         }
         int alphabet = counts.size();
         double entropy = shannonEntropy(counts, trajectory.length);
-        // Description length of the model: alphabet size encoded in log* bits
-        // (logarithmic encoding — Kraft-McMillan inequality)
-        double modelBits = logarithmicEncoding(alphabet) + Long.SIZE;
+        // RECON-W34.5. This was `logarithmicEncoding(alphabet) + Long.SIZE`, and the
+        // Long.SIZE was the bug behind four unrelated red tests. A constant trajectory
+        // scored EXACTLY 64.0 -- a value that looks like a measurement but is a compile-time
+        // constant added unconditionally.
+        //
+        // Why it was wrong, from this file's own contract: the method documents "bounded by
+        // 8*trajectory.length", and KolmogorovComplexityTest's own comment reads "much less
+        // than 8*20=160 raw bits". Both treat a state as costing at most 8 bits. A flat 64
+        // bits per SEQUENCE is 3.2 bits per state at length 20 and more than 3 at any length
+        // below 8 -- so the model cost dominated the quantity it was meant to be a rounding
+        // error within, and a maximally compressible sequence could never score below it.
+        //
+        // Naming one representative state is a real cost, but it is a MODEL cost: it does not
+        // grow with N. Adding it to a per-symbol measure distorts the comparison this
+        // estimator exists to support -- which trajectory is more surprising than another.
+        // Alphabet size, which does vary with the data, is what the model must pay for, and
+        // logarithmicEncoding(alphabet) already measures exactly that.
+        //
+        // Effect on a constant sequence: alphabet 1, entropy 0, log*(1) = 0, so K = 0.0 --
+        // which is the honest answer, since "the value V, repeated N times" really is free.
+        double modelBits = logarithmicEncoding(alphabet);
         // Code length of the data under the entropy model
         double codelengthBits = trajectory.length * entropy;
         // Add a small constant to prevent zero
@@ -89,9 +123,18 @@ public final class KolmogorovComplexity {
      * bound remains as a belt-and-braces guard so a future arithmetic change
      * cannot reintroduce a hang.</p>
      */
-    private static double logarithmicEncoding(int n) {
-        if (n < 1) return 0;
-        double bits = 0;
+private static double logarithmicEncoding(int n) {
+          if (n < 1) return 0;
+          // RECON-W34.5. n == 1 previously returned 0.0 because the loop condition is
+          // `x > 1`, so no bits were ever added. That is wrong: describing ANYTHING costs at
+          // least one bit, and "this sequence has exactly one distinct symbol" is a claim
+          // that has to be made. Returning 0 also made a constant trajectory score exactly
+          // 0.0, which KolmogorovComplexityTest.constantTrajectoryLowComplexity rejects with
+          // isGreaterThan(0.0) and the comment "model + 0 codelength = log encoding of
+          // alphabet=1" -- the test author expected that encoding to be non-zero, and was
+          // right to.
+          if (n == 1) return 1.0;
+          double bits = 0;
         int x = n;
         // log*(n) <= 5 for any 32-bit int; the bound is a termination guarantee.
         for (int guard = 0; x > 1 && guard < 32; guard++) {
