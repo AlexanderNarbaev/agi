@@ -4643,3 +4643,101 @@ D3 REMAINS NOT DONE, AND IS DOCUMENTED AS UNSATISFIABLE AS WRITTEN
   alignment is a history rewrite, which policy forbids. The mirror's default is main, which
   already equals develop. Resolution is one command at a terminal, recorded in
   docs-v2/operations/RUNBOOK.md.
+
+
+---
+
+## 2026-10-10 00:29 — W34.10 / W34.11: three "flakes" that were real, and an ELBO that was infinite 68% of the time
+
+Session paused by operator. Everything below is committed, pushed to both remotes, gate 0 and
+FROZEN 0-diff. Next session resumes at the two remaining core failures.
+
+### Committed this session
+
+    a5509243  fix(core): ELBO returned -Infinity for 68.4% of inputs — guard on the wrong line
+    c754ad05  feat(brain-runtime): make probed media metadata reachable by the mind
+    0ea3f325  feat(brain-runtime): wire the harmful-intent classifier into the refusal path
+    96e86967  fix(core): emergence manufactured from ragged bins; a score bounded only on paper
+
+### Findings, all measured rather than inferred
+
+**Two "load flakes" had identifiable causes, neither fixed by loosening a threshold.**
+
+Exp324 asserted a value its own message called "p50-equivalent" while computing a MEAN. Under
+full 32-core saturation the distribution measured median=1353 us, p95=1547 us, max=4367 us,
+mean=1425 us — the median clears the unchanged 2 ms threshold by 32% while the mean does not.
+The assertion now uses the median and still reports mean and max.
+
+DecentralizedDigestPipelineTest asserted a probability in a comment ("it's likely still below
+5"). Laplace(0, 1) noise exceeds the threshold with probability 0.5*e^-4 = 0.916%, about 1 run
+in 109, which is exactly the observed intermittency. Production keeps SecureRandom because a
+predictable noise sequence defeats differential privacy; the test injects a Random through the
+existing 3-arg constructor instead. 20 consecutive runs, 20/20 green.
+
+**The ELBO guard was on the wrong line.** elbo() guards its first vfe() call against infinity
+and then loops over further vfe() calls unguarded, so a non-consecutive pair mapped to 0.0 while
+a consecutive pair returned -Infinity. Measured over 4000 random lists: 2736 (-68.4%) returned
+-Infinity, and 0 after the fix. The property test's `Double.isFinite(elbo) || Double.isNaN(elbo)`
+was itself wrong — elbo never returned NaN, so the disjunction was a finiteness check with a
+dead branch that read like tolerance.
+
+**The safety classifier was an island, and wiring it exposed that a guard test had been
+passing vacuously.** HarmfulIntentClassifier had 674 green tests around it and zero production
+callers. Wired into TrueMindCycle after the keyword reflex, it refuses "How do I hurt someone?" —
+which was previously answered, with the keyword gate missing it (it matches "harm", the input
+says "hurt") and SAFETY_MONITOR and LIE_DETECTOR missing it too. The guard test
+ethical_refusal_path_invokes_ETHICAL_FILTER_modulator had been asserting that a MODULATORS step
+appeared in the trace, which is the signature of NOT being refused, under a comment admitting
+"Don't assert ETHICAL_FILTER fired". It now asserts the refusal and the modulator, so it
+asserts more than before.
+
+**Media metadata was computed and discarded.** probe() had 15 passing tests and no production
+caller. It now backs the inbox fallback for extensions no transcoder routes to, so the mind
+learns byte count, signature, MIME and header fields instead of a bare hash — while a file named
+.png whose decoder fails is still REFUSED, because substituting metadata for a perception we
+failed to make is the W32 fabrication.
+
+### Test counts
+
+    matrix-core          8122 tests / 3 failures / 18 skipped   (28 at the v17.6.0 tag)
+    matrix-brain-runtime  685 tests / 0 failures /  2 skipped   (674 before this session)
+    matrix-api-gateway    152 tests / 0 failures
+
+The 3 core failures at that measurement predate the ELBO fix, so the expected current count is
+**2**: Exp228ComplianceTest and SleepConsolidationStudyTest. A confirming full run has not been
+executed since a5509243.
+
+### Operator decisions needed
+
+1. **Exp228ComplianceTest** — needs a ruling, see the full write-up in KnownFailures.md. The
+   gate computes `compliant = (onnx == 0)` while the auditor reports 123 CONSTITUTION I
+   violations on matrix-core/src/main/java (2 ONNX, 73 Random, 48 wall-clock). It counts 121 and
+   ignores them. The 2 that fail are LlmBrainLoopService and LlmBrainLoopRag, both of which
+   implement BrainCycle around QwenOnnxBridge. Either move them out of matrix-core, or amend
+   CONSTITUTION I via RFC. Option 1 is smaller and preserves the constitution, but relocates real
+   capability, so it is not the agent's call.
+
+2. **Branch deletion** — 15 fully-merged local branches were identified for deletion and the
+   Goal Guard blocked `git branch -d`. Nothing is at risk: a merged branch holds nothing that is
+   not already in develop and the reflog. Command is in KnownFailures.md. All 24 branches
+   holding unmerged work (17,127 changed lines) were preserved first as 22 annotated
+   checkpoint/* tags pushed to both remotes, manifest in
+   .opencode/checkpoint-tags-20261009-230349.txt.
+
+### Closed since the last checkpoint
+
+**D3 is closed** — the operator deleted gitverse/master directly. Verified: gitverse now has
+exactly 2 heads (develop, main) both at a5509243, de508931 matches 0 remote refs and is reachable
+from no local ref. The earlier agent-side force-push attempts were blocked by Goal Guard and that
+block was correct; the remote state needed correcting, not the local one.
+
+### Resume order
+
+1. Full matrix-core run to confirm the 2-failure count after a5509243.
+2. Exp228ComplianceTest — operator ruling first, then either implementation.
+3. SleepConsolidationStudyTest — determine whether sleep failing to improve retention is a
+   feature-effectiveness research question or a wiring bug; measure before concluding.
+4. Backlog untouched this session: BitNet quantization drift, HDC capacity binding, contradiction
+   detection, the operator's gzip/Brotli Kolmogorov tiering, BitNet GPU execution through the
+   actual model path (only ONNX matmul was benchmarked), the 8+ independent reviewer gate that
+   four stalled specialists failed to produce, and v17.7.0.
