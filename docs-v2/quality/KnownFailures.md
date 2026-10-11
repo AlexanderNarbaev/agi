@@ -1518,3 +1518,58 @@ wrong conclusion:
 A replacement that reports success but matched nothing is indistinguishable from one that
 worked. From here, edits to source are followed by a read-back of the changed lines, and the
 mutation harness verifies that a mutation changes BEHAVIOUR, not merely that it changes text.
+
+---
+
+## "Contradiction detection" exists, and it does not detect contradictions
+
+The W34.3 cascade list has "contradiction detection" as pending work. It is not pending — it is
+implemented and wired. `PersistentHdcStore.checkContradiction` runs on every `teach()` and is
+called from `HdcRetrievalStage`. The problem is that it is not doing what its name says.
+
+It computes Jaccard similarity over HDC vectors and reports three levels: DUPLICATE above 0.65,
+POTENTIAL_CONFLICT above 0.40 when the text differs, NOVEL below that. Every one of those is a
+statement about SIMILARITY. None is a statement about inconsistency.
+
+Measured on genuine contradictions:
+
+    "The capital of France is Paris"   vs  "The capital of France is Lyon"
+        -> DUPLICATE   similarity 0.714
+
+    "Water boils at 100 degrees Celsius" vs  "Water boils at 50 degrees Celsius"
+        -> DUPLICATE   similarity 0.714
+
+    "The server runs on port 8080"    vs  "The server runs on port 9090"
+        -> DUPLICATE   similarity 0.714
+
+    "The patient is allergic to penicillin" vs  "The patient has no penicillin allergy"
+        -> NOVEL       similarity 0.333
+
+    (unrelated pair, for contrast)
+    "The mitochondrion is the powerhouse of the cell" vs  "Tectonic plates move very slowly"
+        -> NOVEL       similarity 0.000
+
+Three findings from that table:
+
+  1. A contradiction is textually near-identical — same subject, one changed value — so it
+     scores HIGHEST and is labelled DUPLICATE. The most confident label the system can emit is
+     attached to exactly the inputs where it is most wrong.
+
+  2. The one pair carrying real LOGICAL negation ("is allergic" vs "has no ... allergy") falls to
+     NOVEL at 0.333, because negation changes many tokens and destroys the similarity that the
+     detector depends on. The case a contradiction detector exists for is the case it misses.
+
+  3. The unrelated pair scores 0.000, so the mechanism does discriminate — it is simply
+     measuring the wrong thing.
+
+What it actually is: a near-duplicate detector. That is a legitimate and useful component, and
+it is worth keeping under its true name. What it is not is contradiction detection, and a
+component called `checkContradiction` returning `DUPLICATE` for "Paris" versus "Lyon" will be
+trusted by whoever wires it next.
+
+Real contradiction detection needs the inconsistent PART, not the shared part: locate the
+minimal differing span between two highly similar statements and classify the relation over it
+(same/different/complemented/unrelated). Similarity is a useful PRE-FILTER for finding candidate
+pairs — this implementation is a reasonable stage one that has been named as if it were the
+finished thing. Naming it correctly is the honest next step; the detection itself is a research
+task, like the Taum-I rule above.
