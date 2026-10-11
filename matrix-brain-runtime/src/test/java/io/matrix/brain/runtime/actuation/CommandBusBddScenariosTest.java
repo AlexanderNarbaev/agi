@@ -276,6 +276,47 @@ class CommandBusBddScenariosTest {
                     .allMatch(CommandBus.Entry::dispatched);
         }
 
+        /**
+         * W35.2 — found by mutation, not by reading.
+         *
+         * <p>{@code scripts/mutation-safety-check.sh} replaces the dispatch-time re-gate with
+         * {@code if (false)}, and every test in this class still passed. That is a real gap:
+         * the second evaluation exists precisely so a command cannot be dispatched on a verdict
+         * that no longer holds, and nothing was checking that it did.</p>
+         *
+         * <p>With a deterministic stateless gate the second check can never change an outcome,
+         * which is why no test noticed. The gate here is deliberately stateful — it permits on
+         * the first evaluation and refuses afterwards — so the only thing standing between the
+         * command and the device is the re-gate itself.</p>
+         */
+        @Test
+        @DisplayName("a command is re-gated at dispatch, not trusted from submit time")
+        void dispatchReGatesTheCommand() {
+            java.util.concurrent.atomic.AtomicInteger calls = new java.util.concurrent.atomic.AtomicInteger();
+            CommandGate flipping = command -> {
+                // Permit exactly once, at submit. Refuse everything afterwards.
+                if (calls.getAndIncrement() == 0) {
+                    return SafetyGate.Verdict.allow();
+                }
+                return SafetyGate.Verdict.refuse("policy changed after submission");
+            };
+            SimulatedDeviceAdapter device = new SimulatedDeviceAdapter("light");
+            CommandBus guarded = new CommandBus(flipping).register(device);
+
+            guarded.submit(DeviceCommand.of("light", "on"));
+            List<CommandBus.Entry> dispatched = guarded.dispatch();
+
+            assertThat(dispatched).hasSize(1);
+            assertThat(dispatched.get(0).dispatched())
+                    .as("the command was permitted at submit and refused at dispatch; it must "
+                            + "NOT reach the device on the stale permission")
+                    .isFalse();
+            assertThat(dispatched.get(0).detail()).contains("policy changed");
+            assertThat(device.receipts())
+                    .as("the device must never have seen this command")
+                    .isEmpty();
+        }
+
         @Test
         @DisplayName("a command for an unknown device is refused with that reason")
         void unknownDeviceIsRefused() {
