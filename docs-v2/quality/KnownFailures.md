@@ -1630,3 +1630,59 @@ in order to pass. It now asserts the deferral is stated and names `RuleInduction
 The class, its two tests and its JMH benchmark moved to `src/experimental/`, which is not a
 declared source set, so production cannot compile or reach it. It is kept because the diagnosis
 is the artefact worth having, not the code.
+
+---
+
+## W36.4 — the "empty modules" are not empty, and one of them does not exist
+
+The wave instruction was to remove `matrix-fpga`, `matrix-micro`, `matrix-ros2` and
+`matrix-ecosystem` from `settings.gradle`, archiving or deleting their directories. Measured
+first:
+
+    matrix-ecosystem   is rootProject.name, NOT a module. No directory exists. Nothing to do.
+    matrix-fpga        16 files, 0 java — Verilog constraints, Makefile, ldn2v.py
+    matrix-micro       12 files, 0 java — C (src/mpdt_neuron.c), tools/, tests/
+    matrix-ros2         8 files, 0 java — ROS2 launch files, sensor_fusion.py, package.xml
+
+All three were ALREADY commented out of `settings.gradle`, in a block headed "EXPERIMENTAL
+MODULES (TRUE-W0: deregistered)" with a pointer to an audit document. So the removal the wave
+asked for had been done before the wave arrived.
+
+**They were not deleted, because they are not empty.** They contain real embedded source in
+C, Python and Verilog constraint files, and each is referenced by 16-20 tracked files. Deleting
+them would destroy working code and break those references. They are correctly outside the
+Gradle build — that is why they have no build.gradle — and they are correctly marked
+experimental.
+
+The accurate disposition is therefore: nothing to remove, nothing to archive, and one of the
+four named modules was never a module at all. Recorded rather than acted on, because executing
+"delete the directories" literally would have been data loss disguised as cleanup.
+
+---
+
+## W36.4b — "BitNet GPU acceleration verified" was FALSE
+
+Claimed in CAVEATS-v17.6.0-mind and in docs-v2/operations/TUNING-PARAMETERS.md:
+"CPU 9.68 ms vs CUDA 6.55 ms (1.48x), verified by hiding the GPU".
+
+**What was actually measured was an ONNX matmul benchmark.** BitNet is not ONNX. Measured
+directly:
+
+    grep -ciE 'onnx|cuda|OrtSession' matrix-core/src/main/java/io/matrix/neuron/BitNet*.java
+        BitNetModel             0
+        BitNetInferenceForward  0
+        BitNetBlock             0
+
+Every BitNet matmul is a hand-written triple loop. There is no tensor backend, no native
+kernel, no JNI, no CUDA execution provider in the model's path. The bitNet checkpoint that
+exists is consumed by Java code.
+
+The CUDA number is still a true measurement OF A CUDA MATMUL. Quoting it as BitNet acceleration
+substituted one claim for a different one, and the fact that it was verified by hiding the GPU
+made it look more rigorous than it was — it proved the benchmark was using the GPU, not that
+BitNet could.
+
+The prompt for this wave asked to "verify the entire BitNet forward pass runs on CUDA". The
+measured answer is that it does not, and cannot today. That requires exporting the weights to a
+GPU-consumable format, or a native kernel, or a backend abstraction with a CUDA implementation.
+None exists. This is recorded rather than reported as a successful verification.

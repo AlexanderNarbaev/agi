@@ -556,3 +556,27 @@ bash scripts/diagnose-cuda.sh --repair   # repoint masquerading symlinks at genu
 
 LD_LIBRARY_PATH=.onnx_libs ./gradlew :matrix-core:test   # run with GPU available
 ```
+
+
+## W36.4 — CORRECTION: BitNet has no GPU path, and never had
+
+An earlier section of this document, and CAVEATS-v17.6.0-mind, record "BitNet GPU acceleration
+verified: CPU 9.68 ms vs CUDA 6.55 ms (1.48x)". **That claim was wrong.**
+
+What was measured was an ONNX matmul benchmark. BitNet is not ONNX. Measured now:
+
+    grep -ciE 'onnx|cuda|OrtSession' matrix-core/src/main/java/io/matrix/neuron/BitNet*.java
+        BitNetModel            0
+        BitNetInferenceForward 0
+        BitNetBlock            0
+
+Every BitNet matmul is a hand-written triple loop in Java. There is no tensor backend, no
+native kernel, no JNI, and no CUDA execution provider in the model's path.
+
+The ONNX measurement remains a true measurement of what it measured — a CUDA matmul is faster
+than a CPU matmul — but it says nothing about BitNet, which does not use ONNX. Quoting it as
+BitNet acceleration was a substitution of one claim for a different claim.
+
+Getting a real BitNet GPU path requires work that has not been done: exporting the weights to a
+tensor format a GPU runtime can consume, or writing a native kernel, or introducing a backend
+abstraction with a CUDA implementation. None exists today.
