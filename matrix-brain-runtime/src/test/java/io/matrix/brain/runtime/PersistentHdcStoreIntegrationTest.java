@@ -93,13 +93,26 @@ class PersistentHdcStoreIntegrationTest {
         PersistentHdcStore store = new PersistentHdcStore(storePath, 256);
         store.teach("a", "Paris is the capital of France");
 
-        // Surface-different but HDC-similar (4 of 5 tokens shared) -> potential conflict
-        PersistentHdcStore.ContradictionReport rep =
-            store.checkContradiction("b", "paris france is the capital");
-        assertThat(rep.level())
-            .isIn(PersistentHdcStore.ContradictionLevel.POTENTIAL_CONFLICT,
-                  PersistentHdcStore.ContradictionLevel.DUPLICATE);
-        assertThat(rep.existingId()).isEqualTo("a");
+          // W36.2 — re-specified against the LOGICAL detector rather than the similarity one.
+          //
+          // These two wordings are paraphrases, and the parser extracts
+          //     ("paris", "is-a", "capital of france")   and
+          //     ("paris france", "is-a", "capital")
+          // — different subjects, so it reports NOVEL.
+          //
+          // That is the safe direction to fail. Claiming a contradiction between two phrasings
+          // of one fact would be a false accusation; declining to recognise them as the same
+          // fact loses a duplicate report, which costs far less. Paraphrase detection is NOT
+          // provided here and is not claimed to be: the old Jaccard scheme called these
+          // DUPLICATE only because they shared 4 of 5 tokens, which is a statement about
+          // wording rather than meaning.
+          PersistentHdcStore.ContradictionReport rep =
+                  store.checkContradiction("b", "paris france is the capital");
+          assertThat(rep.level())
+                  .as("paraphrases must never be reported as contradicting each other")
+                  .isNotIn(PersistentHdcStore.ContradictionLevel.CONTRADICTION,
+                           PersistentHdcStore.ContradictionLevel.NEGATION);
+          assertThat(rep.existingId()).isEqualTo("a");
     }
 
     @Test

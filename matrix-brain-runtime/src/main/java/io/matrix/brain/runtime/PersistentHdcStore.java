@@ -171,14 +171,24 @@ public final class PersistentHdcStore {
                     bestContent = contents.get(e.getKey());
                 }
             }
-            if (bestSim >= 0.65) {
-                return new ContradictionReport(ContradictionLevel.DUPLICATE,
-                    bestSim, bestId, bestContent);
-            }
-            if (bestSim >= 0.40 && bestContent != null
-                && !bestContent.equalsIgnoreCase(newContent)) {
-                return new ContradictionReport(ContradictionLevel.POTENTIAL_CONFLICT,
-                    bestSim, bestId, bestContent);
+            // W36.2 — the LOGICAL verdict decides the level; similarity is reported, not trusted.
+            // The old thresholds returned DUPLICATE at 0.714 for three genuine contradictions
+            // and NOVEL for the one pair carrying logical negation.
+            if (bestContent != null) {
+                FactTriples.Report logical =
+                        FactTriples.compareSentences(bestContent, newContent);
+                switch (logical.level()) {
+                    case CONTRADICTION -> { return new ContradictionReport(
+                            ContradictionLevel.CONTRADICTION, bestSim, bestId, bestContent); }
+                    case NEGATION -> { return new ContradictionReport(
+                            ContradictionLevel.NEGATION, bestSim, bestId, bestContent); }
+                    case DUPLICATE -> { return new ContradictionReport(
+                            ContradictionLevel.DUPLICATE, bestSim, bestId, bestContent); }
+                    case UNPARSEABLE -> { return new ContradictionReport(
+                            ContradictionLevel.UNPARSEABLE, bestSim, bestId, bestContent); }
+                    default -> { return new ContradictionReport(
+                            ContradictionLevel.NOVEL, bestSim, bestId, bestContent); }
+                }
             }
             return new ContradictionReport(ContradictionLevel.NOVEL, bestSim, bestId, bestContent);
         } finally {
@@ -186,7 +196,35 @@ public final class PersistentHdcStore {
         }
     }
 
-    public enum ContradictionLevel { NOVEL, POTENTIAL_CONFLICT, DUPLICATE }
+    /**
+     * W36.2 — a level can now mean CONTRADICTION.
+     *
+     * <p>The enum previously had exactly three values and none of them described an
+     * inconsistency: DUPLICATE meant "similar", POTENTIAL_CONFLICT meant "similar but not
+     * identical", NOVEL meant "not similar". Measured on genuine contradictions the old scheme
+     * returned DUPLICATE at 0.714 for three of them — the most confident label available,
+     * attached to exactly the inputs where it was most wrong — and NOVEL for the one pair
+     * carrying logical negation.</p>
+     *
+     * <p>The verdict now comes from {@link FactTriples}, which compares subject-predicate-object
+     * triples rather than vectors. {@link ContradictionReport#similarity()} is still reported,
+     * because lexical overlap is useful information — it is simply not the question being
+     * asked. POTENTIAL_CONFLICT is retained so existing callers keep compiling.</p>
+     */
+    public enum ContradictionLevel {
+        /** Same subject and predicate, incompatible objects. A real contradiction. */
+        CONTRADICTION,
+        /** One asserts the triple, the other denies it. */
+        NEGATION,
+        /** The same fact stated twice. */
+        DUPLICATE,
+        /** Retained for compatibility; no longer produced by checkContradiction. */
+        POTENTIAL_CONFLICT,
+        /** Nothing to conflict with. */
+        NOVEL,
+        /** At least one statement could not be reduced to a triple. */
+        UNPARSEABLE
+    }
 
     public record ContradictionReport(
         ContradictionLevel level, double similarity, String existingId, String existingContent
