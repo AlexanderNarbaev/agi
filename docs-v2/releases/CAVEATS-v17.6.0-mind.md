@@ -221,3 +221,21 @@ without anyone noticing until a stale test noticed, and both are recorded rather
 
 The single largest gap in this release is not in the code. It is that the review protocol
 mandated for it did not happen, and this document says so instead of implying otherwise.
+
+---
+
+## RETRACTED 2026-10-11 (W36.4) — see v17.9.0-mind
+
+Two statements below are withdrawn as false capability claims. The historical text is left
+intact so the record shows what was believed and when; the corrections are:
+
+1. **"BitNet GPU acceleration verified"** — the CUDA numbers below measure an ONNX MATMUL.
+   BitNet is pure Java: `grep -ciE 'onnx|cuda|OrtSession'` over `BitNetModel`,
+   `BitNetInferenceForward` and `BitNetBlock` returns 0 for all three. There is no BitNet GPU
+   path. The measurement is true of what it measured and was quoted as if it were about
+   BitNet.
+
+2. **"the 8+ independent reviewer gate"** was and remains unsatisfied. Nothing in this release
+   has been peer-reviewed.
+
+Both corrections are recorded in full in `docs-v2/quality/KnownFailures.md`.

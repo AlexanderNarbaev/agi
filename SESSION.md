@@ -4900,3 +4900,86 @@ finding is recorded so nobody wires checkContradiction believing it answers a qu
   - W34.3 cascades not started: BitNet quantization drift, HDC capacity binding,
     gzip/Brotli Kolmogorov tiering.
   - 8+ independent reviewer gate: unsatisfiable in this environment.
+
+
+---
+
+## 2026-10-11 22:03 — RECON-W36: three false capabilities found and removed
+
+### Committed this wave
+
+    b813b046  test: a disk-budget test was asserting the MACHINE, not the code
+    686d201a  docs: correct two false capability claims
+    0c005c53  W36.3 remove the per-cycle Tsetlin call; correct an over-claim of mine
+    6ccb9837  W36.2 real contradiction detection
+    3c50b948  W36.1 Article I debt adjudicated to zero
+
+    Article I   0 blocking, 0 unclassified, 83 permitted
+    Exp228      COMPLIANT, onnx=0
+    Tests       9209 across 11 buildable modules, 0 failures (was 9001 across 3)
+
+### W36.1 — the Article I debt is closed, and the gate now blocks on ignorance
+
+84 advisory sites adjudicated. ONE was a genuine violation: InputFilterGuard decided a rate-limit
+window with Instant.now(), so the same requests could be permitted or denied depending on machine
+load. Its clock is now injected. Annotating it would have made the gate green while leaving the
+verdict non-reproducible, which is the opposite of the point.
+
+The other 23 are annotated @ArticleIPermitted with a specific reason. The 59 seeded-Random sites
+are classified BY RULE, because Article I already permits them and reproducing one sentence 59
+times adds no judgement.
+
+UNADJUDICATED NOW BLOCKS. It previously did not, on the reasoning that "not decidable from text"
+argues for leniency. That produced 84 sites nobody was accountable for. An unadjudicated
+violation is not a lesser violation, it is an unknown one.
+
+### W36.2 — contradiction detection was measuring similarity
+
+The old detector returned DUPLICATE at 0.714 for three real contradictions — the most confident
+label available, attached to exactly where it was most wrong — and NOVEL for the only pair
+carrying logical negation, a miss. FactTriples compares subject-predicate-object propositions:
+
+    capital Paris vs Lyon      DUPLICATE 0.714 -> CONTRADICTION
+    allergic to X vs not       NOVEL 0.333     -> NEGATION
+    'is located in' vs 'is in' CONTRADICTION    -> DUPLICATE (false alarm removed)
+
+Paraphrase detection is NOT provided and is not claimed: two phrasings of one fact extract to
+different subjects and report NOVEL, which is the safe direction to fail.
+
+### W36.3 — I corrected two claims of my own
+
+**"Production Tsetlin learning works."** It does not, at the setting production uses. I measured
+100% at ONE operating point and generalised. The sweep shows 46% at args 1/5/10/50 and 1000, and
+100% only at 200. Production passes 10 — 46%, chance. Pinned by a test so the fix gets noticed.
+
+**"AdvancedTsetlinMachine is unused by production."** False. TrueMindCycle built a FRESH
+UNTRAINED model every cycle and wrote its confidence into the trace. It could not affect the
+reply or the verdict. Removed, and the stage now honestly says it is deferred and names the
+engine that does the learning. The integration test had asserted the trace CONTAINS
+AdvancedTsetlinMachine.predict — a guard that could only pass while the broken part kept
+running.
+
+### W36.4 — two more corrections, and a refusal to follow the instruction literally
+
+**"BitNet GPU acceleration verified" was FALSE.** The CUDA numbers measure an ONNX MATMUL.
+BitNetModel, BitNetInferenceForward and BitNetBlock contain ZERO onnx/cuda/OrtSession
+references; every matmul is a hand-written triple loop. There is no BitNet GPU path.
+
+**"Remove the empty modules."** matrix-ecosystem is rootProject.name, not a module. fpga, micro
+and ros2 were ALREADY commented out of settings.gradle, and they are NOT empty: 36 files of
+real C, Python and Verilog constraint code, referenced by 16-20 tracked files each. Deleting
+them per the literal instruction would have been data loss dressed as cleanup. Recorded instead.
+
+### The pattern across this wave
+
+Four of the bugs found were in the VERIFICATION tooling, not the product:
+  - the auditor's inactive sentinel was Integer.MIN_VALUE and the test was `depth > sentinel`,
+    which is always true, so every line was exempt and the auditor reported ZERO findings — it
+    passed;
+  - an annotation was matched short-form while every call site wrote it fully-qualified;
+  - a mutation harness reported everything surviving because cp hit a disk quota;
+  - a mutation written as `false && f(x)` on a two-line expression still called f through the
+    `||` below it.
+
+Each produced a confident, specific, fictional result. **A gate that silently skips everything
+looks exactly like a clean one**, and that equivalence is the most expensive failure mode here.
