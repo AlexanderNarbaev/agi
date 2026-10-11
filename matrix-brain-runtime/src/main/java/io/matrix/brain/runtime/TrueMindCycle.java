@@ -20,7 +20,6 @@ import io.matrix.brain.runtime.safety.HarmfulIntentClassifier;
 import io.matrix.signals.SignalModule;
 import io.matrix.signals.SignalModuleRegistry;
 import io.matrix.signals.TextSignalModule;
-import io.matrix.tsetlin.AdvancedTsetlinMachine;
 
 import java.util.ArrayList;
 import java.util.BitSet;
@@ -42,7 +41,7 @@ import java.util.Random;
  *    -> SaliencyEngine.score(source, bits)       (real)
  *    -> BirBrainCycle.cycle(input)                (real core cycle;
  *       internally: HdcBrain 10k-bit, CodebookMemory,
- *       AdvancedTsetlinMachine.predict, MCTS planner)
+ *       TsetlinTrainer via RuleInductionEngine during sleep, MCTS planner)
  *    -> SafetyMonitor (consistencyChecker + lieDetector)
  * </pre>
  *
@@ -259,20 +258,27 @@ public TrueMindCycle() {
                 "dim=10000",
                 "codebook_size_bytes=" + codebook.size()))));
 
-        // Tsetlin: predict with a small inline classifier using the real engine.
-        int[] tsetlinFeats = new int[Math.min(bits.length, 256)];
-        for (int i = 0; i < tsetlinFeats.length; i++) tsetlinFeats[i] = bits[i] ? 1 : 0;
-        AdvancedTsetlinMachine.Model tModel =
-            AdvancedTsetlinMachine.init(tsetlinFeats.length, 8, 2, rng.nextLong());
-        AdvancedTsetlinMachine.PredictResult tPred =
-            AdvancedTsetlinMachine.predict(tModel, tsetlinFeats);
-        trace.add(BrcStep.of("TSETLIN", core.accepted(),
-            Math.min(1.0, tPred.confidence()),
-            List.of(ev(AdvancedTsetlinMachine.class.getSimpleName(), "predict",
-                "nFeatures=" + tModel.nFeatures(),
-                "nClauses=" + tModel.nClauses(),
-                "predicted=" + tPred.predicted(),
-                "confidence=" + String.format("%.3f", tPred.confidence())))));
+        // W36.3 — the per-cycle Tsetlin call is REMOVED rather than kept as decoration.
+        //
+        // What this did: constructed a FRESH, untrained AdvancedTsetlinMachine on every single
+        // cycle, predicted with it, and wrote the resulting confidence into the trace. The
+        // result could not influence the reply or the verdict — it was a number attached to a
+        // step that never learned anything. Measured on a trivially separable task, that class
+        // scores at chance (48-51% where chance is 50%) and every attempted configuration got
+        // worse, so it was never going to become informative.
+        //
+        // Emitting a confidence figure derived from a model that is re-initialised each cycle
+        // and cannot train is worse than emitting nothing: it reads as a real Tsetlin output to
+        // anyone reading the trace, and it costs an allocation per cycle to do it.
+        //
+        // PRODUCTION LEARNING IS NOT MISSING — it lives elsewhere and works:
+        // RealSleepScheduler -> RuleInductionEngine -> TsetlinTrainer, measured 100% on the same
+        // separable task at 200 epochs. This stage stays deferred until a trained model is
+        // available to consult at inference time.
+        trace.add(BrcStep.of("TSETLIN", false, 0.0,
+            List.of("deferred=per-cycle-model-cannot-train",
+                "note=AdvancedTsetlinMachine moved to src/experimental; production rule "
+                    + "induction runs in RealSleepScheduler via RuleInductionEngine/TsetlinTrainer")));
 
         // MCTS placeholder — real MctsTree integration deferred to TRUE-W3.
         trace.add(BrcStep.of("MCTS", false, core.confidence(),

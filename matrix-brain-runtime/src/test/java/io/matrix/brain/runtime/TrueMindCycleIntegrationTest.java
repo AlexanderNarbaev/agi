@@ -48,7 +48,16 @@ class TrueMindCycleIntegrationTest {
         assertThat(evidence).anyMatch(e -> e.contains("SaliencyEngine.score"));
         assertThat(evidence).anyMatch(e -> e.contains("BirBrainCycle.cycle"));
         assertThat(evidence).anyMatch(e -> e.contains("HdcBrain.search-cosine"));
-        assertThat(evidence).anyMatch(e -> e.contains("AdvancedTsetlinMachine.predict"));
+        // W36.3 — this asserted that the trace names a Tsetlin prediction. It did, because the
+        // cycle built a FRESH UNTRAINED AdvancedTsetlinMachine every iteration and wrote its
+        // confidence into the trace. The number was real arithmetic on a model that could not
+        // learn, which made the guard test pass by checking that a meaningless stage was present.
+        //
+        // What the trace now asserts instead is that the stage is honestly DEFERRED, naming the
+        // engine that actually learns (TsetlinTrainer, via RuleInductionEngine during sleep).
+        // A guard that requires a broken component to keep running is not a guard.
+        assertThat(evidence).anyMatch(e -> e.contains("deferred=per-cycle-model-cannot-train"));
+        assertThat(evidence).anyMatch(e -> e.contains("RuleInductionEngine/TsetlinTrainer"));
         assertThat(evidence).anyMatch(e -> e.contains("SafetyMonitor.evaluate"));
         assertThat(evidence).anyMatch(e -> e.contains("ReflexEngine.tryReflex"));
     }

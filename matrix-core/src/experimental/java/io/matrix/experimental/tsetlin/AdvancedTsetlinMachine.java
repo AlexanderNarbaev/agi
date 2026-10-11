@@ -1,4 +1,4 @@
-package io.matrix.tsetlin;
+package io.matrix.experimental.tsetlin;
 
 import io.matrix.neuron.EnrichedNeuron;
 import io.matrix.neuron.Neurotransmitter;
@@ -17,6 +17,30 @@ import java.util.Random;
  * <p>Pure functions where possible. update() may use seeded RNG.
  */
 public final class AdvancedTsetlinMachine {
+
+    // W36.3 — RESEARCH PROTOTYPE, EXCLUDED FROM THE PRODUCTION BUILD.
+    //
+    // This class does not learn. Measured on a trivially separable task (feature 0 determines
+    // the label), 4000 updates, chance = 50%:
+    //
+    //     literals/clause   before   after 4000 updates
+    //         0               51%            51%
+    //         1               37%             4%
+    //         2               47%            14%
+    //         4               52%            44%
+    //
+    // Every configuration got WORSE. A clause with no literals can never fire, so Type I's
+    // add-literals branch is unreachable and the model deadlocks at chance; once clauses DO
+    // fire, Type II strips literals on an incorrect output while Type I only adds them once the
+    // output is already right.
+    //
+    // It is kept because the diagnosis is the useful artefact, not the code. It lives here, in
+    // src/experimental (a separate source set that the production jar does not compile), so it
+    // cannot be reached by production code and cannot be mistaken for a working component.
+    //
+    // PRODUCTION USES TsetlinTrainer, which is a different class and does work:
+    // measured 100% on the same separable task at 200 epochs, driven by
+    // RealSleepScheduler -> RuleInductionEngine. See KnownFailures.md.
 
     public record Clause(int[] include, int[] exclude, int polarity) {}
 

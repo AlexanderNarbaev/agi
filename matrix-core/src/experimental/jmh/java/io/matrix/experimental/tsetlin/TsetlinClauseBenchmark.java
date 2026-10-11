@@ -1,6 +1,6 @@
-package io.matrix.perf;
+package io.matrix.experimental.tsetlin;
 
-import io.matrix.tsetlin.AdvancedTsetlinMachine;
+
 
 import java.util.Random;
 

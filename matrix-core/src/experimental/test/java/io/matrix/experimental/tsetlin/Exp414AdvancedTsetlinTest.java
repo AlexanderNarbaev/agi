@@ -1,6 +1,6 @@
-package io.matrix.research;
+package io.matrix.experimental.tsetlin;
 
-import io.matrix.tsetlin.AdvancedTsetlinMachine;
+
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;

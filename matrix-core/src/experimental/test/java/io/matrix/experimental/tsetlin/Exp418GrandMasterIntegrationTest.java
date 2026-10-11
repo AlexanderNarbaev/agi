@@ -1,4 +1,4 @@
-package io.matrix.research;
+package io.matrix.experimental.tsetlin;
 
 import io.matrix.budgeter.ConjugateBudgeterMulti;
 import io.matrix.chain.ChainRegistry;
@@ -21,7 +21,7 @@ import io.matrix.neuron.TSNE;
 import io.matrix.neuron.TruthTable;
 import io.matrix.noosphere.CausalCrdt;
 import io.matrix.noosphere.FnlRegistry;
-import io.matrix.tsetlin.AdvancedTsetlinMachine;
+
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;

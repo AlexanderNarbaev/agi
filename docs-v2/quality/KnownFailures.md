@@ -1573,3 +1573,60 @@ minimal differing span between two highly similar statements and classify the re
 pairs — this implementation is a reasonable stage one that has been named as if it were the
 finished thing. Naming it correctly is the honest next step; the detection itself is a research
 task, like the Taum-I rule above.
+
+---
+
+## W36.3 — a correction I made to myself, and the one production Tsetlin finding that matters
+
+### I previously told you production Tsetlin learning works. It does not, at the settings production uses.
+
+Earlier this session I reported:
+
+    TsetlinTrainer (PRODUCTION class) accuracy: 100%  (400/400)
+
+That was measured at ONE operating point and I generalised from it. The fuller sweep:
+
+    trainBatch(.., 1)    -> 46%        trainBatch(.., 200)  -> 100%
+    trainBatch(.., 5)    -> 46%        trainBatch(.., 1000) -> 46%
+    trainBatch(.., 10)   -> 46%
+    trainBatch(.., 50)   -> 46%
+
+A single working point with failing neighbours is not a learning curve, it is an accident of one
+parameter value. And PRODUCTION calls `trainBatch(inputs, labels, 10)`:
+
+    RuleInductionEngine.induce() -> tsetlin.trainBatch(trainInputs, trainLabels, 10)
+
+which measures **46%** — indistinguishable from chance on a task any learner should solve
+outright.
+
+**So: production Tsetlin training is NOT demonstrated to learn.** I also nearly made the
+opposite error — my first version of this test asserted `> 90`, failed, and I checked whether
+RuleInductionEngine held a real trainer at all. It does. The trainer simply is not learning at
+the setting production passes.
+
+`ProductionTsetlinLearningTest` now pins the measured 46% rather than a threshold we wish for,
+with a message saying that if the assertion starts failing the trainer changed and the claim
+must be revisited. Asserting `> 90` would leave the suite permanently red and train everyone to
+ignore it; pinning 46 keeps the gap visible and still alarms on improvement.
+
+### AdvancedTsetlinMachine moved to src/experimental, and the per-cycle call was REMOVED
+
+I had recorded this class as "unused by production". That was wrong. `TrueMindCycle` constructed
+a FRESH UNTRAINED model every single cycle:
+
+    AdvancedTsetlinMachine.init(tsetlinFeats.length, 8, 2, rng.nextLong());
+    PredictResult tPred = AdvancedTsetlinMachine.predict(tModel, tsetlinFeats);
+    trace.add(BrcStep.of("TSETLIN", ..., tPred.confidence(), ...));
+
+The result could not influence the reply or the verdict — it was a number on a step that could
+never learn, re-allocated every iteration. Emitting that as a Tsetlin confidence is worse than
+emitting nothing: it reads as a real classifier output to anyone reading a trace.
+
+The call is removed and the stage is now honestly deferred, naming the engine that does the
+learning. `TrueMindCycleIntegrationTest` had asserted the trace contains
+`AdvancedTsetlinMachine.predict` — a guard that required the broken component to keep running
+in order to pass. It now asserts the deferral is stated and names `RuleInductionEngine`.
+
+The class, its two tests and its JMH benchmark moved to `src/experimental/`, which is not a
+declared source set, so production cannot compile or reach it. It is kept because the diagnosis
+is the artefact worth having, not the code.
