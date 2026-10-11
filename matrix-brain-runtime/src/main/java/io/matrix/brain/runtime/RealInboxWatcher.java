@@ -179,6 +179,15 @@ public final class RealInboxWatcher {
                           + " SHA-256 fingerprint " + sha256Hex(path)
                           + " (not a perception: no decoder for this format).";
                   transcoder = "MediaMetadataProbe+SHA-256";
+                    // W35.1: teach the measured properties as SEPARATE facts, not just the
+                    // description paragraph. The whole description is one long document, and
+                    // HDC retrieval scores against a document as a whole, so "What format was
+                    // chart.dat?" could not retrieve the MIME string out of the middle of it —
+                    // the answer was stored and unreachable at the same time. Mirrors the
+                    // ONE FACT PER FIELD handling of the sensor stream above.
+                    for (String fact : meta.facts()) {
+                        hdcStore.teach(inboxId(path) + "-" + claimToken(fact), fact);
+                    }
               }
 
             // RECON-W32.1: refuse rather than persist a measurement that does not exist.

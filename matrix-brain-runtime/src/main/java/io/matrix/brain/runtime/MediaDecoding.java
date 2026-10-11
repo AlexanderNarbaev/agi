@@ -196,6 +196,41 @@ public final class MediaDecoding {
         public boolean signatureRecognised() {
             return detectedMime != null;
         }
+
+        /**
+         * W35.1 — one retrievable fact per property.
+         *
+         * <p>{@link #describe} produces a single paragraph, and the inbox taught that whole
+         * paragraph as one document. A question like "What format was chart.dat?" could not
+         * retrieve it: HDC retrieval scores against the document as a whole, so a long
+         * description is diluted by its own length and the MIME string loses to the
+         * surrounding prose. This is the same reason {@code SensorStreamDecoder} emits
+         * {@code facts()} and the inbox teaches each one separately — see the "ONE FACT PER
+         * FIELD" note at that call site.</p>
+         *
+         * <p>Each returned string is short enough to be retrieved on its own and states only
+         * what was measured. Nothing here claims the contents were read; the existing
+         * not-a-perception sentence remains in the taught description.</p>
+         *
+         * @return short factual claims about this payload, never empty for a real file
+         */
+        public java.util.List<String> facts() {
+            java.util.List<String> out = new java.util.ArrayList<>();
+            String name = fileName == null || fileName.isEmpty() ? "(unnamed)" : fileName;
+            out.add(name + " is a file of " + sizeBytes + " bytes.");
+            if (signatureRecognised()) {
+                out.add("The format of " + name + " is " + detectedMime + ".");
+                out.add(name + " has signature " + signatureHex + ".");
+            } else {
+                out.add("The format of " + name + " is unrecognised; no container signature matched.");
+            }
+            out.add(name + " has a printable ratio of "
+                    + String.format(java.util.Locale.ROOT, "%.2f", printableRatio) + ".");
+            for (java.util.Map.Entry<String, String> e : headerFields.entrySet()) {
+                out.add("Header field " + e.getKey() + " of " + name + " is " + e.getValue() + ".");
+            }
+            return out;
+        }
     }
 
     /** Number of leading bytes rendered into {@link MediaMetadata#signatureHex()}. Unit: bytes. */
