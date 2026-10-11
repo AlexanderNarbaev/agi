@@ -41,13 +41,14 @@ public final class BrainLoopCompliance {
      * @param onnxImports   ONNX/LLM symbols found in decision-path (always blocking)
      * @param randomCalls   randomness sites found; blocking only when UNSEEDED
      * @param wallClockCalls clock sites found; advisory, pending human classification
-     * @param blockingCount findings that actually caused {@code compliant} to be decided
-     * @param advisoryCount findings recorded but not enforced
+     * @param blockingCount confirmed breaches; these block
+     * @param unclassified  wall-clock sites awaiting adjudication; these ALSO block (W36.1)
+     * @param permittedCount sites adjudicated or classified by rule; these do not block
      * @param note          a human-readable account of the decision
      */
     public record ComplianceResult(boolean compliant, int onnxImports,
                                    int randomCalls, int wallClockCalls,
-                                   int blockingCount, int advisoryCount,
+                                   int blockingCount, int unclassified, int permittedCount,
                                    String note) { }
 
     /**
@@ -59,7 +60,7 @@ public final class BrainLoopCompliance {
      */
     public static ComplianceResult check(Path sourceDir) throws IOException {
         if (!Files.exists(sourceDir)) {
-            return new ComplianceResult(false, 0, 0, 0, 0, 0, "no source");
+            return new ComplianceResult(false, 0, 0, 0, 0, 0, 0, "no source");
         }
         DecisionPathAuditor auditor = new DecisionPathAuditor();
         var report = auditor.audit(sourceDir);
@@ -77,20 +78,33 @@ public final class BrainLoopCompliance {
         }
 
         long blocking = report.blockingCount();
-        boolean compliant = blocking == 0;
+        long unclassified = report.unclassifiedCount();
+        long permitted = report.permittedCount();
+
+        // W36.1 — unadjudicated wall-clock now BLOCKS. It previously did not, on the reasoning
+        // that "not decidable from text" argues for leniency. That produced 84 sites nobody was
+        // accountable for and a gate that printed them without acting on them. An unadjudicated
+        // violation is not a lesser violation, it is an unknown one.
+        boolean compliant = blocking == 0 && unclassified == 0;
 
         String note = compliant
-                ? "no blocking findings; " + advisoryCount(report)
-                  + " advisory sites recorded for review (seeded Random is permitted by "
-                  + "Article I; wall-clock classification is not decidable from text)"
-                : blocking + " blocking finding(s): " + firstBlocking(report);
+                ? "Article I clean: " + blocking + " blocking, " + unclassified
+                  + " unclassified, " + permitted + " permitted"
+                : (blocking > 0 ? blocking + " confirmed breach(es): " + firstBlocking(report)
+                                : unclassified + " unadjudicated wall-clock site(s): "
+                                  + firstUnclassified(report));
 
         return new ComplianceResult(compliant, onnx, random, wallClock,
-                (int) blocking, (int) report.advisoryCount(), note);
+                (int) blocking, (int) unclassified, (int) permitted, note);
     }
 
-    private static long advisoryCount(DecisionPathAuditor.AuditReport report) {
-        return report.advisoryCount();
+    private static String firstUnclassified(DecisionPathAuditor.AuditReport report) {
+        return report.violations().stream()
+                .filter(v -> v.severity() == DecisionPathAuditor.Severity.UNCLASSIFIED
+                        && v.permitReason() == null)
+                .map(DecisionPathAuditor.Violation::toString)
+                .findFirst()
+                .orElse("(none)");
     }
 
     private static String firstBlocking(DecisionPathAuditor.AuditReport report) {

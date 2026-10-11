@@ -11,7 +11,8 @@ import java.util.UUID;
  *
  * <p>Ref: L4_Mediator.md §5.1
  */
-public final class Task implements Comparable<Task> {
+@io.matrix.auditor.ArticleIPermitted(value = "task record; createdAt is provenance and age() has no production caller")
+    public final class Task implements Comparable<Task> {
 
     public enum Status { PENDING, ACTIVE, COMPLETED, FAILED }
 

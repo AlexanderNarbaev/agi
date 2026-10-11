@@ -33,7 +33,8 @@ import java.util.Map;
  * but deferred until real training data lands.)
  */
 @ApplicationScoped
-public class ChainStateStore {
+@io.matrix.auditor.ArticleIPermitted(value = "chain-state record field; stored for provenance, no branch reads it")
+    public class ChainStateStore {
 
     private static final Logger log = LoggerFactory.getLogger(ChainStateStore.class);
 

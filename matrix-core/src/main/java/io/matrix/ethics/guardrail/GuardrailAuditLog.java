@@ -21,7 +21,8 @@ import java.util.List;
  * @param confidence  confidence score [0.0 .. 1.0]
  * @param patterns    list of detected patterns
  */
-public record GuardrailAuditLog(
+@io.matrix.auditor.ArticleIPermitted(value = "audit log; timestamp written to the trail, never compared to make a decision")
+    public record GuardrailAuditLog(
         Long id,
         Instant timestamp,
         String userId,

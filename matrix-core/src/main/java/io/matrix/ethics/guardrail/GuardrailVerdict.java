@@ -15,7 +15,8 @@ import java.util.List;
  *
  * <p>Ref: EU AI Act Art. 9 — Risk Management System
  */
-public enum GuardrailVerdict {
+@io.matrix.auditor.ArticleIPermitted(value = "verdict enum; timestamp attached to a result AFTER PASS or FAIL is decided")
+    public enum GuardrailVerdict {
     /** Content passed all checks. */
     PASS,
     /** Content has potential issues — logged, may proceed with warning. */

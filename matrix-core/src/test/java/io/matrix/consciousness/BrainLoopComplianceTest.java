@@ -46,13 +46,16 @@ class BrainLoopComplianceTest {
     @Test
     void complianceRecord() {
 var r = new BrainLoopCompliance.ComplianceResult(
-                  true, 0, 0, 0, 0, 0, "all checks pass");
+                  true, 0, 0, 0, 0, 0, 0, "all checks pass");
           assertThat(r.compliant()).isTrue();
           assertThat(r.onnxImports()).isZero();
           // W35.2: the gate now decides on blockingCount, so the record must expose the two
           // counts it decided on rather than only the raw tallies it prints.
           assertThat(r.blockingCount()).isZero();
-          assertThat(r.advisoryCount()).isZero();
+          // W36.1: unclassified wall-clock now BLOCKS, so the record must expose the count the
+          // decision was actually made on, not only the raw tallies it prints.
+          assertThat(r.unclassified()).isZero();
+          assertThat(r.permittedCount()).isZero();
           assertThat(r.note()).isEqualTo("all checks pass");
     }
 }

@@ -23,7 +23,8 @@ import java.util.List;
  * <p>Uses Vert.x Mutiny PgClient for non-blocking database access.
  */
 @ApplicationScoped
-public class GuardrailAuditRepository {
+@io.matrix.auditor.ArticleIPermitted(value = "audit repository; timestamps stored for the trail, no verdict depends on them")
+    public class GuardrailAuditRepository {
 
     private static final Logger log = LoggerFactory.getLogger(GuardrailAuditRepository.class);
 

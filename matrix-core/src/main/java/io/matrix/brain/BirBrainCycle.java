@@ -48,7 +48,8 @@ import java.util.Random;
  *                            Safety pipeline → CycleResult
  * </pre>
  */
-public final class BirBrainCycle implements BrainCycle {
+@io.matrix.auditor.ArticleIPermitted(value = "latency instrumentation; elapsed time is REPORTED in the trace, never branched on")
+    public final class BirBrainCycle implements BrainCycle {
 
     private final TextEncoder encoder;
     private final SaliencyEngine saliency;

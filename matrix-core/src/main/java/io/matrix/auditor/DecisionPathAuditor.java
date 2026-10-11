@@ -82,12 +82,49 @@ public final class DecisionPathAuditor {
         /** Breaks Article I. The compliance gate fails on any of these. */
         VIOLATION,
         /**
-         * A wall-clock or randomness site whose role cannot be determined from text. Reported
-         * so a human can classify it; deliberately not blocking, because a block here would
-         * either fail on legitimate audit timestamps or be waived until it becomes meaningless.
+         * W36.1 — a wall-clock read nobody has adjudicated.
+         *
+         * <p>Previously these were {@code ADVISORY} and did not block, on the reasoning that
+         * "not decidable from text" argues for leniency. That was wrong in effect: 84 sites sat
+         * unadjudicated indefinitely and the gate reported a number nobody was accountable for.
+         * An unadjudicated violation is not a lesser violation, it is an unknown one, and the
+         * point of a gate is to make unknowns visible.</p>
+         *
+         * <p>So this now BLOCKS. The two ways to clear it are to inject a clock (fixing the
+         * real case) or to annotate {@link ArticleIPermitted} with a reason (adjudicating the
+         * benign one). Both are deliberate acts; neither is silence.</p>
          */
-        ADVISORY
+        UNCLASSIFIED
     }
+
+    /**
+     * W36.1 — verdict for a site that has been adjudicated and found permitted.
+     *
+     * <p>Replaces {@code ADVISORY}. Recorded with its justification so the classification stays
+     * reviewable, and counted separately from both violations and unknowns.</p>
+     */
+    public enum Permit {
+        /** Annotated {@link ArticleIPermitted}: wall-clock that reaches no decision. */
+        PERMITTED,
+        /** Classified by RULE rather than by hand: see {@link #SEEDED_RANDOM_RULE}. */
+        PERMITTED_BY_RULE
+    }
+
+    /**
+     * W36.1 — the RULE that classifies seeded Random as permitted, with its justification.
+     *
+     * <p>CONSTITUTION Article I, cognitive layer clause: error-driven learning, exploration
+     * sampling and hypothesis generation <em>may</em> use seeded Random where the seed is a pure
+     * function of state. Every seeded {@code new Random(expr)} in a decision-path package
+     * satisfies the letter of that clause, so requiring a hand-written annotation on each of 59
+     * sites would record the constitution 59 times without adding any judgement.</p>
+     *
+     * <p>Unseeded randomness is NOT covered and stays a VIOLATION: it has no seed, so it cannot
+     * be a pure function of anything.</p>
+     */
+    public static final String SEEDED_RANDOM_RULE =
+            "CONSTITUTION I, cognitive layer: seeded Random is permitted where the seed is a "
+            + "pure function of state";
 
     private static final Pattern UNSEEDED_RANDOM = Pattern.compile("new\\s+Random\\s*\\(\\s*\\)");
     private static final Pattern SEEDED_RANDOM = Pattern.compile("new\\s+Random\\s*\\([^)]");
@@ -96,10 +133,29 @@ public final class DecisionPathAuditor {
 
     /** Recorded finding. {@code severity} distinguishes blocking from advisory. */
     public record Violation(String file, int line, String symbol, String reason,
-                            Severity severity) {
+                            Severity severity, String permitReason) {
+
+        /** A blocking breach of Article I. */
+        public static Violation violation(String f, int line, String sym, String why) {
+            return new Violation(f, line, sym, why, Severity.VIOLATION, null);
+        }
+
+        /** A wall-clock read awaiting human adjudication. */
+        public static Violation unclassified(String f, int line, String sym, String why) {
+            return new Violation(f, line, sym, why, Severity.UNCLASSIFIED, null);
+        }
+
+        /** A site adjudicated, or classified by rule, as permitted. */
+        public static Violation permitted(String f, int line, String sym, String why,
+                                          String permitReason, boolean byRule) {
+            return new Violation(f, line, sym, why, Severity.UNCLASSIFIED,
+                    byRule ? "rule:" + permitReason : permitReason);
+        }
+
         @Override
         public String toString() {
-            return file + ":" + line + "  " + severity + "  " + symbol + "  — " + reason;
+            return file + ":" + line + "  " + severity + "  " + symbol + "  — " + reason
+                    + (permitReason == null ? "" : "  [" + permitReason + "]");
         }
     }
 
@@ -109,13 +165,26 @@ public final class DecisionPathAuditor {
         }
 
         /** Findings that actually block, excluding advisories. */
+        /** Confirmed breaches. These block. */
         public long blockingCount() {
             return violations.stream().filter(v -> v.severity() == Severity.VIOLATION).count();
         }
 
-        /** Findings recorded for human classification, not counted as blocking. */
-        public long advisoryCount() {
-            return violations.stream().filter(v -> v.severity() == Severity.ADVISORY).count();
+        /** Wall-clock reads nobody has judged yet. These ALSO block, deliberately. */
+        public long unclassifiedCount() {
+            return violations.stream()
+                    .filter(v -> v.severity() == Severity.UNCLASSIFIED && v.permitReason() == null)
+                    .count();
+        }
+
+        /** Sites adjudicated or classified by rule as permitted. These do not block. */
+        public long permittedCount() {
+            return violations.stream().filter(v -> v.permitReason() != null).count();
+        }
+
+        /** Total that should block: confirmed breaches plus unadjudicated sites. */
+        public long nonCompliantCount() {
+            return blockingCount() + unclassifiedCount();
         }
     }
 
@@ -144,7 +213,12 @@ public final class DecisionPathAuditor {
             // An unreadable root yields an empty report rather than an exception, matching the
             // previous contract.
         }
-        boolean passed = violations.stream().noneMatch(v -> v.severity() == Severity.VIOLATION);
+        // W36.1: PASS requires zero NON-COMPLIANT sites. UNCLASSIFIED counts, because a gate
+        // that reports PASS while a wall-clock site is unjudged is reporting that it checked
+        // something it did not check.
+        boolean passed = violations.stream()
+                .noneMatch(v -> v.severity() == Severity.VIOLATION
+                        || (v.severity() == Severity.UNCLASSIFIED && v.permitReason() == null));
         return new AuditReport(scanned[0], violations, passed);
     }
 
@@ -156,71 +230,161 @@ public final class DecisionPathAuditor {
         String content = stripCommentsAndStrings(Files.readString(file));
         String[] lines = content.split("\n");
 
-        // Track members annotated @AdversarialStochasticity. Article I permits unbounded
-        // randomness there with explicit marking, and this annotation is code rather than a
-        // comment precisely so that the marking survives the comment strip above. A member so
-        // marked still REPORTS its findings — they are downgraded to ADVISORY, not deleted.
-        boolean inAdversarialMember = false;
-        int adversarialBraceDepth = 0;
+        // W36.1 — @ArticleIPermitted exempts the annotated MEMBER, which may be a method or an
+        // entire type. Both cases are handled by remembering the brace depth at which the
+        // exemption starts and clearing it when the scanner returns to that depth. An earlier
+        // version only skipped the declaration line itself, so a class-level annotation
+        // exempted nothing and all 24 sites stayed UNCLASSIFIED — which is exactly the kind of
+        // gate that looks like it works because nothing about it fails loudly.
+        //
+        // @AdversarialStochasticity works the same way, for the same reason.
+        // A BUG worth recording: these were initially Integer.MIN_VALUE as an "inactive"
+        // sentinel, and the test was `depth > permittedFromDepth`. With MIN_VALUE that
+        // comparison is `0 > -2147483648`, which is TRUE — so every line in every file was
+        // exempt from the first line of the scan and the auditor reported zero findings,
+        // i.e. it passed. A sentinel must not be a value the real domain can hold, and
+        // MIN_VALUE is a value depth could legitimately take.
+        // `entered` matters because a multi-line declaration may open with no brace at all:
+        // `@ArticleIPermitted` on `public record CycleEvent(` is followed by a line that adds
+        // nothing to the depth. Without tracking entry, the exemption cleared on that line
+        // before the record body opened, and the wall-clock sites inside it stayed
+        // UNCLASSIFIED. A member is only finished once it has been ENTERED and returned.
+        boolean permittedActive = false;
+        boolean adversarialActive = false;
+        boolean permittedEntered = false;
+        boolean adversarialEntered = false;
+        int permittedFromDepth = 0;
+        int adversarialFromDepth = 0;
         int depth = 0;
 
         for (int i = 0; i < lines.length; i++) {
             String line = lines[i].trim();
-            if (line.isEmpty()) {
-                continue;
-            }
-            for (ForbiddenSymbol fs : FORBIDDEN_SYMBOLS) {
-                if (line.contains("import ") && line.contains(fs.prefix())) {
-                    out.add(new Violation(relPath, i + 1, fs.prefix(), fs.reason(),
-                            Severity.VIOLATION));
+
+            if (line.contains("ArticleIPermitted")) {
+                // A NESTED annotation must not clear `entered`. The import line matches first,
+                // making the whole type active, and the method annotation inside it re-arms the
+                // baseline at the current depth — resetting `entered` there made the method body
+                // look un-entered and the site inside it stayed UNCLASSIFIED.
+                // Re-arm the baseline ONLY on a fresh activation. When a type is already
+                // annotated and a method inside it is annotated too, re-arming at the method's
+                // own depth would put the baseline AT the method, so the method body would not
+                // read as deeper than it and the site inside it stayed UNCLASSIFIED.
+                if (!permittedActive) {
+                    permittedEntered = false;
+                    permittedFromDepth = depth;
                 }
+                permittedActive = true;
+                continue;
             }
             if (line.contains("@AdversarialStochasticity")) {
-                inAdversarialMember = true;
-                adversarialBraceDepth = -1;
+                adversarialActive = true;
+                adversarialEntered = false;
+                adversarialFromDepth = depth;
                 continue;
             }
-            if (inAdversarialMember) {
-                for (char ch : line.toCharArray()) {
-                    if (ch == '{') { if (adversarialBraceDepth < 0) { adversarialBraceDepth = 0; } adversarialBraceDepth++; }
-                    else if (ch == '}') { adversarialBraceDepth--; }
+            int opens = count(line, '{');
+            int closes = count(line, '}');
+            boolean inPermittedMember = permittedActive && depth > permittedFromDepth;
+            boolean exempt = inPermittedMember
+                    || (adversarialActive && depth > adversarialFromDepth);
+
+            if (inPermittedMember) {
+                // Still RECORDED, just not blocking. Silently skipping an annotated site would
+                // make the report understate the debt it claims to have adjudicated — the count
+                // would fall without any record of what fell.
+                if (!line.startsWith("import ")) {
+                    classifyAsPermitted(relPath, i + 1, line, out);
                 }
-                if (adversarialBraceDepth == 0) { inAdversarialMember = false; }
-                continue;   // annotated members are not scanned for further violations
+            } else if (!exempt) {
+                if (line.isEmpty()) {
+                    continue;
+                }
+                for (ForbiddenSymbol fs : FORBIDDEN_SYMBOLS) {
+                    if (line.contains("import ") && line.contains(fs.prefix())) {
+                        out.add(Violation.violation(relPath, i + 1, fs.prefix(), fs.reason()));
+                    }
+                }
+                if (!line.startsWith("import ")) {
+                    classify(relPath, i + 1, line, out);
+                }
             }
-            if (line.startsWith("import ")) {
-                // Imports are covered above; a bare import of Random or ThreadLocalRandom is
-                // not a violation until it is actually used.
-                continue;
+
+            depth += opens - closes;
+            if (permittedActive && depth > permittedFromDepth) {
+                permittedEntered = true;
             }
-            for (char ch : line.toCharArray()) {
-                if (ch == '{') { depth++; } else if (ch == '}') { depth--; }
+            if (adversarialActive && depth > adversarialFromDepth) {
+                adversarialEntered = true;
             }
-            if (line.contains("Math.random") || line.contains("ThreadLocalRandom")
-                    || UNSEEDED_RANDOM.matcher(line).find()) {
-                out.add(new Violation(relPath, i + 1,
-                        line.contains("Math.random") ? "Math.random"
-                                : line.contains("ThreadLocalRandom") ? "ThreadLocalRandom"
-                                : "new Random()",
-                        "Unseeded randomness is forbidden outside adversarial mode "
-                                + "(CONSTITUTION I)",
-                        Severity.VIOLATION));
-            } else if (SEEDED_RANDOM.matcher(line).find()) {
-                // Article I explicitly permits seeded Random in the cognitive layer. Recorded
-                // so the count is visible, not counted as a breach.
-                out.add(new Violation(relPath, i + 1, "new Random(seed)",
-                        "Seeded Random — permitted in the cognitive layer by Article I; "
-                                + "confirm the seed is a pure function of state",
-                        Severity.ADVISORY));
+            if (permittedActive && permittedEntered && depth <= permittedFromDepth) {
+                permittedActive = false;
+                permittedEntered = false;
             }
-            if (WALL_CLOCK.matcher(line).find()) {
-                out.add(new Violation(relPath, i + 1, "wall-clock",
-                        "Wall-clock in decision-path is forbidden for deterministic replay "
-                                + "(Article I). If this only stamps an audit record, classify "
-                                + "and waive it explicitly.",
-                        Severity.ADVISORY));
+            if (adversarialActive && adversarialEntered && depth <= adversarialFromDepth) {
+                adversarialActive = false;
+                adversarialEntered = false;
             }
         }
+    }
+
+    /**
+     * Classify a line inside a member annotated {@link ArticleIPermitted}.
+     *
+     * <p>Recorded rather than dropped, and promoted to PERMITTED rather than left UNCLASSIFIED,
+     * so the report accounts for every wall-clock read it saw. The count falling without a
+     * corresponding record is how a debt gets mistaken for a fix.</p>
+     */
+    private static void classifyAsPermitted(String relPath, int lineNo, String line,
+                                            List<Violation> out) {
+        if (WALL_CLOCK.matcher(line).find()) {
+            out.add(Violation.permitted(relPath, lineNo, "wall-clock", "Annotated permitted",
+                    "member annotated @ArticleIPermitted", false));
+        } else if (UNSEEDED_RANDOM.matcher(line).find() || line.contains("Math.random")
+                || line.contains("ThreadLocalRandom")) {
+            out.add(Violation.violation(relPath, lineNo, "unseeded-random",
+                    "Unseeded randomness is never excusable, not even in a permitted member"));
+        } else if (SEEDED_RANDOM.matcher(line).find()) {
+            out.add(Violation.permitted(relPath, lineNo, "new Random(seed)", "Seeded Random",
+                    SEEDED_RANDOM_RULE, true));
+        }
+    }
+
+    /** Apply one line's findings to the report. Split out so the exemption logic above stays readable. */
+    private static void classify(String relPath, int lineNo, String line, List<Violation> out) {
+        if (line.contains("Math.random") || line.contains("ThreadLocalRandom")
+                || UNSEEDED_RANDOM.matcher(line).find()) {
+            out.add(Violation.violation(relPath, lineNo,
+                    line.contains("Math.random") ? "Math.random"
+                            : line.contains("ThreadLocalRandom") ? "ThreadLocalRandom"
+                            : "new Random()",
+                    "Unseeded randomness is forbidden outside adversarial mode "
+                            + "(CONSTITUTION I)"));
+        } else if (SEEDED_RANDOM.matcher(line).find()) {
+            // Article I permits seeded Random in the cognitive layer. Classified BY RULE rather
+            // than site by site, because the rule is already written down and the alternative
+            // is recording the same sentence 59 times.
+            out.add(Violation.permitted(relPath, lineNo, "new Random(seed)",
+                    "Seeded Random", SEEDED_RANDOM_RULE, true));
+        }
+        if (WALL_CLOCK.matcher(line).find()) {
+            // Not decidable from text: an audit-log timestamp and a rate-limit window are the
+            // same call. So it BLOCKS until a human annotates ArticleIPermitted or the clock is
+            // injected — see InputFilterGuard, which was the one real case.
+            out.add(Violation.unclassified(relPath, lineNo, "wall-clock",
+                    "Wall-clock in a decision-path package. If this only records an audit "
+                            + "field, annotate the member with @ArticleIPermitted; if it "
+                            + "influences a decision, inject a clock."));
+        }
+    }
+
+    private static int count(String s, char c) {
+        int n = 0;
+        for (int k = 0; k < s.length(); k++) {
+            if (s.charAt(k) == c) {
+                n++;
+            }
+        }
+        return n;
     }
 
     /**
@@ -236,28 +400,34 @@ public final class DecisionPathAuditor {
     public String formatReport(AuditReport report) {
         StringBuilder sb = new StringBuilder();
         sb.append("=== Decision-Path Audit Report ===\n");
-        sb.append(String.format("Files scanned: %d%n", report.filesScanned()));
-        // "Violations" is retained as the headline term: a wall-clock read in a decision path
-        // IS prohibited by Article I whether or not this text scan can prove it reaches a
-        // branch. The split below is about whether the finding BLOCKS, not about whether it is
-        // a violation — so the count is the violation count and nothing is renamed away.
-        sb.append(String.format("Violations:    %d%n", report.violationCount()));
-        sb.append(String.format("  BLOCKING:   %d%n", report.blockingCount()));
-        sb.append(String.format("  ADVISORY:   %d%n", report.advisoryCount()));
-        sb.append(String.format("Verdict:       %s%n",
-                report.blockingCount() == 0 ? "PASS" : "FAIL"));
+        sb.append(String.format("Files scanned:  %d%n", report.filesScanned()));
+        sb.append(String.format("Violations:     %d%n", report.violationCount()));
+        sb.append(String.format("  BLOCKING:     %d%n", report.blockingCount()));
+        sb.append(String.format("  UNCLASSIFIED: %d  (wall-clock nobody has adjudicated)%n",
+                report.unclassifiedCount()));
+        sb.append(String.format("  PERMITTED:    %d  (adjudicated or classified by rule)%n",
+                report.permittedCount()));
+        sb.append(String.format("Verdict:        %s%n",
+                report.nonCompliantCount() == 0 ? "PASS" : "FAIL"));
 
         List<Violation> blocking = report.violations().stream()
                 .filter(v -> v.severity() == Severity.VIOLATION).toList();
         if (!blocking.isEmpty()) {
-            sb.append("\n--- BLOCKING (breach of Article I) ---\n");
+            sb.append("\n--- BLOCKING (confirmed breach of Article I) ---\n");
             blocking.forEach(v -> sb.append("  ").append(v).append('\n'));
         }
-        List<Violation> advisory = report.violations().stream()
-                .filter(v -> v.severity() == Severity.ADVISORY).toList();
-        if (!advisory.isEmpty()) {
-            sb.append("\n--- ADVISORY (recorded, awaiting classification) ---\n");
-            advisory.forEach(v -> sb.append("  ").append(v).append('\n'));
+        List<Violation> unknown = report.violations().stream()
+                .filter(v -> v.severity() == Severity.UNCLASSIFIED && v.permitReason() == null)
+                .toList();
+        if (!unknown.isEmpty()) {
+            sb.append("\n--- UNCLASSIFIED (each needs an injected clock or @ArticleIPermitted) ---\n");
+            unknown.forEach(v -> sb.append("  ").append(v).append('\n'));
+        }
+        List<Violation> permitted = report.violations().stream()
+                .filter(v -> v.permitReason() != null).toList();
+        if (!permitted.isEmpty()) {
+            sb.append("\n--- PERMITTED (adjudicated, with reason) ---\n");
+            permitted.forEach(v -> sb.append("  ").append(v).append('\n'));
         }
         return sb.toString();
     }

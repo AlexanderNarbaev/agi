@@ -19,7 +19,8 @@ import io.matrix.observability.MatrixMetrics;
  *
  * <p>Ref: L4_Mediator.md §2.1, §3, §5
  */
-public final class InstanceMediator {
+@io.matrix.auditor.ArticleIPermitted(value = "lastTickTime is assigned and never read anywhere; the field is dead")
+    public final class InstanceMediator {
 
     public record MediatorConfig(
             long tickIntervalMs,

@@ -20,7 +20,8 @@ import com.sun.net.httpserver.HttpServer;
  * - /health: health check
  * - /stats: JSON stats
  */
-public final class BrainTelemetry {
+@io.matrix.auditor.ArticleIPermitted(value = "telemetry; uptime is EXPORTED as a metric, never branched on")
+    public final class BrainTelemetry {
     
     private static final int DEFAULT_PORT = 9201;
     

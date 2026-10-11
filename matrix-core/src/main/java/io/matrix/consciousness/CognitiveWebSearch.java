@@ -21,7 +21,8 @@ import java.util.List;
  * <p>CONSTITUTION VI compliance: web-style cognitive augmentation,
  * not phenomenal consciousness claim.
  */
-public final class CognitiveWebSearch {
+@io.matrix.auditor.ArticleIPermitted(value = "call site is annotated as not used in decision paths")
+    public final class CognitiveWebSearch {
 
     private CognitiveWebSearch() {}
 

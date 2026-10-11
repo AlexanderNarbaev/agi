@@ -21,7 +21,8 @@ import java.util.concurrent.atomic.AtomicReference;
  *       system would also expose a manual recovery API for ops.</li>
  * </ul>
  */
-public class FreezeRecoveryManager {
+@io.matrix.auditor.ArticleIPermitted(value = "audit record of when a violation occurred; the cooldown DECISION reads the logical tick")
+    public class FreezeRecoveryManager {
 
     /** State machine for the freeze mode. */
     public enum State {

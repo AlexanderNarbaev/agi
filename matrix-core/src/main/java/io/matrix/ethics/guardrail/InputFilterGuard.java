@@ -32,7 +32,8 @@ import java.util.regex.Pattern;
  * <p>Ref: EU AI Act Art. 9, Annex IV — Risk Management System
  */
 @ApplicationScoped
-public class InputFilterGuard {
+@io.matrix.auditor.ArticleIPermitted(value = "guard RESULT timestamp only; the rate-limit DECISION uses an injected clock")
+    public class InputFilterGuard {
 
     private static final Logger log = LoggerFactory.getLogger(InputFilterGuard.class);
 
@@ -61,6 +62,32 @@ public class InputFilterGuard {
 
     // ── Rate Limiting State ──
     private final Map<String, Deque<Instant>> requestTimestamps = new ConcurrentHashMap<>();
+
+    /**
+     * W36.1 — the rate limiter's clock, injected.
+     *
+     * <p>This was {@code Instant.now()} inline, and it is the one GENUINE Article I violation
+     * among the wall-clock sites the improved auditor surfaced. The elapsed time decided whether
+     * a request was permitted or rate-limited, so the same request sequence returned different
+     * verdicts depending on machine load. A guardrail whose verdict cannot be replayed cannot be
+     * audited, which is the entire reason the rule exists.</p>
+     *
+     * <p>Injecting rather than annotating is the point: annotating would have made the gate
+     * green while leaving the decision non-deterministic. The one remaining {@code Instant.now()}
+     * in this class stamps the RESULT record, which no verdict depends on.</p>
+     */
+    private final java.util.function.Supplier<Instant> clock;
+
+    public InputFilterGuard() {
+        this(Instant::now);
+    }
+
+    /**
+     * @param clock supplies the current instant; injected so rate limiting is deterministic
+     */
+    public InputFilterGuard(java.util.function.Supplier<Instant> clock) {
+        this.clock = clock == null ? Instant::now : clock;
+    }
 
     /**
      * Evaluate input text against all configured checks.
@@ -214,7 +241,7 @@ public class InputFilterGuard {
                     "No user ID — rate limit skipped");
         }
 
-        Instant now = Instant.now();
+        Instant now = clock.get();
         Instant oneMinuteAgo = now.minus(Duration.ofMinutes(1));
         Instant oneHourAgo = now.minus(Duration.ofHours(1));
 

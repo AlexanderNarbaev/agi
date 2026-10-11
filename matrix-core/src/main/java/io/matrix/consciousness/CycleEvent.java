@@ -5,7 +5,8 @@ package io.matrix.consciousness;
  *
  * <p>Rich event object for cycle lifecycle.
  */
-public record CycleEvent(
+@io.matrix.auditor.ArticleIPermitted(value = "event record; timestamp is an observation field, not an input to any decision")
+    public record CycleEvent(
         int cycleId,
         EventType type,
         String input,

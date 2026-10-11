@@ -48,7 +48,8 @@ import java.util.Random;
  * {@link UnifiedPretrainedMerger#loadBaseline(Path)} to provide
  * deterministic startup regardless of which models are on disk.
  */
-public final class UnifiedPretrainedMerger {
+@io.matrix.auditor.ArticleIPermitted(value = "model-manifest provenance stamp; written once, never read by a decision")
+    public final class UnifiedPretrainedMerger {
 
     private static final Logger log = LoggerFactory.getLogger(UnifiedPretrainedMerger.class);
 

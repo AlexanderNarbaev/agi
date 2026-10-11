@@ -92,11 +92,82 @@ class DecisionPathAuditorTest {
         assertThat(text).contains("Violations");
     }
 
+    /**
+     * W36.1 — an UNADJUDICATED wall-clock read must now BLOCK.
+     *
+     * <p>This is the property the wave turned on. It is also the one most likely to silently
+     * regress: a gate that no longer blocks is indistinguishable from a gate that never
+     * blocked, unless something is deliberately broken.</p>
+     */
+    @Test
+    void unclassifiedWallClockBlocks() throws IOException {
+        Path root = createTempTree();
+        writeFile(root, "io/matrix/brain/Decider.java",
+                "package io.matrix.brain;\n"
+                        + "public class Decider {\n"
+                        + "  public boolean decide(long t) {\n"
+                        + "    if (System.currentTimeMillis() - t > 1000) { return false; }\n"
+                        + "    return true;\n"
+                        + "  }\n"
+                        + "}\n");
+        // W36.1 NOTE — the auditor classifies by the path RELATIVE to the root it is given, so
+        // these files are written at io/matrix/brain/... INSIDE the temp root and the audit is
+        // run on that root. Auditing the package directory itself would relativise every file
+        // to a bare name, match no decision-path package, and silently scan NOTHING — a gate
+        // that skips everything reports zero findings and looks clean.
+        var report = new DecisionPathAuditor().audit(root);
+        assertThat(report.filesScanned())
+                .as("the file must actually be scanned, not skipped")
+                .isGreaterThan(0);
+        assertThat(report.blockingCount())
+                .as("a confirmed breach still blocks")
+                .isZero();
+        assertThat(report.unclassifiedCount())
+                .as("wall-clock nobody has judged is NOT a lesser violation, it is an unknown "
+                        + "one, and it must block until annotated or given an injected clock")
+                .isEqualTo(1);
+        assertThat(report.nonCompliantCount()).isEqualTo(1);
+        assertThat(report.passed())
+                .as("the report must not claim PASS while a site is unadjudicated")
+                .isFalse();
+    }
+
+    /**
+     * W36.1 — annotating a member clears it, and the justification is retained.
+     */
+    @Test
+    void articleIPermittedAnnotationClearsASite() throws IOException {
+        Path root = createTempTree();
+        writeFile(root, "io/matrix/brain/Recorder.java",
+                "package io.matrix.brain;\n"
+                        + "import io.matrix.auditor.ArticleIPermitted;\n"
+                        + "public class Recorder {\n"
+                        + "  @ArticleIPermitted(value = \"audit field, no decision reads it\")\n"
+                        + "  public long stamp() { return System.currentTimeMillis(); }\n"
+                        + "}\n");
+        var report = new DecisionPathAuditor().audit(root);
+        assertThat(report.unclassifiedCount())
+                .as("an annotated member must be adjudicated, not merely annotated")
+                .isZero();
+        assertThat(report.permittedCount()).isEqualTo(1);
+        assertThat(report.passed()).isTrue();
+        assertThat(report.violations().get(0).permitReason())
+                .as("the adjudication must be ATTRIBUTED, not merely dropped. The report "
+                        + "cannot quote the annotation's own text because string literals are "
+                        + "stripped before scanning — correctly, since a string is not code — so "
+                        + "the reason is carried in the SOURCE annotation, where a reviewer "
+                        + "reads it, and the report says the site was annotated.")
+                .contains("ArticleIPermitted");
+        assertThat(Files.readString(root.resolve("io/matrix/brain/Recorder.java")))
+                .as("the human-readable justification stays in the source")
+                .contains("audit field, no decision reads it");
+    }
+
     @Test
     void violationRecord() {
         DecisionPathAuditor.Violation v =
 new DecisionPathAuditor.Violation("file.java", 10, "sym", "reason",
-                          DecisionPathAuditor.Severity.VIOLATION);
+                          DecisionPathAuditor.Severity.VIOLATION, null);
           assertThat(v.file()).isEqualTo("file.java");
           assertThat(v.line()).isEqualTo(10);
           assertThat(v.symbol()).isEqualTo("sym");

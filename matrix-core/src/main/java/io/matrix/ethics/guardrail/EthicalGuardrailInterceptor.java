@@ -44,7 +44,8 @@ import java.util.stream.Collectors;
 @Provider
 @Guardrailed
 @ApplicationScoped
-public class EthicalGuardrailInterceptor implements ContainerRequestFilter, ContainerResponseFilter {
+@io.matrix.auditor.ArticleIPermitted(value = "request-context timestamp flows ONLY into the audit log; the verdict is decided without it")
+    public class EthicalGuardrailInterceptor implements ContainerRequestFilter, ContainerResponseFilter {
 
     private static final Logger log = LoggerFactory.getLogger(EthicalGuardrailInterceptor.class);
 
