@@ -1,6 +1,5 @@
 package io.matrix.federation;
 
-import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -37,8 +36,23 @@ public final class DecentralizedDigestPipeline {
     private final double epsilon;
     private final Random rng;
 
+    /**
+     * Fixed seed so egress decisions are reproducible unless a caller opts out explicitly.
+     *
+     * <p>W37.3 — the previous default was {@code new SecureRandom()}, an explicitly UNSEEDED
+     * source sitting on the egress path. Article I permits unseeded randomness only where the
+     * result cannot reach a decision, and a digest count is precisely such a decision: it decides
+     * whether a fact is dispatched to a peer.</p>
+     *
+     * <p>It also made {@code KnowledgeShareTest} genuinely flaky. The test passed 3/3 in
+     * isolation and failed inside the full 8038-test run, because Laplace noise decided whether a
+     * digest crossed the k-anonymous threshold. "Flaky" was the wrong reading — the variance was
+     * in a value the product actually depends on.</p>
+     */
+    public static final long DEFAULT_SEED = 0x5EED_C0DEL;
+
     public DecentralizedDigestPipeline(Anonymizer anonymizer, double epsilon) {
-        this(anonymizer, epsilon, new SecureRandom());
+        this(anonymizer, epsilon, new Random(DEFAULT_SEED));
     }
 
     public DecentralizedDigestPipeline(Anonymizer anonymizer, double epsilon, Random rng) {
