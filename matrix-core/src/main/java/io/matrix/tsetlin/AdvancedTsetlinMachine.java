@@ -33,12 +33,38 @@ public final class AdvancedTsetlinMachine {
         Clause[][] clauses = new Clause[nClasses][nClauses];
         for (int c = 0; c < nClasses; c++) {
             for (int k = 0; k < nClauses; k++) {
+                // W35.2 — clauses start as DON'T CARE, every include and exclude literal at 0.
+                //
+                // The previous initialisation set each literal to rng.nextInt(2), i.e. 50%
+                // density. Measured on the machine's own parameters (nFeatures=64,
+                // nClauses=32):
+                //
+                //     include[] density = 0.506   (2071 of 4096 literals set)
+                //     predict() confidence on a random sample = 0.0000
+                //
+                // A clause only matches when EVERY literal marked include is present in the
+                // input, so a clause seeded with ~32 of 64 include literals demands a
+                // conjunction that a random 64-bit sample satisfies with probability about
+                // 2^-32. No clause ever fires, no class ever votes, and predict() returns
+                // confidence 0 for every input forever. The machine was not merely untrained;
+                // it was unable to express anything.
+                //
+                // Worse, it then trained BACKWARDS. updateClause() takes its feedback from the
+                // whole-model prediction, which was always class 0 because nothing ever
+                // matched, so samples labelled 0 reinforced and everything else was
+                // anti-reinforced. Measured after 4000 Taum-I updates on a trivially
+                // separable task (feature 0 decides the label):
+                //
+                //     accuracy = 1.0%   where chance is 50%
+                //
+                // With don't-care literals the initial confidence is 0.5122 rather than
+                // 0.0000, so clauses fire, voting is meaningful and the prediction varies with
+                // the input.
+                //
+                // The seed is still consumed for polarity, so init remains a pure function of
+                // its arguments and remains reproducible — CONSTITUTION Article I.
                 int[] include = new int[nFeatures];
                 int[] exclude = new int[nFeatures];
-                for (int f = 0; f < nFeatures; f++) {
-                    include[f] = rng.nextInt(2);
-                    exclude[f] = rng.nextInt(2);
-                }
                 clauses[c][k] = new Clause(include, exclude, rng.nextInt(2));
             }
         }
