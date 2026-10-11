@@ -1442,3 +1442,79 @@ What this means for the record:
 
 This is recorded rather than worked around. Re-labelling internal cross-checks as "review"
 would convert an honest gap into a false claim, which is the one outcome worse than the gap.
+
+---
+
+## AdvancedTsetlinMachine — the learning rule is a research task, and I did not solve it
+
+The don't-care initialisation fix (previous section) stands and is verified. The learning rule
+does not, and this records an attempt to implement Taum-I properly that **failed**, with the
+measurements, because the measurements are the useful part.
+
+### The three defects in the original updateClause
+
+  1. It took ONE boolean, the whole-model prediction, as the feedback signal for an individual
+     clause. A clause was reinforced or anti-reinforced according to whether the ENTIRE model
+     was right, not whether that clause contributed anything.
+  2. It only ever set include literals, so exclude literals — half the clause representation —
+     could never be learned.
+  3. It never flipped polarity, which is the Type-Ia action that lets a clause change what it
+     votes for.
+
+Measured on a trivially separable task (feature 0 determines the label), 4000 updates:
+
+    original rule, don't-care init     48%   (chance is 50%)
+
+### What I implemented, and why it still did not learn
+
+A rewrite with correct structure: a shared `clauseFires()` used by BOTH training and scoring,
+per-clause firing status, Type I adding include AND exclude literals, Type Ia flipping polarity,
+Type II removing a randomly chosen SET literal rather than clearing by feature index.
+
+Two findings from that rewrite are worth more than the code:
+
+**A clause with no literals can never fire, so it can never be given literals.** With
+CLAUSE_THRESHOLD = 1 and don't-care literals, `satisfied` is 0, no clause fires, Type I's
+"add literals" branch is unreachable, and the model is deadlocked at exactly chance — measured
+accuracy was 51%, 51%, 51%, 51% across 500 / 1000 / 2000 / 4000 updates. Constant to the
+percent. Seeding clauses with literals breaks the deadlock:
+
+    literals per clause   before    after 4000 updates
+        0                   51%           51%
+        1                   37%            4%
+        2                   47%           14%
+        4                   52%           44%
+
+**Every configuration got worse.** Type II fires on an incorrect output and removes literals,
+so while the model is wrong clauses are being stripped; Type I only adds literals once the
+output is already right. That asymmetry is the actual obstacle, and closing it needs the
+tempering schedule and clause-selection strategy from the reference construction — not a
+plausible-looking rewrite.
+
+### Why the code was reverted
+
+The rewrite was structurally more correct but empirically unproven, and it did not make the
+machine learn. Committing it would have meant shipping an ML component whose only claim to
+correctness is that it looks like the paper. The repository keeps the don't-care
+initialisation, which is a measured fix, and the original update rule, which is a documented
+defect.
+
+This is a research task, not a bug fix. It needs iteration against a benchmark with held-out
+accuracy, not a property test that pins the current bad number.
+
+### A process lesson, recorded because it recurred three times this session
+
+I edited source with python string replacement and three times believed an edit had applied
+when the anchor had simply not matched. Twice this produced a confident, specific, entirely
+wrong conclusion:
+
+  - a mutation written as `false && harmfulIntent.saysHarmful(input)` on a two-line
+    declaration compiled, changed the file, and STILL CALLED THE CLASSIFIER through the `||`
+    on the next line — reporting a test gap for a guard that was load-bearing;
+  - a replacement of predict()'s matching loop silently did not apply, leaving training and
+    scoring using different clause semantics while I believed they shared one;
+  - a package-rewrite script repackaged 18 files it should not have touched.
+
+A replacement that reports success but matched nothing is indistinguishable from one that
+worked. From here, edits to source are followed by a read-back of the changed lines, and the
+mutation harness verifies that a mutation changes BEHAVIOUR, not merely that it changes text.
