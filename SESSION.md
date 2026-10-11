@@ -4741,3 +4741,162 @@ block was correct; the remote state needed correcting, not the local one.
    detection, the operator's gzip/Brotli Kolmogorov tiering, BitNet GPU execution through the
    actual model path (only ONNX matmul was benchmarked), the 8+ independent reviewer gate that
    four stalled specialists failed to produce, and v17.7.0.
+
+
+---
+
+## 2026-10-11 17:05 — W35.2: the Article I gate made real, a Tsetlin that could not speak, and two corrections
+
+### Committed this wave
+
+    6438047d  fix(core): MI went to -3.2e-16; contradiction detection does not detect contradictions
+    ecb87f10  fix(core): the ethics freeze cooldown decided using a wall clock
+    73b68cbd  docs(quality): Taum-I rewrite attempted, measured, and reverted
+    31463267  test(brain-runtime): mutation-check the safety guards
+    16d3d3d0  docs(quality): the 8+ reviewer gate fails because the subagent path does not complete
+    5704566c  fix(core): Tsetlin clauses were seeded so densely that none could ever match
+    3f12d9c8  fix(core): make the Article I gate enforce what the constitution actually says
+
+### THE COMPLIANCE GATE WAS ENFORCING 2 OF 123
+
+`BrainLoopCompliance` computed `compliant = onnx == 0` while its auditor reported 123
+CONSTITUTION I violations on matrix-core/src/main/java and PRINTED all three counts. Reading
+CONSTITUTION Article I rather than assuming what it says showed the auditor was wrong in BOTH
+directions:
+
+  it under-enforced: wall-clock and unseeded randomness were reported but never blocked;
+  it over-enforced: every `Random` was flagged, while Article I explicitly PERMITS seeded
+  Random in the cognitive layer, where the seed is a pure function of state.
+
+Decomposition of the 121 that followed:
+
+    62  new Random(seed)  — the constitution's own sanctioned mechanism, not a breach
+    32  System.nanoTime   — instrumentation
+    28  wall-clock        — forbidden, but blocking on a text scan fails on audit timestamps
+    10  unseeded Random   — forbidden, unambiguous
+
+Findings now carry a severity: VIOLATION blocks, ADVISORY is recorded and counted. Comments and
+string literals are stripped before scanning, which alone removed 33 false findings — including
+the compliance checker flagging ITSELF, because BrainLoopCompliance lives in
+io/matrix/consciousness/ and contains the literals "Math.random" and "currentTimeMillis" as part
+of counting them.
+
+Article I permits unbounded randomness in adversarial mode with EXPLICIT MARKING, so the marking
+had to survive the thing it marks: @AdversarialStochasticity is an ANNOTATION, not a comment,
+because the auditor strips comments and a marker it cannot read is a hope. Four adversarial
+factories annotated; their findings are downgraded to ADVISORY rather than deleted.
+
+One real production breach fixed: SystemDemo, in MAIN, called TruthTable.random(2).
+
+Result: 123 findings of which 121 unenforced -> 84 findings, ALL classified, 0 blocking.
+
+### THE TSETLIN MACHINE COULD NOT EXPRESS ANYTHING
+
+Measured on its own parameters:
+
+    include[] density            0.506  (2071 of 4096 literals)
+    predict() confidence          0.0000 for EVERY input
+    accuracy after 4000 updates   1.0%, where chance is 50%
+
+init() set every clause literal to rng.nextInt(2). A clause matches only when EVERY include
+literal is present, so a clause with ~32 of 64 literals demands a conjunction a random 64-bit
+sample satisfies with probability about 2^-32. Nothing ever fired, and because the feedback
+signal was the whole-model prediction (always class 0), it then trained BACKWARDS.
+
+Clauses now initialise as don't-care. Initial confidence 0.0000 -> 0.5172.
+
+THE LEARNING RULE IS STILL BROKEN, AND I TRIED TO FIX IT
+
+I implemented structurally correct Taum-I — shared clauseFires used by both training and
+scoring, per-clause firing, Type I adding include AND exclude literals, Type Ia flipping
+polarity, Type II removing a randomly chosen set literal. It did not learn:
+
+    literals/clause   before   after 4000 updates
+        0               51%            51%
+        1               37%             4%
+        2               47%            14%
+        4               52%            44%
+
+A clause with no literals can never fire, so Type I's add-literals branch is unreachable. Every
+configuration got worse, because Type II strips literals on an incorrect output while Type I
+only adds them once the output is already right. Closing that needs the tempering schedule and
+clause-selection strategy from the reference construction.
+
+THE REWRITE WAS REVERTED. It was structurally more correct and empirically unproven, and
+shipping an ML component whose only claim to correctness is that it resembles the paper is the
+exact failure this campaign exists to fix. The measured fix stays; the documented defect stays.
+
+### INDEPENDENT REVIEW IS UNAVAILABLE, AND NOW WE KNOW WHY
+
+Nine reviewers dispatched in parallel with narrow scopes and a required verdict block: zero
+results at 1115s, at 4667s, at 77 minutes. Control experiment: a tenth task whose entire output
+was the literal string "SMOKE TEST OK", with no tools and no analysis — still [RUNNING] after
+180s.
+
+A task that must emit four words cannot legitimately take three minutes. The subagent execution
+path does not complete tasks in this environment. All ten cancelled; the gate is NOT satisfied
+and nothing here is peer-reviewed.
+
+The mechanical substitute is mutation testing, because "do the tests pass" and "do the tests
+notice when the guard is broken" are different questions:
+
+    SafetyGate allows everything                     KILLED (5 failures)
+    CommandBus skips the gate at dispatch            KILLED (3 failures)
+    TrueMindCycle ignores the intent classifier      KILLED (3 failures)
+    indicator matching loses its prefix anchor       KILLED (4 failures)
+    === 4 killed, 0 survived ===
+
+One REAL gap found: the dispatch-time re-gate survived mutation. With a deterministic stateless
+gate the second evaluation can never change an outcome, so nothing noticed. A stateful gate that
+permits once and refuses thereafter now proves it is load-bearing.
+
+### THE MUTATION CHECKER WAS WRONG TWICE, AND THAT IS THE MORE USEFUL FINDING
+
+First version copied the repo to /tmp and every mutation "survived" — cp hit a disk quota on an
+unrelated minecraft-server/.minecraft/assets directory and the tests never ran. A harness that
+cannot tell "guard is untested" from "harness is broken" reports a confident negative, which is
+worse than reporting nothing.
+
+Second version reported two false survivors, because the declaration is a TWO-LINE expression:
+
+    boolean harmfulHit = harmfulIntent.saysHarmful(input)
+            || harmfulIntent.saysHarmful(original);
+
+Replacing only the first line with `false && ...` yields `(false && A) || B`, which STILL
+EVALUATES THE CLASSIFIER. The mutation compiled, changed the file, and did nothing — reporting
+a gap for a guard that is load-bearing.
+
+That is now recorded in KnownFailures.md, and edits are followed by reading the changed lines
+back rather than trusting a replacement that reported success.
+
+### TWO MORE CORRECTIONS
+
+FreezeRecoveryManager decided its cooldown with System.currentTimeMillis(), so two identical
+violation sequences separated by different amounts of real time returned different verdicts —
+inside the mechanism responsible for enforcing Article I. The cooldown is now measured in the
+logical tick the class was already threading and ignoring. Four tests that used Thread.sleep to
+let a cooldown expire are now deterministic and no longer fail on a loaded CI runner.
+
+"Contradiction detection" is on the pending list. It is not pending — it is implemented and
+wired, and it does not do what its name says. Measured:
+
+    'The capital of France is Paris' vs 'The capital of France is Lyon'  -> DUPLICATE  0.714
+    'Water boils at 100 degrees'    vs 'Water boils at 50 degrees'      -> DUPLICATE  0.714
+    'The server runs on port 8080'  vs 'The server runs on port 9090'   -> DUPLICATE  0.714
+    'The patient is allergic to penicillin' vs 'has no penicillin allergy' -> NOVEL   0.333
+
+A contradiction is textually near-identical, so it scores HIGHEST and is labelled DUPLICATE —
+the most confident label attached to exactly the inputs where it is most wrong. And the one pair
+with real logical negation falls to NOVEL, because negation destroys the similarity the
+detector depends on. What exists is a near-duplicate detector. Nothing renamed or disabled; the
+finding is recorded so nobody wires checkContradiction believing it answers a question it does not.
+
+### Still open
+
+  - Taum-I learning rule: research task, measured and documented, not solved.
+  - Real contradiction detection: needs the minimal differing span, not similarity.
+  - 84 advisory sites: dominated by seeded Random in the cognitive layer, which Article I
+    permits; they are reported rather than ignored so the count stays honest.
+  - W34.3 cascades not started: BitNet quantization drift, HDC capacity binding,
+    gzip/Brotli Kolmogorov tiering.
+  - 8+ independent reviewer gate: unsatisfiable in this environment.
