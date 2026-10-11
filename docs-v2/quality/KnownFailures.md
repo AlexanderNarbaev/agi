@@ -1404,3 +1404,41 @@ of it. Stored and unreachable at the same time. `MediaMetadata.facts()` now proj
 measurements into short claims taught individually, mirroring the sensor stream's existing
 ONE FACT PER FIELD handling. The test asserts on RETRIEVAL and on claim LENGTH, because "the
 string is in there" is the claim that proved insufficient.
+
+---
+
+## The 8+ independent reviewer gate — fifth attempt, and the mechanism is broken
+
+The operator requires 8+ independent reviewer verdicts with re-review. This release has none.
+This is the fifth attempt, and it is now diagnosed rather than merely observed.
+
+Attempt: nine reviewers dispatched in parallel with narrow, explicit scopes and a required
+output block (`VERDICT / FINDINGS / SEVERITY / WHY`), covering safety wiring, actuation,
+architecture, test quality, release honesty, scientific correctness, media honesty, regression
+risk, and the Tsetlin defect.
+
+    elapsed 1115s  all 9 RUNNING, 0 results
+    elapsed 4667s  all 9 RUNNING, 0 results
+    elapsed 4667s+ (77 min)  all 9 RUNNING, 0 results
+
+Then the control experiment. A tenth task was dispatched whose entire required output was the
+literal string `SMOKE TEST OK`, with explicit instructions to use no tools and do no analysis:
+
+    elapsed 180s   status: [RUNNING] "Still working..."
+
+**A task that must emit four words and read nothing cannot legitimately take three minutes.**
+That rules out "the reviewers are slow" and "the scopes were too broad" and establishes the
+cause: the subagent execution path does not complete tasks in this environment. All ten were
+cancelled.
+
+What this means for the record:
+
+  - No independent review exists for v17.8.0-mind or for anything after it.
+  - The gate is NOT satisfied, and nothing in the release should be read as peer-reviewed.
+  - Self-review is not a substitute. Every fix in this campaign was found by ME measuring or
+    reasoning about my own output, which is a real method and a systematically biased one: the
+    defects found so far have all been ones I was already looking at. A second reader with a
+    different reading of the same file is exactly what is missing.
+
+This is recorded rather than worked around. Re-labelling internal cross-checks as "review"
+would convert an honest gap into a false claim, which is the one outcome worse than the gap.
