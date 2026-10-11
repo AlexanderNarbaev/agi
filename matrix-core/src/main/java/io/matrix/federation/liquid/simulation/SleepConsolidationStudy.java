@@ -15,6 +15,21 @@ public final class SleepConsolidationStudy {
     /**
      * Study result.
      */
+    /**
+     * One arm of the study.
+     *
+     * <p><b>W35.1 — {@code memoryRetention} is a misleading name and is kept only to avoid a
+     * breaking change.</b> It is {@code memoryFootprint / memoryBefore}: the fraction of
+     * vectors SURVIVING pruning, not how much the mind still remembers. Sleep in this study
+     * is pruning, so it is expected to be below 1.0, and an earlier test read it as functional
+     * retention and failed at 0.78 for being a perfectly good pruning result.</p>
+     *
+     * <p>What actually shows sleep working is {@code accuracyAfterSleep}, which rises from
+     * 0.5135 to 0.6134 while the footprint falls from 100 to 78 — dropping the weakest
+     * vectors raises the mean of the ones that remain. {@code forgettingRate} is
+     * {@code 1 - after/before}, so it goes NEGATIVE when accuracy improves, which reads
+     * backwards at a glance but is arithmetically correct and is asserted as such.</p>
+     */
     public record StudyResult(
             String condition,
             int trainingExamples,
