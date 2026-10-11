@@ -1,4 +1,4 @@
-package io.matrix.brain;
+package io.matrix.api.llm_quarantine;
 
 import org.junit.jupiter.api.Test;
 

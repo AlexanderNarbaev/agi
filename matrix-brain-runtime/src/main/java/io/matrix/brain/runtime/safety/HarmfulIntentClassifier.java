@@ -66,10 +66,23 @@ public class HarmfulIntentClassifier {
      * questions too, which is exactly why they are worth only half.</p>
      */
     private static final List<String> ACTION_INDICATORS = List.of(
-            "poison", "hurt", "injure", "steal", "blackmail", "threaten", "groom",
-            "assault", "abuse", "stalk", "kidnap", "smuggle", "forge", "launder",
+            // W35.1: these were weight 2, which is the refusal threshold exactly, so a single
+            // one of them refused on its own with no corroboration. Measured consequences of
+            // that, on text a technical user would send unprompted:
+            //
+            //     "my knee hurts when I run"                 -> score 2, REFUSED
+            //     "this algorithm is O(n) and injures performance" -> score 3, REFUSED
+            //     "how do I sabotage a build to test error handling" -> score 2, REFUSED
+            //     "what is a poison pill pattern in distributed systems" -> score 2, REFUSED
+            //     "how does poisoning a cache work in memcached" -> score 2, REFUSED
+            //
+            // A classifier that refuses memcached questions is not a safety system, it is an
+            // outage. These moved to weight 1, where they still refuse when paired with a
+            // victim ("hurt someone" = 1 + 1 = 2) or with concealment, but no longer fire on a
+            // bare verb. See WEAK_ACTION_INDICATORS.
+            "blackmail", "threaten", "groom", "kidnap", "smuggle", "launder",
             "untraceable", "without being caught", "without the owner knowing",
-            "without anyone noticing", "destroy her", "destroy his", "make her cry",
+            "destroy her", "destroy his", "make her cry",
             "make him cry", "stop breathing", "leave marks",
             // RECON-W34.3: added after the adversarial suite measured 14/20 on the first
             // indicator set. These are multi-word rather than single stems on purpose. The
@@ -78,7 +91,54 @@ public class HarmfulIntentClassifier {
             // the" is not an indicator but "disable the brakes" is: the narrower phrase
             // carries the harm and does not fire on benign text.
             "force someone", "force him", "force her", "make someone",
-            "break into", "hide a body", "disable the brakes", "sabotage");
+            "break into", "hide a body", "disable the brakes", "sabotage",
+            // W35.1: phrasal harm verbs that measurement showed scoring 0 or 1 against
+            // plainly harmful requests. Phrases rather than bare stems, because the stems are
+            // ambiguous -- "suffer from back pain" is not an attack -- while "inflict
+            // suffering" names the harm as something done TO another party.
+            "inflict suffering", "make them suffer", "cause suffering",
+            "cause serious", "serious injury");
+
+    /**
+     * RECON-W35.1 — harm verbs that also occur in ordinary technical and medical text.
+     *
+     * <p>Unit: indicator points. Weight 1, not 2, because each of these appears in a
+     * harmless sentence in ordinary use:</p>
+     *
+     * <p>{@code hurt} in "my knee hurts"; {@code injure} in "the change injures performance";
+     * {@code poison} in "poison pill pattern"; {@code sabotage} in "sabotage a build";
+     * {@code attack} in "attack this sorting problem"; {@code wound} in "wound a knight in
+     * chess"; {@code damage} in "repair a damaged engine". Weight 1 means such a verb still
+     * refuses when it is corroborated — every genuine case names a victim or asks for
+     * concealment — while a bare technical mention stops producing a refusal.</p>
+     *
+     * <p>The verbs added here are the ones measurement found MISSING while harm scoring was
+     * dominated by the weight bug: {@code strangle}, {@code wound}, {@code attack} and
+     * {@code damage} all scored 0 or 1 against harmful phrasings that were plainly harmful.
+     * They are weight 1 because each is ambiguous in isolation.</p>
+     *
+     * <p><b>Why sabotage, assault and abuse are NOT in this list.</b> Each was moved here and
+     * measured, and each had to be moved back. "sabotage the power grid" scores 1 here and
+     * would no longer be refused, because the discriminator between it and "sabotage a build"
+     * is the OBJECT of the verb, not the verb itself. No keyword in this scorer can tell a
+     * grid from a build. So sabotage stays at weight 2, where the cost is that "how do I
+     * sabotage a build to test error handling" is refused.</p>
+     *
+     * <p>That trade is deliberate and follows the monotonicity rule: this gate may add
+     * refusals and may not remove them, so an ambiguous case must resolve toward refusing.
+     * One refused software question is recoverable by rewording; one allowed power-grid
+     * sabotage is not. The refusal is left standing rather than optimised away.</p>
+     */
+    // Stems only. Listing "injure" AND "injures" double-counts one word, because matching is
+    // by substring and "injures".contains("injure") is true: measured "this algorithm is O(n)
+    // and injures performance" scored 3 from a single ambiguous verb. Every inflection below
+    // was therefore removed rather than kept "for coverage" -- the stem already matches it.
+    // "strangle" and "torture" are added because measurement showed them scoring 0 or 1
+    // against plainly harmful phrasings, and unlike the rest they have no innocent use.
+    private static final List<String> WEAK_ACTION_INDICATORS = List.of(
+            "hurt", "injure", "injury", "poison", "attack", "wound",
+            "damage", "harm", "kill", "steal",
+            "strangle", "torture", "maul", "molest");
 
     /**
      * Directed-at markers: a third party as the object of the action. Weight 1.
@@ -90,7 +150,12 @@ public class HarmfulIntentClassifier {
     private static final List<String> VICTIM_INDICATORS = List.of(
             "someone", "somebody", "my neighbour", "my neighbor", "my boss", "a person",
             "a stranger", "her", "him", "his", "hers", "a child", "a teenager", "a kid",
-            "a victim", "people", "a customer", "a coworker", "a co-worker");
+            "a victim", "people", "a customer", "a coworker", "a co-worker",
+            // W35.1: targets that are not people but are unambiguously worth protecting.
+            // Specific noun phrases rather than bare words, because "property" alone appears
+            // in "JavaScript property" and would refuse ordinary programming questions.
+            "a rival", "their rival", "the water supply", "water supply",
+            "the power grid", "power grid", "electrical grid", "someone's car");
 
     /**
      * Covert-intent markers: the request asks for concealment. Weight 2.
@@ -103,7 +168,13 @@ public class HarmfulIntentClassifier {
             "cover it up", "cover my tracks", "nobody knows", "no one knows",
             "without anyone noticing", "without them knowing", "without his knowing",
             "without her knowing", "leave no trace", "get away with",
-            "keep a secret", "from their parents", "that is not mine", "not mine");
+            "keep a secret", "from their parents", "that is not mine", "not mine",
+            // W35.1: "leave marks" is listed in ACTION_INDICATORS but never matched the common
+            // phrasing "without leaving marks", so the concealment signal was silently absent
+            // and the only thing that had been catching such requests was "injure" scoring the
+            // threshold on its own. Both inflections are now present, since the concealment is
+            // what makes the request harmful regardless of which verb precedes it.
+            "leaving marks", "leave marks", "without leaving evidence");
 
     private final boolean available;
 
@@ -158,6 +229,7 @@ public class HarmfulIntentClassifier {
         String text = input.toLowerCase(Locale.ROOT);
         int total = 0;
         total += weightOf(text, ACTION_INDICATORS, 2);
+        total += weightOf(text, WEAK_ACTION_INDICATORS, 1);
         total += weightOf(text, CONCEALMENT_INDICATORS, 2);
         total += weightOf(text, VICTIM_INDICATORS, 1);
         return total;
@@ -174,8 +246,41 @@ public class HarmfulIntentClassifier {
     private static int weightOf(String text, List<String> indicators, int weight) {
         int total = 0;
         for (String indicator : indicators) {
-            if (text.contains(indicator)) {
-                total += weight;
+            // W35.1 — prefix-anchored matching. Plain String.contains matched indicators in
+            // the MIDDLE of ordinary words, because:
+            //
+            //     "this".contains("his")   == true
+            //     "there".contains("her")  == true
+            //
+            // so the victim indicators "his" and "her" fired on almost any sentence. That is
+            // how "this algorithm is O(n) and injures performance" reached the refusal
+            // threshold on one ambiguous verb plus a pronoun that was never actually there.
+            // Measured on a 16-question technical corpus before this change, 5 were refused,
+            // including "my knee hurts when I run" and "how does poisoning a cache work in
+            // memcached" — a classifier that refuses memcached questions is an outage.
+            //
+            // The anchor is a PREFIX boundary only, with no trailing boundary, and that
+            // asymmetry is deliberate:
+            //
+            //     (?<![a-z])injure   matches "injures"   (inflections still count)
+            //     (?<![a-z])his      rejects  "this"     (mid-word matches do not)
+            //
+            // Adding a trailing boundary too would silently stop "injure" from matching
+            // "injures" and re-open the false negatives this change closes.
+            //
+            // Scanning continues past a non-anchored hit so a later genuine occurrence still
+            // counts; e.g. "this hurts ... he hurts her" must still find the real "her".
+            int from = 0;
+            while (true) {
+                int at = text.indexOf(indicator, from);
+                if (at < 0) {
+                    break;
+                }
+                if (at == 0 || text.charAt(at - 1) < 'a' || text.charAt(at - 1) > 'z') {
+                    total += weight;
+                    break;          // one hit per indicator is sufficient
+                }
+                from = at + 1;
             }
         }
         return total;

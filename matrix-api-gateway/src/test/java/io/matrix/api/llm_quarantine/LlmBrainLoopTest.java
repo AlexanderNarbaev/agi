@@ -1,5 +1,8 @@
-package io.matrix.brain;
+package io.matrix.api.llm_quarantine;
 
+import io.matrix.api.llm_quarantine.LlmBrainLoopService;
+import io.matrix.api.llm_quarantine.LlmBrainLoopRag;
+import io.matrix.autonomy.AutonomyEngine;
 import io.matrix.autonomy.AutonomyEngine;
 import io.matrix.knowledge.SimpleKnowledgeBase;
 
@@ -122,7 +125,8 @@ class AutonomyEngineTest {
     
     @Test
     void testMain() throws NoSuchMethodException {
-        var main = AutonomyEngine.class.getMethod("main", String[].class);
+        // W35.1: retargeted to the Gateway launcher, which now owns the LLM-loading CLI.
+        var main = AutonomyEngineLauncher.class.getMethod("main", String[].class);
         assertNotNull(main);
     }
     

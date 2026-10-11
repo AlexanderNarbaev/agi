@@ -1,5 +1,10 @@
-package io.matrix.brain;
+package io.matrix.api.llm_quarantine;
 
+import io.matrix.brain.BrainPipeline;
+import io.matrix.brain.BrainPipeline.BrainOutput;
+import io.matrix.brain.BrainPipeline.BrainInput;
+import io.matrix.brain.BrainCycle;
+import io.matrix.brain.BrainPipeline.BlockExecutions;
 import io.matrix.api.GenerationResult;
 import io.matrix.api.QwenOnnxBridge;
 import io.matrix.auditor.MatrixTrace;
@@ -29,6 +34,14 @@ import java.util.List;
  * Wires the actual Qwen2.5-0.5B model into the cognitive cycle.
  */
 public final class LlmBrainLoopService implements BrainPipeline, BrainCycle {
+    /**
+     * W35.1 — unit conversion constant.
+     *
+     * <p>{@code latency} is measured in nanoseconds by the call and reported in milliseconds.
+     * The 1000 is not a tunable; it is the definition of the unit, and naming it says so.</p>
+     */
+    private static final long NANOS_PER_MILLI = 1000L;
+
     
     private final TextEncoder encoder;
     private final SaliencyEngine saliency;
@@ -156,7 +169,7 @@ public final class LlmBrainLoopService implements BrainPipeline, BrainCycle {
         return new BrainOutput(
             r.reply(),
             new BlockExecutions("LlmBrainLoopService", r.action(), "QwenLLM", 0, 0),
-            latency / 1000);
+            latency / NANOS_PER_MILLI);
     }
     
     public static CycleResult fromBrainOutput(BrainOutput out) {

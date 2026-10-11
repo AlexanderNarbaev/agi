@@ -1,5 +1,6 @@
-package io.matrix.brain;
+package io.matrix.api.llm_quarantine;
 
+import io.matrix.brain.BrainCycle;
 import io.matrix.knowledge.SimpleKnowledgeBase;
 import io.matrix.learning.ConversationLearner;
 
@@ -26,7 +27,7 @@ import java.nio.file.Paths;
  *   int learned = loop.learn();  // learns from all recorded conversations
  *   String better_reply = loop.talk("What is gravity?");  // should be better
  */
-public final class BrainLearningLoop {
+public final class BrainLearningLoop implements io.matrix.autonomy.LearningLoop {
     
     private final LlmBrainLoopRag brain;
     private final ConversationLearner learner;

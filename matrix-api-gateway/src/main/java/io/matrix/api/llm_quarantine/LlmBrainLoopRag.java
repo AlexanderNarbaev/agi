@@ -1,5 +1,6 @@
-package io.matrix.brain;
+package io.matrix.api.llm_quarantine;
 
+import io.matrix.brain.BrainCycle;
 import io.matrix.api.GenerationResult;
 import io.matrix.api.QwenOnnxBridge;
 import io.matrix.auditor.MatrixTrace;

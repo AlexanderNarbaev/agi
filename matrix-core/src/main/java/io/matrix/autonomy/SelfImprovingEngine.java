@@ -1,6 +1,5 @@
 package io.matrix.autonomy;
 
-import io.matrix.brain.BrainLearningLoop;
 import io.matrix.lifecycle.AutonomyImpulse;
 import io.matrix.lifecycle.ImpulseScheduler;
 
@@ -23,13 +22,13 @@ import java.util.concurrent.atomic.AtomicLong;
  */
 public final class SelfImprovingEngine {
     
-    private final BrainLearningLoop learningLoop;
+    private final LearningLoop learningLoop;
     private final ImpulseScheduler scheduler;
     private final AtomicLong learnCycles = new AtomicLong();
     private final AtomicLong talkCycles = new AtomicLong();
     private volatile boolean running = false;
     
-    public SelfImprovingEngine(BrainLearningLoop learningLoop, ImpulseScheduler scheduler) {
+    public SelfImprovingEngine(LearningLoop learningLoop, ImpulseScheduler scheduler) {
         this.learningLoop = learningLoop;
         this.scheduler = scheduler;
     }
@@ -76,59 +75,10 @@ public final class SelfImprovingEngine {
     
     public long getLearnCycles() { return learnCycles.get(); }
     public long getTalkCycles() { return talkCycles.get(); }
-    public BrainLearningLoop getLearningLoop() { return learningLoop; }
+    public LearningLoop getLearningLoop() { return learningLoop; }
     public boolean isRunning() { return running; }
     
     public void close() {
         learningLoop.close();
-    }
-    
-    public static void main(String[] args) throws Exception {
-        if (args.length < 1) {
-            System.out.println("Usage: SelfImprovingEngine <model-path>");
-            System.exit(1);
-        }
-        String modelPath = args[0];
-        
-        System.out.println("=== Self-Improving Engine ===");
-        System.out.println("Model: " + modelPath);
-        System.out.println();
-        
-        // Create brain with learning
-        BrainLearningLoop loop = new BrainLearningLoop(modelPath);
-        
-        // Create scheduler
-        var budgeter = new io.matrix.budgeter.ConjugateBudgeter();
-        var ethics = new io.matrix.ethics.EthicalFilter();
-        var scheduler = new ImpulseScheduler(budgeter, ethics);
-        
-        SelfImprovingEngine engine = new SelfImprovingEngine(loop, scheduler);
-        engine.start();
-        
-        System.out.println("Talk to the brain (type 'quit' to stop):");
-        System.out.println();
-        
-        java.util.Scanner sc = new java.util.Scanner(System.in);
-        while (sc.hasNextLine()) {
-            String line = sc.nextLine().trim();
-            if ("quit".equalsIgnoreCase(line) || "exit".equalsIgnoreCase(line)) break;
-            if (line.isEmpty()) continue;
-            
-            String reply = engine.talk(line);
-            System.out.println("[MATRIX] " + reply);
-            System.out.println();
-            
-            // Learn periodically
-            if (engine.getTalkCycles() % 5 == 0) {
-                int learned = engine.learnFromConversations();
-                if (learned > 0) {
-                    System.out.println("[self-improve] Learned " + learned + " new facts");
-                }
-            }
-        }
-        
-        engine.close();
-        sc.close();
-        System.out.println("[self-improve] Stopped");
     }
 }

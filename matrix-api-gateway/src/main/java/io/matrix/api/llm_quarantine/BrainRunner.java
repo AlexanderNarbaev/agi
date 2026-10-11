@@ -1,8 +1,10 @@
-package io.matrix.brain;
+package io.matrix.api.llm_quarantine;
 
+import io.matrix.brain.ConfidenceFilter;
+import io.matrix.brain.BrainCycle;
 import io.matrix.knowledge.SimpleKnowledgeBase;
 import io.matrix.learning.ConversationLearner;
-import io.matrix.learning.BrainImprover;
+import io.matrix.api.llm_quarantine.BrainImprover;
 
 import java.io.BufferedReader;
 import java.io.IOException;

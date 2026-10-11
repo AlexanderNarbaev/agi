@@ -1,8 +1,9 @@
-package io.matrix.brain;
+package io.matrix.api.llm_quarantine;
 
+import io.matrix.brain.ConfidenceFilter;
 import io.matrix.knowledge.SimpleKnowledgeBase;
 import io.matrix.learning.ConversationLearner;
-import io.matrix.learning.BrainImprover;
+import io.matrix.api.llm_quarantine.BrainImprover;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;

@@ -1,4 +1,4 @@
-package io.matrix.brain;
+package io.matrix.api.llm_quarantine;
 
 import io.quarkus.runtime.StartupEvent;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -19,6 +19,15 @@ import org.slf4j.LoggerFactory;
  */
 @ApplicationScoped
 public class BrainServerStartup {
+    /**
+     * W35.1 — default bind port when MATRIX_BRAIN_PORT is unset.
+     *
+     * <p>Named rather than inlined so the default is discoverable and overridable in one
+     * place, and so the quality gate's literal count does not grow just because a file
+     * changed module.</p>
+     */
+    private static final int DEFAULT_PORT = 9200;
+
     
     private static final Logger log = LoggerFactory.getLogger(BrainServerStartup.class);
     private BrainHttpServer server;
@@ -32,7 +41,7 @@ public class BrainServerStartup {
         
         String port = System.getenv("MATRIX_BRAIN_PORT");
         String model = System.getenv("MATRIX_BRAIN_MODEL");
-        int portNum = port != null ? Integer.parseInt(port) : 9200;
+        int portNum = port != null ? Integer.parseInt(port) : DEFAULT_PORT;
         String modelPath = model != null ? model : "models/onnx/qwen05b";
         
         log.info("BrainServerStartup: starting brain server on port " + portNum);

@@ -1,7 +1,6 @@
 package io.matrix.autonomy;
 import io.matrix.budgeter.ConjugateBudgeter;
 import io.matrix.brain.BrainCycle;
-import io.matrix.brain.LlmBrainLoopRag;
 import io.matrix.knowledge.SimpleKnowledgeBase;
 
 import io.matrix.brain.BrainCycle;
@@ -90,43 +89,4 @@ public final class AutonomyEngine {
     public long getTotalReflections() { return totalReflections.get(); }
     public String getLastReflection() { return lastReflection.get(); }
     public boolean isRunning() { return running; }
-    
-    public static void main(String[] args) throws Exception {
-        if (args.length < 1) {
-            System.out.println("Usage: AutonomyEngine <model-path> [duration-sec]");
-            System.exit(1);
-        }
-        String modelPath = args[0];
-        int durationSec = args.length > 1 ? Integer.parseInt(args[1]) : 35;
-        
-        io.matrix.budgeter.ConjugateBudgeter budgeter = new ConjugateBudgeter();
-        EthicalFilter ethics = new EthicalFilter();
-        ImpulseScheduler scheduler = new ImpulseScheduler(budgeter, ethics);
-        
-        LlmBrainLoopRag brain = new LlmBrainLoopRag(modelPath, new SimpleKnowledgeBase());
-        AutonomyEngine engine = new AutonomyEngine(brain, scheduler);
-        engine.start();
-        
-        System.out.println("===== Autonomy Engine Started =====");
-        System.out.println("Model: " + modelPath);
-        System.out.println("Duration: " + durationSec + "s");
-        System.out.println("Schedule: idle=30s, curiosity=120s, integrity=300s");
-        System.out.println();
-        System.out.println("Self-initiating brain cycles. Press Ctrl+C to stop.");
-        
-        Thread.sleep(durationSec * 1000L);
-        
-        System.out.println();
-        System.out.println("===== Autonomy Engine Report =====");
-        System.out.println("Total cycles: " + engine.getCycleCount());
-        System.out.println("Total reflections: " + engine.getTotalReflections());
-        String last = engine.getLastReflection();
-        System.out.println("Last reflection: " + 
-            (last != null ? 
-             last.substring(0, Math.min(200, last.length())) + "..." 
-             : "(none)"));
-        
-        engine.stop();
-        brain.close();
-    }
 }

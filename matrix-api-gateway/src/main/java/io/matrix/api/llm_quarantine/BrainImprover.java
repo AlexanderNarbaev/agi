@@ -1,6 +1,7 @@
-package io.matrix.learning;
+package io.matrix.api.llm_quarantine;
 
-import io.matrix.brain.LlmBrainLoopRag;
+import io.matrix.learning.ConversationLearner;
+import io.matrix.api.llm_quarantine.LlmBrainLoopRag;
 import io.matrix.knowledge.SimpleKnowledgeBase;
 
 import java.io.IOException;
