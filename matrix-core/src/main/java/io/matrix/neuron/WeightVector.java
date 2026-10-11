@@ -1,5 +1,7 @@
 package io.matrix.neuron;
 
+
+import io.matrix.auditor.AdversarialStochasticity;
 import java.util.Arrays;
 import java.util.Objects;
 import java.util.Random;
@@ -69,7 +71,8 @@ public final record WeightVector(int[] weights) {
      * @param k number of inputs
      * @return random weight vector
      */
-    public static WeightVector random(int k) {
+    @AdversarialStochasticity("test scaffolding: random vectors for property tests")
+        public static WeightVector random(int k) {
         return random(k, new Random());
     }
 

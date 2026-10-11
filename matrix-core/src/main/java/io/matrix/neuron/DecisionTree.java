@@ -1,5 +1,7 @@
 package io.matrix.neuron;
 
+
+import io.matrix.auditor.AdversarialStochasticity;
 import java.util.BitSet;
 import java.util.Objects;
 import java.util.Random;
@@ -246,7 +248,8 @@ public sealed interface DecisionTree permits DecisionTree.Leaf, DecisionTree.Spl
      * @param maxDepth maximum depth of the generated tree
      * @return a random decision tree
      */
-    static DecisionTree random(int k, int maxDepth) {
+    @AdversarialStochasticity("test scaffolding: random trees for property tests")
+        static DecisionTree random(int k, int maxDepth) {
         return random(k, maxDepth, ThreadLocalRandom.current());
     }
 

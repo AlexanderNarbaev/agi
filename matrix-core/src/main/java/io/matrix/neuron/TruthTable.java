@@ -1,5 +1,7 @@
 package io.matrix.neuron;
 
+
+import io.matrix.auditor.AdversarialStochasticity;
 import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericRecord;
@@ -174,13 +176,15 @@ public final class TruthTable {
     /**
      * Creates a random truth table where each output bit is set with 50% probability.
      */
-    public static TruthTable random(int k) {
+    @AdversarialStochasticity("test scaffolding: random tables for property tests")
+        public static TruthTable random(int k) {
         return random(k, ThreadLocalRandom.current());
     }
 
     /**
      * Creates a random truth table with uniform priority weights.
      */
+    @AdversarialStochasticity("test scaffolding: random tables for property tests")
     public static TruthTable random(int k, WeightVector weights) {
         return random(k, ThreadLocalRandom.current(), weights);
     }

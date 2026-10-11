@@ -135,7 +135,7 @@ public final class SystemDemo {
 
     static boolean checkHades() {
         var detector = new DerangementDetector();
-        var neuron = NeuronInstance.stable(NeuronId.create(), TruthTable.random(2));
+        var neuron = NeuronInstance.stable(NeuronId.create(), TruthTable.random(2, new java.util.Random(42L)));
         return detector.checkNeuron(neuron, 10) == null;
     }
 

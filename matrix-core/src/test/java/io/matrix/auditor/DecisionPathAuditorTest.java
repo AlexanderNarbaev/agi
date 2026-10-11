@@ -95,11 +95,15 @@ class DecisionPathAuditorTest {
     @Test
     void violationRecord() {
         DecisionPathAuditor.Violation v =
-                new DecisionPathAuditor.Violation("file.java", 10, "sym", "reason");
-        assertThat(v.file()).isEqualTo("file.java");
-        assertThat(v.line()).isEqualTo(10);
-        assertThat(v.symbol()).isEqualTo("sym");
-        assertThat(v.reason()).isEqualTo("reason");
+new DecisionPathAuditor.Violation("file.java", 10, "sym", "reason",
+                          DecisionPathAuditor.Severity.VIOLATION);
+          assertThat(v.file()).isEqualTo("file.java");
+          assertThat(v.line()).isEqualTo(10);
+          assertThat(v.symbol()).isEqualTo("sym");
+          assertThat(v.reason()).isEqualTo("reason");
+          // W35.2: the compliance gate decides on severity, so a Violation that could not
+          // state whether it blocks would leave the gate undecidable.
+          assertThat(v.severity()).isEqualTo(DecisionPathAuditor.Severity.VIOLATION);
     }
 
     @Test
