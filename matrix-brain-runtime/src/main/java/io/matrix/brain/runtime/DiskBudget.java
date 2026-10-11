@@ -31,19 +31,52 @@ public final class DiskBudget {
     public static final long REFUSE_THRESHOLD_BYTES = 10L * 1024 * 1024 * 1024; // 10 GB
 
     private final Path root;
-    private long ledgerBytes = 0;
+private long ledgerBytes = 0;
 
-    public DiskBudget(Path root) {
-        this.root = root;
-    }
+      /**
+       * Supplies the free-space reading. Injectable so tier logic is testable in isolation.
+       */
+      private final java.util.function.LongSupplier freeBytesProbe;
 
-    public static DiskBudget forRoot(Path root) {
-        return new DiskBudget(root);
-    }
+      public DiskBudget(Path root) {
+          this(root, null);
+      }
+
+      /**
+       * W36.4 — constructor taking an explicit free-space reading.
+       *
+       * <p>{@code DiskBudgetTest.healthy_tier_is_default} asserted that whatever
+       * {@code @TempDir} happened to land on was HEALTHY. That is a statement about the machine,
+       * not about the code: it passed or failed depending on how full the runner's temporary
+       * filesystem was, and it failed during this wave's own 11-module run because the build
+       * had filled tmpfs.</p>
+       *
+       * <p>Reading the disk is injected so the thresholds can be tested against controlled
+       * values, which is what the test was always trying to do.</p>
+       *
+       * @param root           the root path reported by this budget
+       * @param freeBytesProbe supplies free bytes; null means read the real filesystem
+       */
+      public DiskBudget(Path root, java.util.function.LongSupplier freeBytesProbe) {
+          this.root = root;
+          this.freeBytesProbe = freeBytesProbe;
+      }
+
+      /** A budget over a KNOWN free-space value, for testing thresholds without touching disk. */
+      public static DiskBudget withFreeBytes(Path root, long freeBytes) {
+          return new DiskBudget(root, () -> freeBytes);
+      }
+
+      public static DiskBudget forRoot(Path root) {
+          return new DiskBudget(root);
+      }
 
     /** Bytes free at {@link #root}. */
-    public long freeBytes() {
-        try {
+public long freeBytes() {
+          if (freeBytesProbe != null) {
+              return freeBytesProbe.getAsLong();
+          }
+          try {
             FileStore fs = Files.getFileStore(root);
             return fs.getUsableSpace();
         } catch (IOException ex) {

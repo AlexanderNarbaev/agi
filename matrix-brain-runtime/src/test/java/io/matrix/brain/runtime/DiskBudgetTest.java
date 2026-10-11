@@ -31,9 +31,19 @@ class DiskBudgetTest {
 
     @Test
     void healthy_tier_is_default(@TempDir Path tmp) {
-        DiskBudget b = DiskBudget.forRoot(tmp);
-        // tmp on dev sandbox has plenty of space; expect HEALTHY
-        assertThat(b.tier()).isEqualTo(DiskBudget.Tier.HEALTHY);
+        // W36.4 — this asserted that whatever @TempDir landed on was HEALTHY, which is a
+        // statement about the MACHINE. It failed during this wave's own 11-module run because
+        // the build had filled the temporary filesystem: the code was fine and the host was
+        // busy. The tier thresholds are now tested against controlled free-space values, which
+        // is what the assertion was always trying to express.
+        assertThat(DiskBudget.withFreeBytes(tmp, 80L * 1024 * 1024 * 1024).tier())
+                .isEqualTo(DiskBudget.Tier.HEALTHY);
+        assertThat(DiskBudget.withFreeBytes(tmp, 15L * 1024 * 1024 * 1024).tier())
+                .as("below the 25 GB warn threshold but above the 10 GB refuse threshold")
+                .isEqualTo(DiskBudget.Tier.WARN);
+        assertThat(DiskBudget.withFreeBytes(tmp, 5L * 1024 * 1024 * 1024).tier())
+                .as("below the 10 GB refuse threshold")
+                .isEqualTo(DiskBudget.Tier.REFUSE);
     }
 
     @Test
