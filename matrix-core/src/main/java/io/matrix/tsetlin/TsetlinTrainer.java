@@ -226,7 +226,45 @@ public final class TsetlinTrainer {
         return score > 0;
     }
 
-    private static long pack(long[] words) { return words[0]; }
+    /**
+     * Fold an arbitrary-width feature vector into this trainer's {@code inputBits}-bit space.
+     *
+     * <p>W37.3 — this previously returned {@code words[0]}, discarding every other word. In
+     * production that silently dropped most of the signal: {@code EpisodeFeatureExtractor}
+     * encodes a {@code dim=1024} HDC vector into 16 packed longs, and {@code RuleInductionEngine}
+     * constructs this trainer with {@code inputBits=16}, so {@link #fires} examined 16 bits of a
+     * 1024-bit feature vector. The learner was fitting noise from 1/64th of its input while
+     * reporting a fidelity number that looked legitimate.</p>
+     *
+     * <p>The fold is XOR-parity: input bit {@code j} becomes the parity of source bits
+     * {@code j, j+inputBits, j+2*inputBits, ...}. Deterministic, order-independent, and it uses
+     * every source bit rather than the first word. It is still lossy, which is unavoidable
+     * because {@link #TsetlinTrainer} caps {@code inputBits} at 20 — a 1024-bit vector cannot be
+     * represented exactly in 16 bits by any mapping. Collapsing to {@code words[0]} was not a
+     * lossy encoding, it was a broken one: it threw away 93.75% of production features and kept
+     * only the low 64 bits.</p>
+     *
+     * <p>For inputs already within {@code inputBits} this is the identity, so existing
+     * single-word callers are unaffected.</p>
+     */
+    public long packForTest(long[] words) { return pack(words); }
+
+    private long pack(long[] words) {
+        if (words == null || words.length == 0) return 0L;
+        if (words.length == 1 && inputBits >= Long.SIZE) return words[0];
+
+        long packed = 0L;
+        int srcBit = 0;
+        for (int w = 0; w < words.length; w++) {
+            long word = words[w];
+            for (int b = 0; b < Long.SIZE; b++, srcBit++) {
+                if (((word >>> b) & 1L) == 1L) {
+                    packed ^= 1L << (srcBit % inputBits);
+                }
+            }
+        }
+        return packed;
+    }
 
     /** Exact distillation of the decision function into CLAUSESET. */
     public ClauseSetForm toDecisionClauseSet(String provenance) {
