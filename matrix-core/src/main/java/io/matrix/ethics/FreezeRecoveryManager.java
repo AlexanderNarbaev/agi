@@ -41,7 +41,26 @@ public class FreezeRecoveryManager {
 
     private final long freezeDurationMs;
     private final AtomicReference<State> state = new AtomicReference<>(State.NORMAL);
-    private final AtomicLong freezeStartedAtMs = new AtomicLong(0);
+    /**
+     * W35.2 — the freeze cooldown is measured in LOGICAL TICKS, not wall-clock milliseconds.
+     *
+     * <p>The cooldown decided whether an action was allowed using
+     * {@code System.currentTimeMillis()}, which is a decision resting on a real clock. Article I
+     * forbids wall-clock in decision paths precisely so a run can be replayed and audited: two
+     * identical violation sequences separated by different amounts of real time would freeze for
+     * different durations and produce different verdicts.</p>
+     *
+     * <p>{@code reportViolation} already accepts a {@code tick}, so the logical clock was being
+     * threaded through the class and simply ignored for the decision. It is now the only clock
+     * the cooldown reads.</p>
+     */
+    private final AtomicLong freezeStartedAtTick = new AtomicLong(0);
+
+    /**
+     * The manager's own logical clock, advanced only by explicit calls. Never derived from the
+     * host clock, so the sequence of states is reproducible from the sequence of inputs alone.
+     */
+    private final AtomicLong logicalClock = new AtomicLong(0);
     private final AtomicLong violationCount = new AtomicLong();
     private final AtomicLong recoveryCount = new AtomicLong();
     private final java.util.List<Violation> violationHistory = new java.util.concurrent.CopyOnWriteArrayList<>();
@@ -69,7 +88,7 @@ public class FreezeRecoveryManager {
         // Transition to FROZEN if not already.
         if (state.get() != State.FROZEN) {
             state.set(State.FROZEN);
-            freezeStartedAtMs.set(System.currentTimeMillis());
+            freezeStartedAtTick.set(tick);
             return true;  // newly frozen — block
         }
         return true;  // already frozen — block
@@ -82,11 +101,21 @@ public class FreezeRecoveryManager {
      *         if FROZEN.
      */
     public boolean isActionAllowed() {
+        return isActionAllowed(logicalClock.get());
+    }
+
+    /**
+     * Whether an action is currently allowed, evaluated against an explicit logical time.
+     *
+     * @param nowTick the caller's logical clock reading
+     * @return true when the action may proceed
+     */
+    public boolean isActionAllowed(long nowTick) {
         State s = state.get();
         if (s == State.NORMAL) return true;
         if (s == State.RECOVERING) return true;
         // FROZEN: check if cooldown elapsed.
-        long elapsed = System.currentTimeMillis() - freezeStartedAtMs.get();
+        long elapsed = nowTick - freezeStartedAtTick.get();
         if (elapsed >= freezeDurationMs) {
             // Cooldown done — transition to RECOVERING, then back to NORMAL.
             state.set(State.RECOVERING);
@@ -97,13 +126,35 @@ public class FreezeRecoveryManager {
         return false;
     }
 
-    /** Force-clear the freeze state (for manual recovery). */
+/** Force-clear the freeze state (for manual recovery). */
     public void manualRecover() {
         if (state.get() != State.NORMAL) {
             recoveryCount.incrementAndGet();
         }
         state.set(State.NORMAL);
-        freezeStartedAtMs.set(0);
+        freezeStartedAtTick.set(0);
+    }
+
+    /**
+     * Advance the manager's logical clock.
+     *
+     * <p>W35.2 — this is the only way time moves for the cooldown decision. It is never derived
+     * from the host clock, so a given sequence of violations and clock advances always produces
+     * the same sequence of states, which is what makes a freeze decision replayable for audit.</p>
+     *
+     * @param deltaMs logical milliseconds to advance; negative values are ignored
+     * @return the new logical clock reading
+     */
+    public long advanceClock(long deltaMs) {
+        if (deltaMs <= 0) {
+            return logicalClock.get();
+        }
+        return logicalClock.addAndGet(deltaMs);
+    }
+
+    /** The current logical clock reading. */
+    public long logicalNow() {
+        return logicalClock.get();
     }
 
     /** Get current state. */

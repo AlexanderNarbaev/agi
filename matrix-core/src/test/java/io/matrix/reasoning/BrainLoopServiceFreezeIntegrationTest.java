@@ -47,7 +47,8 @@ class BrainLoopServiceFreezeIntegrationTest {
         var t1 = svc.tick(new BitSet());
         assertThat(t1.phasePath()).isEqualTo("frozen");
 
-        Thread.sleep(100);
+        // W35.2 — logical time instead of Thread.sleep; see Exp045H045FreezeRecoveryTest.
+        freeze.advanceClock(100);
         // After cooldown: tick resumes
         var t2 = svc.tick(new BitSet());
         assertThat(t2.phasePath()).isNotEqualTo("frozen");

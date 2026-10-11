@@ -40,7 +40,11 @@ class Exp045H045FreezeRecoveryTest {
         mgr.reportViolation("test", "forbidden action", 0);
         assertThat(mgr.getState()).isEqualTo(FreezeRecoveryManager.State.FROZEN);
         // Wait for cooldown (200ms in this test).
-        Thread.sleep(300);
+        // W35.2 — this used Thread.sleep(300) to let a wall-clock cooldown expire. The
+        // cooldown is now measured in LOGICAL TICKS, so the test advances logical time instead.
+        // That removes a real-time dependency: this test used to pass only if the machine was
+        // not heavily loaded, and would fail spuriously on a busy CI runner.
+        mgr.advanceClock(300);
         // Next check should trigger recovery.
         assertThat(mgr.isActionAllowed()).isTrue();
         assertThat(mgr.getState()).isEqualTo(FreezeRecoveryManager.State.RECOVERING);
@@ -71,7 +75,9 @@ class Exp045H045FreezeRecoveryTest {
     void recoveryCountTracksAutoAndManualRecoveries() throws InterruptedException {
         // Auto-recovery
         mgr.reportViolation("test", "v1", 0);
-        Thread.sleep(300);
+        // W35.2 — logical time, so the cooldown is deterministic rather than dependent on the
+        // machine being idle. See the sibling test for the same change.
+        mgr.advanceClock(300);
         mgr.isActionAllowed();  // triggers auto-recovery
         // Manual recovery
         mgr.reportViolation("test", "v2", 1);
@@ -94,8 +100,8 @@ class Exp045H045FreezeRecoveryTest {
     void freezeDurationIsRespected() {
         FreezeRecoveryManager longMgr = new FreezeRecoveryManager(10_000L);  // 10s
         longMgr.reportViolation("test", "v", 0);
-        // Even after 50ms, still frozen (10s cooldown).
-        try { Thread.sleep(50); } catch (InterruptedException ignored) {}
+        // Even after 50 logical ms, still frozen (10s cooldown).
+        longMgr.advanceClock(50);
         assertThat(longMgr.isActionAllowed()).isFalse();
         // Manual recovery bypasses the cooldown.
         longMgr.manualRecover();
