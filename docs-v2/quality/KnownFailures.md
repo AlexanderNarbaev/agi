@@ -2026,3 +2026,33 @@ all genuinely not the cause. The cause was a parameter never swept.
 
 This blocks any claim that rule induction generalises beyond conjunctions, and it must be stated
 in the next release caveats rather than discovered later.
+
+---
+
+## W37.4 — the parallel test invocation is unreliable, and it fails as a phantom
+
+Twice during W37 the 11-module verification reported `> Task :matrix-core:test FAILED` while every
+result was green:
+
+    failing XML classes: 0
+    xml files present:   2   (of 8042 tests' worth)
+
+`matrix-core:test` alone: **8042 tests / 0 failures in 23 minutes**, with 40 GB available. All ten
+other modules, run serially: all BUILD SUCCESSFUL. Aggregate across all eleven: **9314 / 0**.
+
+So the failure is not a test failure and not an out-of-memory kill. It is the *shape* of the
+command. Two independent traps:
+
+1. **Killing a background Gradle run and starting another against the same build directory.** The
+   second run inherits a half-populated `build/test-results/`, reports `FAILED`, and leaves an
+   incomplete XML set. I caused this deliberately by killing a run to supersede it. There is no
+   concurrent Gradle invocation against one project here.
+2. **`:matrix-core:test` alongside the other ten modules.** matrix-core alone takes 23 minutes;
+   with ten other test JVMs contending it does not finish, and Gradle reports a task failure with
+   no assertion behind it.
+
+**The verification command for this repo is per-module, in sequence, not one invocation listing
+eleven modules.** A single 11-module line has produced this phantom more than once and every
+occurrence looked like a real regression. A red build that disappears when you re-run the same
+test alone is not evidence of anything, and it cost roughly an hour of chasing a defect that did
+not exist.
