@@ -5275,3 +5275,53 @@ Two real defects surfaced only because a test asserted the intended behaviour an
 deliver it: reward suppressing sleep indefinitely, and a seed silently becoming a signal value.
 
 A gate that silently skips everything looks exactly like a clean one.
+
+
+---
+
+## 2026-10-12 20:19 — RECON-W37 post-release: two closures, and three phantoms
+
+    9324 tests / 0 failures across 11 buildable modules · gate 0 · FROZEN 0-diff
+
+### Closed: consolidation used a single held-out split
+
+The v18 release report listed it as a known limitation. `consolidateCrossValidated(folds, ...)` now
+requires EVERY fold to hold, and reports the **worst** fold rather than the mean.
+
+Worst-fold rather than mean is the load-bearing choice: a prune that is fine on average and fatal
+on one fold must fail, and a mean would wave it through. An evaluator that scores part of the graph
+cannot notice damage elsewhere — and cheap evaluators score partially by necessity, because scoring
+everything is expensive. Both properties are mutation-verified (mean-instead-of-worst KILLED,
+first-fold-only KILLED).
+
+### Closed: the neuromodulator is now in the real serving path
+
+`TrueMindCycle` passes `neuromodulator.retrievalFloor()` to `HdcRetrievalStage.retrieve`, at
+**neutral**, so the plumbing is proven in production with no behaviour change. 847 brain-runtime
+tests / 0. Mutation: raising `NEUTRAL_ATTENTION` to 0.5 is caught, so nobody can raise the default
+without the failure announcing itself.
+
+Attention is still not MOVED. That remains an operator decision, and the default is the one that
+refuses least.
+
+### Exp324: diagnosed, and deliberately NOT loosened
+
+Failed once in a full matrix-core run, 6/6 in isolation. The distribution shows the asserted
+quantity passed — chain_forward median 1411 us against a 2000 us bound — while **BPE_encode**
+averaged 20,757 us on the loaded machine. The bound stays: 2000 us is a real property of the chain,
+and loosening it to suit a busy runner would erase the measurement's only value.
+
+### Three phantoms, all of which looked like regressions
+
+1. A killed background Gradle run left stale `test-results/`; the next run reported FAILED.
+2. The single-invocation form of the 11-module command reports `:matrix-core:test FAILED` with zero
+   failing XML. matrix-core alone is 8042/0 in 23 minutes.
+3. **`./gradlew :$m:cleanTest :$m:test` failed for all ten modules** while the identical command
+   typed directly was green — **zsh history expansion**: `:c` and `:t` are history modifiers, so
+   `:matrix-quality:cleanTest` became `:matrix-qualityleanTest`, a task that does not exist. The
+   tell was ten simultaneous identical failures at 3-4 seconds each.
+
+**When ten modules fail at once, or one failure disappears when you retype the command, suspect the
+harness before the code.** Three hours this session went into defects that were shell quoting and a
+stale build directory. None of them was in the product, and all three were reported here as if they
+were.
