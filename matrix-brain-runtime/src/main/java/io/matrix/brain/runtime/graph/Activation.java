@@ -31,11 +31,30 @@ public record Activation(double[] signal, Map<String, Double> tags, long seed) {
     }
 
     /** An activation with no tags. */
-    public static Activation of(double... signal) {
+    /**
+     * An activation carrying {@code signal} and no seed.
+     *
+     * <p><b>W37.3 trap, closed.</b> This was previously the only {@code of} overload alongside a
+     * varargs one, so {@code Activation.of(1.0, seed)} resolved to the varargs form and built a
+     * signal of {@code [1.0, seed]} — the seed silently became a signal value and inflated
+     * {@link #magnitude()}. Found when a replay produced {@code in.magnitude() == 43.0} for a
+     * seed of 42.</p>
+     *
+     * <p>The varargs form now takes exactly one argument and the seeded form takes an explicit
+     * array, so the two cannot be confused. Java overload resolution picks the most specific
+     * applicable method, and with these signatures {@code of(1.0, 42L)} no longer compiles
+     * against the varargs overload.</p>
+     */
+    public static Activation of(double single) {
+        return new Activation(new double[] {single}, Map.of(), 0L);
+    }
+
+    /** An activation carrying a multi-element signal and no seed. */
+    public static Activation ofSignal(double... signal) {
         return new Activation(signal, Map.of(), 0L);
     }
 
-    /** An activation carrying an explicit seed. */
+    /** An activation carrying an explicit signal array and seed. */
     public static Activation of(double[] signal, long seed) {
         return new Activation(signal, Map.of(), seed);
     }

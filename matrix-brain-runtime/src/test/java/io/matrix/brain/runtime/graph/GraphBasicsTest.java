@@ -122,7 +122,7 @@ class GraphBasicsTest {
     @Test
     @DisplayName("activation is immutable: withSignal does not mutate the original")
     void activationIsImmutable() {
-        Activation original = Activation.of(1.0, 2.0);
+        Activation original = Activation.ofSignal(1.0, 2.0);
         Activation derived = original.withSignal(new double[] {5.0});
         assertThat(original.signal()).containsExactly(1.0, 2.0);
         assertThat(derived.signal()).containsExactly(5.0);
