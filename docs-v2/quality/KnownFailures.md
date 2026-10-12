@@ -1991,10 +1991,12 @@ So two paths that both *look* like canonical deviations (`fires` update-mode, `t
 are load-bearing here and must NOT be "corrected" without the full measurement suite. Both are
 now commented in place.
 
-Still untested: canonical computes the `p` gate from a DATASET-LEVEL vote over the training set;
-this implementation uses the PER-EXAMPLE vote with `T = nClauses/4`, so `p` saturates to 0 or 1
-far more aggressively than intended. That is the most likely remaining cause and is the next thing
-to audit.
+| Canonical DATASET-LEVEL vote for the `p` gate (instead of per-example) | **regressed**: constant-dimension 100% -> 50.2%, noise 100% -> 79.6%, parity-1 100% -> 49.8%. The per-example vote is correct for this implementation. Reverted. |
+
+That exhausts the plausible causes reachable without redesigning the update rule. **Parity-k with
+k >= 3 remains OPEN.** Conjunctions (including the constant-dimension case) are solved; parity and
+presumably other non-monotone functions are not. Treat the learner as conjunction-capable only until
+proven otherwise, and say so in release material.
 
 This blocks any claim that rule induction generalises beyond conjunctions, and it must be stated
 in the next release caveats rather than discovered later.
