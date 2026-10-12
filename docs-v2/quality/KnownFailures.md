@@ -1980,5 +1980,21 @@ the `typeOneGrowth` path applied to non-firing own-target clauses (canonical TM 
 feedback at all); `TsetlinAutomaton`'s 2n-states-with-threshold-n instead of canonical
 2n+1-with-threshold-0.
 
+Two further hypotheses tested against it, both eliminated by measurement:
+
+| Change | Result |
+|---|---|
+| `includes()` threshold `state >= n` -> `state > n` (canonical Granmo) | **regressed everything**: 1-bit 100% -> 96.9% (min 50%), 16-bit constant 100% -> 81.6%, noise 100% -> 74.6%. The two implementations encode states differently, so the thresholds are NOT directly comparable and `>=` is correct here. Reverted. |
+| Canonical: no feedback at all to non-firing own-target clauses (drop `typeOneGrowth` at line 227) | **collapsed everything**: parity-1 100% -> 49.8%, constant-dimension 100% -> 50.2%. This path is load-bearing for bootstrap given this repo's half-included deterministic init, not a deviation to remove. Reverted. |
+
+So two paths that both *look* like canonical deviations (`fires` update-mode, `typeOneGrowth`)
+are load-bearing here and must NOT be "corrected" without the full measurement suite. Both are
+now commented in place.
+
+Still untested: canonical computes the `p` gate from a DATASET-LEVEL vote over the training set;
+this implementation uses the PER-EXAMPLE vote with `T = nClauses/4`, so `p` saturates to 0 or 1
+far more aggressively than intended. That is the most likely remaining cause and is the next thing
+to audit.
+
 This blocks any claim that rule induction generalises beyond conjunctions, and it must be stated
 in the next release caveats rather than discovered later.
