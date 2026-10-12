@@ -5225,3 +5225,53 @@ did not deliver it: reward suppressing sleep, and the seed leaking into a signal
 
 A gate that silently skips everything looks exactly like a clean one. That equivalence is the most
 expensive failure mode in this codebase, and it keeps costing.
+
+
+---
+
+## 2026-10-12 19:03 — RECON-W37.5: v18.0.0-mind (Connectome Alpha)
+
+    9318 tests / 0 failures across 11 buildable modules   (per-module, in sequence)
+    gate 0 · FROZEN 0-diff
+
+The Living Connectome **core** is built, mutation-verified and (partially) wired. The nine-stage
+linear pipeline that serves traffic is unchanged. This is a foundation, not a migration.
+
+### Wired
+
+- `NeuroModulatorHub.retrievalFloor()` reaches `HdcRetrievalStage.retrieve(...)`; both retrieval
+  bodies and the ignorance trace honour it. The clamp is duplicated in the stage so no caller can
+  route around it. **Default attention 0.0 — production behaviour is unchanged.**
+- Tsetlin `pack()` and `typeOne` fixes, used by `RuleInductionEngine` and `AgentBrainService`.
+- `RuleInductionEngine.predict` now routes to the trained engines instead of a stub.
+
+### Built and proven, not called
+
+`Connectome` + 93 tests, `ReplayPhase`, `SleepConsolidator`, `ClauseExplorer`. All three sleep
+phases work; none is scheduled. Nothing constructs a `NeuroModulatorHub` in production.
+
+### The headline numbers
+
+- Tsetlin, 16-bit with 15 constant dimensions: **62.5% -> 100%** (16/16 seeds)
+- Parity-3..6 at `s >= 2^k * 4`: **100%** (the "open defect" was an unswept parameter)
+- Neuromodulation: precision **0.92 -> 1.00**, recall **1.00 -> 0.83**
+- Exploration repairs a real under-trained model: **75% -> 100%**
+- Professional baseline: **4/4** probes cleared, in every query style, over 2016 store entries
+
+### Not claimed
+
+No graph in production. No neuromodulator in production. Sleep phases unscheduled. Parity k>=7
+unproven. `recommendS` fitted to measurement, not derived. `ClauseExplorer` is local search, not
+Gibbs sampling. No independent reviewer verdict exists.
+
+### And the thing that keeps costing
+
+Every surviving mutation this wave found a test that COULD NOT FAIL rather than code that was wrong.
+The Professional Baseline test skipped instead of failing; the tie-break test compared values that
+are identical for tied edges; `Result.modulator()` returned a fresh object so asserting on it proved
+nothing; `totalPlasticity` summed a delta that is zero by construction.
+
+Two real defects surfaced only because a test asserted the intended behaviour and the code did not
+deliver it: reward suppressing sleep indefinitely, and a seed silently becoming a signal value.
+
+A gate that silently skips everything looks exactly like a clean one.
