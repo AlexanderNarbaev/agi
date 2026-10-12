@@ -134,6 +134,68 @@ public final class SleepConsolidator {
         return new Result(before, graph.synapses().size(), accuracyBefore, accuracyAfter, accepted);
     }
 
+    /**
+     * Cross-validated consolidation: a proposal is accepted only if EVERY held-out fold holds.
+     *
+     * <p>The single-split version accepts a prune whenever one evaluator does not notice the
+     * damage. If the evaluator scores only part of the graph — which every cheap evaluator does,
+     * since scoring everything is expensive — a prune elsewhere in the graph passes unnoticed and
+     * the brief's PASS criterion reports success on a graph that got worse.</p>
+     *
+     * <p>Requiring agreement across folds makes that failure mode visible: a prune that helps fold
+     * A and hurts fold B is rejected rather than silently accepted. The folds are supplied by the
+     * caller because what constitutes an independent fold is a property of the evaluation data,
+     * not of the pruner.</p>
+     *
+     * @param folds independent evaluators, at least one
+     * @param fraction fraction of candidates to propose
+     * @param step annealing temperature; accepted and unused, as in {@link #consolidate}
+     * @return the worst-case before/after accuracy across folds
+     */
+    public Result consolidateCrossValidated(List<Evaluator> folds, double fraction, double step) {
+        if (folds == null || folds.isEmpty()) {
+            throw new IllegalArgumentException("at least one fold required");
+        }
+        int before = graph.synapses().size();
+
+        // Baseline: the WORST fold, not the mean. A prune that is fine on average and fatal on
+        // one fold must fail, and an average would let it through.
+        double baseline = Double.MAX_VALUE;
+        for (Evaluator f : folds) baseline = Math.min(baseline, f.accuracy(graph));
+
+        List<Synapse> candidates = new ArrayList<>();
+        for (Synapse s : graph.synapses()) {
+            if (graph.isVeto(s.from()) || graph.isVeto(s.to())) continue;
+            if (s.state() == Synapse.SynapseState.PRUNED) continue;
+            candidates.add(s);
+        }
+        candidates.sort(Comparator
+                .comparingDouble((Synapse s) -> Math.abs(s.weight()))
+                .thenComparing(Synapse::from)
+                .thenComparing(Synapse::to));
+
+        int proposalCount = Math.min(
+                Math.max(1, (int) Math.ceil(candidates.size() * fraction)), candidates.size());
+        List<Synapse> proposed = candidates.subList(0, proposalCount);
+
+        for (Synapse s : proposed) graph.markPruned(s);
+        double after = Double.MAX_VALUE;
+        for (Evaluator f : folds) after = Math.min(after, f.accuracy(graph));
+
+        boolean accepted = after >= baseline - 1e-9;
+        if (!accepted) {
+            for (Synapse s : proposed) graph.restore(s);
+            after = Double.MAX_VALUE;
+            for (Evaluator f : folds) after = Math.min(after, f.accuracy(graph));
+        } else {
+            graph.prune(Set.of());
+            after = Double.MAX_VALUE;
+            for (Evaluator f : folds) after = Math.min(after, f.accuracy(graph));
+        }
+
+        return new Result(before, graph.synapses().size(), baseline, after, accepted);
+    }
+
     @Override
     public String toString() {
         return "SleepConsolidator[seed=" + seed + " synapses=" + graph.synapses().size() + "]";
