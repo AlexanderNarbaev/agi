@@ -36,43 +36,46 @@
 - [x] 2-node integration proven against serving path
 - [x] DESIGN-68 updated with post-fix measurements
 
-### W37.2 — Dynamics: Propagation & Neuromodulation ⬜ NOT STARTED
-- [ ] `NeuroModulatorHub`: Attention, Uncertainty, Reward, Fatigue
-- [ ] Fatigue → sleep demand, with a bound that Reward cannot cancel indefinitely
-- [ ] Attention → HDC retrieval threshold; **must be measured**, not asserted
-- [ ] Modulators must not loosen veto thresholds (DESIGN-68 §4.2)
-- [ ] **Verification demanded by the brief:** prove Attention measurably changes retrieval
-      precision/recall. HDC thresholds are currently fixed constants, so this needs a real
-      experiment, not a wiring change.
-- [ ] **Blocker to state honestly:** §4.2 is currently a *proposal* in DESIGN-68, not verified.
+### W37.2 — Dynamics: Propagation & Neuromodulation ✅ CORE COMPLETE (`e48099b7`)
+- [x] `NeuroModulatorHub`: Attention, Uncertainty, Reward, Fatigue
+- [x] Fatigue → sleep demand; Reward's cancellation is **bounded by a floor**, not a fraction
+- [x] Attention → retrieval floor, **measured**: precision 0.92 → 1.00, recall 1.00 → 0.83
+- [x] Floor floored at the production value — a modulator can only refuse more, never serve more
+- [x] 12 tests, 6 mutants, 6 killed
+- [ ] NOT wired into `TrueMindCycle` — the hub exists and is proven, nothing calls it in production
 
-### W37.3 — Sleep 2.0: Consolidation & Pruning ⬜ NOT STARTED
-- [ ] Replay phase: select high-uncertainty episodes, Hebbian update
-- [ ] Pruning phase: simulated annealing, evaluate on **held-out** data (reuse RuleInductionEngine's 80/20 split, do not invent a second one)
-- [ ] Exploration phase: Gibbs sampling over Tsetlin clause mutations
-- [ ] **PASS criterion from the brief:** network shrinks, accuracy does not drop
-- [ ] Resolve Tsetlin hyperparameter target — the brief's ">80%" framing was based on the fixture
-      bug and is void. Conjunctions are already 100%; the real gap is parity (see W37.4b).
+### W37.3 — Sleep 2.0: Consolidation & Pruning ✅ 2 OF 3 PHASES (`b5c5f441`, `12536ae0`)
+- [ ] Replay phase: select high-uncertainty episodes, Hebbian update — NOT IMPLEMENTED
+- [x] Pruning phase (`SleepConsolidator`): batch apply, accept only if held-out accuracy holds,
+      veto-exempt, reversible via `Connectome.restore()`. Measured: 3 synapses → 1, accuracy 1.0 held
+- [x] Exploration phase (`ClauseExplorer`): repairs a real under-trained model 75% → 100% in
+      2 proposals. **Local search over the truth table, NOT Gibbs sampling** — javadoc says so
+- [x] **PASS criterion met and measured:** network shrinks, accuracy does not drop
+- [x] Annealing `step` parameter accepted but deliberately UNUSED, documented rather than faked
 
 ### W37.4 — Bootstrap: The Child Brain ⬜ NOT STARTED
 - [ ] Mass-import Wikidata/ONNX facts into graph structure
 - [ ] Auto-connect related concepts by HDC proximity
 - [ ] Establish "Professional Baseline": what the system knows at startup
 
-### W37.4b — OPEN DEFECT: parity-k >= 3 ⬜ BLOCKING W37.3
-- [ ] **Why it blocks:** W37.3's exploration phase mutates Tsetlin clauses. A learner that cannot
-      represent parity will mutate toward whatever it happened to fit, and pruning will then remove
-      correct edges for looking unused.
-- [x] Hypothesis 1: clause count (64→2048) — ELIMINATED, no effect
-- [x] Hypothesis 2: `feedbackT` (16→128) — ELIMINATED, no effect
-- [x] Hypothesis 3: `includes()` threshold `>=` vs `>` — ELIMINATED, `>` regresses everything
-- [x] Hypothesis 4: remove `typeOneGrowth` (canonical) — ELIMINATED, collapses everything
-- [x] Hypothesis 5: canonical dataset-level vote for `p` gating — ELIMINATED, regresses
-- [ ] Remaining lead: canonical `p` gate uses a **dataset-level vote damped by s**; this
-      implementation uses the per-example vote. Tested and regressed, so the difference is
-      subtler than the formula.
-- [ ] Untested: `TsetlinAutomaton` uses 2n states with threshold n; canonical uses 2n+1 with
-      threshold 0. Verified *not* the direct cause but never compared behaviourally.
+### W37.4b — parity-k >= 3 ✅ RESOLVED (`4590c986`)
+
+**The cause was `s`, a parameter never swept.** All the earlier elimination was measured at the
+default `s=4.0`:
+
+    parity-k   s=4     s=8     s=16    s=32    s=64    (1024 clauses, 200 epochs, 16 seeds)
+    parity-3  87.5%  100.0%  100.0% 100.0%  100.0%
+    parity-4  48.0%   75.0%  100.0% 100.0%  100.0%
+    parity-5  50.8%   51.0%   62.9% 100.0%  100.0%
+    parity-6   ~51%   51.7%   51.7%  57.2%  100.0%
+
+`s >= 2^k * 4` gives 100% (min 100%, 16/16 seeds) for parity-3 through parity-6.
+Conjunctions are 100% at every `s` from 4 to 32, so raising it is safe.
+
+- [x] `TsetlinTrainer.recommendS(informativeBits)` and `countInformativeBits(inputs, width)`
+- [x] 7 tests, 4 mutants, 4 killed
+- [ ] The bound is FITTED TO MEASUREMENT, not derived. It coincides with a canonical bound for k-bit
+      parity with 2^k clauses; the two were not proven equivalent.
 
 ### W37.5 — Release v18.0.0-mind ⬜ NOT STARTED
 - [ ] Full 11-module suite
