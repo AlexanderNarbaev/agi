@@ -1686,3 +1686,80 @@ The prompt for this wave asked to "verify the entire BitNet forward pass runs on
 measured answer is that it does not, and cannot today. That requires exporting the weights to a
 GPU-consumable format, or a native kernel, or a backend abstraction with a CUDA implementation.
 None exists. This is recorded rather than reported as a successful verification.
+
+---
+
+## W37.3 — the pinned 46% was a fixture bug, not a hyperparameter mismatch (FIXED)
+
+W37 arrived asserting: *"TsetlinTrainer: Proven production learning engine (100% accuracy on
+separable tasks, though currently pinned at 46% in prod due to hyperparameter mismatch — see
+W37.3 fix)"*, and W37.3 was to tune `46% -> >80%`.
+
+**Both halves of that are wrong, and the fix is not epochs.**
+
+### Root cause: `pack()` returned `words[0]`
+
+    private static long pack(long[] words) { return words[0]; }
+
+Production encodes a `dim=1024` HDC vector into **16 packed longs** (`EpisodeFeatureExtractor`),
+and `RuleInductionEngine` builds the trainer with `inputBits=16`, so `fires()` examined **16 bits
+of a 1024-bit feature vector**. 93.75% of production features never reached the learner, and the
+fidelity number reported afterwards looked entirely legitimate.
+
+The pinned test made the same mistake one level up. It builds `x[j] = rng.nextInt(2)` across a
+`long[16]` and evaluates `predict(x[0])`, so 400 rows collapse to **2 distinct inputs**:
+
+    ENCODING PROBE (label = bit 0)
+      words[] rows, epochs=10  ->  46%     trainer sees   2 distinct inputs
+      words[] rows, epochs=50  ->  46%
+      words[] rows, epochs=200 -> 100%
+      bit-packed, epochs=10    ->  98%     trainer sees 399 distinct inputs
+      bit-packed, epochs=50    -> 100%
+
+The trainer was fitting a two-valued function while holding 400 samples, and reporting 46% about
+the wrong thing. At the argument production actually passes it scores **98%** once the features
+are delivered. No hyperparameter change was ever going to help, because the signal was not there.
+
+`pack()` now folds the whole vector by XOR-parity: input bit `j` takes the parity of source bits
+`j, j+inputBits, j+2*inputBits, ...`. Deterministic, order-independent, identity for inputs
+already within `inputBits`, so single-word callers are unaffected. Mutation: 2 mutants, 2 killed.
+
+### STILL OPEN — a second, independent defect
+
+Fixing `pack()` exposed the real capability ceiling rather than hiding it:
+
+    1024-bit production-shaped, epochs=10  -> 55%
+    1024-bit production-shaped, epochs=50  -> 50%
+    1024-bit production-shaped, epochs=200 -> 47%
+
+Folding 64 random bits into 1 destroys a bit-0 label, so at true production width accuracy is
+**chance**. `TsetlinTrainer` hard-caps `inputBits` at **20** (`inputBits in 1..20`), so a 1024-bit
+vector cannot be represented exactly *by any mapping*. This is a design constraint, not a bug,
+and it needs a decision rather than a patch:
+
+- raise the cap and let a 1024-bit Tsetlin run directly (memory: clauses x states x bits), or
+- keep a small automaton and feed it a **learned** projection of the HDC vector rather than XOR
+  parity, which preserves the discriminative directions instead of cancelling them, or
+- have the trainer consume HDC similarity/distance features instead of raw bits.
+
+XOR parity is the right *fallback* — deterministic, total, order-independent — and the wrong
+*projection* for a signal-carrying vector. **Do not read the 98% as "production Tsetlin now
+works."** It works when the features fit. In production they do not.
+
+### Also fixed: unseeded randomness on the federation egress path
+
+`DecentralizedDigestPipeline` defaulted to `new SecureRandom()` — an explicitly unseeded source
+deciding **whether a fact is dispatched to a peer**. Article I permits unseeded randomness only
+where the result cannot reach a decision.
+
+It surfaced as `KnowledgeShareTest` passing 3/3 in isolation and failing inside the full run; the
+test's own comment said *"use low-noise pipeline so the shared count RELIABLY >= k"*, so the
+variance was known and `epsilon=10.0` still left enough for Laplace noise to move a digest across
+the k-anonymous threshold. "Flaky" was the wrong reading: the variance was in a value the product
+depends on. Now seeded by default; 10 consecutive runs, 0 failures.
+
+### A guard that measured nothing
+
+The first draft of the `pack()` regression guards reimplemented the fold *inside the test* and
+passed with the bug restored — verified by mutation, not assumed. A guard that reimplements the
+logic it guards cannot fail. They now call the real `pack()` through `packForTest`.
