@@ -1763,3 +1763,51 @@ depends on. Now seeded by default; 10 consecutive runs, 0 failures.
 The first draft of the `pack()` regression guards reimplemented the fold *inside the test* and
 passed with the bug restored — verified by mutation, not assumed. A guard that reimplements the
 logic it guards cannot fail. They now call the real `pack()` through `packForTest`.
+
+### W37.3b — root cause of "production Tsetlin doesn't learn" (STILL OPEN)
+
+Having fixed the `pack()` fixture bug, the real blocker was isolated. Production config
+(16 bits, 64 clauses, 200 states, 10 epochs), label = bit 0:
+
+    bits 1..15 CONSTANT ZERO   ->  46-53%   (chance)
+    bits 1..15 RANDOM          -> 100%
+
+The label is fully determined by bit 0 in **both** rows, so noise in the unused bits should be
+irrelevant. It is worth ~50 accuracy points. That gap *is* the defect.
+
+**Mechanism.** A clause that includes a literal on a bit which never varies can never fire, so
+with 15 constant dimensions only the few clauses keyed on bit 0 can vote. The polarity sum then
+degenerates toward a constant: measured `predict(0) == predict(1) == true`, i.e. the model
+returns the same answer for every input. Noise makes the unused dimensions *reachable*, which is
+why it appears to help.
+
+**Hypotheses tested and eliminated** (recorded so they are not retried):
+
+| Hypothesis | Result |
+|---|---|
+| Epoch count | 46% at 10, 50, 200, 1000 alike |
+| `InitStrategy.RANDOM` vs `COMPLEMENTARY` | identical, 46% / 100% both |
+| FFI projection / landmark similarity | chance; the fixture had no signal at all |
+| Update/predict firing mismatch | **tried, reverted** — see below |
+
+**The firing fix that did not work.** `fires()` returned `updateMode ? true : anyIncluded`, so a
+literal-free clause fired during UPDATE but not during PREDICT — the two phases disagreed about
+the model. Changing it to standard Tsetlin semantics ("fires iff no included literal is
+violated") is the textbook fix and was implemented and measured. It made things *different*, not
+better: on constant inputs `predict(0)==predict(1)` still, because with consistent semantics every
+empty clause fires on every input and the vote stops depending on the input entirely. **Reverted
+rather than committed** — it traded one degenerate regime for another, and shipping it would have
+meant swapping a measured bug for an unmeasured one. All 8038 matrix-core tests passed either way,
+which is why mutation testing mattered here: the revert was caught by mutation, not by the suite.
+
+**Remaining hypothesis (unverified).** The learner needs feature-variance awareness: detect
+constant dimensions and exclude clauses keyed on them from initialisation, or otherwise let
+clauses specialise on the bits that actually vary. Not implemented.
+
+**Trap for whoever tunes this next.** A fixture whose unused bits are RANDOM reports 100% and
+hides the defect completely. Every "Tsetlin works" measurement taken before W37.3 used random
+unused bits. The constant-zero case is what a real caller hits whenever a feature vector has an
+inactive dimension — which is the normal case for a 20-bit automaton fed a 1024-bit HDC vector
+where only a few dimensions carry signal.
+
+`TsetlinFiringConsistencyTest` now characterises this and will fail when the trainer is fixed.
