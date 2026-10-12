@@ -1993,10 +1993,36 @@ now commented in place.
 
 | Canonical DATASET-LEVEL vote for the `p` gate (instead of per-example) | **regressed**: constant-dimension 100% -> 50.2%, noise 100% -> 79.6%, parity-1 100% -> 49.8%. The per-example vote is correct for this implementation. Reverted. |
 
-That exhausts the plausible causes reachable without redesigning the update rule. **Parity-k with
-k >= 3 remains OPEN.** Conjunctions (including the constant-dimension case) are solved; parity and
-presumably other non-monotone functions are not. Treat the learner as conjunction-capable only until
-proven otherwise, and say so in release material.
+## W37.3b — RESOLVED: parity was under-provisioned, not broken
+
+Everything above was measured at the default `s = 4.0`. Sweeping `s` instead of clause count:
+
+    parity-k    s=4      s=8      s=16     s=32     s=64     (1024 clauses, 200 epochs, 16 seeds)
+    parity-3   87.5%   100.0%   100.0%   100.0%   100.0%
+    parity-4   48.0%    75.0%   100.0%   100.0%   100.0%
+    parity-5   50.8%    51.0%    62.9%   100.0%   100.0%
+    parity-6    ~51%    51.7%    51.7%    57.2%   100.0%
+
+**`s` is the dominant parameter, not clause count.** 64 -> 2048 clauses changed nothing at s=4;
+`s=4 -> 32` took parity-3 from 87.5% to 100%. The rule `s >= 2^k * 4` holds across 16 trainer seeds:
+parity-3 through parity-6 all reach **100% (min 100%)** at or above the recommendation, and parity-7
+reaches ~99%.
+
+Conjunctions are **unaffected**: measured 100% at every `s` from 4 to 32, so raising `s` is safe for
+existing callers.
+
+`TsetlinTrainer.recommendS(informativeBits)` and `countInformativeBits(inputs, inputBits)` are now
+public so a caller cannot repeat the mistake. `countInformativeBits` matters: a 1024-bit HDC vector
+with 6 active dimensions must be sized on 6, not on 1024, or `s = 2^1024` would be requested.
+
+The bound is a **lower bound fitted to measurement**, not a derivation. It coincides with a
+canonical bound for representing k-bit parity with 2^k clauses, but the two were not proven
+equivalent. Treat it as an empirical starting point and verify against the real target.
+
+**So "parity-3 and wider do not learn" was true and wrong at the same time**: true at the default
+`s`, wrong as a statement about the learner. The earlier elimination table is not invalidated —
+clause count, feedbackT, threshold convention, `typeOneGrowth` and the dataset-level `p` gate were
+all genuinely not the cause. The cause was a parameter never swept.
 
 This blocks any claim that rule induction generalises beyond conjunctions, and it must be stated
 in the next release caveats rather than discovered later.
