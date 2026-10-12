@@ -4983,3 +4983,86 @@ Four of the bugs found were in the VERIFICATION tooling, not the product:
 
 Each produced a confident, specific, fictional result. **A gate that silently skips everything
 looks exactly like a clean one**, and that equivalence is the most expensive failure mode here.
+
+
+---
+
+## 2026-10-12 10:27 — RECON-W37: the brief's premises checked before building on them
+
+W37 asks to migrate the linear pipeline to a Living Connectome over five waves. Before writing a
+line of graph code I checked §0's asset claims, and two of them did not survive.
+
+### HEAD in the brief was stale
+
+§0 says `a176860c`. Actual HEAD was `f8be87cf` (the v17.9.0-mind tag). Not a problem, just noted.
+
+### §0 asset claim: "TsetlinTrainer — proven production learning engine, 100% accuracy, pinned at
+### 46% due to hyperparameter mismatch, see W37.3 fix"
+
+**The 46% was a fixture bug.** `TsetlinTrainer.pack()` was `return words[0]`, and the pinned test
+built `long[16]` rows with `x[j]=rng.nextInt(2)`, so 400 rows collapsed to **2 distinct inputs**.
+The learner was fitting a two-valued function while holding 400 samples. No hyperparameter change
+could ever have helped, because the signal was not there.
+
+In production the same bug is worse: `EpisodeFeatureExtractor` encodes `dim=1024` into **16 packed
+longs**, so `fires()` examined 16 bits of a 1024-bit vector. 93.75% of production features never
+reached the learner and the fidelity number afterwards looked legitimate.
+
+Fixed (d830d3a1) with an XOR-parity fold over every word. Mutation: 2 mutants, 2 killed.
+
+### What is STILL true: production Tsetlin does not learn
+
+With the fixture bug gone, the real blocker is sharp:
+
+    label = bit 0, bits 1..15 CONSTANT ZERO  ->  46-53%   (chance)
+    label = bit 0, bits 1..15 RANDOM         -> 100%
+
+Noise in unused bits is worth ~50 accuracy points. A clause including a literal on a constant
+bit can never fire, so the polarity sum degenerates to a constant answer. Verified across 12 data
+seeds (97-100% whenever the unused bits vary), so noise is causal rather than seed luck.
+
+**Every "Tsetlin works" measurement taken before W37.3 used random unused bits.** The
+constant-zero case is what a real caller hits whenever a feature vector has an inactive
+dimension — the normal case for a 20-bit automaton fed a 1024-bit HDC vector.
+
+Three fixes tried, one kept:
+- XOR fold over all words — KEPT.
+- Standard Tsetlin firing semantics — tried, REVERTED: on constant inputs `predict(0)==predict(1)`
+  either way, trading one degenerate regime for another. All 8038 matrix-core tests passed both
+  with and without it, so the mutation check is what caught the difference.
+- Variance-aware init (`declareActiveBits`) — tried, REVERTED: 46% before, 46% after, and the
+  first version was a silent no-op. 141 lines removed rather than shipped inert.
+
+### Two more real defects found on the way
+
+`DecentralizedDigestPipeline` defaulted to `new SecureRandom()` — unseeded randomness deciding
+**whether a fact is dispatched to a peer**. Article I permits unseeded randomness only where the
+result cannot reach a decision. It showed up as a test passing 3/3 in isolation and failing in the
+full run; "flaky" was the wrong reading, the variance was in a value the product depends on.
+Now seeded (3aa5fdc5), 10/10 clean.
+
+### Design work
+
+DESIGN-68 derives the topology from the code and refuses to wire Tsetlin in:
+
+- `TrueMindCycle` is a fixed-precedence if/else ladder; there is no place where several weighted
+  nodes contribute to one answer, which is exactly what the migration is for.
+- Arithmetic and Analogy are deterministic and stateless, so Hebbian plasticity on them would be
+  theatre. Plasticity covers HDC, BIR and Tsetlin only.
+- Tsetlin is marked DEFERRED. Plasticity around a node with no learning signal grows a graph that
+  adapts toward noise, and pruning then removes correct edges because they look unused.
+- Reproducible stochasticity needs topology IN the seed. `f(seed, node, step)` does not determine
+  the computation once the graph is mutable, so runs diverge after the first prune — exactly the
+  runs worth replaying.
+- Veto edges (ConsistencyChecker, LieDetector) must be structurally exempt from pruning and LTD,
+  or sleep-time pruning can disable the safety check under pressure.
+
+DESIGN-58 is already taken and DESIGN-67 is the highest existing, hence 68.
+
+### Verification
+
+    9212 tests / 0 failures across 11 buildable modules   (before the reverting work)
+    gate 0, FROZEN 0-diff
+
+LSP again reported duplicate methods and unresolved symbols in files javac compiles cleanly.
+Ground truth (grep + javac) confirms no duplicates. Third time this campaign.
