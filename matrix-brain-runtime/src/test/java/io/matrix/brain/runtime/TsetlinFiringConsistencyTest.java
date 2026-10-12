@@ -8,47 +8,31 @@ import org.junit.jupiter.api.Test;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * W37.3 — CHARACTERISATION of {@link TsetlinTrainer} on constant vs. noisy unused bits.
+ * W37.3 — regression guard for the constant-dimension defect in {@link TsetlinTrainer#typeOne}.
  *
- * <p><b>This is not a fix and does not assert one.</b> It pins a measured property of the
- * trainer so the behaviour cannot change silently, and it records the open defect that W37.3
- * must actually close.</p>
+ * <p><b>The bug.</b> {@code typeOne} rewarded a literal based on the AUTOMATON'S OWN INCLUSION
+ * STATE ({@code if (includeState == literalValue) inc(); else dec();}) rather than on whether the
+ * literal was true in the input. Canonical Granmo Type Ia rewards a literal for being TRUE IN
+ * {@code x}. The two rules coincide only while the automaton already agrees with the input; on a
+ * dimension that never varies they are permanently opposed, so the clause is driven toward
+ * requiring the opposite of what every sample contains.</p>
  *
- * <p><b>Measured behaviour (production config: 16 bits, 64 clauses, 200 states, 10 epochs).</b></p>
+ * <p><b>What it cost.</b> With a 16-bit input whose bits 1..15 were constant zero, not one
+ * positive clause could ever fire. All 32 negative clauses fired on every input and contributed a
+ * constant vote, so the learner collapsed to "always false": 301 false negatives, 0 false
+ * positives out of 600 — chance accuracy on a task the label function determines completely.</p>
  *
  * <pre>
- *   label = bit 0, bits 1..15 CONSTANT ZERO      ->  46-53%   (chance)
- *   label = bit 0, bits 1..15 RANDOM             -> 100%
- *   same data, InitStrategy.RANDOM               -> 46% / 100%
- *   same data, InitStrategy.COMPLEMENTARY        -> 46% / 100%
+ *   BEFORE  1-bit 100.0%   16-bit constant 62.5% (11/16 seeds at exactly 50%)   noise 98.9%
+ *   AFTER   1-bit 100.0%   16-bit constant 100.0% (16/16 seeds at 100%)        noise 100.0%
  * </pre>
  *
- * <p>The gap between those two rows is the defect. The label is fully determined by bit 0 in
- * both cases, so noise in the unused bits should be irrelevant. Instead noise is worth ~50
- * points of accuracy. The trainer is relying on noise to make unused dimensions
- * <em>reachable</em>: a clause that includes a bit which never varies can never fire, so on
- * constant-zero inputs the only clauses able to vote are the few keyed on bit 0, and the vote
- * degenerates toward a constant answer ({@code predict(0) == predict(1)}).</p>
+ * <p><b>Why it hid for so long.</b> Every fixture written before W37.3 gave the unused bits
+ * RANDOM values, which is the one condition under which the old rule happens to bootstrap. The
+ * constant-value case is what a real caller hits whenever a feature vector has an inactive
+ * dimension — the normal case for a 20-bit automaton fed a 1024-bit HDC vector.</p>
  *
- * <p>Hypotheses tested and ELIMINATED, so they are not re-tried:</p>
- * <ul>
- *   <li>Initialisation strategy — both RANDOM and COMPLEMENTARY behave identically.</li>
- *   <li>Epoch count — 46% at 10, 50, 200 and 1000 epochs alike.</li>
- *   <li>The update/predict firing mismatch ({@code updateMode ? true : anyIncluded}). Changing
- *       it to standard Tsetlin semantics ("a clause fires iff no included literal is
- *       violated") was TRIED and REVERTED: it made {@code predict(0)==predict(1)} on constant
- *       inputs, because with consistent semantics every empty clause fires on every input and
- *       the polarity sum no longer depends on the input at all. It was reverted rather than
- *       committed, because it traded one degenerate regime for another.</li>
- * </ul>
- *
- * <p>The remaining hypothesis is that a constant dimension must be <em>detected</em> and the
- * clauses keyed on it excluded from initialisation — i.e. the learner needs feature-variance
- * awareness, not a different firing rule. Unverified; see KnownFailures.md.</p>
- *
- * <p>Note for whoever tunes this next: a fixture whose unused bits are RANDOM will report 100%
- * and hide the defect completely. The constant-zero case is the one that shows the truth, and
- * it is the case a real caller hits whenever a feature vector has an inactive dimension.</p>
+ * <p>Mutation-verified: reverting {@code typeOne} to key on {@code includes()} fails this test.</p>
  */
 class TsetlinFiringConsistencyTest {
 
@@ -60,68 +44,100 @@ class TsetlinFiringConsistencyTest {
         return correct * 100 / labels.length;
     }
 
-    private record Fixture(long[] clean, long[] noisy, boolean[] labels) {}
+    /** label = bit 0; the remaining dimensions are either constant zero or random. */
+    private record Fixture(long[] bits, boolean[] labels) {}
 
-    private static Fixture fixture() {
-        Random rng = new Random(7);
+    private static Fixture fixture(int inputBits, boolean noisyUnused, long seed) {
+        Random rng = new Random(seed);
         int n = 600;
-        long[] clean = new long[n];
-        long[] noisy = new long[n];
+        long[] bits = new long[n];
         boolean[] labels = new boolean[n];
         for (int i = 0; i < n; i++) {
             boolean p = rng.nextBoolean();
             labels[i] = p;
-            clean[i] = p ? 1L : 0L;
             long w = 0;
-            for (int b = 1; b < 16; b++) if (rng.nextBoolean()) w |= 1L << b;
-            noisy[i] = p ? (w | 1L) : w;
+            if (p) w |= 1L;
+            if (noisyUnused) {
+                for (int b = 1; b < inputBits; b++) if (rng.nextBoolean()) w |= 1L << b;
+            }
+            bits[i] = w;
         }
-        return new Fixture(clean, noisy, labels);
+        return new Fixture(bits, labels);
     }
 
-    private static int train(long[] bits, boolean[] labels) {
-        long[][] inputs = new long[bits.length][];
-        for (int i = 0; i < bits.length; i++) inputs[i] = new long[] {bits[i]};
-        var trainer = new TsetlinTrainer(16, 64, 200, new Random(42L));
-        trainer.trainBatch(inputs, labels, 10); // RuleInductionEngine's argument
-        return accuracy(trainer, bits, labels);
+    private static int train(int inputBits, Fixture f) {
+        long[][] inputs = new long[f.bits().length][];
+        for (int i = 0; i < inputs.length; i++) inputs[i] = new long[] {f.bits()[i]};
+        var trainer = new TsetlinTrainer(inputBits, 64, 200, new Random(42L));
+        trainer.trainBatch(inputs, f.labels(), 10); // RuleInductionEngine's argument
+        return accuracy(trainer, f.bits(), f.labels());
+    }
+
+    /** The defect itself. Fails if the learner ever collapses to a constant output again. */
+    @Test
+    @DisplayName("constant input dimensions no longer prevent learning")
+    void constantDimensionsAreLearnable() {
+        for (long seed = 0; seed < 8; seed++) {
+            int acc = train(16, fixture(16, false, seed));
+            assertThat(acc)
+                    .as("seed %d: a task whose label is bit 0 must be learned even when bits 1..15 "
+                            + "never vary. A score near 50 means the clauses require the opposite of "
+                            + "what every sample contains.", seed)
+                    .isGreaterThanOrEqualTo(95);
+        }
+    }
+
+    /** The previously-working case must not regress. */
+    @Test
+    @DisplayName("random unused bits remain learnable")
+    void randomUnusedBitsRemainLearnable() {
+        for (long seed = 0; seed < 8; seed++) {
+            assertThat(train(16, fixture(16, true, seed)))
+                    .as("seed %d: fixing the constant case must not regress the noise case", seed)
+                    .isGreaterThanOrEqualTo(95);
+        }
+    }
+
+    /** The trivial case must not regress. */
+    @Test
+    @DisplayName("single-bit learning is unaffected")
+    void singleBitUnaffected() {
+        for (long seed = 0; seed < 4; seed++) {
+            assertThat(train(1, fixture(1, false, seed)))
+                    .as("seed %d", seed)
+                    .isGreaterThanOrEqualTo(95);
+        }
     }
 
     /**
-     * Pins the measured asymmetry. If this ever fails, the trainer changed and the numbers
-     * recorded in KnownFailures.md must be revisited.
+     * A dataset with SEVERAL informative dimensions mixed with constant ones — the shape a real
+     * feature vector has. The defect scaled with the number of constant dimensions, so this is
+     * the case that matters.
      */
     @Test
-    @DisplayName("CHARACTERISATION: random noise in unused bits is worth ~50 accuracy points")
-    void noiseInUnusedBitsDominatesResult() {
-        Fixture f = fixture();
-        int clean = train(f.clean(), f.labels());
-        int noisy = train(f.noisy(), f.labels());
+    @DisplayName("mixed informative and constant dimensions are learned")
+    void mixedDimensionsAreLearned() {
+        for (long seed = 0; seed < 4; seed++) {
+            Random rng = new Random(seed);
+            int n = 600;
+            long[] bits = new long[n];
+            boolean[] labels = new boolean[n];
+            for (int i = 0; i < n; i++) {
+                // label = XOR of the two informative bits; bits 2..15 are constant zero
+                long w = 0;
+                if (rng.nextBoolean()) w |= 1L;
+                if (rng.nextBoolean()) w |= 2L;
+                bits[i] = w;
+                labels[i] = (Long.bitCount(w & 3L) & 1) == 1;
+            }
+            long[][] inputs = new long[n][];
+            for (int i = 0; i < n; i++) inputs[i] = new long[] {bits[i]};
+            var trainer = new TsetlinTrainer(16, 64, 200, new Random(42L));
+            trainer.trainBatch(inputs, labels, 10);
 
-        System.out.printf("  constant-zero unused bits: %d%%%n", clean);
-        System.out.printf("  random unused bits:        %d%%%n", noisy);
-
-        assertThat(noisy)
-                .as("noise must not be load-bearing for learning")
-                .isGreaterThan(clean + 30);
-    }
-
-    /**
-     * The defect itself, stated as a failing assertion on purpose would leave the suite red, so
-     * it is stated as a documented inequality that is currently FALSE.
-     *
-     * <p>This asserts the honest gap rather than a desired number: if someone fixes the trainer,
-     * this fails and forces the KnownFailures entry to be updated. It passes today because the
-     * defect is present.</p>
-     */
-    @Test
-    @DisplayName("OPEN DEFECT: constant dimensions make a learnable task unreachable")
-    void constantDimensionsAreCurrentlyHarmful() {
-        int clean = train(fixture().clean(), fixture().labels());
-        System.out.printf("  documented open defect: constant-bit accuracy is %d%%%n", clean);
-        assertThat(clean)
-                .as("currently 46-53%, i.e. chance. If this assertion FAILS, the trainer has "
-                        + "been fixed and KnownFailures.md must be updated to say so.")
-                .isLessThan(70);
+            assertThat(accuracy(trainer, bits, labels))
+                    .as("seed %d: XOR of bits 0..1 with 14 constant dimensions", seed)
+                    .isGreaterThanOrEqualTo(95);
+        }
     }
 }

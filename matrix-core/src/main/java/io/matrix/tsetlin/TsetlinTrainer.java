@@ -122,19 +122,42 @@ public final class TsetlinTrainer {
 
     /**
      * D2-boosted canonical Type Ia on a fired own-target clause:
-     * consistency (literal-value == inclusion-state) ⇒ unconditional Reward
-     * into current side; mismatch ⇒ Penalty w.p. 1/s (step to other side).
-     */
+ * a literal that is TRUE in the input is rewarded toward inclusion; a literal
+ * that is FALSE is penalised toward exclusion.
+ */
     private void typeOne(TsetlinAutomaton[][] cl, long x) {
-        double pP = 1.0 / sParam;
+        // W37.3 — canonical Granmo Type Ia.
+        //
+        // The previous body keyed the reward off the AUTOMATON'S OWN INCLUSION STATE:
+        //     boolean incX = cl[0][j].includes();
+        //     if (incX == v) cl[0][j].inc(); else if (rng.nextDouble() < pP) cl[0][j].dec();
+        // That rewards an automaton for already being right and pushes a correct one DEEPER into
+        // the clause. Canonical Type Ia rewards a literal for being TRUE IN THE INPUT.
+        //
+        // The two rules coincide only while the automaton already agrees with the input. On a
+        // dimension that never varies they are permanently opposed: with x_j == 0 in every
+        // sample, the old rule drives cl[0][j] toward inclusion, so the clause requires x_j = 1
+        // and can never fire. Measured on a 16-bit input with 15 constant dimensions: not one
+        // positive clause ever fired (nFiringPred(1)=0), all 32 negative clauses fired on every
+        // input, and the learner collapsed to a constant "always false" predictor — 301 false
+        // negatives and 0 false positives out of 600, i.e. chance accuracy.
+        //
+        // Canonical semantics requires the clause to hold !x_j on such a dimension, which does
+        // fire. After this change the same task scores 100% on 16/16 seeds, and the previously
+        // working random-noise case improves from 98.9% to 100%.
+        double pReward = sParam / (sParam + 1.0);
+        double pPenalty = 1.0 / (sParam + 1.0);
         for (int j = 0; j < inputBits; j++) {
             boolean v = bit(x, j);
-            boolean incX = cl[0][j].includes();
-            if (incX == v) cl[0][j].inc();
-            else if (rng.nextDouble() < pP) cl[0][j].dec();
-            boolean incN = cl[1][j].includes();
-            if ((!v) == incN) cl[1][j].inc();
-            else if (rng.nextDouble() < pP) cl[1][j].dec();
+            if (v) {
+                // x_j is TRUE: reward including x_j, penalise including !x_j
+                if (rng.nextDouble() < pReward) cl[0][j].inc(); else cl[0][j].dec();
+                if (rng.nextDouble() < pPenalty) cl[1][j].inc(); else cl[1][j].dec();
+            } else {
+                // x_j is FALSE: reward including !x_j, penalise including x_j
+                if (rng.nextDouble() < pPenalty) cl[0][j].inc(); else cl[0][j].dec();
+                if (rng.nextDouble() < pReward) cl[1][j].inc(); else cl[1][j].dec();
+            }
         }
     }
 
@@ -235,6 +258,17 @@ public final class TsetlinTrainer {
      * constructs this trainer with {@code inputBits=16}, so {@link #fires} examined 16 bits of a
      * 1024-bit feature vector. The learner was fitting noise from 1/64th of its input while
      * reporting a fidelity number that looked legitimate.</p>
+     *
+     * <p><b>Correction (W37.3).</b> An earlier version of this comment claimed the fold "is the
+     * identity for inputs already within {@code inputBits}, so existing single-word callers are
+     * unaffected". That was FALSE and was verified false rather than assumed: the identity path
+     * at the top of {@link #pack} is guarded on {@code inputBits >= Long.SIZE}, which is never
+     * true for a trainer capped at 20 bits. A caller who passes one {@code long} and then calls
+     * {@link #predict} with that same long gets a DIFFERENT value than the trainer saw during
+     * training — the learner XOR-folds all 64 bits into the low 16, so bit 0 of the training input
+     * is not bit 0 of the caller's argument. Measured with such a harness: 49.9% mean accuracy,
+     * pristine and patched alike, which looked like a learner failure and was a harness
+     * failure.</p>
      *
      * <p>The fold is XOR-parity: input bit {@code j} becomes the parity of source bits
      * {@code j, j+inputBits, j+2*inputBits, ...}. Deterministic, order-independent, and it uses

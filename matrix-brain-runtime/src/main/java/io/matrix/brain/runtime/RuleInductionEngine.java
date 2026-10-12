@@ -236,14 +236,27 @@ public final class RuleInductionEngine {
 
     /** Stub predictor (real impl would route through BirRegistry/Bir inference). */
     private boolean predict(Object predictor, long[] input) {
-        // Deterministic placeholder: predict true iff first set bit of input
-        // is in an odd position. Real integration uses ClauseSetForm.fires().
-        for (int i = 0; i < input.length * 64; i++) {
-            if ((input[i >>> 6] >>> (i & 63) & 1L) == 1L) {
-                return (i & 1) == 1;
-            }
+        // W37.3d — this was a stub that IGNORED the predictor argument and returned
+        // "first set bit of the raw input is in an odd position". Both callers passed a trained
+        // engine (TsetlinTrainer, MpdtGaProducer), so every `tsetlinFidelity` and `mpdtFidelity`
+        // in this file measured that placeholder rather than the model it was attributed to, and
+        // the "pick the better engine" comparison compared one stub against itself.
+        //
+        // Route to the real engines. Both expose predict(long packed), and TsetlinTrainer.pack()
+        // is the canonical fold from a multi-word feature vector into its inputBits space — the
+        // caller MUST pass raw words, not a pre-folded long, or training and serving disagree.
+        if (predictor instanceof io.matrix.tsetlin.TsetlinTrainer t) {
+            return t.predict(t.packForTest(input));
         }
-        return false;
+        if (predictor instanceof io.matrix.evolution.MpdtGaProducer m) {
+            long packed = 0L;
+            for (int i = 0; i < input.length; i++) {
+                packed ^= input[i]; // same parity fold; see TsetlinTrainer.pack
+            }
+            return m.predict(packed);
+        }
+        throw new IllegalArgumentException(
+                "unsupported predictor type: " + (predictor == null ? "null" : predictor.getClass().getName()));
     }
 
     public long seed() { return seed; }

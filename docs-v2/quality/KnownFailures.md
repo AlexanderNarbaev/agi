@@ -1836,3 +1836,149 @@ Also eliminated during this investigation, for the record:
 FIXED. (2) the update/predict firing mismatch — real, fixable in the textbook way, but the fix
 trades one degenerate regime for another — NOT fixed. (3) constant input dimensions making a
 learnable task unreachable — root cause of the 46%, still OPEN.
+
+---
+
+## W37.3c — ROOT CAUSE FOUND AND FIXED: `typeOne` rewarded the wrong thing
+
+After four failed hypotheses, an adversarial analysis found the actual mechanism. It also corrected
+two of my own claims, both verified rather than accepted.
+
+### The defect
+
+`TsetlinTrainer.typeOne` rewarded a literal based on the **automaton's own inclusion state**:
+
+    boolean incX = cl[0][j].includes();
+    if (incX == v) cl[0][j].inc();          // reward an automaton for already being right
+    else if (rng.nextDouble() < pP) cl[0][j].dec();
+
+Canonical Granmo Type Ia rewards a literal for being **TRUE IN `x`**:
+
+    pReward  = s / (s + 1)      // literal true  -> toward inclusion
+    pPenalty = 1 / (s + 1)      // literal false -> toward exclusion
+
+The two rules coincide only while the automaton already agrees with the input. **On a dimension
+that never varies they are permanently opposed.** With `x_j == 0` in every sample, the old rule
+drives `cl[0][j]` toward inclusion, so the clause requires `x_j = 1` and can never fire.
+
+Instrumented, on a 16-bit input with 15 constant dimensions:
+
+    nFiringPred(1) = 0     <- not ONE positive clause ever fires
+    nFiringPred(0) = 32    <- all 32 negative clauses fire on every input
+    scoreFor(0)    = -32   <- constant vote regardless of input
+    typeTwo invocations = 0
+
+The learner learned literally `always false`. Measured **301 false negatives, 0 false positives**
+out of 600 — chance accuracy on a task the label function determines completely.
+
+The task is NOT degenerate: the target is the conjunction `x_0 AND NOT x_1 ... NOT x_15`, two
+clauses, far inside a Tsetlin machine's expressive power. A correct implementation reaches 100%.
+
+### Measured, 16 data seeds each
+
+| case | BEFORE | AFTER |
+|---|---|---|
+| 1-bit | 100.0% | 100.0% |
+| **16-bit constant** | **62.5%** (11/16 seeds at exactly 50.0%) | **100.0%** (16/16) |
+| 16-bit random noise | 98.9% | **100.0%** |
+
+Robustness: 20-bit constant 50% -> 100%; 256 clauses 50% -> 100%; s=2.0 62.5% -> 100%;
+8/12-bit constant -> 100%; parity-3 (6 informative of 16) 75.3% -> 100%.
+
+**The failure was bimodal**, not uniform: each run either collapsed to exactly 50% or accidentally
+escaped to 100%. That is why earlier notes said "46-53%" — the true failure rate is per-seed, and
+it is 100% reproducible at 16-20 bits.
+
+Mutation-verified: reverting `typeOne` to key on `includes()` fails
+`TsetlinFiringConsistencyTest`.
+
+### Why it survived for so long
+
+Every Tsetlin fixture written before W37.3 gave unused bits RANDOM values — the one condition
+under which the old rule happens to bootstrap. The constant case is what a real caller hits
+whenever a feature vector has an inactive dimension, which is the normal case for a 20-bit
+automaton fed a 1024-bit HDC vector.
+
+### Two of my claims were wrong, verified and corrected
+
+1. I wrote that the `pack()` fold "is the identity for inputs already within `inputBits`, so
+   existing single-word callers are unaffected". **False.** The identity path is guarded on
+   `inputBits >= Long.SIZE`, never true for a 20-bit-capped trainer. A caller passing one `long`
+   and then calling `predict` with that same long gets a DIFFERENT value than training saw:
+   measured 49.9% mean accuracy with such a harness, which looked like a learner failure and was
+   a harness failure. Comment corrected in place.
+
+2. I attributed the constant-dimension collapse to `fires()` and `typeOneGrowth`. Both were
+   measured and are **not** causal. `fires(updateMode)` at line 103 is a real canonical deviation
+   (canonical returns 0 for an empty clause) and is now demonstrably **load-bearing** given the
+   deterministic half-included init: making it canonical WITHOUT the `typeOne` fix regresses the
+   noise case from 98.9% to 64.8%. It should be commented as load-bearing so nobody "fixes" it in
+   isolation.
+
+## W37.3d — OPEN: RuleInductionEngine's fidelity never measured Tsetlin
+
+`RuleInductionEngine.induce()` trains the trainer, then scores it with:
+
+    private boolean predict(Object predictor, long[] input) {
+        // Stub predictor: predict true iff first set bit of input is in an odd position.
+        for (int i = 0; i < input.length * 64; i++) { ... return (i & 1) == 1; }
+        return false;
+    }
+
+**The `predictor` argument is ignored entirely.** The reported `tsetlinFidelity` is the stub's
+accuracy on the raw input bits, not the trainer's. The same stub is used for `MpdtGaProducer`, so
+the "pick the better engine" comparison compares one stub to itself.
+
+This is a more serious defect than the one just fixed, because it means **no measurement ever
+existed** for whether rule induction works. Every fidelity number in this file describes a
+placeholder. The `typeOne` fix cannot be validated through this path until the predictor actually
+routes to the trained model.
+
+## W37.3e — W37.3d FIXED: fidelity never measured the model
+
+`RuleInductionEngine.predict(Object, long[])` ignored its `predictor` argument and returned
+"first set bit of the raw input is in an odd position". Both callers passed a trained engine, so
+every `tsetlinFidelity` and `mpdtFidelity` measured that placeholder, and the "pick the better
+engine" comparison compared one stub against itself.
+
+Now routed to the real engines (`TsetlinTrainer.predict(pack(...))`,
+`MpdtGaProducer.predict(packed)`), with an explicit error on an unknown predictor type rather
+than a silent fallback.
+
+**First real measurement of rule induction ever taken:**
+
+    parity-4 of 16 bits (12 constant dims)   tsetlin=1.000  mpdt=0.500
+    parity-2 of 16 bits (14 constant dims)   tsetlin=1.000  mpdt=0.500
+    parity-1 of 16 bits (15 constant dims)   tsetlin=1.000  mpdt=0.500
+    parity-8 of 16 bits (8 constant dims)    tsetlin=0.250  mpdt=0.250
+    parity-4, data seed 11                   tsetlin=0.000  mpdt=0.000
+
+The parity-≥3 failures are a **separate, still-open limitation** and are NOT fixed by the
+typeOne fix. Measured directly against the trainer at n=600 (no Article II cap):
+
+| task | accuracy |
+|---|---|
+| parity-1, parity-2 | 100% |
+| parity-3 | 37% |
+| parity-4 | 48% |
+| parity-8 | 49% |
+
+Eliminated as the cause, all measured: clause count (64 -> 2048 makes no difference, parity-4
+stays ~48%); `feedbackT` (16/32/64/128, parity-4 stays ~48%); epochs; init strategy. Note the
+Article II `K_MAX=20` cap means `induce()` sees at most 20 samples, so its 80/20 split leaves
+**4 test samples** — the 1.000 figures above are real but rest on 4 points, and seed 11 giving
+0.000 shows how fragile that is. Any claim about rule-induction accuracy must state N.
+
+## W37.3f — OPEN: parity-3 and wider do not learn
+
+An open, bounded defect rather than a mystery. The learner handles conjunction (which is what
+the constant-dimension case reduces to) perfectly, but parity-3-of-16 stays at chance with 2048
+clauses and any `feedbackT`. Since 2^n-1 clauses are needed to represent parity-n exactly, and
+2048 clauses is far above that for n=3, the limitation is not raw capacity. Candidates not yet
+tested: the `p` gating using a per-example vote rather than the canonical dataset-level vote;
+the `typeOneGrowth` path applied to non-firing own-target clauses (canonical TM gives them no
+feedback at all); `TsetlinAutomaton`'s 2n-states-with-threshold-n instead of canonical
+2n+1-with-threshold-0.
+
+This blocks any claim that rule induction generalises beyond conjunctions, and it must be stated
+in the next release caveats rather than discovered later.
