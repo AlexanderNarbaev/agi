@@ -5066,3 +5066,85 @@ DESIGN-58 is already taken and DESIGN-67 is the highest existing, hence 68.
 
 LSP again reported duplicate methods and unresolved symbols in files javac compiles cleanly.
 Ground truth (grep + javac) confirms no duplicates. Third time this campaign.
+
+
+---
+
+## 2026-10-12 13:22 — RECON-W37.1: the graph core, and the learner underneath it
+
+### The brief's §0 did not survive checking
+
+§0 calls `TsetlinTrainer` a "proven production learning engine, 100% accuracy, pinned at 46% due to
+hyperparameter mismatch — see W37.3 fix". None of that was right, and fixing it turned out to be
+the most valuable work of the wave.
+
+**Three separate defects, in the order they surfaced:**
+
+1. `pack()` was `return words[0]`. Production encodes `dim=1024` into 16 packed longs, so `fires()`
+   examined 16 bits of a 1024-bit vector. The pinned 46% was a fixture artifact of the same bug:
+   `long[16]` rows with `x[j]=rng.nextInt(2)` collapse to 2 distinct inputs. FIXED (XOR fold).
+
+2. `fires()` returned `updateMode ? true : anyIncluded`, so a literal-free clause fired during
+   UPDATE but not PREDICT. Tried the canonical fix; it traded one degenerate regime for another.
+   REVERTED — and now commented as load-bearing.
+
+3. **`typeOne` rewarded inclusion-state instead of literal truth.** This was the real one.
+   Canonical Granmo Type Ia rewards a literal for being TRUE IN x; the code rewarded an automaton
+   for already being right. The two coincide only while the automaton agrees with the input, and on
+   a dimension that never varies they are permanently opposed — the clause is driven to require the
+   opposite of what every sample contains.
+
+       BEFORE      1-bit 100%   16-bit constant 62.5% (11/16 seeds at exactly 50%)   noise 98.9%
+       AFTER       1-bit 100%   16-bit constant 100%  (16/16)                          noise 100%
+
+   Instrumented: `nFiringPred(1) = 0` (not one positive clause ever fires), `typeTwo` invoked
+   zero times, 301 false negatives and 0 false positives. The learner had learned `always false`.
+
+   Mutation-verified.
+
+**Why it hid:** every Tsetlin fixture written before W37 gave unused bits RANDOM values — the one
+condition under which the old rule happens to bootstrap. The constant case is what a real caller
+hits whenever a feature vector has an inactive dimension.
+
+### A second defect found while verifying the fix
+
+`RuleInductionEngine.predict(Object, long[])` ignored its predictor argument and returned "first set
+bit of the raw input is in an odd position". Every `tsetlinFidelity` and `mpdtFidelity` in that
+file measured that placeholder, and the "pick the better engine" comparison compared one stub to
+itself. Now routed to the real engines. First real measurement of rule induction that exists:
+parity-4 tsetlin=1.000 mpdt=0.500 (on 4 test samples — Article II K_MAX=20 caps induce() at 20
+inputs, so the 80/20 split leaves 4. Any claim here must state N.)
+
+### Two of my own claims were wrong, corrected in place
+
+- "pack() is the identity for inputs already within inputBits" — FALSE. Guarded on
+  `inputBits >= Long.SIZE`, never true for a 20-bit-capped trainer. A harness that predicted with a
+  raw long got 49.9% and looked like a learner failure.
+- I blamed `fires()` and `typeOneGrowth`. Both measured NOT causal, and both are now commented as
+  load-bearing after I confirmed that "canonicalising" them regresses the working cases.
+
+### Still open, bounded, not guessed at
+
+Parity-k with k >= 3 sits at chance (37-54%) even with 2048 clauses, any feedbackT, and either
+threshold convention. Four hypotheses eliminated by measurement. The learner is
+**conjunction-capable only** until proven otherwise.
+
+### W37.1 delivered
+
+`matrix-brain-runtime/.../graph/`: NodeId, Activation, CognitiveNode, Synapse, PlasticityRule,
+SeededRandom, Connectome, HdcNode. 36 tests, 10 mutants, 10 killed.
+
+HdcNode wraps HdcRetrievalStage, not Tsetlin — DESIGN-68 §2.2 marks Tsetlin DEFERRED for the
+connectome because the fix is verified only for conjunctions.
+
+**Three mutants survived the first mutation round, and every survival was a weak test, not a
+strong code path:**
+- `markPruned` veto refusal had no test at all.
+- The tie-break mutant survived twice because propagate() returns signal VALUES and every tied
+  edge contributes 0.5 — so two runs following *different* edges return identical activations.
+  Added `Connectome.lastReached()` so the test compares which nodes were reached. Comparing the
+  same graph twice cannot catch it: LinkedHashMap iteration is stable within one instance.
+- `pre*post` -> `post` survived because every plasticity test used pre=1, where the two are
+  indistinguishable by construction.
+
+A gate that cannot fail is not a gate. All three were found by mutation, not by reading.
