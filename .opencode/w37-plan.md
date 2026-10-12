@@ -1,7 +1,10 @@
 # MISSION: RECON-W37 — The Living Connectome
 
 **Status:** in progress · started 2026-10-12
-**Baseline:** `2e61334e` · 9258 tests / 0 failures / 11 modules · gate 0 · FROZEN 0-diff
+**Baseline:** `045445b9` · 9314 tests / 0 failures / 11 modules · gate 0 · FROZEN 0-diff
+
+**Attention default DECIDED:** 0.0 (behaviour-preserving). At mid attention the floor rises to
+0.275 and serving refuses more — an operator decision, not one to take while wiring a class in.
 **Design of record:** `docs-v2/designs/DESIGN-68-living-connectome.md`
 **Debt of record:** `docs-v2/quality/KnownFailures.md`
 
@@ -93,10 +96,12 @@ Conjunctions are 100% at every `s` from 4 to 32, so raising it is safe.
 - [ ] The bound is FITTED TO MEASUREMENT, not derived. It coincides with a canonical bound for k-bit
       parity with 2^k clauses; the two were not proven equivalent.
 
-### W37.5 — Release v18.0.0-mind ⬜ NOT STARTED
-- [ ] Full 11-module suite
-- [ ] Release report distinguishing **wired** from **core-and-tested-only**
-- [ ] Must state: parity open, N<=20 on rule induction, no graph in TrueMindCycle
+### W37.5 — Release v18.0.0-mind ⬜ IN PROGRESS
+- [x] Release report `docs-v2/releases/MATRIX-MIND-REPORT-V18.md`, wired vs tested-only split
+- [ ] Per-module sequential verification (the single-invocation form fails as a phantom)
+- [ ] Tag `v18.0.0-mind`, push both remotes
+- [ ] Must state: no graph in TrueMindCycle, no neuromodulator in production, sleep phases
+      unscheduled, parity k>=7 unproven, recommendS fitted, ClauseExplorer not MCMC, no reviewer gate
 
 ---
 
