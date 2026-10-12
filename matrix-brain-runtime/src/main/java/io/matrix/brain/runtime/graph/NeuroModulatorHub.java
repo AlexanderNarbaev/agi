@@ -64,6 +64,22 @@ public final class NeuroModulatorHub {
      */
     public static final double MAX_REWARD_FATIGUE_CANCEL = 0.5;
 
+    /**
+     * Attention that leaves retrieval exactly at the measured production floor.
+     *
+     * <p>This is the value {@link TrueMindCycle} must use until someone deliberately chooses
+     * otherwise. At mid attention the floor rises to 0.275, which changes serving behaviour — more
+     * refusals — and that is a user-visible change that belongs to a decision, not to the act of
+     * wiring the class in.</p>
+     */
+    public static final double NEUTRAL_ATTENTION = 0.0;
+
+    /** A hub that reproduces current production behaviour exactly. */
+    public static NeuroModulatorHub productionDefault() {
+        return new NeuroModulatorHub(NEUTRAL_ATTENTION, 0.5, 0.0, 0.0,
+                DEFAULT_SLEEP_DEMAND_THRESHOLD);
+    }
+
     /** A hub at rest: mid attention, mid uncertainty, no reward, no fatigue. */
     public NeuroModulatorHub() {
         this(0.5, 0.5, 0.0, 0.0, DEFAULT_SLEEP_DEMAND_THRESHOLD);

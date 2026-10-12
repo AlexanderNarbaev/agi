@@ -217,10 +217,30 @@ public final class HdcRetrievalStage {
         }
     }
 
-    public HdcResult retrieve(String input, SignalStage.SignalObservation obs, List<BrcStep> trace) {
-        if (store != null) return retrievePersistent(input, obs, trace);
-        return retrieveInMemory(input, obs, trace);
-    }
+public HdcResult retrieve(String input, SignalStage.SignalObservation obs, List<BrcStep> trace) {
+          if (store != null) return retrievePersistent(input, obs, trace);
+          return retrieveInMemory(input, obs, trace);
+      }
+
+      /**
+       * Retrieval with an explicit floor, so a neuromodulator can bias it.
+       *
+       * <p>W37.2 — the floor was a compile-time constant, which made "attention affects
+       * retrieval" unprovable in production however the hub was tuned. Callers pass
+       * {@code NeuroModulatorHub.retrievalFloor()}; the existing overloads keep the measured
+       * production value so nothing changes until a caller opts in.</p>
+       *
+       * <p>The requested floor can only RAISE relative to {@code ContentSimilarity.RETRIEVAL_FLOOR}:
+       * the clamp lives here, not only in the hub, so no caller can loosen the threshold the
+       * published ROC was measured at — including one that constructs its own hub or passes a
+       * raw double.</p>
+       */
+      public HdcResult retrieve(String input, SignalStage.SignalObservation obs, List<BrcStep> trace,
+                                double requestedFloor) {
+          double floor = Math.max(ContentSimilarity.RETRIEVAL_FLOOR, requestedFloor);
+          if (store != null) return retrievePersistent(input, obs, trace, floor);
+          return retrieveInMemory(input, obs, trace, floor);
+      }
 
     /**
      * RECON-W31.4 — retrieve using BOTH the transliterated and the original form.
@@ -244,19 +264,34 @@ public final class HdcRetrievalStage {
      * @param trace          receives the scoring step
      * @return the better of the two retrievals
      */
-    public HdcResult retrieve(String input, String originalInput,
-                              SignalStage.SignalObservation obs, List<BrcStep> trace) {
-        HdcResult primary = retrieve(input, obs, trace);
-        if (originalInput == null || originalInput.equals(input)) return primary;
-        HdcResult secondary = retrieve(originalInput, obs, trace);
-        // Keep the stronger match. Ties go to the retrieval form, so a Latin question
-        // behaves exactly as it did before this change.
-        return (secondary.matched() && !primary.matched())
-            || (secondary.matched() && secondary.confidence() > primary.confidence())
-            ? secondary : primary;
+public HdcResult retrieve(String input, String originalInput,
+                                SignalStage.SignalObservation obs, List<BrcStep> trace) {
+          return retrieve(input, originalInput, obs, trace, ContentSimilarity.RETRIEVAL_FLOOR);
+      }
+
+      /** As {@link #retrieve(String, String, SignalStage.SignalObservation, List)}, with an
+       *  explicit floor. Clamped exactly as the single-form overload is. */
+      public HdcResult retrieve(String input, String originalInput,
+                                SignalStage.SignalObservation obs, List<BrcStep> trace,
+                                double requestedFloor) {
+          double floor = Math.max(ContentSimilarity.RETRIEVAL_FLOOR, requestedFloor);
+          HdcResult primary = retrieve(input, obs, trace, floor);
+          if (originalInput == null || originalInput.equals(input)) return primary;
+          HdcResult secondary = retrieve(originalInput, obs, trace, floor);
+          // Keep the stronger match. Ties go to the retrieval form, so a Latin question
+          // behaves exactly as it did before this change.
+          return (secondary.matched() && !primary.matched())
+              || (secondary.matched() && secondary.confidence() > primary.confidence())
+              ? secondary : primary;
+      }
+
+    private HdcResult retrievePersistent(String input, SignalStage.SignalObservation obs,
+                                        List<BrcStep> trace) {
+        return retrievePersistent(input, obs, trace, ContentSimilarity.RETRIEVAL_FLOOR);
     }
 
-    private HdcResult retrievePersistent(String input, SignalStage.SignalObservation obs, List<BrcStep> trace) {
+    private HdcResult retrievePersistent(String input, SignalStage.SignalObservation obs,
+                                        List<BrcStep> trace, double retrievalFloor) {
         if (store.size() == 0) {
             trace.add(BrcStep.of("HDC_MEMORY", false, 0.50,
                 List.of("reason=empty-store", "mode=persistent")));
@@ -314,11 +349,11 @@ public final class HdcRetrievalStage {
             bestContent = bestAnsweredContent;
             bestScore = bestAnsweredScore;
         }
-        if (bestScore < ContentSimilarity.RETRIEVAL_FLOOR || bestId == null) {
+        if (bestScore < retrievalFloor || bestId == null) {
             // EPI-3 structured ignorance: report WHAT was seen and what was required,
             // so "I don't know" carries an evidence trail instead of being a bare miss.
             String ignoranceTrace = "mode=persistent best_similarity=" + bestScore
-                + " floor=" + ContentSimilarity.RETRIEVAL_FLOOR
+                + " floor=" + retrievalFloor
                 + " nearest_fact_id=" + (bestId == null ? "none" : bestId)
                 + " top=" + topIds;
             trace.add(BrcStep.of("HDC_MEMORY", false, bestScore,
@@ -339,7 +374,7 @@ public final class HdcRetrievalStage {
         return HdcResult.hit(hReply,
             ContentSimilarity.confidenceFor(bestScore),
             "mode=persistent best=" + bestId + " score=" + bestScore
-                + " floor=" + ContentSimilarity.RETRIEVAL_FLOOR);
+                + " floor=" + retrievalFloor);
     }
 
     // -----------------------------------------------------------------
@@ -376,7 +411,13 @@ public final class HdcRetrievalStage {
         inMemoryContents.put(id, content);
     }
 
-    private HdcResult retrieveInMemory(String input, SignalStage.SignalObservation obs, List<BrcStep> trace) {
+    private HdcResult retrieveInMemory(String input, SignalStage.SignalObservation obs,
+                                      List<BrcStep> trace) {
+        return retrieveInMemory(input, obs, trace, ContentSimilarity.RETRIEVAL_FLOOR);
+    }
+
+    private HdcResult retrieveInMemory(String input, SignalStage.SignalObservation obs,
+                                      List<BrcStep> trace, double retrievalFloor) {
         if (inMemoryVectors.isEmpty()) {
             trace.add(BrcStep.of("HDC_MEMORY", false, 0.50,
                 List.of("reason=empty-store", "mode=in-memory")));
@@ -404,7 +445,7 @@ public final class HdcRetrievalStage {
         java.util.List<String> topIds = top.asList();
         if (bestScore < ContentSimilarity.RETRIEVAL_FLOOR || bestId == null) {
             String ignoranceTrace = "mode=in-memory best_similarity=" + bestScore
-                + " floor=" + ContentSimilarity.RETRIEVAL_FLOOR
+                + " floor=" + retrievalFloor
                 + " nearest_fact_id=" + (bestId == null ? "none" : bestId)
                 + " top=" + topIds;
             trace.add(BrcStep.of("HDC_MEMORY", false, bestScore,
@@ -424,6 +465,6 @@ public final class HdcRetrievalStage {
         return HdcResult.hit(hReply,
             ContentSimilarity.confidenceFor(bestScore),
             "mode=in-memory best=" + bestId + " score=" + bestScore
-                + " floor=" + ContentSimilarity.RETRIEVAL_FLOOR);
+                + " floor=" + retrievalFloor);
     }
 }
