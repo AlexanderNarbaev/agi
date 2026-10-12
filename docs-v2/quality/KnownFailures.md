@@ -2056,3 +2056,53 @@ eleven modules.** A single 11-module line has produced this phantom more than on
 occurrence looked like a real regression. A red build that disappears when you re-run the same
 test alone is not evidence of anything, and it cost roughly an hour of chasing a defect that did
 not exist.
+
+## W37.5b — Exp324 latency assertion is machine-load-sensitive (diagnostic, not loosened)
+
+`Exp324EndToEndForwardPassTest.endToEndForwardPassLatency()` failed once during a full
+`matrix-core:test` run and passed 6/6 in isolation. It asserts the chain forward-pass median is
+under 2000 us.
+
+The recorded distribution from the failing run is the whole story:
+
+    [Exp324] forward-pass latency p50=19240 us p95=29067 us p99=35119 us avg=20232 us
+    [Exp324] per-stage avg: BPE_encode=20757 us, chain_forward(24 blocks)=1444 us, LM_head_score=4.5 us
+    [Exp324] chain_forward distribution: median=1411 us p95=1792 us max=1997 us mean=1444 us
+
+**The asserted quantity passed.** chain_forward median was 1411 us against a 2000 us bound, with max
+1997 us. What failed the surrounding test was `BPE_encode` averaging 20,757 us — fourteen times the
+entire chain budget — because the JVM was sharing a loaded machine with the other ~8000 tests in the
+suite.
+
+**The bound was NOT loosened.** 2000 us is a real property of the chain and the chain still meets
+it. Raising the threshold to accommodate a loaded runner would erase the measurement's only value.
+The correct fix is to run the timing test on a quiet machine, which is a CI scheduling concern, not
+a code change.
+
+Second occurrence of this class after W36's `DiskBudgetTest`, which asserted the host filesystem
+was healthy. **A latency assertion is a statement about the machine unless the machine is
+controlled**, and this one measures a stage (BPE) that is 14x over budget while asserting on a
+different one.
+
+
+## W37.5c — zsh history expansion silently rewrote every multi-module test command
+
+`./gradlew :$m:cleanTest :$m:test` inside a shell function reported **BUILD FAILED for all ten
+modules**, while the identical command typed directly reported BUILD SUCCESSFUL with a full green
+result set.
+
+Cause: **zsh history expansion**. `:c` and `:t` are history modifiers, so the shell rewrote
+`:matrix-quality:cleanTest` to `:matrix-qualityleanTest` — a task that does not exist, which fails
+fast in 3-4 seconds. Braces fix it:
+
+    ./gradlew ":${m}:cleanTest" ":${m}:test"
+
+The tell was that every module failed identically and *quickly*, while direct invocation passed.
+Ten modules do not fail simultaneously for one reason.
+
+This cost roughly ten minutes of believing there were ten broken modules. Recorded because the
+failure is indistinguishable from a real one at a glance, and because this session has now produced
+three separate phantom failures — a killed Gradle run leaving stale results, the single-invocation
+form of the same command, and this — all of which looked like regressions and none of which were.
+
+**When ten modules fail at once, suspect the harness before the code.**

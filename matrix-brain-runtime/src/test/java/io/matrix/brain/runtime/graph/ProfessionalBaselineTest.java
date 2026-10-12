@@ -141,6 +141,28 @@ class ProfessionalBaselineTest {
     }
 
     /**
+     * W37.2 — TrueMindCycle is wired to the neuromodulator at NEUTRAL, and must stay
+     * behaviour-preserving while it is.
+     *
+     * <p>This is the test that would catch the plumbing silently changing answers. The hub now
+     * supplies the retrieval floor inside {@code TrueMindCycle}; at the neutral default that floor
+     * equals {@code ContentSimilarity.RETRIEVAL_FLOOR} exactly. If anyone raises the default
+     * attention without deciding to, every retrieval question that previously cleared the floor
+     * now has to clear a higher one, and answers silently stop being served.</p>
+     */
+    @Test
+    @DisplayName("the wired neuromodulator default does not change the retrieval floor")
+    void wiredDefaultIsBehaviourPreserving() {
+        assertThat(NeuroModulatorHub.productionDefault().retrievalFloor())
+                .as("TrueMindCycle passes this value to HdcRetrievalStage; any drift from the "
+                        + "measured production floor is an unannounced behaviour change")
+                .isEqualTo(ContentSimilarity.RETRIEVAL_FLOOR);
+        assertThat(NeuroModulatorHub.NEUTRAL_ATTENTION)
+                .as("the neutral state must be the one that reproduces production")
+                .isEqualTo(0.0);
+    }
+
+    /**
      * The Russian half of the distilled corpus was unreachable behind a W31.4 regression and
      * nearly lost again. Retrieval must work in both languages the acquisition covered.
      */
