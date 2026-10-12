@@ -42,16 +42,32 @@
 - [x] Attention → retrieval floor, **measured**: precision 0.92 → 1.00, recall 1.00 → 0.83
 - [x] Floor floored at the production value — a modulator can only refuse more, never serve more
 - [x] 12 tests, 6 mutants, 6 killed
-- [ ] NOT wired into `TrueMindCycle` — the hub exists and is proven, nothing calls it in production
+- [x] **WIRED THROUGH THE SERVING PATH (`8a994f96`)**: `HdcRetrievalStage.retrieve()` takes an
+      optional floor; both retrieval bodies and the ignorance trace honour it. The clamp is
+      duplicated in the stage so no caller can route around it. `productionDefault()` uses
+      attention 0.0 so behaviour is unchanged. Verified: 837 brain-runtime tests / 0 failures.
+- [ ] Still NOT called from `TrueMindCycle` — the floor reaches retrieval, but nothing constructs
+      a non-default hub in production. Attention is therefore plumbing, not live behaviour.
 
 ### W37.3 — Sleep 2.0: Consolidation & Pruning ✅ 2 OF 3 PHASES (`b5c5f441`, `12536ae0`)
-- [ ] Replay phase: select high-uncertainty episodes, Hebbian update — NOT IMPLEMENTED
+- [x] Replay phase (`ReplayPhase`, `2bdc988f`): priority = distance from confident-and-accepted;
+      accepted-but-unsure > rejected > confident-correct. Reduced attention 0.5. 14 tests,
+      5 mutants, 5 killed
 - [x] Pruning phase (`SleepConsolidator`): batch apply, accept only if held-out accuracy holds,
       veto-exempt, reversible via `Connectome.restore()`. Measured: 3 synapses → 1, accuracy 1.0 held
 - [x] Exploration phase (`ClauseExplorer`): repairs a real under-trained model 75% → 100% in
       2 proposals. **Local search over the truth table, NOT Gibbs sampling** — javadoc says so
 - [x] **PASS criterion met and measured:** network shrinks, accuracy does not drop
 - [x] Annealing `step` parameter accepted but deliberately UNUSED, documented rather than faked
+
+### W37.3c — the honest remaining gap
+- [ ] `TrueMindCycle` still constructs no `NeuroModulatorHub`, so attention/reward/fatigue never
+      reach production. The mechanisms are built and proven; they are not switched on.
+- [ ] `ClauseExplorer` is local search over a truth table, not Gibbs sampling over clause automata.
+      Documented as such; a real sampler would need a stationary distribution and mixing guarantees.
+- [ ] `SleepConsolidator`'s annealing `step` is accepted and unused; a real anneal needs a cooling
+      schedule and a restart budget.
+- [ ] `TsetlinTrainer.recommendS` is FITTED to measurement, not derived.
 
 ### W37.4 — Bootstrap: The Child Brain ⬜ NOT STARTED
 - [ ] Mass-import Wikidata/ONNX facts into graph structure
