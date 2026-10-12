@@ -1811,3 +1811,28 @@ inactive dimension — which is the normal case for a 20-bit automaton fed a 102
 where only a few dimensions carry signal.
 
 `TsetlinFiringConsistencyTest` now characterises this and will fail when the trainer is fixed.
+
+**A fourth hypothesis tried and reverted: variance-aware initialisation.** Implemented
+`declareActiveBits` + `trainBatchAuto` so clauses keyed on a constant dimension would skip it
+instead of being permanently unfireable. Measured: **46% before, 46% after.** It changed nothing.
+
+Worse, the first version was a **silent no-op**: `declareActiveBits` stored the mask but
+`trainBatch` never applied it. The evidence that it did nothing was that a mutation ignoring
+`activeBits` entirely left the whole suite green. Shipping an API that cannot affect any
+observable output is worse than not shipping it, so all 141 lines were reverted. Recorded because
+"we tried variance-aware init" is the obvious next thing to try, and it does not work.
+
+Also eliminated during this investigation, for the record:
+
+| Candidate | Outcome |
+|---|---|
+| Majority-vote centroids (vs OR-of-members) | oracle 0% -> 100%, but only after fixing the probe fixture; told us nothing about the trainer |
+| Per-bit mean of an OR | still saturates (density 0.9697); mean of a saturated value is saturated |
+| `InitStrategy.RANDOM` vs `COMPLEMENTARY` | identical |
+| Epochs 1 / 5 / 10 / 25 / 50 / 100 / 200 / 1000 | 46% throughout on constant inputs |
+| Data-seed sensitivity (12 seeds) | stable 97-100% when unused bits vary, so noise is genuinely causal, not seed luck |
+
+**Three separate defects, in the order they were found.** (1) `pack()` dropping 15 of 16 words —
+FIXED. (2) the update/predict firing mismatch — real, fixable in the textbook way, but the fix
+trades one degenerate regime for another — NOT fixed. (3) constant input dimensions making a
+learnable task unreachable — root cause of the 46%, still OPEN.
