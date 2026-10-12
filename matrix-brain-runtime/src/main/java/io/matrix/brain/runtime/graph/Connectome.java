@@ -200,6 +200,28 @@ public final class Connectome {
         return before - synapses.size();
     }
 
+    /**
+     * Reconnects a previously pruned synapse, as a rejected consolidation pass needs.
+     *
+     * <p>Matches on endpoints rather than on the whole record, so two synapses sharing endpoints
+     * and weight cannot cause the wrong edge to be restored.</p>
+     *
+     * @param target the synapse to reconnect
+     * @return true if an edge in PRUNED state was restored
+     */
+    public boolean restore(Synapse target) {
+        for (int i = 0; i < synapses.size(); i++) {
+            Synapse s = synapses.get(i);
+            if (s.state() == Synapse.SynapseState.PRUNED
+                    && s.from().equals(target.from())
+                    && s.to().equals(target.to())) {
+                synapses.set(i, s.reconnected());
+                return true;
+            }
+        }
+        return false;
+    }
+
     /** Marks a synapse pruned. Returns false if the edge does not exist or is protected. */
     public boolean markPruned(Synapse target) {
         if (vetoNodes.contains(target.to()) || vetoNodes.contains(target.from())) {
