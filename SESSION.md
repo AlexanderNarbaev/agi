@@ -5148,3 +5148,80 @@ strong code path:**
   indistinguishable by construction.
 
 A gate that cannot fail is not a gate. All three were found by mutation, not by reading.
+
+
+---
+
+## 2026-10-12 18:27 — RECON-W37.2/.3/.4: neuromodulation, sleep 2.0, and the child brain
+
+    9314 tests / 0 failures across 11 buildable modules (per-module, in sequence)
+    graph suite: 93 tests · ~45 mutants introduced · 45 killed
+
+### W37.2 — neuromodulation, measured rather than asserted
+
+The brief demands "prove Attention_Level affects retrieval precision/recall". Measured against the
+real ContentSimilarity scorer with a corpus of hard negatives:
+
+    floor=0.20 (attention 0.0): served=13 correct=12 precision=0.92 recall=1.00
+    floor=0.35 (attention 1.0): served=10 correct=10 precision=1.00 recall=0.83
+
+Attention buys precision by refusing more. The recall cost is asserted alongside so it cannot be
+quietly dropped.
+
+The first corpus had every negative scoring 0.0000 except one at 0.1667 — all below the floor — so
+precision was 1.00 everywhere and the claim was untestable. The claim was not false; the fixture
+contained no hard cases.
+
+Wired through the SERVING PATH (`8a994f96`). HdcRetrievalStage carried its own warning from W31 —
+"a fix must be verified THROUGH the serving path, because in-process tests of the wrong class are
+green and meaningless" — and it applied here too. The clamp is duplicated in the stage as well as
+the hub, because a safety bound enforced in one class is a bound the next caller routes around.
+Neutral state is attention 0.0, so behaviour is unchanged: 837 tests / 0.
+
+A §4.3 invariant turned out not to be enforced: capping reward's fatigue cancellation at half still
+let it fall BELOW the sleep threshold at max fatigue, so a permanently reward-rich environment could
+suppress consolidation forever. A cap expressed as a fraction is only a floor when that fraction
+cannot cross the threshold. Now a floor on residual demand.
+
+### W37.3 — Sleep 2.0, all three phases
+
+- Replay (`ReplayPhase`): priority = distance from confident-and-accepted. Accepted-but-unsure >
+  rejected > confident-correct. Replaying successes consolidates nothing.
+- Pruning (`SleepConsolidator`): batch apply, accept only if held-out accuracy holds. 3 synapses -> 1,
+  accuracy 1.0 held. Veto-exempt, reversible.
+- Exploration (`ClauseExplorer`): repairs a real under-trained Tsetlin 75% -> 100% in 2 proposals.
+  **Local search over a truth table, not Gibbs sampling** — the javadoc says so, because a real MCMC
+  sampler needs a stationary distribution and mixing guarantees that are not established here.
+
+### W37.4 — the Professional Baseline, and a harness that measured itself
+
+    distilled dataset        1893 facts, 10 domains, en + ru, 0 acquisition failures
+    live store               2016 entries
+    terse store form         4/4 cleared the floor
+    natural question         4/4 cleared
+    self-query top score     p0 = p50 = p100 = 1.000
+
+The first version of this measurement reported **1/8** and read as a severe usability defect. It was
+the harness: it parsed the store with a separator the file does not use and fed truncated JSON
+punctuation to the scorer. The system was at 4/4 throughout.
+
+Then the TEST silently skipped — Gradle runs with the module directory as CWD, the relative path did
+not resolve, and `assumeTrue` turned a broken reader into a green test that measured nothing. The
+file written to prevent silently-unmeasured claims was itself silently unmeasured. It now asserts.
+
+### The pattern across four waves
+
+Every surviving mutant found a test that could not fail, not code that was wrong:
+
+- markPruned's veto refusal had no test at all
+- the tie-break test compared signal VALUES, which are identical for tied edges, so it could not see
+  which edges were followed
+- `Result.modulator()` returned a fresh object, so asserting on it proved nothing about what ran
+- `totalPlasticity` summed activation deltas that are zero for a pass-through node, by construction
+- the baseline test skipped instead of failing
+
+And two real defects were found only because a test asserted the INTENDED behaviour and the code
+did not deliver it: reward suppressing sleep, and the seed leaking into a signal value.
+
+A gate that silently skips everything looks exactly like a clean one. That equivalence is the most
+expensive failure mode in this codebase, and it keeps costing.
