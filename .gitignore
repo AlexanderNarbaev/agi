@@ -70,7 +70,14 @@ models/pretrained/qwen2.5-1.5b/
 models/pretrained/qwen3-0.6b/
 models/pretrained/qwen3-1.7b/
 models/pretrained/smollm2-360m/
-data/
+# RECON-W38.0 — data/ is ignored wholesale, but ProfessionalBaselineTest asserts the
+# live store EXISTS and fails rather than skipping. An ignored fixture is a test that
+# passes only on the machine that already has it. The baseline store is 285 KB and is
+# the specification of what the system knows at startup, so it is tracked.
+data/*
+!data/mind/
+data/mind/*
+!data/mind/hdc_kb.ndjson
 models/training_data/auto_generated.jsonl
 models/trained/
 matrix-core/models/HuggingFaceTB_SmolLM2-360M-Instruct/
