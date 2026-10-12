@@ -12,8 +12,15 @@ This is the **migration plan** from a linear stage pipeline to a weighted graph,
 the code as it exists at `3aa5fdc5`. Every claim below is either quoted from source or measured;
 per CONSTITUTION Article VI, intent is not a claim.
 
-It is **not** a claim that the graph exists. Nothing in §2 has been implemented yet. The honest
-current state of the system is the linear pipeline described in §1.
+It is **not** a claim that the graph is wired in. As of `1210e1ee` the graph CORE exists and is
+tested (`matrix-brain-runtime/.../graph/`: NodeId, Activation, CognitiveNode, Synapse,
+PlasticityRule, SeededRandom, Connectome, HdcNode — 41 tests, 11 mutants killed), but
+`TrueMindCycle` still runs the linear ladder from §1 unchanged. The 2-node integration the brief
+asks for is proven in `ConnectomeIntegrationTest` against the real serving path; it is not yet a
+replacement for a live stage.
+
+Per §5, the sequence is unchanged: replay must be bit-exact on the current pipeline before
+topology becomes mutable.
 
 ---
 
@@ -50,16 +57,30 @@ not discard it. A graph whose topology drifts from the first turn is a different
 seed-based reproducibility argument in §1.2 of the prompt only holds if the topology is itself a
 function of `(seed, step)`.
 
-### 1.3 Measured capability floor (this is the number that should govern the migration)
+### 1.3 Measured capability floor
 
-    Tsetlin learning, honestly-encoded 16-bit features   98%   (production arg = 10 epochs)
-    Tsetlin learning, production 1024-bit HDC features    47-55%  (chance)
-    Tsetlin learning, words[] fixture as previously pinned 46%  (fixture bug, now fixed)
+    Tsetlin, 16-bit features, all dimensions varying        100%
+    Tsetlin, 16-bit features, 15 dimensions constant zero   100%   (was 62.5%, mean of 16 seeds)
+    Tsetlin, 1-bit                                          100%
+    Tsetlin, parity-3 of 16, 14 constant dims                37%   chance — OPEN
+    Tsetlin, parity-4 of 16, 12 constant dims                48%   chance — OPEN
+    Tsetlin, production 1024-bit HDC features              unverified
 
-The middle row is the one that matters. It means the graph's **association node** currently has
-no learning signal at production feature width. Building Hebbian plasticity around a node that
-cannot learn would produce a graph that looks adaptive and is not.
+**Updated 2026-10-12.** The constant-dimension collapse previously reported here as 47-55% is
+**FIXED**. The cause was `typeOne` rewarding a literal's automaton inclusion-state rather than its
+truth value in the input; on a dimension that never varies the two have opposite attractors, so the
+clause was driven to require the opposite of what every sample contained. With that corrected,
+conjunctions — including every constant-dimension case — score 100% on 16/16 seeds.
 
+`pack()` was also fixed. It returned `words[0]`, discarding 15 of 16 words, so `fires()` examined
+16 bits of a 1024-bit production HDC vector while reporting a legitimate-looking fidelity number.
+
+**The binding limitation has moved.** Parity-k with k >= 3 is at chance and was NOT fixed — see
+KnownFailures.md "W37.3f", where four hypotheses are eliminated by measurement. The learner is
+**conjunction-capable only** until proven otherwise. That still blocks wiring Tsetlin as the
+connectome's plastic association node: a plasticity rule applied to a learner that cannot
+represent the target reinforces whatever the learner happened to fit, and pruning then removes
+correct edges because they look unused.
 ---
 
 ## 2. Proposed topology
@@ -187,10 +208,19 @@ Ordered by dependency, not by ambition:
 
 ## 6. Explicitly not claimed
 
-- No graph code exists at `3aa5fdc5`. This document is a plan.
+- The graph CORE exists and is tested (`1210e1ee`), but no graph is wired into `TrueMindCycle`.
+  The nine-stage precedence ladder is unchanged and remains the only live path. The 2-node
+  integration is proven against the serving path in `ConnectomeIntegrationTest`; it is not yet a
+  live stage replacement.
 - "Neuromodulation improves retrieval precision" is **unverified**. §2 of the prompt asks to
   "prove Attention affects retrieval precision/recall"; no such measurement has been run, and
   `HDC` similarity thresholds are currently fixed constants.
 - "Sleep consolidates and prunes" is **unverified**. `RealSleepScheduler` exists and calls
   `RuleInductionEngine.induce`; consolidation/pruning as described in §1.4 of the prompt does not.
-- Tsetlin is not a proven engine. See §1.3.
+- **Tsetlin is conjunction-capable only.** Parity-3 and wider sit at chance (37-48%) with 2048
+  clauses, any `feedbackT`, and either threshold convention; four hypotheses eliminated by
+  measurement. Constant-dimension and conjunction cases are 100%. See §1.3 and KnownFailures.md
+  "W37.3f". Until parity is fixed, Tsetlin must not be wired in as a plastic association node.
+- **Rule induction has N <= 20.** Article II `K_MAX=20` caps `RuleInductionEngine.induce()` at 20
+  inputs, so its 80/20 split leaves 4 test samples. Any fidelity figure from that path must state N;
+  measured values ranged from 0.000 to 1.000 across data seeds on the same task.
