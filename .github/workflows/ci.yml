@@ -10,6 +10,10 @@ on:
   pull_request:
     branches: [develop, main, release/**]
   workflow_dispatch:
+  schedule:
+    # RECON-W38.0, D7 RFC APPROVED: weekly scheduled run of the research/property
+    # suites only (not the full pipeline). Minimal change per operator directive.
+    - cron: "0 4 * * 1"
 
 env:
   GRADLE_OPTS: "-Xmx8g -Dorg.gradle.daemon=false"
@@ -21,6 +25,7 @@ jobs:
     name: Build & Test (Java)
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    if: github.event_name != 'schedule'  # weekly schedule runs research-suites only
     steps:
       - uses: actions/checkout@v4
 
@@ -61,6 +66,7 @@ jobs:
     name: Security Scan
     runs-on: ubuntu-latest
     needs: build-test
+    if: github.event_name != 'schedule'  # weekly schedule runs research-suites only
     steps:
       - uses: actions/checkout@v4
 
@@ -180,3 +186,33 @@ jobs:
           sleep 60
           curl -f https://api.matrix.ai/q/health || exit 1
           echo "✅ Production deployment healthy"
+
+  # RECON-W38.0, D7: weekly scheduled run of the research/property suites.
+  # These suites are currently exercised only when someone runs them locally.
+  # Self-contained job; no coupling to the deploy pipeline.
+  research-suites:
+    name: Weekly Research & Property Suites
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule'
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 25
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '25'
+          cache: gradle
+
+      - name: Run property / research suites (matrix-core)
+        run: ./gradlew :matrix-core:test --no-daemon \
+          --tests "io.matrix.**.*PropertyTest" \
+          --tests "io.matrix.**.*PropertyBasedVerifierTest" \
+          --tests "io.matrix.**.*StudyTest"
+
+      - name: Run property / research suites (matrix-brain-runtime)
+        run: ./gradlew :matrix-brain-runtime:test --no-daemon \
+          --tests "io.matrix.**.*PropertyTest" \
+          --tests "io.matrix.**.*Pbt*Test" \
+          --tests "io.matrix.**.*StudyTest"
