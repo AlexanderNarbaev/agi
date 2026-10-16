@@ -1217,7 +1217,7 @@ operator can run:
 
 ---
 
-## Exp228ComplianceTest.realProjectCompliance — awaiting an operator ruling, and the gate is narrower than the constitution
+## Exp228ComplianceTest.realProjectCompliance — RESOLVED in W36.1 via Article I classification
 
 `Exp228ComplianceTest` runs `BrainLoopCompliance.check` over `matrix-core/src/main/java` and
 asserts `compliant()`. That method computes:
