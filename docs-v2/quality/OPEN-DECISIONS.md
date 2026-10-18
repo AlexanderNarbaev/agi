@@ -9,6 +9,42 @@ being the right call now, and the honest thing is to stop deferring and ask.
 No option below has been taken. Where a recommendation is given it is marked, and the cost
 of *not* taking it is stated too.
 
+## CLOSED decisions (RECON-W38.0, 2026-10-17)
+
+Rulings by the operator; evidence pointers below. D2 and D8 were closed in earlier waves;
+the five below were ruled in this sweep.
+
+- **D1 — BitNet: CLOSED.** The W32 record (environment-blocked, never executed; 27-28
+  failures in 10 classes from one cause: the missing /tmp/hf_cache snapshot) was superseded
+  in RECON-W33.1: the checkpoint was provisioned and the BitNet suites now execute for real
+  (see KnownFailures.md, 'RECON-W33.1 — the BitNet skip record above is now HISTORICAL').
+  Option B was taken. BitNet is tested, not merely documented.
+- **D2 — six integration tests on stale branches: CLOSED** via RECON-W32.0/W38.0 recovery:
+  EpisodicLogPersistenceTest recovered and green (3/0, commit 11249775);
+  SleepAndConsolidationIntegrationTest preserved as
+  docs-v2/quality/lost-capability-tests/SleepAndConsolidationIntegrationTest.java.txt
+  (9 of 12 tests unportable — the ConsolidationCycle.run(EpisodicLog, PersistentHdcStore)
+  API those tests were written against no longer exists).
+- **D3 — gitverse/master: CLOSED (operator, 2026-10-05).** The operator deleted
+  gitverse/master directly on the remote; verified gitverse holds exactly two heads
+  (develop, main) aligned with develop; de508931 'Initial commit' matches no remote ref and
+  is reachable from no local ref. See SESSION.md, W33.1 checkpoint.
+- **D5 — disk cleanup: CLOSED.** The W32.34 ruling executed the reclaim (smoke corpora
+  removed; data/ DISK-LEDGER seq 179-181 record ~137 GB reclaimed and data/smoke absent on
+  disk as of RECON-W38.0 verification).
+- **D6 — the TrueMindCycle.java:88 'kill' reflex: CLOSED AGAINST REMOVAL (W32.34).**
+  The description in this file was factually wrong: it is not a benign simulation leftover,
+  it is a safety refusal registration ('I cannot provide instructions intended to kill.'),
+  and it was the only safety guard with no coverage at the time. Deleting it failed 4 tests;
+  it remains load-bearing for Article I refusals. It stays. See SESSION.md RECON-W32.34
+  'D6 is not executed, because the premise was false'.
+- **D7 — weekly CI RFC: CLOSED — RFC APPROVED (operator, RECON-W38 pre-session).**
+  .github/workflows/ci.yml is unfrozen for one minimal change: a scheduled weekly run of
+  the research/property suites (landed as commit 6a15f178). No other CI behaviour altered.
+
+D4 and D8 were closed in the W33-W34 sweeps (tagging with explicit caveats; research-debt
+ownership per family) and are not re-litigated here.
+
 ---
 
 ## D1 — The 28 BitNet failures: red, or environment-blocked?
