@@ -2,6 +2,10 @@
 
 **Tag:** `v18.0.0-mind` · 2026-10-12 · Connectome Alpha
 **Baseline:** `045445b9` · **9,314 tests / 0 failures** across 11 buildable modules · gate 0 · FROZEN 0-diff
+**Final close-out (RECON-W37.5, 2026-10-16): 9,324 tests / 0 failures** across 11 buildable
+modules. Sleep pruning is cross-validated (worst-fold, mutation-verified) per SESSION.md W37.5;
+delta vs the tagged baseline includes recovered lost-capability tests and post-tag additions
+tracked in KnownFailures.md and SESSION.md.
 **Design of record:** `docs-v2/designs/DESIGN-68-living-connectome.md`
 **Debt of record:** `docs-v2/quality/KnownFailures.md`
 

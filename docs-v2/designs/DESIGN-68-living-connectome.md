@@ -212,9 +212,17 @@ Ordered by dependency, not by ambition:
   The nine-stage precedence ladder is unchanged and remains the only live path. The 2-node
   integration is proven against the serving path in `ConnectomeIntegrationTest`; it is not yet a
   live stage replacement.
-- "Neuromodulation improves retrieval precision" is **unverified**. §2 of the prompt asks to
-  "prove Attention affects retrieval precision/recall"; no such measurement has been run, and
-  `HDC` similarity thresholds are currently fixed constants.
+- Neuromodulation→retrieval is now **partially verified (W38.0)**. HDC similarity
+  thresholds are no longer fixed constants: `TrueMindCycle` feeds the neuromodulator
+  `retrievalFloor()` into `HdcRetrievalStage` (commit `7a013d91`), and W38.0 applied and traced
+  the effective floor on the in-memory path too, at misses and hits (commit `7210484f`).
+  Measured (in-memory synthetic path, `RetrievalFloorAppliedTest`): with neutral floor 0.20 a
+  0.333-similarity fact is a HIT; raising the floor to 0.35 turns it into a MISS (recall
+  suppression of sub-floor matches); requesting below the published-ROC floor is clamped
+  (floor invariant is monotonic). Mutations: M1 (floor→constant) killed; M2 (inner clamp
+  removed) is API-equivalent and documented as defensive. Still unmeasured: a precision/recall
+  curve on the persistent path, and end-to-end dynamic modulation (stays in shadow mode per
+  operator §(Ⅳ) rule: attention 0.0 neutral, recall 1.00).
 - "Sleep consolidates and prunes" is **unverified**. `RealSleepScheduler` exists and calls
   `RuleInductionEngine.induce`; consolidation/pruning as described in §1.4 of the prompt does not.
 - **Tsetlin is conjunction-capable only.** Parity-3 and wider sit at chance (37-48%) with 2048
