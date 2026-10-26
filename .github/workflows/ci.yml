@@ -50,9 +50,8 @@ jobs:
              matrix-audit/src/main matrix-billing/src/main matrix-observability/src/main \
              2>/dev/null && echo "✅ No LLM imports in production runtime paths"
 
-      - name: Build native binary (api-gateway)
-        run: ./gradlew :matrix-api-gateway:nativeCompile --no-daemon
-        continue-on-error: true   # Native build requires special image; skip in CI
+      - name: Build gateway distribution
+        run: ./gradlew :matrix-api-gateway:installDist --no-daemon --console=plain
 
       - name: Upload coverage
         if: matrix.event_name == 'push'
@@ -60,6 +59,127 @@ jobs:
         with:
           name: coverage-report
           path: '**/build/reports/jacoco/test/html'
+
+  # Stage 1b: Container images — build and smoke test (required gate)
+  #
+  # RECON-W38.4: the root Dockerfiles and the gateway Dockerfile had no CI
+  # coverage at all, and each of them was broken (they copied a
+  # matrix-core-*-runner.jar that no supported packaging mode produces, and
+  # the gateway invoked :matrix-api-gateway:nativeCompile, a task that does
+  # not exist in that module). This job builds every image from a fresh
+  # checkout and asserts that it starts and reports healthy.
+  container-images:
+    name: Container Images (build + smoke)
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    needs: [build-test]
+    if: github.event_name != 'schedule'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 25
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '25'
+          cache: gradle
+
+      - name: Build matrix-core (Quarkus fast-jar)
+        run: ./gradlew :matrix-core:quarkusBuild --no-daemon --console=plain
+
+      - name: Build gateway distribution
+        run: ./gradlew :matrix-api-gateway:installDist --no-daemon --console=plain
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build matrix-core image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: Dockerfile
+          tags: matrix-core:ci
+          load: true
+
+      - name: Build matrix-core minikube image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: Dockerfile.minikube
+          tags: matrix-core:minikube-ci
+          load: true
+
+      - name: Build api-gateway image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: deploy/docker/Dockerfile.api-gateway
+          tags: matrix-api-gateway:ci
+          load: true
+
+      - name: Smoke test api-gateway image
+        run: |
+          set -euo pipefail
+          docker run -d --name gw-ci -p 8765:8765 matrix-api-gateway:ci
+          ok=0
+          for i in $(seq 1 40); do
+            if curl -fsS http://127.0.0.1:8765/health/ready >/dev/null 2>&1; then ok=1; break; fi
+            sleep 2
+          done
+          if [ "$ok" != "1" ]; then
+            echo "::error::api-gateway image did not become ready"
+            docker logs gw-ci || true
+            exit 1
+          fi
+          echo "✅ api-gateway image healthy"
+          docker rm -f gw-ci
+
+      - name: Smoke test matrix-core image
+        run: |
+          set -euo pipefail
+          docker network create matrix-ci
+          docker run -d --name pg-ci --network matrix-ci \
+            -e POSTGRES_USER=matrix -e POSTGRES_PASSWORD=matrix -e POSTGRES_DB=matrix \
+            postgres:17-alpine
+          docker run -d --name redis-ci --network matrix-ci redis:7-alpine
+          docker run -d --name core-ci --network matrix-ci -p 9091:9091 \
+            -e REDIS_URI=redis://redis-ci:6379 \
+            -e DB_HOST=pg-ci -e DB_PORT=5432 \
+            matrix-core:ci
+          ok=0
+          for i in $(seq 1 60); do
+            if curl -fsS http://127.0.0.1:9091/q/health/ready >/dev/null 2>&1; then ok=1; break; fi
+            sleep 2
+          done
+          if [ "$ok" != "1" ]; then
+            echo "::error::matrix-core image did not become ready"
+            docker logs core-ci || true
+            exit 1
+          fi
+          echo "✅ matrix-core image healthy"
+          docker rm -f core-ci pg-ci redis-ci
+
+      - name: Smoke test matrix-core minikube image
+        run: |
+          set -euo pipefail
+          docker run -d --name mini-ci -p 9092:9091 \
+            --network matrix-ci \
+            -e REDIS_URI=redis://redis-ci:6379 \
+            -e DB_HOST=pg-ci -e DB_PORT=5432 \
+            matrix-core:minikube-ci
+          ok=0
+          for i in $(seq 1 60); do
+            if curl -fsS http://127.0.0.1:9092/q/health/ready >/dev/null 2>&1; then ok=1; break; fi
+            sleep 2
+          done
+          if [ "$ok" != "1" ]; then
+            echo "::error::matrix-core minikube image did not become ready"
+            docker logs mini-ci || true
+            exit 1
+          fi
+          echo "✅ matrix-core minikube image healthy"
+          docker rm -f mini-ci pg-ci redis-ci
+          docker network rm matrix-ci
 
   # Stage 2: Security scan
   security:
@@ -71,16 +191,45 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: SpotBugs static analysis
-        run: ./gradlew :matrix-core:spotbugsMain :matrix-core:spotbugsTest --no-daemon
-        continue-on-error: true
+        # RECON-W38.4: this step used to be `continue-on-error: true`, which
+        # hid the fact that the analysis had NEVER produced evidence: the
+        # resolved SpotBugs engine cannot read Java 25 bytecode ("Unsupported
+        # class file major version 69"), so the task exited 4 and wrote a
+        # 0-byte report. That is a skip, not a pass, and it must not be
+        # reported as a pass.
+        #
+        # The step now distinguishes the two cases explicitly:
+        #   - the known engine limitation  -> loud skip notice, job continues
+        #   - any other SpotBugs failure   -> the job FAILS
+        run: |
+          set -o pipefail
+          ./gradlew :matrix-core:spotbugsMain :matrix-core:spotbugsTest --no-daemon --console=plain 2>&1 | tee /tmp/spotbugs.log
+          status=${PIPESTATUS[0]}
+          if [ "$status" = "0" ]; then
+            echo "✅ SpotBugs analysis completed"
+            exit 0
+          fi
+          if grep -q "Unsupported class file major version" /tmp/spotbugs.log; then
+            echo "::warning::SpotBugs SKIPPED — the resolved engine cannot read Java 25 bytecode (class file major version 69). Latest release 4.9.3 bundles ASM 9.7.1 (max major 68). No static-analysis evidence was produced for this run. This is a known, tracked limitation, NOT a passing check."
+            echo "::warning::Track: replace the SpotBugs engine as soon as a Java 25-capable release ships."
+            exit 0
+          fi
+          echo "::error::SpotBugs failed for a reason other than the known Java 25 engine limitation"
+          exit 1
 
       - name: Check for secrets in code
+        # RECON-W38.4: this was `continue-on-error: true`, which turned a
+        # critical security check into a no-op that could never fail the
+        # pipeline. It is now required: a detected secret fails the job.
+        # Verified locally on the committed tree before the change: no
+        # high-signal secret patterns (AWS keys, private keys, GitHub
+        # tokens, Slack tokens, Google keys, live Stripe keys) in any
+        # tracked file.
         uses: trufflesecurity/trufflehog@main
         with:
           path: ./
           base: ${{ github.ref }}
           head: HEAD
-        continue-on-error: true
 
       - name: OWASP dependency check
         run: |
@@ -92,11 +241,14 @@ jobs:
           fi
           echo "✅ No known-vulnerable dependencies"
 
-  # Stage 3: Build Docker images (on develop/main)
+  # Stage 3: Docker images (on develop/main)
   docker:
     name: Docker Build & Push
     runs-on: ubuntu-latest
-    needs: [build-test, security]
+    # RECON-W38.4: publishing now depends on container-images, so an image is
+    # never pushed unless it was built from a fresh checkout and passed its
+    # startup/health smoke test.
+    needs: [build-test, security, container-images]
     if: github.event_name == 'push' && (github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/main')
     strategy:
       matrix:

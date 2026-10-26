@@ -191,6 +191,20 @@ spotbugs {
     effort = com.github.spotbugs.snom.Effort.DEFAULT
     reportLevel = com.github.spotbugs.snom.Confidence.valueOf('MEDIUM')
     excludeFilter = file('config/spotbugs/exclude.xml')
+    // RECON-W38.4: pin the newest released SpotBugs engine. The previously
+    // resolved engine could not read Java 25 bytecode ("Unsupported class
+    // file major version 69"), so spotbugsMain exited 4 and wrote a 0-byte
+    // report: the static-analysis gate produced NO evidence, and CI's
+    // continue-on-error hid it.
+    //
+    // LIMITATION (verified 2026-10-26): 4.9.3 is the newest release on
+    // Maven Central and still bundles ASM 9.7.1, which supports class file
+    // major version 68 (Java 24) at most. This project targets Java 25
+    // (major 69), so the analysis still cannot run. The pin keeps the tool
+    // current so the gate recovers when a Java 25-capable release lands.
+    // Until then CI must report this as an explicit, loud limitation rather
+    // than a silent pass.
+    toolVersion = '4.9.3'
 }
 
 spotbugsMain {
