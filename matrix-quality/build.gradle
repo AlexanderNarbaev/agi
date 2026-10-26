@@ -35,4 +35,17 @@ application {
 tasks.withType(Test) {
     useJUnitPlatform()
     maxHeapSize = '2g'
+    // RECON-W38.4: ModuleLifecycleRegistryTest scans the repository working
+    // tree, which Gradle does not track as a test input. Without this the
+    // test task can be UP-TO-DATE from an earlier run and the guard would
+    // report a STALE result - the same vacuous-guard failure mode that
+    // RuntimeLlmGuardTest once had.
+    inputs.files(rootProject.file('settings.gradle'))
+    inputs.files(rootProject.file('docs-v2/architecture/MODULE-LIFECYCLE.md'))
+    // The guard also lists the top-level module DIRECTORIES; their names are
+    // what it checks, so they are declared as a property rather than as file
+    // contents (which would drag in node_modules).
+    inputs.property('moduleDirectoryNames',
+        rootProject.fileTree(rootProject.projectDir) { include 'matrix-*' }
+            .files.collect { it.name }.sort())
 }

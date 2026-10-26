@@ -32,11 +32,16 @@ describe('DecisionTimeline', () => {
 
   it('renders legend with 5 stages', () => {
     render(<DecisionTimeline steps={SAMPLE_STEPS} totalDurationMs={15} />);
-    expect(screen.getByText(/INPUT/i)).toBeInTheDocument();
+    // RECON-W38.4: the exact string matches the legend entry only; the regex
+    // also matched a step label ("INPUT_NORMALIZED"), so the test failed with
+    // "Found multiple elements".
+    expect(screen.getByText('INPUT')).toBeInTheDocument();
     expect(screen.getByText(/BIR \(logic\)/i)).toBeInTheDocument();
     expect(screen.getByText(/HDC \(memory\)/i)).toBeInTheDocument();
     expect(screen.getByText(/MCTS \(plan\)/i)).toBeInTheDocument();
-    expect(screen.getByText(/MODULATORS/i)).toBeInTheDocument();
+    // RECON-W38.4: exact match, so the legend entry is distinguished from a
+    // step label ("MODULATORS_APPLIED"), which the regex also matched.
+    expect(screen.getByText('MODULATORS')).toBeInTheDocument();
   });
 
   it('handles empty steps', () => {

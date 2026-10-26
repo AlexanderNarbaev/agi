@@ -60,6 +60,45 @@ jobs:
           name: coverage-report
           path: '**/build/reports/jacoco/test/html'
 
+  # Stage 1a: matrix-web-ui — the web console's own test suite (required gate)
+  #
+  # RECON-W38.4: matrix-web-ui declares a jest suite, but nothing ever ran it.
+  # The suite could not even start: `setupFilesAfterEach` is not a Jest option
+  # (the correct name is `setupFilesAfterEnv`, so jest.setup.ts was never
+  # loaded), the transform named `ts-jest` which was not a declared dependency,
+  # and `testEnvironment: 'jsdom'` needed `jest-environment-jsdom`, which Jest
+  # 28+ no longer ships. The suite is now runnable and green, and it is a
+  # required check like every other one.
+  #
+  # `--legacy-peer-deps` is required because of a PRE-EXISTING peer conflict:
+  # eslint-config-next@16.3.6 requires eslint >= 9 while the project pins
+  # eslint 8.57.1. Aligning them is a major dependency upgrade, which needs an
+  # explicit RFC, so the conflict is worked around here and recorded in
+  # docs-v2/architecture/MODULE-LIFECYCLE.md rather than silently resolved.
+  web-ui-tests:
+    name: Web UI Tests (matrix-web-ui)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    if: github.event_name != 'schedule'
+    defaults:
+      run:
+        working-directory: matrix-web-ui
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: matrix-web-ui/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci --legacy-peer-deps --no-audit --no-fund
+
+      - name: Run the web console test suite
+        run: npx jest --ci
+
   # Stage 1b: Container images — build and smoke test (required gate)
   #
   # RECON-W38.4: the root Dockerfiles and the gateway Dockerfile had no CI
@@ -248,7 +287,7 @@ jobs:
     # RECON-W38.4: publishing now depends on container-images, so an image is
     # never pushed unless it was built from a fresh checkout and passed its
     # startup/health smoke test.
-    needs: [build-test, security, container-images]
+    needs: [build-test, security, container-images, web-ui-tests]
     if: github.event_name == 'push' && (github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/main')
     strategy:
       matrix:
