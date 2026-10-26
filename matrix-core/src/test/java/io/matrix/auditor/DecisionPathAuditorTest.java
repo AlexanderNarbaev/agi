@@ -57,6 +57,62 @@ class DecisionPathAuditorTest {
         assertThat(report.passed()).isTrue();
     }
 
+    /**
+     * RECON-W38.4 — the ONNX runtime API lives in {@code ai.onnxruntime}; the
+     * {@code com.microsoft.onnxruntime} package holds the generated protobuf
+     * classes. Before this rule existed, a decision-path file importing the
+     * runtime API - the import that actually performs inference - was NOT
+     * flagged, because only the protobuf prefix was listed.
+     */
+    @Test
+    void onnxRuntimeApiImportInDecisionPathFlagsViolation() throws IOException {
+        DecisionPathAuditor auditor = new DecisionPathAuditor();
+        Path root = createTempTree();
+        writeFile(root, "io/matrix/consciousness/MyClass.java",
+                "package io.matrix.consciousness;\n" +
+                "import ai.onnxruntime.OrtSession;\n" +
+                "public class MyClass {}\n");
+        var report = auditor.audit(root);
+        assertThat(report.violationCount()).isGreaterThan(0);
+        assertThat(report.passed()).isFalse();
+        assertThat(report.violations())
+                .anySatisfy(v -> assertThat(v.symbol()).isEqualTo("ai.onnxruntime."));
+    }
+
+    /**
+     * RECON-W38.4 — the distill-side rule named the package
+     * "io.matrix.distill.onnx.", which does not exist in the tree, so it could
+     * never fire. The class that actually performs ONNX inference for
+     * distillation is io.matrix.distill.OnnxActivationTeacher.
+     */
+    @Test
+    void distillOnnxTeacherImportInDecisionPathFlagsViolation() throws IOException {
+        DecisionPathAuditor auditor = new DecisionPathAuditor();
+        Path root = createTempTree();
+        writeFile(root, "io/matrix/consciousness/MyClass.java",
+                "package io.matrix.consciousness;\n" +
+                "import io.matrix.distill.OnnxActivationTeacher;\n" +
+                "public class MyClass {}\n");
+        var report = auditor.audit(root);
+        assertThat(report.violationCount()).isGreaterThan(0);
+        assertThat(report.passed()).isFalse();
+        assertThat(report.violations())
+                .anySatisfy(v -> assertThat(v.symbol())
+                        .isEqualTo("io.matrix.distill.OnnxActivationTeacher"));
+    }
+
+    @Test
+    void onnxRuntimeApiImportOutsideDecisionPathNotFlagged() throws IOException {
+        DecisionPathAuditor auditor = new DecisionPathAuditor();
+        Path root = createTempTree();
+        writeFile(root, "io/matrix/rag/MyClass.java",
+                "package io.matrix.rag;\n" +
+                "import ai.onnxruntime.OrtSession;\n" +
+                "public class MyClass {}\n");
+        var report = auditor.audit(root);
+        assertThat(report.passed()).isTrue();
+    }
+
     @Test
     void mathRandomInDecisionPathFlagged() throws IOException {
         DecisionPathAuditor auditor = new DecisionPathAuditor();

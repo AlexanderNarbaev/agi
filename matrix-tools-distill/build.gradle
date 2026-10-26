@@ -5,7 +5,25 @@
 // This module is INTENTIONALLY a separate Gradle project.
 // - No compile-time dependency on matrix-core (uses reflection or its own models).
 // - No COMPILE-TIME LLM symbols available; runtime is plain Java CLI.
-// - CONSTITUTION I: matrix-core runtime classpath must NOT include ONNX runtime.
+// - No ONNX runtime on the PRODUCTION RUNTIME classpath.
+//
+//   RECON-W38.4: the previous wording here claimed "matrix-core runtime
+//   classpath must NOT include ONNX runtime". That statement was factually
+//   false of the tree: matrix-core declares onnxruntime + onnxruntime_gpu as
+//   `implementation`, and five classes in matrix-core import the runtime API
+//   (ai.onnxruntime). The constraint that actually holds, and that this
+//   module's isolation supports, is narrower and is now enforced:
+//     * ONNX must not appear in a DECISION-PATH package
+//       (io.matrix.consciousness / brain / mediator / reasoning / actions /
+//       ethics / imports / neuron) - enforced by DecisionPathAuditor,
+//       which forbids the ai.onnxruntime. and com.microsoft.onnxruntime.
+//       prefixes;
+//     * the LLM-serving ONNX classes stay quarantined from the runtime mind
+//       path by RuntimeLlmGuardTest (reachability, not classpath).
+//   Keeping this module separate keeps the OFFLINE distillation tool out of
+//   the production runtime and out of the core module graph. That value is
+//   real and is independent of the false statement above.
+
 //
 // Decision: matrix-tools-distill is its own world for offline distillation.
 // Use cases:

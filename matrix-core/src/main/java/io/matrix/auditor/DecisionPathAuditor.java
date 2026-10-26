@@ -69,7 +69,19 @@ public final class DecisionPathAuditor {
     private static final List<ForbiddenSymbol> FORBIDDEN_SYMBOLS = List.of(
             new ForbiddenSymbol("com.microsoft.onnxruntime.",
                     "ONNX runtime inference in decision-path (CONSTITUTION I)"),
-            new ForbiddenSymbol("io.matrix.distill.onnx.",
+            // RECON-W38.4: the ONNX *runtime API* lives in ai.onnxruntime, not in
+            // com.microsoft.onnxruntime (that package holds the generated
+            // protobuf classes). The rule above therefore did not match a
+            // decision-path file importing the runtime API - the one import
+            // that actually performs inference. Both prefixes are now listed.
+            new ForbiddenSymbol("ai.onnxruntime.",
+                    "ONNX runtime inference in decision-path (CONSTITUTION I)"),
+            // RECON-W38.4: this rule was dead. The prefix
+            // "io.matrix.distill.onnx." matches no package in the tree - the
+            // class that actually performs ONNX inference for distillation is
+            // io.matrix.distill.OnnxActivationTeacher. The rule now names the
+            // real class, so it can fire.
+            new ForbiddenSymbol("io.matrix.distill.OnnxActivationTeacher",
                     "Distill-side ONNX access from decision-path (PARADIGM §3)"),
             new ForbiddenSymbol("io.matrix.api.QwenOnnxBridge",
                     "Qwen-on-Qwen chat bridge in decision-path"),
