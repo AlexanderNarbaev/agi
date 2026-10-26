@@ -132,6 +132,55 @@ tasks.withType(Test) {
     }
 }
 
+// ─── Generated build metadata (RECON-W38.4) ───────────────────────────────────
+//
+// The native binary used to print hardcoded headline numbers ("171+ cognitive
+// measurement classes", "6,700+ test methods across 940+ test files"). Those
+// numbers were true once and were never updated, and a shipped binary cannot
+// verify them at runtime.
+//
+// The counts are now MEASURED at build time from the source tree and written
+// into a resource, so the number printed by a binary always corresponds to the
+// tree that binary was built from. The counting method is stated in the file
+// itself, and a binary built without the resource says so instead of guessing.
+tasks.register('generateBuildInfo') {
+    def consciousnessSrc = fileTree('src/main/java/io/matrix/consciousness') { include '**/*.java' }
+    def cognitiveNamed = fileTree('src/main/java') {
+        include '**/io/matrix/consciousness/Cognitive*.java'
+    }
+    def testFiles = fileTree('src/test/java') { include '**/*Test.java' }
+    def allTestFiles = fileTree('src/test/java') { include '**/*.java' }
+    def out = layout.buildDirectory.file('generated/build-info/matrix-build-info.properties')
+    // the generated directory must be a resource root, otherwise the file
+    // never reaches the jar and the binary cannot read it
+    sourceSets.main.resources.srcDir(layout.buildDirectory.dir('generated/build-info'))
+    inputs.files(consciousnessSrc, cognitiveNamed, testFiles, allTestFiles)
+    outputs.file(out)
+    doLast {
+        int testMethods = 0
+        allTestFiles.files.each { f ->
+            testMethods += f.readLines().count { l -> l.trim().startsWith('@Test') }
+        }
+        def props = new Properties()
+        props.setProperty('build.consciousness.package.files', String.valueOf(consciousnessSrc.files.size()))
+        props.setProperty('build.consciousness.package.named.cognitive', String.valueOf(cognitiveNamed.files.size()))
+        props.setProperty('build.test.files', String.valueOf(allTestFiles.files.size()))
+        props.setProperty('build.test.classes', String.valueOf(testFiles.files.size()))
+        props.setProperty('build.test.methods', String.valueOf(testMethods))
+        props.setProperty('build.counting.method',
+            'consciousness.package.files = .java files in io/matrix/consciousness; ' +
+            'consciousness.package.named.cognitive = those named Cognitive*.java; ' +
+            'test.files = .java files under src/test/java; test.classes = those named *Test.java; ' +
+            'test.methods = source lines starting with @Test')
+        def f = out.get().asFile
+        f.parentFile.mkdirs()
+        f.withOutputStream { props.store(it, 'MATRIX build metadata - generated, do not edit') }
+        logger.lifecycle("matrix-build-info: ${testMethods} @Test methods across ${allTestFiles.files.size()} test files")
+    }
+}
+
+processResources.dependsOn tasks.named('generateBuildInfo')
+
 tasks.withType(JavaCompile) {
     options.compilerArgs.add('--add-modules=jdk.incubator.vector')
 }
