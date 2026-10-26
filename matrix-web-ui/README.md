@@ -18,7 +18,7 @@ Production landing page + dashboard for the MATRIX Hybrid Neuro-Symbolic AI.
 
 ## Stack
 
-- **Next.js 14** (App Router)
+- **Next.js 16.3.5** (App Router) — the version pinned in `package.json`
 - **React 18**
 - **TypeScript 5.6**
 - **Tailwind CSS 3.4**

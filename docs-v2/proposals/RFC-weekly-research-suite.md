@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| **Status** | PROPOSED — awaiting operator approval. **Nothing in `.github/` has been changed.** |
+| **Status** | **APPROVED** — operator, RFC-approved in RECON-W38 pre-session (decision D7). Implemented: `.github/workflows/ci.yml` carries `schedule: - cron: "0 4 * * 1"` and a `research-suites` job; landed in commit `6a15f178` ("WAL: RECON-W38.0 - D7: weekly research/property suite schedule in CI (RFC-approved minimal change)"). See `docs-v2/quality/OPEN-DECISIONS.md` (CLOSED decisions, D7). |
 | **Author** | RECON-W32.34, operator decision D7 (option A: author the RFC, change nothing) |
 | **Date** | 2026-10-05 |
 | **Affects** | `.github/workflows/**` — **FROZEN**. This document proposes; it does not authorise. |
