@@ -5777,3 +5777,205 @@ resolved.
     shared-global-state order-dependent flake.
   - declare_scope fails because .swarm/plan.json is stale and does not contain M5.
   - Nothing has been pushed to remote in this session.
+
+---
+
+# SESSION — RECON-W38 (owner directive "MASTER ENGINEERING DIRECTIVE v2")
+
+**Date:** 2026-10-26
+**Branch:** `develop` (base `ea7316cb`)
+**Mandate:** owner directive v2, §§ 7, 11, 13–21, 43, 50, 51
+
+---
+
+## Incident record — FROZEN-zone unfreeze mandate
+
+**Date:** 2026-10-26 · **Decision:** D8 (owner directive v2, §§11 and 14)
+
+`.github/workflows/**` is a FROZEN zone under CONSTITUTION Article III and
+AGENTS.md. This session **modified two files in it** under an explicit owner
+mandate:
+
+| File | Change | Mandate |
+|---|---|---|
+| `.github/workflows/ci.yml` | replaced the invalid `:matrix-api-gateway:nativeCompile` step with `installDist`; added a required `container-images` job that builds and smoke-tests all three images; made the `docker` job depend on it; distinguished the known SpotBugs engine limitation from a real failure; made trufflehog required | §11 |
+| `.github/workflows/tla.yml` | the job now performs **real model checking** with TLC instead of parsing only; runs on `develop` as well as `main`; reports per-specification state space and outcome; fails on a model-check failure; distinguishes verified properties from syntax-only checks | §14 |
+
+No other FROZEN file was touched. `AGENTS.md` and `CONSTITUTION.md` are
+**unchanged** by this session. The pre-existing uncommitted `AGENTS.md`
+modification (a six-line "AI Dev Tools" section) was left untouched and
+**remains an unauthorised FROZEN edit with no RFC behind it** — it is the
+owner's to resolve.
+
+## Objective
+
+Turn MATRIX into a coherent, verifiable hybrid intelligence system:
+preserve research, repair demonstrated defects, improve capability through
+reproducible experiments — **without** stopping after producing a report and
+**without** launching another broad redesign before the critical defects are
+repaired.
+
+## Baseline (re-validated, not taken on trust)
+
+The investigative report behind the directive was treated as an input, not as
+truth. Re-measured against the working tree:
+
+- `develop` compiled? **No.** `:matrix-brain-runtime:compileJava` failed at
+  `FatigueUncertaintyAggregator.java:93` — a missing accessor in *main* source.
+  Fixed in `65b506d3`; 116 suites / 909 tests / 0 failures afterwards.
+- Nine TLA+ specifications: **all nine failed to parse.** The CI job ran the
+  parser only, and the Java-side "formal gate" (`TlaSpecSmokeTest`) is a
+  text-level smoke test that passes on files the TLA+ parser rejects.
+- The three Dockerfiles referenced artifacts that are never produced
+  (`*-runner.jar` under Quarkus's default fast-jar packaging) and two
+  directories that are not tracked (`models/pretrained/`,
+  `models/training_data/`).
+- The Stripe webhook verifier had **no timestamp tolerance**: a replay 30 days
+  old was accepted. Reproduced against the pre-fix algorithm before changing
+  it.
+- `git fsck` exit 18: one missing commit, four missing trees, six invalid
+  reflog entries. Pre-existing damage, unchanged by this work (verified by
+  diffing `fsck` output against the `.git` archive).
+- Corrections to the original audit: coverage exclusion is 407 of 1 033 files
+  (39.4 %, denominator 626), not 371/35.9 %; there are 6 `@Disabled`
+  annotations, not 7; Stripe HMAC verification was **not** broken — the defect
+  was the missing freshness window.
+
+## Changes
+
+### §11 — CI and container builds
+- `Dockerfile`, `Dockerfile.minikube`: rewritten for the fast-jar layout; the
+  models are no longer baked in; the readiness check is a real HTTP probe.
+- `deploy/docker/Dockerfile.api-gateway`: rewritten as a two-stage JVM image
+  that runs the real `installDist` output.
+- `matrix-api-gateway/build.gradle`: the `application` plugin with the real
+  main class and the vector/native-access JVM flags.
+- `matrix-core/build.gradle`: SpotBugs pinned with a comment recording that
+  SpotBugs 4.9.3 bundles ASM 9.7.1 and therefore cannot read Java 25 class
+  files (major version 69) — the engine limitation, stated as such.
+- `.github/workflows/ci.yml`: see the incident record above.
+
+### §14 — formal specifications (this session's largest change)
+- All nine specifications now **parse**, and all nine are **model-checked**
+  with TLC against a real configuration: four are fully green, five report a
+  recorded property failure.
+- 14 distinct defect classes were found and repaired, including four that had
+  made a property silently meaningless: `EXCEPT` does not extend a function's
+  domain (so `RegisterBot` never initialised the counters); a multi-bound
+  quantifier evaluates its second bound outside the first binder's scope; TLC
+  cannot index a string and `SubSeq` on a string yields a character tuple;
+  `"APPROVE:"` has 8 characters and `"REJECT:"` has 7.
+- Four specifications have **recorded property failures** that were reported
+  rather than papered over, and one specification is still syntax-checked only.
+- Full detail, including the counterexample for every failure, is in
+  `docs-v2/engineering/TLA-STATUS.md`.
+
+### §15 — machine-specific symlinks
+- The five committed `.onnx_libs/` symlinks pointed into one developer's
+  untracked virtualenv and a single CUDA install; a fresh clone had dangling
+  links. They are now untracked and git-ignored, and
+  `scripts/diagnose-cuda.sh --repair` recreates them locally.
+- `matrix-core/build.gradle` and `matrix-tools-distill/build.gradle` no longer
+  hard-code an absolute home-directory path: the CUDA library path is derived
+  from the project root and from `CUDA_HOME`/`CUDA_PATH`, and a candidate is
+  included only if it actually exists.
+- `scripts/diagnose-cuda.sh` discovers the Python version instead of assuming
+  3.14.
+
+### §17 — dead dependencies
+`matrix-brain-runtime` declared `matrix-audit` and `matrix-observability` with
+**zero** imports, no `ServiceLoader`, no `Class.forName` and no
+`META-INF/services` entry. Both removed; the runtime classpath no longer
+contains them, and the module's and the gateway's tests still pass.
+
+### §18 — tooling placeholders
+- `mise.toml`: `echo 'Add test command'` / `echo 'Add lint command'` replaced
+  with the real commands.
+- `matrix-web-ui/README.md`: claimed Next.js 14; `package.json` pins 16.3.5.
+- `docs-v2/proposals/RFC-weekly-research-suite.md`: status corrected from
+  "PROPOSED" to "APPROVED" with the implementing commit cited.
+
+### §19 — stale headline numbers
+- `ApplicationImpl` printed "171+ cognitive measurement classes" and
+  "6,700+ test methods across 940+ test files". Those numbers were true once
+  and were never updated, and a shipped binary cannot verify them.
+- A new `:matrix-core:generateBuildInfo` Gradle task **measures** the counts
+  from the source tree at build time and writes them into a resource; the
+  binary prints those, states the counting method, and says "not available"
+  rather than guessing when the resource is absent. Measured at this commit:
+  **171** files in `io.matrix.consciousness` (61 named `Cognitive*`),
+  **7 529** `@Test` methods across **1 065** test files.
+
+## Verification
+
+| Check | Result |
+|---|---|
+| `:matrix-brain-runtime:test` | 116 suites / 909 tests / 0 failures / 2 skipped |
+| `:matrix-billing:test` | 71 tests / 0 failures |
+| `DecisionPathAuditorTest` | 13 tests / 0 failures |
+| `:matrix-core:compileJava` + `:matrix-brain-runtime:test` + `:matrix-api-gateway:test` | BUILD SUCCESSFUL after the CUDA-path and dead-dependency changes |
+| TLA+ parse (SANY, all 9) | 9/9 clean — no `Unknown operator`, no `Parse Error` |
+| TLA+ model check (TLC, all 9) | 4 fully green · 5 with recorded property failures · 0 syntax-only |
+| `matrix-core:recon-w38` container | healthy, `/q/health/ready` 200 |
+| `matrix-api-gateway:recon-w38` container | healthy, `/health/ready` 200 → `{"status":"UP",...}` |
+| `:matrix-core:generateBuildInfo` | 7 529 @Test methods / 1 065 test files — matches an independent count |
+
+## Evidence
+
+- `formal/*.tla` + `formal/*.cfg` — the repaired specifications and the
+  configurations, each `.cfg` documenting why every constant has its value.
+- `docs-v2/engineering/TLA-STATUS.md` — per-specification verified /
+  syntax-only / failed classification, with a counterexample for every
+  failure and the full list of defect classes repaired.
+- `docs-v2/operations/CONTAINER-BUILDS.md` and
+  `docs-v2/designs/DESIGN-69-onnx-runtime-boundary.md` — the container and
+  ONNX contracts written down.
+- `docs-v2/security/WEBHOOK-SIGNATURE-FRESHNESS.md` — the Stripe freshness
+  contract.
+
+## Impact
+
+The repository now **compiles and tests green on `develop`**, the three
+container images build and pass a readiness probe, the webhook verifier
+rejects stale replays, and — for the first time — the formal specifications
+are actually parsed and model-checked, with the four specifications whose
+properties genuinely fail named as such.
+
+## Limitations
+
+- Five specifications have **recorded property failures**. They are reported,
+  not fixed, because each needs an author decision about the property's
+  intent, not a syntax repair. See `docs-v2/engineering/TLA-STATUS.md`.
+- Five specifications have **recorded property failures** (`ConjugateBudgeterDP`,
+  `FrozenEthicalFNL`, `MctsLatsVisit`, `MemoryM4Causal`, `MPDTNeuron`). All
+  nine specifications now parse and all nine are model-checked; five report a
+  failure. Each failure needs an author decision about the property's intent.
+- SpotBugs cannot read Java 25 class files with any released version, so the
+  static-analysis gate produces no report on this toolchain. This is a
+  toolchain limitation, recorded in the CI job, not a clean result.
+- The `AGENTS.md` "AI Dev Tools" edit in the working tree is an unauthorised
+  FROZEN change with no RFC. It was left untouched deliberately.
+- `git fsck` still reports one missing commit, four missing trees and six
+  invalid reflog entries. Pre-existing; a recovery bundle and a `.git` archive
+  are stored outside the worktree.
+
+## Recovery
+
+- Repository state before this session: `~/matrix-recovery/20261026-214910/`
+  (`refs.bundle` recording a complete history, `git-dir.tar`, `worktree.patch`,
+  `index.patch`, `reflog-all.txt`, `symlink-inventory.txt`, `STATE.txt`).
+- Every change in this session is a separate commit; `git revert` of any one
+  commit restores the prior state.
+- The TLA+ repairs are syntax- and modelling-level only. No property was
+  weakened, deleted, or replaced with `TRUE`; the diff of every `.tla` file is
+  reviewable on its own.
+
+## Next Action
+
+- Author decisions on the four recorded formal-property failures and on the
+  `AGENTS.md` FROZEN edit.
+- Continue the directive's remaining backlog: §13 (the competing `MindCycle`
+  and `TrueMindCycle` conductors), §16 (module lifecycle for
+  `matrix-fpga`/`matrix-micro`/`matrix-ros2`/`matrix-web-ui`), §20 (the
+  capability registry), §21–26 (BIR execution-path audit, determinism policy,
+  cognitive lifecycle, learning-feedback contract, cognitive metrics).

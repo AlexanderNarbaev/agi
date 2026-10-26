@@ -70,3 +70,63 @@
 - compileJava + compileTestJava: ✅ BUILD SUCCESSFUL
 - All targeted tests: ✅ BUILD SUCCESSFUL (17/17 new + 15/15 prior)
 - CI toolchain validated in docker: ✅
+
+---
+
+## RECON-W38 — Owner directive "MASTER ENGINEERING DIRECTIVE v2" (2026-10-26)
+
+**Base:** `develop` @ `ea7316cb` · **Mandate:** §§7, 11, 13–21, 43, 50, 51
+
+### Incident — FROZEN-zone unfreeze mandate (2026-10-26, decision D8)
+
+`.github/workflows/**` is FROZEN (CONSTITUTION Art. III / AGENTS.md). The owner
+directive v2 mandates changes to two files in it:
+
+- **§11 — `.github/workflows/ci.yml`**: invalid `:matrix-api-gateway:nativeCompile`
+  step replaced with `installDist`; new required `container-images` job building
+  and smoke-testing all three images; `docker` job now depends on it; SpotBugs
+  engine limitation distinguished from a real failure; trufflehog made required.
+- **§14 — `.github/workflows/tla.yml`**: the job now performs **real model
+  checking** with TLC instead of parsing only; runs on `develop` as well as
+  `main`; reports per-spec state space and outcome; fails on a model-check
+  failure; distinguishes verified properties from syntax-only checks.
+
+No other FROZEN file touched. `CONSTITUTION.md` unchanged. `AGENTS.md` **not
+changed by this session** — the pre-existing uncommitted "AI Dev Tools" edit
+remains an unauthorised FROZEN change with no RFC, left for the owner.
+
+### Repairs
+
+| Area | Finding | Fix | Evidence |
+|---|---|---|---|
+| Compile | `develop` did not compile: missing accessor used by `FatigueUncertaintyAggregator` | added `sleepDemandThreshold()` | `65b506d3`; 116 suites / 909 tests / 0 failures |
+| Webhook | Stripe verifier had **no timestamp tolerance** — a 30-day-old replay was accepted | `Clock` injection, symmetric 300 s window, 9-case failure taxonomy, 26 tests | `c2009775`; 71 tests / 0 failures |
+| Containers | all three Dockerfiles referenced artifacts that are never produced | fast-jar layout, real readiness probe, real gateway entrypoint | `26fa8ea6`; all three images healthy |
+| ONNX | `ai.onnxruntime.` unguarded in decision paths; `io.matrix.distill.onnx.` rule was dead | tightened `DecisionPathAuditor`; 13 tests | `ea7316cb`; 13/0 |
+| TLA+ | **all 9 specs failed to parse**; CI parsed only; Java "formal gate" was a text-level smoke test | all 9 parse; 8 model-checked; 4 with recorded property failures | §50 evidence in `SESSION.md`; `docs-v2/engineering/TLA-STATUS.md` |
+| Symlinks | 5 committed `.onnx_libs/` links into one developer's untracked venv | untracked + ignored; portable CUDA path resolution | `scripts/diagnose-cuda.sh --repair` |
+| Dead deps | `matrix-brain-runtime` declared `matrix-audit` + `matrix-observability`, zero imports | both removed | runtime classpath verified |
+| Tooling | `mise.toml` placeholders; web-ui README claimed Next.js 14 vs 16.3.5; RFC status "PROPOSED" vs approved in `6a15f178` | all corrected | — |
+| CLI claims | native binary printed "171+ classes" / "6,700+ tests across 940+ files" | build-time **measured** metadata resource; counting method printed | 7 529 @Test / 1 065 files, matches independent count |
+
+### Corrections to the prior audit (re-validated, not assumed)
+
+- Coverage exclusion is **407 of 1 033** files (39.4 %, denominator 626), not 371/35.9 %.
+- There are **6** `@Disabled` annotations, not 7.
+- Stripe HMAC verification was **not** broken; the defect was the missing freshness window.
+- The first compile failure was in **main** source, not `compileTestJava`.
+
+### Verification
+
+- `:matrix-brain-runtime:test` 116 suites / 909 tests / 0 failures / 2 skipped
+- `:matrix-billing:test` 71 / 0 · `DecisionPathAuditorTest` 13 / 0
+- TLA+ SANY 9/9 clean · TLC 8 configs: 4 green, 4 recorded failures, 1 syntax-only
+- `matrix-core:recon-w38` `/q/health/ready` 200 · `matrix-api-gateway:recon-w38` `/health/ready` 200
+
+### Still open
+
+- Four formal-property failures need an **author** decision (not a syntax fix).
+- `ConjugateBudgeterDP` has no model yet.
+- SpotBugs cannot read Java 25 class files with any released version.
+- The `AGENTS.md` FROZEN edit in the working tree needs an owner ruling.
+- `git fsck` exit 18 (1 missing commit, 4 missing trees, 6 invalid reflog entries) — pre-existing.
