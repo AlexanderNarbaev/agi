@@ -182,3 +182,9 @@ docs-v2/operations/bench/w30-perf-20261002-122937.json
 data/models/bitnet-checkpoint/
 data/models/**/*.safetensors
 data/models/**/*.safetensors.sha256
+
+# RECON-W38.4: CUDA/ONNX native-library links are machine-local state. They were
+# committed to git and pointed into one developer's untracked virtualenv and a
+# single CUDA install, so a fresh clone had dangling links. scripts/diagnose-cuda.sh
+# --repair recreates them locally; they are never committed.
+.onnx_libs/

@@ -84,11 +84,34 @@ tasks.withType(JavaCompile).configureEach {
 
 tasks.withType(Test) {
     useJUnitPlatform()
-    def nvidiaLibs = fileTree('/home/alexandr-narbaev/Projects/agi/.venv/lib/python3.14/site-packages') {
-        include 'nvidia/*/lib'
+    // RUN 62: provide NVIDIA CUDA library path for ONNX runtime GPU.
+    //
+    // RECON-W38.4: the previous values were absolute paths into one developer's
+    // home directory plus one CUDA install. On any other machine they were
+    // simply wrong paths, and the five symlinks that carried the libraries
+    // were committed to git - one of them pointing into an untracked
+    // virtualenv, so a fresh clone had a dangling link. Candidates are now
+    // derived from the project root and from the standard CUDA environment
+    // variables, and each is included ONLY if it actually exists: an absent
+    // optional accelerator must not become a bogus library path.
+    // scripts/diagnose-cuda.sh --repair creates the local .onnx_libs/ links
+    // that this path picks up.
+    def cudaLibDirs = []
+    def venvLib = file("${rootDir}/.venv/lib")
+    if (venvLib.exists()) {
+        cudaLibDirs += fileTree(venvLib) { include '**/site-packages/nvidia/*/lib' }.files
     }
-    def nvidiaPaths = nvidiaLibs.collect { it.absolutePath }.join(':')
-    systemProperty 'java.library.path', "${nvidiaPaths}:/usr/local/cuda-13.1/lib64"
+    [System.getenv('CUDA_HOME'), System.getenv('CUDA_PATH'), '/usr/local/cuda']
+        .findAll { it }
+        .collect { file(it) }
+        .findAll { it.exists() }
+        .each { cudaLibDirs += fileTree(it) { include '**/lib64' }.files }
+    def onnxLibs = file("${rootDir}/.onnx_libs")
+    if (onnxLibs.exists()) cudaLibDirs << onnxLibs
+    def nvidiaPaths = cudaLibDirs.collect { it.absolutePath }.join(':')
+    if (!nvidiaPaths.isEmpty()) {
+        systemProperty 'java.library.path', nvidiaPaths
+    }
     jvmArgs '--enable-native-access=ALL-UNNAMED'
 }
 
