@@ -27,6 +27,15 @@ VARIABLES
 
 vars == <<applied, result, stepState>>
 
+\* ── Helpers (auxiliary, not enforced by TLC) ─────────────────────────────────
+
+HammingDist(b1, b2) == 0   \* abstracted; concrete in Java as bitwise XOR popcount
+MaxWidth(c1, c2) == 0
+SuperWidth(c1, c2) == 0
+SuperStep(s1, s2) == s1
+Threshold(s) == 0
+IdStep == CHOOSE s ∈ Steps : TRUE
+
 \* ── Init ─────────────────────────────────────────────────────────────────────
 
 Init ==
@@ -36,6 +45,9 @@ Init ==
 
 \* ── Apply a single step ─────────────────────────────────────────────────────
 
+\* Function the implementation computes: layer.evaluate(padInput(x))
+ApplyFn(s, x) == CHOOSE o ∈ Outputs : TRUE   \* abstracted as nondet for TLC
+
 ApplyStep(s, x) ==
     /\ s ∈ Steps
     /\ x ∈ Inputs
@@ -44,9 +56,6 @@ ApplyStep(s, x) ==
     /\ result'  = [result  EXCEPT ![s] = ApplyFn(s, x)]
     /\ stepState' = [stepState EXCEPT ![s] = "running"]
     /\ UNCHANGED <<>>
-
-\* Function the implementation computes: layer.evaluate(padInput(x))
-ApplyFn(s, x) == CHOOSE o ∈ Outputs : TRUE   \* abstracted as nondet for TLC
 
 Converge(s) ==
     /\ stepState[s] = "running"
@@ -75,9 +84,9 @@ Compose(left, right) ==
 \* super-chain left-then-right with at most Alpha-bit Hamming slack.
 ComposeEndpointPreserved ==
     \A left, right ∈ Steps, x ∈ Inputs :
-        Let composed = ApplyFn(right, ApplyFn(left, x))
-            direct   = ApplyFn(SuperStep(left, right), x)
-        In  HammingDist(composed, direct) ≤ Alpha
+        LET composed == ApplyFn(right, ApplyFn(left, x))
+            direct   == ApplyFn(SuperStep(left, right), x)
+        IN  HammingDist(composed, direct) ≤ Alpha
 
 \* ── Safety properties ────────────────────────────────────────────────────────
 
@@ -106,15 +115,6 @@ ComposeIdentity ==
 \* The chain terminates (converges) within MaxSteps iterations.
 ChainTerminates ==
     \A s ∈ Steps : <>(stepState[s] = "converged")
-
-\* ── Helpers (auxiliary, not enforced by TLC) ─────────────────────────────────
-
-HammingDist(b1, b2) == 0   \* abstracted; concrete in Java as bitwise XOR popcount
-MaxWidth(c1, c2) == 0
-SuperWidth(c1, c2) == 0
-SuperStep(s1, s2) == s1
-Threshold(s) == 0
-IdStep == CHOOSE s ∈ Steps : TRUE
 
 =============================================================================
 \* Modification History

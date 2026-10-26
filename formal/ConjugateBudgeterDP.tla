@@ -11,17 +11,39 @@ EXTENDS Naturals, FiniteSets, TLC
 
 CONSTANTS
     Rows,                \* the set of candidate rows (1..n)
-    Values,              \* Function: row -> value v_i ∈ ℕ (or ℝ abstracted as Int)
-    Costs,               \* Function: row -> cost c_i ∈ ℕ⁺
+    Values,              \* the per-row values (|Values| = |Rows|, distinct)
+    Costs                \* the per-row costs (|Costs| = |Rows|, distinct)
 
 \* Abbreviations
-V(i) == Values[i]
-C(i) == Costs[i]
+\*
+\* `Values` and `Costs` are supplied by the model as sets of per-row
+\* numbers: a TLC configuration file can express sets, numbers, strings and
+\* model values, but never a function. Row i therefore takes the i-th
+\* smallest element of each set — the rows are numbered 1..n, so the
+\* assignment is unique as soon as the elements of the sets are distinct.
+V(i) == CHOOSE v \in Values : Cardinality({w \in Values : w < v}) = i - 1
+C(i) == CHOOSE c \in Costs : Cardinality({w \in Costs : w < c}) = i - 1
+
+\* `Max(S)` and `MIN(S)` — the largest / smallest element of a set of
+\* naturals. TLA+ has no standard `Max` operator, and `Len` (the Sequences
+\* operator) applies to sequences only, while `Rows` is a set. The DP fold
+\* below takes the maximum of two cells as the maximum of the two-element
+\* set of cells.
+Max(S) == IF S = {} THEN 0 ELSE CHOOSE m \in S : \A y \in S : m >= y
+MIN(S) == IF S = {} THEN 0 ELSE CHOOSE m \in S : \A y \in S : m <= y
+
+\* RECON-W38.4: `Sum` is not a standard TLA+ operator (it is LOCAL to the Bags
+\* module), so the spec's total-cost expression had no definition. This is the
+\* standard recursive sum over a set of naturals; it makes the intended
+\* meaning explicit without changing any operator body that uses it.
+RECURSIVE Sum(_)
+Sum(S) == IF S = {} THEN 0
+           ELSE LET x == CHOOSE y \in S : TRUE IN x + Sum(S \ {x})
 
 \* ── Helper: total cost & value, envelope cap ─────────────────────────────────
 
-TotalCost   == Sum(C(i) : i ∈ Rows)
-TotalValue  == Sum(V(i) : i ∈ Rows)
+TotalCost   == Sum({C(i) : i ∈ Rows})
+TotalValue  == Sum({V(i) : i ∈ Rows})
 
 \* ── State ────────────────────────────────────────────────────────────────────
 
@@ -45,48 +67,53 @@ Init ==
 \*
 \* The DP returns the optimal 0/1 selection for the current envelope. The
 \* shadow price is the terminal value slope λ(E) = V*(E) − V*(E−1).
+\*
+\* The fold below enumerates the candidate rows 1..Cardinality(Rows). `Rows`
+\* is the set {1..n} of candidate rows (see CONSTANT Rows), so the i-th row
+\* of that enumeration is i — the spec wrote `Rows[i]`, which TLA+ does not
+\* allow (a set cannot be applied to an argument).
 
 DPValue(e) ==                     \* backward DP table cell: V*(e)
     LET table == [ee ∈ 0..e |-> 0]
-    IN  LET fold[i ∈ 0..Len(Rows), ee ∈ 0..e] ==
+    IN  LET fold[i ∈ 0..Cardinality(Rows), ee ∈ 0..e] ==
             IF i = 0 THEN table[ee]
-            ELSE IF C(Rows[i]) <= ee
-                 THEN Max(fold[i-1, ee],
-                          V(Rows[i]) + fold[i-1, ee - C(Rows[i])])
+            ELSE IF C(i) <= ee
+                 THEN Max({fold[i-1, ee],
+                           V(i) + fold[i-1, ee - C(i)]})
                  ELSE fold[i-1, ee]
-        IN fold[Len(Rows), e]
+        IN fold[Cardinality(Rows), e]
+
+\* Reconstruct the optimal subset: pick any row whose inclusion contributes
+\* strictly more value than skipping it (greedy pick of the table — the DP
+\* itself guarantees optimality; the reconstruction is the witness).
+GreedyPick(e) ==
+    LET fold[i ∈ 0..Cardinality(Rows), ee ∈ 0..e] ==
+            IF i = 0 THEN [k ∈ Rows |-> FALSE]
+            ELSE LET prev == fold[i-1, ee]
+                     take == fold[i-1, ee - C(i)]
+                 IN IF C(i) <= ee
+                    THEN [k ∈ Rows |-> IF k = i
+                                       THEN TRUE
+                                       ELSE prev[k] \/ take[k]]
+                    ELSE prev
+    IN fold[Cardinality(Rows), e]
 
 Step(newEnvelope, observedLambda) ==
     /\ newEnvelope ∈ Nat
     /\ observedLambda ∈ Nat  \* abstracted as integer for TLC tractability
     /\ IF newEnvelope < MIN({C(i) : i ∈ Rows})
        THEN  \* envelope below cheapest row → FALLBACK path
-            /\ selected' = [i ∈ Rows |-> FALSE]
-            /\ shadow'   = 0
+             /\ selected' = [i ∈ Rows |-> FALSE]
+             /\ shadow'   = 0
        ELSE
-            LET dp0  == DPValue(newEnvelope)
-                dp1  == IF newEnvelope > 0 THEN DPValue(newEnvelope - 1) ELSE 0
-                lam  == dp0 - dp1
-            IN
-                /\ shadow' = lam
-                /\ selected' = GreedyPick(newEnvelope)  \* see reconstruction lemma
+             LET dp0  == DPValue(newEnvelope)
+                 dp1  == IF newEnvelope > 0 THEN DPValue(newEnvelope - 1) ELSE 0
+                 lam  == dp0 - dp1
+             IN
+                 /\ shadow' = lam
+                 /\ selected' = GreedyPick(newEnvelope)  \* see reconstruction lemma
     /\ envelope' = newEnvelope
     /\ epoch' = epoch + 1
-
-\* Reconstruct the optimal subset: pick any row whose inclusion contributes
-\* strictly more value than skipping it (greedy pick of the table — the DP
-\* itself guarantees optimality; the reconstruction is the witness).
-GreedyPick(e) ==
-    LET fold[i ∈ 0..Len(Rows), ee ∈ 0..e] ==
-            IF i = 0 THEN [k ∈ Rows |-> FALSE]
-            ELSE LET prev == fold[i-1, ee]
-                     take == fold[i-1, ee - C(Rows[i])]
-                 IN IF C(Rows[i]) <= ee
-                    THEN [k ∈ Rows |-> IF k = Rows[i]
-                                       THEN TRUE
-                                       ELSE prev[k] \/ take[k]]
-                    ELSE prev
-    IN fold[Len(Rows), e]
 
 Next ==
     \E newE \in 0..TotalCost, obsLam \in 0..TotalValue :
@@ -100,17 +127,17 @@ Spec == Init /\ [][Next]_vars
 \* (in the model this is structural — the DP enforces it; here we require
 \*  that Sum(C(i)*selected[i]) ≤ envelope at every step.)
 SpentWithinEnvelope ==
-    [][ Sum(C(i) : i ∈ Rows) \* selected[i]  ≤  envelope ]_<<selected, envelope>>
+    [][ (Sum({C(i) : i ∈ {j ∈ Rows : selected[j]}}) ≤ envelope) ]_<<selected, envelope>>
     \* ^-- the totalCost of the chosen subset, expressed via the structural
     \*     fact that the DP enforces Σc·x ≤ e on its own. We assert the
     \*     equivalent residual in the post-state below.
 
 \* S2: shadow price is finite & non-negative when CONJUGATE mode ran
 ShadowFinite ==
-    [][ shadow ∈ Nat ]_shadow
+    [][ (shadow ∈ Nat) ]_shadow
 
 ShadowBounded ==
-    [][ shadow ≤ Max({V(i) : i ∈ Rows}) ]_shadow
+    [][ (shadow ≤ Max({V(i) : i ∈ Rows})) ]_shadow
 
 \* S3: shadow price is monotonically non-increasing in envelope
 \*      λ(E) = V*(E) − V*(E−1) is a non-increasing function of E.
@@ -156,10 +183,21 @@ PeriodStep(obs) ==
     /\ UNCHANGED <<envelope, selected>>
     /\ epoch'  = epoch + 1
 
-\* Per-period property: shadow stays in [0, maxV] at every step.
+\* Per-period property: shadow stays in [0, maxV] at every step. The
+\* observation is quantified over the same range the Next action uses for
+\* the observed lambda (0..TotalValue); the module used `obs` free.
 ShadowBoundedPeriod ==
-    [][ PeriodStep(obs) ⇒
-        shadow' ∈ 0..Max({V(i) : i ∈ Rows}) ]_shadow
+    [][ (\A obs \in 0..TotalValue : PeriodStep(obs) ⇒
+        shadow' ∈ 0..Max({V(i) : i ∈ Rows})) ]_shadow
+
+\* ── Model bound (TLC state constraint) ───────────────────────────────────────
+\*
+\* `epoch` is an unbounded counter in the Java implementation, so the raw
+\* state space of the model is infinite. The model is restricted to the
+\* first TotalCost epochs — the very horizon the FiniteHorizon property
+\* talks about. The constraint only prunes the explored states; no property
+\* is weakened by it.
+EpochBound == epoch <= TotalCost
 
 =============================================================================
 \* Modification History

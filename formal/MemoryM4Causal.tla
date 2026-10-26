@@ -64,6 +64,12 @@ Tombstone(r, k, epoch) ==
 \*
 \* Causal merge preserves both states' progress. Tombstones "win" over any
 \* state entry whose epoch ≤ tombstone epoch (irreversibility).
+\*
+\* Max is not provided by any TLA+ standard module, so it is defined here;
+\* Merge uses it to raise the vector clock to the later of the two epochs.
+\* (SANY requires an operator to be defined before it is used.)
+
+Max(S) == CHOOSE m ∈ S : \A s ∈ S : s ≤ m
 
 Merge(r1, r2) ==
     /\ r1 ∈ Replicas
@@ -102,22 +108,25 @@ Spec == Init /\ [][Next]_vars
 \*     unless an explicit Tombstone removes it.
 MonotonicityExceptTombstone ==
     [][ \A r ∈ Replicas, k ∈ Keys :
-            (k ∈ state'[r] ∧ ⟨k, Epochs⟩ ∉ tombstones'[r])
+            (k ∈ state'[r] ∧ ∀E ∈ Epochs : ⟨k, E⟩ ∉ tombstones'[r])
             ⇒ k ∈ state[r] ]_state
 
 \* F2: TombstoneIrreversible — once ⟨k, E⟩ ∈ tombstones[r], no subsequent
 \*     operation may put k back into state[r] with insert epoch ≤ E.
+\*     Tombstones are never removed, so checking the implication in every
+\*     state in which the tombstone is present is equivalent to checking it
+\*     from the moment the tombstone is created onwards.
 TombstoneIrreversible ==
-    [][ \A r ∈ Replicas, k ∈ Keys, E ∈ Epochs :
-            ⟨k, E⟩ ∈ tombstones[r]
-            ⇒ [][ ¬(k ∈ state[r] ∧ vc[r][k] ≤ E) ]_<<state, vc>> ]_tombstones
+    \A r ∈ Replicas, k ∈ Keys, E ∈ Epochs :
+        ⟨k, E⟩ ∈ tombstones[r]
+        ⇒ ¬(k ∈ state[r] ∧ vc[r][k] ≤ E)
 
 \* F3: EventualConsistency — after enough Merge steps, all replicas agree
 \*     on the keys they hold (up to tombstone filtering).
 EventualConsistency ==
-    \A r1, r2 ∈ Replicas :
-        <>[(state[r1] \ {k : ∃t : ⟨k, t⟩ ∈ tombstones[r1]})
-           = (state[r2] \ {k : ∃t : ⟨k, t⟩ ∈ tombstones[r2]})]_state
+    <> \A r1, r2 ∈ Replicas :
+        (state[r1] \ {k ∈ Keys : ∃t ∈ Epochs : ⟨k, t⟩ ∈ tombstones[r1]})
+        = (state[r2] \ {k ∈ Keys : ∃t ∈ Epochs : ⟨k, t⟩ ∈ tombstones[r2]})
 
 \* F4: FrozenImmutability — FROZEN keys, once observed frozen at a replica,
 \*     never re-enter the state by any later operation.

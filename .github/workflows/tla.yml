@@ -1,19 +1,24 @@
 name: Formal Specs (TLA+)
 
-# On every PR or push that touches formal/, run TLC against each spec.
-# TLC is the TLA+ model checker; it explores bounded state spaces to verify
-# invariants (per CRITICAL_GAPS.md GAP-021).
+# RECON-W38.4 (owner directive target). This job used to run SANY only, and
+# its own comment said so: "For now we run only the parser to catch syntax
+# regressions early." Nine specifications had therefore never been parsed by
+# the TLA+ parser at all - the Java-side "formal gate" (TlaSpecSmokeTest) is a
+# TEXT-level smoke test that passes on files the TLA+ parser rejects. The job
+# now performs real model checking with TLC and reports, per specification,
+# which properties were actually evaluated.
 
 on:
   push:
-    branches: [main]
+    branches: [develop, main]
     paths:
       - 'formal/**'
       - '.github/workflows/tla.yml'
   pull_request:
-    branches: [main]
+    branches: [develop, main]
     paths:
       - 'formal/**'
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -39,24 +44,81 @@ jobs:
           curl -fsSL -o tools/tla2tools.jar \
             https://github.com/tlaplus/tlaplus/releases/download/v1.8.0/tla2tools.jar
           ls -lh tools/tla2tools.jar
+          # The main class in the current tla2tools build is tlc2.TLC.
+          unzip -l tools/tla2tools.jar | grep -E 'tlc2/TLC.class' | head -1
 
-      - name: Sanity-check each spec parses
+      # Required. SANY exits 255 on a parse error but 0 on a SEMANTIC error,
+      # so the exit code alone is not the gate: the step also greps for the
+      # error markers SANY prints.
+      - name: Parse and semantic-check every spec (SANY)
         run: |
-          set -e
+          set -uo pipefail
+          failed=0
           for spec in formal/*.tla; do
-            echo "--- SANY parse check: $spec ---"
-            java -cp tools/tla2tools.jar tla2sany.SANY "$spec" || {
-              echo "::error::TLA+ spec $spec failed to parse"
-              exit 1
-            }
+            echo "--- SANY: $spec ---"
+            out="$(java -cp tools/tla2tools.jar tla2sany.SANY "$spec" 2>&1)"
+            rc=$?
+            echo "$out" | grep -E "Unknown operator|Parse Error|Encountered|\*\*\* Errors:" | head -5 || true
+            if [ "$rc" != "0" ] || echo "$out" | grep -qE "Unknown operator|Parse Error|Encountered"; then
+              echo "::error::$spec failed the SANY parse/semantic check"
+              failed=1
+            else
+              echo "✅ $spec parses cleanly"
+            fi
           done
+          [ "$failed" = "0" ] || exit 1
 
-      # Full TLC model-checking requires a config file (Cfg) for each spec.
-      # These are added as a follow-up when concrete parameters are fixed
-      # (see formal/README.md). For now we run only the parser to catch
-      # syntax regressions early.
-      - name: Summary
-        if: success()
+      # Required. Real model checking.
+      - name: Model-check every spec that has a configuration (TLC)
         run: |
-          echo "All $(ls formal/*.tla | wc -l) TLA+ specs parse cleanly."
-          echo "Add *.cfg files to enable bounded state-space model checking."
+          set -uo pipefail
+          # Specifications with a KNOWN, recorded, genuinely false property.
+          # Each needs an author decision (the property, not the syntax, is
+          # wrong); they are reported loudly and do not fail this job. Any
+          # other failure fails the job.
+          KNOWN_FAILING="MPDTNeuron MemoryM4Causal MctsLatsVisit FrozenEthicalFNL ConjugateBudgeterDP"
+          mkdir -p /tmp/tlc-meta
+          checked=0
+          failed=0
+          skipped=0
+          for cfg in formal/*.cfg; do
+            spec="$(basename "$cfg" .cfg)"
+            tla="formal/$spec.tla"
+            if [ ! -f "$tla" ]; then
+              echo "::warning::$cfg has no matching specification"
+              continue
+            fi
+            echo "=== TLC model check: $spec ==="
+            set +e
+            out="$(cd formal && java -cp ../tools/tla2tools.jar tlc2.TLC \
+                     -metadir "/tmp/tlc-meta/$spec" \
+                     -config "$spec.cfg" "$spec.tla" 2>&1)"
+            rc=$?
+            set -e
+            checked=$((checked+1))
+            echo "$out" | grep -E "states generated|No error has been found|^Error:" | head -6 || true
+            if [ "$rc" = "0" ]; then
+              echo "✅ $spec: model check passed"
+            elif echo " $KNOWN_FAILING " | grep -q " $spec "; then
+              echo "::warning::$spec: model check FAILED (rc=$rc). This is a KNOWN, recorded property failure that needs an author decision - see docs-v2/engineering/TLA-STATUS.md. It is reported, not hidden, and it is NOT a passing check."
+            else
+              echo "::error::$spec: model check FAILED (rc=$rc)"
+              failed=$((failed+1))
+            fi
+          done
+          for spec in formal/*.tla; do
+            base="$(basename "$spec" .tla)"
+            if [ ! -f "formal/$base.cfg" ]; then
+              skipped=$((skipped+1))
+              echo "::notice::$base has no configuration: syntax-checked only, no property was model-checked. See docs-v2/engineering/TLA-STATUS.md."
+            fi
+          done
+          echo "Model-checked $checked specification(s); $skipped syntax-checked only; $failed failed."
+          [ "$failed" = "0" ] || exit 1
+
+      - name: Summary
+        if: always()
+        run: |
+          echo "TLA+ status is recorded in docs-v2/engineering/TLA-STATUS.md."
+          echo "A specification is 'model-checked' only when TLC ran to completion over its"
+          echo "configured state space; a specification without a .cfg is syntax-checked only."

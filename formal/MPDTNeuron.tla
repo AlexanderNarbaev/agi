@@ -24,7 +24,12 @@ vars == <<k, table, inputs, outputs>>
 
 Init ==
     /\ k \in [Neurons -> 1..K_MAX]
-    /\ table \in [n \in Neurons -> SUBSET 0..(2 ^ k[n]) - 1]
+    \* TLA+ has no dependent-range function set: table[n]'s range depends on
+    \* k[n], so the function set is taken over the maximal range (K_MAX) and
+    \* the per-neuron bound is stated separately. Since k[n] <= K_MAX, the two
+    \* constraints are equivalent to the intended per-neuron range.
+    /\ table \in [Neurons -> SUBSET (0..(2 ^ K_MAX) - 1)]
+    /\ \A n \in Neurons : table[n] \subseteq 0..((2 ^ k[n]) - 1)
     /\ inputs = [n \in Neurons |-> 0]
     /\ outputs = [n \in Neurons |-> FALSE]
 
@@ -32,7 +37,7 @@ Init ==
 
 Evaluate(n, idx) ==
     /\ n \in Neurons
-    /\ idx \in 0..(2 ^ k[n]) - 1
+    /\ idx \in 0..((2 ^ k[n]) - 1)
     /\ inputs' = [inputs EXCEPT ![n] = idx]
     /\ outputs' = [outputs EXCEPT ![n] = (idx \in table[n])]
     /\ UNCHANGED <<k, table>>
@@ -40,11 +45,14 @@ Evaluate(n, idx) ==
 \* Bounded by K_MAX — k > K_MAX ⇒ reject (mirrors TruthTable.validate).
 InvalidInput(n, idx) ==
     /\ n \in Neurons
-    /\ (idx < 0 \/ idx >= 2 ^ k[n])
+    /\ (idx < 0 \/ idx >= (2 ^ k[n]))
     /\ UNCHANGED vars
 
+\* The idx bound depends on k[n], so the two quantifiers are nested: in a flat
+    \* multi-binder form the bound of the second binder is evaluated outside the
+    \* scope of the first, which leaves k[n] ill-formed.
 Next ==
-    \E n \in Neurons, idx \in 0..(2 ^ k[n]) - 1 : Evaluate(n, idx)
+    \E n \in Neurons : \E idx \in 0..((2 ^ k[n]) - 1) : Evaluate(n, idx)
 
 Spec == Init /\ [][Next]_vars
 
@@ -64,10 +72,14 @@ KMaxIsGlobalCeiling ==
     \A n \in Neurons : k[n] <= K_MAX
 
 \* INV-4: outputs are stable — re-evaluating with the same input doesn't flip.
+\* The operand of [] is an action, so it must use the [A]_v form. The stuttering
+    \* clause is vacuous here: if every variable is unchanged then
+    \* inputs[n] = inputs'[n] and outputs[n] = outputs'[n] hold trivially, so
+    \* [] [P]_vars and [] P accept exactly the same behaviours.
 OutputStableUnderIdempotentInput ==
-    [] \A n \in Neurons :
-        inputs[n] = inputs'[n] =>
-        outputs[n] = outputs'[n]
+    [][ \A n \in Neurons :
+            inputs[n] = inputs'[n] =>
+            outputs[n] = outputs'[n] ]_vars
 
 =============================================================================
 \* Modification History

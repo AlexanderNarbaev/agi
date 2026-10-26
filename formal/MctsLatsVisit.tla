@@ -13,7 +13,10 @@ EXTENDS Naturals, FiniteSets, Reals, TLC
 CONSTANTS
     Nodes,           \* universe of MCTS/LATS nodes
     Visits,          \* integer visit counts per node
-    AlphaRoot,       \* the alpha-Root convergence bound ∈ (0, 1)
+    AlphaRoot       \* the alpha-Root convergence bound ∈ (0, 1); a TLC
+                    \* configuration file carries integers only and
+                    \* tla2tools has no real arithmetic, so the bound is
+                    \* modelled by its integer ceiling 1
 
 \* ── State ────────────────────────────────────────────────────────────────────
 
@@ -24,6 +27,31 @@ VARIABLES
     bestArm          \* the argmax over visitCount × reward
 
 vars == <<tree, visitCount, totalReward, bestArm>>
+
+
+Threshold(N, alpha) == N                         \* placeholder for TLC
+
+OptimalArm(node) == CHOOSE n ∈ Nodes : TRUE       \* ground truth (abstracted)
+
+ArgmaxByReward(vc, tr) == CHOOSE n ∈ Nodes : TRUE   \* abstracted
+MeanReward(n) == IF visitCount[n] = 0 THEN 0
+                ELSE totalReward[n] / visitCount[n]
+
+\* MeanAbove(n, m) — "the mean reward of n is strictly above the mean reward
+\* of m". The two means are compared by cross-multiplication: the Reals
+\* standard module is a dummy in tla2tools (TLC evaluates its `/` as an
+\* unevaluable CHOOSE), and integer division would truncate the means and so
+\* weaken the comparison. The cross-multiplied form is equivalent here
+\* because the antecedent of BestArmIsArgmax gives visitCount[n] > visitCount[m]
+\* ≥ 0, hence both denominators are positive.
+MeanAbove(n, m) == visitCount[m] * totalReward[n] > visitCount[n] * totalReward[m]
+
+Probability(p) == 0                                   \* placeholder
+
+\* The visit budget N of the convergence claim below. The module used N
+\* without ever defining it; N is the number of visit levels the model
+\* enumerates, i.e. the size of `Visits`.
+N == Cardinality(Visits)
 
 \* ── Init ─────────────────────────────────────────────────────────────────────
 
@@ -37,6 +65,7 @@ Init ==
 
 Visit(node, reward) ==
     /\ node ∈ Nodes
+    /\ visitCount[node] + 1 ∈ Visits  \* keep the documented type visitCount[n] ∈ Visits
     /\ visitCount'  = [visitCount  EXCEPT ![node] = visitCount[node] + 1]
     /\ totalReward' = [totalReward EXCEPT ![node] = totalReward[node] + reward]
     /\ bestArm' = ArgmaxByReward(visitCount', totalReward')
@@ -67,22 +96,20 @@ Convergence ==
         (visitCount[node] ≥ Threshold(N, AlphaRoot))
         ⇒ Probability(bestArm = OptimalArm(node)) ≥ 1 - 1 / N^AlphaRoot
 
-\* Helper: minimum visit threshold for the alpha-Root bound
-Threshold(N, alpha) == N                         \* placeholder for TLC
-
-OptimalArm(node) == CHOOSE n ∈ Nodes : TRUE       \* ground truth (abstracted)
-
 \* ── Safety properties ────────────────────────────────────────────────────────
 
 \* S1: Visit counts are non-negative and monotonically non-decreasing.
+\* The comparison is element-wise: TLA+ defines no ordering on functions, so
+\* `visitCount' ≥ visitCount` is not a well-formed TLA+ expression (TLC
+\* rejects it with "The first argument of >= should be an integer").
 VisitsMonotone ==
-    [][ visitCount' ≥ visitCount ]_visitCount
+    [][ \A n ∈ Nodes : visitCount'[n] ≥ visitCount[n] ]_visitCount
 
 \* S2: bestArm is the argmax of (visits, mean reward) — it never points
 \*     to a node with strictly fewer visits AND lower reward than another.
 BestArmIsArgmax ==
     [][ \A n, m ∈ Nodes :
-            (visitCount[n] > visitCount[m] ∧ MeanReward(n) > MeanReward(m))
+            (visitCount[n] > visitCount[m] ∧ MeanAbove(n, m))
             ⇒ bestArm' = n \/ bestArm' = m ]_bestArm
 
 \* S3: Expansion preserves the visited-set semantics (a node is a child
@@ -98,11 +125,6 @@ SearchTerminates ==
     <>(bestArm ∈ {n ∈ Nodes : visitCount[n] > 0})
 
 \* ── Helpers ─────────────────────────────────────────────────────────────────
-
-ArgmaxByReward(vc, tr) == CHOOSE n ∈ Nodes : TRUE   \* abstracted
-MeanReward(n) == IF visitCount[n] = 0 THEN 0
-                ELSE totalReward[n] / visitCount[n]
-Probability(p) == 0                                   \* placeholder
 
 =============================================================================
 \* Modification History
