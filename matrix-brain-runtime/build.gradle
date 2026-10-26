@@ -26,11 +26,15 @@ dependencies {
     // FROZEN research core (article V: read-only, no mutation)
     implementation project(':matrix-core')
 
-    // Audit chain (matrix-audit HashChainedLog + GdprPruner)
-    implementation project(':matrix-audit')
-
-    // Prometheus metrics + healthchecks
-    implementation project(':matrix-observability')
+    // RECON-W38.4: the matrix-audit and matrix-observability dependencies were
+    // REMOVED. Both were declared but unused: this module contains no import
+    // of io.matrix.audit or io.matrix.observability, no ServiceLoader or
+    // Class.forName lookup against them, and no META-INF/services entry. They
+    // were dead weight in the runtime classpath of the module that owns the
+    // serving path.
+    //
+    // Callers that need them declare them themselves - matrix-api-gateway
+    // already declares project(':matrix-audit') directly.
 
     // JSON for REST DTO
     implementation 'com.fasterxml.jackson.core:jackson-databind:2.18.2'
