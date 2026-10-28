@@ -52,6 +52,15 @@ application {
 tasks.withType(Test) {
     useJUnitPlatform()
     maxHeapSize = '2g'
+    // RECON-W38.4: CognitiveConductorGuardTest scans the production sources
+    // of several modules, which Gradle does not track as a test input.
+    // Without this the task can be UP-TO-DATE and the guard would report a
+    // STALE result instead of re-checking the architecture.
+    inputs.files(fileTree(rootProject.projectDir) {
+        include 'matrix-core/src/main/java/**/*.java'
+        include 'matrix-brain-runtime/src/main/java/**/*.java'
+        include 'matrix-api-gateway/src/main/java/**/*.java'
+    })
     // RECON-W33.2: RealGpuKernelEngine -> MatrixNativeMath -> SimdTruthTableEval loads
     // jdk.incubator.vector at class-init. Without this flag, constructing a
     // RealGpuKernelEngine throws NoClassDefFoundError(jdk/incubator/vector/Vector), so no
