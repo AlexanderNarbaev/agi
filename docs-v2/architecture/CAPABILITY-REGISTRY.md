@@ -28,7 +28,7 @@ itself an unbacked claim.
 
 | # | Claim as published | State | Evidence | Measured value |
 |---|---|---|---|---|
-| C-01 | "724 Tests Passing" | **CORRECTED** | `./scripts/count-tests.sh` | **8,898** test methods across 14 modules (source-counted; see §"How the test count is measured"). The figure 724 appears in no measurement in this repository; it is also the tokenizer's vocabulary size, which is how it most likely arose. |
+| C-01 | "724 Tests Passing" | **CORRECTED** | `./gradlew test` (the executed count); `./scripts/count-tests.sh` (the source count) | **9,432** tests executed across 14 modules and 1,282 suites, **26 skipped, 0 failures, 0 errors** (`BUILD SUCCESSFUL in 23m 6s`). The source count is **8,898** test methods; the difference is `@ParameterizedTest` cases, which expand into several executed tests. The figure 724 appears in no measurement in this repository; it is also the tokenizer's vocabulary size, which is how it most likely arose. |
 | C-01b | "0 LLM calls in the decision path" (new headline stat) | **VERIFIED** | `.github/workflows/ci.yml` — the Article-I gate; `RuntimeLlmGuardTest` scans the runtime modules for legacy LLM imports | **0** — the gate is a required CI check, so the number cannot silently regress. |
 | C-01c | "9 TLA+ specs, model-checked in CI" (new headline stat) | **VERIFIED** | `.github/workflows/tla.yml`; per-specification detail in `docs-v2/engineering/TLA-STATUS.md` | All **9** specifications parse and all 9 are model-checked; 4 are fully green and 5 report a recorded property failure, which `docs-v2/engineering/TLA-STATUS.md` states explicitly. |
 | C-02 | "33,000× Faster than LLMs" / "Energy Efficiency 33,000× vs GPU-based LLMs" | **CORRECTED** | `docs-v2/research/BENCHMARK-REPORT-W620.md` §4 | The benchmark report records a **100,000× speedup** against a synthetic LLM ops/sec model, with an energy ratio of 0.00x. The published 33,000× matches no measurement: it is derived in `docs-v2/story/overview.md` by dividing 10–100 *tokens/sec* by a *<10 ms inference* — two different quantities. The card was also labelled "Energy Efficiency" while carrying a speedup. |
@@ -43,42 +43,39 @@ itself an unbacked claim.
 
 ## How the test count is measured
 
-The published figure is a **source count of test methods**, produced by a
-named command:
-
-```bash
-./scripts/count-tests.sh          # per module and total
-./scripts/count-tests.sh --total  # 8898
-```
-
-It counts every source line declaring `@Test`, `@ParameterizedTest`,
-`@TestFactory` or `@RepeatedTest` under `src/test`, per module. This is the
-same counting method the build itself uses
-(`:matrix-core:generateBuildInfo`), so the number a binary prints and the
-number this page publishes are produced the same way.
-
-It is a **source** count, not an execution count: a `@Disabled` method is
-counted here and is not executed. For the executed count, run
-`./gradlew test` and sum the `tests="N"` attributes of the JUnit XML result
-files:
+The published figure is the **executed** count — the number of tests the
+build actually ran, and the number that passed:
 
 ```bash
 ./gradlew test
 python3 - <<'PYEOF'
 import re, glob
-total = 0
-for f in glob.glob('*/build/test-results/test/*.xml') + glob.glob('pilots/*/build/test-results/test/*.xml'):
-    m = re.search(r'tests="(\d+)"', open(f).read())
+total = skipped = failures = errors = 0
+for f in glob.glob('**/build/test-results/test/*.xml', recursive=True):
+    m = re.search(r'tests="(\d+)" skipped="(\d+)" failures="(\d+)" errors="(\d+)"',
+                  open(f, errors='ignore').read())
     if m:
-        total += int(m.group(1))
-print(total)
+        t, s, fl, e = map(int, m.groups())
+        total += t; skipped += s; failures += fl; errors += e
+print(total, skipped, failures, errors)
 PYEOF
 ```
 
-The page labels the figure **"Test methods"** rather than "Tests Passing"
-precisely because it is a source count: calling it "passing" would claim an
-execution that the number does not record, which is the error this registry
-exists to remove.
+Measured on 2026-10-28: **9 432 tests, 26 skipped, 0 failures, 0 errors**,
+`BUILD SUCCESSFUL in 23m 6s`.
+
+There is also a **source** count, produced in seconds by
+`./scripts/count-tests.sh` (**8,898**). It counts every source line declaring
+`@Test`, `@ParameterizedTest`, `@TestFactory` or `@RepeatedTest` under
+`src/test`, per module. It is the same counting method the build itself uses
+(`:matrix-core:generateBuildInfo`), so the number a binary prints and this
+number are produced the same way.
+
+The two differ by 534: a `@ParameterizedTest` method is one source line and
+several executed tests, and a `@Disabled` method is counted by the source
+count but not executed. The page publishes the **executed** figure, because
+"Tests Passing" is a claim about an execution and must therefore be backed by
+one — which is exactly the error the original "724" was.
 
 ## Not capability claims
 

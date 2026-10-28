@@ -130,3 +130,24 @@ remains an unauthorised FROZEN change with no RFC, left for the owner.
 - SpotBugs cannot read Java 25 class files with any released version.
 - The `AGENTS.md` FROZEN edit in the working tree needs an owner ruling.
 - `git fsck` exit 18 (1 missing commit, 4 missing trees, 6 invalid reflog entries) — pre-existing.
+
+### Continuation — §13 mind cycles, §16 module scope, §20 capability registry (2026-10-28)
+
+| Item | Finding | Fix | Evidence |
+|---|---|---|---|
+| §13 mind cycles | Two classes claimed to be the conductor and two files asserted opposite facts about which the gateway serves; `MindCycle`'s comment was exactly backwards | ADR-2026-10-26-002: `TrueMindCycle` is the one conductor; `MindCycle` `@Deprecated`; the CLI defaults to it with `--legacy` opt-in; `CognitiveConductorGuardTest` enforces it (proved non-vacuous) | 117 suites / 912 tests / 0 failures |
+| §16 module scope | 4 modules had no lifecycle state; the archive markers TRUE-MIND-AUDIT §4 promised did not exist; `matrix-web-ui`'s jest suite had never run — it could not start (`setupFilesAfterEach` is not a Jest option, `ts-jest` was undeclared, `jest-environment-jsdom` was undeclared) | `MODULE-LIFECYCLE.md`; 3 archive markers; `scripts/verify-dormant-modules.sh`; jest config rewritten to `next/jest`; 12 broken tests fixed; `web-ui-tests` is now a required CI job; `ModuleLifecycleRegistryTest` enforces the registry | web-ui **8 suites / 50 tests / 0** · micro **PASS 4/4** · fpga **SKIPPED** (amaranth absent) · ros2 **NO-SUITE** |
+| §20 capability claims | The published page advertised "724 tests", "33,000x faster than LLMs", a 25% random baseline, "90% accuracy retention from LLM distillation" and "every claim is backed by ..." — none of which any measurement produced | `CAPABILITY-REGISTRY.md` (10 claims, each with state + evidence); the page corrected with provenance per card; `scripts/count-tests.sh` is the named command (**8,898** test methods, 14 modules); `CapabilityClaimsGuardTest` enforces it | 4 guard tests / 0 failures |
+| popcount benchmark | `:matrix-core:test` was **red**: the test asserted a *timing outcome* (machine-dependent) against a baseline that was the **retracted wrong function** (XOR-fold) | benchmark against production; the retraction is now pinned by a timing-independent property | production 0.10 ms · unrolled4 0.44 ms (**0.22x** vs production) · fold 1.25 ms (0.08x) |
+
+### Corrections to the prior audit (second pass)
+
+- The full-suite executed count is **8,898** test methods (source-counted) — not the "724" the front page claimed, and not the 9,324 figure recorded in an earlier session entry.
+- `matrix-web-ui` has a pre-existing peer conflict: `eslint-config-next@16.3.6` needs `eslint >= 9`, the project pins `eslint@8.57.1`, so a strict `npm install` fails with ERESOLVE. CI installs with `--legacy-peer-deps`. Aligning them is a major upgrade and needs an RFC — recorded, not resolved.
+
+### Still open
+
+- The four formal-property failures need an **author** decision.
+- `ConjugateBudgeterDP`'s model is checked; `MCTSPlanner` has no production caller.
+- The `AGENTS.md` FROZEN edit in the working tree needs an owner ruling.
+- The eslint major-version conflict needs an RFC.

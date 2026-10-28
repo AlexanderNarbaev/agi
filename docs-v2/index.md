@@ -75,8 +75,8 @@ description: "An open-source hybrid neuro-symbolic AI system that thinks like a 
 
     <div class="hero-stats">
       <div class="stat">
-        <span class="stat-number">8,898</span>
-        <span class="stat-label">Test methods, 14 modules</span>
+        <span class="stat-number">9,432</span>
+        <span class="stat-label">Tests passing, 14 modules</span>
       </div>
       <div class="stat">
         <span class="stat-number">0</span>
@@ -110,7 +110,7 @@ description: "An open-source hybrid neuro-symbolic AI system that thinks like a 
   </div>
   <div class="toggle-content hidden" id="engineer-content">
     <h3>Welcome, builder!</h3>
-    <p>MATRIX is a <strong>hybrid neuro-symbolic AI framework</strong>. BIR for logic, HDC for patterns, MCTS for planning, biochemical modulators for adaptive behavior. No LLM in the decision path — enforced by a CI gate. 8,898 test methods across 14 modules.</p>
+    <p>MATRIX is a <strong>hybrid neuro-symbolic AI framework</strong>. BIR for logic, HDC for patterns, MCTS for planning, biochemical modulators for adaptive behavior. No LLM in the decision path — enforced by a CI gate. 9,432 tests passing across 14 modules.</p>
     <p><a href="guide/getting-started.html">→ Get Started in 5 Minutes</a></p>
   </div>
   <div class="toggle-content hidden" id="scientist-content">

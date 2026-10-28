@@ -6183,11 +6183,15 @@ Minecraft survival (WAL-620).
 
 ### Verification
 
-- `./scripts/count-tests.sh --total` → **8,898** test methods across 14
-  modules. The page says "8,898" and labels it **"Test methods"**, not
-  "Tests Passing", because it is a source count: a `@Disabled` method is
-  counted here and is not executed, and calling it "passing" would claim an
-  execution the number does not record.
+- `./gradlew test` → **9,432 tests executed across 14 modules and 1,282
+  suites: 26 skipped, 0 failures, 0 errors** (`BUILD SUCCESSFUL in 23m 6s`).
+  The page publishes that figure as "9,432 Tests passing", because "Tests
+  Passing" is a claim about an execution and must be backed by one — which is
+  exactly the error the original "724" was.
+- `./scripts/count-tests.sh --total` → **8,898** test methods (a source
+  count, in seconds). The two differ by 534: a `@ParameterizedTest` is one
+  source line and several executed tests, and a `@Disabled` method is counted
+  by the source count but not executed. Both commands are in the registry.
 - Every headline number on the corrected page is present in the registry; the
   retired values (`724`, `33,000`, `25% random`) are absent from the page.
 - `CapabilityClaimsGuardTest` — 4 tests.
@@ -6208,9 +6212,9 @@ had no backing are named as such rather than quietly retained.
 - The published speedup (100,000×) is a comparison against a **synthetic**
   LLM ops/sec model, not an end-to-end measurement against a served LLM. The
   page says so, and the registry says so.
-- The test count is a source count, not an execution count. The executed
-  count is a separate measurement (`./gradlew test`, summed over the JUnit
-  XML), and the registry gives that command too.
+- The executed count is a full-suite measurement: it takes ~23 minutes to
+  reproduce. The registry gives both that command and the instant source
+  count, and states which is which.
 - `docs-v2/story/` is a narrative and was not audited claim by claim; only
   the comparison table that carried the retired figures was touched.
 
