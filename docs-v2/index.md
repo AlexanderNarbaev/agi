@@ -75,16 +75,16 @@ description: "An open-source hybrid neuro-symbolic AI system that thinks like a 
 
     <div class="hero-stats">
       <div class="stat">
-        <span class="stat-number">724</span>
-        <span class="stat-label">Tests Passing</span>
+        <span class="stat-number">8,898</span>
+        <span class="stat-label">Test methods, 14 modules</span>
       </div>
       <div class="stat">
-        <span class="stat-number">33,000×</span>
-        <span class="stat-label">Faster than LLMs</span>
+        <span class="stat-number">0</span>
+        <span class="stat-label">LLM calls in the decision path</span>
       </div>
       <div class="stat">
-        <span class="stat-number">100%</span>
-        <span class="stat-label">Constitution Compliant</span>
+        <span class="stat-number">9</span>
+        <span class="stat-label">TLA+ specs, model-checked in CI</span>
       </div>
     </div>
 
@@ -110,12 +110,12 @@ description: "An open-source hybrid neuro-symbolic AI system that thinks like a 
   </div>
   <div class="toggle-content hidden" id="engineer-content">
     <h3>Welcome, builder!</h3>
-    <p>MATRIX is a <strong>production-grade hybrid AI framework</strong>. BIR for logic, HDC for patterns, MCTS for planning, biochemical modulators for adaptive behavior. 33,000× faster than LLMs. 724 tests passing. CONSTITUTION-compliant.</p>
+    <p>MATRIX is a <strong>hybrid neuro-symbolic AI framework</strong>. BIR for logic, HDC for patterns, MCTS for planning, biochemical modulators for adaptive behavior. No LLM in the decision path — enforced by a CI gate. 8,898 test methods across 14 modules.</p>
     <p><a href="guide/getting-started.html">→ Get Started in 5 Minutes</a></p>
   </div>
   <div class="toggle-content hidden" id="scientist-content">
     <h3>Welcome, researcher!</h3>
-    <p>MATRIX is a <strong>mathematically rigorous system</strong> with formal proofs, benchmarks, and 90% accuracy retention from LLM distillation. Every claim is backed by tests, benchmarks, or TLA+ specs.</p>
+    <p>MATRIX is a <strong>mathematically rigorous system</strong>: TLA+ specifications that are parsed and model-checked in CI, and published benchmark reports. Every capability claim on this page is listed in the <a href="../architecture/CAPABILITY-REGISTRY.md">capability registry</a>, with the measurement behind it — including the claims that had none, and what replaced them.</p>
     <p><a href="science-v2/math-foundations.html">→ See the Math</a></p>
   </div>
 </div>
@@ -126,19 +126,19 @@ description: "An open-source hybrid neuro-symbolic AI system that thinks like a 
     <div class="pillar">
       <div class="pillar-icon">🔮</div>
       <h3>BIR: Logic</h3>
-      <p>Boolean inference engine — fast, deterministic, explainable. 75% accuracy on logic tasks.</p>
+      <p>Boolean inference engine — fast, deterministic, explainable. 75% accuracy on 100 logic puzzles (random baseline 30%).</p>
       <a href="story/brain-analogy.html#bir">Learn more →</a>
     </div>
     <div class="pillar">
       <div class="pillar-icon">🌌</div>
       <h3>HDC: Patterns</h3>
-      <p>Hyperdimensional computing — learns from 50 examples, not 50,000. 89.9% AUC score.</p>
+      <p>Hyperdimensional computing — 0.899 AUC with 50 training examples, against a random 0.253.</p>
       <a href="story/brain-analogy.html#hdc">Learn more →</a>
     </div>
     <div class="pillar">
       <div class="pillar-icon">♟️</div>
       <h3>MCTS: Planning</h3>
-      <p>Monte Carlo Tree Search — thinks 5 moves ahead. 92% success in Minecraft survival.</p>
+      <p>Monte Carlo Tree Search — 92% success in the headless Minecraft pilot, 0 deaths, against 78% for a single agent.</p>
       <a href="story/brain-analogy.html#mcts">Learn more →</a>
     </div>
     <div class="pillar">
@@ -192,17 +192,17 @@ description: "An open-source hybrid neuro-symbolic AI system that thinks like a 
     <div class="benchmark-card">
       <h3>Logic Tasks</h3>
       <div class="benchmark-value">75%</div>
-      <p>vs 25% random baseline</p>
+      <p>BIR on 100 puzzles; random baseline 30%</p>
     </div>
     <div class="benchmark-card">
       <h3>Sample Efficiency</h3>
       <div class="benchmark-value">89.9%</div>
-      <p>AUC with only 50 examples</p>
+      <p>AUC with only 50 examples (random 25.3%)</p>
     </div>
     <div class="benchmark-card">
-      <h3>Energy Efficiency</h3>
-      <div class="benchmark-value">33,000×</div>
-      <p>vs GPU-based LLMs</p>
+      <h3>Speedup</h3>
+      <div class="benchmark-value">100,000×</div>
+      <p>BIR vs a synthetic LLM ops/sec model</p>
     </div>
     <div class="benchmark-card">
       <h3>Federation Resilience</h3>
@@ -210,7 +210,9 @@ description: "An open-source hybrid neuro-symbolic AI system that thinks like a 
       <p>consensus with 50% nodes killed</p>
     </div>
   </div>
-  <p><a href="research/BENCHMARK-REPORT-W620.html">→ Full benchmark report</a></p>
+  <p><a href="research/BENCHMARK-REPORT-W620.html">→ Full benchmark report</a> ·
+     <a href="architecture/CAPABILITY-REGISTRY.md">→ Capability registry: every claim and its evidence</a></p>
+  <p class="benchmark-note">The speedup figure is a comparison against a synthetic LLM ops/sec model, not an end-to-end measurement against a served LLM. Sources: <code>research/BENCHMARK-REPORT-W620.md</code> (logic, sample efficiency, speedup), <code>research/FEDERATION-SCALE-REPORT-W635.md</code> (resilience), <code>waves/WAL-620.md</code> (Minecraft pilot).</p>
 </div>
 
 <div class="cta-section">

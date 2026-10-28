@@ -216,12 +216,22 @@ Here's where it gets exciting. MATRIX is **massively more efficient** than tradi
 
 | Metric | ChatGPT | MATRIX | Winner |
 |--------|---------|--------|--------|
-| **Energy use** | ~500W (GPU) | ~15W (CPU) | MATRIX (33×) |
-| **Speed** | 10-100 tokens/sec | <10ms inference | MATRIX (33,000×) |
-| **Learning** | Needs millions of examples | Learns from 50 | MATRIX |
+| **Learning** | Needs millions of examples | Learns from 50 (measured: AUC 0.899 with 50 samples — `research/BENCHMARK-REPORT-W620.md` §2) | MATRIX |
 | **Explainability** | Black box | Full reasoning trace | MATRIX |
 | **Sleep** | No | Yes | MATRIX |
 | **Ethics** | Post-hoc filtering | Built into core | MATRIX |
+
+**On the performance comparison.** Earlier editions of this table carried two
+speed and power figures — "~500W vs ~15W (33×)" and "10-100 tokens/sec vs
+<10ms inference (33,000×)". Neither number was produced by a measurement, and
+the second divided a *generation rate* by a *single-call latency* — two
+different quantities. Both have been removed rather than restated.
+
+What the repository actually measured is in
+`research/BENCHMARK-REPORT-W620.md` §4: against a synthetic LLM ops/sec
+model, CPU BIR is recorded as 100,000x faster with an energy ratio of 0.00x.
+That is a modelled comparison, not an end-to-end measurement against a served
+LLM, and it is presented as such here.
 
 **Why?** Because MATRIX doesn't need to simulate 175 billion parameters. It uses **simple rules** for logic, **compact vectors** for patterns, and **emergent coordination** for collaboration.
 

@@ -5979,3 +5979,247 @@ properties genuinely fail named as such.
   `matrix-fpga`/`matrix-micro`/`matrix-ros2`/`matrix-web-ui`), §20 (the
   capability registry), §21–26 (BIR execution-path audit, determinism policy,
   cognitive lifecycle, learning-feedback contract, cognitive metrics).
+
+---
+
+## §13 — One cognitive conductor (ADR-2026-10-26-002)
+
+### Objective
+
+Resolve the competing `MindCycle` and `TrueMindCycle` implementations into a
+single coherent architecture, with an ADR.
+
+### Baseline
+
+Two classes both claimed to be the cognitive conductor, and the repository
+asserted two incompatible facts about which one the gateway serves:
+
+- `ProductionBrainClient`: *"use TrueMindCycle (real core engines), **not**
+  the legacy hand-coded MindCycle"* — **true**;
+- `MindCycle` itself: *"MindCycle is the pipeline the gateway actually serves
+  (TrueMindCycle is the offline/audit variant)"* — **exactly backwards**.
+
+A reader had no way to tell which was true. The only production source that
+constructed `MindCycle` was `MindRuntimeCli`, the developer REPL.
+
+### Changes
+
+- `docs-v2/architecture/ADR-2026-10-26-002-single-cognitive-conductor.md` —
+  the decision, the alternatives rejected, the consequences.
+- `MindCycle` — `@Deprecated`, with the ADR reference and the backwards
+  comment corrected.
+- `MindRuntimeCli` — defaults to `TrueMindCycle`; `--legacy` opts into the
+  old pipeline, so the opt-in is visible rather than ambient.
+- `CognitiveConductorGuardTest` — the decision is **enforced**, not merely
+  documented: no production source may construct `MindCycle`; the CLI must
+  default to `TrueMindCycle`; `ProductionBrainClient` must construct
+  `TrueMindCycle` and never `MindCycle`.
+
+### Verification
+
+- The guard was **proved non-vacuous**: with a deliberate `new MindCycle()` in
+  a production source it fails; it passes once the violation is removed.
+- `:matrix-brain-runtime:test` — 117 suites / 912 tests / 0 failures.
+
+### Evidence
+
+`CognitiveConductorGuardTest`; the ADR; `MindRuntimeCli`; `MindCycle`.
+
+### Impact
+
+The serving path has exactly one conductor and the repository says so
+consistently. The ambiguity is closed by a failing-on-violation CI guard
+rather than by a comment.
+
+### Limitations
+
+**Multi-step planning is not wired into the serving conductor.** `MCTSPlanner`
+has zero production callers and `TrueMindCycle` has no MCTS stage. This was
+already true before the ADR; the ADR makes it explicit. Recorded in the ADR
+as a follow-up, not silently dropped.
+
+### Recovery
+
+`git revert 7b1f0e2d` (the §13 commit) restores the previous behaviour.
+
+### Next Action
+
+Wire `MCTSPlanner` into `TrueMindCycle` as a separate change with its own
+evidence, or record a decision that planning stays unwired.
+
+---
+
+## §16 — Module lifecycle states
+
+### Objective
+
+Give every module an explicit lifecycle state, and stop the out-of-Gradle
+modules from being unverified by anything.
+
+### Baseline
+
+- `matrix-fpga`, `matrix-micro` and `matrix-ros2` are commented out of
+  `settings.gradle`; `matrix-web-ui` is a Next.js project outside Gradle.
+- The archived markers that TRUE-MIND-AUDIT §4 promised for the three
+  deregistered modules **did not exist** — `docs-v2/archive/` held only
+  `failures.md`.
+- **Nothing ran any of their test suites.** `matrix-web-ui`'s jest suite
+  could not even start: `setupFilesAfterEach` is not a Jest option (so
+  `jest.setup.ts` was never loaded), the transform named `ts-jest` which was
+  not a declared dependency, and `testEnvironment: 'jsdom'` needed
+  `jest-environment-jsdom`, which Jest 28+ no longer ships.
+
+### Changes
+
+- `docs-v2/architecture/MODULE-LIFECYCLE.md` — the authoritative registry:
+  every module has exactly one state (ACTIVE / ACTIVE-EXTERNAL / DORMANT /
+  PLANNED), and a module may only be called *verified* when a named command
+  verifies it.
+- `docs-v2/archive/matrix-fpga.md`, `matrix-micro.md`, `matrix-ros2.md` — the
+  promised archive markers, each recording the module's real verification
+  state.
+- `scripts/verify-dormant-modules.sh` — runs the dormant modules on demand
+  and reports PASS / FAIL / SKIPPED / NO-SUITE separately. A skipped check is
+  never reported as a pass.
+- `matrix-web-ui` — jest config rewritten to `next/jest`; the two missing
+  dependencies declared; `fetch` stub installed in `jest.setup.ts`; three
+  under-specified queries made precise. The suite is now a **required CI
+  check** (job `web-ui-tests`).
+- `ModuleLifecycleRegistryTest` — keeps the registry and `settings.gradle` in
+  step.
+
+### Verification
+
+| Module | Result | How |
+|---|---|---|
+| `matrix-web-ui` | **8 suites, 50 tests, 0 failures** | `npm ci --legacy-peer-deps && npx jest --ci` — also in CI |
+| `matrix-micro` | **PASS**, 4/4 | `gcc -std=c11` build of `tests/test_mpdt.c` |
+| `matrix-fpga` | **SKIPPED** | `amaranth` is not installed — *unverified*, not passing |
+| `matrix-ros2` | **NO-SUITE** | the module declares no test suite at all |
+
+Both guards were **proved non-vacuous**: `ModuleLifecycleRegistryTest` fails
+when an unclassified module directory appears; `CognitiveConductorGuardTest`
+fails on a deliberate violation.
+
+Both guards also needed their Gradle **inputs** declared: Gradle does not
+track the working tree as a test input, so the tasks could report a stale
+green. That is the same vacuous-guard failure mode that once made
+`RuntimeLlmGuardTest` pass while scanning nothing.
+
+### Evidence
+
+`MODULE-LIFECYCLE.md`; the three archive markers;
+`scripts/verify-dormant-modules.sh`; `ModuleLifecycleRegistryTest`;
+`matrix-web-ui/jest.config.js`; CI job `web-ui-tests`.
+
+### Impact
+
+Four modules that had no state now have one, and one of them has a test suite
+that runs for the first time and is green.
+
+### Limitations
+
+- `eslint-config-next@16.3.6` requires `eslint >= 9` while the project pins
+  `eslint@8.57.1`, so a strict `npm install` fails with `ERESOLVE`. CI
+  installs with `--legacy-peer-deps`. Aligning them is a **major dependency
+  upgrade**, which AGENTS.md forbids without an explicit RFC — so the
+  conflict is recorded rather than resolved.
+- The three dormant modules are verified **on demand only**; no CI runner
+  carries the toolchain they need.
+
+### Recovery
+
+`git revert` of the §16 commit restores the previous module state.
+
+### Next Action
+
+An owner decision on the eslint major version, and a CI runner with a C
+toolchain if the dormant modules are ever to be verified automatically.
+
+---
+
+## §20 — Capability registry: every public claim, and what backs it
+
+### Objective
+
+Correct the stale capability claims, and make the correction enforceable.
+
+### Baseline
+
+`docs-v2/index.md` is a **published** page. It advertised:
+
+| Claim | Status against the repository |
+|---|---|
+| "724 Tests Passing" | **No measurement produced 724.** It is also the tokenizer's vocabulary size. |
+| "33,000× Faster than LLMs" / "Energy Efficiency 33,000×" | **Matches no measurement.** The benchmark report records **100,000×** against a synthetic LLM ops/sec model, with an energy ratio of 0.00x. The 33,000× was derived by dividing 10–100 *tokens/sec* by a *<10 ms inference* — two different quantities — and it was labelled "Energy Efficiency" while carrying a speedup. |
+| "vs 25% random baseline" | The report measured **30%**. |
+| "90% accuracy retention from LLM distillation" | **No measurement exists** anywhere in the repository. |
+| "Every claim is backed by tests, benchmarks, or TLA+ specs" | **False when written** — four of the numbers above had no backing. |
+| "production-grade hybrid AI framework" | A statement about readiness, not a measurement. |
+
+Three claims *were* backed: 75% logic accuracy and 89.9% AUC (W620),
+100% federation resilience with 50% of nodes killed (W635), and 92%
+Minecraft survival (WAL-620).
+
+### Changes
+
+- `docs-v2/architecture/CAPABILITY-REGISTRY.md` — the authoritative record:
+  ten claims, each with its state (VERIFIED / CORRECTED / UNSOURCED /
+  REWORDED), its evidence and its measured value, plus the rules that govern
+  the registry.
+- `docs-v2/index.md` — corrected, **not** deleted. The backed claims are
+  kept with their sources; the unsourced ones are removed; the wrong ones are
+  corrected; the readiness claim is reworded; every benchmark card now
+  carries a provenance line naming the report it comes from.
+- `docs-v2/story/overview.md` — the "ChatGPT vs MATRIX" table's two
+  unmeasured speed/power figures are removed, with a note saying what was
+  removed and why.
+- `scripts/count-tests.sh` — the named command that produces the published
+  test count, so the claim has a reproducing command.
+- `CapabilityClaimsGuardTest` — the correction is **enforced**: the page must
+  link to the registry; the retired values must not reappear; every headline
+  number on the page must be registered; the registry must carry a row for
+  every claim.
+
+### Verification
+
+- `./scripts/count-tests.sh --total` → **8,898** test methods across 14
+  modules. The page says "8,898" and labels it **"Test methods"**, not
+  "Tests Passing", because it is a source count: a `@Disabled` method is
+  counted here and is not executed, and calling it "passing" would claim an
+  execution the number does not record.
+- Every headline number on the corrected page is present in the registry; the
+  retired values (`724`, `33,000`, `25% random`) are absent from the page.
+- `CapabilityClaimsGuardTest` — 4 tests.
+
+### Evidence
+
+`CAPABILITY-REGISTRY.md`; `docs-v2/index.md`; `docs-v2/story/overview.md`;
+`scripts/count-tests.sh`; `CapabilityClaimsGuardTest`.
+
+### Impact
+
+The published page now states only numbers a measurement in this repository
+produced, each traceable to the report that produced it, and the claims that
+had no backing are named as such rather than quietly retained.
+
+### Limitations
+
+- The published speedup (100,000×) is a comparison against a **synthetic**
+  LLM ops/sec model, not an end-to-end measurement against a served LLM. The
+  page says so, and the registry says so.
+- The test count is a source count, not an execution count. The executed
+  count is a separate measurement (`./gradlew test`, summed over the JUnit
+  XML), and the registry gives that command too.
+- `docs-v2/story/` is a narrative and was not audited claim by claim; only
+  the comparison table that carried the retired figures was touched.
+
+### Recovery
+
+`git revert` of the §20 commit restores the previous page.
+
+### Next Action
+
+Decide whether the synthetic speedup comparison should be replaced by an
+end-to-end measurement against a served baseline, and whether the front page
+should publish the executed test count instead of the source count.
