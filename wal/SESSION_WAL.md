@@ -185,13 +185,31 @@ is unchanged, because its check became real rather than its model bigger.
 
 **All nine specifications parse and model-check with no violation.**
 
+### Continuation — RECON-W38.5 third pass: BrcStep remodelled (2026-10-30)
+
+| Item | Finding | Change |
+|---|---|---|
+| `BrcStep`'s three configured invariants | TLC reported all three as constant-level: the helpers were stubs (`HammingDist == 0`, `SuperStep(s1,s2) == s1`, `ApplyFn == CHOOSE ... TRUE`), so they evaluated to TRUE without looking at the model. **No configured property mentioned `applied`, `result` or `stepState` — the state machine was constrained by nothing.** | the step set, the concrete function each step computes and the bit-vector space are now module-defined; `HammingDist` is real; the composition is modelled as the Java's `BrcChain.compose` — chains of steps with `compose(l,r) == l \o r`, not a `SuperStep` over a pair of steps |
+| `BrcStep`'s state machine | nothing constrained it | two invariants added, both the Java's own rules: `AppliedResultMatchesFn` (the recorded output is what the step computes) and `ConvergenceIsComputed` (`BrcStep.checkConvergence`, recomputed on every application, not latched) |
+| `BrcStep.ChainTerminates` | "every step eventually converges" is **false of the implementation**: with a threshold of 1, a step whose output is always two bits from its input never converges — the complement step is exactly such a step | replaced by the conditional guarantee the Java gives (`ConvergenceIsComputed`) plus `ConvergenceReachable` |
+
+**Non-vacuity proved by mutation:** recording the input instead of the output
+made `AppliedResultMatchesFn` fail; widening the convergence threshold made
+`ConvergenceIsComputed` fail. The composition laws were shown to be checked
+against the model as well — TLC refuted `ComposeEndpointPreserved` when the
+chain fold ran the steps in reverse order.
+
+**All nine specifications parse and model-check with no violation, and NO
+specification triggers TLC's constant-level warning any more** (previously
+`BrcStep` alone did, three times).
+
 ### Still open
 
-- **Three** vacuous formal properties remain, each needing a real action in
+- **Two** vacuous formal properties remain, each needing a real action in
   the model or an explicit statement that the module does not model that
-  behaviour: `BotEthicsPipeline.EventualKillRejection`,
+  behaviour: `BotEthicsPipeline.EventualKillRejection`, and
   `MctsLatsVisit.Convergence` (needs a probabilistic model, not a bigger state
-  space), and `BrcStep`'s three constant-level invariants.
+  space).
 - `BotEthicsPipeline`'s spec asserts a kill-trigger rejection policy the Java
   does not implement — the formal spec is currently stronger than the code.
 - `MCTSPlanner` has no production caller.

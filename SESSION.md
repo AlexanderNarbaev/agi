@@ -6416,3 +6416,91 @@ adds a check rather than removing one.
 - `BotEthicsPipeline`'s kill-trigger policy is an owner decision: implement it
   in the Java, or drop it from the specification.
 - `MCTSPlanner` still has no production caller.
+
+### RECON-W38.5, third pass — BrcStep: a state machine that nothing constrained
+
+#### Objective
+
+Close the last closable vacuous property: `BrcStep`'s three configured
+invariants, which TLC reported as constant-level.
+
+#### Baseline
+
+`BrcStep`'s helpers were stubs — `HammingDist == 0`, `SuperStep(s1, s2) == s1`,
+`ApplyFn(s, x) == CHOOSE o ∈ Outputs : TRUE` — so all three configured
+invariants evaluated to TRUE without ever looking at the model. No configured
+property mentioned `applied`, `result` or `stepState`: **the state machine was
+constrained by nothing at all**.
+
+#### Changes
+
+- The step set, the concrete function each step computes, and the bit-vector
+  space are now defined in the module; `HammingDist` is a real distance over
+  bit-set vectors.
+- The composition is modelled as **chains** — sequences of steps — with
+  `compose(l, r) == l \o r`, which is what `BrcChain.compose()` does. The old
+  model had a single `SuperStep` for a *pair* of steps; the composition of two
+  steps is generally not itself one of the steps, so the old abstraction did
+  not correspond to anything in the implementation.
+- Two invariants that constrain the state machine were added:
+  `AppliedResultMatchesFn` and `ConvergenceIsComputed` — the Java's own
+  rules, taken from `BrcStep.apply()` and `checkConvergence()`.
+- The liveness property `ChainTerminates` ("every step eventually converges")
+  was **false of the implementation**: with a threshold of 1, a step whose
+  output is always two bits from its input never converges. It is replaced by
+  the conditional guarantee the Java gives plus `ConvergenceReachable`.
+
+#### Verification
+
+All nine specifications parse and model-check with no violation, and **no
+specification triggers TLC's constant-level warning any more** (previously
+`BrcStep` alone did, three times).
+
+`BrcStep` is now 1 501 states / 125 distinct.
+
+Both new invariants were **proved non-vacuous by mutation**: recording the
+input instead of the output made `AppliedResultMatchesFn` fail, and widening
+the convergence threshold made `ConvergenceIsComputed` fail. The composition
+laws were shown to be checked against the model too — TLC refuted
+`ComposeEndpointPreserved` when the chain fold ran the steps in reverse order.
+
+#### Evidence
+
+- `formal/BrcStep.tla` (v2.0), `formal/BrcStep.cfg`
+- `docs-v2/engineering/TLA-STATUS.md` — §"Vacuous properties that have been
+  closed" → §"`BrcStep` — a state machine that nothing constrained".
+
+#### Impact
+
+The formal specification of the BRC step now describes the implementation's
+actual composition semantics, and the state machine is constrained for the
+first time.
+
+#### Limitations
+
+- The three composition laws hold for **any** deterministic step functions, so
+  they check the composition operator, not the step functions. That is the
+  correct formalisation of `BrcChain.compose` and is stated explicitly rather
+  than presented as more than it is.
+- The model's steps are three concrete functions over a two-bit vector space,
+  not the production `NeuronLayer` evaluations. The production layers are
+  table-driven and far too large to enumerate.
+- **Two** properties remain vacuous: `BotEthicsPipeline.EventualKillRejection`
+  (its antecedent is unreachable, and the kill-trigger policy it states is not
+  implemented in the Java at all) and `MctsLatsVisit.Convergence` (the UCT
+  convergence claim needs a probabilistic model, not a bigger state space).
+
+#### Recovery
+
+The change is a single commit; `git revert` restores the previous module.
+The module's public operators are unchanged apart from the helpers, and the
+configuration file's constant list changed (`Steps`, `Inputs` and `Outputs`
+are now module-defined).
+
+#### Next Action
+
+- `BotEthicsPipeline`'s kill-trigger policy is an owner decision: implement it
+  in the Java, or drop it from the specification.
+- `MctsLatsVisit.Convergence` needs a probabilistic model (or an explicit
+  statement that the module does not establish it).
+- `MCTSPlanner` still has no production caller.

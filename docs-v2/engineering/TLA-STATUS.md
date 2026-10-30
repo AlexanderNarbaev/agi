@@ -45,7 +45,7 @@ Two toolchain facts that are easy to get wrong:
 | `Consensus` | 55 057 / 5 476 | `TypeOK` (invariant); `DecisionMonotonic`, `WeightedIdempotent`, `LivenessBounded` (properties) |
 | `MPDTNeuron` | 39 568 / 5 184 | `KMaxIsGlobalCeiling` (invariant); `KBounded`, `OutputDeterminedByInputs`, `OutputStableUnderIdempotentInput` (properties) |
 | `BotEthicsPipeline` | 14 621 / 7 396 | `TypeOK`, `ApprovalsPlusRejectionsEqualsTicks`, `TombstonesEqualsRejections`, `AuditChainLengthEqualsDecisions`, `AuditLinksAreTyped` (invariants); `BotsMonotonicExpand`, `BotsMonotonic`, `EveryBotEventuallyTicked`, `EventualKillRejection` (properties) |
-| `BrcStep` | 5 833 / 729 | `ComposeEndpointPreserved`, `ComposeAssociative`, `ComposeIdentity` |
+| `BrcStep` | 1 501 / 125 | `TypeOK`, `AppliedResultMatchesFn`, `ConvergenceIsComputed` (invariants); `ComposeEndpointPreserved`, `ComposeAssociative`, `ComposeIdentity`, `ConvergenceReachable` (properties) |
 | `HashChain` | 127 882 / 20 440 | `TypeOK`, `VerifiedImpliesIntact` (invariants); `ChainMonotonic`, `LastHashConsistent`, `AppendKeepsChainValid`, `TamperDetected`, `RestoreVerifies` (properties) |
 | `ConjugateBudgeterDP` | 381 / 91 | all six module properties |
 | `FrozenEthicalFNL` | 65 / 16 | all five module properties |
@@ -204,11 +204,6 @@ property.
   implementation does not implement** — `matrix-core/.../BotEthicsPipeline.java`
   has no kill trigger at all. The formal spec is currently *stronger* than the
   code it models.
-- `BrcStep` — all three configured invariants are **constant-level**: TLC
-  itself warns that each "evaluates to TRUE". They reference only constants
-  and stub helpers (`HammingDist == 0`, `SuperStep == s1`) and never touch
-  `applied`/`result`/`stepState`. The state machine is not actually
-  constrained by them.
 - `MctsLatsVisit.Convergence` — `Probability(p) == 0` is a placeholder and
   `OptimalArm(node)` is the stub `CHOOSE n ∈ Nodes : TRUE`, so the
   probabilistic UCT convergence claim cannot be checked. It also asserts a
@@ -216,8 +211,9 @@ property.
   1/N^AlphaRoot) that a finite model cannot establish; it needs a
   probabilistic model, not a larger state space.
 
-TLC reports the constant-level case explicitly; `BrcStep` is the only
-specification that triggers it.
+TLC reports the constant-level case explicitly. **No specification triggers
+it any more**: the last one, `BrcStep`, was closed by giving the module real
+step functions, a real Hamming distance and the Java's chain composition.
 
 ## Vacuous properties that have been closed
 
@@ -269,6 +265,56 @@ every link's hash against its own fields and its predecessor's, and
 because broken chains are now reachable. The tamper path was observed in a
 counterexample: a payload mutation produced `verified = FALSE` on a chain
 whose stored hash no longer matched.
+
+### `BrcStep` — a state machine that nothing constrained
+
+**Were vacuous because:** the module's helpers were stubs — `HammingDist ==
+0`, `SuperStep(s1, s2) == s1`, `ApplyFn(s, x) == CHOOSE o ∈ Outputs : TRUE`
+— so all three configured invariants evaluated to TRUE without ever looking
+at the model. TLC itself warned that each was "a constant-level formula". The
+state machine (`applied`, `result`, `stepState`) was constrained by **nothing
+at all**: no configured property mentioned any of them.
+
+**The Java:** `io.matrix.reasoning.BrcChain.compose(left, right)`
+**concatenates the two chains' step lists** — the super-chain runs left's
+steps first, then right's — and `BrcStep.apply()` computes
+`layer.evaluate(padInput(x))` and returns `state.next(output, converged)`,
+where `converged` is the Hamming distance between the applied vector and the
+produced output against the step's threshold.
+
+**What changed:**
+
+- The step set, the concrete function each step computes, and the bit-vector
+  space are now defined in the module; `HammingDist` is a real distance over
+  bit-set vectors.
+- The composition is modelled as **chains** (sequences of steps) with
+  `compose(l, r) == l \o r`, which is what the Java does. The old model had
+  a single `SuperStep` for a *pair* of steps — but the composition of two
+  steps is generally not itself one of the steps, so the old abstraction did
+  not correspond to anything in the implementation.
+- Two invariants that constrain the state machine were added:
+  `AppliedResultMatchesFn` (the recorded output is exactly what the step
+  computes) and `ConvergenceIsComputed` (convergence is the Java's check, and
+  it is recomputed on every application rather than latched).
+- The old liveness property `ChainTerminates` — "every step eventually
+  converges" — was **false of the implementation**: with a threshold of 1, a
+  step whose output is always two bits from its input never converges, and
+  the complement step is exactly such a step. It is replaced by the
+  conditional guarantee the Java actually gives (`ConvergenceIsComputed`) and
+  by `ConvergenceReachable`.
+
+**Evidence:** both new invariants were **proved non-vacuous by mutation** —
+recording the input instead of the output made `AppliedResultMatchesFn`
+fail, and widening the convergence threshold made `ConvergenceIsComputed`
+fail. The composition laws were also shown to be checked against the model:
+TLC refuted `ComposeEndpointPreserved` when the chain fold ran the steps in
+reverse order, which is the bug it was written to catch.
+
+**What the laws are and are not:** the three composition laws hold for *any*
+deterministic step functions, so they do not constrain the step functions
+themselves — they check that the composition operator implements them. That is
+the correct formalisation of `BrcChain.compose`, and it is now a statement
+about real functions rather than about stubs.
 
 ### `MctsLatsVisit` — a real argmax
 
@@ -369,6 +415,13 @@ list is recorded because "it did not parse" was previously invisible.
     opposite.
 24. `MctsLatsVisit.ArgmaxByReward` returned an arbitrary node, so
     `BestArmIsArgmax` had nothing to check.
+25. `BrcStep`'s helpers were stubs (`HammingDist == 0`, `SuperStep == s1`,
+    `ApplyFn == CHOOSE ... TRUE`) and its composition was modelled as a pair
+    of steps rather than the Java's chain concatenation, so its three
+    configured invariants were constant-level and the state machine was
+    constrained by nothing. Its liveness property was also false of the
+    implementation — a step whose output is always two bits from its input
+    never converges.
 
 ## What CI does now
 
