@@ -403,6 +403,22 @@ jobs:
           echo "Model-checked $checked specification(s); $skipped syntax-checked only; $failed failed."
           [ "$failed" = "0" ] || exit 1
 
+      # RECON-W39: a gate that cannot go red is not a gate. This step applies
+      # deliberate defects to COPIES of the specifications in an isolated
+      # temporary directory and checks that the properties still reject them.
+      # The real source tree is never modified. A mutant that starts to
+      # survive, or that stops being reproducible, fails this job.
+      - name: Mutation harness - can the gate still go red?
+        run: |
+          set -uo pipefail
+          python3 scripts/mutation-harness.py \
+            --report docs-v2/engineering/MUTATION-REPORT.md
+          rc=$?
+          if [ "$rc" != "0" ]; then
+            echo "::error::the mutation harness found a hole in the formal gate (rc=$rc)"
+            exit 1
+          fi
+
       - name: Summary
         if: always()
         run: |

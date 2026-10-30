@@ -1,0 +1,116 @@
+{
+  "description": "Mutation manifest for the formal gate. Each entry declares a deliberate defect that the specification MUST reject. The harness applies the mutation to a COPY of the specification in an isolated temporary directory and runs TLC there; the real source tree is never touched. A mutant that survives means the gate has a hole: the property it targets cannot fail. 'expect' records the outcome that was observed and accepted; a mutant that behaves differently is reported as DRIFT, which fails the run - so a weakened property or a corrected specification cannot pass unnoticed.",
+  "toolchain": {
+    "jar": "tools/tla2tools.jar",
+    "version": "1.8.0",
+    "sha256": "fc6878c603f0fdc18b9fe3e5bf51860cb90ab5b1154e3c371660c036d6bdd63e"
+  },
+  "mutants": [
+    {
+      "id": "MemoryM4Causal-tombstone-guard-inverted",
+      "spec": "MemoryM4Causal",
+      "why": "The Insert guard must reject an insert that a tombstone covers. Inverting it must make the tombstone properties fail.",
+      "old": "/\\ ¬tombstonedBy(r, k, epoch)",
+      "new": "/\\ tombstonedBy(r, k, epoch)",
+      "expect": "KILLED"
+    },
+    {
+      "id": "MemoryM4Causal-merge-stale-clock",
+      "spec": "MemoryM4Causal",
+      "why": "The Merge filter must use the MERGED clock. Reverting it to the receiver's pre-merge clock is the defect RECON-W39 corrected - and it was invisible to F1-F4 until PresentImpliesUncovered and AbsentImpliesCovered were added.",
+      "old": "∧ Max({vc[r1][k], vc[r2][k]}) ≤ t}]",
+      "new": "∧ vc[r1][k] ≤ t}]",
+      "expect": "KILLED"
+    },
+    {
+      "id": "MemoryM4Causal-tombstone-deletes-newer",
+      "spec": "MemoryM4Causal",
+      "why": "A tombstone at a stale epoch must not delete a strictly newer value. Making the removal unconditional is the defect RECON-W39 corrected.",
+      "old": "IF epoch ≥ vc[r][k] THEN state[r] \\ {k} ELSE state[r]]",
+      "new": "state[r] \\ {k}]",
+      "expect": "KILLED"
+    },
+    {
+      "id": "ConjugateBudgeterDP-step-uses-raw-unit-slope",
+      "spec": "ConjugateBudgeterDP",
+      "why": "The step must compute the slope over the REDUCED grid, as the Java does. The raw-unit slope is what the model computed before RECON-W39 and what the Java never computes. The shipped configuration has row costs with gcd 1, where the two slopes coincide, so the mutant is checked against a configuration whose costs share a divisor.",
+      "config": "formal/mutations/ConjugateBudgeterDP.gcd2.cfg",
+      "old": "LET lam  == GridShadow(newEnvelope)",
+      "new": "LET lam  == IF newEnvelope > 0 THEN DPValue(newEnvelope) - DPValue(newEnvelope - 1) ELSE 0",
+      "expect": "KILLED"
+    },
+    {
+      "id": "ConjugateBudgeterDP-witness-union",
+      "spec": "ConjugateBudgeterDP",
+      "why": "The witness reconstruction must carry the remaining budget down, not union the skip and take witnesses. The union can cost more than the envelope - the defect RECON-W38.5 corrected.",
+      "old": "THEN [k ∈ Rows |-> IF k = i\n                                         THEN TRUE\n                                         ELSE picks[i-1, ee - C(i)][k]]",
+      "new": "THEN [k ∈ Rows |-> IF k = i\n                                         THEN TRUE\n                                         ELSE picks[i-1, ee][k] \\/ picks[i-1, ee - C(i)][k]]",
+      "expect": "KILLED"
+    },
+    {
+      "id": "BrcStep-chain-fold-reversed",
+      "spec": "BrcStep",
+      "why": "The chain must be applied left to right. Folding it in reverse must break ComposeEndpointPreserved.",
+      "old": "ELSE ApplyFn(c[Len(c)], ApplyChain(SubSeq(c, 1, Len(c) - 1), x))",
+      "new": "ELSE ApplyFn(c[1], ApplyChain(SubSeq(c, 1, Len(c) - 1), x))",
+      "expect": "KILLED"
+    },
+    {
+      "id": "BrcStep-convergence-threshold-strict",
+      "spec": "BrcStep",
+      "why": "The step must mark a step converged when the Hamming distance is AT MOST the threshold. Using a strict comparison must break ConvergenceIsComputed, which states the Java's own rule.",
+      "old": "IF HammingDist(x, ApplyFn(s, x)) ≤ ConvergenceThreshold",
+      "new": "IF HammingDist(x, ApplyFn(s, x)) < ConvergenceThreshold",
+      "expect": "KILLED"
+    },
+    {
+      "id": "HashChain-verified-always-true",
+      "spec": "HashChain",
+      "why": "A broken chain must never be reported as verified. Making the append report an unconditionally verified chain must break VerifiedImpliesIntact.",
+      "old": "/\\ chain' = [chain EXCEPT ![i] = [chain[i] EXCEPT !.payload = p]]\n    /\\ UNCHANGED <<lastHash>>\n    /\\ verified' = ChainIntact(chain')",
+      "new": "/\\ chain' = [chain EXCEPT ![i] = [chain[i] EXCEPT !.payload = p]]\n    /\\ UNCHANGED <<lastHash>>\n    /\\ verified' = TRUE",
+      "expect": "KILLED"
+    },
+    {
+      "id": "BotEthicsPipeline-trigger-guard-dropped",
+      "spec": "BotEthicsPipeline",
+      "why": "The FNL verdict must gate the approve action: an action the FNL rejects may not be approved. Dropping the guard must break FnlVerdictIsFollowed.",
+      "old": "/\\ a \\notin FnlTriggers",
+      "new": "/\\ TRUE",
+      "expect": "KILLED"
+    },
+    {
+      "id": "MctsLatsVisit-node-its-own-child",
+      "spec": "MctsLatsVisit",
+      "why": "A node must never become its own child. Dropping the guard must break TreeAcyclic - the defect RECON-W38.5 corrected.",
+      "old": "/\\ child # parent",
+      "new": "/\\ TRUE",
+      "expect": "KILLED"
+    },
+    {
+      "id": "MPDTNeuron-init-k-range-widened",
+      "spec": "MPDTNeuron",
+      "why": "The k bound must hold from the initial state. Widening the initial range must make KBounded fail.",
+      "old": "/\\ k \\in [Neurons -> 1..K_MAX]",
+      "new": "/\\ k \\in [Neurons -> 1..(K_MAX + 1)]",
+      "expect": "KILLED"
+    },
+    {
+      "id": "Consensus-evaluate-without-quorum",
+      "spec": "Consensus",
+      "why": "A proposal may only be decided once the quorum of votes has been cast. Dropping the quorum guard must break the decision properties.",
+      "old": "/\\ p \\notin weightedEval\n    /\\ Cardinality(votes[p]) >= Threshold",
+      "new": "/\\ p \\notin weightedEval\n    /\\ TRUE",
+      "expect": "SURVIVED",
+      "finding": "The Consensus properties do not pin the quorum: with the guard removed, a proposal is decided from a single vote and every property still holds. This is the evidence for the gap the registry records - the model's Threshold is a vote COUNT while the Java's rule is a weight RATIO - and it is why the Consensus entry does not claim a checked quorum."
+    },
+    {
+      "id": "FrozenEthicalFNL-fires-a-non-triggering-axiom",
+      "spec": "FrozenEthicalFNL",
+      "why": "Only the axioms whose trigger covers the feature set may fire. Firing all of them must break FiredSubsetOfTotal and NeuronsAreCanonical.",
+      "old": "{neurons[a] : a \\in {x \\in Axioms : features \\in Triggers[x]}}]",
+      "new": "{neurons[a] : a \\in Axioms}]",
+      "expect": "KILLED"
+    }
+  ]
+}
