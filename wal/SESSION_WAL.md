@@ -232,3 +232,70 @@ property in any configuration file is unfalsifiable any more.**
 - `MCTSPlanner` has no production caller.
 - The `AGENTS.md` FROZEN edit in the working tree needs an owner ruling.
 - The eslint major-version conflict needs an RFC.
+
+---
+
+## RECON-W39 — Owner directive "MASTER DEVELOPMENT MISSION" (2026-10-30)
+
+**Base:** `develop` @ `7043d925` · **Mandate:** the specification-to-implementation
+chain: intended semantics -> TLA+ -> Java -> tests -> CI -> production claim.
+
+### Incident — FROZEN-zone CI trigger change (2026-10-30, decision D9)
+
+`.github/workflows/**` is FROZEN (CONSTITUTION Art. III / AGENTS.md). The owner
+directive (§5.2) mandates that a Java change to a modelled behaviour must run
+the formal gate. `.github/workflows/tla.yml` triggered on `formal/**` only, so
+a change to `NeuronLayer.java`, `HashChain.java` or `ConjugateBudgeter.java`
+never reached TLC.
+
+**Decision D9:** the `tla.yml` path filter is extended with a **generated
+block** naming every implementation, production caller and test that
+`formal/spec-implementation-map.yml` maps. The block is not hand-maintained:
+`./gradlew :matrix-quality:regenerateFormalPaths` rewrites it from the
+registry, and `SpecImplementationMapTest` fails the build when the block and
+the registry drift apart. The `pull_request` filter also gained the workflow
+file itself, which it lacked.
+
+No other FROZEN file was touched. `CONSTITUTION.md` and `AGENTS.md` are
+unchanged. `matrix-core/src/main/java/io/matrix/ethics/frozen/**` was read
+only — the defect found there is recorded as an open item needing an RFC.
+
+### What the registry found
+
+Nine specifications, nine conformance records. The statuses are per
+specification and explicit; `PRODUCTION_PATH_VERIFIED` is refused by the
+validator unless the specification names a production caller.
+
+| Specification | Production caller | The finding |
+|---|---|---|
+| `MPDTNeuron` | yes | `KBounded`/`KMaxIsGlobalCeiling` are tautologies; the cfg pins `K_MAX = 2` against the Java's 20 |
+| `MemoryM4Causal` | **no** | the Java had no epoch-aware implementation at all |
+| `MctsLatsVisit` | yes (`io.matrix.mcts`) | the model describes `MCTSPlanner`, which nothing calls; production selects by visit count |
+| `Consensus` | **no** | `ConsensusEngine` is instantiated only by tests |
+| `BotEthicsPipeline` | yes (REST) | `FnlTriggers` is exact-match; the Java matches phrases |
+| `BrcStep` | yes (`evaluate`) | `compose` has no production caller, yet three properties constrain it |
+| `HashChain` | yes | the model derives the timestamp from chain position; the Java used the wall clock |
+| `ConjugateBudgeterDP` | yes | the shadow price is computed on a gcd-reduced grid, so it is not the model's slope |
+| `FrozenEthicalFNL` | yes | the cfg's trigger relation is not the Java's; and `Set.copyOf` iteration order is randomised per JVM run |
+
+### Repairs in this wave
+
+| Area | Finding | Fix | Evidence |
+|---|---|---|---|
+| HashChain | the injected `Supplier<Long> clock` was **dead code**; `Objects.requireNonNull(timestampMs >= 0 ? "ok" : "ts")` never threw; the sequence rule was unenforced | clock honoured, timestamps and 64-hex hashes validated, `sequence(i) = i - 1` enforced in `verify()`/`restore()` | `ADR-2026-10-30-003`; 19 new tests |
+| CRDT | `GrowOnlySet.toJson()` wrote the **elements only**, so tombstones were lost — a tombstoned key could be resurrected after a restart | versioned, lossless format; legacy array format still readable; unknown version rejected | `ADR-2026-10-30-004`; 8 new tests |
+| CRDT | three incompatible deletion semantics shared one package | `EpochAwareCausalSet` added as the explicit epoch-aware implementation | 20 property-based tests |
+| MemoryM4Causal | the model's `Tombstone` deleted a **strictly newer** value; the `Merge` filter used a **stale** clock while raising it | both corrected; F1-F4 still hold | TLC: 396 577 states, 26 244 distinct, no error |
+| CI | a Java change to a modelled behaviour never ran TLC | generated path filter from the registry | `SpecImplementationMapTest`, 9 tests |
+
+### Still open
+
+- `FrozenEthicalFNL.evaluate()` iterates `Set.copyOf(...)`, whose order is
+  randomised per JVM run: with several axioms firing, `Result.firedNeuron()`
+  is not reproducible. It is in a FROZEN zone and needs an RFC.
+- `Consensus` and `MemoryM4Causal` have no production caller.
+- `MCTSPlanner` and `LatsValueFunction` have no production caller; the LATS
+  mode is never enabled in production.
+- The shadow-price definition of `ConjugateBudgeterDP` still does not match
+  the Java's gcd-reduced grid.
+- The MCTS convergence bound remains UNVERIFIED.
