@@ -251,6 +251,17 @@ specifications:
             The model's Visit increments ONE node; the Java's backpropagate
             increments the whole root→leaf ancestor chain, so every node on the
             path ends with the same visit count and mean reward.
+        - code: NO_REWARD_SIGNAL
+          detail: >-
+            The production caller PlanningStage passes a CONSTANT reward
+            function - (DecisionTree dt) -> 0.5 - so every simulated rollout
+            scores the same and the UCB1 selection has no signal to
+            discriminate on. The production search is a bounded deterministic
+            random walk over tree mutations, not an optimiser. The measured
+            comparison is in ADR-2026-10-30-005: the production search costs
+            18.197 us/op against 0.808 us/op for a single greedy step, and
+            reaches a LOWER mean reward (2.60 against 3.25) on the benchmark
+            problem.
         - code: SEMANTIC_MISMATCH
           detail: >-
             The model's per-node visit budget (Visits) has no Java counterpart;

@@ -48,6 +48,12 @@ Status vocabulary: `FIXED` (the defect was real and is corrected),
 | 13 | Greedy Wasserstein vs exact optimal transport | **VERIFIED_NOT_A_DEFECT** | `ktopo/FingerprintDistance.java:4,37-52` — `wasserstein1` accumulates `Σ_i |cumA_i − cumB_i| · binWidth` over the shared histogram grid. That is the CDF-integral formula, which **is** the exact 1-D Wasserstein-1 distance between the two piecewise-constant distributions; nothing is approximated and no greedy assignment is used. |
 | 14 | EXP-010 criterion mismatches | **VERIFIED_NOT_A_DEFECT** | `test/.../tsetlin/Exp010ComparisonTest.java:63` — "Tsetlin grid — model selection strictly by TRAIN accuracy", and `:140` asserts the learnability sanity bound `max(r[1], r[2]) > 0.5`. The selection criterion is stated where it is applied, and the assertion checks what the run measured. |
 
+## Added by RECON-W39 — one more, found while reviewing the algorithm
+
+| Risk | Status | Evidence |
+|---|---|---|
+| The production MCTS search has no reward signal | **OPEN** | `matrix-brain-runtime/.../stages/PlanningStage.java:103-105` builds the tree with the reward function `(DecisionTree dt) -> 0.5` — a constant. Every simulated rollout scores the same, so the UCB1 selection compares equal means and the rule reduces to the exploration term. `PlanningStage` is the **only** production caller of `MctsTree`. The measured comparison (ADR-2026-10-30-005): the production search costs 18.197 us/op against 0.808 us/op for one greedy step, and reaches a *lower* mean reward (2.60 against 3.25) on the benchmark problem. **Fixing it means deciding what the planning stage is optimising** — a design decision, recorded as ADR-2026-10-30-005 R3, not a code change. |
+
 ## Summary
 
 - Operational: **9 FIXED**, **1 VERIFIED_NOT_A_DEFECT** (ONNX), **1 INTENTIONAL_LIMITATION** (the deliberately excluded modules). No open operational defect.
