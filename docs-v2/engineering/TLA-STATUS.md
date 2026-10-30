@@ -477,7 +477,8 @@ list is recorded because "it did not parse" was previously invisible.
 ## What CI does now
 
 `.github/workflows/tla.yml` (owner directive §14, incident D8 recorded in
-`SESSION.md` and `wal/SESSION_WAL.md`):
+`SESSION.md` and `wal/SESSION_WAL.md`; RECON-W39 owner directive §5,
+incident D9):
 
 - runs on `develop` as well as `main`;
 - **parses and semantic-checks every specification** (required);
@@ -488,4 +489,140 @@ list is recorded because "it did not parse" was previously invisible.
   if a future change makes a model check fail, the specification is named in
   `KNOWN_FAILING` and the job reports it loudly rather than hiding it;
 - distinguishes a verified property from a syntax-only check and from a
-  recorded failure.
+  recorded failure;
+- **RECON-W39**: watches the code it models. The path filter used to be
+  `formal/**` alone, so a change to `NeuronLayer.java` or `HashChain.java`
+  never reached TLC. The filter now carries a **generated** block naming every
+  implementation, production caller and test that
+  `formal/spec-implementation-map.yml` maps. The block is rewritten by
+  `./gradlew :matrix-quality:regenerateFormalPaths` and
+  `SpecImplementationMapTest` fails the build when it drifts from the map;
+- **RECON-W39**: verifies the **toolchain by digest**, not only by version —
+  the sha256 the GitHub release API reports for the v1.8.0 `tla2tools.jar` is
+  checked before the jar reaches the gate;
+- **RECON-W39**: runs the **mutation harness** as a required step, so a gate
+  that can no longer go red fails the job.
+
+A toolchain fact worth knowing, because it nearly made the mutation harness
+lie: **TLC's exit code is 0 when `-continue` is passed, even if a property was
+violated.** The CI job deliberately does not pass `-continue`, so its
+`rc != 0` check is sound; the harness reads the violation from TLC's output
+instead of trusting the exit code.
+
+---
+
+## RECON-W39 — what the gate checks is not what the system is
+
+The preceding sections record that the gate is sound: nine specifications
+parse, nine are model-checked, every configured property holds, and no
+property is vacuous. That is a statement about the **configured finite
+models**. It is not a statement about MATRIX.
+
+RECON-W39 asked the next question: *for each specification, what does the
+model actually correspond to in the running system?* The answer is recorded
+per specification in **`formal/spec-implementation-map.yml`** — the registry —
+and the registry is validated automatically.
+
+### The registry
+
+`formal/spec-implementation-map.yml` maps all nine specifications to the Java
+that implements them, the production callers, the unit and integration tests,
+the properties, the assumptions, the abstractions, and an explicit conformance
+status from a closed vocabulary:
+
+`SPECIFICATION_ONLY`, `IMPLEMENTATION_ONLY`, `ABSTRACT_MODEL`, `MODEL_CHECKED`,
+`JAVA_UNIT_VERIFIED`, `TRACE_CONFORMANT`, `INTEGRATION_VERIFIED`,
+`PRODUCTION_PATH_VERIFIED`, `BLOCKED`, `UNVERIFIED`.
+
+`matrix-quality/src/test/java/io/matrix/quality/SpecImplementationMapTest.java`
+enforces the rules that matter:
+
+- every referenced path must exist;
+- every specification must name tests;
+- every status must come from the vocabulary;
+- **`PRODUCTION_PATH_VERIFIED` is refused unless a production caller is
+  named** — the check that stops the registry from over-claiming;
+- the workflow's path filter must contain every path the registry maps, and
+  the generated block must match the registry exactly.
+
+### What the registry found
+
+The statuses are per specification and explicit. The findings that changed a
+document or a model:
+
+| Specification | Production caller | The finding |
+|---|---|---|
+| `Consensus` | **none** | `ConsensusEngine` is instantiated only by tests; the model's `Threshold` is a vote COUNT while the Java's rule is a weight RATIO |
+| `MemoryM4Causal` | **none** | the Java had no epoch-aware implementation at all; `EpochAwareCausalSet` was added |
+| `MctsLatsVisit` | yes (`io.matrix.mcts`) | the model describes `MCTSPlanner`, which nothing calls; production selects by visit count, and the LATS/PUCT path never runs in production |
+| `MPDTNeuron` | yes | the k-properties are pinned to the model's `K_MAX = 2`, not to the Java's 20 |
+| `BotEthicsPipeline` | yes (REST) | the model's `FnlTriggers` is exact set membership; the Java matches phrases |
+| `BrcStep` | yes (`evaluate`) | `compose` has no production caller, yet three of the four properties constrain it |
+| `HashChain` | yes | the model derives the timestamp from chain position; the Java used the wall clock |
+| `ConjugateBudgeterDP` | yes | the shadow price is computed on a gcd-reduced grid — a slope the model did not describe |
+| `FrozenEthicalFNL` | yes | the configuration's trigger relation is not the Java's; and `Set.copyOf` iteration order is randomised per JVM run |
+
+### Two model corrections that no property could see
+
+`MemoryM4Causal` was corrected twice in RECON-W39: the merge filter used the
+receiver's pre-merge clock while the same action raised that clock to the
+merged maximum, and the tombstone action removed a key unconditionally, so a
+stale tombstone deleted a strictly newer value.
+
+**Neither correction was pinned by any property** — reverting either left
+every property holding. Two properties were added to pin them
+(`PresentImpliesUncovered`, `AbsentImpliesCovered`), and the mutation harness
+now proves they are pinned.
+
+### The budgeter's shadow price
+
+`io.matrix.budgeter.ConjugateBudgeter` reduces its DP grid by the gcd of the
+row costs, so its shadow price is the marginal value of **G raw units**, not
+one. The model computed the marginal of one unit. With rows `(v=1, c=4)` and
+`(v=100, c=6)` at envelope 7 the Java reports **99** and the model reported
+**0**. The model now mirrors the Java's grid (`GridUnit`, `GridCap`,
+`GridShadow`) and `LambdaBounded` states the correspondence directly. The
+bound the property carries is unchanged — one extra grid unit can enable at
+most one additional row, so the marginal still cannot exceed the largest
+single row value.
+
+The correspondence is pinned from the Java side by
+`ConjugateBudgeterTraceConformanceTest`, and the specification therefore
+carries the **TRACE_CONFORMANT** status for the first time.
+
+### The mutation harness — can the gate go red?
+
+`scripts/mutation-harness.py` applies a deliberate defect to a **copy** of a
+specification in an isolated temporary directory, runs TLC there, and records
+the outcome. The real source tree is never modified. The toolchain is
+verified by digest first.
+
+Thirteen mutants, one or two per specification. Result: **12 killed, 1
+survived, 0 invalid, 0 drift.** The survivor is
+`Consensus-evaluate-without-quorum` — with the quorum guard removed, a
+proposal is decided from a single vote and every Consensus property still
+holds. That is a real hole, and it is recorded in
+`docs-v2/engineering/MUTATION-REPORT.md` rather than left to be discovered
+later.
+
+The manifest records the outcome that was **observed and accepted** for each
+mutant, so a mutant that starts behaving differently is reported as DRIFT and
+fails the job: a gate that quietly changes is as bad as a gate that is quietly
+green.
+
+### What this document does not claim
+
+- **Nine TLC configurations passing is not a verified system.** Each
+  configuration is a bounded finite model of an abstraction; the registry
+  records, per specification, exactly what that abstraction leaves out.
+- **MODEL_CHECKED is a claim about the model.** Whether the model and the Java
+  agree is a separate status, and it is not implied.
+- **The MCTS convergence bound is UNVERIFIED.** It is a probabilistic claim
+  about an asymptotic visit distribution; no finite model check can establish
+  it, and it is kept in the module as an imported claim with its source
+  unverified.
+- **`FrozenEthicalFNL`'s fired-neuron choice is not reproducible** when
+  several axioms fire on the same input: `evaluate()` iterates
+  `Set.copyOf(...)`, whose order is randomised per JVM run. The class is in a
+  FROZEN zone, so the defect is recorded as an open item requiring an RFC
+  rather than patched.
