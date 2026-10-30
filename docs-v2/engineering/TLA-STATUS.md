@@ -308,6 +308,31 @@ note was written. What replaced it in the gate are checks that *can* fail:
 is a sum of those, so it can reach ±2. The invariant was corrected to `Int`
 and then held.
 
+### `MctsLatsVisit` — a real argmax
+
+**Was vacuous because:** `ArgmaxByReward` was the stub
+`CHOOSE n ∈ Nodes : TRUE` — an arbitrary node — and `BestArmIsArgmax` said
+"if n has more visits and a higher mean than m, then `bestArm'` is n or m",
+which says nothing about what `bestArm` *is* and could not fail.
+
+**The Java:** `io.matrix.federation.liquid.MCTSPlanner.extractBestPath()` walks
+the children and keeps the one with the strictly greatest average reward
+("if (child.getAverageReward() > bestReward)"), so the first child with the
+maximum wins a tie; and `TreeNode.getAverageReward()` returns `0` when
+`visits == 0`.
+
+**What changed:** `ArgmaxByReward` now selects a node of maximal **mean
+reward**, compared by cross-multiplication (the `Reals` module in
+`tla2tools` is a dummy, and integer division would truncate the means), with
+a zero-visit node treated as having the mean 0 exactly as the Java does.
+`BestArmIsArgmax` now asserts that no rival beats the selected arm.
+
+**Evidence:** the property failed **three times** while the comparison was
+being got right, each time with a concrete counterexample — a swapped
+cross-multiplication, a zero-visit node treated as having no mean at all, and
+an inverted argument order in the property itself. That is what a real check
+looks like; the stub could not fail.
+
 ### `BrcStep` — a state machine that nothing constrained
 
 **Were vacuous because:** the module's helpers were stubs — `HammingDist ==
@@ -357,31 +382,6 @@ deterministic step functions, so they do not constrain the step functions
 themselves — they check that the composition operator implements them. That is
 the correct formalisation of `BrcChain.compose`, and it is now a statement
 about real functions rather than about stubs.
-
-### `MctsLatsVisit` — a real argmax
-
-**Was vacuous because:** `ArgmaxByReward` was the stub
-`CHOOSE n ∈ Nodes : TRUE` — an arbitrary node — and `BestArmIsArgmax` said
-"if n has more visits and a higher mean than m, then `bestArm'` is n or m",
-which says nothing about what `bestArm` *is* and could not fail.
-
-**The Java:** `io.matrix.federation.liquid.MCTSPlanner.extractBestPath()` walks
-the children and keeps the one with the strictly greatest average reward
-("if (child.getAverageReward() > bestReward)"), so the first child with the
-maximum wins a tie; and `TreeNode.getAverageReward()` returns `0` when
-`visits == 0`.
-
-**What changed:** `ArgmaxByReward` now selects a node of maximal **mean
-reward**, compared by cross-multiplication (the `Reals` module in
-`tla2tools` is a dummy, and integer division would truncate the means), with
-a zero-visit node treated as having the mean 0 exactly as the Java does.
-`BestArmIsArgmax` now asserts that no rival beats the selected arm.
-
-**Evidence:** the property failed **three times** while the comparison was
-being got right, each time with a concrete counterexample — a swapped
-cross-multiplication, a zero-visit node treated as having no mean at all, and
-an inverted argument order in the property itself. That is what a real check
-looks like; the stub could not fail.
 
 ## Defect classes found and repaired
 
