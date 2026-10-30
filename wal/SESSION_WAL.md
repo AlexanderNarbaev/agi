@@ -168,10 +168,30 @@ and `RestoreVerifies`, `MctsLatsVisit.Convergence` and `BestArmIsArgmax`,
 `BrcStep`'s three invariants). Each is named in
 `docs-v2/engineering/TLA-STATUS.md` and is not counted as verified.
 
+### Continuation — RECON-W38.5 second pass: two vacuous properties closed (2026-10-30)
+
+| Property | Was vacuous because | Evidence in the Java | Change |
+|---|---|---|---|
+| `HashChain.TamperDetected` / `RestoreVerifies` | the module had **no tamper action**, so `TamperDetected`'s antecedent (which required an append to produce a payload other than the one appended) was unreachable | `io.matrix.audit.HashChain`: "any retroactive mutation invalidates every subsequent verify() check"; `verify()` recomputes every link's hash; `restore()` throws on a chain that does not verify | `ChainIntact(c)` is now a named operator; a `TamperLink(i, p)` action mutates a payload without touching its hash; `AppendLink` sets `verified' = ChainIntact(chain')` instead of `TRUE`; `HashChainDependency` became the per-chain definition it always was, and `VerifiedImpliesIntact` took its place as the invariant; `AppendKeepsChainValid` — false in every non-empty state and excluded from the cfg — now says what its comment says and is checked |
+| `MctsLatsVisit.BestArmIsArgmax` | `ArgmaxByReward` was `CHOOSE n ∈ Nodes : TRUE` (an arbitrary node), and the property said nothing about what `bestArm` **is** | `MCTSPlanner.extractBestPath()` keeps the child with the strictly greatest average reward; `TreeNode.getAverageReward()` returns 0 when `visits == 0` | `ArgmaxByReward` selects a node of maximal **mean reward** by cross-multiplication, with a zero-visit node treated as mean 0; `BestArmIsArgmax` asserts that no rival beats the selected arm |
+
+**Evidence that the checks are now real:** both failed while they were being
+written, each with a concrete counterexample — a swapped cross-multiplication,
+a zero-visit node treated as having no mean at all, an inverted argument order
+in the property itself, and a tamper path that broke `HashChainDependency`.
+A stub cannot fail. `HashChain`'s state space grew from **820 to 20 440
+distinct states** because broken chains are now reachable; `MctsLatsVisit`'s
+is unchanged, because its check became real rather than its model bigger.
+
+**All nine specifications parse and model-check with no violation.**
+
 ### Still open
 
-- Four **vacuous** formal properties: each needs either a real action in the
-  model or an explicit statement that the module does not model that behaviour.
+- **Three** vacuous formal properties remain, each needing a real action in
+  the model or an explicit statement that the module does not model that
+  behaviour: `BotEthicsPipeline.EventualKillRejection`,
+  `MctsLatsVisit.Convergence` (needs a probabilistic model, not a bigger state
+  space), and `BrcStep`'s three constant-level invariants.
 - `BotEthicsPipeline`'s spec asserts a kill-trigger rejection policy the Java
   does not implement — the formal spec is currently stronger than the code.
 - `MCTSPlanner` has no production caller.

@@ -14,6 +14,10 @@ and every configured property holds.** The five specifications that carried a
 recorded property failure have been resolved against the Java implementations
 they model — see §"The five recorded failures, and how each was resolved".
 
+A second pass then closed the properties that were **checked but vacuous** —
+the ones the model's shape made incapable of failing — for `HashChain` and
+`MctsLatsVisit`. See §"Vacuous properties that have been closed".
+
 ## How to reproduce
 
 ```bash
@@ -42,12 +46,13 @@ Two toolchain facts that are easy to get wrong:
 | `MPDTNeuron` | 39 568 / 5 184 | `KMaxIsGlobalCeiling` (invariant); `KBounded`, `OutputDeterminedByInputs`, `OutputStableUnderIdempotentInput` (properties) |
 | `BotEthicsPipeline` | 14 621 / 7 396 | `TypeOK`, `ApprovalsPlusRejectionsEqualsTicks`, `TombstonesEqualsRejections`, `AuditChainLengthEqualsDecisions`, `AuditLinksAreTyped` (invariants); `BotsMonotonicExpand`, `BotsMonotonic`, `EveryBotEventuallyTicked`, `EventualKillRejection` (properties) |
 | `BrcStep` | 5 833 / 729 | `ComposeEndpointPreserved`, `ComposeAssociative`, `ComposeIdentity` |
-| `HashChain` | 820 / 820 | `TypeOK`, `HashChainDependency` (invariants); `ChainMonotonic`, `LastHashConsistent`, `TamperDetected`, `RestoreVerifies` (properties) |
+| `HashChain` | 127 882 / 20 440 | `TypeOK`, `VerifiedImpliesIntact` (invariants); `ChainMonotonic`, `LastHashConsistent`, `AppendKeepsChainValid`, `TamperDetected`, `RestoreVerifies` (properties) |
 | `ConjugateBudgeterDP` | 381 / 91 | all six module properties |
 | `FrozenEthicalFNL` | 65 / 16 | all five module properties |
 
 No specification is syntax-checked only, and no property is recorded as
-failing.
+failing. The `MctsLatsVisit` state space is unchanged by the argmax work —
+the check became real rather than the model becoming bigger.
 
 ## The five recorded failures, and how each was resolved
 
@@ -199,21 +204,96 @@ property.
   implementation does not implement** — `matrix-core/.../BotEthicsPipeline.java`
   has no kill trigger at all. The formal spec is currently *stronger* than the
   code it models.
-- `HashChain.TamperDetected` and `HashChain.RestoreVerifies` — the module has
-  no action that mutates an existing link and none that sets `verified = FALSE`,
-  so the tamper antecedent and the "verification failed" conclusion are
-  unreachable.
 - `BrcStep` — all three configured invariants are **constant-level**: TLC
   itself warns that each "evaluates to TRUE". They reference only constants
   and stub helpers (`HammingDist == 0`, `SuperStep == s1`) and never touch
   `applied`/`result`/`stepState`. The state machine is not actually
   constrained by them.
-- `MctsLatsVisit.Convergence` and `BestArmIsArgmax` — `ArgmaxByReward` is the
-  stub `CHOOSE n ∈ Nodes : TRUE` and `Probability(p) == 0`, so neither
-  property can fail.
+- `MctsLatsVisit.Convergence` — `Probability(p) == 0` is a placeholder and
+  `OptimalArm(node)` is the stub `CHOOSE n ∈ Nodes : TRUE`, so the
+  probabilistic UCT convergence claim cannot be checked. It also asserts a
+  claim (visit counts converge to the optimal arm with probability ≥ 1 −
+  1/N^AlphaRoot) that a finite model cannot establish; it needs a
+  probabilistic model, not a larger state space.
 
 TLC reports the constant-level case explicitly; `BrcStep` is the only
 specification that triggers it.
+
+## Vacuous properties that have been closed
+
+Two of the vacuous properties were closed by giving the model the behaviour
+the Java has. Both were re-checked with TLC, and both **failed while the work
+was in progress** — which is the evidence that they are real checks now and
+were not before.
+
+### `HashChain` — a tamper path, and a verification result that tracks integrity
+
+**Were vacuous because:** the module had no action that mutates an existing
+link, and no action that set `verified = FALSE`. `TamperDetected`'s antecedent
+included `AppendLink(p, e)` **and** `LastLink(chain').payload /= p` — but an
+append always sets the payload to `p`, so the antecedent was unreachable and
+the property could not fail.
+
+**The Java:** `io.matrix.audit.HashChain` states that "any retroactive
+mutation invalidates every subsequent verify() check", `verify()` recomputes
+every link's hash against its own fields and its predecessor's, and
+`restore()` throws `IllegalArgumentException` on a chain that does not verify.
+
+**What changed:**
+
+- `ChainIntact(c)` — the predicate `verify()` computes, now a named operator
+  instead of an expression inlined in one property.
+- `TamperLink(i, p)` — a retroactive mutation of a link's payload that leaves
+  the stored hash alone.
+- `AppendLink` no longer sets `verified' = TRUE` by fiat; it sets
+  `verified' = ChainIntact(chain')`. This is the Java's guarantee: an append
+  after a tampered link does **not** repair the chain.
+- `TamperDetected` now states the direction that holds for **any** hash: a
+  chain that does not verify is never reported as verified.
+- `RestoreVerifies` now states the correspondence `verified' =
+  ChainIntact(chain')`.
+- `HashChainDependency` was an *unconditional* invariant — "the chain is
+  always internally consistent" — which is exactly what a tamper breaks. TLC
+  found the violation the moment the tamper action was added, which is the
+  tamper action working. It is now the per-chain definition it always was, and
+  `VerifiedImpliesIntact` (`verified => ChainIntact(chain)`) took its place
+  as the system-level invariant.
+- `AppendKeepsChainValid` was **false in every state with a non-empty chain**
+  (it said the last link's hash differs from `lastHash'`, and `lastHash'` *is*
+  the last link's hash) and had been excluded from the configuration file, so
+  the module carried a property that was simply untrue and never ran. It now
+  states what its comment says: an append neither breaks an intact chain nor
+  repairs a broken one — and it is checked.
+
+**Evidence:** the state space grew from **820 to 20 440 distinct states**,
+because broken chains are now reachable. The tamper path was observed in a
+counterexample: a payload mutation produced `verified = FALSE` on a chain
+whose stored hash no longer matched.
+
+### `MctsLatsVisit` — a real argmax
+
+**Was vacuous because:** `ArgmaxByReward` was the stub
+`CHOOSE n ∈ Nodes : TRUE` — an arbitrary node — and `BestArmIsArgmax` said
+"if n has more visits and a higher mean than m, then `bestArm'` is n or m",
+which says nothing about what `bestArm` *is* and could not fail.
+
+**The Java:** `io.matrix.federation.liquid.MCTSPlanner.extractBestPath()` walks
+the children and keeps the one with the strictly greatest average reward
+("if (child.getAverageReward() > bestReward)"), so the first child with the
+maximum wins a tie; and `TreeNode.getAverageReward()` returns `0` when
+`visits == 0`.
+
+**What changed:** `ArgmaxByReward` now selects a node of maximal **mean
+reward**, compared by cross-multiplication (the `Reals` module in
+`tla2tools` is a dummy, and integer division would truncate the means), with
+a zero-visit node treated as having the mean 0 exactly as the Java does.
+`BestArmIsArgmax` now asserts that no rival beats the selected arm.
+
+**Evidence:** the property failed **three times** while the comparison was
+being got right, each time with a concrete counterexample — a swapped
+cross-multiplication, a zero-visit node treated as having no mean at all, and
+an inverted argument order in the property itself. That is what a real check
+looks like; the stub could not fail.
 
 ## Defect classes found and repaired
 
@@ -278,6 +358,17 @@ list is recorded because "it did not parse" was previously invisible.
     property asserted a mathematically false claim — which the Java's javadoc
     also asserted. `FrozenEthicalFNL` accumulated one axiom per step while the
     Java evaluates every neuron against the same features in one call.
+
+**Checks that could not fail** (second pass)
+
+22. `HashChain` had no tamper path at all, and its `AppendKeepsChainValid`
+    property was false in every non-empty state yet was excluded from the
+    configuration file — a property that was untrue and never ran.
+23. `HashChain.AppendLink` set `verified' = TRUE` unconditionally, so the
+    model claimed an append repairs a tampered chain. The Java says the
+    opposite.
+24. `MctsLatsVisit.ArgmaxByReward` returned an arbitrary node, so
+    `BestArmIsArgmax` had nothing to check.
 
 ## What CI does now
 

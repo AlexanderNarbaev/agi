@@ -33,7 +33,42 @@ Threshold(N, alpha) == N                         \* placeholder for TLC
 
 OptimalArm(node) == CHOOSE n ∈ Nodes : TRUE       \* ground truth (abstracted)
 
-ArgmaxByReward(vc, tr) == CHOOSE n ∈ Nodes : TRUE   \* abstracted
+\* MeanAboveIn(vc, tr, n, m) — "n's mean reward is strictly above m's",
+\* over an explicit count/reward pair (the state variables are not available
+\* inside ArgmaxByReward, which is called with the POST-state).
+\*
+\* The comparison is by cross-multiplication for the reason given below
+\* MeanAbove: the Reals standard module is a dummy in tla2tools, and integer
+\* division would truncate the means. A node with no visits has no mean, so
+\* it never beats anything.
+\* The Java's rule for a node with no visits: io.matrix.federation.liquid
+\* .TreeNode.getAverageReward() returns 0 when visits == 0, so such a node has
+\* the mean 0 and is neither better nor worse than a node whose mean is 0.
+\* (A first version of this operator treated a zero-visit node as having NO
+\* mean at all, which let the argmax select a node with no visits while
+\* another node had a strictly higher mean — TLC refuted the property, and
+\* it was right.)
+\* mean(n) > mean(m), i.e. tr[n]/vc[n] > tr[m]/vc[m], cross-multiplied as
+\* tr[n]*vc[m] > tr[m]*vc[n]. (The operands are easy to swap; the original
+\* MeanAbove had them the right way round and the first version of this
+\* operator had them reversed, which TLC caught immediately.)
+MeanAboveIn(vc, tr, n, m) ==
+    IF vc[n] = 0 THEN
+        IF vc[m] = 0 THEN FALSE ELSE tr[m] < 0
+    ELSE IF vc[m] = 0 THEN tr[n] > 0
+    ELSE tr[n] * vc[m] > tr[m] * vc[n]
+
+\* ArgmaxByReward(vc, tr) — the node with the highest MEAN reward.
+\*
+\* RECON-W38.5: this was `CHOOSE n ∈ Nodes : TRUE`, i.e. an arbitrary node.
+\* The Java it models is not arbitrary: io.matrix.federation.liquid.MCTSPlanner
+\* .extractBestPath() walks the children and keeps the one with the strictly
+\* greatest average reward ("if (child.getAverageReward() > bestReward)"), so
+\* the FIRST child with the maximum wins a tie. The operator now implements
+\* that rule: the chosen node has no rival with a strictly higher mean.
+ArgmaxByReward(vc, tr) ==
+    CHOOSE n ∈ Nodes : ∀m ∈ Nodes : MeanAboveIn(vc, tr, m, n) => FALSE
+
 MeanReward(n) == IF visitCount[n] = 0 THEN 0
                 ELSE totalReward[n] / visitCount[n]
 
@@ -44,7 +79,7 @@ MeanReward(n) == IF visitCount[n] = 0 THEN 0
 \* weaken the comparison. The cross-multiplied form is equivalent here
 \* because the antecedent of BestArmIsArgmax gives visitCount[n] > visitCount[m]
 \* ≥ 0, hence both denominators are positive.
-MeanAbove(n, m) == visitCount[m] * totalReward[n] > visitCount[n] * totalReward[m]
+MeanAbove(n, m) == MeanAboveIn(visitCount, totalReward, n, m)
 
 Probability(p) == 0                                   \* placeholder
 
@@ -132,10 +167,15 @@ VisitsMonotone ==
 
 \* S2: bestArm is the argmax of (visits, mean reward) — it never points
 \*     to a node with strictly fewer visits AND lower reward than another.
+\* RECON-W38.5: the old formula was "if n has more visits AND a higher mean
+\* than m, then bestArm' is n or m" — which says nothing about what bestArm
+\* IS, and could not fail while ArgmaxByReward returned an arbitrary node.
+\* The property now states the Java's rule: bestArm' is a node of maximal
+\* mean reward, compared over the POST-state (which is what the action
+\* passes to ArgmaxByReward). The comparison is written "m above bestArm'",
+\* i.e. NO rival may beat the selected arm - the argmax condition itself.
 BestArmIsArgmax ==
-    [][ \A n, m ∈ Nodes :
-            (visitCount[n] > visitCount[m] ∧ MeanAbove(n, m))
-            ⇒ bestArm' = n \/ bestArm' = m ]_bestArm
+    [][ \A m ∈ Nodes : MeanAboveIn(visitCount', totalReward', m, bestArm') => FALSE ]_bestArm
 
 \* S3: Expansion preserves the visited-set semantics - a node is never its
 \*     own child.

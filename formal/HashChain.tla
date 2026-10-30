@@ -52,6 +52,22 @@ ComputeHash(prevHash, seq, payload, ts, extra) ==
 
 \* ── Operations ────────────────────────────────────────────────────────────────
 
+\* The hash the first link chains from.
+GENESIS == "0" \o SubSeq("0000000000000000000000000000000000000000000000000000000000000000", 1, 64)
+
+\* ChainIntact(c) — the answer io.matrix.audit.HashChain.verify() gives for
+\* the chain c: every link's hash matches its own fields AND the previous
+\* link's hash (the genesis hash for the first link).
+\*
+\* RECON-W38.5: this predicate existed only inlined inside RestoreVerifies,
+\* which is why the module could not express what it was actually about. The
+\* Java's verify() computes exactly this.
+ChainIntact(c) ==
+    \A i \in 1..Len(c):
+        c[i].hash = ComputeHash(
+            IF i = 1 THEN GENESIS ELSE c[i-1].hash,
+            i - 1, c[i].payload, i - 1, c[i].extra)
+
 \* The most recent link of the append-only chain. The chain only grows at
 \* the end, so the newest link is the last element of the sequence.
 LastLink(s) == s[Len(s)]
@@ -69,12 +85,37 @@ AppendLink(p, e) ==
        IN
        /\ chain' = Append(chain, newLink)
        /\ lastHash' = newLink.hash
-       /\ verified' = TRUE    \* the chain is intact immediately after append
+       \* RECON-W38.5: the old value was the constant TRUE. It is not: the
+       \* Java's class javadoc states that "any retroactive mutation
+       \* invalidates every subsequent verify() check", so appending after a
+       \* tampered link does NOT restore the chain's validity - the appended
+       \* link simply chains from a broken predecessor. The verification
+       \* result is therefore the integrity of the new chain, not TRUE.
+       /\ verified' = ChainIntact(chain')
 
 \* ── Specification ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 
 \* The next state appends one link with an arbitrary valid payload/extra.
-Next == \E p \in VALID_PAYLOADS, e \in VALID_EXTRAS : AppendLink(p, e)
+\* A retroactive mutation of a link's payload - the attack the Java's design
+\* anticipates ("any retroactive mutation invalidates every subsequent
+\* verify() check"). The link's stored hash is NOT updated, which is what
+\* makes it detectable.
+\*
+\* RECON-W38.5: the module had no way to tamper at all, so the "tampering
+\* invalidates the chain" property had an unreachable antecedent and could
+\* never fail - it was checked and proved nothing.
+TamperLink(i, p) ==
+    /\ i \in 1..Len(chain)
+    /\ p \in VALID_PAYLOADS
+    /\ p /= chain[i].payload
+    /\ chain' = [chain EXCEPT ![i] = [chain[i] EXCEPT !.payload = p]]
+    /\ UNCHANGED <<lastHash>>
+    /\ verified' = ChainIntact(chain')
+
+\* The next state appends one link with an arbitrary valid payload/extra, or
+\* mutates a link's payload in place.
+Next == (\E p \in VALID_PAYLOADS, e \in VALID_EXTRAS : AppendLink(p, e))
+        \/ (\E i \in 1..Len(chain), p \in VALID_PAYLOADS : TamperLink(i, p))
 
 \* The behaviour of the audited system: append-only, arbitrarily long.
 Spec == Init /\ [][Next]_vars
@@ -91,42 +132,71 @@ LastHashConsistent ==
          \/ (Len(chain') = Len(chain) /\ lastHash' = lastHash) ]_<<chain, lastHash>>
 
 \* INV-3: After any append, the chain is internally consistent.
+\*
+\* RECON-W38.5: the old formula said "the last link's hash differs from
+\* lastHash'" - but lastHash' IS the last link's hash, so the formula was
+\* FALSE in every state with a non-empty chain. It was excluded from the
+\* configuration file, so the module carried a property that was simply
+\* untrue and was never run. The property now says what the comment says:
+\* an append neither breaks an intact chain nor repairs a broken one.
 AppendKeepsChainValid ==
-    [][ \A i \in 1..Len(chain'):
-             \E link \in {LastLink(chain')}: link.hash /= lastHash' ]_chain
+    [][ (Len(chain') = Len(chain) + 1)
+          => (ChainIntact(chain') <=> ChainIntact(chain)) ]_chain
 
 \* INV-4: Tampering with any link invalidates the chain.
+\*
+\* RECON-W38.5: the old formula's antecedent included `AppendLink(p, e)` AND
+\* `LastLink(chain').payload /= p` - but an append always sets the payload to
+\* p, so the antecedent was UNREACHABLE and the property could never fail.
+\* It was checked and proved nothing. The property now says what the comment
+\* says, and it can fail: if any link's payload changed, verification must
+\* report the chain as broken.
+\* RECON-W38.5 (second pass): the first version of this property read
+\* "some link's payload changed => verified' = FALSE". TLC refuted it, and
+\* it was TLC that was right: the module's toy hash is a plain encoding, so
+\* changing a payload back to an earlier value restores the stored hash and
+\* the chain verifies again. A one-way hash would not behave that way, but
+\* the spec models a reversible encoding and must not pretend otherwise.
+\*
+\* The guarantee the Java actually gives is the DIRECTION that holds for any
+\* hash: a chain that does not verify is never reported as verified. That is
+\* the detection half, and it is what makes
+\* io.matrix.audit.HashChain.restore() reject the chain.
 TamperDetected ==
-    [][ \A p \in VALID_PAYLOADS, e \in VALID_EXTRAS, oldChain \in {chain}, oldLast \in {lastHash}:
-            /\ oldChain /= <<>>
-            /\ lastHash = oldLast
-            /\ chain = oldChain
-            /\ AppendLink(p, e)
-            /\ LastLink(chain').payload /= p  \* tamper: changed the payload
-            =>
-                verified' = FALSE  \* verification must catch it
-    ]_vars
+    [][ ~ChainIntact(chain') => verified' = FALSE ]_vars
 
-\* INV-5: Reconstructed chains must verify (when their hashes are intact).
+\* INV-5: the verification result tracks the chain's integrity.
+\*
+\* RECON-W38.5: the old formula quantified `newChain \in {chain}` - a
+\* singleton - and then asserted the same implication twice, so it said only
+\* "an intact chain reports verified = TRUE", which the old AppendLink
+\* guaranteed by fiat. The property now states the correspondence the Java
+\* actually implements: `verified` IS the answer verify() would give, so a
+\* chain that does not verify is reported as broken - which is what makes
+\* io.matrix.audit.HashChain.restore() reject it.
 RestoreVerifies ==
-    [][ \A newChain \in {chain}:
-            (newChain /= <<>> /\ \A i \in 1..Len(newChain):
-                newChain[i].hash = ComputeHash(
-                    IF i = 1 THEN "0" \o SubSeq("0000000000000000000000000000000000000000000000000000000000000000", 1, 64)
-                             ELSE newChain[i-1].hash,
-                    i - 1,
-                    newChain[i].payload,
-                    i - 1,
-                    newChain[i].extra))
-            =>
-                (chain = newChain => verified' = TRUE)
-    ]_chain
+    [][ verified' = ChainIntact(chain') ]_chain
 
 \* INV-6: Each link's hash depends on the previous link's hash.
-HashChainDependency ==
-    \A i \in 2..Len(chain):
-        chain[i].hash = ComputeHash(
-            chain[i-1].hash, i-1, chain[i].payload, i-1, chain[i].extra)
+\*
+\* RECON-W38.5: this was an UNCONDITIONAL invariant over the current chain -
+\* "the chain is always internally consistent" - and that is exactly what a
+\* retroactive mutation breaks. TLC found the violation the moment the
+\* tamper action was added, which is the tamper action working as intended.
+\*
+\* The guarantee the Java actually gives is NOT that a chain cannot be
+\* broken, but that a broken chain is DETECTED: "any retroactive mutation
+\* invalidates every subsequent verify() check". So the dependency is now the
+\* definition of an intact chain (used by ChainIntact), and the system-level
+\* guarantee is carried by TamperDetected and RestoreVerifies.
+HashChainDependency(c) ==
+    \A i \in 2..Len(c):
+        c[i].hash = ComputeHash(
+            c[i-1].hash, i - 1, c[i].payload, i - 1, c[i].extra)
+
+\* INV-7: the system never reports a broken chain as verified.
+VerifiedImpliesIntact ==
+    verified => ChainIntact(chain)
 
 =============================================================================
 \* Modification History

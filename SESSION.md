@@ -6325,3 +6325,94 @@ changed, and each change carries its justification in the file.
   code.
 - `MCTSPlanner` still has no production caller; that is unchanged and
   recorded in ADR-2026-10-26-002.
+
+### RECON-W38.5, second pass — the vacuous properties that could not fail
+
+#### Objective
+
+Close the properties that were **checked but vacuous** — the ones the model's
+shape made incapable of failing — so that the formal gate checks behaviour
+rather than reporting a green that means nothing.
+
+#### Baseline
+
+Four properties were checked, passed, and proved nothing. They were named in
+`TLA-STATUS.md` rather than counted as verified.
+
+#### Changes
+
+- **`HashChain`** — the module had no way to tamper with a link, so
+  `TamperDetected`'s antecedent was unreachable. `ChainIntact(c)` (the
+  predicate `io.matrix.audit.HashChain.verify()` computes) is now a named
+  operator; a `TamperLink(i, p)` action mutates a link's payload and leaves
+  its hash alone; `AppendLink` sets `verified' = ChainIntact(chain')` instead
+  of `TRUE` by fiat — the Java guarantees that an append does **not** repair a
+  tampered chain; `TamperDetected` states the direction that holds for any
+  hash (a chain that does not verify is never reported as verified) and
+  `RestoreVerifies` states the correspondence. `HashChainDependency` was an
+  unconditional invariant — "the chain is always internally consistent" —
+  which is exactly what a tamper breaks; TLC found the violation the moment
+  the tamper action was added. It is now the per-chain definition, and
+  `VerifiedImpliesIntact` took its place as the system invariant.
+  `AppendKeepsChainValid` was false in every non-empty state and had been
+  excluded from the configuration file; it now says what its comment says and
+  is checked.
+- **`MctsLatsVisit`** — `ArgmaxByReward` returned an arbitrary node
+  (`CHOOSE n ∈ Nodes : TRUE`), so `BestArmIsArgmax` had nothing to check. It
+  now selects a node of maximal **mean reward** by cross-multiplication, with
+  a zero-visit node treated as having the mean 0 exactly as
+  `TreeNode.getAverageReward()` does; `BestArmIsArgmax` asserts that no rival
+  beats the selected arm.
+
+#### Verification
+
+All nine specifications still parse and model-check with no violation. The
+`HashChain` state space grew from **820 to 20 440 distinct states** (broken
+chains are now reachable), and `MctsLatsVisit`'s is unchanged — its check
+became real rather than its model becoming bigger.
+
+Both new checks **failed while they were being written**, each time with a
+concrete counterexample: a swapped cross-multiplication, a zero-visit node
+treated as having no mean, an inverted argument order in the property itself,
+and a tamper path that broke `HashChainDependency`. A stub cannot fail; these
+can.
+
+#### Evidence
+
+- `formal/HashChain.tla`, `formal/HashChain.cfg`
+- `formal/MctsLatsVisit.tla`
+- `docs-v2/engineering/TLA-STATUS.md` — §"Vacuous properties that have been
+  closed", with the counterexamples.
+
+#### Impact
+
+Two properties went from "checked, passing, proving nothing" to real checks.
+The `HashChain` model now covers the Java's stated guarantee that a
+retroactive mutation invalidates every subsequent verification — which, before
+this, was asserted nowhere and checked nowhere.
+
+#### Limitations
+
+- **Three properties are still vacuous**: `BotEthicsPipeline.EventualKillRejection`
+  (its antecedent is unreachable, and the kill-trigger policy it states is not
+  implemented in the Java at all), `MctsLatsVisit.Convergence` (the UCT
+  convergence claim needs a probabilistic model, not a bigger state space),
+  and `BrcStep`'s three constant-level invariants (TLC warns about each).
+- `HashChain`'s `restore()` path is not modelled as an action — the Java
+  *rejects* a chain that does not verify, so there is no reachable "restore a
+  broken chain" behaviour to check; the rejection is expressed through the
+  verification result.
+
+#### Recovery
+
+Each change is a separate commit; `git revert` restores any of them. The
+`HashChain` cfg change is the only one that alters what CI checks, and it
+adds a check rather than removing one.
+
+#### Next Action
+
+- `BrcStep`'s three invariants need the real BRC composition modelled, or an
+  explicit statement that the module does not constrain the state machine.
+- `BotEthicsPipeline`'s kill-trigger policy is an owner decision: implement it
+  in the Java, or drop it from the specification.
+- `MCTSPlanner` still has no production caller.
