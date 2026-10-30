@@ -22,8 +22,22 @@ vars == <<chain, lastHash, verified>>
 
 \* ── Type invariants ────────────────────────────────────────────────────────────
 
+\* RECON-W39: the record now has the Java's six fields:
+\*   io.matrix.audit.HashLink is
+\*     record HashLink(long sequence, String previousHash, String payloadHash,
+\*                     long timestampMs, String extra, String hash)
+\* The previous model had a three-field record - payload, extra, hash - and
+\* derived the predecessor and the timestamp from the chain POSITION. That
+\* was an abstraction, but it hid two things the Java actually does: the
+\* link stores its own predecessor, and the link stores the payload's DIGEST
+\* rather than the payload.
 TypeOK ==
-    /\ chain \in Seq([payload: VALID_PAYLOADS, extra: VALID_EXTRAS, hash: STRING])
+    /\ chain \in Seq([sequence: 0..MAX_LINKS,
+                      previousHash: STRING,
+                      payloadHash: STRING,
+                      timestampMs: 0..MAX_LINKS,
+                      extra: VALID_EXTRAS,
+                      hash: STRING])
     /\ lastHash \in STRING
     /\ verified \in BOOLEAN
 
@@ -42,18 +56,28 @@ Init ==
 \*
 \* This is sufficient to verify structural properties like chain integrity.
 
+\* The Java stores the SHA-256 of the payload, and the canonical hash INPUT
+\* contains that digest - so the payload is hashed twice. The model mirrors
+\* that: the link carries a payloadHash, never a payload.
+PayloadHash(p) == "ph:" \o p
+
 RECURSIVE ComputeHash(_, _, _, _, _)
 
-ComputeHash(prevHash, seq, payload, ts, extra) ==
+ComputeHash(prevHash, seq, payloadHash, ts, extra) ==
     \* Deterministic opaque hash. We use a simple encoding that TLA+ can
     \* reason about: prefix the inputs and concatenate.
-    LET encoded == "H" \o prevHash \o ToString(seq) \o ":" \o payload \o "@" \o ToString(ts) \o "|" \o extra
+    LET encoded == "H" \o prevHash \o ToString(seq) \o ":" \o payloadHash \o "@" \o ToString(ts) \o "|" \o extra
     IN encoded
 
 \* ── Operations ────────────────────────────────────────────────────────────────
 
 \* The hash the first link chains from.
-GENESIS == "0" \o SubSeq("0000000000000000000000000000000000000000000000000000000000000000", 1, 64)
+\*
+\* RECON-W39: this was "0" \o SubSeq(<64 zeros>, 1, 64), which is 65 characters
+\* - SubSeq over a 64-character string returns all 64 of them, and the extra
+\* "0" made it 65. The Java's HashLink.genesisHash() is exactly 64 zeros,
+\* and the first link's previousHash must equal it.
+GENESIS == SubSeq("0000000000000000000000000000000000000000000000000000000000000000", 1, 64)
 
 \* ChainIntact(c) — the answer io.matrix.audit.HashChain.verify() gives for
 \* the chain c: every link's hash matches its own fields AND the previous
@@ -62,11 +86,18 @@ GENESIS == "0" \o SubSeq("000000000000000000000000000000000000000000000000000000
 \* RECON-W38.5: this predicate existed only inlined inside RestoreVerifies,
 \* which is why the module could not express what it was actually about. The
 \* Java's verify() computes exactly this.
+\* RECON-W39: the Java's verify() checks three things per link - that the
+\* sequence number is the link's position, that the stored previousHash is
+\* the predecessor's hash, and that the link's own hash matches its fields.
+\* The model now checks the same three things, because the link now carries
+\* the fields the Java carries.
 ChainIntact(c) ==
     \A i \in 1..Len(c):
-        c[i].hash = ComputeHash(
-            IF i = 1 THEN GENESIS ELSE c[i-1].hash,
-            i - 1, c[i].payload, i - 1, c[i].extra)
+        /\ c[i].sequence = i - 1
+        /\ c[i].previousHash = IF i = 1 THEN GENESIS ELSE c[i-1].hash
+        /\ c[i].hash = ComputeHash(
+                c[i].previousHash, c[i].sequence,
+                c[i].payloadHash, c[i].timestampMs, c[i].extra)
 
 \* The most recent link of the append-only chain. The chain only grows at
 \* the end, so the newest link is the last element of the sequence.
@@ -77,11 +108,16 @@ AppendLink(p, e) ==
     /\ Len(chain) < MAX_LINKS
     /\ p \in VALID_PAYLOADS
     /\ e \in VALID_EXTRAS
-    /\ LET prev == IF Len(chain) = 0 THEN "0" \o SubSeq("0000000000000000000000000000000000000000000000000000000000000000", 1, 64)
+    /\ LET prev == IF Len(chain) = 0 THEN GENESIS
                 ELSE LastLink(chain).hash
        seq  == Len(chain)
        ts   == seq  \* simple deterministic ts for the spec
-       newLink == [payload |-> p, extra |-> e, hash |-> ComputeHash(prev, seq, p, ts, e)]
+       newLink == [sequence    |-> seq,
+                   previousHash |-> prev,
+                   payloadHash  |-> PayloadHash(p),
+                   timestampMs  |-> ts,
+                   extra        |-> e,
+                   hash         |-> ComputeHash(prev, seq, PayloadHash(p), ts, e)]
        IN
        /\ chain' = Append(chain, newLink)
        /\ lastHash' = newLink.hash
@@ -104,11 +140,15 @@ AppendLink(p, e) ==
 \* RECON-W38.5: the module had no way to tamper at all, so the "tampering
 \* invalidates the chain" property had an unreachable antecedent and could
 \* never fail - it was checked and proved nothing.
+\* RECON-W39: the Java's link stores the payload's DIGEST, so the
+\* retroactive mutation an attacker performs is on the digest, not on a
+\* payload the link does not have. The stored hash is not updated, which is
+\* what makes the mutation detectable.
 TamperLink(i, p) ==
     /\ i \in 1..Len(chain)
     /\ p \in VALID_PAYLOADS
-    /\ p /= chain[i].payload
-    /\ chain' = [chain EXCEPT ![i] = [chain[i] EXCEPT !.payload = p]]
+    /\ p /= chain[i].payloadHash
+    /\ chain' = [chain EXCEPT ![i] = [chain[i] EXCEPT !.payloadHash = PayloadHash(p)]]
     /\ UNCHANGED <<lastHash>>
     /\ verified' = ChainIntact(chain')
 
@@ -144,6 +184,9 @@ AppendKeepsChainValid ==
           => (ChainIntact(chain') <=> ChainIntact(chain)) ]_chain
 
 \* INV-4: Tampering with any link invalidates the chain.
+\*
+\* RECON-W39: "the link's payload changed" is now "the link's payload DIGEST
+\* changed", because that is what the Java's record holds.
 \*
 \* RECON-W38.5: the old formula's antecedent included `AppendLink(p, e)` AND
 \* `LastLink(chain').payload /= p` - but an append always sets the payload to
@@ -192,7 +235,7 @@ RestoreVerifies ==
 HashChainDependency(c) ==
     \A i \in 2..Len(c):
         c[i].hash = ComputeHash(
-            c[i-1].hash, i - 1, c[i].payload, i - 1, c[i].extra)
+            c[i-1].hash, i - 1, c[i].payloadHash, c[i].timestampMs, c[i].extra)
 
 \* INV-7: the system never reports a broken chain as verified.
 VerifiedImpliesIntact ==

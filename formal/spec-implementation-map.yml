@@ -511,24 +511,26 @@ specifications:
     conformance:
       status: [MODEL_CHECKED, ABSTRACT_MODEL, JAVA_UNIT_VERIFIED, INTEGRATION_VERIFIED, PRODUCTION_PATH_VERIFIED]
       gaps:
-        - code: REPRESENTATION_MISMATCH
+        - code: MODEL_CORRECTED
           detail: >-
             The Java record carries sequence, previousHash, payloadHash,
-            timestampMs, extra and hash; the model carries payload, extra and
-            hash and derives sequence and timestamp from the chain POSITION.
-            The model is an abstraction of the record, not its shape.
-        - code: SEMANTIC_MISMATCH
-          detail: >-
-            The model's GENESIS is 65 characters ("0" plus a 64-character
-            SubSeq); the Java's genesisHash() is exactly 64.
+            timestampMs, extra and hash; the model carried payload, extra and
+            hash and derived sequence and timestamp from the chain POSITION.
+            The model's record now has the Java's six fields, ChainIntact
+            checks the same three things the Java's verify() checks (the
+            sequence number, the stored predecessor, and the link's own hash),
+            the genesis hash is exactly 64 zeros as the Java's is, and the
+            tamper action mutates the payload DIGEST because the Java's link
+            has no payload field.
         - code: SEMANTIC_MISMATCH
           detail: >-
             The model stores lastHash and verified as STATE; the Java computes
             latest() and verify() on demand.
         - code: NOT_TRACE_CONFORMANT
           detail: >-
-            The model hashes the payload text; the Java hashes the payload's
-            SHA-256 digest, so the payload is hashed twice.
+            No model trace has been replayed through the Java. The model's
+            hash is an opaque encoding, not SHA-256: the abstract claim is
+            injectivity, not collision resistance, and the ADR says so.
     abstractions:
       - "The model's hash is an abstract deterministic encoding; the Java uses SHA-256, whose collision resistance TLC cannot prove."
     assumptions:

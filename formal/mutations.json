@@ -67,8 +67,8 @@
       "id": "HashChain-verified-always-true",
       "spec": "HashChain",
       "why": "A broken chain must never be reported as verified. Making the append report an unconditionally verified chain must break VerifiedImpliesIntact.",
-      "old": "/\\ chain' = [chain EXCEPT ![i] = [chain[i] EXCEPT !.payload = p]]\n    /\\ UNCHANGED <<lastHash>>\n    /\\ verified' = ChainIntact(chain')",
-      "new": "/\\ chain' = [chain EXCEPT ![i] = [chain[i] EXCEPT !.payload = p]]\n    /\\ UNCHANGED <<lastHash>>\n    /\\ verified' = TRUE",
+      "old": "/\\ chain' = [chain EXCEPT ![i] = [chain[i] EXCEPT !.payloadHash = PayloadHash(p)]]\n    /\\ UNCHANGED <<lastHash>>\n    /\\ verified' = ChainIntact(chain')",
+      "new": "/\\ chain' = [chain EXCEPT ![i] = [chain[i] EXCEPT !.payloadHash = PayloadHash(p)]]\n    /\\ UNCHANGED <<lastHash>>\n    /\\ verified' = TRUE",
       "expect": "KILLED"
     },
     {
@@ -110,6 +110,14 @@
       "why": "Only the axioms whose trigger covers the feature set may fire. Firing all of them must break FiredSubsetOfTotal and NeuronsAreCanonical.",
       "old": "{neurons[a] : a \\in {x \\in Axioms : features \\in Triggers[x]}}]",
       "new": "{neurons[a] : a \\in Axioms}]",
+      "expect": "KILLED"
+    },
+    {
+      "id": "HashChain-wrong-sequence-number",
+      "spec": "HashChain",
+      "why": "A link's sequence number must be its position in the chain - the contract RECON-W39 wrote into the Java (sequence(i) = i - 1). Recording a different number must break the integrity check.",
+      "old": "sequence    |-> seq,",
+      "new": "sequence    |-> seq + 1,",
       "expect": "KILLED"
     }
   ]
