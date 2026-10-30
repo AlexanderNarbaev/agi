@@ -299,3 +299,48 @@ validator unless the specification names a production caller.
 - The shadow-price definition of `ConjugateBudgeterDP` still does not match
   the Java's gcd-reduced grid.
 - The MCTS convergence bound remains UNVERIFIED.
+
+### Continuation — RECON-W39: the rest of the wave (2026-10-30)
+
+The wave continued after the registry and the CRDT work.
+
+| Area | Finding | Fix | Evidence |
+|---|---|---|---|
+| Formal ↔ code | the TLA+ gate watched `formal/**` only: a change to `NeuronLayer.java` never reached TLC | the workflow's path filter now carries a **generated** block from `formal/spec-implementation-map.yml`; `SpecImplementationMapTest` fails the build when it drifts | 123 paths per trigger; the guard has 9 tests |
+| Toolchain | the jar was pinned by version only | the sha256 the GitHub release API reports for the v1.8.0 asset is verified before the jar reaches the gate | `fc6878c6…d6bdd63e` |
+| Budgeter | the model's shadow price was the slope over ONE raw unit; the Java computes it over the gcd-reduced grid | the model mirrors the Java's grid; `LambdaBounded` states the correspondence; the bound it carries is unchanged | `ConjugateBudgeterTraceConformanceTest`: 99 at envelope 7, sweep 1, 1, 99, 99 |
+| M4 | two corrections to the model were **invisible to every property** — reverting either left everything holding | two properties added to pin them; the harness now proves they are pinned | `AbsentImpliesCovered` violated by both reverted actions |
+| Gate | nothing ever asked whether the gate can go red | `scripts/mutation-harness.py`: 13 mutants, copies only, isolated temp dirs, digest-verified toolchain | 12 killed, 1 survived, 0 invalid, 0 drift |
+| Gate | TLC's exit code is **0 with `-continue`** even on a violated property — the CI job deliberately omits `-continue`, so its check is sound; the harness reads the violation from the output | the harness classifies from the output | measured against tla2tools 1.8.0 |
+| MCTS | `rolloutPolicy` was documented as random and implemented deterministically; the trace did not say which selection rule ran | the javadoc says what the code does; the trace reports `selection=UCB1,latsMode=false` | the LATS/PUCT path is never enabled in production |
+| Risks | 25 operational and cognitive risks were a list of suspicions | `docs-v2/engineering/RISK-REGISTER.md` — each item re-verified from the code, with the file and line that decided it | 9 FIXED + 1 VERIFIED_NOT_A_DEFECT + 1 INTENTIONAL_LIMITATION (operational); 8 VERIFIED_NOT_A_DEFECT + 4 OPEN (cognitive) |
+| Knowledge | TLA-STATUS did not say what the gate does NOT verify; FORMAL-CONTRACTS mapped `MPDTNeuron` to a class that does not exist | both corrected; the ADR registry lists all four decisions; the pinned-dependency list records the new test dependency | `docs-v2/engineering/STANDARDS-MATRIX.md` |
+
+### Verification at the end of the wave
+
+- The formal gate, run exactly as CI runs it: **9 specifications
+  model-checked, 0 syntax-checked only, 0 failed.**
+- The mutation harness: **13 generated, 12 killed, 1 survived, 0 invalid,
+  0 drift.** The survivor is the `Consensus` quorum, and it is recorded.
+- Targeted Java suites: `io.matrix.noosphere`, `io.matrix.budgeter`,
+  `io.matrix.audit`, `io.matrix.mcts`, the whole of `matrix-quality`, and the
+  whole of `matrix-brain-runtime` — **1 675 tests, 0 failures, 0 errors**
+  (4 skipped). **This was a targeted run, not the full suite**: the number
+  above is what was executed, and no claim is made about the rest.
+- The registry guard: **9 tests, all green** — every referenced path exists,
+  every specification names tests, every status is in the vocabulary, and
+  `PRODUCTION_PATH_VERIFIED` is refused without a production caller.
+
+### Still open
+
+- `FrozenEthicalFNL.evaluate()` iterates `Set.copyOf(...)`, whose order is
+  randomised per JVM run: with several axioms firing, the fired neuron is
+  not reproducible. FROZEN zone — an RFC is needed, not a patch.
+- `Consensus` and `MemoryM4Causal` have no production caller; `MCTSPlanner`
+  and `LatsValueFunction` have none either, and the LATS mode is never
+  enabled in production.
+- The `Consensus` quorum is not pinned by any property — the one surviving
+  mutant.
+- The MCTS convergence bound remains UNVERIFIED.
+- Four open cognitive risks, each with its smallest fix, in
+  `docs-v2/engineering/RISK-REGISTER.md`.
