@@ -344,3 +344,50 @@ The wave continued after the registry and the CRDT work.
 - The MCTS convergence bound remains UNVERIFIED.
 - Four open cognitive risks, each with its smallest fix, in
   `docs-v2/engineering/RISK-REGISTER.md`.
+
+### Continuation — RECON-W39: the last two items (2026-10-30)
+
+| Area | Finding | Fix | Evidence |
+|---|---|---|---|
+| HashChain model | the model carried a three-field link (payload, extra, hash) and derived the predecessor and the timestamp from the chain POSITION; the Java's `HashLink` has six fields and stores the payload's DIGEST | the model's record now has the Java's six fields; `ChainIntact` checks the same three things `verify()` checks (the sequence number, the stored predecessor, the link's own hash); the genesis hash is exactly 64 zeros, as `genesisHash()` is; the tamper action mutates the digest | 20 440 distinct states — unchanged, so the alignment cost no coverage |
+| MCTS | **the production search has no reward signal**: `PlanningStage` passes `(DecisionTree dt) -> 0.5` — a constant — and it is the only production caller of `MctsTree` | recorded, measured and NOT silently changed: the replacement of a constant reward with an informative one changes which action the brain takes and needs a decision about what the planning stage optimises | ADR-2026-10-30-005; JMH: greedy 0.808 us/op, random 0.787, production 18.197; mean reward 3.25 / 3.75 / **2.60** |
+
+### Verification at the end of the wave (final)
+
+- The formal gate, run exactly as CI runs it: **9 specifications
+  model-checked, 0 syntax-checked only, 0 failed.**
+- The mutation harness: **14 generated, 13 killed, 1 survived, 0 invalid,
+  0 drift.** The survivor is the `Consensus` quorum, recorded with its
+  justification in `docs-v2/engineering/MUTATION-REPORT.md`.
+- `matrix-quality` and `matrix-brain-runtime`: **whole modules, green.**
+- Targeted `matrix-core` suites (`io.matrix.mcts`, `io.matrix.noosphere`,
+  `io.matrix.budgeter`, `io.matrix.audit`): green.
+- The registry guard: green — every referenced path exists, every
+  specification names tests, every status is in the vocabulary, and
+  `PRODUCTION_PATH_VERIFIED` is refused without a production caller.
+
+**These were targeted runs, not the full suite.** No claim is made about the
+rest of the repository's tests, and the test count published in
+`docs-v2/index.md` still refers to the last full run — it was not
+re-measured, and it is not restated here.
+
+### The wave's open items, in one place
+
+1. `FrozenEthicalFNL.evaluate()` iterates `Set.copyOf(...)` — the order is
+   randomised per JVM run, so with several axioms firing the fired neuron is
+   not reproducible. FROZEN zone → an RFC, not a patch.
+2. The production MCTS search has no reward signal (ADR-2026-10-30-005 R3).
+3. The `Consensus` quorum is not pinned by any property — the one surviving
+   mutant — and `ConsensusEngine` has no production caller.
+4. `MemoryM4Causal` has no production caller, though `EpochAwareCausalSet`
+   now implements the model.
+5. `MCTSPlanner` and `LatsValueFunction` have no production caller, and the
+   LATS mode is never enabled in production.
+6. The MCTS convergence bound remains UNVERIFIED.
+7. Four open cognitive risks, each with its smallest fix, in
+   `docs-v2/engineering/RISK-REGISTER.md`.
+8. The model-level divergences for `Consensus`, `BotEthicsPipeline`,
+   `FrozenEthicalFNL`, `BrcStep` and `MPDTNeuron` are recorded precisely in
+   the registry rather than corrected, because each correction would need
+   either a different abstraction or a decision about which layer is
+   authoritative.
