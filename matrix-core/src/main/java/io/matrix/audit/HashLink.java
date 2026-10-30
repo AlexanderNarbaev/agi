@@ -43,11 +43,44 @@ public record HashLink(
 
     public HashLink {
         if (sequence < 0) throw new IllegalArgumentException("sequence must be >= 0");
+        // RECON-W39: this was
+        //     Objects.requireNonNull(timestampMs >= 0 ? "ok" : "ts", "timestampMs");
+        // The conditional always yields a NON-NULL String, so requireNonNull
+        // never threw and a negative timestamp was accepted silently. The
+        // check is now explicit.
+        if (timestampMs < 0) throw new IllegalArgumentException("timestampMs must be >= 0");
         Objects.requireNonNull(previousHash, "previousHash");
         Objects.requireNonNull(payloadHash, "payloadHash");
-        Objects.requireNonNull(timestampMs >= 0 ? "ok" : "ts", "timestampMs");
         Objects.requireNonNull(extra, "extra");
         Objects.requireNonNull(hash, "hash");
+        // RECON-W39: the hash fields are SHA-256 hex digests. A malformed
+        // value used to be accepted here and only failed later, during
+        // verification, with a confusing error.
+        requireHex64(previousHash, "previousHash");
+        requireHex64(payloadHash, "payloadHash");
+        requireHex64(hash, "hash");
+    }
+
+    /**
+     * A SHA-256 digest is exactly 64 hexadecimal characters. Validating the
+     * shape here means a malformed link is rejected at construction rather
+     * than at some later verification.
+     */
+    private static void requireHex64(String value, String field) {
+        if (value.length() != 64) {
+            throw new IllegalArgumentException(
+                    field + " must be 64 hex characters, was " + value.length());
+        }
+        for (int i = 0; i < 64; i++) {
+            char c = value.charAt(i);
+            boolean hex = (c >= '0' && c <= '9')
+                    || (c >= 'a' && c <= 'f')
+                    || (c >= 'A' && c <= 'F');
+            if (!hex) {
+                throw new IllegalArgumentException(
+                        field + " must be hexadecimal, found '" + c + "' at index " + i);
+            }
+        }
     }
 
     /** Length (bytes) of the fixed-width sequence field. */
@@ -59,19 +92,42 @@ public record HashLink(
 
     /**
      * Factory: build a new link that extends the given previous link
-     * (or null for the genesis link).
+     * (or null for the genesis link), stamped with the current wall-clock.
+     *
+     * <p>RECON-W39: {@link HashChain} accepts an injected clock supplier, but
+     * this factory read {@code System.currentTimeMillis()} directly, so the
+     * injected clock had no effect and no test could produce a reproducible
+     * chain. Use {@link #extend(HashLink, String, String, long)} when the
+     * timestamp must be supplied by the caller.
      */
     public static HashLink extend(HashLink previous, String payload, String extra) {
+        return extend(previous, payload, extra, System.currentTimeMillis());
+    }
+
+    /**
+     * Factory: build a new link that extends the given previous link
+     * (or null for the genesis link), with an explicit timestamp.
+     *
+     * <p>RECON-W39: the timestamp is now supplied by the caller, so a
+     * {@link HashChain} configured with a fixed or advancing clock produces a
+     * reproducible chain. The timestamp is still part of the hashed content
+     * (see {@link #computeHash}), so it is integrity-relevant, not metadata.
+     *
+     * @param previous   the predecessor link, or {@code null} for the genesis link
+     * @param payload    the payload text (hashed into {@code payloadHash})
+     * @param extra      the extra tag (part of the hashed content)
+     * @param timestampMs the link's timestamp in epoch milliseconds; must be &gt;= 0
+     */
+    public static HashLink extend(HashLink previous, String payload, String extra, long timestampMs) {
         Objects.requireNonNull(payload, "payload");
         Objects.requireNonNull(extra, "extra");
         String previousHash = previous == null
-                ? "0000000000000000000000000000000000000000000000000000000000000000"
+                ? HashLink.genesisHash()
                 : previous.hash();
         long sequence = previous == null ? 0L : previous.sequence() + 1;
-        long now = System.currentTimeMillis();
         String payloadHash = sha256Hex(payload.getBytes(java.nio.charset.StandardCharsets.UTF_8));
-        String hash = computeHash(previousHash, sequence, payloadHash, now, extra);
-        return new HashLink(sequence, previousHash, payloadHash, now, extra, hash);
+        String hash = computeHash(previousHash, sequence, payloadHash, timestampMs, extra);
+        return new HashLink(sequence, previousHash, payloadHash, timestampMs, extra, hash);
     }
 
     /**
