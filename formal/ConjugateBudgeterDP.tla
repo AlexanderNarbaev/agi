@@ -83,6 +83,49 @@ DPValue(e) ==                     \* backward DP table cell: V*(e)
                  ELSE fold[i-1, ee]
         IN fold[Cardinality(Rows), e]
 
+\* ── The DP grid the Java actually uses ───────────────────────────────────────
+\*
+\* RECON-W39: the shadow price in io.matrix.budgeter.ConjugateBudgeter is
+\* computed on a grid REDUCED by the gcd of the row costs:
+\*
+\*     g = gcd(costs);  units = cap / g;  lambda = dp[0][units] - dp[0][units-1]
+\*
+\* so the slope it reports is the marginal value of G raw units, not of one.
+\* The model computed the marginal of ONE raw unit, so it did not describe
+\* the Java whenever g > 1. A concrete counterexample: rows (v=1, c=4) and
+\* (v=100, c=6) at envelope 7 give g = 2, so the Java reports
+\* V*(6) - V*(4) = 100 - 1 = 99, while the model's slope was
+\* V*(7) - V*(6) = 100 - 100 = 0.
+\*
+\* The grid is mirrored here so the model and the Java compute the SAME
+\* number. The property LambdaBounded then states that correspondence
+\* directly - it is checked, not assumed - and the bound it carries is
+\* unchanged: one extra grid unit can enable at most one additional row,
+\* so the marginal still cannot exceed the largest single row value.
+
+RECURSIVE Gcd2(_, _)
+Gcd2(a, b) == IF b = 0 THEN a ELSE Gcd2(b, a % b)
+
+GcdOfCosts ==
+    LET fold[i \in 0..Cardinality(Rows)] ==
+            IF i = 0 THEN 0 ELSE Gcd2(fold[i-1], C(i))
+    IN fold[Cardinality(Rows)]
+
+\* The grid unit: g raw units per DP cell. A zero gcd (no rows, or rows of
+\* cost zero) would make the reduction meaningless, so it degrades to 1.
+GridUnit == IF GcdOfCosts = 0 THEN 1 ELSE GcdOfCosts
+
+\* The largest multiple of the grid unit not exceeding e - the Java's
+\* `units = cap / g` cell count expressed in raw units.
+GridCap(e) == e - (e % GridUnit)
+
+\* The shadow price the Java reports at envelope e: the slope of the value
+\* function over the last GRID UNIT.
+GridShadow(e) ==
+    IF GridCap(e) < GridUnit
+    THEN 0
+    ELSE DPValue(GridCap(e)) - DPValue(GridCap(e) - GridUnit)
+
 \* Reconstruct the optimal subset: take row i only when taking it is at
 \* least as good as skipping it, and carry the REMAINING BUDGET down with the
 \* witness.
@@ -130,9 +173,7 @@ Step(newEnvelope, observedLambda) ==
              /\ selected' = [i ∈ Rows |-> FALSE]
              /\ shadow'   = 0
        ELSE
-             LET dp0  == DPValue(newEnvelope)
-                 dp1  == IF newEnvelope > 0 THEN DPValue(newEnvelope - 1) ELSE 0
-                 lam  == dp0 - dp1
+             LET lam  == GridShadow(newEnvelope)
              IN
                  /\ shadow' = lam
                  /\ selected' = GreedyPick(newEnvelope)  \* see reconstruction lemma
@@ -181,8 +222,7 @@ ShadowBounded ==
 \* single row value (one extra unit of budget adds at most one row's worth of
 \* value).
 LambdaBounded ==
-    [][ (IF envelope = 0 THEN 0 ELSE DPValue(envelope) - DPValue(envelope - 1))
-          = shadow
+    [][ shadow = GridShadow(envelope)
         /\ shadow ≥ 0
         /\ shadow ≤ Max({V(i) : i ∈ Rows}) ]_shadow
 

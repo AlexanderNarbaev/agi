@@ -253,12 +253,15 @@ specifications:
         - code: NO_PRODUCTION_CALLER
           detail: >-
             MCTSPlanner and LatsValueFunction have no production caller.
-        - code: NO_PRODUCTION_CALLER
+        - code: SEMANTIC_MISMATCH
           detail: >-
             PlanningStage uses the six-argument MctsTree constructor, which
-            hard-codes latsMode = false, so the LATS/PUCT selection path and
-            the value function never execute in production even though the
-            trace reports engine=LatsReflector.
+            hard-codes latsMode = false. The LATS/PUCT selection, the value
+            function and the in-search reflection therefore never execute in
+            production. The post-search LatsReflector pass DOES run - the
+            trace line engine=LatsReflector.reflect is true - but the tree
+            that reflection runs over was driven by UCB1, not PUCT, and the
+            trace does not say so.
     abstractions:
       - "The model's step set is three concrete functions over a two-bit vector space; the production step is a NeuronLayer with a wider input."
     assumptions:
@@ -549,6 +552,7 @@ specifications:
         - matrix-core/src/test/java/io/matrix/budgeter/ConjugateBudgeterTest.java
         - matrix-core/src/test/java/io/matrix/budgeter/ConjugateBudgeterStepTest.java
         - matrix-core/src/test/java/io/matrix/budgeter/ConjugateBudgeterVsGreedyTest.java
+        - matrix-core/src/test/java/io/matrix/budgeter/ConjugateBudgeterTraceConformanceTest.java
       integration:
         - matrix-core/src/test/java/io/matrix/lifecycle/ImpulseSchedulerTest.java
         - matrix-core/src/test/java/io/matrix/research/Exp045FreezeRecoveryTest.java
@@ -564,19 +568,15 @@ specifications:
         - FiniteHorizon
         - ShadowBoundedPeriod
     conformance:
-      status: [MODEL_CHECKED, ABSTRACT_MODEL, JAVA_UNIT_VERIFIED, INTEGRATION_VERIFIED, PRODUCTION_PATH_VERIFIED]
+      status: [MODEL_CHECKED, ABSTRACT_MODEL, JAVA_UNIT_VERIFIED, TRACE_CONFORMANT, INTEGRATION_VERIFIED, PRODUCTION_PATH_VERIFIED]
       gaps:
         - code: SEMANTIC_MISMATCH
           detail: >-
-            The Java reduces the DP grid by the gcd of the row costs, so its
-            shadow price is dp[0][units] - dp[0][units-1] = V*(cap) - V*(cap-g):
-            the marginal value of G raw units. The model computes V*(E) - V*(E-1),
-            the marginal value of ONE unit. With rows (v=1,c=4),(v=100,c=6) and
-            envelope 7 the Java returns lambda = 99 while the model returns 0.
-        - code: SEMANTIC_MISMATCH
-          detail: >-
             The Java's fallback path returns shadowPrice = NaN; the model's
-            fallback sets shadow = 0 and ShadowFinite requires a natural number.
+            fallback sets shadow = 0 and ShadowFinite requires a natural
+            number. TLA+ has no NaN, so the model's fallback cannot state the
+            Java's value; the divergence is bounded to the fallback path and
+            is asserted in ConjugateBudgeterTraceConformanceTest.
         - code: SEMANTIC_MISMATCH
           detail: >-
             The model's Step ignores observedLambda entirely; the Java smooths
@@ -589,6 +589,26 @@ specifications:
           detail: >-
             ConjugateBudgeterMulti is a DIFFERENT algorithm with no production
             caller; ConsciousnessLoop holds a budgeter but never calls it.
+      corrected:
+        - code: MODEL_CORRECTED
+          detail: >-
+            The Java reduces the DP grid by the gcd of the row costs, so its
+            shadow price is dp[0][units] - dp[0][units-1] = V*(cap) -
+            V*(cap-g): the marginal value of G raw units. The model computed
+            V*(E) - V*(E-1), the marginal value of ONE unit. With rows
+            (v=1,c=4),(v=100,c=6) at envelope 7 the Java returns lambda = 99
+            while the model returned 0. The model now mirrors the Java's grid
+            (GridUnit, GridCap, GridShadow) and LambdaBounded states that
+            correspondence directly. The bound it carries is unchanged: one
+            extra grid unit can enable at most one additional row, so the
+            marginal still cannot exceed the largest single row value.
+        - code: TRACE_CONFORMANCE_TEST
+          detail: >-
+            ConjugateBudgeterTraceConformanceTest pins the correspondence
+            against the Java: rows (v=1,c=4),(v=100,c=6) give shadowPrice 99
+            at envelope 7, and a sweep of envelopes 4..7 gives 1, 1, 99, 99 -
+            the model's GridShadow values, confirmed by TLC over the
+            configuration Rows={1,2}, Values={1,100}, Costs={4,6}.
     abstractions:
       - "The model omits the gcd grid reduction, the size fallback and the multi-period smoothing."
     assumptions:
