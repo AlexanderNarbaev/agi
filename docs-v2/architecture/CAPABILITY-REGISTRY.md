@@ -30,7 +30,7 @@ itself an unbacked claim.
 |---|---|---|---|---|
 | C-01 | "724 Tests Passing" | **CORRECTED** | `./gradlew test` (the executed count); `./scripts/count-tests.sh` (the source count) | **9,432** tests executed across 14 modules and 1,282 suites, **26 skipped, 0 failures, 0 errors** (`BUILD SUCCESSFUL in 23m 6s`). The source count is **8,898** test methods; the difference is `@ParameterizedTest` cases, which expand into several executed tests. The figure 724 appears in no measurement in this repository; it is also the tokenizer's vocabulary size, which is how it most likely arose. |
 | C-01b | "0 LLM calls in the decision path" (new headline stat) | **VERIFIED** | `.github/workflows/ci.yml` — the Article-I gate; `RuntimeLlmGuardTest` scans the runtime modules for legacy LLM imports | **0** — the gate is a required CI check, so the number cannot silently regress. |
-| C-01c | "9 TLA+ specs, model-checked in CI" (new headline stat) | **VERIFIED** | `.github/workflows/tla.yml`; per-specification detail in `docs-v2/engineering/TLA-STATUS.md` | All **9** specifications parse and all 9 are model-checked; 4 are fully green and 5 report a recorded property failure, which `docs-v2/engineering/TLA-STATUS.md` states explicitly. |
+| C-01c | "9 TLA+ specs, model-checked in CI" (new headline stat) | **VERIFIED** | `.github/workflows/tla.yml`; per-specification detail in `docs-v2/engineering/TLA-STATUS.md` | All **9** specifications parse and all 9 are model-checked, and **every configured property now holds** — the quarantine list in the TLC job is empty. RECON-W38.5 resolved the five specifications that used to report a recorded property failure, each against the Java implementation it models, and then closed the properties that were checked but vacuous: **no property in any configuration file is unfalsifiable**, and TLC's "constant-level formula" warning no longer fires for any specification. |
 | C-02 | "33,000× Faster than LLMs" / "Energy Efficiency 33,000× vs GPU-based LLMs" | **CORRECTED** | `docs-v2/research/BENCHMARK-REPORT-W620.md` §4 | The benchmark report records a **100,000× speedup** against a synthetic LLM ops/sec model, with an energy ratio of 0.00x. The published 33,000× matches no measurement: it is derived in `docs-v2/story/overview.md` by dividing 10–100 *tokens/sec* by a *<10 ms inference* — two different quantities. The card was also labelled "Energy Efficiency" while carrying a speedup. |
 | C-03 | "100% Constitution Compliant" | **VERIFIED (as gates, not as a number)** | `.github/workflows/ci.yml` — the Article-I gate, `DecisionPathAuditorTest` (13 tests) and `RuntimeLlmGuardTest` run on every build | The compliance mechanisms are real and enforced in CI. "100%" is not a measured quantity, so the page now says which gates are enforced rather than asserting a percentage. |
 | C-04 | "75% accuracy on logic tasks" / "vs 25% random baseline" | **CORRECTED (baseline)** | `docs-v2/research/BENCHMARK-REPORT-W620.md` §1 | BIR **75%** on 100 puzzles — correct. The random baseline is **30%**, not 25%. Note also that BIR (75.0%) **ties** the heuristic baseline (75.0%); the page implied a gain over a simpler method that the report does not show. |
@@ -87,8 +87,11 @@ not in the registry:
 - the narrative in `docs-v2/story/` — it is a story, and where it states a
   number it links to the report that produced it;
 - the TLA+ specification status — it is recorded per specification in
-  `docs-v2/engineering/TLA-STATUS.md`, including the five specifications whose
-  properties genuinely fail.
+  `docs-v2/engineering/TLA-STATUS.md`. RECON-W38.5 resolved the five
+  specifications whose properties genuinely failed, so the list of failing
+  specifications is empty; the document now also records which properties
+  are *not* machine-checked (the probabilistic MCTS convergence bound, which
+  is marked UNVERIFIED) so that a green gate is not read as more than it is.
 
 ## What was found, and what was deliberately not changed
 
