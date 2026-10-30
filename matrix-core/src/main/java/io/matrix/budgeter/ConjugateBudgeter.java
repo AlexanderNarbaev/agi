@@ -49,8 +49,22 @@ public final class ConjugateBudgeter {
      *
      * <p>Three invariants (W-B):
      * <ul>
-     *   <li><b>Lambda monotonicity</b> — within a single DP, the shadow price
-     *       is non-increasing in the envelope (verified by the DP itself).</li>
+     *   <li><b>Terminal value slope</b> — within a single DP, the shadow price
+     *       is the marginal value of the envelope,
+     *       {@code λ(E) = V*(E) − V*(E−1)}. It is non-negative (more budget
+     *       never hurts) and bounded by the largest single row value (one
+     *       extra unit of budget adds at most one row's worth of value).
+     *       <br><b>RECON-W38.5 — this entry used to read "lambda
+     *       monotonicity — within a single DP, the shadow price is
+     *       non-increasing in the envelope (verified by the DP itself)".</b>
+     *       That claim is FALSE for a 0/1 knapsack, and the formal model this
+     *       class is specified by caught it: with rows
+     *       {@code V = (3,5,9)}, {@code C = (2,3,4)} the optimum is
+     *       {@code V*(7) = 14}, {@code V*(8) = 14}, {@code V*(9) = 17}, so
+     *       {@code λ(8) = 0 < λ(9) = 3}. A one-unit budget increase can newly
+     *       enable a whole row, so the marginal value can rise. The assertion
+     *       has been restated as the properties that actually hold; see
+     *       {@code formal/ConjugateBudgeterDP.tla}.</li>
      *   <li><b>Shadow-price bounds</b> — across epochs, the smoothed shadow
      *       price always lies in {@code [0, maxVperC]} (clamped by
      *       {@link #step(long, double)}).</li>
@@ -202,10 +216,13 @@ public final class ConjugateBudgeter {
      *   <li>Determinism — no randomness, no wall-clock.</li>
      * </ul>
      *
-     * <p>Note: lambda monotonicity is a property of the single-epoch DP,
-     * not the per-period smoothing (which by design lets the shadow price
-     * follow the observed series). See {@link #allocate(Row[], long)} and
-     * the formal spec {@code formal/ConjugateBudgeterDP.tla}.
+     * <p>Note: the shadow price's definition is a property of the
+     * single-epoch DP, not of the per-period smoothing (which by design lets
+     * the shadow price follow the observed series). See
+     * {@link #allocate(Row[], long)} and the formal spec
+     * {@code formal/ConjugateBudgeterDP.tla} — which now checks the terminal
+     * value slope, its non-negativity and its bound, rather than the
+     * non-increasing claim that was false.
      *
      * @param rows the row set defining the shadow-price ceiling
      * @param epoch new epoch index (must be &gt; current epoch)

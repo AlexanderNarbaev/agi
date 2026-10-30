@@ -31,7 +31,26 @@ Init ==
     /\ table \in [Neurons -> SUBSET (0..(2 ^ K_MAX) - 1)]
     /\ \A n \in Neurons : table[n] \subseteq 0..((2 ^ k[n]) - 1)
     /\ inputs = [n \in Neurons |-> 0]
-    /\ outputs = [n \in Neurons |-> FALSE]
+    \* RECON-W38.5: the memoised output is seeded from the TRUTH TABLE, not
+    \* hard-coded to FALSE.
+    \*
+    \* The Java implementation has no persistent output field at all:
+    \* io.matrix.neuron.NeuronLayer.evaluate() computes each neuron's output
+    \* on demand from its truth table (via the BIR runtime) and returns a
+    \* fresh BitSet. The output is therefore a PURE FUNCTION of (k, table,
+    \* input) - there is no hidden state to carry.
+    \*
+    \* The spec models a memoised output, and seeding it with FALSE made it
+    \* contradict the table whenever the table contained input 0. That is
+    \* hidden state, which is exactly what INV-2 forbids, so INV-2 was false
+    \* in every reachable state in which a neuron's table contained 0, and
+    \* INV-4 failed on the first evaluation of such a neuron (the "flipped"
+    \* output was not a flip at all - it was the table's answer arriving).
+    \*
+    \* Seeding the output from the table removes the hidden state. It makes
+    \* the model STRONGER: the invariant is now true of every reachable state
+    \* instead of being contradicted by the initial state.
+    /\ outputs = [n \in Neurons |-> (0 \in table[n])]
 
 \* ── Evaluate ─────────────────────────────────────────────────────────────────
 

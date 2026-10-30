@@ -33,6 +33,21 @@ Init ==
     /\ frozenSeen = [r ∈ Replicas |-> {}]
     /\ vc         = [r ∈ Replicas |-> [k ∈ Keys |-> 0]]
 
+\* ── Helper: does a tombstone cover an insert at this epoch? ────────────────
+\*
+\* RECON-W38.5: "a tombstone covers an insert at this epoch" means the
+\* tombstone is AT OR AFTER the insert - the insert is not newer than the
+\* tombstone, so the tombstone wins. The previous definition used `t ≤ epoch`,
+\* which made the helper agree with the Insert guard and disagreed with F2
+\* (F2 forbids a re-insert with insert epoch ≤ E, i.e. it requires the insert
+\* to be NEWER than every tombstone of that key).
+\*
+\* The helper was dead code: it was referenced by the Insert precondition's
+\* COMMENT but never called. It is now the guard itself, so the comment, the
+\* helper and F2 all say the same thing.
+tombstonedBy(r, k, epoch) ==
+    \E t ∈ Epochs : ⟨k, t⟩ ∈ tombstones[r] ∧ t ≥ epoch
+
 \* ── Insert: add a key at the given epoch ────────────────────────────────────
 \*
 \* Preconditions:
@@ -45,7 +60,15 @@ Insert(r, k, epoch) ==
     /\ k ∈ Keys \ FrozenKeys         \* frozen keys cannot be inserted at all
     /\ epoch ∈ Epochs
     /\ epoch ≥ vc[r][k]
-    /\ ∀t ∈ Epochs : ⟨k, t⟩ ∈ tombstones[r] ⇒ t > epoch   \* no tombstone before/equal
+    \* RECON-W38.5: the guard now CALLS the helper, and the helper's direction
+    \* was corrected (see below). The previous inline conjunct
+    \* `∀t : ⟨k,t⟩ ∈ tombstones[r] ⇒ t > epoch` read "the insert must be OLDER
+    \* than every tombstone of the key" - which is the exact opposite of F2,
+    \* and made F2 false in every state where a key was tombstoned and then
+    \* re-inserted. F2 requires the opposite: an insert must be strictly NEWER
+    \* than every tombstone of that key, so the tombstone is not resurrected
+    \* at an epoch it should have covered.
+    /\ ¬tombstonedBy(r, k, epoch)
     /\ state'      = [state      EXCEPT ![r] = state[r] ∪ {k}]
     /\ vc'         = [vc         EXCEPT ![r] = [vc[r] EXCEPT ![k] = epoch]]
     /\ UNCHANGED <<tombstones, frozenSeen>>
@@ -106,10 +129,22 @@ Spec == Init /\ [][Next]_vars
 
 \* F1: Monotonicity — once a key enters state[r], no operation removes it
 \*     unless an explicit Tombstone removes it.
+\*
+\* RECON-W38.5: the implication was INVERTED with respect to its own comment.
+\* As written it said "a key may only APPEAR if a tombstone does not cover
+\* it" - i.e. it forbade ADDING a key, which the Insert action does by
+\* construction, so the property was false in the second state of every run.
+\* The comment (and the Java this models) say the opposite: the set only
+\* grows, and a key leaves it only by being tombstoned.
+\*
+\* io.matrix.noosphere.GrowOnlySet is exactly this: "a CRDT that only supports
+\* additions ... once a neuron identity is added to the set, it is never
+\* removed" - and its only removal path, tombstoneAt(), records a tombstone
+\* in the same step. This is that rule.
 MonotonicityExceptTombstone ==
     [][ \A r ∈ Replicas, k ∈ Keys :
-            (k ∈ state'[r] ∧ ∀E ∈ Epochs : ⟨k, E⟩ ∉ tombstones'[r])
-            ⇒ k ∈ state[r] ]_state
+            (k ∈ state[r] ∧ k \notin state'[r])
+            ⇒ (\E E ∈ Epochs : ⟨k, E⟩ ∈ tombstones'[r]) ]_state
 
 \* F2: TombstoneIrreversible — once ⟨k, E⟩ ∈ tombstones[r], no subsequent
 \*     operation may put k back into state[r] with insert epoch ≤ E.
@@ -136,8 +171,6 @@ FrozenImmutability ==
 
 \* ── Auxiliary helper ────────────────────────────────────────────────────────
 
-tombstonedBy(r, k, epoch) ==
-    \E t ∈ Epochs : ⟨k, t⟩ ∈ tombstones[r] ∧ t ≤ epoch
 
 =============================================================================
 \* Modification History

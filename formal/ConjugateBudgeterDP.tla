@@ -83,20 +83,44 @@ DPValue(e) ==                     \* backward DP table cell: V*(e)
                  ELSE fold[i-1, ee]
         IN fold[Cardinality(Rows), e]
 
-\* Reconstruct the optimal subset: pick any row whose inclusion contributes
-\* strictly more value than skipping it (greedy pick of the table — the DP
-\* itself guarantees optimality; the reconstruction is the witness).
+\* Reconstruct the optimal subset: take row i only when taking it is at
+\* least as good as skipping it, and carry the REMAINING BUDGET down with the
+\* witness.
+\*
+\* RECON-W38.5: the previous reconstruction unioned the "skip" witness with
+\* the "take" witness (`prev[k] \/ take[k]`), so it could select BOTH the rows
+\* of the skip solution AND the rows of the take solution - and the union can
+\* cost more than the envelope. That is why SpentWithinEnvelope was false: with
+\* V = (3,5,9) and C = (2,3,4) at envelope 3 the old reconstruction selected
+\* rows 1 and 2, costing 2+3 = 5 against an envelope of 3.
+\*
+\* io.matrix.budgeter.ConjugateBudgeter.conjugateDp() does NOT do that. It
+\* tracks the running budget - `e -= c[i]` when a row is taken - and its
+\* witness for "take" is the witness for the REDUCED budget, not a union with
+\* the skip witness. It also decides to take only when taking is at least as
+\* good as skipping (`takeVal >= dp[i + 1][e]`), where the previous
+\* reconstruction took every row that fit.
+\*
+\* The reconstruction below follows the Java: the take-branch carries
+\* `ee - C(i)`, and the row is taken only when it is at least as good as
+\* skipping.
 GreedyPick(e) ==
-    LET fold[i ∈ 0..Cardinality(Rows), ee ∈ 0..e] ==
+    LET vals[i ∈ 0..Cardinality(Rows), ee ∈ 0..e] ==
+            IF i = 0 THEN 0
+            ELSE IF C(i) <= ee
+                 THEN Max({vals[i-1, ee],
+                           V(i) + vals[i-1, ee - C(i)]})
+                 ELSE vals[i-1, ee]
+        picks[i ∈ 0..Cardinality(Rows), ee ∈ 0..e] ==
             IF i = 0 THEN [k ∈ Rows |-> FALSE]
-            ELSE LET prev == fold[i-1, ee]
-                     take == fold[i-1, ee - C(i)]
-                 IN IF C(i) <= ee
-                    THEN [k ∈ Rows |-> IF k = i
-                                       THEN TRUE
-                                       ELSE prev[k] \/ take[k]]
-                    ELSE prev
-    IN fold[Cardinality(Rows), e]
+            ELSE IF C(i) <= ee
+                 THEN IF V(i) + vals[i-1, ee - C(i)] >= vals[i-1, ee]
+                      THEN [k ∈ Rows |-> IF k = i
+                                         THEN TRUE
+                                         ELSE picks[i-1, ee - C(i)][k]]
+                      ELSE picks[i-1, ee]
+                 ELSE picks[i-1, ee]
+    IN picks[Cardinality(Rows), e]
 
 Step(newEnvelope, observedLambda) ==
     /\ newEnvelope ∈ Nat
@@ -139,14 +163,28 @@ ShadowFinite ==
 ShadowBounded ==
     [][ (shadow ≤ Max({V(i) : i ∈ Rows})) ]_shadow
 
-\* S3: shadow price is monotonically non-increasing in envelope
-\*      λ(E) = V*(E) − V*(E−1) is a non-increasing function of E.
-\*      Equivalent to: for any two consecutive envelopes E1 > E0 ≥ 1,
-\*        λ(E1) ≤ λ(E0).  Asserted as a step-invariant over a 2-step frame.
-LambdaMonotoneTwoStep ==
-    [][ \A e0, e1 ∈ 0..TotalCost :
-            e1 ≥ e0 ⇒ DPValue(e1) - (IF e0 > 0 THEN DPValue(e0-1) ELSE 0)
-                      ≥ DPValue(e1+1) - DPValue(e1) ]_<<envelope, shadow>>
+\* S3: the shadow price IS the DP's terminal value slope, and it is a sane
+\*      quantity: non-negative and bounded by the largest single row value.
+\*
+\* RECON-W38.5: the previous property asserted that λ(E) = V*(E) − V*(E−1) is
+\* NON-INCREASING in the envelope. That is FALSE for a 0/1 knapsack, and the
+\* spec's own row set is a counterexample: with V = (3,5,9) and C = (2,3,4),
+\* V*(7) = 14, V*(8) = 14 and V*(9) = 17, so λ(8) = 0 < λ(9) = 3. No
+\* implementation can satisfy the old property, so it was a broken assertion
+\* rather than a gate. (The same false claim appears in the Java's javadoc -
+\* ConjugateBudgeter says "lambda monotonicity - the shadow price is
+\* non-increasing in the envelope" - and is corrected there too.)
+\*
+\* What the DP does guarantee, and what the Java relies on, is stated here
+\* instead: the shadow price equals the marginal value of the envelope, it is
+\* non-negative (more budget never hurts), and it is bounded by the largest
+\* single row value (one extra unit of budget adds at most one row's worth of
+\* value).
+LambdaBounded ==
+    [][ (IF envelope = 0 THEN 0 ELSE DPValue(envelope) - DPValue(envelope - 1))
+          = shadow
+        /\ shadow ≥ 0
+        /\ shadow ≤ Max({V(i) : i ∈ Rows}) ]_shadow
 
 \* ── Liveness: finite horizon ────────────────────────────────────────────────
 

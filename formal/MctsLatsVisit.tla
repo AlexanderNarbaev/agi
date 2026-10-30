@@ -74,6 +74,17 @@ Visit(node, reward) ==
 Expand(parent, child) ==
     /\ parent ∈ Nodes
     /\ child ∈ Nodes
+    \* RECON-W38.5: a node is never its own child.
+    \*
+    \* The Java implementation cannot produce this: MCTSPlanner.expand()
+    \* constructs a FRESH TreeNode with the expanded node as its parent, so
+    \* `node` and `node.children` never contain the same object. The Java's
+    \* backpropagate() then walks `node = node.parent` up the chain, which
+    \* requires that chain to terminate.
+    \*
+    \* Without this guard the spec allowed Expand("n1","n1"), which put "n1"
+    \* in tree["n1"] and violated S3 (TreeAcyclic) in the first expansion.
+    /\ child # parent
     /\ child ∉ tree[parent]
     /\ tree' = [tree EXCEPT ![parent] = tree[parent] ∪ {child}]
     /\ UNCHANGED <<visitCount, totalReward, bestArm>>
@@ -82,7 +93,21 @@ Next ==
     \/ \E n ∈ Nodes, r ∈ {-1, 0, 1} : Visit(n, r)
     \/ \E p, c ∈ Nodes : Expand(p, c)
 
-Spec == Init /\ [][Next]_vars
+\* RECON-W38.5: the search keeps iterating.
+\*
+\* The Java's plan() is a bounded loop that ALWAYS backpropagates on every
+\* iteration (`backpropagate(node, reward)` increments node.visits and every
+\* ancestor's), so a search that runs at least one iteration has visited at
+\* least one node. The spec encoded no such assumption: with a bare
+\* [][Next]_vars an infinite stuttering behaviour is fair, so the search could
+\* do nothing forever and LIV (SearchTerminates) was false in the very first
+\* state.
+\*
+\* Weak fairness on Next states exactly that: while a step is possible, one
+\* eventually happens. Expansion saturates after finitely many steps (each
+\* parent can hold at most |Nodes|-1 children), so the search cannot run on
+\* expansions alone and a Visit - the model's backpropagation - must occur.
+Spec == Init /\ [][Next]_vars /\ WF_vars(Next)
 
 \* ── Convergence argument: alpha-Root ───────────────────────────────────────
 \*
@@ -112,8 +137,18 @@ BestArmIsArgmax ==
             (visitCount[n] > visitCount[m] ∧ MeanAbove(n, m))
             ⇒ bestArm' = n \/ bestArm' = m ]_bestArm
 
-\* S3: Expansion preserves the visited-set semantics (a node is a child
-\*     of exactly one parent at a time, no cycles).
+\* S3: Expansion preserves the visited-set semantics - a node is never its
+\*     own child.
+\*
+\* RECON-W38.5: the original comment claimed more than the property checks
+\* ("a node is a child of exactly one parent at a time, no cycles"). What the
+\* property checks is the absence of SELF-LOOPS, and that is what it now
+\* says. The Java's guarantee is stronger - each TreeNode gets its parent at
+\* construction and is never re-parented, so the parent chain is a forest and
+\* backpropagate() terminates - but this model's `tree` map records only the
+\* parent-to-children direction, so it can express the self-loop exclusion
+\* and not the one-parent rule. The difference is recorded in
+\* docs-v2/engineering/TLA-STATUS.md rather than papered over.
 TreeAcyclic ==
     [][ \A n ∈ Nodes : n ∉ tree[n] ]_tree
 

@@ -6227,3 +6227,101 @@ had no backing are named as such rather than quietly retained.
 Decide whether the synthetic speedup comparison should be replaced by an
 end-to-end measurement against a served baseline, and whether the front page
 should publish the executed test count instead of the source count.
+
+---
+
+## RECON-W38.5 — the five recorded formal-property failures, resolved
+
+### Objective
+
+Resolve the five specifications whose model checks failed, against the Java
+implementations they model, and leave only what genuinely needs an author
+decision.
+
+### Baseline
+
+Five of the nine model-checked specifications reported a property failure.
+Each was reported, not papered over, with a counterexample and an assessment.
+None had been traced to the code they model — that was the missing step.
+
+### Changes — one per failure, each grounded in the implementation
+
+| Specification | Root cause | Evidence in the Java | Fix |
+|---|---|---|---|
+| `MPDTNeuron` | `Init` seeded the memoised output `FALSE` while seeding the input `0`; any table containing input 0 therefore carried hidden state | `io.matrix.neuron.NeuronLayer.evaluate()` computes each output **on demand** from the truth table and returns a fresh `BitSet` — there is no persistent output field at all | `Init` seeds the output from the table: `outputs = [n \in Neurons |-> (0 \in table[n])]`. The model is **stronger**: the invariant now holds in every reachable state |
+| `MemoryM4Causal` | F1's implication was inverted against its own comment; the `Insert` guard was inverted against F2; the helper encoding the right direction was dead code | `io.matrix.noosphere.GrowOnlySet` is a G-Set — "once added, never removed" — whose only removal path records a tombstone in the same step | F1 now says what its comment says; the helper's inequality was corrected (`t ≥ epoch`) and is now **called** by the guard; the helper was moved above its first use |
+| `MctsLatsVisit` | `Expand` had no `child # parent` guard; `Spec` encoded no fairness, so the search could stutter forever | `MCTSPlanner.expand()` constructs a **fresh** `TreeNode`, and `backpropagate()` walks the parent chain, which must terminate; `plan()` backpropagates every iteration | `Expand` gained the guard; `Spec` gained `WF_vars(Next)` |
+| `ConjugateBudgeterDP` | the witness reconstruction unioned the skip witness with the take witness, so the selected set could exceed the envelope; the λ-monotonicity property asserted a **mathematically false** claim | `ConjugateBudgeter.conjugateDp()` tracks the running budget (`e -= c[i]`) and takes the witness for the *reduced* budget; the same false λ claim was in the Java's **own javadoc** | `GreedyPick` follows the Java; `LambdaMonotoneTwoStep` → `LambdaBounded`, which asserts what the DP actually guarantees; the false claim was corrected in the Java's javadoc |
+| `FrozenEthicalFNL` | the model accumulated one axiom per step while its three properties asserted mutually inconsistent things | `FrozenAxiomNeuron.activate(BitSet)` is a **pure function** of (table, features); `FrozenEthicalFNL.evaluate(BitSet)` calls it on **every** neuron against the *same* features | the activation step evaluates the whole FNL in one step, as the Java does; the three properties restated to what the Java guarantees; `Spec` gained per-feature-set weak fairness |
+
+### Verification
+
+**All nine specifications now model-check green** — no recorded failures, no
+syntax-only checks:
+
+| Specification | State space | Result |
+|---|---|---|
+| `MemoryM4Causal` | 608 001 / 40 000 | no violation |
+| `MctsLatsVisit` | 326 593 / 46 656 | no violation |
+| `Consensus` | 55 057 / 5 476 | no violation |
+| `MPDTNeuron` | 39 568 / 5 184 | no violation |
+| `BotEthicsPipeline` | 14 621 / 7 396 | no violation |
+| `BrcStep` | 5 833 / 729 | no violation |
+| `HashChain` | 820 / 820 | no violation |
+| `ConjugateBudgeterDP` | 381 / 91 | no violation |
+| `FrozenEthicalFNL` | 65 / 16 | no violation |
+
+TLC's own "constant-level formula" warning now fires for `BrcStep` only,
+which is the documented truth about that module.
+
+### Evidence
+
+- `formal/*.tla` and `formal/*.cfg` — the corrected models, each change
+  carrying the Java reference and the reasoning in its comment.
+- `matrix-core/src/main/java/io/matrix/budgeter/ConjugateBudgeter.java` — the
+  false "lambda monotonicity" claim removed from the javadoc, with the
+  counterexample (V*(7)=14, V*(8)=14, V*(9)=17) written down.
+- `docs-v2/engineering/TLA-STATUS.md` — the per-specification status, the
+  five resolutions with their evidence, and the list of properties that are
+  checked but **vacuous**.
+- `.github/workflows/tla.yml` — the quarantine list is now **empty**; the
+  mechanism is kept so a future failure is reported loudly.
+
+### Impact
+
+The TLA+ gate is now a real gate: nine specifications, every configured
+property, and a job that fails when one of them does. Before this, the job
+parsed files that had never been parsed, and five of the nine models
+asserted things their own implementation contradicted.
+
+### Limitations
+
+- **Four properties are still vacuous** — they are checked and they pass, but
+  they prove nothing: `BotEthicsPipeline.EventualKillRejection` (its
+  antecedent is unreachable, and the policy it states is not implemented in the
+  Java at all), `HashChain.TamperDetected` and `RestoreVerifies` (no action
+  mutates a link or falsifies a verification), `MctsLatsVisit.Convergence` and
+  `BestArmIsArgmax` (stub helpers), and `BrcStep`'s three invariants
+  (constant-level — TLC warns about them). Each is named in
+  `TLA-STATUS.md` rather than counted as a verified property.
+- `FrozenEthicalFNL`'s model still cannot express the Java's one-parent rule
+  (its `tree` map records only the parent-to-children direction), so the
+  acyclicity property checks self-loops and not cycles in general. The
+  difference is recorded.
+
+### Recovery
+
+Every change is a separate commit; `git revert` of any one restores the
+previous state. The formal models are the only files whose semantics
+changed, and each change carries its justification in the file.
+
+### Next Action
+
+- Close the four vacuous properties: they need either a real action in the
+  model (a tamper path, a real `ArgmaxByReward`) or an explicit statement
+  that the module does not model that behaviour.
+- Decide whether `BotEthicsPipeline`'s kill-trigger policy should be
+  implemented in the Java — the formal spec is currently stronger than the
+  code.
+- `MCTSPlanner` still has no production caller; that is unchanged and
+  recorded in ADR-2026-10-26-002.

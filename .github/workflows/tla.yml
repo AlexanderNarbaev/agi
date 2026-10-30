@@ -76,7 +76,31 @@ jobs:
           # Each needs an author decision (the property, not the syntax, is
           # wrong); they are reported loudly and do not fail this job. Any
           # other failure fails the job.
-          KNOWN_FAILING="MPDTNeuron MemoryM4Causal MctsLatsVisit FrozenEthicalFNL ConjugateBudgeterDP"
+          KNOWN_FAILING=""
+
+          # RECON-W38.5: the list is EMPTY. Five specifications used to carry
+          # a recorded property failure; each was traced to the Java it models
+          # and fixed there or in the specification:
+          #   MPDTNeuron          Init seeded a memoised output that
+          #                       contradicted the truth table
+          #   MemoryM4Causal      F1's implication was inverted against its own
+          #                       comment; the Insert guard was inverted against
+          #                       F2, and the helper that encoded the right
+          #                       direction was dead code
+          #   MctsLatsVisit       Expand allowed a node to be its own child;
+          #                       Spec encoded no fairness, so the search could
+          #                       stutter forever
+          #   ConjugateBudgeterDP the witness reconstruction unioned the skip
+          #                       and take witnesses, so the selected set could
+          #                       exceed the envelope; and the lambda-monotonicity
+          #                       claim was mathematically FALSE (it was also
+          #                       false in the Java's javadoc)
+          #   FrozenEthicalFNL    the model accumulated one axiom per step while
+          #                       the Java evaluates every neuron against the
+          #                       same features in one call
+          # The mechanism is kept: if a future change makes a model check fail,
+          # the specification is named here and the job reports it loudly
+          # rather than hiding it.
           mkdir -p /tmp/tlc-meta
           checked=0
           failed=0

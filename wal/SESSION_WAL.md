@@ -145,9 +145,35 @@ remains an unauthorised FROZEN change with no RFC, left for the owner.
 - The full-suite executed count is **8,898** test methods (source-counted) — not the "724" the front page claimed, and not the 9,324 figure recorded in an earlier session entry.
 - `matrix-web-ui` has a pre-existing peer conflict: `eslint-config-next@16.3.6` needs `eslint >= 9`, the project pins `eslint@8.57.1`, so a strict `npm install` fails with ERESOLVE. CI installs with `--legacy-peer-deps`. Aligning them is a major upgrade and needs an RFC — recorded, not resolved.
 
+### Continuation — RECON-W38.5: the five recorded formal-property failures resolved (2026-10-30)
+
+| Specification | Root cause | Evidence in the Java | Fix |
+|---|---|---|---|
+| `MPDTNeuron` | `Init` seeded the memoised output `FALSE` against a truth table that may contain input 0 — hidden state | `NeuronLayer.evaluate()` computes each output on demand and returns a fresh `BitSet`; no persistent output field exists | `Init` seeds the output from the table; the model is **stronger** |
+| `MemoryM4Causal` | F1's implication was inverted against its own comment; the `Insert` guard was inverted against F2; the helper encoding the right direction was dead code | `GrowOnlySet` is a G-Set whose only removal path records a tombstone in the same step | F1 rewritten to its comment's meaning; the helper's inequality corrected (`t ≥ epoch`) and now **called**; helper moved above its first use |
+| `MctsLatsVisit` | `Expand` had no `child # parent` guard; `Spec` encoded no fairness | `MCTSPlanner.expand()` builds a fresh `TreeNode`; `backpropagate()` walks a chain that must terminate; `plan()` backpropagates every iteration | `Expand` guard added; `Spec` gained `WF_vars(Next)` |
+| `ConjugateBudgeterDP` | the witness unioned the skip and take witnesses and so could exceed the envelope; the λ-monotonicity property asserted a **mathematically false** claim | `ConjugateBudgeter.conjugateDp()` tracks the running budget (`e -= c[i]`) and takes the reduced-budget witness; the same false λ claim was in the Java's **own javadoc** | `GreedyPick` follows the Java; `LambdaMonotoneTwoStep` → `LambdaBounded`; the false claim corrected in the Java's javadoc with its counterexample (V*(7)=14, V*(8)=14, V*(9)=17) |
+| `FrozenEthicalFNL` | the model accumulated one axiom per step while its three properties were mutually inconsistent | `FrozenAxiomNeuron.activate(BitSet)` is a **pure function**; `FrozenEthicalFNL.evaluate(BitSet)` calls it on **every** neuron against the same features | one-step evaluation matching the Java; the three properties restated; per-feature-set weak fairness added |
+
+**Result: all nine specifications model-check green** — no recorded failures,
+no syntax-only checks. TLC's constant-level warning now fires for `BrcStep`
+only, which is the documented truth about that module. The CI quarantine list
+in `.github/workflows/tla.yml` is **empty**; the mechanism is kept so a future
+failure is reported loudly rather than hidden.
+
+No property was weakened, deleted, or replaced with `TRUE` to obtain a green
+run. Four properties remain **vacuous** — checked, passing, and proving
+nothing (`BotEthicsPipeline.EventualKillRejection`, `HashChain.TamperDetected`
+and `RestoreVerifies`, `MctsLatsVisit.Convergence` and `BestArmIsArgmax`,
+`BrcStep`'s three invariants). Each is named in
+`docs-v2/engineering/TLA-STATUS.md` and is not counted as verified.
+
 ### Still open
 
-- The four formal-property failures need an **author** decision.
-- `ConjugateBudgeterDP`'s model is checked; `MCTSPlanner` has no production caller.
+- Four **vacuous** formal properties: each needs either a real action in the
+  model or an explicit statement that the module does not model that behaviour.
+- `BotEthicsPipeline`'s spec asserts a kill-trigger rejection policy the Java
+  does not implement — the formal spec is currently stronger than the code.
+- `MCTSPlanner` has no production caller.
 - The `AGENTS.md` FROZEN edit in the working tree needs an owner ruling.
 - The eslint major-version conflict needs an RFC.
