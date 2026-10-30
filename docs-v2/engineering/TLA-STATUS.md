@@ -41,10 +41,10 @@ Two toolchain facts that are easy to get wrong:
 | Specification | State space (generated / distinct) | Properties evaluated |
 |---|---|---|
 | `MemoryM4Causal` | 608 001 / 40 000 | `TombstoneIrreversible` (invariant); `MonotonicityExceptTombstone`, `FrozenImmutability`, `EventualConsistency` (properties) |
-| `MctsLatsVisit` | 326 593 / 46 656 | `Convergence` (invariant); `VisitsMonotone`, `BestArmIsArgmax`, `TreeAcyclic`, `SearchTerminates` (properties) |
+| `MctsLatsVisit` | 326 593 / 46 656 | `TypeOK`, `VisitBudgetRespected` (invariants); `VisitsMonotone`, `BestArmIsArgmax`, `TreeAcyclic`, `SearchTerminates` (properties) |
 | `Consensus` | 55 057 / 5 476 | `TypeOK` (invariant); `DecisionMonotonic`, `WeightedIdempotent`, `LivenessBounded` (properties) |
 | `MPDTNeuron` | 39 568 / 5 184 | `KMaxIsGlobalCeiling` (invariant); `KBounded`, `OutputDeterminedByInputs`, `OutputStableUnderIdempotentInput` (properties) |
-| `BotEthicsPipeline` | 14 621 / 7 396 | `TypeOK`, `ApprovalsPlusRejectionsEqualsTicks`, `TombstonesEqualsRejections`, `AuditChainLengthEqualsDecisions`, `AuditLinksAreTyped` (invariants); `BotsMonotonicExpand`, `BotsMonotonic`, `EveryBotEventuallyTicked`, `EventualKillRejection` (properties) |
+| `BotEthicsPipeline` | 481 / 256 | `TypeOK`, `ApprovalsPlusRejectionsEqualsTicks`, `TombstonesEqualsRejections`, `AuditChainLengthEqualsDecisions`, `AuditLinksAreTyped`, `FnlVerdictIsFollowed` (invariants); `BotsMonotonicExpand`, `BotsMonotonic`, `EveryBotEventuallyTicked` (properties) |
 | `BrcStep` | 1 501 / 125 | `TypeOK`, `AppliedResultMatchesFn`, `ConvergenceIsComputed` (invariants); `ComposeEndpointPreserved`, `ComposeAssociative`, `ComposeIdentity`, `ConvergenceReachable` (properties) |
 | `HashChain` | 127 882 / 20 440 | `TypeOK`, `VerifiedImpliesIntact` (invariants); `ChainMonotonic`, `LastHashConsistent`, `AppendKeepsChainValid`, `TamperDetected`, `RestoreVerifies` (properties) |
 | `ConjugateBudgeterDP` | 381 / 91 | all six module properties |
@@ -193,27 +193,13 @@ fairness, so a triggerable feature set is not starved.
 
 ## Properties that are checked but prove nothing
 
-These are reported as passing, and they are **vacuous** — the model's shape
-means the antecedent is never reachable. A vacuous pass is not a verified
-property.
+**There are none left.** Every property in every configuration file can now
+fail, and the ones that could not are listed under §"Vacuous properties that
+have been closed" with the reason each was closed.
 
-- `BotEthicsPipeline.EventualKillRejection` — its antecedent is
-  `[] (lastAction[b] = a /\ Contains("kill", a))`, i.e. the kill action must
-  persist in *every* state, which fairness prevents. Separately: the
-  specification asserts a kill-trigger rejection policy that **the Java
-  implementation does not implement** — `matrix-core/.../BotEthicsPipeline.java`
-  has no kill trigger at all. The formal spec is currently *stronger* than the
-  code it models.
-- `MctsLatsVisit.Convergence` — `Probability(p) == 0` is a placeholder and
-  `OptimalArm(node)` is the stub `CHOOSE n ∈ Nodes : TRUE`, so the
-  probabilistic UCT convergence claim cannot be checked. It also asserts a
-  claim (visit counts converge to the optimal arm with probability ≥ 1 −
-  1/N^AlphaRoot) that a finite model cannot establish; it needs a
-  probabilistic model, not a larger state space.
-
-TLC reports the constant-level case explicitly. **No specification triggers
-it any more**: the last one, `BrcStep`, was closed by giving the module real
-step functions, a real Hamming distance and the Java's chain composition.
+TLC's own "constant-level formula" warning — which fires when an invariant
+evaluates to TRUE without depending on the state — **no longer fires for any
+specification**. It fired for `BrcStep` alone before, three times.
 
 ## Vacuous properties that have been closed
 
@@ -265,6 +251,62 @@ every link's hash against its own fields and its predecessor's, and
 because broken chains are now reachable. The tamper path was observed in a
 counterexample: a payload mutation produced `verified = FALSE` on a chain
 whose stored hash no longer matched.
+
+### `BotEthicsPipeline` — the FNL's verdict was not in the model at all
+
+**Was vacuous because:** the model had **no FNL in it**. `ApproveAction(b, a)`
+and `RejectAction(b, a)` were both enabled for every `(bot, action)` pair —
+the decision was an unconstrained choice — and the property's antecedent
+`[] (lastAction[b] = a /\ Contains("kill", a))` demanded that the
+kill-triggered action be that bot's **last action in every state of the
+future**, which fairness prevents because the bot keeps ticking. So the
+antecedent was unreachable and the property could not fail.
+
+It was also the wrong claim about the implementation:
+`io.matrix.api.BotEthicsPipeline` contains **no "kill" substring test**.
+`io.matrix.ethics.FROZENFNLGuardian.evaluate(text)` asks the FROZEN FNL for
+a verdict and follows it — a REJECTED verdict creates the GDPR tombstone and
+the audit link, an APPROVED verdict creates only the audit link. The FNL's
+trigger set is **data**, not a hard-coded word.
+
+**What changed:** the trigger set is a module constant (`FnlTriggers`, from
+the configuration file); the approve and reject actions are gated on it, so
+the decision follows the verdict exactly as the Java's does; a `lastVerdict`
+variable records the verdict; and the property is now `FnlVerdictIsFollowed`
+— the verdict recorded for an action **is** the FNL's verdict for it, in the
+same step, with no delay and no override.
+
+**Evidence:** the property was **proved non-vacuous by mutation** — removing
+the `a ∉ FnlTriggers` guard from the approve action made it fail, and
+recording an approval as a rejection verdict made it fail. The state space
+shrank from **14 621 / 7 396 to 481 / 256**, because the decision is no longer
+a free choice.
+
+### `MctsLatsVisit.Convergence` — a probabilistic claim, moved out of the gate
+
+**Was vacuous because:** `Probability(p)` was the placeholder `0`,
+`OptimalArm(node)` was the stub `CHOOSE n ∈ Nodes : TRUE` — an arbitrary node
+rather than a ground truth — and `Threshold(N, alpha)` was `N`, which the
+modelled visit budget never reaches, so the antecedent was unreachable.
+
+**Why it cannot be closed the same way:** the claim is *probabilistic* — it is
+about the asymptotic distribution of visit counts under a randomised selection
+rule — and TLC has no probability at all (the `Reals` module in `tla2tools` is
+a dummy, and `1 / N^AlphaRoot` is not evaluable). No finite model check can
+establish it, and a larger state space would not help.
+
+**What changed:** the property was **removed from the configuration file** —
+a property that cannot fail in a CI gate reports a green that no computation
+produced — and the claim is kept in the module as an **imported claim marked
+UNVERIFIED**, with the note that its primary source was not re-read while the
+note was written. What replaced it in the gate are checks that *can* fail:
+`TypeOK` (the module had **no type invariant at all**) and
+`VisitBudgetRespected`.
+
+**Evidence:** `TypeOK` immediately found a real defect — the accumulated
+`totalReward` was bounded by the *per-visit* reward domain (`-1..1`) while it
+is a sum of those, so it can reach ±2. The invariant was corrected to `Int`
+and then held.
 
 ### `BrcStep` — a state machine that nothing constrained
 
@@ -422,6 +464,15 @@ list is recorded because "it did not parse" was previously invisible.
     constrained by nothing. Its liveness property was also false of the
     implementation — a step whose output is always two bits from its input
     never converges.
+26. `BotEthicsPipeline` had no FNL in its model: approving and rejecting were
+    both enabled for every action, so the decision was free — and the
+    kill-trigger property, whose antecedent demanded a kill action persist
+    forever, could not fail. The Java takes the decision from the FROZEN FNL's
+    verdict, and the trigger set is data.
+27. `MctsLatsVisit` had **no type invariant at all**, and the accumulated
+    reward was implicitly unbounded by the per-visit domain. `MctsLatsVisit`'s
+    `Convergence` was a probabilistic claim that no finite model can check,
+    presented as an invariant.
 
 ## What CI does now
 

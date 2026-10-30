@@ -9,6 +9,7 @@
 EXTENDS Naturals, FiniteSets, Sequences, TLC
 
 CONSTANTS
+    FnlTriggers,      \* action texts the FROZEN FNL rejects (model-checked)
     MAX_BOTS,        \* upper bound on number of bots (model-checked)
     MAX_TICKS,       \* upper bound on ticks per bot (model-checked)
     BotIds,          \* universe of bot identifiers (model-checked)
@@ -29,9 +30,11 @@ VARIABLES
     rejections,       \* function: botId -> count of rejected actions
     tombstones,       \* function: botId -> count of tombstones
     auditChain,       \* function: botId -> seq of audit links
-    lastAction       \* function: botId -> most recent action text
+    lastAction,      \* function: botId -> most recent action text
+    lastVerdict      \* function: botId -> "none" | "approved" | "rejected"
 
-vars == <<bots, ticks, approvals, rejections, tombstones, auditChain, lastAction>>
+vars == <<bots, ticks, approvals, rejections, tombstones, auditChain,
+          lastAction, lastVerdict>>
 
 \* RECON-W38.4: the spec tested for the kill trigger with `"kill" \in a`, i.e.
 \* set membership applied to a STRING. That is not a substring test and it is
@@ -69,6 +72,7 @@ TypeOK ==
     /\ tombstones \in [bots -> Nat]
     /\ auditChain \in [bots -> Seq(STRING)]   \* sequence of audit links per bot
     /\ lastAction \in [bots -> STRING]
+    /\ lastVerdict \in [bots -> {"none", "approved", "rejected"}]
 
 Init ==
     /\ bots = {}
@@ -78,6 +82,7 @@ Init ==
     /\ tombstones = [b \in {} |-> 0]
     /\ auditChain = [b \in {} |-> <<>>]
     /\ lastAction = [b \in {} |-> ""]
+    /\ lastVerdict = [b \in {} |-> "none"]
 
 \* ── Actions ────────────────────────────────────────────────────────────────────
 
@@ -99,10 +104,23 @@ RegisterBot(b) ==
     /\ tombstones' = tombstones @@ (b :> 0)
     /\ auditChain' = auditChain @@ (b :> <<>>)
     /\ lastAction' = lastAction @@ (b :> "")
+    /\ lastVerdict' = lastVerdict @@ (b :> "none")
 
 \* Approve action. No tombstone is created, but a chain link is appended.
+\*
+\* RECON-W38.5: the approve and reject actions were BOTH enabled for every
+\* (bot, action) pair - the model had no FNL in it at all, and the decision
+\* was an unconstrained choice. That is why the kill-trigger property could
+\* not fail (see FnlVerdictIsFollowed below).
+\*
+\* io.matrix.api.BotEthicsPipeline asks
+\* io.matrix.ethics.FROZENFNLGuardian.evaluate(action_text) for a verdict and
+\* follows it: a REJECTED verdict creates the GDPR tombstone and the audit
+\* link, an APPROVED verdict creates only the audit link. The FNL's trigger
+\* set is DATA - it is not a hard-coded word - so it is a constant here.
 ApproveAction(b, a) ==
     /\ b \in bots
+    /\ a \notin FnlTriggers
     /\ ticks[b] < MAX_TICKS
     /\ approvals' = [approvals EXCEPT ![b] = approvals[b] + 1]
     /\ ticks' = [ticks EXCEPT ![b] = ticks[b] + 1]
@@ -110,17 +128,20 @@ ApproveAction(b, a) ==
     /\ tombstones' = tombstones
     /\ auditChain' = [auditChain EXCEPT ![b] = Append(auditChain[b], "APPROVE:" \o a)]
     /\ lastAction' = [lastAction EXCEPT ![b] = a]
+    /\ lastVerdict' = [lastVerdict EXCEPT ![b] = "approved"]
     /\ UNCHANGED <<bots>>
 
 \* Reject action. A tombstone is created and a chain link appended.
 RejectAction(b, a) ==
     /\ b \in bots
+    /\ a \in FnlTriggers
     /\ ticks[b] < MAX_TICKS
     /\ rejections' = [rejections EXCEPT ![b] = rejections[b] + 1]
     /\ ticks' = [ticks EXCEPT ![b] = ticks[b] + 1]
     /\ tombstones' = [tombstones EXCEPT ![b] = tombstones[b] + 1]
     /\ auditChain' = [auditChain EXCEPT ![b] = Append(auditChain[b], "REJECT:" \o a)]
     /\ lastAction' = [lastAction EXCEPT ![b] = a]
+    /\ lastVerdict' = [lastVerdict EXCEPT ![b] = "rejected"]
     /\ UNCHANGED <<bots, approvals>>
 
 \* The tick action of one bot, factored out of Next so that a per-bot
@@ -197,16 +218,30 @@ AuditLinksAreTyped ==
 EveryBotEventuallyTicked ==
     [](\A b \in BotIds : (b \in bots) => <>(ValueOr(ticks, b, 0) > 0))
 
-\* LIV-2: Every action text that contains the kill trigger eventually
-\* causes a rejection (no delayed acceptance of harmful content).
-\* RECON-W38.4: same constant-domain repair as LIV-1, plus the substring test
-\* (Contains) instead of the set-membership misuse.
-EventualKillRejection ==
-    \A a \in ActionIds :
-        \A b \in BotIds :
-            (b \in bots) =>
-                (([] (ValueOr(lastAction, b, "") = a /\ Contains("kill", a)) =>
-                  <>(ValueOr(rejections, b, 0) > 0)))
+\* LIV-2: the pipeline's decision FOLLOWS the FNL's verdict - no delayed
+\*     acceptance, and no override.
+\*
+\* RECON-W38.5: the old property was
+\*
+\*   [] (lastAction[b] = a /\ Contains("kill", a)) => <>(rejections[b] > 0)
+\*
+\* whose antecedent demanded that the kill-triggered action be that bot's LAST
+\* action in EVERY state of the future. Fairness prevents that - the bot
+\* keeps ticking and its last action changes - so the antecedent was
+\* unreachable and the property could not fail. It was checked and proved
+\* nothing.
+\*
+\* It was also the wrong claim about the implementation.
+\* io.matrix.api.BotEthicsPipeline contains no "kill" substring test:
+\* FROZENFNLGuardian.evaluate(text) asks the FROZEN FNL for a verdict and
+\* follows it. The FNL's trigger set is data, so the model now takes it as a
+\* constant (FnlTriggers), the approve and reject actions are gated on it,
+\* and the property states the guarantee the Java actually gives: the verdict
+\* recorded for an action IS the FNL's verdict for it, in the same step.
+FnlVerdictIsFollowed ==
+    \A b \in bots :
+        /\ (lastVerdict[b] = "approved") => (lastAction[b] \notin FnlTriggers)
+        /\ (lastVerdict[b] = "rejected") => (rejections[b] > 0)
 
 =============================================================================
 \* Modification History

@@ -6504,3 +6504,95 @@ are now module-defined).
 - `MctsLatsVisit.Convergence` needs a probabilistic model (or an explicit
   statement that the module does not establish it).
 - `MCTSPlanner` still has no production caller.
+
+### RECON-W38.5, fourth pass — the FNL's verdict enters the model, and the last unfalsifiable property leaves the gate
+
+#### Objective
+
+Close the last two vacuous properties: `BotEthicsPipeline`'s kill-trigger
+property, and `MctsLatsVisit`'s probabilistic convergence claim.
+
+#### Baseline
+
+- `BotEthicsPipeline.EventualKillRejection` could not fail. Its antecedent
+  `[] (lastAction[b] = a /\ Contains("kill", a))` demanded that the
+  kill-triggered action be that bot's **last action in every state of the
+  future**, which fairness prevents because the bot keeps ticking. Worse: the
+  model had **no FNL in it at all** — approving and rejecting were both
+  enabled for every `(bot, action)` pair, so the decision was a free choice.
+- `MctsLatsVisit.Convergence` could not fail: `Probability(p)` was the
+  placeholder `0`, `OptimalArm(node)` was `CHOOSE n ∈ Nodes : TRUE`, and
+  `Threshold(N, alpha)` was `N`, which the modelled visit budget never
+  reaches.
+
+#### Changes
+
+- **`BotEthicsPipeline`** — the FNL's trigger set is now a module constant
+  (`FnlTriggers`, from the configuration file), because in the Java it is
+  *data*: `FROZENFNLGuardian.evaluate(text)` asks the FROZEN FNL for a
+  verdict and follows it. The approve and reject actions are gated on the
+  trigger set, a `lastVerdict` variable records the verdict, and the property
+  is now `FnlVerdictIsFollowed` — the verdict recorded for an action **is**
+  the FNL's verdict for it, in the same step.
+- **`MctsLatsVisit`** — `Convergence` was **removed from the configuration
+  file** and kept in the module as an imported claim marked UNVERIFIED: it is
+  a probabilistic claim about the asymptotic distribution of visit counts, and
+  TLC has no probability. What replaced it in the gate are checks that *can*
+  fail: `TypeOK` — the module had **no type invariant at all** — and
+  `VisitBudgetRespected`.
+
+#### Verification
+
+All nine specifications parse and model-check with no violation, and **no
+specification triggers TLC's constant-level warning any more**.
+
+`BotEthicsPipeline` shrank from **14 621 / 7 396 to 481 / 256** states,
+because the decision is no longer a free choice.
+
+`FnlVerdictIsFollowed` was **proved non-vacuous by mutation**: removing the
+`a ∉ FnlTriggers` guard made it fail, and recording an approval as a
+rejection verdict made it fail.
+
+`TypeOK` immediately **found a real defect**: the accumulated `totalReward`
+was bounded by the *per-visit* reward domain (`-1..1`) while it is a sum of
+those and can reach ±2. The invariant was corrected to `Int` and then held.
+
+#### Evidence
+
+- `formal/BotEthicsPipeline.tla`, `formal/BotEthicsPipeline.cfg`
+- `formal/MctsLatsVisit.tla`, `formal/MctsLatsVisit.cfg`
+- `docs-v2/engineering/TLA-STATUS.md` — §"Properties that are checked but
+  prove nothing" now records that **there are none left**.
+
+#### Impact
+
+Every property in every configuration file can now fail. The formal gate
+reports green only where a computation produced it.
+
+#### Limitations
+
+- The MCTS convergence bound is **not** machine-checked and is recorded as
+  UNVERIFIED: its primary source was not re-read while the note was written,
+  and TLC cannot evaluate probabilities. It would need a probabilistic model
+  or a different tool.
+- The FNL's trigger set is modelled as a set of action *texts*; the Java
+  derives it from the FROZEN axioms' feature patterns. The abstraction is the
+  same, the representation is coarser.
+- The MCTS module's steps remain abstractions: the production
+  `NeuronLayer` evaluations are table-driven and too large to enumerate.
+
+#### Recovery
+
+Each change is a separate commit. The configuration files' constant lists
+changed (`FnlTriggers` was added; `Steps`, `Inputs` and `Outputs` are now
+module-defined in `BrcStep`; `MctsLatsVisit`'s invariant list changed), and
+`git revert` restores each.
+
+#### Next Action
+
+- The MCTS convergence bound needs either a probabilistic model or an
+  explicit statement that the module does not establish it. The second is now
+  in place; the first is a separate piece of work.
+- `MCTSPlanner` still has no production caller.
+- The `AGENTS.md` FROZEN edit in the working tree needs an owner ruling.
+- The eslint major-version conflict needs an RFC.

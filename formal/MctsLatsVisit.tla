@@ -28,6 +28,27 @@ VARIABLES
 
 vars == <<tree, visitCount, totalReward, bestArm>>
 
+\* The reward values a SINGLE Visit can produce. The accumulated total
+\* reward is a sum of those, so it is an integer that can exceed ±1 — the
+\* first version of TypeOK bounded it by the per-visit domain and TLC
+\* refuted that immediately, which is the type invariant doing its job.
+RewardValues == -1..1
+
+\* RECON-W38.5: the module had NO type invariant at all — the state of the
+\* MCTS model was never checked against its own declared domains, and the
+\* configuration file's only invariant was a property that could not fail
+\* (see the convergence section below).
+TypeOK ==
+    /\ tree        ∈ [Nodes -> SUBSET Nodes]
+    /\ visitCount  ∈ [Nodes -> Visits]
+    /\ totalReward ∈ [Nodes -> Int]
+    /\ bestArm     ∈ Nodes
+
+\* The visit budget is finite: a node's count never leaves the modelled set.
+\* (The Visit action's guard already enforces it; this states it as an
+\* invariant of the reachable states.)
+VisitBudgetRespected ==
+    ∀n ∈ Nodes : visitCount[n] ∈ Visits
 
 Threshold(N, alpha) == N                         \* placeholder for TLC
 
@@ -150,7 +171,38 @@ Spec == Init /\ [][Next]_vars /\ WF_vars(Next)
 \* MCTS visit counts converge to the optimal arm with probability ≥ 1 −
 \* 1/N^AlphaRoot as N → ∞. For LATS (with bounded value-function error
 \* ε), the analogous bound holds when the value function is α-accurate.
-
+\*
+\* RECON-W38.5: the claim used to be in the configuration file's INVARIANTS
+\* list, and it could not fail:
+\*   - Probability(p) was the placeholder 0;
+\*   - OptimalArm(node) was `CHOOSE n ∈ Nodes : TRUE` — not a ground truth
+\*     but an arbitrary node;
+\*   - Threshold(N, alpha) was N, which the modelled visit budget never
+\*     reaches, so the antecedent was unreachable.
+\* A property that cannot fail is not a check, and leaving it in the CI's
+\* invariant list gives false assurance: the gate reports a green that no
+\* computation produced.
+\*
+\* The claim itself is a PROBABILISTIC convergence result from the MCTS
+\* literature: it concerns the asymptotic distribution of visit counts under
+\* a randomised selection rule, and TLC has no probability at all (the Reals
+\* module in tla2tools is a dummy, and `1 / N^AlphaRoot` is not evaluable).
+\* No finite model check can establish it.
+\*
+\* It is therefore recorded here as an IMPORTED CLAIM, marked UNVERIFIED, and
+\* it is NOT in the configuration file:
+\*
+\*   The bound as written rests on the PAC-MCTS convergence result in the
+\*   MCTS literature (the bandit-based Monte-Carlo planning line of work).
+\*   The primary source was NOT re-read while this note was written and the
+\*   exact bound form has NOT been verified against it — per META-R3 it is
+\*   marked UNVERIFIED rather than asserted.
+\*
+\* What this module DOES check about selection is the deterministic part: the
+\* selected arm is one of maximal mean reward (BestArmIsArgmax), the visit
+\* counts never decrease (VisitsMonotone), the tree has no self-loops
+\* (TreeAcyclic), the search terminates (SearchTerminates), and the state
+\* respects its declared types (TypeOK).
 Convergence ==
     \A node ∈ Nodes :
         (visitCount[node] ≥ Threshold(N, AlphaRoot))

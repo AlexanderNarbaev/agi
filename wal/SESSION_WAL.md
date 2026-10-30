@@ -203,13 +203,30 @@ chain fold ran the steps in reverse order.
 specification triggers TLC's constant-level warning any more** (previously
 `BrcStep` alone did, three times).
 
+### Continuation — RECON-W38.5 fourth pass: the last two unfalsifiable properties (2026-10-30)
+
+| Property | Was vacuous because | Evidence in the Java | Change |
+|---|---|---|---|
+| `BotEthicsPipeline.EventualKillRejection` | the model had **no FNL in it**: approving and rejecting were both enabled for every `(bot, action)` pair, so the decision was free; and the antecedent `[] (lastAction[b] = a /\ Contains("kill", a))` demanded the kill action persist in EVERY future state, which fairness prevents | `io.matrix.api.BotEthicsPipeline` contains **no "kill" substring test**: `FROZENFNLGuardian.evaluate(text)` asks the FROZEN FNL for a verdict and follows it; the FNL's trigger set is **data** | the trigger set is a module constant (`FnlTriggers`, from the cfg); the approve/reject actions are gated on it; a `lastVerdict` variable records the verdict; the property is now `FnlVerdictIsFollowed` — the recorded verdict IS the FNL's verdict, in the same step |
+| `MctsLatsVisit.Convergence` | `Probability(p)` was the placeholder `0`, `OptimalArm(node)` was `CHOOSE n ∈ Nodes : TRUE`, and `Threshold(N, alpha)` was `N` — unreachable in the modelled budget | — (it is a probabilistic claim; TLC has no probability and no finite model can establish it) | **removed from the configuration file** — a property that cannot fail in a CI gate reports a green that no computation produced — and kept in the module as an **imported claim marked UNVERIFIED**. Replaced in the gate by `TypeOK` (the module had **no type invariant at all**) and `VisitBudgetRespected` |
+
+**Evidence:** `FnlVerdictIsFollowed` was proved non-vacuous by mutation —
+removing the `a ∉ FnlTriggers` guard made it fail, and recording an approval
+as a rejection verdict made it fail. `BotEthicsPipeline`'s state space shrank
+from **14 621 / 7 396 to 481 / 256**, because the decision is no longer a free
+choice. `TypeOK` immediately **found a real defect**: the accumulated
+`totalReward` was bounded by the per-visit reward domain (`-1..1`) while it
+is a sum of those and can reach ±2.
+
+**All nine specifications parse and model-check with no violation, and NO
+property in any configuration file is unfalsifiable any more.**
+
 ### Still open
 
-- **Two** vacuous formal properties remain, each needing a real action in
-  the model or an explicit statement that the module does not model that
-  behaviour: `BotEthicsPipeline.EventualKillRejection`, and
-  `MctsLatsVisit.Convergence` (needs a probabilistic model, not a bigger state
-  space).
+- The MCTS convergence bound is not machine-checked and is recorded as
+  UNVERIFIED; it would need a probabilistic model or a different tool.
+- The `AGENTS.md` FROZEN edit in the working tree needs an owner ruling.
+- The eslint major-version conflict needs an RFC.
 - `BotEthicsPipeline`'s spec asserts a kill-trigger rejection policy the Java
   does not implement — the formal spec is currently stronger than the code.
 - `MCTSPlanner` has no production caller.
