@@ -6596,3 +6596,49 @@ module-defined in `BrcStep`; `MctsLatsVisit`'s invariant list changed), and
 - `MCTSPlanner` still has no production caller.
 - The `AGENTS.md` FROZEN edit in the working tree needs an owner ruling.
 - The eslint major-version conflict needs an RFC.
+
+---
+
+## RECON-W39 — MASTER DEVELOPMENT MISSION (2026-10-30)
+
+**Base:** `develop` @ `7043d925` · **Mandate:** §4 реестр, §5 CI-триггер,
+§6 CRDT, §7 HashChain, §8 MCTS/LATS, §9 соответствие остальных моделей,
+§11 harness мутаций, §12 риски, §13-15 итог.
+
+### Что сделано
+
+| Область | Было | Стало |
+|---|---|---|
+| Реестр спецификаций | не существовало | `formal/spec-implementation-map.yml` — 9 спеков → Java, production-вызывающие, тесты, свойства, **явный статус**; валидатор отказывает в `PRODUCTION_PATH_VERIFIED` без вызывающего |
+| CI-триггер | `formal/**` — правка Java не запускала гейт | фильтр путей **генерируется из реестра**; `SpecImplementationMapTest` падает при расхождении |
+| Инструментарий | только версия | проверка **sha256** `tla2tools.jar` перед запуском |
+| GrowOnlySet | `toJson()` писал только элементы — tombstone-ы терялись при перезапуске | версионированный формат, tombstone-ы переживают round-trip, старый формат читается, неизвестная версия отвергается |
+| M4-семантика | три несовместимых семантики удаления в одном пакете | `EpochAwareCausalSet` — явная epoch-aware реализация (ADR-2026-10-30-004) |
+| `MemoryM4Causal` | tombstone удалял более новое значение; merge-фильтр брал устаревшие часы | оба исправлены; **добавлены два свойства**, которые их фиксируют (`PresentImpliesUncovered`, `AbsentImpliesCovered`) |
+| `ConjugateBudgeterDP` | shadow price — наклон по одной единице, а Java считает по сетке, reduced на gcd | модель повторяет сетку Java; соответствие закреплено `ConjugateBudgeterTraceConformanceTest` → статус **TRACE_CONFORMANT** |
+| `HashChain` | внедрённый clock — мёртвый код; проверка timestamp не срабатывала; sequence не проверялся | clock работает, значения валидируются, `sequence(i) = i-1` соблюдается; ADR-2026-10-30-003 |
+| MCTS | `rolloutPolicy` документирован как random, а реализация детерминирована; трейс не говорил, какое правило выбора работало | документация исправлена; трейс сообщает `selection=UCB1,latsMode=false` |
+| Формальный гейт | зелёный — но никто не спрашивал, может ли он краснеть | `scripts/mutation-harness.py`: 13 мутантов, 12 убиты, 1 выжил (кворум `Consensus` — реальная дыра, зафиксирована) |
+| Риски | список подозрений | `docs-v2/engineering/RISK-REGISTER.md` — 25 пунктов со статусом и доказательством; открытых операционных нет, 4 когнитивных |
+| Знания | TLA-STATUS без раздела «что гейт НЕ проверяет» | добавлен раздел; `FORMAL-CONTRACTS.md` указывает на реестр и больше не отображает несуществующий `neuron/MPDTNeuron*` |
+
+### Чего этот отчёт не утверждает
+
+Девять сконфигурированных моделей TLC — это утверждение о **ограниченных
+конечных моделях**, а не о MATRIX. `MODEL_CHECKED` — утверждение о модели;
+соответствие модели и Java — отдельный статус, и оно не следует из первого.
+Гейт теперь проверяет и то, что он следит за кодом, который моделирует, и то,
+что он всё ещё может покраснеть.
+
+### Открытое
+
+- `FrozenEthicalFNL.evaluate()` перебирает `Set.copyOf(...)` — порядок
+  рандомизируется на каждый запуск JVM, поэтому при нескольких сработавших
+  аксиомах выбор нейрона **невоспроизводим**. FROZEN-зона → нужен RFC.
+- `Consensus` и `MemoryM4Causal` не имеют production-вызывающего.
+- `MCTSPlanner` и `LatsValueFunction` не имеют production-вызывающего; LATS-режим
+  в production не включается.
+- Кворум `Consensus` не закреплён ни одним свойством (единственный выживший
+  мутант).
+- Граница сходимости MCTS остаётся UNVERIFIED.
+- Четыре открытых когнитивных риска — в `RISK-REGISTER.md`.

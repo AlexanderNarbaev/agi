@@ -118,6 +118,18 @@ Java 25 · Quarkus 3.38.3 · GraalVM plugin 1.1.10 · Avro 1.12.2 · ONNX Runtim
 
 1. **W31 RUN 437-450** (см. секцию выше): HDC+BitLinear+Boolean brain до Capability Level 3.
 2. TLA+-спек-кандидаты (см. [architecture/FORMAL-CONTRACTS.md](../architecture/FORMAL-CONTRACTS.md)):
+   - **RECON-W39**: спе-каталог заменён реестром
+     [`formal/spec-implementation-map.yml`](../../formal/spec-implementation-map.yml)
+     (машинно-читаемый, проверяется автоматически). Для каждой спецификации
+     зафиксированы Java-исходники, production-вызывающие, тесты, свойства и
+     **явный статус соответствия**. Валидатор
+     `matrix-quality/.../SpecImplementationMapTest.java` не допускает статус
+     `PRODUCTION_PATH_VERIFIED` без названного production-вызывающего.
+   - **RECON-W39**: harness мутаций `scripts/mutation-harness.py` — гейт
+     проверяется на способность краснеть. Отчёт:
+     [`engineering/MUTATION-REPORT.md`](MUTATION-REPORT.md).
+   - **RECON-W39**: перечень рисков перепроверен и переведён в статусы —
+     [`engineering/RISK-REGISTER.md`](RISK-REGISTER.md).
    - `BRC-Step` (закрывает пробел `reasoning/`),
    - `ConjugateBudgeter-DP`,
    - `Memory-M4-Causal`,

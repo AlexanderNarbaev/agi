@@ -92,6 +92,22 @@ not in the registry:
   specifications is empty; the document now also records which properties
   are *not* machine-checked (the probabilistic MCTS convergence bound, which
   is marked UNVERIFIED) so that a green gate is not read as more than it is.
+- **RECON-W39** added two more statements that keep a green gate from being
+  read as more than it is. First, the **specification-to-implementation
+  registry** (`formal/spec-implementation-map.yml`) records, per specification,
+  what the model actually corresponds to in the running system — including the
+  two specifications that have **no production caller** (`Consensus`,
+  `MemoryM4Causal`) and the three whose models describe a class nothing
+  invokes. It is validated automatically, and the validator **refuses** the
+  status `PRODUCTION_PATH_VERIFIED` unless a production caller is named.
+  Second, the **mutation harness** (`scripts/mutation-harness.py`) asks
+  whether the gate can still go red: thirteen deliberate defects are applied
+  to copies of the specifications in an isolated temporary directory, and the
+  result is published in `docs-v2/engineering/MUTATION-REPORT.md`
+  (12 killed, 1 survived — the survivor is a real hole in the `Consensus`
+  quorum, recorded rather than hidden). The gate now also watches the code
+  it models: its CI path filter is generated from the registry, so a change to
+  a mapped implementation runs the formal check.
 
 ## What was found, and what was deliberately not changed
 
