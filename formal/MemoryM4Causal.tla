@@ -1,7 +1,8 @@
 ---------------------------- MODULE MemoryM4Causal ----------------------------
 \* TLA+ formal specification of the Memory M4 Causal CRDT layer
-\* (matrix-core/src/main/java/io/matrix/noosphere/Crdt.java,
-\*  noosphere/GrowOnlySet.java, DESIGN-05 §Memory)
+\* (matrix-core/src/main/java/io/matrix/noosphere/EpochAwareCausalSet.java;
+\*  see also noosphere/GrowOnlySet.java — the two-phase set variant — and
+\*  docs-v2/architecture/ADR-2026-10-30-004-noosphere-crdt-semantics.md)
 \*
 \* Author: MATRIX SSC
 \* Spec version: 1.0 (2026-08-27)
@@ -79,7 +80,20 @@ Tombstone(r, k, epoch) ==
     /\ r ∈ Replicas
     /\ k ∈ Keys \ FrozenKeys
     /\ epoch ∈ Epochs
-    /\ state'      = [state      EXCEPT ![r] = state[r] \ {k}]
+    \* RECON-W39: the removal used to be unconditional. A tombstone at epoch
+    \* E is a LOGICAL CLOCK, not a wall-clock stamp: it means "deleted as of
+    \* logical time E". A key that already holds a STRICTLY NEWER insert
+    \* epoch (vc[r][k] > E) is therefore not deleted by it — that value was
+    \* written after the deletion in the logical order, and deleting it would
+    \* be a stale delete. This is the same rule io.matrix.noosphere
+    \* .EpochAwareCausalSet implements (a key is live iff its insert epoch is
+    \* strictly greater than its tombstone epoch).
+    \*
+    \* F2 is unaffected: F2 only forbids a key that is in the state with
+    \* vc[r][k] ≤ E, and exactly that case is the one where the key is now
+    \* removed.
+    /\ state'      = [state      EXCEPT ![r] =
+                          IF epoch ≥ vc[r][k] THEN state[r] \ {k} ELSE state[r]]
     /\ tombstones' = [tombstones EXCEPT ![r] = tombstones[r] ∪ {⟨k, epoch⟩}]
     /\ UNCHANGED <<frozenSeen, vc>>
 
@@ -98,11 +112,20 @@ Merge(r1, r2) ==
     /\ r1 ∈ Replicas
     /\ r2 ∈ Replicas
     /\ r1 # r2
+    \* RECON-W39: the filter used the RECEIVER's pre-merge clock vc[r1][k]
+    \* while the very next conjunct raises that clock to
+    \* Max(vc[r1][k], vc[r2][k]). The two disagreed: a merge could keep a
+    \* key that the new clock says is covered by a tombstone, and drop a key
+    \* that a NEWER insert on the other side had legitimately resurrected.
+    \* The filter now uses the same merged clock that vc' installs, which is
+    \* also the rule io.matrix.noosphere.EpochAwareCausalSet implements: a
+    \* key is live iff its insert epoch is strictly greater than its tombstone
+    \* epoch.
     /\ state' = [state EXCEPT
         ![r1] = (state[r1] ∪ state[r2])
                  \ {k ∈ Keys : ∃t ∈ Epochs :
                                   ⟨k, t⟩ ∈ tombstones[r1] ∪ tombstones[r2]
-                                  ∧ vc[r1][k] ≤ t}]
+                                  ∧ Max({vc[r1][k], vc[r2][k]}) ≤ t}]
     /\ tombstones' = [tombstones EXCEPT ![r1] = tombstones[r1] ∪ tombstones[r2]]
     /\ vc'        = [vc EXCEPT ![r1] = [k ∈ Keys |-> Max({vc[r1][k], vc[r2][k]})]]
     /\ UNCHANGED <<frozenSeen>>
