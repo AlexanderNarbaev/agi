@@ -147,7 +147,12 @@ specifications:
       integration: []
     properties:
       invariants: [TombstoneIrreversible]
-      properties: [MonotonicityExceptTombstone, FrozenImmutability, EventualConsistency]
+      properties:
+        - MonotonicityExceptTombstone
+        - FrozenImmutability
+        - EventualConsistency
+        - PresentImpliesUncovered
+        - AbsentImpliesCovered
     conformance:
       status: [MODEL_CHECKED, ABSTRACT_MODEL, JAVA_UNIT_VERIFIED]
       gaps:

@@ -186,6 +186,37 @@ EventualConsistency ==
         (state[r1] \ {k ∈ Keys : ∃t ∈ Epochs : ⟨k, t⟩ ∈ tombstones[r1]})
         = (state[r2] \ {k ∈ Keys : ∃t ∈ Epochs : ⟨k, t⟩ ∈ tombstones[r2]})
 
+\* F5: PresentImpliesUncovered — a key that is in the state is not covered
+\*     by a tombstone that covers its clock.
+\*
+\* RECON-W39: this property and its twin below were added together with the
+\* two corrections they pin. The correction to the Merge action (the filter
+\* must use the MERGED clock, not the receiver's pre-merge clock) was NOT
+\* detectable by F1-F4: reverting it left every existing property holding.
+\* That is what the mutation harness found, and it is exactly the kind of
+\* blind spot a property set is supposed not to have.
+
+PresentImpliesUncovered ==
+    [][ \A r \in Replicas, k \in Keys :
+            (k \in state[r])
+            => ¬(\E E \in Epochs : ⟨k, E⟩ \in tombstones[r] ∧ E ≥ vc[r][k])
+    ]_state
+
+\* F6: AbsentImpliesCovered — a key that has been inserted (its clock is
+\*     above zero) and is absent from the state is covered by a tombstone
+\*     that covers its clock.
+\*
+\* This pins the correction to the Tombstone action: a tombstone at a STALE
+\* epoch does not delete a strictly newer value, so the key stays in the
+\* state. Reverting the correction to an unconditional removal violated this
+\* property, and violated no other.
+
+AbsentImpliesCovered ==
+    [][ \A r \in Replicas, k \in Keys :
+            (k \notin state[r] ∧ vc[r][k] > 0)
+            => (\E E \in Epochs : ⟨k, E⟩ \in tombstones[r] ∧ E ≥ vc[r][k])
+    ]_state
+
 \* F4: FrozenImmutability — FROZEN keys, once observed frozen at a replica,
 \*     never re-enter the state by any later operation.
 FrozenImmutability ==
