@@ -22,6 +22,12 @@ dependencies {
     implementation 'com.fasterxml.jackson.core:jackson-databind:2.18.2'
     implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.18.2'
 
+    // RECON-W39: the specification-to-implementation registry is YAML, and
+    // SpecImplementationMapTest parses it. The artifact is already in the
+    // dependency graph of matrix-core (Quarkus pulls in snakeyaml), so the
+    // reactor as a whole downloads nothing new.
+    testImplementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.18.3'
+
     testImplementation 'org.junit.jupiter:junit-jupiter:5.11.4'
     testImplementation 'org.junit.platform:junit-platform-launcher:1.11.4'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher:1.11.4'
@@ -42,10 +48,37 @@ tasks.withType(Test) {
     // RuntimeLlmGuardTest once had.
     inputs.files(rootProject.file('settings.gradle'))
     inputs.files(rootProject.file('docs-v2/architecture/MODULE-LIFECYCLE.md'))
+    // RECON-W39: the same trap applies to the registry guard, which reads the
+    // specification-to-implementation map and the workflow whose path filter
+    // it checks. Both are declared so the guard can never report a stale
+    // result.
+    inputs.files(rootProject.file('formal/spec-implementation-map.yml'))
+    inputs.files(rootProject.file('.github/workflows/tla.yml'))
     // The guard also lists the top-level module DIRECTORIES; their names are
     // what it checks, so they are declared as a property rather than as file
     // contents (which would drag in node_modules).
     inputs.property('moduleDirectoryNames',
         rootProject.fileTree(rootProject.projectDir) { include 'matrix-*' }
             .files.collect { it.name }.sort())
+}
+
+// RECON-W39: the registry is the single source of truth for the TLA+
+// workflow's path filter. This task rewrites the generated block in
+// .github/workflows/tla.yml from formal/spec-implementation-map.yml, so the
+// filter can never silently drift from the map. Run it after changing the
+// map:  ./gradlew :matrix-quality:regenerateFormalPaths
+tasks.register('regenerateFormalPaths', Test) {
+    description = 'Rewrites the generated path block of .github/workflows/tla.yml from the specification registry.'
+    group = 'verification'
+    useJUnitPlatform()
+    dependsOn tasks.named('testClasses')
+    // A Test task registered by hand does not inherit the Java plugin's
+    // test source set, so the class directories and classpath are set here.
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath
+    filter { includeTestsMatching 'io.matrix.quality.SpecImplementationMapTest' }
+    systemProperty 'matrix.formalPaths.write', 'true'
+    // A regeneration that finds nothing to change must still be able to run.
+    outputs.upToDateWhen { false }
+    testLogging { events 'passed', 'failed' }
 }

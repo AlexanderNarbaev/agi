@@ -1,0 +1,685 @@
+# formal/spec-implementation-map.yml — the specification-to-implementation registry
+#
+# RECON-W39, owner directive §4.1. One authoritative, machine-readable map from
+# every TLA+ specification to the Java that implements it, the tests that
+# exercise it, and the production path it runs on.
+#
+# WHY THIS FILE EXISTS
+# The TLA+ gate in .github/workflows/tla.yml triggers on formal/** only. A Java
+# change could therefore alter a modelled behaviour without any formal check
+# running. This registry is the single source of truth for BOTH:
+#   * the CI path filter (see ci_paths and the generated block below), and
+#   * the conformance status of each specification.
+#
+# The registry is VALIDATED AUTOMATICALLY by
+#   matrix-quality/src/test/java/io/matrix/quality/SpecImplementationMapTest.java
+# which checks that every referenced path exists, that every specification has
+# tests, that no specification claims PRODUCTION_PATH_VERIFIED without a
+# production caller, and that the CI path filter in .github/workflows/tla.yml
+# still matches the paths declared here.
+#
+# Status vocabulary (owner directive §4.2 — do not collapse these):
+#   SPECIFICATION_ONLY        a specification with no implementation
+#   IMPLEMENTATION_ONLY       an implementation with no specification
+#   ABSTRACT_MODEL            the model is a deliberate abstraction of the code
+#   MODEL_CHECKED             parsed and model-checked by TLC; properties hold
+#   JAVA_UNIT_VERIFIED        Java unit tests cover the implementation
+#   TRACE_CONFORMANT          a generated model trace was replayed through Java
+#   INTEGRATION_VERIFIED      integration tests exercise it
+#   PRODUCTION_PATH_VERIFIED  a live production path uses it
+#   BLOCKED                   verification is impossible, and the reason is stated
+#   UNVERIFIED                claimed but not demonstrated
+#
+# A specification may hold several statuses. A specification that is
+# MODEL_CHECKED but whose Java correspondence is not demonstrated says so
+# explicitly — model checking is evidence about the configured finite model,
+# never about the Java implementation.
+
+schema_version: 1
+
+# The closed vocabulary. The validator rejects any status outside this list.
+vocabulary:
+  status:
+    - SPECIFICATION_ONLY
+    - IMPLEMENTATION_ONLY
+    - ABSTRACT_MODEL
+    - MODEL_CHECKED
+    - JAVA_UNIT_VERIFIED
+    - TRACE_CONFORMANT
+    - INTEGRATION_VERIFIED
+    - PRODUCTION_PATH_VERIFIED
+    - BLOCKED
+    - UNVERIFIED
+
+specifications:
+
+  # ───────────────────────────────────────────────────────────────────────────
+  - id: MPDTNeuron
+    title: "MPDT neuron — the output is a pure function of (k, table, input)"
+    spec: formal/MPDTNeuron.tla
+    config: formal/MPDTNeuron.cfg
+    java:
+      module: matrix-core
+      sources:
+        - matrix-core/src/main/java/io/matrix/neuron/NeuronLayer.java
+        - matrix-core/src/main/java/io/matrix/neuron/TruthTable.java
+        - matrix-core/src/main/java/io/matrix/neuron/DecisionTree.java
+        - matrix-core/src/main/java/io/matrix/bir/TtForm.java
+        - matrix-core/src/main/java/io/matrix/bir/BooleanRuntime.java
+        - matrix-core/src/main/java/io/matrix/bir/DecisionTreeAdapter.java
+        - matrix-core/src/main/java/io/matrix/bir/TruthTableAdapter.java
+      production_callers:
+        - matrix-core/src/main/java/io/matrix/reasoning/BrcStep.java
+        - matrix-core/src/main/java/io/matrix/neuron/HierarchicalBrain.java
+        - matrix-core/src/main/java/io/matrix/neuron/NeuralMemoryResponse.java
+        - matrix-core/src/main/java/io/matrix/api/OpenAIChatResource.java
+        - matrix-core/src/main/java/io/matrix/brain/DefaultBrainPipeline.java
+        - matrix-core/src/main/java/io/matrix/agent/AgentLoop.java
+        - matrix-core/src/main/java/io/matrix/agent/react/ReActAgentLoop.java
+      production_caller_status: PRODUCTION_PATH_VERIFIED
+    tests:
+      unit:
+        - matrix-core/src/test/java/io/matrix/neuron/NeuronLayerTest.java
+        - matrix-core/src/test/java/io/matrix/neuron/TruthTableTest.java
+        - matrix-core/src/test/java/io/matrix/neuron/DecisionTreeTest.java
+        - matrix-core/src/test/java/io/matrix/neuron/SimdTruthTableEvalTest.java
+        - matrix-core/src/test/java/io/matrix/neuron/HierarchicalBrainTest.java
+        - matrix-core/src/test/java/io/matrix/concurrent/ThreadSafeNeuronLayerTest.java
+      integration:
+        - matrix-core/src/test/java/io/matrix/integration/BrcIntegrationTest.java
+        - matrix-core/src/test/java/io/matrix/integration/EndToEndTest.java
+        - matrix-core/src/test/java/io/matrix/integration/BrcMctsIntegrationTest.java
+        - matrix-core/src/test/java/io/matrix/integration/RagAgentLoopIntegrationTest.java
+    properties:
+      invariants: [KMaxIsGlobalCeiling]
+      properties: [KBounded, OutputDeterminedByInputs, OutputStableUnderIdempotentInput]
+    conformance:
+      status: [MODEL_CHECKED, ABSTRACT_MODEL, JAVA_UNIT_VERIFIED, INTEGRATION_VERIFIED, PRODUCTION_PATH_VERIFIED]
+      gaps:
+        - code: VACUOUS_PROPERTY
+          detail: >-
+            KBounded and KMaxIsGlobalCeiling cannot fail: k is UNCHANGED in every
+            action and Init already constrains k ∈ 1..K_MAX. The cfg pins
+            K_MAX = 2 while the Java's real ceiling is TruthTable.K_MAX = 20, so
+            widening the Java bound would leave this gate green.
+        - code: SEMANTIC_MISMATCH
+          detail: >-
+            The model has an InvalidInput action that rejects an out-of-range
+            index; the Java masks it instead (TruthTable.evaluate: input &
+            ((1 << k) - 1); TtForm.eval: input[0] & ((1L << k) - 1)). The Java
+            never rejects.
+        - code: ABSTRACTION
+          detail: >-
+            The model allows a per-neuron k; NeuronLayer has ONE shared k for
+            the whole layer and rejects heterogeneous tables at build time.
+        - code: EXECUTION_PATH
+          detail: >-
+            The production forward pass does not call TruthTable.evaluate — it
+            goes DecisionTreeAdapter.toBir → BooleanRuntime.evaluate → TtForm.eval.
+            TruthTable appears on that path only for serialization.
+    abstractions:
+      - "The model's `outputs` is a memoised cache; the Java has no output field at all — NeuronLayer.evaluate returns a fresh BitSet."
+    assumptions:
+      - "The BIR runtime evaluates a compiled dense truth table; the model reasons about the table directly."
+    limitations:
+      - "K_MAX is modelled at 2, not at the Java's 20."
+
+  # ───────────────────────────────────────────────────────────────────────────
+  - id: MemoryM4Causal
+    title: "M4 causal CRDT — tombstones with epochs, per-key vector clocks"
+    spec: formal/MemoryM4Causal.tla
+    config: formal/MemoryM4Causal.cfg
+    java:
+      module: matrix-core
+      sources:
+        - matrix-core/src/main/java/io/matrix/noosphere/EpochAwareCausalSet.java
+        - matrix-core/src/main/java/io/matrix/noosphere/GrowOnlySet.java
+        - matrix-core/src/main/java/io/matrix/noosphere/Crdt.java
+        - matrix-core/src/main/java/io/matrix/noosphere/CausalCrdt.java
+        - matrix-core/src/main/java/io/matrix/noosphere/MeshFederation.java
+      production_callers: []
+      production_caller_status: NO_PRODUCTION_CALLER
+    tests:
+      unit:
+        - matrix-core/src/test/java/io/matrix/noosphere/EpochAwareCausalSetTest.java
+        - matrix-core/src/test/java/io/matrix/noosphere/GrowOnlySetCausalTest.java
+        - matrix-core/src/test/java/io/matrix/noosphere/GrowOnlySetPersistenceTest.java
+      integration: []
+    properties:
+      invariants: [TombstoneIrreversible]
+      properties: [MonotonicityExceptTombstone, FrozenImmutability, EventualConsistency]
+    conformance:
+      status: [MODEL_CHECKED, ABSTRACT_MODEL, JAVA_UNIT_VERIFIED]
+      gaps:
+        - code: NO_PRODUCTION_CALLER
+          detail: >-
+            GrowOnlySet and CausalCrdt are referenced only by their own classes
+            and by tests. MeshFederation's javadoc mentions the CRDT but the
+            class uses a ConcurrentHashMap<String,FnlPackage>. The M4 mesh is
+            not a replicating system today.
+        - code: NOT_TRACE_CONFORMANT
+          detail: >-
+            No generated model trace has been replayed through the Java yet.
+      corrected:
+        - code: IMPLEMENTATION_ADDED
+          detail: >-
+            Before RECON-W39 the Java had NO epoch-aware implementation of this
+            model at all: GrowOnlySet stores bare keys, discards the epoch and
+            filters tombstones unconditionally (a 2P-Set). EpochAwareCausalSet
+            was added so the model has a real counterpart
+            (ADR-2026-10-30-004); it carries the frozen-key set as well.
+        - code: MODEL_CORRECTED
+          detail: >-
+            The model's Tombstone action removed the key unconditionally, so a
+            tombstone at a stale epoch deleted a strictly newer value. It now
+            removes the key only when the tombstone's epoch is at least the
+            key's insert epoch, which is the rule EpochAwareCausalSet
+            implements.
+        - code: MODEL_CORRECTED
+          detail: >-
+            The model's Merge filtered keys with the RECEIVER's pre-merge
+            clock while the same action raised that clock to the merged
+            maximum. The two disagreed, so a merge could keep a key the new
+            clock says is tombstoned. The filter now uses the merged clock.
+    abstractions:
+      - "The model has an explicit Freeze action; the Java's frozen-key handling is a flag on the set, not a separate action."
+    assumptions:
+      - "Replica identity is an opaque constant; the Java's EpochAwareCausalSet is a single replica's state."
+    limitations:
+      - "The model's per-replica vector clock vc[r][k] is modelled as a single epoch per key per replica."
+
+  # ───────────────────────────────────────────────────────────────────────────
+  - id: MctsLatsVisit
+    title: "MCTS/LATS search — visit counts, tree shape, arm selection"
+    spec: formal/MctsLatsVisit.tla
+    config: formal/MctsLatsVisit.cfg
+    java:
+      module: matrix-core
+      sources:
+        - matrix-core/src/main/java/io/matrix/mcts/MctsTree.java
+        - matrix-core/src/main/java/io/matrix/mcts/MctsNode.java
+        - matrix-core/src/main/java/io/matrix/mcts/MctsAction.java
+        - matrix-core/src/main/java/io/matrix/mcts/LatsNode.java
+        - matrix-core/src/main/java/io/matrix/mcts/LatsValueFunction.java
+        - matrix-core/src/main/java/io/matrix/mcts/LatsReflector.java
+        - matrix-core/src/main/java/io/matrix/federation/liquid/MCTSPlanner.java
+      production_callers:
+        - matrix-brain-runtime/src/main/java/io/matrix/brain/runtime/stages/PlanningStage.java
+        - matrix-brain-runtime/src/main/java/io/matrix/brain/runtime/stages/ArithmeticStage.java
+        - matrix-brain-runtime/src/main/java/io/matrix/brain/runtime/TrueMindCycle.java
+        - matrix-api-gateway/src/main/java/io/matrix/api/brain/ProductionBrainClient.java
+      production_caller_status: PRODUCTION_PATH_VERIFIED
+    tests:
+      unit:
+        - matrix-core/src/test/java/io/matrix/mcts/MctsTreeTest.java
+        - matrix-core/src/test/java/io/matrix/mcts/MctsNodeTest.java
+        - matrix-core/src/test/java/io/matrix/mcts/MctsTreeLatsTest.java
+        - matrix-core/src/test/java/io/matrix/mcts/MctsLatsConvergenceTest.java
+        - matrix-core/src/test/java/io/matrix/mcts/LatsNodeTest.java
+        - matrix-core/src/test/java/io/matrix/mcts/LatsReflectorTest.java
+        - matrix-core/src/test/java/io/matrix/mcts/LatsValueFunctionTest.java
+        - matrix-core/src/test/java/io/matrix/federation/liquid/MCTSPlannerTest.java
+        - matrix-brain-runtime/src/test/java/io/matrix/brain/runtime/stages/PlanningStageTest.java
+        - matrix-brain-runtime/src/test/java/io/matrix/brain/runtime/PlanningCallerExistsTest.java
+      integration:
+        - matrix-core/src/test/java/io/matrix/integration/MctsIntegrationTest.java
+        - matrix-core/src/test/java/io/matrix/integration/BrcMctsIntegrationTest.java
+        - matrix-core/src/test/java/io/matrix/integration/EndToEndTest.java
+        - matrix-brain-runtime/src/test/java/io/matrix/brain/runtime/stages/ArithmeticStagePlanningTest.java
+        - matrix-brain-runtime/src/test/java/io/matrix/brain/runtime/stages/ArithmeticCompoundRoutingTest.java
+    properties:
+      invariants: [TypeOK, VisitBudgetRespected]
+      properties: [VisitsMonotone, BestArmIsArgmax, TreeAcyclic, SearchTerminates]
+    conformance:
+      status: [MODEL_CHECKED, ABSTRACT_MODEL, JAVA_UNIT_VERIFIED, INTEGRATION_VERIFIED, PRODUCTION_PATH_VERIFIED]
+      gaps:
+        - code: WRONG_TARGET
+          detail: >-
+            The spec's bestArm is an argmax over MEAN reward — the rule of
+            io.matrix.federation.liquid.MCTSPlanner.extractBestPath, which has
+            NO production caller. The production engine selects by VISIT COUNT
+            (MctsTree.runSearch → MctsNode.mostVisitedChild). BestArmIsArgmax
+            therefore constrains a class nothing calls, and the rule production
+            uses is not modelled.
+        - code: SEMANTIC_MISMATCH
+          detail: >-
+            The model's Visit increments ONE node; the Java's backpropagate
+            increments the whole root→leaf ancestor chain, so every node on the
+            path ends with the same visit count and mean reward.
+        - code: SEMANTIC_MISMATCH
+          detail: >-
+            The model's per-node visit budget (Visits) has no Java counterpart;
+            the Java bounds total iterations, not per-node visits.
+        - code: NO_PRODUCTION_CALLER
+          detail: >-
+            MCTSPlanner and LatsValueFunction have no production caller.
+        - code: NO_PRODUCTION_CALLER
+          detail: >-
+            PlanningStage uses the six-argument MctsTree constructor, which
+            hard-codes latsMode = false, so the LATS/PUCT selection path and
+            the value function never execute in production even though the
+            trace reports engine=LatsReflector.
+    abstractions:
+      - "The model's step set is three concrete functions over a two-bit vector space; the production step is a NeuronLayer with a wider input."
+    assumptions:
+      - "The convergence claim is probabilistic and is NOT machine-checked; see the Convergence note in the module."
+    limitations:
+      - "The model cannot express the UCT selection rule used during search; only the final arm selection is modelled."
+
+  # ───────────────────────────────────────────────────────────────────────────
+  - id: Consensus
+    title: "Consensus — weighted voting over proposals"
+    spec: formal/Consensus.tla
+    config: formal/Consensus.cfg
+    java:
+      module: matrix-core
+      sources:
+        - matrix-core/src/main/java/io/matrix/consensus/ConsensusEngine.java
+        - matrix-core/src/main/java/io/matrix/consensus/WeightedVoting.java
+        - matrix-core/src/main/java/io/matrix/consensus/Vote.java
+        - matrix-core/src/main/java/io/matrix/consensus/Proposal.java
+        - matrix-core/src/main/java/io/matrix/consensus/ConsensusLevel.java
+      production_callers: []
+      production_caller_status: NO_PRODUCTION_CALLER
+    tests:
+      unit:
+        - matrix-core/src/test/java/io/matrix/consensus/ConsensusEngineTest.java
+        - matrix-core/src/test/java/io/matrix/consensus/ConsensusTypesTest.java
+        - matrix-core/src/test/java/io/matrix/consensus/ConsensusBenchmarkTest.java
+        - matrix-core/src/test/java/io/matrix/verification/SafetyPropertiesTest.java
+      integration:
+        - matrix-core/src/test/java/io/matrix/noosphere/GlobalMediatorTest.java
+        - matrix-core/src/test/java/io/matrix/agent/MultiAgentLoopTest.java
+        - matrix-core/src/test/java/io/matrix/integration/L1toL5IntegrationTest.java
+        - matrix-core/src/test/java/io/matrix/verification/SystemIntegrationTest.java
+    properties:
+      invariants: [TypeOK]
+      properties: [DecisionMonotonic, WeightedIdempotent, LivenessBounded]
+    conformance:
+      status: [MODEL_CHECKED, ABSTRACT_MODEL, JAVA_UNIT_VERIFIED, INTEGRATION_VERIFIED]
+      gaps:
+        - code: NO_PRODUCTION_CALLER
+          detail: >-
+            ConsensusEngine is only instantiated by GlobalMediator and
+            MultiAgentLoop, and BOTH are instantiated only by tests. No module
+            outside matrix-core references io.matrix.consensus.
+        - code: SEMANTIC_MISMATCH
+          detail: >-
+            The spec's Threshold is an integer VOTE COUNT; the Java has no
+            count threshold — WeightedVoting uses a weight ratio
+            (APPROVAL_THRESHOLD = 0.5) and ConsensusEngine's simple majority
+            uses 2/3. With Threshold = 2, two NO ballots make the model APPROVE
+            while the Java REJECTs.
+        - code: SEMANTIC_MISMATCH
+          detail: >-
+            The model's Decisions set has no PENDING state; the Java enum has
+            PENDING (not enough votes) and TIMED_OUT.
+        - code: NOT_MODELLED
+          detail: >-
+            The DEBATE strategy and ByzantineConsensus are not modelled. No
+            Byzantine fault-tolerance guarantee is claimed.
+        - code: NAME_COLLISION
+          detail: >-
+            io.matrix.federation.consensus.LocalConsensusEngine is a different
+            class with a real production caller and its own specification
+            (docs-v2/tla/FederationConsensus.tla). It is NOT this model.
+    abstractions:
+      - "The model has one evaluation strategy (weighted count); the Java has three."
+    assumptions:
+      - "Votes are by distinct agents in the modelled universe."
+    limitations:
+      - "No Byzantine or partial-participation behaviour is modelled."
+
+  # ───────────────────────────────────────────────────────────────────────────
+  - id: BotEthicsPipeline
+    title: "Bot ethics pipeline — FNL verdict, GDPR tombstone, audit chain"
+    spec: formal/BotEthicsPipeline.tla
+    config: formal/BotEthicsPipeline.cfg
+    java:
+      module: matrix-core
+      sources:
+        - matrix-core/src/main/java/io/matrix/api/BotEthicsPipeline.java
+        - matrix-core/src/main/java/io/matrix/api/BotEthicsResource.java
+        - matrix-core/src/main/java/io/matrix/ethics/FROZENFNLGuardian.java
+        - matrix-core/src/main/java/io/matrix/ethics/FROZENGDPREscalator.java
+        - matrix-core/src/main/java/io/matrix/ethics/frozen/FrozenEthicalFNL.java
+        - matrix-core/src/main/java/io/matrix/ethics/frozen/TextFeatureExtractor.java
+        - matrix-core/src/main/java/io/matrix/audit/FrozenFNLHashChain.java
+        - matrix-core/src/main/java/io/matrix/minecraft/HeadlessBotRegistry.java
+      production_callers:
+        - matrix-core/src/main/java/io/matrix/api/BotEthicsResource.java
+        - matrix-core/src/main/java/io/matrix/agent/EthicsGuard.java
+      production_caller_status: PRODUCTION_PATH_VERIFIED
+    tests:
+      unit:
+        - matrix-core/src/test/java/io/matrix/api/BotEthicsPipelineTest.java
+        - matrix-core/src/test/java/io/matrix/ethics/FROZENFNLGuardianTest.java
+        - matrix-core/src/test/java/io/matrix/ethics/FROZENGDPREscalatorTest.java
+      integration:
+        - matrix-core/src/test/java/io/matrix/api/BotEthicsResourceTest.java
+        - matrix-core/src/test/java/io/matrix/e2e/E2EIntegrationTest.java
+        - matrix-core/src/test/java/io/matrix/e2e/MasterPipelineE2ETest.java
+    properties:
+      invariants:
+        - TypeOK
+        - ApprovalsPlusRejectionsEqualsTicks
+        - TombstonesEqualsRejections
+        - AuditChainLengthEqualsDecisions
+        - AuditLinksAreTyped
+        - FnlVerdictIsFollowed
+      properties: [BotsMonotonicExpand, BotsMonotonic, EveryBotEventuallyTicked]
+    conformance:
+      status: [MODEL_CHECKED, ABSTRACT_MODEL, JAVA_UNIT_VERIFIED, INTEGRATION_VERIFIED, PRODUCTION_PATH_VERIFIED]
+      gaps:
+        - code: SEMANTIC_MISMATCH
+          detail: >-
+            FnlTriggers is exact set membership on the action text; the Java
+            decides on whole-word and phrase feature extraction
+            (TextFeatureExtractor.TRIGGERS). "Kill the enemy" is APPROVED by the
+            model and REJECTED by the Java — a difference the repository's own
+            BotEthicsPipelineTest asserts.
+        - code: SEMANTIC_MISMATCH
+          detail: >-
+            The model keeps per-bot counters and a per-bot audit chain; the Java
+            has global counters and ONE shared HashChain.
+        - code: SEMANTIC_MISMATCH
+          detail: >-
+            The model's audit links are "APPROVE:"/"REJECT:" prefixed texts; the
+            Java appends a JSON fingerprint and never stores the action text.
+        - code: SEMANTIC_MISMATCH
+          detail: >-
+            BotsMonotonicExpand asserts the bot set only grows, but
+            HeadlessBotRegistry.unregister() exists.
+        - code: NO_EXTERNAL_CLIENT
+          detail: >-
+            The REST endpoint is served, but nothing in the repository consumes
+            it, and no @QuarkusTest exercises it over the wire.
+    abstractions:
+      - "FnlTriggers stands in for the FROZEN FNL's phrase-level trigger list."
+    assumptions:
+      - "The model's action universe is small and its trigger set is supplied by the configuration file."
+    limitations:
+      - "The trigger set is not generated from the FROZEN axioms' canonical data."
+
+  # ───────────────────────────────────────────────────────────────────────────
+  - id: BrcStep
+    title: "BRC step — atomic boolean step and chain composition"
+    spec: formal/BrcStep.tla
+    config: formal/BrcStep.cfg
+    java:
+      module: matrix-core
+      sources:
+        - matrix-core/src/main/java/io/matrix/reasoning/BrcStep.java
+        - matrix-core/src/main/java/io/matrix/reasoning/BrcChain.java
+        - matrix-core/src/main/java/io/matrix/reasoning/BrcState.java
+      production_callers:
+        - matrix-core/src/main/java/io/matrix/reasoning/BrainLoopService.java
+        - matrix-core/src/main/java/io/matrix/reasoning/ConsciousnessLoop.java
+        - matrix-core/src/main/java/io/matrix/api/OpenAIChatResource.java
+      production_caller_status: PRODUCTION_PATH_VERIFIED
+    tests:
+      unit:
+        - matrix-core/src/test/java/io/matrix/reasoning/BrcChainTest.java
+        - matrix-core/src/test/java/io/matrix/reasoning/BrcChainComposeTest.java
+        - matrix-core/src/test/java/io/matrix/reasoning/Exp146BrcStepVerifierTest.java
+      integration:
+        - matrix-core/src/test/java/io/matrix/integration/BrcIntegrationTest.java
+        - matrix-core/src/test/java/io/matrix/integration/BrcMctsIntegrationTest.java
+        - matrix-core/src/test/java/io/matrix/integration/EndToEndTest.java
+        - matrix-core/src/test/java/io/matrix/reasoning/StageLatencyTrackerIntegrationTest.java
+        - matrix-core/src/test/java/io/matrix/reasoning/ConsciousnessLoopFeedbackTest.java
+    properties:
+      invariants: [TypeOK, AppliedResultMatchesFn, ConvergenceIsComputed]
+      properties: [ComposeEndpointPreserved, ComposeAssociative, ComposeIdentity, ConvergenceReachable]
+    conformance:
+      status: [MODEL_CHECKED, ABSTRACT_MODEL, JAVA_UNIT_VERIFIED, INTEGRATION_VERIFIED, PRODUCTION_PATH_VERIFIED]
+      gaps:
+        - code: NO_PRODUCTION_CALLER
+          detail: >-
+            BrcChain.compose is called only from BrcChainComposeTest. THREE of
+            the four configured properties constrain compose.
+        - code: SEMANTIC_MISMATCH
+          detail: >-
+            The model's step is a total function on a fixed two-bit space; the
+            Java's step is a NeuronLayer whose input is padded by pattern
+            repetition to layer.outputWidth()*k bits and whose output has
+            layer.outputWidth() bits. The second step of a composed chain
+            receives the PADDED first-step output, so
+            ApplyChain(compose(l,r),x) = ApplyFn(r, ApplyFn(l,x)) is not what
+            the Java computes.
+        - code: SEMANTIC_MISMATCH
+          detail: >-
+            The Java's compose also merges maxSteps and earlyStopping, and
+            evaluate() breaks out of the loop when a step converges — so the
+            composed right half may never run, and ComposeEndpointPreserved is
+            false of the Java.
+        - code: NAME_COLLISION
+          detail: >-
+            io.matrix.brain.runtime.BrcStep (matrix-brain-runtime) is an
+            unrelated trace record, not the class this model describes.
+        - code: NOT_TRACE_CONFORMANT
+          detail: >-
+            Exp146BrcStepVerifierTest calls itself a Java-side mirror of the
+            specification but never touches io.matrix.reasoning.BrcStep — it
+            re-implements a majority vote over boolean[].
+    abstractions:
+      - "The model's three concrete step functions stand in for NeuronLayer evaluations."
+    assumptions:
+      - "The model assumes every step has the same input and output width; the Java does not."
+    limitations:
+      - "Width changes and input padding are not modelled."
+
+  # ───────────────────────────────────────────────────────────────────────────
+  - id: HashChain
+    title: "Audit hash chain — append-only, tamper-evident link sequence"
+    spec: formal/HashChain.tla
+    config: formal/HashChain.cfg
+    java:
+      module: matrix-core
+      sources:
+        - matrix-core/src/main/java/io/matrix/audit/HashChain.java
+        - matrix-core/src/main/java/io/matrix/audit/HashLink.java
+        - matrix-core/src/main/java/io/matrix/audit/FrozenFNLHashChain.java
+      production_callers:
+        - matrix-core/src/main/java/io/matrix/ethics/FROZENFNLGuardian.java
+        - matrix-core/src/main/java/io/matrix/api/BotEthicsResource.java
+        - matrix-core/src/main/java/io/matrix/brain/BirBrainCycle.java
+        - matrix-core/src/main/java/io/matrix/ethics/FROZENGDPREscalator.java
+        - matrix-api-gateway/src/main/java/io/matrix/api/llm_quarantine/LlmBrainLoopService.java
+      production_caller_status: PRODUCTION_PATH_VERIFIED
+    tests:
+      unit:
+        - matrix-core/src/test/java/io/matrix/audit/HashChainTest.java
+        - matrix-core/src/test/java/io/matrix/audit/HashChainIntegrityTest.java
+        - matrix-core/src/test/java/io/matrix/audit/FrozenFNLHashChainTest.java
+      integration:
+        - matrix-core/src/test/java/io/matrix/ethics/FROZENFNLGuardianTest.java
+        - matrix-core/src/test/java/io/matrix/e2e/MasterPipelineE2ETest.java
+        - matrix-core/src/test/java/io/matrix/e2e/E2EIntegrationTest.java
+        - matrix-core/src/test/java/io/matrix/agent/EthicsGuardTest.java
+    properties:
+      invariants: [TypeOK, VerifiedImpliesIntact]
+      properties: [ChainMonotonic, LastHashConsistent, AppendKeepsChainValid, TamperDetected, RestoreVerifies]
+    conformance:
+      status: [MODEL_CHECKED, ABSTRACT_MODEL, JAVA_UNIT_VERIFIED, INTEGRATION_VERIFIED, PRODUCTION_PATH_VERIFIED]
+      gaps:
+        - code: REPRESENTATION_MISMATCH
+          detail: >-
+            The Java record carries sequence, previousHash, payloadHash,
+            timestampMs, extra and hash; the model carries payload, extra and
+            hash and derives sequence and timestamp from the chain POSITION.
+            The model is an abstraction of the record, not its shape.
+        - code: SEMANTIC_MISMATCH
+          detail: >-
+            The model's GENESIS is 65 characters ("0" plus a 64-character
+            SubSeq); the Java's genesisHash() is exactly 64.
+        - code: SEMANTIC_MISMATCH
+          detail: >-
+            The model stores lastHash and verified as STATE; the Java computes
+            latest() and verify() on demand.
+        - code: NOT_TRACE_CONFORMANT
+          detail: >-
+            The model hashes the payload text; the Java hashes the payload's
+            SHA-256 digest, so the payload is hashed twice.
+    abstractions:
+      - "The model's hash is an abstract deterministic encoding; the Java uses SHA-256, whose collision resistance TLC cannot prove."
+    assumptions:
+      - "The chain's order is the sequence number; wall-clock time is recorded but never ordered by."
+    limitations:
+      - "The model cannot express an attacker who rewrites the whole chain and replaces the trusted head."
+
+  # ───────────────────────────────────────────────────────────────────────────
+  - id: ConjugateBudgeterDP
+    title: "Conjugate budgeter — 0/1 knapsack allocation and shadow price"
+    spec: formal/ConjugateBudgeterDP.tla
+    config: formal/ConjugateBudgeterDP.cfg
+    java:
+      module: matrix-core
+      sources:
+        - matrix-core/src/main/java/io/matrix/budgeter/ConjugateBudgeter.java
+      production_callers:
+        - matrix-core/src/main/java/io/matrix/lifecycle/ImpulseScheduler.java
+        - matrix-core/src/main/java/io/matrix/autonomy/AutonomyEngine.java
+        - matrix-core/src/main/java/io/matrix/autonomy/SelfImprovingEngine.java
+        - matrix-api-gateway/src/main/java/io/matrix/api/llm_quarantine/BrainProduction.java
+        - matrix-api-gateway/src/main/java/io/matrix/api/llm_quarantine/BrainIntegrated.java
+      production_caller_status: PRODUCTION_PATH_VERIFIED
+    tests:
+      unit:
+        - matrix-core/src/test/java/io/matrix/budgeter/ConjugateBudgeterTest.java
+        - matrix-core/src/test/java/io/matrix/budgeter/ConjugateBudgeterStepTest.java
+        - matrix-core/src/test/java/io/matrix/budgeter/ConjugateBudgeterVsGreedyTest.java
+      integration:
+        - matrix-core/src/test/java/io/matrix/lifecycle/ImpulseSchedulerTest.java
+        - matrix-core/src/test/java/io/matrix/research/Exp045FreezeRecoveryTest.java
+        - matrix-core/src/test/java/io/matrix/reasoning/ArousalDynamicsIntegrationTest.java
+        - matrix-core/src/test/java/io/matrix/reasoning/ConsciousnessLoopFeedbackTest.java
+    properties:
+      invariants: []
+      properties:
+        - SpentWithinEnvelope
+        - ShadowFinite
+        - ShadowBounded
+        - LambdaBounded
+        - FiniteHorizon
+        - ShadowBoundedPeriod
+    conformance:
+      status: [MODEL_CHECKED, ABSTRACT_MODEL, JAVA_UNIT_VERIFIED, INTEGRATION_VERIFIED, PRODUCTION_PATH_VERIFIED]
+      gaps:
+        - code: SEMANTIC_MISMATCH
+          detail: >-
+            The Java reduces the DP grid by the gcd of the row costs, so its
+            shadow price is dp[0][units] - dp[0][units-1] = V*(cap) - V*(cap-g):
+            the marginal value of G raw units. The model computes V*(E) - V*(E-1),
+            the marginal value of ONE unit. With rows (v=1,c=4),(v=100,c=6) and
+            envelope 7 the Java returns lambda = 99 while the model returns 0.
+        - code: SEMANTIC_MISMATCH
+          detail: >-
+            The Java's fallback path returns shadowPrice = NaN; the model's
+            fallback sets shadow = 0 and ShadowFinite requires a natural number.
+        - code: SEMANTIC_MISMATCH
+          detail: >-
+            The model's Step ignores observedLambda entirely; the Java smooths
+            the observed shadow price with SMOOTHING_ALPHA = 0.7.
+        - code: NOT_MODELLED
+          detail: >-
+            The Java's MAX_DP_UNITS = 250000 grid-size fallback has no model
+            counterpart, and the Java caps the envelope at the total row cost.
+        - code: NO_PRODUCTION_CALLER
+          detail: >-
+            ConjugateBudgeterMulti is a DIFFERENT algorithm with no production
+            caller; ConsciousnessLoop holds a budgeter but never calls it.
+    abstractions:
+      - "The model omits the gcd grid reduction, the size fallback and the multi-period smoothing."
+    assumptions:
+      - "Row costs and values are naturals; the model does not model overflow."
+    limitations:
+      - "The shadow-price definition does not yet match the Java's reduced grid."
+
+  # ───────────────────────────────────────────────────────────────────────────
+  - id: FrozenEthicalFNL
+    title: "FROZEN ethical FNL — the four prohibitions and the canonical neuron set"
+    spec: formal/FrozenEthicalFNL.tla
+    config: formal/FrozenEthicalFNL.cfg
+    java:
+      module: matrix-core
+      sources:
+        - matrix-core/src/main/java/io/matrix/ethics/frozen/FrozenEthicalFNL.java
+        - matrix-core/src/main/java/io/matrix/ethics/frozen/FrozenAxiomNeuron.java
+        - matrix-core/src/main/java/io/matrix/ethics/frozen/TextFeatureExtractor.java
+        - matrix-core/src/main/java/io/matrix/ethics/frozen/TruthTableUtil.java
+        - matrix-core/src/main/java/io/matrix/ethics/EthicalFilter.java
+      production_callers:
+        - matrix-core/src/main/java/io/matrix/ethics/EthicalFilter.java
+        - matrix-core/src/main/java/io/matrix/ethics/FROZENFNLGuardian.java
+        - matrix-core/src/main/java/io/matrix/lifecycle/ImpulseScheduler.java
+        - matrix-core/src/main/java/io/matrix/audit/FrozenFNLHashChain.java
+        - matrix-core/src/main/java/io/matrix/ethics/FROZENGDPREscalator.java
+        - matrix-core/src/main/java/io/matrix/api/BotEthicsResource.java
+        - matrix-core/src/main/java/io/matrix/agent/EthicsGuard.java
+      production_caller_status: PRODUCTION_PATH_VERIFIED
+    tests:
+      unit:
+        - matrix-core/src/test/java/io/matrix/ethics/frozen/FrozenEthicalFNLTest.java
+      integration:
+        - matrix-core/src/test/java/io/matrix/ethics/EthicalFilterFrozenIntegrationTest.java
+        - matrix-core/src/test/java/io/matrix/e2e/MasterPipelineE2ETest.java
+        - matrix-core/src/test/java/io/matrix/e2e/E2EIntegrationTest.java
+        - matrix-core/src/test/java/io/matrix/api/BotEthicsResourceTest.java
+        - matrix-core/src/test/java/io/matrix/api/BotEthicsPipelineTest.java
+        - matrix-core/src/test/java/io/matrix/agent/EthicsGuardTest.java
+        - matrix-core/src/test/java/io/matrix/ethics/FROZENFNLGuardianTest.java
+    properties:
+      invariants: []
+      properties:
+        - NeuronSetImmutable
+        - DeterministicActivation
+        - FiredSubsetOfTotal
+        - NeuronsAreCanonical
+        - Liveness
+    conformance:
+      status: [MODEL_CHECKED, ABSTRACT_MODEL, JAVA_UNIT_VERIFIED, INTEGRATION_VERIFIED, PRODUCTION_PATH_VERIFIED]
+      gaps:
+        - code: SEMANTIC_MISMATCH
+          detail: >-
+            The model's trigger relation comes from the configuration file's
+            four TriggerPairs, and axioms 4, 5 and 6 have EMPTY trigger sets.
+            The Java has no trigger relation at all: canonical() materialises
+            2^16-entry truth tables, so effectively
+            Triggers[a] = { F ⊆ {0..15} : bit(a) ∈ F } over a SIXTEEN-bit
+            universe, and TRUTHFULNESS and PRIVACY DO fire — a network state
+            the model cannot represent.
+        - code: SEMANTIC_MISMATCH
+          detail: >-
+            The model's `activated` maps each feature set to the SET of fired
+            neurons; the Java's evaluate() returns only the FIRST fired neuron
+            and keeps no per-feature-set state.
+        - code: BLOCKED
+          detail: >-
+            FrozenEthicalFNL.evaluate() iterates java.util.Set.copyOf(...),
+            whose iteration order is randomised per JVM run. When more than one
+            axiom fires, WHICH neuron reaches Result.firedNeuron() is not
+            reproducible across runs, contradicting the class javadoc and
+            CONSTITUTION Article I. The class is in a FROZEN zone: fixing it
+            needs an explicit RFC and is recorded as an open item.
+        - code: NAME_COLLISION
+          detail: >-
+            io.matrix.multimodal.TextFeatureExtractor is a different class;
+            MultimodalTest does not exercise the FROZEN one.
+    abstractions:
+      - "The model's feature universe is four bits against the Java's sixteen."
+    assumptions:
+      - "The FROZEN package is read-only for this work; changes there need an RFC."
+    limitations:
+      - "The canonical trigger relation is not generated from the FROZEN axioms' data."
+
+# ───────────────────────────────────────────────────────────────────────────────
+# The CI path filter. Every path listed here MUST be in the `paths:` block of
+# .github/workflows/tla.yml, so that a change to an implementation triggers the
+# formal gate. The validator compares the two and fails when they drift.
+#
+# Regenerate with:  ./gradlew :matrix-quality:regenerateFormalPaths
+ci_paths:
+  - formal/spec-implementation-map.yml
+  - matrix-quality/src/test/java/io/matrix/quality/SpecImplementationMapTest.java
+  - matrix-quality/build.gradle
