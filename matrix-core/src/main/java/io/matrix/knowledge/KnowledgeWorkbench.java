@@ -191,6 +191,21 @@ public class KnowledgeWorkbench implements AutoCloseable {
     }
 
     /**
+     * Apply a correction to what is known.
+     *
+     * <p>The earlier claim is kept and marked superseded, the new claim
+     * carries its source, and the revision records what changed. The changes
+     * are applied in one transaction, so a refinement that fails validation
+     * leaves the workspace exactly as it was.
+     */
+    public KnowledgeChanges refine(String workspaceId, KnowledgeRefiner.Refinement request) {
+        KnowledgeSnapshot snapshot = workspace(workspaceId);
+        KnowledgeChanges changes = new KnowledgeRefiner().refine(workspaceId, snapshot, request);
+        store().applyChanges(workspaceId, changes);
+        return changes;
+    }
+
+    /**
      * Run the teaching experiment and measure the result.
      *
      * <p>The result is a machine-to-machine measurement. It says whether the

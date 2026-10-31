@@ -549,8 +549,164 @@ public final class KnowledgeStore implements AutoCloseable {
         return false;
     }
 
-    // ── assessment history ───────────────────────────────────────────────────
+    /**
+     * Apply incremental changes to a workspace, in one transaction.
+     *
+     * <p>Claims are upserted, evidence is inserted, and revisions are
+     * appended. A superseded claim keeps its row with its new status, so the
+     * history of what was believed is never destroyed.
+     *
+     * <p>The evidence rule still holds: a change that asserts an established
+     * status without evidence for it is rejected, and the rejection leaves
+     * the workspace exactly as it was.
+     */
+    public void applyChanges(String workspaceId, KnowledgeChanges changes) {
+        KnowledgeSnapshot current = exportWorkspace(workspaceId);
+        List<Claim> allClaims = new ArrayList<>(current.claims());
+        allClaims.removeIf(c -> changes.claims().stream()
+                .anyMatch(changed -> changed.id().equals(c.id())));
+        allClaims.addAll(changes.claims());
 
+        List<Evidence> allEvidence = new ArrayList<>(current.evidence());
+        allEvidence.addAll(changes.evidence());
+
+        // The rule is checked against the evidence the workspace will have
+        // after the change, not only against the evidence being added.
+        Map<String, Integer> evidencePerClaim = new HashMap<>();
+        for (Evidence evidence : allEvidence) {
+            evidencePerClaim.merge(evidence.claimId(), 1, Integer::sum);
+        }
+        for (Claim claim : changes.claims()) {
+            boolean needsEvidence = claim.status() == ClaimStatus.SUPPORTED
+                    || claim.status() == ClaimStatus.VERIFIED
+                    || claim.status() == ClaimStatus.CONTESTED
+                    || claim.status() == ClaimStatus.REFUTED
+                    || claim.status() == ClaimStatus.SUPERSEDED;
+            if (needsEvidence && evidencePerClaim.getOrDefault(claim.id(), 0) == 0) {
+                throw new IllegalArgumentException(
+                        "claim " + claim.id() + " is " + claim.status() + " but carries no evidence");
+            }
+        }
+        for (Evidence evidence : changes.evidence()) {
+            boolean claimKnown = allClaims.stream()
+                    .anyMatch(c -> c.id().equals(evidence.claimId()));
+            if (!claimKnown) {
+                throw new IllegalArgumentException(
+                        "evidence " + evidence.id() + " references unknown claim " + evidence.claimId());
+            }
+            boolean sourceKnown = current.sources().stream()
+                    .anyMatch(s -> s.id().equals(evidence.sourceId()))
+                    || changes.sources().stream()
+                    .anyMatch(s -> s.id().equals(evidence.sourceId()));
+            if (!sourceKnown) {
+                throw new IllegalArgumentException(
+                        "evidence " + evidence.id() + " references unknown source " + evidence.sourceId());
+            }
+        }
+
+        try {
+            connection.setAutoCommit(false);
+            try {
+                for (Source source : changes.sources()) {
+                    upsertSource(source);
+                }
+                for (Claim claim : changes.claims()) {
+                    upsertClaim(claim);
+                }
+                for (Evidence evidence : changes.evidence()) {
+                    insertEvidence(evidence);
+                }
+                for (KnowledgeRevision revision : changes.revisions()) {
+                    insertRevision(revision);
+                }
+                connection.commit();
+            } catch (SQLException | RuntimeException e) {
+                connection.rollback();
+                throw e;
+            } finally {
+                connection.setAutoCommit(true);
+            }
+        } catch (SQLException e) {
+            throw new IllegalStateException("Failed to apply the knowledge changes", e);
+        }
+    }
+
+    private void upsertSource(Source s) throws SQLException {
+        try (PreparedStatement ps = connection.prepareStatement(
+                "INSERT OR REPLACE INTO source(id, workspace_id, kind, title, locator, authority, "
+                        + "freshness, excerpt, added_at) VALUES (?,?,?,?,?,?,?,?,?)")) {
+            ps.setString(1, s.id());
+            ps.setString(2, s.workspaceId());
+            ps.setString(3, s.kind().name());
+            ps.setString(4, s.title());
+            ps.setString(5, s.locator());
+            ps.setInt(6, s.authority());
+            ps.setInt(7, s.freshness());
+            ps.setString(8, s.excerpt());
+            ps.setString(9, s.addedAt());
+            ps.executeUpdate();
+        }
+    }
+
+    private void upsertClaim(Claim c) throws SQLException {
+        try (PreparedStatement ps = connection.prepareStatement(
+                "INSERT OR REPLACE INTO claim(id, workspace_id, concept_id, proposition, scope, "
+                        + "context, status, confidence, version, introduced_by_source_id, "
+                        + "created_at, updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)")) {
+            ps.setString(1, c.id());
+            ps.setString(2, c.workspaceId());
+            ps.setString(3, c.conceptId());
+            ps.setString(4, c.proposition());
+            ps.setString(5, c.scope());
+            ps.setString(6, c.context());
+            ps.setString(7, c.status().name());
+            ps.setDouble(8, c.confidence());
+            ps.setInt(9, c.version());
+            ps.setString(10, c.introducedBySourceId());
+            ps.setString(11, c.createdAt());
+            ps.setString(12, c.updatedAt());
+            ps.executeUpdate();
+        }
+    }
+
+    private void insertEvidence(Evidence e) throws SQLException {
+        try (PreparedStatement ps = connection.prepareStatement(
+                "INSERT OR REPLACE INTO evidence(id, workspace_id, claim_id, source_id, relation, "
+                        + "excerpt, quality, recorded_at) VALUES (?,?,?,?,?,?,?,?)")) {
+            ps.setString(1, e.id());
+            ps.setString(2, e.workspaceId());
+            ps.setString(3, e.claimId());
+            ps.setString(4, e.sourceId());
+            ps.setString(5, e.relation().name());
+            ps.setString(6, e.excerpt());
+            ps.setInt(7, e.quality());
+            ps.setString(8, e.recordedAt());
+            ps.executeUpdate();
+        }
+    }
+
+    private void insertRevision(KnowledgeRevision rev) throws SQLException {
+        try (PreparedStatement ps = connection.prepareStatement(
+                "INSERT OR REPLACE INTO revision(id, workspace_id, target_type, target_id, kind, "
+                        + "summary, added_facts, still_valid, no_longer_valid, newly_explained, "
+                        + "evidence_ids, recorded_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)")) {
+            ps.setString(1, rev.id());
+            ps.setString(2, rev.workspaceId());
+            ps.setString(3, rev.targetType());
+            ps.setString(4, rev.targetId());
+            ps.setString(5, rev.kind().name());
+            ps.setString(6, rev.summary());
+            ps.setString(7, writeJson(rev.addedFacts()));
+            ps.setString(8, writeJson(rev.stillValidAssumptions()));
+            ps.setString(9, writeJson(rev.noLongerValidAssumptions()));
+            ps.setString(10, writeJson(rev.newlyExplainedCases()));
+            ps.setString(11, writeJson(rev.evidenceIds()));
+            ps.setString(12, rev.recordedAt());
+            ps.executeUpdate();
+        }
+    }
+
+    // ── assessment history ───────────────────────────────────────────────────
     /**
      * Record one assessment outcome.
      *

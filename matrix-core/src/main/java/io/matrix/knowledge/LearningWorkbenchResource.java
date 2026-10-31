@@ -58,6 +58,29 @@ public class LearningWorkbenchResource {
     public record TeachBackRequest(String conceptId, String level, Double expectedGain) {
     }
 
+    /** The body of a refinement request. */
+    public record RefineRequest(
+            String conceptId,
+            String supersededClaimId,
+            String proposition,
+            String scope,
+            String context,
+            String status,
+            Double confidence,
+            String sourceKind,
+            String sourceTitle,
+            String sourceLocator,
+            String sourceExcerpt,
+            Integer sourceAuthority,
+            Integer sourceFreshness,
+            String revisionKind,
+            String summary,
+            List<String> addedFacts,
+            List<String> stillValidAssumptions,
+            List<String> noLongerValidAssumptions,
+            List<String> newlyExplainedCases) {
+    }
+
     /** The storage and workspace status. */
     @GET
     @Path("/status")
@@ -296,8 +319,88 @@ public class LearningWorkbenchResource {
         }
     }
 
-    private static AbstractionLevel parseLevel(String raw) {
+    /**
+     * Apply a correction to what is known.
+     *
+     * <p>The earlier claim is retained and marked superseded, the corrected
+     * claim carries its source, and the revision records what changed and
+     * why. Nothing is deleted.
+     */
+    @POST
+    @Path("/workspaces/{id}/refine")
+    public Response refine(@PathParam("id") String workspaceId, RefineRequest request) {
+        if (request == null || request.conceptId() == null || request.proposition() == null) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity(Map.of("error", "a concept id and a proposition are required"))
+                    .build();
+        }
+        try {
+            KnowledgeRefiner.Refinement refinement = new KnowledgeRefiner.Refinement(
+                    request.conceptId(),
+                    request.supersededClaimId(),
+                    request.proposition(),
+                    request.scope(),
+                    request.context(),
+                    parseStatus(request.status()),
+                    request.confidence() == null ? 0.5 : request.confidence(),
+                    parseSourceKind(request.sourceKind()),
+                    request.sourceTitle() == null ? "A human statement" : request.sourceTitle(),
+                    request.sourceLocator(),
+                    request.sourceExcerpt(),
+                    request.sourceAuthority() == null ? 50 : request.sourceAuthority(),
+                    request.sourceFreshness() == null ? 50 : request.sourceFreshness(),
+                    parseRevisionKind(request.revisionKind()),
+                    request.summary() == null ? "The claim was corrected." : request.summary(),
+                    request.addedFacts(), request.stillValidAssumptions(),
+                    request.noLongerValidAssumptions(), request.newlyExplainedCases());
+            KnowledgeChanges changes = workbench.refine(workspaceId, refinement);
+            Map<String, Object> result = new LinkedHashMap<>();
+            result.put("claims", changes.claims());
+            result.put("sources", changes.sources());
+            result.put("evidence", changes.evidence());
+            result.put("revisions", changes.revisions());
+            return Response.ok(result).build();
+        } catch (IllegalArgumentException e) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity(Map.of("error", e.getMessage()))
+                    .build();
+        }
+    }
+
+    private static ClaimStatus parseStatus(String raw) {
         if (raw == null || raw.isBlank()) {
+            return ClaimStatus.SUPPORTED;
+        }
+        try {
+            return ClaimStatus.valueOf(raw.trim().toUpperCase(java.util.Locale.ROOT));
+        } catch (IllegalArgumentException e) {
+            return ClaimStatus.SUPPORTED;
+        }
+    }
+
+    private static SourceKind parseSourceKind(String raw) {
+        if (raw == null || raw.isBlank()) {
+            return SourceKind.HUMAN_ASSERTION;
+        }
+        try {
+            return SourceKind.valueOf(raw.trim().toUpperCase(java.util.Locale.ROOT));
+        } catch (IllegalArgumentException e) {
+            return SourceKind.HUMAN_ASSERTION;
+        }
+    }
+
+    private static RevisionKind parseRevisionKind(String raw) {
+        if (raw == null || raw.isBlank()) {
+            return RevisionKind.CORRECTION;
+        }
+        try {
+            return RevisionKind.valueOf(raw.trim().toUpperCase(java.util.Locale.ROOT));
+        } catch (IllegalArgumentException e) {
+            return RevisionKind.CORRECTION;
+        }
+    }
+
+    private static AbstractionLevel parseLevel(String raw) {        if (raw == null || raw.isBlank()) {
             return AbstractionLevel.INTRODUCTORY;
         }
         try {
