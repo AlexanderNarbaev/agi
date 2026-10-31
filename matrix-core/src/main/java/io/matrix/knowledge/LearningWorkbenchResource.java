@@ -361,6 +361,7 @@ public class LearningWorkbenchResource {
             result.put("claims", changes.claims());
             result.put("sources", changes.sources());
             result.put("evidence", changes.evidence());
+            result.put("representations", changes.representations());
             result.put("revisions", changes.revisions());
             return Response.ok(result).build();
         } catch (IllegalArgumentException e) {
