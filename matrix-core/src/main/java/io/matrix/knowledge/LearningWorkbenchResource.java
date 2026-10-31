@@ -54,6 +54,10 @@ public class LearningWorkbenchResource {
     public record AssessRequest(String itemId, String answer, Double confidence, String sessionId) {
     }
 
+    /** The body of a teach-back request. */
+    public record TeachBackRequest(String conceptId, String level, Double expectedGain) {
+    }
+
     /** The storage and workspace status. */
     @GET
     @Path("/status")
@@ -239,6 +243,57 @@ public class LearningWorkbenchResource {
         result.put("prerequisites", snapshot.prerequisites());
         result.put("revisions", snapshot.revisions());
         return result;
+    }
+
+    /**
+     * The teaching plan for a concept.
+     *
+     * <p>The plan is composed from the authored representations only; it
+     * never sees the held-out assessment items that will measure it.
+     */
+    @GET
+    @Path("/workspaces/{id}/teaching-plan/{conceptId}")
+    public Response teachingPlan(@PathParam("id") String workspaceId,
+                                  @PathParam("conceptId") String conceptId,
+                                  @QueryParam("level") String level) {
+        try {
+            TeachingPlan plan = workbench.teachingPlan(workspaceId, conceptId, parseLevel(level));
+            return Response.ok(plan).build();
+        } catch (IllegalArgumentException e) {
+            return Response.status(Response.Status.NOT_FOUND)
+                    .entity(Map.of("error", e.getMessage()))
+                    .build();
+        }
+    }
+
+    /**
+     * Run the teaching experiment.
+     *
+     * <p>A second learner is taught the plan and is then measured on the
+     * held-out items, which the teacher never saw. The expectation is
+     * declared in the request, and the result says whether it was met.
+     *
+     * <p>The learner is a synthetic one, so this is a machine-to-machine
+     * result and not evidence of human teaching effectiveness.
+     */
+    @POST
+    @Path("/workspaces/{id}/teach-back")
+    public Response teachBack(@PathParam("id") String workspaceId, TeachBackRequest request) {
+        if (request == null || request.conceptId() == null) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity(Map.of("error", "a concept id is required"))
+                    .build();
+        }
+        double expectedGain = request.expectedGain() == null ? 0.0 : request.expectedGain();
+        try {
+            TeachBackEvaluator.TeachBackResult result = workbench.teachBack(
+                    workspaceId, request.conceptId(), parseLevel(request.level()), expectedGain);
+            return Response.ok(result).build();
+        } catch (IllegalArgumentException e) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity(Map.of("error", e.getMessage()))
+                    .build();
+        }
     }
 
     private static AbstractionLevel parseLevel(String raw) {

@@ -74,6 +74,7 @@
   <button data-tab="ask">Ask</button>
   <button data-tab="knowledge">Knowledge</button>
   <button data-tab="assess">Assess</button>
+  <button data-tab="teach">Teach</button>
   <button data-tab="progress">Progress</button>
   <button data-tab="persistence">Persistence</button>
 </nav>
@@ -135,8 +136,35 @@
     </div>
   </section>
 
-  <section id="tab-progress">
-    <h2>Progress and mastery</h2>
+  <section id="tab-teach">
+    <h2>Teaching and teach-back</h2>
+    <div class="card">
+      <p class="muted" style="margin-top:0">MATRIX composes a teaching plan from the representations it
+        holds. A second, synthetic learner is then taught that plan and measured on the
+        <strong>held-out</strong> items, which the teacher never saw. The measurement is
+        machine-to-machine: it shows whether the lesson contained the content the evaluation
+        asks for, which is necessary for transfer and not sufficient for it.</p>
+      <div class="row">
+        <select id="teach-concept" style="width:280px"></select>
+        <select id="teach-level" style="width:190px">
+          <option value="INTRODUCTORY">Introductory</option>
+          <option value="INTERMEDIATE">Intermediate</option>
+          <option value="ADVANCED">Advanced</option>
+          <option value="MECHANISTIC">Mechanistic</option>
+        </select>
+        <input type="text" id="teach-expected" value="0.5" style="width:130px"
+               title="Declared expectation: the minimum gain on the held-out set">
+        <button class="action" id="btn-teach" style="margin-top:0">Compose and teach back</button>
+      </div>
+      <div id="teach-result" style="margin-top:16px"></div>
+    </div>
+    <div class="card">
+      <h2 style="margin-top:0">The teaching plan</h2>
+      <div id="teach-plan" class="muted">Choose a concept and press the button.</div>
+    </div>
+  </section>
+
+  <section id="tab-progress">    <h2>Progress and mastery</h2>
     <div class="card">
       <p class="muted" style="margin-top:0">Each capability is shown separately. A concept may be recalled
         accurately and still not understood, and the state says which.</p>
@@ -184,6 +212,7 @@ document.querySelectorAll('nav button').forEach(btn => {
     $('tab-' + btn.dataset.tab).classList.add('active');
     if (btn.dataset.tab === 'knowledge') loadKnowledge();
     if (btn.dataset.tab === 'assess') loadAssessment();
+    if (btn.dataset.tab === 'teach') loadConceptsForTeaching();
     if (btn.dataset.tab === 'progress') loadProgress();
   });
 });
@@ -350,6 +379,52 @@ async function submit(itemId) {
     resultBox.textContent = e.message;
   }
 }
+
+async function loadConceptsForTeaching() {
+  try {
+    const concepts = await api('/workspaces/' + WS + '/concepts');
+    const select = $('teach-concept');
+    select.innerHTML = concepts.map(c => '<option value="' + esc(c.id) + '">' + esc(c.name) + '</option>').join('');
+  } catch (e) {
+    $('teach-concept').innerHTML = '<option value="">(could not load the concepts)</option>';
+  }
+}
+
+$('btn-teach').addEventListener('click', async () => {
+  const conceptId = $('teach-concept').value;
+  if (!conceptId) return;
+  const level = $('teach-level').value;
+  const expected = parseFloat($('teach-expected').value) || 0;
+  const out = $('teach-result');
+  out.innerHTML = '<span class="muted">Teaching and measuring…</span>';
+  try {
+    const plan = await api('/workspaces/' + WS + '/teaching-plan/' + encodeURIComponent(conceptId) + '?level=' + level);
+    $('teach-plan').innerHTML = '<div class="muted">' + esc(plan.conceptName) + ' · ' +
+      plan.steps.length + ' step(s) · dataset ' + esc(plan.datasetId) + ' v' + plan.datasetVersion + '</div>' +
+      plan.steps.map(s => '<div style="margin:10px 0"><span class="tag">' + esc(s.level) + '</span>' +
+        '<div>' + esc(s.statement) + '</div>' +
+        '<div class="muted">exercise: ' + esc(s.exercise) + '</div>' +
+        '<div class="muted">check: ' + esc(s.check) + '</div></div>').join('');
+
+    const r = await api('/workspaces/' + WS + '/teach-back', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ conceptId, level, expectedGain: expected })
+    });
+    out.innerHTML = '<div class="card ' + (r.metExpectation ? 'good' : 'warn') + '">' +
+      '<h2 style="margin-top:0">Teach-back result</h2>' +
+      '<div>Taught at ' + esc(r.levelTaughtAt) + ' · measured on ' + r.itemsMeasured +
+      ' held-out item(s) from ' + esc(r.datasetId) + ' v' + r.datasetVersion + '</div>' +
+      '<div>Score before ' + r.beforeScore + ' → after ' + r.afterScore +
+      ' · gain <strong>' + r.gain + '</strong> · expectation (' + esc(r.expectation) +
+      ') <strong>' + (r.metExpectation ? 'met' : 'NOT met') + '</strong></div>' +
+      '<table><tr><th>Item</th><th>Dimension</th><th>Before</th><th>After</th></tr>' +
+      r.outcomes.map(o => '<tr><td>' + esc(o.itemId) + '</td><td>' + esc(o.dimension) +
+        '</td><td>' + o.before + '</td><td>' + o.after + '</td></tr>').join('') + '</table>' +
+      '<p class="muted">' + esc(r.conclusion) + '</p></div>';
+  } catch (e) {
+    out.innerHTML = '<div class="card bad">' + esc(e.message) + '</div>';
+  }
+});
 
 async function loadProgress() {
   try {

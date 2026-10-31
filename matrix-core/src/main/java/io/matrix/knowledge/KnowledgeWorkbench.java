@@ -177,6 +177,34 @@ public class KnowledgeWorkbench implements AutoCloseable {
                 : MasteryCriteria.defaults();
     }
 
+    /**
+     * The teaching plan for a concept.
+     *
+     * <p>The composer is given the knowledge and the dataset, but the
+     * dataset is only used for its identifier and version: the plan is built
+     * from the authored representations and never from the assessment items.
+     */
+    public TeachingPlan teachingPlan(String workspaceId, String conceptId, AbstractionLevel level) {
+        KnowledgeSnapshot snapshot = workspace(workspaceId);
+        TeachingComposer composer = new TeachingComposer(snapshot, dataset(workspaceId));
+        return composer.compose(conceptId, level);
+    }
+
+    /**
+     * Run the teaching experiment and measure the result.
+     *
+     * <p>The result is a machine-to-machine measurement. It says whether the
+     * lesson contained the content the held-out items ask for, which is
+     * necessary for transfer and not sufficient for it.
+     */
+    public TeachBackEvaluator.TeachBackResult teachBack(String workspaceId, String conceptId,
+                                                        AbstractionLevel level, double expectedGain) {
+        KnowledgeSnapshot snapshot = workspace(workspaceId);
+        AssessmentDataset dataset = dataset(workspaceId);
+        TeachingPlan plan = new TeachingComposer(snapshot, dataset).compose(conceptId, level);
+        return new TeachBackEvaluator().run(plan, dataset, snapshot, expectedGain);
+    }
+
     /** The storage status, as the persistence screen shows it. */
     public Map<String, Object> status() {
         Map<String, Object> status = new LinkedHashMap<>();
