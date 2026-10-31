@@ -92,14 +92,24 @@ the audit compared blob SHAs file by file.
    the repository where "ask → answer → improve" is expressed as a contract.
    *It is the natural interface for the mission's §20 loop.*
 
-### A live defect the audit found
+### A defect the audit recorded, and later found to be already fixed
 
 `DistillationLedger` — the ledger that is the Article VI evidence that
-distillation improves the mind — throws `NullPointerException` on a null map
-value and `NumberFormatException` on an empty field in a corrupt line, i.e.
-it does not do the `ledger_handles_corrupt_lines_gracefully` its own test
-name promises (`docs-v2/releases/CAVEATS-v17.6.0-mind.md` §5). Recorded here;
-not fixed in this wave.
+distillation improves the mind — was recorded here as throwing
+`NullPointerException` on a null map value and `NumberFormatException` on an
+empty field in a corrupt line.
+
+**That claim was wrong, and it was wrong in this wave's own document.** It
+was taken from the older text of `docs-v2/quality/KnownFailures.md` and from
+`docs-v2/releases/CAVEATS-v17.6.0-mind.md` §5, both of which predate
+RECON-W34.1 and RECON-W34.4. The code as it stands guards the parse: a
+damaged line is skipped, counted and reported, and the rest survive.
+
+Verified by running the ledger's own suites:
+`./gradlew :matrix-brain-runtime:test --tests "*Distillation*"` — 46 tests
+across 7 classes, 0 failures, 0 errors. The corrected record is in
+`docs-v2/quality/KnownFailures.md`, and the correction is recorded in the
+WAL.
 
 ---
 

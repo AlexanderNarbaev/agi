@@ -618,7 +618,32 @@ Found while fixing the ledger, and not previously reported by anything. In
 3. `durationMs` and the row timestamp were two separate clock reads, so a row could report a
    timestamp earlier than the duration preceding it. Now one read feeds both.
 
-### OPEN — NEEDS-OWNER: `samplesUsed` is defined as two different things at once
+### CLOSED (RECON-W34.4) — `samplesUsed` is defined as two different things at once
+
+**This entry was open and is not.** It is recorded here in the past tense
+because the file said "NEEDS-OWNER" about a question the owner had already
+ruled on in RECON-W34.4, and the stale text was carried into the RECON-W40
+reconnaissance as a live defect.
+
+**The ruling.** `TrueDistillationFactory.distill` now passes each field its
+own real unit: `inputBits` carries BYTES and `samplesUsed` carries a COUNT.
+The comment in the code says so: *"Operator ruling: each field reports its
+own real unit."* `DistillationLedger.summary()` reports both under
+distinctly named keys — `total_inputs_count` and `total_inputs_bytes` — so
+the transposition cannot be read the wrong way.
+
+**Verified.** `./gradlew :matrix-brain-runtime:test --tests "*Distillation*"`
+— 46 tests across 7 classes, 0 failures, 0 errors, including
+`DistillationLedgerRobustnessTest` (9), `DistillationFactoryIntegrationTest`
+(11) and `TrueDistillationFactoryIntegrationTest` (9).
+
+The original reasoning is kept below, because the citations are the reason
+the ruling is checkable.
+
+<details>
+<summary>The original entry (RECON-W34.1), kept for the citations</summary>
+
+### OPEN (at RECON-W34.1) — NEEDS-OWNER: `samplesUsed` is defined as two different things at once
 
 `TrueDistillationFactoryIntegrationTest.distill_appends_ledger_row_with_real_engine_identity`
 expects `inputsCount() == 8`, and `inputsCount()` is an alias for `samplesUsed` — so
@@ -633,9 +658,13 @@ Both cannot hold. The current factory writes `(int) sourceBytes` into `samplesUs
 mishap from the snake_case → camelCase schema migration, where `inputs_count` and
 `inputs_bytes` were separate fields that no longer have separate homes.
 
-**Not guessed at.** Picking either side changes the meaning of persisted ledger data, and the
+**Not guessed at** (at the time). Picking either side changes the meaning of persisted ledger data, and the
 wrong pick silently corrupts a record other tools read. Recorded as NEEDS-OWNER with both
 test citations so the decision is one reading rather than an archaeology exercise.
+
+**The owner ruled in RECON-W34.4**: each field reports its own real unit.
+
+</details>
 
 ### Also corrected in tests, with the reasoning kept in place
 
