@@ -694,3 +694,59 @@ store now runs the model that describes it.
 
 **The formal gate now covers TEN specifications**, all model-checked with no
 failures: 65 to 396,577 states each.
+
+### W40.6 — the false learner removed, a real one measured (2026-10-31)
+
+Owner directive §24 asked for `AgentBrainService.generateFromBir()` to be
+revalidated and for the supervised learning it pretended to be to be
+implemented and evaluated. Both are done.
+
+**The verdict.** The method trained on constant-true labels, never read the
+corpus answers, hashed the first 64 characters of the text, folded a 64-bit
+value into 20 bits for training while evaluating the raw 64 bits when
+serving, and returned one bit rendered as ASCII — so it could only ever be
+`""` or `"!"`. The caller required eight characters, so the branch was
+**unreachable**: it could not affect a single response. The method, the
+corpus trainer it called and the field it filled are now removed, together
+with the dead branch in `OpenAIChatResource`. The removal is recorded in the
+code where it was, so the next reader does not reinstate it.
+
+**What replaces it.** `io.matrix.knowledge.AcceptanceModel`:
+
+  - the labels are REAL — the verdict of the deterministic grader, which
+    knows the key terms of the item;
+  - the inputs are EXPLICIT features (`TextFeatureVector`): the presence of
+    the item's key terms, whether the answer shares the item's wording, a
+    negation, a repeated term, the dimension and the length — 16 bits in a
+    documented order;
+  - the outcome is MEASURED on the held-out items and compared with the
+    deterministic grader;
+  - the learned rule is DISTILLED into an exact, inspectable clause set.
+
+**Measured:** trained on 11 outcomes, measured on 11 held-out items, the
+learned rule reached **100%** against the grader's **100%**. The
+deterministic grader stays in the production path: it is exact, it needs no
+training, and it cannot be wrong about a key term. The learned rule is kept
+because it is inspectable — it says which SHAPE of answer tends to be
+accepted, which a lookup table cannot. The dataset is small and uniform, so
+the measurement is a floor and not a proof of generalisation.
+
+**Two capacity findings, measured rather than assumed:**
+
+  - With ten clauses and five automaton states the Tsetlin machine does not
+    learn even "every answer naming the key terms is acceptable": it
+    predicts FALSE for its own training data. With the production counts
+    (64 clauses, 200 states — the ones `RuleInductionEngine` uses) it
+    learns. The learner therefore uses the production counts.
+  - The distillation enumerates the whole input space, so at 20 bits it
+    costs minutes. The features are therefore 16 bits wide, and the
+    distillation is lazy and cached rather than on the measurement path.
+
+The measurement is available at
+`GET /v1/workbench/workspaces/{id}/acceptance-model`.
+
+Tested (5 tests): the features are explicit and readable, not a hash; the
+learner is trained on the training outcomes and measured on the held-out
+ones; the comparison with the deterministic grader is made and reported; the
+learned rule is distilled into an inspectable form; with no outcomes nothing
+is learned and nothing is claimed; and the learner is deterministic.
