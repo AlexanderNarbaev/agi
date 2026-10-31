@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 /**
@@ -188,6 +189,36 @@ public class KnowledgeWorkbench implements AutoCloseable {
         KnowledgeSnapshot snapshot = workspace(workspaceId);
         TeachingComposer composer = new TeachingComposer(snapshot, dataset(workspaceId));
         return composer.compose(conceptId, level);
+    }
+
+    /**
+     * Train the supervised learner on the recorded outcomes and measure it on
+     * the held-out ones.
+     *
+     * <p>This is the supervised path the owner directive asks for, with the
+     * labels of the deterministic grader and explicit text features instead
+     * of a hash. The grader stays in the production path: it is exact and
+     * needs no training. The learned rule is kept because it is INSPECTABLE
+     * - it says which shape of answer tends to be accepted, which a lookup
+     * table cannot.
+     */
+    public Map<String, Object> acceptanceModel(String workspaceId) {
+        AssessmentDataset dataset = dataset(workspaceId);
+        List<AssessmentOutcome> outcomes = outcomes(workspaceId);
+        AcceptanceModel model = new AcceptanceModel(dataset.items(), new Random(42));
+        AcceptanceModel.Evaluation evaluation = model.trainAndEvaluate(outcomes);
+
+        Map<String, Object> result = new LinkedHashMap<>();
+        result.put("evaluation", evaluation);
+        result.put("trainedOn", evaluation.trainedOn());
+        result.put("measuredOn", evaluation.measuredOn());
+        result.put("heldOutAccuracy", evaluation.heldOutAccuracy());
+        result.put("deterministicAccuracy", evaluation.deterministicAccuracy());
+        result.put("beatsDeterministic", evaluation.beatsDeterministic());
+        result.put("conclusion", evaluation.conclusion());
+        result.put("datasetId", dataset.id());
+        result.put("datasetVersion", dataset.version());
+        return result;
     }
 
     /**

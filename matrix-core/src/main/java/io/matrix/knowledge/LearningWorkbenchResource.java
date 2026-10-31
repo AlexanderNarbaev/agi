@@ -271,6 +271,19 @@ public class LearningWorkbenchResource {
     }
 
     /**
+     * The supervised learner over the learner's own answers.
+     *
+     * <p>The measurement compares the learned rule with the deterministic
+     * grader on the held-out items, and says which is in the production
+     * path. The grader is: it is exact and needs no training.
+     */
+    @GET
+    @Path("/workspaces/{id}/acceptance-model")
+    public Response acceptanceModel(@PathParam("id") String workspaceId) {
+        return Response.ok(workbench.acceptanceModel(workspaceId)).build();
+    }
+
+    /**
      * The teaching plan for a concept.
      *
      * <p>The plan is composed from the authored representations only; it

@@ -386,19 +386,24 @@ public class OpenAIChatResource {
             }
 
             // Priority order:
-            //   1. Tsetlin-trained BIR on the loaded corpus (real knowledge —
-            //      trains on the 6,653-entry combined_training.json on first call)
-            //   2. Boolean chain (magnitude-aware scorer) when Qwen safetensors loaded
-            //   3. PureBirGenerator templates (last-resort when no real data exists)
-            //   4. Character-by-character generation
-            //   5. Brain decision code
-            String tsetlinResponse = qaHit ? null : brainService.generateFromBir(userText);
-            if (tsetlinResponse != null && !tsetlinResponse.isBlank()
-                    && tsetlinResponse.trim().length() >= 8) {
-                // Tsetlin-trained on corpus — use this as primary
-                response = tsetlinResponse;
-                generated = response;
-            } else if (generated == null || generated.trim().length() < 8) {
+            //   1. Boolean chain (magnitude-aware scorer) when Qwen safetensors loaded
+            //   2. PureBirGenerator templates (last-resort when no real data exists)
+            //   3. Character-by-character generation
+            //
+            // RECON-W40: the "Tsetlin-trained BIR on the loaded corpus" step
+            // was REMOVED, and the removal is not a simplification. The
+            // branch called AgentBrainService.generateFromBir(), whose
+            // output is one bit rendered as ASCII - so it can only ever be
+            // "" or "!" - and the guard below required eight characters. The
+            // branch was therefore UNREACHABLE: it could not affect a single
+            // response. What it claimed to be - a corpus-trained natural
+            // language generator - it was not: its labels were a constant
+            // true, its answers were discarded, and it folded the text into
+            // a hash of the first 64 characters. The supervised learning
+            // that the directive asks for now lives in
+            // io.matrix.knowledge.AcceptanceModel, where the labels are real
+            // and the outcome is measured on held-out items.
+            if (generated == null || generated.trim().length() < 8) {
                 // PureBirGenerator produced too short — fall back to character-by-character
                 response = brainService.textGenerator().generate(
                         worldContext.isEmpty() ? userText : worldContext + " | " + userText);
