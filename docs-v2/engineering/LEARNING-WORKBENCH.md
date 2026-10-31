@@ -97,6 +97,15 @@ recorded outcomes met stated criteria — never because something declared
 it. The note beside each row says how many outcomes it rests on, across
 how many variants, and how many were held out.
 
+Above the per-dimension rows there is the **capability ladder**: where the
+learner stands for each concept as a whole. `UNDERSTANDING` is not inferred
+from a high recall score — it needs competence on the causal, transfer and
+evaluation dimensions, because understanding means explaining causes,
+predicting outcomes and identifying counterexamples. `KNOWLEDGE` needs a
+teach-back that met its declared expectation, because generating an
+explanation is not proof of teaching. The note under each concept says
+which dimensions are short, by name.
+
 If a later outcome contradicts an earlier success, the state **falls** and
 the note says so. That is deliberate: keeping the old label would be the
 easy thing to do and the dishonest one.
@@ -199,7 +208,46 @@ re-imported — the pack was not loaded a second time.
 The store lives at `matrix-core/data/knowledge/workbench.sqlite`. It is one
 file: copy it to back the workspace up, and put it back to restore it.
 
-## 9. What this release does not do
+## 9. See what the workspace does not know
+
+Every question you ask is recorded, including the ones the workspace had to
+refuse. Two wordings of the same question are ONE record, so the count is a
+count of questions and not of wordings.
+
+On the **Progress** tab, **Consolidate the asked questions** does three
+things:
+
+- a question asked more than once and still unanswered is **promoted** into
+  the list of recurring gaps;
+- a question the workspace can now answer is marked **resolved and kept** —
+  the record of the gap is the evidence that the workspace learned something,
+  and the resolution survives a restart;
+- the gaps that remain are what the workspace does not know, written down.
+
+## 10. See the metrics, and what was not measured
+
+On the **Dashboard** tab, **Measured metrics** reports:
+
+- the software version, and **where it was read from**;
+- the dataset and its version;
+- the procedure that produced each number;
+- the sample size of each number;
+- the capability dimensions, with the outcomes each rests on.
+
+There is deliberately **no single intelligence score**: one number would
+hide the differences that matter. The report ends with the metrics that were
+NOT measured, listed rather than omitted.
+
+## 11. Let the system write down what it learned about you
+
+`POST /v1/workbench/workspaces/{photosynthesis}/learned-rule?conceptId=…`
+turns the acceptance model's measurement into a **claim** in the store, with
+a source and evidence. It is a claim like any other: it has a status, a
+scope, a readable provenance, and it can be superseded later. The source is
+an `OBSERVATION` — the measurement — and not an authority the system
+pretends to have.
+
+## 12. What this release does not do
 
 - **It is not a chat assistant.** The answer is composed from the claims and
   representations in the store, not generated.
@@ -209,14 +257,21 @@ file: copy it to back the workspace up, and put it back to restore it.
 - **The learning state is not a measurement of general intelligence.** It is
   a measurement of one domain against one dataset version, and the note on
   every row says which.
-- **No stage above `COMPETENCE` has been reached yet.** `UNDERSTANDING` and
-  `KNOWLEDGE` need their own evidence, and the criteria for them are
-  deliberately stricter than for competence.
+- **The higher stages need their own evidence, and they are stricter.**
+  `UNDERSTANDING` needs competence on the causal, transfer and evaluation
+  dimensions; `KNOWLEDGE` needs a teach-back that met a declared
+  expectation. A learner with a perfect recall score and no causal
+  understanding stays at `COMPETENCE`, and the note says why.
+- **The metrics report does not hide what it could not measure.** The
+  Dashboard ends with the list of metrics that were NOT measured: transfer
+  to a human learner, long-term retention, generalisation beyond the
+  assessed dataset, causal attribution, the reliability of the sources
+  beyond their recorded authority, and efficiency.
 - **The teaching capability is demonstrated only machine-to-machine.** A
   synthetic learner was taught and measured on held-out items; that shows the
   lesson contained the assessed content, not that a person would learn it.
 
-## 10. Where the pieces are
+## 13. Where the pieces are
 
 | Piece | Path |
 |---|---|
@@ -224,13 +279,18 @@ file: copy it to back the workspace up, and put it back to restore it.
 | The store | `KnowledgeStore.java` (SQLite, versioned schema, atomic imports) |
 | The retriever | `KnowledgeRetriever.java`, `TextFeatures.java` |
 | The measurement | `LearningStateEvaluator.java`, `AssessmentGrader.java` |
+| The capability ladder | `CapabilityEvaluator.java`, `CapabilityState.java` |
+| The episodic log | `QuestionConsolidator.java`, `AskedQuestion.java` |
+| The supervised learner | `AcceptanceModel.java`, `TextFeatureVector.java` |
+| The metrics | `MetricsReport.java` |
+| The formal models | `formal/KnowledgeLifecycle.tla`, `formal/KnowledgeStore.tla` |
 | The application | `KnowledgeWorkbench.java`, `LearningWorkbenchResource.java` |
 | The interface | `matrix-core/src/main/resources/META-INF/resources/workbench/index.html` |
 | The knowledge pack | `matrix-core/src/main/resources/knowledge/photosynthesis.pack.json` |
 | The dataset | `matrix-core/src/main/resources/knowledge/photosynthesis.assessment.json` |
 | The reconnaissance | `docs-v2/engineering/W40-RECONNAISSANCE.md` |
 
-## 11. The API, if you would rather not use the browser
+## 14. The API, if you would rather not use the browser
 
 ```
 curl http://localhost:9091/v1/workbench/status
@@ -239,4 +299,8 @@ curl -X POST http://localhost:9091/v1/workbench/workspaces/photosynthesis/ask \
   -H 'Content-Type: application/json' \
   -d '{"question":"What is photosynthesis?","level":"MECHANISTIC"}'
 curl http://localhost:9091/v1/workbench/workspaces/photosynthesis/learning-state
+curl http://localhost:9091/v1/workbench/workspaces/photosynthesis/capability
+curl http://localhost:9091/v1/workbench/workspaces/photosynthesis/metrics
+curl http://localhost:9091/v1/workbench/workspaces/photosynthesis/questions
+curl -X POST http://localhost:9091/v1/workbench/workspaces/photosynthesis/questions/consolidate
 ```
