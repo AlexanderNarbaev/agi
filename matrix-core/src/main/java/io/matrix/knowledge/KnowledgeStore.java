@@ -52,7 +52,7 @@ import java.util.Set;
 public final class KnowledgeStore implements AutoCloseable {
 
     /** The schema version this build writes. */
-    public static final int SCHEMA_VERSION = 1;
+    public static final int SCHEMA_VERSION = 2;
 
     private static final ObjectMapper JSON = new ObjectMapper();
 
@@ -93,8 +93,12 @@ public final class KnowledgeStore implements AutoCloseable {
         int version = readSchemaVersion();
         if (version == 0) {
             createSchemaV1();
-            writeSchemaVersion(SCHEMA_VERSION);
-            version = SCHEMA_VERSION;
+            // The version is recorded as 1 and the migration path then runs,
+            // so a fresh database is built by the same code that upgrades an
+            // old one. A database that skips a migration is a database whose
+            // schema nobody has ever tested.
+            writeSchemaVersion(1);
+            version = 1;
         }
         while (version < SCHEMA_VERSION) {
             version = migrateFrom(version);
@@ -230,6 +234,32 @@ public final class KnowledgeStore implements AutoCloseable {
     }
 
     private int migrateFrom(int version) throws SQLException {
+        if (version == 1) {
+            // v2 adds the assessment history: the learning state must
+            // survive a restart, and the state is derived from the recorded
+            // outcomes, so the outcomes themselves have to be durable.
+            try (Statement st = connection.createStatement()) {
+                st.execute("""
+                    CREATE TABLE IF NOT EXISTS assessment_outcome (
+                        id TEXT PRIMARY KEY,
+                        workspace_id TEXT NOT NULL,
+                        item_id TEXT NOT NULL,
+                        concept_id TEXT NOT NULL,
+                        dimension TEXT NOT NULL,
+                        correct INTEGER NOT NULL,
+                        score REAL NOT NULL,
+                        claimed_confidence REAL NOT NULL,
+                        learner_answer TEXT,
+                        session_id TEXT,
+                        answered_at INTEGER NOT NULL,
+                        held_out INTEGER NOT NULL
+                    )""");
+                st.execute("CREATE INDEX IF NOT EXISTS idx_outcome_ws ON assessment_outcome(workspace_id)");
+                st.execute("CREATE INDEX IF NOT EXISTS idx_outcome_concept ON assessment_outcome(concept_id)");
+            }
+            writeSchemaVersion(2);
+            return 2;
+        }
         throw new IllegalStateException("No migration is defined from schema version " + version);
     }
 
@@ -517,6 +547,58 @@ public final class KnowledgeStore implements AutoCloseable {
         }
         visited.remove(node);
         return false;
+    }
+
+    // ── assessment history ───────────────────────────────────────────────────
+
+    /**
+     * Record one assessment outcome.
+     *
+     * <p>The outcome is stored with the concept and dimension it belongs to,
+     * so the learning state can be derived after a restart without the
+     * dataset having to be present. Re-running the same item in the same
+     * session replaces the earlier outcome rather than doubling it.
+     */
+    public void recordOutcome(String workspaceId, AssessmentItem item, AssessmentOutcome outcome) {
+        String id = workspaceId + "|" + item.id() + "|" + outcome.sessionId() + "|"
+                + outcome.answeredAt();
+        try (PreparedStatement ps = connection.prepareStatement(
+                "INSERT OR REPLACE INTO assessment_outcome(id, workspace_id, item_id, concept_id, "
+                        + "dimension, correct, score, claimed_confidence, learner_answer, session_id, "
+                        + "answered_at, held_out) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)")) {
+            ps.setString(1, id);
+            ps.setString(2, workspaceId);
+            ps.setString(3, item.id());
+            ps.setString(4, item.conceptId());
+            ps.setString(5, item.dimension().name());
+            ps.setInt(6, outcome.correct() ? 1 : 0);
+            ps.setDouble(7, outcome.score());
+            ps.setDouble(8, outcome.claimedConfidence());
+            ps.setString(9, outcome.learnerAnswer());
+            ps.setString(10, outcome.sessionId());
+            ps.setLong(11, outcome.answeredAt());
+            ps.setInt(12, item.heldOut() ? 1 : 0);
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            throw new IllegalStateException("Failed to record the assessment outcome", e);
+        }
+    }
+
+    /** Every assessment outcome recorded for a workspace, oldest first. */
+    public List<AssessmentOutcome> outcomes(String workspaceId) {
+        return query("SELECT item_id, correct, score, claimed_confidence, learner_answer, "
+                + "session_id, answered_at FROM assessment_outcome WHERE workspace_id = ? "
+                + "ORDER BY answered_at, item_id", workspaceId, rs -> new AssessmentOutcome(
+                rs.getString("item_id"), rs.getInt("correct") != 0, rs.getDouble("score"),
+                rs.getDouble("claimed_confidence"), rs.getString("learner_answer"),
+                rs.getString("session_id"), rs.getLong("answered_at")));
+    }
+
+    /** The number of assessment outcomes recorded for a workspace. */
+    public int outcomeCount(String workspaceId) {
+        Integer count = queryOne("SELECT COUNT(*) AS n FROM assessment_outcome WHERE workspace_id = ?",
+                workspaceId, rs -> rs.getInt("n"));
+        return count == null ? 0 : count;
     }
 
     // ── reads ─────────────────────────────────────────────────────────────────

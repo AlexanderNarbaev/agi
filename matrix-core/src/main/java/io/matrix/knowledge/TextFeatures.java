@@ -137,4 +137,42 @@ public final class TextFeatures {
     public static Set<String> terms(String text) {
         return new LinkedHashSet<>(tokens(text));
     }
+
+    /**
+     * The words of a text as they were written, without the suffix fold.
+     *
+     * <p>Matching uses the folded stem; showing the user the stem would be
+     * confusing ("rol" for "role"), so the surface form is kept for display.
+     */
+    public static List<String> originalTokens(String text) {
+        List<String> out = new ArrayList<>();
+        if (text == null || text.isBlank()) {
+            return out;
+        }
+        StringBuilder current = new StringBuilder();
+        for (char ch : text.toLowerCase(Locale.ROOT).toCharArray()) {
+            if (Character.isLetterOrDigit(ch)) {
+                current.append(ch);
+            } else {
+                emitOriginal(current, out);
+            }
+        }
+        emitOriginal(current, out);
+        return out;
+    }
+
+    private static void emitOriginal(StringBuilder current, List<String> out) {
+        if (current.length() == 0) {
+            return;
+        }
+        String token = current.toString();
+        current.setLength(0);
+        if (token.length() < 3 && !Character.isDigit(token.charAt(0))) {
+            return;
+        }
+        if (STOPWORDS.contains(token)) {
+            return;
+        }
+        out.add(token);
+    }
 }

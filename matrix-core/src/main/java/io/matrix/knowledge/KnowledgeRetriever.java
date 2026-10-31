@@ -97,7 +97,10 @@ public final class KnowledgeRetriever {
             totalWeight += weight;
         }
 
-        Set<String> unmatched = new LinkedHashSet<>(queryTerms);
+        // The uncovered terms are reported in the words the user wrote, not
+        // in the folded stems the matcher works with.
+        Set<String> unmatched = new LinkedHashSet<>(TextFeatures.originalTokens(question));
+        Set<String> unmatchedStems = new LinkedHashSet<>(queryTerms);
         List<ScoredClaim> scored = new ArrayList<>();
         for (Claim claim : snapshot.claims()) {
             Set<String> terms = claimTerms.get(claim.id());
@@ -105,7 +108,7 @@ public final class KnowledgeRetriever {
             for (String term : queryTerms) {
                 if (terms.contains(term)) {
                     matched += queryWeights.get(term);
-                    unmatched.remove(term);
+                    unmatchedStems.remove(term);
                 }
             }
             if (matched > 0.0) {
@@ -211,7 +214,7 @@ public final class KnowledgeRetriever {
                 limitations.add("Supported but not independently verified: " + claim.proposition());
             }
         }
-        if (!unmatched.isEmpty()) {
+        if (!unmatchedStems.isEmpty()) {
             limitations.add("Not covered by the workspace: " + String.join(", ", unmatched));
         }
 
@@ -269,9 +272,15 @@ public final class KnowledgeRetriever {
 
     /** The terms of a question that no claim in the workspace covers. */
     public Set<String> unmatchedTerms(String question) {
-        Set<String> unmatched = new LinkedHashSet<>(TextFeatures.tokens(question));
+        Set<String> covered = new HashSet<>();
         for (Set<String> terms : claimTerms.values()) {
-            unmatched.removeAll(terms);
+            covered.addAll(terms);
+        }
+        Set<String> unmatched = new LinkedHashSet<>();
+        for (String original : TextFeatures.originalTokens(question)) {
+            if (!covered.contains(TextFeatures.fold(original))) {
+                unmatched.add(original);
+            }
         }
         return unmatched;
     }

@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MATRIX Learning Workbench</title>
+<style>
+  :root {
+    --bg: #10151c; --panel: #182029; --panel-2: #1f2933; --line: #2c3846;
+    --text: #dfe7ef; --muted: #8fa3b8; --accent: #4db6a5; --warn: #e0a458;
+    --bad: #d97b7b; --good: #7fbf7f;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text);
+         font: 15px/1.55 ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  header { padding: 18px 24px; border-bottom: 1px solid var(--line); background: var(--panel);
+           display: flex; align-items: baseline; gap: 16px; flex-wrap: wrap; }
+  header h1 { font-size: 18px; margin: 0; letter-spacing: .02em; }
+  header .sub { color: var(--muted); font-size: 13px; }
+  nav { display: flex; gap: 2px; padding: 0 16px; background: var(--panel);
+        border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+  nav button { background: none; border: 0; color: var(--muted); padding: 11px 15px;
+               cursor: pointer; font-size: 14px; border-bottom: 2px solid transparent; }
+  nav button:hover { color: var(--text); }
+  nav button.active { color: var(--accent); border-bottom-color: var(--accent); }
+  main { padding: 22px 24px 60px; max-width: 1080px; }
+  section { display: none; }
+  section.active { display: block; }
+  h2 { font-size: 15px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted);
+       margin: 0 0 14px; }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 8px;
+          padding: 16px 18px; margin-bottom: 14px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; }
+  .metric { background: var(--panel-2); border: 1px solid var(--line); border-radius: 8px; padding: 14px; }
+  .metric .v { font-size: 24px; font-weight: 600; }
+  .metric .k { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .06em; }
+  input[type=text], textarea, select { width: 100%; background: var(--bg); color: var(--text);
+      border: 1px solid var(--line); border-radius: 6px; padding: 10px 12px; font: inherit; }
+  textarea { min-height: 84px; resize: vertical; }
+  button.action { background: var(--accent); color: #06231f; border: 0; border-radius: 6px;
+      padding: 10px 18px; font-weight: 600; cursor: pointer; margin-top: 10px; }
+  button.action:disabled { opacity: .5; cursor: default; }
+  button.ghost { background: var(--panel-2); color: var(--text); border: 1px solid var(--line);
+      border-radius: 6px; padding: 8px 14px; cursor: pointer; }
+  .row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+  .tag { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 11px;
+         border: 1px solid var(--line); color: var(--muted); margin-right: 5px; }
+  .tag.VERIFIED, .tag.COMPETENCE { color: var(--good); border-color: var(--good); }
+  .tag.SUPPORTED, .tag.PRACTICE { color: var(--accent); border-color: var(--accent); }
+  .tag.CONTESTED, .tag.REFUTED { color: var(--bad); border-color: var(--bad); }
+  .tag.DRAFT, .tag.UNKNOWN { color: var(--muted); }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 500; font-size: 12px; text-transform: uppercase; }
+  .muted { color: var(--muted); }
+  .answer { white-space: pre-wrap; font-size: 15px; }
+  .warn { border-left: 3px solid var(--warn); padding-left: 12px; }
+  .bad { border-left: 3px solid var(--bad); padding-left: 12px; }
+  .good { border-left: 3px solid var(--good); padding-left: 12px; }
+  pre { background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 12px;
+        overflow-x: auto; font-size: 12.5px; color: var(--muted); }
+  .hide { display: none !important; }
+</style>
+</head>
+<body>
+<header>
+  <h1>MATRIX Learning Workbench</h1>
+  <span class="sub" id="hdr-workspace">workspace: —</span>
+  <span class="sub" id="hdr-storage">storage: —</span>
+</header>
+
+<nav>
+  <button data-tab="dashboard" class="active">Dashboard</button>
+  <button data-tab="ask">Ask</button>
+  <button data-tab="knowledge">Knowledge</button>
+  <button data-tab="assess">Assess</button>
+  <button data-tab="progress">Progress</button>
+  <button data-tab="persistence">Persistence</button>
+</nav>
+
+<main>
+  <section id="tab-dashboard" class="active">
+    <h2>Dashboard</h2>
+    <div class="card">
+      <div class="row">
+        <button class="action" id="btn-load">Load the demonstration knowledge pack</button>
+        <span class="muted" id="load-note">The pack is the photosynthesis domain: 8 concepts, 17 claims,
+          4 sources, 13 representations across four levels of abstraction.</span>
+      </div>
+    </div>
+    <div class="grid" id="dash-metrics"></div>
+    <div class="card">
+      <h2 style="margin-top:0">Recent corrections and revisions</h2>
+      <div id="dash-revisions" class="muted">No revisions recorded.</div>
+    </div>
+  </section>
+
+  <section id="tab-ask">
+    <h2>Ask the workspace</h2>
+    <div class="card">
+      <div class="row">
+        <div style="flex:1; min-width:260px">
+          <input type="text" id="ask-q" placeholder="Ask about the knowledge this workspace holds…">
+        </div>
+        <select id="ask-level" style="width:190px">
+          <option value="INTRODUCTORY">Introductory</option>
+          <option value="INTERMEDIATE">Intermediate</option>
+          <option value="ADVANCED">Advanced</option>
+          <option value="MECHANISTIC">Mechanistic</option>
+        </select>
+        <button class="action" id="btn-ask" style="margin-top:0">Ask</button>
+      </div>
+      <div id="ask-result" style="margin-top:16px"></div>
+    </div>
+    <div class="card">
+      <h2 style="margin-top:0">Unknown detection</h2>
+      <div class="muted" id="ask-gap">Ask a question to see which of its terms the workspace cannot cover.</div>
+    </div>
+  </section>
+
+  <section id="tab-knowledge">
+    <h2>Knowledge explorer</h2>
+    <div class="card"><h2 style="margin-top:0">Concepts</h2><div id="k-concepts" class="muted">—</div></div>
+    <div class="card"><h2 style="margin-top:0">Claims</h2><div id="k-claims" class="muted">—</div></div>
+    <div class="card"><h2 style="margin-top:0">Representations and their refinement chain</h2>
+      <div id="k-reprs" class="muted">—</div></div>
+    <div class="card"><h2 style="margin-top:0">Sources</h2><div id="k-sources" class="muted">—</div></div>
+  </section>
+
+  <section id="tab-assess">
+    <h2>Assessment</h2>
+    <div class="card">
+      <div id="assess-meta" class="muted">—</div>
+      <div id="assess-items" style="margin-top:14px"></div>
+    </div>
+  </section>
+
+  <section id="tab-progress">
+    <h2>Progress and mastery</h2>
+    <div class="card">
+      <p class="muted" style="margin-top:0">Each capability is shown separately. A concept may be recalled
+        accurately and still not understood, and the state says which.</p>
+      <div id="progress-states" class="muted">—</div>
+    </div>
+  </section>
+
+  <section id="tab-persistence">
+    <h2>Persistence and recovery</h2>
+    <div class="card">
+      <div id="persist-status" class="muted">—</div>
+    </div>
+    <div class="card">
+      <h2 style="margin-top:0">How to verify the state survives a restart</h2>
+      <pre>1. Stop the application (Ctrl-C).
+2. Start it again:  ./gradlew :matrix-core:quarkusRun
+3. Open this page:  http://localhost:9091/workbench/
+The counts below are read back from the store on disk by this new process.</pre>
+    </div>
+  </section>
+</main>
+
+<script>
+const API = '/v1/workbench';
+const WS = 'photosynthesis';
+let dataset = null;
+
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+async function api(path, options) {
+  const res = await fetch(API + path, options);
+  const text = await res.text();
+  let body = null;
+  try { body = text ? JSON.parse(text) : null; } catch (e) { body = { raw: text }; }
+  if (!res.ok) throw new Error((body && body.error) || ('HTTP ' + res.status));
+  return body;
+}
+
+document.querySelectorAll('nav button').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('section').forEach(s => s.classList.remove('active'));
+    btn.classList.add('active');
+    $('tab-' + btn.dataset.tab).classList.add('active');
+    if (btn.dataset.tab === 'knowledge') loadKnowledge();
+    if (btn.dataset.tab === 'assess') loadAssessment();
+    if (btn.dataset.tab === 'progress') loadProgress();
+  });
+});
+
+async function loadStatus() {
+  try {
+    const s = await api('/status');
+    $('hdr-workspace').textContent = 'workspace: ' + (s.workspaces.join(', ') || 'none loaded');
+    $('hdr-storage').textContent = 'storage: ' + s.schemaVersion + ' · ' + s.sizeBytes + ' bytes · ' + s.exists;
+    $('persist-status').innerHTML =
+      '<table><tr><th>Database</th><td>' + esc(s.databasePath) + '</td></tr>' +
+      '<tr><th>Exists</th><td>' + s.exists + '</td></tr>' +
+      '<tr><th>Size</th><td>' + s.sizeBytes + ' bytes</td></tr>' +
+      '<tr><th>Schema version</th><td>' + s.schemaVersion + '</td></tr>' +
+      '<tr><th>Workspaces</th><td>' + esc((s.workspaces || []).join(', ') || 'none') + '</td></tr></table>' +
+      '<pre>' + esc(JSON.stringify(s.counts, null, 2)) + '</pre>';
+    const counts = (s.counts || {})[WS];
+    $('dash-metrics').innerHTML = counts ? [
+      ['Concepts', counts.concepts], ['Claims', counts.claims], ['Sources', counts.sources],
+      ['Evidence links', counts.evidence], ['Representations', counts.representations],
+      ['Revisions', counts.revisions], ['Assessments', counts.assessmentOutcomes]
+    ].map(([k, v]) => '<div class="metric"><div class="v">' + v + '</div><div class="k">' + k + '</div></div>').join('')
+      : '<div class="metric"><div class="v">0</div><div class="k">no workspace loaded</div></div>';
+  } catch (e) {
+    $('hdr-storage').textContent = 'storage: unavailable — ' + e.message;
+  }
+}
+
+$('btn-load').addEventListener('click', async () => {
+  $('btn-load').disabled = true;
+  try {
+    const r = await api('/workspaces/' + WS + '/load', { method: 'POST' });
+    $('load-note').textContent = 'Loaded ' + r.concepts + ' concepts, ' + r.claims + ' claims, ' +
+      r.sources + ' sources, ' + r.representations + ' representations.';
+    await loadStatus();
+    await loadKnowledge();
+  } catch (e) {
+    $('load-note').textContent = 'Could not load the pack: ' + e.message;
+  } finally {
+    $('btn-load').disabled = false;
+  }
+});
+
+$('btn-ask').addEventListener('click', async () => {
+  const q = $('ask-q').value.trim();
+  if (!q) return;
+  const out = $('ask-result');
+  out.innerHTML = '<span class="muted">Thinking…</span>';
+  try {
+    const a = await api('/workspaces/' + WS + '/ask', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ question: q, level: $('ask-level').value })
+    });
+    if (!a.answered) {
+      out.innerHTML = '<div class="card warn"><h2 style="margin-top:0">No answer</h2>' +
+        '<div>' + esc(a.abstentionReason) + '</div>' +
+        '<p class="muted">Terms this workspace does not cover: ' + esc((a.unmatchedTerms || []).join(', ')) + '</p></div>';
+    } else {
+      out.innerHTML = '<div class="card good"><h2 style="margin-top:0">Answer at ' + esc(a.level) + ' level</h2>' +
+        '<div class="answer">' + esc(a.statement) + '</div>' +
+        '<p class="muted">Confidence ' + a.confidence + ' · concepts: ' +
+        esc((a.concepts || []).map(c => c.name).join(', ')) + '</p></div>' +
+        (a.claims && a.claims.length ? '<div class="card"><h2 style="margin-top:0">Supporting claims</h2>' +
+          a.claims.map(c => '<div><span class="tag ' + esc(c.status) + '">' + esc(c.status) + '</span>' +
+          esc(c.proposition) + '<div class="muted">scope: ' + esc(c.scope || 'unstated') + '</div></div>').join('') +
+          '</div>' : '') +
+        (a.sources && a.sources.length ? '<div class="card"><h2 style="margin-top:0">Sources</h2>' +
+          a.sources.map(s => '<div><div>' + esc(s.title) + '</div><div class="muted">' + esc(s.locator) + '</div></div>').join('') +
+          '</div>' : '') +
+        (a.limitations && a.limitations.length ? '<div class="card warn"><h2 style="margin-top:0">Limitations</h2>' +
+          a.limitations.map(l => '<div>· ' + esc(l) + '</div>').join('') + '</div>' : '');
+    }
+    const gaps = await api('/workspaces/' + WS + '/gaps?question=' + encodeURIComponent(q));
+    $('ask-gap').innerHTML = '<div>Terms of the question nothing covers: <strong>' +
+      esc((gaps.uncoveredTerms || []).join(', ') || 'none') + '</strong></div>' +
+      '<div class="muted">Concepts represented but without an established claim: ' +
+      esc((gaps.conceptsWithoutEstablishedClaims || []).join(', ') || 'none') + '</div>';
+  } catch (e) {
+    out.innerHTML = '<div class="card bad">' + esc(e.message) + '</div>';
+  }
+});
+
+async function loadKnowledge() {
+  try {
+    const [concepts, claims, reprs, sources, revs] = await Promise.all([
+      api('/workspaces/' + WS + '/concepts'), api('/workspaces/' + WS + '/claims'),
+      api('/workspaces/' + WS + '/representations'), api('/workspaces/' + WS + '/sources'),
+      api('/workspaces/' + WS + '/revisions')
+    ]);
+    $('k-concepts').innerHTML = concepts.map(c =>
+      '<div><strong>' + esc(c.name) + '</strong> <span class="muted">' + esc(c.domain || '') + '</span>' +
+      '<div class="muted">' + esc(c.definition || '') + '</div></div>').join('');
+    $('k-claims').innerHTML = '<table><tr><th>Status</th><th>Claim</th><th>Scope</th><th>Confidence</th></tr>' +
+      claims.map(c => '<tr><td><span class="tag ' + esc(c.status) + '">' + esc(c.status) + '</span></td><td>' +
+        esc(c.proposition) + '</td><td class="muted">' + esc(c.scope || '—') + '</td><td>' + c.confidence +
+        '</td></tr>').join('') + '</table>';
+    $('k-reprs').innerHTML = reprs.map(r =>
+      '<div style="margin-bottom:10px"><span class="tag">' + esc(r.level) + '</span>' +
+      '<div>' + esc(r.statement) + '</div>' +
+      '<div class="muted">assumes: ' + esc((r.assumptions || []).join('; ') || '—') +
+      ' · omits: ' + esc((r.omitted || []).join('; ') || '—') +
+      ' · valid when: ' + esc((r.validityConditions || []).join('; ') || '—') + '</div>' +
+      (r.refinesRepresentationId ? '<div class="muted">refines: ' + esc(r.refinesRepresentationId) + '</div>' : '') +
+      '</div>').join('');
+    $('k-sources').innerHTML = sources.map(s =>
+      '<div style="margin-bottom:10px"><strong>' + esc(s.title) + '</strong> ' +
+      '<span class="tag">' + esc(s.kind) + '</span>' +
+      '<div class="muted">' + esc(s.locator) + '</div>' +
+      '<div class="muted">authority ' + s.authority + ' · freshness ' + s.freshness + '</div></div>').join('');
+    $('dash-revisions').innerHTML = revs.length ? revs.map(r =>
+      '<div style="margin-bottom:10px"><span class="tag">' + esc(r.kind) + '</span><div>' + esc(r.summary) + '</div>' +
+      '<div class="muted">added: ' + esc((r.addedFacts || []).join('; ')) + '</div>' +
+      '<div class="muted">no longer applies: ' + esc((r.noLongerValidAssumptions || []).join('; ')) + '</div>' +
+      '<div class="muted">now explains: ' + esc((r.newlyExplainedCases || []).join('; ')) + '</div></div>').join('')
+      : 'No revisions recorded.';
+  } catch (e) {
+    $('k-concepts').innerHTML = '<span class="muted">' + esc(e.message) + '</span>';
+  }
+}
+
+async function loadAssessment() {
+  try {
+    dataset = await api('/workspaces/' + WS + '/assessment');
+    $('assess-meta').textContent = 'Dataset ' + dataset.datasetId + ' v' + dataset.version +
+      ' · ' + dataset.items.length + ' items (' +
+      dataset.items.filter(i => i.heldOut).length + ' held out)';
+    $('assess-items').innerHTML = dataset.items.map(i =>
+      '<div style="border-bottom:1px solid var(--line); padding:10px 0">' +
+      '<div><span class="tag">' + esc(i.dimension) + '</span>' +
+      (i.heldOut ? '<span class="tag">held out</span>' : '<span class="tag">training</span>') +
+      (i.critical ? '<span class="tag REFUTED">critical</span>' : '') + '</div>' +
+      '<div style="margin:6px 0">' + esc(i.prompt) + '</div>' +
+      '<textarea data-item="' + esc(i.id) + '" placeholder="Your answer…"></textarea>' +
+      '<div class="row"><input type="text" data-conf="' + esc(i.id) + '" value="0.7" style="width:110px" ' +
+      'title="How confident are you? (0 to 1)"><button class="ghost" data-submit="' + esc(i.id) + '">Submit</button>' +
+      '<span data-result="' + esc(i.id) + '" class="muted"></span></div></div>').join('');
+    document.querySelectorAll('[data-submit]').forEach(btn => {
+      btn.addEventListener('click', () => submit(btn.dataset.submit));
+    });
+  } catch (e) {
+    $('assess-meta').textContent = 'Could not load the dataset: ' + e.message;
+  }
+}
+
+async function submit(itemId) {
+  const answerBox = document.querySelector('[data-item="' + itemId + '"]');
+  const confBox = document.querySelector('[data-conf="' + itemId + '"]');
+  const resultBox = document.querySelector('[data-result="' + itemId + '"]');
+  resultBox.textContent = 'Grading…';
+  try {
+    const r = await api('/workspaces/' + WS + '/assess', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ itemId, answer: answerBox.value, confidence: parseFloat(confBox.value) || 0,
+                             sessionId: 'ui' })
+    });
+    const o = r.outcome;
+    resultBox.className = o.correct ? 'good' : 'bad';
+    resultBox.innerHTML = o.correct
+      ? 'Correct — score ' + o.score + ', confidence claimed ' + o.claimedConfidence
+      : 'Not correct — score ' + o.score + '. The terms the answer was missing are shown on the item.';
+    await loadProgress();
+    await loadStatus();
+  } catch (e) {
+    resultBox.textContent = e.message;
+  }
+}
+
+async function loadProgress() {
+  try {
+    const p = await api('/workspaces/' + WS + '/learning-state');
+    if (!p.states.length) {
+      $('progress-states').innerHTML = '<span class="muted">No assessment has been recorded yet. ' +
+        'Answer an item on the Assess tab and the state will appear here.</span>';
+      return;
+    }
+    const byConcept = {};
+    p.states.forEach(s => {
+      (byConcept[s.conceptId] = byConcept[s.conceptId] || []).push(s);
+    });
+    $('progress-states').innerHTML = Object.entries(byConcept).map(([cid, states]) =>
+      '<div style="margin-bottom:14px"><strong>' + esc(states[0].conceptId) + '</strong>' +
+      '<table><tr><th>Dimension</th><th>Stage</th><th>Score</th><th>Evidence</th><th>Note</th></tr>' +
+      states.map(s => '<tr><td>' + esc(s.dimension) + '</td>' +
+        '<td><span class="tag ' + esc(s.stage) + '">' + esc(s.stage) + '</span></td>' +
+        '<td>' + s.score + '</td><td>' + s.evidenceCount + ' outcome(s), ' + s.variantCount + ' variant(s)' +
+        (s.heldOutCount ? ', ' + s.heldOutCount + ' held out' : '') + '</td>' +
+        '<td class="muted">' + esc(s.note) + '</td></tr>').join('') + '</table></div>').join('');
+  } catch (e) {
+    $('progress-states').innerHTML = '<span class="muted">' + esc(e.message) + '</span>';
+  }
+}
+
+loadStatus();
+</script>
+</body>
+</html>

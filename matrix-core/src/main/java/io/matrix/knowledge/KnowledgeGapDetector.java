@@ -32,6 +32,11 @@ public final class KnowledgeGapDetector {
         this.retriever = new KnowledgeRetriever(snapshot);
     }
 
+    /** The workspace this detector examines. */
+    public KnowledgeSnapshot snapshot() {
+        return snapshot;
+    }
+
     /** The terms of a question that nothing in the workspace covers. */
     public List<String> uncoveredTerms(String question) {
         return List.copyOf(retriever.unmatchedTerms(question));

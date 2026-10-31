@@ -1,0 +1,233 @@
+{
+  "dataset": {
+    "id": "photosynthesis-v1",
+    "version": 1,
+    "description": "The baseline and evaluation set for photosynthesis, respiration and plant gas exchange. Each capability is probed by a PAIR of items: one that may be used while learning and one held-out variant that may not. The held-out items are the independent measurement, so the post-learning result is not a re-reading of what was practised."
+  },
+  "items": [
+    {
+      "id": "t-recall-1",
+      "concept": "Photosynthesis",
+      "dimension": "RECALL",
+      "prompt": "What does photosynthesis use as its inputs, and what does it produce?",
+      "keyTerms": ["light", "carbon", "dioxide", "water", "sugar"],
+      "difficulty": 1,
+      "variant": "training",
+      "heldOut": false
+    },
+    {
+      "id": "e-recall-1",
+      "concept": "Photosynthesis",
+      "dimension": "RECALL",
+      "prompt": "Name the raw materials photosynthesis consumes and the main product it makes.",
+      "keyTerms": ["light", "carbon", "dioxide", "sugar"],
+      "difficulty": 1,
+      "variant": "held-out",
+      "heldOut": true
+    },
+    {
+      "id": "t-expl-1",
+      "concept": "Photosynthesis",
+      "dimension": "EXPLANATION",
+      "prompt": "Explain in your own words how photosynthesis and cellular respiration relate to each other.",
+      "keyTerms": ["sugar", "energy", "respiration", "photosynthesis"],
+      "difficulty": 2,
+      "variant": "training",
+      "heldOut": false
+    },
+    {
+      "id": "e-expl-1",
+      "concept": "Photosynthesis",
+      "dimension": "EXPLANATION",
+      "prompt": "Explain why a plant needs photosynthesis and cellular respiration rather than one of them alone.",
+      "keyTerms": ["sugar", "energy", "respiration", "photosynthesis"],
+      "difficulty": 2,
+      "variant": "held-out",
+      "heldOut": true
+    },
+    {
+      "id": "t-causal-1",
+      "concept": "Photosynthesis",
+      "dimension": "CAUSAL",
+      "prompt": "A plant is moved into a darker room. What happens to its gas exchange, and why?",
+      "keyTerms": ["light", "photosynthesis", "respiration"],
+      "difficulty": 2,
+      "variant": "training",
+      "heldOut": false
+    },
+    {
+      "id": "e-causal-1",
+      "concept": "Photosynthesis",
+      "dimension": "CAUSAL",
+      "prompt": "A plant is moved into a brighter room. Predict what happens to its oxygen release and explain.",
+      "keyTerms": ["light", "photosynthesis", "respiration", "oxygen"],
+      "difficulty": 2,
+      "variant": "held-out",
+      "heldOut": true
+    },
+    {
+      "id": "t-app-1",
+      "concept": "Photosynthesis",
+      "dimension": "APPLICATION",
+      "prompt": "A hot, dry day arrives. Predict the effect on photosynthesis and explain the mechanism.",
+      "keyTerms": ["stomata", "close", "carbon", "dioxide"],
+      "difficulty": 3,
+      "variant": "training",
+      "heldOut": false
+    },
+    {
+      "id": "e-app-1",
+      "concept": "Photosynthesis",
+      "dimension": "APPLICATION",
+      "prompt": "The water supply to a plant is cut off. What happens to the plant's oxygen production?",
+      "keyTerms": ["water", "oxygen", "photosynthesis"],
+      "difficulty": 2,
+      "variant": "held-out",
+      "heldOut": true
+    },
+    {
+      "id": "t-transfer-1",
+      "concept": "Photosynthesis",
+      "dimension": "TRANSFER",
+      "prompt": "A greenhouse operator can either raise the carbon dioxide concentration or add more light. Which do you expect to help more, and why?",
+      "keyTerms": ["carbon", "dioxide", "rubisco", "photorespiration"],
+      "difficulty": 3,
+      "variant": "training",
+      "heldOut": false
+    },
+    {
+      "id": "e-transfer-1",
+      "concept": "Photosynthesis",
+      "dimension": "TRANSFER",
+      "prompt": "The same operator now wants to reduce the water the crop loses while keeping the yield. What would you change, and what would follow?",
+      "keyTerms": ["stomata", "carbon", "dioxide", "water"],
+      "difficulty": 3,
+      "variant": "held-out",
+      "heldOut": true
+    },
+    {
+      "id": "t-eval-1",
+      "concept": "Photosynthesis",
+      "dimension": "EVALUATION",
+      "prompt": "An article says photosynthesis is the conversion of carbon dioxide into oxygen. Evaluate that claim.",
+      "keyTerms": ["water", "splitting", "carbon", "dioxide"],
+      "difficulty": 3,
+      "variant": "training",
+      "critical": true,
+      "heldOut": false
+    },
+    {
+      "id": "e-eval-1",
+      "concept": "Photosynthesis",
+      "dimension": "EVALUATION",
+      "prompt": "A leaflet claims that a plant releases the oxygen it takes in as carbon dioxide. Evaluate that statement.",
+      "keyTerms": ["water", "splitting", "oxygen"],
+      "difficulty": 3,
+      "variant": "held-out",
+      "critical": true,
+      "heldOut": true
+    },
+    {
+      "id": "t-ground-1",
+      "concept": "Photosynthesis",
+      "dimension": "GROUNDING",
+      "prompt": "Which source in this workspace is a peer-reviewed publication, and what does it support?",
+      "keyTerms": ["faculty", "review"],
+      "difficulty": 2,
+      "variant": "training",
+      "heldOut": false
+    },
+    {
+      "id": "e-ground-1",
+      "concept": "Photosynthesis",
+      "dimension": "GROUNDING",
+      "prompt": "Name the kind of source that supports the claim about RuBisCO oxygenation, and say how strong that kind of source is.",
+      "keyTerms": ["review", "publication", "peer"],
+      "difficulty": 2,
+      "variant": "held-out",
+      "heldOut": true
+    },
+    {
+      "id": "t-resp-1",
+      "concept": "Cellular respiration",
+      "dimension": "RECALL",
+      "prompt": "What does cellular respiration produce, and what does it need in order to do so?",
+      "keyTerms": ["atp", "oxygen", "energy"],
+      "difficulty": 1,
+      "variant": "training",
+      "heldOut": false
+    },
+    {
+      "id": "e-resp-1",
+      "concept": "Cellular respiration",
+      "dimension": "RECALL",
+      "prompt": "What is the main energy product of cellular respiration, and which gas does it consume?",
+      "keyTerms": ["atp", "oxygen"],
+      "difficulty": 1,
+      "variant": "held-out",
+      "heldOut": true
+    },
+    {
+      "id": "t-pr-expl-1",
+      "concept": "Photorespiration",
+      "dimension": "EXPLANATION",
+      "prompt": "Explain what photorespiration is and why it is described as wasteful.",
+      "keyTerms": ["rubisco", "oxygen", "energy", "carbon", "dioxide"],
+      "difficulty": 2,
+      "variant": "training",
+      "heldOut": false
+    },
+    {
+      "id": "e-pr-expl-1",
+      "concept": "Photorespiration",
+      "dimension": "EXPLANATION",
+      "prompt": "Explain the carbon and energy cost of photorespiration for the plant.",
+      "keyTerms": ["carbon", "dioxide", "energy", "rubisco"],
+      "difficulty": 3,
+      "variant": "held-out",
+      "heldOut": true
+    },
+    {
+      "id": "t-rub-eval-1",
+      "concept": "RuBisCO",
+      "dimension": "EVALUATION",
+      "prompt": "A text describes RuBisCO as the enzyme that fixes carbon dioxide, and says nothing else. Is that account complete?",
+      "keyTerms": ["oxygen", "oxygenation", "photorespiration"],
+      "difficulty": 3,
+      "variant": "training",
+      "critical": true,
+      "heldOut": false
+    },
+    {
+      "id": "e-rub-eval-1",
+      "concept": "RuBisCO",
+      "dimension": "EVALUATION",
+      "prompt": "A diagram labels RuBisCO simply 'the carbon dioxide fixer'. What has the diagram left out?",
+      "keyTerms": ["oxygen", "oxygenation", "photorespiration"],
+      "difficulty": 3,
+      "variant": "held-out",
+      "critical": true,
+      "heldOut": true
+    },
+    {
+      "id": "t-stom-1",
+      "concept": "Stomatal conductance",
+      "dimension": "APPLICATION",
+      "prompt": "Why does closing the stomata to conserve water also slow photosynthesis?",
+      "keyTerms": ["stomata", "carbon", "dioxide", "photosynthesis"],
+      "difficulty": 2,
+      "variant": "training",
+      "heldOut": false
+    },
+    {
+      "id": "e-stom-1",
+      "concept": "Stomatal conductance",
+      "dimension": "APPLICATION",
+      "prompt": "A grower raises the carbon dioxide in the greenhouse. Predict the effect on the stomata and on photosynthesis.",
+      "keyTerms": ["carbon", "dioxide", "stomata", "photosynthesis"],
+      "difficulty": 3,
+      "variant": "held-out",
+      "heldOut": true
+    }
+  ]
+}
