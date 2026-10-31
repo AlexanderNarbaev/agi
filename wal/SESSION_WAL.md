@@ -750,3 +750,57 @@ learner is trained on the training outcomes and measured on the held-out
 ones; the comparison with the deterministic grader is made and reported; the
 learned rule is distilled into an inspectable form; with no outcomes nothing
 is learned and nothing is claimed; and the learner is deterministic.
+
+### W40.6 — the episodic log restored: what the workspace was asked (2026-10-31)
+
+This is the capability the MIND-W3 branch had and `develop` lost: the
+episodic log was replayed, the recurring patterns were promoted to canonical
+identifiers so that paraphrases collapsed, and the entries that were no
+longer true were retired **by tombstone** rather than by deletion. The
+branch's own tests for it survive uncompiled at
+`docs-v2/quality/lost-capability-tests/`.
+
+What is here now, in the learning application:
+
+  - every ask is recorded, including the questions the workspace had to
+    refuse. A learning application that only remembers what it knew cannot
+    tell the user what it does not know;
+  - two wordings of the same question collapse onto ONE record. The key is
+    the sorted set of the question's folded content terms — not a hash, so
+    the collapse is visible and checkable;
+  - a question asked more than once and still unanswered is **promoted** into
+    the explicit list of recurring gaps;
+  - a question the workspace can now answer is marked RESOLVED and **kept**.
+    The gap did not stop existing because it was closed; the record of the
+    gap is the evidence that the workspace learned something. The resolution
+    survives a restart, so the gap is not rediscovered on every launch.
+
+**Measured, in the running application over HTTP:**
+
+  - two wordings of an unanswerable question → one record, `timesAsked` 2,
+    uncovered terms `[extinction, coefficient, antenna, pigment]`;
+  - consolidation → open 1, promoted 1, with the note that it had been asked
+    twice and was still unanswered;
+  - a correction that adds the measured extinction coefficient to the claim
+    about the light-harvesting complex → the question becomes answerable;
+  - consolidation again → open 0, resolved 1, and the record is still there,
+    with its uncovered terms and the note that the workspace can answer it
+    now.
+
+The store moves to schema version 3, with a migration from version 2 that
+creates the table and its two indexes. The Progress screen of the workbench
+shows the log and a button that consolidates it. The endpoints are
+`GET /v1/workbench/workspaces/{id}/questions` and
+`POST /v1/workbench/workspaces/{id}/questions/consolidate`.
+
+Tested (5 tests): two wordings collapse onto one record; an unanswerable
+question is recorded with what was uncovered; a question asked more than
+once and still unanswered is promoted into the gaps; a question that becomes
+answerable is resolved **and kept**; and the log survives a restart.
+
+**One correction to an earlier finding.** The first version of this test
+chose the question "What is the quantum yield of photosystem one?" and found
+that the workspace ANSWERED it, because the IDF weighting lets one rare
+term carry the coverage threshold. That is the retriever behaving as
+designed — the rare term is the specific one — and it is recorded here
+because the first reading of it, "the question is a gap", was wrong.
