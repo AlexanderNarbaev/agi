@@ -12,6 +12,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -52,7 +53,7 @@ import java.util.Set;
 public final class KnowledgeStore implements AutoCloseable {
 
     /** The schema version this build writes. */
-    public static final int SCHEMA_VERSION = 2;
+    public static final int SCHEMA_VERSION = 3;
 
     private static final ObjectMapper JSON = new ObjectMapper();
 
@@ -234,6 +235,31 @@ public final class KnowledgeStore implements AutoCloseable {
     }
 
     private int migrateFrom(int version) throws SQLException {
+        if (version == 2) {
+            // v3 adds the episodic log of the questions the workspace was
+            // asked. A learning application needs to know what it was asked
+            // and could not answer, or it cannot show the user what it does
+            // not know.
+            try (Statement st = connection.createStatement()) {
+                st.execute("""
+                    CREATE TABLE IF NOT EXISTS asked_question (
+                        id TEXT PRIMARY KEY,
+                        workspace_id TEXT NOT NULL,
+                        canonical_key TEXT NOT NULL,
+                        question TEXT NOT NULL,
+                        uncovered_terms TEXT NOT NULL,
+                        times_asked INTEGER NOT NULL,
+                        first_asked_at INTEGER NOT NULL,
+                        last_asked_at INTEGER NOT NULL,
+                        status TEXT NOT NULL,
+                        resolution_note TEXT
+                    )""");
+                st.execute("CREATE INDEX IF NOT EXISTS idx_asked_ws ON asked_question(workspace_id)");
+                st.execute("CREATE INDEX IF NOT EXISTS idx_asked_key ON asked_question(workspace_id, canonical_key)");
+            }
+            writeSchemaVersion(3);
+            return 3;
+        }
         if (version == 1) {
             // v2 adds the assessment history: the learning state must
             // survive a restart, and the state is derived from the recorded
@@ -731,6 +757,110 @@ public final class KnowledgeStore implements AutoCloseable {
             ps.setString(11, writeJson(rev.evidenceIds()));
             ps.setString(12, rev.recordedAt());
             ps.executeUpdate();
+        }
+    }
+
+    // ── the episodic log of asked questions ───────────────────────────────────
+
+    /**
+     * Record that a question was asked, and fold it into the record of its
+     * canonical key.
+     *
+     * <p>Two wordings of the same question share one record: the count
+     * grows, the earliest asking is kept, and the most recent wording is
+     * kept because it is the one the user last used.
+     */
+    public AskedQuestion recordAskedQuestion(String workspaceId, String question,
+                                             List<String> uncoveredTerms, long askedAt) {
+        String key = QuestionConsolidator.canonicalKey(question);
+        String id = Ids.askedQuestion(workspaceId, key);
+        try (PreparedStatement ps = connection.prepareStatement(
+                "SELECT times_asked, first_asked_at, last_asked_at, status, resolution_note "
+                        + "FROM asked_question WHERE id = ?")) {
+            ps.setString(1, id);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    int times = rs.getInt("times_asked") + 1;
+                    long first = rs.getLong("first_asked_at");
+                    AskedQuestion.Status status = AskedQuestion.Status.valueOf(rs.getString("status"));
+                    String note = rs.getString("resolution_note");
+                    try (PreparedStatement update = connection.prepareStatement(
+                            "UPDATE asked_question SET question = ?, uncovered_terms = ?, "
+                                    + "times_asked = ?, last_asked_at = ?, status = ?, "
+                                    + "resolution_note = ? WHERE id = ?")) {
+                        update.setString(1, question);
+                        update.setString(2, writeJson(uncoveredTerms));
+                        update.setInt(3, times);
+                        update.setLong(4, askedAt);
+                        update.setString(5, status.name());
+                        update.setString(6, note);
+                        update.setString(7, id);
+                        update.executeUpdate();
+                    }
+                    return new AskedQuestion(id, workspaceId, key, question, uncoveredTerms,
+                            times, Instant.ofEpochMilli(first).toString(),
+                            Instant.ofEpochMilli(askedAt).toString(), status, note);
+                }
+            }
+        } catch (SQLException e) {
+            throw new IllegalStateException("Failed to read the asked question", e);
+        }
+        try (PreparedStatement ps = connection.prepareStatement(
+                "INSERT INTO asked_question(id, workspace_id, canonical_key, question, "
+                        + "uncovered_terms, times_asked, first_asked_at, last_asked_at, status, "
+                        + "resolution_note) VALUES (?,?,?,?,?,?,?,?,?,?)")) {
+            ps.setString(1, id);
+            ps.setString(2, workspaceId);
+            ps.setString(3, key);
+            ps.setString(4, question);
+            ps.setString(5, writeJson(uncoveredTerms));
+            ps.setInt(6, 1);
+            ps.setLong(7, askedAt);
+            ps.setLong(8, askedAt);
+            ps.setString(9, AskedQuestion.Status.OPEN.name());
+            ps.setString(10, null);
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            throw new IllegalStateException("Failed to record the asked question", e);
+        }
+        return new AskedQuestion(id, workspaceId, key, question, uncoveredTerms, 1,
+                Instant.ofEpochMilli(askedAt).toString(), Instant.ofEpochMilli(askedAt).toString(),
+                AskedQuestion.Status.OPEN, null);
+    }
+
+    /** The asked questions of a workspace, most recently asked first. */
+    public List<AskedQuestion> askedQuestions(String workspaceId) {
+        return query("SELECT id, workspace_id, canonical_key, question, uncovered_terms, "
+                + "times_asked, first_asked_at, last_asked_at, status, resolution_note "
+                + "FROM asked_question WHERE workspace_id = ? ORDER BY times_asked DESC, "
+                + "last_asked_at DESC", workspaceId, rs -> new AskedQuestion(
+                rs.getString("id"), rs.getString("workspace_id"), rs.getString("canonical_key"),
+                rs.getString("question"), readJsonList(rs.getString("uncovered_terms")),
+                rs.getInt("times_asked"),
+                Instant.ofEpochMilli(rs.getLong("first_asked_at")).toString(),
+                Instant.ofEpochMilli(rs.getLong("last_asked_at")).toString(),
+                AskedQuestion.Status.valueOf(rs.getString("status")),
+                rs.getString("resolution_note")));
+    }
+
+    /**
+     * Mark a question resolved.
+     *
+     * <p>The record is kept. A question that was once unanswerable and now
+     * is not is evidence that the workspace learned something, and deleting
+     * it would throw that evidence away.
+     */
+    public void resolveAskedQuestion(String workspaceId, String canonicalKey, String note) {
+        try (PreparedStatement ps = connection.prepareStatement(
+                "UPDATE asked_question SET status = ?, resolution_note = ? "
+                        + "WHERE workspace_id = ? AND canonical_key = ?")) {
+            ps.setString(1, AskedQuestion.Status.RESOLVED.name());
+            ps.setString(2, note);
+            ps.setString(3, workspaceId);
+            ps.setString(4, canonicalKey);
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            throw new IllegalStateException("Failed to resolve the asked question", e);
         }
     }
 

@@ -193,6 +193,14 @@
         accurately and still not understood, and the state says which.</p>
       <div id="progress-states" class="muted">—</div>
     </div>
+    <div class="card">
+      <p class="muted" style="margin-top:0">What the workspace was asked and could not answer. Two wordings of the
+        same question are one record, so the count is a count of questions, not of wordings. A question the
+        workspace can now answer is marked <em>resolved</em> and kept — the record of the gap is the evidence
+        that something was learned.</p>
+      <button id="consolidate-questions" class="btn">Consolidate the asked questions</button>
+      <div id="progress-questions" class="muted">—</div>
+    </div>
   </section>
 
   <section id="tab-persistence">
@@ -236,7 +244,7 @@ document.querySelectorAll('nav button').forEach(btn => {
     if (btn.dataset.tab === 'knowledge') loadKnowledge();
     if (btn.dataset.tab === 'assess') loadAssessment();
     if (btn.dataset.tab === 'teach') loadConceptsForTeaching();
-    if (btn.dataset.tab === 'progress') loadProgress();
+    if (btn.dataset.tab === 'progress') { loadProgress(); loadQuestions(); }
   });
 });
 
@@ -534,6 +542,41 @@ async function loadProgress() {
     $('progress-states').innerHTML = '<span class="muted">' + esc(e.message) + '</span>';
   }
 }
+
+async function loadQuestions() {
+  try {
+    const q = await api('/workspaces/' + WS + '/questions');
+    if (!q.length) {
+      $('progress-questions').innerHTML = '<span class="muted">Nothing has been asked yet. Ask a question on the ' +
+        'Ask tab — including one the workspace cannot answer — and it will appear here.</span>';
+      return;
+    }
+    $('progress-questions').innerHTML = '<table><tr><th>Question</th><th>Asked</th><th>Uncovered terms</th>' +
+      '<th>Status</th></tr>' + q.map(r => '<tr><td>' + esc(r.question) + '</td>' +
+        '<td>' + r.timesAsked + ' time(s)</td>' +
+        '<td class="muted">' + (r.uncoveredTerms || []).map(esc).join(', ') + '</td>' +
+        '<td><span class="tag ' + (r.status === 'OPEN' ? 'PRACTICE' : 'COMPETENCE') + '">' + esc(r.status) +
+        '</span></td></tr>').join('') + '</table>';
+  } catch (e) {
+    $('progress-questions').innerHTML = '<span class="muted">' + esc(e.message) + '</span>';
+  }
+}
+
+$('consolidate-questions').addEventListener('click', async () => {
+  const btn = $('consolidate-questions');
+  btn.disabled = true;
+  try {
+    const r = await api('/workspaces/' + WS + '/questions/consolidate', { method: 'POST' });
+    $('progress-questions').innerHTML = '<p>' + r.resolvedQuestions + ' resolved, ' + r.openQuestions +
+      ' still open, ' + r.promotedGaps + ' promoted to a recurring gap.</p>' +
+      (r.notes && r.notes.length ? '<ul>' + r.notes.map(n => '<li>' + esc(n) + '</li>').join('') + '</ul>' : '');
+    await loadQuestions();
+  } catch (e) {
+    $('progress-questions').innerHTML = '<span class="muted">' + esc(e.message) + '</span>';
+  } finally {
+    btn.disabled = false;
+  }
+});
 
 loadStatus();
 </script>

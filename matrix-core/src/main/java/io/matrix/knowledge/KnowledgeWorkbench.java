@@ -110,10 +110,19 @@ public class KnowledgeWorkbench implements AutoCloseable {
         return cached;
     }
 
-    /** Ask a question of a workspace. */
+    /**
+     * Ask a question of a workspace.
+     *
+     * <p>The asking is recorded, including the questions the workspace had
+     * to refuse: a learning application that only remembers what it knew
+     * cannot tell the user what it does not know. The record is a tombstone
+     * log - it is kept when the question becomes answerable.
+     */
     public Answer ask(String workspaceId, String question, AbstractionLevel level) {
         KnowledgeSnapshot snapshot = workspace(workspaceId);
-        return new KnowledgeRetriever(snapshot).answer(question, level);
+        Answer answer = new KnowledgeRetriever(snapshot).answer(question, level);
+        recordAsk(workspaceId, question, answer.unmatchedTerms());
+        return answer;
     }
 
     /** What the workspace does not know. */
@@ -189,6 +198,51 @@ public class KnowledgeWorkbench implements AutoCloseable {
         KnowledgeSnapshot snapshot = workspace(workspaceId);
         TeachingComposer composer = new TeachingComposer(snapshot, dataset(workspaceId));
         return composer.compose(conceptId, level);
+    }
+
+    /**
+     * The questions the workspace was asked and could not answer.
+     *
+     * <p>This is the workspace's episodic log, reduced to what a learner
+     * needs: what it does not know, and how often it was asked.
+     */
+    public List<AskedQuestion> askedQuestions(String workspaceId) {
+        return store().askedQuestions(workspaceId);
+    }
+
+    /**
+     * Consolidate the episodic log.
+     *
+     * <p>A question the workspace can now answer is marked RESOLVED and
+     * KEPT - the record of the gap is the evidence that the workspace
+     * learned something. A question asked more than once and still
+     * unanswered is promoted into the explicit list of gaps.
+     */
+    public QuestionConsolidator.ConsolidationReport consolidateQuestions(String workspaceId) {
+        List<AskedQuestion> asked = store.askedQuestions(workspaceId);
+        QuestionConsolidator.ConsolidationReport report =
+                new QuestionConsolidator().consolidate(asked, new KnowledgeRetriever(workspace(workspaceId)));
+
+        // The resolutions are written back, so that the tombstone survives a
+        // restart and the gap is not rediscovered on every launch.
+        for (AskedQuestion resolved : report.resolved()) {
+            if (resolved.status() == AskedQuestion.Status.RESOLVED) {
+                store.resolveAskedQuestion(workspaceId, resolved.canonicalKey(),
+                        resolved.resolutionNote());
+            }
+        }
+        return report;
+    }
+
+    /**
+     * Record that a question was asked, and whether it was answered.
+     *
+     * <p>Called by the ask path, so that the workspace learns what it was
+     * asked - including the questions it had to refuse.
+     */
+    public AskedQuestion recordAsk(String workspaceId, String question, List<String> uncoveredTerms) {
+        return store.recordAskedQuestion(workspaceId, question, uncoveredTerms,
+                System.currentTimeMillis());
     }
 
     /**

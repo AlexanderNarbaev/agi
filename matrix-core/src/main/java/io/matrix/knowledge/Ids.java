@@ -43,6 +43,11 @@ public final class Ids {
         return "r-" + digest(workspaceId + "|" + conceptId + "|" + level + "|" + statement);
     }
 
+    /** The deterministic id of an asked question, keyed by its canonical form. */
+    public static String askedQuestion(String workspaceId, String canonicalKey) {
+        return slug("aq-" + workspaceId + "-" + canonicalKey);
+    }
+
     public static String revision(String workspaceId, String targetId,
                                   RevisionKind kind, String summary) {
         return "rev-" + digest(workspaceId + "|" + targetId + "|" + kind + "|" + summary);

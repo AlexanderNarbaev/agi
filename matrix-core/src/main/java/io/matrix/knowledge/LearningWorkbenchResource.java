@@ -271,6 +271,27 @@ public class LearningWorkbenchResource {
     }
 
     /**
+     * The questions the workspace was asked and could not answer.
+     *
+     * <p>Two wordings of the same question collapse onto one record, so the
+     * count is a count of questions asked, not of wordings used.
+     */
+    @GET
+    @Path("/workspaces/{id}/questions")
+    public Response questions(@PathParam("id") String workspaceId) {
+        return Response.ok(workbench.askedQuestions(workspaceId)).build();
+    }
+
+    /**
+     * Consolidate the episodic log of asked questions.
+     */
+    @POST
+    @Path("/workspaces/{id}/questions/consolidate")
+    public Response consolidateQuestions(@PathParam("id") String workspaceId) {
+        return Response.ok(workbench.consolidateQuestions(workspaceId)).build();
+    }
+
+    /**
      * The supervised learner over the learner's own answers.
      *
      * <p>The measurement compares the learned rule with the deterministic
