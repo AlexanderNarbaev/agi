@@ -119,6 +119,38 @@
       "old": "sequence    |-> seq,",
       "new": "sequence    |-> seq + 1,",
       "expect": "KILLED"
+    },
+    {
+      "id": "KnowledgeLifecycle-established-without-evidence",
+      "spec": "KnowledgeLifecycle",
+      "why": "A refinement must not leave a claim established with nothing behind it. Dropping the evidence the refinement attaches must make EvidenceRequired fail.",
+      "old": "/\\ evidence' = [evidence EXCEPT ![new] = {s}]",
+      "new": "/\\ evidence' = evidence",
+      "expect": "KILLED"
+    },
+    {
+      "id": "KnowledgeLifecycle-no-revision-recorded",
+      "spec": "KnowledgeLifecycle",
+      "why": "Every change must leave a revision that says what changed. Dropping the revision must make RevisionRecorded fail.",
+      "old": "/\\ revisions' = revisions \\cup {<<old, new>>}",
+      "new": "/\\ revisions' = revisions",
+      "expect": "KILLED"
+    },
+    {
+      "id": "KnowledgeLifecycle-superseded-claim-rewritten",
+      "spec": "KnowledgeLifecycle",
+      "why": "A correction must not rewrite what was believed. Letting the refinement change the text of the superseded claim must make SupersededKeepsProposition fail.",
+      "old": "/\\ proposition' = proposition",
+      "new": "/\\ proposition' = [proposition EXCEPT ![old] = \"rewritten\"]",
+      "expect": "KILLED"
+    },
+    {
+      "id": "KnowledgeLifecycle-draft-claim-can-be-superseded",
+      "spec": "KnowledgeLifecycle",
+      "why": "A claim with no evidence cannot be superseded: the superseded status is itself an established one. Widening the guard to allow a DRAFT claim must make EvidenceRequired fail - the gap the model found in its own first version.",
+      "old": "/\\ status[old] \\in Established",
+      "new": "/\\ status[old] \\in Established \\cup {Draft}",
+      "expect": "KILLED"
     }
   ]
 }

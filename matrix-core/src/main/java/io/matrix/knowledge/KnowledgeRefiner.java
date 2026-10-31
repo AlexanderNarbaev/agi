@@ -81,6 +81,15 @@ public final class KnowledgeRefiner {
                 throw new IllegalArgumentException(
                         "the superseded claim belongs to a different concept");
             }
+            // A claim with nothing behind it cannot be superseded: the
+            // superseded status is itself an established one, and the store
+            // refuses an established claim with no evidence. The check is
+            // here so that the refusal says why.
+            if (!hasEvidence(snapshot, superseded.id())) {
+                throw new IllegalArgumentException(
+                        "the superseded claim carries no evidence, and a claim with no evidence "
+                                + "cannot be superseded");
+            }
         }
 
         int version = superseded == null ? 1 : superseded.version() + 1;
@@ -166,6 +175,10 @@ public final class KnowledgeRefiner {
 
         return new KnowledgeChanges(List.of(source), claims, List.of(evidence), representations,
                 List.of(revision));
+    }
+
+    private static boolean hasEvidence(KnowledgeSnapshot snapshot, String claimId) {
+        return snapshot.evidence().stream().anyMatch(e -> e.claimId().equals(claimId));
     }
 
     private static Concept concept(KnowledgeSnapshot snapshot, String conceptId) {

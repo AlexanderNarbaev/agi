@@ -9,7 +9,7 @@ only, and the Java-side "formal gate" (`TlaSpecSmokeTest`) is a **text-level**
 smoke test that passes on files the TLA+ parser rejects. Nine specifications
 had therefore never been parsed by a TLA+ parser at all.
 
-**Current state: all nine specifications parse, all nine are model-checked,
+**Current state: all ten specifications parse, all ten are model-checked,
 and every configured property holds.** The five specifications that carried a
 recorded property failure have been resolved against the Java implementations
 they model — see §"The five recorded failures, and how each was resolved".
@@ -49,9 +49,25 @@ Two toolchain facts that are easy to get wrong:
 | `HashChain` | 127 882 / 20 440 | `TypeOK`, `VerifiedImpliesIntact` (invariants); `ChainMonotonic`, `LastHashConsistent`, `AppendKeepsChainValid`, `TamperDetected`, `RestoreVerifies` (properties) |
 | `ConjugateBudgeterDP` | 381 / 91 | all six module properties |
 | `FrozenEthicalFNL` | 65 / 16 | all five module properties |
+| `KnowledgeLifecycle` | 432 / 216 | `EvidenceRequired`, `SupersededKeepsProposition`, `RevisionRecorded`, `SingleSuperseder`, `RepresentationChainAcyclic` (invariants); `EvidenceAlways`, `PropositionAlways`, `RevisionAlways`, `SupersederAlways` (properties) |
 
 No specification is syntax-checked only, and no property is recorded as
-failing. The `MctsLatsVisit` state space is unchanged by the argmax work —
+failing.
+
+`KnowledgeLifecycle` was added in RECON-W40, when the learning application
+gave the repository its first claims, evidence and revisions. It models the
+four promises the Java makes: a claim may only assert an established status
+if evidence supports it; a correction does not destroy what was believed;
+every change leaves a revision; and the account the reader is given at a
+level is the one that nothing at that level refines.
+
+**The model found a gap in the Java before the Java was tested for it.** The
+first version of the model allowed a DRAFT claim to be superseded. TLC
+reported a violation of `EvidenceRequired`: a superseded claim is itself an
+established status, so it would need evidence it does not have — which is
+exactly the change the Java's store refuses. The model's guard was
+tightened to `Established`, and `KnowledgeRefiner` now pre-checks the same
+rule so that the refusal says why instead of failing later in the store. The `MctsLatsVisit` state space is unchanged by the argmax work —
 the check became real rather than the model becoming bigger.
 
 ## The five recorded failures, and how each was resolved

@@ -125,6 +125,81 @@ specifications:
       - "K_MAX is modelled at 2, not at the Java's 20."
 
   # ───────────────────────────────────────────────────────────────────────────
+  - id: KnowledgeLifecycle
+    title: "The lifecycle of a learned claim — evidence, supersession, revision, refinement"
+    spec: formal/KnowledgeLifecycle.tla
+    config: formal/KnowledgeLifecycle.cfg
+    java:
+      module: matrix-core
+      sources:
+        - matrix-core/src/main/java/io/matrix/knowledge/KnowledgeStore.java
+        - matrix-core/src/main/java/io/matrix/knowledge/KnowledgeRefiner.java
+        - matrix-core/src/main/java/io/matrix/knowledge/KnowledgeChanges.java
+        - matrix-core/src/main/java/io/matrix/knowledge/KnowledgeSnapshot.java
+        - matrix-core/src/main/java/io/matrix/knowledge/Representations.java
+        - matrix-core/src/main/java/io/matrix/knowledge/Claim.java
+        - matrix-core/src/main/java/io/matrix/knowledge/Evidence.java
+        - matrix-core/src/main/java/io/matrix/knowledge/Representation.java
+        - matrix-core/src/main/java/io/matrix/knowledge/KnowledgeRevision.java
+      production_callers:
+        - matrix-core/src/main/java/io/matrix/knowledge/KnowledgeWorkbench.java
+        - matrix-core/src/main/java/io/matrix/knowledge/LearningWorkbenchResource.java
+      production_caller_status: PRODUCTION_PATH_VERIFIED
+    tests:
+      unit:
+        - matrix-core/src/test/java/io/matrix/knowledge/KnowledgeStoreTest.java
+        - matrix-core/src/test/java/io/matrix/knowledge/KnowledgeRefinerTest.java
+      integration:
+        - matrix-core/src/test/java/io/matrix/knowledge/KnowledgeWorkbenchTest.java
+    properties:
+      invariants: [EvidenceRequired, SupersededKeepsProposition, RevisionRecorded, SingleSuperseder, RepresentationChainAcyclic]
+      properties: [EvidenceAlways, PropositionAlways, RevisionAlways, SupersederAlways]
+    conformance:
+      status: [MODEL_CHECKED, JAVA_UNIT_VERIFIED, INTEGRATION_VERIFIED, PRODUCTION_PATH_VERIFIED]
+      gaps:
+        - code: ABSTRACTION
+          detail: >-
+            The model has ONE refinement action. The Java has three paths that
+            change what is known: a package import, which REPLACES the
+            workspace; an incremental change set, which upserts; and the
+            refiner, which supersedes. The model describes the third.
+        - code: ABSTRACTION
+          detail: >-
+            The model's evidence is a set of supporting sources. The Java's
+            evidence carries a RELATION — SUPPORTS or CONTRADICTS — so a claim
+            can be supported and contradicted at the same time, and the store's
+            rule admits both. The model has no contradicting relation, so it
+            cannot express a contested claim.
+        - code: VACUOUS_PROPERTY
+          detail: >-
+            SupersededKeepsProposition compares the proposition of a
+            superseded claim with the claim's own identity, because the
+            configuration format cannot carry a function of claims to strings.
+            The model therefore checks that a supersession does not REWRITE
+            the text; it does not check that two different claims do not share
+            one text. The Java's ids are deterministic over the proposition,
+            so the two coincide there.
+      corrected:
+        - code: SPECIFICATION_GAP
+          detail: >-
+            The first version of the model allowed a DRAFT claim to be
+            superseded. TLC found the resulting state violates
+            EvidenceRequired: a superseded claim is an established status and
+            would need evidence it does not have, which is exactly the change
+            the Java's store refuses. The model's guard was tightened to
+            Established and the Java's refiner now pre-checks the same rule,
+            so the refusal says why instead of failing in the store.
+    abstractions:
+      - "The model's `proposition` is the identity of the claim's text, not the text itself — the configuration format cannot express a function of claims to strings."
+      - "The model has no notion of a claim's scope, so the conflict between two claims about the same concept at different scopes — which the Java keeps apart — is not represented."
+    assumptions:
+      - "The store applies an import and a change set in one transaction, so the model's single Refine step stands for the whole change."
+      - "A claim's status is the proxy for whether evidence supports it; in the Java the evidence is checked directly."
+    limitations:
+      - "The configuration is deliberately small: two claims, one source, three representations, two levels. It checks the promises of the refinement, not the breadth of the store."
+      - "The model does not cover the concurrent case: two refinements arriving at once are applied one after another."
+
+  # ───────────────────────────────────────────────────────────────────────────
   - id: MemoryM4Causal
     title: "M4 causal CRDT — tombstones with epochs, per-key vector clocks"
     spec: formal/MemoryM4Causal.tla
