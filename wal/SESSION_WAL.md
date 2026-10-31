@@ -559,3 +559,52 @@ W40.5 — understanding and teaching: causal explanations, transfer
 assessments, a multi-level teaching plan, and a machine-to-machine
 teach-back whose measurement is the second learner's improvement and not
 the lesson's polish.
+
+### W40.5 — understanding and teaching (2026-10-31)
+
+The teaching capability now exists and has been measured.
+
+`TeachingComposer` builds a plan for a concept from the representations the
+workspace holds: the accounts are ordered from the least to the most
+advanced, every step carries an exercise and a check, and the plan names the
+dataset version it was built against. The composer is given the dataset for
+its identifier and nothing else — the plan is never built from the items
+that will measure it.
+
+`SyntheticLearner` holds only what it was taught and answers from that
+alone; it does not consult the workspace it was taught from.
+
+`TeachBackEvaluator` runs the experiment: the learner is measured before
+and after the lesson, on the held-out items only, and the result states
+whether a **declared** expectation was met.
+
+Measured through the API:
+
+| Taught at | Declared expectation | Before | After | Gain | Outcome |
+|---|---|---|---|---|---|
+| Mechanistic | gain ≥ 0.2 | 0.0 | 0.81 | 0.81 | met |
+| Introductory | gain ≥ 0.9 | 0.0 | 0.702 | 0.702 | **not met** |
+
+Per item at the mechanistic level: recall 1.0, explanation 1.0, causal 1.0,
+application 1.0, transfer 1.0, evaluation 0.667, **grounding 0.0**. The
+grounding item scores zero in both runs, and that is the honest result: the
+taught account carries no provenance, so a lesson that teaches what
+photosynthesis is does not teach where the account came from.
+
+What the experiment does **not** show, stated in the code and in the result
+itself: the learner can only answer out of the accounts it was given, so
+the score measures whether the lesson CONTAINED the content the held-out
+items ask for. That is necessary for transfer and far from sufficient — a
+person may understand an account without reusing its wording, and a machine
+may reproduce the wording without understanding it. The learner is
+synthetic, so this is a **machine-to-machine** result and not evidence of
+human teaching effectiveness.
+
+Endpoints and screen: `GET /workspaces/{id}/teaching-plan/{conceptId}`,
+`POST /workspaces/{id}/teach-back`, and the **Teach** tab.
+
+Tested (7 tests): the plan is ordered; a lower level gives a shorter plan;
+the teacher never sees the evaluation; the teach-back measures a gain; a
+declared expectation that is not met is reported as not met; a concept with
+no held-out item yields no claim at all; the learner answers only from what
+it was taught.

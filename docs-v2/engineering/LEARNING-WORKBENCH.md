@@ -101,7 +101,48 @@ If a later outcome contradicts an earlier success, the state **falls** and
 the note says so. That is deliberate: keeping the old label would be the
 easy thing to do and the dishonest one.
 
-## 6. Stop it, start it again, and verify
+## 6. Watch MATRIX teach, and measure whether it worked
+
+Go to the **Teach** tab.
+
+1. Choose a concept and a level. MATRIX composes a teaching plan from the
+   accounts it holds — each step carries an explanation, an exercise and a
+   check, and the plan names the dataset version it was built against.
+2. Set the **declared expectation**: the minimum gain on the held-out set
+   that you consider a success. This is set *before* the run, because an
+   experiment whose outcome is decided after the fact is not an experiment.
+3. Press **Compose and teach back**.
+
+What happens: a second, synthetic learner is taught the plan, and is then
+measured **before and after** the lesson on the held-out items — the items
+the teacher never saw. The result shows the score before, the score after,
+the gain, the per-item measurement, and whether the declared expectation was
+met.
+
+Two runs, both measured on this machine:
+
+| Taught at | Declared expectation | Before | After | Gain | Outcome |
+|---|---|---|---|---|---|
+| Mechanistic | gain ≥ 0.2 | 0.00 | 0.81 | **0.81** | met |
+| Introductory | gain ≥ 0.9 | 0.00 | 0.702 | 0.702 | **not met** |
+
+The second run is reported as a failure, with the reason. That is the point
+of declaring the expectation in advance.
+
+One item scores zero in both runs: the **grounding** item, which asks
+where the account came from. The taught explanation carries no provenance,
+so a lesson that teaches what photosynthesis is does not teach where the
+knowledge came from. The gap is visible instead of being smoothed over.
+
+**What this measurement is.** The synthetic learner can only answer out of
+the accounts it was given, so the score measures whether the lesson
+*contained* the content the held-out items ask for. That is a necessary
+condition for transfer and a far from sufficient one: a person may
+understand an account without reusing its wording, and a machine may
+reproduce the wording without understanding it. This is a **machine-to-machine
+result** and says nothing about human teaching effectiveness.
+
+## 7. Stop it, start it again, and verify
 
 This is the part that matters, so do it explicitly:
 
@@ -118,7 +159,7 @@ re-imported — the pack was not loaded a second time.
 The store lives at `matrix-core/data/knowledge/workbench.sqlite`. It is one
 file: copy it to back the workspace up, and put it back to restore it.
 
-## 7. What this release does not do
+## 8. What this release does not do
 
 - **It is not a chat assistant.** The answer is composed from the claims and
   representations in the store, not generated.
@@ -131,10 +172,11 @@ file: copy it to back the workspace up, and put it back to restore it.
 - **No stage above `COMPETENCE` has been reached yet.** `UNDERSTANDING` and
   `KNOWLEDGE` need their own evidence, and the criteria for them are
   deliberately stricter than for competence.
-- **The taught capability is not demonstrated.** Machine-to-machine
-  teach-back is the next milestone, not this one.
+- **The teaching capability is demonstrated only machine-to-machine.** A
+  synthetic learner was taught and measured on held-out items; that shows the
+  lesson contained the assessed content, not that a person would learn it.
 
-## 8. Where the pieces are
+## 9. Where the pieces are
 
 | Piece | Path |
 |---|---|
@@ -148,7 +190,7 @@ file: copy it to back the workspace up, and put it back to restore it.
 | The dataset | `matrix-core/src/main/resources/knowledge/photosynthesis.assessment.json` |
 | The reconnaissance | `docs-v2/engineering/W40-RECONNAISSANCE.md` |
 
-## 9. The API, if you would rather not use the browser
+## 10. The API, if you would rather not use the browser
 
 ```
 curl http://localhost:9091/v1/workbench/status
