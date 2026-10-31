@@ -270,6 +270,7 @@ public class KnowledgeWorkbench implements AutoCloseable {
         result.put("deterministicAccuracy", evaluation.deterministicAccuracy());
         result.put("beatsDeterministic", evaluation.beatsDeterministic());
         result.put("conclusion", evaluation.conclusion());
+        result.put("comparison", evaluation.comparison());
         result.put("datasetId", dataset.id());
         result.put("datasetVersion", dataset.version());
         return result;

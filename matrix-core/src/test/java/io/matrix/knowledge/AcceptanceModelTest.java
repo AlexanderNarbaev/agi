@@ -113,6 +113,15 @@ class AcceptanceModelTest {
                 + ", measured on " + evaluation.measuredOn()
                 + ", learned " + Math.round(evaluation.heldOutAccuracy() * 100)
                 + "% against the grader's " + Math.round(evaluation.deterministicAccuracy() * 100) + "%");
+        AcceptanceModel.LearnerComparison comparison = evaluation.comparison();
+        assertThat(comparison).isNotNull();
+        assertThat(comparison.tsetlinAccuracy()).contains("%");
+        assertThat(comparison.wisardAccuracy()).contains("%");
+        assertThat(comparison.verdict()).isNotBlank();
+        System.out.println("  Tsetlin: " + comparison.tsetlinAccuracy() + " in " + comparison.tsetlinMillis() + " us");
+        System.out.println("  WiSARD : " + comparison.wisardAccuracy() + " in " + comparison.wisardMillis() + " us");
+        System.out.println("  faster : " + comparison.faster());
+        System.out.println("  verdict: " + comparison.verdict());
     }
 
     @Test

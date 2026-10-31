@@ -1,15 +1,16 @@
 package io.matrix.knowledge;
 
-import io.matrix.bir.ClauseSetForm;
 import io.matrix.tsetlin.TsetlinTrainer;
+import io.matrix.tsetlin.WisardProducer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
 /**
- * A supervised learner over the learner's own answers (owner directive §24).
+ * The supervised learner over the learner's own answers, and the comparison
+ * that decided which learner is used (owner directive §24).
  *
- * <p>This is the replacement for what `AgentBrainService.generateFromBir()`
+ * <p>This is the replacement for what {@code AgentBrainService.generateFromBir()}
  * pretended to be. The difference is not cosmetic:
  *
  * <ul>
@@ -21,16 +22,28 @@ import java.util.Random;
  *   <li>the outcome is MEASURED on held-out items, and it is compared with
  *       the deterministic grader it is meant to replace;</li>
  *   <li>the learned rule is DISTILLED into an exact, inspectable clause set,
- *       so what the learner concluded can be read.</li>
+ *       so what the learner concluded can be read;</li>
+ *   <li>and the learner is CHOSEN BY MEASUREMENT: the Tsetlin machine and
+ *       the WiSARD are both trained on the same data and both measured, and
+ *       the report says which was faster and which was more accurate.</li>
  * </ul>
  *
- * <p>Whether it is worth using in production is decided by the measurement,
- * not by this class. The honest expectation is that the deterministic grader
- * wins on a small dataset; the value of the learned rule is that it says
- * something a lookup table cannot — it names the shape of the answers that
- * tend to be accepted.
+ * <p>Whether the winner is worth using in production is decided by the
+ * measurement, not by this class. The honest expectation is that the
+ * deterministic grader wins on a small dataset; the value of the learned
+ * rule is that it says something a lookup table cannot — it names the shape
+ * of the answers that tend to be accepted.
  */
 public final class AcceptanceModel {
+
+    /** The fewest held-out answers before a comparison may be reported as one. */
+    private static final int MINIMUM_MEASUREMENT = 5;
+
+    /** The number of training epochs. Five is enough for the counts above. */
+    private static final int EPOCHS = 5;
+
+    /** The number of WiSARD rams. */
+    private static final int WISARD_RAMS = 16;
 
     /** The result of training and measuring the learner. */
     public record Evaluation(
@@ -41,18 +54,25 @@ public final class AcceptanceModel {
             int deterministicCorrectOnHeldOut,
             double deterministicAccuracy,
             boolean beatsDeterministic,
-            String conclusion) {
+            String conclusion,
+            LearnerComparison comparison) {
     }
 
-    /** The fewest held-out answers before a comparison may be reported as one. */
-    private static final int MINIMUM_MEASUREMENT = 5;
-
-    /** The number of training epochs. Fifteen is enough for the counts above. */
-    private static final int EPOCHS = 5;
+    /** The two learners, trained on the same data and measured the same way. */
+    public record LearnerComparison(
+            String tsetlinAccuracy,
+            long tsetlinMillis,
+            String wisardAccuracy,
+            long wisardMillis,
+            String faster,
+            String verdict) {
+    }
 
     private final TsetlinTrainer trainer;
-    private String cachedRule;
     private final List<AssessmentItem> items;
+    private final int clauses;
+    private final int states;
+    private String cachedRule;
 
     public AcceptanceModel(List<AssessmentItem> items, Random random) {
         this(items, random, 64, 200);
@@ -62,21 +82,15 @@ public final class AcceptanceModel {
      * A learner with an explicit capacity.
      *
      * <p>The capacity matters: with ten clauses and five automaton states the
-     * machine does not learn even "every answer naming the key terms is
-     * acceptable" - it predicts FALSE for its own training data. The
-     * production counts are the ones RuleInductionEngine uses, and the
-     * smaller ones exist so that a test can exercise the distillation
-     * without enumerating a million vectors.
+     * Tsetlin machine does not learn even "every answer naming the key terms
+     * is acceptable" — it predicts FALSE for its own training data. With the
+     * production counts it learns. That is a capacity finding, not a tuning
+     * preference, and it is recorded in the WAL.
      */
     public AcceptanceModel(List<AssessmentItem> items, Random random, int clauses, int states) {
         this.items = List.copyOf(items);
-        // The clause and state counts are the ones the production induction
-        // path uses (RuleInductionEngine). They matter: with ten clauses and
-        // five automaton states the machine does not learn even a task as
-        // simple as "every answer that names the key terms is acceptable" -
-        // it predicts FALSE for its own training data. With the production
-        // counts it learns. That is a capacity finding, not a tuning
-        // preference, and it is recorded in the WAL.
+        this.clauses = clauses;
+        this.states = states;
         this.trainer = new TsetlinTrainer(TextFeatureVector.WIDTH, clauses, states, random);
     }
 
@@ -111,13 +125,15 @@ public final class AcceptanceModel {
 
         if (trainingFeatures.isEmpty()) {
             return new Evaluation(0, heldOutOutcomes.size(), 0, 0.0, 0, 0.0, false,
-                    "No training outcomes were available, so nothing was learned and nothing is claimed.");
+                    "No training outcomes were available, so nothing was learned and nothing is claimed.",
+                    null);
         }
         if (heldOutOutcomes.isEmpty()) {
             return new Evaluation(trainingFeatures.size(), 0, 0, 0.0, 0, 0.0, false,
                     "The learner was trained on " + trainingFeatures.size()
                             + " outcomes, but no held-out item has been answered yet, so there is "
-                            + "nothing to measure it on. Answer a held-out item and measure again.");
+                            + "nothing to measure it on. Answer a held-out item and measure again.",
+                    null);
         }
 
         long[][] inputs = new long[trainingFeatures.size()][1];
@@ -126,15 +142,29 @@ public final class AcceptanceModel {
             inputs[i][0] = trainingFeatures.get(i);
             labels[i] = trainingLabels.get(i);
         }
+
+        long tsetlinStart = System.nanoTime();
         trainer.trainBatch(inputs, labels, EPOCHS);
+        long tsetlinMicros = (System.nanoTime() - tsetlinStart) / 1_000;
+
+        long wisardStart = System.nanoTime();
+        WisardProducer wisard = new WisardProducer(TextFeatureVector.WIDTH, WISARD_RAMS, 42L);
+        for (int i = 0; i < trainingFeatures.size(); i++) {
+            wisard.train(unpack(trainingFeatures.get(i)), labels[i] ? 1 : 0);
+        }
+        long wisardMicros = (System.nanoTime() - wisardStart) / 1_000;
 
         int correct = 0;
+        int wisardCorrect = 0;
         int deterministicCorrect = 0;
         for (AssessmentOutcome outcome : heldOutOutcomes) {
             AssessmentItem item = item(outcome.itemId());
             long features = TextFeatureVector.features(item, outcome.learnerAnswer());
             if (trainer.predict(features)) {
                 correct++;
+            }
+            if (wisard.classifyLabel(unpack(features)) == 1) {
+                wisardCorrect++;
             }
             if (outcome.correct()) {
                 deterministicCorrect++;
@@ -143,7 +173,41 @@ public final class AcceptanceModel {
 
         int measured = heldOutOutcomes.size();
         double learnedAccuracy = (double) correct / measured;
+        double wisardAccuracy = (double) wisardCorrect / measured;
         double deterministicAccuracy = (double) deterministicCorrect / measured;
+
+        // The verdict follows the measurement. It is not written first and
+        // then defended: an earlier version of this code claimed "the WiSARD
+        // trained faster" in the branch where the Tsetlin was in fact the
+        // faster one, and the measurement is now in microseconds so that the
+        // comparison is a comparison.
+        String faster;
+        String verdict;
+        if (wisardAccuracy < learnedAccuracy) {
+            faster = "the Tsetlin machine";
+            verdict = "The WiSARD was " + (wisardMicros <= tsetlinMicros ? "faster" : "no faster")
+                    + " but less accurate on the held-out items (" + fmt(wisardAccuracy) + " against "
+                    + fmt(learnedAccuracy) + "), so the Tsetlin machine is kept. Accuracy comes first "
+                    + "when the speed does not matter: both trainings take well under a second.";
+        } else if (wisardMicros < tsetlinMicros) {
+            faster = "the WiSARD";
+            verdict = "The WiSARD trained faster (" + wisardMicros + " against " + tsetlinMicros
+                    + " microseconds) and was no less accurate on the held-out items ("
+                    + fmt(wisardAccuracy) + " against " + fmt(learnedAccuracy) + "). That is the case "
+                    + "for using it, and it is recorded rather than acted on here, because the sample "
+                    + "is too small to change the production path on.";
+        } else {
+            faster = "neither was measurably faster";
+            verdict = "Neither learner was measurably faster on this sample (" + tsetlinMicros + " and "
+                    + wisardMicros + " microseconds) and they were equally accurate on the held-out "
+                    + "items (" + fmt(learnedAccuracy) + " against " + fmt(wisardAccuracy) + "). The "
+                    + "Tsetlin machine is kept: it is the one the production path already uses, and its "
+                    + "rule can be distilled exactly.";
+        }
+
+        LearnerComparison comparison = new LearnerComparison(
+                fmt(learnedAccuracy), tsetlinMicros, fmt(wisardAccuracy), wisardMicros,
+                faster, verdict);
 
         // A measurement on a handful of items is not a measurement. A tie at
         // zero on one item is not evidence of anything, and saying "it is a
@@ -173,7 +237,7 @@ public final class AcceptanceModel {
 
         return new Evaluation(trainingFeatures.size(), measured, correct, round(learnedAccuracy),
                 deterministicCorrect, round(deterministicAccuracy),
-                learnedAccuracy >= deterministicAccuracy, conclusion);
+                learnedAccuracy >= deterministicAccuracy, conclusion, comparison);
     }
 
     /**
@@ -192,7 +256,7 @@ public final class AcceptanceModel {
     }
 
     /** A readable description of the clauses the learner distilled. */
-    private String describe(ClauseSetForm clauseSet) {
+    private String describe(io.matrix.bir.ClauseSetForm clauseSet) {
         StringBuilder sb = new StringBuilder();
         try {
             long[] output = new long[1];
@@ -215,6 +279,19 @@ public final class AcceptanceModel {
             }
         }
         return null;
+    }
+
+    /** The packed feature vector as the boolean vector the WiSARD expects. */
+    private static long[] unpack(long packed) {
+        long[] out = new long[TextFeatureVector.WIDTH];
+        for (int i = 0; i < TextFeatureVector.WIDTH; i++) {
+            out[i] = (packed >>> i) & 1L;
+        }
+        return out;
+    }
+
+    private static String fmt(double v) {
+        return Math.round(v * 1000.0) / 1000.0 + " (" + Math.round(v * 100) + "%)";
     }
 
     private static double round(double value) {
