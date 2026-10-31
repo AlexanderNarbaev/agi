@@ -99,7 +99,7 @@ public final class QuestionConsolidator {
                 // gap is the evidence that something was learned.
                 resolved.add(new AskedQuestion(record.id(), record.workspaceId(),
                         record.canonicalKey(), record.question(), record.uncoveredTerms(),
-                        record.timesAsked(), record.firstAskedAt(), record.lastAskedAt(),
+                        record.timesAsked(), record.answered(), record.firstAskedAt(), record.lastAskedAt(),
                         AskedQuestion.Status.RESOLVED,
                         "The workspace can answer this question now; the record of the gap is kept."));
                 notes.add("resolved: " + record.question());

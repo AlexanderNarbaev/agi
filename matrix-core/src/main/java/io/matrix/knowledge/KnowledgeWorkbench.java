@@ -121,7 +121,7 @@ public class KnowledgeWorkbench implements AutoCloseable {
     public Answer ask(String workspaceId, String question, AbstractionLevel level) {
         KnowledgeSnapshot snapshot = workspace(workspaceId);
         Answer answer = new KnowledgeRetriever(snapshot).answer(question, level);
-        recordAsk(workspaceId, question, answer.unmatchedTerms());
+        recordAsk(workspaceId, question, answer.unmatchedTerms(), answer.answered());
         return answer;
     }
 
@@ -201,6 +201,128 @@ public class KnowledgeWorkbench implements AutoCloseable {
     }
 
     /**
+     * The metrics of this workspace.
+     *
+     * <p>The owner directive requires a metrics report that carries the
+     * dataset version, the software version, the test procedure and the
+     * sample size, that is not a single opaque intelligence score, and that
+     * does not hide the metrics that were not measured. The last of those
+     * is the one that is easiest to get wrong, so the report ends with the
+     * list of what it does NOT measure.
+     */
+    public MetricsReport metrics(String workspaceId) {
+        KnowledgeSnapshot snapshot = workspace(workspaceId);
+        AssessmentDataset dataset = dataset(workspaceId);
+        List<LearningState> states = learningStates(workspaceId);
+        List<AskedQuestion> asked = askedQuestions(workspaceId);
+
+        List<MetricsReport.DimensionMetric> dimensions = new ArrayList<>();
+        for (LearningState state : states) {
+            dimensions.add(new MetricsReport.DimensionMetric(
+                    state.conceptId(), state.dimension().name(), state.stage().name(), state.score(),
+                    state.evidenceCount(), state.variantCount(), state.heldOutCount(),
+                    state.evidenceCount() > 0, state.note()));
+        }
+
+        int established = 0;
+        int contradicted = 0;
+        for (Claim claim : snapshot.claims()) {
+            switch (claim.status()) {
+                case DRAFT, UNKNOWN -> {
+                }
+                case CONTESTED -> contradicted++;
+                default -> established++;
+            }
+        }
+        // The share is of CLAIMS, not of links: a claim with three links
+        // still counts once. Counting the links would let the share exceed
+        // one, which is nonsense.
+        java.util.Set<String> claimsWithEvidence = new java.util.LinkedHashSet<>();
+        for (Evidence evidence : snapshot.evidence()) {
+            if (snapshot.claims().stream().anyMatch(c -> c.id().equals(evidence.claimId()))) {
+                claimsWithEvidence.add(evidence.claimId());
+            }
+        }
+        int withEvidence = claimsWithEvidence.size();
+
+        int answered = 0;
+        int refused = 0;
+        for (AskedQuestion record : asked) {
+            if (record.answered()) {
+                answered++;
+            } else {
+                refused++;
+            }
+        }
+        int distinct = asked.size();
+        int recurring = (int) asked.stream()
+                .filter(r -> r.timesAsked() >= QuestionConsolidator.PROMOTION_THRESHOLD)
+                .count();
+
+        MetricsReport.CoverageMetric coverage = new MetricsReport.CoverageMetric(
+                snapshot.concepts().size(), snapshot.claims().size(), established, withEvidence,
+                contradicted, snapshot.sources().size(), snapshot.evidence().size(),
+                snapshot.representations().size(), snapshot.revisions().size(),
+                snapshot.prerequisites().size(),
+                snapshot.claims().isEmpty() ? 0.0 : (double) withEvidence / snapshot.claims().size());
+
+        MetricsReport.AskingMetric asking = new MetricsReport.AskingMetric(
+                asked.stream().mapToInt(AskedQuestion::timesAsked).sum(), answered, refused,
+                distinct, recurring,
+                asked.isEmpty() ? 0.0 : (double) refused / asked.size());
+
+        List<String> notes = new ArrayList<>();
+        notes.add("The learning state is derived only from recorded outcomes. A dimension with no "
+                + "outcome is not reported at all, rather than reported as zero.");
+        notes.add("The teach-back measurement is machine-to-machine. It says that the lesson CONTAINED "
+                + "the assessed content; it does not say that a human would have learned it.");
+        notes.add("The evidence-backed share counts the claims that at least one evidence link points at. "
+                + "It says nothing about whether the source is correct.");
+
+        return new MetricsReport(
+                workspaceId,
+                softwareVersion().value(),
+                softwareVersion().source(),
+                dataset.id(),
+                String.valueOf(dataset.version()),
+                "Each dimension is scored from the recorded outcomes of its assessment items: the "
+                        + "key-term coverage of the answer against the item's key terms, over the items "
+                        + "of that dimension, with the held-out items counted separately and the "
+                        + "variant items counted as evidence of transfer. The stage is the lowest "
+                        + "stage whose criteria the score and the evidence counts meet.",
+                dimensions,
+                coverage,
+                asking,
+                MetricsReport.unmeasuredMetrics(),
+                notes);
+    }
+
+    /** The version of the running build, and where it was read from. */
+    private static VersionInfo softwareVersion() {
+        Package pkg = MetricsReport.class.getPackage();
+        String fromManifest = pkg == null ? null : pkg.getImplementationVersion();
+        if (fromManifest != null && !fromManifest.isBlank()) {
+            return new VersionInfo(fromManifest, "the package manifest of the running build");
+        }
+        try {
+            String fromConfig = org.eclipse.microprofile.config.ConfigProvider
+                    .getConfig().getOptionalValue("quarkus.application.version", String.class)
+                    .orElse(null);
+            if (fromConfig != null && !fromConfig.isBlank()) {
+                return new VersionInfo(fromConfig, "the quarkus.application.version configuration");
+            }
+        } catch (RuntimeException e) {
+            // The configuration is not reachable in every context; the
+            // report says that it could not be read rather than guessing.
+        }
+        return new VersionInfo("unknown", "the version could not be read from the running build");
+    }
+
+    /** A version and the place it was read from. */
+    private record VersionInfo(String value, String source) {
+    }
+
+    /**
      * The questions the workspace was asked and could not answer.
      *
      * <p>This is the workspace's episodic log, reduced to what a learner
@@ -240,8 +362,9 @@ public class KnowledgeWorkbench implements AutoCloseable {
      * <p>Called by the ask path, so that the workspace learns what it was
      * asked - including the questions it had to refuse.
      */
-    public AskedQuestion recordAsk(String workspaceId, String question, List<String> uncoveredTerms) {
-        return store.recordAskedQuestion(workspaceId, question, uncoveredTerms,
+    public AskedQuestion recordAsk(String workspaceId, String question, List<String> uncoveredTerms,
+                                   boolean answered) {
+        return store().recordAskedQuestion(workspaceId, question, uncoveredTerms, answered,
                 System.currentTimeMillis());
     }
 

@@ -53,7 +53,7 @@ import java.util.Set;
 public final class KnowledgeStore implements AutoCloseable {
 
     /** The schema version this build writes. */
-    public static final int SCHEMA_VERSION = 3;
+    public static final int SCHEMA_VERSION = 4;
 
     private static final ObjectMapper JSON = new ObjectMapper();
 
@@ -235,6 +235,16 @@ public final class KnowledgeStore implements AutoCloseable {
     }
 
     private int migrateFrom(int version) throws SQLException {
+        if (version == 3) {
+            // v4 adds the flag that says whether the workspace answered the
+            // question when it was last asked. Without it the refusal rate
+            // can only be guessed from the uncovered terms.
+            try (Statement st = connection.createStatement()) {
+                st.execute("ALTER TABLE asked_question ADD COLUMN answered INTEGER NOT NULL DEFAULT 0");
+            }
+            writeSchemaVersion(4);
+            return 4;
+        }
         if (version == 2) {
             // v3 adds the episodic log of the questions the workspace was
             // asked. A learning application needs to know what it was asked
@@ -771,34 +781,37 @@ public final class KnowledgeStore implements AutoCloseable {
      * kept because it is the one the user last used.
      */
     public AskedQuestion recordAskedQuestion(String workspaceId, String question,
-                                             List<String> uncoveredTerms, long askedAt) {
+                                             List<String> uncoveredTerms, boolean answered,
+                                             long askedAt) {
         String key = QuestionConsolidator.canonicalKey(question);
         String id = Ids.askedQuestion(workspaceId, key);
         try (PreparedStatement ps = connection.prepareStatement(
-                "SELECT times_asked, first_asked_at, last_asked_at, status, resolution_note "
-                        + "FROM asked_question WHERE id = ?")) {
+                "SELECT times_asked, answered, first_asked_at, last_asked_at, status, "
+                        + "resolution_note FROM asked_question WHERE id = ?")) {
             ps.setString(1, id);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
                     int times = rs.getInt("times_asked") + 1;
+                    boolean wasAnswered = answered || rs.getInt("answered") == 1;
                     long first = rs.getLong("first_asked_at");
                     AskedQuestion.Status status = AskedQuestion.Status.valueOf(rs.getString("status"));
                     String note = rs.getString("resolution_note");
                     try (PreparedStatement update = connection.prepareStatement(
                             "UPDATE asked_question SET question = ?, uncovered_terms = ?, "
                                     + "times_asked = ?, last_asked_at = ?, status = ?, "
-                                    + "resolution_note = ? WHERE id = ?")) {
+                                    + "resolution_note = ?, answered = ? WHERE id = ?")) {
                         update.setString(1, question);
                         update.setString(2, writeJson(uncoveredTerms));
                         update.setInt(3, times);
                         update.setLong(4, askedAt);
                         update.setString(5, status.name());
                         update.setString(6, note);
-                        update.setString(7, id);
+                        update.setInt(7, wasAnswered ? 1 : 0);
+                        update.setString(8, id);
                         update.executeUpdate();
                     }
                     return new AskedQuestion(id, workspaceId, key, question, uncoveredTerms,
-                            times, Instant.ofEpochMilli(first).toString(),
+                            times, wasAnswered, Instant.ofEpochMilli(first).toString(),
                             Instant.ofEpochMilli(askedAt).toString(), status, note);
                 }
             }
@@ -808,7 +821,7 @@ public final class KnowledgeStore implements AutoCloseable {
         try (PreparedStatement ps = connection.prepareStatement(
                 "INSERT INTO asked_question(id, workspace_id, canonical_key, question, "
                         + "uncovered_terms, times_asked, first_asked_at, last_asked_at, status, "
-                        + "resolution_note) VALUES (?,?,?,?,?,?,?,?,?,?)")) {
+                        + "resolution_note, answered) VALUES (?,?,?,?,?,?,?,?,?,?,?)")) {
             ps.setString(1, id);
             ps.setString(2, workspaceId);
             ps.setString(3, key);
@@ -819,11 +832,12 @@ public final class KnowledgeStore implements AutoCloseable {
             ps.setLong(8, askedAt);
             ps.setString(9, AskedQuestion.Status.OPEN.name());
             ps.setString(10, null);
+            ps.setInt(11, answered ? 1 : 0);
             ps.executeUpdate();
         } catch (SQLException e) {
             throw new IllegalStateException("Failed to record the asked question", e);
         }
-        return new AskedQuestion(id, workspaceId, key, question, uncoveredTerms, 1,
+        return new AskedQuestion(id, workspaceId, key, question, uncoveredTerms, 1, answered,
                 Instant.ofEpochMilli(askedAt).toString(), Instant.ofEpochMilli(askedAt).toString(),
                 AskedQuestion.Status.OPEN, null);
     }
@@ -831,12 +845,12 @@ public final class KnowledgeStore implements AutoCloseable {
     /** The asked questions of a workspace, most recently asked first. */
     public List<AskedQuestion> askedQuestions(String workspaceId) {
         return query("SELECT id, workspace_id, canonical_key, question, uncovered_terms, "
-                + "times_asked, first_asked_at, last_asked_at, status, resolution_note "
+                + "times_asked, first_asked_at, last_asked_at, status, resolution_note, answered "
                 + "FROM asked_question WHERE workspace_id = ? ORDER BY times_asked DESC, "
                 + "last_asked_at DESC", workspaceId, rs -> new AskedQuestion(
                 rs.getString("id"), rs.getString("workspace_id"), rs.getString("canonical_key"),
                 rs.getString("question"), readJsonList(rs.getString("uncovered_terms")),
-                rs.getInt("times_asked"),
+                rs.getInt("times_asked"), rs.getInt("answered") == 1,
                 Instant.ofEpochMilli(rs.getLong("first_asked_at")).toString(),
                 Instant.ofEpochMilli(rs.getLong("last_asked_at")).toString(),
                 AskedQuestion.Status.valueOf(rs.getString("status")),

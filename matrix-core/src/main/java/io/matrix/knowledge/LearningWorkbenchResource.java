@@ -271,6 +271,21 @@ public class LearningWorkbenchResource {
     }
 
     /**
+     * The metrics of this workspace.
+     *
+     * <p>The report carries the dataset version, the software version, the
+     * test procedure and the sample size of every number, and it ends with
+     * the list of the metrics that were NOT measured. There is no single
+     * intelligence score: a single score would hide the differences that
+     * matter.
+     */
+    @GET
+    @Path("/workspaces/{id}/metrics")
+    public Response metrics(@PathParam("id") String workspaceId) {
+        return Response.ok(workbench.metrics(workspaceId).asMap()).build();
+    }
+
+    /**
      * The questions the workspace was asked and could not answer.
      *
      * <p>Two wordings of the same question collapse onto one record, so the

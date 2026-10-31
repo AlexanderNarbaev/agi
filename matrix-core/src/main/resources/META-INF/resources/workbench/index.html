@@ -94,6 +94,14 @@
       <h2 style="margin-top:0">Recent corrections and revisions</h2>
       <div id="dash-revisions" class="muted">No revisions recorded.</div>
     </div>
+    <div class="card">
+      <h2 style="margin-top:0">Measured metrics</h2>
+      <p class="muted" style="margin-top:0">Every number below is a measurement with its sample size, the
+        dataset it came from and the procedure that produced it. There is deliberately no single
+        intelligence score: one number would hide the differences that matter. The metrics that were
+        <em>not</em> measured are listed at the bottom rather than left out.</p>
+      <div id="dash-report" class="muted">—</div>
+    </div>
   </section>
 
   <section id="tab-ask">
@@ -248,6 +256,60 @@ document.querySelectorAll('nav button').forEach(btn => {
   });
 });
 
+async function loadMetrics() {
+  try {
+    const m = await api('/workspaces/' + WS + '/metrics');
+    const c = m.coverage || {};
+    const a = m.asking || {};
+    let html = '<table><tr><th>Metric</th><th>Value</th><th>Sample</th></tr>' +
+      '<tr><td>Concepts</td><td>' + c.concepts + '</td><td>whole workspace</td></tr>' +
+      '<tr><td>Claims</td><td>' + c.claims + '</td><td>whole workspace</td></tr>' +
+      '<tr><td>Established claims</td><td>' + c.establishedClaims + '</td><td>' + c.claims + ' claims</td></tr>' +
+      '<tr><td>Claims backed by evidence</td><td>' + c.claimsWithEvidence + ' (' +
+        Math.round(c.evidenceBackedShare * 100) + '%)</td><td>' + c.claims + ' claims</td></tr>' +
+      '<tr><td>Contested claims</td><td>' + c.contradictedClaims + '</td><td>' + c.claims + ' claims</td></tr>' +
+      '<tr><td>Sources</td><td>' + c.sources + '</td><td>whole workspace</td></tr>' +
+      '<tr><td>Evidence links</td><td>' + c.evidenceLinks + '</td><td>whole workspace</td></tr>' +
+      '<tr><td>Representations</td><td>' + c.representations + '</td><td>whole workspace</td></tr>' +
+      '<tr><td>Revisions</td><td>' + c.revisions + '</td><td>whole workspace</td></tr>' +
+      '<tr><td>Questions asked</td><td>' + a.questionsAsked + '</td><td>' + a.distinctQuestions +
+        ' distinct question(s)</td></tr>' +
+      '<tr><td>Questions refused</td><td>' + a.questionsRefused + ' (' +
+        Math.round(a.refusalRate * 100) + '%)</td><td>' + a.distinctQuestions + ' distinct question(s)</td></tr>' +
+      '<tr><td>Recurring gaps</td><td>' + a.recurringGaps + '</td><td>' + a.distinctQuestions +
+        ' distinct question(s)</td></tr></table>';
+
+    html += '<h2>Capability dimensions</h2>';
+    if (!m.dimensions || !m.dimensions.length) {
+      html += '<p class="muted">No dimension has been assessed yet, so none is reported. A dimension '
+        + 'with no outcome is not reported as zero.</p>';
+    } else {
+      html += '<table><tr><th>Concept</th><th>Dimension</th><th>Stage</th><th>Score</th><th>Evidence</th>'
+        + '<th>Note</th></tr>' + m.dimensions.map(d => '<tr><td>' + esc(d.conceptId) + '</td>' +
+          '<td>' + esc(d.dimension) + '</td><td><span class="tag ' + esc(d.stage) + '">' +
+          esc(d.stage) + '</span></td><td>' + d.score + '</td>' +
+          '<td>' + d.evidenceCount + ' outcome(s), ' + d.variantCount + ' variant(s)' +
+          (d.heldOutCount ? ', ' + d.heldOutCount + ' held out' : '') + '</td>' +
+          '<td class="muted">' + esc(d.note) + '</td></tr>').join('') + '</table>';
+    }
+
+    html += '<h2>Provenance of this report</h2><table>' +
+      '<tr><th>Software version</th><td>' + esc(m.softwareVersion) + ' <span class="muted">(' +
+        esc(m.softwareVersionSource) + ')</span></td></tr>' +
+      '<tr><th>Dataset</th><td>' + esc(m.datasetId) + ', version ' + esc(m.datasetVersion) + '</td></tr>' +
+      '<tr><th>Test procedure</th><td class="muted">' + esc(m.testProcedure) + '</td></tr></table>';
+
+    html += '<h2>What was NOT measured</h2><ul>' +
+      (m.unmeasured || []).map(u => '<li class="muted">' + esc(u) + '</li>').join('') + '</ul>';
+    if (m.notes && m.notes.length) {
+      html += '<h2>Notes</h2><ul>' + m.notes.map(n => '<li class="muted">' + esc(n) + '</li>').join('') + '</ul>';
+    }
+    $('dash-report').innerHTML = html;
+  } catch (e) {
+    $('dash-report').innerHTML = '<span class="muted">' + esc(e.message) + '</span>';
+  }
+}
+
 async function loadStatus() {
   try {
     const s = await api('/status');
@@ -280,6 +342,7 @@ $('btn-load').addEventListener('click', async () => {
       r.sources + ' sources, ' + r.representations + ' representations.';
     await loadStatus();
     await loadKnowledge();
+    await loadMetrics();
   } catch (e) {
     $('load-note').textContent = 'Could not load the pack: ' + e.message;
   } finally {

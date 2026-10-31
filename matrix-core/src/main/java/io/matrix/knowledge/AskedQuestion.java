@@ -16,6 +16,10 @@ import java.util.List;
  * "what is photosynthesis" and "photosynthesis, please" are visibly the same
  * question and "what is photolysis" is visibly a different one.
  *
+ * <p>The record also says whether the workspace ANSWERED the question when
+ * it was last asked, so that the refusal rate can be reported rather than
+ * guessed.
+ *
  * <p>A question that the workspace now answers is RESOLVED, not deleted.
  * That is the same rule the rest of the knowledge model follows, and the
  * same rule the MIND-W3 branch applied to its episodic store: a record that
@@ -29,6 +33,7 @@ public record AskedQuestion(
         String question,
         List<String> uncoveredTerms,
         int timesAsked,
+        boolean answered,
         String firstAskedAt,
         String lastAskedAt,
         Status status,
