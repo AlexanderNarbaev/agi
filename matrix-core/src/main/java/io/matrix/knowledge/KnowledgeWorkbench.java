@@ -201,6 +201,35 @@ public class KnowledgeWorkbench implements AutoCloseable {
     }
 
     /**
+     * Register what the system has learned about the learner as knowledge.
+     *
+     * <p>The rule the acceptance model induced is written into the store as
+     * a claim with a source and evidence, so that it is subject to the same
+     * rules as everything else: it has a status, a scope, a provenance that
+     * can be read, and it can be superseded later.
+     *
+     * @param workspaceId the workspace to write into
+     * @param conceptId the concept the claim is about
+     */
+    public LearnedRuleRegistrar.Registration registerLearnedRule(String workspaceId, String conceptId) {
+        AssessmentDataset dataset = dataset(workspaceId);
+        AcceptanceModel model = new AcceptanceModel(dataset.items(), new Random(42));
+        AcceptanceModel.Evaluation evaluation = model.trainAndEvaluate(outcomes(workspaceId));
+
+        LearnedRuleRegistrar.Registration registration = LearnedRuleRegistrar.registration(
+                workspaceId, conceptId, dataset.id(), evaluation);
+
+        store().applyChanges(workspaceId, new KnowledgeChanges(
+                List.of(registration.source()),
+                List.of(registration.claim()),
+                List.of(registration.evidence()),
+                List.of(),
+                List.of()));
+
+        return registration;
+    }
+
+    /**
      * The metrics of this workspace.
      *
      * <p>The owner directive requires a metrics report that carries the

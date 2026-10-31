@@ -271,6 +271,25 @@ public class LearningWorkbenchResource {
     }
 
     /**
+     * Register what the system has learned about the learner as knowledge.
+     *
+     * <p>The rule the acceptance model induced becomes a claim with a source
+     * and evidence, in the same store as everything else, so that it can be
+     * read and later superseded.
+     */
+    @POST
+    @Path("/workspaces/{id}/learned-rule")
+    public Response registerLearnedRule(@PathParam("id") String workspaceId,
+                                        @QueryParam("conceptId") String conceptId) {
+        if (conceptId == null || conceptId.isBlank()) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity(Map.of("error", "a concept id is required"))
+                    .build();
+        }
+        return Response.ok(workbench.registerLearnedRule(workspaceId, conceptId)).build();
+    }
+
+    /**
      * The metrics of this workspace.
      *
      * <p>The report carries the dataset version, the software version, the

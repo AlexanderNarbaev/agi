@@ -249,9 +249,16 @@ Ordered by what unblocks the most. Each item is independently verifiable.
 ### Wave F — cognitive integration
 - **F1** `generateFromBir()`: delete or rewrite. It cannot currently affect a
   response, and the rewrite must use explicit text features, not a hash
-- **F2** Feed the Tsetlin and WiSARD explicit text features through
-  `RuleInductionEngine`, and register the induced rules in the knowledge
-  store with provenance
+- **F2** ✅ (half) The Tsetlin and the WiSARD take explicit text features, and
+  the induced rule is registered in the knowledge store with its provenance
+  (`LearnedRuleRegistrar`, endpoint
+  `POST /v1/workbench/workspaces/{id}/learned-rule`). **The other half is
+  not possible as written**: `RuleInductionEngine` lives in
+  `matrix-brain-runtime`, which already depends on `matrix-core`, so
+  `matrix-core` cannot call it without a circular dependency. The
+  distillation it performs is available in `matrix-core` directly —
+  `TsetlinTrainer.toClauseSet` produces the same exact `ClauseSetForm` — and
+  that is what is used.
 - **F3** Bring back **tombstone-based forgetting** from `mind-w2-persistent-mind`
   — a retracted fact must leave a record that it was once believed
 - **F4** Goal progress, if the learning loop needs a resumable objective
