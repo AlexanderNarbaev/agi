@@ -1,0 +1,839 @@
+{
+  "workspace": {
+    "id": "photosynthesis",
+    "name": "Photosynthesis, respiration and plant gas exchange"
+  },
+  "notes": [
+    "Source policy (AGENTS.md META-R3): every claim below is tied to a source whose excerpt was actually retrieved and recorded. The peer-reviewed review is the primary scientific source; the encyclopedia entries are SECONDARY_REPORT and are scored as such (authority 55), so claims resting on them alone are SUPPORTED rather than VERIFIED.",
+    "Retrieval dates: the review and the encyclopedia entries were fetched on 2026-10-31; the Wikipedia revision ids are recorded in each source locator so the exact revision can be re-read.",
+    "A textbook source (Taiz & Zeiger, Plant Physiology and Development) is still to be added. Until it is, no claim that depends on a specific quantitative figure from a textbook is marked VERIFIED."
+  ],
+  "sources": [
+    {
+      "key": "perera2020",
+      "kind": "PUBLICATION",
+      "title": "Recent advances in understanding and improving photosynthesis",
+      "locator": "https://pmc.ncbi.nlm.nih.gov/articles/PMC7886073/ (Perera-Castro AV, Flexas J. Faculty Reviews 2020;9:5, doi:10.12703/b/9-5, PMCID PMC7886073, retrieved 2026-10-31)",
+      "authority": 85,
+      "freshness": 75,
+      "excerpt": "Photosynthesis is the chemical reaction that sustains most life on Earth. ... the enzyme that catalyzes CO2 fixation in the Calvin-Benson cycle - ribulose 1,5-bisphosphate carboxylase oxidase or rubisco - is inefficient owing to several intrinsic characteristics, the most notable being the competitiveness between carboxylation and oxidation processes, since the oxidation of D-ribulose-1,5-bisphosphate results in the energetically expensive but perhaps convenient photorespiratory pathway. ... Light, CO2, and water supply affect g_s. ... Light energy is absorbed and transferred to the photosystem II (PSII) core by the light-harvesting complex II (LHCII). ... the C4 mechanism allows CO2 concentrations around rubisco of at least 10-times higher than those of the surrounding atmosphere ... eukaryotic algae like Chlamydomonas containing pyrenoids can concentrate CO2 40-times and prokaryotic cyanobacteria possessing carboxysomes 100-times higher than the surrounding atmosphere. ... photosynthetically ... photosynthetic limitations are generally well-balanced in angiosperms. ... these delays, especially in rubisco activation, have been estimated to decrease wheat assimilation by 21% in shade to sun transitions."
+    },
+    {
+      "key": "wiki-photosynthesis",
+      "kind": "SECONDARY_REPORT",
+      "title": "Photosynthesis (encyclopedia entry)",
+      "locator": "https://en.wikipedia.org/wiki/Photosynthesis (revision 1379238357, 2026-10-08, retrieved 2026-10-31)",
+      "authority": 55,
+      "freshness": 90,
+      "excerpt": "Photosynthesis is a system of biological processes by which photopigment-bearing autotrophic organisms, such as most plants, algae and cyanobacteria, convert light energy - typically from sunlight - into the chemical energy necessary to fuel their metabolism. The term photosynthesis usually refers to oxygenic photosynthesis, a process that releases oxygen as a byproduct of water splitting. Photosynthetic organisms store the converted chemical energy within the bonds of intracellular organic compounds, typically carbohydrates like sugars, starches, phytoglycogen and cellulose. When needing to use this stored energy, an organism's cells then metabolize the organic compounds through cellular respiration."
+    },
+    {
+      "key": "wiki-respiration",
+      "kind": "SECONDARY_REPORT",
+      "title": "Cellular respiration (encyclopedia entry)",
+      "locator": "https://en.wikipedia.org/wiki/Cellular_respiration (revision 1382176743, 2026-10-27, retrieved 2026-10-31)",
+      "authority": 55,
+      "freshness": 90,
+      "excerpt": "Cellular respiration is the process of oxidizing biological fuels using an inorganic electron acceptor, such as oxygen, to drive production of adenosine triphosphate (ATP), which stores chemical energy in a biologically accessible form. Cellular respiration may be described as a set of metabolic reactions and processes that take place in the cells to transfer chemical energy from nutrients to ATP, with the flow of electrons to an electron acceptor, and then release waste products."
+    },
+    {
+      "key": "wiki-photorespiration",
+      "kind": "SECONDARY_REPORT",
+      "title": "Photorespiration (encyclopedia entry)",
+      "locator": "https://en.wikipedia.org/wiki/Photorespiration (revision 1364043280, 2026-07-14, retrieved 2026-10-31)",
+      "authority": 55,
+      "freshness": 80,
+      "excerpt": "Photorespiration (also known as the oxidative photosynthetic carbon cycle or C2 cycle) refers to a process in plant metabolism where the enzyme RuBisCO oxygenates ribulose 1,5-bisphosphate (RuBP), wasting some of the energy produced by photosynthesis. The desired reaction is the addition of carbon dioxide to RuBP (carboxylation), a key step in the Calvin-Benson cycle, but approximately 25% of reactions by RuBisCO instead add oxygen to RuBP (oxygenation), creating a product that cannot be used within the Calvin-Benson cycle. This process lowers the efficiency of photosynthesis, potentially lowering photosynthetic output by 25% in C3 plants. Photorespiration involves a complex network of enzyme reactions that exchange metabolites between chloroplasts, leaf peroxisomes and mitochondria."
+    }
+  ],
+  "concepts": [
+    {
+      "key": "photosynthesis",
+      "name": "Photosynthesis",
+      "definition": "The conversion of light energy into chemical energy stored in organic compounds.",
+      "domain": "plant physiology"
+    },
+    {
+      "key": "respiration",
+      "name": "Cellular respiration",
+      "definition": "The transfer of chemical energy from nutrients to ATP by oxidation with an inorganic electron acceptor.",
+      "domain": "cell biology"
+    },
+    {
+      "key": "photorespiration",
+      "name": "Photorespiration",
+      "definition": "The pathway entered when RuBisCO oxygenates RuBP instead of carboxylating it.",
+      "domain": "plant physiology"
+    },
+    {
+      "key": "rubisco",
+      "name": "RuBisCO",
+      "definition": "Ribulose-1,5-bisphosphate carboxylase/oxygenase, the enzyme that catalyses CO2 fixation.",
+      "domain": "plant physiology"
+    },
+    {
+      "key": "calvin-cycle",
+      "name": "The Calvin-Benson cycle",
+      "definition": "The light-independent reactions in which carbon dioxide is fixed into carbohydrate.",
+      "domain": "plant physiology"
+    },
+    {
+      "key": "light-reactions",
+      "name": "Light-dependent reactions",
+      "definition": "The thylakoid reactions that harvest light and build a proton gradient.",
+      "domain": "plant physiology"
+    },
+    {
+      "key": "stomatal-conductance",
+      "name": "Stomatal conductance",
+      "definition": "The rate at which a leaf exchanges gas with the atmosphere through its stomata.",
+      "domain": "plant physiology"
+    },
+    {
+      "key": "ccm",
+      "name": "CO2-concentrating mechanisms",
+      "definition": "Mechanisms that raise the CO2 concentration around RuBisCO above atmospheric levels.",
+      "domain": "plant physiology"
+    }
+  ],
+  "claims": [
+    {
+      "key": "c-energy",
+      "concept": "photosynthesis",
+      "proposition": "Photosynthesis converts light energy into chemical energy stored in organic compounds such as sugars and starches.",
+      "scope": "Oxygenic photosynthesis in plants, algae and cyanobacteria",
+      "context": "general biology",
+      "status": "VERIFIED",
+      "confidence": 0.95,
+      "evidence": [
+        {
+          "source": "perera2020",
+          "relation": "SUPPORTS",
+          "excerpt": "Photosynthesis is the chemical reaction that sustains most life on Earth.",
+          "quality": 90
+        },
+        {
+          "source": "wiki-photosynthesis",
+          "relation": "SUPPORTS",
+          "excerpt": "Photosynthetic organisms store the converted chemical energy within the bonds of intracellular organic compounds, typically carbohydrates like sugars, starches, phytoglycogen and cellulose.",
+          "quality": 70
+        }
+      ]
+    },
+    {
+      "key": "c-oxygenic",
+      "concept": "photosynthesis",
+      "proposition": "Oxygenic photosynthesis releases oxygen as a byproduct of splitting water.",
+      "scope": "Oxygenic photosynthesis; the oxygen originates from water, not from carbon dioxide",
+      "context": "general biology",
+      "status": "SUPPORTED",
+      "confidence": 0.85,
+      "evidence": [
+        {
+          "source": "wiki-photosynthesis",
+          "relation": "SUPPORTS",
+          "excerpt": "The term photosynthesis usually refers to oxygenic photosynthesis, a process that releases oxygen as a byproduct of water splitting.",
+          "quality": 75
+        }
+      ]
+    },
+    {
+      "key": "c-both",
+      "concept": "photosynthesis",
+      "proposition": "Photosynthetic organisms store the converted chemical energy and later metabolise it through cellular respiration; the two processes are not alternatives in time.",
+      "scope": "Photosynthetic organisms",
+      "context": "general biology",
+      "status": "SUPPORTED",
+      "confidence": 0.8,
+      "evidence": [
+        {
+          "source": "wiki-photosynthesis",
+          "relation": "SUPPORTS",
+          "excerpt": "When needing to use this stored energy, an organism's cells then metabolize the organic compounds through cellular respiration.",
+          "quality": 70
+        }
+      ]
+    },
+    {
+      "key": "c-respiration",
+      "concept": "respiration",
+      "proposition": "Cellular respiration oxidizes biological fuels with an inorganic electron acceptor such as oxygen to drive ATP production.",
+      "scope": "Aerobic cellular respiration",
+      "context": "cell biology",
+      "status": "SUPPORTED",
+      "confidence": 0.8,
+      "evidence": [
+        {
+          "source": "wiki-respiration",
+          "relation": "SUPPORTS",
+          "excerpt": "Cellular respiration is the process of oxidizing biological fuels using an inorganic electron acceptor, such as oxygen, to drive production of adenosine triphosphate (ATP), which stores chemical energy in a biologically accessible form.",
+          "quality": 75
+        }
+      ]
+    },
+    {
+      "key": "c-rubisco-oxygenation",
+      "concept": "rubisco",
+      "proposition": "RuBisCO is inefficient chiefly because carboxylation competes with oxygenation, and the oxygenation route leads into the energetically expensive photorespiratory pathway.",
+      "scope": "RuBisCO catalysis in C3 plants",
+      "context": "plant physiology",
+      "status": "VERIFIED",
+      "confidence": 0.9,
+      "evidence": [
+        {
+          "source": "perera2020",
+          "relation": "SUPPORTS",
+          "excerpt": "the enzyme that catalyzes CO2 fixation in the Calvin-Benson cycle - ribulose 1,5-bisphosphate carboxylase oxidase or rubisco - is inefficient owing to several intrinsic characteristics, the most notable being the competitiveness between carboxylation and oxidation processes, since the oxidation of D-ribulose-1,5-bisphosphate results in the energetically expensive but perhaps convenient photorespiratory pathway",
+          "quality": 95
+        }
+      ]
+    },
+    {
+      "key": "c-calvin",
+      "concept": "calvin-cycle",
+      "proposition": "The carboxylation step of the Calvin-Benson cycle is the addition of carbon dioxide to RuBP, and it is the reaction RuBisCO competes with.",
+      "scope": "The Calvin-Benson cycle in oxygenic phototrophs",
+      "context": "plant physiology",
+      "status": "SUPPORTED",
+      "confidence": 0.85,
+      "evidence": [
+        {
+          "source": "wiki-photorespiration",
+          "relation": "SUPPORTS",
+          "excerpt": "The desired reaction is the addition of carbon dioxide to RuBP (carboxylation), a key step in the Calvin-Benson cycle",
+          "quality": 75
+        }
+      ]
+    },
+    {
+      "key": "c-25pct",
+      "concept": "photorespiration",
+      "proposition": "Approximately a quarter of RuBisCO reactions are oxygenations rather than carboxylations.",
+      "scope": "The figure is an approximation for C3 plants under typical conditions",
+      "context": "plant physiology",
+      "status": "SUPPORTED",
+      "confidence": 0.7,
+      "evidence": [
+        {
+          "source": "wiki-photorespiration",
+          "relation": "SUPPORTS",
+          "excerpt": "approximately 25% of reactions by RuBisCO instead add oxygen to RuBP (oxygenation), creating a product that cannot be used within the Calvin-Benson cycle",
+          "quality": 70
+        }
+      ]
+    },
+    {
+      "key": "c-photoresp-cost",
+      "concept": "photorespiration",
+      "proposition": "Photorespiration lowers the efficiency of photosynthesis and may lower photosynthetic output by around a quarter in C3 plants.",
+      "scope": "C3 plants",
+      "context": "plant physiology",
+      "status": "SUPPORTED",
+      "confidence": 0.7,
+      "evidence": [
+        {
+          "source": "wiki-photorespiration",
+          "relation": "SUPPORTS",
+          "excerpt": "This process lowers the efficiency of photosynthesis, potentially lowering photosynthetic output by 25% in C3 plants.",
+          "quality": 70
+        }
+      ]
+    },
+    {
+      "key": "c-photoresp-organs",
+      "concept": "photorespiration",
+      "proposition": "Photorespiration exchanges metabolites between chloroplasts, leaf peroxisomes and mitochondria.",
+      "scope": "The photorespiratory pathway in plants",
+      "context": "plant physiology",
+      "status": "SUPPORTED",
+      "confidence": 0.75,
+      "evidence": [
+        {
+          "source": "wiki-photorespiration",
+          "relation": "SUPPORTS",
+          "excerpt": "Photorespiration involves a complex network of enzyme reactions that exchange metabolites between chloroplasts, leaf peroxisomes and mitochondria.",
+          "quality": 70
+        }
+      ]
+    },
+    {
+      "key": "c-stomata",
+      "concept": "stomatal-conductance",
+      "proposition": "Stomatal conductance is affected by light, carbon dioxide and water supply.",
+      "scope": "Leaf gas exchange under field and controlled conditions",
+      "context": "plant physiology",
+      "status": "VERIFIED",
+      "confidence": 0.9,
+      "evidence": [
+        {
+          "source": "perera2020",
+          "relation": "SUPPORTS",
+          "excerpt": "Light, CO2, and water supply affect g_s.",
+          "quality": 95
+        }
+      ]
+    },
+    {
+      "key": "c-balance",
+      "concept": "photosynthesis",
+      "proposition": "In angiosperms the photosynthetic limitations are generally well balanced across biochemical, stomatal and mesophyll components, so relaxing any single one yields only modest gains.",
+      "scope": "Angiosperms in steady state",
+      "context": "plant physiology",
+      "status": "VERIFIED",
+      "confidence": 0.85,
+      "evidence": [
+        {
+          "source": "perera2020",
+          "relation": "SUPPORTS",
+          "excerpt": "photosynthetic limitations are generally well-balanced in angiosperms ... only modest improvements of photosynthesis can be expected from relaxing only one limiting factor",
+          "quality": 90
+        }
+      ]
+    },
+    {
+      "key": "c-c4",
+      "concept": "ccm",
+      "proposition": "The C4 carbon-concentrating mechanism raises the carbon dioxide concentration around RuBisCO to at least ten times that of the surrounding atmosphere.",
+      "scope": "C4 plants",
+      "context": "plant physiology",
+      "status": "VERIFIED",
+      "confidence": 0.9,
+      "evidence": [
+        {
+          "source": "perera2020",
+          "relation": "SUPPORTS",
+          "excerpt": "the C4 mechanism allows CO2 concentrations around rubisco of at least 10-times higher than those of the surrounding atmosphere",
+          "quality": 95
+        }
+      ]
+    },
+    {
+      "key": "c-carboxysome",
+      "concept": "ccm",
+      "proposition": "Cyanobacteria carrying carboxysomes concentrate carbon dioxide up to one hundred times the surrounding atmospheric level, and Chlamydomonas carrying pyrenoids up to forty times.",
+      "scope": "The algal and cyanobacterial concentrating mechanisms",
+      "context": "plant physiology",
+      "status": "VERIFIED",
+      "confidence": 0.85,
+      "evidence": [
+        {
+          "source": "perera2020",
+          "relation": "SUPPORTS",
+          "excerpt": "eukaryotic algae like Chlamydomonas containing pyrenoids can concentrate CO2 40-times and prokaryotic cyanobacteria possessing carboxysomes 100-times higher than the surrounding atmosphere",
+          "quality": 95
+        }
+      ]
+    },
+    {
+      "key": "c-lhc",
+      "concept": "light-reactions",
+      "proposition": "Light energy is absorbed and transferred to the photosystem II core by the light-harvesting complex II.",
+      "scope": "The thylakoid membrane of oxygenic phototrophs",
+      "context": "plant physiology",
+      "status": "VERIFIED",
+      "confidence": 0.9,
+      "evidence": [
+        {
+          "source": "perera2020",
+          "relation": "SUPPORTS",
+          "excerpt": "Light energy is absorbed and transferred to the photosystem II (PSII) core by the light-harvesting complex II (LHCII).",
+          "quality": 95
+        }
+      ]
+    },
+    {
+      "key": "c-shade",
+      "concept": "light-reactions",
+      "proposition": "Delays in RuBisCO activation during a shade-to-sun transition have been estimated to reduce wheat assimilation by about 21%.",
+      "scope": "Wheat, shade-to-sun transitions",
+      "context": "plant physiology",
+      "status": "VERIFIED",
+      "confidence": 0.8,
+      "evidence": [
+        {
+          "source": "perera2020",
+          "relation": "SUPPORTS",
+          "excerpt": "these delays, especially in rubisco activation, have been estimated to decrease wheat assimilation by 21% in shade to sun transitions",
+          "quality": 90
+        }
+      ]
+    },
+    {
+      "key": "c-misconception-oxygen",
+      "concept": "photosynthesis",
+      "proposition": "The oxygen a plant releases comes from the carbon dioxide it absorbs.",
+      "scope": "The misconception, stated so that it can be refuted",
+      "context": "common misconception",
+      "status": "REFUTED",
+      "confidence": 0.9,
+      "evidence": [
+        {
+          "source": "wiki-photosynthesis",
+          "relation": "CONTRADICTS",
+          "excerpt": "a process that releases oxygen as a byproduct of water splitting",
+          "quality": 80
+        }
+      ]
+    },
+    {
+      "key": "c-misconception-respiration",
+      "concept": "respiration",
+      "proposition": "A photosynthetic organism obtains all of its energy from photosynthesis and never needs cellular respiration.",
+      "scope": "The misconception, stated so that it can be refuted",
+      "context": "common misconception",
+      "status": "REFUTED",
+      "confidence": 0.85,
+      "evidence": [
+        {
+          "source": "wiki-photosynthesis",
+          "relation": "CONTRADICTS",
+          "excerpt": "When needing to use this stored energy, an organism's cells then metabolize the organic compounds through cellular respiration.",
+          "quality": 75
+        }
+      ]
+    }
+  ],
+  "representations": [
+    {
+      "key": "r-photo-intro",
+      "concept": "photosynthesis",
+      "level": "INTRODUCTORY",
+      "audience": "a reader with no background in biology",
+      "statement": "Photosynthesis is how green plants use light energy to build sugars out of carbon dioxide and water, releasing oxygen as a by-product. The sugars are the plant's stored food.",
+      "scope": "A first account, suitable for a school-level explanation. It describes what happens, not the machinery.",
+      "assumptions": [
+        "The reader knows what a gas is and what light is.",
+        "The plant is green and growing in light."
+      ],
+      "includedFacts": [
+        "Light energy is the input.",
+        "Carbon dioxide and water are the inputs.",
+        "Sugars are the output.",
+        "Oxygen is released."
+      ],
+      "omitted": [
+        "That the oxygen comes from water rather than from the carbon dioxide.",
+        "That the plant also respires, at the same time.",
+        "That the reaction is split into light-dependent and light-independent stages.",
+        "That RuBisCO can react with oxygen as well as carbon dioxide."
+      ],
+      "validityConditions": [
+        "Green plants in light.",
+        "An introductory account of the overall balance, not of the mechanism."
+      ],
+      "prerequisites": [],
+      "confidence": 0.9
+    },
+    {
+      "key": "r-photo-inter",
+      "concept": "photosynthesis",
+      "level": "INTERMEDIATE",
+      "audience": "a reader who has finished an introductory biology course",
+      "statement": "Photosynthesis has two linked stages. The light-dependent reactions, in the thylakoid membranes, harvest light, split water and build a proton gradient that drives ATP and NADPH production. The light-independent reactions, in the chloroplast stroma, use that ATP and NADPH to fix carbon dioxide into carbohydrate through the Calvin-Benson cycle. The plant also runs cellular respiration to release that stored energy again, and it does so continuously, including in daylight.",
+      "scope": "The two-stage structure and the parallel respiration, without molecular detail.",
+      "assumptions": [
+        "The reader can accept a compartment structure: thylakoid membrane and stroma.",
+        "Chloroplasts and mitochondria are distinct compartments."
+      ],
+      "includedFacts": [
+        "The light-dependent reactions build ATP and NADPH and split water.",
+        "The Calvin-Benson cycle fixes carbon dioxide using ATP and NADPH.",
+        "Respiration runs in parallel with photosynthesis.",
+        "Photorespiration is a competing reaction at RuBisCO."
+      ],
+      "omitted": [
+        "The Z-scheme of electron transport.",
+        "The chemical identity of the proton gradient.",
+        "The three-carbon and two-carbon intermediates of the C2 cycle.",
+        "The anatomical difference between C3 and C4 leaves."
+      ],
+      "validityConditions": [
+        "Oxygenic phototrophs.",
+        "Suited to reasoning about why a change in light, carbon dioxide or temperature alters the outcome."
+      ],
+      "prerequisites": [
+        "light-reactions",
+        "calvin-cycle"
+      ],
+      "refines": "r-photo-intro",
+      "confidence": 0.85
+    },
+    {
+      "key": "r-photo-adv",
+      "concept": "photosynthesis",
+      "level": "ADVANCED",
+      "audience": "an undergraduate student of plant physiology",
+      "statement": "Photosynthetic performance is the net result of a chain of competing processes rather than a single reaction. Light harvesting by the light-harvesting complexes feeds the photosystems; electron transport establishes a proton gradient whose yield sets the rate of ATP and NADPH formation; RuBisCO catalyses carboxylation but also oxygenation, and the oxygenation route is paid for through photorespiration, which returns carbon dioxide to the chloroplast only after a cycle spanning chloroplast, peroxisome and mitochondrion. Diffusion to the carboxylation site, through the stomata and the mesophyll, is itself a major limitation, and in angiosperms the biochemical, stomatal and mesophyll limitations are close to balanced.",
+      "scope": "The limiting processes and how they trade against one another.",
+      "assumptions": [
+        "The reader knows the Calvin-Benson cycle and can follow the C2 cycle.",
+        "Stomatal and mesophyll conductance are treated as the diffusion terms."
+      ],
+      "includedFacts": [
+        "RuBisCO oxygenation diverts carbon into photorespiration.",
+        "Photorespiration spans three organelles.",
+        "Stomatal conductance responds to light, carbon dioxide and water.",
+        "In angiosperms the limitations are well balanced."
+      ],
+      "omitted": [
+        "The photosynthetic apparatus of C4 and CAM plants in detail.",
+        "The specific engineering attempts to improve crop photosynthesis."
+      ],
+      "validityConditions": [
+        "C3 plants, steady state, non-stress conditions.",
+        "The balance statement does not hold under severe stress."
+      ],
+      "prerequisites": [
+        "rubisco",
+        "photorespiration",
+        "stomatal-conductance"
+      ],
+      "refines": "r-photo-inter",
+      "confidence": 0.8
+    },
+    {
+      "key": "r-photo-mech",
+      "concept": "photosynthesis",
+      "level": "MECHANISTIC",
+      "audience": "a researcher or an advanced student",
+      "statement": "Oxygenic photosynthesis couples a membrane protonmotive force to a carbon fixation cycle. Photosystem II absorbs photons through the light-harvesting complex II and uses the excitation energy to extract electrons from water; the resulting oxygen is the by-product of that extraction. The electrons pass through the photosynthetic electron transport chain, protons are pumped across the thylakoid membrane, and the resulting gradient drives ATP synthase. NADPH is formed on the stromal side. In the stroma, ATP and NADPH are spent by the Calvin-Benson cycle, in which RuBisCO adds CO2 to RuBP, and the product is reduced to triose phosphate. When RuBisCO instead oxygenates RuBP, the two-carbon product is routed through the peroxisome and the mitochondrion and carbon dioxide is released; carbon is thereby lost and ATP and reducing power are consumed without carbon being fixed.",
+      "scope": "The coupled mechanism, with the chemical steps that can be drawn on paper.",
+      "assumptions": [
+        "The reader is comfortable with a proton gradient and with enzyme catalysis.",
+        "Oxygenic phototrophs with a Calvin-Benson cycle."
+      ],
+      "includedFacts": [
+        "Water is the electron donor in photosystem II, and oxygen is its by-product.",
+        "The proton gradient across the thylakoid drives ATP synthesis.",
+        "RuBisCO catalyses both carboxylation and oxygenation of RuBP.",
+        "Photorespiration releases carbon dioxide and consumes energy."
+      ],
+      "omitted": [
+        "The chemistry of photosystem I.",
+        "The regulation of RuBisCO activity by RuBisCO activase and inhibitors.",
+        "The carbon-concentrating anatomy of C4 and CAM plants."
+      ],
+      "validityConditions": [
+        "Oxygenic phototrophs.",
+        "Assumes steady-state conditions; the oxygenase/carboxylase ratio is temperature and carbon dioxide dependent."
+      ],
+      "prerequisites": [
+        "rubisco",
+        "photorespiration",
+        "light-reactions",
+        "calvin-cycle"
+      ],
+      "refines": "r-photo-adv",
+      "confidence": 0.8
+    },
+    {
+      "key": "r-resp-intro",
+      "concept": "respiration",
+      "level": "INTRODUCTORY",
+      "audience": "a reader with no background in biology",
+      "statement": "Cellular respiration breaks down food molecules to release the energy a cell can use. It needs an electron acceptor, usually oxygen, and it produces ATP.",
+      "scope": "What respiration is for and what it needs.",
+      "assumptions": [],
+      "includedFacts": [
+        "Respiration releases energy from food.",
+        "Oxygen is the usual electron acceptor.",
+        "ATP is the usable energy currency."
+      ],
+      "omitted": [
+        "That plants carry it out as well as animals.",
+        "That it runs at the same time as photosynthesis."
+      ],
+      "validityConditions": [
+        "Aerobic respiration."
+      ],
+      "prerequisites": [],
+      "confidence": 0.85
+    },
+    {
+      "key": "r-resp-inter",
+      "concept": "respiration",
+      "level": "INTERMEDIATE",
+      "audience": "a reader who has finished an introductory biology course",
+      "statement": "Cellular respiration is a set of reactions in which the energy in nutrients is transferred to ATP by moving electrons to an inorganic electron acceptor, typically oxygen, and releasing waste products. It runs continuously in plant cells, including during daylight, so a plant both makes sugar by photosynthesis and spends it by respiration.",
+      "scope": "The transfer of energy to ATP, and the fact that plants respire continuously.",
+      "assumptions": [
+        "The reader knows that ATP is the cell's usable energy currency."
+      ],
+      "includedFacts": [
+        "Electron flow to an acceptor drives ATP production.",
+        "Waste products are released.",
+        "Plants respire during daylight as well as at night."
+      ],
+      "omitted": [
+        "The individual reactions of the citric acid cycle and the electron transport chain.",
+        "The stoichiometry of ATP per glucose."
+      ],
+      "validityConditions": [
+        "Aerobic cellular respiration."
+      ],
+      "prerequisites": [
+        "photosynthesis"
+      ],
+      "confidence": 0.8
+    },
+    {
+      "key": "r-photoresp-intro",
+      "concept": "photorespiration",
+      "level": "INTRODUCTORY",
+      "audience": "a reader with no background in biology",
+      "statement": "Photorespiration is a wasteful side reaction of photosynthesis: the plant's main carbon-fixing enzyme grabs oxygen instead of carbon dioxide, and the plant has to spend energy undoing the result.",
+      "scope": "The idea of a competing, costly reaction, without the chemistry.",
+      "assumptions": [
+        "The reader knows that photosynthesis fixes carbon dioxide."
+      ],
+      "includedFacts": [
+        "The main enzyme can react with oxygen instead of carbon dioxide.",
+        "The side route costs the plant energy."
+      ],
+      "omitted": [
+        "The approximate fraction of reactions.",
+        "The organelles involved.",
+        "Why it is worse in hot, dry conditions."
+      ],
+      "validityConditions": [
+        "C3 plants."
+      ],
+      "prerequisites": [
+        "photosynthesis"
+      ],
+      "confidence": 0.85
+    },
+    {
+      "key": "r-photoresp-adv",
+      "concept": "photorespiration",
+      "level": "ADVANCED",
+      "audience": "an undergraduate student of plant physiology",
+      "statement": "Photorespiration is the C2 oxidative photosynthetic carbon cycle. When RuBisCO oxygenates RuBP, a two-carbon product is formed that the Calvin-Benson cycle cannot use. The plant recovers it by moving it through the peroxisome and the mitochondrion, where glycine is converted to serine, carbon dioxide is released and ammonia is reassimilated. Because carbon dioxide is released again and ATP and reducing power were spent, photorespiration lowers net photosynthetic output; the fraction of RuBisCO reactions that take the oxygenation route is roughly a quarter in typical C3 conditions.",
+      "scope": "The pathway and its carbon and energy cost.",
+      "assumptions": [
+        "The reader knows the Calvin-Benson cycle and the chemistry of amino acids."
+      ],
+      "includedFacts": [
+        "The photorespiratory cycle spans chloroplast, peroxisome and mitochondrion.",
+        "Carbon dioxide is released back to the chloroplast.",
+        "Roughly a quarter of RuBisCO reactions are oxygenations."
+      ],
+      "omitted": [
+        "Engineering of photorespiratory bypasses.",
+        "The photorespiratory role in stress signalling."
+      ],
+      "validityConditions": [
+        "C3 plants under typical conditions; the fraction varies with temperature and carbon dioxide."
+      ],
+      "prerequisites": [
+        "rubisco",
+        "calvin-cycle"
+      ],
+      "confidence": 0.8
+    },
+    {
+      "key": "r-rubisco-inter",
+      "concept": "rubisco",
+      "level": "INTERMEDIATE",
+      "audience": "a reader who has finished an introductory biology course",
+      "statement": "RuBisCO is the enzyme that fixes carbon dioxide, adding it to a five-carbon sugar to start the Calvin-Benson cycle. It is also the enzyme's weakness: it can add oxygen instead of carbon dioxide, and that mistake costs the plant energy.",
+      "scope": "The dual activity of one enzyme, and why it matters.",
+      "assumptions": [
+        "The reader knows what an enzyme does."
+      ],
+      "includedFacts": [
+        "RuBisCO catalyses carboxylation.",
+        "It catalyses oxygenation instead, about a quarter of the time.",
+        "The oxygenation route is the photorespiratory pathway."
+      ],
+      "omitted": [
+        "The activation cycle and RuBisCO activase.",
+        "The evolutionary history of the enzyme."
+      ],
+      "validityConditions": [
+        "Oxygenic phototrophs."
+      ],
+      "prerequisites": [
+        "calvin-cycle"
+      ],
+      "confidence": 0.85
+    },
+    {
+      "key": "r-calvin-adv",
+      "concept": "calvin-cycle",
+      "level": "ADVANCED",
+      "audience": "an undergraduate student of plant physiology",
+      "statement": "The Calvin-Benson cycle fixes carbon dioxide in the stroma using ATP and NADPH from the light reactions. RuBisCO adds carbon dioxide to ribulose-1,5-bisphosphate; the product is reduced and rearranged to regenerate the acceptor, so the cycle turns over continuously. The rate at which the cycle can run is set by the supply of ATP and NADPH and by the carboxylation rate of RuBisCO.",
+      "scope": "The cycle's inputs, its turning point and what limits it.",
+      "assumptions": [
+        "The reader knows the products of the light reactions."
+      ],
+      "includedFacts": [
+        "ATP and NADPH are consumed.",
+        "RuBP is the acceptor and is regenerated.",
+        "RuBisCO catalyses the fixation step."
+      ],
+      "omitted": [
+        "Each named intermediate of the cycle.",
+        "The regulation of cycle enzymes."
+      ],
+      "validityConditions": [
+        "Oxygenic phototrophs with a Calvin-Benson cycle."
+      ],
+      "prerequisites": [
+        "rubisco",
+        "light-reactions"
+      ],
+      "confidence": 0.8
+    },
+    {
+      "key": "r-light-adv",
+      "concept": "light-reactions",
+      "level": "ADVANCED",
+      "audience": "an undergraduate student of plant physiology",
+      "statement": "The light-dependent reactions occur in the thylakoid membrane. Light-harvesting complex II transfers excitation energy to the photosystem II core, which extracts electrons from water; the electrons pass through the electron transport chain, protons are moved into the thylakoid lumen, and the gradient drives ATP synthase. The system must also dissipate excess excitation as heat, because unbalanced absorption produces damaging reactive oxygen species. Activation of RuBisCO lags when a shaded leaf is suddenly exposed to strong light, and that lag alone has been estimated to cut wheat assimilation by about a fifth.",
+      "scope": "The energetic machinery and its main costs.",
+      "assumptions": [
+        "The reader knows the components of the thylakoid membrane."
+      ],
+      "includedFacts": [
+        "LHCII transfers energy to the photosystem II core.",
+        "Water is split and the gradient drives ATP synthesis.",
+        "Excess light must be dissipated to avoid reactive oxygen species.",
+        "RuBisCO activation lags after a shade-to-sun transition."
+      ],
+      "omitted": [
+        "The Z-scheme in detail.",
+        "Chlorophyll fluorescence measurement methods."
+      ],
+      "validityConditions": [
+        "Oxygenic phototrophs.",
+        "The 21% figure is an estimate for wheat."
+      ],
+      "prerequisites": [
+        "photosynthesis"
+      ],
+      "confidence": 0.8
+    },
+    {
+      "key": "r-stomata-inter",
+      "concept": "stomatal-conductance",
+      "level": "INTERMEDIATE",
+      "audience": "a reader who has finished an introductory biology course",
+      "statement": "Stomata are adjustable pores in the leaf through which carbon dioxide enters and water vapour leaves. Stomatal conductance measures how freely gas moves through them. It responds to light, to the carbon dioxide concentration and to the plant's water supply, so closing the stomata to conserve water also restricts the carbon dioxide supply for photosynthesis.",
+      "scope": "The diffusion step and the trade-off it expresses.",
+      "assumptions": [
+        "The reader knows that photosynthesis consumes carbon dioxide."
+      ],
+      "includedFacts": [
+        "Stomata control gas exchange.",
+        "Light, carbon dioxide and water supply affect conductance.",
+        "Conserving water by closing stomata restricts carbon dioxide uptake."
+      ],
+      "omitted": [
+        "The hormonal signalling that opens and closes the stomata.",
+        "The mesophyll conductance component."
+      ],
+      "validityConditions": [
+        "Leaf gas exchange in vascular plants."
+      ],
+      "prerequisites": [
+        "photosynthesis"
+      ],
+      "confidence": 0.8
+    },
+    {
+      "key": "r-ccm-adv",
+      "concept": "ccm",
+      "level": "ADVANCED",
+      "audience": "an undergraduate student of plant physiology",
+      "statement": "A carbon-concentrating mechanism raises the carbon dioxide concentration around RuBisCO above the atmospheric level, which favours carboxylation over oxygenation. C4 plants achieve at least a tenfold concentration. Cyanobacteria that carry carboxysomes achieve up to one hundredfold, and the green alga Chlamydomonas, which carries pyrenoids, up to fortyfold. The strategies differ in the organelle that performs the concentration, but they serve the same purpose.",
+      "scope": "The purpose of the concentrating mechanisms and the magnitude of their effect.",
+      "assumptions": [
+        "The reader knows why carboxylation and oxygenation compete."
+      ],
+      "includedFacts": [
+        "Concentrating CO2 favours carboxylation.",
+        "C4 achieves at least tenfold.",
+        "Carboxysomes achieve up to one hundredfold; pyrenoids up to fortyfold."
+      ],
+      "omitted": [
+        "The anatomical and biochemical detail of the C4 cycle.",
+        "Engineering these mechanisms into C3 crops."
+      ],
+      "validityConditions": [
+        "The mechanisms as they occur naturally."
+      ],
+      "prerequisites": [
+        "rubisco"
+      ],
+      "confidence": 0.8
+    }
+  ],
+  "prerequisites": [
+    {
+      "concept": "calvin-cycle",
+      "requires": "rubisco",
+      "required": true,
+      "note": "The fixation step is catalysed by RuBisCO, so the cycle cannot be explained without it."
+    },
+    {
+      "concept": "photorespiration",
+      "requires": "rubisco",
+      "required": true,
+      "note": "Photorespiration begins at the oxygenation reaction of RuBisCO."
+    },
+    {
+      "concept": "photorespiration",
+      "requires": "calvin-cycle",
+      "required": true,
+      "note": "The photorespiratory cycle exists because the oxygenation product cannot enter the Calvin-Benson cycle."
+    },
+    {
+      "concept": "ccm",
+      "requires": "rubisco",
+      "required": true,
+      "note": "The point of concentrating CO2 is to change the balance of the two reactions RuBisCO performs."
+    },
+    {
+      "concept": "light-reactions",
+      "requires": "photosynthesis",
+      "required": false,
+      "note": "The light reactions are one half of photosynthesis."
+    }
+  ],
+  "revisions": [
+    {
+      "target": "photosynthesis",
+      "kind": "REFINEMENT",
+      "summary": "The introductory account was replaced by a two-stage account that adds respiration and the photorespiratory competition, and then by the limiting-process account.",
+      "addedFacts": [
+        "The light-dependent reactions build ATP and NADPH and split water.",
+        "Respiration runs in parallel with photosynthesis.",
+        "Photorespiration competes with carboxylation at RuBisCO.",
+        "The biochemical, stomatal and mesophyll limitations are well balanced in angiosperms."
+      ],
+      "stillValid": [
+        "Light energy is the input.",
+        "Carbon dioxide and water are the inputs.",
+        "Sugars are the output and oxygen is released."
+      ],
+      "noLongerValid": [
+        "That photosynthesis and respiration happen at different times of day.",
+        "That the released oxygen comes from the absorbed carbon dioxide.",
+        "That the account is complete without the respiration that consumes the sugar it produces."
+      ],
+      "newlyExplained": [
+        "Why a plant in darkness still consumes oxygen.",
+        "Why raising carbon dioxide increases growth even though light is unchanged.",
+        "Why a hot, dry day can slow photosynthesis despite adequate light."
+      ],
+      "evidence": [
+        "c-energy",
+        "c-both",
+        "c-rubisco-oxygenation",
+        "c-balance"
+      ]
+    }
+  ]
+}
