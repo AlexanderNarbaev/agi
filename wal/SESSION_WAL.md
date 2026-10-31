@@ -608,3 +608,53 @@ the teacher never sees the evaluation; the teach-back measures a gain; a
 declared expectation that is not met is reported as not met; a concept with
 no held-out item yields no claim at all; the learner answers only from what
 it was taught.
+
+### W40.6 — the conceptual-change path, completed (2026-10-31)
+
+A refinement that changed the claims but not the explanation left the
+workspace telling the reader the old account. That was the same failure the
+directive warns about in another shape, and it was found by running the
+correction over HTTP rather than by reading the code.
+
+The refinement chain has two kinds of link, and they had been confused:
+
+  - a link BETWEEN levels ("the intermediate account refines the
+    introductory one") says the concept has a more detailed account. Both
+    are current, at their own levels.
+  - a link WITHIN a level ("the corrected account refines the earlier one at
+    the introductory level") says the earlier account at that level is no
+    longer the one to read.
+
+`Representations.activeAt` makes the distinction explicit: the active
+account at a level is the one that nothing at the SAME level refines. The
+refiner now refines the active account at the requested level, and the
+retriever reads the active account. The pack's four levels still chain the
+way they did, and the introductory account is still the introductory answer.
+
+Measured over HTTP, on the photosynthesis workspace:
+
+| | the answer |
+|---|---|
+| before the correction | "Photosynthetic performance is the net result of a chain of competing processes rather than a single reaction..." |
+| after the correction | "Oxygenic photosynthesis releases oxygen by splitting water, and the rate of that release falls as the light level falls; the earlier account did not say so." |
+
+The claims shown after the correction carry their statuses: `REFUTED`,
+`SUPPORTED`, `SUPERSEDED`, `SUPERSEDED`, `SUPPORTED` — the superseded ones
+are still there, marked, with their history.
+
+`KnowledgeChanges` now carries representations as well as sources, claims,
+evidence and revisions, and the store writes them in the same transaction.
+
+The Knowledge Explorer screen gained a correction panel: choose a concept
+and a claim, write the corrected proposition, its scope and the source it
+rests on, record it, and see what happened.
+
+Tested (7 tests): a correction supersedes without deleting; the corrected
+claim carries its source; the revision records what changed; the history
+survives a restart; unknown references are refused; a claim asserting an
+established status without evidence is refused; and a refinement that
+changes what is said also changes the account the reader sees while the
+earlier account stays in the chain.
+
+The formal gate was re-run after these changes: **9 specifications,
+exit 0, no failures** — 65 to 396,577 states each.

@@ -142,7 +142,47 @@ understand an account without reusing its wording, and a machine may
 reproduce the wording without understanding it. This is a **machine-to-machine
 result** and says nothing about human teaching effectiveness.
 
-## 7. Stop it, start it again, and verify
+## 7. Correct what the workspace believes
+
+Go to the **Knowledge** tab, to the bottom panel, **Correct what is known**.
+
+1. Choose the concept and, if you are correcting something, the claim.
+2. Write the corrected proposition and the **scope** — the condition under
+   which it holds. A claim that was true in one condition and false in
+   another is corrected by *adding* the condition, not by erasing the fact.
+3. Give the source it rests on. A human statement is a source, and it is
+   recorded as one, with its own authority and freshness.
+4. Press **Record the correction**.
+
+What happens, and what it deliberately does not do:
+
+- The **earlier claim is kept**, with the status `SUPERSEDED` and its
+  version advanced. Its proposition is unchanged: what was believed is still
+  visible, marked as no longer the account.
+- The **corrected claim is a new claim**, with its own scope, its own source
+  and the evidence link that makes it `SUPPORTED` rather than a draft.
+- The **revision** records what was added, which assumptions still hold,
+  which simplification stopped applying, and which new cases the refined
+  model now explains.
+- If you also give a **refined account**, that text becomes the account the
+  reader is given at that level, and it refines the one it replaced. The
+  earlier account stays in the chain and stays visible — it is simply no
+  longer the one that is read.
+
+Measured over HTTP, on the photosynthesis workspace:
+
+```
+before:  Photosynthetic performance is the net result of a chain of
+         competing processes rather than a single reaction. ...
+after:   Oxygenic photosynthesis releases oxygen by splitting water, and the
+         rate of that release falls as the light level falls; the earlier
+         account did not say so. ...
+```
+
+The answer changed because the knowledge changed, and the claim that was
+superseded is still in the store with its history.
+
+## 8. Stop it, start it again, and verify
 
 This is the part that matters, so do it explicitly:
 
@@ -159,7 +199,7 @@ re-imported — the pack was not loaded a second time.
 The store lives at `matrix-core/data/knowledge/workbench.sqlite`. It is one
 file: copy it to back the workspace up, and put it back to restore it.
 
-## 8. What this release does not do
+## 9. What this release does not do
 
 - **It is not a chat assistant.** The answer is composed from the claims and
   representations in the store, not generated.
@@ -176,7 +216,7 @@ file: copy it to back the workspace up, and put it back to restore it.
   synthetic learner was taught and measured on held-out items; that shows the
   lesson contained the assessed content, not that a person would learn it.
 
-## 9. Where the pieces are
+## 10. Where the pieces are
 
 | Piece | Path |
 |---|---|
@@ -190,7 +230,7 @@ file: copy it to back the workspace up, and put it back to restore it.
 | The dataset | `matrix-core/src/main/resources/knowledge/photosynthesis.assessment.json` |
 | The reconnaissance | `docs-v2/engineering/W40-RECONNAISSANCE.md` |
 
-## 10. The API, if you would rather not use the browser
+## 11. The API, if you would rather not use the browser
 
 ```
 curl http://localhost:9091/v1/workbench/status
