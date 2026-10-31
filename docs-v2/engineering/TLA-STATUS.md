@@ -9,8 +9,8 @@ only, and the Java-side "formal gate" (`TlaSpecSmokeTest`) is a **text-level**
 smoke test that passes on files the TLA+ parser rejects. Nine specifications
 had therefore never been parsed by a TLA+ parser at all.
 
-**Current state: all ten specifications parse, all ten are model-checked,
-and every configured property holds.** The five specifications that carried a
+**Current state: all eleven specifications parse, all eleven are
+model-checked, and every configured property holds.** The five specifications that carried a
 recorded property failure have been resolved against the Java implementations
 they model — see §"The five recorded failures, and how each was resolved".
 
@@ -49,10 +49,29 @@ Two toolchain facts that are easy to get wrong:
 | `HashChain` | 127 882 / 20 440 | `TypeOK`, `VerifiedImpliesIntact` (invariants); `ChainMonotonic`, `LastHashConsistent`, `AppendKeepsChainValid`, `TamperDetected`, `RestoreVerifies` (properties) |
 | `ConjugateBudgeterDP` | 381 / 91 | all six module properties |
 | `FrozenEthicalFNL` | 65 / 16 | all five module properties |
-| `KnowledgeLifecycle` | 432 / 216 | `EvidenceRequired`, `SupersededKeepsProposition`, `RevisionRecorded`, `SingleSuperseder`, `RepresentationChainAcyclic` (invariants); `EvidenceAlways`, `PropositionAlways`, `RevisionAlways`, `SupersederAlways` (properties) |
+| `KnowledgeStore` | 145 / 64 | `TypeOK`, `EvidenceHasClaim`, `BackedHasSource`, `SchemaAtLeastOne`, `ImportIsAtomic`, `VersionNotBelowFloor`, `CountersNotBelowFloor` (invariants); `EvidenceAlways`, `SourceAlways`, `VersionNeverDecreases`, `CountersNeverDecrease` (properties) |
+| `KnowledgeLifecycle` | 2 808 / 1 296 | `EvidenceRequired`, `SupersededKeepsProposition`, `RevisionRecorded`, `SingleSuperseder`, `RepresentationChainAcyclic` (invariants); `EvidenceAlways`, `PropositionAlways`, `RevisionAlways`, `SupersederAlways` (properties) |
 
 No specification is syntax-checked only, and no property is recorded as
 failing.
+
+`KnowledgeStore` was added in RECON-W40 alongside it, for the other half of
+the same persistence layer: the STORE rather than the claim. It states the
+three promises the restart depends on — an import is atomic, so the claims
+and the evidence that backs them land together or not at all; the schema
+version only ever goes up; and a claim that is backed by evidence has a
+source behind that evidence.
+
+Its four mutants all kill: the import that drops the claims, the rolled-back
+import that leaves them behind, the import that drops the sources, and the
+migration that lowers the version.
+
+**A note on how the model had to be written.** The first version explored an
+unbounded counter — the number of imports — and TLC did not finish: an
+unbounded counter means an infinite state space. The bounds are now in the
+configuration (`MaxSteps`, `MaxVersion`) and recorded in the registry as a
+gap, because a bounded model checks the monotonicity over a finite history
+and not over an unbounded one.
 
 ### The vacuity the new model had, and how it was found
 

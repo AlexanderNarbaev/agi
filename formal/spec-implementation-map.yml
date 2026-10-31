@@ -200,6 +200,64 @@ specifications:
       - "The model does not cover the concurrent case: two refinements arriving at once are applied one after another."
 
   # ───────────────────────────────────────────────────────────────────────────
+  - id: KnowledgeStore
+    title: "The knowledge store's persistence semantics — atomic import, monotone schema version, sourced evidence"
+    spec: formal/KnowledgeStore.tla
+    config: formal/KnowledgeStore.cfg
+    java:
+      module: matrix-core
+      sources:
+        - matrix-core/src/main/java/io/matrix/knowledge/KnowledgeStore.java
+        - matrix-core/src/main/java/io/matrix/knowledge/KnowledgeImporter.java
+        - matrix-core/src/main/java/io/matrix/knowledge/KnowledgeSnapshot.java
+      production_callers:
+        - matrix-core/src/main/java/io/matrix/knowledge/KnowledgeWorkbench.java
+        - matrix-core/src/main/java/io/matrix/knowledge/LearningWorkbenchResource.java
+      production_caller_status: PRODUCTION_PATH_VERIFIED
+    tests:
+      unit:
+        - matrix-core/src/test/java/io/matrix/knowledge/KnowledgeStoreTest.java
+        - matrix-core/src/test/java/io/matrix/knowledge/KnowledgeImporterTest.java
+      integration:
+        - matrix-core/src/test/java/io/matrix/knowledge/KnowledgeWorkbenchTest.java
+    properties:
+      invariants: [TypeOK, EvidenceHasClaim, BackedHasSource, SchemaAtLeastOne, ImportIsAtomic, VersionNotBelowFloor, CountersNotBelowFloor]
+      properties: [EvidenceAlways, SourceAlways, VersionNeverDecreases, CountersNeverDecrease]
+    conformance:
+      status: [MODEL_CHECKED, JAVA_UNIT_VERIFIED, INTEGRATION_VERIFIED, PRODUCTION_PATH_VERIFIED]
+      gaps:
+        - code: ABSTRACTION
+          detail: >-
+            The model's import is one atomic step that lands a whole
+            package. The Java's import is a transaction over many rows, and
+            the incremental change set (applyChanges) is a different
+            operation that upserts rather than replaces. The model describes
+            the package import.
+        - code: ABSTRACTION
+          detail: >-
+            The model's Backed constant says which claims of the package have
+            at least one evidence link. The Java's evidence carries a
+            RELATION — SUPPORTS or CONTRADICTS — so a claim can be backed by
+            a contradicting source without being supported by any. The model
+            has one relation and cannot express that case.
+        - code: BOUNDED_MODEL
+          detail: >-
+            The counters and the schema version are bounded by MaxSteps and
+            MaxVersion, because an unbounded counter makes the state space
+            infinite. The model therefore checks the monotonicity over a
+            finite number of steps, not over an unbounded history.
+      corrected: []
+    abstractions:
+      - "The model's `backed` is the set of claims that have at least one evidence link; it carries no relation, and no excerpt, and no quality."
+      - "The model has no notion of the workspace's content beyond the imported package; the Java's store also holds episodic questions and assessment outcomes, which this model does not describe."
+    assumptions:
+      - "The Java applies a package import in one transaction, so the model's one atomic step stands for the whole import."
+      - "The Java's schema version only ever increases; the migrations are forward-only and the store refuses to open a newer schema."
+    limitations:
+      - "The configuration is deliberately small: three claims, two sources, one workspace, four schema versions. It checks the promises of the store, not its breadth."
+      - "The model does not cover the concurrent case: two imports arriving at once are applied one after another."
+      - "The model does not describe the episodic question log or the assessment outcomes, which share the same file but have their own semantics."
+
   - id: MemoryM4Causal
     title: "M4 causal CRDT — tombstones with epochs, per-key vector clocks"
     spec: formal/MemoryM4Causal.tla

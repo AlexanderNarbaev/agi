@@ -151,6 +151,38 @@
       "old": "/\\ status[old] \\in Established",
       "new": "/\\ status[old] \\in Established \\cup {Draft}",
       "expect": "KILLED"
+    },
+    {
+      "id": "KnowledgeStore-import-drops-the-claims",
+      "spec": "KnowledgeStore",
+      "why": "An import must land the claims and the evidence that backs them together. Dropping the claims must make TypeOK fail, because the evidence would then point at claims that are not there.",
+      "old": "/\\ claims' = claims \\cup Claims",
+      "new": "/\\ claims' = claims",
+      "expect": "KILLED"
+    },
+    {
+      "id": "KnowledgeStore-rollback-leaves-the-claims",
+      "spec": "KnowledgeStore",
+      "why": "A rolled-back import must leave nothing behind. Letting the rollback keep the claims must make ImportIsAtomic fail - the store would hold half a package.",
+      "old": "/\\ claims' = claims\n    /\\ backed' = backed",
+      "new": "/\\ claims' = claims \\cup Claims\n    /\\ backed' = backed",
+      "expect": "KILLED"
+    },
+    {
+      "id": "KnowledgeStore-import-drops-the-sources",
+      "spec": "KnowledgeStore",
+      "why": "A claim that is backed by evidence needs a source behind that evidence. Dropping the sources must make BackedHasSource fail.",
+      "old": "/\\ sources' = sources \\cup Sources",
+      "new": "/\\ sources' = sources",
+      "expect": "KILLED"
+    },
+    {
+      "id": "KnowledgeStore-migration-lowers-the-version",
+      "spec": "KnowledgeStore",
+      "why": "The schema version only ever goes up. A migration that lowers it must fail the version properties - a downgrade would read data written by a newer schema.",
+      "old": "/\\ schemaVersion' = schemaVersion + 1",
+      "new": "/\\ schemaVersion' = schemaVersion - 1",
+      "expect": "KILLED"
     }
   ]
 }
