@@ -44,6 +44,9 @@ public final class AcceptanceModel {
             String conclusion) {
     }
 
+    /** The fewest held-out answers before a comparison may be reported as one. */
+    private static final int MINIMUM_MEASUREMENT = 5;
+
     /** The number of training epochs. Fifteen is enough for the counts above. */
     private static final int EPOCHS = 5;
 
@@ -142,18 +145,31 @@ public final class AcceptanceModel {
         double learnedAccuracy = (double) correct / measured;
         double deterministicAccuracy = (double) deterministicCorrect / measured;
 
-        String conclusion = learnedAccuracy >= deterministicAccuracy
-                ? "The learned rule matched the deterministic grader on the held-out items ("
-                        + Math.round(learnedAccuracy * 100) + "% against "
-                        + Math.round(deterministicAccuracy * 100) + "% on " + measured
-                        + " items). It is a candidate for the production path, and the rule it "
-                        + "distilled is recorded below."
-                : "The learned rule did NOT match the deterministic grader on the held-out items ("
-                        + Math.round(learnedAccuracy * 100) + "% against "
-                        + Math.round(deterministicAccuracy * 100) + "% on " + measured
-                        + " items). The deterministic grader stays in the production path. The rule is "
-                        + "recorded because it says something the lookup table cannot: which SHAPE of "
-                        + "answer tends to be accepted.";
+        // A measurement on a handful of items is not a measurement. A tie at
+        // zero on one item is not evidence of anything, and saying "it is a
+        // candidate for the production path" on that basis would be exactly
+        // the kind of claim this work is supposed to refuse.
+        String conclusion;
+        if (measured < MINIMUM_MEASUREMENT) {
+            conclusion = "Only " + measured + " held-out item(s) have been answered, so the measurement "
+                    + "is not yet one: a comparison on " + measured + " item(s) cannot decide anything. "
+                    + "The deterministic grader stays in the production path until there are at least "
+                    + MINIMUM_MEASUREMENT + " held-out answers.";
+        } else if (learnedAccuracy >= deterministicAccuracy) {
+            conclusion = "The learned rule matched the deterministic grader on the held-out items ("
+                    + Math.round(learnedAccuracy * 100) + "% against "
+                    + Math.round(deterministicAccuracy * 100) + "% on " + measured
+                    + " items). The deterministic grader still stays in the production path - it is "
+                    + "exact and needs no training - but the rule is worth keeping, because it says "
+                    + "something the lookup table cannot: which SHAPE of answer tends to be accepted.";
+        } else {
+            conclusion = "The learned rule did NOT match the deterministic grader on the held-out items ("
+                    + Math.round(learnedAccuracy * 100) + "% against "
+                    + Math.round(deterministicAccuracy * 100) + "% on " + measured
+                    + " items). The deterministic grader stays in the production path. The rule is "
+                    + "recorded because it says something the lookup table cannot: which SHAPE of "
+                    + "answer tends to be accepted.";
+        }
 
         return new Evaluation(trainingFeatures.size(), measured, correct, round(learnedAccuracy),
                 deterministicCorrect, round(deterministicAccuracy),
