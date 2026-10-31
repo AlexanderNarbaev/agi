@@ -391,3 +391,171 @@ re-measured, and it is not restated here.
    the registry rather than corrected, because each correction would need
    either a different abstraction or a decision about which layer is
    authoritative.
+
+
+---
+
+## RECON-W40 — the epistemic learning workbench (2026-10-31)
+
+**Mission:** MATRIX RECON-W40 — epistemic learning and cognitive workbench.
+**Branch:** `develop` · **Starting checkpoint:** `6763bdaa` (RECON-W39).
+
+### What this wave is
+
+The previous wave made MATRIX's formal verification gate real. This wave
+makes the system **learn and keep what it learned** — and, more importantly,
+makes that claim checkable by a user who is not developing the source.
+
+The reconnaissance is in `docs-v2/engineering/W40-RECONNAISSANCE.md`; the
+first-run guide is in `docs-v2/engineering/LEARNING-WORKBENCH.md`.
+
+### The reconnaissance (W40.0)
+
+Three findings decided the architecture, and each was verified against the
+source rather than inferred:
+
+1. **A working knowledge-acquisition path already exists** — `QaCorpusIndex`
+   and `POST /v1/qa/learn` — and it is not the one that looks like the
+   brain. `io.matrix.consciousness`, `ConsciousBrain`,
+   `CognitiveProcessor` and `CognitiveGenesisProfile` have **zero
+   production callers** (`grep -rn "new ConsciousBrain" matrix-core/src/main
+   matrix-api-gateway/src/main matrix-brain-runtime/src/main` → no hits), and
+   the profile is thirteen unlabelled doubles with no text, no identifier and
+   no provenance.
+2. **`AgentBrainService.generateFromBir()` is not learning.** Constant-`true`
+   labels, the corpus answers are never read, the 6,633-entry JSON array is
+   read line-by-line so no line parses (training silently falls through to
+   the 93-line JSONL), the serving path evaluates a different encoding than
+   the training path, and the output is one bit rendered as ASCII — so it can
+   only return `""` or `"!"`. The caller's `length() >= 8` guard makes the
+   branch **unreachable**. It affects no response.
+3. **The repository already knows what it lost.** The `feature/mind-w*`
+   branches were inventoried file by file. Three capabilities exist on
+   branches and not in `develop`: episodic→knowledge promotion with
+   tombstone-based forgetting (the branch `ConsolidationCycle`, 167 lines,
+   eight preserved uncompiled tests), goal-progress tracking, and generic
+   GPU operation dispatch. The first of these is exactly the mechanism the
+   learning loop needs.
+
+### The knowledge foundation (W40.1)
+
+`io.matrix.knowledge` — the records the directive names: `Concept`, `Claim`,
+`Source`, `Evidence`, `Representation`, `Prerequisite`, `KnowledgeRevision`,
+with the enums that give them meaning. `KnowledgeStore` keeps them in a
+versioned SQLite schema and makes the promises enforceable rather than
+aspirational:
+
+- a claim may assert `SUPPORTED`, `VERIFIED`, `CONTESTED`, `REFUTED` or
+  `SUPERSEDED` **only if the snapshot carries evidence for it**;
+- an import is one transaction — an invalid snapshot imports nothing;
+- the schema is versioned, with a migration per version, and a fresh
+  database is built by the same code that upgrades an old one;
+- revisions are appended, never replaced.
+
+Identifiers are deterministic, so re-importing a pack updates rather than
+duplicates, and an exported package keeps its identity on another machine.
+
+### The learning engine (W40.2)
+
+`TextFeatures` replaces the repository's habit of hashing text — every
+learner here consumes an FNV hash of the first 64 characters or a 256-bit
+hash of "input + reply", so two questions that mean the same thing share no
+features. `KnowledgeRetriever` scores each claim by the IDF-weighted share
+of the question's informative terms that the claim covers, and assembles the
+answer at the requested abstraction level: the same question gives the
+beginner's account or the researcher's, and neither erases the other. When
+nothing reaches the threshold the answer **abstains** and names the terms of
+the question that no claim covers.
+
+### The measurement (W40.3)
+
+Twelve dimensions are kept apart, because a concept can be recalled
+accurately and still not be understood. `LearningStateEvaluator` derives the
+state from the recorded outcomes and from nothing else; the acceptance
+criteria are configurable per dimension and recorded with every transition.
+A contradicting outcome **lowers** the state and says so.
+`AssessmentDataset` is a versioned artefact with a held-out evaluation set:
+every capability is probed by a pair of items, one usable while learning and
+one held out.
+
+### The application (W40.4)
+
+`./gradlew :matrix-core:quarkusRun` → <http://localhost:9091/workbench/>.
+No database server, no model provider, no credentials. The interface is one
+static page; every control performs the real operation behind it.
+
+**Measured, by running it:**
+
+| Step | Result |
+|---|---|
+| load the pack | 8 concepts, 17 claims, 4 sources, 18 evidence links, 13 representations, 1 revision |
+| ask "What is photosynthesis?" (INTRODUCTORY) | answered, confidence 0.84, three real sources with their locators |
+| ask the same question (MECHANISTIC) | answered with the mechanistic account instead |
+| ask "What is the boiling point of mercury?" | **refused**; uncovered terms named: boil, point, mercury |
+| assess | a correct answer scored 1.0, a wrong one 0.0, both recorded |
+| learning state | RECALL PRACTICE 0.5 over 2 outcomes; CALIBRATION PRACTICE 0.45; the note records that the latest outcome contradicts an earlier success |
+| **stop, start a new process** | the new process found the workspace, all 8 concepts, 17 claims, 13 representations, the revision, both outcomes and the derived state — and the recovered workspace still answered correctly |
+
+The schema moved 1 → 2 to carry the assessment history. The first version
+of that code wrote the current version number straight after creating the
+v1 tables and therefore skipped the migration; the workbench test caught it
+on a missing table.
+
+### The sources of the demonstration pack
+
+Four sources, all fetched and read before they were cited, with the
+excerpts recorded verbatim and the Wikipedia revision identifiers in their
+locators: a peer-reviewed review in *Faculty Reviews* (Perera-Castro and
+Flexas 2020, doi:10.12703/b/9-5, PMCID PMC7886073) and three encyclopedia
+entries. Per AGENTS.md META-R3 an aggregator is not an acceptable basis for
+a significant claim, so a claim resting on an encyclopedia entry alone is
+`SUPPORTED`, not `VERIFIED` — the 25% oxygenation figure, the
+photorespiratory carbon cost and the source of the released oxygen are all
+marked that way, and the package says in its notes that a textbook source is
+still to be added.
+
+### Tests
+
+Targeted runs, executed, not inferred:
+
+- `:matrix-core:test --tests "io.matrix.knowledge.*"` — **51 tests, 0
+  failures** (KnowledgeStoreTest 9, KnowledgeImporterTest 9,
+  KnowledgeRetrieverTest 10, LearningStateEvaluatorTest 11,
+  KnowledgeWorkbenchTest 4, plus the pre-existing KnowledgeGraphStoreTest 22
+  and SimpleKnowledgeBaseTest 3).
+- The application was started and exercised over HTTP; the restart was a
+  real process kill and a real new process.
+
+**No claim is made about the rest of the repository's suite.** The test
+count published in `docs-v2/index.md` still refers to the last full run.
+
+### Open items
+
+1. `generateFromBir()` is dead code that cannot affect a response. It
+   should be deleted or rewritten with explicit text features — not
+   extended.
+2. No stage above `COMPETENCE` has been reached. `UNDERSTANDING` and
+   `KNOWLEDGE` need their own evidence; the criteria for them are stricter
+   than for competence and are not yet exercised.
+3. Machine-to-machine teach-back is not implemented; the teaching capability
+   is therefore not demonstrated.
+4. External retrieval is not implemented. The pack's sources were fetched
+   and recorded by hand.
+5. The retrieval is lexical and IDF-weighted. It explains its answers, which
+   is what the measurements need, but it has no semantic matching and no
+   paraphrase handling beyond a conservative suffix fold.
+6. The lesson-learning path — episodic replay promoting recurring patterns
+   into canonical knowledge with tombstone-based forgetting — exists on the
+   `feature/mind-w2-persistent-mind` branch and **not** in `develop`. It is
+   the mechanism that would turn the workbench's episodes into knowledge, and
+   it is the next thing to bring back.
+7. `io.matrix.consciousness` remains a research sandbox with no production
+   caller. It was deliberately not built upon.
+8. The `DistillationLedger` defect recorded in RECON-W39 is still open.
+
+### Next
+
+W40.5 — understanding and teaching: causal explanations, transfer
+assessments, a multi-level teaching plan, and a machine-to-machine
+teach-back whose measurement is the second learner's improvement and not
+the lesson's polish.
