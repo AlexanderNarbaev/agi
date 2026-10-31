@@ -54,6 +54,28 @@ Two toolchain facts that are easy to get wrong:
 No specification is syntax-checked only, and no property is recorded as
 failing.
 
+### The vacuity the new model had, and how it was found
+
+`KnowledgeLifecycle` was the first model written for the learning
+application, and its first version was **vacuous**: the `Refine` action
+required an established claim, but no action could ever establish one, so
+the refinement could never fire and the model checked nothing.
+
+It was found by the mutation harness, not by reading the model. Three of the
+four mutants recorded for it SURVIVED, because the action they targeted
+could not happen. The fourth, which widened the guard, was killed - which is
+what gave the failure away.
+
+The fix is an `Assert` action: the importer's path, in which a claim enters
+the workspace with a source behind it. With it the model explores 1,296
+distinct states and all four mutants kill.
+
+This is the same class of defect the RECON-W39 pass closed for `HashChain`
+and `MctsLatsVisit` - a property that cannot fail. It was found by the same
+mechanism, and it is worth recording that the mechanism keeps working: a
+model that is added later can be vacuous in the same way, and only the
+mutation harness tells you.
+
 `KnowledgeLifecycle` was added in RECON-W40, when the learning application
 gave the repository its first claims, evidence and revisions. It models the
 four promises the Java makes: a claim may only assert an established status

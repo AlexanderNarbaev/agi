@@ -658,3 +658,39 @@ earlier account stays in the chain.
 
 The formal gate was re-run after these changes: **9 specifications,
 exit 0, no failures** — 65 to 396,577 states each.
+
+### W40.6 — the knowledge lifecycle enters the formal gate (2026-10-31)
+
+`formal/KnowledgeLifecycle.tla` models the four promises the Java makes about
+a learned claim: the evidence rule, that a correction does not destroy what
+was believed, that every change leaves a revision, and that the account the
+reader is given at a level is the one nothing at that level refines.
+
+**The model found two defects, and neither was found by reading the code.**
+
+1. **The model was vacuous.** `Refine` required an established claim, but no
+   action could ever establish one - the initial claims were all DRAFT and
+   the only other action concerned representations. The refinement could
+   never fire, so the model checked nothing. The mutation harness found it:
+   three of the four mutants recorded for it survived, because the action
+   they targeted could not happen. The fix is an `Assert` action - the
+   importer's path, in which a claim enters the workspace with a source
+   behind it. With it the model explores 1,296 distinct states and all four
+   mutants kill.
+
+2. **The Java could produce a state the store refuses.** Allowing a DRAFT
+   claim to be superseded produces a SUPERSEDED claim with no evidence, and a
+   superseded claim is itself an established status - exactly the change the
+   store rejects. The model's guard is now `Established`, and
+   `KnowledgeRefiner` pre-checks the same rule so the refusal says why
+   instead of failing later in the store.
+
+The specification is registered in `formal/spec-implementation-map.yml` with
+its sources, its tests, its properties and the gaps the model cannot close:
+the evidence has no CONTRADICTS relation, and the claim text is the claim's
+identity because the configuration format cannot carry a function of claims
+to strings. The CI path filter was regenerated, so a change to the knowledge
+store now runs the model that describes it.
+
+**The formal gate now covers TEN specifications**, all model-checked with no
+failures: 65 to 396,577 states each.
