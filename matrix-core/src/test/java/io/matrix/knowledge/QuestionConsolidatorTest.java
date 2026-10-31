@@ -47,7 +47,10 @@ class QuestionConsolidatorTest {
         List<AskedQuestion> asked = workbench.askedQuestions("photosynthesis");
         assertThat(asked).hasSize(1);
         assertThat(asked.get(0).timesAsked()).isEqualTo(2);
-        assertThat(asked.get(0).status()).isEqualTo(AskedQuestion.Status.OPEN);
+        // The question was answerable, so it is not a gap: the status says
+        // whether there is still something the workspace does not know.
+        assertThat(asked.get(0).status()).isEqualTo(AskedQuestion.Status.RESOLVED);
+        assertThat(asked.get(0).answered()).isTrue();
     }
 
     @Test
@@ -117,9 +120,12 @@ class QuestionConsolidatorTest {
                 List.of("why a dimmer day lowers the measured oxygen release"),
                 null, null));
 
-        // The question is now answerable.
-        assertThat(workbench.ask("photosynthesis", GAP_QUESTION,
-                AbstractionLevel.INTRODUCTORY).answered()).isTrue();
+        // The question is now answerable. The retriever is used directly
+        // here, because asking through the workbench would record the
+        // asking - and the point of this test is the CONSOLIDATION resolving
+        // a record that was left open.
+        assertThat(new KnowledgeRetriever(workbench.workspace("photosynthesis"))
+                .answer(GAP_QUESTION).answered()).isTrue();
 
         QuestionConsolidator.ConsolidationReport report = workbench.consolidateQuestions("photosynthesis");
 
@@ -134,6 +140,7 @@ class QuestionConsolidatorTest {
         assertThat(asked.get(0).status()).isEqualTo(AskedQuestion.Status.RESOLVED);
         assertThat(asked.get(0).resolutionNote()).contains("can answer");
         assertThat(asked.get(0).uncoveredTerms()).contains("extinction");
+        assertThat(asked.get(0).timesAsked()).isEqualTo(1);
     }
 
     @Test

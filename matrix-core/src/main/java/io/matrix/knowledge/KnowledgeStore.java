@@ -793,6 +793,14 @@ public final class KnowledgeStore implements AutoCloseable {
                 if (rs.next()) {
                     int times = rs.getInt("times_asked") + 1;
                     boolean wasAnswered = answered || rs.getInt("answered") == 1;
+                    // A question the workspace could answer is not a gap.
+                    // The status says whether there is still something it
+                    // does not know, so an answered question is RESOLVED
+                    // from the start - and the record of the asking is kept
+                    // either way.
+                    AskedQuestion.Status newStatus = wasAnswered
+                            ? AskedQuestion.Status.RESOLVED
+                            : AskedQuestion.Status.OPEN;
                     long first = rs.getLong("first_asked_at");
                     AskedQuestion.Status status = AskedQuestion.Status.valueOf(rs.getString("status"));
                     String note = rs.getString("resolution_note");
@@ -804,7 +812,7 @@ public final class KnowledgeStore implements AutoCloseable {
                         update.setString(2, writeJson(uncoveredTerms));
                         update.setInt(3, times);
                         update.setLong(4, askedAt);
-                        update.setString(5, status.name());
+                        update.setString(5, newStatus.name());
                         update.setString(6, note);
                         update.setInt(7, wasAnswered ? 1 : 0);
                         update.setString(8, id);
@@ -812,7 +820,7 @@ public final class KnowledgeStore implements AutoCloseable {
                     }
                     return new AskedQuestion(id, workspaceId, key, question, uncoveredTerms,
                             times, wasAnswered, Instant.ofEpochMilli(first).toString(),
-                            Instant.ofEpochMilli(askedAt).toString(), status, note);
+                            Instant.ofEpochMilli(askedAt).toString(), newStatus, note);
                 }
             }
         } catch (SQLException e) {
@@ -830,8 +838,11 @@ public final class KnowledgeStore implements AutoCloseable {
             ps.setInt(6, 1);
             ps.setLong(7, askedAt);
             ps.setLong(8, askedAt);
-            ps.setString(9, AskedQuestion.Status.OPEN.name());
-            ps.setString(10, null);
+            ps.setString(9, answered ? AskedQuestion.Status.RESOLVED.name()
+                    : AskedQuestion.Status.OPEN.name());
+            ps.setString(10, answered
+                    ? "The workspace answered this question when it was asked."
+                    : null);
             ps.setInt(11, answered ? 1 : 0);
             ps.executeUpdate();
         } catch (SQLException e) {
@@ -839,7 +850,8 @@ public final class KnowledgeStore implements AutoCloseable {
         }
         return new AskedQuestion(id, workspaceId, key, question, uncoveredTerms, 1, answered,
                 Instant.ofEpochMilli(askedAt).toString(), Instant.ofEpochMilli(askedAt).toString(),
-                AskedQuestion.Status.OPEN, null);
+                answered ? AskedQuestion.Status.RESOLVED : AskedQuestion.Status.OPEN,
+                answered ? "The workspace answered this question when it was asked." : null);
     }
 
     /** The asked questions of a workspace, most recently asked first. */
