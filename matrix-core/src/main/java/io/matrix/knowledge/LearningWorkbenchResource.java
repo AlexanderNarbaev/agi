@@ -271,6 +271,31 @@ public class LearningWorkbenchResource {
     }
 
     /**
+     * Where the learner stands on the ladder of §9 for every assessed
+     * concept.
+     */
+    @GET
+    @Path("/workspaces/{id}/capability")
+    public Response capabilityStates(@PathParam("id") String workspaceId) {
+        return Response.ok(workbench.capabilityStates(workspaceId)).build();
+    }
+
+    /**
+     * Where the learner stands on the ladder for one concept, with the
+     * teach-back when it is asked for.
+     *
+     * <p>The teach-back is the evidence the highest stage needs: without it,
+     * a learner can be understood but not yet teachable.
+     */
+    @GET
+    @Path("/workspaces/{id}/capability/{conceptId}")
+    public Response capabilityState(@PathParam("id") String workspaceId,
+                                    @PathParam("conceptId") String conceptId,
+                                    @QueryParam("teachBack") boolean teachBack) {
+        return Response.ok(workbench.capabilityState(workspaceId, conceptId, teachBack)).build();
+    }
+
+    /**
      * Register what the system has learned about the learner as knowledge.
      *
      * <p>The rule the acceptance model induced becomes a claim with a source

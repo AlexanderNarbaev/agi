@@ -202,6 +202,15 @@
       <div id="progress-states" class="muted">—</div>
     </div>
     <div class="card">
+      <h2 style="margin-top:0">Capability ladder</h2>
+      <p class="muted" style="margin-top:0">Where the learner stands for each concept, on the seven-stage
+        ladder: unknown, exploration, initial learning, practice, competence, understanding, and
+        teachable capability. Understanding needs competence on the causal, transfer and evaluation
+        dimensions, not a high recall score. The last stage needs a teach-back that met its declared
+        expectation — generating an explanation is not proof of teaching.</p>
+      <div id="progress-capability" class="muted">—</div>
+    </div>
+    <div class="card">
       <p class="muted" style="margin-top:0">What the workspace was asked and could not answer. Two wordings of the
         same question are one record, so the count is a count of questions, not of wordings. A question the
         workspace can now answer is marked <em>resolved</em> and kept — the record of the gap is the evidence
@@ -252,7 +261,7 @@ document.querySelectorAll('nav button').forEach(btn => {
     if (btn.dataset.tab === 'knowledge') loadKnowledge();
     if (btn.dataset.tab === 'assess') loadAssessment();
     if (btn.dataset.tab === 'teach') loadConceptsForTeaching();
-    if (btn.dataset.tab === 'progress') { loadProgress(); loadQuestions(); }
+    if (btn.dataset.tab === 'progress') { loadProgress(); loadCapability(); loadQuestions(); }
   });
 });
 
@@ -603,6 +612,26 @@ async function loadProgress() {
         '<td class="muted">' + esc(s.note) + '</td></tr>').join('') + '</table></div>').join('');
   } catch (e) {
     $('progress-states').innerHTML = '<span class="muted">' + esc(e.message) + '</span>';
+  }
+}
+
+async function loadCapability() {
+  try {
+    const caps = await api('/workspaces/' + WS + '/capability');
+    if (!caps.length) {
+      $('progress-capability').innerHTML = '<span class="muted">Nothing has been assessed yet, so no '
+        + 'concept has a position on the ladder.</span>';
+      return;
+    }
+    $('progress-capability').innerHTML = caps.map(c => '<div style="margin-bottom:12px">'
+      + '<strong>' + esc(c.conceptId) + '</strong> &rarr; <span class="tag ' + esc(c.stage) + '">'
+      + esc(c.stage) + '</span>'
+      + '<div class="muted" style="margin-top:4px">' + esc(c.note) + '</div>'
+      + '<div class="muted" style="margin-top:4px">dimensions: '
+      + Object.entries(c.dimensions || {}).map(([d, s]) => esc(d) + '=' + esc(s)).join(', ')
+      + '</div></div>').join('');
+  } catch (e) {
+    $('progress-capability').innerHTML = '<span class="muted">' + esc(e.message) + '</span>';
   }
 }
 

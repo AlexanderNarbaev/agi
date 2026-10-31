@@ -201,6 +201,52 @@ public class KnowledgeWorkbench implements AutoCloseable {
     }
 
     /**
+     * Where the learner stands on the ladder of §9 for one concept.
+     *
+     * <p>The per-dimension states are what §10 asks for; this is the ladder
+     * that §9 asks for. The top two stages need evidence that a score
+     * cannot provide: understanding needs competence on the causal, transfer
+     * and evaluation dimensions, and the teachable stage needs a teach-back
+     * that met its expectation.
+     *
+     * @param workspaceId the workspace
+     * @param conceptId the concept
+     * @param includeTeachBack whether to run the teach-back, which is the
+     *     evidence the highest stage needs
+     */
+    public CapabilityState capabilityState(String workspaceId, String conceptId,
+                                            boolean includeTeachBack) {
+        List<LearningState> states = learningStates(workspaceId).stream()
+                .filter(s -> s.conceptId().equals(conceptId))
+                .toList();
+
+        TeachBackEvaluator.TeachBackResult teachBack = null;
+        if (includeTeachBack) {
+            teachBack = teachBack(workspaceId, conceptId, AbstractionLevel.MECHANISTIC,
+                    CapabilityEvaluator.DEFAULT_EXPECTED_GAIN);
+        }
+        return CapabilityEvaluator.evaluate(conceptId, states, teachBack);
+    }
+
+    /**
+     * Where the learner stands on the ladder for every concept that has
+     * been assessed.
+     *
+     * <p>Without a teach-back the highest reachable stage is UNDERSTANDING,
+     * and the record says why: the highest stage needs the evidence of a
+     * teach-back, and it is not run for every concept on every request.
+     */
+    public List<CapabilityState> capabilityStates(String workspaceId) {
+        List<String> conceptIds = learningStates(workspaceId).stream()
+                .map(LearningState::conceptId)
+                .distinct()
+                .toList();
+        return conceptIds.stream()
+                .map(conceptId -> capabilityState(workspaceId, conceptId, false))
+                .toList();
+    }
+
+    /**
      * Register what the system has learned about the learner as knowledge.
      *
      * <p>The rule the acceptance model induced is written into the store as
