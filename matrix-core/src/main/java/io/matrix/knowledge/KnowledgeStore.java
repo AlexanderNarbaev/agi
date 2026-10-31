@@ -616,6 +616,9 @@ public final class KnowledgeStore implements AutoCloseable {
                 for (Evidence evidence : changes.evidence()) {
                     insertEvidence(evidence);
                 }
+                for (Representation representation : changes.representations()) {
+                    upsertRepresentation(representation);
+                }
                 for (KnowledgeRevision revision : changes.revisions()) {
                     insertRevision(revision);
                 }
@@ -681,6 +684,31 @@ public final class KnowledgeStore implements AutoCloseable {
             ps.setString(6, e.excerpt());
             ps.setInt(7, e.quality());
             ps.setString(8, e.recordedAt());
+            ps.executeUpdate();
+        }
+    }
+
+    private void upsertRepresentation(Representation r) throws SQLException {
+        try (PreparedStatement ps = connection.prepareStatement(
+                "INSERT OR REPLACE INTO representation(id, workspace_id, concept_id, level, audience, "
+                        + "statement, scope, assumptions, included_facts, omitted, validity_conditions, "
+                        + "prerequisites, refines, confidence, created_at) "
+                        + "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)")) {
+            ps.setString(1, r.id());
+            ps.setString(2, r.workspaceId());
+            ps.setString(3, r.conceptId());
+            ps.setString(4, r.level().name());
+            ps.setString(5, r.audience());
+            ps.setString(6, r.statement());
+            ps.setString(7, r.scope());
+            ps.setString(8, writeJson(r.assumptions()));
+            ps.setString(9, writeJson(r.includedFacts()));
+            ps.setString(10, writeJson(r.deliberatelyOmitted()));
+            ps.setString(11, writeJson(r.validityConditions()));
+            ps.setString(12, writeJson(r.prerequisiteConceptIds()));
+            ps.setString(13, r.refinesRepresentationId());
+            ps.setDouble(14, r.confidence());
+            ps.setString(15, r.createdAt());
             ps.executeUpdate();
         }
     }

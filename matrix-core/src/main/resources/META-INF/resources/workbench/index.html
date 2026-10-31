@@ -126,6 +126,29 @@
     <div class="card"><h2 style="margin-top:0">Representations and their refinement chain</h2>
       <div id="k-reprs" class="muted">—</div></div>
     <div class="card"><h2 style="margin-top:0">Sources</h2><div id="k-sources" class="muted">—</div></div>
+    <div class="card">
+      <h2 style="margin-top:0">Correct what is known</h2>
+      <p class="muted" style="margin-top:0">A correction does not overwrite what was believed. The earlier
+        claim is kept and marked superseded, the corrected claim carries the source it rests on, and a
+        revision records what changed, which assumptions still hold, and which simplification stopped
+        applying.</p>
+      <div class="row">
+        <select id="ref-concept" style="width:230px"></select>
+        <select id="ref-claim" style="width:340px"></select>
+      </div>
+      <div style="margin-top:10px">
+        <input type="text" id="ref-proposition" placeholder="The corrected proposition…">
+      </div>
+      <div class="row" style="margin-top:10px">
+        <input type="text" id="ref-scope" placeholder="Scope (the condition under which it holds)" style="flex:1; min-width:240px">
+        <input type="text" id="ref-source" placeholder="Source title" style="flex:1; min-width:200px">
+      </div>
+      <div class="row" style="margin-top:10px">
+        <input type="text" id="ref-excerpt" placeholder="Source excerpt" style="flex:1; min-width:300px">
+        <button class="action" id="btn-refine" style="margin-top:0">Record the correction</button>
+      </div>
+      <div id="ref-result" style="margin-top:14px"></div>
+    </div>
   </section>
 
   <section id="tab-assess">
@@ -302,6 +325,7 @@ async function loadKnowledge() {
       api('/workspaces/' + WS + '/representations'), api('/workspaces/' + WS + '/sources'),
       api('/workspaces/' + WS + '/revisions')
     ]);
+    window.__claims = claims;
     $('k-concepts').innerHTML = concepts.map(c =>
       '<div><strong>' + esc(c.name) + '</strong> <span class="muted">' + esc(c.domain || '') + '</span>' +
       '<div class="muted">' + esc(c.definition || '') + '</div></div>').join('');
@@ -328,10 +352,70 @@ async function loadKnowledge() {
       '<div class="muted">no longer applies: ' + esc((r.noLongerValidAssumptions || []).join('; ')) + '</div>' +
       '<div class="muted">now explains: ' + esc((r.newlyExplainedCases || []).join('; ')) + '</div></div>').join('')
       : 'No revisions recorded.';
+    fillRefinementSelectors(concepts, claims);
   } catch (e) {
     $('k-concepts').innerHTML = '<span class="muted">' + esc(e.message) + '</span>';
   }
 }
+
+function fillRefinementSelectors(concepts, claims) {
+  const conceptSelect = $('ref-concept');
+  const previous = conceptSelect.value;
+  conceptSelect.innerHTML = concepts.map(c => '<option value="' + esc(c.id) + '">' + esc(c.name) + '</option>').join('');
+  if (previous) conceptSelect.value = previous;
+  fillClaimSelector();
+}
+
+function fillClaimSelector() {
+  const conceptId = $('ref-concept').value;
+  const claims = window.__claims || [];
+  const relevant = claims.filter(c => c.conceptId === conceptId);
+  $('ref-claim').innerHTML = '<option value="">(add a new claim — do not supersede anything)</option>' +
+    relevant.map(c => '<option value="' + esc(c.id) + '">' + esc(c.proposition.slice(0, 80)) + '</option>').join('');
+}
+
+$('ref-concept').addEventListener('change', fillClaimSelector);
+
+$('btn-refine').addEventListener('click', async () => {
+  const proposition = $('ref-proposition').value.trim();
+  if (!proposition) {
+    $('ref-result').innerHTML = '<div class="card bad">A corrected proposition is required.</div>';
+    return;
+  }
+  const body = {
+    conceptId: $('ref-concept').value,
+    supersededClaimId: $('ref-claim').value || null,
+    proposition,
+    scope: $('ref-scope').value || null,
+    status: 'SUPPORTED',
+    confidence: 0.8,
+    sourceKind: 'HUMAN_ASSERTION',
+    sourceTitle: $('ref-source').value || 'A human statement',
+    sourceExcerpt: $('ref-excerpt').value || null,
+    revisionKind: $('ref-claim').value ? 'CORRECTION' : 'REFINEMENT',
+    summary: $('ref-claim').value ? 'The claim was corrected.' : 'A new claim was added.',
+    addedFacts: [proposition],
+    stillValidAssumptions: [],
+    noLongerValidAssumptions: [],
+    newlyExplainedCases: []
+  };
+  $('ref-result').innerHTML = '<span class="muted">Recording…</span>';
+  try {
+    const r = await api('/workspaces/' + WS + '/refine', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body)
+    });
+    $('ref-result').innerHTML = '<div class="card good"><h2 style="margin-top:0">Recorded</h2>' +
+      '<div>' + r.claims.length + ' claim(s) written, ' + r.sources.length + ' source(s), ' +
+      r.evidence.length + ' evidence link(s), ' + r.revisions.length + ' revision(s).</div>' +
+      r.revisions.map(rev => '<div class="muted" style="margin-top:6px">' + esc(rev.summary) +
+        ' — no longer applies: ' + esc((rev.noLongerValidAssumptions || []).join('; ') || 'nothing recorded') +
+        '</div>').join('') + '</div>';
+    await loadKnowledge();
+    await loadStatus();
+  } catch (e) {
+    $('ref-result').innerHTML = '<div class="card bad">' + esc(e.message) + '</div>';
+  }
+});
 
 async function loadAssessment() {
   try {

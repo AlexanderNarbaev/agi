@@ -78,7 +78,9 @@ public class LearningWorkbenchResource {
             List<String> addedFacts,
             List<String> stillValidAssumptions,
             List<String> noLongerValidAssumptions,
-            List<String> newlyExplainedCases) {
+            List<String> newlyExplainedCases,
+            String refinedRepresentation,
+            String refinedRepresentationLevel) {
     }
 
     /** The storage and workspace status. */
@@ -352,7 +354,8 @@ public class LearningWorkbenchResource {
                     parseRevisionKind(request.revisionKind()),
                     request.summary() == null ? "The claim was corrected." : request.summary(),
                     request.addedFacts(), request.stillValidAssumptions(),
-                    request.noLongerValidAssumptions(), request.newlyExplainedCases());
+                    request.noLongerValidAssumptions(), request.newlyExplainedCases(),
+                    request.refinedRepresentation(), parseLevel(request.refinedRepresentationLevel()));
             KnowledgeChanges changes = workbench.refine(workspaceId, refinement);
             Map<String, Object> result = new LinkedHashMap<>();
             result.put("claims", changes.claims());

@@ -62,7 +62,8 @@ class KnowledgeRefinerTest {
                 List.of("the rate falls with the light level"),
                 List.of("plants still photosynthesise in light"),
                 List.of("the earlier claim held without mentioning the light level"),
-                List.of("why a dimmer day lowers the measured oxygen release"));
+                List.of("why a dimmer day lowers the measured oxygen release"),
+                null, null);
     }
 
     @Test
@@ -158,7 +159,7 @@ class KnowledgeRefinerTest {
                 new KnowledgeRefiner.Refinement("c-does-not-exist", null, "A new claim.", null, null,
                         ClaimStatus.SUPPORTED, 0.5, SourceKind.HUMAN_ASSERTION, "A source", null, null,
                         50, 50, RevisionKind.CORRECTION, "A summary.", List.of(), List.of(), List.of(),
-                        List.of())))
+                        List.of(), null, null)))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("holds no concept");
     }
@@ -169,7 +170,8 @@ class KnowledgeRefinerTest {
         KnowledgeRefiner.Refinement unverifiable = new KnowledgeRefiner.Refinement(
                 photosynthesisId(), null, "An assertion with no source.", null, null,
                 ClaimStatus.VERIFIED, 0.9, SourceKind.HUMAN_ASSERTION, "A source", null, null,
-                50, 50, RevisionKind.CORRECTION, "A summary.", List.of(), List.of(), List.of(), List.of());
+                50, 50, RevisionKind.CORRECTION, "A summary.", List.of(), List.of(), List.of(), List.of(),
+                null, null);
 
         // The refiner always attaches the source, so the change itself is
         // sound; the store's rule is what refuses a change that would assert
@@ -179,9 +181,48 @@ class KnowledgeRefinerTest {
                     workbench.workspace("photosynthesis"), unverifiable);
             workbench.workspace("photosynthesis");
             storeOf(workbench).applyChanges("photosynthesis",
-                    new KnowledgeChanges(changes.sources(), changes.claims(), List.of(), changes.revisions()));
+                    new KnowledgeChanges(changes.sources(), changes.claims(), List.of(),
+                            changes.representations(), changes.revisions()));
         }).isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("carries no evidence");
+    }
+
+    @Test
+    @DisplayName("a refinement that changes what is said also changes the account the reader sees")
+    void aRefinementUpdatesTheAccount() {
+        Claim original = claimWith("Oxygenic photosynthesis releases oxygen");
+        KnowledgeRefiner.Refinement withAccount = new KnowledgeRefiner.Refinement(
+                photosynthesisId(), original.id(),
+                "Oxygenic photosynthesis releases oxygen at a rate that falls as the light level falls.",
+                "Green plants in light; the rate depends on the light level", "general biology",
+                ClaimStatus.SUPPORTED, 0.8, SourceKind.OBSERVATION,
+                "Greenhouse light series", "urn:experiment:greenhouse-2026-10-31",
+                "Oxygen release fell by a third when the lamp was dimmed.", 70, 100,
+                RevisionKind.CORRECTION, "The correction adds the light level as a condition.",
+                List.of("the rate falls with the light level"),
+                List.of("plants still photosynthesise in light"),
+                List.of("the earlier claim held without mentioning the light level"),
+                List.of("why a dimmer day lowers the measured oxygen release"),
+                "Oxygenic photosynthesis releases oxygen at a rate that falls as the light level falls.",
+                AbstractionLevel.INTRODUCTORY);
+
+        KnowledgeChanges changes = workbench.refine("photosynthesis", withAccount);
+
+        // The refined account was written and it refines the earlier one.
+        assertThat(changes.representations()).hasSize(1);
+        Representation refined = changes.representations().get(0);
+        assertThat(refined.refinesRepresentationId()).isNotBlank();
+        assertThat(refined.statement()).contains("light level");
+
+        // The earlier account is still there, in the chain.
+        KnowledgeSnapshot after = workbench.workspace("photosynthesis");
+        assertThat(after.representations()).extracting(Representation::id)
+                .contains(refined.refinesRepresentationId());
+
+        // And the answer now uses the refined account.
+        Answer answer = workbench.ask("photosynthesis", "What is photosynthesis?",
+                AbstractionLevel.INTRODUCTORY);
+        assertThat(answer.statement()).contains("light level");
     }
 
     private static KnowledgeStore storeOf(KnowledgeWorkbench workbench) {

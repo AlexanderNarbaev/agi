@@ -52,7 +52,9 @@ public final class KnowledgeRefiner {
             List<String> addedFacts,
             List<String> stillValidAssumptions,
             List<String> noLongerValidAssumptions,
-            List<String> newlyExplainedCases) {
+            List<String> newlyExplainedCases,
+            String refinedRepresentation,
+            AbstractionLevel refinedRepresentationLevel) {
 
         public Refinement {
             addedFacts = List.copyOf(addedFacts == null ? List.of() : addedFacts);
@@ -120,13 +122,50 @@ public final class KnowledgeRefiner {
             noLongerValid = superseded.scope() == null ? List.of() : List.of(superseded.scope());
         }
 
+        // The refined ACCOUNT: when the correction changes what the
+        // workspace says, the explanation the reader sees must change too.
+        // The earlier representation is kept and the new one refines it, so
+        // the chain shows how the account evolved.
+        List<Representation> representations = new ArrayList<>();
+        if (request.refinedRepresentation() != null && !request.refinedRepresentation().isBlank()) {
+            List<Representation> available = snapshot.representations().stream()
+                    .filter(r -> r.conceptId().equals(concept.id()))
+                    .toList();
+            AbstractionLevel level = request.refinedRepresentationLevel() == null
+                    ? AbstractionLevel.INTRODUCTORY : request.refinedRepresentationLevel();
+            // The account that is refined is the ACTIVE one at that level, so
+            // the correction lands on what the reader is actually given.
+            Representation previous = Representations.activeAt(available, level);
+            if (previous == null) {
+                previous = Representations.activeAt(available, AbstractionLevel.INTRODUCTORY);
+                if (previous != null) {
+                    level = previous.level();
+                }
+            }
+            String representationId = Ids.representation(workspaceId, concept.id(), level,
+                    request.refinedRepresentation());
+            representations.add(new Representation(representationId, workspaceId, concept.id(), level,
+                    previous == null ? "a reader" : previous.audience(),
+                    request.refinedRepresentation(),
+                    request.scope(),
+                    previous == null ? List.of() : previous.assumptions(),
+                    request.addedFacts(),
+                    previous == null ? List.of() : previous.deliberatelyOmitted(),
+                    previous == null ? List.of() : previous.validityConditions(),
+                    previous == null ? List.of() : previous.prerequisiteConceptIds(),
+                    previous == null ? null : previous.id(),
+                    request.confidence(),
+                    now));
+        }
+
         KnowledgeRevision revision = new KnowledgeRevision(
                 Ids.revision(workspaceId, concept.id(), request.revisionKind(), request.summary()),
                 workspaceId, "concept", concept.id(), request.revisionKind(), request.summary(),
                 request.addedFacts(), stillValid, noLongerValid, request.newlyExplainedCases(),
                 List.of(evidence.id()), now);
 
-        return new KnowledgeChanges(List.of(source), claims, List.of(evidence), List.of(revision));
+        return new KnowledgeChanges(List.of(source), claims, List.of(evidence), representations,
+                List.of(revision));
     }
 
     private static Concept concept(KnowledgeSnapshot snapshot, String conceptId) {

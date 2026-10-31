@@ -177,7 +177,7 @@ public final class KnowledgeRetriever {
             if (available.isEmpty()) {
                 continue;
             }
-            Representation chosen = choose(available, wanted);
+            Representation chosen = Representations.forLevel(available, wanted);
             if (chosen != null) {
                 statements.add(chosen.statement());
                 limitations.addAll(chosen.validityConditions());
@@ -247,22 +247,6 @@ public final class KnowledgeRetriever {
         }
         long hits = nameTerms.stream().filter(queryTerms::contains).count();
         return (double) hits / nameTerms.size();
-    }
-
-    /** The representation closest to the requested level. */
-    private static Representation choose(List<Representation> available, AbstractionLevel wanted) {
-        Representation best = null;
-        int bestDistance = Integer.MAX_VALUE;
-        for (Representation representation : available) {
-            int distance = Math.abs(representation.level().ordinal() - wanted.ordinal());
-            if (distance < bestDistance
-                    || (distance == bestDistance && best != null
-                        && representation.level().ordinal() > best.level().ordinal())) {
-                best = representation;
-                bestDistance = distance;
-            }
-        }
-        return best;
     }
 
     /** The concepts this workspace knows about. */
