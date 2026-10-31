@@ -201,6 +201,21 @@ public class KnowledgeWorkbench implements AutoCloseable {
     }
 
     /**
+     * Hand the knowledge of one workspace to another.
+     *
+     * <p>A transfer, not a backup: the identifiers are regenerated for the
+     * receiving workspace, because a claim's identifier is derived from the
+     * workspace that holds it. The learner's own history is NOT
+     * transferred - knowledge that was transferred has not been demonstrated
+     * by the new learner, and the receiving workspace's learning state says
+     * so by starting empty.
+     */
+    public KnowledgeTransfer.TransferResult transferKnowledge(String fromWorkspace,
+                                                               String toWorkspace) {
+        return KnowledgeTransfer.transfer(store(), fromWorkspace, toWorkspace);
+    }
+
+    /**
      * Where the learner stands on the ladder of §9 for one concept.
      *
      * <p>The per-dimension states are what §10 asks for; this is the ladder

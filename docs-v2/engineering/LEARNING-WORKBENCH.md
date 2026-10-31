@@ -247,7 +247,30 @@ scope, a readable provenance, and it can be superseded later. The source is
 an `OBSERVATION` — the measurement — and not an authority the system
 pretends to have.
 
-## 12. What this release does not do
+## 12. Hand the knowledge to another learner
+
+```
+curl -X POST "http://localhost:9091/v1/workbench/workspaces/photosynthesis/transfer?to=learner-b"
+```
+
+This is a **transfer**, not a backup. The export and the import put a
+workspace back exactly as it was; a transfer gives the knowledge to a
+different learner, so the identifiers are regenerated for the receiving
+workspace — a claim's identifier is derived from the workspace that holds
+it, and two workspaces must not share a row.
+
+What travels: the concepts, the claims, the sources with their locators,
+excerpts, authority and freshness, the evidence links, the representations
+with their refinement chains, the prerequisites and the revisions. The
+receiving learner can answer what the first one could.
+
+What does NOT travel: the learner's own history. The assessment outcomes and
+the record of the questions that were asked belong to the learner who
+produced them. A learner who has just received the knowledge has not
+demonstrated that they know it, and the receiving workspace's learning state
+starts empty rather than inheriting someone else's evidence.
+
+## 13. What this release does not do
 
 - **It is not a chat assistant.** The answer is composed from the claims and
   representations in the store, not generated.
@@ -271,7 +294,7 @@ pretends to have.
   synthetic learner was taught and measured on held-out items; that shows the
   lesson contained the assessed content, not that a person would learn it.
 
-## 13. Where the pieces are
+## 14. Where the pieces are
 
 | Piece | Path |
 |---|---|
@@ -281,6 +304,7 @@ pretends to have.
 | The measurement | `LearningStateEvaluator.java`, `AssessmentGrader.java` |
 | The capability ladder | `CapabilityEvaluator.java`, `CapabilityState.java` |
 | The episodic log | `QuestionConsolidator.java`, `AskedQuestion.java` |
+| The transfer | `KnowledgeTransfer.java` |
 | The supervised learner | `AcceptanceModel.java`, `TextFeatureVector.java` |
 | The metrics | `MetricsReport.java` |
 | The formal models | `formal/KnowledgeLifecycle.tla`, `formal/KnowledgeStore.tla` |
@@ -290,7 +314,7 @@ pretends to have.
 | The dataset | `matrix-core/src/main/resources/knowledge/photosynthesis.assessment.json` |
 | The reconnaissance | `docs-v2/engineering/W40-RECONNAISSANCE.md` |
 
-## 14. The API, if you would rather not use the browser
+## 15. The API, if you would rather not use the browser
 
 ```
 curl http://localhost:9091/v1/workbench/status
@@ -303,4 +327,5 @@ curl http://localhost:9091/v1/workbench/workspaces/photosynthesis/capability
 curl http://localhost:9091/v1/workbench/workspaces/photosynthesis/metrics
 curl http://localhost:9091/v1/workbench/workspaces/photosynthesis/questions
 curl -X POST http://localhost:9091/v1/workbench/workspaces/photosynthesis/questions/consolidate
+curl -X POST "http://localhost:9091/v1/workbench/workspaces/photosynthesis/transfer?to=learner-b"
 ```

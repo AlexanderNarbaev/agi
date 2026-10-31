@@ -271,6 +271,31 @@ public class LearningWorkbenchResource {
     }
 
     /**
+     * Hand the knowledge of this workspace to another one.
+     *
+     * <p>The identifiers are regenerated for the receiving workspace, and the
+     * learner's history stays behind: the knowledge travels, the evidence
+     * that a learner demonstrated it does not.
+     */
+    @POST
+    @Path("/workspaces/{id}/transfer")
+    public Response transfer(@PathParam("id") String workspaceId,
+                             @QueryParam("to") String toWorkspace) {
+        if (toWorkspace == null || toWorkspace.isBlank()) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity(Map.of("error", "a receiving workspace id is required"))
+                    .build();
+        }
+        try {
+            return Response.ok(workbench.transferKnowledge(workspaceId, toWorkspace)).build();
+        } catch (IllegalArgumentException e) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity(Map.of("error", e.getMessage()))
+                    .build();
+        }
+    }
+
+    /**
      * Where the learner stands on the ladder of §9 for every assessed
      * concept.
      */
