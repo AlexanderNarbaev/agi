@@ -7278,3 +7278,11 @@ ru 0/5, paraphrase 0/2, false premise 0/2 ✓ ✓.
 **Готово** ✓ ✓. Отчёт: `docs-v2/engineering/W42.3-DIALOG-INTELLIGENCE-REPORT.md` ✓ ✓.
 **Измерено:** accuracy 0.583 → 0.792, русский 0/5 → 4/5, 168/168 классов ✓ ✓.
 **Дальше:** W42.4 — обучение и оценка ✓ ✓.
+
+# RECON-W42.4 — Learning, assessment and the authored representation
+
+**Готово** ✓ ✓. Отчёт: `docs-v2/engineering/W42.4-LEARNING-AND-REPRESENTATION-REPORT.md` ✓ ✓.
+**Первая практическая цель миссии продемонстрирована целиком** ✓ ✓ — на живом
+приложении, с перезапуском по SIGKILL ✓ ✓ ✓.
+**Дальше:** W42.5 — когнитивная интеграция ✓ ✓; в ней консолидация ✓ ✓,
+которая сейчас недостижима ✓ ✓.
