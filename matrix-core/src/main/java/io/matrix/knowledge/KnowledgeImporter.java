@@ -84,8 +84,15 @@ public final class KnowledgeImporter {
             SourceKind kind = parseKind(entry.kind);
             String id = Ids.source(workspaceId, kind, entry.locator == null ? entry.title : entry.locator);
             sourceIds.put(entry.key, id);
+            // The source's provenance: the version of the material that was
+            // read, its publication date, and a hash of it. A source whose
+            // version cannot be named is a source that cannot be re-read.
+            String contentHash = entry.contentHash != null && !entry.contentHash.isBlank()
+                    ? entry.contentHash
+                    : Ids.digest(entry.excerpt == null ? "" : entry.excerpt);
             sources.add(new Source(id, workspaceId, kind, entry.title, entry.locator,
-                    entry.authority, entry.freshness, entry.excerpt, importedAt));
+                    entry.authority, entry.freshness, entry.excerpt, importedAt,
+                    contentHash, entry.publishedAt));
         }
 
         List<Claim> claims = new ArrayList<>();
@@ -105,8 +112,21 @@ public final class KnowledgeImporter {
                 evidence.add(new Evidence(Ids.evidence(workspaceId, id, sourceId), workspaceId, id, sourceId,
                         parseRelation(ev.relation), ev.excerpt, ev.quality, importedAt));
             }
+            // How the claim was extracted and how it was validated. The
+            // defaults describe exactly what the pack format can guarantee:
+            // a proposition transcribed from a source excerpt and checked
+            // against it. A pack that claims more must say so.
+            String extraction = entry.extractionMethod != null && !entry.extractionMethod.isBlank()
+                    ? entry.extractionMethod
+                    : "transcribed from the cited source excerpt";
+            String validation = entry.validationMethod != null && !entry.validationMethod.isBlank()
+                    ? entry.validationMethod
+                    : (evidence.isEmpty()
+                            ? "none: no evidence link"
+                            : "checked against the cited excerpt");
             claims.add(new Claim(id, workspaceId, conceptId, entry.proposition, entry.scope, entry.context,
-                    status, entry.confidence, 1, introducedBy, importedAt, importedAt));
+                    status, entry.confidence, 1, introducedBy, extraction, validation,
+                    importedAt, importedAt));
         }
 
         List<Representation> representations = new ArrayList<>();

@@ -100,11 +100,19 @@ public final class KnowledgeRefiner {
                 Ids.source(workspaceId, request.sourceKind(),
                         request.sourceLocator() == null ? request.sourceTitle() : request.sourceLocator()),
                 workspaceId, request.sourceKind(), request.sourceTitle(), request.sourceLocator(),
-                request.sourceAuthority(), request.sourceFreshness(), request.sourceExcerpt(), now);
+                request.sourceAuthority(), request.sourceFreshness(), request.sourceExcerpt(), now,
+                // The hash of the material the correction was read from.
+                Ids.digest(request.sourceExcerpt() == null ? "" : request.sourceExcerpt()),
+                null);
 
         Claim updated = new Claim(claimId, workspaceId, concept.id(), request.proposition(),
                 request.scope(), request.context(), request.status(), request.confidence(), version,
-                source.id(), now, now);
+                source.id(),
+                "transcribed from the excerpt of the correcting source",
+                request.status() == ClaimStatus.VERIFIED
+                        ? "checked against the excerpt of the correcting source"
+                        : "not independently verified: read from the correcting source",
+                now, now);
 
         Evidence evidence = new Evidence(Ids.evidence(workspaceId, claimId, source.id()),
                 workspaceId, claimId, source.id(), EvidenceRelation.SUPPORTS,
@@ -119,7 +127,9 @@ public final class KnowledgeRefiner {
             claims.add(new Claim(superseded.id(), superseded.workspaceId(), superseded.conceptId(),
                     superseded.proposition(), superseded.scope(), superseded.context(),
                     ClaimStatus.SUPERSEDED, superseded.confidence(), superseded.version() + 1,
-                    superseded.introducedBySourceId(), superseded.createdAt(), now));
+                    superseded.introducedBySourceId(),
+                    superseded.extractionMethod(), superseded.validationMethod(),
+                    superseded.createdAt(), now));
         }
 
         List<String> stillValid = request.stillValidAssumptions();

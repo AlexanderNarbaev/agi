@@ -53,7 +53,7 @@ import java.util.Set;
 public final class KnowledgeStore implements AutoCloseable {
 
     /** The schema version this build writes. */
-    public static final int SCHEMA_VERSION = 4;
+    public static final int SCHEMA_VERSION = 5;
 
     private static final ObjectMapper JSON = new ObjectMapper();
 
@@ -103,6 +103,20 @@ public final class KnowledgeStore implements AutoCloseable {
         }
         while (version < SCHEMA_VERSION) {
             version = migrateFrom(version);
+        }
+    }
+
+    /**
+     * The schema version this database is currently at.
+     *
+     * <p>Exposed so that a caller - and a test - can tell whether the
+     * migration chain ran, rather than assuming it did.
+     */
+    public int schemaVersion() {
+        try {
+            return readSchemaVersion();
+        } catch (SQLException e) {
+            return 0;
         }
     }
 
@@ -234,7 +248,67 @@ public final class KnowledgeStore implements AutoCloseable {
         }
     }
 
+    /**
+     * Fills the provenance of records that predate the provenance fields.
+     *
+     * <p>What can honestly be recovered is recovered: a source's content
+     * hash is computed from the excerpt that was actually stored, so the
+     * material it was read from is still identifiable. What cannot be
+     * recovered is marked as unknown rather than invented: no old record can
+     * say how it was extracted, and the migration will not pretend it did.
+     */
+    private void backfillProvenance() throws SQLException {
+        String unknown = "unknown: the record predates the provenance fields";
+        try (PreparedStatement ps = connection.prepareStatement(
+                "UPDATE claim SET extraction_method = ? WHERE extraction_method IS NULL")) {
+            ps.setString(1, unknown);
+            ps.executeUpdate();
+        }
+        try (PreparedStatement ps = connection.prepareStatement(
+                "UPDATE claim SET validation_method = ? WHERE validation_method IS NULL")) {
+            ps.setString(1, unknown);
+            ps.executeUpdate();
+        }
+        try (Statement st = connection.createStatement();
+             ResultSet rs = st.executeQuery("SELECT id, excerpt FROM source WHERE content_hash IS NULL")) {
+            List<String[]> pending = new ArrayList<>();
+            while (rs.next()) {
+                pending.add(new String[]{rs.getString("id"),
+                        rs.getString("excerpt") == null ? "" : rs.getString("excerpt")});
+            }
+            try (PreparedStatement ps = connection.prepareStatement(
+                    "UPDATE source SET content_hash = ? WHERE id = ?")) {
+                for (String[] row : pending) {
+                    ps.setString(1, Ids.digest(row[1]));
+                    ps.setString(2, row[0]);
+                    ps.addBatch();
+                }
+                ps.executeBatch();
+            }
+        }
+    }
+
     private int migrateFrom(int version) throws SQLException {
+        if (version == 4) {
+            // NOTE: the v1 CREATE TABLE above must stay the v1 shape. A
+            // fresh database is built by the same code that upgrades an old
+            // one (see migrate()), so a column added here AND here would
+            // fail with "duplicate column name" on every fresh database.
+            // v5 adds the provenance the mission's §5.2 requires: the
+            // source's content hash and publication date, and the claim's
+            // extraction and validation methods. A claim that says where it
+            // came from must also say HOW it was extracted and HOW it was
+            // validated, or "it has provenance" means nothing.
+            try (Statement st = connection.createStatement()) {
+                st.execute("ALTER TABLE source ADD COLUMN content_hash TEXT");
+                st.execute("ALTER TABLE source ADD COLUMN published_at TEXT");
+                st.execute("ALTER TABLE claim ADD COLUMN extraction_method TEXT");
+                st.execute("ALTER TABLE claim ADD COLUMN validation_method TEXT");
+            }
+            backfillProvenance();
+            writeSchemaVersion(5);
+            return 5;
+        }
         if (version == 3) {
             // v4 adds the flag that says whether the workspace answered the
             // question when it was last asked. Without it the refusal rate
@@ -951,22 +1025,26 @@ public final class KnowledgeStore implements AutoCloseable {
     }
 
     public List<Source> sources(String workspaceId) {
-        return query("SELECT id, workspace_id, kind, title, locator, authority, freshness, excerpt, added_at "
+        return query("SELECT id, workspace_id, kind, title, locator, authority, freshness, excerpt, "
+                + "added_at, content_hash, published_at "
                 + "FROM source WHERE workspace_id = ? ORDER BY title", workspaceId, rs -> new Source(
                 rs.getString("id"), rs.getString("workspace_id"),
                 SourceKind.valueOf(rs.getString("kind")), rs.getString("title"),
                 rs.getString("locator"), rs.getInt("authority"), rs.getInt("freshness"),
-                rs.getString("excerpt"), rs.getString("added_at")));
+                rs.getString("excerpt"), rs.getString("added_at"),
+                rs.getString("content_hash"), rs.getString("published_at")));
     }
 
     public List<Claim> claims(String workspaceId) {
         return query("SELECT id, workspace_id, concept_id, proposition, scope, context, status, "
-                + "confidence, version, introduced_by_source_id, created_at, updated_at "
+                + "confidence, version, introduced_by_source_id, extraction_method, validation_method, "
+                + "created_at, updated_at "
                 + "FROM claim WHERE workspace_id = ? ORDER BY id", workspaceId, rs -> new Claim(
                 rs.getString("id"), rs.getString("workspace_id"), rs.getString("concept_id"),
                 rs.getString("proposition"), rs.getString("scope"), rs.getString("context"),
                 ClaimStatus.valueOf(rs.getString("status")), rs.getDouble("confidence"),
                 rs.getInt("version"), rs.getString("introduced_by_source_id"),
+                rs.getString("extraction_method"), rs.getString("validation_method"),
                 rs.getString("created_at"), rs.getString("updated_at")));
     }
 

@@ -71,6 +71,15 @@ public final class KnowledgePack {
         public int freshness = 50;
         @JsonProperty("excerpt")
         public String excerpt;
+        /** The source's version: a revision id, an edition, a DOI suffix. */
+        @JsonProperty("version")
+        public String version;
+        /** The publication date of the source, ISO-8601 where known. */
+        @JsonProperty("publishedAt")
+        public String publishedAt;
+        /** The hash of the material that was actually read. */
+        @JsonProperty("contentHash")
+        public String contentHash;
     }
 
     /** A concept: a stable identity for an idea. */
@@ -105,6 +114,12 @@ public final class KnowledgePack {
         public double confidence = 0.5;
         @JsonProperty("evidence")
         public List<EvidenceEntry> evidence = List.of();
+        /** How this claim was extracted from its source. */
+        @JsonProperty("extractionMethod")
+        public String extractionMethod;
+        /** How this claim was validated, if it was. */
+        @JsonProperty("validationMethod")
+        public String validationMethod;
     }
 
     /** Evidence: what a source says about a claim. */

@@ -16,7 +16,10 @@
       "locator": "https://pmc.ncbi.nlm.nih.gov/articles/PMC7886073/ (Perera-Castro AV, Flexas J. Faculty Reviews 2020;9:5, doi:10.12703/b/9-5, PMCID PMC7886073, retrieved 2026-10-31)",
       "authority": 85,
       "freshness": 75,
-      "excerpt": "Photosynthesis is the chemical reaction that sustains most life on Earth. ... the enzyme that catalyzes CO2 fixation in the Calvin-Benson cycle - ribulose 1,5-bisphosphate carboxylase oxidase or rubisco - is inefficient owing to several intrinsic characteristics, the most notable being the competitiveness between carboxylation and oxidation processes, since the oxidation of D-ribulose-1,5-bisphosphate results in the energetically expensive but perhaps convenient photorespiratory pathway. ... Light, CO2, and water supply affect g_s. ... Light energy is absorbed and transferred to the photosystem II (PSII) core by the light-harvesting complex II (LHCII). ... the C4 mechanism allows CO2 concentrations around rubisco of at least 10-times higher than those of the surrounding atmosphere ... eukaryotic algae like Chlamydomonas containing pyrenoids can concentrate CO2 40-times and prokaryotic cyanobacteria possessing carboxysomes 100-times higher than the surrounding atmosphere. ... photosynthetically ... photosynthetic limitations are generally well-balanced in angiosperms. ... these delays, especially in rubisco activation, have been estimated to decrease wheat assimilation by 21% in shade to sun transitions."
+      "excerpt": "Photosynthesis is the chemical reaction that sustains most life on Earth. ... the enzyme that catalyzes CO2 fixation in the Calvin-Benson cycle - ribulose 1,5-bisphosphate carboxylase oxidase or rubisco - is inefficient owing to several intrinsic characteristics, the most notable being the competitiveness between carboxylation and oxidation processes, since the oxidation of D-ribulose-1,5-bisphosphate results in the energetically expensive but perhaps convenient photorespiratory pathway. ... Light, CO2, and water supply affect g_s. ... Light energy is absorbed and transferred to the photosystem II (PSII) core by the light-harvesting complex II (LHCII). ... the C4 mechanism allows CO2 concentrations around rubisco of at least 10-times higher than those of the surrounding atmosphere ... eukaryotic algae like Chlamydomonas containing pyrenoids can concentrate CO2 40-times and prokaryotic cyanobacteria possessing carboxysomes 100-times higher than the surrounding atmosphere. ... photosynthetically ... photosynthetic limitations are generally well-balanced in angiosperms. ... these delays, especially in rubisco activation, have been estimated to decrease wheat assimilation by 21% in shade to sun transitions.",
+      "version": "Faculty Reviews 2020;9:5, doi:10.12703/b/9-5",
+      "publishedAt": "2020",
+      "contentHash": "686a0140"
     },
     {
       "key": "wiki-photosynthesis",
@@ -25,7 +28,10 @@
       "locator": "https://en.wikipedia.org/wiki/Photosynthesis (revision 1379238357, 2026-10-08, retrieved 2026-10-31)",
       "authority": 55,
       "freshness": 90,
-      "excerpt": "Photosynthesis is a system of biological processes by which photopigment-bearing autotrophic organisms, such as most plants, algae and cyanobacteria, convert light energy - typically from sunlight - into the chemical energy necessary to fuel their metabolism. The term photosynthesis usually refers to oxygenic photosynthesis, a process that releases oxygen as a byproduct of water splitting. Photosynthetic organisms store the converted chemical energy within the bonds of intracellular organic compounds, typically carbohydrates like sugars, starches, phytoglycogen and cellulose. When needing to use this stored energy, an organism's cells then metabolize the organic compounds through cellular respiration."
+      "excerpt": "Photosynthesis is a system of biological processes by which photopigment-bearing autotrophic organisms, such as most plants, algae and cyanobacteria, convert light energy - typically from sunlight - into the chemical energy necessary to fuel their metabolism. The term photosynthesis usually refers to oxygenic photosynthesis, a process that releases oxygen as a byproduct of water splitting. Photosynthetic organisms store the converted chemical energy within the bonds of intracellular organic compounds, typically carbohydrates like sugars, starches, phytoglycogen and cellulose. When needing to use this stored energy, an organism's cells then metabolize the organic compounds through cellular respiration.",
+      "version": "revision 1379238357",
+      "publishedAt": "2026-10-08",
+      "contentHash": "f081ff39"
     },
     {
       "key": "wiki-respiration",
@@ -34,7 +40,10 @@
       "locator": "https://en.wikipedia.org/wiki/Cellular_respiration (revision 1382176743, 2026-10-27, retrieved 2026-10-31)",
       "authority": 55,
       "freshness": 90,
-      "excerpt": "Cellular respiration is the process of oxidizing biological fuels using an inorganic electron acceptor, such as oxygen, to drive production of adenosine triphosphate (ATP), which stores chemical energy in a biologically accessible form. Cellular respiration may be described as a set of metabolic reactions and processes that take place in the cells to transfer chemical energy from nutrients to ATP, with the flow of electrons to an electron acceptor, and then release waste products."
+      "excerpt": "Cellular respiration is the process of oxidizing biological fuels using an inorganic electron acceptor, such as oxygen, to drive production of adenosine triphosphate (ATP), which stores chemical energy in a biologically accessible form. Cellular respiration may be described as a set of metabolic reactions and processes that take place in the cells to transfer chemical energy from nutrients to ATP, with the flow of electrons to an electron acceptor, and then release waste products.",
+      "version": "revision 1382176743",
+      "publishedAt": "2026-10-27",
+      "contentHash": "fa05da19"
     },
     {
       "key": "wiki-photorespiration",
@@ -43,7 +52,10 @@
       "locator": "https://en.wikipedia.org/wiki/Photorespiration (revision 1364043280, 2026-07-14, retrieved 2026-10-31)",
       "authority": 55,
       "freshness": 80,
-      "excerpt": "Photorespiration (also known as the oxidative photosynthetic carbon cycle or C2 cycle) refers to a process in plant metabolism where the enzyme RuBisCO oxygenates ribulose 1,5-bisphosphate (RuBP), wasting some of the energy produced by photosynthesis. The desired reaction is the addition of carbon dioxide to RuBP (carboxylation), a key step in the Calvin-Benson cycle, but approximately 25% of reactions by RuBisCO instead add oxygen to RuBP (oxygenation), creating a product that cannot be used within the Calvin-Benson cycle. This process lowers the efficiency of photosynthesis, potentially lowering photosynthetic output by 25% in C3 plants. Photorespiration involves a complex network of enzyme reactions that exchange metabolites between chloroplasts, leaf peroxisomes and mitochondria."
+      "excerpt": "Photorespiration (also known as the oxidative photosynthetic carbon cycle or C2 cycle) refers to a process in plant metabolism where the enzyme RuBisCO oxygenates ribulose 1,5-bisphosphate (RuBP), wasting some of the energy produced by photosynthesis. The desired reaction is the addition of carbon dioxide to RuBP (carboxylation), a key step in the Calvin-Benson cycle, but approximately 25% of reactions by RuBisCO instead add oxygen to RuBP (oxygenation), creating a product that cannot be used within the Calvin-Benson cycle. This process lowers the efficiency of photosynthesis, potentially lowering photosynthetic output by 25% in C3 plants. Photorespiration involves a complex network of enzyme reactions that exchange metabolites between chloroplasts, leaf peroxisomes and mitochondria.",
+      "version": "revision 1364043280",
+      "publishedAt": "2026-07-14",
+      "contentHash": "d838f5c6"
     }
   ],
   "concepts": [
@@ -118,7 +130,9 @@
           "excerpt": "Photosynthetic organisms store the converted chemical energy within the bonds of intracellular organic compounds, typically carbohydrates like sugars, starches, phytoglycogen and cellulose.",
           "quality": 70
         }
-      ]
+      ],
+      "extractionMethod": "transcribed from the cited source excerpt by the pack author",
+      "validationMethod": "transcribed from the cited source excerpt and checked against it; the source is an authoritative reference for the claim"
     },
     {
       "key": "c-oxygenic",
@@ -135,7 +149,9 @@
           "excerpt": "The term photosynthesis usually refers to oxygenic photosynthesis, a process that releases oxygen as a byproduct of water splitting.",
           "quality": 75
         }
-      ]
+      ],
+      "extractionMethod": "transcribed from the cited source excerpt by the pack author",
+      "validationMethod": "transcribed from the cited source excerpt and checked against it; not independently verified"
     },
     {
       "key": "c-both",
@@ -152,7 +168,9 @@
           "excerpt": "When needing to use this stored energy, an organism's cells then metabolize the organic compounds through cellular respiration.",
           "quality": 70
         }
-      ]
+      ],
+      "extractionMethod": "transcribed from the cited source excerpt by the pack author",
+      "validationMethod": "transcribed from the cited source excerpt and checked against it; not independently verified"
     },
     {
       "key": "c-respiration",
@@ -169,7 +187,9 @@
           "excerpt": "Cellular respiration is the process of oxidizing biological fuels using an inorganic electron acceptor, such as oxygen, to drive production of adenosine triphosphate (ATP), which stores chemical energy in a biologically accessible form.",
           "quality": 75
         }
-      ]
+      ],
+      "extractionMethod": "transcribed from the cited source excerpt by the pack author",
+      "validationMethod": "transcribed from the cited source excerpt and checked against it; not independently verified"
     },
     {
       "key": "c-rubisco-oxygenation",
@@ -186,7 +206,9 @@
           "excerpt": "the enzyme that catalyzes CO2 fixation in the Calvin-Benson cycle - ribulose 1,5-bisphosphate carboxylase oxidase or rubisco - is inefficient owing to several intrinsic characteristics, the most notable being the competitiveness between carboxylation and oxidation processes, since the oxidation of D-ribulose-1,5-bisphosphate results in the energetically expensive but perhaps convenient photorespiratory pathway",
           "quality": 95
         }
-      ]
+      ],
+      "extractionMethod": "transcribed from the cited source excerpt by the pack author",
+      "validationMethod": "transcribed from the cited source excerpt and checked against it; the source is an authoritative reference for the claim"
     },
     {
       "key": "c-calvin",
@@ -203,7 +225,9 @@
           "excerpt": "The desired reaction is the addition of carbon dioxide to RuBP (carboxylation), a key step in the Calvin-Benson cycle",
           "quality": 75
         }
-      ]
+      ],
+      "extractionMethod": "transcribed from the cited source excerpt by the pack author",
+      "validationMethod": "transcribed from the cited source excerpt and checked against it; not independently verified"
     },
     {
       "key": "c-25pct",
@@ -220,7 +244,9 @@
           "excerpt": "approximately 25% of reactions by RuBisCO instead add oxygen to RuBP (oxygenation), creating a product that cannot be used within the Calvin-Benson cycle",
           "quality": 70
         }
-      ]
+      ],
+      "extractionMethod": "transcribed from the cited source excerpt by the pack author",
+      "validationMethod": "transcribed from the cited source excerpt and checked against it; not independently verified"
     },
     {
       "key": "c-photoresp-cost",
@@ -237,7 +263,9 @@
           "excerpt": "This process lowers the efficiency of photosynthesis, potentially lowering photosynthetic output by 25% in C3 plants.",
           "quality": 70
         }
-      ]
+      ],
+      "extractionMethod": "transcribed from the cited source excerpt by the pack author",
+      "validationMethod": "transcribed from the cited source excerpt and checked against it; not independently verified"
     },
     {
       "key": "c-photoresp-organs",
@@ -254,7 +282,9 @@
           "excerpt": "Photorespiration involves a complex network of enzyme reactions that exchange metabolites between chloroplasts, leaf peroxisomes and mitochondria.",
           "quality": 70
         }
-      ]
+      ],
+      "extractionMethod": "transcribed from the cited source excerpt by the pack author",
+      "validationMethod": "transcribed from the cited source excerpt and checked against it; not independently verified"
     },
     {
       "key": "c-stomata",
@@ -271,7 +301,9 @@
           "excerpt": "Light, CO2, and water supply affect g_s.",
           "quality": 95
         }
-      ]
+      ],
+      "extractionMethod": "transcribed from the cited source excerpt by the pack author",
+      "validationMethod": "transcribed from the cited source excerpt and checked against it; the source is an authoritative reference for the claim"
     },
     {
       "key": "c-balance",
@@ -288,7 +320,9 @@
           "excerpt": "photosynthetic limitations are generally well-balanced in angiosperms ... only modest improvements of photosynthesis can be expected from relaxing only one limiting factor",
           "quality": 90
         }
-      ]
+      ],
+      "extractionMethod": "transcribed from the cited source excerpt by the pack author",
+      "validationMethod": "transcribed from the cited source excerpt and checked against it; the source is an authoritative reference for the claim"
     },
     {
       "key": "c-c4",
@@ -305,7 +339,9 @@
           "excerpt": "the C4 mechanism allows CO2 concentrations around rubisco of at least 10-times higher than those of the surrounding atmosphere",
           "quality": 95
         }
-      ]
+      ],
+      "extractionMethod": "transcribed from the cited source excerpt by the pack author",
+      "validationMethod": "transcribed from the cited source excerpt and checked against it; the source is an authoritative reference for the claim"
     },
     {
       "key": "c-carboxysome",
@@ -322,7 +358,9 @@
           "excerpt": "eukaryotic algae like Chlamydomonas containing pyrenoids can concentrate CO2 40-times and prokaryotic cyanobacteria possessing carboxysomes 100-times higher than the surrounding atmosphere",
           "quality": 95
         }
-      ]
+      ],
+      "extractionMethod": "transcribed from the cited source excerpt by the pack author",
+      "validationMethod": "transcribed from the cited source excerpt and checked against it; the source is an authoritative reference for the claim"
     },
     {
       "key": "c-lhc",
@@ -339,7 +377,9 @@
           "excerpt": "Light energy is absorbed and transferred to the photosystem II (PSII) core by the light-harvesting complex II (LHCII).",
           "quality": 95
         }
-      ]
+      ],
+      "extractionMethod": "transcribed from the cited source excerpt by the pack author",
+      "validationMethod": "transcribed from the cited source excerpt and checked against it; the source is an authoritative reference for the claim"
     },
     {
       "key": "c-shade",
@@ -356,7 +396,9 @@
           "excerpt": "these delays, especially in rubisco activation, have been estimated to decrease wheat assimilation by 21% in shade to sun transitions",
           "quality": 90
         }
-      ]
+      ],
+      "extractionMethod": "transcribed from the cited source excerpt by the pack author",
+      "validationMethod": "transcribed from the cited source excerpt and checked against it; the source is an authoritative reference for the claim"
     },
     {
       "key": "c-misconception-oxygen",
@@ -373,7 +415,9 @@
           "excerpt": "a process that releases oxygen as a byproduct of water splitting",
           "quality": 80
         }
-      ]
+      ],
+      "extractionMethod": "transcribed from the cited source excerpt by the pack author",
+      "validationMethod": "the cited source excerpt contradicts the proposition"
     },
     {
       "key": "c-misconception-respiration",
@@ -390,7 +434,9 @@
           "excerpt": "When needing to use this stored energy, an organism's cells then metabolize the organic compounds through cellular respiration.",
           "quality": 75
         }
-      ]
+      ],
+      "extractionMethod": "transcribed from the cited source excerpt by the pack author",
+      "validationMethod": "the cited source excerpt contradicts the proposition"
     }
   ],
   "representations": [

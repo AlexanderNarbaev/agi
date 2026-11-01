@@ -19,6 +19,8 @@ public record Claim(
         double confidence,
         int version,
         String introducedBySourceId,
+        String extractionMethod,
+        String validationMethod,
         String createdAt,
         String updatedAt) {
 

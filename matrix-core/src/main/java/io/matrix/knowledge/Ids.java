@@ -78,7 +78,15 @@ public final class Ids {
     }
 
     /** FNV-1a over the UTF-8 bytes, rendered as eight hex characters. */
-    private static String digest(String raw) {
+    /**
+     * A short, stable digest of a piece of text.
+     *
+     * <p>RECON-W41: used as the content hash of a source's excerpt, so that a
+     * source can say WHICH material it was read from, and two readings of
+     * the same material hash the same. Deterministic, no wall-clock, no
+     * randomness.
+     */
+    public static String digest(String raw) {
         long hash = 0xcbf29ce484222325L;
         for (byte b : raw.getBytes(StandardCharsets.UTF_8)) {
             hash ^= (b & 0xff);

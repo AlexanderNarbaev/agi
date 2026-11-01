@@ -6,7 +6,15 @@ package io.matrix.knowledge;
  * <p>The semantics are deliberately narrow:
  *
  * <ul>
- *   <li>{@link #DRAFT} — asserted, not yet checked against any source.</li>
+ *   <li>{@link #DRAFT} — asserted by the system itself and not yet checked
+ *       against any source. A draft with no source is a HYPOTHESIS: the
+ *       system's own proposal, carrying no external support.</li>
+ *   <li>{@link #CANDIDATE} — extracted from a source and recorded with its
+ *       provenance, but not yet validated by any procedure. The mission's
+ *       rule: "Extracted information is provisional until validated by
+ *       appropriate procedures." A candidate may carry evidence; that
+ *       evidence shows where the claim came from, not that it is
+ *       established.</li>
  *   <li>{@link #SUPPORTED} — at least one source supports it; it has not been
  *       verified against an authoritative or experimental check.</li>
  *   <li>{@link #VERIFIED} — the supporting evidence meets the acceptance
@@ -24,6 +32,7 @@ package io.matrix.knowledge;
  */
 public enum ClaimStatus {
     DRAFT,
+    CANDIDATE,
     SUPPORTED,
     VERIFIED,
     CONTESTED,

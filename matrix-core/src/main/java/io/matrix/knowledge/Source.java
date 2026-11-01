@@ -18,7 +18,9 @@ public record Source(
         int authority,
         int freshness,
         String excerpt,
-        String addedAt) {
+        String addedAt,
+        String contentHash,
+        String publishedAt) {
 
     public Source {
         if (id == null || id.isBlank()) {

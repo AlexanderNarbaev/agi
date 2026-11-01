@@ -67,7 +67,12 @@ public final class LearnedRuleRegistrar {
                 60,
                 95,
                 excerpt(evaluation),
-                java.time.Instant.now().toString());
+                java.time.Instant.now().toString(),
+                // The content hash of the measurement that was recorded, so
+                // that the claim's provenance points at exactly this
+                // measurement and not at some other run of it.
+                Ids.digest(excerpt(evaluation)),
+                null);
 
         String now = java.time.Instant.now().toString();
         Claim claim = new Claim(
@@ -81,6 +86,8 @@ public final class LearnedRuleRegistrar {
                 confidence(evaluation),
                 1,
                 source.id(),
+                "derived by the acceptance model from the held-out items",
+                "measured against the held-out items of " + datasetId,
                 now,
                 now);
 

@@ -42,11 +42,13 @@ class KnowledgeStoreTest {
                         new Concept(advancedId, ws, "Photosynthesis advanced",
                                 "Mechanistic detail.", "biology", "2026-10-31T00:00:00Z")),
                 List.of(new Source(sourceId, ws, SourceKind.AUTHORITATIVE_REFERENCE,
-                        "A textbook", "urn:isbn:978-0-00", 90, 70, "Plants photosynthesise.", "2026-10-31T00:00:00Z")),
+                        "A textbook", "urn:isbn:978-0-00", 90, 70, "Plants photosynthesise.", "2026-10-31T00:00:00Z",
+                        "hash-of-the-textbook-excerpt", null)),
                 List.of(new Claim(claimId, ws, conceptId,
                         "Plants use light energy to convert carbon dioxide and water into sugars.",
                         "In green plants, in light", "general biology", ClaimStatus.VERIFIED, 0.95, 1,
-                        sourceId, "2026-10-31T00:00:00Z", "2026-10-31T00:00:00Z")),
+                        sourceId, "transcribed from the excerpt", "checked against the excerpt",
+                        "2026-10-31T00:00:00Z", "2026-10-31T00:00:00Z")),
                 List.of(new Evidence(evidenceId, ws, claimId, sourceId, EvidenceRelation.SUPPORTS,
                         "Plants photosynthesise.", 90, "2026-10-31T00:00:00Z")),
                 List.of(new Representation(introId, ws, conceptId, AbstractionLevel.INTRODUCTORY,
@@ -153,7 +155,8 @@ class KnowledgeStoreTest {
                     demoSnapshot().sources(),
                     List.of(new Claim(orphanClaim, ws, demoSnapshot().concepts().get(0).id(),
                             "An unsupported assertion.", null, null, ClaimStatus.VERIFIED, 0.9, 1,
-                            null, "2026-10-31T00:00:00Z", "2026-10-31T00:00:00Z")),
+                            null, "transcribed from the excerpt", "checked against the excerpt",
+                            "2026-10-31T00:00:00Z", "2026-10-31T00:00:00Z")),
                     List.of(), demoSnapshot().representations(), demoSnapshot().prerequisites(),
                     demoSnapshot().revisions(), "2026-10-31T00:00:00Z");
 
@@ -177,7 +180,7 @@ class KnowledgeStoreTest {
             KnowledgeSnapshot snapshot = demoSnapshot();
             List<Claim> claims = List.of(new Claim(
                     "cl-orphan", "demo", snapshot.concepts().get(0).id(), "Unsupported.", null, null,
-                    ClaimStatus.SUPPORTED, 0.5, 1, null, "t", "t"));
+                    ClaimStatus.SUPPORTED, 0.5, 1, null, "transcribed", "checked", "t", "t"));
             KnowledgeSnapshot broken = new KnowledgeSnapshot("demo", "Demo",
                     snapshot.concepts(), snapshot.sources(), claims, List.of(),
                     snapshot.representations(), snapshot.prerequisites(), snapshot.revisions(), "t");

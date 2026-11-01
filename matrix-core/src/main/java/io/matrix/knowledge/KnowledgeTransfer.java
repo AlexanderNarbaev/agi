@@ -128,7 +128,8 @@ public final class KnowledgeTransfer {
             String id = Ids.source(toWorkspace, src.kind(), src.locator());
             sourceIds.put(src.id(), id);
             sources.add(new Source(id, toWorkspace, src.kind(), src.title(), src.locator(),
-                    src.authority(), src.freshness(), src.excerpt(), src.addedAt()));
+                    src.authority(), src.freshness(), src.excerpt(), src.addedAt(),
+                    src.contentHash(), src.publishedAt()));
         }
 
         Map<String, String> claimIds = new HashMap<>();
@@ -142,6 +143,7 @@ public final class KnowledgeTransfer {
                     claim.proposition(), claim.scope(), claim.context(), claim.status(),
                     claim.confidence(), claim.version(),
                     introducedBy == null ? null : sourceIds.getOrDefault(introducedBy, introducedBy),
+                    claim.extractionMethod(), claim.validationMethod(),
                     claim.createdAt(), claim.updatedAt()));
         }
 
