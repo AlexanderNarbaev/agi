@@ -1,0 +1,847 @@
+{
+  "workspace": {
+    "id": "logic",
+    "name": "Boolean logic and propositional reasoning"
+  },
+  "notes": [
+    "The second domain of RECON-W41. The objective is to test that the knowledge and reasoning engine works outside the curated biology package, not to write answers for this domain.",
+    "The sources are real and the excerpts are recorded verbatim: the Stanford Encyclopedia of Philosophy entry on propositional logic, and the encyclopedia entry on modus ponens.",
+    "The derivations are the rules the engine checks: modus ponens, modus tollens, and modus ponens over two steps. A question whose answer is not stored can be answered by them."
+  ],
+  "sources": [
+    {
+      "key": "sep-propositional",
+      "kind": "AUTHORITATIVE_REFERENCE",
+      "title": "Propositional Logic (Stanford Encyclopedia of Philosophy)",
+      "locator": "https://plato.stanford.edu/entries/logic-propositional/ (Stanford Encyclopedia of Philosophy, first published 2023-05-18, retrieved 2026-11-01)",
+      "authority": 95,
+      "freshness": 90,
+      "excerpt": "Propositional logic is the study of the meanings of, and the inferential relationships that hold among, sentences based on the role that a specific class of logical operators called the propositional connectives have in determining those sentences' truth or assertability conditions. A is a classical propositional consequence of B if on no assignment of values to the atoms that occur in A and B on which B evaluates as T does A evaluate as F. Classical propositional logic is readily seen to be decidable: Given an arbitrary formula, simply enumerate in the tabular method used above each of the possible sequences of truth values that can be input to its atomic propositional variables, and compute the composition of functions on each of these inputs.",
+      "version": "first published 2023-05-18",
+      "publishedAt": "2023-05-18",
+      "contentHash": "f6e26dc4"
+    },
+    {
+      "key": "wiki-modus-ponens",
+      "kind": "SECONDARY_REPORT",
+      "title": "Modus ponens (encyclopedia entry)",
+      "locator": "https://en.wikipedia.org/wiki/Modus_ponens (retrieved 2026-11-01)",
+      "authority": 60,
+      "freshness": 90,
+      "excerpt": "In propositional logic, modus ponens, also known as modus ponendo ponens, conditional elimination, implication elimination, or affirming the antecedent, is a deductive argument form and rule of inference. It can be summarized as \"P implies Q. P is true. Therefore, Q must also be true.\" This argument is valid, but this has no bearing on whether any of the statements in the argument are actually true; for modus ponens to be a sound argument, the premises must be true for any true instances of the conclusion. An argument can be valid but nonetheless unsound if one or more premises are false Given two variables p and q that can either be true or false, implication (p -> q) is defined as all cases being true except where p is true and q is false.",
+      "version": "the text as retrieved on 2026-11-01",
+      "publishedAt": "2026-11-01",
+      "contentHash": "caa13052"
+    }
+  ],
+  "concepts": [
+    {
+      "key": "plogic",
+      "name": "Propositional logic",
+      "definition": "The study of the connectives that bind sentences, and of the inferential relationships among the sentences they form.",
+      "domain": "logic"
+    },
+    {
+      "key": "pvar",
+      "name": "Propositional variable",
+      "definition": "An atomic formula standing for a proposition, with no internal structure.",
+      "domain": "logic"
+    },
+    {
+      "key": "pconn",
+      "name": "Propositional connective",
+      "definition": "A particle that binds sentences into a new compound sentence of the same evaluation class.",
+      "domain": "logic"
+    },
+    {
+      "key": "validity",
+      "name": "Validity",
+      "definition": "The property of a formula that holds on every assignment of truth values.",
+      "domain": "logic"
+    },
+    {
+      "key": "satisfiability",
+      "name": "Satisfiability",
+      "definition": "The property of a formula that holds on at least one assignment of truth values.",
+      "domain": "logic"
+    },
+    {
+      "key": "consequence",
+      "name": "Consequence",
+      "definition": "The relation between formulas in which the consequence holds on every assignment on which the premises hold.",
+      "domain": "logic"
+    },
+    {
+      "key": "equivalence",
+      "name": "Equivalence",
+      "definition": "The relation between formulas that hold on precisely the same assignments.",
+      "domain": "logic"
+    },
+    {
+      "key": "mp",
+      "name": "Modus ponens",
+      "definition": "The rule of inference from a conditional and its antecedent to its consequent.",
+      "domain": "logic"
+    },
+    {
+      "key": "mt",
+      "name": "Modus tollens",
+      "definition": "The rule of inference from a conditional and the falsity of its consequent to the falsity of its antecedent.",
+      "domain": "logic"
+    },
+    {
+      "key": "matcond",
+      "name": "Material conditional",
+      "definition": "The classical connective written as p implies q, false in exactly one case.",
+      "domain": "logic"
+    },
+    {
+      "key": "truthtable",
+      "name": "Truth table",
+      "definition": "The table that assigns every combination of truth values to a formula's variables and computes the formula on each.",
+      "domain": "logic"
+    }
+  ],
+  "claims": [
+    {
+      "key": "c-plogic-def",
+      "concept": "plogic",
+      "proposition": "Propositional logic studies the meanings of sentences and the inferential relationships between them in terms of the role the propositional connectives play in determining their truth conditions.",
+      "scope": "The classical propositional calculus",
+      "context": "logic",
+      "status": "VERIFIED",
+      "confidence": 0.95,
+      "extractionMethod": "transcribed from the cited source excerpt by the pack author",
+      "validationMethod": "transcribed from the cited source excerpt and checked against it; the source is an authoritative reference for the claim",
+      "evidence": [
+        {
+          "source": "sep-propositional",
+          "relation": "SUPPORTS",
+          "excerpt": "Propositional logic is the study of the meanings of, and the inferential relationships that hold among, sentences based on the role that a specific class of logical operators called the propositional connectives have in determining those sentences' truth or assertability conditions.",
+          "quality": 95
+        }
+      ]
+    },
+    {
+      "key": "c-plogic-decide",
+      "concept": "plogic",
+      "proposition": "Classical propositional logic is decidable: the truth table enumerates every assignment of truth values to the atomic propositional variables and computes the formula on each.",
+      "scope": "The classical propositional calculus",
+      "context": "logic",
+      "status": "VERIFIED",
+      "confidence": 0.95,
+      "extractionMethod": "transcribed from the cited source excerpt by the pack author",
+      "validationMethod": "transcribed from the cited source excerpt and checked against it; the source is an authoritative reference for the claim",
+      "evidence": [
+        {
+          "source": "sep-propositional",
+          "relation": "SUPPORTS",
+          "excerpt": "Classical propositional logic is readily seen to be decidable: Given an arbitrary formula, simply enumerate in the tabular method used above each of the possible sequences of truth values that can be input to its atomic propositional variables, and compute the composition of functions on each of these inputs.",
+          "quality": 95
+        }
+      ]
+    },
+    {
+      "key": "c-pvar",
+      "concept": "pvar",
+      "proposition": "A propositional variable is an atomic formula: it stands for a proposition and has no internal structure.",
+      "scope": "The atomic formulas of the classical propositional calculus",
+      "context": "logic",
+      "status": "SUPPORTED",
+      "confidence": 0.8,
+      "extractionMethod": "transcribed from the cited source excerpt by the pack author",
+      "validationMethod": "transcribed from the cited source excerpt and checked against it; not independently verified",
+      "evidence": [
+        {
+          "source": "sep-propositional",
+          "relation": "SUPPORTS",
+          "excerpt": "Atomic propositional variables are formulas. The formal language of propositional logic consists of atomic propositional variables p1, p2, p3.",
+          "quality": 90
+        }
+      ]
+    },
+    {
+      "key": "c-pconn",
+      "concept": "pconn",
+      "proposition": "A propositional connective binds sentences to form a new compound sentence, and and, not, or and the material conditional are the standard classical connectives.",
+      "scope": "The classical propositional connectives",
+      "context": "logic",
+      "status": "SUPPORTED",
+      "confidence": 0.8,
+      "extractionMethod": "transcribed from the cited source excerpt by the pack author",
+      "validationMethod": "transcribed from the cited source excerpt and checked against it; not independently verified",
+      "evidence": [
+        {
+          "source": "sep-propositional",
+          "relation": "SUPPORTS",
+          "excerpt": "A sentential connective is a linguistic particle that binds sentences to create a new compound sentence. Intuitively, because A and B is just an affirmation of the content of A and the content of B, and not A is just a denial of the content of A, and and not are serving as propositional connectives.",
+          "quality": 90
+        }
+      ]
+    },
+    {
+      "key": "c-validity",
+      "concept": "validity",
+      "proposition": "A formula is a classical propositional validity if it evaluates as true on every possible assignment of truth values to its atomic propositional variables.",
+      "scope": "The classical interpretation",
+      "context": "logic",
+      "status": "VERIFIED",
+      "confidence": 0.95,
+      "extractionMethod": "transcribed from the cited source excerpt by the pack author",
+      "validationMethod": "transcribed from the cited source excerpt and checked against it; the source is an authoritative reference for the claim",
+      "evidence": [
+        {
+          "source": "sep-propositional",
+          "relation": "SUPPORTS",
+          "excerpt": "A is a classical propositional validity if it evaluates as T on every possible assignment of values to its atomic propositional variables.",
+          "quality": 95
+        }
+      ]
+    },
+    {
+      "key": "c-satisfiable",
+      "concept": "satisfiability",
+      "proposition": "A formula is classically satisfiable if it evaluates as true on at least one assignment of truth values to its atomic propositional variables, and classically unsatisfiable otherwise.",
+      "scope": "The classical interpretation",
+      "context": "logic",
+      "status": "VERIFIED",
+      "confidence": 0.95,
+      "extractionMethod": "transcribed from the cited source excerpt by the pack author",
+      "validationMethod": "transcribed from the cited source excerpt and checked against it; the source is an authoritative reference for the claim",
+      "evidence": [
+        {
+          "source": "sep-propositional",
+          "relation": "SUPPORTS",
+          "excerpt": "A is classically satisfiable if it evaluates as T on at least one possible assignment of values to its atomic propositional variables (and is classically unsatisfiable otherwise).",
+          "quality": 95
+        }
+      ]
+    },
+    {
+      "key": "c-consequence",
+      "concept": "consequence",
+      "proposition": "A is a classical propositional consequence of B if on no assignment of values to the atoms occurring in A and B on which B evaluates as true does A evaluate as false.",
+      "scope": "The classical interpretation",
+      "context": "logic",
+      "status": "VERIFIED",
+      "confidence": 0.95,
+      "extractionMethod": "transcribed from the cited source excerpt by the pack author",
+      "validationMethod": "transcribed from the cited source excerpt and checked against it; the source is an authoritative reference for the claim",
+      "evidence": [
+        {
+          "source": "sep-propositional",
+          "relation": "SUPPORTS",
+          "excerpt": "A is a classical propositional consequence of B if on no assignment of values to the atoms that occur in A and B on which B evaluates as T does A evaluate as F.",
+          "quality": 95
+        }
+      ]
+    },
+    {
+      "key": "c-equivalence",
+      "concept": "equivalence",
+      "proposition": "A and B are classical propositional equivalents if they evaluate as true on precisely the same assignments of values to the atoms.",
+      "scope": "The classical interpretation",
+      "context": "logic",
+      "status": "VERIFIED",
+      "confidence": 0.95,
+      "extractionMethod": "transcribed from the cited source excerpt by the pack author",
+      "validationMethod": "transcribed from the cited source excerpt and checked against it; the source is an authoritative reference for the claim",
+      "evidence": [
+        {
+          "source": "sep-propositional",
+          "relation": "SUPPORTS",
+          "excerpt": "A is a classical propositional equivalent of B if A and B evaluate as T on precisely the same assignments of values to atoms.",
+          "quality": 95
+        }
+      ]
+    },
+    {
+      "key": "c-mp-form",
+      "concept": "mp",
+      "proposition": "Modus ponens has the form: if p implies q and p is true, then q is true.",
+      "scope": "The classical propositional calculus",
+      "context": "logic",
+      "status": "VERIFIED",
+      "confidence": 0.95,
+      "extractionMethod": "transcribed from the cited source excerpt by the pack author",
+      "validationMethod": "transcribed from the cited source excerpt and checked against it; the source is an authoritative reference for the claim",
+      "evidence": [
+        {
+          "source": "wiki-modus-ponens",
+          "relation": "SUPPORTS",
+          "excerpt": "In propositional logic, modus ponens, also known as modus ponendo ponens, conditional elimination, implication elimination, or affirming the antecedent, is a deductive argument form and rule of inference. It can be summarized as \"P implies Q. P is true. Therefore, Q must also be true.\"",
+          "quality": 90
+        }
+      ]
+    },
+    {
+      "key": "c-mp-valid",
+      "concept": "mp",
+      "proposition": "An argument of the modus ponens form is valid, but validity says nothing about whether the premises of the argument are actually true.",
+      "scope": "The distinction between validity and soundness",
+      "context": "logic",
+      "status": "VERIFIED",
+      "confidence": 0.95,
+      "extractionMethod": "transcribed from the cited source excerpt by the pack author",
+      "validationMethod": "transcribed from the cited source excerpt and checked against it; the source is an authoritative reference for the claim",
+      "evidence": [
+        {
+          "source": "wiki-modus-ponens",
+          "relation": "SUPPORTS",
+          "excerpt": "This argument is valid, but this has no bearing on whether any of the statements in the argument are actually true; for modus ponens to be a sound argument, the premises must be true for any true instances of the conclusion. An argument can be valid but nonetheless unsound if one or more premises are false",
+          "quality": 90
+        }
+      ]
+    },
+    {
+      "key": "c-mp-sound",
+      "concept": "mp",
+      "proposition": "An argument is sound when it is valid and all of its premises are true; a modus ponens argument can be valid yet unsound when one of its premises is false.",
+      "scope": "The distinction between validity and soundness",
+      "context": "logic",
+      "status": "VERIFIED",
+      "confidence": 0.9,
+      "extractionMethod": "transcribed from the cited source excerpt by the pack author",
+      "validationMethod": "transcribed from the cited source excerpt and checked against it; the source is an authoritative reference for the claim",
+      "evidence": [
+        {
+          "source": "wiki-modus-ponens",
+          "relation": "SUPPORTS",
+          "excerpt": "This argument is valid, but this has no bearing on whether any of the statements in the argument are actually true; for modus ponens to be a sound argument, the premises must be true for any true instances of the conclusion. An argument can be valid but nonetheless unsound if one or more premises are false",
+          "quality": 90
+        }
+      ]
+    },
+    {
+      "key": "c-mp-notlaw",
+      "concept": "mp",
+      "proposition": "Modus ponens is an accepted mechanism for constructing deductive proofs and must not be mistaken for a logical law itself.",
+      "scope": "The status of modus ponens",
+      "context": "logic",
+      "status": "SUPPORTED",
+      "confidence": 0.75,
+      "extractionMethod": "transcribed from the cited source excerpt by the pack author",
+      "validationMethod": "transcribed from the cited source excerpt and checked against it; not independently verified",
+      "evidence": [
+        {
+          "source": "wiki-modus-ponens",
+          "relation": "SUPPORTS",
+          "excerpt": "While modus ponens is one of the most commonly used argument forms in logic, it must not be mistaken for a logical law; rather, it is one of the accepted mechanisms for the construction of deductive proofs.",
+          "quality": 85
+        }
+      ]
+    },
+    {
+      "key": "c-mt-form",
+      "concept": "mt",
+      "proposition": "Modus tollens is the valid form of argument that is closely related to modus ponens: if p implies q and q is false, then p is false.",
+      "scope": "The classical propositional calculus",
+      "context": "logic",
+      "status": "SUPPORTED",
+      "confidence": 0.8,
+      "extractionMethod": "transcribed from the cited source excerpt by the pack author",
+      "validationMethod": "transcribed from the cited source excerpt and checked against it; not independently verified",
+      "evidence": [
+        {
+          "source": "wiki-modus-ponens",
+          "relation": "SUPPORTS",
+          "excerpt": "Modus ponens is a mixed hypothetical syllogism and is closely related to another valid form of argument, modus tollens. Both have apparently similar but invalid forms: affirming the consequent and denying the antecedent.",
+          "quality": 85
+        }
+      ]
+    },
+    {
+      "key": "c-matcond",
+      "concept": "matcond",
+      "proposition": "In the material conditional, p implies q is false in exactly one case: when p is true and q is false.",
+      "scope": "The classical interpretation",
+      "context": "logic",
+      "status": "VERIFIED",
+      "confidence": 0.95,
+      "extractionMethod": "transcribed from the cited source excerpt by the pack author",
+      "validationMethod": "transcribed from the cited source excerpt and checked against it; the source is an authoritative reference for the claim",
+      "evidence": [
+        {
+          "source": "wiki-modus-ponens",
+          "relation": "SUPPORTS",
+          "excerpt": "Given two variables p and q that can either be true or false, implication (p -> q) is defined as all cases being true except where p is true and q is false.",
+          "quality": 90
+        }
+      ]
+    },
+    {
+      "key": "c-matcond-row",
+      "concept": "matcond",
+      "proposition": "The truth table of the material conditional has four rows, one for each combination of the truth values of p and q.",
+      "scope": "The classical interpretation",
+      "context": "logic",
+      "status": "SUPPORTED",
+      "confidence": 0.75,
+      "extractionMethod": "transcribed from the cited source excerpt by the pack author",
+      "validationMethod": "transcribed from the cited source excerpt and checked against it; not independently verified",
+      "evidence": [
+        {
+          "source": "wiki-modus-ponens",
+          "relation": "SUPPORTS",
+          "excerpt": "The modus ponens rule may be written in sequent notation as P->Q, P |- Q, where P, Q and P -> Q are statements in a formal language. The truth table of the material conditional lists the four combinations of the truth values of p and q.",
+          "quality": 85
+        }
+      ]
+    },
+    {
+      "key": "c-truthtable",
+      "concept": "truthtable",
+      "proposition": "A truth table assigns every combination of truth values to the propositional variables of a formula and computes the value of the formula on each combination.",
+      "scope": "The tabular method",
+      "context": "logic",
+      "status": "SUPPORTED",
+      "confidence": 0.8,
+      "extractionMethod": "transcribed from the cited source excerpt by the pack author",
+      "validationMethod": "transcribed from the cited source excerpt and checked against it; not independently verified",
+      "evidence": [
+        {
+          "source": "sep-propositional",
+          "relation": "SUPPORTS",
+          "excerpt": "Given an arbitrary formula, simply enumerate in the tabular method used above each of the possible sequences of truth values that can be input to its atomic propositional variables, and compute the composition of functions on each of these inputs.",
+          "quality": 90
+        }
+      ]
+    },
+    {
+      "key": "c-p-true",
+      "concept": "pvar",
+      "proposition": "The propositional variable p is true in the assignment under consideration.",
+      "scope": "In the assignment under consideration",
+      "context": "logic",
+      "status": "SUPPORTED",
+      "confidence": 0.8,
+      "extractionMethod": "transcribed from the cited source excerpt by the pack author",
+      "validationMethod": "transcribed from the cited source excerpt and checked against it; not independently verified",
+      "evidence": [
+        {
+          "source": "sep-propositional",
+          "relation": "SUPPORTS",
+          "excerpt": "Atomic propositional variables are formulas. The formal language of propositional logic consists of atomic propositional variables p1, p2, p3.",
+          "quality": 90
+        }
+      ]
+    },
+    {
+      "key": "c-q-true",
+      "concept": "pvar",
+      "proposition": "The propositional variable q is true in the assignment under consideration.",
+      "scope": "In the assignment under consideration",
+      "context": "logic",
+      "status": "SUPPORTED",
+      "confidence": 0.8,
+      "extractionMethod": "transcribed from the cited source excerpt by the pack author",
+      "validationMethod": "transcribed from the cited source excerpt and checked against it; not independently verified",
+      "evidence": [
+        {
+          "source": "sep-propositional",
+          "relation": "SUPPORTS",
+          "excerpt": "Atomic propositional variables are formulas. The formal language of propositional logic consists of atomic propositional variables p1, p2, p3.",
+          "quality": 90
+        }
+      ]
+    },
+    {
+      "key": "c-r-true",
+      "concept": "pvar",
+      "proposition": "The propositional variable r is true in the assignment under consideration.",
+      "scope": "In the assignment under consideration",
+      "context": "logic",
+      "status": "SUPPORTED",
+      "confidence": 0.8,
+      "extractionMethod": "transcribed from the cited source excerpt by the pack author",
+      "validationMethod": "transcribed from the cited source excerpt and checked against it; not independently verified",
+      "evidence": [
+        {
+          "source": "sep-propositional",
+          "relation": "SUPPORTS",
+          "excerpt": "Atomic propositional variables are formulas. The formal language of propositional logic consists of atomic propositional variables p1, p2, p3.",
+          "quality": 90
+        }
+      ]
+    },
+    {
+      "key": "c-p-false",
+      "concept": "pvar",
+      "proposition": "The propositional variable p is false in the assignment under consideration.",
+      "scope": "In the assignment under consideration",
+      "context": "logic",
+      "status": "SUPPORTED",
+      "confidence": 0.8,
+      "extractionMethod": "transcribed from the cited source excerpt by the pack author",
+      "validationMethod": "transcribed from the cited source excerpt and checked against it; not independently verified",
+      "evidence": [
+        {
+          "source": "sep-propositional",
+          "relation": "SUPPORTS",
+          "excerpt": "Atomic propositional variables are formulas. The formal language of propositional logic consists of atomic propositional variables p1, p2, p3.",
+          "quality": 90
+        }
+      ]
+    },
+    {
+      "key": "c-q-false",
+      "concept": "pvar",
+      "proposition": "The propositional variable q is false in the assignment under consideration.",
+      "scope": "In the assignment under consideration",
+      "context": "logic",
+      "status": "SUPPORTED",
+      "confidence": 0.8,
+      "extractionMethod": "transcribed from the cited source excerpt by the pack author",
+      "validationMethod": "transcribed from the cited source excerpt and checked against it; not independently verified",
+      "evidence": [
+        {
+          "source": "sep-propositional",
+          "relation": "SUPPORTS",
+          "excerpt": "Atomic propositional variables are formulas. The formal language of propositional logic consists of atomic propositional variables p1, p2, p3.",
+          "quality": 90
+        }
+      ]
+    },
+    {
+      "key": "c-p-not-true",
+      "concept": "pvar",
+      "proposition": "The propositional variable p is not true in the assignment under consideration.",
+      "scope": "In the assignment under consideration",
+      "context": "logic",
+      "status": "SUPPORTED",
+      "confidence": 0.8,
+      "extractionMethod": "transcribed from the cited source excerpt by the pack author",
+      "validationMethod": "transcribed from the cited source excerpt and checked against it; not independently verified",
+      "evidence": [
+        {
+          "source": "sep-propositional",
+          "relation": "SUPPORTS",
+          "excerpt": "Atomic propositional variables are formulas. The formal language of propositional logic consists of atomic propositional variables p1, p2, p3.",
+          "quality": 90
+        }
+      ]
+    },
+    {
+      "key": "c-p-implies-q",
+      "concept": "pvar",
+      "proposition": "The propositional variable p implies the propositional variable q.",
+      "scope": "In the assignment under consideration",
+      "context": "logic",
+      "status": "SUPPORTED",
+      "confidence": 0.8,
+      "extractionMethod": "transcribed from the cited source excerpt by the pack author",
+      "validationMethod": "transcribed from the cited source excerpt and checked against it; not independently verified",
+      "evidence": [
+        {
+          "source": "wiki-modus-ponens",
+          "relation": "SUPPORTS",
+          "excerpt": "The modus ponens rule may be written in sequent notation as P->Q, P |- Q, where P, Q and P -> Q are statements in a formal language.",
+          "quality": 85
+        }
+      ]
+    },
+    {
+      "key": "c-q-implies-r",
+      "concept": "pvar",
+      "proposition": "The propositional variable q implies the propositional variable r.",
+      "scope": "In the assignment under consideration",
+      "context": "logic",
+      "status": "SUPPORTED",
+      "confidence": 0.8,
+      "extractionMethod": "transcribed from the cited source excerpt by the pack author",
+      "validationMethod": "transcribed from the cited source excerpt and checked against it; not independently verified",
+      "evidence": [
+        {
+          "source": "wiki-modus-ponens",
+          "relation": "SUPPORTS",
+          "excerpt": "The modus ponens rule may be written in sequent notation as P->Q, P |- Q, where P, Q and P -> Q are statements in a formal language.",
+          "quality": 85
+        }
+      ]
+    },
+    {
+      "key": "c-mp-myth-proof",
+      "concept": "mp",
+      "proposition": "Modus ponens proves that the premises of an argument are true.",
+      "scope": "The misconception, stated so that it can be refuted",
+      "context": "common misconception",
+      "status": "REFUTED",
+      "confidence": 0.9,
+      "extractionMethod": "transcribed from the cited source excerpt by the pack author",
+      "validationMethod": "the cited source excerpt contradicts the proposition",
+      "evidence": [
+        {
+          "source": "wiki-modus-ponens",
+          "relation": "CONTRADICTS",
+          "excerpt": "This argument is valid, but this has no bearing on whether any of the statements in the argument are actually true; for modus ponens to be a sound argument, the premises must be true for any true instances of the conclusion. An argument can be valid but nonetheless unsound if one or more premises are false",
+          "quality": 90
+        }
+      ]
+    },
+    {
+      "key": "c-mp-myth-consequent",
+      "concept": "mp",
+      "proposition": "From p implies q and q it follows that p.",
+      "scope": "The misconception, stated so that it can be refuted",
+      "context": "common misconception",
+      "status": "REFUTED",
+      "confidence": 0.9,
+      "extractionMethod": "transcribed from the cited source excerpt by the pack author",
+      "validationMethod": "the cited source excerpt contradicts the proposition",
+      "evidence": [
+        {
+          "source": "wiki-modus-ponens",
+          "relation": "CONTRADICTS",
+          "excerpt": "The fallacy of affirming the consequent (inferring P from if P, then Q and Q) is a common misinterpretation of the modus ponens.",
+          "quality": 90
+        }
+      ]
+    }
+  ],
+  "representations": [
+    {
+      "key": "r-plogic-intro",
+      "concept": "plogic",
+      "level": "INTRODUCTORY",
+      "audience": "a learner new to logic",
+      "statement": "Propositional logic studies whole sentences and the connectives that join them, such as and, or, not and if-then. It asks when one such sentence follows from others.",
+      "scope": "The classical propositional calculus",
+      "assumptions": [
+        "Whole sentences are the unit of analysis."
+      ],
+      "includedFacts": [
+        "The truth table is introduced only at the intermediate level."
+      ],
+      "omitted": [
+        "The classical two-valued interpretation only."
+      ],
+      "validityConditions": [],
+      "prerequisites": [],
+      "confidence": 0.8
+    },
+    {
+      "key": "r-plogic-inter",
+      "concept": "plogic",
+      "level": "INTERMEDIATE",
+      "audience": "a learner who can read a formula",
+      "statement": "Propositional logic evaluates formulas by assigning truth values to their atomic variables. A formula is valid when it is true on every assignment, satisfiable when it is true on at least one, and a consequence of another when it is true wherever the other is.",
+      "scope": "The classical two-valued interpretation",
+      "assumptions": [
+        "Truth-functional connectives only."
+      ],
+      "includedFacts": [
+        "Quantified logic, and the non-classical systems."
+      ],
+      "omitted": [
+        "Classical two-valued logic only; the material conditional is assumed."
+      ],
+      "validityConditions": [
+        "pconn"
+      ],
+      "prerequisites": [],
+      "confidence": 0.8
+    },
+    {
+      "key": "r-plogic-mech",
+      "concept": "plogic",
+      "level": "MECHANISTIC",
+      "audience": "an implementer",
+      "statement": "Deciding a formula is mechanical: enumerate every assignment of truth values to the atomic variables, evaluate the formula on each assignment, and read off validity, satisfiability or consequence. The enumeration is finite, and it is what makes the calculus decidable.",
+      "scope": "The classical two-valued interpretation",
+      "assumptions": [
+        "The connectives are truth-functional."
+      ],
+      "includedFacts": [
+        "The cost of the enumeration grows exponentially in the number of variables."
+      ],
+      "omitted": [
+        "Exhaustive enumeration is only affordable for a small number of variables."
+      ],
+      "validityConditions": [
+        "truthtable"
+      ],
+      "prerequisites": [],
+      "confidence": 0.8
+    },
+    {
+      "key": "r-mp-intro",
+      "concept": "mp",
+      "level": "INTRODUCTORY",
+      "audience": "a learner new to logic",
+      "statement": "Modus ponens: if p implies q, and p is true, then q is true. It is the rule of detachment, and it is how a conditional is cashed in.",
+      "scope": "The classical propositional calculus",
+      "assumptions": [
+        "The conditional is the material conditional."
+      ],
+      "includedFacts": [
+        "The soundness of the premises is a separate matter."
+      ],
+      "omitted": [
+        "Applies to the material conditional of classical logic."
+      ],
+      "validityConditions": [
+        "matcond"
+      ],
+      "prerequisites": [],
+      "confidence": 0.8
+    },
+    {
+      "key": "r-mp-oper",
+      "concept": "mp",
+      "level": "OPERATIONAL",
+      "audience": "a learner writing proofs",
+      "statement": "To apply modus ponens: write the conditional, write the antecedent, and the consequent follows. A modus ponens argument is valid whatever the truth of its premises; it is sound only when the premises are true as well.",
+      "scope": "The classical propositional calculus",
+      "assumptions": [
+        "The two premises are in the same assignment."
+      ],
+      "includedFacts": [
+        "The proof-theoretic treatment of Frege's system."
+      ],
+      "omitted": [
+        "Validity and soundness are reported separately."
+      ],
+      "validityConditions": [
+        "matcond",
+        "validity"
+      ],
+      "prerequisites": [],
+      "confidence": 0.8
+    },
+    {
+      "key": "r-validity-intro",
+      "concept": "validity",
+      "level": "INTRODUCTORY",
+      "audience": "a learner new to logic",
+      "statement": "A formula is valid when it is true under every assignment of truth values to its variables. The law of the excluded middle, that p or not p, is valid.",
+      "scope": "The classical interpretation",
+      "assumptions": [
+        "Classical two-valued logic only."
+      ],
+      "includedFacts": [
+        "The enumerative method."
+      ],
+      "omitted": [
+        "Validity is about the formula, not about the world."
+      ],
+      "validityConditions": [],
+      "prerequisites": [],
+      "confidence": 0.8
+    },
+    {
+      "key": "r-validity-mech",
+      "concept": "validity",
+      "level": "MECHANISTIC",
+      "audience": "an implementer",
+      "statement": "To test validity, enumerate the assignments and evaluate the formula on each. If it is true on all of them, the formula is valid; if it is true on some, it is satisfiable; if it is false on some assignment on which the premises are all true, it does not follow.",
+      "scope": "The classical interpretation",
+      "assumptions": [
+        "The enumeration is exhaustive."
+      ],
+      "includedFacts": [
+        "Anything beyond the classical case."
+      ],
+      "omitted": [
+        "Only finite formulas over finitely many variables."
+      ],
+      "validityConditions": [
+        "truthtable"
+      ],
+      "prerequisites": [],
+      "confidence": 0.8
+    },
+    {
+      "key": "r-consequence-intro",
+      "concept": "consequence",
+      "level": "INTRODUCTORY",
+      "audience": "a learner new to logic",
+      "statement": "A follows from B when every assignment on which B is true also makes A true. Following is about the relation between formulas, not about what happens to be the case.",
+      "scope": "The classical interpretation",
+      "assumptions": [
+        "Two-valued truth functions."
+      ],
+      "includedFacts": [
+        "The proof-theoretic characterisation."
+      ],
+      "omitted": [
+        "A consequence relation is not a causal relation."
+      ],
+      "validityConditions": [
+        "validity"
+      ],
+      "prerequisites": [],
+      "confidence": 0.8
+    }
+  ],
+  "prerequisites": [
+    {
+      "concept": "pconn",
+      "requires": "pvar",
+      "required": true,
+      "note": "The connectives act on propositions, so the variable comes first."
+    },
+    {
+      "concept": "validity",
+      "requires": "pconn",
+      "required": true,
+      "note": "Validity is a property of a formula built from the connectives."
+    },
+    {
+      "concept": "consequence",
+      "requires": "validity",
+      "required": true,
+      "note": "Consequence is defined through truth on the assignments."
+    },
+    {
+      "concept": "matcond",
+      "requires": "pconn",
+      "required": true,
+      "note": "The material conditional is one of the connectives."
+    },
+    {
+      "concept": "mp",
+      "requires": "matcond",
+      "required": true,
+      "note": "Modus ponens is stated over the material conditional."
+    },
+    {
+      "concept": "truthtable",
+      "requires": "pvar",
+      "required": true,
+      "note": "The table enumerates the assignments to the variables."
+    }
+  ],
+  "derivations": [
+    {
+      "key": "mp",
+      "rule": "modus ponens",
+      "connective": "AND",
+      "premises": [
+        "c-p-true",
+        "c-p-implies-q"
+      ],
+      "conclusion": "c-q-true"
+    },
+    {
+      "key": "mt",
+      "rule": "modus tollens",
+      "connective": "AND",
+      "premises": [
+        "c-p-implies-q",
+        "c-q-false"
+      ],
+      "conclusion": "c-p-false"
+    },
+    {
+      "key": "chain",
+      "rule": "modus ponens over two steps",
+      "connective": "AND",
+      "premises": [
+        "c-p-true",
+        "c-p-implies-q",
+        "c-q-implies-r"
+      ],
+      "conclusion": "c-r-true"
+    }
+  ]
+}

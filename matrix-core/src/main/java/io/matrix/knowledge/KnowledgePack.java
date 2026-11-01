@@ -44,6 +44,9 @@ public final class KnowledgePack {
 
     @JsonProperty("revisions")
     public List<RevisionEntry> revisions = List.of();
+    /** The recorded inferences: the rules of this workspace. */
+    @JsonProperty("derivations")
+    public List<DerivationEntry> derivations = List.of();
 
     /** The workspace the package populates. */
     @JsonIgnoreProperties(ignoreUnknown = true)
@@ -80,6 +83,21 @@ public final class KnowledgePack {
         /** The hash of the material that was actually read. */
         @JsonProperty("contentHash")
         public String contentHash;
+    }
+
+    /** A recorded inference: the rule, its premises, and its conclusion. */
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public static final class DerivationEntry {
+        @JsonProperty("key")
+        public String key;
+        @JsonProperty("rule")
+        public String rule;
+        @JsonProperty("connective")
+        public String connective = "AND";
+        @JsonProperty("premises")
+        public List<String> premises = List.of();
+        @JsonProperty("conclusion")
+        public String conclusion;
     }
 
     /** A concept: a stable identity for an idea. */

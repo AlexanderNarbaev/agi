@@ -153,6 +153,27 @@ public final class KnowledgeImporter {
                     importedAt, importedAt));
         }
 
+        List<Derivation> derivations = new ArrayList<>();
+        for (KnowledgePack.DerivationEntry entry : pack.derivations) {
+            requireKey(entry.key, "derivation");
+            String conclusionId = resolve(claimIds, entry.conclusion, "claim", entry.key);
+            List<String> premiseIds = new ArrayList<>();
+            for (String premise : entry.premises == null ? List.<String>of() : entry.premises) {
+                premiseIds.add(resolve(claimIds, premise, "claim", entry.key));
+            }
+            Derivation.Connective connective;
+            try {
+                connective = Derivation.Connective.valueOf(
+                        entry.connective == null ? "AND" : entry.connective.toUpperCase(java.util.Locale.ROOT));
+            } catch (IllegalArgumentException e) {
+                throw new IllegalArgumentException("unknown connective: " + entry.connective);
+            }
+            derivations.add(new Derivation("der-" + entry.key, workspaceId,
+                    "rule-" + entry.key, entry.rule == null ? entry.key : entry.rule,
+                    connective, conclusionId, premiseIds,
+                    DerivationStatus.UNDECIDED, importedAt));
+        }
+
         List<Representation> representations = new ArrayList<>();
         for (KnowledgePack.RepresentationEntry entry : pack.representations) {
             requireKey(entry.key, "representation");
@@ -194,7 +215,8 @@ public final class KnowledgeImporter {
 
         return new KnowledgeSnapshot(workspaceId,
                 pack.workspace.name == null ? workspaceId : pack.workspace.name,
-                concepts, sources, claims, evidence, representations, prerequisites, revisions, importedAt);
+                concepts, sources, claims, evidence, representations, prerequisites, revisions,
+                derivations, importedAt);
     }
 
     // ── resolution ────────────────────────────────────────────────────────────

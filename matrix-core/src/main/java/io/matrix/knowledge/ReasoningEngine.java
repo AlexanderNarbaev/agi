@@ -145,15 +145,42 @@ public final class ReasoningEngine {
         for (Derivation rule : rules) {
             // A rule is usable when the workspace holds its conclusion and
             // its premises. The check is exact: VALID, INVALID or UNDECIDED.
-            if (!claims.stream().anyMatch(claim -> claim.id().equals(rule.conclusionClaimId()))
-                    && !snapshot.claims().stream()
-                            .anyMatch(claim -> claim.id().equals(rule.conclusionClaimId()))) {
+            if (!snapshot.claims().stream()
+                    .anyMatch(claim -> claim.id().equals(rule.conclusionClaimId()))) {
                 continue;
             }
-            DerivationStatus status = checker.check(rule, factIds, rules);
+            // The premises are FRAME-SCOPED: only the claims this question
+            // actually put on the table count, and only the ones the rule
+            // reasons over. Passing every retrieved claim to the checker
+            // would put the whole workspace's claims into the model and
+            // exhaust the atom budget, which is a way of answering
+            // UNDECIDED for everything.
+            Set<String> frame = new LinkedHashSet<>();
+            for (String premise : rule.premiseClaimIds()) {
+                if (factIds.contains(premise)) {
+                    frame.add(premise);
+                }
+            }
+            DerivationStatus status = checker.check(rule, frame, rules);
             derivations.add(new Derivation(rule.id(), rule.workspaceId(), rule.ruleId(),
                     rule.ruleName(), rule.connective(), rule.conclusionClaimId(),
                     rule.premiseClaimIds(), status, rule.recordedAt()));
+        }
+        // A rule that could not fire is reported with the reason: a premise
+        // the question did not supply is not the same as a false premise,
+        // and the difference is the difference between "we do not know" and
+        // "this does not follow".
+        for (Derivation derivation : derivations) {
+            if (derivation.status() == DerivationStatus.DERIVED_INVALID) {
+                List<String> missing = derivation.premiseClaimIds().stream()
+                        .filter(premise -> !factIds.contains(premise))
+                        .toList();
+                if (!missing.isEmpty()) {
+                    limitations.add("The rule '" + derivation.ruleName() + "' could not be applied: "
+                            + missing.size() + " of its premises were not established by this "
+                            + "question. The question does not say whether they hold or not.");
+                }
+            }
         }
         if (derivations.isEmpty()) {
             steps.add(new Step("inference", "the workspace holds no rule that bears on this question"));
