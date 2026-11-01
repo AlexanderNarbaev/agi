@@ -279,9 +279,16 @@ public final class ReasoningEngine {
      * how the question was read. It is a heuristic, and it says so.
      */
     public TaskKind classify(List<String> terms) {
-        Set<String> words = new LinkedHashSet<>(terms);
+        // The terms are FOLDED - "implies" arrives as "impli" - so the
+        // keywords have to be folded the same way. Comparing folded terms
+        // with unfolded keywords never matched, and every derivation
+        // question was classified as a plain fact.
+        Set<String> words = new LinkedHashSet<>();
+        for (String term : terms) {
+            words.add(term);
+        }
         if (containsAny(words, "require", "requires", "required", "prerequisite", "depend",
-                "depends", "prerequisite", "before")) {
+                "depends", "before")) {
             return TaskKind.PREREQUISITE;
         }
         if (containsAny(words, "relate", "relation", "relationship", "connection", "compare",
@@ -295,13 +302,32 @@ public final class ReasoningEngine {
         return TaskKind.FACT;
     }
 
+    /** Whether the question's folded terms contain any of the folded keywords. */
     private boolean containsAny(Set<String> words, String... candidates) {
         for (String candidate : candidates) {
-            if (words.contains(candidate)) {
+            if (words.contains(candidate) || words.contains(fold(candidate))) {
                 return true;
             }
         }
         return false;
+    }
+
+    /** The same suffix fold the tokenizer uses. */
+    private static String fold(String token) {
+        String folded = token;
+        if (folded.length() > 5 && folded.endsWith("ing")) {
+            folded = folded.substring(0, folded.length() - 3);
+        } else if (folded.length() > 4 && folded.endsWith("ed")) {
+            folded = folded.substring(0, folded.length() - 2);
+        } else if (folded.length() > 4 && folded.endsWith("es")) {
+            folded = folded.substring(0, folded.length() - 2);
+        } else if (folded.length() > 3 && folded.endsWith("s") && !folded.endsWith("ss")) {
+            folded = folded.substring(0, folded.length() - 1);
+        }
+        if (folded.length() > 3 && folded.endsWith("e")) {
+            folded = folded.substring(0, folded.length() - 1);
+        }
+        return folded;
     }
 
     private Result abstain(String question, TaskKind task, List<Step> steps, String reason) {

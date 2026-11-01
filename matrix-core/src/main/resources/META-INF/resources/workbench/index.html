@@ -65,6 +65,10 @@
 <body>
 <header>
   <h1>MATRIX Learning Workbench</h1>
+  <select id="ws-select" style="width:220px">
+    <option value="photosynthesis">photosynthesis (biology)</option>
+    <option value="logic">logic (propositional)</option>
+  </select>
   <span class="sub" id="hdr-workspace">workspace: —</span>
   <span class="sub" id="hdr-storage">storage: —</span>
 </header>
@@ -72,10 +76,12 @@
 <nav>
   <button data-tab="dashboard" class="active">Dashboard</button>
   <button data-tab="ask">Ask</button>
+  <button data-tab="reasoning">Reasoning</button>
   <button data-tab="knowledge">Knowledge</button>
   <button data-tab="assess">Assess</button>
   <button data-tab="teach">Teach</button>
   <button data-tab="progress">Progress</button>
+  <button data-tab="goals">Goals</button>
   <button data-tab="persistence">Persistence</button>
 </nav>
 
@@ -125,6 +131,29 @@
       <h2 style="margin-top:0">Unknown detection</h2>
       <div class="muted" id="ask-gap">Ask a question to see which of its terms the workspace cannot cover.</div>
     </div>
+  </section>
+
+  <section id="tab-reasoning">
+    <h2>Reasoning</h2>
+    <p class="muted">The evidence-grounded path. The answer shows how the question was read, what was
+      retrieved, which recorded rules were checked, whether a conflict was found, and what the
+      answer rests on. A question the workspace cannot cover is refused, not guessed.</p>
+    <div class="row">
+      <input type="text" id="reason-q" placeholder="Ask something that has to be worked out…">
+      <select id="reason-level" style="width:190px">
+        <option value="INTRODUCTORY">introductory</option>
+        <option value="INTERMEDIATE">intermediate</option>
+        <option value="ADVANCED">advanced</option>
+        <option value="MECHANISTIC">mechanistic</option>
+        <option value="OPERATIONAL">operational</option>
+      </select>
+      <button class="action" id="btn-reason" style="margin-top:0">Reason</button>
+    </div>
+    <div id="reason-result" style="margin-top:16px"></div>
+    <div class="card"><h2 style="margin-top:0">The recorded rules of this workspace</h2>
+      <div id="reason-rules" class="muted">—</div></div>
+    <div class="card"><h2 style="margin-top:0">The recorded conflicts</h2>
+      <div id="reason-conflicts" class="muted">—</div></div>
   </section>
 
   <section id="tab-knowledge">
@@ -220,6 +249,25 @@
     </div>
   </section>
 
+  <section id="tab-goals">
+    <h2>Persistent goals</h2>
+    <p class="muted">A goal is not part of the knowledge: it says what was being attempted, what
+      failed, how much of the budget is spent and where to pick up. It survives a restart, and a
+      restarted process can ask what it was doing.</p>
+    <div class="card"><h2 style="margin-top:0">The goals of this workspace</h2>
+      <div id="goal-list" class="muted">—</div></div>
+    <div class="card"><h2 style="margin-top:0">Start a goal</h2>
+      <div class="row">
+        <input type="text" id="goal-desc" placeholder="What is the objective?">
+        <input type="text" id="goal-criteria" placeholder="Success criteria, separated by ;" style="width:320px">
+        <input type="number" id="goal-budget" value="10" min="1" style="width:90px">
+        <button class="action" id="btn-goal" style="margin-top:0">Start</button>
+      </div>
+      <div class="muted" id="goal-note">A goal with no subtasks is created with one required
+        subtask, so that it has something to resume.</div>
+    </div>
+  </section>
+
   <section id="tab-persistence">
     <h2>Persistence and recovery</h2>
     <div class="card">
@@ -237,7 +285,7 @@ The counts below are read back from the store on disk by this new process.</pre>
 
 <script>
 const API = '/v1/workbench';
-const WS = 'photosynthesis';
+let WS = 'photosynthesis';
 let dataset = null;
 
 const $ = (id) => document.getElementById(id);
@@ -262,6 +310,8 @@ document.querySelectorAll('nav button').forEach(btn => {
     if (btn.dataset.tab === 'assess') loadAssessment();
     if (btn.dataset.tab === 'teach') loadConceptsForTeaching();
     if (btn.dataset.tab === 'progress') { loadProgress(); loadCapability(); loadQuestions(); }
+    if (btn.dataset.tab === 'reasoning') loadRules();
+    if (btn.dataset.tab === 'goals') loadGoals();
   });
 });
 
@@ -318,6 +368,15 @@ async function loadMetrics() {
     $('dash-report').innerHTML = '<span class="muted">' + esc(e.message) + '</span>';
   }
 }
+
+$('ws-select').addEventListener('change', function () {
+  WS = $('ws-select').value;
+  loadStatus();
+  loadMetrics();
+  loadRules();
+  loadGoals();
+  loadKnowledge();
+});
 
 async function loadStatus() {
   try {
@@ -664,6 +723,174 @@ async function loadQuestions() {
     $('progress-questions').innerHTML = '<span class="muted">' + esc(e.message) + '</span>';
   }
 }
+
+// ── Reasoning ───────────────────────────────────────────────────────────
+$('btn-reason').addEventListener('click', async () => {
+  const question = $('reason-q').value.trim();
+  if (!question) { $('reason-result').innerHTML = '<div class="card warn">Type a question first.</div>'; return; }
+  $('reason-result').innerHTML = '<div class="muted">Reasoning…</div>';
+  try {
+    const response = await fetch('/v1/workbench/workspaces/' + WS + '/reason', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ question: question, level: $('reason-level').value })
+    });
+    const result = await response.json();
+    let html = '';
+    if (!result.answered) {
+      html += '<div class="card warn"><h2 style="margin-top:0">Not answered</h2><div>'
+        + esc(result.abstentionReason || 'The workspace does not cover this question.')
+        + '</div></div>';
+    } else {
+      html += '<div class="card good"><h2 style="margin-top:0">Answer (' + esc(result.task) + ')</h2>'
+        + '<div class="answer">' + esc(result.answer) + '</div></div>';
+    }
+    html += '<div class="card"><h2 style="margin-top:0">How the question was handled</h2>'
+      + (result.steps || []).map(function (step) {
+          return '<div><b>' + esc(step.stage) + '</b><div class="muted">' + esc(step.detail) + '</div></div>';
+        }).join('') + '</div>';
+    if ((result.claims || []).length) {
+      html += '<div class="card"><h2 style="margin-top:0">The claims the answer rests on</h2>'
+        + result.claims.map(function (claim) {
+            return '<div><span class="tag ' + esc(claim.status) + '">' + esc(claim.status) + '</span> '
+              + esc(claim.proposition) + '<div class="muted">scope: ' + esc(claim.scope || 'unstated')
+              + ' · warrant: ' + esc(claim.warrant) + ' · derivation: ' + esc(claim.derivationStatus)
+              + '</div></div>';
+          }).join('') + '</div>';
+    }
+    if ((result.derivations || []).length) {
+      html += '<div class="card"><h2 style="margin-top:0">The rules that were checked</h2>'
+        + result.derivations.map(function (derivation) {
+            return '<div><b>' + esc(derivation.ruleName) + '</b> — ' + esc(derivation.status)
+              + '<div class="muted">premises: ' + (derivation.premiseClaimIds || []).join(', ')
+              + ' → ' + esc(derivation.conclusionClaimId) + '</div></div>';
+          }).join('') + '</div>';
+    }
+    if ((result.sources || []).length) {
+      html += '<div class="card"><h2 style="margin-top:0">The sources</h2>'
+        + result.sources.map(function (source) {
+            return '<div>' + esc(source.title) + '<div class="muted">' + esc(source.locator || '')
+              + '</div></div>';
+          }).join('') + '</div>';
+    }
+    if ((result.limitations || []).length) {
+      html += '<div class="card warn"><h2 style="margin-top:0">Limitations</h2>'
+        + result.limitations.map(function (item) { return '<div>' + esc(item) + '</div>'; }).join('')
+        + '</div>';
+    }
+    $('reason-result').innerHTML = html;
+  } catch (error) {
+    $('reason-result').innerHTML = '<div class="card warn">The request failed: ' + esc(String(error)) + '</div>';
+  }
+});
+
+async function loadRules() {
+  try {
+    const response = await fetch('/v1/workbench/workspaces/' + WS + '/derivations');
+    const rules = await response.json();
+    $('reason-rules').innerHTML = rules.length
+      ? rules.map(function (rule) {
+          return '<div><b>' + esc(rule.ruleName) + '</b> (' + esc(rule.connective) + ') — '
+            + (rule.premiseClaimIds || []).length + ' premise(s) → ' + esc(rule.conclusionClaimId)
+            + '</div>';
+        }).join('')
+      : '<span class="muted">No rule is recorded in this workspace, so no answer here can be '
+        + 'derived rather than retrieved.</span>';
+    const conflicts = await (await fetch('/v1/workbench/workspaces/' + WS + '/contradictions')).json();
+    $('reason-conflicts').innerHTML = conflicts.length
+      ? conflicts.map(function (conflict) {
+          return '<div>' + esc(conflict.kind) + '<div class="muted">' + esc(conflict.claimAId)
+            + ' and ' + esc(conflict.claimBId) + ' — neither side is preferred.</div></div>';
+        }).join('')
+      : '<span class="muted">No conflict has been recorded among the claims of this workspace.</span>';
+  } catch (error) {
+    $('reason-rules').innerHTML = '<span class="muted">Could not read the rules.</span>';
+  }
+}
+
+// ── Goals ───────────────────────────────────────────────────────────────
+async function loadGoals() {
+  try {
+    const goals = await (await fetch('/v1/workbench/workspaces/' + WS + '/goals')).json();
+    if (!goals.length) {
+      $('goal-list').innerHTML = '<span class="muted">No goal has been started in this workspace.</span>';
+      return;
+    }
+    $('goal-list').innerHTML = goals.map(function (goal) {
+      let html = '<div class="card"><h3 style="margin-top:0">' + esc(goal.description)
+        + ' <span class="tag">' + esc(goal.status) + '</span></h3>';
+      html += '<div class="muted">budget: ' + goal.budgetUsed + ' of ' + goal.budgetUnits
+        + ' · remaining work: ' + esc(goal.remainingWork || 'none')
+        + '<br>checkpoint: ' + esc(goal.lastCheckpoint || 'none')
+        + '<br>recovery: ' + esc(goal.recoveryInstructions || 'none') + '</div>';
+      if ((goal.subtasks || []).length) {
+        html += '<div>' + goal.subtasks.map(function (subtask) {
+          return '<div><span class="tag ' + esc(subtask.status) + '">' + esc(subtask.status) + '</span> '
+            + esc(subtask.description) + (subtask.required ? ' <span class="muted">(required)</span>' : '')
+            + (subtask.status !== 'COMPLETED'
+                ? ' <button class="action" data-goal="' + esc(goal.id) + '" data-subtask="'
+                  + esc(subtask.id) + '">complete</button>'
+                : '')
+            + '</div>';
+        }).join('') + '</div>';
+      }
+      if ((goal.failedAttempts || []).length) {
+        html += '<div class="muted">failed attempts: ' + goal.failedAttempts.map(function (failure) {
+          return esc(failure.attempt) + ' — ' + esc(failure.reason);
+        }).join('; ') + '</div>';
+      }
+      html += '<div><button class="action" data-checkpoint="' + esc(goal.id) + '">checkpoint</button></div>';
+      html += '</div>';
+      return html;
+    }).join('');
+    document.querySelectorAll('[data-goal]').forEach(function (button) {
+      button.addEventListener('click', async function () {
+        await fetch('/v1/workbench/workspaces/' + WS + '/goals/' + button.dataset.goal
+          + '/subtasks/' + button.dataset.subtask + '/complete', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ evidenceIds: [], note: 'completed from the workbench' })
+        });
+        loadGoals();
+      });
+    });
+    document.querySelectorAll('[data-checkpoint]').forEach(function (button) {
+      button.addEventListener('click', async function () {
+        await fetch('/v1/workbench/workspaces/' + WS + '/goals/' + button.dataset.checkpoint
+          + '/checkpoint', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ checkpoint: 'checkpointed from the workbench', remainingWork: '' })
+        });
+        loadGoals();
+      });
+    });
+  } catch (error) {
+    $('goal-list').innerHTML = '<span class="muted">Could not read the goals.</span>';
+  }
+}
+
+$('btn-goal').addEventListener('click', async () => {
+  const description = $('goal-desc').value.trim();
+  if (!description) { $('goal-note').textContent = 'Describe the objective first.'; return; }
+  const criteria = $('goal-criteria').value.split(';').map(function (part) { return part.trim(); })
+    .filter(function (part) { return part.length > 0; });
+  try {
+    await fetch('/v1/workbench/workspaces/' + WS + '/goals', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        description: description,
+        successCriteria: criteria,
+        budgetUnits: parseInt($('goal-budget').value, 10) || 10,
+        subtasks: [{ id: 'first', description: 'The first step of the objective', required: true,
+          prerequisiteSubtaskIds: [] }]
+      })
+    });
+    $('goal-desc').value = '';
+    $('goal-criteria').value = '';
+    $('goal-note').textContent = 'The goal was started; it survives a restart.';
+    loadGoals();
+  } catch (error) {
+    $('goal-note').textContent = 'The goal could not be started.';
+  }
+});
 
 $('consolidate-questions').addEventListener('click', async () => {
   const btn = $('consolidate-questions');

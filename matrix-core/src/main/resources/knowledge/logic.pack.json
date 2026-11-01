@@ -596,6 +596,44 @@
           "quality": 90
         }
       ]
+    },
+    {
+      "key": "c-p-true-other",
+      "concept": "pvar",
+      "proposition": "The propositional variable p is true in the other assignment under consideration.",
+      "scope": "In the other assignment under consideration",
+      "context": "logic",
+      "status": "SUPPORTED",
+      "confidence": 0.8,
+      "extractionMethod": "transcribed from the cited source excerpt by the pack author",
+      "validationMethod": "transcribed from the cited source excerpt and checked against it; not independently verified",
+      "evidence": [
+        {
+          "source": "sep-propositional",
+          "relation": "SUPPORTS",
+          "excerpt": "Atomic propositional variables are formulas. The formal language of propositional logic consists of atomic propositional variables p1, p2, p3.",
+          "quality": 90
+        }
+      ]
+    },
+    {
+      "key": "c-p-not-true-other",
+      "concept": "pvar",
+      "proposition": "The propositional variable p is not true in the other assignment under consideration.",
+      "scope": "In the other assignment under consideration",
+      "context": "logic",
+      "status": "SUPPORTED",
+      "confidence": 0.8,
+      "extractionMethod": "transcribed from the cited source excerpt by the pack author",
+      "validationMethod": "transcribed from the cited source excerpt and checked against it; not independently verified",
+      "evidence": [
+        {
+          "source": "sep-propositional",
+          "relation": "SUPPORTS",
+          "excerpt": "Atomic propositional variables are formulas. The formal language of propositional logic consists of atomic propositional variables p1, p2, p3.",
+          "quality": 90
+        }
+      ]
     }
   ],
   "representations": [

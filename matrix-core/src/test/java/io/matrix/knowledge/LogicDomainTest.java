@@ -39,7 +39,7 @@ class LogicDomainTest {
     @DisplayName("the package imports with its sources, claims and rules")
     void thePackageImports() {
         assertThat(logic.concepts()).hasSize(11);
-        assertThat(logic.claims()).hasSize(26);
+        assertThat(logic.claims()).hasSize(28);
         assertThat(logic.sources()).hasSize(2);
         assertThat(logic.derivations()).hasSize(3);
     }
@@ -135,15 +135,36 @@ class LogicDomainTest {
     void theConflictBetweenOppositeClaimsIsRecorded() {
         List<Contradiction> conflicts = new ContradictionDetector().detect(logic);
 
-        assertThat(conflicts).anySatisfy(conflict -> {
+        // Exactly two conflicts: "p is true" against "p is not true" in the
+        // first assignment, and the same pair in the other assignment.
+        //
+        // The claims about the OTHER variables differ in polarity but say
+        // different things, so they are not conflicts; and the claim about
+        // p in the first assignment is not a conflict with the claim about
+        // p in the other assignment, because the scopes differ. A detector
+        // that cried "contradiction" on those would be worthless.
+        assertThat(conflicts).hasSize(2);
+        assertThat(conflicts).allSatisfy(conflict -> {
             assertThat(conflict.kind()).isEqualTo(Contradiction.Kind.OPPOSITE_POLARITY);
             assertThat(conflict.claimAId()).isNotEqualTo(conflict.claimBId());
+        });
+        // Neither conflict is between claims about different variables.
+        assertThat(conflicts).allSatisfy(conflict -> {
+            Claim left = claimById(conflict.claimAId());
+            Claim right = claimById(conflict.claimBId());
+            assertThat(left.conceptId()).isEqualTo(right.conceptId());
+            assertThat(left.scope()).isEqualTo(right.scope());
         });
         // And the claims themselves keep their status.
         assertThat(logic.claims()).filteredOn(claim ->
                 "The propositional variable p is true in the assignment under consideration."
                         .equals(claim.proposition()))
                 .allSatisfy(claim -> assertThat(claim.status()).isEqualTo(ClaimStatus.SUPPORTED));
+    }
+
+    private Claim claimById(String id) {
+        return logic.claims().stream()
+                .filter(claim -> claim.id().equals(id)).findFirst().orElseThrow();
     }
 
     @Test
@@ -155,7 +176,7 @@ class LogicDomainTest {
             store.importWorkspace(logic);
             KnowledgeSnapshot read = store.exportWorkspace("logic");
 
-            assertThat(read.claims()).hasSize(26);
+            assertThat(read.claims()).hasSize(28);
             assertThat(read.derivations()).hasSize(3);
             assertThat(read.derivations()).anySatisfy(derivation -> {
                 assertThat(derivation.ruleName()).isEqualTo("modus ponens");

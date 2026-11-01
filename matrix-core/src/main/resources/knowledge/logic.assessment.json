@@ -1,0 +1,204 @@
+{
+  "dataset": {
+    "id": "logic-v1",
+    "version": 1,
+    "description": "The baseline and evaluation set for propositional logic. Each capability is probed by a PAIR of items: one that may be used while learning and one held-out variant that may not. The held-out items are the independent measurement."
+  },
+  "items": [
+    {
+      "id": "l-recall-1",
+      "concept": "Propositional logic",
+      "dimension": "RECALL",
+      "prompt": "What does propositional logic study?",
+      "keyTerms": [
+        "connectives",
+        "sentences"
+      ],
+      "difficulty": 1,
+      "variant": "training",
+      "critical": false,
+      "heldOut": false
+    },
+    {
+      "id": "e-recall-1",
+      "concept": "Propositional logic",
+      "dimension": "RECALL",
+      "prompt": "Name the thing propositional logic analyses and the operators it analyses them by.",
+      "keyTerms": [
+        "connectives",
+        "sentences"
+      ],
+      "difficulty": 1,
+      "variant": "held-out",
+      "critical": false,
+      "heldOut": true
+    },
+    {
+      "id": "l-recall-2",
+      "concept": "Validity",
+      "dimension": "RECALL",
+      "prompt": "When is a formula called a validity?",
+      "keyTerms": [
+        "every",
+        "assignment"
+      ],
+      "difficulty": 1,
+      "variant": "training",
+      "critical": false,
+      "heldOut": false
+    },
+    {
+      "id": "e-recall-2",
+      "concept": "Validity",
+      "dimension": "RECALL",
+      "prompt": "Under what condition does a formula count as a classical propositional validity?",
+      "keyTerms": [
+        "every",
+        "assignment"
+      ],
+      "difficulty": 1,
+      "variant": "held-out",
+      "critical": false,
+      "heldOut": true
+    },
+    {
+      "id": "l-explain-1",
+      "concept": "Modus ponens",
+      "dimension": "EXPLANATION",
+      "prompt": "State modus ponens.",
+      "keyTerms": [
+        "implies",
+        "true"
+      ],
+      "difficulty": 1,
+      "variant": "training",
+      "critical": false,
+      "heldOut": false
+    },
+    {
+      "id": "e-explain-1",
+      "concept": "Modus ponens",
+      "dimension": "EXPLANATION",
+      "prompt": "Give the form of the rule of detachment: what is assumed and what follows?",
+      "keyTerms": [
+        "implies",
+        "true"
+      ],
+      "difficulty": 1,
+      "variant": "held-out",
+      "critical": false,
+      "heldOut": true
+    },
+    {
+      "id": "l-apply-1",
+      "concept": "Material conditional",
+      "dimension": "APPLICATION",
+      "prompt": "In which case is the material conditional p implies q false?",
+      "keyTerms": [
+        "true",
+        "false"
+      ],
+      "difficulty": 1,
+      "variant": "training",
+      "critical": false,
+      "heldOut": false
+    },
+    {
+      "id": "e-apply-1",
+      "concept": "Material conditional",
+      "dimension": "APPLICATION",
+      "prompt": "Given that p is true, what must be the case for the material conditional p implies q to be false?",
+      "keyTerms": [
+        "q",
+        "false"
+      ],
+      "difficulty": 1,
+      "variant": "held-out",
+      "critical": false,
+      "heldOut": true
+    },
+    {
+      "id": "l-causal-1",
+      "concept": "Consequence",
+      "dimension": "CAUSAL",
+      "prompt": "How is consequence between two formulas defined?",
+      "keyTerms": [
+        "assignment",
+        "consequence"
+      ],
+      "difficulty": 1,
+      "variant": "training",
+      "critical": false,
+      "heldOut": false
+    },
+    {
+      "id": "e-causal-1",
+      "concept": "Consequence",
+      "dimension": "CAUSAL",
+      "prompt": "Why does a formula follow from another? Because it holds on every assignment on which the other holds.",
+      "keyTerms": [
+        "assignment"
+      ],
+      "difficulty": 1,
+      "variant": "held-out",
+      "critical": false,
+      "heldOut": true
+    },
+    {
+      "id": "l-transfer-1",
+      "concept": "Truth table",
+      "dimension": "TRANSFER",
+      "prompt": "How does a truth table decide a formula?",
+      "keyTerms": [
+        "assignment",
+        "enumerates"
+      ],
+      "difficulty": 1,
+      "variant": "training",
+      "critical": false,
+      "heldOut": false
+    },
+    {
+      "id": "e-transfer-1",
+      "concept": "Truth table",
+      "dimension": "TRANSFER",
+      "prompt": "An engineer must decide whether a formula is valid by hand. What does she do?",
+      "keyTerms": [
+        "assignment",
+        "enumerates"
+      ],
+      "difficulty": 1,
+      "variant": "held-out",
+      "critical": false,
+      "heldOut": true
+    },
+    {
+      "id": "l-eval-1",
+      "concept": "Modus ponens",
+      "dimension": "EVALUATION",
+      "prompt": "Does a valid modus ponens argument prove that its premises are true?",
+      "keyTerms": [
+        "valid",
+        "premises"
+      ],
+      "difficulty": 1,
+      "variant": "training",
+      "critical": false,
+      "heldOut": false
+    },
+    {
+      "id": "e-eval-1",
+      "concept": "Modus ponens",
+      "dimension": "EVALUATION",
+      "prompt": "An argument is valid but one of its premises is false. Is the argument sound?",
+      "keyTerms": [
+        "sound",
+        "false"
+      ],
+      "difficulty": 1,
+      "variant": "held-out",
+      "critical": false,
+      "heldOut": true
+    }
+  ]
+}

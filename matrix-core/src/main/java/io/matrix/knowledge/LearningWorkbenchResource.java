@@ -10,6 +10,7 @@ import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -56,6 +57,36 @@ public class LearningWorkbenchResource {
 
     /** The body of a teach-back request. */
     public record TeachBackRequest(String conceptId, String level, Double expectedGain) {
+    }
+
+    /** The body of a goal request. */
+    public record GoalRequest(
+            String description,
+            List<String> successCriteria,
+            List<String> prerequisiteConceptIds,
+            List<SubtaskRequest> subtasks,
+            Integer budgetUnits,
+            String recoveryInstructions) {
+    }
+
+    /** One subtask of a goal. */
+    public record SubtaskRequest(
+            String id,
+            String description,
+            Boolean required,
+            List<String> prerequisiteSubtaskIds) {
+    }
+
+    /** The body of a subtask completion. */
+    public record SubtaskCompletion(List<String> evidenceIds, String note) {
+    }
+
+    /** The body of a checkpoint. */
+    public record CheckpointRequest(String checkpoint, String remainingWork) {
+    }
+
+    /** The body of a teach-back experiment request. */
+    public record TeachBackExperimentRequest(String conceptId, Double expectedGain) {
     }
 
     /** The body of a refinement request. */
@@ -106,7 +137,8 @@ public class LearningWorkbenchResource {
     @POST
     @Path("/workspaces/{id}/load")
     public Response load(@PathParam("id") String workspaceId) {
-        if (!KnowledgeWorkbench.DEFAULT_WORKSPACE.equals(workspaceId)) {
+        if (!KnowledgeWorkbench.DEFAULT_WORKSPACE.equals(workspaceId)
+                && !KnowledgeWorkbench.LOGIC_WORKSPACE.equals(workspaceId)) {
             return Response.status(Response.Status.NOT_FOUND)
                     .entity(Map.of("error", "no bundled package for workspace " + workspaceId))
                     .build();
@@ -119,7 +151,8 @@ public class LearningWorkbenchResource {
                 "sources", snapshot.sources().size(),
                 "evidence", snapshot.evidence().size(),
                 "representations", snapshot.representations().size(),
-                "revisions", snapshot.revisions().size())).build();
+                "revisions", snapshot.revisions().size(),
+                "derivations", snapshot.derivations().size())).build();
     }
 
     /** The concepts of a workspace. */
@@ -176,6 +209,129 @@ public class LearningWorkbenchResource {
         AbstractionLevel level = parseLevel(request.level());
         Answer answer = workbench.ask(workspaceId, request.question(), level);
         return Response.ok(answer).build();
+    }
+
+    /**
+     * Reasons over a workspace and answers a question.
+     *
+     * <p>The answer carries the stages of the pipeline, so the user can see
+     * how the question was read, what was retrieved, which rules were
+     * checked and what the answer rests on.
+     */
+    @POST
+    @Path("/workspaces/{id}/reason")
+    public Response reason(@PathParam("id") String workspaceId, AskRequest request) {
+        if (request == null || request.question() == null || request.question().isBlank()) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity(Map.of("error", "a question is required"))
+                    .build();
+        }
+        AbstractionLevel level = parseLevel(request.level());
+        ReasoningEngine.Result result = workbench.reason(workspaceId, request.question(), level);
+        return Response.ok(result).build();
+    }
+
+    /** The recorded inferences of a workspace. */
+    @GET
+    @Path("/workspaces/{id}/derivations")
+    public List<Derivation> derivations(@PathParam("id") String workspaceId) {
+        return workbench.derivations(workspaceId);
+    }
+
+    /** The recorded conflicts of a workspace. */
+    @GET
+    @Path("/workspaces/{id}/contradictions")
+    public List<Contradiction> contradictions(@PathParam("id") String workspaceId) {
+        return workbench.contradictions(workspaceId);
+    }
+
+    /** The goals of a workspace. */
+    @GET
+    @Path("/workspaces/{id}/goals")
+    public List<LearningGoal> goals(@PathParam("id") String workspaceId) {
+        return workbench.goals(workspaceId);
+    }
+
+    /** The goals that were under way, for a restarted process to pick up. */
+    @GET
+    @Path("/workspaces/{id}/goals/resumable")
+    public List<LearningGoal> resumableGoals(@PathParam("id") String workspaceId) {
+        return workbench.resumableGoals(workspaceId);
+    }
+
+    /** Starts a goal. */
+    @POST
+    @Path("/workspaces/{id}/goals")
+    public Response startGoal(@PathParam("id") String workspaceId, GoalRequest request) {
+        if (request == null || request.description() == null || request.description().isBlank()) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity(Map.of("error", "a description is required"))
+                    .build();
+        }
+        List<LearningGoal.Subtask> subtasks = new ArrayList<>();
+        if (request.subtasks() != null) {
+            for (SubtaskRequest subtask : request.subtasks()) {
+                subtasks.add(new LearningGoal.Subtask(
+                        subtask.id(), subtask.description(),
+                        subtask.required() == null || subtask.required(),
+                        subtask.prerequisiteSubtaskIds() == null
+                                ? List.of() : subtask.prerequisiteSubtaskIds(),
+                        LearningGoal.Status.PENDING, List.of(), ""));
+            }
+        }
+        LearningGoal goal = workbench.startGoal(workspaceId, request.description(),
+                request.successCriteria() == null ? List.of() : request.successCriteria(),
+                request.prerequisiteConceptIds() == null ? List.of() : request.prerequisiteConceptIds(),
+                subtasks, request.budgetUnits() == null ? 10 : request.budgetUnits(),
+                request.recoveryInstructions() == null
+                        ? "reopen the workspace and continue with the first open subtask"
+                        : request.recoveryInstructions());
+        return Response.status(Response.Status.CREATED).entity(goal).build();
+    }
+
+    /** Records that a subtask was completed. */
+    @POST
+    @Path("/workspaces/{id}/goals/{goalId}/subtasks/{subtaskId}/complete")
+    public Response completeSubtask(@PathParam("id") String workspaceId,
+                                     @PathParam("goalId") String goalId,
+                                     @PathParam("subtaskId") String subtaskId,
+                                     SubtaskCompletion request) {
+        List<String> evidence = request == null || request.evidenceIds() == null
+                ? List.of() : request.evidenceIds();
+        String note = request == null ? "" : request.note();
+        return Response.ok(workbench.completeSubtask(workspaceId, goalId, subtaskId, evidence, note))
+                .build();
+    }
+
+    /** Writes a checkpoint for a goal. */
+    @POST
+    @Path("/workspaces/{id}/goals/{goalId}/checkpoint")
+    public Response checkpointGoal(@PathParam("id") String workspaceId,
+                                   @PathParam("goalId") String goalId,
+                                   CheckpointRequest request) {
+        String checkpoint = request == null ? "" : request.checkpoint();
+        String remaining = request == null ? "" : request.remainingWork();
+        return Response.ok(workbench.checkpointGoal(workspaceId, goalId, checkpoint, remaining)).build();
+    }
+
+    /**
+     * The rebuilt teach-back experiment.
+     *
+     * <p>Four phases over disjoint item sets, an independent closed-book
+     * learner, a leakage audit and a calibration measurement.
+     */
+    @POST
+    @Path("/workspaces/{id}/teach-back-experiment")
+    public Response teachBackExperiment(@PathParam("id") String workspaceId,
+                                         TeachBackExperimentRequest request) {
+        if (request == null || request.conceptId() == null || request.conceptId().isBlank()) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity(Map.of("error", "a concept is required"))
+                    .build();
+        }
+        double expectedGain = request.expectedGain() == null ? 0.2 : request.expectedGain();
+        return Response.ok(workbench.teachBackExperiment(workspaceId, request.conceptId(), expectedGain))
+                .build();
     }
 
     /** What the workspace does not know. */

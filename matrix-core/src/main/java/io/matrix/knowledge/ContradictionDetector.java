@@ -28,9 +28,6 @@ import java.util.Set;
  */
 public final class ContradictionDetector {
 
-    /** The share of shared content terms two claims must have to be compared. */
-    public static final double MINIMUM_SHARED_TERMS = 0.6;
-
     /**
      * The conflicts between the claims of a workspace.
      *
@@ -79,24 +76,48 @@ public final class ContradictionDetector {
             return null;
         }
 
-        Set<String> leftTerms = new HashSet<>(TextFeatures.tokens(left.proposition()));
-        Set<String> rightTerms = new HashSet<>(TextFeatures.tokens(right.proposition()));
-        if (leftTerms.isEmpty() || rightTerms.isEmpty()) {
-            return null;
-        }
-        Set<String> shared = new HashSet<>(leftTerms);
-        shared.retainAll(rightTerms);
-        double overlap = (double) shared.size() / Math.min(leftTerms.size(), rightTerms.size());
-        if (overlap < MINIMUM_SHARED_TERMS) {
+        boolean leftNegated = isNegated(left);
+        boolean rightNegated = isNegated(right);
+        if (leftNegated == rightNegated) {
             return null;
         }
 
-        boolean leftNegated = isNegated(left);
-        boolean rightNegated = isNegated(right);
-        if (leftNegated != rightNegated) {
-            return Contradiction.Kind.OPPOSITE_POLARITY;
+        // Two claims contradict when they say the SAME thing with opposite
+        // polarity - so the terms must agree once the negation is taken
+        // out. Comparing only the polarity was wrong: "the variable p is
+        // not true" and "the variable q is true" have opposite polarity and
+        // nothing else in common, and they are not a contradiction at all.
+        Set<String> leftTerms = termsWithoutNegation(left.proposition());
+        Set<String> rightTerms = termsWithoutNegation(right.proposition());
+        if (leftTerms.isEmpty() || rightTerms.isEmpty()) {
+            return null;
         }
-        return null;
+        if (!leftTerms.equals(rightTerms)) {
+            return null;
+        }
+        return Contradiction.Kind.OPPOSITE_POLARITY;
+    }
+
+    /**
+     * The content terms of a proposition, with the negation removed.
+     *
+     * <p>The negation is a word of its own, so removing it leaves the rest
+     * of the proposition: what the claim says, apart from whether it says
+     * it.
+     */
+    private Set<String> termsWithoutNegation(String proposition) {
+        Set<String> terms = new HashSet<>();
+        for (String word : TextFeatures.rawWords(proposition)) {
+            switch (word) {
+                case "not", "no", "never", "cannot", "nothing", "neither", "nor" -> {
+                    continue;
+                }
+                default -> {
+                }
+            }
+            terms.add(TextFeatures.fold(word));
+        }
+        return terms;
     }
 
     /** Whether the two claims declare the same conditions. */

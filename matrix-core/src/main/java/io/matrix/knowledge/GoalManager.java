@@ -134,6 +134,11 @@ public final class GoalManager {
         return updated;
     }
 
+    /** The goals of a workspace, with their subtasks attached. */
+    public List<LearningGoal> goalsWithSubtasks(String workspaceId) {
+        return store.goalsWithSubtasks(workspaceId);
+    }
+
     /**
      * The goals that were under way when the process stopped.
      *

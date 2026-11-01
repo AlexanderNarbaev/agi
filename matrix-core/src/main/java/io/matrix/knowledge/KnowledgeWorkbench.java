@@ -34,9 +34,15 @@ public class KnowledgeWorkbench implements AutoCloseable {
     /** The identifier of the package that ships with the application. */
     public static final String DEFAULT_WORKSPACE = "photosynthesis";
 
+    /** The identifier of the second bundled domain. */
+    public static final String LOGIC_WORKSPACE = "logic";
+
     private final String databasePath;
     private final String packResource;
     private final String assessmentResource;
+    private final String adversarialResource;
+    private final String logicPackResource;
+    private final String logicAssessmentResource;
 
     private KnowledgeStore store;
     private final Map<String, AssessmentDataset> datasets = new LinkedHashMap<>();
@@ -49,16 +55,30 @@ public class KnowledgeWorkbench implements AutoCloseable {
             String packResource,
             @ConfigProperty(name = "matrix.knowledge.assessment",
                     defaultValue = "knowledge/photosynthesis.assessment.json")
-            String assessmentResource) {
+            String assessmentResource,
+            @ConfigProperty(name = "matrix.knowledge.adversarial",
+                    defaultValue = "knowledge/photosynthesis.adversarial.json")
+            String adversarialResource,
+            @ConfigProperty(name = "matrix.knowledge.logic.pack",
+                    defaultValue = "knowledge/logic.pack.json")
+            String logicPackResource,
+            @ConfigProperty(name = "matrix.knowledge.logic.assessment",
+                    defaultValue = "knowledge/logic.assessment.json")
+            String logicAssessmentResource) {
         this.databasePath = databasePath;
         this.packResource = packResource;
         this.assessmentResource = assessmentResource;
+        this.adversarialResource = adversarialResource;
+        this.logicPackResource = logicPackResource;
+        this.logicAssessmentResource = logicAssessmentResource;
     }
 
     /** The workbench over a store at a chosen path, for tests and tools. */
     public static KnowledgeWorkbench at(String databasePath) {
         return new KnowledgeWorkbench(databasePath,
-                "knowledge/photosynthesis.pack.json", "knowledge/photosynthesis.assessment.json");
+                "knowledge/photosynthesis.pack.json", "knowledge/photosynthesis.assessment.json",
+                "knowledge/photosynthesis.adversarial.json",
+                "knowledge/logic.pack.json", "knowledge/logic.assessment.json");
     }
 
     /** The knowledge store, opened on first use. */
@@ -80,9 +100,25 @@ public class KnowledgeWorkbench implements AutoCloseable {
      * content intact.
      */
     public KnowledgeSnapshot loadBundledPackage(String workspaceId) {
-        KnowledgeSnapshot snapshot = new KnowledgeImporter().importResource(packResource);
+        KnowledgeSnapshot snapshot = new KnowledgeImporter().importResource(packFor(workspaceId));
         store().importWorkspace(snapshot);
         return snapshot;
+    }
+
+    /**
+     * The bundled package that belongs to a workspace.
+     *
+     * <p>Two packages ship with the application: the biology domain and the
+     * logic domain. The second exists so that the engine can be shown to
+     * work outside the curated package it was first demonstrated on.
+     */
+    public String packFor(String workspaceId) {
+        return LOGIC_WORKSPACE.equals(workspaceId) ? logicPackResource : packResource;
+    }
+
+    /** The assessment dataset that belongs to a workspace. */
+    public String assessmentFor(String workspaceId) {
+        return LOGIC_WORKSPACE.equals(workspaceId) ? logicAssessmentResource : assessmentResource;
     }
 
     /** Whether a workspace exists. */
@@ -104,7 +140,7 @@ public class KnowledgeWorkbench implements AutoCloseable {
     public AssessmentDataset dataset(String workspaceId) {
         AssessmentDataset cached = datasets.get(workspaceId);
         if (cached == null) {
-            cached = AssessmentDataset.loadResource(assessmentResource, workspace(workspaceId));
+            cached = AssessmentDataset.loadResource(assessmentFor(workspaceId), workspace(workspaceId));
             datasets.put(workspaceId, cached);
         }
         return cached;
@@ -517,6 +553,82 @@ public class KnowledgeWorkbench implements AutoCloseable {
         AssessmentDataset dataset = dataset(workspaceId);
         TeachingPlan plan = new TeachingComposer(snapshot, dataset).compose(conceptId, level);
         return new TeachBackEvaluator().run(plan, dataset, snapshot, expectedGain);
+    }
+
+    /**
+     * Reasons over a workspace and answers a question.
+     *
+     * <p>This is the evidence-grounded path: the pipeline of the mission's
+     * §6.1, with every stage recorded in the result.
+     */
+    public ReasoningEngine.Result reason(String workspaceId, String question, AbstractionLevel level) {
+        return new ReasoningEngine().reason(workspace(workspaceId), question, level);
+    }
+
+    /** The recorded inferences of a workspace. */
+    public List<Derivation> derivations(String workspaceId) {
+        return store().derivations(workspaceId);
+    }
+
+    /** The recorded conflicts of a workspace. */
+    public List<Contradiction> contradictions(String workspaceId) {
+        return store().contradictions(workspaceId);
+    }
+
+    /** The goals of a workspace, with their subtasks. */
+    public List<LearningGoal> goals(String workspaceId) {
+        return new GoalManager(store()).goalsWithSubtasks(workspaceId);
+    }
+
+    /** The goals that were under way, for a restarted process to pick up. */
+    public List<LearningGoal> resumableGoals(String workspaceId) {
+        return new GoalManager(store()).resumable(workspaceId);
+    }
+
+    /** Starts a goal. */
+    public LearningGoal startGoal(String workspaceId, String description,
+                                   List<String> successCriteria, List<String> prerequisiteConceptIds,
+                                   List<LearningGoal.Subtask> subtasks, int budgetUnits,
+                                   String recoveryInstructions) {
+        return new GoalManager(store()).start(workspaceId, description, successCriteria,
+                prerequisiteConceptIds, subtasks, budgetUnits, recoveryInstructions);
+    }
+
+    /** Records that a subtask was completed. */
+    public LearningGoal completeSubtask(String workspaceId, String goalId, String subtaskId,
+                                         List<String> evidenceIds, String note) {
+        return new GoalManager(store()).completeSubtask(workspaceId, goalId, subtaskId, evidenceIds, note);
+    }
+
+    /** Writes a checkpoint for a goal. */
+    public LearningGoal checkpointGoal(String workspaceId, String goalId, String checkpoint,
+                                        String remainingWork) {
+        return new GoalManager(store()).checkpoint(workspaceId, goalId, checkpoint, remainingWork);
+    }
+
+    /**
+     * The rebuilt teach-back experiment.
+     *
+     * <p>Four phases over disjoint item sets, an independent closed-book
+     * learner, a leakage audit and a calibration measurement. The result is
+     * a machine-to-machine measurement and says so.
+     */
+    public TeachBackExperiment.Result teachBackExperiment(String workspaceId, String conceptId,
+                                                          double expectedGain) {
+        KnowledgeSnapshot snapshot = workspace(workspaceId);
+        AssessmentDataset dataset = AssessmentDataset.loadResource(
+                adversarialResource, snapshot);
+        TeachingPlan plan = new TeachingComposer(snapshot, dataset)
+                .compose(conceptId, AbstractionLevel.INTRODUCTORY);
+        List<Claim> taught = snapshot.claims().stream()
+                .filter(claim -> claim.conceptId().equals(conceptId))
+                .toList();
+        StringBuilder lesson = new StringBuilder();
+        for (TeachingStep step : plan.steps()) {
+            lesson.append(step.statement()).append(' ');
+        }
+        return TeachBackExperiment.run(conceptId, snapshot, dataset, taught, lesson.toString(),
+                expectedGain);
     }
 
     /** The storage status, as the persistence screen shows it. */
