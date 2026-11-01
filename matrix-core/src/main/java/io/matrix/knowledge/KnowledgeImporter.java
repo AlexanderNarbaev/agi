@@ -29,11 +29,35 @@ public final class KnowledgeImporter {
 
     private static final ObjectMapper JSON = new ObjectMapper();
 
+    /**
+     * The largest package the importer will read.
+     *
+     * <p>The mission's §5.5 names oversized files among the things an import
+     * has to survive. A package is a document that is going to be held and
+     * reasoned over; a document of unbounded size is a denial of service
+     * against the store, not a package.
+     */
+    public static final int MAX_PACKAGE_CHARACTERS = 4 * 1024 * 1024;
+
+    /**
+     * The largest excerpt a single source may carry.
+     *
+     * <p>An excerpt is the text a claim is grounded in. A source that
+     * carries a megabyte of text behind one claim is not a source; it is a
+     * document that was not read.
+     */
+    public static final int MAX_EXCERPT_CHARACTERS = 64 * 1024;
+
     private final String importedAt = Instant.now().toString();
 
     /** Import a package from a file. */
     public KnowledgeSnapshot importPack(Path file) {
         try {
+            long size = Files.size(file);
+            if (size > MAX_PACKAGE_CHARACTERS) {
+                throw new IllegalArgumentException("The knowledge package at " + file + " is "
+                        + size + " bytes, which is over the limit of " + MAX_PACKAGE_CHARACTERS);
+            }
             return importPack(Files.readString(file, StandardCharsets.UTF_8));
         } catch (IOException e) {
             throw new IllegalStateException("Cannot read the knowledge package at " + file, e);
@@ -54,6 +78,10 @@ public final class KnowledgeImporter {
 
     /** Import a package from JSON text. */
     public KnowledgeSnapshot importPack(String json) {
+        if (json != null && json.length() > MAX_PACKAGE_CHARACTERS) {
+            throw new IllegalArgumentException("The knowledge package is " + json.length()
+                    + " characters, which is over the limit of " + MAX_PACKAGE_CHARACTERS);
+        }
         KnowledgePack pack;
         try {
             pack = JSON.readValue(json, KnowledgePack.class);
@@ -90,6 +118,11 @@ public final class KnowledgeImporter {
             String contentHash = entry.contentHash != null && !entry.contentHash.isBlank()
                     ? entry.contentHash
                     : Ids.digest(entry.excerpt == null ? "" : entry.excerpt);
+            if (entry.excerpt != null && entry.excerpt.length() > MAX_EXCERPT_CHARACTERS) {
+                throw new IllegalArgumentException("The source " + entry.key + " carries an excerpt of "
+                        + entry.excerpt.length() + " characters, which is over the limit of "
+                        + MAX_EXCERPT_CHARACTERS);
+            }
             sources.add(new Source(id, workspaceId, kind, entry.title, entry.locator,
                     entry.authority, entry.freshness, entry.excerpt, importedAt,
                     contentHash, entry.publishedAt));

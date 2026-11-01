@@ -153,6 +153,23 @@ META-R1 R-C: 5 schools applied to MATRIX integration architecture.
 - `designs/DESIGN-{16,17,18,19}-*.md` — децентрализация, action arena, consciousness loop, subconscious consolidator.
 - `research/HYPOTHESES-NEW.md` — H-039..H-068 карточки brain wave и W31.
 - `science/{SUBSTRATE-MODELS,FOUNDATIONS,GOALS-REQUIREMENTS,OPEN-PROBLEMS,ALGORITHM-ATLAS-INDEX}.md` — полные реестры оснований.
+## Wave 41 — RECON-W41: Evidence-Grounded Reasoning & Continual Learning (2026-11-01)
+
+| Аспект | Документ |
+|---|---|
+| **Аудит реального состояния W40** | `engineering/W41-REALITY-AUDIT.md` |
+| **Дизайн доказательного рассуждения** | `designs/DESIGN-70-evidence-grounded-reasoning.md` |
+| **Релиз Local Alpha v0.2** | `engineering/W41-LOCAL-ALPHA-V0.2.md` |
+| **Исследование A — наука обучения** | `research/W41-RESEARCH-A-LEARNING-SCIENCE.md` |
+| **Исследование B — когнитивные системы** | `research/W41-RESEARCH-B-COGNITIVE-SYSTEMS.md` |
+| **Исследование C — инженерия знаний** | `research/W41-RESEARCH-C-KNOWLEDGE-ENGINEERING.md` |
+| **Гипотезы H-100..H-103** | `research/HYPOTHESES-NEW.md` |
+| **Реестр спецификаций** | `formal/spec-implementation-map.yml` (12 спецификаций) |
+| **Результаты мутационного анализа** | `engineering/MUTATION-REPORT.md` |
+| **Состояние TLA+** | `engineering/TLA-STATUS.md` |
+| **Риски** | `engineering/RISK-REGISTER.md` |
+| **Реестр возможностей** | `designs/DESIGN-58-capability-levels-roadmap.md` §6a |
+
 ## Wave 104-111 (2026-09-16) — Cross-Disciplinary Completion
 
 W104 — Kolmogorov Complexity (CTM estimator): matrix-core/src/main/java/io/matrix/consciousness/KolmogorovComplexity.java

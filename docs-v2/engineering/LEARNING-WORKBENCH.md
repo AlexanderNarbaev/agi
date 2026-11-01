@@ -251,7 +251,50 @@ pretends to have.
 
 ```
 curl -X POST "http://localhost:9091/v1/workbench/workspaces/photosynthesis/transfer?to=learner-b"
+
+# RECON-W41 — the reasoning interface, the goals, and the second domain
+curl -X POST http://localhost:9091/v1/workbench/workspaces/logic/load
+curl -X POST http://localhost:9091/v1/workbench/workspaces/logic/reason \
+  -H 'Content-Type: application/json' \
+  -d '{"question":"Does q follow from p and p implies q?","level":"INTRODUCTORY"}'
+curl http://localhost:9091/v1/workbench/workspaces/logic/derivations
+curl http://localhost:9091/v1/workbench/workspaces/logic/contradictions
+curl http://localhost:9091/v1/workbench/workspaces/photosynthesis/goals
+curl http://localhost:9091/v1/workbench/workspaces/photosynthesis/goals/resumable
+curl -X POST http://localhost:9091/v1/workbench/workspaces/photosynthesis/goals \
+  -H 'Content-Type: application/json' \
+  -d '{"description":"Learn the Calvin cycle","successCriteria":["the learner can explain the cycle"],
+       "budgetUnits":5,
+       "subtasks":[{"id":"read","description":"Read the source","required":true,
+                    "prerequisiteSubtaskIds":[]}]}'
+curl -X POST http://localhost:9091/v1/workbench/workspaces/photosynthesis/goals/GOAL_ID/subtasks/read/complete \
+  -H 'Content-Type: application/json' -d '{"evidenceIds":["e-1"],"note":"read the source"}'
+curl -X POST http://localhost:9091/v1/workbench/workspaces/photosynthesis/goals/GOAL_ID/checkpoint \
+  -H 'Content-Type: application/json' -d '{"checkpoint":"read the source","remainingWork":"explain"}'
+curl -X POST http://localhost:9091/v1/workbench/workspaces/photosynthesis/teach-back-experiment \
+  -H 'Content-Type: application/json' -d '{"conceptId":"c-photosynthesis-4d4bb673","expectedGain":0.2}'
 ```
+
+## 16. The screens of this wave
+
+The browser at `http://localhost:9091/workbench/` carries the screens this
+wave added, beside the ones it already had:
+
+- **Reasoning** — the question, the eight stages of the pipeline, the claims
+  the answer rests on with their warrants and derivation status, the recorded
+  rules with their verdicts, the sources, the limitations, and the recorded
+  conflicts.
+- **Goals** — every goal with its status, the budget spent, the remaining
+  work, the last checkpoint, the recovery instructions, the subtasks (each
+  with a button to complete one), the failed attempts, and a checkpoint
+  button.
+- A **domain selector** in the header: the biology package and the logic
+  package.
+
+The domain selector matters for the honest reading of every number in this
+document: a result on the photosynthesis package says something about that
+package, and the logic package exists so that the engine can be seen to work
+outside the package it was first demonstrated on.
 
 This is a **transfer**, not a backup. The export and the import put a
 workspace back exactly as it was; a transfer gives the knowledge to a

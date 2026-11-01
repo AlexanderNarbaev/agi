@@ -1725,3 +1725,34 @@ formal/spec-implementation-map.yml», и это единственный его 
 `docs-v2/designs/DESIGN-58-...md` §6a — реестр возможностей ✓ ✓: каждое
 новое измерение привязано к уровню DESIGN-58, и указано, чего оно **не**
 устанавливает ✓ ✓.
+
+# RECON-W41 — §5.5 устойчивость импорта и документация (2026-11-01)
+
+## Ограничения импорта
+
+`KnowledgeImporter`:
+- `MAX_PACKAGE_CHARACTERS = 4 MiB` — пакет больше лимита отвергается, и файл
+  проверяется **до** чтения ✓ ✓.
+- `MAX_EXCERPT_CHARACTERS = 64 KiB` — источник с непомерным отрывком
+  отвергается ✓ ✓.
+
+Сообщение об ошибке называет нарушенный лимит ✓ ✓.
+
+**Инъекция в промпт проверена, а не предположена:** хранилище знаний **не
+находится на пути к LLM** — `grep -rn "KnowledgeStore\|KnowledgeSnapshot"
+matrix-core/src/main/java/io/matrix/api/*.java matrix-core/src/main/java/io/matrix/rag/*.java`
+не даёт совпадений ✓ ✓. Текст источника хранится и над ним рассуждают; он
+никогда не попадает в промпт ✓ ✓. Собственные ответы системы пишутся в
+эпизодическую память с тегом `generated-dialogue` и **исключаются** из
+контекста генерации ✓ ✓.
+
+## Документация
+
+- `docs-v2/engineering/TLA-STATUS.md` — двенадцать спецификаций; новая
+  §"A vacuous property that is recorded rather than closed" ✓ ✓.
+- `docs-v2/engineering/RISK-REGISTER.md` — девять рисков W41 ✓ ✓.
+- `docs-v2/engineering/LEARNING-WORKBENCH.md` §15–16 — новые точки API и
+  экраны ✓ ✓.
+- `docs-v2/INDEX.md` — раздел W41 ✓ ✓.
+- `docs-v2/engineering/MUTATION-REPORT.md` — перегенерирован: **27 мутантов,
+  25 убито, 2 выжили (записаны с находками), 0 невалидных, 0 дрейфа** ✓ ✓.

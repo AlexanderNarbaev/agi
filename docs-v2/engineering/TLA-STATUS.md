@@ -9,7 +9,7 @@ only, and the Java-side "formal gate" (`TlaSpecSmokeTest`) is a **text-level**
 smoke test that passes on files the TLA+ parser rejects. Nine specifications
 had therefore never been parsed by a TLA+ parser at all.
 
-**Current state: all eleven specifications parse, all eleven are
+**Current state: all twelve specifications parse, all twelve are
 model-checked, and every configured property holds.** The five specifications that carried a
 recorded property failure have been resolved against the Java implementations
 they model — see §"The five recorded failures, and how each was resolved".
@@ -17,6 +17,28 @@ they model — see §"The five recorded failures, and how each was resolved".
 A second pass then closed the properties that were **checked but vacuous** —
 the ones the model's shape made incapable of failing — for `HashChain` and
 `MctsLatsVisit`. See §"Vacuous properties that have been closed".
+
+## A vacuous property that is recorded rather than closed — `KnowledgeAxes`
+
+`ConflictsAreKept` cannot fail. The model has **no action that removes a
+conflict**, which is exactly the guarantee the specification makes: a
+recorded conflict is never forgotten. A property whose antecedent is
+unreachable cannot fail, so the mutation harness reports it as a survivor.
+
+It is **recorded** rather than closed, because closing it would mean adding
+an action that forgets conflicts — and that action would contradict the
+specification it is supposed to check. The guarantee is structural: there is
+no way to forget a conflict, so there is nothing to test.
+
+What the conflicts machinery **is** tested by, and both of these mutants are
+killed:
+
+- a conflict that makes one of its claims UNKNOWN — violates
+  `ConflictsChangeNothing`;
+- a conflict that names only one side — violates `ConflictsArePairs`.
+
+The registry's `KnowledgeAxes` entry carries the gap under the code
+`VACUOUS_PROPERTY`, so the conformance claim does not outrun the gate.
 
 ## How to reproduce
 
@@ -51,6 +73,7 @@ Two toolchain facts that are easy to get wrong:
 | `FrozenEthicalFNL` | 65 / 16 | all five module properties |
 | `KnowledgeStore` | 145 / 64 | `TypeOK`, `EvidenceHasClaim`, `BackedHasSource`, `SchemaAtLeastOne`, `ImportIsAtomic`, `VersionNotBelowFloor`, `CountersNotBelowFloor` (invariants); `EvidenceAlways`, `SourceAlways`, `VersionNeverDecreases`, `CountersNeverDecrease` (properties) |
 | `KnowledgeLifecycle` | 2 808 / 1 296 | `EvidenceRequired`, `SupersededKeepsProposition`, `RevisionRecorded`, `SingleSuperseder`, `RepresentationChainAcyclic` (invariants); `EvidenceAlways`, `PropositionAlways`, `RevisionAlways`, `SupersederAlways` (properties) |
+| `KnowledgeAxes` | 16 539 / 3 466 | `EstablishedHasWarrant`, `InferredNamesADerivation`, `ValidDerivationIsRecorded`, `ConflictsChangeNothing`, `NothingIsDeleted`, `ConflictsArePairs` (invariants); `WarrantMonotone`, `DerivationsAreKept`, `ConflictsAreKept`, `SupersededIsKept` (properties) |
 
 No specification is syntax-checked only, and no property is recorded as
 failing.
