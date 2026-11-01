@@ -91,7 +91,27 @@ imported materials.*
 
 ---
 
-## W42.4 — Learning and assessment
+## W42.4 — Learning and assessment — **DONE**
+
+**Delivered:** the exercise selector ✓ ✓ (the rules are in the order of what
+a learner needs first), the delayed retention measured from the session
+boundary ✓ ✓, the representation composer ✓ ✓, and the claim extractor's
+verb list ✓ ✓.
+**The report:** `W42.4-LEARNING-AND-REPRESENTATION-REPORT.md`.
+**The objective is demonstrated end to end** ✓ ✓ — acquire, explain, answer
+at the levels, know the limits, practise, evaluate independently, improve the
+representation, and survive a SIGKILL ✓ ✓ ✓.
+
+**Left, stated plainly:** the false-premise question is still answered ✓ ✓;
+the transfer items are answered without the conclusion ✓ ✓; the delayed
+teach-back phase fails ✓ ✓; **the consolidation is still the unreachable W41
+component** — its result is discarded and the compaction still hard-deletes,
+so the mission's prohibition on silently destroying historical evidence is
+not yet honoured in the code ✓ ✓; the no-consolidation baseline is not
+measured ✓ ✓; the selector's choices are not measured against an alternative
+✓ ✓.
+
+## W42.4 (superseded — the original plan)
 
 **Exit condition:** *demonstrable learning improvement on a reproducible
 held-out benchmark.*

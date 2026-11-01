@@ -16,7 +16,8 @@ able to resume from the repository alone.
 | **W42.2 — Universal knowledge acquisition** | **DONE (the core)** | TXT/MD/HTML/PDF/EPUB through libraries; the source record; the promotion layers; the independence rule; the endpoint and the interface — **verified live**: a concept acquired from a real document became retrievable with its source |
 | W42.2 — Universal knowledge acquisition | not started | |
 | **W42.3 — Dialog Intelligence** | **DONE** | `W42.3-DIALOG-INTELLIGENCE-REPORT.md`; the localised text layer, the bilingual lexicon, the typo corrector, the bounded conversation, the eight dialogue classes, 168 measured cases — accuracy 0.583 → 0.792, the Russian 0/5 → 4/5 |
-| W42.4 — Learning and assessment | not started | the next wave |
+| **W42.4 — Learning and assessment** | **DONE** | `W42.4-LEARNING-AND-REPRESENTATION-REPORT.md`; the exercise selector, the delayed retention measured from the session boundary, and the representation composer — the mission's first practical objective is now demonstrated end to end on the running application |
+| W42.5 — Cognitive integration | not started | the next wave |
 | W42.4 — Learning and assessment | not started | |
 | W42.5 — Cognitive integration | not started | |
 | W42.6 — Local Alpha v0.3 | not started | |
@@ -50,6 +51,8 @@ two waves.
 | `21fbed22` | The dialogue is visible, and the navigation loads its tabs |
 | `8f3cad04` | A term that reached the knowledge is not reported as uncovered |
 | `7942838f` | The dialogue has a hundred and sixty-eight cases, and they are measured |
+| `416a2b80` | The system chooses what to practise next, and the delay is measured |
+| `ea94d726` | An imported concept gets an account of its own |
 
 **Starting commit:** `0296e83e` (W41's final verification).
 **The remote HEAD was verified, not assumed** — `git fetch origin --prune`
