@@ -15,7 +15,20 @@ public record AssessmentOutcome(
         double claimedConfidence,
         String learnerAnswer,
         String sessionId,
-        long answeredAt) {
+        long answeredAt,
+        boolean heldOut) {
+
+    /**
+     * An outcome without the held-out flag.
+     *
+     * <p>The flag is part of the record because a measurement of learning
+     * has to say whether it was made on an item the learner may practise
+     * with or on one held back from the learning.
+     */
+    public AssessmentOutcome(String itemId, boolean correct, double score, double claimedConfidence,
+                             String learnerAnswer, String sessionId, long answeredAt) {
+        this(itemId, correct, score, claimedConfidence, learnerAnswer, sessionId, answeredAt, false);
+    }
 
     public AssessmentOutcome {
         if (itemId == null || itemId.isBlank()) {
