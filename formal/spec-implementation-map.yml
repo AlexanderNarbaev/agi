@@ -200,6 +200,62 @@ specifications:
       - "The model does not cover the concurrent case: two refinements arriving at once are applied one after another."
 
   # ───────────────────────────────────────────────────────────────────────────
+  - id: KnowledgeAxes
+    title: "The three epistemic axes of a claim, the recorded derivations and the recorded conflicts"
+    spec: formal/KnowledgeAxes.tla
+    config: formal/KnowledgeAxes.cfg
+    java:
+      module: matrix-core
+      sources:
+        - matrix-core/src/main/java/io/matrix/knowledge/Claim.java
+        - matrix-core/src/main/java/io/matrix/knowledge/ClaimWarrant.java
+        - matrix-core/src/main/java/io/matrix/knowledge/DerivationStatus.java
+        - matrix-core/src/main/java/io/matrix/knowledge/Derivation.java
+        - matrix-core/src/main/java/io/matrix/knowledge/Contradiction.java
+        - matrix-core/src/main/java/io/matrix/knowledge/ContradictionDetector.java
+        - matrix-core/src/main/java/io/matrix/knowledge/KnowledgeStore.java
+      production_callers:
+        - matrix-core/src/main/java/io/matrix/knowledge/KnowledgeWorkbench.java
+        - matrix-core/src/main/java/io/matrix/knowledge/LearningWorkbenchResource.java
+      production_caller_status: PRODUCTION_PATH_VERIFIED
+    tests:
+      unit:
+        - matrix-core/src/test/java/io/matrix/knowledge/LogicDomainTest.java
+        - matrix-core/src/test/java/io/matrix/knowledge/KnowledgeProvenanceTest.java
+      integration:
+        - matrix-core/src/test/java/io/matrix/knowledge/KnowledgeWorkbenchTest.java
+    properties:
+      invariants: [EstablishedHasWarrant, InferredNamesADerivation, ValidDerivationIsRecorded, ConflictsChangeNothing, NothingIsDeleted, ConflictsArePairs]
+      properties: [WarrantMonotone, DerivationsAreKept, ConflictsAreKept, SupersededIsKept]
+    conformance:
+      status: [MODEL_CHECKED, JAVA_UNIT_VERIFIED, INTEGRATION_VERIFIED, PRODUCTION_PATH_VERIFIED]
+      gaps:
+        - code: ABSTRACTION
+          detail: >-
+            The model holds a claim's layer, warrant and derivation status as
+            three independent facts. The Java holds them as three fields of
+            one record, which is the same independence: no field is derived
+            from another at write time. The model does NOT represent the
+            entailment checker that decides a derivation's status - that
+            check lives in EntailmentChecker and is bounded by an atom
+            budget, while the model lets any derivation be recorded with
+            any status.
+        - code: SCOPE
+          detail: >-
+            The model covers the epistemic axes only. The persistence of a
+            derivation and a conflict is covered by the KnowledgeStore
+            specification, and the lifecycle of a superseded claim by the
+            KnowledgeLifecycle specification.
+        - code: VACUOUS_PROPERTY
+          detail: >-
+            The temporal property ConflictsAreKept cannot fail: the model has
+            no action that removes a conflict, which is exactly the guarantee
+            the specification makes, so the property documents the guarantee
+            rather than testing it. The mutation harness records this as a
+            survivor with that finding, and the conflicts machinery IS tested
+            by two mutants that ARE killed - one that makes a conflicted claim
+            UNKNOWN, and one that records a conflict naming only one side.
+
   - id: KnowledgeStore
     title: "The knowledge store's persistence semantics — atomic import, monotone schema version, sourced evidence"
     spec: formal/KnowledgeStore.tla

@@ -183,6 +183,47 @@
       "old": "/\\ schemaVersion' = schemaVersion + 1",
       "new": "/\\ schemaVersion' = schemaVersion - 1",
       "expect": "KILLED"
+    },
+    {
+      "id": "KnowledgeAxes-establish-sets-the-layer-without-the-warrant",
+      "spec": "KnowledgeAxes",
+      "why": "An established claim always keeps a warrant: a claim with no warrant was asserted, and asserting is not knowing. Establishing the layer without the warrant must make EstablishedHasWarrant fail.",
+      "old": "/\\ layer' = [layer EXCEPT ![c] = \"SUPPORTED\"]\n    /\\ warrant' = [warrant EXCEPT ![c] = w]",
+      "new": "/\\ layer' = [layer EXCEPT ![c] = \"SUPPORTED\"]\n    /\\ warrant' = [warrant EXCEPT ![c] = \"NONE\"]",
+      "expect": "KILLED"
+    },
+    {
+      "id": "KnowledgeAxes-derivation-is-not-recorded",
+      "spec": "KnowledgeAxes",
+      "why": "A claim whose derivation was found valid names a recorded derivation. Recording the status without recording the conclusion must make ValidDerivationIsRecorded fail.",
+      "old": "/\\ conclusions' = conclusions \\cup {conclusion}",
+      "new": "/\\ conclusions' = conclusions",
+      "expect": "KILLED"
+    },
+    {
+      "id": "KnowledgeAxes-conflict-forgets-what-it-recorded",
+      "spec": "KnowledgeAxes",
+      "why": "A recorded conflict is never forgotten. A system that drops a conflict it already holds must make ConflictsAreKept fail - the floor remembers what the conflicts were, and a forgotten conflict is not among them any more. The mutant fires only when the pair is already there, so the conflict is recorded first and forgotten second: a mutant that simply never records a conflict would leave the property vacuously true.",
+      "old": "/\\ {c, d} \\notin conflicts\n    /\\ conflicts' = conflicts \\cup {{c, d}}",
+      "new": "/\\ {c, d} \\in conflicts\n    /\\ conflicts' = conflicts \\ {c, d}",
+      "expect": "SURVIVED",
+      "finding": "The property ConflictsAreKept is vacuous by construction: the model has no action that removes a conflict, which is exactly the guarantee the specification makes. A mutant that prevents the conflict from being recorded leaves the property trivially true. The property therefore documents the guarantee rather than testing it, and the registry's entry says so. The conflicts machinery IS tested by the other two mutants: one that makes a conflicted claim UNKNOWN, and one that records a conflict naming only one side."
+    },
+    {
+      "id": "KnowledgeAxes-conflict-empties-the-claim",
+      "spec": "KnowledgeAxes",
+      "why": "A conflict changes nothing about either side: it is a record ABOUT two claims. Making a conflicted claim UNKNOWN must make ConflictsChangeNothing fail.",
+      "old": "/\\ conflicts' = conflicts \\cup {{c, d}}\n    /\\ derivationsFloor' = derivationsFloor \\cup recorded\n    /\\ conflictsFloor' = conflictsFloor \\cup conflicts\n    /\\ UNCHANGED <<layer, warrant, derivationStatus, hasEvidence, recorded,\n                    conclusions>>",
+      "new": "/\\ conflicts' = conflicts \\cup {{c, d}}\n    /\\ layer' = [layer EXCEPT ![c] = \"UNKNOWN\"]\n    /\\ derivationsFloor' = derivationsFloor \\cup recorded\n    /\\ conflictsFloor' = conflictsFloor \\cup conflicts\n    /\\ UNCHANGED <<warrant, derivationStatus, hasEvidence, recorded,\n                    conclusions>>",
+      "expect": "KILLED"
+    },
+    {
+      "id": "KnowledgeAxes-conflict-names-only-one-side",
+      "spec": "KnowledgeAxes",
+      "why": "A conflict names both sides: it is a pair of claims and nothing else. The store keeps no count of records agreeing with either side, so a conflict that named one claim alone would say nothing. Recording a singleton must make ConflictsArePairs fail.",
+      "old": "/\\ conflicts' = conflicts \\cup {{c, d}}",
+      "new": "/\\ conflicts' = conflicts \\cup {{c}}",
+      "expect": "KILLED"
     }
   ]
 }
