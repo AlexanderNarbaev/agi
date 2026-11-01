@@ -44,12 +44,15 @@ public final class DialogueContext {
             String question,
             List<String> conceptIds,
             List<String> conceptNames,
+            List<String> claimIds,
             String language,
-            boolean answered) {
+            boolean answered,
+            DialogueAct.Act act) {
 
         public Turn {
             conceptIds = List.copyOf(conceptIds == null ? List.of() : conceptIds);
             conceptNames = List.copyOf(conceptNames == null ? List.of() : conceptNames);
+            claimIds = List.copyOf(claimIds == null ? List.of() : claimIds);
         }
     }
 
@@ -69,6 +72,7 @@ public final class DialogueContext {
     public void record(String question, Answer answer) {
         List<String> conceptIds = new ArrayList<>();
         List<String> conceptNames = new ArrayList<>();
+        List<String> claimIds = new ArrayList<>();
         if (answer != null) {
             for (Concept concept : answer.concepts()) {
                 if (conceptIds.size() >= MAXIMUM_CONCEPTS_PER_TURN) {
@@ -77,10 +81,17 @@ public final class DialogueContext {
                 conceptIds.add(concept.id());
                 conceptNames.add(concept.name());
             }
+            for (Claim claim : answer.claims()) {
+                if (claimIds.size() >= MAXIMUM_CONCEPTS_PER_TURN) {
+                    break;
+                }
+                claimIds.add(claim.id());
+            }
         }
-        turns.add(new Turn(question, conceptIds, conceptNames,
+        turns.add(new Turn(question, conceptIds, conceptNames, claimIds,
                 TextProfiles.detect(question == null ? "" : question),
-                answer != null && answer.answered()));
+                answer != null && answer.answered(),
+                DialogueAct.classify(question)));
         while (turns.size() > MAXIMUM_TURNS) {
             turns.remove(0);
         }
@@ -183,6 +194,20 @@ public final class DialogueContext {
             return question;
         }
         return question.strip() + " (" + subject + ")";
+    }
+
+    /**
+     * The claims of the last turn that answered something.
+     *
+     * <p>These are the claims a correction is about: the user is saying
+     * that something the system said was wrong, and what it said was one
+     * of these.
+     */
+    public List<String> lastTurnClaimIds() {
+        if (turns.isEmpty()) {
+            return List.of();
+        }
+        return turns.get(turns.size() - 1).claimIds();
     }
 
     /** The distinct concepts the conversation has touched. */

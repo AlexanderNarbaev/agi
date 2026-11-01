@@ -192,9 +192,43 @@ public class KnowledgeWorkbench implements AutoCloseable {
                                     + "\"."),
                     answer.gaps(), answer.unmatchedTerms());
         }
+        answer = applyCorrection(context, question, answer);
         recordAsk(workspaceId, question, answer.unmatchedTerms(), answer.answered());
         context.record(question, answer);
         return answer;
+    }
+
+    /**
+     * What happens when the user corrects the system.
+     *
+     * <p>The mission's §5: "if the user corrects an answer, the system
+     * re-evaluates affected knowledge and updates internal models" — and
+     * never overwrites it. The re-evaluation here is the refinement path,
+     * which supersedes the claim and records a new one with its evidence;
+     * it cannot happen without the user's correction and its evidence, so
+     * the system's answer names the claims that are open to correction and
+     * asks for the corrected statement.
+     *
+     * <p>Nothing is overwritten here: the claims are named, and the
+     * knowledge changes only when the correction arrives with evidence.
+     */
+    private Answer applyCorrection(DialogueContext context, String question, Answer answer) {
+        if (!DialogueAct.isCorrection(question)) {
+            return answer;
+        }
+        List<String> claimIds = context.lastTurnClaimIds();
+        if (claimIds.isEmpty()) {
+            return answer;
+        }
+        List<String> gaps = new ArrayList<>(answer.gaps());
+        gaps.add("The correction names " + claimIds.size() + " claim(s) of the previous answer: "
+                + String.join(", ", claimIds) + ". A correction needs the corrected statement AND "
+                + "the evidence for it; until both arrive, the claims stand unchanged and nothing "
+                + "is overwritten.");
+        return new Answer(answer.question(), answer.level(), answer.answered(),
+                answer.abstentionReason(), answer.statement(), answer.supportScore(),
+                answer.support(), answer.concepts(), answer.claims(), answer.sources(),
+                answer.limitations(), gaps, answer.unmatchedTerms());
     }
 
     /** The limitations with one more note. */
