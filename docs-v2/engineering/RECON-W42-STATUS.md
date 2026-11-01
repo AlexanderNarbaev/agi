@@ -17,7 +17,7 @@ able to resume from the repository alone.
 | W42.2 — Universal knowledge acquisition | not started | |
 | **W42.3 — Dialog Intelligence** | **DONE** | `W42.3-DIALOG-INTELLIGENCE-REPORT.md`; the localised text layer, the bilingual lexicon, the typo corrector, the bounded conversation, the eight dialogue classes, 168 measured cases — accuracy 0.583 → 0.792, the Russian 0/5 → 4/5 |
 | **W42.4 — Learning and assessment** | **DONE** | `W42.4-LEARNING-AND-REPRESENTATION-REPORT.md`; the exercise selector, the delayed retention measured from the session boundary, and the representation composer — the mission's first practical objective is now demonstrated end to end on the running application |
-| W42.5 — Cognitive integration | not started | the next wave |
+| **W42.5 — Cognitive integration** | **IN PROGRESS** | the tombstone is done (`d47edb32`); the consolidation, the baselines and the false-premise detector are not |
 | W42.4 — Learning and assessment | not started | |
 | W42.5 — Cognitive integration | not started | |
 | W42.6 — Local Alpha v0.3 | not started | |
@@ -53,6 +53,8 @@ two waves.
 | `7942838f` | The dialogue has a hundred and sixty-eight cases, and they are measured |
 | `416a2b80` | The system chooses what to practise next, and the delay is measured |
 | `ea94d726` | An imported concept gets an account of its own |
+| `d47edb32` | A forgetting is marked, not performed |
+| `d9323c3f` | The false-premise mechanism was measured, and it was not shipped |
 
 **Starting commit:** `0296e83e` (W41's final verification).
 **The remote HEAD was verified, not assumed** — `git fetch origin --prune`
