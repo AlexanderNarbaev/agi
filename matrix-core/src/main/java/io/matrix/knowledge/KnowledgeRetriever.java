@@ -85,7 +85,7 @@ public final class KnowledgeRetriever {
         if (queryTerms.isEmpty()) {
             return new Answer(question, wanted, false,
                     "The question contains no searchable terms.",
-                    "", 0.0, List.of(), List.of(), List.of(), List.of(),
+                    "", 0.0, SupportScore.none(), List.of(), List.of(), List.of(), List.of(),
                     List.of(), TextFeatures.tokens(question));
         }
 
@@ -125,7 +125,7 @@ public final class KnowledgeRetriever {
         if (relevant.isEmpty()) {
             return new Answer(question, wanted, false,
                     "No claim in this workspace covers enough of the question to answer it.",
-                    "", 0.0, List.of(), List.of(), List.of(),
+                    "", 0.0, SupportScore.none(), List.of(), List.of(), List.of(),
                     List.of("the workspace holds " + snapshot.claims().size() + " claims about "
                             + snapshot.concepts().size() + " concepts"),
                     List.copyOf(unmatched), List.copyOf(unmatched));
@@ -203,9 +203,27 @@ public final class KnowledgeRetriever {
                     + "so the answer is the claim itself.");
         }
 
+        // The support score: the mean of the matched claims' OWN confidence
+        // field - which was authored by hand in the knowledge package -
+        // multiplied by the retrieval coverage. The VALUE is unchanged from
+        // RECON-W40, so nothing that depended on it breaks; what changed is
+        // that it is now called a support score, decomposed, and shipped with
+        // a statement of what it is not. See SupportScore.
         double claimConfidence = claims.stream().mapToDouble(Claim::confidence).average().orElse(0.0);
         double coverage = relevant.stream().mapToDouble(ScoredClaim::coverage).average().orElse(0.0);
-        double confidence = Math.round(claimConfidence * coverage * 100.0) / 100.0;
+        double supportScore = Math.round(claimConfidence * coverage * 100.0) / 100.0;
+
+        SupportScore support = new SupportScore(
+                supportScore,
+                round(coverage),
+                sources.stream().mapToDouble(src -> src.authority()).average().orElse(0.0),
+                sources.stream().mapToDouble(src -> src.freshness()).average().orElse(0.0),
+                claims.size(),
+                sources.size(),
+                scopeMatch(queryTerms, claims),
+                SupportScore.ContradictionStatus.NOT_COMPUTED,
+                SupportScore.UNCALIBRATED,
+                SupportScore.MEANING);
 
         for (Claim claim : claims) {
             if (claim.status() == ClaimStatus.CONTESTED) {
@@ -219,8 +237,44 @@ public final class KnowledgeRetriever {
         }
 
         return new Answer(question, used, true, null,
-                String.join("\n\n", statements), confidence, concepts, claims, sources,
+                String.join("\n\n", statements), supportScore, support, concepts, claims, sources,
                 limitations, List.copyOf(unmatched), List.copyOf(unmatched));
+    }
+
+    /**
+     * How well the question falls inside the scope the claims declare.
+     *
+     * <p>A claim's scope says where it holds ("in green plants, in light").
+     * If the question's terms fall inside it, the scope matches; if a scope
+     * is declared and none of the question's terms fall in it, the answer is
+     * outside the scope it was asked about; if no scope is declared, nothing
+     * can be said, and that is what is reported.
+     */
+    private SupportScore.ScopeMatch scopeMatch(List<String> queryTerms, List<Claim> claims) {
+        boolean anyScope = false;
+        boolean anyTermInScope = false;
+        for (Claim claim : claims) {
+            String scope = claim.scope();
+            if (scope == null || scope.isBlank()) {
+                continue;
+            }
+            anyScope = true;
+            Set<String> scopeTerms = new LinkedHashSet<>(TextFeatures.tokens(scope));
+            for (String term : queryTerms) {
+                if (scopeTerms.contains(term)) {
+                    anyTermInScope = true;
+                }
+            }
+        }
+        if (!anyScope) {
+            return SupportScore.ScopeMatch.UNDECLARED;
+        }
+        return anyTermInScope ? SupportScore.ScopeMatch.MATCHES : SupportScore.ScopeMatch.OUTSIDE;
+    }
+
+    /** Rounds to three decimals, so the support score is not over-precise. */
+    private static double round(double value) {
+        return Math.round(value * 1000.0) / 1000.0;
     }
 
     private double maxIdf() {

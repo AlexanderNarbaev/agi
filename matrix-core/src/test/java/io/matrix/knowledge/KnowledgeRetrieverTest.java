@@ -36,7 +36,7 @@ class KnowledgeRetrieverTest {
         assertThat(answer.concepts()).extracting(Concept::name).contains("Photosynthesis");
         assertThat(answer.claims()).isNotEmpty();
         assertThat(answer.sources()).isNotEmpty();
-        assertThat(answer.confidence()).isGreaterThan(0.0);
+        assertThat(answer.supportScore()).isGreaterThan(0.0);
     }
 
     @Test
@@ -68,7 +68,7 @@ class KnowledgeRetrieverTest {
         assertThat(answer.statement()).isEmpty();
         assertThat(answer.claims()).isEmpty();
         assertThat(answer.sources()).isEmpty();
-        assertThat(answer.confidence()).isEqualTo(0.0);
+        assertThat(answer.supportScore()).isEqualTo(0.0);
         // The user is told WHAT is missing, not merely that something is.
         assertThat(answer.unmatchedTerms()).isNotEmpty();
     }
@@ -98,7 +98,7 @@ class KnowledgeRetrieverTest {
         Answer second = retriever.answer("How does RuBisCO affect photosynthetic efficiency?");
 
         assertThat(first.statement()).isEqualTo(second.statement());
-        assertThat(first.confidence()).isEqualTo(second.confidence());
+        assertThat(first.supportScore()).isEqualTo(second.supportScore());
         assertThat(first.claims()).extracting(Claim::id)
                 .containsExactlyElementsOf(second.claims().stream().map(Claim::id).toList());
     }

@@ -31,6 +31,17 @@ public final class HierarchicalMemory {
     /**
      * Memory level in the hierarchy.
      */
+    /**
+     * The tag that marks a record as an EPISODE - something that was said,
+     * not something that was learned.
+     *
+     * <p>RECON-W41 §5.1: "A conversational answer may be preserved as an
+     * episodic record of what was said. It may not become a verified fact
+     * without the corresponding evidence process." The tag is what lets the
+     * retrieval tell the two apart.
+     */
+    public static final String EPISODE_TAG = "generated-dialogue";
+
     public enum Level {
         /** Raw artifacts (ephemeral, auto-expire). */
         L0_ARTIFACT(0, "Raw Artifact", 0.1),
@@ -191,8 +202,26 @@ public final class HierarchicalMemory {
      * Searches for entries matching the query across all levels.
      */
     public List<MemoryEntry> search(String query, int limit) {
+        return search(query, limit, Set.of());
+    }
+
+    /**
+     * Search, optionally excluding records carrying a given tag.
+     *
+     * <p>RECON-W41: the search is used to build the CONTEXT a generation is
+     * conditioned on, and that context must be what the system has LEARNED,
+     * not what it has SAID. A generated answer stored as an episode is a
+     * legitimate record of the interaction, but serving it back as retrieved
+     * knowledge makes the system condition on its own output. The tag is
+     * how the two are told apart.
+     *
+     * @param excludedTags tags whose records are withheld from the result
+     */
+    public List<MemoryEntry> search(String query, int limit, Set<String> excludedTags) {
         String lowerQuery = query.toLowerCase();
+        Set<String> excluded = excludedTags == null ? Set.of() : excludedTags;
         return entries.values().stream()
+                .filter(e -> excluded.stream().noneMatch(e.tags()::contains))
                 .filter(e -> e.content().toLowerCase().contains(lowerQuery)
                         || e.domain().toLowerCase().contains(lowerQuery)
                         || e.tags().stream().anyMatch(t -> t.toLowerCase().contains(lowerQuery)))

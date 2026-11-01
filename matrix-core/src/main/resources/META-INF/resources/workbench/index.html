@@ -376,8 +376,19 @@ $('btn-ask').addEventListener('click', async () => {
     } else {
       out.innerHTML = '<div class="card good"><h2 style="margin-top:0">Answer at ' + esc(a.level) + ' level</h2>' +
         '<div class="answer">' + esc(a.statement) + '</div>' +
-        '<p class="muted">Confidence ' + a.confidence + ' · concepts: ' +
-        esc((a.concepts || []).map(c => c.name).join(', ')) + '</p></div>' +
+        '<p class="muted">Support score ' + a.supportScore + ' · concepts: ' +
+        esc((a.concepts || []).map(c => c.name).join(', ')) + '</p>' +
+        (a.support ? '<p class="muted" style="margin-top:6px">' + esc(a.support.meaning) + '</p>' +
+          '<table><tr><th>Input</th><th>Value</th></tr>' +
+          '<tr><td>Evidence coverage</td><td>' + a.support.evidenceCoverage + '</td></tr>' +
+          '<tr><td>Mean source authority</td><td>' + a.support.meanSourceAuthority + '</td></tr>' +
+          '<tr><td>Mean source freshness</td><td>' + a.support.meanSourceFreshness + '</td></tr>' +
+          '<tr><td>Claims used</td><td>' + a.support.claimCount + '</td></tr>' +
+          '<tr><td>Sources used</td><td>' + a.support.sourceCount + '</td></tr>' +
+          '<tr><td>Scope match</td><td>' + esc(a.support.scopeMatch) + '</td></tr>' +
+          '<tr><td>Contradiction check</td><td>' + esc(a.support.contradiction) + '</td></tr>' +
+          '<tr><td>Calibration</td><td>' + esc(a.support.calibrationStatus) + '</td></tr></table>' : '') +
+        '</div>' +
         (a.claims && a.claims.length ? '<div class="card"><h2 style="margin-top:0">Supporting claims</h2>' +
           a.claims.map(c => '<div><span class="tag ' + esc(c.status) + '">' + esc(c.status) + '</span>' +
           esc(c.proposition) + '<div class="muted">scope: ' + esc(c.scope || 'unstated') + '</div></div>').join('') +

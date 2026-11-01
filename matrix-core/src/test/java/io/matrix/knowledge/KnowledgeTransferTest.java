@@ -81,7 +81,7 @@ class KnowledgeTransferTest {
 
         assertThat(answer.answered()).isTrue();
         assertThat(answer.sources()).isNotEmpty();
-        assertThat(answer.confidence()).isGreaterThan(0.0);
+        assertThat(answer.supportScore()).isGreaterThan(0.0);
     }
 
     @Test

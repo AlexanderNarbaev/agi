@@ -10,7 +10,16 @@ import java.util.List;
  * explicit. When the evidence does not reach the threshold, the answer says
  * so, names the terms of the question that nothing in the workspace covers,
  * and does not present a guess. A system that never abstains is a system
- * whose confidence cannot be read.
+ * whose support cannot be read.
+ *
+ * <p>The number this record used to call {@code confidence} is now called
+ * {@code supportScore}, and it is accompanied by a {@link SupportScore}
+ * record that decomposes it and states what it is not. RECON-W41's audit
+ * established that the old number was the mean of the matched claims'
+ * authored confidence multiplied by the retrieval coverage, with no
+ * calibration data anywhere in the repository - a heuristic presented with
+ * the authority of a probability. The value is unchanged; what it is called,
+ * and what the reader is told about it, is not.
  */
 public record Answer(
         String question,
@@ -18,7 +27,8 @@ public record Answer(
         boolean answered,
         String abstentionReason,
         String statement,
-        double confidence,
+        double supportScore,
+        SupportScore support,
         List<Concept> concepts,
         List<Claim> claims,
         List<Source> sources,
@@ -38,5 +48,14 @@ public record Answer(
     /** True when the workspace could not answer, and said so. */
     public boolean abstained() {
         return !answered;
+    }
+
+    /**
+     * The one-line disclosure that travels with every answer.
+     *
+     * @return what the number means, or why there is no number
+     */
+    public String supportMeaning() {
+        return support == null ? SupportScore.MEANING : support.meaning();
     }
 }

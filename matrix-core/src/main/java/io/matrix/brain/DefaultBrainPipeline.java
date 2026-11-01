@@ -99,7 +99,15 @@ public class DefaultBrainPipeline implements BrainPipeline {
         int reads = 0;
         StringBuilder memCtx = new StringBuilder();
         if (longTermMemory != null) {
-            var entries = longTermMemory.search(processedInput, 3);
+            // RECON-W41 §5.1: the context a generation is conditioned on must
+            // be what the system has LEARNED, not what it has SAID. The
+            // episodes - the generated answers - are kept, and they are
+            // excluded here. Before this, the pipeline searched the memory,
+            // prepended the hits to the prompt, generated, and wrote the
+            // result back: the system's own output became part of its next
+            // input.
+            var entries = longTermMemory.search(processedInput, 3,
+                    java.util.Set.of(HierarchicalMemory.EPISODE_TAG));
             for (var e : entries) {
                 if (e != null && e.content() != null && !e.content().isBlank()) {
                     memCtx.append(e.content()).append(' ');
@@ -136,12 +144,16 @@ public class DefaultBrainPipeline implements BrainPipeline {
         // ─── Memory write-back (world model) ─────────────────────────
         int writes = 0;
         if (longTermMemory != null && !output.isBlank()) {
+            // The record is an EPISODE: what was said, not what is known.
+            // It is stored in the same place as before - the pipeline's
+            // context does not read it back - but it is marked, so that the
+            // retrieval can tell an interaction from a learned fact.
             longTermMemory.store(
                     HierarchicalMemory.Level.L2_MODULE,
                     "Q: " + truncate(processedInput, 200)
                             + " | A: " + truncate(output, 200),
                     "brain",
-                    Set.of("pipeline", "auto"));
+                    Set.of("pipeline", "auto", HierarchicalMemory.EPISODE_TAG));
             writes++;
         }
 

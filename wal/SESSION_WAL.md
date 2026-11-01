@@ -1223,3 +1223,55 @@ in-memory state (W4) — a future W7 wave can persist this to SQLite» — эт�
 **Имена веток сдвинуты относительно их содержимого** — ловушка для
 аудита по имени: mind-w2 несёт консолидацию, mind-w3 — цели, mind-w4 —
 журнал дистилляции.
+
+# RECON-W41 — W41.1 epistemic integrity, part 1: the number and the episode (2026-11-01)
+
+Две правки из аудита W41.0, обе — про честность, а не про функции.
+
+## 1. «confidence» → support score с раскрытым составом
+
+§6.5: «Never expose an uncalibrated heuristic as a probability of factual
+correctness… If a heuristic score is useful, call it a support score and
+disclose its meaning.»
+
+`io.matrix.knowledge.SupportScore` — новая запись, которая несёт:
+- **значение** — тот же самый продукт (среднее заявленных уверенностей ×
+  покрытие), **неизменное**, чтобы ничего не сломалось;
+- **входы по отдельности**: покрытие, средняя authority источников, средняя
+  freshness, число утверждений и источников;
+- **совпадение области** — вычисляется: термины вопроса относительно
+  объявленной области утверждений;
+- **статус противоречия** — `NOT_COMPUTED`, а не `NONE_DETECTED`: разница
+  между «противоречия нет» и «его не искали» и есть суть;
+- **статус калибровки** — честно: «not calibrated: the repository holds no
+  held-out set against which this score could be compared with observed
+  correctness»;
+- **смысл** — одной фразой: «A support score… It is NOT a probability that
+  the answer is factually correct, and it has not been calibrated».
+
+Поле `Answer.confidence` переименовано в `supportScore`; рядом теперь лежит
+`support`. UI показывает «Support score» и таблицу входов. Тест фиксирует,
+что значение для «What is photosynthesis?» осталось **0.84** — непрерывность
+сохранена, изменилось только то, как оно называется и что о нём сказано.
+
+## 2. Эпизод — не факт (§5.1)
+
+Найденная петля: `DefaultBrainPipeline` ищет по `HierarchicalMemory`, приклеивает
+найденное к промпту, генерирует и **записывает результат обратно** — вывод
+системы становился частью её следующего входа, и ничто в хранилище не
+отличало сказанное от выученного.
+
+Исправление:
+- `HierarchicalMemory.EPISODE_TAG = "generated-dialogue"` — запись разговора
+  помечается как эпизод;
+- **запись сохранена** (разговор — законная эпизодическая запись), но
+  **помечена**;
+- поиск, из которого строится контекст генерации, **исключает** эпизоды
+  (и в конвейере, и в чате): контекст порождения — это то, что система
+  **выучила**, а не то, что она **сказала**;
+- `HierarchicalMemory.search(query, limit, excludedTags)` — перегрузка с
+  исключением по метке.
+
+Тесты (3): эпизод сохраняется и помечается; поиск для порождения его
+не выдаёт, а выученное — выдаёт; исключение пустого набора ничего не
+меняет.

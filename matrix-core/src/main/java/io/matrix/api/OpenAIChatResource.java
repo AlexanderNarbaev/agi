@@ -323,7 +323,11 @@ public class OpenAIChatResource {
             // Pre-load world model + long-term memory as semantic seed (not as response)
             StringBuilder context = new StringBuilder();
             if (longTermMemory != null) {
-                var memEntries = longTermMemory.search(userText, 3);
+                // RECON-W41 §5.1: the episodes - this system's own previous
+                // answers - are kept in the memory but are not served back
+                // as retrieved knowledge.
+                var memEntries = longTermMemory.search(userText, 3,
+                        java.util.Set.of(HierarchicalMemory.EPISODE_TAG));
                 for (var entry : memEntries) {
                     if (entry != null && entry.content() != null && !entry.content().isBlank()) {
                         context.append(entry.content()).append(' ');
@@ -419,11 +423,13 @@ public class OpenAIChatResource {
 
             // World-model write-back: store the interaction as a memory entry
             if (longTermMemory != null && response != null && !response.isBlank()) {
+                // The record is an EPISODE, marked as such: what was said in
+                // an interaction is not a fact the system has learned.
                 longTermMemory.store(
                         HierarchicalMemory.Level.L2_MODULE,
                         "Q: " + truncate(userText, 200) + " | A: " + truncate(response, 200),
                         "chat",
-                        Set.of("auto", "user-interaction"));
+                        Set.of("auto", "user-interaction", HierarchicalMemory.EPISODE_TAG));
             }
         } catch (Exception e) {
             log.error("Neural text generation failed", e);
