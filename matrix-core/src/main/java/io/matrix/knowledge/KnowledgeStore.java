@@ -54,7 +54,7 @@ import java.util.Set;
 public final class KnowledgeStore implements AutoCloseable {
 
     /** The schema version this build writes. */
-    public static final int SCHEMA_VERSION = 7;
+    public static final int SCHEMA_VERSION = 8;
 
     private static final ObjectMapper JSON = new ObjectMapper();
 
@@ -349,6 +349,30 @@ public final class KnowledgeStore implements AutoCloseable {
     }
 
     private int migrateFrom(int version) throws SQLException {
+        if (version == 7) {
+            // v8 adds the persistent goals. A goal is not part of the
+            // knowledge: the knowledge store can be restored and the goal
+            // still not be, which is exactly what the mission warns about.
+            try (Statement st = connection.createStatement()) {
+                st.execute("CREATE TABLE IF NOT EXISTS learning_goal ("
+                        + "id TEXT PRIMARY KEY, workspace_id TEXT NOT NULL, description TEXT NOT NULL, "
+                        + "success_criteria TEXT NOT NULL, prerequisites TEXT NOT NULL, "
+                        + "status TEXT NOT NULL, progress_evidence TEXT NOT NULL, "
+                        + "failed_attempts TEXT NOT NULL, remaining_work TEXT, "
+                        + "budget_units INTEGER NOT NULL, budget_used INTEGER NOT NULL, "
+                        + "last_checkpoint TEXT, recovery_instructions TEXT, "
+                        + "created_at TEXT NOT NULL, updated_at TEXT NOT NULL)");
+                st.execute("CREATE TABLE IF NOT EXISTS learning_goal_subtask ("
+                        + "goal_id TEXT NOT NULL, subtask_id TEXT NOT NULL, description TEXT NOT NULL, "
+                        + "required INTEGER NOT NULL, prerequisites TEXT NOT NULL, "
+                        + "status TEXT NOT NULL, evidence TEXT NOT NULL, note TEXT, "
+                        + "PRIMARY KEY (goal_id, subtask_id))");
+                st.execute("CREATE INDEX IF NOT EXISTS idx_goal_workspace "
+                        + "ON learning_goal(workspace_id)");
+            }
+            writeSchemaVersion(8);
+            return 8;
+        }
         if (version == 6) {
             // v7 adds the recorded conflicts. A conflict is a record ABOUT two
             // claims; it neither deletes nor demotes either of them, and the
@@ -506,7 +530,7 @@ public final class KnowledgeStore implements AutoCloseable {
 
     private void deleteWorkspace(String workspaceId) throws SQLException {
         for (String table : List.of("revision", "prerequisite", "representation", "evidence",
-                "derivation", "contradiction", "claim", "source", "concept")) {
+                "derivation", "contradiction", "learning_goal", "claim", "source", "concept")) {
             try (PreparedStatement ps = connection.prepareStatement(
                     "DELETE FROM " + table + " WHERE workspace_id = ?")) {
                 ps.setString(1, workspaceId);
@@ -514,10 +538,17 @@ public final class KnowledgeStore implements AutoCloseable {
             }
         }
         // The premise table has no workspace of its own: a premise belongs
-        // to its derivation, so the derivations' premises go with them.
+        // to its derivation, so the derivations' premises go with them. The
+        // same holds for a subtask, which belongs to its goal.
         try (PreparedStatement ps = connection.prepareStatement(
                 "DELETE FROM derivation_premise WHERE derivation_id IN "
                         + "(SELECT id FROM derivation WHERE workspace_id = ?)")) {
+            ps.setString(1, workspaceId);
+            ps.executeUpdate();
+        }
+        try (PreparedStatement ps = connection.prepareStatement(
+                "DELETE FROM learning_goal_subtask WHERE goal_id IN "
+                        + "(SELECT id FROM learning_goal WHERE workspace_id = ?)")) {
             ps.setString(1, workspaceId);
             ps.executeUpdate();
         }
@@ -1340,6 +1371,167 @@ public final class KnowledgeStore implements AutoCloseable {
                 premises.getOrDefault(rs.getString("id"), List.of()),
                 DerivationStatus.valueOf(rs.getString("status")),
                 rs.getString("recorded_at")));
+    }
+
+    /**
+     * Records a learning goal, replacing any earlier record of it.
+     *
+     * <p>The goal is written whole, in one statement, so a goal is never
+     * half-written: a process that dies mid-write leaves the previous
+     * version, not a mixture.
+     */
+    public void recordGoal(LearningGoal goal) {
+        try (PreparedStatement ps = connection.prepareStatement(
+                "INSERT OR REPLACE INTO learning_goal(id, workspace_id, description, "
+                        + "success_criteria, prerequisites, status, progress_evidence, "
+                        + "failed_attempts, remaining_work, budget_units, budget_used, "
+                        + "last_checkpoint, recovery_instructions, created_at, updated_at) "
+                        + "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)")) {
+            ps.setString(1, goal.id());
+            ps.setString(2, goal.workspaceId());
+            ps.setString(3, goal.description());
+            ps.setString(4, join(goal.successCriteria()));
+            ps.setString(5, join(goal.prerequisiteConceptIds()));
+            ps.setString(6, goal.status().name());
+            ps.setString(7, join(goal.progressEvidenceIds()));
+            ps.setString(8, join(goal.failedAttempts().stream()
+                    .map(attempt -> attempt.id() + "|" + attempt.attempt() + "|" + attempt.reason()
+                            + "|" + attempt.recordedAt())
+                    .toList()));
+            ps.setString(9, goal.remainingWork());
+            ps.setInt(10, goal.budgetUnits());
+            ps.setInt(11, goal.budgetUsed());
+            ps.setString(12, goal.lastCheckpoint());
+            ps.setString(13, goal.recoveryInstructions());
+            ps.setString(14, goal.createdAt());
+            ps.setString(15, goal.updatedAt());
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            throw new IllegalStateException("failed to record the goal " + goal.id(), e);
+        }
+    }
+
+    /** The goals of a workspace. */
+    public List<LearningGoal> goals(String workspaceId) {
+        return query("SELECT id, workspace_id, description, success_criteria, "
+                + "prerequisites, status, progress_evidence, failed_attempts, remaining_work, "
+                + "budget_units, budget_used, last_checkpoint, recovery_instructions, "
+                + "created_at, updated_at FROM learning_goal WHERE workspace_id = ? ORDER BY id",
+                workspaceId, rs -> {
+                    List<LearningGoal.FailedAttempt> failures = new ArrayList<>();
+                    for (String entry : split(rs.getString("failed_attempts"))) {
+                        String[] parts = entry.split("\\|", 4);
+                        failures.add(new LearningGoal.FailedAttempt(
+                                parts.length > 0 ? parts[0] : "",
+                                parts.length > 1 ? parts[1] : "",
+                                parts.length > 2 ? parts[2] : "",
+                                parts.length > 3 ? parts[3] : ""));
+                    }
+                    return new LearningGoal(
+                            rs.getString("id"), rs.getString("workspace_id"),
+                            rs.getString("description"),
+                            split(rs.getString("success_criteria")),
+                            split(rs.getString("prerequisites")),
+                            List.of(),
+                            LearningGoal.Status.valueOf(rs.getString("status")),
+                            split(rs.getString("progress_evidence")),
+                            failures,
+                            rs.getString("remaining_work"),
+                            rs.getInt("budget_units"), rs.getInt("budget_used"),
+                            rs.getString("last_checkpoint"), rs.getString("recovery_instructions"),
+                            rs.getString("created_at"), rs.getString("updated_at"));
+                });
+    }
+
+    /**
+     * Records a goal together with its subtasks.
+     *
+     * <p>The subtasks live in their own table so that a resumed goal can be
+     * inspected piece by piece, and so that a subtask's own evidence is
+     * reachable without parsing the whole goal.
+     */
+    public void recordGoalWithSubtasks(LearningGoal goal) {
+        recordGoal(goal);
+        try {
+            connection.setAutoCommit(false);
+            try {
+                try (PreparedStatement ps = connection.prepareStatement(
+                        "DELETE FROM learning_goal_subtask WHERE goal_id = ?")) {
+                    ps.setString(1, goal.id());
+                    ps.executeUpdate();
+                }
+                try (PreparedStatement ps = connection.prepareStatement(
+                        "INSERT INTO learning_goal_subtask(goal_id, subtask_id, description, "
+                                + "required, prerequisites, status, evidence, note) "
+                                + "VALUES (?,?,?,?,?,?,?,?)")) {
+                    for (LearningGoal.Subtask subtask : goal.subtasks()) {
+                        ps.setString(1, goal.id());
+                        ps.setString(2, subtask.id());
+                        ps.setString(3, subtask.description());
+                        ps.setBoolean(4, subtask.required());
+                        ps.setString(5, join(subtask.prerequisiteSubtaskIds()));
+                        ps.setString(6, subtask.status().name());
+                        ps.setString(7, join(subtask.evidenceIds()));
+                        ps.setString(8, subtask.note());
+                        ps.addBatch();
+                    }
+                    ps.executeBatch();
+                }
+                connection.commit();
+            } catch (SQLException | RuntimeException e) {
+                connection.rollback();
+                throw e;
+            } finally {
+                connection.setAutoCommit(true);
+            }
+        } catch (SQLException e) {
+            throw new IllegalStateException("failed to record the subtasks of " + goal.id(), e);
+        }
+    }
+
+    /** The goals of a workspace, with their subtasks attached. */
+    public List<LearningGoal> goalsWithSubtasks(String workspaceId) {
+        List<LearningGoal> goals = goals(workspaceId);
+        List<LearningGoal> withSubtasks = new ArrayList<>();
+        for (LearningGoal goal : goals) {
+            List<LearningGoal.Subtask> subtasks = new ArrayList<>();
+            try (PreparedStatement ps = connection.prepareStatement(
+                    "SELECT subtask_id, description, required, prerequisites, status, evidence, note "
+                            + "FROM learning_goal_subtask WHERE goal_id = ? ORDER BY subtask_id")) {
+                ps.setString(1, goal.id());
+                try (ResultSet rs = ps.executeQuery()) {
+                    while (rs.next()) {
+                        subtasks.add(new LearningGoal.Subtask(
+                                rs.getString("subtask_id"), rs.getString("description"),
+                                rs.getBoolean("required"),
+                                split(rs.getString("prerequisites")),
+                                LearningGoal.Status.valueOf(rs.getString("status")),
+                                split(rs.getString("evidence")), rs.getString("note")));
+                    }
+                }
+            } catch (SQLException e) {
+                throw new IllegalStateException("failed to read the subtasks of " + goal.id(), e);
+            }
+            withSubtasks.add(new LearningGoal(goal.id(), goal.workspaceId(), goal.description(),
+                    goal.successCriteria(), goal.prerequisiteConceptIds(), subtasks, goal.status(),
+                    goal.progressEvidenceIds(), goal.failedAttempts(), goal.remainingWork(),
+                    goal.budgetUnits(), goal.budgetUsed(), goal.lastCheckpoint(),
+                    goal.recoveryInstructions(), goal.createdAt(), goal.updatedAt()));
+        }
+        return withSubtasks;
+    }
+
+    /** Joins a list with the separator the store uses. */
+    private static String join(List<String> values) {
+        return values == null ? "" : String.join("\u001f", values);
+    }
+
+    /** Splits a stored list back apart. */
+    private static List<String> split(String stored) {
+        if (stored == null || stored.isEmpty()) {
+            return List.of();
+        }
+        return List.of(stored.split("\u001f", -1));
     }
 
     /**
