@@ -187,7 +187,7 @@ public class LearningWorkbenchResource {
             try {
                 Files.copy(upload.uploadedFile(), temporary, StandardCopyOption.REPLACE_EXISTING);
                 DocumentImporter.ImportResult result = new DocumentImporter(workbench.store())
-                        .importDocument(workspaceId, temporary,
+                        .importDocument(workspaceId, temporary, filename,
                                 language == null || language.isBlank() ? null : language);
                 Map<String, Object> report = new LinkedHashMap<>();
                 report.put("workspace", result.workspaceId());

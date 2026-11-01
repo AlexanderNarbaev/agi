@@ -83,7 +83,27 @@ public final class DocumentImporter {
      */
     public ImportResult importDocument(String workspaceId, Path path, String declaredLanguage)
             throws IOException {
-        DocumentFormat format = DocumentFormat.of(path.getFileName().toString());
+        return importDocument(workspaceId, path, path.getFileName().toString(), declaredLanguage);
+    }
+
+    /**
+     * Imports a document under a name of the caller's choosing.
+     *
+     * <p>The name is what the source is recorded under, and it is what the
+     * format is detected from. A caller that reads the document from a
+     * temporary file passes the name the user gave — the temporary name
+     * would be a lie about where the document came from.
+     *
+     * @param workspaceId the workspace to import into
+     * @param path the file to read
+     * @param filename the name to record
+     * @param declaredLanguage the language, when the caller knows it
+     * @return what the import did
+     * @throws IOException when the document cannot be read
+     */
+    public ImportResult importDocument(String workspaceId, Path path, String filename,
+                                       String declaredLanguage) throws IOException {
+        DocumentFormat format = DocumentFormat.of(filename);
         if (format == null) {
             throw new IOException("the format of " + path.getFileName() + " is not one this "
                     + "pipeline reads");
@@ -99,7 +119,6 @@ public final class DocumentImporter {
         }
         byte[] content = Files.readAllBytes(path);
         String hash = sha256(content);
-        String filename = path.getFileName().toString();
 
         SourceRecord.Builder source = new SourceRecord.Builder(
                 sourceId(workspaceId, hash), filename, hash, format)
@@ -129,6 +148,10 @@ public final class DocumentImporter {
         List<Evidence> evidence = new ArrayList<>();
         Set<String> conceptIds = new LinkedHashSet<>();
         List<String> skipped = new ArrayList<>();
+        Set<String> conceptsBefore = new LinkedHashSet<>();
+        for (Concept concept : store.concepts(workspaceId)) {
+            conceptsBefore.add(concept.id());
+        }
 
         for (ClaimExtractor.Proposal proposal : ClaimExtractor.propose(document)) {
             Concept concept = store.ensureConcept(workspaceId, proposal.subject(), null, null);
@@ -145,11 +168,12 @@ public final class DocumentImporter {
         }
 
         // The concepts that were created by this import, for the report.
+        // The count is taken BEFORE the import creates them, because after
+        // it they all exist - and a report that always says zero is a
+        // report nobody can use.
         int created = 0;
         for (String conceptId : conceptIds) {
-            boolean existed = store.concepts(workspaceId).stream()
-                    .anyMatch(concept -> concept.id().equals(conceptId));
-            if (!existed) {
+            if (!conceptsBefore.contains(conceptId)) {
                 created++;
             }
         }
