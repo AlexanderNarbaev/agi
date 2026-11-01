@@ -202,6 +202,7 @@ public class LearningWorkbenchResource {
                 report.put("segments", result.segments());
                 report.put("claimsProposed", result.claimsProposed());
                 report.put("conceptsCreated", result.conceptsCreated());
+                report.put("representationsCreated", result.representationsCreated());
                 return Response.ok(report).build();
             } finally {
                 Files.deleteIfExists(temporary);

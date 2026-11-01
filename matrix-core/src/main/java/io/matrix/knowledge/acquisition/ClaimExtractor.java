@@ -46,22 +46,22 @@ public final class ClaimExtractor {
      * proposal it makes can be checked against the source.
      */
     private static final Set<String> DECLARATIVE_VERBS = Set.of(
-            // English: being, having, and the verbs of a scientific statement.
-            "is", "are", "was", "were", "be", "being", "been", "has", "have", "had",
-            "means", "refer", "consist", "include", "require", "need", "produce", "generate",
-            "release", "absorb", "convert", "transform", "use", "build", "happen", "occur",
-            "form", "create", "make", "contain", "provide", "depend", "result", "lead", "cause",
-            "enable", "allow", "determine", "control", "represent", "describe", "define",
-            "equal", "become", "remain", "stay", "work", "function", "act", "react", "respond",
-            "grow", "move", "split", "join", "bind", "store", "carry", "transport",
-            "supply", "support", "drive", "feed", "take", "give", "show",
-            // Russian.
-            "является", "есть", "означает", "называется", "состоит", "требует", "нуждается",
-            "производит", "создает", "выделяет", "поглощает", "преобразует", "использует",
-            "строит", "происходит", "образует", "содержит", "зависит", "приводит", "вызывает",
-            "определяет", "обеспечивает", "представляет", "описывает", "равен", "становится",
-            "остается", "работает", "действует", "реагирует", "растет", "делится", "связывается",
-            "хранит", "переносит", "нужен", "нужна", "нужны");
+            "is", "are", "was", "were", "be", "being", "been", "has", "have",
+            "had", "means", "refer", "consist", "include", "require", "need", "produce", "generate",
+            "release", "absorb", "convert", "transform", "use", "build", "happen", "occur", "form",
+            "create", "make", "contain", "provide", "depend", "result", "lead", "cause", "enable",
+            "allow", "determine", "control", "represent", "describe", "define", "equal", "become", "remain",
+            "stay", "work", "function", "act", "react", "respond", "grow", "move", "split",
+            "join", "bind", "store", "carry", "transport", "supply", "support", "drive", "feed",
+            "take", "give", "show", "boil", "freeze", "melt", "dissolve", "evaporate", "condense",
+            "burn", "reacts", "diffuse", "flow", "expand", "contract", "rotate", "recycle", "photosynthesise",
+            "photosynthesize", "respire", "ferment", "crystallise", "crystallize", "oxidise", "oxidize", "reduce", "bond",
+            "separate", "mix", "transfer", "emit", "reflect", "compete", "survive", "divide", "multiply",
+            "increase", "decrease", "change", "vary", "arise", "является", "есть", "означает", "называется",
+            "состоит", "требует", "нуждается", "производит", "создает", "выделяет", "поглощает", "преобразует", "использует",
+            "строит", "происходит", "образует", "содержит", "зависит", "приводит", "вызывает", "определяет", "обеспечивает",
+            "представляет", "описывает", "равен", "становится", "остается", "работает", "действует", "реагирует", "растет",
+            "делится", "связывается", "хранит", "переносит", "нужен", "нужна", "нужны");
 
     /** The smallest sentence a proposal may have. */
     private static final int MINIMUM_SENTENCE_LENGTH = 20;
@@ -160,7 +160,10 @@ public final class ClaimExtractor {
             return DECLARATIVE_VERBS.contains(lower.substring(0, lower.length() - 1));
         }
         if (lower.length() > 3 && lower.endsWith("es")) {
-            return DECLARATIVE_VERBS.contains(lower.substring(0, lower.length() - 2));
+            // "freezes" folds to "freez" and the list holds "freeze": both
+            // stems are tried, because the -es ending can stand for either.
+            String stem = lower.substring(0, lower.length() - 2);
+            return DECLARATIVE_VERBS.contains(stem) || DECLARATIVE_VERBS.contains(stem + "e");
         }
         return false;
     }

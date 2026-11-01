@@ -64,6 +64,7 @@ public final class DocumentImporter {
             int claimsProposed,
             int claimsAdded,
             int conceptsCreated,
+            int representationsCreated,
             List<String> skipped) {
 
         public ImportResult {
@@ -178,11 +179,38 @@ public final class DocumentImporter {
             }
         }
 
+        // THE REPRESENTATIONS.
+        //
+        // A concept that came from a document had claims and evidence but
+        // no authored account, so the system's answer about it was the
+        // claim itself - which is not an explanation. The composer writes
+        // the account the document already contains, at the levels the
+        // document's own sentences support, and at no others.
+        List<io.matrix.knowledge.Representation> representations = new ArrayList<>();
+        java.util.Map<String, List<Claim>> claimsByConcept = new java.util.LinkedHashMap<>();
+        for (Claim claim : claims) {
+            claimsByConcept.computeIfAbsent(claim.conceptId(), key -> new ArrayList<>())
+                    .add(claim);
+        }
+        List<String> conceptNames = new ArrayList<>();
+        for (Concept concept : store.concepts(workspaceId)) {
+            conceptNames.add(concept.name());
+        }
+        for (Concept concept : store.concepts(workspaceId)) {
+            List<Claim> conceptClaims = claimsByConcept.get(concept.id());
+            if (conceptClaims == null || conceptClaims.isEmpty()) {
+                continue;
+            }
+            representations.addAll(io.matrix.knowledge.RepresentationComposer.compose(
+                    concept, conceptClaims, conceptNames, workspaceId, record.sourceId(),
+                    record.importedAt()));
+        }
+
         store.applyChanges(workspaceId, new KnowledgeChanges(List.of(storeSource), claims,
-                evidence, List.of(), List.of()));
+                evidence, representations, List.of()));
 
         return new ImportResult(workspaceId, record, document.segments().size(),
-                claims.size(), claims.size(), created, skipped);
+                claims.size(), claims.size(), created, representations.size(), skipped);
     }
 
     /** The quality of the evidence: the extraction's own quality. */
