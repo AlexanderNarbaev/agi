@@ -127,6 +127,59 @@ held-out benchmark.*
 
 ---
 
+## W42.5 — the false-premise detection — **THE ANALYSIS, AND WHY IT WAS NOT SHIPPED**
+
+The benchmark holds two `FALSE_PREMISE` items, and both were answered:
+*"Since photosynthesis produces oxygen from carbon dioxide, how much oxygen
+does a plant release in an hour?"* and *"Since every valid argument has
+true premises, what are the premises of modus ponens?"*.
+
+**A mechanism was built and measured, and it was not shipped.** A question
+that asserts a premise ("Since X, ...") was extracted, and the premise was
+checked against the workspace's claims: the premise was SUPPORTED when a
+statement of the workspace carried a sufficient share of the premise's
+content terms. A premise the workspace could not support was refused, and
+the answer named it.
+
+**MEASURED, at the threshold that was best:**
+
+| | the baseline | with the premise rule |
+|---|---|---|
+| the answer accuracy | 0.792 | 0.750 |
+| the abstention quality | 0.700 | 0.900 |
+| the items wrong in total | 8 | 7 |
+
+**The trade:** the rule fixed the false premises and the refusal of the
+unanswerable question, and it cost a legitimate MULTI_HOP question — *"If
+light reactions split water and release oxygen, what does the Calvin cycle
+do?"* — whose premise the workspace states in different words.
+
+**Why it was reverted.** The support test is a TERM test, and a false
+premise is a RELATION error: the premise says the oxygen comes from carbon
+dioxide, and the workspace says it comes from splitting water — the two
+statements share the subject and the object and differ in their SOURCE. A
+term test cannot see that, and a term test that is tuned until two items
+pass is a fit to a sample of 34, not a capability. The mission's §7.1 says
+that a metric moving in the wrong direction means stopping and analysing,
+and the mission's §16 forbids hiding a failed experiment.
+
+**What a real detector needs**, for the next wave:
+1. the **premise clause** of the question — done and kept in the analysis
+   above: the marker has to be at the START of the question, and "as " is
+   not a premise marker;
+2. the **subject, the object and the source** of a proposition — the
+   prepositional phrase that names where something comes from, with the
+   head noun as the source;
+3. a **contradiction test** over that structure: the same subject and the
+   same object with a different source are in conflict;
+4. the same structure for the **negation** — the W41 `ContradictionDetector`
+   already handles opposite polarity over equal terms, and it can be
+   reused for that part.
+
+**The measurement that must accompany it:** the false-premise items are
+TWO. Whatever is built has to be measured against a set that is larger than
+two, or the number is a demonstration and not a capability.
+
 ## W42.5 — Cognitive integration
 
 **Exit condition:** *measurable improvement attributable to specific
