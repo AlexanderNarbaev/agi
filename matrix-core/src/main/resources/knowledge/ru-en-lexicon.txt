@@ -1,0 +1,198 @@
+# The bilingual term lexicon of MATRIX (RECON-W42.3).
+#
+# One pair per line: the Russian term, a tab, the English term. The lookup
+# works in both directions, so one line serves a Russian question and an
+# English one.
+#
+# WHAT THIS IS, AND WHAT IT IS NOT.
+#
+# It is a SEARCH AID. A Russian question and an English claim about the
+# same concept share no token, and this table is the bridge that lets the
+# retriever find the claim. The mission's §6 warns that "translation is not
+# evidence that two propositions are equivalent", and that is exactly the
+# line this file does not cross: the lexicon says these two WORDS mean the
+# same thing, and it says nothing about whether the two PROPOSITIONS are
+# equivalent. A claim's truth is unaffected by a term appearing here.
+#
+# The terms are the STEMS: the text layer folds the case endings off a
+# Russian word before the lookup, so "фотосинтезе" folds to "фотосинтез"
+# and is found here.
+#
+# The English side is folded the same way ("photosynthesis" -> "photosynthesi").
+#
+фотосинтез	photosynthesis
+фотосинтетическ	photosynthetic
+растение	plant
+plants	plant
+лист	leaf
+листья	leaf
+хлорофилл	chlorophyll
+пигмент	pigment
+свет	light
+света	light
+солнечный	sunlight
+солнце	sun
+энергия	energy
+энерги	energy
+углерод	carbon
+углерода	carbon
+диоксид	dioxide
+оксид	oxide
+кислород	oxygen
+кислорода	oxygen
+азот	nitrogen
+углекислый	carbon dioxide
+вода	water
+воды	water
+сахар	sugar
+сахароз	sucrose
+глюкоз	glucose
+глюкоза	glucose
+пируват	pyruvate
+молекул	molecule
+молекула	molecule
+клетка	cell
+клетки	cell
+клеточн	cellular
+клеточный	cellular
+ядро	nucleus
+митохондр	mitochondria
+митохондри	mitochondria
+матрикс	matrix
+стомат	stomata
+устьиц	stomata
+устьице	stomata
+тилакоид	thylakoid
+тилакоидн	thylakoid
+строма	stroma
+цикл	cycle
+цикл	cycle
+кальвин	calvin
+кальвина	calvin
+цикл кальвина	calvin cycle
+цикл кельвина	calvin cycle
+модус поненс	modus ponens
+модус	modus
+поненс	ponens
+т toll	modus tollens
+логика	logic
+логическ	logical
+вывод	conclusion
+выводит	entail
+следует	follows
+следу	follow
+следоват	conclude
+посылка	premise
+посылк	premise
+аргумент	argument
+аргумент	argument
+истинн	true
+истина	truth
+ложн	false
+ложь	false
+необходимо	necessary
+достаточно	sufficient
+невозможно	impossible
+возможно	possible
+дыхание	respiration
+дыхательн	respiratory
+клеточное дыхание	cellular respiration
+аэробн	aerobic
+анаэробн	anaerobic
+гликолиз	glycolysis
+кребс	krebs
+цикл кребса	krebs cycle
+фосфорилирован	phosphorylation
+окислительн	oxidative
+электрон	electron
+электронн	electron
+транспорт	transport
+транспортн	transport
+цепь	chain
+цеп	chain
+электронно-транспортная цепь	electron transport chain
+атф	atp
+nadph	nadph
+нак	 nadph
+фотосинтетическ	photosynthetic
+система	system
+систем	system
+процесс	process
+процесс	process
+стадия	stage
+стади	stage
+этап	stage
+этап	stage
+преобразован	convert
+преобразует	convert
+превраща	convert
+расщепля	split
+расщепляет	split
+разделяет	split
+выделяет	release
+выделя	release
+поглоща	absorb
+поглощает	absorb
+использует	use
+использу	used
+строит	build
+стро	build
+образует	form
+образован	form
+содержит	contain
+содерж	contain
+созда	creat
+создает	create
+созда	produces
+производит	produce
+требует	require
+требу	requires
+зависит	depend
+зависим	depends
+определяет	determine
+определя	determines
+контролирует	control
+управля	control
+позволяет	allow
+позвол	allows
+обеспечивает	provide
+обеспеч	ensures
+участвует	participate
+участву	participates
+вовлеч	involved
+вовлека	involves
+содержимое	content
+частица	particle
+частиц	particle
+молекулярн	molecular
+химическ	chemical
+химия	chemistry
+физик	physical
+биолог	biological
+биология	biology
+наука	science
+научн	scientific
+теория	theory
+закон	law
+правило	rule
+принцип	principle
+модель	model
+система координат	coordinate system
+кальвин	calvin
+цикл кальвина	calvin cycle
+газообразн	gas
+газ	gas
+веществ	substance
+газообразные вещества	gaseous substances
+участ	participate
+участи	participate
+принима	participate
+производств	production
+продукц	product
+продукт	product
+высвобожд	release
+высвободить	release
+поглощени	absorption
+преобразован	transformation
+темновой	dark
+световой	light

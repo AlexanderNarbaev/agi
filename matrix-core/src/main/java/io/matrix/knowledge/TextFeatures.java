@@ -26,16 +26,14 @@ import java.util.Set;
  */
 public final class TextFeatures {
 
-    /** Words that carry no retrieval signal in a question or a proposition. */
-    private static final Set<String> STOPWORDS = Set.of(
-            "the", "a", "an", "of", "in", "to", "is", "are", "was", "were", "be", "been",
-            "and", "or", "for", "with", "that", "this", "these", "those", "it", "its",
-            "as", "by", "on", "at", "from", "into", "how", "what", "which", "who", "when",
-            "where", "why", "do", "does", "did", "can", "could", "would", "should", "there",
-            "their", "they", "them", "you", "your", "we", "our", "us", "i", "he", "she",
-            "not", "but", "than", "then", "so", "if", "about", "also", "more", "most",
-            "any", "all", "some", "such", "only", "other", "between", "during", "under",
-            "over", "each", "per", "via", "using", "used");
+    /**
+     * Words that carry no retrieval signal in a question or a proposition.
+     *
+     * <p>RECON-W42.3 moved the list into {@link TextProfiles}: the stopwords
+     * are a property of a language, not of a class. The English list itself
+     * is unchanged, so the W41 behaviour is unchanged.
+     */
+    private static final Set<String> STOPWORDS = TextProfiles.ENGLISH.stopwords();
 
     private TextFeatures() {
     }
@@ -58,6 +56,22 @@ public final class TextFeatures {
     }
 
     /**
+     * The profile of a text, detected.
+     *
+     * <p>RECON-W42.3. The text layer's language-dependent rules are a
+     * property of the language, so a caller that wants the Russian
+     * stopwords or the Russian case endings asks for the profile.
+     */
+    public static TextProfile profileOf(String text) {
+        return TextProfiles.ofText(text);
+    }
+
+    /** The profile of a language code. */
+    public static TextProfile profileByLanguage(String language) {
+        return TextProfiles.ofLanguage(language);
+    }
+
+    /**
      * Split a text into retrieval tokens: lower-cased, punctuation removed,
      * stopwords dropped, and a deliberately conservative suffix fold so that
      * a plural or a gerund still matches its stem.
@@ -71,15 +85,19 @@ public final class TextFeatures {
         if (text == null || text.isBlank()) {
             return out;
         }
+        // RECON-W42.3: the stopwords and the fold are the language's, and
+        // the language is detected from the text. An English text folds
+        // exactly as it did in W41.
+        TextProfile profile = TextProfiles.ofText(text);
         StringBuilder current = new StringBuilder();
         for (char ch : text.toLowerCase(Locale.ROOT).toCharArray()) {
             if (Character.isLetterOrDigit(ch)) {
                 current.append(ch);
             } else {
-                emit(current, out);
+                emit(current, out, profile);
             }
         }
-        emit(current, out);
+        emit(current, out, profile);
         return out;
     }
 
@@ -121,7 +139,7 @@ public final class TextFeatures {
         current.setLength(0);
     }
 
-    private static void emit(StringBuilder current, List<String> out) {
+    private static void emit(StringBuilder current, List<String> out, TextProfile profile) {
         if (current.length() == 0) {
             return;
         }
@@ -140,10 +158,10 @@ public final class TextFeatures {
         // The stopword test is on the word as it was written, not on the
         // folded stem: a fold would otherwise turn a stopword into a
         // fragment that no longer looks like one.
-        if (STOPWORDS.contains(token)) {
+        if (profile.isStopWord(token)) {
             return;
         }
-        out.add(fold(token));
+        out.add(profile.fold(token));
     }
 
     /**
@@ -156,6 +174,21 @@ public final class TextFeatures {
      * stored energy.
      */
     static String fold(String token) {
+        return TextProfiles.ENGLISH.fold(token);
+    }
+
+    /**
+     * The fold of a token in the language of the text it came from.
+     *
+     * <p>RECON-W42.3. A Russian question's words carry the case in the
+     * word itself, so the Russian fold strips the case ending — and the
+     * English fold is unchanged.
+     */
+    public static String foldIn(String token, String language) {
+        return TextProfiles.ofLanguage(language).fold(token);
+    }
+
+    static String foldEnglish(String token) {
         String folded = token;
         if (folded.length() > 5 && folded.endsWith("ing")) {
             folded = folded.substring(0, folded.length() - 3);
@@ -211,19 +244,20 @@ public final class TextFeatures {
         if (text == null || text.isBlank()) {
             return out;
         }
+        TextProfile profile = TextProfiles.ofText(text);
         StringBuilder current = new StringBuilder();
         for (char ch : text.toLowerCase(Locale.ROOT).toCharArray()) {
             if (Character.isLetterOrDigit(ch)) {
                 current.append(ch);
             } else {
-                emitOriginal(current, out);
+                emitOriginal(current, out, profile);
             }
         }
-        emitOriginal(current, out);
+        emitOriginal(current, out, profile);
         return out;
     }
 
-    private static void emitOriginal(StringBuilder current, List<String> out) {
+    private static void emitOriginal(StringBuilder current, List<String> out, TextProfile profile) {
         if (current.length() == 0) {
             return;
         }
@@ -232,7 +266,7 @@ public final class TextFeatures {
         if (token.length() < 3 && !Character.isDigit(token.charAt(0))) {
             return;
         }
-        if (STOPWORDS.contains(token)) {
+        if (profile.isStopWord(token)) {
             return;
         }
         out.add(token);

@@ -97,6 +97,37 @@ public final class KnowledgeRetriever {
             totalWeight += weight;
         }
 
+        // THE BILINGUAL BRIDGE.
+        //
+        // RECON-W42.3. A Russian question and an English claim about the
+        // same concept share no token, so the retriever could not reach the
+        // claim at all - the W42 benchmark measured 0/5 on the Russian
+        // items. The bilingual lexicon says which terms name the same
+        // thing, and the counterparts join the query.
+        //
+        // The counterpart is a SEARCH TERM, not evidence: it does not make
+        // the claim true, and it does not make the two propositions
+        // equivalent. The claim is judged on its own evidence, exactly as
+        // before.
+        List<String> queryTermsExpanded = new ArrayList<>(queryTerms);
+        for (String term : queryTerms) {
+            for (String counterpart : BilingualLexicon.instance().translations(term)) {
+                String folded = TextProfiles.ENGLISH.fold(counterpart);
+                if (!queryTermsExpanded.contains(folded)) {
+                    queryTermsExpanded.add(folded);
+                    // The counterpart INHERITS the weight of the term it
+                    // translates, and the question's total weight does not
+                    // change. An English question therefore retrieves
+                    // exactly what it retrieved before the lexicon existed
+                    // - the pinned W41 support score is unchanged - while a
+                    // Russian question gains the reach it was missing.
+                    queryWeights.merge(folded, queryWeights.get(term), Double::sum);
+                }
+            }
+        }
+        final List<String> effectiveTerms = queryTermsExpanded.size() != queryTerms.size()
+                ? queryTermsExpanded : queryTerms;
+
         // The uncovered terms are reported in the words the user wrote, not
         // in the folded stems the matcher works with.
         //
@@ -117,7 +148,7 @@ public final class KnowledgeRetriever {
         for (Claim claim : snapshot.claims()) {
             Set<String> terms = claimTerms.get(claim.id());
             double matched = 0.0;
-            for (String term : queryTerms) {
+            for (String term : effectiveTerms) {
                 if (terms.contains(term)) {
                     matched += queryWeights.get(term);
                     unmatchedStems.remove(term);
