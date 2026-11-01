@@ -10,10 +10,16 @@ import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import org.jboss.resteasy.reactive.RestForm;
+import org.jboss.resteasy.reactive.multipart.FileUpload;
+import io.matrix.knowledge.acquisition.DocumentImporter;
 
 /**
  * The HTTP surface of the MATRIX Learning Workbench
@@ -153,6 +159,58 @@ public class LearningWorkbenchResource {
                 "representations", snapshot.representations().size(),
                 "revisions", snapshot.revisions().size(),
                 "derivations", snapshot.derivations().size())).build();
+    }
+
+    /**
+     * Imports a document into a workspace.
+     *
+     * <p>The mission's §5: a document becomes knowledge through the
+     * extraction pipeline, and every claim it produces carries its source,
+     * its excerpt and its location. The document travels as a multipart
+     * body; nothing is fetched from the network, and the file's size is
+     * bounded before it is read.
+     */
+    @POST
+    @Path("/workspaces/{id}/documents")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
+    public Response importDocument(@PathParam("id") String workspaceId,
+                                   @RestForm("file") FileUpload upload,
+                                   @RestForm("language") String language) {
+        if (upload == null || upload.uploadedFile() == null) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity(Map.of("error", "a file is required"))
+                    .build();
+        }
+        String filename = upload.fileName() == null ? "document.txt" : upload.fileName();
+        try {
+            java.nio.file.Path temporary = Files.createTempFile("matrix-import-", "-" + filename);
+            try {
+                Files.copy(upload.uploadedFile(), temporary, StandardCopyOption.REPLACE_EXISTING);
+                DocumentImporter.ImportResult result = new DocumentImporter(workbench.store())
+                        .importDocument(workspaceId, temporary,
+                                language == null || language.isBlank() ? null : language);
+                Map<String, Object> report = new LinkedHashMap<>();
+                report.put("workspace", result.workspaceId());
+                report.put("sourceId", result.source().sourceId());
+                report.put("filename", result.source().filename());
+                report.put("format", result.source().format().name());
+                report.put("contentHash", result.source().contentHash());
+                report.put("language", result.source().language());
+                report.put("author", result.source().author());
+                report.put("publicationDate", result.source().publicationDate());
+                report.put("extractionQuality", result.source().extractionQuality());
+                report.put("segments", result.segments());
+                report.put("claimsProposed", result.claimsProposed());
+                report.put("conceptsCreated", result.conceptsCreated());
+                return Response.ok(report).build();
+            } finally {
+                Files.deleteIfExists(temporary);
+            }
+        } catch (IOException e) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity(Map.of("error", e.getMessage()))
+                    .build();
+        }
     }
 
     /** The concepts of a workspace. */

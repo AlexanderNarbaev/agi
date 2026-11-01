@@ -95,6 +95,19 @@
           4 sources, 13 representations across four levels of abstraction.</span>
       </div>
     </div>
+    <div class="card">
+      <h2 style="margin-top:0">Import a document</h2>
+      <p class="muted">A document is read by the extraction pipeline - TXT, Markdown, HTML, PDF, EPUB -
+        and becomes claims that carry their source, their excerpt and their place in the document.
+        The claims arrive as candidates: nothing has validated them yet. Two copies of the same file
+        are one source, not two confirmations.</p>
+      <div class="row">
+        <input type="file" id="doc-file" accept=".txt,.md,.markdown,.html,.htm,.xhtml,.pdf,.epub">
+        <input type="text" id="doc-language" placeholder="language, if known" style="width:180px">
+        <button class="action" id="btn-import">Import</button>
+        <span class="muted" id="doc-note">No document imported yet.</span>
+      </div>
+    </div>
     <div class="grid" id="dash-metrics"></div>
     <div class="card">
       <h2 style="margin-top:0">Recent corrections and revisions</h2>
@@ -452,6 +465,40 @@ $('btn-load').addEventListener('click', async () => {
     $('load-note').textContent = 'Could not load the pack: ' + e.message;
   } finally {
     $('btn-load').disabled = false;
+  }
+});
+
+$('btn-import').addEventListener('click', async () => {
+  const input = $('doc-file');
+  if (!input.files || !input.files.length) {
+    $('doc-note').textContent = 'Choose a document first.';
+    return;
+  }
+  $('btn-import').disabled = true;
+  $('doc-note').textContent = 'Reading the document…';
+  try {
+    const body = new FormData();
+    body.append('file', input.files[0]);
+    const language = $('doc-language').value.trim();
+    if (language) body.append('language', language);
+    const r = await fetch('/v1/workbench/workspaces/' + WS + '/documents', {
+      method: 'POST', body: body
+    });
+    if (!r.ok) {
+      const error = await r.json().catch(function () { return {}; });
+      throw new Error(error.error || ('the server answered ' + r.status));
+    }
+    const report = await r.json();
+    $('doc-note').textContent = 'Imported ' + report.filename + ' (' + report.format +
+      '): ' + report.segments + ' segment(s), ' + report.claimsProposed +
+      ' candidate claim(s), ' + report.conceptsCreated + ' new concept(s). Source ' +
+      report.sourceId + ', hash ' + report.contentHash.slice(0, 12) + '…';
+    await loadKnowledge();
+    await loadStatus();
+  } catch (e) {
+    $('doc-note').textContent = 'Could not import the document: ' + e.message;
+  } finally {
+    $('btn-import').disabled = false;
   }
 });
 
