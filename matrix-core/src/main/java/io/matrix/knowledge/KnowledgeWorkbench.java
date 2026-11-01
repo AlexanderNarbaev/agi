@@ -9,6 +9,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -157,8 +158,64 @@ public class KnowledgeWorkbench implements AutoCloseable {
     public Answer ask(String workspaceId, String question, AbstractionLevel level) {
         KnowledgeSnapshot snapshot = workspace(workspaceId);
         Answer answer = new KnowledgeRetriever(snapshot).answer(question, level);
+
+        // WHAT THE QUESTION DEMANDS IS CHECKED BEFORE THE ANSWER IS.
+        //
+        // RECON-W42.1. The support score could not tell an answerable
+        // question from an unanswerable one: on the W42 benchmark the two
+        // distributions overlap (the answerable items scored 0.25 to 0.88,
+        // the unanswerable ones the system wrongly answered scored 0.22 to
+        // 0.63), so no threshold separates them. The decision needs
+        // information the score does not carry - what KIND of answer the
+        // question asks for.
+        QuestionDemand.Analysis demand = QuestionDemand.analyse(question,
+                new LinkedHashSet<>(answer.unmatchedTerms()),
+                QuestionDemand.contentTerms(question));
+        answer = applyDemand(answer, demand);
+
         recordAsk(workspaceId, question, answer.unmatchedTerms(), answer.answered());
         return answer;
+    }
+
+    /**
+     * Applies the demand analysis to a retrieved answer.
+     *
+     * <p>Three of the four demands are refusals, each with its reason; the
+     * fourth — an ambiguous question — becomes a clarification, because the
+     * mission's §6 says an ambiguous request should ask rather than guess.
+     */
+    private Answer applyDemand(Answer answer, QuestionDemand.Analysis demand) {
+        if (demand.kind() == QuestionDemand.Kind.KNOWLEDGE
+                && demand.demandCoverage() >= QuestionDemand.MINIMUM_DEMAND_COVERAGE) {
+            return answer;
+        }
+        if (demand.kind() == QuestionDemand.Kind.AMBIGUOUS) {
+            List<String> limitations = new ArrayList<>(answer.limitations());
+            limitations.add(demand.reason());
+            limitations.add(demand.clarification());
+            return new Answer(answer.question(), answer.level(), false,
+                    demand.reason() + " The system asks rather than guesses: "
+                            + demand.clarification(),
+                    "", answer.supportScore(), answer.support(), answer.concepts(),
+                    answer.claims(), answer.sources(), limitations, answer.gaps(),
+                    answer.unmatchedTerms());
+        }
+        String reason = demand.kind() == QuestionDemand.Kind.KNOWLEDGE
+                ? "The workspace covers only " + Math.round(demand.demandCoverage() * 100)
+                        + "% of the question's content terms, and a question the workspace does "
+                        + "not cover is not one to guess at."
+                : demand.reason();
+        List<String> limitations = new ArrayList<>(answer.limitations());
+        limitations.add(reason);
+        if (demand.kind() == QuestionDemand.Kind.KNOWLEDGE
+                && !demand.unmatchedTerms().isEmpty()) {
+            limitations.add("Not covered by the workspace: "
+                    + String.join(", ", demand.unmatchedTerms()));
+        }
+        return new Answer(answer.question(), answer.level(), false, reason,
+                "", answer.supportScore(), answer.support(), answer.concepts(),
+                answer.claims(), answer.sources(), limitations, answer.gaps(),
+                answer.unmatchedTerms());
     }
 
     /** What the workspace does not know. */

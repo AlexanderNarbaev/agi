@@ -128,6 +128,8 @@ public final class HierarchicalMemory {
     }
     private final Map<String, Set<String>> domainIndex = new ConcurrentHashMap<>();
     private final AtomicLong idCounter = new AtomicLong(0);
+    /** The entries removed to keep the memory within its capacity. */
+    private final AtomicLong evictedCount = new AtomicLong(0);
     private final int maxEntries;
 
     public HierarchicalMemory(int maxEntries) {
@@ -357,17 +359,43 @@ public final class HierarchicalMemory {
         }
     }
 
+    /**
+     * Evicts one entry when the memory is over capacity.
+     *
+     * <p>RECON-W42.1 fixed a defect here. The eviction used to look only at
+     * L0 — the raw artifacts — while the production path writes only L2
+     * (the pipeline stores every interaction as an L2 module). The eviction
+     * therefore never fired on the live path, and the entry map grew
+     * without bound: the capacity was checked, the check always passed, and
+     * nothing was ever removed.
+     *
+     * <p>The rule now is what the name says: evict from the lowest level
+     * that actually holds something. The entries removed are counted, so the
+     * bound is observable rather than asserted.
+     */
     private void evictLowestLevel() {
-        Set<String> l0Ids = levelIndex.get(Level.L0_ARTIFACT);
-        if (l0Ids != null && !l0Ids.isEmpty()) {
-            String oldest = l0Ids.stream()
+        for (Level level : Level.values()) {
+            Set<String> ids = levelIndex.get(level);
+            if (ids == null || ids.isEmpty()) {
+                continue;
+            }
+            String oldest = ids.stream()
                     .map(entries::get)
                     .filter(Objects::nonNull)
                     .min(Comparator.comparingLong(MemoryEntry::lastAccessedAt))
                     .map(MemoryEntry::id)
                     .orElse(null);
-            if (oldest != null) remove(oldest);
+            if (oldest != null) {
+                remove(oldest);
+                evictedCount.incrementAndGet();
+                return;
+            }
         }
+    }
+
+    /** The entries removed to keep the memory within its capacity. */
+    public long evictedCount() {
+        return evictedCount.get();
     }
 
     private double computeDriftScore(MemoryEntry entry, String otherDomain) {

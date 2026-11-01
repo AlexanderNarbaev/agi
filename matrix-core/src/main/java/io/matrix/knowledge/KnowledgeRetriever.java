@@ -99,8 +99,20 @@ public final class KnowledgeRetriever {
 
         // The uncovered terms are reported in the words the user wrote, not
         // in the folded stems the matcher works with.
+        //
+        // RECON-W42.1 fixed a defect here. The set of originals was built
+        // and never reduced, so the answer reported EVERY word of the
+        // question as "not covered by the workspace" - including the words
+        // that were covered and the stopwords. The stem set was reduced
+        // correctly; the original set was not. The two are now reduced
+        // together, through the stem each original folds to.
         Set<String> unmatched = new LinkedHashSet<>(TextFeatures.originalTokens(question));
         Set<String> unmatchedStems = new LinkedHashSet<>(queryTerms);
+        Map<String, Set<String>> originalsByStem = new LinkedHashMap<>();
+        for (String original : unmatched) {
+            originalsByStem.computeIfAbsent(TextFeatures.fold(original), key -> new LinkedHashSet<>())
+                    .add(original);
+        }
         List<ScoredClaim> scored = new ArrayList<>();
         for (Claim claim : snapshot.claims()) {
             Set<String> terms = claimTerms.get(claim.id());
@@ -109,6 +121,10 @@ public final class KnowledgeRetriever {
                 if (terms.contains(term)) {
                     matched += queryWeights.get(term);
                     unmatchedStems.remove(term);
+                    Set<String> originals = originalsByStem.remove(term);
+                    if (originals != null) {
+                        unmatched.removeAll(originals);
+                    }
                 }
             }
             if (matched > 0.0) {

@@ -41,6 +41,23 @@ public final class TextFeatures {
     }
 
     /**
+     * Whether a word carries no retrieval signal.
+     *
+     * <p>RECON-W42.1. The stopword list was private, so a caller that needed
+     * to know which of a question's terms carry signal had to guess. The
+     * demand analysis needs exactly that: the demand of a question is
+     * carried by its content terms.
+     */
+    public static boolean isStopWord(String word) {
+        return word != null && STOPWORDS.contains(word);
+    }
+
+    /** The stopword list, for a caller that needs to show it. */
+    public static Set<String> stopWords() {
+        return STOPWORDS;
+    }
+
+    /**
      * Split a text into retrieval tokens: lower-cased, punctuation removed,
      * stopwords dropped, and a deliberately conservative suffix fold so that
      * a plural or a gerund still matches its stem.
