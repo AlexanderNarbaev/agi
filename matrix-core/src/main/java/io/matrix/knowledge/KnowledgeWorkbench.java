@@ -717,19 +717,42 @@ public class KnowledgeWorkbench implements AutoCloseable {
                         + "written?\", not a promise that the disk is healthy.");
 
         // The backup state: there is none, and saying so is the honest report.
+        //
+        // The store runs in WAL mode, so the committed rows may live in the
+        // write-ahead log rather than in the database file. Copying the
+        // database file ALONE therefore loses whatever has not yet been
+        // checkpointed - and that is not a small thing: it is the assessment
+        // outcomes and the asked questions, the records the interface calls
+        // "the evidence that something was learned". An experiment on this
+        // wave's own store showed the naive copy losing every one of them.
+        // The instruction must therefore name all three files.
         Path wal = path.resolveSibling(path.getFileName() + "-wal");
+        Path shm = path.resolveSibling(path.getFileName() + "-shm");
         long walBytes = 0L;
         try {
             walBytes = Files.exists(wal) ? Files.size(wal) : 0L;
         } catch (IOException e) {
             walBytes = -1L;
         }
-        integrity.put("backupState", "none: the store is a single SQLite file. A copy of "
-                + path.getFileName() + " is the backup, and taking one is the operator's job.");
+        integrity.put("backupState",
+                "none: the store is a single SQLite database in WAL mode, so a backup is THREE "
+                        + "files, not one. Copy " + path.getFileName() + ", "
+                        + path.getFileName() + "-wal and " + path.getFileName() + "-shm "
+                        + "together, while the application is not writing. Copying only "
+                        + path.getFileName() + " loses everything the write-ahead log has not "
+                        + "yet checkpointed into it - the assessment outcomes and the asked "
+                        + "questions among it. Taking the copy is the operator's job.");
+        integrity.put("backupFiles", List.of(path.getFileName().toString(),
+                path.getFileName() + "-wal", path.getFileName() + "-shm"));
         integrity.put("writeAheadLogBytes", walBytes);
         if (walBytes > 8 * 1024 * 1024) {
             warnings.add("The write-ahead log holds " + walBytes + " bytes. The data is durable, "
                     + "but a checkpoint would fold it back into the database file.");
+        }
+        if (walBytes > 0) {
+            warnings.add("The write-ahead log holds " + walBytes + " bytes of committed rows. "
+                    + "A backup must include " + path.getFileName() + "-wal, or those rows "
+                    + "are not in the backup.");
         }
 
         // The recovery warnings.

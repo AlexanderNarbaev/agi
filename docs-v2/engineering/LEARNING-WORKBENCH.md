@@ -128,7 +128,14 @@ the teacher never saw. The result shows the score before, the score after,
 the gain, the per-item measurement, and whether the declared expectation was
 met.
 
-Two runs, both measured on this machine:
+Two runs, both measured on this machine. **These are the W40
+measurements.** RECON-W41 found that this path measures whether the *lesson
+contained* the item's key terms — the learner it measures echoes the taught
+statements — and it rebuilt the experiment around an independent closed-book
+learner, four disjoint phases, a leakage audit and a calibration report. The
+rebuilt experiment is reachable at
+`POST /v1/workbench/workspaces/{id}/teach-back-experiment`; the numbers below
+are kept as the historical record of the path the interface still calls.
 
 | Taught at | Declared expectation | Before | After | Gain | Outcome |
 |---|---|---|---|---|---|
@@ -150,6 +157,13 @@ condition for transfer and a far from sufficient one: a person may
 understand an account without reusing its wording, and a machine may
 reproduce the wording without understanding it. This is a **machine-to-machine
 result** and says nothing about human teaching effectiveness.
+
+**The rebuilt experiment, for comparison.** Measured on the same concept
+(the photosynthesis account, the adversarial item set): PRE 0/2, POST 1/1,
+**DELAYED 0/1**, TRANSFER 1/2; the structured learner 1.00 against the
+legacy containment score 1.00 and a lexical baseline of 0.00; the
+calibration over 6 forecasts gives a Brier score of 0.322. The delayed phase
+**fails**, which is the point of the rebuild — the old path could not fail.
 
 ## 7. Correct what the workspace believes
 

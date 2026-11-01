@@ -16,11 +16,19 @@ The record of an architectural decision that three independent research
 streams converged on, and of the measurement discipline that follows from it.
 
 It is **not** a claim that MATRIX now reasons well. It is not: the reasoning
-engine is at its first increment, the second domain does not exist yet, and
-the teach-back is still the containment measurement RECON-W40 built. What
-this document fixes is the *shape* of the epistemic model and the *contract*
-each measurement has to satisfy, so that the later increments cannot quietly
-reintroduce the defect RECON-W41 found.
+engine is at its first increment. What this document fixes is the *shape* of
+the epistemic model and the *contract* each measurement has to satisfy, so
+that the later increments cannot quietly reintroduce the defect RECON-W41
+found.
+
+**Where this document stands now (updated 2026-11-01 by RECON-W42).** The
+second domain now exists — the propositional-logic pack with 11 concepts,
+28 claims, 2 sources, 8 representations and 3 recorded derivations, loadable
+from the application at `POST /workspaces/logic/load`. The teach-back has
+been rebuilt around an independent closed-book learner over four disjoint
+phases, with a leakage audit and a calibration report, and it **fails** on
+the delayed phase. The two sentences this document opened with were true
+when it was written and are now historical.
 
 ## 1. The defect this wave found
 
