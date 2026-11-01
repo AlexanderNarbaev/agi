@@ -42,6 +42,8 @@ public final class KnowledgeRetriever {
     private final Map<String, List<Representation>> representationsByConcept = new LinkedHashMap<>();
     private final Map<String, Set<String>> claimTerms = new LinkedHashMap<>();
     private final Map<String, Double> idf;
+    /** The corrector for the typos in a question (RECON-W42.3). */
+    private final TypoCorrector corrector;
 
     public KnowledgeRetriever(KnowledgeSnapshot snapshot) {
         this(snapshot, DEFAULT_MINIMUM_COVERAGE);
@@ -50,6 +52,7 @@ public final class KnowledgeRetriever {
     public KnowledgeRetriever(KnowledgeSnapshot snapshot, double minimumCoverage) {
         this.snapshot = snapshot;
         this.minimumCoverage = minimumCoverage;
+        this.corrector = TypoCorrector.over(snapshot);
         for (Concept concept : snapshot.concepts()) {
             conceptsById.put(concept.id(), concept);
         }
@@ -122,6 +125,30 @@ public final class KnowledgeRetriever {
                     // - the pinned W41 support score is unchanged - while a
                     // Russian question gains the reach it was missing.
                     queryWeights.merge(folded, queryWeights.get(term), Double::sum);
+                }
+            }
+        }
+        // THE TYPOS ARE CORRECTED, AND THE ORIGINAL IS KEPT.
+        //
+        // RECON-W42.3. "What is fotosynthesis?" shares no token with the
+        // claim it is about, and the workspace refused it. The correction
+        // is close to the question's own vocabulary, and the original word
+        // stays in the query as well - so the answer is found AND the
+        // answer says which word it changed.
+        List<TypoCorrector.Correction> corrections = corrector.corrections(question);
+        if (!corrections.isEmpty()) {
+            for (TypoCorrector.Correction correction : corrections) {
+                String folded = TextProfiles.ofLanguage(TextProfiles.detect(question))
+                        .fold(correction.corrected());
+                if (!queryTermsExpanded.contains(folded)) {
+                    queryTermsExpanded.add(folded);
+                    // The correction INHERITS the weight of the word it
+                    // replaces, so that a question with a typo is weighted
+                    // exactly like the question without one.
+                    String originalStem = TextProfiles.ofLanguage(TextProfiles.detect(question))
+                            .fold(correction.original());
+                    double weight = queryWeights.getOrDefault(originalStem, maxIdf());
+                    queryWeights.merge(folded, weight, Double::sum);
                 }
             }
         }
@@ -281,6 +308,11 @@ public final class KnowledgeRetriever {
         }
         if (!unmatchedStems.isEmpty()) {
             limitations.add("Not covered by the workspace: " + String.join(", ", unmatched));
+        }
+        for (TypoCorrector.Correction correction : corrector.corrections(question)) {
+            limitations.add("Read \"" + correction.original() + "\" as \""
+                    + correction.corrected() + "\" (" + correction.distance() + " edit(s)); "
+                    + "the question is kept as it was written.");
         }
 
         return new Answer(question, used, true, null,
