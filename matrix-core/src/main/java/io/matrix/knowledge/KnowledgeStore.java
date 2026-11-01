@@ -1705,6 +1705,57 @@ public final class KnowledgeStore implements AutoCloseable {
         return transitions;
     }
 
+    /**
+     * The concept with this name in the workspace, created if it is absent.
+     *
+     * <p>RECON-W42.2. The store had no way to add a concept: the concepts
+     * came from the curated knowledge packages, and `KnowledgeRefiner`
+     * could not create one either — so a genuinely new topic had no runtime
+     * entry point even through the correction path. The acquisition
+     * pipeline needs one: a document's subject IS a new concept.
+     *
+     * <p>The identity is derived from the workspace and the name, so
+     * importing the same document twice finds the same concept rather than
+     * making a second one.
+     *
+     * @param workspaceId the workspace
+     * @param name the concept's name
+     * @param definition what the concept is, when the document says so
+     * @param domain the concept's domain, when the document says so
+     * @return the concept, existing or new
+     */
+    public Concept ensureConcept(String workspaceId, String name, String definition,
+                                  String domain) {
+        if (workspaceId == null || workspaceId.isBlank()) {
+            throw new IllegalArgumentException("a workspace is required");
+        }
+        if (name == null || name.isBlank()) {
+            throw new IllegalArgumentException("a concept name is required");
+        }
+        String id = Ids.digest(workspaceId + "|concept|" + name.strip().toLowerCase(java.util.Locale.ROOT));
+        for (Concept concept : concepts(workspaceId)) {
+            if (concept.id().equals(id)) {
+                return concept;
+            }
+        }
+        Concept concept = new Concept(id, workspaceId, name.strip(), definition, domain,
+                java.time.Instant.now().toString());
+        try (PreparedStatement ps = connection.prepareStatement(
+                "INSERT OR IGNORE INTO concept(id, workspace_id, name, definition, domain, created_at) "
+                        + "VALUES (?,?,?,?,?,?)")) {
+            ps.setString(1, concept.id());
+            ps.setString(2, concept.workspaceId());
+            ps.setString(3, concept.name());
+            ps.setString(4, concept.definition());
+            ps.setString(5, concept.domain());
+            ps.setString(6, concept.createdAt());
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            throw new IllegalStateException("failed to create the concept " + name, e);
+        }
+        return concept;
+    }
+
     /** The recorded conflicts of a workspace. */
     public List<Contradiction> contradictions(String workspaceId) {
         return query("SELECT id, workspace_id, claim_a_id, claim_b_id, kind, detected_by, "
