@@ -1756,3 +1756,57 @@ matrix-core/src/main/java/io/matrix/api/*.java matrix-core/src/main/java/io/matr
 - `docs-v2/INDEX.md` — раздел W41 ✓ ✓.
 - `docs-v2/engineering/MUTATION-REPORT.md` — перегенерирован: **27 мутантов,
   25 убито, 2 выжили (записаны с находками), 0 невалидных, 0 дрейфа** ✓ ✓.
+
+# RECON-W41 — финальная проверка волны (2026-11-01)
+
+## Формальный гейт — 12/12
+
+```
+OK BotEthicsPipeline 481 состояний     OK HashChain 188 416
+OK BrcStep 1501                         OK KnowledgeAxes 16 539
+OK ConjugateBudgeterDP 16 381           OK KnowledgeLifecycle 2 808
+OK Consensus 55 057                     OK KnowledgeStore 145
+OK FrozenEthicalFNL 65                  OK MctsLatsVisit 326 593
+OK MemoryM4Causal 396 577               OK MPDTNeuron 39 568
+```
+
+Каждая спецификация — exit 0 ✓ ✓.
+
+## Мутационный гейт — 27 мутантов
+
+25 убиты ✓ · 2 выжили и **записаны с находками** ✓ · 0 невалидных ✓ ·
+0 дрейфа от записанного ожидания ✓ ✓.
+
+## Тесты — 121 класс, 1 212 тестов, 0 падений
+
+`io.matrix.knowledge.*`, `io.matrix.memory.*`, `io.matrix.brain.*`,
+`io.matrix.api.*`, `io.matrix.rag.*` ✓ ✓. Полный прогон репозитория **не
+выполнялся** — OOM-риск и правило владельца ✓ ✓.
+
+## Живой прогон — весь путь
+
+Приложение стартует за 1,3–1,7 с ✓ ✓.
+
+| Шаг | Результат |
+|---|---|
+| Create | photosynthesis 8/17/4/18/13, logic 11/28/2/28/8 + 3 вывода ✓ |
+| Learn | ответ: 3 источника, 7 утверждений, support score 0.84 с раскрытием ✓ |
+| Отказ | `answered: false`, незакрытые термы `boiling, point, mercury` ✓ |
+| Assess | исход записан, `heldOut: true` ✓ |
+| Reason | задача DERIVATION, 3 правила, все DERIVED_VALID ✓ |
+| Goals | start → complete → checkpoint ✓ |
+| Teach-back | PRE 0/2, POST 1/1, **DELAYED 0/1**, TRANSFER 1/2; structured 1.00, baseline 0.00 ✓ |
+| Force stop | `kill -9` ✓ |
+| Restart | та же схема v8, счётчики, цель, подзадача, бюджет, чекпойнт, исход, порядок посылок — всё на месте ✓ |
+| Reload | цель отвечает: «Learn the Calvin cycle», IN_PROGRESS ✓ |
+| Reassess | тот же ответ 0.84 ✓ |
+| Integrity | последняя запись, состояние бэкапа, размер WAL, предупреждения о восстановлении ✓ |
+
+## Что осталось незакрытым — честно
+
+- Полный прогон репозитория не выполнялся (OOM-риск) ✓.
+- Отложенная фаза teach-back проваливается — это и было целью перестройки ✓.
+- Support score не калиброван и не выдаётся за вероятность ✓.
+- `ConflictsAreKept` — вакуумное свойство, записано как находка ✓.
+- История когнитивного конвейера не ограничена (унаследовано от W40) ✓.
+- Третий домен и планировщик целей — следующая волна ✓.
