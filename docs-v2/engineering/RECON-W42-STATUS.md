@@ -15,7 +15,8 @@ able to resume from the repository alone.
 | **W42.1 — Unified learning and knowledge core** | **DONE** | `W42.1-LEARNING-CORE-REPORT.md`; the state machine, the planner, the demand check, the memory's bound, the teach-back gate; abstention quality 0.400 → 0.700 |
 | **W42.2 — Universal knowledge acquisition** | **DONE (the core)** | TXT/MD/HTML/PDF/EPUB through libraries; the source record; the promotion layers; the independence rule; the endpoint and the interface — **verified live**: a concept acquired from a real document became retrievable with its source |
 | W42.2 — Universal knowledge acquisition | not started | |
-| W42.3 — Dialog Intelligence | not started | |
+| **W42.3 — Dialog Intelligence** | **DONE** | `W42.3-DIALOG-INTELLIGENCE-REPORT.md`; the localised text layer, the bilingual lexicon, the typo corrector, the bounded conversation, the eight dialogue classes, 168 measured cases — accuracy 0.583 → 0.792, the Russian 0/5 → 4/5 |
+| W42.4 — Learning and assessment | not started | the next wave |
 | W42.4 — Learning and assessment | not started | |
 | W42.5 — Cognitive integration | not started | |
 | W42.6 — Local Alpha v0.3 | not started | |
@@ -40,6 +41,15 @@ two waves.
 | `25fd40bf` | Something selects the next learning action |
 | `fa7075f6` | The question's demand is checked before the answer is; the memory's bound; the tokenizer's tests |
 | `794b3dd7` | The interface runs the measurement that can fail |
+| `0e820255` | A document becomes knowledge the store can trace |
+| `0230a449` | The document import is reachable from the interface |
+| `e18d7cbe` | The text layer speaks Russian |
+| `8aa6a961` | The typos are corrected, and the original is kept |
+| `d60916f6` | The conversation remembers, and it is bounded |
+| `eeb412e6` | The class of an utterance is recognised |
+| `21fbed22` | The dialogue is visible, and the navigation loads its tabs |
+| `8f3cad04` | A term that reached the knowledge is not reported as uncovered |
+| `7942838f` | The dialogue has a hundred and sixty-eight cases, and they are measured |
 
 **Starting commit:** `0296e83e` (W41's final verification).
 **The remote HEAD was verified, not assumed** — `git fetch origin --prune`

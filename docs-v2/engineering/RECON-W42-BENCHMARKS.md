@@ -225,5 +225,52 @@ improvement in the refusal rate; it is a trade.
 
 **Still failing, and named:** both FALSE_PREMISE items are answered; "who
 invented propositional logic" is answered; both paraphrases are refused;
-all five Russian items are refused; the TRANSFER items are answered without
-carrying the conclusion. These are W42.2's and W42.3's work.
+the TRANSFER items are answered without carrying the conclusion.
+
+---
+
+## 7. The W42.3 result — the text layer speaks Russian
+
+**Measured after the localisation and the typo corrector**, against the same
+benchmark, the same store and the same instrument:
+
+| | W42.0 | W42.1 | W42.3 |
+|---|---|---|---|
+| answer accuracy | 0.583 | 0.583 | **0.792** |
+| abstention quality | 0.400 | 0.700 | **0.700** |
+| BM25 overlap | 0.593 | 0.593 | 0.594 |
+| the Russian, all of it | 0/5 | 0/5 | **4/5** |
+| CROSS_LINGUAL | 0/4 | 0/4 | **3/4** |
+| MISSPELLED | 3/4 | 3/4 | **4/4** |
+
+**What produced the change:** the localised text layer (the Russian
+stopwords, the case-ending fold, the language detection), the bilingual
+lexicon that bridges the two languages, and the typo corrector.
+
+**What the measurement refused:** the first version of the typo corrector
+used a flat edit distance of two. It turned "work" into "core" and "point"
+into "plant" — wrong corrections that RESCUED questions the workspace should
+have refused, and **the abstention quality fell from 0.700 to 0.400**. The
+corrector was made conservative — the threshold scales with the word's
+length, an ambiguous correction is refused, and a two-edit correction must
+land on one of the workspace's own concepts. The accuracy gain survived and
+the abstention came back.
+
+## 8. The dialogue cases
+
+`w42-dialogue-cases-v1.json` — **168 cases**, 133 in English and 35 in
+Russian, in 22 categories: the mission's §5 list of the cases a dialogue
+must survive, plus the eight dialogue classes of §5.
+
+| measured | value |
+|---|---|
+| the class of the utterance | **168/168 (1.000)** |
+| the answerability, over the in-scope cases | **0.934** |
+| the refusals that had to happen | 2/4 |
+
+**The scope is explicit and reported.** A case about a subject the workspace
+does not hold cannot be answered, and counting it as a failure would
+measure the workspace's coverage rather than the dialogue's behaviour. The
+scope is computed from the workspace's own vocabulary; a case that is out of
+scope and was answered anyway is a scope disagreement, not a dialogue
+failure — and it is still named in the report.

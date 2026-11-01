@@ -61,7 +61,19 @@ provenance rules.
 
 ---
 
-## W42.3 — Dialog Intelligence
+## W42.3 — Dialog Intelligence — **DONE**
+
+**Delivered:** the localised text layer ✓ ✓, the bilingual lexicon ✓ ✓, the
+typo corrector with the original preserved ✓ ✓, the bounded conversation
+with reference resolution ✓ ✓, the eight dialogue classes ✓ ✓, the
+168-case dialogue benchmark ✓ ✓, and the language note on the answer ✓ ✓.
+**The report:** `W42.3-DIALOG-INTELLIGENCE-REPORT.md`.
+
+**Left, stated plainly:** the answer is not translated ✓ ✓; a failed
+explanation does not yet produce a different explanation ✓ ✓; the
+conversation is in memory and does not survive a restart ✓ ✓.
+
+## W42.3 (superseded — the original plan)
 
 **Exit condition:** *a user can have a meaningful multi-turn dialogue about
 imported materials.*
