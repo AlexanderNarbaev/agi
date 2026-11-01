@@ -113,9 +113,13 @@ public final class KnowledgeRetriever {
         // equivalent. The claim is judged on its own evidence, exactly as
         // before.
         List<String> queryTermsExpanded = new ArrayList<>(queryTerms);
+        // The stem each counterpart came from, so that a term the
+        // counterpart covered is not also reported as uncovered.
+        Map<String, String> counterpartOf = new LinkedHashMap<>();
         for (String term : queryTerms) {
             for (String counterpart : BilingualLexicon.instance().translations(term)) {
                 String folded = TextProfiles.ENGLISH.fold(counterpart);
+                counterpartOf.putIfAbsent(folded, term);
                 if (!queryTermsExpanded.contains(folded)) {
                     queryTermsExpanded.add(folded);
                     // The counterpart INHERITS the weight of the term it
@@ -182,6 +186,15 @@ public final class KnowledgeRetriever {
                     Set<String> originals = originalsByStem.remove(term);
                     if (originals != null) {
                         unmatched.removeAll(originals);
+                    }
+                    // A term that reached the knowledge through its
+                    // counterpart is COVERED: reporting "not covered:
+                    // фотосинтез" about a question the workspace just
+                    // answered is a false report.
+                    String original = counterpartOf.get(term);
+                    if (original != null) {
+                        unmatched.remove(original);
+                        unmatchedStems.remove(original);
                     }
                 }
             }
