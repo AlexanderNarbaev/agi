@@ -278,10 +278,15 @@ public class KnowledgeWorkbench implements AutoCloseable {
                 + String.join(", ", claimIds) + ". A correction needs the corrected statement AND "
                 + "the evidence for it; until both arrive, the claims stand unchanged and nothing "
                 + "is overwritten.");
-        return new Answer(answer.question(), answer.level(), answer.answered(),
-                answer.abstentionReason(), answer.statement(), answer.supportScore(),
-                answer.support(), answer.concepts(), answer.claims(), answer.sources(),
-                answer.limitations(), gaps, answer.unmatchedTerms());
+        // The answer is NOT a knowledge answer: the system did not answer a
+        // question, it asked for the correction's evidence. Saying so is
+        // honest; answering the question anyway would be answering a
+        // question the user did not ask.
+        return new Answer(answer.question(), answer.level(), false,
+                "The user corrected the previous answer. The affected claims are named, and "
+                        + "nothing is overwritten until the correction and its evidence arrive.",
+                "", answer.supportScore(), answer.support(), answer.concepts(), answer.claims(),
+                answer.sources(), answer.limitations(), gaps, answer.unmatchedTerms());
     }
 
     /** The limitations with one more note. */
