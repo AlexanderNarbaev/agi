@@ -102,10 +102,16 @@ public final class AssessmentDataset {
         List<AssessmentItem> items = new ArrayList<>();
         for (ItemEntry entry : file.items) {
             String conceptId = resolveConcept(snapshot, entry.concept);
+            List<AssessmentItem.Alternative> alternatives = new ArrayList<>();
+            for (AlternativeEntry alternative : entry.alternatives) {
+                alternatives.add(new AssessmentItem.Alternative(
+                        alternative.id, alternative.text, alternative.misconceptionId));
+            }
             items.add(new AssessmentItem(entry.id, conceptId,
                     LearningDimension.valueOf(entry.dimension.trim().toUpperCase(Locale.ROOT)),
                     entry.prompt, entry.keyTerms, entry.difficulty,
-                    entry.variant == null ? "standard" : entry.variant, entry.critical, entry.heldOut));
+                    entry.variant == null ? "standard" : entry.variant, entry.critical, entry.heldOut,
+                    alternatives, entry.correctAlternativeId));
         }
         return new AssessmentDataset(file.dataset.id, file.dataset.version, file.dataset.description, items);
     }
@@ -140,6 +146,16 @@ public final class AssessmentDataset {
     }
 
     @JsonIgnoreProperties(ignoreUnknown = true)
+    /** One answer a learner may choose. */
+    static final class AlternativeEntry {
+        @JsonProperty("id")
+        public String id;
+        @JsonProperty("text")
+        public String text;
+        @JsonProperty("misconceptionId")
+        public String misconceptionId;
+    }
+
     static final class ItemEntry {
         @JsonProperty("id")
         public String id;
@@ -159,5 +175,11 @@ public final class AssessmentDataset {
         public boolean critical;
         @JsonProperty("heldOut")
         public boolean heldOut;
+        /** The answers a learner may choose, with the key and the misconception bindings. */
+        @JsonProperty("alternatives")
+        public List<AlternativeEntry> alternatives = List.of();
+        /** The identifier of the correct alternative. */
+        @JsonProperty("correctAlternativeId")
+        public String correctAlternativeId;
     }
 }
