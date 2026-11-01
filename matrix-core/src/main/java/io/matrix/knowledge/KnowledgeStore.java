@@ -54,7 +54,7 @@ import java.util.Set;
 public final class KnowledgeStore implements AutoCloseable {
 
     /** The schema version this build writes. */
-    public static final int SCHEMA_VERSION = 6;
+    public static final int SCHEMA_VERSION = 7;
 
     private static final ObjectMapper JSON = new ObjectMapper();
 
@@ -349,6 +349,21 @@ public final class KnowledgeStore implements AutoCloseable {
     }
 
     private int migrateFrom(int version) throws SQLException {
+        if (version == 6) {
+            // v7 adds the recorded conflicts. A conflict is a record ABOUT two
+            // claims; it neither deletes nor demotes either of them, and the
+            // store keeps no count of records agreeing with one side.
+            try (Statement st = connection.createStatement()) {
+                st.execute("CREATE TABLE IF NOT EXISTS contradiction ("
+                        + "id TEXT PRIMARY KEY, workspace_id TEXT NOT NULL, "
+                        + "claim_a_id TEXT NOT NULL, claim_b_id TEXT NOT NULL, "
+                        + "kind TEXT NOT NULL, detected_by TEXT NOT NULL, recorded_at TEXT NOT NULL)");
+                st.execute("CREATE INDEX IF NOT EXISTS idx_contradiction_workspace "
+                        + "ON contradiction(workspace_id)");
+            }
+            writeSchemaVersion(7);
+            return 7;
+        }
         if (version == 5) {
             // v6 adds the epistemic axes the claim now carries, and the
             // table of recorded derivations.
@@ -491,12 +506,20 @@ public final class KnowledgeStore implements AutoCloseable {
 
     private void deleteWorkspace(String workspaceId) throws SQLException {
         for (String table : List.of("revision", "prerequisite", "representation", "evidence",
-                "claim", "source", "concept")) {
+                "derivation", "contradiction", "claim", "source", "concept")) {
             try (PreparedStatement ps = connection.prepareStatement(
                     "DELETE FROM " + table + " WHERE workspace_id = ?")) {
                 ps.setString(1, workspaceId);
                 ps.executeUpdate();
             }
+        }
+        // The premise table has no workspace of its own: a premise belongs
+        // to its derivation, so the derivations' premises go with them.
+        try (PreparedStatement ps = connection.prepareStatement(
+                "DELETE FROM derivation_premise WHERE derivation_id IN "
+                        + "(SELECT id FROM derivation WHERE workspace_id = ?)")) {
+            ps.setString(1, workspaceId);
+            ps.executeUpdate();
         }
         try (PreparedStatement ps = connection.prepareStatement("DELETE FROM workspace WHERE id = ?")) {
             ps.setString(1, workspaceId);
@@ -568,6 +591,33 @@ public final class KnowledgeStore implements AutoCloseable {
                 ps.setString(15, c.createdAt());
                 ps.setString(16, c.updatedAt());
                 ps.executeUpdate();
+            }
+        }
+        for (Derivation derivation : snapshot.derivations()) {
+            try (PreparedStatement ps = connection.prepareStatement(
+                    "INSERT OR REPLACE INTO derivation(id, workspace_id, rule_id, rule_name, "
+                            + "connective, conclusion_claim_id, status, recorded_at) "
+                            + "VALUES (?,?,?,?,?,?,?,?)")) {
+                ps.setString(1, derivation.id());
+                ps.setString(2, derivation.workspaceId());
+                ps.setString(3, derivation.ruleId());
+                ps.setString(4, derivation.ruleName());
+                ps.setString(5, derivation.connective().name());
+                ps.setString(6, derivation.conclusionClaimId());
+                ps.setString(7, derivation.status().name());
+                ps.setString(8, derivation.recordedAt());
+                ps.executeUpdate();
+            }
+            try (PreparedStatement ps = connection.prepareStatement(
+                    "INSERT OR REPLACE INTO derivation_premise(derivation_id, ordinal, claim_id) "
+                            + "VALUES (?,?,?)")) {
+                for (int i = 0; i < derivation.premiseClaimIds().size(); i++) {
+                    ps.setString(1, derivation.id());
+                    ps.setInt(2, i);
+                    ps.setString(3, derivation.premiseClaimIds().get(i));
+                    ps.addBatch();
+                }
+                ps.executeBatch();
             }
         }
         for (Evidence e : snapshot.evidence()) {
@@ -1292,6 +1342,41 @@ public final class KnowledgeStore implements AutoCloseable {
                 rs.getString("recorded_at")));
     }
 
+    /**
+     * Records a conflict between two claims.
+     *
+     * <p>The record is about the two claims, not about either of them.
+     * Recording a conflict changes nothing else: no claim's status moves,
+     * and nothing is deleted.
+     */
+    public void recordContradiction(Contradiction contradiction) {
+        try (PreparedStatement ps = connection.prepareStatement(
+                "INSERT OR REPLACE INTO contradiction(id, workspace_id, claim_a_id, claim_b_id, "
+                        + "kind, detected_by, recorded_at) VALUES (?,?,?,?,?,?,?)")) {
+            ps.setString(1, contradiction.id());
+            ps.setString(2, contradiction.workspaceId());
+            ps.setString(3, contradiction.claimAId());
+            ps.setString(4, contradiction.claimBId());
+            ps.setString(5, contradiction.kind().name());
+            ps.setString(6, contradiction.detectedBy());
+            ps.setString(7, contradiction.recordedAt());
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            throw new IllegalStateException("failed to record the contradiction", e);
+        }
+    }
+
+    /** The recorded conflicts of a workspace. */
+    public List<Contradiction> contradictions(String workspaceId) {
+        return query("SELECT id, workspace_id, claim_a_id, claim_b_id, kind, detected_by, "
+                + "recorded_at FROM contradiction WHERE workspace_id = ? ORDER BY id",
+                workspaceId, rs -> new Contradiction(
+                        rs.getString("id"), rs.getString("workspace_id"),
+                        rs.getString("claim_a_id"), rs.getString("claim_b_id"),
+                        Contradiction.Kind.valueOf(rs.getString("kind")),
+                        rs.getString("detected_by"), rs.getString("recorded_at")));
+    }
+
     public List<Evidence> evidence(String workspaceId) {
         return query("SELECT id, workspace_id, claim_id, source_id, relation, excerpt, quality, recorded_at "
                 + "FROM evidence WHERE workspace_id = ? ORDER BY id", workspaceId, rs -> new Evidence(
@@ -1345,7 +1430,8 @@ public final class KnowledgeStore implements AutoCloseable {
                 rs -> rs.getString("name"));
         return new KnowledgeSnapshot(workspaceId, name,
                 concepts(workspaceId), sources(workspaceId), claims(workspaceId), evidence(workspaceId),
-                representations(workspaceId), prerequisites(workspaceId), revisions(workspaceId), now());
+                representations(workspaceId), prerequisites(workspaceId), revisions(workspaceId),
+                derivations(workspaceId), now());
     }
 
     /** The workspace identifiers this store holds. */

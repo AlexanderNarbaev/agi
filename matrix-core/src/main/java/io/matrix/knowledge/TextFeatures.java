@@ -66,6 +66,44 @@ public final class TextFeatures {
         return out;
     }
 
+    /**
+     * Every word of the text, lowercased, with nothing removed.
+     *
+     * <p>The content tokens are not enough for some questions: a stopword
+     * is dropped, so "not" never reaches a caller that looks for a
+     * negation, and a one-letter token is dropped, so the propositional
+     * variables of a logic domain - p, q, r - are invisible. This method
+     * returns the words as they were written, so that a caller can ask
+     * about them.
+     *
+     * @param text the text to read
+     * @return every word, lowercased, in order
+     */
+    public static List<String> rawWords(String text) {
+        List<String> out = new ArrayList<>();
+        if (text == null || text.isBlank()) {
+            return out;
+        }
+        StringBuilder current = new StringBuilder();
+        for (char ch : text.toLowerCase(Locale.ROOT).toCharArray()) {
+            if (Character.isLetterOrDigit(ch)) {
+                current.append(ch);
+            } else {
+                emitRaw(current, out);
+            }
+        }
+        emitRaw(current, out);
+        return out;
+    }
+
+    private static void emitRaw(StringBuilder current, List<String> out) {
+        if (current.length() == 0) {
+            return;
+        }
+        out.add(current.toString());
+        current.setLength(0);
+    }
+
     private static void emit(StringBuilder current, List<String> out) {
         if (current.length() == 0) {
             return;
@@ -73,7 +111,14 @@ public final class TextFeatures {
         String token = current.toString();
         current.setLength(0);
         if (token.length() < 3 && !Character.isDigit(token.charAt(0))) {
-            return;
+            // A one-letter word is usually noise - but it is not always.
+            // The propositional variables of a logic domain are p, q and r,
+            // and a tokenizer that drops them makes that domain unaskable.
+            // The word is kept only when it is a letter on its own, so the
+            // short articles and prepositions ("a", "of") stay out.
+            if (token.length() != 1 || !Character.isLetter(token.charAt(0))) {
+                return;
+            }
         }
         // The stopword test is on the word as it was written, not on the
         // folded stem: a fold would otherwise turn a stopword into a

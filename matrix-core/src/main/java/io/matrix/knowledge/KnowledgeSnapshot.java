@@ -28,7 +28,25 @@ public record KnowledgeSnapshot(
         List<Representation> representations,
         List<Prerequisite> prerequisites,
         List<KnowledgeRevision> revisions,
+        List<Derivation> derivations,
         String exportedAt) {
+
+    /**
+     * A snapshot without recorded derivations.
+     *
+     * <p>The ten-component form is kept so that the callers that never
+     * reason about inferences do not have to say so. A snapshot without
+     * derivations is a workspace whose rules are not recorded, and the
+     * reasoning engine reports exactly that.
+     */
+    public KnowledgeSnapshot(String workspaceId, String workspaceName,
+            List<Concept> concepts, List<Source> sources, List<Claim> claims,
+            List<Evidence> evidence, List<Representation> representations,
+            List<Prerequisite> prerequisites, List<KnowledgeRevision> revisions,
+            String exportedAt) {
+        this(workspaceId, workspaceName, concepts, sources, claims, evidence, representations,
+                prerequisites, revisions, List.of(), exportedAt);
+    }
 
     public KnowledgeSnapshot {
         concepts = List.copyOf(concepts == null ? List.of() : concepts);
@@ -38,11 +56,13 @@ public record KnowledgeSnapshot(
         representations = List.copyOf(representations == null ? List.of() : representations);
         prerequisites = List.copyOf(prerequisites == null ? List.of() : prerequisites);
         revisions = List.copyOf(revisions == null ? List.of() : revisions);
+        derivations = List.copyOf(derivations == null ? List.of() : derivations);
     }
 
     /** An empty workspace. */
     public static KnowledgeSnapshot empty(String workspaceId, String workspaceName) {
         return new KnowledgeSnapshot(workspaceId, workspaceName,
-                List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), null);
+                List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(),
+                List.of(), null);
     }
 }

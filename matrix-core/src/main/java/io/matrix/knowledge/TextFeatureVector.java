@@ -106,8 +106,17 @@ public final class TextFeatureVector {
         return shared >= 2;
     }
 
+    /**
+     * Whether the text contains a negation.
+     *
+     * <p>The RAW words are read, not the content terms: "not" is a
+     * stopword, so the content tokens never carry it, and a negation check
+     * that reads the content tokens cannot see the most common English
+     * negation at all. That was a live defect - the negation bit could
+     * never fire for "not".
+     */
     private static boolean containsNegation(String answer) {
-        for (String term : TextFeatures.tokens(answer)) {
+        for (String term : TextFeatures.rawWords(answer)) {
             switch (term) {
                 case "not", "no", "never", "cannot", "nothing", "neither", "nor" -> {
                     return true;
