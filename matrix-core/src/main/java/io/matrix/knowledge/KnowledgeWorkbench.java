@@ -12,6 +12,7 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.Random;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
@@ -417,6 +418,39 @@ public class KnowledgeWorkbench implements AutoCloseable {
     /** The recorded transitions of a workspace, oldest first. */
     public List<LearningTransition> learningTransitions(String workspaceId) {
         return store().learningTransitions(workspaceId);
+    }
+
+    /**
+     * The next exercise for the learner.
+     *
+     * <p>The mission's §10.1 asks for an exercise generator and a learner
+     * practice loop: RECON-W41 had neither, and the caller had to supply
+     * the item id. The selection is derived from the learner's persisted
+     * state and the workspace's gaps.
+     */
+    public ExerciseSelector.Selection nextExercise(String workspaceId) {
+        Set<String> attempted = new LinkedHashSet<>();
+        for (AssessmentOutcome outcome : outcomes(workspaceId)) {
+            attempted.add(outcome.itemId());
+        }
+        return new ExerciseSelector(dataset(workspaceId), learningStates(workspaceId),
+                workspace(workspaceId), attempted).next();
+    }
+
+    /**
+     * The exercises for the next session.
+     *
+     * @param workspaceId the workspace
+     * @param count how many to select
+     * @return the selections, in order
+     */
+    public List<ExerciseSelector.Selection> nextExercises(String workspaceId, int count) {
+        Set<String> attempted = new LinkedHashSet<>();
+        for (AssessmentOutcome outcome : outcomes(workspaceId)) {
+            attempted.add(outcome.itemId());
+        }
+        return new ExerciseSelector(dataset(workspaceId), learningStates(workspaceId),
+                workspace(workspaceId), attempted).next(count);
     }
 
     /**

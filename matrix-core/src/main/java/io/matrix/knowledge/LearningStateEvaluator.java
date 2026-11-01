@@ -46,12 +46,31 @@ public final class LearningStateEvaluator {
         // Calibration is a property of the learner, not of one dimension: it
         // is measured over every outcome recorded for the concept.
         boolean calibration = dimension == LearningDimension.CALIBRATION;
+        // RETENTION IS THE DELAYED EVIDENCE (RECON-W42.4).
+        //
+        // The mission's §7.4 asks for "delayed retrieval, after a meaningful
+        // interval" and the dataset holds no item of the RETENTION
+        // dimension at all - so the dimension had no criterion and could
+        // never be anything but UNKNOWN.
+        //
+        // The retention evidence is the learner's performance BEFORE the
+        // most recent session: the outcomes of the sessions that came
+        // before it. The learner has practised since, and what the earlier
+        // performance says about the material now is the retention. The
+        // delay is a property of the DATA - the session boundary - and not
+        // of a clock, which the CONSTITUTION's first article forbids in a
+        // decision path.
+        boolean retention = dimension == LearningDimension.RETENTION;
+        Set<String> earlierSessions = retention ? sessionsBeforeTheLatest(outcomes) : Set.of();
         List<AssessmentOutcome> relevant = outcomes.stream()
                 .filter(o -> itemIds.contains(o.itemId()))
                 .filter(o -> {
                     AssessmentItem item = item(o.itemId());
                     if (item == null || !item.conceptId().equals(conceptId)) {
                         return false;
+                    }
+                    if (retention) {
+                        return earlierSessions.contains(o.sessionId());
                     }
                     return calibration || item.dimension() == dimension;
                 })
@@ -103,6 +122,29 @@ public final class LearningStateEvaluator {
             error += Math.abs(outcome.claimedConfidence() - actual);
         }
         return 1.0 - error / outcomes.size();
+    }
+
+    /**
+     * The sessions that came before the most recent one.
+     *
+     * <p>The order of the sessions is the order the outcomes were recorded
+     * in, and the session ids are compared in that order — a session id is
+     * an opaque string, so the order comes from the outcomes themselves.
+     *
+     * @param outcomes the outcomes
+     * @return the session ids before the last one
+     */
+    private Set<String> sessionsBeforeTheLatest(List<AssessmentOutcome> outcomes) {
+        List<String> order = new ArrayList<>();
+        for (AssessmentOutcome outcome : outcomes) {
+            if (!order.contains(outcome.sessionId())) {
+                order.add(outcome.sessionId());
+            }
+        }
+        if (order.size() <= 1) {
+            return Set.of();
+        }
+        return new LinkedHashSet<>(order.subList(0, order.size() - 1));
     }
 
     private LearningStage stageFor(double mean, int count, int variants, int heldOut,

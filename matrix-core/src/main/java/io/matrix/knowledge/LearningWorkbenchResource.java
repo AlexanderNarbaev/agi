@@ -349,6 +349,49 @@ public class LearningWorkbenchResource {
     }
 
     /**
+     * The next exercise for the learner.
+     *
+     * <p>The mission's §10.1 asks for an exercise generator and a learner
+     * practice loop. RECON-W41 had neither: the caller had to supply the
+     * item id. The selection comes from the learner's persisted state and
+     * the workspace's gaps, and the item is one the dataset holds — the
+     * selector never writes a question.
+     */
+    @GET
+    @Path("/workspaces/{id}/exercises/next")
+    public Map<String, Object> nextExercise(@PathParam("id") String workspaceId) {
+        ExerciseSelector.Selection selection = workbench.nextExercise(workspaceId);
+        Map<String, Object> result = new LinkedHashMap<>();
+        if (selection == null) {
+            result.put("selection", null);
+            result.put("reason", "there is nothing left to practise in this workspace");
+            return result;
+        }
+        Map<String, Object> item = new LinkedHashMap<>();
+        item.put("id", selection.item().id());
+        item.put("prompt", selection.item().prompt());
+        item.put("dimension", selection.item().dimension().name());
+        item.put("concept", selection.conceptName());
+        item.put("difficulty", selection.item().difficulty());
+        item.put("heldOut", selection.heldOut());
+        item.put("alternatives", selection.item().alternatives().size());
+        result.put("selection", item);
+        result.put("reason", selection.reason());
+        return result;
+    }
+
+    /**
+     * The exercises for the next session.
+     */
+    @GET
+    @Path("/workspaces/{id}/exercises")
+    public List<ExerciseSelector.Selection> exercises(@PathParam("id") String workspaceId,
+                                                      @QueryParam("count") Integer count) {
+        int howMany = count == null || count < 1 ? 5 : Math.min(count, 50);
+        return workbench.nextExercises(workspaceId, howMany);
+    }
+
+    /**
      * The next bounded learning action for every active goal.
      *
      * <p>The mission's §4.6: the planning subsystem inspects the active

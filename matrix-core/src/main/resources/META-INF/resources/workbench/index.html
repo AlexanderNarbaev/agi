@@ -212,6 +212,19 @@
   <section id="tab-assess">
     <h2>Assessment</h2>
     <div class="card">
+      <h2 style="margin-top:0">The next exercise</h2>
+      <p class="muted">The system chooses what to practise next, from the learner's own state and
+        the workspace's gaps: the dimension that has not reached competence, a concept whose
+        prerequisites are missing, or the held-out item - the independent test. The item is one the
+        dataset holds; the system never writes a question, and a generated question the learner is
+        graded on would be exactly the generated content the mission forbids promoting.</p>
+      <div class="row">
+        <button class="action" id="btn-next-exercise">What should I practise?</button>
+        <span class="muted" id="exercise-note">Nothing asked yet.</span>
+      </div>
+      <div id="exercise-item" style="margin-top:14px"></div>
+    </div>
+    <div class="card">
       <div id="assess-meta" class="muted">—</div>
       <div id="assess-items" style="margin-top:14px"></div>
     </div>
@@ -347,7 +360,7 @@ document.querySelectorAll('nav button').forEach(btn => {
     if (btn.dataset.tab === 'dashboard') { loadStatus(); loadMetrics(); }
     if (btn.dataset.tab === 'ask') { loadDialogue(); }
     if (btn.dataset.tab === 'knowledge') loadKnowledge();
-    if (btn.dataset.tab === 'assess') loadAssessment();
+    if (btn.dataset.tab === 'assess') { loadAssessment(); loadNextExercise(); }
     if (btn.dataset.tab === 'teach') loadConceptsForTeaching();
     if (btn.dataset.tab === 'progress') { loadProgress(); loadCapability(); loadQuestions(); }
     if (btn.dataset.tab === 'reasoning') loadRules();
@@ -514,6 +527,10 @@ $('btn-import').addEventListener('click', async () => {
   } finally {
     $('btn-import').disabled = false;
   }
+});
+
+$('btn-next-exercise').addEventListener('click', async () => {
+  await loadNextExercise();
 });
 
 $('btn-ask').addEventListener('click', async () => {
@@ -924,6 +941,26 @@ async function loadRules() {
 }
 
 // ── Goals ───────────────────────────────────────────────────────────────
+async function loadNextExercise() {
+  try {
+    const r = await api('/workspaces/' + WS + '/exercises/next');
+    if (!r.selection) {
+      $('exercise-note').textContent = r.reason || 'there is nothing to practise';
+      $('exercise-item').innerHTML = '';
+      return;
+    }
+    $('exercise-note').textContent = r.reason;
+    const item = r.selection;
+    $('exercise-item').innerHTML = '<div class="card"><div class="muted">'
+      + esc(item.concept) + ' · ' + esc(item.dimension) + ' · difficulty ' + item.difficulty
+      + (item.heldOut ? ' · <strong>held-out item</strong>' : '') + '</div>'
+      + '<div style="margin-top:8px">' + esc(item.prompt) + '</div>'
+      + '<div class="muted">item ' + esc(item.id) + '</div></div>';
+  } catch (error) {
+    $('exercise-note').textContent = 'Could not read the next exercise: ' + error.message;
+  }
+}
+
 async function loadDialogue() {
   try {
     const turns = await (await fetch('/v1/workbench/workspaces/' + WS + '/dialogue')).json();
