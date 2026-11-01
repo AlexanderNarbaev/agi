@@ -104,8 +104,17 @@ public final class KnowledgeImporter {
             claimIds.put(entry.key, id);
             ClaimStatus status = parseStatus(entry.status);
             String introducedBy = null;
+            // The source behind the claim's evidence, whatever the relation.
+            // It sets the WARRANT: what we know about this claim - that it
+            // holds, or that it does not - was established by that kind of
+            // source. A claim whose evidence only contradicts it has no
+            // source that introduced it, but it still has a warrant.
+            String warrantSource = null;
             for (KnowledgePack.EvidenceEntry ev : entry.evidence) {
                 String sourceId = resolve(sourceIds, ev.source, "source", entry.key);
+                if (warrantSource == null) {
+                    warrantSource = sourceId;
+                }
                 if (introducedBy == null && "SUPPORTS".equalsIgnoreCase(ev.relation)) {
                     introducedBy = sourceId;
                 }
@@ -124,8 +133,23 @@ public final class KnowledgeImporter {
                     : (evidence.isEmpty()
                             ? "none: no evidence link"
                             : "checked against the cited excerpt");
+            // The warrant follows from the kind of the source behind the
+            // claim: an observation established it by perception, a
+            // publication by testimony. A claim with no source behind it
+            // has no warrant.
+            ClaimWarrant warrant = ClaimWarrant.NONE;
+            if (warrantSource != null) {
+                final String sourceId = warrantSource;
+                SourceKind kind = pack.sources.stream()
+                        .filter(candidate -> sourceId.equals(sourceIds.get(candidate.key)))
+                        .map(candidate -> parseKind(candidate.kind))
+                        .findFirst()
+                        .orElse(null);
+                warrant = KnowledgeStore.warrantOfKind(kind == null ? null : kind.name());
+            }
             claims.add(new Claim(id, workspaceId, conceptId, entry.proposition, entry.scope, entry.context,
                     status, entry.confidence, 1, introducedBy, extraction, validation,
+                    warrant, DerivationStatus.NOT_DERIVED,
                     importedAt, importedAt));
         }
 

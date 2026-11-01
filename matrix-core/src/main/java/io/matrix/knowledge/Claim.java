@@ -7,6 +7,13 @@ package io.matrix.knowledge;
  * in one context and fail in another — "plants release oxygen during the day"
  * is true under light and false in darkness, and the claim must be able to
  * say so without being refuted.
+ *
+ * <p>RECON-W41: the claim carries three epistemic facts, kept apart on
+ * purpose. {@link ClaimStatus} says which LAYER the claim is in.
+ * {@link ClaimWarrant} says what KIND OF THING established it — perception,
+ * testimony, inference or comparison. {@link DerivationStatus} says
+ * whether an inference was sound. Collapsing them into one label is what
+ * lets a system believe things it has not established.
  */
 public record Claim(
         String id,
@@ -21,6 +28,8 @@ public record Claim(
         String introducedBySourceId,
         String extractionMethod,
         String validationMethod,
+        ClaimWarrant warrant,
+        DerivationStatus derivationStatus,
         String createdAt,
         String updatedAt) {
 
@@ -36,6 +45,12 @@ public record Claim(
         }
         if (status == null) {
             throw new IllegalArgumentException("claim status must not be null");
+        }
+        if (warrant == null) {
+            warrant = ClaimWarrant.NONE;
+        }
+        if (derivationStatus == null) {
+            derivationStatus = DerivationStatus.NOT_DERIVED;
         }
         if (confidence < 0.0 || confidence > 1.0 || Double.isNaN(confidence)) {
             throw new IllegalArgumentException("claim confidence must be within [0,1]");

@@ -48,6 +48,7 @@ class KnowledgeStoreTest {
                         "Plants use light energy to convert carbon dioxide and water into sugars.",
                         "In green plants, in light", "general biology", ClaimStatus.VERIFIED, 0.95, 1,
                         sourceId, "transcribed from the excerpt", "checked against the excerpt",
+                        ClaimWarrant.TESTIMONY, DerivationStatus.NOT_DERIVED,
                         "2026-10-31T00:00:00Z", "2026-10-31T00:00:00Z")),
                 List.of(new Evidence(evidenceId, ws, claimId, sourceId, EvidenceRelation.SUPPORTS,
                         "Plants photosynthesise.", 90, "2026-10-31T00:00:00Z")),
@@ -156,6 +157,7 @@ class KnowledgeStoreTest {
                     List.of(new Claim(orphanClaim, ws, demoSnapshot().concepts().get(0).id(),
                             "An unsupported assertion.", null, null, ClaimStatus.VERIFIED, 0.9, 1,
                             null, "transcribed from the excerpt", "checked against the excerpt",
+                            ClaimWarrant.NONE, DerivationStatus.NOT_DERIVED,
                             "2026-10-31T00:00:00Z", "2026-10-31T00:00:00Z")),
                     List.of(), demoSnapshot().representations(), demoSnapshot().prerequisites(),
                     demoSnapshot().revisions(), "2026-10-31T00:00:00Z");
@@ -180,7 +182,8 @@ class KnowledgeStoreTest {
             KnowledgeSnapshot snapshot = demoSnapshot();
             List<Claim> claims = List.of(new Claim(
                     "cl-orphan", "demo", snapshot.concepts().get(0).id(), "Unsupported.", null, null,
-                    ClaimStatus.SUPPORTED, 0.5, 1, null, "transcribed", "checked", "t", "t"));
+                    ClaimStatus.SUPPORTED, 0.5, 1, null, "transcribed", "checked",
+                    ClaimWarrant.NONE, DerivationStatus.NOT_DERIVED, "t", "t"));
             KnowledgeSnapshot broken = new KnowledgeSnapshot("demo", "Demo",
                     snapshot.concepts(), snapshot.sources(), claims, List.of(),
                     snapshot.representations(), snapshot.prerequisites(), snapshot.revisions(), "t");

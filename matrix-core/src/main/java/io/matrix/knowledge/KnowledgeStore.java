@@ -16,6 +16,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -53,7 +54,7 @@ import java.util.Set;
 public final class KnowledgeStore implements AutoCloseable {
 
     /** The schema version this build writes. */
-    public static final int SCHEMA_VERSION = 5;
+    public static final int SCHEMA_VERSION = 6;
 
     private static final ObjectMapper JSON = new ObjectMapper();
 
@@ -249,6 +250,65 @@ public final class KnowledgeStore implements AutoCloseable {
     }
 
     /**
+     * Recovers the warrant of the claims that predate the axis.
+     *
+     * <p>A claim's warrant follows from the kind of the source behind its
+     * evidence, which the store already holds. A claim whose source was an
+     * observation or an experiment was established by perception; one whose
+     * source was a publication, a reference or a report was established by
+     * testimony; one whose source was a mathematical derivation was
+     * inferred. A claim with no source behind it gets no warrant: it was
+     * asserted, and asserting is not knowing.
+     *
+     * <p>The evidence is consulted rather than the claim's own source
+     * field, because a claim that only CONTRADICTS another claim is
+     * established by that contradicting source: what we know about it is
+     * that it does not hold.
+     */
+    private void backfillWarrant() throws SQLException {
+        try (Statement st = connection.createStatement();
+             ResultSet rs = st.executeQuery(
+                     "SELECT c.id, s.kind FROM claim c LEFT JOIN source s ON s.id = ("
+                             + "SELECT e.source_id FROM evidence e WHERE e.claim_id = c.id "
+                             + "ORDER BY e.id LIMIT 1)")) {
+            List<String[]> pending = new ArrayList<>();
+            while (rs.next()) {
+                String kind = rs.getString("kind");
+                pending.add(new String[]{rs.getString("id"), warrantOfKind(kind).name()});
+            }
+            try (PreparedStatement ps = connection.prepareStatement(
+                    "UPDATE claim SET warrant = ?, derivation_status = ? WHERE id = ?")) {
+                for (String[] row : pending) {
+                    ps.setString(1, row[1]);
+                    ps.setString(2, DerivationStatus.NOT_DERIVED.name());
+                    ps.setString(3, row[0]);
+                    ps.addBatch();
+                }
+                ps.executeBatch();
+            }
+        }
+    }
+
+    /**
+     * The warrant a source of this kind provides.
+     *
+     * @param kind the source kind, or null when there is no source
+     * @return the warrant the source establishes
+     */
+    public static ClaimWarrant warrantOfKind(String kind) {
+        if (kind == null) {
+            return ClaimWarrant.NONE;
+        }
+        return switch (SourceKind.valueOf(kind)) {
+            case OBSERVATION, EXPERIMENT -> ClaimWarrant.OBSERVED;
+            case AUTHORITATIVE_REFERENCE, PUBLICATION, SECONDARY_REPORT, DATASET, HUMAN_ASSERTION ->
+                    ClaimWarrant.TESTIMONY;
+            case MATHEMATICAL_DERIVATION -> ClaimWarrant.INFERRED;
+            case MODEL_GENERATED -> ClaimWarrant.NONE;
+        };
+    }
+
+    /**
      * Fills the provenance of records that predate the provenance fields.
      *
      * <p>What can honestly be recovered is recovered: a source's content
@@ -289,6 +349,35 @@ public final class KnowledgeStore implements AutoCloseable {
     }
 
     private int migrateFrom(int version) throws SQLException {
+        if (version == 5) {
+            // v6 adds the epistemic axes the claim now carries, and the
+            // table of recorded derivations.
+            //
+            // The warrant of an existing claim is recovered from the kind of
+            // the source behind it: an observation or an experiment
+            // established it by perception, a publication or a reference by
+            // testimony. A claim with no source behind it keeps no warrant
+            // - it was asserted, and asserting is not knowing.
+            try (Statement st = connection.createStatement()) {
+                st.execute("ALTER TABLE claim ADD COLUMN warrant TEXT");
+                st.execute("ALTER TABLE claim ADD COLUMN derivation_status TEXT");
+                st.execute("CREATE TABLE IF NOT EXISTS derivation ("
+                        + "id TEXT PRIMARY KEY, workspace_id TEXT NOT NULL, "
+                        + "rule_id TEXT NOT NULL, rule_name TEXT NOT NULL, "
+                        + "connective TEXT NOT NULL, conclusion_claim_id TEXT NOT NULL, "
+                        + "status TEXT NOT NULL, recorded_at TEXT NOT NULL)");
+                st.execute("CREATE TABLE IF NOT EXISTS derivation_premise ("
+                        + "derivation_id TEXT NOT NULL, ordinal INTEGER NOT NULL, "
+                        + "claim_id TEXT NOT NULL, PRIMARY KEY (derivation_id, ordinal))");
+                st.execute("CREATE INDEX IF NOT EXISTS idx_derivation_workspace "
+                        + "ON derivation(workspace_id)");
+                st.execute("CREATE INDEX IF NOT EXISTS idx_derivation_premise_claim "
+                        + "ON derivation_premise(claim_id)");
+            }
+            backfillWarrant();
+            writeSchemaVersion(6);
+            return 6;
+        }
         if (version == 4) {
             // NOTE: the v1 CREATE TABLE above must stay the v1 shape. A
             // fresh database is built by the same code that upgrades an old
@@ -440,7 +529,8 @@ public final class KnowledgeStore implements AutoCloseable {
         for (Source s : snapshot.sources()) {
             try (PreparedStatement ps = connection.prepareStatement(
                     "INSERT OR REPLACE INTO source(id, workspace_id, kind, title, locator, authority, "
-                            + "freshness, excerpt, added_at) VALUES (?,?,?,?,?,?,?,?,?)")) {
+                            + "freshness, excerpt, added_at, content_hash, published_at) "
+                            + "VALUES (?,?,?,?,?,?,?,?,?,?,?)")) {
                 ps.setString(1, s.id());
                 ps.setString(2, s.workspaceId());
                 ps.setString(3, s.kind().name());
@@ -450,6 +540,8 @@ public final class KnowledgeStore implements AutoCloseable {
                 ps.setInt(7, s.freshness());
                 ps.setString(8, s.excerpt());
                 ps.setString(9, s.addedAt());
+                ps.setString(10, s.contentHash());
+                ps.setString(11, s.publishedAt());
                 ps.executeUpdate();
             }
         }
@@ -457,7 +549,8 @@ public final class KnowledgeStore implements AutoCloseable {
             try (PreparedStatement ps = connection.prepareStatement(
                     "INSERT OR REPLACE INTO claim(id, workspace_id, concept_id, proposition, scope, "
                             + "context, status, confidence, version, introduced_by_source_id, "
-                            + "created_at, updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)")) {
+                            + "extraction_method, validation_method, warrant, derivation_status, "
+                            + "created_at, updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)")) {
                 ps.setString(1, c.id());
                 ps.setString(2, c.workspaceId());
                 ps.setString(3, c.conceptId());
@@ -468,8 +561,12 @@ public final class KnowledgeStore implements AutoCloseable {
                 ps.setDouble(8, c.confidence());
                 ps.setInt(9, c.version());
                 ps.setString(10, c.introducedBySourceId());
-                ps.setString(11, c.createdAt());
-                ps.setString(12, c.updatedAt());
+                ps.setString(11, c.extractionMethod());
+                ps.setString(12, c.validationMethod());
+                ps.setString(13, c.warrant().name());
+                ps.setString(14, c.derivationStatus().name());
+                ps.setString(15, c.createdAt());
+                ps.setString(16, c.updatedAt());
                 ps.executeUpdate();
             }
         }
@@ -747,7 +844,8 @@ public final class KnowledgeStore implements AutoCloseable {
     private void upsertSource(Source s) throws SQLException {
         try (PreparedStatement ps = connection.prepareStatement(
                 "INSERT OR REPLACE INTO source(id, workspace_id, kind, title, locator, authority, "
-                        + "freshness, excerpt, added_at) VALUES (?,?,?,?,?,?,?,?,?)")) {
+                        + "freshness, excerpt, added_at, content_hash, published_at) "
+                        + "VALUES (?,?,?,?,?,?,?,?,?,?,?)")) {
             ps.setString(1, s.id());
             ps.setString(2, s.workspaceId());
             ps.setString(3, s.kind().name());
@@ -757,6 +855,8 @@ public final class KnowledgeStore implements AutoCloseable {
             ps.setInt(7, s.freshness());
             ps.setString(8, s.excerpt());
             ps.setString(9, s.addedAt());
+            ps.setString(10, s.contentHash());
+            ps.setString(11, s.publishedAt());
             ps.executeUpdate();
         }
     }
@@ -765,7 +865,8 @@ public final class KnowledgeStore implements AutoCloseable {
         try (PreparedStatement ps = connection.prepareStatement(
                 "INSERT OR REPLACE INTO claim(id, workspace_id, concept_id, proposition, scope, "
                         + "context, status, confidence, version, introduced_by_source_id, "
-                        + "created_at, updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)")) {
+                        + "extraction_method, validation_method, warrant, derivation_status, "
+                        + "created_at, updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)")) {
             ps.setString(1, c.id());
             ps.setString(2, c.workspaceId());
             ps.setString(3, c.conceptId());
@@ -776,8 +877,12 @@ public final class KnowledgeStore implements AutoCloseable {
             ps.setDouble(8, c.confidence());
             ps.setInt(9, c.version());
             ps.setString(10, c.introducedBySourceId());
-            ps.setString(11, c.createdAt());
-            ps.setString(12, c.updatedAt());
+            ps.setString(11, c.extractionMethod());
+            ps.setString(12, c.validationMethod());
+            ps.setString(13, c.warrant().name());
+            ps.setString(14, c.derivationStatus().name());
+            ps.setString(15, c.createdAt());
+            ps.setString(16, c.updatedAt());
             ps.executeUpdate();
         }
     }
@@ -1038,14 +1143,153 @@ public final class KnowledgeStore implements AutoCloseable {
     public List<Claim> claims(String workspaceId) {
         return query("SELECT id, workspace_id, concept_id, proposition, scope, context, status, "
                 + "confidence, version, introduced_by_source_id, extraction_method, validation_method, "
-                + "created_at, updated_at "
+                + "warrant, derivation_status, created_at, updated_at "
                 + "FROM claim WHERE workspace_id = ? ORDER BY id", workspaceId, rs -> new Claim(
                 rs.getString("id"), rs.getString("workspace_id"), rs.getString("concept_id"),
                 rs.getString("proposition"), rs.getString("scope"), rs.getString("context"),
                 ClaimStatus.valueOf(rs.getString("status")), rs.getDouble("confidence"),
                 rs.getInt("version"), rs.getString("introduced_by_source_id"),
                 rs.getString("extraction_method"), rs.getString("validation_method"),
+                rs.getString("warrant") == null ? ClaimWarrant.NONE
+                        : ClaimWarrant.valueOf(rs.getString("warrant")),
+                rs.getString("derivation_status") == null ? DerivationStatus.NOT_DERIVED
+                        : DerivationStatus.valueOf(rs.getString("derivation_status")),
                 rs.getString("created_at"), rs.getString("updated_at")));
+    }
+
+    /**
+     * Records an inference: the rule, its premises in order, and the
+     * conclusion it produced.
+     *
+     * <p>A derivation that is not recorded cannot be shown, and the
+     * mission's §6.1 requires the answer to be explainable "through its
+     * supporting claims and operations".
+     */
+    public void recordDerivation(Derivation derivation) {
+        validateDerivation(derivation);
+        try {
+            connection.setAutoCommit(false);
+            try {
+            try (PreparedStatement ps = connection.prepareStatement(
+                    "INSERT OR REPLACE INTO derivation(id, workspace_id, rule_id, rule_name, "
+                            + "connective, conclusion_claim_id, status, recorded_at) "
+                            + "VALUES (?,?,?,?,?,?,?,?)")) {
+                ps.setString(1, derivation.id());
+                ps.setString(2, derivation.workspaceId());
+                ps.setString(3, derivation.ruleId());
+                ps.setString(4, derivation.ruleName());
+                ps.setString(5, derivation.connective().name());
+                ps.setString(6, derivation.conclusionClaimId());
+                ps.setString(7, derivation.status().name());
+                ps.setString(8, derivation.recordedAt());
+                ps.executeUpdate();
+            }
+            try (PreparedStatement ps = connection.prepareStatement(
+                    "DELETE FROM derivation_premise WHERE derivation_id = ?")) {
+                ps.setString(1, derivation.id());
+                ps.executeUpdate();
+            }
+            try (PreparedStatement ps = connection.prepareStatement(
+                    "INSERT INTO derivation_premise(derivation_id, ordinal, claim_id) "
+                            + "VALUES (?,?,?)")) {
+                for (int i = 0; i < derivation.premiseClaimIds().size(); i++) {
+                    ps.setString(1, derivation.id());
+                    ps.setInt(2, i);
+                    ps.setString(3, derivation.premiseClaimIds().get(i));
+                    ps.addBatch();
+                }
+                ps.executeBatch();
+            }
+            connection.commit();
+            } catch (SQLException | RuntimeException e) {
+                connection.rollback();
+                throw e;
+            } finally {
+                connection.setAutoCommit(true);
+            }
+        } catch (SQLException e) {
+            throw new IllegalStateException("failed to record the derivation", e);
+        }
+    }
+
+    /**
+     * Checks that a derivation can be recorded at all.
+     *
+     * <p>Three things must hold: the conclusion and every premise must be
+     * claims this workspace holds; the one-premise connectives must have
+     * exactly one premise, because IMPLIES and NOT read the first premise
+     * and a rule that gives them more has no determined meaning; and the
+     * derivation must name its rule.
+     */
+    private void validateDerivation(Derivation derivation) {
+        if (derivation == null) {
+            throw new IllegalArgumentException("the derivation must not be null");
+        }
+        if (derivation.ruleId() == null || derivation.ruleId().isBlank()) {
+            throw new IllegalArgumentException("a derivation must name its rule");
+        }
+        if (derivation.conclusionClaimId() == null || derivation.conclusionClaimId().isBlank()) {
+            throw new IllegalArgumentException("a derivation must name its conclusion");
+        }
+        if (derivation.premiseClaimIds().isEmpty()) {
+            throw new IllegalArgumentException("a derivation must have at least one premise");
+        }
+        if (derivation.connective().usesFirstPremiseOnly() && derivation.premiseClaimIds().size() > 1) {
+            throw new IllegalArgumentException("the connective " + derivation.connective()
+                    + " reads the first premise only, so the derivation must have exactly one");
+        }
+        for (String claimId : derivation.premiseClaimIds()) {
+            if (!claimExists(derivation.workspaceId(), claimId)) {
+                throw new IllegalArgumentException(
+                        "the premise " + claimId + " is not a claim of this workspace");
+            }
+        }
+        if (!claimExists(derivation.workspaceId(), derivation.conclusionClaimId())) {
+            throw new IllegalArgumentException(
+                    "the conclusion " + derivation.conclusionClaimId() + " is not a claim of this workspace");
+        }
+    }
+
+    private boolean claimExists(String workspaceId, String claimId) {
+        try (PreparedStatement ps = connection.prepareStatement(
+                "SELECT 1 FROM claim WHERE id = ? AND workspace_id = ?")) {
+            ps.setString(1, claimId);
+            ps.setString(2, workspaceId);
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next();
+            }
+        } catch (SQLException e) {
+            throw new IllegalStateException("failed to check the claim " + claimId, e);
+        }
+    }
+
+    /** The derivations recorded for a workspace, oldest first. */
+    public List<Derivation> derivations(String workspaceId) {
+        Map<String, List<String>> premises = new LinkedHashMap<>();
+        try (PreparedStatement ps = connection.prepareStatement(
+                "SELECT derivation_id, claim_id FROM derivation_premise "
+                        + "WHERE derivation_id IN (SELECT id FROM derivation WHERE workspace_id = ?) "
+                        + "ORDER BY derivation_id, ordinal")) {
+            ps.setString(1, workspaceId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    premises.computeIfAbsent(rs.getString("derivation_id"), key -> new ArrayList<>())
+                            .add(rs.getString("claim_id"));
+                }
+            }
+        } catch (SQLException e) {
+            throw new IllegalStateException("failed to read the derivation premises", e);
+        }
+        return query("SELECT id, workspace_id, rule_id, rule_name, connective, "
+                + "conclusion_claim_id, status, recorded_at FROM derivation "
+                + "WHERE workspace_id = ? ORDER BY recorded_at, id", workspaceId, rs -> new Derivation(
+                rs.getString("id"), rs.getString("workspace_id"), rs.getString("rule_id"),
+                rs.getString("rule_name"),
+                Derivation.Connective.valueOf(rs.getString("connective")),
+                rs.getString("conclusion_claim_id"),
+                premises.getOrDefault(rs.getString("id"), List.of()),
+                DerivationStatus.valueOf(rs.getString("status")),
+                rs.getString("recorded_at")));
     }
 
     public List<Evidence> evidence(String workspaceId) {

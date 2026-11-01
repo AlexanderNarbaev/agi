@@ -88,6 +88,8 @@ public final class LearnedRuleRegistrar {
                 source.id(),
                 "derived by the acceptance model from the held-out items",
                 "measured against the held-out items of " + datasetId,
+                ClaimWarrant.OBSERVED,
+                DerivationStatus.NOT_DERIVED,
                 now,
                 now);
 

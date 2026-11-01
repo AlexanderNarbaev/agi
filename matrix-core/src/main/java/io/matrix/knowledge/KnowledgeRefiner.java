@@ -112,6 +112,8 @@ public final class KnowledgeRefiner {
                 request.status() == ClaimStatus.VERIFIED
                         ? "checked against the excerpt of the correcting source"
                         : "not independently verified: read from the correcting source",
+                KnowledgeStore.warrantOfKind(request.sourceKind().name()),
+                DerivationStatus.NOT_DERIVED,
                 now, now);
 
         Evidence evidence = new Evidence(Ids.evidence(workspaceId, claimId, source.id()),
@@ -129,6 +131,7 @@ public final class KnowledgeRefiner {
                     ClaimStatus.SUPERSEDED, superseded.confidence(), superseded.version() + 1,
                     superseded.introducedBySourceId(),
                     superseded.extractionMethod(), superseded.validationMethod(),
+                    superseded.warrant(), superseded.derivationStatus(),
                     superseded.createdAt(), now));
         }
 

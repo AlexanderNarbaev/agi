@@ -144,6 +144,7 @@ public final class KnowledgeTransfer {
                     claim.confidence(), claim.version(),
                     introducedBy == null ? null : sourceIds.getOrDefault(introducedBy, introducedBy),
                     claim.extractionMethod(), claim.validationMethod(),
+                    claim.warrant(), claim.derivationStatus(),
                     claim.createdAt(), claim.updatedAt()));
         }
 
