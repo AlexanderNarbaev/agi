@@ -72,6 +72,32 @@ public final class CapabilityEvaluator {
     public static CapabilityState evaluate(String conceptId,
                                            List<LearningState> dimensionStates,
                                            TeachBackEvaluator.TeachBackResult teachBack) {
+        return evaluate(conceptId, dimensionStates,
+                teachBack == null ? null : teachBack.metExpectation(),
+                teachBack == null ? null : teachBack.conclusion());
+    }
+
+    /**
+     * Derive the capability state of one concept from a teach-back verdict.
+     *
+     * <p>RECON-W42.1. The top stage used to be gated on the legacy
+     * containment measurement, whose score cannot fail: the lesson and the
+     * held-out items were written from the same account, so the lesson
+     * contained the items' terms by construction. The verdict now comes
+     * from whichever teach-back was actually run, and the three states are
+     * distinct: no teach-back at all, one that did not meet its
+     * expectation, and one that did.
+     *
+     * @param conceptId the concept
+     * @param dimensionStates the per-dimension states, already evaluated
+     * @param taught whether a teach-back met its expectation; null when no
+     *     teach-back has been run
+     * @param teachBackConclusion what the teach-back concluded, or null
+     */
+    public static CapabilityState evaluate(String conceptId,
+                                           List<LearningState> dimensionStates,
+                                           Boolean taught,
+                                           String teachBackConclusion) {
         Map<LearningDimension, LearningStage> stages = new EnumMap<>(LearningDimension.class);
         int correctOutcomes = 0;
         int totalOutcomes = 0;
@@ -117,32 +143,34 @@ public final class CapabilityEvaluator {
         } else {
             boolean understanding = UNDERSTANDING_DIMENSIONS.stream()
                     .allMatch(d -> stages.get(d) == LearningStage.COMPETENCE);
-            boolean taught = teachBack != null && teachBack.metExpectation();
+            boolean metExpectation = taught != null && taught;
             if (!understanding) {
                 stage = LearningStage.COMPETENCE;
                 note = "Every assessed dimension has reached competence, but understanding also needs "
                         + "competence on the causal, transfer and evaluation dimensions, and those "
                         + "are not all there yet.";
-            } else if (!taught) {
+            } else if (!metExpectation) {
                 stage = LearningStage.UNDERSTANDING;
-                note = "The learner can explain causes, predict outcomes and identify "
-                        + "counterexamples. The highest stage is not reached because there is no "
-                        + "teach-back that met its expectation: generating an explanation is not "
-                        + "proof of teaching.";
+                note = taught == null
+                        ? "The learner can explain causes, predict outcomes and identify "
+                                + "counterexamples. The highest stage is not reached because there is "
+                                + "no teach-back at all: generating an explanation is not proof of "
+                                + "teaching."
+                        : "The learner can explain causes, predict outcomes and identify "
+                                + "counterexamples. The highest stage is not reached because the "
+                                + "teach-back did not meet its expectation: generating an explanation "
+                                + "is not proof of teaching.";
             } else {
                 stage = LearningStage.KNOWLEDGE;
                 note = "The learner is competent across the assessed dimensions, can explain causes, "
                         + "predict outcomes and identify counterexamples, and a teach-back met its "
                         + "declared expectation. The teach-back is machine-to-machine: it shows that "
-                        + "the lesson CONTAINED the assessed content, not that a human learned it.";
+                        + "an independent closed-book learner can answer held-out items after the "
+                        + "lesson, not that a human learned it.";
             }
         }
 
-        String teachBackConclusion = teachBack == null
-                ? null
-                : teachBack.conclusion();
-
         return new CapabilityState(conceptId, stage, stages, missing,
-                teachBack != null && teachBack.metExpectation(), teachBackConclusion, note);
+                taught != null && taught, teachBackConclusion, note);
     }
 }

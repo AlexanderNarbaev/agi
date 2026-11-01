@@ -677,20 +677,38 @@ $('btn-teach').addEventListener('click', async () => {
         '<div class="muted">exercise: ' + esc(s.exercise) + '</div>' +
         '<div class="muted">check: ' + esc(s.check) + '</div></div>').join('');
 
-    const r = await api('/workspaces/' + WS + '/teach-back', {
+    // The REBUILT experiment, not the W40 containment measurement.
+    //
+    // RECON-W42.1. The interface used to run the legacy teach-back, whose
+    // score measures whether the lesson CONTAINED the held-out item's key
+    // terms - a number that cannot fail, because the lesson was written
+    // from the same account the items were written from. The rebuilt
+    // experiment has four disjoint phases, an independent closed-book
+    // learner, a leakage audit and a calibration report, and its delayed
+    // phase DOES fail. An interface that only ever shows a measurement which
+    // cannot fail is an interface that cannot show a regression.
+    const r = await api('/workspaces/' + WS + '/teach-back-experiment', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ conceptId, level, expectedGain: expected })
+      body: JSON.stringify({ conceptId: conceptId, expectedGain: expected })
     });
     out.innerHTML = '<div class="card ' + (r.metExpectation ? 'good' : 'warn') + '">' +
-      '<h2 style="margin-top:0">Teach-back result</h2>' +
-      '<div>Taught at ' + esc(r.levelTaughtAt) + ' · measured on ' + r.itemsMeasured +
-      ' held-out item(s) from ' + esc(r.datasetId) + ' v' + r.datasetVersion + '</div>' +
-      '<div>Score before ' + r.beforeScore + ' → after ' + r.afterScore +
-      ' · gain <strong>' + r.gain + '</strong> · expectation (' + esc(r.expectation) +
-      ') <strong>' + (r.metExpectation ? 'met' : 'NOT met') + '</strong></div>' +
-      '<table><tr><th>Item</th><th>Dimension</th><th>Before</th><th>After</th></tr>' +
-      r.outcomes.map(o => '<tr><td>' + esc(o.itemId) + '</td><td>' + esc(o.dimension) +
-        '</td><td>' + o.before + '</td><td>' + o.after + '</td></tr>').join('') + '</table>' +
+      '<h2 style="margin-top:0">Teach-back experiment</h2>' +
+      '<div>Concept ' + esc(r.conceptId) + ' · dataset ' + esc(r.datasetId) +
+      ' v' + r.datasetVersion + ' · expected gain ' + r.expectedMinimumGain +
+      ' <strong>' + (r.metExpectation ? 'met' : 'NOT met') + '</strong></div>' +
+      '<table><tr><th>Phase</th><th>Items</th><th>Correct</th><th>Accuracy</th><th>Note</th></tr>' +
+      r.phases.map(p => '<tr><td>' + esc(p.name) + '</td><td>' + p.itemsMeasured +
+        '</td><td>' + p.correct + '</td><td>' + p.accuracy +
+        '</td><td class="muted">' + esc(p.note) + '</td></tr>').join('') + '</table>' +
+      '<div class="muted">probes ' + r.probes + ' · restatements ' + r.restatements +
+      ' · legacy restatements ' + r.legacyRestatements + '</div>' +
+      '<div>Structured learner ' + r.structuredAccuracy +
+      ' · legacy containment ' + r.legacyAccuracy +
+      ' · lexical baseline ' + r.lexicalBaselineAccuracy + '</div>' +
+      (r.calibration ? '<div class="muted">calibration over ' + r.calibration.count +
+        ' forecast(s): Brier ' + r.calibration.brier + ' · mean confidence ' +
+        r.calibration.meanConfidence + ' · observed ' + r.calibration.observedFrequency +
+        '<br>' + esc(r.calibration.meaning) + '</div>' : '') +
       '<p class="muted">' + esc(r.conclusion) + '</p></div>';
   } catch (e) {
     out.innerHTML = '<div class="card bad">' + esc(e.message) + '</div>';

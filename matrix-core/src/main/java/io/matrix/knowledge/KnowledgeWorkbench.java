@@ -390,12 +390,24 @@ public class KnowledgeWorkbench implements AutoCloseable {
                 .filter(s -> s.conceptId().equals(conceptId))
                 .toList();
 
-        TeachBackEvaluator.TeachBackResult teachBack = null;
+        // THE TEACH-BACK THAT GATES THE TOP STAGE IS THE ONE THAT CAN FAIL.
+        //
+        // RECON-W42.1. The legacy containment measurement scores whether the
+        // lesson CONTAINED the held-out items' key terms - and the lesson
+        // and the items were written from the same account, so it cannot
+        // fail. The rebuilt experiment measures an independent closed-book
+        // learner over four disjoint phases, and its delayed phase DOES
+        // fail. A capability stage gated on a measurement that cannot fail
+        // is a stage that cannot record a regression.
+        Boolean taught = null;
+        String conclusion = null;
         if (includeTeachBack) {
-            teachBack = teachBack(workspaceId, conceptId, AbstractionLevel.MECHANISTIC,
+            TeachBackExperiment.Result experiment = teachBackExperiment(workspaceId, conceptId,
                     CapabilityEvaluator.DEFAULT_EXPECTED_GAIN);
+            taught = experiment.metExpectation();
+            conclusion = experiment.conclusion();
         }
-        return CapabilityEvaluator.evaluate(conceptId, states, teachBack);
+        return CapabilityEvaluator.evaluate(conceptId, states, taught, conclusion);
     }
 
     /**
