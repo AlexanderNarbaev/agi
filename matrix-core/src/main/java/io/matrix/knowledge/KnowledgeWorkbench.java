@@ -157,7 +157,13 @@ public class KnowledgeWorkbench implements AutoCloseable {
      */
     public Answer ask(String workspaceId, String question, AbstractionLevel level) {
         KnowledgeSnapshot snapshot = workspace(workspaceId);
-        Answer answer = new KnowledgeRetriever(snapshot).answer(question, level);
+        // The conversation resolves the reference BEFORE the retrieval, so
+        // that "Explain this in more detail" reaches the concept the last
+        // turn was about. The original question is what the answer carries.
+        DialogueContext context = context(workspaceId);
+        String expanded = context.expand(question);
+        Answer answer = new KnowledgeRetriever(snapshot)
+                .answer(expanded.equals(question) ? question : expanded, level);
 
         // WHAT THE QUESTION DEMANDS IS CHECKED BEFORE THE ANSWER IS.
         //
@@ -173,8 +179,42 @@ public class KnowledgeWorkbench implements AutoCloseable {
                 QuestionDemand.contentTerms(question));
         answer = applyDemand(answer, demand);
 
+        if (!expanded.equals(question)) {
+            // The answer carries the question the USER wrote, and says what
+            // it was read as. The mission's §6 requires the original message
+            // to be preserved alongside any normalized representation.
+            answer = new Answer(question, answer.level(), answer.answered(),
+                    answer.abstentionReason(), answer.statement(), answer.supportScore(),
+                    answer.support(), answer.concepts(), answer.claims(), answer.sources(),
+                    withNote(answer.limitations(),
+                            "The reference was resolved against the conversation: the question "
+                                    + "was read as being about \"" + context.resolveSubject(question)
+                                    + "\"."),
+                    answer.gaps(), answer.unmatchedTerms());
+        }
         recordAsk(workspaceId, question, answer.unmatchedTerms(), answer.answered());
+        context.record(question, answer);
         return answer;
+    }
+
+    /** The limitations with one more note. */
+    private List<String> withNote(List<String> limitations, String note) {
+        List<String> extended = new ArrayList<>(limitations);
+        extended.add(note);
+        return extended;
+    }
+
+    /**
+     * The conversation of a workspace.
+     *
+     * <p>The mission's §6 asks for a bounded conversation history. The
+     * context is held in memory and bounded in both the number of turns
+     * and the number of concepts each turn keeps; the store's own
+     * {@code asked_question} table remains the durable record of what was
+     * asked.
+     */
+    public DialogueContext context(String workspaceId) {
+        return contexts.computeIfAbsent(workspaceId, key -> new DialogueContext(key));
     }
 
     /**
@@ -278,6 +318,9 @@ public class KnowledgeWorkbench implements AutoCloseable {
         }
         return transitions;
     }
+
+    /** The conversations of the workspaces. */
+    private final Map<String, DialogueContext> contexts = new LinkedHashMap<>();
 
     /** The recorded transitions of a workspace, oldest first. */
     public List<LearningTransition> learningTransitions(String workspaceId) {
