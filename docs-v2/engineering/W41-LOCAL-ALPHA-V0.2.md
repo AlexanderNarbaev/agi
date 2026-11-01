@@ -36,7 +36,7 @@ English statements. Both limits are named here rather than papered over.
 | A goal survives a forced stop | goal `Learn the Calvin cycle`, subtask `read` COMPLETED, budget 1/5, checkpoint intact after `kill -9` | `curl .../workspaces/photosynthesis/goals` after restart |
 | The teach-back experiment can fail | PRE 0/2, POST 1/1, **DELAYED 0/1**, TRANSFER 1/2; structured 1.00, lexical baseline 0.00 | `curl -X POST .../teach-back-experiment` |
 | Calibration is measured, not asserted | 6 forecasts, Brier 0.322, reliability 0.099, resolution 0.000, uncertainty 0.222 | same |
-| The formal gate holds | 12 specifications, all exit 0; 26 mutants, 25 killed, 1 recorded survivor, 0 drift | `python3 scripts/mutation-harness.py`, `java -cp tools/tla2tools.jar tlc2.TLC …` |
+| The formal gate holds | 12 specifications, all exit 0 (65 … 396 577 states); 27 mutants, 25 killed, 2 recorded survivors, 0 drift | `python3 scripts/mutation-harness.py`, `java -cp tools/tla2tools.jar tlc2.TLC …` |
 | The targeted suites hold | 119 classes, 1 205 tests, 0 failures | `./gradlew :matrix-core:test --tests "io.matrix.knowledge.*" --tests "io.matrix.memory.*" --tests "io.matrix.brain.*" --tests "io.matrix.api.*" --tests "io.matrix.rag.*"` |
 
 The application starts in **1.5–1.7 s** and listens on `http://0.0.0.0:9091`
@@ -118,6 +118,12 @@ Stated so that no reader infers more than was measured:
    W40, not addressed by this wave. See the risk register.
 9. **Formal results are evidence about the configured model**, not about the
    Java. The registry records the abstraction gap for each specification.
+10. **One formal property is vacuous and is recorded as such.**
+    `ConflictsAreKept` cannot fail, because the model has no action that
+    removes a conflict — which is exactly the guarantee the specification
+    makes. Closing it would mean adding an action that contradicts the
+    specification it is meant to check. The mutation harness records it as a
+    survivor, and the registry carries the gap under `VACUOUS_PROPERTY`.
 
 ---
 

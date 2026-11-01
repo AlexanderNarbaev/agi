@@ -182,7 +182,8 @@ public class KnowledgeWorkbench implements AutoCloseable {
         double score = AssessmentGrader.score(item, answer);
         boolean correct = AssessmentGrader.isCorrect(item, answer);
         AssessmentOutcome outcome = new AssessmentOutcome(itemId, correct, score, claimedConfidence,
-                answer, sessionId == null ? "default" : sessionId, System.currentTimeMillis());
+                answer, sessionId == null ? "default" : sessionId, System.currentTimeMillis(),
+                item.heldOut());
         store().recordOutcome(workspaceId, item, outcome);
         return outcome;
     }
@@ -658,8 +659,100 @@ public class KnowledgeWorkbench implements AutoCloseable {
             counts.put(workspace, per);
         }
         status.put("counts", counts);
+        status.put("integrity", integrity());
         status.put("ok", true);
         return status;
+    }
+
+    /**
+     * The integrity of the store, as the System Integrity View shows it.
+     *
+     * <p>Four things are reported, and none of them is a claim that cannot
+     * be checked: when the last durable write happened, what state the
+     * backup is in, what the recovery warnings are, and which goals are
+     * waiting to be picked up.
+     */
+    public Map<String, Object> integrity() {
+        Map<String, Object> integrity = new LinkedHashMap<>();
+        Path path = Paths.get(databasePath);
+        List<String> warnings = new ArrayList<>();
+
+        // The last durable write: the newest record the store holds.
+        //
+        // The records do not all carry the same shape of time - an
+        // assessment outcome carries epoch milliseconds, a goal carries an
+        // ISO instant - so each is read as an Instant and the newest is
+        // chosen among the Instants. Comparing the two forms as strings
+        // would be a comparison of two alphabets.
+        java.time.Instant lastWrite = null;
+        String lastWorkspace = null;
+        for (String workspace : workspaces()) {
+            for (AssessmentOutcome outcome : store().outcomes(workspace)) {
+                java.time.Instant at = java.time.Instant.ofEpochMilli(outcome.answeredAt());
+                if (lastWrite == null || at.isAfter(lastWrite)) {
+                    lastWrite = at;
+                    lastWorkspace = workspace;
+                }
+            }
+            for (LearningGoal goal : store().goalsWithSubtasks(workspace)) {
+                if (goal.updatedAt() == null) {
+                    continue;
+                }
+                java.time.Instant at;
+                try {
+                    at = java.time.Instant.parse(goal.updatedAt());
+                } catch (java.time.format.DateTimeParseException e) {
+                    continue;
+                }
+                if (lastWrite == null || at.isAfter(lastWrite)) {
+                    lastWrite = at;
+                    lastWorkspace = workspace;
+                }
+            }
+        }
+        integrity.put("lastDurableWrite", lastWrite == null ? null : lastWrite.toString());
+        integrity.put("lastDurableWriteWorkspace", lastWorkspace);
+        integrity.put("lastDurableWriteMeaning",
+                "The newest record the store holds: the answer to \"is what I see what was "
+                        + "written?\", not a promise that the disk is healthy.");
+
+        // The backup state: there is none, and saying so is the honest report.
+        Path wal = path.resolveSibling(path.getFileName() + "-wal");
+        long walBytes = 0L;
+        try {
+            walBytes = Files.exists(wal) ? Files.size(wal) : 0L;
+        } catch (IOException e) {
+            walBytes = -1L;
+        }
+        integrity.put("backupState", "none: the store is a single SQLite file. A copy of "
+                + path.getFileName() + " is the backup, and taking one is the operator's job.");
+        integrity.put("writeAheadLogBytes", walBytes);
+        if (walBytes > 8 * 1024 * 1024) {
+            warnings.add("The write-ahead log holds " + walBytes + " bytes. The data is durable, "
+                    + "but a checkpoint would fold it back into the database file.");
+        }
+
+        // The recovery warnings.
+        if (!Files.exists(path)) {
+            warnings.add("There is no database file yet: the workspaces will be empty until a "
+                    + "package is loaded.");
+        }
+        for (String workspace : workspaces()) {
+            for (LearningGoal goal : new GoalManager(store()).resumable(workspace)) {
+                warnings.add("The goal \"" + goal.description() + "\" was under way in the "
+                        + workspace + " and is waiting to be picked up. "
+                        + (goal.recoveryInstructions() == null ? ""
+                                : "Recovery: " + goal.recoveryInstructions()));
+            }
+        }
+        integrity.put("recoveryWarnings", warnings);
+
+        // The schema version and what it means.
+        integrity.put("schemaVersion", KnowledgeStore.SCHEMA_VERSION);
+        integrity.put("schemaVersionMeaning",
+                "The version of the store's shape. A store written by a newer schema is not read "
+                        + "by an older one, so this number belongs in an operator's notes.");
+        return integrity;
     }
 
     @PreDestroy

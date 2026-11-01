@@ -274,6 +274,10 @@
       <div id="persist-status" class="muted">—</div>
     </div>
     <div class="card">
+      <h2 style="margin-top:0">System integrity</h2>
+      <div id="persist-integrity" class="muted">—</div>
+    </div>
+    <div class="card">
       <h2 style="margin-top:0">How to verify the state survives a restart</h2>
       <pre>1. Stop the application (Ctrl-C).
 2. Start it again:  ./gradlew :matrix-core:quarkusRun
@@ -378,6 +382,28 @@ $('ws-select').addEventListener('change', function () {
   loadKnowledge();
 });
 
+function renderIntegrity(integrity) {
+  if (!integrity) { $('persist-integrity').innerHTML = '<span class="muted">—</span>'; return; }
+  let html = '<table>';
+  html += '<tr><th>Last durable write</th><td>' + esc(integrity.lastDurableWrite || 'none yet')
+    + ' <span class="muted">(' + esc(integrity.lastDurableWriteWorkspace || 'no workspace') + ')</span>'
+    + '<div class="muted">' + esc(integrity.lastDurableWriteMeaning || '') + '</div></td></tr>';
+  html += '<tr><th>Backup</th><td>' + esc(integrity.backupState || '—')
+    + '<div class="muted">the write-ahead log holds ' + esc(integrity.writeAheadLogBytes) + ' bytes</div></td></tr>';
+  html += '<tr><th>Store schema</th><td>' + esc(integrity.schemaVersion)
+    + '<div class="muted">' + esc(integrity.schemaVersionMeaning || '') + '</div></td></tr>';
+  html += '</table>';
+  const warnings = integrity.recoveryWarnings || [];
+  if (warnings.length) {
+    html += '<h3 style="margin-top:12px">Recovery warnings</h3><ul>';
+    warnings.forEach(function (warning) { html += '<li class="muted">' + esc(warning) + '</li>'; });
+    html += '</ul>';
+  } else {
+    html += '<div class="muted">No recovery warning: nothing is waiting to be picked up.</div>';
+  }
+  $('persist-integrity').innerHTML = html;
+}
+
 async function loadStatus() {
   try {
     const s = await api('/status');
@@ -390,6 +416,7 @@ async function loadStatus() {
       '<tr><th>Schema version</th><td>' + s.schemaVersion + '</td></tr>' +
       '<tr><th>Workspaces</th><td>' + esc((s.workspaces || []).join(', ') || 'none') + '</td></tr></table>' +
       '<pre>' + esc(JSON.stringify(s.counts, null, 2)) + '</pre>';
+    renderIntegrity(s.integrity);
     const counts = (s.counts || {})[WS];
     $('dash-metrics').innerHTML = counts ? [
       ['Concepts', counts.concepts], ['Claims', counts.claims], ['Sources', counts.sources],

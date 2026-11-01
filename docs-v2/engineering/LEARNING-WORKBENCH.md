@@ -275,7 +275,25 @@ curl -X POST http://localhost:9091/v1/workbench/workspaces/photosynthesis/teach-
   -H 'Content-Type: application/json' -d '{"conceptId":"c-photosynthesis-4d4bb673","expectedGain":0.2}'
 ```
 
-## 16. The screens of this wave
+## 16. The System Integrity View
+
+The **Persistence** screen carries the integrity of the store, and every part
+of it can be checked:
+
+- **the last durable write** — the newest record the store holds, with the
+  workspace it belongs to. It answers "is what I see what was written?",
+  not "is the disk healthy?";
+- **the backup state** — there is none. The store is a single SQLite file and
+  a copy of it is the backup, which is the operator's job;
+- **the write-ahead log's size** — the data is durable, but a large log
+  means a checkpoint would fold it back into the database file;
+- **the schema version** — the version of the store's shape, with what that
+  means for an operator's notes;
+- **the recovery warnings** — including, for every goal that was under way,
+  the goal and its recovery instructions. This is how a restarted process
+  says what it was doing.
+
+## 17. The screens of this wave
 
 The browser at `http://localhost:9091/workbench/` carries the screens this
 wave added, beside the ones it already had:
