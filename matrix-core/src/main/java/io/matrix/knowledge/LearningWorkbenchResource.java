@@ -318,6 +318,37 @@ public class LearningWorkbenchResource {
     }
 
     /**
+     * The conversation of a workspace.
+     *
+     * <p>The mission's §6: the dialogue subsystem keeps a bounded history
+     * of what was said, in what class, and about which concepts.
+     */
+    @GET
+    @Path("/workspaces/{id}/dialogue")
+    public List<DialogueContext.Turn> dialogue(@PathParam("id") String workspaceId) {
+        return workbench.context(workspaceId).turns();
+    }
+
+    /**
+     * The class of an utterance.
+     *
+     * <p>The mission's §5 names the classes a dialogue must distinguish:
+     * question, correction, observation, hypothesis, teach-request, example,
+     * failed-explanation, experiment-result.
+     */
+    @GET
+    @Path("/workspaces/{id}/dialogue/classify")
+    public Map<String, Object> classify(@PathParam("id") String workspaceId,
+                                        @QueryParam("utterance") String utterance) {
+        Map<String, Object> result = new LinkedHashMap<>();
+        result.put("utterance", utterance);
+        result.put("act", DialogueAct.classify(utterance).name());
+        result.put("language", TextProfiles.detect(utterance));
+        result.put("referential", DialogueContext.isReferential(utterance));
+        return result;
+    }
+
+    /**
      * The next bounded learning action for every active goal.
      *
      * <p>The mission's §4.6: the planning subsystem inspects the active

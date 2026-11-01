@@ -141,6 +141,14 @@
       <div id="ask-result" style="margin-top:16px"></div>
     </div>
     <div class="card">
+      <h2 style="margin-top:0">The conversation</h2>
+      <p class="muted">What was said, in what class, and about which concepts. The history is
+        bounded, and a question that refers to something without naming it - "Explain this in more
+        detail" - is resolved against the last turn. The question you typed is always kept as you
+        typed it.</p>
+      <div id="dialogue-list" class="muted">—</div>
+    </div>
+    <div class="card">
       <h2 style="margin-top:0">Unknown detection</h2>
       <div class="muted" id="ask-gap">Ask a question to see which of its terms the workspace cannot cover.</div>
     </div>
@@ -257,7 +265,7 @@
         same question are one record, so the count is a count of questions, not of wordings. A question the
         workspace can now answer is marked <em>resolved</em> and kept — the record of the gap is the evidence
         that something was learned.</p>
-      <button id="consolidate-questions" class="btn">Consolidate the asked questions</button>
+      <button id="consolidate-questions" class="action">Consolidate the asked questions</button>
       <div id="progress-questions" class="muted">—</div>
     </div>
   </section>
@@ -333,12 +341,18 @@ document.querySelectorAll('nav button').forEach(btn => {
     document.querySelectorAll('section').forEach(s => s.classList.remove('active'));
     btn.classList.add('active');
     $('tab-' + btn.dataset.tab).classList.add('active');
+    // RECON-W42.3: the navigation had no branch for three of the nine
+    // tabs, so the Dashboard was empty on first paint and the Ask and
+    // Persistence tabs never loaded their content.
+    if (btn.dataset.tab === 'dashboard') { loadStatus(); loadMetrics(); }
+    if (btn.dataset.tab === 'ask') { loadDialogue(); }
     if (btn.dataset.tab === 'knowledge') loadKnowledge();
     if (btn.dataset.tab === 'assess') loadAssessment();
     if (btn.dataset.tab === 'teach') loadConceptsForTeaching();
     if (btn.dataset.tab === 'progress') { loadProgress(); loadCapability(); loadQuestions(); }
     if (btn.dataset.tab === 'reasoning') loadRules();
     if (btn.dataset.tab === 'goals') loadGoals();
+    if (btn.dataset.tab === 'persistence') loadStatus();
   });
 });
 
@@ -910,6 +924,27 @@ async function loadRules() {
 }
 
 // ── Goals ───────────────────────────────────────────────────────────────
+async function loadDialogue() {
+  try {
+    const turns = await (await fetch('/v1/workbench/workspaces/' + WS + '/dialogue')).json();
+    if (!turns.length) {
+      $('dialogue-list').innerHTML = '<span class="muted">Nothing has been said yet.</span>';
+      return;
+    }
+    $('dialogue-list').innerHTML = turns.map(function (turn) {
+      return '<div><span class="tag">' + esc(turn.act) + '</span> ' +
+        '<span class="muted">' + esc(turn.language) + ' · ' +
+        (turn.answered ? 'answered' : 'not answered') + '</span>' +
+        '<div>' + esc(turn.question) + '</div>' +
+        (turn.conceptNames && turn.conceptNames.length
+          ? '<div class="muted">about: ' + esc(turn.conceptNames.join(', ')) + '</div>' : '') +
+        '</div>';
+    }).join('');
+  } catch (error) {
+    $('dialogue-list').innerHTML = '<span class="muted">Could not read the conversation.</span>';
+  }
+}
+
 async function loadPlan() {
   try {
     const plans = await (await fetch('/v1/workbench/workspaces/' + WS + '/plan')).json();

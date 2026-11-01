@@ -193,9 +193,62 @@ public class KnowledgeWorkbench implements AutoCloseable {
                     answer.gaps(), answer.unmatchedTerms());
         }
         answer = applyCorrection(context, question, answer);
+        answer = applyLanguageNote(question, answer);
         recordAsk(workspaceId, question, answer.unmatchedTerms(), answer.answered());
         context.record(question, answer);
         return answer;
+    }
+
+    /**
+     * The answer says which language the knowledge is in.
+     *
+     * <p>The mission's §6 asks for a multilingual generation. The honest
+     * version of that, with the knowledge in one language and the question
+     * in another, is to SAY SO: the answer is written in the language the
+     * workspace holds, and a question in another language is told that.
+     *
+     * <p>What the system does not do is substitute the terms of a lexicon
+     * into the answer text. A word-by-word substitution of a few hundred
+     * terms produces a text that reads as though it were translated and is
+     * not — and the mission's §6 warns that a translation is not evidence
+     * that two propositions are equivalent. A note is honest; a
+     * substituted answer is not.
+     */
+    private Answer applyLanguageNote(String question, Answer answer) {
+        String questionLanguage = TextProfiles.detect(question);
+        if (!answer.answered() || "unknown".equals(questionLanguage)) {
+            return answer;
+        }
+        String knowledgeLanguage = knowledgeLanguage();
+        if (knowledgeLanguage.equals(questionLanguage)) {
+            return answer;
+        }
+        return new Answer(answer.question(), answer.level(), answer.answered(),
+                answer.abstentionReason(), answer.statement(), answer.supportScore(),
+                answer.support(), answer.concepts(), answer.claims(), answer.sources(),
+                withNote(answer.limitations(),
+                        "The question is in " + questionLanguage + " and the knowledge is in "
+                                + knowledgeLanguage + ", so the answer is written in "
+                                + knowledgeLanguage + ". The terms are bridged by the bilingual "
+                                + "lexicon, which says which WORDS name the same thing; it does "
+                                + "not translate the answer."),
+                answer.gaps(), answer.unmatchedTerms());
+    }
+
+    /**
+     * The language the workspace's knowledge is in.
+     *
+     * <p>Detected from the knowledge itself, and reported as unknown when
+     * the detection is not decisive.
+     */
+    public String knowledgeLanguage() {
+        StringBuilder text = new StringBuilder();
+        KnowledgeSnapshot snapshot = workspace(DEFAULT_WORKSPACE);
+        for (Claim claim : snapshot.claims()) {
+            text.append(claim.proposition()).append(' ');
+        }
+        String detected = TextProfiles.detect(text.toString());
+        return "unknown".equals(detected) ? "en" : detected;
     }
 
     /**
