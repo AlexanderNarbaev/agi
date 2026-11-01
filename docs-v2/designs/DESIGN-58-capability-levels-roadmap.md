@@ -156,6 +156,33 @@ class BrainCapabilityTest {
 These are not state-of-the-art but they are **demonstrably infant-class behaviors** that the
 system can be tested for and improved iteratively.
 
+## 6a. Capability registry — RECON-W41 (2026-11-01)
+
+**What this section is.** META-R5 requires every new measurement of "the brain
+can X" to name the capability level it belongs to. This wave added a learning
+workbench with a reasoning engine and a learner-instrument. It did **not** add
+a new level: the levels describe the cognition pipeline, and the workbench is
+a measurement instrument for the levels it claims to reach, not a stage of its
+own. The registry below says which level each new measurement touches, and
+what the measurement does and does not establish.
+
+| Capability measured | Level | What was measured | What it does NOT establish | Evidence |
+|---|---|---|---|---|
+| Evidence-grounded derivation over propositional logic | **L6 — compositional reasoning** | A question with a derivable answer is classified DERIVATION, the recorded rules are checked by an exact bounded entailment procedure, and the status of each is reported (`DERIVED_VALID`). The logic domain holds 3 recorded rules and 28 claims. | That the pipeline reaches L6's 75% two-hop retrieval target: that target is measured by `SyntheticGrammarExperiment`, not by the workbench. The workbench's result is about the reasoning engine, not about the HDC bridge. | `ReasoningEngineTest`, `LogicDomainTest`, live `POST /workspaces/logic/reason` |
+| A claim's standing, separated into layer, warrant and derivation status | **L5 — symbol grounding** | A claim carries three independent facts; an established claim always keeps a warrant (a claim with no warrant was asserted, and asserting is not knowing). Modelled and mutation-tested. | That the cognition pipeline grounds symbols better than before: nothing in the cognition pipeline changed in this wave. | `KnowledgeAxes.tla` (model-checked, 4 mutants killed), `KnowledgeProvenanceTest` |
+| The learner's retention, measured where it can fail | **L5 — symbol grounding** | A four-phase teach-back over disjoint item sets with a closed-book learner; the **delayed phase fails** (0/1). | Any claim about human learning, and any claim about learning in general: six measured items on one concept is a demonstration, not a generalisation. | `TeachBackExperimentTest`, live `POST .../teach-back-experiment` |
+| A learning goal across a restart | **L5 — symbol grounding** | A goal with its subtasks, budget, checkpoint and recovery instructions is intact after `kill -9`, and a restarted process can ask what it was doing. | That the system plans: the manager resumes a goal, it does not choose the next subtask. | `GoalPersistenceTest`, live restart verification |
+| Honest abstention | **L5 — symbol grounding** | A question outside the workspace is refused with the uncovered terms named; the reason is recorded. | That the pipeline refuses in general: the refusal is the workbench's, at the level of retrieval. | `KnowledgeWorkbenchTest`, live `POST .../ask` |
+
+**The levels this wave does not reach.** The cognition pipeline's own L0–L7
+targets are untouched by this wave, except that L5 and L6 now have an
+instrument that can measure claims about them honestly. No number in §6 was
+re-measured by this wave, and none is claimed to be.
+
+**The recorded hole.** One mutant survives the gate — `Consensus-evaluate-without-quorum`
+— and the registry's Consensus entry does not claim a checked quorum because
+of it. See `docs-v2/engineering/MUTATION-REPORT.md`.
+
 ## 7. Where publishing fits
 
 After reaching Level 6:
