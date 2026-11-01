@@ -140,3 +140,34 @@ Status: **proposed** → **running** по мере реализации RUN 437-
   *Status*: PROPOSED — depends on hardware-Φ research findings
 - **H-099**: Real-world EEG input can drive MATRIX cognitive state without retraining
   *Status*: PROPOSED — depends on EEG integration research findings
+
+## W41 — RECON-W41: три оси эпистемики, точный энтейлмент, валидная обучаемость (2026-11-01)
+
+- **H-100**: Слой утверждения (`ClaimStatus`), основание (`ClaimWarrant`:
+  `OBSERVED`/`TESTIMONY`/`INFERRED`/`COMPARED`/`NONE` — четыре праманы Ньяи)
+  и обоснованность вывода (`DerivationStatus`) — независимые оси; сводить их
+  в одно число запрещено.
+  *Status*: **IMPLEMENTED** — оси в `Claim`, `ClaimWarrant`, `DerivationStatus`;
+  миграция схемы v6; DESIGN-70 §2. Проверяется тестами `KnowledgeProvenanceTest`
+  и `KnowledgeStoreMigrationTest`.
+- **H-101**: Энтейлмент определяется точно ограниченным энумератором
+  ground-пропозициональных моделей; ответ — `DERIVED_VALID` /
+  `DERIVED_INVALID` / `UNDECIDED`, без балла, без подсчёта, без времени, без
+  сети.
+  *Status*: **IMPLEMENTED** — `EntailmentChecker`; согласие с независимой
+  реализацией на 1000 псевдослучайных теориях: 0 расхождений (после
+  исправления `HashMap` в эталоне, 12 расхождений до).
+- **H-102**: Измерение обучаемости через лексикальное сдерживание урока
+  невалидно; teach-back должен измерять дискриминацию по структурированным
+  утверждениям, с независимым учеником, скрытым ключом, adversarial-паком и
+  логической (не календарной) задержкой.
+  *Status*: **PROPOSED** — исследование готово
+  (`W41-RESEARCH-A-LEARNING-SCIENCE.md`), пакет предметов ещё не написан;
+  блокер: без ключа и привязок к заблуждениям эксперимент неопровержим.
+- **H-103**: Основание поддержки утверждения должно **вычисляться в точке
+  использования** из реально задействованных посылок, а обновления
+  компонентов — только знаковой, гейтированной по ошибке и взвешенной по
+  eligibility коррекцией (δ = observed − expected; нет ошибки → нет
+  обновления), с явной абстиненцией при невыполнении критерия приёмки.
+  *Status*: **PROPOSED** — `W41-RESEARCH-B-COGNITIVE-SYSTEMS.md`; кандидаты:
+  `io.matrix.knowledge.{Derivation, SupportScore, Answer}`, `io.matrix.cognitive.ErrorDrivenLearner`.
