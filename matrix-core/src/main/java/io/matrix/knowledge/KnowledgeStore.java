@@ -54,7 +54,7 @@ import java.util.Set;
 public final class KnowledgeStore implements AutoCloseable {
 
     /** The schema version this build writes. */
-    public static final int SCHEMA_VERSION = 8;
+    public static final int SCHEMA_VERSION = 9;
 
     private static final ObjectMapper JSON = new ObjectMapper();
 
@@ -349,6 +349,37 @@ public final class KnowledgeStore implements AutoCloseable {
     }
 
     private int migrateFrom(int version) throws SQLException {
+        if (version == 8) {
+            // v9 adds the learning state machine's tables: the state a
+            // capability is in, and the transitions it went through.
+            //
+            // The transitions are the point. A recomputed stage can say what
+            // the state is now; only a recorded transition can say when it
+            // changed, what changed it, and what it was before - and only a
+            // recorded transition can preserve the earlier mastery when new
+            // evidence contradicts the model.
+            try (Statement st = connection.createStatement()) {
+                st.execute("CREATE TABLE IF NOT EXISTS learning_state ("
+                        + "id TEXT PRIMARY KEY, workspace_id TEXT NOT NULL, "
+                        + "concept_id TEXT NOT NULL, dimension TEXT NOT NULL, "
+                        + "stage TEXT NOT NULL, score REAL NOT NULL, "
+                        + "evidence_count INTEGER NOT NULL, "
+                        + "transitioned_at TEXT NOT NULL, note TEXT, "
+                        + "UNIQUE (workspace_id, concept_id, dimension))");
+                st.execute("CREATE TABLE IF NOT EXISTS learning_transition ("
+                        + "id TEXT PRIMARY KEY, workspace_id TEXT NOT NULL, "
+                        + "concept_id TEXT NOT NULL, dimension TEXT NOT NULL, "
+                        + "from_stage TEXT, to_stage TEXT NOT NULL, "
+                        + "reason TEXT NOT NULL, outcome_id TEXT, "
+                        + "occurred_at TEXT NOT NULL)");
+                st.execute("CREATE INDEX IF NOT EXISTS idx_learning_state_workspace "
+                        + "ON learning_state(workspace_id)");
+                st.execute("CREATE INDEX IF NOT EXISTS idx_learning_transition_workspace "
+                        + "ON learning_transition(workspace_id, occurred_at)");
+            }
+            writeSchemaVersion(9);
+            return 9;
+        }
         if (version == 7) {
             // v8 adds the persistent goals. A goal is not part of the
             // knowledge: the knowledge store can be restored and the goal
@@ -1557,6 +1588,121 @@ public final class KnowledgeStore implements AutoCloseable {
         } catch (SQLException e) {
             throw new IllegalStateException("failed to record the contradiction", e);
         }
+    }
+
+    /**
+     * Records the learning state of a workspace and the transitions it went
+     * through, in one transaction.
+     *
+     * <p>The two tables move together: a state without its transition
+     * history is a label, and a transition without the state it produced is
+     * an orphan. Writing them atomically means a reader never sees one
+     * without the other.
+     */
+    public void recordLearningStates(String workspaceId, Map<String, LearningState> states,
+                                      List<LearningTransition> transitions) {
+        try {
+            connection.setAutoCommit(false);
+            try {
+                try (PreparedStatement ps = connection.prepareStatement(
+                        "INSERT OR REPLACE INTO learning_state(id, workspace_id, concept_id, "
+                                + "dimension, stage, score, evidence_count, transitioned_at, note) "
+                                + "VALUES (?,?,?,?,?,?,?,?,?)")) {
+                    for (LearningState state : states.values()) {
+                        ps.setString(1, Ids.digest(workspaceId + "|" + state.conceptId() + "|"
+                                + state.dimension().name()));
+                        ps.setString(2, workspaceId);
+                        ps.setString(3, state.conceptId());
+                        ps.setString(4, state.dimension().name());
+                        ps.setString(5, state.stage().name());
+                        ps.setDouble(6, state.score());
+                        ps.setInt(7, state.evidenceCount());
+                        ps.setString(8, java.time.Instant.now().toString());
+                        ps.setString(9, state.note());
+                        ps.addBatch();
+                    }
+                    ps.executeBatch();
+                }
+                try (PreparedStatement ps = connection.prepareStatement(
+                        "INSERT OR REPLACE INTO learning_transition(id, workspace_id, concept_id, "
+                                + "dimension, from_stage, to_stage, reason, outcome_id, occurred_at) "
+                                + "VALUES (?,?,?,?,?,?,?,?,?)")) {
+                    for (LearningTransition transition : transitions) {
+                        ps.setString(1, transition.id());
+                        ps.setString(2, transition.workspaceId());
+                        ps.setString(3, transition.conceptId());
+                        ps.setString(4, transition.dimension().name());
+                        ps.setString(5, transition.fromStage() == null ? null : transition.fromStage().name());
+                        ps.setString(6, transition.toStage().name());
+                        ps.setString(7, transition.reason());
+                        ps.setString(8, transition.outcomeId());
+                        ps.setString(9, transition.occurredAt());
+                        ps.addBatch();
+                    }
+                    ps.executeBatch();
+                }
+                connection.commit();
+            } catch (SQLException | RuntimeException e) {
+                connection.rollback();
+                throw e;
+            } finally {
+                connection.setAutoCommit(true);
+            }
+        } catch (SQLException e) {
+            throw new IllegalStateException("failed to record the learning states of " + workspaceId, e);
+        }
+    }
+
+    /** The recorded learning states of a workspace, keyed by concept and dimension. */
+    public Map<String, LearningState> recordedLearningStates(String workspaceId) {
+        Map<String, LearningState> states = new LinkedHashMap<>();
+        try (PreparedStatement ps = connection.prepareStatement(
+                "SELECT concept_id, dimension, stage, score, evidence_count, note "
+                        + "FROM learning_state WHERE workspace_id = ? ORDER BY concept_id, dimension")) {
+            ps.setString(1, workspaceId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    LearningDimension dimension =
+                            LearningDimension.valueOf(rs.getString("dimension"));
+                    LearningState state = new LearningState(
+                            rs.getString("concept_id"), dimension,
+                            LearningStage.valueOf(rs.getString("stage")),
+                            rs.getDouble("score"), rs.getInt("evidence_count"),
+                            0, 0, 0, List.of(), rs.getString("note"));
+                    states.put(LearningStateMachine.key(state.conceptId(), dimension), state);
+                }
+            }
+        } catch (SQLException e) {
+            throw new IllegalStateException("failed to read the learning states of " + workspaceId, e);
+        }
+        return states;
+    }
+
+    /** The recorded transitions of a workspace, oldest first. */
+    public List<LearningTransition> learningTransitions(String workspaceId) {
+        List<LearningTransition> transitions = new ArrayList<>();
+        try (PreparedStatement ps = connection.prepareStatement(
+                "SELECT id, workspace_id, concept_id, dimension, from_stage, to_stage, reason, "
+                        + "outcome_id, occurred_at FROM learning_transition WHERE workspace_id = ? "
+                        + "ORDER BY occurred_at, id")) {
+            ps.setString(1, workspaceId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    transitions.add(new LearningTransition(
+                            rs.getString("id"), rs.getString("workspace_id"),
+                            rs.getString("concept_id"),
+                            LearningDimension.valueOf(rs.getString("dimension")),
+                            rs.getString("from_stage") == null ? null
+                                    : LearningStage.valueOf(rs.getString("from_stage")),
+                            LearningStage.valueOf(rs.getString("to_stage")),
+                            rs.getString("reason"), rs.getString("outcome_id"),
+                            rs.getString("occurred_at")));
+                }
+            }
+        } catch (SQLException e) {
+            throw new IllegalStateException("failed to read the transitions of " + workspaceId, e);
+        }
+        return transitions;
     }
 
     /** The recorded conflicts of a workspace. */

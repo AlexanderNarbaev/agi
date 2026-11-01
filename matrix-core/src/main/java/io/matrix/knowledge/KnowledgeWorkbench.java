@@ -185,7 +185,46 @@ public class KnowledgeWorkbench implements AutoCloseable {
                 answer, sessionId == null ? "default" : sessionId, System.currentTimeMillis(),
                 item.heldOut());
         store().recordOutcome(workspaceId, item, outcome);
+        // The state machine reconciles after every outcome: this is the
+        // moment the evidence changed, so this is the moment a capability
+        // can advance or regress.
+        reconcileLearningStates(workspaceId, outcome.itemId());
         return outcome;
+    }
+
+    /**
+     * Reconciles the recorded learning states with the evidence and records
+     * the transitions.
+     *
+     * <p>The computed state is the reading of the evidence now; the recorded
+     * state is the reading last time. Where they differ, the capability
+     * moved, and the move is written down with its cause — including a
+     * regression, which is recorded as a regression and never erased.
+     *
+     * @param workspaceId the workspace to reconcile
+     * @param causeId the outcome that caused the reconciliation, or null
+     * @return the transitions that happened
+     */
+    public List<LearningTransition> reconcileLearningStates(String workspaceId, String causeId) {
+        List<LearningState> computed = learningStates(workspaceId);
+        Map<String, LearningState> recorded = store().recordedLearningStates(workspaceId);
+        Map<String, LearningState> current = new LinkedHashMap<>();
+        for (LearningState state : computed) {
+            current.put(LearningStateMachine.key(state.conceptId(), state.dimension()), state);
+        }
+        String occurredAt = java.time.Instant.now().toString();
+        List<LearningTransition> transitions =
+                new LearningStateMachine().reconcile(workspaceId, computed, recorded, causeId,
+                        occurredAt);
+        if (!transitions.isEmpty() || !current.equals(recorded)) {
+            store().recordLearningStates(workspaceId, current, transitions);
+        }
+        return transitions;
+    }
+
+    /** The recorded transitions of a workspace, oldest first. */
+    public List<LearningTransition> learningTransitions(String workspaceId) {
+        return store().learningTransitions(workspaceId);
     }
 
     /** Every outcome recorded for a workspace. */
@@ -563,7 +602,35 @@ public class KnowledgeWorkbench implements AutoCloseable {
      * §6.1, with every stage recorded in the result.
      */
     public ReasoningEngine.Result reason(String workspaceId, String question, AbstractionLevel level) {
-        return new ReasoningEngine().reason(workspace(workspaceId), question, level);
+        KnowledgeSnapshot snapshot = workspace(workspaceId);
+        ReasoningEngine.Result result = new ReasoningEngine().reason(snapshot, question, level);
+
+        // WHAT WAS CHECKED IS NOW RECORDED.
+        //
+        // RECON-W41 built the contradiction detector and the entailment
+        // checker, and wired neither to the store: the `contradiction` table
+        // was therefore always empty, and every stored derivation kept the
+        // `UNDECIDED` status it was imported with, so `GET /contradictions`
+        // always answered `[]` and the stored verdicts said nothing.
+        //
+        // A verdict and a conflict are not generated content and are not
+        // promoted to trusted knowledge: they are computed facts ABOUT
+        // claims that are already in the store, with their own provenance.
+        // Recording them is what makes the knowledge inspectable - which is
+        // the whole point of the store holding a verdict at all.
+        for (Derivation derivation : result.derivations()) {
+            // The verdict carries the time of the CHECK, not the time the
+            // rule was recorded: what the store holds is "this was checked
+            // at this moment, and it came out this way".
+            store().recordDerivation(new Derivation(derivation.id(), derivation.workspaceId(),
+                    derivation.ruleId(), derivation.ruleName(), derivation.connective(),
+                    derivation.conclusionClaimId(), derivation.premiseClaimIds(),
+                    derivation.status(), java.time.Instant.now().toString()));
+        }
+        for (Contradiction conflict : new ContradictionDetector().detect(snapshot)) {
+            store().recordContradiction(conflict);
+        }
+        return result;
     }
 
     /** The recorded inferences of a workspace. */
