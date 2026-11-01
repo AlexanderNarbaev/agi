@@ -13,7 +13,7 @@ able to resume from the repository alone.
 |---|---|---|
 | **W42.0 — Reality and integration audit** | **DONE** | five deliverables in `docs-v2/engineering/W42-*.md`; the benchmark instrument and its baseline; the configuration fix |
 | **W42.1 — Unified learning and knowledge core** | **DONE** | `W42.1-LEARNING-CORE-REPORT.md`; the state machine, the planner, the demand check, the memory's bound, the teach-back gate; abstention quality 0.400 → 0.700 |
-| W42.2 — Universal knowledge acquisition | not started | the next wave; the mission's *acquire* verb depends on it |
+| **W42.2 — Universal knowledge acquisition** | **DONE (the core)** | TXT/MD/HTML/PDF/EPUB through libraries; the source record; the promotion layers; the independence rule; the endpoint and the interface — **verified live**: a concept acquired from a real document became retrievable with its source |
 | W42.2 — Universal knowledge acquisition | not started | |
 | W42.3 — Dialog Intelligence | not started | |
 | W42.4 — Learning and assessment | not started | |
@@ -102,32 +102,49 @@ which proved the data-loss defect (`W42-RISK-REGISTER.md` R1).
 
 ## 6. The next action
 
-**W42.2 — universal knowledge acquisition.** The mission's first practical
-objective needs it: *acquire a new concept from an actual document*. There
-is no ingestion of any kind today — the only import is a hand-curated
-package JSON, and `KnowledgeImporter.importPack` has no production caller.
+**W42.3 — Dialog Intelligence (RU + EN).** The mission's §6 and §14 want a
+dialogue subsystem: language identification, normalization, typo handling,
+morphology, lemmatization, intent detection, entity and concept
+recognition, context tracking, reference resolution, ambiguity detection,
+clarification, bounded conversation memory, response planning, multilingual
+generation and user feedback — with the original message preserved
+alongside any normalized representation.
 
-Concretely, in order:
+**What the W42.2 work left measured:**
 
-1. The source record — filename, id, content hash, format, language, the
-   author and the publication date **when known** and never invented, the
-   import date, the location, the extracted structure, the page references,
-   the extraction quality and the processing history (§5.2).
-2. The pipeline `SOURCE → EXTRACTION → NORMALIZATION → SEGMENTATION →
-   CONCEPT DISCOVERY → CLAIM EXTRACTION → EVIDENCE LINKING → VALIDATION →
-   KNOWLEDGE INTEGRATION` (§5.3), with established libraries for the
-   parsing (§5.1) — never a hand-written PDF or EPUB parser.
-3. The promotion state machine `RAW → EXTRACTED → CANDIDATE → SUPPORTED →
-   VERIFIED → DISPUTED → SUPERSEDED → INVALIDATED` (§5.4), and the rule that
-   ten documents copying one source are not ten confirmations (§5.4).
-4. The corpus manager (§5.5).
-5. The §13.2 security list, assessed against the ingestion that now exists —
-   this is the first moment a document's text reaches the system.
+| | baseline | now |
+|---|---|---|
+| the W42 benchmark's accuracy | 0.583 | 0.583 |
+| the abstention quality | 0.400 | **0.700** |
+| the Russian items (CROSS_LINGUAL) | 0/5 | **0/5** |
+| the paraphrases | 0/2 | 0/2 |
+| the false premises | 0/2 | 0/2 |
+| `TextFeatures`' tests | 0 | 6 |
 
-**The dependency is one-way:** W42.2 does not need W42.3. And the measure
-is the mission's own: a concept acquired from a real document, explained
-from the stored knowledge, with the provenance of every claim pointing at
-the document it came from.
+**The Russian is the largest single hole in the product** — five of the five
+cross-lingual items fail, because the stopword list, the suffix fold, the
+negation list and the task-classification keywords are all English. The
+text layer is the first thing W42.3 changes, and its tests already exist to
+be changed against.
+
+**What W42.2 left unfinished, stated plainly:**
+
+1. **The corpus manager** (§5.5) — the collections, the deduplication, the
+   incremental indexing, the resumable imports and the export.
+2. **The representations for the imported concepts.** A concept acquired from
+   a document is retrievable with its source, but the prose the answer
+   shows is still the pack's authored account — an imported concept has no
+   authored representation yet.
+3. **The validation stage.** The pipeline stops at the EVIDENCE LINKING and
+   KNOWLEDGE INTEGRATION steps; the claims arrive as CANDIDATE and stay
+   there, which is the honest state for an unvalidated extraction.
+4. **The two false-premise items.** Nothing yet checks the premise of a
+   question.
+5. **The security list is attended to where it applies, not everywhere.**
+   The oversized file, the zip bomb and the malicious HTML are handled; the
+   path traversal is not reachable (there is no path in the request); the
+   prompt injection inside a document is now reachable for the first time
+   and must be assessed in W42.3.
 
 **For reference, W42.1's plan was:**
 
@@ -144,6 +161,8 @@ the document it came from.
    `KnowledgeGapDetector.missingPrerequisites()` already exist and are unused
    — they are the raw material.
 5. Measure the abstention improvement against the W42 baseline (0.400).
+
+**All five were delivered.**
 
 1. Fix the backup instruction (R1) and add the test that would have caught it.
 2. Wire the contradiction and derivation recording (R4, R5); the empty

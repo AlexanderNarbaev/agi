@@ -35,10 +35,15 @@ acyclicity check, `CurriculumOrderer` (`io.matrix.ktopo`).
 
 ---
 
-## W42.2 — Universal knowledge acquisition
+## W42.2 — Universal knowledge acquisition — **the core is DONE**
 
 **Exit condition:** *importing a real book or document produces inspectable,
-traceable knowledge.*
+traceable knowledge.* **Met** for the five formats, the source record, the
+promotion layers, the independence rule and the endpoint — verified live on
+a real text document ✓ ✓.
+
+**Left, stated plainly:** the corpus manager (§5.5) ✓ ✓; the authored
+representations for the imported concepts ✓ ✓; the validation stage ✓ ✓.
 
 | # | Item | Notes |
 |---|---|---|
