@@ -227,6 +227,28 @@ public class KnowledgeWorkbench implements AutoCloseable {
         return store().learningTransitions(workspaceId);
     }
 
+    /**
+     * The next bounded learning action for every active goal.
+     *
+     * <p>The mission's §4.6: something has to decide what to do next. Until
+     * this wave, nothing did — the goals recorded what a human had already
+     * done, and the pieces that would make a planner possible
+     * ({@code remainingSubtasks}, {@code blockedSubtasks},
+     * {@code hasDependencyCycle}, {@code missingPrerequisites}) were written
+     * and never called.
+     *
+     * <p>The plan is derived from what the workspace holds, and its cost
+     * estimate is recomputable by reading the store.
+     */
+    public List<LearningPlanner.Plan> plan(String workspaceId) {
+        KnowledgeSnapshot snapshot = workspace(workspaceId);
+        List<LearningPlanner.Plan> plans = new ArrayList<>();
+        for (LearningGoal goal : store().goalsWithSubtasks(workspaceId)) {
+            plans.add(new LearningPlanner(snapshot, goal).plan());
+        }
+        return plans;
+    }
+
     /** Every outcome recorded for a workspace. */
     public List<AssessmentOutcome> outcomes(String workspaceId) {
         return store().outcomes(workspaceId);

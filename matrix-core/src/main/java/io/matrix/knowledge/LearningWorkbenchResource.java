@@ -259,6 +259,20 @@ public class LearningWorkbenchResource {
         return workbench.resumableGoals(workspaceId);
     }
 
+    /**
+     * The next bounded learning action for every active goal.
+     *
+     * <p>The mission's §4.6: the planning subsystem inspects the active
+     * goals, identifies the missing prerequisites and the knowledge gaps,
+     * estimates the cost and selects an appropriate strategy. Until this
+     * wave, nothing selected anything.
+     */
+    @GET
+    @Path("/workspaces/{id}/plan")
+    public List<LearningPlanner.Plan> plan(@PathParam("id") String workspaceId) {
+        return workbench.plan(workspaceId);
+    }
+
     /** Starts a goal. */
     @POST
     @Path("/workspaces/{id}/goals")
@@ -398,6 +412,18 @@ public class LearningWorkbenchResource {
         result.put("dimensions", List.of(LearningDimension.values()));
         result.put("stages", List.of(LearningStage.values()));
         return result;
+    }
+
+    /**
+     * Every change of a capability's state, with the outcome that caused it.
+     *
+     * <p>The mission's §7: the lifecycle is revisable, a regression must be
+     * observable and explained, and earlier mastery records are preserved.
+     */
+    @GET
+    @Path("/workspaces/{id}/learning-transitions")
+    public List<LearningTransition> learningTransitions(@PathParam("id") String workspaceId) {
+        return workbench.learningTransitions(workspaceId);
     }
 
     /** The recorded assessment outcomes. */

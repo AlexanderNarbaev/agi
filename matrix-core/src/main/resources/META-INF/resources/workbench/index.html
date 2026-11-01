@@ -254,8 +254,18 @@
     <p class="muted">A goal is not part of the knowledge: it says what was being attempted, what
       failed, how much of the budget is spent and where to pick up. It survives a restart, and a
       restarted process can ask what it was doing.</p>
+    <div class="card"><h2 style="margin-top:0">The next action</h2>
+      <p class="muted">What the system itself would do next: the subtask whose dependencies are
+        met, the subtask that must be unblocked first, or the concept this workspace does not
+        hold yet. The cost is the number of prerequisites that are missing, so it can be checked
+        against the store.</p>
+      <div id="plan-list" class="muted">—</div></div>
     <div class="card"><h2 style="margin-top:0">The goals of this workspace</h2>
       <div id="goal-list" class="muted">—</div></div>
+    <div class="card"><h2 style="margin-top:0">The learning history</h2>
+      <p class="muted">Every change of a capability's state, with the outcome that caused it. A
+        regression is recorded as a regression and the earlier mastery stays in the log.</p>
+      <div id="transition-list" class="muted">—</div></div>
     <div class="card"><h2 style="margin-top:0">Start a goal</h2>
       <div class="row">
         <input type="text" id="goal-desc" placeholder="What is the objective?">
@@ -835,7 +845,56 @@ async function loadRules() {
 }
 
 // ── Goals ───────────────────────────────────────────────────────────────
+async function loadPlan() {
+  try {
+    const plans = await (await fetch('/v1/workbench/workspaces/' + WS + '/plan')).json();
+    if (!plans.length) {
+      $('plan-list').innerHTML = '<span class="muted">There is no goal to plan for.</span>';
+      return;
+    }
+    $('plan-list').innerHTML = plans.map(function (plan) {
+      if (!plan.actions.length) {
+        return '<div class="muted">' + esc(plan.summary) + '</div>';
+      }
+      return plan.actions.map(function (action) {
+        return '<div><span class="tag">' + esc(action.kind) + '</span> '
+          + esc(action.action)
+          + '<div class="muted">' + esc(action.reason)
+          + ' · estimated cost: ' + action.estimatedCost
+          + (action.missingConceptIds && action.missingConceptIds.length
+              ? ' · missing: ' + esc(action.missingConceptIds.join(', ')) : '')
+          + '</div></div>';
+      }).join('');
+    }).join('');
+  } catch (error) {
+    $('plan-list').innerHTML = '<span class="muted">Could not read the plan.</span>';
+  }
+}
+
+async function loadTransitions() {
+  try {
+    const transitions = await (await fetch(
+      '/v1/workbench/workspaces/' + WS + '/learning-transitions')).json();
+    if (!transitions.length) {
+      $('transition-list').innerHTML = '<span class="muted">No capability has changed state yet.</span>';
+      return;
+    }
+    $('transition-list').innerHTML = transitions.map(function (transition) {
+      const moved = transition.fromStage === transition.toStage ? '' : '';
+      return '<div><span class="tag ' + (transition.toStage < transition.fromStage ? 'REGRESSED' : '')
+        + '">' + esc(transition.fromStage) + ' → ' + esc(transition.toStage) + '</span> '
+        + esc(transition.dimension)
+        + '<div class="muted">' + esc(transition.reason)
+        + (transition.outcomeId ? ' · outcome ' + esc(transition.outcomeId) : '') + '</div></div>';
+    }).join('');
+  } catch (error) {
+    $('transition-list').innerHTML = '<span class="muted">Could not read the learning history.</span>';
+  }
+}
+
 async function loadGoals() {
+  loadPlan();
+  loadTransitions();
   try {
     const goals = await (await fetch('/v1/workbench/workspaces/' + WS + '/goals')).json();
     if (!goals.length) {
