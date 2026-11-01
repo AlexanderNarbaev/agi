@@ -187,3 +187,43 @@ held 737 512 bytes against a 278 528-byte database file: 2.6×.
 | W42.4 | the no-consolidation baseline | **does not exist** |
 
 **Every one of these is a before-and-after against a number recorded here.**
+
+---
+
+## 6. The W42.1 result — the abstention number moved
+
+**Measured after the demand check** (`QuestionDemand`), against the same
+benchmark, the same store and the same instrument:
+
+| | W42.0 baseline | W42.1 | |
+|---|---|---|---|
+| answer accuracy | 0.583 | **0.583** | unchanged |
+| abstention quality | 0.400 | **0.700** | **+0.300** |
+| BM25 overlap | 0.593 | **0.593** | unchanged |
+
+By category:
+
+| category | W42.0 | W42.1 |
+|---|---|---|
+| AMBIGUOUS | 1/2 refused | **2/2 refused** |
+| UNANSWERABLE | 2/4 refused | **3/4 refused** |
+| ADVERSARIAL | 1/2 refused | **2/2 refused** |
+| every other category | unchanged | unchanged |
+
+**What produced the change:** three demand rules — a question carrying a
+command, a question about the future, and an ambiguous question — each of
+which refuses with its reason. **What did not change:** the answer accuracy
+and the BM25 overlap, which is the point: the system's answers are the same
+answers, and it now declines six of the ten it should have declined.
+
+**The threshold that was tried and removed.** A count-based demand coverage
+was tried as a refusal threshold. It caught nothing the demand rules do not
+catch, and it cost a misspelled question that the typo handling should
+answer — so it was removed, and it remains only as a reported measurement.
+A threshold that trades a wrong refusal for a right one is not an
+improvement in the refusal rate; it is a trade.
+
+**Still failing, and named:** both FALSE_PREMISE items are answered; "who
+invented propositional logic" is answered; both paraphrases are refused;
+all five Russian items are refused; the TRANSFER items are answered without
+carrying the conclusion. These are W42.2's and W42.3's work.

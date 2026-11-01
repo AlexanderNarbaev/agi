@@ -6,11 +6,16 @@ Each item names its baseline, its exit condition and the risk it closes.
 
 ---
 
-## W42.1 — Unified learning and knowledge core
+## W42.1 — Unified learning and knowledge core — **DONE**
 
 **Exit condition (the mission's):** *a persistent goal can acquire, practise,
 evaluate, revise and resume learning.* The "acquire" half needs W42.2's
 ingestion; W42.1 delivers the rest and says so.
+**Delivered:** the backup instruction ✓, the contradiction and derivation
+recording ✓, the persisted state machine ✓, the planner ✓, the memory's
+bound ✓, the demand check ✓ (abstention 0.400 → 0.700), the tokenizer's
+tests ✓, the teach-back gate ✓.
+**The report:** `W42.1-LEARNING-CORE-REPORT.md`.
 
 | # | Item | Baseline | Exit condition | Risk |
 |---|---|---|---|---|
