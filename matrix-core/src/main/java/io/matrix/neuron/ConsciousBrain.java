@@ -96,6 +96,24 @@ public final class ConsciousBrain {
         this.interAgentSnapshots = new io.matrix.consciousness.InterAgentPhiSnapshot[INTER_AGENT_SNAPSHOT_CAPACITY];
     }
 
+    /**
+     * What the brain predicts: the observation it recalls.
+     *
+     * <p>The hippocampus holds the observations of the previous cycles.
+     * The one most similar to the current observation is the brain's
+     * prediction for it, and the distance between the two is the
+     * prediction error. With nothing recalled yet, the prediction is
+     * silence, and the error is the whole observation.
+     *
+     * @param observation the observation
+     * @return the prediction
+     */
+    private float[] predictedFrom(float[] observation) {
+        String key = hippocampus.findMostSimilar(observation);
+        float[] recalled = key == null ? null : hippocampus.retrieve(key);
+        return recalled == null ? new float[dims] : recalled;
+    }
+
     public CycleReport cycle(float[] observation) {
         if (observation == null || observation.length != dims) {
             throw new IllegalArgumentException("observation size mismatch");
@@ -106,10 +124,24 @@ public final class ConsciousBrain {
         hdc.learn(observation, label, 0.5f, 0.01f);
         HdcBrain.Recall recall = hdc.forward(observation);
 
-        // 2. Compute prediction error (use observation as its own prediction for now;
-        //    real systems would have a generative model).
+        // 2. Compute the prediction error.
+        //
+        // RECON-W42.8. The prediction used to be the observation itself -
+        // the code said so - so the surprise was zero in every cycle, and
+        // the whole error-driven part of this cycle was dead by
+        // construction: the Wu-wei decision always saw a surprise of
+        // zero, and the cognitive error stream never recorded anything.
+        // The DESIGN-58 marks L7 as DONE with eighty-five tests, and none
+        // of them could see it, because the error could not be non-zero.
+        //
+        // The prediction is now what the brain RECALLS from its
+        // hippocampus: the observation it finds most similar to the one
+        // it is looking at. On the first cycle there is nothing to recall,
+        // and the surprise is the largest the scale allows - which is what
+        // it should be when a brain sees something for the first time.
+        float[] predicted = predictedFrom(observation);
         PredictiveCoder.PredictionError error = PredictiveCoder.computeError(
-                toDouble(observation), toDouble(observation));
+                toDouble(observation), toDouble(predicted));
         double surprise = error.magnitude();
 
         // 2b. Compute integration metrics — trajectory is updated on every cycle so that
