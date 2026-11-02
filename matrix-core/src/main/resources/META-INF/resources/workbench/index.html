@@ -78,6 +78,7 @@
   <button data-tab="ask">Ask</button>
   <button data-tab="reasoning">Reasoning</button>
   <button data-tab="knowledge">Knowledge</button>
+  <button data-tab="corpus">Sources</button>
   <button data-tab="assess">Assess</button>
   <button data-tab="teach">Teach</button>
   <button data-tab="progress">Progress</button>
@@ -209,15 +210,34 @@
     </div>
   </section>
 
+  <section id="tab-corpus">
+    <h2>Source browser — the corpus registry</h2>
+    <p class="muted" style="margin-top:0">What the workspace knows, where it came from, and how much
+      of it is <em>independent</em>. The independent confirmations are counted by the distinct content
+      hashes of the sources behind a claim: two documents with the same content are one source, and
+      ten copies of one source are one confirmation. The registry does not rank the sources — the
+      authority and the freshness are reported as they were authored, because a ranking nobody could
+      check would not be information.</p>
+    <div class="card"><div id="corpus-meta" class="muted">—</div></div>
+    <div class="card"><h2 style="margin-top:0">The registry</h2>
+      <div id="corpus-entries" class="muted">—</div></div>
+    <div class="card"><h2 style="margin-top:0">What the registry says</h2>
+      <div id="corpus-notes" class="muted">—</div></div>
+  </section>
+
   <section id="tab-assess">
     <h2>Assessment</h2>
     <div class="card">
       <h2 style="margin-top:0">The next exercise</h2>
       <p class="muted">The system chooses what to practise next, from the learner's own state and
         the workspace's gaps: the dimension that has not reached competence, a concept whose
-        prerequisites are missing, or the held-out item - the independent test. The item is one the
-        dataset holds; the system never writes a question, and a generated question the learner is
-        graded on would be exactly the generated content the mission forbids promoting.</p>
+        prerequisites are missing, or the held-out item - the independent test. <strong>Since W42.7
+        the system writes assessment items for the concepts it acquired from a document</strong>: a
+        practice item and a held-out twin per dimension, with the key terms taken from the
+        workspace's own claims and from the excerpts of the sources behind them. It writes no content
+        of its own - the terms it checks an answer against are the workspace's own - and the held-out
+        twin asks the same thing in different words, so the independent test cannot be passed by
+        remembering the practice.</p>
       <div class="row">
         <button class="action" id="btn-next-exercise">What should I practise?</button>
         <span class="muted" id="exercise-note">Nothing asked yet.</span>
@@ -360,6 +380,7 @@ document.querySelectorAll('nav button').forEach(btn => {
     if (btn.dataset.tab === 'dashboard') { loadStatus(); loadMetrics(); }
     if (btn.dataset.tab === 'ask') { loadDialogue(); }
     if (btn.dataset.tab === 'knowledge') loadKnowledge();
+    if (btn.dataset.tab === 'corpus') loadCorpus();
     if (btn.dataset.tab === 'assess') { loadAssessment(); loadNextExercise(); }
     if (btn.dataset.tab === 'teach') loadConceptsForTeaching();
     if (btn.dataset.tab === 'progress') { loadProgress(); loadCapability(); loadQuestions(); }
@@ -582,6 +603,28 @@ $('btn-ask').addEventListener('click', async () => {
     out.innerHTML = '<div class="card bad">' + esc(e.message) + '</div>';
   }
 });
+
+async function loadCorpus() {
+  try {
+    const c = await api('/workspaces/' + WS + '/corpus');
+    $('corpus-meta').innerHTML = 'the sources: <strong>' + c.theSources + '</strong> · the imported: ' +
+      c.theImported + ' · the authored: ' + c.theAuthored + ' · the claims: ' + c.theClaims +
+      ' · the best independent confirmations: <strong>' + c.theIndependentConfirmations + '</strong>';
+    $('corpus-entries').innerHTML = '<table><tr><th>Source</th><th>Kind</th><th>Language</th>' +
+      '<th>Format</th><th>Claims</th><th>Independent confirmations</th><th>Content hash</th></tr>' +
+      (c.theRegistry || []).map(e =>
+        '<tr><td>' + esc(e.theTitle || e.theSource) + '<div class="muted">' + esc(e.theLocator || '') + '</div></td>' +
+        '<td><span class="tag">' + esc(e.theKind) + '</span></td>' +
+        '<td>' + esc(e.theLanguage || '—') + '</td>' +
+        '<td>' + esc(e.theFormat || '—') + '</td>' +
+        '<td>' + e.theClaimsSupported + '</td>' +
+        '<td>' + e.theIndependentConfirmations + '</td>' +
+        '<td class="muted">' + esc((e.theContentHash || '').slice(0, 16)) + '</td></tr>').join('') + '</table>';
+    $('corpus-notes').innerHTML = (c.theNotes || []).map(n => '<div>' + esc(n) + '</div>').join('');
+  } catch (e) {
+    $('corpus-meta').innerHTML = '<span class="muted">The registry is not available: ' + esc(String(e)) + '</span>';
+  }
+}
 
 async function loadKnowledge() {
   try {
