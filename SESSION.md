@@ -7752,3 +7752,11 @@ index folds with the English one, so a Latin term in a Russian question never re
 Russian false-premise question is answered with support 0.2 while the support score itself says
 `scopeMatch=OUTSIDE` ✓ ✓ — the system knows the answer is out of scope and answers anyway ✓ ✓. Both need the
 same discipline: fix, measure on the candidate, and only then enable the candidate ✓ ✓.
+
+# RECON-W42.9 — the folding mismatch is pinned to two lines, and the fix is designed
+
+**Done** ✓ ✓. The claims' terms are folded with the claim's own language (EN) and the query's with the
+question's language (RU), so a Latin term in a Russian question never reaches the index ✓ ✓ — and the
+bilingual bridge cannot help, because the lexicon has no Latin form ✓ ✓. The fix is designed: the query
+must also carry the form the index uses ✓ ✓, keeping the Russian fold for the bridge ✓ ✓, with the English
+path provably unchanged ✓ ✓. The weight change it implies must be measured on the candidate ✓ ✓.
