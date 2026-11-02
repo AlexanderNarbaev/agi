@@ -17,7 +17,8 @@ able to resume from the repository alone.
 | W42.2 — Universal knowledge acquisition | not started | |
 | **W42.3 — Dialog Intelligence** | **DONE** | `W42.3-DIALOG-INTELLIGENCE-REPORT.md`; the localised text layer, the bilingual lexicon, the typo corrector, the bounded conversation, the eight dialogue classes, 168 measured cases — accuracy 0.583 → 0.792, the Russian 0/5 → 4/5 |
 | **W42.4 — Learning and assessment** | **DONE** | `W42.4-LEARNING-AND-REPRESENTATION-REPORT.md`; the exercise selector, the delayed retention measured from the session boundary, and the representation composer — the mission's first practical objective is now demonstrated end to end on the running application |
-| **W42.5 — Cognitive integration** | **IN PROGRESS** | the tombstone is done (`d47edb32`); the consolidation, the baselines and the false-premise detector are not |
+| **W42.5 — Cognitive integration** | **DONE** | `W42.5-COGNITIVE-INTEGRATION-REPORT.md`; the false-premise detector (the `FALSE_PREMISE` items 0/2 → 2/2, the accuracy unchanged at 0.792 and the abstention 0.700 → 0.900), the bounded idempotent consolidation, the error-driven selection, and the retention baseline experiment — the retention's evidence 2 → 3 and its stage EXPLORATION → PRACTICE against the no-consolidation baseline |
+| W42.6 — Local Alpha v0.3 | not started | the next wave |
 | W42.4 — Learning and assessment | not started | |
 | W42.5 — Cognitive integration | not started | |
 | W42.6 — Local Alpha v0.3 | not started | |
@@ -55,6 +56,10 @@ two waves.
 | `ea94d726` | An imported concept gets an account of its own |
 | `d47edb32` | A forgetting is marked, not performed |
 | `d9323c3f` | The false-premise mechanism was measured, and it was not shipped |
+| `2c2e3c85` | A question's premise is checked against the workspace's own claims |
+| `b9cc93b9` | The consolidation is bounded, marked, and leaves the truth alone |
+| `548b3adc` | The exercise the learner got wrong is the one they are asked again |
+| `e9f2265a` | The delayed retention is measured against a no-consolidation baseline |
 
 **Starting commit:** `0296e83e` (W41's final verification).
 **The remote HEAD was verified, not assumed** — `git fetch origin --prune`

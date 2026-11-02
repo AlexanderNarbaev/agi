@@ -223,9 +223,9 @@ answer — so it was removed, and it remains only as a reported measurement.
 A threshold that trades a wrong refusal for a right one is not an
 improvement in the refusal rate; it is a trade.
 
-**Still failing, and named:** both FALSE_PREMISE items are answered; "who
-invented propositional logic" is answered; both paraphrases are refused;
-the TRANSFER items are answered without carrying the conclusion.
+**Still failing, and named:** "who invented propositional logic" is answered;
+both paraphrases are refused; the TRANSFER items are answered without
+carrying the conclusion; `ru-cross-3` is refused.
 
 ---
 
@@ -255,6 +255,32 @@ corrector was made conservative — the threshold scales with the word's
 length, an ambiguous correction is refused, and a two-edit correction must
 land on one of the workspace's own concepts. The accuracy gain survived and
 the abstention came back.
+
+## 9. The W42.5 result — the baseline comparisons
+
+**MEASURED on the same benchmark, the same store and the same instrument:**
+
+| | W42.3 | **W42.5** |
+|---|---|---|
+| the answer accuracy | 0.792 | **0.792** (unchanged) |
+| the abstention quality | 0.700 | **0.900** |
+| the BM25 overlap | 0.594 | **0.594** (unchanged) |
+| the FALSE_PREMISE items | 0/2 | **2/2** |
+| the delayed retention's stage | — | **PRACTICE**, against EXPLORATION for the baseline |
+| the delayed retention's evidence | — | **3**, against 2 for the baseline |
+
+**What produced the change:** the false-premise detector — the premise of a
+question is checked against the workspace's own claims, and the workspace
+already holds the misconception as a REFUTED claim and the denial as a
+VERIFIED one.
+
+**The retention baseline** (the mission's §14 row, "the delayed retention
+is measured and improved over a no-consolidation baseline") is measured on
+the photosynthesis assessment set of 22 items: the error-driven selection
+gathers **three** items of delayed evidence where the plain order gathers
+**two**, and the retention's stage is PRACTICE against EXPLORATION. The
+learner is a scripted rule and the dataset holds 22 items, so this is a
+demonstration and not a generalisation.
 
 ## 8. The dialogue cases
 

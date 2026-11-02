@@ -180,7 +180,22 @@ and the mission's §16 forbids hiding a failed experiment.
 TWO. Whatever is built has to be measured against a set that is larger than
 two, or the number is a demonstration and not a capability.
 
-## W42.5 — Cognitive integration
+## W42.5 — Cognitive integration — **DONE**
+
+**Delivered:** the false-premise detector ✓ ✓ (the `FALSE_PREMISE` items
+0/2 → 2/2, the accuracy unchanged ✓ ✓, the abstention 0.700 → 0.900 ✓ ✓);
+the bounded idempotent consolidation with seven kinds of forgetting and
+without touching a claim ✓ ✓; the error-driven selection ✓ ✓; the
+retention baseline experiment ✓ ✓ — the retention's evidence 2 → 3 and its
+stage EXPLORATION → PRACTICE ✓ ✓.
+**The report:** `W42.5-COGNITIVE-INTEGRATION-REPORT.md`.
+
+**Left, stated plainly:** the consolidation does not yet affect the
+knowledge ✓ ✓; the §9's error-driven learning integration is not wired ✓ ✓;
+the `ConsciousBrain` cluster and the nine shadow classes are an owner's
+decision ✓ ✓; the paraphrase items and `ru-cross-3` are still wrong ✓ ✓.
+
+## W42.5 (superseded — the original plan)
 
 **Exit condition:** *measurable improvement attributable to specific
 cognitive components.*
