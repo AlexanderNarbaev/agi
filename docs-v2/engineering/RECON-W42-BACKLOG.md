@@ -279,3 +279,35 @@ what it would take and what stands in the way.
 mentions *acquire*, and acquisition needs W42.2. The honest statement is
 that W42.1 delivers the other four verbs, and the W42.1 report says which
 one it could not deliver and why.
+
+## W42.9 — the magic numbers, file by file (D-015, R28)
+
+**The rule, from the gate's own scanner.** A candidate is a numeric
+literal of three or more digits on a line that is not a comment, not a
+`static final` definition, and not in an exempt package
+(`io.matrix.protocol`, `io.matrix.federation`, `io.matrix.research`,
+`io.matrix.consciousness`).
+
+**The measurement.** 341 candidates in 299 lines over 167 files. The
+files with the most candidates:
+
+| the file | the candidates |
+|---|---|
+| `io/matrix/cli/ChainTextGenerator.java` | 10 |
+| `io/matrix/knowledge/TruthTable.java` | 3 |
+| `io/matrix/cli/ConversationEdgeTest.java` | 3 |
+| `io/matrix/federation/liquid/ClusterTopology.java` | 2 |
+| `io/matrix/research/AlgorithmEncyclopedia.java` | 4 |
+| `io/matrix/neuron/FloatEmbeddingIndex.java` | 2 |
+| `io/matrix/neuron/BitNetTokenizer.java` | 2 |
+| `io/matrix/neuron/BitNetModel.java` | 8 |
+
+**The method, one file at a time.** For each file: name the constant
+after what the number IS in that file (`PORT`, `TIMEOUT_MS`,
+`KEY_TERM`), move the literal into the constant's definition, compile,
+and run that package's tests. A file that does not compile is reverted
+immediately — as happened with the blind attempt, which is why it was
+reverted (R28).
+
+**The gate.** `scripts/quality-gate.sh` must report no more than the
+accepted 270 candidates. The baseline is NOT updated.

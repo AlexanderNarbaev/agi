@@ -7514,3 +7514,11 @@ them would weaken the gate ✓ ✓. It is recorded as R27, for the owner ✓ ✓
 answered ✓ ✓; the magic numbers are fixed in the code and the baseline is NOT updated ✓ ✓; the
 shadow classes are wired one by one with the math verified first ✓ ✓; the full test suite is not
 run for now ✓ ✓.
+
+# RECON-W42.9 — the mechanical extraction failed and was reverted
+
+**Done** ✓ ✓. The owner's D-015 was attempted mechanically; the blind extraction broke the build
+(200 errors over 167 files), was reverted, and the compile is green again ✓ ✓. The failure and its
+three measured causes are recorded as R28 ✓ ✓, and the by-file method with the per-file candidate
+table is the W42.9 backlog ✓ ✓. The quality gate stays RED (R27) — the literals are still to be
+extracted, file by file ✓ ✓.
