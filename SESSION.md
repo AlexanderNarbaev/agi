@@ -7354,3 +7354,11 @@ ru 0/5, paraphrase 0/2, false premise 0/2 ✓ ✓.
 ✓ ✓, the validator is idempotent ✓ ✓, and the report says what it promoted ✓ ✓.
 **The 12-step checklist was re-run against the current code** ✓ ✓ — twelve steps,
 and a `SIGKILL` with 4.1 MB of WAL pending ✓ ✓ ✓.
+
+# RECON-W42.7 — the owner's decisions
+
+**Done** ✓ ✓. D-011: the answer's frame is translated ✓ ✓, the knowledge is not ✓ ✓.
+D-012: the shadow classes are wired to the live engines ✓ ✓ — the error-driven
+decay's math was verified first and the verification found a real defect ✓ ✓ ✓.
+**A live check found a second defect**: the Russian question named the wrong
+concept ✓ ✓ ✓.
