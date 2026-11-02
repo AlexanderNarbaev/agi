@@ -7665,3 +7665,9 @@ makes — the layer graph and the policy's requirements for the target ✓ ✓. 
 cannot reach VERIFIED on one source copied many times ✓ ✓. Three mutated models were caught by TLC ✓ ✓.
 The formal gate is 14 passed, 0 failed ✓ ✓, and all three of the new state machines now have a
 specification ✓ ✓.
+
+# RECON-W42.9 — the new specifications are covered by the mutation gate
+
+**Done** ✓ ✓. The five mutants of the two new specifications are in `formal/mutations.json`, so they are
+part of the reproducible gate ✓ ✓, and all five are KILLED ✓ ✓. One honest caveat: the two-rung jump is
+caught by `TypeOK` before `AdvanceIsOneStep` gets its turn ✓ ✓.

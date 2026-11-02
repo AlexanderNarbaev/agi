@@ -224,6 +224,46 @@
       "old": "/\\ conflicts' = conflicts \\cup {{c, d}}",
       "new": "/\\ conflicts' = conflicts \\cup {{c}}",
       "expect": "KILLED"
+    },
+    {
+      "id": "LearningStateMachine-two-rung-jump",
+      "spec": "LearningStateMachine",
+      "why": "A move up is legal only one rung at a time. Allowing two must break AdvanceIsOneStep.",
+      "old": "/\\ stage' = stage + 1",
+      "new": "/\\ stage' = stage + 2",
+      "expect": "KILLED"
+    },
+    {
+      "id": "LearningStateMachine-records-unchanged-stage",
+      "spec": "LearningStateMachine",
+      "why": "A transition is recorded only when the stage changed. Recording an unchanged stage must break NoSelfTransition.",
+      "old": "Next == FirstEvidence \\/ Advance \\/ FallBack",
+      "new": "SameStage ==\n    /\\ stage \\in 1..TopStage\n    /\\ Len(recorded) < MAX_TRANSITIONS\n    /\\ stage' = stage\n    /\\ recorded' = Append(recorded, <<stage, stage>>)\n\nNext == FirstEvidence \\/ Advance \\/ FallBack \\/ SameStage",
+      "expect": "KILLED"
+    },
+    {
+      "id": "PromotionStage-verified-accepts-one-source",
+      "spec": "PromotionStage",
+      "why": "The mission's §5.4: ten documents copying one source are not ten independent confirmations. A VERIFIED layer that accepts one source must break VerifiedNeedsTwoIndependentSources.",
+      "old": "-> Cardinality(sources) >= 2",
+      "new": "-> Cardinality(sources) >= 1",
+      "expect": "KILLED"
+    },
+    {
+      "id": "PromotionStage-terminal-reopens",
+      "spec": "PromotionStage",
+      "why": "SUPERSEDED and INVALIDATED are terminal. Letting a superseded claim come back must break TerminalIsFinal.",
+      "old": "[] OTHER                -> {}",
+      "new": "[] s = \"SUPERSEDED\"      -> {\"VERIFIED\"}\n      [] OTHER                -> {}",
+      "expect": "KILLED"
+    },
+    {
+      "id": "PromotionStage-supported-needs-no-evidence",
+      "spec": "PromotionStage",
+      "why": "A supported claim has something behind it. Removing the requirement must break SupportedNeedsASource.",
+      "old": "[] to = \"SUPPORTED\"                   -> Cardinality(sources) >= 1",
+      "new": "[] to = \"SUPPORTED\"                   -> Cardinality(sources) >= 0",
+      "expect": "KILLED"
     }
   ]
 }
