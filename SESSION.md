@@ -7522,3 +7522,10 @@ run for now ✓ ✓.
 three measured causes are recorded as R28 ✓ ✓, and the by-file method with the per-file candidate
 table is the W42.9 backlog ✓ ✓. The quality gate stays RED (R27) — the literals are still to be
 extracted, file by file ✓ ✓.
+
+# RECON-W42.9 — the by-file extraction starts: the io.matrix.neuron package
+
+**Done** ✓ ✓. The first two files of the by-file extraction are in: the GPT-2 byte ranges of
+`BitNetTokenizer` and the Llama-3 stop-token ids of `BitNetModel` now carry names that say what
+they are ✓ ✓. The neuron tests pass ✓ ✓ and the quality gate's MAGIC-2 list has shrunk by these
+files ✓ ✓ — it is still RED ✓ ✓.
