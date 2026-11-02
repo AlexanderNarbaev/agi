@@ -7493,3 +7493,10 @@ passing ✓ ✓.
 **Done** ✓ ✓. The error-driven decay no longer only changes what the answer SAYS about its
 bindings — it changes what the answer STANDS on ✓ ✓: a claim's coverage is scaled by the
 integrity of the concept's binding ✓ ✓, and the test isolates the difference ✓ ✓.
+
+# RECON-W42.8 — the L7 cycle predicts
+
+**Done** ✓ ✓. The `ConsciousBrain`'s prediction error was structurally zero — the observation
+against itself ✓ ✓ — and the whole error-driven part of the L7 cycle was dead by construction ✓ ✓.
+The prediction now comes from the brain's own recall ✓ ✓, and the surprise separates the cases
+it was built to separate ✓ ✓.
