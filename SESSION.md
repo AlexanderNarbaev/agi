@@ -7362,3 +7362,9 @@ D-012: the shadow classes are wired to the live engines ✓ ✓ — the error-dr
 decay's math was verified first and the verification found a real defect ✓ ✓ ✓.
 **A live check found a second defect**: the Russian question named the wrong
 concept ✓ ✓ ✓.
+
+# RECON-W42.7 — the consolidation proposes and measures
+
+**Done** ✓ ✓. The second shadow class is wired ✓ ✓ — the consolidation now measures the
+knowledge's answerability on the held-out items before and after ✓ ✓ and keeps the
+proposal only if it did not fall ✓ ✓ ✓.
