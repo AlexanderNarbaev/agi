@@ -8,6 +8,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -766,6 +767,96 @@ public class KnowledgeWorkbench implements AutoCloseable {
                 answer.support(), answer.concepts(), answer.claims(), answer.sources(),
                 withNote(answer.limitations(), String.join("; ", notes)),
                 answer.gaps(), answer.unmatchedTerms());
+    }
+
+    /**
+     * One session of practice: what was attempted, and what came of it.
+     *
+     * @param sessionId the session
+     * @param items how many items were attempted
+     * @param correct how many were answered correctly
+     * @param heldOut how many of them were held out from the learning
+     * @param concepts the concepts the session touched
+     * @param firstAnsweredAt the first answer's instant
+     * @param lastAnsweredAt the last answer's instant
+     */
+    public record LearningSession(
+            String sessionId,
+            int items,
+            int correct,
+            int heldOut,
+            List<String> concepts,
+            long firstAnsweredAt,
+            long lastAnsweredAt) {
+
+        public LearningSession {
+            concepts = List.copyOf(concepts == null ? List.of() : concepts);
+        }
+    }
+
+    /**
+     * The sessions of practice in a workspace.
+     *
+     * <p>RECON-W42.7. The mission's §9 names a Learning Sessions view, and
+     * the workspace recorded the outcomes but never grouped them: the
+     * learner practised in sessions, and a session is evidence about the
+     * learner that a single item is not.
+     *
+     * <p>The sessions are ordered by their first answer, and the outcomes
+     * inside a session keep the order they were answered in.
+     *
+     * @param workspaceId the workspace
+     * @return the sessions
+     */
+    public List<LearningSession> learningSessions(String workspaceId) {
+        List<AssessmentOutcome> outcomes = store().outcomes(workspaceId);
+        Map<String, List<AssessmentOutcome>> bySession = new LinkedHashMap<>();
+        for (AssessmentOutcome outcome : outcomes) {
+            String session = outcome.sessionId() == null || outcome.sessionId().isBlank()
+                    ? "(no session)" : outcome.sessionId();
+            bySession.computeIfAbsent(session, key -> new ArrayList<>()).add(outcome);
+        }
+        List<LearningSession> sessions = new ArrayList<>();
+        for (Map.Entry<String, List<AssessmentOutcome>> entry : bySession.entrySet()) {
+            List<AssessmentOutcome> session = entry.getValue();
+            Set<String> concepts = new LinkedHashSet<>();
+            int correct = 0;
+            int heldOut = 0;
+            long first = Long.MAX_VALUE;
+            long last = Long.MIN_VALUE;
+            for (AssessmentOutcome outcome : session) {
+                if (outcome.correct()) {
+                    correct++;
+                }
+                if (outcome.heldOut()) {
+                    heldOut++;
+                }
+                concepts.add(conceptOf(workspaceId, outcome.itemId()));
+                first = Math.min(first, outcome.answeredAt());
+                last = Math.max(last, outcome.answeredAt());
+            }
+            sessions.add(new LearningSession(entry.getKey(), session.size(), correct, heldOut,
+                    new ArrayList<>(concepts), first == Long.MAX_VALUE ? 0 : first,
+                    last == Long.MIN_VALUE ? 0 : last));
+        }
+        sessions.sort(Comparator.comparingLong(LearningSession::firstAnsweredAt));
+        return sessions;
+    }
+
+    /**
+     * The concept an assessment item belongs to.
+     *
+     * @param workspaceId the workspace
+     * @param itemId the item
+     * @return the concept's id, or the item's own id when it is unknown
+     */
+    private String conceptOf(String workspaceId, String itemId) {
+        for (AssessmentItem item : dataset(workspaceId).items()) {
+            if (item.id().equals(itemId)) {
+                return item.conceptId();
+            }
+        }
+        return itemId;
     }
 
     /**

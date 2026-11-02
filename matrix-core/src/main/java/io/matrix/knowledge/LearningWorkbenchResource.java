@@ -590,6 +590,20 @@ public class LearningWorkbenchResource {
     }
 
     /**
+     * The sessions of practice in a workspace.
+     *
+     * <p>The mission's §9 names a Learning Sessions view. The learner
+     * practised in sessions, and a session is evidence about the learner
+     * that a single item is not: how much was attempted, how much came
+     * right, and which concepts the session touched.
+     */
+    @GET
+    @Path("/workspaces/{id}/sessions")
+    public List<KnowledgeWorkbench.LearningSession> sessions(@PathParam("id") String workspaceId) {
+        return workbench.learningSessions(workspaceId);
+    }
+
+    /**
      * The synthetic typo benchmark: the intent preservation.
      *
      * <p>The mission's §14 names the row: "≥ 95 % intent preservation on a

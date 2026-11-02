@@ -84,6 +84,7 @@
   <button data-tab="assess">Assess</button>
   <button data-tab="teach">Teach</button>
   <button data-tab="progress">Progress</button>
+  <button data-tab="sessions">Sessions</button>
   <button data-tab="goals">Goals</button>
   <button data-tab="persistence">Persistence</button>
 </nav>
@@ -314,6 +315,14 @@
     </div>
   </section>
 
+  <section id="tab-sessions">
+    <h2>Learning sessions</h2>
+    <p class="muted" style="margin-top:0">The learner practised in sessions, and a session is
+      evidence about the learner that a single item is not: how much was attempted, how much came
+      right, how much was held out from the learning, and which concepts the session touched.</p>
+    <div class="card"><div id="sessions-body" class="muted">—</div></div>
+  </section>
+
   <section id="tab-progress">    <h2>Progress and mastery</h2>
     <div class="card">
       <p class="muted" style="margin-top:0">Each capability is shown separately. A concept may be recalled
@@ -422,6 +431,7 @@ document.querySelectorAll('nav button').forEach(btn => {
     if (btn.dataset.tab === 'assess') { loadAssessment(); loadNextExercise(); }
     if (btn.dataset.tab === 'teach') loadConceptsForTeaching();
     if (btn.dataset.tab === 'progress') { loadProgress(); loadCapability(); loadQuestions(); }
+    if (btn.dataset.tab === 'sessions') loadSessions();
     if (btn.dataset.tab === 'reasoning') loadRules();
     if (btn.dataset.tab === 'goals') loadGoals();
     if (btn.dataset.tab === 'persistence') loadStatus();
@@ -939,6 +949,26 @@ $('btn-teach').addEventListener('click', async () => {
     out.innerHTML = '<div class="card bad">' + esc(e.message) + '</div>';
   }
 });
+
+async function loadSessions() {
+  try {
+    const sessions = await api('/workspaces/' + WS + '/sessions');
+    if (!sessions.length) {
+      $('sessions-body').innerHTML = '<span class="muted">No practice has been recorded yet. ' +
+        'Answer an item on the Assess tab and the session will appear here.</span>';
+      return;
+    }
+    $('sessions-body').innerHTML = '<table><tr><th>Session</th><th>The items</th><th>The correct</th>' +
+      '<th>The held-out ones</th><th>The concepts</th><th>From</th><th>To</th></tr>' +
+      sessions.map(s => '<tr><td class="muted">' + esc(s.sessionId) + '</td><td>' + s.items +
+        '</td><td>' + s.correct + '</td><td>' + s.heldOut + '</td><td class="muted">' +
+        (s.concepts || []).join(', ') + '</td><td class="muted">' +
+        new Date(s.firstAnsweredAt).toLocaleString() + '</td><td class="muted">' +
+        new Date(s.lastAnsweredAt).toLocaleString() + '</td></tr>').join('') + '</table>';
+  } catch (e) {
+    $('sessions-body').innerHTML = '<span class="muted">The sessions are not available: ' + esc(String(e)) + '</span>';
+  }
+}
 
 async function loadProgress() {
   try {
