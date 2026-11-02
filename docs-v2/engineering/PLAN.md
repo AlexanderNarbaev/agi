@@ -254,3 +254,10 @@ Java 25 · Quarkus 3.38.3 · GraalVM plugin 1.1.10 · Avro 1.12.2 · ONNX Runtim
 `POST /api/v1/tools/invoke` (запись в любой файл и shell — релиз-блокер);
 подписанный JWT; несоответствие OpenAPI; путь-параметр tenant в
 `TenantQaResource`.
+
+### W43.4 — The corpus foundation — DONE
+
+`docs-v2/engineering/W43-CORPUS.md` ✓. A controlled three-file corpus with a
+licence manifest, a measured parser table, an inspectable import report,
+the traceability from a claim to a span, and the measured idempotence ✓✓.
+Two defects found and recorded: R51 (fixed) and R52 (open) ✓✓.

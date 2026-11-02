@@ -33,6 +33,7 @@ public final class AssessmentDataset {
     private final int version;
     private final String description;
     private final List<AssessmentItem> items;
+    private final List<String> skipped;
 
     /**
      * A dataset that holds the package's items and the generated ones.
@@ -48,14 +49,37 @@ public final class AssessmentDataset {
                                                         List<AssessmentItem> items) {
         List<AssessmentItem> all = new ArrayList<>(base.items());
         all.addAll(items);
-        return new AssessmentDataset(base.id(), base.version(), base.description(), all);
+        return new AssessmentDataset(base.id(), base.version(), base.description(), all,
+                base.skipped());
     }
 
     private AssessmentDataset(String id, int version, String description, List<AssessmentItem> items) {
+        this(id, version, description, items, List.of());
+    }
+
+    private AssessmentDataset(String id, int version, String description, List<AssessmentItem> items,
+                              List<String> skipped) {
         this.id = id;
         this.version = version;
         this.description = description;
         this.items = List.copyOf(items);
+        this.skipped = List.copyOf(skipped);
+    }
+
+    /**
+     * The items the dataset holds that could NOT be anchored to a concept
+     * of this workspace.
+     *
+     * <p>RECON-W43.4. The dataset is loaded for every workspace, and a
+     * workspace that does not hold the concepts of the packaged dataset used
+     * to make the load FAIL — so importing a document into an empty
+     * workspace crashed with "the assessment dataset refers to an unknown
+     * concept". An item that names a concept this workspace does not have
+     * cannot be asked here, and the honest thing is to leave it out AND
+     * say so, not to refuse the whole dataset over it.
+     */
+    public List<String> skipped() {
+        return skipped;
     }
 
     /** The dataset identifier, for example "photosynthesis-v1". */
@@ -117,8 +141,14 @@ public final class AssessmentDataset {
             throw new IllegalArgumentException("The assessment dataset is not valid JSON: " + e.getMessage(), e);
         }
         List<AssessmentItem> items = new ArrayList<>();
+        List<String> skipped = new ArrayList<>();
         for (ItemEntry entry : file.items) {
             String conceptId = resolveConcept(snapshot, entry.concept);
+            if (conceptId == null) {
+                skipped.add(entry.id + ": the concept '" + entry.concept + "' is not in this "
+                        + "workspace");
+                continue;
+            }
             List<AssessmentItem.Alternative> alternatives = new ArrayList<>();
             for (AlternativeEntry alternative : entry.alternatives) {
                 alternatives.add(new AssessmentItem.Alternative(
@@ -130,17 +160,25 @@ public final class AssessmentDataset {
                     entry.variant == null ? "standard" : entry.variant, entry.critical, entry.heldOut,
                     alternatives, entry.correctAlternativeId));
         }
-        return new AssessmentDataset(file.dataset.id, file.dataset.version, file.dataset.description, items);
+        return new AssessmentDataset(file.dataset.id, file.dataset.version, file.dataset.description,
+                items, skipped);
     }
 
+    /**
+     * The concept of a name in this workspace, or null when the workspace
+     * does not hold it.
+     *
+     * <p>It returns null rather than throwing: the dataset is shared
+     * between workspaces, and a workspace that does not hold a concept the
+     * dataset names is a normal state, not an error.
+     */
     private static String resolveConcept(KnowledgeSnapshot snapshot, String conceptName) {
         for (Concept concept : snapshot.concepts()) {
             if (concept.name().equalsIgnoreCase(conceptName)) {
                 return concept.id();
             }
         }
-        throw new IllegalArgumentException(
-                "The assessment dataset refers to an unknown concept: " + conceptName);
+        return null;
     }
 
     /** The JSON shape of a dataset file. */

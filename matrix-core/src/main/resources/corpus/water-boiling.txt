@@ -1,0 +1,15 @@
+Water boiling — working notes
+
+Water boils at 100 degrees Celsius at sea level. The boiling point is the
+temperature at which the vapour pressure of the liquid equals the pressure of
+the air above it, so the liquid turns to vapour throughout its volume
+instead of evaporating only at the surface.
+
+At a higher altitude the air pressure is lower, so the boiling point is
+lower. At the top of a high mountain, water boils at around 70 degrees
+Celsius, and food takes longer to cook.
+
+These notes state the boiling point at sea level and note the effect of
+altitude separately. A claim that the boiling point is 100 degrees Celsius
+without its scope is not a claim these notes support, and the corpus exists
+to make that distinction testable.

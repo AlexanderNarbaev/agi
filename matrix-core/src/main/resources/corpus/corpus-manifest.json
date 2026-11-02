@@ -1,0 +1,34 @@
+{
+  "theNote": "The corpus of this wave. It is small on purpose, it is controlled, and every file in it says what it is. There is no book in it, no copyrighted text, and no training happens on it: the corpus is read, imported and traced, and nothing is fitted to it.",
+  "theLicensing": "Every entry carries the licence of its text and its sha256. The importer verifies the hash before it reads the file: a file whose bytes differ from the manifest is reported, not silently imported. A file in the corpus directory that the manifest does not list has NO licence, and it is reported as such.",
+  "theCorpus": "corpus",
+  "entries": [
+    {
+      "file": "photosynthesis-notes.md",
+      "format": "MARKDOWN",
+      "language": "en",
+      "sha256": "2c712e2b9f8cc8ca6cf825fde8185ae61033f16437369f7fdf335eebba56132b",
+      "licence": "AGPL-3.0",
+      "attribution": "written for the MATRIX corpus foundation, 2026-11-02",
+      "purpose": "a structured document: the headings must survive the import as the segments' headings"
+    },
+    {
+      "file": "water-boiling.txt",
+      "format": "TXT",
+      "language": "en",
+      "sha256": "15ef0a09935b20566df5afce4c0a6f1f4c2c03447156884d43fa05f4f6348fa7",
+      "licence": "AGPL-3.0",
+      "attribution": "written for the MATRIX corpus foundation, 2026-11-02",
+      "purpose": "a flat document: the paragraphs must survive the import as the segments"
+    },
+    {
+      "file": "photosynthesis-page.html",
+      "format": "HTML",
+      "language": "en",
+      "sha256": "a04c0484562451d736b1344f4738c2a159e2387689bd493b1a73dc0affb3e0ae",
+      "licence": "AGPL-3.0",
+      "attribution": "written for the MATRIX corpus foundation, 2026-11-02",
+      "purpose": "a marked-up document: the headings and the paragraphs must both survive"
+    }
+  ]
+}

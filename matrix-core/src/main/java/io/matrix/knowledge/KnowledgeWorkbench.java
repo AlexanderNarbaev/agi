@@ -216,6 +216,15 @@ public class KnowledgeWorkbench implements AutoCloseable {
             store().recordAssessmentItems(workspaceId, result.items());
             datasets.remove(workspaceId);
         }
+        // The items of the packaged dataset that this workspace cannot ask
+        // are part of the report: a dataset that is partly applied says
+        // which part it left out.
+        if (!packaged.skipped().isEmpty()) {
+            List<String> skipped = new ArrayList<>(result.skipped());
+            skipped.addAll(packaged.skipped());
+            result = new AssessmentGenerator.Result(result.items(), result.concepts(),
+                    result.conceptsSkipped(), skipped);
+        }
         return result;
     }
 
