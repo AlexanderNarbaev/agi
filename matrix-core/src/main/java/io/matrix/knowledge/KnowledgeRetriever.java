@@ -41,6 +41,7 @@ public final class KnowledgeRetriever {
     private final Map<String, Claim> claimsById = new LinkedHashMap<>();
     private final Map<String, List<Representation>> representationsByConcept = new LinkedHashMap<>();
     private final Map<String, Set<String>> claimTerms = new LinkedHashMap<>();
+    private final Map<String, Set<String>> representationTerms = new LinkedHashMap<>();
     private final Map<String, Double> idf;
     /** The corrector for the typos in a question (RECON-W42.3). */
     private final TypoCorrector corrector;
@@ -72,6 +73,36 @@ public final class KnowledgeRetriever {
             representationsByConcept
                     .computeIfAbsent(representation.conceptId(), k -> new ArrayList<>())
                     .add(representation);
+        }
+        // THE REPRESENTATIONS ARE INDEXED, AT THE CONCEPT LEVEL.
+        //
+        // RECON-W42.7. The answer is composed from the REPRESENTATIONS, and
+        // the retriever scored only the CLAIMS. So the answer could speak a
+        // vocabulary the retrieval could not see: "Explain how green plants
+        // make food using sunlight." shares no term with any claim of the
+        // photosynthesis concept, and the answer the workspace writes about
+        // that concept says "Photosynthesis is how green plants use light
+        // energy to build sugars ... The sugars are the plant's stored
+        // food." The retriever and the answer must agree on what the
+        // workspace knows.
+        //
+        // The representation's text belongs to the CONCEPT, and it is
+        // scored at the concept level. The first version of this added the
+        // representation's terms to every claim of the concept, and the
+        // vocabulary of one explanation then reached claims about
+        // cellular respiration and stomatal conductance: "What is
+        // photosynthesis?" went from seven claims to eleven, the pinned
+        // support score moved from 0.84 to 0.82, and the answer grew
+        // evidence that has nothing to do with the question. The
+        // representation is the concept's own explanation, and it is a
+        // SEARCH term - not evidence, and not a claim.
+        for (Map.Entry<String, List<Representation>> entry : representationsByConcept.entrySet()) {
+            StringBuilder text = new StringBuilder();
+            for (Representation representation : entry.getValue()) {
+                text.append(' ').append(representation.statement());
+            }
+            representationTerms.put(entry.getKey(),
+                    new LinkedHashSet<>(TextFeatures.tokens(text.toString())));
         }
         this.idf = TextFeatures.idf(new ArrayList<>(claimTerms.values()));
     }
@@ -209,7 +240,40 @@ public final class KnowledgeRetriever {
                 .filter(s -> s.coverage() >= minimumCoverage)
                 .toList();
 
-        if (relevant.isEmpty()) {
+        // THE CONCEPT BRIDGE. A concept can be reached through its own
+        // explanation even when no claim of it shares a term with the
+        // question. The representation's coverage is the coverage of the
+        // CONCEPT, and the concept's claims are the evidence behind it.
+        Map<String, Double> representationCoverages = new LinkedHashMap<>();
+        for (Map.Entry<String, Set<String>> entry : representationTerms.entrySet()) {
+            double matched = 0.0;
+            for (String term : effectiveTerms) {
+                if (entry.getValue().contains(term)) {
+                    matched += queryWeights.get(term);
+                }
+            }
+            if (matched > 0.0) {
+                representationCoverages.put(entry.getKey(), matched / totalWeight);
+            }
+        }
+        // The concepts that the representations reach, and that the
+        // claims alone did not.
+        Set<String> claimsAlready = new LinkedHashSet<>();
+        for (ScoredClaim match : relevant) {
+            claimsAlready.add(match.claim().conceptId());
+        }
+        List<Claim> bridgedClaims = new ArrayList<>();
+        for (Map.Entry<String, Double> entry : representationCoverages.entrySet()) {
+            if (entry.getValue() >= minimumCoverage && !claimsAlready.contains(entry.getKey())) {
+                for (Claim claim : snapshot.claims()) {
+                    if (claim.conceptId().equals(entry.getKey())) {
+                        bridgedClaims.add(claim);
+                    }
+                }
+            }
+        }
+
+        if (relevant.isEmpty() && bridgedClaims.isEmpty()) {
             return new Answer(question, wanted, false,
                     "No claim in this workspace covers enough of the question to answer it.",
                     "", 0.0, SupportScore.none(), List.of(), List.of(), List.of(),
@@ -227,6 +291,9 @@ public final class KnowledgeRetriever {
         for (ScoredClaim match : relevant) {
             conceptScores.merge(match.claim().conceptId(), match.coverage(), Math::max);
         }
+        for (Map.Entry<String, Double> entry : representationCoverages.entrySet()) {
+            conceptScores.merge(entry.getKey(), entry.getValue(), Math::max);
+        }
         List<Concept> concepts = conceptScores.entrySet().stream()
                 .sorted((left, right) -> {
                     int byName = Double.compare(nameCoverage(right.getKey(), queryTerms),
@@ -240,7 +307,8 @@ public final class KnowledgeRetriever {
                 .filter(c -> c != null)
                 .toList();
 
-        List<Claim> claims = relevant.stream().map(ScoredClaim::claim).toList();
+        List<Claim> claims = new ArrayList<>(relevant.stream().map(ScoredClaim::claim).toList());
+        claims.addAll(bridgedClaims);
 
         // The sources behind the claims: the evidence links, not the claim's
         // own word.

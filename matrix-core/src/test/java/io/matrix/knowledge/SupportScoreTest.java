@@ -37,7 +37,16 @@ class SupportScoreTest {
 
         // The number did not move, so nothing that depended on it breaks.
         // What moved is its name and its disclosure.
-        assertThat(answer.supportScore()).isEqualTo(0.84);
+        //
+        // RECON-W42.7 moved it once, from 0.84 to 0.85, and the reason is
+        // known: the concept bridge let a question reach a concept through
+        // the workspace's own explanation, and for "What is
+        // photosynthesis?" the answer's evidence grew by one claim. The
+        // support score is the mean of the matched claims' confidences, so
+        // the mean moved with the evidence. The retrieval of the claims
+        // themselves did not change: the same seven claims are matched,
+        // with the same coverages.
+        assertThat(answer.supportScore()).isEqualTo(0.85);
     }
 
     @Test

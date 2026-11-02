@@ -116,17 +116,36 @@ class KnowledgeRetrieverTest {
     void aRefutedClaimIsMarkedAsSuch() {
         Answer answer = retriever.answer("Where does the oxygen plants release come from?");
 
+        // The refuted misconception is present in the workspace and is
+        // marked REFUTED, so it can be shown to a learner as a mistake
+        // to correct rather than as a fact.
+        Claim refuted = snapshot.claims().stream()
+                .filter(c -> c.status() == ClaimStatus.REFUTED)
+                .findFirst().orElseThrow();
+
         if (answer.answered()) {
-            for (Claim claim : answer.claims()) {
-                assertThat(claim.status()).isNotEqualTo(ClaimStatus.VERIFIED);
-            }
-            // The refuted misconception is present in the workspace and is
-            // marked REFUTED, so it can be shown to a learner as a mistake
-            // to correct rather than as a fact.
-            Claim refuted = snapshot.claims().stream()
-                    .filter(c -> c.status() == ClaimStatus.REFUTED)
-                    .findFirst().orElseThrow();
-            assertThat(refuted.status()).isEqualTo(ClaimStatus.REFUTED);
+            // THE INVARIANT, NOT A PROXY.
+            //
+            // The first version of this asserted that NO claim in the
+            // answer is VERIFIED. That was a proxy for "the refuted
+            // misconception is never presented as established", and the
+            // proxy became wrong when the concept bridge let a question
+            // reach a concept through the workspace's own explanation: the
+            // answer now also carries OTHER claims, and some of them are
+            // verified - correctly so, since they are not the
+            // misconception.
+            //
+            // The invariant itself is asserted here: the refuted claim
+            // appears as REFUTED, and the answer's statement does not
+            // assert it.
+            assertThat(answer.claims()).filteredOn(claim -> claim.id().equals(refuted.id()))
+                    .isNotEmpty()
+                    .allSatisfy(claim ->
+                            assertThat(claim.status()).isEqualTo(ClaimStatus.REFUTED));
+            assertThat(answer.statement()).doesNotContain(refuted.proposition());
+            // And the correct claim about the oxygen is there too.
+            assertThat(answer.claims()).anySatisfy(claim ->
+                    assertThat(claim.proposition()).contains("releases oxygen as a byproduct"));
         }
     }
 
