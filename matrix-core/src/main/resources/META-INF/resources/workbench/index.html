@@ -78,6 +78,7 @@
   <button data-tab="ask">Ask</button>
   <button data-tab="reasoning">Reasoning</button>
   <button data-tab="knowledge">Knowledge</button>
+  <button data-tab="epistemic">Epistemic</button>
   <button data-tab="corpus">Sources</button>
   <button data-tab="graph">Graph</button>
   <button data-tab="experiments">Experiments</button>
@@ -394,6 +395,50 @@
 The counts below are read back from the store on disk by this new process.</pre>
     </div>
   </section>
+
+  <section id="tab-epistemic">
+    <h2>Epistemic state</h2>
+    <p class="muted">
+      What the evidence says about each claim, and why. Every claim carries
+      its standing, the reading of a counterexample against its scope, the
+      evidence it rests on and what that evidence IS — a source, a direct
+      observation, a derived conclusion, a hypothesis, a contradiction or an
+      unknown — and the questions the system could not settle.
+    </p>
+    <div class="grid">
+      <div class="card">
+        <h3 style="margin-top:0">Claims</h3>
+        <div id="epi-claims" class="muted">No claims loaded.</div>
+      </div>
+      <div class="card">
+        <h3 style="margin-top:0">The claim, and the reasoning behind it</h3>
+        <div id="epi-detail" class="muted">Choose a claim.</div>
+      </div>
+    </div>
+    <div class="card">
+      <h3 style="margin-top:0">Record an observation</h3>
+      <div class="grid">
+        <div>
+          <label>What was observed</label>
+          <input type="text" id="epi-observation" placeholder="an observation, in your words"
+                 style="width:100%">
+          <label>Under which conditions</label>
+          <input type="text" id="epi-condition"
+                 placeholder="where and when it was seen — the system reads the scope against it"
+                 style="width:100%">
+          <div class="row">
+            <button class="action" id="epi-example">Record as an example</button>
+            <button class="action" id="epi-counterexample">Record as a counterexample</button>
+          </div>
+          <span class="muted" id="epi-note">Nothing recorded yet.</span>
+        </div>
+        <div>
+          <h3 style="margin-top:0">The revision history</h3>
+          <div id="epi-revisions" class="muted">No revisions recorded.</div>
+        </div>
+      </div>
+    </div>
+  </section>
 </main>
 
 <script>
@@ -425,6 +470,7 @@ document.querySelectorAll('nav button').forEach(btn => {
     if (btn.dataset.tab === 'dashboard') { loadStatus(); loadMetrics(); }
     if (btn.dataset.tab === 'ask') { loadDialogue(); }
     if (btn.dataset.tab === 'knowledge') loadKnowledge();
+    if (btn.dataset.tab === 'epistemic') loadEpistemic();
     if (btn.dataset.tab === 'corpus') loadCorpus();
     if (btn.dataset.tab === 'graph') loadGraph();
     if (btn.dataset.tab === 'experiments') loadExperiments();
@@ -436,6 +482,167 @@ document.querySelectorAll('nav button').forEach(btn => {
     if (btn.dataset.tab === 'goals') loadGoals();
     if (btn.dataset.tab === 'persistence') loadStatus();
   });
+});
+
+// RECON-W43.5: the workbench showed what the workspace KNEW, but not why
+// the system concluded anything. The epistemic panel is the answer to the
+// mission's §5: the user can inspect the evidence, the reading, the
+// questions the system could not settle, and the revision history.
+let EPI_CLAIM = null;
+
+async function loadEpistemic() {
+  try {
+    const claims = await api('/workspaces/' + WS + '/claims');
+    let html = '<table><tr><th>Claim</th><th>Status</th><th>Scope</th></tr>';
+    for (const claim of claims) {
+      html += '<tr><td><a href="#" data-epi-claim="' + esc(claim.id) + '">'
+        + esc(claim.proposition) + '</a></td>'
+        + '<td>' + esc(claim.status) + '</td>'
+        + '<td>' + esc(claim.scope ?? '') + '</td></tr>';
+    }
+    html += '</table>';
+    $('epi-claims').innerHTML = html;
+    document.querySelectorAll('[data-epi-claim]').forEach(a => {
+      a.addEventListener('click', (e) => {
+        e.preventDefault();
+        EPI_CLAIM = a.dataset.epiClaim;
+        loadEpistemicDetail();
+      });
+    });
+    if (!EPI_CLAIM && claims.length) {
+      EPI_CLAIM = claims[0].id;
+    }
+    await loadEpistemicDetail();
+    await loadEpistemicRevisions();
+  } catch (e) {
+    $('epi-claims').textContent = 'Could not load the claims: ' + e.message;
+  }
+}
+
+// WHAT THE EVIDENCE IS. The mission's §5 names six kinds, and the panel
+// says which one each piece of evidence is, so the user is never looking
+// at a link without knowing what kind of thing it points at.
+function evidenceKind(relation, sourceKind) {
+  if (sourceKind === 'OBSERVATION') return 'direct observation';
+  if (relation === 'CONTRADICTS') return 'contradiction';
+  if (relation === 'EXEMPLIFIES') return 'example';
+  if (relation === 'QUALIFIES') return 'qualification';
+  if (relation === 'FAILS_TO_SUPPORT' || relation === 'INSUFFICIENT') return 'unknown';
+  if (sourceKind === 'DOCUMENT' || sourceKind === 'HUMAN_ASSERTION') return 'source evidence';
+  return 'derived conclusion';
+}
+
+async function loadEpistemicDetail() {
+  if (!EPI_CLAIM) { $('epi-detail').textContent = 'Choose a claim.'; return; }
+  try {
+    const a = await api('/workspaces/' + WS + '/claims/' + EPI_CLAIM + '/assessment');
+    let html = '<p><strong>' + esc(a.proposition) + '</strong></p>';
+    html += '<p class="muted">the scope it states: ' + esc(a.scope ?? '— it states none') + '</p>';
+    html += '<p>standing: <strong>' + esc(a.standing) + '</strong><br>'
+      + '<span class="muted">' + esc(a.standingReason ?? '') + '</span></p>';
+    if (a.reading) {
+      html += '<p>the reading of the counterexample: <strong>' + esc(a.reading) + '</strong><br>'
+        + '<span class="muted">' + esc(a.readingReason ?? '') + '</span></p>';
+    }
+    if (a.alternatives && a.alternatives.length) {
+      html += '<p class="muted">it cannot exclude: ' + a.alternatives.map(esc).join('; ') + '</p>';
+    }
+    if (a.unresolved && a.unresolved.length) {
+      html += '<p class="muted">unresolved: ' + a.unresolved.map(esc).join('; ') + '</p>';
+    }
+    const rows = []
+      .concat(a.supporting || [], a.contradicting || [], a.qualifying || [],
+              a.exemplifying || [], a.insufficient || []);
+    if (rows.length) {
+      html += '<table><tr><th>Evidence</th><th>Relation</th><th>What it is</th>'
+        + '<th>Source</th></tr>';
+      for (const ref of rows) {
+        html += '<tr><td>' + esc((ref.excerpt ?? '').slice(0, 90)) + '</td>'
+          + '<td>' + esc(ref.relation) + '</td>'
+          + '<td>' + esc(evidenceKind(ref.relation, ref.sourceKind)) + '</td>'
+          + '<td>' + esc(ref.sourceTitle ?? ref.sourceId) + '</td></tr>';
+      }
+      html += '</table>';
+    } else {
+      html += '<p class="muted">No evidence is recorded for this claim.</p>';
+    }
+    if (a.proposal) {
+      html += '<p>the system proposes: <strong>' + esc(a.proposal) + '</strong><br>'
+        + '<span class="muted">' + esc(a.proposalReason ?? '') + '</span></p>'
+        + '<div class="row">'
+        + '<button class="action" id="epi-accept">Accept the refinement</button>'
+        + '<button class="action" id="epi-reject">Reject it</button></div>';
+    }
+    $('epi-detail').innerHTML = html;
+    if ($('epi-accept')) {
+      $('epi-accept').addEventListener('click', () => refine('accept', a.proposal));
+    }
+    if ($('epi-reject')) {
+      $('epi-reject').addEventListener('click', () => refine('reject', a.proposal));
+    }
+  } catch (e) {
+    $('epi-detail').textContent = 'Could not read the assessment: ' + e.message;
+  }
+}
+
+async function refine(action, proposition) {
+  try {
+    await api('/workspaces/' + WS + '/claims/' + EPI_CLAIM + '/refine/' + action, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ proposition: proposition, reason: 'accepted in the workbench' })
+    });
+    $('epi-note').textContent = action === 'accept'
+      ? 'The refinement was accepted. The original claim is kept, and the history says so.'
+      : 'The refinement was rejected, and the rejection is kept too.';
+    await loadEpistemic();
+  } catch (e) {
+    $('epi-note').textContent = 'The ' + action + ' was refused: ' + e.message;
+  }
+}
+
+async function loadEpistemicRevisions() {
+  try {
+    const revisions = await api('/workspaces/' + WS + '/revisions');
+    if (!revisions.length) { $('epi-revisions').innerHTML = 'No revisions recorded.'; return; }
+    let html = '<table><tr><th>Revision</th><th>Kind</th><th>Summary</th></tr>';
+    for (const r of revisions) {
+      html += '<tr><td>' + esc(r.id) + '</td><td>' + esc(r.kind ?? '') + '</td>'
+        + '<td>' + esc(r.summary ?? '') + '</td></tr>';
+    }
+    html += '</table>';
+    $('epi-revisions').innerHTML = html;
+  } catch (e) {
+    $('epi-revisions').textContent = 'Could not read the revisions: ' + e.message;
+  }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  const observation = () => $('epi-observation').value.trim();
+  const condition = () => $('epi-condition').value.trim();
+  const record = async (contradicts) => {
+    if (!EPI_CLAIM) { $('epi-note').textContent = 'Choose a claim first.'; return; }
+    if (!observation()) { $('epi-note').textContent = 'Write what was observed.'; return; }
+    try {
+      await api('/workspaces/' + WS + '/claims/' + EPI_CLAIM + '/examples', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          observation: observation(),
+          condition: condition() || null,
+          contradicts: contradicts
+        })
+      });
+      $('epi-note').textContent = contradicts
+        ? 'The counterexample is recorded. The original claim is kept.'
+        : 'The example is recorded.';
+      await loadEpistemic();
+    } catch (e) {
+      $('epi-note').textContent = 'The observation was refused: ' + e.message;
+    }
+  };
+  $('epi-example').addEventListener('click', () => record(false));
+  $('epi-counterexample').addEventListener('click', () => record(true));
 });
 
 async function loadMetrics() {
