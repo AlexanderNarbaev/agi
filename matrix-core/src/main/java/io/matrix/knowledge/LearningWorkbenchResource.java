@@ -466,6 +466,31 @@ public class LearningWorkbenchResource {
             marked.add(entry);
         }
         result.put("marked", marked);
+        // THE ERROR-DRIVEN INTEGRATION, VISIBLE.
+        //
+        // The consolidation's phase that records the VERIFIED learning
+        // errors was not reported over HTTP, so the phase was invisible to
+        // anyone who used the API - and an invisible phase is one nobody
+        // checks.
+        ErrorIntegrator.Result integration = report.integration();
+        if (integration != null) {
+            Map<String, Object> phase = new LinkedHashMap<>();
+            phase.put("theCandidates", integration.candidates());
+            phase.put("theVerified", integration.verified());
+            phase.put("theRecorded", integration.recorded());
+            phase.put("theUnverified", integration.unverified());
+            List<Map<String, Object>> errors = new ArrayList<>();
+            for (LearningError error : integration.errors()) {
+                Map<String, Object> entry = new LinkedHashMap<>();
+                entry.put("theItem", error.itemId());
+                entry.put("theConcept", error.conceptId());
+                entry.put("theDimension", error.dimension().name());
+                entry.put("verified", error.verified());
+                errors.add(entry);
+            }
+            phase.put("theErrors", errors);
+            result.put("theIntegration", phase);
+        }
         return result;
     }
 
