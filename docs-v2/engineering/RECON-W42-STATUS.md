@@ -64,6 +64,9 @@ two waves.
 | `5ff2a525` | The idempotency flag means what it says |
 | `cc16492e` | The error-driven integration happens only after the error is verified |
 | `ea468cff` | The validation stage: two independent sources promote, one does not |
+| `34df3d7e` | The consolidation proposes, measures, and keeps the proposal only if the knowledge did not fall |
+| `beccce7b` | The knowledge graph is a projection of the workspace, and it is visible |
+| `e79c9a72` | The Experiment Dashboard — the measured instrument, in the interface |
 | `014a26b8` | The conversation survives a restart, and the referent with it |
 | `543c01b0` | The corpus registry: what the workspace knows, and how much of it is independent |
 
