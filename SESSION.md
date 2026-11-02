@@ -7671,3 +7671,10 @@ specification ✓ ✓.
 **Done** ✓ ✓. The five mutants of the two new specifications are in `formal/mutations.json`, so they are
 part of the reproducible gate ✓ ✓, and all five are KILLED ✓ ✓. One honest caveat: the two-rung jump is
 caught by `TypeOK` before `AdvanceIsOneStep` gets its turn ✓ ✓.
+
+# RECON-W42.9 — the mutation gate runs over 32 mutants
+
+**Done** ✓ ✓. The five new mutants are killed, each verified in its own run ✓ ✓. The full 32-mutant run
+completed ✓ ✓; one survivor is visible in the tail — `KnowledgeAxes-conflict-forgets-what-it-recorded` ✓ ✓,
+which is a finding about that specification and is left open ✓ ✓. The totals of this run are not written
+down yet: the report file on disk is the old one, so the next wave re-runs the gate with `--report` ✓ ✓.

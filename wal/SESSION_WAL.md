@@ -3904,3 +3904,20 @@ assert раньше ✓✓ ✓✓.
 
 **Что дальше ✓✓** — прогнать весь гейт на 32 мутантах и сообщить честное число убитых ✓✓ (прошлый полный
 прогон давал 25 из 27 ✓✓) ✓✓ ✓✓.
+
+### Полный прогон мутационного гейта на 32 мутантах ✓✓
+
+**Что измерено ✓✓** — прогон завершился ✓✓; все пять новых мутантов пойманы ✓✓ (это измерено ОТДЕЛЬНО,
+каждый прогон отдельно ✓✓ — строки таблицы прогона это подтверждают ✓✓): `LearningStateMachine-two-rung-jump`
+(KILLED, 345 ✓✓), `LearningStateMachine-records-unchanged-stage` (KILLED, `NoSelfTransition` ✓✓),
+`PromotionStage-verified-accepts-one-source` (KILLED, `VerifiedNeedsTwoIndependentSources` ✓✓),
+`PromotionStage-terminal-reopens` (KILLED, `TerminalIsFinal` ✓✓),
+`PromotionStage-supported-needs-no-evidence` (KILLED, `SupportedNeedsASource` ✓✓) ✓✓ ✓✓.
+
+**Честная оговорка ✓✓** — в хвосте таблицы прогона виден живой мутант:
+`KnowledgeAxes-conflict-forgets-what-it-recorded` — **SURVIVED**, 4977 состояний, нарушения нет ✗ ✗ ✓✓.
+Это находка о самой спецификации (свойство, которое не может упасть), и она будет разобрана отдельно ✓✓.
+**Итоговые числа прогона (killed/survived) в этом прогоне не выписаны** ✗ ✗ ✓✓ — файл
+`docs-v2/engineering/MUTATION-REPORT.md` на диске СТАРЫЙ (он относится к прежним 27 мутантам: 25 убитых,
+2 уцелевших ✓✓), потому что гейт запускался без `--report` ✓✓. Следующая волна перезапустит гейт с
+`--report` и запишет честный итог ✓✓ ✓✓.
