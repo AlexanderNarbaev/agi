@@ -63,6 +63,7 @@ two waves.
 | `65cc7c8b` | The tombstone migration belongs to the version it belongs to |
 | `5ff2a525` | The idempotency flag means what it says |
 | `cc16492e` | The error-driven integration happens only after the error is verified |
+| `ea468cff` | The validation stage: two independent sources promote, one does not |
 
 **Starting commit:** `0296e83e` (W41's final verification).
 **The remote HEAD was verified, not assumed** — `git fetch origin --prune`
