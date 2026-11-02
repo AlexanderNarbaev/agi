@@ -7744,3 +7744,11 @@ that was a defect of the instrument, not of the system ✓ ✓. After the fix th
 0.915 → 0.979 ✓ ✓, above the gate's 0.95 ✓ ✓. The candidate is still not enabled: the abstention is 0.889
 against the 0.9 floor ✓ ✓, because the Russian false-premise item is answered instead of refused ✓ ✓ — a
 real gap ✓ ✓. Lowering the floor is not allowed ✓ ✓, so the false-premise detection comes first ✓ ✓.
+
+# RECON-W42.9 — the roots of the last two gaps are found
+
+**Done** ✓ ✓. The diagnostic measured both ✓ ✓: the Russian question folds with the Russian profile while the
+index folds with the English one, so a Latin term in a Russian question never reaches the index ✓ ✓; and the
+Russian false-premise question is answered with support 0.2 while the support score itself says
+`scopeMatch=OUTSIDE` ✓ ✓ — the system knows the answer is out of scope and answers anyway ✓ ✓. Both need the
+same discipline: fix, measure on the candidate, and only then enable the candidate ✓ ✓.
