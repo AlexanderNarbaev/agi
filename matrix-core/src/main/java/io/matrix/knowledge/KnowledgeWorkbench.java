@@ -802,24 +802,35 @@ public class KnowledgeWorkbench implements AutoCloseable {
         if (verified.isEmpty()) {
             return new DecayResult(List.of(), 0, 0.0, 0.0, 0, 0);
         }
-        io.matrix.cognitive.CognitiveErrorStream stream = HebbianBindings.streamOf(verified);
         KnowledgeSnapshot snapshot = workspace(workspaceId);
         List<String> touched = new ArrayList<>();
         double strengthBefore = 0.0;
         double strengthAfter = 0.0;
         int activeBefore = 0;
         int activeAfter = 0;
+        // The decay is applied ONCE per concept, over the errors about
+        // THAT concept. The first version applied the whole stream to
+        // every concept, once per error: a concept with two errors was
+        // decayed four times, and the report listed it twice.
+        java.util.Map<String, List<LearningError>> byConcept = new java.util.LinkedHashMap<>();
         for (LearningError error : verified) {
             String conceptId = error.conceptId();
             if (conceptId == null || conceptId.isBlank()) {
                 continue;
             }
+            byConcept.computeIfAbsent(conceptId, key -> new ArrayList<>()).add(error);
+        }
+        for (java.util.Map.Entry<String, List<LearningError>> entry : byConcept.entrySet()) {
+            String conceptId = entry.getKey();
+            List<LearningError> errorsOfConcept = entry.getValue();
+            io.matrix.cognitive.CognitiveErrorStream stream =
+                    HebbianBindings.streamOf(errorsOfConcept);
             io.matrix.neuron.HebbianUpdater.State state = store().hebbianState(workspaceId, conceptId);
             if (state == null) {
                 state = HebbianBindings.stateFor(snapshot, conceptId);
             }
             float[] direction = HebbianBindings.observation(
-                    HebbianBindings.termsOf(error.learnerAnswer()));
+                    HebbianBindings.termsOf(errorsOfConcept.get(0).learnerAnswer()));
             double strength = HebbianBindings.strengthAt(state, direction);
             int active = io.matrix.cognitive.ErrorDrivenLearner.totalActiveBindings(state);
             io.matrix.cognitive.ErrorDrivenLearner.applyDecay(state, stream,
