@@ -7735,3 +7735,12 @@ how the query's terms and the BM25 index are prepared, and measure where the mat
 raw claim token" explanation is wrong ✓ ✓ — recorded as refuted rather than quietly dropped ✓ ✓. Two
 questions stay open and must be measured, not guessed: which workspace holds the logic claims ✓ ✓, and what
 the abstention metric's denominator is ✓ ✓.
+
+# RECON-W42.9 — the gap was in the benchmark's paths, not in the system
+
+**Done** ✓ ✓. The diagnostic measured the two workspaces as separate ✓ ✓ and showed that the benchmark asks
+the workspace each item names ✓ ✓. My new items named the wrong workspace for the logic questions ✓ ✓ —
+that was a defect of the instrument, not of the system ✓ ✓. After the fix the candidate's accuracy rose
+0.915 → 0.979 ✓ ✓, above the gate's 0.95 ✓ ✓. The candidate is still not enabled: the abstention is 0.889
+against the 0.9 floor ✓ ✓, because the Russian false-premise item is answered instead of refused ✓ ✓ — a
+real gap ✓ ✓. Lowering the floor is not allowed ✓ ✓, so the false-premise detection comes first ✓ ✓.

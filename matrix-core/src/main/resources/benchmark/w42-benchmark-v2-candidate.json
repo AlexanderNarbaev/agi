@@ -652,7 +652,7 @@
       "id": "ru-miss-3",
       "category": "MISSPELLED",
       "language": "ru",
-      "workspace": "photosynthesis",
+      "workspace": "logic",
       "question": "Что такоэ модус поненс?",
       "answerable": true,
       "keyTerms": [
@@ -709,7 +709,7 @@
       "id": "ru-factual-4",
       "category": "FACTUAL",
       "language": "ru",
-      "workspace": "photosynthesis",
+      "workspace": "logic",
       "question": "Что утверждает modus ponens?",
       "answerable": true,
       "keyTerms": [
@@ -784,7 +784,7 @@
       "id": "ru-hop-2",
       "category": "MULTI_HOP",
       "language": "ru",
-      "workspace": "photosynthesis",
+      "workspace": "logic",
       "question": "Если p влечёт q и p истинно, что следует?",
       "answerable": true,
       "keyTerms": [
@@ -899,7 +899,7 @@
       "id": "en-miss-6",
       "category": "MISSPELLED",
       "language": "en",
-      "workspace": "photosynthesis",
+      "workspace": "logic",
       "question": "What is modus ponnes?",
       "answerable": true,
       "keyTerms": [
