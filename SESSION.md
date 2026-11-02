@@ -7293,3 +7293,10 @@ ru 0/5, paraphrase 0/2, false premise 0/2 ✓ ✓.
 **Не внедрено, но записано полностью:** детектор ложной посылки ✓ ✓ —
 он был построен, измерен и откачен ✓ ✓; разбор в `RECON-W42-BACKLOG.md` ✓ ✓.
 **Дальше:** W42.5 — консолидация и базовые линии ✓ ✓; W42.6 — Local Alpha v0.3 ✓ ✓.
+
+# RECON-W42.5 — Cognitive integration: the baseline comparisons
+
+**Готово** ✓ ✓. Отчёт: `docs-v2/engineering/W42.5-COGNITIVE-INTEGRATION-REPORT.md` ✓ ✓.
+**Измерено:** abstention 0.700 → 0.900 ✓ ✓, FALSE_PREMISE 0/2 → 2/2 ✓ ✓,
+отложенное удержание EXPLORATION → PRACTICE против базовой линии ✓ ✓.
+**Дальше:** W42.6 — Local Alpha v0.3 ✓ ✓.
