@@ -40,6 +40,10 @@ APP_PID=""
 DB="$(mktemp -t w43-journey-XXXXXX.sqlite)"
 rm -f "$DB"
 
+# How long the script waits for the service to answer. Named, because the
+# quality gate counts a bare number in a loop as a literal, and it is one.
+readonly STARTUP_WAIT_SECONDS=60
+
 if [ ! -f "$JAR" ]; then
   echo "the application is not built: $JAR is missing."
   echo "build it with: ./gradlew :matrix-core:quarkusBuild"
@@ -64,7 +68,7 @@ start_app() {
          -Dmatrix.knowledge.path="$DB" \
          -jar "$JAR" >/tmp/w43-journey.log 2>&1 &
   APP_PID=$!
-  for _ in $(seq 1 60); do
+  for _ in $(seq 1 "$STARTUP_WAIT_SECONDS"); do
     sleep 1
     if curl -s -o /dev/null -m 2 "http://127.0.0.1:$PORT/q/health" 2>/dev/null; then
       return 0

@@ -84,7 +84,7 @@ One decision, in one place: `io.matrix.security.NetworkExposure`.
 | `Claim.modality`, `polarity`, `temporalScope`, `preconditions`, `exceptions` | **PLANNED** | same migration |
 | `Derivation.goal`, `evidenceIds`, `contradictedClaimIds`, `assumptions` | **PLANNED** | same migration |
 | The workbench UI panel for the cycle | **PLANNED** | the API is live and the HTML workbench is a static file; the smallest useful panel is not done in this wave |
-| A benchmark for the slice (mission §10) | **PLANNED** | see the backlog §2 |
+| A benchmark for the slice (mission §10) | **IMPLEMENTED, MEASURED** — but it measures the slice's DECISIONS, not understanding | `io.matrix.knowledge.benchmark.SliceBenchmark`; `w43-slice-benchmark-v1.json`; **24 cases, standing 24/24, reading 16/16, proposal 24/24, quotation 24/24; EN 12/12, RU 12/12; train 8, validation 6, test 10** |
 | The corpus foundation (mission §7) | **PLANNED** | see the backlog §3 |
 | Fine-tuning, model training, weight updates | **NOT STARTED, AND NOT PLANNED IN THIS WAVE** | the prerequisites of mission §9 do not exist |
 
@@ -99,14 +99,25 @@ One decision, in one place: `io.matrix.security.NetworkExposure`.
 | The formal gate | **14 passed, 0 failed** | the 14 `.tla` specifications in `formal/` |
 | The security boundary | **0 failures** | 10 runtime assertions across 3 process configurations |
 | The counterexample journey | **0 failures** | 18 runtime assertions, including a `kill -9` and a restart |
+| The slice benchmark | **24 cases: standing 24/24, reading 16/16, proposal 24/24, quotation 24/24** | 24 cases; the reading is expected in 16 of them; EN 12/12, RU 12/12; train 8, validation 6, **test 10** |
 | The quality gate | **exit 0** at 271 literal candidates against an accepted baseline of 271 | the accepted baseline is the MEASURED value, so the next literal fails |
 | The determinism gate | **0 mismatches** | 20 accepted groups over 48 findings, in three roots |
 | The Local Alpha journey | **12 of 12 assertions** | the previous wave's checklist, re-verified after the security change |
 
+**What the slice benchmark does NOT measure — stated plainly.** The slice's
+decisions are **language-independent by construction**: the reading depends on
+the evidence relation and on whether a condition was recorded, not on the
+words. The Russian subset therefore measures that the text is carried
+through unchanged and the structure is read — **not** that the system
+understands Russian. And a perfect score here means **the rules are applied
+consistently**, not that the system reasons well: the cases exercise the
+rules the slice implements. The benchmark of the mission's §10 — with
+ambiguity, false premises, temporal changes, typo variants and clarification
+— is still to be built, and it is the backlog's first item.
+
 **Not measured in this wave:** the full repository test suite (owner rule
 D-017 — the OOM risk); the matrix-core full suite (8034 `@Test`
-annotations — the targeted scope is ~18 % of the module); a benchmark of
-the new slice.
+annotations — the targeted scope is ~18 % of the module).
 
 ---
 

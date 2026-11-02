@@ -828,10 +828,19 @@ public class KnowledgeWorkbench implements AutoCloseable {
         return java.time.Instant.now().toString();
     }
 
+    /**
+     * The content-hash algorithm of a recorded text.
+     *
+     * <p>Named, because the string carries digits and the quality gate
+     * counts a string that carries digits as a literal — correctly: an
+     * algorithm name in three places is a constant waiting to be extracted.
+     */
+    private static final String HASH_ALGORITHM = "SHA-256";
+
     /** The content hash of a recorded text. */
     private static String contentHash(String text) {
         try {
-            java.security.MessageDigest digest = java.security.MessageDigest.getInstance("SHA-256");
+            java.security.MessageDigest digest = java.security.MessageDigest.getInstance(HASH_ALGORITHM);
             byte[] bytes = digest.digest(text.getBytes(java.nio.charset.StandardCharsets.UTF_8));
             StringBuilder sb = new StringBuilder(bytes.length * 2);
             for (byte b : bytes) {
@@ -839,7 +848,8 @@ public class KnowledgeWorkbench implements AutoCloseable {
             }
             return sb.toString();
         } catch (java.security.NoSuchAlgorithmException impossible) {
-            throw new IllegalStateException("SHA-256 is required and is not available", impossible);
+            throw new IllegalStateException(HASH_ALGORITHM + " is required and is not available",
+                    impossible);
         }
     }
 
