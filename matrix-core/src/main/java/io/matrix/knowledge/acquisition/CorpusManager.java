@@ -164,17 +164,23 @@ public final class CorpusManager {
         return null;
     }
 
-    /** The format of a source. */
+    /**
+     * The format of a source.
+     *
+     * <p>The format is what the importer detected. The first version of
+     * this guessed it from the locator's extension, and the guess was
+     * garbage for the authored sources: the locator of a Wikipedia
+     * reference is "org/wiki/cellular_respiration (revision 1382176743,
+     * ...)", and the "extension" of that is "9-5, pmcid pmc7886073,
+     * retrieved 2026-10-31)". A guess nobody can check is not a format,
+     * so the guess is gone and the answer is "unknown" when the format
+     * was not recorded.
+     */
     private static String formatOf(Source source) {
         String format = source.format();
         if (format != null && !format.isBlank()) {
             return format.toLowerCase(java.util.Locale.ROOT);
         }
-        String locator = source.locator();
-        if (locator == null || locator.isBlank()) {
-            return "unknown";
-        }
-        int dot = locator.lastIndexOf('.');
-        return dot < 0 ? "unknown" : locator.substring(dot + 1).toLowerCase(java.util.Locale.ROOT);
+        return "unknown";
     }
 }
