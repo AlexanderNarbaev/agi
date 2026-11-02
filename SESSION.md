@@ -7643,3 +7643,10 @@ shadows is now wired end to end ✓ ✓.
 Hamming distance — different functions ✓ ✓. Had the math not been checked first, the class would have been
 "wired" as an adapter and silently changed the numbers ✓ ✓. It holds an exact bit-Jaccard that exists
 nowhere else ✓ ✓, and it needs a live consumer or the owner's decision ✓ ✓.
+
+# RECON-W42.9 — the formal gate runs locally and is green
+
+**Done** ✓ ✓. `scripts/formal-gate.sh` runs the twelve TLA+ specifications with the invocation the CI uses
+and exits 1 if any fails ✓ ✓. The run: 12 passed, 0 failed, exit 0 ✓ ✓ — including `HashChain`, so the
+adapter change did not break the chain's formal property ✓ ✓. The quality gate stays green: 263 literals
+against the 270 baseline, exit 0 ✓ ✓.
