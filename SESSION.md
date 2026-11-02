@@ -7387,3 +7387,10 @@ substrings ✓ ✓ (the Russian "те" had matched inside another word and cost 
 production caller and now is the live engine of the consolidation's error-driven phase ✓ ✓,
 its state is persisted (the schema v15) ✓ ✓, the answer says the bindings were weakened ✓ ✓,
 and the live check shows the state surviving a SIGKILL ✓ ✓✓.
+
+# RECON-W42.7 — DOCX, CSV and the refused corrupted container
+
+**Done** ✓ ✓. The mission's §5.1 names eight formats; the pipeline read six ✓ ✓ — DOCX and CSV
+are read now ✓ ✓, without a new dependency ✓ ✓. The corrupted-container defect — a broken
+document imported as an EMPTY one, silently — was real and was in the EPUB too ✓ ✓; both refuse
+now ✓ ✓, and the refusal is a 400 with a reason, not a 500 with a stack ✓ ✓✓.
