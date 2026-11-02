@@ -13,3 +13,21 @@ java {
 repositories {
     mavenCentral()
 }
+
+// RECON-W42.7 — a reproducible archive.
+//
+// A jar's entries carry the timestamp of the moment they were written and
+// the order the filesystem happened to hand them over, so two builds of
+// the same sources produce two DIFFERENT archives. The compilation was
+// already byte-identical between two clean builds; this makes the archive
+// byte-identical too.
+//
+// The mission's §14 asks for a reproducible build, and it names the
+// distinction: the compilation is reproducible and the archive was not.
+// The distinction is closed here rather than reported as a half-measure.
+allprojects {
+    tasks.withType(AbstractArchiveTask).configureEach {
+        preserveFileTimestamps = false
+        reproducibleFileOrder = true
+    }
+}

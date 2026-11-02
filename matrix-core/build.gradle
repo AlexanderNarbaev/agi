@@ -180,7 +180,27 @@ tasks.register('generateBuildInfo') {
             'test.methods = source lines starting with @Test')
         def f = out.get().asFile
         f.parentFile.mkdirs()
-        f.withOutputStream { props.store(it, 'MATRIX build metadata - generated, do not edit') }
+        f.withOutputStream { os ->
+            // The file is written WITHOUT a timestamp.
+            //
+            // RECON-W42.7: java.util.Properties.store writes the current
+            // time into its comment, so two builds of the same sources
+            // produced two DIFFERENT archives — the one entry that stood
+            // between the compilation and the archive being reproducible.
+            // The properties are written by hand, sorted, so the file is a
+            // function of the sources alone.
+            def sw = new java.io.OutputStreamWriter(os, 'UTF-8')
+            sw.write('#MATRIX build metadata - generated, do not edit\n')
+            props.stringPropertyNames().sort().each { key ->
+                def value = props.getProperty(key)
+                def escaped = value.replace('\\', '\\\\')
+                    .replace('\n', '\\n')
+                    .replace('\r', '\\r')
+                    .replace('\t', '\\t')
+                sw.write("${key}=${escaped}\n")
+            }
+            sw.flush()
+        }
         logger.lifecycle("matrix-build-info: ${testMethods} @Test methods across ${allTestFiles.files.size()} test files")
     }
 }
