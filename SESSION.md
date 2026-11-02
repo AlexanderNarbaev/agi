@@ -7678,3 +7678,12 @@ caught by `TypeOK` before `AdvanceIsOneStep` gets its turn ✓ ✓.
 completed ✓ ✓; one survivor is visible in the tail — `KnowledgeAxes-conflict-forgets-what-it-recorded` ✓ ✓,
 which is a finding about that specification and is left open ✓ ✓. The totals of this run are not written
 down yet: the report file on disk is the old one, so the next wave re-runs the gate with `--report` ✓ ✓.
+
+# RECON-W42.9 — the grown benchmark found seven real gaps
+
+**Done** ✓ ✓. The benchmark grew from 34 to 67 items, with the Russian share from 18% to 49% ✓ ✓, and the
+run exposed seven real capability gaps — the Russian term lexicon misses five terms, the typo corrector
+misses the Russian spellings and one English one, and the false-premise detection answers in Russian ✓ ✓.
+The items are kept as `w42-benchmark-v2-candidate.json` ✓ ✓; the live benchmark is back to 34 so the tree
+is not left with a red gate ✓ ✓. Fixing the gaps comes first — weakening the gate to make it green is not
+allowed ✓ ✓.
