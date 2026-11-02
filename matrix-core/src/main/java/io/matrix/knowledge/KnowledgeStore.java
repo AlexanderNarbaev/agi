@@ -497,6 +497,18 @@ public final class KnowledgeStore implements AutoCloseable {
                         status TEXT NOT NULL,
                         resolution_note TEXT
                     )""");
+                // The tombstone columns (RECON-W42.5). A forgotten record
+                // keeps its content: forgetting must not destroy the
+                // historical evidence, it must mark it.
+                if (!askedColumnExists(st, "forgotten_at")) {
+                    st.execute("ALTER TABLE asked_question ADD COLUMN forgotten_at INTEGER");
+                }
+                if (!askedColumnExists(st, "forgotten_kind")) {
+                    st.execute("ALTER TABLE asked_question ADD COLUMN forgotten_kind TEXT");
+                }
+                if (!askedColumnExists(st, "forgotten_reason")) {
+                    st.execute("ALTER TABLE asked_question ADD COLUMN forgotten_reason TEXT");
+                }
                 st.execute("CREATE INDEX IF NOT EXISTS idx_asked_ws ON asked_question(workspace_id)");
                 st.execute("CREATE INDEX IF NOT EXISTS idx_asked_key ON asked_question(workspace_id, canonical_key)");
             }
@@ -1111,7 +1123,8 @@ public final class KnowledgeStore implements AutoCloseable {
                     }
                     return new AskedQuestion(id, workspaceId, key, question, uncoveredTerms,
                             times, wasAnswered, Instant.ofEpochMilli(first).toString(),
-                            Instant.ofEpochMilli(askedAt).toString(), newStatus, note);
+                            Instant.ofEpochMilli(askedAt).toString(), newStatus, note,
+                            null, null, null);
                 }
             }
         } catch (SQLException e) {
@@ -1142,13 +1155,15 @@ public final class KnowledgeStore implements AutoCloseable {
         return new AskedQuestion(id, workspaceId, key, question, uncoveredTerms, 1, answered,
                 Instant.ofEpochMilli(askedAt).toString(), Instant.ofEpochMilli(askedAt).toString(),
                 answered ? AskedQuestion.Status.RESOLVED : AskedQuestion.Status.OPEN,
-                answered ? "The workspace answered this question when it was asked." : null);
+                answered ? "The workspace answered this question when it was asked." : null,
+                null, null, null);
     }
 
     /** The asked questions of a workspace, most recently asked first. */
     public List<AskedQuestion> askedQuestions(String workspaceId) {
         return query("SELECT id, workspace_id, canonical_key, question, uncovered_terms, "
-                + "times_asked, first_asked_at, last_asked_at, status, resolution_note, answered "
+                + "times_asked, first_asked_at, last_asked_at, status, resolution_note, answered, "
+                + "forgotten_at, forgotten_kind, forgotten_reason "
                 + "FROM asked_question WHERE workspace_id = ? ORDER BY times_asked DESC, "
                 + "last_asked_at DESC", workspaceId, rs -> new AskedQuestion(
                 rs.getString("id"), rs.getString("workspace_id"), rs.getString("canonical_key"),
@@ -1157,7 +1172,64 @@ public final class KnowledgeStore implements AutoCloseable {
                 Instant.ofEpochMilli(rs.getLong("first_asked_at")).toString(),
                 Instant.ofEpochMilli(rs.getLong("last_asked_at")).toString(),
                 AskedQuestion.Status.valueOf(rs.getString("status")),
-                rs.getString("resolution_note")));
+                rs.getString("resolution_note"),
+                rs.getLong("forgotten_at") == 0 ? null
+                        : Instant.ofEpochMilli(rs.getLong("forgotten_at")).toString(),
+                rs.getString("forgotten_kind"),
+                rs.getString("forgotten_reason")));
+    }
+
+    /**
+     * Marks an asked question as forgotten.
+     *
+     * <p>The record is kept and marked, with the instant and the grounds of
+     * the forgetting. An audit that cannot see this cannot tell a
+     * forgetting from a loss.
+     *
+     * @param workspaceId the workspace
+     * @param id the record's id
+     * @param kind the rule that named the record
+     * @param reason why the rule named it
+     * @param nowMs the instant of the forgetting
+     * @return true when a record was marked
+     */
+    public boolean forgetAskedQuestion(String workspaceId, String id, String kind, String reason,
+                                       long nowMs) {
+        try (PreparedStatement ps = connection.prepareStatement(
+                "UPDATE asked_question SET forgotten_at = ?, forgotten_kind = ?, "
+                        + "forgotten_reason = ? WHERE workspace_id = ? AND id = ? "
+                        + "AND forgotten_at IS NULL")) {
+            ps.setLong(1, nowMs);
+            ps.setString(2, kind);
+            ps.setString(3, reason);
+            ps.setString(4, workspaceId);
+            ps.setString(5, id);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            throw new IllegalStateException("Failed to forget the asked question", e);
+        }
+    }
+
+    /**
+     * The records that were forgotten, and why.
+     *
+     * @param workspaceId the workspace
+     * @return the forgotten records
+     */
+    public List<AskedQuestion> forgottenAskedQuestions(String workspaceId) {
+        return askedQuestions(workspaceId).stream().filter(AskedQuestion::forgotten).toList();
+    }
+
+    /** Whether the asked-question table already has the column. */
+    private static boolean askedColumnExists(Statement st, String column) throws SQLException {
+        try (var rs = st.executeQuery("PRAGMA table_info(asked_question)")) {
+            while (rs.next()) {
+                if (column.equals(rs.getString("name"))) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     /**

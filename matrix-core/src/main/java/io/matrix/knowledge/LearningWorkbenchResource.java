@@ -350,6 +350,51 @@ public class LearningWorkbenchResource {
     }
 
     /**
+     * Consolidates a workspace.
+     *
+     * <p>The mission's §8 describes a bounded consolidation in which
+     * forgetting is marked and never destructive. The run is bounded by
+     * its budget, it is idempotent, and it does not change any claim:
+     * a claim's truth comes from its evidence and not from how often it
+     * was asked about.
+     *
+     * <p>The instant of the run is supplied by the caller, because the
+     * CONSTITUTION's first article forbids a clock in a decision path.
+     */
+    @POST
+    @Path("/workspaces/{id}/consolidate")
+    public Map<String, Object> consolidate(@PathParam("id") String workspaceId,
+                                           @QueryParam("maxForgotten") Integer maxForgotten,
+                                           @QueryParam("ageWindowDays") Integer ageWindowDays,
+                                           @QueryParam("nowMs") Long nowMs) {
+        int max = maxForgotten == null || maxForgotten < 0 ? 100 : Math.min(maxForgotten, 1000);
+        long window = ageWindowDays == null || ageWindowDays < 0
+                ? 30L * 24 * 60 * 60 * 1000
+                : ageWindowDays * 24L * 60 * 60 * 1000;
+        long now = nowMs == null ? System.currentTimeMillis() : nowMs;
+        KnowledgeConsolidator.Report report = KnowledgeConsolidator.consolidate(workbench,
+                workspaceId, now, new KnowledgeConsolidator.Budget(max, window));
+
+        Map<String, Object> result = new LinkedHashMap<>();
+        result.put("workspace", workspaceId);
+        result.put("examined", report.examined());
+        result.put("candidates", report.candidates());
+        result.put("forgotten", report.forgotten());
+        result.put("idempotent", report.idempotent());
+        result.put("invariants", report.invariants());
+        List<Map<String, Object>> marked = new ArrayList<>();
+        for (KnowledgeConsolidator.Candidate candidate : report.marked()) {
+            Map<String, Object> entry = new LinkedHashMap<>();
+            entry.put("question", candidate.question());
+            entry.put("kind", candidate.kind().name());
+            entry.put("reason", candidate.reason());
+            marked.add(entry);
+        }
+        result.put("marked", marked);
+        return result;
+    }
+
+    /**
      * The next exercise for the learner.
      *
      * <p>The mission's §10.1 asks for an exercise generator and a learner

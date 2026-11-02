@@ -489,6 +489,36 @@ public class KnowledgeWorkbench implements AutoCloseable {
     }
 
     /**
+     * Marks a record of the dialogue memory as forgotten.
+     *
+     * <p>RECON-W42.5. The record is MARKED, never deleted: the mission's
+     * §8 forbids destroying the historical evidence, and the record of
+     * what the user asked and what the system could not answer is exactly
+     * that evidence.
+     *
+     * @param workspaceId the workspace
+     * @param questionId the record's id
+     * @param kind the rule that named the record
+     * @param reason why the rule named it
+     * @param nowMs the instant of the forgetting
+     * @return true when a record was marked
+     */
+    public boolean forgetQuestion(String workspaceId, String questionId, String kind, String reason,
+                                   long nowMs) {
+        return store().forgetAskedQuestion(workspaceId, questionId, kind, reason, nowMs);
+    }
+
+    /**
+     * The records that were forgotten, and why.
+     *
+     * @param workspaceId the workspace
+     * @return the forgotten records
+     */
+    public List<AskedQuestion> forgottenQuestions(String workspaceId) {
+        return store().forgottenAskedQuestions(workspaceId);
+    }
+
+    /**
      * The next bounded learning action for every active goal.
      *
      * <p>The mission's §4.6: something has to decide what to do next. Until

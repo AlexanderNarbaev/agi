@@ -101,7 +101,8 @@ public final class QuestionConsolidator {
                         record.canonicalKey(), record.question(), record.uncoveredTerms(),
                         record.timesAsked(), record.answered(), record.firstAskedAt(), record.lastAskedAt(),
                         AskedQuestion.Status.RESOLVED,
-                        "The workspace can answer this question now; the record of the gap is kept."));
+                        "The workspace can answer this question now; the record of the gap is kept.",
+                        record.forgottenAt(), record.forgottenKind(), record.forgottenReason()));
                 notes.add("resolved: " + record.question());
             } else {
                 open.add(record);
