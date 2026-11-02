@@ -7568,3 +7568,10 @@ is the home of these classes, not `matrix-core` ✓ ✓.
 **Done** ✓ ✓. `ActionAcceptor` now writes every acceptance decision into the audit chain it is given, and
 `ActionAcceptorAuditTest` proves it — two decisions produce two entries and the chain verifies ✓ ✓.
 The wiring is proven at the class level; the chain is not yet created in the orchestrator's live path ✓ ✓.
+
+# RECON-W42.9 — the AuditChain is wired into the live path of the gateway
+
+**Done** ✓ ✓. The gateway's live audit service (`RealAuditService`, built by `MinimalHttpServer:101`)
+now chains every claim it records, and `RealAuditServiceAuditChainTest` proves the chain holds, verifies,
+and detects a rewrite ✓ ✓. The measurement also corrected the last wave: `ActionAcceptor` itself has no
+production caller, so that earlier link is class-level only ✓ ✓.

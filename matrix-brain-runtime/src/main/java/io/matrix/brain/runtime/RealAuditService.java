@@ -16,6 +16,8 @@ import java.util.Map;
 public final class RealAuditService {
 
     private final SafetyMonitor safety;
+    /** The tamper-evident trail of every recorded claim (CONSTITUTION Article VIII). */
+    private final AuditChain chain = new AuditChain();
     private long entryCount = 0;
 
     public RealAuditService(SafetyMonitor safety) {
@@ -27,19 +29,25 @@ public final class RealAuditService {
         entryCount++;
         var report = safety.evaluate(claim, List.of(), List.of(), topic, polarity,
             confidence, List.of());
-        if (report.alerts() == null || report.alerts().isEmpty()) return 0;
         int worst = 0;
-        for (var alert : report.alerts()) {
-            int level = switch (alert.level().name()) {
-                case "INFO" -> 1;
-                case "WARNING" -> 2;
-                case "CRITICAL" -> 3;
-                default -> 0;
-            };
-            if (level > worst) worst = level;
+        if (report.alerts() != null && !report.alerts().isEmpty()) {
+            for (var alert : report.alerts()) {
+                int level = switch (alert.level().name()) {
+                    case "INFO" -> 1;
+                    case "WARNING" -> 2;
+                    case "CRITICAL" -> 3;
+                    default -> 0;
+                };
+                if (level > worst) worst = level;
+            }
         }
+        chain.append("claim.record", topic + "|" + polarity + "|" + confidence
+            + "|alert=" + worst + "|" + claim);
         return worst;
     }
+
+    /** The tamper-evident trail of the recorded claims. */
+    public AuditChain auditChain() { return chain; }
 
     public long entryCount() { return entryCount; }
 
