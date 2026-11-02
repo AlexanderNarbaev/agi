@@ -118,7 +118,8 @@ public final class KnowledgeRetriever {
         List<String> queryTerms = TextFeatures.tokens(question);
         if (queryTerms.isEmpty()) {
             return new Answer(question, wanted, false,
-                    "The question contains no searchable terms.",
+                    ResponseFrame.in(TextProfiles.detect(question),
+                            "The question contains no searchable terms."),
                     "", 0.0, SupportScore.none(), List.of(), List.of(), List.of(), List.of(),
                     List.of(), TextFeatures.tokens(question));
         }
@@ -274,8 +275,11 @@ public final class KnowledgeRetriever {
         }
 
         if (relevant.isEmpty() && bridgedClaims.isEmpty()) {
+            // The frame's sentence is said in the language of the
+            // question; the knowledge is not translated.
             return new Answer(question, wanted, false,
-                    "No claim in this workspace covers enough of the question to answer it.",
+                    ResponseFrame.in(TextProfiles.detect(question),
+                            "No claim in this workspace covers enough of the question to answer it."),
                     "", 0.0, SupportScore.none(), List.of(), List.of(), List.of(),
                     List.of("the workspace holds " + snapshot.claims().size() + " claims about "
                             + snapshot.concepts().size() + " concepts"),

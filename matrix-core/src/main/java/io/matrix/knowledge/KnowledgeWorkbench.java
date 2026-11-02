@@ -250,9 +250,10 @@ public class KnowledgeWorkbench implements AutoCloseable {
                     answer.abstentionReason(), answer.statement(), answer.supportScore(),
                     answer.support(), answer.concepts(), answer.claims(), answer.sources(),
                     withNote(answer.limitations(),
-                            "The reference was resolved against the conversation: the question "
-                                    + "was read as being about \"" + context.resolveSubject(question)
-                                    + "\"."),
+                            ResponseFrame.template(TextProfiles.detect(question),
+                                    "The reference was resolved against the conversation: the "
+                                            + "question was read as being about \"{concept}\".",
+                                    Map.of("concept", context.resolveSubject(question)))),
                     answer.gaps(), answer.unmatchedTerms());
         }
         answer = applyCorrection(context, question, answer);
@@ -312,11 +313,13 @@ public class KnowledgeWorkbench implements AutoCloseable {
                 answer.abstentionReason(), answer.statement(), answer.supportScore(),
                 answer.support(), answer.concepts(), answer.claims(), answer.sources(),
                 withNote(answer.limitations(),
-                        "The question is in " + questionLanguage + " and the knowledge is in "
-                                + knowledgeLanguage + ", so the answer is written in "
-                                + knowledgeLanguage + ". The terms are bridged by the bilingual "
-                                + "lexicon, which says which WORDS name the same thing; it does "
-                                + "not translate the answer."),
+                        ResponseFrame.template(questionLanguage,
+                                "The question is in {question} and the knowledge is in {knowledge}.",
+                                Map.of("question", questionLanguage,
+                                        "knowledge", knowledgeLanguage))
+                                + " The terms are bridged by the bilingual lexicon, which says "
+                                + "which WORDS name the same thing; it does not translate the "
+                                + "answer."),
                 answer.gaps(), answer.unmatchedTerms());
     }
 
