@@ -1018,6 +1018,26 @@ public final class KnowledgeStore implements AutoCloseable {
      * the workspace exactly as it was.
      */
     public void applyChanges(String workspaceId, KnowledgeChanges changes) {
+        applyChanges(workspaceId, changes, List.of());
+    }
+
+    /**
+     * Applies a set of changes, with the concepts they need, in ONE
+     * transaction.
+     *
+     * <p>RECON-W42.7. The import is atomic only if EVERYTHING it writes
+     * is in the same transaction. The concepts were created before the
+     * transaction began, so a failure between the two left the workspace
+     * holding concepts with no claims — a half-imported document. The
+     * concepts now go in with the claims, the evidence, the
+     * representations and the source.
+     *
+     * @param workspaceId the workspace
+     * @param changes the changes
+     * @param concepts the concepts the changes need; an existing concept
+     *     is left alone
+     */
+    public void applyChanges(String workspaceId, KnowledgeChanges changes, List<Concept> concepts) {
         KnowledgeSnapshot current = exportWorkspace(workspaceId);
         List<Claim> allClaims = new ArrayList<>(current.claims());
         allClaims.removeIf(c -> changes.claims().stream()
@@ -1064,6 +1084,9 @@ public final class KnowledgeStore implements AutoCloseable {
         try {
             connection.setAutoCommit(false);
             try {
+                for (Concept concept : concepts) {
+                    insertConceptIfAbsent(concept);
+                }
                 for (Source source : changes.sources()) {
                     upsertSource(source);
                 }
@@ -1088,6 +1111,26 @@ public final class KnowledgeStore implements AutoCloseable {
             }
         } catch (SQLException e) {
             throw new IllegalStateException("Failed to apply the knowledge changes", e);
+        }
+    }
+
+    /**
+     * Inserts a concept unless the workspace already holds one with the
+     * same id.
+     *
+     * @param concept the concept
+     */
+    private void insertConceptIfAbsent(Concept concept) throws SQLException {
+        try (PreparedStatement ps = connection.prepareStatement(
+                "INSERT OR IGNORE INTO concept(id, workspace_id, name, definition, domain, "
+                        + "created_at) VALUES (?,?,?,?,?,?)")) {
+            ps.setString(1, concept.id());
+            ps.setString(2, concept.workspaceId());
+            ps.setString(3, concept.name());
+            ps.setString(4, concept.definition());
+            ps.setString(5, concept.domain());
+            ps.setString(6, concept.createdAt());
+            ps.executeUpdate();
         }
     }
 

@@ -168,8 +168,24 @@ public final class DocumentImporter {
             conceptsBefore.add(concept.id());
         }
 
+        // THE CONCEPTS ARE BUILT, NOT WRITTEN.
+        //
+        // The concepts were created by a write of their own, before the
+        // transaction of the claims began, so a failure in between left
+        // the workspace holding concepts with no claims — a half-imported
+        // document. The mission's §14 asks for an ATOMIC import, and the
+        // concepts now go in with the claims, in one transaction.
+        java.util.Map<String, Concept> conceptsById = new java.util.LinkedHashMap<>();
+        for (Concept existing : store.concepts(workspaceId)) {
+            conceptsById.put(existing.id(), existing);
+        }
         for (ClaimExtractor.Proposal proposal : ClaimExtractor.propose(document)) {
-            Concept concept = store.ensureConcept(workspaceId, proposal.subject(), null, null);
+            Concept concept = conceptsById.get(conceptId(workspaceId, proposal.subject()));
+            if (concept == null) {
+                concept = new Concept(conceptId(workspaceId, proposal.subject()), workspaceId,
+                        proposal.subject().strip(), null, null, record.importedAt());
+                conceptsById.put(concept.id(), concept);
+            }
             conceptIds.add(concept.id());
             String claimId = claimId(workspaceId, record.contentHash(), proposal.proposition());
             claims.add(new Claim(claimId, workspaceId, concept.id(), proposal.proposition(),
@@ -207,10 +223,10 @@ public final class DocumentImporter {
                     .add(claim);
         }
         List<String> conceptNames = new ArrayList<>();
-        for (Concept concept : store.concepts(workspaceId)) {
+        for (Concept concept : conceptsById.values()) {
             conceptNames.add(concept.name());
         }
-        for (Concept concept : store.concepts(workspaceId)) {
+        for (Concept concept : conceptsById.values()) {
             List<Claim> conceptClaims = claimsByConcept.get(concept.id());
             if (conceptClaims == null || conceptClaims.isEmpty()) {
                 continue;
@@ -221,7 +237,8 @@ public final class DocumentImporter {
         }
 
         store.applyChanges(workspaceId, new KnowledgeChanges(List.of(storeSource), claims,
-                evidence, representations, List.of()));
+                evidence, representations, List.of()),
+                new ArrayList<>(conceptsById.values()));
 
         // THE VALIDATION STAGE OF THE PIPELINE.
         //
@@ -261,6 +278,21 @@ public final class DocumentImporter {
     }
 
     /** The claim id for a proposition from a document. */
+    /**
+     * The id of a concept of a workspace.
+     *
+     * <p>The id is a pure function of the workspace and the name, so it
+     * can be computed before the concept is written.
+     *
+     * @param workspaceId the workspace
+     * @param name the concept's name
+     * @return the id
+     */
+    static String conceptId(String workspaceId, String name) {
+        return io.matrix.knowledge.Ids.digest(workspaceId + "|concept|"
+                + name.strip().toLowerCase(java.util.Locale.ROOT));
+    }
+
     public static String claimId(String workspaceId, String contentHash, String proposition) {
         return "clm-" + Ids.digest(workspaceId + "|" + contentHash + "|"
                 + proposition.strip().toLowerCase(java.util.Locale.ROOT));
