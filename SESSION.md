@@ -7529,3 +7529,9 @@ extracted, file by file ✓ ✓.
 `BitNetTokenizer` and the Llama-3 stop-token ids of `BitNetModel` now carry names that say what
 they are ✓ ✓. The neuron tests pass ✓ ✓ and the quality gate's MAGIC-2 list has shrunk by these
 files ✓ ✓ — it is still RED ✓ ✓.
+
+# RECON-W42.9 — the conversation ports are named
+
+**Done** ✓ ✓. The three ports of the conversation stack (`ConversationDocker`) now carry names that
+say what they are, and the generated Dockerfile and README are unchanged ✓ ✓. The cli tests pass ✓ ✓
+and the quality gate was recounted ✓ ✓ — still RED ✓ ✓.
