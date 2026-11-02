@@ -7374,3 +7374,9 @@ proposal only if it did not fall ✓ ✓ ✓.
 **Done** ✓ ✓. D-003 carried out ✓ ✓ — the knowledge graph is a read-only projection of the
 workspace ✓ ✓ — and the interface now carries the mission's §9's views ✓ ✓, with the
 numbers measured live rather than copied ✓ ✓ ✓.
+
+# RECON-W42.7 — the unsettled referent asks
+
+**Done** ✓ ✓. A question whose referent the conversation has not settled now gets a question
+back ✓ ✓ — the mission's §6 ✓ ✓ — and the reference words are matched as words, not as
+substrings ✓ ✓ (the Russian "те" had matched inside another word and cost 0.042 of accuracy) ✓ ✓✓.
