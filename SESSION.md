@@ -7414,3 +7414,9 @@ workspace ✓ ✓. The instrument now loads it ✓ ✓, and the published baseli
 compilation is byte-reproducible ✓ ✓, and the archive's difference is named ✓ ✓. The synthetic
 typo benchmark measures the intent preservation ✓ ✓ at 24 of 24 ✓ ✓ — and its own measurement
 was wrong twice before it was right ✓ ✓✓.
+
+# RECON-W42.7 — the gates re-run
+
+**Done** ✓ ✓. The formal gate passes 12 of 12 after the whole wave ✓ ✓, the clean-code gate is
+clean for the files this wave added ✓ ✓, and the backlog's teach-back entry — which said the
+delayed phase fails — was stale ✓ ✓: it measures ✓ ✓.

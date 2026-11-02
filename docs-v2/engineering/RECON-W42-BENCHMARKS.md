@@ -120,8 +120,8 @@ number MATRIX used.
 | What | Value | Command |
 |---|---|---|
 | Application startup | **1.571 s** | the live log: `matrix-core 1.0.0 on JVM … started in 1.571s` |
-| Targeted suites | **121 classes / 1 212 tests / 0 failures** | `./gradlew :matrix-core:test --tests "io.matrix.knowledge.*" --tests "io.matrix.memory.*" --tests "io.matrix.brain.*" --tests "io.matrix.api.*" --tests "io.matrix.rag.*"` |
-| Formal gate | **12/12 exit 0** — 65, 145, 481, 1 501, 2 808, 16 381, 16 539, 39 568, 55 057, 188 416, 326 593, 396 577 states | `java -cp tools/tla2tools.jar tlc2.TLC -config formal/<S>.cfg formal/<S>.tla` |
+| Targeted suites | **164 classes / 1 473 tests / 0 failures** (2026-11-02) | `./gradlew :matrix-core:test --tests "io.matrix.knowledge.*" --tests "io.matrix.memory.*" --tests "io.matrix.brain.*" --tests "io.matrix.api.*" --tests "io.matrix.rag.*" --tests "io.matrix.cognitive.*" --tests "io.matrix.mcp.*"` — **the full repository suite has still not been re-run; it needs the owner's agreement because of the OOM risk** |
+| Formal gate | **12/12 exit 0** — 65, 145, 481, 1 501, 2 808, 16 381, 16 539, 39 568, 55 057, 188 416, 326 593, 396 577 states | `java -cp tools/tla2tools.jar tlc2.TLC -config formal/<S>.cfg formal/<S>.tla` — **re-run on 2026-11-02 after the whole W42.7 wave: 12 passed, 0 failed** |
 | Mutation gate | **27 mutants, 25 killed, 2 survived, 0 invalid, 0 drift** | `python3 scripts/mutation-harness.py` |
 | The knowledge package | 27 test classes, **214 `@Test`** | `matrix-core/src/test/java/io/matrix/knowledge/` |
 | Restart recovery | **verified** — schema v8, both workspaces, the goal, the completed subtask, budget 1/5, the checkpoint, the outcome, the derivation's premise order | the W41 journey script, over HTTP, with `kill -9` |
