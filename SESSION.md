@@ -7555,3 +7555,10 @@ owner's decision ✓ ✓. The remaining 185 Java occurrences are the review queu
 and each of them has zero production callers; the build already carries live equivalents. The sixth,
 `ConsciousBrain`, is referenced but its results are consumed by nothing. The risk row R29 was written
 wrong first (it claimed the module was not built) and was corrected to the measured fact ✓ ✓.
+
+# RECON-W42.9 — the AuditChain's math is verified and its wiring target is determined
+
+**Done** ✓ ✓. `AuditChain`'s hash input is identical in `append` and `verify`, so the chain detects
+tampering ✓ ✓; the other four shadows are still unverified ✓ ✓. The module graph settles where the
+wiring must happen: `matrix-brain-runtime` depends on `matrix-core`, so the runtime's own orchestrator
+is the home of these classes, not `matrix-core` ✓ ✓.
