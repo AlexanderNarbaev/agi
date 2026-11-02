@@ -7487,3 +7487,9 @@ weakened binding changes the answer's text but not yet the retrieval's scoring �
 **Done** ✓ ✓. The Local Alpha checklist and the restart check are versioned scripts that ASSERT
 ✓ ✓ — 15 and 5 assertions, both green ✓ ✓, and the gate was seen failing before it was seen
 passing ✓ ✓.
+
+# RECON-W42.7 — the decay is consumed
+
+**Done** ✓ ✓. The error-driven decay no longer only changes what the answer SAYS about its
+bindings — it changes what the answer STANDS on ✓ ✓: a claim's coverage is scaled by the
+integrity of the concept's binding ✓ ✓, and the test isolates the difference ✓ ✓.
