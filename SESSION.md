@@ -7475,3 +7475,9 @@ raw words, in the language of the question ✓ ✓.
 **Done** ✓ ✓. The workspace can now apply a rule it holds to an instance the question states ✓ ✓ —
 grounded in a claim it names, and refused when it holds no rule ✓ ✓. The answer accuracy is
 **1.000** (24 of 24) ✓ ✓, and the one remaining failure is named rather than papered over ✓ ✓.
+
+# RECON-W42.7 — the answer's claim is true
+
+**Done** ✓ ✓. The answer no longer claims a weakening that never happened ✓ ✓ — the note is backed
+by the state's comparison with the fresh build ✓ ✓ — and the census's finding is recorded: the
+weakened binding changes the answer's text but not yet the retrieval's scoring ✓ ✓.
