@@ -7457,3 +7457,9 @@ has a reproducible census, which found six stale rows ✓ ✓. The archive is by
 two clean builds ✓ ✓ — the §14 table has no open row any more ✓ ✓. And the consolidation's
 report stopped overclaiming: the idempotency is per record, and the `marked` field holds the
 records the run actually marked ✓ ✓.
+
+# RECON-W42.7 — the research wave and the loopback
+
+**Done** ✓ ✓. The W42's three research waves are persisted at last — the streams, nine hypotheses
+with verified primary sources, DESIGN-71 and the doctrine's §6.1 ✓ ✓. And the workbench binds to
+the loopback, so the §13.2's "unauthorized access" is a measured property rather than a limit ✓ ✓.
