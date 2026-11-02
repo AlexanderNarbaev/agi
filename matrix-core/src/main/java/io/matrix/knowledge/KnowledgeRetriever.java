@@ -300,8 +300,16 @@ public final class KnowledgeRetriever {
         }
         List<Concept> concepts = conceptScores.entrySet().stream()
                 .sorted((left, right) -> {
-                    int byName = Double.compare(nameCoverage(right.getKey(), queryTerms),
-                            nameCoverage(left.getKey(), queryTerms));
+                    // The EFFECTIVE terms, not the raw ones: the question
+                    // "Что такое фотосинтез?" asks for the concept
+                    // photosynthesis by its counterpart, and the concept
+                    // whose NAME the question named is the concept the
+                    // question is about. With the raw terms the name
+                    // coverage of every concept was zero and the order
+                    // fell back to the score - and the answer to "Что такое
+                    // фотосинтез?" was about cellular respiration.
+                    int byName = Double.compare(nameCoverage(right.getKey(), effectiveTerms),
+                            nameCoverage(left.getKey(), effectiveTerms));
                     if (byName != 0) {
                         return byName;
                     }

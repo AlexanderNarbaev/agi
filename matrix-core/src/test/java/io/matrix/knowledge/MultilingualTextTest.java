@@ -135,6 +135,36 @@ class MultilingualTextTest {
     }
 
     @Test
+    @DisplayName("the concept the question named comes first, in either language")
+    void theConceptTheQuestionNamedComesFirst(@TempDir Path dir) {
+        try (KnowledgeWorkbench workbench = KnowledgeWorkbench.at(dir.resolve("w.sqlite").toString())) {
+            workbench.loadBundledPackage("photosynthesis");
+
+            // The Russian question names the concept by its counterpart.
+            // The name coverage used the RAW terms, so every concept scored
+            // zero on it and the order fell back to the score - and the
+            // answer to "Что такое фотосинтез?" was about cellular
+            // respiration.
+            Answer russian = workbench.ask("photosynthesis", "Что такое фотосинтез?",
+                    AbstractionLevel.INTRODUCTORY);
+            assertThat(russian.concepts()).isNotEmpty();
+            assertThat(russian.concepts().get(0).name()).isEqualTo("Photosynthesis");
+            assertThat(russian.statement()).contains("Photosynthesis");
+
+            Answer russian2 = workbench.ask("photosynthesis", "Что такое клеточное дыхание?",
+                    AbstractionLevel.INTRODUCTORY);
+            assertThat(russian2.concepts()).isNotEmpty();
+            assertThat(russian2.concepts().get(0).name()).isEqualTo("Cellular respiration");
+
+            // And the English question is unchanged.
+            Answer english = workbench.ask("photosynthesis", "What is photosynthesis?",
+                    AbstractionLevel.INTRODUCTORY);
+            assertThat(english.concepts()).isNotEmpty();
+            assertThat(english.concepts().get(0).name()).isEqualTo("Photosynthesis");
+        }
+    }
+
+    @Test
     @DisplayName("the profile's negations are the language's negations")
     void theProfilesNegationsAreTheLanguagesNegations() {
         assertThat(TextProfiles.ENGLISH.isNegation("not")).isTrue();
