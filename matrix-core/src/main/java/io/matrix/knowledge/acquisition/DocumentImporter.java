@@ -65,7 +65,8 @@ public final class DocumentImporter {
             int claimsAdded,
             int conceptsCreated,
             int representationsCreated,
-            List<String> skipped) {
+            List<String> skipped,
+            ClaimValidator.Result validation) {
 
         public ImportResult {
             skipped = List.copyOf(skipped == null ? List.of() : skipped);
@@ -222,8 +223,26 @@ public final class DocumentImporter {
         store.applyChanges(workspaceId, new KnowledgeChanges(List.of(storeSource), claims,
                 evidence, representations, List.of()));
 
+        // THE VALIDATION STAGE OF THE PIPELINE.
+        //
+        // The mission's §5.4 names the pipeline: SOURCE -> EXTRACTION ->
+        // NORMALIZATION -> SEGMENTATION -> CONCEPT DISCOVERY -> CLAIM
+        // EXTRACTION -> EVIDENCE LINKING -> VALIDATION -> KNOWLEDGE
+        // INTEGRATION. The validation is the stage that decides what the
+        // extracted claims are worth, and it was not part of the import: a
+        // document that stated what the workspace already held left the
+        // workspace with two claims and no promotion, and the claim the
+        // document contributed stayed CANDIDATE for ever.
+        //
+        // The validation runs here, on the workspace as it now stands -
+        // the new document's claims and evidence included - so the group
+        // of claims that state the same thing is measured with the new
+        // source in it.
+        ClaimValidator.Result validation = ClaimValidator.validate(store, workspaceId);
+
         return new ImportResult(workspaceId, record, document.segments().size(),
-                claims.size(), claims.size(), created, representations.size(), skipped);
+                claims.size(), claims.size(), created, representations.size(), skipped,
+                validation);
     }
 
     /** The quality of the evidence: the extraction's own quality. */

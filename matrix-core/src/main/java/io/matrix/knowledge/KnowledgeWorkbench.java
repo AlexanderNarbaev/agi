@@ -547,6 +547,18 @@ public class KnowledgeWorkbench implements AutoCloseable {
     }
 
     /**
+     * The store, for the acquisition's stages that need it.
+     *
+     * <p>RECON-W42.7. The validation stage of the acquisition runs against
+     * the store, so that the importer and the workbench can both call it.
+     *
+     * @return the store
+     */
+    public KnowledgeStore storeForValidation() {
+        return store();
+    }
+
+    /**
      * Imports a document into a workspace.
      *
      * <p>RECON-W42.7. The workbench exposes the import so that the

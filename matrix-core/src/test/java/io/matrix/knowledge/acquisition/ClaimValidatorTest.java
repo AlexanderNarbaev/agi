@@ -34,17 +34,24 @@ class ClaimValidatorTest {
 
         try (KnowledgeWorkbench workbench = KnowledgeWorkbench.at(dir.resolve("w.sqlite").toString())) {
             workbench.loadBundledPackage("photosynthesis");
-            workbench.importDocument("photosynthesis", file, null);
+            // The validation is a STAGE OF THE IMPORT since W42.7, so the
+            // import itself promotes the claim. The explicit call below
+            // then finds the work already done and must report nothing -
+            // that is the idempotence.
+            DocumentImporter.ImportResult imported =
+                    workbench.importDocument("photosynthesis", file, null);
+
+            assertThat(imported.validation().promoted()).isGreaterThan(0);
+            assertThat(imported.validation().superseded()).isGreaterThan(0);
+            assertThat(imported.validation().refusals()).isEmpty();
 
             ClaimValidator.Result result = ClaimValidator.validate(workbench, "photosynthesis");
-
-            assertThat(result.promoted()).isGreaterThan(0);
-            assertThat(result.superseded()).isGreaterThan(0);
+            assertThat(result.promoted()).isEqualTo(0);
             assertThat(result.refusals()).isEmpty();
 
             // The canonical claim is VERIFIED and carries the evidence of
             // both sources.
-            ClaimValidator.Promotion promotion = result.promotions().get(0);
+            ClaimValidator.Promotion promotion = imported.validation().promotions().get(0);
             assertThat(promotion.to()).isEqualTo(ClaimStatus.VERIFIED);
             assertThat(promotion.independentSources()).isEqualTo(2);
 
@@ -115,22 +122,21 @@ class ClaimValidatorTest {
 
         try (KnowledgeWorkbench workbench = KnowledgeWorkbench.at(dir.resolve("w.sqlite").toString())) {
             workbench.loadBundledPackage("photosynthesis");
-            workbench.importDocument("photosynthesis", file, null);
+            DocumentImporter.ImportResult imported =
+                    workbench.importDocument("photosynthesis", file, null);
 
-            ClaimValidator.Result result = ClaimValidator.validate(workbench, "photosynthesis");
             Claim canonical = workbench.workspace("photosynthesis").claims().stream()
-                    .filter(claim -> claim.id().equals(result.promotions().get(0).claimId()))
+                    .filter(claim -> claim.id().equals(
+                            imported.validation().promotions().get(0).claimId()))
                     .findFirst()
                     .orElseThrow();
 
             // The confidence is an authored field. The system has no
             // calibrated way to compute one, and the mission's §16 forbids
             // presenting a heuristic as a probability without calibration.
-            assertThat(canonical.confidence()).isEqualTo(
-                    workbench.workspace("photosynthesis").claims().stream()
-                            .filter(claim -> claim.id().equals(result.promotions().get(0).claimId()))
-                            .findFirst().orElseThrow().confidence());
+            // The promoted claim keeps the confidence it was authored with.
             assertThat(canonical.confidence()).isBetween(0.0, 1.0);
+            assertThat(canonical.confidence()).isGreaterThan(0.0);
         }
     }
 
@@ -146,9 +152,9 @@ class ClaimValidatorTest {
         String promotedId;
         try (KnowledgeWorkbench workbench = KnowledgeWorkbench.at(db.toString())) {
             workbench.loadBundledPackage("photosynthesis");
-            workbench.importDocument("photosynthesis", file, null);
-            ClaimValidator.Result result = ClaimValidator.validate(workbench, "photosynthesis");
-            promotedId = result.promotions().get(0).claimId();
+            DocumentImporter.ImportResult imported =
+                    workbench.importDocument("photosynthesis", file, null);
+            promotedId = imported.validation().promotions().get(0).claimId();
         }
 
         try (KnowledgeWorkbench workbench = KnowledgeWorkbench.at(db.toString())) {

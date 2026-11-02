@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.Map;
 import org.jboss.resteasy.reactive.RestForm;
 import org.jboss.resteasy.reactive.multipart.FileUpload;
+import io.matrix.knowledge.acquisition.ClaimValidator;
 import io.matrix.knowledge.acquisition.DocumentImporter;
 
 /**
@@ -215,6 +216,14 @@ public class LearningWorkbenchResource {
                 AssessmentGenerator.Result generated = workbench.generateAssessment(workspaceId);
                 report.put("theAssessmentItemsGenerated", generated.items().size());
                 report.put("theAssessmentConcepts", generated.concepts());
+                // The validation stage of the pipeline: the claims the
+                // document contributed are measured against the claims the
+                // workspace already held, and a claim that two
+                // INDEPENDENT sources state is promoted.
+                ClaimValidator.Result validation = result.validation();
+                report.put("theClaimsPromoted", validation.promoted());
+                report.put("theClaimsSuperseded", validation.superseded());
+                report.put("theValidationRefusals", validation.refusals());
                 return Response.ok(report).build();
             } finally {
                 Files.deleteIfExists(temporary);

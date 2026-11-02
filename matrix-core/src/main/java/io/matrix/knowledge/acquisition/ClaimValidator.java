@@ -89,9 +89,21 @@ public final class ClaimValidator {
      * @return what the validation did
      */
     public static Result validate(KnowledgeWorkbench workbench, String workspaceId) {
-        List<Claim> claims = workbench.workspace(workspaceId).claims();
-        List<Evidence> evidence = workbench.workspace(workspaceId).evidence();
-        Map<String, String> sourceHashes = sourceHashes(workbench, workspaceId);
+        return validate(workbench.storeForValidation(), workspaceId);
+    }
+
+    /**
+     * Validates a workspace through its store.
+     *
+     * @param store the store
+     * @param workspaceId the workspace
+     * @return what the validation did
+     */
+    public static Result validate(io.matrix.knowledge.KnowledgeStore store, String workspaceId) {
+        io.matrix.knowledge.KnowledgeSnapshot snapshot = store.exportWorkspace(workspaceId);
+        List<Claim> claims = snapshot.claims();
+        List<Evidence> evidence = snapshot.evidence();
+        Map<String, String> sourceHashes = sourceHashes(store, workspaceId);
 
         // The evidence of each claim.
         Map<String, List<Evidence>> byClaim = new LinkedHashMap<>();
@@ -175,10 +187,18 @@ public final class ClaimValidator {
             // with its new status: the first version of this added the old
             // claim to the changes, and the status never moved - the
             // evidence was written and the promotion was not.
-            Promotion promotion = promote(canonical, independent, promotions, refusals);
-            if (promotion != null) {
-                changedClaims.add(withStatus(canonical, ClaimStatus.VERIFIED,
-                        "the validation: " + promotion.reason()));
+            //
+            // A claim that is ALREADY verified is left alone: the
+            // validation is a stage of the import, and the import runs it
+            // on every document - so the second run over the same
+            // workspace must not try to promote the same claim again and
+            // report a refusal for it.
+            if (canonical.status() != ClaimStatus.VERIFIED) {
+                Promotion promotion = promote(canonical, independent, promotions, refusals);
+                if (promotion != null) {
+                    changedClaims.add(withStatus(canonical, ClaimStatus.VERIFIED,
+                            "the validation: " + promotion.reason()));
+                }
             }
 
             // The duplicates are superseded by the canonical one.
@@ -192,7 +212,8 @@ public final class ClaimValidator {
         }
 
         if (!changedClaims.isEmpty() || !addedEvidence.isEmpty()) {
-            workbench.applyValidated(workspaceId, changedClaims, addedEvidence);
+            store.applyChanges(workspaceId, new io.matrix.knowledge.KnowledgeChanges(List.of(),
+                    changedClaims, addedEvidence, List.of(), List.of()));
         }
 
         return new Result(byProposition.size(), promotions.size(), supersessions.size(),
@@ -310,9 +331,10 @@ public final class ClaimValidator {
     }
 
     /** The content hash of every source of the workspace. */
-    private static Map<String, String> sourceHashes(KnowledgeWorkbench workbench, String workspaceId) {
+    private static Map<String, String> sourceHashes(io.matrix.knowledge.KnowledgeStore store,
+                                                    String workspaceId) {
         Map<String, String> hashes = new LinkedHashMap<>();
-        for (io.matrix.knowledge.Source source : workbench.workspace(workspaceId).sources()) {
+        for (io.matrix.knowledge.Source source : store.sources(workspaceId)) {
             hashes.put(source.id(), source.contentHash());
         }
         return hashes;
