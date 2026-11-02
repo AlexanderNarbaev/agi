@@ -7714,3 +7714,11 @@ from the word the correction replaced ✓ ✓.
 **Done** ✓ ✓. The bridge in `KnowledgeRetriever` runs on the corrected terms as well, and the counterpart
 inherits the weight of the word the correction replaced ✓ ✓. The candidate's accuracy rose 0.894 → 0.915 ✓ ✓
 and `ru-miss-1` now passes ✓ ✓; the live gate and the typo benchmark are green ✓ ✓.
+
+# RECON-W42.9 — the remaining six are diagnosed
+
+**Done** ✓ ✓. A second diagnostic against the real corpus found four more things: the lexicon's English
+side is folded (`implies` → `impli` ✓ ✓), the corrector can turn a correct word into a typo (`modus` →
+`modu` ✓ ✓), `loadBundledPackage("logic")` did not change the vocabulary at all (663 either way ✓ ✓), and
+the Russian lexicon lacks `истинно` → `true` ✓ ✓. The candidate stays a candidate: the gate wants 0.95 and
+the candidate is at 0.915 ✓ ✓.
