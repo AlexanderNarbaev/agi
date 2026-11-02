@@ -134,6 +134,49 @@ class KnowledgeConsolidatorTest {
     }
 
     @Test
+    @DisplayName("the run is idempotent PER RECORD when the candidates outnumber the budget")
+    void theRunIsIdempotentPerRecordWhenTheCandidatesOutnumberTheBudget(@TempDir Path dir) {
+        try (KnowledgeWorkbench workbench = KnowledgeWorkbench.at(dir.resolve("w.sqlite").toString())) {
+            workbench.loadBundledPackage("photosynthesis");
+            for (String question : List.of(
+                    "What is quantum chromodynamics?",
+                    "What is the Higgs boson?",
+                    "What is a hadron?",
+                    "What is QCD confinement?")) {
+                workbench.ask("photosynthesis", question, AbstractionLevel.INTRODUCTORY);
+            }
+
+            // The budget allows ONE record per run, and there are more
+            // candidates than that. The run is NOT idempotent over the
+            // workspace - and the report says so instead of claiming a
+            // guarantee it does not have. What IS idempotent is the
+            // record: no record is forgotten twice.
+            KnowledgeConsolidator.Budget budget = new KnowledgeConsolidator.Budget(1, 0);
+            KnowledgeConsolidator.Report first = KnowledgeConsolidator.consolidate(workbench,
+                    "photosynthesis", NOW, budget);
+            KnowledgeConsolidator.Report second = KnowledgeConsolidator.consolidate(workbench,
+                    "photosynthesis", NOW, budget);
+
+            assertThat(first.forgotten()).isEqualTo(1);
+            assertThat(second.forgotten()).isEqualTo(1);
+            assertThat(first.idempotent()).isFalse();
+            assertThat(second.idempotent()).isFalse();
+
+            // The candidates drop by exactly what was forgotten, and the
+            // two runs forgot DIFFERENT records.
+            assertThat(second.candidates()).isEqualTo(first.candidates() - 1);
+            assertThat(first.marked()).hasSize(1);
+            assertThat(second.marked()).hasSize(1);
+            assertThat(first.marked().get(0).questionId())
+                    .isNotEqualTo(second.marked().get(0).questionId());
+
+            // And the invariant text says what the flag means.
+            assertThat(second.invariants()).anyMatch(invariant ->
+                    invariant.contains("idempotent PER RECORD"));
+        }
+    }
+
+    @Test
     @DisplayName("no claim changes: the truth of a claim is not a function of its use")
     void noClaimChangesTheTruthOfAClaimIsNotAFunctionOfItsUse(@TempDir Path dir) {
         try (KnowledgeWorkbench workbench = KnowledgeWorkbench.at(dir.resolve("w.sqlite").toString())) {

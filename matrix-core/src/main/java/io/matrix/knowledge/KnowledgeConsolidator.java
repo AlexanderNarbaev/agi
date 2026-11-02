@@ -28,8 +28,12 @@ import java.util.Set;
  * </ul>
  *
  * <p><b>The consolidation is bounded</b> — a fixed budget of records, a
- * fixed number of phases — and it is <b>idempotent</b>: a second run over
- * an unchanged workspace changes nothing.
+ * fixed number of phases — and it is <b>idempotent per record</b>: a
+ * record that was forgotten is never forgotten again, and a second run
+ * over an unchanged workspace touches no claim. While the rules still
+ * name more candidates than the budget allows, each run forgets more —
+ * and the report says so instead of claiming a guarantee it does not
+ * have.
  *
  * <p><b>No wall-clock in the decision path</b> (the CONSTITUTION's first
  * article): the caller supplies the instant the run is made.
@@ -131,7 +135,23 @@ public final class KnowledgeConsolidator {
                              int rolledBack) {
     }
 
-    /** The result of one run. */
+    /**
+     * The result of one run.
+     *
+     * @param examined how many records were examined
+     * @param candidates how many the rules named
+     * @param forgotten how many were actually marked and forgotten
+     * @param marked the records that were ACTUALLY marked — RECON-W42.7:
+     *     the field used to hold every candidate the rules named, so a
+     *     run that forgot one record out of sixty reported sixty marked
+     *     records. The name and the semantics disagreed, and the report
+     *     is what the reader trusts.
+     * @param invariants the invariants the run held to
+     * @param idempotent whether the rules name nothing more
+     * @param integration the error-driven integration's result
+     * @param acceptance the probe's acceptance
+     * @param decay the error-driven decay's result
+     */
     public record Report(
             int examined,
             int candidates,
@@ -260,7 +280,12 @@ public final class KnowledgeConsolidator {
                         + "grounds of the forgetting.",
                 "The run is bounded: at most " + budget.maxForgotten()
                         + " records may be forgotten in one run.",
-                "The run is idempotent: a second run over an unchanged workspace forgets nothing.",
+                "The run is idempotent PER RECORD: a record that was forgotten is never forgotten "
+                        + "again, and a second run over an unchanged workspace touches no claim. It "
+                        + "is NOT idempotent over the workspace while the rules still name more "
+                        + "candidates than the budget allows - a bounded consolidation with more to "
+                        + "forget will forget more next time, and the report says so rather than "
+                        + "claiming a guarantee it does not have.",
                 "Only the VERIFIED errors are integrated: an error the learner has made in one "
                         + "session may be a slip, and it is not acted upon.",
                 "The error-driven decay is targeted and bounded: it weakens the association "
@@ -268,15 +293,36 @@ public final class KnowledgeConsolidator {
                         + "deadband's lower edge, so a repeated error cannot weaken the "
                         + "association without bound.");
 
-        // IDEMPOTENCY: the run is idempotent when the rules, applied to the
-        // state the run left behind, name nothing. The first version of
-        // this compared the candidates with the forgotten records, and it
-        // reported "not idempotent" for a run that had forgotten
+        // IDEMPOTENCY: the flag says whether the rules, applied to the
+        // state the run left behind, name nothing MORE. The first version
+        // of this compared the candidates with the forgotten records, and
+        // it reported "not idempotent" for a run that had forgotten
         // everything the rules named - which is the opposite of the truth.
+        //
+        // RECON-W42.7: the flag was right and the TEXT around it was not.
+        // The invariant claimed that "a second run over an unchanged
+        // workspace forgets nothing", and the live measurement says
+        // otherwise: with the age window at zero, every record is a decay
+        // candidate, and three runs in a row forgot 5, 5 and 5 - the
+        // records drop out of the candidate list exactly once each, which
+        // is the per-record idempotency, but the workspace still has more
+        // to forget. The invariant now says that, and the flag keeps its
+        // meaning: the rules name nothing more.
         List<Candidate> after = candidates(workbench.askedQuestions(workspaceId),
                 workbench.workspace(workspaceId), nowMs, budget);
         boolean idempotent = after.isEmpty();
-        return new Report(questions.size(), candidates.size(), forgotten, candidates, invariants,
+
+        // THE MARKED RECORDS ARE THE ONES THE RUN ACTUALLY MARKED.
+        //
+        // The report used to carry every candidate the rules named, which
+        // is not what "marked" says: with a budget of five and sixty
+        // candidates, the report said sixty marked records and five
+        // forgotten ones, and both numbers were true and neither was the
+        // answer to the question the reader was asking.
+        List<Candidate> marked = candidates.stream()
+                .filter(candidate -> markedIds.contains(candidate.questionId()))
+                .toList();
+        return new Report(questions.size(), candidates.size(), forgotten, marked, invariants,
                 idempotent, integration, acceptance, decay);
     }
 
