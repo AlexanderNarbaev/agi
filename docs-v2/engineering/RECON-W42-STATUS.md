@@ -358,3 +358,29 @@ specifications that were on disk but uncommitted (`LearningStateMachine.tla`,
 `PromotionStage.tla` — the formal gate measures **14 passed, 0 failed** with
 them), `formal/.gitignore` for TLC's state directories, the three audit
 reports, and the corrections they imply.
+
+**The journey was re-verified on the live path, after this wave's changes
+(2026-11-02).** The Local Alpha checklist — the mission's §14 journey, as a
+gate that can go red — was run over HTTP against the packaged application:
+
+| Step | What it asserts | Result |
+|---|---|---|
+| 1–4 | the workspace loads; a real document becomes knowledge; the imported concept is answered in the document's words; the same question is answered at four levels and the answers differ | **held** |
+| 5–6 | a question the workspace cannot support is refused; a false premise is refused and the refutation is quoted | **held** |
+| 7–9 | the system says what the learner should do next; the held-out items are a strict subset; the import wrote a representation of the new concept | **held** |
+| 10–11 | the consolidation stays within its budget and touches no claim (24 before, 24 after); both arms of the retention experiment report | **held** |
+| 12 | the concepts survive the forced termination | **held** |
+
+`scripts/local-alpha-checklist.sh` → **`the checklist: 0 — every assertion
+held`**. `scripts/local-alpha-restart.sh` → **`the restart: 0 — every
+assertion held`**, with **13 concepts, 19 representations and 24 claims**
+surviving a `SIGKILL` of the application's own JVM, and the consolidation
+after the restart reporting **0 candidates, 0 forgotten, idempotent**.
+
+**A note on how the application was started for this run.** The packaged
+application was started with `-Dmatrix.auto-train.enabled=false`, because
+the default configuration trains synchronously over the 3.6 MB corpus and
+blocks the `StartupEvent` — the port was not up after 180 s. That is a
+finding about the default configuration, not about the journey: the journey
+itself holds, and it holds in 12 assertions over HTTP with a real document
+imported, exercised and then killed.
