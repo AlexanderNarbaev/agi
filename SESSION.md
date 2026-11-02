@@ -7607,3 +7607,11 @@ not cover ✓ ✓.
 `prodBrain.teach()/learnAll()` ✓ ✓; `AutonomyLoop`'s goal methods are called by nobody ✓ ✓, so the audit
 chain will not be wired there ✓ ✓. The inbox watcher and the episodic log are the candidates that carry
 runtime decisions the gateway's buffer does not cover ✓ ✓.
+
+# RECON-W42.9 — the live run and the forced restart (X.6)
+
+**Done** ✓ ✓. The Local Alpha checklist was run live over HTTP on port 9096: every assertion held ✓ ✓.
+The application's JVM was then killed with SIGKILL and the restart script verified the state: 13 concepts,
+19 representations, 24 claims, the consolidation idempotent with nothing forgotten ✓ ✓. The W42.9 changes to
+the checklist script and the literal extraction are therefore verified on the live path, not only by the
+compiler ✓ ✓.
