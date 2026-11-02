@@ -7438,3 +7438,9 @@ answered in ✓ ✓✓.
 **Done** ✓ ✓. The census found two stale rows — the error-driven learner and the cognitive error
 stream, both wired in W42.7 and still marked disconnected ✓ ✓ — and the matrix now says what is
 true about the sleep consolidator: its mechanism crossed the module boundary, its class did not ✓ ✓.
+
+# RECON-W42.7 — the census screens every row
+
+**Done** ✓ ✓. Six rows of the integration matrix were stale — four of them genuinely, two of them
+the census's own false positives — and the matrix now says which is which ✓ ✓. The distillation
+ledger was marked disconnected while its snapshot is read back into the mind's state ✓ ✓.
