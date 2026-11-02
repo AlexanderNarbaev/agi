@@ -226,7 +226,8 @@ public class KnowledgeWorkbench implements AutoCloseable {
         DialogueContext context = context(workspaceId);
         String expanded = context.expand(question);
         String resolvedSubject = expanded.equals(question) ? null : context.resolveSubject(question);
-        Answer answer = new KnowledgeRetriever(snapshot)
+        Answer answer = new KnowledgeRetriever(snapshot,
+                KnowledgeRetriever.DEFAULT_MINIMUM_COVERAGE, weakenedBindings(workspaceId))
                 .answer(expanded.equals(question) ? question : expanded, level);
 
 
@@ -736,6 +737,31 @@ public class KnowledgeWorkbench implements AutoCloseable {
      * @param answer the answer
      * @return the answer
      */
+    /**
+     * The weakened bindings of a workspace, by concept.
+     *
+     * <p>RECON-W42.7. The error-driven decay weakens a concept's binding
+     * to the terms the learner got wrong. Until now the retrieval did not
+     * consult it, so the decay changed the answer's TEXT and not the
+     * answer's CONTENT: the answer stood on exactly the same claims after
+     * the decay as before it. This is the plumbing that makes the decay
+     * consumable - the retrieval asks for the strength of the binding
+     * that carries each matched term, and a weakened binding carries less.
+     *
+     * @param workspaceId the workspace
+     * @return the stored accumulator of each concept that has one
+     */
+    private java.util.Map<String, float[]> weakenedBindings(String workspaceId) {
+        java.util.Map<String, float[]> bindings = new java.util.LinkedHashMap<>();
+        for (Concept concept : workspace(workspaceId).concepts()) {
+            io.matrix.neuron.HebbianUpdater.State state = store().hebbianState(workspaceId, concept.id());
+            if (state != null && state.accumulator != null) {
+                bindings.put(concept.id(), state.accumulator);
+            }
+        }
+        return bindings;
+    }
+
     private Answer applyWeakenedBindings(String workspaceId, Answer answer) {
         if (answer == null || !answer.answered() || answer.concepts().isEmpty()) {
             return answer;

@@ -186,6 +186,98 @@ public final class HebbianBindings {
     }
 
     /**
+     * The integrity of one term's binding.
+     *
+     * <p>The comparison is between the STORED state and the state that
+     * would be built now, without any decay: a term whose binding has
+     * never been decayed has the same strength in both, and one that has
+     * been weakened has less. The ratio is the integrity, and it is
+     * clamped into [0, 1] - a binding whose accumulator went below zero
+     * carries no weight at all.
+     *
+     * <p>This is what makes the decay CONSUMABLE. The retrieval asks for
+     * the strength of the concept's binding to the terms it matched, and
+     * the error-driven decay is exactly what weakens it.
+     *
+     * @param stored the stored accumulator
+     * @param fresh the accumulator as it would be built without a decay
+     * @param term the term
+     * @return the integrity in [0, 1]; 1.0 when there is nothing to weaken
+     */
+    public static double integrityOf(float[] stored, float[] fresh, String term) {
+        if (stored == null || fresh == null || term == null || term.isBlank()) {
+            return 1.0;
+        }
+        double storedSum = 0.0;
+        double freshSum = 0.0;
+        for (int position : positionsOf(term)) {
+            if (position < stored.length && stored[position] > 0.0f) {
+                storedSum += stored[position];
+            }
+            if (position < fresh.length && fresh[position] > 0.0f) {
+                freshSum += fresh[position];
+            }
+        }
+        if (freshSum <= 0.0) {
+            // The concept carries no binding to this term, so there is
+            // nothing the decay could have weakened.
+            return 1.0;
+        }
+        double ratio = storedSum / freshSum;
+        if (ratio < 0.0) {
+            return 0.0;
+        }
+        return Math.min(ratio, 1.0);
+    }
+
+    /**
+     * The integrity of a concept's binding, as a whole.
+     *
+     * <p>The comparison is between the STORED accumulator and the
+     * accumulator that would be built now, without any decay. A concept
+     * whose binding has never been decayed has the same strength in both,
+     * and one whose binding the error-driven decay has weakened has less.
+     * The ratio is the integrity, clamped into [0, 1].
+     *
+     * <p>This is the coarse measure, and it is the one that always
+     * exists: the per-term measure can only see a term whose own
+     * positions carry the binding, and the positions of two terms
+     * overlap only by accident. The concept-level measure sees the
+     * weakening wherever it landed.
+     *
+     * @param stored the stored accumulator
+     * @param fresh the accumulator as it would be built without a decay
+     * @return the integrity in [0, 1]; 1.0 when there is nothing to weaken
+     */
+    public static double integrityOf(float[] stored, float[] fresh) {
+        if (stored == null || fresh == null) {
+            return 1.0;
+        }
+        double storedSum = 0.0;
+        double freshSum = 0.0;
+        for (int index = 0; index < Math.min(stored.length, fresh.length); index++) {
+            // Only the POSITIVE accumulators are the binding's strength.
+            // The negative ones are the anti-Hebbian part - the positions
+            // where the concept and its claim DISAGREE - and they are not
+            // weakened by the decay, so counting them would hide it.
+            if (stored[index] > 0.0f) {
+                storedSum += stored[index];
+            }
+            if (fresh[index] > 0.0f) {
+                freshSum += fresh[index];
+            }
+        }
+        if (freshSum <= 0.0) {
+            return 1.0;
+        }
+        double ratio = storedSum / freshSum;
+        if (ratio < 0.0) {
+            return 0.0;
+        }
+        return Math.min(ratio, 1.0);
+    }
+
+    /**
      * The state of a concept: its bindings, built from its claims.
      *
      * @param snapshot the workspace

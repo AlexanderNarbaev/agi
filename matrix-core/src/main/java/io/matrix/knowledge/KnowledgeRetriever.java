@@ -9,6 +9,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import io.matrix.neuron.HebbianUpdater;
 
 /**
  * Answers a question from the claims of a workspace (owner directive §19
@@ -37,6 +38,23 @@ public final class KnowledgeRetriever {
     private final KnowledgeSnapshot snapshot;
     private final double minimumCoverage;
 
+    /**
+     * The weakened bindings, by concept.
+     *
+     * <p>RECON-W42.7. The error-driven decay weakens a concept's binding
+     * to the terms the learner got wrong, and until now nothing in the
+     * retrieval consulted it: the answer said the bindings had been
+     * weakened, and the answer stood on exactly the same claims as
+     * before. The mission's own definition of an integration asks that a
+     * component's result be CONSUMED by another meaningful component,
+     * and this is that consumption.
+     *
+     * <p>The map holds the STORED accumulator of each concept that has
+     * one. A concept with no entry has no weakened binding, and its
+     * terms count in full.
+     */
+    private final Map<String, float[]> weakenedBindings;
+
     private final Map<String, Concept> conceptsById = new LinkedHashMap<>();
     private final Map<String, Claim> claimsById = new LinkedHashMap<>();
     private final Map<String, List<Representation>> representationsByConcept = new LinkedHashMap<>();
@@ -51,8 +69,22 @@ public final class KnowledgeRetriever {
     }
 
     public KnowledgeRetriever(KnowledgeSnapshot snapshot, double minimumCoverage) {
+        this(snapshot, minimumCoverage, Map.of());
+    }
+
+    /**
+     * A retriever that consults the weakened bindings.
+     *
+     * @param snapshot the workspace
+     * @param minimumCoverage the coverage a claim must reach
+     * @param weakenedBindings the stored accumulator of each concept whose
+     *     binding the error-driven decay has weakened
+     */
+    public KnowledgeRetriever(KnowledgeSnapshot snapshot, double minimumCoverage,
+            Map<String, float[]> weakenedBindings) {
         this.snapshot = snapshot;
         this.minimumCoverage = minimumCoverage;
+        this.weakenedBindings = weakenedBindings == null ? Map.of() : Map.copyOf(weakenedBindings);
         this.corrector = TypoCorrector.over(snapshot);
         for (Concept concept : snapshot.concepts()) {
             conceptsById.put(concept.id(), concept);
@@ -224,7 +256,7 @@ public final class KnowledgeRetriever {
             double matched = 0.0;
             for (String term : effectiveTerms) {
                 if (terms.contains(term)) {
-                    matched += queryWeights.get(term);
+                    matched += queryWeights.get(term) * integrityOf(claim, term, originalsByStem);
                     unmatchedStems.remove(term);
                     Set<String> originals = originalsByStem.remove(term);
                     if (originals != null) {
@@ -496,6 +528,37 @@ public final class KnowledgeRetriever {
             return SupportScore.ScopeMatch.UNDECLARED;
         }
         return anyTermInScope ? SupportScore.ScopeMatch.MATCHES : SupportScore.ScopeMatch.OUTSIDE;
+    }
+
+    /**
+     * The integrity of the binding that carries a matched term.
+     *
+     * <p>A concept with no weakened binding counts in full. A concept
+     * with one counts by the strength of its binding to the terms the
+     * question actually wrote - the raw words, because the bindings were
+     * built from the raw words of the claims.
+     *
+     * @param claim the matched claim
+     * @param stem the matched stem
+     * @param originalsByStem the raw words the question wrote
+     * @return the integrity in [0, 1]
+     */
+    private double integrityOf(Claim claim, String stem, Map<String, Set<String>> originalsByStem) {
+        float[] stored = weakenedBindings.get(claim.conceptId());
+        if (stored == null) {
+            return 1.0;
+        }
+        HebbianUpdater.State fresh = HebbianBindings.stateFor(snapshot, claim.conceptId());
+        double integrity = HebbianBindings.integrityOf(stored, fresh.accumulator);
+        Set<String> originals = originalsByStem.get(stem);
+        if (originals == null || originals.isEmpty()) {
+            return integrity;
+        }
+        for (String original : originals) {
+            integrity = Math.min(integrity,
+                    HebbianBindings.integrityOf(stored, fresh.accumulator, original));
+        }
+        return integrity;
     }
 
     /** Rounds to three decimals, so the support score is not over-precise. */
