@@ -7432,3 +7432,9 @@ endpoints have no authentication today ✓ ✓✓.
 **Done** ✓ ✓. All eleven of the mission's §9 views now carry content ✓ ✓ — the Learning Sessions
 was the last one without it ✓ ✓, and it groups the assessment outcomes by the session they were
 answered in ✓ ✓✓.
+
+# RECON-W42.7 — the integration matrix gets a reproducible census
+
+**Done** ✓ ✓. The census found two stale rows — the error-driven learner and the cognitive error
+stream, both wired in W42.7 and still marked disconnected ✓ ✓ — and the matrix now says what is
+true about the sleep consolidator: its mechanism crossed the module boundary, its class did not ✓ ✓.
