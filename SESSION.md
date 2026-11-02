@@ -7469,3 +7469,9 @@ the loopback, so the §13.2's "unauthorized access" is a measured property rathe
 **Done** ✓ ✓. The CROSS_LINGUAL set is 4 of 4 ✓ ✓, the accuracy is **0.958** ✓ ✓, and the
 bilingual bridge stopped reporting a word it had just covered ✓ ✓ — the credit now reaches the
 raw words, in the language of the question ✓ ✓.
+
+# RECON-W42.7 — the rule is applied
+
+**Done** ✓ ✓. The workspace can now apply a rule it holds to an instance the question states ✓ ✓ —
+grounded in a claim it names, and refused when it holds no rule ✓ ✓. The answer accuracy is
+**1.000** (24 of 24) ✓ ✓, and the one remaining failure is named rather than papered over ✓ ✓.
