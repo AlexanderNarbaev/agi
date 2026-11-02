@@ -449,6 +449,42 @@ public class LearningWorkbenchResource {
     }
 
     /**
+     * Validates a workspace: the claims that several INDEPENDENT sources
+     * state are promoted, and the duplicates are superseded.
+     *
+     * <p>The mission's §5.5: "Ten documents copying the same source do not
+     * constitute ten independent confirmations." The independence is
+     * counted by the distinct content hashes of the sources behind the
+     * claim, not by the number of files.
+     */
+    @POST
+    @Path("/workspaces/{id}/validate")
+    public Map<String, Object> validate(@PathParam("id") String workspaceId) {
+        io.matrix.knowledge.acquisition.ClaimValidator.Result result =
+                workbench.validate(workspaceId);
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("workspace", workspaceId);
+        body.put("theGroups", result.groups());
+        body.put("thePromoted", result.promoted());
+        body.put("theSuperseded", result.superseded());
+        body.put("theRefusals", result.refusals());
+        List<Map<String, Object>> promotions = new ArrayList<>();
+        for (io.matrix.knowledge.acquisition.ClaimValidator.Promotion promotion
+                : result.promotions()) {
+            Map<String, Object> entry = new LinkedHashMap<>();
+            entry.put("theClaim", promotion.claimId());
+            entry.put("theProposition", promotion.proposition());
+            entry.put("from", promotion.from().name());
+            entry.put("to", promotion.to().name());
+            entry.put("theIndependentSources", promotion.independentSources());
+            entry.put("theReason", promotion.reason());
+            promotions.add(entry);
+        }
+        body.put("thePromotions", promotions);
+        return body;
+    }
+
+    /**
      * The verified learning errors of a workspace.
      *
      * <p>The mission's §9: the error-driven integration happens only after

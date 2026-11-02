@@ -456,6 +456,56 @@ public class KnowledgeWorkbench implements AutoCloseable {
     }
 
     /**
+     * Imports a document into a workspace.
+     *
+     * <p>RECON-W42.7. The workbench exposes the import so that the
+     * acquisition does not need the store itself.
+     *
+     * @param workspaceId the workspace
+     * @param path the document
+     * @param declaredLanguage the declared language, or null
+     * @return what the import did
+     */
+    public io.matrix.knowledge.acquisition.DocumentImporter.ImportResult importDocument(
+            String workspaceId, java.nio.file.Path path, String declaredLanguage) {
+        try {
+            return new io.matrix.knowledge.acquisition.DocumentImporter(store())
+                    .importDocument(workspaceId, path, declaredLanguage);
+        } catch (java.io.IOException e) {
+            throw new IllegalStateException("Failed to import the document " + path, e);
+        }
+    }
+
+    /**
+     * Validates a workspace: the claims that several independent sources
+     * state are promoted, and the duplicates are superseded.
+     *
+     * @param workspaceId the workspace
+     * @return what the validation did
+     */
+    public io.matrix.knowledge.acquisition.ClaimValidator.Result validate(String workspaceId) {
+        return io.matrix.knowledge.acquisition.ClaimValidator.validate(this, workspaceId);
+    }
+
+    /**
+     * Writes the claims and the evidence of a validation.
+     *
+     * <p>RECON-W42.7. The validation stage of the acquisition changes the
+     * claims' statuses and adds the evidence of the sources that state
+     * them. The store's rules still hold: a claim that asserts an
+     * established status must carry the evidence for it, and the change
+     * is atomic.
+     *
+     * @param workspaceId the workspace
+     * @param claims the claims with their new statuses
+     * @param evidence the evidence that was added
+     */
+    public void applyValidated(String workspaceId, List<Claim> claims, List<Evidence> evidence) {
+        store().applyChanges(workspaceId, new KnowledgeChanges(List.of(), claims, evidence,
+                List.of(), List.of()));
+    }
+
+    /**
      * The next exercise for the learner.
      *
      * <p>The mission's §10.1 asks for an exercise generator and a learner
