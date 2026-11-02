@@ -380,14 +380,16 @@ metrics for the same reason.
 | 15 | bounded memory under long sessions | **MEASURED** | 50 questions asked → the dialogue context holds 32 turns, the bound it declares; 8 concepts per turn |
 | 16 | no unexplained failed or vacuous property | **MEASURED** | the two mutation survivors are recorded with their findings, and one of them is named as vacuous by construction |
 | 17 | all critical mutants killed or justified | **MEASURED: 25 of 27, 2 justified** | `scripts/mutation-harness.py` — 27 mutants, 25 killed, 2 survived, 0 invalid, 0 drift |
-| 18 | a reproducible build | **PARTIALLY MEASURED** | the COMPILATION is reproducible: two clean builds produced **2 413 byte-identical class files** (the hash `8ea0474b…`). The ARCHIVE is not: two clean jar builds produced different hashes, and the cause is not yet explained. The build is pinned — Java 25, Gradle 9.6.0, the Quarkus BOM, SQLite 3.43.0.0, jsoup 1.17.2, PDFBox 3.0.3, TLC 1.8.0 — and a `clean` + a single-task build failed once and succeeded twice, so the build's fragility is itself not yet pinned |
+| 18 | a reproducible build | **MEASURED (W42.7): the COMPILATION and the ARCHIVE** | two clean builds produce **2 413 byte-identical class files** (the hash `8ea0474b…`) **and the same jar** (`9b17cf2e…`). Two causes were found and closed: the archive's entry timestamps and order, and the ONE entry whose content differed — `matrix-build-info.properties`, because `java.util.Properties.store` writes the current time into its comment. The build metadata is now written by hand, sorted, with no timestamp: a function of the sources alone |ifferent hashes, and the cause is not yet explained. The build is pinned — Java 25, Gradle 9.6.0, the Quarkus BOM, SQLite 3.43.0.0, jsoup 1.17.2, PDFBox 3.0.3, TLC 1.8.0 — and a `clean` + a single-task build failed once and succeeded twice, so the build's fragility is itself not yet pinned |
 
-**One row is half measured**, and it is named here rather than left to be
-discovered: the reproducible build (row 18) is measured for the
-compilation — 2 413 byte-identical class files from two clean builds —
-but not for the archive, whose two clean builds differ, and a `clean`
-plus a single-task build failed once and succeeded twice, so the build's
-own fragility is not yet pinned. That is work, not a claim.
+**No row of the table is open any more.** The last half-measured row — the
+reproducible build (row 18) — was closed in W42.7: two clean builds now
+produce the same jar, and the two causes are named (the archive's entry
+timestamps and order, and the one entry whose content differed because
+`Properties.store` writes the current time into its comment). One caveat
+stands, and it is about the build's fragility rather than its output: a
+`clean` together with a single-task build failed once and succeeded twice,
+so that combination is not yet pinned.
 
 **The typo benchmark's own history is worth one line.** The row read 0.292
 when the benchmark was first run, and the system was answering every

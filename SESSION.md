@@ -7444,3 +7444,8 @@ true about the sleep consolidator: its mechanism crossed the module boundary, it
 **Done** ✓ ✓. Six rows of the integration matrix were stale — four of them genuinely, two of them
 the census's own false positives — and the matrix now says which is which ✓ ✓. The distillation
 ledger was marked disconnected while its snapshot is read back into the mind's state ✓ ✓.
+
+# RECON-W42.7 — the archive is reproducible
+
+**Done** ✓ ✓. Two clean builds now produce the same jar ✓ ✓ — the last half-measured row of the
+§14 table is closed ✓ ✓, and no row of the table is open any more ✓ ✓.
