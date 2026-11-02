@@ -6,6 +6,7 @@ import io.matrix.knowledge.KnowledgeWorkbench;
 import io.matrix.knowledge.Source;
 import io.matrix.knowledge.SourceKind;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -48,6 +49,39 @@ public final class CorpusManager {
             String note) {
     }
 
+    /**
+     * One title and the versions filed under it.
+     *
+     * <p>RECON-W42.7. The registry could report that two sources share a
+     * title, and could not say how many versions of that title the
+     * workspace holds — so a workspace could not answer "is this the
+     * second edition?".
+     *
+     * <p><b>A version is a distinct content under one title.</b> Two
+     * documents with the same content are one source, so the versions of a
+     * title are the sources whose content hashes differ.
+     *
+     * @param title the title
+     * @param versions the versions, oldest authored publication first
+     * @param versionCount how many versions there are
+     * @param latestPublishedAt the latest authored publication date, or
+     *     "unknown" when no version carries one
+     * @param latestSourceId the source of that latest version, or null
+     * @param note what the registry says about the group
+     */
+    public record TitleGroup(
+            String title,
+            List<Entry> versions,
+            int versionCount,
+            String latestPublishedAt,
+            String latestSourceId,
+            String note) {
+
+        public TitleGroup {
+            versions = List.copyOf(versions == null ? List.of() : versions);
+        }
+    }
+
     /** The registry of a workspace. */
     public record Registry(
             List<Entry> entries,
@@ -57,11 +91,28 @@ public final class CorpusManager {
             int documents,
             int claims,
             int independentConfirmations,
-            List<String> notes) {
+            List<String> notes,
+            List<TitleGroup> titles) {
 
         public Registry {
             entries = List.copyOf(entries == null ? List.of() : entries);
             notes = List.copyOf(notes == null ? List.of() : notes);
+            titles = List.copyOf(titles == null ? List.of() : titles);
+        }
+
+        /**
+         * The versions of one title.
+         *
+         * @param title the title
+         * @return the group, or null when the workspace holds no such title
+         */
+        public TitleGroup title(String title) {
+            for (TitleGroup group : titles) {
+                if (group.title().equals(title)) {
+                    return group;
+                }
+            }
+            return null;
         }
     }
 
@@ -128,6 +179,58 @@ public final class CorpusManager {
                                     + confirmationsFor + " independent confirmation(s)"));
         }
 
+        // THE VERSIONS, GROUPED BY TITLE.
+        //
+        // The versions of a title are the sources filed under it whose
+        // contents differ. They are ordered by the AUTHORED publication
+        // date, and the sources that carry no date go last — the registry
+        // does not guess a date, and it does not order by the moment the
+        // document happened to be imported.
+        Map<String, List<Entry>> byTitle = new LinkedHashMap<>();
+        Map<String, List<Source>> sourcesByTitle = new LinkedHashMap<>();
+        for (Source source : sources) {
+            String title = source.title() == null || source.title().isBlank()
+                    ? "(untitled)" : source.title();
+            sourcesByTitle.computeIfAbsent(title, key -> new ArrayList<>()).add(source);
+        }
+        for (Entry entry : entries) {
+            String title = entry.title() == null || entry.title().isBlank()
+                    ? "(untitled)" : entry.title();
+            byTitle.computeIfAbsent(title, key -> new ArrayList<>()).add(entry);
+        }
+        List<TitleGroup> groups = new ArrayList<>();
+        for (Map.Entry<String, List<Source>> group : sourcesByTitle.entrySet()) {
+            String title = group.getKey();
+            List<Source> groupSources = new ArrayList<>(group.getValue());
+            groupSources.sort(Comparator
+                    .comparing((Source source) -> publishedAtOf(source), Comparator.nullsLast(
+                            Comparator.naturalOrder()))
+                    .thenComparing(Source::id));
+            List<Entry> versions = new ArrayList<>();
+            for (Source source : groupSources) {
+                for (Entry entry : byTitle.getOrDefault(title, List.of())) {
+                    if (entry.sourceId().equals(source.id())) {
+                        versions.add(entry);
+                    }
+                }
+            }
+            String latestPublished = "unknown";
+            String latestId = null;
+            for (Source source : groupSources) {
+                String published = publishedAtOf(source);
+                if (published != null && !published.isBlank()) {
+                    latestPublished = published;
+                    latestId = source.id();
+                }
+            }
+            groups.add(new TitleGroup(title, versions, versions.size(), latestPublished, latestId,
+                    versions.size() == 1
+                            ? "the workspace holds one version of this title"
+                            : "the workspace holds " + versions.size() + " versions of this "
+                                    + "title, and they differ in content"));
+        }
+        groups.sort(Comparator.comparing(TitleGroup::title));
+
         List<String> notes = new ArrayList<>();
         notes.add("The independent confirmations are counted by the DISTINCT content hashes of "
                 + "the sources behind a claim: two documents with the same content are one "
@@ -135,9 +238,27 @@ public final class CorpusManager {
         notes.add("The authority and the freshness of a source are as they were authored. The "
                 + "registry does not rank the sources, because a ranking nobody can check is "
                 + "not information.");
+        notes.add("The versions of a title are the sources filed under it whose contents differ. "
+                + "They are ordered by the AUTHORED publication date, and a version without one "
+                + "goes last: the registry does not guess a date, and the moment a document "
+                + "happened to be imported is not a publication date.");
 
         return new Registry(entries, sources.size(), imported, sources.size() - imported,
-                documents, claims.size(), maximumConfirmations, notes);
+                documents, claims.size(), maximumConfirmations, notes, groups);
+    }
+
+    /**
+     * The authored publication date of a source.
+     *
+     * @param source the source
+     * @return the date, or null when it was not authored
+     */
+    private static String publishedAtOf(Source source) {
+        String published = source.publishedAt();
+        if (published == null || published.isBlank() || published.equalsIgnoreCase("unknown")) {
+            return null;
+        }
+        return published;
     }
 
     /**

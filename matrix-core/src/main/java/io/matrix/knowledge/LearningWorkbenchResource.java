@@ -675,6 +675,32 @@ public class LearningWorkbenchResource {
             entries.add(item);
         }
         body.put("theRegistry", entries);
+        // THE VERSIONS, GROUPED BY TITLE.
+        //
+        // The workspace can now say how many versions of a title it holds
+        // and which one carries the latest authored publication date.
+        List<Map<String, Object>> titles = new ArrayList<>();
+        for (io.matrix.knowledge.acquisition.CorpusManager.TitleGroup group : registry.titles()) {
+            Map<String, Object> item = new LinkedHashMap<>();
+            item.put("theTitle", group.title());
+            item.put("theVersions", group.versionCount());
+            item.put("theLatestPublishedAt", group.latestPublishedAt());
+            item.put("theLatestSource", group.latestSourceId());
+            item.put("theNote", group.note());
+            List<Map<String, Object>> versions = new ArrayList<>();
+            for (io.matrix.knowledge.acquisition.CorpusManager.Entry version : group.versions()) {
+                Map<String, Object> entry = new LinkedHashMap<>();
+                entry.put("theSource", version.sourceId());
+                entry.put("theContentHash", version.contentHash());
+                entry.put("theFormat", version.format());
+                entry.put("theClaimsSupported", version.claimsSupported());
+                entry.put("theImported", version.imported());
+                versions.add(entry);
+            }
+            item.put("theVersionList", versions);
+            titles.add(item);
+        }
+        body.put("theTitles", titles);
         return body;
     }
 
