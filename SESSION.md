@@ -7562,3 +7562,9 @@ wrong first (it claimed the module was not built) and was corrected to the measu
 tampering ✓ ✓; the other four shadows are still unverified ✓ ✓. The module graph settles where the
 wiring must happen: `matrix-brain-runtime` depends on `matrix-core`, so the runtime's own orchestrator
 is the home of these classes, not `matrix-core` ✓ ✓.
+
+# RECON-W42.9 — the first shadow class is wired: AuditChain records the acceptor's decisions
+
+**Done** ✓ ✓. `ActionAcceptor` now writes every acceptance decision into the audit chain it is given, and
+`ActionAcceptorAuditTest` proves it — two decisions produce two entries and the chain verifies ✓ ✓.
+The wiring is proven at the class level; the chain is not yet created in the orchestrator's live path ✓ ✓.
