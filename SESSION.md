@@ -7768,3 +7768,12 @@ path provably unchanged ✓ ✓. The weight change it implies must be measured o
 English fold is asymmetric ("release" vs "releas") ✓ ✓, so a question and a claim differing only by the plural
 never meet ✓ ✓. The global fix was measured, broke the rule application and the transfer items ✓ ✓, and was
 reverted ✓ ✓ — the tree is green again except that one old red test ✓ ✓ (R31 in the risk register ✓ ✓).
+
+# RECON-W42.9 — two global changes measured and rejected, and the design conclusion
+
+**Done** ✓ ✓. Two candidate global fixes were measured and reverted ✓ ✓: the English fold's asymmetry (it
+repairs the old red test and breaks the rule application ✓ ✓) and the scope match's cross-language
+comparison (it breaks the cross-lingual, abstention and instrument gates ✓ ✓). The conclusion is now
+written down ✓ ✓: the cross-language matching is a set of local mechanisms that only work together as they
+are ✓ ✓, so the fixes belong inside the matching with their own tests ✓ ✓, not as global changes to the
+folding rules ✓ ✓. The tree is back to 425 knowledge tests with one old red ✓ ✓ (R31, R32 ✓ ✓).
