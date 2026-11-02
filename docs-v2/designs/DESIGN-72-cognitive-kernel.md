@@ -155,7 +155,28 @@ not a lost observation.
 
 ---
 
-## 4. What this design does NOT claim
+## 4. What the research waves changed about this design
+
+Three cross-disciplinary waves (R-A — contemporary ML/DL, R-B — cybernetics and computational
+cognition, R-D — early-learning neuroscience) were raised in parallel, as the owner rule
+META-R1 requires for a change of this class. Their findings are in
+`docs-v2/research/MATRIX-CROSS-DISCIPLINARY-RESEARCH.md` §9, and the hypotheses are in
+`HYPOTHESES-NEW.md` (H-113…H-128). Three of them bear on THIS document:
+
+| hypothesis | what it says about this design | what this design does about it |
+|---|---|---|
+| **H-122** (Spelke et al. 1994; Spelke & Kinzler 2007) | "enumerate all sixteen Boolean functions" is not a neutral start — it already presupposes truth-functional rules over the declared variables | the design **keeps** the complete space (completeness is what makes the measurement meaningful) and records that completeness is a **declared** assumption, not a discovered neutrality. A prior is NOT introduced in W44: a prior can hide a non-monotone true rule, and the escape hatch it would need is not built. |
+| **H-124** (Cashon & Cohen 2000; Munakata 2000; Rankin et al. 2009) | "any deviation is a model error" fires on perceptual noise as readily as on a wrong model | the design **separates** the error from the surprise: `ErrorSignal` carries a disposition (`MODEL_DEFECT`, `EXTERNAL`, `MISSING_CONDITION`, `UNRESOLVED`) and a provenance, and the revision path requires the disposition, not a reaction. A perceptual-noise floor is NOT measured in W44 — that is the open item. |
+| **H-123 / H-126** (Gopnik et al. 2001; Kushnir & Gopnik 2005) | passive covariation is a free experiment, and a promoted procedure must carry the regime in which it matched | the design stores the applicability domain and the reference fallback, and the "regime" (the conditions of the held-out cases) is part of the stored `Case` — but the promotion rule does not yet **compare** regimes, and there is no `CONFOUNDED` flag on an experiment. |
+
+Two of the three (H-124, H-126) are partially satisfied by construction and partially open;
+one (H-122) is a documented **deliberate** choice with a named cost. None of them changes the
+architecture of this document, and none of them was implemented silently: the wave's own
+report says which are open.
+
+---
+
+## 5. What this design does NOT claim
 
 - It does not claim general intelligence, consciousness, or understanding. It claims a
   measurable loop.

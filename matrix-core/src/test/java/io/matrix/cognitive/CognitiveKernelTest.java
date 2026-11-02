@@ -100,6 +100,28 @@ class CognitiveKernelTest {
     }
 
     @Test
+    @DisplayName("the trace of the cycle is written down, and survives a restart")
+    void theTraceOfTheCycleIsWrittenDownAndSurvivesARestart() {
+        CognitiveOutcome outcome = observe("power=1,switch=0");
+
+        // The trace is in the response ...
+        assertThat(outcome.trace().steps()).isNotEmpty();
+        // ... and it is in the store, which is the only way it survives the process.
+        List<LearningTrace.Step> stored = store.events(outcome.episodeId());
+        assertThat(stored).isNotEmpty();
+        assertThat(stored).hasSameSizeAs(outcome.trace().steps());
+        assertThat(stored.stream().map(LearningTrace.Step::phase).toList())
+                .contains("PERCEIVE", "RESTORE", "PREDICT", "SELECT", "ANSWER");
+
+        store.close();
+        workbench.close();
+        store = new CognitiveStore(directory.resolve("cognitive.sqlite"));
+        List<LearningTrace.Step> afterRestart = store.events(outcome.episodeId());
+        assertThat(afterRestart).hasSameSizeAs(stored);
+        assertThat(afterRestart.get(0).phase()).isEqualTo(stored.get(0).phase());
+    }
+
+    @Test
     @DisplayName("the observation becomes a case, and the case survives a restart")
     void theObservationBecomesACaseThatSurvivesARestart() {
         observe("power=1,switch=0");

@@ -220,7 +220,7 @@ public final class CognitiveKernel {
             return new CognitiveOutcome(episodeId, CognitiveOutcome.Status.REFUSED,
                     "The signal could not be interpreted: "
                             + String.join("; ", percept.notes()),
-                    percept, null, null, null, trace.build(), notes);
+                    percept, null, null, null, persist(trace, episodeId, now), notes);
         }
 
         // ── 2. RESTORE ───────────────────────────────────────────────────────
@@ -242,7 +242,7 @@ public final class CognitiveKernel {
             store.closeEpisode(episodeId, now);
             return new CognitiveOutcome(episodeId, CognitiveOutcome.Status.REFUSED,
                     "The requested assignment could not be read: " + e.getMessage(),
-                    percept, null, null, null, trace.build(), notes);
+                    percept, null, null, null, persist(trace, episodeId, now), notes);
         }
 
         // ── 4. PREDICT ────────────────────────────────────────────────────────
@@ -297,7 +297,7 @@ public final class CognitiveKernel {
             store.closeEpisode(episodeId, now);
             return new CognitiveOutcome(episodeId, CognitiveOutcome.Status.REFUSED,
                     "No computation was permitted for this request: " + decision.reason(),
-                    percept, prediction, null, decision, trace.build(), notes);
+                    percept, prediction, null, decision, persist(trace, episodeId, now), notes);
         }
 
         // ── 6. COMPUTE AND, WHEN THE MODEL IS UNSETTLED, ACT ────────────────
@@ -473,7 +473,32 @@ public final class CognitiveKernel {
         trace.step("ANSWER", "CognitiveKernel", answer);
         store.closeEpisode(episodeId, now);
         return new CognitiveOutcome(episodeId, CognitiveOutcome.Status.COMPLETED, answer,
-                percept, prediction, error, decision, trace.build(), notes);
+                percept, prediction, error, decision, persist(trace, episodeId, now), notes);
+    }
+
+
+    /**
+     * Writes the trace of a cycle into the episode's event stream.
+     *
+     * <p>The trace is the record of WHY an answer was reached, and a record that lives only in
+     * the response is a record that disappears with the process. It is written here, step by
+     * step, so that {@code GET /v1/cognitive/trace/{episodeId}} returns the same thing after a
+     * restart as it did during the cycle.</p>
+     *
+     * @param builder the builder of the cycle's trace
+     * @param episodeId the episode the trace belongs to
+     * @param occurredAt the instant of the cycle
+     * @return the trace, built
+     */
+    private LearningTrace persist(LearningTrace.Builder builder, String episodeId, String occurredAt) {
+        LearningTrace trace = builder.build();
+        long sequence = 0L;
+        for (LearningTrace.Step step : trace.steps()) {
+            store.appendEvent(episodeId + "-evt-" + sequence, episodeId, sequence,
+                    step.phase(), step.actor(), step.detail(), occurredAt);
+            sequence++;
+        }
+        return trace;
     }
 
     private static String answerFor(HypothesisPrediction forecast, Boolean computed,

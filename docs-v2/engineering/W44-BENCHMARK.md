@@ -15,11 +15,11 @@ presented as a measurement.
 
 | Scope | Tests | Failures | Skipped |
 |---|---|---|---|
-| `io.matrix.cognitive.*` (the whole W44 addition) | **256** | **0** | 0 |
+| `io.matrix.cognitive.*` (the whole W44 addition) | **257** | **0** | 0 |
 | — `io.matrix.cognitive.algorithms.*` (W44.2) | 104 | 0 | 0 |
 | — `io.matrix.cognitive.neuromodulation.*` (W44.3) | 59 | 0 | 0 |
 | — `io.matrix.cognitive.microworld.*` (W44.4) | 50 | 0 | 0 |
-| — `io.matrix.cognitive.CognitiveKernelTest` (W44.1/W44.5) | 9 | 0 | 0 |
+| — `io.matrix.cognitive.CognitiveKernelTest` (W44.1/W44.5) | 10 | 0 | 0 |
 | — `io.matrix.cognitive.CognitiveSolverTest` (W44.2 reachability) | 5 | 0 | 0 |
 | `matrix-brain-runtime:test` (the whole module, unchanged by this wave) | 914 | 0 | 2 |
 | `matrix-core:test` — the W43 targeted scope: `knowledge`, `memory`, `brain`, `api`, `rag` | 1518 | 0 | 0 |
@@ -256,6 +256,32 @@ Source: `CognitiveSolverTest`, over `POST /v1/cognitive/solve`.
 | a graph with a **negative cycle** | the method refuses; the answer says **"No shortest path exists"**; a finite distance is never reported |
 | `allowBounded` | the bounded search may be chosen; if it did not finish, the answer is labelled **NOT proven** and the notes say "bounded, not proven" |
 | any call | the measured cost lands in the shared ledger |
+
+---
+
+## 6.1 The end-to-end run, over HTTP
+
+The packaged application was started against a temporary database and driven over HTTP. This
+is the only run in the wave that exercises the real serving surface.
+
+| step | request | observed |
+|---|---|---|
+| 1 | `POST /v1/cognitive/observe` ×4 | four cycles; each restores the model from the cases, predicts, selects, computes, probes, observes, learns, regulates |
+| 2 | `GET /v1/cognitive/summary` | `claims 1, evidence 4, predictions 8, errors 0, procedures 1, tasks 0` — the model settled and a procedure was promoted |
+| 3 | `GET /v1/cognitive/procedures` | `proc-microworld-settled-model`, `requiredFacts [MODEL_SETTLED]`, `referenceAlgorithmId micro-world-hypothesis-enumeration`, `validationAgreement 1.0` over 4 cases, and the name of the procedure states the rule the system discovered |
+| 4 | `GET /v1/cognitive/trace/{episodeId}` | **9 steps**: PERCEIVE, RESTORE, PREDICT, SELECT, COMPUTE, PROPOSE, LEARN, REGULATE, ANSWER |
+| 5 | `POST /v1/cognitive/solve` (4 vertices, 6 edges) | selected `graph.shortest-path.dijkstra`; "the shortest distance from 0 to 3 is 3.0, along 0 → 1 → 2 → 3" |
+
+**The run found a defect and it was fixed before the wave closed.** The trace was built in
+memory and never written to the `cognitive_event` table, so step 4 returned an empty array.
+`CognitiveKernel.persist` now writes every step, a test asserts that the trace survives a
+restart, and the trace was re-read after the fix.
+
+**A property of the design that the run made visible:** the answer the endpoint returns is the
+outcome of the **experiment the kernel ran**, not the outcome of the assignment the caller
+asked about — the recorded cases are the discriminating experiments, with their own
+conditions. This is right for the loop, and it is stated here because it is not obvious from
+the request.
 
 ---
 
