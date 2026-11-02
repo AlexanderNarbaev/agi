@@ -138,14 +138,75 @@ public class KnowledgeWorkbench implements AutoCloseable {
         return store().exportWorkspace(workspaceId);
     }
 
-    /** The assessment dataset bound to a workspace. */
+    /**
+     * The assessment dataset bound to a workspace.
+     *
+     * <p>RECON-W42.7. The dataset is the package's items PLUS the items
+     * the generator wrote for the concepts the package does not cover. A
+     * concept the workspace acquired from a document had nothing to
+     * practise with before, and the mission's goal says the system must
+     * "practise applying the concept".
+     */
     public AssessmentDataset dataset(String workspaceId) {
         AssessmentDataset cached = datasets.get(workspaceId);
         if (cached == null) {
             cached = AssessmentDataset.loadResource(assessmentFor(workspaceId), workspace(workspaceId));
             datasets.put(workspaceId, cached);
         }
+        // The merge must be IDEMPOTENT: the cached dataset already holds the
+        // generated items after the first call, and adding them again
+        // would give the workspace two items with the same id. The
+        // evaluator refuses such a dataset, and it is right to.
+        List<AssessmentItem> generated = store().assessmentItems(workspaceId);
+        if (!generated.isEmpty()) {
+            Set<String> present = new LinkedHashSet<>();
+            for (AssessmentItem item : cached.items()) {
+                present.add(item.id());
+            }
+            List<AssessmentItem> missing = new ArrayList<>();
+            for (AssessmentItem item : generated) {
+                if (present.add(item.id())) {
+                    missing.add(item);
+                }
+            }
+            if (!missing.isEmpty()) {
+                cached = AssessmentDataset.withAdditionalItems(cached, missing);
+                datasets.put(workspaceId, cached);
+            }
+        }
         return cached;
+    }
+
+    /**
+     * Generates the assessment items of the concepts the dataset does not
+     * cover.
+     *
+     * <p>The generation is deterministic: the same claims produce the same
+     * items, with the same ids, in the same order. The items are written
+     * to the store, so they survive a restart.
+     *
+     * @param workspaceId the workspace
+     * @return what the generation did
+     */
+    public AssessmentGenerator.Result generateAssessment(String workspaceId) {
+        // The covered concepts are the PACKAGE's concepts. The first
+        // version read them from the cache, and the cache is empty before
+        // the dataset is loaded - so the generator wrote items for the
+        // concepts the package already covers, and the learner would have
+        // practised the same concept twice.
+        AssessmentDataset packaged = AssessmentDataset.loadResource(assessmentFor(workspaceId),
+                workspace(workspaceId));
+        Set<String> covered = new LinkedHashSet<>();
+        for (AssessmentItem item : packaged.items()) {
+            covered.add(item.conceptId());
+        }
+        AssessmentGenerator.Result result = AssessmentGenerator.generate(workspace(workspaceId),
+                covered);
+        if (result.wroteAnything()) {
+            store().recordAssessmentItems(workspaceId, result.items());
+            datasets.remove(workspaceId);
+        }
+        return result;
     }
 
     /**
@@ -499,8 +560,14 @@ public class KnowledgeWorkbench implements AutoCloseable {
     public io.matrix.knowledge.acquisition.DocumentImporter.ImportResult importDocument(
             String workspaceId, java.nio.file.Path path, String declaredLanguage) {
         try {
-            return new io.matrix.knowledge.acquisition.DocumentImporter(store())
-                    .importDocument(workspaceId, path, declaredLanguage);
+            io.matrix.knowledge.acquisition.DocumentImporter.ImportResult result =
+                    new io.matrix.knowledge.acquisition.DocumentImporter(store())
+                            .importDocument(workspaceId, path, declaredLanguage);
+            // The concept the document brought in has to be PRACTISABLE:
+            // the assessment items are generated for the concepts the
+            // dataset does not cover.
+            generateAssessment(workspaceId);
+            return result;
         } catch (java.io.IOException e) {
             throw new IllegalStateException("Failed to import the document " + path, e);
         }

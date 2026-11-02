@@ -54,7 +54,7 @@ import java.util.Set;
 public final class KnowledgeStore implements AutoCloseable {
 
     /** The schema version this build writes. */
-    public static final int SCHEMA_VERSION = 13;
+    public static final int SCHEMA_VERSION = 14;
 
     private static final ObjectMapper JSON = new ObjectMapper();
 
@@ -349,6 +349,29 @@ public final class KnowledgeStore implements AutoCloseable {
     }
 
     private int migrateFrom(int version) throws SQLException {
+        if (version == 13) {
+            // v14 adds the table of the GENERATED assessment items.
+            //
+            // The assessment dataset came from the knowledge package, so a
+            // concept the workspace acquired from a document had nothing
+            // to practise with. The generated items are part of the
+            // workspace's assessment, and they must survive a restart -
+            // the mission's goal says the improvement must remain after a
+            // forced termination.
+            try (Statement st = connection.createStatement()) {
+                st.execute("CREATE TABLE IF NOT EXISTS assessment_item ("
+                        + "id TEXT PRIMARY KEY, workspace_id TEXT NOT NULL, "
+                        + "concept_id TEXT NOT NULL, dimension TEXT NOT NULL, "
+                        + "prompt TEXT NOT NULL, key_terms TEXT NOT NULL, "
+                        + "difficulty INTEGER NOT NULL, variant TEXT NOT NULL, "
+                        + "critical INTEGER NOT NULL, held_out INTEGER NOT NULL, "
+                        + "recorded_at TEXT NOT NULL)");
+                st.execute("CREATE INDEX IF NOT EXISTS idx_assessment_item_workspace "
+                        + "ON assessment_item(workspace_id, id)");
+            }
+            writeSchemaVersion(14);
+            return 14;
+        }
         if (version == 12) {
             // v13 adds the language of a source.
             //
@@ -1330,6 +1353,58 @@ public final class KnowledgeStore implements AutoCloseable {
         } catch (SQLException e) {
             throw new IllegalStateException("Failed to record the learning errors", e);
         }
+    }
+
+    /**
+     * Records the generated assessment items of a workspace.
+     *
+     * @param workspaceId the workspace
+     * @param items the items
+     */
+    public void recordAssessmentItems(String workspaceId, List<AssessmentItem> items) {
+        if (items == null || items.isEmpty()) {
+            return;
+        }
+        try (PreparedStatement ps = connection.prepareStatement(
+                "INSERT OR REPLACE INTO assessment_item(id, workspace_id, concept_id, dimension, "
+                        + "prompt, key_terms, difficulty, variant, critical, held_out, "
+                        + "recorded_at) VALUES (?,?,?,?,?,?,?,?,?,?,?)")) {
+            for (AssessmentItem item : items) {
+                ps.setString(1, item.id());
+                ps.setString(2, workspaceId);
+                ps.setString(3, item.conceptId());
+                ps.setString(4, item.dimension().name());
+                ps.setString(5, item.prompt());
+                ps.setString(6, String.join(",", item.keyTerms()));
+                ps.setInt(7, item.difficulty());
+                ps.setString(8, item.variant());
+                ps.setInt(9, item.critical() ? 1 : 0);
+                ps.setInt(10, item.heldOut() ? 1 : 0);
+                ps.setString(11, java.time.Instant.now().toString());
+                ps.addBatch();
+            }
+            ps.executeBatch();
+        } catch (SQLException e) {
+            throw new IllegalStateException("Failed to record the assessment items", e);
+        }
+    }
+
+    /**
+     * The generated assessment items of a workspace.
+     *
+     * @param workspaceId the workspace
+     * @return the items
+     */
+    public List<AssessmentItem> assessmentItems(String workspaceId) {
+        return query("SELECT id, workspace_id, concept_id, dimension, prompt, key_terms, "
+                + "difficulty, variant, critical, held_out FROM assessment_item "
+                + "WHERE workspace_id = ? ORDER BY id", workspaceId, rs -> new AssessmentItem(
+                rs.getString("id"), rs.getString("concept_id"),
+                LearningDimension.valueOf(rs.getString("dimension")),
+                rs.getString("prompt"), splitList(rs.getString("key_terms")),
+                rs.getInt("difficulty"), rs.getString("variant"),
+                rs.getInt("critical") != 0, rs.getInt("held_out") != 0,
+                List.of(), null));
     }
 
     /**

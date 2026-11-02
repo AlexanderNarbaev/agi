@@ -34,6 +34,23 @@ public final class AssessmentDataset {
     private final String description;
     private final List<AssessmentItem> items;
 
+    /**
+     * A dataset that holds the package's items and the generated ones.
+     *
+     * <p>RECON-W42.7. The generated items are part of the workspace's
+     * assessment, so the dataset has to be able to carry them.
+     *
+     * @param base the dataset the items come from
+     * @param items the items to add
+     * @return the merged dataset
+     */
+    public static AssessmentDataset withAdditionalItems(AssessmentDataset base,
+                                                        List<AssessmentItem> items) {
+        List<AssessmentItem> all = new ArrayList<>(base.items());
+        all.addAll(items);
+        return new AssessmentDataset(base.id(), base.version(), base.description(), all);
+    }
+
     private AssessmentDataset(String id, int version, String description, List<AssessmentItem> items) {
         this.id = id;
         this.version = version;
