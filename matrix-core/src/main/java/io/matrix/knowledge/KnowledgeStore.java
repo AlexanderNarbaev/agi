@@ -1320,6 +1320,33 @@ public final class KnowledgeStore implements AutoCloseable {
     }
 
     /**
+     * Brings a forgotten record back.
+     *
+     * <p>RECON-W42.7. The consolidation's acceptance criterion needs to be
+     * able to undo its own proposal: the sleep consolidator's rule is that
+     * a proposal is taken only if the held-out measurement does not fall,
+     * and the proposal is rolled back as a batch when it does. The record
+     * is marked forgotten, not deleted, so the rollback is a matter of
+     * clearing the mark.
+     *
+     * @param workspaceId the workspace
+     * @param id the record
+     * @return true when a record was brought back
+     */
+    public boolean reviveAskedQuestion(String workspaceId, String id) {
+        try (PreparedStatement ps = connection.prepareStatement(
+                "UPDATE asked_question SET forgotten_at = NULL, forgotten_kind = NULL, "
+                        + "forgotten_reason = NULL WHERE workspace_id = ? AND id = ? "
+                        + "AND forgotten_at IS NOT NULL")) {
+            ps.setString(1, workspaceId);
+            ps.setString(2, id);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            throw new IllegalStateException("Failed to revive the asked question", e);
+        }
+    }
+
+    /**
      * Records the verified learning errors of a workspace.
      *
      * <p>A record of an error that has not been repeated is not evidence

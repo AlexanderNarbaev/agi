@@ -713,6 +713,17 @@ public class KnowledgeWorkbench implements AutoCloseable {
     }
 
     /**
+     * Brings a forgotten record back.
+     *
+     * @param workspaceId the workspace
+     * @param questionId the record
+     * @return true when a record was brought back
+     */
+    public boolean reviveQuestion(String workspaceId, String questionId) {
+        return store().reviveAskedQuestion(workspaceId, questionId);
+    }
+
+    /**
      * The records that were forgotten, and why.
      *
      * @param workspaceId the workspace

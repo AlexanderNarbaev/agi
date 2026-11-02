@@ -466,6 +466,22 @@ public class LearningWorkbenchResource {
             marked.add(entry);
         }
         result.put("marked", marked);
+        // THE ACCEPTANCE CRITERION.
+        //
+        // The consolidation PROPOSES the forgetting and keeps the proposal
+        // only if the knowledge's answerability on the held-out items did
+        // not fall - the sleep consolidator's rule, wired into the
+        // knowledge domain.
+        KnowledgeConsolidator.Acceptance acceptance = report.acceptance();
+        if (acceptance != null) {
+            Map<String, Object> probe = new LinkedHashMap<>();
+            probe.put("theItemsProbed", acceptance.probed());
+            probe.put("theAnsweredBefore", acceptance.answeredBefore());
+            probe.put("theAnsweredAfter", acceptance.answeredAfter());
+            probe.put("theProposalAccepted", acceptance.accepted());
+            probe.put("theRolledBack", acceptance.rolledBack());
+            result.put("theAcceptance", probe);
+        }
         // THE ERROR-DRIVEN INTEGRATION, VISIBLE.
         //
         // The consolidation's phase that records the VERIFIED learning

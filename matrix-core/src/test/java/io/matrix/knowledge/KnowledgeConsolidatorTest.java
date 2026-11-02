@@ -30,6 +30,48 @@ class KnowledgeConsolidatorTest {
     private static final long NOW = System.currentTimeMillis() + 60L * 24 * 60 * 60 * 1000;
 
     @Test
+    @DisplayName("the run measures the knowledge before and after, and keeps the proposal only if it did not fall")
+    void theRunMeasuresTheKnowledgeBeforeAndAfter(@TempDir Path dir) {
+        try (KnowledgeWorkbench workbench =
+                KnowledgeWorkbench.at(dir.resolve("w.sqlite").toString())) {
+            workbench.loadBundledPackage("photosynthesis");
+            workbench.ask("photosynthesis", "What is photosynthesis?",
+                    AbstractionLevel.INTRODUCTORY);
+            workbench.ask("photosynthesis", "What is the Calvin-Benson cycle?",
+                    AbstractionLevel.INTRODUCTORY);
+
+            KnowledgeConsolidator.Report report = KnowledgeConsolidator.consolidate(workbench,
+                    "photosynthesis", System.currentTimeMillis() + 60_000,
+                    new KnowledgeConsolidator.Budget(10, 0));
+
+            // The acceptance criterion: the sleep consolidator's rule,
+            // wired into the knowledge domain.
+            KnowledgeConsolidator.Acceptance acceptance = report.acceptance();
+            assertThat(acceptance).isNotNull();
+            assertThat(acceptance.probed()).isGreaterThan(0);
+            assertThat(acceptance.answeredBefore()).isGreaterThanOrEqualTo(0);
+            assertThat(acceptance.answeredAfter()).isEqualTo(acceptance.answeredBefore());
+            assertThat(acceptance.accepted()).isTrue();
+            assertThat(acceptance.rolledBack()).isEqualTo(0);
+        }
+    }
+
+    @Test
+    @DisplayName("the probe records nothing: a probe must not change what it measures")
+    void theProbeRecordsNothing(@TempDir Path dir) {
+        try (KnowledgeWorkbench workbench =
+                KnowledgeWorkbench.at(dir.resolve("w.sqlite").toString())) {
+            workbench.loadBundledPackage("photosynthesis");
+            int askedBefore = workbench.askedQuestions("photosynthesis").size();
+
+            KnowledgeConsolidator.consolidate(workbench, "photosynthesis",
+                    System.currentTimeMillis() + 60_000, KnowledgeConsolidator.Budget.defaults());
+
+            assertThat(workbench.askedQuestions("photosynthesis")).hasSize(askedBefore);
+        }
+    }
+
+    @Test
     @DisplayName("a record the rules name is marked, and it is still there")
     void aRecordTheRulesNameIsMarkedAndItIsStillThere(@TempDir Path dir) {
         try (KnowledgeWorkbench workbench = KnowledgeWorkbench.at(dir.resolve("w.sqlite").toString())) {

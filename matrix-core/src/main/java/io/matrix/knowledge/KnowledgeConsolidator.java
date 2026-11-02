@@ -54,6 +54,31 @@ public final class KnowledgeConsolidator {
         }
     }
 
+    /** How many held-out items the acceptance probe asks. */
+    public static final int PROBE_SIZE = 12;
+
+    /**
+     * The held-out items the acceptance probe asks.
+     *
+     * <p>The probe is bounded: it asks the first {@link #PROBE_SIZE}
+     * held-out items of the dataset, in the dataset's order, so the same
+     * workspace is always probed the same way.
+     *
+     * @param workbench the workspace
+     * @param workspaceId the workspace
+     * @return the items
+     */
+    private static List<AssessmentItem> probeItems(KnowledgeWorkbench workbench, String workspaceId) {
+        try {
+            List<AssessmentItem> held = workbench.dataset(workspaceId).heldOutItems();
+            return held.size() > PROBE_SIZE ? held.subList(0, PROBE_SIZE) : held;
+        } catch (RuntimeException e) {
+            // A workspace with no dataset cannot be probed, and a probe
+            // that cannot run does not refuse the consolidation.
+            return List.of();
+        }
+    }
+
     /**
      * The kinds of forgetting the consolidation knows.
      *
@@ -88,6 +113,24 @@ public final class KnowledgeConsolidator {
             long ageMs) {
     }
 
+    /**
+     * The acceptance criterion of one run.
+     *
+     * <p>RECON-W42.7. The sleep consolidator's rule, wired into the
+     * knowledge domain: <em>a proposal is taken only if the held-out
+     * measurement does not fall, and the proposal is rolled back as a
+     * batch when it does</em>.
+     *
+     * @param probed how many held-out items were asked
+     * @param answeredBefore how many of them the workspace answered before
+     * @param answeredAfter how many of them it answers after
+     * @param accepted whether the proposal was kept
+     * @param rolledBack how many records were brought back
+     */
+    public record Acceptance(int probed, int answeredBefore, int answeredAfter, boolean accepted,
+                             int rolledBack) {
+    }
+
     /** The result of one run. */
     public record Report(
             int examined,
@@ -96,7 +139,8 @@ public final class KnowledgeConsolidator {
             List<Candidate> marked,
             List<String> invariants,
             boolean idempotent,
-            ErrorIntegrator.Result integration) {
+            ErrorIntegrator.Result integration,
+            Acceptance acceptance) {
 
         public Report {
             marked = List.copyOf(marked == null ? List.of() : marked);
@@ -135,8 +179,33 @@ public final class KnowledgeConsolidator {
         // learner has repeated are integrated.
         ErrorIntegrator.Result integration = ErrorIntegrator.integrate(workbench, workspaceId);
 
+        // PHASE: THE PROBE BEFORE.
+        //
+        // The consolidation now PROPOSES, and the proposal is accepted
+        // only if the knowledge's answerability on the held-out items does
+        // not fall. This is the sleep consolidator's rule, wired into the
+        // knowledge domain: "a proposal is taken iff held-out accuracy
+        // does not fall", and the proposal is rolled back as a batch when
+        // it does.
+        //
+        // The probe asks the HELD-OUT items - the independent test the
+        // learner has never seen - and counts how many the workspace can
+        // answer. The probe uses the retriever directly, so it records
+        // nothing: a probe must not change what it measures.
+        int probed = 0;
+        int answeredBefore = 0;
+        List<AssessmentItem> probeItems = probeItems(workbench, workspaceId);
+        for (AssessmentItem item : probeItems) {
+            probed++;
+            if (new KnowledgeRetriever(workbench.workspace(workspaceId))
+                    .answer(item.prompt(), AbstractionLevel.INTRODUCTORY).answered()) {
+                answeredBefore++;
+            }
+        }
+
         // PHASE: THE MARK. A forgotten record is marked, never deleted.
         int forgotten = 0;
+        List<String> markedIds = new ArrayList<>();
         for (Candidate candidate : candidates) {
             if (forgotten >= budget.maxForgotten()) {
                 break;
@@ -144,8 +213,33 @@ public final class KnowledgeConsolidator {
             if (workbench.forgetQuestion(workspaceId, candidate.questionId(), candidate.kind().name(),
                     candidate.reason(), nowMs)) {
                 forgotten++;
+                markedIds.add(candidate.questionId());
             }
         }
+
+        // PHASE: THE PROBE AFTER, AND THE ROLLBACK.
+        int answeredAfter = 0;
+        for (AssessmentItem item : probeItems) {
+            if (new KnowledgeRetriever(workbench.workspace(workspaceId))
+                    .answer(item.prompt(), AbstractionLevel.INTRODUCTORY).answered()) {
+                answeredAfter++;
+            }
+        }
+        boolean accepted = answeredAfter >= answeredBefore;
+        int rolledBack = 0;
+        if (!accepted && forgotten > 0) {
+            // The batch is rolled back: an early removal must not mask a
+            // later degradation, and the state that is left must be a
+            // state that was measured.
+            for (String id : markedIds) {
+                if (workbench.reviveQuestion(workspaceId, id)) {
+                    rolledBack++;
+                }
+            }
+            forgotten = 0;
+        }
+        Acceptance acceptance = new Acceptance(probed, answeredBefore, answeredAfter, accepted,
+                rolledBack);
 
         List<String> invariants = List.of(
                 "No claim was changed: the consolidation reports the support of the claims and "
@@ -168,7 +262,7 @@ public final class KnowledgeConsolidator {
                 workbench.workspace(workspaceId), nowMs, budget);
         boolean idempotent = after.isEmpty();
         return new Report(questions.size(), candidates.size(), forgotten, candidates, invariants,
-                idempotent, integration);
+                idempotent, integration, acceptance);
     }
 
     /**
