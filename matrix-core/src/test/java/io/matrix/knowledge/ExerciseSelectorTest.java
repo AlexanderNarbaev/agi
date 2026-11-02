@@ -35,14 +35,37 @@ class ExerciseSelectorTest {
     }
 
     @Test
-    @DisplayName("an item the learner has attempted is not selected again")
-    void anItemTheLearnerHasAttemptedIsNotSelectedAgain(@TempDir Path dir) {
+    @DisplayName("a wrongly answered item is asked again; a right one is not")
+    void aWronglyAnsweredItemIsAskedAgainARightOneIsNot(@TempDir Path dir) {
         try (KnowledgeWorkbench workbench = KnowledgeWorkbench.at(dir.resolve("w.sqlite").toString())) {
             workbench.loadBundledPackage("photosynthesis");
 
             ExerciseSelector.Selection first = workbench.nextExercise("photosynthesis");
             assertThat(first).isNotNull();
+            // The learner answers it wrongly: the error is the gap, and the
+            // gap is what practice is for.
             workbench.assess("photosynthesis", first.item().id(), "an answer", 0.5, "test");
+
+            ExerciseSelector.Selection second = workbench.nextExercise("photosynthesis");
+            assertThat(second).isNotNull();
+            assertThat(second.item().id()).isEqualTo(first.item().id());
+            assertThat(second.reason()).contains("wrongly");
+        }
+    }
+
+    @Test
+    @DisplayName("a rightly answered item is not asked again")
+    void aRightlyAnsweredItemIsNotAskedAgain(@TempDir Path dir) {
+        try (KnowledgeWorkbench workbench = KnowledgeWorkbench.at(dir.resolve("w.sqlite").toString())) {
+            workbench.loadBundledPackage("photosynthesis");
+
+            ExerciseSelector.Selection first = workbench.nextExercise("photosynthesis");
+            assertThat(first).isNotNull();
+            // The learner answers it correctly, with the answer the item
+            // holds.
+            AssessmentItem item = first.item();
+            workbench.assess("photosynthesis", item.id(),
+                    String.join(" ", item.keyTerms()), 0.9, "test");
 
             ExerciseSelector.Selection second = workbench.nextExercise("photosynthesis");
             assertThat(second).isNotNull();
@@ -86,12 +109,13 @@ class ExerciseSelectorTest {
         try (KnowledgeWorkbench workbench = KnowledgeWorkbench.at(dir.resolve("w.sqlite").toString())) {
             workbench.loadBundledPackage("photosynthesis");
 
-            // The learner attempts EVERY training item, so the only items
-            // left are the held-out ones - and the selection must be one of
-            // them.
+            // The learner attempts EVERY training item CORRECTLY, so the
+            // only items left are the held-out ones - and the selection
+            // must be one of them.
             for (AssessmentItem item : workbench.dataset("photosynthesis").items()) {
                 if (!item.heldOut()) {
-                    workbench.assess("photosynthesis", item.id(), "an answer", 0.5, "test");
+                    workbench.assess("photosynthesis", item.id(),
+                    String.join(" ", item.keyTerms()), 0.9, "test");
                 }
             }
 

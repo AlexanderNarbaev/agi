@@ -465,11 +465,15 @@ public class KnowledgeWorkbench implements AutoCloseable {
      */
     public ExerciseSelector.Selection nextExercise(String workspaceId) {
         Set<String> attempted = new LinkedHashSet<>();
+        Set<String> failed = new LinkedHashSet<>();
         for (AssessmentOutcome outcome : outcomes(workspaceId)) {
             attempted.add(outcome.itemId());
+            if (!outcome.correct()) {
+                failed.add(outcome.itemId());
+            }
         }
         return new ExerciseSelector(dataset(workspaceId), learningStates(workspaceId),
-                workspace(workspaceId), attempted).next();
+                workspace(workspaceId), attempted, failed).next();
     }
 
     /**
@@ -481,11 +485,15 @@ public class KnowledgeWorkbench implements AutoCloseable {
      */
     public List<ExerciseSelector.Selection> nextExercises(String workspaceId, int count) {
         Set<String> attempted = new LinkedHashSet<>();
+        Set<String> failed = new LinkedHashSet<>();
         for (AssessmentOutcome outcome : outcomes(workspaceId)) {
             attempted.add(outcome.itemId());
+            if (!outcome.correct()) {
+                failed.add(outcome.itemId());
+            }
         }
         return new ExerciseSelector(dataset(workspaceId), learningStates(workspaceId),
-                workspace(workspaceId), attempted).next(count);
+                workspace(workspaceId), attempted, failed).next(count);
     }
 
     /**

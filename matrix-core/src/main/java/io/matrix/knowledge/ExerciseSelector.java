@@ -60,6 +60,7 @@ public final class ExerciseSelector {
     private final List<LearningState> states;
     private final KnowledgeSnapshot snapshot;
     private final Set<String> attempted;
+    private final Set<String> failed;
 
     /**
      * A selector over a learner.
@@ -71,10 +72,33 @@ public final class ExerciseSelector {
      */
     public ExerciseSelector(AssessmentDataset dataset, List<LearningState> states,
                             KnowledgeSnapshot snapshot, Set<String> attempted) {
+        this(dataset, states, snapshot, attempted, Set.of());
+    }
+
+    /**
+     * A selector over a learner, with the errors they made.
+     *
+     * <p>The failed items are the ones the learner is asked again, and
+     * that is the error-driven part of the loop: an item the learner got
+     * wrong is evidence of a gap, and the gap is what practice is for.
+     * Without this, a failed item was "attempted" and therefore skipped
+     * forever - the learner could not fail the same item twice, and the
+     * system could not tell a learner who has understood from one who has
+     * merely been exposed.
+     *
+     * @param dataset the assessment items
+     * @param states the learner's per-dimension states
+     * @param snapshot the workspace
+     * @param attempted the item ids the learner has already attempted
+     * @param failed the item ids the learner has answered wrongly
+     */
+    public ExerciseSelector(AssessmentDataset dataset, List<LearningState> states,
+                            KnowledgeSnapshot snapshot, Set<String> attempted, Set<String> failed) {
         this.dataset = dataset;
         this.states = states == null ? List.of() : states;
         this.snapshot = snapshot;
         this.attempted = attempted == null ? Set.of() : attempted;
+        this.failed = failed == null ? Set.of() : failed;
     }
 
     /**
@@ -114,7 +138,19 @@ public final class ExerciseSelector {
             }
         }
 
-        // 1. An unattempted item of a weak dimension.
+        // 1. THE ERROR-DRIVEN SELECTION. An item the learner answered
+        // wrongly is the evidence of a gap, and it comes before the items
+        // the learner has never seen.
+        for (LearningDimension dimension : weak) {
+            for (AssessmentItem item : items) {
+                if (item.dimension() == dimension && failed.contains(item.id())) {
+                    return new Selection(item, dimension,
+                            "the learner answered this item wrongly, and the error is the gap",
+                            item.heldOut(), nameOf(item.conceptId()));
+                }
+            }
+        }
+        // 2. An unattempted item of a weak dimension.
         for (LearningDimension dimension : weak) {
             for (AssessmentItem item : items) {
                 if (item.dimension() == dimension && !attempted.contains(item.id())) {
@@ -124,7 +160,7 @@ public final class ExerciseSelector {
                 }
             }
         }
-        // 2. An item of a concept with a missing prerequisite.
+        // 3. An item of a concept with a missing prerequisite.
         for (String conceptId : gapConcepts) {
             for (AssessmentItem item : items) {
                 if (item.conceptId().equals(conceptId) && !attempted.contains(item.id())) {
@@ -134,7 +170,7 @@ public final class ExerciseSelector {
                 }
             }
         }
-        // 3. The held-out item of a weak dimension: the independent test.
+        // 4. The held-out item of a weak dimension: the independent test.
         for (LearningDimension dimension : weak) {
             for (AssessmentItem item : items) {
                 if (item.dimension() == dimension && item.heldOut()
@@ -145,14 +181,14 @@ public final class ExerciseSelector {
                 }
             }
         }
-        // 4. Otherwise, the next unattempted item.
+        // 5. Otherwise, the next unattempted item.
         for (AssessmentItem item : items) {
             if (!attempted.contains(item.id())) {
                 return new Selection(item, item.dimension(), "the next unattempted item",
                         item.heldOut(), nameOf(item.conceptId()));
             }
         }
-        // 5. And finally the item the learner has attempted least recently.
+        // 6. And finally the item the learner has attempted least recently.
         for (AssessmentItem item : items) {
             if (item.heldOut()) {
                 return new Selection(item, item.dimension(),
