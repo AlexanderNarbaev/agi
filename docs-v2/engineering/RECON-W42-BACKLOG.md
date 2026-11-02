@@ -211,7 +211,19 @@ cognitive components.*
 
 ---
 
-## W42.6 — Local Alpha v0.3
+## W42.6 — Local Alpha v0.3 — **DONE**
+
+**Delivered:** the Alpha document ✓ ✓ with the twelve steps verified over
+HTTP ✓ ✓, the owner's checklist ✓ ✓, the limits named ✓ ✓, and the restart
+verified with a `SIGKILL` of the application's own JVM and 469 712 bytes of
+unwritten WAL ✓ ✓ ✓.
+**The document:** `W42.6-LOCAL-ALPHA-V0.3.md`.
+**Also written here:** the **W42.2 acquisition report** ✓ ✓ — the wave was
+implemented, committed and measured, but its report was never written, and
+the mission's §16 says a task is not complete merely because the code was
+written ✓ ✓.
+
+## W42.6 (superseded — the original plan)
 
 **Exit condition:** a reproducible local alpha with honest capability
 boundaries — the owner's thirteen-step journey, with the forced restart and
