@@ -7583,3 +7583,11 @@ billing engines — they account the brain's operation costs and the feature ent
 money and signed keys ✓ ✓. `DistillationLedger` is already written by the live `TrueDistillationFactory`,
 though the gateway's `/v1/distill` endpoint is still a stub ✓ ✓. `GpuKernelEngine` is an orphan whose live
 counterpart does not implement it ✓ ✓. The matrix rows are corrected accordingly ✓ ✓.
+
+# RECON-W42.9 — the matrix rows are corrected, and the previous WAL claim is retracted
+
+**Done** ✓ ✓. Two rows of the integration matrix are corrected: `ModelToMatrix` is `INTEGRATED
+(transitively)` — the live distillation ledger calls it — and `CreditLedger` + `LicenseManager` are
+`DISCONNECTED` because they are orphans, not duplicates of the billing engines ✓ ✓. The previous WAL entry
+claimed the matrix edit had been applied and that the distillation ledger was only partly integrated; both
+claims were wrong and are retracted in the WAL ✓ ✓.
