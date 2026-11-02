@@ -7777,3 +7777,11 @@ comparison (it breaks the cross-lingual, abstention and instrument gates ✓ ✓
 written down ✓ ✓: the cross-language matching is a set of local mechanisms that only work together as they
 are ✓ ✓, so the fixes belong inside the matching with their own tests ✓ ✓, not as global changes to the
 folding rules ✓ ✓. The tree is back to 425 knowledge tests with one old red ✓ ✓ (R31, R32 ✓ ✓).
+
+# RECON-W42.9 — the false-premise detector exists, it just does not work in Russian
+
+**Done** ✓ ✓. Measured: the English false-premise question is refused with an exact reason ("the premise of
+the question is contradicted by the workspace") ✓ ✓ — the mechanism is there ✓ ✓ — while the Russian one is
+answered with support 0.2 and `scopeMatch=OUTSIDE` ✓ ✓. So "knows what it does not know" is not missing from
+the system ✓ ✓; it has to be carried over to Russian ✓ ✓, by comparing the premise and the claims in one
+form ✓ ✓. That is a narrow task ✓ ✓, not a redesign ✓ ✓.
