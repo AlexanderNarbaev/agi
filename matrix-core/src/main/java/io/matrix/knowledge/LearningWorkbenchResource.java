@@ -232,6 +232,16 @@ public class LearningWorkbenchResource {
             return Response.status(Response.Status.BAD_REQUEST)
                     .entity(Map.of("error", e.getMessage()))
                     .build();
+        } catch (java.io.UncheckedIOException e) {
+            // The extractor wraps a refusal in an UncheckedIOException: a
+            // document that cannot be read is the CALLER's problem, not a
+            // server fault. The mission's §13.2 names the malformed and
+            // the corrupted documents, and a refusal must be a clear
+            // refusal - not a 500 with a stack trace.
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity(Map.of("error", e.getCause() == null
+                            ? e.getMessage() : e.getCause().getMessage()))
+                    .build();
         }
     }
 
