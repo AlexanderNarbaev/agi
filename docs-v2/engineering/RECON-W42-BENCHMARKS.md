@@ -319,6 +319,41 @@ gathers **three** items of delayed evidence where the plain order gathers
 learner is a scripted rule and the dataset holds 22 items, so this is a
 demonstration and not a generalisation.
 
+## 11. The mission's §14 acceptance table — the state of every row
+
+The mission's §14 gives eighteen rows of engineering targets and says:
+**"These are engineering targets, not results."** This table is the state
+of every row on 2026-11-02, measured or not. A row that is not measured
+is named as not measured — the mission's §16 forbids a report that hides
+what it does not cover, and the `MetricsReport` names its own unmeasured
+metrics for the same reason.
+
+| # | the §14 row | the state | the evidence |
+|---|---|---|---|
+| 1 | startup under 5 s | **MEASURED: 1.428 s** | the live log: `matrix-core 1.0.0 on JVM … started in 1.428s` |
+| 2 | no mandatory external service | **MEASURED** | the application runs with SQLite alone — no PostgreSQL, no Redis, no Kafka, no API key, no internet |
+| 3 | Russian and English | **MEASURED, partially** | the Russian 4/5 and the CROSS_LINGUAL 3/4 on the W42 benchmark; the dialogue cases are 133 English and 35 Russian |
+| 4 | import TXT, MD, HTML, PDF, EPUB | **MEASURED, and two more** | the format tests, and DOCX and CSV added in W42.7 — the mission's §5.1 names eight formats and the pipeline reads all of them |
+| 5 | 100 % recovery after a forced termination | **MEASURED** | the twelve-step checklist, `SIGKILL` of the application's own JVM: 13 concepts, 19 representations, 24 claims and the imported account survive |
+| 6 | atomic import | **MEASURED (W42.7)** | the concepts go in with the claims, in one transaction; a refused change leaves neither the concept nor the evidence |
+| 7 | 100 % provenance | **MEASURED: 1.000** | `the evidenceBackedShare: 1.0` — 17 claims, 17 with evidence, 18 evidence links, 4 sources |
+| 8 | no fabrication on unsupported questions | **MEASURED: the abstention 0.900** | 9 of the 10 unanswerable items refused; the one that is answered is named in the report |
+| 9 | ≥ 100 reproducible multilingual test cases | **MEASURED: 168** | `w42-dialogue-cases-v1.json` — 22 categories, 133 English and 35 Russian, the class of the utterance 168/168 |
+| 10 | ≥ 95 % intent preservation on a synthetic typo benchmark | **NOT MEASURED as its own benchmark** | the MISSPELLED category of the W42 benchmark is 4/4, and the dialogue's typo categories are 32 cases, but no separate synthetic typo benchmark with an intent label exists yet — **this row is open** |
+| 11 | retrieval against BM25 / the lexical baseline | **MEASURED: the overlap 0.608** | the same ranking and the same instrument, so the number is attributable |
+| 12 | independent pre, post, delayed and transfer measurement | **MEASURED, partially** | the held-out items are 43 of the 86, and the retention experiment measures the delayed arm against a baseline; the pre/post pair over a learner's own answers is **not** measured as one experiment |
+| 13 | retention against a no-consolidation baseline | **MEASURED** | the baseline EXPLORATION/2 against the consolidation PRACTICE/3, over a scripted learner and 22 items — a demonstration, not a generalisation |
+| 14 | multi-step goal execution and recovery | **MEASURED** | the goal, the prerequisite, the plan's order ("its dependencies are met"), the budget 1 of 5, the checkpoint, and the survival of the goal and the completed subtask after the forced restart |
+| 15 | bounded memory under long sessions | **MEASURED** | 50 questions asked → the dialogue context holds 32 turns, the bound it declares; 8 concepts per turn |
+| 16 | no unexplained failed or vacuous property | **MEASURED** | the two mutation survivors are recorded with their findings, and one of them is named as vacuous by construction |
+| 17 | all critical mutants killed or justified | **MEASURED: 25 of 27, 2 justified** | `scripts/mutation-harness.py` — 27 mutants, 25 killed, 2 survived, 0 invalid, 0 drift |
+| 18 | a reproducible build | **NOT MEASURED** | the build is pinned — Java 25, Gradle 9.6.0, the Quarkus BOM, SQLite 3.43.0.0, jsoup 1.17.2, PDFBox 3.0.3, TLC 1.8.0 — but no build was run twice from a clean state and compared, so this row is **open** |
+
+**Two rows are open**, and they are named here rather than left to be
+discovered: the synthetic typo benchmark with an intent label (row 10) and
+the twice-built reproducible build (row 18). Neither is a claim; both are
+work.
+
 ## 8. The dialogue cases
 
 `w42-dialogue-cases-v1.json` — **168 cases**, 133 in English and 35 in
