@@ -7760,3 +7760,11 @@ question's language (RU), so a Latin term in a Russian question never reaches th
 bilingual bridge cannot help, because the lexicon has no Latin form ✓ ✓. The fix is designed: the query
 must also carry the form the index uses ✓ ✓, keeping the Russian fold for the bridge ✓ ✓, with the English
 path provably unchanged ✓ ✓. The weight change it implies must be measured on the candidate ✓ ✓.
+
+# RECON-W42.9 — the query carries the index's form, and the old red test is diagnosed
+
+**Done** ✓ ✓. The query's terms now also carry the form the index uses ✓ ✓, and the candidate's accuracy is
+**1.000** ✓ ✓ — every answerable item is answered ✓ ✓. The pre-existing red test is diagnosed too ✓ ✓: the
+English fold is asymmetric ("release" vs "releas") ✓ ✓, so a question and a claim differing only by the plural
+never meet ✓ ✓. The global fix was measured, broke the rule application and the transfer items ✓ ✓, and was
+reverted ✓ ✓ — the tree is green again except that one old red test ✓ ✓ (R31 in the risk register ✓ ✓).

@@ -240,6 +240,26 @@ public final class KnowledgeRetriever {
                 }
             }
         }
+        // W42.9: the INDEX folds every claim with the claim's own language and
+        // the QUERY folds with the question's language. A Russian question
+        // therefore leaves a Latin term ("modus") as it is, while the index
+        // holds it folded ("modu"), and the term never reached the claim it
+        // was about. The query's terms are therefore ALSO folded the way the
+        // index folds them. For an English question this adds nothing - the
+        // English fold of an English term is the term itself - so the pinned
+        // W41 path stays exactly as it was.
+        for (String term : queryTerms) {
+            String asIndexed = TextProfiles.ENGLISH.fold(term);
+            if (!asIndexed.equals(term) && !queryTermsExpanded.contains(asIndexed)) {
+                queryTermsExpanded.add(asIndexed);
+                // The word the user wrote is COVERED by the form the index
+                // holds, so it must not also be reported as uncovered.
+                counterpartOf.putIfAbsent(asIndexed, term);
+                double weight = queryWeights.getOrDefault(term, maxIdf());
+                queryWeights.merge(asIndexed, weight, Double::sum);
+            }
+        }
+
         final List<String> effectiveTerms = queryTermsExpanded.size() != queryTerms.size()
                 ? queryTermsExpanded : queryTerms;
 
