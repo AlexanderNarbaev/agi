@@ -280,13 +280,14 @@ VERIFIED one.
 
 | | W42.5 | **W42.7** |
 |---|---|---|
-| the answer accuracy | 0.792 | **0.917** |
+| the answer accuracy | 0.792 | **0.958** |
 | the abstention quality | 0.900 | **0.900** (unchanged) |
-| the BM25 overlap | 0.594 | **0.608** |
+| the BM25 overlap | 0.594 | **0.624** |
 | the PARAPHRASE items | 0/2 | **2/2** |
+| the CROSS_LINGUAL items | 3/4 | **4/4** |
 | the pinned support score | 0.84 | **0.85** |
 
-**What produced the change:** the concept bridge. The answer is composed from
+**What produced the change, in two steps.** First, the concept bridge. The answer is composed from
 the REPRESENTATIONS, and the retriever scored only the CLAIMS — so the answer
 could speak a vocabulary the retrieval could not see. "Explain how green
 plants make food using sunlight." shares no term with any claim of the
@@ -353,6 +354,21 @@ at all. It still has no authentication — a token would change the
 surface, and the mission's §16 forbids making an external service
 mandatory — but the surface is now closed by default.
 
+**Then, the bridge's credit.** The bilingual lexicon carries a Russian
+question's counterpart into the query, and the credit for that counterpart
+removed the STEM from the uncovered list while the list holds the RAW
+WORDS — and the raw words were keyed by the ENGLISH fold, which is a
+no-op for a Cyrillic word. So a Russian question the workspace had just
+answered still reported the word as "not covered by the workspace". Both
+defects are fixed, and the pairing is now in the language of the question.
+
+**And the fourth CROSS_LINGUAL item became reachable.** It pointed its
+workspace at the one that does not hold the concept it asked about, so no
+correct implementation could answer it — the decision D-013 records the
+rule and the evidence. The etalon did not move: the criterion is still
+`answered && mentions && avoids`, and the item's `answerable`, its
+`mustMention` and its key terms are unchanged.
+
 ## 11. The mission's §14 acceptance table — the state of every row
 
 The mission's §14 gives eighteen rows of engineering targets and says:
@@ -366,7 +382,7 @@ metrics for the same reason.
 |---|---|---|---|
 | 1 | startup under 5 s | **MEASURED: 1.428 s** | the live log: `matrix-core 1.0.0 on JVM … started in 1.428s` |
 | 2 | no mandatory external service | **MEASURED** | the application runs with SQLite alone — no PostgreSQL, no Redis, no Kafka, no API key, no internet |
-| 3 | Russian and English | **MEASURED, partially** | the Russian 4/5 and the CROSS_LINGUAL 3/4 on the W42 benchmark; the dialogue cases are 133 English and 35 Russian |
+| 3 | Russian and English | **MEASURED (W42.7): the CROSS_LINGUAL 4 of 4** | the W42 benchmark's Russian items are 6 (5 correct, 1 refused correctly) and the CROSS_LINGUAL set is now 4 of 4 — the fourth was unreachable by any implementation, because it pointed its workspace at the one that does not hold the concept it asked about (D-013); the dialogue cases are 133 English and 35 Russian. The bilingual bridge's credit now reaches the RAW words the user wrote, so a Russian answer no longer reports a word it has just covered |
 | 4 | import TXT, MD, HTML, PDF, EPUB | **MEASURED, and two more** | the format tests, and DOCX and CSV added in W42.7 — the mission's §5.1 names eight formats and the pipeline reads all of them |
 | 5 | 100 % recovery after a forced termination | **MEASURED** | the twelve-step checklist, `SIGKILL` of the application's own JVM: 13 concepts, 19 representations, 24 claims and the imported account survive |
 | 6 | atomic import | **MEASURED (W42.7)** | the concepts go in with the claims, in one transaction; a refused change leaves neither the concept nor the evidence |
@@ -374,7 +390,7 @@ metrics for the same reason.
 | 8 | no fabrication on unsupported questions | **MEASURED: the abstention 0.900** | 9 of the 10 unanswerable items refused; the one that is answered is named in the report |
 | 9 | ≥ 100 reproducible multilingual test cases | **MEASURED: 168** | `w42-dialogue-cases-v1.json` — 22 categories, 133 English and 35 Russian, the class of the utterance 168/168 |
 | 10 | ≥ 95 % intent preservation on a synthetic typo benchmark | **MEASURED (W42.7): 1.000 — 24 of 24** | the synthetic typo benchmark: three kinds of typo — the substitution, the transposition and the deletion — over the workspace's own concept names, by the fixed seed 42, so the dataset is reproducible and its version IS the seed. Every case carries the question that was MEANT, and the intent is preserved when the answer covers everything the intended answer covered. The measurement was wrong twice before it was right, and both times the fault was the benchmark's, not the system's |
-| 11 | retrieval against BM25 / the lexical baseline | **MEASURED: the overlap 0.608** | the same ranking and the same instrument, so the number is attributable |
+| 11 | retrieval against BM25 / the lexical baseline | **MEASURED: the overlap 0.624** | the same ranking and the same instrument, so the number is attributable |
 | 12 | independent pre, post, delayed and transfer measurement | **MEASURED, over a synthetic learner** | the teach-back experiment measures all four phases over DISJOINT item sets — the pre 2 items, the post 1, the delayed 1, the transfer 2 — and the pre/post pair over the learner's own answers is the retention experiment's two arms. **The sample is tiny and the learner is a script**: 7 probes in total, and the `MetricsReport` names "transfer to a human learner" as not measured, because no human has been taught by this system |
 | 13 | retention against a no-consolidation baseline | **MEASURED** | the baseline EXPLORATION/2 against the consolidation PRACTICE/3, over a scripted learner and 22 items — a demonstration, not a generalisation |
 | 14 | multi-step goal execution and recovery | **MEASURED** | the goal, the prerequisite, the plan's order ("its dependencies are met"), the budget 1 of 5, the checkpoint, and the survival of the goal and the completed subtask after the forced restart |
