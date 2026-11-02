@@ -7591,3 +7591,12 @@ counterpart does not implement it ✓ ✓. The matrix rows are corrected accordi
 `DISCONNECTED` because they are orphans, not duplicates of the billing engines ✓ ✓. The previous WAL entry
 claimed the matrix edit had been applied and that the distillation ledger was only partly integrated; both
 claims were wrong and are retracted in the WAL ✓ ✓.
+
+# RECON-W42.9 — the redundant audit chain is reverted
+
+**Done** ✓ ✓. The gateway already records every claim evaluation in its own bounded hash-chained buffer
+(`HashChainedAuditBuffer(200)`, appended in `/v1/explain`), so wiring the shadow chain into
+`RealAuditService` created a second, unbounded chain over the same facts — a second store ✓ ✓. It was
+reverted the same day ✓ ✓, the matrix row is corrected ✓ ✓, and the WAL retracts the earlier claim ✓ ✓.
+The shadow's capability still has a real home: the runtime's own decisions, which the gateway's buffer does
+not cover ✓ ✓.
