@@ -128,6 +128,43 @@ public final class DialogueContext {
         }
     }
 
+    /**
+     * Whether the conversation holds a subject to refer to.
+     *
+     * <p>RECON-W42.7. A question like "How does it work?" is referential
+     * in the ordinary sense, but {@link #isReferential(String)} says it is
+     * not — the rule there is narrow on purpose, and the question carries
+     * the content term "work". The conversation can still settle what such
+     * a question is about: if it holds a turn that named a subject, the
+     * referent has something to point at.
+     *
+     * @return whether the conversation holds a subject
+     */
+    public boolean hasSubject() {
+        return currentSubject() != null;
+    }
+
+    /**
+     * The subject of the conversation: the concept the last turn that named
+     * one was about.
+     *
+     * <p>RECON-W42.7. The referential rule is narrow on purpose — a
+     * question that names a subject is never rewritten — and "How does it
+     * work?" carries the content term "work", so the rule misses it. The
+     * conversation can still say what such a question is about.
+     *
+     * @return the subject, or null when the conversation has named none
+     */
+    public String currentSubject() {
+        for (int i = turns.size() - 1; i >= 0; i--) {
+            Turn turn = turns.get(i);
+            if (!turn.conceptNames().isEmpty()) {
+                return turn.conceptNames().get(0);
+            }
+        }
+        return null;
+    }
+
     /** The turns of the conversation, oldest first. */
     public List<Turn> turns() {
         return List.copyOf(turns);
@@ -180,12 +217,7 @@ public final class DialogueContext {
         if (question == null || question.isBlank()) {
             return false;
         }
-        String lower = question.toLowerCase(Locale.ROOT);
-        boolean hasReference = containsAny(lower,
-                "it", "this", "that", "these", "those", "such", "the same",
-                "it", "это", "этот", "эта", "эти", "тот", "та", "те", "этого",
-                "про него", "про это");
-        if (!hasReference) {
+        if (!hasReference(question)) {
             return false;
         }
         // A question that names a subject of its own is not referential:
@@ -197,6 +229,73 @@ public final class DialogueContext {
                 "подробнее", "объясни", "расскажи", "еще", "ещё"));
         return content.isEmpty();
     }
+
+    /**
+     * Whether the question carries a reference word at all.
+     *
+     * <p>RECON-W42.7. {@link #isReferential(String)} couples the
+     * reference word with the question naming no subject of its own, and
+     * the two answers different questions: "does the question refer to
+     * something?" and "does the question refer to something without
+     * naming it?". The demand analysis needs the first.
+     *
+     * @param question the question as the user wrote it
+     * @return whether the question carries a reference word
+     */
+    public static boolean hasReference(String question) {
+        if (question == null || question.isBlank()) {
+            return false;
+        }
+        // The WORDS of the question, not its substrings.
+        //
+        // The first version matched the substrings, and the Russian "те"
+        // matched inside another word — so the Russian question "Какие
+        // газообразные вещества участвуют в фотосинтезе?" was read as
+        // referring to something, and the workspace asked what it referred
+        // to instead of answering. The accuracy fell from 0.917 to 0.875.
+        Set<String> words = new LinkedHashSet<>(wordsOf(question));
+        for (String word : REFERENCE_WORDS) {
+            if (words.contains(word)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * The words of a question, lower-cased, with nothing removed.
+     *
+     * <p>The reference words are stopwords — "this", "it", "это" — and
+     * {@link TextFeatures#originalTokens(String)} drops the stopwords, so
+     * it cannot find them.
+     *
+     * @param text the text
+     * @return the words
+     */
+    private static List<String> wordsOf(String text) {
+        List<String> out = new ArrayList<>();
+        StringBuilder current = new StringBuilder();
+        for (char ch : text.toLowerCase(Locale.ROOT).toCharArray()) {
+            if (Character.isLetterOrDigit(ch)) {
+                current.append(ch);
+            } else {
+                if (current.length() > 0) {
+                    out.add(current.toString());
+                    current.setLength(0);
+                }
+            }
+        }
+        if (current.length() > 0) {
+            out.add(current.toString());
+        }
+        return out;
+    }
+
+    /** The words that refer to something without naming it. */
+    private static final List<String> REFERENCE_WORDS = List.of(
+            "it", "this", "that", "these", "those", "such", "same",
+            "это", "этот", "эта", "эти", "тот", "та", "те", "этого", "него",
+            "про него", "про это");
 
     private static boolean containsAny(String text, String... words) {
         for (String word : words) {

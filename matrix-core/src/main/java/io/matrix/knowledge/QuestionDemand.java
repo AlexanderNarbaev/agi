@@ -113,6 +113,30 @@ public final class QuestionDemand {
      */
     public static Analysis analyse(String question, Set<String> unmatched,
                                    Set<String> contentTerms) {
+        // Without the conversation's state, the referent is assumed to be
+        // settled - the caller's older contract.
+        return analyse(question, unmatched, contentTerms, true);
+    }
+
+    /**
+     * Analyses what the question demands, with the referent's state.
+     *
+     * <p>RECON-W42.7. A question that refers to something the conversation
+     * has not settled is AMBIGUOUS, and the mission's §6 says such a
+     * request should ask rather than guess. "How does it work?" refers to
+     * something and names no subject, and the demand analysis saw only a
+     * knowledge question - so the workspace refused it with the generic
+     * "no claim covers enough of the question" and never asked.
+     *
+     * @param question the question
+     * @param unmatched the terms the workspace did not cover
+     * @param contentTerms the question's content terms
+     * @param referentSettled whether the referent is settled - by the
+     *     conversation, or by the question naming a subject of its own
+     * @return the analysis
+     */
+    public static Analysis analyse(String question, Set<String> unmatched,
+                                   Set<String> contentTerms, boolean referentSettled) {
         String lower = question == null ? "" : question.toLowerCase(Locale.ROOT);
 
         String instruction = instructionPattern(lower);
@@ -131,6 +155,19 @@ public final class QuestionDemand {
         if (ambiguity != null) {
             return new Analysis(Kind.AMBIGUOUS, ambiguity, coverage(unmatched, contentTerms),
                     unmatched, clarificationFor(question));
+        }
+
+        // THE UNSETTLED REFERENT.
+        //
+        // The question refers to something, names no subject of its own,
+        // and the conversation has not settled one either. The workspace
+        // cannot know what is being asked about, so it asks.
+        if (!referentSettled && DialogueContext.hasReference(question)) {
+            return new Analysis(Kind.AMBIGUOUS,
+                    "the question refers to something the conversation has not settled",
+                    coverage(unmatched, contentTerms), unmatched,
+                    "The question refers to something (\"" + question + "\") that the "
+                            + "conversation has not settled. What does it refer to?");
         }
 
         return new Analysis(Kind.KNOWLEDGE, "the question asks about knowledge",

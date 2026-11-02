@@ -224,8 +224,10 @@ public class KnowledgeWorkbench implements AutoCloseable {
         // turn was about. The original question is what the answer carries.
         DialogueContext context = context(workspaceId);
         String expanded = context.expand(question);
+        String resolvedSubject = expanded.equals(question) ? null : context.resolveSubject(question);
         Answer answer = new KnowledgeRetriever(snapshot)
                 .answer(expanded.equals(question) ? question : expanded, level);
+
 
         // WHAT THE QUESTION DEMANDS IS CHECKED BEFORE THE ANSWER IS.
         //
@@ -236,9 +238,17 @@ public class KnowledgeWorkbench implements AutoCloseable {
         // 0.63), so no threshold separates them. The decision needs
         // information the score does not carry - what KIND of answer the
         // question asks for.
+        // The referent is settled when the CONVERSATION settled it, or
+        // when the question names a subject of its own - and a question
+        // that names a subject is covered by the workspace, so the
+        // coverage says so.
+        Set<String> contentTerms = QuestionDemand.contentTerms(question);
+        Set<String> unmatchedTerms = new LinkedHashSet<>(answer.unmatchedTerms());
+        boolean referentSettled = !expanded.equals(question)
+                || context.hasSubject()
+                || QuestionDemand.coverage(unmatchedTerms, contentTerms) > 0.0;
         QuestionDemand.Analysis demand = QuestionDemand.analyse(question,
-                new LinkedHashSet<>(answer.unmatchedTerms()),
-                QuestionDemand.contentTerms(question));
+                unmatchedTerms, contentTerms, referentSettled);
         answer = applyDemand(answer, demand);
         answer = applyPremise(answer, question, snapshot);
 
@@ -253,7 +263,7 @@ public class KnowledgeWorkbench implements AutoCloseable {
                             ResponseFrame.template(TextProfiles.detect(question),
                                     "The reference was resolved against the conversation: the "
                                             + "question was read as being about \"{concept}\".",
-                                    Map.of("concept", context.resolveSubject(question)))),
+                                    Map.of("concept", resolvedSubject))),
                     answer.gaps(), answer.unmatchedTerms());
         }
         answer = applyCorrection(context, question, answer);
