@@ -7615,3 +7615,10 @@ The application's JVM was then killed with SIGKILL and the restart script verifi
 19 representations, 24 claims, the consolidation idempotent with nothing forgotten ✓ ✓. The W42.9 changes to
 the checklist script and the literal extraction are therefore verified on the live path, not only by the
 compiler ✓ ✓.
+
+# RECON-W42.9 — the audit chain is one implementation, not three
+
+**Done** ✓ ✓. The runtime's `AuditChain` no longer implements any hash logic of its own: it delegates to the
+canonical `io.matrix.audit.HashChainedLog`, so the chain format, the linking and the verification are the
+canonical ones ✓ ✓. The `matrix-audit` dependency is declared again because it is now used ✓ ✓. The
+module's tests are green: 14 + 1, no failures ✓ ✓.

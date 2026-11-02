@@ -25,6 +25,9 @@ repositories {
 dependencies {
     // FROZEN research core (article V: read-only, no mutation)
     implementation project(':matrix-core')
+    // W42.9 / D-016: the runtime's audit chain is a face of the canonical
+    // engine in matrix-audit, not a third implementation of the same thing.
+    implementation project(':matrix-audit')
 
     // RECON-W38.4: the matrix-audit and matrix-observability dependencies were
     // REMOVED. Both were declared but unused: this module contains no import
