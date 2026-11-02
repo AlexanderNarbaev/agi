@@ -148,11 +148,14 @@ public final class KnowledgeConsolidator {
                         + " records may be forgotten in one run.",
                 "The run is idempotent: a second run over an unchanged workspace forgets nothing.");
 
-        // IDEMPOTENCY: the run is idempotent when a second pass over the
-        // same state finds nothing left to forget.
-        boolean idempotent = candidates.size() == forgotten
-                || workbench.askedQuestions(workspaceId).stream()
-                        .noneMatch(q -> q.forgotten());
+        // IDEMPOTENCY: the run is idempotent when the rules, applied to the
+        // state the run left behind, name nothing. The first version of
+        // this compared the candidates with the forgotten records, and it
+        // reported "not idempotent" for a run that had forgotten
+        // everything the rules named - which is the opposite of the truth.
+        List<Candidate> after = candidates(workbench.askedQuestions(workspaceId),
+                workbench.workspace(workspaceId), nowMs, budget);
+        boolean idempotent = after.isEmpty();
         return new Report(questions.size(), candidates.size(), forgotten, candidates, invariants,
                 idempotent);
     }
