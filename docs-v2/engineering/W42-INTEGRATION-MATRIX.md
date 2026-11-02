@@ -107,7 +107,7 @@ already exist, and the one with the provenance model (product A's
 | `HdcBrain.forward/learn` | `PRODUCTION_PATH_VERIFIED` | `BirBrainCycle:177,296` |
 | `HebbianUpdater` accumulator | `INTEGRATED` but **inert** | written at `HdcBrain:182`; the stored code is bundled separately at `:180`; **nothing in production reads the accumulator** |
 | `HdcBinding.bind/unbind` | `DISCONNECTED` | `HdcBrain.bindRecord` has no production caller; both operators are plain XOR |
-| `ConsciousBrain` | `DISCONNECTED` | **0 production construction sites; 67 test sites**; its `CycleReport` reaches only test-only builders |
+| `ConsciousBrain` | `DISCONNECTED` | **0 production construction sites; 67 test sites**; its `CycleReport` reaches only test-only builders. The census counts 11 mentions and 0 constructions outside its own file; the one call file it finds (`CognitiveGenesisProfileBuilder`) imports the NESTED RECORD `CycleReport` — a reference, not a use |
 | `CognitiveProcessor` | `DISCONNECTED` | its 2 production sites are inside `ConsciousBrain`; `history` is unbounded |
 | `CognitiveAttention` / `ProfileKVCache` / `CognitiveSlidingWindow` | `DISCONNECTED` | reachable only through `ConsciousBrain` |
 | `CognitiveErrorStream` | `INTEGRATED` (W42.7) | the consolidation's error-driven phase BUILDS one from the workspace's VERIFIED learning errors and hands it to the decay — the census counts 5 production files, one of them `KnowledgeWorkbench` |
@@ -115,7 +115,7 @@ already exist, and the one with the provenance model (product A's
 | `FreeEnergyLoss` / `ConsciousBrain.freeEnergy` | `DISCONNECTED` | one caller, a test; the "KL divergence" is a residual variance |
 | `TwoStageConsolidator` | `DISCONNECTED` | `ConsciousBrain` only; its result is **discarded** at both call sites |
 | `HierarchicalMemory` L0 eviction | `INTEGRATED` but **ineffective for the live path** | `DefaultBrainPipeline:151-152` writes **only L2**; `evictLowestLevel` removes only L0 ⇒ **nothing is ever evicted** |
-| `HierarchicalMemory.evictExpired` | `DISCONNECTED` | 0 `src/main` callers |
+| `HierarchicalMemory.evictExpired` | `DISCONNECTED` | 0 `src/main` callers — the census counts 5 call files for the CLASS and 0 for the METHOD: the memory is constructed and used in production, and the method that expires it is called from nowhere |
 | `PersistentHdcStore.vectors` | `PRODUCTION_PATH_VERIFIED` — **unbounded** | `matrix-brain-runtime/.../PersistentHdcStore:41` |
 | `TombstoneService` (5 backends) | `INTEGRATED` in the **privacy** path, **DISCONNECTED** from memory | `AuditLogResource:59`, `BotEthicsResource:69`, `CascadeResource:52`; nothing in the sleep or memory path uses it |
 | `SqliteMemoryBackend.compact` | `PRODUCTION_PATH_VERIFIED` — **a hard DELETE** | `matrix-core/.../memory/SqliteMemoryBackend:156` — the opposite of graceful forgetting |
@@ -149,13 +149,28 @@ is consumed. `INTEGRATED` and `PRODUCTION_PATH_VERIFIED` stay ASSERTED,
 with their evidence cited in the rows above; the census supplies the
 countable evidence.
 
-**What the census found on 2026-11-02.** Two rows were stale. The
+**What the census found on 2026-11-02 — four rows were stale.** The
 `ErrorDrivenLearner` was still marked `DISCONNECTED` although W42.7 made
 it the live engine of the consolidation's error-driven phase — the census
-counts 6 production files for it. The `CognitiveErrorStream` was still
-marked "reachable only through `ConsciousBrain`" although the same wave
-made the consolidation's phase build one. Both rows are corrected above,
-and the census is what caught them.
+counts 6 mentions and 2 call files for it. The `CognitiveErrorStream` was
+still marked "reachable only through `ConsciousBrain`" although the same
+wave made the consolidation's phase build one. The `DistillationLedger`
+was marked `DISCONNECTED` although it is injected into the live
+distillation factory and its snapshot is read back into the mind's state —
+it is integrated, and it was not. And the `FederationRegistry` row
+conflated two different classes that share a name: the gateway's own
+registry is constructed in the gateway's live path, and the brain-runtime's
+shadow is not.
+
+**What the census found that was NOT a defect — four rows it flagged and
+the reader must not chase.** The `ConsciousBrain`'s single "call file" is
+an import of a nested record, not a use. The `HierarchicalMemory`'s five
+call files are calls of the CLASS; the method the row is about,
+`evictExpired`, has none. The `AgentLoop` and the `ReActAgentLoop` construct
+each other and neither is reached. **A syntactic reference is not a
+workflow**, and the census's counts are a screen, not a verdict — the
+statuses stay ASSERTED, and the screen tells a reader which rows to look
+at again.
 
 ---
 
@@ -168,8 +183,8 @@ and the census is what caught them.
 | `MctsTree` | `PRODUCTION_PATH_VERIFIED` — **degenerate** | `PlanningStage:103-105` — the reward function is the constant `0.5`; UCB1 degenerates to "prefer the least-visited child"; the action is arbitrary |
 | `BirBrainCycle` | `PRODUCTION_PATH_VERIFIED` — **trace only** | `TrueMindCycle:422-425` discards the brain's own reply: *"for trace/audit only, not the user-facing answer"* |
 | Runtime BRC trace (`io.matrix.brain.runtime.BrcStep`) | `PRODUCTION_PATH_VERIFIED` | `ProductionBrainClient:413` → the explain endpoint |
-| `AgentLoop` | `DISCONNECTED` | **0 production construction sites**; `checkConvergence()` scans **all** scheduler tasks for any `COMPLETED` one, so a task completed before the loop started ends it after one tick |
-| `ReActAgentLoop` | `DISCONNECTED` | 0 production sites |
+| `AgentLoop` | `DISCONNECTED` | **0 production construction sites**; `checkConvergence()` scans **all** scheduler tasks for any `COMPLETED` one, so a task completed before the loop started ends it after one tick. The census finds 1 construction — inside `ReActAgentLoop`, which is itself unreachable |
+| `ReActAgentLoop` | `DISCONNECTED` | 0 production sites — the census finds 1 construction, inside `AgentLoop`, which is itself unreachable: the two construct each other and neither is reached |
 | `TaskScheduler` | `DISCONNECTED` | 0 production sites; 24 test callers |
 | `MultiAgentLoop` | `DISCONNECTED` | 0 production sites |
 | `MCTSPlanner` | `DISCONNECTED` | 0 production sites; its own javadoc admits it |
@@ -177,8 +192,10 @@ and the census is what caught them.
 | `ConsensusEngine` | `INTEGRATED` in a CLI self-check only | `SystemDemo:122` computes a verdict and folds it into a boolean |
 | Core BRC chain (`io.matrix.reasoning.BrcChain`) | `DISCONNECTED` | built with an **empty** step list at `BrainLoopService:97`; produced and discarded |
 | `GpuKernelEngine` | `DISCONNECTED` | 0 production sites; `detectBackend()` **always** returns CPU while the commit advertises bit-exact CPU==GPU |
-| `ModelToMatrix`, `DistillationLedger` | `DISCONNECTED` | 0 production sites; develop's live path is `TrueDistillationFactory` |
-| `CreditLedger` (brain-runtime), `AuditChain`, `FederationRegistry` (brain-runtime), `LicenseManager` | `DISCONNECTED` | 0 production sites; shadow duplicates of live engines. **The owner's decision (D-012) is to wire them to the live engines, one at a time, and their math is verified first** — two shadow classes were wired in W42.7 (`ErrorDrivenLearner`, `SleepConsolidator`'s mechanism), and the rest are named here |
+| `ModelToMatrix` | `DISCONNECTED` | 0 production sites — the census counts 0 mentions, 0 constructions and 0 call files outside its own file; develop's live path is `TrueDistillationFactory` |
+| `DistillationLedger` (brain-runtime) | `INTEGRATED` (product B) — **the row was stale** | it is INJECTED into the live distillation factory and written to (`TrueDistillationFactory:148`), and its snapshot is READ BACK into the mind's state (`PersistentMind:139`) — so its result is consumed, which is the mission's own test for integration. The census counts 2 call files and 0 constructions: nothing constructs it, it is passed in |
+| `CreditLedger` (brain-runtime), `AuditChain`, `LicenseManager` | `DISCONNECTED` | 0 production sites; shadow duplicates of live engines. **The owner's decision (D-012) is to wire them to the live engines, one at a time, and their math is verified first** — two shadow classes were wired in W42.7 (`ErrorDrivenLearner`, `SleepConsolidator`'s mechanism), and the rest are named here |
+| `FederationRegistry` (brain-runtime, the shadow) | `DISCONNECTED` | the shadow copy. **The gateway has its OWN `FederationRegistry`** (`io.matrix.api.federation`), and that one IS constructed in the gateway's live path (`FederateResource:34`) — the census counts that construction under the same name, and the two are different classes with different semantics. A name is not a component |
 | `SleepConsolidator` (brain-runtime) | `DISCONNECTED` — **but its MECHANISM is integrated** | the mechanism was REIMPLEMENTED in the knowledge domain in W42.7 — the consolidation now proposes, measures the answerability on the held-out items before and after, and keeps the proposal only if it did not fall. The class in the brain-runtime is still unwired, and the census counts 0 production files for it: the mechanism crossed the module boundary; the class did not |
 | `RealGpuKernelEngine`, `RealSleepScheduler`, `RealInboxWatcher`, `io.matrix.goals.GoalTracker` | `PRODUCTION_PATH_VERIFIED` (product B) | the live replacements for the deleted drafts |
 
