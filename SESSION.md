@@ -7368,3 +7368,9 @@ concept ✓ ✓ ✓.
 **Done** ✓ ✓. The second shadow class is wired ✓ ✓ — the consolidation now measures the
 knowledge's answerability on the held-out items before and after ✓ ✓ and keeps the
 proposal only if it did not fall ✓ ✓ ✓.
+
+# RECON-W42.7 — the graph projection and the experiment dashboard
+
+**Done** ✓ ✓. D-003 carried out ✓ ✓ — the knowledge graph is a read-only projection of the
+workspace ✓ ✓ — and the interface now carries the mission's §9's views ✓ ✓, with the
+numbers measured live rather than copied ✓ ✓ ✓.
