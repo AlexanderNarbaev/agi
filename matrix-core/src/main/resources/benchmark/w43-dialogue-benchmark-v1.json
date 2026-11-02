@@ -1,0 +1,71 @@
+{
+  "theNote": "The benchmark of the dialogue. The expectations are the TRUTH, not the system's current answers. A question whose referent the conversation has not settled must get a question back, not a guess. A question the workspace cannot cover must be refused WITHOUT a question back — refusing to answer and asking which one was meant are different acts, and a system that asks about everything answers nothing. A question that carries a false presupposition must be refused: the system must not accept the premise to get past it.",
+  "theScope": "It measures the REFUSALS: the clarification asked, the clarification withheld, the abstention given and the false premise rejected. It does not measure the accuracy of the answers it accepts — that is the W42 instrument over its own cases, and the two accuracies are not comparable.",
+  "theWorkspace": "photosynthesis",
+  "items": [
+    {
+      "id": "dlg-en-001",
+      "language": "en",
+      "split": "train",
+      "category": "clarification_required",
+      "question": "How does it work?",
+      "expect": {"answered": false, "clarification": true}
+    },
+    {
+      "id": "dlg-en-002",
+      "language": "en",
+      "split": "validation",
+      "category": "answered",
+      "question": "What is photosynthesis?",
+      "expect": {"answered": true, "clarification": false}
+    },
+    {
+      "id": "dlg-en-003",
+      "language": "en",
+      "split": "validation",
+      "category": "abstention_by_coverage",
+      "question": "What is the boiling point of mercury?",
+      "expect": {"answered": false, "clarification": false}
+    },
+    {
+      "id": "dlg-en-004",
+      "language": "en",
+      "split": "test",
+      "category": "false_premise",
+      "question": "Why does photosynthesis release oxygen instead of carbon dioxide?",
+      "expect": {"answered": false, "clarification": false}
+    },
+    {
+      "id": "dlg-ru-001",
+      "language": "ru",
+      "split": "train",
+      "category": "clarification_required",
+      "question": "Как это работает?",
+      "expect": {"answered": false, "clarification": true}
+    },
+    {
+      "id": "dlg-ru-002",
+      "language": "ru",
+      "split": "validation",
+      "category": "answered",
+      "question": "Что такое фотосинтез?",
+      "expect": {"answered": true, "clarification": false}
+    },
+    {
+      "id": "dlg-ru-003",
+      "language": "ru",
+      "split": "validation",
+      "category": "abstention_by_coverage",
+      "question": "Какая температура кипения ртути?",
+      "expect": {"answered": false, "clarification": false}
+    },
+    {
+      "id": "dlg-ru-004",
+      "language": "ru",
+      "split": "test",
+      "category": "false_premise",
+      "question": "Почему фотосинтез выделяет кислород, а не углекислый газ?",
+      "expect": {"answered": false, "clarification": false}
+    }
+  ]
+}

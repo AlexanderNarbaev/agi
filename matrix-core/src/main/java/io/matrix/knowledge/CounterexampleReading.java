@@ -48,7 +48,25 @@ public enum CounterexampleReading {
     REVEALS_MISSING_CONDITION,
 
     /** The system cannot decide, and says which explanations it cannot exclude. */
-    INCONCLUSIVE;
+    INCONCLUSIVE,
+
+    /**
+     * The counterexample and the claim's scope do not overlap, so whether
+     * the counterexample falls INSIDE the scope or OUTSIDE it cannot be
+     * decided from the text.
+     *
+     * <p>This is the mission's own worked example. A penguin refutes
+     * "All birds fly"; it does not automatically refute "Most birds fly
+     * under ordinary conditions", because whether a penguin is an ordinary
+     * case is a question about the world and not about the text. Deciding
+     * it by lexical overlap would be the failure pattern the mission names
+     * — treating lexical similarity as semantic equivalence — and it would
+     * decide it in the direction of a REFINEMENT.
+     *
+     * <p>So the system does not decide. It proposes no narrowing, it says
+     * what it cannot exclude, and it asks.
+     */
+    SCOPE_UNRESOLVED;
 
     /**
      * The explanations the system lists when it cannot decide.
@@ -60,8 +78,20 @@ public enum CounterexampleReading {
     public static java.util.List<String> unresolvedExplanations() {
         return java.util.List.of(
                 "the claim has an exception the counterexample reveals",
+                "the counterexample falls outside the claim's scope, so the claim survives in it",
                 "the system's interpretation of the source was wrong",
                 "the inference from the evidence was invalid",
                 "the counterexample itself is unreliable or ambiguous");
+    }
+
+    /**
+     * The question a system asks when it cannot settle the scope.
+     *
+     * @return the clarification, or an empty string when nothing is unresolved
+     */
+    public String clarification() {
+        return this == SCOPE_UNRESOLVED
+                ? "Does this observation fall inside the scope the claim states?"
+                : "";
     }
 }

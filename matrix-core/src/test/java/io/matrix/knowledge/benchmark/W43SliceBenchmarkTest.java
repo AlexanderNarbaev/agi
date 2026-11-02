@@ -77,7 +77,9 @@ class W43SliceBenchmarkTest {
     void theDatasetHasAHeldOutSplitAndBothLanguagesAreInIt() throws Exception {
         List<Item> items = SliceBenchmark.items();
 
-        assertThat(items).hasSize(24);
+        // The size is written down, so that a change to the dataset is a
+        // visible change to the test rather than a silent one.
+        assertThat(items).hasSize(32);
         assertThat(items).extracting(Item::language).contains("en", "ru");
         assertThat(items).extracting(Item::split).contains("train", "validation", "test");
 
