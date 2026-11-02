@@ -7636,3 +7636,10 @@ verifies, and the refusal's reason is recoverable ✓ ✓.
 decision with its reason and hash ✓ ✓. The test `PromotionDecisionsEndpointTest` boots the gateway in
 production mode, runs a real `/v1/analyze` cycle and reads the endpoint back ✓ ✓. The first of the six
 shadows is now wired end to end ✓ ✓.
+
+# RECON-W42.9 — the GPU shadow is not a duplicate, and the math proved it
+
+**Done** ✓ ✓. The census row is corrected: the shadow computes a Jaccard similarity and the live engine a
+Hamming distance — different functions ✓ ✓. Had the math not been checked first, the class would have been
+"wired" as an adapter and silently changed the numbers ✓ ✓. It holds an exact bit-Jaccard that exists
+nowhere else ✓ ✓, and it needs a live consumer or the owner's decision ✓ ✓.
