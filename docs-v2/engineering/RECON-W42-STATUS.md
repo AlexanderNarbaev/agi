@@ -219,3 +219,23 @@ and is what the interface runs), revise ✓ (the persisted state machine
 records every transition, including the regressions, with the earlier
 mastery preserved), resume ✓ (the transitions and the plan survive a
 restart). Acquire ✗ — W42.2.
+
+## W42.9 (2026-11-02) — the literals are below the baseline, the shadows are censused, the journey re-verified
+
+**The owner's D-015 is fulfilled.** The quality gate's literal counter is **263** against the accepted
+baseline of **270** (141 shell → 78, 198 Java → 185), and the baseline was NOT updated. The gate still
+exits 1, and now only on the frozen zones (785 diff lines in `.github/`, 14 in `AGENTS.md` against
+`b144563e`) — the owner's decision (§16.1).
+
+**The shadow census is measured, not assumed.** `AuditChain` — the gateway already had a hash-chained
+buffer, so a second chain over the same facts was reverted the same day it was found. `DistillationLedger`
+and `ModelToMatrix` are already live (the ledger is written by the live `TrueDistillationFactory` and its
+snapshot is read back into the mind's state). `CreditLedger` and `LicenseManager` are orphans but NOT
+duplicates — they account the brain's operation costs and the feature entitlements, while `matrix-billing`
+accounts customer money and signed keys. `GpuKernelEngine` is a genuine duplicate of the live
+`RealGpuKernelEngine`'s bit-cosine capability.
+
+**The journey is re-verified on the live path (X.6).** The Local Alpha checklist was run over HTTP:
+every assertion held. The application's JVM was then killed with SIGKILL: 13 concepts, 19
+representations and 24 claims survived, and the consolidation after the restart was idempotent with
+nothing forgotten.
