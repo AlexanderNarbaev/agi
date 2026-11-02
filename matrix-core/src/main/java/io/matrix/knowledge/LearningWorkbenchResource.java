@@ -590,6 +590,26 @@ public class LearningWorkbenchResource {
     }
 
     /**
+     * The synthetic typo benchmark: the intent preservation.
+     *
+     * <p>The mission's §14 names the row: "≥ 95 % intent preservation on a
+     * synthetic typo benchmark". The cases are synthetic — the misspellings
+     * are generated from the workspace's own concept names by a fixed seed
+     * — and every case carries the question that was MEANT, so the
+     * measurement is about the intent and not about the spelling.
+     */
+    @GET
+    @Path("/workspaces/{id}/typo-benchmark")
+    public Map<String, Object> typoBenchmark(@PathParam("id") String workspaceId) {
+        io.matrix.knowledge.benchmark.TypoBenchmarkGenerator.Benchmark benchmark =
+                io.matrix.knowledge.benchmark.TypoBenchmarkRunner.benchmark(workbench, workspaceId);
+        io.matrix.knowledge.benchmark.TypoBenchmarkGenerator.Result result =
+                io.matrix.knowledge.benchmark.TypoBenchmarkRunner.run(workbench, workspaceId,
+                        benchmark);
+        return io.matrix.knowledge.benchmark.TypoBenchmarkRunner.asMap(result, benchmark);
+    }
+
+    /**
      * The knowledge graph of a workspace, as a projection.
      *
      * <p>The decision D-003 of the reconnaissance: the graph store is a
