@@ -18,7 +18,7 @@ able to resume from the repository alone.
 | **W42.3 — Dialog Intelligence** | **DONE** | `W42.3-DIALOG-INTELLIGENCE-REPORT.md`; the localised text layer, the bilingual lexicon, the typo corrector, the bounded conversation, the eight dialogue classes, 168 measured cases — accuracy 0.583 → 0.792, the Russian 0/5 → 4/5 |
 | **W42.4 — Learning and assessment** | **DONE** | `W42.4-LEARNING-AND-REPRESENTATION-REPORT.md`; the exercise selector, the delayed retention measured from the session boundary, and the representation composer — the mission's first practical objective is now demonstrated end to end on the running application |
 | **W42.5 — Cognitive integration** | **DONE** | `W42.5-COGNITIVE-INTEGRATION-REPORT.md`; the false-premise detector (the `FALSE_PREMISE` items 0/2 → 2/2, the accuracy unchanged at 0.792 and the abstention 0.700 → 0.900), the bounded idempotent consolidation, the error-driven selection, and the retention baseline experiment — the retention's evidence 2 → 3 and its stage EXPLORATION → PRACTICE against the no-consolidation baseline |
-| **W42.6 — Local Alpha v0.3** | **DONE** | `W42.6-LOCAL-ALPHA-V0.3.md` — the twelve steps verified over HTTP, and the journey survives a `SIGKILL` with 469 712 bytes of WAL unwritten. The §9's error-driven learning integration is wired in as a phase of the consolidation (the schema is v11) |
+| **W42.6 — Local Alpha v0.3** | **DONE** | `W42.6-LOCAL-ALPHA-V0.3.md` — the twelve steps verified over HTTP, and the journey survives a `SIGKILL` with 469 712 bytes of WAL unwritten. The §9's error-driven learning integration is wired in as a phase of the consolidation (the schema is v11), the §5.5's validation stage promotes a claim on two independent sources, and the §6's conversation is persisted (the schema is v12) |
 | W42.4 — Learning and assessment | not started | |
 | W42.5 — Cognitive integration | not started | |
 | W42.6 — Local Alpha v0.3 | not started | |
@@ -64,6 +64,7 @@ two waves.
 | `5ff2a525` | The idempotency flag means what it says |
 | `cc16492e` | The error-driven integration happens only after the error is verified |
 | `ea468cff` | The validation stage: two independent sources promote, one does not |
+| `014a26b8` | The conversation survives a restart, and the referent with it |
 
 **Starting commit:** `0296e83e` (W41's final verification).
 **The remote HEAD was verified, not assumed** — `git fetch origin --prune`
