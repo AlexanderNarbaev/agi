@@ -335,13 +335,22 @@ numbers are true of their own instrument.
 
 **Two negative findings, recorded rather than smoothed.** The **quality gate
 exits 0** (263 candidates against the accepted baseline of 270) — the earlier
-"the gate still exits 1" was stale. And the **application's startup does not
-meet the mission's 5-second target**: the packaged application reports
-`started in 19.018s` with the auto-trainer disabled, and **the port was not
-up after 180 s with the default configuration**, because `AutoTrainer.onStart`
-trains synchronously over a 3.6 MB corpus and blocks the `StartupEvent`. The
-`1.571 s` of the W42.0 baseline was measured under different conditions and
-cannot be quoted against that target any more.
+"the gate still exits 1" was stale. And the **application's startup meets the mission's 5-second target only when the
+training corpus is not on the working directory's path** — the mechanism is a
+RELATIVE configuration key:
+
+| How it was started | Measured |
+|---|---|
+| default configuration, working directory **without** the corpus | **2.038 s** — the corpus is not found, `AutoTrainer` skips, the port comes up |
+| default configuration, working directory **with** the corpus (the repository root) | **the port was not up after 90 s** — `AutoTrainer.onStart` trains synchronously over the 3.6 MB `models/training_data/combined_training.json` and blocks the `StartupEvent` |
+| `-Dmatrix.auto-train.enabled=false`, working directory with the corpus | **19.018 s** — the Quarkus `started in` line |
+
+`matrix.auto-train.path` is relative (`models/training_data/combined_training.json`),
+`matrix.auto-train.enabled` defaults to **true**, and **no `matrix.auto-train.*`
+key exists in `application.properties`** — so the startup time is a function of
+the working directory, the same defect class as R20. The `1.571 s` of the
+W42.0 baseline was measured under conditions that are not written down, and
+cannot be quoted against this target.
 
 **The build needs a JDK 25 that the machine does not put on the `PATH`.** The
 default `java` is a JRE 25 without a compiler, so a bare `./gradlew` fails

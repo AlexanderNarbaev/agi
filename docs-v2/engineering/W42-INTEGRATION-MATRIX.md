@@ -76,15 +76,15 @@ knowledge.**
 | `TeachBackEvaluator` (legacy) | `INTEGRATED` | `KnowledgeWorkbench:556`; the UI calls it; it measures **lesson containment** |
 | `TeachBackExperiment` (rebuilt) | `INTEGRATED` | `KnowledgeWorkbench:631`; **no UI caller** — see §6 |
 | `StructuredLearner`, `Calibration` | `INTEGRATED` | reached only through `TeachBackExperiment` |
-| `TextFeatures` (tokenizer, stopwords, fold, IDF) | `INTEGRATED` — and **untested** | 38 call sites; **zero tests anywhere in the repository**; English-only by construction |
+| `TextFeatures` (tokenizer, stopwords, fold, IDF) | `INTEGRATED` and **TESTED** — **the row was stale** | 38 call sites. The tests exist: `TextFeaturesTest`, `MultilingualTextTest` and `AssessmentGeneratorTest`. The W42.0 audit's "zero tests anywhere in the repository" was true at `0296e83e` and is false now; the localisation (English → Russian) is the W42.3 work. |
 | `QuestionSimilarity` | `DISCONNECTED` | 0 `src/main` references outside its own file |
-| `KnowledgeGapDetector.missingPrerequisites` | `DISCONNECTED` | no callers |
-| `KnowledgeStore.goals(workspaceId)` | `DISCONNECTED` | no callers at all |
-| `KnowledgeStore.recordContradiction` | `DISCONNECTED` | no production caller ⇒ **the `contradiction` table is always empty** ⇒ `GET /contradictions` always returns `[]` |
-| `KnowledgeStore.recordDerivation` | `DISCONNECTED` | test-only ⇒ stored derivations stay `UNDECIDED` |
+| `KnowledgeGapDetector.missingPrerequisites` | `INTEGRATED` — **the row was stale** | `ExerciseSelector:196` and `LearningPlanner:136` call it, and the planner is built at `KnowledgeWorkbench:1061` — the mission's §4.3 "select the next bounded action" is live. |
+| `KnowledgeStore.goals(workspaceId)` | `INTEGRATED` — **the row was stale** | `KnowledgeStore:2080` → `GoalManager:139` → `KnowledgeWorkbench:1496` → `LearningWorkbenchResource:342` — the HTTP surface reads the goals. |
+| `KnowledgeStore.recordContradiction` | `INTEGRATED` — **the row was stale** | `KnowledgeWorkbench:1479` records every conflict the reasoning engine finds. The derived claim — "the `contradiction` table is always empty" — is **false**. |
+| `KnowledgeStore.recordDerivation` | `INTEGRATED` — **the row was stale** | `KnowledgeWorkbench:1473` stores the derivation **with its verdict**. The derived claim — "stored derivations stay `UNDECIDED`" — is **false**. |
 | `GoalManager.failAttempt` | `DISCONNECTED` | test-only; the REST surface has no endpoint for a failed attempt |
 | `AcceptanceModel.distilledRule()` | `DISCONNECTED` | the inspectable clause set — the class's stated point — is never exposed |
-| `LearningStage.of/atLeast`, `MasteryCriteria.exploratory`, `LearningGoal.remainingSubtasks` | `DISCONNECTED` | no callers; the machinery for "the next thing to do" exists and is unused |
+| `LearningStage.of/atLeast`, `MasteryCriteria.exploratory`, `LearningGoal.remainingSubtasks` | `INTEGRATED` — **the row was stale** | `LearningPlanner:151` calls `LearningGoal.remainingSubtasks()`; the planner is live at `KnowledgeWorkbench:1061`. The machinery for "the next thing to do" is used. |
 | `LearningDimension.RETENTION/TEACHING/PROCEDURE/SYNTHESIS` | `UNVERIFIED` | declared, but **no shipped dataset item uses them** — 4 of 13 dimensions are unmeasurable today |
 | `AssessmentItem.difficulty` | `DISCONNECTED` | stored, never read by any evaluator |
 | `KnowledgePack.notes` | `DISCONNECTED` | curation provenance is dropped at import |
@@ -137,6 +137,24 @@ scripts/integration-census.py                    # the whole matrix
 scripts/integration-census.py ErrorDrivenLearner ConsciousBrain
 scripts/integration-census.py --markdown         # the table
 ```
+
+**A LIMIT OF THE CENSUS, measured 2026-11-02.** `scripts/integration-census.py:65-72`
+scans **six** source roots: `matrix-core`, `matrix-brain-runtime`,
+`matrix-api-gateway`, `matrix-audit` and `matrix-ethics` (plus
+`matrix-core`'s resources). The repository has **fourteen** `src/main/java`
+trees, so **eight modules and `pilots/*` are invisible to it** — and one of
+the six roots it does scan, `matrix-ethics`, is not a module the build
+includes at all. Every count in this matrix that was produced by the
+census is therefore a count over a SUBSET of the tree, and a class that the
+census reports as having no production caller may have one in a module the
+census does not read.
+
+**The independent census** of `W42-VERIFICATION-INTEGRATION.md` was written
+over all fourteen trees (1 339 production files) and is the one that
+corrected the rows below. The two censuses disagree on thirteen rows, and
+every one of the thirteen was a row that said "no production caller" for a
+class that HAS one. **A census that reads six of fourteen roots cannot
+support a claim that a class is unreachable.**
 
 For every component the matrix names, the census counts the production
 files that mention it — the `src/main` trees of every module, excluding
@@ -207,10 +225,10 @@ at again.
 
 | Item | Status | Evidence |
 |---|---|---|
-| REST surface | `PRODUCTION_PATH_VERIFIED` | 36 endpoints, all performing real operations; 28 probed live |
-| UI | `PRODUCTION_PATH_VERIFIED` | 9 tabs, 10 buttons, **no button without a working action** |
-| UI ↔ REST | `INTEGRATED` | 10 of 36 endpoints have **no UI caller** — including `/goals/resumable` and `/teach-back-experiment`, which the tabs that claim those capabilities do not call |
-| Dashboard first paint | `DISCONNECTED` | `index.html:938` calls only `loadStatus()`; the metrics and revisions boxes stay empty until a load or a workspace switch |
+| REST surface | `PRODUCTION_PATH_VERIFIED` | **52 endpoints**, not 36 — all performing real operations; 28 probed live. The count is from the `@GET`/`@POST`/`@PUT`/`@DELETE` handlers of `LearningWorkbenchResource`. |
+| UI | `PRODUCTION_PATH_VERIFIED` | **13 tabs and 26 buttons**, not 9 and 10 — **no button without a working action**. The tab count grew with the W42.7 views. |
+| UI ↔ REST | `INTEGRATED` | **15 of 52 endpoints have no UI caller**, not 10 of 36. `/teach-back-experiment` is among the ones the Teach tab now calls (`index.html:925`); `/goals/resumable` remains without one. |
+| Dashboard first paint | `DISCONNECTED` | `index.html:1311` — not `:938` — calls only `loadStatus()`; the metrics and revisions boxes stay empty until a load or a workspace switch |
 | Persistence | `PRODUCTION_PATH_VERIFIED` | live `kill -9` → restart → counts, goal, subtask, budget, checkpoint, outcome and premise order intact |
 | **Backup instruction** | `VERIFIED_NOT_A_DEFECT is FALSE — this is a data-loss defect** | `KnowledgeWorkbench:727-728` tells the operator to copy `workbench.sqlite` alone. Proven by experiment: the naive copy loses **every** `assessment_outcome` and `asked_question` record, because those live in the `-wal` file |
 | Local autonomy | `PRODUCTION_PATH_VERIFIED` | no PostgreSQL, Redis, Kafka, OTLP collector or LLM API is required; **no API key is configured anywhere** |
@@ -229,7 +247,7 @@ at again.
 | F5 | **Retrieval is English-only, and the tokenizer has zero tests.** | W42.3 must localise the morphology/stopwords/negation list, and `TextFeatures` needs tests before anything is changed. |
 | F6 | **Abstention quality is 0.400** — the system answers 6 of the 10 questions it cannot support, and agrees with a false premise in both false-premise items. | This is the most dangerous measured weakness: it is an epistemic defect, not a missing feature. |
 | F7 | **The `contradiction` table is always empty and derivations are always `UNDECIDED`**, because the two recording methods have no production caller. | Two one-line wirings. The features were built and then not connected. |
-| F8 | **The backup instruction loses data.** | A one-line fix with a proven failure mode. |
+| F8 | **The backup instruction loses data.** | **CLOSED.** `KnowledgeWorkbench:1652-1661` now names all three files (`-wal` and `-shm` beside the store) and the screen renders it. The fix was made in W42.1; the finding was still open in this matrix. |
 | F9 | **Three parallel knowledge systems.** | W42 must not add a fourth. The graph store should become a read-only projection over the W41 store, not a peer. |
 | F10 | **`HierarchicalMemory`'s eviction never fires on the live path** (only L2 is written; only L0 is evicted). | An unbounded production map, fixable in one place. |
 

@@ -7829,3 +7829,29 @@ accepted baseline of 270) ✓ ✓. And the **application's startup does not meet
 19.018s` with the auto-trainer disabled, and **the port was not up after 180 s with the default configuration**,
 because `AutoTrainer.onStart` trains synchronously over a 3.6 MB corpus and blocks the `StartupEvent` ✓ ✓. The
 build also needs a JDK 25 that the machine does not put on the `PATH` ✓ ✓.
+
+# RECON-W42.9 — the third audit: the census read six roots of fourteen, and thirteen rows were wrong
+
+**Done** ✓ ✓. The integration matrix had **thirteen rows whose status was wrong** ✓ ✓, and every one of them said
+"no production caller" for a class that has one ✓ ✓: `TextFeatures` (not "zero tests" — three test files, and the
+"zero" was true at `0296e83e`), `KnowledgeGapDetector.missingPrerequisites`, `LearningGoal.remainingSubtasks`,
+`KnowledgeStore.recordContradiction` (so "the contradiction table is always empty" is **false**),
+`KnowledgeStore.recordDerivation` (so "stored derivations stay UNDECIDED" is **false**) and
+`KnowledgeStore.goals(workspaceId)` ✓ ✓. The backup instruction is **already fixed** ✓ ✓ — the finding was still
+open in the matrix ✓ ✓. The counters were stale: 36 → **52** endpoints, 9 → **13** tabs and 10 → **26** buttons,
+10 of 36 → **15 of 52** uncalled ✓ ✓.
+
+**The census that produced the matrix reads six of the fourteen source roots** ✓ ✓ — and one of the six,
+`matrix-ethics`, is not a module the build includes ✓ ✓. Eight modules and `pilots/*` are invisible to it ✓ ✓,
+so **a census that reads six of fourteen roots cannot support a claim that a class is unreachable** ✓ ✓ ✓ ✓.
+
+**The startup finding is now precise** ✓ ✓ — my first statement was too broad ✓ ✓. Measured three ways: **2.038 s**
+when the training corpus is not on the working directory's path ✓ ✓; **the port not up after 90 s** when it is ✓ ✓;
+**19.018 s** with `-Dmatrix.auto-train.enabled=false` and the corpus present ✓ ✓. The mechanism is a relative key —
+`matrix.auto-train.path`, `matrix.auto-train.enabled` defaulting to true, and no `matrix.auto-train.*` key in
+`application.properties` ✓ ✓ — so the startup time is a function of the working directory, the same defect class as
+R20 ✓ ✓.
+
+**What has no measurement at all** ✓ ✓: **not one** of the mission's §13.1 families — HDC, BIR, Tsetlin, WiSARD,
+RAG, MCTS, the attention family — has a quality baseline ✓ ✓. The countable half exists ✓ ✓ (the census over all
+fourteen trees says what is live and what is not) ✓ ✓; the measurement half does not ✓ ✓ ✓ ✓.

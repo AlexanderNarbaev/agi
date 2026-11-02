@@ -14,16 +14,21 @@
 
 34 items, 12 categories, two languages, two workspaces.
 
+**The counts in this table were wrong and are corrected on 2026-11-02.** The
+table summed to **37** against the file's **34** items: `FACTUAL` was 7 and
+is 6, `CROSS_LINGUAL` was 5 and is 4, `UNANSWERABLE` was 5 and is 4. The
+counts are now taken from the JSON itself.
+
 | Category | What it asks | Count |
 |---|---|---|
-| `FACTUAL` | a direct question the knowledge covers | 7 |
+| `FACTUAL` | a direct question the knowledge covers | 6 |
 | `MULTI_HOP` | a question needing two facts combined | 3 |
 | `CONTRADICTORY` | a question whose answer is a conflict | 1 |
 | `AMBIGUOUS` | a question whose intended meaning is unclear | 2 |
 | `MISSPELLED` | a question with a typo | 4 |
 | `PARAPHRASE` | a question using different words for the same thing | 2 |
-| `CROSS_LINGUAL` | a Russian question against English knowledge | 5 |
-| `UNANSWERABLE` | a question the workspace cannot support | 5 |
+| `CROSS_LINGUAL` | a Russian question against English knowledge | 4 |
+| `UNANSWERABLE` | a question the workspace cannot support | 4 |
 | `FALSE_PREMISE` | a question whose premise is false | 2 |
 | `CAUSAL` | a "why" question | 2 |
 | `TRANSFER` | a question about a novel example | 2 |
