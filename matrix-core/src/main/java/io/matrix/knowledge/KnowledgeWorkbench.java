@@ -37,6 +37,15 @@ public class KnowledgeWorkbench implements AutoCloseable {
     /** The identifier of the package that ships with the application. */
     public static final String DEFAULT_WORKSPACE = "photosynthesis";
 
+    /** The authority of a recorded observation: it is a witness, not a reference. */
+    private static final int OBSERVATION_AUTHORITY = 40;
+
+    /** The freshness of a recorded observation: it was made recently, by definition. */
+    private static final int OBSERVATION_FRESHNESS = 60;
+
+    /** The quality of the evidence of an observation: it records what was seen, nothing more. */
+    private static final int OBSERVATION_EVIDENCE_QUALITY = 50;
+
     /** The identifier of the second bundled domain. */
     public static final String LOGIC_WORKSPACE = "logic";
 
@@ -642,6 +651,196 @@ public class KnowledgeWorkbench implements AutoCloseable {
     public void applyValidated(String workspaceId, List<Claim> claims, List<Evidence> evidence) {
         store().applyChanges(workspaceId, new KnowledgeChanges(List.of(), claims, evidence,
                 List.of(), List.of()));
+    }
+
+    // ── W43.2: the counterexample cycle ──────────────────────────────────────
+    //
+    // The mission's §5 scenario, in one place: an example, a counterexample,
+    // the question of whether the claim still holds, and the refinement that
+    // follows. What the system does and does not decide is stated in
+    // ADR-W43-01 and in ClaimAssessor; what is decided here is only the
+    // bookkeeping, and the bookkeeping is what makes the history survive a
+    // restart.
+
+    /**
+     * Records an example against a claim, or a counterexample against it.
+     *
+     * <p>An example is a situation in which the claim HOLDS; a counterexample
+     * is a situation in which it does not. Either is stored as a
+     * {@link Source} of kind {@link SourceKind#OBSERVATION} — because that
+     * is what it is — together with the evidence link that says how it
+     * bears on the claim.
+     *
+     * <p><b>Where the condition lives.</b> The condition under which the
+     * observation was made is the source's {@code locator}: for an
+     * observation, the locator is where and under what it was seen. When the
+     * observer records no condition, the assessor says that it cannot read
+     * the counterexample against the claim's scope — rather than guessing
+     * which of the six explanations applies.
+     *
+     * @param workspaceId the workspace
+     * @param claimId the claim the example bears on
+     * @param observation what was observed
+     * @param condition the conditions under which it was observed, or null
+     * @param contradicts whether the observation contradicts the claim
+     * @return the evidence link that was recorded
+     */
+    public Evidence recordExample(String workspaceId, String claimId, String observation,
+                                  String condition, boolean contradicts) {
+        Claim claim = claimById(workspaceId, claimId);
+        String excerpt = observation == null || observation.isBlank()
+                ? "an observation was recorded without its text"
+                : observation.strip();
+        String sourceId = "obs-" + java.util.UUID.randomUUID();
+        Source source = new Source(sourceId, workspaceId, SourceKind.OBSERVATION,
+                contradicts ? "a counterexample" : "an example",
+                condition,
+                OBSERVATION_AUTHORITY, OBSERVATION_FRESHNESS,
+                excerpt, recordedAt(), contentHash(excerpt), null, null, "observation");
+        Evidence evidence = new Evidence("evd-" + java.util.UUID.randomUUID(), workspaceId,
+                claimId, sourceId,
+                contradicts ? EvidenceRelation.CONTRADICTS : EvidenceRelation.EXEMPLIFIES,
+                excerpt, OBSERVATION_EVIDENCE_QUALITY, recordedAt());
+        store().applyChanges(workspaceId, new KnowledgeChanges(List.of(source), List.of(),
+                List.of(evidence), List.of(), List.of()));
+        return evidence;
+    }
+
+    /**
+     * Assesses whether a claim still holds, against the recorded evidence.
+     *
+     * @param workspaceId the workspace
+     * @param claimId the claim
+     * @return the reasoning result
+     */
+    public ClaimAssessment assessClaim(String workspaceId, String claimId) {
+        Claim claim = claimById(workspaceId, claimId);
+        return ClaimAssessor.assess(workspaceId, claim, store().evidence(workspaceId),
+                store().sources(workspaceId));
+    }
+
+    /**
+     * Accepts a proposed refinement: the claim is narrowed, and BOTH claims
+     * and the revision that links them are kept.
+     *
+     * <p>The original claim is not deleted. It becomes SUPERSEDED, its
+     * version goes up, and the revision says what replaced it and why. The
+     * mission's §3.7: a refinement must not erase the fact that the earlier
+     * model was used and later found insufficient.
+     *
+     * <p>The refined claim starts as a HYPOTHESIS, because nothing supports
+     * it yet: the counterexample shows the GENERAL form is incomplete, and
+     * the narrower form was assembled rather than evidenced. The link back to
+     * the original is in the revision's target id, and the link forward is
+     * in the refined claim's validation method.
+     *
+     * @param workspaceId the workspace
+     * @param claimId the claim being refined
+     * @param refinedProposition the narrower proposition
+     * @return the revision that was recorded
+     */
+    public KnowledgeRevision acceptRefinement(String workspaceId, String claimId,
+                                              String refinedProposition) {
+        if (refinedProposition == null || refinedProposition.isBlank()) {
+            throw new IllegalArgumentException("the refined proposition must not be blank");
+        }
+        Claim original = claimById(workspaceId, claimId);
+        ClaimAssessment assessment = assessClaim(workspaceId, claimId);
+        String refinedId = "clm-" + java.util.UUID.randomUUID();
+        String revisionId = "rev-" + java.util.UUID.randomUUID();
+
+        Claim refined = new Claim(refinedId, workspaceId, original.conceptId(),
+                refinedProposition.strip(), original.scope(), original.context(),
+                ClaimStatus.HYPOTHESIS, 0.0, 1, original.introducedBySourceId(),
+                "narrowed by revision " + revisionId, "accepted by the operator",
+                original.warrant(), DerivationStatus.NOT_DERIVED, recordedAt(), recordedAt());
+        Claim superseded = new Claim(original.id(), original.workspaceId(), original.conceptId(),
+                original.proposition(), original.scope(), original.context(),
+                ClaimStatus.SUPERSEDED, original.confidence(), original.version() + 1,
+                original.introducedBySourceId(), original.extractionMethod(),
+                "superseded by " + refinedId, original.warrant(), original.derivationStatus(),
+                original.createdAt(), recordedAt());
+
+        KnowledgeRevision revision = new KnowledgeRevision(revisionId, workspaceId, "claim",
+                original.id(), RevisionKind.REFINEMENT,
+                "the claim was narrowed to '" + refinedProposition.strip() + "' "
+                        + "(refined-claim-id=" + refinedId + ") because "
+                        + (assessment.readingReason() == null
+                                ? "the recorded evidence demanded a narrower formulation"
+                                : assessment.readingReason()),
+                List.of("the narrowed proposition: " + refinedProposition.strip()),
+                List.of(),
+                List.of("the original scope: " + original.scope()),
+                assessment.contradicting().stream()
+                        .map(ClaimAssessment.EvidenceRef::sourceId).toList(),
+                assessment.contradicting().stream()
+                        .map(ClaimAssessment.EvidenceRef::evidenceId).toList(),
+                recordedAt());
+
+        store().applyChanges(workspaceId, new KnowledgeChanges(List.of(),
+                List.of(refined, superseded), List.of(), List.of(), List.of(revision)));
+        return revision;
+    }
+
+    /**
+     * Rejects a proposed refinement: the original claim stands, and the fact
+     * that a refinement was considered is kept.
+     *
+     * @param workspaceId the workspace
+     * @param claimId the claim
+     * @param reason why the refinement was rejected
+     * @return the revision that was recorded
+     */
+    public KnowledgeRevision rejectRefinement(String workspaceId, String claimId, String reason) {
+        Claim original = claimById(workspaceId, claimId);
+        String revisionId = "rev-" + java.util.UUID.randomUUID();
+        KnowledgeRevision revision = new KnowledgeRevision(revisionId, workspaceId, "claim",
+                original.id(), RevisionKind.REJECTED_REFINEMENT,
+                "a narrowing of this claim was proposed and rejected; the original stands"
+                        + (reason == null || reason.isBlank() ? "" : ": " + reason.strip()),
+                List.of(), List.of(original.scope()), List.of(), List.of(), List.of(),
+                recordedAt());
+        store().applyChanges(workspaceId, new KnowledgeChanges(List.of(), List.of(), List.of(),
+                List.of(), List.of(revision)));
+        return revision;
+    }
+
+    /** The claim of a workspace, by id. */
+    private Claim claimById(String workspaceId, String claimId) {
+        for (Claim claim : store().claims(workspaceId)) {
+            if (claim.id().equals(claimId)) {
+                return claim;
+            }
+        }
+        throw new IllegalArgumentException("no claim '" + claimId + "' in workspace '"
+                + workspaceId + "'");
+    }
+
+    /**
+     * The timestamp of a recorded event.
+     *
+     * <p>It records WHEN and no decision reads it: the audit trail needs the
+     * time, and the reasoning needs the evidence, not the clock.
+     */
+    @io.matrix.auditor.ArticleIPermitted(value = "the timestamp of a recorded observation, "
+            + "evidence row or revision; it records WHEN, and no decision reads it")
+    private static String recordedAt() {
+        return java.time.Instant.now().toString();
+    }
+
+    /** The content hash of a recorded text. */
+    private static String contentHash(String text) {
+        try {
+            java.security.MessageDigest digest = java.security.MessageDigest.getInstance("SHA-256");
+            byte[] bytes = digest.digest(text.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+            StringBuilder sb = new StringBuilder(bytes.length * 2);
+            for (byte b : bytes) {
+                sb.append(String.format("%02x", b));
+            }
+            return sb.toString();
+        } catch (java.security.NoSuchAlgorithmException impossible) {
+            throw new IllegalStateException("SHA-256 is required and is not available", impossible);
+        }
     }
 
     /**

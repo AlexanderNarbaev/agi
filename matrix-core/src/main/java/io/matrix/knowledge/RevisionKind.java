@@ -8,6 +8,13 @@ package io.matrix.knowledge;
  */
 public enum RevisionKind {
     /** A later, more detailed representation of the same concept. */
+    /**
+     * RECON-W43.0. A refinement was PROPOSED and REJECTED. The original
+     * claim stands, the proposal is kept, and the fact that it was considered
+     * is not lost — a refinement that was rejected is still a thing that
+     * happened.
+     */
+    REJECTED_REFINEMENT,
     REFINEMENT,
     /** A new representation at a different abstraction level. */
     DIFFERENT_ABSTRACTION,

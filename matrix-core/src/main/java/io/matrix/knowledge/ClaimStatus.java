@@ -38,5 +38,28 @@ public enum ClaimStatus {
     CONTESTED,
     SUPERSEDED,
     REFUTED,
-    UNKNOWN
+    UNKNOWN,
+    /**
+     * RECON-W43.0. The system SAW this: it is on record as an observation,
+     * and it is not yet a claim anyone has argued for.
+     */
+    OBSERVED,
+    /**
+     * RECON-W43.0. An assertion is on record and nothing supports it yet.
+     * A user's correction lands here first — it is evidence about what the
+     * user meant, and at most a candidate claim.
+     */
+    HYPOTHESIS,
+    /**
+     * RECON-W43.0. The evidence was sought and does not decide. This is not
+     * the same as REFUTED, and it is not the same as UNKNOWN: something was
+     * looked at, and it did not settle the matter.
+     */
+    INSUFFICIENT_EVIDENCE,
+    /**
+     * RECON-W43.0. The claim was replaced by a narrower one, and BOTH are
+     * kept. The status says what happened; the earlier claim remains
+     * readable, and the revision that links them remains readable.
+     */
+    REFINED
 }

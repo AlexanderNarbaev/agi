@@ -327,6 +327,16 @@ public final class ClaimValidator {
             case SUPERSEDED -> PromotionStage.SUPERSEDED;
             case REFUTED -> PromotionStage.INVALIDATED;
             case UNKNOWN -> PromotionStage.RAW;
+            // RECON-W43.0: the epistemic statuses the ADR added, mapped onto
+            // the promotion layers. An OBSERVATION is the rawest thing the
+            // system holds; a HYPOTHESIS is a candidate; a claim whose
+            // evidence does not decide is NOT invalidated — it is still a
+            // candidate, because nothing has refuted it; and a REFINED claim
+            // has been superseded by a narrower one.
+            case OBSERVED -> PromotionStage.RAW;
+            case HYPOTHESIS -> PromotionStage.CANDIDATE;
+            case INSUFFICIENT_EVIDENCE -> PromotionStage.CANDIDATE;
+            case REFINED -> PromotionStage.SUPERSEDED;
         };
     }
 

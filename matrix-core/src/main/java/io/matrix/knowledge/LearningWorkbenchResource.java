@@ -321,6 +321,120 @@ public class LearningWorkbenchResource {
         return Response.ok(result).build();
     }
 
+    // ── W43.2: the counterexample cycle, over HTTP ───────────────────────────
+
+    /** The body of an example request. */
+    public record ExampleRequest(String observation, String condition, Boolean contradicts) {
+    }
+
+    /** The body of a refinement request. */
+    public record RefinementRequest(String proposition, String reason) {
+    }
+
+    /**
+     * Records an example against a claim, or a counterexample against it.
+     *
+     * <p>The observation is stored as an OBSERVATION source with the
+     * condition it was made under, and the evidence link says how it bears
+     * on the claim. Nothing is promoted and nothing is decided here: the
+     * assessment is a separate question, and the user asks it.
+     */
+    @POST
+    @Path("/workspaces/{id}/claims/{claimId}/examples")
+    public Response example(@PathParam("id") String workspaceId,
+                             @PathParam("claimId") String claimId,
+                             ExampleRequest request) {
+        if (request == null || request.observation() == null || request.observation().isBlank()) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity(Map.of("error", "an observation is required"))
+                    .build();
+        }
+        boolean contradicts = request.contradicts() != null && request.contradicts();
+        try {
+            Evidence evidence = workbench.recordExample(workspaceId, claimId,
+                    request.observation(), request.condition(), contradicts);
+            return Response.ok(Map.of(
+                    "evidenceId", evidence.id(),
+                    "claimId", evidence.claimId(),
+                    "sourceId", evidence.sourceId(),
+                    "relation", evidence.relation().name(),
+                    "excerpt", evidence.excerpt())).build();
+        } catch (IllegalArgumentException unknown) {
+            return Response.status(Response.Status.NOT_FOUND)
+                    .entity(Map.of("error", unknown.getMessage()))
+                    .build();
+        }
+    }
+
+    /**
+     * The assessment of a claim: does it still hold, on what evidence, and
+     * with what left unresolved.
+     */
+    @GET
+    @Path("/workspaces/{id}/claims/{claimId}/assessment")
+    public Response assessment(@PathParam("id") String workspaceId,
+                                @PathParam("claimId") String claimId) {
+        try {
+            return Response.ok(workbench.assessClaim(workspaceId, claimId).asMap()).build();
+        } catch (IllegalArgumentException unknown) {
+            return Response.status(Response.Status.NOT_FOUND)
+                    .entity(Map.of("error", unknown.getMessage()))
+                    .build();
+        }
+    }
+
+    /**
+     * Accepts a proposed refinement.
+     *
+     * <p>The original claim is kept and becomes SUPERSEDED; the narrower
+     * claim and the revision that links them are stored alongside it.
+     */
+    @POST
+    @Path("/workspaces/{id}/claims/{claimId}/refine/accept")
+    public Response acceptRefinement(@PathParam("id") String workspaceId,
+                                      @PathParam("claimId") String claimId,
+                                      RefinementRequest request) {
+        if (request == null || request.proposition() == null || request.proposition().isBlank()) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity(Map.of("error", "the refined proposition is required"))
+                    .build();
+        }
+        try {
+            KnowledgeRevision revision = workbench.acceptRefinement(workspaceId, claimId,
+                    request.proposition());
+            return Response.ok(Map.of(
+                    "revisionId", revision.id(),
+                    "claimId", revision.targetId(),
+                    "kind", revision.kind().name(),
+                    "summary", revision.summary())).build();
+        } catch (IllegalArgumentException unknown) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity(Map.of("error", unknown.getMessage()))
+                    .build();
+        }
+    }
+
+    /** Rejects a proposed refinement; the original claim stands. */
+    @POST
+    @Path("/workspaces/{id}/claims/{claimId}/refine/reject")
+    public Response rejectRefinement(@PathParam("id") String workspaceId,
+                                     @PathParam("claimId") String claimId,
+                                     RefinementRequest request) {
+        try {
+            KnowledgeRevision revision = workbench.rejectRefinement(workspaceId, claimId,
+                    request == null ? null : request.reason());
+            return Response.ok(Map.of(
+                    "revisionId", revision.id(),
+                    "claimId", revision.targetId(),
+                    "kind", revision.kind().name(),
+                    "summary", revision.summary())).build();
+        } catch (IllegalArgumentException unknown) {
+            return Response.status(Response.Status.NOT_FOUND)
+                    .entity(Map.of("error", unknown.getMessage()))
+                    .build();
+        }
+    }
+
     /** The recorded inferences of a workspace. */
     @GET
     @Path("/workspaces/{id}/derivations")

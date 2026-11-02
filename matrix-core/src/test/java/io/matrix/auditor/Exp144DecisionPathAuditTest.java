@@ -71,13 +71,14 @@ class Exp144DecisionPathAuditTest {
         Path repo = repoRoot();
         Path baseline = repo.resolve(DecisionPathBaseline.BASELINE_FILE);
         assertThat(baseline).as("the accepted baseline of decision-path findings").exists();
-        var accepted = DecisionPathBaseline.acceptedKeys(baseline);
-        var fresh = DecisionPathBaseline.newFindings("matrix-core/src/main/java", report, accepted);
-        if (!fresh.isEmpty()) {
-            fresh.forEach(f -> System.out.println("[DECPATH-AUDIT] NEW in matrix-core: " + f));
-        }
-        assertThat(fresh)
-                .as("decision-path findings in matrix-core that the accepted baseline does not list")
+        var accepted = DecisionPathBaseline.forRoot(
+                DecisionPathBaseline.acceptedCounts(baseline), "matrix-core/src/main/java");
+        var actual = DecisionPathBaseline.actualCounts("matrix-core/src/main/java", report);
+        var mismatches = DecisionPathBaseline.mismatches(accepted, actual);
+        mismatches.forEach(m -> System.out.println("[DECPATH-AUDIT] " + m));
+        assertThat(mismatches)
+                .as("decision-path findings in matrix-core that the accepted baseline does not "
+                        + "list, or lists with a different count")
                 .isEmpty();
     }
 

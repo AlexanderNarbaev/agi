@@ -99,10 +99,10 @@ class DecisionPathGateTest {
                 .as("the determinism gate needs an explicit baseline of accepted findings")
                 .exists();
 
-        Set<String> accepted = DecisionPathBaseline.acceptedKeys(baseline);
+        java.util.Map<String, Integer> accepted = DecisionPathBaseline.acceptedCounts(baseline);
         String expiry = DecisionPathBaseline.expiry(baseline);
 
-        Set<String> found = new TreeSet<>();
+        java.util.Map<String, Integer> found = new java.util.TreeMap<>();
         Set<String> rootsScanned = new LinkedHashSet<>();
         for (String root : SCANNED_ROOTS) {
             Path rootPath = repo.resolve(root);
@@ -113,7 +113,7 @@ class DecisionPathGateTest {
             DecisionPathAuditor.AuditReport report = new DecisionPathAuditor().audit(rootPath);
             for (DecisionPathAuditor.Violation v : report.violations()) {
                 if (DecisionPathBaseline.blocks(v)) {
-                    found.add(DecisionPathBaseline.key(root, v));
+                    found.merge(DecisionPathBaseline.key(root, v), 1, Integer::sum);
                 }
             }
         }
@@ -122,28 +122,17 @@ class DecisionPathGateTest {
                 .as("the determinism gate must scan every relevant production source root")
                 .contains("matrix-core/src/main/java", "matrix-brain-runtime/src/main/java");
 
-        Set<String> newFindings = new TreeSet<>(found);
-        newFindings.removeAll(accepted);
-        Set<String> staleEntries = new TreeSet<>(accepted);
-        staleEntries.removeAll(found);
-
-        if (!newFindings.isEmpty()) {
-            System.out.println("[DECPATH-GATE] NEW blocking findings (" + newFindings.size() + "):");
-            newFindings.forEach(f -> System.out.println("  " + f));
-        }
-        if (!staleEntries.isEmpty()) {
-            System.out.println("[DECPATH-GATE] baseline entries that no longer hold ("
-                    + staleEntries.size() + "):");
-            staleEntries.forEach(f -> System.out.println("  " + f));
+        List<String> mismatches = DecisionPathBaseline.mismatches(accepted, found);
+        if (!mismatches.isEmpty()) {
+            System.out.println("[DECPATH-GATE] the findings and the accepted baseline do not "
+                    + "agree (" + mismatches.size() + "):");
+            mismatches.forEach(m -> System.out.println("  " + m));
         }
 
-        assertThat(newFindings)
+        assertThat(mismatches)
                 .as("decision paths that violate the constitution's Article I and are not in the "
-                        + "accepted baseline")
-                .isEmpty();
-        assertThat(staleEntries)
-                .as("the accepted baseline lists findings that no longer exist — update "
-                        + BASELINE_FILE + " so that it says what is actually there")
+                        + "accepted baseline, findings whose count differs from the baseline, "
+                        + "or baseline entries that no longer hold — update " + BASELINE_FILE)
                 .isEmpty();
         assertThat(expiry)
                 .as("the baseline must carry an expiry")
