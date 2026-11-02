@@ -49,6 +49,9 @@ public final class DocxDocumentExtractor implements DocumentExtractor {
     /** The entries one document may contain. */
     public static final int MAXIMUM_ENTRIES = 2_000;
 
+    /** The size of the buffer one entry is read through. */
+    public static final int READ_BUFFER_BYTES = 8192;
+
     /** The XML element that holds a run of text. */
     private static final String TEXT_ELEMENT = "w:t";
 
@@ -177,7 +180,7 @@ public final class DocxDocumentExtractor implements DocumentExtractor {
     /** Reads an entry, refusing to expand past the limit. */
     private static byte[] readBounded(InputStream input, String name) throws IOException {
         java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream();
-        byte[] buffer = new byte[8192];
+        byte[] buffer = new byte[READ_BUFFER_BYTES];
         long read = 0;
         int count;
         while ((count = input.read(buffer)) > 0) {

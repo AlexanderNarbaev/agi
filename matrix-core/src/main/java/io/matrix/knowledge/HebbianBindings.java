@@ -49,6 +49,15 @@ public final class HebbianBindings {
     /** How many positions each term lights in the hypercube. */
     public static final int BITS_PER_TERM = 8;
 
+    /**
+     * The constant the term's positions are mixed with.
+     *
+     * <p>The golden ratio's 32-bit form: it spreads the neighbouring terms'
+     * hashes over the hypercube, so two terms that differ by one letter
+     * do not light the same positions.
+     */
+    public static final int POSITION_MIX = 0x9E3779B1;
+
     /** The learning rate of the state build. */
     public static final float BUILD_ETA = 0.5f;
 
@@ -110,7 +119,7 @@ public final class HebbianBindings {
         int hash = term.hashCode();
         int[] positions = new int[BITS_PER_TERM];
         for (int i = 0; i < BITS_PER_TERM; i++) {
-            int mixed = hash * (i + 1) * 0x9E3779B1;
+            int mixed = hash * (i + 1) * POSITION_MIX;
             positions[i] = Math.floorMod(mixed, HdcEncoding.DIM);
         }
         return positions;
