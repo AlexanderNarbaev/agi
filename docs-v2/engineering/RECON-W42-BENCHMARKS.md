@@ -386,6 +386,36 @@ logic IS and says that the word "invented" is not covered by it. The
 statement is true and the gap is named, so nothing is fabricated; but the
 etalon asks for a refusal, and the etalon has not been moved.
 
+**AND THE MEASUREMENT SHOWS THAT NO THRESHOLD SEPARATES IT.** The
+uncovered terms of every item were measured — the number of gaps is
+what a refusal rule would have to turn on:
+
+| the item | the etalon | the gaps | the gaps |
+|---|---|---|---|
+| `en-factual-1` "What is photosynthesis?" | answer | none | 0 |
+| `en-factual-2` "Where does the oxygen come from?" | answer | come | 1 |
+| `en-hop-1` "If light reactions split water…" | answer | split, release, use | 3 |
+| `en-para-1` "Explain how green plants make food…" | answer | explain, green, make, food, sunlight | 5+ |
+| `en-transfer-1` "if it rains then the ground is wet" | answer | rains, ground, wet | 3 |
+| `en-unanswer-1` "the boiling point of mercury" | REFUSE | boiling, point, mercury | 3 |
+| `en-unanswer-2` "Who invented propositional logic?" | REFUSE | invented | **1** |
+| `en-unanswer-3` "the price of carbon dioxide in 2050" | REFUSE | will, price, 2050 | 3 |
+
+**A rule that refuses on the gap count cannot separate these:** an
+answerable item carries five gaps and is answered, while the item the
+etalon wants refused carries one. The gaps of the answerable items are
+the question's GLUE — "come", "state", "explain", "green" — and the
+answer carries the substance; the gap of `en-unanswer-2` is the RELATION
+the workspace does not hold ("invented"), and no rule about the number
+of gaps can tell the two apart.
+
+**So the choice is a design decision and it belongs to the owner:**
+refuse whenever the question's relation is uncovered (which needs a
+relation the system cannot yet recognise), or accept the current
+behaviour — answer what the workspace holds, name the word it cannot
+cover, and refuse nothing. The second is what the system does today,
+and it is not a fabrication.
+
 ## 11. The mission's §14 acceptance table — the state of every row
 
 The mission's §14 gives eighteen rows of engineering targets and says:
