@@ -109,8 +109,9 @@ already exist, and the one with the provenance model (product A's
 | `HdcBinding.bind/unbind` | `DISCONNECTED` | `HdcBrain.bindRecord` has no production caller; both operators are plain XOR |
 | `ConsciousBrain` | `DISCONNECTED` | **0 production construction sites; 67 test sites**; its `CycleReport` reaches only test-only builders |
 | `CognitiveProcessor` | `DISCONNECTED` | its 2 production sites are inside `ConsciousBrain`; `history` is unbounded |
-| `CognitiveAttention` / `ProfileKVCache` / `CognitiveSlidingWindow` / `CognitiveErrorStream` | `DISCONNECTED` | reachable only through `ConsciousBrain` |
-| `ErrorDrivenLearner.applyDecay` | `DISCONNECTED` | 0 `src/main` callers; decays the accumulator but never the weights |
+| `CognitiveAttention` / `ProfileKVCache` / `CognitiveSlidingWindow` | `DISCONNECTED` | reachable only through `ConsciousBrain` |
+| `CognitiveErrorStream` | `INTEGRATED` (W42.7) | the consolidation's error-driven phase BUILDS one from the workspace's VERIFIED learning errors and hands it to the decay — the census counts 5 production files, one of them `KnowledgeWorkbench` |
+| `ErrorDrivenLearner.applyDecay` | `PRODUCTION_PATH_VERIFIED` (W42.7) | **the row was stale.** It is the live engine of the consolidation's error-driven phase: the phase applies the bounded decay to the workspace's own Hebbian bindings, the state is persisted (the schema v15), and the answer says that the bindings it rests on were weakened. The census counts 6 production files |
 | `FreeEnergyLoss` / `ConsciousBrain.freeEnergy` | `DISCONNECTED` | one caller, a test; the "KL divergence" is a residual variance |
 | `TwoStageConsolidator` | `DISCONNECTED` | `ConsciousBrain` only; its result is **discarded** at both call sites |
 | `HierarchicalMemory` L0 eviction | `INTEGRATED` but **ineffective for the live path** | `DefaultBrainPipeline:151-152` writes **only L2**; `evictLowestLevel` removes only L0 ⇒ **nothing is ever evicted** |
@@ -122,6 +123,39 @@ already exist, and the one with the provenance model (product A's
 **The memory subsystem has no forgetting on the cognitive path.** The only
 things that remove memory are capacity-driven LRU eviction and that one
 `DELETE`. The mechanisms that were designed to forget are unwired.
+
+---
+
+## 3.1 The census — the countable part, reproducibly
+
+The statuses above are judgements, and a judgement needs evidence. The
+countable part of the evidence is now reproducible:
+
+```
+scripts/integration-census.py                    # the whole matrix
+scripts/integration-census.py ErrorDrivenLearner ConsciousBrain
+scripts/integration-census.py --markdown         # the table
+```
+
+For every component the matrix names, the census counts the production
+files that mention it — the `src/main` trees of every module, excluding
+the component's own file — and the test files that mention it. The count
+is exactly defined: a file counts once per component when the name
+occurs anywhere in it.
+
+**What the census is NOT.** A count of production files is not a count of
+production call sites, and neither is a judgement about whether the result
+is consumed. `INTEGRATED` and `PRODUCTION_PATH_VERIFIED` stay ASSERTED,
+with their evidence cited in the rows above; the census supplies the
+countable evidence.
+
+**What the census found on 2026-11-02.** Two rows were stale. The
+`ErrorDrivenLearner` was still marked `DISCONNECTED` although W42.7 made
+it the live engine of the consolidation's error-driven phase — the census
+counts 6 production files for it. The `CognitiveErrorStream` was still
+marked "reachable only through `ConsciousBrain`" although the same wave
+made the consolidation's phase build one. Both rows are corrected above,
+and the census is what caught them.
 
 ---
 
@@ -144,7 +178,8 @@ things that remove memory are capacity-driven LRU eviction and that one
 | Core BRC chain (`io.matrix.reasoning.BrcChain`) | `DISCONNECTED` | built with an **empty** step list at `BrainLoopService:97`; produced and discarded |
 | `GpuKernelEngine` | `DISCONNECTED` | 0 production sites; `detectBackend()` **always** returns CPU while the commit advertises bit-exact CPU==GPU |
 | `ModelToMatrix`, `DistillationLedger` | `DISCONNECTED` | 0 production sites; develop's live path is `TrueDistillationFactory` |
-| `CreditLedger` (brain-runtime), `AuditChain`, `FederationRegistry` (brain-runtime), `LicenseManager` | `DISCONNECTED` | 0 production sites; shadow duplicates of live engines |
+| `CreditLedger` (brain-runtime), `AuditChain`, `FederationRegistry` (brain-runtime), `LicenseManager` | `DISCONNECTED` | 0 production sites; shadow duplicates of live engines. **The owner's decision (D-012) is to wire them to the live engines, one at a time, and their math is verified first** — two shadow classes were wired in W42.7 (`ErrorDrivenLearner`, `SleepConsolidator`'s mechanism), and the rest are named here |
+| `SleepConsolidator` (brain-runtime) | `DISCONNECTED` — **but its MECHANISM is integrated** | the mechanism was REIMPLEMENTED in the knowledge domain in W42.7 — the consolidation now proposes, measures the answerability on the held-out items before and after, and keeps the proposal only if it did not fall. The class in the brain-runtime is still unwired, and the census counts 0 production files for it: the mechanism crossed the module boundary; the class did not |
 | `RealGpuKernelEngine`, `RealSleepScheduler`, `RealInboxWatcher`, `io.matrix.goals.GoalTracker` | `PRODUCTION_PATH_VERIFIED` (product B) | the live replacements for the deleted drafts |
 
 ---
