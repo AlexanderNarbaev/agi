@@ -5,15 +5,17 @@ import java.util.Locale;
 /**
  * The formats the acquisition pipeline can read (RECON-W42.2).
  *
- * <p>The mission's §5.1 names TXT, Markdown, HTML, PDF, EPUB and the
- * structured formats, and says: "Use appropriate established libraries
+ * <p>The mission's §5.1 names TXT, Markdown, HTML, PDF, EPUB, DOCX, CSV and
+ * the structured formats, and says: "Use appropriate established libraries
  * instead of developing PDF parsing, EPUB decoding, or document extraction
  * from scratch."
  *
  * <p>Each format is read by a library that already exists — the JDK for
- * plain text and for the ZIP container an EPUB is, jsoup for HTML and for
- * the XHTML inside an EPUB, and PDFBox for PDF. Nothing here parses a
- * binary format by hand.
+ * plain text and for the ZIP containers an EPUB and a DOCX are, jsoup for
+ * HTML, for the XHTML inside an EPUB and for the XML inside a DOCX, and
+ * PDFBox for PDF. Nothing here parses a binary format by hand, and no new
+ * dependency was added: the CONSTITUTION's seventh article pins the
+ * stack.
  */
 public enum DocumentFormat {
 
@@ -27,6 +29,10 @@ public enum DocumentFormat {
     PDF(false),
     /** EPUB: a ZIP container of XHTML documents. */
     EPUB(false),
+    /** DOCX: a ZIP container of XML documents. */
+    DOCX(false),
+    /** CSV: a table of rows, with a header. */
+    CSV(true),
     /** A knowledge package: the store's own JSON format. */
     JSON(false);
 
@@ -67,6 +73,12 @@ public enum DocumentFormat {
         }
         if (lower.endsWith(".epub")) {
             return EPUB;
+        }
+        if (lower.endsWith(".docx")) {
+            return DOCX;
+        }
+        if (lower.endsWith(".csv")) {
+            return CSV;
         }
         if (lower.endsWith(".json")) {
             return JSON;

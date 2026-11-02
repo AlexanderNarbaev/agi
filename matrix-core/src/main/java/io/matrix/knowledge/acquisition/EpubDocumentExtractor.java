@@ -99,6 +99,16 @@ public final class EpubDocumentExtractor implements DocumentExtractor {
                 documents.put(name, content);
             }
         }
+        // THE CORRUPTED CONTAINER.
+        //
+        // A ZIP reader hands back nothing for a file that is not a ZIP, so
+        // a broken EPUB was imported as an EMPTY one - silently, with a
+        // clean result. The mission's §13.2 names the corrupted packages
+        // among the attacks an importer must survive.
+        if (documents.isEmpty()) {
+            throw new IOException("the EPUB holds no content document, so it is not a book "
+                    + "this pipeline can read, and it is refused");
+        }
         source.processed("read " + documents.size() + " content document(s) from the EPUB");
 
         String title = null;

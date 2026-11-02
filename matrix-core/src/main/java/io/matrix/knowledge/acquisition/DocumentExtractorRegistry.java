@@ -17,6 +17,8 @@ public final class DocumentExtractorRegistry {
     private final HtmlDocumentExtractor html = new HtmlDocumentExtractor();
     private final PdfDocumentExtractor pdf = new PdfDocumentExtractor();
     private final EpubDocumentExtractor epub = new EpubDocumentExtractor();
+    private final DocxDocumentExtractor docx = new DocxDocumentExtractor();
+    private final CsvDocumentExtractor csv = new CsvDocumentExtractor();
 
     /** The extractor for a format. */
     public DocumentExtractor extractor(DocumentFormat format) {
@@ -26,6 +28,8 @@ public final class DocumentExtractorRegistry {
             case HTML -> html;
             case PDF -> pdf;
             case EPUB -> epub;
+            case DOCX -> docx;
+            case CSV -> csv;
             case JSON -> throw new IllegalArgumentException(
                     "a knowledge package is not read by the document pipeline");
         };
