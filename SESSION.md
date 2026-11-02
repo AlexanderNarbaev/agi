@@ -7600,3 +7600,10 @@ claims were wrong and are retracted in the WAL ✓ ✓.
 reverted the same day ✓ ✓, the matrix row is corrected ✓ ✓, and the WAL retracts the earlier claim ✓ ✓.
 The shadow's capability still has a real home: the runtime's own decisions, which the gateway's buffer does
 not cover ✓ ✓.
+
+# RECON-W42.9 — the live runtime decision paths are measured
+
+**Done** ✓ ✓. The gateway's live runtime calls are `inboxWatcher.scan()`, `episodicLog.append()` and
+`prodBrain.teach()/learnAll()` ✓ ✓; `AutonomyLoop`'s goal methods are called by nobody ✓ ✓, so the audit
+chain will not be wired there ✓ ✓. The inbox watcher and the episodic log are the candidates that carry
+runtime decisions the gateway's buffer does not cover ✓ ✓.
