@@ -180,19 +180,39 @@ public final class KnowledgeRetriever {
         // The stem each counterpart came from, so that a term the
         // counterpart covered is not also reported as uncovered.
         Map<String, String> counterpartOf = new LinkedHashMap<>();
-        for (String term : queryTerms) {
+        // W42.9: the bridge must see the CORRECTED words too. It used to run
+        // BEFORE the typo correction, so a Russian typo was fixed after the
+        // bridge had already looked: the bridge never saw the fixed Russian
+        // term, never produced its English counterpart, and the question could
+        // not reach the English claim it was about.
+        //
+        // The counterpart INHERITS the weight of the word it translates, and
+        // the question's total weight does not change. An English question
+        // therefore retrieves exactly what it retrieved before the lexicon
+        // existed - the pinned W41 support score is unchanged - while a
+        // Russian question gains the reach it was missing. A CORRECTED word
+        // inherits the weight of the word it replaced, so a question with a
+        // typo is weighted exactly like the question without one.
+        java.util.function.Function<String, String> weightSource = term -> term;
+        List<String> bridgeTerms = new ArrayList<>(queryTerms);
+        for (TypoCorrector.Correction correction : corrector.corrections(question)) {
+            String detected = TextProfiles.detect(question);
+            String foldedCorrected = TextProfiles.ofLanguage(detected).fold(correction.corrected());
+            bridgeTerms.add(foldedCorrected);
+            String foldedOriginal = TextProfiles.ofLanguage(detected).fold(correction.original());
+            weightSource = weightSource.andThen(term ->
+                foldedCorrected.equals(term) ? foldedOriginal : term);
+        }
+        for (String term : bridgeTerms) {
             for (String counterpart : BilingualLexicon.instance().translations(term)) {
                 String folded = TextProfiles.ENGLISH.fold(counterpart);
-                counterpartOf.putIfAbsent(folded, term);
+                counterpartOf.putIfAbsent(folded, weightSource.apply(term));
                 if (!queryTermsExpanded.contains(folded)) {
                     queryTermsExpanded.add(folded);
-                    // The counterpart INHERITS the weight of the term it
-                    // translates, and the question's total weight does not
-                    // change. An English question therefore retrieves
-                    // exactly what it retrieved before the lexicon existed
-                    // - the pinned W41 support score is unchanged - while a
-                    // Russian question gains the reach it was missing.
-                    queryWeights.merge(folded, queryWeights.get(term), Double::sum);
+                    Double weight = queryWeights.get(weightSource.apply(term));
+                    if (weight != null) {
+                        queryWeights.merge(folded, weight, Double::sum);
+                    }
                 }
             }
         }

@@ -7708,3 +7708,9 @@ failure is downstream: the bilingual bridge ran BEFORE the typo correction ✓ �
 never produced its English counterpart ✓ ✓. The first fix attempt did not pass its verification (a corrected
 term has no query weight) and was reverted ✓ ✓; the tree is green ✓ ✓. The next attempt must take the weight
 from the word the correction replaced ✓ ✓.
+
+# RECON-W42.9 — the bilingual bridge now sees the corrected words
+
+**Done** ✓ ✓. The bridge in `KnowledgeRetriever` runs on the corrected terms as well, and the counterpart
+inherits the weight of the word the correction replaced ✓ ✓. The candidate's accuracy rose 0.894 → 0.915 ✓ ✓
+and `ru-miss-1` now passes ✓ ✓; the live gate and the typo benchmark are green ✓ ✓.
