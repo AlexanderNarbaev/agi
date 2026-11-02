@@ -38,6 +38,12 @@ public class KnowledgeWorkbench implements AutoCloseable {
     public static final String DEFAULT_WORKSPACE = "photosynthesis";
 
     /** The authority of a recorded observation: it is a witness, not a reference. */
+    private static final int STATED_CLAIM_AUTHORITY = 40;
+
+    /** The freshness of a stated claim: it was said just now. */
+    private static final int STATED_CLAIM_FRESHNESS = 60;
+
+    /** The authority of an observation. */
     private static final int OBSERVATION_AUTHORITY = 40;
 
     /** The freshness of a recorded observation: it was made recently, by definition. */
@@ -713,6 +719,51 @@ public class KnowledgeWorkbench implements AutoCloseable {
         store().applyChanges(workspaceId, new KnowledgeChanges(List.of(source), List.of(),
                 List.of(evidence), List.of(), List.of()));
         return evidence;
+    }
+
+    /**
+     * Records a claim that was STATED, with the scope it states.
+     *
+     * <p>RECON-W43.5. The mission's §5 scenario starts with a claim, and
+     * until this wave the only claims that could be stated were the ones a
+     * package or a document carried — and a document's claim carries the
+     * LOCATION of the span it was read from in its scope column, not a
+     * scope in words. So there was no way to state "plants release oxygen
+     * during the day, in daylight" and then challenge it with an
+     * observation made under a condition that narrows that scope, and the
+     * journey had been running the package's first claim instead.
+     *
+     * <p>The claim enters as CANDIDATE, with the scope it states, and it
+     * enters with a source of its own: a stated claim is a human
+     * assertion, and the system records who said it, not that it is
+     * true.
+     *
+     * @param workspaceId the workspace
+     * @param proposition what is claimed
+     * @param scope the scope the claim states, or null
+     * @param sourceTitle the title of the source it came from, or null
+     * @return the claim that was recorded
+     */
+    public Claim recordClaim(String workspaceId, String proposition, String scope,
+                              String sourceTitle) {
+        if (proposition == null || proposition.isBlank()) {
+            throw new IllegalArgumentException("a claim needs a proposition");
+        }
+        String text = proposition.strip();
+        String scopeText = scope == null || scope.isBlank() ? null : scope.strip();
+        String sourceId = "src-" + java.util.UUID.randomUUID();
+        String now = recordedAt();
+        Source source = new Source(sourceId, workspaceId, SourceKind.HUMAN_ASSERTION,
+                sourceTitle == null || sourceTitle.isBlank() ? "a stated claim" : sourceTitle,
+                scopeText, STATED_CLAIM_AUTHORITY, STATED_CLAIM_FRESHNESS, text, now,
+                contentHash(text), null, null, "stated");
+        Claim claim = new Claim("clm-" + java.util.UUID.randomUUID(), workspaceId,
+                "cpt-" + java.util.UUID.randomUUID(), text, scopeText, null,
+                ClaimStatus.CANDIDATE, 0.0, 1, sourceId, "stated by the user", "not validated",
+                null, null, now, now);
+        store().applyChanges(workspaceId, new KnowledgeChanges(List.of(source), List.of(claim),
+                List.of(), List.of(), List.of()));
+        return claim;
     }
 
     /**

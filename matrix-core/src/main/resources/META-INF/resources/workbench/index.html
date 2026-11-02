@@ -540,12 +540,12 @@ async function loadEpistemicDetail() {
     html += '<p class="muted">the scope it states: ' + esc(a.scope ?? '— it states none') + '</p>';
     html += '<p>standing: <strong>' + esc(a.standing) + '</strong><br>'
       + '<span class="muted">' + esc(a.standingReason ?? '') + '</span></p>';
-    if (a.reading) {
-      html += '<p>the reading of the counterexample: <strong>' + esc(a.reading) + '</strong><br>'
+    if (a.counterexampleReading) {
+      html += '<p>the reading of the counterexample: <strong>' + esc(a.counterexampleReading) + '</strong><br>'
         + '<span class="muted">' + esc(a.readingReason ?? '') + '</span></p>';
     }
-    if (a.alternatives && a.alternatives.length) {
-      html += '<p class="muted">it cannot exclude: ' + a.alternatives.map(esc).join('; ') + '</p>';
+    if (a.alternativeExplanations && a.alternativeExplanations.length) {
+      html += '<p class="muted">it cannot exclude: ' + a.alternativeExplanations.map(esc).join('; ') + '</p>';
     }
     if (a.unresolved && a.unresolved.length) {
       html += '<p class="muted">unresolved: ' + a.unresolved.map(esc).join('; ') + '</p>';
@@ -566,19 +566,19 @@ async function loadEpistemicDetail() {
     } else {
       html += '<p class="muted">No evidence is recorded for this claim.</p>';
     }
-    if (a.proposal) {
-      html += '<p>the system proposes: <strong>' + esc(a.proposal) + '</strong><br>'
-        + '<span class="muted">' + esc(a.proposalReason ?? '') + '</span></p>'
+    if (a.proposedRefinement) {
+      html += '<p>the system proposes: <strong>' + esc(a.proposedRefinement) + '</strong><br>'
+        + '<span class="muted">' + esc(a.refinementReason ?? '') + '</span></p>'
         + '<div class="row">'
         + '<button class="action" id="epi-accept">Accept the refinement</button>'
         + '<button class="action" id="epi-reject">Reject it</button></div>';
     }
     $('epi-detail').innerHTML = html;
     if ($('epi-accept')) {
-      $('epi-accept').addEventListener('click', () => refine('accept', a.proposal));
+      $('epi-accept').addEventListener('click', () => refine('accept', a.proposedRefinement));
     }
     if ($('epi-reject')) {
-      $('epi-reject').addEventListener('click', () => refine('reject', a.proposal));
+      $('epi-reject').addEventListener('click', () => refine('reject', a.proposedRefinement));
     }
   } catch (e) {
     $('epi-detail').textContent = 'Could not read the assessment: ' + e.message;

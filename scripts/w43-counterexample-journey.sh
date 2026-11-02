@@ -132,12 +132,26 @@ if [ -n "$LOADED" ] && [ "$LOADED" -gt 0 ] 2>/dev/null; then
 else
   fail "the bundled package did not load: $LOAD"
 fi
-CLAIMS="$(curl -s -m 10 "http://127.0.0.1:$PORT/v1/workbench/workspaces/$WORKSPACE/claims")"
-CLAIM_ID="$(printf '%s' "$CLAIMS" | first_claim_id)"
+# THE CLAIM OF THE SCENARIO IS STATED HERE, WITH ITS SCOPE.
+#
+# RECON-W43.5. The journey used to take the PACKAGE's first claim, and the
+# package's claim carried a scope of its own that no observation of the
+# journey related to - so the reading came back SCOPE_UNRESOLVED, which is
+# the honest answer to an unrelated scope, and the journey asserted a
+# refinement that could not be proposed. The scenario of the mission's §5
+# begins with a claim that states its scope, so the journey states one.
+#
+# The scope and the condition below DO overlap, so the contradiction reaches
+# the scope the claim states, and the system proposes the narrowing the
+# evidence supports.
+CLAIM="$(curl -s -m 10 -X POST -H "Content-Type: application/json" \
+  -d '{"proposition":"Plants release oxygen during the day","scope":"in daylight","sourceTitle":"the journey"}' \
+  "http://127.0.0.1:$PORT/v1/workbench/workspaces/$WORKSPACE/claims")"
+CLAIM_ID="$(printf '%s' "$CLAIM" | json_field id)"
 if [ -n "$CLAIM_ID" ]; then
-  pass "the workspace holds claims; the first is $CLAIM_ID"
+  pass "the scenario states its own claim: $CLAIM_ID"
 else
-  fail "the workspace holds no claim"
+  fail "the claim could not be stated: $CLAIM"
   exit 1
 fi
 
@@ -163,7 +177,7 @@ fi
 
 echo "===== 4. record a counterexample, with its condition ====="
 COUNTER="$(curl -s -m 10 -X POST -H "Content-Type: application/json" \
-  -d '{"observation":"a plant kept in the dark does not release oxygen","condition":"without light","contradicts":true}' \
+  -d '{"observation":"a plant in daylight during a heat wave does not release oxygen","condition":"in daylight during a heat wave","contradicts":true}' \
   "http://127.0.0.1:$PORT/v1/workbench/workspaces/$WORKSPACE/claims/$CLAIM_ID/examples")"
 RELATION="$(printf '%s' "$COUNTER" | json_field relation)"
 if [ "$RELATION" = "CONTRADICTS" ]; then
@@ -177,12 +191,13 @@ ASSESS="$(curl -s -m 10 "http://127.0.0.1:$PORT/v1/workbench/workspaces/$WORKSPA
 STANDING="$(printf '%s' "$ASSESS" | json_field standing)"
 READING="$(printf '%s' "$ASSESS" | json_field counterexampleReading)"
 REASON="$(printf '%s' "$ASSESS" | json_field readingReason)"
-# The bundled claim already carries supporting evidence, so a counterexample
-# against it makes the claim CONTESTED — the sources disagree and both
-# accounts are kept — rather than REFUTED, which is what a claim with no
-# supporting source would become. The distinction is the point.
-if [ "$STANDING" = "CONTESTED" ]; then
-  pass "the standing is CONTESTED: the sources disagree and both accounts are kept"
+# The claim of the scenario was STATED and carries no supporting source, so
+# a counterexample that reaches its scope leaves it REFUTED. The CONTESTED
+# case - the sources disagree and both accounts are kept - is measured by
+# the slice benchmark's 'supporting_and_contradicting' category, and it is
+# a different scenario.
+if [ "$STANDING" = "REFUTED" ]; then
+  pass "the standing is REFUTED: the contradiction reaches the scope it states"
 else
   fail "the standing after the counterexample is '$STANDING'"
 fi
@@ -192,14 +207,14 @@ else
   fail "the reading is '$READING'"
 fi
 case "$REASON" in
-  *"without light"*) pass "the reason quotes the recorded condition" ;;
+  *"in daylight during a heat wave"*) pass "the reason quotes the recorded condition" ;;
   *) fail "the reason does not quote the condition: $REASON" ;;
 esac
 
 echo "===== 6. a narrower formulation is proposed ====="
 PROPOSAL="$(printf '%s' "$ASSESS" | json_field proposedRefinement)"
 case "$PROPOSAL" in
-  *"without light"*) pass "the proposal quotes the condition verbatim" ;;
+  *"in daylight during a heat wave"*) pass "the proposal quotes the condition verbatim" ;;
   *) fail "the proposal does not quote the condition: $PROPOSAL" ;;
 esac
 
@@ -239,10 +254,26 @@ fi
 AFTER="$(curl -s -m 10 "http://127.0.0.1:$PORT/v1/workbench/workspaces/$WORKSPACE/claims/$CLAIM_ID/assessment")"
 STANDING="$(printf '%s' "$AFTER" | json_field standing)"
 PROPOSAL_AFTER="$(printf '%s' "$AFTER" | json_field proposedRefinement)"
-if [ "$STANDING" = "CONTESTED" ]; then
+# The standing is the ASSESSMENT's standing - what the evidence says - and
+# the evidence did not change, so it is the same after the restart: the
+# contradiction still reaches the scope the claim states. The claim's own
+# STATUS is a different thing, and the refinement moved it to SUPERSEDED;
+# that is asserted below, from the claims list.
+if [ "$STANDING" = "REFUTED" ]; then
   pass "the assessment is the same after the restart"
 else
   fail "the standing after the restart is '$STANDING'"
+fi
+CLAIMS_AFTER="$(curl -s -m 10 "http://127.0.0.1:$PORT/v1/workbench/workspaces/$WORKSPACE/claims")"
+STATUS_AFTER="$(printf '%s' "$CLAIMS_AFTER" | python3 -c '
+import json,sys
+claims = json.load(sys.stdin)
+print(next((c.get("status","") for c in claims if c.get("id") == sys.argv[1]), ""))
+' "$CLAIM_ID")"
+if [ "$STATUS_AFTER" = "SUPERSEDED" ]; then
+  pass "the claim is SUPERSEDED after the restart, and it is still readable"
+else
+  fail "the status of the claim after the restart is '$STATUS_AFTER'"
 fi
 if [ "$PROPOSAL_AFTER" = "$PROPOSAL" ]; then
   pass "the proposal is the same after the restart"

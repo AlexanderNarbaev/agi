@@ -324,6 +324,35 @@ public class LearningWorkbenchResource {
     // ── W43.2: the counterexample cycle, over HTTP ───────────────────────────
 
     /** The body of an example request. */
+    /**
+     * The body of a claim request.
+     *
+     * <p>RECON-W43.5: a claim that was STATED, with the scope it states.
+     */
+    public record ClaimRequest(String proposition, String scope, String sourceTitle) {
+    }
+
+    /**
+     * Records a stated claim.
+     *
+     * <p>The scenario of the mission's §5 starts with a claim, and a claim
+     * that names the scope it states is what makes a counterexample
+     * readable against it.
+     */
+    @POST
+    @Path("/workspaces/{id}/claims")
+    public Response recordClaim(@PathParam("id") String workspaceId, ClaimRequest request) {
+        if (request == null || request.proposition() == null
+                || request.proposition().isBlank()) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity(Map.of("error", "a proposition is required"))
+                    .build();
+        }
+        Claim claim = workbench.recordClaim(workspaceId, request.proposition(),
+                request.scope(), request.sourceTitle());
+        return Response.status(Response.Status.CREATED).entity(claim).build();
+    }
+
     public record ExampleRequest(String observation, String condition, Boolean contradicts) {
     }
 

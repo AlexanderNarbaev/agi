@@ -71,6 +71,76 @@ class CounterexampleCycleTest {
     }
 
     @Test
+    @DisplayName("a stated claim carries the scope it states, and enters as a candidate")
+    void aStatedClaimCarriesTheScopeItStatesAndEntersAsACandidate(@TempDir Path dir) {
+        try (KnowledgeWorkbench workbench =
+                KnowledgeWorkbench.at(dir.resolve("w.sqlite").toString())) {
+            Claim claim = workbench.recordClaim("stated",
+                    "Plants release oxygen during the day", "in daylight", "the journey");
+
+            assertThat(claim.proposition()).isEqualTo("Plants release oxygen during the day");
+            assertThat(claim.scope()).isEqualTo("in daylight");
+            assertThat(claim.status()).isEqualTo(ClaimStatus.CANDIDATE);
+            assertThat(claim.introducedBySourceId()).isNotBlank();
+
+            // The claim has a source of its own: a stated claim is a human
+            // assertion, and the system records who said it.
+            Source source = workbench.storeForValidation().sources("stated").stream()
+                    .filter(candidate -> candidate.id().equals(claim.introducedBySourceId()))
+                    .findFirst().orElseThrow();
+            assertThat(source.kind()).isEqualTo(SourceKind.HUMAN_ASSERTION);
+            assertThat(source.contentHash()).isNotBlank();
+        }
+    }
+
+    @Test
+    @DisplayName("a counterexample that narrows the scope states is read as a missing condition")
+    void aCounterexampleThatNarrowsTheScopeStatesIsReadAsAMissingCondition(@TempDir Path dir) {
+        try (KnowledgeWorkbench workbench =
+                KnowledgeWorkbench.at(dir.resolve("w.sqlite").toString())) {
+            Claim claim = workbench.recordClaim("stated",
+                    "Plants release oxygen during the day", "in daylight", null);
+
+            workbench.recordExample("stated", claim.id(),
+                    "a plant in daylight during a heat wave does not release oxygen",
+                    "in daylight during a heat wave", true);
+
+            ClaimAssessment assessment = workbench.assessClaim("stated", claim.id());
+
+            assertThat(assessment.counterexampleReading())
+                    .isEqualTo(CounterexampleReading.REVEALS_MISSING_CONDITION);
+            assertThat(assessment.standing()).isEqualTo(ClaimStatus.REFUTED);
+            assertThat(assessment.proposedRefinement())
+                    .contains("in daylight during a heat wave");
+        }
+    }
+
+    @Test
+    @DisplayName("a counterexample whose scope does not overlap is not read as a refutation")
+    void aCounterexampleWhoseScopeDoesNotOverlapIsNotReadAsARefutation(@TempDir Path dir) {
+        try (KnowledgeWorkbench workbench =
+                KnowledgeWorkbench.at(dir.resolve("w.sqlite").toString())) {
+            Claim claim = workbench.recordClaim("stated",
+                    "RuBisCO catalyzes carbon fixation in C3 plants", "in C3 plants", null);
+
+            workbench.recordExample("stated", claim.id(),
+                    "a plant kept in the dark does not release oxygen", "in darkness", true);
+
+            ClaimAssessment assessment = workbench.assessClaim("stated", claim.id());
+
+            // The system cannot decide whether the observation falls inside
+            // the scope, so it does not refute the claim and proposes
+            // nothing: it asks.
+            assertThat(assessment.counterexampleReading())
+                    .isEqualTo(CounterexampleReading.SCOPE_UNRESOLVED);
+            assertThat(assessment.proposedRefinement()).isNull();
+            assertThat(assessment.unresolved()).isNotEmpty();
+            assertThat(assessment.standing())
+                    .isNotEqualTo(ClaimStatus.REFUTED);
+        }
+    }
+
+    @Test
     @DisplayName("the counterexample cycle survives a restart")
     void theCounterexampleCycleSurvivesARestart() {
         Path db = dir.resolve("workbench.sqlite");
