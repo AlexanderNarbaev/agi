@@ -7500,3 +7500,10 @@ integrity of the concept's binding ✓ ✓, and the test isolates the difference
 against itself ✓ ✓ — and the whole error-driven part of the L7 cycle was dead by construction ✓ ✓.
 The prediction now comes from the brain's own recall ✓ ✓, and the surprise separates the cases
 it was built to separate ✓ ✓.
+
+# RECON-W42.8 — the benchmark is a gate, and the quality gate was red
+
+**Done** ✓ ✓. The benchmark runs with the suite and a regression in the answers turns it red ✓ ✓.
+And the repository's own quality gate was found RED — 76 new literal candidates and a frozen-zone
+diff against the W30 baseline ✓ ✓ — with the baseline deliberately NOT updated, because accepting
+them would weaken the gate ✓ ✓. It is recorded as R27, for the owner ✓ ✓.
