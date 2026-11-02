@@ -7548,3 +7548,10 @@ syntax ✓ ✓. The gate was recounted ✓ ✓ — still RED ✓ ✓.
 the literal check is GREEN and the baseline was not updated ✓ ✓. The gate still exits 1, but now only
 on the frozen zones (785 diff lines in `.github/`, 14 in `AGENTS.md` against `b144563e`), which are the
 owner's decision ✓ ✓. The remaining 185 Java occurrences are the review queue, not a blocker ✓ ✓.
+
+# RECON-W42.9 — the shadow classes are measured before D-016's wiring
+
+**Done** ✓ ✓. Five of the six shadow classes are in `matrix-brain-runtime`, which the build DOES include,
+and each of them has zero production callers; the build already carries live equivalents. The sixth,
+`ConsciousBrain`, is referenced but its results are consumed by nothing. The risk row R29 was written
+wrong first (it claimed the module was not built) and was corrected to the measured fact ✓ ✓.
