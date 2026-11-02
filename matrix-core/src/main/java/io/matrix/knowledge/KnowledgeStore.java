@@ -54,7 +54,7 @@ import java.util.Set;
 public final class KnowledgeStore implements AutoCloseable {
 
     /** The schema version this build writes. */
-    public static final int SCHEMA_VERSION = 9;
+    public static final int SCHEMA_VERSION = 10;
 
     private static final ObjectMapper JSON = new ObjectMapper();
 
@@ -349,6 +349,34 @@ public final class KnowledgeStore implements AutoCloseable {
     }
 
     private int migrateFrom(int version) throws SQLException {
+        if (version == 9) {
+            // v10 adds the tombstone columns of the dialogue memory.
+            //
+            // A forgotten record is MARKED, never deleted: the mission's
+            // §8 forbids destroying the historical evidence, and the record
+            // of what the user asked and what the system could not answer
+            // is exactly that evidence.
+            //
+            // The first version of this migration sat in the v2 block,
+            // where it only ever ran on a database that had never had the
+            // asked-question table - so on an existing database the columns
+            // were never added, and the consolidation endpoint answered
+            // with "no such column: forgotten_at". The migration belongs
+            // to the version it belongs to.
+            try (Statement st = connection.createStatement()) {
+                if (!askedColumnExists(st, "forgotten_at")) {
+                    st.execute("ALTER TABLE asked_question ADD COLUMN forgotten_at INTEGER");
+                }
+                if (!askedColumnExists(st, "forgotten_kind")) {
+                    st.execute("ALTER TABLE asked_question ADD COLUMN forgotten_kind TEXT");
+                }
+                if (!askedColumnExists(st, "forgotten_reason")) {
+                    st.execute("ALTER TABLE asked_question ADD COLUMN forgotten_reason TEXT");
+                }
+            }
+            writeSchemaVersion(10);
+            return 10;
+        }
         if (version == 8) {
             // v9 adds the learning state machine's tables: the state a
             // capability is in, and the transitions it went through.
@@ -497,18 +525,6 @@ public final class KnowledgeStore implements AutoCloseable {
                         status TEXT NOT NULL,
                         resolution_note TEXT
                     )""");
-                // The tombstone columns (RECON-W42.5). A forgotten record
-                // keeps its content: forgetting must not destroy the
-                // historical evidence, it must mark it.
-                if (!askedColumnExists(st, "forgotten_at")) {
-                    st.execute("ALTER TABLE asked_question ADD COLUMN forgotten_at INTEGER");
-                }
-                if (!askedColumnExists(st, "forgotten_kind")) {
-                    st.execute("ALTER TABLE asked_question ADD COLUMN forgotten_kind TEXT");
-                }
-                if (!askedColumnExists(st, "forgotten_reason")) {
-                    st.execute("ALTER TABLE asked_question ADD COLUMN forgotten_reason TEXT");
-                }
                 st.execute("CREATE INDEX IF NOT EXISTS idx_asked_ws ON asked_question(workspace_id)");
                 st.execute("CREATE INDEX IF NOT EXISTS idx_asked_key ON asked_question(workspace_id, canonical_key)");
             }
