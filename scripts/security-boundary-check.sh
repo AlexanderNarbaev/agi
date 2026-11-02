@@ -32,6 +32,15 @@ PORT_LOCAL=9097
 PORT_EXPOSED=9098
 TOKEN="w43-boundary-check-token"
 
+# The address that counts as the loopback interface.
+#
+# The kernel reports an IPv4-mapped address on a dual-stack host, and that
+# address IS the loopback, so the check normalises what the kernel says and
+# compares the HOST. The address lives in a constant because the quality
+# gate treats a bare number on a case line as a literal - correctly: a
+# value belongs in a constant.
+readonly LOOPBACK_ADDRESS='127.0.0.1'
+
 # How long the check waits for the application to reach its startup event.
 readonly STARTUP_WAIT_SECONDS=60
 # How long the check waits for the startup GUARD to fire.
@@ -41,8 +50,6 @@ readonly REQUEST_TIMEOUT_SECONDS=10
 # The HTTP statuses the check expects.
 readonly STATUS_UNAUTHORIZED=401
 readonly STATUS_OK=200
-# The addresses that count as the loopback interface.
-readonly LOOPBACK_PATTERN='127.0.0.1:*|localhost:*|"[::1]:"*|"[::ffff:127.0.0.1]:"*'
 
 FAILURES=0
 APP_PID=""
@@ -117,11 +124,20 @@ APP_PID=$!
 
 if wait_up "$PORT_LOCAL"; then
   BOUND="$(bound_to "$PORT_LOCAL")"
-  case "$BOUND" in
-    $LOOPBACK_PATTERN)
+  HOST="${BOUND%:*}"
+  case "$HOST" in
+    \[*\]) HOST="${HOST#\[}"; HOST="${HOST%\]}" ;;
+  esac
+  case "$HOST" in
+    ::ffff:*) HOST="${HOST#::ffff:}" ;;
+  esac
+  case "$HOST" in
+    "$LOOPBACK_ADDRESS"|localhost|::1)
       pass "the service is bound to the loopback ($BOUND)" ;;
-    "") fail "the service is bound to an address the check cannot read" ;;
-    *) fail "the service is bound to $BOUND, not to the loopback" ;;
+    "")
+      fail "the service is bound to an address the check cannot read" ;;
+    *)
+      fail "the service is bound to $BOUND, not to the loopback" ;;
   esac
 
   CODE="$(status "$PORT_LOCAL" GET /v1/workbench/status)"

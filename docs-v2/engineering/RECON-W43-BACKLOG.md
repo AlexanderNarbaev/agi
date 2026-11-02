@@ -32,8 +32,9 @@ gap of the wave, and it is the first thing the next wave should do.
 
 | # | Item | What it must produce |
 |---|---|---|
-| 2.1 | The benchmark dataset | positive examples, counterexamples, exceptions, boundary cases, ambiguous cases, false premises, missing evidence, contradictory sources, temporal changes, negation scope, typo variants, **English and Russian separately**, cases where the answer is abstention, cases where clarification is required, and cases where a claim must be REFINED rather than deleted |
-| 2.2 | The train/validation/test split | the test cases unavailable to the learning process — the discipline the v3 benchmark already follows |
+| 2.0 | **PARTLY DONE** — the SLICE's decisions are measured: `w43-slice-benchmark-v1.json`, 24 cases, EN and RU, train/validation/test, **standing 24/24, reading 16/16, proposal 24/24, quotation 24/24**. It measures the rules, not the understanding, and it says so in the dataset, in the runner and in the status document |
+| 2.1 | The benchmark dataset | positive examples, counterexamples, exceptions, boundary cases, ambiguous cases, false premises, missing evidence, contradictory sources, temporal changes, negation scope, typo variants, **English and Russian separately**, cases where the answer is abstention, cases where clarification is required, and cases where a claim must be REFINED rather than deleted — the SLICE's subset exists (2.0); the rest does not |
+| 2.2 | The train/validation/test split | **DONE for the slice**: train 8 / validation 6 / test 10, and every case runs in its own store, so the held-out cases are held out in fact |
 | 2.3 | The metrics | claim-to-source traceability, evidence-relation classification, counterexample detection, false-premise rejection, scope and negation handling, unsupported-assertion rate, abstention precision AND recall, clarification quality, retrieval recall, revision correctness, delayed recall, transfer to unseen examples, persistence after a forced restart, idempotent import and consolidation — each with its definition and its limitation |
 | 2.4 | The per-language reporting | the results are reported per language, never merged |
 | 2.5 | The comparison | against the previous benchmark ONLY on identical overlapping cases; v3 reuses 24 of v1's questions, so the overlap must be computed, not assumed |
