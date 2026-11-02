@@ -559,10 +559,24 @@ public class KnowledgeWorkbench implements AutoCloseable {
      */
     public io.matrix.knowledge.acquisition.DocumentImporter.ImportResult importDocument(
             String workspaceId, java.nio.file.Path path, String declaredLanguage) {
+        return importDocument(workspaceId, path, path.getFileName().toString(), declaredLanguage);
+    }
+
+    /**
+     * Imports a document into a workspace, under a known file name.
+     *
+     * @param workspaceId the workspace
+     * @param path the document
+     * @param filename the name the document was uploaded under
+     * @param declaredLanguage the declared language, or null
+     * @return what the import did
+     */
+    public io.matrix.knowledge.acquisition.DocumentImporter.ImportResult importDocument(
+            String workspaceId, java.nio.file.Path path, String filename, String declaredLanguage) {
         try {
             io.matrix.knowledge.acquisition.DocumentImporter.ImportResult result =
                     new io.matrix.knowledge.acquisition.DocumentImporter(store())
-                            .importDocument(workspaceId, path, declaredLanguage);
+                            .importDocument(workspaceId, path, filename, declaredLanguage);
             // The concept the document brought in has to be PRACTISABLE:
             // the assessment items are generated for the concepts the
             // dataset does not cover.

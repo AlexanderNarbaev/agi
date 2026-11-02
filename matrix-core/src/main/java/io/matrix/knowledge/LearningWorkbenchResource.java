@@ -186,9 +186,15 @@ public class LearningWorkbenchResource {
             java.nio.file.Path temporary = Files.createTempFile("matrix-import-", "-" + filename);
             try {
                 Files.copy(upload.uploadedFile(), temporary, StandardCopyOption.REPLACE_EXISTING);
-                DocumentImporter.ImportResult result = new DocumentImporter(workbench.store())
-                        .importDocument(workspaceId, temporary, filename,
-                                language == null || language.isBlank() ? null : language);
+                // The workbench does the import, not the resource: the
+                // workbench also GENERATES the assessment items for the
+                // concepts the document brought in, and the resource used
+                // to call the importer directly - so the imported concept
+                // was never practisable over HTTP, although it was
+                // practisable in the tests.
+                DocumentImporter.ImportResult result = workbench.importDocument(workspaceId,
+                        temporary, filename,
+                        language == null || language.isBlank() ? null : language);
                 Map<String, Object> report = new LinkedHashMap<>();
                 report.put("workspace", result.workspaceId());
                 report.put("sourceId", result.source().sourceId());
@@ -203,6 +209,12 @@ public class LearningWorkbenchResource {
                 report.put("claimsProposed", result.claimsProposed());
                 report.put("conceptsCreated", result.conceptsCreated());
                 report.put("representationsCreated", result.representationsCreated());
+                // The assessment items generated for the concepts the
+                // document brought in: the concept has to be PRACTISABLE,
+                // not only explainable.
+                AssessmentGenerator.Result generated = workbench.generateAssessment(workspaceId);
+                report.put("theAssessmentItemsGenerated", generated.items().size());
+                report.put("theAssessmentConcepts", generated.concepts());
                 return Response.ok(report).build();
             } finally {
                 Files.deleteIfExists(temporary);
