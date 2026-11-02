@@ -7507,3 +7507,10 @@ it was built to separate ✓ ✓.
 And the repository's own quality gate was found RED — 76 new literal candidates and a frozen-zone
 diff against the W30 baseline ✓ ✓ — with the baseline deliberately NOT updated, because accepting
 them would weaken the gate ✓ ✓. It is recorded as R27, for the owner ✓ ✓.
+
+# RECON-W42.9 — the owner's decisions are recorded
+
+**Done** ✓ ✓. Four decisions recorded as D-014..D-017 ✓ ✓: the disagreeing benchmark item stays
+answered ✓ ✓; the magic numbers are fixed in the code and the baseline is NOT updated ✓ ✓; the
+shadow classes are wired one by one with the math verified first ✓ ✓; the full test suite is not
+run for now ✓ ✓.

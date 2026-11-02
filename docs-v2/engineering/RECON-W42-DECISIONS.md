@@ -255,3 +255,60 @@ the workspace it names. `ru-cross-3` was the only one that did not.
 items: the Russian cross-lingual score moves from 4 of 5 to 5 of 5
 because the fifth item became answerable, not because the criterion was
 eased. The criterion is untouched: `answered && mentions && avoids`.
+
+## D-014 — The one disagreeing benchmark item stays answered, and the disagreement is recorded
+
+**The owner decided this on 2026-11-02.** The item is `en-unanswer-2` —
+"Who invented propositional logic?" — whose etalon asks for a refusal and
+whose system answers with what propositional logic IS, naming the word
+"invented" as uncovered.
+
+The measured reason the etalon cannot be met by a rule: the uncovered
+terms of every item were measured, and **no threshold on their number
+separates the item from the answerable ones**. `en-para-1` carries five
+gaps and is answered; `en-unanswer-2` carries one. The gaps of the
+answerable items are the question's glue — "come", "state", "explain" —
+and the answer carries the substance; the gap of `en-unanswer-2` is the
+RELATION the workspace does not hold, and a rule about the number of
+gaps cannot tell the two apart.
+
+**So the behaviour stands: answer what the workspace holds, name the
+word it cannot cover, and refuse nothing.** The etalon is not moved
+(D-013), the abstention quality stays 0.900, and the disagreement is
+printed by the benchmark gate on every run, so it cannot be forgotten.
+The target of §14's row 8 is "no fabrication on unsupported questions",
+and there is no fabricated statement: the statement is true and the gap
+is named.
+
+## D-015 — The magic numbers are fixed in the code; the baseline is NOT updated
+
+**The owner decided this on 2026-11-02.** `scripts/quality-gate.sh` has
+been RED since 2026-10-02: the literal candidates rose from the accepted
+270 to 346, and the frozen-zone check finds 785 diff lines in
+`.github/workflows/` and 14 in `AGENTS.md` against the W30 baseline
+`b144563e`.
+
+The literals are extracted to named constants, in the code, so the gate
+counts them where they belong. **The baseline is not updated** —
+accepting 76 new literals would be weakening the gate, and the
+mission's §16 forbids weakening a formal property to make the build
+green. The frozen zones are the owner's (§16.1); their diff is a
+separate question from the literals and is not touched here.
+
+## D-016 — The shadow classes are wired to the live engines, one at a time, the math first
+
+**The owner decided this on 2026-11-02.** This sharpens D-012 rather
+than replacing it: the six shadow classes are not to be deleted, and
+each is to be wired to its live engine — with its math verified first,
+because that verification has already paid once: the `ConsciousBrain`'s
+prediction error was computed against the observation itself, so its
+surprise was identically zero, and the error-driven part of the L7 cycle
+was dead by construction.
+
+## D-017 — The full repository test suite is not run; the targeted packages stand
+
+**The owner decided this on 2026-11-02.** The AGENTS.md requires the
+owner's agreement for the full run because of the OOM risk, and the
+owner withheld it for now. The mission therefore continues to measure
+with the targeted packages, and the full run remains an open,
+owner-held item rather than a silent omission.
