@@ -84,12 +84,47 @@ public final class BenchmarkRunner {
         }
     }
 
+    /**
+     * Loads the packaged workspace of an item when the workspace is empty.
+     *
+     * @param workspaceId the workspace the item belongs to
+     * @return whether the workspace was loaded for the measurement
+     */
+    private boolean ensureWorkspace(String workspaceId) {
+        if (workspaceId == null || workspaceId.isBlank()) {
+            return false;
+        }
+        if (!workbench.workspace(workspaceId).concepts().isEmpty()) {
+            return false;
+        }
+        try {
+            workbench.loadBundledPackage(workspaceId);
+            return true;
+        } catch (RuntimeException e) {
+            // There is no package under this name. The item is measured
+            // against the empty workspace, and the result shows it.
+            return false;
+        }
+    }
+
     /** Runs every item of a benchmark. */
     public Report run(List<BenchmarkItem> items) {
         List<ItemResult> results = new ArrayList<>();
         Map<String, KnowledgeSnapshot> snapshots = new LinkedHashMap<>();
 
         for (BenchmarkItem item : items) {
+            // THE ITEM'S OWN WORKSPACE.
+            //
+            // Every item names the workspace it belongs to, and the runner
+            // asks that workspace. But a workspace that was never LOADED
+            // measures an empty one, and the items of the other workspace
+            // were measured against nothing. The probe loaded both packages
+            // by hand, so the probe's number was right and the dashboard's
+            // was not - the same instrument, two different numbers.
+            //
+            // The instrument now loads the packaged workspace when the
+            // workspace is empty, and says so on the item.
+            boolean loaded = ensureWorkspace(item.workspace());
             KnowledgeSnapshot snapshot = snapshots.computeIfAbsent(item.workspace(),
                     workbench::workspace);
             Answer answer = workbench.ask(item.workspace(), item.question(),
@@ -99,7 +134,10 @@ public final class BenchmarkRunner {
 
             double coverage = 0.0;
             boolean correct;
-            String note = "";
+            String note = loaded
+                    ? "the workspace of this item was empty, and the packaged workspace was "
+                            + "loaded for the measurement"
+                    : "";
             if (expected) {
                 coverage = keyTermCoverage(item, answer);
                 boolean mentions = mentionsAll(item.mustMention(), answer.statement());
