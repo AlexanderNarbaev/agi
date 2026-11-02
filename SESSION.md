@@ -7380,3 +7380,10 @@ numbers measured live rather than copied ✓ ✓ ✓.
 **Done** ✓ ✓. A question whose referent the conversation has not settled now gets a question
 back ✓ ✓ — the mission's §6 ✓ ✓ — and the reference words are matched as words, not as
 substrings ✓ ✓ (the Russian "те" had matched inside another word and cost 0.042 of accuracy) ✓ ✓✓.
+
+# RECON-W42.7 — the error-driven decay is wired and it survives the restart
+
+**Done** ✓ ✓. The owner's named example is executed ✓ ✓ — the ErrorDrivenLearner had no
+production caller and now is the live engine of the consolidation's error-driven phase ✓ ✓,
+its state is persisted (the schema v15) ✓ ✓, the answer says the bindings were weakened ✓ ✓,
+and the live check shows the state surviving a SIGKILL ✓ ✓✓.
