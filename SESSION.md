@@ -7347,3 +7347,10 @@ ru 0/5, paraphrase 0/2, false premise 0/2 ✓ ✓.
 практика и независимый близнец по каждому измерению ✓ ✓, детерминированно ✓ ✓,
 с переживанием перезапуска ✓ ✓ (схема v14) ✓ ✓.
 **Дефект живого слоя найден** ✓ ✓: HTTP-импорт обходил генератор ✓ ✓ ✓.
+
+# RECON-W42.7 — the validation is a stage of the import
+
+**Готово** ✓ ✓. §5.4's pipeline ends with the validation ✓ ✓ — the import runs it
+✓ ✓, the validator is idempotent ✓ ✓, and the report says what it promoted ✓ ✓.
+**The 12-step checklist was re-run against the current code** ✓ ✓ — twelve steps,
+and a `SIGKILL` with 4.1 MB of WAL pending ✓ ✓ ✓.
