@@ -151,6 +151,34 @@ class ErrorDrivenDecayWiringTest {
         }
     }
 
+    @Test
+    @DisplayName("the answer does NOT claim a weakening that never happened")
+    void theAnswerDoesNotClaimAWeakeningThatNeverHappened(@TempDir Path dir) {
+        try (KnowledgeWorkbench workbench =
+                KnowledgeWorkbench.at(dir.resolve("w.sqlite").toString())) {
+            workbench.loadBundledPackage("photosynthesis");
+            Answer before = workbench.ask("photosynthesis", "What is photosynthesis?",
+                    AbstractionLevel.INTRODUCTORY);
+            assertThat(before.answered()).isTrue();
+            String conceptId = before.concepts().get(0).id();
+
+            // The verified errors are recorded, but NO consolidation has
+            // run: nothing was weakened, and the answer must not say that
+            // it was. The note used to be derived from the COUNT of the
+            // errors, so it claimed a decay that had never happened.
+            workbench.store().recordLearningErrors("photosynthesis", List.of(
+                    error("e1", conceptId, "The mitochondrion makes ATP", true),
+                    error("e2", conceptId, "The chloroplast makes ATP", true)));
+
+            Answer answer = workbench.ask("photosynthesis", "What is photosynthesis?",
+                    AbstractionLevel.INTRODUCTORY);
+
+            assertThat(answer.answered()).isTrue();
+            assertThat(answer.limitations()).noneSatisfy(limitation ->
+                    assertThat(limitation).contains("weakened the bindings"));
+        }
+    }
+
     private LearningError error(String id, String conceptId, String learnerAnswer, boolean verified) {
         return new LearningError(id, "photosynthesis", "item-" + id, conceptId,
                 LearningDimension.RECALL, learnerAnswer, "The expected answer", verified);

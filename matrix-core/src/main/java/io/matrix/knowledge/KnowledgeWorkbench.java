@@ -745,16 +745,57 @@ public class KnowledgeWorkbench implements AutoCloseable {
         if (verified.isEmpty()) {
             return answer;
         }
-        java.util.Map<String, Long> byConcept = new java.util.LinkedHashMap<>();
+        java.util.Map<String, List<LearningError>> byConcept = new java.util.LinkedHashMap<>();
         for (LearningError error : verified) {
-            byConcept.merge(error.conceptId(), 1L, Long::sum);
+            byConcept.computeIfAbsent(error.conceptId(), key -> new ArrayList<>()).add(error);
         }
         List<String> notes = new ArrayList<>();
         for (Concept concept : answer.concepts()) {
-            Long count = byConcept.get(concept.id());
-            if (count == null || count == 0L) {
+            List<LearningError> errors = byConcept.get(concept.id());
+            if (errors == null || errors.isEmpty()) {
                 continue;
             }
+            // THE NOTE MUST BE TRUE, NOT PLAUSIBLE.
+            //
+            // RECON-W42.7. The note used to be derived from the COUNT of
+            // the verified errors, so it said "the error-driven decay
+            // weakened the bindings of that concept" even when no
+            // consolidation had ever run and no binding had been
+            // touched. The answer stated something the workspace could
+            // not support, and the CONSTITUTION's sixth article forbids
+            // exactly that.
+            //
+            // The STATE says whether the decay actually moved the binding:
+            // a state that was never decayed carries no negative
+            // accumulator in the direction of the error.
+            io.matrix.neuron.HebbianUpdater.State state = store().hebbianState(workspaceId, concept.id());
+            if (state == null) {
+                continue;
+            }
+            // The state as it would be built NOW, without any decay. The
+            // comparison is the evidence: a state that was never decayed
+            // is exactly the fresh build, and one that was decayed is
+            // weaker in the direction of the error.
+            io.matrix.neuron.HebbianUpdater.State fresh =
+                    HebbianBindings.stateFor(workspace(workspaceId), concept.id());
+            boolean weakened = false;
+            for (LearningError error : errors) {
+                float[] direction = HebbianBindings.observation(
+                        HebbianBindings.termsOf(error.learnerAnswer()));
+                if (direction.length == 0) {
+                    continue;
+                }
+                double now = HebbianBindings.strengthAt(state, direction);
+                double before = HebbianBindings.strengthAt(fresh, direction);
+                if (now < before) {
+                    weakened = true;
+                    break;
+                }
+            }
+            if (!weakened) {
+                continue;
+            }
+            long count = errors.size();
             notes.add("the learner has " + count + " verified error"
                     + (count == 1L ? "" : "s") + " about " + concept.name()
                     + ", and the error-driven decay weakened the bindings of that concept");
