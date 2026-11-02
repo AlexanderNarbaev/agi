@@ -79,6 +79,7 @@
   <button data-tab="reasoning">Reasoning</button>
   <button data-tab="knowledge">Knowledge</button>
   <button data-tab="corpus">Sources</button>
+  <button data-tab="graph">Graph</button>
   <button data-tab="assess">Assess</button>
   <button data-tab="teach">Teach</button>
   <button data-tab="progress">Progress</button>
@@ -223,6 +224,19 @@
       <div id="corpus-entries" class="muted">—</div></div>
     <div class="card"><h2 style="margin-top:0">What the registry says</h2>
       <div id="corpus-notes" class="muted">—</div></div>
+  </section>
+
+  <section id="tab-graph">
+    <h2>Knowledge graph</h2>
+    <p class="muted" style="margin-top:0">A <em>read-only projection</em> of the workspace: the
+      concepts, the claims and the sources, with the relations between them. It holds no state of its
+      own, so there is no second copy of the knowledge that could drift from the first. The weight of
+      a relation is the claim's own authored confidence — not a probability.</p>
+    <div class="card"><div id="graph-meta" class="muted">—</div></div>
+    <div class="card"><h2 style="margin-top:0">The entities</h2>
+      <div id="graph-entities" class="muted">—</div></div>
+    <div class="card"><h2 style="margin-top:0">The relations</h2>
+      <div id="graph-relations" class="muted">—</div></div>
   </section>
 
   <section id="tab-assess">
@@ -381,6 +395,7 @@ document.querySelectorAll('nav button').forEach(btn => {
     if (btn.dataset.tab === 'ask') { loadDialogue(); }
     if (btn.dataset.tab === 'knowledge') loadKnowledge();
     if (btn.dataset.tab === 'corpus') loadCorpus();
+    if (btn.dataset.tab === 'graph') loadGraph();
     if (btn.dataset.tab === 'assess') { loadAssessment(); loadNextExercise(); }
     if (btn.dataset.tab === 'teach') loadConceptsForTeaching();
     if (btn.dataset.tab === 'progress') { loadProgress(); loadCapability(); loadQuestions(); }
@@ -603,6 +618,28 @@ $('btn-ask').addEventListener('click', async () => {
     out.innerHTML = '<div class="card bad">' + esc(e.message) + '</div>';
   }
 });
+
+async function loadGraph() {
+  try {
+    const g = await api('/workspaces/' + WS + '/graph');
+    $('graph-meta').innerHTML = 'the entities: <strong>' + g.theEntities + '</strong> · the relations: <strong>' +
+      g.theRelations + '</strong> · the most connected: ' + (g.theCentral || []).join(', ');
+    const types = {};
+    (g.theEntityList || []).forEach(e => { types[e.theType] = (types[e.theType] || 0) + 1; });
+    $('graph-entities').innerHTML = '<div class="muted">' + Object.keys(types).map(t =>
+      t + ': ' + types[t]).join(' · ') + '</div><table><tr><th>Id</th><th>Type</th><th>Properties</th></tr>' +
+      (g.theEntityList || []).map(e => '<tr><td class="muted">' + esc(e.theId) + '</td><td>' +
+        esc(e.theType) + '</td><td>' + esc(JSON.stringify(e.theProperties || {}).slice(0, 120)) +
+        '</td></tr>').join('') + '</table>';
+    $('graph-relations').innerHTML = '<table><tr><th>From</th><th>Predicate</th><th>To</th><th>Weight</th></tr>' +
+      (g.theRelationList || []).map(r => '<tr><td class="muted">' + esc(r.theFrom) + '</td><td>' +
+        esc(r.thePredicate) + '</td><td class="muted">' + esc(r.theTo) + '</td><td>' +
+        r.theWeight + '</td></tr>').join('') + '</table>' +
+      '<div class="muted" style="margin-top:10px">' + esc(g.theNote || '') + '</div>';
+  } catch (e) {
+    $('graph-meta').innerHTML = '<span class="muted">The graph is not available: ' + esc(String(e)) + '</span>';
+  }
+}
 
 async function loadCorpus() {
   try {

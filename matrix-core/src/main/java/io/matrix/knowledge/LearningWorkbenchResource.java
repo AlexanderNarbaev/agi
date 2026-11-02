@@ -511,6 +511,51 @@ public class LearningWorkbenchResource {
     }
 
     /**
+     * The knowledge graph of a workspace, as a projection.
+     *
+     * <p>The decision D-003 of the reconnaissance: the graph store is a
+     * read-only PROJECTION of the workspace, not a second copy of the
+     * knowledge. The projection is built from the snapshot and thrown
+     * away, so there is no fourth knowledge system that could drift from
+     * the first.
+     */
+    @GET
+    @Path("/workspaces/{id}/graph")
+    public Map<String, Object> graph(@PathParam("id") String workspaceId) {
+        KnowledgeGraphStore graph =
+                KnowledgeGraphProjector.project(workbench.workspace(workspaceId));
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("workspace", workspaceId);
+        body.put("theEntities", graph.entityCount());
+        body.put("theRelations", graph.relationCount());
+        body.put("theCentral", graph.topCentral(10));
+        List<Map<String, Object>> entities = new ArrayList<>();
+        for (KnowledgeGraphStore.Entity entity : graph.entities()) {
+            Map<String, Object> entry = new LinkedHashMap<>();
+            entry.put("theId", entity.id());
+            entry.put("theType", entity.type());
+            entry.put("theProperties", entity.properties());
+            entities.add(entry);
+        }
+        body.put("theEntityList", entities);
+        List<Map<String, Object>> relations = new ArrayList<>();
+        for (KnowledgeGraphStore.Relation relation : graph.allRelations()) {
+            Map<String, Object> entry = new LinkedHashMap<>();
+            entry.put("theFrom", relation.fromId());
+            entry.put("theTo", relation.toId());
+            entry.put("thePredicate", relation.predicate());
+            entry.put("theWeight", relation.weight());
+            relations.add(entry);
+        }
+        body.put("theRelationList", relations);
+        body.put("theNote", "This graph is a read-only projection of the workspace: the concepts, "
+                + "the claims and the sources, with the relations between them. It holds no state "
+                + "of its own. The weight of a relation is the claim's own authored confidence - "
+                + "not a probability, and the support score remains uncalibrated.");
+        return body;
+    }
+
+    /**
      * The corpus registry of a workspace.
      *
      * <p>The mission's §5.5 asks for a corpus manager: the record of what
