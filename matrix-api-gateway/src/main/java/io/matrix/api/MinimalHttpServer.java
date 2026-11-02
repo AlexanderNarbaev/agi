@@ -320,6 +320,10 @@ public final class MinimalHttpServer {
         http.createContext("/v1/explain", exchange -> writeJson(exchange, 200,
             "{\"explainments\":" + explanations.size() + "}"));
         http.createContext("/v1/audit/logs", this::handleAuditLogs);
+        // W42.9 / D-016: the promotion decisions of the runtime — the refusals
+        // included — are readable here. Before this, a lesson that did NOT
+        // become knowledge left only a counter behind.
+        http.createContext("/v1/audit/promotions", this::handlePromotionDecisions);
         http.createContext("/v1/audit/verify", this::handleAuditVerify);
         http.createContext("/v1/distill", this::handleDistill);
         http.createContext("/v1/bir", this::handleBir);
@@ -525,6 +529,33 @@ public final class MinimalHttpServer {
             first = false;
         }
         sb.append("],\"count\":").append(auditEvents.size()).append("}");
+        writeJson(ex, 200, sb.toString());
+    }
+
+    /** The promotion decisions of the runtime's episodic log, refusals included. */
+    private void handlePromotionDecisions(HttpExchange ex) throws IOException {
+        if (!"GET".equalsIgnoreCase(ex.getRequestMethod())) {
+            writeJson(ex, 405, "{\"error\":\"method not allowed\"}");
+            return;
+        }
+        if (episodicLog == null) {
+            writeJson(ex, 200, "{\"decisions\":[],\"count\":0,\"verified\":true}");
+            return;
+        }
+        io.matrix.brain.runtime.AuditChain chain = episodicLog.auditChain();
+        StringBuilder sb = new StringBuilder("{\"decisions\":[");
+        boolean first = true;
+        for (var e : chain.all()) {
+            if (!first) sb.append(",");
+            sb.append("{\"index\":").append(e.index())
+              .append(",\"action\":\"").append(esc(e.action())).append("\"")
+              .append(",\"details\":\"").append(esc(e.details())).append("\"")
+              .append(",\"timestamp\":").append(e.timestampMillis())
+              .append(",\"hash\":\"").append(e.hash()).append("\"}");
+            first = false;
+        }
+        sb.append("],\"count\":").append(chain.size())
+          .append(",\"verified\":").append(chain.verify()).append("}");
         writeJson(ex, 200, sb.toString());
     }
 

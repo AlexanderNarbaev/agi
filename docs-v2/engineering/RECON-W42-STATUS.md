@@ -239,3 +239,8 @@ accounts customer money and signed keys. `GpuKernelEngine` is a genuine duplicat
 every assertion held. The application's JVM was then killed with SIGKILL: 13 concepts, 19
 representations and 24 claims survived, and the consolidation after the restart was idempotent with
 nothing forgotten.
+
+**The first shadow is wired end to end.** The runtime's `AuditChain` is a face of the canonical
+`io.matrix.audit.HashChainedLog` and records every promotion decision of the episodic log — the refusals
+included, whose reason used to be lost. The gateway serves them at `GET /v1/audit/promotions`, proved by
+`PromotionDecisionsEndpointTest` after a real `/v1/analyze` cycle ✓ ✓.

@@ -7629,3 +7629,10 @@ module's tests are green: 14 + 1, no failures ✓ ✓.
 refused — with the reason and the trace ✓ ✓. Previously a refusal was only counted and its reason was
 lost ✓ ✓. The test `EpisodicLogAuditChainTest` proves it: 2 decisions, 2 chain entries, the chain
 verifies, and the refusal's reason is recoverable ✓ ✓.
+
+# RECON-W42.9 — the promotion decisions are readable over HTTP
+
+**Done** ✓ ✓. The gateway serves `GET /v1/audit/promotions`: the count, the verification and every promotion
+decision with its reason and hash ✓ ✓. The test `PromotionDecisionsEndpointTest` boots the gateway in
+production mode, runs a real `/v1/analyze` cycle and reads the endpoint back ✓ ✓. The first of the six
+shadows is now wired end to end ✓ ✓.
