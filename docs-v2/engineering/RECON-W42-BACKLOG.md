@@ -231,6 +231,20 @@ the repeated assessment at the end.
 
 ---
 
+## W42.7 — the open items, stated plainly (2026-11-02)
+
+**The mission is not finished, and this is what is left.** Each item names
+what it would take and what stands in the way.
+
+| # | Item | Where it stands | What it takes |
+|---|---|---|---|
+| 7.1 | **The answer is not translated.** A Russian question about an English workspace gets an English answer, and **the answer says so**. | the behaviour is honest and tested; the mission's §14 lists "RU+EN" as a target | **an owner decision.** With no external service and no LLM, a fluent translation of a sentence is not achievable — a word-by-word translation of the representations is gibberish, and the mission's §16 forbids making an external service mandatory. The options are: accept the boundary and record it as a limit, or authorise an optional translation service behind the same interface, which the mission forbids as a mandatory dependency |
+| 7.2 | **The corpus registry does not track the versions of a source.** The content hash IS the version: the same document with different content is a different source, and the registry can only report that two sources share a title | the registry exists (`GET …/corpus`); the versions are not grouped | group the sources by their title and report the versions — a small change over the registry that already exists |
+| 7.3 | **The delayed teach-back phase fails**, and is reported as failing | the phase exists and says so | the phase needs a delay the harness does not wait for. The mission's §7 asks for the delayed measurement; the retention experiment measures a delayed stage instead, and that is what the report cites |
+| 7.4 | **The validation is not run on the workspaces the packages load.** It runs on every import, and it can be run by hand | the import runs it (`POST …/documents` reports what it promoted) | nothing — the packages' claims are authored, and the validation has nothing to group that the authoring did not |
+| 7.5 | **`ConsciousBrain` and the nine shadow classes** are documented and unused | the classes exist; the decision on them is not the implementer's to make | **an owner decision** (§16.1): the nine shadow classes are either wired into a capability or deleted with their documentation corrected |
+| 7.6 | **The interface has ten of the mission's eleven views.** The Source Browser was added in W42.7 | the views that exist: Conversation, Knowledge Library, Source Browser, Reasoning, Assessments, Learning Goals, Progress, Teaching, Persistence, Dashboard | the remaining gaps are the Knowledge Graph and the Experiment Dashboard. Both would have real content — the graph store and the retention experiment — and neither is an empty screen |
+
 ## Cross-cutting
 
 | # | Item | Why |
