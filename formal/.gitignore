@@ -1,0 +1,4 @@
+# TLC writes its explored state sets here when a specification is checked.
+# They are a build artefact, not a source artifact: the states are derived
+# from the .tla files and from the .cfg files beside them.
+states/

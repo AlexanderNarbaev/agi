@@ -60,6 +60,23 @@ public final class KnowledgeRetriever {
     private final Map<String, List<Representation>> representationsByConcept = new LinkedHashMap<>();
     private final Map<String, Set<String>> claimTerms = new LinkedHashMap<>();
     private final Map<String, Set<String>> representationTerms = new LinkedHashMap<>();
+    /**
+     * The lemmas of the claims' words, by claim.
+     *
+     * <p>RECON-W42.9. The English fold is asymmetric, so a question and a
+     * claim that differ only in their inflection never meet: "release" folds
+     * to "release" and "releases" folds to "releas". The fold is NOT changed
+     * — its behaviour is pinned by W41's tests and a global change to it
+     * was measured and rolled back twice — so the equivalence is applied
+     * where the terms are COMPARED. This map is the second channel of that
+     * comparison; the folded terms still decide the ranking, the coverage
+     * threshold and the reported gaps.
+     *
+     * @see EnglishLemma
+     */
+    private final Map<String, Set<String>> claimLemmas = new LinkedHashMap<>();
+    /** The lemmas of the representations' words, by concept. */
+    private final Map<String, Set<String>> representationLemmas = new LinkedHashMap<>();
     private final Map<String, Double> idf;
     /** The corrector for the typos in a question (RECON-W42.3). */
     private final TypoCorrector corrector;
@@ -100,6 +117,7 @@ public final class KnowledgeRetriever {
                 }
             }
             claimTerms.put(claim.id(), new LinkedHashSet<>(TextFeatures.tokens(text.toString())));
+            claimLemmas.put(claim.id(), EnglishLemma.lemmasOf(text.toString()));
         }
         for (Representation representation : snapshot.representations()) {
             representationsByConcept
@@ -135,6 +153,7 @@ public final class KnowledgeRetriever {
             }
             representationTerms.put(entry.getKey(),
                     new LinkedHashSet<>(TextFeatures.tokens(text.toString())));
+            representationLemmas.put(entry.getKey(), EnglishLemma.lemmasOf(text.toString()));
         }
         this.idf = TextFeatures.idf(new ArrayList<>(claimTerms.values()));
     }
@@ -290,12 +309,40 @@ public final class KnowledgeRetriever {
             originalsByStem.computeIfAbsent(TextFeatures.foldIn(original, questionLanguage),
                     key -> new LinkedHashSet<>()).add(original);
         }
+        // THE QUERY'S LEMMAS.
+        //
+        // RECON-W42.9. The query's terms are folded, and the English fold is
+        // asymmetric, so a question and a claim that differ only in their
+        // inflection do not meet. The query therefore carries a second
+        // channel of lemmas, keyed by the same folded term, and a term
+        // matches a claim when EITHER channel agrees.
+        //
+        // The key is the folded term, so the weight, the reporting of the
+        // uncovered words and the rest of the accounting stay exactly where
+        // they were: the lemma channel only widens the REACH of a claim.
+        Map<String, Set<String>> queryLemmas = new LinkedHashMap<>();
+        for (String original : TextFeatures.originalTokens(question)) {
+            String stem = TextFeatures.foldIn(original, questionLanguage);
+            queryLemmas.computeIfAbsent(stem, key -> new LinkedHashSet<>())
+                    .add(EnglishLemma.lemma(original));
+        }
+        // A term that came from the bilingual bridge, from a typo correction
+        // or from the index form has no raw word of its own behind it, so its
+        // lemma is computed from the term itself.
+        for (String term : effectiveTerms) {
+            if (!queryLemmas.containsKey(term)) {
+                queryLemmas.computeIfAbsent(term, key -> new LinkedHashSet<>())
+                        .add(EnglishLemma.lemma(term));
+            }
+        }
+
         List<ScoredClaim> scored = new ArrayList<>();
         for (Claim claim : snapshot.claims()) {
             Set<String> terms = claimTerms.get(claim.id());
+            Set<String> lemmas = claimLemmas.get(claim.id());
             double matched = 0.0;
             for (String term : effectiveTerms) {
-                if (terms.contains(term)) {
+                if (terms.contains(term) || sameLemma(lemmas, queryLemmas.get(term))) {
                     matched += queryWeights.get(term) * integrityOf(claim, term, originalsByStem);
                     unmatchedStems.remove(term);
                     Set<String> originals = originalsByStem.remove(term);
@@ -346,9 +393,10 @@ public final class KnowledgeRetriever {
         // CONCEPT, and the concept's claims are the evidence behind it.
         Map<String, Double> representationCoverages = new LinkedHashMap<>();
         for (Map.Entry<String, Set<String>> entry : representationTerms.entrySet()) {
+            Set<String> lemmas = representationLemmas.get(entry.getKey());
             double matched = 0.0;
             for (String term : effectiveTerms) {
-                if (entry.getValue().contains(term)) {
+                if (entry.getValue().contains(term) || sameLemma(lemmas, queryLemmas.get(term))) {
                     matched += queryWeights.get(term);
                 }
             }
@@ -635,6 +683,30 @@ public final class KnowledgeRetriever {
     /** The concepts this workspace knows about. */
     public List<Concept> knownConcepts() {
         return snapshot.concepts();
+    }
+
+    /**
+     * Whether a claim's lemmas and a query term's lemmas name the same word.
+     *
+     * <p>RECON-W42.9. The empty case is the common one: a term that came
+     * from the bilingual bridge has a lemma, and a claim whose words are
+     * all unrelated to it has none.
+     *
+     * @param claimLemmas the lemmas of the claim's words
+     * @param queryLemmas the lemmas of the query term's words
+     * @return whether the two agree
+     */
+    private static boolean sameLemma(Set<String> claimLemmas, Set<String> queryLemmas) {
+        if (claimLemmas == null || queryLemmas == null || claimLemmas.isEmpty()
+                || queryLemmas.isEmpty()) {
+            return false;
+        }
+        for (String lemma : queryLemmas) {
+            if (claimLemmas.contains(lemma)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /** The terms of a question that no claim in the workspace covers. */

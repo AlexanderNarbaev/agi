@@ -77,7 +77,15 @@ public final class TextProfiles {
             Set.of("не", "нет", "ни", "никогда", "ничего", "нельзя", "без"),
             Set.of("что", "кто", "где", "когда", "почему", "зачем", "как", "какой", "какая",
                     "какие", "чей", "чья", "чьи", "сколько", "разве", "неужели"),
-            List.of("иями", "ями", "ами", "его", "ому", "ыми", "ими", "ах", "ях", "ой",
+            List.of("иями", "ями", "ами",
+                    // RECON-W42.9: the genitive of an adjective is "-ого",
+                    // and the list had "-его" without it. So "углекислого"
+                    // (the genitive of "углекислый") kept its ending, and
+                    // the premise of a Russian question never reached the
+                    // lexicon's entry for "углекислый" — the two are the
+                    // same word in different cases, and the case is
+                    // exactly what the fold is for.
+                    "ого", "его", "ому", "ыми", "ими", "ах", "ях", "ой",
                     "ей", "ый", "ий", "ая", "яя", "ое", "ее", "ые", "ие", "ов", "ев",
                     "ам", "ям", "ом", "ем", "ах", "ях", "ой", "ей", "у", "ю", "а", "я",
                     "ы", "и", "ь", "е"));
