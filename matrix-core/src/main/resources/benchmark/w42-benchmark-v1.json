@@ -234,7 +234,7 @@
       "id": "ru-cross-3",
       "category": "CROSS_LINGUAL",
       "language": "ru",
-      "workspace": "logic",
+      "workspace": "photosynthesis",
       "question": "Что такое цикл Кальвина?",
       "answerable": true,
       "keyTerms": ["Calvin cycle"],

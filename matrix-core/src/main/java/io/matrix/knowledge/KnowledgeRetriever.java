@@ -202,10 +202,21 @@ public final class KnowledgeRetriever {
         // together, through the stem each original folds to.
         Set<String> unmatched = new LinkedHashSet<>(TextFeatures.originalTokens(question));
         Set<String> unmatchedStems = new LinkedHashSet<>(queryTerms);
+        // The words the user wrote, keyed by the STEM each one folds to IN
+        // THE LANGUAGE OF THE QUESTION.
+        //
+        // RECON-W42.7: the key was the ENGLISH fold, which is a no-op for a
+        // Cyrillic word - so a Russian question's raw words were keyed by
+        // themselves and never paired with their stems. A Russian
+        // question about "цикл Кальвина" was answered by the bilingual
+        // bridge, and the answer still reported "кальвина" as not covered
+        // by the workspace: the bridge's counterpart had covered the stem,
+        // and the raw word was never reached.
+        final String questionLanguage = TextProfiles.detect(question);
         Map<String, Set<String>> originalsByStem = new LinkedHashMap<>();
         for (String original : unmatched) {
-            originalsByStem.computeIfAbsent(TextFeatures.fold(original), key -> new LinkedHashSet<>())
-                    .add(original);
+            originalsByStem.computeIfAbsent(TextFeatures.foldIn(original, questionLanguage),
+                    key -> new LinkedHashSet<>()).add(original);
         }
         List<ScoredClaim> scored = new ArrayList<>();
         for (Claim claim : snapshot.claims()) {
@@ -227,6 +238,22 @@ public final class KnowledgeRetriever {
                     if (original != null) {
                         unmatched.remove(original);
                         unmatchedStems.remove(original);
+                        // The words the user actually wrote. The query's
+                        // terms are STEMS, and the uncovered list holds the
+                        // RAW words — so removing the stem alone left the
+                        // raw word in the list. A Russian question about
+                        // "цикл Кальвина" was answered, and the answer
+                        // still reported "кальвина" as not covered by the
+                        // workspace, which is a false report: the
+                        // counterpart DID cover it.
+                        //
+                        // The map is keyed by the stem in the question's
+                        // language, and the counterpart's source stem is
+                        // one of those keys.
+                        Set<String> written = originalsByStem.remove(original);
+                        if (written != null) {
+                            unmatched.removeAll(written);
+                        }
                     }
                 }
             }

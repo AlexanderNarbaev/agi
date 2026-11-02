@@ -218,3 +218,40 @@ the accumulator arbitrarily far below zero. The mission's §9 forbids
 exactly that. The floor is now the lower edge of the Hebbian updater's
 deadband, and the properties — the targeted-only decay, the floor, the
 determinism, the parameter checks — are pinned by tests.
+
+## D-013 — a benchmark item's POINTER may be corrected; its ETALON may not
+
+**The context.** The W42 benchmark's `ru-cross-3` asks "Что такое цикл
+Кальвина?" — about the Calvin cycle — and pointed its `workspace` at
+**logic**, the workspace that holds propositional logic, modus ponens and
+the truth tables. The Calvin-Benson cycle is a concept of the
+**photosynthesis** workspace. The item was therefore **unreachable by any
+implementation**: no correct system could answer it, because the
+knowledge it asks about was not where it asked.
+
+**The rule.** A benchmark item has two kinds of fields, and they are not
+the same kind of thing:
+
+- the **etalon** — `answerable`, `mustMention`, `mustNotMention`, the
+  key terms. This says what the RIGHT answer is. **It may not be
+  changed to make a number better.** (D-001.)
+- the **pointer** — `workspace`. This says where the knowledge lives. A
+  pointer that names a workspace without the concept is a defect in the
+  data, and correcting it changes no expectation: it makes the item
+  reachable, which is what an answerable item must be.
+
+**The test that distinguishes the two.** If the item could be answered
+correctly by some implementation as it stands, it is a tuning question and
+the etalon stays. If **no** implementation could answer it, the item is
+malformed and the pointer is corrected. `ru-cross-3` is the second case:
+the logic package holds no Calvin cycle, so the correct behaviour was to
+refuse, and the refusal was counted as a wrong answer.
+
+**The evidence.** Every item of the benchmark was checked against its own
+workspace: the key terms of every other item appear in the knowledge of
+the workspace it names. `ru-cross-3` was the only one that did not.
+
+**What this does not do.** It does not move the target for the Russian
+items: the Russian cross-lingual score moves from 4 of 5 to 5 of 5
+because the fifth item became answerable, not because the criterion was
+eased. The criterion is untouched: `answered && mentions && avoids`.
