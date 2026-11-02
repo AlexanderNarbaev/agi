@@ -180,3 +180,41 @@ sites) and the "which spec is the W41 baseline" question (verified against
 the remote, not assumed).
 
 **Forecloses.** No finding enters the plan without a citation.
+
+## D-011 — The frame of the answer is translated; the knowledge is not
+
+**Owner decision, 2026-11-02.** The owner was asked how far the
+multilingual work should go, and chose: *translate the frame of the answer
+into the language of the question*.
+
+**What this means in the code.** The sentences MATRIX writes around an
+answer — the refusal, the language note, the reference note, the level's
+limitation — are said in the user's language. The workspace's own
+statements are not translated: they stay in the language they were written
+in, and the answer says so.
+
+**Why not more.** A word-by-word translation of a scientific explanation
+is gibberish, and gibberish is worse than a clear boundary. The mission's
+§16 forbids making an external service mandatory, so a real translation of
+the knowledge needs an owner decision of its own. The frames are a closed
+set the system writes itself, so their translations are exact rather than
+approximate — that is the difference between a table and a translator.
+
+## D-012 — The shadow classes are wired to the live engines, and their math is verified first
+
+**Owner decision, 2026-11-02.** The nine shadow classes on `develop` are
+wired to the live engines rather than deleted. The mission's §12.4 forbids
+discarding unsuccessful implementations, and §16.1 reserves the deletion
+for the owner.
+
+**The order the owner named.** The `ErrorDrivenLearner` first — because
+the mission's §9 says the error-driven integration happens "only after
+verifying the math", and because this class's mathematics is what the
+error-driven learning actually is.
+
+**What the verification found.** The decay subtracted a fixed step from the
+targeted accumulators and had no floor: the same error, repeated, drove
+the accumulator arbitrarily far below zero. The mission's §9 forbids
+exactly that. The floor is now the lower edge of the Hebbian updater's
+deadband, and the properties — the targeted-only decay, the floor, the
+determinism, the parameter checks — are pinned by tests.
