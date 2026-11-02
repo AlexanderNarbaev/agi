@@ -511,6 +511,64 @@ public class LearningWorkbenchResource {
     }
 
     /**
+     * The experiment dashboard: the measured instrument, not a claim.
+     *
+     * <p>The mission's §9 names an Experiment Dashboard among the views.
+     * This one shows the numbers the same instrument produces every time:
+     * the W42 benchmark over this workspace, by category and by language,
+     * and the workspace's own coverage. The numbers are measured here and
+     * now, from the workspace as it stands — not copied from a report.
+     */
+    @GET
+    @Path("/workspaces/{id}/experiments")
+    public Map<String, Object> experiments(@PathParam("id") String workspaceId) {
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("workspace", workspaceId);
+        try {
+            List<io.matrix.knowledge.benchmark.BenchmarkItem> items =
+                    io.matrix.knowledge.benchmark.BenchmarkItem.load("benchmark/w42-benchmark-v1.json");
+            io.matrix.knowledge.benchmark.BenchmarkRunner.Report report =
+                    new io.matrix.knowledge.benchmark.BenchmarkRunner(workbench).run(items);
+            body.put("theItems", report.results().size());
+            body.put("theAnswerable", report.answerableCount());
+            body.put("theAnsweredCorrectly", report.answeredCorrectly());
+            body.put("theUnanswerable", report.unanswerableCount());
+            body.put("theRefusedCorrectly", report.refusedCorrectly());
+            body.put("theAnswerAccuracy", report.answerAccuracy());
+            body.put("theAbstentionQuality", report.abstentionQuality());
+            body.put("theBm25Overlap", report.meanBm25Overlap());
+            List<Map<String, Object>> categories = new ArrayList<>();
+            for (Map.Entry<String, io.matrix.knowledge.benchmark.BenchmarkRunner.Report.Group> entry
+                    : report.byCategory().entrySet()) {
+                Map<String, Object> group = new LinkedHashMap<>();
+                group.put("theCategory", entry.getKey());
+                group.put("theItems", entry.getValue().items());
+                group.put("theCorrect", entry.getValue().correct());
+                group.put("theRefusedCorrectly", entry.getValue().refusedCorrectly());
+                categories.add(group);
+            }
+            body.put("theCategories", categories);
+            List<Map<String, Object>> languages = new ArrayList<>();
+            for (Map.Entry<String, io.matrix.knowledge.benchmark.BenchmarkRunner.Report.Group> entry
+                    : report.byLanguage().entrySet()) {
+                Map<String, Object> group = new LinkedHashMap<>();
+                group.put("theLanguage", entry.getKey());
+                group.put("theItems", entry.getValue().items());
+                group.put("theCorrect", entry.getValue().correct());
+                languages.add(group);
+            }
+            body.put("theLanguages", languages);
+        } catch (RuntimeException e) {
+            body.put("theError", "The benchmark could not be run: " + e.getMessage());
+        }
+        body.put("theNote", "These numbers are measured here and now, from this workspace, with "
+                + "the same instrument since W42.0. The support score is not a probability and is "
+                + "not calibrated; the BM25 overlap says how much of the retrieval the lexical "
+                + "baseline already explained.");
+        return body;
+    }
+
+    /**
      * The knowledge graph of a workspace, as a projection.
      *
      * <p>The decision D-003 of the reconnaissance: the graph store is a

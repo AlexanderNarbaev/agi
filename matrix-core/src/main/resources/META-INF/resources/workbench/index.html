@@ -80,6 +80,7 @@
   <button data-tab="knowledge">Knowledge</button>
   <button data-tab="corpus">Sources</button>
   <button data-tab="graph">Graph</button>
+  <button data-tab="experiments">Experiments</button>
   <button data-tab="assess">Assess</button>
   <button data-tab="teach">Teach</button>
   <button data-tab="progress">Progress</button>
@@ -239,6 +240,27 @@
       <div id="graph-relations" class="muted">—</div></div>
   </section>
 
+  <section id="tab-experiments">
+    <h2>Experiment dashboard</h2>
+    <p class="muted" style="margin-top:0">The measured instrument, not a claim. These numbers are
+      measured here and now, from this workspace, with the same instrument the reconnaissance has
+      used since W42.0 — they are not copied from a report.</p>
+    <div class="card"><div id="exp-meta" class="muted">—</div></div>
+    <div class="card"><h2 style="margin-top:0">By category</h2>
+      <div id="exp-categories" class="muted">—</div></div>
+    <div class="card"><h2 style="margin-top:0">By language</h2>
+      <div id="exp-languages" class="muted">—</div></div>
+    <div class="card"><h2 style="margin-top:0">The delayed-retention baseline</h2>
+      <p class="muted">The retention experiment measures a scripted learner under two selection
+        policies — the system's own error-driven selection, and a no-consolidation baseline that
+        retries the least recently asked items. It is a comparison of two policies over a scripted
+        learner, not a measurement of a person.</p>
+      <div class="row"><button class="action" id="btn-retention">Run the retention comparison</button>
+        <span class="muted" id="retention-note">Not run in this session.</span></div>
+      <div id="retention-result" style="margin-top:14px"></div>
+    </div>
+  </section>
+
   <section id="tab-assess">
     <h2>Assessment</h2>
     <div class="card">
@@ -396,6 +418,7 @@ document.querySelectorAll('nav button').forEach(btn => {
     if (btn.dataset.tab === 'knowledge') loadKnowledge();
     if (btn.dataset.tab === 'corpus') loadCorpus();
     if (btn.dataset.tab === 'graph') loadGraph();
+    if (btn.dataset.tab === 'experiments') loadExperiments();
     if (btn.dataset.tab === 'assess') { loadAssessment(); loadNextExercise(); }
     if (btn.dataset.tab === 'teach') loadConceptsForTeaching();
     if (btn.dataset.tab === 'progress') { loadProgress(); loadCapability(); loadQuestions(); }
@@ -617,6 +640,50 @@ $('btn-ask').addEventListener('click', async () => {
   } catch (e) {
     out.innerHTML = '<div class="card bad">' + esc(e.message) + '</div>';
   }
+});
+
+async function loadExperiments() {
+  try {
+    const e = await api('/workspaces/' + WS + '/experiments');
+    if (e.theError) {
+      $('exp-meta').innerHTML = '<span class="muted">' + esc(e.theError) + '</span>';
+      return;
+    }
+    $('exp-meta').innerHTML = 'the items: ' + e.theItems + ' · the answerable: ' + e.theAnswerable +
+      ' · the answered correctly: <strong>' + e.theAnsweredCorrectly + '</strong> · the accuracy: <strong>' +
+      e.theAnswerAccuracy + '</strong> · the refusals that had to happen: ' + e.theRefusedCorrectly +
+      ' of ' + e.theUnanswerable + ' (the abstention ' + e.theAbstentionQuality + ') · the BM25 overlap: ' +
+      e.theBm25Overlap + '<div class="muted" style="margin-top:8px">' + esc(e.theNote || '') + '</div>';
+    $('exp-categories').innerHTML = '<table><tr><th>Category</th><th>Items</th><th>Correct</th>' +
+      '<th>Refused correctly</th></tr>' + (e.theCategories || []).map(c =>
+        '<tr><td>' + esc(c.theCategory) + '</td><td>' + c.theItems + '</td><td>' + c.theCorrect +
+        '</td><td>' + c.theRefusedCorrectly + '</td></tr>').join('') + '</table>';
+    $('exp-languages').innerHTML = '<table><tr><th>Language</th><th>Items</th><th>Correct</th></tr>' +
+      (e.theLanguages || []).map(l => '<tr><td>' + esc(l.theLanguage) + '</td><td>' + l.theItems +
+        '</td><td>' + l.theCorrect + '</td></tr>').join('') + '</table>';
+  } catch (err) {
+    $('exp-meta').innerHTML = '<span class="muted">The experiments are not available: ' + esc(String(err)) + '</span>';
+  }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  const button = document.getElementById('btn-retention');
+  if (!button) return;
+  button.addEventListener('click', async () => {
+    $('retention-note').textContent = 'Running…';
+    try {
+      const r = await api('/workspaces/' + WS + '/retention-experiment?maxSessions=20');
+      const b = r.baseline || {}, c = r.consolidation || {};
+      $('retention-note').textContent = 'Done.';
+      $('retention-result').innerHTML = '<table><tr><th>Arm</th><th>Sessions</th><th>The retention stage</th>' +
+        '<th>The evidence</th></tr><tr><td>the no-consolidation baseline</td><td>' + b.sessions +
+        '</td><td>' + esc(b.theRetentionStage || '') + '</td><td>' + b.theRetentionEvidence +
+        '</td></tr><tr><td>the consolidation</td><td>' + c.sessions + '</td><td>' +
+        esc(c.theRetentionStage || '') + '</td><td>' + c.theRetentionEvidence + '</td></tr></table>';
+    } catch (err) {
+      $('retention-note').textContent = 'The comparison could not be run: ' + String(err);
+    }
+  });
 });
 
 async function loadGraph() {
