@@ -164,13 +164,17 @@ v3 is the instrument that grows.
 Stated plainly, because the mission's §16 forbids a capability claim that
 the evidence does not carry.
 
-- **No epistemic model yet.** The architecture decision (§3 of the
-  directive) is not written; no new source/evidence/case/reasoning-result
-  entity exists.
-- **No counterexample-learning slice.** The scenario of §5 is not
-  implemented.
-- **No benchmark for the slice.** §10's metrics are not measured.
-- **No corpus foundation.** §7 is untouched.
+- **No epistemic model yet** — **DONE**: `docs-v2/engineering/ADR-W43-01-epistemic-model.md`
+  defines the model, names what is reused and what is new, and lists the four
+  decisions that are the owner's.
+- **No counterexample-learning slice** — **DONE on the existing schema**: the
+  example → counterexample → assessment → proposal → acceptance → history →
+  `kill -9` → restart scenario runs live, and the mission's §5 is met except
+  for the first-class `Case` object, which needs the migration the owner has
+  not yet approved.
+- **No benchmark for the slice** — **STILL NOT DONE**: §10's metrics are not
+  measured. This is the largest honest gap of the wave.
+- **No corpus foundation** — **STILL NOT DONE**: §7 is untouched.
 - **The gates can fail now** (§3.5), and the registry drift that was a red
   test in the repository is fixed. What is NOT done is the rest of §2:
   the mutation harness does not yet record its survivors with reasons, and
