@@ -7481,3 +7481,9 @@ grounded in a claim it names, and refused when it holds no rule ✓ ✓. The ans
 **Done** ✓ ✓. The answer no longer claims a weakening that never happened ✓ ✓ — the note is backed
 by the state's comparison with the fresh build ✓ ✓ — and the census's finding is recorded: the
 weakened binding changes the answer's text but not yet the retrieval's scoring ✓ ✓.
+
+# RECON-W42.8 — the mission's gate is in the repository
+
+**Done** ✓ ✓. The Local Alpha checklist and the restart check are versioned scripts that ASSERT
+✓ ✓ — 15 and 5 assertions, both green ✓ ✓, and the gate was seen failing before it was seen
+passing ✓ ✓.
