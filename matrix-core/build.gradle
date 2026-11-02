@@ -99,6 +99,19 @@ dependencies {
 
 tasks.withType(Test) {
     useJUnitPlatform()
+    // RECON-W43: the ONNX runtime extracts a native library of about 583 MB
+    // into a fresh directory under java.io.tmpdir for EVERY session load and
+    // never removes it. A test run therefore left as many directories as it
+    // loaded models, and they filled the per-user quota of the /tmp tmpfs -
+    // which broke the build, the gates and the shell with EDQUOT. The test
+    // JVMs get their own scratch directory, and it is emptied before the
+    // run. Deleting a directory another worker has open is safe on Linux:
+    // the worker keeps its mapping and the space comes back when it exits.
+    systemProperty 'java.io.tmpdir', "${rootProject.projectDir}/data/tmp"
+    doFirst {
+        delete file("${rootProject.projectDir}/data/tmp")
+        mkdir file("${rootProject.projectDir}/data/tmp")
+    }
     // Exclude integration tests from default test run (requires Docker)
     if (!project.hasProperty('includeIntegration')) {
         exclude '**/integration/**'

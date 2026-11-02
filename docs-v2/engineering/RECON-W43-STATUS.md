@@ -76,7 +76,22 @@ One decision, in one place: `io.matrix.security.NetworkExposure`.
 | The whole cycle survives a forced restart | IMPLEMENTED, TESTED, DEMONSTRATED | `scripts/w43-counterexample-journey.sh` — **"the counterexample journey: 0 — every assertion held"** |
 | The workbench exposes the cycle over HTTP | IMPLEMENTED, REACHABLE | `POST/GET /v1/workbench/workspaces/{id}/claims/{claimId}/{examples,assessment,refine/accept,refine/reject}` |
 
-### 1.4 What was NOT done
+### 1.4 The temporary-directory leak — FIXED, and it took the tools down with it
+
+The ONNX runtime extracts a native library of about **583 MB** into a fresh
+directory under `java.io.tmpdir` for every session load, and never removes it.
+A wave's worth of starts left **52 directories, 19.5 GB**, and filled the
+per-user quota of the `/tmp` tmpfs. The consequence was not a slow
+degradation: every spawn-based tool — the build, the gates, the shell itself
+— began to fail with `EDQUOT`.
+
+Fixed: the launcher sets `java.io.tmpdir` (the JVM reads it at launch, so it
+cannot be redirected from inside the application), and `io.matrix.Scratch`
+removes what the earlier runs left behind. **Measured: two consecutive starts
+leave 0 directories in `/tmp` and 583 MB in `data/tmp` — the same 583 MB
+after the second start as after the first.** Recorded as **R48**.
+
+### 1.5 What was NOT done
 
 | Item | State | Why |
 |---|---|---|

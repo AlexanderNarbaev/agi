@@ -43,6 +43,16 @@ readonly LOOPBACK_ADDRESS='127.0.0.1'
 
 # How long the check waits for the application to reach its startup event.
 readonly STARTUP_WAIT_SECONDS=60
+
+# Where the application's temporary files go.
+#
+# The ONNX runtime extracts a native library of about 583 MB into a fresh
+# directory under java.io.tmpdir for every session load, and never removes
+# it. The JVM reads java.io.tmpdir at LAUNCH, so it cannot be redirected
+# from inside the application - the launcher sets it, and the application's
+# own cleanup removes what the earlier runs left behind.
+readonly SCRATCH="$ROOT/data/tmp"
+mkdir -p "$SCRATCH"
 # How long the check waits for the startup GUARD to fire.
 readonly GUARD_WAIT_SECONDS=45
 # The timeout of a single HTTP request to the application.
@@ -118,7 +128,7 @@ bound_to() {
 
 echo "===== 1. LOCAL-ONLY: loopback bound, anonymous write allowed ====="
 QUARKUS_HTTP_PORT=$PORT_LOCAL \
-  java -Dmatrix.auto-train.enabled=false \
+  java -Djava.io.tmpdir="$SCRATCH" -Dmatrix.auto-train.enabled=false \
        -jar "$JAR" >/tmp/w43-security-local.log 2>&1 &
 APP_PID=$!
 
