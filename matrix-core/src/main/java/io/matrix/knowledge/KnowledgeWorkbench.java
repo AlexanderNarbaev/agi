@@ -179,6 +179,7 @@ public class KnowledgeWorkbench implements AutoCloseable {
                 new LinkedHashSet<>(answer.unmatchedTerms()),
                 QuestionDemand.contentTerms(question));
         answer = applyDemand(answer, demand);
+        answer = applyPremise(answer, question, snapshot);
 
         if (!expanded.equals(question)) {
             // The answer carries the question the USER wrote, and says what
@@ -317,6 +318,40 @@ public class KnowledgeWorkbench implements AutoCloseable {
      * fourth — an ambiguous question — becomes a clarification, because the
      * mission's §6 says an ambiguous request should ask rather than guess.
      */
+    /**
+     * The premise of the question is checked against the workspace.
+     *
+     * <p>RECON-W42.5. A question that asserts a premise - "Since X, ..." -
+     * asks its question UNDER that premise. Answering it as if the premise
+     * held would take the premise for granted, and the premise is the part
+     * the user may have got wrong.
+     *
+     * <p>The workspace already holds what is needed: the photosynthesis
+     * package holds the misconception as a REFUTED claim, and the logic
+     * package holds a verified claim that denies the second premise. The
+     * check is against those claims and not against a world model.
+     */
+    private Answer applyPremise(Answer answer, String question, KnowledgeSnapshot snapshot) {
+        String premise = PremiseChecker.premiseOf(question);
+        if (premise == null) {
+            return answer;
+        }
+        Claim refutation = PremiseChecker.refutation(premise, snapshot);
+        if (refutation == null) {
+            return answer;
+        }
+        List<String> limitations = new ArrayList<>(answer.limitations());
+        limitations.add("The question asserts a premise that this workspace contradicts: \""
+                + premise + "\".");
+        limitations.add("The claim that contradicts it: \"" + refutation.proposition() + "\".");
+        return new Answer(answer.question(), answer.level(), false,
+                "The premise of the question is contradicted by the workspace: \"" + premise
+                        + "\". The workspace holds \"" + refutation.proposition() + "\", "
+                        + "so answering the question under that premise would take it for granted.",
+                "", answer.supportScore(), answer.support(), answer.concepts(), answer.claims(),
+                answer.sources(), limitations, answer.gaps(), answer.unmatchedTerms());
+    }
+
     private Answer applyDemand(Answer answer, QuestionDemand.Analysis demand) {
         if (demand.kind() == QuestionDemand.Kind.KNOWLEDGE
                 && demand.demandCoverage() >= QuestionDemand.MINIMUM_DEMAND_COVERAGE) {
