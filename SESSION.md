@@ -7722,3 +7722,9 @@ side is folded (`implies` → `impli` ✓ ✓), the corrector can turn a correct
 `modu` ✓ ✓), `loadBundledPackage("logic")` did not change the vocabulary at all (663 either way ✓ ✓), and
 the Russian lexicon lacks `истинно` → `true` ✓ ✓. The candidate stays a candidate: the gate wants 0.95 and
 the candidate is at 0.915 ✓ ✓.
+
+# RECON-W42.9 — the lexicon grew, the measurement did not move
+
+**Done** ✓ ✓. The Russian lexicon gained `истинно` → `true` and `ложно` → `false` ✓ ✓, but the candidate's
+accuracy stayed at 0.915 ✓ ✓ — so `ru-hop-2`'s blocker is not the missing term ✓ ✓. The next round must read
+how the query's terms and the BM25 index are prepared, and measure where the match is lost ✓ ✓.

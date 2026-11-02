@@ -198,3 +198,5 @@ nadph	nadph
 световой	light
 фотосистема	photosystem
 влечёт	implies
+истинно	true
+ложно	false
