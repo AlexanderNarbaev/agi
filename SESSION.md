@@ -7449,3 +7449,11 @@ ledger was marked disconnected while its snapshot is read back into the mind's s
 
 **Done** ✓ ✓. Two clean builds now produce the same jar ✓ ✓ — the last half-measured row of the
 §14 table is closed ✓ ✓, and no row of the table is open any more ✓ ✓.
+
+# RECON-W42.7 — the sessions, the census, the reproducible archive, the honest report
+
+**Done** ✓ ✓. All eleven of the mission's §9 views now carry content ✓ ✓. The integration matrix
+has a reproducible census, which found six stale rows ✓ ✓. The archive is byte-identical between
+two clean builds ✓ ✓ — the §14 table has no open row any more ✓ ✓. And the consolidation's
+report stopped overclaiming: the idempotency is per record, and the `marked` field holds the
+records the run actually marked ✓ ✓.
