@@ -248,3 +248,8 @@ included, whose reason used to be lost. The gateway serves them at `GET /v1/audi
 **The formal gate is locally runnable and green.** `scripts/formal-gate.sh` runs the twelve TLA+
 specifications with the CI's invocation and exits 1 if any fails ✓ ✓. The measured run: 12 passed, 0
 failed ✓ ✓ — including `HashChain`, so the audit chain's rewrite did not break its formal property ✓ ✓.
+
+**The learning state machine now has a formal specification.** `formal/LearningStateMachine.tla` models the
+seven-rung ladder and the two rules the Java enforces ✓ ✓. Its safety properties are falsifiable: a model
+that allows a two-rung jump violates `AdvanceIsOneStep`, and a model that records an unchanged stage
+violates `NoSelfTransition` — both were caught by TLC ✓ ✓. The formal gate is 13 passed, 0 failed ✓ ✓.

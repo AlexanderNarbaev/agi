@@ -7650,3 +7650,10 @@ nowhere else ✓ ✓, and it needs a live consumer or the owner's decision ✓ �
 and exits 1 if any fails ✓ ✓. The run: 12 passed, 0 failed, exit 0 ✓ ✓ — including `HashChain`, so the
 adapter change did not break the chain's formal property ✓ ✓. The quality gate stays green: 263 literals
 against the 270 baseline, exit 0 ✓ ✓.
+
+# RECON-W42.9 — the learning state machine has a formal specification
+
+**Done** ✓ ✓. `formal/LearningStateMachine.tla` models the seven-rung ladder and the two rules the Java
+enforces — a one-rung advance, a fall-back from any stage, and the first evidence allowed to carry the
+capability several rungs at once ✓ ✓. Its properties can fail: two mutated models were caught by TLC
+(`AdvanceIsOneStep` and `NoSelfTransition`) ✓ ✓. The full formal gate is now 13 passed, 0 failed ✓ ✓.
