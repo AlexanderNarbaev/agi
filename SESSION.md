@@ -7700,3 +7700,11 @@ instrument, not a weakening of the gate ✓ ✓. The live benchmark stays at 34 
 **Done** ✓ ✓. The typo corrector's vocabulary now holds the language's stopwords, so a typo in a Russian
 function word has something to correct towards ✓ ✓. The candidate's accuracy rose 0.857 → 0.894 ✓ ✓, and
 the typo benchmark still passes ✓ ✓. The live benchmark stays at 34 items and the gate is green ✓ ✓.
+
+# RECON-W42.9 — the Russian typo failures are diagnosed, the fix is not yet landed
+
+**Done** ✓ ✓. A diagnostic against the real workspace showed the corrector DOES fix «фотосинтеез» ✓ ✓ — so the
+failure is downstream: the bilingual bridge ran BEFORE the typo correction ✓ ✓, so the corrected Russian term
+never produced its English counterpart ✓ ✓. The first fix attempt did not pass its verification (a corrected
+term has no query weight) and was reverted ✓ ✓; the tree is green ✓ ✓. The next attempt must take the weight
+from the word the correction replaced ✓ ✓.
