@@ -482,6 +482,17 @@ public class LearningWorkbenchResource {
             probe.put("theRolledBack", acceptance.rolledBack());
             result.put("theAcceptance", probe);
         }
+        // THE ERROR-DRIVEN DECAY, VISIBLE.
+        if (report.decay() != null) {
+            Map<String, Object> decay = new LinkedHashMap<>();
+            decay.put("theConcepts", report.decay().concepts());
+            decay.put("theVerifiedErrors", report.decay().errors());
+            decay.put("theStrengthBefore", report.decay().strengthBefore());
+            decay.put("theStrengthAfter", report.decay().strengthAfter());
+            decay.put("theActiveBefore", report.decay().activeBefore());
+            decay.put("theActiveAfter", report.decay().activeAfter());
+            result.put("theDecay", decay);
+        }
         // THE ERROR-DRIVEN INTEGRATION, VISIBLE.
         //
         // The consolidation's phase that records the VERIFIED learning

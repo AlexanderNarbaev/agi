@@ -140,7 +140,8 @@ public final class KnowledgeConsolidator {
             List<String> invariants,
             boolean idempotent,
             ErrorIntegrator.Result integration,
-            Acceptance acceptance) {
+            Acceptance acceptance,
+            KnowledgeWorkbench.DecayResult decay) {
 
         public Report {
             marked = List.copyOf(marked == null ? List.of() : marked);
@@ -178,6 +179,16 @@ public final class KnowledgeConsolidator {
         // happens only after the error is verified, so only the errors the
         // learner has repeated are integrated.
         ErrorIntegrator.Result integration = ErrorIntegrator.integrate(workbench, workspaceId);
+
+        // THE ERROR-DRIVEN DECAY.
+        //
+        // The owner's decision D-012: the shadow classes are wired to the
+        // live engines. The ErrorDrivenLearner is the live engine of the
+        // targeted forgetting, and this is the live phase that forgets.
+        // The decay acts on the workspace's own Hebbian bindings, over the
+        // VERIFIED errors only, and the weakened state is written to the
+        // store so that it survives a restart.
+        KnowledgeWorkbench.DecayResult decay = workbench.applyErrorDrivenDecay(workspaceId);
 
         // PHASE: THE PROBE BEFORE.
         //
@@ -251,7 +262,11 @@ public final class KnowledgeConsolidator {
                         + " records may be forgotten in one run.",
                 "The run is idempotent: a second run over an unchanged workspace forgets nothing.",
                 "Only the VERIFIED errors are integrated: an error the learner has made in one "
-                        + "session may be a slip, and it is not acted upon.");
+                        + "session may be a slip, and it is not acted upon.",
+                "The error-driven decay is targeted and bounded: it weakens the association "
+                        + "that the wrong answer shared with the concept, and it stops at the "
+                        + "deadband's lower edge, so a repeated error cannot weaken the "
+                        + "association without bound.");
 
         // IDEMPOTENCY: the run is idempotent when the rules, applied to the
         // state the run left behind, name nothing. The first version of
@@ -262,7 +277,7 @@ public final class KnowledgeConsolidator {
                 workbench.workspace(workspaceId), nowMs, budget);
         boolean idempotent = after.isEmpty();
         return new Report(questions.size(), candidates.size(), forgotten, candidates, invariants,
-                idempotent, integration, acceptance);
+                idempotent, integration, acceptance, decay);
     }
 
     /**

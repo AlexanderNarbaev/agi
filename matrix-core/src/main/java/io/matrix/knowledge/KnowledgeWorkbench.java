@@ -268,6 +268,7 @@ public class KnowledgeWorkbench implements AutoCloseable {
         }
         answer = applyCorrection(context, question, answer);
         answer = applyLanguageNote(question, answer);
+        answer = applyWeakenedBindings(workspaceId, answer);
         recordAsk(workspaceId, question, answer.unmatchedTerms(), answer.answered());
         context.record(question, answer);
         persistTurn(workspaceId, context);
@@ -720,6 +721,134 @@ public class KnowledgeWorkbench implements AutoCloseable {
     public boolean forgetQuestion(String workspaceId, String questionId, String kind, String reason,
                                    long nowMs) {
         return store().forgetAskedQuestion(workspaceId, questionId, kind, reason, nowMs);
+    }
+
+    /**
+     * Says in the answer that a concept's bindings were weakened.
+     *
+     * <p>RECON-W42.7. The error-driven decay is only worth doing if
+     * something reads its result. The answer does: when it speaks about a
+     * concept the learner has a VERIFIED error about, it says so, and it
+     * says that the bindings were weakened — so the user knows that the
+     * answer rests on an association the system has itself weakened.
+     *
+     * @param answer the answer
+     * @return the answer
+     */
+    private Answer applyWeakenedBindings(String workspaceId, Answer answer) {
+        if (answer == null || !answer.answered() || answer.concepts().isEmpty()) {
+            return answer;
+        }
+        List<LearningError> verified = store().learningErrors(workspaceId).stream()
+                .filter(LearningError::verified).toList();
+        if (verified.isEmpty()) {
+            return answer;
+        }
+        java.util.Map<String, Long> byConcept = new java.util.LinkedHashMap<>();
+        for (LearningError error : verified) {
+            byConcept.merge(error.conceptId(), 1L, Long::sum);
+        }
+        List<String> notes = new ArrayList<>();
+        for (Concept concept : answer.concepts()) {
+            Long count = byConcept.get(concept.id());
+            if (count == null || count == 0L) {
+                continue;
+            }
+            notes.add("the learner has " + count + " verified error"
+                    + (count == 1L ? "" : "s") + " about " + concept.name()
+                    + ", and the error-driven decay weakened the bindings of that concept");
+        }
+        if (notes.isEmpty()) {
+            return answer;
+        }
+        return new Answer(answer.question(), answer.level(), answer.answered(),
+                answer.abstentionReason(), answer.statement(), answer.supportScore(),
+                answer.support(), answer.concepts(), answer.claims(), answer.sources(),
+                withNote(answer.limitations(), String.join("; ", notes)),
+                answer.gaps(), answer.unmatchedTerms());
+    }
+
+    /**
+     * The result of the error-driven decay over a workspace's bindings.
+     *
+     * @param concepts the concepts the decay touched
+     * @param errors the verified errors it acted on
+     * @param bindingsBefore the active bindings before
+     * @param bindingsAfter the active bindings after
+     */
+    public record DecayResult(List<String> concepts, int errors, double strengthBefore,
+                              double strengthAfter, int activeBefore, int activeAfter) {
+    }
+
+    /**
+     * Applies the error-driven decay to the workspace's Hebbian bindings.
+     *
+     * <p>The owner's decision D-012: the shadow classes are wired to the
+     * live engines. This is the {@link io.matrix.cognitive.ErrorDrivenLearner}
+     * in the consolidation — the live phase that forgets — acting on the
+     * workspace's own bindings, over the VERIFIED learning errors only.
+     *
+     * <p>The state survives a restart: it is written to the store, so the
+     * weakened bindings are still weakened after a forced termination.
+     *
+     * @param workspaceId the workspace
+     * @return what the decay did
+     */
+    public DecayResult applyErrorDrivenDecay(String workspaceId) {
+        List<LearningError> errors = store().learningErrors(workspaceId);
+        List<LearningError> verified = errors.stream()
+                .filter(LearningError::verified)
+                .toList();
+        if (verified.isEmpty()) {
+            return new DecayResult(List.of(), 0, 0.0, 0.0, 0, 0);
+        }
+        io.matrix.cognitive.CognitiveErrorStream stream = HebbianBindings.streamOf(verified);
+        KnowledgeSnapshot snapshot = workspace(workspaceId);
+        List<String> touched = new ArrayList<>();
+        double strengthBefore = 0.0;
+        double strengthAfter = 0.0;
+        int activeBefore = 0;
+        int activeAfter = 0;
+        for (LearningError error : verified) {
+            String conceptId = error.conceptId();
+            if (conceptId == null || conceptId.isBlank()) {
+                continue;
+            }
+            io.matrix.neuron.HebbianUpdater.State state = store().hebbianState(workspaceId, conceptId);
+            if (state == null) {
+                state = HebbianBindings.stateFor(snapshot, conceptId);
+            }
+            float[] direction = HebbianBindings.observation(
+                    HebbianBindings.termsOf(error.learnerAnswer()));
+            double strength = HebbianBindings.strengthAt(state, direction);
+            int active = io.matrix.cognitive.ErrorDrivenLearner.totalActiveBindings(state);
+            io.matrix.cognitive.ErrorDrivenLearner.applyDecay(state, stream,
+                    HebbianBindings.DECAY_ETA, HebbianBindings.THRESHOLD);
+            store().saveHebbianState(workspaceId, conceptId, state);
+            touched.add(conceptId);
+            strengthBefore += strength;
+            strengthAfter += HebbianBindings.strengthAt(state, direction);
+            activeBefore += active;
+            activeAfter += io.matrix.cognitive.ErrorDrivenLearner.totalActiveBindings(state);
+        }
+        return new DecayResult(List.copyOf(touched), verified.size(), strengthBefore, strengthAfter,
+                activeBefore, activeAfter);
+    }
+
+    /**
+     * The active bindings of a workspace's concept: how many of its
+     * associations are still standing.
+     *
+     * @param workspaceId the workspace
+     * @param conceptId the concept
+     * @return the count
+     */
+    public int activeBindings(String workspaceId, String conceptId) {
+        io.matrix.neuron.HebbianUpdater.State state = store().hebbianState(workspaceId, conceptId);
+        if (state == null) {
+            state = HebbianBindings.stateFor(workspace(workspaceId), conceptId);
+        }
+        return io.matrix.cognitive.ErrorDrivenLearner.totalActiveBindings(state);
     }
 
     /**

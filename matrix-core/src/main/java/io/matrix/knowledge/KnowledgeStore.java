@@ -54,7 +54,7 @@ import java.util.Set;
 public final class KnowledgeStore implements AutoCloseable {
 
     /** The schema version this build writes. */
-    public static final int SCHEMA_VERSION = 14;
+    public static final int SCHEMA_VERSION = 15;
 
     private static final ObjectMapper JSON = new ObjectMapper();
 
@@ -349,6 +349,25 @@ public final class KnowledgeStore implements AutoCloseable {
     }
 
     private int migrateFrom(int version) throws SQLException {
+        if (version == 14) {
+            // v15 adds the table of the HEBBIAN BINDINGS.
+            //
+            // The owner's decision D-012: the shadow classes are wired to
+            // the live engines. The ErrorDrivenLearner is the live engine
+            // of the error-driven forgetting, and the consolidation is the
+            // live phase that forgets. The state the decay acts on has to
+            // survive a restart - the mission's goal says the improvement
+            // must remain after a forced termination.
+            try (Statement st = connection.createStatement()) {
+                st.execute("CREATE TABLE IF NOT EXISTS hebbian_binding ("
+                        + "workspace_id TEXT NOT NULL, concept_id TEXT NOT NULL, "
+                        + "weights TEXT NOT NULL, accumulator TEXT NOT NULL, "
+                        + "updated_at TEXT NOT NULL, "
+                        + "PRIMARY KEY(workspace_id, concept_id))");
+            }
+            writeSchemaVersion(15);
+            return 15;
+        }
         if (version == 13) {
             // v14 adds the table of the GENERATED assessment items.
             //
@@ -1316,6 +1335,80 @@ public final class KnowledgeStore implements AutoCloseable {
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {
             throw new IllegalStateException("Failed to forget the asked question", e);
+        }
+    }
+
+    /**
+     * Reads the Hebbian state of a workspace's concept.
+     *
+     * @param workspaceId the workspace
+     * @param conceptId the concept
+     * @return the state, or null when the workspace holds none
+     */
+    public io.matrix.neuron.HebbianUpdater.State hebbianState(String workspaceId, String conceptId) {
+        try (PreparedStatement ps = connection.prepareStatement(
+                "SELECT weights, accumulator FROM hebbian_binding "
+                        + "WHERE workspace_id = ? AND concept_id = ?")) {
+            ps.setString(1, workspaceId);
+            ps.setString(2, conceptId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (!rs.next()) {
+                    return null;
+                }
+                return new io.matrix.neuron.HebbianUpdater.State(
+                        io.matrix.neuron.HdcEncoding.fromBits(rs.getString(1)),
+                        io.matrix.neuron.HdcEncoding.fromAccumulator(rs.getString(2)));
+            }
+        } catch (SQLException e) {
+            throw new IllegalStateException("Failed to read the hebbian state", e);
+        }
+    }
+
+    /**
+     * Writes the Hebbian state of a workspace's concept.
+     *
+     * @param workspaceId the workspace
+     * @param conceptId the concept
+     * @param state the state
+     */
+    public void saveHebbianState(String workspaceId, String conceptId,
+                                  io.matrix.neuron.HebbianUpdater.State state) {
+        try (PreparedStatement ps = connection.prepareStatement(
+                "INSERT INTO hebbian_binding(workspace_id, concept_id, weights, accumulator, "
+                        + "updated_at) VALUES(?, ?, ?, ?, ?) "
+                        + "ON CONFLICT(workspace_id, concept_id) DO UPDATE SET "
+                        + "weights = excluded.weights, accumulator = excluded.accumulator, "
+                        + "updated_at = excluded.updated_at")) {
+            ps.setString(1, workspaceId);
+            ps.setString(2, conceptId);
+            ps.setString(3, io.matrix.neuron.HdcEncoding.toBits(state.weights));
+            ps.setString(4, io.matrix.neuron.HdcEncoding.toAccumulator(state.accumulator));
+            ps.setString(5, Long.toString(System.currentTimeMillis()));
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            throw new IllegalStateException("Failed to save the hebbian state", e);
+        }
+    }
+
+    /**
+     * The concepts of a workspace that hold a Hebbian state.
+     *
+     * @param workspaceId the workspace
+     * @return the concept ids
+     */
+    public java.util.Set<String> hebbianConcepts(String workspaceId) {
+        try (PreparedStatement ps = connection.prepareStatement(
+                "SELECT concept_id FROM hebbian_binding WHERE workspace_id = ?")) {
+            ps.setString(1, workspaceId);
+            java.util.Set<String> ids = new java.util.LinkedHashSet<>();
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    ids.add(rs.getString(1));
+                }
+            }
+            return ids;
+        } catch (SQLException e) {
+            throw new IllegalStateException("Failed to read the hebbian concepts", e);
         }
     }
 
