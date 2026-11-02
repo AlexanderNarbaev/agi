@@ -7728,3 +7728,10 @@ the candidate is at 0.915 ✓ ✓.
 **Done** ✓ ✓. The Russian lexicon gained `истинно` → `true` and `ложно` → `false` ✓ ✓, but the candidate's
 accuracy stayed at 0.915 ✓ ✓ — so `ru-hop-2`'s blocker is not the missing term ✓ ✓. The next round must read
 how the query's terms and the BM25 index are prepared, and measure where the match is lost ✓ ✓.
+
+# RECON-W42.9 — the folding hypothesis is refuted
+
+**Done** ✓ ✓. The BM25 index and the query both fold the same way ✓ ✓, so the "folded counterpart against a
+raw claim token" explanation is wrong ✓ ✓ — recorded as refuted rather than quietly dropped ✓ ✓. Two
+questions stay open and must be measured, not guessed: which workspace holds the logic claims ✓ ✓, and what
+the abstention metric's denominator is ✓ ✓.
