@@ -319,6 +319,39 @@ gathers **three** items of delayed evidence where the plain order gathers
 learner is a scripted rule and the dataset holds 22 items, so this is a
 demonstration and not a generalisation.
 
+## 12. The importer against the mission's §13.2
+
+The mission names twelve attacks an importer must survive: the malformed
+documents, the zip bombs, the oversized files, the malicious HTML, the
+prompt injection in the imported documents, the path traversal, the
+untrusted links, the corrupted packages, the invalid signatures, the
+replay attacks, the unauthorized access and the resource exhaustion. The
+rule behind them is the one the mission states: **imported content is
+data, not executable instruction**.
+
+| the attack | the state | what happens |
+|---|---|---|
+| the malformed document | **MEASURED** | refused by name — the pipeline says which formats it reads |
+| the corrupted package | **MEASURED** | the DOCX and the EPUB refuse a container with no body; the refusal is a 400 with the reason, not a 500 with a stack |
+| the zip bomb | **MEASURED** | the expansion check refuses it — the entry's expansion is bounded at 16 MB and the document's at 64 MB; the declared size is a second line |
+| the oversized file | **MEASURED** | the document is refused before it is read, at 32 MB |
+| the malicious HTML | **MEASURED** | the scripts and the event handlers are dropped; what remains is text |
+| the prompt injection | **MEASURED** | the injected sentence does not become a claim, and the system does not follow it: the answer about photosynthesis still comes from the knowledge |
+| the path traversal | **MEASURED** | the name is REFUSED, not sanitised |
+| the untrusted link | **MEASURED** | the link is text; nothing is fetched and the target does not become a source |
+| the replay attack | **MEASURED** | the same document imported twice is one source, not two |
+| the invalid signature | **NOT MEASURED** | the knowledge packages carry no signature, so there is nothing to verify — and that is a limit of the format, not a defence |
+| the unauthorized access | **NOT MEASURED at this layer** | the importer runs inside the workbench; the access control of the HTTP surface is a separate question, and the workbench's endpoints carry no authentication today |
+| the resource exhaustion | **MEASURED** | the size limits above, and the dialogue's 32-turn bound |
+
+**Two of the twelve are not measured, and both are named.** The packages
+carry no signature, so there is nothing to verify — and pretending
+otherwise would be a claim about a defence that does not exist. The
+unauthorized access is a real limit: the workbench's HTTP endpoints have
+no authentication, and the mission's §16 forbids making an external
+service mandatory, so an access control that needs one is not the answer
+— but the limit is recorded rather than passed over.
+
 ## 11. The mission's §14 acceptance table — the state of every row
 
 The mission's §14 gives eighteen rows of engineering targets and says:

@@ -7420,3 +7420,9 @@ was wrong twice before it was right ✓ ✓✓.
 **Done** ✓ ✓. The formal gate passes 12 of 12 after the whole wave ✓ ✓, the clean-code gate is
 clean for the files this wave added ✓ ✓, and the backlog's teach-back entry — which said the
 delayed phase fails — was stale ✓ ✓: it measures ✓ ✓.
+
+# RECON-W42.7 — the importer measured against the mission's §13.2
+
+**Done** ✓ ✓. Ten of the mission's twelve attacks are now measured ✓ ✓, and the two that are not
+are named with the reason ✓ ✓ — the packages carry no signature, and the workbench's HTTP
+endpoints have no authentication today ✓ ✓✓.
