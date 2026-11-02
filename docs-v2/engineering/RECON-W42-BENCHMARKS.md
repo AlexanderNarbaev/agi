@@ -274,6 +274,43 @@ question is checked against the workspace's own claims, and the workspace
 already holds the misconception as a REFUTED claim and the denial as a
 VERIFIED one.
 
+## 10. The W42.7 result — the workspace's own explanation is searchable
+
+**MEASURED on the same benchmark, the same store and the same instrument:**
+
+| | W42.5 | **W42.7** |
+|---|---|---|
+| the answer accuracy | 0.792 | **0.917** |
+| the abstention quality | 0.900 | **0.900** (unchanged) |
+| the BM25 overlap | 0.594 | **0.608** |
+| the PARAPHRASE items | 0/2 | **2/2** |
+| the pinned support score | 0.84 | **0.85** |
+
+**What produced the change:** the concept bridge. The answer is composed from
+the REPRESENTATIONS, and the retriever scored only the CLAIMS — so the answer
+could speak a vocabulary the retrieval could not see. "Explain how green
+plants make food using sunlight." shares no term with any claim of the
+photosynthesis concept, and the explanation the workspace writes about that
+concept says "Photosynthesis is how green plants use light energy to build
+sugars out of carbon dioxide and water, releasing oxygen as a by-product. The
+sugars are the plant's stored food." The bridge is scored at the concept
+level, so the vocabulary of one explanation reaches the concept it explains
+and no other claim.
+
+**What the measurement refused:** the first version of the bridge added the
+representation's terms to every claim of the concept. "What is
+photosynthesis?" went from seven claims to eleven, the pinned support score
+moved from 0.84 to 0.82, and the answer grew evidence about cellular
+respiration and stomatal conductance. That version was not kept.
+
+**The abstention did not move:** 0.900 before and after. The gain is three
+more answerable items answered correctly, and no new false answer.
+
+**The pinned support score moved once**, from 0.84 to 0.85, and the reason is
+known: the answer's evidence for "What is photosynthesis?" grew by one claim,
+and the support score is the mean of the matched claims' confidences. The
+claims that are matched, and their coverages, did not change.
+
 **The retention baseline** (the mission's §14 row, "the delayed retention
 is measured and improved over a no-consolidation baseline") is measured on
 the photosynthesis assessment set of 22 items: the error-driven selection
