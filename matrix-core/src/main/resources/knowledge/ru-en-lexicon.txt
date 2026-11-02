@@ -196,3 +196,5 @@ nadph	nadph
 преобразован	transformation
 темновой	dark
 световой	light
+фотосистема	photosystem
+влечёт	implies

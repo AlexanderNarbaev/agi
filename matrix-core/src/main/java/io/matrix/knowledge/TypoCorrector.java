@@ -127,6 +127,13 @@ public final class TypoCorrector {
                 vocabulary.addAll(TextFeatures.originalTokens(concept.definition()));
             }
         }
+        // W42.9: a Russian question contains Russian words, and the workspace
+        // holds English ones. Without the bilingual terms in the vocabulary, a
+        // Russian typo has nothing to be corrected towards, so the corrector
+        // silently did nothing.
+        for (String term : BilingualLexicon.instance().terms()) {
+            vocabulary.add(term);
+        }
         return new TypoCorrector(vocabulary, conceptNames);
     }
 

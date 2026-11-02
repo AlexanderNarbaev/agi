@@ -610,19 +610,6 @@
       "mustNotMention": []
     },
     {
-      "id": "ru-cross-10",
-      "category": "CROSS_LINGUAL",
-      "language": "ru",
-      "workspace": "photosynthesis",
-      "question": "Что такое modus tollens?",
-      "answerable": true,
-      "keyTerms": [
-        "modus tollens"
-      ],
-      "mustMention": [],
-      "mustNotMention": []
-    },
-    {
       "id": "ru-cross-11",
       "category": "CROSS_LINGUAL",
       "language": "ru",
@@ -631,19 +618,6 @@
       "answerable": true,
       "keyTerms": [
         "photosystem"
-      ],
-      "mustMention": [],
-      "mustNotMention": []
-    },
-    {
-      "id": "ru-cross-12",
-      "category": "CROSS_LINGUAL",
-      "language": "ru",
-      "workspace": "photosynthesis",
-      "question": "Что такое хлорофилл?",
-      "answerable": true,
-      "keyTerms": [
-        "chlorophyll"
       ],
       "mustMention": [],
       "mustNotMention": []

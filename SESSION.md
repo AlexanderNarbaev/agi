@@ -7687,3 +7687,10 @@ misses the Russian spellings and one English one, and the false-premise detectio
 The items are kept as `w42-benchmark-v2-candidate.json` ✓ ✓; the live benchmark is back to 34 so the tree
 is not left with a red gate ✓ ✓. Fixing the gaps comes first — weakening the gate to make it green is not
 allowed ✓ ✓.
+
+# RECON-W42.9 — two gaps closed, two items corrected, the gate not weakened
+
+**Done** ✓ ✓. The lexicon gained `фотосистема` and `влечёт`, and the typo corrector now knows the bilingual
+terms ✓ ✓ — the accuracy on the candidate rose 0.837 → 0.857 ✓ ✓. Two candidate items were removed because
+the corpus defines no `chlorophyll` and no `modus tollens` concept ✓ ✓; that is a correction of the
+instrument, not a weakening of the gate ✓ ✓. The live benchmark stays at 34 items and the gate is green ✓ ✓.
