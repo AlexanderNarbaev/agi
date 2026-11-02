@@ -7394,3 +7394,9 @@ and the live check shows the state surviving a SIGKILL ✓ ✓✓.
 are read now ✓ ✓, without a new dependency ✓ ✓. The corrupted-container defect — a broken
 document imported as an EMPTY one, silently — was real and was in the EPUB too ✓ ✓; both refuse
 now ✓ ✓, and the refusal is a 400 with a reason, not a 500 with a stack ✓ ✓✓.
+
+# RECON-W42.7 — the versions of a title
+
+**Done** ✓ ✓. The backlog's 7.2 is closed ✓ ✓ — the corpus registry groups the sources by
+their title and reports the versions ✓ ✓, ordered by the authored publication date ✓ ✓,
+guessing no date ✓ ✓✓.
