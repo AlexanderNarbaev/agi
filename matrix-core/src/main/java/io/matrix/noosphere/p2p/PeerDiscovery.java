@@ -1,5 +1,6 @@
 package io.matrix.noosphere.p2p;
 
+import io.matrix.security.NetworkExposure;
 import jakarta.enterprise.context.ApplicationScoped;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,7 +35,9 @@ public class PeerDiscovery {
     public void start(int port) {
         running = true;
         executor.submit(() -> {
-            try (ServerSocket server = new ServerSocket(port)) {
+            NetworkExposure.current().guard("peer discovery");
+            try (ServerSocket server = new ServerSocket(port, 50,
+                    java.net.InetAddress.getByName(NetworkExposure.current().bindAddress()))) {
                 log.info("PeerDiscovery listening on port {}", port);
                 while (running) {
                     try {

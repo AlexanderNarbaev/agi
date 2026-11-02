@@ -1,5 +1,6 @@
 package io.matrix.api.llm_quarantine;
 
+import io.matrix.security.NetworkExposure;
 import io.matrix.brain.ConfidenceFilter;
 import io.matrix.brain.BrainCycle;
 import io.matrix.brain.BirBrainCycle;
@@ -74,7 +75,13 @@ public final class BrainHttpServer {
     }
     
     public void start() throws IOException {
-        HttpServer server = HttpServer.create(new InetSocketAddress(port), 0);
+// RECON-W43.0: this listener binds through the shared boundary, so it
+        // cannot end up reachable from another host while the process is
+        // local-only, and it refuses to start when the process is exposed
+        // without a configured credential.
+        NetworkExposure.current().guard("BrainHttpServer");
+        HttpServer server = HttpServer.create(new InetSocketAddress(
+                NetworkExposure.current().bindAddress(), port), 0);
         server.createContext("/health", new HealthHandler());
         server.createContext("/chat", new ChatHandler());
         server.createContext("/learn", new LearnHandler());

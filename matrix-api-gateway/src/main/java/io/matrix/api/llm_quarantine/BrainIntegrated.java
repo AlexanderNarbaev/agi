@@ -1,5 +1,6 @@
 package io.matrix.api.llm_quarantine;
 
+import io.matrix.security.NetworkExposure;
 import io.matrix.brain.BrainCycle;
 import io.matrix.autonomy.AutonomyEngine;
 import io.matrix.autonomy.AutonomyEngine;
@@ -62,7 +63,8 @@ public final class BrainIntegrated {
         
         // Start HTTP server
         com.sun.net.httpserver.HttpServer server = com.sun.net.httpserver.HttpServer.create(
-            new java.net.InetSocketAddress(port), 0);
+            new java.net.InetSocketAddress(
+                NetworkExposure.current().bindAddress(), port), 0);
         server.createContext("/health", new HttpHandler() {
             public void handle(com.sun.net.httpserver.HttpExchange ex) throws java.io.IOException {
                 String body = "{\"status\":\"ok\",\"service\":\"brain-integrated\"}";

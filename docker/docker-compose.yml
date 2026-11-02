@@ -16,6 +16,12 @@ services:
     environment:
       - JAVA_OPTS=-Xmx2g
       - MATRIX_MODEL_PATH=/app/models/onnx/qwen05b
+      # RECON-W43.0: this stack publishes the conversation server on three
+      # ports, so the process is reachable from the network and is declared
+      # exposed. The credential is required: the application refuses to
+      # start without it, and every state-changing request must present it.
+      - MATRIX_SECURITY_MODE=NETWORK_EXPOSED
+      - MATRIX_SECURITY_TOKEN=${MATRIX_SECURITY_TOKEN:?set MATRIX_SECURITY_TOKEN before starting this stack}
     volumes:
       - conv-data:/app/data/conversations
       - conv-backup:/backup

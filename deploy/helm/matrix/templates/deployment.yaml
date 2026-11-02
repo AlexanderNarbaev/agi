@@ -39,6 +39,18 @@ spec:
                 secretKeyRef:
                   name: {{ include "matrix.fullname" . }}-secrets
                   key: license-signing-secret
+            # RECON-W43.0: this chart publishes the service through an
+            # ingress, so the process IS reachable from the network. It is
+            # therefore declared exposed, and the startup guard refuses to
+            # start it without a credential. The secret must exist; a
+            # deployment that has none does not serve.
+            - name: MATRIX_SECURITY_MODE
+              value: NETWORK_EXPOSED
+            - name: MATRIX_SECURITY_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "matrix.fullname" . }}-secrets
+                  key: security-token
           livenessProbe:
             httpGet:
               path: /q/health/live

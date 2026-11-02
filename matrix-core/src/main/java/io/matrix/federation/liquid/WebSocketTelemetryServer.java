@@ -1,5 +1,6 @@
 package io.matrix.federation.liquid;
 
+import io.matrix.security.NetworkExposure;
 import java.io.*;
 import com.sun.net.httpserver.HttpServer;
 import java.net.*;
@@ -30,7 +31,13 @@ public final class WebSocketTelemetryServer {
     }
 
     public void start() throws IOException {
-        server = HttpServer.create(new InetSocketAddress(port), 0);
+// RECON-W43.0: this listener binds through the shared boundary, so it
+        // cannot end up reachable from another host while the process is
+        // local-only, and it refuses to start when the process is exposed
+        // without a configured credential.
+        NetworkExposure.current().guard("WebSocketTelemetryServer");
+        server = HttpServer.create(new InetSocketAddress(
+                NetworkExposure.current().bindAddress(), port), 0);
 
         server.createContext("/metrics", exchange -> {
             String json = buildMetricsJson();

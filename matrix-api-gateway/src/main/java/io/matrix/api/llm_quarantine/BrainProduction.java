@@ -1,5 +1,6 @@
 package io.matrix.api.llm_quarantine;
 
+import io.matrix.security.NetworkExposure;
 import io.matrix.brain.ConfidenceFilteredBrain;
 import io.matrix.brain.ConfidenceFilter;
 import io.matrix.brain.BrainCycle;
@@ -53,7 +54,13 @@ public final class BrainProduction {
         this.autonomy = new AutonomyEngine(filteredBrain, scheduler);
         
         // HTTP server
-        this.server = HttpServer.create(new InetSocketAddress(port), 0);
+// RECON-W43.0: this listener binds through the shared boundary, so it
+        // cannot end up reachable from another host while the process is
+        // local-only, and it refuses to start when the process is exposed
+        // without a configured credential.
+        NetworkExposure.current().guard("BrainProduction");
+        this.server = HttpServer.create(new InetSocketAddress(
+                NetworkExposure.current().bindAddress(), port), 0);
         // Serve web UI at /
         server.createContext("/", new WebUiHandler());
 
