@@ -7400,3 +7400,10 @@ now ✓ ✓, and the refusal is a 400 with a reason, not a 500 with a stack ✓ 
 **Done** ✓ ✓. The backlog's 7.2 is closed ✓ ✓ — the corpus registry groups the sources by
 their title and reports the versions ✓ ✓, ordered by the authored publication date ✓ ✓,
 guessing no date ✓ ✓✓.
+
+# RECON-W42.7 — the checklist re-verified, and the instrument fixed
+
+**Done** ✓ ✓. The twelve steps pass against the current code ✓ ✓, and the re-run found that the
+dashboard and the probe were reporting different numbers for the same measurement ✓ ✓ — the
+benchmark item's workspace was never loaded, so half the items were measured against an empty
+workspace ✓ ✓. The instrument now loads it ✓ ✓, and the published baseline did not move ✓ ✓✓.
