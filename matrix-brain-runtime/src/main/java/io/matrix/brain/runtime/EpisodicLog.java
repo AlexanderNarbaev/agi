@@ -167,12 +167,24 @@ public final class EpisodicLog {
     }
 
     private final Path logPath;
+    /**
+     * Every promotion decision is recorded here (W42.9 / D-016). A refusal was
+     * previously only counted, so the reason a lesson did NOT become knowledge
+     * was lost. The chain keeps it, and the chain is tamper-evident.
+     */
+    private final AuditChain auditChain;
     private final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
     private long appendCount = 0;
     private long rejectedCount = 0;
 
     public EpisodicLog(Path logPath) {
+        this(logPath, new AuditChain());
+    }
+
+    /** The log with an explicit chain, so a caller can read the decisions back. */
+    public EpisodicLog(Path logPath, AuditChain auditChain) {
         this.logPath = logPath;
+        this.auditChain = auditChain;
     }
 
     /**
@@ -193,12 +205,16 @@ public final class EpisodicLog {
      */
     public PromotionGate.Decision append(Entry e) {
         if (e == null) {
-            return PromotionGate.Decision.deny(PromotionGate.Reason.EMPTY,
+            PromotionGate.Decision denied = PromotionGate.Decision.deny(PromotionGate.Reason.EMPTY,
                 "promoted=false reason=EMPTY (null entry)");
+            auditChain.append("episode.rejected", "|EMPTY|" + denied.trace());
+            return denied;
         }
         PromotionGate.Decision d = PromotionGate.evaluate(
             PromotionGate.Candidate.forInteraction(
                 e.input(), e.reply(), e.confidence(), e.modulatorsFired(), e.accepted()));
+        auditChain.append(d.promoted() ? "episode.promoted" : "episode.rejected",
+            e.id() + "|" + d.reason().name() + "|" + d.trace());
         if (!d.promoted()) {
             lock.writeLock().lock();
             try { rejectedCount++; }
@@ -245,6 +261,9 @@ public final class EpisodicLog {
         String id = "ep-" + ts + "-" + Long.toHexString(fnv1a64(input + "|" + reply));
         return append(new Entry(id, input, reply, confidence, accepted, modulators, ts));
     }
+
+    /** The chain of the promotion decisions — the refusals included. */
+    public AuditChain auditChain() { return auditChain; }
 
     /** Entries written to the log since construction. */
     public long appendedCount() {

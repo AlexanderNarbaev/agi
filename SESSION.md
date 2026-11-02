@@ -7622,3 +7622,10 @@ compiler ✓ ✓.
 canonical `io.matrix.audit.HashChainedLog`, so the chain format, the linking and the verification are the
 canonical ones ✓ ✓. The `matrix-audit` dependency is declared again because it is now used ✓ ✓. The
 module's tests are green: 14 + 1, no failures ✓ ✓.
+
+# RECON-W42.9 — the promotion decisions are recorded, the refusals included
+
+**Done** ✓ ✓. `EpisodicLog` now writes every promotion decision into the audit chain — promoted or
+refused — with the reason and the trace ✓ ✓. Previously a refusal was only counted and its reason was
+lost ✓ ✓. The test `EpisodicLogAuditChainTest` proves it: 2 decisions, 2 chain entries, the chain
+verifies, and the refusal's reason is recoverable ✓ ✓.
