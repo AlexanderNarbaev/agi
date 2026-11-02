@@ -397,6 +397,33 @@ public final class KnowledgeRetriever {
                     + "so the answer is the claim itself.");
         }
 
+        // THE RULE APPLICATION.
+        //
+        // RECON-W42.7. The mission's §7 names the transfer category: a
+        // principle that has been grasped must be applied to an instance it
+        // was not stated in. The workspace can state modus ponens, and it
+        // could not apply it - a question that stated a conditional and
+        // asked what followed was answered with the DEFINITION of the rule
+        // and nothing about the instance.
+        //
+        // The application is grounded in a claim the workspace holds, and
+        // the consequent is the QUESTION's own text: nothing is invented
+        // here, and a workspace that holds no rule is not licensed to
+        // apply one.
+        RuleApplication.Application application = RuleApplication.apply(question, snapshot.claims());
+        if (application != null) {
+            statements.add(0, RuleApplication.statementOf(application));
+            limitations.add("The rule applied is stated by the workspace: "
+                    + application.groundingProposition());
+            Claim grounding = snapshot.claims().stream()
+                    .filter(claim -> claim.id().equals(application.groundingClaimId()))
+                    .findFirst()
+                    .orElse(null);
+            if (grounding != null && !claims.contains(grounding)) {
+                claims.add(grounding);
+            }
+        }
+
         // The support score: the mean of the matched claims' OWN confidence
         // field - which was authored by hand in the knowledge package -
         // multiplied by the retrieval coverage. The VALUE is unchanged from
