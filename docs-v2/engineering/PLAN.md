@@ -261,3 +261,41 @@ Java 25 · Quarkus 3.38.3 · GraalVM plugin 1.1.10 · Avro 1.12.2 · ONNX Runtim
 licence manifest, a measured parser table, an inspectable import report,
 the traceability from a claim to a span, and the measured idempotence ✓✓.
 Two defects found and recorded: R51 (fixed) and R52 (open) ✓✓.
+
+---
+
+## Wave W44 — Cognitive Kernel Foundation (02 Nov 2026)
+
+**Директива:** W44 — Cognitive Architecture, World Model, Neuromodulation & Adaptive Computation.
+**ADR:** `docs-v2/engineering/ADR-W44-01-cognitive-kernel.md`.
+**Карта возможностей:** `docs-v2/engineering/W44-CAPABILITY-MAP.md`.
+
+### Что сделано
+
+| Срез | Что | Где |
+|---|---|---|
+| W44.0 | Сверка: фактический HEAD, рабочее дерево, **две несвязанные цепочки обслуживания** (Quarkus-эпистемное ядро и `MinimalHttpServer`-мозговой рантайм), карта из 25 реализаций с состояниями, 4 мёртвые подсистемы и 1 недоказуемое GPU-утверждение | `W44-CAPABILITY-MAP.md` |
+| W44.1 | Контракты ядра: `Signal`, `Percept`, `Prediction`, `ErrorSignal`, `DriveSignal`, `AlgorithmCapability`, `ComputeBudget`, `AlgorithmDecision`, `LearningTrace`, `CognitiveTask` + **схема-16: объект `Case`** | `io.matrix.cognitive.*`, `io.matrix.knowledge.Case` |
+| W44.2 | Портфель алгоритмов с декларацией предусловий и **измеренной** стоимостью: точная арифметика, энтейлмент (существующий `EntailmentChecker`), Дейкстра/Беллман-Форд, ограниченный поиск, переиспользуемая процедура; селектор `accuracy − costWeight × relativeCost` | `io.matrix.cognitive.algorithms.*` |
+| W44.3 | **Новый** регуляторный слой: типизированные драйвы, ограниченное влияние (4 поля `RegulationBias`), запрет на ослабление гейтов; старые биохимические острова остаются INACTIVE и задокументированы | `io.matrix.cognitive.neuromodulation.*` |
+| W44.4 | Когнитивный микромир со **скрытым** правилом, конкурирующими гипотезами (все 16 булевых функций), различающим экспериментом, контрпримером и разделением предсказания и наблюдения | `io.matrix.cognitive.microworld.*` |
+| W44.5 | Сквозная интеграция: `POST /v1/cognitive/**`, вкладка «Cognitive» в существующем воркбенче, та же БД SQLite, переживание рестарта | `CognitiveService`, `CognitiveResource`, `workbench/index.html` |
+
+### Ключевые решения волны
+
+- Ядро живёт в `matrix-core` — единственном модуле с Quarkus, владельце эпистемного
+  хранилища и воркбенча. Новый модуль означал бы второе приложение.
+- **Ни один существующий «гормональный» подсистемный код не воскрешён**: `BiochemicalNetwork`,
+  `BiochemicalOrchestrator`, `KineticModulator`, `CognitiveModulationBridge`, `Impulse`,
+  `AttentionRouter` — недостижимые острова с рукописными коэффициентами без источников.
+- `Dijkstra` документирует «неотрицательные веса» и **не проверяет их**; обёртка портфеля
+  проверяет и отказывает, а fallback — Беллман-Форд.
+- `Case` реализован: это была отложенная миграция-16, решение владельца теперь дано
+  директивой W44.
+
+### Что НЕ сделано и не заявлено
+
+Слияние двух цепочек обслуживания; подключение пакета `graph` (159 тестов, 0 production-вызовов);
+GPU как выбираемый backend (провайдеры ONNX не наблюдаемы в рантайме); обученный мета-контроллер
+над портфелем (директива запрещает его до измеримой детерминированной базы); пятиклассовая
+таксономия памяти как код.

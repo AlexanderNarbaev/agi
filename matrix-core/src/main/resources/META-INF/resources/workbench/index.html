@@ -79,6 +79,7 @@
   <button data-tab="reasoning">Reasoning</button>
   <button data-tab="knowledge">Knowledge</button>
   <button data-tab="epistemic">Epistemic</button>
+  <button data-tab="cognitive">Cognitive</button>
   <button data-tab="corpus">Sources</button>
   <button data-tab="graph">Graph</button>
   <button data-tab="experiments">Experiments</button>
@@ -439,6 +440,50 @@ The counts below are read back from the store on disk by this new process.</pre>
       </div>
     </div>
   </section>
+  <section id="tab-cognitive">
+    <h2>Cognitive kernel</h2>
+    <p class="muted">
+      One cognitive cycle, end to end: what was perceived, what was predicted, which
+      computation was chosen and why, what was observed, what changed, and where the
+      system refused. The predictions, the errors, the promoted procedures and the
+      internal tasks below all survive a restart.
+    </p>
+    <div class="card">
+      <h3 style="margin-top:0">Run a cycle</h3>
+      <div class="row">
+        <input type="text" id="cog-assignment" value="power=1,switch=0"
+               placeholder="power=1,switch=0" style="width:280px">
+        <button class="action" id="cog-observe">Observe</button>
+        <span class="muted" id="cog-note">Nothing observed yet.</span>
+      </div>
+    </div>
+    <div class="grid">
+      <div class="card">
+        <h3 style="margin-top:0">The trace of the last cycle</h3>
+        <div id="cog-trace" class="muted">No cycle has been run.</div>
+      </div>
+      <div class="card">
+        <h3 style="margin-top:0">Predictions</h3>
+        <div id="cog-predictions" class="muted">No predictions recorded.</div>
+      </div>
+      <div class="card">
+        <h3 style="margin-top:0">Prediction errors</h3>
+        <div id="cog-errors" class="muted">No errors recorded.</div>
+      </div>
+      <div class="card">
+        <h3 style="margin-top:0">Promoted procedures</h3>
+        <div id="cog-procedures" class="muted">No procedure promoted.</div>
+      </div>
+      <div class="card">
+        <h3 style="margin-top:0">Internal tasks</h3>
+        <div id="cog-tasks" class="muted">No internal task generated.</div>
+      </div>
+      <div class="card">
+        <h3 style="margin-top:0">Cases — the observations and their conditions</h3>
+        <div id="cog-cases" class="muted">No case recorded.</div>
+      </div>
+    </div>
+  </section>
 </main>
 
 <script>
@@ -471,6 +516,7 @@ document.querySelectorAll('nav button').forEach(btn => {
     if (btn.dataset.tab === 'ask') { loadDialogue(); }
     if (btn.dataset.tab === 'knowledge') loadKnowledge();
     if (btn.dataset.tab === 'epistemic') loadEpistemic();
+    if (btn.dataset.tab === 'cognitive') loadCognitive();
     if (btn.dataset.tab === 'corpus') loadCorpus();
     if (btn.dataset.tab === 'graph') loadGraph();
     if (btn.dataset.tab === 'experiments') loadExperiments();
@@ -1510,6 +1556,83 @@ $('consolidate-questions').addEventListener('click', async () => {
     await loadQuestions();
   } catch (e) {
     $('progress-questions').innerHTML = '<span class="muted">' + esc(e.message) + '</span>';
+  } finally {
+    btn.disabled = false;
+  }
+});
+
+const COG_API = '/v1/cognitive';
+
+async function cogApi(path, options) {
+  const res = await fetch(COG_API + path, options);
+  const text = await res.text();
+  let body = null;
+  try { body = text ? JSON.parse(text) : null; } catch (e) { body = { raw: text }; }
+  if (!res.ok) throw new Error((body && body.error) || ('HTTP ' + res.status));
+  return body;
+}
+
+async function loadCognitive() {
+  try {
+    const [predictions, errors, procedures, tasks, cases] = await Promise.all([
+      cogApi('/predictions'), cogApi('/errors'), cogApi('/procedures'),
+      cogApi('/tasks'), cogApi('/cases')
+    ]);
+
+    $('cog-predictions').innerHTML = predictions.length ? predictions.map(function (p) {
+      return '<div><b>' + esc(p.subject) + '</b> &rarr; ' + esc(p.predictedValue) +
+        '<div class="muted">basis ' + esc(p.basis) + '@' + esc(p.basisVersion) +
+        ' &middot; confidence ' + esc(p.confidence) + '</div></div>';
+    }).join('') : '<span class="muted">No predictions recorded.</span>';
+
+    $('cog-errors').innerHTML = errors.length ? errors.map(function (e) {
+      return '<div>expected <b>' + esc(e.expected) + '</b>, observed <b>' + esc(e.observed) + '</b>' +
+        '<div class="muted">' + esc(e.disposition) + ' &middot; responsible for: ' +
+        esc(e.responsibleModel) + '@' + esc(e.responsibleVersion) + '</div></div>';
+    }).join('') : '<span class="muted">No errors recorded.</span>';
+
+    $('cog-procedures').innerHTML = procedures.length ? procedures.map(function (p) {
+      return '<div><b>' + esc(p.name) + '</b>' +
+        '<div class="muted">valid when ' + esc(p.applicability) +
+        ' &middot; agreed with the reference on ' + esc(p.validationCases) +
+        ' held-out case(s) &middot; falls back to ' + esc(p.referenceAlgorithmId) + '</div></div>';
+    }).join('') : '<span class="muted">No procedure promoted.</span>';
+
+    $('cog-tasks').innerHTML = tasks.length ? tasks.map(function (t) {
+      return '<div><b>' + esc(t.reason) + '</b>' +
+        '<div class="muted">' + esc(t.status) + ' &middot; budget ' + esc(t.budgetWallClockMillis) +
+        ' ms &middot; may: ' + esc((t.allowedActions || []).join(', ')) +
+        ' &middot; stops when: ' + esc(t.stopCondition) + '</div></div>';
+    }).join('') : '<span class="muted">No internal task generated.</span>';
+
+    $('cog-cases').innerHTML = cases.length ? cases.map(function (c) {
+      return '<div><b>' + esc(c.statement) + '</b>' +
+        '<div class="muted">under ' + esc(c.conditions) + ' &middot; ' + esc(c.origin) +
+        ' &middot; ' + esc(c.observedAt) + '</div></div>';
+    }).join('') : '<span class="muted">No case recorded.</span>';
+  } catch (error) {
+    $('cog-predictions').innerHTML = '<span class="muted">Could not read the cognitive state.</span>';
+  }
+}
+
+$('cog-observe').addEventListener('click', async () => {
+  const btn = $('cog-observe');
+  const assignment = $('cog-assignment').value.trim();
+  if (!assignment) { $('cog-note').textContent = 'Name an assignment first.'; return; }
+  btn.disabled = true;
+  try {
+    const outcome = await cogApi('/observe', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ assignment: assignment })
+    });
+    $('cog-trace').innerHTML = (outcome.trace || []).map(function (step) {
+      return '<div><b>' + esc(step.phase) + '</b> <span class="muted">' + esc(step.actor) + '</span>' +
+        '<div class="muted">' + esc(step.detail) + '</div></div>';
+    }).join('');
+    $('cog-note').textContent = outcome.status + ': ' + outcome.answer;
+    await loadCognitive();
+  } catch (error) {
+    $('cog-note').textContent = 'The cycle failed: ' + error.message;
   } finally {
     btn.disabled = false;
   }

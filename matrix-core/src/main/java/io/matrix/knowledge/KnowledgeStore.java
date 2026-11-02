@@ -53,8 +53,16 @@ import java.util.Set;
  */
 public final class KnowledgeStore implements AutoCloseable {
 
-    /** The schema version this build writes. */
-    public static final int SCHEMA_VERSION = 15;
+    /**
+     * The schema version this build writes.
+     *
+     * <p>v16 adds the {@link Case} table and the {@code evidence.case_id} link. The case model
+     * was planned in {@code ADR-W43-01} §4.5 and landed in W44 (see
+     * {@code docs-v2/engineering/ADR-W44-01-cognitive-kernel.md}). The table is named
+     * {@code epistemic_case} rather than {@code case} because {@code CASE} is a reserved word in
+     * SQL and every query would then need quoting.</p>
+     */
+    public static final int SCHEMA_VERSION = 16;
 
     private static final ObjectMapper JSON = new ObjectMapper();
 
@@ -349,6 +357,38 @@ public final class KnowledgeStore implements AutoCloseable {
     }
 
     private int migrateFrom(int version) throws SQLException {
+        if (version == 15) {
+            // v16 adds the CASE table and the link from evidence to it.
+            //
+            // The case model was planned in ADR-W43-01 §4.5 and recorded as
+            // PLANNED in RECON-W43-STATUS.md, waiting for the owner's
+            // schema-16 decision. The W44 directive is that decision.
+            //
+            // The reason a case needs its own table is that an observation
+            // carries the CONDITIONS it was made under. Before this table
+            // those conditions had no home: they lived in the locator of an
+            // OBSERVATION source, which is a field whose documented purpose
+            // is to say where a source came from.
+            //
+            // The migration is additive. No existing table changes shape, so
+            // no existing query can break, and the chain still builds a
+            // fresh database with exactly the code that upgrades an old one.
+            try (Statement st = connection.createStatement()) {
+                st.execute("CREATE TABLE IF NOT EXISTS epistemic_case ("
+                        + "id TEXT PRIMARY KEY, workspace_id TEXT NOT NULL, "
+                        + "concept_id TEXT, statement TEXT NOT NULL, "
+                        + "conditions TEXT NOT NULL, outcome TEXT NOT NULL, "
+                        + "source_id TEXT, origin TEXT NOT NULL, "
+                        + "observed_at TEXT NOT NULL)");
+                st.execute("CREATE INDEX IF NOT EXISTS idx_case_workspace "
+                        + "ON epistemic_case(workspace_id, observed_at)");
+                if (!tableColumnExists(st, "evidence", "case_id")) {
+                    st.execute("ALTER TABLE evidence ADD COLUMN case_id TEXT");
+                }
+            }
+            writeSchemaVersion(16);
+            return 16;
+        }
         if (version == 14) {
             // v15 adds the table of the HEBBIAN BINDINGS.
             //
@@ -1650,7 +1690,19 @@ public final class KnowledgeStore implements AutoCloseable {
 
     /** Whether the source table already has the column. */
     private static boolean sourceColumnExists(Statement st, String column) throws SQLException {
-        try (var rs = st.executeQuery("PRAGMA table_info(source)")) {
+        return tableColumnExists(st, "source", column);
+    }
+
+    /**
+     * Whether a column is already present on a table.
+     *
+     * <p>The check exists because SQLite has no {@code ADD COLUMN IF NOT EXISTS}: running the
+     * same migration twice would fail, and a migration that is not idempotent is a migration
+     * that breaks the first time a database is copied.</p>
+     */
+    private static boolean tableColumnExists(Statement st, String table, String column)
+            throws SQLException {
+        try (var rs = st.executeQuery("PRAGMA table_info(" + table + ")")) {
             while (rs.next()) {
                 if (column.equals(rs.getString("name"))) {
                     return true;
@@ -2142,6 +2194,98 @@ public final class KnowledgeStore implements AutoCloseable {
         } catch (SQLException e) {
             throw new IllegalStateException("failed to record the contradiction", e);
         }
+    }
+
+    /**
+     * Records one case: an observation, the conditions it was made under and what was seen.
+     *
+     * <p>The write is idempotent on the case id, so re-running the same observation does not
+     * create a parallel copy of it. That matters for the cognitive kernel, whose case ids are
+     * derived from the observation itself: a restart that replays an episode must not double the
+     * evidence.</p>
+     */
+    public void recordCase(Case observation) {
+        try (PreparedStatement ps = connection.prepareStatement(
+                "INSERT OR REPLACE INTO epistemic_case(id, workspace_id, concept_id, statement, "
+                        + "conditions, outcome, source_id, origin, observed_at) "
+                        + "VALUES (?,?,?,?,?,?,?,?,?)")) {
+            ps.setString(1, observation.id());
+            ps.setString(2, observation.workspaceId());
+            ps.setString(3, observation.conceptId());
+            ps.setString(4, observation.statement());
+            ps.setString(5, observation.conditions());
+            ps.setString(6, observation.outcome());
+            ps.setString(7, observation.sourceId());
+            ps.setString(8, observation.origin().name());
+            ps.setString(9, observation.observedAt());
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            throw new IllegalStateException("failed to record the case", e);
+        }
+    }
+
+    /** Every case of a workspace, oldest first. */
+    public List<Case> cases(String workspaceId) {
+        List<Case> out = new ArrayList<>();
+        try (PreparedStatement ps = connection.prepareStatement(
+                "SELECT id, workspace_id, concept_id, statement, conditions, outcome, source_id, "
+                        + "origin, observed_at FROM epistemic_case WHERE workspace_id = ? "
+                        + "ORDER BY observed_at, id")) {
+            ps.setString(1, workspaceId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    out.add(new Case(
+                            rs.getString("id"),
+                            rs.getString("workspace_id"),
+                            rs.getString("concept_id"),
+                            rs.getString("statement"),
+                            rs.getString("conditions"),
+                            rs.getString("outcome"),
+                            rs.getString("source_id"),
+                            Case.Origin.valueOf(rs.getString("origin")),
+                            rs.getString("observed_at")));
+                }
+            }
+        } catch (SQLException e) {
+            throw new IllegalStateException("failed to read the cases", e);
+        }
+        return out;
+    }
+
+    /**
+     * Points an evidence link at the case that produced it.
+     *
+     * <p>The link is a separate statement rather than a column on {@link Evidence} because
+     * {@code Evidence} is a W43 record whose constructor is used by every writer in the
+     * repository. Adding a field to it would change a public constructor for the sake of one
+     * optional link, and the optional link is exactly the kind of thing that should not be able
+     * to break the records that do not need it.</p>
+     */
+    public void linkEvidenceToCase(String evidenceId, String caseId) {
+        try (PreparedStatement ps = connection.prepareStatement(
+                "UPDATE evidence SET case_id = ? WHERE id = ?")) {
+            ps.setString(1, caseId);
+            ps.setString(2, evidenceId);
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            throw new IllegalStateException("failed to link the evidence to its case", e);
+        }
+    }
+
+    /** The case an evidence link came from, or null when it came from none. */
+    public String caseIdForEvidence(String evidenceId) {
+        try (PreparedStatement ps = connection.prepareStatement(
+                "SELECT case_id FROM evidence WHERE id = ?")) {
+            ps.setString(1, evidenceId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getString("case_id");
+                }
+            }
+        } catch (SQLException e) {
+            throw new IllegalStateException("failed to read the case of an evidence link", e);
+        }
+        return null;
     }
 
     /**

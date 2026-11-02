@@ -722,6 +722,53 @@ public class KnowledgeWorkbench implements AutoCloseable {
     }
 
     /**
+     * Records an observation as a first-class CASE, with the conditions it was made under.
+     *
+     * <p>W44. {@link #recordExample} writes the observation as a source plus an evidence link,
+     * and the conditions live in the source's locator. That was enough while the conditions were
+     * free text attached to a claim. The cognitive kernel needs more: a case is what makes a
+     * PREDICTION distinguishable from an OBSERVATION, because the case carries the conditions
+     * and the outcome, and a prediction carries only what was expected.
+     *
+     * <p>The write order matters and is deliberate: the source and the evidence go through the
+     * transactional {@code applyChanges}, the case is written next, and the link from the
+     * evidence to the case is written last. A reader that sees an evidence link therefore never
+     * sees a link to a case that does not exist.</p>
+     *
+     * @param workspaceId the workspace
+     * @param claimId the claim the observation bears on
+     * @param observation what was observed
+     * @param condition the conditions under which it was observed
+     * @param contradicts whether the observation contradicts the claim
+     * @param caseId the id of the case to record
+     * @return the evidence link that was recorded
+     */
+    public Evidence recordObservation(String workspaceId, String claimId, String observation,
+                                      String condition, boolean contradicts, String caseId) {
+        Claim claim = claimById(workspaceId, claimId);
+        String excerpt = observation == null || observation.isBlank()
+                ? "an observation was recorded without its text"
+                : observation.strip();
+        String conditions = condition == null ? "" : condition.strip();
+        String sourceId = "obs-" + java.util.UUID.randomUUID();
+        Source source = new Source(sourceId, workspaceId, SourceKind.OBSERVATION,
+                contradicts ? "a counterexample" : "an example",
+                conditions,
+                OBSERVATION_AUTHORITY, OBSERVATION_FRESHNESS,
+                excerpt, recordedAt(), contentHash(excerpt), null, null, "observation");
+        Evidence evidence = new Evidence("evd-" + java.util.UUID.randomUUID(), workspaceId,
+                claimId, sourceId,
+                contradicts ? EvidenceRelation.CONTRADICTS : EvidenceRelation.EXEMPLIFIES,
+                excerpt, OBSERVATION_EVIDENCE_QUALITY, recordedAt());
+        store().applyChanges(workspaceId, new KnowledgeChanges(List.of(source), List.of(),
+                List.of(evidence), List.of(), List.of()));
+        store().recordCase(new Case(caseId, workspaceId, claim.conceptId(), excerpt,
+                conditions, excerpt, sourceId, Case.Origin.OBSERVED, recordedAt()));
+        store().linkEvidenceToCase(evidence.id(), caseId);
+        return evidence;
+    }
+
+    /**
      * Records a claim that was STATED, with the scope it states.
      *
      * <p>RECON-W43.5. The mission's §5 scenario starts with a claim, and
