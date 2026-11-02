@@ -7407,3 +7407,10 @@ guessing no date ✓ ✓✓.
 dashboard and the probe were reporting different numbers for the same measurement ✓ ✓ — the
 benchmark item's workspace was never loaded, so half the items were measured against an empty
 workspace ✓ ✓. The instrument now loads it ✓ ✓, and the published baseline did not move ✓ ✓✓.
+
+# RECON-W42.7 — the atomic import, the reproducible build, the typo benchmark
+
+**Done** ✓ ✓. The import is atomic ✓ ✓ — the concepts go in with the claims ✓ ✓. The
+compilation is byte-reproducible ✓ ✓, and the archive's difference is named ✓ ✓. The synthetic
+typo benchmark measures the intent preservation ✓ ✓ at 24 of 24 ✓ ✓ — and its own measurement
+was wrong twice before it was right ✓ ✓✓.

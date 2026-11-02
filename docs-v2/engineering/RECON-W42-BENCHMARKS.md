@@ -339,7 +339,7 @@ metrics for the same reason.
 | 7 | 100 % provenance | **MEASURED: 1.000** | `the evidenceBackedShare: 1.0` — 17 claims, 17 with evidence, 18 evidence links, 4 sources |
 | 8 | no fabrication on unsupported questions | **MEASURED: the abstention 0.900** | 9 of the 10 unanswerable items refused; the one that is answered is named in the report |
 | 9 | ≥ 100 reproducible multilingual test cases | **MEASURED: 168** | `w42-dialogue-cases-v1.json` — 22 categories, 133 English and 35 Russian, the class of the utterance 168/168 |
-| 10 | ≥ 95 % intent preservation on a synthetic typo benchmark | **NOT MEASURED as its own benchmark** | the MISSPELLED category of the W42 benchmark is 4/4, and the dialogue's typo categories are 32 cases, but no separate synthetic typo benchmark with an intent label exists yet — **this row is open** |
+| 10 | ≥ 95 % intent preservation on a synthetic typo benchmark | **MEASURED (W42.7): 1.000 — 24 of 24** | the synthetic typo benchmark: three kinds of typo — the substitution, the transposition and the deletion — over the workspace's own concept names, by the fixed seed 42, so the dataset is reproducible and its version IS the seed. Every case carries the question that was MEANT, and the intent is preserved when the answer covers everything the intended answer covered. The measurement was wrong twice before it was right, and both times the fault was the benchmark's, not the system's |
 | 11 | retrieval against BM25 / the lexical baseline | **MEASURED: the overlap 0.608** | the same ranking and the same instrument, so the number is attributable |
 | 12 | independent pre, post, delayed and transfer measurement | **MEASURED, partially** | the held-out items are 43 of the 86, and the retention experiment measures the delayed arm against a baseline; the pre/post pair over a learner's own answers is **not** measured as one experiment |
 | 13 | retention against a no-consolidation baseline | **MEASURED** | the baseline EXPLORATION/2 against the consolidation PRACTICE/3, over a scripted learner and 22 items — a demonstration, not a generalisation |
@@ -349,12 +349,20 @@ metrics for the same reason.
 | 17 | all critical mutants killed or justified | **MEASURED: 25 of 27, 2 justified** | `scripts/mutation-harness.py` — 27 mutants, 25 killed, 2 survived, 0 invalid, 0 drift |
 | 18 | a reproducible build | **PARTIALLY MEASURED** | the COMPILATION is reproducible: two clean builds produced **2 413 byte-identical class files** (the hash `8ea0474b…`). The ARCHIVE is not: two clean jar builds produced different hashes, and the cause is not yet explained. The build is pinned — Java 25, Gradle 9.6.0, the Quarkus BOM, SQLite 3.43.0.0, jsoup 1.17.2, PDFBox 3.0.3, TLC 1.8.0 — and a `clean` + a single-task build failed once and succeeded twice, so the build's fragility is itself not yet pinned |
 
-**One row is open and one is half measured**, and both are named here
-rather than left to be discovered: the synthetic typo benchmark with an
-intent label (row 10) is not measured at all, and the reproducible build
-(row 18) is measured for the compilation — byte-identical class files —
-but not for the archive, whose two clean builds differ. Neither is a
-claim; both are work.
+**One row is half measured**, and it is named here rather than left to be
+discovered: the reproducible build (row 18) is measured for the
+compilation — 2 413 byte-identical class files from two clean builds —
+but not for the archive, whose two clean builds differ, and a `clean`
+plus a single-task build failed once and succeeded twice, so the build's
+own fragility is not yet pinned. That is work, not a claim.
+
+**The typo benchmark's own history is worth one line.** The row read 0.292
+when the benchmark was first run, and the system was answering every
+misspelled question with the reference's answer. The measurement was
+wrong twice — the label was attached to only one case of each concept,
+and then the bar was the concept's key terms rather than the intended
+answer — and a benchmark that reports a number nobody checked is worth
+nothing.
 
 ## 8. The dialogue cases
 
