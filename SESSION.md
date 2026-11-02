@@ -7463,3 +7463,9 @@ records the run actually marked ✓ ✓.
 **Done** ✓ ✓. The W42's three research waves are persisted at last — the streams, nine hypotheses
 with verified primary sources, DESIGN-71 and the doctrine's §6.1 ✓ ✓. And the workbench binds to
 the loopback, so the §13.2's "unauthorized access" is a measured property rather than a limit ✓ ✓.
+
+# RECON-W42.7 — the Russian cross-lingual score
+
+**Done** ✓ ✓. The CROSS_LINGUAL set is 4 of 4 ✓ ✓, the accuracy is **0.958** ✓ ✓, and the
+bilingual bridge stopped reporting a word it had just covered ✓ ✓ — the credit now reaches the
+raw words, in the language of the question ✓ ✓.
