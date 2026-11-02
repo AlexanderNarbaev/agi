@@ -134,6 +134,16 @@ public final class TypoCorrector {
         for (String term : BilingualLexicon.instance().terms()) {
             vocabulary.add(term);
         }
+        // W42.9: the function words too. A typo in "что такое" is a typo in a
+        // STOPWORD: without the stopwords in the vocabulary there was nothing
+        // to correct it towards, and the two-edit rule then blocked it as well
+        // (a two-edit correction must land on a concept name).
+        for (String stopword : TextProfiles.RUSSIAN.stopwords()) {
+            vocabulary.add(stopword);
+        }
+        for (String stopword : TextProfiles.ENGLISH.stopwords()) {
+            vocabulary.add(stopword);
+        }
         return new TypoCorrector(vocabulary, conceptNames);
     }
 

@@ -7694,3 +7694,9 @@ allowed ✓ ✓.
 terms ✓ ✓ — the accuracy on the candidate rose 0.837 → 0.857 ✓ ✓. Two candidate items were removed because
 the corpus defines no `chlorophyll` and no `modus tollens` concept ✓ ✓; that is a correction of the
 instrument, not a weakening of the gate ✓ ✓. The live benchmark stays at 34 items and the gate is green ✓ ✓.
+
+# RECON-W42.9 — the stopwords are in the typo vocabulary
+
+**Done** ✓ ✓. The typo corrector's vocabulary now holds the language's stopwords, so a typo in a Russian
+function word has something to correct towards ✓ ✓. The candidate's accuracy rose 0.857 → 0.894 ✓ ✓, and
+the typo benchmark still passes ✓ ✓. The live benchmark stays at 34 items and the gate is green ✓ ✓.
