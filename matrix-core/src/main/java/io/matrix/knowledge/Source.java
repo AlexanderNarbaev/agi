@@ -20,7 +20,17 @@ public record Source(
         String excerpt,
         String addedAt,
         String contentHash,
-        String publishedAt) {
+        String publishedAt,
+        String language,
+        String format) {
+
+    /** A source without a language or a format. */
+    public Source(String id, String workspaceId, SourceKind kind, String title, String locator,
+                  int authority, int freshness, String excerpt, String addedAt, String contentHash,
+                  String publishedAt) {
+        this(id, workspaceId, kind, title, locator, authority, freshness, excerpt, addedAt,
+                contentHash, publishedAt, null, null);
+    }
 
     public Source {
         if (id == null || id.isBlank()) {

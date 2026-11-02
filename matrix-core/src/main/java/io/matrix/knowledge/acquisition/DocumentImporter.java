@@ -129,7 +129,19 @@ public final class DocumentImporter {
         ExtractedDocument document = new DocumentExtractorRegistry().extract(format, content,
                 filename, source);
         if (declaredLanguage != null && !declaredLanguage.isBlank()) {
+            // The declaration wins: the caller has said what the document
+            // is, and the registry reports what the workspace was told.
             source.language(declaredLanguage);
+        } else {
+            // Otherwise the language is DETECTED from the extracted text.
+            // The importer used to leave it "unknown", so the corpus
+            // registry could not say what language a source was written in
+            // - and the mission's §5.5 asks for the structure of the
+            // source.
+            String detected = io.matrix.knowledge.TextProfiles.detect(document.text());
+            if (detected != null && !detected.isBlank() && !"unknown".equals(detected)) {
+                source.language(detected);
+            }
         }
         SourceRecord record = source.build();
 
@@ -143,7 +155,8 @@ public final class DocumentImporter {
         Source storeSource = new Source(record.sourceId(), workspaceId, SourceKind.HUMAN_ASSERTION,
                 record.filename(), record.location(), 50, 50,
                 record.processingHistory().isEmpty() ? "" : record.processingHistory().get(0),
-                record.importedAt(), record.contentHash(), record.publicationDate());
+                record.importedAt(), record.contentHash(), record.publicationDate(),
+                record.language(), record.format().name().toLowerCase(java.util.Locale.ROOT));
 
         List<Claim> claims = new ArrayList<>();
         List<Evidence> evidence = new ArrayList<>();

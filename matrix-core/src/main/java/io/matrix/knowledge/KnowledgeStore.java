@@ -54,7 +54,7 @@ import java.util.Set;
 public final class KnowledgeStore implements AutoCloseable {
 
     /** The schema version this build writes. */
-    public static final int SCHEMA_VERSION = 12;
+    public static final int SCHEMA_VERSION = 13;
 
     private static final ObjectMapper JSON = new ObjectMapper();
 
@@ -349,6 +349,25 @@ public final class KnowledgeStore implements AutoCloseable {
     }
 
     private int migrateFrom(int version) throws SQLException {
+        if (version == 12) {
+            // v13 adds the language of a source.
+            //
+            // The importer DETECTS the language of a document and the
+            // corpus manager reports it, but the store dropped it on the
+            // way in - so the registry could not say what language a
+            // source was written in, which is part of the mission's §5.5's
+            // "structure of the source".
+            try (Statement st = connection.createStatement()) {
+                if (!sourceColumnExists(st, "language")) {
+                    st.execute("ALTER TABLE source ADD COLUMN language TEXT");
+                }
+                if (!sourceColumnExists(st, "format")) {
+                    st.execute("ALTER TABLE source ADD COLUMN format TEXT");
+                }
+            }
+            writeSchemaVersion(13);
+            return 13;
+        }
         if (version == 11) {
             // v12 adds the table of the conversation's turns.
             //
@@ -1033,8 +1052,8 @@ public final class KnowledgeStore implements AutoCloseable {
     private void upsertSource(Source s) throws SQLException {
         try (PreparedStatement ps = connection.prepareStatement(
                 "INSERT OR REPLACE INTO source(id, workspace_id, kind, title, locator, authority, "
-                        + "freshness, excerpt, added_at, content_hash, published_at) "
-                        + "VALUES (?,?,?,?,?,?,?,?,?,?,?)")) {
+                        + "freshness, excerpt, added_at, content_hash, published_at, language, "
+                        + "format) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)")) {
             ps.setString(1, s.id());
             ps.setString(2, s.workspaceId());
             ps.setString(3, s.kind().name());
@@ -1046,6 +1065,8 @@ public final class KnowledgeStore implements AutoCloseable {
             ps.setString(9, s.addedAt());
             ps.setString(10, s.contentHash());
             ps.setString(11, s.publishedAt());
+            ps.setString(12, s.language());
+            ps.setString(13, s.format());
             ps.executeUpdate();
         }
     }
@@ -1389,6 +1410,18 @@ public final class KnowledgeStore implements AutoCloseable {
         }
     }
 
+    /** Whether the source table already has the column. */
+    private static boolean sourceColumnExists(Statement st, String column) throws SQLException {
+        try (var rs = st.executeQuery("PRAGMA table_info(source)")) {
+            while (rs.next()) {
+                if (column.equals(rs.getString("name"))) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
     /** Splits a comma-separated list. */
     private static List<String> splitList(String value) {
         if (value == null || value.isBlank()) {
@@ -1526,13 +1559,14 @@ public final class KnowledgeStore implements AutoCloseable {
 
     public List<Source> sources(String workspaceId) {
         return query("SELECT id, workspace_id, kind, title, locator, authority, freshness, excerpt, "
-                + "added_at, content_hash, published_at "
+                + "added_at, content_hash, published_at, language, format "
                 + "FROM source WHERE workspace_id = ? ORDER BY title", workspaceId, rs -> new Source(
                 rs.getString("id"), rs.getString("workspace_id"),
                 SourceKind.valueOf(rs.getString("kind")), rs.getString("title"),
                 rs.getString("locator"), rs.getInt("authority"), rs.getInt("freshness"),
                 rs.getString("excerpt"), rs.getString("added_at"),
-                rs.getString("content_hash"), rs.getString("published_at")));
+                rs.getString("content_hash"), rs.getString("published_at"),
+                rs.getString("language"), rs.getString("format")));
     }
 
     public List<Claim> claims(String workspaceId) {

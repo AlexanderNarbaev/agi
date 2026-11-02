@@ -449,6 +449,50 @@ public class LearningWorkbenchResource {
     }
 
     /**
+     * The corpus registry of a workspace.
+     *
+     * <p>The mission's §5.5 asks for a corpus manager: the record of what
+     * the workspace knows, where it came from, and how much of it is
+     * independent. The independent confirmations are counted by the
+     * distinct content hashes of the sources behind a claim - two
+     * documents with the same content are one source, and ten copies of
+     * one source are one confirmation.
+     */
+    @GET
+    @Path("/workspaces/{id}/corpus")
+    public Map<String, Object> corpus(@PathParam("id") String workspaceId) {
+        io.matrix.knowledge.acquisition.CorpusManager.Registry registry =
+                io.matrix.knowledge.acquisition.CorpusManager.registry(workbench, workspaceId);
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("workspace", workspaceId);
+        body.put("theSources", registry.sources());
+        body.put("theImported", registry.imported());
+        body.put("theAuthored", registry.authored());
+        body.put("theDocuments", registry.documents());
+        body.put("theClaims", registry.claims());
+        body.put("theIndependentConfirmations", registry.independentConfirmations());
+        body.put("theNotes", registry.notes());
+        List<Map<String, Object>> entries = new ArrayList<>();
+        for (io.matrix.knowledge.acquisition.CorpusManager.Entry entry : registry.entries()) {
+            Map<String, Object> item = new LinkedHashMap<>();
+            item.put("theSource", entry.sourceId());
+            item.put("theKind", entry.kind().name());
+            item.put("theTitle", entry.title());
+            item.put("theLocator", entry.locator());
+            item.put("theContentHash", entry.contentHash());
+            item.put("theLanguage", entry.language());
+            item.put("theFormat", entry.format());
+            item.put("theClaimsSupported", entry.claimsSupported());
+            item.put("theIndependentConfirmations", entry.independentConfirmations());
+            item.put("theImported", entry.imported());
+            item.put("theNote", entry.note());
+            entries.add(item);
+        }
+        body.put("theRegistry", entries);
+        return body;
+    }
+
+    /**
      * Validates a workspace: the claims that several INDEPENDENT sources
      * state are promoted, and the duplicates are superseded.
      *
