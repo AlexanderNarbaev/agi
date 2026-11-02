@@ -253,3 +253,9 @@ failed ✓ ✓ — including `HashChain`, so the audit chain's rewrite did not b
 seven-rung ladder and the two rules the Java enforces ✓ ✓. Its safety properties are falsifiable: a model
 that allows a two-rung jump violates `AdvanceIsOneStep`, and a model that records an unchanged stage
 violates `NoSelfTransition` — both were caught by TLC ✓ ✓. The formal gate is 13 passed, 0 failed ✓ ✓.
+
+**The promotion machine has a formal specification, and X.2 is closed.** `formal/PromotionStage.tla` models
+the eight layers, the layer graph and the policy's target requirements ✓ ✓, and holds §5.4's line: a claim
+cannot reach VERIFIED on one source copied many times ✓ ✓. Three mutated models were caught by TLC ✓ ✓.
+The formal gate is 14 passed, 0 failed ✓ ✓, and the learning machine, the promotion machine and the BRC
+step all have specifications ✓ ✓.

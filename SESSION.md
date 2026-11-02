@@ -7657,3 +7657,11 @@ against the 270 baseline, exit 0 ✓ ✓.
 enforces — a one-rung advance, a fall-back from any stage, and the first evidence allowed to carry the
 capability several rungs at once ✓ ✓. Its properties can fail: two mutated models were caught by TLC
 (`AdvanceIsOneStep` and `NoSelfTransition`) ✓ ✓. The full formal gate is now 13 passed, 0 failed ✓ ✓.
+
+# RECON-W42.9 — the promotion machine has a formal specification, and X.2 is closed
+
+**Done** ✓ ✓. `formal/PromotionStage.tla` models the eight layers and the two separate checks the Java
+makes — the layer graph and the policy's requirements for the target ✓ ✓. It holds §5.4's line: a claim
+cannot reach VERIFIED on one source copied many times ✓ ✓. Three mutated models were caught by TLC ✓ ✓.
+The formal gate is 14 passed, 0 failed ✓ ✓, and all three of the new state machines now have a
+specification ✓ ✓.
