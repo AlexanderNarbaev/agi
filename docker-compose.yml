@@ -67,6 +67,9 @@ services:
     environment:
       QUARKUS_PROFILE: prod
       QUARKUS_HTTP_PORT: 8080
+      # RECON-W42.7: the application binds to the loopback by default;
+      # a container's published port must be bound on its own interface.
+      QUARKUS_HTTP_HOST: 0.0.0.0
       # PostgreSQL
       QUARKUS_DATASOURCE_JDBC_URL: jdbc:postgresql://postgres:5432/matrix
       QUARKUS_DATASOURCE_USERNAME: matrix

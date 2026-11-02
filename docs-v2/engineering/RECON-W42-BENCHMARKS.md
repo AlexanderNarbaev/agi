@@ -341,16 +341,17 @@ data, not executable instruction**.
 | the untrusted link | **MEASURED** | the link is text; nothing is fetched and the target does not become a source |
 | the replay attack | **MEASURED** | the same document imported twice is one source, not two |
 | the invalid signature | **NOT MEASURED** | the knowledge packages carry no signature, so there is nothing to verify — and that is a limit of the format, not a defence |
-| the unauthorized access | **NOT MEASURED at this layer** | the importer runs inside the workbench; the access control of the HTTP surface is a separate question, and the workbench's endpoints carry no authentication today |
+| the unauthorized access | **MEASURED (W42.7): the workbench binds to the loopback** | the workbench's HTTP endpoints carry no authentication — and the local answer to that is the bind address. The application now listens on `127.0.0.1` by default (`quarkus.http.host=${QUARKUS_HTTP_HOST:127.0.0.1}`), so it is reachable only from the machine it runs on. Verified live: the loopback answers and the host's own address `192.168.31.237:9098` is **refused**. The container deployment overrides the bind with `QUARKUS_HTTP_HOST=0.0.0.0`, because a published port must be bound on the container's own interface |
 | the resource exhaustion | **MEASURED** | the size limits above, and the dialogue's 32-turn bound |
 
-**Two of the twelve are not measured, and both are named.** The packages
-carry no signature, so there is nothing to verify — and pretending
-otherwise would be a claim about a defence that does not exist. The
-unauthorized access is a real limit: the workbench's HTTP endpoints have
-no authentication, and the mission's §16 forbids making an external
-service mandatory, so an access control that needs one is not the answer
-— but the limit is recorded rather than passed over.
+**One of the twelve is not measured, and it is named.** The packages carry
+no signature, so there is nothing to verify — and pretending otherwise
+would be a claim about a defence that does not exist. The unauthorized
+access was a real limit too, and W42.7 closed it the local way: the
+workbench binds to the loopback, so it is not reachable from the network
+at all. It still has no authentication — a token would change the
+surface, and the mission's §16 forbids making an external service
+mandatory — but the surface is now closed by default.
 
 ## 11. The mission's §14 acceptance table — the state of every row
 
