@@ -280,11 +280,12 @@ VERIFIED one.
 
 | | W42.5 | **W42.7** |
 |---|---|---|
-| the answer accuracy | 0.792 | **0.958** |
+| the answer accuracy | 0.792 | **1.000** |
 | the abstention quality | 0.900 | **0.900** (unchanged) |
-| the BM25 overlap | 0.594 | **0.624** |
+| the BM25 overlap | 0.594 | **0.603** |
 | the PARAPHRASE items | 0/2 | **2/2** |
 | the CROSS_LINGUAL items | 3/4 | **4/4** |
+| the TRANSFER items | 1/2 | **2/2** |
 | the pinned support score | 0.84 | **0.85** |
 
 **What produced the change, in two steps.** First, the concept bridge. The answer is composed from
@@ -369,6 +370,22 @@ rule and the evidence. The etalon did not move: the criterion is still
 `answered && mentions && avoids`, and the item's `answerable`, its
 `mustMention` and its key terms are unchanged.
 
+**And then, the transfer.** The workspace could state modus ponens and
+could not apply it: a question that stated a conditional and asked what
+followed was answered with the definition of the rule and nothing about
+the instance. The application is now made — the consequent is the
+QUESTION'S OWN TEXT, and the application is grounded in a claim the
+workspace holds, which the answer names. A workspace that holds no rule
+is not licensed to apply one. The answer accuracy is **1.000**, the
+TRANSFER items are 2 of 2, and the BM25 overlap moves to 0.603 because the
+transfer answer is a different answer.
+
+**The one remaining failure is named, not fixed.** "Who invented
+propositional logic?" — the workspace answers with what propositional
+logic IS and says that the word "invented" is not covered by it. The
+statement is true and the gap is named, so nothing is fabricated; but the
+etalon asks for a refusal, and the etalon has not been moved.
+
 ## 11. The mission's §14 acceptance table — the state of every row
 
 The mission's §14 gives eighteen rows of engineering targets and says:
@@ -387,10 +404,10 @@ metrics for the same reason.
 | 5 | 100 % recovery after a forced termination | **MEASURED** | the twelve-step checklist, `SIGKILL` of the application's own JVM: 13 concepts, 19 representations, 24 claims and the imported account survive |
 | 6 | atomic import | **MEASURED (W42.7)** | the concepts go in with the claims, in one transaction; a refused change leaves neither the concept nor the evidence |
 | 7 | 100 % provenance | **MEASURED: 1.000** | `the evidenceBackedShare: 1.0` — 17 claims, 17 with evidence, 18 evidence links, 4 sources |
-| 8 | no fabrication on unsupported questions | **MEASURED: the abstention 0.900** | 9 of the 10 unanswerable items refused; the one that is answered is named in the report |
+| 8 | no fabrication on unsupported questions | **MEASURED: the abstention 0.900, and NO fabricated statement** | 9 of the 10 unanswerable items refused. The one that is answered is "Who invented propositional logic?" — the workspace answers with what propositional logic IS and NAMES the uncovered word "invented". That is not a fabrication: the statement is true and the gap is said. The etalon asks for a refusal, and the disagreement is recorded rather than resolved by moving the etalon |
 | 9 | ≥ 100 reproducible multilingual test cases | **MEASURED: 168** | `w42-dialogue-cases-v1.json` — 22 categories, 133 English and 35 Russian, the class of the utterance 168/168 |
 | 10 | ≥ 95 % intent preservation on a synthetic typo benchmark | **MEASURED (W42.7): 1.000 — 24 of 24** | the synthetic typo benchmark: three kinds of typo — the substitution, the transposition and the deletion — over the workspace's own concept names, by the fixed seed 42, so the dataset is reproducible and its version IS the seed. Every case carries the question that was MEANT, and the intent is preserved when the answer covers everything the intended answer covered. The measurement was wrong twice before it was right, and both times the fault was the benchmark's, not the system's |
-| 11 | retrieval against BM25 / the lexical baseline | **MEASURED: the overlap 0.624** | the same ranking and the same instrument, so the number is attributable |
+| 11 | retrieval against BM25 / the lexical baseline | **MEASURED: the overlap 0.603** | the same ranking and the same instrument, so the number is attributable |
 | 12 | independent pre, post, delayed and transfer measurement | **MEASURED, over a synthetic learner** | the teach-back experiment measures all four phases over DISJOINT item sets — the pre 2 items, the post 1, the delayed 1, the transfer 2 — and the pre/post pair over the learner's own answers is the retention experiment's two arms. **The sample is tiny and the learner is a script**: 7 probes in total, and the `MetricsReport` names "transfer to a human learner" as not measured, because no human has been taught by this system |
 | 13 | retention against a no-consolidation baseline | **MEASURED** | the baseline EXPLORATION/2 against the consolidation PRACTICE/3, over a scripted learner and 22 items — a demonstration, not a generalisation |
 | 14 | multi-step goal execution and recovery | **MEASURED** | the goal, the prerequisite, the plan's order ("its dependencies are met"), the budget 1 of 5, the checkpoint, and the survival of the goal and the completed subtask after the forced restart |
