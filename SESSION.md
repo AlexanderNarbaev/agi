@@ -7575,3 +7575,11 @@ The wiring is proven at the class level; the chain is not yet created in the orc
 now chains every claim it records, and `RealAuditServiceAuditChainTest` proves the chain holds, verifies,
 and detects a rewrite ✓ ✓. The measurement also corrected the last wave: `ActionAcceptor` itself has no
 production caller, so that earlier link is class-level only ✓ ✓.
+
+# RECON-W42.9 — the shadow census is corrected: orphans are not duplicates
+
+**Done** ✓ ✓. The runtime's `CreditLedger` and `LicenseManager` are orphans but NOT duplicates of the
+billing engines — they account the brain's operation costs and the feature entitlements, not customer
+money and signed keys ✓ ✓. `DistillationLedger` is already written by the live `TrueDistillationFactory`,
+though the gateway's `/v1/distill` endpoint is still a stub ✓ ✓. `GpuKernelEngine` is an orphan whose live
+counterpart does not implement it ✓ ✓. The matrix rows are corrected accordingly ✓ ✓.

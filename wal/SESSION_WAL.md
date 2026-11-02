@@ -3607,3 +3607,27 @@ MISMATCH_LARGE по расхождению предсказания и факт�
 `DISCONNECTED` (они не подключены), а у `AuditChain` появилась отдельная строка со статусом
 `INTEGRATED (W42.9)` и доказательством ✓ ✓. Предыдущая фраза «добавлена строка» была неточной — запись
 исправлена здесь, а не переписана ✓ ✓ (D-009) ✓ ✓.
+
+## W42.9 — пересчитана перепись теневых классов, строка матрицы исправлена ✓✓
+
+**Измерение ✓✓** — проверено, кто на самом деле использует остальные тени ✓✓:
+- `CreditLedger` (brain-runtime) — **0** живых вызывающих ✓✓, и это **не дубль** живого движка: рантаймный
+  считает стоимость операций МОЗГА (`ANALYZE`, `THINK_WITH_MCTS`, `TEACH`, `LEARN`, `SLEEP`, `DISTILL`;
+  `deduct`/`refund`/`topUp`/`balance`) ✓✓, а `matrix-billing`'s — деньги ЗАКАЗЧИКА
+  (`credit`/`debit`/`balance`/`history`) ✓✓; разные возможности ✓✓;
+- `LicenseManager` (brain-runtime) — **0** живых вызывающих ✓✓, и тоже **не дубль**: он решает ПРАВА по
+  тарифу (`Tier { FREE, PRO, ENTERPRISE }`, у фичи `minTier` и `creditCost`, `check(tier, feature)`) ✓✓, а
+  `matrix-billing`'s `LicenseKey` — ПОДПИСАННЫЙ КЛЮЧ (`encode`/`decode`/`isValid`) ✓✓;
+- `DistillationLedger` — **не тень**: живой `TrueDistillationFactory` (его создаёт
+  `matrix-api-gateway`'s `MinimalHttpServer:219`) пишет в него каждую дистилляцию через
+  `ledger.record(new DistillationLedger.Entry(...))` ✓✓, но эндпоинт шлюза `/v1/distill` всё ещё отвечает
+  текстом «the real pipeline is queued for W5» ✓✓ — поэтому статус `PARTLY INTEGRATED` ✓✓;
+- `ModelToMatrix` используется только `DistillationLedger` ✓✓ — то же частичное состояние ✓✓;
+- `GpuKernelEngine` — **0** живых вызывающих ✓✓, и живой `RealGpuKernelEngine` его НЕ реализует
+  (`public final class RealGpuKernelEngine {` без `implements`) ✓✓ — здесь дубль вероятен, и это следующий
+  вопрос ✓✓.
+
+**Исправление документа ✓✓** — в `docs-v2/engineering/W42-INTEGRATION-MATRIX.md` прежняя общая строка
+называла их «shadow duplicates of live engines» ✓✓ — для `CreditLedger` и `LicenseManager` это было НЕВЕРНО
+✓✓; строка разделена на три, каждая с измеренным статусом и доказательством ✓✓. Ранее я записал в R29,
+что все пять — «shadow duplicates» ✓✓; это уточнено здесь измерением, а не переписано ✓✓ (D-009) ✓ ✓.
