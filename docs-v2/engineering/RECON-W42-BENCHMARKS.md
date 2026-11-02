@@ -347,12 +347,14 @@ metrics for the same reason.
 | 15 | bounded memory under long sessions | **MEASURED** | 50 questions asked → the dialogue context holds 32 turns, the bound it declares; 8 concepts per turn |
 | 16 | no unexplained failed or vacuous property | **MEASURED** | the two mutation survivors are recorded with their findings, and one of them is named as vacuous by construction |
 | 17 | all critical mutants killed or justified | **MEASURED: 25 of 27, 2 justified** | `scripts/mutation-harness.py` — 27 mutants, 25 killed, 2 survived, 0 invalid, 0 drift |
-| 18 | a reproducible build | **NOT MEASURED** | the build is pinned — Java 25, Gradle 9.6.0, the Quarkus BOM, SQLite 3.43.0.0, jsoup 1.17.2, PDFBox 3.0.3, TLC 1.8.0 — but no build was run twice from a clean state and compared, so this row is **open** |
+| 18 | a reproducible build | **PARTIALLY MEASURED** | the COMPILATION is reproducible: two clean builds produced **2 413 byte-identical class files** (the hash `8ea0474b…`). The ARCHIVE is not: two clean jar builds produced different hashes, and the cause is not yet explained. The build is pinned — Java 25, Gradle 9.6.0, the Quarkus BOM, SQLite 3.43.0.0, jsoup 1.17.2, PDFBox 3.0.3, TLC 1.8.0 — and a `clean` + a single-task build failed once and succeeded twice, so the build's fragility is itself not yet pinned |
 
-**Two rows are open**, and they are named here rather than left to be
-discovered: the synthetic typo benchmark with an intent label (row 10) and
-the twice-built reproducible build (row 18). Neither is a claim; both are
-work.
+**One row is open and one is half measured**, and both are named here
+rather than left to be discovered: the synthetic typo benchmark with an
+intent label (row 10) is not measured at all, and the reproducible build
+(row 18) is measured for the compilation — byte-identical class files —
+but not for the archive, whose two clean builds differ. Neither is a
+claim; both are work.
 
 ## 8. The dialogue cases
 
