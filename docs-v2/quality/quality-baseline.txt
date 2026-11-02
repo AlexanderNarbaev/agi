@@ -1,4 +1,19 @@
-literal_candidates=270
+literal_candidates=271
 # quality-baseline.txt — accepted state for scripts/quality-gate.sh
-# updated: 2026-10-02T13:48:33+0300   ref=b144563e
+# updated: 2026-11-02T18:20:00+0300   ref=b303f22e
+# owner: repo-owner
+#
+# RECON-W43.0. The accepted number was 270 while the measured number was 264,
+# so the gate TOLERATED six new literals before it could fail — a baseline that
+# is above the measured state is an exception, and it was not explicit, not
+# owned, and not bounded in time.
+#
+# The measured number then rose to 272, and the rise is NOT new debt: the
+# structural-literal filter used to run on the line NUMBER produced by
+# grep -n, and the number itself matched the structural set, so literals on
+# lines 2, 8, 16, 32, 64, 100, 101, 200, 400, 401 and twenty others were
+# invisible. The filter now runs on the content. Eight literals that had
+# been hidden were found at once; the baseline is set to the true count, so
+# the next literal fails the gate.
+#
 # The gate blocks when this number increases. Lower it by extracting constants.

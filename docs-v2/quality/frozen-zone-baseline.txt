@@ -1,0 +1,34 @@
+# FROZEN-1 exceptions — explicit, narrow, owned and time-bounded.
+#
+# RECON-W43.0. The quality gate compares the frozen zones against a
+# historical baseline ref (b144563e). Two of them have drifted since, and
+# that drift is a FACT of the repository, not a new violation. The gate
+# used to count those zones as violations and then never read the counter,
+# so the frozen-zone rule could not fail at all.
+#
+# Now it can. To do that honestly, the drift that already exists is
+# recorded HERE, per zone, with the number of diff lines that are accepted,
+# who accepts them, and the date on which the acceptance EXPIRES. A zone
+# with no entry here must have zero drift. A zone whose drift grows past
+# its accepted number is a new violation. A zone whose exception has
+# expired is a violation too — the point of a time bound is that it is
+# enforced.
+#
+# Format:  zone | accepted_diff_lines | owner | expires
+#
+# The dates are the owner's to set. These are placeholders for the two
+# zones that have drifted; the owner should confirm or shorten them.
+#
+# RECON-W43.0, the .github/ exception was raised from 785 to 851 diff
+# lines. The change is SANCTIONED by the W43 directive, which requires that
+# "CI must run the gates on changes that can affect their contracts" — a
+# requirement that cannot be met without editing a workflow, and the
+# workflows are a frozen zone. The exception is recorded here rather than
+# waved through, so that the amount of the change is visible and the
+# expiry is real. What was added: the `quality-gates` job in ci.yml (the
+# clean-code gate, the formal gate and the security boundary check) and the
+# regenerated TLA+ path filter in tla.yml (the two specifications this wave
+# registered).
+
+.github/ | 851 | repo-owner | 2026-12-31
+AGENTS.md | 14 | repo-owner | 2026-12-31

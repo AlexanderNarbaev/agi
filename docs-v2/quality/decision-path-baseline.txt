@@ -1,0 +1,78 @@
+# The accepted decision-path findings — explicit, narrow, owned and time-bounded.
+#
+# RECON-W43.0. One accepted blocking finding per line:
+#   <root>:<file>:<line> <symbol> | <the reason it is permitted>
+#
+# Every line is an EXCEPTION, not a pass. The gate fails when a finding
+# appears that is not here, and also when a line here no longer holds, so
+# that the baseline cannot silently become a blanket.
+#
+# WHAT IS IN HERE
+# The wall-clock reads are timestamps: the time a goal was set, a row was
+# written, an episode was logged, a file was observed. They RECORD when
+# something happened and they decide nothing, which is exactly what
+# CONSTITUTION Article I allows: it forbids wall-clock in a DECISION PATH,
+# not the recording of time.
+#
+# They were previously invisible because the determinism audit scanned
+# neither matrix-brain-runtime nor the knowledge core. The W43 audit found
+# them by widening the coverage, and they are listed here one by one, each
+# with its reason, rather than being waved through by a package-level
+# exemption.
+#
+# ONE EXCEPTION IS OF A DIFFERENT KIND
+# TrueDistillationFactory imports an ONNX activation teacher. That is a
+# TRAINING component: it teaches a distilled model and does not run on the
+# decision path. It is listed separately below rather than swept in with
+# the timestamps.
+#
+# owner: repo-owner
+expires=2026-12-31
+matrix-brain-runtime/src/main/java:io/matrix/brain/runtime/CreditLedger.java:56 wall-clock | the credit entry's timestamp; it decides nothing
+matrix-brain-runtime/src/main/java:io/matrix/brain/runtime/CreditLedger.java:71 wall-clock | the credit entry's timestamp; it decides nothing
+matrix-brain-runtime/src/main/java:io/matrix/brain/runtime/CreditLedger.java:86 wall-clock | the credit entry's timestamp; it decides nothing
+matrix-brain-runtime/src/main/java:io/matrix/brain/runtime/EpisodicLog.java:260 wall-clock | the episode's timestamp; it decides nothing
+matrix-brain-runtime/src/main/java:io/matrix/brain/runtime/FederationRegistry.java:39 wall-clock | the peer's registration timestamp; it decides nothing
+matrix-brain-runtime/src/main/java:io/matrix/brain/runtime/FederationRegistry.java:53 wall-clock | the peer's registration timestamp; it decides nothing
+matrix-brain-runtime/src/main/java:io/matrix/brain/runtime/KnowledgeExchangeProtocol.java:201 wall-clock | the exchange's timestamp; it decides nothing
+matrix-brain-runtime/src/main/java:io/matrix/brain/runtime/ModelToMatrix.java:136 wall-clock | the mapping's timestamp; it decides nothing
+matrix-brain-runtime/src/main/java:io/matrix/brain/runtime/ModelToMatrix.java:155 wall-clock | the mapping's timestamp; it decides nothing
+matrix-brain-runtime/src/main/java:io/matrix/brain/runtime/ModelToMatrix.java:74 wall-clock | the mapping's timestamp; it decides nothing
+matrix-brain-runtime/src/main/java:io/matrix/brain/runtime/ModelToMatrix.java:92 wall-clock | the mapping's timestamp; it decides nothing
+matrix-brain-runtime/src/main/java:io/matrix/brain/runtime/PersistentMind.java:107 wall-clock | the persisted state's timestamp; it decides nothing
+matrix-brain-runtime/src/main/java:io/matrix/brain/runtime/PersistentMind.java:113 wall-clock | the persisted state's timestamp; it decides nothing
+matrix-brain-runtime/src/main/java:io/matrix/brain/runtime/PersistentMind.java:94 wall-clock | the persisted state's timestamp; it decides nothing
+matrix-brain-runtime/src/main/java:io/matrix/brain/runtime/RealInboxWatcher.java:107 wall-clock | the observation timestamp of a watched file; it decides nothing
+matrix-brain-runtime/src/main/java:io/matrix/brain/runtime/RealSleepScheduler.java:147 wall-clock | the sleep cycle's timestamp; it decides nothing
+matrix-brain-runtime/src/main/java:io/matrix/brain/runtime/RealSleepScheduler.java:148 wall-clock | the sleep cycle's timestamp; it decides nothing
+matrix-brain-runtime/src/main/java:io/matrix/brain/runtime/RealSleepScheduler.java:155 wall-clock | the sleep cycle's timestamp; it decides nothing
+matrix-brain-runtime/src/main/java:io/matrix/brain/runtime/RealSleepScheduler.java:156 wall-clock | the sleep cycle's timestamp; it decides nothing
+matrix-brain-runtime/src/main/java:io/matrix/brain/runtime/RealSleepScheduler.java:179 wall-clock | the sleep cycle's timestamp; it decides nothing
+matrix-brain-runtime/src/main/java:io/matrix/brain/runtime/RealSleepScheduler.java:184 wall-clock | the sleep cycle's timestamp; it decides nothing
+matrix-brain-runtime/src/main/java:io/matrix/brain/runtime/RealSleepScheduler.java:49 wall-clock | the sleep cycle's timestamp; it decides nothing
+matrix-brain-runtime/src/main/java:io/matrix/brain/runtime/RealSleepScheduler.java:99 wall-clock | the sleep cycle's timestamp; it decides nothing
+matrix-brain-runtime/src/main/java:io/matrix/brain/runtime/SparseHdcStore.java:51 wall-clock | the vector's timestamp; it decides nothing
+matrix-brain-runtime/src/main/java:io/matrix/brain/runtime/TrueDistillationFactory.java:105 wall-clock | the teacher's timestamp; it decides nothing
+matrix-brain-runtime/src/main/java:io/matrix/brain/runtime/TrueDistillationFactory.java:132 wall-clock | the teacher's timestamp; it decides nothing
+matrix-brain-runtime/src/main/java:io/matrix/brain/runtime/TrueDistillationFactory.java:4 io.matrix.distill.OnnxActivationTeacher | an ONNX activation TEACHER: it is a training-time component, not a runtime decision
+matrix-core/src/main/java:io/matrix/knowledge/GoalManager.java:246 wall-clock | the goal's timestamp; it decides nothing
+matrix-core/src/main/java:io/matrix/knowledge/KnowledgeImporter.java:51 wall-clock | the import timestamp; it decides nothing
+matrix-core/src/main/java:io/matrix/knowledge/KnowledgeRefiner.java:75 wall-clock | the timestamp of the refinement; it decides nothing
+matrix-core/src/main/java:io/matrix/knowledge/KnowledgeStore.java:1429 wall-clock | the row's created/updated timestamp; it decides nothing
+matrix-core/src/main/java:io/matrix/knowledge/KnowledgeStore.java:1512 wall-clock | the row's created/updated timestamp; it decides nothing
+matrix-core/src/main/java:io/matrix/knowledge/KnowledgeStore.java:1546 wall-clock | the row's created/updated timestamp; it decides nothing
+matrix-core/src/main/java:io/matrix/knowledge/KnowledgeStore.java:1593 wall-clock | the row's created/updated timestamp; it decides nothing
+matrix-core/src/main/java:io/matrix/knowledge/KnowledgeStore.java:1641 wall-clock | the row's created/updated timestamp; it decides nothing
+matrix-core/src/main/java:io/matrix/knowledge/KnowledgeStore.java:2174 wall-clock | the row's created/updated timestamp; it decides nothing
+matrix-core/src/main/java:io/matrix/knowledge/KnowledgeStore.java:2296 wall-clock | the row's created/updated timestamp; it decides nothing
+matrix-core/src/main/java:io/matrix/knowledge/KnowledgeStore.java:2442 wall-clock | the row's created/updated timestamp; it decides nothing
+matrix-core/src/main/java:io/matrix/knowledge/KnowledgeWorkbench.java:1382 wall-clock | the timestamp of the recorded event; it decides nothing
+matrix-core/src/main/java:io/matrix/knowledge/KnowledgeWorkbench.java:1476 wall-clock | the timestamp of the recorded event; it decides nothing
+matrix-core/src/main/java:io/matrix/knowledge/KnowledgeWorkbench.java:517 wall-clock | the timestamp of the recorded event; it decides nothing
+matrix-core/src/main/java:io/matrix/knowledge/KnowledgeWorkbench.java:547 wall-clock | the timestamp of the recorded event; it decides nothing
+matrix-core/src/main/java:io/matrix/knowledge/LearnedRuleRegistrar.java:104 wall-clock | the rule's registration timestamp; it decides nothing
+matrix-core/src/main/java:io/matrix/knowledge/LearnedRuleRegistrar.java:70 wall-clock | the rule's registration timestamp; it decides nothing
+matrix-core/src/main/java:io/matrix/knowledge/LearnedRuleRegistrar.java:77 wall-clock | the rule's registration timestamp; it decides nothing
+matrix-core/src/main/java:io/matrix/knowledge/LearningWorkbenchResource.java:459 wall-clock | the timestamp of the consolidation; it decides nothing
+matrix-core/src/main/java:io/matrix/knowledge/acquisition/ClaimValidator.java:316 wall-clock | the claim's creation timestamp; it decides nothing
+matrix-core/src/main/java:io/matrix/knowledge/acquisition/DocumentImporter.java:127 wall-clock | the source's import timestamp; it decides nothing

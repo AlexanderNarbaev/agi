@@ -60,8 +60,38 @@ public final class DecisionPathAuditor {
             "io/matrix/actions/",
             "io/matrix/ethics/",
             "io/matrix/imports/",
-            "io/matrix/neuron/"
+            "io/matrix/neuron/",
+            "io/matrix/knowledge/"
     );
+
+    /**
+     * Packages that are NOT decision paths, and why.
+     *
+     * <p>RECON-W43.0. The W42 audit found that the determinism audit did not
+     * scan the runtime modules. It did not find that the package list was
+     * wrong — the list is the constitution's own definition of a decision
+     * path, and widening it by intuition produced 211 findings that were
+     * mostly the DELIBERATE design: the ONNX-serving endpoints and the
+     * LLM quarantine are where an LLM is supposed to be, and the transport
+     * layer is not where a decision is made.
+     *
+     * <p>So the coverage was widened where the mission asks for it — the
+     * SOURCE ROOTS — and the exclusions are written down here rather than
+     * left implicit:
+     *
+     * <ul>
+     *   <li>{@code io/matrix/api/} — the transport layer. It hosts the
+     *       deliberate ONNX-serving endpoints and the LLM quarantine, which
+     *       is where a model is ALLOWED to be. The decision packages beneath
+     *       it ({@code knowledge}, {@code learning}, {@code rag}) are
+     *       covered on their own account.</li>
+     *   <li>{@code io/matrix/api/llm_quarantine/} — the quarantine itself.
+     *       Its name says what it is: LLM code held apart from the
+     *       decision path.</li>
+     *   <li>{@code io/matrix/distill/} — a training-time teacher, not a
+     *       runtime decision path.</li>
+     * </ul>
+     */
 
     /** Symbols whose mere presence in a decision-path file is always a violation. */
     private record ForbiddenSymbol(String prefix, String reason) { }
@@ -138,7 +168,7 @@ public final class DecisionPathAuditor {
             "CONSTITUTION I, cognitive layer: seeded Random is permitted where the seed is a "
             + "pure function of state";
 
-    private static final Pattern UNSEEDED_RANDOM = Pattern.compile("new\\s+Random\\s*\\(\\s*\\)");
+    private static final Pattern UNSEEDED_RANDOM = Pattern.compile("new\\s+(?:[\\w.]+\\.)?Random\\s*\\(\\s*\\)");
     private static final Pattern SEEDED_RANDOM = Pattern.compile("new\\s+Random\\s*\\([^)]");
     private static final Pattern WALL_CLOCK = Pattern.compile(
             "System\\.currentTimeMillis\\s*\\(|Instant\\.now\\s*\\(|LocalDateTime\\.now\\s*\\(");

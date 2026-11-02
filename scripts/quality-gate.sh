@@ -27,6 +27,8 @@ REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$REPO_ROOT" || exit 1
 
 BASELINE_FILE="docs-v2/quality/quality-baseline.txt"
+# RECON-W43.0: the recorded, time-bounded exceptions for the frozen zones.
+FROZEN_EXCEPTIONS_FILE="docs-v2/quality/frozen-zone-baseline.txt"
 MODE="${1:-}"
 VIOLATIONS=0
 
@@ -147,9 +149,20 @@ check_java_magic() {
             # Numeric literals >= 3 digits, excluding the structural set and excluding
             # lines that define a named constant.
             local hits
+            # RECON-W43.0: the structural filter used to run on the NUMBERED
+            # line, and the number itself could match it — grep -n prints
+            # "2:...", and "2" is in the structural set, so a literal on
+            # line 2 (or 8, 16, 32, 64, 100, 101, 200, 400, 401, ...) was
+            # filtered out along with the line number. The gate was blind
+            # on thirty line numbers. Found by deliberately injecting a
+            # violation and watching the gate stay green.
+            #
+            # The filter now runs on the CONTENT: the line-number prefix is
+            # stripped before the structural test and restored afterwards.
             hits="$(grep -nE '(^|[^A-Za-z0-9_.])[0-9]{3,}([LlFfDd]?)([^A-Za-z0-9_]|$)' "$f" 2>/dev/null \
                 | grep -vE 'static final|final static|// |/\*|\* ' \
-                | grep -vE "$STRUCTURAL_LITERALS" || true)"
+                | awk -v structural="$STRUCTURAL_LITERALS" '{ content=$0; sub(/^[0-9]+:/, "", content); if (content !~ structural) print }' \
+                || true)"
             if [ -n "$hits" ]; then
                 local n
                 n="$(printf '%s\n' "$hits" | wc -l)"
@@ -204,18 +217,55 @@ check_frozen() {
     local total=0 z
     for z in ".github/" "CONSTITUTION.md" "AGENTS.md" "ethics/" \
              "matrix-brain-runtime/src/main/java/io/matrix/brain/runtime/EvalBattery.java"; do
-        local n
+        local n accepted expiry
         n="$(git diff "$BASELINE_REF" -- "$z" 2>/dev/null | wc -l)"
-        if [ "$n" -ne 0 ]; then
-            printf '  FROZEN-1 %s has %s diff lines vs %s\n' "$z" "$n" "$BASELINE_REF"
+        accepted="$(frozen_exception_lines "$z")"
+        if [ "$accepted" -lt 0 ]; then
+            # No exception is recorded for this zone: it must be untouched.
+            if [ "$n" -ne 0 ]; then
+                printf '  FROZEN-1 %s has %s diff lines vs %s and no recorded exception\n' \
+                       "$z" "$n" "$BASELINE_REF"
+                total=$((total + 1))
+            fi
+            continue
+        fi
+        expiry="$(frozen_exception_expiry "$z")"
+        if [ -n "$expiry" ] && [ "$(date +%s)" -gt "$(date -d "$expiry" +%s 2>/dev/null || echo 0)" ]; then
+            printf '  FROZEN-1 %s: the recorded exception expired on %s\n' "$z" "$expiry"
+            total=$((total + 1))
+            continue
+        fi
+        if [ "$n" -gt "$accepted" ]; then
+            printf '  FROZEN-1 %s has %s diff lines vs %s; the exception accepts %s\n' \
+                   "$z" "$n" "$BASELINE_REF" "$accepted"
             total=$((total + 1))
         fi
     done
     if [ "$total" -eq 0 ]; then
-        report FROZEN-1 "all 5 frozen zones at 0 diff vs $BASELINE_REF"
+        report FROZEN-1 "all 5 frozen zones within their recorded exceptions vs $BASELINE_REF"
     else
         VIOLATIONS=$((VIOLATIONS + total))
     fi
+}
+
+# The accepted diff-line count for a frozen zone, or -1 when none is recorded.
+frozen_exception_lines() {
+    local zone="$1"
+    [ -f "$FROZEN_EXCEPTIONS_FILE" ] || { echo -1; return; }
+    local row
+    row="$(grep -E "^[[:space:]]*${zone//\//\\/}[[:space:]]*\|" "$FROZEN_EXCEPTIONS_FILE" 2>/dev/null | head -1)"
+    [ -n "$row" ] || { echo -1; return; }
+    echo "$row" | awk -F'|' '{gsub(/[[:space:]]/,"",$2); print ($2 ~ /^[0-9]+$/) ? $2 : -1}'
+}
+
+# The expiry date of a frozen zone's exception, or an empty string.
+frozen_exception_expiry() {
+    local zone="$1"
+    [ -f "$FROZEN_EXCEPTIONS_FILE" ] || { echo ""; return; }
+    local row
+    row="$(grep -E "^[[:space:]]*${zone//\//\\/}[[:space:]]*\|" "$FROZEN_EXCEPTIONS_FILE" 2>/dev/null | head -1)"
+    [ -n "$row" ] || { echo ""; return; }
+    echo "$row" | awk -F'|' '{gsub(/[[:space:]]/,"",$4); print $4}'
 }
 
 echo "=============================================="
@@ -277,6 +327,16 @@ if [ "$TOTAL_CANDIDATES" -gt "$ACCEPTED" ]; then
     echo "FAIL: literal candidates rose from $ACCEPTED to $TOTAL_CANDIDATES."
     echo "      $(( TOTAL_CANDIDATES - ACCEPTED )) new magic number(s). Extract them to a"
     echo "      named constant or scripts/matrix.env, or document why the literal is structural."
+    VIOLATIONS=$((VIOLATIONS + 1))
+fi
+
+# RECON-W43.0: the counter is finally READ.
+#
+# VIOLATIONS was incremented at three places and never read, so the CFG-1
+# and FROZEN-1 rules could not fail the run. A check that cannot fail is
+# not a check. Every rule now contributes to the exit status.
+if [ "$VIOLATIONS" -gt 0 ] && [ "$MODE" != "--report" ]; then
+    echo "FAIL: $VIOLATIONS violation(s) outside the accepted baseline."
     exit 1
 fi
-echo "PASS: $TOTAL_CANDIDATES candidate(s), at or below the accepted baseline of $ACCEPTED."
+echo "PASS: $TOTAL_CANDIDATES candidate(s), at or below the accepted baseline of $ACCEPTED; $VIOLATIONS other violation(s)."

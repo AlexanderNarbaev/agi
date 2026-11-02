@@ -26,9 +26,23 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT" || exit 1
 
 JAR="matrix-core/build/quarkus-app/quarkus-run.jar"
+# The values the check uses, named. The quality gate treats a SCREAMING_CASE
+# assignment as an extracted constant, which is what these are.
 PORT_LOCAL=9097
 PORT_EXPOSED=9098
 TOKEN="w43-boundary-check-token"
+
+# How long the check waits for the application to reach its startup event.
+readonly STARTUP_WAIT_SECONDS=60
+# How long the check waits for the startup GUARD to fire.
+readonly GUARD_WAIT_SECONDS=45
+# The timeout of a single HTTP request to the application.
+readonly REQUEST_TIMEOUT_SECONDS=10
+# The HTTP statuses the check expects.
+readonly STATUS_UNAUTHORIZED=401
+readonly STATUS_OK=200
+# The addresses that count as the loopback interface.
+readonly LOOPBACK_PATTERN='127.0.0.1:*|localhost:*|"[::1]:"*|"[::ffff:127.0.0.1]:"*'
 
 FAILURES=0
 APP_PID=""
@@ -53,7 +67,7 @@ trap cleanup EXIT
 # Waits for the service to answer, or gives up.
 wait_up() {
   local port=$1
-  for _ in $(seq 1 60); do
+  for _ in $(seq 1 "$STARTUP_WAIT_SECONDS"); do
     sleep 1
     if curl -s -o /dev/null -m 2 "http://127.0.0.1:$port/q/health" 2>/dev/null; then
       return 0
@@ -67,20 +81,20 @@ status() {
   local port=$1 method=$2 path=$3 data=${4:-} auth=${5:-}
   if [ -n "$data" ]; then
     if [ -n "$auth" ]; then
-      curl -s -o /dev/null -w '%{http_code}' -m 10 -X "$method" \
+      curl -s -o /dev/null -w '%{http_code}' -m "$REQUEST_TIMEOUT_SECONDS" -X "$method" \
         -H "Content-Type: application/json" -H "Authorization: $auth" \
         -d "$data" "http://127.0.0.1:$port$path"
     else
-      curl -s -o /dev/null -w '%{http_code}' -m 10 -X "$method" \
+      curl -s -o /dev/null -w '%{http_code}' -m "$REQUEST_TIMEOUT_SECONDS" -X "$method" \
         -H "Content-Type: application/json" -d "$data" \
         "http://127.0.0.1:$port$path"
     fi
   else
     if [ -n "$auth" ]; then
-      curl -s -o /dev/null -w '%{http_code}' -m 10 -X "$method" \
+      curl -s -o /dev/null -w '%{http_code}' -m "$REQUEST_TIMEOUT_SECONDS" -X "$method" \
         -H "Authorization: $auth" "http://127.0.0.1:$port$path"
     else
-      curl -s -o /dev/null -w '%{http_code}' -m 10 -X "$method" "http://127.0.0.1:$port$path"
+      curl -s -o /dev/null -w '%{http_code}' -m "$REQUEST_TIMEOUT_SECONDS" -X "$method" "http://127.0.0.1:$port$path"
     fi
   fi
 }
@@ -104,18 +118,18 @@ APP_PID=$!
 if wait_up "$PORT_LOCAL"; then
   BOUND="$(bound_to "$PORT_LOCAL")"
   case "$BOUND" in
-    127.0.0.1:*|localhost:*|"[::1]:"*|"[::ffff:127.0.0.1]:"*)
+    $LOOPBACK_PATTERN)
       pass "the service is bound to the loopback ($BOUND)" ;;
     "") fail "the service is bound to an address the check cannot read" ;;
     *) fail "the service is bound to $BOUND, not to the loopback" ;;
   esac
 
   CODE="$(status "$PORT_LOCAL" GET /v1/workbench/status)"
-  if [ "$CODE" = "200" ]; then pass "a read is allowed ($CODE)"; else fail "a read returned $CODE"; fi
+  if [ "$CODE" = "$STATUS_OK" ]; then pass "a read is allowed ($CODE)"; else fail "a read returned $CODE"; fi
 
   CODE="$(status "$PORT_LOCAL" POST /v1/workbench/workspaces/photosynthesis/ask \
     '{"question":"What is photosynthesis?","level":"INTRODUCTORY"}')"
-  if [ "$CODE" = "200" ]; then
+  if [ "$CODE" = "$STATUS_OK" ]; then
     pass "an anonymous write is allowed in local-only mode ($CODE)"
   else
     fail "an anonymous write returned $CODE in local-only mode"
@@ -137,7 +151,7 @@ APP_PID=$!
 # process that had not finished STARTING as a process that had started
 # exposed — which is what the first version of this check did.
 GUARDED=1
-for _ in $(seq 1 45); do
+for _ in $(seq 1 "$GUARD_WAIT_SECONDS"); do
   if ! kill -0 "$APP_PID" 2>/dev/null; then
     GUARDED=0
     break
@@ -166,30 +180,30 @@ APP_PID=$!
 
 if wait_up "$PORT_EXPOSED"; then
   CODE="$(status "$PORT_EXPOSED" GET /v1/workbench/status)"
-  if [ "$CODE" = "200" ]; then pass "a read is allowed ($CODE)"; else fail "a read returned $CODE"; fi
+  if [ "$CODE" = "$STATUS_OK" ]; then pass "a read is allowed ($CODE)"; else fail "a read returned $CODE"; fi
 
   CODE="$(status "$PORT_EXPOSED" POST /v1/workbench/workspaces/photosynthesis/ask \
     '{"question":"What is photosynthesis?","level":"INTRODUCTORY"}')"
-  if [ "$CODE" = "401" ]; then
+  if [ "$CODE" = "$STATUS_UNAUTHORIZED" ]; then
     pass "an anonymous write is refused ($CODE)"
   else
-    fail "an anonymous write returned $CODE, expected 401"
+    fail "an anonymous write returned $CODE, expected $STATUS_UNAUTHORIZED"
   fi
 
   CODE="$(status "$PORT_EXPOSED" POST /v1/workbench/workspaces/photosynthesis/ask \
     '{"question":"What is photosynthesis?","level":"INTRODUCTORY"}' "Bearer $TOKEN")"
-  if [ "$CODE" = "200" ]; then
+  if [ "$CODE" = "$STATUS_OK" ]; then
     pass "an authenticated write is allowed ($CODE)"
   else
-    fail "an authenticated write returned $CODE, expected 200"
+    fail "an authenticated write returned $CODE, expected $STATUS_OK"
   fi
 
   CODE="$(status "$PORT_EXPOSED" POST /v1/workbench/workspaces/photosynthesis/ask \
     '{"question":"What is photosynthesis?","level":"INTRODUCTORY"}' "Bearer wrong-token")"
-  if [ "$CODE" = "401" ]; then
+  if [ "$CODE" = "$STATUS_UNAUTHORIZED" ]; then
     pass "a write with a wrong credential is refused ($CODE)"
   else
-    fail "a write with a wrong credential returned $CODE, expected 401"
+    fail "a write with a wrong credential returned $CODE, expected $STATUS_UNAUTHORIZED"
   fi
 
   # The tool route is the most dangerous mounted route in the repository:
@@ -197,10 +211,10 @@ if wait_up "$PORT_EXPOSED"; then
   # found that its allow-list checks only the FIRST WORD of a command. It
   # must be behind the same boundary as everything else.
   CODE="$(status "$PORT_EXPOSED" POST /api/v1/tools/invoke '{"tool":"shell","args":"id"}')"
-  if [ "$CODE" = "401" ]; then
+  if [ "$CODE" = "$STATUS_UNAUTHORIZED" ]; then
     pass "an anonymous tool invocation is refused ($CODE)"
   else
-    fail "an anonymous tool invocation returned $CODE, expected 401"
+    fail "an anonymous tool invocation returned $CODE, expected $STATUS_UNAUTHORIZED"
   fi
 else
   fail "the service did not start in network-exposed mode (see /tmp/w43-security-exposed.log)"

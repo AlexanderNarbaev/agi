@@ -21,7 +21,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 class Exp144DecisionPathAuditTest {
 
     @Test
-    void auditReality() {
+    void auditReality() throws java.io.IOException {
         // Walk up from test CWD to find matrix-core/src/main/java
         Path cwd = Path.of(".").toAbsolutePath();
         Path root = null;
@@ -40,8 +40,16 @@ class Exp144DecisionPathAuditTest {
         }
         DecisionPathAuditor auditor = new DecisionPathAuditor();
         var report = auditor.audit(root);
-        // We don't FAIL on violations (legacy code) — we just document.
-        // Future RUNs in phase γ will resolve violations.
+        // RECON-W43.0: this used to PRINT the findings and assert only that
+        // the scan had looked at more than zero files — a check that could
+        // not fail, and one that was mistaken for a check. It now asserts
+        // the result. matrix-core's decision path has NO blocking finding,
+        // so this assertion holds today and goes red the moment someone
+        // puts a wall-clock read or an unseeded Random into a decision
+        // package.
+        //
+        // The cross-module gate, with its explicit baseline of the accepted
+        // findings in matrix-brain-runtime, is DecisionPathGateTest.
         System.out.println("[DECPATH-AUDIT] files=" + report.filesScanned()
                 + " violations=" + report.violationCount()
                 + " passed=" + report.passed());
@@ -53,5 +61,36 @@ class Exp144DecisionPathAuditTest {
             }
         }
         assertThat(report.filesScanned()).isGreaterThan(0);
+
+        // RECON-W43.0: the assertion is against the ACCEPTED baseline, not
+        // against zero — matrix-core's decision path does have accepted
+        // findings, and what must hold is that there is no finding the
+        // baseline does not know about. The comparison lives in one place
+        // (DecisionPathBaseline) so that this test and the gate test cannot
+        // drift apart.
+        Path repo = repoRoot();
+        Path baseline = repo.resolve(DecisionPathBaseline.BASELINE_FILE);
+        assertThat(baseline).as("the accepted baseline of decision-path findings").exists();
+        var accepted = DecisionPathBaseline.acceptedKeys(baseline);
+        var fresh = DecisionPathBaseline.newFindings("matrix-core/src/main/java", report, accepted);
+        if (!fresh.isEmpty()) {
+            fresh.forEach(f -> System.out.println("[DECPATH-AUDIT] NEW in matrix-core: " + f));
+        }
+        assertThat(fresh)
+                .as("decision-path findings in matrix-core that the accepted baseline does not list")
+                .isEmpty();
+    }
+
+    /** The repository root, found by walking up from the test's directory. */
+    private static Path repoRoot() {
+        Path candidate = Path.of(".").toAbsolutePath();
+        for (int i = 0; i < 6 && candidate != null; i++) {
+            if (java.nio.file.Files.isDirectory(candidate.resolve("formal"))
+                    && java.nio.file.Files.isDirectory(candidate.resolve("matrix-core"))) {
+                return candidate;
+            }
+            candidate = candidate.getParent();
+        }
+        throw new IllegalStateException("cannot locate the repository root");
     }
 }

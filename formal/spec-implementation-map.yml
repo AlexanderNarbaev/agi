@@ -900,6 +900,87 @@ specifications:
     limitations:
       - "The canonical trigger relation is not generated from the FROZEN axioms' data."
 
+  # ───────────────────────────────────────────────────────────────────────────────
+  # RECON-W43.0. These two specifications were on disk but were NOT registered,
+  # and the drift was a RED TEST in the repository: the validator compares the
+  # specifications present in formal/ with the registry, and it failed. The
+  # specifications were written on 2026-11-02 and the registry was last written
+  # on 2026-11-01, so the drift predates this wave; committing them only made
+  # it visible in git. The registry is the single source of truth, so a
+  # specification that exists without an entry is a specification nobody has
+  # claimed.
+  - id: LearningStateMachine
+    title: "The learning state machine — a move up is one rung at a time, a move down is legal from anywhere"
+    spec: formal/LearningStateMachine.tla
+    config: formal/LearningStateMachine.cfg
+    java:
+      module: matrix-core
+      sources:
+        - matrix-core/src/main/java/io/matrix/knowledge/LearningStateMachine.java
+      production_callers:
+        - matrix-core/src/main/java/io/matrix/knowledge/KnowledgeWorkbench.java
+      production_caller_status: PRODUCTION_PATH_VERIFIED
+    tests:
+      unit:
+        - matrix-core/src/test/java/io/matrix/knowledge/LearningStateMachineTest.java
+      integration:
+        - matrix-core/src/test/java/io/matrix/knowledge/KnowledgeWorkbenchTest.java
+    properties:
+      invariants: [TypeOK, NoSelfTransition, AdvanceIsOneStep, NeverAboveTheTop]
+      properties: []
+    conformance:
+      status: [MODEL_CHECKED, ABSTRACT_MODEL, JAVA_UNIT_VERIFIED, PRODUCTION_PATH_VERIFIED]
+      gaps:
+        - code: NO_INTEGRATION_TEST_OF_THE_TRANSITION
+          detail: >-
+            The unit test exercises the state machine directly. The production
+            caller (KnowledgeWorkbench.reconcile) is exercised by the workbench
+            tests, but no test asserts that a RECONCILED transition in the
+            workbench obeys the one-rung rule end to end.
+    abstractions:
+      - "The model holds one capability; the Java holds a map of them, keyed by concept and dimension."
+    assumptions:
+      - "The ladder is fixed in the Java (LearningStateMachine.LADDER) and is defined in the model rather than supplied as a constant."
+    limitations:
+      - "The model bounds the recorded transitions with MAX_TRANSITIONS, so it says nothing about a chain longer than the bound."
+
+  - id: PromotionStage
+    title: "The promotion machine — VERIFIED needs a second INDEPENDENT source, and the graph and the policy are separate checks"
+    spec: formal/PromotionStage.tla
+    config: formal/PromotionStage.cfg
+    java:
+      module: matrix-core
+      sources:
+        - matrix-core/src/main/java/io/matrix/knowledge/acquisition/PromotionStage.java
+        - matrix-core/src/main/java/io/matrix/knowledge/acquisition/PromotionPolicy.java
+      production_callers:
+        - matrix-core/src/main/java/io/matrix/knowledge/acquisition/ClaimValidator.java
+        - matrix-core/src/main/java/io/matrix/knowledge/acquisition/DocumentImporter.java
+        - matrix-core/src/main/java/io/matrix/knowledge/KnowledgeWorkbench.java
+      production_caller_status: PRODUCTION_PATH_VERIFIED
+    tests:
+      unit:
+        - matrix-core/src/test/java/io/matrix/knowledge/acquisition/ClaimValidatorTest.java
+      integration:
+        - matrix-core/src/test/java/io/matrix/knowledge/acquisition/DocumentImportTest.java
+    properties:
+      invariants: [TypeOK, VerifiedNeedsTwoIndependentSources, SupportedNeedsASource, DisputeNeedsEvidence, TrustedIsExactlyThePair]
+      properties: [TerminalIsFinal]
+    conformance:
+      status: [MODEL_CHECKED, ABSTRACT_MODEL, JAVA_UNIT_VERIFIED, INTEGRATION_VERIFIED, PRODUCTION_PATH_VERIFIED]
+      gaps:
+        - code: POLICY_EDGE_CASES_NOT_MODELLED
+          detail: >-
+            The model checks that a claim cannot reach VERIFIED on one source.
+            It does not model the interaction of a dispute with a promotion,
+            which the Java refuses in a way the model does not express.
+    abstractions:
+      - "The model counts DISTINCT source hashes, as PromotionPolicy.independentSources does; ten copies of one source are one source."
+    assumptions:
+      - "The model supplies two hashes, so the independence property is checked over two sources and not over ten."
+    limitations:
+      - "The model does not model the extraction, the segmentation or the evidence itself."
+
 # ───────────────────────────────────────────────────────────────────────────────
 # The CI path filter. Every path listed here MUST be in the `paths:` block of
 # .github/workflows/tla.yml, so that a change to an implementation triggers the
