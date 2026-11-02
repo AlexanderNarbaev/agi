@@ -48,7 +48,7 @@ representations for the imported concepts ✓ ✓; the validation stage ✓ ✓.
 | # | Item | Notes |
 |---|---|---|
 | 2.1 | **A document pipeline:** `SOURCE → EXTRACTION → NORMALIZATION → SEGMENTATION → CONCEPT DISCOVERY → CLAIM EXTRACTION → EVIDENCE LINKING → VALIDATION → INTEGRATION` | the mission's §5.3 verbatim |
-| 2.2 | **Formats:** TXT, Markdown, HTML, PDF, EPUB — using established libraries, not hand-written parsers | the mission's §5.1; §13.2's security list applies to each |
+| 2.2 | **Formats:** TXT, Markdown, HTML, PDF, EPUB — using established libraries, not hand-written parsers | the mission's §5.1; §13.2's security list applies to each. **DONE, and there are SEVEN, not five**: TXT, MD, HTML, PDF, EPUB, DOCX and CSV — DOCX and CSV were added in W42.7 |
 | 2.3 | **A source record** preserving the filename, the id, the content hash, the format, the language, the author when known, the publication date when known, the import date, the location, the extracted structure, the page references, the extraction quality and the processing history | the mission's §5.2; **never invent bibliographic metadata** |
 | 2.4 | **A promotion state machine:** `RAW → EXTRACTED → CANDIDATE → SUPPORTED → VERIFIED → DISPUTED → SUPERSEDED → INVALIDATED`, with precise transition rules | the mission's §5.4 |
 | 2.5 | **Distinguish source agreement from independent corroboration** | ten documents copying one source are not ten confirmations |
