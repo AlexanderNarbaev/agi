@@ -252,7 +252,7 @@ what it would take and what stands in the way.
 | X.1 | **The documentation consistency registry** must stay current | §3.4; eight contradictions were found in one wave |
 | X.2 | **A formal specification for each new state machine** — the promotion machine, the learning state machine, the planner's cycle | §13; extend only where the semantics are stable |
 | X.3 | **Mutation coverage for every new critical property** — a property that cannot fail is not a check | §13 |
-| X.4 | **The benchmark grows** — 34 items is a demonstration; the mission asks for ≥ 100 multilingual cases | §14.1 |
+| X.4 | **The benchmark grows** — 34 items is a demonstration; the mission asks for ≥ 100 multilingual cases | §14.1 — **CLOSED in W42.9.** `w42-benchmark-v3.json` holds **137 items** in 13 categories, English 64 and Russian 73, split **train 40 / validation 39 / test 58**, with a pointer check for every item (the defect class of D-013) and a test proving the check can fail. Measured 2026-11-02: accuracy **0.842**, abstention **0.861**, BM25 overlap 0.499; FALSE_PREMISE 8 of 8 refused, MISSPELLED 13 of 13. The 168-case dialogue set is unchanged. |
 | X.5 | **The security checklist of §13.2 is assessed when ingestion exists** | §13.2 |
 | X.6 | **Every wave ends with a live run, a forced restart, and the numbers** | §12.1 |
 
@@ -311,3 +311,29 @@ reverted (R28).
 
 **The gate.** `scripts/quality-gate.sh` must report no more than the
 accepted 270 candidates. The baseline is NOT updated.
+
+---
+
+## W42.9 (continued) — what the audits and the measurements left
+
+### Closed in this wave
+
+| # | Item | Evidence |
+|---|---|---|
+| 9.1 | **The old red test.** `KnowledgeRetrieverTest > a refuted misconception is never returned as an established claim` failed since before W42.9. | **CLOSED** — the English fold's asymmetry, repaired by a second LEMMA channel beside the fold. The fold itself is unchanged, because W41 pins it and two global fixes were measured and rolled back. `EnglishLemma`; `EnglishLemmaTest`. |
+| 9.2 | **The false premise, in Russian.** The detector "exists, it does not work in Russian". | **CLOSED** — the premise is compared in the index form, the bilingual bridge handles folded stems and multi-word counterparts, and the Russian suffix list gained `-ого`. `RussianPremiseTest`, `FalsePremiseAcrossLanguagesTest`. |
+| 9.3 | **The negation was unscoped.** A claim carrying any negation word counted as a denial. | **CLOSED** — a denial is a negated CLAUSE whose subject is the premise's subject. |
+| 9.4 | **X.4 — the benchmark grows.** | **CLOSED** — 137 items, split and checked (see the table above). |
+| 9.5 | **The two formal specifications were on disk and uncommitted.** | **CLOSED** — `LearningStateMachine.tla` and `PromotionStage.tla` are committed; the formal gate measures **14 passed, 0 failed**. |
+| 9.6 | **The documentation contradictions.** | **APPLIED** — the duplicate status rows, the mutation numbers (27/25/2 → **32/30/2**), the formal-gate count (12/13/14 → **14**), the shadow-class count (nine → **six**), the `ModelToMatrix` status, the quality gate's exit code (1 → **0**), and the acceptance table's verdicts. `PLAN.md` gained the W42 section it was missing — the `AGENTS.md` session procedure reads it to find the current wave. |
+
+### Open, and what each takes
+
+| # | Item | What stands in the way |
+|---|---|---|
+| 9.7 | **The application's startup does not meet the 5-second target.** Measured: `started in 19.018s` with the auto-trainer disabled; **the port was not up after 180 s with the default configuration**. | `AutoTrainer.onStart` trains synchronously over the 3.6 MB `models/training_data/combined_training.json` and blocks the `StartupEvent`. The fix is a decision, not a measurement: bound the training, move it off the startup path, or make it opt-in. It is a change to a startup path, so it is the owner's (§16.1) unless it is done as an additive, bounded change. |
+| 9.8 | **R32 — the cross-language scope match.** A claim's scope is written in the claim's language and folded in that language, while a Russian question is compared in Russian, so every Russian question was reported as OUTSIDE the scope it asked about. | A global change was measured and **breaks three green gates** (the cross-lingual gate, the abstention gate, the instrument test) and was reverted. The fix has to be inside the matching, with its own tests for each rule — the same conclusion the fold's asymmetry reached. |
+| 9.9 | **The multi-word counterpart still does not reach the token set in the RETRIEVER.** The premise checker now handles it; the retriever's bridge still adds "carbon dioxide" as a phrase where the index holds "carbon" and "dioxide" separately. | Measured by the benchmark work: "углекислый" is reported as uncovered. The same phrase-aware rule the premise checker uses belongs in the retriever's bridge — with its own test. |
+| 9.10 | **The lexicon has no "валидность" and no "фотодыхание"**, so three Russian items are refused for a reason that has nothing to do with the capability. | A gap in a hand-curated table. The table is the right place for it, and the entry is a data addition, not a mechanism change. |
+| 9.11 | **The injection detector is English-only**, so a pure-Russian injection inside an imported document is answered. | The §13.2 security list is the checklist, and this is an item of it that the ingestion made reachable for the first time. |
+| 9.12 | **The build needs a JDK 25 that the machine does not put on the `PATH`.** A bare `./gradlew` fails with *"does not provide the required capabilities: [JAVA_COMPILER]"*. | A fact about the machine, not about the repository. The build runs with `JAVA_HOME=/home/alexandr-narbaev/jdk25`; a fresh clone needs a JDK 25 to build at all. |

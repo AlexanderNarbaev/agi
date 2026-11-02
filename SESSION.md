@@ -7785,3 +7785,47 @@ the question is contradicted by the workspace") ✓ ✓ — the mechanism is the
 answered with support 0.2 and `scopeMatch=OUTSIDE` ✓ ✓. So "knows what it does not know" is not missing from
 the system ✓ ✓; it has to be carried over to Russian ✓ ✓, by comparing the premise and the claims in one
 form ✓ ✓. That is a narrow task ✓ ✓, not a redesign ✓ ✓.
+
+# RECON-W42.9 — the old red test is green, the Russian premise is refused, and three audits say what is stale
+
+**Done** ✓ ✓. The red test that predates this wave — `KnowledgeRetrieverTest > a refuted misconception is never
+returned as an established claim` — is **green** ✓ ✓. The cause was measured: the English fold is asymmetric in
+BOTH directions ("release" → "release" but "releases" → "releas"; "process" → "proces" but "processes" →
+"process"), so a question and a claim differing only in their inflection never met ✓ ✓. **The fold was not
+changed** — W41 pins it, two global fixes were already measured and rolled back, and §16 forbids weakening a
+property to make a number better ✓ ✓. A second channel was added beside it: `EnglishLemma` finds the base of an
+"-es" plural, and the retriever matches a term when either channel agrees ✓ ✓. The folded terms still decide the
+ranking, the coverage threshold and the reported gaps; only a claim's REACH changes ✓ ✓. **Benchmark v1 is
+unchanged — accuracy 1.000, abstention 0.900 — and the BM25 overlap moved 0.593 → 0.610** ✓ ✓.
+
+**The false premise is now refused in Russian** ✓ ✓. Three measured causes: the premise was compared with the
+claims in RAW words while the bilingual lexicon is a table of FOLDED stems; the claim's text did not carry its
+concept's name, so the Russian term for the concept had no counterpart on the claim's side; and the Russian suffix
+list had "-его" without "-ого", so "углекислого" never met the lexicon's "углекислый" ✓ ✓. The premise is now
+compared in the index form, the bridge handles a multi-word counterpart, and "-ого" was added ✓ ✓. **The Russian
+question is refused, and the premise the workspace HOLDS is still answered** ✓ ✓.
+
+**The negation now has a scope** ✓ ✓. A claim carrying any negation word is not a denial: "the two processes are
+not alternatives in time" negates a proposition about alternatives in time and says nothing about whether
+photosynthesis converts light energy into chemical energy ✓ ✓. A denial is now a negated CLAUSE whose subject is
+the premise's subject ✓ ✓.
+
+**Three independent audits** ✓ ✓. `W42-VERIFICATION-ARCHAEOLOGY.md` (80 verdicts: 51 TRUE, 11 PARTLY TRUE, 16
+FALSE, 2 UNVERIFIABLE — nine of the sixteen were TRUE at the base and are merely stale, because both reports are
+anchored to `0296e83e` and `develop` is 176 commits ahead) ✓ ✓; `W42-VERIFICATION-DOCS.md` (93 registry findings,
+20 contradiction pairs) ✓ ✓, and a third audit of the integration matrix ✓ ✓. Their corrections are applied: the duplicate
+status rows, the mutation numbers (27/25/2 → 32/30/2), the formal-gate count (12/13/14 → 14), the shadow-class
+count (nine → six), the `ModelToMatrix` status, the quality gate's exit code (1 → 0), and the acceptance table's
+verdicts ✓ ✓. `PLAN.md` gained the W42 section it was missing — the `AGENTS.md` session procedure reads it to find
+the current wave ✓ ✓.
+
+**The benchmark grew to 137 items** ✓ ✓ — 13 categories, English 64 and Russian 73, split train 40 / validation 39
+/ test 58, with every item's pointer checked against the workspace it names ✓ ✓. Measured after this wave:
+accuracy 0.842, abstention 0.861, BM25 overlap 0.499; FALSE_PREMISE 8 of 8 refused, MISSPELLED 13 of 13 ✓ ✓. That
+is a harder instrument than v1, and both numbers are true of their own ✓ ✓.
+
+**Two negative findings, recorded rather than smoothed** ✓ ✓. The quality gate **exits 0** (263 against the
+accepted baseline of 270) ✓ ✓. And the **application's startup does not meet the 5-second target**: `started in
+19.018s` with the auto-trainer disabled, and **the port was not up after 180 s with the default configuration**,
+because `AutoTrainer.onStart` trains synchronously over a 3.6 MB corpus and blocks the `StartupEvent` ✓ ✓. The
+build also needs a JDK 25 that the machine does not put on the `PATH` ✓ ✓.

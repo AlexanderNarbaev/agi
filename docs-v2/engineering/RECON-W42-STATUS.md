@@ -14,14 +14,13 @@ able to resume from the repository alone.
 | **W42.0 — Reality and integration audit** | **DONE** | five deliverables in `docs-v2/engineering/W42-*.md`; the benchmark instrument and its baseline; the configuration fix |
 | **W42.1 — Unified learning and knowledge core** | **DONE** | `W42.1-LEARNING-CORE-REPORT.md`; the state machine, the planner, the demand check, the memory's bound, the teach-back gate; abstention quality 0.400 → 0.700 |
 | **W42.2 — Universal knowledge acquisition** | **DONE (the core)** | TXT/MD/HTML/PDF/EPUB through libraries; the source record; the promotion layers; the independence rule; the endpoint and the interface — **verified live**: a concept acquired from a real document became retrievable with its source |
-| W42.2 — Universal knowledge acquisition | not started | |
 | **W42.3 — Dialog Intelligence** | **DONE** | `W42.3-DIALOG-INTELLIGENCE-REPORT.md`; the localised text layer, the bilingual lexicon, the typo corrector, the bounded conversation, the eight dialogue classes, 168 measured cases — accuracy 0.583 → 0.792, the Russian 0/5 → 4/5 |
 | **W42.4 — Learning and assessment** | **DONE** | `W42.4-LEARNING-AND-REPRESENTATION-REPORT.md`; the exercise selector, the delayed retention measured from the session boundary, and the representation composer — the mission's first practical objective is now demonstrated end to end on the running application |
 | **W42.5 — Cognitive integration** | **DONE** | `W42.5-COGNITIVE-INTEGRATION-REPORT.md`; the false-premise detector (the `FALSE_PREMISE` items 0/2 → 2/2, the accuracy unchanged at 0.792 and the abstention 0.700 → 0.900), the bounded idempotent consolidation, the error-driven selection, and the retention baseline experiment — the retention's evidence 2 → 3 and its stage EXPLORATION → PRACTICE against the no-consolidation baseline |
 | **W42.6 — Local Alpha v0.3** | **DONE** | `W42.6-LOCAL-ALPHA-V0.3.md` — the twelve steps verified over HTTP, and the journey survives a `SIGKILL` with 469 712 bytes of WAL unwritten. The §9's error-driven learning integration is wired in as a phase of the consolidation (the schema is v11), the §5.5's validation stage promotes a claim on two independent sources, and the §6's conversation is persisted (the schema is v12) |
-| W42.4 — Learning and assessment | not started | |
-| W42.5 — Cognitive integration | not started | |
-| W42.6 — Local Alpha v0.3 | not started | |
+| **W42.7 — the open items** | **DONE** | `RECON-W42-BACKLOG.md` §W42.7; the corpus registry's versions, the Source Browser, the Knowledge Graph, the Experiment Dashboard, the Learning Sessions, the persisted conversation, the validation stage, the authored representations, the error-driven decay, and the consolidation that proposes and measures |
+| **W42.9 — the fold, the Russian premise, the audit** | **DONE** | the section at the end of this file: the asymmetric English fold, the Russian false premise, the lemma channel, the scoped negation, and three independent audits of the W42 documentation |
+
 
 **The mission's first practical objective** — *acquire a new concept from an
 actual document, explain it with stored knowledge, answer at different
@@ -74,6 +73,13 @@ two waves.
 **The remote HEAD was verified, not assumed** — `git fetch origin --prune`
 then `git rev-parse origin/develop` → `0296e83e88b9caecba828c992f9634c21d51a1c8`.
 
+**The HEAD when the W42.9 wave began was `6ea07101`**, verified the same way
+(`git ls-remote origin develop` → `6ea0710197e8440b0ea9c2ed035d368be769104a`,
+equal to the local `develop`). It is **176 commits** after `0296e83e`, and
+nine of them landed on the night of 2026-11-01 — which is why the W42.0
+reports, both anchored to `0296e83e`, are stale in a dozen places
+(`W42-VERIFICATION-ARCHAEOLOGY.md`).
+
 ---
 
 ## 3. Files changed by this wave
@@ -102,11 +108,11 @@ owner's pre-existing modifications (`.gitignore`, `.opencode/*`, `AGENTS.md`,
 
 | What | Result | Command |
 |---|---|---|
-| Targeted suites | **121 classes, 1 212 tests, 0 failures** | `./gradlew :matrix-core:test --tests "io.matrix.knowledge.*" --tests "io.matrix.memory.*" --tests "io.matrix.brain.*" --tests "io.matrix.api.*" --tests "io.matrix.rag.*"` |
-| Formal gate | **12/12 exit 0**, 65 … 396 577 states | `java -cp tools/tla2tools.jar tlc2.TLC -config formal/<S>.cfg formal/<S>.tla` |
-| Mutation gate | **27 mutants, 25 killed, 2 survivors** (both recorded with findings), 0 invalid, 0 drift | `python3 scripts/mutation-harness.py` |
-| Startup | **1.571 s** | the live log |
-| W42 benchmark | **34 items: accuracy 0.583, abstention 0.400, BM25 overlap 0.593** | `RECON-W42-BENCHMARKS.md` |
+| Targeted suites | **121 classes, 1 212 tests, 0 failures** (the W42.0 baseline) | `./gradlew :matrix-core:test --tests "io.matrix.knowledge.*" --tests "io.matrix.memory.*" --tests "io.matrix.brain.*" --tests "io.matrix.api.*" --tests "io.matrix.rag.*"` |
+| Formal gate | **14/14 exit 0** (measured 2026-11-02; the W42.0 baseline was 12) | `scripts/formal-gate.sh` |
+| Mutation gate | **32 mutants, 30 killed, 2 survivors** (both recorded with findings), 0 invalid, 0 drift — `formal/mutations.json` and `MUTATION-REPORT.md`; the "27 / 25 / 2" that this file carried earlier was stale | `python3 scripts/mutation-harness.py` |
+| Startup | **1.571 s** (the W42.0 measurement) — see the W42.9 section for the re-measurement | the live log |
+| W42 benchmark | **34 items: accuracy 0.583, abstention 0.400, BM25 overlap 0.593** (the W42.0 baseline) | `RECON-W42-BENCHMARKS.md` |
 | Restart recovery | **verified** after `kill -9` | the W41 journey script |
 
 **Failed tests: none.** **Experiments: one** — the WAL backup experiment,
@@ -259,3 +265,96 @@ the eight layers, the layer graph and the policy's target requirements ✓ ✓, 
 cannot reach VERIFIED on one source copied many times ✓ ✓. Three mutated models were caught by TLC ✓ ✓.
 The formal gate is 14 passed, 0 failed ✓ ✓, and the learning machine, the promotion machine and the BRC
 step all have specifications ✓ ✓.
+
+### W42.9 (continued, 2026-11-02) — the fold's asymmetry, the Russian premise, and three audits
+
+**THE OLD RED TEST IS GREEN.** `KnowledgeRetrieverTest > a refuted misconception is
+never returned as an established claim` was failing since before W42.9 (the WAL
+established it also fails on `384e24ff`, a commit predating the wave). The
+cause was measured, not guessed: **the English fold is asymmetric**, and it is
+asymmetric in both directions — `release` folds to `release` and `releases`
+folds to `releas`; `process` folds to `proces` and `processes` folds to
+`process`. A question and a claim that differ only in their inflection never
+met, so "Where does the oxygen plants release come from?" never reached the
+claim "Oxygenic photosynthesis releases oxygen as a byproduct of splitting
+water."
+
+**THE FOLD WAS NOT CHANGED.** Two global fixes had already been measured and
+rolled back (the WAL records both), the fold's behaviour is pinned by W41's
+own test (`fold("molecules") == "molecul"`), and the mission's §16 forbids
+weakening a property to make a number better. So a **second channel** was
+added beside the folded terms: `EnglishLemma` computes the base of an `-es`
+plural — after a sibilant (`ss`, `x`, `z`, `ch`, `sh`) the plural is `-es`,
+and otherwise the base ends in a silent `e` and the plural is `-s` — and the
+retriever matches a term when either channel agrees. The folded terms still
+decide the ranking, the coverage threshold and the reported gaps; only the
+REACH of a claim changes. **The benchmark v1 is unchanged: accuracy 1.000,
+abstention 0.900; the BM25 overlap moved 0.593 → 0.610.**
+
+**THE RUSSIAN FALSE PREMISE IS NOW REFUSED.** The W42.9 diagnosis was that the
+detector "exists, it does not work in Russian": an English question refused
+with an exact explanation, a Russian question answered. Three causes, all
+measured: the premise was compared with the claims in **RAW** words while the
+bilingual lexicon is a table of **FOLDED** stems, so a Russian term never
+reached it; the claim's text did not carry its **concept's name**, so the
+Russian term for the concept had no counterpart on the claim's side; and the
+Russian suffix list had `-его` **without `-ого`**, so "углекислого" never met
+the lexicon's "углекислый". The premise is now compared in the index form,
+the bridge handles a multi-word counterpart, and `-ого` was added. **The
+Russian question is refused, and the premise the workspace HOLDS is still
+answered.**
+
+**THE NEGATION IS NOW SCOPED.** The first version of the detector asked only
+whether a claim carried a negation word, and that is not a denial: "the two
+processes are **not** alternatives in time" negates a proposition about
+alternatives in time and says nothing about whether photosynthesis converts
+light energy into chemical energy. The bare test refused a premise the
+workspace holds. **A denial is now a NEGATED CLAUSE whose subject is the
+premise's subject** — the clause must cover the premise's terms.
+
+**THREE INDEPENDENT AUDITS.** The wave's own documentation was audited by
+three read-only specialists, against the code and not against the reports:
+`W42-VERIFICATION-ARCHAEOLOGY.md` (80 verdicts on the two reconnaissance
+reports: 51 TRUE, 11 PARTLY TRUE, 16 FALSE, 2 UNVERIFIABLE — **nine of the
+sixteen were TRUE at the base and are stale**, because both reports are
+anchored to `0296e83e` and `develop` is 176 commits ahead),
+`W42-VERIFICATION-DOCS.md` (93 registry findings, 20 contradiction pairs) and a
+third audit of the integration matrix. Their corrections are applied in the
+wave's own documents, and what they could not settle is marked UNVERIFIED
+rather than guessed.
+
+**The benchmark grew to 137 items.** `w42-benchmark-v3.json` holds 137 items
+in 13 categories, English 64 and Russian 73, split train 40 / validation 39 /
+test 58, with the pointer of every item checked against the workspace it
+names — the defect class D-013 caught — and the check itself proven able to
+fail. **Measured 2026-11-02, after this wave's changes: accuracy 0.842
+(85 of 101 answerable), abstention 0.861 (31 of 36 refused), BM25 overlap
+0.499; the FALSE_PREMISE items score 8 of 8 refused and the MISSPELLED items
+13 of 13.** These are a *different, harder* instrument from v1, and both
+numbers are true of their own instrument.
+
+**Two negative findings, recorded rather than smoothed.** The **quality gate
+exits 0** (263 candidates against the accepted baseline of 270) — the earlier
+"the gate still exits 1" was stale. And the **application's startup does not
+meet the mission's 5-second target**: the packaged application reports
+`started in 19.018s` with the auto-trainer disabled, and **the port was not
+up after 180 s with the default configuration**, because `AutoTrainer.onStart`
+trains synchronously over a 3.6 MB corpus and blocks the `StartupEvent`. The
+`1.571 s` of the W42.0 baseline was measured under different conditions and
+cannot be quoted against that target any more.
+
+**The build needs a JDK 25 that the machine does not put on the `PATH`.** The
+default `java` is a JRE 25 without a compiler, so a bare `./gradlew` fails
+with *"does not provide the required capabilities: [JAVA_COMPILER]"*. The
+build runs with `JAVA_HOME=/home/alexandr-narbaev/jdk25`. A fresh clone
+therefore needs a JDK 25 to build at all, and that is a fact about the
+machine, not about the repository.
+
+**Committed in this wave:** `EnglishLemma` and its test, the lemma channel in
+`KnowledgeRetriever`, the index-form premise comparison, the scoped negation,
+the Russian `-ого` ending, `RussianPremiseTest`,
+`FalsePremiseAcrossLanguagesTest`, `EnglishLemmaTest`, the two formal
+specifications that were on disk but uncommitted (`LearningStateMachine.tla`,
+`PromotionStage.tla` — the formal gate measures **14 passed, 0 failed** with
+them), `formal/.gitignore` for TLC's state directories, the three audit
+reports, and the corrections they imply.
