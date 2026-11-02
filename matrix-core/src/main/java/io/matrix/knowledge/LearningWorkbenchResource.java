@@ -350,6 +350,60 @@ public class LearningWorkbenchResource {
     }
 
     /**
+     * Runs the retention baseline experiment.
+     *
+     * <p>The mission's §14 asks that the delayed retention be measured
+     * against a no-consolidation baseline. The two arms are the same
+     * learner under two selection policies, so the difference is the
+     * policy and not the learner.
+     *
+     * <p>The arms run over their own workspaces: the first version ran
+     * both over one, and the second arm inherited the first arm's
+     * outcomes.
+     */
+    @GET
+    @Path("/workspaces/{id}/retention-experiment")
+    public Map<String, Object> retentionExperiment(@PathParam("id") String workspaceId,
+                                                    @QueryParam("maxSessions") Integer maxSessions) {
+        int max = maxSessions == null || maxSessions < 1 ? 20 : Math.min(maxSessions, 100);
+        java.nio.file.Path directory;
+        try {
+            directory = java.nio.file.Files.createTempDirectory("matrix-retention");
+        } catch (java.io.IOException e) {
+            throw new IllegalStateException("Failed to create the experiment's directory", e);
+        }
+        RetentionExperiment.Report report = RetentionExperiment.run(
+                () -> KnowledgeWorkbench.at(directory.resolve(
+                        "arm-" + java.util.UUID.randomUUID() + ".sqlite").toString()),
+                workspaceId, max);
+
+        Map<String, Object> result = new LinkedHashMap<>();
+        result.put("workspace", workspaceId);
+        result.put("itemsInTheDataset", report.itemsInTheDataset());
+        result.put("whatWasMeasured", report.whatWasMeasured());
+        result.put("limits", report.limits());
+        result.put("baseline", arm(report.baseline()));
+        result.put("consolidation", arm(report.consolidation()));
+        result.put("theRetentionStageOfTheBaseline", report.baseline().retentionStage());
+        result.put("theRetentionStageOfTheConsolidation", report.consolidation().retentionStage());
+        return result;
+    }
+
+    /** The arm's result as a map. */
+    private Map<String, Object> arm(RetentionExperiment.ArmResult arm) {
+        Map<String, Object> result = new LinkedHashMap<>();
+        result.put("policy", arm.policy().name());
+        result.put("sessions", arm.sessions());
+        result.put("itemsAsked", arm.itemsAsked());
+        result.put("itemsWrongAtTheEnd", arm.itemsWrongAtTheEnd());
+        result.put("theMeanScore", arm.meanScore());
+        result.put("theWeakestStage", arm.weakestStage().name());
+        result.put("theRetentionStage", arm.retentionStage());
+        result.put("theRetentionEvidence", arm.retentionEvidence());
+        return result;
+    }
+
+    /**
      * Consolidates a workspace.
      *
      * <p>The mission's §8 describes a bounded consolidation in which

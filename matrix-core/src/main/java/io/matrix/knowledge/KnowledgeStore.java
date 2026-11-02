@@ -1291,7 +1291,7 @@ public final class KnowledgeStore implements AutoCloseable {
     public List<AssessmentOutcome> outcomes(String workspaceId) {
         return query("SELECT item_id, correct, score, claimed_confidence, learner_answer, "
                 + "session_id, answered_at, held_out FROM assessment_outcome WHERE workspace_id = ? "
-                + "ORDER BY answered_at, item_id", workspaceId, rs -> new AssessmentOutcome(
+                + "ORDER BY answered_at, session_id, item_id", workspaceId, rs -> new AssessmentOutcome(
                 rs.getString("item_id"), rs.getInt("correct") != 0, rs.getDouble("score"),
                 rs.getDouble("claimed_confidence"), rs.getString("learner_answer"),
                 rs.getString("session_id"), rs.getLong("answered_at"),

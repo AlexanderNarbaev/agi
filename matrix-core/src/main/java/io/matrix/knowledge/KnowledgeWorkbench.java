@@ -466,12 +466,7 @@ public class KnowledgeWorkbench implements AutoCloseable {
     public ExerciseSelector.Selection nextExercise(String workspaceId) {
         Set<String> attempted = new LinkedHashSet<>();
         Set<String> failed = new LinkedHashSet<>();
-        for (AssessmentOutcome outcome : outcomes(workspaceId)) {
-            attempted.add(outcome.itemId());
-            if (!outcome.correct()) {
-                failed.add(outcome.itemId());
-            }
-        }
+        collectAttempts(outcomes(workspaceId), attempted, failed);
         return new ExerciseSelector(dataset(workspaceId), learningStates(workspaceId),
                 workspace(workspaceId), attempted, failed).next();
     }
@@ -486,14 +481,37 @@ public class KnowledgeWorkbench implements AutoCloseable {
     public List<ExerciseSelector.Selection> nextExercises(String workspaceId, int count) {
         Set<String> attempted = new LinkedHashSet<>();
         Set<String> failed = new LinkedHashSet<>();
-        for (AssessmentOutcome outcome : outcomes(workspaceId)) {
-            attempted.add(outcome.itemId());
-            if (!outcome.correct()) {
-                failed.add(outcome.itemId());
-            }
-        }
+        collectAttempts(outcomes(workspaceId), attempted, failed);
         return new ExerciseSelector(dataset(workspaceId), learningStates(workspaceId),
                 workspace(workspaceId), attempted, failed).next(count);
+    }
+
+    /**
+     * The items the learner has attempted, and the ones they got wrong.
+     *
+     * <p><b>An item is failed when its LAST outcome is wrong.</b> The
+     * first version asked whether ANY outcome was wrong, and an item that
+     * was answered wrongly once and rightly afterwards stayed in the
+     * failed set for ever - so the error-driven selection kept asking the
+     * item the learner had already learned, and the learner never moved
+     * on. The error is the current state, not the history.
+     *
+     * @param outcomes the outcomes, in the order they were recorded
+     * @param attempted the items the learner has attempted
+     * @param failed the items the learner has answered wrongly LAST
+     */
+    private void collectAttempts(List<AssessmentOutcome> outcomes, Set<String> attempted,
+                                  Set<String> failed) {
+        Map<String, Boolean> lastCorrect = new LinkedHashMap<>();
+        for (AssessmentOutcome outcome : outcomes) {
+            attempted.add(outcome.itemId());
+            lastCorrect.put(outcome.itemId(), outcome.correct());
+        }
+        for (Map.Entry<String, Boolean> entry : lastCorrect.entrySet()) {
+            if (!entry.getValue()) {
+                failed.add(entry.getKey());
+            }
+        }
     }
 
     /**

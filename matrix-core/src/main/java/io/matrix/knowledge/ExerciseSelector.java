@@ -61,6 +61,7 @@ public final class ExerciseSelector {
     private final KnowledgeSnapshot snapshot;
     private final Set<String> attempted;
     private final Set<String> failed;
+    private final Set<String> excluded;
 
     /**
      * A selector over a learner.
@@ -72,7 +73,7 @@ public final class ExerciseSelector {
      */
     public ExerciseSelector(AssessmentDataset dataset, List<LearningState> states,
                             KnowledgeSnapshot snapshot, Set<String> attempted) {
-        this(dataset, states, snapshot, attempted, Set.of());
+        this(dataset, states, snapshot, attempted, Set.of(), Set.of());
     }
 
     /**
@@ -94,11 +95,39 @@ public final class ExerciseSelector {
      */
     public ExerciseSelector(AssessmentDataset dataset, List<LearningState> states,
                             KnowledgeSnapshot snapshot, Set<String> attempted, Set<String> failed) {
+        this(dataset, states, snapshot, attempted, failed, Set.of());
+    }
+
+    /**
+     * A selector over a learner, with the errors they made and the items
+     * this selection must not return.
+     *
+     * <p><b>The attempted set and the excluded set are different things.</b>
+     * The attempted set is the items the learner has ever been asked, and
+     * it keeps the selector away from what it has already covered. The
+     * excluded set is what this selection must not return twice — the
+     * items already chosen for this session. The first version used the
+     * attempted set for both, and the consequence was that the wrongly
+     * answered item was returned five times in a row: it was excluded
+     * because it had been attempted, and it was returned because it had
+     * failed, and the failed rule never consulted the exclusion at all.
+     *
+     * @param dataset the assessment items
+     * @param states the learner's per-dimension states
+     * @param snapshot the workspace
+     * @param attempted the item ids the learner has already attempted
+     * @param failed the item ids the learner has answered wrongly last
+     * @param excluded the item ids this selection must not return
+     */
+    public ExerciseSelector(AssessmentDataset dataset, List<LearningState> states,
+                            KnowledgeSnapshot snapshot, Set<String> attempted, Set<String> failed,
+                            Set<String> excluded) {
         this.dataset = dataset;
         this.states = states == null ? List.of() : states;
         this.snapshot = snapshot;
         this.attempted = attempted == null ? Set.of() : attempted;
         this.failed = failed == null ? Set.of() : failed;
+        this.excluded = excluded == null ? Set.of() : excluded;
     }
 
     /**
@@ -143,7 +172,8 @@ public final class ExerciseSelector {
         // the learner has never seen.
         for (LearningDimension dimension : weak) {
             for (AssessmentItem item : items) {
-                if (item.dimension() == dimension && failed.contains(item.id())) {
+                if (item.dimension() == dimension && failed.contains(item.id())
+                        && !excluded.contains(item.id())) {
                     return new Selection(item, dimension,
                             "the learner answered this item wrongly, and the error is the gap",
                             item.heldOut(), nameOf(item.conceptId()));
@@ -153,7 +183,8 @@ public final class ExerciseSelector {
         // 2. An unattempted item of a weak dimension.
         for (LearningDimension dimension : weak) {
             for (AssessmentItem item : items) {
-                if (item.dimension() == dimension && !attempted.contains(item.id())) {
+                if (item.dimension() == dimension && !attempted.contains(item.id())
+                        && !excluded.contains(item.id())) {
                     return new Selection(item, dimension,
                             "the dimension has not reached competence yet", item.heldOut(),
                             nameOf(item.conceptId()));
@@ -163,7 +194,8 @@ public final class ExerciseSelector {
         // 3. An item of a concept with a missing prerequisite.
         for (String conceptId : gapConcepts) {
             for (AssessmentItem item : items) {
-                if (item.conceptId().equals(conceptId) && !attempted.contains(item.id())) {
+                if (item.conceptId().equals(conceptId) && !attempted.contains(item.id())
+                        && !excluded.contains(item.id())) {
                     return new Selection(item, item.dimension(),
                             "the concept's prerequisites are not all in the workspace",
                             item.heldOut(), nameOf(item.conceptId()));
@@ -174,7 +206,7 @@ public final class ExerciseSelector {
         for (LearningDimension dimension : weak) {
             for (AssessmentItem item : items) {
                 if (item.dimension() == dimension && item.heldOut()
-                        && !attempted.contains(item.id())) {
+                        && !attempted.contains(item.id()) && !excluded.contains(item.id())) {
                     return new Selection(item, dimension,
                             "the held-out item of the dimension is the independent test",
                             true, nameOf(item.conceptId()));
@@ -183,7 +215,7 @@ public final class ExerciseSelector {
         }
         // 5. Otherwise, the next unattempted item.
         for (AssessmentItem item : items) {
-            if (!attempted.contains(item.id())) {
+            if (!attempted.contains(item.id()) && !excluded.contains(item.id())) {
                 return new Selection(item, item.dimension(), "the next unattempted item",
                         item.heldOut(), nameOf(item.conceptId()));
             }
@@ -207,9 +239,14 @@ public final class ExerciseSelector {
      */
     public List<Selection> next(int count) {
         List<Selection> selections = new ArrayList<>();
-        Set<String> chosen = new LinkedHashSet<>(attempted);
+        // The items already chosen for this session, and the items the
+        // learner has already been asked, are different sets: the first is
+        // what this selection must not return twice, the second is what it
+        // must not return at all.
+        Set<String> chosen = new LinkedHashSet<>();
         for (int i = 0; i < count; i++) {
-            Selection selection = new ExerciseSelector(dataset, states, snapshot, chosen).next();
+            Selection selection = new ExerciseSelector(dataset, states, snapshot, attempted, failed,
+                    chosen).next();
             if (selection == null) {
                 break;
             }
