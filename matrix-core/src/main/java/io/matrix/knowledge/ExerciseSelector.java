@@ -62,6 +62,7 @@ public final class ExerciseSelector {
     private final Set<String> attempted;
     private final Set<String> failed;
     private final Set<String> excluded;
+    private final Set<String> conceptsWithVerifiedErrors;
 
     /**
      * A selector over a learner.
@@ -95,7 +96,42 @@ public final class ExerciseSelector {
      */
     public ExerciseSelector(AssessmentDataset dataset, List<LearningState> states,
                             KnowledgeSnapshot snapshot, Set<String> attempted, Set<String> failed) {
-        this(dataset, states, snapshot, attempted, failed, Set.of());
+        this(dataset, states, snapshot, attempted, failed, Set.of(), Set.of());
+    }
+
+    /**
+     * A selector over a learner, with the errors they made, the items this
+     * selection must not return, and the concepts they have a VERIFIED
+     * error about.
+     *
+     * <p><b>The verified errors come first, and the unverified ones
+     * second.</b> The mission's §9 says the error-driven integration
+     * happens "only after verifying the math": an error the learner has
+     * made in two different sessions is a gap, and the items of that
+     * concept are what the learner needs. A single wrong answer may be a
+     * slip, and the item it belongs to is asked again - but it is not
+     * treated as a durable gap.
+     *
+     * @param dataset the assessment items
+     * @param states the learner's per-dimension states
+     * @param snapshot the workspace
+     * @param attempted the item ids the learner has already attempted
+     * @param failed the item ids the learner has answered wrongly last
+     * @param excluded the item ids this selection must not return
+     * @param conceptsWithVerifiedErrors the concepts the learner has a
+     *     verified error about
+     */
+    public ExerciseSelector(AssessmentDataset dataset, List<LearningState> states,
+                            KnowledgeSnapshot snapshot, Set<String> attempted, Set<String> failed,
+                            Set<String> excluded, Set<String> conceptsWithVerifiedErrors) {
+        this.dataset = dataset;
+        this.states = states == null ? List.of() : states;
+        this.snapshot = snapshot;
+        this.attempted = attempted == null ? Set.of() : attempted;
+        this.failed = failed == null ? Set.of() : failed;
+        this.excluded = excluded == null ? Set.of() : excluded;
+        this.conceptsWithVerifiedErrors =
+                conceptsWithVerifiedErrors == null ? Set.of() : conceptsWithVerifiedErrors;
     }
 
     /**
@@ -122,12 +158,7 @@ public final class ExerciseSelector {
     public ExerciseSelector(AssessmentDataset dataset, List<LearningState> states,
                             KnowledgeSnapshot snapshot, Set<String> attempted, Set<String> failed,
                             Set<String> excluded) {
-        this.dataset = dataset;
-        this.states = states == null ? List.of() : states;
-        this.snapshot = snapshot;
-        this.attempted = attempted == null ? Set.of() : attempted;
-        this.failed = failed == null ? Set.of() : failed;
-        this.excluded = excluded == null ? Set.of() : excluded;
+        this(dataset, states, snapshot, attempted, failed, excluded, Set.of());
     }
 
     /**
@@ -167,9 +198,21 @@ public final class ExerciseSelector {
             }
         }
 
-        // 1. THE ERROR-DRIVEN SELECTION. An item the learner answered
-        // wrongly is the evidence of a gap, and it comes before the items
-        // the learner has never seen.
+        // 1. THE VERIFIED GAP. The learner has been wrong about this
+        // concept in two different sessions: that is a gap, and the items
+        // of that concept are what they need.
+        for (String conceptId : conceptsWithVerifiedErrors) {
+            for (AssessmentItem item : items) {
+                if (item.conceptId().equals(conceptId) && !excluded.contains(item.id())) {
+                    return new Selection(item, item.dimension(),
+                            "the learner has a verified error about this concept",
+                            item.heldOut(), nameOf(item.conceptId()));
+                }
+            }
+        }
+        // 2. THE IMMEDIATE ERROR. An item the learner answered wrongly is
+        // the evidence of a gap, and it comes before the items the learner
+        // has never seen.
         for (LearningDimension dimension : weak) {
             for (AssessmentItem item : items) {
                 if (item.dimension() == dimension && failed.contains(item.id())
@@ -180,7 +223,7 @@ public final class ExerciseSelector {
                 }
             }
         }
-        // 2. An unattempted item of a weak dimension.
+        // 3. An unattempted item of a weak dimension.
         for (LearningDimension dimension : weak) {
             for (AssessmentItem item : items) {
                 if (item.dimension() == dimension && !attempted.contains(item.id())
@@ -191,7 +234,7 @@ public final class ExerciseSelector {
                 }
             }
         }
-        // 3. An item of a concept with a missing prerequisite.
+        // 4. An item of a concept with a missing prerequisite.
         for (String conceptId : gapConcepts) {
             for (AssessmentItem item : items) {
                 if (item.conceptId().equals(conceptId) && !attempted.contains(item.id())
@@ -202,7 +245,7 @@ public final class ExerciseSelector {
                 }
             }
         }
-        // 4. The held-out item of a weak dimension: the independent test.
+        // 5. The held-out item of a weak dimension: the independent test.
         for (LearningDimension dimension : weak) {
             for (AssessmentItem item : items) {
                 if (item.dimension() == dimension && item.heldOut()
@@ -213,14 +256,14 @@ public final class ExerciseSelector {
                 }
             }
         }
-        // 5. Otherwise, the next unattempted item.
+        // 6. Otherwise, the next unattempted item.
         for (AssessmentItem item : items) {
             if (!attempted.contains(item.id()) && !excluded.contains(item.id())) {
                 return new Selection(item, item.dimension(), "the next unattempted item",
                         item.heldOut(), nameOf(item.conceptId()));
             }
         }
-        // 6. And finally the item the learner has attempted least recently.
+        // 7. And finally the item the learner has attempted least recently.
         for (AssessmentItem item : items) {
             if (item.heldOut()) {
                 return new Selection(item, item.dimension(),
@@ -246,7 +289,7 @@ public final class ExerciseSelector {
         Set<String> chosen = new LinkedHashSet<>();
         for (int i = 0; i < count; i++) {
             Selection selection = new ExerciseSelector(dataset, states, snapshot, attempted, failed,
-                    chosen).next();
+                    chosen, conceptsWithVerifiedErrors).next();
             if (selection == null) {
                 break;
             }

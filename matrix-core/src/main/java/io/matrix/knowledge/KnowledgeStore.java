@@ -54,7 +54,7 @@ import java.util.Set;
 public final class KnowledgeStore implements AutoCloseable {
 
     /** The schema version this build writes. */
-    public static final int SCHEMA_VERSION = 10;
+    public static final int SCHEMA_VERSION = 11;
 
     private static final ObjectMapper JSON = new ObjectMapper();
 
@@ -349,6 +349,28 @@ public final class KnowledgeStore implements AutoCloseable {
     }
 
     private int migrateFrom(int version) throws SQLException {
+        if (version == 10) {
+            // v11 adds the table of the verified learning errors.
+            //
+            // The mission's §9: the error-driven learning integration
+            // happens only after the error is verified. A record of an
+            // error that has not been repeated is not evidence of a gap,
+            // and the outcomes keep it - the table holds the VERIFIED
+            // errors only.
+            try (Statement st = connection.createStatement()) {
+                st.execute("CREATE TABLE IF NOT EXISTS learning_error ("
+                        + "id TEXT PRIMARY KEY, workspace_id TEXT NOT NULL, "
+                        + "item_id TEXT NOT NULL, concept_id TEXT NOT NULL, "
+                        + "dimension TEXT NOT NULL, learner_answer TEXT NOT NULL, "
+                        + "expected_answer TEXT NOT NULL, verified INTEGER NOT NULL, "
+                        + "recorded_at TEXT NOT NULL, "
+                        + "UNIQUE (workspace_id, item_id))");
+                st.execute("CREATE INDEX IF NOT EXISTS idx_learning_error_workspace "
+                        + "ON learning_error(workspace_id, concept_id)");
+            }
+            writeSchemaVersion(11);
+            return 11;
+        }
         if (version == 9) {
             // v10 adds the tombstone columns of the dialogue memory.
             //
@@ -1224,6 +1246,59 @@ public final class KnowledgeStore implements AutoCloseable {
         } catch (SQLException e) {
             throw new IllegalStateException("Failed to forget the asked question", e);
         }
+    }
+
+    /**
+     * Records the verified learning errors of a workspace.
+     *
+     * <p>A record of an error that has not been repeated is not evidence
+     * of a gap, and the outcomes keep it - the table holds the VERIFIED
+     * errors only.
+     *
+     * @param workspaceId the workspace
+     * @param errors the errors
+     */
+    public void recordLearningErrors(String workspaceId, List<LearningError> errors) {
+        if (errors == null || errors.isEmpty()) {
+            return;
+        }
+        try (PreparedStatement ps = connection.prepareStatement(
+                "INSERT OR REPLACE INTO learning_error(id, workspace_id, item_id, concept_id, "
+                        + "dimension, learner_answer, expected_answer, verified, recorded_at) "
+                        + "VALUES (?,?,?,?,?,?,?,?,?)")) {
+            for (LearningError error : errors) {
+                ps.setString(1, error.id());
+                ps.setString(2, error.workspaceId());
+                ps.setString(3, error.itemId());
+                ps.setString(4, error.conceptId());
+                ps.setString(5, error.dimension().name());
+                ps.setString(6, error.learnerAnswer());
+                ps.setString(7, error.expectedAnswer());
+                ps.setInt(8, error.verified() ? 1 : 0);
+                ps.setString(9, Instant.now().toString());
+                ps.addBatch();
+            }
+            ps.executeBatch();
+        } catch (SQLException e) {
+            throw new IllegalStateException("Failed to record the learning errors", e);
+        }
+    }
+
+    /**
+     * The learning errors of a workspace.
+     *
+     * @param workspaceId the workspace
+     * @return the errors
+     */
+    public List<LearningError> learningErrors(String workspaceId) {
+        return query("SELECT id, workspace_id, item_id, concept_id, dimension, learner_answer, "
+                + "expected_answer, verified FROM learning_error WHERE workspace_id = ? "
+                + "ORDER BY concept_id, item_id", workspaceId, rs -> new LearningError(
+                rs.getString("id"), rs.getString("workspace_id"), rs.getString("item_id"),
+                rs.getString("concept_id"),
+                LearningDimension.valueOf(rs.getString("dimension")),
+                rs.getString("learner_answer"), rs.getString("expected_answer"),
+                rs.getInt("verified") != 0));
     }
 
     /**

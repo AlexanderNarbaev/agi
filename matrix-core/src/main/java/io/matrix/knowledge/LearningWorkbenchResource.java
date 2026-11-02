@@ -449,6 +449,40 @@ public class LearningWorkbenchResource {
     }
 
     /**
+     * The verified learning errors of a workspace.
+     *
+     * <p>The mission's §9: the error-driven integration happens only after
+     * the error is verified. An error the learner has made in one session
+     * may be a slip, and it is not acted upon; an error the learner has
+     * repeated in two sessions, and has not since answered correctly, is
+     * a gap, and its items are what the selector prefers.
+     */
+    @POST
+    @Path("/workspaces/{id}/integrate-errors")
+    public Map<String, Object> integrateErrors(@PathParam("id") String workspaceId) {
+        ErrorIntegrator.Result result = ErrorIntegrator.integrate(workbench, workspaceId);
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("workspace", workspaceId);
+        body.put("theCandidates", result.candidates());
+        body.put("theVerified", result.verified());
+        body.put("theRecorded", result.recorded());
+        body.put("theUnverified", result.unverified());
+        List<Map<String, Object>> errors = new ArrayList<>();
+        for (LearningError error : result.errors()) {
+            Map<String, Object> entry = new LinkedHashMap<>();
+            entry.put("item", error.itemId());
+            entry.put("concept", error.conceptId());
+            entry.put("dimension", error.dimension().name());
+            entry.put("theLearnersAnswer", error.learnerAnswer());
+            entry.put("theExpectedAnswer", error.expectedAnswer());
+            entry.put("verified", error.verified());
+            errors.add(entry);
+        }
+        body.put("theErrors", errors);
+        return body;
+    }
+
+    /**
      * The next exercise for the learner.
      *
      * <p>The mission's §10.1 asks for an exercise generator and a learner

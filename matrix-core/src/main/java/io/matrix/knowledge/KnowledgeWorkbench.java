@@ -468,7 +468,8 @@ public class KnowledgeWorkbench implements AutoCloseable {
         Set<String> failed = new LinkedHashSet<>();
         collectAttempts(outcomes(workspaceId), attempted, failed);
         return new ExerciseSelector(dataset(workspaceId), learningStates(workspaceId),
-                workspace(workspaceId), attempted, failed).next();
+                workspace(workspaceId), attempted, failed, Set.of(),
+                ErrorIntegrator.conceptsWithVerifiedErrors(this, workspaceId)).next();
     }
 
     /**
@@ -483,7 +484,8 @@ public class KnowledgeWorkbench implements AutoCloseable {
         Set<String> failed = new LinkedHashSet<>();
         collectAttempts(outcomes(workspaceId), attempted, failed);
         return new ExerciseSelector(dataset(workspaceId), learningStates(workspaceId),
-                workspace(workspaceId), attempted, failed).next(count);
+                workspace(workspaceId), attempted, failed, Set.of(),
+                ErrorIntegrator.conceptsWithVerifiedErrors(this, workspaceId)).next(count);
     }
 
     /**

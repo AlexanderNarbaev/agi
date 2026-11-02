@@ -95,7 +95,8 @@ public final class KnowledgeConsolidator {
             int forgotten,
             List<Candidate> marked,
             List<String> invariants,
-            boolean idempotent) {
+            boolean idempotent,
+            ErrorIntegrator.Result integration) {
 
         public Report {
             marked = List.copyOf(marked == null ? List.of() : marked);
@@ -126,6 +127,14 @@ public final class KnowledgeConsolidator {
         List<Candidate> candidates = candidates(questions, workbench.workspace(workspaceId),
                 nowMs, budget);
 
+        // PHASE: THE ERROR-DRIVEN INTEGRATION. This is the phase that makes
+        // the consolidation affect the LEARNER and not only the dialogue's
+        // memory: the verified errors are recorded, and the exercise
+        // selector acts on them. The mission's §9 says the integration
+        // happens only after the error is verified, so only the errors the
+        // learner has repeated are integrated.
+        ErrorIntegrator.Result integration = ErrorIntegrator.integrate(workbench, workspaceId);
+
         // PHASE: THE MARK. A forgotten record is marked, never deleted.
         int forgotten = 0;
         for (Candidate candidate : candidates) {
@@ -146,7 +155,9 @@ public final class KnowledgeConsolidator {
                         + "grounds of the forgetting.",
                 "The run is bounded: at most " + budget.maxForgotten()
                         + " records may be forgotten in one run.",
-                "The run is idempotent: a second run over an unchanged workspace forgets nothing.");
+                "The run is idempotent: a second run over an unchanged workspace forgets nothing.",
+                "Only the VERIFIED errors are integrated: an error the learner has made in one "
+                        + "session may be a slip, and it is not acted upon.");
 
         // IDEMPOTENCY: the run is idempotent when the rules, applied to the
         // state the run left behind, name nothing. The first version of
@@ -157,7 +168,7 @@ public final class KnowledgeConsolidator {
                 workbench.workspace(workspaceId), nowMs, budget);
         boolean idempotent = after.isEmpty();
         return new Report(questions.size(), candidates.size(), forgotten, candidates, invariants,
-                idempotent);
+                idempotent, integration);
     }
 
     /**
