@@ -54,7 +54,7 @@ import java.util.Set;
 public final class KnowledgeStore implements AutoCloseable {
 
     /** The schema version this build writes. */
-    public static final int SCHEMA_VERSION = 11;
+    public static final int SCHEMA_VERSION = 12;
 
     private static final ObjectMapper JSON = new ObjectMapper();
 
@@ -349,6 +349,33 @@ public final class KnowledgeStore implements AutoCloseable {
     }
 
     private int migrateFrom(int version) throws SQLException {
+        if (version == 11) {
+            // v12 adds the table of the conversation's turns.
+            //
+            // The mission's §6 asks for a bounded PERSISTED conversation
+            // history. The context was held in memory, so a restart lost
+            // it - and "explain this in more detail" had no referent after
+            // a restart, which is exactly the case the mission names.
+            //
+            // The table is bounded the way the context is: the live turns
+            // are the last MAXIMUM_TURNS. The turns that fall out of the
+            // working memory are MARKED, not deleted - the mission's §8
+            // forbids destroying the historical evidence, and the record
+            // of what was asked and how it was classified is evidence.
+            try (Statement st = connection.createStatement()) {
+                st.execute("CREATE TABLE IF NOT EXISTS dialogue_turn ("
+                        + "id TEXT PRIMARY KEY, workspace_id TEXT NOT NULL, "
+                        + "question TEXT NOT NULL, concept_ids TEXT NOT NULL, "
+                        + "concept_names TEXT NOT NULL, claim_ids TEXT NOT NULL, "
+                        + "language TEXT NOT NULL, answered INTEGER NOT NULL, "
+                        + "act TEXT NOT NULL, recorded_at TEXT NOT NULL, "
+                        + "forgotten_at INTEGER)");
+                st.execute("CREATE INDEX IF NOT EXISTS idx_dialogue_turn_workspace "
+                        + "ON dialogue_turn(workspace_id, recorded_at)");
+            }
+            writeSchemaVersion(12);
+            return 12;
+        }
         if (version == 10) {
             // v11 adds the table of the verified learning errors.
             //
@@ -1282,6 +1309,98 @@ public final class KnowledgeStore implements AutoCloseable {
         } catch (SQLException e) {
             throw new IllegalStateException("Failed to record the learning errors", e);
         }
+    }
+
+    /**
+     * Records a turn of the conversation.
+     *
+     * @param workspaceId the workspace
+     * @param turn the turn
+     */
+    public void recordDialogueTurn(String workspaceId, DialogueContext.Turn turn) {
+        try (PreparedStatement ps = connection.prepareStatement(
+                "INSERT OR REPLACE INTO dialogue_turn(id, workspace_id, question, concept_ids, "
+                        + "concept_names, claim_ids, language, answered, act, recorded_at, "
+                        + "forgotten_at) VALUES (?,?,?,?,?,?,?,?,?,?,NULL)")) {
+            ps.setString(1, turn.id());
+            ps.setString(2, workspaceId);
+            ps.setString(3, turn.question());
+            ps.setString(4, String.join(",", turn.conceptIds()));
+            ps.setString(5, String.join(",", turn.conceptNames()));
+            ps.setString(6, String.join(",", turn.claimIds()));
+            ps.setString(7, turn.language());
+            ps.setInt(8, turn.answered() ? 1 : 0);
+            ps.setString(9, turn.act().name());
+            ps.setLong(10, System.currentTimeMillis());
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            throw new IllegalStateException("Failed to record the dialogue turn", e);
+        }
+    }
+
+    /**
+     * The live turns of a workspace's conversation, oldest first.
+     *
+     * @param workspaceId the workspace
+     * @param limit how many to read
+     * @return the turns
+     */
+    public List<DialogueContext.Turn> dialogueTurns(String workspaceId, int limit) {
+        List<DialogueContext.Turn> turns = query("SELECT id, workspace_id, question, "
+                + "concept_ids, concept_names, claim_ids, language, answered, act "
+                + "FROM dialogue_turn WHERE workspace_id = ? AND forgotten_at IS NULL "
+                + "ORDER BY recorded_at DESC, id DESC LIMIT " + Math.max(1, limit),
+                workspaceId, rs -> new DialogueContext.Turn(
+                rs.getString("id"), rs.getString("question"),
+                splitList(rs.getString("concept_ids")), splitList(rs.getString("concept_names")),
+                splitList(rs.getString("claim_ids")), rs.getString("language"),
+                rs.getInt("answered") != 0,
+                DialogueAct.Act.valueOf(rs.getString("act"))));
+        // The store reads the newest first; the conversation is oldest
+        // first.
+        java.util.Collections.reverse(turns);
+        return turns;
+    }
+
+    /**
+     * Marks the turns that fall out of the working memory.
+     *
+     * <p>The turns are MARKED, not deleted: the mission's §8 forbids
+     * destroying the historical evidence, and the record of what was asked
+     * and how it was classified is evidence.
+     *
+     * @param workspaceId the workspace
+     * @param keep how many live turns to keep
+     * @return the number of turns that were marked
+     */
+    public int forgetOldDialogueTurns(String workspaceId, int keep) {
+        try (PreparedStatement ps = connection.prepareStatement(
+                "UPDATE dialogue_turn SET forgotten_at = ? WHERE workspace_id = ? "
+                        + "AND forgotten_at IS NULL AND id NOT IN ("
+                        + "SELECT id FROM dialogue_turn WHERE workspace_id = ? "
+                        + "AND forgotten_at IS NULL ORDER BY recorded_at DESC, id DESC LIMIT ?)")) {
+            ps.setLong(1, System.currentTimeMillis());
+            ps.setString(2, workspaceId);
+            ps.setString(3, workspaceId);
+            ps.setInt(4, Math.max(0, keep));
+            return ps.executeUpdate();
+        } catch (SQLException e) {
+            throw new IllegalStateException("Failed to forget the old dialogue turns", e);
+        }
+    }
+
+    /** Splits a comma-separated list. */
+    private static List<String> splitList(String value) {
+        if (value == null || value.isBlank()) {
+            return List.of();
+        }
+        List<String> parts = new ArrayList<>();
+        for (String part : value.split(",")) {
+            if (!part.isBlank()) {
+                parts.add(part);
+            }
+        }
+        return parts;
     }
 
     /**

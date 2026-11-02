@@ -41,6 +41,7 @@ public final class DialogueContext {
 
     /** One turn of the conversation. */
     public record Turn(
+            String id,
             String question,
             List<String> conceptIds,
             List<String> conceptNames,
@@ -53,6 +54,13 @@ public final class DialogueContext {
             conceptIds = List.copyOf(conceptIds == null ? List.of() : conceptIds);
             conceptNames = List.copyOf(conceptNames == null ? List.of() : conceptNames);
             claimIds = List.copyOf(claimIds == null ? List.of() : claimIds);
+        }
+
+        /** A turn without an identity yet. */
+        public Turn(String question, List<String> conceptIds, List<String> conceptNames,
+                    List<String> claimIds, String language, boolean answered,
+                    DialogueAct.Act act) {
+            this(null, question, conceptIds, conceptNames, claimIds, language, answered, act);
         }
     }
 
@@ -88,10 +96,33 @@ public final class DialogueContext {
                 claimIds.add(claim.id());
             }
         }
-        turns.add(new Turn(question, conceptIds, conceptNames, claimIds,
+        turns.add(new Turn(io.matrix.knowledge.Ids.digest(workspaceId + "|turn|"
+                        + (question == null ? "" : question) + "|" + turns.size()),
+                question, conceptIds, conceptNames, claimIds,
                 TextProfiles.detect(question == null ? "" : question),
                 answer != null && answer.answered(),
                 DialogueAct.classify(question)));
+        while (turns.size() > MAXIMUM_TURNS) {
+            turns.remove(0);
+        }
+    }
+
+    /**
+     * Loads the persisted turns of the conversation.
+     *
+     * <p>RECON-W42.7. The mission's §6 asks for a bounded PERSISTED
+     * conversation history. The context used to be held in memory only,
+     * so a restart lost it - and "explain this in more detail" had no
+     * referent after a restart, which is the case the mission names.
+     *
+     * @param persisted the turns, oldest first
+     */
+    public void load(List<Turn> persisted) {
+        if (persisted == null || persisted.isEmpty()) {
+            return;
+        }
+        turns.clear();
+        turns.addAll(persisted);
         while (turns.size() > MAXIMUM_TURNS) {
             turns.remove(0);
         }

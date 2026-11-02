@@ -27,7 +27,7 @@ class ErrorIntegratorTest {
             workbench.loadBundledPackage("photosynthesis");
             AssessmentItem item = workbench.dataset("photosynthesis").items().get(0);
 
-            workbench.assess("photosynthesis", item.id(), "wrong", 0.5, "session-one");
+            workbench.assess("photosynthesis", item.id(), "wrong", 0.5, "session-1");
 
             ErrorIntegrator.Result result = ErrorIntegrator.integrate(workbench, "photosynthesis");
 
@@ -46,8 +46,8 @@ class ErrorIntegratorTest {
             workbench.loadBundledPackage("photosynthesis");
             AssessmentItem item = workbench.dataset("photosynthesis").items().get(0);
 
-            workbench.assess("photosynthesis", item.id(), "wrong", 0.5, "session-one");
-            workbench.assess("photosynthesis", item.id(), "wrong", 0.5, "session-two");
+            workbench.assess("photosynthesis", item.id(), "wrong", 0.5, "session-1");
+            workbench.assess("photosynthesis", item.id(), "wrong", 0.5, "session-2");
 
             ErrorIntegrator.Result result = ErrorIntegrator.integrate(workbench, "photosynthesis");
 
@@ -73,10 +73,18 @@ class ErrorIntegratorTest {
             workbench.loadBundledPackage("photosynthesis");
             AssessmentItem item = workbench.dataset("photosynthesis").items().get(0);
 
-            workbench.assess("photosynthesis", item.id(), "wrong", 0.5, "session-one");
-            workbench.assess("photosynthesis", item.id(), "wrong", 0.5, "session-two");
+            // The session ids sort in the temporal order, because the
+            // store orders the outcomes by (the instant, the session id)
+            // and two outcomes of the same item can share a millisecond.
+            // The first version of this test used "session-one",
+            // "session-two" and "session-three" - and "session-three" sorts
+            // BEFORE "session-two", so the "last" outcome was whichever
+            // the tie-break chose. The test passed or failed depending on
+            // how fast the machine was.
+            workbench.assess("photosynthesis", item.id(), "wrong", 0.5, "session-1");
+            workbench.assess("photosynthesis", item.id(), "wrong", 0.5, "session-2");
             workbench.assess("photosynthesis", item.id(), String.join(" ", item.keyTerms()), 0.9,
-                    "session-three");
+                    "session-3");
 
             ErrorIntegrator.Result result = ErrorIntegrator.integrate(workbench, "photosynthesis");
 
@@ -94,8 +102,8 @@ class ErrorIntegratorTest {
             workbench.loadBundledPackage("photosynthesis");
             AssessmentItem item = workbench.dataset("photosynthesis").items().get(0);
 
-            workbench.assess("photosynthesis", item.id(), "wrong", 0.5, "session-one");
-            workbench.assess("photosynthesis", item.id(), "wrong", 0.5, "session-two");
+            workbench.assess("photosynthesis", item.id(), "wrong", 0.5, "session-1");
+            workbench.assess("photosynthesis", item.id(), "wrong", 0.5, "session-2");
             ErrorIntegrator.integrate(workbench, "photosynthesis");
 
             Set<String> concepts = ErrorIntegrator.conceptsWithVerifiedErrors(workbench,
@@ -115,8 +123,8 @@ class ErrorIntegratorTest {
         try (KnowledgeWorkbench workbench = KnowledgeWorkbench.at(dir.resolve("w.sqlite").toString())) {
             workbench.loadBundledPackage("photosynthesis");
             AssessmentItem item = workbench.dataset("photosynthesis").items().get(0);
-            workbench.assess("photosynthesis", item.id(), "wrong", 0.5, "session-one");
-            workbench.assess("photosynthesis", item.id(), "wrong", 0.5, "session-two");
+            workbench.assess("photosynthesis", item.id(), "wrong", 0.5, "session-1");
+            workbench.assess("photosynthesis", item.id(), "wrong", 0.5, "session-2");
 
             KnowledgeConsolidator.Report report = KnowledgeConsolidator.consolidate(workbench,
                     "photosynthesis", System.currentTimeMillis(),
@@ -136,8 +144,8 @@ class ErrorIntegratorTest {
         try (KnowledgeWorkbench workbench = KnowledgeWorkbench.at(db.toString())) {
             workbench.loadBundledPackage("photosynthesis");
             AssessmentItem item = workbench.dataset("photosynthesis").items().get(0);
-            workbench.assess("photosynthesis", item.id(), "wrong", 0.5, "session-one");
-            workbench.assess("photosynthesis", item.id(), "wrong", 0.5, "session-two");
+            workbench.assess("photosynthesis", item.id(), "wrong", 0.5, "session-1");
+            workbench.assess("photosynthesis", item.id(), "wrong", 0.5, "session-2");
             ErrorIntegrator.integrate(workbench, "photosynthesis");
         }
 

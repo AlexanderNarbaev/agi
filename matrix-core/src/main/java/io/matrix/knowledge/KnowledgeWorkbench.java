@@ -198,7 +198,29 @@ public class KnowledgeWorkbench implements AutoCloseable {
         answer = applyLanguageNote(question, answer);
         recordAsk(workspaceId, question, answer.unmatchedTerms(), answer.answered());
         context.record(question, answer);
+        persistTurn(workspaceId, context);
         return answer;
+    }
+
+    /**
+     * Persists the last turn of the conversation.
+     *
+     * <p>The turns that fall out of the working memory are MARKED, not
+     * deleted: the mission's §8 forbids destroying the historical
+     * evidence, and the record of what was asked and how it was classified
+     * is evidence.
+     *
+     * @param workspaceId the workspace
+     * @param context the conversation
+     */
+    private void persistTurn(String workspaceId, DialogueContext context) {
+        List<DialogueContext.Turn> turns = context.turns();
+        if (turns.isEmpty()) {
+            return;
+        }
+        DialogueContext.Turn last = turns.get(turns.size() - 1);
+        store().recordDialogueTurn(workspaceId, last);
+        store().forgetOldDialogueTurns(workspaceId, DialogueContext.MAXIMUM_TURNS);
     }
 
     /**
@@ -301,14 +323,22 @@ public class KnowledgeWorkbench implements AutoCloseable {
     /**
      * The conversation of a workspace.
      *
-     * <p>The mission's §6 asks for a bounded conversation history. The
-     * context is held in memory and bounded in both the number of turns
-     * and the number of concepts each turn keeps; the store's own
-     * {@code asked_question} table remains the durable record of what was
-     * asked.
+     * <p>The mission's §6 asks for a bounded PERSISTED conversation
+     * history. The context is bounded in the number of turns and in the
+     * number of concepts each turn keeps, and it is now PERSISTED: the
+     * first time a workspace's context is asked for, the turns the store
+     * holds are loaded into it, so a restart does not lose the referent
+     * that "explain this in more detail" depends on.
+     *
+     * <p>The store's own {@code asked_question} table remains the durable
+     * record of what was asked and whether the workspace could answer it.
      */
     public DialogueContext context(String workspaceId) {
-        return contexts.computeIfAbsent(workspaceId, key -> new DialogueContext(key));
+        return contexts.computeIfAbsent(workspaceId, key -> {
+            DialogueContext context = new DialogueContext(key);
+            context.load(store().dialogueTurns(workspaceId, DialogueContext.MAXIMUM_TURNS));
+            return context;
+        });
     }
 
     /**
