@@ -7535,3 +7535,9 @@ files ✓ ✓ — it is still RED ✓ ✓.
 **Done** ✓ ✓. The three ports of the conversation stack (`ConversationDocker`) now carry names that
 say what they are, and the generated Dockerfile and README are unchanged ✓ ✓. The cli tests pass ✓ ✓
 and the quality gate was recounted ✓ ✓ — still RED ✓ ✓.
+
+# RECON-W42.9 — the Local Alpha checklist's tunables are named
+
+**Done** ✓ ✓. The checklist script's HTTP timeouts are named constants and its step files carry
+`stepNN` names ✓ ✓ — the values and the step numbering are unchanged ✓ ✓, and `bash -n` confirms the
+syntax ✓ ✓. The gate was recounted ✓ ✓ — still RED ✓ ✓.
