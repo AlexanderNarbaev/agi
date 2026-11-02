@@ -7426,3 +7426,9 @@ delayed phase fails — was stale ✓ ✓: it measures ✓ ✓.
 **Done** ✓ ✓. Ten of the mission's twelve attacks are now measured ✓ ✓, and the two that are not
 are named with the reason ✓ ✓ — the packages carry no signature, and the workbench's HTTP
 endpoints have no authentication today ✓ ✓✓.
+
+# RECON-W42.7 — the Learning Sessions view
+
+**Done** ✓ ✓. All eleven of the mission's §9 views now carry content ✓ ✓ — the Learning Sessions
+was the last one without it ✓ ✓, and it groups the assessment outcomes by the session they were
+answered in ✓ ✓✓.
