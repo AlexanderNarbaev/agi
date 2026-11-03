@@ -19,7 +19,27 @@ import java.util.Arrays;
  *
  * <p>Sequence numbers are assigned by the caller in arrival order and are what makes the event
  * stream replayable: given the same signals in the same order, the same perception is produced
- * (CONSTITUTION Article I — no wall-clock and no randomness in a decision path).</p>
+ * (CONSTITUTION Article I — no wall-clock and no randomness in a decision path). W45.0 assigns
+ * them from the durable sequence of the {@link CognitiveStore}, so the order of the signals
+ * survives a restart and two concurrent callers are never handed the same number.</p>
+ *
+ * <h2>W45.0 — the identity of a signal</h2>
+ * <p>The {@code id} of a signal is the identity of the RECEIVED signal, and nothing else. It is
+ * unique per REQUEST and it is never a function of the payload: W44 derived it from
+ * {@code String.hashCode()}, so two identical payloads shared one id and different payloads
+ * collided by accident — and because the store replaced records with that id, a repeated
+ * request destroyed the history of the first one.</p>
+ *
+ * <p>The four identities of the stack are separate namespaces:</p>
+ * <ul>
+ *   <li>the <b>request id</b> — the caller's logical request, which exists only when the caller
+ *       supplies an idempotency key, and is that key;</li>
+ *   <li>the <b>signal id</b> — this record's {@code id}: the signal that was received;</li>
+ *   <li>the <b>episode id</b> — one execution of the cycle, {@code "ep-" + signal.id()}, the
+ *       derivation the kernel uses and {@link EpisodeIdAllocator#episodeIdFor(String)} states;</li>
+ *   <li>the <b>event id</b> — one immutable event inside an episode, derived from the episode
+ *       and the position of the event in it.</li>
+ * </ul>
  */
 public record CognitiveSignal(
         String id,

@@ -62,14 +62,18 @@ public final class MicroWorldSettledModelMethod implements AlgorithmMethod<Micro
                 new AlgorithmCapability.ResourceProfile("O(1)", true, false,
                         "refuses when the model has not settled"),
                 new AlgorithmCapability.AccuracyProfile(
-                        "agreement with the reference method on held-out cases",
-                        1.0, 0, "the held-out cases of the promoted procedure", "measured at promotion"),
+                        "agreement with the reference method over the SAME model-eligible "
+                                + "observations (IN-SAMPLE: the lamp world's input domain is "
+                                + "exhausted once the model settles, so no independent "
+                                + "validation data exists)",
+                        1.0, 0, "the model's own observations", "derived from the reference"),
                 new AlgorithmCapability.DeterminismProfile(true, "none"),
                 new AlgorithmCapability.ReliabilityProfile(
                         "refusal when the applicability domain does not hold", false,
                         "the reference method takes over"),
                 new AlgorithmCapability.VerificationStrategy(
-                        "agreement with the reference method", "MicroWorldSettledModelMethod"),
+                        "agreement with the reference method over the model-eligible "
+                                + "observations", "MicroWorldReferenceMethod"),
                 FALLBACK_ID);
     }
 
@@ -86,11 +90,20 @@ public final class MicroWorldSettledModelMethod implements AlgorithmMethod<Micro
         if (!computation.fact(PRECONDITION_MODEL_SETTLED)) {
             return false;
         }
+        // W45.0. A promoted procedure is no longer REQUIRED for the shortcut: the shortcut is
+        // an algebraic identity over the model-eligible data, and requiring a validated
+        // procedure would make the system depend on evidence the lamp world cannot produce.
+        // When a procedure record does exist it must still be active and applicable.
         Procedure procedure = computation.procedure();
-        if (procedure == null || !procedure.active()) {
-            return false;
+        if (procedure != null) {
+            if (!procedure.active()) {
+                return false;
+            }
+            if (!procedure.applicable(computation.facts())) {
+                return false;
+            }
         }
-        return procedure.applicable(computation.facts());
+        return true;
     }
 
     @Override

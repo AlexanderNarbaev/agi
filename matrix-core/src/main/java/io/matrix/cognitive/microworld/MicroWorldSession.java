@@ -61,6 +61,7 @@ public final class MicroWorldSession {
 
     private final List<Observation> observations = new ArrayList<>();
     private final List<Observation> applied = new ArrayList<>();
+    private final List<Observation> quarantined = new ArrayList<>();
     private final List<RuleHypothesis> surviving = new ArrayList<>();
     private final List<RejectedHypothesis> rejected = new ArrayList<>();
     private final Set<String> rejectedIds = new LinkedHashSet<>();
@@ -184,9 +185,37 @@ public final class MicroWorldSession {
         }
         observations.add(observation);
 
+        // W45.0. An observation that arrives already HELD — a contradiction whose cause has
+        // not been established, or one a review rejected — is recorded and kept, and it does
+        // NOT constrain the model. This is the rule that makes a restart safe: the durable
+        // record says what the previous session decided, and the restored session honours it
+        // instead of re-deciding from a prediction history it does not have.
+        if (observation.disposition().isHeld()) {
+            quarantined.add(observation);
+            return;
+        }
+
         HypothesisPrediction prediction = latestPredictionByAssignment.get(observation.assignmentKey());
-        if (prediction != null && prediction.value() != observation.lamp()) {
+        // W45.0. A contradiction is a disagreement with a BELIEF. The session holds an
+        // observation only when the model was SETTLED — the prediction was unanimous — and the
+        // world disagreed with it. A prediction the session explicitly marked as unsettled is
+        // an admission of ignorance, not a belief: the record says the value "is explicitly
+        // not a decision", so an observation that differs from it is ordinary learning.
+        //
+        // The W44 rule held the observation in both cases, and that rule only LOOKED harmless
+        // because the restoration path applied the held observations anyway — the very defect
+        // this wave fixes. With the defect fixed, the W44 rule is a learning deadlock: the
+        // micro-world's learning observations are held as conflicts, the model never settles,
+        // and every later prediction stays unsettled, so nothing ever becomes a belief again.
+        // The W44 benchmark's own adversarial case (§4.4) predicts a SETTLED assignment — the
+        // two survivors agree there — and it is still held under this rule.
+        if (prediction != null && prediction.unanimous() && prediction.value() != observation.lamp()) {
             recordPredictionError(prediction, observation);
+            // The observation is HELD: recorded, durable, and outside the model. It goes into
+            // the same list a restored held observation goes into, so that "the observations
+            // the model was NOT built from" means one thing whether the session is live or
+            // rebuilt.
+            quarantined.add(observation);
             return;
         }
         applied.add(observation);
@@ -225,6 +254,62 @@ public final class MicroWorldSession {
      */
     public List<Observation> appliedObservations() {
         return List.copyOf(applied);
+    }
+
+    /**
+     * The observations the model was NOT built from.
+     *
+     * <p>W45.0. These are the observations the session recorded and deliberately kept out of
+     * the active hypothesis set: a contradiction whose cause is unresolved, and an observation
+     * a review rejected. They are durable, visible and inspectable, and they never constrain
+     * the model. A reader can always ask the session what it knows and what it is holding.</p>
+     *
+     * @return the held observations, in the order they were recorded
+     */
+    public List<Observation> quarantinedObservations() {
+        return List.copyOf(quarantined);
+    }
+
+    /**
+     * Whether the model was actually built from this observation.
+     *
+     * <p>This is the session's own decision about one observation, and it is what the caller
+     * persists as the observation's disposition. The answer is about the MODEL, not about the
+     * record: an observation can be recorded, visible and still not be model data.</p>
+     *
+     * @param observation the observation
+     * @return true when the observation constrains the active model
+     */
+    public boolean isApplied(Observation observation) {
+        if (observation == null) {
+            return false;
+        }
+        for (Observation candidate : applied) {
+            if (candidate.id().equals(observation.id())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * The disposition the session has decided for one observation.
+     *
+     * <p>This is the session's own decision, and it is the decision the caller persists. A
+     * live contradiction is {@link ObservationDisposition#UNRESOLVED} — its cause has not been
+     * established — and an observation the model was built from is
+     * {@link ObservationDisposition#ELIGIBLE}. The rule is one rule: an observation that the
+     * model was not built from is held.</p>
+     *
+     * @param observation the observation
+     * @return the disposition
+     */
+    public ObservationDisposition dispositionOf(Observation observation) {
+        if (observation == null) {
+            return ObservationDisposition.conservativeDefault();
+        }
+        return isApplied(observation)
+                ? ObservationDisposition.ELIGIBLE : ObservationDisposition.UNRESOLVED;
     }
 
     /** The hypotheses that still fit every applied observation, in identifier order. */
@@ -491,17 +576,11 @@ public final class MicroWorldSession {
         List<String> supporting = supportingHypothesesByAssignment
                 .getOrDefault(observation.assignmentKey(), List.of());
         String responsible = supporting.isEmpty() ? survivingFirstId() : supporting.get(0);
-        String note;
-        if (prediction.unanimous()) {
-            note = "the session predicted this value unanimously and the outcome contradicts it; "
-                    + "the cause is unresolved, so the hypotheses are left standing and flagged "
-                    + "for review";
-        } else {
-            note = "the prediction was not unanimous (" + prediction.disagreeingHypothesisIds().size()
-                    + " of " + surviving.size() + " surviving hypotheses disagreed); the outcome "
-                    + "contradicts the value the prediction carried, so the hypotheses that made "
-                    + "it are left standing and flagged for review";
-        }
+        // W45.0: only a SETTLED prediction can be contradicted, so the record is always about
+        // a belief the session actually held.
+        String note = "the session predicted this value unanimously and the outcome contradicts "
+                + "it; the cause is unresolved, so the hypotheses are left standing and flagged "
+                + "for review";
         errors.add(new PredictionError(ERROR_ID_PREFIX + episodeId + "-" + (++errorCounter),
                 observation.input(), prediction.value(), observation.lamp(), responsible, note));
         reviewIds.addAll(supporting);

@@ -60,6 +60,22 @@ final class KernelRegulator implements CognitiveKernel.RegulatoryBridge {
         return this.state;
     }
 
+    /**
+     * W45.0 — adopts the persisted regulatory state.
+     *
+     * <p>The adapter held the state in memory, so every restart reset the drives to neutral.
+     * The kernel now restores the persisted state before the cycle begins.</p>
+     *
+     * @param state the state to adopt, or null when nothing is persisted
+     */
+    @Override
+    public void restore(RegulatoryState state) {
+        if (state == null) {
+            return;
+        }
+        this.state = state;
+    }
+
     @Override
     public RegulationBias bias(RegulatoryState state, DriveSignal.Effect effect) {
         return controller.bias(state, lastEvents);

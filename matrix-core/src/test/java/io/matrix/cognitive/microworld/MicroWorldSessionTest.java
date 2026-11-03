@@ -157,10 +157,17 @@ class MicroWorldSessionTest {
                 environment.probe(WorldInput.of(true, true)),
                 environment.probe(WorldInput.of(true, false)));
 
-        HypothesisPrediction prediction = session.predict(WorldInput.of(false, false));
+        // W45.0. The prediction must be a BELIEF for the observation to contradict it. The
+        // two survivors agree about power=1,switch=0, so the prediction there is unanimous;
+        // about power=0,switch=0 they disagree, and an observation that differs from an
+        // unsettled prediction is ordinary learning, not a conflict.
+        HypothesisPrediction prediction = session.predict(WorldInput.of(true, false));
         assertThat(prediction.value()).isFalse();
+        assertThat(prediction.unanimous())
+                .withFailMessage("the prediction must be settled for the case to be a conflict")
+                .isTrue();
 
-        Observation adversarial = environment.adversarialProbe(WorldInput.of(false, false));
+        Observation adversarial = environment.adversarialProbe(WorldInput.of(true, false));
         assertThat(adversarial.lamp()).isTrue();
         assertThat(adversarial.adversarial()).isTrue();
 
@@ -268,6 +275,32 @@ class MicroWorldSessionTest {
         assertThatThrownBy(() -> session.observe(conflicting))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining(observation.id());
+    }
+
+    @Test
+    @DisplayName("TEST-LEARN-005 — an observation that differs from an UNSETTLED prediction is "
+            + "learning, not a conflict")
+    void learn005AnObservationAgainstAnUnsettledPredictionIsLearning() {
+        LampEnvironment environment = environment();
+        MicroWorldSession session = sessionWith(environment,
+                environment.probe(WorldInput.of(false, true)),
+                environment.probe(WorldInput.of(true, true)),
+                environment.probe(WorldInput.of(true, false)));
+
+        // About power=0,switch=0 the two survivors DISAGREE, so the prediction there is not a
+        // belief.
+        HypothesisPrediction prediction = session.predict(WorldInput.of(false, false));
+        assertThat(prediction.unanimous()).isFalse();
+
+        Observation observation = environment.probe(WorldInput.of(false, false));
+        session.applyOutcome(observation);
+
+        // No conflict is recorded: the model had no belief to contradict.
+        assertThat(session.predictionErrors()).isEmpty();
+        // And the observation IS applied: it is the data the model needed.
+        assertThat(session.appliedObservations()).hasSize(4);
+        assertThat(session.quarantinedObservations()).isEmpty();
+        assertThat(session.survivingHypotheses()).hasSize(1);
     }
 
     @Test

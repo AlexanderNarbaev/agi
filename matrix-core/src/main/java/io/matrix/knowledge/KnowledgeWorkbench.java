@@ -1,5 +1,6 @@
 package io.matrix.knowledge;
 
+import io.matrix.cognitive.microworld.ObservationDisposition;
 import jakarta.annotation.PreDestroy;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -730,10 +731,17 @@ public class KnowledgeWorkbench implements AutoCloseable {
      * PREDICTION distinguishable from an OBSERVATION, because the case carries the conditions
      * and the outcome, and a prediction carries only what was expected.
      *
-     * <p>The write order matters and is deliberate: the source and the evidence go through the
-     * transactional {@code applyChanges}, the case is written next, and the link from the
-     * evidence to the case is written last. A reader that sees an evidence link therefore never
-     * sees a link to a case that does not exist.</p>
+     * <p>W45.0 changed the WRITE. The W44 version wrote the source and the evidence through
+     * the transactional {@code applyChanges}, then the case, then the link from the evidence to
+     * the case — three separately committed operations. A process that died between them left a
+     * half-written observation: evidence with no case, a case with no evidence, a link to
+     * nothing. The write is now ONE transaction, so an observation is either wholly there or
+     * wholly absent.</p>
+     *
+     * <p>W45.0 also added the DISPOSITION. The observation carries what it may be believed for:
+     * eligible model data, an unresolved conflict, an observation accepted by a review, or one
+     * rejected by a review. The disposition is written in the same transaction, so a case can
+     * never exist without the record of what it is allowed to do to the model.</p>
      *
      * @param workspaceId the workspace
      * @param claimId the claim the observation bears on
@@ -745,6 +753,28 @@ public class KnowledgeWorkbench implements AutoCloseable {
      */
     public Evidence recordObservation(String workspaceId, String claimId, String observation,
                                       String condition, boolean contradicts, String caseId) {
+        return recordObservation(workspaceId, claimId, observation, condition, contradicts, caseId,
+                contradicts ? ObservationDisposition.UNRESOLVED : ObservationDisposition.ELIGIBLE,
+                contradicts ? "the observation contradicts the model and is held as an unresolved "
+                        + "conflict" : "the observation is ordinary model data");
+    }
+
+    /**
+     * W45.0 — records an observation with an explicit disposition, in one transaction.
+     *
+     * @param workspaceId the workspace
+     * @param claimId the claim the observation bears on
+     * @param observation what was observed
+     * @param condition the conditions under which it was observed
+     * @param contradicts whether the observation contradicts the claim
+     * @param caseId the id of the case to record
+     * @param disposition what the observation may be believed for
+     * @param reason why it is in that disposition
+     * @return the evidence link that was recorded
+     */
+    public Evidence recordObservation(String workspaceId, String claimId, String observation,
+                                      String condition, boolean contradicts, String caseId,
+                                      ObservationDisposition disposition, String reason) {
         Claim claim = claimById(workspaceId, claimId);
         String excerpt = observation == null || observation.isBlank()
                 ? "an observation was recorded without its text"
@@ -760,11 +790,10 @@ public class KnowledgeWorkbench implements AutoCloseable {
                 claimId, sourceId,
                 contradicts ? EvidenceRelation.CONTRADICTS : EvidenceRelation.EXEMPLIFIES,
                 excerpt, OBSERVATION_EVIDENCE_QUALITY, recordedAt());
-        store().applyChanges(workspaceId, new KnowledgeChanges(List.of(source), List.of(),
-                List.of(evidence), List.of(), List.of()));
-        store().recordCase(new Case(caseId, workspaceId, claim.conceptId(), excerpt,
-                conditions, excerpt, sourceId, Case.Origin.OBSERVED, recordedAt()));
-        store().linkEvidenceToCase(evidence.id(), caseId);
+        store().recordObservationAtomically(workspaceId, source, evidence,
+                new Case(caseId, workspaceId, claim.conceptId(), excerpt,
+                        conditions, excerpt, sourceId, Case.Origin.OBSERVED, recordedAt()),
+                disposition, reason, recordedAt());
         return evidence;
     }
 

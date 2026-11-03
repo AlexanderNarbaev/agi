@@ -1,6 +1,7 @@
 package io.matrix.cognitive;
 
 import io.matrix.cognitive.microworld.Observation;
+import io.matrix.cognitive.microworld.ObservationDisposition;
 import io.matrix.cognitive.microworld.WorldInput;
 import io.matrix.knowledge.Case;
 import io.matrix.knowledge.Ids;
@@ -171,9 +172,22 @@ public final class MicroWorldCodec {
      *
      * <p>This is how the model survives a restart: the cases ARE the episodic memory, and a
      * session rebuilt from them knows what it has already seen.</p>
+     *
+     * <p><b>W45.0: the disposition comes back with the observation.</b> The W44 version read the
+     * cases and returned every one of them as an ordinary observation, so a session rebuilt
+     * after a restart applied contradictions that the live session had deliberately kept out of
+     * its hypothesis set — the contradiction survived the restart as a record and was lost as a
+     * decision. The disposition is now read with the case, and a case whose disposition cannot
+     * be established is {@link ObservationDisposition#conservativeDefault()}: held, not
+     * assumed to be model data.</p>
+     *
+     * @param store the store to read from
+     * @param workspaceId the workspace
+     * @return every observation the workspace holds, each carrying its disposition
      */
     public static List<Observation> readCases(KnowledgeStore store, String workspaceId) {
         List<Observation> out = new ArrayList<>();
+        Map<String, ObservationDisposition> dispositions = store.caseDispositions(workspaceId);
         for (Case observation : store.cases(workspaceId)) {
             WorldInput input;
             try {
@@ -186,8 +200,11 @@ public final class MicroWorldCodec {
             }
             boolean lamp = observation.outcome() != null
                     && observation.outcome().contains(LAMP_ON);
+            ObservationDisposition disposition = dispositions.getOrDefault(observation.id(),
+                    ObservationDisposition.conservativeDefault());
             out.add(new Observation("obs-" + observation.id(), input, lamp,
-                    observation.origin() == Case.Origin.ADVERSARIAL, observation.observedAt()));
+                    observation.origin() == Case.Origin.ADVERSARIAL, observation.observedAt(),
+                    disposition));
         }
         return out;
     }

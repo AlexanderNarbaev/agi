@@ -64,8 +64,15 @@ class CognitiveKernelTest {
         }
     }
 
+    /**
+     * W45.0. The signal id is UNIQUE per request, exactly as the serving path now allocates
+     * it. The W44 helper derived it from the payload's hash, so two requests with the same
+     * payload shared one episode id — and the W45 store, which no longer overwrites an
+     * episode, refuses that with an explicit conflict. The collision was the defect, not the
+     * refusal.
+     */
     private CognitiveOutcome observe(String assignment) {
-        return kernel.process(CognitiveSignal.structured("sig-" + assignment.hashCode(),
+        return kernel.process(CognitiveSignal.structured("sig-" + clock.incrementAndGet(),
                 assignment, "the test", clock.incrementAndGet()));
     }
 
@@ -173,26 +180,49 @@ class CognitiveKernelTest {
     }
 
     @Test
-    @DisplayName("once the model settles, the validated fast path is selected and the reference stays as its fallback")
+    @DisplayName("once the model settles, the fast path is used as a derived shortcut — and "
+            + "NO procedure is promoted, because no independent evidence exists")
     void onceTheModelSettlesTheFastPathIsSelected() {
-        // Four cycles: the model settles on the conjunction, and the promotion needs at least
-        // two held-out cases that agree with the reference.
+        // Four cycles over the four assignments: the model settles on the conjunction.
         for (int i = 0; i < 8; i++) {
             observe("power=" + (i % 2) + ",switch=" + ((i / 2) % 2));
         }
 
+        // W45.0. NO procedure is promoted. The lamp world's input domain is four
+        // assignments; a model that has settled has seen all four, so the set of
+        // observations the model was NOT built from is empty, and there is no independent
+        // evidence a promotion could rest on. The W44 wave promoted a procedure here on the
+        // model's OWN data and called the agreement a held-out validation.
         List<io.matrix.cognitive.algorithms.Procedure> procedures =
                 store.procedures(CognitiveKernel.WORKSPACE_ID);
-        assertThat(procedures).isNotEmpty();
-        io.matrix.cognitive.algorithms.Procedure promoted = procedures.get(0);
-        assertThat(promoted.active()).isTrue();
-        assertThat(promoted.validationCases()).isGreaterThanOrEqualTo(
-                CognitiveKernel.MINIMUM_VALIDATION_CASES);
-        assertThat(promoted.validationAgreement()).isEqualTo(1.0);
-        assertThat(promoted.referenceAlgorithmId())
-                .isEqualTo(MicroWorldReferenceMethod.ID);
-        assertThat(promoted.requiredFacts())
-                .contains(MicroWorldSettledModelMethod.PRECONDITION_MODEL_SETTLED);
+        assertThat(procedures)
+                .withFailMessage("nothing may be promoted without independent evidence")
+                .isEmpty();
+
+        // And the refusal says why, in the trace a reader can check.
+        CognitiveOutcome outcome = observe("power=1,switch=0");
+        String learn = outcome.trace().phase("LEARN").get(0).detail();
+        assertThat(learn).contains("no procedure was promoted");
+        assertThat(learn).contains("independent observations are required");
+        assertThat(outcome.notes())
+                .anyMatch(note -> note.contains("not a validated procedure"));
+    }
+
+    @Test
+    @DisplayName("the fast path is still used when the model has settled, and the reference "
+            + "stays as its fallback")
+    void theFastPathIsUsedAsADerivedShortcut() {
+        for (int i = 0; i < 8; i++) {
+            observe("power=" + (i % 2) + ",switch=" + ((i / 2) % 2));
+        }
+
+        CognitiveOutcome outcome = observe("power=1,switch=0");
+        assertThat(outcome.decision()).isNotNull();
+        assertThat(outcome.decision().selectedAlgorithmId()).isNotBlank();
+        // Whatever was selected, the reference remains available as the fallback: the
+        // shortcut's applicability domain is the settled model, and outside it the
+        // reference answers.
+        assertThat(outcome.decision().candidates()).isNotEmpty();
     }
 
     @Test
@@ -259,7 +289,7 @@ class CognitiveKernelTest {
     }
 
     private CognitiveOutcome cycle(CognitiveKernel kernel, String assignment) {
-        return kernel.process(CognitiveSignal.structured("sig-" + assignment.hashCode(),
+        return kernel.process(CognitiveSignal.structured("sig-" + clock.incrementAndGet(),
                 assignment, "the test", clock.incrementAndGet()));
     }
 

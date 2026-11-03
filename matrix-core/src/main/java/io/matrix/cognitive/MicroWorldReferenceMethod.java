@@ -23,6 +23,12 @@ import java.util.Set;
  * <p>The method is STATELESS: the session arrives in the payload. That is what lets the same
  * registered method serve every cycle and every workspace.</p>
  *
+ * <p><b>W45.0: the reference reads the MODEL-ELIGIBLE observations.</b> It is the
+ * re-derivation of the surviving hypotheses from the data the model was built from, so it
+ * reads exactly that data — {@link io.matrix.cognitive.microworld.MicroWorldSession#appliedObservations()}.
+ * An observation the session held as an unresolved conflict is not part of the model, and a
+ * reference that used it would be checking a different model than the one in production.</p>
+ *
  * <p>When the surviving hypotheses disagree, the method REFUSES. It does not pick the majority
  * and it does not average: an undecided model is reported as undecided, because a confident
  * answer from an undecided model is the failure mode this whole wave exists to prevent.</p>
@@ -61,7 +67,8 @@ public final class MicroWorldReferenceMethod implements AlgorithmMethod<MicroWor
                 new AlgorithmCapability.ReliabilityProfile(
                         "refusal when the model does not settle", false, "none"),
                 new AlgorithmCapability.VerificationStrategy(
-                        "agreement with the recorded cases", "MicroWorldReferenceMethod"),
+                        "agreement with the recorded cases that were eligible to constrain the "
+                                + "model", "MicroWorldReferenceMethod"),
                 null);
     }
 
@@ -80,7 +87,13 @@ public final class MicroWorldReferenceMethod implements AlgorithmMethod<MicroWor
         if (!preconditionsHold(computation)) {
             throw new IllegalStateException("the reference method needs an assignment and a session");
         }
-        List<Observation> observations = computation.session().observations();
+        // W45.0. The reference must be a reference FOR THE ACTIVE MODEL, so it must read the
+        // SAME data the model was built from: the observations that were ELIGIBLE to constrain
+        // it. The W44 version read every recorded observation, including the ones the session
+        // deliberately kept out of the hypothesis set as unresolved conflicts — so the
+        // reference was a second implementation over a DIFFERENT dataset, and agreement
+        // between the two proved nothing about the model the fast path actually uses.
+        List<Observation> observations = computation.session().appliedObservations();
         List<RuleHypothesis> consistent = HypothesisSpace
                 .allBooleanFunctionsOfTwoVariables()
                 .stream()

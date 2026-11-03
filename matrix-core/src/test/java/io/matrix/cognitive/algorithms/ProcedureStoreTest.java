@@ -23,7 +23,7 @@ class ProcedureStoreTest {
     private static Procedure candidate(String id, Set<String> requiredFacts) {
         return new Procedure(id, "a validated procedure", FAMILY, "1.0.0",
                 "applies when the graph is a tree", requiredFacts, REFERENCE,
-                0, 0.0, 0, 0, "2026-11-02", null);
+                0, 0.0, 0, 0, "2026-11-02", null, ValidationKind.INDEPENDENT);
     }
 
     /** {@code count} cases on which the candidate agrees with the reference. */
@@ -152,7 +152,7 @@ class ProcedureStoreTest {
     @Test
     void aProcedureWithoutAReferenceIsRefusedAtConstruction() {
         assertThatThrownBy(() -> new Procedure("p1", "n", FAMILY, "1.0.0", "a", Set.of(), "  ",
-                0, 0.0, 0, 0, "2026-11-02", null))
+                0, 0.0, 0, 0, "2026-11-02", null, ValidationKind.INDEPENDENT))
                 .isInstanceOf(IllegalArgumentException.class);
     }
 

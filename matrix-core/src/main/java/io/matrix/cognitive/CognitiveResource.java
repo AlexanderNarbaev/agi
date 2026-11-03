@@ -39,12 +39,32 @@ public class CognitiveResource {
     @Inject
     CognitiveService service;
 
-    /** The body of an observation request. */
-    public record ObserveRequest(String assignment) {
+    /**
+     * The body of an observation request.
+     *
+     * <p>The idempotency key is OPTIONAL and its name is part of the contract: a caller that
+     * sends {@code idempotencyKey} names ONE logical request, and the endpoint will recognise
+     * a repeated delivery of it. A caller that sends nothing gets a new request every time,
+     * even when the assignment is byte-identical to an earlier one.</p>
+     *
+     * @param assignment     the assignment to reason about
+     * @param idempotencyKey the key that names the logical request, or null
+     */
+    public record ObserveRequest(String assignment, String idempotencyKey) {
+
+        /** A request that does not name itself. */
+        public ObserveRequest(String assignment) {
+            this(assignment, null);
+        }
     }
 
     /**
      * Runs one cognitive cycle.
+     *
+     * <p>Without an idempotency key every call is a new request. With one, a repeated delivery
+     * of the same key and the same assignment returns the ORIGINAL outcome and does no new
+     * work, and a repeated delivery of the same key with a DIFFERENT assignment is a conflict:
+     * {@code 409 Conflict}, with the first outcome left untouched.</p>
      *
      * @param request the assignment to reason about
      * @return the outcome, with the full trace
@@ -56,10 +76,17 @@ public class CognitiveResource {
             return Response.status(400).entity(Map.of("error",
                     "the request needs an assignment, for example power=1,switch=0")).build();
         }
-        CognitiveOutcome outcome = service.observe(request.assignment());
-        return Response.status(outcome.status() == CognitiveOutcome.Status.REFUSED ? 409 : 200)
-                .entity(describe(outcome))
-                .build();
+        try {
+            CognitiveOutcome outcome = service.observe(request.assignment(), request.idempotencyKey());
+            return Response.status(outcome.status() == CognitiveOutcome.Status.REFUSED ? 409 : 200)
+                    .entity(describe(outcome))
+                    .build();
+        } catch (CognitiveConflictException e) {
+            // The request conflicts with the record: the same idempotency key was delivered
+            // with a different assignment, or a fact of an episode was about to be rewritten.
+            // Nothing is overwritten, and the caller is told what happened.
+            return Response.status(409).entity(Map.of("error", e.getMessage())).build();
+        }
     }
 
     /** The body of a solve request. */

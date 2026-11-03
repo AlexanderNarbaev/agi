@@ -4,11 +4,13 @@ import io.matrix.cognitive.algorithms.AlgorithmDecision;
 import io.matrix.cognitive.algorithms.AlgorithmMethod;
 import io.matrix.cognitive.algorithms.ComputeBudget;
 import io.matrix.cognitive.algorithms.Procedure;
+import io.matrix.cognitive.algorithms.ValidationKind;
 import io.matrix.cognitive.algorithms.ProblemRequest;
 import io.matrix.cognitive.microworld.Experiment;
 import io.matrix.cognitive.microworld.HypothesisPrediction;
 import io.matrix.cognitive.microworld.MicroWorldSession;
 import io.matrix.cognitive.microworld.Observation;
+import io.matrix.cognitive.microworld.ObservationDisposition;
 import io.matrix.cognitive.microworld.WorldInput;
 import io.matrix.cognitive.neuromodulation.RegulatoryState;
 import io.matrix.cognitive.neuromodulation.RegulationBias;
@@ -22,6 +24,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.LongSupplier;
 import java.util.function.Supplier;
 
 /**
@@ -110,6 +113,24 @@ public final class CognitiveKernel {
     private final Supplier<String> timestamps;
 
     /**
+     * W45.0 — the monotonic clock the cycle's DEADLINE is measured against.
+     *
+     * <p>This is not a cognitive input and it never reaches a decision about what is true. It
+     * is read only to decide whether the cycle has run out of its budget, and it is injected so
+     * that a test can make the budget expire deterministically instead of by sleeping.</p>
+     */
+    private final LongSupplier monotonicNanos;
+
+    /**
+     * W45.0 — why the last cycle promoted nothing, in words a reader can act on.
+     *
+     * <p>A refusal with no reason is a refusal a reader cannot check. The field is written by
+     * the promotion check and read by the trace, so the reason ends up in the durable record of
+     * the cycle rather than only in a log line.</p>
+     */
+    private String lastPromotionRefusal;
+
+    /**
      * The narrow view of the algorithm selector that the kernel needs.
      *
      * <p>The kernel does not depend on the concrete selector class. It depends on the DECISION
@@ -150,6 +171,19 @@ public final class CognitiveKernel {
 
         /** The bias the current state implies for one effect. */
         RegulationBias bias(RegulatoryState state, DriveSignal.Effect effect);
+
+        /**
+         * W45.0 — adopts a persisted regulatory state.
+         *
+         * <p>ADR-W44-01 lists the drives among the cognitive state the store persists, and
+         * until W45 they were the one item on that list that was not persisted: the state
+         * lived in the adapter, so a restart reset every drive to neutral. The kernel
+         * restores the persisted state at the start of a cycle and writes the new one back
+         * at the end.</p>
+         *
+         * @param state the state to adopt, or null when nothing is persisted
+         */
+        void restore(RegulatoryState state);
     }
 
     /** One event the regulator is allowed to consume. */
@@ -177,6 +211,41 @@ public final class CognitiveKernel {
                 () -> java.time.Instant.now().toString());
     }
 
+    /**
+     * W45.0 — a kernel with an explicit MONOTONIC clock for the cycle's deadline.
+     *
+     * <p>The wall-clock timestamp source and the monotonic clock are separate on purpose. The
+     * timestamp is a record of WHEN something happened and it may be a wall-clock string. The
+     * deadline is a resource boundary and it must not move when the wall clock is adjusted, so
+     * it is measured against a monotonic clock, which a test can replace.</p>
+     *
+     * @param workbench the epistemic store
+     * @param store the cognitive store
+     * @param sessionFactory how a session is rebuilt
+     * @param environment the world the cycle probes
+     * @param selector the algorithm selector
+     * @param regulator the regulator
+     * @param timestamps the wall-clock timestamp source
+     * @param monotonicNanos the monotonic clock, in nanoseconds
+     */
+    public CognitiveKernel(KnowledgeWorkbench workbench,
+                           CognitiveStore store,
+                           MicroWorldSession.Factory sessionFactory,
+                           io.matrix.cognitive.microworld.MicroWorldEnvironment environment,
+                           AlgorithmSelectorBridge selector,
+                           RegulatoryBridge regulator,
+                           Supplier<String> timestamps,
+                           LongSupplier monotonicNanos) {
+        this.workbench = workbench;
+        this.store = store;
+        this.sessionFactory = sessionFactory;
+        this.environment = environment;
+        this.selector = selector;
+        this.regulator = regulator;
+        this.timestamps = timestamps;
+        this.monotonicNanos = monotonicNanos == null ? System::nanoTime : monotonicNanos;
+    }
+
     /** Creates a kernel with an explicit timestamp source, so a test can be deterministic. */
     public CognitiveKernel(KnowledgeWorkbench workbench,
                            CognitiveStore store,
@@ -192,23 +261,51 @@ public final class CognitiveKernel {
         this.selector = selector;
         this.regulator = regulator;
         this.timestamps = timestamps;
+        this.monotonicNanos = System::nanoTime;
     }
 
     /**
      * Runs one cognitive cycle.
      *
+     * <p><b>W45.0: the cycle is a serial execution boundary.</b> The kernel holds mutable state
+     * — the regulator's drives, and the store holds ONE JDBC connection — and two cycles
+     * running at the same time would interleave their regulatory updates: each would read the
+     * same drive state, each would evolve it, and the second write would silently discard the
+     * first one's contribution. The store's methods are synchronised, so no two WRITES overlap,
+     * but a write that is correct on its own is still a lost update when the state it was
+     * derived from has already moved.</p>
+     *
+     * <p>So one cycle runs at a time per kernel. That is the smallest mechanism that makes the
+     * contract correct: there is no actor, no message bus and no lock hierarchy — the cycle
+     * simply does not overlap with itself. The cost is stated plainly: a slow cycle holds the
+     * others back, and the concurrency guarantee is "one cycle at a time", not "the system
+     * scales".</p>
+     *
      * @param signal the raw input
      * @return the outcome, with the full trace
      */
-    public CognitiveOutcome process(CognitiveSignal signal) {
+    public synchronized CognitiveOutcome process(CognitiveSignal signal) {
         String episodeId = "ep-" + signal.id();
         String now = timestamps.get();
         LearningTrace.Builder trace = LearningTrace.builder(episodeId, episodeId);
         List<String> notes = new ArrayList<>();
         store.startEpisode(episodeId, WORKSPACE_ID, "a cognitive cycle on " + signal.channel(), now);
 
+        // W45.0. The cycle's budget is a DEADLINE, measured against a monotonic clock and
+        // checked at the phase boundaries. The work below is enclosed so that a budget that
+        // runs out ends the cycle in an explicit, persisted terminal state instead of
+        // leaving the episode open.
+        CycleDeadline deadline = new CycleDeadline(DEFAULT_CYCLE_BUDGET_MILLIS, monotonicNanos);
+        Percept percept = null;
+        Prediction prediction = null;
+        ErrorSignal error = null;
+        AlgorithmDecision decision = null;
+        boolean experimentExecuted = false;
+        boolean observationCommitted = false;
+        boolean procedureChanged = false;
+        try {
         // ── 1. PERCEIVE ───────────────────────────────────────────────────────
-        Percept percept = ChannelClassifier.classify(signal);
+        percept = ChannelClassifier.classify(signal);
         trace.step("PERCEIVE", "ChannelClassifier",
                 "channel=" + percept.channel() + " malformed=" + percept.malformed()
                         + " confidence=" + percept.confidence()
@@ -223,15 +320,20 @@ public final class CognitiveKernel {
                     percept, null, null, null, persist(trace, episodeId, now), notes);
         }
 
+        deadline.check("PERCEIVE");
         // ── 2. RESTORE ───────────────────────────────────────────────────────
         List<Observation> remembered = MicroWorldCodec.readCases(workbench.storeForValidation(),
                 WORKSPACE_ID);
         MicroWorldSession session = sessionFactory.create(episodeId, remembered);
         trace.step("RESTORE", "MicroWorldSession",
                 "the session was rebuilt from " + remembered.size()
-                        + " recorded case(s); the model holds "
+                        + " recorded case(s); " + session.appliedObservations().size()
+                        + " of them constrain the model and "
+                        + session.quarantinedObservations().size()
+                        + " are held as unresolved conflicts; the model holds "
                         + session.survivingHypotheses().size() + " surviving hypothesis(es)");
 
+        deadline.check("RESTORE");
         // ── 3. READ THE REQUESTED ASSIGNMENT ──────────────────────────────────
         WorldInput requested;
         try {
@@ -247,7 +349,7 @@ public final class CognitiveKernel {
 
         // ── 4. PREDICT ────────────────────────────────────────────────────────
         HypothesisPrediction forecast = session.predict(requested);
-        Prediction prediction = new Prediction("prd-" + episodeId, WORKSPACE_ID, episodeId,
+        prediction = new Prediction("prd-" + episodeId, WORKSPACE_ID, episodeId,
                 "lamp@" + MicroWorldCodec.describe(requested),
                 Boolean.toString(forecast.value()),
                 "surviving-hypotheses", "v1",
@@ -264,6 +366,7 @@ public final class CognitiveKernel {
             notes.add("the surviving hypotheses disagree; the prediction is not settled");
         }
 
+        deadline.check("PREDICT");
         // ── 5. SELECT A COMPUTATIONAL METHOD ──────────────────────────────────
         RegulationBias bias = regulator.bias(regulator.state(),
                 DriveSignal.Effect.ALGORITHM_COST_PREFERENCE);
@@ -288,7 +391,7 @@ public final class CognitiveKernel {
         AlgorithmSelectorBridge.Selection selection = selector.select(
                 new ProblemRequest(FAMILY_MICRO_WORLD, computation, facts, budget),
                 bias.costWeightMultiplier());
-        AlgorithmDecision decision = selection.decision();
+        decision = selection.decision();
         trace.step("SELECT", "AlgorithmSelector",
                 "selected=" + decision.selectedAlgorithmId() + " status=" + decision.status()
                         + " reason=" + decision.reason()
@@ -300,6 +403,7 @@ public final class CognitiveKernel {
                     percept, prediction, null, decision, persist(trace, episodeId, now), notes);
         }
 
+        deadline.check("SELECT");
         // ── 6. COMPUTE AND, WHEN THE MODEL IS UNSETTLED, ACT ────────────────
         Boolean computed = null;
         try {
@@ -312,6 +416,7 @@ public final class CognitiveKernel {
             notes.add("the selected method refused: " + e.getMessage());
         }
 
+        deadline.check("COMPUTE");
         boolean unsettled = !forecast.unanimous();
         Experiment experiment = session.proposeExperiment();
         double gain = experiment.expectedInformationGain();
@@ -352,6 +457,7 @@ public final class CognitiveKernel {
                         + " the-regulation-asks-for-evidence=" + regulationAsks
                         + " rationale=" + experiment.rationale());
 
+        deadline.check("PROPOSE");
         HypothesisPrediction probedForecast = probed == null ? null : session.predict(probed);
         Prediction probedPrediction = probed == null ? null
                 : new Prediction("prd-" + episodeId + "-probe",
@@ -368,16 +474,18 @@ public final class CognitiveKernel {
         }
         Observation observed = null;
         if (probed != null) {
+            deadline.check("PREDICT");
             observed = environment.probe(probed);
+            experimentExecuted = true;
             trace.step("PROBE", "MicroWorldEnvironment",
                     "the sandbox answered lamp=" + observed.lamp() + " for "
                             + MicroWorldCodec.describe(probed)
                             + " (" + probeReason + ")");
         }
 
+        deadline.check("PROBE");
         // ── 7. OBSERVE: write the case and the evidence ──────────────────────
         Claim model = modelClaim();
-        ErrorSignal error = null;
         if (observed != null) {
             // Whether the observation CONTRADICTS the model is COMPUTED, not assumed. An
             // observation the surviving hypotheses explain is an example; an observation none
@@ -392,16 +500,42 @@ public final class CognitiveKernel {
                 }
             }
             String caseId = MicroWorldCodec.caseIdFor(observed.input(), observed.lamp());
+
+            // W45.0. The session decides FIRST whether the observation may constrain the
+            // model, and the decision is what gets persisted. Before this change the case was
+            // written before the session had seen the observation, and the case carried no
+            // record of what it was allowed to do to the model — so a contradiction that the
+            // session deliberately kept out of its hypothesis set was applied by the next
+            // session, which rebuilt itself from these cases.
+            session.applyOutcome(observed);
+            boolean applied = session.isApplied(observed);
+            ObservationDisposition disposition = session.dispositionOf(observed);
+            String dispositionReason = applied
+                    ? "the session applied the observation to its hypothesis set"
+                    : "the observation contradicts a prediction the session made; its cause is "
+                            + "unresolved, so it is held out of the active model until a review "
+                            + "adjudicates it";
+            // The evidence relation is the conservative signal: an observation that the model
+            // does not explain, or one that is held, CONTRADICTS the claim. The relation and
+            // the disposition are not the same question — the relation says what the evidence
+            // is about, the disposition says what may be believed because of it — but the
+            // relation is deliberately the stronger of the two, so that a database written
+            // before the disposition existed can be backfilled from it conservatively.
+            boolean contradicts = !explained || !applied;
             workbench.recordObservation(WORKSPACE_ID, model.id(),
                     MicroWorldCodec.describeOutcome(observed.lamp()),
                     MicroWorldCodec.describe(observed.input()),
-                    !explained,
-                    caseId);
+                    contradicts,
+                    caseId,
+                    disposition,
+                    dispositionReason);
+            observationCommitted = true;
             trace.step("OBSERVE", "CognitiveStore",
                     "the outcome was written as case " + caseId
                             + " and as evidence on claim " + model.id()
-                            + "; the model " + (explained ? "explains it" : "does NOT explain it"));
-            session.applyOutcome(observed);
+                            + "; the model " + (explained ? "explifies it" : "does NOT explain it")
+                            + "; the observation's disposition is " + disposition.name()
+                            + (applied ? "" : " and it does NOT constrain the active model"));
 
             // A prediction error has two forms, and both are worth recording. The first is a
             // CONFIDENT wrong answer: the model settled on a value and the outcome says
@@ -438,15 +572,27 @@ public final class CognitiveKernel {
             }
         }
 
+        deadline.check("OBSERVE");
         // ── 8. LEARN: promote a fast path only after it is validated ─────────
         Procedure promotion = promoteIfValidated(session, remembered);
+        procedureChanged = promotion != null;
         if (promotion != null) {
             trace.step("LEARN", "CognitiveKernel",
                     "the fast path was promoted after agreeing with the reference on "
-                            + promotion.validationCases() + " held-out case(s)");
-            notes.add("a validated procedure was promoted: " + promotion.id());
+                            + promotion.validationCases() + " INDEPENDENT case(s) — cases the "
+                            + "model was not built from");
+            notes.add("an independently validated procedure was promoted: " + promotion.id());
+        } else {
+            trace.step("LEARN", "CognitiveKernel",
+                    lastPromotionRefusal == null
+                            ? "no procedure was promoted: the model has not settled on a single "
+                                    + "hypothesis yet"
+                            : lastPromotionRefusal);
+            notes.add("the fast path is an in-sample derived shortcut of the reference; it is "
+                    + "not a validated procedure");
         }
 
+        deadline.check("LEARN");
         // ── 9. REGULATE ───────────────────────────────────────────────────────
         List<RegulatoryEvent> events = new ArrayList<>();
         if (observed != null && !forecast.unanimous()) {
@@ -467,13 +613,50 @@ public final class CognitiveKernel {
         trace.step("REGULATE", "RegulationController",
                 "the drives now read " + next.held().size() + " dimension(s); the bias on the "
                         + "cost preference is " + bias.costWeightMultiplier());
+        // W45.0. The new state and the provenance of the change are written in ONE
+        // transaction, so the durable state and the reason for it cannot disagree. The event
+        // ids carry the episode, so a replay of the same episode is refused rather than
+        // applied twice.
+        List<CognitiveStore.RegulatoryEventRecord> regulatoryRecords = new ArrayList<>();
+        for (int index = 0; index < events.size(); index++) {
+            regulatoryRecords.add(new CognitiveStore.RegulatoryEventRecord(
+                    episodeId + "-reg-" + index, WORKSPACE_ID, episodeId,
+                    events.get(index).kind().name(), events.get(index).magnitude(),
+                    events.get(index).source(), now));
+        }
+        long regulatoryVersion = store.recordRegulatoryState(WORKSPACE_ID, next, now,
+                regulatoryRecords);
+        trace.step("REGULATE", "CognitiveStore",
+                "the regulatory state was persisted at version " + regulatoryVersion
+                        + " with " + regulatoryRecords.size() + " event(s) of provenance");
 
         // ── 10. ANSWER ────────────────────────────────────────────────────────
+        deadline.check("REGULATE");
         String answer = answerFor(forecast, computed, observed, error);
         trace.step("ANSWER", "CognitiveKernel", answer);
         store.closeEpisode(episodeId, now);
         return new CognitiveOutcome(episodeId, CognitiveOutcome.Status.COMPLETED, answer,
                 percept, prediction, error, decision, persist(trace, episodeId, now), notes);
+        } catch (CycleTimeoutException timeout) {
+            // W45.0. The cycle ran out of its budget. The episode ends, the trace is kept, and
+            // the notes say exactly what had already happened — so that a reader can tell an
+            // interrupted cycle from a cycle that never ran, and from a cycle that finished.
+            notes.add("the cycle ran out of its " + timeout.budgetMillis()
+                    + "ms budget at the " + timeout.phase() + " phase, after "
+                    + timeout.elapsedMillis() + "ms");
+            notes.add("an experiment was executed: " + experimentExecuted);
+            notes.add("an observation was committed: " + observationCommitted);
+            notes.add("the procedure state changed: " + procedureChanged);
+            notes.add("the side effects that had already happened are NOT rolled back");
+            trace.step("TIMEOUT", "CycleDeadline", timeout.getMessage()
+                    + "; experiment-executed=" + experimentExecuted
+                    + " observation-committed=" + observationCommitted
+                    + " procedure-changed=" + procedureChanged);
+            store.closeEpisode(episodeId, now);
+            return new CognitiveOutcome(episodeId, CognitiveOutcome.Status.RESOURCE_LIMITED,
+                    "The cognitive cycle ran out of its budget: " + timeout.getMessage(),
+                    percept, prediction, error, decision, persist(trace, episodeId, now), notes);
+        }
     }
 
 
@@ -521,14 +704,30 @@ public final class CognitiveKernel {
     }
 
     /**
-     * Promotes the fast path when, and only when, it agrees with the reference on the held-out
+     * Promotes the fast path when, and only when, it agrees with the reference on INDEPENDENT
      * cases.
      *
-     * <p>This is the W44 §22 acceptance step. A fast path that is merely plausible is not
-     * promoted; one that reproduces the reference answer on every recorded case is. The
-     * procedure records its applicability domain — {@code MODEL_SETTLED} — and names the
-     * reference method it falls back to, so a later cycle outside that domain uses the
-     * reference instead.</p>
+     * <p><b>W45.0 changed what this method may do.</b> The W44 version validated the fast
+     * path against the reference on {@code remembered} — the very observations the model was
+     * built from — and then reported the agreement as a "held-out validation". That was an
+     * in-sample consistency check wearing the name of a validation: it showed that the cheap
+     * path computes what the expensive path computes, and it said nothing about whether the
+     * model is right about the world.</p>
+     *
+     * <p>The candidate validation set is now computed honestly: it is the recorded
+     * observations the model was <b>not</b> built from. A held observation is not in it — a
+     * contradiction is a conflict to be adjudicated, not evidence — and an observation the
+     * model already consumed is not in it either.</p>
+     *
+     * <p><b>In the lamp world that set is always empty, and that is a fact about the world
+     * rather than a bug.</b> The domain has four assignments; a truth table over four rows is
+     * determined only when all four have been observed; so a model that has SETTLED has seen
+     * the whole domain, and there is nothing left to observe independently. Splitting the same
+     * four rows in two and calling the halves independent is not something the domain
+     * supports. So <b>nothing is promoted</b>, and the fast path is used as what it actually
+     * is: an algebraic shortcut of the reference over the same model-eligible data, with the
+     * reference still there to take over whenever the shortcut's precondition does not
+     * hold.</p>
      *
      * @return the promoted procedure, or null when nothing was promoted
      */
@@ -536,8 +735,17 @@ public final class CognitiveKernel {
         if (session.survivingHypotheses().size() != 1) {
             return null;
         }
-        List<Observation> cases = new ArrayList<>(remembered);
+        List<Observation> cases = independentValidationCandidates(session, remembered);
         if (cases.size() < MINIMUM_VALIDATION_CASES) {
+            // The refusal is the finding. The lamp world's input domain is exhausted once the
+            // model settles, so no independent evidence exists and no procedure may be
+            // promoted. The fast path still runs as a DERIVED SHORTCUT of the reference, and
+            // the trace says so — but nothing calls it validated.
+            lastPromotionRefusal = "no procedure was promoted: the validation set holds "
+                    + cases.size() + " observation(s) the model was not built from, and "
+                    + MINIMUM_VALIDATION_CASES + " independent observations are required; "
+                    + "the fast path is used as an in-sample derived shortcut of the reference, "
+                    + "not as a validated procedure";
             return null;
         }
         int agreed = 0;
@@ -553,6 +761,8 @@ public final class CognitiveKernel {
                 // That means the model has no account of its own data, and nothing may be
                 // promoted on top of it. The refusal is the finding; promoting a procedure
                 // would bury it.
+                lastPromotionRefusal = "no procedure was promoted: the reference method refused "
+                        + "on the independent validation set (" + e.getMessage() + ")";
                 return null;
             }
             boolean fast = session.survivingHypotheses().get(0).evaluate(observation.input());
@@ -562,6 +772,9 @@ public final class CognitiveKernel {
         }
         double agreement = (double) agreed / (double) cases.size();
         if (agreement < 1.0) {
+            lastPromotionRefusal = "no procedure was promoted: the fast path disagreed with the "
+                    + "reference on " + (cases.size() - agreed) + " of " + cases.size()
+                    + " independent observation(s)";
             return null;
         }
         Procedure promoted = new Procedure(PROCEDURE_ID,
@@ -571,9 +784,60 @@ public final class CognitiveKernel {
                 "the model has settled on exactly one surviving hypothesis",
                 Set.of(MicroWorldSettledModelMethod.PRECONDITION_MODEL_SETTLED),
                 MicroWorldReferenceMethod.ID,
-                cases.size(), agreement, 0, 0, timestamps.get(), null);
+                cases.size(), agreement, 0, 0, timestamps.get(), null,
+                ValidationKind.INDEPENDENT);
         store.recordProcedure(WORKSPACE_ID, promoted);
+        lastPromotionRefusal = null;
         return promoted;
+    }
+
+    /**
+     * W45.0 — the observations that may serve as INDEPENDENT validation data.
+     *
+     * <p>An observation qualifies only when the model was NOT built from it and it is not a
+     * held conflict. The set is computed from the session's own record of what it applied,
+     * so it is the same rule the reference method and the fast path use.</p>
+     *
+     * @param session    the session, holding what the model was built from
+     * @param remembered every observation the workspace holds
+     * @return the candidates for an independent validation
+     */
+    private List<Observation> independentValidationCandidates(MicroWorldSession session,
+                                                              List<Observation> remembered) {
+        Set<String> applied = new java.util.LinkedHashSet<>();
+        for (Observation observation : session.appliedObservations()) {
+            applied.add(observation.id());
+        }
+        List<Observation> candidates = new ArrayList<>();
+        for (Observation observation : remembered) {
+            if (applied.contains(observation.id())) {
+                continue;
+            }
+            if (!observation.constrainsModel()) {
+                continue;
+            }
+            candidates.add(observation);
+        }
+        return candidates;
+    }
+
+    /**
+     * W45.0 — restores the persisted regulatory state.
+     *
+     * <p>ADR-W44-01 lists the drives among the cognitive state the cognitive store persists,
+     * and until W45 they were the one item on that list that was not persisted: the state
+     * lived in the in-memory adapter, so a restart reset every drive to neutral. The
+     * application calls this once, when it starts, and the kernel persists the new state at
+     * the end of every cycle.</p>
+     *
+     * @return the restored state, or null when nothing is persisted
+     */
+    public RegulatoryState restoreRegulatoryState() {
+        RegulatoryState persisted = store.regulatoryState(WORKSPACE_ID);
+        if (persisted != null) {
+            regulator.restore(persisted);
+        }
+        return persisted;
     }
 
     /** The promoted procedure for the micro-world family, when there is one. */

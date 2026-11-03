@@ -91,7 +91,8 @@ public final class ProcedureStore {
                 candidate.useCount(),
                 candidate.failureCount(),
                 candidate.promotedAt(),
-                null);
+                null,
+                candidate.validationKind());
         procedures.put(stored.id(), stored);
         return new PromotionOutcome(true, validation.reason(), stored);
     }
@@ -168,7 +169,8 @@ public final class ProcedureStore {
                     updated.validationAgreement(), updated.useCount(), updated.failureCount(),
                     updated.promotedAt(),
                     "the measured agreement fell to " + observedAgreement + ", below the threshold of "
-                            + MINIMUM_AGREEMENT);
+                            + MINIMUM_AGREEMENT,
+                    updated.validationKind());
         }
         procedures.put(id, updated);
         return updated;
@@ -190,7 +192,8 @@ public final class ProcedureStore {
                 current.version(), current.applicability(), current.requiredFacts(),
                 current.referenceAlgorithmId(), current.validationCases(),
                 current.validationAgreement(), current.useCount(), current.failureCount(),
-                current.promotedAt(), reason == null || reason.isBlank() ? "retired" : reason);
+                current.promotedAt(), reason == null || reason.isBlank() ? "retired" : reason,
+                current.validationKind());
         procedures.put(id, retired);
         return retired;
     }

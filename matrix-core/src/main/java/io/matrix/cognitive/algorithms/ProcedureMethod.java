@@ -97,18 +97,30 @@ public final class ProcedureMethod<I>
                         "O(1) heap", true, false,
                         "the applicability domain does not hold, so the reference method takes over"),
                 new AlgorithmCapability.AccuracyProfile(
-                        "agreement with the reference on held-out cases",
+                        procedure.validated()
+                                ? "agreement with the reference on INDEPENDENT cases"
+                                : "agreement with the reference over the model's own data "
+                                        + "(IN-SAMPLE: not an independent validation)",
                         procedure.validationAgreement(),
                         procedure.validationCases(),
-                        "the held-out validation of the procedure " + procedure.id(),
+                        procedure.validated()
+                                ? "the independent validation of the procedure " + procedure.id()
+                                : "the model's own observations, for the procedure " + procedure.id(),
                         procedure.promotedAt()),
                 new AlgorithmCapability.DeterminismProfile(true,
-                        "none: the procedure was validated on a fixed corpus"),
+                        procedure.validated()
+                                ? "none: the procedure was validated on an independent corpus"
+                                : "none: the shortcut is a function of the model's own data"),
                 new AlgorithmCapability.ReliabilityProfile(
                         "the applicability domain does not hold, so the reference method takes over",
                         false, "the reference method answers"),
                 new AlgorithmCapability.VerificationStrategy(
-                        "the procedure was validated against its reference on held-out cases",
+                        procedure.validated()
+                                ? "the procedure was validated against its reference on "
+                                        + "independent cases"
+                                : "the procedure agrees with its reference over the model's own "
+                                        + "data; it is a derived shortcut, not a validated "
+                                        + "procedure",
                         "io.matrix.cognitive.algorithms.ProcedureValidator.validate"),
                 procedure.referenceAlgorithmId());
     }

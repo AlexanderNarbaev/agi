@@ -2,6 +2,7 @@ package io.matrix.knowledge;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.matrix.cognitive.microworld.ObservationDisposition;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -62,7 +63,7 @@ public final class KnowledgeStore implements AutoCloseable {
      * {@code epistemic_case} rather than {@code case} because {@code CASE} is a reserved word in
      * SQL and every query would then need quoting.</p>
      */
-    public static final int SCHEMA_VERSION = 16;
+    public static final int SCHEMA_VERSION = 17;
 
     private static final ObjectMapper JSON = new ObjectMapper();
 
@@ -325,6 +326,73 @@ public final class KnowledgeStore implements AutoCloseable {
      * recovered is marked as unknown rather than invented: no old record can
      * say how it was extracted, and the migration will not pretend it did.
      */
+    /**
+     * W45.0 — gives every case of a pre-v17 database a disposition.
+     *
+     * <p>The rule is conservative and it is stated once, here, so that it can be checked:</p>
+     * <ul>
+     *   <li>a case whose linked evidence CONTRADICTS the claim was a recorded conflict, and
+     *       it is HELD — {@code UNRESOLVED};</li>
+     *   <li>a case whose linked evidence SUPPORTS, EXEMPLIFIES or QUALIFIES the claim was
+     *       ordinary model data, and it is {@code ELIGIBLE};</li>
+     *   <li>a case with no linked evidence, or with any other relation, CANNOT be classified,
+     *       and it is {@code UNRESOLVED} — an observation that cannot be classified must not
+     *       silently become confirmed model data.</li>
+     * </ul>
+     */
+    private void backfillObservationDispositions() throws SQLException {
+        String eligible = ObservationDisposition.ELIGIBLE.name();
+        String unresolved = ObservationDisposition.UNRESOLVED.name();
+        List<String[]> rows = new ArrayList<>();
+        try (Statement st = connection.createStatement();
+             ResultSet rs = st.executeQuery(
+                     "SELECT c.id, c.workspace_id, c.observed_at, "
+                             + "(SELECT e.relation FROM evidence e WHERE e.case_id = c.id "
+                             + "ORDER BY e.recorded_at LIMIT 1) "
+                             + "FROM epistemic_case c")) {
+            while (rs.next()) {
+                String relation = rs.getString(4);
+                String disposition = unresolved;
+                String reason = "the disposition could not be inferred from the record; "
+                        + "the observation is held rather than assumed to be model data";
+                if (relation != null) {
+                    switch (relation) {
+                        case "CONTRADICTS" -> {
+                            disposition = unresolved;
+                            reason = "the recorded evidence contradicts the model; the "
+                                    + "observation is held as an unresolved conflict";
+                        }
+                        case "SUPPORTS", "EXEMPLIFIES", "QUALIFIES" -> {
+                            disposition = eligible;
+                            reason = "the recorded evidence supports the model; the observation "
+                                    + "was ordinary model data";
+                        }
+                        default -> {
+                            disposition = unresolved;
+                            reason = "the recorded evidence relation '" + relation
+                                    + "' does not establish model eligibility";
+                        }
+                    }
+                }
+                rows.add(new String[]{rs.getString("id"), rs.getString("workspace_id"),
+                        disposition, reason, rs.getString("observed_at")});
+            }
+        }
+        try (PreparedStatement ps = connection.prepareStatement(
+                "INSERT OR IGNORE INTO observation_disposition(case_id, workspace_id, disposition, "
+                        + "reason, recorded_at) VALUES (?,?,?,?,?)")) {
+            for (String[] row : rows) {
+                ps.setString(1, row[0]);
+                ps.setString(2, row[1]);
+                ps.setString(3, row[2]);
+                ps.setString(4, row[3]);
+                ps.setString(5, row[4]);
+                ps.addBatch();
+            }
+            ps.executeBatch();
+        }
+    }
+
     private void backfillProvenance() throws SQLException {
         String unknown = "unknown: the record predates the provenance fields";
         try (PreparedStatement ps = connection.prepareStatement(
@@ -357,6 +425,42 @@ public final class KnowledgeStore implements AutoCloseable {
     }
 
     private int migrateFrom(int version) throws SQLException {
+        if (version == 16) {
+            // v17 adds the DISPOSITION of an observation: whether it may constrain the
+            // active model.
+            //
+            // The reason is a defect the W44 wave left behind. The knowledge store already
+            // recorded that an observation CONTRADICTED the model - as an evidence relation -
+            // but the micro-world's restoration path never read it back. A session rebuilt
+            // from the durable cases therefore applied a contradiction that the live session
+            // had deliberately kept out of its hypothesis set. The contradiction survived the
+            // restart as a RECORD and was lost as a DECISION.
+            //
+            // The disposition is a separate table and not a column on the case, because it
+            // answers a different question from the case's origin: the origin says where the
+            // observation came from, the disposition says what may be believed because of it.
+            // It also carries the adjudication - why it was held, who resolved it, when, and
+            // which model revision took it in - which the case table has no room for.
+            //
+            // The migration is ADDITIVE and it is BACKFILLED. A record from v16 whose
+            // disposition cannot be established is UNRESOLVED, never ELIGIBLE: an observation
+            // that cannot be classified must not silently become confirmed model data. Where
+            // the evidence relation CAN be read, it is used - CONTRADICTS means the
+            // observation was a recorded conflict and is held; a supporting relation means it
+            // was ordinary model data.
+            try (Statement st = connection.createStatement()) {
+                st.execute("CREATE TABLE IF NOT EXISTS observation_disposition ("
+                        + "case_id TEXT PRIMARY KEY, workspace_id TEXT NOT NULL, "
+                        + "disposition TEXT NOT NULL, reason TEXT, "
+                        + "contradicted_prediction_id TEXT, resolved_by TEXT, resolved_at TEXT, "
+                        + "model_revision_id TEXT, recorded_at TEXT NOT NULL)");
+                st.execute("CREATE INDEX IF NOT EXISTS idx_disposition_workspace "
+                        + "ON observation_disposition(workspace_id)");
+            }
+            backfillObservationDispositions();
+            writeSchemaVersion(17);
+            return 17;
+        }
         if (version == 15) {
             // v16 adds the CASE table and the link from evidence to it.
             //
@@ -2197,6 +2301,164 @@ public final class KnowledgeStore implements AutoCloseable {
     }
 
     /**
+     * W45.0 — records an observation and EVERYTHING that hangs off it, in ONE transaction.
+     *
+     * <p>The W44 path wrote the same observation in three separate committed operations: the
+     * source and the evidence through {@code applyChanges}, then the case, then the link from
+     * the evidence to the case. A process that died between them left a half-written
+     * observation: evidence with no case, or a case with no evidence, or a case whose evidence
+     * pointed at nothing. None of those states is a state a reader can interpret, and the
+     * W45 acceptance criterion is that a failed epistemic write cannot leave a half-linked
+     * structure behind.</p>
+     *
+     * <p>This method writes the source, the evidence, the case, the evidence-to-case link and
+     * the observation's disposition in a single transaction. Either all of it is on disk, or
+     * none of it is.</p>
+     *
+     * @param workspaceId the workspace
+     * @param source      the source of the observation
+     * @param evidence    the evidence the observation provides
+     * @param observation the case
+     * @param disposition what the observation may be believed for
+     * @param reason      why it is in that disposition
+     * @param recordedAt  when the observation was recorded
+     */
+    public void recordObservationAtomically(String workspaceId, Source source, Evidence evidence,
+                                            Case observation, ObservationDisposition disposition,
+                                            String reason, String recordedAt) {
+        try {
+            connection.setAutoCommit(false);
+            try {
+                upsertSource(source);
+                insertEvidence(evidence);
+                insertCase(observation);
+                linkEvidenceToCase(evidence.id(), observation.id());
+                insertDisposition(workspaceId, observation.id(), disposition, reason,
+                        null, null, null, null, recordedAt);
+                connection.commit();
+            } catch (SQLException | RuntimeException e) {
+                connection.rollback();
+                throw e;
+            } finally {
+                connection.setAutoCommit(true);
+            }
+        } catch (SQLException e) {
+            throw new IllegalStateException("failed to record the observation atomically", e);
+        }
+    }
+
+    /**
+     * W45.0 — the disposition of every case of a workspace.
+     *
+     * <p>A case that is ABSENT from the map has no established disposition. The caller must
+     * treat that as {@link ObservationDisposition#conservativeDefault()} — the conservative
+     * default is the caller's job because the store refuses to guess.</p>
+     *
+     * @param workspaceId the workspace
+     * @return the disposition of each case that has one
+     */
+    public Map<String, ObservationDisposition> caseDispositions(String workspaceId) {
+        Map<String, ObservationDisposition> out = new LinkedHashMap<>();
+        try (PreparedStatement ps = connection.prepareStatement(
+                "SELECT case_id, disposition FROM observation_disposition WHERE workspace_id = ?")) {
+            ps.setString(1, workspaceId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    out.put(rs.getString("case_id"),
+                            ObservationDisposition.valueOf(rs.getString("disposition")));
+                }
+            }
+        } catch (SQLException e) {
+            throw new IllegalStateException("failed to read the observation dispositions", e);
+        }
+        return out;
+    }
+
+    /**
+     * W45.0 — the reason an observation is in the disposition it is in.
+     *
+     * @param workspaceId the workspace
+     * @param caseId      the case
+     * @return the reason, or an empty string when the case has no disposition row
+     */
+    public String dispositionReason(String workspaceId, String caseId) {
+        try (PreparedStatement ps = connection.prepareStatement(
+                "SELECT reason FROM observation_disposition WHERE workspace_id = ? AND case_id = ?")) {
+            ps.setString(1, workspaceId);
+            ps.setString(2, caseId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    String reason = rs.getString("reason");
+                    return reason == null ? "" : reason;
+                }
+            }
+        } catch (SQLException e) {
+            throw new IllegalStateException("failed to read the disposition reason", e);
+        }
+        return "";
+    }
+
+    /**
+     * W45.0 — records the disposition of an observation that already exists.
+     *
+     * <p>This is the ADJUDICATION path: a review accepts or rejects a held observation. It
+     * never deletes anything - the observation, its source, its evidence and the link between
+     * them are all left exactly as they were.</p>
+     *
+     * @param workspaceId                the workspace
+     * @param caseId                     the case
+     * @param disposition                the new disposition
+     * @param reason                     why
+     * @param contradictedPredictionId   the prediction the observation contradicted, if any
+     * @param resolvedBy                 who or what resolved the conflict
+     * @param resolvedAt                 when it was resolved
+     * @param modelRevisionId            the model revision that took the observation in
+     * @param recordedAt                 when the disposition was recorded
+     */
+    public void adjudicateObservation(String workspaceId, String caseId,
+                                       ObservationDisposition disposition, String reason,
+                                       String contradictedPredictionId, String resolvedBy,
+                                       String resolvedAt, String modelRevisionId,
+                                       String recordedAt) {
+        try {
+            connection.setAutoCommit(false);
+            try {
+                insertDisposition(workspaceId, caseId, disposition, reason,
+                        contradictedPredictionId, resolvedBy, resolvedAt, modelRevisionId, recordedAt);
+                connection.commit();
+            } catch (SQLException | RuntimeException e) {
+                connection.rollback();
+                throw e;
+            } finally {
+                connection.setAutoCommit(true);
+            }
+        } catch (SQLException e) {
+            throw new IllegalStateException("failed to record the adjudication", e);
+        }
+    }
+
+    private void insertDisposition(String workspaceId, String caseId,
+                                   ObservationDisposition disposition, String reason,
+                                   String contradictedPredictionId, String resolvedBy,
+                                   String resolvedAt, String modelRevisionId, String recordedAt) throws SQLException {
+        try (PreparedStatement ps = connection.prepareStatement(
+                "INSERT OR REPLACE INTO observation_disposition(case_id, workspace_id, disposition, "
+                        + "reason, contradicted_prediction_id, resolved_by, resolved_at, "
+                        + "model_revision_id, recorded_at) VALUES (?,?,?,?,?,?,?,?,?)")) {
+            ps.setString(1, caseId);
+            ps.setString(2, workspaceId);
+            ps.setString(3, disposition.name());
+            ps.setString(4, reason);
+            ps.setString(5, contradictedPredictionId);
+            ps.setString(6, resolvedBy);
+            ps.setString(7, resolvedAt);
+            ps.setString(8, modelRevisionId);
+            ps.setString(9, recordedAt);
+            ps.executeUpdate();
+        }
+    }
+
+    /**
      * Records one case: an observation, the conditions it was made under and what was seen.
      *
      * <p>The write is idempotent on the case id, so re-running the same observation does not
@@ -2205,6 +2467,14 @@ public final class KnowledgeStore implements AutoCloseable {
      * evidence.</p>
      */
     public void recordCase(Case observation) {
+        try {
+            insertCase(observation);
+        } catch (SQLException e) {
+            throw new IllegalStateException("failed to record the case", e);
+        }
+    }
+
+    private void insertCase(Case observation) throws SQLException {
         try (PreparedStatement ps = connection.prepareStatement(
                 "INSERT OR REPLACE INTO epistemic_case(id, workspace_id, concept_id, statement, "
                         + "conditions, outcome, source_id, origin, observed_at) "
@@ -2219,8 +2489,6 @@ public final class KnowledgeStore implements AutoCloseable {
             ps.setString(8, observation.origin().name());
             ps.setString(9, observation.observedAt());
             ps.executeUpdate();
-        } catch (SQLException e) {
-            throw new IllegalStateException("failed to record the case", e);
         }
     }
 
