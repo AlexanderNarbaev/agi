@@ -1,0 +1,1142 @@
+document,category,heading,lines,bytes,capability_claim_sentences,production_types_named,production_types,source_files_named,source_files
+ACCESS_SUMMARY.md,session-report,🚀 MATRIX Production Ecosystem — Access Summary,190,6204,0,0,,0,
+AGENTS.md,normative,AGENTS — процедуры сессий,75,6655,0,0,,0,
+BRANCHING-STRATEGY.md,other,Branching Strategy — MATRIX Ecosystem,175,4818,1,0,,0,
+CONSTITUTION.md,other,CONSTITUTION — MATRIX,63,4780,0,0,,0,
+CONTRIBUTING.md,operational-manual,CONTRIBUTING — Участие в проекте MATRIX,28,2340,0,0,,0,
+INSTALL.md,operational-manual,INSTALL — установка пакета документации в репозиторий,45,3402,0,0,,0,
+MIGRATION.md,operational-manual,M.A.T.R.I.X. — Migration & Portability Guide,373,8350,1,0,,0,
+README.md,operational-manual,MATRIX — детерминированное нейро-символическое ядро,63,3669,0,0,,0,
+SESSION.md,session-report,SESSION,7885,467414,258,11,io.matrix.brain.runtime.KnowledgeForgeIngest;io.matrix.memory.SqliteMemoryBackend;io.matrix.knowledge.AcceptanceModel;io.matrix.knowledge.MetricsReport;io.matrix.noosphere.GrowOnlySet;io.matrix.api.MinimalHttpServer;io.matrix.knowledge.Acceptance;io.matrix.audit.HashChainedLog,18,BirRegistryPersistence.java;BitNetModelLoadTest.java;ContentSimilarity.java;DiskHygienePolicyTest.java;EvalBattery.java;FatigueUncertaintyAggregator.java;HdcVector.java;NeuromodulationStreamSimulationTest.java
+_template.md,session-report,Spec: [Feature Name],51,1027,0,0,,0,
+constitution.md,other,Project Constitution — agi,71,3026,3,0,,0,
+deploy/README.md,operational-manual,MATRIX Deployment (Wave T-09),77,2593,0,0,,0,
+docker/README.md,operational-manual,MATRIX Conversation Docker Setup,43,1021,0,0,,0,
+docs-v2/DEPLOYMENT-REPORT.md,other,Documentation Deployment Report,224,4995,1,0,,0,
+docs-v2/INDEX.md,other,INDEX — MATRIX Docs v2,383,21919,0,0,,37,io/matrix/consciousness/KolmogorovComplexityRecorder.java;io/matrix/consciousness/KolmogorovComplexitySnapshot.java;io/matrix/consciousness/LSystemComplexity.java;io/matrix/research/W113ProfileBenchmarkTest.java;io/matrix/research/W118NKAttractorBenchmark.java;io/matrix/research/W120LSystemPhiCorrelation.java;io/matrix/research/W121MemristorPhaseTransition.java;io/matrix/research/W122FullIntegrationTest.java
+docs-v2/STYLE-GUIDE.md,other,MATRIX Documentation Style Guide,96,2389,0,0,,0,
+docs-v2/SUMMARY.md,other,MATRIX Encyclopedia — Table of Contents,67,1944,0,0,,0,
+docs-v2/TRANSFORMATION-PLAN.md,other,MATRIX TRANSFORMATION PLAN — От исследовательского проекта к production-ready платформе,967,33999,1,0,,0,
+docs-v2/_raw/2026-08-pre-v2/MATRIX_docs/MATRIX_docs/AGENTS.md,normative,AGENTS.md — Инструкции для ИИ-агентов и разработчиков,62,6655,1,0,,0,
+docs-v2/_raw/2026-08-pre-v2/MATRIX_docs/MATRIX_docs/CONSTITUTION.md,other,CONSTITUTION — Конституция проекта MATRIX,69,11437,0,0,,0,
+docs-v2/_raw/2026-08-pre-v2/MATRIX_docs/MATRIX_docs/CONTRIBUTING.md,operational-manual,CONTRIBUTING — Участие в проекте MATRIX,28,2340,0,0,,0,
+docs-v2/_raw/2026-08-pre-v2/MATRIX_docs/MATRIX_docs/INSTALL.md,operational-manual,INSTALL — установка пакета документации в репозиторий,45,3402,0,0,,0,
+docs-v2/_raw/2026-08-pre-v2/MATRIX_docs/MATRIX_docs/README.md,operational-manual,MATRIX (MENTAT),243,15632,0,0,,27,agent/AgentGenome.java;agent/AgentLoop.java;api/AgentWebSocket.java;api/MatrixResource.java;api/OpenAIChatResource.java;cauldron/CauldronProtocol.java;cluster/NeuronClusterActor.java;dialog/TelegramBotService.java
+docs-v2/_raw/2026-08-pre-v2/MATRIX_docs/MATRIX_docs/WAL.md,other,"WAL — Write-Ahead Log сессий (checkpoint, не лог)",19,1168,0,0,,0,
+docs-v2/_raw/2026-08-pre-v2/MATRIX_docs/MATRIX_docs/docs/GLOSSARY.md,other,Глоссарий MATRIX,68,19506,0,0,,1,mediator/InstanceMediator.java
+docs-v2/_raw/2026-08-pre-v2/MATRIX_docs/MATRIX_docs/docs/INDEX.md,other,Документация MATRIX — карта,84,13214,0,0,,0,
+docs-v2/_raw/2026-08-pre-v2/MATRIX_агентный_пакет/MATRIX_агентный_пакет/00_README_пакета.md,other,Агентный пакет MATRIX — README,62,5137,0,0,,0,
+docs-v2/_raw/2026-08-pre-v2/MATRIX_агентный_пакет/MATRIX_агентный_пакет/01_CONSTITUTION.md,other,CONSTITUTION.md — Конституция проекта MATRIX,69,12441,0,0,,0,
+docs-v2/_raw/2026-08-pre-v2/MATRIX_агентный_пакет/MATRIX_агентный_пакет/02_AGENTS.md,other,"AGENTS.md — Инструкции для ИИ-агентов, работающих в этом репозитории",70,6517,1,0,,0,
+docs-v2/_raw/2026-08-pre-v2/MATRIX_агентный_пакет/MATRIX_агентный_пакет/03_Целевая_архитектура.md,other,Целевая архитектура MATRIX,128,15726,0,0,,0,
+docs-v2/_raw/2026-08-pre-v2/MATRIX_агентный_пакет/MATRIX_агентный_пакет/04_Научные_основания.md,other,Научные основания MATRIX,205,37466,0,0,,0,
+docs-v2/_raw/2026-08-pre-v2/MATRIX_агентный_пакет/MATRIX_агентный_пакет/05_SPECS/SPEC-000_developmental_loop.md,other,SPEC-000: Developmental Loop (curriculum engine + MA-gates),68,7990,0,0,,0,
+docs-v2/_raw/2026-08-pre-v2/MATRIX_агентный_пакет/MATRIX_агентный_пакет/05_SPECS/SPEC-001_конвертация_весов.md,other,SPEC-001: Верифицируемая конвертация весов (карантин → дистилляция по активациям),56,6434,0,0,,0,
+docs-v2/_raw/2026-08-pre-v2/MATRIX_агентный_пакет/MATRIX_агентный_пакет/05_SPECS/SPEC-002_boolean_compute_layer.md,other,"SPEC-002: Boolean Compute Layer — BIR, гибридные примитивы, механизмы обучения",99,13475,0,0,,0,
+docs-v2/_raw/2026-08-pre-v2/MATRIX_агентный_пакет/MATRIX_агентный_пакет/05_SPECS/SPEC-003_топология_знаний.md,other,"SPEC-003: Топология знаний (Ricci-анализ графов, drift-fingerprint, curriculum-ordering)",51,6394,0,0,,0,
+docs-v2/_raw/2026-08-pre-v2/MATRIX_агентный_пакет/MATRIX_агентный_пакет/06_ИССЛЕДОВАНИЯ/HYPOTHESES_и_METRICS.md,other,HYPOTHESES.md + METRICS.md — исследовательский реестр,65,9675,0,0,,0,
+docs-v2/_raw/2026-08-pre-v2/MATRIX_агентный_пакет/MATRIX_агентный_пакет/07_План_реализации.md,other,План реализации MATRIX,97,11949,0,0,,0,
+docs-v2/_raw/2026-08-pre-v2/MATRIX_агентный_пакет/MATRIX_агентный_пакет/08_Java_стек.md,other,Технологический стек (Java-first),45,6715,0,0,,0,
+docs-v2/_raw/2026-08-pre-v2/MATRIX_агентный_пакет/MATRIX_агентный_пакет/09_Критический_аудит_итоговый.md,other,"Итоговый критический аудит (для владельца, не для агентов)",50,12048,0,0,,0,
+docs-v2/_raw/2026-08-pre-v2/agents/agents/AGENTS-MODULES.md,other,AGENTS-MODULES — правила разработки модулей сигналов,28,2582,0,0,,0,
+docs-v2/_raw/2026-08-pre-v2/agents/agents/AGENTS-RESEARCH.md,other,"AGENTS-RESEARCH — протокол исследований, фиксации результатов и научных статей",29,4350,0,0,,0,
+docs-v2/_raw/2026-08-pre-v2/agents/agents/README.md,operational-manual,Спецификации для агентов — карта,14,2142,0,0,,0,
+docs-v2/_raw/2026-08-pre-v2/blog/blog/001-mpdt-neuron.md,other,What is an MPDT Neuron and Why It Never Hallucinates,69,2839,3,0,,0,
+docs-v2/_raw/2026-08-pre-v2/design/design/DESIGN-01-units.md,other,DESIGN-01: Вычислительная единица — внутреннее устройство гибридного «нейрона»,181,14604,0,0,,0,
+docs-v2/_raw/2026-08-pre-v2/design/design/DESIGN-02-composition.md,other,"DESIGN-02: Композиция — кластеры, сети, точки зрения, профессионалы",156,14256,0,0,,0,
+docs-v2/_raw/2026-08-pre-v2/design/design/DESIGN-03-pipeline.md,other,"DESIGN-03: Контур запроса — считывание ввода, размышление, преобразование в вывод",139,15845,0,0,,0,
+docs-v2/_raw/2026-08-pre-v2/design/design/DESIGN-04-learning.md,other,"DESIGN-04: Обучение — предобучение, дистилляция, интерактивное взаимодействие",133,12865,0,0,,0,
+docs-v2/_raw/2026-08-pre-v2/design/design/DESIGN-05-memory.md,other,"DESIGN-05: Память — слои, консолидация, забывание, восстановление",94,10433,0,0,,0,
+docs-v2/_raw/2026-08-pre-v2/design/design/DESIGN-06-signal-modules.md,other,"DESIGN-06: Модули входящих и исходящих сигналов — контракт, реестр, медиа",96,10720,0,0,,0,
+docs-v2/_raw/2026-08-pre-v2/design/design/DESIGN-07-lifecycle.md,other,"DESIGN-07: Жизненный цикл элементов — Cauldron, TaskCell, группы, активность, сон, Operator",92,13412,0,0,,0,
+docs-v2/_raw/2026-08-pre-v2/design/design/DESIGN-08-federation.md,other,"DESIGN-08: Федерация, локальные инференсы, безопасность протоколов",140,12553,0,0,,0,
+docs-v2/_raw/2026-08-pre-v2/design/design/DESIGN-09-monotone-decoder.md,other,DESIGN-09: MonotoneDecoder — producer монотонных CLAUSESET по схеме Ханселя/Кабулова–Норматова,111,14428,0,0,,0,
+docs-v2/_raw/2026-08-pre-v2/design/design/DESIGN-10-binary-reservoir.md,other,DESIGN-10. Бинарный резервуар,116,8950,1,0,,0,
+docs-v2/_raw/2026-08-pre-v2/design/design/DESIGN-11-budgeter-homeostat.md,other,DESIGN-11. Сопряжённый бюджетер рядов Cauldron и гомеостат коридоров,152,12359,0,0,,0,
+docs-v2/_raw/2026-08-pre-v2/design/design/DESIGN-12-fnl-taskcell.md,other,DESIGN-12. FNL (карантин свежих элементов) и TaskCell (эфемерные задачные инстансы),140,11210,0,0,,0,
+docs-v2/_raw/2026-08-pre-v2/design/design/DESIGN-13-action-registry.md,other,DESIGN-13. Реестр действий с ioSchema (контракты Хоара / доменный слой PDDL),146,17503,0,0,,0,
+docs-v2/_raw/2026-08-pre-v2/design/design/DESIGN-14-bir-consumer-migration.md,other,"DESIGN-14. Миграция потребителей на BIR (Критерий A, SPEC-002)",51,5163,0,1,io.matrix.bir.BooleanRuntime,0,
+docs-v2/_raw/2026-08-pre-v2/design/design/DESIGN-15-ac3-planner-preprocessing.md,other,DESIGN-15. AC-3 предобработка ограничений для ExecutablePlanner,44,3030,1,1,io.matrix.agent.planning.Ac3Solver,0,
+docs-v2/_raw/2026-08-pre-v2/docs-root-flat/AGENTS.md,normative,AGENTS.md — MATRIX (MENTAT),47,3661,0,0,,1,TruthTable.java
+docs-v2/_raw/2026-08-pre-v2/docs-root-flat/API.md,other,MATRIX API Documentation,1039,19702,0,0,,0,
+docs-v2/_raw/2026-08-pre-v2/docs-root-flat/ARCHITECTURE.md,other,MATRIX — Architecture Overview (v3.47),154,5861,1,0,,0,
+docs-v2/_raw/2026-08-pre-v2/docs-root-flat/BRAND_BOOK.md,other,MATRIX Brand Book v1.0,69,2680,1,0,,0,
+docs-v2/_raw/2026-08-pre-v2/docs-root-flat/CLA.md,other,Contributor License Agreement (CLA),60,2237,0,0,,0,
+docs-v2/_raw/2026-08-pre-v2/docs-root-flat/CORPORATE_PARTICIPANTS.md,other,Corporate Participants — Корпоративные участники,64,2482,5,0,,0,
+docs-v2/_raw/2026-08-pre-v2/docs-root-flat/COVERAGE_REPORT.md,other,"MATRIX — Coverage & Static Analysis Report (Wave 21, 2026-07-19)",117,4468,3,37,io.matrix.privacy.storage.CompositeTombstoneStorage;io.matrix.privacy.storage.InMemoryTombstoneStorage;io.matrix.privacy.storage.PostgresTombstoneStorage;io.matrix.privacy.storage.TombstoneStorageFactory;io.matrix.evolution.SelfDescriptionService;io.matrix.privacy.storage.TombstoneStorage;io.matrix.evolution.ProtectedSelfRewrite;io.matrix.ethics.frozen.FrozenEthicalFNL,0,
+docs-v2/_raw/2026-08-pre-v2/docs-root-flat/CRITICAL_GAPS.md,other,MATRIX — Отчёт о критических пробелах (Code Review),265,21971,3,2,io.matrix.privacy.TombstoneService;io.matrix.privacy.Tombstone,16,AdversarialInputFilter.java;AgentLoop.java;CauldronProtocol.java;ConsensusEngine.java;DecisionTree.java;EthicalFilter.java;EvolutionLoop.java;GeneticOperators.java
+docs-v2/_raw/2026-08-pre-v2/docs-root-flat/DEPLOYMENT.md,other,MATRIX Deployment Guide,714,16175,0,1,io.matrix.api.OpenAIChatResource,0,
+docs-v2/_raw/2026-08-pre-v2/docs-root-flat/DISCORD_SETUP.md,other,Discord Server Setup Guide,81,3045,1,0,,0,
+docs-v2/_raw/2026-08-pre-v2/docs-root-flat/GAP_ANALYSIS.md,other,"GAP ANALYSIS: Contradictions, Critical Gaps, and Resolution Plan",203,7608,0,0,,12,matrix-core/src/jmh/java/io/matrix/bir/BirEvaluateBenchmark.java;matrix-core/src/main/java/io/matrix/agent/SubAgent.java;matrix-core/src/main/java/io/matrix/bir/DecisionTreeAdapter.java;matrix-core/src/main/java/io/matrix/bir/JvmSimdBackend.java;matrix-core/src/main/java/io/matrix/bir/SubstrateBackend.java;matrix-core/src/main/java/io/matrix/bir/TruthTableAdapter.java;matrix-core/src/main/java/io/matrix/memory/SqliteMemoryBackend.java;matrix-core/src/main/java/io/matrix/signals/AudioSignalModule.java
+docs-v2/_raw/2026-08-pre-v2/docs-root-flat/GITHUB_PAGES.md,other,MATRIX GitHub Pages,58,1938,0,0,,0,
+docs-v2/_raw/2026-08-pre-v2/docs-root-flat/GLOSSARY.md,other,Глоссарий MATRIX,183,136616,0,0,,1,mediator/InstanceMediator.java
+docs-v2/_raw/2026-08-pre-v2/docs-root-flat/HARDWARE_ANALYSIS.md,other,Анализ аппаратных мощностей — MATRIX,112,4440,0,0,,0,
+docs-v2/_raw/2026-08-pre-v2/docs-root-flat/IMPLEMENTATION_GUIDE.md,other,MATRIX IMPLEMENTATION GUIDE,405,13020,2,0,,1,DefaultBrainPipeline.java
+docs-v2/_raw/2026-08-pre-v2/docs-root-flat/INDEX.md,other,Документация MATRIX — карта,96,50569,1,0,,0,
+docs-v2/_raw/2026-08-pre-v2/docs-root-flat/L0_manifesto.md,other,L0 — Манифест МАТРИЦЫ,147,15163,0,0,,0,
+docs-v2/_raw/2026-08-pre-v2/docs-root-flat/L10_Monitoring.md,other,"L10 — Мониторинг, наблюдаемость и SRE-практики",268,13751,0,1,io.matrix.neuron.TruthTable,0,
+docs-v2/_raw/2026-08-pre-v2/docs-root-flat/L11_Mangement.md,other,L11 — Сообщество и управление проектом,193,17237,0,0,,0,
+docs-v2/_raw/2026-08-pre-v2/docs-root-flat/L12_Legal.md,other,L12 — Юридическая и лицензионная стратегия,249,21837,0,0,,0,
+docs-v2/_raw/2026-08-pre-v2/docs-root-flat/L13_Pilot.md,other,L13 — Пилотные проекты и демонстрационные сценарии,290,22568,0,0,,0,
+docs-v2/_raw/2026-08-pre-v2/docs-root-flat/L14_BusinessModel.md,other,L14 — Бизнес-модель и устойчивость,254,19832,1,0,,0,
+docs-v2/_raw/2026-08-pre-v2/docs-root-flat/L15_LearningProgram.md,other,L15 — Образовательная программа,298,17393,0,0,,0,
+docs-v2/_raw/2026-08-pre-v2/docs-root-flat/L16_PhysicalInterfaces.md,other,L16 — Физические интерфейсы,280,15889,0,0,,0,
+docs-v2/_raw/2026-08-pre-v2/docs-root-flat/L17.md,other,L17 — Онбординг и руководство контрибьютора,226,13097,0,0,,0,
+docs-v2/_raw/2026-08-pre-v2/docs-root-flat/L18.md,other,"L18 — Тестирование, CI/CD и качество кода",356,18776,0,0,,1,matrix.java
+docs-v2/_raw/2026-08-pre-v2/docs-root-flat/L19.md,other,L19 — Глобальное сообщество и культурная адаптация,170,15706,0,0,,0,
+docs-v2/_raw/2026-08-pre-v2/docs-root-flat/L1_MPDT_neuron.md,other,L1 — Формальная спецификация MPDT-нейрона,282,17681,0,0,,0,
+docs-v2/_raw/2026-08-pre-v2/docs-root-flat/L20.md,other,L20 — Медиа-стратегия и связи с общественностью,250,19392,0,0,,0,
+docs-v2/_raw/2026-08-pre-v2/docs-root-flat/L22.md,other,L21 — Партнёрства с университетами и исследователями,294,23523,0,0,,0,
+docs-v2/_raw/2026-08-pre-v2/docs-root-flat/L23.md,other,L22 — Взаимодействие с корпоративными участниками,264,20919,0,0,,0,
+docs-v2/_raw/2026-08-pre-v2/docs-root-flat/L2_Iteraction_protocol.md,other,"L2 — Протоколы взаимодействия, маршрутизации и консенсуса",332,21739,0,0,,0,
+docs-v2/_raw/2026-08-pre-v2/docs-root-flat/L3_Neurocluster_Arch.md,other,L3 — Архитектура нейронных кластеров и функциональных нейронных долей (FNL),285,22324,0,0,,0,
+docs-v2/_raw/2026-08-pre-v2/docs-root-flat/L4_Mediator.md,other,"L4 — Медиатор, драйверы и проактивное вовлечение",361,31349,0,0,,0,
+docs-v2/_raw/2026-08-pre-v2/docs-root-flat/L5_DNA.md,other,"L5 — Геном: эволюционное обучение, сжатие и безопасность",306,27391,0,0,,0,
+docs-v2/_raw/2026-08-pre-v2/docs-root-flat/L6_Memory.md,other,"L6 — Память мира: гибридное хранилище, когнитивное хранилище и распространение снапшотов",347,23449,0,0,,0,
+docs-v2/_raw/2026-08-pre-v2/docs-root-flat/L7_Ethics.md,other,L7 — Врата восприятия: мультимодальный прокси и Этический фильтр,246,21324,0,0,,0,
+docs-v2/_raw/2026-08-pre-v2/docs-root-flat/L8_Roadmap.md,other,"L8 — Дорога в Ноосферу: дорожная карта, интеграция и протокол разработки",415,31279,6,0,,0,
+docs-v2/_raw/2026-08-pre-v2/docs-root-flat/L9_Deployment.md,other,L9 — Руководство по развёртыванию и эксплуатации,535,17557,1,0,,0,
+docs-v2/_raw/2026-08-pre-v2/docs-root-flat/LONGTERM_PLAN.md,other,LONGTERM PLAN — MATRIX v1.1.0 → v2.0.0,325,17668,0,0,,0,
+docs-v2/_raw/2026-08-pre-v2/docs-root-flat/MASTER_PLAN.md,other,MASTER PLAN — MATRIX v3.1,736,40952,1,0,,43,agent/AgentAction.java;agent/AgentBrainService.java;agent/AgentGenome.java;agent/AgentLoop.java;agent/AgentState.java;benchmark/CompressionBenchmark.java;cauldron/CauldronProtocol.java;cluster/NeuronClusterActor.java
+docs-v2/_raw/2026-08-pre-v2/docs-root-flat/MATRIX_TEAM.md,other,Команда разработки AGI-системы MATRIX,176,13888,4,0,,4,BooleanRag.java;RagResult.java;benchmark/CompressionBenchmark.java;rag/RagResult.java
+docs-v2/_raw/2026-08-pre-v2/docs-root-flat/MATRIX_V3_ARCHITECTURE.md,other,MATRIX v3.0 — Глубокая архитектурная ревизия,590,29176,0,0,,0,
+docs-v2/_raw/2026-08-pre-v2/docs-root-flat/MATRIX_V3_IMPLEMENTATION_PLAN.md,other,MATRIX v3.0 — Master Implementation Plan,848,28759,12,0,,0,
+docs-v2/_raw/2026-08-pre-v2/docs-root-flat/MATRIX_реформа_документации_и_harness.md,other,Реформа документации и harness MATRIX,160,18852,3,0,,0,
+docs-v2/_raw/2026-08-pre-v2/docs-root-flat/MATRIX_стратегический_аудит_и_план.md,other,Стратегический аудит и план развития MATRIX (MENTAT),670,129999,1,0,,0,
+docs-v2/_raw/2026-08-pre-v2/docs-root-flat/MODEL_RECOMMENDATIONS.md,other,Рекомендации моделей для MATRIX pretraining,350,14024,0,0,,0,
+docs-v2/_raw/2026-08-pre-v2/docs-root-flat/NATIVE_BUILD.md,other,GraalVM Native Image Build — MATRIX,20,583,0,0,,0,
+docs-v2/_raw/2026-08-pre-v2/docs-root-flat/NATIVE_COMPILATION.md,other,GraalVM Native Image Compilation — MATRIX,245,7788,4,2,io.matrix.cluster.NeuronClusterActor;io.matrix.events.R2dbcEventJournal,0,
+docs-v2/_raw/2026-08-pre-v2/docs-root-flat/OPEN_PROBLEMS.md,other,Open Problems — MATRIX Research Directions,173,6597,11,0,,0,
+docs-v2/_raw/2026-08-pre-v2/docs-root-flat/PARTNERSHIPS.md,other,Partnerships — Реестр партнёрств,59,2108,2,0,,0,
+docs-v2/_raw/2026-08-pre-v2/docs-root-flat/PLAYER_GUIDE.md,other,MATRIX Player Guide — Minecraft Client Setup,85,3680,0,0,,0,
+docs-v2/_raw/2026-08-pre-v2/docs-root-flat/PRIVACY.md,other,Privacy Policy (PRIVACY.md),59,2129,4,0,,0,
+docs-v2/_raw/2026-08-pre-v2/docs-root-flat/PROJECT_AUDIT_2026-07-25.md,other,M.A.T.R.I.X. Project Audit — 2026-07-25,341,17664,1,0,,0,
+docs-v2/_raw/2026-08-pre-v2/docs-root-flat/PROJECT_AUDIT_v3.58.md,other,M.A.T.R.I.X. — Documentation Audit Report,190,7303,0,0,,1,TruthTable.java
+docs-v2/_raw/2026-08-pre-v2/docs-root-flat/REBUILD_PLAN.md,other,MATRIX REBUILD PLAN,332,17535,10,0,,1,agent/SubAgent.java
+docs-v2/_raw/2026-08-pre-v2/docs-root-flat/REBUILD_SYNTHESIS.md,other,MATRIX REBUILD SYNTHESIS,370,28876,0,0,,46,matrix-actions/.../ActionRegistry.java;matrix-actions/.../PddlMapper.java;matrix-bir/.../BddForm.java;matrix-bir/.../BooleanRuntime.java;matrix-bir/.../ClauseSetForm.java;matrix-bir/.../Compiler.java;matrix-bir/.../EvaluateBenchmark.java;matrix-bir/.../TruthTableAdapter.java
+docs-v2/_raw/2026-08-pre-v2/docs-root-flat/REQUIREMENTS.md,other,MATRIX — Единый свод требований (Requirements Specification),444,46586,1,0,,9,AgentLoop.java;CauldronProtocol.java;ConsensusEngine.java;DecisionTree.java;EthicalFilter.java;EvolutionLoop.java;HadesProtocol.java;StructuralSafetyGuard.java
+docs-v2/_raw/2026-08-pre-v2/docs-root-flat/RUNBOOK.md,other,M.A.T.R.I.X. — Operations Runbook,227,5155,0,0,,1,TruthTable.java
+docs-v2/_raw/2026-08-pre-v2/docs-root-flat/TRANSLATIONS.md,other,Translations — Многоязычная поддержка,52,1752,0,0,,0,
+docs-v2/_raw/2026-08-pre-v2/docs-root-flat/V3_CONFIGURATION.md,other,v3.0 Configuration Reference — MATRIX,290,8177,0,6,io.matrix.reasoning.BrcChain;io.matrix.vqvae.VqVaeProxy;io.matrix.agent.AgentLoop;io.matrix.rag.BooleanRag;io.matrix.vqvae.CodeBook;io.matrix.mcts.MctsTree,0,
+docs-v2/_raw/2026-08-pre-v2/docs-root-flat/VIDEO_COURSE.md,other,MATRIX Video Course — 7 Modules,83,2786,0,0,,12,ethics/EthicalFilter.java;events/EventJournal.java;evolution/EvolutionLoop.java;evolution/GeneticOperators.java;hades/HadesProtocol.java;mediator/DriverState.java;mediator/InstanceMediator.java;minecraft/BlockAgent.java
+docs-v2/_raw/2026-08-pre-v2/docs-root-flat/WAL-w32.md,other,"WAL — 2026-08-24, компактификация (сессия прервана по запросу)",61,5559,0,0,,0,
+docs-v2/_raw/2026-08-pre-v2/docs-root-flat/WAVE_35_AUTONOMOUS_TRAINING.md,other,Wave 35 — Autonomous Dialogue Training Pipeline,149,8267,0,0,,0,
+docs-v2/_raw/2026-08-pre-v2/docs-root-flat/architecture.md,other,MATRIX AGI — Runtime Architecture,7,141,0,0,,0,
+docs-v2/_raw/2026-08-pre-v2/docs-root-flat/d13.md,other,DESIGN-13. Реестр действий с ioSchema (контракты Хоара / доменный слой PDDL),146,17504,0,0,,0,
+docs-v2/_raw/2026-08-pre-v2/docs-root-flat/gl_w20.md,other,Глоссарий MATRIX,143,88471,0,0,,1,mediator/InstanceMediator.java
+docs-v2/_raw/2026-08-pre-v2/docs-root-flat/gl_w21.md,other,Глоссарий MATRIX,146,92188,0,0,,1,mediator/InstanceMediator.java
+docs-v2/_raw/2026-08-pre-v2/docs-root-flat/gl_w22.md,other,Глоссарий MATRIX,149,95393,0,0,,1,mediator/InstanceMediator.java
+docs-v2/_raw/2026-08-pre-v2/docs-root-flat/gl_w23.md,other,Глоссарий MATRIX,152,99083,0,0,,1,mediator/InstanceMediator.java
+docs-v2/_raw/2026-08-pre-v2/docs-root-flat/gl_w24.md,other,Глоссарий MATRIX,155,102993,0,0,,1,mediator/InstanceMediator.java
+docs-v2/_raw/2026-08-pre-v2/docs-root-flat/gl_w25.md,other,Глоссарий MATRIX,162,108514,0,0,,1,mediator/InstanceMediator.java
+docs-v2/_raw/2026-08-pre-v2/docs-root-flat/gl_w26.md,other,Глоссарий MATRIX,165,111800,0,0,,1,mediator/InstanceMediator.java
+docs-v2/_raw/2026-08-pre-v2/docs-root-flat/gl_w27.md,other,Глоссарий MATRIX,168,115435,0,0,,1,mediator/InstanceMediator.java
+docs-v2/_raw/2026-08-pre-v2/docs-root-flat/gl_w28.md,other,Глоссарий MATRIX,171,119088,0,0,,1,mediator/InstanceMediator.java
+docs-v2/_raw/2026-08-pre-v2/docs-root-flat/gl_w29.md,other,Глоссарий MATRIX,174,123120,0,0,,1,mediator/InstanceMediator.java
+docs-v2/_raw/2026-08-pre-v2/docs-root-flat/gl_w30.md,other,Глоссарий MATRIX,177,127496,0,0,,1,mediator/InstanceMediator.java
+docs-v2/_raw/2026-08-pre-v2/docs-root-flat/harness_scan.md,other,HARNESS-PRACTICE-SCAN. Индустрия агентных харнессов — скан для MATRIX,118,13616,1,0,,0,
+docs-v2/_raw/2026-08-pre-v2/docs-root-flat/hyp_now.md,other,Гипотезы и эксперименты MATRIX,237,69086,0,0,,0,
+docs-v2/_raw/2026-08-pre-v2/docs-root-flat/hyp_w25.md,other,Гипотезы и эксперименты MATRIX,231,65579,0,0,,0,
+docs-v2/_raw/2026-08-pre-v2/docs-root-flat/hyp_w29.md,other,Гипотезы и эксперименты MATRIX,237,69086,0,0,,0,
+docs-v2/_raw/2026-08-pre-v2/docs-root-flat/hyp_w30.md,other,Гипотезы и эксперименты MATRIX,255,74184,0,0,,0,
+docs-v2/_raw/2026-08-pre-v2/docs-root-flat/idx_d13.md,other,Документация MATRIX — карта,94,32680,1,0,,0,
+docs-v2/_raw/2026-08-pre-v2/docs-root-flat/idx_new.md,other,Документация MATRIX — карта,93,29996,1,0,,0,
+docs-v2/_raw/2026-08-pre-v2/docs-root-flat/idx_w20.md,other,Документация MATRIX — карта,93,31640,1,0,,0,
+docs-v2/_raw/2026-08-pre-v2/docs-root-flat/idx_w21.md,other,Документация MATRIX — карта,94,33529,1,0,,0,
+docs-v2/_raw/2026-08-pre-v2/docs-root-flat/idx_w22.md,other,Документация MATRIX — карта,94,34341,1,0,,0,
+docs-v2/_raw/2026-08-pre-v2/docs-root-flat/idx_w23.md,other,Документация MATRIX — карта,94,35466,1,0,,0,
+docs-v2/_raw/2026-08-pre-v2/docs-root-flat/idx_w24.md,other,Документация MATRIX — карта,94,37155,1,0,,0,
+docs-v2/_raw/2026-08-pre-v2/docs-root-flat/idx_w25.md,other,Документация MATRIX — карта,94,38844,1,0,,0,
+docs-v2/_raw/2026-08-pre-v2/docs-root-flat/idx_w25b.md,other,Документация MATRIX — карта,95,39170,1,0,,0,
+docs-v2/_raw/2026-08-pre-v2/docs-root-flat/idx_w26.md,other,Документация MATRIX — карта,95,40663,1,0,,0,
+docs-v2/_raw/2026-08-pre-v2/docs-root-flat/idx_w27.md,other,Документация MATRIX — карта,95,42394,1,0,,0,
+docs-v2/_raw/2026-08-pre-v2/docs-root-flat/idx_w28.md,other,Документация MATRIX — карта,95,44178,1,0,,0,
+docs-v2/_raw/2026-08-pre-v2/docs-root-flat/idx_w29.md,other,Документация MATRIX — карта,95,46413,1,0,,0,
+docs-v2/_raw/2026-08-pre-v2/docs-root-flat/idx_w30.md,other,Документация MATRIX — карта,95,48348,1,0,,0,
+docs-v2/_raw/2026-08-pre-v2/docs-root-flat/idx_w30b.md,other,Документация MATRIX — карта,96,48606,1,0,,0,
+docs-v2/_raw/2026-08-pre-v2/docs-root-flat/index.en.md,other,MATRIX — A deterministic Boolean compute platform for safe AI,170,6277,0,0,,0,
+docs-v2/_raw/2026-08-pre-v2/docs-root-flat/index.md,other,MATRIX (MENTAT) — детерминированное нейро-символическое ядро,62,3842,0,0,,0,
+docs-v2/_raw/2026-08-pre-v2/docs-root-flat/plan.md,other,Plan — стратегический поворот: SDD-реорганизация + продолжение атласа,47,4718,1,0,,0,
+docs-v2/_raw/2026-08-pre-v2/docs-root-flat/ss_d13.md,other,SYSTEM-SYNTHESIS. Единая система,459,141457,0,0,,0,
+docs-v2/_raw/2026-08-pre-v2/docs-root-flat/ss_new.md,other,SYSTEM-SYNTHESIS. Единая система,411,124055,0,0,,0,
+docs-v2/_raw/2026-08-pre-v2/docs-root-flat/ss_w19.md,other,SYSTEM-SYNTHESIS. Единая система,438,133753,0,0,,0,
+docs-v2/_raw/2026-08-pre-v2/docs-root-flat/ss_w20.md,other,SYSTEM-SYNTHESIS. Единая система,459,141164,0,0,,0,
+docs-v2/_raw/2026-08-pre-v2/docs-root-flat/ss_w21.md,other,SYSTEM-SYNTHESIS. Единая система,463,148045,0,0,,0,
+docs-v2/_raw/2026-08-pre-v2/docs-root-flat/ss_w22.md,other,SYSTEM-SYNTHESIS. Единая система,475,155968,0,0,,0,
+docs-v2/_raw/2026-08-pre-v2/docs-root-flat/ss_w23.md,other,SYSTEM-SYNTHESIS. Единая система,488,162695,0,0,,0,
+docs-v2/_raw/2026-08-pre-v2/docs-root-flat/ss_w24.md,other,SYSTEM-SYNTHESIS. Единая система,503,169609,0,0,,0,
+docs-v2/_raw/2026-08-pre-v2/docs-root-flat/ss_w25.md,other,SYSTEM-SYNTHESIS. Единая система,512,176149,0,0,,0,
+docs-v2/_raw/2026-08-pre-v2/docs-root-flat/ss_w26.md,other,SYSTEM-SYNTHESIS. Единая система,521,183496,1,0,,0,
+docs-v2/_raw/2026-08-pre-v2/docs-root-flat/ss_w27.md,other,SYSTEM-SYNTHESIS. Единая система,530,189217,1,0,,0,
+docs-v2/_raw/2026-08-pre-v2/docs-root-flat/ss_w28.md,other,SYSTEM-SYNTHESIS. Единая система,538,195470,1,0,,0,
+docs-v2/_raw/2026-08-pre-v2/docs-root-flat/ss_w29.md,other,SYSTEM-SYNTHESIS. Единая система,543,202691,1,0,,0,
+docs-v2/_raw/2026-08-pre-v2/docs-root-flat/ss_w30.md,other,SYSTEM-SYNTHESIS. Единая система,547,209653,1,0,,0,
+docs-v2/_raw/2026-08-pre-v2/docs-root-flat/tasks.md,other,TASKS. Задачи на реализацию,162,14497,0,0,,0,
+docs-v2/_raw/2026-08-pre-v2/docs-root-flat/w19.md,other,ALGORITHM-ATLAS. Волна 19 (§77–§79),182,16984,0,0,,0,
+docs-v2/_raw/2026-08-pre-v2/docs-root-flat/w20.md,other,ALGORITHM-ATLAS. Волна 20 (§80–§82),172,15890,0,0,,0,
+docs-v2/_raw/2026-08-pre-v2/docs-root-flat/w21.md,other,ALGORITHM-ATLAS. Волна 21 (§83–§85),186,17460,2,0,,0,
+docs-v2/_raw/2026-08-pre-v2/docs-root-flat/w22.md,other,"Атлас алгоритмических школ, волна 22 (§86–§88)",32,14674,0,0,,0,
+docs-v2/_raw/2026-08-pre-v2/docs-root-flat/w23.md,other,"Атлас алгоритмических школ, волна 23",103,10146,0,0,,0,
+docs-v2/_raw/2026-08-pre-v2/docs-root-flat/w24.md,other,"Атлас алгоритмических школ, волна 24",163,16564,0,0,,0,
+docs-v2/_raw/2026-08-pre-v2/docs-root-flat/w25.md,other,"Атлас алгоритмических школ, волна 25",182,18419,0,0,,0,
+docs-v2/_raw/2026-08-pre-v2/docs-root-flat/w26.md,other,"Атлас алгоритмических школ, волна 26",176,16956,0,0,,0,
+docs-v2/_raw/2026-08-pre-v2/docs-root-flat/w27.md,other,"Атлас алгоритмических школ, волна 27",173,16709,0,0,,0,
+docs-v2/_raw/2026-08-pre-v2/docs-root-flat/w28.md,other,"Атлас алгоритмических школ, волна 28",180,17156,0,0,,0,
+docs-v2/_raw/2026-08-pre-v2/docs-root-flat/w29.md,other,"Атлас алгоритмических школ, волна 29",198,18222,0,0,,0,
+docs-v2/_raw/2026-08-pre-v2/docs-root-flat/w30.md,other,"Атлас алгоритмических школ, волна 30",187,17329,0,0,,0,
+docs-v2/_raw/2026-08-pre-v2/docs-root-flat/wave15.md,other,"Волна 15. Навыки из подкрепления, контуры без вычислений, степени подтверждения",251,31029,0,0,,0,
+docs-v2/_raw/2026-08-pre-v2/docs-root-flat/wave16.md,other,Атлас алгоритмов — Волна 16 (§68–§70),131,31737,2,0,,0,
+docs-v2/_raw/2026-08-pre-v2/docs-root-flat/wave17.md,other,Атлас алгоритмов — Волна 17 (§71–§73),121,29052,0,0,,0,
+docs-v2/_raw/2026-08-pre-v2/docs-specs/WAVE_22_E2E_INTEGRATION.md,other,Wave 22: E2E Integration Test Suite — Specification,151,4736,2,0,,0,
+docs-v2/_raw/2026-08-pre-v2/engineering/engineering/ADR-001-matrix-vs-rag-system-roles.md,other,ADR-001: rag-system как внешняя зависимость MATRIX,32,5422,0,0,,1,rag/HybridBooleanRag.java
+docs-v2/_raw/2026-08-pre-v2/engineering/engineering/ADR-002-bir-canonical-representation.md,other,ADR-002. BIR как единое каноническое представление артефактов,53,6746,0,0,,0,
+docs-v2/_raw/2026-08-pre-v2/engineering/engineering/ADR-003-tsetlin-producers-over-living-mechanisms.md,other,ADR-003. Автоматы Цетлина как базовые producers BIR; «живые» механизмы — только через эксперимент,45,5582,0,0,,0,
+docs-v2/_raw/2026-08-pre-v2/engineering/engineering/ADR-004-cauldron-budget-scheduling.md,other,"ADR-004. Планировщик бюджетов рядов Cauldron: расписание Левина как базовое, сопряжённый DP как ставка; гомеостат коридоров",49,7731,0,0,,0,
+docs-v2/_raw/2026-08-pre-v2/engineering/engineering/ADR-005-three-valued-gate-verdicts.md,other,"ADR-005. Трёхзначный вердикт гейтов: accept / reject / undecided, witness обязателен, два класса отказа",48,6253,0,0,,0,
+docs-v2/_raw/2026-08-pre-v2/engineering/engineering/ADR-006-llm-and-external-stores-not-dependencies.md,other,ADR-006. LLM и внешние хранилища — не зависимости системы,43,6795,0,0,,0,
+docs-v2/_raw/2026-08-pre-v2/engineering/engineering/ARC42-RISKS.md,other,"ARC42, раздел 11. Риски и технический долг",40,8233,0,0,,0,
+docs-v2/_raw/2026-08-pre-v2/engineering/engineering/C4.md,other,C4-модель MATRIX/MENTAT,143,11142,0,0,,0,
+docs-v2/_raw/2026-08-pre-v2/engineering/engineering/DESIGN-14-call-site-audit.md,other,DESIGN-14 — Аннекс: реестр булевых call-sites вне BIR,80,7064,0,0,,8,api/OpenAIChatResource.java;dialog/ChatBot.java;explainability/ExplanationGenerator.java;matrix-core/src/test/java/io/matrix/bir/Inv1SourceGuardTest.java;mcts/MctsTree.java;minecraft/NeuralBrain.java;neuron/BatchEvaluator.java;neuron/HierarchicalBrain.java
+docs-v2/_raw/2026-08-pre-v2/engineering/engineering/JAVA_NATIVE.md,other,"JAVA_NATIVE: GraalVM native-image, ограничения JMM и путь субстратов",50,7259,0,0,,0,
+docs-v2/_raw/2026-08-pre-v2/engineering/engineering/JAVA_STACK.md,other,Технологический стек MATRIX: решения и отказы,50,5517,0,0,,0,
+docs-v2/_raw/2026-08-pre-v2/engineering/engineering/PLAN-FULL-IMPLEMENTATION.md,other,"PLAN: Полная реализация спецификаций, дизайнов и гипотез MATRIX",109,15596,0,1,io.matrix.runtime.RuntimeLimits,0,
+docs-v2/_raw/2026-08-pre-v2/engineering/engineering/ROADMAP.md,other,Дорожная карта MATRIX,76,9544,0,0,,0,
+docs-v2/_raw/2026-08-pre-v2/engineering/engineering/SDD-COVERAGE.md,other,SDD Coverage Map — код ↔ спецификации,142,12223,0,0,,2,ConsensusEngine.java;MatrixSimulation.java
+docs-v2/_raw/2026-08-pre-v2/improvements/improvements/FEDERATED_LEARNING.md,other,Federated Learning — Implementation Plan,333,9541,0,0,,6,matrix-core/src/main/java/io/matrix/federated/CompressionCodec.java;matrix-core/src/main/java/io/matrix/federated/FederatedProtocol.java;matrix-core/src/main/java/io/matrix/federated/FederatedResource.java;matrix-core/src/main/java/io/matrix/federated/LocalTrainer.java;matrix-core/src/main/java/io/matrix/federated/PrivacyMechanism.java;matrix-core/src/main/java/io/matrix/federated/SecureAggregator.java
+docs-v2/_raw/2026-08-pre-v2/improvements/improvements/FORMAL_VERIFICATION.md,other,Formal Verification — Implementation Plan,264,7480,1,0,,5,matrix-core/src/main/java/io/matrix/verification/ContinuousVerifier.java;matrix-core/src/main/java/io/matrix/verification/PropertyViolation.java;matrix-core/src/main/java/io/matrix/verification/RuntimeVerifier.java;matrix-core/src/main/java/io/matrix/verification/VerificationReport.java;matrix-core/src/test/java/io/matrix/verification/PropertyBasedTest.java
+docs-v2/_raw/2026-08-pre-v2/improvements/improvements/FPGA_SYNTHESIS.md,other,FPGA Synthesis — Implementation Plan,182,4508,0,0,,2,matrix-core/src/main/java/io/matrix/fpga/FpgaAccelerator.java;matrix-core/src/main/java/io/matrix/fpga/FpgaBridge.java
+docs-v2/_raw/2026-08-pre-v2/improvements/improvements/GRAALVM_NATIVE.md,other,GraalVM Native Compilation — Implementation Plan,153,3795,0,6,io.matrix.cluster.NeuronClusterActor;io.matrix.events.KafkaEventJournal;io.matrix.evolution.Chromosome;io.matrix.neuron.DecisionTree;io.matrix.neuron.TruthTable;io.matrix.neuron.Decision,0,
+docs-v2/_raw/2026-08-pre-v2/improvements/improvements/MULTIMODAL_LEARNING.md,other,Multi-modal Learning — Implementation Plan,263,7184,3,0,,5,matrix-core/src/main/java/io/matrix/multimodal/CrossModalAligner.java;matrix-core/src/main/java/io/matrix/multimodal/FeatureExtractor.java;matrix-core/src/main/java/io/matrix/multimodal/MultimodalInference.java;matrix-core/src/main/java/io/matrix/multimodal/MultimodalTrainer.java;matrix-core/src/main/java/io/matrix/multimodal/UnifiedRepresentation.java
+docs-v2/_raw/2026-08-pre-v2/improvements/improvements/P2P_NOOSPHERE.md,other,P2P Noosphere — Implementation Plan,284,7946,0,0,,6,matrix-core/src/main/java/io/matrix/noosphere/p2p/KnowledgeConsensus.java;matrix-core/src/main/java/io/matrix/noosphere/p2p/P2PNetwork.java;matrix-core/src/main/java/io/matrix/noosphere/p2p/P2PResource.java;matrix-core/src/main/java/io/matrix/noosphere/p2p/PeerDiscovery.java;matrix-core/src/main/java/io/matrix/noosphere/p2p/PrivacyPreserver.java;matrix-core/src/main/java/io/matrix/noosphere/p2p/TrustManager.java
+docs-v2/_raw/2026-08-pre-v2/improvements/improvements/PERFORMANCE_OPTIMIZATION.md,other,Performance Optimization — Implementation Plan,259,7329,1,0,,6,matrix-core/src/jmh/java/io/matrix/benchmark/TruthTableBenchmark.java;matrix-core/src/main/java/io/matrix/events/BatchKafkaJournal.java;matrix-core/src/main/java/io/matrix/evolution/ParallelEvolution.java;matrix-core/src/main/java/io/matrix/neuron/SimdTruthTableEval.java;matrix-core/src/main/java/io/matrix/rag/IndexedBooleanRag.java;matrix-core/src/main/java/io/matrix/redis/PooledRedisConfig.java
+docs-v2/_raw/2026-08-pre-v2/improvements/improvements/ROS2_INTEGRATION.md,other,ROS2 Integration — Implementation Plan,239,6414,0,0,,0,
+docs-v2/_raw/2026-08-pre-v2/research/research/2026-07-10_AI_ML_Architectures_vs_MPDT.md,other,Research Dossier: Modern AI/ML Architectures vs. MATRIX MPDT Boolean Neuron System,798,41526,32,0,,0,
+docs-v2/_raw/2026-08-pre-v2/research/research/AI_AGENT_SYSTEMS_RESEARCH_2026_Q3.md,other,"Research Dossier: AI Agent Systems, Boolean Neural Networks & Genetic Algorithms",638,25730,18,0,,14,AgentLoop.java;BooleanRag.java;ConsensusProtocol.java;HierarchicalMemory.java;HybridBooleanRag.java;MctsTree.java;RrfFusion.java;StructuralSafetyGuard.java
+docs-v2/_raw/2026-08-pre-v2/research/research/ANALYSIS-laptop-feasibility.md,other,"Анализ: пробелы, возможности и расчёт ноутбучной реализуемости MATRIX vs маленькие LLM",93,12234,0,0,,0,
+docs-v2/_raw/2026-08-pre-v2/research/research/HYPOTHESES.md,other,Гипотезы и эксперименты MATRIX,271,78422,0,1,io.matrix.tsetlin.MedianThresholdBinarizer,0,
+docs-v2/_raw/2026-08-pre-v2/research/research/METRICS.md,other,Реестр метрик MATRIX,89,8717,0,0,,0,
+docs-v2/_raw/2026-08-pre-v2/research/research/RESEARCH_SYNTHESIS_2026_Q3.md,other,Research Synthesis Report — MATRIX v3.0,378,15322,0,0,,5,agent/AgentLoop.java;cluster/NeuronClusterActor.java;ethics/EthicalFilter.java;neuron/TruthTable.java;rag/BooleanRag.java
+docs-v2/_raw/2026-08-pre-v2/research/research/RESEARCH_SYNTHESIS_2026_Q3_v2.md,other,Research Synthesis v2 — MATRIX v3.10,557,34075,2,0,,56,AdversarialInputFilter.java;AdversarialInputFilterTest.java;AgentGenome.java;AgentLoop.java;AgentPipeline.java;AgentTrace.java;AsyncAgentLoop.java;BooleanRag.java
+docs-v2/_raw/2026-08-pre-v2/research/research/SINV_ANALYSIS_REPORT.md,other,SINV Forum Ideas Analysis Report,492,29369,0,0,,0,
+docs-v2/_raw/2026-08-pre-v2/research/research/SYNTHESIS_COMPLETE.md,other,Research Synthesis — Implementation Status,63,2666,0,0,,17,ScadaSafetyMonitor.java;agent/AgentResponse.java;agent/AgentTrajectoryRecorder.java;agent/react/ReflexionMemory.java;ethics/LieDetector.java;evolution/AgentGenome.java;evolution/MetaHarnessOptimizer.java;evolution/ParetoFitness.java
+docs-v2/_raw/2026-08-pre-v2/research/research/TASKS.md,other,TASKS. Задачи на реализацию,201,18428,0,0,,0,
+docs-v2/_raw/2026-08-pre-v2/research/research/notes/BIR-THEORY-scan.md,other,"Литературно-алгоритмический обзор: теория для BIR (SPEC-002, этапы A/B)",199,35055,0,0,,0,
+docs-v2/_raw/2026-08-pre-v2/research/research/notes/DUALITY-baselines.md,other,Baseline-протокол: Дуальность и рационализаторское зерно,144,8265,0,0,,0,
+docs-v2/_raw/2026-08-pre-v2/research/research/notes/DUALITY-extensions.md,other,Расширения исследования дуальности: нейрофизиологические и культурные механизмы,215,20528,0,0,,0,
+docs-v2/_raw/2026-08-pre-v2/research/research/notes/DUALITY-operational-defs.md,other,Операциональные определения: Дуальность мира и рационализаторское зерно,168,12386,0,0,,0,
+docs-v2/_raw/2026-08-pre-v2/research/research/notes/DUALITY-socio-cognitive.md,other,Расширение исследования дуальности: социо-когнитивные механизмы,315,36164,2,0,,0,
+docs-v2/_raw/2026-08-pre-v2/research/research/notes/DUALITY-sources.md,other,Источники: Дуальность мира (мужское/женское) и рационализаторское зерно,97,19151,0,0,,0,
+docs-v2/_raw/2026-08-pre-v2/research/research/notes/HARNESS-PRACTICE-scan.md,other,HARNESS-PRACTICE-SCAN. Индустрия агентных харнессов — скан для MATRIX,118,13616,1,0,,0,
+docs-v2/_raw/2026-08-pre-v2/research/research/papers/PAPER-01-hybrid-boolean-compute-laptop.md,other,"Гибридный булев вычислительный слой на ноутбучном железе: ёмкость представления, latency и энергия в сравнении с локальными LLM",64,10918,0,0,,0,
+docs-v2/_raw/2026-08-pre-v2/research/research/papers/README.md,operational-manual,Публикации MATRIX — протокол автогенерации,19,3120,0,0,,0,
+docs-v2/_raw/2026-08-pre-v2/research/research/prototype-java/README.md,operational-manual,"prototype-java — модули сигналов на BIR (Java, без зависимостей)",35,2572,0,0,,0,
+docs-v2/_raw/2026-08-pre-v2/research/research/prototype/RESULTS.md,other,"Результаты прототипа BIR (numpy, ноутбучное железо)",67,7368,0,0,,0,
+docs-v2/_raw/2026-08-pre-v2/research/research/reports/EXP-002-report.md,other,EXP-002 Report — CLAUSESET (Tsetlin) vs MPDT-GA producer,30,2758,0,1,io.matrix.tsetlin.TsetlinTrainer,0,
+docs-v2/_raw/2026-08-pre-v2/research/research/reports/EXP-003-report.md,other,EXP-003 Report — «Живой обучатель» (GA) против Tsetlin как producer,17,1454,0,0,,0,
+docs-v2/_raw/2026-08-pre-v2/research/research/reports/EXP-009-report.md,other,EXP-009B 2026-08-25 — первые измерения CPU-инференса (учитель ONNX → дистиллят BIR),28,2323,1,0,,0,
+docs-v2/_raw/2026-08-pre-v2/research/research/reports/EXP-010-report.md,other,EXP-010 Report — Single-pass WNN (WiSARD) vs TsetlinTrainer,51,3947,1,0,,1,matrix-core/src/test/java/io/matrix/tsetlin/Exp010ComparisonTest.java
+docs-v2/_raw/2026-08-pre-v2/research/research/reports/EXP-023-card.md,other,EXP-023 — Preregistered протокол: Дуальность мира и рационализаторское зерно,317,25476,0,0,,0,
+docs-v2/_raw/2026-08-pre-v2/research/research/reports/EXP-023-report.md,other,EXP-023 — Preregistered Skeleton Report,103,2471,0,0,,0,
+docs-v2/_raw/2026-08-pre-v2/research/research/reports/EXP-024-report.md,other,EXP-024 — Preregistered Skeleton Report,56,1358,0,0,,0,
+docs-v2/_raw/2026-08-pre-v2/research/research/reports/EXP-025-report.md,other,EXP-025 — Preregistered Skeleton Report,76,1704,0,0,,0,
+docs-v2/_raw/2026-08-pre-v2/research/research/reports/EXP-026-report.md,other,EXP-026 — Preregistered Skeleton Report,61,1478,0,0,,0,
+docs-v2/_raw/2026-08-pre-v2/research/research/reports/TM-CONVERGENCE-AUDIT-PLAN.md,other,TM Convergence Audit Plan — EXP-002 pre-stage closeout,202,17561,0,0,,0,
+docs-v2/_raw/2026-08-pre-v2/research/research/scripts/duality_README.md,other,DUALITY Protocol — Preregistered инструкция,55,2885,0,0,,0,
+docs-v2/_raw/2026-08-pre-v2/science/science/ALGORITHM-ATLAS-WAVE10.md,other,Атлас алгоритмов — Волна 10 (§50–§52),263,32129,0,0,,0,
+docs-v2/_raw/2026-08-pre-v2/science/science/ALGORITHM-ATLAS-WAVE11.md,other,Атлас алгоритмов — Волна 11 (§53–§55),226,27317,0,0,,0,
+docs-v2/_raw/2026-08-pre-v2/science/science/ALGORITHM-ATLAS-WAVE12.md,other,Атлас алгоритмов — Волна 12 (§56–§58),242,30774,0,0,,0,
+docs-v2/_raw/2026-08-pre-v2/science/science/ALGORITHM-ATLAS-WAVE13.md,other,Атлас алгоритмов и моделей. Волна 13,304,33980,4,0,,0,
+docs-v2/_raw/2026-08-pre-v2/science/science/ALGORITHM-ATLAS-WAVE14.md,other,Атлас алгоритмов и моделей. Волна 14,279,30502,0,0,,0,
+docs-v2/_raw/2026-08-pre-v2/science/science/ALGORITHM-ATLAS-WAVE15.md,other,"Волна 15. Навыки из подкрепления, контуры без вычислений, степени подтверждения",251,31003,0,0,,0,
+docs-v2/_raw/2026-08-pre-v2/science/science/ALGORITHM-ATLAS-WAVE16.md,other,Атлас алгоритмов — Волна 16 (§68–§70),131,31737,2,0,,0,
+docs-v2/_raw/2026-08-pre-v2/science/science/ALGORITHM-ATLAS-WAVE17.md,other,Атлас алгоритмов — Волна 17 (§71–§73),121,29050,0,0,,0,
+docs-v2/_raw/2026-08-pre-v2/science/science/ALGORITHM-ATLAS-WAVE18.md,other,ALGORITHM-ATLAS. Волна 18 (§74–§76),200,19537,0,0,,0,
+docs-v2/_raw/2026-08-pre-v2/science/science/ALGORITHM-ATLAS-WAVE19.md,other,ALGORITHM-ATLAS. Волна 19 (§77–§79),182,16984,0,0,,0,
+docs-v2/_raw/2026-08-pre-v2/science/science/ALGORITHM-ATLAS-WAVE20.md,other,ALGORITHM-ATLAS. Волна 20 (§80–§82),172,15890,0,0,,0,
+docs-v2/_raw/2026-08-pre-v2/science/science/ALGORITHM-ATLAS-WAVE21.md,other,ALGORITHM-ATLAS. Волна 21 (§83–§85),186,17459,2,0,,0,
+docs-v2/_raw/2026-08-pre-v2/science/science/ALGORITHM-ATLAS-WAVE22.md,other,"Атлас алгоритмических школ, волна 22 (§86–§88)",32,14674,0,0,,0,
+docs-v2/_raw/2026-08-pre-v2/science/science/ALGORITHM-ATLAS-WAVE23.md,other,"Атлас алгоритмических школ, волна 23",103,10146,0,0,,0,
+docs-v2/_raw/2026-08-pre-v2/science/science/ALGORITHM-ATLAS-WAVE24.md,other,"Атлас алгоритмических школ, волна 24",163,16564,0,0,,0,
+docs-v2/_raw/2026-08-pre-v2/science/science/ALGORITHM-ATLAS-WAVE25.md,other,"Атлас алгоритмических школ, волна 25",182,18419,0,0,,0,
+docs-v2/_raw/2026-08-pre-v2/science/science/ALGORITHM-ATLAS-WAVE26.md,other,"Атлас алгоритмических школ, волна 26",176,16956,0,0,,0,
+docs-v2/_raw/2026-08-pre-v2/science/science/ALGORITHM-ATLAS-WAVE27.md,other,"Атлас алгоритмических школ, волна 27",173,16709,0,0,,0,
+docs-v2/_raw/2026-08-pre-v2/science/science/ALGORITHM-ATLAS-WAVE28.md,other,"Атлас алгоритмических школ, волна 28",180,17156,0,0,,0,
+docs-v2/_raw/2026-08-pre-v2/science/science/ALGORITHM-ATLAS-WAVE29.md,other,"Атлас алгоритмических школ, волна 29",198,18222,0,0,,0,
+docs-v2/_raw/2026-08-pre-v2/science/science/ALGORITHM-ATLAS-WAVE30.md,other,"Атлас алгоритмических школ, волна 30",187,17329,0,0,,0,
+docs-v2/_raw/2026-08-pre-v2/science/science/ALGORITHM-ATLAS-WAVE31.md,other,"Атлас алгоритмических школ, волна 31",189,17087,0,0,,0,
+docs-v2/_raw/2026-08-pre-v2/science/science/ALGORITHM-ATLAS-WAVE32.md,other,"Атлас алгоритмических школ, волна 32",185,17565,0,0,,0,
+docs-v2/_raw/2026-08-pre-v2/science/science/ALGORITHM-ATLAS-WAVE4.md,other,"Атлас алгоритмических школ, том 2 (продолжение): волна 4, часть 1 — Китай, Япония",42,21563,1,0,,0,
+docs-v2/_raw/2026-08-pre-v2/science/science/ALGORITHM-ATLAS-WAVE4B.md,other,"Атлас алгоритмических школ, том 2 (продолжение): волна 4, часть 2 — Румыния, Москва, Нидерланды",46,20638,0,0,,0,
+docs-v2/_raw/2026-08-pre-v2/science/science/ALGORITHM-ATLAS-WAVE4C.md,other,"Атлас алгоритмических школ, том 2 (продолжение): волна 4, часть 3 — Британия/Шотландия, Индия II, США, сводная карта",86,30423,0,0,,0,
+docs-v2/_raw/2026-08-pre-v2/science/science/ALGORITHM-ATLAS-WAVE5.md,other,"ALGORITHM-ATLAS, том 2 — волна 5, часть 1 (§33–§34)",60,21122,0,0,,0,
+docs-v2/_raw/2026-08-pre-v2/science/science/ALGORITHM-ATLAS-WAVE5B.md,other,"ALGORITHM-ATLAS, том 2 — волна 5, часть 2 (§35–§37)",60,16791,0,0,,0,
+docs-v2/_raw/2026-08-pre-v2/science/science/ALGORITHM-ATLAS-WAVE6.md,other,"ALGORITHM-ATLAS, том 2 — волна 6 (§38–§40)",52,20043,0,0,,0,
+docs-v2/_raw/2026-08-pre-v2/science/science/ALGORITHM-ATLAS-WAVE7.md,other,Алгоритмический атлас — волна 7 (§41–§43),86,35351,0,0,,0,
+docs-v2/_raw/2026-08-pre-v2/science/science/ALGORITHM-ATLAS-WAVE8.md,other,Алгоритмический атлас — волна 8 (§44–§46),73,29431,0,0,,0,
+docs-v2/_raw/2026-08-pre-v2/science/science/ALGORITHM-ATLAS-WAVE9.md,other,Атлас алгоритмов — Волна 9 (§47–§49),261,33138,0,0,,0,
+docs-v2/_raw/2026-08-pre-v2/science/science/ALGORITHM-ATLAS.md,other,"Атлас алгоритмических школ, том 2: индийские школы, категории, квант, сотовые автоматы, резервуары, академии СНГ",270,106766,0,0,,0,
+docs-v2/_raw/2026-08-pre-v2/science/science/FOUNDATIONS.md,other,Научные основания MATRIX,196,33250,0,0,,0,
+docs-v2/_raw/2026-08-pre-v2/science/science/SUBSTRATE-MODELS.md,other,"Субстратные модели: автоматы, свёрточные схемы, комбинаторика памяти, числовая классификация знаний, мозжечковый слой",221,66563,1,0,,0,
+docs-v2/_raw/2026-08-pre-v2/science/science/SYSTEM-SYNTHESIS.md,other,SYSTEM-SYNTHESIS. Единая система,551,217233,1,0,,0,
+docs-v2/_raw/2026-08-pre-v2/spec/SPEC-000-developmental-loop.md,other,SPEC-000: Developmental Loop (curriculum engine + MA-gates),64,7624,0,0,,0,
+docs-v2/_raw/2026-08-pre-v2/spec/SPEC-001-weight-conversion.md,other,SPEC-001: Верифицируемая конвертация весов (карантин → дистилляция по активациям),57,6848,0,0,,0,
+docs-v2/_raw/2026-08-pre-v2/spec/SPEC-002-boolean-compute-layer.md,other,"SPEC-002: Boolean Compute Layer — BIR, гибридные примитивы, механизмы обучения",97,13624,0,0,,0,
+docs-v2/_raw/2026-08-pre-v2/spec/SPEC-003-knowledge-topology.md,other,"SPEC-003: Топология знаний (Ricci-анализ графов, drift-fingerprint, curriculum-ordering)",49,6417,0,0,,0,
+docs-v2/_raw/2026-08-pre-v2/spec/quantum/BIR-to-MPS.md,other,BIR → MPS: спецификация квантового маппинга,82,12681,0,0,,0,
+docs-v2/_raw/2026-08-pre-v2/staging-wave4/staging-wave4/ALGORITHM-ATLAS-WAVE4.md,other,"Атлас алгоритмических школ, том 2 (продолжение): волна 4, часть 1 — Китай, Япония",42,21563,1,0,,0,
+docs-v2/_raw/2026-08-pre-v2/staging-wave4/staging-wave4/ALGORITHM-ATLAS-WAVE4B.md,other,"Атлас алгоритмических школ, том 2 (продолжение): волна 4, часть 2 — Румыния, Москва, Нидерланды",46,20638,0,0,,0,
+docs-v2/_raw/2026-08-pre-v2/staging-wave4/staging-wave4/ALGORITHM-ATLAS-WAVE4C.md,other,"Атлас алгоритмических школ, том 2 (продолжение): волна 4, часть 3 — Британия/Шотландия, Индия II, США, сводная карта",86,30423,0,0,,0,
+docs-v2/_raw/2026-08-pre-v2/staging-wave4/staging-wave4/ALGORITHM-ATLAS-WAVE5.md,other,"ALGORITHM-ATLAS, том 2 — волна 5, часть 1 (§33–§34)",60,21122,0,0,,0,
+docs-v2/_raw/2026-08-pre-v2/staging-wave4/staging-wave4/ALGORITHM-ATLAS-WAVE5B.md,other,"ALGORITHM-ATLAS, том 2 — волна 5, часть 2 (§35–§37)",60,16839,0,0,,0,
+docs-v2/_raw/2026-08-pre-v2/superpowers/superpowers/plans/2026-05-31-iteration-0.3-plan.md,other,Iteration 0.3 — Implementation Plan,51,1538,0,0,,21,MatrixSimulation.java;evolution/EvolutionLoop.java;evolution/EvolutionLoopTest.java;evolution/FitnessFn.java;evolution/FitnessFnTest.java;evolution/Population.java;evolution/PopulationTest.java;neuron/TruthTable.java
+docs-v2/_raw/2026-08-pre-v2/superpowers/superpowers/plans/2026-05-31-observability-quarkus-plan.md,other,MATRIX Observability + Quarkus Migration — Implementation Plan,1142,34856,5,9,io.matrix.observability.MatrixMetrics;io.matrix.evolution.EvolutionLoop;io.matrix.cli.EvolutionCommand;io.matrix.cli.SimulateCommand;io.matrix.evolution.FitnessFn;io.matrix.neuron.DecisionTree;io.matrix.cli.DemoCommand;io.matrix.neuron.Decision,26,EvolutionLoop.java;HadesProtocol.java;InstanceMediator.java;MatrixSimulation.java;MinecraftExperiment.java;SurvivalRunner.java;SystemDemo.java;matrix-core/src/main/java/io/matrix/LongEvolutionExperiment.java
+docs-v2/_raw/2026-08-pre-v2/superpowers/superpowers/specs/2026-05-31-iteration-0.3-design.md,other,Iteration 0.3 — GridWorld Simulator & Agent Training,178,5222,0,0,,0,
+docs-v2/_raw/2026-08-pre-v2/superpowers/superpowers/specs/2026-05-31-observability-quarkus-design.md,other,MATRIX Observability + Quarkus Migration — Design Spec,139,6024,4,0,,15,LongEvolutionExperiment.java;NativeCompileTest.java;matrix-core/src/main/java/io/matrix/MatrixApplication.java;matrix-core/src/main/java/io/matrix/MinecraftExperiment.java;matrix-core/src/main/java/io/matrix/cli/DemoCommand.java;matrix-core/src/main/java/io/matrix/cli/EvolutionCommand.java;matrix-core/src/main/java/io/matrix/cli/SimulateCommand.java;matrix-core/src/main/java/io/matrix/cluster/NeuronClusterActor.java
+docs-v2/_raw/2026-08-pre-v2/superpowers/superpowers/specs/2026-05-31-phase-1.1-design.md,other,Phase 1.1 — Infrastructure + NeuronClusterActor,117,3878,0,0,,11,ClusterConfig.java;NeuronClusterActor.java;NeuronClusterActorTest.java;NeuronClusterSerializer.java;NeuronEvent.java;NeuronEventType.java;NeuronId.java;NeuronInstance.java
+docs-v2/_raw/2026-08-pre-v2/vision/vision/ARCHITECTURE.md,other,Целевая архитектура MATRIX,138,19468,0,0,,0,
+docs-v2/_raw/2026-08-pre-v2/vision/vision/GOALS-REQUIREMENTS.md,other,Цели и требования MATRIX — консолидация,60,10734,0,0,,0,
+docs-v2/_raw/2026-08-pre-v2/vision/vision/OPEN_PROBLEMS.md,other,OPEN PROBLEMS — исследовательское видение MATRIX,38,6940,0,0,,0,
+docs-v2/_raw/2026-08-pre-v2/w32/w32/ss32-delta.md,other,Дельта волны 32 к карте системы,72,8825,0,0,,0,
+docs-v2/_raw/2026-08-pre-v2/w32/w32/ss32.md,other,SYSTEM-SYNTHESIS. Единая система,555,223678,1,0,,0,
+docs-v2/_raw/W78-PHIR-RESEARCH-REPORT.md,session-report,W78-ΦR-RESEARCH-REPORT,757,34592,14,2,io.matrix.consciousness.IntegrationMetricsResult;io.matrix.consciousness.IntegrationMetrics,8,ConsciousBrain.java;IntegrationMetrics.java;IntegrationMetricsResult.java;matrix-core/src/main/java/io/matrix/consciousness/IntegrationMetrics.java;matrix-core/src/main/java/io/matrix/consciousness/IntegrationMetricsResult.java;matrix-core/src/main/java/io/matrix/neuron/ConsciousBrain.java;matrix-core/src/test/java/io/matrix/consciousness/IntegrationMetricsTest.java;matrix-core/src/test/java/io/matrix/neuron/ConsciousBrainTest.java
+docs-v2/algorithms/BrcChain.md,other,BRC Chain (послойное булеvo рассуждение),52,3678,0,0,,1,matrix-core/src/main/java/io/matrix/reasoning/BrcChain.java
+docs-v2/algorithms/ConversationProtocol.md,other,Conversation Protocol (Observe → Think → Act цикл),62,4513,0,0,,1,matrix-core/src/main/java/io/matrix/agent/AgentLoop.java
+docs-v2/algorithms/FROZEN-EthicalFNL.md,other,FROZEN Ethical FNL (монотонность запретов),75,4948,0,0,,1,matrix-core/src/main/java/io/matrix/ethics/frozen/FrozenEthicalFNL.java
+docs-v2/algorithms/FederatedMesh.md,other,Federated Mesh (Noosphere M4: CRDT + Quorum + Kafka),63,4726,0,0,,1,matrix-core/src/main/java/io/matrix/noosphere/MeshFederation.java
+docs-v2/algorithms/Hansel-Chains.md,other,Hansel Chains (послойное декодирование монотонных функций),47,4230,0,0,,0,
+docs-v2/algorithms/HashChain-Audit.md,other,Hash-Chain Audit (SHA-256 tamper-evident append-only log),66,4985,0,0,,2,HashLink.java;matrix-core/src/main/java/io/matrix/audit/HashChain.java
+docs-v2/algorithms/Legal-Axioms.md,other,Legal Axioms (FrozenEthicalFNL: монотонный слой запретов),76,6055,0,0,,1,matrix-core/src/main/java/io/matrix/ethics/frozen/FrozenEthicalFNL.java
+docs-v2/algorithms/MPDT-GA.md,other,MPDT-GA (эволюционный baseline с MDL-давлением),55,3739,0,0,,1,matrix-core/src/main/java/io/matrix/evolution/MpdtGaProducer.java
+docs-v2/algorithms/Mcts-Lats.md,other,MCTS + LATS (Value/Reflection-augmented tree search),74,6463,0,0,,0,
+docs-v2/algorithms/Ricci-Fingerprint.md,other,Ricci Fingerprint (Ollivier κ → 24-bin drift → Wasserstein-1),58,4399,0,0,,1,ktopo/RicciFlow.java
+docs-v2/algorithms/Tsetlin-Automaton.md,other,Tsetlin Automaton (Granmo Type I/II),47,4015,0,0,,1,matrix-core/src/main/java/io/matrix/tsetlin/TsetlinAutomaton.java
+docs-v2/algorithms/WiSARD-WNN.md,other,"WiSARD WNN (RAM-гранулярность, однопроходное обучение)",49,3652,0,0,,1,matrix-core/src/main/java/io/matrix/tsetlin/WisardProducer.java
+docs-v2/architecture/ADR-2026-09-12-001-hdc-bitlinear-hybrid-brain.md,architecture,ADR-2026-09-12-001: Adopt HDC × BitLinear Hybrid Brain as Architectural Primitive,97,4674,3,0,,0,
+docs-v2/architecture/ADR-2026-10-26-002-single-cognitive-conductor.md,architecture,ADR-2026-10-26-002 — One cognitive conductor: `TrueMindCycle` is the serving path,140,7822,3,0,,4,matrix-api-gateway/src/main/java/io/matrix/api/brain/ProductionBrainClient.java;matrix-brain-runtime/src/main/java/io/matrix/brain/runtime/MindCycle.java;matrix-brain-runtime/src/main/java/io/matrix/brain/runtime/MindRuntimeCli.java;matrix-brain-runtime/src/test/java/io/matrix/brain/runtime/CognitiveConductorGuardTest.java
+docs-v2/architecture/ADR-2026-10-30-003-hashchain-trust-model.md,architecture,"ADR-2026-10-30-003 — HashChain: trust model, clock, and sequence semantics",122,9250,0,1,io.matrix.audit.HashChain,3,matrix-core/src/main/java/io/matrix/audit/HashChain.java;matrix-core/src/main/java/io/matrix/audit/HashLink.java;matrix-core/src/test/java/io/matrix/audit/HashChainIntegrityTest.java
+docs-v2/architecture/ADR-2026-10-30-004-noosphere-crdt-semantics.md,architecture,"ADR-2026-10-30-004 — Noosphere CRDT: one deletion semantics per class, and durable tombstones",126,8969,0,2,io.matrix.noosphere.EpochAwareCausalSet;io.matrix.noosphere.GrowOnlySet,5,matrix-core/src/main/java/io/matrix/noosphere/Crdt.java;matrix-core/src/main/java/io/matrix/noosphere/EpochAwareCausalSet.java;matrix-core/src/main/java/io/matrix/noosphere/GrowOnlySet.java;matrix-core/src/test/java/io/matrix/noosphere/EpochAwareCausalSetTest.java;matrix-core/src/test/java/io/matrix/noosphere/GrowOnlySetPersistenceTest.java
+docs-v2/architecture/ADR-2026-10-30-005-mcts-reward-signal.md,architecture,ADR-2026-10-30-005 — The production MCTS search has no reward signal,136,9068,0,2,io.matrix.brain.runtime.stages.PlanningStage;io.matrix.mcts.MctsTree,3,matrix-brain-runtime/src/main/java/io/matrix/brain/runtime/stages/PlanningStage.java;matrix-core/src/jmh/java/io/matrix/mcts/MctsAlternativesBenchmark.java;matrix-core/src/test/java/io/matrix/mcts/MctsAlternativesComparisonTest.java
+docs-v2/architecture/CAPABILITY-REGISTRY.md,architecture,Capability registry,123,9799,2,0,,0,
+docs-v2/architecture/ECOSYSTEM-LAYOUT.md,architecture,MATRIX Ecosystem — Architecture (C4 Container View),219,13349,1,0,,0,
+docs-v2/architecture/FEDERATION-MODULE.md,architecture,Federation Module Architecture,124,3459,1,0,,9,BiochemicalMediator.java;CognitiveModulationBridge.java;FederationRuntime.java;FederationTelemetry.java;GpuTaskExecutor.java;LocalConsensusEngine.java;ModulatorDefinition.java;ModulatorRegistry.java
+docs-v2/architecture/FORMAL-CONTRACTS.md,architecture,FORMAL-CONTRACTS,77,7399,0,0,,1,matrix-quality/src/test/java/io/matrix/quality/SpecImplementationMapTest.java
+docs-v2/architecture/MATRIX-ADAPTIVE-COMPUTATION.md,architecture,MATRIX — Adaptive computation: the algorithm portfolio and the compute controller,168,9032,1,7,io.matrix.federation.liquid.CognitiveRouter;io.matrix.brain.runtime.RuleInductionEngine;io.matrix.knowledge.EntailmentChecker;io.matrix.knowledge.AcceptanceModel;io.matrix.knowledge.Acceptance;io.matrix.neuron.BellmanFord;io.matrix.neuron.Dijkstra,0,
+docs-v2/architecture/MATRIX-COGNITIVE-ARCHITECTURE.md,architecture,MATRIX — The cognitive architecture,140,11025,6,0,,0,
+docs-v2/architecture/MATRIX-COGNITIVE-KERNEL.md,architecture,MATRIX — The cognitive kernel,185,10371,3,1,io.matrix.cognitive.CognitiveService,1,matrix-core/src/test/java/io/matrix/cognitive/CognitiveKernelTest.java
+docs-v2/architecture/MATRIX-NEUROMODULATION.md,architecture,MATRIX — Neuromodulation and internal regulation,148,10327,4,1,io.matrix.cognitive.DriveSignal,1,/graph/NeuroModulatorHub.java
+docs-v2/architecture/MODULE-LIFECYCLE.md,architecture,Module lifecycle registry,115,6624,3,0,,1,Test.java
+docs-v2/architecture/MODULES.md,architecture,MODULES — пакет↔спека/дизайн/гипотеза,39,2185,0,0,,0,
+docs-v2/architecture/OVERVIEW.md,architecture,ARCHITECTURE — OVERVIEW,63,3465,0,0,,0,
+docs-v2/architecture/REQUEST-autonomy-impulses.md,architecture,REQUEST-autonomy-impulses — побуждающая активность,121,10104,0,0,,0,
+docs-v2/architecture/REQUEST-brain-overview.md,architecture,REQUEST-brain-overview — Brain-like Anatomy of MATRIX,123,10727,0,0,,1,TruthTable.java
+docs-v2/architecture/REQUEST-decentralized-digests.md,architecture,REQUEST-decentralized-digests — анонимные дайджесты в noosphere,147,10533,0,0,,0,
+docs-v2/architecture/REQUEST-memory-hierarchy.md,architecture,REQUEST-memory-hierarchy — иерархия памяти MATRIX,115,9036,0,0,,0,
+docs-v2/architecture/RUNTIME-TOPOLOGY.md,architecture,RUNTIME-TOPOLOGY,52,2692,0,0,,0,
+docs-v2/archive/failures.md,other,Failures & Lessons: The Hall of Shame,262,7820,0,0,,0,
+docs-v2/archive/matrix-fpga.md,other,Archived module: `matrix-fpga`,40,1722,1,0,,0,
+docs-v2/archive/matrix-micro.md,other,Archived module: `matrix-micro`,41,1631,0,0,,0,
+docs-v2/archive/matrix-ros2.md,other,Archived module: `matrix-ros2`,40,1475,0,0,,0,
+docs-v2/designs/CONNECTOME-TOPOLOGY.md,other,The Living Connectome — Topology,9,457,0,0,,0,
+docs-v2/designs/CONST-AMEND-I-W101.md,other,CONSTITUTION Amendment — Article I (Determinism) — W101,99,5183,3,0,,0,
+docs-v2/designs/DESIGN-01-units.md,design,DESIGN-01 — Вычислительная единица,24,1215,0,0,,0,
+docs-v2/designs/DESIGN-02-viewpoint.md,design,DESIGN-02 — Композиция (Viewpoint),23,1176,0,0,,0,
+docs-v2/designs/DESIGN-03-pipeline.md,design,DESIGN-03 — Контур запроса (P-E-D pipeline),21,1323,0,0,,0,
+docs-v2/designs/DESIGN-04-learning.md,design,DESIGN-04 — Обучение (продюсеры),29,1408,0,0,,0,
+docs-v2/designs/DESIGN-05-memory.md,design,DESIGN-05 — Память (M0…M4),20,1042,0,0,,0,
+docs-v2/designs/DESIGN-06-signal-modules.md,design,DESIGN-06 — Модули сигналов (контракт),24,1189,0,0,,0,
+docs-v2/designs/DESIGN-07-lifecycle.md,design,DESIGN-07 — Жизненный цикл элементов,22,1349,0,0,,0,
+docs-v2/designs/DESIGN-08-federation.md,design,DESIGN-08 — Федерация и ELSP,30,1931,0,0,,0,
+docs-v2/designs/DESIGN-09-monotone-decoder.md,design,DESIGN-09 — MonotoneDecoder (Hansel-style),26,1582,0,0,,0,
+docs-v2/designs/DESIGN-10-binary-reservoir.md,design,DESIGN-10 — Бинарный резервуар (intESN),19,735,0,0,,0,
+docs-v2/designs/DESIGN-11-budgeter.md,design,DESIGN-11 — Сопряжённый бюджетер (ConjugateBudgeter),25,1527,0,0,,0,
+docs-v2/designs/DESIGN-12-taskcell-fnl.md,design,DESIGN-12 — FNL (карантин) и TaskCell,28,1467,0,0,,0,
+docs-v2/designs/DESIGN-13-action-registry.md,design,DESIGN-13 — Реестр действий (Hoare + Atomic Swap),24,1575,0,0,,0,
+docs-v2/designs/DESIGN-14-bir-migration.md,design,DESIGN-14 — Миграция потребителей на BIR,29,1982,0,0,,0,
+docs-v2/designs/DESIGN-15-plan-preprocessing.md,design,DESIGN-15 — AC-3 планирование (PlanPreprocessor),28,1581,0,0,,0,
+docs-v2/designs/DESIGN-16-perception-federation.md,design,DESIGN-16 — Perception Federation,82,5337,0,0,,0,
+docs-v2/designs/DESIGN-17-action-arena.md,design,DESIGN-17 — Action Arena (Transaction & Arbitration),85,5903,0,0,,0,
+docs-v2/designs/DESIGN-18-consciousness-loop.md,design,DESIGN-18 — Consciousness Loop (петля сознания),99,6254,0,0,,0,
+docs-v2/designs/DESIGN-19-subconscious-consolidator.md,design,DESIGN-19 — Subconscious Consolidator (консолидатор подсознания),122,7173,0,0,,0,
+docs-v2/designs/DESIGN-20-enriched-neurons.md,design,DESIGN-20 — Enriched Neurons: Signal-Strength + Chemical Composition,194,9311,0,0,,4,EnrichedChainEvaluator.java;EnrichedNeuron.java;EnrichedSerialization.java;Neurotransmitter.java
+docs-v2/designs/DESIGN-21-chain-triggering.md,design,DESIGN-21 — Chain Triggering: One Chain Activates Another,187,8122,0,1,io.matrix.chain.ChainRegistry,6,ChainDescriptor.java;ChainId.java;ChainRegistry.java;TriggerEvaluator.java;TriggerPredicate.java;TriggerRule.java
+docs-v2/designs/DESIGN-22-neuron-merging-compaction.md,design,DESIGN-22 — Neuron Merging + Compaction,263,10233,1,1,io.matrix.noosphere.FnlRegistry,9,BooleanMinimizer.java;EnrichedNeuron.java;EnrichedSerialization.java;FnlEntry.java;FnlProvenance.java;FnlRegistry.java;NeuronCompactor.java;NeuronMerger.java
+docs-v2/designs/DESIGN-23-free-energy.md,design,DESIGN-23 — Free Energy Minimization for Chain Convergence,74,2666,0,0,,0,
+docs-v2/designs/DESIGN-24-synaptic-pruning.md,design,DESIGN-24 — Synaptic Pruning (Biology-Inspired Compaction),47,1797,0,0,,0,
+docs-v2/designs/DESIGN-25-hebbian-chain.md,design,DESIGN-25 — Hebbian Learning at Chain Level,43,1447,0,0,,0,
+docs-v2/designs/DESIGN-26-dream-replay.md,design,DESIGN-26 — Dream Replay (REM Cycle),43,1456,0,0,,0,
+docs-v2/designs/DESIGN-27-curriculum-zpd.md,design,DESIGN-27 — Curriculum / ZPD Engine,45,1428,0,0,,0,
+docs-v2/designs/DESIGN-28-attractor-dynamics.md,design,DESIGN-28 — Attractor Dynamics (Fixed-Point Convergence),43,1345,0,0,,0,
+docs-v2/designs/DESIGN-29-stdp.md,design,DESIGN-29 — STDP (Spike-Timing-Dependent Plasticity),43,1406,0,0,,0,
+docs-v2/designs/DESIGN-30-contrastive-hebbian.md,design,DESIGN-30 — Contrastive Hebbian Learning,38,1142,0,0,,0,
+docs-v2/designs/DESIGN-31-hopfield.md,design,DESIGN-31 — Hopfield Auto-Association,36,1184,0,0,,0,
+docs-v2/designs/DESIGN-32-boltzmann.md,design,DESIGN-32 — Boltzmann Machine (Stochastic Hopfield),35,1083,0,0,,0,
+docs-v2/designs/DESIGN-33-kohonen-som.md,design,DESIGN-33 — Kohonen Self-Organizing Map,39,1273,0,0,,0,
+docs-v2/designs/DESIGN-34-thompson-sampling.md,design,DESIGN-34 — Thompson Sampling (Bayesian Bandit),36,1162,0,0,,0,
+docs-v2/designs/DESIGN-35-kalman.md,design,DESIGN-35 — Kalman Filter for Chain State Estimation,36,1143,0,0,,0,
+docs-v2/designs/DESIGN-36-tensor-train.md,design,DESIGN-36 — Tensor Network Decomposition,36,1328,0,0,,0,
+docs-v2/designs/DESIGN-37-lsystem.md,design,DESIGN-37 — L-System Rewriting for Curriculum Generation,38,1249,0,0,,0,
+docs-v2/designs/DESIGN-38-gradient-flow.md,design,DESIGN-38 — Gradient Flow Analysis (Topology of Learning),38,1290,0,0,,0,
+docs-v2/designs/DESIGN-39-gray-scott.md,design,DESIGN-39 — Gray-Scott Reaction-Diffusion,37,1223,0,0,,0,
+docs-v2/designs/DESIGN-40-kauffman.md,design,DESIGN-40 — Kauffman Boolean Networks (Random Boolean Networks),34,990,0,0,,0,
+docs-v2/designs/DESIGN-41-info-bottleneck.md,design,DESIGN-41 — Information Bottleneck (Tishby),36,1270,0,0,,0,
+docs-v2/designs/DESIGN-42-sparse-coding.md,design,DESIGN-42 — Sparse Coding (Olshausen-Field),39,1419,0,0,,0,
+docs-v2/designs/DESIGN-43-predictive-coding.md,design,DESIGN-43 — Predictive Coding (Rao-Ballard),42,1325,0,0,,0,
+docs-v2/designs/DESIGN-44-astar.md,design,DESIGN-44 — A* Search (Hart 1968),7,275,0,0,,0,
+docs-v2/designs/DESIGN-45-simplex.md,design,DESIGN-45 — Simplex / Linear Programming (Dantzig 1947),7,298,1,0,,0,
+docs-v2/designs/DESIGN-46-q-learning.md,design,DESIGN-46 — Tabular Q-Learning (Watkins 1989),6,279,0,0,,0,
+docs-v2/designs/DESIGN-47-gillespie.md,design,DESIGN-47 — Gillespie Stochastic Simulation (Gillespie 1976),7,301,0,0,,0,
+docs-v2/designs/DESIGN-48-persistent-homology.md,design,DESIGN-48 — Persistent Homology / Vietoris-Rips (Edelsbrunner 2010),7,330,0,0,,0,
+docs-v2/designs/DESIGN-49-random-forest.md,design,DESIGN-49 — Random Forest (Breiman 2001),7,283,0,0,,0,
+docs-v2/designs/DESIGN-50-conway.md,design,DESIGN-50 — Conway Game of Life (Gardner 1970),7,284,0,0,,0,
+docs-v2/designs/DESIGN-51-echo-state.md,design,DESIGN-51 — Echo State Property Test (Jaeger 2001),6,260,1,0,,0,
+docs-v2/designs/DESIGN-52-sarsa.md,design,DESIGN-52 — Tabular SARSA (Rummery 1994),6,245,1,0,,0,
+docs-v2/designs/DESIGN-53-tsne.md,design,DESIGN-53 — t-SNE (van der Maaten 2008),6,246,0,0,,0,
+docs-v2/designs/DESIGN-54-hdc-bitnet-hybrid-brain.md,design,DESIGN-54 — HDC × BitLinear × Boolean Brain Hybrid,147,6683,0,0,,5,BitLinear.java;CodebookMemory.java;HdcBinding.java;HdcEncoding.java;HebbianUpdater.java
+docs-v2/designs/DESIGN-55-russian-asian-cybernetics-integration.md,design,DESIGN-55 — Russian / Asian Cybernetics Integration,162,8698,0,0,,3,BernsteinRouter.java;FuzzyBit.java;NyayaQuantizer.java
+docs-v2/designs/DESIGN-56-fuzzy-bit-continuous-relaxation.md,design,DESIGN-56 — Fuzzy-bit Continuous Relaxation Surface,120,5086,0,0,,3,ContinuousTraining.java;FuzzyBit.java;FuzzyTable.java
+docs-v2/designs/DESIGN-57-nyaya-4-logic.md,design,DESIGN-57 — Nyaya 4-state Logic for Uncertainty Quantization,122,5454,6,0,,3,NyayaQuantizer.java;NyayaWeight.java;UncertaintyAggregator.java
+docs-v2/designs/DESIGN-58-capability-levels-roadmap.md,design,DESIGN-58 — Capability Levels Roadmap (Infant Cognition Milestones),195,12440,7,0,,0,
+docs-v2/designs/DESIGN-59-nca-brain.md,design,DESIGN-59 — Neural Cellular Automata Brain,132,6410,2,0,,4,ContinuousRelaxation.java;NcaBrainSimulator.java;NcaCell.java;NcaGrid.java
+docs-v2/designs/DESIGN-60-deep-research-wave.md,design,"DESIGN-60 — Deep Research Wave: Consciousness, Memory, Emergence & Applied Philosophy",172,7657,4,0,,19,BitLinearDreamer.java;BitLinearDreamerTest.java;ConsciousBrain.java;ConsciousBrainTest.java;EmbodiedNcaAndHermeneuticTest.java;EmbodiedNcaCortex.java;FreeEnergyLoss.java;FreeEnergyLossTest.java
+docs-v2/designs/DESIGN-61-integration-metrics.md,design,DESIGN-61 — Integration Metrics (Φ Family),130,6094,6,0,,5,ConsciousBrain.java;ConsciousBrainTest.java;IntegrationMetrics.java;IntegrationMetricsResult.java;IntegrationMetricsTest.java
+docs-v2/designs/DESIGN-62-pattern-generator.md,design,DESIGN-62 — PatternGenerator & Empirical Validation,84,3860,2,0,,3,matrix-core/src/main/java/io/matrix/research/PatternGenerator.java;matrix-core/src/test/java/io/matrix/research/PatternGeneratorTest.java;matrix-core/src/test/java/io/matrix/research/W76EmpiricalValidationTest.java
+docs-v2/designs/DESIGN-63-tickling-noise.md,design,DESIGN-63 — TicklingDetector & Empirical Validation Substrate,123,4485,4,0,,7,ConsciousBrain.java;IntegrationMetrics.java;IntegrationMetricsResult.java;IntegrationMetricsTest.java;NoiseCeilingBenchmarkTest.java;TicklingDetector.java;TicklingDetectorTest.java
+docs-v2/designs/DESIGN-64-controlled-stochasticity.md,design,DESIGN-64 — Controlled Stochasticity & Error-Driven Learning,162,7768,1,3,io.matrix.cognitive.ExploratoryActionSampler;io.matrix.cognitive.CognitiveErrorStream;io.matrix.cognitive.CognitiveError,0,
+docs-v2/designs/DESIGN-67-liquid-federation-architecture.md,design,DESIGN-67: Liquid Federation Architecture,314,9350,0,0,,0,
+docs-v2/designs/DESIGN-68-living-connectome.md,design,DESIGN-68 — The Living Connectome: Topology and Migration Plan,234,12276,6,0,,0,
+docs-v2/designs/DESIGN-69-onnx-runtime-boundary.md,design,DESIGN-69 — The ONNX Runtime Boundary,173,7126,4,8,io.matrix.consciousness.BrainLoopCompliance;io.matrix.distill.OnnxActivationTeacher;io.matrix.auditor.DecisionPathAuditor;io.matrix.rag.FloatEmbeddingIndex;io.matrix.api.OnnxRuntimeAdapter;io.matrix.rag.HybridBooleanRag;io.matrix.api.QwenOnnxBridge;io.matrix.api.TextEmbedder,2,matrix-brain-runtime/src/test/java/io/matrix/brain/runtime/RuntimeLlmGuardTest.java;matrix-core/src/main/java/io/matrix/auditor/DecisionPathAuditor.java
+docs-v2/designs/DESIGN-70-evidence-grounded-reasoning.md,design,DESIGN-70 — Evidence-Grounded Reasoning and the Three Epistemic Axes,204,10291,7,0,,0,
+docs-v2/designs/DESIGN-71-w42-measured-learning.md,design,DESIGN-71 — The W42 Measured-Learning Design,104,6046,6,0,,0,
+docs-v2/designs/DESIGN-72-cognitive-kernel.md,design,DESIGN-72 — The cognitive kernel,189,11893,10,0,,0,
+docs-v2/designs/DESIGN-NN-anokhin-acceptor.md,design,DESIGN-NN — Anokhin Acceptor Action (R-B cybernetics),44,1461,2,0,,0,
+docs-v2/designs/DESIGN-NN-core-knowledge.md,design,DESIGN-NN — Core Knowledge (Spelke / Spitz-Sokolov) (R-D neuroscience),23,930,2,0,,0,
+docs-v2/designs/DESIGN-NN-free-energy.md,design,DESIGN-NN — Free Energy Principle (FEP) for Mind Arousal (META-R R-A SOTA ML),70,2465,2,0,,0,
+docs-v2/designs/DESIGN-NN-glushkov-automaton.md,design,DESIGN-NN — Glushkov Algebraic Automaton (R-C Soviet cybernetics),24,898,1,0,,0,
+docs-v2/designs/DESIGN-NN-graph-memory.md,design,DESIGN-NN — Graph-Neural Memory Indexing (R-A SOTA ML),23,837,1,0,,0,
+docs-v2/designs/DESIGN-NN-memory-indexing.md,design,DESIGN-NN — Memory Indexing via Hierarchical Bloom (META-R R-F math),25,869,0,0,,0,
+docs-v2/designs/DESIGN-NN-negative-selection.md,design,DESIGN-NN — Negative-Selection Anomaly Detector (META-R R-E biology),36,1339,1,1,io.matrix.brain.runtime.NegativeSelectionDetector,0,
+docs-v2/designs/DESIGN-NN-nyaya-inference.md,design,DESIGN-NN — Nyaya Inference (R-C Asian / Indian logic),27,1044,2,0,,0,
+docs-v2/designs/DESIGN-NN-sparse-hdc.md,design,DESIGN-NN — Sparse-HDC winner-take-all hashing,48,1801,0,0,,0,
+docs-v2/designs/DESIGN-NN-stigmergy-routing.md,design,DESIGN-NN — Stigmergy Routing (R-E biology / mycelium),28,1055,3,0,,0,
+docs-v2/designs/DESIGN-NN-thermodynamic-bounds.md,design,DESIGN-NN — Thermodynamic Bounds on Learning (R-E physics),38,1243,0,0,,0,
+docs-v2/designs/drafts/Design-DRAFT-BrcChain-Primitives.md,other,Design-DRAFT — BrcChain Primitives,32,1525,0,0,,0,
+docs-v2/designs/drafts/Design-DRAFT-ConjugateDP.md,other,Design-DRAFT — Conjugate Budgeter (DP + conjugate gradient/dual),35,1601,0,0,,0,
+docs-v2/designs/drafts/Design-DRAFT-MemoryM4.md,other,Design-DRAFT — Memory M4 (Causal CRDT),32,1199,0,0,,0,
+docs-v2/designs/drafts/Design-DRAFT-SDM-Recurrent.md,other,Design-DRAFT — SDM-Recurrent (Kanerva),37,1570,0,0,,0,
+docs-v2/designs/drafts/Design-DRAFT-TsetlinExpansion.md,other,"Design-DRAFT — Tsetlin Expansion (TypeI/II, multi-clause tuning)",38,1955,0,0,,0,
+docs-v2/ecosystem/algorithms/biochemical.md,other,Biochemical Modulator Network,115,3378,2,0,,1,BiochemicalNetwork.java
+docs-v2/ecosystem/algorithms/bir.md,other,BIR — Boolean Inference Rules,115,3311,2,0,,2,//github.com/AlexanderNarbaev/agi/blob/develop/matrix-core/src/main/java/io/matrix/brain/BirBrainCycle.java;matrix-core/src/main/java/io/matrix/brain/BirBrainCycle.java
+docs-v2/ecosystem/algorithms/fft.md,other,FFT — Discrete Fourier Transform,94,2625,0,0,,2,//github.com/AlexanderNarbaev/agi/blob/develop/matrix-core/src/main/java/io/matrix/transcoders/AudioFFTEncoder.java;matrix-core/src/main/java/io/matrix/transcoders/AudioFFTEncoder.java
+docs-v2/ecosystem/algorithms/hdc.md,other,HDC — Hyperdimensional Computing,119,3667,3,0,,0,
+docs-v2/ecosystem/algorithms/index.md,other,Algorithms — Deep Dives,57,2618,1,0,,0,
+docs-v2/ecosystem/algorithms/mcts.md,other,MCTS — Monte Carlo Tree Search,114,2921,2,0,,0,
+docs-v2/ecosystem/algorithms/sobel.md,other,Sobel — Pure Symbolic Edge Detection,104,2782,0,0,,2,//github.com/AlexanderNarbaev/agi/blob/develop/matrix-core/src/main/java/io/matrix/transcoders/VisionEdgeEncoder.java;matrix-core/src/main/java/io/matrix/transcoders/VisionEdgeEncoder.java
+docs-v2/ecosystem/algorithms/stigmergy.md,other,Stigmergy — Indirect Coordination,143,3805,1,0,,0,
+docs-v2/ecosystem/api/index.md,other,API Reference,220,4237,1,0,,0,
+docs-v2/ecosystem/architecture/index.md,other,Architecture,128,5050,1,0,,0,
+docs-v2/ecosystem/architecture/mindcycle.md,other,MindCycle — 10-Stage Cognitive Orchestration Layer (MIND-W1),84,2827,0,0,,0,
+docs-v2/ecosystem/concept/index.md,other,What is MATRIX?,130,4057,1,0,,0,
+docs-v2/ecosystem/constitution/index.md,other,Constitution,160,4938,2,0,,0,
+docs-v2/ecosystem/index.md,other,MATRIX Ecosystem,54,2222,0,0,,0,
+docs-v2/ecosystem/quickstart/index.md,other,Quickstart — 5 minutes from zero to first API call,267,7492,0,2,io.matrix.api.MinimalHttpServer;io.matrix.sdk.MatrixClient,0,
+docs-v2/ecosystem/sdks/index.md,other,SDK Guides,209,4298,1,1,io.matrix.sdk.MatrixClient,0,
+docs-v2/ecosystem/xai/index.md,other,XAI Deep Dive — How Decisions Are Explained,176,4627,3,0,,0,
+docs-v2/engineering/ADR-W43-01-epistemic-model.md,adr,ADR-W43-01 — The epistemic model of MATRIX,347,19376,18,6,io.matrix.knowledge.KnowledgeRevision;io.matrix.knowledge.ClaimStatus;io.matrix.knowledge.Derivation;io.matrix.knowledge.Evidence;io.matrix.knowledge.Source;io.matrix.knowledge.Claim,11,KnowledgeStore.java;RevisionKind.java;matrix-core/src/main/java/io/matrix/knowledge/ClaimStatus.java;matrix-core/src/main/java/io/matrix/knowledge/Derivation.java;matrix-core/src/main/java/io/matrix/knowledge/Evidence.java;matrix-core/src/main/java/io/matrix/knowledge/EvidenceRelation.java;matrix-core/src/main/java/io/matrix/knowledge/KnowledgeRevision.java;matrix-core/src/main/java/io/matrix/knowledge/KnowledgeStore.java
+docs-v2/engineering/ADR-W44-01-cognitive-kernel.md,adr,"ADR-W44-01 — The cognitive kernel: contracts, placement and schema",201,13009,14,21,io.matrix.cognitive.algorithms.AlgorithmCapability;io.matrix.cognitive.algorithms.AlgorithmDecision;io.matrix.cognitive.algorithms.ComputeBudget;io.matrix.cognitive.microworld.Observation;io.matrix.cognitive.microworld.Experiment;io.matrix.knowledge.KnowledgeSnapshot;io.matrix.memory.SqliteMemoryBackend;io.matrix.cognitive.CognitiveKernel,1,Case.java
+docs-v2/engineering/INVARIANTS.md,engineering,INVARIANTS,47,3137,0,0,,0,
+docs-v2/engineering/JMH-GATE-EVIDENCE.md,engineering,JMH-GATE-EVIDENCE,24,2408,0,0,,0,
+docs-v2/engineering/LEARNING-WORKBENCH.md,engineering,The MATRIX Learning Workbench — a first-run guide,406,20013,17,0,,15,AcceptanceModel.java;AskedQuestion.java;AssessmentGrader.java;CapabilityEvaluator.java;CapabilityState.java;KnowledgeRetriever.java;KnowledgeStore.java;KnowledgeTransfer.java
+docs-v2/engineering/MUTATION-REPORT.md,engineering,Mutation harness report — the MATRIX formal gate,99,13319,7,0,,0,
+docs-v2/engineering/PLAN.md,engineering,PLAN,301,24751,0,2,io.matrix.security.NetworkExposure;io.matrix.knowledge.Case,1,matrix-quality/.../SpecImplementationMapTest.java
+docs-v2/engineering/RECON-W42-BACKLOG.md,engineering,RECON-W42 — Backlog,341,30443,22,0,,8,io/matrix/cli/ChainTextGenerator.java;io/matrix/cli/ConversationEdgeTest.java;io/matrix/federation/liquid/ClusterTopology.java;io/matrix/knowledge/TruthTable.java;io/matrix/neuron/BitNetModel.java;io/matrix/neuron/BitNetTokenizer.java;io/matrix/neuron/FloatEmbeddingIndex.java;io/matrix/research/AlgorithmEncyclopedia.java
+docs-v2/engineering/RECON-W42-BENCHMARKS.md,engineering,RECON-W42 — Benchmarks and Measurements,488,30457,25,4,io.matrix.knowledge.benchmark.BenchmarkRunner;io.matrix.knowledge.benchmark.BenchmarkItem;io.matrix.knowledge.benchmark.Benchmark;io.matrix.knowledge.benchmark.Bm25Index,0,
+docs-v2/engineering/RECON-W42-DECISIONS.md,engineering,RECON-W42 — Decisions,314,14916,9,0,,0,
+docs-v2/engineering/RECON-W42-STATUS.md,engineering,RECON-W42 — Status,395,26484,19,2,io.matrix.audit.HashChainedLog;io.matrix.audit.HashChain,3,matrix-core/src/main/java/io/matrix/knowledge/benchmark/BenchmarkItem.java;matrix-core/src/main/java/io/matrix/knowledge/benchmark/BenchmarkRunner.java;matrix-core/src/main/java/io/matrix/knowledge/benchmark/Bm25Index.java
+docs-v2/engineering/RECON-W43-BACKLOG.md,engineering,RECON-W43 — Backlog,106,10464,6,0,,0,
+docs-v2/engineering/RECON-W43-STATUS.md,engineering,RECON-W43 — Status,184,13862,10,3,io.matrix.knowledge.benchmark.SliceBenchmark;io.matrix.security.NetworkExposure;io.matrix.Scratch,0,
+docs-v2/engineering/RECON-W44-ARCHAEOLOGY.md,engineering,RECON-W44 — MATRIX repository archaeology,596,36717,28,44,io.matrix.federation.liquid.biochemistry.BiochemicalNetwork;io.matrix.federation.registry.DynamicModulatorRegistry;io.matrix.brain.runtime.stages.BilingualFactLookup;io.matrix.brain.runtime.graph.SleepConsolidator;io.matrix.brain.runtime.graph.NeuroModulatorHub;io.matrix.cognitive.microworld.LampEnvironment;io.matrix.memory.PersistentHierarchicalMemory;io.matrix.brain.runtime.stages.AnalogyStage,0,
+docs-v2/engineering/RECON-W44-BACKLOG.md,engineering,RECON — W44 backlog,124,7450,6,3,io.matrix.knowledge.KnowledgeConsolidator;io.matrix.memory.ConsolidationCycle;io.matrix.sleep.SleepCycle,2,KnowledgeStore.java;SleepConsolidator.java
+docs-v2/engineering/RECON-W44-STATUS.md,engineering,RECON — W44 status,198,16698,8,0,,3,Case.java;KnowledgeStore.java;KnowledgeWorkbench.java
+docs-v2/engineering/RELEASE-NOTES.md,engineering,RELEASE-NOTES — v2 rebuild,77,5055,0,0,,0,
+docs-v2/engineering/RISK-REGISTER.md,engineering,"RISK-REGISTER — operational and cognitive risks, revalidated",86,16291,12,1,io.matrix.brain.runtime.MindCycle,36,CognitiveProcessor.java;GoalManager.java;KnowledgeStore.java;ProductionBrainClient.java;agent/AgentLoop.java;api/MatrixResource.java;api/brain/ProductionBrainClient.java;brain/runtime/stages/HdcRetrievalStage.java
+docs-v2/engineering/SDD-COVERAGE.md,engineering,SDD-COVERAGE,42,2200,0,0,,0,
+docs-v2/engineering/STANDARDS-MATRIX.md,engineering,STANDARDS-MATRIX,57,5255,0,0,,0,
+docs-v2/engineering/TLA-STATUS.md,engineering,TLA+ status — what is actually verified,708,39873,34,10,io.matrix.ethics.frozen.FrozenAxiomNeuron;io.matrix.ethics.frozen.FrozenEthicalFNL;io.matrix.federation.liquid.MCTSPlanner;io.matrix.budgeter.ConjugateBudgeter;io.matrix.ethics.FROZENFNLGuardian;io.matrix.noosphere.GrowOnlySet;io.matrix.api.BotEthicsPipeline;io.matrix.neuron.NeuronLayer,3,HashChain.java;NeuronLayer.java;matrix-quality/src/test/java/io/matrix/quality/SpecImplementationMapTest.java
+docs-v2/engineering/W40-COMPONENT-INTEGRATION.md,engineering,"W40.6 — what was integrated, and what was measured before deciding",82,4628,5,8,io.matrix.knowledge.QuestionSimilarity;io.matrix.knowledge.AcceptanceModel;io.matrix.tsetlin.TsetlinTrainer;io.matrix.tsetlin.WisardProducer;io.matrix.knowledge.Acceptance;io.matrix.neuron.HdcEncoding;io.matrix.bir.ClauseSetForm;io.matrix.bir.Clause,0,
+docs-v2/engineering/W40-RECONNAISSANCE.md,engineering,"W40.0 — Reconnaissance: what MATRIX has, what it lost, and what the learning application is built from",285,21035,10,0,,5,GpuOperation.java;OpenAIChatResource.java;docs-v2/quality/lost-capability-tests/SleepAndConsolidationIntegrationTest.consolidation.java;matrix-core/src/main/java/io/matrix/agent/AgentBrainService.java;matrix-core/src/main/java/io/matrix/api/QaCorpusIndex.java
+docs-v2/engineering/W41-LOCAL-ALPHA-V0.2.md,engineering,MATRIX Learning Workbench — Local Alpha v0.2,208,10911,16,0,,0,
+docs-v2/engineering/W41-REALITY-AUDIT.md,engineering,W41.0 — Reality and history audit,387,18849,16,0,,10,AcceptanceModel.java;AcceptanceModelTest.java;ConsolidationCycle.java;DefaultBrainPipeline.java;EpisodicLog.java;GoalTracker.java;KnowledgeRetriever.java;OpenAIChatResource.java
+docs-v2/engineering/W42-ARCHITECTURE-REALITY-MAP.md,engineering,W42 — Architecture Reality Map,295,17330,10,0,,0,
+docs-v2/engineering/W42-HISTORICAL-BRANCH-RECOVERY.md,engineering,W42 — Historical Branch Recovery,221,16700,2,19,io.matrix.brain.runtime.graph.SleepConsolidator;io.matrix.api.federation.FederationRegistry;io.matrix.brain.runtime.RealGpuKernelEngine;io.matrix.brain.runtime.DistillationLedger;io.matrix.brain.runtime.FederationRegistry;io.matrix.brain.runtime.GpuKernelEngine;io.matrix.cognitive.ErrorDrivenLearner;io.matrix.lifecycle.ConsolidationCycle,1,matrix-api-gateway/src/test/java/io/matrix/api/SingleInstanceGuardTest.java
+docs-v2/engineering/W42-INTEGRATION-MATRIX.md,engineering,W42 — Integration Matrix,272,28165,20,8,io.quarkus.runner.ApplicationImpl;io.matrix.api.MinimalHttpServer;io.matrix.brain.runtime.BrcStep;io.matrix.audit.HashChainedLog;io.matrix.reasoning.BrcChain;io.matrix.goals.GoalTracker;io.matrix.audit.HashChain;io.matrix.goals.Goal,2,DistillationLedger.java;ModelToMatrix.java
+docs-v2/engineering/W42-RECONNAISSANCE.md,engineering,W42 — Reconnaissance,271,14679,5,3,io.matrix.knowledge.benchmark.BenchmarkRunner;io.matrix.knowledge.benchmark.Benchmark;io.matrix.knowledge.benchmark.Bm25Index,0,
+docs-v2/engineering/W42-RISK-REGISTER.md,engineering,W42 — Risk Register,205,36724,20,3,io.matrix.privacy.TombstoneService;io.matrix.privacy.Tombstone;io.matrix.Scratch,3,TextFeatures.java;matrix-api-gateway/src/main/java/io/matrix/api/federation/FederateResource.java;matrix-core/src/main/java/io/matrix/bir/LineageLedger.java
+docs-v2/engineering/W42-VERIFICATION-ARCHAEOLOGY.md,engineering,W42 — Independent Verification of the Historical-Branch Archaeology,398,52547,11,22,io.matrix.brain.runtime.graph.SleepConsolidator;io.matrix.api.federation.FederationRegistry;io.matrix.brain.runtime.RealGpuKernelEngine;io.matrix.brain.runtime.PersistentHdcStore;io.matrix.brain.runtime.DistillationLedger;io.matrix.brain.runtime.FederationRegistry;io.matrix.brain.runtime.GpuKernelEngine;io.matrix.cognitive.ErrorDrivenLearner,56,/AuditChain.java;/CreditLedger.java;/EpisodicLog.java;/FederationRegistry.java;/GoalTracker.java;/GpuAccelerationTest.java;/GpuKernelEngine.java;/LearningWorkbenchResource.java
+docs-v2/engineering/W42-VERIFICATION-DOCS.md,engineering,W42 — Documentation Consistency Registry (verification pass),500,86165,29,0,,24,BenchDiagnosticTest.java;EpisodicLog.java;HierarchicalMemory.java;KnowledgeConsolidator.java;KnowledgeRetriever.java;KnowledgeStore.java;KnowledgeWorkbench.java;LearningWorkbenchResource.java
+docs-v2/engineering/W42-VERIFICATION-INTEGRATION.md,engineering,W42 — Verification of the Integration Matrix and the Mission's Acceptance Targets,360,57056,33,14,io.matrix.brain.runtime.stages.PlanningStage;io.matrix.brain.runtime.RealGpuKernelEngine;io.matrix.brain.runtime.RealSleepScheduler;io.matrix.brain.runtime.RealInboxWatcher;io.matrix.knowledge.RetentionExperiment;io.matrix.knowledge.TeachBackExperiment;io.matrix.cognitive.ErrorDrivenLearner;io.matrix.knowledge.HebbianBindings,104,AcceptanceModel.java;AnalogyStage.java;ArithmeticStage.java;AssessmentDataset.java;AssessmentGenerator.java;AssessmentGeneratorTest.java;AuditLogResource.java;AutoTrainer.java
+docs-v2/engineering/W42.1-LEARNING-CORE-REPORT.md,engineering,W42.1 — The unified learning and knowledge core,271,12548,7,0,,0,
+docs-v2/engineering/W42.2-UNIVERSAL-ACQUISITION-REPORT.md,engineering,W42.2 — Universal acquisition,173,8508,13,0,,0,
+docs-v2/engineering/W42.3-DIALOG-INTELLIGENCE-REPORT.md,engineering,W42.3 — Dialog Intelligence (RU + EN),168,7932,6,0,,0,
+docs-v2/engineering/W42.4-LEARNING-AND-REPRESENTATION-REPORT.md,engineering,"W42.4 — Learning, assessment and the authored representation",144,7792,6,0,,0,
+docs-v2/engineering/W42.5-COGNITIVE-INTEGRATION-REPORT.md,engineering,W42.5 — Cognitive integration: the baseline comparisons,191,8982,9,0,,0,
+docs-v2/engineering/W42.6-LOCAL-ALPHA-V0.3.md,engineering,MATRIX Learning Workbench — Local Alpha v0.3,314,17048,16,0,,0,
+docs-v2/engineering/W43-BASELINE.md,engineering,W43 — Verified baseline,186,23127,8,3,io.matrix.security.NetworkExposure;io.matrix.api.AuthorizationFilter;io.matrix.security.StartupGuard,11,ClaimValidator.java;DocumentImporter.java;IngestResource.java;JwtAuthFilter.java;KnowledgeWorkbench.java;LearningStateMachine.java;MinimalHttpServer.java;PromotionPolicy.java
+docs-v2/engineering/W43-BENCHMARK.md,engineering,W43 — The benchmark of the epistemic slice,206,11361,9,2,io.matrix.knowledge.benchmark.DialogueBenchmark;io.matrix.knowledge.benchmark.SliceBenchmark,0,
+docs-v2/engineering/W43-CORPUS.md,engineering,W43 — The corpus foundation,159,7855,3,3,io.matrix.knowledge.acquisition.CorpusManifest;io.matrix.knowledge.acquisition.DocumentFormat;io.matrix.knowledge.acquisition.CorpusImport,0,
+docs-v2/engineering/W44-ALGORITHM-PORTFOLIO-MAP.md,engineering,W44 — Algorithm portfolio map,113,6591,4,2,io.matrix.knowledge.EntailmentChecker;io.matrix.neuron.Dijkstra,0,
+docs-v2/engineering/W44-BENCHMARK.md,engineering,W44 — Benchmark,314,16752,5,2,io.matrix.cognitive.CognitiveSolver;io.matrix.cognitive.CognitiveKernel,0,
+docs-v2/engineering/W44-CAPABILITY-MAP.md,engineering,W44 — Capability map,142,15029,6,17,io.matrix.cognitive.algorithms.AlgorithmCapability;io.matrix.cognitive.algorithms.AlgorithmSelector;io.matrix.cognitive.MicroWorldReferenceMethod;io.matrix.cognitive.algorithms.ProcedureStore;io.matrix.knowledge.KnowledgeConsolidator;io.matrix.cognitive.algorithms.Procedure;io.matrix.lifecycle.ConsolidationCycle;io.matrix.cognitive.CognitiveSignal,18,/cognitive/CognitiveKernel.java;/goals/GoalTracker.java;/graph/NeuroModulatorHub.java;/knowledge/DialogueContext.java;/knowledge/EntailmentChecker.java;/knowledge/GoalManager.java;/knowledge/KnowledgeRetriever.java;/knowledge/KnowledgeWorkbench.java
+docs-v2/engineering/W44-CAPABILITY-REGISTRY.md,engineering,W44 — Capability registry,287,21397,8,106,io.matrix.federation.liquid.biochemistry.BiochemicalOrchestrator;io.matrix.federation.liquid.biochemistry.BiochemicalNetwork;io.matrix.federation.integration.CognitiveModulationBridge;io.matrix.federation.liquid.biochemistry.StigmergyProtocol;io.matrix.cognitive.neuromodulation.RegulationController;io.matrix.federation.orchestration.IntegratedFederation;io.matrix.federation.registry.DynamicModulatorRegistry;io.matrix.federation.liquid.CapabilityConsensusEngine,0,
+docs-v2/engineering/W44-COGNITIVE-CYCLE-MAP.md,engineering,W44 — Cognitive cycle map,118,6801,4,5,io.matrix.consciousness.BrainLoopService;io.matrix.reasoning.ConsciousnessLoop;io.matrix.brain.runtime.TrueMindCycle;io.matrix.brain.runtime.MindCycle;io.matrix.brain.BirBrainCycle,2,matrix-brain-runtime/src/main/java/io/matrix/brain/runtime/TrueMindCycle.java;matrix-core/src/main/java/io/matrix/cognitive/CognitiveKernel.java
+docs-v2/engineering/W44-DOCUMENT-RECONCILIATION.md,engineering,W44 — Document reconciliation,169,11155,5,5,io.matrix.consciousness.IntegrationMetrics;io.matrix.monotone.MonotoneDecoder;io.matrix.neuron.ConsciousBrain;io.matrix.neuron.BitLinear;io.matrix.SystemDemo,0,
+docs-v2/engineering/W44-GOALS-AUTONOMY-ACTION-MAP.md,engineering,"W44 — Goals, autonomy and action map",137,9233,4,23,io.matrix.mediator.scheduler.TaskScheduler;io.matrix.budgeter.ConjugateBudgeterMulti;io.matrix.autonomy.SelfImprovingEngine;io.matrix.budgeter.ConjugateBudgeter;io.matrix.agent.react.ReActAgentLoop;io.matrix.brain.runtime.AutonomyLoop;io.matrix.actions.PlanPreprocessor;io.matrix.consciousness.ActionGate,0,
+docs-v2/engineering/W44-HYPOTHESIS-AND-FAILURE-MAP.md,engineering,W44 — Hypothesis and failure map,115,7989,5,5,io.matrix.federation.gpu.GpuTaskExecutor;io.matrix.consciousness.AttentionRouter;io.matrix.api.resource.AnalyzeResource;io.matrix.api.OnnxRuntimeAdapter;io.matrix.perception.TextEncoder,2,KnowledgeStore.java;SleepConsolidator.java
+docs-v2/engineering/W44-MEMORY-ARCHITECTURE-MAP.md,engineering,W44 — Memory architecture map,173,9999,8,11,io.matrix.cognitive.algorithms.ProcedureValidator;io.matrix.memory.PersistentHierarchicalMemory;io.matrix.brain.runtime.PersistentHdcStore;io.matrix.cognitive.algorithms.Procedure;io.matrix.brain.runtime.graph.Connectome;io.matrix.memory.HierarchicalMemory;io.matrix.cognitive.CognitiveKernel;io.matrix.brain.runtime.EpisodicLog,3,KnowledgeStore.java;io/matrix/knowledge/acquisition/ClaimValidator.java;io/matrix/knowledge/acquisition/PromotionPolicy.java
+docs-v2/engineering/W44-NEUROMODULATION-MAP.md,engineering,W44 — Neuromodulation map,125,7367,3,8,io.matrix.federation.liquid.biochemistry.BiochemicalNetwork;io.matrix.cognitive.neuromodulation.RegulationController;io.matrix.federation.registry.DynamicModulatorRegistry;io.matrix.brain.runtime.graph.NeuroModulatorHub;io.matrix.consciousness.ArousalDynamics;io.matrix.reasoning.ArousalDynamics;io.matrix.consciousness.Impulse;io.matrix.mediator.DriverState,0,
+docs-v2/engineering/W44-PERCEPTION-AND-REPRESENTATION-MAP.md,engineering,W44 — Perception and representation map,139,7563,1,11,io.matrix.signals.SignalModuleRegistry;io.matrix.multimodal.FeatureExtractor;io.matrix.signals.AudioSignalModule;io.matrix.signals.ImageSignalModule;io.matrix.signals.TextSignalModule;io.matrix.signals.SignalRegistry;io.matrix.perception.TextEncoder;io.matrix.signals.SensorPacket,0,
+docs-v2/engineering/W44-SUBSYSTEM-EVIDENCE.md,engineering,W44.0 — subsystem evidence,219,17837,0,132,io.matrix.federation.liquid.biochemistry.BiochemicalOrchestrator;io.matrix.federation.liquid.biochemistry.BiochemicalNetwork;io.matrix.federation.integration.CognitiveModulationBridge;io.matrix.federation.liquid.biochemistry.StigmergyProtocol;io.matrix.cognitive.neuromodulation.RegulationController;io.matrix.consciousness.CognitiveGenesisProfileBuilder2;io.matrix.federation.orchestration.IntegratedFederation;io.matrix.consciousness.CognitiveGenesisProfileBuilder,0,
+docs-v2/guide/api-reference.md,other,API Reference,264,4210,0,0,,0,
+docs-v2/guide/architecture.md,other,Architecture: Module Breakdown,325,7400,0,0,,0,
+docs-v2/guide/extending.md,other,Extending MATRIX,274,6400,1,0,,4,BrainHttpServer.java;CapabilityConsensusEngine.java;LiquidNodeRoleAssigner.java;NodeRole.java
+docs-v2/guide/getting-started.md,other,Getting Started with MATRIX,190,4300,0,0,,0,
+docs-v2/index.md,other,,279,13054,0,0,,0,
+docs-v2/levels/L0-Manifesto.md,other,L0 — Manifesto,96,4003,0,0,,1,TruthTable.java
+docs-v2/levels/L1-BirUnit-Legacy.md,other,L1 — BirUnit (atomic compute element),53,3603,0,0,,1,lifecycle/FnlGate.java
+docs-v2/levels/L10-Monitoring.md,other,"L10 — Monitoring, Observability, SRE",88,3607,0,0,,0,
+docs-v2/levels/L11-Management.md,other,"L11 — Cell Management, Snapshots, Governance",97,3829,0,0,,0,
+docs-v2/levels/L12-Legal.md,other,L12 — Legal and Licensing Strategy,98,4985,0,0,,0,
+docs-v2/levels/L13-Pilot.md,other,L13 — Pilot Deployments,95,4104,1,0,,0,
+docs-v2/levels/L14-BusinessModel.md,other,L14 — Business Model and Sustainability,98,5539,7,0,,0,
+docs-v2/levels/L15-LearningProgram.md,other,L15 — Learning Program,98,5329,2,0,,0,
+docs-v2/levels/L16-PhysicalInterfaces.md,other,L16 — Physical Interfaces,98,4929,3,0,,0,
+docs-v2/levels/L17.md,other,L17 — Contributor Onboarding,85,2955,1,0,,0,
+docs-v2/levels/L18.md,other,"L18 — Testing, CI/CD, and Code Quality",36,3467,0,0,,0,
+docs-v2/levels/L19.md,other,L19 — Global Community and Cultural Adaptation,97,3806,2,0,,0,
+docs-v2/levels/L2-Interaction-Protocol.md,other,"L2 — Interaction Protocol (signal, routing, consensus)",98,3707,0,0,,0,
+docs-v2/levels/L20.md,other,L20 — Media Strategy and Public Communication,44,3810,1,0,,0,
+docs-v2/levels/L22.md,other,L22 — University and Researcher Partnerships,49,4733,4,0,,0,
+docs-v2/levels/L23.md,other,L23 — Corporate Engagement,44,4625,0,0,,0,
+docs-v2/levels/L3-Neurocluster-Arch.md,other,L3 — Neurocluster & Functional Neural Lobe (FNL),90,4175,1,0,,0,
+docs-v2/levels/L4-Mediator.md,other,"L4 — Mediator (hierarchy, drivers, proactive engagement)",98,4139,1,0,,0,
+docs-v2/levels/L5-DNA.md,other,"L5 — Genome: Evolution, Compression, Cauldron, HADES",97,4745,0,0,,1,evolution/MpdtGaProducer.java
+docs-v2/levels/L6-Memory.md,other,"L6 — Memory (tiers, event sourcing, snapshots, Noosphere)",90,3748,1,0,,0,
+docs-v2/levels/L7-Ethics.md,other,L7 — Perception Gate and Ethical Filter (FROZEN),95,3853,2,0,,0,
+docs-v2/levels/L8-Roadmap.md,other,"L8 — Roadmap, Integration, and Development Protocol",97,3851,1,0,,0,
+docs-v2/levels/L9-Deployment.md,other,L9 — Deployment & Operations,97,3485,0,0,,0,
+docs-v2/levels/LONGTERM_PLAN.md,other,LONGTERM_PLAN — Delivery Schedule and Dependencies,96,3689,0,0,,0,
+docs-v2/operations/CONTAINER-BUILDS.md,other,Container Builds — supported variants and requirements,136,5427,1,1,io.matrix.api.MinimalHttpServer,0,
+docs-v2/operations/DEPLOYMENT.md,other,DEPLOYMENT,63,2454,0,0,,0,
+docs-v2/operations/HARDWARE-PROFILE.md,other,HARDWARE-PROFILE.md — RECON-W30,147,5281,2,0,,0,
+docs-v2/operations/MIND-VALIDATION-CHECKLIST.md,other,MATRIX MIND — Human Validation Checklist (RU/EN),96,4273,0,0,,0,
+docs-v2/operations/NATIVE-IMAGE-DEEP-RESEARCH.md,other,Native-Image Deep-Research Report,124,5297,1,1,io.matrix.imports.HammingNative,1,matrix-core/src/main/java/io/matrix/imports/HammingNative.java
+docs-v2/operations/RUNBOOK.md,other,RUNBOOK,233,10308,1,1,io.matrix.runtime.RuntimeLimits,0,
+docs-v2/operations/TUNING-PARAMETERS.md,other,TUNING-PARAMETERS.md — RECON-W30,582,29199,18,1,io.matrix.brain.runtime.HdcVector,0,
+docs-v2/operations/bench/README.md,operational-manual,RECON-W30 benchmark evidence,69,4350,2,0,,0,
+docs-v2/operations/drafts/DRAFT-Kafka-Integration.md,other,DRAFT — Kafka Integration,22,765,0,0,,0,
+docs-v2/operations/drafts/DRAFT-Native-Build.md,other,DRAFT — Native Build,22,637,0,0,,0,
+docs-v2/operations/drafts/DRAFT-Operator-Runbook.md,other,DRAFT — Operator-Runbook,28,1071,0,0,,0,
+docs-v2/operations/drafts/DRAFT-RFC-Procedure.md,other,DRAFT — RFC Procedure,27,974,0,0,,0,
+docs-v2/operations/drafts/DRAFT-Release-Process.md,other,DRAFT — Release Process,23,765,0,0,,0,
+docs-v2/operations/drafts/PROMPT-autonomous-run.md,other,AUTONOMOUS WAVE-EXECUTION PROMPT — MATRIX docs-v2 BACKLOG,237,15540,3,0,,4,ExpNnnIT.java;bir/BirAvroCodecIT.java;bir/FpgaBackend.java;matrix-core/src/test/java/io/matrix/external/BaselineBenchmark.java
+docs-v2/paradigm/ENGINEERING-INVARIANTS.md,other,ENGINEERING-INVARIANTS — Engineering Rules for MATRIX,240,7261,0,0,,1,Test.java
+docs-v2/paradigm/PARADIGM.md,other,PARADIGM — Четвёртая парадигма искусственного интеллекта,232,12621,0,0,,0,
+docs-v2/paradigm/PHASES.md,other,PHASES — Detailed Engineering Plan,358,11516,1,0,,0,
+docs-v2/paradigm/README.md,operational-manual,INDEX — paradigm/ (Contents),24,1235,0,0,,0,
+docs-v2/paradigm/REQUIREMENTS.md,other,REQUIREMENTS — раскладка видения на требования к подсистемам,209,9706,0,0,,0,
+docs-v2/paradigm/RUN-PROTOCOL.md,other,RUN-PROTOCOL — How Individual RUNs Are Executed,166,4153,2,0,,0,
+docs-v2/paradigm/TESTING-STRATEGY.md,other,TESTING-STRATEGY — How Tests Are Authored and Run,162,4119,0,0,,0,
+docs-v2/paradigm/TRACEABILITY.md,other,TRACEABILITY — SPEC ↔ DESIGN ↔ код ↔ тесты ↔ EXP,203,10359,0,0,,1,TruthTable.java
+docs-v2/paradigm/VERIFICATION-PROTOCOL.md,other,VERIFICATION-PROTOCOL — How Claims Become Evidence,130,3504,0,0,,0,
+docs-v2/proposals/PROPOSAL-global-decentralized-brain-federation.md,other,PROPOSAL — Global Decentralized Brain Federation (GDBF),554,28754,3,0,,7,brain/NeuronBlock.java;gpu/CudaContext.java;gpu/GpuAcceleratedTask.java;matrix-core/src/main/java/io/matrix/consciousness/ArousalDynamics.java;mediator/BiochemicalSignal.java;mediator/Mediator.java;social/TheoryOfMind.java
+docs-v2/proposals/PROPOSAL-wal-split-wave-based-architecture.md,other,WAL Split Plan — Wave-based Architecture,118,3299,1,0,,0,
+docs-v2/proposals/PROPOSAL-wave-347-global-federation-architecture.md,other,PROPOSAL — Wave 347: Global Decentralized Brain Federation Architecture,629,35566,3,0,,15,brain/NeuronBlock.java;lifecycle/CauldronProtocol.java;lifecycle/ConsolidationCycle.java;lifecycle/FnlGate.java;matrix-core/src/main/java/io/matrix/brain/NeuronBlock.java;matrix-core/src/main/java/io/matrix/consciousness/IntegrationMetrics.java;matrix-core/src/main/java/io/matrix/federation/Anonymizer.java;matrix-core/src/main/java/io/matrix/federation/ElspChannel.java
+docs-v2/proposals/RFC-001-wal-checkpoint-workflow.md,other,RFC-001: WAL Checkpoint GitHub Actions Workflow,117,4584,2,0,,0,
+docs-v2/proposals/RFC-weekly-ci-smoke.md,other,RFC: Weekly CI Job for the Fresh-Clone Smoke Test,81,4702,1,0,,0,
+docs-v2/proposals/RFC-weekly-research-suite.md,other,RFC: weekly scheduled run of the research and property suites,88,5000,1,0,,0,
+docs-v2/quality/KnownFailures.md,other,KnownFailures.md — the honest failure ledger,2137,120541,65,1,io.matrix.api.QwenOnnxBridge,3,KolmogorovComplexity.java;io/matrix/brain/LlmBrainLoopRag.java;io/matrix/brain/LlmBrainLoopService.java
+docs-v2/quality/OPEN-DECISIONS.md,other,Open decisions — awaiting the operator,190,11859,6,0,,9,AutonomyIntegrationTest.java;BitNetModelLoadTest.java;DistillationFactoryIntegrationTest.java;GpuKernelEngineIntegrationTest.java;RealSleepSchedulerIntegrationTest.java;SleepAndConsolidationIntegrationTest.java;TrueDistillationFactoryIntegrationTest.java;TrueMindCycle.java
+docs-v2/quality/RECON-W33.1-runbook-D3-D5.md,other,RECON-W33.1 Runbook — D3 (gitverse master) and D5 (disk),184,7018,3,0,,0,
+docs-v2/releases/CAVEATS-v17.6.0-mind.md,other,v17.6.0-mind — Release Caveats,241,12393,11,0,,1,EvalBattery.java
+docs-v2/releases/CAVEATS-v17.8.0-mind.md,other,CAVEATS — v17.8.0-mind,103,6180,2,0,,0,
+docs-v2/releases/CAVEATS-v17.9.0-mind.md,other,CAVEATS — v17.9.0-mind,154,7951,0,0,,0,
+docs-v2/releases/MATRIX-MIND-REPORT-V18.md,other,MATRIX-MIND-REPORT-V18,258,13016,4,0,,0,
+docs-v2/research/BENCHMARK-REPORT-W620.md,research,MATRIX Benchmark Report (W601),45,1398,1,0,,0,
+docs-v2/research/BITNET-2B-INTEGRATION-DEEP-RESEARCH.md,research,BitNet b1.58 2B Integration Deep-Research Report,118,5126,4,0,,3,matrix-core/src/main/java/io/matrix/imports/BitLinearGpu.java;matrix-core/src/main/java/io/matrix/neuron/BitLinear.java;matrix-core/src/test/java/io/matrix/research/BitNetModelLoadTest.java
+docs-v2/research/BITNET-B1.58-DEEP-RESEARCH.md,research,BitNet b1.58 Integration Deep-Research Report,111,4634,3,2,io.matrix.imports.SafetensorsReader;io.matrix.neuron.BitLinear,2,matrix-core/src/main/java/io/matrix/neuron/BitLinear.java;matrix-core/src/test/java/io/matrix/research/BitNetQuantizationBenchmarkTest.java
+docs-v2/research/BITNET-TRANSFORMER-ARCHITECTURE-RESEARCH.md,research,BitNet b1.58 Transformer Block Architecture Deep-Research Report,206,6919,0,0,,0,
+docs-v2/research/BITNET-W41-W49-COMPLETE-SUMMARY.md,research,BitNet b1.58 2B End-to-End Inference — Complete,147,5466,1,0,,13,BitNetBlock.java;BitNetBlockRealForwardTest.java;BitNetInferenceForward.java;BitNetInferencePrimitivesTest.java;BitNetModel.java;BitNetModelFullForwardTest.java;BitNetModelLoadTest.java;BitNetRealForwardTest.java
+docs-v2/research/BITNET-WEIGHT-FORMAT-RESEARCH.md,research,BitNet b1.58 Weight Format Deep-Research Report,89,2958,0,0,,0,
+docs-v2/research/DISTILLATION-LEDGER.md,research,DISTILLATION-LEDGER.md,80,3847,3,0,,0,
+docs-v2/research/EDGE-AI-POSITIONING.md,research,Edge-AI Positioning — MATRIX W31 Brain,150,8213,4,0,,0,
+docs-v2/research/EXTERNAL-BENCHMARK-REPORT-W760.md,research,EXTERNAL BENCHMARK REPORT (W760),126,2935,0,0,,0,
+docs-v2/research/FEDERATION-SCALE-REPORT-W635.md,research,Federation Scale Simulation Report (W606),115,2340,0,0,,0,
+docs-v2/research/GPU-NATIVE-IMAGE-W34-W40-SUMMARY.md,research,GPU + Native-Image Integration Wave (W34-W40),138,5846,2,0,,7,BitLinearGpuForwardTest.java;BitLinearGpuTest.java;BitNetModelLoadTest.java;GpuVsCpuBenchmarkTest.java;GpuVsCpuSizeBenchmarkTest.java;matrix-core/src/main/java/io/matrix/imports/BitLinearGpu.java;matrix-core/src/main/java/io/matrix/neuron/BitLinearGpuForward.java
+docs-v2/research/GRAND-UNIFICATION-REPORT-W1000.md,research,MATRIX Grand Unification Report (W1000),176,5881,1,0,,0,
+docs-v2/research/HYPOTHESES-NEW.md,hypothesis,H-039…H-050,344,41565,6,1,io.matrix.cognitive.ErrorDrivenLearner,8,BitLinear.java;CodebookMemory.java;FuzzyBit.java;HdcAsLlmPreprocessor.java;HdcBrain.java;HdcEncoding.java;NcaBrainSimulator.java;NyayaWeight.java
+docs-v2/research/HYPOTHESES.md,hypothesis,HYPOTHESES,45,3986,0,0,,0,
+docs-v2/research/HYPOTHESIS-TESTING-REPORT-W104-W124.md,hypothesis,Hypothesis Testing Report — W104-W124,65,2945,5,0,,0,
+docs-v2/research/IIT4-DIRECT-SYNTHESIS.md,research,IIT 4.0 Direct Research Synthesis (W180),57,2368,3,0,,0,
+docs-v2/research/MATRIX-CIVILIZATION-REPORT-W1500.md,research,MATRIX: A Hybrid Neuro-Symbolic Civilization (W1500),140,5447,0,0,,0,
+docs-v2/research/MATRIX-COGNITIVE-RESEARCH-AGENDA.md,research,MATRIX — Cognitive research agenda,186,10647,17,0,,0,
+docs-v2/research/MATRIX-CROSS-DISCIPLINARY-RESEARCH.md,research,Cross-Disciplinary Research Doctrine (CDRD) — MATRIX,409,67279,1,0,,0,
+docs-v2/research/MATRIX-MIND-REPORT-V17.2.md,research,"MATRIX MIND REPORT v17.2 — ""Truthfully Fixed""",460,26517,10,3,io.matrix.federation.liquid.simulation.SleepConsolidationStudy;io.matrix.consciousness.KolmogorovComplexity;io.matrix.model.ModelRegistry,1,KolmogorovComplexity.java
+docs-v2/research/MATRIX-MIND-REPORT-V17.md,research,MATRIX-MIND-REPORT-V17.md — Release v17.0.0-mind,110,7599,2,0,,0,
+docs-v2/research/MATRIX-MIND-REPORT-W12.md,research,MATRIX-MIND-REPORT-W12 (Updated 2026-09-26),156,5653,2,0,,0,
+docs-v2/research/MATRIX-OMNI-REPORT.md,research,MATRIX Omni-Modal Intelligence Report (W1200),125,3982,1,0,,0,
+docs-v2/research/MATRIX-ROUTING-TABLE.md,research,MATRIX Stage Routing Table,77,4933,3,0,,3,ArithmeticStage.java;MindCycle.java;MinimalHttpServer.java
+docs-v2/research/MIND-VALIDATION-CHECKLIST-v3.md,research,MIND-VALIDATION-CHECKLIST v3 — 2026-09-28,151,14414,6,0,,0,
+docs-v2/research/MINECRAFT-PILOT-REPORT-W645.md,research,Minecraft GridWorld Pilot Report (W611),89,2673,1,0,,0,
+docs-v2/research/MISC-DIRECT-SYNTHESIS.md,research,Misc Direct Research Synthesis (W181),103,3374,5,0,,0,
+docs-v2/research/PROPERTY-TEST-COMPLETE-W129-W147.md,research,Property-based Test Coverage — W129-W147,65,2651,2,0,,0,
+docs-v2/research/PROPERTY-TEST-SUMMARY-W129-W135.md,research,Property-based Test Coverage Report — W129-W135,52,1976,6,0,,0,
+docs-v2/research/PROTOCOL.md,research,PROTOCOL — методология экспериментов,48,3329,2,0,,9,matrix-core/src/jmh/java/io/matrix/benchmark/BatchEvaluatorBenchmark.java;matrix-core/src/jmh/java/io/matrix/benchmark/BinaryBenchmark.java;matrix-core/src/jmh/java/io/matrix/benchmark/CompressionBenchmark.java;matrix-core/src/jmh/java/io/matrix/benchmark/FrozenFNLBenchmark.java;matrix-core/src/jmh/java/io/matrix/benchmark/HashChainBenchmark.java;matrix-core/src/jmh/java/io/matrix/benchmark/NeuralBrainBenchmark.java;matrix-core/src/jmh/java/io/matrix/benchmark/NeuronHotPathBenchmark.java;matrix-core/src/jmh/java/io/matrix/benchmark/SimdTruthTableBenchmark.java
+docs-v2/research/RECON-BASELINE.md,research,RECON Baseline — verified at the start of W33.1,98,4658,1,0,,1,DistillationFactoryIntegrationTest.java
+docs-v2/research/RECON-W0-REPORT.md,research,RECON-W0 — Ground Truth & Branch Reconciliation,155,7608,1,2,io.matrix.audit.HashChainedLog;io.matrix.audit.HashChain,3,matrix-api-gateway/src/main/java/io/matrix/api/HashChainedAuditBuffer.java;matrix-api-gateway/src/main/java/io/matrix/api/MinimalHttpServer.java;matrix-api-gateway/src/test/java/io/matrix/api/HashChainedAuditBufferTest.java
+docs-v2/research/RECON-W1-REPORT.md,research,RECON-W1 — Kill the Simulacra (Truthfulness Surgery),121,6277,2,0,,10,matrix-brain-runtime/.../EngineCallRegistry.java;matrix-brain-runtime/.../EngineCallRegistryTest.java;matrix-brain-runtime/.../EvidenceTruthGuardTest.java;matrix-brain-runtime/.../MindCycleIntegrationTest.java;matrix-brain-runtime/.../TrueMindCycle.java;matrix-brain-runtime/.../stages/ArithmeticStage.java;matrix-brain-runtime/.../stages/BirInferenceStage.java;matrix-brain-runtime/.../stages/BirInferenceStageSimulacrumTest.java
+docs-v2/research/RECON-W13-REPORT.md,research,RECON-W13 Report — Prove It Live,96,4290,0,0,,1,BenchmarkRegression.java
+docs-v2/research/RECON-W14-REPORT.md,research,RECON-W14 Report — Real Knowledge Mass (closes L-1 partially),91,4686,3,0,,0,
+docs-v2/research/RECON-W15-REPORT.md,research,"RECON-W15 Report — True Persistence & Contradiction Intelligence (closes L-2, L-3)",64,3166,1,0,,1,matrix-core/.../BirRegistryPersistence.java
+docs-v2/research/RECON-W16-REPORT.md,research,,0,0,0,0,,0,
+docs-v2/research/RECON-W17-REPORT.md,research,RECON-W17 Report — Live Two-Node Federation (closes L-6),34,1551,1,0,,0,
+docs-v2/research/RECON-W18-REPORT.md,research,,0,0,0,0,,0,
+docs-v2/research/RECON-W19-MILESTONE.md,research,RECON-W19+ Perpetual Loop — milestone after W13-W18,30,1495,1,0,,0,
+docs-v2/research/RECON-W2-COMPLETE-REPORT.md,research,RECON-W2 (finish) — Promote the Orphans — COMPLETE 8/8,95,4153,0,0,,0,
+docs-v2/research/RECON-W2-PARTIAL-REPORT.md,research,RECON-W2 (finish) — Promote the Orphans (4/8 complete),93,4492,0,0,,0,
+docs-v2/research/RECON-W2-REPORT.md,research,RECON-W2 — Promote the Orphans (in progress),70,2705,1,0,,2,matrix-api-gateway/.../MinimalHttpServer.java;matrix-api-gateway/.../MultilingualMindWiringTest.java
+docs-v2/research/RECON-W20-REPORT.md,research,RECON-W20 — Disk Forensics & Hygiene,149,7038,1,0,,2,matrix-core/src/main/java/io/matrix/ops/DiskHygienePolicy.java;matrix-core/src/test/java/io/matrix/ops/DiskHygienePolicyTest.java
+docs-v2/research/RECON-W21-REPORT.md,research,RECON-W21 — Activation Sidecar: Real Knowledge Without the Segfault (closes L-1 / L-1.5),133,7285,3,0,,1,matrix-core/.../distill/ActivationRecord.java
+docs-v2/research/RECON-W22-REPORT.md,research,RECON-W22 — Root-Cause GENERALIZATION 0/7 (D-W13-1),156,8597,3,0,,7,BenchmarkRunner.java;MindCycle.java;MinimalHttpServer.java;ProductionBrainClient.java;TrueMindCycle.java;stages/BilingualFactLookup.java;stages/RelationalReasoningStage.java
+docs-v2/research/RECON-W25-REPORT.md,research,RECON-W25 — Two-Node Federation Transcript (L-6),121,5368,2,0,,0,
+docs-v2/research/RECON-W3-PART-A-REPORT.md,research,RECON-W3 Part A — Truthfulness Surgery — COMPLETE,93,5249,0,0,,0,
+docs-v2/research/RECON-W3-PART-B-REPORT.md,research,RECON-W3 Part B — Close the Learning Loop — COMPLETE,105,5542,1,0,,0,
+docs-v2/research/RECON-W37-MCMC-SAMPLING.md,research,RECON-W37 — MCMC / Gibbs sampling vs the current Tsetlin exploration,46,2393,2,0,,0,
+docs-v2/research/RECON-W4-REPORT.md,research,RECON-W4 — Real Planning (MCTS/LATS into Decision Path) — COMPLETE,92,4475,1,0,,0,
+docs-v2/research/RECON-W5-REPORT.md,research,RECON-W5 — Distillation Into THE Growing Matrix — COMPLETE,91,4326,0,0,,0,
+docs-v2/research/RESEARCH-ENGINE.md,research,MATRIX Research Engine — TRUE-W11,68,3033,1,0,,0,
+docs-v2/research/REVIEW-CYCLE-1-FIXES.md,research,Review Cycle #1 Fixes — W104-W128,84,2993,0,0,,2,ConsciousBrain.java;HdcBrain.java
+docs-v2/research/REVIEW-CYCLE-2-FIXES.md,research,Goal Guard Review Cycle #2 — Fixes Applied,78,3435,0,0,,5,matrix-core/src/main/java/io/matrix/consciousness/CognitiveMultiResolutionAttention.java;matrix-core/src/main/java/io/matrix/consciousness/CognitiveQLoRA.java;matrix-core/src/main/java/io/matrix/consciousness/CognitiveYaRN.java;matrix-core/src/main/java/io/quarkus/runner/ApplicationImpl.java;matrix-core/src/test/java/io/matrix/consciousness/CognitiveNewArchitecturesPropertyTest.java
+docs-v2/research/REVIEW-CYCLE-3-FIXES.md,research,Review Cycle #3 Fixes — W383 (Goal-Reviewer Findings),108,5145,2,0,,11,BiochemicalMediator.java;CognitiveModulationBridge.java;FederationRuntime.java;LocalConsensusEngine.java;ModulatorRegistryStore.java;matrix-core/src/main/java/io/matrix/federation/consensus/LocalConsensusEngine.java;matrix-core/src/main/java/io/matrix/federation/integration/CognitiveModulationBridge.java;matrix-core/src/main/java/io/matrix/federation/registry/ModulatorRegistryStore.java
+docs-v2/research/SESSION-SUMMARY-W281-W314.md,research,Session Summary: W281-W314 (Native Build + Adaptive Compute),145,5112,0,0,,5,Compute.java;Test.java;matrix-core/src/main/java/io/matrix/consciousness/CognitiveEarlyExit.java;matrix-core/src/main/java/io/matrix/consciousness/CognitiveMultiTokenPrediction.java;matrix-core/src/main/java/io/quarkus/runner/ApplicationImpl.java
+docs-v2/research/SLEEP-CONSOLIDATION-STUDY-W650.md,research,Sleep Consolidation Study Report (W609),16,620,0,0,,0,
+docs-v2/research/SWARM-INTELLIGENCE-REPORT-W780.md,research,SWARM INTELLIGENCE REPORT (W780),102,2677,0,0,,0,
+docs-v2/research/TRUE-MIND-AUDIT-2026-09-26.md,research,TRUE-MIND AUDIT — develop @ 3ac66cfe (2026-09-26),208,9307,4,22,io.matrix.memory.PersistentHierarchicalMemory;io.matrix.federation.gpu.GpuTaskExecutor;io.matrix.federation.liquid.MCTSPlanner;io.matrix.signals.SignalModuleRegistry;io.matrix.transcoders.AudioFFTEncoder;io.matrix.weights.WeightsConsolidator;io.matrix.reasoning.ConsciousnessLoop;io.matrix.memory.SqliteMemoryBackend,12,AnalogyStage.java;ArithmeticStage.java;BirInferenceStage.java;HdcRetrievalStage.java;MindCycle.java;ModulatorStage.java;ReflexStage.java;SaliencyStage.java
+docs-v2/research/W103-SOVIET-ASIAN-RESEARCH-REPORT.md,research,W103 — Cross-Disciplinary Research Wave R-C (Soviet / Asian Schools),191,8826,13,0,,0,
+docs-v2/research/W104-W111-EVIDENCE.md,research,W104-W111 Verification Evidence,38,1393,0,0,,7,AnalogicalConsistency.java;CognitiveGenesisProfile.java;ConceptualExclusion.java;KolmogorovComplexity.java;LSystem.java;MemristorSwitch.java;NKBooleanNetwork.java
+docs-v2/research/W129-W161-COMPLETE-SUMMARY.md,research,W129-W161 Complete Cross-Disciplinary Expansion,81,3218,1,0,,0,
+docs-v2/research/W129-W174-FINAL-SYNTHESIS.md,research,W129-W174 — Complete Cross-Disciplinary Expansion,83,3224,0,0,,0,
+docs-v2/research/W129-W185-FINAL-SUMMARY.md,research,W129-W185 — Complete Cross-Disciplinary & Property-Based Expansion,87,3472,1,0,,0,
+docs-v2/research/W203-W217-LLM-INSPIRED-SYNTHESIS.md,research,W203-W217: LLM-Inspired Cognitive Architecture (15 waves),77,2822,0,0,,1,ConsciousBrain.java
+docs-v2/research/W281-W286-NATIVE-BUILD-REPORT.md,research,Native Build Report (W281-W286),147,4442,1,2,io.quarkus.runner.ApplicationImpl;io.matrix.MatrixApplication,1,matrix-core/src/main/java/io/quarkus/runner/ApplicationImpl.java
+docs-v2/research/W281-W292-NATIVE-FULL-REPORT.md,research,Native Build Full Report (W281-W292),164,5095,1,2,io.quarkus.runner.ApplicationImpl;io.matrix.MatrixApplication,1,matrix-core/src/main/java/io/quarkus/runner/ApplicationImpl.java
+docs-v2/research/W300-M302-AGENT-STATUS.md,research,Subagent Status (W300-W302),33,1073,1,0,,0,
+docs-v2/research/W31-ARXIV-PAPER-DRAFT.md,research,"MATRIX W31 Brain — Edge-AI Hybrid Architecture: Combining Hyperdimensional Computing, BitLinear Ternary Weights, and Boolean Tables for CPU-Only Infant-Class Co",123,9073,5,0,,0,
+docs-v2/research/W316-cognitive-efficiency-direct.md,research,Cognitive Architecture Efficiency (Direct Synthesis),46,1684,1,0,,0,
+docs-v2/research/W317-native-optimization-direct.md,research,Native Image Optimization (Direct Synthesis),53,1486,0,0,,0,
+docs-v2/research/W318-llm-innovations-direct.md,research,LLM Innovations 2024-2026 (Direct Synthesis),41,1412,2,0,,0,
+docs-v2/research/W41-RESEARCH-A-LEARNING-SCIENCE.md,research,W41 Research Stream A — Learning Science for Defensible Capability Measurement and Teach-Back Validity,382,60759,34,0,,0,
+docs-v2/research/W41-RESEARCH-B-COGNITIVE-SYSTEMS.md,research,W41-RESEARCH-B — Cognitive Systems and Cybernetics: How a Learning System Should Be Architected,287,44434,28,2,io.matrix.cognitive.ErrorDrivenLearner;io.matrix.knowledge.Derivation,1,matrix-core/src/test/java/io/matrix/knowledge/ErrorGateAdaptationExperimentTest.java
+docs-v2/research/W41-RESEARCH-C-KNOWLEDGE-ENGINEERING.md,research,W41 — Research Stream C: Knowledge Engineering for an Evidence-Grounded Reasoning Engine,693,43502,30,0,,0,
+docs-v2/research/W42-RESEARCH-A-LEARNING-SCIENCE.md,research,W42 Research Stream A — Learning Science for the Measurement of Learning,153,8544,14,0,,0,
+docs-v2/research/W42-RESEARCH-B-COGNITIVE-SYSTEMS.md,research,W42 Research Stream B — Cognitive Systems for a Consolidation That Proposes,150,8207,10,0,,0,
+docs-v2/research/W42-RESEARCH-C-KNOWLEDGE-ENGINEERING.md,research,W42 Research Stream C — Knowledge Engineering for the Acquisition and the Dialogue,143,8356,10,0,,0,
+docs-v2/research/W51-W59-BITNET-INFERENCE-COMPLETE-SUMMARY.md,research,BitNet b1.58 Inference — Complete Implementation Summary (W51-W59),160,6704,2,0,,24,BitNetAutoregressive.java;BitNetAutoregressiveTest.java;BitNetBlock.java;BitNetBlockRealForwardTest.java;BitNetBlockSequence.java;BitNetBlockSequenceTest.java;BitNetInferenceForward.java;BitNetKvCacheGenerationTest.java
+docs-v2/research/W51-W74-COMPREHENSIVE-SUMMARY.md,research,MATRIX Project State — W51-W74 Comprehensive Summary,193,8319,5,0,,13,BitLinearDreamer.java;ConsciousBrain.java;EmbodiedNcaCortex.java;FreeEnergyLoss.java;HermeneuticLoop.java;IntegrationMetrics.java;IntegrationMetricsResult.java;PragmaticTest.java
+docs-v2/research/W60-W64-DEEP-RESEARCH-SYNTHESIS.md,research,"W60-W64 Deep Research Synthesis — Consciousness, Memory, Emergence, Applied Philosophy",94,4701,0,0,,0,
+docs-v2/research/W69-W72-INTEGRATION-METRICS-SYNTHESIS.md,research,W69-W72 Integration Metrics — Final Synthesis,156,5909,7,1,io.matrix.consciousness.IntegrationMetrics,3,ConsciousBrain.java;IntegrationMetrics.java;IntegrationMetricsResult.java
+docs-v2/research/W76-EMPIRICAL-VALIDATION-REPORT.md,research,W76 — Empirical Validation of MATRIX ConsciousBrain with Structured HDC Patterns,733,37669,14,4,io.matrix.consciousness.IntegrationMetrics;io.matrix.neuron.ConsciousBrain;io.matrix.neuron.HdcEncoding;io.matrix.neuron.HdcBrain,17,ConsciousBrain.java;HdcEncoding.java;IntegrationMetrics.java;PatternGenerator.java;TwoStageConsolidator.java;W60W72BenchmarkTest.java;W76EmpiricalValidationTest.java;matrix-core/src/main/java/io/matrix/consciousness/IntegrationMetrics.java
+docs-v2/research/W76-EMPIRICAL-VALIDATION-RESULTS.md,research,W76 Empirical Validation — Results,73,3028,0,0,,0,
+docs-v2/research/W80-FINAL-SYNTHESIS-REPORT.md,research,W80 Final Synthesis Report — MATRIX W60-W80 Wave Series,612,50744,25,2,io.matrix.consciousness.IntegrationMetrics;io.matrix.research.PatternGenerator,29,BitLinearDreamer.java;ConsciousBrain.java;EmbodiedNcaCortex.java;FreeEnergyLoss.java;HermeneuticLoop.java;IntegrationMetrics.java;IntegrationMetricsResult.java;PragmaticTest.java
+docs-v2/research/W87-W112-COMPLETE-SYNTHESIS.md,research,W87-W112 — Complete Cross-Disciplinary Synthesis,107,3815,1,0,,0,
+docs-v2/research/W87-W91-FINAL-SYNTHESIS-REPORT.md,research,W87–W91 Final Synthesis — Multi-Timestep Integration Metrics & PhiID,411,19909,4,2,io.matrix.neuron.ConsciousBrain;io.matrix.consciousness.PhiId,6,matrix-core/src/main/java/io/matrix/consciousness/IntegrationMetrics.java;matrix-core/src/main/java/io/matrix/consciousness/PhiId.java;matrix-core/src/main/java/io/matrix/neuron/ConsciousBrain.java;matrix-core/src/test/java/io/matrix/consciousness/PhiIdTest.java;matrix-core/src/test/java/io/matrix/consciousness/PhiLinGaussTest.java;matrix-core/src/test/java/io/matrix/research/W88MultiTimestepNoiseFloorTest.java
+docs-v2/research/W87-W99-FINAL-SYNTHESIS-REPORT.md,research,W87–W99 Final Synthesis — Integration Metrics Suite & Cognitive Layer,281,16296,5,0,,24,PhiId.java;consciousness/CrossLevelPhi.java;consciousness/InterAgentPhi.java;consciousness/StabilityPhi.java;matrix-core/src/main/java/io/matrix/cognitive/CognitiveError.java;matrix-core/src/main/java/io/matrix/cognitive/CognitiveErrorStream.java;matrix-core/src/main/java/io/matrix/cognitive/ExploratoryActionSampler.java;matrix-core/src/main/java/io/matrix/consciousness/CrossLevelPhi.java
+docs-v2/research/W95-CYBERNETIC-RESEARCH-REPORT.md,research,W95 — Cross-Disciplinary Research Wave R-B (Cybernetic / Constructivist),211,10510,10,0,,3,CrossLevelPhi.java;InterAgentPhi.java;StabilityPhi.java
+docs-v2/research/protocols/H-002-clauseset-vs-ga.md,research,H-002 — CLAUSESET vs MPDT-GA preregistration & gates (EXP-002),76,4615,0,0,,0,
+docs-v2/research/protocols/H-003-living-learner.md,research,H-003 — Living-learner vs Tsetlin preregistration & gates (EXP-003),79,4772,0,0,,0,
+docs-v2/research/protocols/H-005-developmental-loop.md,research,H-005 — Developmental Loop solves ≥30% быстрее preregistration & gates (EXP-005),86,5628,0,0,,0,
+docs-v2/research/protocols/H-006-guardrail.md,research,H-006 — FROZEN-guardrail preregistration & gates,75,4521,0,0,,0,
+docs-v2/research/protocols/H-007-memory-stack.md,research,H-007 — Knowledge Stack Recall@5 ≥0.85 preregistration & gates (EXP-007),85,5381,0,0,,0,
+docs-v2/research/protocols/H-009-distillation.md,research,H-009 — Distillation-to-BIR preregistration & gates (EXP-009B/C),77,4677,0,0,,0,
+docs-v2/research/protocols/H-010-wisard-vs-tsetlin.md,research,H-010 — WiSARD vs TsetlinTrainer preregistration & gates (EXP-010),77,4637,0,0,,0,
+docs-v2/research/protocols/H-011-sdm-reader.md,research,H-011 — SDM M1 read beats flat top-K Hamming precision@5 preregistration & gates (EXP-011),86,5401,0,0,,1,memory/SdmReader.java
+docs-v2/research/protocols/H-015-intes-network.md,research,H-015 — Binary intESN within 3 п.п. of float-ESN at ≥10× less energy preregistration & gates (EXP-015),96,6119,0,0,,1,reservoir/IntEsNetwork.java
+docs-v2/research/protocols/H-039.md,research,EXP-039 preregistration,18,617,1,0,,0,
+docs-v2/research/protocols/H-040.md,research,EXP-040 preregistration,18,520,0,0,,0,
+docs-v2/research/protocols/H-041.md,research,EXP-041 preregistration,19,492,0,0,,0,
+docs-v2/research/protocols/H-043.md,research,EXP-043 preregistration,25,1033,0,0,,0,
+docs-v2/research/protocols/H-044.md,research,EXP-044 preregistration,16,431,1,0,,0,
+docs-v2/research/protocols/H-045.md,research,EXP-045 preregistration,18,555,0,0,,0,
+docs-v2/research/protocols/H-046.md,research,EXP-046 preregistration,27,825,0,0,,0,
+docs-v2/research/protocols/H-047.md,research,EXP-047 preregistration,18,469,0,0,,0,
+docs-v2/research/protocols/H-048.md,research,EXP-048 preregistration,18,503,0,0,,0,
+docs-v2/research/protocols/H-049.md,research,EXP-049 preregistration,18,457,0,0,,0,
+docs-v2/research/protocols/H-050.md,research,EXP-050 preregistration,16,413,0,0,,0,
+docs-v2/research/reports/EXP-002-003-production-verdict.md,research,EXP-002/003 — Production verdict (qa_pairs.json restored),60,3063,0,0,,2,Exp002Exp003ProtocolTest.java;matrix-core/src/test/java/io/matrix/evolution/Exp002ComparisonTest.java
+docs-v2/research/reports/EXP-002-report.md,research,EXP-002 Report — CLAUSESET (Tsetlin) vs MPDT-GA producer,44,2321,0,0,,0,
+docs-v2/research/reports/EXP-003-report.md,research,EXP-003 Report — «Живой обучатель» (GA) vs Tsetlin как producer,26,1554,0,0,,0,
+docs-v2/research/reports/EXP-009-report.md,research,"EXP-009 Report — дистилляция в MATRIX, CPU+GPU-нога",48,3415,1,0,,2,matrix-core/src/main/java/io/matrix/distill/OnnxActivationTeacher.java;matrix-core/src/test/java/io/matrix/distill/Exp009bCpuVsOnnxTest.java
+docs-v2/research/reports/EXP-010-report.md,research,EXP-010 Report — WiSARD WNN vs TsetlinTrainer,37,2524,0,0,,0,
+docs-v2/research/reports/EXP-039-report.md,research,EXP-039 — Curiosity-impulse precision@top-K,30,1295,1,0,,1,matrix-core/src/test/java/io/matrix/research/Exp039CuriosityImpulseTest.java
+docs-v2/research/reports/EXP-040-report.md,research,EXP-040 — M2→M3 promotion precision,29,1301,0,0,,1,matrix-core/src/test/java/io/matrix/research/Exp040M2M3PromotionTest.java
+docs-v2/research/reports/EXP-041-report.md,research,EXP-041 — Offline dream-replay vs online retention,34,1490,0,0,,1,matrix-core/src/test/java/io/matrix/research/Exp041OfflineReplayRetentionTest.java
+docs-v2/research/reports/EXP-042-report.md,research,EXP-042 — Consciousness-loop per-stage latency,39,1518,0,0,,2,matrix-core/src/main/java/io/matrix/reasoning/ConsciousnessLoop.java;matrix-core/src/test/java/io/matrix/research/Exp042ConsciousnessLoopLatencyTest.java
+docs-v2/research/reports/EXP-043-report.md,research,EXP-043 — Decentralized digest utility under k-anonymity + DP-noise,64,2794,1,0,,2,matrix-core/src/main/java/io/matrix/federation/DecentralizedDigestPipeline.java;matrix-core/src/test/java/io/matrix/research/Exp043DecentralizedDigestUtilityTest.java
+docs-v2/research/reports/EXP-043-tuning-report.md,research,EXP-043 — Decentralized digest utility (retuned),32,1502,3,0,,1,matrix-core/src/test/java/io/matrix/research/Exp043TuningDecentralizedDigestUtilityTest.java
+docs-v2/research/reports/EXP-044-report.md,research,EXP-044 — Saliency calibration (online),27,1112,1,0,,1,matrix-core/src/test/java/io/matrix/research/Exp044SaliencyCalibrationTest.java
+docs-v2/research/reports/EXP-045-report.md,research,EXP-045 — Freeze-on-ethics-violation recovery,32,1476,0,0,,1,matrix-core/src/test/java/io/matrix/research/Exp045FreezeRecoveryTest.java
+docs-v2/research/reports/EXP-046-report.md,research,EXP-046 — Impulse scheduler gate filter accuracy,49,2010,0,0,,2,matrix-core/src/main/java/io/matrix/lifecycle/ImpulseScheduler.java;matrix-core/src/test/java/io/matrix/research/Exp046ImpulseGateAccuracyTest.java
+docs-v2/research/reports/EXP-046-retuning-report.md,research,EXP-046 — Impulse scheduler gate filter accuracy (retuned),39,1864,0,0,,3,matrix-core/src/main/java/io/matrix/lifecycle/ImpulseScheduler.java;matrix-core/src/test/java/io/matrix/research/Exp046ImpulseGateAccuracyTest.java;matrix-core/src/test/java/io/matrix/research/Exp046RetuningImpulseGateAccuracyTest.java
+docs-v2/research/reports/EXP-047-report.md,research,EXP-047 — Cross-pillar latency budget,27,972,0,0,,1,matrix-core/src/test/java/io/matrix/research/Exp047CrossPillarLatencyTest.java
+docs-v2/research/reports/EXP-048-report.md,research,EXP-048 — Emergence of behavior stability,26,1012,0,0,,1,matrix-core/src/test/java/io/matrix/research/Exp048EmergenceStabilityTest.java
+docs-v2/research/reports/EXP-049-report.md,research,EXP-049 — Share-impulse precision,24,889,0,0,,1,matrix-core/src/test/java/io/matrix/research/Exp049ShareImpulseTest.java
+docs-v2/research/reports/EXP-050-report.md,research,EXP-050 — Arousal monotonicity,19,703,0,0,,1,matrix-core/src/test/java/io/matrix/research/Exp050ArousalMonotonicityTest.java
+docs-v2/research/reports/EXP-MATRIX.0-report.md,research,EXP-MATRIX.0 — Baseline benchmark (synthetic FFN16 teacher),51,2329,1,0,,2,matrix-core/src/main/java/io/matrix/distill/OnnxActivationTeacher.java;matrix-core/src/test/java/io/matrix/research/ExpMatrix0BaselineBenchmarkTest.java
+docs-v2/research/reports/EXP-MATRIX.1-report.md,research,EXP-MATRIX.1 — Sequential distillation (synthetic FFN16),48,2170,3,0,,3,matrix-core/src/main/java/io/matrix/distill/Distiller.java;matrix-core/src/main/java/io/matrix/distill/OnnxActivationTeacher.java;matrix-core/src/test/java/io/matrix/research/ExpMatrix1DistillationTest.java
+docs-v2/research/reports/EXP-MATRIX.10-multibench.md,research,EXP-MATRIX.10 — Multi-benchmark comparison (Wave E),57,2181,0,0,,0,
+docs-v2/research/reports/EXP-MATRIX.11-native-build-status.md,research,"Native Build Status (Wave G, partial)",79,3443,1,0,,0,
+docs-v2/research/reports/EXP-MATRIX.12-bitlinear-training.md,research,EXP-MATRIX.12 — BitLinear training (Wave D),64,2630,0,0,,1,matrix-core/src/main/java/io/matrix/imports/BitLinearProjector.java
+docs-v2/research/reports/EXP-MATRIX.13-full-bench.md,research,EXP-MATRIX.13 — Real-domain corpus benchmark (Wave K),55,2335,1,0,,2,BitLinearTrainer.java;matrix-core/src/main/java/io/matrix/imports/BitLinearTrainer.java
+docs-v2/research/reports/EXP-MATRIX.13-native-final.md,research,EXP-MATRIX.13-native-final — Wave N native-image status (final),40,1783,0,0,,0,
+docs-v2/research/reports/EXP-MATRIX.13-native-run18.md,research,EXP-MATRIX.13-NATIVE-RUN18 — Native image build status (RUN 18 update),88,3671,0,0,,0,
+docs-v2/research/reports/EXP-MATRIX.14-h043-digest-utility.md,research,EXP-MATRIX.14 — H-043 Decentralized Digest Utility (Wave RUN 16),65,2532,1,0,,1,matrix-core/src/test/java/io/matrix/research/Exp043DecentralizedDigestTest.java
+docs-v2/research/reports/EXP-MATRIX.15-h046-gate-accuracy.md,research,EXP-MATRIX.15 — H-046 Subconscious gate filter accuracy (Wave RUN 16),73,2980,0,0,,1,matrix-core/src/test/java/io/matrix/research/Exp046SubconsciousGateAccuracyTest.java
+docs-v2/research/reports/EXP-MATRIX.16-prod-corpus-rerun.md,research,EXP-MATRIX.16 — Production-corpus EXP-009 / EXP-010 reruns (Wave RUN 17),62,2683,0,0,,1,matrix-core/src/test/java/io/matrix/research/Exp016ProductionCorpusTest.java
+docs-v2/research/reports/EXP-MATRIX.19-feedback-trainer.md,research,EXP-MATRIX.19 — Continuous LM head training via chat feedback (RUN 19),51,2254,1,0,,1,../../matrix-core/src/main/java/io/matrix/chat/ChatDrivenTrainer.java
+docs-v2/research/reports/EXP-MATRIX.2-report.md,research,EXP-MATRIX.2 — Real DistilBERT distillation,74,3652,1,0,,1,matrix-core/src/test/java/io/matrix/research/ExpMatrix0BaselineBenchmarkTest.java
+docs-v2/research/reports/EXP-MATRIX.20-e2e-stress.md,research,EXP-MATRIX.20 — E2E Bilingual QA Stress Test (RUN 20),67,2689,1,0,,1,matrix-core/src/test/java/io/matrix/research/Exp020E2EBilingualStressTest.java
+docs-v2/research/reports/EXP-MATRIX.21-signed-update.md,research,EXP-MATRIX.21 — Signed LM head update verification (RUN 22),68,2938,0,0,,2,matrix-core/src/test/java/io/matrix/api/LmHeadFeedbackTrainerTest.java;matrix-core/src/test/java/io/matrix/api/LmHeadTest.java
+docs-v2/research/reports/EXP-MATRIX.22-confidence.md,research,"EXP-MATRIX.22 — Confidence calibration (H-024, RUN 23)",56,2224,3,0,,0,
+docs-v2/research/reports/EXP-MATRIX.23-baseline.md,research,EXP-MATRIX.23 — Performance baseline (RUN 28),66,2552,1,0,,1,matrix-core/src/test/java/io/matrix/research/Exp028PerformanceBaselineTest.java
+docs-v2/research/reports/EXP-MATRIX.24-sparsity.md,research,EXP-MATRIX.24 — Sparse weight storage measurement (RUN 29),53,1785,0,0,,1,matrix-core/src/test/java/io/matrix/api/LmHeadTest.java
+docs-v2/research/reports/EXP-MATRIX.25-semantic.md,research,EXP-MATRIX.25 — Semantic query expansion (RUN 30),74,3232,1,0,,2,matrix-core/src/test/java/io/matrix/api/SemanticExpanderTest.java;matrix-core/src/test/java/io/matrix/research/Exp025SemanticRetrievalTest.java
+docs-v2/research/reports/EXP-MATRIX.26-batch-training.md,research,EXP-MATRIX.26 — Batch training speedup (RUN 34),74,2828,2,0,,1,matrix-core/src/test/java/io/matrix/api/LmHeadTrainerBatchTest.java
+docs-v2/research/reports/EXP-MATRIX.27-h044-calibration.md,research,EXP-MATRIX.27 — H-044 calibration verification with real ECE (RUN 35),59,1847,0,0,,1,matrix-core/src/test/java/io/matrix/research/Exp035H044CalibrationTest.java
+docs-v2/research/reports/EXP-MATRIX.28-h045-recovery.md,research,EXP-MATRIX.28 — H-045 ethics violation recovery (RUN 39),64,2564,0,0,,1,matrix-core/src/test/java/io/matrix/ethics/Exp045H045FreezeRecoveryTest.java
+docs-v2/research/reports/EXP-MATRIX.29-h050-arousal.md,research,EXP-MATRIX.29 — H-050 arousal dynamics verification (RUN 41),56,2117,0,0,,1,matrix-core/src/test/java/io/matrix/reasoning/Exp041H050ArousalDynamicsTest.java
+docs-v2/research/reports/EXP-MATRIX.3-report.md,research,EXP-MATRIX.3 — Real DistilBERT (non-tiny) distillation,75,3642,2,0,,0,
+docs-v2/research/reports/EXP-MATRIX.34-native-status.md,research,EXP-MATRIX.34 — Native build retry status (RUN 53),39,1347,1,0,,0,
+docs-v2/research/reports/EXP-MATRIX.35-hf-onnx-graalvm.md,research,RUN 54 — HuggingFace integration + ONNX/GraalVM documentation,100,3754,0,0,,1,HuggingFaceFetcher.java
+docs-v2/research/reports/EXP-MATRIX.36-native-attempt.md,research,EXP-MATRIX.36 — Native build attempt log (RUN 55),82,2900,2,1,io.matrix.SystemDemo,0,
+docs-v2/research/reports/EXP-MATRIX.37-gpu-onnx.md,research,EXP-MATRIX.37 — GPU ONNX inference verification (RUN 63),106,3360,1,0,,2,matrix-core/src/main/java/io/matrix/api/OnnxRuntimeAdapter.java;matrix-core/src/test/java/io/matrix/api/OnnxRuntimeGpuTest.java
+docs-v2/research/reports/EXP-MATRIX.38-gpu-vs-cpu.md,research,EXP-MATRIX.38 — GPU vs CPU ONNX benchmark (RUN 65),49,1417,0,0,,1,matrix-core/src/test/java/io/matrix/research/Exp065GpuVsCpuBenchmarkTest.java
+docs-v2/research/reports/EXP-MATRIX.39-qwen-onnx-bridge.md,research,EXP-MATRIX.39 — QwenOnnxBridge (RUN 66),56,1697,0,0,,0,
+docs-v2/research/reports/EXP-MATRIX.4-report.md,research,EXP-MATRIX.4 — GPT-2 distillation,51,2415,0,0,,0,
+docs-v2/research/reports/EXP-MATRIX.40-qwen-end-to-end.md,research,EXP-MATRIX.40 — Qwen end-to-end real LLM in Java (RUN 66-75),61,1925,1,0,,0,
+docs-v2/research/reports/EXP-MATRIX.43-bpe-encoder-fix.md,research,EXP-MATRIX.43 — BPE encoder/decoder fix (RUN 78),43,1370,1,0,,0,
+docs-v2/research/reports/EXP-MATRIX.47-argmax-prob.md,research,EXP-MATRIX.47 — Argmax probability calibration (RUN 92),40,1278,1,0,,0,
+docs-v2/research/reports/EXP-MATRIX.5-report.md,research,EXP-MATRIX.5 — Real-LLM sidecar wired to MATRIX chat API,78,3036,2,0,,1,matrix-core/src/main/java/io/matrix/api/OpenAIChatResource.java
+docs-v2/research/reports/EXP-MATRIX.50-llm-capabilities.md,research,EXP-MATRIX.50 — Full LLM capability stack (RUN 66-102),74,2622,1,0,,0,
+docs-v2/research/reports/EXP-MATRIX.53-onnx-export-with-hidden.md,research,EXP-MATRIX.53 — ONNX export with hidden_states (RUN 108),42,1230,2,0,,1,TextEmbedder.java
+docs-v2/research/reports/EXP-MATRIX.55-beam-search.md,research,EXP-MATRIX.55 — Beam search generator (RUN 112),35,1091,1,0,,0,
+docs-v2/research/reports/EXP-MATRIX.57-context-window.md,research,EXP-MATRIX.57 — Context window management (RUN 124),33,951,0,0,,0,
+docs-v2/research/reports/EXP-MATRIX.6-report.md,research,EXP-MATRIX.6 — MATRIX multi-backend chat (DistilBERT distilled + sidecars),80,3992,1,0,,6,OpenAIChatResource.java;matrix-core/src/main/java/io/matrix/api/ChatPipelineEnricher.java;matrix-core/src/main/java/io/matrix/api/ModelRegistryResource.java;matrix-core/src/main/java/io/matrix/api/OpenAIChatResource.java;matrix-core/src/main/java/io/matrix/model/ModelRegistry.java;matrix-core/src/test/java/io/matrix/model/ModelRegistryTest.java
+docs-v2/research/reports/EXP-MATRIX.7-report.md,research,EXP-MATRIX.7 — Real LLM weights imported into MATRIX boolean substrate,107,4967,1,0,,1,matrix-core/src/test/java/io/matrix/imports/WeightImportEndToEndIT.java
+docs-v2/research/reports/EXP-RESEARCH-CONSCIOUSNESS-METRICS-REPORT.md,research,EXP-RESEARCH-CONSCIOUSNESS-METRICS-REPORT,94,3825,1,0,,0,
+docs-v2/research/reports/EXP-RESEARCH-MEMORY-EMERGENCE-METACOGNITION-REPORT.md,research,"Research Dossier — Memory Consolidation, Emergent Multi-Agent Systems, Metacognition & Applied Philosophy for MATRIX Brain Simulator",638,50363,20,0,,19,BitLinearDreamer.java;BitLinearTrainer.java;FreeEnergyLoss.java;brain/EmbodiedNcaCortex.java;brain/SelfModel.java;brain/Viewpoint.java;consciousness/HermeneuticLoop.java;consciousness/PragmaticTest.java
+docs-v2/research/summaries/GLOSSARY.md,research,,68,9961,0,0,,0,
+docs-v2/research/summaries/INDEX-W20.md,research,Нормативный каркас,66,5753,0,0,,0,
+docs-v2/research/summaries/W31-CROSS-DISCIPLINARY-SYNTHESIS.md,research,W31 — Cross-Disciplinary Synthesis Summary,141,7864,0,0,,14,AdultHabituationExperiment.java;BitLinear.java;CodebookMemory.java;CrossModalPaired.java;HdcAsLlmPreprocessor.java;HdcBinding.java;HdcBrain.java;HdcConditioning.java
+docs-v2/research/summaries/WAVE15-summary.md,research,"§65. Мичи (MENACE, BOXES) и Уилкс (микропрограммирование, библиотека подпрограмм)",60,15634,0,0,,0,
+docs-v2/research/summaries/synthesis-W25.md,research,"1. Стек механизмов (L0–L10, снизу вверх)",66,7380,0,0,,0,
+docs-v2/research/summaries/synthesis-W28.md,research,1. Дельта относительно W25,56,6757,0,0,,0,
+docs-v2/ru/ecosystem/algorithms/biochemical.md,other,Биохимическая сеть модуляторов,20,1052,0,0,,0,
+docs-v2/ru/ecosystem/algorithms/bir.md,other,BIR — Boolean Inference Rules,19,822,0,0,,0,
+docs-v2/ru/ecosystem/algorithms/fft.md,other,FFT — Быстрое преобразование Фурье,18,709,0,0,,0,
+docs-v2/ru/ecosystem/algorithms/hdc.md,other,HDC — Hyperdimensional Computing,20,824,0,0,,0,
+docs-v2/ru/ecosystem/algorithms/index.md,other,Алгоритмы,28,1215,0,0,,0,
+docs-v2/ru/ecosystem/algorithms/mcts.md,other,MCTS — Monte Carlo Tree Search,18,707,0,0,,0,
+docs-v2/ru/ecosystem/algorithms/sobel.md,other,Sobel — детекция границ,18,728,0,0,,0,
+docs-v2/ru/ecosystem/algorithms/stigmergy.md,other,Стегимергия — непрямая координация,20,977,0,0,,0,
+docs-v2/ru/ecosystem/api/index.md,other,API Reference,39,1354,0,0,,0,
+docs-v2/ru/ecosystem/architecture/index.md,other,Архитектура,35,1262,0,0,,0,
+docs-v2/ru/ecosystem/concept/index.md,other,Что такое MATRIX?,132,7065,0,0,,0,
+docs-v2/ru/ecosystem/constitution/index.md,other,Конституция,161,8084,0,0,,0,
+docs-v2/ru/ecosystem/index.md,other,Экосистема MATRIX,54,3449,0,0,,0,
+docs-v2/ru/ecosystem/quickstart/index.md,other,Быстрый старт — 5 минут от нуля до первого API-вызова,219,7563,0,2,io.matrix.api.MinimalHttpServer;io.matrix.sdk.MatrixClient,0,
+docs-v2/ru/ecosystem/sdks/index.md,other,SDK руководства,24,759,0,0,,0,
+docs-v2/ru/ecosystem/xai/index.md,other,Глубокое погружение в XAI,28,1126,0,0,,0,
+docs-v2/ru/ethics.md,other,Четыре закона: нерушимые правила MATRIX,159,8853,0,1,io.matrix.federation.registry.DynamicModulatorRegistry,0,
+docs-v2/ru/index.md,other,🧠 MATRIX: Энциклопедия гибридного интеллекта,68,3487,0,0,,0,
+docs-v2/ru/overview.md,other,"MATRIX: ИИ, который думает как мозг",137,7107,0,0,,0,
+docs-v2/science-v2/benchmarks.md,other,Benchmarks: Methodology and Results,228,6812,0,3,io.matrix.federation.liquid.simulation.SleepConsolidationStudy;io.matrix.federation.liquid.simulation.FederationSimulation;io.matrix.federation.liquid.benchmark.BenchmarkRunner,12,../../matrix-core/src/main/java/io/matrix/federation/liquid/benchmark/CausalityBenchmark.java;../../matrix-core/src/main/java/io/matrix/federation/liquid/benchmark/EnergyBenchmark.java;../../matrix-core/src/main/java/io/matrix/federation/liquid/benchmark/LogicBenchmark.java;../../matrix-core/src/main/java/io/matrix/federation/liquid/benchmark/SampleEfficiencyBenchmark.java;../../matrix-core/src/main/java/io/matrix/federation/liquid/simulation/FederationSimulation.java;../../matrix-core/src/main/java/io/matrix/federation/liquid/simulation/SleepConsolidationStudy.java;CausalityBenchmark.java;EnergyBenchmark.java
+docs-v2/science-v2/forking-paths.md,other,Forking Paths: Why We Chose What We Chose,245,7928,6,0,,3,../../matrix-core/src/main/java/io/matrix/brain/BirBrainCycle.java;../../matrix-core/src/main/java/io/matrix/brain/LlmBrainLoopService.java;../../matrix-core/src/main/java/io/matrix/federation/registry/DynamicModulatorRegistry.java
+docs-v2/science-v2/hypotheses.md,other,Hypotheses: Status and Evidence,163,4676,5,0,,14,../../matrix-core/src/main/java/io/matrix/federation/liquid/benchmark/EnergyBenchmark.java;../../matrix-core/src/main/java/io/matrix/federation/liquid/benchmark/LogicBenchmark.java;../../matrix-core/src/main/java/io/matrix/federation/liquid/benchmark/SampleEfficiencyBenchmark.java;../../matrix-core/src/main/java/io/matrix/federation/liquid/simulation/FederationSimulation.java;../../matrix-core/src/main/java/io/matrix/federation/liquid/simulation/SleepConsolidationStudy.java;../../matrix-core/src/test/java/io/matrix/federation/liquid/biochemistry/StigmergyProtocolTest.java;../../matrix-core/src/test/java/io/matrix/federation/liquid/biochemistry/StressCascadeSimulationTest.java;EnergyBenchmark.java
+docs-v2/science-v2/math-foundations.md,other,Mathematical Foundations,244,6098,0,0,,0,
+docs-v2/science/ALGORITHM-ATLAS-INDEX.md,other,ALGORITHM-ATLAS — указатель,58,3386,0,0,,0,
+docs-v2/science/FOUNDATIONS.md,other,FOUNDATIONS — научные основания MATRIX,34,2650,0,0,,0,
+docs-v2/science/GOALS-REQUIREMENTS.md,other,GOALS-REQUIREMENTS — цели и функциональные требования MATRIX,47,3565,0,0,,1,bir/FpgaBackend.java
+docs-v2/science/OPEN-PROBLEMS.md,other,OPEN-PROBLEMS — исследовательское видение,44,4503,0,0,,0,
+docs-v2/science/SUBSTRATE-MODELS.md,other,SUBSTRATE-MODELS — реестр вычислительных теорий MATRIX,46,3660,0,0,,0,
+docs-v2/security/LLM-QUARANTINE.md,other,LLM-Serving Class Quarantine Policy (TRUE-W9),57,2012,1,16,io.matrix.api.ContinuousBatchScheduler;io.matrix.api.ContextWindowManager;io.matrix.api.BeamSearchGenerator;io.matrix.api.AdaptiveModelRouter;io.matrix.api.OnnxRuntimeAdapter;io.matrix.api.ChainTextGenerator;io.matrix.api.OpenAIChatResource;io.matrix.api.HuggingFaceFetcher,0,
+docs-v2/security/SECURITY-AUDIT-W368.md,other,Security Audit — W368,117,4048,1,0,,0,
+docs-v2/security/WEBHOOK-SIGNATURE-FRESHNESS.md,other,Webhook Signature Freshness Policy,102,5161,2,1,io.matrix.billing.StripeWebhookHandler,0,
+docs-v2/specifications/INDEX.md,other,SPECIFICATIONS — INDEX,25,2438,0,0,,0,
+docs-v2/specifications/SPEC-000-developmental-loop.md,other,SPEC-000 — Developmental Loop,27,1636,0,0,,0,
+docs-v2/specifications/SPEC-001-weight-conversion.md,other,SPEC-001 — Верифицируемая конвертация весов,27,1736,0,0,,0,
+docs-v2/specifications/SPEC-002-boolean-compute-layer.md,other,SPEC-002 — Boolean Compute Layer (BIR),38,2502,0,1,io.matrix.tsetlin.TsetlinTrainer,7,Backend.java;bir/BirCompiler.java;bir/BirRegistry.java;bir/BooleanRuntime.java;bir/DecisionTreeAdapter.java;bir/LineageLedger.java;bir/TruthTableAdapter.java
+docs-v2/specifications/SPEC-002-quantum-bir-mps.md,other,SPEC-002-quantum — BIR → MPS,20,1469,0,0,,0,
+docs-v2/specifications/SPEC-003-knowledge-topology.md,other,SPEC-003 — Knowledge Topology,28,1715,0,0,,0,
+docs-v2/specifications/SPEC-004-perception.md,other,SPEC-004 — Perception Pillar (Sensor Layer),77,5512,0,0,,0,
+docs-v2/specifications/SPEC-005-action.md,other,SPEC-005 — Action Pillar (Motor Layer),87,5839,0,0,,0,
+docs-v2/specifications/SPEC-006-consciousness-deliberation.md,other,SPEC-006 — Consciousness / Deliberation (центральный процессор),81,6317,0,0,,0,
+docs-v2/specifications/SPEC-007-subconscious.md,other,SPEC-007 — Subconscious (фоновый слой),76,6586,0,0,,0,
+docs-v2/specifications/SPEC-008-reasoning-brcchain.md,other,SPEC-008 — Boolean Reasoning Chain (BRC) (normative),115,5713,1,0,,0,
+docs-v2/specifications/SPEC-009-mediator-hierarchy.md,other,SPEC-009 — Mediator Hierarchy (normative),106,5552,0,0,,0,
+docs-v2/specifications/SPEC-010-hades-burden.md,other,SPEC-010 — HADES Burden Lifting (normative),114,5624,0,0,,1,../../matrix-core/src/main/java/io/matrix/api/OpenAIChatResource.java
+docs-v2/specifications/SPEC-011-memory-hierarchy.md,other,SPEC-011 — Hierarchical Memory (normative),135,5709,0,0,,1,../../matrix-core/src/main/java/io/matrix/api/OpenAIChatResource.java
+docs-v2/specifications/SPEC-012-rag-boolean.md,other,SPEC-012 — Boolean RAG (normative),146,6790,0,0,,1,../../matrix-core/src/main/java/io/matrix/api/QaCorpusIndex.java
+docs-v2/specifications/SPEC-013-dynamic-modulator-registry.md,other,SPEC-013: Dynamic Modulator Registry,215,8498,0,0,,0,
+docs-v2/specifications/SPEC-014-wal-management.md,other,SPEC-014: WAL Management & Wave-based Checkpointing,302,9710,0,0,,0,
+docs-v2/specs/SPEC-W33.3-unknown-media-payload.md,specification,SPEC-W33.3 — UnknownMediaPayload: perception gaps as first-class knowledge,132,7273,4,0,,0,
+docs-v2/specs/SPEC-W34.3-monotone-tightening.md,specification,SPEC-W34.3 — Monotone Tightening: a classifier that may only ever add refusals,92,4841,5,0,,0,
+docs-v2/story/brain-analogy.md,other,The Brain Analogy: How MATRIX Mimics Biology,235,7833,1,0,,0,
+docs-v2/story/ethics.md,other,The Four Laws: MATRIX's Unbreakable Rules,186,5737,5,1,io.matrix.federation.registry.DynamicModulatorRegistry,0,
+docs-v2/story/federation.md,other,The Digital Hive Mind: How Nodes Work Together,223,5985,7,0,,0,
+docs-v2/story/overview.md,other,The Story of MATRIX: A City of Minds,287,9978,3,0,,0,
+docs-v2/templates/engineer-template.md,other,[Module Name]: [What it does],21,386,0,0,,0,
+docs-v2/templates/forking-path-template.md,other,Forking Path: [Decision Topic],39,690,0,0,,0,
+docs-v2/templates/scientist-template.md,other,[Topic]: [Formal title],18,374,0,0,,0,
+docs-v2/templates/story-template.md,other,[Title]: [Subtitle that hooks curiosity],20,453,0,0,,0,
+docs-v2/vision/BRAIN-LIKE-SYSTEM.md,other,BRAIN-LIKE SYSTEM — архитектурный синтез MATRIX,49,5527,0,0,,1,ethics/frozen/FrozenEthicalFNL.java
+docs-v2/vision/CONCEPT-CORRECTIONS.md,other,DECISIONS — принятые архитектурные решения,91,7699,1,0,,0,
+docs-v2/vision/FINALSUMMARY.md,other,FINALSUMMARY — текущее состояние проекта,3909,166385,40,4,io.matrix.reasoning.BrainLoopService;io.matrix.api.LmHeadFeedbackTrainer;io.matrix.api.ChainFeatureCache;io.matrix.api.LmHead,36,BitLinearTrainer.java;ChatPipelineEnricher.java;ModelRegistry.java;ModelRegistryResource.java;OpenAIChatResource.java;matrix-core/.../api/BpeTokenizer.java;matrix-core/.../api/BpeTokenizerProvider.java;matrix-core/.../api/ChainDebugResource.java
+docs-v2/vision/STATUS-2026-08-28.md,other,STATUS — What works now vs what remains (2026-08-28),107,5227,2,0,,0,
+docs-v2/vision/STATUS-2026-08-31-SHUTDOWN.md,other,"Shutdown Investigation (Wave G follow-up, 2026-08-31)",45,1794,0,0,,0,
+docs-v2/vision/USAGE.md,other,MATRIX — How to use the system,265,11897,2,0,,0,
+docs-v2/waves/SESSION-W347-W351-summary.md,other,🌊 Волны W347-W351: Liquid Federation Foundation,209,7792,0,0,,0,
+docs-v2/waves/WAL-001-phase-0-complete-2026-09-11-0930.md,other,WAL 1 — Phase 0 complete (2026-09-11 09:30),73,2974,1,2,io.matrix.memory.PersistentHierarchicalMemory;io.matrix.memory.PersistentMemory,0,
+docs-v2/waves/WAL-002-wave-h-complete-2026-09-11-0936.md,other,WAL 2 — Wave H complete (2026-09-11 09:36),121,4965,1,0,,0,
+docs-v2/waves/WAL-005-final-all-9-acceptance-criteria-met-2026-09-11-10.md,other,WAL 5 — (FINAL) — All 9 acceptance criteria MET (2026-09-11 10:19),100,4378,0,0,,0,
+docs-v2/waves/WAL-007-phases-xyzaa-complete-2026-09-11-1538.md,other,WAL 7 — Phases X+Y+Z+AA complete (2026-09-11 15:38),162,7391,2,1,io.matrix.imports.HammingNative,0,
+docs-v2/waves/WAL-009-2026-09-04-1818-training-fix.md,other,WAL 9 — 2026-09-04 18:18 — TRAINING FIX,51,1612,0,0,,0,
+docs-v2/waves/WAL-011-2026-09-04-2221-lm-head-negative-sampling.md,other,WAL 11 — 2026-09-04 22:21 — LM head negative sampling,32,1007,0,0,,0,
+docs-v2/waves/WAL-011-2026-09-04-2245-ux-doc-vs-code-audit-fixes.md,other,WAL 11 — 2026-09-04 22:45 — UX doc-vs-code audit fixes,36,1680,0,0,,1,LmHeadResource.java
+docs-v2/waves/WAL-011-negative-sampling-audit-fixes-2026-09-04-2221.md,other,WAL 11 — Negative sampling + audit fixes (2026-09-04 22:21),37,1925,1,1,io.matrix.api.LmHead,0,
+docs-v2/waves/WAL-012-brain-loop-wired-into-v1chat-2026-09-05-1250.md,other,WAL 12 — Brain Loop wired into /v1/chat (2026-09-05 12:50),28,997,0,1,io.matrix.reasoning.BrainLoopService,0,
+docs-v2/waves/WAL-012-w31-cross-disciplinary-research-wave-2026-09-11.md,other,WAL 12 — W31 Cross-Disciplinary Research Wave (2026-09-11),104,6636,0,0,,0,
+docs-v2/waves/WAL-013-sdd-sweep-specs-for-5-top-packages-2026-09-05-1258.md,other,WAL 13 — SDD-sweep specs for 5 top packages (2026-09-05 12:58),26,953,0,0,,0,
+docs-v2/waves/WAL-013-w32-hdc-bitlinear-implementation-wave-2026-09-12.md,other,WAL 13 — W32 HDC + BitLinear implementation wave (2026-09-12),57,2668,0,0,,7,BitLinear.java;CodebookMemory.java;HdcBinding.java;HdcBrain.java;HdcConditioning.java;HdcEncoding.java;HebbianUpdater.java
+docs-v2/waves/WAL-014-tla-structural-smoke-tests-2026-09-05-1300.md,other,WAL 14 — TLA+ structural smoke tests (2026-09-05 13:00),24,768,0,0,,0,
+docs-v2/waves/WAL-014-w32-continued-tests-spelke-crossmodal-2026-09-12.md,other,WAL 14 — W32 continued: tests + Spelke + CrossModal (2026-09-12),50,2275,0,0,,0,
+docs-v2/waves/WAL-015-chainfeaturecache-real-chain-features-2026-09-05-.md,other,WAL 15 — ChainFeatureCache + real chain features (2026-09-05 13:05),25,875,0,1,io.matrix.api.ChainFeatureCache,0,
+docs-v2/waves/WAL-015-w32-final-summary-2026-09-12.md,other,WAL 15 — W32 final summary (2026-09-12),65,2295,0,0,,11,io/matrix/neuron/BitLinear.java;io/matrix/neuron/CodebookMemory.java;io/matrix/neuron/CrossModalPaired.java;io/matrix/neuron/HdcBinding.java;io/matrix/neuron/HdcBrain.java;io/matrix/neuron/HdcConditioning.java;io/matrix/neuron/HdcEncoding.java;io/matrix/neuron/HebbianUpdater.java
+docs-v2/waves/WAL-016-h-043-h-046-verification-2026-09-05-1307.md,other,WAL 16 — H-043 + H-046 verification (2026-09-05 13:07),24,746,0,0,,0,
+docs-v2/waves/WAL-016-w32-wave-5-hdc-llm-integration-2026-09-12.md,other,WAL 16 — W32 Wave 5: HDC + LLM integration (2026-09-12),38,1255,0,0,,0,
+docs-v2/waves/WAL-017-production-corpus-exp-reruns-2026-09-05-1310.md,other,WAL 17 — production-corpus EXP reruns (2026-09-05 13:10),23,701,0,0,,0,
+docs-v2/waves/WAL-017-w31-plan-complete-all-14-runs-2026-09-12.md,other,WAL 17 — W31 PLAN COMPLETE: all 14 RUNs (2026-09-12),59,2060,0,0,,0,
+docs-v2/waves/WAL-018-native-build-attempts-rfc-blocked-2026-09-05-1313.md,other,WAL 18 — native build attempts (RFC blocked) (2026-09-05 13:13),25,842,0,0,,0,
+docs-v2/waves/WAL-018-w31-publishable-artifacts-2026-09-12.md,other,WAL 18 — W31 publishable artifacts (2026-09-12),96,3309,0,0,,17,BitLinear.java;CodebookMemory.java;CrossModalPaired.java;HdcAsLlmPreprocessor.java;HdcBinding.java;HdcBrain.java;HdcConditioning.java;HdcEncoding.java
+docs-v2/waves/WAL-019-continuous-lm-head-training-via-feedback-2026-09-0.md,other,WAL 19 — continuous LM head training via feedback (2026-09-05 13:21),24,795,0,2,io.matrix.api.LmHeadFeedbackTrainer;io.matrix.api.LmHead,0,
+docs-v2/waves/WAL-019-w31-wave-final-audit-2026-09-12.md,other,WAL 19 — W31 WAVE FINAL AUDIT (2026-09-12),58,1881,0,0,,0,
+docs-v2/waves/WAL-020-e2e-bilingual-qa-stress-test-2026-09-05-1325.md,other,WAL 20 — E2E bilingual QA stress test (2026-09-05 13:25),24,744,0,0,,0,
+docs-v2/waves/WAL-020-wave-11-12-adr-mpdt-hdc-bridge-2026-09-12.md,other,WAL 20 — Wave 11-12: ADR + MPDT × HDC bridge (2026-09-12),34,1138,0,0,,0,
+docs-v2/waves/WAL-021-documentation-stabilization-2026-09-05-1326.md,other,WAL 21 — documentation stabilization (2026-09-05 13:26),25,737,0,0,,0,
+docs-v2/waves/WAL-021-w32-wave-complete-sep-12-2026.md,other,WAL 21 — W32 WAVE COMPLETE (Sep 12 2026),47,1498,0,0,,0,
+docs-v2/waves/WAL-022-lmhead-signed-update-api-2026-09-05-1443.md,other,WAL 22 — LmHead signed update API (2026-09-05 14:43),28,938,0,0,,0,
+docs-v2/waves/WAL-022-wave-15-17-l4-sensorimotor-design-58-v3-2026-09-1.md,other,WAL 22 — Wave 15-17: L4 sensorimotor + DESIGN-58 v3 (2026-09-12),32,934,0,0,,0,
+docs-v2/waves/WAL-023-confidence-calibration-2026-09-05-1445.md,other,WAL 23 — confidence calibration (2026-09-05 14:45),24,706,0,0,,0,
+docs-v2/waves/WAL-023-w33-wave-final-full-project-health-2026-09-12.md,other,WAL 23 — W33 WAVE FINAL: full project health (2026-09-12),54,1636,0,0,,0,
+docs-v2/waves/WAL-024-production-observability-metrics-endpoint-2026-09-.md,other,WAL 24 — production observability metrics endpoint (2026-09-05 14:47),22,622,0,0,,0,
+docs-v2/waves/WAL-024-w34-w40-gpu-native-image-integration-2026-09-12.md,other,WAL 24 — W34-W40: GPU + native-image integration (2026-09-12),62,2125,0,0,,0,
+docs-v2/waves/WAL-025-schema-migration-2026-09-05-1448.md,other,WAL 25 — schema migration (2026-09-05 14:48),23,578,0,0,,0,
+docs-v2/waves/WAL-025-w41-bitnet-weight-format-reverse-engineered-2026-0.md,other,WAL 25 — W41: BitNet weight format reverse-engineered (2026-09-12),36,1371,0,0,,0,
+docs-v2/waves/WAL-026-multi-tenant-data-isolation-2026-09-05-1449.md,other,WAL 26 — multi-tenant data isolation (2026-09-05 14:49),22,619,0,0,,0,
+docs-v2/waves/WAL-026-w41-w45-bitnet-2b-inference-pipeline-2026-09-12.md,other,WAL 26 — W41-W45: BitNet 2B inference pipeline (2026-09-12),61,2351,2,0,,0,
+docs-v2/waves/WAL-027-constrained-decoding-output-safety-filter-2026-09-.md,other,WAL 27 — constrained-decoding output safety filter (2026-09-05 14:50),22,628,0,0,,0,
+docs-v2/waves/WAL-027-w46-bitnet-transformer-architecture-sub-agent-rese.md,other,WAL 27 — W46: BitNet transformer architecture (sub-agent research),44,1478,0,0,,0,
+docs-v2/waves/WAL-028-performance-baseline-2026-09-05-1451.md,other,WAL 28 — performance baseline (2026-09-05 14:51),23,602,0,0,,0,
+docs-v2/waves/WAL-028-w41-w49-complete-real-bitnet-2b-end-to-end-inferen.md,other,WAL 28 — W41-W49 COMPLETE: Real BitNet 2B end-to-end inference (2026-09-12),52,1736,0,0,,0,
+docs-v2/waves/WAL-029-sparse-weight-storage-diagnostics-2026-09-05-1504.md,other,WAL 29 — sparse weight storage diagnostics (2026-09-05 15:04),28,866,0,0,,0,
+docs-v2/waves/WAL-029-w51-w53-bitnet-inference-complete-end-to-end-2026-.md,other,WAL 29 — W51-W53: BitNet inference COMPLETE end-to-end (2026-09-12),49,1661,0,0,,0,
+docs-v2/waves/WAL-030-semantic-query-expansion-2026-09-05-1509.md,other,WAL 30 — semantic query expansion (2026-09-05 15:09),25,782,0,0,,0,
+docs-v2/waves/WAL-030-w54-w55-sampling-kv-cache-sampled-generation-202.md,other,WAL 30 — W54-W55: Sampling + KV Cache + Sampled Generation (2026-09-13),46,1521,0,0,,0,
+docs-v2/waves/WAL-031-w56-multi-token-forward-with-causal-mask-2026-09-1.md,other,WAL 31 — W56: Multi-token forward with causal mask (2026-09-13),40,1548,1,0,,0,
+docs-v2/waves/WAL-031-wire-semanticexpander-into-qacorpusindex-2026-09-0.md,other,WAL 31 — wire SemanticExpander into QaCorpusIndex (2026-09-05 15:15),24,774,0,0,,0,
+docs-v2/waves/WAL-032-w58-true-autoregressive-with-kv-cache-reuse-2026-0.md,other,WAL 32 — W58: True autoregressive with KV cache reuse (2026-09-13),42,1361,1,0,,0,
+docs-v2/waves/WAL-032-wire-outputsafetyfilter-into-chaintextgenerator-20.md,other,WAL 32 — wire OutputSafetyFilter into ChainTextGenerator (2026-09-05 15:16),25,814,0,0,,0,
+docs-v2/waves/WAL-033-tenant-scoped-qa-endpoint-2026-09-05-1517.md,other,WAL 33 — tenant-scoped QA endpoint (2026-09-05 15:17),22,570,0,0,,0,
+docs-v2/waves/WAL-034-batch-training-loop-2026-09-05-1519.md,other,WAL 34 — batch training loop (2026-09-05 15:19),24,651,0,0,,0,
+docs-v2/waves/WAL-035-h-044-calibration-acceptance-2026-09-05-1520.md,other,WAL 35 — H-044 calibration acceptance (2026-09-05 15:20),23,665,0,0,,0,
+docs-v2/waves/WAL-036-wire-semanticexpander-fallback-into-openaichatreso.md,other,WAL 36 — wire SemanticExpander fallback into OpenAIChatResource (2026-09-05 15:22),22,692,0,0,,0,
+docs-v2/waves/WAL-037-auto-migrate-legacy-corpus-on-reload-2026-09-05-15.md,other,WAL 37 — auto-migrate legacy corpus on reload (2026-09-05 15:23),23,732,1,0,,0,
+docs-v2/waves/WAL-038-production-health-check-endpoint-2026-09-05-1524.md,other,WAL 38 — production health check endpoint (2026-09-05 15:24),23,652,0,0,,0,
+docs-v2/waves/WAL-039-h-045-ethics-violation-recovery-2026-09-05-1527.md,other,WAL 39 — H-045 ethics violation recovery (2026-09-05 15:27),23,686,0,0,,0,
+docs-v2/waves/WAL-040-per-stage-latency-tracker-2026-09-05-1529.md,other,WAL 40 — per-stage latency tracker (2026-09-05 15:29),23,634,0,0,,0,
+docs-v2/waves/WAL-041-h-050-arousal-dynamics-acceptance-2026-09-05-1601.md,other,WAL 41 — H-050 arousal dynamics acceptance (2026-09-05 16:01),23,633,0,0,,0,
+docs-v2/waves/WAL-042-h-048-emergence-analyzer-2026-09-05-1602.md,other,WAL 42 — H-048 emergence analyzer (2026-09-05 16:02),22,577,0,0,,0,
+docs-v2/waves/WAL-043-wire-stagelatencytracker-into-consciousnessloop-20.md,other,WAL 43 — wire StageLatencyTracker into ConsciousnessLoop (2026-09-05 16:04),22,666,0,0,,0,
+docs-v2/waves/WAL-044-tenant-pagination-category-filter-2026-09-05-1605.md,other,WAL 44 — tenant pagination + category filter (2026-09-05 16:05),22,606,0,0,,0,
+docs-v2/waves/WAL-045-metricsresource-chain-per-layer-stats-2026-09-05-1.md,other,WAL 45 — MetricsResource chain per-layer stats (2026-09-05 16:05),22,585,0,0,,0,
+docs-v2/waves/WAL-046-hverifier-scaffolding-2026-09-05-1606.md,other,WAL 46 — HVerifier scaffolding (2026-09-05 16:06),22,561,0,0,,0,
+docs-v2/waves/WAL-047-h-047-stress-test-2026-09-05-1616.md,other,WAL 47 — H-047 stress test (2026-09-05 16:16),22,566,0,0,,0,
+docs-v2/waves/WAL-048-h-049-share-impulse-acceptance-2026-09-05-1617.md,other,WAL 48 — H-049 share-impulse acceptance (2026-09-05 16:17),22,591,0,0,,0,
+docs-v2/waves/WAL-049-wire-freezerecoverymanager-into-brainloopservice-2.md,other,WAL 49 — wire FreezeRecoveryManager into BrainLoopService (2026-09-05 16:18),22,648,0,0,,0,
+docs-v2/waves/WAL-050-wire-arousaldynamics-into-consciousnessloop-2026-0.md,other,WAL 50 — wire ArousalDynamics into ConsciousnessLoop (2026-09-05 16:19),22,638,0,0,,0,
+docs-v2/waves/WAL-051-floor-at-zero-decay-2026-09-05-1620.md,other,WAL 51 — floor-at-zero decay (2026-09-05 16:20),22,573,0,0,,0,
+docs-v2/waves/WAL-052-h-044-production-corpus-ece-2026-09-05-1622.md,other,WAL 52 — H-044 production corpus ECE (2026-09-05 16:22),22,578,0,0,,0,
+docs-v2/waves/WAL-053-native-build-retry-status-2026-09-05-1623.md,other,WAL 53 — native build retry status (2026-09-05 16:23),22,542,0,0,,0,
+docs-v2/waves/WAL-054-huggingface-integration-2026-09-05-1630.md,other,WAL 54 — HuggingFace integration (2026-09-05 16:30),23,640,0,0,,0,
+docs-v2/waves/WAL-055-native-build-attempt-log-2026-09-05-1638.md,other,WAL 55 — native build attempt log (2026-09-05 16:38),23,634,0,0,,0,
+docs-v2/waves/WAL-056-wire-huggingfacefetcher-into-startup-2026-09-05-16.md,other,WAL 56 — wire HuggingFaceFetcher into startup (2026-09-05 16:40),21,569,0,0,,0,
+docs-v2/waves/WAL-057-qwenmodeladapter-2026-09-05-1641.md,other,WAL 57 — QwenModelAdapter (2026-09-05 16:41),22,560,0,0,,0,
+docs-v2/waves/WAL-058-wire-qwenmodeladapter-into-chain-production-2026-0.md,other,WAL 58 — wire QwenModelAdapter into chain production (2026-09-05 16:42),22,621,0,0,,0,
+docs-v2/waves/WAL-059-onnxruntimeadapter-2026-09-05-1645.md,other,WAL 59 — OnnxRuntimeAdapter (2026-09-05 16:45),23,634,0,0,,0,
+docs-v2/waves/WAL-060-metricsresource-exposes-onnx-qwen-2026-09-05-1646.md,other,WAL 60 — MetricsResource exposes ONNX + Qwen (2026-09-05 16:46),21,571,3,0,,0,
+docs-v2/waves/WAL-061-onnxruntimeadapter-cdi-startup-2026-09-05-1647.md,other,WAL 61 — OnnxRuntimeAdapter CDI startup (2026-09-05 16:47),22,570,0,0,,0,
+docs-v2/waves/WAL-062--run-62-63-gpu-onnx-inference-verified-2026-09-05.md,other,WAL 62 — ## RUN 62-63 — GPU ONNX inference VERIFIED (2026-09-05 18:22),27,880,0,0,,0,
+docs-v2/waves/WAL-064-qwenmodeladapter-cdi-compatible-2026-09-05-1826.md,other,WAL 64 — QwenModelAdapter CDI compatible (2026-09-05 18:26),22,602,0,0,,0,
+docs-v2/waves/WAL-065-gpu-vs-cpu-benchmark-2026-09-05-1827.md,other,WAL 65 — GPU vs CPU benchmark (2026-09-05 18:27),21,523,0,0,,0,
+docs-v2/waves/WAL-066--run-66-78-real-llm-end-to-end-in-java-2026-09-05.md,other,WAL 66 — ## RUN 66-78 — Real LLM end-to-end in Java (2026-09-05 19:23),26,859,0,0,,0,
+docs-v2/waves/WAL-079--run-79-87-continued-llm-expansion-2026-09-05-195.md,other,WAL 79 — ## RUN 79-87 — Continued LLM expansion (2026-09-05 19:55),25,714,0,0,,0,
+docs-v2/waves/WAL-088--run-88-98-advanced-features-2026-09-05-2008.md,other,WAL 88 — ## RUN 88-98 — Advanced features (2026-09-05 20:08),24,678,0,0,,0,
+docs-v2/waves/WAL-099--run-99-103-operational-utilities-2026-09-05-2017.md,other,WAL 99 — ## RUN 99-103 — Operational utilities (2026-09-05 20:17),24,676,0,0,,0,
+docs-v2/waves/WAL-104--run-104-107-embeddings-history-2026-09-05-2025.md,other,WAL 104 — ## RUN 104-107 — Embeddings + history (2026-09-05 20:25),24,671,0,0,,0,
+docs-v2/waves/WAL-108--run-108-115-embeddings-registry-history-2026-09-.md,other,"WAL 108 — ## RUN 108-115 — Embeddings, registry, history (2026-09-05 20:35)",23,669,0,0,,0,
+docs-v2/waves/WAL-116--run-116-118-cost-usage-tracking-2026-09-05-2042.md,other,WAL 116 — ## RUN 116-118 — Cost & usage tracking (2026-09-05 20:42),22,595,0,0,,0,
+docs-v2/waves/WAL-119--run-119-122-routing-metrics-2026-09-05-2051.md,other,WAL 119 — ## RUN 119-122 — Routing & metrics (2026-09-05 20:51),23,607,0,0,,0,
+docs-v2/waves/WAL-123--run-123-127-determinism-bridge-2026-09-05-2100.md,other,WAL 123 — ## RUN 123-127 — Determinism + bridge (2026-09-05 21:00),24,673,0,0,,0,
+docs-v2/waves/WAL-128--run-128-129-benchmark-health-2026-09-05-2107.md,other,WAL 128 — ## RUN 128-129 — Benchmark + health (2026-09-05 21:07),23,620,0,0,,0,
+docs-v2/waves/WAL-129-w65-w68-consciousbrain-integration-l7-final-summ.md,other,WAL 129 — W65-W68: ConsciousBrain integration + L7 + final summary (2026-09-13),96,3200,1,0,,0,
+docs-v2/waves/WAL-130--run-130-131-conversation-export-2026-09-05-2110.md,other,WAL 130 — ## RUN 130-131 — Conversation export (2026-09-05 21:10),22,573,0,0,,0,
+docs-v2/waves/WAL-130-w60-w80-final-consciousness-substrate-complete-202.md,other,WAL 130 — W60-W80 FINAL: consciousness substrate complete (2026-09-13/14),68,2372,0,0,,0,
+docs-v2/waves/WAL-131-w82-w86-ticklingflag-noise-ceiling-design-63-202.md,other,WAL 131 — W82-W86: ticklingFlag + noise-ceiling + DESIGN-63 (2026-09-14),48,1520,1,0,,0,
+docs-v2/waves/WAL-132--run-132-134-performance-tooling-2026-09-05-2113.md,other,WAL 132 — ## RUN 132-134 — Performance tooling (2026-09-05 21:13),22,591,0,0,,0,
+docs-v2/waves/WAL-133-w87-w91-multi-timestep-integration-metrics-φ_ling.md,other,WAL 133 — W87-W91: Multi-timestep integration metrics + Φ_linGauss + PhiID (2026-09-14),70,3572,0,0,,0,
+docs-v2/waves/WAL-134-w92-w95-continuous-tier-controlled-stochasticity-.md,other,WAL 134 — W92-W95: Continuous tier + Controlled Stochasticity + Cybernetic R-B (2026-09-16),66,3359,0,0,,0,
+docs-v2/waves/WAL-135--run-135-137-token-analysis-2026-09-05-2116.md,other,WAL 135 — ## RUN 135-137 — Token analysis (2026-09-05 21:16),23,601,0,0,,0,
+docs-v2/waves/WAL-135-w96-w99-cross-cutting-integration-metrics-minskybe.md,other,WAL 135 — W96-W99: Cross-Cutting Integration Metrics (Minsky/Bernstein/Ashby) (2026-09-16),67,2570,2,0,,3,consciousness/CrossLevelPhi.java;consciousness/InterAgentPhi.java;consciousness/StabilityPhi.java
+docs-v2/waves/WAL-136-wave-104-111-cross-disciplinary-completion.md,other,WAL 136 — Wave 104-111 (Cross-Disciplinary Completion),64,2557,0,0,,8,AnalogicalConsistency.java;CognitiveGenesisProfile.java;ConceptualExclusion.java;KolmogorovComplexity.java;LSystem.java;MemristorSwitch.java;NKBooleanNetwork.java;PropertyBasedMetricsTest.java
+docs-v2/waves/WAL-137-wave-113-124-empirical-benchmarks-integration.md,other,WAL 137 — Wave 113-124 (Empirical Benchmarks + Integration),57,1868,0,0,,0,
+docs-v2/waves/WAL-138--run-138-139-quality-heuristics-2026-09-05-2122.md,other,WAL 138 — ## RUN 138-139 — Quality heuristics (2026-09-05 21:22),22,592,0,0,,0,
+docs-v2/waves/WAL-138-wave-129-161-property-tests-new-measurement-subsy.md,other,WAL 138 — Wave 129-161 (Property Tests + New Measurement Subsystems),63,2605,0,0,,0,
+docs-v2/waves/WAL-139-wave-149-179-new-measurement-subsystems.md,other,WAL 139 — Wave 149-179 (New Measurement Subsystems),40,1412,0,0,,0,
+docs-v2/waves/WAL-140-text-normalization-2026-09-05-2123.md,other,WAL 140 — Text normalization (2026-09-05 21:23),22,537,0,0,,0,
+docs-v2/waves/WAL-140-wave-149-190-comprehensive-measurement-subsystems-.md,other,WAL 140 — Wave 149-190 (Comprehensive Measurement Subsystems + Integration),51,1539,0,0,,0,
+docs-v2/waves/WAL-141-matrix-tools-distill-skeleton-2026-09-07-0955.md,other,WAL 141 — matrix-tools-distill skeleton (2026-09-07 09:55),26,813,0,0,,0,
+docs-v2/waves/WAL-141-wave-200-milestone-cross-disciplinary-synthesis-co.md,other,WAL 141 — Wave 200 MILESTONE (Cross-Disciplinary Synthesis Complete),37,1120,0,0,,0,
+docs-v2/waves/WAL-142--run-142-148-phase-α-audit-trace-verifier-2026-.md,other,WAL 142 — ## RUN 142-148 — Phase α audit + trace + verifier (2026-09-07 10:03),37,1092,0,0,,0,
+docs-v2/waves/WAL-142-wave-203-220-llm-inspired-cognitive-subsystems.md,other,WAL 142 — Wave 203-220: LLM-Inspired Cognitive Subsystems,38,1306,0,0,,0,
+docs-v2/waves/WAL-143-wave-203-237-llm-2026-architectural-patterns-appli.md,other,WAL 143 — Wave 203-237: LLM 2026 Architectural Patterns Applied,69,2710,0,0,,0,
+docs-v2/waves/WAL-144-wave-238-270-llm-2026-architectural-patterns-advan.md,other,WAL 144 — Wave 238-270: LLM 2026 Architectural Patterns (Advanced),47,1513,0,0,,0,
+docs-v2/waves/WAL-145-wave-281-287-native-image-build-complete.md,other,WAL 145 — Wave 281-287: Native Image Build Complete,63,1990,0,0,,0,
+docs-v2/waves/WAL-146-wave-281-295-native-build-performance.md,other,WAL 146 — Wave 281-295: Native Build + Performance,53,1490,1,0,,0,
+docs-v2/waves/WAL-147-wave-281-313-native-build-adaptive-compute.md,other,WAL 147 — Wave 281-313: Native Build + Adaptive Compute,77,2645,0,0,,0,
+docs-v2/waves/WAL-148-wave-281-322-session-final-report.md,session-report,WAL 148 — Wave 281-322: Session Final Report,64,2087,0,0,,0,
+docs-v2/waves/WAL-149-wave-327-330-final-consolidation.md,other,WAL 149 — Wave 327-330: Final Consolidation,36,1003,0,0,,0,
+docs-v2/waves/WAL-150--run-150-154-phase-β1-2-partial-2026-09-07-1007.md,other,WAL 150 — ## RUN 150-154 — Phase β.1-2 partial (2026-09-07 10:07),23,663,0,0,,0,
+docs-v2/waves/WAL-150-wave-331-338-final-architecture-set.md,other,WAL 150 — Wave 331-338: Final Architecture Set,40,1199,0,0,,0,
+docs-v2/waves/WAL-155--run-155-171-phases-β-γ-δ-closure-2026-09-07-1118.md,other,WAL 155 — ## RUN 155-171 — Phases β-γ-δ closure (2026-09-07 11:18),37,1281,0,0,,0,
+docs-v2/waves/WAL-173--run-173-185-phase-δ4-verification-2026-09-07-112.md,other,WAL 173 — ## RUN 173-185 — Phase δ.4 verification (2026-09-07 11:28),33,1097,0,0,,0,
+docs-v2/waves/WAL-187--run-187-191-phase-δ4-verification-audits-2026-0.md,other,WAL 187 — ## RUN 187-191 — Phase δ.4 verification + audits (2026-09-07 11:35),26,846,0,0,,0,
+docs-v2/waves/WAL-194--run-194-203-conversation-ablation-analysis-202.md,other,WAL 194 — ## RUN 194-203 — Conversation + Ablation + Analysis (2026-09-07 11:44),25,846,0,0,,0,
+docs-v2/waves/WAL-205--run-205-207-memory-vision-events-2026-09-07-11.md,other,WAL 205 — ## RUN 205-207 — Memory + Vision + Events (2026-09-07 11:54),27,806,0,0,,0,
+docs-v2/waves/WAL-212--run-212-232-architect-supportive-tooling-2026-09.md,other,WAL 212 — ## RUN 212-232 — Architect-supportive tooling (2026-09-07 13:26),29,1003,0,0,,0,
+docs-v2/waves/WAL-244--run-244-264-cognitive-loop-depth-2026-09-07-1503.md,other,WAL 244 — ## RUN 244-264 — Cognitive loop depth (2026-09-07 15:03),28,819,0,0,,0,
+docs-v2/waves/WAL-266--run-266-270-cycle-control-surface-2026-09-07-151.md,other,WAL 266 — ## RUN 266-270 — Cycle control surface (2026-09-07 15:18),26,739,0,0,,0,
+docs-v2/waves/WAL-272--run-272-275-factorybuilderconfig-2026-09-07-1525.md,other,WAL 272 — ## RUN 272-275 — Factory/Builder/Config (2026-09-07 15:25),26,713,0,0,,0,
+docs-v2/waves/WAL-277--run-277-279-data-flow-utilities-2026-09-07-1547.md,other,WAL 277 — ## RUN 277-279 — Data flow utilities (2026-09-07 15:47),26,698,0,0,,0,
+docs-v2/waves/WAL-281--run-281-283-pipeline-components-2026-09-07-1553.md,other,WAL 281 — ## RUN 281-283 — Pipeline components (2026-09-07 15:53),26,703,0,0,,0,
+docs-v2/waves/WAL-285--run-285-287-pipeline-components-2026-09-07-1602.md,other,WAL 285 — ## RUN 285-287 — Pipeline components (2026-09-07 16:02),26,695,0,0,,0,
+docs-v2/waves/WAL-289--run-289-291-over-1000-tests-2026-09-07-1608.md,other,WAL 289 — ## RUN 289-291 — Over 1000 tests (2026-09-07 16:08),26,710,0,0,,0,
+docs-v2/waves/WAL-293--run-293-294-buffer-components-2026-09-07-1613.md,other,WAL 293 — ## RUN 293-294 — Buffer components (2026-09-07 16:13),26,684,0,0,,0,
+docs-v2/waves/WAL-296--run-296-297-schedulingmonitoring-2026-09-07-1619.md,other,WAL 296 — ## RUN 296-297 — Scheduling/monitoring (2026-09-07 16:19),26,689,0,0,,0,
+docs-v2/waves/WAL-299--run-299-300-reliability-components-2026-09-07-16.md,other,WAL 299 — ## RUN 299-300 — Reliability components (2026-09-07 16:25),26,698,0,0,,0,
+docs-v2/waves/WAL-302--run-302-303-admission-control-2026-09-07-1630.md,other,WAL 302 — ## RUN 302-303 — Admission control (2026-09-07 16:30),26,680,0,0,,0,
+docs-v2/waves/WAL-305--run-305-307-more-components-2026-09-07-1641.md,other,WAL 305 — ## RUN 305-307 — More components (2026-09-07 16:41),26,691,0,0,,0,
+docs-v2/waves/WAL-309--run-309-311-over-1000-tests-verified-2026-09-07-.md,other,WAL 309 — ## RUN 309-311 — Over 1000 tests verified (2026-09-07 16:54),26,722,0,0,,0,
+docs-v2/waves/WAL-313-health-check-2026-09-07-1700.md,other,WAL 313 — Health check (2026-09-07 17:00),66,2513,0,0,,0,
+docs-v2/waves/WAL-347.md,other,WAL 347 — ProtoBuf Schema and SPEC-013 Dynamic Modulator Registry,53,2513,0,0,,0,
+docs-v2/waves/WAL-348.md,other,WAL 348 — DESIGN-67 Liquid Federation Architecture,49,1950,0,0,,0,
+docs-v2/waves/WAL-349.md,other,WAL 349 — PROPOSAL WAL Split,41,1249,0,0,,0,
+docs-v2/waves/WAL-350.md,other,WAL 350 — SPEC-014 WAL Management,48,1776,0,0,,0,
+docs-v2/waves/WAL-351.md,other,WAL 351 — extract-waves.py + SESSION Summary,48,1901,2,0,,0,
+docs-v2/waves/WAL-353.md,other,Sync Issue: gitverse Shallow Clone,29,1085,0,0,,0,
+docs-v2/waves/WAL-355.md,other,WAL 355 — GitVerse Push Diagnostic,50,1543,1,0,,0,
+docs-v2/waves/WAL-356.md,other,WAL 356 — GitVerse Resolution (Workaround Documented),47,1669,0,0,,0,
+docs-v2/waves/WAL-357.md,other,WAL 357 — ProtoBuf Code Generation,62,2325,1,0,,1,matrix-core/src/test/java/io/matrix/federation/proto/ModulatorRegistrySmokeTest.java
+docs-v2/waves/WAL-358.md,other,WAL 358 — ModulatorRegistryStore Implementation,74,2953,4,2,io.matrix.federation.registry.ModulatorRegistryStore;io.matrix.federation.registry.Modulator,2,matrix-core/src/main/java/io/matrix/federation/registry/ModulatorRegistryStore.java;matrix-core/src/test/java/io/matrix/federation/registry/ModulatorRegistryStoreTest.java
+docs-v2/waves/WAL-359.md,other,WAL 359 — Local Consensus Engine,87,2678,1,1,io.matrix.federation.consensus.LocalConsensusEngine,2,matrix-core/src/main/java/io/matrix/federation/consensus/LocalConsensusEngine.java;matrix-core/src/test/java/io/matrix/federation/consensus/LocalConsensusEngineTest.java
+docs-v2/waves/WAL-360.md,other,WAL 360 — FederationRuntime End-to-End Integration,83,3101,1,1,io.matrix.federation.runtime.FederationRuntime,2,matrix-core/src/main/java/io/matrix/federation/runtime/FederationRuntime.java;matrix-core/src/test/java/io/matrix/federation/runtime/FederationRuntimeTest.java
+docs-v2/waves/WAL-361.md,other,WAL 361 — BiochemicalMediator (Federation → Cognitive Bridge),71,2430,1,1,io.matrix.federation.integration.BiochemicalMediator,2,matrix-core/src/main/java/io/matrix/federation/integration/BiochemicalMediator.java;matrix-core/src/test/java/io/matrix/federation/mediator/BiochemicalMediatorTest.java
+docs-v2/waves/WAL-362.md,other,WAL 362 — GpuTaskExecutor Stub,76,2335,1,1,io.matrix.federation.gpu.GpuTaskExecutor,2,matrix-core/src/main/java/io/matrix/federation/gpu/GpuTaskExecutor.java;matrix-core/src/test/java/io/matrix/federation/gpu/GpuTaskExecutorTest.java
+docs-v2/waves/WAL-363.md,other,WAL 363 — FederationTelemetry Hooks,70,2202,1,1,io.matrix.federation.telemetry.FederationTelemetry,2,matrix-core/src/main/java/io/matrix/federation/telemetry/FederationTelemetry.java;matrix-core/src/test/java/io/matrix/federation/telemetry/FederationTelemetryTest.java
+docs-v2/waves/WAL-364.md,other,WAL 364 — TLA+ Specification for Federation Consensus,84,2513,1,0,,0,
+docs-v2/waves/WAL-365.md,other,WAL 365 — Property-Based Tests with jqwik,53,1812,0,0,,1,matrix-core/src/test/java/io/matrix/federation/property/FederationPropertyTest.java
+docs-v2/waves/WAL-366.md,other,WAL 366 — Chaos Engineering Tests,54,1942,0,0,,2,matrix-core/src/main/java/io/matrix/federation/consensus/LocalConsensusEngine.java;matrix-core/src/test/java/io/matrix/federation/chaos/ConsensusChaosTest.java
+docs-v2/waves/WAL-367.md,other,WAL 367 — JMH Performance Benchmarks,62,1668,4,0,,1,matrix-core/src/jmh/java/io/matrix/federation/benchmark/ConsensusBenchmark.java
+docs-v2/waves/WAL-368.md,other,WAL 368 — Security Audit,75,1938,0,0,,0,
+docs-v2/waves/WAL-369.md,other,WAL 369 — CognitiveModulationBridge (Federation → Consciousness),55,1852,0,1,io.matrix.federation.integration.CognitiveModulationBridge,2,matrix-core/src/main/java/io/matrix/federation/integration/CognitiveModulationBridge.java;matrix-core/src/test/java/io/matrix/federation/mediator/CognitiveModulationBridgeTest.java
+docs-v2/waves/WAL-370.md,other,WAL 370 — Comprehensive Verification (End-to-End),78,2389,0,0,,0,
+docs-v2/waves/WAL-371.md,other,WAL 371 — TLA+ Config + Java Model Checker,63,2235,0,0,,1,matrix-core/src/test/java/io/matrix/federation/formal/ConsensusModelCheckerTest.java
+docs-v2/waves/WAL-372.md,other,WAL 372 — ModulatorRegistry Property Tests,37,1333,0,0,,2,ModulatorRegistryPropertyTest.java;matrix-core/src/test/java/io/matrix/federation/property/ModulatorRegistryPropertyTest.java
+docs-v2/waves/WAL-373.md,other,WAL 373 — BiochemicalMediator Property Tests,34,1137,0,0,,2,BiochemicalMediatorPropertyTest.java;matrix-core/src/test/java/io/matrix/federation/property/BiochemicalMediatorPropertyTest.java
+docs-v2/waves/WAL-374.md,other,WAL 374 — Federation End-to-End Integration Tests,43,1610,0,0,,2,FederationEndToEndTest.java;matrix-core/src/test/java/io/matrix/federation/e2e/FederationEndToEndTest.java
+docs-v2/waves/WAL-375.md,other,WAL 375 — Telemetry Concurrency Stress Test,39,1272,0,0,,2,TelemetryConcurrencyTest.java;matrix-core/src/test/java/io/matrix/federation/stress/TelemetryConcurrencyTest.java
+docs-v2/waves/WAL-376.md,other,WAL 376 — Cumulative Verification (W356-W375),77,2190,0,0,,0,
+docs-v2/waves/WAL-377.md,other,WAL 377 — Federation Module Architecture Documentation,34,1077,0,0,,0,
+docs-v2/waves/WAL-378.md,other,WAL 378 — Registry Round-Trip Serialization Tests,35,1183,0,0,,2,RegistryRoundTripTest.java;matrix-core/src/test/java/io/matrix/federation/serialization/RegistryRoundTripTest.java
+docs-v2/waves/WAL-379.md,other,WAL 379 — Registry Backup/Restore,50,1607,1,1,io.matrix.federation.backup.RegistryBackup,2,matrix-core/src/main/java/io/matrix/federation/backup/RegistryBackup.java;matrix-core/src/test/java/io/matrix/federation/backup/RegistryBackupTest.java
+docs-v2/waves/WAL-380.md,other,WAL 380 — Federation CLI Commands,48,1271,1,1,io.quarkus.runner.ApplicationImpl,1,matrix-core/src/main/java/io/quarkus/runner/ApplicationImpl.java
+docs-v2/waves/WAL-381.md,other,WAL 381 — Prometheus Exporter for Telemetry,50,1431,0,1,io.matrix.federation.telemetry.PrometheusExporter,2,matrix-core/src/main/java/io/matrix/federation/telemetry/PrometheusExporter.java;matrix-core/src/test/java/io/matrix/federation/telemetry/PrometheusExporterTest.java
+docs-v2/waves/WAL-382.md,other,WAL 382 — Final Comprehensive Verification (W356-W381),120,3093,0,0,,0,
+docs-v2/waves/WAL-384.md,other,WAL 384 — Minor Issue Fixes (REVIEW-CYCLE-3 Followup),56,1966,0,0,,8,ConsensusModelCheckerTest.java;FederationTelemetryTest.java;PrometheusExporter.java;RegistryBackup.java;matrix-core/src/main/java/io/matrix/federation/backup/RegistryBackup.java;matrix-core/src/main/java/io/matrix/federation/telemetry/PrometheusExporter.java;matrix-core/src/test/java/io/matrix/federation/formal/ConsensusModelCheckerTest.java;matrix-core/src/test/java/io/matrix/federation/telemetry/FederationTelemetryTest.java
+docs-v2/waves/WAL-385.md,other,WAL 385 — Deferred Fixes from REVIEW-CYCLE-3,72,2949,0,0,,10,BiochemicalMediator.java;FederationTelemetry.java;FederationTelemetryTest.java;matrix-core/src/main/java/io/matrix/federation/consensus/LocalConsensusEngine.java;matrix-core/src/main/java/io/matrix/federation/gpu/GpuTaskExecutor.java;matrix-core/src/main/java/io/matrix/federation/integration/BiochemicalMediator.java;matrix-core/src/main/java/io/matrix/federation/registry/ModulatorRegistryStore.java;matrix-core/src/main/java/io/matrix/federation/telemetry/FederationTelemetry.java
+docs-v2/waves/WAL-386.md,other,WAL 386 — Javadoc Improvements for Federation Classes,49,1426,0,0,,4,matrix-core/src/main/java/io/matrix/federation/backup/RegistryBackup.java;matrix-core/src/main/java/io/matrix/federation/gpu/GpuTaskExecutor.java;matrix-core/src/main/java/io/matrix/federation/integration/BiochemicalMediator.java;matrix-core/src/main/java/io/matrix/federation/telemetry/PrometheusExporter.java
+docs-v2/waves/WAL-387.md,other,WAL 387 — Edge Case Tests + NPE Fixes,76,2725,0,0,,4,matrix-core/src/main/java/io/matrix/federation/consensus/LocalConsensusEngine.java;matrix-core/src/main/java/io/matrix/federation/integration/CognitiveModulationBridge.java;matrix-core/src/main/java/io/matrix/federation/runtime/FederationRuntime.java;matrix-core/src/test/java/io/matrix/federation/edge/FederationEdgeCaseTest.java
+docs-v2/waves/WAL-388.md,other,WAL 388 — Registry Concurrency Documentation + Tests,60,1852,0,0,,1,matrix-core/src/test/java/io/matrix/federation/concurrency/RegistryConcurrencyTest.java
+docs-v2/waves/WAL-389.md,other,WAL 389 — Full-Stack Integration Tests,67,1968,0,0,,1,matrix-core/src/test/java/io/matrix/federation/e2e/FullStackIntegrationTest.java
+docs-v2/waves/WAL-390.md,other,WAL 390 — SHA-256 Hash Upgrade (FAIL-6 followup),56,1446,0,0,,1,matrix-core/src/main/java/io/matrix/federation/registry/ModulatorRegistryStore.java
+docs-v2/waves/WAL-391.md,other,WAL 391 — Final Comprehensive Verification,68,2108,0,0,,0,
+docs-v2/waves/WAL-392.md,other,WAL 392 — Real Conversation CLI (First Live Launch),69,2324,2,1,io.matrix.cli.RealConversationCli,2,matrix-core/src/main/java/io/matrix/cli/RealConversationCli.java;matrix-core/src/test/java/io/matrix/cli/RealConversationCliTest.java
+docs-v2/waves/WAL-393.md,other,WAL 393 — Multi-Session Continuity,70,2011,2,1,io.matrix.cli.RealConversationCli,2,matrix-core/src/main/java/io/matrix/cli/RealConversationCli.java;matrix-core/src/test/java/io/matrix/cli/RealConversationCliTest.java
+docs-v2/waves/WAL-394.md,other,WAL 394 — Real Conversation HTTP Server,68,2053,1,1,io.matrix.cli.RealConversationServer,2,matrix-core/src/main/java/io/matrix/cli/RealConversationServer.java;matrix-core/src/test/java/io/matrix/cli/RealConversationCliTest.java
+docs-v2/waves/WAL-395.md,other,WAL 395 — Real Conversation Replay CLI,52,1130,0,1,io.matrix.cli.RealConversationReplay,1,matrix-core/src/main/java/io/matrix/cli/RealConversationReplay.java
+docs-v2/waves/WAL-396.md,other,WAL 396 — End-to-End Tests for Real Conversation,42,1390,0,0,,2,RealConversationEndToEndTest.java;matrix-core/src/test/java/io/matrix/cli/e2e/RealConversationEndToEndTest.java
+docs-v2/waves/WAL-397.md,other,WAL 397 — Native Build Verification,43,1145,0,3,io.matrix.cli.RealConversationReplay;io.matrix.cli.RealConversationServer;io.matrix.cli.RealConversationCli,0,
+docs-v2/waves/WAL-398.md,other,WAL 398 — Matrix Conversation Launcher Script,52,1281,1,0,,0,
+docs-v2/waves/WAL-399.md,other,WAL 399 — NDJSON to Training Pair Converter,52,1351,1,1,io.matrix.cli.NdjsonToTraining,1,matrix-core/src/main/java/io/matrix/cli/NdjsonToTraining.java
+docs-v2/waves/WAL-400.md,other,WAL 400 — Launcher Script with All Commands,40,1021,0,0,,0,
+docs-v2/waves/WAL-401.md,other,WAL 401 — Conversation Statistics CLI,50,1036,0,1,io.matrix.cli.ConversationStats,1,matrix-core/src/main/java/io/matrix/cli/ConversationStats.java
+docs-v2/waves/WAL-402.md,other,,1,1,0,0,,0,
+docs-v2/waves/WAL-403.md,other,WAL 403 — End-to-End Verification,57,1628,0,1,io.matrix.cli.RealConversationReplay,0,
+docs-v2/waves/WAL-404.md,other,,1,1,0,0,,0,
+docs-v2/waves/WAL-405.md,other,,1,1,0,0,,0,
+docs-v2/waves/WAL-406.md,other,,1,1,0,0,,0,
+docs-v2/waves/WAL-407.md,other,WAL 407 — Conversation Export CLI,45,1167,0,1,io.matrix.cli.ConversationExport,1,matrix-core/src/main/java/io/matrix/cli/ConversationExport.java
+docs-v2/waves/WAL-408.md,other,,1,1,0,0,,0,
+docs-v2/waves/WAL-409.md,other,WAL 409 — Conversation Merge CLI,40,871,0,1,io.matrix.cli.ConversationMerge,1,matrix-core/src/main/java/io/matrix/cli/ConversationMerge.java
+docs-v2/waves/WAL-410.md,other,WAL 410 — Launcher with Merge Command,45,1078,0,0,,0,
+docs-v2/waves/WAL-411.md,other,WAL 411 — Conversation Tail CLI,38,897,0,1,io.matrix.cli.ConversationTail,1,matrix-core/src/main/java/io/matrix/cli/ConversationTail.java
+docs-v2/waves/WAL-412.md,other,WAL 412 — Conversation Head CLI,38,788,0,1,io.matrix.cli.ConversationHead,1,matrix-core/src/main/java/io/matrix/cli/ConversationHead.java
+docs-v2/waves/WAL-413.md,other,,1,1,0,0,,0,
+docs-v2/waves/WAL-414.md,other,WAL 414 — Conversation Compact CLI,40,1088,0,1,io.matrix.cli.ConversationCompact,1,matrix-core/src/main/java/io/matrix/cli/ConversationCompact.java
+docs-v2/waves/WAL-415.md,other,WAL 415 — Conversation Diff CLI,52,1428,0,1,io.matrix.cli.ConversationDiff,1,matrix-core/src/main/java/io/matrix/cli/ConversationDiff.java
+docs-v2/waves/WAL-416.md,other,WAL 416 — Web UI for Real Conversation,59,1621,1,0,,1,matrix-core/src/main/java/io/matrix/cli/RealConversationServer.java
+docs-v2/waves/WAL-417.md,other,WAL 417 — /history HTTP Endpoint,39,1078,0,0,,1,matrix-core/src/main/java/io/matrix/cli/RealConversationServer.java
+docs-v2/waves/WAL-418.md,other,WAL 418 — Web UI with History Loading,42,1243,1,0,,0,
+docs-v2/waves/WAL-419.md,other,WAL 419 — Conversation Count CLI,36,714,0,1,io.matrix.cli.ConversationCount,1,matrix-core/src/main/java/io/matrix/cli/ConversationCount.java
+docs-v2/waves/WAL-420.md,other,,1,1,0,0,,0,
+docs-v2/waves/WAL-421.md,other,WAL 421 — Conversation Name CLI,45,1158,0,1,io.matrix.cli.ConversationName,1,matrix-core/src/main/java/io/matrix/cli/ConversationName.java
+docs-v2/waves/WAL-422.md,other,WAL 422 — Conversation List Named CLI,43,1306,0,1,io.matrix.cli.ConversationListNamed,1,matrix-core/src/main/java/io/matrix/cli/ConversationListNamed.java
+docs-v2/waves/WAL-423.md,other,WAL 423 — Conversation Validate CLI,42,1469,0,1,io.matrix.cli.ConversationValidate,1,matrix-core/src/main/java/io/matrix/cli/ConversationValidate.java
+docs-v2/waves/WAL-424.md,other,WAL 424 — Conversation Find Similar CLI,41,976,0,1,io.matrix.cli.ConversationFind,1,matrix-core/src/main/java/io/matrix/cli/ConversationFind.java
+docs-v2/waves/WAL-425.md,other,WAL 425 — Launcher with 16 Commands,39,1084,0,0,,0,
+docs-v2/waves/WAL-426.md,other,"WAL 426 — Tests for Name, Validate, Find",48,1129,0,0,,3,matrix-core/src/test/java/io/matrix/cli/ConversationFindTest.java;matrix-core/src/test/java/io/matrix/cli/ConversationNameTest.java;matrix-core/src/test/java/io/matrix/cli/ConversationValidateTest.java
+docs-v2/waves/WAL-427.md,other,WAL 427 — Conversation Summary CLI,46,1056,0,1,io.matrix.cli.ConversationSummary,1,matrix-core/src/main/java/io/matrix/cli/ConversationSummary.java
+docs-v2/waves/WAL-428.md,other,WAL 428 — Conversation Extract CLI,42,935,0,1,io.matrix.cli.ConversationExtract,1,matrix-core/src/main/java/io/matrix/cli/ConversationExtract.java
+docs-v2/waves/WAL-429.md,other,WAL 429 — Launcher with 21 Commands,44,1333,0,0,,0,
+docs-v2/waves/WAL-430.md,other,WAL 430 — Conversation Report CLI,73,1596,0,1,io.matrix.cli.ConversationReport,1,matrix-core/src/main/java/io/matrix/cli/ConversationReport.java
+docs-v2/waves/WAL-431.md,other,WAL 431 — ModelTest CLI + 23-Command Launcher,48,1515,0,1,io.matrix.cli.ConversationModelTest,1,matrix-core/src/main/java/io/matrix/cli/ConversationModelTest.java
+docs-v2/waves/WAL-433.md,other,WAL 433 — Final Comprehensive Verification,48,1356,1,1,io.matrix.cli.RealConversationCli,0,
+docs-v2/waves/WAL-434.md,other,WAL 434 — Conversation Model Evaluation CLI,57,1495,0,1,io.matrix.cli.ConversationModelEval,1,matrix-core/src/main/java/io/matrix/cli/ConversationModelEval.java
+docs-v2/waves/WAL-435.md,other,WAL 435 — Launcher with eval Command (24 Total),23,621,0,0,,0,
+docs-v2/waves/WAL-436.md,other,WAL 436 — Tests for Report and ModelEval,41,928,0,0,,2,matrix-core/src/test/java/io/matrix/cli/ConversationModelEvalTest.java;matrix-core/src/test/java/io/matrix/cli/ConversationReportTest.java
+docs-v2/waves/WAL-437.md,other,WAL 437 — Conversation Backup CLI (zip archive),48,1152,0,1,io.matrix.cli.ConversationBackup,1,matrix-core/src/main/java/io/matrix/cli/ConversationBackup.java
+docs-v2/waves/WAL-438.md,other,WAL 438 — Conversation Restore CLI (zip extract),41,940,0,1,io.matrix.cli.ConversationRestore,1,matrix-core/src/main/java/io/matrix/cli/ConversationRestore.java
+docs-v2/waves/WAL-439.md,other,WAL 439 — Launcher with Backup/Restore (26 Commands),23,663,0,0,,0,
+docs-v2/waves/WAL-440.md,other,"WAL 440 — Final Verification (264 Tests, 0 Fail)",43,1054,0,1,io.matrix.cli.RealConversationCli,0,
+docs-v2/waves/WAL-441.md,other,WAL 441 — Model Downloader CLI,50,1124,0,1,io.matrix.cli.ModelDownloader,1,matrix-core/src/main/java/io/matrix/cli/ModelDownloader.java
+docs-v2/waves/WAL-442.md,other,WAL 442 — Streaming Server (SSE),51,1293,1,1,io.matrix.cli.ConversationStreamServer,1,matrix-core/src/main/java/io/matrix/cli/ConversationStreamServer.java
+docs-v2/waves/WAL-444.md,other,WAL 444 — Docker Build Helper CLI,57,1416,0,1,io.matrix.cli.ConversationDocker,1,matrix-core/src/main/java/io/matrix/cli/ConversationDocker.java
+docs-v2/waves/WAL-445.md,other,WAL 445 — Live Conversation Monitor CLI,45,1045,0,1,io.matrix.cli.ConversationMonitor,1,matrix-core/src/main/java/io/matrix/cli/ConversationMonitor.java
+docs-v2/waves/WAL-446.md,other,WAL 446 — Conversation Bookmark CLI,44,1189,0,1,io.matrix.cli.ConversationBookmark,1,matrix-core/src/main/java/io/matrix/cli/ConversationBookmark.java
+docs-v2/waves/WAL-447.md,other,"WAL 447 — Final Verification (92 Waves, 264 Tests, 30 Tools)",35,818,0,0,,0,
+docs-v2/waves/WAL-448.md,other,WAL 448 — ConversationSummarize CLI (Model-Generated),38,917,0,1,io.matrix.cli.ConversationSummarize,1,matrix-core/src/main/java/io/matrix/cli/ConversationSummarize.java
+docs-v2/waves/WAL-449.md,other,WAL 449 — Conversation Cleanup CLI,49,1206,0,1,io.matrix.cli.ConversationCleanup,1,matrix-core/src/main/java/io/matrix/cli/ConversationCleanup.java
+docs-v2/waves/WAL-450.md,other,WAL 450 — MatrixChatClient Library API,54,1400,0,1,io.matrix.chat.MatrixChatClient,1,matrix-core/src/main/java/io/matrix/chat/MatrixChatClient.java
+docs-v2/waves/WAL-451.md,other,WAL 451 — MatrixChatClient Tests,41,958,0,0,,1,matrix-core/src/test/java/io/matrix/chat/MatrixChatClientTest.java
+docs-v2/waves/WAL-453.md,other,WAL 453 — ConversationBenchmark CLI (Inference Speed),60,1600,1,1,io.matrix.cli.ConversationBenchmark,1,matrix-core/src/main/java/io/matrix/cli/ConversationBenchmark.java
+docs-v2/waves/WAL-454.md,other,WAL 454 — Conversation to SQL CLI,50,1150,0,1,io.matrix.cli.ConversationToSql,1,matrix-core/src/main/java/io/matrix/cli/ConversationToSql.java
+docs-v2/waves/WAL-455.md,other,WAL 455 — Conversation Favorite CLI,46,1033,0,1,io.matrix.cli.ConversationFavorite,1,matrix-core/src/main/java/io/matrix/cli/ConversationFavorite.java
+docs-v2/waves/WAL-456.md,other,"WAL 456 — Final Verification (101 Waves, 35 Tools, 264+ Tests)",29,636,0,0,,0,
+docs-v2/waves/WAL-457.md,other,WAL 457 — HTML Export CLI,64,1518,0,1,io.matrix.cli.ConversationHtmlExport,1,matrix-core/src/main/java/io/matrix/cli/ConversationHtmlExport.java
+docs-v2/waves/WAL-458.md,other,WAL 458 — ConversationDedup CLI (Duplicate Detection),49,1218,0,1,io.matrix.cli.ConversationDedup,1,matrix-core/src/main/java/io/matrix/cli/ConversationDedup.java
+docs-v2/waves/WAL-459.md,other,WAL 459 — Conversation Share CLI,44,987,0,1,io.matrix.cli.ConversationShare,1,matrix-core/src/main/java/io/matrix/cli/ConversationShare.java
+docs-v2/waves/WAL-460.md,other,"WAL 460 — Final Verification (105 Waves, 38 Tools, 264+ Tests)",29,634,0,0,,0,
+docs-v2/waves/WAL-461.md,other,WAL 461 — ConversationBatch CLI (Bulk Operations),60,1518,0,1,io.matrix.cli.ConversationBatch,1,matrix-core/src/main/java/io/matrix/cli/ConversationBatch.java
+docs-v2/waves/WAL-462.md,other,WAL 462 — ConversationEdgeTest CLI,49,1454,0,1,io.matrix.cli.ConversationEdgeTest,1,matrix-core/src/main/java/io/matrix/cli/ConversationEdgeTest.java
+docs-v2/waves/WAL-463.md,other,WAL 463 — ConversationTimeline CLI,58,1215,0,1,io.matrix.cli.ConversationTimeline,1,matrix-core/src/main/java/io/matrix/cli/ConversationTimeline.java
+docs-v2/waves/WAL-464.md,other,"WAL 464 — Final Verification (109 Waves, 41 Tools, 264 Tests)",29,634,0,0,,0,
+docs-v2/waves/WAL-465.md,other,WAL 465 — ConversationPatterns CLI,55,1285,0,1,io.matrix.cli.ConversationPatterns,1,matrix-core/src/main/java/io/matrix/cli/ConversationPatterns.java
+docs-v2/waves/WAL-466.md,other,WAL 466 — ConversationArchive CLI (Daily Zip),44,957,0,1,io.matrix.cli.ConversationArchive,1,matrix-core/src/main/java/io/matrix/cli/ConversationArchive.java
+docs-v2/waves/WAL-467.md,other,WAL 467 — ConversationGenerate CLI (Synthetic Data),52,1415,0,1,io.matrix.cli.ConversationGenerate,1,matrix-core/src/main/java/io/matrix/cli/ConversationGenerate.java
+docs-v2/waves/WAL-468.md,other,WAL 468 — ConversationTag CLI (Tagging),48,1216,0,1,io.matrix.cli.ConversationTag,1,matrix-core/src/main/java/io/matrix/cli/ConversationTag.java
+docs-v2/waves/WAL-469.md,other,WAL 469 — ConversationPerplexity CLI,54,1281,0,1,io.matrix.cli.ConversationPerplexity,1,matrix-core/src/main/java/io/matrix/cli/ConversationPerplexity.java
+docs-v2/waves/WAL-470.md,other,WAL 470 — ConversationPrompt CLI (Single-Prompt Test),33,723,0,1,io.matrix.cli.ConversationPrompt,1,matrix-core/src/main/java/io/matrix/cli/ConversationPrompt.java
+docs-v2/waves/WAL-471.md,other,"WAL 471 — Final Verification (116 Waves, 48 Tools, 264 Tests)",32,727,0,0,,0,
+docs-v2/waves/WAL-472.md,other,WAL 472 — Deep Investigation: Real Brain Functionality,54,1908,0,0,,0,
+docs-v2/waves/WAL-473.md,other,WAL 473 — LLM-Backed Brain Loop WORKING!,55,1727,1,0,,1,matrix-core/src/main/java/io/matrix/brain/LlmBrainLoopService.java
+docs-v2/waves/WAL-474.md,other,WAL 474 — BrainPipeline Implementation,43,1253,3,0,,1,matrix-core/src/main/java/io/matrix/brain/LlmBrainLoopService.java
+docs-v2/waves/WAL-475.md,other,WAL 475 — Multi-thread ONNX (2x speedup),31,755,0,0,,1,OnnxRuntimeAdapter.java
+docs-v2/waves/WAL-476.md,other,WAL 476 — AutonomyEngine (self-initiating brain!),46,1295,0,1,io.matrix.autonomy.AutonomyEngine,1,matrix-core/src/main/java/io/matrix/autonomy/AutonomyEngine.java
+docs-v2/waves/WAL-477.md,other,WAL 477 — SimpleKnowledgeBase (RAG Foundation),43,1105,0,1,io.matrix.knowledge.SimpleKnowledgeBase,1,matrix-core/src/main/java/io/matrix/knowledge/SimpleKnowledgeBase.java
+docs-v2/waves/WAL-478.md,other,WAL 478 — RAG-enhanced Brain Loop WORKING!,42,1133,0,0,,1,matrix-core/src/main/java/io/matrix/brain/LlmBrainLoopRag.java
+docs-v2/waves/WAL-479.md,other,WAL 479 — BrainServer (HTTP API for real brain!),36,923,0,0,,0,
+docs-v2/waves/WAL-480.md,other,"WAL 480 — Brain tests (34 pass, 0 fail)",26,708,0,0,,1,matrix-core/src/test/java/io/matrix/brain/LlmBrainLoopTest.java
+docs-v2/waves/WAL-482.md,other,WAL 482 — BrainIntegrated (full brain running!),55,1705,2,0,,5,AutonomyEngine.java;LlmBrainLoopRag.java;LlmBrainLoopService.java;matrix-core/src/main/java/io/matrix/brain/BrainCycle.java;matrix-core/src/main/java/io/matrix/brain/BrainIntegrated.java
+docs-v2/waves/WAL-499.md,other,WAL 499 — BrainHttpServer (complete brain with all endpoints),39,1156,0,0,,0,
+docs-v2/waves/WAL-500.md,other,WAL 500 — TRANSFORMATION PLAN: От исследовательского прототипа к production-ready платформе,182,7033,0,0,,0,
+docs-v2/waves/WAL-595.md,other,WAL-595: Final Documentation & API Freeze,73,2745,0,0,,0,
+docs-v2/waves/WAL-600.md,other,WAL-600: MATRIX Hybrid Federation — COMPLETE,108,3538,0,0,,0,
+docs-v2/waves/WAL-602.md,other,WAL-602: Improve BIR Solver Accuracy,30,710,0,0,,0,
+docs-v2/waves/WAL-603.md,other,WAL-603: Improve Sample Efficiency Benchmark,28,550,0,0,,0,
+docs-v2/waves/WAL-604.md,other,WAL-604: Improve Causality Benchmark,30,644,0,0,,0,
+docs-v2/waves/WAL-607.md,other,WAL-607: Improve Sybil Attack Detection,28,569,0,0,,0,
+docs-v2/waves/WAL-610.md,other,WAL-610: Minecraft GridWorld Pilot,35,913,0,0,,0,
+docs-v2/waves/WAL-612.md,other,WAL-612: Final Integration & Cleanup,48,1020,0,0,,0,
+docs-v2/waves/WAL-613.md,other,WAL-613: Final Documentation Update,38,977,0,0,,0,
+docs-v2/waves/WAL-614.md,other,WAL-614: Phase 2 Summary & Next Steps,88,2605,0,0,,0,
+docs-v2/waves/WAL-615.md,other,WAL-615: Additional Benchmark Scenarios,34,915,0,0,,0,
+docs-v2/waves/WAL-616.md,other,WAL-616: Advanced Federation Features,35,953,0,0,,0,
+docs-v2/waves/WAL-617.md,other,WAL-617: Real-World Deployment Preparation,45,1036,0,0,,0,
+docs-v2/waves/WAL-618.md,other,WAL-618: Final Optimization,35,829,0,0,,0,
+docs-v2/waves/WAL-619.md,other,WAL-619: Final Documentation,63,1221,0,0,,0,
+docs-v2/waves/WAL-620.md,other,WAL-620: Final Commit and Tag,103,2736,0,0,,0,
+docs-v2/waves/WAL-621.md,other,WAL-621: Phase 3 — Production Deployment,37,782,0,0,,0,
+docs-v2/waves/WAL-622.md,other,WAL-622: Cloud Infrastructure Setup,87,1973,0,0,,0,
+docs-v2/waves/WAL-623.md,other,WAL-623: Security Hardening,81,2071,0,0,,0,
+docs-v2/waves/WAL-624.md,other,WAL-624: Monitoring & Alerting Setup,108,2414,0,0,,0,
+docs-v2/waves/WAL-625.md,other,WAL-625: CI/CD Pipeline Setup,116,2531,0,0,,0,
+docs-v2/waves/WAL-626.md,other,WAL-626: Production Deployment,83,1924,0,0,,0,
+docs-v2/waves/WAL-627.md,other,WAL-627: Post-Deployment Monitoring,59,1698,0,0,,0,
+docs-v2/waves/WAL-628.md,other,WAL-628: Performance Optimization,71,1982,0,0,,0,
+docs-v2/waves/WAL-629.md,other,WAL-629: Final Production Verification,71,1927,1,0,,0,
+docs-v2/waves/WAL-630.md,other,WAL-630: Final Documentation and Handoff,80,2333,1,0,,0,
+docs-v2/waves/WAL-631.md,other,WAL-631: Phase 4 — Scaling & Optimization,34,669,0,0,,0,
+docs-v2/waves/WAL-632.md,other,WAL-632: Horizontal Scaling Setup,84,2229,0,0,,0,
+docs-v2/waves/WAL-633.md,other,WAL-633: Performance Optimization,63,2104,0,0,,0,
+docs-v2/waves/WAL-634.md,other,WAL-634: Cost Optimization,67,2192,1,0,,0,
+docs-v2/waves/WAL-635.md,other,WAL-635: Reliability Engineering,78,2371,0,0,,0,
+docs-v2/waves/WAL-636.md,other,WAL-636: Final Scaling Verification,61,1694,0,0,,0,
+docs-v2/waves/WAL-637.md,other,WAL-637: Final Documentation Update,73,1400,0,0,,0,
+docs-v2/waves/WAL-638.md,other,WAL-638: Final Commit and Tag,81,1848,0,0,,0,
+docs-v2/waves/WAL-639.md,other,WAL-639: Phase 5 — Final Optimization & Cleanup,38,769,0,0,,0,
+docs-v2/waves/WAL-640.md,other,WAL-640: Code Cleanup,55,1618,0,0,,0,
+docs-v2/waves/WAL-641.md,other,WAL-641: Documentation Cleanup,54,1645,1,0,,0,
+docs-v2/waves/WAL-642.md,other,WAL-642: Testing Cleanup,54,1478,0,0,,0,
+docs-v2/waves/WAL-643.md,other,WAL-643: Infrastructure Cleanup,54,1621,0,0,,0,
+docs-v2/waves/WAL-644.md,other,WAL-644: Final Optimization,66,1996,0,0,,0,
+docs-v2/waves/WAL-645.md,other,WAL-645: Final Commit and Tag,83,2098,0,0,,0,
+docs-v2/waves/WAL-646.md,other,WAL-646: Final Summary & Handoff,132,3795,0,0,,0,
+docs-v2/waves/WAL-647.md,other,WAL-647: Final Commit and Tag,77,2192,0,0,,0,
+docs-v2/waves/WAL-648.md,other,WAL-648: Final Cleanup and Optimization,48,1323,0,0,,0,
+docs-v2/waves/WAL-649.md,other,WAL-649: Final Verification,70,1836,0,0,,0,
+docs-v2/waves/WAL-650.md,other,WAL-650: Final Commit and Tag,77,2193,0,0,,0,
+docs-v2/waves/wave-347-protobuf-schema-dynamic-modulators.md,other,WAL: Wave 347 — ProtoBuf Schema + Dynamic Modulator Registry,124,4681,1,0,,0,
+docs/index.md,documentation,INDEX — MATRIX Docs v2,20,1486,0,0,,0,
+formal/README.md,formal-specification,MATRIX — Formal Verification Specifications,53,2248,1,5,io.matrix.ethics.frozen.FrozenEthicalFNL;io.matrix.consensus.ConsensusEngine;io.matrix.api.BotEthicsPipeline;io.matrix.neuron.TruthTable;io.matrix.audit.HashChain,0,
+infra/k8s/runbooks.md,other,MATRIX Runbooks — Incident Response Procedures,178,5688,0,0,,0,
+matrix-core/bin/test/io/matrix/research/README.md,operational-manual,MATRIX W31 Brain — Edge-AI Demo,78,4247,2,0,,0,
+matrix-core/docs/DIAGNOSIS.md,other,M3: HybridBooleanRag Embedding Gap — Diagnosis Report,161,8672,1,0,,7,FloatEmbeddingIndex.java;matrix-core/src/main/java/io/matrix/rag/BooleanIndex.java;matrix-core/src/main/java/io/matrix/rag/HybridBooleanRag.java;matrix-core/src/main/java/io/matrix/rag/RrfFusion.java;matrix-core/src/test/java/io/matrix/rag/RecallAtKEvaluator.java;matrix-core/src/test/java/io/matrix/rag/RecallAtKPropertyTest.java;rag/HybridBooleanRag.java
+matrix-core/docs/H-007-progress.md,other,H-007: RRF Weight Tuning — Progress Report,48,2092,0,0,,1,WeightSweep.java
+matrix-core/src/main/resources/corpus/photosynthesis-notes.md,other,Photosynthesis — working notes,38,1645,2,0,,0,
+matrix-core/src/test/java/io/matrix/research/README.md,operational-manual,MATRIX W31 Brain — Edge-AI Demo,78,4247,2,0,,0,
+matrix-fpga/README.md,operational-manual,matrix-fpga — MPDT Neuron → FPGA Compiler,82,1752,0,0,,0,
+matrix-micro/README.md,operational-manual,matrix-micro — MPDT Neuron Library for Microcontrollers,92,2310,0,0,,0,
+matrix-sdk-js/README.md,operational-manual,@matrix/sdk (MATRIX JavaScript SDK),28,617,0,0,,0,
+matrix-sdk-python/README.md,operational-manual,matrix-ai (MATRIX Python SDK),46,881,0,0,,0,
+matrix-web-ui/README.md,operational-manual,MATRIX Landing Page (`matrix-web-ui`),144,3921,0,0,,0,
+output/sinv/sinv_analysis.md,other,Анализ синергии MATRIX ↔ СИНВ,43,3905,0,0,,0,
+prompts/iteration_0_1.md,other,,21,1735,0,0,,0,
+scripts/README.md,operational-manual,scripts/ — Python-скрипты для research (NOT in production),34,1904,0,0,,0,
+wal/GLOBAL_WAL.md,session-history,v3.62 — Final Status,51,1942,0,0,,0,
+wal/SESSION_WAL.md,session-history,RECON-W41 — W41.0 Reality and history audit (2026-11-01),4637,403324,38,20,io.matrix.knowledge.acquisition.PromotionStage;io.matrix.knowledge.acquisition.Promotion;io.matrix.knowledge.LearningStateMachine;io.matrix.knowledge.QuestionSimilarity;io.matrix.knowledge.KnowledgeTransfer;io.matrix.api.HashChainedAuditBuffer;io.matrix.knowledge.ReasoningEngine;io.matrix.knowledge.AcceptanceModel,6,ConjugateBudgeter.java;ExtractorsTest.java;HashChain.java;KnowledgeStore.java;MultimodalTest.java;NeuronLayer.java
