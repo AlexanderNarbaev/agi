@@ -71,6 +71,25 @@ import java.util.Locale;
  * <p>Every method of this store synchronizes on the store. The store holds ONE JDBC
  * connection, and a connection is not thread-safe; serialising the access is what makes the
  * "two concurrent callers never get the same number" promise true inside one process.</p>
+ *
+ * <h2>W45.2 — one writer process per database file</h2>
+ * <p><b>The contract: ONE writer process per cognitive database file.</b> A second process that
+ * opens the same file is REFUSED at start-up — it is told which file it tried to open and who
+ * holds it, and it does not open the file at all. The guard is ON BY DEFAULT and it is
+ * enforced by the {@link WriterLock}, which takes the operating system's lock on a lock file
+ * next to the database and records the owner in it.</p>
+ *
+ * <p>The contract is not a style rule: it is what makes the W45.1 recovery of an interrupted
+ * request SOUND. That recovery asks the operating system whether the owner of a claim is
+ * alive, and it treats a claim whose owner cannot be disproven as OWNED, because a claim
+ * wrongly considered alive is visible while one wrongly considered dead is a duplicated
+ * execution. A second writer in another container, or on another host, has a process id the
+ * first writer cannot see — so the first writer would judge its claims dead and repeat their
+ * work. Refusing the second writer turns that assumption into a fact.</p>
+ *
+ * <p>The guard is released when the store closes normally, and it is NOT released when the
+ * process is killed: the lock file is left behind with the dead owner's record in it, and the
+ * next writer takes it over because that owner is dead.</p>
  */
 public final class CognitiveStore implements AutoCloseable {
 
@@ -80,25 +99,69 @@ public final class CognitiveStore implements AutoCloseable {
     private static final System.Logger LOG = System.getLogger(CognitiveStore.class.getName());
 
     private final Connection connection;
+    private WriterLock writerLock;
 
     /**
      * Opens (and creates) the cognitive tables in the given SQLite file.
      *
+     * <p>The single-writer guard is TAKEN: the file may not be opened by another writer, and
+     * this store refuses to open it when it is.</p>
+     *
      * @param databaseFile the knowledge database; it may already exist
      */
     public CognitiveStore(Path databaseFile) {
+        this(databaseFile, WriterLock.acquire(databaseFile, OwnershipToken.current()));
+    }
+
+    /**
+     * Opens the cognitive tables WITHOUT the single-writer guard.
+     *
+     * <p><b>This restores the assumption the guard removed, and it is unsafe.</b> The W45.1
+     * recovery of an interrupted request judges the owner of a claim by asking the operating
+     * system whether that owner is alive. With a second writer in another container, or on
+     * another host, the first writer cannot see the second writer's process id at all, so it
+     * would judge that writer's claims DEAD and execute their work a second time — the
+     * duplicated execution the conservative rule exists to prevent.</p>
+     *
+     * <p>Use it only for a one-off tool that runs while the application is STOPPED, and never
+     * to give two processes the same database.</p>
+     *
+     * @param databaseFile the knowledge database; it may already exist
+     * @param reason       why the guard is not taken, in words an operator can read
+     * @return the store
+     */
+    public static CognitiveStore withoutSingleWriterGuard(Path databaseFile, String reason) {
+        LOG.log(System.Logger.Level.WARNING, "the single-writer guard of the cognitive database "
+                + databaseFile + " is DISABLED: " + reason);
+        return new CognitiveStore(databaseFile, null);
+    }
+
+    private CognitiveStore(Path databaseFile, WriterLock writerLock) {
         try {
             Path parent = databaseFile.toAbsolutePath().getParent();
             if (parent != null) {
                 Files.createDirectories(parent);
             }
+            this.writerLock = writerLock;
             this.connection = DriverManager.getConnection("jdbc:sqlite:" + databaseFile);
             this.connection.setAutoCommit(true);
             configure();
             migrate();
         } catch (Exception e) {
+            if (writerLock != null) {
+                writerLock.close();
+            }
             throw new IllegalStateException("Cannot open the cognitive store at " + databaseFile, e);
         }
+    }
+
+    /**
+     * The writer lock this store holds, when it holds one.
+     *
+     * @return the lock, or empty when the store was opened without the guard
+     */
+    public java.util.Optional<WriterLock> writerLock() {
+        return java.util.Optional.ofNullable(writerLock);
     }
 
     private void configure() throws SQLException {
@@ -2034,12 +2097,25 @@ public final class CognitiveStore implements AutoCloseable {
         return new io.matrix.cognitive.neuromodulation.RegulatoryState(drives);
     }
 
+    /**
+     * Closes the store and RELEASES the writer lock.
+     *
+     * <p>The lock file is deleted while the operating system's lock is still held, so that no
+     * other writer can take the file over between the deletion and the release. A store whose
+     * process is killed does NOT get here: the lock file stays, with the dead owner's record
+     * in it, and the next writer takes it over because that owner is dead.</p>
+     */
     @Override
     public synchronized void close() {
         try {
             connection.close();
         } catch (SQLException e) {
             throw new IllegalStateException("failed to close the cognitive store", e);
+        } finally {
+            if (writerLock != null) {
+                writerLock.close();
+                writerLock = null;
+            }
         }
     }
 }

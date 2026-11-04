@@ -31,6 +31,12 @@ import java.util.UUID;
  * established, the claim is treated as OWNED (still running) and is not stolen. A claim that is
  * wrongly considered alive is visible and recoverable by an operator; a claim that is wrongly
  * considered dead is a duplicated execution.</p>
+ *
+ * <p><b>W45.2 — the topology is now ENFORCED, not assumed.</b> The {@link WriterLock} refuses
+ * a second writer of the same cognitive database file at start-up, so the owner of a claim is
+ * always a process this host can see. The same primitives — the pid, the start instant of the
+ * process and the instance token — are what the lock uses to tell a dead owner from a live
+ * one, and the two rules now rest on the same fact: there is one writer.</p>
  */
 public record OwnershipToken(long pid, String startedAt, String token) {
 
@@ -72,7 +78,8 @@ public record OwnershipToken(long pid, String startedAt, String token) {
         }
         if (owner.pid() == mine.pid()) {
             // Another INSTANCE of this very process. The store has one writer per database
-            // file, so the instance that made the claim is gone: its work may be recovered.
+            // file — W45.2 enforces it with the writer lock — so the instance that made the
+            // claim is gone: its work may be recovered.
             return Ownership.DEAD;
         }
         return owner.ownerAlive() ? Ownership.LIVE_OTHER : Ownership.DEAD;

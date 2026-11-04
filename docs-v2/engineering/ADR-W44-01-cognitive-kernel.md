@@ -1,6 +1,9 @@
 # ADR-W44-01 — The cognitive kernel: contracts, placement and schema
 
 **Status:** accepted · 2026-11-02 · wave W44 · supersedes nothing
+**Scope clarified 2026-11-04 by `ADR-W45.2-01`**: the canonical entry point is named per
+serving application, and the five cycles are kept rather than merged. The content below is
+the historical decision and is not rewritten.
 **Author:** the coordinator · **Decider:** the repository owner (the W44 directive itself)
 **Relates to:** `ADR-W43-01-epistemic-model.md` (the epistemic model this wave extends),
 `ADR-2026-10-26-002-single-cognitive-conductor.md` (one conductor per serving path)

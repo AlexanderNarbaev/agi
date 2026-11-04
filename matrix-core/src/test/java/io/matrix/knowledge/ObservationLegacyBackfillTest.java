@@ -63,7 +63,7 @@ class ObservationLegacyBackfillTest {
         writeV16Database(database);
 
         try (KnowledgeStore store = new KnowledgeStore(database)) {
-            assertThat(store.schemaVersion()).isEqualTo(18);
+            assertThat(store.schemaVersion()).isEqualTo(KnowledgeStore.SCHEMA_VERSION);
             Map<String, ObservationDisposition> dispositions = store.caseDispositions(WORKSPACE);
 
             assertThat(dispositions)
@@ -134,6 +134,38 @@ class ObservationLegacyBackfillTest {
                     .containsEntry("case-unanimous", ObservationDisposition.UNRESOLVED)
                     .containsEntry("case-unexplained", ObservationDisposition.UNRESOLVED)
                     .containsEntry("case-supporting", ObservationDisposition.ELIGIBLE);
+        }
+    }
+
+    @Test
+    @DisplayName("a database rewound to v16 is migrated and its dispositions are backfilled")
+    void aDatabaseRewoundToV16IsMigratedAndItsDispositionsAreBackfilled() throws Exception {
+        Path database = directory.resolve("rewound.sqlite");
+        try (KnowledgeStore store = new KnowledgeStore(database)) {
+            store.recordObservationAtomically(WORKSPACE,
+                    new Source("src-1", WORKSPACE, SourceKind.OBSERVATION, "an example",
+                            "power=1,switch=1", 40, 60, "the lamp was on", INSTANT, "hash", null,
+                            null, null),
+                    new Evidence("evd-1", WORKSPACE, "clm-1", "src-1",
+                            EvidenceRelation.EXEMPLIFIES, "the lamp was on", 50, INSTANT),
+                    new Case("case-supported", WORKSPACE, "cpt-1", "the lamp was on",
+                            "power=1,switch=1", "the lamp was on", "src-1", Case.Origin.OBSERVED,
+                            INSTANT),
+                    ObservationDisposition.ELIGIBLE, "ordinary model data", INSTANT);
+        }
+
+        // The database is rewound to the shape a W44 build left behind: the disposition table
+        // does not exist yet, and the version says so.
+        try (Connection connection = DriverManager.getConnection("jdbc:sqlite:" + database);
+             Statement st = connection.createStatement()) {
+            st.execute("DROP TABLE observation_disposition");
+            st.execute("UPDATE schema_meta SET value='16' WHERE key='version'");
+        }
+
+        try (KnowledgeStore upgraded = new KnowledgeStore(database)) {
+            assertThat(upgraded.schemaVersion()).isEqualTo(KnowledgeStore.SCHEMA_VERSION);
+            assertThat(upgraded.caseDispositions(WORKSPACE))
+                    .containsEntry("case-supported", ObservationDisposition.ELIGIBLE);
         }
     }
 

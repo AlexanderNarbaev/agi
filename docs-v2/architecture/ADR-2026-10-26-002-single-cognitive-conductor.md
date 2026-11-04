@@ -1,6 +1,10 @@
 # ADR-2026-10-26-002 — One cognitive conductor: `TrueMindCycle` is the serving path
 
-**Status:** Accepted
+**Status:** Accepted · **scope clarified 2026-11-04 by `ADR-W45.2-01`**: this decision holds
+for the brain runtime (`matrix-brain-runtime`, `matrix-api-gateway`), which is the application
+its "Applies to" line names. It is NOT the conductor of the epistemic and workbench
+application, whose learning loop is `io.matrix.cognitive.CognitiveKernel`. The content below
+is the historical decision and is not rewritten.
 **Date:** 2026-10-26
 **Deciders:** repository owner (via MASTER ENGINEERING DIRECTIVE v2, §13)
 **Applies to:** `matrix-brain-runtime`, `matrix-api-gateway`

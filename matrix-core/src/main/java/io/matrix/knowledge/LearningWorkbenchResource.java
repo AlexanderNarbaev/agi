@@ -2,6 +2,7 @@ package io.matrix.knowledge;
 
 import jakarta.inject.Inject;
 import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.DefaultValue;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
@@ -140,26 +141,91 @@ public class LearningWorkbenchResource {
      *
      * <p>The import replaces the workspace, so it is also the way to start
      * over — deliberately, and visibly.
+     *
+     * <p><b>W45.2 — the replacement fails closed.</b> It used to erase the workspace's
+     * contradictions, its evidence and its revisions without asking, which is exactly the
+     * kind of silent destruction a system whose value is its history cannot afford. The
+     * endpoint now refuses to replace a workspace that holds something unless the caller
+     * asks for it with {@code ?replace=true}, and it leaves a recoverable snapshot of what
+     * it replaced — the snapshot's id is in the response.</p>
+     *
+     * @param workspaceId the workspace
+     * @param replace     whether the caller explicitly asks to replace a workspace that holds
+     *                    something
+     * @return the loaded counts, and the id of the snapshot of what was replaced
      */
     @POST
     @Path("/workspaces/{id}/load")
-    public Response load(@PathParam("id") String workspaceId) {
+    public Response load(@PathParam("id") String workspaceId,
+                         @QueryParam("replace") @DefaultValue("false") boolean replace) {
         if (!KnowledgeWorkbench.DEFAULT_WORKSPACE.equals(workspaceId)
                 && !KnowledgeWorkbench.LOGIC_WORKSPACE.equals(workspaceId)) {
             return Response.status(Response.Status.NOT_FOUND)
                     .entity(Map.of("error", "no bundled package for workspace " + workspaceId))
                     .build();
         }
-        KnowledgeSnapshot snapshot = workbench.loadBundledPackage(workspaceId);
-        return Response.ok(Map.of(
-                "workspace", snapshot.workspaceId(),
-                "concepts", snapshot.concepts().size(),
-                "claims", snapshot.claims().size(),
-                "sources", snapshot.sources().size(),
-                "evidence", snapshot.evidence().size(),
-                "representations", snapshot.representations().size(),
-                "revisions", snapshot.revisions().size(),
-                "derivations", snapshot.derivations().size())).build();
+        WorkspaceLoad load;
+        try {
+            load = workbench.loadBundledPackage(workspaceId, replace);
+        } catch (WorkspaceReplacementRefused refused) {
+            Map<String, Object> body = new LinkedHashMap<>();
+            body.put("error", refused.getMessage());
+            body.put("workspace", workspaceId);
+            body.put("replaceParameter", "replace");
+            body.put("refused", true);
+            return Response.status(Response.Status.CONFLICT).entity(body).build();
+        }
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("workspace", load.loaded().workspaceId());
+        body.put("concepts", load.loaded().concepts().size());
+        body.put("claims", load.loaded().claims().size());
+        body.put("sources", load.loaded().sources().size());
+        body.put("evidence", load.loaded().evidence().size());
+        body.put("representations", load.loaded().representations().size());
+        body.put("revisions", load.loaded().revisions().size());
+        body.put("derivations", load.loaded().derivations().size());
+        body.put("replaced", load.replaced());
+        body.put("snapshotId", load.snapshot() == null ? null : load.snapshot().id());
+        return Response.ok(body).build();
+    }
+
+    /**
+     * W45.2 — brings a workspace back from one of its snapshots.
+     *
+     * <p>The restore replaces the CURRENT content of the workspace, so it is exactly as
+     * destructive as a load — and it is exactly as safe: it takes a snapshot of what it
+     * replaces, and the id of that snapshot is in the response.</p>
+     *
+     * @param workspaceId the workspace to restore
+     * @param snapshotId  the snapshot to restore it from
+     * @return the restored counts, and the id of the snapshot of what was replaced
+     */
+    @POST
+    @Path("/workspaces/{id}/restore/{snapshotId}")
+    public Response restore(@PathParam("id") String workspaceId,
+                            @PathParam("snapshotId") String snapshotId) {
+        WorkspaceSnapshot replaced;
+        try {
+            replaced = workbench.restoreWorkspaceSnapshot(workspaceId, snapshotId);
+        } catch (IllegalArgumentException unknown) {
+            return Response.status(Response.Status.NOT_FOUND)
+                    .entity(Map.of("error", unknown.getMessage()))
+                    .build();
+        }
+        KnowledgeSnapshot restored = workbench.workspace(workspaceId);
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("workspace", restored.workspaceId());
+        body.put("restoredFrom", snapshotId);
+        body.put("concepts", restored.concepts().size());
+        body.put("claims", restored.claims().size());
+        body.put("sources", restored.sources().size());
+        body.put("evidence", restored.evidence().size());
+        body.put("representations", restored.representations().size());
+        body.put("revisions", restored.revisions().size());
+        body.put("contradictions", restored.contradictions().size());
+        body.put("replaced", replaced != null);
+        body.put("snapshotId", replaced == null ? null : replaced.id());
+        return Response.ok(body).build();
     }
 
     /**

@@ -1,6 +1,7 @@
 package io.matrix.knowledge;
 
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.matrix.cognitive.microworld.ObservationDisposition;
 import java.io.IOException;
@@ -80,8 +81,13 @@ public final class KnowledgeStore implements AutoCloseable {
      * derives the id from the conditions and the outcome — overwrote the decision a review had
      * taken. The occurrence and the history are what let the fact, the act and the decision
      * be three different things again.</p>
+     *
+     * <p>v19 is W45.2: it adds the {@code workspace_snapshot} table, so that a destructive
+     * workspace replacement leaves a recoverable snapshot of what it replaced. The owner's
+     * decision is that the reload fails closed and that the contradiction history is never
+     * silently erased.</p>
      */
-    public static final int SCHEMA_VERSION = 18;
+    public static final int SCHEMA_VERSION = 19;
 
     /**
      * The disposition a prediction error carries when no hypothesis of the model explained the
@@ -93,6 +99,34 @@ public final class KnowledgeStore implements AutoCloseable {
      * (see {@code ADR-W44-01} §2.4).</p>
      */
     private static final String MISSING_CONDITION = "MISSING_CONDITION";
+
+    /**
+     * The prefix of the identifiers this store derives for workspace snapshots.
+     *
+     * <p>The identifier of a snapshot is the workspace's identifier and the number of
+     * snapshots that workspace already holds, so it is unique, readable and derived — nothing
+     * is invented and nothing is random.</p>
+     */
+    private static final String SNAPSHOT_ID_PREFIX = "snap-";
+
+    /**
+     * How many content tables the emptiness of a workspace is decided by.
+     *
+     * <p>It is the number of the placeholders in the emptiness query, and it is named so
+     * that the query and this number cannot drift apart.</p>
+     */
+    private static final int WORKSPACE_CONTENT_TABLES = 10;
+
+    /**
+     * The serialiser of a workspace's content.
+     *
+     * <p>It is a mapper of its own, and not the store's list mapper, because a snapshot has
+     * to survive a version that knows more fields than this one: an unknown field in a
+     * payload is ignored rather than refused, so that a snapshot taken by a later build can
+     * still be read by this one.</p>
+     */
+    private static final ObjectMapper SNAPSHOT_JSON = new ObjectMapper()
+            .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
     /**
      * W45.1 — how long SQLite waits for a writer that arrives while another writer holds
@@ -110,7 +144,24 @@ public final class KnowledgeStore implements AutoCloseable {
 
     private final Connection connection;
 
+    /**
+     * W45.2 — the single-writer guard of this database file.
+     *
+     * <p>It is held by the PROCESS, not by this store: the cognitive store and the epistemic
+     * store open the same file, and both belong to one process. A second PROCESS is refused,
+     * because a second writer would make the recovery of an interrupted request unsafe.</p>
+     */
+    private io.matrix.cognitive.WriterLock writerLock;
+
     public KnowledgeStore(Path databaseFile) {
+        // W45.2. The epistemic store opens the SAME file as the cognitive store, so the
+        // single-writer guard belongs to the FILE, not to one store. The lock is held by the
+        // PROCESS: a second store of this process joins it (the contract is one writer
+        // process), and a second PROCESS is refused — which is what keeps the W45.1 recovery
+        // of an interrupted request safe.
+        io.matrix.cognitive.WriterLock lock = io.matrix.cognitive.WriterLock
+                .acquire(databaseFile, io.matrix.cognitive.OwnershipToken.current());
+        this.writerLock = lock;
         try {
             Path parent = databaseFile.toAbsolutePath().getParent();
             if (parent != null) {
@@ -121,6 +172,7 @@ public final class KnowledgeStore implements AutoCloseable {
             configure();
             migrate();
         } catch (IOException | SQLException e) {
+            lock.close();
             throw new IllegalStateException("Cannot open the knowledge store at " + databaseFile, e);
         }
     }
@@ -632,6 +684,34 @@ public final class KnowledgeStore implements AutoCloseable {
     }
 
     private int migrateFrom(int version) throws SQLException {
+        if (version == 18) {
+            // v19 adds the WORKSPACE SNAPSHOT: the recoverable copy of a workspace's content
+            // that a destructive replacement leaves behind.
+            //
+            // The reason is the owner's decision of the W45.2 wave. The reload replaced a
+            // workspace by deleting its rows and inserting the package's rows in one
+            // transaction, and the deletion took the contradiction history, the evidence and
+            // the revisions with it. Nothing said so, and nothing could take it back.
+            //
+            // The migration is ADDITIVE and there is nothing to backfill: the table is new,
+            // so it holds no legacy rows, and the rows it will hold are the snapshots that the
+            // destructive operations take from then on. A database that was written before
+            // this wave has no snapshot of its content — and that is not something a
+            // migration can invent, because a snapshot of a workspace that has already been
+            // replaced would be a snapshot of the wrong moment.
+            //
+            // The migration is safe to run again after an interruption: the table is created
+            // IF NOT EXISTS, nothing is copied, and the version is written last.
+            try (Statement st = connection.createStatement()) {
+                st.execute("CREATE TABLE IF NOT EXISTS workspace_snapshot ("
+                        + "id TEXT PRIMARY KEY, workspace_id TEXT NOT NULL, "
+                        + "created_at TEXT NOT NULL, kind TEXT NOT NULL, payload TEXT NOT NULL)");
+                st.execute("CREATE INDEX IF NOT EXISTS idx_workspace_snapshot_workspace "
+                        + "ON workspace_snapshot(workspace_id, created_at)");
+            }
+            writeSchemaVersion(19);
+            return 19;
+        }
         if (version == 17) {
             // v18 adds the OCCURRENCE and the ADJUDICATION HISTORY, and turns the disposition
             // into a PROJECTION.
@@ -1076,15 +1156,99 @@ public final class KnowledgeStore implements AutoCloseable {
      *
      * <p>The snapshot is validated BEFORE anything is written, so an invalid
      * snapshot leaves the store exactly as it was.
+     *
+     * <p><b>W45.2 — this method replaces, and it leaves a snapshot.</b> The replacement
+     * erases the workspace's contradictions, its evidence and its revisions, so the content
+     * that is erased is written down first: a caller of this method can no longer destroy a
+     * workspace's history without a recoverable copy of it existing. The refusal — the part
+     * that asks the caller whether it means the replacement — belongs to
+     * {@link #importWorkspaceWithSnapshot(KnowledgeSnapshot, boolean, String)}, which the
+     * workbench and the HTTP surface use.</p>
      */
     public void importWorkspace(KnowledgeSnapshot snapshot) {
+        replaceWorkspace(snapshot, WorkspaceSnapshot.Kind.LOAD, now());
+    }
+
+    // ── the recoverable snapshot ─────────────────────────────────────────────────
+
+    /**
+     * W45.2 — replaces a workspace's content and leaves a recoverable snapshot of what it
+     * replaced.
+     *
+     * <p><b>What this method promises.</b> Either the workspace holds the new content and a
+     * snapshot of the old content, or neither changed. There is no moment at which the
+     * workspace is destroyed without a snapshot of it existing: the snapshot is written in the
+     * SAME transaction as the replacement, so a transaction that rolls back takes the
+     * snapshot with it and leaves the workspace as it was.</p>
+     *
+     * <p><b>Why the load refuses by default.</b> A replacement erases the workspace's
+     * contradictions, its evidence and its revisions. The caller has to say that it means
+     * it: a load into a workspace that holds something is refused unless the caller asks for
+     * the replacement explicitly. The refusal happens BEFORE the transaction that would
+     * delete anything is opened, so a refused load leaves the workspace exactly as it was.</p>
+     *
+     * <p><b>Why the write lock is taken first.</b> The content of the snapshot is read
+     * inside the transaction, and a transaction that reads first and writes second cannot be
+     * upgraded to a write lock once another writer has committed (SQLite refuses that
+     * upgrade rather than letting the snapshot and the replacement disagree). Touching the
+     * workspace row without changing it takes the lock first, so that everything after it
+     * reads a state that no other writer can move.</p>
+     *
+     * @param snapshot  the content to load
+     * @param replace   whether the caller explicitly asks to replace a workspace that holds
+     *                  something
+     * @param createdAt when the snapshot was taken; the caller's instant, never a clock read
+     *                  inside the store
+     * @return the snapshot of what was replaced, or null when the workspace held nothing
+     * @throws WorkspaceReplacementRefused when the workspace holds something and the caller
+     *                                    did not ask for the replacement
+     */
+    public synchronized WorkspaceSnapshot importWorkspaceWithSnapshot(KnowledgeSnapshot snapshot,
+            boolean replace, String createdAt) {
+        validate(snapshot);
+        if (!replace && !isWorkspaceEmpty(snapshot.workspaceId())) {
+            throw new WorkspaceReplacementRefused(snapshot.workspaceId(),
+                    "the workspace '" + snapshot.workspaceId() + "' is not empty, and loading "
+                            + "would erase its content; send replace=true to replace it "
+                            + "anyway, or restore one of its snapshots instead");
+        }
+        return replaceWorkspace(snapshot, WorkspaceSnapshot.Kind.LOAD, createdAt);
+    }
+
+    /**
+     * W45.2 — replaces a workspace's content and leaves a recoverable snapshot of what it
+     * replaced.
+     *
+     * <p>This is the same operation as
+     * {@link #importWorkspaceWithSnapshot(KnowledgeSnapshot, boolean, String)} without the
+     * refusal: the caller has already said that it means the replacement. It exists for the
+     * callers that ARE the explicit request — the restore, and the legacy in-process load.</p>
+     *
+     * @param snapshot  the content to load
+     * @param kind      why the snapshot is taken
+     * @param createdAt when the snapshot was taken
+     * @return the snapshot of what was replaced, or null when the workspace held nothing
+     */
+    public synchronized WorkspaceSnapshot replaceWorkspace(KnowledgeSnapshot snapshot,
+            WorkspaceSnapshot.Kind kind, String createdAt) {
         validate(snapshot);
         try {
             connection.setAutoCommit(false);
             try {
+                // The write lock comes first, so that the content the snapshot holds is the
+                // content this very transaction replaces.
+                lockWorkspace(snapshot.workspaceId());
+                WorkspaceSnapshot taken = null;
+                if (!isWorkspaceEmpty(snapshot.workspaceId())) {
+                    // A snapshot of nothing is a snapshot of a moment in which there was
+                    // nothing to lose, and it is not worth a row: what the owner asked for
+                    // is a snapshot of what a replacement DESTROYED.
+                    taken = writeSnapshot(snapshot.workspaceId(), kind, createdAt);
+                }
                 deleteWorkspace(snapshot.workspaceId());
                 insertWorkspace(snapshot);
                 connection.commit();
+                return taken;
             } catch (SQLException | RuntimeException e) {
                 connection.rollback();
                 throw e;
@@ -1092,7 +1256,278 @@ public final class KnowledgeStore implements AutoCloseable {
                 connection.setAutoCommit(true);
             }
         } catch (SQLException e) {
-            throw new IllegalStateException("Failed to import workspace " + snapshot.workspaceId(), e);
+            throw new IllegalStateException("Failed to replace workspace " + snapshot.workspaceId(), e);
+        }
+    }
+
+    /**
+     * W45.2 — takes a snapshot of a workspace's content without changing the workspace.
+     *
+     * <p>The snapshot is written in its own transaction, and it is written before anything is
+     * read, so that the content it holds is the content of the moment the snapshot was
+     * taken.</p>
+     *
+     * @param workspaceId the workspace to snapshot
+     * @param kind        why the snapshot is taken
+     * @param createdAt   when the snapshot is taken
+     * @return what the snapshot holds
+     */
+    public synchronized WorkspaceSnapshot takeWorkspaceSnapshot(String workspaceId,
+            WorkspaceSnapshot.Kind kind, String createdAt) {
+        try {
+            connection.setAutoCommit(false);
+            try {
+                lockWorkspace(workspaceId);
+                WorkspaceSnapshot taken = writeSnapshot(workspaceId, kind, createdAt);
+                connection.commit();
+                return taken;
+            } catch (SQLException | RuntimeException e) {
+                connection.rollback();
+                throw e;
+            } finally {
+                connection.setAutoCommit(true);
+            }
+        } catch (SQLException e) {
+            throw new IllegalStateException("Failed to snapshot workspace " + workspaceId, e);
+        }
+    }
+
+    /**
+     * W45.2 — brings a workspace back from a snapshot.
+     *
+     * <p>The restore replaces the CURRENT content of the workspace, so it is exactly as
+     * destructive as a load — and it is exactly as safe: it takes a snapshot of what it
+     * replaces, unless the workspace holds nothing, in which case there is nothing to
+     * preserve.</p>
+     *
+     * @param snapshotId the snapshot to restore
+     * @param createdAt  when the snapshot of the replaced content was taken
+     * @return the snapshot of what the restore replaced, or null when the workspace held
+     *         nothing
+     */
+    public synchronized WorkspaceSnapshot restoreWorkspaceSnapshot(String snapshotId, String createdAt) {
+        KnowledgeSnapshot content = snapshotContent(snapshotId);
+        validate(content);
+        try {
+            connection.setAutoCommit(false);
+            try {
+                lockWorkspace(content.workspaceId());
+                WorkspaceSnapshot taken = null;
+                if (!isWorkspaceEmpty(content.workspaceId())) {
+                    taken = writeSnapshot(content.workspaceId(),
+                            WorkspaceSnapshot.Kind.RESTORE, createdAt);
+                }
+                deleteWorkspace(content.workspaceId());
+                insertWorkspace(content);
+                connection.commit();
+                return taken;
+            } catch (SQLException | RuntimeException e) {
+                connection.rollback();
+                throw e;
+            } finally {
+                connection.setAutoCommit(true);
+            }
+        } catch (SQLException e) {
+            throw new IllegalStateException("Failed to restore the snapshot " + snapshotId, e);
+        }
+    }
+
+    /**
+     * W45.2 — the snapshots of a workspace, newest first.
+     *
+     * <p>The snapshots are INSPECTED here, not restored: the counts come from the snapshot's
+     * own content, so a reader can see what a snapshot is worth before deciding to bring it
+     * back.</p>
+     *
+     * @param workspaceId the workspace
+     * @return the snapshots the workspace holds
+     */
+    public List<WorkspaceSnapshot> workspaceSnapshots(String workspaceId) {
+        List<WorkspaceSnapshot> out = new ArrayList<>();
+        try (PreparedStatement ps = connection.prepareStatement(
+                "SELECT id, workspace_id, created_at, kind, payload FROM workspace_snapshot "
+                        + "WHERE workspace_id = ? ORDER BY created_at DESC, id DESC")) {
+            ps.setString(1, workspaceId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    out.add(describeSnapshot(rs.getString("id"), rs.getString("workspace_id"),
+                            rs.getString("created_at"),
+                            WorkspaceSnapshot.Kind.valueOf(rs.getString("kind")),
+                            rs.getString("payload")));
+                }
+            }
+        } catch (SQLException e) {
+            throw new IllegalStateException("failed to read the snapshots of " + workspaceId, e);
+        }
+        return out;
+    }
+
+    /**
+     * W45.2 — one snapshot, inspected.
+     *
+     * @param snapshotId the snapshot
+     * @return what the snapshot holds
+     */
+    public WorkspaceSnapshot workspaceSnapshot(String snapshotId) {
+        try (PreparedStatement ps = connection.prepareStatement(
+                "SELECT id, workspace_id, created_at, kind, payload FROM workspace_snapshot "
+                        + "WHERE id = ?")) {
+            ps.setString(1, snapshotId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return describeSnapshot(rs.getString("id"), rs.getString("workspace_id"),
+                            rs.getString("created_at"),
+                            WorkspaceSnapshot.Kind.valueOf(rs.getString("kind")),
+                            rs.getString("payload"));
+                }
+            }
+        } catch (SQLException e) {
+            throw new IllegalStateException("failed to read the snapshot " + snapshotId, e);
+        }
+        return null;
+    }
+
+    /**
+     * W45.2 — whether the workspace holds nothing that a replacement would erase.
+     *
+     * <p>The question is asked about the tables the replacement touches, and not about the
+     * workspace row itself: the row carries the workspace's name and the moment it was
+     * created, and a replacement rewrites it with the same values. The records that are NOT
+     * at risk from a replacement — the cognitive kernel's cases, their dispositions, their
+     * adjudication history, the assessment items, the asked questions — are not counted
+     * either, because a replacement does not erase them.</p>
+     *
+     * @param workspaceId the workspace
+     * @return true when the workspace holds nothing
+     */
+    public boolean isWorkspaceEmpty(String workspaceId) {
+        try (PreparedStatement ps = connection.prepareStatement(
+                "SELECT (SELECT count(*) FROM concept WHERE workspace_id = ?) "
+                        + "+ (SELECT count(*) FROM source WHERE workspace_id = ?) "
+                        + "+ (SELECT count(*) FROM claim WHERE workspace_id = ?) "
+                        + "+ (SELECT count(*) FROM evidence WHERE workspace_id = ?) "
+                        + "+ (SELECT count(*) FROM representation WHERE workspace_id = ?) "
+                        + "+ (SELECT count(*) FROM prerequisite WHERE workspace_id = ?) "
+                        + "+ (SELECT count(*) FROM revision WHERE workspace_id = ?) "
+                        + "+ (SELECT count(*) FROM derivation WHERE workspace_id = ?) "
+                        + "+ (SELECT count(*) FROM contradiction WHERE workspace_id = ?) "
+                        + "+ (SELECT count(*) FROM learning_goal WHERE workspace_id = ?)")) {
+            for (int i = 1; i <= WORKSPACE_CONTENT_TABLES; i++) {
+                ps.setString(i, workspaceId);
+            }
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next() && rs.getInt(1) == 0;
+            }
+        } catch (SQLException e) {
+            throw new IllegalStateException("failed to read the content of " + workspaceId, e);
+        }
+    }
+
+    /**
+     * W45.2 — takes the write lock of the database without changing anything.
+     *
+     * <p>A deferred transaction that reads first and writes second cannot be upgraded to a
+     * write lock once another writer has committed: SQLite refuses the upgrade rather than
+     * letting the two disagree. Touching the workspace row without changing it takes the
+     * lock, so that the content read afterwards is a content no other writer can move while
+     * the transaction is open.</p>
+     */
+    private void lockWorkspace(String workspaceId) throws SQLException {
+        try (PreparedStatement ps = connection.prepareStatement(
+                "UPDATE workspace SET version = version WHERE id = ?")) {
+            ps.setString(1, workspaceId);
+            ps.executeUpdate();
+        }
+    }
+
+    /**
+     * W45.2 — writes the snapshot row and returns what it holds.
+     *
+     * <p>The content is read AFTER the lock is held, so that the snapshot is of the moment
+     * the replacement happens and not of a moment that another writer could have moved.</p>
+     */
+    private WorkspaceSnapshot writeSnapshot(String workspaceId, WorkspaceSnapshot.Kind kind,
+            String createdAt) throws SQLException {
+        KnowledgeSnapshot content = exportWorkspace(workspaceId);
+        String payload = writeSnapshotPayload(content);
+        String id = nextSnapshotId(workspaceId);
+        try (PreparedStatement ps = connection.prepareStatement(
+                "INSERT INTO workspace_snapshot(id, workspace_id, created_at, kind, payload) "
+                        + "VALUES (?,?,?,?,?)")) {
+            ps.setString(1, id);
+            ps.setString(2, workspaceId);
+            ps.setString(3, createdAt);
+            ps.setString(4, kind.name());
+            ps.setString(5, payload);
+            ps.executeUpdate();
+        }
+        return describeSnapshot(id, workspaceId, createdAt, kind, payload);
+    }
+
+    /**
+     * W45.2 — the identifier of the next snapshot of a workspace.
+     *
+     * <p>The identifier is derived from the workspace and from the number of snapshots the
+     * workspace already holds, so it is unique, readable and derived — nothing is invented
+     * and nothing is random. The count is read inside the transaction that holds the write
+     * lock, so two snapshots of the same workspace cannot be handed the same number.</p>
+     */
+    private String nextSnapshotId(String workspaceId) throws SQLException {
+        int held;
+        try (PreparedStatement ps = connection.prepareStatement(
+                "SELECT count(*) FROM workspace_snapshot WHERE workspace_id = ?")) {
+            ps.setString(1, workspaceId);
+            try (ResultSet rs = ps.executeQuery()) {
+                rs.next();
+                held = rs.getInt(1);
+            }
+        }
+        return SNAPSHOT_ID_PREFIX + workspaceId + "-" + (held + 1);
+    }
+
+    /** W45.2 — what a snapshot holds, counted from its own content. */
+    private static WorkspaceSnapshot describeSnapshot(String id, String workspaceId, String createdAt,
+            WorkspaceSnapshot.Kind kind, String payload) {
+        KnowledgeSnapshot content = readSnapshotPayload(payload);
+        return new WorkspaceSnapshot(id, workspaceId, createdAt, kind,
+                content.concepts().size(), content.claims().size(), content.sources().size(),
+                content.evidence().size(), content.representations().size(),
+                content.revisions().size(), content.contradictions().size(),
+                content.derivations().size(), content.prerequisites().size(),
+                content.goals().size());
+    }
+
+    /** W45.2 — the content of a snapshot, for a restore. */
+    private KnowledgeSnapshot snapshotContent(String snapshotId) {
+        try (PreparedStatement ps = connection.prepareStatement(
+                "SELECT payload FROM workspace_snapshot WHERE id = ?")) {
+            ps.setString(1, snapshotId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return readSnapshotPayload(rs.getString(1));
+                }
+            }
+        } catch (SQLException e) {
+            throw new IllegalStateException("failed to read the snapshot " + snapshotId, e);
+        }
+        throw new IllegalArgumentException("there is no snapshot with the id " + snapshotId);
+    }
+
+    /** W45.2 — the serialised form of a workspace's content. */
+    private static String writeSnapshotPayload(KnowledgeSnapshot content) {
+        try {
+            return SNAPSHOT_JSON.writeValueAsString(content);
+        } catch (IOException e) {
+            throw new IllegalStateException("failed to serialise the workspace content", e);
+        }
+    }
+
+    /** W45.2 — the content a snapshot holds. */
+    private static KnowledgeSnapshot readSnapshotPayload(String payload) {
+        try {
+            return SNAPSHOT_JSON.readValue(payload, KnowledgeSnapshot.class);
+        } catch (IOException e) {
+            throw new IllegalStateException("failed to deserialise the workspace content", e);
         }
     }
 
@@ -1289,6 +1724,30 @@ public final class KnowledgeStore implements AutoCloseable {
                 ps.setString(12, rev.recordedAt());
                 ps.executeUpdate();
             }
+        }
+        // W45.2: the recorded conflicts are part of the content. A replacement that dropped
+        // them would drop the evidence that the system had found a conflict at all.
+        for (Contradiction contradiction : snapshot.contradictions()) {
+            try (PreparedStatement ps = connection.prepareStatement(
+                    "INSERT OR REPLACE INTO contradiction(id, workspace_id, claim_a_id, claim_b_id, "
+                            + "kind, detected_by, recorded_at) VALUES (?,?,?,?,?,?,?)")) {
+                ps.setString(1, contradiction.id());
+                ps.setString(2, contradiction.workspaceId());
+                ps.setString(3, contradiction.claimAId());
+                ps.setString(4, contradiction.claimBId());
+                ps.setString(5, contradiction.kind().name());
+                ps.setString(6, contradiction.detectedBy());
+                ps.setString(7, contradiction.recordedAt());
+                ps.executeUpdate();
+            }
+        }
+        // W45.2: the goals and their subtasks are part of the content too. The mission says
+        // that restoring a knowledge database is NOT the same as restoring an active goal,
+        // and a replacement that dropped the goals would make that sentence true in the
+        // worst way possible.
+        for (LearningGoal goal : snapshot.goals()) {
+            recordGoal(goal);
+            insertGoalSubtasks(goal);
         }
     }
 
@@ -2452,28 +2911,7 @@ public final class KnowledgeStore implements AutoCloseable {
         try {
             connection.setAutoCommit(false);
             try {
-                try (PreparedStatement ps = connection.prepareStatement(
-                        "DELETE FROM learning_goal_subtask WHERE goal_id = ?")) {
-                    ps.setString(1, goal.id());
-                    ps.executeUpdate();
-                }
-                try (PreparedStatement ps = connection.prepareStatement(
-                        "INSERT INTO learning_goal_subtask(goal_id, subtask_id, description, "
-                                + "required, prerequisites, status, evidence, note) "
-                                + "VALUES (?,?,?,?,?,?,?,?)")) {
-                    for (LearningGoal.Subtask subtask : goal.subtasks()) {
-                        ps.setString(1, goal.id());
-                        ps.setString(2, subtask.id());
-                        ps.setString(3, subtask.description());
-                        ps.setBoolean(4, subtask.required());
-                        ps.setString(5, join(subtask.prerequisiteSubtaskIds()));
-                        ps.setString(6, subtask.status().name());
-                        ps.setString(7, join(subtask.evidenceIds()));
-                        ps.setString(8, subtask.note());
-                        ps.addBatch();
-                    }
-                    ps.executeBatch();
-                }
+                insertGoalSubtasks(goal);
                 connection.commit();
             } catch (SQLException | RuntimeException e) {
                 connection.rollback();
@@ -2483,6 +2921,37 @@ public final class KnowledgeStore implements AutoCloseable {
             }
         } catch (SQLException e) {
             throw new IllegalStateException("failed to record the subtasks of " + goal.id(), e);
+        }
+    }
+
+    /**
+     * W45.2 — writes the subtasks of a goal.
+     *
+     * <p>The subtasks are written in the caller's transaction, so that a snapshot's restore
+     * brings a goal and its subtasks back together or not at all.</p>
+     */
+    private void insertGoalSubtasks(LearningGoal goal) throws SQLException {
+        try (PreparedStatement ps = connection.prepareStatement(
+                "DELETE FROM learning_goal_subtask WHERE goal_id = ?")) {
+            ps.setString(1, goal.id());
+            ps.executeUpdate();
+        }
+        try (PreparedStatement ps = connection.prepareStatement(
+                "INSERT INTO learning_goal_subtask(goal_id, subtask_id, description, "
+                        + "required, prerequisites, status, evidence, note) "
+                        + "VALUES (?,?,?,?,?,?,?,?)")) {
+            for (LearningGoal.Subtask subtask : goal.subtasks()) {
+                ps.setString(1, goal.id());
+                ps.setString(2, subtask.id());
+                ps.setString(3, subtask.description());
+                ps.setBoolean(4, subtask.required());
+                ps.setString(5, join(subtask.prerequisiteSubtaskIds()));
+                ps.setString(6, subtask.status().name());
+                ps.setString(7, join(subtask.evidenceIds()));
+                ps.setString(8, subtask.note());
+                ps.addBatch();
+            }
+            ps.executeBatch();
         }
     }
 
@@ -3661,7 +4130,8 @@ public final class KnowledgeStore implements AutoCloseable {
         return new KnowledgeSnapshot(workspaceId, name,
                 concepts(workspaceId), sources(workspaceId), claims(workspaceId), evidence(workspaceId),
                 representations(workspaceId), prerequisites(workspaceId), revisions(workspaceId),
-                derivations(workspaceId), now());
+                derivations(workspaceId), contradictions(workspaceId), goalsWithSubtasks(workspaceId),
+                now());
     }
 
     /** The workspace identifiers this store holds. */
@@ -3734,6 +4204,11 @@ public final class KnowledgeStore implements AutoCloseable {
             connection.close();
         } catch (SQLException e) {
             throw new IllegalStateException("Failed to close the knowledge store", e);
+        } finally {
+            if (writerLock != null) {
+                writerLock.close();
+                writerLock = null;
+            }
         }
     }
 }

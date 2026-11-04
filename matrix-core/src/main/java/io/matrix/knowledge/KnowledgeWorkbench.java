@@ -117,11 +117,81 @@ public class KnowledgeWorkbench implements AutoCloseable {
      * Load the bundled package into a workspace, replacing whatever was
      * there. The import is atomic, so a failed load leaves the previous
      * content intact.
+     *
+     * <p><b>W45.2 — this entry point replaces without asking.</b> It is the in-process door
+     * that the pre-W45.2 callers use, and the HTTP surface does not use it: the endpoint
+     * calls {@link #loadBundledPackage(String, boolean)}, which fails closed unless the
+     * caller asks for the replacement. What changed here is that the replacement now leaves
+     * a recoverable snapshot of what it replaced, so the contradiction history is not
+     * silently erased even on this path.</p>
      */
     public KnowledgeSnapshot loadBundledPackage(String workspaceId) {
         KnowledgeSnapshot snapshot = new KnowledgeImporter().importResource(packFor(workspaceId));
-        store().importWorkspace(snapshot);
+        store().replaceWorkspace(snapshot, WorkspaceSnapshot.Kind.LOAD, recordedAt());
         return snapshot;
+    }
+
+    /**
+     * W45.2 — loads the bundled package into a workspace, failing closed.
+     *
+     * <p><b>What the owner's decision asks for.</b> A reload replaces the workspace: it
+     * erases the contradictions, the evidence and the revisions the workspace held, and it
+     * did so without asking. The load therefore refuses to replace a workspace that holds
+     * something unless the caller explicitly asks for the replacement, and it leaves a
+     * recoverable snapshot of what it replaced.</p>
+     *
+     * <p><b>What the caller has to send.</b> The boolean {@code replace}. The HTTP surface
+     * takes it as the query parameter {@code replace=true}; a caller of this method passes it
+     * as the argument. The refusal says so in as many words, because a refusal a caller
+     * cannot act on is only a slower way of failing.</p>
+     *
+     * <p><b>What is left behind.</b> A snapshot of the replaced content, written in the same
+     * transaction as the replacement. There is no moment at which the workspace is destroyed
+     * without a snapshot of it existing, and the snapshot can be inspected — and restored —
+     * long afterwards.</p>
+     *
+     * @param workspaceId the workspace to load
+     * @param replace     whether the caller explicitly asks to replace a workspace that holds
+     *                    something
+     * @return what was loaded, and the snapshot of what was replaced
+     * @throws WorkspaceReplacementRefused when the workspace holds something and the caller
+     *                                    did not ask for the replacement
+     */
+    public WorkspaceLoad loadBundledPackage(String workspaceId, boolean replace) {
+        KnowledgeSnapshot snapshot = new KnowledgeImporter().importResource(packFor(workspaceId));
+        WorkspaceSnapshot taken = store().importWorkspaceWithSnapshot(snapshot, replace, recordedAt());
+        return new WorkspaceLoad(workspaceId, snapshot, taken);
+    }
+
+    /**
+     * W45.2 — brings a workspace back from one of its snapshots.
+     *
+     * <p>The restore replaces the CURRENT content of the workspace, so it is exactly as
+     * destructive as a load — and it is exactly as safe: it takes a snapshot of what it
+     * replaces, unless the workspace holds nothing.</p>
+     *
+     * @param workspaceId the workspace to restore
+     * @param snapshotId  the snapshot to restore it from
+     * @return the snapshot of what the restore replaced, or null when the workspace held
+     *         nothing
+     */
+    public WorkspaceSnapshot restoreWorkspaceSnapshot(String workspaceId, String snapshotId) {
+        WorkspaceSnapshot known = store().workspaceSnapshot(snapshotId);
+        if (known == null || !known.workspaceId().equals(workspaceId)) {
+            throw new IllegalArgumentException("the snapshot " + snapshotId
+                    + " does not belong to the workspace " + workspaceId);
+        }
+        return store().restoreWorkspaceSnapshot(snapshotId, recordedAt());
+    }
+
+    /**
+     * W45.2 — the snapshots of a workspace, inspected.
+     *
+     * @param workspaceId the workspace
+     * @return the snapshots the workspace holds, newest first
+     */
+    public List<WorkspaceSnapshot> workspaceSnapshots(String workspaceId) {
+        return store().workspaceSnapshots(workspaceId);
     }
 
     /**

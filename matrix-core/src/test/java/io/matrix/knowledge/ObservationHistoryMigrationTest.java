@@ -49,7 +49,7 @@ class ObservationHistoryMigrationTest {
         writeV17Database(database);
 
         try (KnowledgeStore store = new KnowledgeStore(database)) {
-            assertThat(store.schemaVersion()).isEqualTo(18);
+            assertThat(store.schemaVersion()).isEqualTo(KnowledgeStore.SCHEMA_VERSION);
 
             // Every disposition of the v17 database has a row in the history.
             List<ObservationAdjudication> history = store.adjudications(WORKSPACE);
@@ -78,7 +78,7 @@ class ObservationHistoryMigrationTest {
         Path database = directory.resolve("fresh.sqlite");
         try (KnowledgeStore store = new KnowledgeStore(database)) {
             assertThat(store.schemaVersion()).isEqualTo(KnowledgeStore.SCHEMA_VERSION);
-            assertThat(store.schemaVersion()).isEqualTo(18);
+            assertThat(store.schemaVersion()).isEqualTo(KnowledgeStore.SCHEMA_VERSION);
             assertThat(tableNames(database))
                     .contains("observation_occurrence", "observation_adjudication",
                             "observation_disposition");
@@ -93,7 +93,7 @@ class ObservationHistoryMigrationTest {
 
         // The first run of the migration.
         try (KnowledgeStore store = new KnowledgeStore(database)) {
-            assertThat(store.schemaVersion()).isEqualTo(18);
+            assertThat(store.schemaVersion()).isEqualTo(KnowledgeStore.SCHEMA_VERSION);
             assertThat(store.adjudications(WORKSPACE)).hasSize(2);
         }
 
@@ -106,7 +106,7 @@ class ObservationHistoryMigrationTest {
 
         // The migration runs again, over a database that already has everything.
         try (KnowledgeStore store = new KnowledgeStore(database)) {
-            assertThat(store.schemaVersion()).isEqualTo(18);
+            assertThat(store.schemaVersion()).isEqualTo(KnowledgeStore.SCHEMA_VERSION);
             assertThat(store.adjudications(WORKSPACE))
                     .withFailMessage("the backfill must not copy a row twice")
                     .hasSize(2);
@@ -126,7 +126,7 @@ class ObservationHistoryMigrationTest {
         List<String> before = tableShapes(database);
 
         try (KnowledgeStore store = new KnowledgeStore(database)) {
-            assertThat(store.schemaVersion()).isEqualTo(18);
+            assertThat(store.schemaVersion()).isEqualTo(KnowledgeStore.SCHEMA_VERSION);
         }
 
         List<String> after = tableShapes(database);
