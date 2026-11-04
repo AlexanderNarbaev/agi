@@ -75,7 +75,7 @@ import java.util.Locale;
 public final class CognitiveStore implements AutoCloseable {
 
     /** The schema version this build writes. */
-    public static final int SCHEMA_VERSION = 3;
+    public static final int SCHEMA_VERSION = 4;
 
     private static final System.Logger LOG = System.getLogger(CognitiveStore.class.getName());
 
@@ -106,6 +106,31 @@ public final class CognitiveStore implements AutoCloseable {
             st.execute("PRAGMA journal_mode=WAL");
             st.execute("PRAGMA synchronous=FULL");
         }
+    }
+
+    /**
+     * Adds a column to an existing table when it is not there yet.
+     *
+     * <p>SQLite has no {@code ADD COLUMN IF NOT EXISTS}, so the column list is read first.
+     * The migration is therefore re-runnable: an interrupted migration can be run again and
+     * will add only what is missing.</p>
+     *
+     * @param st        the statement to run the probe with
+     * @param table     the table to extend
+     * @param column    the column to add
+     * @param definition the column definition
+     * @throws SQLException when the probe or the statement fails
+     */
+    private static void addColumnIfMissing(Statement st, String table, String column, String definition)
+            throws SQLException {
+        try (ResultSet rs = st.executeQuery("PRAGMA table_info(" + table + ")")) {
+            while (rs.next()) {
+                if (column.equals(rs.getString("name"))) {
+                    return;
+                }
+            }
+        }
+        st.execute("ALTER TABLE " + table + " ADD COLUMN " + column + " " + definition);
     }
 
     private void migrate() throws SQLException {
@@ -196,6 +221,39 @@ public final class CognitiveStore implements AutoCloseable {
                         created_at TEXT NOT NULL,
                         completed_at TEXT
                     )""");
+            // W45.1: the lifecycle of a request is a STATE MACHINE, and every transition of
+            // it is durable and inspectable.
+            //
+            // The W45.0 table had two states and no way to say "this request died half way".
+            // The columns below carry what the recovery needs: the last durable CHECKPOINT of
+            // the execution, the OWNER that claimed it, the stable REQUEST identity, and the
+            // classification of a failure or of a recovery.
+            addColumnIfMissing(st, "cognitive_idempotency", "checkpoint", "TEXT");
+            addColumnIfMissing(st, "cognitive_idempotency", "owner_token", "TEXT");
+            addColumnIfMissing(st, "cognitive_idempotency", "owner_pid", "INTEGER");
+            addColumnIfMissing(st, "cognitive_idempotency", "request_id", "TEXT");
+            addColumnIfMissing(st, "cognitive_idempotency", "signal_sequence", "INTEGER NOT NULL DEFAULT 0");
+            addColumnIfMissing(st, "cognitive_idempotency", "attempts", "INTEGER NOT NULL DEFAULT 0");
+            addColumnIfMissing(st, "cognitive_idempotency", "updated_at", "TEXT");
+            addColumnIfMissing(st, "cognitive_idempotency", "failure", "TEXT");
+            addColumnIfMissing(st, "cognitive_idempotency", "recovery", "TEXT");
+            // W45.1: the append-only HISTORY of the request lifecycle. The idempotency row
+            // is the current state; this table is how the system got there. A transition
+            // never erases the one before it, so a recovery decision can always be read
+            // back and explained.
+            st.execute("""
+                    CREATE TABLE IF NOT EXISTS cognitive_request_event (
+                        id TEXT PRIMARY KEY,
+                        key TEXT NOT NULL,
+                        request_id TEXT,
+                        episode_id TEXT,
+                        state TEXT NOT NULL,
+                        checkpoint TEXT,
+                        detail TEXT,
+                        occurred_at TEXT NOT NULL
+                    )""");
+            st.execute("CREATE INDEX IF NOT EXISTS idx_cognitive_request_event_key "
+                    + "ON cognitive_request_event(key, occurred_at)");
             // W45.0: the DURABLE REGULATORY STATE.
             //
             // ADR-W44-01 lists the drives among the cognitive state the store persists, and
@@ -1237,7 +1295,16 @@ public final class CognitiveStore implements AutoCloseable {
             String state,
             String outcome,
             String createdAt,
-            String completedAt) {
+            String completedAt,
+            String checkpoint,
+            String ownerToken,
+            Long ownerPid,
+            String requestId,
+            long signalSequence,
+            int attempts,
+            String updatedAt,
+            String failure,
+            String recovery) {
 
         /** The state of a key whose delivery is still running. */
         public static final String STATE_IN_PROGRESS = "IN_PROGRESS";
@@ -1249,30 +1316,112 @@ public final class CognitiveStore implements AutoCloseable {
         public boolean completed() {
             return STATE_COMPLETED.equals(state) && outcome != null;
         }
+
+        /**
+         * The lifecycle state of this request.
+         *
+         * @return the state, or empty when the stored state is not one this version knows
+         */
+        public java.util.Optional<RequestExecutionState> executionState() {
+            try {
+                return java.util.Optional.of(RequestExecutionState.valueOf(state));
+            } catch (IllegalArgumentException | NullPointerException e) {
+                return java.util.Optional.empty();
+            }
+        }
+
+        /**
+         * The last durable checkpoint of the execution behind this request.
+         *
+         * @return the checkpoint, or empty when the execution never reached one
+         */
+        public java.util.Optional<RequestCheckpoint> lastCheckpoint() {
+            if (checkpoint == null || checkpoint.isBlank()) {
+                return java.util.Optional.empty();
+            }
+            try {
+                return java.util.Optional.of(RequestCheckpoint.valueOf(checkpoint));
+            } catch (IllegalArgumentException e) {
+                return java.util.Optional.empty();
+            }
+        }
+
+        /**
+         * The owner that claimed this request.
+         *
+         * @return the token, or empty when the row carries no owner
+         */
+        public java.util.Optional<OwnershipToken> owner() {
+            if (ownerToken == null || ownerToken.isBlank() || ownerPid == null) {
+                return java.util.Optional.empty();
+            }
+            String[] parts = ownerToken.split("\\|", 3);
+            String startedAt = parts.length > 1 ? parts[1] : "";
+            String token = parts.length > 2 ? parts[2] : "";
+            return java.util.Optional.of(new OwnershipToken(ownerPid, startedAt, token));
+        }
     }
 
     /**
-     * Claims an idempotency key.
+     * Claims an idempotency key for one execution.
      *
-     * <p>The claim is an INSERT, and it is the only atomic step of the registry: the caller
-     * that wins the insert owns the key and does the work; every other caller finds the key
-     * claimed and does no work at all.</p>
+     * <p>W45.1. The claim is a single statement, and it is the only atomic step of the
+     * registry: the caller that wins it owns the request and does the work; every other
+     * caller finds the request claimed and does no work at all.</p>
+     *
+     * <p>The claim carries the identities of the execution — the request id, the signal id and
+     * the episode id — because they must SURVIVE the process that allocated them. A retry
+     * after a crash continues the SAME logical execution: the same episode, the same signal.
+     * A request that is re-executed is never given a second episode.</p>
+     *
+     * <p>The statement takes the key over only when the stored row is in a state that proves
+     * that no effect happened ({@code FAILED_NO_EFFECT} or {@code INTERRUPTED_NO_EFFECT}) and
+     * the payload is the same. Every other case leaves the stored row untouched, and the
+     * caller reads it and decides what to tell its own caller.</p>
      *
      * @param key         the idempotency key
      * @param fingerprint the digest of the payload
+     * @param requestId   the stable identity of the logical request
+     * @param signalId    the signal id allocated for the execution
+     * @param episodeId   the episode id allocated for the execution
+     * @param owner       the token of the claiming process
      * @param createdAt   the instant of the claim
-     * @return true when the caller claimed the key, false when it was already claimed
+     * @return the row after the claim: the caller's own claim, or the row that was already
+     *         there and that the caller must interpret
      */
-    public synchronized boolean claimIdempotency(String key, String fingerprint, String createdAt) {
+    public synchronized IdempotencyRecord claimIdempotency(String key, String fingerprint,
+                                                            String requestId, String signalId,
+                                                            long signalSequence, String episodeId,
+                                                            OwnershipToken owner, String createdAt) {
         try (PreparedStatement ps = connection.prepareStatement(
-                "INSERT OR IGNORE INTO cognitive_idempotency(key, fingerprint, episode_id, "
-                        + "signal_id, state, outcome, created_at, completed_at) "
-                        + "VALUES (?,?,NULL,NULL,?,NULL,?,NULL)")) {
+                "INSERT INTO cognitive_idempotency(key, fingerprint, episode_id, signal_id, "
+                        + "state, outcome, created_at, completed_at, checkpoint, owner_token, "
+                        + "owner_pid, request_id, signal_sequence, attempts, updated_at, failure, "
+                        + "recovery) VALUES (?,?,?,?,?,NULL,?,NULL,?,?,?,?,?,1,?,NULL,NULL) "
+                        + "ON CONFLICT(key) DO UPDATE SET state = excluded.state, "
+                        + "owner_token = excluded.owner_token, owner_pid = excluded.owner_pid, "
+                        + "updated_at = excluded.updated_at, "
+                        + "attempts = cognitive_idempotency.attempts + 1, "
+                        + "checkpoint = excluded.checkpoint "
+                        + "WHERE cognitive_idempotency.fingerprint = excluded.fingerprint "
+                        + "AND cognitive_idempotency.state IN (?, ?)")) {
             ps.setString(1, key);
             ps.setString(2, fingerprint);
-            ps.setString(3, IdempotencyRecord.STATE_IN_PROGRESS);
-            ps.setString(4, createdAt);
-            return ps.executeUpdate() > 0;
+            ps.setString(3, episodeId);
+            ps.setString(4, signalId);
+            ps.setString(5, RequestExecutionState.IN_PROGRESS.name());
+            ps.setString(6, createdAt);
+            ps.setString(7, RequestCheckpoint.CLAIMED.name());
+            ps.setString(8, serializeOwner(owner));
+            ps.setLong(9, owner.pid());
+            ps.setString(10, requestId);
+            ps.setLong(11, signalSequence);
+            ps.setString(12, createdAt);
+            ps.setString(13, RequestExecutionState.FAILED_NO_EFFECT.name());
+            ps.setString(14, RequestExecutionState.INTERRUPTED_NO_EFFECT.name());
+            ps.executeUpdate();
+            return findIdempotency(key).orElseThrow(
+                    () -> new IllegalStateException("the idempotency key vanished right after it was claimed"));
         } catch (SQLException e) {
             throw new IllegalStateException("failed to claim the idempotency key", e);
         }
@@ -1287,19 +1436,293 @@ public final class CognitiveStore implements AutoCloseable {
     public synchronized java.util.Optional<IdempotencyRecord> findIdempotency(String key) {
         try (PreparedStatement ps = connection.prepareStatement(
                 "SELECT key, fingerprint, episode_id, signal_id, state, outcome, created_at, "
-                        + "completed_at FROM cognitive_idempotency WHERE key = ?")) {
+                        + "completed_at, checkpoint, owner_token, owner_pid, request_id, "
+                        + "signal_sequence, attempts, "
+                        + "updated_at, failure, recovery FROM cognitive_idempotency WHERE key = ?")) {
             ps.setString(1, key);
             try (ResultSet rs = ps.executeQuery()) {
                 if (!rs.next()) {
                     return java.util.Optional.empty();
                 }
-                return java.util.Optional.of(new IdempotencyRecord(rs.getString(1),
-                        rs.getString(2), rs.getString(3), rs.getString(4), rs.getString(5),
-                        rs.getString(6), rs.getString(7), rs.getString(8)));
+                long pid = rs.getLong("owner_pid");
+                Long ownerPid = rs.wasNull() ? null : pid;
+                return java.util.Optional.of(new IdempotencyRecord(rs.getString("key"),
+                        rs.getString("fingerprint"), rs.getString("episode_id"),
+                        rs.getString("signal_id"), rs.getString("state"), rs.getString("outcome"),
+                        rs.getString("created_at"), rs.getString("completed_at"),
+                        rs.getString("checkpoint"), rs.getString("owner_token"), ownerPid,
+                        rs.getString("request_id"), rs.getLong("signal_sequence"),
+                        rs.getInt("attempts"), rs.getString("updated_at"),
+                        rs.getString("failure"), rs.getString("recovery")));
             }
         } catch (SQLException e) {
             throw new IllegalStateException("failed to read the idempotency key", e);
         }
+    }
+
+    /**
+     * Records the durable checkpoint an execution has just reached.
+     *
+     * <p>The checkpoint is written in the same store as the work it describes, so it never
+     * claims more than has been committed. It is the fact the recovery reads: a request whose
+     * checkpoint is at or after {@link RequestCheckpoint#OBSERVATION_COMMITTED} has committed
+     * an observation and may NOT be executed again.</p>
+     *
+     * @param key        the idempotency key
+     * @param checkpoint the checkpoint that was reached
+     * @param occurredAt the instant of the checkpoint
+     */
+    public synchronized void recordCheckpoint(String key, RequestCheckpoint checkpoint, String occurredAt) {
+        try (PreparedStatement ps = connection.prepareStatement(
+                "UPDATE cognitive_idempotency SET checkpoint = ?, updated_at = ? WHERE key = ?")) {
+            ps.setString(1, checkpoint.name());
+            ps.setString(2, occurredAt);
+            ps.setString(3, key);
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            throw new IllegalStateException("failed to record the checkpoint of " + key, e);
+        }
+        recordRequestEvent(key, null, null, checkpoint.name(), checkpoint.name(), occurredAt,
+                "the execution reached " + checkpoint);
+    }
+
+    /**
+     * Records a transition of the request lifecycle in the append-only history.
+     *
+     * @param key        the idempotency key
+     * @param requestId  the stable identity of the logical request
+     * @param episodeId  the episode of the execution, when there is one
+     * @param state      the state the request moved to
+     * @param checkpoint the checkpoint the transition happened at, when there is one
+     * @param detail     what the transition was
+     * @param occurredAt the instant of the transition
+     */
+    public synchronized void recordRequestEvent(String key, String requestId, String episodeId,
+                                                String state, String checkpoint, String detail,
+                                                String occurredAt) {
+        try (PreparedStatement ps = connection.prepareStatement(
+                "INSERT OR IGNORE INTO cognitive_request_event(id, key, request_id, episode_id, "
+                        + "state, checkpoint, detail, occurred_at) VALUES (?,?,?,?,?,?,?,?)")) {
+            ps.setString(1, "req-" + key + "-" + occurredAt + "-" + state
+                    + (checkpoint == null ? "" : "-" + checkpoint));
+            ps.setString(2, key);
+            ps.setString(3, requestId);
+            ps.setString(4, episodeId);
+            ps.setString(5, state);
+            ps.setString(6, checkpoint);
+            ps.setString(7, detail);
+            ps.setString(8, occurredAt);
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            throw new IllegalStateException("failed to record the request event of " + key, e);
+        }
+    }
+
+    /**
+     * Every request that is not in a terminal state, whatever claimed it.
+     *
+     * @return the unfinished requests, oldest first
+     */
+    public synchronized java.util.List<IdempotencyRecord> unfinishedRequests() {
+        java.util.List<IdempotencyRecord> rows = new java.util.ArrayList<>();
+        try (PreparedStatement ps = connection.prepareStatement(
+                "SELECT key, fingerprint, episode_id, signal_id, state, outcome, created_at, "
+                        + "completed_at, checkpoint, owner_token, owner_pid, request_id, "
+                        + "signal_sequence, attempts, "
+                        + "updated_at, failure, recovery FROM cognitive_idempotency "
+                        + "WHERE state NOT IN (?, ?) ORDER BY created_at")) {
+            ps.setString(1, RequestExecutionState.COMPLETED.name());
+            ps.setString(2, RequestExecutionState.INDETERMINATE.name());
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    long pid = rs.getLong("owner_pid");
+                    Long ownerPid = rs.wasNull() ? null : pid;
+                    rows.add(new IdempotencyRecord(rs.getString("key"),
+                            rs.getString("fingerprint"), rs.getString("episode_id"),
+                            rs.getString("signal_id"), rs.getString("state"), rs.getString("outcome"),
+                            rs.getString("created_at"), rs.getString("completed_at"),
+                            rs.getString("checkpoint"), rs.getString("owner_token"), ownerPid,
+                            rs.getString("request_id"), rs.getLong("signal_sequence"),
+                            rs.getInt("attempts"), rs.getString("updated_at"),
+                            rs.getString("failure"), rs.getString("recovery")));
+                }
+            }
+            return rows;
+        } catch (SQLException e) {
+            throw new IllegalStateException("failed to list the unfinished requests", e);
+        }
+    }
+
+    /**
+     * Marks an episode that a terminated process left open, and closes it.
+     *
+     * <p>W45.1. An episode that was opened and never closed is an episode whose outcome is
+     * unknown, and an open episode is a lie: the store says the cycle is still running. When
+     * the recovery finds such an episode — the process that owned it is gone — it writes the
+     * terminal event and closes it. The event is part of the append-only stream, so the
+     * history of the episode says exactly where it stopped.</p>
+     *
+     * @param episodeId  the episode that was interrupted
+     * @param detail     what is known about the interruption
+     * @param occurredAt the instant of the interruption
+     */
+    public synchronized void interruptEpisode(String episodeId, String detail, String occurredAt) {
+        List<String> existing = episodeContent(episodeId);
+        if (existing == null) {
+            return;
+        }
+        if (existing.get(3) == null) {
+            try (PreparedStatement ps = connection.prepareStatement(
+                    "UPDATE cognitive_episode SET closed_at = ? WHERE id = ? AND closed_at IS NULL")) {
+                ps.setString(1, occurredAt);
+                ps.setString(2, episodeId);
+                ps.executeUpdate();
+            } catch (SQLException e) {
+                throw new IllegalStateException("failed to close the interrupted episode", e);
+            }
+        }
+        if (hasInterruptionEvent(episodeId)) {
+            // The interruption is already recorded: the recovery must not write a second
+            // terminal event for the same episode.
+            return;
+        }
+        long sequence = nextEventSequence(episodeId);
+        appendEvent("evt-" + episodeId + "-recovered-" + sequence, episodeId, sequence,
+                "INTERRUPTED", "Recovery", detail, occurredAt);
+    }
+
+    /**
+     * Whether the episode already carries the terminal event of an interruption.
+     *
+     * @param episodeId the episode
+     * @return true when the episode was already interrupted
+     */
+    private boolean hasInterruptionEvent(String episodeId) {
+        try (PreparedStatement ps = connection.prepareStatement(
+                "SELECT 1 FROM cognitive_event WHERE episode_id = ? AND type = 'INTERRUPTED' "
+                        + "LIMIT 1")) {
+            ps.setString(1, episodeId);
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next();
+            }
+        } catch (SQLException e) {
+            throw new IllegalStateException("failed to read the interruption of " + episodeId, e);
+        }
+    }
+
+    /**
+     * The next free position of the event stream of an episode.
+     *
+     * @param episodeId the episode
+     * @return the next sequence number
+     */
+    private long nextEventSequence(String episodeId) {
+        try (PreparedStatement ps = connection.prepareStatement(
+                "SELECT COALESCE(MAX(sequence), 0) FROM cognitive_event WHERE episode_id = ?")) {
+            ps.setString(1, episodeId);
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next() ? rs.getLong(1) + 1 : 1;
+            }
+        } catch (SQLException e) {
+            throw new IllegalStateException("failed to read the event position of " + episodeId, e);
+        }
+    }
+
+    /**
+     * The lifecycle history of one request.
+     *
+     * @param key the idempotency key
+     * @return the events of the request, oldest first
+     */
+    public synchronized java.util.List<String> requestEvents(String key) {
+        java.util.List<String> events = new java.util.ArrayList<>();
+        try (PreparedStatement ps = connection.prepareStatement(
+                "SELECT state, checkpoint, detail, occurred_at FROM cognitive_request_event "
+                        + "WHERE key = ? ORDER BY occurred_at, rowid")) {
+            ps.setString(1, key);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    events.add(rs.getString(4) + " " + rs.getString(1)
+                            + (rs.getString(2) == null ? "" : " @" + rs.getString(2))
+                            + " — " + rs.getString(3));
+                }
+            }
+            return events;
+        } catch (SQLException e) {
+            throw new IllegalStateException("failed to read the request history of " + key, e);
+        }
+    }
+
+    /**
+     * Records the failure of an execution, with the classification that says whether the work
+     * may be repeated.
+     *
+     * <p>W45.1. The W45.0 implementation DELETED the mapping of a failed request, so the next
+     * delivery of the same key started a new episode and repeated the work — including an
+     * observation that had already been committed. A failure is now recorded, never erased: the
+     * row keeps the identities, the checkpoint and the classification, and the row is only
+     * re-executable when the classification proves that nothing was written.</p>
+     *
+     * @param key        the idempotency key
+     * @param state      the state the request moved to
+     * @param checkpoint the last durable checkpoint, when there is one
+     * @param failure    what happened, in words
+     * @param occurredAt the instant of the failure
+     */
+    public synchronized void failIdempotency(String key, RequestExecutionState state,
+                                              RequestCheckpoint checkpoint, String failure,
+                                              String occurredAt, OwnershipToken owner) {
+        IdempotencyRecord current = findIdempotency(key).orElse(null);
+        try (PreparedStatement ps = connection.prepareStatement(
+                "UPDATE cognitive_idempotency SET state = ?, checkpoint = COALESCE(?, checkpoint), "
+                        + "failure = ?, updated_at = ? WHERE key = ? AND owner_token = ?")) {
+            ps.setString(1, state.name());
+            ps.setString(2, checkpoint == null ? null : checkpoint.name());
+            ps.setString(3, failure);
+            ps.setString(4, occurredAt);
+            ps.setString(5, key);
+            ps.setString(6, serializeOwner(owner));
+            if (ps.executeUpdate() == 0) {
+                // The FENCE again: a process that lost the request may not write its own
+                // failure over the state of the new owner.
+                return;
+            }
+        } catch (SQLException e) {
+            throw new IllegalStateException("failed to record the failure of " + key, e);
+        }
+        recordRequestEvent(key, current == null ? null : current.requestId(),
+                current == null ? null : current.episodeId(), state.name(),
+                checkpoint == null ? null : checkpoint.name(), failure, occurredAt);
+    }
+
+    /**
+     * Records the recovery decision of a request whose owner is gone.
+     *
+     * @param key        the idempotency key
+     * @param state      the state the request moved to
+     * @param checkpoint the last durable checkpoint, when there is one
+     * @param recovery   what the recovery decided, in words
+     * @param occurredAt the instant of the recovery
+     */
+    public synchronized void recordRecovery(String key, RequestExecutionState state,
+                                            RequestCheckpoint checkpoint, String recovery,
+                                            String occurredAt) {
+        IdempotencyRecord current = findIdempotency(key).orElse(null);
+        try (PreparedStatement ps = connection.prepareStatement(
+                "UPDATE cognitive_idempotency SET state = ?, checkpoint = COALESCE(?, checkpoint), "
+                        + "recovery = ?, updated_at = ? WHERE key = ?")) {
+            ps.setString(1, state.name());
+            ps.setString(2, checkpoint == null ? null : checkpoint.name());
+            ps.setString(3, recovery);
+            ps.setString(4, occurredAt);
+            ps.setString(5, key);
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            throw new IllegalStateException("failed to record the recovery of " + key, e);
+        }
+        recordRequestEvent(key, current == null ? null : current.requestId(),
+                current == null ? null : current.episodeId(), state.name(),
+                checkpoint == null ? null : checkpoint.name(), recovery, occurredAt);
     }
 
     /**
@@ -1312,36 +1735,45 @@ public final class CognitiveStore implements AutoCloseable {
      * @param completedAt the instant the delivery finished
      */
     public synchronized void completeIdempotency(String key, String episodeId, String signalId,
-                                                 String outcome, String completedAt) {
+                                                 String outcome, String completedAt,
+                                                 OwnershipToken owner) {
         try (PreparedStatement ps = connection.prepareStatement(
                 "UPDATE cognitive_idempotency SET episode_id = ?, signal_id = ?, state = ?, "
-                        + "outcome = ?, completed_at = ? WHERE key = ?")) {
+                        + "outcome = ?, completed_at = ?, checkpoint = ?, updated_at = ? "
+                        + "WHERE key = ? AND owner_token = ?")) {
             ps.setString(1, episodeId);
             ps.setString(2, signalId);
-            ps.setString(3, IdempotencyRecord.STATE_COMPLETED);
+            ps.setString(3, RequestExecutionState.COMPLETED.name());
             ps.setString(4, outcome);
             ps.setString(5, completedAt);
-            ps.setString(6, key);
-            ps.executeUpdate();
+            ps.setString(6, RequestCheckpoint.IDEMPOTENCY_COMPLETED.name());
+            ps.setString(7, completedAt);
+            ps.setString(8, key);
+            ps.setString(9, serializeOwner(owner));
+            if (ps.executeUpdate() == 0) {
+                // W45.1: the FENCE. The completion only counts when the writer is still the
+                // owner of the request. A process that lost the request to a recovery must
+                // not write the outcome of its own execution over the outcome of the new
+                // one: the request has one owner at a time.
+                throw new CognitiveConflictException(CognitiveConflictException.Kind.EPISODE_STATE,
+                        "the request " + key + " is no longer owned by this process; its "
+                                + "completion was refused");
+            }
         } catch (SQLException e) {
             throw new IllegalStateException("failed to complete the idempotency key", e);
         }
+        recordRequestEvent(key, null, episodeId, RequestExecutionState.COMPLETED.name(),
+                RequestCheckpoint.IDEMPOTENCY_COMPLETED.name(), "the request completed", completedAt);
     }
 
     /**
-     * Releases a claimed key whose delivery failed, so that the key can be used again.
+     * Serialises an ownership token for the store.
      *
-     * @param key the idempotency key
+     * @param owner the token
+     * @return the serialised form, {@code pid|startedAt|token}
      */
-    public synchronized void releaseIdempotency(String key) {
-        try (PreparedStatement ps = connection.prepareStatement(
-                "DELETE FROM cognitive_idempotency WHERE key = ? AND state <> ?")) {
-            ps.setString(1, key);
-            ps.setString(2, IdempotencyRecord.STATE_COMPLETED);
-            ps.executeUpdate();
-        } catch (SQLException e) {
-            throw new IllegalStateException("failed to release the idempotency key", e);
-        }
+    private static String serializeOwner(OwnershipToken owner) {
+        return owner.pid() + "|" + owner.startedAt() + "|" + owner.token();
     }
 
     // ── helpers ──────────────────────────────────────────────────────────────

@@ -78,14 +78,27 @@ public class CognitiveResource {
         }
         try {
             CognitiveOutcome outcome = service.observe(request.assignment(), request.idempotencyKey());
-            return Response.status(outcome.status() == CognitiveOutcome.Status.REFUSED ? 409 : 200)
-                    .entity(describe(outcome))
-                    .build();
+            Response.Status status = switch (outcome.status()) {
+                case COMPLETED -> Response.Status.OK;
+                case REFUSED -> Response.Status.CONFLICT;
+                // W45.1: a timeout and a controlled failure are TERMINAL answers, not normal
+                // ones. The outcome is durable and replayable: the same key returns the same
+                // terminal outcome and does no work.
+                case RESOURCE_LIMITED -> Response.Status.SERVICE_UNAVAILABLE;
+                case FAILED -> Response.Status.INTERNAL_SERVER_ERROR;
+            };
+            return Response.status(status).entity(describe(outcome)).build();
         } catch (CognitiveConflictException e) {
             // The request conflicts with the record: the same idempotency key was delivered
             // with a different assignment, or a fact of an episode was about to be rewritten.
             // Nothing is overwritten, and the caller is told what happened.
             return Response.status(409).entity(Map.of("error", e.getMessage())).build();
+        } catch (CognitiveRequestFailure e) {
+            // W45.1: the request was interrupted after it had committed durable work, so its
+            // outcome cannot be established. The caller must NOT retry the same key blindly:
+            // the effect may already have happened.
+            return Response.status(409).entity(Map.of("error", e.getMessage(),
+                    "state", e.kind().name())).build();
         }
     }
 

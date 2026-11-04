@@ -285,11 +285,29 @@ public final class CognitiveKernel {
      * @return the outcome, with the full trace
      */
     public synchronized CognitiveOutcome process(CognitiveSignal signal) {
+        return process(signal, RequestProgressListener.NO_OP);
+    }
+
+    /**
+     * Runs one cognitive cycle for a signal, reporting the durable checkpoints it reaches.
+     *
+     * <p>W45.1. The listener is called at the phase boundaries, AFTER the work of the phase has
+     * been committed. It is how the request lifecycle knows how far the cycle got, which is the
+     * fact a recovery needs: a request that died after committing an observation may not be
+     * executed again, and a request that died before writing anything may be.</p>
+     *
+     * @param signal   the raw input
+     * @param listener the listener of the durable checkpoints
+     * @return the outcome, with the full trace
+     */
+    public synchronized CognitiveOutcome process(CognitiveSignal signal,
+                                                 RequestProgressListener listener) {
         String episodeId = "ep-" + signal.id();
         String now = timestamps.get();
         LearningTrace.Builder trace = LearningTrace.builder(episodeId, episodeId);
         List<String> notes = new ArrayList<>();
         store.startEpisode(episodeId, WORKSPACE_ID, "a cognitive cycle on " + signal.channel(), now);
+        listener.at(RequestCheckpoint.EPISODE_OPENED);
 
         // W45.0. The cycle's budget is a DEADLINE, measured against a monotonic clock and
         // checked at the phase boundaries. The work below is enclosed so that a budget that
@@ -358,6 +376,7 @@ public final class CognitiveKernel {
                 forecast.supportingCaseIds(),
                 now);
         store.recordPrediction(prediction);
+        listener.at(RequestCheckpoint.PREDICTION_WRITTEN);
         trace.step("PREDICT", "MicroWorldSession",
                 "predicted lamp=" + forecast.value() + " unanimous=" + forecast.unanimous()
                         + " disagreeing=" + forecast.disagreeingHypothesisIds().size()
@@ -477,6 +496,7 @@ public final class CognitiveKernel {
             deadline.check("PREDICT");
             observed = environment.probe(probed);
             experimentExecuted = true;
+            listener.at(RequestCheckpoint.EXPERIMENT_EXECUTED);
             trace.step("PROBE", "MicroWorldEnvironment",
                     "the sandbox answered lamp=" + observed.lamp() + " for "
                             + MicroWorldCodec.describe(probed)
@@ -515,12 +535,19 @@ public final class CognitiveKernel {
                     : "the observation contradicts a prediction the session made; its cause is "
                             + "unresolved, so it is held out of the active model until a review "
                             + "adjudicates it";
-            // The evidence relation is the conservative signal: an observation that the model
-            // does not explain, or one that is held, CONTRADICTS the claim. The relation and
-            // the disposition are not the same question — the relation says what the evidence
-            // is about, the disposition says what may be believed because of it — but the
-            // relation is deliberately the stronger of the two, so that a database written
-            // before the disposition existed can be backfilled from it conservatively.
+            // The evidence relation and the disposition are two different questions: the
+            // relation says what the evidence is ABOUT, the disposition says what may be
+            // BELIEVED because of it. The relation is the conservative signal here — an
+            // observation the model does not explain, or one that is held, CONTRADICTS the
+            // claim — but it is NOT the stronger of the two as a rule of classification.
+            //
+            // W45.1: the v16 -> v17 backfill used to read the relation alone, and that rule
+            // preserved an OBSOLETE W44 rule: it held every observation the model did not
+            // explain, while the live kernel applies such an observation. The backfill now
+            // consults the cognitive error records — a disagreement with a UNANIMOUS
+            // prediction is a conflict with a belief, and everything else is learning — and
+            // falls back to the relation only when those records are not there. The relation
+            // remains the conservative fallback, not the classification.
             boolean contradicts = !explained || !applied;
             workbench.recordObservation(WORKSPACE_ID, model.id(),
                     MicroWorldCodec.describeOutcome(observed.lamp()),
@@ -528,8 +555,11 @@ public final class CognitiveKernel {
                     contradicts,
                     caseId,
                     disposition,
-                    dispositionReason);
+                    dispositionReason,
+                    episodeId,
+                    signal.id());
             observationCommitted = true;
+            listener.at(RequestCheckpoint.OBSERVATION_COMMITTED);
             trace.step("OBSERVE", "CognitiveStore",
                     "the outcome was written as case " + caseId
                             + " and as evidence on claim " + model.id()
@@ -626,6 +656,7 @@ public final class CognitiveKernel {
         }
         long regulatoryVersion = store.recordRegulatoryState(WORKSPACE_ID, next, now,
                 regulatoryRecords);
+        listener.at(RequestCheckpoint.REGULATION_PERSISTED);
         trace.step("REGULATE", "CognitiveStore",
                 "the regulatory state was persisted at version " + regulatoryVersion
                         + " with " + regulatoryRecords.size() + " event(s) of provenance");
@@ -635,8 +666,11 @@ public final class CognitiveKernel {
         String answer = answerFor(forecast, computed, observed, error);
         trace.step("ANSWER", "CognitiveKernel", answer);
         store.closeEpisode(episodeId, now);
+        listener.at(RequestCheckpoint.EPISODE_CLOSED);
+        LearningTrace completed = persist(trace, episodeId, now);
+        listener.at(RequestCheckpoint.OUTCOME_PERSISTED);
         return new CognitiveOutcome(episodeId, CognitiveOutcome.Status.COMPLETED, answer,
-                percept, prediction, error, decision, persist(trace, episodeId, now), notes);
+                percept, prediction, error, decision, completed, notes);
         } catch (CycleTimeoutException timeout) {
             // W45.0. The cycle ran out of its budget. The episode ends, the trace is kept, and
             // the notes say exactly what had already happened — so that a reader can tell an
@@ -656,6 +690,53 @@ public final class CognitiveKernel {
             return new CognitiveOutcome(episodeId, CognitiveOutcome.Status.RESOURCE_LIMITED,
                     "The cognitive cycle ran out of its budget: " + timeout.getMessage(),
                     percept, prediction, error, decision, persist(trace, episodeId, now), notes);
+        } catch (RuntimeException failure) {
+            // W45.1. A controlled runtime failure is a TERMINAL state of the cycle, not a
+            // normal answer and not an abandoned episode.
+            //
+            // Before W45.1 an exception after `startEpisode` left the episode OPEN and the
+            // caller got a stack trace: the store said the cycle was still running, and the
+            // request looked like it had never happened. Now the episode is closed, the
+            // trace records where the cycle stopped, and the outcome says FAILED — which the
+            // request lifecycle stores, so that a retry REPLAYS the failure instead of
+            // repeating the work.
+            notes.add("the cycle failed: " + failure.getClass().getSimpleName()
+                    + (failure.getMessage() == null ? "" : ": " + failure.getMessage()));
+            notes.add("an experiment was executed: " + experimentExecuted);
+            notes.add("an observation was committed: " + observationCommitted);
+            notes.add("the procedure state changed: " + procedureChanged);
+            notes.add("the side effects that had already happened are NOT rolled back");
+            trace.step("FAILURE", "CognitiveKernel",
+                    failure.getClass().getSimpleName()
+                            + (failure.getMessage() == null ? "" : ": " + failure.getMessage())
+                            + "; experiment-executed=" + experimentExecuted
+                            + " observation-committed=" + observationCommitted
+                            + " procedure-changed=" + procedureChanged);
+            closeAfterFailure(episodeId, now);
+            return new CognitiveOutcome(episodeId, CognitiveOutcome.Status.FAILED,
+                    "The cognitive cycle failed: " + failure.getClass().getSimpleName()
+                            + (failure.getMessage() == null ? "" : ": " + failure.getMessage()),
+                    percept, prediction, error, decision, persist(trace, episodeId, now), notes);
+        }
+    }
+
+    /**
+     * Closes an episode whose cycle failed.
+     *
+     * <p>The close must not fail the failure: an episode that cannot be closed because the
+     * store is unhappy is a second problem, and the first one must still be reported. The
+     * interruption is therefore recorded as well, so that the episode carries a terminal
+     * event even when the close itself failed.</p>
+     *
+     * @param episodeId the episode of the failed cycle
+     * @param now       the instant of the failure
+     */
+    private void closeAfterFailure(String episodeId, String now) {
+        try {
+            store.closeEpisode(episodeId, now);
+        } catch (RuntimeException e) {
+            store.interruptEpisode(episodeId,
+                    "the episode could not be closed normally: " + e.getMessage(), now);
         }
     }
 

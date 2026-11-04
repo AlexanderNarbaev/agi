@@ -89,15 +89,29 @@ class IdempotencyRegistryTest {
     }
 
     @Test
-    @DisplayName("a released key can be used again")
-    void aReleasedKeyCanBeUsedAgain() {
+    @DisplayName("a request that failed before any effect can be executed again")
+    void aRequestThatFailedBeforeAnyEffectCanBeExecutedAgain() {
         String fingerprint = IdempotencyRegistry.fingerprintOf("power=1,switch=0");
         registry.claim("delivery-1", fingerprint);
-        registry.release("delivery-1");
+        registry.fail("delivery-1", RequestExecutionState.FAILED_NO_EFFECT, null,
+                "the service was down before anything was written");
 
         IdempotencyRegistry.Claim claim = registry.claim("delivery-1", fingerprint);
 
-        assertThat(claim.kind()).isEqualTo(IdempotencyRegistry.Kind.ACQUIRED);
+        assertThat(claim.kind()).isEqualTo(IdempotencyRegistry.Kind.RECOVERED);
+    }
+
+    @Test
+    @DisplayName("a request that failed after a durable effect may NOT be executed again")
+    void aRequestThatFailedAfterADurableEffectMayNotBeExecutedAgain() {
+        String fingerprint = IdempotencyRegistry.fingerprintOf("power=1,switch=0");
+        registry.claim("delivery-1", fingerprint);
+        registry.fail("delivery-1", RequestExecutionState.INTERRUPTED_PARTIAL,
+                RequestCheckpoint.OBSERVATION_COMMITTED, "the observation was committed");
+
+        IdempotencyRegistry.Claim claim = registry.claim("delivery-1", fingerprint);
+
+        assertThat(claim.kind()).isEqualTo(IdempotencyRegistry.Kind.INDETERMINATE);
     }
 
     @Test

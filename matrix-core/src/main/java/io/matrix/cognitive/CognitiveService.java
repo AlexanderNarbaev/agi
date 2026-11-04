@@ -65,6 +65,23 @@ public class CognitiveService {
     private CognitiveSolver solver;
     private EpisodeIdAllocator allocator;
     private IdempotencyRegistry registry;
+    private RequestFailpoint failpoint;
+    private OwnershipToken ownerToken;
+    private java.util.function.LongSupplier monotonicNanos;
+
+    /**
+     * Replaces the monotonic clock of the cycle's deadline.
+     *
+     * <p>W45.1. The clock is the seam a test uses to make the budget expire deterministically.
+     * It is NOT a decision input: the deadline is a resource boundary, and the wall clock is
+     * still what the records carry.</p>
+     *
+     * @param clock the monotonic clock, in nanoseconds, or null for the system clock
+     */
+    public synchronized void monotonicClock(java.util.function.LongSupplier clock) {
+        this.monotonicNanos = clock;
+        this.kernel = null;
+    }
 
     /** The container's constructor: a random identity source and the system clock. */
     @Inject
@@ -83,8 +100,23 @@ public class CognitiveService {
      * @param clock    the source of the timestamps written with the durable records
      */
     public CognitiveService(IdSource idSource, Supplier<String> clock) {
+        this(idSource, clock, RequestFailpoint.fromSystemProperties());
+    }
+
+    /**
+     * A service with an explicit identity source, clock and fault injection point.
+     *
+     * <p>The failpoint is the seam the tests use to fail a request at an exact point of its
+     * lifecycle. It is NOT an endpoint and it is absent unless it is given.</p>
+     *
+     * @param idSource  where the unique tokens of the signal ids come from
+     * @param clock     the source of the timestamps written with the durable records
+     * @param failpoint the fault injection point, or the absent one
+     */
+    public CognitiveService(IdSource idSource, Supplier<String> clock, RequestFailpoint failpoint) {
         this.idSource = idSource;
         this.clock = clock;
+        this.failpoint = failpoint;
     }
 
     /** The kernel, built on first use. */
@@ -122,9 +154,88 @@ public class CognitiveService {
     /** The registry of the idempotency keys, built on first use. */
     public synchronized IdempotencyRegistry registry() {
         if (registry == null) {
-            registry = new IdempotencyRegistry(store(), clock);
+            registry = new IdempotencyRegistry(store(), clock, allocator(), ownerToken());
         }
         return registry;
+    }
+
+    /**
+     * The ownership token of this service instance.
+     *
+     * <p>W45.1. The token identifies the INSTANCE, not the JVM, so a service that is rebuilt
+     * inside the same process does not inherit the claims of the instance it replaced. The
+     * registry and the recovery use the same token, so they agree about who owns what.</p>
+     *
+     * @return the token of this instance
+     */
+    public synchronized OwnershipToken ownerToken() {
+        if (ownerToken == null) {
+            ownerToken = OwnershipToken.current();
+        }
+        return ownerToken;
+    }
+
+    /**
+     * The deterministic fault injection point of this process.
+     *
+     * <p>It is absent unless the system property {@code w45.failpoint} names a checkpoint, so
+     * the production behaviour does not depend on it. There is no endpoint for it: a request
+     * can never make the process stop.</p>
+     *
+     * @return the failpoint of this process
+     */
+    public synchronized RequestFailpoint failpoint() {
+        if (failpoint == null) {
+            failpoint = RequestFailpoint.fromSystemProperties();
+        }
+        return failpoint;
+    }
+    /**
+     * The recovery of the requests that a terminated process left behind.
+     *
+     * <p>W45.1. A request whose owner is gone is classified from its last durable checkpoint:
+     * a request that had written nothing may be executed again, and a request that had
+     * committed work may not. Either way the episode it opened is closed with a terminal
+     * event, because an episode that is still open is an episode whose outcome is unknown —
+     * and the store must never say that a cycle is still running when it is not.</p>
+     *
+     * <p>The recovery never steals the work of a live process: a request whose owner is alive
+     * is left exactly as it is.</p>
+     *
+     * @return what the recovery did, one line per request
+     */
+    public synchronized java.util.List<String> recoverInterruptedRequests() {
+        java.util.List<String> report = new java.util.ArrayList<>();
+        IdempotencyRegistry registry = registry();
+        for (CognitiveStore.IdempotencyRecord record : registry.unfinished()) {
+            java.util.Optional<OwnershipToken> claimedBy = record.owner();
+            if (claimedBy.isPresent()) {
+                OwnershipToken.Ownership ownership = OwnershipToken.classify(claimedBy.get(), ownerToken);
+                if (ownership == OwnershipToken.Ownership.MINE
+                        || ownership == OwnershipToken.Ownership.LIVE_OTHER) {
+                    // The owner is alive: the work is not stolen.
+                    continue;
+                }
+            }
+            RequestCheckpoint checkpoint = record.lastCheckpoint().orElse(null);
+            boolean effect = checkpoint != null && checkpoint.durableEffect();
+            RequestExecutionState state = effect
+                    ? RequestExecutionState.INTERRUPTED_PARTIAL
+                    : RequestExecutionState.INTERRUPTED_NO_EFFECT;
+            String detail = effect
+                    ? "the process that owned this request is gone and the request had reached "
+                            + checkpoint + "; the outcome cannot be established"
+                    : "the process that owned this request is gone and the request had written "
+                            + "nothing; it may be executed again";
+            // The owner is gone, so the recovery writes the classification on its behalf.
+            registry.recordRecovery(record.key(), state, checkpoint, detail);
+            if (record.episodeId() != null && !record.episodeId().isBlank()) {
+                store().interruptEpisode(record.episodeId(), detail, clock.get());
+            }
+            report.add(record.key() + " → " + state + " (checkpoint "
+                    + (checkpoint == null ? "none" : checkpoint) + ")");
+        }
+        return report;
     }
 
     private CognitiveKernel build() {
@@ -144,12 +255,19 @@ public class CognitiveService {
                 sessionFactory,
                 environment,
                 new KernelSelector(registry, ledger),
-                new KernelRegulator());
+                new KernelRegulator(),
+                () -> java.time.Instant.now().toString(),
+                monotonicNanos == null ? System::nanoTime : monotonicNanos);
         // W45.0. The regulatory state is restored ONCE, when the application starts. ADR-W44-01
         // lists the drives among the cognitive state the store persists, and until W45 they
         // were the one item on that list that was not persisted: the adapter held them in
         // memory, so every restart reset every drive to neutral.
         built.restoreRegulatoryState();
+        // W45.1. The requests that a terminated process left behind are recovered ONCE, when
+        // the application starts. A request whose owner is alive is left alone: its work is
+        // not stolen. A request whose owner is gone is classified from its last durable
+        // checkpoint, and the episode it opened is closed with a terminal event.
+        recoverInterruptedRequests();
         return built;
     }
 
@@ -182,7 +300,7 @@ public class CognitiveService {
      */
     public CognitiveOutcome observe(String payload, String idempotencyKey) {
         if (idempotencyKey == null || idempotencyKey.isBlank()) {
-            return runCycle(payload).outcome();
+            return runCycle(payload, RequestProgressListener.NO_OP).outcome();
         }
         String key = idempotencyKey.trim();
         String fingerprint = IdempotencyRegistry.fingerprintOf(payload);
@@ -207,19 +325,70 @@ public class CognitiveService {
                         CognitiveConflictException.Kind.IDEMPOTENCY_KEY,
                         "a request with the idempotency key " + key + " is still running");
             }
-            default -> {
-                try {
-                    Cycle cycle = runCycle(payload);
-                    registry.complete(key, cycle.outcome().episodeId(), cycle.signalId(),
-                            cycle.outcome());
-                    return cycle.outcome();
-                } catch (RuntimeException e) {
-                    // A request that failed is not a completed one: the key is released so
-                    // that the caller may try again.
-                    registry.release(key);
-                    throw e;
-                }
+            case INDETERMINATE -> {
+                // W45.1. The request was interrupted after it had already written something.
+                // The outcome cannot be established, and the request may NOT be executed again:
+                // the caller is told the truth instead of being given a duplicate.
+                throw new CognitiveRequestFailure(CognitiveRequestFailure.Kind.INDETERMINATE,
+                        "the request with the idempotency key " + key + " was interrupted after "
+                                + "it had already committed durable work"
+                                + (claim.checkpoint() == null ? "" : " (it had reached "
+                                        + claim.checkpoint() + ")")
+                                + "; its outcome cannot be established and the request will not "
+                                + "be executed again");
             }
+            default -> {
+                return execute(key, payload, claim);
+            }
+        }
+    }
+
+    /**
+     * Executes a claimed request and records its terminal state.
+     *
+     * <p>W45.1. The mapping of the request is NEVER deleted. A request that fails inside the
+     * cycle ends in a {@code FAILED} outcome, which is durable and replayable: the next
+     * delivery of the same key is answered with that outcome and does no work. A failure
+     * OUTSIDE the cycle is recorded with the classification that says whether the work may be
+     * repeated — and the classification is derived from the last durable checkpoint, not from
+     * an assumption.</p>
+     *
+     * @param key     the idempotency key
+     * @param payload the assignment to reason about
+     * @param claim   the claim the caller owns
+     * @return the outcome
+     */
+    private CognitiveOutcome execute(String key, String payload, IdempotencyRegistry.Claim claim) {
+        IdempotencyRegistry registry = registry();
+        java.util.concurrent.atomic.AtomicReference<RequestCheckpoint> last =
+                new java.util.concurrent.atomic.AtomicReference<>();
+        RequestProgressListener listener = checkpoint -> {
+            registry.checkpoint(key, checkpoint);
+            last.set(checkpoint);
+            failpoint().apply(checkpoint);
+        };
+        try {
+            // W45.1. The CLAIMED checkpoint is reported BEFORE the cycle starts: the claim
+            // is already durable, and this is the one boundary at which the request has
+            // written nothing at all. It is the boundary that decides whether a request
+            // that dies here may be executed again — and it is the boundary a test must be
+            // able to kill the process at.
+            listener.at(RequestCheckpoint.CLAIMED);
+            Cycle cycle = runCycle(payload, listener, claim.signalId(), claim.sequence());
+            registry.complete(key, cycle.outcome().episodeId(), claim.signalId(), cycle.outcome());
+            // The completion is the last durable write of the request. A process that dies
+            // after it died with a COMPLETED request: the retry replays the outcome and
+            // does no work.
+            listener.at(RequestCheckpoint.IDEMPOTENCY_COMPLETED);
+            return cycle.outcome();
+        } catch (RuntimeException e) {
+            RequestCheckpoint reached = last.get();
+            RequestExecutionState state = reached == null || !reached.durableEffect()
+                    ? RequestExecutionState.FAILED_NO_EFFECT
+                    : RequestExecutionState.INTERRUPTED_PARTIAL;
+            registry.fail(key, state, reached, e.getClass().getSimpleName()
+                    + (e.getMessage() == null ? "" : ": " + e.getMessage()));
+            throw e;
         }
     }
 
@@ -237,12 +406,41 @@ public class CognitiveService {
      * @return the cycle
      */
     private Cycle runCycle(String payload) {
+        return runCycle(payload, RequestProgressListener.NO_OP);
+    }
+
+    /**
+     * Runs one cycle with a fresh identity and a progress listener.
+     *
+     * @param payload  the assignment to reason about
+     * @param listener the listener of the durable checkpoints
+     * @return the cycle
+     */
+    private Cycle runCycle(String payload, RequestProgressListener listener) {
         EpisodeIdAllocator allocator = allocator();
         String signalId = allocator.nextSignalId();
         long sequence = allocator.nextSignalSequence();
+        return runCycle(payload, listener, signalId, sequence);
+    }
+
+    /**
+     * Runs one cycle with the identities the caller already holds.
+     *
+     * <p>W45.1: a request that is executed again — after an interruption that wrote nothing —
+     * keeps the identities it was given when it was claimed. It is the SAME logical request,
+     * in the SAME episode, and never a second one.</p>
+     *
+     * @param payload  the assignment to reason about
+     * @param listener the listener of the durable checkpoints
+     * @param signalId the signal id of the request
+     * @param sequence the arrival number of the signal
+     * @return the cycle
+     */
+    private Cycle runCycle(String payload, RequestProgressListener listener, String signalId,
+                           long sequence) {
         CognitiveSignal signal = CognitiveSignal.structured(signalId, payload,
                 ENDPOINT_PROVENANCE, sequence);
-        return new Cycle(kernel().process(signal), signalId);
+        return new Cycle(kernel().process(signal, listener), signalId);
     }
 
     @PreDestroy

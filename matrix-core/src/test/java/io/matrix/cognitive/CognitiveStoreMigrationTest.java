@@ -101,8 +101,9 @@ class CognitiveStoreMigrationTest {
         CognitiveStore store = new CognitiveStore(database);
         try {
             assertThat(store.nextSequence("cognitive.signal")).isEqualTo(1L);
-            assertThat(store.claimIdempotency("delivery-1", "fingerprint", "2026-11-03T00:00:00Z"))
-                    .isTrue();
+            assertThat(store.claimIdempotency("delivery-1", "fingerprint", "req-1", "sig-1", 1L,
+                    "ep-sig-1", OwnershipToken.current(), "2026-11-03T00:00:00Z"))
+                    .isNotNull();
             assertThat(store.findIdempotency("delivery-1")).isPresent();
         } finally {
             store.close();
@@ -131,6 +132,102 @@ class CognitiveStoreMigrationTest {
                     .isInstanceOf(CognitiveConflictException.class);
         } finally {
             store.close();
+        }
+    }
+
+    /**
+     * W45.1 — the migration of a database that the W45.0 wave wrote.
+     *
+     * <p>The W45.1 schema adds the request lifecycle: the checkpoint, the owner, the request
+     * identity and the arrival number of a request, and the append-only history of the
+     * lifecycle. A database written by W45.0 therefore has an idempotency row that knows
+     * nothing about the checkpoint or the owner — and it must be MIGRATED, not dropped: the
+     * outcome it holds is the record of a request that already happened.</p>
+     */
+    @Test
+    @DisplayName("a database written by W45.0 keeps its requests and gains the request lifecycle")
+    void aDatabaseWrittenByW45KeepsItsRequestsAndGainsTheRequestLifecycle() throws SQLException {
+        writeW45Database();
+
+        CognitiveStore store = new CognitiveStore(database);
+        try {
+            // The mapping of the completed request survived, with its outcome.
+            CognitiveStore.IdempotencyRecord record = store.findIdempotency("delivery-1")
+                    .orElseThrow();
+            assertThat(record.state()).isEqualTo(RequestExecutionState.COMPLETED.name());
+            assertThat(record.episodeId()).isEqualTo("ep-w45");
+            assertThat(record.outcome()).isNotBlank();
+            // The new columns exist and are empty for a row that predates them.
+            assertThat(record.checkpoint()).isNull();
+            assertThat(record.ownerToken()).isNull();
+            assertThat(record.requestId()).isNull();
+            // The request history table exists and is empty.
+            assertThat(store.requestEvents("delivery-1")).isEmpty();
+            // The episode of the old request is still there.
+            assertThat(store.episodes(WORKSPACE)).containsExactly("ep-w45");
+        } finally {
+            store.close();
+        }
+    }
+
+    @Test
+    @DisplayName("a database written by W45.0 can claim a request afterwards")
+    void aDatabaseWrittenByW45CanClaimARequestAfterwards() throws SQLException {
+        writeW45Database();
+
+        CognitiveStore store = new CognitiveStore(database);
+        try {
+            CognitiveStore.IdempotencyRecord claimed = store.claimIdempotency("delivery-2",
+                    "fingerprint", "req-2", "sig-2", 1L, "ep-sig-2", OwnershipToken.current(),
+                    "2026-11-04T00:00:00Z");
+
+            assertThat(claimed.state()).isEqualTo(RequestExecutionState.IN_PROGRESS.name());
+            assertThat(claimed.requestId()).isEqualTo("req-2");
+            assertThat(claimed.signalSequence()).isEqualTo(1L);
+            assertThat(claimed.lastCheckpoint()).contains(RequestCheckpoint.CLAIMED);
+            assertThat(claimed.owner()).isPresent();
+            // The lifecycle history is append-only and lives beside the request.
+            store.recordRequestEvent("delivery-2", "req-2", "ep-sig-2",
+                    RequestExecutionState.IN_PROGRESS.name(), RequestCheckpoint.CLAIMED.name(),
+                    "the request was claimed", "2026-11-04T00:00:00Z");
+            assertThat(store.requestEvents("delivery-2")).isNotEmpty();
+        } finally {
+            store.close();
+        }
+    }
+
+    /** Writes a database in the shape the W45.0 wave left behind. */
+    private void writeW45Database() throws SQLException {
+        try (Connection raw = DriverManager.getConnection("jdbc:sqlite:" + database);
+             Statement st = raw.createStatement()) {
+            st.execute("CREATE TABLE cognitive_schema_meta ("
+                    + "key TEXT PRIMARY KEY, value TEXT NOT NULL)");
+            st.execute("INSERT INTO cognitive_schema_meta(key, value) VALUES('version', '3')");
+            st.execute("""
+                    CREATE TABLE cognitive_episode (
+                        id TEXT PRIMARY KEY, workspace_id TEXT NOT NULL, summary TEXT NOT NULL,
+                        started_at TEXT NOT NULL, closed_at TEXT)""");
+            st.execute("""
+                    CREATE TABLE cognitive_idempotency (
+                        key TEXT PRIMARY KEY, fingerprint TEXT NOT NULL, episode_id TEXT,
+                        signal_id TEXT, state TEXT NOT NULL, outcome TEXT,
+                        created_at TEXT NOT NULL, completed_at TEXT)""");
+            st.execute("""
+                    CREATE TABLE cognitive_regulatory_state (
+                        workspace_id TEXT PRIMARY KEY, state TEXT NOT NULL, version INTEGER NOT NULL,
+                        recorded_at TEXT NOT NULL)""");
+            st.execute("""
+                    CREATE TABLE cognitive_regulatory_event (
+                        id TEXT PRIMARY KEY, workspace_id TEXT NOT NULL, episode_id TEXT,
+                        kind TEXT NOT NULL, magnitude REAL NOT NULL, source TEXT NOT NULL,
+                        applied_at TEXT NOT NULL)""");
+            st.execute("INSERT INTO cognitive_episode(id, workspace_id, summary, started_at, "
+                    + "closed_at) VALUES('ep-w45','microworld','a cognitive cycle on STRUCTURED',"
+                    + "'2026-11-03T00:00:00Z','2026-11-03T00:00:01Z')");
+            st.execute("INSERT INTO cognitive_idempotency(key, fingerprint, episode_id, signal_id, "
+                    + "state, outcome, created_at, completed_at) VALUES('delivery-1','fingerprint',"
+                    + "'ep-w45','sig-w45','COMPLETED','{\"episodeId\":\"ep-w45\"}',"
+                    + "'2026-11-03T00:00:00Z','2026-11-03T00:00:01Z')");
         }
     }
 

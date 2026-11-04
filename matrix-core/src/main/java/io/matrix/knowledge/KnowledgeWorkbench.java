@@ -775,6 +775,33 @@ public class KnowledgeWorkbench implements AutoCloseable {
     public Evidence recordObservation(String workspaceId, String claimId, String observation,
                                       String condition, boolean contradicts, String caseId,
                                       ObservationDisposition disposition, String reason) {
+        return recordObservation(workspaceId, claimId, observation, condition, contradicts, caseId,
+                disposition, reason, null, null);
+    }
+
+    /**
+     * W45.1 — records an observation with the episode and the signal it belongs to.
+     *
+     * <p>The occurrence of an observation is the ACT of observing, and an act belongs to an
+     * episode and answers a signal. When the caller knows them, they are written with the
+     * observation, so that the record says which act this was and not only which fact.</p>
+     *
+     * @param workspaceId the workspace
+     * @param claimId the claim the observation bears on
+     * @param observation what was observed
+     * @param condition the conditions under which it was observed
+     * @param contradicts whether the observation contradicts the claim
+     * @param caseId the id of the case to record
+     * @param disposition what the observation may be believed for
+     * @param reason why it is in that disposition
+     * @param episodeId the episode the observation belongs to, when it is known
+     * @param signalId the signal that produced the observation, when it is known
+     * @return the evidence link that was recorded
+     */
+    public Evidence recordObservation(String workspaceId, String claimId, String observation,
+                                      String condition, boolean contradicts, String caseId,
+                                      ObservationDisposition disposition, String reason,
+                                      String episodeId, String signalId) {
         Claim claim = claimById(workspaceId, claimId);
         String excerpt = observation == null || observation.isBlank()
                 ? "an observation was recorded without its text"
@@ -790,11 +817,42 @@ public class KnowledgeWorkbench implements AutoCloseable {
                 claimId, sourceId,
                 contradicts ? EvidenceRelation.CONTRADICTS : EvidenceRelation.EXEMPLIFIES,
                 excerpt, OBSERVATION_EVIDENCE_QUALITY, recordedAt());
-        store().recordObservationAtomically(workspaceId, source, evidence,
+        store().recordObservationOccurrence(workspaceId, source, evidence,
                 new Case(caseId, workspaceId, claim.conceptId(), excerpt,
                         conditions, excerpt, sourceId, Case.Origin.OBSERVED, recordedAt()),
-                disposition, reason, recordedAt());
+                disposition, reason, episodeId, signalId, recordedAt());
         return evidence;
+    }
+
+    /**
+     * W45.1 — records a review's decision about a case.
+     *
+     * <p>The decision id is the caller's, and it is what makes the review safe to deliver
+     * twice: the same decision with the same content is an idempotent no-op, and the same
+     * decision id with different content is refused rather than applied. The instants come
+     * from the caller as well, because a decision that reads a clock inside itself depends
+     * on when it was taken rather than on what was decided (CONSTITUTION Article I).</p>
+     *
+     * @param workspaceId              the workspace
+     * @param caseId                   the canonical case the review is about
+     * @param decisionId               the stable identifier of the decision
+     * @param disposition              what the case becomes
+     * @param reason                   why
+     * @param contradictedPredictionId the prediction the observation contradicted, if any
+     * @param resolvedBy               who or what decided
+     * @param resolvedAt               when it was decided
+     * @param modelRevisionId          the model revision that took the observation in, if any
+     * @param recordedAt               when the decision was recorded
+     * @param requestId                the request the review came from, if known
+     */
+    public void adjudicateObservation(String workspaceId, String caseId, String decisionId,
+                                      ObservationDisposition disposition, String reason,
+                                      String contradictedPredictionId, String resolvedBy,
+                                      String resolvedAt, String modelRevisionId, String recordedAt,
+                                      String requestId) {
+        store().adjudicateObservation(ObservationAdjudication.decide(decisionId, workspaceId,
+                caseId, disposition, reason, contradictedPredictionId, resolvedBy, resolvedAt,
+                modelRevisionId, recordedAt, requestId));
     }
 
     /**

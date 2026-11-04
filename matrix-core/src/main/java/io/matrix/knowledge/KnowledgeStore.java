@@ -18,6 +18,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -47,10 +48,18 @@ import java.util.Set;
  *       refuses an import that asserts a verified claim with no source.</li>
  *   <li><b>History is never lost.</b> Revisions are appended, never replaced;
  *       a superseded claim keeps its row.</li>
+ *   <li><b>A decision is never lost either.</b> W45.1: the disposition of an
+ *       observation is a PROJECTION of an append-only history of decisions
+ *       ({@code observation_adjudication}), and re-observing a fact never
+ *       overwrites the decision a review took about it.</li>
  * </ul>
  *
- * <p>This class is not thread-safe: it owns a single JDBC connection and is
- * meant to be owned by one component.
+ * <p>This class owns a single JDBC connection, and a connection is not
+ * thread-safe. The methods that WRITE the observation records synchronize on
+ * the store, so that two callers in one process are ordered by the store
+ * itself; the read methods do not synchronize, and a reader that wants a
+ * consistent view of several reads should read inside one of the write
+ * methods' transaction or take the store's lock.
  */
 public final class KnowledgeStore implements AutoCloseable {
 
@@ -62,8 +71,40 @@ public final class KnowledgeStore implements AutoCloseable {
      * {@code docs-v2/engineering/ADR-W44-01-cognitive-kernel.md}). The table is named
      * {@code epistemic_case} rather than {@code case} because {@code CASE} is a reserved word in
      * SQL and every query would then need quoting.</p>
+     *
+     * <p>v18 is W45.1: it adds the {@code observation_occurrence} table (one act of observing a
+     * canonical case) and the {@code observation_adjudication} table (the append-only history
+     * of the decisions about it), and it turns {@code observation_disposition} into a
+     * PROJECTION of that history. The v17 defect was that a case carried its decision in one
+     * row, so a later observation of the same fact — the same case id, because the micro-world
+     * derives the id from the conditions and the outcome — overwrote the decision a review had
+     * taken. The occurrence and the history are what let the fact, the act and the decision
+     * be three different things again.</p>
      */
-    public static final int SCHEMA_VERSION = 17;
+    public static final int SCHEMA_VERSION = 18;
+
+    /**
+     * The disposition a prediction error carries when no hypothesis of the model explained the
+     * observation.
+     *
+     * <p>The name is the one the cognitive store writes, and it is repeated here as a literal
+     * because the two stores deliberately do not know each other's classes: the cognitive
+     * store exists so that the knowledge store does not have to import the cognitive records
+     * (see {@code ADR-W44-01} §2.4).</p>
+     */
+    private static final String MISSING_CONDITION = "MISSING_CONDITION";
+
+    /**
+     * W45.1 — how long SQLite waits for a writer that arrives while another writer holds
+     * the lock, in milliseconds. Ten seconds is far longer than a write of this size takes.
+     */
+    private static final int BUSY_TIMEOUT_MILLIS = 10_000;
+
+    /** The SQLite error code of a constraint violation. */
+    private static final int SQLITE_CONSTRAINT = 19;
+
+    /** The SQLite error code of a primary-key violation. */
+    private static final int SQLITE_CONSTRAINT_PRIMARYKEY = 1555;
 
     private static final ObjectMapper JSON = new ObjectMapper();
 
@@ -91,6 +132,13 @@ public final class KnowledgeStore implements AutoCloseable {
             st.execute("PRAGMA journal_mode=WAL");
             st.execute("PRAGMA synchronous=FULL");
             st.execute("PRAGMA foreign_keys=ON");
+            // W45.1. SQLite serialises writers, and a writer that arrives while another
+            // writer holds the lock is told "the database is busy" rather than being made
+            // to wait. A busy timeout turns that refusal into a wait, which is what the
+            // concurrent-write contract needs: two callers that both write the same case
+            // must be ordered by the database, not by an accident of timing. Ten seconds is
+            // far longer than a write of this size takes.
+            st.execute("PRAGMA busy_timeout=" + BUSY_TIMEOUT_MILLIS);
         }
     }
 
@@ -339,10 +387,39 @@ public final class KnowledgeStore implements AutoCloseable {
      *       and it is {@code UNRESOLVED} — an observation that cannot be classified must not
      *       silently become confirmed model data.</li>
      * </ul>
+     *
+     * <h2>W45.1 — the rule follows the W45 semantic, not the W44 one</h2>
+     *
+     * <p><b>What the W44 wave actually did.</b> The W44 kernel wrote the evidence relation
+     * from ONE question — "does any surviving hypothesis explain this observation?" — and
+     * {@code CONTRADICTS} meant "no hypothesis explains it". The W44 session, on the other
+     * hand, held an observation out of the model whenever it disagreed with ANY prediction,
+     * settled or not. So a counterexample was two different things in W44, and the durable
+     * record of which one it was is the prediction error:</p>
+     * <ul>
+     *   <li>an error whose disposition is {@code UNRESOLVED} was a disagreement with a
+     *       SETTLED prediction — a belief — and the observation is HELD;</li>
+     *   <li>an error whose disposition is {@code MISSING_CONDITION} was an observation the
+     *       model had no account of, and under the W45 semantic that is ORDINARY LEARNING,
+     *       because the W45 rule holds an observation only when it disagrees with a
+     *       unanimous prediction.</li>
+     * </ul>
+     *
+     * <p><b>Why the classification reads the errors and not only the relation.</b> The
+     * relation alone cannot tell the two apart: both of them are {@code CONTRADICTS}. The
+     * error row can, and the prediction it names carries the confidence, which is 1.0 for a
+     * unanimous prediction and 0.0 for an unsettled one — so a v16 database CAN say which
+     * of the four situations a case was in.</p>
+     *
+     * <p><b>What a database without the cognitive tables gets.</b> The rule degrades to the
+     * relation-only rule above, which is the conservative one: a recorded conflict is held
+     * unless the records say it was ordinary learning. A knowledge database that never had a
+     * cognitive store has no errors to read, and holding is the safe answer there.</p>
      */
     private void backfillObservationDispositions() throws SQLException {
         String eligible = ObservationDisposition.ELIGIBLE.name();
         String unresolved = ObservationDisposition.UNRESOLVED.name();
+        Map<String, ErrorEvidence> errors = readCognitiveErrorEvidence();
         List<String[]> rows = new ArrayList<>();
         try (Statement st = connection.createStatement();
              ResultSet rs = st.executeQuery(
@@ -351,11 +428,29 @@ public final class KnowledgeStore implements AutoCloseable {
                              + "ORDER BY e.recorded_at LIMIT 1) "
                              + "FROM epistemic_case c")) {
             while (rs.next()) {
+                String caseId = rs.getString("id");
                 String relation = rs.getString(4);
-                String disposition = unresolved;
-                String reason = "the disposition could not be inferred from the record; "
-                        + "the observation is held rather than assumed to be model data";
-                if (relation != null) {
+                ErrorEvidence error = errors.get(caseId);
+                String disposition;
+                String reason;
+                if (error != null) {
+                    // The database's own error record says what kind of disagreement this was.
+                    if (error.unanimousPrediction()) {
+                        disposition = unresolved;
+                        reason = "the observation contradicted a settled prediction the model "
+                                + "made; it is held as an unresolved conflict";
+                    } else if (MISSING_CONDITION.equals(error.disposition())) {
+                        disposition = eligible;
+                        reason = "no hypothesis of the model explained the observation; the "
+                                + "disagreement was with an unsettled prediction, and an "
+                                + "observation of unknown cause is ordinary learning rather "
+                                + "than a conflict with a belief";
+                    } else {
+                        disposition = unresolved;
+                        reason = "the observation was recorded as a conflict whose cause was "
+                                + "not established; it is held as an unresolved conflict";
+                    }
+                } else if (relation != null) {
                     switch (relation) {
                         case "CONTRADICTS" -> {
                             disposition = unresolved;
@@ -373,8 +468,12 @@ public final class KnowledgeStore implements AutoCloseable {
                                     + "' does not establish model eligibility";
                         }
                     }
+                } else {
+                    disposition = unresolved;
+                    reason = "the disposition could not be inferred from the record; "
+                            + "the observation is held rather than assumed to be model data";
                 }
-                rows.add(new String[]{rs.getString("id"), rs.getString("workspace_id"),
+                rows.add(new String[]{caseId, rs.getString("workspace_id"),
                         disposition, reason, rs.getString("observed_at")});
             }
         }
@@ -390,6 +489,114 @@ public final class KnowledgeStore implements AutoCloseable {
                 ps.addBatch();
             }
             ps.executeBatch();
+        }
+    }
+
+    /**
+     * W45.1 — what the database's own prediction errors say about each case.
+     *
+     * <p>A prediction error names the cases it is about, and it names the prediction it is
+     * about. The prediction's confidence is what tells a BELIEF (1.0, the surviving
+     * hypotheses agreed) from an unsettled prediction (0.0, they did not), so the two are
+     * told apart here and not guessed at.</p>
+     *
+     * <p>The cognitive tables live in the same file but belong to another store, and a
+     * knowledge database may have none of them. The read is therefore conditional: without
+     * the tables there are no errors to read, and the classification falls back to the
+     * relation alone.</p>
+     *
+     * @return the evidence each case has, by case id
+     */
+    private Map<String, ErrorEvidence> readCognitiveErrorEvidence() throws SQLException {
+        Map<String, ErrorEvidence> byCase = new HashMap<>();
+        if (!tableExists("cognitive_error")) {
+            return byCase;
+        }
+        boolean hasPredictions = tableExists("cognitive_prediction");
+        String sql = "SELECT e.case_ids, e.disposition, "
+                + (hasPredictions
+                        ? "(SELECT p.confidence FROM cognitive_prediction p WHERE p.id = e.prediction_id)"
+                        : "NULL")
+                + " FROM cognitive_error e";
+        try (Statement st = connection.createStatement();
+             ResultSet rs = st.executeQuery(sql)) {
+            while (rs.next()) {
+                String disposition = rs.getString(2);
+                double confidence = rs.getDouble(3);
+                boolean unanimous = !rs.wasNull() && confidence >= 1.0;
+                ErrorEvidence evidence = new ErrorEvidence(disposition, unanimous);
+                for (String caseId : splitCommaList(rs.getString(1))) {
+                    ErrorEvidence existing = byCase.get(caseId);
+                    // The most conservative of the errors that name the case wins: an
+                    // observation that contradicted a belief once is held, whatever else it
+                    // did later.
+                    if (existing == null || weight(evidence) > weight(existing)) {
+                        byCase.put(caseId, evidence);
+                    }
+                }
+            }
+        }
+        return byCase;
+    }
+
+    /** How much a piece of error evidence holds the observation back. */
+    private static int weight(ErrorEvidence evidence) {
+        if (evidence.unanimousPrediction()) {
+            return 2;
+        }
+        return MISSING_CONDITION.equals(evidence.disposition()) ? 0 : 1;
+    }
+
+    /** Whether a table is there at all. */
+    private boolean tableExists(String name) throws SQLException {
+        try (PreparedStatement ps = connection.prepareStatement(
+                "SELECT 1 FROM sqlite_master WHERE type='table' AND name = ?")) {
+            ps.setString(1, name);
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next();
+            }
+        }
+    }
+
+    /** Splits a list the way the cognitive store writes one. */
+    private static List<String> splitCommaList(String value) {
+        if (value == null || value.isBlank()) {
+            return List.of();
+        }
+        return List.of(value.split(","));
+    }
+
+    /**
+     * What a database's prediction error says about a case.
+     *
+     * @param disposition        the disposition of the error
+     * @param unanimousPrediction whether the prediction the error is about was unanimous
+     */
+    private record ErrorEvidence(String disposition, boolean unanimousPrediction) {
+    }
+
+    /**
+     * W45.1 — gives every disposition that predates the history a row in the history.
+     *
+     * <p>The rule is deliberately modest. A row written by W45.0 says that a case HAS a
+     * disposition; it says nothing about how it got there, because nothing was recorded. So
+     * the backfilled decision has no previous disposition and a decision id derived from the
+     * case id, and the history and the projection agree from the first row onwards.</p>
+     *
+     * <p>The write is {@code INSERT OR IGNORE} over a single statement, so it is atomic and
+     * it is safe to run again: a row that was copied is not copied twice, and a row that was
+     * not copied yet is copied by the next run.</p>
+     */
+    private void backfillAdjudicationHistory() throws SQLException {
+        try (PreparedStatement ps = connection.prepareStatement(
+                "INSERT OR IGNORE INTO observation_adjudication(decision_id, workspace_id, case_id, "
+                        + "previous_disposition, disposition, reason, contradicted_prediction_id, "
+                        + "resolved_by, resolved_at, model_revision_id, recorded_at, request_id) "
+                        + "SELECT 'adj-backfill-' || case_id, workspace_id, case_id, NULL, "
+                        + "disposition, reason, contradicted_prediction_id, resolved_by, "
+                        + "resolved_at, model_revision_id, recorded_at, NULL "
+                        + "FROM observation_disposition")) {
+            ps.executeUpdate();
         }
     }
 
@@ -425,6 +632,54 @@ public final class KnowledgeStore implements AutoCloseable {
     }
 
     private int migrateFrom(int version) throws SQLException {
+        if (version == 17) {
+            // v18 adds the OCCURRENCE and the ADJUDICATION HISTORY, and turns the disposition
+            // into a PROJECTION.
+            //
+            // The reason is a defect the W45.0 wave left behind. The disposition of a case
+            // lived in ONE row, and the micro-world derives a case id from the conditions AND
+            // the observed outcome — so the same fact comes back as the same case in a later
+            // episode. The production path wrote that row with INSERT OR REPLACE, and a
+            // review's adjudication was therefore erased by the next observation of the same
+            // fact. The observation and its evidence survived; the DECISION about whether they
+            // may constrain the model did not.
+            //
+            // The migration is ADDITIVE and it is BACKFILLED. No existing table changes shape,
+            // so no existing query can break, and the chain still builds a fresh database with
+            // exactly the code that upgrades an old one.
+            //
+            // The backfill says what honestly can be said about a row that was written before
+            // the history existed: that there IS a disposition, and that nothing is known about
+            // what came before it. The previous disposition is therefore null and the decision
+            // id is derived from the case id, so that the history and the projection agree for
+            // a database written by W45.0. The backfill is INSERT OR IGNORE and the tables are
+            // created IF NOT EXISTS, so an interrupted migration is safe to run again: the
+            // tables that were created stay, the rows that were copied are not copied twice,
+            // and the version is written last.
+            try (Statement st = connection.createStatement()) {
+                st.execute("CREATE TABLE IF NOT EXISTS observation_occurrence ("
+                        + "id TEXT PRIMARY KEY, workspace_id TEXT NOT NULL, case_id TEXT NOT NULL, "
+                        + "episode_id TEXT, signal_id TEXT, source_id TEXT, evidence_id TEXT, "
+                        + "observed_at TEXT NOT NULL, disposition TEXT NOT NULL, reason TEXT)");
+                st.execute("CREATE INDEX IF NOT EXISTS idx_occurrence_workspace "
+                        + "ON observation_occurrence(workspace_id, observed_at)");
+                st.execute("CREATE INDEX IF NOT EXISTS idx_occurrence_case "
+                        + "ON observation_occurrence(case_id)");
+                st.execute("CREATE TABLE IF NOT EXISTS observation_adjudication ("
+                        + "decision_id TEXT PRIMARY KEY, workspace_id TEXT NOT NULL, "
+                        + "case_id TEXT NOT NULL, previous_disposition TEXT, disposition TEXT NOT NULL, "
+                        + "reason TEXT, contradicted_prediction_id TEXT, resolved_by TEXT, "
+                        + "resolved_at TEXT, model_revision_id TEXT, recorded_at TEXT NOT NULL, "
+                        + "request_id TEXT)");
+                st.execute("CREATE INDEX IF NOT EXISTS idx_adjudication_workspace "
+                        + "ON observation_adjudication(workspace_id)");
+                st.execute("CREATE INDEX IF NOT EXISTS idx_adjudication_case "
+                        + "ON observation_adjudication(case_id)");
+            }
+            backfillAdjudicationHistory();
+            writeSchemaVersion(18);
+            return 18;
+        }
         if (version == 16) {
             // v17 adds the DISPOSITION of an observation: whether it may constrain the
             // active model.
@@ -2326,6 +2581,62 @@ public final class KnowledgeStore implements AutoCloseable {
     public void recordObservationAtomically(String workspaceId, Source source, Evidence evidence,
                                             Case observation, ObservationDisposition disposition,
                                             String reason, String recordedAt) {
+        recordObservationOccurrence(workspaceId, source, evidence, observation, disposition,
+                reason, null, null, recordedAt);
+    }
+
+    /**
+     * W45.1 — records an observation as ONE occurrence of a canonical case.
+     *
+     * <p><b>Why this is not the same as writing the disposition.</b> The W45.0 method wrote
+     * the disposition with {@code INSERT OR REPLACE}, and the micro-world derives a case id
+     * from the conditions AND the observed outcome, so the same fact comes back as the same
+     * case in a later episode. The write therefore erased the adjudication a review had
+     * taken: the observation and its evidence survived, and the DECISION did not.</p>
+     *
+     * <p>The write is now split in two, because there are two different things to write:</p>
+     * <ul>
+     *   <li>the OCCURRENCE — that the fact was observed again, now, in this episode — which is
+     *       always written;</li>
+     *   <li>the DISPOSITION — where the case stands — which is written ONLY when the case
+     *       stands nowhere yet.</li>
+     * </ul>
+     *
+     * <p>A case that already has a disposition keeps it: a re-observation never adjudicates,
+     * and the rules are these.</p>
+     * <ul>
+     *   <li>no disposition yet — the disposition the session decided is written, and the
+     *       history records it as the first decision about the case;</li>
+     *   <li>the case is ELIGIBLE or UNRESOLVED — the state is NOT changed. The occurrence is
+     *       added, and the reason the session gave is kept WITH the occurrence, because the
+     *       reason belongs to the decision and the decision did not change;</li>
+     *   <li>the case is ACCEPTED or REJECTED — nothing is touched at all. A review's decision
+     *       is not undone by a later look at the same fact.</li>
+     * </ul>
+     *
+     * <p><b>Why the reason of a re-observation is not written over the decision's.</b> The
+     * projection has to be reconstructible from the history, and it can only be that if the
+     * history explains every column of it. A re-observation changes no decision, so it
+     * changes no column of the projection, and the reason it carries stays on the occurrence
+     * where it belongs.</p>
+     *
+     * @param workspaceId the workspace
+     * @param source      the source of the observation
+     * @param evidence    the evidence the observation provides
+     * @param observation the case
+     * @param disposition what the session decided the observation may be believed for
+     * @param reason      why the session decided that
+     * @param episodeId   the episode the observation belongs to, when it is known
+     * @param signalId    the signal that produced the observation, when it is known
+     * @param recordedAt  when the observation was recorded
+     * @return the occurrence that was recorded
+     */
+    public synchronized ObservationOccurrence recordObservationOccurrence(String workspaceId,
+            Source source, Evidence evidence, Case observation, ObservationDisposition disposition,
+            String reason, String episodeId, String signalId, String recordedAt) {
+        ObservationOccurrence occurrence = new ObservationOccurrence(
+                ObservationOccurrence.idForEvidence(evidence.id()), workspaceId, observation.id(),
+                episodeId, signalId, source.id(), evidence.id(), recordedAt, disposition, reason);
         try {
             connection.setAutoCommit(false);
             try {
@@ -2333,8 +2644,28 @@ public final class KnowledgeStore implements AutoCloseable {
                 insertEvidence(evidence);
                 insertCase(observation);
                 linkEvidenceToCase(evidence.id(), observation.id());
-                insertDisposition(workspaceId, observation.id(), disposition, reason,
-                        null, null, null, null, recordedAt);
+
+                ObservationDisposition current = currentDisposition(observation.id());
+                if (current == null) {
+                    // The case stands nowhere yet, so this write is its first decision. A
+                    // case cannot be born ACCEPTED or REJECTED: those two states say that a
+                    // REVIEW happened, and the writing of an observation is not a review.
+                    if (!ObservationDisposition.canBeInitialDisposition(disposition)) {
+                        throw new ObservationConflictException(
+                                ObservationConflictException.Kind.TRANSITION,
+                                "the case '" + observation.id() + "' has no disposition yet, so it "
+                                        + "may only be recorded as ELIGIBLE or UNRESOLVED, and not as "
+                                        + disposition);
+                    }
+                    writeProjection(workspaceId, observation.id(), disposition, reason, null, null,
+                            null, null, recordedAt);
+                    appendAdjudication(ObservationAdjudication.decide(
+                            "adj-initial-" + observation.id(), workspaceId, observation.id(),
+                            disposition, reason, null, null, null, null, recordedAt, null));
+                }
+                // The case already has a disposition: the state is left exactly where the
+                // last decision put it, and only the occurrence is added.
+                writeOccurrence(occurrence);
                 connection.commit();
             } catch (SQLException | RuntimeException e) {
                 connection.rollback();
@@ -2345,6 +2676,7 @@ public final class KnowledgeStore implements AutoCloseable {
         } catch (SQLException e) {
             throw new IllegalStateException("failed to record the observation atomically", e);
         }
+        return occurrence;
     }
 
     /**
@@ -2405,6 +2737,14 @@ public final class KnowledgeStore implements AutoCloseable {
      * never deletes anything - the observation, its source, its evidence and the link between
      * them are all left exactly as they were.</p>
      *
+     * <p><b>W45.1 — the decision id is derived from the content.</b> This entry point carries
+     * no id of its own, so the store derives one from what the decision says. The same
+     * decision therefore always has the same id: it is an idempotent no-op the second time,
+     * and a decision with a different content is a different decision, which the history
+     * keeps beside it. A caller that wants to hand the store a decision id of its own — and
+     * that wants the store to REFUSE a reused id — uses
+     * {@link #adjudicateObservation(ObservationAdjudication)}.</p>
+     *
      * @param workspaceId                the workspace
      * @param caseId                     the case
      * @param disposition                the new disposition
@@ -2420,11 +2760,103 @@ public final class KnowledgeStore implements AutoCloseable {
                                        String contradictedPredictionId, String resolvedBy,
                                        String resolvedAt, String modelRevisionId,
                                        String recordedAt) {
+        String decisionId = "adj-" + Ids.digest(caseId + "|" + disposition.name() + "|" + reason
+                + "|" + contradictedPredictionId + "|" + resolvedBy + "|" + resolvedAt + "|"
+                + modelRevisionId + "|" + recordedAt);
+        adjudicateObservation(ObservationAdjudication.decide(decisionId, workspaceId, caseId,
+                disposition, reason, contradictedPredictionId, resolvedBy, resolvedAt,
+                modelRevisionId, recordedAt, null));
+    }
+
+    /**
+     * W45.1 — takes a decision about a canonical case and writes it to the history.
+     *
+     * <p><b>What a decision does.</b> It appends a row to the adjudication history and it
+     * updates the projection, in ONE transaction: a reader that sees the new disposition sees
+     * the decision that produced it, and a reader that sees the decision sees the
+     * disposition. Nothing is ever deleted — the observation, its source, its evidence and
+     * every earlier decision stay exactly where they were, and a decision that is later
+     * overturned remains in the history as the decision that was taken.</p>
+     *
+     * <p><b>What happens when the decision arrives twice.</b> The same decision id with the
+     * same content is an idempotent no-op: the second delivery changes nothing and writes no
+     * second row. The same decision id with DIFFERENT content is a conflict — an exception,
+     * never a silent overwrite — because a decision id names one decision, and a store that
+     * let it name two would let a caller rewrite the past by accident.</p>
+     *
+     * <p><b>What happens when two decisions race.</b> The decision is written first, so that
+     * the write lock is held before the state is read; the state is then read again and
+     * compared with what it was when the decision was prepared. If it moved, another writer
+     * decided something in between, and the decision is refused as a conflict rather than
+     * applied to a state it was not written for.</p>
+     *
+     * <p><b>What may move where.</b> The transition is checked against
+     * {@link ObservationDisposition#canTransitionTo(ObservationDisposition)}, which is the
+     * whole transition table. A case that stands nowhere may be decided outright — that is
+     * the FIRST decision about it, not a transition — and a case that is REJECTED may not
+     * become ELIGIBLE, ever: only a review can change a rejection, and the history records
+     * that it happened.</p>
+     *
+     * @param decision the decision to take
+     */
+    public synchronized void adjudicateObservation(ObservationAdjudication decision) {
+        ObservationAdjudication existing = adjudicationById(decision.decisionId());
+        if (existing != null) {
+            if (existing.sameContentAs(decision)) {
+                // The same decision, delivered twice. Nothing changes.
+                return;
+            }
+            throw new ObservationConflictException(ObservationConflictException.Kind.DECISION,
+                    "the decision '" + decision.decisionId() + "' was already taken with a "
+                            + "different content; a decision id may not be reused for another "
+                            + "decision");
+        }
+        ObservationDisposition before = currentDisposition(decision.caseId());
         try {
             connection.setAutoCommit(false);
             try {
-                insertDisposition(workspaceId, caseId, disposition, reason,
-                        contradictedPredictionId, resolvedBy, resolvedAt, modelRevisionId, recordedAt);
+                try {
+                    appendAdjudication(new ObservationAdjudication(decision.decisionId(),
+                            decision.workspaceId(), decision.caseId(), before,
+                            decision.disposition(), decision.reason(),
+                            decision.contradictedPredictionId(), decision.resolvedBy(),
+                            decision.resolvedAt(), decision.modelRevisionId(),
+                            decision.recordedAt(), decision.requestId()));
+                } catch (SQLException e) {
+                    if (!isUniqueConstraintViolation(e)) {
+                        throw e;
+                    }
+                    // Another writer took the decision id while this one was preparing the
+                    // write. The decision is looked up again: the same content is the same
+                    // decision delivered twice, and a different content is a conflict.
+                    connection.rollback();
+                    ObservationAdjudication concurrent = adjudicationById(decision.decisionId());
+                    if (concurrent != null && concurrent.sameContentAs(decision)) {
+                        return;
+                    }
+                    throw new ObservationConflictException(
+                            ObservationConflictException.Kind.DECISION,
+                            "the decision '" + decision.decisionId() + "' was taken by another "
+                                    + "writer with a different content");
+                }
+                // The write lock is held from here on, so the state that is read is the state
+                // that every other writer has committed.
+                ObservationDisposition actual = currentDisposition(decision.caseId());
+                if (actual != before) {
+                    throw new ObservationConflictException(
+                            ObservationConflictException.Kind.DECISION,
+                            "the disposition of the case '" + decision.caseId() + "' changed while "
+                                    + "the decision '" + decision.decisionId() + "' was being taken");
+                }
+                if (before != null && !before.canTransitionTo(decision.disposition())) {
+                    throw new ObservationConflictException(
+                            ObservationConflictException.Kind.TRANSITION,
+                            "a case that is " + before + " may not become " + decision.disposition());
+                }
+                writeProjection(decision.workspaceId(), decision.caseId(), decision.disposition(),
+                        decision.reason(), decision.contradictedPredictionId(),
+                        decision.resolvedBy(), decision.resolvedAt(), decision.modelRevisionId(),
+                        decision.recordedAt());
                 connection.commit();
             } catch (SQLException | RuntimeException e) {
                 connection.rollback();
@@ -2437,14 +2869,294 @@ public final class KnowledgeStore implements AutoCloseable {
         }
     }
 
-    private void insertDisposition(String workspaceId, String caseId,
-                                   ObservationDisposition disposition, String reason,
-                                   String contradictedPredictionId, String resolvedBy,
-                                   String resolvedAt, String modelRevisionId, String recordedAt) throws SQLException {
+    /**
+     * W45.1 — the history of the decisions about the cases of a workspace, oldest first.
+     *
+     * <p>The history is APPEND-ONLY: a decision that was taken is never rewritten and never
+     * removed, and a decision that was later overturned stays in the list beside the one that
+     * overturned it. The order is the order the decisions were committed in.</p>
+     *
+     * @param workspaceId the workspace
+     * @return every decision the workspace holds
+     */
+    public List<ObservationAdjudication> adjudications(String workspaceId) {
+        List<ObservationAdjudication> out = new ArrayList<>();
         try (PreparedStatement ps = connection.prepareStatement(
-                "INSERT OR REPLACE INTO observation_disposition(case_id, workspace_id, disposition, "
+                "SELECT decision_id, workspace_id, case_id, previous_disposition, disposition, reason, "
+                        + "contradicted_prediction_id, resolved_by, resolved_at, model_revision_id, "
+                        + "recorded_at, request_id FROM observation_adjudication WHERE workspace_id = ? "
+                        + "ORDER BY rowid")) {
+            ps.setString(1, workspaceId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    out.add(readAdjudication(rs));
+                }
+            }
+        } catch (SQLException e) {
+            throw new IllegalStateException("failed to read the adjudication history", e);
+        }
+        return out;
+    }
+
+    /**
+     * W45.1 — the history of the decisions about ONE case, oldest first.
+     *
+     * @param workspaceId the workspace
+     * @param caseId      the canonical case
+     * @return every decision that was taken about the case
+     */
+    public List<ObservationAdjudication> adjudicationsOfCase(String workspaceId, String caseId) {
+        List<ObservationAdjudication> out = new ArrayList<>();
+        try (PreparedStatement ps = connection.prepareStatement(
+                "SELECT decision_id, workspace_id, case_id, previous_disposition, disposition, reason, "
+                        + "contradicted_prediction_id, resolved_by, resolved_at, model_revision_id, "
+                        + "recorded_at, request_id FROM observation_adjudication "
+                        + "WHERE workspace_id = ? AND case_id = ? ORDER BY rowid")) {
+            ps.setString(1, workspaceId);
+            ps.setString(2, caseId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    out.add(readAdjudication(rs));
+                }
+            }
+        } catch (SQLException e) {
+            throw new IllegalStateException("failed to read the adjudication history of " + caseId, e);
+        }
+        return out;
+    }
+
+    /**
+     * W45.1 — every act of observing the cases of a workspace, oldest first.
+     *
+     * <p>An occurrence is a moment: this fact was seen again, now, in this episode. Two
+     * occurrences of the same case are two different acts and both of them are kept, which is
+     * what makes the difference between "the fact was observed twice" and "the fact was
+     * observed once and adjudicated once" readable.</p>
+     *
+     * @param workspaceId the workspace
+     * @return every occurrence the workspace holds
+     */
+    public List<ObservationOccurrence> occurrences(String workspaceId) {
+        List<ObservationOccurrence> out = new ArrayList<>();
+        try (PreparedStatement ps = connection.prepareStatement(
+                "SELECT id, workspace_id, case_id, episode_id, signal_id, source_id, evidence_id, "
+                        + "observed_at, disposition, reason FROM observation_occurrence "
+                        + "WHERE workspace_id = ? ORDER BY observed_at, id")) {
+            ps.setString(1, workspaceId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    out.add(readOccurrence(rs));
+                }
+            }
+        } catch (SQLException e) {
+            throw new IllegalStateException("failed to read the observation occurrences", e);
+        }
+        return out;
+    }
+
+    /**
+     * W45.1 — every act of observing ONE canonical case, oldest first.
+     *
+     * @param workspaceId the workspace
+     * @param caseId      the canonical case
+     * @return every occurrence of the case
+     */
+    public List<ObservationOccurrence> occurrencesOfCase(String workspaceId, String caseId) {
+        List<ObservationOccurrence> out = new ArrayList<>();
+        try (PreparedStatement ps = connection.prepareStatement(
+                "SELECT id, workspace_id, case_id, episode_id, signal_id, source_id, evidence_id, "
+                        + "observed_at, disposition, reason FROM observation_occurrence "
+                        + "WHERE workspace_id = ? AND case_id = ? ORDER BY observed_at, id")) {
+            ps.setString(1, workspaceId);
+            ps.setString(2, caseId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    out.add(readOccurrence(rs));
+                }
+            }
+        } catch (SQLException e) {
+            throw new IllegalStateException("failed to read the occurrences of " + caseId, e);
+        }
+        return out;
+    }
+
+    /**
+     * W45.1 — the cases that are waiting for a review.
+     *
+     * <p><b>Why this is not "the held cases".</b> A held case is one that does not constrain
+     * the model, and that is true of a case a review has REJECTED as well as of a case a
+     * review has not yet looked at. A queue that asked for the held cases would list the
+     * rejected ones as if they were still waiting, and every reader of the queue would be
+     * wrong about them. This method asks the question the queue is actually asking: which
+     * cases await an adjudication.</p>
+     *
+     * @param workspaceId the workspace
+     * @return the ids of the cases that await adjudication
+     */
+    public Set<String> casesAwaitingAdjudication(String workspaceId) {
+        Set<String> out = new LinkedHashSet<>();
+        try (PreparedStatement ps = connection.prepareStatement(
+                "SELECT case_id, disposition FROM observation_disposition WHERE workspace_id = ? "
+                        + "ORDER BY case_id")) {
+            ps.setString(1, workspaceId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    if (ObservationDisposition.valueOf(rs.getString("disposition"))
+                            .awaitingAdjudication()) {
+                        out.add(rs.getString("case_id"));
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            throw new IllegalStateException("failed to read the cases awaiting adjudication", e);
+        }
+        return out;
+    }
+
+    /**
+     * W45.1 — rebuilds the projection of the dispositions from the history and says whether
+     * it agreed with what was stored.
+     *
+     * <p><b>Why the projection has to be rebuildable.</b> The projection is derived state, and
+     * derived state that cannot be recomputed is a second source of truth. A reader must be
+     * able to ask "what does the history say the case stands at?" and get the same answer as
+     * "what does the case stand at?" — and the only way to know that the two agree is to
+     * compute one from the other.</p>
+     *
+     * <p><b>What the answer means.</b> The returned value says whether the STORED projection
+     * already agreed with the history. When it did not, the projection is repaired from the
+     * history and the method returns false, because a disagreement that was silently fixed
+     * would hide the fact that there was one. The history is the authority: it is
+     * append-only, and the projection is written from it in the same transaction as the
+     * decision.</p>
+     *
+     * <p>A projection row that the history does not know about is reported as a disagreement
+     * and is LEFT ALONE: it says something the history does not, and a store that deleted it
+     * would destroy a record on the strength of a comparison.</p>
+     *
+     * @param workspaceId the workspace
+     * @return true when the stored projection agreed with the history
+     */
+    public synchronized boolean rebuildDispositionProjection(String workspaceId) {
+        Map<String, ObservationAdjudication> expected = new LinkedHashMap<>();
+        try (PreparedStatement ps = connection.prepareStatement(
+                "SELECT decision_id, workspace_id, case_id, previous_disposition, disposition, reason, "
+                        + "contradicted_prediction_id, resolved_by, resolved_at, model_revision_id, "
+                        + "recorded_at, request_id FROM observation_adjudication WHERE workspace_id = ? "
+                        + "ORDER BY rowid")) {
+            ps.setString(1, workspaceId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    ObservationAdjudication decision = readAdjudication(rs);
+                    expected.put(decision.caseId(), decision);
+                }
+            }
+        } catch (SQLException e) {
+            throw new IllegalStateException("failed to read the adjudication history", e);
+        }
+
+        Map<String, String[]> stored = new LinkedHashMap<>();
+        try (PreparedStatement ps = connection.prepareStatement(
+                "SELECT case_id, disposition, reason, contradicted_prediction_id, resolved_by, "
+                        + "resolved_at, model_revision_id, recorded_at FROM observation_disposition "
+                        + "WHERE workspace_id = ?")) {
+            ps.setString(1, workspaceId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    stored.put(rs.getString("case_id"), new String[]{
+                            rs.getString("disposition"), rs.getString("reason"),
+                            rs.getString("contradicted_prediction_id"), rs.getString("resolved_by"),
+                            rs.getString("resolved_at"), rs.getString("model_revision_id"),
+                            rs.getString("recorded_at")});
+                }
+            }
+        } catch (SQLException e) {
+            throw new IllegalStateException("failed to read the disposition projection", e);
+        }
+
+        List<String> disagreeing = new ArrayList<>();
+        for (Map.Entry<String, ObservationAdjudication> entry : expected.entrySet()) {
+            ObservationAdjudication decision = entry.getValue();
+            String[] row = stored.get(entry.getKey());
+            if (row == null || !row[0].equals(decision.disposition().name())
+                    || !sameText(row[1], decision.reason())
+                    || !sameText(row[2], decision.contradictedPredictionId())
+                    || !sameText(row[3], decision.resolvedBy())
+                    || !sameText(row[4], decision.resolvedAt())
+                    || !sameText(row[5], decision.modelRevisionId())
+                    || !sameText(row[6], decision.recordedAt())) {
+                disagreeing.add(entry.getKey());
+            }
+        }
+        for (String caseId : stored.keySet()) {
+            if (!expected.containsKey(caseId)) {
+                disagreeing.add(caseId);
+            }
+        }
+        if (disagreeing.isEmpty()) {
+            return true;
+        }
+        try {
+            connection.setAutoCommit(false);
+            try {
+                for (String caseId : disagreeing) {
+                    ObservationAdjudication decision = expected.get(caseId);
+                    if (decision == null) {
+                        // The history says nothing about this case, so nothing is written.
+                        continue;
+                    }
+                    writeProjection(decision.workspaceId(), caseId, decision.disposition(),
+                            decision.reason(), decision.contradictedPredictionId(),
+                            decision.resolvedBy(), decision.resolvedAt(),
+                            decision.modelRevisionId(), decision.recordedAt());
+                }
+                connection.commit();
+            } catch (SQLException | RuntimeException e) {
+                connection.rollback();
+                throw e;
+            } finally {
+                connection.setAutoCommit(true);
+            }
+        } catch (SQLException e) {
+            throw new IllegalStateException("failed to rebuild the disposition projection", e);
+        }
+        return false;
+    }
+
+    /** Whether two stored texts say the same thing, treating a null as an empty string. */
+    private static boolean sameText(String left, String right) {
+        return (left == null ? "" : left).equals(right == null ? "" : right);
+    }
+
+    /**
+     * W45.1 — writes the PROJECTION of the adjudication history.
+     *
+     * <p>The projection is derived state: the history is the record, and this row is the
+     * answer to the question a reader asks most often — where does this case stand now. Every
+     * column of it is a column of the decision that produced it, which is what makes the
+     * rebuild possible: the projection can be recomputed from the history and compared with
+     * what is stored.</p>
+     *
+     * <p>The write is an upsert and not an {@code INSERT OR REPLACE}: the row is replaced
+     * deliberately, because that is what a projection IS, and it is replaced with exactly the
+     * columns of the decision, so that the projection never says anything the history does
+     * not.</p>
+     */
+    private void writeProjection(String workspaceId, String caseId,
+                                 ObservationDisposition disposition, String reason,
+                                 String contradictedPredictionId, String resolvedBy,
+                                 String resolvedAt, String modelRevisionId,
+                                 String recordedAt) throws SQLException {
+        try (PreparedStatement ps = connection.prepareStatement(
+                "INSERT INTO observation_disposition(case_id, workspace_id, disposition, "
                         + "reason, contradicted_prediction_id, resolved_by, resolved_at, "
-                        + "model_revision_id, recorded_at) VALUES (?,?,?,?,?,?,?,?,?)")) {
+                        + "model_revision_id, recorded_at) VALUES (?,?,?,?,?,?,?,?,?) "
+                        + "ON CONFLICT(case_id) DO UPDATE SET workspace_id = excluded.workspace_id, "
+                        + "disposition = excluded.disposition, reason = excluded.reason, "
+                        + "contradicted_prediction_id = excluded.contradicted_prediction_id, "
+                        + "resolved_by = excluded.resolved_by, resolved_at = excluded.resolved_at, "
+                        + "model_revision_id = excluded.model_revision_id, "
+                        + "recorded_at = excluded.recorded_at")) {
             ps.setString(1, caseId);
             ps.setString(2, workspaceId);
             ps.setString(3, disposition.name());
@@ -2456,6 +3168,168 @@ public final class KnowledgeStore implements AutoCloseable {
             ps.setString(9, recordedAt);
             ps.executeUpdate();
         }
+    }
+
+    /**
+     * W45.1 — writes the OCCURRENCE of an observation.
+     *
+     * <p>The occurrence is written once per act of observing. The same occurrence id with the
+     * same content is an idempotent no-op — a replayed request must not double the record —
+     * and the same occurrence id with different content is a conflict, because an occurrence
+     * is a moment and a moment does not happen twice with a different content.</p>
+     */
+    private void writeOccurrence(ObservationOccurrence occurrence) throws SQLException {
+        try (PreparedStatement ps = connection.prepareStatement(
+                "INSERT INTO observation_occurrence(id, workspace_id, case_id, episode_id, "
+                        + "signal_id, source_id, evidence_id, observed_at, disposition, reason) "
+                        + "VALUES (?,?,?,?,?,?,?,?,?,?)")) {
+            ps.setString(1, occurrence.id());
+            ps.setString(2, occurrence.workspaceId());
+            ps.setString(3, occurrence.caseId());
+            ps.setString(4, occurrence.episodeId());
+            ps.setString(5, occurrence.signalId());
+            ps.setString(6, occurrence.sourceId());
+            ps.setString(7, occurrence.evidenceId());
+            ps.setString(8, occurrence.observedAt());
+            ps.setString(9, occurrence.disposition().name());
+            ps.setString(10, occurrence.reason());
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            if (!isUniqueConstraintViolation(e)) {
+                throw e;
+            }
+            ObservationOccurrence existing = occurrenceById(occurrence.id());
+            if (existing != null && existing.equals(occurrence)) {
+                return;
+            }
+            throw new ObservationConflictException(ObservationConflictException.Kind.OCCURRENCE,
+                    "the occurrence '" + occurrence.id() + "' was already recorded with a "
+                            + "different content");
+        }
+    }
+
+    /** W45.1 — appends a decision to the append-only history. */
+    private void appendAdjudication(ObservationAdjudication decision) throws SQLException {
+        try (PreparedStatement ps = connection.prepareStatement(
+                "INSERT INTO observation_adjudication(decision_id, workspace_id, case_id, "
+                        + "previous_disposition, disposition, reason, contradicted_prediction_id, "
+                        + "resolved_by, resolved_at, model_revision_id, recorded_at, request_id) "
+                        + "VALUES (?,?,?,?,?,?,?,?,?,?,?,?)")) {
+            ps.setString(1, decision.decisionId());
+            ps.setString(2, decision.workspaceId());
+            ps.setString(3, decision.caseId());
+            ps.setString(4, decision.previousDisposition() == null
+                    ? null : decision.previousDisposition().name());
+            ps.setString(5, decision.disposition().name());
+            ps.setString(6, decision.reason());
+            ps.setString(7, decision.contradictedPredictionId());
+            ps.setString(8, decision.resolvedBy());
+            ps.setString(9, decision.resolvedAt());
+            ps.setString(10, decision.modelRevisionId());
+            ps.setString(11, decision.recordedAt());
+            ps.setString(12, decision.requestId());
+            ps.executeUpdate();
+        }
+    }
+
+    /** W45.1 — where a case stands, or null when it stands nowhere yet. */
+    private ObservationDisposition currentDisposition(String caseId) {
+        try (PreparedStatement ps = connection.prepareStatement(
+                "SELECT disposition FROM observation_disposition WHERE case_id = ?")) {
+            ps.setString(1, caseId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return ObservationDisposition.valueOf(rs.getString(1));
+                }
+            }
+        } catch (SQLException e) {
+            throw new IllegalStateException("failed to read the disposition of " + caseId, e);
+        }
+        return null;
+    }
+
+    /** W45.1 — the decision with this id, or null when there is none. */
+    private ObservationAdjudication adjudicationById(String decisionId) {
+        try (PreparedStatement ps = connection.prepareStatement(
+                "SELECT decision_id, workspace_id, case_id, previous_disposition, disposition, reason, "
+                        + "contradicted_prediction_id, resolved_by, resolved_at, model_revision_id, "
+                        + "recorded_at, request_id FROM observation_adjudication WHERE decision_id = ?")) {
+            ps.setString(1, decisionId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return readAdjudication(rs);
+                }
+            }
+        } catch (SQLException e) {
+            throw new IllegalStateException("failed to read the decision " + decisionId, e);
+        }
+        return null;
+    }
+
+    /** W45.1 — the occurrence with this id, or null when there is none. */
+    private ObservationOccurrence occurrenceById(String occurrenceId) {
+        try (PreparedStatement ps = connection.prepareStatement(
+                "SELECT id, workspace_id, case_id, episode_id, signal_id, source_id, evidence_id, "
+                        + "observed_at, disposition, reason FROM observation_occurrence WHERE id = ?")) {
+            ps.setString(1, occurrenceId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return readOccurrence(rs);
+                }
+            }
+        } catch (SQLException e) {
+            throw new IllegalStateException("failed to read the occurrence " + occurrenceId, e);
+        }
+        return null;
+    }
+
+    /** W45.1 — reads one row of the history. */
+    private static ObservationAdjudication readAdjudication(ResultSet rs) throws SQLException {
+        String previous = rs.getString("previous_disposition");
+        return new ObservationAdjudication(
+                rs.getString("decision_id"),
+                rs.getString("workspace_id"),
+                rs.getString("case_id"),
+                previous == null ? null : ObservationDisposition.valueOf(previous),
+                ObservationDisposition.valueOf(rs.getString("disposition")),
+                rs.getString("reason"),
+                rs.getString("contradicted_prediction_id"),
+                rs.getString("resolved_by"),
+                rs.getString("resolved_at"),
+                rs.getString("model_revision_id"),
+                rs.getString("recorded_at"),
+                rs.getString("request_id"));
+    }
+
+    /** W45.1 — reads one row of the occurrences. */
+    private static ObservationOccurrence readOccurrence(ResultSet rs) throws SQLException {
+        return new ObservationOccurrence(
+                rs.getString("id"),
+                rs.getString("workspace_id"),
+                rs.getString("case_id"),
+                rs.getString("episode_id"),
+                rs.getString("signal_id"),
+                rs.getString("source_id"),
+                rs.getString("evidence_id"),
+                rs.getString("observed_at"),
+                ObservationDisposition.valueOf(rs.getString("disposition")),
+                rs.getString("reason"));
+    }
+
+    /**
+     * Whether a failure is SQLite's refusal of a duplicate key.
+     *
+     * <p>The store has to tell a duplicate from every other failure, because a duplicate is a
+     * case it can reason about — the same record delivered twice — while anything else is a
+     * failure of the database itself.</p>
+     */
+    private static boolean isUniqueConstraintViolation(SQLException e) {
+        String message = e.getMessage() == null ? "" : e.getMessage();
+        if (message.contains("UNIQUE constraint failed") || message.contains("PRIMARY KEY constraint failed")) {
+            return true;
+        }
+        int code = e.getErrorCode();
+        return code == SQLITE_CONSTRAINT || code == SQLITE_CONSTRAINT_PRIMARYKEY;
     }
 
     /**

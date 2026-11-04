@@ -397,7 +397,9 @@ class CognitiveContradictionDurabilityTest {
 
         KnowledgeStore upgraded = new KnowledgeStore(database);
         try {
-            assertThat(upgraded.schemaVersion()).isEqualTo(17);
+            // W45.1: the knowledge schema reached 18 (the adjudication history and the
+            // observation occurrences). The v16 -> v17 -> v18 chain still arrives here.
+            assertThat(upgraded.schemaVersion()).isEqualTo(18);
             Map<String, ObservationDisposition> dispositions =
                     upgraded.caseDispositions(WORKSPACE);
             assertThat(dispositions)

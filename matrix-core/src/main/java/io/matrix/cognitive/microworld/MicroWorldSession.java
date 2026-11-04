@@ -301,12 +301,24 @@ public final class MicroWorldSession {
      * {@link ObservationDisposition#ELIGIBLE}. The rule is one rule: an observation that the
      * model was not built from is held.</p>
      *
+     * <p><b>W45.1.</b> A RESTORED observation carries the disposition a REVIEW gave it, and
+     * the session must not collapse that decision: an observation a review ACCEPTED is
+     * {@link ObservationDisposition#ACCEPTED}, and one a review REJECTED is
+     * {@link ObservationDisposition#REJECTED}. Collapsing them into "eligible" and "held"
+     * would lose the very distinction the adjudication history exists to keep, and the
+     * occurrence the session writes would then contradict the projection.</p>
+     *
      * @param observation the observation
      * @return the disposition
      */
     public ObservationDisposition dispositionOf(Observation observation) {
         if (observation == null) {
             return ObservationDisposition.conservativeDefault();
+        }
+        ObservationDisposition own = observation.disposition();
+        if (own == ObservationDisposition.ACCEPTED || own == ObservationDisposition.REJECTED) {
+            // A reviewed decision is the decision. The session honours it.
+            return own;
         }
         return isApplied(observation)
                 ? ObservationDisposition.ELIGIBLE : ObservationDisposition.UNRESOLVED;
