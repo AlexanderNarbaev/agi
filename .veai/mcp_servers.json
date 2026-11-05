@@ -1,0 +1,70 @@
+{
+    "context7": {
+        "command": "npx",
+        "args": [
+            "-y",
+            "@upstash/context7-mcp@latest"
+        ]
+    },
+    "docker-mcp": {
+        "command": "uvx",
+        "args": [
+            "docker-mcp"
+        ]
+    },
+    "mcp-echarts": {
+        "command": "npx",
+        "args": [
+            "-y",
+            "mcp-echarts"
+        ]
+    },
+    "kubernetes-mcp-server": {
+        "command": "npx",
+        "args": [
+            "-y",
+            "kubernetes-mcp-server"
+        ]
+    },
+    "memory": {
+        "command": "npx",
+        "args": [
+            "-y",
+            "@modelcontextprotocol/server-memory"
+        ]
+    },
+    "mcp-mermaid": {
+        "command": "npx",
+        "args": [
+            "-y",
+            "mcp-mermaid"
+        ]
+    },
+    "playwright": {
+        "command": "npx",
+        "args": [
+            "-y",
+            "@playwright/mcp",
+            "--browser",
+            "chrome"
+        ]
+    },
+    "sequential-thinking": {
+        "command": "npx",
+        "args": [
+            "-y",
+            "@modelcontextprotocol/server-sequential-thinking"
+        ]
+    },
+    "token-optimizer": {
+        "command": "npx",
+        "args": [
+            "-y",
+            "token-optimizer-mcp"
+        ]
+    },
+    "IDE MCP Server": {
+        "url": "http://IDE-MCP-SERVER/stream",
+        "type": "http"
+    }
+}

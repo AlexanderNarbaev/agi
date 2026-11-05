@@ -107,6 +107,10 @@ matrix-core/models/Qwen*
 /matrix-core/reflect-config.json
 /matrix-core/resource-config.json
 /.opencode/state/
+# The agent's runtime state: per-session JSON, lock files and scratch backups.
+# The CONFIGURATION belongs in the repository; the state of one machine does not.
+/.opencode/goals/
+/.opencode/tmp/
 
 # Large runtime/data files (rev 2026-08-10)
 /memory/
