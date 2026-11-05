@@ -71,6 +71,10 @@ decisions, then the proposals. Within a kind the newest wave comes first.
 | OD-031 | The four subjects that lost their documents are WRITTEN, not mapped: the renumbered series keeps its numbers and the missing specifications are created | owner | 2026-11-05 | ACCEPTED | — | `docs-v2/governance/OPEN-QUESTIONS.md` (Q-W46-20) | four new normative documents — NOT written in W46 | the owner's answer of 2026-11-05; the implementation is TASK-W46-19 |
 | OD-032 | PR-002 and PR-006 are ACCEPTED with a deadline: they are re-examined at W47 and must be closed there | owner | 2026-11-05 | ACCEPTED | — | `docs-v2/governance/OPEN-QUESTIONS.md` (Q-W46-18) | none yet | the owner's answer of 2026-11-05; the deadline is the W47 wave; the implementation is TASK-W46-20 |
 | OD-033 | The four MATRIX skills are installed under `.agents/skills/` AND registered in the harness's trigger table | owner | 2026-11-05 | ACCEPTED | — | `docs-v2/governance/SKILLS.md`; `docs-v2/governance/SKILL-INVENTORY.md` | the harness's own source and its mirror in the home directory — NOT changed in W46 | the owner's answer of 2026-11-05; the implementation is TASK-W46-21 |
+| OD-035 | The retention has THREE tiers: the daily backups of the last 7 days, one weekly point per week for 4 weeks, and one monthly point per month for 12 months | owner | 2026-11-05 | ACCEPTED | OD-029 (refined: the two tiers become three) | `docs-v2/operations/RECOVERY-RUNBOOK.md` §8; `scripts/backup-retention.py` | an operations tool that DELETES files — the policy it implements is the owner's | the owner's answer of 2026-11-05 to the W47 questionnaire, asked because the phrase in OD-029 was ambiguous; the implementation is TASK-W46-17 |
+| OD-036 | A workspace replacement erases the workspace's LEARNING STATE with its knowledge: the assessment items, the learning state, the transitions, the outcomes, the dialogue turns, the asked questions and the hebbian bindings go with the concepts | owner | 2026-11-05 | ACCEPTED | — | `docs-v2/engineering/W47-WORKSPACE-REPLACEMENT-CONTRACT.md` §2 and §5 | the erasure set grows by eight tables, and the snapshot must carry them | the owner's answer of 2026-11-05 to the W47 questionnaire; it closes the residual the W47 contract recorded in §5; the implementation is TASK-W46-16 |
+| OD-037 | The k-anonymity counter counts DISTINCT NODES, as the class promises, not the contributions of one hash | owner | 2026-11-05 | ACCEPTED | — | `docs-v2/specifications/SPEC-016-decentralized-digests.md` | `io.matrix.federation.Anonymizer` counts distinct nodes per content hash | the owner's answer of 2026-11-05 to the W47 questionnaire; the defect is at `matrix-core/src/main/java/io/matrix/federation/Anonymizer.java:25-27` |
+| OD-038 | The null ImpulseScheduler in the gateway's autonomy loop is fixed in W47, not deferred | owner | 2026-11-05 | ACCEPTED | — | `docs-v2/specifications/SPEC-015-autonomy-impulses.md` (the invariant the fix satisfies) | a serving-path change in chain B | the owner's answer of 2026-11-05 to the W47 questionnaire; the defect is at `matrix-brain-runtime/.../AutonomyLoop.java:38` and `matrix-core/src/main/java/io/matrix/autonomy/AutonomyEngine.java:75` |
 | OD-034 | The four skill packages whose declared name differs from their directory are FIXED: the names are corrected | owner | 2026-11-05 | ACCEPTED | — | `docs-v2/governance/SKILL-INVENTORY.md` §1 and §3 | the owner's library and the plugin bundle — NOT changed in W46 | the owner's answer of 2026-11-05; the implementation is TASK-W46-22 |
 | ADR-2026-09-12-001 | Adopt an HDC × BitLinear × Boolean hybrid brain as an architectural primitive, orthogonal to MPDP | normative | 2026-09-12 | ACCEPTED | — | `docs-v2/architecture/ADR-2026-09-12-001-hdc-bitlinear-hybrid-brain.md` | a contract | the document names no decider; it is a standing architectural rule, referenced by `docs-v2/engineering/STANDARDS-MATRIX.md` as Accepted |
 | ADR-2026-10-26-002 | `TrueMindCycle` is the one cognitive conductor — of the brain runtime | owner | 2026-10-26 | ACCEPTED | ADR-W45.2-01 (for the epistemic application only) | `docs-v2/architecture/ADR-2026-10-26-002-single-cognitive-conductor.md` | a contract | decided by the repository owner via MASTER ENGINEERING DIRECTIVE v2, §13, for `matrix-brain-runtime` and `matrix-api-gateway`. The header carries a scope annotation of 2026-11-04: the decision holds for the brain runtime, is **not** the conductor of the epistemic application, and the body was not rewritten |
@@ -122,11 +126,11 @@ decisions, then the proposals. Within a kind the newest wave comes first.
 | CD-W42-10 | The specialist audits are the evidence base, not a summary of them | coordinator | 2026-11-01 | ACCEPTED | — | `docs-v2/engineering/RECON-W42-DECISIONS.md` (D-010) | none | the W42 wave under the owner directive |
 | CD-W42-11 | A benchmark item's POINTER may be corrected; its ETALON may not | coordinator | 2026-11-01 | ACCEPTED | — | `docs-v2/engineering/RECON-W42-DECISIONS.md` (D-013) | none | the W42 wave under the owner directive; the entry carries the rule and the criterion that would change it |
 | PR-001 | Add a GitHub Actions workflow that validates wave checkpoint integrity on every push | proposal | 2026-09-18 | REJECTED | — | `docs-v2/proposals/RFC-001-wal-checkpoint-workflow.md` | none | rejected by the owner on 2026-09-18 in favour of the manual process; the document keeps the rejected workflow for the historical record and states the replacement rule |
-| PR-002 | Add a weekly CI job that runs the fresh-clone smoke test | proposal | 2026-09-29 | PROPOSED | — | `docs-v2/proposals/RFC-weekly-ci-smoke.md` | none | awaiting operator approval; the document states that it does not itself modify `.github/workflows/**` and that the campaign proceeds without the automation. No such workflow exists |
+| PR-002 | Add a weekly CI job that runs the fresh-clone smoke test | proposal | 2026-09-29 | **REJECTED** | the manual step Z1 in `docs-v2/research/MIND-VALIDATION-CHECKLIST-v3.md:107` | `docs-v2/proposals/RFC-weekly-ci-smoke.md` | none | **W47, 2026-11-05.** The RFC itself says the automation blocks nothing (`RFC-weekly-ci-smoke.md:6`); the implementation needs an RFC mandate for `.github/workflows/**`, which is a FROZEN zone, and W47 has none; a weekly CI job already exists (`.github/workflows/ci.yml:13-16`) and runs something else; the predecessor PR-001 was closed the same way. The manual smoke step and the `bash -n` gate (`scripts/quality-gate.sh`) remain. The RFC is preserved, not rewritten. does not itself modify `.github/workflows/**` and that the campaign proceeds without the automation. No such workflow exists |
 | PR-003 | Run the research and property suites on a weekly schedule in CI | proposal | 2026-10-05 | ACCEPTED | — | `docs-v2/proposals/RFC-weekly-research-suite.md`; the approval recorded in `docs-v2/quality/OPEN-DECISIONS.md` (CLOSED decisions, D7) | none | approved by the operator in the RECON-W38 pre-session and implemented in commit `6a15f178`; the schedule is visible in `.github/workflows/ci.yml`. This row and OD-012 are the same decision seen from two sides: the RFC is the proposal, the operator ruling is the decision |
 | PR-004 | Global decentralized brain federation: a hybrid federation of local digital brains | proposal | 2026-09-17 | PROPOSED | — | `docs-v2/proposals/PROPOSAL-global-decentralized-brain-federation.md` | none | the document says "proposal · draft v0.1" and names no decider; it is a design proposal, not a decision. The `UNVERIFIED` mark that the W46 document audit gave it is a claim-provenance status, not a decision status, and it does not change this row |
 | PR-005 | Wave 347: the architecture of the global decentralized brain federation | proposal | 2026-09-17 | PROPOSED | — | `docs-v2/proposals/PROPOSAL-wave-347-global-federation-architecture.md` | none | the document says "proposal · draft v1.0" and names no decider; it builds on PR-004 and on `DESIGN-58`. Same note as PR-004 about the `UNVERIFIED` mark |
-| PR-006 | Split the monolithic `WAL.md` into one file per wave | proposal | 2026-09-18 | PROPOSED | — | `docs-v2/proposals/PROPOSAL-wal-split-wave-based-architecture.md` | none | **never ruled on** — no document records an acceptance or a rejection, so the status is `PROPOSED` rather than `ACCEPTED`. Its first two phases happened anyway: `docs-v2/specifications/SPEC-014-wal-management.md` (W350) and `scripts/extract-waves.py` (W351) exist. The bulk extraction did not: `docs-v2/waves/` holds exactly one `wave-*.md` file. The `WAL.md` the proposal splits is **not at that path in the repository today** — the journal is `wal/SESSION_WAL.md` — so the proposal describes a file layout that no longer exists under that name |
+| PR-006 | Split the monolithic `WAL.md` into one file per wave | proposal | 2026-09-18 | **SUPERSEDED** | `docs-v2/waves/INDEX.md` and the per-wave records `docs-v2/waves/WAL-NNN-*.md` | `docs-v2/proposals/PROPOSAL-wal-split-wave-based-architecture.md` | none | **W47, 2026-11-05.** The goal was reached by another path: the canonical chronological log is `docs-v2/waves/INDEX.md` (321 records) and the project state points at it (`docs-v2/INDEX.md:80`). The mechanism of the proposal is obsolete: `WAL.md` is not in the tree, the `wave-NNN-*.md` naming was not adopted, the waves index has no LATEST file does not exist and the archive was never created — none of its three migration phases was performed. Executing it now would rename or archive historical records, which the waves index forbids. The proposal is preserved, not rewritten.ords an acceptance or a rejection, so the status is `PROPOSED` rather than `ACCEPTED`. Its first two phases happened anyway: `docs-v2/specifications/SPEC-014-wal-management.md` (W350) and `scripts/extract-waves.py` (W351) exist. The bulk extraction did not: `docs-v2/waves/` holds exactly one `wave-*.md` file. The `WAL.md` the proposal splits is **not at that path in the repository today** — the journal is `wal/SESSION_WAL.md` — so the proposal describes a file layout that no longer exists under that name |
 
 ---
 
@@ -331,6 +335,51 @@ that implements it.
 - **the document that holds it**: `docs-v2/governance/SKILL-INVENTORY.md` §1 and §3
 - **the effect on the runtime**: the owner's library and the plugin bundle — NOT changed in W46
 - **the evidence or the scope of the approval**: the owner's answer of 2026-11-05; the implementation is TASK-W46-22
+
+## 3.2 The owner's answers of 2026-11-05 — the W47 questionnaire
+
+**Four decisions, taken in the W47 questionnaire.** They are recorded with the
+questions they answered, and every one of them names the task that implements it.
+
+### OD-035 — The retention has THREE tiers: the daily backups of the last 7 days, one weekly point per week for 4 weeks, and one monthly point per month for 12 months
+
+- **kind**: owner
+- **the date**: 2026-11-05
+- **the status**: ACCEPTED
+- **the successor**: OD-029 (refined: the two tiers become three)
+- **the document that holds it**: `docs-v2/operations/RECOVERY-RUNBOOK.md` §8; `scripts/backup-retention.py`
+- **the effect on the runtime**: an operations tool that DELETES files — the policy it implements is the owner's
+- **the evidence or the scope of the approval**: the owner's answer of 2026-11-05 to the W47 questionnaire, asked because the phrase in OD-029 was ambiguous; the implementation is TASK-W46-17
+
+### OD-036 — A workspace replacement erases the workspace's LEARNING STATE with its knowledge: the assessment items, the learning state, the transitions, the outcomes, the dialogue turns, the asked questions and the hebbian bindings go with the concepts
+
+- **kind**: owner
+- **the date**: 2026-11-05
+- **the status**: ACCEPTED
+- **the successor**: —
+- **the document that holds it**: `docs-v2/engineering/W47-WORKSPACE-REPLACEMENT-CONTRACT.md` §2 and §5
+- **the effect on the runtime**: the erasure set grows by eight tables, and the snapshot must carry them
+- **the evidence or the scope of the approval**: the owner's answer of 2026-11-05 to the W47 questionnaire; it closes the residual the W47 contract recorded in §5; the implementation is TASK-W46-16
+
+### OD-037 — The k-anonymity counter counts DISTINCT NODES, as the class promises, not the contributions of one hash
+
+- **kind**: owner
+- **the date**: 2026-11-05
+- **the status**: ACCEPTED
+- **the successor**: —
+- **the document that holds it**: `docs-v2/specifications/SPEC-016-decentralized-digests.md`
+- **the effect on the runtime**: `io.matrix.federation.Anonymizer` counts distinct nodes per content hash
+- **the evidence or the scope of the approval**: the owner's answer of 2026-11-05 to the W47 questionnaire; the defect is at `matrix-core/src/main/java/io/matrix/federation/Anonymizer.java:25-27`
+
+### OD-038 — The null ImpulseScheduler in the gateway's autonomy loop is fixed in W47, not deferred
+
+- **kind**: owner
+- **the date**: 2026-11-05
+- **the status**: ACCEPTED
+- **the successor**: —
+- **the document that holds it**: `docs-v2/specifications/SPEC-015-autonomy-impulses.md` (the invariant the fix satisfies)
+- **the effect on the runtime**: a serving-path change in chain B
+- **the evidence or the scope of the approval**: the owner's answer of 2026-11-05 to the W47 questionnaire; the defect is at `matrix-brain-runtime/.../AutonomyLoop.java:38` and `matrix-core/src/main/java/io/matrix/autonomy/AutonomyEngine.java:75`
 
 ## 4. The duplicate-identifier problem
 
