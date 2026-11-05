@@ -389,6 +389,26 @@ with their answer, because a closed question is the proof that the project once 
 describe is **not** implemented — the owner's instruction for this wave was to fix the
 decisions and to leave the code to W47. Every closed question names the task that implements it.
 
+> **W47 (2026-11-05) — the decisions of this wave are now IMPLEMENTED.** The owner's
+> instruction was carried out: TASK-W46-16, TASK-W46-17, TASK-W46-18, TASK-W46-20,
+> TASK-W46-21 and TASK-W46-22 are done, and the three tasks the questionnaire created
+> (TASK-W46-23, TASK-W46-24, TASK-W46-25) are done as well. The reports are in
+> `docs-v2/engineering/W47-STATUS.md`.
+>
+> **Q-W46-23 (OD-034) is closed on TWO of its four positions, and the other two are a
+> boundary, not an oversight.** The two `.veai` directories were renamed (`git mv`, the
+> history follows): `seatch-first` → `search-first` and
+> `scientific-thinking-scholar-evaluation` → `scholar-evaluation` — in both cases the
+> DECLARED name was right and the directory was wrong. The other two were refused on
+> purpose: `matt-pocock` is an owner-owned container in `.opencode/**` with seventeen
+> sub-skills and no root `SKILL.md`, and giving it one would change what the container
+> means; `plan.retired-backup` is a retired, untracked asset of the opencode-swarm plugin
+> that the plugin reinstalls by itself, and its declared name `plan` collides with a live
+> `plan` — fixing it would mean reviving a retired bundle or renaming another bundle, and
+> its name carries a dot, which the harness's own name rule forbids
+> (`^[a-z0-9]+(?:-[a-z0-9]+)*$`). Both refusals are recorded in
+> `docs-v2/governance/DECISION-REGISTER.md` OD-034 with the reason.
+
 ---
 
 ## The types, and what each one needs
