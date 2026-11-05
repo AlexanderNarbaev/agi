@@ -1,7 +1,9 @@
 # MISSION: RECON-W37 — The Living Connectome
 
-**Status:** in progress · started 2026-10-12
-**Baseline:** `045445b9` · 9314 tests / 0 failures / 11 modules · gate 0 · FROZEN 0-diff
+**Status:** completed 2026-10-16 (RECON-W37.5, release v18.0.0-mind Connectome Alpha; started 2026-10-12)
+**Final:** 9324 tests / 0 failures / 11 buildable modules (up from baseline 9314); sleep pruning
+cross-validated worst-fold + mutation-verified; see SESSION.md W37.5 and MATRIX-MIND-REPORT-V18.
+**Baseline:** `045445b9` · gate 0 · FROZEN 0-diff
 
 **Attention default DECIDED:** 0.0 (behaviour-preserving). At mid attention the floor rises to
 0.275 and serving refuses more — an operator decision, not one to take while wiring a class in.

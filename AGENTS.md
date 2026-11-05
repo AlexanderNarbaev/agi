@@ -69,3 +69,9 @@
 
 После W31 допускается **до 4 одновременных** глубоких research-задач. Каждая — с явным скоупом и конкретным
 output. Таймаут на research агента = 30 минут; долгие задачи необходимо делить на более узкие подзадачи.
+
+## AI Dev Tools (via opencode_initializer)
+- DevoxxGenie (JetBrains, Apache 2.0) — local LLMs, RAG, MCP
+- Cline (VS Code+JetBrains, Apache 2.0) — AI agent, Ollama
+- Tabby (VS Code+JetBrains, Apache 2.0) — self-hosted completion
+- Aider (CLI, Apache 2.0) — git-aware edits

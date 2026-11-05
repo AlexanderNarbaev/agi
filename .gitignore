@@ -183,10 +183,9 @@ data/models/bitnet-checkpoint/
 data/models/**/*.safetensors
 data/models/**/*.safetensors.sha256
 
-# RECON-W38.5: the TLA+ tools jar is downloaded by the CI job
-# (.github/workflows/tla.yml) into tools/. It is a build-time dependency, not
-# a source artifact, and it must not be committed.
-tools/tla2tools.jar
+# AI for OpenIDE — local agent state (chat transcripts, memory, snapshots; may contain secrets).
+.aiforopenide/
+!.aiforopenide/config.json
 
 # RECON-W38.4: CUDA/ONNX native-library links are machine-local state. They were
 # committed to git and pointed into one developer's untracked virtualenv and a
