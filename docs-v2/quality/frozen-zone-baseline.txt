@@ -30,5 +30,25 @@
 # regenerated TLA+ path filter in tla.yml (the two specifications this wave
 # registered).
 
+# W46, the AGENTS.md exception was raised from 14 to 63 diff lines.
+#
+# The change is SANCTIONED by the owner: on 2026-11-05 the owner answered the
+# W46 questionnaire and chose "apply the patch" for the AGENTS.md amendment,
+# whose exact diff was prepared and verified in W46.2
+# (docs-v2/governance/AGENTS-AMENDMENT-PROPOSAL.md).
+#
+# What the patch does, in nine hunks: it repairs the five paths the file
+# pointed at and that do not exist (engineering/PLAN.md, WAL.md, ethics/frozen/,
+# context.md, HYPOTHESES-NEW.md); it makes the push rule conform to the
+# autonomy levels, so that two owner-owned documents no longer give opposite
+# standing instructions; and it adds two lines about the commit-specific test
+# baseline and the JUnit XML as the evidence.
+#
+# The remaining lines of the 63 are the owner's own "AI Dev Tools" block, which
+# was in the working tree before the wave and is committed separately.
+#
+# The change is recorded here rather than waved through, so that the amount
+# of it is visible and the expiry is real.
+
 .github/ | 851 | repo-owner | 2026-12-31
-AGENTS.md | 14 | repo-owner | 2026-12-31
+AGENTS.md | 63 | repo-owner | 2026-12-31

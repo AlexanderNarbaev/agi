@@ -100,7 +100,9 @@ the deletion of opencode.json.bak   .codex/   .opencode/goals/
 ```
 
 Plus the local journal `wal/SESSION_WAL.md`, which is **outside git** (`.gitignore` line 127
-ignores `/wal/`) and therefore local-only.
+ignores `/wal/`) — but that rule applies only to NEW files: `wal/GLOBAL_WAL.md` and
+`wal/SESSION_WAL.md` have been tracked since the early waves, so they ARE in git. Only
+`wal/state.yaml` is excluded <!-- no-link: the file is excluded by .gitignore and does not exist -->.
 
 **The owner's databases and data are not on that list and are not on yours.**
 `data/` is ignored (`.gitignore` line 77) and holds the live databases. **Never modify

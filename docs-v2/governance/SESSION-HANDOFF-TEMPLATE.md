@@ -9,8 +9,10 @@ agent must be able to pick up the work from this document alone.
 
 **Where it goes:** the wave record is `docs-v2/engineering/W<N>-STATUS.md`; this template is
 the **shape** of the end-of-session section of that document. The local journal is
-`wal/SESSION_WAL.md` — **it is not in git** (the directory is in `.gitignore`), so **the handoff
-must not live only there**.
+`wal/SESSION_WAL.md` — it **is** tracked (the `/wal/` ignore rule applies only to NEW files,
+and both journals have been committed since the early waves), so a handoff there survives. **It
+is still not enough**: the journal is a running log, not a wave record, and the wave record is
+what the next session reads.
 
 ---
 

@@ -189,7 +189,8 @@ and that no agent may touch, discard, stage or commit:
 `.opencode/goals/` · `.opencode/opencode-swarm.json` · `.opencode/tmp/` · `.veai/`
 
 Plus the local journal `wal/SESSION_WAL.md`, which is **outside git** (`/wal/` is in
-`.gitignore`) and therefore local-only.
+`.gitignore`) — but that rule applies only to NEW files: the two journals have been tracked
+since the early waves, so they are in git. Only `wal/state.yaml` is excluded <!-- no-link: the file is excluded by .gitignore and does not exist -->.
 
 **A session that finds a different set of owner entries is not a failure — it is a fact that
 the owner worked in between.** Record the set; do not "restore" it.

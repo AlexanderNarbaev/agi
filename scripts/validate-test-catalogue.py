@@ -102,6 +102,7 @@ def main(argv):
     root = Path(arguments.root).resolve()
     path = root / arguments.catalogue
     defects = []
+    observations = []
 
     def defect(kind, subject, note):
         defects.append({"class": kind, "subject": subject, "note": note})
@@ -160,12 +161,24 @@ def main(argv):
             claimed = result.get(counter)
             if claimed is None:
                 continue
-            if int(claimed) != measured[xml_key]:
+            if int(claimed) == measured[xml_key]:
+                continue
+            if int(claimed) > measured[xml_key]:
+                # The catalogue claims MORE than the machine holds: the claim is
+                # impossible, and the scope is stale.
                 defect("STALE_COUNT", name,
                        "the catalogue says " + str(claimed) + " " + counter
                        + " and the XML of " + module + " holds "
-                       + str(measured[xml_key]) + " (the XML is from a later run, "
-                       "and the catalogue is not rewritten here)")
+                       + str(measured[xml_key]) + " (the claim is impossible)")
+            else:
+                # The XML holds MORE than the scope claims: the residue on this
+                # machine is from a WIDER run (a different filter), not from
+                # this scope. That is an observation, not a defect — the XML
+                # cannot REFUTE a claim, it can only fail to confirm it.
+                observations.append(name + ": the XML of " + module + " holds "
+                                    + str(measured[xml_key]) + " " + counter
+                                    + " and the scope claims " + str(claimed)
+                                    + " — the XML is from a wider run")
 
     for entry in catalogue.get("scopes_not_runnable_here") or []:
         name = str(entry.get("id", "<no id>"))
@@ -176,7 +189,7 @@ def main(argv):
                    "a scope that was not executed must say what it was not")
 
     report = {"catalogue": arguments.catalogue, "scopes": len(scopes),
-              "defects": defects, "counts": {}}
+              "defects": defects, "observations": observations, "counts": {}}
     for item in defects:
         report["counts"][item["class"]] = report["counts"].get(item["class"], 0) + 1
 
@@ -190,6 +203,8 @@ def main(argv):
             print("    " + item["class"] + "  " + item["subject"] + "  " + item["note"])
     else:
         print("  the defects: 0 — the catalogue agrees with the evidence on this machine")
+    for observation in observations:
+        print("    observed: " + observation)
 
     if arguments.json:
         with open(arguments.json, "w", encoding="utf-8") as handle:

@@ -123,7 +123,7 @@ project resumable without the previous agent's memory.
 | the historical wave records | `docs-v2/waves/` (this directory) | **320** | `HISTORICAL` |
 | the pre-v2 archive | `docs-v2/_raw/` | 282 | `ARCHIVED` — **never modified** |
 | the archaeology maps (W44) | `docs-v2/engineering/` | 13 documents + 5 CSV/JSON | `HISTORICAL` — the evidence of the W44 audit |
-| the local journal | `wal/SESSION_WAL.md` | — | **local only** — the directory is in `.gitignore`, so it is not part of the project's history |
+| the journal | `wal/SESSION_WAL.md` | — | **tracked** — the `/wal/` ignore rule applies only to NEW files, and this journal has been committed since the early waves. Only `wal/state.yaml` is excluded |
 
 **The complete document registry** — every document, with its category, its status, its
 currency and its successor — is `docs-v2/engineering/W46-DOCUMENT-AUDIT.csv` (880 rows, one
