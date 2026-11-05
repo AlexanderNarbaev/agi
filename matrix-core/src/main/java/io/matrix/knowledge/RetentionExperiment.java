@@ -108,11 +108,14 @@ public final class RetentionExperiment {
         // first arm's outcomes - so the comparison was between an arm and
         // an arm-plus-its-predecessor.
         try (KnowledgeWorkbench baselineWorkbench = factory.create()) {
-            baselineWorkbench.loadBundledPackage(workspaceId);
+            // The experiment SETS UP its workspace: it means the load, so it says so. W47
+            // made the door ask, and an experiment that loads the package into a workspace
+            // that already holds it is a deliberate replacement.
+            baselineWorkbench.loadBundledPackage(workspaceId, true);
             ArmResult baseline = runArm(baselineWorkbench, workspaceId, Policy.BASELINE_ORDER,
                     maxSessions);
             try (KnowledgeWorkbench consolidationWorkbench = factory.create()) {
-                consolidationWorkbench.loadBundledPackage(workspaceId);
+                consolidationWorkbench.loadBundledPackage(workspaceId, true);
                 ArmResult consolidation = runArm(consolidationWorkbench, workspaceId,
                         Policy.CONSOLIDATION_SELECTED, maxSessions);
                 return report(baseline, consolidation, consolidationWorkbench, workspaceId);

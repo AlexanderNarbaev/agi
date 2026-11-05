@@ -2,6 +2,7 @@ package io.matrix.knowledge;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.matrix.cognitive.microworld.ObservationDisposition;
 import java.io.IOException;
@@ -12,6 +13,7 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.time.Instant;
@@ -115,7 +117,6 @@ public final class KnowledgeStore implements AutoCloseable {
      * <p>It is the number of the placeholders in the emptiness query, and it is named so
      * that the query and this number cannot drift apart.</p>
      */
-    private static final int WORKSPACE_CONTENT_TABLES = 10;
 
     /**
      * The serialiser of a workspace's content.
@@ -127,6 +128,88 @@ public final class KnowledgeStore implements AutoCloseable {
      */
     private static final ObjectMapper SNAPSHOT_JSON = new ObjectMapper()
             .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+
+    /**
+     * W47 — the version of the snapshot payload this build writes.
+     *
+     * <p>Version 1 is the bare knowledge content: the workspace's concepts, sources, claims,
+     * evidence, representations, prerequisites, revisions, derivations, contradictions and
+     * goals. Version 2 adds the rows of the observation tables, which version 1 could not
+     * carry because the erasure set did not yet erase them. A version 1 payload is still
+     * readable: a snapshot taken before this wave restores exactly as it did before.</p>
+     */
+    private static final int SNAPSHOT_PAYLOAD_VERSION = 2;
+
+    /**
+     * W47 — the tables a workspace replacement erases, and the rule that selects the rows of
+     * each of them.
+     *
+     * <p><b>Why the list is declared once.</b> Three things have to agree about what a
+     * replacement erases: the deletion itself, the preview that tells the caller what would
+     * be erased, and the emptiness check that decides whether the caller has to consent. A
+     * list that all three read is the only way for them to agree; three hand-written lists
+     * drift, and a drift here is a silent loss of history.</p>
+     *
+     * <p><b>The order is the reference order.</b> A row that points at another row goes
+     * first, so that no reference dangles while the rows are being removed: an occurrence
+     * points at a case, an adjudication points at a revision, a premise points at a
+     * derivation, a subtask points at a goal, a claim points at a concept and a source, and a
+     * case points at a concept and a source.</p>
+     *
+     * <p><b>What the owner's decision of 2026-11-05 added.</b> The four observation tables —
+     * the case, its occurrences, its disposition and its adjudication history. The erasure
+     * set predated the observation tables, so a replacement left a case and a disposition
+     * whose evidence rows were gone. The decision is OD-025: the case goes with its history
+     * and with its evidence.</p>
+     *
+     * <p><b>What is NOT erased.</b> The learner's history — the assessment items, the
+     * learning errors, the learning state, the transitions, the outcomes, the dialogue turns
+     * and the asked questions — belongs to the learner rather than to the workspace's
+     * knowledge, and the W45.2 contract keeps it. The snapshot table is not erased either:
+     * it is the recoverable copy of what the replacement destroyed.</p>
+     */
+    private static final List<ErasedTable> ERASED_TABLES = List.of(
+            new ErasedTable("observation_occurrence", "workspace_id = ?", false),
+            new ErasedTable("observation_adjudication", "workspace_id = ?", false),
+            new ErasedTable("observation_disposition", "workspace_id = ?", false),
+            new ErasedTable("evidence", "workspace_id = ?", true),
+            new ErasedTable("revision", "workspace_id = ?", true),
+            new ErasedTable("derivation_premise",
+                    "derivation_id IN (SELECT id FROM derivation WHERE workspace_id = ?)", true),
+            new ErasedTable("derivation", "workspace_id = ?", true),
+            new ErasedTable("contradiction", "workspace_id = ?", true),
+            new ErasedTable("prerequisite", "workspace_id = ?", true),
+            new ErasedTable("representation", "workspace_id = ?", true),
+            new ErasedTable("learning_goal_subtask",
+                    "goal_id IN (SELECT id FROM learning_goal WHERE workspace_id = ?)", true),
+            new ErasedTable("learning_goal", "workspace_id = ?", true),
+            new ErasedTable("claim", "workspace_id = ?", true),
+            new ErasedTable("epistemic_case", "workspace_id = ?", false),
+            new ErasedTable("source", "workspace_id = ?", true),
+            new ErasedTable("concept", "workspace_id = ?", true));
+
+    /**
+     * W47 — one table a workspace replacement erases.
+     *
+     * @param table                    the table
+     * @param where                   the rule that selects the workspace's rows of it
+     * @param carriedByTheTypedSnapshot whether the typed knowledge content already holds the
+     *                                 table's rows, or whether the snapshot has to carry them
+     *                                 separately
+     */
+    private record ErasedTable(String table, String where, boolean carriedByTheTypedSnapshot) {
+    }
+
+    /**
+     * W47 — what a snapshot holds: the typed knowledge content, and the rows of the tables
+     * the typed content does not carry.
+     */
+    private record SnapshotPayload(int version, KnowledgeSnapshot knowledge, List<SnapshotTable> tables) {
+    }
+
+    /** W47 — the rows of one table, captured verbatim. */
+    private record SnapshotTable(String table, List<Map<String, Object>> rows) {
+    }
 
     /**
      * W45.1 — how long SQLite waits for a writer that arrives while another writer holds
@@ -1306,7 +1389,8 @@ public final class KnowledgeStore implements AutoCloseable {
      *         nothing
      */
     public synchronized WorkspaceSnapshot restoreWorkspaceSnapshot(String snapshotId, String createdAt) {
-        KnowledgeSnapshot content = snapshotContent(snapshotId);
+        SnapshotPayload payload = snapshotPayload(snapshotId);
+        KnowledgeSnapshot content = payload.knowledge();
         validate(content);
         try {
             connection.setAutoCommit(false);
@@ -1319,6 +1403,7 @@ public final class KnowledgeStore implements AutoCloseable {
                 }
                 deleteWorkspace(content.workspaceId());
                 insertWorkspace(content);
+                insertObservationTables(payload.tables());
                 connection.commit();
                 return taken;
             } catch (SQLException | RuntimeException e) {
@@ -1400,27 +1485,78 @@ public final class KnowledgeStore implements AutoCloseable {
      * @param workspaceId the workspace
      * @return true when the workspace holds nothing
      */
+    /**
+     * W47 — whether the workspace holds nothing that a replacement would erase.
+     *
+     * <p>The question is asked of {@link #ERASED_TABLES}, the very set the deletion uses.
+     * Before this wave the check counted only the ten knowledge tables, so a workspace that
+     * held an epistemic case and nothing else counted as empty: the replacement would then
+     * have erased the case and its history WITHOUT asking, because the caller was told the
+     * workspace was empty. A refusal that depends on a second list of tables is a refusal
+     * that can be wrong, and this one was wrong in the direction of destroying history.</p>
+     */
     public boolean isWorkspaceEmpty(String workspaceId) {
-        try (PreparedStatement ps = connection.prepareStatement(
-                "SELECT (SELECT count(*) FROM concept WHERE workspace_id = ?) "
-                        + "+ (SELECT count(*) FROM source WHERE workspace_id = ?) "
-                        + "+ (SELECT count(*) FROM claim WHERE workspace_id = ?) "
-                        + "+ (SELECT count(*) FROM evidence WHERE workspace_id = ?) "
-                        + "+ (SELECT count(*) FROM representation WHERE workspace_id = ?) "
-                        + "+ (SELECT count(*) FROM prerequisite WHERE workspace_id = ?) "
-                        + "+ (SELECT count(*) FROM revision WHERE workspace_id = ?) "
-                        + "+ (SELECT count(*) FROM derivation WHERE workspace_id = ?) "
-                        + "+ (SELECT count(*) FROM contradiction WHERE workspace_id = ?) "
-                        + "+ (SELECT count(*) FROM learning_goal WHERE workspace_id = ?)")) {
-            for (int i = 1; i <= WORKSPACE_CONTENT_TABLES; i++) {
-                ps.setString(i, workspaceId);
+        for (ErasedTable table : ERASED_TABLES) {
+            if (countRows(table, workspaceId) > 0) {
+                return false;
             }
+        }
+        return true;
+    }
+
+    /** W47 — how many rows of a table the erasure would remove. */
+    private int countRows(ErasedTable table, String workspaceId) {
+        try (PreparedStatement ps = connection.prepareStatement(
+                "SELECT count(*) FROM " + table.table() + " WHERE " + table.where())) {
+            ps.setString(1, workspaceId);
             try (ResultSet rs = ps.executeQuery()) {
-                return rs.next() && rs.getInt(1) == 0;
+                return rs.next() ? rs.getInt(1) : 0;
             }
         } catch (SQLException e) {
-            throw new IllegalStateException("failed to read the content of " + workspaceId, e);
+            throw new IllegalStateException("failed to count the rows of " + table.table(), e);
         }
+    }
+
+    /**
+     * W47 — what a replacement of this workspace would erase.
+     *
+     * <p><b>Nothing is written.</b> The preview counts the rows the erasure would remove
+     * and lists the epistemic cases that would go with them, and it writes nothing: no row,
+     * no snapshot, no revision, no counter. A caller that asks and then decides not to
+     * replace has changed nothing at all.</p>
+     *
+     * <p><b>The counts and the deletion read the same declaration.</b> The preview is
+     * therefore a truthful account of the operation, and not a second opinion about it.</p>
+     *
+     * @param workspaceId the workspace
+     * @return what the replacement would erase
+     */
+    public synchronized ReplacementPreview previewWorkspaceReplacement(String workspaceId) {
+        Map<String, Integer> counts = new LinkedHashMap<>();
+        int total = 0;
+        for (ErasedTable table : ERASED_TABLES) {
+            int count = countRows(table, workspaceId);
+            counts.put(table.table(), count);
+            total += count;
+        }
+        return new ReplacementPreview(workspaceId, total > 0, counts, caseIds(workspaceId), total);
+    }
+
+    /** W47 — the epistemic cases a replacement of this workspace would erase. */
+    private List<String> caseIds(String workspaceId) {
+        List<String> ids = new ArrayList<>();
+        try (PreparedStatement ps = connection.prepareStatement(
+                "SELECT id FROM epistemic_case WHERE workspace_id = ? ORDER BY observed_at, id")) {
+            ps.setString(1, workspaceId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    ids.add(rs.getString(1));
+                }
+            }
+        } catch (SQLException e) {
+            throw new IllegalStateException("failed to read the cases of " + workspaceId, e);
+        }
+        return ids;
     }
 
     /**
@@ -1449,7 +1585,11 @@ public final class KnowledgeStore implements AutoCloseable {
     private WorkspaceSnapshot writeSnapshot(String workspaceId, WorkspaceSnapshot.Kind kind,
             String createdAt) throws SQLException {
         KnowledgeSnapshot content = exportWorkspace(workspaceId);
-        String payload = writeSnapshotPayload(content);
+        // The rows that the typed content does not carry are captured with the same rules
+        // the erasure uses, in the same transaction, so that the snapshot holds exactly what
+        // the replacement is about to destroy.
+        List<SnapshotTable> tables = captureObservationTables(workspaceId);
+        String payload = writeSnapshotPayload(content, tables);
         String id = nextSnapshotId(workspaceId);
         try (PreparedStatement ps = connection.prepareStatement(
                 "INSERT INTO workspace_snapshot(id, workspace_id, created_at, kind, payload) "
@@ -1488,17 +1628,32 @@ public final class KnowledgeStore implements AutoCloseable {
     /** W45.2 — what a snapshot holds, counted from its own content. */
     private static WorkspaceSnapshot describeSnapshot(String id, String workspaceId, String createdAt,
             WorkspaceSnapshot.Kind kind, String payload) {
-        KnowledgeSnapshot content = readSnapshotPayload(payload);
+        SnapshotPayload decoded = readSnapshotPayload(payload);
+        List<SnapshotTable> tables = decoded.tables();
+        KnowledgeSnapshot content = decoded.knowledge();
         return new WorkspaceSnapshot(id, workspaceId, createdAt, kind,
                 content.concepts().size(), content.claims().size(), content.sources().size(),
                 content.evidence().size(), content.representations().size(),
                 content.revisions().size(), content.contradictions().size(),
                 content.derivations().size(), content.prerequisites().size(),
-                content.goals().size());
+                content.goals().size(),
+                countRows(tables, "epistemic_case"), countRows(tables, "observation_occurrence"),
+                countRows(tables, "observation_disposition"),
+                countRows(tables, "observation_adjudication"));
     }
 
-    /** W45.2 — the content of a snapshot, for a restore. */
-    private KnowledgeSnapshot snapshotContent(String snapshotId) {
+    /** W47 — how many rows a captured table holds. */
+    private static int countRows(List<SnapshotTable> tables, String table) {
+        for (SnapshotTable captured : tables) {
+            if (captured.table().equals(table)) {
+                return captured.rows().size();
+            }
+        }
+        return 0;
+    }
+
+    /** W47 — the whole payload of a snapshot, for a restore. */
+    private SnapshotPayload snapshotPayload(String snapshotId) {
         try (PreparedStatement ps = connection.prepareStatement(
                 "SELECT payload FROM workspace_snapshot WHERE id = ?")) {
             ps.setString(1, snapshotId);
@@ -1513,52 +1668,172 @@ public final class KnowledgeStore implements AutoCloseable {
         throw new IllegalArgumentException("there is no snapshot with the id " + snapshotId);
     }
 
-    /** W45.2 — the serialised form of a workspace's content. */
-    private static String writeSnapshotPayload(KnowledgeSnapshot content) {
+    /**
+     * W47 — the serialised form of a workspace's content.
+     *
+     * <p>The payload names its version, so that a reader can tell a version 1 payload — the
+     * bare knowledge content, which every snapshot before this wave holds — from a version 2
+     * payload, which also holds the observation rows.</p>
+     */
+    private static String writeSnapshotPayload(KnowledgeSnapshot content, List<SnapshotTable> tables) {
         try {
-            return SNAPSHOT_JSON.writeValueAsString(content);
+            return SNAPSHOT_JSON.writeValueAsString(
+                    new SnapshotPayload(SNAPSHOT_PAYLOAD_VERSION, content, tables));
         } catch (IOException e) {
             throw new IllegalStateException("failed to serialise the workspace content", e);
         }
     }
 
-    /** W45.2 — the content a snapshot holds. */
-    private static KnowledgeSnapshot readSnapshotPayload(String payload) {
+    /**
+     * W47 — the content a snapshot holds.
+     *
+     * <p>A payload that names a version this build does not know is refused: a snapshot is
+     * the only recoverable copy of what a replacement destroyed, and reading it as
+     * something else would restore the wrong thing quietly.</p>
+     */
+    private static SnapshotPayload readSnapshotPayload(String payload) {
         try {
-            return SNAPSHOT_JSON.readValue(payload, KnowledgeSnapshot.class);
+            JsonNode tree = SNAPSHOT_JSON.readTree(payload);
+            if (tree.has("knowledge") && tree.has("version")) {
+                SnapshotPayload decoded = SNAPSHOT_JSON.readValue(payload,
+                        new TypeReference<SnapshotPayload>() {
+                        });
+                if (decoded.version() > SNAPSHOT_PAYLOAD_VERSION) {
+                    throw new IllegalArgumentException("the snapshot was written by a newer "
+                            + "build: its payload version is " + decoded.version()
+                            + " and this build reads up to " + SNAPSHOT_PAYLOAD_VERSION);
+                }
+                return decoded;
+            }
+            // Version 1: the bare knowledge content, without the observation rows.
+            return new SnapshotPayload(1, SNAPSHOT_JSON.readValue(payload, KnowledgeSnapshot.class),
+                    List.of());
         } catch (IOException e) {
             throw new IllegalStateException("failed to deserialise the workspace content", e);
         }
     }
 
+    /**
+     * W47 — erases a workspace, in the order that keeps every reference valid while the rows
+     * go.
+     *
+     * <p>The set is {@link #ERASED_TABLES}, and it is the same set the preview counts and
+     * the same set the emptiness check reads. The two tables that have no workspace of their
+     * own — a premise belongs to its derivation, a subtask belongs to its goal — are in the
+     * list with the rule that selects them, and they are deleted BEFORE the rows they point
+     * at, so that the subquery still finds them.</p>
+     */
     private void deleteWorkspace(String workspaceId) throws SQLException {
-        for (String table : List.of("revision", "prerequisite", "representation", "evidence",
-                "derivation", "contradiction", "learning_goal", "claim", "source", "concept")) {
+        for (ErasedTable table : ERASED_TABLES) {
             try (PreparedStatement ps = connection.prepareStatement(
-                    "DELETE FROM " + table + " WHERE workspace_id = ?")) {
+                    "DELETE FROM " + table.table() + " WHERE " + table.where())) {
                 ps.setString(1, workspaceId);
                 ps.executeUpdate();
             }
-        }
-        // The premise table has no workspace of its own: a premise belongs
-        // to its derivation, so the derivations' premises go with them. The
-        // same holds for a subtask, which belongs to its goal.
-        try (PreparedStatement ps = connection.prepareStatement(
-                "DELETE FROM derivation_premise WHERE derivation_id IN "
-                        + "(SELECT id FROM derivation WHERE workspace_id = ?)")) {
-            ps.setString(1, workspaceId);
-            ps.executeUpdate();
-        }
-        try (PreparedStatement ps = connection.prepareStatement(
-                "DELETE FROM learning_goal_subtask WHERE goal_id IN "
-                        + "(SELECT id FROM learning_goal WHERE workspace_id = ?)")) {
-            ps.setString(1, workspaceId);
-            ps.executeUpdate();
         }
         try (PreparedStatement ps = connection.prepareStatement("DELETE FROM workspace WHERE id = ?")) {
             ps.setString(1, workspaceId);
             ps.executeUpdate();
         }
+    }
+
+    /**
+     * W47 — the rows of the erased tables that the typed knowledge content does not carry.
+     *
+     * <p>The typed content carries the concepts, the sources, the claims, the evidence, the
+     * representations, the prerequisites, the revisions, the derivations, the contradictions
+     * and the goals. The observation tables are not typed content — they are rows of a
+     * database — so they are captured verbatim, table by table, with the very rule that
+     * selects them for deletion.</p>
+     *
+     * @param workspaceId the workspace
+     * @return the captured rows, table by table
+     */
+    private List<SnapshotTable> captureObservationTables(String workspaceId) throws SQLException {
+        List<SnapshotTable> captured = new ArrayList<>();
+        for (ErasedTable table : ERASED_TABLES) {
+            if (table.carriedByTheTypedSnapshot()) {
+                continue;
+            }
+            captured.add(new SnapshotTable(table.table(), readRows(table, workspaceId)));
+        }
+        return captured;
+    }
+
+    /** W47 — the rows of one table that the erasure would remove. */
+    private List<Map<String, Object>> readRows(ErasedTable table, String workspaceId)
+            throws SQLException {
+        List<Map<String, Object>> rows = new ArrayList<>();
+        try (PreparedStatement ps = connection.prepareStatement(
+                "SELECT * FROM " + table.table() + " WHERE " + table.where())) {
+            ps.setString(1, workspaceId);
+            try (ResultSet rs = ps.executeQuery()) {
+                ResultSetMetaData meta = rs.getMetaData();
+                int columns = meta.getColumnCount();
+                while (rs.next()) {
+                    Map<String, Object> row = new LinkedHashMap<>();
+                    for (int column = 1; column <= columns; column++) {
+                        row.put(meta.getColumnLabel(column), rs.getObject(column));
+                    }
+                    rows.add(row);
+                }
+            }
+        }
+        return rows;
+    }
+
+    /**
+     * W47 — puts the captured observation rows back.
+     *
+     * <p>The table name comes from the snapshot's payload, so it is checked against the
+     * tables this store knows how to capture: a payload that names a table the store does
+     * not know is refused rather than executed.</p>
+     */
+    private void insertObservationTables(List<SnapshotTable> tables) throws SQLException {
+        for (SnapshotTable table : tables) {
+            if (!isCapturableTable(table.table())) {
+                throw new IllegalArgumentException("the snapshot names the table "
+                        + table.table() + ", which this store does not capture");
+            }
+            for (Map<String, Object> row : table.rows()) {
+                if (row.isEmpty()) {
+                    continue;
+                }
+                List<String> columns = new ArrayList<>(row.keySet());
+                StringBuilder sql = new StringBuilder("INSERT OR REPLACE INTO ")
+                        .append(table.table()).append(" (");
+                for (int i = 0; i < columns.size(); i++) {
+                    if (i > 0) {
+                        sql.append(", ");
+                    }
+                    sql.append(columns.get(i));
+                }
+                sql.append(") VALUES (");
+                for (int i = 0; i < columns.size(); i++) {
+                    if (i > 0) {
+                        sql.append(", ");
+                    }
+                    sql.append("?");
+                }
+                sql.append(")");
+                try (PreparedStatement ps = connection.prepareStatement(sql.toString())) {
+                    for (int i = 0; i < columns.size(); i++) {
+                        ps.setObject(i + 1, row.get(columns.get(i)));
+                    }
+                    ps.executeUpdate();
+                }
+            }
+        }
+    }
+
+    /** W47 — whether this store knows how to capture the rows of the table. */
+    private static boolean isCapturableTable(String table) {
+        for (ErasedTable erased : ERASED_TABLES) {
+            if (!erased.carriedByTheTypedSnapshot() && erased.table().equals(table)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private void insertWorkspace(KnowledgeSnapshot snapshot) throws SQLException {

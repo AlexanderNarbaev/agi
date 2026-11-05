@@ -13,10 +13,17 @@ package io.matrix.knowledge;
  *
  * <p><b>What a snapshot is not.</b> It is not a backup of the whole database: it holds the
  * content of ONE workspace, and it holds exactly the records that a replacement of that
- * workspace erases. The records a replacement does not erase — the cognitive kernel's cases,
- * their dispositions, their adjudication history, the assessment items, the asked questions —
- * are not in the snapshot, because they are not at risk from a replacement and duplicating
- * them would create a second source of truth for them.</p>
+ * workspace erases. The records a replacement does not erase — the assessment items, the
+ * asked questions, the learner's own history — are not in the snapshot, because they are
+ * not at risk from a replacement and duplicating them would create a second source of truth
+ * for them.</p>
+ *
+ * <p><b>W47 — the cases are in the snapshot now.</b> The owner's decision of 2026-11-05
+ * (OD-025) put the epistemic case, its occurrences, its disposition and its adjudication
+ * history INTO the erasure set: a replacement erases the case together with its history and
+ * its evidence. A snapshot that did not carry them would have left the only recoverable copy
+ * of the case history behind at the moment it was destroyed, so the payload carries them
+ * and the counts below say how many there are.</p>
  *
  * <p><b>Why the counts are here.</b> A snapshot is meant to be INSPECTED before anybody
  * decides to restore it: which workspace, when, what kind of operation took it, and how much
@@ -37,6 +44,10 @@ package io.matrix.knowledge;
  * @param derivationCount    how many derivations it holds
  * @param prerequisiteCount  how many prerequisites it holds
  * @param goalCount          how many goals it holds
+ * @param caseCount          how many epistemic cases it holds
+ * @param occurrenceCount    how many observation occurrences it holds
+ * @param dispositionCount   how many observation dispositions it holds
+ * @param adjudicationCount  how many observation adjudications it holds
  */
 public record WorkspaceSnapshot(
         String id,
@@ -52,7 +63,27 @@ public record WorkspaceSnapshot(
         int contradictionCount,
         int derivationCount,
         int prerequisiteCount,
-        int goalCount) {
+        int goalCount,
+        int caseCount,
+        int occurrenceCount,
+        int dispositionCount,
+        int adjudicationCount) {
+
+    /**
+     * The counts of the knowledge content alone.
+     *
+     * <p>A snapshot taken before the W47 wave holds no case history, so the four counts of
+     * the observation tables are zero. The form is kept so that a reader of the older
+     * shape is not broken by the newer one.</p>
+     */
+    public WorkspaceSnapshot(String id, String workspaceId, String createdAt, Kind kind,
+            int conceptCount, int claimCount, int sourceCount, int evidenceCount,
+            int representationCount, int revisionCount, int contradictionCount,
+            int derivationCount, int prerequisiteCount, int goalCount) {
+        this(id, workspaceId, createdAt, kind, conceptCount, claimCount, sourceCount, evidenceCount,
+                representationCount, revisionCount, contradictionCount, derivationCount,
+                prerequisiteCount, goalCount, 0, 0, 0, 0);
+    }
 
     /** Why the snapshot was taken. */
     public enum Kind {

@@ -149,43 +149,121 @@ public class LearningWorkbenchResource {
      * asks for it with {@code ?replace=true}, and it leaves a recoverable snapshot of what
      * it replaced — the snapshot's id is in the response.</p>
      *
+     * <p><b>W47 — two ways to consent, and a preview.</b> The consent can be given as the
+     * query parameter {@code ?replace=true} or as the body field {@code replaceExisting:
+     * true}; the two are the same decision, and either one grants it. A caller can also ask
+     * what a replacement would erase with {@code ?dryRun=true}: the answer is the count of
+     * every table the replacement removes and the identifiers of the epistemic cases that
+     * would go with them, and nothing is written. A dry run and a consent are mutually
+     * exclusive — a request that asks for both is refused, because a caller that means
+     * both has not said which of the two it means.</p>
+     *
      * @param workspaceId the workspace
-     * @param replace     whether the caller explicitly asks to replace a workspace that holds
-     *                    something
-     * @return the loaded counts, and the id of the snapshot of what was replaced
+     * @param replace     whether the caller explicitly asks, as a query parameter, to replace
+     *                    a workspace that holds something
+     * @param dryRun      whether the caller asks what a replacement would erase, without
+     *                    replacing anything
+     * @param body        the request body; it may hold {@code replaceExisting: true} as the
+     *                    second way to consent
+     * @return the loaded counts, and the id of the snapshot of what was replaced; or the
+     *         preview, when the caller asked for one
      */
     @POST
     @Path("/workspaces/{id}/load")
+    @Consumes({MediaType.APPLICATION_JSON, MediaType.WILDCARD})
     public Response load(@PathParam("id") String workspaceId,
-                         @QueryParam("replace") @DefaultValue("false") boolean replace) {
+                         @QueryParam("replace") @DefaultValue("false") boolean replace,
+                         @QueryParam("dryRun") @DefaultValue("false") boolean dryRun,
+                         Map<String, Object> body) {
         if (!KnowledgeWorkbench.DEFAULT_WORKSPACE.equals(workspaceId)
                 && !KnowledgeWorkbench.LOGIC_WORKSPACE.equals(workspaceId)) {
             return Response.status(Response.Status.NOT_FOUND)
                     .entity(Map.of("error", "no bundled package for workspace " + workspaceId))
                     .build();
         }
+        Boolean replaceExisting;
+        try {
+            replaceExisting = readReplaceExisting(body);
+        } catch (IllegalArgumentException invalid) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity(Map.of("error", invalid.getMessage(), "workspace", workspaceId))
+                    .build();
+        }
+        boolean consent = replace || Boolean.TRUE.equals(replaceExisting);
+        if (dryRun && consent) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity(Map.of("error",
+                            "the dry run and the replacement are mutually exclusive: a dry run "
+                                    + "changes nothing and a replacement destroys the workspace",
+                            "workspace", workspaceId))
+                    .build();
+        }
+        if (dryRun) {
+            return preview(workspaceId);
+        }
         WorkspaceLoad load;
         try {
-            load = workbench.loadBundledPackage(workspaceId, replace);
+            load = workbench.loadBundledPackage(workspaceId, consent);
         } catch (WorkspaceReplacementRefused refused) {
-            Map<String, Object> body = new LinkedHashMap<>();
-            body.put("error", refused.getMessage());
-            body.put("workspace", workspaceId);
-            body.put("replaceParameter", "replace");
-            body.put("refused", true);
-            return Response.status(Response.Status.CONFLICT).entity(body).build();
+            Map<String, Object> refused_ = new LinkedHashMap<>();
+            refused_.put("error", refused.getMessage());
+            refused_.put("workspace", workspaceId);
+            refused_.put("replaceParameter", "replace");
+            refused_.put("refused", true);
+            return Response.status(Response.Status.CONFLICT).entity(refused_).build();
         }
+        Map<String, Object> loaded = new LinkedHashMap<>();
+        loaded.put("workspace", load.loaded().workspaceId());
+        loaded.put("concepts", load.loaded().concepts().size());
+        loaded.put("claims", load.loaded().claims().size());
+        loaded.put("sources", load.loaded().sources().size());
+        loaded.put("evidence", load.loaded().evidence().size());
+        loaded.put("representations", load.loaded().representations().size());
+        loaded.put("revisions", load.loaded().revisions().size());
+        loaded.put("derivations", load.loaded().derivations().size());
+        loaded.put("replaced", load.replaced());
+        loaded.put("snapshotId", load.snapshot() == null ? null : load.snapshot().id());
+        return Response.ok(loaded).build();
+    }
+
+    /**
+     * W47 — the consent the request body carries.
+     *
+     * <p>The body may hold {@code replaceExisting: true}. A value that is not a boolean is
+     * refused rather than guessed at: a consent that is read loosely is not a consent.</p>
+     */
+    @SuppressWarnings("unchecked")
+    private static Boolean readReplaceExisting(Map<String, Object> body) {
+        if (body == null || body.isEmpty()) {
+            return null;
+        }
+        Object value = body.get("replaceExisting");
+        if (value == null) {
+            return null;
+        }
+        if (value instanceof Boolean flag) {
+            return flag;
+        }
+        throw new IllegalArgumentException("the body field replaceExisting must be a boolean, "
+                + "and it is a " + value.getClass().getSimpleName());
+    }
+
+    /**
+     * W47 — what a replacement of the workspace would erase.
+     *
+     * <p>The answer comes from the same declaration the deletion uses, so it is the
+     * operation's own account of itself and not an estimate of it.</p>
+     */
+    private Response preview(String workspaceId) {
+        ReplacementPreview preview = workbench.previewWorkspaceReplacement(workspaceId);
         Map<String, Object> body = new LinkedHashMap<>();
-        body.put("workspace", load.loaded().workspaceId());
-        body.put("concepts", load.loaded().concepts().size());
-        body.put("claims", load.loaded().claims().size());
-        body.put("sources", load.loaded().sources().size());
-        body.put("evidence", load.loaded().evidence().size());
-        body.put("representations", load.loaded().representations().size());
-        body.put("revisions", load.loaded().revisions().size());
-        body.put("derivations", load.loaded().derivations().size());
-        body.put("replaced", load.replaced());
-        body.put("snapshotId", load.snapshot() == null ? null : load.snapshot().id());
+        body.put("workspace", preview.workspaceId());
+        body.put("dryRun", true);
+        body.put("wouldReplace", preview.wouldReplace());
+        body.put("totalRecords", preview.totalRecords());
+        body.put("counts", preview.counts());
+        body.put("caseIds", preview.caseIds());
+        body.put("replaceParameter", "replace");
         return Response.ok(body).build();
     }
 

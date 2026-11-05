@@ -114,21 +114,46 @@ public class KnowledgeWorkbench implements AutoCloseable {
     }
 
     /**
-     * Load the bundled package into a workspace, replacing whatever was
-     * there. The import is atomic, so a failed load leaves the previous
-     * content intact.
+     * Load the bundled package into a workspace that holds nothing.
      *
-     * <p><b>W45.2 — this entry point replaces without asking.</b> It is the in-process door
-     * that the pre-W45.2 callers use, and the HTTP surface does not use it: the endpoint
-     * calls {@link #loadBundledPackage(String, boolean)}, which fails closed unless the
-     * caller asks for the replacement. What changed here is that the replacement now leaves
-     * a recoverable snapshot of what it replaced, so the contradiction history is not
-     * silently erased even on this path.</p>
+     * <p><b>W47 — this entry point fails closed too.</b> It used to replace whatever was
+     * there, without asking: the in-process door that the pre-W45.2 callers use, and the
+     * door through which a workspace's history could be destroyed without the caller ever
+     * being asked. The HTTP surface does not use it — the endpoint calls
+     * {@link #loadBundledPackage(String, boolean)}, which asks — and this method now asks
+     * as well: it refuses to replace a workspace that holds something, and the caller that
+     * means the replacement says so with
+     * {@link #loadBundledPackage(String, boolean)}.</p>
+     *
+     * <p><b>Why the callers do not break.</b> The pre-W45.2 callers load a package into a
+     * workspace that holds nothing — that is what a first load is — and the refusal is
+     * about a workspace that holds something. The one caller that loaded the same package
+     * three times was a test that wanted idempotence, and idempotence is not the contract:
+     * the contract is that a replacement is a decision, and a decision is made by the
+     * caller.</p>
+     *
+     * @param workspaceId the workspace to load
+     * @return what was loaded
+     * @throws WorkspaceReplacementRefused when the workspace holds something and the caller
+     *                                    did not ask for the replacement
      */
     public KnowledgeSnapshot loadBundledPackage(String workspaceId) {
         KnowledgeSnapshot snapshot = new KnowledgeImporter().importResource(packFor(workspaceId));
-        store().replaceWorkspace(snapshot, WorkspaceSnapshot.Kind.LOAD, recordedAt());
+        store().importWorkspaceWithSnapshot(snapshot, false, recordedAt());
         return snapshot;
+    }
+
+    /**
+     * W47 — what a replacement of the workspace would erase.
+     *
+     * <p>The preview changes nothing: it counts the rows the replacement would remove and
+     * lists the epistemic cases that would go with them.</p>
+     *
+     * @param workspaceId the workspace
+     * @return what the replacement would erase
+     */
+    public ReplacementPreview previewWorkspaceReplacement(String workspaceId) {
+        return store().previewWorkspaceReplacement(workspaceId);
     }
 
     /**

@@ -117,12 +117,14 @@ class KnowledgeWorkbenchTest {
     }
 
     @Test
-    @DisplayName("a workspace can be reloaded without duplicating anything")
+    @DisplayName("a reload that the caller asked for does not duplicate anything")
     void reloadingIsIdempotent() {
         try (KnowledgeWorkbench workbench = workbench()) {
             workbench.loadBundledPackage("photosynthesis");
-            workbench.loadBundledPackage("photosynthesis");
-            workbench.loadBundledPackage("photosynthesis");
+            // W47: the reload is a DECISION, and a decision is made by the caller. The
+            // in-process door asks too, so a reload that means it says so.
+            workbench.loadBundledPackage("photosynthesis", true);
+            workbench.loadBundledPackage("photosynthesis", true);
 
             KnowledgeSnapshot snapshot = workbench.workspace("photosynthesis");
             assertThat(snapshot.concepts()).hasSize(8);

@@ -169,6 +169,27 @@ class WorkspaceSnapshotMigrationTest {
                     + "prerequisites TEXT NOT NULL, status TEXT NOT NULL, evidence TEXT NOT NULL, note TEXT, "
                     + "PRIMARY KEY (goal_id, subtask_id))");
 
+            // The tables that the v16, v17 and v18 migrations add. A database that claims
+            // to be a v18 one HAS them: the W47 capture and the erasure read them, and a
+            // fixture that leaves them out is not a v18 database — it is a broken one.
+            st.execute("CREATE TABLE epistemic_case (id TEXT PRIMARY KEY, workspace_id TEXT NOT NULL, "
+                    + "concept_id TEXT, statement TEXT NOT NULL, conditions TEXT NOT NULL, "
+                    + "outcome TEXT NOT NULL, source_id TEXT, origin TEXT NOT NULL, "
+                    + "observed_at TEXT NOT NULL)");
+            st.execute("CREATE TABLE observation_disposition (case_id TEXT PRIMARY KEY, "
+                    + "workspace_id TEXT NOT NULL, disposition TEXT NOT NULL, reason TEXT, "
+                    + "contradicted_prediction_id TEXT, resolved_by TEXT, resolved_at TEXT, "
+                    + "model_revision_id TEXT, recorded_at TEXT NOT NULL)");
+            st.execute("CREATE TABLE observation_occurrence (id TEXT PRIMARY KEY, "
+                    + "workspace_id TEXT NOT NULL, case_id TEXT NOT NULL, episode_id TEXT, "
+                    + "signal_id TEXT, source_id TEXT, evidence_id TEXT, observed_at TEXT NOT NULL, "
+                    + "disposition TEXT NOT NULL, reason TEXT)");
+            st.execute("CREATE TABLE observation_adjudication (decision_id TEXT PRIMARY KEY, "
+                    + "workspace_id TEXT NOT NULL, case_id TEXT NOT NULL, previous_disposition TEXT, "
+                    + "disposition TEXT NOT NULL, reason TEXT, contradicted_prediction_id TEXT, "
+                    + "resolved_by TEXT, resolved_at TEXT, model_revision_id TEXT, "
+                    + "recorded_at TEXT NOT NULL, request_id TEXT)");
+
             st.execute("INSERT INTO workspace(id, name, created_at, version) VALUES('"
                     + WORKSPACE + "','Demo workspace','" + INSTANT + "',1)");
             st.execute("INSERT INTO concept(id, workspace_id, name, definition, domain, created_at) "
