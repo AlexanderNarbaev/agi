@@ -2,7 +2,7 @@
 
 **Status:** `CANONICAL` · **This document is a SNAPSHOT, not a history.** It describes the
 project at one commit and is replaced, not appended to, when the state moves.
-**Snapshot of:** `42d5d04fd9a0a2e792662a6c041e97880c869fde` · **Date:** 2026-11-05
+**Snapshot of:** `a2cf34d65ca0007c79fd05fb725bb53c417e2dbd` · **Date:** 2026-11-05
 **Validation:** `scripts/validate-project-state.py --strict` — it checks that the commit below
 is the repository's HEAD, that the wave and the baseline below are the current ones, and that
 the canonical documents it names exist. It reports a lag of one commit as an OBSERVATION, not
@@ -32,12 +32,12 @@ and "served" is the single most important fact about this repository, and it is 
 | | |
 |---|---|
 | the branch | `develop` |
-| the commit | `42d5d04fd9a0a2e792662a6c041e97880c869fde` — the W47 commit; this snapshot is carried by the commit that follows it |
+| the commit | `a2cf34d65ca0007c79fd05fb725bb53c417e2dbd` — the W47 commit; this snapshot is carried by the commit that follows it |
 | the remote | `origin/develop` — **the same commit** (the local and the remote do not diverge) |
 | the release version | **none.** The tags `v1.0.0` and `v16.0.0-mind` exist, but no release process is defined and the `v16.0.0-mind` tag predates three waves of work |
-| the latest completed wave | **W47** — the implementation of the owner's decisions of 2026-11-05 (OD-025…OD-038), in eight commits; before it, **W46** — the consolidation (`233af984`), and **W45.2** — the owner's four architecture decisions (`a6ded233`) |
+| the latest completed wave | **W47** — the implementation of the owner's decisions of 2026-11-05 (OD-025…OD-044), in thirteen commits; before it, **W46** — the consolidation (`233af984`), and **W45.2** — the owner's four architecture decisions (`a6ded233`) |
 | the previous waves | W45.1 (`509d23ba`) — the crash consistency; W45.0 (`eae6003f`) — the cognitive kernel integrity; RECON-W44.0 (`ae6c017b`) — the bytecode archaeology |
-| the active wave | **W47** — complete and committed. The eight tasks of the W46 directive (TASK-W46-16…TASK-W46-22, TASK-W46-9) are implemented, and the three tasks the W47 questionnaire created (TASK-W46-23…TASK-W46-25) are implemented with them. The report is `docs-v2/engineering/W47-STATUS.md` |
+| the active wave | **W47** — complete and committed. The eight tasks of the W46 directive (TASK-W46-16…TASK-W46-22, TASK-W46-9) are implemented, the three tasks the W47 questionnaire created (TASK-W46-23…TASK-W46-25) are implemented with them, and the six answers of the end-of-wave questionnaire (OD-039…OD-044) are recorded — two of them implemented in W47, four of them the first tasks of W48. The report is `docs-v2/engineering/W47-STATUS.md` |
 | the modules | **14** included in `settings.gradle`, 3 commented out, 2 outside Gradle, 1 stray orphan file |
 | the serving entry points | **2** applications — the Quarkus app on **9091** (210 routes) and the brain runtime's JDK server on **8765** (28 routes) |
 | the CLI entry points | **79** |
