@@ -88,6 +88,24 @@ class AutonomyEngineTest {
     }
 
     @Test
+    void theCuriosityDriveIsPaidForAndNotRefusedByTheBudget() {
+        // W47 (OD-044): the envelope of the curiosity impulse is the COST of
+        // that impulse (100). With the envelope of 50 the scheduler refused
+        // every fire — cost > envelope — so the drive was expressed and
+        // declined on every cycle. A drive that can never be paid for is not a
+        // drive, and the conjugate budget's number is the owner's to set.
+        ImpulseScheduler scheduler = realScheduler();
+        AutonomyEngine engine = new AutonomyEngine(new RecordingBrain(), scheduler);
+
+        long rejectionsBefore = scheduler.totalRejections();
+        assertThatCode(engine::curiosityCycle).doesNotThrowAnyException();
+
+        assertThat(scheduler.totalRejections())
+                .as("the curiosity drive must not be refused by the budget")
+                .isEqualTo(rejectionsBefore);
+    }
+
+    @Test
     void theIntegrityCycleValidatesAndSurvives() {
         // The integrity cycle fires the drive BEFORE the validation, so with a
         // broken scheduler the validation never happens at all. The brain must

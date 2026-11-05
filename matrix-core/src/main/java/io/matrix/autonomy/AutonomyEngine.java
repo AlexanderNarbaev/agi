@@ -100,7 +100,20 @@ public final class AutonomyEngine {
             String q = questions[(int) (cycleCount.get() % questions.length)];
             BrainCycle.CycleResult r = brain.cycle(q);
             lastReflection.set(r.reply());
-            fire(AutonomyImpulse.CURIOSITY, 50);
+            // W47 (OD-044): the envelope is the COST of the impulse.
+            //
+            // The curiosity impulse costs 100 (ImpulseScheduler.costFor), and the
+            // scheduler refuses a fire whose cost exceeds the envelope. With an
+            // envelope of 50 the drive was therefore refused on EVERY cycle: the
+            // null-scheduler fix made the impulse reach the budget and the
+            // FROZEN gate, but the budget could never pay for it, so the drive
+            // was expressed and declined forever.
+            //
+            // The conjugate budget is the system's resource discipline, so the
+            // number is the owner's: the owner's answer of 2026-11-05 was to
+            // raise the envelope to the cost, and to keep the refusal path for
+            // the drives that SHOULD be refused.
+            fire(AutonomyImpulse.CURIOSITY, 100);
         } catch (Exception e) {
             log.warn("AutonomyEngine: the curiosity cycle failed: {}", e.getMessage());
         }
