@@ -2,7 +2,7 @@
 
 ## Что это
 
-AR-документ: директивы по внутренним драйверам, производящим действие **без внешнего сигнала**. Это «intrinsic motivation» в терминах vision GOALS-REQUIREMENTS §FR-09, согласованная с NFR-10 (DEGRADED-режим). Конкретика — [SPEC-008-autonomy-impulses](../specifications/SPEC-008-autonomy-impulses.md) (placeholder). Существующие нормативы: [SPEC-000-devloop](../specifications/SPEC-000-developmental-loop.md), [DESIGN-07-lifecycle](../designs/DESIGN-07-lifecycle.md), [DESIGN-11-budgeter](../designs/DESIGN-11-budgeter.md), [DESIGN-12-taskcell-fnl](../designs/DESIGN-12-taskcell-fnl.md).
+AR-документ: директивы по внутренним драйверам, производящим действие **без внешнего сигнала**. Это «intrinsic motivation» в терминах vision GOALS-REQUIREMENTS §FR-09, согласованная с NFR-10 (DEGRADED-режим). Конкретика — `SPEC-008-autonomy-impulses` <!-- no-link: no specification of that subject exists; SPEC-008 is the reasoning spec; Q-W46-20 --> (placeholder). Существующие нормативы: [SPEC-000-devloop](../specifications/SPEC-000-developmental-loop.md), [DESIGN-07-lifecycle](../designs/DESIGN-07-lifecycle.md), [DESIGN-11-budgeter](../designs/DESIGN-11-budgeter.md), [DESIGN-12-taskcell-fnl](../designs/DESIGN-12-taskcell-fnl.md).
 
 ## Каноническое запрещение
 
@@ -110,7 +110,7 @@ AR-документ: директивы по внутренним драйвер
 ## Открытые задачи
 
 - H-005 (running): DevLoop сокращает solve-time ≥30% — preliminary positive на `LearnedMinecraftPilot`.
-- H-014 (proposed): VC-оценка предсказывает размер окна Φ-гейта → планирование consolidation.
+- H-014 (proposed): VC-оценка предсказывает размер окна Φ-гейта → планирование consolidation. <!-- no-id: the hypothesis register never declared it (Q-W46-19) -->
 - TLA+ `BRC-Step` — закрытие пробела для impulse-pipeline (next-format-contract, FORMAL-CONTRACTS.md).
 - Семантические constraint-predicate-плагины для AC-3 в импульсах (DESIGN-15, отложено).
 

@@ -1,5 +1,8 @@
 # RELEASE-NOTES — v2 rebuild 
 
+**Status:** `HISTORICAL` — the state it records no longer exists; the successor is named in the canonical registers
+
+
 ## Что пересобрано
 
 ### Новая навигация

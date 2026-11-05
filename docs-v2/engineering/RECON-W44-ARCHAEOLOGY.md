@@ -71,7 +71,7 @@ and `defined-elsewhere`.
 | JMH benchmarks | **22** | types in `src/jmh/java` (20 top-level, 2 nested) |
 | experimental source sets | 7 | types in `src/experimental/java` |
 | generated source sets | 109 | Quarkus-generated code under `src/generated/java` — not hand-written |
-| types in directories Gradle does not build | **19** | `matrix-fpga`, `matrix-micro`, `matrix-ros2`, `matrix-sdk-python`, `matrix-sdk-js`, `matrix-web-ui` — 11 under a `src/matrix` source set and 5 under `src/non-built`; 3 further Java files exist in `matrix-web-ui` and `matrix-micro` outside any `src` tree |
+| types in directories Gradle does not build | **19** | `matrix-fpga`, `matrix-micro`, `matrix-ros2`, `matrix-sdk-python`, `matrix-sdk-js`, `matrix-web-ui` — 11 under a `src/matrix` <!-- no-link: shorthand for the package tree, not a path --> source set and 5 under `src/non-built` <!-- no-link: shorthand for a source tree that is not built, not a path -->; 3 further Java files exist in `matrix-web-ui` and `matrix-micro` outside any `src` tree |
 | Markdown documents | **1140** | excluding `build/`, `node_modules/`, `.venv/` — 1129 before this audit's own 11 documents |
 | Python scripts (first-party) | 59 | the `.venv` alone holds 9547 |
 | C/C++ sources (first-party) | 9 | 7 `.c`, 1 `.cpp`, 1 `.h`; `matrix-web-ui` holds 17 more, `matrix-micro` 6 |

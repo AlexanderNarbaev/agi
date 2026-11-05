@@ -9,7 +9,7 @@
 
 1. Установить GraalVM JDK + `gu install native-image`.
 2. `./gradlew :matrix-core:build -Dquarkus.native.enabled=true -Dnative.native-image=true`.
-3. Артефакт: `matrix-core/build/matrix-core-runner`.
+3. Артефакт: `matrix-core/build/matrix-core-runner` <!-- no-link: a build artefact, not a repository file -->.
 
 ## Метрики / Гейты
 

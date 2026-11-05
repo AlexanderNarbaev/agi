@@ -60,7 +60,7 @@ main                 ← production releases; only merged via PR; protected
 - `feature/<wave-id>-<short-description>` — new functionality
 - `fix/<issue-number>-<short-description>` — bug fixes
 - `chore/<description>` — maintenance (deps, configs)
-- `docs/<description>` — documentation only
+- `docs/<description>` <!-- no-link: a placeholder for the branch name --> — documentation only
 - `release/v<MAJOR>.<MINOR>` — versioned releases
 - `backup-<branch>-<timestamp>` — immutable backup snapshots
 

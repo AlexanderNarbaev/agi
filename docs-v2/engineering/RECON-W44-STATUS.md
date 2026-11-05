@@ -186,7 +186,7 @@ names the measurement that motivates it. The full agenda with the experiments is
 
 | # | Proposal | Motivated by |
 |---|---|---|
-| 1 | Write `scripts/w44-cognitive-journey.sh` — the real `kill -9` and restart, in the shape of the W43 journey | criterion 17 is only partially met |
+| 1 | Write `scripts/w44-cognitive-journey.sh` <!-- no-link: the script was never written; the journey harness is scripts/w45-cognitive-recovery-journey.sh --> — the real `kill -9` and restart, in the shape of the W43 journey | criterion 17 is only partially met |
 | 2 | Measure how close the deterministic selector is to the best achievable choice, and publish the gap | the selector is a baseline, not a policy (§2 of the benchmark) |
 | 3 | Amortise a preprocessing cost in the selection, or state the break-even in the decision | the index/scan measurement (§2.1) |
 | 4 | Cap the number of simultaneously maintained hypotheses and measure the effect of the cap | the hypothesis set is currently unbounded |

@@ -10,14 +10,14 @@
 For each research iteration:
 
 1. **Pick a domain** (queue below — never pick two in the same iteration).
-2. **Write DESIGN note** at `docs-v2/designs/DESIGN-NN-<slug>.md` with:
+2. **Write DESIGN note** at `docs-v2/designs/DESIGN-NN-<slug>.md` <!-- no-link: a pattern, not a path --> with:
    - Algorithmic core (1 paragraph)
    - Why it might help MATRIX (link to W1..W10 gaps)
    - Implementation sketch (≤30 lines pseudo-code)
 3. **Prototype** in `matrix-core/src/main/java/io/matrix/experimental/`
    behind `-Pexperimental=true` Gradle property.
 4. **Benchmark** vs incumbent on the fixed eval battery
-   (`docs-v2/research/MATRIX-EVAL-BATTERY.md`).
+   (`docs-v2/research/MATRIX-EVAL-BATTERY.md` <!-- no-link: the file was never created -->).
 5. **Promote or reject** with measured numbers in the design note.
 6. **Record failures** in `docs-v2/archive/failures.md` (do not delete).
 7. **If promoted**: integrate into MindCycle behind capability levels

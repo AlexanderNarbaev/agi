@@ -2,7 +2,7 @@
 
 ## Что это
 
-AR-документ: кросс-секционные директивы, **как** MATRIX организован в виде brain-like контура. Это не спека и не дизайн — конкретика уходит в [SPEC-004-perception](../specifications/SPEC-004-perception.md), [SPEC-005-deliberation](../specifications/SPEC-005-deliberation.md), [SPEC-006-action](../specifications/SPEC-006-action.md), [SPEC-007-memory-hierarchy](../specifications/SPEC-007-memory-hierarchy.md), [SPEC-008-autonomy-impulses](../specifications/SPEC-008-autonomy-impulses.md), [SPEC-009-decentralized-digests](../specifications/SPEC-009-decentralized-digests.md). Настоящий AR фиксирует **скелет** и инварианты стыков; ничего не добавляет сверх существующего OVERVIEW и DESIGN-03.
+AR-документ: кросс-секционные директивы, **как** MATRIX организован в виде brain-like контура. Это не спека и не дизайн — конкретика уходит в [SPEC-004-perception](../specifications/SPEC-004-perception.md), [SPEC-005-deliberation](../specifications/SPEC-006-consciousness-deliberation.md), [SPEC-006-action](../specifications/SPEC-005-action.md), [SPEC-007-memory-hierarchy](../specifications/SPEC-011-memory-hierarchy.md), `SPEC-008-autonomy-impulses` <!-- no-link: no specification of that subject exists; SPEC-008 is the reasoning spec; Q-W46-20 -->, `SPEC-009-decentralized-digests` <!-- no-link: no specification of that subject exists; SPEC-009 is the mediator spec; Q-W46-20 -->. Настоящий AR фиксирует **скелет** и инварианты стыков; ничего не добавляет сверх существующего OVERVIEW и DESIGN-03.
 
 ## Анатомия (высокий уровень)
 
@@ -113,7 +113,7 @@ AR-документ: кросс-секционные директивы, **ка�
 
 - Никаких «AGI», «общий интеллект», «самостоятельное мышление» (CONSTITUTION VI).
 - Никаких абсолютных гарантий безопасности — только измеримые инварианты.
-- Никаких обещаний сроков на M5+/subconscious, federated digests — preregistered гипотезы H-011, H-016 и др.
+- Никаких обещаний сроков на M5+/subconscious, federated digests — preregistered гипотезы H-011, H-016 и др. <!-- no-id: the hypothesis register never declared it (Q-W46-19) -->
 
 ## Куда расти
 

@@ -2,7 +2,7 @@
 
 ## Setup
 - Python HTTP server exposing OpenAI-compatible `/v1/chat/completions`
-- Loads a HuggingFace model from `models/external/<name>/`
+- Loads a HuggingFace model from `models/external/<name>/` <!-- no-link: a placeholder for a model directory -->
 - Two modes: classification (DistilBERT SST-2) or causal LM (GPT-2)
 - Force-loads the correct class per model name to avoid the
   saved-checkpoint quirk (the download script persists a

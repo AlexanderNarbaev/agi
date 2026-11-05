@@ -3,7 +3,7 @@
 
 ## Что
 
-Расширение текущего TsetlinTrainer под будущие контролируемые эксперименты (H-016): полные цепи Ханселя, multi-label, weighted-счётчики с Γ(t)-tempered шумом.
+Расширение текущего TsetlinTrainer под будущие контролируемые эксперименты (H-016): полные цепи Ханселя, multi-label, weighted-счётчики с Γ(t)-tempered шумом. <!-- no-id: the hypothesis register never declared it (Q-W46-19) -->
 
 ## Цели (draft)
 

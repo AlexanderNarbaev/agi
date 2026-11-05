@@ -49,6 +49,21 @@ class CanonicalEntryPointTest {
     }
 
     @Test
+    @DisplayName("a specialist is attributed to the chain that REACHES it, not to its module")
+    void aSpecialistIsAttributedToTheChainThatReachesIt() {
+        // W46.0 CORRECTION. BirBrainCycle lives in matrix-core but the constant pool shows
+        // it is reached from the brain runtime (TrueMindCycle, PersistentMind) and from the
+        // unmounted BrainHttpServer - and from NO chain A route. The declaration records the
+        // chain whose closure reaches the class.
+        assertThat(CanonicalEntryPoint.of(CanonicalEntryPoint.BRAIN_RUNTIME_APPLICATION))
+                .extracting(CanonicalEntryPoint.Declaration::entryPointClass)
+                .contains("io.matrix.brain.BirBrainCycle");
+        assertThat(CanonicalEntryPoint.of(CanonicalEntryPoint.EPISTEMIC_APPLICATION))
+                .extracting(CanonicalEntryPoint.Declaration::entryPointClass)
+                .doesNotContain("io.matrix.brain.BirBrainCycle");
+    }
+
+    @Test
     @DisplayName("the specialist loops are specialists, not serving entry points")
     void theSpecialistLoopsAreSpecialistsNotServingEntryPoints() {
         List<CanonicalEntryPoint.Declaration> specialists =

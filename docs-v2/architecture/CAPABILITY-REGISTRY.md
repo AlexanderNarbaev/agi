@@ -1,5 +1,14 @@
 # Capability registry
 
+
+**Status:** `SUPERSEDED` (2026-11-04) → **`docs-v2/architecture/CAPABILITY-REGISTRY.yml`**.
+This registry's vocabulary is the *provenance of a claim* (`VERIFIED` / `UNSOURCED` /
+`CORRECTED` / `REWORDED` / `REMOVED`), not the state of a capability, and three of its numbers
+were refuted or are stale — the test count, the TLA+ count (it says 9; the repository holds
+15) and the speed-up factor. The successor carries four independent axes: implementation,
+integration, verification and operational status. **This document is kept as the evidence of
+what was claimed on 2026-10-26, and it is not rewritten.**
+
 **Status:** authoritative · 2026-10-26 · RECON-W38.4 (owner directive §20)
 
 Every capability this project states publicly is listed here with the

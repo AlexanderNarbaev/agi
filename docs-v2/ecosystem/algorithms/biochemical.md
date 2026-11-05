@@ -34,7 +34,7 @@ constants tuned to give biologically-plausible dynamics:
 
 ## Implementation
 
-Source: [`matrix-core/src/main/java/io/matrix/brain/modulators/`](https://github.com/AlexanderNarbaev/agi/tree/develop/matrix-core/src/main/java/io/matrix/brain/modulators)
+Source: [`matrix-core/src/main/java/io/matrix/brain/modulators/` <!-- no-link: the package is elsewhere; the modulator code is in matrix-core/src/main/java/io/matrix/brain/ -->](https://github.com/AlexanderNarbaev/agi/tree/develop/matrix-core/src/main/java/io/matrix/brain/modulators)
 
 Key classes:
 - `BiochemicalNetwork` — the 4-ODE system

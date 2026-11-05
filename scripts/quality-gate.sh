@@ -12,6 +12,10 @@
 #   2. MAGIC-2  numeric literals in production Java outside named constants
 #   3. CFG-1    the tuning env file exists and every variable is provenance-tagged
 #   4. FROZEN-1 the five frozen zones have zero diff against the wave baseline
+#   5. DOCS-1   the documentation links and the stable identifiers resolve
+#               (W46.3; the checker is scripts/docs-link-check.py)
+#   6. TEST-1   the test evidence catalogue agrees with the evidence on this
+#               machine (W46.3; scripts/validate-test-catalogue.py)
 #
 # Exit 0 = clean, 1 = violations found. New violations BLOCK; a baseline file records
 # what already exists so this gate is adoptable without a 3000-line cleanup first.
@@ -273,10 +277,64 @@ echo "  MATRIX clean-code gate"
 echo "  baseline ref: $BASELINE_REF"
 echo "=============================================="
 
+# ---------------------------------------------------------------------------
+# DOCS-1: the documentation links and the stable identifiers
+# ---------------------------------------------------------------------------
+#
+# W46.3. The link checker is a separate tool (scripts/docs-link-check.py) because it
+# is useful on its own; the gate calls it so that a broken link blocks the build.
+#
+# The checker's own strict set excludes the archive and the historical waves: they
+# describe the tree as it was, and their broken references are the history. A
+# current document that points at a document that is not there IS a defect, and it
+# fails the gate.
+check_docs_links() {
+    local checker="$REPO_ROOT/scripts/docs-link-check.py"
+    if [ ! -f "$checker" ]; then
+        report DOCS-1 "the link checker is absent: scripts/docs-link-check.py"
+        VIOLATIONS=$((VIOLATIONS + 1))
+        return
+    fi
+    local output
+    if ! output="$(python3 "$checker" --root "$REPO_ROOT" --strict 2>&1)"; then
+        printf '%s\n' "$output" | grep -E "BROKEN_LINK|BROKEN_ANCHOR|MISSING_PATH|UNDEFINED_IDENTIFIER|DUPLICATE_IDENTIFIER" | head -20
+        report DOCS-1 "the documentation links do not resolve"
+        VIOLATIONS=$((VIOLATIONS + 1))
+        return
+    fi
+    report DOCS-1 "the documentation links resolve"
+}
+
+# ---------------------------------------------------------------------------
+# TEST-1: the test evidence catalogue against the evidence on this machine
+# ---------------------------------------------------------------------------
+#
+# The catalogue is the project's claim about its own baseline. A stale claim is
+# worse than no claim, so the gate compares the catalogue with the JUnit XML
+# that the last run left behind.
+check_test_catalogue() {
+    local checker="$REPO_ROOT/scripts/validate-test-catalogue.py"
+    if [ ! -f "$checker" ]; then
+        report TEST-1 "the catalogue validator is absent"
+        VIOLATIONS=$((VIOLATIONS + 1))
+        return
+    fi
+    local output
+    if ! output="$(python3 "$checker" --root "$REPO_ROOT" --strict 2>&1)"; then
+        printf '%s\n' "$output" | grep -E "STALE_COUNT|UNKNOWN_COMMIT|MISSING_" | head -20
+        report TEST-1 "the test catalogue is stale"
+        VIOLATIONS=$((VIOLATIONS + 1))
+        return
+    fi
+    report TEST-1 "the test catalogue agrees with the evidence"
+}
+
 check_shell_magic
 check_java_magic
 check_env_provenance
 check_frozen
+check_docs_links
+check_test_catalogue
 
 echo "----------------------------------------------"
 if [ "$MODE" = "--report" ]; then

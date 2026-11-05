@@ -5,7 +5,7 @@
 ## Перед первым PR
 
 1. Прочитай `CONSTITUTION.md` (инварианты и запреты) и `AGENTS.md` (рабочий протокол).
-2. Найди свою задачу в спеке (`docs/spec/`) или предложи новую через issue.
+2. Найди свою задачу в спеке (`docs/spec/` <!-- no-link: the v1 tree was removed by the migration to docs-v2; the specifications are in docs-v2/specifications/ (Q-W46-21) -->) или предложи новую через issue.
 
 ## Процесс
 

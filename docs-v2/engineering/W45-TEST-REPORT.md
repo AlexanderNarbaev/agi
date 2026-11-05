@@ -8,7 +8,7 @@ Ubuntu 26.04.1 / Linux 7.0.0-42, Ryzen 9 9955HX, 32 threads, 59 GiB.
 
 **The environment note that matters:** GraalVM's tooling is **not** present on this host
 (`native-image`, `gu` and `gu-build` are absent and the JDK is not a GraalVM), and
-`matrix-core/build/native` does not exist — **no native binary has ever been built here.**
+`matrix-core/build/native` <!-- no-link: a build artefact, not a repository file --> does not exist — **no native binary has ever been built here.**
 Every result below is a **JVM** result. No native-image test was executed, and none is
 counted as passing.
 

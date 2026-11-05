@@ -4,6 +4,9 @@
 
 ## H-039…H-050
 
+**Status:** `RESEARCH` — evidence and findings, not a commitment
+
+
 | ID | One-line summary | Methodology sketch | Gate criterion | Prereq |
 |---|---|---|---|---|
 | **H-039** | Curiosity-impulse fires when prediction-error > θ_c в offline replay | Seed-фиксированный replay; варьировать θ_c; измерить precision/recall impulse против ground-truth «surprise»-меток | Precision@top-K ≥0.7 при recall ≥0.5 (synthetic-scope) | [SPEC-007](./../specifications/SPEC-007-subconscious.md) PredictionModel; M1 episode corpus |
@@ -134,9 +137,9 @@ Status: **proposed** → **running** по мере реализации RUN 437-
 
 ## W127+ — New Hypotheses
 
-- **H-097**: Sub-agent research findings will surface concrete next-wave directions
+- **H-097**: Sub-agent research findings will surface concrete next-wave directions <!-- no-id: the register never declared it (Q-W46-19) -->
   *Status*: RUNNING — 3 deep-research agents in flight
-- **H-098**: Hardware-accelerated Φ reduces per-cycle latency below 1ms for N=1024
+- **H-098**: Hardware-accelerated Φ reduces per-cycle latency below 1ms for N=1024 <!-- no-id: the register never declared it (Q-W46-19) -->
   *Status*: PROPOSED — depends on hardware-Φ research findings
 - **H-099**: Real-world EEG input can drive MATRIX cognitive state without retraining
   *Status*: PROPOSED — depends on EEG integration research findings

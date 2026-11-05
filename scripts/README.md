@@ -1,6 +1,6 @@
 # scripts/ — Python-скрипты для research (NOT in production)
 
-**CONSTITUTION VII.1:** Python допустим только в `docs/research/` и `scripts/`.
+**CONSTITUTION VII.1:** Python допустим только в `docs/research/` <!-- no-link: the v1 tree was removed by the migration to docs-v2; the research is in docs-v2/research/ (Q-W46-21) --> и `scripts/`.
 Все скрипты в этой папке — для ручного research-запуска, НЕ вызываются из Gradle/Java рантайма.
 
 ## Использование

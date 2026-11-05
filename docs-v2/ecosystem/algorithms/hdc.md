@@ -38,7 +38,7 @@ the probability that two random vectors have similarity > 0.1 is less than 0.01%
 
 ## Implementation
 
-Source: [`matrix-core/src/main/java/io/matrix/hdc/`](https://github.com/AlexanderNarbaev/agi/tree/develop/matrix-core/src/main/java/io/matrix/hdc)
+Source: [`matrix-core/src/main/java/io/matrix/hdc/` <!-- no-link: the package is elsewhere; the HDC code is in matrix-core/src/main/java/io/matrix/bir/ -->](https://github.com/AlexanderNarbaev/agi/tree/develop/matrix-core/src/main/java/io/matrix/hdc)
 
 Key classes:
 - `HyperVector` — 10,000-bit binary vector with operations

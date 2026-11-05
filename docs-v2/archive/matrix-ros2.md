@@ -1,5 +1,8 @@
 # Archived module: `matrix-ros2`
 
+**Status:** `ARCHIVED` — the state it records no longer exists; the successor is named in the canonical registers
+
+
 **State:** DORMANT — deregistered from `settings.gradle`, contents retained.
 **Deregistered:** TRUE-W0 (`docs-v2/research/TRUE-MIND-AUDIT-2026-09-26.md`, §4).
 **Lifecycle registry:** `docs-v2/architecture/MODULE-LIFECYCLE.md`.

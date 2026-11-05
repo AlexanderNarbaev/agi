@@ -43,7 +43,7 @@
 
 - [Wave Logs](waves/) — Per-wave documentation (W1-W655+)
 - [Failures & Lessons](archive/failures.md) — What didn't work and why
-- [Architecture Decisions](archive/decisions/) — ADRs
+- `Architecture Decisions` <!-- no-link: the decision archive was never created; the decisions live in governance/DECISION-REGISTER.md --> — ADRs
 
 ---
 

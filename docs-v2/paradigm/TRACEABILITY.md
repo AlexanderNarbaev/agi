@@ -186,7 +186,7 @@
 | G5 | ActionGate | (новый) | 4-каскад явный класс + state |
 | G6 | ConsciousTrace | (append-only журнал) | Реализация |
 | G7 | PredictionModel | (новый) | Сон-консолидация |
-| G8 | Qwen → tools/distill/ | весь `api/OnnxChat*`, `bridge/Qwen*`, `bridge/Onnx*` | Перенести в `tools/distill/` |
+| G8 | Qwen → tools/distill/ | весь `api/OnnxChat*`, `bridge/Qwen*`, `bridge/Onnx*` | Перенести в `tools/distill/` <!-- no-link: the v1 tree was removed by the migration to docs-v2 (Q-W46-21) --> |
 | G9 | Pilot #1 GridWorld | новый модуль | simulator + agent + GA |
 | G10 | Pilot #2 Proactive chatbot | telegram bot | text via BRC, без Qwen |
 | G11 | TLA+ BRC-Step | `formal/tla/BRC-Step.tla` | Проверить state transitions |

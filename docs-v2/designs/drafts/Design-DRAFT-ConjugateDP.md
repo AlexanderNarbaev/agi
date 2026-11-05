@@ -7,7 +7,7 @@
 
 ## Цели
 
-- H-021 (EXP-021): превосходство над greedy по ≤3% throughput за 100 поколений × 64 tasks.
+- H-021 (EXP-021): превосходство над greedy по ≤3% throughput за 100 поколений × 64 tasks. <!-- no-id: the hypothesis register never declared it (Q-W46-19) -->
 - Shadow price λ ∈ [λ_lo, λ_hi] монотонно с накопленным объёмом.
 
 ## Блокеры

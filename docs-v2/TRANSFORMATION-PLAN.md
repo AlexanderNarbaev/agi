@@ -1,6 +1,6 @@
 # MATRIX TRANSFORMATION PLAN — От исследовательского проекта к production-ready платформе
 
-**Статус:** proposal · **Version:** v1.0-draft · **Date:** 2026-09-21  
+**Статус:`HISTORICAL` — the state it records no longer exists; the successor is named in the canonical registers · ** proposal · **Version:** v1.0-draft · **Date:** 2026-09-21  
 **Автор:** Deep Research Analysis  
 **На основе:** аудита текущей кодовой базы, документации, и лучших практик GitHub open-source проектов мирового уровня
 
@@ -293,8 +293,8 @@ matrix.dev/
 > Этика — математически вшитый FROZEN-слой.  
 > Одинаковые состояние и вход → одинаковый выход.
 
-[Начать работу →](quickstart/)  
-[Смотреть демо →](examples/demo-chat/)  
+`Начать работу →` <!-- no-link: the quickstart directory was never created; the README carries the quick start -->  
+`Смотреть демо →` <!-- no-link: the example was never created; the README carries the quick start -->  
 [Читать документацию →](architecture/)
 
 ## Почему MATRIX?

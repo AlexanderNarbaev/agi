@@ -1,5 +1,13 @@
 # MATRIX — The cognitive architecture
 
+
+**Status:** `ACTIVE` but **one decision is now closed** · 2026-11-04.
+Line 139 leaves the merging open (*"Merging … is a separate decision with its own ADR"*).
+**The owner's decision of 2026-11-04 settled it: the two chains stay isolated and fail
+closed.** See `docs-v2/engineering/W45.2-CHAIN-BOUNDARY.md` and
+`docs-v2/engineering/ADR-W45.2-01-canonical-entry-point.md`. The document is otherwise
+current — the serving surface and the single SQLite file are as it says.
+
 **Status:** W44 implementation · 2026-11-02
 **Companion documents:** `MATRIX-COGNITIVE-KERNEL.md` · `MATRIX-NEUROMODULATION.md` ·
 `MATRIX-ADAPTIVE-COMPUTATION.md` · `docs-v2/engineering/W44-CAPABILITY-MAP.md`

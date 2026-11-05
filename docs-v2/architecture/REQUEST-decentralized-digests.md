@@ -2,7 +2,7 @@
 
 ## Что это
 
-AR-документ: директивы по топологии «neuron-blocks × near-user × digest-up». Существующая норма — [DESIGN-08-federation](../designs/DESIGN-08-federation.md) (ELSP v1 Ed25519 + ML-DSA v2, `federation/Anonymizer`). Этот AR **расширяет роль** Anonymizer'а с «единичного фильтра исходящих digests» до «границы между локальным контекстом и глобальным пулом знаний». Полная спецификация — [SPEC-009-decentralized-digests](../specifications/SPEC-009-decentralized-digests.md) (placeholder).
+AR-документ: директивы по топологии «neuron-blocks × near-user × digest-up». Существующая норма — [DESIGN-08-federation](../designs/DESIGN-08-federation.md) (ELSP v1 Ed25519 + ML-DSA v2, `federation/Anonymizer`). Этот AR **расширяет роль** Anonymizer'а с «единичного фильтра исходящих digests» до «границы между локальным контекстом и глобальным пулом знаний». Полная спецификация — `SPEC-009-decentralized-digests` <!-- no-link: no specification of that subject exists; SPEC-009 is the mediator spec; Q-W46-20 --> (placeholder).
 
 ## Принцип
 

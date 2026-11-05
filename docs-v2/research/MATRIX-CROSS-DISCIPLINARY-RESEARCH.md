@@ -1,6 +1,6 @@
 # Cross-Disciplinary Research Doctrine (CDRD) — MATRIX
 
-**Status:** v1, зафиксировано 2026-09-11 в рамках cross-disciplinary research wave (W31).
+**Status:`RESEARCH` — evidence and findings, not a commitment · ** v1, зафиксировано 2026-09-11 в рамках cross-disciplinary research wave (W31).
 
 ## 1. Назначение документа
 
@@ -73,11 +73,11 @@ MATRIX «умеет думать». H-102 в частности требует a
 - `docs-v2/research/MATRIX-CROSS-DISCIPLINARY-RESEARCH.md` — этот файл, доктрина
 - `docs-v2/designs/DESIGN-54-...` — HDC+BitNet hybrid, IBM+MSR синтез
 - `docs-v2/designs/DESIGN-55-...` — Russian/Asian cybernetics integration
-- `docs-v2/designs/DESIGN-56-fuzzy-bits.md` — Zadeh fuzzy as continuous relaxation
+- `docs-v2/designs/DESIGN-56-fuzzy-bit-continuous-relaxation.md` — Zadeh fuzzy as continuous relaxation
 - `docs-v2/designs/DESIGN-57-nyaya-4-logic.md` — 4-state classification
-- `docs-v2/designs/DESIGN-58-capability-levels.md` — measurable milestones
+- `docs-v2/designs/DESIGN-58-capability-levels-roadmap.md` — measurable milestones
 - `docs-v2/designs/DESIGN-59-nca-brain.md` — Neural Cellular Automata integration
-- `docs-v2/research/summaries/W31-SYNTHESIS.md` — точка-входа для новых читателей
+- `docs-v2/research/summaries/W31-CROSS-DISCIPLINARY-SYNTHESIS.md` — точка-входа для новых читателей
 - `docs-v2/research/HYPOTHESES-NEW.md` — расширенный список гипотез
 
 ## 5. Когда НЕ запускать дополнительные research-волны

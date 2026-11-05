@@ -11,7 +11,7 @@ Three container definitions existed and **none of them could build**:
 | File | Previous `COPY` / task | Outcome |
 |---|---|---|
 | `Dockerfile` | `matrix-core/build/matrix-core-*-runner.jar` | no such artifact is produced by any supported packaging mode |
-| `Dockerfile.minikube` | `matrix-core/build/matrix-core-1.0.0-runner.jar` | same |
+| `Dockerfile.minikube` | `matrix-core/build/matrix-core-1.0.0-runner.jar` <!-- no-link: a build artefact, not a repository file --> | same |
 | `deploy/docker/Dockerfile.api-gateway` | `:matrix-api-gateway:nativeCompile` | task does not exist — the module applies no GraalVM plugin |
 
 They were also **not covered by CI**: the `docker` job built only

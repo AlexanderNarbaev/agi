@@ -32,7 +32,7 @@ They are untouched by this wave and will stay untouched:
 | `AGENTS.md` | modified | owner |
 | `opencode.json` | modified | owner |
 | `opencode.json.bak` | deleted | owner |
-| `.codex/`, `.opencode/goals/`, `.opencode/opencode-swash.json`, `.opencode/tmp/`, `.veai/` | untracked | owner |
+| `.codex/`, `.opencode/goals/`, `.opencode/opencode-swarm.json` <!-- no-link: the file is .opencode/opencode-swarm.json -->, `.opencode/tmp/`, `.veai/` | untracked | owner |
 
 **Branches.** 20 local branches, 14 remote. The eight MIND branches are
 detailed in `W42-HISTORICAL-BRANCH-RECOVERY.md`; the finding that changes

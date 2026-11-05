@@ -1,3 +1,9 @@
+# SUPERSEDED (2026-11-04, W46.2) — this file is a session snapshot from 2026-08-10 and
+# it is NOT the current state of the project. The canonical current state is
+# docs-v2/governance/PROJECT-STATE.md, which is regenerated, not appended to. The
+# authoritative work log is docs-v2/waves/INDEX.md. This file is kept because it is evidence
+# of how the project recorded its state before the consolidation; it is not updated.
+#
 # GLOBAL WAL — 2026-08-10
 session:
   id: "20260810-130733"

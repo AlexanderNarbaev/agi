@@ -727,7 +727,7 @@ W76 closes the **empirical gap** between MATRIX's algorithmic correlates of cons
 
 The PatternGenerator class is **greenfield, small (~150 lines), and biologically grounded**. The EmpiricalValidationTest runs in <60 seconds and produces a publication-quality results table. Implementation should proceed in two PRs:
 
-1. **PR-1**: PatternGenerator + its unit tests (W76 setup).
-2. **PR-2**: W76EmpiricalValidationTest + statistical helpers + results table (W76 execution).
+1. **PR-1**: PatternGenerator + its unit tests (W76 setup). <!-- no-id: a local numbering, not a register identifier -->
+2. **PR-2**: W76EmpiricalValidationTest + statistical helpers + results table (W76 execution). <!-- no-id: a local numbering, not a register identifier -->
 
 After both PRs land, H-082 transitions from "proposed" to "verified" or "falsified" — closing W76 and freeing MATRIX to claim that its integration metrics are **measurement substrates with empirical backing**, in full CONSTITUTION VI compliance.

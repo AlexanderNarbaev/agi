@@ -29,7 +29,7 @@ interdependencies to fix with `--initialize-at-build-time` lists.
 4. **Try `--report-unsupported-elements-at-runtime`** for partial builds.
 
 ## Files
-- runner.jar (uber-jar, WORKS): `matrix-core/build/matrix-core-1.0.0-runner.jar`
+- runner.jar (uber-jar, WORKS): `matrix-core/build/matrix-core-1.0.0-runner.jar` <!-- no-link: a build artefact, not a repository file -->
 - static main fix: `MatrixApplication.main()`
 - build config: `matrix-core/build.gradle` (graalvmNative block)
 

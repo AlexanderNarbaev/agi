@@ -135,9 +135,9 @@ Total: **16 tests**, all should pass after `npm install`.
 This module is part of the broader MATRIX ecosystem transformation
 (W1500 → Production). See:
 
-- [`CONSTITUTION.md`](../../CONSTITUTION.md) — hard constraints
-- [`BRANCHING-STRATEGY.md`](../../BRANCHING-STRATEGY.md) — branching model
-- [`docs-v2/architecture/ECOSYSTEM-LAYOUT.md`](../../docs-v2/architecture/ECOSYSTEM-LAYOUT.md) — C4 diagram
+- [`CONSTITUTION.md`](../CONSTITUTION.md) — hard constraints
+- [`BRANCHING-STRATEGY.md`](../BRANCHING-STRATEGY.md) — branching model
+- [`docs-v2/architecture/ECOSYSTEM-LAYOUT.md`](../docs-v2/architecture/ECOSYSTEM-LAYOUT.md) — C4 diagram
 
 ---
 

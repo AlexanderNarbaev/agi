@@ -19,7 +19,7 @@
 | Категория | Задача | Статус | Куда ведёт |
 |---|---|---|---|
 | **Алгоритмическая полнота** | Полные цепи Ханселя (DESIGN-09) с оптимальной границей C(k,⌊k/2⌋) | proposed (H-016) | research wave |
-| **Алгоритмическая полнота** | GUHA-генерация правил покрывает полное малого арного пространства | proposed (H-018) | EXP-018 |
+| **Алгоритмическая полнота** | GUHA-генерация правил покрывает полное малого арного пространства | proposed (H-018) | EXP-018 | <!-- no-id: the hypothesis register never declared it (Q-W46-19) -->
 | **Алгоритмическая полнота** | ConjugateBudgeter: ТЛА-доказательство оптимальности shadow-price | proposed | `engineering/PLAN.md` next-format-contracts |
 | **Алгоритмическая полнота** | BRC-Step: атомарный preserved-step контракт для `reasoning/BrcChain` | needs-spec | top-priority SDD next session |
 | **Алгоритмическая полнота** | MCTS/LATS: конвергенция к α-Root формально | proposed | next-format-contracts |

@@ -2,7 +2,7 @@
 
 **Status**: v1 · singleton normative
 **Package**: `io.matrix.memory`
-**Related**: [SPEC-003](./SPEC-003-knowledge-topology.md), [DESIGN-08](../designs/DESIGN-08-hierarchical-memory.md)
+**Related**: [SPEC-003](./SPEC-003-knowledge-topology.md), [DESIGN-08](../designs/DESIGN-05-memory.md)
 
 ## Что
 
@@ -115,11 +115,11 @@ DriftSignal {
 
 - `agent/LongHorizonPlanner` использует `HierarchicalMemory` для
   retrieval по плановому контексту.
-- `brain/BrainPipeline` ([DESIGN-13](../designs/DESIGN-13-brain-pipeline.md))
+- `brain/BrainPipeline` ([DESIGN-13](../designs/DESIGN-03-pipeline.md))
   использует `L2_MODULE` для world-model.
 - `OpenAIChatResource` ([api/OpenAIChatResource](../../matrix-core/src/main/java/io/matrix/api/OpenAIChatResource.java))
   использует `longTermMemory` (L2 + L3) для retrieval.
-- `lifecycle/ConsolidationCycle` ([DESIGN-07](../designs/DESIGN-07-consolidation-cycle.md))
+- `lifecycle/ConsolidationCycle` ([DESIGN-07](../designs/DESIGN-07-lifecycle.md))
   выполняет promotion/demotion как часть drain-summary.
 
 ## Тесты

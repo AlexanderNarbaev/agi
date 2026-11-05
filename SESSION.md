@@ -1,6 +1,13 @@
+<!-- W46.2: this file is HISTORICAL. It is the append-only session journal of the project
+     as it stood up to the W43 era. Its body describes a state that the W44, W45.0, W45.1 and
+     W45.2 waves rewrote, and it is NOT rewritten here: a historical record that is edited to
+     look current stops being evidence. The CANONICAL current state is
+     docs-v2/governance/PROJECT-STATE.md; the wave records are in docs-v2/engineering/ and
+     docs-v2/waves/; the work log is docs-v2/waves/INDEX.md. -->
+
 # SESSION
 
-**Status:** 🎉 TRUE-MIND REALIZATION COMPLETE — v16.0.0-mind RELEASED
+**Status:`HISTORICAL` — the state it records no longer exists; the successor is named in the canonical registers · ** 🎉 TRUE-MIND REALIZATION COMPLETE — v16.0.0-mind RELEASED
 
 **Date:** 2026-09-26
 **Branch tips:** `main` @ `1399cb53` · `release/v1.0` @ `98fa34bb` · `develop` @ `8cf8636b`

@@ -1,5 +1,13 @@
 # RISK-REGISTER — operational and cognitive risks, revalidated
 
+
+**Status:** `HISTORICAL` (2026-11-04) → the canonical register is
+**`docs-v2/governance/RISK-REGISTER.md`**. This document revalidated the operational and
+cognitive risks against the tree on 2026-10-30 (RECON-W39). The canonical register carries
+those records forward, adds the W46.0 audit's findings, and states the **actual exposure**
+separately from the implementation status. **This document is kept as the record of that
+revalidation and is not rewritten.**
+
 **RECON-W39** · 2026-10-30 · owner directive §12
 
 Every item below was re-examined against the **current tree**, not against the

@@ -526,7 +526,7 @@ admit several 4-subsets, so no unique identification is possible.
 | **GPU** | NVIDIA GeForce RTX 5070 Ti Laptop GPU present | `W44-BENCHMARK.md` header (not exercised by these tests) |
 | **OS** | **Ubuntu 26.04.1 LTS, Linux 7.0.0-42-generic x86_64** | `/etc/os-release`, `uname -srm` on the reconciliation host. `W44-BENCHMARK.md` does **not** name the OS; the host is the same machine by CPU/RAM/GPU identity. `[speculative]` for the *W44 run itself*, established for the reconciliation host |
 | **GraalVM native-image tooling** | **ABSENT** | `command -v native-image` → nothing; `command -v gu` → nothing; `command -v gu-build` → nothing. The JDK in use is **OpenJDK, not GraalVM**, so `-Dquarkus.native.enabled=true` cannot work here |
-| **Native binary** | **never built** | `matrix-core/build/native` does not exist; `matrix-core/build.gradle:521-531` registers `nativeSmokeTest` with `enabled = false` and `dependsOn 'buildNative'` — the ordinary `test` task never produces a native image |
+| **Native binary** | **never built** | `matrix-core/build/native` <!-- no-link: a build artefact, not a repository file --> does not exist; `matrix-core/build.gradle:521-531` registers `nativeSmokeTest` with `enabled = false` and `dependsOn 'buildNative'` — the ordinary `test` task never produces a native image |
 | **Docker** | `/usr/bin/docker` present | `command -v docker`. Irrelevant to the 24 failures: they are missing-binary failures, not missing-Docker failures |
 | **Full-run duration** | **24 minutes** for the `matrix-core` full suite | `RECON-W44-ARCHAEOLOGY.md` §1.1bis (Disclosure) |
 

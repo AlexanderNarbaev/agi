@@ -424,7 +424,7 @@ instrument) from the *pramāṇa* (the means of knowledge).
 
 ## 9. ENGINEERING HYPOTHESIS
 
-> ### H-CK1 — Provenance-gated epistemic layers with an exact, two-axis validity check
+> ### H-CK1 — Provenance-gated epistemic layers with an exact, two-axis validity check <!-- no-id: a local numbering, not a register identifier -->
 >
 > **Mechanism.** MATRIX's claim record gains two orthogonal, separately stored axes —
 > `pramana` ∈ {PRATYAKSHA, SHABDA, ANUMANA, UPAMANA, NONE} and
@@ -475,7 +475,7 @@ instrument) from the *pramāṇa* (the means of knowledge).
   see §11); the gate refuses to run against an unexpected version. *Refutation if* a gate
   decision depends on the database version rather than on the record.
 
-**Scope of the claim.** H-CK1 is a claim about *label discipline and exact decidability of
+**Scope of the claim.** H-CK1 is a claim about *label discipline and exact decidability of <!-- no-id: a local numbering, not a register identifier -->
 validity*, not about the semantic quality of any generated text. It does not claim that the
 inference rules are correct, that the source corpus is good, or that the store's concepts are
 right. It claims only that (i) the store can always say how a record entered and whether its
@@ -497,7 +497,7 @@ Listed to keep the backlog honest; **not** to be started in this wave.
   trusted layer becomes append-only; retracting a claim writes a `supersession` +
   `retraction_justification` row (AGM-style: removal is accompanied by a statement about the
   removal), and the store can replay the belief state at any logical point.
-  *Deferred because* it presupposes H-CK1's labels and contradiction objects; a supersession
+  *Deferred because* it presupposes H-CK1's labels and contradiction objects; a supersession <!-- no-id: a local numbering, not a register identifier -->
   schema written before the labels settle would be rewritten.
 - **B2 — Scope-qualified contradiction (RIPPLE-style partial agreement).** Give every claim an
   `applies_under` scope; two claims whose scopes do not overlap yield `SCOPED_DISAGREEMENT`
@@ -687,7 +687,7 @@ premises false — Church's soundness theorem; Nyāya's *tarka*), and **conflict
 belongs to a scope and a claim-set, not to a pair — Duhem, Quine, Kuhn, Lakatos). PROV-DM
 supplies the storage grammar for the first, and explicitly licenses the n-ary reification that
 the second requires. The one hypothesis this wave can afford to test is therefore not "add
-provenance fields" but **H-CK1: make the two axes orthogonal, put a single gate in front of the
+provenance fields" but **H-CK1: make the two axes orthogonal, put a single gate in front of the <!-- no-id: a local numbering, not a register identifier -->
 trusted layer, decide validity exactly by bounded model enumeration, and represent conflict
 rather than counting it away** — falsifiable by seven in-repo tests (T-A…T-G) that need no LLM,
 no network, and no wall-clock.

@@ -143,7 +143,7 @@
 
 ## 6. Tools Allowed Offline (NOT in runtime)
 
-These are ALLOWED in `tools/distill/` and similar packages,
+These are ALLOWED in `tools/distill/` <!-- no-link: the v1 tree was removed by the migration to docs-v2 (Q-W46-21) --> and similar packages,
 but MUST NOT be referenced from runtime decision paths:
 
 - ONNX Runtime (`onnxruntime-*`)

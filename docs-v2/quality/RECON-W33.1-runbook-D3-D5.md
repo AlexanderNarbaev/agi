@@ -1,5 +1,8 @@
 # RECON-W33.1 Runbook — D3 (gitverse master) and D5 (disk)
 
+**Status:** `HISTORICAL` — the state it records no longer exists; the successor is named in the canonical registers
+
+
 Authoritative record of the two operator cleanup directives, the exact commands, what each
 actually did, and — where a directive rested on a premise the evidence contradicted — what
 was NOT done and why.

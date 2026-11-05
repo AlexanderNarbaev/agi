@@ -66,7 +66,7 @@ impulse → FrozenEthicalFNL ─┐
 - Юнит-тесты `PlanRunnerTest`, `PlanPreprocessorTest`: satisfied / failure modes (юнит + jqwik invariant preservation).
 - AC-3: fail-fast на пустом домене (`IllegalStateException("unsatisfiable_preconditions at step=name")`).
 - Атомарный своп: tampered `domainHash` → `IllegalArgumentException` (jqwik).
-- Полный EXP-014 (BDD-бисимуляция версий) — после H-017.
+- Полный EXP-014 (BDD-бисимуляция версий) — после H-017. <!-- no-id: the hypothesis register never declared it (Q-W46-19) -->
 
 ## Реализация в коде
 

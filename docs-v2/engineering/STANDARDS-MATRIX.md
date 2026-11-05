@@ -1,5 +1,16 @@
 # STANDARDS-MATRIX
 
+
+**Status:** `ACTIVE` with three known errors · 2026-11-04.
+(a) The Java version is cited to `gradle.properties`, which carries **no version line** — it
+lives in `build.gradle:9-10` and `matrix-core/build.gradle:30-31,377`.
+(b) The ADR table lists five of the eight ADRs; `ADR-W43-01`, `ADR-W44-01` and
+`ADR-W45.2-01` live in `docs-v2/engineering/`, and `ADR-2026-10-26-002` is marked *Accepted*
+although W45.2 superseded its scope. The canonical list is
+`docs-v2/governance/DECISION-REGISTER.md`.
+(c) **Nothing in this matrix is enforced.** The gates live in a CI job named *«Quality gates
+(can fail)»*, so a gate does not block a merge — this document does not say so.
+
 Версии зависимостей и причины пропусков. Проверено онлайн (maven-metadata).
 
 | Компонент | Текущее | Источник | Решение |

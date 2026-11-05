@@ -48,8 +48,8 @@
 
 ## New Hypotheses for W126+
 
-- **H-097**: Sub-agent research findings will surface concrete next-wave directions
-- **H-098**: Hardware-accelerated Φ reduces per-cycle latency below 1ms for N=1024
+- **H-097**: Sub-agent research findings will surface concrete next-wave directions <!-- no-id: the register never declared it (Q-W46-19) -->
+- **H-098**: Hardware-accelerated Φ reduces per-cycle latency below 1ms for N=1024 <!-- no-id: the register never declared it (Q-W46-19) -->
 - **H-099**: Real-world EEG input can drive MATRIX cognitive state without
   retraining (transfer learning)
 

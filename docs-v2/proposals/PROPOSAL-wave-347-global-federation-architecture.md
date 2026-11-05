@@ -599,7 +599,7 @@ message NeuronBlockType {
 ```
 docs-v2/proposals/PROPOSAL-wave-347-global-federation-architecture.md (этот файл)
 docs-v2/designs/DESIGN-65-liquid-federation.md
-docs-v2/designs/DESIGN-66-biochemical-modulation.md
+docs-v2/designs/DESIGN-66-biochemical-modulation.md <!-- no-id: the design was never written under this number (Q-W46-20) -->
 docs-v2/designs/DESIGN-67-dynamic-registries.md
 docs-v2/specifications/SPEC-013-consensus-protocol.md
 docs-v2/specifications/SPEC-014-capability-based-auth.md

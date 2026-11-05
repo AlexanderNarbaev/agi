@@ -24,7 +24,7 @@ You are an autonomous multi-agent orchestrator for the MATRIX project at /home/a
 Read `docs-v2/INDEX.md` (one page navigation). Then read in order:
 
 - `docs-v2/engineering/PLAN.md`
-- `docs-v2/vision/DECISIONS.md` (11 architectural decisions)
+- `docs-v2/vision/DECISIONS.md` <!-- no-link: the file was never created; the decisions live in governance/DECISION-REGISTER.md --> (11 architectural decisions)
 - `docs-v2/engineering/INVARIANTS.md`
 - `docs-v2/vision/BRAIN-LIKE-SYSTEM.md`
 - `docs-v2/specifications/SPEC-{000,001,002,002-quantum,003}.md`
@@ -150,13 +150,13 @@ Independent comparative benchmark before any distillation. Establish the floor.
 
 - Pick one open-weights model: start with smallest publicly available, e.g. `Xenova/gpt2` (~125 MB) — whichever downloads without exceeding 2 GB quota and doesn't require safetensors tooling we don't have.
 - Use `transformers` python pipeline with `optimum.onnxruntime` for ONNX export to `models/external/<modelname>/model.onnx` (~ gitignored, never committed).
-- Java harness `matrix-core/src/test/java/io/matrix/external/BaselineBenchmark.java` that loads the same `.onnx` via `OnnxActivationTeacher` + `Distiller` (or equivalent latency-only path) and measures inference latency ×50 batch × per-call. Compare to MATRIX native path (TsetlinTrainer + WisardProducer trained on same task).
-- Numbers to `docs-v2/research/reports/EXP-019-baseline-vs-onnx.md`. Honest write-up; if MATRIX doesn't beat, write that plainly.
+- Java harness `matrix-core/src/test/java/io/matrix/external/BaselineBenchmark.java` <!-- no-link: the test was never written; the benchmark is in matrix-core/src/test/java/io/matrix/benchmark/ --> that loads the same `.onnx` via `OnnxActivationTeacher` + `Distiller` (or equivalent latency-only path) and measures inference latency ×50 batch × per-call. Compare to MATRIX native path (TsetlinTrainer + WisardProducer trained on same task).
+- Numbers to `docs-v2/research/reports/EXP-019-baseline-vs-onnx.md` <!-- no-link: the report was never written; the baseline numbers are in engineering/W45-TEST-EVIDENCE-RECONCILIATION.md -->. Honest write-up; if MATRIX doesn't beat, write that plainly.
 
 ### Wave M-A.T.R.I.X.1+: Sequential distillation
 
 - For each open-weights model in turn (one per wave):
-  1. Download `.safetensors` / `.onnx` to `models/external/<name>/` (gitignored).
+  1. Download `.safetensors` / `.onnx` to `models/external/<name>/` <!-- no-link: a placeholder for a model directory --> (gitignored).
   2. Probe distillation: extract activations from one hidden layer; map to MATRIX input bits; train `TsetlinTrainer` or `WisardProducer` on them.
   3. Measure: original-model latency vs distilled-BIR latency on identical inputs; accuracy parity.
   4. Quality gates: parity ≥ baseline within ±3 pp; latency gain target documented per H-009.

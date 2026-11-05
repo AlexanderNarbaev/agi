@@ -1,5 +1,10 @@
 # PLAN
 
+
+**Status:** `HISTORICAL` · **The canonical roadmap is `docs-v2/governance/ROADMAP.md`.**
+This document records what was planned up to W44; its last recorded wave is W44 and it is
+three waves behind. It is kept as the record of that plan and is **not** rewritten.
+
 Что реализовано и что осталось (synth-only).
 
 ## W32 Wave (Sep 11-12 2026) — HDC × BitLinear hybrid brain implementation

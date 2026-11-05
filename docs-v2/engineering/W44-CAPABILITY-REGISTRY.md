@@ -1,5 +1,13 @@
 # W44 — Capability registry
 
+
+**Status:** `SUPERSEDED` (2026-11-04) → **`docs-v2/architecture/CAPABILITY-REGISTRY.yml`**.
+This registry is the W44 audit's base and uses a different vocabulary from the architecture
+registry. It also carries two labels that the bytecode has since disproved: it marks
+`io.matrix.api.MinimalHttpServer` as *inactive-but-tested* (the class has a `main` at
+`MinimalHttpServer.java:1674`), and its cycle map names five cycles where the tree has six.
+**The document is kept as the audit's evidence and is not rewritten.**
+
 **Audit:** RECON-W44.0 · 2026-11-02 · branch `develop` · HEAD `81f08478`
 **Evidence:** `W44-CLASS-INVENTORY.csv` (source scan) + `W44-CALL-GRAPH.csv` (bytecode,
 `javap -p -c`) · generator `scripts/w44-audit-inventory.py` (read-only)

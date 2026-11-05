@@ -54,7 +54,7 @@ configuration, and no workflow may be added until the operator approves it.**
 
 ## 4. Baseline, and how "new failure" is decided
 
-A committed file, `docs-v2/quality/ci-baseline.json`, listing failing class names and the
+A committed file, `docs-v2/quality/ci-baseline.json` <!-- no-link: the file was never created; the RFC is a proposal -->, listing failing class names and the
 skip count at approval time. A run fails only if a class appears that is not in the list, or
 if the skip count changes without a corresponding entry in `KnownFailures.md`.
 

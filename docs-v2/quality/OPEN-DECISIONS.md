@@ -1,5 +1,13 @@
 # Open decisions — awaiting the operator
 
+
+**Status:** `HISTORICAL` (2026-11-04) → the canonical register is
+**`docs-v2/governance/OPEN-QUESTIONS.md`**. This document recorded the operator decisions
+deferred at commit `434e856f` (2026-10-05); the canonical register carries them forward with
+their evidence, their competing explanations and their status, and adds the questions the
+W46.0 audit raised. **This document is kept as the record of that deferral and is not
+rewritten.**
+
 **Status:** none of these can be resolved from the code. Each needs a human choice.
 **Recorded:** 2026-10-05, at commit `434e856f` (RECON-W32.33).
 **Why this file exists:** each item was deferred across several waves because deferring was

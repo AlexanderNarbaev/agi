@@ -45,4 +45,4 @@
 2. либо multi-dataset × seeds для «preliminary support»;
 3. либо production-domain для полного verdict.
 
-Все синтетические результаты держат карточку на **running** или помечают «refuted-toy» с пинами в `tests/`.
+Все синтетические результаты держат карточку на **running** или помечают «refuted-toy» с пинами в `tests/` <!-- no-link: a generic directory name, not a path -->.

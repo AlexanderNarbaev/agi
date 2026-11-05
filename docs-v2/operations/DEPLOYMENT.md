@@ -4,7 +4,7 @@
 
 ## Артефакты
 
-- Docker-образ `matrix-core` (`matrix-core/Dockerfile` / `Dockerfile` репозитория).
+- Docker-образ `matrix-core` (`matrix-core/Dockerfile` <!-- no-link: the Dockerfile was never created; the container instructions are in operations/CONTAINER-BUILDS.md --> / `Dockerfile` репозитория).
 - Helm-chart (если есть; см. `matrix-operator/` K8s-оператор).
 - `docker-compose.prod.yml` для прод-стенда (Kafka, PG, Redis).
 

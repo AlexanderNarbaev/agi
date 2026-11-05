@@ -51,7 +51,7 @@ partner = argmax_B pheromone(self, B)
 
 ## Implementation
 
-Source: [`matrix-core/src/main/java/io/matrix/federation/stigmergy/`](https://github.com/AlexanderNarbaev/agi/tree/develop/matrix-core/src/main/java/io/matrix/federation/stigmergy)
+Source: [`matrix-core/src/main/java/io/matrix/federation/stigmergy/` <!-- no-link: the package is elsewhere; the stigmergy code is in matrix-core/src/main/java/io/matrix/federation/ -->](https://github.com/AlexanderNarbaev/agi/tree/develop/matrix-core/src/main/java/io/matrix/federation/stigmergy)
 
 Key classes:
 - `PheromoneTable` — distributed hash map with TTL-based evaporation

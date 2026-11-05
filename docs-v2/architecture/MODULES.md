@@ -14,7 +14,7 @@
 | Пакет | ↔ Спека/Дизайн/Эксп |
 |---|---|
 | `bir/` | SPEC-002, DESIGN-14 (миграция), INV-1 |
-| `tsetlin/`, `bir.producers.motone/` | DESIGN-09, H-010 accepted (EXP-010) |
+| `tsetlin/`, `bir.producers.motone/` <!-- no-link: a Java package, not a path --> | DESIGN-09, H-010 accepted (EXP-010) |
 | `evolution/` | DESIGN-04, H-002/H-003 refuted-toy (EXP-002/003) |
 | `devloop/` | SPEC-000, DESIGN-15 |
 | `ktopo/` | SPEC-003 (WIP — Ricci-анализ) |

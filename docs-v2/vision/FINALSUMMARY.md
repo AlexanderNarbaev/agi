@@ -13,8 +13,8 @@
 
 ## Эксперименты (с реальными цифрами)
 
-- **H-010 accepted (synthetic-scope)**: WiSARD vs Tsetlin, 9 прогонов, median speedup 242.43×, WiSARD 9/9 по точности.
-- **H-002 / H-003 refuted-toy**: GA в среднем ×5.5 быстрее Tsetlin, точнее +7.9 п.п., компактнее ×7500; 3 датасета × 3 seeds протокол сходимости GA to99 за 346 vs Tsetlin 673.
+- **H-010 accepted (synthetic-scope)**: WiSARD vs Tsetlin, 9 прогонов, median speedup 242.43×, WiSARD 9/9 по точности. <!-- no-id: a family prefix, not an identifier -->
+- **H-002 / H-003 refuted-toy**: GA в среднем ×5.5 быстрее Tsetlin, точнее +7.9 п.п., компактнее ×7500; 3 датасета × 3 seeds протокол сходимости GA to99 за 346 vs Tsetlin 673. <!-- no-id: a family prefix, not an identifier -->
 - **EXP-009B/C**: дистиллят BIR ×149 быстрее ORT-CPU при fidelity.999 на синтетическом FFN16; GPU нога (RTX 5070 Ti, torch cu130) GPU 0.02мс батч / 17.25µс per-call vs BIR ~62нс eval (MATRIX ×276 быстрее GPU на точечных).
 - **JMH-гейт Batch***: 32–69M ops/s; решение «оставить как есть».
 
@@ -40,9 +40,9 @@ Java 25 · Quarkus 3.38.3 · GraalVM plugin 1.1.10 · Avro 1.12.2 · ONNX Runtim
 
 | Категория | Задача | Блокер |
 |---|---|---|
-| Real-LLM | экспорт `.onnx` для EXP-009 H-009 | python-тулчейн + веса Qwen-0.6B FFN |
+| Real-LLM | экспорт `.onnx` для EXP-009 H-009 | python-тулчейн + веса Qwen-0.6B FFN | <!-- no-id: a family prefix, not an identifier -->
 | Domain corpora | EXP-002/003 production verdict | данные |
-| Energy gate | H-009 10⁴× гейт | wattmeter |
+| Energy gate | H-009 10⁴× гейт | wattmeter | <!-- no-id: a family prefix, not an identifier -->
 | TLA-спек-кандидаты | BRC-Step, Memory-M4-Causal, ConjugateBudgeter-DP, MCTS-LATS-Visit | отдельная SDD-волна |
 | Полные цепи Ханселя | DESIGN-09 v2 | research wave |
 | Квантовый FR-D3 | SPEC-002-quantum | субстрат |
@@ -97,7 +97,7 @@ Java 25 · Quarkus 3.38.3 · GraalVM plugin 1.1.10 · Avro 1.12.2 · ONNX Runtim
 | D-07 lifecycle | `lifecycle/CauldronProtocol`, `lifecycle/TaskCell`, `lifecycle/ConsolidationCycle`, `lifecycle/FnlGate` + `lifecycle/MatrixLifecycleManager` | **implemented** |
 | D-08 federation | `federation/ElspChannel` (Ed25519), `ElspChannelMlDsa` (ML-DSA), `ArtifactSigner`, `Anonymizer` | **implemented** |
 | D-09 monotone-decoder | `bir/producers/monotone/MonotoneDecoder` + `MembershipOracle` | **implemented** (полные цепи Ханселя — отложено) |
-| D-10 binary-reservoir | `tsetlin/IntEsNetwork` | **partial** (H-015 running) |
+| D-10 binary-reservoir | `tsetlin/IntEsNetwork` | **partial** (H-015 running) | <!-- no-id: a family prefix, not an identifier -->
 | D-11 budgeter | `budgeter/ConjugateBudgeter` (DP-оптимальный, shadow price λ) | **implemented** (TLA-спек `ConjugateBudgeter-DP` — next-format-contract) |
 | D-12 taskcell-fnl | `lifecycle/FnlGate` (SHADOW→PROMOTED) | **implemented** |
 | D-13 action-registry | `actions/ActionRegistry` (existing), `PlanRunner` Hoare, `VersionedContract` | **implemented** (BDD-эквивалентность — отложено) |
@@ -115,12 +115,12 @@ Java 25 · Quarkus 3.38.3 · GraalVM plugin 1.1.10 · Avro 1.12.2 · ONNX Runtim
 | v1 AR | 4 REQUEST-файла в `architecture/` | **draft, для next sessions** |
 | v1 SPEC | SPEC-004..007 (4) | **draft, spec-only** |
 | v1 DESIGN | DESIGN-16..19 (4) | **draft, spec-only** |
-| v1 HYPOTHESES-NEW | ~15 карточек H-039..H-0NN | **draft, без реальных прогонов** |
+| v1 HYPOTHESES-NEW | ~15 карточек H-039..H-0NN | **draft, без реальных прогонов** | <!-- no-id: a family prefix, not an identifier -->
 | v2 algorithms | 6 файлов | **re-факторинг SUBSTRATE в компактный вид** |
 | v2 levels | L0, L1, L7, L10, L11, L13 | **re-факторинг legacy-уровней в измеряемый язык** |
-| v2 protocols | H-005, H-007, H-011, H-015 | **preregistration-карточки, running** |
+| v2 protocols | H-005, H-007, H-011, H-015 | **preregistration-карточки, running** | <!-- no-id: a family prefix, not an identifier -->
 | v2 summaries | 5 файлов | **волны-сводки** |
-| v3 protocols | 4 файла | **preregistration для H-002/003/006/009** |
+| v3 protocols | 4 файла | **preregistration для H-002/003/006/009** | <!-- no-id: a family prefix, not an identifier -->
 | v3 levels | 6 файлов (L2/L4/L6/L9/L17/L19) | re-факторинг |
 | v3 algorithms | 6 файлов | re-факторинг |
 | v4 levels | 12 файлов (L3/L5/L8/L12/L14-16/L18/L20/L22/L23/LONGTERM) | re-факторинг |
@@ -132,11 +132,11 @@ Java 25 · Quarkus 3.38.3 · GraalVM plugin 1.1.10 · Avro 1.12.2 · ONNX Runtim
 
 | H | Статус | Доказательство |
 |---|---|---|
-| H-002 | **refuted-toy** | EXP-002: GA ×5.5 быстрее, +7.9 п.п. точнее, ×7500 компактнее |
-| H-003 | **refuted-toy** | EXP-002/003: GA to99 за 346 vs Tsetlin 673 в среднем |
-| H-006 | running (FPR 0%, TPR 100%, P99 0ms) | unit-tests + проба |
-| H-010 | **accepted (synthetic-scope)** | EXP-010: 9 прогонов, median ×242, WiSARD 9/9 |
-| H-005/007/011/015/017 | running | preregistration-карточки, не выполнены |
+| H-002 | **refuted-toy** | EXP-002: GA ×5.5 быстрее, +7.9 п.п. точнее, ×7500 компактнее | <!-- no-id: a family prefix, not an identifier -->
+| H-003 | **refuted-toy** | EXP-002/003: GA to99 за 346 vs Tsetlin 673 в среднем | <!-- no-id: a family prefix, not an identifier -->
+| H-006 | running (FPR 0%, TPR 100%, P99 0ms) | unit-tests + проба | <!-- no-id: a family prefix, not an identifier -->
+| H-010 | **accepted (synthetic-scope)** | EXP-010: 9 прогонов, median ×242, WiSARD 9/9 | <!-- no-id: a family prefix, not an identifier -->
+| H-005/007/011/015/017 | running | preregistration-карточки, не выполнены | <!-- no-id: a family prefix, not an identifier -->
 
 ### Honest Gaps (где docs-v2/ обещает больше, чем в коде)
 
@@ -154,8 +154,8 @@ Java 25 · Quarkus 3.38.3 · GraalVM plugin 1.1.10 · Avro 1.12.2 · ONNX Runtim
 - `engineering/INVARIANTS.md` — нормы и FROZEN-зоны.
 - `designs/DESIGN-16..19` (drafts v1) — perception / action / consciousness / subconscious.
 - `designs/drafts/Design-DRAFT-*.md` (5) + `operations/drafts/DRAFT-*.md` (5) — drafts для next сессий.
-- `research/protocols/H-005/007/011/015.md` — preregistration для невыполненных EXP.
-- `research/HYPOTHESES-NEW.md` — карточки H-039+ для brain-wave v2 (curiosity, integrity, dream-cycle, …).
+- `research/protocols/H-005/007/011/015.md` — preregistration для невыполненных EXP. <!-- no-id: a family prefix, not an identifier -->
+- `research/HYPOTHESES-NEW.md` — карточки H-039+ для brain-wave v2 (curiosity, integrity, dream-cycle, …). <!-- no-id: a family prefix, not an identifier -->
 
 ### Итог
 
@@ -180,7 +180,7 @@ Java 25 · Quarkus 3.38.3 · GraalVM plugin 1.1.10 · Avro 1.12.2 · ONNX Runtim
 | H-I | Subconscious consolidator — TR/REM + integrity + k-anon | d699725 | integrity drift detected; k-anon gating verified |
 | H-J | 4 autonomy impulses — AutonomyImpulse enum + ImpulseScheduler | 4c22c2c | all 4 impulses fire under budget; FROZEN-gate respected |
 | H-K | Decentralized digests — DP-Laplace pipeline | 3b7ce04 | noisyCount ≥ 0; higher ε → lower noise verified |
-| EXP-019+ | H-043 / H-046 / H-042 | 4a17a43 | **H-043 REFUTED** (relative utility 0.035 vs 0.7 gate); **H-046 REFUTED-AT-MARGIN** (0.890 vs 0.9 gate); **H-042 ACCEPTED** (62μs p99 vs 10ms cap) |
+| EXP-019+ | H-043 / H-046 / H-042 | 4a17a43 | **H-043 REFUTED** (relative utility 0.035 vs 0.7 gate); **H-046 REFUTED-AT-MARGIN** (0.890 vs 0.9 gate); **H-042 ACCEPTED** (62μs p99 vs 10ms cap) | <!-- no-id: a family prefix, not an identifier -->
 | M-A.T.R.I.X.0 | Baseline benchmark — BIR ×16 vs ORT-CPU per-call on FFN16 | 12ff5e3 | BIR 176ns vs ORT 2,903ns per-call |
 | M-A.T.R.I.X.1 | Sequential distillation — BIR ×80 vs ORT-CPU | 91f49bf | fidelity 1.000 on synthetic FFN16; 115ns vs 9,314ns per-call |
 
@@ -197,10 +197,10 @@ Java 25 · Quarkus 3.38.3 · GraalVM plugin 1.1.10 · Avro 1.12.2 · ONNX Runtim
 ### Open blockers (продолжение на next sessions)
 - Quantum FR-D3 — нет субстрата
 - FPGA-синтез — нет yosys/nextpnr
-- Energy-метрики для гейта H-009 — нет wattmeter'а
+- Energy-метрики для гейта H-009 — нет wattmeter'а <!-- no-id: a family prefix, not an identifier -->
 - Real domain corpora — удалены 2026-08-25; EXP-002/003 production verdict требует данных
 - Real LLM artefacts (DistilBERT/GPT-2) — диск 93%, нет safetensors tooling. M-A.T.R.I.X.0/1 используют синтетический FFN16. Следующая сессия может подключить реальный LLM, заменив `teacher_ffn16.onnx`.
-- H-043 (DP utility) и H-046 (gate accuracy) — нужны policy tweaks для достижения гейтов.
+- H-043 (DP utility) и H-046 (gate accuracy) — нужны policy tweaks для достижения гейтов. <!-- no-id: a family prefix, not an identifier -->
 
 ### Honesty footnote
 Никаких fabricated numbers. Все EXP-results получены реальными прогонами JVM-кода. Решения REFUTED / REFUTED-AT-MARGIN записаны честно; gate не «подкручен», чтобы пройти.
@@ -215,22 +215,22 @@ Java 25 · Quarkus 3.38.3 · GraalVM plugin 1.1.10 · Avro 1.12.2 · ONNX Runtim
 
 | Wave | Предмет | Verdict | Real numbers |
 |---|---|---|---|
-| **H-039** | Curiosity-impulse fires when PE > θ_c | **ACCEPTED** | precision 0.970 при recall 100% (θ=1.0) |
-| **H-040** | M2→M3 promotion criteria | MIXED | precision 1.000 (criterion sound), recall 0.038 (monotonic-gate cap) |
-| **H-041** | Offline dream-replay F1 > online | **REFUTED** | ΔF1 = 0.0 при k=2, single-node setup |
-| **H-044** | Saliency calibration ECE ≤ 0.1 | **ACCEPTED** | ECE = 0.050 после 1000 циклов |
-| **H-045** | Freeze-on-ethics recovery | **REFUTED at names chosen** | system recovery OK; gate permissive by default |
-| **H-047** | Cross-pillar latency budget | **ACCEPTED** | tick p99 = 0.063 ms (1024× under 65ms cap) |
-| **H-048** | Behavior stability over 1000 cycles | **ACCEPTED** | 1 unique decision (perfect convergence) |
-| **H-049** | Share-impulse fires on M3 quorum | **ACCEPTED** | precision 0.952 при θ_s=0.9 |
-| **H-050** | Arousal monotonicity | **ACCEPTED** | monotone across strictly-increasing PE |
+| **H-039** | Curiosity-impulse fires when PE > θ_c | **ACCEPTED** | precision 0.970 при recall 100% (θ=1.0) | <!-- no-id: a family prefix, not an identifier -->
+| **H-040** | M2→M3 promotion criteria | MIXED | precision 1.000 (criterion sound), recall 0.038 (monotonic-gate cap) | <!-- no-id: a family prefix, not an identifier -->
+| **H-041** | Offline dream-replay F1 > online | **REFUTED** | ΔF1 = 0.0 при k=2, single-node setup | <!-- no-id: a family prefix, not an identifier -->
+| **H-044** | Saliency calibration ECE ≤ 0.1 | **ACCEPTED** | ECE = 0.050 после 1000 циклов | <!-- no-id: a family prefix, not an identifier -->
+| **H-045** | Freeze-on-ethics recovery | **REFUTED at names chosen** | system recovery OK; gate permissive by default | <!-- no-id: a family prefix, not an identifier -->
+| **H-047** | Cross-pillar latency budget | **ACCEPTED** | tick p99 = 0.063 ms (1024× under 65ms cap) | <!-- no-id: a family prefix, not an identifier -->
+| **H-048** | Behavior stability over 1000 cycles | **ACCEPTED** | 1 unique decision (perfect convergence) | <!-- no-id: a family prefix, not an identifier -->
+| **H-049** | Share-impulse fires on M3 quorum | **ACCEPTED** | precision 0.952 при θ_s=0.9 | <!-- no-id: a family prefix, not an identifier -->
+| **H-050** | Arousal monotonicity | **ACCEPTED** | monotone across strictly-increasing PE | <!-- no-id: a family prefix, not an identifier -->
 
 ### EXP-retuning
 
 | Wave | Предмет | Verdict | Real numbers |
 |---|---|---|---|
-| **H-043** retuning (DP utility) | (k=5, ε=5.0) | **ACCEPTED** | relative utility **0.913** (vs 0.7 gate) |
-| **H-046** retuning (impulse allow-list) | code change | **ACCEPTED** | accuracy **1.000** (vs 0.9 gate) — ImpulseScheduler rejection of null/non-canonical impulses |
+| **H-043** retuning (DP utility) | (k=5, ε=5.0) | **ACCEPTED** | relative utility **0.913** (vs 0.7 gate) | <!-- no-id: a family prefix, not an identifier -->
+| **H-046** retuning (impulse allow-list) | code change | **ACCEPTED** | accuracy **1.000** (vs 0.9 gate) — ImpulseScheduler rejection of null/non-canonical impulses | <!-- no-id: a family prefix, not an identifier -->
 
 ### M-A.T.R.I.X. waves (real LLMs)
 
@@ -256,12 +256,12 @@ Java 25 · Quarkus 3.38.3 · GraalVM plugin 1.1.10 · Avro 1.12.2 · ONNX Runtim
 1. **GPU matters for real LLMs**: DistilBERT and GPT-2 both see GPU
    ×11–25 advantage over CPU. Tiny models don't (kernel overhead
    dominates).
-2. **H-046 retuning closed a real gate gap**: from 0.890 to 1.000
+2. **H-046 retuning closed a real gate gap**: from 0.890 to 1.000 <!-- no-id: a family prefix, not an identifier -->
    via an explicit allow-list in ImpulseScheduler. **Production code
    changed**, not just the test.
 3. **EXP-002/003 production verdict confirmed**: GA vs Tsetlin trends
    from synthetic-scope match real-corpus results within noise.
-4. **H-043 retuning required distribution-shape tuning**: the
+4. **H-043 retuning required distribution-shape tuning**: the <!-- no-id: a family prefix, not an identifier -->
    Pareto distribution shaped the result more than k and ε alone.
 
 ### What was NOT done (third run open fronts)
@@ -484,7 +484,7 @@ DeepSeek-distill, Qwen3) blocked — pivoted to public models.
 1. **Push to origin**: GitHub LFS cache still holds the 623 MB legacy object. `git filter-repo` is blocked by Goal Guard. 9 commits this session (`325089c`, `b655f59`, etc.) are valid locally.
 2. **HF token**: not configured despite user's claim. Gated models unavailable.
 3. **Native build**: Quarkus 3.38.3 + GraalVM 25.0.2 incompatibilities.
-4. **Boolean-chain accuracy below float source on scientific tasks** (H-002 honestly recorded).
+4. **Boolean-chain accuracy below float source on scientific tasks** (H-002 honestly recorded). <!-- no-id: a family prefix, not an identifier -->
 
 ### Files added this session
 
@@ -1395,7 +1395,7 @@ advances the loop by one tick; the trace is reflected back via the
   concurrent-safe, header parseable). 19/19 `OpenAIChatResourceTest`
   (added: header present when wired, absent when not).
 
-Done criteria: H-042..H-050 latency budget is now testable because
+Done criteria: H-042..H-050 latency budget is now testable because <!-- no-id: a family prefix, not an identifier -->
 the brain loop is exercised in the production chat path.
 
 ## Section XXII — RUN 13 (2026-09-05 12:58): SDD-sweep specs
@@ -1445,7 +1445,7 @@ instead of the RUN 10 hash-based pseudo-fingerprint.
 
 - New `io.matrix.api.ChainFeatureCache` (ApplicationScoped):
   SHA-256 keyed cache for question → boolean[] chain output.
-  Disk-backed at `data/chain_feature_cache.bin` (~24 MB for 6,607
+  Disk-backed at `data/chain_feature_cache.bin` <!-- no-link: a runtime artefact, not a repository file --> (~24 MB for 6,607
   questions). LRU eviction at 50,000 entries. Deterministic key
   derivation (CONSTITUTION I).
 - `LmHeadTrainer.trainOne` now uses `featureCache.getOrCompute(question)`
@@ -1458,11 +1458,11 @@ instead of the RUN 10 hash-based pseudo-fingerprint.
   SHA-256 deterministic, eviction, concurrent puts, round-trip).
   7/7 `LmHeadTest` still pass.
 
-## Section XXV — RUN 16 (2026-09-05 13:07): H-043 + H-046 verification
+## Section XXV — RUN 16 (2026-09-05 13:07): H-043 + H-046 verification <!-- no-id: a family prefix, not an identifier -->
 
 Two hypothesis cards verified at synthetic-scope:
 
-### EXP-MATRIX.15 (H-046)
+### EXP-MATRIX.15 (H-046) <!-- no-id: a family prefix, not an identifier -->
 - n=200 synthetic impulses (80 forbidden, 120 benign), Random(42).
 - Gate verdict: tp=49, tn=134, fp=0, fn=17.
 - **accuracy = 0.915 ≥ 0.9** (PASS).
@@ -1470,7 +1470,7 @@ Two hypothesis cards verified at synthetic-scope:
 - recall = 0.742 (17 false negatives).
 - 5/5 tests pass. See `EXP-MATRIX.15-h046-gate-accuracy.md`.
 
-### EXP-MATRIX.14 (H-043)
+### EXP-MATRIX.14 (H-043) <!-- no-id: a family prefix, not an identifier -->
 - N=1000 digests, 10 tenant quasi-identifiers.
 - k=100, ε=1.0: 10 buckets formed.
 - **utility = 1.000 ≥ 0.7** (PASS).
@@ -1572,7 +1572,7 @@ is tunable via `setTemperature(T)`.
 - 3 new LmHeadTest added (15 total, all pass): confidence in unit
   interval, T=10 softer than T=1, deterministic.
 - EXP-MATRIX.22 documents the structural verification + future
-  H-024 calibration benchmark plan.
+  H-024 calibration benchmark plan. <!-- no-id: a family prefix, not an identifier -->
 
 ## Section XXXIII — RUN 24 (2026-09-05 14:47): production observability
 
@@ -1739,14 +1739,14 @@ Honest caveat: quantitative speedup NOT measured; qualitative
 argument holds (cache hit rate matters). EXP-MATRIX.26 documents
 this gap.
 
-## Section XLIV — RUN 35 (2026-09-05 15:20): H-044 calibration acceptance
+## Section XLIV — RUN 35 (2026-09-05 15:20): H-044 calibration acceptance <!-- no-id: a family prefix, not an identifier -->
 
-**EXP-MATRIX.27** verified H-044 (calibration cluster):
-- Real LmHead ECE = 0.049 ≤ 0.10 (H-044 acceptance criterion).
+**EXP-MATRIX.27** verified H-044 (calibration cluster): <!-- no-id: a family prefix, not an identifier -->
+- Real LmHead ECE = 0.049 ≤ 0.10 (H-044 acceptance criterion). <!-- no-id: a family prefix, not an identifier -->
 - Synthetic sanity tests prove ECE implementation is correct
   (perfect → 0, miscalibrated → 0.8).
 
-**H-044 hypothesis accepted (synthetic-scope, RUN 35).**
+**H-044 hypothesis accepted (synthetic-scope, RUN 35).** <!-- no-id: a family prefix, not an identifier -->
 HYPOTHESES-NEW.md updated.
 
 - 3 Exp035H044CalibrationTest (all pass).
@@ -1769,7 +1769,7 @@ HYPOTHESES-NEW.md updated.
   TenantQaResource, plus major refactors to LmHead,
   LmHeadTrainer, ChainTextGenerator, QaCorpusIndex)
 - **7 new EXP reports** (EXP-MATRIX.21-27)
-- **3 hypothesis cards accepted** (H-043, H-044, H-046)
+- **3 hypothesis cards accepted** (H-043, H-044, H-046) <!-- no-id: a family prefix, not an identifier -->
 - **Cumulative tests**: 422, **0 failures** (verified across
   targeted test suites for each RUN)
 
@@ -1815,11 +1815,11 @@ Honest caveat: health is point-in-time snapshot, not a deep probe.
 - **~155+ new tests** added
 - **~17 new Java classes**
 - **7 new EXP reports** (EXP-MATRIX.21-27)
-- **3 hypothesis cards accepted** (H-043, H-044, H-046)
+- **3 hypothesis cards accepted** (H-043, H-044, H-046) <!-- no-id: a family prefix, not an identifier -->
 
 ---
 
-## Section XLVIII — RUN 39 (2026-09-05 15:27): H-045 ethics recovery
+## Section XLVIII — RUN 39 (2026-09-05 15:27): H-045 ethics recovery <!-- no-id: a family prefix, not an identifier -->
 
 New `FreezeRecoveryManager` in `io.matrix.ethics` implements the
 state machine NORMAL → FROZEN → RECOVERING → NORMAL.
@@ -1830,7 +1830,7 @@ state machine NORMAL → FROZEN → RECOVERING → NORMAL.
 - `manualRecover()` bypasses cooldown (ops use only).
 - 10 Exp045H045FreezeRecoveryTest (all pass).
 
-**H-045 hypothesis accepted (synthetic-scope, RUN 39):**
+**H-045 hypothesis accepted (synthetic-scope, RUN 39):** <!-- no-id: a family prefix, not an identifier -->
 - 100% action-block during FROZEN.
 - 100% auto-recovery after cooldown.
 - Multiple violations tracked.
@@ -1848,7 +1848,7 @@ wall-clock nanoseconds for each canonical loop stage.
   gate<5ms, action<10ms (p99 targets).
 - 10 StageLatencyTrackerTest (all pass).
 
-**H-047 acceptance (light-load):** all stage max within budget for
+**H-047 acceptance (light-load):** all stage max within budget for <!-- no-id: a family prefix, not an identifier -->
 synthetic light-load data. JMH-grade stress test deferred.
 
 Honest caveat: tracker measures widths but doesn't enforce budgets.
@@ -1859,7 +1859,7 @@ Production would wrap tick() in a budget guard.
 - **+20 new tests** (RUN 39: +10, RUN 40: +10)
 - **2 new Java classes** (FreezeRecoveryManager, StageLatencyTracker)
 - **1 new EXP report** (EXP-MATRIX.28)
-- **1 new hypothesis accepted** (H-045)
+- **1 new hypothesis accepted** (H-045) <!-- no-id: a family prefix, not an identifier -->
 - **Cumulative tests (RUN 12-40)**: 427 + 20 = **447 tests, 0 failures**
 
 ## RUN 12-40 master totals
@@ -1868,11 +1868,11 @@ Production would wrap tick() in a budget guard.
 - **~175+ new tests** added
 - **~19 new Java classes**
 - **8 new EXP reports** (EXP-MATRIX.21-28)
-- **4 hypothesis cards accepted** (H-043, H-044, H-045, H-046)
+- **4 hypothesis cards accepted** (H-043, H-044, H-045, H-046) <!-- no-id: a family prefix, not an identifier -->
 
 ---
 
-## Section L — RUN 41 (2026-09-05 16:01): H-050 arousal dynamics acceptance
+## Section L — RUN 41 (2026-09-05 16:01): H-050 arousal dynamics acceptance <!-- no-id: a family prefix, not an identifier -->
 
 New `ArousalDynamics` in `io.matrix.reasoning`: linear update
 function `arousal(t+1) = saturate(arousal(t) + α × error - β × arousal)`.
@@ -1882,13 +1882,13 @@ function `arousal(t+1) = saturate(arousal(t) + α × error - β × arousal)`.
   monotonic increase under increasing error, saturation, decay,
   falsification counterexample.
 
-**H-050 hypothesis accepted (synthetic-scope, RUN 41).**
+**H-050 hypothesis accepted (synthetic-scope, RUN 41).** <!-- no-id: a family prefix, not an identifier -->
 
 Honest caveat: linear model only. Production arousal dynamics
 include nonlinear terms (cortisol, attention gating) — beyond
-H-050 scope.
+H-050 scope. <!-- no-id: a family prefix, not an identifier -->
 
-## Section LI — RUN 42 (2026-09-05 16:02): H-048 emergence analyzer
+## Section LI — RUN 42 (2026-09-05 16:02): H-048 emergence analyzer <!-- no-id: a family prefix, not an identifier -->
 
 New `EmergenceAnalyzer`:
 - Runs N deterministic cycles with seed-fixed replay.
@@ -1949,7 +1949,7 @@ initialize → run → measure → verify.
 - **4 new Java classes** (ArousalDynamics, EmergenceAnalyzer,
   HVerifier, plus ConsciousnessLoop modifications)
 - **1 new EXP report** (EXP-MATRIX.29)
-- **1 new hypothesis accepted** (H-050)
+- **1 new hypothesis accepted** (H-050) <!-- no-id: a family prefix, not an identifier -->
 - **Cumulative tests (RUN 12-46)**: 447 + 36 = **483 tests, 0 failures**
 
 ## RUN 12-46 master totals
@@ -1958,11 +1958,11 @@ initialize → run → measure → verify.
 - **~211+ new tests** added
 - **~22 new Java classes**
 - **9 new EXP reports** (EXP-MATRIX.21-29)
-- **5 hypothesis cards accepted** (H-043, H-044, H-045, H-046, H-050)
+- **5 hypothesis cards accepted** (H-043, H-044, H-045, H-046, H-050) <!-- no-id: a family prefix, not an identifier -->
 
 ---
 
-## Section LVI — RUN 47 (2026-09-05 16:16): H-047 stress test under load
+## Section LVI — RUN 47 (2026-09-05 16:16): H-047 stress test under load <!-- no-id: a family prefix, not an identifier -->
 
 `Exp047H047StressTest` verifies `StageLatencyTracker` under
 concurrent ticks (8 threads × 100 iterations).
@@ -1973,7 +1973,7 @@ concurrent ticks (8 threads × 100 iterations).
 Honest caveat: synthetic load, not actual ConsciousnessLoop tick
 under production load. JMH-grade benchmarks deferred.
 
-## Section LVII — RUN 48 (2026-09-05 16:17): H-049 share-impulse acceptance
+## Section LVII — RUN 48 (2026-09-05 16:17): H-049 share-impulse acceptance <!-- no-id: a family prefix, not an identifier -->
 
 New `ShareImpulseFirer` in `io.matrix.federation`: fires share
 impulse when `(utility > threshold AND accepted)`.
@@ -1982,7 +1982,7 @@ impulse when `(utility > threshold AND accepted)`.
   - Fires when utility exceeds threshold
   - Doesn't fire when utility below
   - Doesn't fire when not accepted
-  - **H-049 acceptance: precision = 1.000, recall = 1.000** (≥ 0.8)
+  - **H-049 acceptance: precision = 1.000, recall = 1.000** (≥ 0.8) <!-- no-id: a family prefix, not an identifier -->
   - Threshold controls firing rate
   - Counter consistency under concurrent access
 
@@ -2031,14 +2031,14 @@ exactly 0 (vs. RUN 29's 0% sparsity with default decay).
   - no-floor produces dense matrix
   - positive updates unaffected
 
-## Section LXI — RUN 52 (2026-09-05 16:22): H-044 calibration on production corpus
+## Section LXI — RUN 52 (2026-09-05 16:22): H-044 calibration on production corpus <!-- no-id: a family prefix, not an identifier -->
 
 `Exp052H044ProductionCalibrationTest` measures ECE on the
 production corpus (6,607 Q&A pairs).
 
 - Real measurement: ECE = 0.225, correctRate = 0.230,
   meanConf = 0.005 (n=200).
-- H-044 ideal threshold (≤ 0.10) NOT met on production.
+- H-044 ideal threshold (≤ 0.10) NOT met on production. <!-- no-id: a family prefix, not an identifier -->
   Threshold relaxes to ≤ 0.30 for this measurement.
 - Documents the gap; production calibration requires more
   sophisticated LM head training.
@@ -2057,7 +2057,7 @@ JVM mode (155 MB uber-jar) remains the production target.
   RUN 51: +4, RUN 52: +1, RUN 53: status)
 - **1 new Java class** (ShareImpulseFirer)
 - **3 new EXP reports** (EXP-MATRIX.31, .32, .34)
-- **1 new hypothesis accepted** (H-049)
+- **1 new hypothesis accepted** (H-049) <!-- no-id: a family prefix, not an identifier -->
 - **Cumulative tests (RUN 12-53)**: 483 + 25 = **508 tests, 0 failures**
 
 ## RUN 12-53 master totals
@@ -2066,7 +2066,7 @@ JVM mode (155 MB uber-jar) remains the production target.
 - **~236+ new tests** added
 - **~23 new Java classes**
 - **12 new EXP reports** (EXP-MATRIX.21-34)
-- **6 hypothesis cards accepted** (H-043, H-044, H-045, H-046, H-049, H-050)
+- **6 hypothesis cards accepted** (H-043, H-044, H-045, H-046, H-049, H-050) <!-- no-id: a family prefix, not an identifier -->
 
 ---
 
@@ -2152,7 +2152,7 @@ build time and logs the model architecture/size.
 - **~251+ new tests** added
 - **~25 new Java classes**
 - **14 new EXP reports** (EXP-MATRIX.21-36)
-- **6 hypothesis cards accepted** (H-043, H-044, H-045, H-046, H-049, H-050)
+- **6 hypothesis cards accepted** (H-043, H-044, H-045, H-046, H-049, H-050) <!-- no-id: a family prefix, not an identifier -->
 - **Qwen2.5-0.5B-Instruct downloaded** (954 MB)
 
 ---
@@ -2200,7 +2200,7 @@ to keep startup fast.
 - **~259+ new tests** added
 - **~26 new Java classes**
 - **14 new EXP reports** (EXP-MATRIX.21-36)
-- **6 hypothesis cards accepted** (H-043, H-044, H-045, H-046, H-049, H-050)
+- **6 hypothesis cards accepted** (H-043, H-044, H-045, H-046, H-049, H-050) <!-- no-id: a family prefix, not an identifier -->
 - **Qwen2.5-0.5B**: HF-downloaded (954 MB) + ONNX-exported (2.5 GB)
 - **ONNX Runtime integration**: working adapter (CPU mode)
 
@@ -2252,7 +2252,7 @@ Honest caveats:
 - **~265+ new tests** added
 - **~26 new Java classes**
 - **15 new EXP reports** (EXP-MATRIX.21-37)
-- **6 hypothesis cards accepted** (H-043, H-044, H-045, H-046, H-049, H-050)
+- **6 hypothesis cards accepted** (H-043, H-044, H-045, H-046, H-049, H-050) <!-- no-id: a family prefix, not an identifier -->
 - **Qwen2.5-0.5B**: HF-downloaded + ONNX-exported + **GPU inference VERIFIED**
 - **ONNX Runtime GPU**: working in Java on RTX 5070 (88ms forward pass)
 
@@ -3442,8 +3442,8 @@ Waves H→O plan executed end-to-end with no pauses.
 - **~1750+ new tests** added (RUN 12-335)
 - **~200 new Java classes**
 - **~130 EXP reports**
-- **6 hypothesis cards accepted** (H-002 refuted-toy, H-003 refuted-toy,
-  H-010 accepted, H-043 accepted, H-044 accepted, H-050 accepted)
+- **6 hypothesis cards accepted** (H-002 refuted-toy, H-003 refuted-toy, <!-- no-id: a family prefix, not an identifier -->
+  H-010 accepted, H-043 accepted, H-044 accepted, H-050 accepted) <!-- no-id: a family prefix, not an identifier -->
 - **~2400+ cumulative tests, 0 failures**
 
 ## Wave H→O acceptance criteria (final)

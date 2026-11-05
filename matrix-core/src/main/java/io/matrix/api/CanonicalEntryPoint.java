@@ -117,11 +117,16 @@ public final class CanonicalEntryPoint {
                             + "ProductionBrainClient, which builds the TrueMindCycle. The "
                             + "gateway's own JAX-RS facade is NOT this path: it is unmounted "
                             + "and constructs a stub cycle"),
-            Declaration.specialist(EPISTEMIC_APPLICATION, "io.matrix.brain.BirBrainCycle",
-                    "the BIR/HDC/Tsetlin/MCTS portfolio. The TrueMindCycle already delegates "
-                            + "to it through its BirInferenceStage, so it is a specialist of "
-                            + "the brain runtime's cycle and a method of the kernel's "
-                            + "portfolio"),
+            // W46.0 CORRECTION. The declaration used to attribute BirBrainCycle to the
+            // epistemic application. The constant pool of the current build says otherwise:
+            // it is reached from the brain runtime (TrueMindCycle, PersistentMind) and from
+            // the unmounted BrainHttpServer, and NO chain A route reaches it. The field
+            // records the chain whose closure reaches the class, not the module it lives in.
+            Declaration.specialist(BRAIN_RUNTIME_APPLICATION, "io.matrix.brain.BirBrainCycle",
+                    "the BIR/HDC/Tsetlin/MCTS portfolio. The TrueMindCycle delegates to it "
+                            + "through its BirInferenceStage, so it is a stage of the brain "
+                            + "runtime's cycle. It lives in matrix-core but is reached from "
+                            + "the brain runtime, and no chain A route reaches it"),
             Declaration.specialist(EPISTEMIC_APPLICATION, "io.matrix.reasoning.ConsciousnessLoop",
                     "the loop that io.matrix.reasoning.BrainLoopService drives; one caller"),
             Declaration.specialist(EPISTEMIC_APPLICATION, "io.matrix.consciousness.BrainLoopService",
