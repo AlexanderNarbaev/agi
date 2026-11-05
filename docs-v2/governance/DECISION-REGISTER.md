@@ -1,0 +1,445 @@
+# DECISION REGISTER — MATRIX
+
+**Status:** CANONICAL · 2026-11-04 · branch `develop` · HEAD `a6ded233`
+**Kind:** an index. Nothing in this file is a decision; every row points at the document that
+holds the decision, and the full text, the rejected alternatives and the evidence live there.
+
+This register answers one question — *what has been decided, by whom, when, and what replaced
+it* — and it answers it by routing a reader, not by restating decisions. Where a row gives a
+one-line summary, that summary is a pointer, not a substitute: the document named in the
+"document that holds it" column is the authority.
+
+It is **not** a capability registry (those claims live in `docs-v2/architecture/CAPABILITY-REGISTRY.md`
+and `docs-v2/engineering/W44-CAPABILITY-REGISTRY.md`), **not** a research log (the hypothesis
+registers and the experiment reports live in `docs-v2/research/`), **not** a roadmap (that is
+`docs-v2/governance/ROADMAP.md`), and **not** a list of open questions (that is
+`docs-v2/governance/OPEN-QUESTIONS.md`).
+
+The registry was built by reading every decision-bearing document in the repository: the
+eight ADRs, the two owner-decision documents of the W45/W45.2 waves, the two wave decision
+logs (`docs-v2/engineering/W45-DECISION-LOG.md` and
+`docs-v2/engineering/RECON-W42-DECISIONS.md`), the normative concept-corrections
+log, the operator's decision ledger, the RFCs and the proposals. A decision that is written
+down but not ruled on is recorded as `PROPOSED`; a document that does not say whether it is a
+decision is recorded as `UNKNOWN`, with the reason.
+
+**Three id prefixes are this register's own**, because the repository's bare `D` is
+ambiguous (see §4): `OD-` for an owner decision, `CD-` for a coordinator decision, `PR-` for
+a proposal. The normative decisions of `docs-v2/vision/CONCEPT-CORRECTIONS.md` get `ND-`,
+a prefix the four given prefixes have no home for: they are decisions, but no document names
+a decider for them.
+
+---
+
+## 1. The summary table
+
+Sorted: owner decisions, then the ADRs, then the normative decisions, then the coordinator
+decisions, then the proposals. Within a kind the newest wave comes first.
+
+| id | the decision (one line) | the kind | the date | the status | the successor | the document that holds it | the effect on the runtime | the evidence or the scope of the approval |
+|---|---|---|---|---|---|---|---|---|
+| [OD-001](#od-001--the-canonical-entry-point-per-serving-application)| Name the canonical entry point of each serving application; keep the five cycles, merge nothing | owner | 2026-11-04 | ACCEPTED | — | `docs-v2/engineering/W45.2-OWNER-DECISIONS.md` (Decision 1); the contract in `docs-v2/engineering/ADR-W45.2-01-canonical-entry-point.md` | a contract | the owner's second answer to the questionnaire of 2026-11-04; every option in the questionnaire is recorded, and the first answer is OD-005 
+| [OD-002](#od-002--the-two-chains-stay-isolated-and-fail-closed)| Keep the two serving chains isolated and fail closed; no bridge, no implicit write path, no new network surface | owner | 2026-11-04 | ACCEPTED | — | `docs-v2/engineering/W45.2-OWNER-DECISIONS.md` (Decision 2); the contract and its limits in `docs-v2/engineering/W45.2-CHAIN-BOUNDARY.md` | a boundary | the owner's second answer to the questionnaire of 2026-11-04; the first answer (a write bridge) is OD-005 
+| [OD-003](#od-003--the-destructive-workspace-reload-fails-closed-and-leaves-a-snapshot)| The destructive workspace reload fails closed on a non-empty workspace and leaves a recoverable snapshot | owner | 2026-11-04 | ACCEPTED | — | `docs-v2/engineering/W45.2-OWNER-DECISIONS.md` (Decision 3) | a contract | the owner's second answer to the questionnaire of 2026-11-04; the first answer (versioning) is OD-005; this answers OD-014 
+| [OD-004](#od-004--one-writer-per-database)| One writer process per database file, enforced and documented | owner | 2026-11-04 | ACCEPTED | — | `docs-v2/engineering/W45.2-OWNER-DECISIONS.md` (Decision 4) | a boundary | the owner's second answer to the questionnaire of 2026-11-04; the same answer to the fourth question 
+| OD-005 | The first answer set: `TrueMindCycle` as a global conductor, an authenticated write bridge, a non-destructive reload by versioning | owner | 2026-11-04 | WITHDRAWN | OD-001, OD-002, OD-003 | `docs-v2/engineering/W45.2-OWNER-DECISIONS.md` §0 (the "first answer" column) | none | taken, then re-answered; the document records that the re-answer is the decision and that the first answer is kept because the difference between the two is the difference between a refactor and a boundary |
+| OD-006 | D1 — BitNet: provision the weights and run the suites for real (option B) | owner | 2026-10-05 | ACCEPTED | — | `docs-v2/quality/OPEN-DECISIONS.md` (CLOSED decisions, D1) | none | operator ruling of the RECON-W32.34 / RECON-W33.1 sweep; the ledger closure is the RECON-W38.0 sweep of 2026-10-18 |
+| OD-007 | D2 — six integration tests that exist only on stale branches: recover and port them to the current API (option B) | owner | 2026-10-05 | ACCEPTED | — | `docs-v2/quality/OPEN-DECISIONS.md` (CLOSED decisions, D2) | none | operator ruling of the RECON-W32.34 sweep; the document names RECON-W32.0/W38.0 recovery as the vehicle |
+| OD-008 | D3 — `gitverse/master`: point it at `develop` (option B) | owner | 2026-10-05 | ACCEPTED | — | `docs-v2/quality/OPEN-DECISIONS.md` (CLOSED decisions, D3) | none | operator ruling, dated 2026-10-05 in the document itself |
+| OD-009 | D4 — release tagging: tag with an explicit caveats file rather than tag silently (option C) | owner | 2026-10-05 | ACCEPTED | — | `docs-v2/quality/OPEN-DECISIONS.md` (CLOSED decisions, D4 — closed in the W33–W34 sweeps) | none | operator ruling; the caveats file the ruling requires is `docs-v2/releases/CAVEATS-v17.6.0-mind.md` (tagged 2026-10-05) |
+| OD-010 | D5 — disk cleanup: reclaim the superseded smoke output and the scratch clone | owner | 2026-10-05 | ACCEPTED | — | `docs-v2/quality/OPEN-DECISIONS.md` (CLOSED decisions, D5) | none | operator-gated ruling of the RECON-W32.34 sweep; the document records the reclaim and the ledger sequence |
+| OD-011 | D6 — the `TrueMindCycle` literal `kill` reflex stays (closed against removal) | owner | 2026-10-05 | ACCEPTED | — | `docs-v2/quality/OPEN-DECISIONS.md` (CLOSED decisions, D6) | none | operator ruling of the RECON-W32.34 sweep; the premise was found false — it is a safety refusal, load-bearing for Article I refusals |
+| OD-012 | D7 — weekly CI: approve the RFC and implement the minimal scheduled change | owner | 2026-10-17 | ACCEPTED | — | `docs-v2/quality/OPEN-DECISIONS.md` (CLOSED decisions, D7); the RFC in `docs-v2/proposals/RFC-weekly-research-suite.md` | none | operator approval in the RECON-W38 pre-session; landed in commit `6a15f178` and visible in `.github/workflows/ci.yml` |
+| OD-013 | D8 — the research-core failures: accept them as research debt per family, and burn down the rest | owner | 2026-10-05 | ACCEPTED | — | `docs-v2/quality/OPEN-DECISIONS.md` (CLOSED decisions, D8) | none | operator ruling of the RECON-W32.34 sweep (full attribution); the document records the per-family split and that F4 is a scientific question, not a test bug |
+| OD-014 | May the workspace reload erase a contradiction history? | owner | 2026-11-02 | SUPERSEDED | OD-003 | `docs-v2/engineering/RECON-W44-BACKLOG.md` §5, item 1 | a boundary | the question as put to the owner on 2026-11-02; answered by OD-003 on 2026-11-04, which chose "fail closed with a snapshot" |
+| OD-015 | May the full `matrix-core` suite be run on this host? | owner | 2026-11-02 | SUPERSEDED | OD-024 | `docs-v2/engineering/RECON-W44-BACKLOG.md` §5, item 2 | none | the question as put to the owner on 2026-11-02; it was answered the same day by OD-024 — the full run is withheld for now. The W44 audit then ran it inadvertently (the filter `io.matrix.*` matched everything) without the owner's approval; the decision was not rescinded, and `docs-v2/engineering/W46-OPEN-QUESTIONS.csv` Q-W46-06 asks for the approval again |
+| OD-016 | Is the inert biochemistry island measured or deleted? | owner | 2026-11-02 | UNKNOWN | — | `docs-v2/engineering/RECON-W44-BACKLOG.md` §5, item 3 | none | the question as put to the owner on 2026-11-02; no ruling recorded. The de facto state is that the island stays INACTIVE and unmeasured; `docs-v2/engineering/W45.2-CAPABILITY-DELTA.md` §4 states nothing was revived |
+| OD-017 | Is the `graph` package fixed and wired, or left as a library? | owner | 2026-11-02 | UNKNOWN | — | `docs-v2/engineering/RECON-W44-BACKLOG.md` §5, item 4 | none | the question as put to the owner on 2026-11-02; no ruling recorded. The package still has zero production callers (`docs-v2/engineering/W44-CAPABILITY-MAP.md`, item 14) |
+| OD-018 | Does the schema-16 `Case` table keep its name? | owner | 2026-11-02 | UNKNOWN | — | `docs-v2/engineering/RECON-W44-BACKLOG.md` §5, item 5 | a data shape | the question as put to the owner on 2026-11-02; no ruling recorded. The de facto name is `epistemic_case` (`CASE` is a reserved SQL word) and the table exists in that shape |
+| OD-019 | The frame of the answer is translated; the knowledge is not | owner | 2026-11-02 | ACCEPTED | — | `docs-v2/engineering/RECON-W42-DECISIONS.md` (D-011) | none | the owner was asked how far the translation reaches and answered on 2026-11-02; the entry itself is marked "Owner decision" |
+| OD-020 | The nine shadow classes on `develop` are wired to the live engines rather than deleted, and their math is verified first | owner | 2026-11-02 | ACCEPTED | — | `docs-v2/engineering/RECON-W42-DECISIONS.md` (D-012) | a contract | the owner, on 2026-11-02; the entry names the order the owner gave (`ErrorDrivenLearner` first) and records what the verification found |
+| OD-021 | The one disagreeing benchmark item stays answered, and the disagreement is recorded | owner | 2026-11-02 | ACCEPTED | — | `docs-v2/engineering/RECON-W42-DECISIONS.md` (D-014) | none | the owner, on 2026-11-02; the item is named `en-unanswer-2` in the document |
+| OD-022 | The magic numbers are fixed in the code; the baseline is NOT updated | owner | 2026-11-02 | ACCEPTED | — | `docs-v2/engineering/RECON-W42-DECISIONS.md` (D-015) | none | the owner, on 2026-11-02; the document records that the frozen zones belong to the owner |
+| OD-023 | The shadow classes are wired to the live engines one at a time, the math first | owner | 2026-11-02 | ACCEPTED | — | `docs-v2/engineering/RECON-W42-DECISIONS.md` (D-016) | a contract | the owner, on 2026-11-02; the entry says it sharpens D-012 (OD-020) rather than replacing it |
+| OD-024 | The full repository test suite is not run; the targeted packages stand | owner | 2026-11-02 | ACCEPTED | — | `docs-v2/engineering/RECON-W42-DECISIONS.md` (D-017) | none | the owner, on 2026-11-02: the full run was withheld for now, and the document says the item "remains an open, owner-held item rather than a silent omission". The W44 audit later ran the suite inadvertently, without the owner's approval; the decision was not rescinded, and `docs-v2/engineering/W46-OPEN-QUESTIONS.csv` Q-W46-06 asks for the approval again |
+| OD-025 | The destructive reload erases the case together with its decision history: the erasure set covers the four observation tables | owner | 2026-11-05 | ACCEPTED | — | `docs-v2/governance/OPEN-QUESTIONS.md` (Q-W46-03); the question it answers | a schema and a behaviour change — NOT implemented in W46 | the owner's answer of 2026-11-05 to the W46 questionnaire; the implementation is TASK-W46-16 |
+| OD-026 | The reload's consent flag accepts both `?replace=true` and `replaceExisting: true` | owner | 2026-11-05 | ACCEPTED | — | `docs-v2/governance/OPEN-QUESTIONS.md` (Q-W46-01) | an API change — NOT implemented in W46 | the owner's answer of 2026-11-05; the implementation is TASK-W46-16 |
+| OD-027 | The reload gains a preview: `?dryRun=true` returns what would be replaced and changes nothing | owner | 2026-11-05 | ACCEPTED | — | `docs-v2/governance/OPEN-QUESTIONS.md` (Q-W46-02) | an API addition — NOT implemented in W46 | the owner's answer of 2026-11-05; the implementation is TASK-W46-16 |
+| OD-028 | The GPU path is fixed in both places: the launcher exports `LD_LIBRARY_PATH`, and the provider diagnostic reports the truth | owner | 2026-11-05 | ACCEPTED | — | `docs-v2/governance/OPEN-QUESTIONS.md` (Q-W46-07); the measurement in `docs-v2/operations/HARDWARE-PROFILE.json` | a serving-path change — NOT implemented in W46 | the owner's answer of 2026-11-05; the measurement (12.6x) is in the hardware report; the implementation is TASK-W46-9 |
+| OD-029 | The retention policy: the backups live outside the repository, 7 days daily plus 4 weeks monthly, and a restore happens only on the owner's explicit command | owner | 2026-11-05 | ACCEPTED | — | `docs-v2/governance/OPEN-QUESTIONS.md` (Q-W46-13); the procedure in `docs-v2/operations/RECOVERY-RUNBOOK.md` | an operational policy — the procedure is written; the schedule is not | the owner's answer of 2026-11-05; the schedule is TASK-W46-17 |
+| OD-030 | The fifteenth TLA+ specification is gated: it moves into `formal/`, enters the specification map and enters the gate | owner | 2026-11-05 | ACCEPTED | — | `docs-v2/governance/OPEN-QUESTIONS.md` (Q-W46-16); `formal/spec-implementation-map.yml` | the gate's scope grows — NOT implemented in W46 | the owner's answer of 2026-11-05; the capability registry's count becomes 15; the implementation is TASK-W46-18 |
+| OD-031 | The four subjects that lost their documents are WRITTEN, not mapped: the renumbered series keeps its numbers and the missing specifications are created | owner | 2026-11-05 | ACCEPTED | — | `docs-v2/governance/OPEN-QUESTIONS.md` (Q-W46-20) | four new normative documents — NOT written in W46 | the owner's answer of 2026-11-05; the implementation is TASK-W46-19 |
+| OD-032 | PR-002 and PR-006 are ACCEPTED with a deadline: they are re-examined at W47 and must be closed there | owner | 2026-11-05 | ACCEPTED | — | `docs-v2/governance/OPEN-QUESTIONS.md` (Q-W46-18) | none yet | the owner's answer of 2026-11-05; the deadline is the W47 wave; the implementation is TASK-W46-20 |
+| OD-033 | The four MATRIX skills are installed under `.agents/skills/` AND registered in the harness's trigger table | owner | 2026-11-05 | ACCEPTED | — | `docs-v2/governance/SKILLS.md`; `docs-v2/governance/SKILL-INVENTORY.md` | the harness's own source and its mirror in the home directory — NOT changed in W46 | the owner's answer of 2026-11-05; the implementation is TASK-W46-21 |
+| OD-034 | The four skill packages whose declared name differs from their directory are FIXED: the names are corrected | owner | 2026-11-05 | ACCEPTED | — | `docs-v2/governance/SKILL-INVENTORY.md` §1 and §3 | the owner's library and the plugin bundle — NOT changed in W46 | the owner's answer of 2026-11-05; the implementation is TASK-W46-22 |
+| ADR-2026-09-12-001 | Adopt an HDC × BitLinear × Boolean hybrid brain as an architectural primitive, orthogonal to MPDP | normative | 2026-09-12 | ACCEPTED | — | `docs-v2/architecture/ADR-2026-09-12-001-hdc-bitlinear-hybrid-brain.md` | a contract | the document names no decider; it is a standing architectural rule, referenced by `docs-v2/engineering/STANDARDS-MATRIX.md` as Accepted |
+| ADR-2026-10-26-002 | `TrueMindCycle` is the one cognitive conductor — of the brain runtime | owner | 2026-10-26 | ACCEPTED | ADR-W45.2-01 (for the epistemic application only) | `docs-v2/architecture/ADR-2026-10-26-002-single-cognitive-conductor.md` | a contract | decided by the repository owner via MASTER ENGINEERING DIRECTIVE v2, §13, for `matrix-brain-runtime` and `matrix-api-gateway`. The header carries a scope annotation of 2026-11-04: the decision holds for the brain runtime, is **not** the conductor of the epistemic application, and the body was not rewritten |
+| ADR-2026-10-30-003 | The HashChain trust model: an injected clock, sequence validation, and tamper-evidence rather than tamper-proofness | normative | 2026-10-30 | ACCEPTED | — | `docs-v2/architecture/ADR-2026-10-30-003-hashchain-trust-model.md` | a contract | the document names no decider; it records the RECON-W39 findings on `io.matrix.audit.HashChain` and the rules that follow |
+| ADR-2026-10-30-004 | One deletion semantics per class in the Noosphere CRDT, with durable tombstones | normative | 2026-10-30 | ACCEPTED | — | `docs-v2/architecture/ADR-2026-10-30-004-noosphere-crdt-semantics.md` | a contract | the document names no decider; it records the RECON-W39 finding that three incompatible deletion semantics existed in one package |
+| ADR-2026-10-30-005 | The production MCTS search has no reward signal, so no planning-superiority claim is made | normative | 2026-10-30 | ACCEPTED | — | `docs-v2/architecture/ADR-2026-10-30-005-mcts-reward-signal.md` | none | the document names no decider; the decision is a refusal to claim — the reward is a constant 0.5, so replacing it needs a separate decision |
+| ADR-W43-01 | The epistemic model of MATRIX: what a piece of knowledge is, and the states it can be in | owner | 2026-11-02 | ACCEPTED | — | `docs-v2/engineering/ADR-W43-01-epistemic-model.md` | a data shape | the repository owner, via the W43 directive; the document names the coordinator as author and points at §9 for the points that still need the owner |
+| ADR-W44-01 | The cognitive kernel: its contracts, its placement in `matrix-core`, and its schema | owner | 2026-11-02 | ACCEPTED | ADR-W45.2-01 (scope clarification only) | `docs-v2/engineering/ADR-W44-01-cognitive-kernel.md` | a contract | the repository owner, via the W44 directive itself. The header carries a scope annotation of 2026-11-04: the canonical entry point is named per serving application and the five cycles are kept rather than merged; the body was not rewritten |
+| ADR-W45.2-01 | The canonical entry point of each serving application is named in code | owner | 2026-11-04 | ACCEPTED | — | `docs-v2/engineering/ADR-W45.2-01-canonical-entry-point.md` | a contract | the repository owner, via the questionnaire of 2026-11-04 (OD-001). Enforced by `io.matrix.api.CanonicalEntryPoint` and the two tests the ADR names |
+| ND-001 | The atomic computational unit is the BirUnit in one of the three BIR forms, evaluated through `BooleanRuntime.evaluate` | normative | 2026-08-27 | ACCEPTED | — | `docs-v2/vision/CONCEPT-CORRECTIONS.md` (D-001) | a contract | the log is marked "normative · singleton · decisions log" and names no decider; each entry states a decision, a rationale and a criterion for reversal. **Date caveat:** the log carries no per-decision date, so the register uses the last revision of the log (2026-08-27) for all eleven entries |
+| ND-002 | The producers are Tsetlin, WiSARD and MPDT-GA, the last as a baseline | normative | 2026-08-27 | ACCEPTED | — | `docs-v2/vision/CONCEPT-CORRECTIONS.md` (D-002) | none | as ND-001; adopting a new producer is stated to require a separate RFC and a preregistered hypothesis |
+| ND-003 | FROZEN ethics: the four prohibitions are implemented and cannot be lifted without the FROZEN procedure | normative | 2026-08-27 | ACCEPTED | — | `docs-v2/vision/CONCEPT-CORRECTIONS.md` (D-003) | a contract | as ND-001; the entry names the implementing classes and the TLA+ contract, and states that only a formal change of the constitution by the owner can cancel it |
+| ND-004 | Memory: the `m0` / `M0`…`M4` / `M5+` hierarchy | normative | 2026-08-27 | ACCEPTED | — | `docs-v2/vision/CONCEPT-CORRECTIONS.md` (D-004) | a data shape | as ND-001; a change of the levels is stated to require an RFC and a TLA+ specification |
+| ND-005 | Decentralisation through anonymised digests | normative | 2026-08-27 | ACCEPTED | — | `docs-v2/vision/CONCEPT-CORRECTIONS.md` (D-005) | a contract | as ND-001; the entry names `io.matrix.federation.Anonymizer` and the post-quant ML-DSA signing channel |
+| ND-006 | The external stack dependencies: Java 25, Quarkus 3.38.3, GraalVM plugin 1.1.10, Avro 1.12.2, ONNX Runtime 1.29.0, kafka-clients 4.3.1, Testcontainers 1.21.3 | normative | 2026-08-27 | ACCEPTED | — | `docs-v2/vision/CONCEPT-CORRECTIONS.md` (D-006) | none | as ND-001; the versions match `matrix-core/build.gradle` today. A major upgrade is stated to require a separate RFC with JMH-gate measurements |
+| ND-007 | The INV-1 source-scan guard | normative | 2026-08-27 | ACCEPTED | — | `docs-v2/vision/CONCEPT-CORRECTIONS.md` (D-007) | a contract | as ND-001; the guard is `matrix-core/src/test/java/io/matrix/bir/Inv1SourceGuardTest.java`; it exists and runs in the ordinary test task |
+| ND-008 | The wave-based mode of work: one coherent task per wave, with a checkpoint commit and a push | normative | 2026-08-27 | ACCEPTED | — | `docs-v2/vision/CONCEPT-CORRECTIONS.md` (D-008) | none | as ND-001; a move to continuous integration is stated to require an RFC |
+| ND-009 | The experiment protocol | normative | 2026-08-27 | ACCEPTED | — | `docs-v2/vision/CONCEPT-CORRECTIONS.md` (D-009) | a contract | as ND-001; the protocol is `docs-v2/research/PROTOCOL.md` and the register is `docs-v2/research/HYPOTHESES.md` |
+| ND-010 | GitHub Pages publishes `docs/`; the rest of `docs-v2/` is served through the repository | normative | 2026-08-27 | ACCEPTED | — | `docs-v2/vision/CONCEPT-CORRECTIONS.md` (D-010) | none | as ND-001; the workflow is `.github/workflows/pages.yml` |
+| ND-011 | Archiving: the history is kept for audit, and the active documents stay compact | normative | 2026-08-27 | ACCEPTED | — | `docs-v2/vision/CONCEPT-CORRECTIONS.md` (D-011) | none | as ND-001. **The document's own "Решение" line is missing from this entry** — it jumps straight to the rationale and the criterion of reversal — so the one-line summary here is taken from the section title and its rationale, not from a decision sentence |
+| CD-001 | The observation disposition is a new concept with its own table, not an overload of `Case.Origin` | coordinator | 2026-11-03 | ACCEPTED | — | `docs-v2/engineering/W45-DECISION-LOG.md` (D1) | a data shape | taken by the W45.0 wave under the W45 directive; the log records the rejected alternatives and the evidence (`Case.Origin` has five provenance values, the evidence relation seven) |
+| CD-002 | An unclassifiable record is held as `UNRESOLVED`, never eligible | coordinator | 2026-11-03 | ACCEPTED | CD-012 (the backfill clause only) | `docs-v2/engineering/W45-DECISION-LOG.md` (D2) | a data shape | taken by the W45.0 wave under the W45 directive; the log records the unsafe direction that was rejected. The v16→v17 backfill clause of this decision was corrected by CD-012 |
+| CD-003 | The contradiction rule is "against a belief", not "against any prediction" | coordinator | 2026-11-03 | ACCEPTED | — | `docs-v2/engineering/W45-DECISION-LOG.md` (D3) | a contract | taken by the W45.0 wave under the W45 directive |
+| CD-004 | The reference method reads the model-eligible observations | coordinator | 2026-11-03 | ACCEPTED | — | `docs-v2/engineering/W45-DECISION-LOG.md` (D4) | a contract | taken by the W45.0 wave under the W45 directive |
+| CD-005 | No procedure is promoted without independent evidence, and the fast path is relabelled | coordinator | 2026-11-03 | ACCEPTED | — | `docs-v2/engineering/W45-DECISION-LOG.md` (D5) | a contract | taken by the W45.0 wave under the W45 directive |
+| CD-006 | The epistemic write is one transaction | coordinator | 2026-11-03 | ACCEPTED | — | `docs-v2/engineering/W45-DECISION-LOG.md` (D6) | a contract | taken by the W45.0 wave under the W45 directive; implemented in `KnowledgeStore.recordObservationAtomically` |
+| CD-007 | The cycle budget is a deadline on a monotonic clock | coordinator | 2026-11-03 | ACCEPTED | — | `docs-v2/engineering/W45-DECISION-LOG.md` (D7) | a contract | taken by the W45.0 wave under the W45 directive |
+| CD-008 | The drive state is durable and its version is allocated inside the transaction | coordinator | 2026-11-03 | ACCEPTED | — | `docs-v2/engineering/W45-DECISION-LOG.md` (D8) | a data shape | taken by the W45.0 wave under the W45 directive |
+| CD-009 | One cognitive cycle runs at a time per kernel | coordinator | 2026-11-03 | ACCEPTED | — | `docs-v2/engineering/W45-DECISION-LOG.md` (D9) | a contract | taken by the W45.0 wave under the W45 directive |
+| CD-010 | The W44 tests that encoded the defects were updated, not deleted | coordinator | 2026-11-03 | ACCEPTED | — | `docs-v2/engineering/W45-DECISION-LOG.md` (D10) | none | taken by the W45.0 wave under the W45 directive; a rule about how the wave treats the previous wave's tests, with no runtime effect |
+| CD-011 | The W44 archaeology artefacts were not regenerated | coordinator | 2026-11-03 | ACCEPTED | — | `docs-v2/engineering/W45-DECISION-LOG.md` (D11) | none | taken by the W45.0 wave under the W45 directive; a rule about artefact custody. Note that CD-015 later corrected one of those artefacts' claims, in a new document rather than in the old one |
+| CD-012 | A legacy record is classified by the durable evidence, not by the evidence relation alone | coordinator | 2026-11-04 | ACCEPTED | — | `docs-v2/engineering/W45.1-LEGACY-DISPOSITION-REPORT.md`; the wave's statement in `docs-v2/engineering/W45.1-STATUS.md` ("Priority D") | a data shape | taken by the W45.1 wave under the W45 directive, after the W45.0 backfill was found wrong for one class of records; the corrected rule consults the cognitive error records and falls back to the relation only when they are absent |
+| CD-013 | The request lifecycle is an explicit state machine, and an interrupted request is classified rather than repeated | coordinator | 2026-11-04 | ACCEPTED | — | `docs-v2/engineering/W45.1-CRASH-CONSISTENCY-DESIGN.md`; the per-crash-point table in `docs-v2/engineering/W45.1-RECOVERY-MATRIX.csv` | a contract | taken by the W45.1 wave under the W45 directive; the matrix names the durable records, the possible side effects, the recovery action and the verification test for each crash point |
+| CD-014 | When the liveness of an owner cannot be disproved, the claim is treated as OWNED | coordinator | 2026-11-04 | ACCEPTED | — | `docs-v2/engineering/W45.1-CRASH-CONSISTENCY-DESIGN.md` (§ the ownership rule) | a contract | taken by the W45.1 wave under the W45 directive; the rule is deliberately asymmetric, because a claim wrongly considered alive is visible while one wrongly considered dead duplicates an execution. Its safe scope is bounded by OD-004 |
+| CD-015 | The adjudication history is append-only; the current disposition is a projection of it, and a re-observation never adjudicates | coordinator | 2026-11-04 | ACCEPTED | — | `docs-v2/engineering/W45.1-DISPOSITION-LIFECYCLE.md` | a data shape | taken by the W45.1 wave under the W45 directive; the defect it fixes was reproduced against the pre-fix code, not merely described |
+| CD-016 | A failed cycle has a truthful terminal state: a FAILURE step, a closed episode, a FAILED outcome | coordinator | 2026-11-04 | ACCEPTED | — | `docs-v2/engineering/W45.1-STATUS.md` ("Priority C") | a contract | taken by the W45.1 wave under the W45 directive; the HTTP surface maps a failure to 500 and a timeout to 503 |
+| CD-017 | The canonical entry point is declared in code, so that a test can check it | coordinator | 2026-11-04 | ACCEPTED | — | `docs-v2/engineering/ADR-W45.2-01-canonical-entry-point.md` (the declaration and its enforcement) | a contract | the mechanism the coordinator chose to implement OD-001 with; the names are strings, so `matrix-core` does not depend on the gateway, and `CanonicalEntryPointTest` and `CanonicalEntryPointChainBTest` resolve each name that can be resolved |
+| CD-018 | The isolation of the two chains is proved by a gate that can go red, with a negative control | coordinator | 2026-11-04 | ACCEPTED | — | `docs-v2/engineering/W45.2-CHAIN-BOUNDARY.md` | a boundary | the mechanism the coordinator chose to implement OD-002 with; the gate reports 16 checks and the negative control 6, and both have been seen going red on a deliberately broken tree |
+| CD-019 | The contract for a future bridge between the chains is written down now | coordinator | 2026-11-04 | ACCEPTED | — | `docs-v2/engineering/W45.2-OWNER-DECISIONS.md` (Decision 2, the bridge contract) and `docs-v2/engineering/W45.2-CHAIN-BOUNDARY.md` | a contract | the coordinator's commitment inside OD-002: ten requirements (BRIDGE-1…10) that a future bridge must satisfy, written down so that a later wave does not invent one. No bridge exists and none is to be built without a further decision |
+| CD-W42-01 | The benchmark is built before any improvement is attempted | coordinator | 2026-11-01 | ACCEPTED | — | `docs-v2/engineering/RECON-W42-DECISIONS.md` (D-001) | a contract | taken by the W42 wave under the owner directive of 2026-11-01; the entry states what it forecloses: no claim in W42.1–W42.5 may state an improvement without the before-and-after numbers from that instrument |
+| CD-W42-02 | No historical branch is merged, restored, or deleted | coordinator | 2026-11-01 | ACCEPTED | — | `docs-v2/engineering/RECON-W42-DECISIONS.md` (D-002) | none | the W42 wave under the owner directive; the entry records that the absence of the four classes is test-enforced |
+| CD-W42-03 | The `KnowledgeGraphStore` becomes a projection, not a fourth store | coordinator | 2026-11-01 | ACCEPTED | — | `docs-v2/engineering/RECON-W42-DECISIONS.md` (D-003) | a data shape | the W42 wave under the owner directive |
+| CD-W42-04 | The BM25 baseline is a measurement, not a candidate | coordinator | 2026-11-01 | ACCEPTED | — | `docs-v2/engineering/RECON-W42-DECISIONS.md` (D-004) | none | the W42 wave under the owner directive |
+| CD-W42-05 | The learning state machine is persisted, not recomputed | coordinator | 2026-11-01 | ACCEPTED | — | `docs-v2/engineering/RECON-W42-DECISIONS.md` (D-005) | a data shape | the W42 wave under the owner directive |
+| CD-W42-06 | The planner selects; it does not generate | coordinator | 2026-11-01 | ACCEPTED | — | `docs-v2/engineering/RECON-W42-DECISIONS.md` (D-006) | a contract | the W42 wave under the owner directive |
+| CD-W42-07 | The mission's §14 targets are read as measurements, not as promises | coordinator | 2026-11-01 | ACCEPTED | — | `docs-v2/engineering/RECON-W42-DECISIONS.md` (D-007) | none | the W42 wave under the owner directive |
+| CD-W42-08 | The defects found by the audit are fixed in the wave that found them | coordinator | 2026-11-01 | ACCEPTED | — | `docs-v2/engineering/RECON-W42-DECISIONS.md` (D-008) | none | the W42 wave under the owner directive |
+| CD-W42-09 | The four W41 documentation contradictions are corrected, not rewritten | coordinator | 2026-11-01 | ACCEPTED | — | `docs-v2/engineering/RECON-W42-DECISIONS.md` (D-009) | none | the W42 wave under the owner directive; the same rule as CD-011, two waves earlier |
+| CD-W42-10 | The specialist audits are the evidence base, not a summary of them | coordinator | 2026-11-01 | ACCEPTED | — | `docs-v2/engineering/RECON-W42-DECISIONS.md` (D-010) | none | the W42 wave under the owner directive |
+| CD-W42-11 | A benchmark item's POINTER may be corrected; its ETALON may not | coordinator | 2026-11-01 | ACCEPTED | — | `docs-v2/engineering/RECON-W42-DECISIONS.md` (D-013) | none | the W42 wave under the owner directive; the entry carries the rule and the criterion that would change it |
+| PR-001 | Add a GitHub Actions workflow that validates wave checkpoint integrity on every push | proposal | 2026-09-18 | REJECTED | — | `docs-v2/proposals/RFC-001-wal-checkpoint-workflow.md` | none | rejected by the owner on 2026-09-18 in favour of the manual process; the document keeps the rejected workflow for the historical record and states the replacement rule |
+| PR-002 | Add a weekly CI job that runs the fresh-clone smoke test | proposal | 2026-09-29 | PROPOSED | — | `docs-v2/proposals/RFC-weekly-ci-smoke.md` | none | awaiting operator approval; the document states that it does not itself modify `.github/workflows/**` and that the campaign proceeds without the automation. No such workflow exists |
+| PR-003 | Run the research and property suites on a weekly schedule in CI | proposal | 2026-10-05 | ACCEPTED | — | `docs-v2/proposals/RFC-weekly-research-suite.md`; the approval recorded in `docs-v2/quality/OPEN-DECISIONS.md` (CLOSED decisions, D7) | none | approved by the operator in the RECON-W38 pre-session and implemented in commit `6a15f178`; the schedule is visible in `.github/workflows/ci.yml`. This row and OD-012 are the same decision seen from two sides: the RFC is the proposal, the operator ruling is the decision |
+| PR-004 | Global decentralized brain federation: a hybrid federation of local digital brains | proposal | 2026-09-17 | PROPOSED | — | `docs-v2/proposals/PROPOSAL-global-decentralized-brain-federation.md` | none | the document says "proposal · draft v0.1" and names no decider; it is a design proposal, not a decision. The `UNVERIFIED` mark that the W46 document audit gave it is a claim-provenance status, not a decision status, and it does not change this row |
+| PR-005 | Wave 347: the architecture of the global decentralized brain federation | proposal | 2026-09-17 | PROPOSED | — | `docs-v2/proposals/PROPOSAL-wave-347-global-federation-architecture.md` | none | the document says "proposal · draft v1.0" and names no decider; it builds on PR-004 and on `DESIGN-58`. Same note as PR-004 about the `UNVERIFIED` mark |
+| PR-006 | Split the monolithic `WAL.md` into one file per wave | proposal | 2026-09-18 | PROPOSED | — | `docs-v2/proposals/PROPOSAL-wal-split-wave-based-architecture.md` | none | **never ruled on** — no document records an acceptance or a rejection, so the status is `PROPOSED` rather than `ACCEPTED`. Its first two phases happened anyway: `docs-v2/specifications/SPEC-014-wal-management.md` (W350) and `scripts/extract-waves.py` (W351) exist. The bulk extraction did not: `docs-v2/waves/` holds exactly one `wave-*.md` file. The `WAL.md` the proposal splits is **not at that path in the repository today** — the journal is `wal/SESSION_WAL.md` — so the proposal describes a file layout that no longer exists under that name |
+
+---
+
+## 2. The superseded chain
+
+| the superseded decision | replaced by | why |
+|---|---|---|
+| `docs-v2/architecture/ADR-2026-10-26-002-single-cognitive-conductor.md` — "`TrueMindCycle` is the one cognitive conductor" | `docs-v2/engineering/ADR-W45.2-01-canonical-entry-point.md` (OD-001) | the ADR was written before the bytecode was examined and reads as if one cycle governed the whole system. It still holds for the brain runtime, which is the scope its own "Applies to" line names; for the epistemic application the canonical entry point is `io.matrix.knowledge.LearningWorkbenchResource`. **The ADR was not rewritten** — it carries a one-line scope annotation in its header, dated 2026-11-04 |
+| `docs-v2/engineering/ADR-W44-01-cognitive-kernel.md` — the kernel's placement and contracts | `docs-v2/engineering/ADR-W45.2-01-canonical-entry-point.md` (OD-001), scope clarification only | the same annotation: the canonical entry point is named per serving application and the five cycles are kept rather than merged. The kernel's contracts, placement and schema are untouched |
+| OD-005 — the first answer set (global conductor, write bridge, versioning) | OD-001, OD-002, OD-003 | the owner re-answered the questionnaire and took the recommended option on all four questions. Both answers are kept: the first is in `docs-v2/engineering/W45.2-OWNER-DECISIONS.md` §0, the second in the same document's decision sections |
+| OD-014 — "may the workspace reload erase a contradiction history?" | OD-003 — fail closed, with a recoverable snapshot | the question was put in `docs-v2/engineering/RECON-W44-BACKLOG.md` §5 on 2026-11-02 and answered on 2026-11-04 |
+| the backfill clause of CD-002 — "classify a legacy record from the evidence relation" | CD-012 — classify it from the durable evidence | the W45.0 rule held every unexplained observation, which is the obsolete W44 rule preserved inside the migration. The correction is in `docs-v2/engineering/W45.1-LEGACY-DISPOSITION-REPORT.md`; CD-002's live-path clause is unchanged |
+| the W44 claim that all 24 failures need a GraalVM native image | `docs-v2/engineering/W45-TEST-EVIDENCE-RECONCILIATION.md` §5.1 — 23 need it, one is a source-compliance regression | not a decision; a correction to an evidence claim, recorded here because a reader who stops at the W44 documents will reach the wrong conclusion |
+
+---
+
+## 3. The owner decisions that changed a runtime contract
+
+These are the decisions whose effect is visible in the running system. Each row names the
+contract, not the reasoning.
+
+### OD-001 — the canonical entry point per serving application
+
+| the application | the canonical entry point | the routes | the cycles it runs |
+|---|---|---|---|
+| the epistemic and workbench application | `io.matrix.knowledge.LearningWorkbenchResource` | `/v1/workbench/**` | `io.matrix.cognitive.CognitiveKernel` |
+| | `io.matrix.api.OpenAIChatResource` | `/v1/chat/completions` | `io.matrix.reasoning.BrainLoopService` |
+| the brain runtime | `io.matrix.api.MinimalHttpServer` | `POST /v1/analyze` | `io.matrix.brain.runtime.TrueMindCycle` |
+
+**Evidence:** the decision text is `docs-v2/engineering/W45.2-OWNER-DECISIONS.md` (Decision 1);
+the contract, its costs and its limits are `docs-v2/engineering/ADR-W45.2-01-canonical-entry-point.md`;
+the enforcement is `io.matrix.api.CanonicalEntryPoint` with `CanonicalEntryPointTest` and
+`CanonicalEntryPointChainBTest`, as recorded in `docs-v2/engineering/W45.2-CAPABILITY-DELTA.md` §1.
+**What it did not do:** merge the cycles, create a sixth conductor, or join the two chains.
+
+### OD-002 — the two chains stay isolated and fail closed
+
+**What it changed:** no bridge, no implicit write path, no automatic trust, no new network
+surface; chain B cannot alter claims, confidence, goals or safety policy.
+**Evidence:** `docs-v2/engineering/W45.2-OWNER-DECISIONS.md` (Decision 2) for the decision,
+`docs-v2/engineering/W45.2-CHAIN-BOUNDARY.md` for the contract and the honest limits of the
+proof, and the gate `scripts/w45-chain-isolation-check.sh` with its negative control
+`scripts/w45-chain-isolation-selftest.sh` for the proof itself.
+**What it did not do:** add a bridge, grant chain B access to the epistemic store, or expose a
+network surface.
+
+### OD-003 — the destructive workspace reload fails closed and leaves a snapshot
+
+**What it changed:** the load refuses to replace a non-empty workspace unless the caller asks
+explicitly; nothing is deleted in that case. With the explicit flag, a snapshot is taken in
+the same transaction as the replacement and the response carries the snapshot's id.
+**Evidence:** `docs-v2/engineering/W45.2-OWNER-DECISIONS.md` (Decision 3); the executed checks
+are named in `docs-v2/engineering/W45.2-CAPABILITY-DELTA.md` §1.
+**What it did not do:** remove the ability to replace a workspace, or version every read of
+one. Two residual gaps are recorded as open in `docs-v2/engineering/W45.2-CAPABILITY-DELTA.md` §3
+and in `docs-v2/engineering/W46-OPEN-QUESTIONS.csv` (Q-W46-01, Q-W46-02, Q-W46-03).
+
+### OD-004 — one writer per database
+
+**What it changed:** a second process opening the same cognitive database is refused at
+start-up; the guard is a lock file holding the owner's pid, its start instant and the instance
+token, and a lock left by a killed process does not block the next one.
+**Evidence:** `docs-v2/engineering/W45.2-OWNER-DECISIONS.md` (Decision 4);
+`docs-v2/engineering/W45.2-CAPABILITY-DELTA.md` §1 names the executed check, including the case
+that starts a second JVM and the case that `SIGKILL`s a writer.
+**What it did not do:** add leases, a fencing service or multi-writer support.
+
+### The W45.0 and W45.1 coordinator decisions that changed a runtime contract
+
+| decision | what it changed | where the evidence lives |
+|---|---|---|
+| CD-001 | a new enum and a new table (`observation_disposition`, schema v17) | `docs-v2/engineering/W45-CAPABILITY-DELTA.md` §1; `docs-v2/engineering/W45-INTEGRITY-DESIGN.md` |
+| CD-006 | the epistemic write became one transaction | `docs-v2/engineering/W45-CAPABILITY-DELTA.md` §1; `docs-v2/engineering/W45-DECISION-LOG.md` (D6) |
+| CD-007 | a monotonic deadline checked at ten phase boundaries; a timeout is an explicit, persisted terminal state | `docs-v2/engineering/W45-CAPABILITY-DELTA.md` §1 |
+| CD-008 | the regulatory state and the provenance of every change are persisted together and restored at start-up | `docs-v2/engineering/W45-CAPABILITY-DELTA.md` §1 |
+| CD-009 | one cycle at a time per kernel; every store write serialised; the sequence never repeats | `docs-v2/engineering/W45-CAPABILITY-DELTA.md` §1 |
+| CD-012 | the corrected legacy backfill rule | `docs-v2/engineering/W45.1-LEGACY-DISPOSITION-REPORT.md` |
+| CD-013 | the request lifecycle state machine and the classification of an interrupted request | `docs-v2/engineering/W45.1-RECOVERY-MATRIX.csv` (one row per crash point) |
+| CD-014 | the ownership liveness rule | `docs-v2/engineering/W45.1-CRASH-CONSISTENCY-DESIGN.md` |
+| CD-015 | the append-only adjudication history and the disposition projection | `docs-v2/engineering/W45.1-DISPOSITION-LIFECYCLE.md` |
+| CD-016 | the truthful terminal state of a failed cycle | `docs-v2/engineering/W45.1-STATUS.md` ("Priority C") |
+| CD-017, CD-018 | the mechanisms that make OD-001 and OD-002 checkable | `docs-v2/engineering/ADR-W45.2-01-canonical-entry-point.md`; `docs-v2/engineering/W45.2-CHAIN-BOUNDARY.md` |
+
+### The earlier waves' decisions that changed a runtime contract
+
+| decision | what it changed | where the evidence lives |
+|---|---|---|
+| CD-W42-01 | the benchmark exists before any improvement is attempted, and no improvement claim may skip the before-and-after numbers | `docs-v2/engineering/RECON-W42-DECISIONS.md` (D-001); the instrument is `w42-benchmark-v1.json` |
+| CD-W42-03 | the `KnowledgeGraphStore` became a projection, not a fourth store | `docs-v2/engineering/RECON-W42-DECISIONS.md` (D-003) |
+| CD-W42-05 | the learning state machine is persisted (`learning_state`), not recomputed | `docs-v2/engineering/RECON-W42-DECISIONS.md` (D-005) |
+| CD-W42-06 | the planner selects; it does not generate | `docs-v2/engineering/RECON-W42-DECISIONS.md` (D-006) |
+| OD-020, OD-023 | the shadow classes are wired to the live engines one at a time, and the math of each is verified first — the verification has already found one class whose error-driven part was dead by construction | `docs-v2/engineering/RECON-W42-DECISIONS.md` (D-012, D-016) |
+| OD-024 | the full repository test suite is not run; the targeted packages stand | `docs-v2/engineering/RECON-W42-DECISIONS.md` (D-017) |
+| ND-003 | the four FROZEN prohibitions are implemented and cannot be lifted without the FROZEN procedure | `docs-v2/vision/CONCEPT-CORRECTIONS.md` (D-003) |
+| ND-007 | the INV-1 source-scan guard blocks legacy calls outside the whitelist | `docs-v2/vision/CONCEPT-CORRECTIONS.md` (D-007); the guard is `matrix-core/src/test/java/io/matrix/bir/Inv1SourceGuardTest.java` |
+
+---
+
+## 3.1 The owner's answers of 2026-11-05 — the W46 questionnaire
+
+**These are the owner's decisions, taken in the questionnaire of 2026-11-05.** They are
+**recorded, not implemented**: the owner's instruction for this wave was to fix the
+decisions in the registers and to leave the behaviour to W47. Every row names the task
+that implements it.
+
+### OD-025 — The destructive reload erases the case together with its decision history: the erasure set covers the four observation tables
+
+- **kind**: owner
+- **the date**: 2026-11-05
+- **the status**: ACCEPTED
+- **the successor**: —
+- **the document that holds it**: `docs-v2/governance/OPEN-QUESTIONS.md` (Q-W46-03); the question it answers
+- **the effect on the runtime**: a schema and a behaviour change — NOT implemented in W46
+- **the evidence or the scope of the approval**: the owner's answer of 2026-11-05 to the W46 questionnaire; the implementation is TASK-W46-16
+
+### OD-026 — The reload's consent flag accepts both `?replace=true` and `replaceExisting: true`
+
+- **kind**: owner
+- **the date**: 2026-11-05
+- **the status**: ACCEPTED
+- **the successor**: —
+- **the document that holds it**: `docs-v2/governance/OPEN-QUESTIONS.md` (Q-W46-01)
+- **the effect on the runtime**: an API change — NOT implemented in W46
+- **the evidence or the scope of the approval**: the owner's answer of 2026-11-05; the implementation is TASK-W46-16
+
+### OD-027 — The reload gains a preview: `?dryRun=true` returns what would be replaced and changes nothing
+
+- **kind**: owner
+- **the date**: 2026-11-05
+- **the status**: ACCEPTED
+- **the successor**: —
+- **the document that holds it**: `docs-v2/governance/OPEN-QUESTIONS.md` (Q-W46-02)
+- **the effect on the runtime**: an API addition — NOT implemented in W46
+- **the evidence or the scope of the approval**: the owner's answer of 2026-11-05; the implementation is TASK-W46-16
+
+### OD-028 — The GPU path is fixed in both places: the launcher exports `LD_LIBRARY_PATH`, and the provider diagnostic reports the truth
+
+- **kind**: owner
+- **the date**: 2026-11-05
+- **the status**: ACCEPTED
+- **the successor**: —
+- **the document that holds it**: `docs-v2/governance/OPEN-QUESTIONS.md` (Q-W46-07); the measurement in `docs-v2/operations/HARDWARE-PROFILE.json`
+- **the effect on the runtime**: a serving-path change — NOT implemented in W46
+- **the evidence or the scope of the approval**: the owner's answer of 2026-11-05; the measurement (12.6x) is in the hardware report; the implementation is TASK-W46-9
+
+### OD-029 — The retention policy: the backups live outside the repository, 7 days daily plus 4 weeks monthly, and a restore happens only on the owner's explicit command
+
+- **kind**: owner
+- **the date**: 2026-11-05
+- **the status**: ACCEPTED
+- **the successor**: —
+- **the document that holds it**: `docs-v2/governance/OPEN-QUESTIONS.md` (Q-W46-13); the procedure in `docs-v2/operations/RECOVERY-RUNBOOK.md`
+- **the effect on the runtime**: an operational policy — the procedure is written; the schedule is not
+- **the evidence or the scope of the approval**: the owner's answer of 2026-11-05; the schedule is TASK-W46-17
+
+### OD-030 — The fifteenth TLA+ specification is gated: it moves into `formal/`, enters the specification map and enters the gate
+
+- **kind**: owner
+- **the date**: 2026-11-05
+- **the status**: ACCEPTED
+- **the successor**: —
+- **the document that holds it**: `docs-v2/governance/OPEN-QUESTIONS.md` (Q-W46-16); `formal/spec-implementation-map.yml`
+- **the effect on the runtime**: the gate's scope grows — NOT implemented in W46
+- **the evidence or the scope of the approval**: the owner's answer of 2026-11-05; the capability registry's count becomes 15; the implementation is TASK-W46-18
+
+### OD-031 — The four subjects that lost their documents are WRITTEN, not mapped: the renumbered series keeps its numbers and the missing specifications are created
+
+- **kind**: owner
+- **the date**: 2026-11-05
+- **the status**: ACCEPTED
+- **the successor**: —
+- **the document that holds it**: `docs-v2/governance/OPEN-QUESTIONS.md` (Q-W46-20)
+- **the effect on the runtime**: four new normative documents — NOT written in W46
+- **the evidence or the scope of the approval**: the owner's answer of 2026-11-05; the implementation is TASK-W46-19
+
+### OD-032 — PR-002 and PR-006 are ACCEPTED with a deadline: they are re-examined at W47 and must be closed there
+
+- **kind**: owner
+- **the date**: 2026-11-05
+- **the status**: ACCEPTED
+- **the successor**: —
+- **the document that holds it**: `docs-v2/governance/OPEN-QUESTIONS.md` (Q-W46-18)
+- **the effect on the runtime**: none yet
+- **the evidence or the scope of the approval**: the owner's answer of 2026-11-05; the deadline is the W47 wave; the implementation is TASK-W46-20
+
+### OD-033 — The four MATRIX skills are installed under `.agents/skills/` AND registered in the harness's trigger table
+
+- **kind**: owner
+- **the date**: 2026-11-05
+- **the status**: ACCEPTED
+- **the successor**: —
+- **the document that holds it**: `docs-v2/governance/SKILLS.md`; `docs-v2/governance/SKILL-INVENTORY.md`
+- **the effect on the runtime**: the harness's own source and its mirror in the home directory — NOT changed in W46
+- **the evidence or the scope of the approval**: the owner's answer of 2026-11-05; the implementation is TASK-W46-21
+
+### OD-034 — The four skill packages whose declared name differs from their directory are FIXED: the names are corrected
+
+- **kind**: owner
+- **the date**: 2026-11-05
+- **the status**: ACCEPTED
+- **the successor**: —
+- **the document that holds it**: `docs-v2/governance/SKILL-INVENTORY.md` §1 and §3
+- **the effect on the runtime**: the owner's library and the plugin bundle — NOT changed in W46
+- **the evidence or the scope of the approval**: the owner's answer of 2026-11-05; the implementation is TASK-W46-22
+
+## 4. The duplicate-identifier problem
+
+The repository has one, and this register does not hide it. There are three distinguishable
+kinds of duplication, and only the first is a real collision.
+
+**(a) A genuine collision — the same id defined twice for different subjects.**
+
+| id | the two claimants | note |
+|---|---|---|
+| `SPEC-002` | `docs-v2/specifications/SPEC-002-boolean-compute-layer.md` and `docs-v2/specifications/SPEC-002-quantum-bir-mps.md` | two different specifications. The repository itself already resolved it inside `docs-v2/specifications/INDEX.md:9-10`, where the second is called **`SPEC-002q`**. That is the precedent this register follows |
+| `H-007` | `docs-v2/research/protocols/H-007-memory-stack.md` (the memory-stack hypothesis) and `matrix-core/docs/H-007-progress.md` (an RRF weight-tuning progress report) | two different subjects under one hypothesis id; the progress report borrows the id without claiming the hypothesis |
+
+**(b) An announcement or citation of an id defined elsewhere.** These are not collisions, but
+they are why a naive id scan reports dozens of duplicates: `docs-v2/research/summaries/INDEX-W20.md`
+tabulates `DESIGN-01`…`DESIGN-12`; `docs-v2/research/W80-FINAL-SYNTHESIS-REPORT.md` announces
+`DESIGN-60`…`DESIGN-62`; `docs-v2/waves/WAL-022-wave-15-17-l4-sensorimotor-design-58-v3-2026-09-1.md` announces `DESIGN-58` v3;
+`docs-v2/waves/WAL-347.md` announces `SPEC-013`; `docs-v2/waves/WAL-350.md` announces
+`SPEC-014`; `docs-v2/vision/FINALSUMMARY.md` tabulates `H-002`, `H-003`, `H-006`, `H-010`;
+`docs-v2/specifications/INDEX.md` tabulates `SPEC-000`…`SPEC-012`; the
+`docs-v2/research/reports/EXP-MATRIX.*` files and the `docs-v2/waves/WAL-0*.md` files
+both announce `H-043`, `H-044`, `H-045`, `H-050`.
+
+**(c) The decision-number space, which is the worst of them.** The bare token `D1` — and the
+bare token `D-001` — mean several different decisions in several different documents:
+
+| where | what "D1" / "D-001" means |
+|---|---|
+| `docs-v2/engineering/W45-DECISION-LOG.md` (D1…D11) | the disposition is a new concept (CD-001) |
+| `docs-v2/engineering/W45.2-OWNER-DECISIONS.md` (Decision 1…4) | the canonical entry point per application (OD-001) |
+| `docs-v2/quality/OPEN-DECISIONS.md` (D1…D8) | the BitNet failures: red or environment-blocked (OD-006) |
+| `docs-v2/engineering/RECON-W42-DECISIONS.md` (D-001…D-017) | the benchmark is built before any improvement is attempted (CD-W42-01) |
+| `docs-v2/vision/CONCEPT-CORRECTIONS.md` (D-001…D-011) | the atomic computational unit is the BirUnit (ND-001) |
+
+and `docs-v2/engineering/RECON-W44-BACKLOG.md` §5 numbers its five owner questions `1`…`5`.
+The W46 directive adds a sixth meaning: its "D1–D4" are the four architecture decisions of
+OD-001…OD-004, which `docs-v2/engineering/W46-OWNER-DECISION-PACKET.md` §0 resolves.
+**So `D-001` alone means two different decisions in two different documents, and `D1` alone
+means three.**
+
+**The rule this register uses.**
+
+1. An id is minted once per **decision**, never per document.
+2. A source document's own id is kept **only if it is unique in the repository**. All eight
+   ADR ids are unique as definitions (each is cited several times, which is not a collision),
+   so they are kept verbatim.
+3. Everything else gets a prefixed id: `OD-` for an owner decision, `CD-` for a coordinator
+   decision, `PR-` for a proposal, `ND-` for a normative decision. **A bare `D` is never used
+   in this register**, because it already means five things across five documents.
+   The W42 log's own `D-001`…`D-017` are kept as `CD-W42-01`…`CD-W42-11` and `OD-019`…`OD-024`,
+   with the wave in the id, so that they cannot be confused with the W45 log's `D1`…`D11`.
+4. Where a source id collides, the register keeps the id and adds a suffix that names the
+   other claimant in the row's note. No id in this register required a suffix, because no
+   decision was found in two documents at once.
+5. The ADR series keeps its own numbering. A decision that is announced in several documents
+   (PR-003 and OD-012 are one decision; CD-001 and the W45.0 integrity design are one
+   decision) is registered **once**, under the document that holds the decision text.
+6. **The kind is taken from the document, not from the wave.** The W42 log is a single file
+   under one owner directive, but six of its seventeen entries say in their own text
+   "Owner decision" or "The owner decided this on 2026-11-02" — D-011, D-012, D-014, D-015,
+   D-016 and D-017. Those are registered as owner decisions (OD-019…OD-024); the other
+   eleven are coordinator decisions under the directive (CD-W42-01…CD-W42-11). The wave a
+   decision belongs to does not decide who took it.
+
+---
+
+## 5. What is NOT in this register
+
+| what | where it lives instead |
+|---|---|
+| capability claims and their evidence | `docs-v2/architecture/CAPABILITY-REGISTRY.md` and `docs-v2/engineering/W44-CAPABILITY-REGISTRY.md` — note that both predate W45.0/W45.1/W45.2 and therefore describe a system that no longer exists; `docs-v2/engineering/W46-OWNER-DECISION-PACKET.md` and `docs-v2/engineering/W46-OPEN-QUESTIONS.csv` (Q-W46-10) carry that finding |
+| research findings, hypotheses, experiment reports | `docs-v2/research/` — the registers are `docs-v2/research/HYPOTHESES.md` and `docs-v2/research/HYPOTHESES-NEW.md`, the protocol is `docs-v2/research/PROTOCOL.md`, and the reports are `docs-v2/research/reports/` |
+| the tasks and the plan | `docs-v2/governance/ROADMAP.md` — it supersedes the role of `docs-v2/engineering/PLAN.md`, whose last recorded wave is W44 and which therefore does not contain W45, W45.1 or W45.2 |
+| open questions | `docs-v2/governance/OPEN-QUESTIONS.md` (the register of record) with `docs-v2/engineering/W46-OPEN-QUESTIONS.csv` as its machine-readable snapshot; the older operator ledger is `docs-v2/quality/OPEN-DECISIONS.md`, which lists D1…D8 as CLOSED in a section at the top while the bodies of the same D1…D8 below still read as open — the CLOSED section is the later state, and this register follows it |
+| the current state of the project | `docs-v2/governance/PROJECT-STATE.md` (a snapshot at one commit, replaced rather than appended to) |
+| the status of a document, and who may change it | `docs-v2/governance/DOCUMENT-STATUS-POLICY.md` |
+| the risks | `docs-v2/governance/RISK-REGISTER.md`, with `docs-v2/engineering/W46-RISK-REGISTER.csv` as its machine-readable snapshot |
+| the wave-by-wave history | `docs-v2/waves/` (320 files) and `wal/SESSION_WAL.md` |
+| the release caveats and the shipped state | `docs-v2/releases/` and `docs-v2/engineering/RELEASE-NOTES.md` |
+
+---
+
+## 6. How to read this register
+
+* **A row points at a document. It does not replace it.** The one-line decision in the second
+  column is a routing hint; the argument, the rejected alternatives, the cost and the limits
+  live in the document named in the seventh column.
+* **An `ACCEPTED` row's document is the authority.** If a reader disagrees with the row, the
+  row is wrong; the document decides.
+* **A `SUPERSEDED` row's successor is the authority.** Follow the sixth column, then read the
+  successor's document. A superseded row is kept because the history of a decision that was
+  taken, changed and taken again is part of the architecture.
+* **A `PROPOSED` row is not a decision.** It is written down and not ruled on. PR-002 and
+  PR-006 are the two that a reader is most likely to mistake for something in force.
+* **An `UNKNOWN` row is a question, not an oversight.** OD-015…OD-018 are owner questions that
+  were put and never answered; the register records the question and the fact that no answer
+  exists, rather than inventing one.
+* **An ADR stops being authoritative when its assumptions are disproved — and it is then
+  annotated, not rewritten.** The W45.2 example: `ADR-2026-10-26-002` and `ADR-W44-01` were
+  both written before the bytecode was examined, and the bytecode contradicts the way they
+  read. Rather than edit either document, the wave added a one-line scope annotation to each
+  header, dated 2026-11-04, naming `ADR-W45.2-01` as the reconciling document. The bodies
+  remain the historical decision. `docs-v2/engineering/W45.2-CAPABILITY-DELTA.md` §4 states
+  this rule: the two historical ADRs were not rewritten, they carry a status annotation
+  pointing at the superseding document.
+* **The kind column tells you who decided.** `owner` — the repository owner, by a directive, a
+  questionnaire answer or an operator ruling. `coordinator` — an agent decision taken under
+  an owner directive; the wave document is the authority, not the coordinator's preference.
+  `normative` — a standing rule whose document names no decider. `proposal` — written down,
+  not decided.
+* **The register is dated and bounded.** It describes the decisions recorded in the repository
+  at `a6ded233` on 2026-11-04. A decision taken afterwards is not here until it is indexed.

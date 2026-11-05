@@ -1,0 +1,1449 @@
+# =============================================================================
+# CAPABILITY REGISTRY — MATRIX
+# =============================================================================
+#
+# WHAT THIS FILE IS
+#   The single authoritative, machine-readable registry of MATRIX's capabilities.
+#   Every row states FOUR independent facts, on FOUR independent axes, and never
+#   one green checkmark:
+#
+#     implementation  does the source exist?
+#     integration     is it wired into a production path?
+#     verification    what has been executed, and what does the execution prove?
+#     operational     what is it doing in production right now?
+#
+#   The four axes are deliberately separable. A subsystem can be IMPLEMENTED and
+#   DORMANT at the same time; a gate can be MEASURED and DORMANT at the same
+#   time. Collapsing them is the error this file exists to prevent.
+#
+# WHAT THIS FILE REPLACES
+#   docs-v2/architecture/CAPABILITY-REGISTRY.md      (dated 2026-10-26) — its
+#       vocabulary is the PROVENANCE OF A CLAIM (VERIFIED / UNSOURCED / CORRECTED
+#       / REWORDED / REMOVED), not the STATE of a capability, and it carries three
+#       refuted or stale numbers: the test count, the TLA count and the speed-up
+#       factor.
+#   docs-v2/engineering/W44-CAPABILITY-REGISTRY.md  — a different vocabulary
+#       entirely (IMPLEMENTED / TESTED / SERVED / ISLAND / INACTIVE / DORMANT / ...).
+#
+#   Both files REMAIN ON DISK as evidence. Neither is rewritten here; the
+#   coordinator annotates them with a pointer to this one.
+#
+# THE THREE RULES
+#   1. A capability may not be SERVED without a named serving path in
+#      `serving_path` (an HTTP route, a CLI, a runtime wiring).
+#   2. A capability may not be MEASURED without a reproducible benchmark in
+#      `benchmark_evidence`.
+#   3. A capability may not be FORMALLY_VERIFIED merely because a TLA+ file
+#      exists — it needs the model-check evidence.
+#
+# HOW TO READ A ROW
+#   - `id` is stable and unique. The `C-0x` ids are CLAIM PROVENANCE, not
+#     capability identity: for those rows the `description` says so and carries
+#     the claim's own wording.
+#   - `implementation` / `integration` / `verification` / `operational` hold
+#     exactly one value from the vocabulary declared in `status_vocabularies`.
+#     A value that is not in the vocabulary is a defect in this file.
+#   - `serving_chain` is one of: chain-a, chain-b, none, both.
+#   - `source_paths`, `test_paths` and `production_callers` hold PATHS THAT
+#     EXIST. A path may carry a line reference after a colon: `path/to/File.java:42`
+#     or `path/to/File.java:42-57`. The validator strips that suffix before
+#     checking existence. A path that does not exist is a finding, and is
+#     recorded in `risks` or in `notes` — never silently written as a value.
+#   - `production_callers` entries are written `ClassName — path/to/File.java`.
+#   - `notes` carries the CSV's literal cell values that are not members of a
+#     vocabulary, and every correction this wave made to a source path, a caller
+#     count or a claim.
+#   - `last_verified_commit` is the commit at which this row's claims were
+#     checked against the tree; `last_verified_at` is the date of the EVIDENCE.
+#     `next_verification_condition` says what would refresh the row.
+#   - `none` means "there is no such thing", not "unknown". `unknown` is a
+#     member of the vocabularies and means "not established".
+#
+# GENERATED
+#   Reconciled from docs-v2/engineering/W46-CAPABILITY-RECONCILIATION.csv (27
+#   rows) plus the capabilities the W46.0 audit found that the CSV does not
+#   yet carry. Additions were made FROM THE SOURCE, never from a document's own
+#   claim.
+#
+# =============================================================================
+
+schema_version: "1.0.0"
+
+generated:
+  date: "2026-11-04"
+  commit: "a6ded23338e069b8bc8a3744c234be5a03995f43"
+  branch: "develop"
+  source: "docs-v2/engineering/W46-CAPABILITY-RECONCILIATION.csv"
+  source_rows: 27
+  capabilities_in_this_file: 34
+  additions_from_source: 7
+  method: "the constant pool of the compiled classes (javap -p -c) over 2978 classes, the current "
+  method_note: "source, and the current configuration. Every source_path, test_path and production "
+  method_note_2: "caller in this file was resolved and checked for existence at the commit named "
+  method_note_3: "above; every caller count was resolved from the compiled constant pool, not from "
+  method_note_4: "a text search."
+  supersedes:
+    - "docs-v2/architecture/CAPABILITY-REGISTRY.md"
+    - "docs-v2/engineering/W44-CAPABILITY-REGISTRY.md"
+  notes: "the two superseded registries stay on disk as evidence; the coordinator annotates them."
+
+status_vocabularies:
+  implementation:
+    - "PROPOSED"
+    - "DESIGNED"
+    - "IMPLEMENTED"
+    - "INACTIVE"
+    - "BLOCKED"
+    - "UNKNOWN"
+  integration:
+    - "ISLAND"
+    - "INTEGRATED"
+    - "INTEGRATION_TESTED"
+    - "UNKNOWN"
+  verification:
+    - "UNTESTED"
+    - "TESTED"
+    - "INTEGRATION_TESTED"
+    - "MEASURED"
+    - "FORMALLY_VERIFIED"
+    - "REJECTED"
+    - "UNKNOWN"
+  operational:
+    - "DORMANT"
+    - "EXPERIMENTAL"
+    - "ACTIVE"
+    - "SERVED"
+    - "DEPRECATED"
+    - "REMOVED"
+    - "UNKNOWN"
+  serving_chain:
+    - "chain-a"
+    - "chain-b"
+    - "none"
+    - "both"
+
+capabilities:
+  -
+    id: "C-01"
+    name: "the published test count: \"724 Tests Passing\" → \"9,432 tests / 1,282 suites\""
+    description: "An audited claim, not a capability identity. The published statement was \"724 Tests Passing\"; the restatement in the 2026-10-26 registry was \"9,432 tests / 1,282 suites\". This row records that the CLAIM was audited and that its number is stale; it does not describe a system capability."
+    domain: "verification-process"
+    implementation: "UNKNOWN"
+    integration: "INTEGRATION_TESTED"
+    verification: "UNKNOWN"
+    operational: "UNKNOWN"
+    source_paths:
+      - "docs-v2/engineering/W44-TEST-MAP.csv"
+      - "scripts/count-tests.sh"
+      - "docs-v2/engineering/W45-TEST-EVIDENCE-RECONCILIATION.md"
+      - "docs-v2/engineering/W44-BENCHMARK.md"
+    production_callers: []
+    serving_chain: "none"
+    serving_path: "none — a claim has no serving path"
+    test_paths: []
+    test_evidence: "the last full-scoped measurement on record: 9816 executions / 1320 classes / 24 failures / 26 skipped (W45-TEST-EVIDENCE-RECONCILIATION.md §1). The result set on disk at this commit is 2422 tests / 4 skipped / 0 failures across 11 modules (partial scopes only)."
+    benchmark_evidence: "scripts/count-tests.sh — the source-side count, reproducible in seconds; the executed count is produced by the build and is recorded in docs-v2/engineering/W45-TEST-EVIDENCE-RECONCILIATION.md §1. The module total for matrix-core alone is 8284 tests (W44-BENCHMARK.md §7.7); the W43 targeted scope was 1518 (W44-BENCHMARK.md §1)."
+    formal_spec: "none"
+    dependencies:
+      - "the Gradle test task of all 14 modules"
+      - "the GraalVM native-image toolchain, absent on this host, which is why 23 of the 24 recorded failures cannot be executed here"
+    limitations: "9816 is a FLOOR, not a total (33 executions are lost in matrix-brain-runtime); the 24 failures are 23 native-image + 1 source-compliance, NOT zero. The full matrix-core suite is never run here, so no single total is established."
+    risks:
+      - "the published 9,432 / 1,282 figure does not correspond to any current run (R-W46-10)"
+      - "a reader who takes any one of these numbers for THE total is wrong: 9,432, 9,816, 8,284 and 2,422 are four different scopes"
+    owner: "the owner (RECON-W38.4 §20)"
+    decision_ref: "docs-v2/engineering/W46-CAPABILITY-RECONCILIATION.csv row C-01; RECON-W38.4 §20"
+    last_verified_commit: "a6ded23338e069b8bc8a3744c234be5a03995f43"
+    last_verified_at: "2026-11-04"
+    next_verification_condition: "a full-suite run on a quiet machine with the GraalVM-dependent classes excluded, which needs the owner's approval (Q-W46-06), would establish the total and retire this row's staleness"
+    notes: "the CSV row is structurally damaged: the name field contains an unescaped comma and the row has 17 fields against a 15-field header. Its literal status cells are preserved here — implementation='MEASURED (the number is stale)', verification='STALE — the published numbers do not match the current measurement', operational='STALE — the published figure does not correspond to the current run'. 'MEASURED' and 'STALE' are not values of this registry's vocabularies, so the four axes above are the honest reading and the literal cells are kept here. The CSV's serving_chain cell reads 'all 14 modules' — a scope, not a chain."
+
+  -
+    id: "C-01b"
+    name: "the published claim: \"0 LLM calls in the decision path\""
+    description: "An audited claim, not a capability identity. The claim is that no LLM call occurs on a decision path, and that a CI gate enforces it."
+    domain: "governance"
+    implementation: "IMPLEMENTED"
+    integration: "INTEGRATION_TESTED"
+    verification: "MEASURED"
+    operational: "ACTIVE"
+    source_paths:
+      - ".github/workflows/ci.yml:45-52"
+      - "matrix-brain-runtime/src/test/java/io/matrix/brain/runtime/RuntimeLlmGuardTest.java"
+    production_callers:
+      - "the CI workflow — .github/workflows/ci.yml:45-52"
+    serving_chain: "both"
+    serving_path: "the CI job that runs the gate on every build; the gate scans the runtime modules of both chains. It is not an HTTP route."
+    test_paths:
+      - "matrix-brain-runtime/src/test/java/io/matrix/brain/runtime/RuntimeLlmGuardTest.java"
+    test_evidence: "the gate runs in CI (the build-test job, blocking) and the test class is present in the tree at this commit"
+    benchmark_evidence: "the gate IS the measurement: RuntimeLlmGuardTest scans the runtime modules for legacy LLM imports and fails the build on a hit; the reproduced value is 0 legacy LLM imports on a decision path. Reproducible by running that one test class."
+    formal_spec: "formal/spec-implementation-map.yml"
+    dependencies:
+      - "the CI workflow .github/workflows/ci.yml"
+    limitations: "the gate checks imports, not execution: a reflective or dynamic call would pass it"
+    risks:
+      - "the gate's coverage is the import graph of the runtime modules; a decision path that reaches an LLM through reflection is not detected"
+    owner: "the owner (YES)"
+    decision_ref: "docs-v2/engineering/W46-CAPABILITY-RECONCILIATION.csv row C-01b"
+    last_verified_commit: "a6ded23338e069b8bc8a3744c234be5a03995f43"
+    last_verified_at: "2026-11-04"
+    next_verification_condition: "a change to the runtime modules' import graph, or to the CI workflow, invalidates the zero and requires the gate to be re-run"
+    notes: "the CSV places RuntimeLlmGuardTest at matrix-core/src/test/java/io/matrix/bir/RuntimeLlmGuardTest.java, which does not exist; the real path is matrix-brain-runtime/src/test/java/io/matrix/brain/runtime/RuntimeLlmGuardTest.java. The CSV's row also lost a comma and split 'the gate runs in CI (the build-test job, blocking)' into two fields."
+
+  -
+    id: "C-01c"
+    name: "the published claim: \"9 TLA+ specs, model-checked in CI\""
+    description: "An audited claim, not a capability identity. The published number was nine; the repository now holds fifteen specifications, of which fourteen are model-checked by the formal gate and registered in the specification-to-implementation map."
+    domain: "formal-methods"
+    implementation: "IMPLEMENTED"
+    integration: "INTEGRATION_TESTED"
+    verification: "FORMALLY_VERIFIED"
+    operational: "ACTIVE"
+    source_paths:
+      - "formal/spec-implementation-map.yml"
+      - "scripts/formal-gate.sh"
+      - "docs-v2/engineering/TLA-STATUS.md"
+      - "docs-v2/tla/FederationConsensus.tla"
+    production_callers:
+      - "the formal gate — scripts/formal-gate.sh"
+      - "the CI workflow — .github/workflows/tla.yml"
+    serving_chain: "both"
+    serving_path: "the CI job that runs scripts/formal-gate.sh over every .cfg in formal/; it is not an HTTP route."
+    test_paths:
+      - "matrix-quality/src/test/java/io/matrix/quality/SpecImplementationMapTest.java"
+    test_evidence: "the formal gate passes 14 of 14 (recorded in the W44 wave); the specification map carries 14 entries and is validated by SpecImplementationMapTest"
+    benchmark_evidence: "scripts/formal-gate.sh runs `java -jar tla2tools.jar -config <spec>.cfg <spec>.tla` for every .cfg in formal/ — the reproducible model-check of all 14 registered specifications. The 14 .tla files in formal/ and the 14 entries in formal/spec-implementation-map.yml were counted directly in this wave."
+    formal_spec: "formal/spec-implementation-map.yml (14 entries); the 14 specifications are the .tla files in formal/; the 15th file on disk, docs-v2/tla/FederationConsensus.tla, is a DIFFERENT model from formal/Consensus.tla and is covered by neither the gate nor the map"
+    dependencies:
+      - "tla2tools.jar 1.8.0, downloaded by .github/workflows/tla.yml"
+      - "a TLC model check per specification"
+    limitations: "the formal gate covers 14 of the 15 .tla files on disk; docs-v2/tla/FederationConsensus.tla is not model-checked and is not registered. The formal gate lives in a CI job named 'Quality gates (can fail)'."
+    risks:
+      - "the register in TLA-STATUS.md says twelve specifications while the repository holds fifteen; both numbers are stale against the tree"
+    owner: "the owner (YES — but the number needs re-issuing)"
+    decision_ref: "docs-v2/engineering/W46-CAPABILITY-RECONCILIATION.csv row C-01c"
+    last_verified_commit: "a6ded23338e069b8bc8a3744c234be5a03995f43"
+    last_verified_at: "2026-11-04"
+    next_verification_condition: "a re-run of scripts/formal-gate.sh at this commit, plus a decision on whether docs-v2/tla/FederationConsensus.tla enters the gate or is withdrawn, would fix the number"
+    notes: "the claim's number 9 is refuted. The current number is 14 model-checked specifications, from 15 .tla files on disk. The CSV's test_evidence cell cites 'W44-BENCHMARK.md' for the '14 of 14' result, but docs-v2/engineering/W44-BENCHMARK.md contains NO formal or TLA content at all (checked by grep) — the citation is broken and the result is carried here from the CSV with the reproducible gate named instead."
+
+  -
+    id: "C-02"
+    name: "the published claim: \"33,000× faster than LLMs\""
+    description: "An audited claim, not a capability identity. The speed-up figure was never measured; the benchmark report records a different number against a synthetic model."
+    domain: "performance"
+    implementation: "UNKNOWN"
+    integration: "UNKNOWN"
+    verification: "REJECTED"
+    operational: "REMOVED"
+    source_paths:
+      - "docs-v2/research/BENCHMARK-REPORT-W620.md"
+    production_callers: []
+    serving_chain: "none"
+    serving_path: "none — a claim has no serving path"
+    test_paths: []
+    test_evidence: "none"
+    benchmark_evidence: "docs-v2/research/BENCHMARK-REPORT-W620.md §4 records 100,000× against a synthetic ops/sec model, with an energy ratio of 0.00x. The published 33,000× appears in no measurement; it is derived in docs-v2/story/overview.md by dividing 10–100 tokens/sec by a <10 ms inference — two different quantities."
+    formal_spec: "none"
+    dependencies:
+      - "none — the measurement does not depend on the implementation"
+    limitations: "the energy card carried a speed-up coefficient; the comparison is against a synthetic ops/sec model, not against an LLM"
+    risks:
+      - "docs-v2/story/overview.md still contains the 33,000× comparison; the registry names the file so the inconsistency is visible rather than hidden"
+    owner: "the owner (YES — removed from the front page)"
+    decision_ref: "docs-v2/engineering/W46-CAPABILITY-RECONCILIATION.csv row C-02"
+    last_verified_commit: "5951cbb8"
+    last_verified_at: "2026-09-20"
+    next_verification_condition: "a benchmark that compares MATRIX against a real LLM inference on the same workload would replace the synthetic model; until then the claim stays rejected"
+    notes: "the CSV's implementation cell is 'REJECTED (the number was never measured)', which is not a value of this registry's implementation vocabulary; the axis that fits is verification, and the implementation axis is honestly unknown because no implementation of the claimed speed-up exists."
+
+  -
+    id: "C-03"
+    name: "the published claim: \"100% Constitution Compliant\""
+    description: "An audited claim, not a capability identity. The compliance MECHANISMS exist and run in CI; the percentage is not a measurable quantity."
+    domain: "governance"
+    implementation: "IMPLEMENTED"
+    integration: "INTEGRATION_TESTED"
+    verification: "MEASURED"
+    operational: "ACTIVE"
+    source_paths:
+      - ".github/workflows/ci.yml:45-52"
+      - ".github/workflows/ci.yml:108"
+      - ".github/workflows/ci.yml:119"
+      - ".github/workflows/ci.yml:125"
+      - "matrix-core/src/test/java/io/matrix/auditor/DecisionPathAuditorTest.java"
+      - "matrix-brain-runtime/src/test/java/io/matrix/brain/runtime/RuntimeLlmGuardTest.java"
+    production_callers:
+      - "the CI workflow — .github/workflows/ci.yml:45-52"
+    serving_chain: "both"
+    serving_path: "the CI job that runs the Article-I gate on every build"
+    test_paths:
+      - "matrix-core/src/test/java/io/matrix/auditor/DecisionPathAuditorTest.java"
+      - "matrix-brain-runtime/src/test/java/io/matrix/brain/runtime/RuntimeLlmGuardTest.java"
+    test_evidence: "the gates execute in CI; DecisionPathAuditorTest carries 13 tests"
+    benchmark_evidence: "the gates are the measurement: DecisionPathAuditorTest (13 tests) and RuntimeLlmGuardTest run on every build, and their reproducible values are 0 violations of the decision-path rules and 0 legacy LLM imports on a decision path"
+    formal_spec: "docs-v2/engineering/TLA-STATUS.md"
+    dependencies:
+      - "the CI workflow .github/workflows/ci.yml"
+    limitations: "'100%' is not a measurable quantity; the registry states which gates are enforced instead of asserting a percentage"
+    risks:
+      - "the gate lives in a CI job named 'Quality gates (can fail)'; the constitutional checks that live in the build-test job are the ones that actually block"
+    owner: "the owner (YES — reworded)"
+    decision_ref: "docs-v2/engineering/W46-CAPABILITY-RECONCILIATION.csv row C-03"
+    last_verified_commit: "a6ded23338e069b8bc8a3744c234be5a03995f43"
+    last_verified_at: "2026-11-04"
+    next_verification_condition: "a change to the gate list in .github/workflows/ci.yml, or to the frozen rules, requires the gate to be re-run"
+    notes: "the CSV places DecisionPathAuditorTest at matrix-core/src/test/java/io/matrix/audit/DecisionPathAuditorTest.java, which does not exist; the real path is matrix-core/src/test/java/io/matrix/auditor/DecisionPathAuditorTest.java."
+
+  -
+    id: "C-04"
+    name: "the published claim: \"75% accuracy on logic tasks\""
+    description: "An audited claim, not a capability identity. The accuracy figure is correct; the baseline it was compared against was not."
+    domain: "reasoning"
+    implementation: "IMPLEMENTED"
+    integration: "INTEGRATION_TESTED"
+    verification: "MEASURED"
+    operational: "UNKNOWN"
+    source_paths:
+      - "docs-v2/research/BENCHMARK-REPORT-W620.md"
+    production_callers: []
+    serving_chain: "none"
+    serving_path: "none — a claim has no serving path"
+    test_paths: []
+    test_evidence: "BIR 75.0% on 100 tasks; random 30%; the TIRAZH heuristic also scores 75.0%"
+    benchmark_evidence: "docs-v2/research/BENCHMARK-REPORT-W620.md §1 — BIR 75.0% over 100 puzzles, random baseline 30% (the published 25% is wrong), and the TIRAZH heuristic also at 75.0%. The corpus of 100 puzzles is named in the report, so the number is reproducible from it."
+    formal_spec: "none"
+    dependencies:
+      - "none — the measurement does not depend on the implementation"
+    limitations: "no gain over a simple heuristic: BIR ties the heuristic baseline on this corpus"
+    risks:
+      - "the published comparison implied a gain over a simpler method that the report does not show"
+    owner: "the owner (YES)"
+    decision_ref: "docs-v2/engineering/W46-CAPABILITY-RECONCILIATION.csv row C-04"
+    last_verified_commit: "5951cbb8"
+    last_verified_at: "2026-09-20"
+    next_verification_condition: "a re-run of the 100-puzzle corpus, or a corpus that separates BIR from the TIRAZH heuristic, would make the comparison meaningful"
+    notes: "the CSV's operational cell is 'CORRECTED (the baseline is 30%)', which is not a value of this registry's operational vocabulary; the correction is recorded here and the operational axis is honestly unknown."
+
+  -
+    id: "C-05"
+    name: "the published claim: \"89.9% AUC / learns from 50 examples\""
+    description: "An audited claim, not a capability identity. The HDC retrieval figure and the sample-efficiency figure were measured on one corpus."
+    domain: "learning"
+    implementation: "IMPLEMENTED"
+    integration: "INTEGRATION_TESTED"
+    verification: "MEASURED"
+    operational: "UNKNOWN"
+    source_paths:
+      - "docs-v2/research/BENCHMARK-REPORT-W620.md"
+    production_callers: []
+    serving_chain: "none"
+    serving_path: "none — a claim has no serving path"
+    test_paths: []
+    test_evidence: "HDC AUC 0.899, 90% after 50 samples; random AUC 0.253"
+    benchmark_evidence: "docs-v2/research/BENCHMARK-REPORT-W620.md §2 — HDC AUC 0.899 (89.9%), reaching 90% after 50 samples, against a random AUC of 0.253 (25.3%)."
+    formal_spec: "none"
+    dependencies:
+      - "none — the measurement does not depend on the implementation"
+    limitations: "one corpus; the sample-efficiency figure is a property of that corpus"
+    risks: []
+    owner: "the owner (YES)"
+    decision_ref: "docs-v2/engineering/W46-CAPABILITY-RECONCILIATION.csv row C-05"
+    last_verified_commit: "5951cbb8"
+    last_verified_at: "2026-09-20"
+    next_verification_condition: "a second corpus would test whether the figure is a property of the method or of the corpus"
+    notes: "the CSV's operational cell is 'ACTIVE', which IS a legal operational value, but the row describes a published measurement rather than a running subsystem; the operational axis is set to unknown and the CSV's literal cell is preserved here."
+
+  -
+    id: "C-06"
+    name: "the published claim: \"92% success in Minecraft survival\""
+    description: "An audited claim, not a capability identity. The figure was measured in a headless Minecraft simulator, not against a public Minecraft server."
+    domain: "embodied-agent"
+    implementation: "IMPLEMENTED"
+    integration: "INTEGRATION_TESTED"
+    verification: "MEASURED"
+    operational: "UNKNOWN"
+    source_paths:
+      - "docs-v2/waves/WAL-620.md"
+      - "docs-v2/waves/WAL-614.md"
+    production_callers: []
+    serving_chain: "none"
+    serving_path: "none — the claim was measured against an external simulator, not served"
+    test_paths: []
+    test_evidence: "92% and 0 deaths at 5 nodes; 78% for a single agent"
+    benchmark_evidence: "docs-v2/waves/WAL-620.md — 92% success with 0 deaths for a 5-node federation and 78% for a single agent in the headless Minecraft simulator."
+    formal_spec: "none"
+    dependencies:
+      - "the headless Minecraft simulator of the W610–W611 wave"
+    limitations: "a simulator, not a real Minecraft server"
+    risks:
+      - "the two figures (92% at 5 nodes, 78% for one agent) are different scopes and are easily quoted as one"
+    owner: "the owner (YES)"
+    decision_ref: "docs-v2/engineering/W46-CAPABILITY-RECONCILIATION.csv row C-06"
+    last_verified_commit: "38cbc344"
+    last_verified_at: "2026-09-20"
+    next_verification_condition: "a run against a public Minecraft server would establish the claim in the environment the published text names"
+    notes: "the CSV's row has 16 fields against a 15-field header: the limitations cell 'a simulator, not a real Minecraft server' was split by an unescaped comma."
+
+  -
+    id: "C-07"
+    name: "the published claim: \"100% Federation Resilience\""
+    description: "An audited claim, not a capability identity. Consensus was measured under node kills in a model."
+    domain: "federation"
+    implementation: "IMPLEMENTED"
+    integration: "INTEGRATION_TESTED"
+    verification: "MEASURED"
+    operational: "UNKNOWN"
+    source_paths:
+      - "docs-v2/research/FEDERATION-SCALE-REPORT-W635.md"
+    production_callers: []
+    serving_chain: "none"
+    serving_path: "none — a claim has no serving path"
+    test_paths: []
+    test_evidence: "consensus 100% with 10/30/50% of the nodes killed, at 100–1000 nodes"
+    benchmark_evidence: "docs-v2/research/FEDERATION-SCALE-REPORT-W635.md — 100% consensus with 10%, 30% and 50% of the nodes killed, at 100, 500 and 1000 nodes."
+    formal_spec: "none"
+    dependencies:
+      - "the federation model of the W635 wave"
+    limitations: "a model, not a battle-tested system"
+    risks:
+      - "100% is measured inside a model; it says nothing about a deployment's network"
+    owner: "the owner (YES)"
+    decision_ref: "docs-v2/engineering/W46-CAPABILITY-RECONCILIATION.csv row C-07"
+    last_verified_commit: "7bacbb3d"
+    last_verified_at: "2026-09-20"
+    next_verification_condition: "a multi-host run under real partition and clock skew would test the model's assumptions"
+    notes: "the CSV's row has 16 fields against a 15-field header: the limitations cell was split by an unescaped comma."
+
+  -
+    id: "C-08"
+    name: "the published claim: \"90% accuracy retention from LLM distillation\""
+    description: "An audited claim, not a capability identity. The pipeline is documented; the retention figure was never measured."
+    domain: "learning"
+    implementation: "UNKNOWN"
+    integration: "UNKNOWN"
+    verification: "REJECTED"
+    operational: "REMOVED"
+    source_paths:
+      - "docs-v2/research/DISTILLATION-LEDGER.md"
+    production_callers: []
+    serving_chain: "none"
+    serving_path: "none — a claim has no serving path"
+    test_paths: []
+    test_evidence: "no measurement"
+    benchmark_evidence: "none — there is no benchmark behind this claim"
+    formal_spec: "none"
+    dependencies:
+      - "none"
+    limitations: "the pipeline is documented; the accuracy retention is not"
+    risks:
+      - "the claim was removed from the front page, so nothing is exposed — but the ledger's presence makes it easy to re-publish"
+    owner: "the owner (YES — removed)"
+    decision_ref: "docs-v2/engineering/W46-CAPABILITY-RECONCILIATION.csv row C-08"
+    last_verified_commit: "3557defb"
+    last_verified_at: "2026-09-27"
+    next_verification_condition: "a measurement of accuracy retention, before and after distillation, on a named corpus, would let the claim be re-stated or finally retired"
+    notes: "the CSV's implementation and integration cells are 'REJECTED', which is a verification value and not a member of those two vocabularies; the two axes are honestly unknown because no implementation of the claimed retention exists."
+
+  -
+    id: "C-09"
+    name: "the published claim: \"production-grade hybrid AI framework\""
+    description: "An audited claim, not a capability identity. A statement about readiness, not a measurement."
+    domain: "governance"
+    implementation: "UNKNOWN"
+    integration: "UNKNOWN"
+    verification: "UNKNOWN"
+    operational: "UNKNOWN"
+    source_paths:
+      - "docs-v2/architecture/CAPABILITY-REGISTRY.md"
+    production_callers: []
+    serving_chain: "none"
+    serving_path: "none — a claim has no serving path"
+    test_paths: []
+    test_evidence: "none"
+    benchmark_evidence: "none"
+    formal_spec: "none"
+    dependencies:
+      - "none"
+    limitations: "a readiness claim, not a measurement; the 2026-10-26 registry replaced it with a description of what the project is and a pointer to the gates that are enforced"
+    risks:
+      - "no technical risk — the risk is that the phrase returns to a public page"
+    owner: "the owner (YES — reworded)"
+    decision_ref: "docs-v2/engineering/W46-CAPABILITY-RECONCILIATION.csv row C-09"
+    last_verified_commit: "a6ded23338e069b8bc8a3744c234be5a03995f43"
+    last_verified_at: "2026-11-04"
+    next_verification_condition: "none — a readiness claim has no measurement that would settle it; it is retired by rewording, not by evidence"
+    notes: "the CSV's cells are implementation='REWORDED', integration='UNKNOWN', verification='UNKNOWN', operational='REWORDED'. 'REWORDED' is not a value of any of this registry's four vocabularies; the four axes are honestly unknown and the literal cells are preserved here."
+
+  -
+    id: "C-10"
+    name: "the published claim: \"Every claim is backed by tests/benchmarks/TLA+\""
+    description: "An audited claim, not a capability identity. The sentence was false when it was written: four of the numbers in the same registry had no backing."
+    domain: "governance"
+    implementation: "UNKNOWN"
+    integration: "UNKNOWN"
+    verification: "UNKNOWN"
+    operational: "UNKNOWN"
+    source_paths:
+      - "docs-v2/architecture/CAPABILITY-REGISTRY.md"
+    production_callers: []
+    serving_chain: "none"
+    serving_path: "none — a claim has no serving path"
+    test_paths: []
+    test_evidence: "none"
+    benchmark_evidence: "none"
+    formal_spec: "none"
+    dependencies:
+      - "none"
+    limitations: "it was false when it was written; the registry it pointed at now states per claim what the evidence is, including where the evidence is absent"
+    risks:
+      - "the sentence is a claim about the registry's own completeness, so it must be re-checked whenever a row's evidence changes"
+    owner: "the owner (YES — reworded)"
+    decision_ref: "docs-v2/engineering/W46-CAPABILITY-RECONCILIATION.csv row C-10"
+    last_verified_commit: "a6ded23338e069b8bc8a3744c234be5a03995f43"
+    last_verified_at: "2026-11-04"
+    next_verification_condition: "this registry supersedes the document it pointed at; the sentence's successor is the rule set in the header of this file"
+    notes: "the CSV's cells are implementation='REWORDED', integration='UNKNOWN', verification='UNKNOWN', operational='REWORDED' — see the note on C-09."
+
+  -
+    id: "W44-COG-KERNEL"
+    name: "the cognitive kernel"
+    description: "The W44 cognitive kernel: the cycle that perceives a signal, restores its model from the recorded cases, predicts, selects a computation, answers, learns and regulates. It is the engine behind POST /v1/cognitive/observe and POST /v1/cognitive/solve."
+    domain: "cognitive-architecture"
+    implementation: "IMPLEMENTED"
+    integration: "INTEGRATION_TESTED"
+    verification: "TESTED"
+    operational: "SERVED"
+    source_paths:
+      - "matrix-core/src/main/java/io/matrix/cognitive/CognitiveKernel.java"
+      - "matrix-core/src/main/java/io/matrix/cognitive/CognitiveService.java"
+      - "matrix-core/src/main/java/io/matrix/cognitive/CognitiveResource.java"
+      - "matrix-core/src/main/java/io/matrix/api/CanonicalEntryPoint.java"
+      - "matrix-core/src/main/java/io/matrix/cognitive/CognitiveStore.java"
+    production_callers:
+      - "io.matrix.cognitive.CognitiveService — matrix-core/src/main/java/io/matrix/cognitive/CognitiveService.java"
+      - "io.matrix.cognitive.CognitiveResource — matrix-core/src/main/java/io/matrix/cognitive/CognitiveResource.java"
+      - "io.matrix.cognitive.ErrorDrivenLearner — matrix-core/src/main/java/io/matrix/cognitive/ErrorDrivenLearner.java"
+    serving_chain: "chain-a"
+    serving_path: "POST /v1/cognitive/observe and POST /v1/cognitive/solve (CognitiveResource, matrix-core/src/main/java/io/matrix/cognitive/CognitiveResource.java:72-125); the workbench's Epistemic panel shows the same claims and evidence because both write one SQLite file"
+    test_paths:
+      - "matrix-core/src/test/java/io/matrix/cognitive/CognitiveKernelTest.java"
+      - "matrix-core/src/test/java/io/matrix/cognitive/CognitiveContradictionDurabilityTest.java"
+      - "matrix-core/src/test/java/io/matrix/cognitive/CognitiveCycleBudgetTest.java"
+      - "matrix-core/src/test/java/io/matrix/cognitive/CognitiveRegulatoryPersistenceTest.java"
+      - "matrix-core/src/test/java/io/matrix/cognitive/CognitiveConcurrencyTest.java"
+      - "matrix-core/src/test/java/io/matrix/cognitive/CognitiveResourceTest.java"
+    test_evidence: "executed (W45-CAPABILITY-DELTA.md §1); 5 test classes reference the kernel, resolved from the constant pool of the compiled test classes at this commit"
+    benchmark_evidence: "docs-v2/engineering/W44-BENCHMARK.md §5 (the kernel end to end, driven as the HTTP endpoint drives it) and §6 (the portfolio, reached from a request)"
+    formal_spec: "none — formal/ holds no specification of the kernel; the CSV records that the TLA coverage was never measured"
+    dependencies:
+      - "io.matrix.knowledge.KnowledgeWorkbench (the epistemic store)"
+      - "io.matrix.cognitive.CognitiveStore (the cognitive store, the same SQLite file)"
+      - "io.matrix.cognitive.algorithms.AlgorithmRegistry and AlgorithmSelector (the portfolio)"
+      - "io.matrix.cognitive.neuromodulation (the regulatory drives)"
+    limitations: "W45.2 added a sixth cycle beside it; the class declares the cycle names as strings. The kernel writes to BOTH stores and the pair is NOT one transaction: the epistemic write goes through the workbench (CognitiveKernel.java:343, :552) and the cognitive write through the CognitiveStore (:309, :378, :590, :596, :657, :870, :917)."
+    risks:
+      - "the two writes can diverge: a failure between them leaves the epistemic and the cognitive state inconsistent (T-10, R-W46-01)"
+    owner: "the owner (YES — ADR-W45.2-01)"
+    decision_ref: "docs-v2/engineering/ADR-W45.2-01-canonical-entry-point.md; docs-v2/engineering/W45-CAPABILITY-DELTA.md §1"
+    last_verified_commit: "a6ded23338e069b8bc8a3744c234be5a03995f43"
+    last_verified_at: "2026-11-04"
+    next_verification_condition: "a change to CognitiveKernel's write sequence, or to either store's transaction boundaries, requires the durability and concurrency tests to be re-run"
+    notes: "the CSV's production_callers cell records only 'CognitiveKernel ← CognitiveService'. The constant pool at this commit also shows io.matrix.cognitive.ErrorDrivenLearner calling into the kernel's package; the full caller list is in the census of this wave."
+
+  -
+    id: "W44-BRAIN-LOOP"
+    name: "the brain loop service — the nine-stage loop"
+    description: "io.matrix.reasoning.BrainLoopService: the production wiring of the nine-stage loop (perception, attention, deliberation, gate, action, consolidation, subconscious, prediction-error, attention-update) behind the OpenAI-compatible chat endpoint. It is a CDI bean and the only cycle behind the chat surface."
+    domain: "cognitive-architecture"
+    implementation: "IMPLEMENTED"
+    integration: "INTEGRATION_TESTED"
+    verification: "TESTED"
+    operational: "SERVED"
+    source_paths:
+      - "matrix-core/src/main/java/io/matrix/reasoning/BrainLoopService.java"
+      - "matrix-core/src/main/java/io/matrix/reasoning/ConsciousnessLoop.java"
+      - "matrix-core/src/main/java/io/matrix/api/OpenAIChatResource.java"
+    production_callers:
+      - "io.matrix.api.OpenAIChatResource — matrix-core/src/main/java/io/matrix/api/OpenAIChatResource.java"
+    serving_chain: "chain-a"
+    serving_path: "POST /v1/chat/completions — the loop's trace is returned in the X-Matrix-Trace response header (OpenAIChatResource.java:260, :499)"
+    test_paths:
+      - "matrix-core/src/test/java/io/matrix/reasoning/BrainLoopServiceTest.java"
+      - "matrix-core/src/test/java/io/matrix/reasoning/BrainLoopServiceFreezeIntegrationTest.java"
+      - "matrix-core/src/test/java/io/matrix/reasoning/ConsciousnessLoopTest.java"
+      - "matrix-core/src/test/java/io/matrix/reasoning/ConsciousnessLoopFeedbackTest.java"
+      - "matrix-core/src/test/java/io/matrix/api/OpenAIChatResourceTest.java"
+    test_evidence: "executed; 3 test classes reference the service and 8 reference the loop, resolved from the constant pool of the compiled test classes at this commit"
+    benchmark_evidence: "none — the loop is exercised, but no number of its own is published"
+    formal_spec: "formal/FrozenEthicalFNL.tla models a frozen ethical component the loop consults; no specification models the nine-stage loop itself"
+    dependencies:
+      - "io.matrix.reasoning.ConsciousnessLoop (the loop it drives)"
+      - "io.matrix.actions.ActionArena, io.matrix.budgeter.ConjugateBudgeter, io.matrix.lifecycle.ConsolidationCycle (the stages it orchestrates)"
+      - "io.matrix.neuron.SchemaDescriptor"
+    limitations: "the loop is stateless between ticks, so concurrent ticks are safe, but the service keeps only the most recent trace; the trace id correlates the rest"
+    risks: []
+    owner: "the owner (partly — W45.2 narrowed the scope to 'a specialist cycle')"
+    decision_ref: "docs-v2/engineering/W46-CAPABILITY-RECONCILIATION.csv row W44-BRAIN-LOOP; docs-v2/engineering/ADR-W45.2-01-canonical-entry-point.md"
+    last_verified_commit: "a6ded23338e069b8bc8a3744c234be5a03995f43"
+    last_verified_at: "2026-11-04"
+    next_verification_condition: "a change to OpenAIChatResource's injection of the service, or to the loop's stage list, requires the brain-loop tests to be re-run"
+    notes: "SCOPE CORRECTION. The CSV row names three classes (consciousness.BrainLoopService, reasoning.BrainLoopService, reasoning.ConsciousnessLoop) and gives the production callers of the FIRST while giving the serving path of the SECOND. The row's own name — 'the brain loop service (the nine-stage loop)' — is the reasoning one: consciousness.BrainLoopService has five stages. This row therefore covers the reasoning service and the loop; the research loop is split out as W46-BRAIN-LOOP-RESEARCH."
+
+  -
+    id: "W44-STUB"
+    name: "the stub cycle"
+    description: "io.matrix.api.brain.StubBrainCycle: an 87-line placeholder that answers by keyword matching. It is what the gateway serves by DEFAULT, because MATRIX_MODE defaults to 'stub'."
+    domain: "cognitive-architecture"
+    implementation: "IMPLEMENTED"
+    integration: "INTEGRATION_TESTED"
+    verification: "TESTED"
+    operational: "ACTIVE"
+    source_paths:
+      - "matrix-api-gateway/src/main/java/io/matrix/api/brain/StubBrainCycle.java"
+      - "matrix-api-gateway/src/main/java/io/matrix/api/MinimalHttpServer.java"
+    production_callers:
+      - "io.matrix.api.MinimalHttpServer — matrix-api-gateway/src/main/java/io/matrix/api/MinimalHttpServer.java"
+      - "io.matrix.api.resource.AnalyzeResource — matrix-api-gateway/src/main/java/io/matrix/api/resource/AnalyzeResource.java"
+      - "io.matrix.api.resource.ExplainResource — matrix-api-gateway/src/main/java/io/matrix/api/resource/ExplainResource.java"
+    serving_chain: "chain-b"
+    serving_path: "POST /v1/analyze on the gateway's JDK HttpServer — MinimalHttpServer.java:301 and :304 construct the stub in the default (stub) mode, and :371 registers the route"
+    test_paths:
+      - "matrix-api-gateway/src/test/java/io/matrix/api/brain/StubBrainCycleTest.java"
+      - "matrix-api-gateway/src/test/java/io/matrix/api/resource/AnalyzeResourceTest.java"
+      - "matrix-api-gateway/src/test/java/io/matrix/api/resource/ExplainResourceTest.java"
+    test_evidence: "present; 3 test classes reference it, resolved from the constant pool at this commit"
+    benchmark_evidence: "none — it is a placeholder and publishes no number"
+    formal_spec: "none"
+    dependencies:
+      - "none"
+    limitations: "it returns a hardcoded answer by keyword; the gateway's /health/live reports \"brain_available\": false while it is serving"
+    risks:
+      - "the gateway serves the stub by default (T-01): a deployment that sets no MATRIX_MODE answers /v1/analyze from 87 lines"
+      - "the gateway's unmounted JAX-RS facade ALSO constructs it; if that facade were ever mounted, the stub would silently replace the real ProductionBrainClient path (T-03)"
+    owner: "the owner (NO — it was never claimed as a capability)"
+    decision_ref: "docs-v2/engineering/W46-CAPABILITY-RECONCILIATION.csv row W44-STUB; docs-v2/architecture/ADR-2026-10-26-002-single-cognitive-conductor.md"
+    last_verified_commit: "a6ded23338e069b8bc8a3744c234be5a03995f43"
+    last_verified_at: "2026-11-04"
+    next_verification_condition: "a change to the default of MATRIX_MODE, or a decision to remove the stub, changes this row; a mount of the JAX-RS facade would make it the served implementation"
+    notes: "STATUS CORRECTION. The CSV's operational cell is 'UNMOUNTED', which is not a value of this registry's operational vocabulary and is also factually wrong for the stub itself: the gateway's own JDK server constructs it in the default mode and answers /v1/analyze with it. What is unmounted is the gateway's JAX-RS facade that also references it. The operational axis is therefore ACTIVE — the stub IS what serves by default — and the CSV's literal cell is kept here. Q-W46-14 asks whether the facade and the stub should exist at all."
+
+  -
+    id: "W44-EPISTEMIC"
+    name: "the epistemic workbench"
+    description: "io.matrix.knowledge.KnowledgeWorkbench: the epistemic surface — concepts, claims, evidence, cases, derivations, contradictions, goals and dialogue over one SQLite store. It is the largest route surface of the application (57 routes)."
+    domain: "epistemic-architecture"
+    implementation: "IMPLEMENTED"
+    integration: "INTEGRATION_TESTED"
+    verification: "TESTED"
+    operational: "SERVED"
+    source_paths:
+      - "matrix-core/src/main/java/io/matrix/knowledge/KnowledgeWorkbench.java"
+      - "matrix-core/src/main/java/io/matrix/knowledge/KnowledgeStore.java"
+      - "matrix-core/src/main/java/io/matrix/knowledge/LearningWorkbenchResource.java"
+    production_callers:
+      - "io.matrix.knowledge.LearningWorkbenchResource — matrix-core/src/main/java/io/matrix/knowledge/LearningWorkbenchResource.java"
+      - "io.matrix.cognitive.CognitiveService — matrix-core/src/main/java/io/matrix/cognitive/CognitiveService.java"
+      - "io.matrix.cognitive.CognitiveKernel — matrix-core/src/main/java/io/matrix/cognitive/CognitiveKernel.java"
+      - "io.matrix.knowledge.KnowledgeConsolidator — matrix-core/src/main/java/io/matrix/knowledge/KnowledgeConsolidator.java"
+      - "io.matrix.knowledge.ErrorIntegrator — matrix-core/src/main/java/io/matrix/knowledge/ErrorIntegrator.java"
+      - "io.matrix.knowledge.GoalManager — matrix-core/src/main/java/io/matrix/knowledge/GoalManager.java"
+    serving_chain: "chain-a"
+    serving_path: "GET and POST /v1/workbench/** — 57 routes on LearningWorkbenchResource (matrix-core/src/main/java/io/matrix/knowledge/LearningWorkbenchResource.java:50)"
+    test_paths:
+      - "matrix-core/src/test/java/io/matrix/knowledge/WorkspaceLoadEndpointTest.java"
+      - "matrix-core/src/test/java/io/matrix/knowledge/WorkspaceSnapshotTest.java"
+      - "matrix-core/src/test/java/io/matrix/knowledge/WorkspaceSnapshotMigrationTest.java"
+      - "matrix-core/src/test/java/io/matrix/knowledge/GoalPersistenceTest.java"
+    test_evidence: "present; W45.1 added the crash consistency. 61 test classes reference the workbench, resolved from the constant pool at this commit"
+    benchmark_evidence: "none — the workbench publishes no number of its own"
+    formal_spec: "formal/KnowledgeStore.tla; formal/KnowledgeLifecycle.tla; formal/LearningStateMachine.tla; formal/KnowledgeAxes.tla — four specifications model this subsystem and are registered in formal/spec-implementation-map.yml"
+    dependencies:
+      - "io.matrix.knowledge.KnowledgeStore (the store: 27 tables, schema v19)"
+      - "the SQLite file data/knowledge/workbench.sqlite, configured by matrix.knowledge.path"
+      - "io.matrix.cognitive.WriterLock (the single-writer guard)"
+    limitations: "KnowledgeStore.recordObservationAtomically — one transaction (W45-DECISION-LOG D6). The workbench and the cognitive store share one file through two connections, so the pair is not one transaction."
+    risks:
+      - "a workspace replacement erases the evidence of an observation while keeping its case, disposition and adjudication history (R-W46-01, open — the owner's decision D3-c)"
+      - "no whole-database backup exists (R-W46-02)"
+    owner: "the owner (YES)"
+    decision_ref: "docs-v2/engineering/W46-CAPABILITY-RECONCILIATION.csv row W44-EPISTEMIC; docs-v2/engineering/W45-DECISION-LOG.md D6"
+    last_verified_commit: "a6ded23338e069b8bc8a3744c234be5a03995f43"
+    last_verified_at: "2026-11-04"
+    next_verification_condition: "a change to the store's schema version, to the erasure set, or to the snapshot transaction, requires the workspace tests to be re-run"
+    notes: "the CSV's production_callers cell records '14 (a CDI bean)'. The constant pool at this commit resolves the individual callers listed above."
+
+  -
+    id: "W44-CONNECTOME"
+    name: "the connectome"
+    description: "The connectome of the brain runtime: the graph subsystem (Connectome, Synapse, CognitiveNode, ReplayPhase, SleepConsolidator, ClauseExplorer) that holds the associative structure of the mind. It is an island of chain B with no serving path."
+    domain: "brain-runtime"
+    implementation: "IMPLEMENTED"
+    integration: "ISLAND"
+    verification: "TESTED"
+    operational: "DORMANT"
+    source_paths:
+      - "matrix-brain-runtime/src/main/java/io/matrix/brain/runtime/graph/Connectome.java"
+      - "matrix-brain-runtime/src/main/java/io/matrix/brain/runtime/graph/Synapse.java"
+      - "matrix-brain-runtime/src/main/java/io/matrix/brain/runtime/graph/CognitiveNode.java"
+      - "matrix-brain-runtime/src/main/java/io/matrix/brain/runtime/graph/ReplayPhase.java"
+      - "matrix-brain-runtime/src/main/java/io/matrix/brain/runtime/graph/SleepConsolidator.java"
+      - "matrix-brain-runtime/src/main/java/io/matrix/brain/runtime/graph/ClauseExplorer.java"
+    production_callers:
+      - "io.matrix.brain.runtime.graph.ReplayPhase — matrix-brain-runtime/src/main/java/io/matrix/brain/runtime/graph/ReplayPhase.java"
+      - "io.matrix.brain.runtime.graph.SleepConsolidator — matrix-brain-runtime/src/main/java/io/matrix/brain/runtime/graph/SleepConsolidator.java"
+    serving_chain: "none"
+    serving_path: "none — the connectome is not on a serving path: its two callers (ReplayPhase and SleepConsolidator) are themselves called by nobody, so nothing reaches it"
+    test_paths:
+      - "matrix-brain-runtime/src/test/java/io/matrix/brain/runtime/graph/ConnectomeIntegrationTest.java"
+      - "matrix-brain-runtime/src/test/java/io/matrix/brain/runtime/graph/ConnectomePropagationTest.java"
+      - "matrix-brain-runtime/src/test/java/io/matrix/brain/runtime/graph/ConnectomePruneSafetyTest.java"
+      - "matrix-brain-runtime/src/test/java/io/matrix/brain/runtime/graph/ReplayPhaseTest.java"
+    test_evidence: "the tests execute; 7 test classes reference the connectome graph, resolved from the constant pool at this commit"
+    benchmark_evidence: "none"
+    formal_spec: "none"
+    dependencies:
+      - "none on a serving path"
+    limitations: "the whole graph package is reachable only from itself"
+    risks:
+      - "0 reachable production callers against 7 test classes — the trap of reading a capability by its tests"
+    owner: "the owner (NO — explicitly rejected, W44-CAPABILITY-MAP #14)"
+    decision_ref: "docs-v2/engineering/W46-CAPABILITY-RECONCILIATION.csv row W44-CONNECTOME; docs-v2/engineering/W44-CAPABILITY-MAP.md"
+    last_verified_commit: "a6ded23338e069b8bc8a3744c234be5a03995f43"
+    last_verified_at: "2026-11-04"
+    next_verification_condition: "a production caller outside the graph package, or a serving path, would change the integration axis from ISLAND"
+    notes: "CORRECTION to the CSV's parenthetical. The CSV says 'ReplayPhase and SleepConsolidator have 0 files in src/main' — both DO have files in src/main at this commit (matrix-brain-runtime/src/main/java/io/matrix/brain/runtime/graph/). What is zero is the REACHABLE caller count: ReplayPhase and SleepConsolidator are called by nobody. The conclusion (no serving path) holds; the stated reason did not. The CSV's integration cell is 'INACTIVE', which is not a member of the integration vocabulary; the honest value is ISLAND. The CSV's operational cell is 'INACTIVE', which is not a member of the operational vocabulary either; the honest rendering of 'implemented, island, tested, not running' is DORMANT."
+
+  -
+    id: "W44-BIOCHEM"
+    name: "the biochemical modulator island"
+    description: "The biochemical modulation subsystem: BiochemicalNetwork, BiochemicalOrchestrator, KineticModulator and the CognitiveModulationBridge that carries them into the cognitive path. An island with no serving path."
+    domain: "neuromodulation"
+    implementation: "IMPLEMENTED"
+    integration: "ISLAND"
+    verification: "TESTED"
+    operational: "DORMANT"
+    source_paths:
+      - "matrix-core/src/main/java/io/matrix/federation/liquid/biochemistry/BiochemicalNetwork.java"
+      - "matrix-core/src/main/java/io/matrix/federation/liquid/biochemistry/BiochemicalOrchestrator.java"
+      - "matrix-core/src/main/java/io/matrix/federation/liquid/KineticModulator.java"
+      - "matrix-core/src/main/java/io/matrix/federation/integration/CognitiveModulationBridge.java"
+    production_callers:
+      - "io.matrix.federation.orchestration.IntegratedFederation — matrix-core/src/main/java/io/matrix/federation/orchestration/IntegratedFederation.java"
+      - "io.matrix.external.AdversarialAttackSuite — matrix-core/src/main/java/io/matrix/external/AdversarialAttackSuite.java"
+      - "io.matrix.federation.liquid.BiochemicalDashboard — matrix-core/src/main/java/io/matrix/federation/liquid/BiochemicalDashboard.java"
+      - "io.matrix.federation.liquid.CognitiveRouter — matrix-core/src/main/java/io/matrix/federation/liquid/CognitiveRouter.java"
+    serving_chain: "none"
+    serving_path: "none — IntegratedFederation, the only caller that is not itself tooling, has no caller either"
+    test_paths:
+      - "matrix-core/src/test/java/io/matrix/federation/liquid/biochemistry/BiochemicalNetworkTest.java"
+      - "matrix-core/src/test/java/io/matrix/federation/liquid/biochemistry/BiochemicalOrchestratorTest.java"
+      - "matrix-core/src/test/java/io/matrix/federation/liquid/KineticModulatorTest.java"
+      - "matrix-core/src/test/java/io/matrix/federation/liquid/BiochemicalDashboardTest.java"
+    test_evidence: "present; 4 test classes reference the network and 12 reference the modulator, resolved from the constant pool at this commit"
+    benchmark_evidence: "none"
+    formal_spec: "none"
+    dependencies:
+      - "none on a serving path"
+    limitations: "the coefficients were chosen by hand with no source; the bridge always reads 0.5"
+    risks:
+      - "a hand-chosen coefficient on a path that reads a constant can look like a working modulation loop to any reader of the code"
+    owner: "the owner (NO — rejected, W44-CAPABILITY-MAP #17-20)"
+    decision_ref: "docs-v2/engineering/W46-CAPABILITY-RECONCILIATION.csv row W44-BIOCHEM; docs-v2/engineering/W44-CAPABILITY-MAP.md"
+    last_verified_commit: "a6ded23338e069b8bc8a3744c234be5a03995f43"
+    last_verified_at: "2026-11-04"
+    next_verification_condition: "a serving caller, or a calibrated coefficient with a source, would change the integration or the operational axis"
+    notes: "PATH CORRECTION. The CSV writes the package as io.matrix.federated.liquid.biochemistry; the real package is io.matrix.federation.liquid.biochemistry (federation, not federated). KineticModulator is in io.matrix.federation.liquid, not in the biochemistry sub-package, and CognitiveModulationBridge is in io.matrix.federation.integration. The CSV's integration cell is 'ISLAND', which IS a legal value; its operational cell is 'INACTIVE', which is not a member of the operational vocabulary, so the axis value is DORMANT — 'implemented, island, tested, not running'."
+
+  -
+    id: "W44-GOALMGR"
+    name: "GoalManager"
+    description: "io.matrix.knowledge.GoalManager: the learning goals of the epistemic store — their subtasks, their state and their transitions. It is reached from the workbench and from the cognitive task table."
+    domain: "epistemic-architecture"
+    implementation: "IMPLEMENTED"
+    integration: "INTEGRATION_TESTED"
+    verification: "TESTED"
+    operational: "SERVED"
+    source_paths:
+      - "matrix-core/src/main/java/io/matrix/knowledge/GoalManager.java"
+      - "matrix-core/src/main/java/io/matrix/cognitive/CognitiveTask.java"
+    production_callers:
+      - "io.matrix.knowledge.KnowledgeWorkbench — matrix-core/src/main/java/io/matrix/knowledge/KnowledgeWorkbench.java"
+    serving_chain: "chain-a"
+    serving_path: "GET /v1/workbench/workspaces/{id}/goals and GET /v1/workbench/workspaces/{id}/goals/resumable — the workbench resource reaches the goal manager through the workbench bean"
+    test_paths:
+      - "matrix-core/src/test/java/io/matrix/knowledge/GoalPersistenceTest.java"
+    test_evidence: "present; 1 test class references it, resolved from the constant pool at this commit"
+    benchmark_evidence: "none"
+    formal_spec: "formal/LearningStateMachine.tla models the learning state machine the goals move through"
+    dependencies:
+      - "io.matrix.knowledge.KnowledgeWorkbench"
+      - "io.matrix.cognitive.CognitiveTask (the cognitive task table)"
+    limitations: "the goal manager is reached only through the workbench; it has no route of its own"
+    risks: []
+    owner: "the owner (NO — it was not claimed in W45)"
+    decision_ref: "docs-v2/engineering/W46-CAPABILITY-RECONCILIATION.csv row W44-GOALMGR"
+    last_verified_commit: "a6ded23338e069b8bc8a3744c234be5a03995f43"
+    last_verified_at: "2026-11-04"
+    next_verification_condition: "a change to the goal table or to the workbench's goal routes requires the goal persistence test to be re-run"
+    notes: "the CSV's operational cell is 'SERVED (it was INACTIVE)' — the parenthetical is kept in notes and the axis value is SERVED. The CSV's production_callers cell says '3 files in src/main, including io.matrix.cognitive.CognitiveTask (new in W45) and KnowledgeWorkbench'; the constant pool resolves exactly ONE production caller of GoalManager itself, KnowledgeWorkbench. W44-CLASS-INVENTORY.csv still marks it INACTIVE — a stale label."
+
+  -
+    id: "W45-ATOMIC"
+    name: "the epistemic write is one transaction"
+    description: "KnowledgeStore.recordObservationAtomically: an observation, its evidence and its disposition are written in ONE transaction, so a crash cannot leave an observation without its evidence or the other way round. The observation_disposition table is the projection; observation_occurrence is the act; observation_adjudication is the append-only history."
+    domain: "durability"
+    implementation: "IMPLEMENTED"
+    integration: "INTEGRATION_TESTED"
+    verification: "TESTED"
+    operational: "SERVED"
+    source_paths:
+      - "matrix-core/src/main/java/io/matrix/knowledge/KnowledgeStore.java"
+      - "matrix-core/src/main/java/io/matrix/cognitive/microworld/ObservationDisposition.java"
+    production_callers:
+      - "io.matrix.knowledge.KnowledgeWorkbench — matrix-core/src/main/java/io/matrix/knowledge/KnowledgeWorkbench.java"
+      - "io.matrix.cognitive.CognitiveKernel — matrix-core/src/main/java/io/matrix/cognitive/CognitiveKernel.java"
+    serving_chain: "chain-a"
+    serving_path: "POST /v1/workbench/workspaces/{id}/claims and the cognitive observe path, both of which reach the store through the workbench bean"
+    test_paths:
+      - "matrix-core/src/test/java/io/matrix/cognitive/CognitiveContradictionDurabilityTest.java"
+      - "matrix-core/src/test/java/io/matrix/cognitive/CognitiveConcurrencyTest.java"
+    test_evidence: "13 + 5 executed tests, in the contradiction-durability and the concurrency suites"
+    benchmark_evidence: "none — the guarantee is a transaction boundary, not a number"
+    formal_spec: "formal/KnowledgeStore.tla models the store's lifecycle, registered in formal/spec-implementation-map.yml"
+    dependencies:
+      - "io.matrix.knowledge.KnowledgeStore (the schema)"
+      - "io.matrix.cognitive.WriterLock (the single-writer guard)"
+    limitations: "the schema went v17 → v19 (workspace_snapshot was added). The atomicity covers the EPISTEMIC write only: the kernel's write to the cognitive store is a second connection and a second transaction, so the pair is not atomic."
+    risks:
+      - "the two stores share one file through two connections; a failure between the two writes leaves the epistemic and the cognitive state inconsistent (T-10)"
+    owner: "the owner (YES — W45-DECISION-LOG D6)"
+    decision_ref: "docs-v2/engineering/W46-CAPABILITY-RECONCILIATION.csv row W45-ATOMIC; docs-v2/engineering/W45-DECISION-LOG.md D6"
+    last_verified_commit: "a6ded23338e069b8bc8a3744c234be5a03995f43"
+    last_verified_at: "2026-11-04"
+    next_verification_condition: "a change to the store's write sequence or to the schema version requires the durability and concurrency tests to be re-run"
+    notes: "the CSV row has 14 fields against a 15-field header: its production_callers cell is absent. The callers listed above were resolved from the constant pool at this commit."
+
+  -
+    id: "W45-BUDGET"
+    name: "the cycle budget is a deadline"
+    description: "io.matrix.cognitive.CycleDeadline and CycleTimeoutException: the kernel's cycle runs under a deadline, and exceeding it is a TERMINAL, recorded outcome rather than a rollback."
+    domain: "cognitive-architecture"
+    implementation: "IMPLEMENTED"
+    integration: "INTEGRATION_TESTED"
+    verification: "TESTED"
+    operational: "SERVED"
+    source_paths:
+      - "matrix-core/src/main/java/io/matrix/cognitive/CycleDeadline.java"
+      - "matrix-core/src/main/java/io/matrix/cognitive/CycleTimeoutException.java"
+      - "matrix-core/src/main/java/io/matrix/cognitive/CognitiveKernel.java"
+    production_callers:
+      - "io.matrix.cognitive.CognitiveService — matrix-core/src/main/java/io/matrix/cognitive/CognitiveService.java"
+      - "io.matrix.cognitive.CognitiveKernel — matrix-core/src/main/java/io/matrix/cognitive/CognitiveKernel.java"
+    serving_chain: "chain-a"
+    serving_path: "POST /v1/cognitive/observe — a cycle that exceeds its deadline returns a terminal outcome (a timeout is a recorded answer, not an error)"
+    test_paths:
+      - "matrix-core/src/test/java/io/matrix/cognitive/CognitiveCycleBudgetTest.java"
+    test_evidence: "executed — 5 tests in the cycle-budget suite"
+    benchmark_evidence: "none — the guarantee is a deadline, not a number"
+    formal_spec: "none"
+    dependencies:
+      - "io.matrix.cognitive.CognitiveKernel (the cycle that is bounded)"
+    limitations: "the timeout is a terminal state, not a rollback: work already done in the cycle is kept and the episode is closed as a terminal outcome"
+    risks:
+      - "a terminal timeout leaves the episode in a state a caller may not expect to be replayable unless it holds the idempotency key"
+    owner: "the owner (YES — W45-DECISION-LOG D7)"
+    decision_ref: "docs-v2/engineering/W46-CAPABILITY-RECONCILIATION.csv row W45-BUDGET; docs-v2/engineering/W45-DECISION-LOG.md D7"
+    last_verified_commit: "a6ded23338e069b8bc8a3744c234be5a03995f43"
+    last_verified_at: "2026-11-04"
+    next_verification_condition: "a change to the deadline or to the timeout's terminal handling requires the cycle-budget tests to be re-run"
+    notes: "the CSV row has 14 fields against a 15-field header: its production_callers cell is absent. The callers listed above were resolved from the constant pool at this commit."
+
+  -
+    id: "W45-ISOLATION"
+    name: "the two chains are isolated"
+    description: "Chain A (the Quarkus epistemic application) and chain B (the JDK HttpServer brain runtime) cannot meet. The guarantee is enforced by a gate that resolves the call graph from the constant pool and fails when chain B reaches the epistemic store, and by a declaration of the canonical entry points."
+    domain: "architecture-boundary"
+    implementation: "IMPLEMENTED"
+    integration: "INTEGRATION_TESTED"
+    verification: "TESTED"
+    operational: "SERVED"
+    source_paths:
+      - "matrix-core/src/main/java/io/matrix/api/CanonicalEntryPoint.java"
+      - "scripts/w45-chain-isolation-check.sh"
+      - "scripts/w45-chain-isolation-selftest.sh"
+      - "scripts/w45-chain-isolation-reachability.py"
+    production_callers:
+      - "the CI workflow that runs the gate — scripts/w45-chain-isolation-check.sh"
+    serving_chain: "both"
+    serving_path: "the gate is a script, not an HTTP route; the declaration it enforces is read by io.matrix.api.CanonicalEntryPoint, which names the three chain-A entry points and the one chain-B entry point"
+    test_paths:
+      - "matrix-core/src/test/java/io/matrix/api/CanonicalEntryPointTest.java"
+      - "matrix-api-gateway/src/test/java/io/matrix/api/CanonicalEntryPointChainBTest.java"
+    test_evidence: "16 gate checks, 0 failed; 6 negative-control checks, 0 failed (the recorded run). The declaration itself is checked by 2 test classes (7 + 3 cases)."
+    benchmark_evidence: "the measurement is the reachability census over the compiled classes: 2909 classes and 76858 constant-pool edges, with chain B reaching 0 classes of io.matrix.cognitive.**, 0 classes of the epistemic store's own classes, 0 classes that name the epistemic database, and 0 of chain A's serving surface. The census is reproduced by scripts/w45-chain-isolation-reachability.py."
+    formal_spec: "none"
+    dependencies:
+      - "the compiled classes of matrix-core, matrix-brain-runtime, matrix-api-gateway and matrix-audit"
+    limitations: "the gate proves the ISOLATION, not the usefulness; the future-bridge contract is BRIDGE-1..10. The isolation is asserted at the class level: the two chains still share 179 classes of library substrate, which is not a path to the store."
+    risks:
+      - "the gate is a build-time check over a private copy; it does not run against the running process, so a class added to chain B's classpath after the gate ran is not covered"
+    owner: "the owner (YES — the owner's decision of 2026-11-04)"
+    decision_ref: "docs-v2/engineering/W46-CAPABILITY-RECONCILIATION.csv row W45-ISOLATION; docs-v2/engineering/ADR-W45.2-01-canonical-entry-point.md"
+    last_verified_commit: "a6ded23338e069b8bc8a3744c234be5a03995f43"
+    last_verified_at: "2026-11-04"
+    next_verification_condition: "a change to either chain's module dependencies, or to the set of route classes, requires the gate to be re-run; a bridge would require the owner's BRIDGE-1..10 contract"
+    notes: "the CSV's verification cell is 'TESTED (a gate, not a formal proof)' — the axis value is TESTED and the qualifier is preserved here. The CSV row has 16 fields against a 15-field header: the verification cell was split by an unescaped comma."
+
+  -
+    id: "W45-FAILCLOSED"
+    name: "the destructive reload fails closed"
+    description: "POST /v1/workbench/workspaces/{id}/load refuses to replace a non-empty workspace unless the caller passes ?replace=true, and takes a snapshot in the SAME transaction as the replacement, so a replacement cannot happen without a recovery point."
+    domain: "durability"
+    implementation: "IMPLEMENTED"
+    integration: "INTEGRATION_TESTED"
+    verification: "TESTED"
+    operational: "SERVED"
+    source_paths:
+      - "matrix-core/src/main/java/io/matrix/knowledge/LearningWorkbenchResource.java"
+      - "matrix-core/src/main/java/io/matrix/knowledge/KnowledgeStore.java"
+    production_callers:
+      - "io.matrix.knowledge.LearningWorkbenchResource — matrix-core/src/main/java/io/matrix/knowledge/LearningWorkbenchResource.java"
+    serving_chain: "chain-a"
+    serving_path: "POST /v1/workbench/workspaces/{id}/load — the destructive load route, whose consent parameter is ?replace=true"
+    test_paths:
+      - "matrix-core/src/test/java/io/matrix/knowledge/WorkspaceLoadEndpointTest.java"
+      - "matrix-core/src/test/java/io/matrix/knowledge/WorkspaceSnapshotTest.java"
+    test_evidence: "executed — 7 cases in the load-endpoint suite and 12 in the snapshot suite"
+    benchmark_evidence: "none"
+    formal_spec: "none"
+    dependencies:
+      - "io.matrix.knowledge.WorkspaceSnapshot (the recovery point)"
+      - "io.matrix.knowledge.WorkspaceReplacementRefused (the refusal)"
+    limitations: "the snapshot is taken in the same transaction; there is no HTTP endpoint for reading a snapshot, so the recovery point is inspectable only programmatically through store.workspaceSnapshots(workspaceId)."
+    risks:
+      - "the erasure set predates the observation tables: a replacement erases the evidence rows the observation wrote while keeping the case, the disposition and the adjudication history (R-W46-01, Q-W46-03 — the owner's decision D3-c)"
+      - "the consent parameter's SHAPE is unsettled: the implementation uses the query parameter ?replace=true and the W46 target contract names a body field replaceExisting (Q-W46-01)"
+    owner: "the owner (YES)"
+    decision_ref: "docs-v2/engineering/W46-CAPABILITY-RECONCILIATION.csv row W45-FAILCLOSED; docs-v2/engineering/W45.2-STATUS.md §2"
+    last_verified_commit: "a6ded23338e069b8bc8a3744c234be5a03995f43"
+    last_verified_at: "2026-11-04"
+    next_verification_condition: "a decision on the erasure set (D3-c) and on the consent parameter's shape (Q-W46-01) would change this row; a change to the erasure set requires a migration test"
+    notes: "the CSV row has 14 fields against a 15-field header: its production_callers cell is absent. The caller listed above was resolved from the constant pool at this commit."
+
+  -
+    id: "W45-WRITERLOCK"
+    name: "one writer process per database file"
+    description: "io.matrix.cognitive.WriterLock: an OS-level lock plus an owner record that admits ONE writer process per database file. A second process that opens the same file is refused; a writer that dies leaves a record that classifies the owner as dead so the next writer may take over."
+    domain: "concurrency"
+    implementation: "IMPLEMENTED"
+    integration: "INTEGRATION_TESTED"
+    verification: "TESTED"
+    operational: "SERVED"
+    source_paths:
+      - "matrix-core/src/main/java/io/matrix/cognitive/WriterLock.java"
+      - "matrix-core/src/main/java/io/matrix/cognitive/CognitiveWriterConflictException.java"
+      - "matrix-core/src/main/java/io/matrix/knowledge/KnowledgeStore.java"
+      - "matrix-core/src/main/java/io/matrix/cognitive/CognitiveStore.java"
+    production_callers:
+      - "io.matrix.knowledge.KnowledgeStore — matrix-core/src/main/java/io/matrix/knowledge/KnowledgeStore.java"
+      - "io.matrix.cognitive.CognitiveStore — matrix-core/src/main/java/io/matrix/cognitive/CognitiveStore.java"
+    serving_chain: "both"
+    serving_path: "the guard is inside the stores, so it applies to every path that opens the database: the chain-A workbench and cognitive routes, and chain B's own mind store"
+    test_paths:
+      - "matrix-core/src/test/java/io/matrix/cognitive/CognitiveWriterLockTest.java"
+    test_evidence: "8 executed tests, including one that starts a second JVM and is refused, and one that SIGKILLs a writer"
+    benchmark_evidence: "none — the guarantee is a lock, not a number"
+    formal_spec: "none"
+    dependencies:
+      - "the operating system's file lock"
+    limitations: "the lock path is not resolved through symlinks (D4-a): the guard normalises the path but does not resolve it, so two aliases of one file yield two lock files. The guarantee is per host unless the filesystem coordinates cross-host locks."
+    risks:
+      - "two writers on one database through two path aliases is exactly the condition the guard exists to prevent (R-W46-03, Q-W46-04)"
+      - "on NFS or SMB the FileLock semantics are unreliable and the other host's pid is invisible, so the record may be judged dead and the file taken over (R-W46-04)"
+    owner: "the owner (YES — the owner's decision of 2026-11-04)"
+    decision_ref: "docs-v2/engineering/W46-CAPABILITY-RECONCILIATION.csv row W45-WRITERLOCK; docs-v2/engineering/W45.2-CHAIN-BOUNDARY.md"
+    last_verified_commit: "a6ded23338e069b8bc8a3744c234be5a03995f43"
+    last_verified_at: "2026-11-04"
+    next_verification_condition: "resolving the lock path to its real path, with a symlink test, closes the D4-a gap and would change this row's limitations"
+    notes: ""
+
+  -
+    id: "W45-SNAPSHOT"
+    name: "the workspace snapshot"
+    description: "The per-workspace logical snapshot: a recovery point taken in the same transaction as a workspace replacement, materialised as a logical export in the workspace_snapshot table (knowledge schema v19)."
+    domain: "durability"
+    implementation: "IMPLEMENTED"
+    integration: "INTEGRATION_TESTED"
+    verification: "TESTED"
+    operational: "SERVED"
+    source_paths:
+      - "matrix-core/src/main/java/io/matrix/knowledge/WorkspaceSnapshot.java"
+      - "matrix-core/src/main/java/io/matrix/knowledge/WorkspaceLoad.java"
+      - "matrix-core/src/main/java/io/matrix/knowledge/WorkspaceReplacementRefused.java"
+      - "matrix-core/src/main/java/io/matrix/knowledge/KnowledgeStore.java"
+    production_callers:
+      - "io.matrix.knowledge.KnowledgeWorkbench — matrix-core/src/main/java/io/matrix/knowledge/KnowledgeWorkbench.java"
+      - "io.matrix.knowledge.LearningWorkbenchResource — matrix-core/src/main/java/io/matrix/knowledge/LearningWorkbenchResource.java"
+    serving_chain: "chain-a"
+    serving_path: "POST /v1/workbench/workspaces/{id}/load — the snapshot is taken as part of the replacement the route performs; the route that creates it is the destructive one"
+    test_paths:
+      - "matrix-core/src/test/java/io/matrix/knowledge/WorkspaceSnapshotTest.java"
+      - "matrix-core/src/test/java/io/matrix/knowledge/WorkspaceSnapshotMigrationTest.java"
+      - "matrix-core/src/test/java/io/matrix/knowledge/WorkspaceLoadEndpointTest.java"
+    test_evidence: "23 executed tests (12 + 4 + 7)"
+    benchmark_evidence: "none"
+    formal_spec: "none"
+    dependencies:
+      - "io.matrix.cognitive.WriterLock (the guard on the file)"
+      - "the knowledge store's schema v19"
+    limitations: "the snapshot is a logical export, not a file-level backup; no whole-database backup exists. There is no HTTP endpoint for reading a snapshot back."
+    risks:
+      - "a corruption of the file itself, or a bad migration, is not recoverable from anything in the repository (R-W46-02, Q-W46-05)"
+      - "the snapshot cannot restore the observation tables that the erasure set leaves behind (Q-W46-03)"
+    owner: "the owner (YES)"
+    decision_ref: "docs-v2/engineering/W46-CAPABILITY-RECONCILIATION.csv row W45-SNAPSHOT; docs-v2/engineering/W45.2-STATUS.md §2"
+    last_verified_commit: "a6ded23338e069b8bc8a3744c234be5a03995f43"
+    last_verified_at: "2026-11-04"
+    next_verification_condition: "a file-level backup command with a restore drill, and a runbook section, would close R-W46-02 and change this row's limitations"
+    notes: "the CSV row has 14 fields against a 15-field header: its production_callers cell is absent. The callers listed above were resolved from the constant pool at this commit."
+
+  -
+    id: "W46-GPU"
+    name: "the published claim: \"the GPU is used by MATRIX\""
+    description: "An audited claim, not a capability identity. The claim is FALSE as written: the ONNX Runtime GPU build is on the classpath and the CUDA provider is compiled in, but MATRIX's Java path requests the GPU inside a catch block and silently falls back to the CPU."
+    domain: "hardware"
+    implementation: "IMPLEMENTED"
+    integration: "UNKNOWN"
+    verification: "REJECTED"
+    operational: "DORMANT"
+    source_paths:
+      - "matrix-core/src/main/java/io/matrix/api/OnnxRuntimeAdapter.java:104-114"
+      - "matrix-core/src/main/java/io/matrix/api/OnnxRuntimeAdapter.java:118-123"
+      - "matrix-core/build.gradle:77"
+      - "matrix-core/build.gradle:135-155"
+      - "docs-v2/engineering/W46-HARDWARE-AND-RESOURCE-REPORT.md"
+      - "models/onnx/qwen05b/model.onnx"
+    production_callers:
+      - "io.matrix.api.OnnxRuntimeAdapter — matrix-core/src/main/java/io/matrix/api/OnnxRuntimeAdapter.java"
+    serving_chain: "chain-a"
+    serving_path: "the adapter is on chain A's chat path, but the GPU provider is never bound, so no route executes on the GPU"
+    test_paths: []
+    test_evidence: "none — no test exercises the CUDA provider"
+    benchmark_evidence: "W46-HARDWARE-AND-RESOURCE-REPORT.md §6: with LD_LIBRARY_PATH exported the provider loads; without it the loader finds the distro's libcudart.so.12 (CUDA 12.4), which lacks cudaLibraryGetKernel. Measured on the same model (models/onnx/qwen05b/model.onnx, sequence length 32, 10 iterations after one warm-up): 191.367 ms per forward on the CPU against 15.190 ms on the CUDA (12.6×). The historical EXP-009C reproduces within 1.4% on the torch path. The measurement is reproducible by running scripts/bench_gpu_vs_bir.py and the ONNX probe with and without LD_LIBRARY_PATH."
+    formal_spec: "none"
+    dependencies:
+      - "com.microsoft.onnxruntime:onnxruntime_gpu:1.29.0 (matrix-core/build.gradle:77)"
+      - "the CUDA runtime the loader actually finds — LD_LIBRARY_PATH, not -Djava.library.path"
+    limitations: "the diagnostic activeProviders() returns a hardcoded CPUExecutionProvider and cannot report the truth; ONNX Runtime 1.29.0 exposes no OrtSession.getProviders(), so the field is a constant. The speed-up is TRUE for a transformer forward pass and FALSE for point calls (EXP-009C: 17.49 µs per call against ~62 ns for a BIR evaluation)."
+    risks:
+      - "the hardcoded diagnostic makes any dashboard report 'CPU' whether the GPU is in use or not, so the false claim cannot be detected from MATRIX's own output"
+      - "the claim was published as true and the hardware report of the W620 wave recorded 'the GPU is unavailable to this machine' — both are loader-path facts, not hardware facts"
+    owner: "the owner (NO — the claim is false as written; it needs the owner's decision)"
+    decision_ref: "docs-v2/engineering/W46-CAPABILITY-RECONCILIATION.csv row W46-GPU; docs-v2/engineering/W46-HARDWARE-AND-RESOURCE-REPORT.md §6"
+    last_verified_commit: "a6ded23338e069b8bc8a3744c234be5a03995f43"
+    last_verified_at: "2026-11-04"
+    next_verification_condition: "exporting LD_LIBRARY_PATH in the launcher and recording the real active provider would turn the claim into a measurement; the owner must decide whether the GPU is in scope for MATRIX at all"
+    notes: "the CSV's integration cell is 'NOT INTEGRATED (the registration fails)', which is not a member of this registry's integration vocabulary; the axis is honestly unknown and the literal cell is preserved here. The CSV's implementation cell is 'IMPLEMENTED (the request)' — the request exists, the binding does not. The CSV's operational cell is 'INACTIVE', which is not a member of the operational vocabulary; the axis value is DORMANT."
+
+  -
+    id: "W46-MODULE-GRAPH"
+    name: "the module graph has no cycles"
+    description: "A measurement of the Gradle module graph: the 8 project() edges declared in 5 build files form an acyclic digraph over the modules of settings.gradle."
+    domain: "build"
+    implementation: "IMPLEMENTED"
+    integration: "INTEGRATION_TESTED"
+    verification: "MEASURED"
+    operational: "ACTIVE"
+    source_paths:
+      - "settings.gradle"
+      - "matrix-api-gateway/build.gradle:47"
+      - "matrix-api-gateway/build.gradle:50"
+      - "matrix-api-gateway/build.gradle:52"
+      - "matrix-brain-runtime/build.gradle:27"
+      - "matrix-brain-runtime/build.gradle:30"
+      - "pilots/compliance-bot/build.gradle:7"
+      - "pilots/edu-assessor/build.gradle:7"
+      - "pilots/smart-home-agent/build.gradle:7"
+    production_callers: []
+    serving_chain: "none"
+    serving_path: "none — a build-graph property is not a serving path"
+    test_paths: []
+    test_evidence: "Tarjan over the edge set: no module-level cycle"
+    benchmark_evidence: "the measurement is reproducible from the committed files alone: settings.gradle (37 lines) declares the modules and the 8 project() edges above are the complete edge set (matrix-api-gateway → matrix-brain-runtime, matrix-core, matrix-audit; matrix-brain-runtime → matrix-core, matrix-audit; the three pilots → matrix-sdk-java). Running Tarjan over that edge set yields no cycle. No script is committed for the computation, so the measurement was re-derived by hand in this wave."
+    formal_spec: "none"
+    dependencies:
+      - "the Gradle build files of the 5 modules"
+    limitations: "the computation is not committed as a tool, so it is reproducible by hand but not by a command. The measurement covers MODULE edges only: two CLASS-level cycles exist inside matrix-core (EthicalFilter ↔ FrozenEthicalFNL, which is in the FROZEN zone, and AgentBrainService ↔ NeuralMemoryResponse) and a 42-package SCC of mutually reachable packages."
+    risks:
+      - "a class-level cycle inside the frozen ethics zone is a build-order and readability hazard that the module-level measurement cannot see"
+    owner: "not applicable — a measurement, not a claim"
+    decision_ref: "docs-v2/engineering/W46-CAPABILITY-RECONCILIATION.csv row W46-MODULE-GRAPH"
+    last_verified_commit: "a6ded23338e069b8bc8a3744c234be5a03995f43"
+    last_verified_at: "2026-11-04"
+    next_verification_condition: "committing the computation as a script would make the measurement reproducible by command rather than by hand; adding a project() edge requires the measurement to be re-run"
+    notes: "the CSV's row has 16 fields against a 15-field header: the owner cell was split by an unescaped comma. The settings.gradle line count (37) and the edge count (8 edges in 5 build files) were confirmed directly in this wave."
+
+  -
+    id: "W46-BRAIN-LOOP-RESEARCH"
+    name: "the RUN-158 brain loop service — the five-stage research loop"
+    description: "io.matrix.consciousness.BrainLoopService: the research and measurement loop (perception, attention, deliberation, gate, action) as a plain Java class with no CDI, no Quarkus and no LLM, built to run on FPGA and edge targets. It has 25 production callers, all of them measurement tooling, and NO serving path."
+    domain: "cognitive-architecture"
+    implementation: "IMPLEMENTED"
+    integration: "ISLAND"
+    verification: "TESTED"
+    operational: "DORMANT"
+    source_paths:
+      - "matrix-core/src/main/java/io/matrix/consciousness/BrainLoopService.java"
+      - "matrix-core/src/main/java/io/matrix/consciousness/BrainLoopServiceBuilder.java"
+      - "matrix-core/src/main/java/io/matrix/consciousness/BrainLoopServiceFactory.java"
+      - "matrix-core/src/main/java/io/matrix/experimental/AblationStudy.java"
+    production_callers:
+      - "io.matrix.consciousness.BrainLoopServiceBuilder — matrix-core/src/main/java/io/matrix/consciousness/BrainLoopServiceBuilder.java"
+      - "io.matrix.consciousness.BrainLoopServiceFactory — matrix-core/src/main/java/io/matrix/consciousness/BrainLoopServiceFactory.java"
+      - "io.matrix.consciousness.BrainLoopDemo — matrix-core/src/main/java/io/matrix/consciousness/BrainLoopDemo.java"
+      - "io.matrix.consciousness.CycleReset — matrix-core/src/main/java/io/matrix/consciousness/CycleReset.java"
+      - "io.matrix.experimental.AblationStudy — matrix-core/src/main/java/io/matrix/experimental/AblationStudy.java"
+      - "io.matrix.pilot.PilotProactiveChat — matrix-core/src/main/java/io/matrix/pilot/PilotProactiveChat.java"
+    serving_chain: "none"
+    serving_path: "none — the 25 callers are profiling, checkpointing, replay, health, saturation and ablation tooling inside io.matrix.consciousness; none of them is in a serving closure, and the class is not a CDI bean"
+    test_paths:
+      - "matrix-core/src/test/java/io/matrix/consciousness/BrainLoopServiceTest.java"
+    test_evidence: "58 test classes reference the class, resolved from the constant pool of the compiled test classes at this commit"
+    benchmark_evidence: "none for the class itself; the surrounding measurement tooling publishes latency and profile figures under other ids"
+    formal_spec: "none"
+    dependencies:
+      - "io.matrix.perception.TextEncoder, io.matrix.perception.SaliencyEngine, io.matrix.consciousness.AttentionRouter, io.matrix.consciousness.PredictionModel, io.matrix.consciousness.ArousalDynamics, io.matrix.consciousness.ActionGate"
+    limitations: "the class is a plain Java object by design, so it cannot be injected or served; it is reached only by code that constructs it"
+    risks:
+      - "58 test references against 0 reachable serving callers is exactly the trap of reading a capability by its tests"
+    owner: "not claimed as a capability — it is the RUN-158 research loop"
+    decision_ref: "docs-v2/engineering/W46-ARCHITECTURE-TRUTH-MAP.md §3"
+    last_verified_commit: "a6ded23338e069b8bc8a3744c234be5a03995f43"
+    last_verified_at: "2026-11-04"
+    next_verification_condition: "a serving caller, or a CDI annotation, would change the integration and operational axes; the CSV row W44-BRAIN-LOOP must be read as the reasoning loop, not this one"
+    notes: "ADDED IN W46.1. This is the class the CSV's W44-BRAIN-LOOP row names FIRST and counts callers for, while giving the serving path of the SECOND class. The two have the same simple name in different packages, so a text search conflates them; the constant pool numbers are 25 : 1. The CSV's row is split by this record and by W44-BRAIN-LOOP."
+
+  -
+    id: "W46-CYCLE-CONSCIOUSNESS"
+    name: "the consciousness loop — the nine stages"
+    description: "io.matrix.reasoning.ConsciousnessLoop: the nine-stage loop itself, behind the reasoning brain loop service. It is the second of the six cycles and one of the three serving paths of chain A."
+    domain: "cognitive-architecture"
+    implementation: "IMPLEMENTED"
+    integration: "INTEGRATION_TESTED"
+    verification: "TESTED"
+    operational: "SERVED"
+    source_paths:
+      - "matrix-core/src/main/java/io/matrix/reasoning/ConsciousnessLoop.java"
+      - "matrix-core/src/main/java/io/matrix/reasoning/BrainLoopService.java"
+    production_callers:
+      - "io.matrix.reasoning.BrainLoopService — matrix-core/src/main/java/io/matrix/reasoning/BrainLoopService.java"
+    serving_chain: "chain-a"
+    serving_path: "POST /v1/chat/completions, through the reasoning brain loop service, which ticks the loop and returns its trace in the X-Matrix-Trace header"
+    test_paths:
+      - "matrix-core/src/test/java/io/matrix/reasoning/ConsciousnessLoopTest.java"
+      - "matrix-core/src/test/java/io/matrix/reasoning/ConsciousnessLoopFeedbackTest.java"
+    test_evidence: "8 test classes reference the loop, resolved from the constant pool of the compiled test classes at this commit"
+    benchmark_evidence: "none"
+    formal_spec: "none"
+    dependencies:
+      - "io.matrix.reasoning.BrainLoopService (its only caller)"
+      - "io.matrix.lifecycle.ConsolidationCycle (the consolidation stage)"
+      - "io.matrix.budgeter.ConjugateBudgeter, io.matrix.actions.ActionArena"
+    limitations: "stateless between ticks; per-tick state lives in the loop body"
+    risks: []
+    owner: "the owner (YES — the six-cycle truth is recorded in ADR-W45.2-01)"
+    decision_ref: "docs-v2/engineering/ADR-W45.2-01-canonical-entry-point.md; docs-v2/engineering/W46-ARCHITECTURE-TRUTH-MAP.md §3"
+    last_verified_commit: "a6ded23338e069b8bc8a3744c234be5a03995f43"
+    last_verified_at: "2026-11-04"
+    next_verification_condition: "a change to the stage list, or to the service that ticks it, requires the consciousness-loop tests to be re-run"
+    notes: "ADDED IN W46.1. One of the six cycles; the CSV carries it only as a source path inside the W44-BRAIN-LOOP row."
+
+  -
+    id: "W46-CYCLE-TRUEMIND"
+    name: "the true mind cycle"
+    description: "io.matrix.brain.runtime.TrueMindCycle: the cycle of the brain runtime — the thing the gateway's ProductionBrainClient drives when MATRIX_MODE=production. It is the third serving path and the one that carries the brain runtime."
+    domain: "brain-runtime"
+    implementation: "IMPLEMENTED"
+    integration: "INTEGRATION_TESTED"
+    verification: "TESTED"
+    operational: "SERVED"
+    source_paths:
+      - "matrix-brain-runtime/src/main/java/io/matrix/brain/runtime/TrueMindCycle.java"
+      - "matrix-api-gateway/src/main/java/io/matrix/api/brain/ProductionBrainClient.java"
+      - "matrix-brain-runtime/src/main/java/io/matrix/brain/runtime/PersistentMind.java"
+    production_callers:
+      - "io.matrix.api.brain.ProductionBrainClient — matrix-api-gateway/src/main/java/io/matrix/api/brain/ProductionBrainClient.java"
+      - "io.matrix.brain.runtime.MindRuntimeCli — matrix-brain-runtime/src/main/java/io/matrix/brain/runtime/MindRuntimeCli.java"
+      - "io.matrix.brain.runtime.actuation.ActuationStage — matrix-brain-runtime/src/main/java/io/matrix/brain/runtime/actuation/ActuationStage.java"
+    serving_chain: "chain-b"
+    serving_path: "POST /v1/analyze on the gateway, but ONLY when MATRIX_MODE=production; the default is the stub (MinimalHttpServer.java:127-128, :301, :304)"
+    test_paths:
+      - "matrix-brain-runtime/src/test/java/io/matrix/brain/runtime/TrueMindCycleIntegrationTest.java"
+      - "matrix-api-gateway/src/test/java/io/matrix/api/CanonicalEntryPointChainBTest.java"
+    test_evidence: "10 test classes reference it, resolved from the constant pool of the compiled test classes at this commit"
+    benchmark_evidence: "docs-v2/engineering/W44-BENCHMARK.md — the W43 scope it belongs to was 1518 tests; the cycle itself publishes no number of its own"
+    formal_spec: "formal/BrcStep.tla and formal/MctsLatsVisit.tla model two of the stages the cycle runs, and are registered in formal/spec-implementation-map.yml"
+    dependencies:
+      - "io.matrix.brain.BirBrainCycle (the inference stage)"
+      - "io.matrix.brain.runtime.PersistentMind (the mind store)"
+      - "io.matrix.brain.runtime.graph.NeuroModulatorHub (the modulator stage)"
+      - "io.matrix.goals.GoalTracker, io.matrix.memory.HierarchicalMemory"
+    limitations: "the cycle is served only in production mode; in the default mode the gateway answers from the stub. ActuationStage calls the cycle but is itself in NEITHER serving closure (T-08)."
+    risks:
+      - "the default mode serves the stub, so a deployment with no MATRIX_MODE set is not running this cycle at all (T-01)"
+    owner: "the owner (YES — declared as chain B's canonical entry point)"
+    decision_ref: "docs-v2/engineering/ADR-W45.2-01-canonical-entry-point.md; docs-v2/engineering/W46-ARCHITECTURE-TRUTH-MAP.md §3"
+    last_verified_commit: "a6ded23338e069b8bc8a3744c234be5a03995f43"
+    last_verified_at: "2026-11-04"
+    next_verification_condition: "a change to the gateway's default mode, or to the cycle's stage list, requires the chain-B tests and the isolation gate to be re-run"
+    notes: "ADDED IN W46.1. One of the six cycles; the CSV carries no row for it."
+
+  -
+    id: "W46-CYCLE-BIR"
+    name: "the BIR brain cycle"
+    description: "io.matrix.brain.BirBrainCycle: the BIR/HDC/Tsetlin/MCTS portfolio of the brain runtime, reached from the true mind cycle's inference stage. It also has its own main, so it can be run as a command line."
+    domain: "brain-runtime"
+    implementation: "IMPLEMENTED"
+    integration: "INTEGRATION_TESTED"
+    verification: "TESTED"
+    operational: "SERVED"
+    source_paths:
+      - "matrix-core/src/main/java/io/matrix/brain/BirBrainCycle.java"
+      - "matrix-brain-runtime/src/main/java/io/matrix/brain/runtime/TrueMindCycle.java"
+      - "matrix-brain-runtime/src/main/java/io/matrix/brain/runtime/PersistentMind.java"
+    production_callers:
+      - "io.matrix.brain.runtime.TrueMindCycle — matrix-brain-runtime/src/main/java/io/matrix/brain/runtime/TrueMindCycle.java"
+      - "io.matrix.brain.runtime.PersistentMind — matrix-brain-runtime/src/main/java/io/matrix/brain/runtime/PersistentMind.java"
+      - "io.matrix.api.llm_quarantine.BrainHttpServer — matrix-api-gateway/src/main/java/io/matrix/api/llm_quarantine/BrainHttpServer.java"
+    serving_chain: "chain-b"
+    serving_path: "POST /v1/analyze on the gateway, through the true mind cycle, in production mode only; and its own main (BirBrainCycle.java:330) as a command line"
+    test_paths:
+      - "matrix-core/src/test/java/io/matrix/brain/BirBrainCycleTest.java"
+      - "matrix-brain-runtime/src/test/java/io/matrix/brain/runtime/PersistentMindIntegrationTest.java"
+    test_evidence: "3 test classes reference it, resolved from the constant pool at this commit"
+    benchmark_evidence: "docs-v2/engineering/W44-BENCHMARK.md §1 records the executed test scope; the cycle's own inference numbers are in the JMH reports under docs-v2/operations/bench/*.json"
+    formal_spec: "formal/BrcStep.tla and formal/MctsLatsVisit.tla model the two stages of this portfolio, registered in formal/spec-implementation-map.yml"
+    dependencies:
+      - "io.matrix.bir (the boolean-chain forms)"
+      - "io.matrix.neuron (the HDC encoders)"
+      - "io.matrix.tsetlin (the Tsetlin machine)"
+      - "io.matrix.mcts (the search)"
+    limitations: "one of its three production callers, BrainHttpServer, is in the llm_quarantine package and is itself unmounted"
+    risks: []
+    owner: "the owner (YES — the W46 audit records it as a specialist of the brain runtime's cycle)"
+    decision_ref: "docs-v2/engineering/W46-ARCHITECTURE-TRUTH-MAP.md §3; docs-v2/engineering/W46-CAPABILITY-RECONCILIATION.csv row W44-COG-KERNEL (which names it as a specialist)"
+    last_verified_commit: "a6ded23338e069b8bc8a3744c234be5a03995f43"
+    last_verified_at: "2026-11-04"
+    next_verification_condition: "a change to the true mind cycle's inference stage requires the chain-B tests and the isolation gate to be re-run"
+    notes: "ADDED IN W46.1. One of the six cycles; the CSV carries no row for it. Note the attribution conflict: io.matrix.api.CanonicalEntryPoint declares BirBrainCycle as a specialist of the EPISTEMIC application, while the constant pool shows it is reached from chain B (TrueMindCycle, PersistentMind) and from the unmounted BrainHttpServer, and from no chain-A route."
+
+  -
+    id: "W46-CYCLE-MIND"
+    name: "the mind cycle"
+    description: "io.matrix.brain.runtime.MindCycle: the two-phase loop of the brain runtime. It is reachable only from the command line and is on no serving path."
+    domain: "brain-runtime"
+    implementation: "IMPLEMENTED"
+    integration: "ISLAND"
+    verification: "TESTED"
+    operational: "EXPERIMENTAL"
+    source_paths:
+      - "matrix-brain-runtime/src/main/java/io/matrix/brain/runtime/MindCycle.java"
+      - "matrix-brain-runtime/src/main/java/io/matrix/brain/runtime/MindRuntimeCli.java"
+    production_callers:
+      - "io.matrix.brain.runtime.MindRuntimeCli — matrix-brain-runtime/src/main/java/io/matrix/brain/runtime/MindRuntimeCli.java"
+    serving_chain: "none"
+    serving_path: "none — its only caller, MindRuntimeCli, is a main() that is in NEITHER serving closure; it is a command-line entry point, not a serving path"
+    test_paths:
+      - "matrix-brain-runtime/src/test/java/io/matrix/brain/runtime/MindCycleIntegrationTest.java"
+      - "matrix-brain-runtime/src/test/java/io/matrix/brain/runtime/PersistentHdcStoreIntegrationTest.java"
+    test_evidence: "2 test classes reference it, resolved from the constant pool at this commit"
+    benchmark_evidence: "none"
+    formal_spec: "none"
+    dependencies:
+      - "io.matrix.brain.runtime.PersistentHdcStore"
+    limitations: "the CLI is the only way in; the cycle cannot be reached over HTTP"
+    risks: []
+    owner: "the owner (YES — recorded as 'reached from the command line')"
+    decision_ref: "docs-v2/engineering/W46-ARCHITECTURE-TRUTH-MAP.md §3"
+    last_verified_commit: "a6ded23338e069b8bc8a3744c234be5a03995f43"
+    last_verified_at: "2026-11-04"
+    next_verification_condition: "a serving path would change the integration and operational axes"
+    notes: "ADDED IN W46.1. One of the six cycles; the CSV carries no row for it."
+
+  -
+    id: "W46-SERVING-TOPOLOGY"
+    name: "the serving topology — what is reachable by an HTTP request today"
+    description: "The measurement of the two serving applications as they are at this commit: chain A is ONE Quarkus process with THREE serving paths and 210 routes and it opens THREE ports; chain B is ONE JDK HttpServer process with 28 routes and it serves a stub unless MATRIX_MODE=production; and nine JAX-RS routes of the gateway are compiled but never mounted."
+    domain: "architecture-boundary"
+    implementation: "IMPLEMENTED"
+    integration: "INTEGRATION_TESTED"
+    verification: "MEASURED"
+    operational: "SERVED"
+    source_paths:
+      - "matrix-core/src/main/java/io/matrix/MatrixApplication.java"
+      - "matrix-core/src/main/resources/application.properties:31"
+      - "matrix-core/src/main/resources/application.properties:44"
+      - "matrix-core/src/main/java/io/matrix/knowledge/LearningWorkbenchResource.java:50"
+      - "matrix-core/src/main/java/io/matrix/cognitive/CognitiveResource.java:34"
+      - "matrix-core/src/main/java/io/matrix/api/OpenAIChatResource.java"
+      - "matrix-core/src/main/java/io/matrix/noosphere/p2p/P2PNetwork.java:28-29"
+      - "matrix-api-gateway/src/main/java/io/matrix/api/MinimalHttpServer.java:317"
+      - "matrix-api-gateway/src/main/java/io/matrix/api/MinimalHttpServer.java:1674-1683"
+      - "matrix-api-gateway/build.gradle:20-27"
+      - "matrix-core/src/main/java/io/matrix/security/NetworkExposure.java"
+      - "docs-v2/architecture/RUNTIME-TOPOLOGY.md"
+    production_callers:
+      - "io.matrix.MatrixApplication — matrix-core/src/main/java/io/matrix/MatrixApplication.java"
+      - "io.matrix.api.MinimalHttpServer — matrix-api-gateway/src/main/java/io/matrix/api/MinimalHttpServer.java"
+    serving_chain: "both"
+    serving_path: "chain A: POST /v1/workbench/**, POST /v1/cognitive/**, POST /v1/chat/completions — 127.0.0.1:9091. chain B: 28 routes on 127.0.0.1:8765, the port being -Dport or args[0] and defaulting to 8765. Chain A additionally opens 9094 (TCP) and 9093 (multicast) for the P2P network."
+    test_paths:
+      - "matrix-core/src/test/java/io/matrix/api/CanonicalEntryPointTest.java"
+      - "matrix-api-gateway/src/test/java/io/matrix/api/CanonicalEntryPointChainBTest.java"
+    test_evidence: "the route census and the closure are the measurement; the declaration of the canonical entry points is checked by 2 test classes"
+    benchmark_evidence: "the measurement is reproducible from the compiled classes: the route census is the constant-pool read of the @Path annotations over the 39 mounted matrix-core route classes, and the closure is the constant-pool call graph. scripts/w45-chain-isolation-reachability.py reproduces the closure over 2909 classes and 76858 edges: chain A's reachable closure is 1015 classes, chain B's is 465, their intersection is 179 library classes, and chain B reaches 0 classes of io.matrix.cognitive.**."
+    formal_spec: "none"
+    dependencies:
+      - "the Quarkus application of matrix-core"
+      - "the JDK HttpServer of matrix-api-gateway"
+      - "io.matrix.security.NetworkExposure (the single bind and authentication boundary)"
+    limitations: "chain A's route census counts 210 routes over 39 resource classes; chain B's 28 routes are the literal createContext calls; the 9 unmounted JAX-RS routes of the gateway are counted from the compiled annotations of classes that are never loaded by a Quarkus runtime."
+    risks:
+      - "the gateway serves the stub by default (T-01)"
+      - "the Quarkus application opens three ports, two of them for the P2P network, and the P2P route is mounted (T-02)"
+      - "the gateway's JAX-RS facade is a stub-shaped decoy: mounting it would silently replace the real brain path with the stub (T-03)"
+      - "the gateway drags 2622 matrix-core classes onto chain B's classpath while mounting none of them (T-04)"
+    owner: "the owner (the topology is declared in io.matrix.api.CanonicalEntryPoint and gated by scripts/w45-chain-isolation-check.sh)"
+    decision_ref: "docs-v2/engineering/ADR-W45.2-01-canonical-entry-point.md; docs-v2/engineering/W46-ARCHITECTURE-TRUTH-MAP.md §1-§2"
+    last_verified_commit: "a6ded23338e069b8bc8a3744c234be5a03995f43"
+    last_verified_at: "2026-11-04"
+    next_verification_condition: "any change to a @Path annotation, to registerRoutes(), to the application.properties bind keys, or to a module's dependencies requires the census and the isolation gate to be re-run"
+    notes: "ADDED IN W46.1. The CSV carries no row for the topology itself. The pre-existing docs-v2/architecture/RUNTIME-TOPOLOGY.md predates the P2P findings and the gateway's stub default, so it is not the source of the numbers above."
+
+  -
+    id: "W44-ALGO-PORTFOLIO"
+    name: "the algorithm capability descriptor and selection policy"
+    description: "io.matrix.cognitive.algorithms: a capability descriptor (a method declares its preconditions, its complexity, its accuracy evidence and its fallback) and a selector that admits a method only when every declared precondition fact is present in the request and ranks the admitted methods by measured data. The portfolio holds eight methods over four families — exact integer arithmetic, exact entailment, shortest path and collection membership — and reaches the kernel through POST /v1/cognitive/solve."
+    domain: "cognitive-architecture"
+    implementation: "IMPLEMENTED"
+    integration: "INTEGRATION_TESTED"
+    verification: "TESTED"
+    operational: "SERVED"
+    source_paths:
+      - "matrix-core/src/main/java/io/matrix/cognitive/algorithms/AlgorithmSelector.java"
+      - "matrix-core/src/main/java/io/matrix/cognitive/algorithms/AlgorithmRegistry.java"
+      - "matrix-core/src/main/java/io/matrix/cognitive/algorithms/CostLedger.java"
+      - "matrix-core/src/main/java/io/matrix/cognitive/algorithms/AlgorithmMethod.java"
+      - "matrix-core/src/main/java/io/matrix/cognitive/algorithms/AlgorithmCapability.java"
+      - "matrix-core/src/main/java/io/matrix/cognitive/algorithms/AlgorithmDecision.java"
+      - "matrix-core/src/main/java/io/matrix/cognitive/algorithms/Portfolio.java"
+      - "matrix-core/src/main/java/io/matrix/cognitive/algorithms/DeclaredCost.java"
+      - "matrix-core/src/main/java/io/matrix/cognitive/algorithms/ProcedureStore.java"
+      - "matrix-core/src/main/java/io/matrix/cognitive/algorithms/ExactIntegerArithmetic.java"
+      - "matrix-core/src/main/java/io/matrix/cognitive/algorithms/EntailmentMethod.java"
+      - "matrix-core/src/main/java/io/matrix/cognitive/algorithms/DijkstraShortestPathMethod.java"
+      - "matrix-core/src/main/java/io/matrix/cognitive/algorithms/BellmanFordShortestPathMethod.java"
+      - "matrix-core/src/main/java/io/matrix/cognitive/algorithms/BoundedUniformCostSearchMethod.java"
+      - "matrix-core/src/main/java/io/matrix/cognitive/algorithms/LinearScanMembershipMethod.java"
+      - "matrix-core/src/main/java/io/matrix/cognitive/algorithms/TrieMembershipMethod.java"
+      - "matrix-core/src/main/java/io/matrix/cognitive/algorithms/BloomFilterMembershipMethod.java"
+      - "matrix-core/src/main/java/io/matrix/cognitive/algorithms/ProcedureValidator.java"
+      - "matrix-core/src/main/java/io/matrix/cognitive/CognitiveSolver.java"
+      - "matrix-core/src/main/java/io/matrix/cognitive/KernelSelector.java"
+    production_callers:
+      - "io.matrix.cognitive.CognitiveSolver — matrix-core/src/main/java/io/matrix/cognitive/CognitiveSolver.java"
+      - "io.matrix.cognitive.KernelSelector — matrix-core/src/main/java/io/matrix/cognitive/KernelSelector.java"
+      - "io.matrix.cognitive.CognitiveService — matrix-core/src/main/java/io/matrix/cognitive/CognitiveService.java"
+    serving_chain: "chain-a"
+    serving_path: "POST /v1/cognitive/solve — the selector's choice and the reason for it are returned in the answer, and POST /v1/cognitive/observe runs the same selector inside the kernel's SELECT step"
+    test_paths:
+      - "matrix-core/src/test/java/io/matrix/cognitive/algorithms/AlgorithmSelectorTest.java"
+      - "matrix-core/src/test/java/io/matrix/cognitive/algorithms/AlgorithmRegistryTest.java"
+      - "matrix-core/src/test/java/io/matrix/cognitive/algorithms/CostLedgerTest.java"
+      - "matrix-core/src/test/java/io/matrix/cognitive/algorithms/IntegerArithmeticMethodTest.java"
+      - "matrix-core/src/test/java/io/matrix/cognitive/algorithms/EntailmentMethodTest.java"
+      - "matrix-core/src/test/java/io/matrix/cognitive/algorithms/ShortestPathMethodsTest.java"
+      - "matrix-core/src/test/java/io/matrix/cognitive/algorithms/BoundedUniformCostSearchMethodTest.java"
+      - "matrix-core/src/test/java/io/matrix/cognitive/algorithms/MembershipLookupTest.java"
+      - "matrix-core/src/test/java/io/matrix/cognitive/algorithms/ProcedureStoreTest.java"
+      - "matrix-core/src/test/java/io/matrix/cognitive/algorithms/PortfolioBenchmarkTest.java"
+    test_evidence: "104 tests, 0 failures, 0 skipped, in the io.matrix.cognitive.algorithms package; the package's METHOD coverage is 171/171 = 100% under the module's JaCoCo gate"
+    benchmark_evidence: "docs-v2/engineering/W44-BENCHMARK.md §2 (the portfolio, measured): the linear scan of 64 queries p50=45506 ns against the trie lookup p50=11001 ns, with the build costing 103054 ns p50 and the break-even at 288 queries; Dijkstra p50=158299 ns against Bellman-Ford p50=245283 ns on 120 vertices; the bounded search p50=22212 ns under a node budget against the exact search p50=156956 ns."
+    formal_spec: "none"
+    dependencies:
+      - "io.matrix.neuron.Dijkstra and io.matrix.neuron.BellmanFord (the existing graph algorithms it wraps)"
+      - "io.matrix.neuron.Trie, io.matrix.neuron.BloomFilter and io.matrix.neuron.XxHash (the existing membership structures it reuses)"
+      - "io.matrix.knowledge.EntailmentChecker (the existing entailment engine it wraps)"
+      - "java.math.BigInteger (the exact arithmetic it evaluates)"
+    limitations: "the selector does not amortise a preprocessing cost: it picks the prebuilt index while the scan is cheaper end to end at 64 queries, because the precondition INDEX_PREBUILT moves the decision to the caller. The declared-cost fallback is a convention — an ORDERING placeholder, not a measurement. The neuromodulatory constants are conventions, not calibrated values. The arithmetic and entailment families are reachable through the portfolio's own API and its tests, not through a user request."
+    risks:
+      - "a caller that asserts INDEX_PREBUILT without having paid the build pays more than a scan would cost"
+      - "the portfolio's own methods are reachable from ONE request family"
+    owner: "the owner (the mechanism was directed in W44.2; the ADR is recorded in the W45.2 decision log)"
+    decision_ref: "docs-v2/engineering/W44-BENCHMARK.md §2 and §6; docs-v2/engineering/W45-CAPABILITY-DELTA.md"
+    last_verified_commit: "a6ded23338e069b8bc8a3744c234be5a03995f43"
+    last_verified_at: "2026-11-04"
+    next_verification_condition: "a change to the portfolio's method set, to the cost ledger, or to the selector's scoring requires the package's 104 tests and the benchmark to be re-run"
+    notes: "ADDED IN W46.1. This capability is not in the W46.0 reconciliation CSV; it is added from the source, which the W46.1 directive permits ('Add to it only from the source'). The numbers in benchmark_evidence are the ones the benchmark printed, quoted from docs-v2/engineering/W44-BENCHMARK.md §2."
+
+
+# =============================================================================
+# SUPERSEDED REGISTRIES AND THE AUDIT THIS FILE CAME FROM
+# =============================================================================
+#
+#   docs-v2/architecture/CAPABILITY-REGISTRY.md
+#       Dated 2026-10-26. Its vocabulary is the provenance of a claim
+#       (VERIFIED / UNSOURCED / CORRECTED / REWORDED / REMOVED), not the state
+#       of a capability, and it carries three refuted or stale numbers: the test
+#       count (9,432 / 1,282 against a current floor of 9,816 and a current
+#       on-disk scope of 2,422), the TLA count (9, and then 12, against 14
+#       model-checked specifications and 15 files on disk) and the speed-up
+#       factor (33,000x against a report that records 100,000x against a
+#       synthetic model). It stays on disk as the evidence of what was claimed
+#       and audited.
+#
+#   docs-v2/engineering/W44-CAPABILITY-REGISTRY.md
+#       Dated 2026-11-02. A different vocabulary (IMPLEMENTED / TESTED / SERVED /
+#       ISLAND / INACTIVE / DORMANT / MEASURED / DEMONSTRATED / EXPERIMENTAL /
+#       PLANNED), and it names five cycles where the code has six. It stays on
+#       disk as the evidence of the W44 archaeology.
+#
+#   THE AUDIT THIS FILE CAME FROM
+#       W46.0 (investigation outputs, all on disk):
+#         docs-v2/engineering/W46-CAPABILITY-RECONCILIATION.csv   the 27 rows
+#         docs-v2/engineering/W46-ARCHITECTURE-TRUTH-MAP.md        the chains, the
+#                                                                   six cycles, the
+#                                                                   persistence map
+#         docs-v2/engineering/W46-HARDWARE-AND-RESOURCE-REPORT.md the GPU
+#         docs-v2/engineering/W46-OPEN-QUESTIONS.csv                15 open questions
+#         docs-v2/engineering/W46-RISK-REGISTER.csv                20 risks
+#         docs-v2/engineering/W46-DOCUMENT-AUDIT.csv               the document graph
+#
+#   WHAT THIS WAVE CHANGED IN THE RECONCILED SET
+#       - the CSV row W44-BRAIN-LOOP was SPLIT: it named three classes and gave
+#         the callers of one and the serving path of another. The nine-stage
+#         reasoning loop is W44-BRAIN-LOOP; the five-stage research loop is
+#         W46-BRAIN-LOOP-RESEARCH.
+#       - the CSV's source paths that did not exist were corrected: the
+#         RuntimeLlmGuardTest module, the DecisionPathAuditorTest package, the
+#         biochemical package (federation, not federated), the KineticModulator
+#         package, and the CognitiveModulationBridge package.
+#       - the CSV's claim that ReplayPhase and SleepConsolidator have 0 files in
+#         src/main was corrected: they have files; what is zero is the REACHABLE
+#         caller count.
+#       - the CSV's operational value 'UNMOUNTED' for the stub cycle was
+#         corrected: the stub IS what the gateway serves by default.
+#       - the CSV's C-01c citation of W44-BENCHMARK.md for the formal gate was
+#         corrected: that document contains no formal content at all.
+#       - the TLA number was carried forward as 14 model-checked of 15 on disk.
+#       - seven capabilities were added from the source, and the seven
+#         capabilities whose CSV rows were structurally damaged were rebuilt.
+#
+#   THE CSV ITSELF IS DAMAGED: 27 rows against a 15-column header, with rows of
+#   14, 15, 16 and 17 fields. Six rows carry an unescaped comma inside a cell
+#   and four rows are missing a cell outright. Every reconstruction is recorded
+#   in the `notes` of the row it affects.
+#
+# =============================================================================
