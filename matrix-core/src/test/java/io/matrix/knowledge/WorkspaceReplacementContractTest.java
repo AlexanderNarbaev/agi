@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import io.matrix.cognitive.microworld.ObservationDisposition;
+import io.matrix.neuron.HebbianUpdater;
 import java.nio.file.Path;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -13,6 +14,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -48,6 +50,17 @@ class WorkspaceReplacementContractTest {
 
     /** The identifier of the case the observation produces. */
     private static final String CASE_ID = "case-1";
+
+    /**
+     * The eight tables the learner's own history lives in.
+     *
+     * <p>They were kept across a replacement until the owner's decision of 2026-11-05: the
+     * learning state goes with the knowledge it describes, so that a replaced workspace
+     * holds no row that points at a concept that is not there.</p>
+     */
+    private static final List<String> LEARNING_TABLES = List.of(
+            "hebbian_binding", "assessment_item", "learning_error", "learning_state",
+            "learning_transition", "assessment_outcome", "dialogue_turn", "asked_question");
 
     @TempDir
     Path directory;
@@ -127,6 +140,125 @@ class WorkspaceReplacementContractTest {
             assertThat(rows("epistemic_case", OTHER_WORKSPACE)).isPositive();
             assertThat(rows("observation_occurrence", OTHER_WORKSPACE)).isPositive();
             assertThat(rows("concept", OTHER_WORKSPACE)).isPositive();
+        }
+    }
+
+    // ── the learning state ───────────────────────────────────────────────────────
+
+    @Test
+    @DisplayName("a workspace that holds only a learning state is not empty")
+    void aWorkspaceThatHoldsOnlyALearningStateIsNotEmpty() {
+        try (KnowledgeStore store = store()) {
+            store.importWorkspaceWithSnapshot(demoSnapshot(WORKSPACE), false, INSTANT);
+            recordLearningState(store, WORKSPACE);
+
+            assertThat(store.isWorkspaceEmpty(WORKSPACE))
+                    .withFailMessage("a workspace that holds a learning state holds something: "
+                            + "the emptiness check decides whether the caller has to consent, "
+                            + "and a check that counts the wrong tables lets the replacement "
+                            + "destroy the learner's history without asking")
+                    .isFalse();
+        }
+    }
+
+    @Test
+    @DisplayName("a replacement erases the learning state as well")
+    void aReplacementErasesTheLearningStateAsWell() {
+        try (KnowledgeStore store = store()) {
+            store.importWorkspaceWithSnapshot(demoSnapshot(WORKSPACE), false, INSTANT);
+            recordLearningState(store, WORKSPACE);
+
+            store.importWorkspaceWithSnapshot(demoSnapshot(WORKSPACE), true, INSTANT);
+
+            for (String table : LEARNING_TABLES) {
+                assertThat(rows(table))
+                        .withFailMessage("the learning state of a replaced workspace must not "
+                                + "survive it: the row points at a concept that is not there, "
+                                + "and the owner decided that the learning state goes with "
+                                + "the knowledge it describes (" + table + ")")
+                        .isZero();
+            }
+            assertThatNoDanglingReference();
+        }
+    }
+
+    @Test
+    @DisplayName("the snapshot carries the learning state it is about to destroy")
+    void theSnapshotCarriesTheLearningStateItIsAboutToDestroy() {
+        try (KnowledgeStore store = store()) {
+            store.importWorkspaceWithSnapshot(demoSnapshot(WORKSPACE), false, INSTANT);
+            recordLearningState(store, WORKSPACE);
+
+            WorkspaceSnapshot taken = store.importWorkspaceWithSnapshot(
+                    demoSnapshot(WORKSPACE), true, INSTANT);
+
+            assertThat(taken).isNotNull();
+            // The counts of the record do not cover the learning tables, so the honest way to
+            // ask what the snapshot holds is to put it back and look at the rows.
+            store.restoreWorkspaceSnapshot(taken.id(), INSTANT);
+
+            for (String table : LEARNING_TABLES) {
+                assertThat(rows(table))
+                        .withFailMessage("the snapshot must carry the learning rows of "
+                                + table + ": a snapshot that does not carry them leaves the only "
+                                + "recoverable copy of the learner's history behind at the "
+                                + "moment it was destroyed")
+                        .isEqualTo(1);
+            }
+        }
+    }
+
+    @Test
+    @DisplayName("a restore brings the learning state back, byte for byte")
+    void aRestoreBringsTheLearningStateBackByteForByte() {
+        try (KnowledgeStore store = store()) {
+            store.importWorkspaceWithSnapshot(demoSnapshot(WORKSPACE), false, INSTANT);
+            recordLearningState(store, WORKSPACE);
+            String csvBefore = dialogueTurnCsv(WORKSPACE);
+            String itemBefore = text("SELECT id || '|' || concept_id || '|' || dimension || '|' "
+                    + "|| difficulty FROM assessment_item WHERE workspace_id = '" + WORKSPACE + "'");
+            String outcomeBefore = text("SELECT id || '|' || item_id || '|' || correct || '|' || "
+                    + "score || '|' || claimed_confidence FROM assessment_outcome WHERE "
+                    + "workspace_id = '" + WORKSPACE + "'");
+
+            WorkspaceSnapshot taken = store.importWorkspaceWithSnapshot(
+                    demoSnapshot(WORKSPACE), true, INSTANT);
+            store.restoreWorkspaceSnapshot(taken.id(), INSTANT);
+
+            assertThat(dialogueTurnCsv(WORKSPACE))
+                    .withFailMessage("the CSV columns of the dialogue turn must come back "
+                            + "byte-identical: a list that is joined again on the way out and "
+                            + "split again on the way back is not the same list")
+                    .isEqualTo(csvBefore);
+            assertThat(text("SELECT id || '|' || concept_id || '|' || dimension || '|' || "
+                    + "difficulty FROM assessment_item WHERE workspace_id = '" + WORKSPACE + "'"))
+                    .isEqualTo(itemBefore);
+            assertThat(text("SELECT id || '|' || item_id || '|' || correct || '|' || score || '|' "
+                    + "|| claimed_confidence FROM assessment_outcome WHERE workspace_id = '"
+                    + WORKSPACE + "'"))
+                    .isEqualTo(outcomeBefore);
+            assertThatNoDanglingReference();
+        }
+    }
+
+    @Test
+    @DisplayName("a replacement does not touch another workspace's learning state")
+    void aReplacementDoesNotTouchAnotherWorkspacesLearningState() {
+        try (KnowledgeStore store = store()) {
+            store.importWorkspaceWithSnapshot(demoSnapshot(WORKSPACE), false, INSTANT);
+            store.importWorkspaceWithSnapshot(demoSnapshot(OTHER_WORKSPACE), false, INSTANT);
+            recordLearningState(store, WORKSPACE);
+            recordLearningState(store, OTHER_WORKSPACE);
+
+            store.importWorkspaceWithSnapshot(demoSnapshot(WORKSPACE), true, INSTANT);
+
+            for (String table : LEARNING_TABLES) {
+                assertThat(rows(table, OTHER_WORKSPACE))
+                        .withFailMessage("a replacement is a decision about ONE workspace: the "
+                                + "learning state of another workspace must not go with it ("
+                                + table + ")")
+                        .isEqualTo(1);
+            }
         }
     }
 
@@ -324,6 +456,52 @@ class WorkspaceReplacementContractTest {
     }
 
     /**
+     * Records the learner's own history for a workspace: one row in each of the eight
+     * learning tables.
+     *
+     * <p>The rows are written through the production writers, so the test holds the store to
+     * the shape it really writes and not to a shape the test invented. The references are
+     * the real ones: the error and the outcome point at the item, the transition points at
+     * the outcome, and all five point at the workspace's concept.</p>
+     */
+    private void recordLearningState(KnowledgeStore store, String workspace) {
+        String conceptId = "cpt-" + workspace;
+        String itemId = "itm-" + workspace;
+        String sessionId = "session-" + workspace;
+        long answeredAt = 1_700_000_000_000L;
+
+        AssessmentItem item = new AssessmentItem(itemId, conceptId, LearningDimension.RECALL,
+                "What does photosynthesis do?", List.of("light", "sugar"), 3, "standard",
+                true, false, List.of(), null);
+        store.recordAssessmentItems(workspace, List.of(item));
+
+        store.recordLearningErrors(workspace, List.of(new LearningError("err-" + workspace,
+                workspace, itemId, conceptId, LearningDimension.RECALL,
+                "it makes oxygen", "it makes sugar", true)));
+
+        store.recordOutcome(workspace, item, new AssessmentOutcome(itemId, false, 0.25, 0.9,
+                "it makes oxygen", sessionId, answeredAt, false));
+
+        store.recordLearningStates(workspace,
+                Map.of(conceptId, new LearningState(conceptId, LearningDimension.RECALL,
+                        LearningStage.INITIAL_LEARNING, 0.4, 3, 0, 0, 1, List.of(itemId),
+                        "the learner is learning")),
+                List.of(new LearningTransition("trn-" + workspace, workspace, conceptId,
+                        LearningDimension.RECALL, LearningStage.EXPLORATION,
+                        LearningStage.INITIAL_LEARNING, "the recall test was answered",
+                        workspace + "|" + itemId + "|" + sessionId + "|" + answeredAt, INSTANT)));
+
+        store.recordDialogueTurn(workspace, new DialogueContext.Turn("turn-" + workspace,
+                "what does photosynthesis do?", List.of(conceptId), List.of("Photosynthesis"),
+                List.of("clm-" + workspace), "en", false, DialogueAct.Act.QUESTION));
+
+        store.recordAskedQuestion(workspace, "what does photosynthesis do?",
+                List.of("sugar"), false, answeredAt);
+
+        store.saveHebbianState(workspace, conceptId, HebbianUpdater.empty());
+    }
+
+    /**
      * Writes a snapshot in the shape this wave's predecessor wrote: the bare knowledge
      * content, with no version and no observation rows.
      */
@@ -373,6 +551,29 @@ class WorkspaceReplacementContractTest {
         } catch (SQLException e) {
             throw new IllegalStateException("failed to read: " + sql, e);
         }
+    }
+
+    /** The value of a single-cell query, as text. */
+    private String text(String sql) {
+        try (Connection connection = DriverManager.getConnection("jdbc:sqlite:" + database());
+             Statement statement = connection.createStatement();
+             ResultSet result = statement.executeQuery(sql)) {
+            return result.next() ? result.getString(1) : null;
+        } catch (SQLException e) {
+            throw new IllegalStateException("failed to read: " + sql, e);
+        }
+    }
+
+    /**
+     * The three CSV columns of the workspace's dialogue turn, exactly as they are stored.
+     *
+     * <p>The columns are joined with a comma when they are written and read back as one
+     * string when they are read, so the comparison is on the bytes the database holds and not
+     * on a list the test rebuilt.</p>
+     */
+    private String dialogueTurnCsv(String workspace) {
+        return text("SELECT concept_ids || '|' || concept_names || '|' || claim_ids "
+                + "FROM dialogue_turn WHERE workspace_id = '" + workspace + "'");
     }
 
     /**
@@ -442,6 +643,52 @@ class WorkspaceReplacementContractTest {
         assertThat(scalar("SELECT count(*) FROM epistemic_case c WHERE c.concept_id IS NOT NULL "
                 + "AND NOT EXISTS (SELECT 1 FROM concept k WHERE k.id = c.concept_id)"))
                 .withFailMessage("a case points at a concept that is not there")
+                .isZero();
+        assertThatNoDanglingLearningReference();
+    }
+
+    /**
+     * Asserts that no learning row points at a row that is not there.
+     *
+     * <p>The learning tables are logical references as well: an item, an error, a state, a
+     * transition and a Hebbian binding point at a concept, an error and an outcome point at
+     * an item, and a transition points at the outcome it came from. Before the owner's
+     * decision of 2026-11-05 the learning tables survived a replacement, so a replaced
+     * workspace held learning rows whose concept was gone. This is the check that says that
+     * it does not happen any more.</p>
+     */
+    private void assertThatNoDanglingLearningReference() {
+        assertThat(scalar("SELECT count(*) FROM assessment_item i WHERE NOT EXISTS "
+                + "(SELECT 1 FROM concept c WHERE c.id = i.concept_id)"))
+                .withFailMessage("an assessment item points at a concept that is not there")
+                .isZero();
+        assertThat(scalar("SELECT count(*) FROM learning_error e WHERE NOT EXISTS "
+                + "(SELECT 1 FROM concept c WHERE c.id = e.concept_id)"))
+                .withFailMessage("a learning error points at a concept that is not there")
+                .isZero();
+        assertThat(scalar("SELECT count(*) FROM learning_state s WHERE NOT EXISTS "
+                + "(SELECT 1 FROM concept c WHERE c.id = s.concept_id)"))
+                .withFailMessage("a learning state points at a concept that is not there")
+                .isZero();
+        assertThat(scalar("SELECT count(*) FROM learning_transition t WHERE NOT EXISTS "
+                + "(SELECT 1 FROM concept c WHERE c.id = t.concept_id)"))
+                .withFailMessage("a learning transition points at a concept that is not there")
+                .isZero();
+        assertThat(scalar("SELECT count(*) FROM hebbian_binding b WHERE NOT EXISTS "
+                + "(SELECT 1 FROM concept c WHERE c.id = b.concept_id)"))
+                .withFailMessage("a Hebbian binding points at a concept that is not there")
+                .isZero();
+        assertThat(scalar("SELECT count(*) FROM learning_error e WHERE NOT EXISTS "
+                + "(SELECT 1 FROM assessment_item i WHERE i.id = e.item_id)"))
+                .withFailMessage("a learning error points at an assessment item that is not there")
+                .isZero();
+        assertThat(scalar("SELECT count(*) FROM assessment_outcome o WHERE NOT EXISTS "
+                + "(SELECT 1 FROM assessment_item i WHERE i.id = o.item_id)"))
+                .withFailMessage("an assessment outcome points at an item that is not there")
+                .isZero();
+        assertThat(scalar("SELECT count(*) FROM learning_transition t WHERE t.outcome_id IS NOT NULL "
+                + "AND NOT EXISTS (SELECT 1 FROM assessment_outcome o WHERE o.id = t.outcome_id)"))
+                .withFailMessage("a learning transition points at an outcome that is not there")
                 .isZero();
     }
 }

@@ -164,6 +164,57 @@ class WorkspaceSnapshotMigrationTest {
                     + "remaining_work TEXT, budget_units INTEGER NOT NULL, budget_used INTEGER NOT NULL, "
                     + "last_checkpoint TEXT, recovery_instructions TEXT, "
                     + "created_at TEXT NOT NULL, updated_at TEXT NOT NULL)");
+            // The learning state lives in the same database, and the
+            // migrations that create it all run BEFORE v19. A real v18
+            // database therefore has these tables, and the fixture has to
+            // have them too: the snapshot of a workspace carries the learning
+            // state with the knowledge, and a fixture that lacks the tables
+            // would prove nothing about a database that has them.
+            st.execute("CREATE TABLE asked_question (id TEXT PRIMARY KEY, "
+                    + "workspace_id TEXT NOT NULL, canonical_key TEXT NOT NULL, "
+                    + "question TEXT NOT NULL, uncovered_terms TEXT NOT NULL, "
+                    + "times_asked INTEGER NOT NULL, first_asked_at INTEGER NOT NULL, "
+                    + "last_asked_at INTEGER NOT NULL, status TEXT NOT NULL, "
+                    + "resolution_note TEXT, answered INTEGER NOT NULL DEFAULT 0, "
+                    + "forgotten_at INTEGER, forgotten_kind TEXT, forgotten_reason TEXT)");
+            st.execute("CREATE TABLE assessment_outcome (id TEXT PRIMARY KEY, "
+                    + "workspace_id TEXT NOT NULL, item_id TEXT NOT NULL, "
+                    + "concept_id TEXT NOT NULL, dimension TEXT NOT NULL, "
+                    + "correct INTEGER NOT NULL, score REAL NOT NULL, "
+                    + "claimed_confidence REAL NOT NULL, learner_answer TEXT, "
+                    + "session_id TEXT, recorded_at TEXT NOT NULL)");
+            st.execute("CREATE TABLE learning_state (id TEXT PRIMARY KEY, "
+                    + "workspace_id TEXT NOT NULL, concept_id TEXT NOT NULL, "
+                    + "dimension TEXT NOT NULL, stage TEXT NOT NULL, score REAL NOT NULL, "
+                    + "evidence_count INTEGER NOT NULL, transitioned_at TEXT NOT NULL, "
+                    + "note TEXT, UNIQUE (workspace_id, concept_id, dimension))");
+            st.execute("CREATE TABLE learning_transition (id TEXT PRIMARY KEY, "
+                    + "workspace_id TEXT NOT NULL, concept_id TEXT NOT NULL, "
+                    + "dimension TEXT NOT NULL, from_stage TEXT, to_stage TEXT NOT NULL, "
+                    + "reason TEXT NOT NULL, outcome_id TEXT, occurred_at TEXT NOT NULL)");
+            st.execute("CREATE TABLE learning_error (id TEXT PRIMARY KEY, "
+                    + "workspace_id TEXT NOT NULL, item_id TEXT NOT NULL, "
+                    + "concept_id TEXT NOT NULL, dimension TEXT NOT NULL, "
+                    + "learner_answer TEXT NOT NULL, expected_answer TEXT NOT NULL, "
+                    + "verified INTEGER NOT NULL, recorded_at TEXT NOT NULL, "
+                    + "UNIQUE (workspace_id, item_id))");
+            st.execute("CREATE TABLE assessment_item (id TEXT PRIMARY KEY, "
+                    + "workspace_id TEXT NOT NULL, concept_id TEXT NOT NULL, "
+                    + "dimension TEXT NOT NULL, prompt TEXT NOT NULL, key_terms TEXT NOT NULL, "
+                    + "difficulty INTEGER NOT NULL, variant TEXT NOT NULL, "
+                    + "critical INTEGER NOT NULL, held_out INTEGER NOT NULL, "
+                    + "recorded_at TEXT NOT NULL)");
+            st.execute("CREATE TABLE dialogue_turn (id TEXT PRIMARY KEY, "
+                    + "workspace_id TEXT NOT NULL, question TEXT NOT NULL, "
+                    + "concept_ids TEXT NOT NULL, concept_names TEXT NOT NULL, "
+                    + "claim_ids TEXT NOT NULL, language TEXT NOT NULL, "
+                    + "answered INTEGER NOT NULL, act TEXT NOT NULL, "
+                    + "recorded_at TEXT NOT NULL, forgotten_at INTEGER)");
+            st.execute("CREATE TABLE hebbian_binding (workspace_id TEXT NOT NULL, "
+                    + "concept_id TEXT NOT NULL, weights TEXT NOT NULL, "
+                    + "accumulator TEXT NOT NULL, updated_at TEXT NOT NULL, "
+                    + "PRIMARY KEY(workspace_id, concept_id))");
+
             st.execute("CREATE TABLE learning_goal_subtask (goal_id TEXT NOT NULL, "
                     + "subtask_id TEXT NOT NULL, description TEXT NOT NULL, required INTEGER NOT NULL, "
                     + "prerequisites TEXT NOT NULL, status TEXT NOT NULL, evidence TEXT NOT NULL, note TEXT, "

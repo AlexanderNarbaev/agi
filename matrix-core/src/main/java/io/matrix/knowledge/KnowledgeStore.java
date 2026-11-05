@@ -162,11 +162,19 @@ public final class KnowledgeStore implements AutoCloseable {
      * whose evidence rows were gone. The decision is OD-025: the case goes with its history
      * and with its evidence.</p>
      *
-     * <p><b>What is NOT erased.</b> The learner's history — the assessment items, the
-     * learning errors, the learning state, the transitions, the outcomes, the dialogue turns
-     * and the asked questions — belongs to the learner rather than to the workspace's
-     * knowledge, and the W45.2 contract keeps it. The snapshot table is not erased either:
-     * it is the recoverable copy of what the replacement destroyed.</p>
+     * <p><b>What the owner's decision of 2026-11-05 added the second time.</b> The eight
+     * learning tables — the assessment items, the learning errors, the learning state, the
+     * transitions, the outcomes, the dialogue turns, the asked questions and the Hebbian
+     * bindings. Before this decision they were kept, and the price of keeping them was a
+     * dangling reference: a replaced workspace held learning rows whose {@code concept_id}
+     * named a concept that the replacement had erased. The decision is that the learning
+     * state goes with the knowledge it describes.</p>
+     *
+     * <p><b>What is NOT erased.</b> The snapshot table is not erased: it is the recoverable
+     * copy of what the replacement destroyed. And the rows that belong to no workspace — the
+     * workspace table's own rows of other workspaces, the cognitive store's tables, which
+     * live in another file — are not erased either; a replacement is a decision about ONE
+     * workspace.</p>
      */
     private static final List<ErasedTable> ERASED_TABLES = List.of(
             new ErasedTable("observation_occurrence", "workspace_id = ?", false),
@@ -183,6 +191,24 @@ public final class KnowledgeStore implements AutoCloseable {
             new ErasedTable("learning_goal_subtask",
                     "goal_id IN (SELECT id FROM learning_goal WHERE workspace_id = ?)", true),
             new ErasedTable("learning_goal", "workspace_id = ?", true),
+            // W47 — the learner's own history. The owner's decision of 2026-11-05: the
+            // learning state goes with the knowledge it describes, so that a replaced
+            // workspace holds no row that points at a concept that is not there.
+            //
+            // The order is the reference order, and it is not a preference: a transition
+            // points at an outcome, an error and an outcome point at an item, so the
+            // referring rows go before the rows they point at. The learning tables have no
+            // declared foreign keys — the schema has none at all — so nothing would raise
+            // an error if the order were wrong; the order is here so that the reference is
+            // never broken, not merely never reported.
+            new ErasedTable("learning_transition", "workspace_id = ?", false),
+            new ErasedTable("learning_error", "workspace_id = ?", false),
+            new ErasedTable("assessment_outcome", "workspace_id = ?", false),
+            new ErasedTable("assessment_item", "workspace_id = ?", false),
+            new ErasedTable("learning_state", "workspace_id = ?", false),
+            new ErasedTable("dialogue_turn", "workspace_id = ?", false),
+            new ErasedTable("asked_question", "workspace_id = ?", false),
+            new ErasedTable("hebbian_binding", "workspace_id = ?", false),
             new ErasedTable("claim", "workspace_id = ?", true),
             new ErasedTable("epistemic_case", "workspace_id = ?", false),
             new ErasedTable("source", "workspace_id = ?", true),
@@ -190,6 +216,20 @@ public final class KnowledgeStore implements AutoCloseable {
 
     /**
      * W47 — one table a workspace replacement erases.
+     *
+     * <p><b>What the three fields mean together.</b> The table is erased; the {@code where}
+     * clause selects the workspace's rows of it; and {@code carriedByTheTypedSnapshot} says
+     * whether the typed knowledge content already holds those rows — in which case the
+     * snapshot carries them through the typed content — or whether they are rows of a
+     * database that the typed content does not know about, in which case the snapshot has to
+     * carry them itself, verbatim, table by table.</p>
+     *
+     * <p><b>The eight learning tables are of the second kind.</b> The typed
+     * {@link KnowledgeSnapshot} carries the concepts, the sources, the claims, the evidence,
+     * the representations, the prerequisites, the revisions, the derivations, the
+     * contradictions and the goals — and nothing of the learner's own history. So the eight
+     * are captured with the very rule that selects them for deletion, and they are restored
+     * from that capture.</p>
      *
      * @param table                    the table
      * @param where                   the rule that selects the workspace's rows of it
@@ -1403,7 +1443,7 @@ public final class KnowledgeStore implements AutoCloseable {
                 }
                 deleteWorkspace(content.workspaceId());
                 insertWorkspace(content);
-                insertObservationTables(payload.tables());
+                insertUntypedTables(payload.tables());
                 connection.commit();
                 return taken;
             } catch (SQLException | RuntimeException e) {
@@ -1588,7 +1628,7 @@ public final class KnowledgeStore implements AutoCloseable {
         // The rows that the typed content does not carry are captured with the same rules
         // the erasure uses, in the same transaction, so that the snapshot holds exactly what
         // the replacement is about to destroy.
-        List<SnapshotTable> tables = captureObservationTables(workspaceId);
+        List<SnapshotTable> tables = captureUntypedTables(workspaceId);
         String payload = writeSnapshotPayload(content, tables);
         String id = nextSnapshotId(workspaceId);
         try (PreparedStatement ps = connection.prepareStatement(
@@ -1722,6 +1762,13 @@ public final class KnowledgeStore implements AutoCloseable {
      * own — a premise belongs to its derivation, a subtask belongs to its goal — are in the
      * list with the rule that selects them, and they are deleted BEFORE the rows they point
      * at, so that the subquery still finds them.</p>
+     *
+     * <p><b>The learning tables keep the same rule.</b> A transition points at an outcome,
+     * an error and an outcome point at an item, and a state, an item, an error, a
+     * transition and a Hebbian binding point at a concept. The referring rows are deleted
+     * first, so that no reference dangles while the rows go. Nothing would report a broken
+     * order — the schema declares no foreign key — which is exactly why the order is stated
+     * rather than left to chance.</p>
      */
     private void deleteWorkspace(String workspaceId) throws SQLException {
         for (ErasedTable table : ERASED_TABLES) {
@@ -1742,14 +1789,18 @@ public final class KnowledgeStore implements AutoCloseable {
      *
      * <p>The typed content carries the concepts, the sources, the claims, the evidence, the
      * representations, the prerequisites, the revisions, the derivations, the contradictions
-     * and the goals. The observation tables are not typed content — they are rows of a
-     * database — so they are captured verbatim, table by table, with the very rule that
-     * selects them for deletion.</p>
+     * and the goals. Two families of tables are not typed content — they are rows of a
+     * database: the four observation tables, and the eight learning tables. They are captured
+     * verbatim, table by table, with the very rule that selects them for deletion.</p>
+     *
+     * <p>The capture is generic: a table and a {@code WHERE} clause. A table joins the
+     * capture by being named in {@link #ERASED_TABLES} without the typed snapshot carrying
+     * it, and it needs no code of its own.</p>
      *
      * @param workspaceId the workspace
      * @return the captured rows, table by table
      */
-    private List<SnapshotTable> captureObservationTables(String workspaceId) throws SQLException {
+    private List<SnapshotTable> captureUntypedTables(String workspaceId) throws SQLException {
         List<SnapshotTable> captured = new ArrayList<>();
         for (ErasedTable table : ERASED_TABLES) {
             if (table.carriedByTheTypedSnapshot()) {
@@ -1783,13 +1834,22 @@ public final class KnowledgeStore implements AutoCloseable {
     }
 
     /**
-     * W47 — puts the captured observation rows back.
+     * W47 — puts the captured rows back.
      *
      * <p>The table name comes from the snapshot's payload, so it is checked against the
      * tables this store knows how to capture: a payload that names a table the store does
      * not know is refused rather than executed.</p>
+     *
+     * <p><b>What is restored, and in which order.</b> Every row comes back with its own
+     * columns, written back with the value the capture read — a TEXT column as text, an
+     * INTEGER column as an integer, a REAL column as a real — so a row that goes out and
+     * comes back is byte-identical. The tables go back in the order they were captured,
+     * which is the order the erasure uses: the referring rows first. The schema declares no
+     * foreign key, so nothing would raise an error if the order were wrong; the order keeps
+     * the reference true while the rows go in, so that a reader of the database between two
+     * inserts never sees a row that points at nothing.</p>
      */
-    private void insertObservationTables(List<SnapshotTable> tables) throws SQLException {
+    private void insertUntypedTables(List<SnapshotTable> tables) throws SQLException {
         for (SnapshotTable table : tables) {
             if (!isCapturableTable(table.table())) {
                 throw new IllegalArgumentException("the snapshot names the table "

@@ -13,10 +13,26 @@ package io.matrix.knowledge;
  *
  * <p><b>What a snapshot is not.</b> It is not a backup of the whole database: it holds the
  * content of ONE workspace, and it holds exactly the records that a replacement of that
- * workspace erases. The records a replacement does not erase — the assessment items, the
- * asked questions, the learner's own history — are not in the snapshot, because they are
- * not at risk from a replacement and duplicating them would create a second source of truth
- * for them.</p>
+ * workspace erases. The records a replacement does not erase — the rows that belong to no
+ * workspace, the snapshot table itself, and everything in another database file — are not in
+ * the snapshot, because they are not at risk from a replacement and duplicating them would
+ * create a second source of truth for them.</p>
+ *
+ * <p><b>W47 — the learner's history is in the snapshot now.</b> The owner's decision of
+ * 2026-11-05 put the learning state into the erasure set: the assessment items, the learning
+ * errors, the learning states, the transitions, the outcomes, the dialogue turns, the asked
+ * questions and the Hebbian bindings go with the knowledge they describe. Before that
+ * decision they were kept, and a replaced workspace was left holding learning rows whose
+ * {@code concept_id} named a concept that the replacement had erased. A snapshot that did
+ * not carry them would have left the only recoverable copy of the learner's history behind
+ * at the moment it was destroyed, so the payload carries them too — verbatim, table by
+ * table, with the rule that selects them for deletion.</p>
+ *
+ * <p><b>What the counts do not say.</b> The counts below are the counts of the KNOWLEDGE
+ * content and of the four observation tables. They do not cover the eight learning tables:
+ * a snapshot can hold learning rows and still report every count as zero. The rows are in
+ * the payload, and the payload is what a restore reads — so the honest way to ask what a
+ * snapshot is worth is to look at the rows it holds, not at the counts.</p>
  *
  * <p><b>W47 — the cases are in the snapshot now.</b> The owner's decision of 2026-11-05
  * (OD-025) put the epistemic case, its occurrences, its disposition and its adjudication
@@ -111,13 +127,20 @@ public record WorkspaceSnapshot(
     }
 
     /**
-     * Whether the snapshot holds anything at all.
+     * Whether the snapshot holds any of the KNOWLEDGE content.
      *
      * <p>A snapshot of an empty workspace is a record that the workspace was empty when it was
      * replaced — which is worth keeping, because it says that the replacement destroyed
      * nothing.</p>
      *
-     * @return true when the snapshot holds no content
+     * <p><b>What it does not say.</b> The counts are the counts of the knowledge content and
+     * of the observation tables; the eight learning tables are not counted. So a snapshot
+     * that holds only learning rows reports {@code empty() == true} while the replacement
+     * that took it did destroy something. The method is kept as it was — it answers "does
+     * this snapshot hold knowledge content?" — and the rows it does not speak about are in
+     * the payload.</p>
+     *
+     * @return true when the snapshot holds no knowledge content
      */
     public boolean empty() {
         return conceptCount == 0 && claimCount == 0 && sourceCount == 0 && evidenceCount == 0
