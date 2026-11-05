@@ -9,7 +9,7 @@ only, and the Java-side "formal gate" (`TlaSpecSmokeTest`) is a **text-level**
 smoke test that passes on files the TLA+ parser rejects. Nine specifications
 had therefore never been parsed by a TLA+ parser at all.
 
-**Current state: all twelve specifications parse, all twelve are
+**Current state: all fifteen specifications parse, all fifteen are
 model-checked, and every configured property holds.** The five specifications that carried a
 recorded property failure have been resolved against the Java implementations
 they model — see §"The five recorded failures, and how each was resolved".

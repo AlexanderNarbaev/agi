@@ -475,6 +475,78 @@ specifications:
       - "The model cannot express the UCT selection rule used during search; only the final arm selection is modelled."
 
   # ───────────────────────────────────────────────────────────────────────────
+  - id: FederationConsensus
+    title: "FederationConsensus — the local consensus engine's weighted vote"
+    spec: formal/FederationConsensus.tla
+    config: formal/FederationConsensus.cfg
+    java:
+      module: matrix-core
+      sources:
+        - matrix-core/src/main/java/io/matrix/federation/consensus/LocalConsensusEngine.java
+        - matrix-core/src/main/java/io/matrix/federation/runtime/FederationRuntime.java
+      production_callers:
+        - matrix-core/src/main/java/io/matrix/federation/runtime/FederationRuntime.java
+        - matrix-core/src/main/java/io/quarkus/runner/ApplicationImpl.java
+      production_caller_status: PRODUCTION_PATH_VERIFIED
+    tests:
+      unit:
+        - matrix-core/src/test/java/io/matrix/federation/formal/ConsensusModelCheckerTest.java
+      integration: []
+    properties:
+      invariants: [TypeOK, VetoInvariance, ApprovalThreshold, WeightMonotonic, VetoOverridesApproval]
+      properties: [SafetySpec]
+    conformance:
+      status: [MODEL_CHECKED, ABSTRACT_MODEL, JAVA_UNIT_VERIFIED, PRODUCTION_PATH_VERIFIED]
+      gaps:
+        - code: NOT_MODELLED
+          detail: >-
+            The deadlock check is off (CHECK_DEADLOCK FALSE), which is the
+            convention of the other bounded models in this directory: a finite
+            voter universe makes the state in which everybody has voted
+            terminal, and a real federation is not terminal. The criterion of
+            SPEC-013 ("no deadlocks") is therefore NOT checked by this model.
+        - code: VACUOUS_PROPERTY
+          detail: >-
+            WeightMonotonic compares the total weight with the sum of the yes-
+            and no-weights, and both sides are the same sum over a partition of
+            the counting votes, so it cannot fail. It is kept because the W364
+            configuration carried it and because it checks the recursive sum
+            helper, but it proves nothing about the engine.
+        - code: SEMANTIC_MISMATCH
+          detail: >-
+            The Java's addVote accepts a repeated vote from the same voter; the
+            model lets each voter vote once. The model is a simplification, not
+            a property of the engine.
+        - code: SCOPE_LIMIT
+          detail: >-
+            The model says nothing about a federation with more than three
+            voters. The bound exists because the unbounded model was measured
+            at 34,305,063 states in 150 seconds against a gate timeout of 300
+            seconds.
+        - code: WEIGHT_TABLE_CHANGED
+          detail: >-
+            The W364 weight table (0, 0, 1, 2, 3, 5, 8, 10) disagreed with the
+            Java's getVotingWeight (L0=0, L1=0, L2=1.0, L3=1.5, L4=2.0,
+            L5=3.0, L6=5.0, L7=10.0) on L3, L4, L5 and L6, and therefore on
+            the very ratios the threshold compares. W47 made the model follow
+            the Java, which is the implementation it models. The model's
+            weights are the Java's doubled, so that the arithmetic is exact; a
+            common scale leaves every ratio unchanged.
+        - code: NAME_COLLISION
+          detail: >-
+            io.matrix.consensus.ConsensusEngine is a different class with its
+            own specification (formal/Consensus.tla). This model is of
+            io.matrix.federation.consensus.LocalConsensusEngine, which is NOT
+            the same engine.
+    abstractions:
+      - "The model has one evaluation, and it is atomic: a vote and the status it implies are one step, exactly as the Java's evaluate() is."
+    assumptions:
+      - "The voter universe is bounded to three model values (Voters = {v1, v2, v3}); a real deployment may have more."
+      - "The approval threshold is the Java's STANDARD_THRESHOLD = 0.67, compared as the scaled integer 100 * yesWeight >= 67 * totalWeight, which is the same comparison on every reachable state."
+    limitations:
+      - "No Byzantine, partial-participation or timeout behaviour is modelled."
+      - "A voter casts at most one vote; the Java does not deduplicate."
+
   - id: Consensus
     title: "Consensus — weighted voting over proposals"
     spec: formal/Consensus.tla

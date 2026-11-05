@@ -15,7 +15,7 @@ production types it names) plus the bytecode call graph.
 | ADRs | 2 | `ADR-W43-01-epistemic-model.md`, `ADR-W44-01-cognitive-kernel.md` |
 | DESIGN documents | **81** | `docs-v2/designs/DESIGN-{NN}-*.md`, with `DESIGN-NN-*` placeholders among them |
 | SPEC documents | 2 | `SPEC-W33.3-unknown-media-payload.md`, `SPEC-W34.3-monotone-tightening.md` |
-| formal specifications | **14** TLA+ in `formal/` + 1 in `docs-v2/tla/` | each with a `.cfg` |
+| formal specifications | **14** TLA+ in `formal/` + 1 in `docs-v2/tla/` <!-- no-link: the directory was removed in W47; the fifteenth specification moved into formal/ --> | each with a `.cfg` |
 | the specification registry | `formal/spec-implementation-map.yml` | 14 entries, machine-validated |
 | hypothesis registries | 2 | `HYPOTHESES.md` (older), `HYPOTHESES-NEW.md` (46 entries) |
 | cross-disciplinary research | 1 | `MATRIX-CROSS-DISCIPLINARY-RESEARCH.md` |

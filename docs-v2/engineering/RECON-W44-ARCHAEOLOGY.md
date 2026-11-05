@@ -78,7 +78,7 @@ and `defined-elsewhere`.
 | YAML/config | 73 | 27 `.yml` + 46 `.yaml` |
 | Protobuf schemas | 1 | `proto/matrix_federation_v1.proto` |
 | Avro schemas | 1 | `consolidated_weights.avro` at the repository root |
-| TLA+ formal specifications | **15** | `formal/` (14) + `docs-v2/tla/` (1) |
+| TLA+ formal specifications | **15** | `formal/` (14) + `docs-v2/tla/` (1) <!-- no-link: the directory was removed in W47; the fifteenth specification moved into formal/ --> |
 | Shell scripts | 53 | |
 
 **The matrices themselves:**

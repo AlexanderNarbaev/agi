@@ -50,5 +50,20 @@
 # The change is recorded here rather than waved through, so that the amount
 # of it is visible and the expiry is real.
 
-.github/ | 851 | repo-owner | 2026-12-31
+# W47, the .github/ exception was raised from 851 to 859 diff lines.
+#
+# The change is GENERATED, not written by hand: the specification-to-implementation
+# map gained the fifteenth specification (OD-030), and the map's own generator
+# (./gradlew :matrix-quality:regenerateFormalPaths) rewrote the path filter in
+# .github/workflows/tla.yml. The generator is the sanctioned mechanism, and the
+# map's validator checks that the workflow's filter matches the map — so the
+# block CANNOT be maintained by hand.
+#
+# What changed: eight path lines, the paths of the new specification's module
+# and its test. Nothing else in the workflow was touched.
+#
+# The exception is recorded here rather than waved through, so that the amount
+# of the change is visible and the expiry is real.
+
+.github/ | 859 | repo-owner | 2026-12-31
 AGENTS.md | 63 | repo-owner | 2026-12-31

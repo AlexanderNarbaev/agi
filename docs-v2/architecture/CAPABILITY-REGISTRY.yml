@@ -194,7 +194,7 @@ capabilities:
   -
     id: "C-01c"
     name: "the published claim: \"9 TLA+ specs, model-checked in CI\""
-    description: "An audited claim, not a capability identity. The published number was nine; the repository now holds fifteen specifications, of which fourteen are model-checked by the formal gate and registered in the specification-to-implementation map."
+    description: "An audited claim, not a capability identity. The published number was nine; the repository now holds FIFTEEN specifications, and all fifteen are model-checked by the formal gate and registered in the specification-to-implementation map — since W47, when the fifteenth moved into formal/ and was repaired so that it parses and model-checks."
     domain: "formal-methods"
     implementation: "IMPLEMENTED"
     integration: "INTEGRATION_TESTED"
@@ -204,7 +204,7 @@ capabilities:
       - "formal/spec-implementation-map.yml"
       - "scripts/formal-gate.sh"
       - "docs-v2/engineering/TLA-STATUS.md"
-      - "docs-v2/tla/FederationConsensus.tla"
+      - "formal/FederationConsensus.tla"
     production_callers:
       - "the formal gate — scripts/formal-gate.sh"
       - "the CI workflow — .github/workflows/tla.yml"
@@ -212,16 +212,17 @@ capabilities:
     serving_path: "the CI job that runs scripts/formal-gate.sh over every .cfg in formal/; it is not an HTTP route."
     test_paths:
       - "matrix-quality/src/test/java/io/matrix/quality/SpecImplementationMapTest.java"
-    test_evidence: "the formal gate passes 14 of 14 (recorded in the W44 wave); the specification map carries 14 entries and is validated by SpecImplementationMapTest"
-    benchmark_evidence: "scripts/formal-gate.sh runs `java -jar tla2tools.jar -config <spec>.cfg <spec>.tla` for every .cfg in formal/ — the reproducible model-check of all 14 registered specifications. The 14 .tla files in formal/ and the 14 entries in formal/spec-implementation-map.yml were counted directly in this wave."
-    formal_spec: "formal/spec-implementation-map.yml (14 entries); the 14 specifications are the .tla files in formal/; the 15th file on disk, docs-v2/tla/FederationConsensus.tla, is a DIFFERENT model from formal/Consensus.tla and is covered by neither the gate nor the map"
+    test_evidence: "the formal gate passes 15 of 15 — measured on this machine in W47: '=== the formal gate: 15 passed, 0 failed', exit 0, and the negative control ('a deliberately broken specification') makes it exit 1. The specification map carries 15 entries and is validated by SpecImplementationMapTest. The new specification also has a mutation-level negative control: formal/mutations.json's 'FederationConsensus-veto-does-not-win' is KILLED (TLC reported a violated invariant: Safety)."
+    benchmark_evidence: "scripts/formal-gate.sh runs `java -jar tla2tools.jar -config <spec>.cfg <spec>.tla` for every .cfg in formal/ — the reproducible model-check of all 15 registered specifications. The 15 .tla files in formal/ and the 15 entries in formal/spec-implementation-map.yml were counted directly in this wave. The fifteenth itself model-checks in 1.6 seconds over 35,937 distinct states."
+    formal_spec: "formal/spec-implementation-map.yml (15 entries); the 15 specifications are the .tla files in formal/, and the fifteenth — FederationConsensus, a DIFFERENT model from formal/Consensus.tla — moved in from docs-v2/tla/ under OD-030 and is covered by neither the gate nor the map"
     dependencies:
       - "tla2tools.jar 1.8.0, downloaded by .github/workflows/tla.yml"
       - "a TLC model check per specification"
-    limitations: "the formal gate covers 14 of the 15 .tla files on disk; docs-v2/tla/FederationConsensus.tla is not model-checked and is not registered. The formal gate lives in a CI job named 'Quality gates (can fail)'."
+    limitations: "the formal gate now covers 15 of the 15 .tla files on disk. What the fifteenth does NOT prove: its deadlock check is off (the finite voter universe makes a terminal state inevitable, the convention of the other bounded models here), its WeightMonotonic property is vacuous by construction, and it says nothing about a federation with more than three voters. The formal gate lives in a CI job named 'Quality gates (can fail)'."
     risks:
-      - "the register in TLA-STATUS.md says twelve specifications while the repository holds fifteen; both numbers are stale against the tree"
-    owner: "the owner (YES — but the number needs re-issuing)"
+      - "the register in TLA-STATUS.md says twelve specifications while the repository holds fifteen; that number is stale against the tree and is recorded as a task"
+      - "the fifteenth specification's model of the voting weights follows the Java and NOT the W364 table, which disagreed with the Java on four of the eight levels; the gap is recorded in the map as WEIGHT_TABLE_CHANGED"
+    owner: "the owner (NO — the number was re-issued in W47: fifteen model-checked specifications, measured)"
     decision_ref: "docs-v2/engineering/W46-CAPABILITY-RECONCILIATION.csv row C-01c"
     last_verified_commit: "a6ded23338e069b8bc8a3744c234be5a03995f43"
     last_verified_at: "2026-11-04"
@@ -1028,24 +1029,27 @@ capabilities:
     production_callers:
       - "io.matrix.api.OnnxRuntimeAdapter — matrix-core/src/main/java/io/matrix/api/OnnxRuntimeAdapter.java"
     serving_chain: "chain-a"
-    serving_path: "the adapter is on chain A's chat path, but the GPU provider is never bound, so no route executes on the GPU"
-    test_paths: []
-    test_evidence: "none — no test exercises the CUDA provider"
+    serving_path: "POST /v1/chat/completions — QwenOnnxBridge — OnnxRuntimeAdapter. With the launcher's LD_LIBRARY_PATH the CUDA provider registers and the execution profile names it; without it the adapter records the fallback and its cause"
+    test_paths:
+      - "matrix-core/src/test/java/io/matrix/api/OnnxRuntimeGpuTest.java"
+      - "matrix-core/src/test/java/io/matrix/api/OnnxRuntimeAdapterTest.java"
+      - "matrix-core/src/test/java/io/matrix/api/OnnxRuntimeGpuDiagnosticTest.java"
+    test_evidence: "29 executions, 0 failures, 0 errors: OnnxRuntimeGpuTest (7), OnnxRuntimeAdapterTest (9) and OnnxRuntimeGpuDiagnosticTest (13). The decision table of the seven GPU states is exercised with no GPU, no model and no ONNX Runtime. Without LD_LIBRARY_PATH one test is SKIPPED with its reason in the JUnit XML; with LD_LIBRARY_PATH exported all 29 run and the execution profile names the CUDA provider."
     benchmark_evidence: "W46-HARDWARE-AND-RESOURCE-REPORT.md §6: with LD_LIBRARY_PATH exported the provider loads; without it the loader finds the distro's libcudart.so.12 (CUDA 12.4), which lacks cudaLibraryGetKernel. Measured on the same model (models/onnx/qwen05b/model.onnx, sequence length 32, 10 iterations after one warm-up): 191.367 ms per forward on the CPU against 15.190 ms on the CUDA (12.6×). The historical EXP-009C reproduces within 1.4% on the torch path. The measurement is reproducible by running scripts/bench_gpu_vs_bir.py and the ONNX probe with and without LD_LIBRARY_PATH."
     formal_spec: "none"
     dependencies:
       - "com.microsoft.onnxruntime:onnxruntime_gpu:1.29.0 (matrix-core/build.gradle:77)"
       - "the CUDA runtime the loader actually finds — LD_LIBRARY_PATH, not -Djava.library.path"
-    limitations: "the diagnostic activeProviders() returns a hardcoded CPUExecutionProvider and cannot report the truth; ONNX Runtime 1.29.0 exposes no OrtSession.getProviders(), so the field is a constant. The speed-up is TRUE for a transformer forward pass and FALSE for point calls (EXP-009C: 17.49 µs per call against ~62 ns for a BIR evaluation)."
+    limitations: "ONNX Runtime 1.29.0 exposes no OrtSession.getProviders(), so the truth comes from getEpDevices(), getModelCompatibilityForEpDevices() and the execution profile — and getModelCompatibilityForEpDevices SEGFAULTS the JVM when a CUDA device is in the list, so it is not called. Without profiling the ladder stops at CUDA_REGISTERED, and the diagnostic does not claim the two profile-dependent states it cannot observe. The speed-up is TRUE for a transformer forward pass and FALSE for point calls (EXP-009C: 17.49 µs per call against ~62 ns for a BIR evaluation). There is still no COMMITTED benchmark for the ONNX provider path: the 191.367 ms against 15.190 ms figures come from an ad-hoc probe that was never preserved."
     risks:
-      - "the hardcoded diagnostic makes any dashboard report 'CPU' whether the GPU is in use or not, so the false claim cannot be detected from MATRIX's own output"
+      - "LD_LIBRARY_PATH is consulted by the OS loader for EVERY native library the process loads, so a wrong library there can break unrelated native code. The launcher prepends only .onnx_libs, and only when the directory exists, so a fresh clone behaves exactly as before."
       - "the claim was published as true and the hardware report of the W620 wave recorded 'the GPU is unavailable to this machine' — both are loader-path facts, not hardware facts"
     owner: "the owner (NO — the claim is false as written; it needs the owner's decision)"
     decision_ref: "docs-v2/engineering/W46-CAPABILITY-RECONCILIATION.csv row W46-GPU; docs-v2/engineering/W46-HARDWARE-AND-RESOURCE-REPORT.md §6"
     last_verified_commit: "a6ded23338e069b8bc8a3744c234be5a03995f43"
     last_verified_at: "2026-11-04"
-    next_verification_condition: "exporting LD_LIBRARY_PATH in the launcher and recording the real active provider would turn the claim into a measurement; the owner must decide whether the GPU is in scope for MATRIX at all"
-    notes: "the CSV's integration cell is 'NOT INTEGRATED (the registration fails)', which is not a member of this registry's integration vocabulary; the axis is honestly unknown and the literal cell is preserved here. The CSV's implementation cell is 'IMPLEMENTED (the request)' — the request exists, the binding does not. The CSV's operational cell is 'INACTIVE', which is not a member of the operational vocabulary; the axis value is DORMANT."
+    next_verification_condition: "a COMMITTED benchmark for the ONNX provider path — the 191.367 ms against 15.190 ms figures come from an ad-hoc probe that was never preserved, and a number nobody can re-run is not a measurement. The owner must also decide whether the GPU is in scope for MATRIX at all."
+    notes: "W47 (OD-028) changed this row. The CSV's integration cell was 'NOT INTEGRATED (the registration fails)', which is not a member of this registry's integration vocabulary, and its operational cell was 'INACTIVE', which is not a member of the operational vocabulary: the axes now say what the wave measured — INTEGRATION_TESTED, TESTED and SERVED — and the CSV keeps its literal cells as the historical record."
 
   -
     id: "W46-MODULE-GRAPH"

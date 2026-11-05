@@ -264,6 +264,14 @@
       "old": "[] to = \"SUPPORTED\"                   -> Cardinality(sources) >= 1",
       "new": "[] to = \"SUPPORTED\"                   -> Cardinality(sources) >= 0",
       "expect": "KILLED"
+    },
+    {
+      "id": "FederationConsensus-veto-does-not-win",
+      "spec": "FederationConsensus",
+      "why": "A VETO must decide on its own: the Java's evaluate() returns CONSENSUS_VETOED the moment a veto is cast, whatever else was cast. If the veto stopped winning, a veto together with enough YES weight would reach APPROVED — and both VetoInvariance and VetoOverridesApproval must fail. The property was not weakened to survive: the transition that broke it was removed because the implementation does not have it.",
+      "old": "ELSE IF HasVeto(vs) THEN \"VETOED\"",
+      "new": "ELSE IF HasVeto(vs) THEN \"PENDING\"",
+      "expect": "KILLED"
     }
   ]
 }

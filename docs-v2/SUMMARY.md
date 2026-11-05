@@ -52,7 +52,7 @@
 - [Style Guide](STYLE-GUIDE.md) — Documentation standards
 - [Research Reports](research/) — Benchmark, federation, sleep, Minecraft
 - [Design Documents](designs/) — DESIGN-01 through DESIGN-58
-- [TLA+ Specifications](tla/) — Formal verification specs
+- [TLA+ Specifications](../formal/) — Formal verification specs
 
 ---
 
