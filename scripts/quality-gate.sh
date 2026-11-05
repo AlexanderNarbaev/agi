@@ -329,12 +329,38 @@ check_test_catalogue() {
     report TEST-1 "the test catalogue agrees with the evidence"
 }
 
+# ---------------------------------------------------------------------------
+# RETENTION-1: the backup retention policy proves itself on a synthetic tree
+# ---------------------------------------------------------------------------
+#
+# The retention script DELETES files. A policy that is not exercised is a
+# policy that is not known to work, so the gate runs the script's own
+# self-test: a synthetic tree of valid, expired, empty, corrupt and symlinked
+# backups, and every rule of the policy is checked against it.
+check_retention() {
+    local tool="$REPO_ROOT/scripts/backup-retention.py"
+    if [ ! -f "$tool" ]; then
+        report RETENTION-1 "the retention tool is absent"
+        VIOLATIONS=$((VIOLATIONS + 1))
+        return
+    fi
+    local output
+    if ! output="$(python3 "$tool" --self-test 2>&1)"; then
+        printf '%s\n' "$output" | grep -E "FAIL" | head -20
+        report RETENTION-1 "the retention policy does not hold"
+        VIOLATIONS=$((VIOLATIONS + 1))
+        return
+    fi
+    report RETENTION-1 "the retention policy holds"
+}
+
 check_shell_magic
 check_java_magic
 check_env_provenance
 check_frozen
 check_docs_links
 check_test_catalogue
+check_retention
 
 echo "----------------------------------------------"
 if [ "$MODE" = "--report" ]; then
