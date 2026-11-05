@@ -1,8 +1,19 @@
 # SPEC-011 — Hierarchical Memory (normative)
 
-**Status**: v1 · singleton normative
+**Status**: `SUPERSEDED` — преемник: [SPEC-017](./SPEC-017-hierarchical-memory.md)
 **Package**: `io.matrix.memory`
-**Related**: [SPEC-003](./SPEC-003-knowledge-topology.md), [DESIGN-08](../designs/DESIGN-05-memory.md)
+**Related**: [SPEC-003](./SPEC-003-knowledge-topology.md), [DESIGN-05](../designs/DESIGN-05-memory.md)
+
+> **W47 — этот документ превосходит SPEC-017, и он был неправ в семи местах.**
+> Уровни `L1_HOT/L2_MODULE/L3_ARCHIVE` не существуют: реальный код — `L0_ARTIFACT…L4_KERNEL`
+> (`HierarchicalMemory.java:53-60`). `MemoryHierarchy` описан как утилитарный класс, а это
+> отдельное пятиуровневое хранилище. Методы `recall`, `expire` и `drift()` не существуют:
+> реальные — `search`, `evictExpired(long)`, `detectDrift()`. Пороги продвижения
+> `accessCount > 5 / > 20` и понижения по TTL отсутствуют. `lifecycle/ConsolidationCycle` не
+> делает promotion/demotion. Тест `DriftSignalTest` в дереве отсутствует. Поиск ранжирован
+> только по значимости, а не по «importance + recency».
+> **Документ сохранён как есть** — он исторический, и его правка стёрла бы след.
+> Нормативным является [SPEC-017](./SPEC-017-hierarchical-memory.md) (OD-031, 2026-11-05).
 
 ## Что
 

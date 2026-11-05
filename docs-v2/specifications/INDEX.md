@@ -18,6 +18,11 @@
 | SPEC-010 | SPEC-010-hades-burden.md | HADES burden-lifting ritual + derangement detector — RUN 13 |
 | SPEC-011 | SPEC-011-memory-hierarchy.md | Hierarchical memory (L1/L2/L3, drift-detection) — RUN 13 |
 | SPEC-012 | SPEC-012-rag-boolean.md | Boolean RAG (inverted-index, hybrid, RR-fusion, ExactTermGuard) — RUN 13 |
+| SPEC-013 | SPEC-013-dynamic-modulator-registry.md | Реестр динамических модуляторов — RUN 13 |
+| SPEC-014 | SPEC-014-wal-management.md | Управление журналом волн — RUN 13 |
+| SPEC-015 | SPEC-015-autonomy-impulses.md | Автономные импульсы: четыре импульса, бюджет, FROZEN-гейт, что обслуживается сегодня — W47 |
+| SPEC-016 | SPEC-016-decentralized-digests.md | Децентрализованные дайджесты: подсчёт → бакетирование → шум → выпуск, k-анонимность, подпись и транспорт — W47 |
+| SPEC-017 | SPEC-017-hierarchical-memory.md | Иерархическая память: пять уровней, три несовместимые таксономии в дереве, продвижение и вытеснение — W47, преемник SPEC-011 |
 
 См. также:
 - Состояние реализации — [architecture/MODULES.md](../architecture/MODULES.md).
