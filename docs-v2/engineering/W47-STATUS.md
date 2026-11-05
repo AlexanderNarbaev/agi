@@ -190,6 +190,7 @@ in the successor field of OD-035.
 | the scope | the command | the result |
 |---|---|---|
 | the store, the API, the federation, the autonomy, the cognitive | `./gradlew :matrix-core:test --tests "io.matrix.api.*" --tests "io.matrix.federation.*" --tests "io.matrix.autonomy.*" --tests "io.matrix.knowledge.*" --tests "io.matrix.cognitive.*" --rerun-tasks` | **269 classes, 2060 executions, 1 skipped, 0 failures, 0 errors** |
+| **the FULL `matrix-core` suite** — approved by the owner (OD-041) | `./gradlew :matrix-core:test --rerun-tasks --max-workers=1 -I /tmp/heap8.gradle` (one JVM, the heap capped at 8 GiB, the other daemons stopped) | **1226 classes, 9051 executions, 23 skipped, 25 failures** — see §11 for what the 25 are |
 | the brain runtime | `./gradlew :matrix-brain-runtime:test --rerun-tasks` | **120 classes, 918 executions, 2 skipped, 0 failures, 0 errors** |
 | the API gateway | `./gradlew :matrix-api-gateway:test --rerun-tasks` | **43 classes, 240 executions, 0 skipped, 0 failures, 0 errors** |
 | the formal gate | `bash scripts/formal-gate.sh` | **15 passed, 0 failed** — exit 0 |
@@ -209,7 +210,22 @@ summary.
 
 | | why | what it means |
 |---|---|---|
-| the full `matrix-core` suite | **the owner's approval is required** (`AGENTS.md` §Тестирование; the OOM risk) | the total population of the suite is still unknown — the same residual as R-W46-10 |
+| ~~the full `matrix-core` suite~~ | **it was run** — the owner approved it on 2026-11-05 (OD-041), and it ran: 1226 classes, 9051 executions, 23 skipped, **25 failures**, of which 22 are the GraalVM native-binary classes and 3 are examined below | the population is now a number. The failures are NOT the wave's — see §11 |
+| the GraalVM / native-image classes | the toolchain is not usable in this environment | they are counted as neither passing nor failing — R-W46-11, and now MEASURED: **22 failures across 6 classes**, not the eight classes the register guessed |
+
+**The 25 failures of the full run, one by one — and whether the wave caused them.**
+
+| the failure | the count | the cause | the wave's fault |
+|---|---|---|---|
+| the native-binary classes (`NativeBinaryCLITest`, `NativeBinaryBackgroundServiceTest`, `NativeBinaryStartupBenchmarkTest`, `NativeBinaryFullIntegrationTest`, `NativeBinaryPerformanceBenchmarkTest`, `NativeBinaryDockerTest`, `NativeBinaryLaunchBenchmarkTest`, `JVMvsNativeBenchmarkTest`) | **22** | `java.io.IOException: Cannot run program "build/native/nativeCompile/matrix-core"` — the native binary was never built, because the GraalVM toolchain is not usable here | **no** — R-W46-11, measured now instead of guessed |
+| `io.matrix.consciousness.Exp228ComplianceTest.realProjectCompliance` | **1** | the check finds **21 unadjudicated wall-clock sites** in the decision-path packages, the first being `io/matrix/knowledge/acquisition/DocumentImporter.java:127` | **no — and this is MEASURED, not asserted**: the same test on a worktree of the pre-wave commit `84955ec9` fails with the SAME numbers (`random=63, wallClock=47`, 21 sites) |
+| `io.matrix.consciousness.CausalEmergencePropertyTest.propertyEIOfNonNegativeDistribution` | **1** | the assertion is `ei >= 0.0` with **no tolerance**, and the effective information of a random sample can come out as `-3.2e-16` — a floating-point artefact | **no**: the same test PASSES on the pre-wave worktree in a standalone run (6 tests, 0 failures). It is a FLAKY property test whose seed varies per run. The fix is a tolerance — a one-line change in a package this wave did not touch, and it is named as a task rather than slipped in |
+
+**The wave added zero wall-clock or random sites to the production sources** —
+`git diff 84955ec9..HEAD -- matrix-core/src/main/java/` contains **0** added lines matching
+`currentTimeMillis|nanoTime|new Random|Math.random|Instant.now|LocalDate.now` ✓. The
+compliance failure is therefore a pre-existing state of the tree, and it was proved on the
+pre-wave commit rather than argued.
 | the GraalVM / native-image classes | the toolchain is not usable in this environment | they are counted as neither passing nor failing — R-W46-11 |
 | `OnnxRuntimeGpuTest.cudaExecutionIsObservedFromTheExecutionProfile` | **skipped with its reason in the XML** — it needs `LD_LIBRARY_PATH` and the CUDA libraries | the run was without the export; with the export, all 29 GPU-related executions run and the execution profile names the CUDA provider |
 | the two `RealOnnxDistillationTest` classes in the brain runtime | **skipped** — the pre-existing skips of that module | not caused by this wave |
@@ -229,6 +245,8 @@ fail:
 | the discovery test | a package without a root `SKILL.md` | the live `.opencode/skills/matt-pocock` was **not** discovered, and a /tmp fixture proved the rule directly |
 | the quality gate | the literal-candidate baseline | unchanged at 271 — the gate did not grow a single candidate |
 | the erasure set | the six dangling-reference checks | a replaced workspace holds no row that points at a concept or a claim that is not there |
+| the compliance check | the pre-wave tree | **PROVED**: a worktree of `84955ec9` fails with the SAME 21 unadjudicated wall-clock sites — the wave added zero wall-clock or random sites to the production sources |
+| the full suite | — | it ran under the owner's approval, with the heap capped at 8 GiB and one JVM, and it is red in 25 places that the wave did not cause (§11) |
 
 ## 13. The benchmarks
 
@@ -282,12 +300,15 @@ temporary directory.
 | R-W46-18 — the observation tables grow without a retention policy | **OPEN**: the retention covers the BACKUPS, not the observation tables inside the database. The snapshot payload is also still unbounded — the W45.2 residual, named in the contract's §10 |
 | R-W46-19 — the documentation link graph is not checked by anything | **CLOSED**: `scripts/docs-link-check.py --strict` runs in the quality gate, and this wave added the retention self-test beside it |
 | R-W46-21 — two agents editing the same file in one wave | **mitigated, not closed**: this wave used disjoint write scopes and the coordinator owned every register; the lesson stands |
+| R-W46-10 — the full suite is not run | **CLOSED for this commit**: the owner approved one run (OD-041) and it ran — 1226 classes, 9051 executions, 23 skipped, **25 failures**, and none of the 25 is the wave's (§11) |
+| R-W46-11 — the GraalVM classes are red here | **OPEN and now MEASURED**: 22 failures across 6 classes — the register's guess of eight was low. They are why the suite is red, and they are counted as neither passing nor failing |
+| the flaky property test | **OPEN**: one line — a missing offset in `CausalEmergencePropertyTest`. It is one of the 25 failures, and it is a false one |
 | the trigger table's fork | **OPEN**: the authoritative copy of the generator lives in `opencode_initializer` and does not know the four new slugs; the installer's progress file currently protects them, and a reset of that file would silently drop them |
 | the identity collision of `plan.retired-backup` | **OPEN by decision**: refusing to revive a retired bundle was the right call; the collision remains and is recorded in OD-034 |
 
 ## 17. The limitations
 
-1. The full `matrix-core` suite was not run — the owner's approval is required.
+1. The full `matrix-core` suite was **run** (the owner approved it, OD-041) and it is **red in 25 places**: 22 native-binary classes that cannot build here, one pre-existing compliance check (proved on the pre-wave commit), and one flaky property test with no floating-point tolerance. The wave's own scopes are green.
 2. The GPU speed-up is not a committed benchmark, and the registry says so.
 3. The fifteenth specification says nothing about a federation with more than three voters,
    and its deadlock check is off.
@@ -330,7 +351,8 @@ uncommitted change of the coordinator's own.
 5. **The trigger table's fork** — either the two copies are brought together or the
    repository's copy is declared the source of truth in writing.
 6. **The two refused names** — the owner's answer decides whether they stay.
-7. **The full suite** — the owner's approval, once, would close R-W46-10 for good.
+7. **The full suite is green** — it was run (OD-041) and its 25 failures are the native-binary classes, the pre-existing compliance check, and the flaky property test. The last two are one line each; the first needs the GraalVM toolchain or an explicit exclusion.
+8. **The flaky property test** — one offset, one line (R-W47-05).
 
 ## 21. The questionnaire results
 

@@ -25,8 +25,8 @@ implemented, tested and never called has no exposure, and saying so is part of t
 | [R-W46-07](#r-w46-07--three-current-documents-reference-a-walmd-that-does-not-exist)| Three current documents reference a WAL.md that does not exist | low | high | OPEN 
 | [R-W46-08](#r-w46-08--sessionmd-is-7885-lines--467-kb-at-the-repository-root-and-is-neither-an-index-nor-a-current-state-record)| SESSION.md is 7885 lines / 467 KB at the repository root and is neither an index nor a current-state record | medium | medium | OPEN 
 | [R-W46-09](#r-w46-09--the-two-capability-registries-use-an-ambiguous-status-vocabulary-and-predate-w450-w452)| The two capability registries use an ambiguous status vocabulary and predate W45.0-W45.2 | high | high | OPEN 
-| [R-W46-10](#r-w46-10--the-full-matrix-core-suite-is-not-run-so-the-total-test-population-is-not-known)| The full matrix-core suite is not run, so the total test population is not known | medium | high | ACCEPTED-OPEN 
-| [R-W46-11](#r-w46-11--eight-graalvm-dependent-test-classes-are-permanently-red-in-this-environment-and-are-counted-as-neither-passing-nor-failing)| Eight GraalVM-dependent test classes are permanently red in this environment and are counted as neither passing nor failing | low | high | OPEN 
+| [R-W46-10](#r-w46-10--the-full-matrix-core-suite-is-not-run-so-the-total-test-population-is-not-known)| The full matrix-core suite is not run, so the total test population is not known | medium | high | CLOSED for this commit — W47, the owner's OD-041: 1226 classes, 9051 executions, 25 failures, none of them the wave's |
+| [R-W46-11](#r-w46-11--eight-graalvm-dependent-test-classes-are-permanently-red-in-this-environment-and-are-counted-as-neither-passing-nor-failing)| Eight GraalVM-dependent test classes are permanently red in this environment and are counted as neither passing nor failing | low | high | OPEN — MEASURED: 22 failures across 6 classes, and the register's guess of eight was low |
 | [R-W46-12](#r-w46-12--a-full-suite-run-has-twice-produced-spurious-failures-from-a-build-directory-race)| A full-suite run has twice produced spurious failures from a build-directory race | medium | medium | OPEN 
 | [R-W46-13](#r-w46-13--qhealthready-answers-503-permanently-in-this-environment)| /q/health/ready answers 503 permanently in this environment | low | high | OPEN 
 | [R-W46-14](#r-w46-14--the-tmp-quota-has-taken-the-tooling-down-before)| The /tmp quota has taken the tooling down before | medium | low | OPEN 
@@ -41,6 +41,7 @@ implemented, tested and never called has no exposure, and saying so is part of t
 | [R-W47-02](#r-w47-02--the-retired-plugin-asset-planretired-backup-still-declares-the-name-plan-which-collides-with-a-live-package)| The retired plugin asset `plan.retired-backup` still declares the name `plan`, which collides with a live package | low | low | ACCEPTED-BY-DECISION 
 | [R-W47-03](#r-w47-03--a-fired-autonomy-impulse-has-no-consumer-the-schedulers-counters-are-reachable-but-nothing-subscribes-to-the-impulse)| A fired autonomy impulse has no consumer: the scheduler's counters are reachable, but nothing subscribes to the impulse | medium | medium | OPEN 
 | [R-W47-04](#r-w47-04--the-126-gpu-speed-up-is-a-number-from-an-ad-hoc-probe-that-was-never-preserved-so-it-cannot-be-re-run)| The 12.6× GPU speed-up is a number from an ad-hoc probe that was never preserved, so it cannot be re-run | medium | high | OPEN-OWNER-DECISION 
+| [R-W47-05](#r-w47-05--a-property-test-asserts-a-floating-point-quantity-against-zero-without-a-tolerance-so-it-fails-on-a-sample-that-comes-out-a-rounding-artefact-below-zero)| A property test asserts a floating-point quantity against zero without a tolerance, so it fails on a sample that comes out a rounding artefact below zero | low | high | OPEN 
 
 ---
 
@@ -165,7 +166,7 @@ implemented, tested and never called has no exposure, and saying so is part of t
 - **exposure**: Real but bounded: the targeted scopes that cover the changed subsystems are green and the failures are known and environmental
 - **mitigation**: Document the limitation and keep the per-scope baselines commit-specific. A full run needs a resource estimate and the owner's approval, per the directive.
 - **owner**: owner (approval for a full run)
-- **status**: ACCEPTED-OPEN
+- **status**: CLOSED for this commit — the owner approved one full run on 2026-11-05 (OD-041), and it ran: **1226 classes, 9051 executions, 23 skipped, 25 failures**, in 25m45s with one test JVM and an 8 GiB heap. The population is now a number rather than a set of scopes. The 25 failures are NOT the wave's: 22 are the GraalVM native-binary classes (the toolchain is absent), one is the compliance check (PROVED pre-existing on a worktree of the pre-wave commit `84955ec9` — the same 21 unadjudicated wall-clock sites), and one is a FLAKY property test with no floating-point tolerance.
 
 ### R-W46-11 — Eight GraalVM-dependent test classes are permanently red in this environment and are counted as neither passing nor failing
 
@@ -177,7 +178,7 @@ implemented, tested and never called has no exposure, and saying so is part of t
 - **exposure**: Low: they fail for an environmental reason, not a code reason
 - **mitigation**: Record the split and the reason in the test catalogue, so that nobody reads the count as a regression.
 - **owner**: agent (Level 1)
-- **status**: OPEN
+- **status**: OPEN — and now MEASURED instead of guessed. The full run of 2026-11-05 puts **22 failures across 6 classes** on this account (the native binary was never built: `Cannot run program "build/native/nativeCompile/matrix-core"`), plus one benchmark class. The register's guess of "eight classes" was low. They are counted as neither passing nor failing, and they are the reason the full suite is red.
 
 ### R-W46-12 — A full-suite run has twice produced spurious failures from a build-directory race
 
@@ -347,6 +348,18 @@ implemented, tested and never called has no exposure, and saying so is part of t
 - **mitigation**: the owner approved a committed benchmark on 2026-11-05 (OD-043): the same model, the same sequence length and iteration count, a warm-up, a median with the dispersion, and the CPU and CUDA cases under comparable conditions.
 - **owner**: the agent (the task); the owner (the approval, given)
 - **status**: OPEN-OWNER-DECISION — the decision is given; the task is TASK-W47-03, in W48
+
+### R-W47-05 — A property test asserts a floating-point quantity against zero without a tolerance, so it fails on a sample that comes out a rounding artefact below zero
+
+- **category**: test-quality
+- **severity**: low
+- **probability**: high
+- **impact**: low
+- **evidence**: `io.matrix.consciousness.CausalEmergencePropertyTest.propertyEIOfNonNegativeDistribution` asserts `ei >= 0.0` with no offset, and the effective information of a random sample came out as `-3.2034265038149176E-16` in the full run of 2026-11-05. The same test PASSES on a standalone run — it is the seed that decides.
+- **exposure**: real, and it is a false failure: it is counted among the 25 failures of the full suite, and a reader of that number would look for a defect that is not there.
+- **mitigation**: one line — an offset, the way the neighbouring property in the same class already uses one (`isCloseTo(0.0, Assertions.offset(1e-9))`).
+- **owner**: the coordinator
+- **status**: OPEN — named, not fixed: it is a one-line change in a package this wave did not touch, and it is not this wave's defect to carry.
 ---
 
 ## How a risk is closed
