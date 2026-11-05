@@ -42,6 +42,23 @@ class FederationTest {
     }
 
     @Test
+    void anonymizerCountsDistinctNodesNotContributions() {
+        // W47: k counts DISTINCT NODES. One node recording the same hash three
+        // times is still one node, and must not satisfy k=3 on its own.
+        var anon = new Anonymizer(3);
+        anon.recordContribution("hash1", "node1");
+        anon.recordContribution("hash1", "node1");
+        anon.recordContribution("hash1", "node1");
+        assertEquals(1, anon.anonymityLevel("hash1"));
+        assertFalse(anon.isAnonymous("hash1"));
+
+        anon.recordContribution("hash1", "node2");
+        anon.recordContribution("hash1", "node3");
+        assertEquals(3, anon.anonymityLevel("hash1"));
+        assertTrue(anon.isAnonymous("hash1"));
+    }
+
+    @Test
     void anonymizerMultipleHashes() {
         var anon = new Anonymizer(2);
         anon.recordContribution("a", "n1");

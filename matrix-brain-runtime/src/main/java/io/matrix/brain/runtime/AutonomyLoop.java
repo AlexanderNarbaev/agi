@@ -2,7 +2,10 @@ package io.matrix.brain.runtime;
 
 import io.matrix.autonomy.AutonomyEngine;
 import io.matrix.brain.BrainCycle;
+import io.matrix.budgeter.ConjugateBudgeter;
+import io.matrix.ethics.EthicalFilter;
 import io.matrix.goals.GoalTracker;
+import io.matrix.lifecycle.ImpulseScheduler;
 import io.matrix.reasoning.ArousalDynamics;
 import io.matrix.reasoning.EmergenceAnalyzer;
 
@@ -35,7 +38,24 @@ public final class AutonomyLoop implements AutoCloseable {
     private final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
 
     public AutonomyLoop(BrainCycle brain) {
-        this.engine = new AutonomyEngine(brain, null);
+        // W47: the engine needs a REAL ImpulseScheduler.
+        //
+        // This loop used to pass null. The engine's curiosity and integrity
+        // cycles fire their drives through the scheduler, so with a null
+        // scheduler the first scheduled cycle threw a NullPointerException,
+        // and a ScheduledExecutorService CANCELS a task that throws — silently
+        // and permanently. The gateway therefore had one curiosity cycle, at
+        // t=120s, and then no curiosity cycle at all; and no integrity cycle
+        // ever, because the integrity check fires BEFORE the validation.
+        //
+        // A null scheduler is not a degraded engine, it is an engine whose
+        // drives can never be expressed, so the scheduler is built here for
+        // real: the same construction the gateway's own launchers use, with the
+        // conjugate budgeter that pays for the drive and the ethical filter
+        // that gates it.
+        ImpulseScheduler scheduler =
+                new ImpulseScheduler(new ConjugateBudgeter(), new EthicalFilter());
+        this.engine = new AutonomyEngine(brain, scheduler);
         this.arousal = new ArousalDynamics(0.20, 0.05);
         this.emergence = new EmergenceAnalyzer(42L);
         this.goals = new GoalTracker();
