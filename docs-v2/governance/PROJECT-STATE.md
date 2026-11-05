@@ -2,7 +2,7 @@
 
 **Status:** `CANONICAL` · **This document is a SNAPSHOT, not a history.** It describes the
 project at one commit and is replaced, not appended to, when the state moves.
-**Snapshot of:** `a6ded23338e069b8bc8a3744c234be5a03995f43` · **Date:** 2026-11-04
+**Snapshot of:** `233af98453232f70dc6a4090f460add986f9d5de` · **Date:** 2026-11-05
 **Validation:** a validator that checks that the commit below is the repository's HEAD, and
 that the wave and the baseline below are the current ones, is TASK-W46-3's
 `scripts/validate-project-state.py` — **it does not exist yet**, so this snapshot is currently
@@ -32,12 +32,12 @@ and "served" is the single most important fact about this repository, and it is 
 | | |
 |---|---|
 | the branch | `develop` |
-| the commit | `a6ded23338e069b8bc8a3744c234be5a03995f43` |
+| the commit | `233af98453232f70dc6a4090f460add986f9d5de` — the wave's own commit; this snapshot was corrected in the commit that follows it |
 | the remote | `origin/develop` — **the same commit** (the local and the remote do not diverge) |
 | the release version | **none.** The tags `v1.0.0` and `v16.0.0-mind` exist, but no release process is defined and the `v16.0.0-mind` tag predates three waves of work |
-| the latest completed wave | **W45.2** — the owner's four architecture decisions (`a6ded233`). **W46 is complete in the working tree and uncommitted** |
+| the latest completed wave | **W46** — the consolidation, in six commits ending at `233af984`; before it, **W45.2** — the owner's four architecture decisions (`a6ded233`) |
 | the previous waves | W45.1 (`509d23ba`) — the crash consistency; W45.0 (`eae6003f`) — the cognitive kernel integrity; RECON-W44.0 (`ae6c017b`) — the bytecode archaeology |
-| the active wave | **W46** — the consolidation. W46.0 (the audit), W46.1 (the canonical structure), W46.2 (the reconciliation) and W46.3 (the tooling) are **complete and uncommitted**; the wave waits for the owner's authorisation to commit and to push |
+| the active wave | **W46** — complete and committed. The owner's decisions of 2026-11-05 are recorded (OD-025…OD-034); their implementation is W47 (TASK-W46-16…TASK-W46-22) |
 | the modules | **14** included in `settings.gradle`, 3 commented out, 2 outside Gradle, 1 stray orphan file |
 | the serving entry points | **2** applications — the Quarkus app on **9091** (210 routes) and the brain runtime's JDK server on **8765** (28 routes) |
 | the CLI entry points | **79** |
@@ -127,7 +127,7 @@ validator says so.
 
 | the subject | the document |
 |---|---|
-| the principles | `CONSTITUTION.md` (normative) — and `constitution.md` is an **unfilled template duplicate** of it, a risk, not an alternative |
+| the principles | `CONSTITUTION.md` (normative) — and the unfilled template duplicate `constitution.md` <!-- no-link: removed on 2026-11-05 by the owner's decision; the file is gone --> was **removed on 2026-11-05** — the normative file is untouched |
 | the session rules | `AGENTS.md` (normative, protected) |
 | the decisions | `docs-v2/governance/DECISION-REGISTER.md` |
 | the capabilities | `docs-v2/architecture/CAPABILITY-REGISTRY.yml` |

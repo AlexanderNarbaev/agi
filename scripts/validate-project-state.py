@@ -79,6 +79,7 @@ def main(argv):
 
     root = Path(arguments.root).resolve()
     defects = []
+    observations = []
 
     def defect(kind, subject, note):
         defects.append({"class": kind, "subject": subject, "note": note})
@@ -101,8 +102,24 @@ def main(argv):
     if branch and head:
         if branch not in state_text:
             defect("STALE_BRANCH", branch, "the state does not name the branch")
-        if head not in state_text and head[:8] not in state_text:
-            defect("STALE_COMMIT", head[:8], "the state does not name the commit")
+        named = re.search(r"\b([0-9a-f]{7,40})\b", state_text)
+        if named:
+            commit = named.group(1)
+            if git(root, "cat-file", "-e", commit + "^{commit}") is None:
+                defect("UNKNOWN_COMMIT", commit,
+                       "the state names a commit the repository does not have")
+            elif git(root, "merge-base", "--is-ancestor", commit, "HEAD") is None:
+                defect("STALE_COMMIT", commit,
+                       "the state names a commit that is not an ancestor of HEAD")
+            else:
+                # A snapshot lags its own commit by construction: the commit
+                # that CARRIES the state cannot be named inside it. A lag of
+                # one commit is the normal case, and it is an observation.
+                ahead = git(root, "rev-list", "--count", commit + "..HEAD")
+                if ahead and int(ahead) > 1:
+                    observations.append(
+                        "the state names " + commit[:8] + " and HEAD is "
+                        + str(ahead) + " commits ahead of it")
     else:
         defect("NO_GIT", ".", "git cannot answer; the identity is unverified")
 
@@ -126,12 +143,17 @@ def main(argv):
             return True
         return False
 
-    for token in set(PATH_RE.findall(state_text)):
-        if token.startswith(("io.matrix", "matrix-core.")) or " " in token:
+    for number, line in enumerate(state_text.split("\n"), start=1):
+        if "no-link:" in line:
+            # an explicit exemption: the line names a path in order to say
+            # something about it
             continue
-        if not resolves(token):
-            defect("MISSING_REFERENCE", token,
-                   "the state document points at a document that is not there")
+        for token in set(PATH_RE.findall(line)):
+            if token.startswith(("io.matrix", "matrix-core.")) or " " in token:
+                continue
+            if not resolves(token):
+                defect("MISSING_REFERENCE", token,
+                       "the state document points at a document that is not there")
 
     # 4. the registers: the counts they declare and the counts they hold
     for relative, pattern in REGISTER_PATTERNS:
@@ -162,6 +184,7 @@ def main(argv):
         "branch": branch,
         "head": head,
         "defects": defects,
+        "observations": observations,
         "counts": {},
     }
     for item in defects:
@@ -177,6 +200,8 @@ def main(argv):
             print("    " + item["class"] + "  " + item["subject"] + "  " + item["note"])
     else:
         print("  the defects: 0 — the state agrees with the repository")
+    for observation in observations:
+        print("    observed: " + observation)
 
     if arguments.json:
         with open(arguments.json, "w", encoding="utf-8") as handle:
