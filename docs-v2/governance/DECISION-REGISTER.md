@@ -74,6 +74,12 @@ decisions, then the proposals. Within a kind the newest wave comes first.
 | OD-035 | The retention has THREE tiers: the daily backups of the last 7 days, one weekly point per week for 4 weeks, and one monthly point per month for 12 months | owner | 2026-11-05 | ACCEPTED | OD-029 (refined: the two tiers become three) | `docs-v2/operations/RECOVERY-RUNBOOK.md` §8; `scripts/backup-retention.py` | an operations tool that DELETES files — the policy it implements is the owner's | the owner's answer of 2026-11-05 to the W47 questionnaire, asked because the phrase in OD-029 was ambiguous; the implementation is TASK-W46-17 |
 | OD-036 | A workspace replacement erases the workspace's LEARNING STATE with its knowledge: the assessment items, the learning state, the transitions, the outcomes, the dialogue turns, the asked questions and the hebbian bindings go with the concepts | owner | 2026-11-05 | ACCEPTED | — | `docs-v2/engineering/W47-WORKSPACE-REPLACEMENT-CONTRACT.md` §2 and §5 | the erasure set grows by eight tables, and the snapshot must carry them | the owner's answer of 2026-11-05 to the W47 questionnaire; it closes the residual the W47 contract recorded in §5; the implementation is TASK-W46-16 |
 | OD-037 | The k-anonymity counter counts DISTINCT NODES, as the class promises, not the contributions of one hash | owner | 2026-11-05 | ACCEPTED | — | `docs-v2/specifications/SPEC-016-decentralized-digests.md` | `io.matrix.federation.Anonymizer` counts distinct nodes per content hash | the owner's answer of 2026-11-05 to the W47 questionnaire; the defect is at `matrix-core/src/main/java/io/matrix/federation/Anonymizer.java:25-27` |
+| OD-039 | The snapshot's payload gets a SIZE BOUND, and the snapshot rows inside the database get the same three-tier calendar that the backups have | owner | 2026-11-05 | ACCEPTED | — | `scripts/backup-retention.py` (the calendar), the W48 task on the payload bound | a database that grows without bound is a disk that fills up; the refusal is explicit — the snapshot is not written and the caller is told | the answer to Q-W47-01 of the end-of-wave questionnaire of 2026-11-05; the recommended option was accepted |
+| OD-040 | `matt-pocock` GETS A ROOT `SKILL.md`: the owner's container becomes a skill with its seventeen sub-skills inside it | owner | 2026-11-05 | ACCEPTED | OD-034 (the refusal it reverses) | `.opencode/skills/matt-pocock/SKILL.md` | the harness would offer `matt-pocock` as ONE skill whose body points at the seventeen sub-skills — the container's meaning changes, and the owner has decided that it should | the answer to Q-W47-02 of the end-of-wave questionnaire of 2026-11-05; the owner chose the option the wave had recommended AGAINST, and that choice is theirs to make |
+| OD-041 | One full `matrix-core` suite run is APPROVED: one test JVM, an 8 GiB heap, the other daemons stopped, against a copy of the working tree | owner | 2026-11-05 | ACCEPTED | TASK-W46-11 (the approval it grants) | `docs-v2/engineering/W47-STATUS.md` §10 | the project's total test population becomes a number instead of a set of scopes — the residual R-W46-10 can be closed for this commit | the answer to Q-W47-03 of the end-of-wave questionnaire of 2026-11-05; the live databases are still not touched |
+| OD-042 | The restore DRILL is performed against a COPY of the live database, in a temporary directory, and the elapsed time and the observed result are written into the runbook | owner | 2026-11-05 | ACCEPTED | — | `docs-v2/operations/RECOVERY-RUNBOOK.md` §5 | the recovery claim moves from IMPLEMENTED to VERIFIED — and only the copy is touched; nothing is restored over the live database | the answer to Q-W47-04 of the end-of-wave questionnaire of 2026-11-05 |
+| OD-043 | A COMMITTED GPU BENCHMARK is written: the same model, the same sequence length and iteration count, a warm-up, a median with the dispersion, and the CPU and CUDA cases under comparable conditions | owner | 2026-11-05 | ACCEPTED | — | the `W46-GPU` row of `docs-v2/architecture/CAPABILITY-REGISTRY.yml` | the 12.6× claim becomes either a re-runnable measurement or nothing; the resource cost is one GPU session | the answer to Q-W47-05 of the end-of-wave questionnaire of 2026-11-05 |
+| OD-044 | The curiosity drive's envelope is raised to the COST (100), so that the drive can be paid for; the refusal path stays for the drives that should be refused | owner | 2026-11-05 | ACCEPTED | OD-038 (the fix it completes) | `matrix-core/src/main/java/io/matrix/autonomy/AutonomyEngine.java` | a serving-path change: the gateway's curiosity cycle starts SPENDING budget, and that is observable in the budgeter | the answer to Q-W47-06 of the end-of-wave questionnaire of 2026-11-05; the conjugate budget's number is the owner's to set |
 | OD-038 | The null ImpulseScheduler in the gateway's autonomy loop is fixed in W47, not deferred | owner | 2026-11-05 | ACCEPTED | — | `docs-v2/specifications/SPEC-015-autonomy-impulses.md` (the invariant the fix satisfies) | a serving-path change in chain B | the owner's answer of 2026-11-05 to the W47 questionnaire; the defect is at `matrix-brain-runtime/.../AutonomyLoop.java:38` and `matrix-core/src/main/java/io/matrix/autonomy/AutonomyEngine.java:75` |
 | OD-034 | The four skill packages whose declared name differs from their directory are FIXED: the names are corrected | owner | 2026-11-05 | ACCEPTED | — | `docs-v2/governance/SKILL-INVENTORY.md` §1 and §3 | the owner's library and the plugin bundle — NOT changed in W46 | the owner's answer of 2026-11-05; the implementation is TASK-W46-22 |
 | ADR-2026-09-12-001 | Adopt an HDC × BitLinear × Boolean hybrid brain as an architectural primitive, orthogonal to MPDP | normative | 2026-09-12 | ACCEPTED | — | `docs-v2/architecture/ADR-2026-09-12-001-hdc-bitlinear-hybrid-brain.md` | a contract | the document names no decider; it is a standing architectural rule, referenced by `docs-v2/engineering/STANDARDS-MATRIX.md` as Accepted |
@@ -380,6 +386,73 @@ questions they answered, and every one of them names the task that implements it
 - **the document that holds it**: `docs-v2/specifications/SPEC-015-autonomy-impulses.md` (the invariant the fix satisfies)
 - **the effect on the runtime**: a serving-path change in chain B
 - **the evidence or the scope of the approval**: the owner's answer of 2026-11-05 to the W47 questionnaire; the defect is at `matrix-brain-runtime/.../AutonomyLoop.java:38` and `matrix-core/src/main/java/io/matrix/autonomy/AutonomyEngine.java:75`
+
+## 3.3 The end-of-wave questionnaire of 2026-11-05 — six questions, six answers
+
+**The mandatory instrument of §16 was used: the harness's `ask_user_question` tool.**
+The questions, their evidence, their alternatives and their consequences are in
+`docs-v2/engineering/W47-QUESTIONNAIRE.md`; the answers are below, and the tasks they
+create are in `docs-v2/governance/ROADMAP.md` §4.6.
+
+### OD-039 — The snapshot's payload gets a SIZE BOUND, and the snapshot rows inside the database get the same three-tier calendar that the backups have
+
+- **kind**: owner
+- **the date**: 2026-11-05
+- **the status**: ACCEPTED
+- **the successor**: —
+- **the document that holds it**: `scripts/backup-retention.py` (the calendar), the W48 task on the payload bound
+- **the effect on the runtime**: a database that grows without bound is a disk that fills up; the refusal is explicit — the snapshot is not written and the caller is told
+- **the evidence or the scope of the approval**: the answer to Q-W47-01 of the end-of-wave questionnaire of 2026-11-05; the recommended option was accepted
+
+### OD-040 — `matt-pocock` GETS A ROOT `SKILL.md`: the owner's container becomes a skill with its seventeen sub-skills inside it
+
+- **kind**: owner
+- **the date**: 2026-11-05
+- **the status**: ACCEPTED
+- **the successor**: OD-034 (the refusal it reverses)
+- **the document that holds it**: `.opencode/skills/matt-pocock/SKILL.md`
+- **the effect on the runtime**: the harness would offer `matt-pocock` as ONE skill whose body points at the seventeen sub-skills — the container's meaning changes, and the owner has decided that it should
+- **the evidence or the scope of the approval**: the answer to Q-W47-02 of the end-of-wave questionnaire of 2026-11-05; the owner chose the option the wave had recommended AGAINST, and that choice is theirs to make
+
+### OD-041 — One full `matrix-core` suite run is APPROVED: one test JVM, an 8 GiB heap, the other daemons stopped, against a copy of the working tree
+
+- **kind**: owner
+- **the date**: 2026-11-05
+- **the status**: ACCEPTED
+- **the successor**: TASK-W46-11 (the approval it grants)
+- **the document that holds it**: `docs-v2/engineering/W47-STATUS.md` §10
+- **the effect on the runtime**: the project's total test population becomes a number instead of a set of scopes — the residual R-W46-10 can be closed for this commit
+- **the evidence or the scope of the approval**: the answer to Q-W47-03 of the end-of-wave questionnaire of 2026-11-05; the live databases are still not touched
+
+### OD-042 — The restore DRILL is performed against a COPY of the live database, in a temporary directory, and the elapsed time and the observed result are written into the runbook
+
+- **kind**: owner
+- **the date**: 2026-11-05
+- **the status**: ACCEPTED
+- **the successor**: —
+- **the document that holds it**: `docs-v2/operations/RECOVERY-RUNBOOK.md` §5
+- **the effect on the runtime**: the recovery claim moves from IMPLEMENTED to VERIFIED — and only the copy is touched; nothing is restored over the live database
+- **the evidence or the scope of the approval**: the answer to Q-W47-04 of the end-of-wave questionnaire of 2026-11-05
+
+### OD-043 — A COMMITTED GPU BENCHMARK is written: the same model, the same sequence length and iteration count, a warm-up, a median with the dispersion, and the CPU and CUDA cases under comparable conditions
+
+- **kind**: owner
+- **the date**: 2026-11-05
+- **the status**: ACCEPTED
+- **the successor**: —
+- **the document that holds it**: the `W46-GPU` row of `docs-v2/architecture/CAPABILITY-REGISTRY.yml`
+- **the effect on the runtime**: the 12.6× claim becomes either a re-runnable measurement or nothing; the resource cost is one GPU session
+- **the evidence or the scope of the approval**: the answer to Q-W47-05 of the end-of-wave questionnaire of 2026-11-05
+
+### OD-044 — The curiosity drive's envelope is raised to the COST (100), so that the drive can be paid for; the refusal path stays for the drives that should be refused
+
+- **kind**: owner
+- **the date**: 2026-11-05
+- **the status**: ACCEPTED
+- **the successor**: OD-038 (the fix it completes)
+- **the document that holds it**: `matrix-core/src/main/java/io/matrix/autonomy/AutonomyEngine.java`
+- **the effect on the runtime**: a serving-path change: the gateway's curiosity cycle starts SPENDING budget, and that is observable in the budgeter
+- **the evidence or the scope of the approval**: the answer to Q-W47-06 of the end-of-wave questionnaire of 2026-11-05; the conjugate budget's number is the owner's to set
 
 ## 4. The duplicate-identifier problem
 

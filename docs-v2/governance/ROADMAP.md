@@ -117,6 +117,22 @@ owner's decisions, and each one is an implementation task.
 | **TASK-W46-24** | the k-anonymity counter counts distinct nodes | `Anonymizer.recordContribution` counts the NODES that contributed a hash, not the contributions of one hash, as the class's own javadoc promises | `io.matrix.federation.Anonymizer` | OD-037 | low — an island class, no production caller | the same hash from two nodes counts 2; the same hash twice from one node counts 1; a test that fails against the old implementation | the executed tests | **yes** — it is approved |
 | **TASK-W46-25** | the gateway's autonomy loop must not die | the loop must not throw a NullPointerException 120 seconds after the gateway starts; the correct behaviour is decided from the code and stated in the specification | `io.matrix.autonomy.AutonomyEngine`, the brain runtime's `AutonomyLoop` | OD-038 | **medium** — a serving-path change | the loop survives its first cycle; the behaviour is stated in SPEC-015; a test that fails against the current wiring | the executed tests | **yes** — it is approved |
 
+### 4.6 The tasks the end-of-wave questionnaire created
+
+**Six questions, six answers, through the harness's `ask_user_question` tool, on 2026-11-05.**
+The questions and their alternatives are in `docs-v2/engineering/W47-QUESTIONNAIRE.md`; the
+answers are OD-039…OD-044. Two of them are implemented in this wave; four are the first
+tasks of W48.
+
+| the id | the task | the goal | the decision | the status |
+|---|---|---|---|---|
+| **TASK-W46-26** | the container `matt-pocock` gets a root manifest | the owner decided that the container SHOULD change: it becomes one skill whose body indexes the seventeen disciplines inside it | OD-040 | **done in W47** — `.opencode/skills/matt-pocock/SKILL.md`, and the harness now discovers it |
+| **TASK-W46-27** | the curiosity drive's envelope is the cost | the drive can be paid for, and the refusal path stays for the drives that should be refused | OD-044 | **done in W47** — `AutonomyEngine.java:116`, with a test that fails against the old envelope |
+| **TASK-W47-01** | the snapshot's size bound, and the three-tier calendar on the rows | the database's own growth is bounded the way the backups are | OD-039 | **W48** — the first task of the next wave |
+| **TASK-W47-02** | the restore drill | a restore is performed against a COPY of the live database, and the result is written into the runbook | OD-042 | **W48** |
+| **TASK-W47-03** | the committed GPU benchmark | the 12.6× claim becomes a re-runnable measurement or nothing | OD-043 | **W48** |
+| **TASK-W46-11** | the full `matrix-core` suite | the project's total test population becomes a number | OD-041 | **approved and run in W47** — one JVM, an 8 GiB heap, the other daemons stopped |
+
 ## 5. The blocked tasks
 
 **TASK-W46-9 is no longer here**: the owner's decision OD-028 of 2026-11-05 unblocked it, and

@@ -389,6 +389,13 @@ with their answer, because a closed question is the proof that the project once 
 describe is **not** implemented — the owner's instruction for this wave was to fix the
 decisions and to leave the code to W47. Every closed question names the task that implements it.
 
+> **The end-of-wave questionnaire of 2026-11-05 was ASKED AND ANSWERED** — six questions
+> through the harness's `ask_user_question` tool, the questions in
+> `docs-v2/engineering/W47-QUESTIONNAIRE.md`, the answers in OD-039…OD-044, the tasks in
+> `docs-v2/governance/ROADMAP.md` §4.6. One of the six answers went AGAINST the wave's
+> recommendation — the owner chose to give the `matt-pocock` container a root manifest, where
+> the wave had recommended leaving it alone — and that choice is the owner's to make.
+>
 > **W47 (2026-11-05) — the decisions of this wave are now IMPLEMENTED.** The owner's
 > instruction was carried out: TASK-W46-16, TASK-W46-17, TASK-W46-18, TASK-W46-20,
 > TASK-W46-21 and TASK-W46-22 are done, and the three tasks the questionnaire created

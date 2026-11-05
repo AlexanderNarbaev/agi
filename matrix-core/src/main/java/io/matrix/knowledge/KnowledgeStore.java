@@ -172,9 +172,9 @@ public final class KnowledgeStore implements AutoCloseable {
      *
      * <p><b>What is NOT erased.</b> The snapshot table is not erased: it is the recoverable
      * copy of what the replacement destroyed. And the rows that belong to no workspace — the
-     * workspace table's own rows of other workspaces, the cognitive store's tables, which
-     * live in another file — are not erased either; a replacement is a decision about ONE
-     * workspace.</p>
+     * workspace table's own rows of other workspaces, and the cognitive store's tables,
+     * which live in the same file but are written by another store — are not erased either;
+     * a replacement is a decision about ONE workspace.</p>
      */
     private static final List<ErasedTable> ERASED_TABLES = List.of(
             new ErasedTable("observation_occurrence", "workspace_id = ?", false),

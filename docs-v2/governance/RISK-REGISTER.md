@@ -16,7 +16,7 @@ implemented, tested and never called has no exposure, and saying so is part of t
 
 | the id | the risk | the severity | the probability | the status |
 |---|---|---|---|---|
-| [R-W46-01](#r-w46-01--the-destructive-workspace-reload-erases-the-evidence-of-an-observation-while-keeping-its-case-disposition-and-adjudication-history)| The destructive workspace reload erases the evidence of an observation while keeping its case, disposition and adjudication history | high | medium | OPEN-OWNER-DECISION 
+| [R-W46-01](#r-w46-01--the-destructive-workspace-reload-erases-the-evidence-of-an-observation-while-keeping-its-case-disposition-and-adjudication-history)| The destructive workspace reload erases the evidence of an observation while keeping its case, disposition and adjudication history | high | medium | CLOSED — W47, OD-025 and TASK-W46-16 
 | [R-W46-02](#r-w46-02--no-whole-database-backup-or-restore-procedure-exists-for-the-canonical-knowledge-database)| No whole-database backup or restore procedure exists for the canonical knowledge database | high | medium | OPEN 
 | [R-W46-03](#r-w46-03--the-writer-guard-does-not-resolve-path-aliases-so-two-writers-can-open-the-same-file-through-different-paths)| The writer guard does not resolve path aliases, so two writers can open the same file through different paths | high | low | OPEN 
 | [R-W46-04](#r-w46-04--the-writer-guard-degrades-to-a-per-host-guarantee-on-a-filesystem-that-does-not-coordinate-cross-host-locks)| The writer guard degrades to a per-host guarantee on a filesystem that does not coordinate cross-host locks | medium | low | DOCUMENTED-OPEN 
@@ -34,9 +34,13 @@ implemented, tested and never called has no exposure, and saying so is part of t
 | [R-W46-16](#r-w46-16--the-gateways-jax-rs-facade-constructs-a-stub-cycle-and-is-not-mounted)| The gateway's JAX-RS facade constructs a stub cycle and is not mounted | low | high | CLOSED 
 | [R-W46-17](#r-w46-17--a-dormant-subsystem-is-not-a-production-vulnerability-and-the-two-must-not-be-conflated)| A dormant subsystem is not a production vulnerability, and the two must not be conflated | medium | medium | OPEN 
 | [R-W46-18](#r-w46-18--the-observation-tables-grow-without-a-retention-policy)| The observation tables grow without a retention policy | low | medium | OPEN-OWNER-DECISION 
-| [R-W46-19](#r-w46-19--the-documentation-link-graph-is-not-checked-by-anything)| The documentation link graph is not checked by anything | medium | high | OPEN 
+| [R-W46-19](#r-w46-19--the-documentation-link-graph-is-not-checked-by-anything)| The documentation link graph is not checked by anything | medium | high | CLOSED — W46, the link checker is in the quality gate 
 | [R-W46-20](#r-w46-20--w46-itself-must-not-commit-or-push-without-the-owners-authorisation-so-the-waves-evidence-lives-only-in-the-working-tree)| W46 itself must not commit or push without the owner's authorisation, so the wave's evidence lives only in the working tree | low | high | ACCEPTED 
 | [R-W46-21](#r-w46-21--two-agents-editing-the-same-file-in-one-wave-the-coordinator-and-a-worker-both-write-into-docs-v2governance-and-a-build-by-one-rewrites-the-compiled-classes-another-is-reading)| Two agents editing the same file in one wave: the coordinator and a worker both write into docs-v2/governance/, and a build by one rewrites the compiled classes another is reading | medium | medium | OPEN 
+| [R-W47-01](#r-w47-01--the-trigger-tables-authoritative-copy-lives-in-another-repository-so-the-four-new-skill-slugs-exist-only-in-this-repositorys-fork)| The trigger table's authoritative copy lives in another repository, so the four new skill slugs exist only in this repository's fork | low | medium | OPEN 
+| [R-W47-02](#r-w47-02--the-retired-plugin-asset-planretired-backup-still-declares-the-name-plan-which-collides-with-a-live-package)| The retired plugin asset `plan.retired-backup` still declares the name `plan`, which collides with a live package | low | low | ACCEPTED-BY-DECISION 
+| [R-W47-03](#r-w47-03--a-fired-autonomy-impulse-has-no-consumer-the-schedulers-counters-are-reachable-but-nothing-subscribes-to-the-impulse)| A fired autonomy impulse has no consumer: the scheduler's counters are reachable, but nothing subscribes to the impulse | medium | medium | OPEN 
+| [R-W47-04](#r-w47-04--the-126-gpu-speed-up-is-a-number-from-an-ad-hoc-probe-that-was-never-preserved-so-it-cannot-be-re-run)| The 12.6× GPU speed-up is a number from an ad-hoc probe that was never preserved, so it cannot be re-run | medium | high | OPEN-OWNER-DECISION 
 
 ---
 
@@ -52,7 +56,8 @@ implemented, tested and never called has no exposure, and saying so is part of t
 - **exposure**: Real: the HTTP endpoint is reachable and the owner's workspace is the one being replaced
 - **mitigation**: Take the observation tables out of the erasure set, or erase them together with the evidence. The first is the smaller change and it changes what a workspace replacement MEANS, so it is the owner's decision (D3-c).
 - **owner**: owner (decision); agent (implementation)
-- **status**: OPEN-OWNER-DECISION
+- **status**: CLOSED — the owner decided (OD-025, 2026-11-05) and W47 implemented it (TASK-W46-16, commit `84955ec9`). The four observation tables and the epistemic case are erased WITH the evidence, in the order their references require, and the snapshot carries them. The erasure set grew further in W47 (OD-036): the learning state goes with the knowledge too.
+- **the residual**: none of the original defect survives. The schema still declares no foreign key, so the ORDER of the erasure is a contract the code keeps and not a constraint the database checks — the contract test asserts the absence of dangling references instead, and it failed loudly once, on an incomplete fixture.
 
 ### R-W46-02 — No whole-database backup or restore procedure exists for the canonical knowledge database
 
@@ -256,7 +261,7 @@ implemented, tested and never called has no exposure, and saying so is part of t
 - **exposure**: Low: the growth is bounded by the request rate
 - **mitigation**: Record the growth in the risk register and decide the retention policy as an owner question, not silently.
 - **owner**: owner (decision)
-- **status**: OPEN-OWNER-DECISION
+- **status**: OPEN — and now precisely bounded. The owner's decision of 2026-11-05 (OD-035, TASK-W46-17) governs the BACKUPS: three tiers, outside the repository, with a tool that refuses to delete a valid copy. It does NOT bound what the live database keeps: the snapshot payload is still unbounded (the W45.2 residual) and the observation tables still grow. The owner approved the bound on 2026-11-05 (OD-039): a size limit on the payload, and the same three-tier calendar on the snapshot ROWS. That is TASK-W47-01, the first task of W48.
 
 ### R-W46-19 — The documentation link graph is not checked by anything
 
@@ -294,6 +299,54 @@ implemented, tested and never called has no exposure, and saying so is part of t
 - **owner**: coordinator
 - **status**: OPEN
 
+
+### R-W47-01 — The trigger table's authoritative copy lives in another repository, so the four new skill slugs exist only in this repository's fork
+
+- **category**: configuration
+- **severity**: low
+- **probability**: medium
+- **impact**: low
+- **evidence**: the generator that writes the trigger mirror is `src/lib/53-auto-skills.sh` — this repository's copy carries the four new slugs, and the authoritative copy lives in `~/Projects/opencode_initializer`, which does not. The installer's progress file (`~/.cache/opencode-setup/progress`) currently marks the step done, so the next run skips the regeneration.
+- **exposure**: real but bounded: until the progress file is reset, nothing overwrites the mirror, and the four slugs survive. If the progress file IS reset, the installer regenerates the mirror from the old copy and the four slugs disappear — the skills still exist and are still discovered by the harness, but the trigger table stops suggesting them.
+- **mitigation**: bring the two copies together, or write down that this repository's copy is the source of truth for the four MATRIX slugs.
+- **owner**: the owner (the other repository is the owner's bootstrap repository)
+- **status**: OPEN
+
+### R-W47-02 — The retired plugin asset `plan.retired-backup` still declares the name `plan`, which collides with a live package
+
+- **category**: identity
+- **severity**: low
+- **probability**: low
+- **impact**: low
+- **evidence**: `.swarm/bundled-skills/plan.retired-backup/SKILL.md` declares `name: plan`; a live `plan` exists at `.opencode/skills/plan` and in the user's skill root. The asset is retired by its directory name, untracked in git, and reinstalled by the opencode-swarm plugin.
+- **exposure**: low — the harness's own name rule forbids a dot, so the package cannot be loaded under its directory name, and the retired asset is not in any of the harness's roots.
+- **mitigation**: the owner decided on 2026-11-05 (OD-040, and Q-W47-02) to leave it: reviving a retired bundle or renaming another bundle's file is not the project's to do.
+- **owner**: the owner
+- **status**: ACCEPTED-BY-DECISION
+
+### R-W47-03 — A fired autonomy impulse has no consumer: the scheduler's counters are reachable, but nothing subscribes to the impulse
+
+- **category**: functional-gap
+- **severity**: medium
+- **probability**: medium
+- **impact**: medium
+- **evidence**: `ImpulseScheduler.fire` returns a `FireRecord` and dispatches to nobody; nothing in the tree subscribes to `AutonomyImpulse.CURIOSITY` or `INTEGRITY_CHECK`. The effects of a fired impulse are the budget reservation and the scheduler's counters.
+- **exposure**: real — the drive is paid for and counted, and nothing acts on it. Before W47 the drive was not even paid for (the null scheduler) and then was always refused (the envelope of 50 against a cost of 100).
+- **mitigation**: the owner's decision of 2026-11-05 (OD-044) raised the envelope to the cost, so the drive is paid for; wiring an impulse to a consumer is a design question that this wave did not answer inside a defect fix.
+- **owner**: the owner (the design); the coordinator (the task)
+- **status**: OPEN
+
+### R-W47-04 — The 12.6× GPU speed-up is a number from an ad-hoc probe that was never preserved, so it cannot be re-run
+
+- **category**: evidence
+- **severity**: medium
+- **probability**: high
+- **impact**: medium
+- **evidence**: the figures (191.367 ms on the CPU against 15.190 ms on CUDA) come from the W46 hardware report; the probe that produced them is not in the repository, so no one can re-run it. The `W46-GPU` row of the capability registry now says so in `next_verification_condition`.
+- **exposure**: real — the claim is published in the hardware report and would be read as a measurement.
+- **mitigation**: the owner approved a committed benchmark on 2026-11-05 (OD-043): the same model, the same sequence length and iteration count, a warm-up, a median with the dispersion, and the CPU and CUDA cases under comparable conditions.
+- **owner**: the agent (the task); the owner (the approval, given)
+- **status**: OPEN-OWNER-DECISION — the decision is given; the task is TASK-W47-03, in W48
 ---
 
 ## How a risk is closed
