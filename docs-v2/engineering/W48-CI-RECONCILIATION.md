@@ -456,10 +456,12 @@ document that reports "success" without them would be reporting half the state.*
    module is not even reached (§4.3).
 3. **The GPU path** — no CI job, no tracked CUDA libraries, no re-runnable artefact
    (§4.4).
-4. **`scripts/formal-gate.sh` was not executed locally.** Its digest check was read
-   (`scripts/formal-gate.sh:39-53`) and the tracked jar's digest was verified
-   directly (`sha256sum --check --strict` → `OK`); the script's own end-to-end run
-   would model-check 15 specifications, which is a build, and this document ran none.
+4. **`scripts/formal-gate.sh` was not executed locally** — **this is no longer true.**
+   It was executed on 2026-11-06 after this reading, with the JDK 25 on the PATH:
+   `scripts/formal-gate.sh` → **"the formal gate: 15 passed, 0 failed"** (every
+   specification in `formal/` model-checked, the pinned jar's digest verified by the
+   script itself before the first specification ran). The local gate and the CI gate
+   now model-check the same specifications with the same verified bytes.
 5. **The W47 full-suite denominator** (1 226 classes / 9 051 executions) is quoted by
    `docs-v2/engineering/W48-TEST-RECONCILIATION.md`, not re-derived here.
 6. **No claim is made about the tree after `4adbc664`.** A CI state is a claim about a

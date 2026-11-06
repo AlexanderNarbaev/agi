@@ -68,7 +68,7 @@ operationally rehearsed, or documented.
 | W48-01 | the legacy-snapshot restore compatibility | **DONE** | locally tested — 12 tests on real temporary SQLite databases | `4084538a`, `4ddcb58d` |
 | W48-02 | the gateway's path-portable tests | **DONE** | locally tested | `0c5b3980` |
 | W48-03 | the branch validation and the GraalVM action | **DONE** | CI tested — the workflow's own steps; the compile was reached in CI | `02d2a516` |
-| W48-04 | the TLA artifact's immutability and the CI formal execution | **DONE** | CI tested + model-checked — 15 specifications, `tools/tla2tools.jar: OK` | `16a2d0c5`, `9bb6bf5c` |
+| W48-04 | the TLA artifact's immutability and the CI formal execution | **DONE** | CI tested + model-checked — 15 specifications, `tools/tla2tools.jar: OK`; and the LOCAL formal gate: **15 passed, 0 failed** | `16a2d0c5`, `9bb6bf5c` |
 | W48-05 | the quality gate's scope and the historical documents | **DONE** | locally tested + CI tested — 0 strict link failures locally, and DOCS-1 **PASS** on the clean runner (`42181161742`), with the historical archive reported separately | `f5870f4c`, `d1f2e0fb`, `64f43f74` |
 | W48-06 | the full-suite failure reconciliation and the numerical/compliance repairs | **DONE** for 2 of 25, **BLOCKED** for the 23 native | locally tested — the 23 re-measured, 2 fixed and green | `241af1e1`, `4adbc664`, `31d8f832`, `40b0942c` |
 | W48-07 | the snapshot size measurement, the bound and the row retention | **DONE** | locally tested — 12 tests and the tool's own 40 checks; the measurement was taken on a copy | `33d199e2` |
