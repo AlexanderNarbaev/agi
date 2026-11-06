@@ -81,10 +81,19 @@
 #    tool is now tracked in the repository, and the job verifies the tracked
 #    bytes.
 #
+# The third change is the SAME repair applied to the second workflow:
+#
+# 3. ci.yml — the "Quality gates" job of the main workflow carried a copy of
+#    the download step that the tla.yml repair had already removed, so the
+#    main workflow was still red at the very step that had just been fixed
+#    elsewhere. The step now verifies the tracked bytes, exactly as tla.yml
+#    does, and the two workflows cannot drift apart again because neither of
+#    them downloads anything.
+#
 # What did NOT change: the triggers, the permissions, the secrets, the
 # concurrency settings and the cache configuration. The exception is
 # recorded here rather than waved through, so that the amount of the change
 # stays visible and the expiry stays real.
 
-.github/ | 946 | repo-owner | 2026-12-31
+.github/ | 958 | repo-owner | 2026-12-31
 AGENTS.md | 63 | repo-owner | 2026-12-31
