@@ -53,6 +53,45 @@ readonly STARTUP_WAIT_SECONDS=60
 # own cleanup removes what the earlier runs left behind.
 readonly SCRATCH="$ROOT/data/tmp"
 mkdir -p "$SCRATCH"
+
+# W48-00 — the check must not be able to touch the owner's live database.
+#
+# The application was started with the DEFAULT configuration, and the default
+# knowledge path is "data/knowledge/workbench.sqlite" — the owner's live file,
+# relative to the working directory the check runs in. The check therefore
+# OPENED the live database, and the store migrated it: the live file was at
+# schema v16 before W47 and at v19 after it. Nothing detected it.
+#
+# The check now points the application at a database inside its own scratch
+# directory, and the gate below PROVES the live file was not touched: its
+# digest and its modification time are recorded before and after the run.
+readonly LIVE_DB="$ROOT/data/knowledge/workbench.sqlite"
+readonly LIVE_MIND_DB="$ROOT/data/mind/mind.sqlite"
+readonly CHECK_DB="$SCRATCH/security-boundary/knowledge/workbench.sqlite"
+mkdir -p "$(dirname "$CHECK_DB")"
+
+live_digest() {
+    local file="$1"
+    if [ -f "$file" ]; then
+        sha256sum "$file" | awk '{print $1}'
+    else
+        echo "absent"
+    fi
+}
+
+live_mtime() {
+    local file="$1"
+    if [ -f "$file" ]; then
+        stat -c %Y "$file"
+    else
+        echo "absent"
+    fi
+}
+
+readonly LIVE_DB_DIGEST_BEFORE="$(live_digest "$LIVE_DB")"
+readonly LIVE_DB_MTIME_BEFORE="$(live_mtime "$LIVE_DB")"
+readonly LIVE_MIND_DIGEST_BEFORE="$(live_digest "$LIVE_MIND_DB")"
+readonly LIVE_MIND_MTIME_BEFORE="$(live_mtime "$LIVE_MIND_DB")"
 # How long the check waits for the startup GUARD to fire.
 readonly GUARD_WAIT_SECONDS=45
 # The timeout of a single HTTP request to the application.
@@ -129,6 +168,7 @@ bound_to() {
 echo "===== 1. LOCAL-ONLY: loopback bound, anonymous write allowed ====="
 QUARKUS_HTTP_PORT=$PORT_LOCAL \
   java -Djava.io.tmpdir="$SCRATCH" -Dmatrix.auto-train.enabled=false \
+       -Dmatrix.knowledge.path="$CHECK_DB" \
        -jar "$JAR" >/tmp/w43-security-local.log 2>&1 &
 APP_PID=$!
 
@@ -170,6 +210,7 @@ echo "===== 2. NETWORK-EXPOSED without a credential: the process refuses to star
 QUARKUS_HTTP_PORT=$PORT_EXPOSED \
   java -Dmatrix.auto-train.enabled=false \
        -Dmatrix.security.mode=NETWORK_EXPOSED \
+       -Dmatrix.knowledge.path="$CHECK_DB" \
        -jar "$JAR" >/tmp/w43-security-guard.log 2>&1 &
 APP_PID=$!
 # The application takes some seconds to reach its startup event, so the
@@ -200,6 +241,7 @@ echo "===== 3. NETWORK-EXPOSED with a credential: anonymous write refused ====="
 QUARKUS_HTTP_PORT=$PORT_EXPOSED QUARKUS_HTTP_HOST=0.0.0.0 \
   java -Dmatrix.auto-train.enabled=false \
        -Dmatrix.security.mode=NETWORK_EXPOSED \
+       -Dmatrix.knowledge.path="$CHECK_DB" \
        -Dmatrix.security.token="$TOKEN" \
        -jar "$JAR" >/tmp/w43-security-exposed.log 2>&1 &
 APP_PID=$!
@@ -249,7 +291,37 @@ cleanup
 
 echo
 if [ "$FAILURES" -eq 0 ]; then
-  echo "the security boundary: 0 — every assertion held"
+  # W48-00 — the live database must be exactly as it was.
+#
+# The check used to open the owner's live knowledge database, and the store
+# migrated it. The gate below is the proof that it does not happen any more:
+# the digest and the modification time of both live files are compared with
+# what they were before the run. A difference is a FAILURE, not a note.
+live_unchanged() {
+    local label="$1" file="$2" digest_before="$3" mtime_before="$4"
+    local digest_after mtime_after
+    digest_after="$(live_digest "$file")"
+    mtime_after="$(live_mtime "$file")"
+    if [ "$digest_before" != "$digest_after" ] || [ "$mtime_before" != "$mtime_after" ]; then
+        echo "  FAIL    the live $label was modified by this check: $file"
+        echo "          the digest was $digest_before and is $digest_after"
+        echo "          the modification time was $mtime_before and is $mtime_after"
+        return 1
+    fi
+    echo "  OK    the live $label was not touched: $file"
+    return 0
+}
+
+VIOLATIONS=0
+live_unchanged "knowledge database" "$LIVE_DB" "$LIVE_DB_DIGEST_BEFORE" "$LIVE_DB_MTIME_BEFORE" || VIOLATIONS=$((VIOLATIONS + 1))
+live_unchanged "mind database" "$LIVE_MIND_DB" "$LIVE_MIND_DIGEST_BEFORE" "$LIVE_MIND_MTIME_BEFORE" || VIOLATIONS=$((VIOLATIONS + 1))
+
+if [ "$VIOLATIONS" -ne 0 ]; then
+    echo "the security boundary: $VIOLATIONS violation(s) — the live data was touched"
+    exit 1
+fi
+
+echo "the security boundary: 0 — every assertion held, and the live data is untouched"
   exit 0
 fi
 echo "the security boundary: $FAILURES — assertion(s) failed"
