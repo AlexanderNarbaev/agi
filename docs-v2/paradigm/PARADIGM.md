@@ -162,7 +162,7 @@ Intelligent Chain Automata.** Не аббревиатура — операцио
 | Среда | Характеристика | Реализация |
 |---|---|---|
 | **CPU** | массовый деплой, edge | Java 25, BIR-interpreter |
-| **GPU** | ускорение off-line обучения | CUDA-опционально через `tools/distill/` |
+| **GPU** | ускорение off-line обучения | CUDA-опционально через `tools/distill/` <!-- no-link: the v1 tree was removed by the migration to docs-v2 (Q-W46-21) --> |
 | **FPGA** | детерминированный ускоритель | BIR в HDL (будущее) |
 | **Pocket** | микроконтроллер | BIR в firmware (будущее) |
 

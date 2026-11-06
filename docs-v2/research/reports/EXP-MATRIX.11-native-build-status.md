@@ -61,7 +61,7 @@ doesn't update the remote cache.
 
 ## Files changed (this wave, but not yet pushed)
 
-- `matrix-core/src/main/resources/META-INF/native-image/proxy-config.json` → DELETED locally
+- `matrix-core/src/main/resources/META-INF/native-image/proxy-config.json` <!-- no-link: the file was never created; the native-image experiment could not run on this host --> → DELETED locally
 - `matrix-core/src/main/resources/META-INF/native-image/reflect-config.json` → NEW locally
 - `consolidated_weights.avro` → truncated to 0 bytes locally
 
@@ -71,7 +71,7 @@ GitHub's LFS cache to expire (not documented).
 
 ## Status
 
-- Uber-jar: ✅ works (`matrix-core/build/matrix-core-1.0.0-runner.jar`)
+- Uber-jar: ✅ works (`matrix-core/build/matrix-core-1.0.0-runner.jar` <!-- no-link: a build artefact, not a repository file -->)
 - Native: ❌ blocked by environment (no Mandrel container; local GraalVM 25.0.2 has class-init issues with this Quarkus config)
 - Push: ❌ blocked by GitHub LFS cache for `consolidated_weights.avro`
 

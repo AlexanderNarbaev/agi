@@ -618,7 +618,32 @@ Found while fixing the ledger, and not previously reported by anything. In
 3. `durationMs` and the row timestamp were two separate clock reads, so a row could report a
    timestamp earlier than the duration preceding it. Now one read feeds both.
 
-### OPEN — NEEDS-OWNER: `samplesUsed` is defined as two different things at once
+### CLOSED (RECON-W34.4) — `samplesUsed` is defined as two different things at once
+
+**This entry was open and is not.** It is recorded here in the past tense
+because the file said "NEEDS-OWNER" about a question the owner had already
+ruled on in RECON-W34.4, and the stale text was carried into the RECON-W40
+reconnaissance as a live defect.
+
+**The ruling.** `TrueDistillationFactory.distill` now passes each field its
+own real unit: `inputBits` carries BYTES and `samplesUsed` carries a COUNT.
+The comment in the code says so: *"Operator ruling: each field reports its
+own real unit."* `DistillationLedger.summary()` reports both under
+distinctly named keys — `total_inputs_count` and `total_inputs_bytes` — so
+the transposition cannot be read the wrong way.
+
+**Verified.** `./gradlew :matrix-brain-runtime:test --tests "*Distillation*"`
+— 46 tests across 7 classes, 0 failures, 0 errors, including
+`DistillationLedgerRobustnessTest` (9), `DistillationFactoryIntegrationTest`
+(11) and `TrueDistillationFactoryIntegrationTest` (9).
+
+The original reasoning is kept below, because the citations are the reason
+the ruling is checkable.
+
+<details>
+<summary>The original entry (RECON-W34.1), kept for the citations</summary>
+
+### OPEN (at RECON-W34.1) — NEEDS-OWNER: `samplesUsed` is defined as two different things at once
 
 `TrueDistillationFactoryIntegrationTest.distill_appends_ledger_row_with_real_engine_identity`
 expects `inputsCount() == 8`, and `inputsCount()` is an alias for `samplesUsed` — so
@@ -633,9 +658,13 @@ Both cannot hold. The current factory writes `(int) sourceBytes` into `samplesUs
 mishap from the snake_case → camelCase schema migration, where `inputs_count` and
 `inputs_bytes` were separate fields that no longer have separate homes.
 
-**Not guessed at.** Picking either side changes the meaning of persisted ledger data, and the
+**Not guessed at** (at the time). Picking either side changes the meaning of persisted ledger data, and the
 wrong pick silently corrupts a record other tools read. Recorded as NEEDS-OWNER with both
 test citations so the decision is one reading rather than an archaeology exercise.
+
+**The owner ruled in RECON-W34.4**: each field reports its own real unit.
+
+</details>
 
 ### Also corrected in tests, with the reasoning kept in place
 
@@ -1217,7 +1246,7 @@ operator can run:
 
 ---
 
-## Exp228ComplianceTest.realProjectCompliance — awaiting an operator ruling, and the gate is narrower than the constitution
+## Exp228ComplianceTest.realProjectCompliance — RESOLVED in W36.1 via Article I classification
 
 `Exp228ComplianceTest` runs `BrainLoopCompliance.check` over `matrix-core/src/main/java` and
 asserts `compliant()`. That method computes:
@@ -2056,3 +2085,53 @@ eleven modules.** A single 11-module line has produced this phantom more than on
 occurrence looked like a real regression. A red build that disappears when you re-run the same
 test alone is not evidence of anything, and it cost roughly an hour of chasing a defect that did
 not exist.
+
+## W37.5b — Exp324 latency assertion is machine-load-sensitive (diagnostic, not loosened)
+
+`Exp324EndToEndForwardPassTest.endToEndForwardPassLatency()` failed once during a full
+`matrix-core:test` run and passed 6/6 in isolation. It asserts the chain forward-pass median is
+under 2000 us.
+
+The recorded distribution from the failing run is the whole story:
+
+    [Exp324] forward-pass latency p50=19240 us p95=29067 us p99=35119 us avg=20232 us
+    [Exp324] per-stage avg: BPE_encode=20757 us, chain_forward(24 blocks)=1444 us, LM_head_score=4.5 us
+    [Exp324] chain_forward distribution: median=1411 us p95=1792 us max=1997 us mean=1444 us
+
+**The asserted quantity passed.** chain_forward median was 1411 us against a 2000 us bound, with max
+1997 us. What failed the surrounding test was `BPE_encode` averaging 20,757 us — fourteen times the
+entire chain budget — because the JVM was sharing a loaded machine with the other ~8000 tests in the
+suite.
+
+**The bound was NOT loosened.** 2000 us is a real property of the chain and the chain still meets
+it. Raising the threshold to accommodate a loaded runner would erase the measurement's only value.
+The correct fix is to run the timing test on a quiet machine, which is a CI scheduling concern, not
+a code change.
+
+Second occurrence of this class after W36's `DiskBudgetTest`, which asserted the host filesystem
+was healthy. **A latency assertion is a statement about the machine unless the machine is
+controlled**, and this one measures a stage (BPE) that is 14x over budget while asserting on a
+different one.
+
+
+## W37.5c — zsh history expansion silently rewrote every multi-module test command
+
+`./gradlew :$m:cleanTest :$m:test` inside a shell function reported **BUILD FAILED for all ten
+modules**, while the identical command typed directly reported BUILD SUCCESSFUL with a full green
+result set.
+
+Cause: **zsh history expansion**. `:c` and `:t` are history modifiers, so the shell rewrote
+`:matrix-quality:cleanTest` to `:matrix-qualityleanTest` — a task that does not exist, which fails
+fast in 3-4 seconds. Braces fix it:
+
+    ./gradlew ":${m}:cleanTest" ":${m}:test"
+
+The tell was that every module failed identically and *quickly*, while direct invocation passed.
+Ten modules do not fail simultaneously for one reason.
+
+This cost roughly ten minutes of believing there were ten broken modules. Recorded because the
+failure is indistinguishable from a real one at a glance, and because this session has now produced
+three separate phantom failures — a killed Gradle run leaving stale results, the single-invocation
+form of the same command, and this — all of which looked like regressions and none of which were.
+
+**When ten modules fail at once, suspect the harness before the code.**

@@ -1,4 +1,4 @@
-# EXP-MATRIX.22 — Confidence calibration (H-024, RUN 23)
+# EXP-MATRIX.22 — Confidence calibration (H-024, RUN 23) <!-- no-id: the hypothesis register never declared it (Q-W46-19) -->
 
 ## Hypothesis
 
@@ -41,7 +41,7 @@ For each test fingerprint `fp`:
   "does T behave as expected" but not yet "is the confidence
   calibrated to actual accuracy".
 - EXP-MATRIX.22 is a STRUCTURAL verification (the API works as
-  specified). A full H-024 verification needs:
+  specified). A full H-024 verification needs: <!-- no-id: the hypothesis register never declared it (Q-W46-19) -->
   - 100+ held-out (question, answer) pairs.
   - For each, compute top-1 confidence.
   - Bin by confidence and measure actual accuracy per bin.
@@ -50,7 +50,7 @@ For each test fingerprint `fp`:
 
 ## Cross-references
 
-- H-024 (HYPOTHESES-NEW.md): calibration acceptance criterion.
+- H-024 (HYPOTHESES-NEW.md): calibration acceptance criterion. <!-- no-id: the hypothesis register never declared it (Q-W46-19) -->
 - LmHead signed-update (RUN 22) is a prerequisite — without
   negative updates, the LM head cannot learn what NOT to predict,
   which biases confidence toward the most-frequent token.

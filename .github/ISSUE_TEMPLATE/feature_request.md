@@ -1,27 +1,52 @@
 ---
 name: Feature Request
-about: Suggest a new feature or improvement
+about: Suggest a capability, an improvement or a gap
 title: "[FEAT] "
 labels: enhancement
 assignees: ""
 ---
 
-## Problem
+## The problem
 
-What problem does this solve? Why is it needed?
+<!-- What is missing or wrong today, and who it hurts. Not the solution. -->
 
-## Proposed Solution
+## The capability proposed
 
-Describe the solution you'd like.
+<!-- Name it, and say where it would live. Then state its four axes honestly — the project's
+     rule is that implemented, integrated, verified and operational are four different facts
+     (docs-v2/architecture/CAPABILITY-REGISTRY.yml). -->
 
-## Alternatives Considered
+| axis | the value | the evidence |
+|---|---|---|
+| `implementation` | | |
+| `integration` | | |
+| `verification` | | |
+| `operational` | | |
 
-What other approaches did you think about?
+- **Serving path**, if it is to be served: the route or the CLI a user calls.
+- **If it is research-only:** the measurement that would have to happen first, and the report
+  that would carry it (`docs-v2/research/reports/`).
 
-## Affected Specifications
+## What it must not do
 
-Which L-documents would this affect? (e.g., L1, L5, L7)
+<!-- The limits of the capability: what it may never do, what it must refuse, and which of the
+     four prohibitions (CONSTITUTION.md, Article IV) it touches. -->
 
-## Additional Context
+## Alternatives considered
 
-Sketches, references, examples.
+<!-- And why they were not chosen. -->
+
+## Acceptance criteria
+
+<!-- How a reader decides that this is done. If it is a code change: the targeted test scope
+     and the gates. If it is a capability claim: the metric, the baseline, the threshold, and
+     the corpus scope (docs-v2/research/PROTOCOL.md). -->
+
+## Canonical documents affected
+
+<!-- The documents that would change, if any: docs-v2/specifications/, docs-v2/designs/,
+     docs-v2/governance/, docs-v2/architecture/, formal/. -->
+
+## Notes
+
+<!-- Sketches, references, related issues, prior art in the repository. -->

@@ -1,43 +1,74 @@
 ---
 name: RFC (Request for Comments)
-about: Propose a major architectural or specification change
+about: Propose an architectural, specification or normative change
 title: "[RFC] "
 labels: rfc
 assignees: ""
 ---
 
-## Motivation
+> Use this template when the change touches an architecture, a specification, a contract or a
+> frozen boundary. A bug or a contained improvement is a **bug report** or a **feature
+> request** instead.
 
-Why is this change needed? What problem does it solve?
+## 1. Motivation
 
-## Proposal
+<!-- The problem, not the solution. What breaks, what is missing, what cost is being paid?
+     If the answer is "it would be nicer", say what is wrong with the current state. -->
 
-Detailed description of the proposed change.
+## 2. The proposal
 
-## Impact on Specifications
+<!-- What changes, concretely: the files, the contracts, the data, the interfaces. -->
 
-Which L-documents need updating?
-- [ ] L0 (Manifesto)
-- [ ] L1 (MPDT Neuron)
-- [ ] L2 (Protocols)
-- [ ] L3 (Clusters)
-- [ ] L4 (Mediators)
-- [ ] L5 (DNA/Evolution)
-- [ ] L6 (Memory)
-- [ ] L7 (Ethics)
-- [ ] L8 (Roadmap)
+## 3. Scope of the change
 
-## Breaking Changes
+- **Modules affected:**
+- **Serving paths affected** (chain A, chain B, or none — see
+  `docs-v2/architecture/RUNTIME-TOPOLOGY.md`):
+- **Canonical documents affected:**
+  - [ ] `docs-v2/specifications/` — a SPEC
+  - [ ] `docs-v2/designs/` — a DESIGN
+  - [ ] `docs-v2/governance/` — a governance document
+  - [ ] `docs-v2/architecture/` — an ADR or the capability registry
+  - [ ] `formal/` — a TLA+ specification
+  - [ ] none of these
 
-List any backwards-incompatible changes.
+## 4. Safety and ethics
 
-## Alternatives
+- **Does the change touch the four prohibitions** (`CONSTITUTION.md`, Article IV)? How is that
+  checked?
+- **Does it touch a frozen zone** (`CONSTITUTION.md`, Article III)? If yes, this RFC needs an
+  explicit owner mandate — say so here.
+- **Does it change what is SERVED** rather than what is implemented? Name the serving path.
 
-What alternatives were considered and why were they rejected?
+## 5. Breaking changes
 
-## Discussion Period
+<!-- What breaks for a caller, a stored record, a route, a CLI, or a downstream integration.
+     What is the migration, and is it reversible? -->
 
-Per [L11 §4.2](docs/L11_Mangement.md):
-- Module-level: 2 weeks
-- Architectural: 1 month
-- Fundamental (L3): 1 month + 90% consensus
+## 6. Alternatives considered
+
+<!-- What else was on the table, and why it was not chosen. An RFC with one option is a
+     proposal, not a request for comments. -->
+
+## 7. Verification plan
+
+<!-- How the change will be shown to be correct. The project's evidence is the JUnit XML and
+     the gate exit codes, not a description of intent. -->
+
+- **Targeted scope(s)** (from `docs-v2/engineering/TEST-CATALOGUE.yml`):
+- **The commands:**
+- **The gates that must stay green:**
+  - [ ] `scripts/quality-gate.sh`
+  - [ ] `scripts/formal-gate.sh` (if a `formal/` specification changed)
+  - [ ] `scripts/security-boundary-check.sh` (if an authorisation boundary changed)
+- **The measurement**, if the change is a capability claim: the metric, the baseline, the
+  threshold, and the corpus scope (`docs-v2/research/PROTOCOL.md`).
+
+## 8. Documentation
+
+<!-- Which document carries the decision once it is taken? The decision itself is recorded in
+     docs-v2/governance/DECISION-REGISTER.md. -->
+
+## 9. Open questions
+
+<!-- What is still undecided, and who must answer it. -->

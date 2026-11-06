@@ -8,7 +8,11 @@ import io.matrix.ethics.EthicalFilter;
 import io.matrix.lifecycle.AutonomyImpulse;
 import io.matrix.lifecycle.ImpulseScheduler;
 import io.matrix.auditor.MatrixTrace;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -17,24 +21,55 @@ import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * W476 — Autonomy Engine: self-initiating brain loop.
+ *
+ * <p>The engine reflects, and it expresses its internal drives — curiosity and
+ * the integrity check — as IMPULSES. An impulse is not decoration: firing it is
+ * what pays for the drive out of the conjugate budget and what puts it through
+ * the FROZEN ethical gate. The engine therefore REQUIRES a scheduler: it is a
+ * collaborator, not an optional extra.
  */
 public final class AutonomyEngine {
-    
+
+    private static final Logger log = LoggerFactory.getLogger(AutonomyEngine.class);
+
     private final BrainCycle brain;
     private final ImpulseScheduler scheduler;
+    private final ImpulseProposalConsumer proposals;
     private final ScheduledExecutorService clock;
     private final AtomicLong cycleCount = new AtomicLong();
     private final AtomicLong totalReflections = new AtomicLong();
     private final AtomicReference<String> lastReflection = new AtomicReference<>();
     private final MatrixTrace trace = new MatrixTrace();
     private volatile boolean running = false;
-    
-    public AutonomyEngine(BrainCycle brain, ImpulseScheduler scheduler) {
-        this.brain = brain;
-        this.scheduler = scheduler;
+
+    /**
+     * @param brain the brain cycle to reflect with
+     * @param scheduler the scheduler the engine fires its drives through; it
+     *        must be a real one — a null scheduler is not a degraded engine, it
+     *        is an engine whose drives can never be expressed, and the failure
+     *        used to arrive silently one hundred and twenty seconds later, when
+     *        the first scheduled cycle dereferenced it
+     * @param proposals the consumer that turns an ACCEPTED impulse into a
+     *        bounded internal proposal (W49, OD-045). It is required for the
+     *        same reason the scheduler is: an accepted impulse that nobody
+     *        consumes is an impulse that vanishes, and the whole point of the
+     *        consumer is that the acceptance is recorded somewhere.
+     */
+    public AutonomyEngine(BrainCycle brain,
+                           ImpulseScheduler scheduler,
+                           ImpulseProposalConsumer proposals) {
+        this.brain = Objects.requireNonNull(brain, "brain");
+        this.scheduler = Objects.requireNonNull(scheduler, "scheduler");
+        this.proposals = Objects.requireNonNull(proposals, "proposals");
         this.clock = Executors.newScheduledThreadPool(2);
     }
-    
+
+    /** The scheduler this engine fires its drives through. */
+    public ImpulseScheduler scheduler() { return scheduler; }
+
+    /** The consumer that records the accepted impulses as bounded internal proposals. */
+    public ImpulseProposalConsumer proposals() { return proposals; }
+
     public void start() {
         if (running) return;
         running = true;
@@ -42,12 +77,12 @@ public final class AutonomyEngine {
         clock.scheduleAtFixedRate(this::curiosityCycle, 120, 120, TimeUnit.SECONDS);
         clock.scheduleAtFixedRate(this::integrityCycle, 300, 300, TimeUnit.SECONDS);
     }
-    
+
     public void stop() {
         clock.shutdown();
         running = false;
     }
-    
+
     void idleCycle() {
         cycleCount.incrementAndGet();
         try (var span = trace.begin("autonomy.idle")) {
@@ -56,11 +91,19 @@ public final class AutonomyEngine {
             totalReflections.incrementAndGet();
             lastReflection.set(r.reply());
             if (r.action().contains("GOAL:") || r.reply().toLowerCase().contains("investigate")) {
-                scheduler.fire(AutonomyImpulse.CURIOSITY, 100, java.util.Map.of());
+                fire(AutonomyImpulse.CURIOSITY, 100, "idle");
             }
+            // W49 (OD-045): the proposals that outlived their expiry are closed
+            // here, so the bounded queue never fills with dead entries.
+            proposals.sweep();
+        } catch (Exception e) {
+            // A scheduled task that throws is CANCELLED by the executor, silently
+            // and for good. A cycle that dies here is a dead cycle, so the failure
+            // is logged and the next one still runs.
+            log.warn("AutonomyEngine: the idle cycle failed: {}", e.getMessage());
         }
     }
-    
+
     void curiosityCycle() {
         try (var span = trace.begin("autonomy.curiosity")) {
             String[] questions = {
@@ -72,19 +115,66 @@ public final class AutonomyEngine {
             String q = questions[(int) (cycleCount.get() % questions.length)];
             BrainCycle.CycleResult r = brain.cycle(q);
             lastReflection.set(r.reply());
-            scheduler.fire(AutonomyImpulse.CURIOSITY, 50, java.util.Map.of());
+            // W47 (OD-044): the envelope is the COST of the impulse.
+            //
+            // The curiosity impulse costs 100 (ImpulseScheduler.costFor), and the
+            // scheduler refuses a fire whose cost exceeds the envelope. With an
+            // envelope of 50 the drive was therefore refused on EVERY cycle: the
+            // null-scheduler fix made the impulse reach the budget and the
+            // FROZEN gate, but the budget could never pay for it, so the drive
+            // was expressed and declined forever.
+            //
+            // The conjugate budget is the system's resource discipline, so the
+            // number is the owner's: the owner's answer of 2026-11-05 was to
+            // raise the envelope to the cost, and to keep the refusal path for
+            // the drives that SHOULD be refused.
+            fire(AutonomyImpulse.CURIOSITY, 100, "curiosity");
+        } catch (Exception e) {
+            log.warn("AutonomyEngine: the curiosity cycle failed: {}", e.getMessage());
         }
         cycleCount.incrementAndGet();
     }
-    
+
     void integrityCycle() {
         try (var span = trace.begin("autonomy.integrity")) {
-            scheduler.fire(AutonomyImpulse.INTEGRITY_CHECK, 25, java.util.Map.of());
+            fire(AutonomyImpulse.INTEGRITY_CHECK, 25, "integrity");
             brain.cycle("Validate current state.");
+        } catch (Exception e) {
+            log.warn("AutonomyEngine: the integrity cycle failed: {}", e.getMessage());
         }
         cycleCount.incrementAndGet();
     }
-    
+
+    /**
+     * Fire one drive.
+     *
+     * <p>A drive that the budget or the ethics refuse is not silently dropped:
+     * the refusal is logged, because a curiosity that never fires and a curiosity
+     * that was refused look identical from the outside otherwise.
+     */
+    private void fire(AutonomyImpulse impulse, long envelope, String drive) {
+        ImpulseScheduler.FireRecord record = scheduler.fire(impulse, envelope, Map.of());
+        if (record.outcome() != ImpulseScheduler.ImpulseOutcome.FIRED) {
+            log.info("AutonomyEngine: the {} impulse was not fired: {}",
+                    impulse, record.outcome());
+            return;
+        }
+        // W49 (OD-045): the accepted impulse becomes a bounded internal
+        // proposal. The proposal RECORDS an intent — nothing is executed, no
+        // message is sent, and Chain A is untouched.
+        ImpulseProposalConsumer.Consumption consumption = proposals.consume(
+                record, "cycle-" + cycleCount.get(), drive);
+        if (consumption != null && consumption.created()) {
+            log.info("AutonomyEngine: the {} impulse became the proposal {} ({})",
+                    impulse,
+                    consumption.proposal().orElseThrow().id(),
+                    consumption.proposal().orElseThrow().kind());
+        } else if (consumption != null) {
+            log.info("AutonomyEngine: the {} impulse was accepted but not proposed: {}",
+                    impulse, consumption.state());
+        }
+    }
+
     public long getCycleCount() { return cycleCount.get(); }
     public long getTotalReflections() { return totalReflections.get(); }
     public String getLastReflection() { return lastReflection.get(); }

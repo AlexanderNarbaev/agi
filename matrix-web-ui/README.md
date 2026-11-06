@@ -18,7 +18,7 @@ Production landing page + dashboard for the MATRIX Hybrid Neuro-Symbolic AI.
 
 ## Stack
 
-- **Next.js 14** (App Router)
+- **Next.js 16.3.5** (App Router) — the version pinned in `package.json`
 - **React 18**
 - **TypeScript 5.6**
 - **Tailwind CSS 3.4**
@@ -135,9 +135,9 @@ Total: **16 tests**, all should pass after `npm install`.
 This module is part of the broader MATRIX ecosystem transformation
 (W1500 → Production). See:
 
-- [`CONSTITUTION.md`](../../CONSTITUTION.md) — hard constraints
-- [`BRANCHING-STRATEGY.md`](../../BRANCHING-STRATEGY.md) — branching model
-- [`docs-v2/architecture/ECOSYSTEM-LAYOUT.md`](../../docs-v2/architecture/ECOSYSTEM-LAYOUT.md) — C4 diagram
+- [`CONSTITUTION.md`](../CONSTITUTION.md) — hard constraints
+- [`BRANCHING-STRATEGY.md`](../BRANCHING-STRATEGY.md) — branching model
+- [`docs-v2/architecture/ECOSYSTEM-LAYOUT.md`](../docs-v2/architecture/ECOSYSTEM-LAYOUT.md) — C4 diagram
 
 ---
 

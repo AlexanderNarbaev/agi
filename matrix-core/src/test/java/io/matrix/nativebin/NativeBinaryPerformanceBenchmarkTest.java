@@ -1,6 +1,7 @@
 package io.matrix.nativebin;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Tag;
 import java.io.File;
 import java.io.InputStream;
 import java.nio.file.Path;
@@ -15,6 +16,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * <p>CONSTITUTION VI compliance: performance benchmark substrate,
  * not a phenomenal consciousness claim.
  */
+@Tag("native-binary")
 class NativeBinaryPerformanceBenchmarkTest {
 
     private static final Path BINARY = Paths.get("build/native/nativeCompile/matrix-core");

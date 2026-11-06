@@ -2,7 +2,7 @@
 
 ## Что это
 
-AR-документ: кросс-секционные директивы по иерархии памяти. Текущая норма — [DESIGN-05-memory](../designs/DESIGN-05-memory.md) (5 слоёв M0..M4). Этот AR **расширяет** DESIGN-05 тремя дополнительными слоями (m0, M5, M5+) и фиксирует TLA+-обязательства. Полная спецификация — [SPEC-007-memory-hierarchy](../specifications/SPEC-007-memory-hierarchy.md) (placeholder, ещё не написан).
+AR-документ: кросс-секционные директивы по иерархии памяти. Текущая норма — [DESIGN-05-memory](../designs/DESIGN-05-memory.md) (5 слоёв M0..M4). Этот AR **расширяет** DESIGN-05 тремя дополнительными слоями (m0, M5, M5+) и фиксирует TLA+-обязательства. Полная спецификация — [SPEC-007-memory-hierarchy](../specifications/SPEC-011-memory-hierarchy.md) (placeholder, ещё не написан).
 
 ## Слои и физика
 
@@ -104,12 +104,12 @@ Spec == Init /\ [][Next]_<<localLog, peerLog, quorumReached, tombstoned>>
 ## Открытые задачи
 
 - H-011 (running): SDM M1 read beats flat top-K Hamming precision@5 — измеряется.
-- H-016 (proposed): MonotoneDecoder within target accuracy at ≥5× smaller corpus — после полных цепей Ханселя.
+- H-016 (proposed): MonotoneDecoder within target accuracy at ≥5× smaller corpus — после полных цепей Ханселя. <!-- no-id: the hypothesis register never declared it (Q-W46-19) -->
 - TLA+ `Memory-M4-Causal` — top-priority next-format-contract (FORMAL-CONTRACTS.md).
-- H-014 (proposed): VC-оценка предсказывает holdout-window threshold — для размера окна Φ-гейта.
+- H-014 (proposed): VC-оценка предсказывает holdout-window threshold — для размера окна Φ-гейта. <!-- no-id: the hypothesis register never declared it (Q-W46-19) -->
 
 ## Куда расти
 
-- [SPEC-007-memory-hierarchy](../specifications/SPEC-007-memory-hierarchy.md) — формальная спека (placeholder).
+- [SPEC-007-memory-hierarchy](../specifications/SPEC-011-memory-hierarchy.md) — формальная спека (placeholder).
 - Расширение `lifecycle/FnlGate` для двойного карантина IMPORT_M4 ↔ DESIGN-08 (отложено в DESIGN-12).
 - M5+ рефлексы после сертификации MA-N — preregistered EXP, не обещание сроков.

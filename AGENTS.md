@@ -9,31 +9,33 @@
 
 ## Один заход — один значимый шаг
 
-Каждая сессия — минимально-ценностная (митигация карго-культов и разрастания). Большие задачи разбиваются на волны (см. `engineering/PLAN.md`).
+Каждая сессия — минимально-ценностная (митигация карго-культов и разрастания). Большие задачи разбиваются на волны (см. `docs-v2/engineering/PLAN.md` и каноническую дорожную карту `docs-v2/governance/ROADMAP.md`).
 
 ## Процедура сессии
 
-1. Прочитать `WAL.md`, `engineering/PLAN.md`, `docs-v2/INDEX.md`.
+1. Прочитать `docs-v2/governance/PROJECT-STATE.md`, `docs-v2/governance/ROADMAP.md`, `docs-v2/governance/DECISION-REGISTER.md`, `docs-v2/governance/OPEN-QUESTIONS.md`, `docs-v2/INDEX.md`.
 2. Определить текущую волну и ответственного.
-3. В конце — обновить WAL/журнал/ПЛАН, закоммитить+запушить значимые изменения.
-4. Инциденты (диск, удаления, несовместимости) фиксируются отдельной записью в WAL.
+3. В конце — обновить отчёт о волне (`docs-v2/engineering/W<N>-STATUS.md`), канонические реестры и ПЛАН, закоммитить+запушить значимые изменения — если волна это допускает (см. `docs-v2/governance/AGENT-OPERATING-PROTOCOL.md`, уровни автономии).
+4. Инциденты (диск, удаления, несовместимости) фиксируются отдельной записью в журнале `wal/SESSION_WAL.md` и в отчёте о волне.
 
 ## Запреты
 
-- Не редактировать FROZEN-зоны (`CONSTITUTION.md`, `AGENTS.md`, `ethics/frozen/`, avro схемы, `.github/workflows/**`) без явного RFC-мандата владельца в этой сессии.
+- Не редактировать FROZEN-зоны (`CONSTITUTION.md`, `AGENTS.md`, `matrix-core/src/main/java/io/matrix/ethics/frozen/`, avro схемы, `.github/workflows/**`) без явного RFC-мандата владельца в этой сессии.
 - Не оставлять новый код без тестов.
 - Не генерировать непроверенные числа в отчётах.
 - Не использовать без явного RFC: Random/wall-clock в рантайм-путях решений, LLM-вызовы в детерминированном контуре, dependency upgrade мажорной версии.
 
 ## Коммиты
 
-Формат: `WAL: <краткое описание изменения>`. Один коммит = одно значимое изменение. Push после каждого. Существенные выводы закрепляются в `WAL.md`, не в `context.md`.
+Формат: `WAL: <краткое описание изменения>`. Один коммит = одно значимое изменение. **Push после каждого — если волна это допускает; push без явного разрешения владельца — операция уровня 3** (см. `docs-v2/governance/AGENT-OPERATING-PROTOCOL.md` §3). Существенные выводы закрепляются в отчёте о волне и в канонических реестрах (`docs-v2/governance/`), а не в чате. Журнал `wal/SESSION_WAL.md` — локальный (каталог `wal/` исключён `.gitignore`), поэтому он **не** заменяет собой отчёт о волне.
 
 ## Тестирование
 
 - Все новые классы покрыты JUnit 5 / jqwik тестами перед коммитом.
 - Targeted suites: `./gradlew :matrix-core:test --tests "io.matrix.<pkg>.*"`.
 - Полный прогон — только по согласованию (риск OOM).
+- Базовая линия — привязана к коммиту и живёт в `docs-v2/engineering/TEST-CATALOGUE.yml`; устаревшее число счётчиков не является базовой линией.
+- Доказательство — JUnit XML (`<module>/build/test-results/test/*.xml`), а не сводка в консоли Gradle.
 - JMH замеры через `--rerun-tasks -PjmhBenchmark=Name` для гейтов DESIGN-04/14.
 
 ## Команды пользователя
@@ -55,7 +57,7 @@
 
 Зачем: обеспечить, что алгоритмические решения **не локально-оптимальны**, а согласуются с историческими и междисциплинарными находками.
 
-**META-R2 (knowledge persistence).** Любая cross-disciplinary находка **обязательно фиксируется** в `docs-v2/research/MATRIX-CROSS-DISCIPLINARY-RESEARCH.md` (доктрина), `docs-v2/designs/DESIGN-{NN}-*.md` (приложение) и соответствующие hypotheses в `HYPOTHESES-NEW.md`. Никакие research-выводы не остаются только в чате.
+**META-R2 (knowledge persistence).** Любая cross-disciplinary находка **обязательно фиксируется** в `docs-v2/research/MATRIX-CROSS-DISCIPLINARY-RESEARCH.md` (доктрина), `docs-v2/designs/DESIGN-{NN}-*.md` (приложение) и соответствующие hypotheses в `docs-v2/research/HYPOTHESES-NEW.md`. Никакие research-выводы не остаются только в чате.
 
 **META-R3 (anti-pattern: Wikipedia-only).** Каждое существенное утверждение должно быть привязано к **первоисточнику** (arXiv, оригинальная книга/статья, официальная документация). Агрегаторы общего уровня — не приемлемы для значимых утверждений. UNVERIFIED — помечать явно.
 
@@ -67,3 +69,9 @@
 
 После W31 допускается **до 4 одновременных** глубоких research-задач. Каждая — с явным скоупом и конкретным
 output. Таймаут на research агента = 30 минут; долгие задачи необходимо делить на более узкие подзадачи.
+
+## AI Dev Tools (via opencode_initializer)
+- DevoxxGenie (JetBrains, Apache 2.0) — local LLMs, RAG, MCP
+- Cline (VS Code+JetBrains, Apache 2.0) — AI agent, Ollama
+- Tabby (VS Code+JetBrains, Apache 2.0) — self-hosted completion
+- Aider (CLI, Apache 2.0) — git-aware edits

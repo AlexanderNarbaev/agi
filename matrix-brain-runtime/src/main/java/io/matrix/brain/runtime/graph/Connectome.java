@@ -160,6 +160,72 @@ public final class Connectome {
     }
 
     /**
+     * RECON-W38.1 - dual-run retrieval entry point.
+     * Same reachability, ordering and tie-breaking as {@link #propagate(Activation, int)}, but a
+     * reached HdcNode is given the real retrieval context (query, observation, trace, floor) so its
+     * outgoing signal is the measured retrieval confidence scaled by node weight, and non-HDC nodes
+     * behave identically to plain propagate(). The linear serving path stays zero-change; the
+     * caller compares the two runs for graph-vs-linear divergence.
+     *
+     * @param input          activation injected at every source node
+     * @param query          retrieval query string
+     * @param obs            signal-stage observation (may be null on the in-memory path)
+     * @param trace          trace list the retrieval stage appends to (may be null)
+     * @param retrievalFloor neuromodulator floor applied at retrieval time
+     * @param topK           maximum outgoing edges followed per node; must be >= 1
+     */
+    public Activation propagateWithRetrieval(Activation input, String query,
+            io.matrix.brain.runtime.stages.SignalStage.SignalObservation obs,
+            java.util.List<io.matrix.brain.runtime.BrcStep> trace,
+            double retrievalFloor, int topK) {
+        Objects.requireNonNull(input, "input");
+        if (topK < 1) {
+            throw new IllegalArgumentException("topK must be >= 1, got " + topK);
+        }
+        Map<NodeId, Double> accumulated = new LinkedHashMap<>();
+
+        for (NodeId source : nodes.keySet()) {
+            CognitiveNode node = nodes.get(source);
+            if (node.state() != CognitiveNode.NodeState.ACTIVE) {
+                continue;
+            }
+
+            List<Synapse> out = new ArrayList<>();
+            for (Synapse s : synapses) {
+                if (s.state() != Synapse.SynapseState.PRUNED
+                        && s.from().equals(source)
+                        && nodes.get(s.to()).state() == CognitiveNode.NodeState.ACTIVE) {
+                    out.add(s);
+                }
+            }
+            out.sort(Comparator
+                    .comparingDouble((Synapse s) -> Math.abs(s.weight()))
+                    .reversed()
+                    .thenComparing(Synapse::to));
+
+            int taken = 0;
+            for (Synapse s : out) {
+                if (taken++ >= topK) {
+                    break;
+                }
+                Activation forwarded = node instanceof HdcNode hdc
+                        ? hdc.process(input, query, obs, trace, retrievalFloor)
+                        : node.process(input);
+                double carried = s.apply(forwarded.magnitude());
+                accumulated.merge(s.to(), carried, Double::sum);
+            }
+        }
+
+        this.lastReached = List.copyOf(accumulated.keySet());
+        double[] signal = new double[accumulated.size()];
+        int i = 0;
+        for (double v : accumulated.values()) {
+            signal[i++] = v;
+        }
+        return input.withSignal(signal.length == 0 ? new double[] {0.0} : signal);
+    }
+
+    /**
      * Applies plasticity to the synapses that carried signal in the last propagation.
      *
      * @param input  the activation injected at propagation time

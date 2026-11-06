@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import Pricing from '@/components/sections/Pricing';
 
 describe('Pricing section', () => {
@@ -9,9 +9,13 @@ describe('Pricing section', () => {
 
   it('displays all three plans', () => {
     render(<Pricing />);
-    expect(screen.getByText(/FREE/i)).toBeInTheDocument();
-    expect(screen.getByText(/PRO/i)).toBeInTheDocument();
-    expect(screen.getByText(/ENTERPRISE/i)).toBeInTheDocument();
+    // RECON-W38.4: the plan name is the heading of the plan card. A bare
+    // getByText(/FREE/i) matched several elements ("FREE" and the "Start Free
+    // Trial" call to action) and the test failed with "Found multiple
+    // elements"; the heading is the element the assertion actually means.
+    expect(screen.getByRole('heading', { name: 'FREE' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'PRO' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'ENTERPRISE' })).toBeInTheDocument();
   });
 
   it('shows PRO plan as most popular', () => {
@@ -26,7 +30,14 @@ describe('Pricing section', () => {
 
   it('displays enterprise contact sales option', () => {
     render(<Pricing />);
-    expect(screen.getByText(/Contact Sales/i)).toBeInTheDocument();
+    // RECON-W38.4: "Contact Sales" is the enterprise plan's call to action, but
+    // the section also ends with a "Need something custom? Contact Sales"
+    // link, so a page-wide query found two elements. The query is scoped to
+    // the enterprise plan card.
+    const enterpriseCard = screen.getByRole('heading', { name: 'ENTERPRISE' }).closest('div');
+    expect(enterpriseCard).not.toBeNull();
+    expect(within(enterpriseCard as HTMLElement).getByRole('link', { name: /Contact Sales/i }))
+      .toBeInTheDocument();
   });
 
   it('shows enterprise on-prem option', () => {

@@ -1,6 +1,7 @@
 package io.matrix.nativebin;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Tag;
 import java.io.InputStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -13,6 +14,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  *
  * <p>End-to-end verification: build + run + verify output.
  */
+@Tag("native-binary")
 class NativeBinaryFullIntegrationTest {
 
     private static final Path BINARY = Paths.get("build/native/nativeCompile/matrix-core");

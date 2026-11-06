@@ -62,11 +62,28 @@ services:
       context: .
       dockerfile: Dockerfile.dev
     ports:
-      - "8080:8080"
-      - "9091:9091"
+      # RECON-W43.0: the published ports bind the LOOPBACK of the host, so
+      # a compose stack that is started by accident is not reachable from
+      # the network. An operator who wants the service on the network
+      # changes this line AND supplies the credential below — the two
+      # together, because one of them without the other is either an
+      # unreachable service or an unprotected one.
+      - "127.0.0.1:8080:8080"
+      - "127.0.0.1:9091:9091"
     environment:
       QUARKUS_PROFILE: prod
       QUARKUS_HTTP_PORT: 8080
+      # RECON-W42.7: the application binds to the loopback by default;
+      # a container's published port must be bound on its own interface.
+      QUARKUS_HTTP_HOST: 0.0.0.0
+      # RECON-W43.0: inside the container the port IS on every interface —
+      # a container that binds its own loopback cannot be reached through
+      # a published port. So the process is explicitly declared EXPOSED and
+      # must carry a credential, and compose REFUSES to start without one
+      # (${VAR:?message}). The application refuses to start in exposed mode
+      # without a credential as well, so both halves fail closed.
+      MATRIX_SECURITY_MODE: NETWORK_EXPOSED
+      MATRIX_SECURITY_TOKEN: ${MATRIX_SECURITY_TOKEN:?set MATRIX_SECURITY_TOKEN before starting the compose stack; the application is reachable from the host and refuses anonymous writes without it}
       # PostgreSQL
       QUARKUS_DATASOURCE_JDBC_URL: jdbc:postgresql://postgres:5432/matrix
       QUARKUS_DATASOURCE_USERNAME: matrix

@@ -25,6 +25,14 @@ import java.util.Random;
  * Pure function. No RNG. Caller supplies all weights.
  */
 public final class BitNetModel {
+    /**
+     * The two reserved vocabulary ids the generation stops at: the header marker and
+     * the end-of-turn marker of the Llama-3 reserved range. The class comment names
+     * the vocabulary this model was built for.
+     */
+    private static final int STOP_TOKEN_HEADER_START = 128001;
+    private static final int STOP_TOKEN_END_OF_TURN = 128009;
+
 
     /** All decoder blocks (typically 30 for b1.58-2B-4T). */
     public final BitNetBlock[] blocks;
@@ -118,7 +126,7 @@ public final class BitNetModel {
         for (int step = 0; step < maxNewTokens; step++) {
             float[] logits = forwardSingleToken(currentToken, position);
             int nextToken = TokenSampler.sample(logits, samplerConfig, rng);
-            if (nextToken == 128001 || nextToken == 128009) break;
+            if (nextToken == STOP_TOKEN_HEADER_START || nextToken == STOP_TOKEN_END_OF_TURN) break;
             generated[genCount++] = nextToken;
             currentToken = nextToken;
             position++;
@@ -147,7 +155,7 @@ public final class BitNetModel {
 
         // First token from prefill
         int currentToken = TokenSampler.sample(logits, cfg, rng);
-        if (currentToken == 128001 || currentToken == 128009) {
+        if (currentToken == STOP_TOKEN_HEADER_START || currentToken == STOP_TOKEN_END_OF_TURN) {
             return new int[0];
         }
         generated[genCount++] = currentToken;
@@ -157,7 +165,7 @@ public final class BitNetModel {
         for (int step = 1; step < maxNewTokens; step++) {
             logits = forwardSingleToken(currentToken, position);
             currentToken = TokenSampler.sample(logits, cfg, rng);
-            if (currentToken == 128001 || currentToken == 128009) break;
+            if (currentToken == STOP_TOKEN_HEADER_START || currentToken == STOP_TOKEN_END_OF_TURN) break;
             generated[genCount++] = currentToken;
             position++;
         }
@@ -215,7 +223,7 @@ public final class BitNetModel {
         int currentToken = TokenSampler.sample(logits, cfg, rng);
         int[] generated = new int[maxNewTokens];
         int genCount = 0;
-        if (currentToken == 128001 || currentToken == 128009) {
+        if (currentToken == STOP_TOKEN_HEADER_START || currentToken == STOP_TOKEN_END_OF_TURN) {
             return new int[0];
         }
         generated[genCount++] = currentToken;
@@ -235,7 +243,7 @@ public final class BitNetModel {
             currentHidden = finalNorm.forward(currentHidden, 1, 1, hiddenSize);
             logits = logitsFromHidden(currentHidden);
             currentToken = TokenSampler.sample(logits, cfg, rng);
-            if (currentToken == 128001 || currentToken == 128009) break;
+            if (currentToken == STOP_TOKEN_HEADER_START || currentToken == STOP_TOKEN_END_OF_TURN) break;
             generated[genCount++] = currentToken;
             position++;
             currentHidden = embeddingLookup(currentToken);

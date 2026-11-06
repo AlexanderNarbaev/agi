@@ -51,6 +51,28 @@ public final class HdcNode implements CognitiveNode {
         return input.withSignal(signal);
     }
 
+    /**
+     * W38.1 — retrieval-aware processing for the connectome serving path.
+     * The bare {@link #process(Activation)} stays a neutral, query-free passthrough because
+     * an Activation cannot carry a query; the graph serving path calls this overload with the
+     * live retrieval context instead. The stage is shared, so a linear call on the same stage
+     * must give the identical outcome.
+     *
+     * <p>Signal: measured confidence scaled by this node's weight; a miss contributes 0.0. The
+     * activation seed is preserved by withSignal/withTag (they carry the input's seed). Tags:
+     * hdc.matched (1/0) and hdc.confidence (measured or 0.0).</p>
+     */
+    public Activation process(Activation input, String query,
+            io.matrix.brain.runtime.stages.SignalStage.SignalObservation obs,
+            java.util.List<io.matrix.brain.runtime.BrcStep> trace, double retrievalFloor) {
+        io.matrix.brain.runtime.stages.HdcRetrievalStage.HdcResult result =
+                stage().retrieve(query, obs, trace, retrievalFloor);
+        double score = result.matched() ? result.confidence() : 0.0;
+        return input.withSignal(new double[] { score * weight })
+                .withTag("hdc.matched", result.matched() ? 1.0 : 0.0)
+                .withTag("hdc.confidence", result.confidence());
+    }
+
     @Override
     public void updateWeights(Activation pre, Activation post) {
         weight = PlasticityRule.update(weight, pre.magnitude(), post.magnitude(),

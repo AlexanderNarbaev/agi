@@ -1,0 +1,277 @@
+{
+  "description": "Mutation manifest for the formal gate. Each entry declares a deliberate defect that the specification MUST reject. The harness applies the mutation to a COPY of the specification in an isolated temporary directory and runs TLC there; the real source tree is never touched. A mutant that survives means the gate has a hole: the property it targets cannot fail. 'expect' records the outcome that was observed and accepted; a mutant that behaves differently is reported as DRIFT, which fails the run - so a weakened property or a corrected specification cannot pass unnoticed.",
+  "toolchain": {
+    "jar": "tools/tla2tools.jar",
+    "version": "1.8.0",
+    "sha256": "fc6878c603f0fdc18b9fe3e5bf51860cb90ab5b1154e3c371660c036d6bdd63e"
+  },
+  "mutants": [
+    {
+      "id": "MemoryM4Causal-tombstone-guard-inverted",
+      "spec": "MemoryM4Causal",
+      "why": "The Insert guard must reject an insert that a tombstone covers. Inverting it must make the tombstone properties fail.",
+      "old": "/\\ ¬tombstonedBy(r, k, epoch)",
+      "new": "/\\ tombstonedBy(r, k, epoch)",
+      "expect": "KILLED"
+    },
+    {
+      "id": "MemoryM4Causal-merge-stale-clock",
+      "spec": "MemoryM4Causal",
+      "why": "The Merge filter must use the MERGED clock. Reverting it to the receiver's pre-merge clock is the defect RECON-W39 corrected - and it was invisible to F1-F4 until PresentImpliesUncovered and AbsentImpliesCovered were added.",
+      "old": "∧ Max({vc[r1][k], vc[r2][k]}) ≤ t}]",
+      "new": "∧ vc[r1][k] ≤ t}]",
+      "expect": "KILLED"
+    },
+    {
+      "id": "MemoryM4Causal-tombstone-deletes-newer",
+      "spec": "MemoryM4Causal",
+      "why": "A tombstone at a stale epoch must not delete a strictly newer value. Making the removal unconditional is the defect RECON-W39 corrected.",
+      "old": "IF epoch ≥ vc[r][k] THEN state[r] \\ {k} ELSE state[r]]",
+      "new": "state[r] \\ {k}]",
+      "expect": "KILLED"
+    },
+    {
+      "id": "ConjugateBudgeterDP-step-uses-raw-unit-slope",
+      "spec": "ConjugateBudgeterDP",
+      "why": "The step must compute the slope over the REDUCED grid, as the Java does. The raw-unit slope is what the model computed before RECON-W39 and what the Java never computes. The shipped configuration has row costs with gcd 1, where the two slopes coincide, so the mutant is checked against a configuration whose costs share a divisor.",
+      "config": "formal/mutations/ConjugateBudgeterDP.gcd2.cfg",
+      "old": "LET lam  == GridShadow(newEnvelope)",
+      "new": "LET lam  == IF newEnvelope > 0 THEN DPValue(newEnvelope) - DPValue(newEnvelope - 1) ELSE 0",
+      "expect": "KILLED"
+    },
+    {
+      "id": "ConjugateBudgeterDP-witness-union",
+      "spec": "ConjugateBudgeterDP",
+      "why": "The witness reconstruction must carry the remaining budget down, not union the skip and take witnesses. The union can cost more than the envelope - the defect RECON-W38.5 corrected.",
+      "old": "THEN [k ∈ Rows |-> IF k = i\n                                         THEN TRUE\n                                         ELSE picks[i-1, ee - C(i)][k]]",
+      "new": "THEN [k ∈ Rows |-> IF k = i\n                                         THEN TRUE\n                                         ELSE picks[i-1, ee][k] \\/ picks[i-1, ee - C(i)][k]]",
+      "expect": "KILLED"
+    },
+    {
+      "id": "BrcStep-chain-fold-reversed",
+      "spec": "BrcStep",
+      "why": "The chain must be applied left to right. Folding it in reverse must break ComposeEndpointPreserved.",
+      "old": "ELSE ApplyFn(c[Len(c)], ApplyChain(SubSeq(c, 1, Len(c) - 1), x))",
+      "new": "ELSE ApplyFn(c[1], ApplyChain(SubSeq(c, 1, Len(c) - 1), x))",
+      "expect": "KILLED"
+    },
+    {
+      "id": "BrcStep-convergence-threshold-strict",
+      "spec": "BrcStep",
+      "why": "The step must mark a step converged when the Hamming distance is AT MOST the threshold. Using a strict comparison must break ConvergenceIsComputed, which states the Java's own rule.",
+      "old": "IF HammingDist(x, ApplyFn(s, x)) ≤ ConvergenceThreshold",
+      "new": "IF HammingDist(x, ApplyFn(s, x)) < ConvergenceThreshold",
+      "expect": "KILLED"
+    },
+    {
+      "id": "HashChain-verified-always-true",
+      "spec": "HashChain",
+      "why": "A broken chain must never be reported as verified. Making the append report an unconditionally verified chain must break VerifiedImpliesIntact.",
+      "old": "/\\ chain' = [chain EXCEPT ![i] = [chain[i] EXCEPT !.payloadHash = PayloadHash(p)]]\n    /\\ UNCHANGED <<lastHash>>\n    /\\ verified' = ChainIntact(chain')",
+      "new": "/\\ chain' = [chain EXCEPT ![i] = [chain[i] EXCEPT !.payloadHash = PayloadHash(p)]]\n    /\\ UNCHANGED <<lastHash>>\n    /\\ verified' = TRUE",
+      "expect": "KILLED"
+    },
+    {
+      "id": "BotEthicsPipeline-trigger-guard-dropped",
+      "spec": "BotEthicsPipeline",
+      "why": "The FNL verdict must gate the approve action: an action the FNL rejects may not be approved. Dropping the guard must break FnlVerdictIsFollowed.",
+      "old": "/\\ a \\notin FnlTriggers",
+      "new": "/\\ TRUE",
+      "expect": "KILLED"
+    },
+    {
+      "id": "MctsLatsVisit-node-its-own-child",
+      "spec": "MctsLatsVisit",
+      "why": "A node must never become its own child. Dropping the guard must break TreeAcyclic - the defect RECON-W38.5 corrected.",
+      "old": "/\\ child # parent",
+      "new": "/\\ TRUE",
+      "expect": "KILLED"
+    },
+    {
+      "id": "MPDTNeuron-init-k-range-widened",
+      "spec": "MPDTNeuron",
+      "why": "The k bound must hold from the initial state. Widening the initial range must make KBounded fail.",
+      "old": "/\\ k \\in [Neurons -> 1..K_MAX]",
+      "new": "/\\ k \\in [Neurons -> 1..(K_MAX + 1)]",
+      "expect": "KILLED"
+    },
+    {
+      "id": "Consensus-evaluate-without-quorum",
+      "spec": "Consensus",
+      "why": "A proposal may only be decided once the quorum of votes has been cast. Dropping the quorum guard must break the decision properties.",
+      "old": "/\\ p \\notin weightedEval\n    /\\ Cardinality(votes[p]) >= Threshold",
+      "new": "/\\ p \\notin weightedEval\n    /\\ TRUE",
+      "expect": "SURVIVED",
+      "finding": "The Consensus properties do not pin the quorum: with the guard removed, a proposal is decided from a single vote and every property still holds. This is the evidence for the gap the registry records - the model's Threshold is a vote COUNT while the Java's rule is a weight RATIO - and it is why the Consensus entry does not claim a checked quorum."
+    },
+    {
+      "id": "FrozenEthicalFNL-fires-a-non-triggering-axiom",
+      "spec": "FrozenEthicalFNL",
+      "why": "Only the axioms whose trigger covers the feature set may fire. Firing all of them must break FiredSubsetOfTotal and NeuronsAreCanonical.",
+      "old": "{neurons[a] : a \\in {x \\in Axioms : features \\in Triggers[x]}}]",
+      "new": "{neurons[a] : a \\in Axioms}]",
+      "expect": "KILLED"
+    },
+    {
+      "id": "HashChain-wrong-sequence-number",
+      "spec": "HashChain",
+      "why": "A link's sequence number must be its position in the chain - the contract RECON-W39 wrote into the Java (sequence(i) = i - 1). Recording a different number must break the integrity check.",
+      "old": "sequence    |-> seq,",
+      "new": "sequence    |-> seq + 1,",
+      "expect": "KILLED"
+    },
+    {
+      "id": "KnowledgeLifecycle-established-without-evidence",
+      "spec": "KnowledgeLifecycle",
+      "why": "A refinement must not leave a claim established with nothing behind it. Dropping the evidence the refinement attaches must make EvidenceRequired fail.",
+      "old": "/\\ evidence' = [evidence EXCEPT ![new] = {s}]",
+      "new": "/\\ evidence' = evidence",
+      "expect": "KILLED"
+    },
+    {
+      "id": "KnowledgeLifecycle-no-revision-recorded",
+      "spec": "KnowledgeLifecycle",
+      "why": "Every change must leave a revision that says what changed. Dropping the revision must make RevisionRecorded fail.",
+      "old": "/\\ revisions' = revisions \\cup {<<old, new>>}",
+      "new": "/\\ revisions' = revisions",
+      "expect": "KILLED"
+    },
+    {
+      "id": "KnowledgeLifecycle-superseded-claim-rewritten",
+      "spec": "KnowledgeLifecycle",
+      "why": "A correction must not rewrite what was believed. Letting the refinement change the text of the superseded claim must make SupersededKeepsProposition fail.",
+      "old": "/\\ proposition' = proposition",
+      "new": "/\\ proposition' = [proposition EXCEPT ![old] = \"rewritten\"]",
+      "expect": "KILLED"
+    },
+    {
+      "id": "KnowledgeLifecycle-draft-claim-can-be-superseded",
+      "spec": "KnowledgeLifecycle",
+      "why": "A claim with no evidence cannot be superseded: the superseded status is itself an established one. Widening the guard to allow a DRAFT claim must make EvidenceRequired fail - the gap the model found in its own first version.",
+      "old": "/\\ status[old] \\in Established",
+      "new": "/\\ status[old] \\in Established \\cup {Draft}",
+      "expect": "KILLED"
+    },
+    {
+      "id": "KnowledgeStore-import-drops-the-claims",
+      "spec": "KnowledgeStore",
+      "why": "An import must land the claims and the evidence that backs them together. Dropping the claims must make TypeOK fail, because the evidence would then point at claims that are not there.",
+      "old": "/\\ claims' = claims \\cup Claims",
+      "new": "/\\ claims' = claims",
+      "expect": "KILLED"
+    },
+    {
+      "id": "KnowledgeStore-rollback-leaves-the-claims",
+      "spec": "KnowledgeStore",
+      "why": "A rolled-back import must leave nothing behind. Letting the rollback keep the claims must make ImportIsAtomic fail - the store would hold half a package.",
+      "old": "/\\ claims' = claims\n    /\\ backed' = backed",
+      "new": "/\\ claims' = claims \\cup Claims\n    /\\ backed' = backed",
+      "expect": "KILLED"
+    },
+    {
+      "id": "KnowledgeStore-import-drops-the-sources",
+      "spec": "KnowledgeStore",
+      "why": "A claim that is backed by evidence needs a source behind that evidence. Dropping the sources must make BackedHasSource fail.",
+      "old": "/\\ sources' = sources \\cup Sources",
+      "new": "/\\ sources' = sources",
+      "expect": "KILLED"
+    },
+    {
+      "id": "KnowledgeStore-migration-lowers-the-version",
+      "spec": "KnowledgeStore",
+      "why": "The schema version only ever goes up. A migration that lowers it must fail the version properties - a downgrade would read data written by a newer schema.",
+      "old": "/\\ schemaVersion' = schemaVersion + 1",
+      "new": "/\\ schemaVersion' = schemaVersion - 1",
+      "expect": "KILLED"
+    },
+    {
+      "id": "KnowledgeAxes-establish-sets-the-layer-without-the-warrant",
+      "spec": "KnowledgeAxes",
+      "why": "An established claim always keeps a warrant: a claim with no warrant was asserted, and asserting is not knowing. Establishing the layer without the warrant must make EstablishedHasWarrant fail.",
+      "old": "/\\ layer' = [layer EXCEPT ![c] = \"SUPPORTED\"]\n    /\\ warrant' = [warrant EXCEPT ![c] = w]",
+      "new": "/\\ layer' = [layer EXCEPT ![c] = \"SUPPORTED\"]\n    /\\ warrant' = [warrant EXCEPT ![c] = \"NONE\"]",
+      "expect": "KILLED"
+    },
+    {
+      "id": "KnowledgeAxes-derivation-is-not-recorded",
+      "spec": "KnowledgeAxes",
+      "why": "A claim whose derivation was found valid names a recorded derivation. Recording the status without recording the conclusion must make ValidDerivationIsRecorded fail.",
+      "old": "/\\ conclusions' = conclusions \\cup {conclusion}",
+      "new": "/\\ conclusions' = conclusions",
+      "expect": "KILLED"
+    },
+    {
+      "id": "KnowledgeAxes-conflict-forgets-what-it-recorded",
+      "spec": "KnowledgeAxes",
+      "why": "A recorded conflict is never forgotten. A system that drops a conflict it already holds must make ConflictsAreKept fail - the floor remembers what the conflicts were, and a forgotten conflict is not among them any more. The mutant fires only when the pair is already there, so the conflict is recorded first and forgotten second: a mutant that simply never records a conflict would leave the property vacuously true.",
+      "old": "/\\ {c, d} \\notin conflicts\n    /\\ conflicts' = conflicts \\cup {{c, d}}",
+      "new": "/\\ {c, d} \\in conflicts\n    /\\ conflicts' = conflicts \\ {c, d}",
+      "expect": "SURVIVED",
+      "finding": "The property ConflictsAreKept is vacuous by construction: the model has no action that removes a conflict, which is exactly the guarantee the specification makes. A mutant that prevents the conflict from being recorded leaves the property trivially true. The property therefore documents the guarantee rather than testing it, and the registry's entry says so. The conflicts machinery IS tested by the other two mutants: one that makes a conflicted claim UNKNOWN, and one that records a conflict naming only one side."
+    },
+    {
+      "id": "KnowledgeAxes-conflict-empties-the-claim",
+      "spec": "KnowledgeAxes",
+      "why": "A conflict changes nothing about either side: it is a record ABOUT two claims. Making a conflicted claim UNKNOWN must make ConflictsChangeNothing fail.",
+      "old": "/\\ conflicts' = conflicts \\cup {{c, d}}\n    /\\ derivationsFloor' = derivationsFloor \\cup recorded\n    /\\ conflictsFloor' = conflictsFloor \\cup conflicts\n    /\\ UNCHANGED <<layer, warrant, derivationStatus, hasEvidence, recorded,\n                    conclusions>>",
+      "new": "/\\ conflicts' = conflicts \\cup {{c, d}}\n    /\\ layer' = [layer EXCEPT ![c] = \"UNKNOWN\"]\n    /\\ derivationsFloor' = derivationsFloor \\cup recorded\n    /\\ conflictsFloor' = conflictsFloor \\cup conflicts\n    /\\ UNCHANGED <<warrant, derivationStatus, hasEvidence, recorded,\n                    conclusions>>",
+      "expect": "KILLED"
+    },
+    {
+      "id": "KnowledgeAxes-conflict-names-only-one-side",
+      "spec": "KnowledgeAxes",
+      "why": "A conflict names both sides: it is a pair of claims and nothing else. The store keeps no count of records agreeing with either side, so a conflict that named one claim alone would say nothing. Recording a singleton must make ConflictsArePairs fail.",
+      "old": "/\\ conflicts' = conflicts \\cup {{c, d}}",
+      "new": "/\\ conflicts' = conflicts \\cup {{c}}",
+      "expect": "KILLED"
+    },
+    {
+      "id": "LearningStateMachine-two-rung-jump",
+      "spec": "LearningStateMachine",
+      "why": "A move up is legal only one rung at a time. Allowing two must break AdvanceIsOneStep.",
+      "old": "/\\ stage' = stage + 1",
+      "new": "/\\ stage' = stage + 2",
+      "expect": "KILLED"
+    },
+    {
+      "id": "LearningStateMachine-records-unchanged-stage",
+      "spec": "LearningStateMachine",
+      "why": "A transition is recorded only when the stage changed. Recording an unchanged stage must break NoSelfTransition.",
+      "old": "Next == FirstEvidence \\/ Advance \\/ FallBack",
+      "new": "SameStage ==\n    /\\ stage \\in 1..TopStage\n    /\\ Len(recorded) < MAX_TRANSITIONS\n    /\\ stage' = stage\n    /\\ recorded' = Append(recorded, <<stage, stage>>)\n\nNext == FirstEvidence \\/ Advance \\/ FallBack \\/ SameStage",
+      "expect": "KILLED"
+    },
+    {
+      "id": "PromotionStage-verified-accepts-one-source",
+      "spec": "PromotionStage",
+      "why": "The mission's §5.4: ten documents copying one source are not ten independent confirmations. A VERIFIED layer that accepts one source must break VerifiedNeedsTwoIndependentSources.",
+      "old": "-> Cardinality(sources) >= 2",
+      "new": "-> Cardinality(sources) >= 1",
+      "expect": "KILLED"
+    },
+    {
+      "id": "PromotionStage-terminal-reopens",
+      "spec": "PromotionStage",
+      "why": "SUPERSEDED and INVALIDATED are terminal. Letting a superseded claim come back must break TerminalIsFinal.",
+      "old": "[] OTHER                -> {}",
+      "new": "[] s = \"SUPERSEDED\"      -> {\"VERIFIED\"}\n      [] OTHER                -> {}",
+      "expect": "KILLED"
+    },
+    {
+      "id": "PromotionStage-supported-needs-no-evidence",
+      "spec": "PromotionStage",
+      "why": "A supported claim has something behind it. Removing the requirement must break SupportedNeedsASource.",
+      "old": "[] to = \"SUPPORTED\"                   -> Cardinality(sources) >= 1",
+      "new": "[] to = \"SUPPORTED\"                   -> Cardinality(sources) >= 0",
+      "expect": "KILLED"
+    },
+    {
+      "id": "FederationConsensus-veto-does-not-win",
+      "spec": "FederationConsensus",
+      "why": "A VETO must decide on its own: the Java's evaluate() returns CONSENSUS_VETOED the moment a veto is cast, whatever else was cast. If the veto stopped winning, a veto together with enough YES weight would reach APPROVED — and both VetoInvariance and VetoOverridesApproval must fail. The property was not weakened to survive: the transition that broke it was removed because the implementation does not have it.",
+      "old": "ELSE IF HasVeto(vs) THEN \"VETOED\"",
+      "new": "ELSE IF HasVeto(vs) THEN \"PENDING\"",
+      "expect": "KILLED"
+    }
+  ]
+}

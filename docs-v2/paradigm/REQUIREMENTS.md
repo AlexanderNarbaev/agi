@@ -39,7 +39,7 @@
 | ID | Требование | Ссылка |
 |----|-----------|--------|
 | R2.1 | Дистилляция знаний: Qwen (или другая LLM) генерирует корпус → булевы веса | PARADIGM §3 |
-| R2.2 | Инструмент дистилляции в `tools/distill/` — изолирован от runtime | это решение интервью |
+| R2.2 | Инструмент дистилляции в `tools/distill/` <!-- no-link: the v1 tree was removed by the migration to docs-v2 (Q-W46-21) --> — изолирован от runtime | это решение интервью |
 | R2.3 | Noosphere: shared knowledge pool с PoA-консенсусом | SPEC-003 |
 | R2.4 | Knowledge hierarchy: эпизодическая / семантическая / процедурная | L5/L6 |
 | R2.5 | Knowledge versioning с возможностью отката | snapshot/* |
@@ -187,7 +187,7 @@
 ### Фаза α (1-2 дня): Substrate готовность
 - R1.1-R1.6: подтвердить инварианты ядра (K_MAX-тесты, hash-chain, TLA+)
 - R0.7: x-matrix-trace в каждом decision-path
-- Qwen-код → `tools/distill/` (отдельный пакет, не в brain/)
+- Qwen-код → `tools/distill/` <!-- no-link: the v1 tree was removed by the migration to docs-v2 (Q-W46-21) --> (отдельный пакет, не в brain/)
 
 ### Фаза β (5-7 дней): Cognition loop
 - R3.* Perception → R5.* Attention/Deliberation → R6.* Gate/Action

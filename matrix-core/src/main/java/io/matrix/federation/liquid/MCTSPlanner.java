@@ -5,8 +5,22 @@ import java.util.*;
 /**
  * W579 — MCTS Planner for multi-step tasks.
  *
- * Monte Carlo Tree Search with BIR as rollout policy (fast, deterministic).
- * Used for planning in Deep Understanding mode.
+ * <p>Monte Carlo Tree Search with a deterministic rollout policy.
+ *
+ * <p><b>RECON-W39 — production status.</b> This class has NO production
+ * caller: it is exercised only by {@code MCTSPlannerTest}. The production MCTS
+ * engine is {@code io.matrix.mcts.MctsTree}, reached from
+ * {@code PlanningStage}, and the two differ in a way that matters:
+ * {@code MCTSPlanner} selects its final action by MEAN REWARD, while
+ * {@code MctsTree} selects by VISIT COUNT. The two rules can disagree, and
+ * only the visit-count rule is the one that runs.
+ *
+ * <p>The claim that this planner is "used for planning in Deep Understanding
+ * mode" was never established — it is removed here rather than left as a
+ * statement about a capability nothing reaches.
+ *
+ * <p>The registry entry for the corresponding specification is
+ * {@code formal/spec-implementation-map.yml} (MctsLatsVisit).
  */
 public final class MCTSPlanner {
 
@@ -67,7 +81,22 @@ public final class MCTSPlanner {
         /** Check if state is terminal. */
         boolean isTerminal(String state);
 
-        /** Rollout policy (default: random). */
+        /**
+         * Rollout policy (default: the FIRST action — deterministic).
+         *
+         * <p>RECON-W39: this javadoc used to say "(default: random)", which
+         * was never true and contradicted CONSTITUTION Article I — MATRIX
+         * keeps stochasticity out of decision paths so that a run can be
+         * replayed. The implementation has always been deterministic (the
+         * first action); only the documentation was wrong. A caller that
+         * wants a different policy overrides this method.
+         *
+         * <p>Note also that the class this interface belongs to,
+         * {@code MCTSPlanner}, has NO production caller: the production MCTS
+         * engine is {@code io.matrix.mcts.MctsTree}, which selects its final
+         * arm by VISIT COUNT rather than by mean reward. See
+         * {@code formal/spec-implementation-map.yml}.
+         */
         default String rolloutPolicy(String state, List<String> actions) {
             return actions.get(0); // Deterministic: first action
         }

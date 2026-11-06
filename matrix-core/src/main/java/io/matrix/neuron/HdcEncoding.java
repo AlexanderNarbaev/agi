@@ -239,6 +239,81 @@ public final class HdcEncoding {
      * Popcount of a single long word. Convenience for callers building custom
      * metrics.
      */
+    /**
+     * The weights as text, so that the state survives a restart.
+     *
+     * <p>RECON-W42.7. The Hebbian state of a workspace's concept has to
+     * outlive the process: the mission's goal says the improvement must
+     * remain after a forced termination. The encoding is exact - the
+     * weights are the words of the hypercube, and the accumulator is the
+     * float of every position.
+     *
+     * @param words the weights
+     * @return the text
+     */
+    public static String toBits(long[] words) {
+        StringBuilder out = new StringBuilder(words.length * 16);
+        for (long word : words) {
+            out.append(String.format("%016x", word));
+        }
+        return out.toString();
+    }
+
+    /**
+     * The weights from text.
+     *
+     * @param text the text
+     * @return the weights
+     */
+    public static long[] fromBits(String text) {
+        long[] words = new long[WORDS];
+        if (text == null) {
+            return words;
+        }
+        String trimmed = text.trim();
+        int count = Math.min(words.length, trimmed.length() / 16);
+        for (int i = 0; i < count; i++) {
+            words[i] = Long.parseUnsignedLong(trimmed.substring(i * 16, i * 16 + 16), 16);
+        }
+        return words;
+    }
+
+    /**
+     * The accumulator as text.
+     *
+     * @param accumulator the accumulator
+     * @return the text
+     */
+    public static String toAccumulator(float[] accumulator) {
+        StringBuilder out = new StringBuilder(accumulator.length * 12);
+        for (int i = 0; i < accumulator.length; i++) {
+            if (i > 0) {
+                out.append(',');
+            }
+            out.append(Float.toString(accumulator[i]));
+        }
+        return out.toString();
+    }
+
+    /**
+     * The accumulator from text.
+     *
+     * @param text the text
+     * @return the accumulator
+     */
+    public static float[] fromAccumulator(String text) {
+        float[] accumulator = new float[DIM];
+        if (text == null || text.isBlank()) {
+            return accumulator;
+        }
+        String[] parts = text.split(",");
+        int count = Math.min(accumulator.length, parts.length);
+        for (int i = 0; i < count; i++) {
+            accumulator[i] = Float.parseFloat(parts[i].trim());
+        }
+        return accumulator;
+    }
+
     public static int popcount(long x) {
         return Long.bitCount(x);
     }

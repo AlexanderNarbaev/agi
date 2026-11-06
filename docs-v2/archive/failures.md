@@ -1,5 +1,8 @@
 # Failures & Lessons: The Hall of Shame
 
+**Status:** `ARCHIVED` — the state it records no longer exists; the successor is named in the canonical registers
+
+
 > **Layer:** Archive | **Last Updated:** 2026-09-20
 
 *Every failure is a lesson. This document records what didn't work and why.*

@@ -45,7 +45,15 @@ import java.util.Random;
  *   <li>Article IV — FROZEN modulator gate runs on every answer.</li>
  *   <li>Article VI — no consciousness claims; "cognitive stages" / "emergent coordination".</li>
  * </ul>
+ *
+ * @deprecated Legacy reference pipeline. The one cognitive conductor for every
+ *     serving path is {@link TrueMindCycle} (ADR-2026-10-26-002). This class
+ *     is retained because it is the only place the MCTS planning stage is
+ *     exercised and because the differential tests compare the two pipelines.
+ *     It must not be constructed by a serving path; the
+ *     {@code CognitiveConductorGuardTest} CI guard enforces that.
  */
+@Deprecated
 public final class MindCycle {
 
     private final Random rng;
@@ -194,9 +202,14 @@ public final class MindCycle {
         trace.add(mctsStep);
 
         // RECON-W22: relational + bilingual-fact stages, evaluated on the RAW input
-        // before any lookup stage. MindCycle is the pipeline the gateway actually
-        // serves (TrueMindCycle is the offline/audit variant), so wiring only the
-        // latter left the live behaviour unchanged.
+        // before any lookup stage.
+        //
+        // RECON-W38.4 / ADR-2026-10-26-002: the parenthetical that used to read
+        // "MindCycle is the pipeline the gateway actually serves (TrueMindCycle is
+        // the offline/audit variant)" was exactly backwards. The gateway serves
+        // TrueMindCycle (see ProductionBrainClient); this class is the legacy
+        // reference pipeline, kept for differential testing and for the MCTS
+        // planning stage.
         io.matrix.brain.runtime.stages.RelationalReasoningStage relationalStage =
             new io.matrix.brain.runtime.stages.RelationalReasoningStage();
         io.matrix.brain.runtime.stages.RelationalReasoningStage.RelationalResult

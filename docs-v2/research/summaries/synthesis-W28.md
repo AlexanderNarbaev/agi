@@ -41,7 +41,7 @@ status: normative
 ## 5. Что закреплено в W28 (новое)
 
 - **Полнота экспериментальной рамки**: HYPOTHESES.md фиксирует 38 карточек (H-001…H-038); EXP-002/003 опровергли H-002/H-003 на toy-корпусе; EXP-010 подтвердил H-010 (WiSARD vs TsetlinTrainer: median 242× при парите по точности).
-- **LTL+model checking (H-017)**: реализован LtlModelChecker; CI-проверка INV-* до деплоя.
+- **LTL+model checking (H-017)**: реализован LtlModelChecker; CI-проверка INV-* до деплоя. <!-- no-id: the hypothesis register never declared it (Q-W46-19) -->
 - **BIR-classifier parity (H-009)**: предварительно EXP-009B/C — latency ×149 vs ORT-CPU, fidelity.999; полный energy-гейт pending.
 - **Поток preregistration → EXP → отчёт** — норма разработки (FR-15).
 

@@ -28,7 +28,7 @@ requires an explicit RFC mandate. This document is that request.
 
 ## Proposal
 
-Add `.github/workflows/weekly-smoke.yml`:
+Add `.github/workflows/weekly-smoke.yml` <!-- no-link: the workflow was never created; the RFC is a proposal -->:
 
 - **Schedule:** `cron: '17 4 * * 1'` (Mondays 04:17 UTC — deliberately off the hour,
   to avoid the top-of-hour scheduler stampede that delays most cron jobs).

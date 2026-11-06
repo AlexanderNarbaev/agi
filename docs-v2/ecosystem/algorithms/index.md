@@ -6,52 +6,68 @@ parent: Ecosystem
 permalink: /ecosystem/algorithms/
 ---
 
-# Algorithms — Deep Dives
+**Status:** ACTIVE · **Updated:** 2026-11-06
 
-A complete reference for every algorithm in the MATRIX stack. Each page
-covers mathematical foundations, history, implementation, pros/cons, and
-code references.
+# Algorithms — deep dives
 
-## Core Algorithms (T-02 API Gateway References)
+Each page here covers the mathematical foundation, the history, the implementation and the
+trade-offs of one algorithm of the stack. The in-code source of the same material is
+`matrix-core/src/main/java/io/matrix/research/AlgorithmEncyclopedia.java`.
 
-These are the engines that power every `/v1/analyze` call.
+> **A correction to this index.** It used to say that the seven algorithms below "power
+> every `/v1/analyze` call". They do not: the gateway's **default mode is `stub`**, and the
+> real cycle runs only under `MATRIX_MODE=production`. Even then, not every stage fires on
+> every input — each stage either fires with its evidence or is skipped. The pages also
+> named classes that do not exist in this repository; those names have been corrected
+> against the code.
 
-| Algorithm | Used In | Description |
-|-----------|---------|-------------|
-| [BIR](/ecosystem/algorithms/bir/) | Logic layer | Boolean Inference Rules |
-| [HDC](/ecosystem/algorithms/hdc/) | Memory layer | Hyperdimensional Computing |
-| [MCTS](/ecosystem/algorithms/mcts/) | Planning layer | Monte Carlo Tree Search |
-| [Sobel](/ecosystem/algorithms/sobel/) | Vision transcoder | Pure symbolic edge detection |
-| [FFT](/ecosystem/algorithms/fft/) | Audio transcoder | Discrete Fourier Transform |
-| [Biochemical Network](/ecosystem/algorithms/biochemical/) | Modulators | FROZEN regulatory network |
-| [Stigmergy](/ecosystem/algorithms/stigmergy/) | Federation | Indirect coordination |
+## The engines of the cycle
 
-## Secondary Algorithms
+| the algorithm | where it runs | the page |
+|---|---|---|
+| **BIR** — boolean inference | stage 6 of the ten-stage cycle; the logic substrate of the whole system | [BIR](/ecosystem/algorithms/bir/) |
+| **HDC** — hyperdimensional computing | stage 7; the pattern memory, `HdcEncoding.DIM = 1024` | [HDC](/ecosystem/algorithms/hdc/) |
+| **MCTS** — Monte Carlo tree search | stage 9; the planning stage | [MCTS](/ecosystem/algorithms/mcts/) |
+| **Sobel** — edge detection | the vision transcoder, `io.matrix.transcoders.VisionEdgeEncoder` | [Sobel](/ecosystem/algorithms/sobel/) |
+| **FFT** — discrete Fourier transform | the audio transcoder, `io.matrix.transcoders.AudioFFTEncoder` | [FFT](/ecosystem/algorithms/fft/) |
+| **Biochemical network** | the modulator dynamics, `io.matrix.federation.liquid.biochemistry` | [Biochemical](/ecosystem/algorithms/biochemical/) |
+| **Stigmergy** | the indirect coordination of the federation | [Stigmergy](/ecosystem/algorithms/stigmergy/) |
 
-Additional algorithms used in supporting roles (federation, audit, etc.)
+## The secondary algorithms
 
-| Algorithm | Description |
-|-----------|-------------|
-| [BrcChain](/algorithms/BrcChain) | Block-referenced chain for state consensus |
-| [ConversationProtocol](/algorithms/ConversationProtocol) | Multi-party conversation state machine |
-| [FROZEN-EthicalFNL](/algorithms/FROZEN-EthicalFNL) | FROZEN ethical neural layer |
-| [FederatedMesh](/algorithms/FederatedMesh) | Peer-to-peer federation topology |
-| [Hansel-Chains](/algorithms/Hansel-Chains) | Breadcrumb audit chains |
-| [HashChain-Audit](/algorithms/HashChain-Audit) | Tamper-evident audit log structure |
-| [Legal-Axioms](/algorithms/Legal-Axioms) | Legal reasoning primitives |
-| [MPDT-GA](/algorithms/MPDT-GA) | Multi-Population Drift Tracking GA |
-| [Mcts-Lats](/algorithms/Mcts-Lats) | MCTS with Language Agent Tree Search |
-| [Ricci-Fingerprint](/algorithms/Ricci-Fingerprint) | Curvature-based topology fingerprints |
-| [Tsetlin-Automaton](/algorithms/Tsetlin-Automaton) | Tsetlin machine learning |
-| [WiSARD-WNN](/algorithms/WiSARD-WNN) | WiSARD weightless neural network |
+Twelve more, with their own pages under `docs-v2/algorithms/`:
 
-## Migration Note
+| the algorithm | the page |
+|---|---|
+| BrcChain — the block-referenced chain for state consensus | [BrcChain](/algorithms/BrcChain) |
+| ConversationProtocol — the multi-party conversation state machine | [ConversationProtocol](/algorithms/ConversationProtocol) |
+| FROZEN-EthicalFNL — the frozen ethical layer | [FROZEN-EthicalFNL](/algorithms/FROZEN-EthicalFNL) |
+| FederatedMesh — the peer-to-peer federation topology | [FederatedMesh](/algorithms/FederatedMesh) |
+| Hansel-Chains — the breadcrumb audit chains | [Hansel-Chains](/algorithms/Hansel-Chains) |
+| HashChain-Audit — the tamper-evident audit log | [HashChain-Audit](/algorithms/HashChain-Audit) |
+| Legal-Axioms — the legal reasoning primitives | [Legal-Axioms](/algorithms/Legal-Axioms) |
+| MPDT-GA — the multi-population drift-tracking genetic algorithm | [MPDT-GA](/algorithms/MPDT-GA) |
+| Mcts-Lats — MCTS with Language Agent Tree Search | [Mcts-Lats](/algorithms/Mcts-Lats) |
+| Ricci-Fingerprint — the curvature-based topology fingerprint | [Ricci-Fingerprint](/algorithms/Ricci-Fingerprint) |
+| Tsetlin-Automaton — the Tsetlin machine | [Tsetlin-Automaton](/algorithms/Tsetlin-Automaton) |
+| WiSARD-WNN — the weightless neural network | [WiSARD-WNN](/algorithms/WiSARD-WNN) |
 
-T-03 migrated algorithm content from `docs-v2/research/` to public-facing
-`docs-v2/ecosystem/algorithms/`. The 12 existing algorithms are accessible
-via the secondary table above. Core algorithms (BIR/HDC/MCTS/Sobel/FFT/Biochemical/Stigmergy)
-have dedicated ecosystem pages to support the API documentation.
+**Some of these are measured, and some are not.** The capability registry states each one
+on four axes; a measured result carries its benchmark, and an unimplemented idea carries
+`PROPOSED`. Where a hypothesis about one of them was refuted, the refutation is indexed in
+[`docs-v2/research/NEGATIVE-RESULTS-INDEX.md`](../../research/NEGATIVE-RESULTS-INDEX.md) —
+for instance the MPDT-GA comparison (NR-001), whose preregistered gate was **not** met.
 
----
+## A note on the numbers in these pages
 
-**Last updated:** 2026-09-21 (Wave T-03)
+The performance figures that were quoted on these pages without a measurement — "~3 ms per
+cycle", "~50 ms", "10 000 iterations ≈ 500 ms", a "100 000× speed-up" — have been removed.
+A benchmark a claim depends on is a **JMH run**, not a timer:
+
+```bash
+./gradlew :matrix-core:jmh -PjmhBenchmark=Name
+```
+
+The method is `docs-v2/research/PROTOCOL.md`; the gate evidence is
+`docs-v2/engineering/JMH-GATE-EVIDENCE.md`. The constitution's Article VI requires it:
+**any number comes only from a real run with an explicit methodological protocol.**

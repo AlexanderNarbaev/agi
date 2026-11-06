@@ -64,6 +64,12 @@ dependencies {
     jmhImplementation 'org.xerial:sqlite-jdbc:3.43.0.0'
     implementation 'org.apache.commons:commons-imaging:1.0.0-alpha5'
     implementation 'org.jsoup:jsoup:1.17.2'
+    // RECON-W42.2 — PDF extraction. The mission's §5.1 requires an
+    // established library rather than a hand-written parser, and PDFBox
+    // 3.0.3 is already the pinned PDF library of this repository (see
+    // matrix-audit/build.gradle), so this is the project's own choice, not
+    // a new one.
+    implementation 'org.apache.pdfbox:pdfbox:3.0.3'
 
     implementation 'org.apache.avro:avro:1.12.2'
     implementation 'io.lettuce:lettuce-core:6.5.0.RELEASE'
@@ -93,6 +99,19 @@ dependencies {
 
 tasks.withType(Test) {
     useJUnitPlatform()
+    // RECON-W43: the ONNX runtime extracts a native library of about 583 MB
+    // into a fresh directory under java.io.tmpdir for EVERY session load and
+    // never removes it. A test run therefore left as many directories as it
+    // loaded models, and they filled the per-user quota of the /tmp tmpfs -
+    // which broke the build, the gates and the shell with EDQUOT. The test
+    // JVMs get their own scratch directory, and it is emptied before the
+    // run. Deleting a directory another worker has open is safe on Linux:
+    // the worker keeps its mapping and the space comes back when it exits.
+    systemProperty 'java.io.tmpdir', "${rootProject.projectDir}/data/tmp"
+    doFirst {
+        delete file("${rootProject.projectDir}/data/tmp")
+        mkdir file("${rootProject.projectDir}/data/tmp")
+    }
     // Exclude integration tests from default test run (requires Docker)
     if (!project.hasProperty('includeIntegration')) {
         exclude '**/integration/**'
@@ -102,13 +121,104 @@ tasks.withType(Test) {
     jvmArgs '-Xmx16g'
     // RUN 62: enable native access for ONNX runtime GPU
     jvmArgs '--enable-native-access=ALL-UNNAMED'
-    // RUN 62: provide NVIDIA CUDA 12 library path for ONNX runtime GPU
-    def nvidiaLibs = fileTree('/home/alexandr-narbaev/Projects/agi/.venv/lib/python3.14/site-packages') {
-        include 'nvidia/*/lib'
+    // RUN 62: provide NVIDIA CUDA library path for ONNX runtime GPU.
+    //
+    // RECON-W38.4: the previous values were absolute paths into one developer's
+    // home directory plus one CUDA install. On any other machine they were
+    // simply wrong paths, and the five symlinks that carried the libraries
+    // were committed to git - one of them pointing into an untracked
+    // virtualenv, so a fresh clone had a dangling link. Candidates are now
+    // derived from the project root and from the standard CUDA environment
+    // variables, and each is included ONLY if it actually exists: an absent
+    // optional accelerator must not become a bogus library path.
+    // scripts/diagnose-cuda.sh --repair creates the local .onnx_libs/ links
+    // that this path picks up.
+    def cudaLibDirs = []
+    def venvLib = file("${rootDir}/.venv/lib")
+    if (venvLib.exists()) {
+        cudaLibDirs += fileTree(venvLib) { include '**/site-packages/nvidia/*/lib' }.files
     }
-    def nvidiaPaths = nvidiaLibs.collect { it.absolutePath }.join(':')
-    systemProperty 'java.library.path', "${nvidiaPaths}:/usr/local/cuda-13.1/lib64"
+    [System.getenv('CUDA_HOME'), System.getenv('CUDA_PATH'), '/usr/local/cuda']
+        .findAll { it }
+        .collect { file(it) }
+        .findAll { it.exists() }
+        .each { cudaLibDirs += fileTree(it) { include '**/lib64' }.files }
+    def onnxLibs = file("${rootDir}/.onnx_libs")
+    if (onnxLibs.exists()) cudaLibDirs << onnxLibs
+    def nvidiaPaths = cudaLibDirs.collect { it.absolutePath }.join(':')
+    if (!nvidiaPaths.isEmpty()) {
+        systemProperty 'java.library.path', nvidiaPaths
+    }
 }
+
+// ─── Generated build metadata (RECON-W38.4) ───────────────────────────────────
+//
+// The native binary used to print hardcoded headline numbers ("171+ cognitive
+// measurement classes", "6,700+ test methods across 940+ test files"). Those
+// numbers were true once and were never updated, and a shipped binary cannot
+// verify them at runtime.
+//
+// The counts are now MEASURED at build time from the source tree and written
+// into a resource, so the number printed by a binary always corresponds to the
+// tree that binary was built from. The counting method is stated in the file
+// itself, and a binary built without the resource says so instead of guessing.
+tasks.register('generateBuildInfo') {
+    def consciousnessSrc = fileTree('src/main/java/io/matrix/consciousness') { include '**/*.java' }
+    def cognitiveNamed = fileTree('src/main/java') {
+        include '**/io/matrix/consciousness/Cognitive*.java'
+    }
+    def testFiles = fileTree('src/test/java') { include '**/*Test.java' }
+    def allTestFiles = fileTree('src/test/java') { include '**/*.java' }
+    def out = layout.buildDirectory.file('generated/build-info/matrix-build-info.properties')
+    // the generated directory must be a resource root, otherwise the file
+    // never reaches the jar and the binary cannot read it
+    sourceSets.main.resources.srcDir(layout.buildDirectory.dir('generated/build-info'))
+    inputs.files(consciousnessSrc, cognitiveNamed, testFiles, allTestFiles)
+    outputs.file(out)
+    doLast {
+        int testMethods = 0
+        allTestFiles.files.each { f ->
+            testMethods += f.readLines().count { l -> l.trim().startsWith('@Test') }
+        }
+        def props = new Properties()
+        props.setProperty('build.consciousness.package.files', String.valueOf(consciousnessSrc.files.size()))
+        props.setProperty('build.consciousness.package.named.cognitive', String.valueOf(cognitiveNamed.files.size()))
+        props.setProperty('build.test.files', String.valueOf(allTestFiles.files.size()))
+        props.setProperty('build.test.classes', String.valueOf(testFiles.files.size()))
+        props.setProperty('build.test.methods', String.valueOf(testMethods))
+        props.setProperty('build.counting.method',
+            'consciousness.package.files = .java files in io/matrix/consciousness; ' +
+            'consciousness.package.named.cognitive = those named Cognitive*.java; ' +
+            'test.files = .java files under src/test/java; test.classes = those named *Test.java; ' +
+            'test.methods = source lines starting with @Test')
+        def f = out.get().asFile
+        f.parentFile.mkdirs()
+        f.withOutputStream { os ->
+            // The file is written WITHOUT a timestamp.
+            //
+            // RECON-W42.7: java.util.Properties.store writes the current
+            // time into its comment, so two builds of the same sources
+            // produced two DIFFERENT archives — the one entry that stood
+            // between the compilation and the archive being reproducible.
+            // The properties are written by hand, sorted, so the file is a
+            // function of the sources alone.
+            def sw = new java.io.OutputStreamWriter(os, 'UTF-8')
+            sw.write('#MATRIX build metadata - generated, do not edit\n')
+            props.stringPropertyNames().sort().each { key ->
+                def value = props.getProperty(key)
+                def escaped = value.replace('\\', '\\\\')
+                    .replace('\n', '\\n')
+                    .replace('\r', '\\r')
+                    .replace('\t', '\\t')
+                sw.write("${key}=${escaped}\n")
+            }
+            sw.flush()
+        }
+        logger.lifecycle("matrix-build-info: ${testMethods} @Test methods across ${allTestFiles.files.size()} test files")
+    }
+}
+
+processResources.dependsOn tasks.named('generateBuildInfo')
 
 tasks.withType(JavaCompile) {
     options.compilerArgs.add('--add-modules=jdk.incubator.vector')
@@ -191,6 +301,20 @@ spotbugs {
     effort = com.github.spotbugs.snom.Effort.DEFAULT
     reportLevel = com.github.spotbugs.snom.Confidence.valueOf('MEDIUM')
     excludeFilter = file('config/spotbugs/exclude.xml')
+    // RECON-W38.4: pin the newest released SpotBugs engine. The previously
+    // resolved engine could not read Java 25 bytecode ("Unsupported class
+    // file major version 69"), so spotbugsMain exited 4 and wrote a 0-byte
+    // report: the static-analysis gate produced NO evidence, and CI's
+    // continue-on-error hid it.
+    //
+    // LIMITATION (verified 2026-10-26): 4.9.3 is the newest release on
+    // Maven Central and still bundles ASM 9.7.1, which supports class file
+    // major version 68 (Java 24) at most. This project targets Java 25
+    // (major 69), so the analysis still cannot run. The pin keeps the tool
+    // current so the gate recovers when a Java 25-capable release lands.
+    // Until then CI must report this as an explicit, loud limitation rather
+    // than a silent pass.
+    toolVersion = '4.9.3'
 }
 
 spotbugsMain {
@@ -383,6 +507,64 @@ tasks.register('runNative', Exec) {
 }
 
 // nativeTest is provided by GraalVM plugin as NativeRunTask
+
+// ─── W48: the native-binary test scope ───────────────────────────────────────
+//
+// The native-binary tests launch build/native/nativeCompile/matrix-core. On a
+// host without a native build they failed with
+// "Cannot run program build/native/nativeCompile/matrix-core" — 23 failures
+// that said nothing about the code under test and made the default JVM task
+// untrustworthy.
+//
+// The scope is now separated into three, and none of them is silently dropped:
+//
+//   1. the default `test` task   — ordinary JVM tests; the native-binary and
+//                                  native-build-configuration scopes are excluded;
+//   2. `nativeBinaryTest`        — the tests that need the compiled executable;
+//                                  it REFUSES to run with a clear message when
+//                                  the executable is absent;
+//   3. `nativeBuildConfigTest`   — the tests that validate the native BUILD
+//                                  configuration (the Dockerfile) and need no
+//                                  executable, so they run on any host.
+//
+// The exclusion is reported in docs-v2/engineering/TEST-CATALOGUE.yml and in
+// docs-v2/engineering/W48-TEST-RECONCILIATION.md, and the native capability
+// stays BLOCKED in CAPABILITY-REGISTRY.yml until an executable exists.
+tasks.named('test') {
+    useJUnitPlatform {
+        excludeTags 'native-binary', 'native-build-config'
+    }
+}
+
+tasks.register('nativeBinaryTest', Test) {
+    group = 'native'
+    description = 'Run the native-binary test scope (requires a compiled native executable)'
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath
+    useJUnitPlatform {
+        includeTags 'native-binary'
+    }
+    def nativeBinary = file("${project.layout.buildDirectory.get()}/native/nativeCompile/matrix-core")
+    doFirst {
+        if (!nativeBinary.exists()) {
+            throw new GradleException(
+                "The native executable ${nativeBinary} does not exist, so the native-binary " +
+                "test scope cannot run. Build it with ./gradlew :matrix-core:buildNative " +
+                "(GraalVM 25+ or Mandrel 24.x) and run this task again. This scope is " +
+                "BLOCKED - it is not a pass, and the default JVM task does not cover it.")
+        }
+    }
+}
+
+tasks.register('nativeBuildConfigTest', Test) {
+    group = 'native'
+    description = 'Run the native build-configuration test scope (no executable required)'
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath
+    useJUnitPlatform {
+        includeTags 'native-build-config'
+    }
+}
 
 tasks.register('nativeReflectionTest', Test) {
     group = 'native'

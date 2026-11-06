@@ -5,7 +5,25 @@
 // This module is INTENTIONALLY a separate Gradle project.
 // - No compile-time dependency on matrix-core (uses reflection or its own models).
 // - No COMPILE-TIME LLM symbols available; runtime is plain Java CLI.
-// - CONSTITUTION I: matrix-core runtime classpath must NOT include ONNX runtime.
+// - No ONNX runtime on the PRODUCTION RUNTIME classpath.
+//
+//   RECON-W38.4: the previous wording here claimed "matrix-core runtime
+//   classpath must NOT include ONNX runtime". That statement was factually
+//   false of the tree: matrix-core declares onnxruntime + onnxruntime_gpu as
+//   `implementation`, and five classes in matrix-core import the runtime API
+//   (ai.onnxruntime). The constraint that actually holds, and that this
+//   module's isolation supports, is narrower and is now enforced:
+//     * ONNX must not appear in a DECISION-PATH package
+//       (io.matrix.consciousness / brain / mediator / reasoning / actions /
+//       ethics / imports / neuron) - enforced by DecisionPathAuditor,
+//       which forbids the ai.onnxruntime. and com.microsoft.onnxruntime.
+//       prefixes;
+//     * the LLM-serving ONNX classes stay quarantined from the runtime mind
+//       path by RuntimeLlmGuardTest (reachability, not classpath).
+//   Keeping this module separate keeps the OFFLINE distillation tool out of
+//   the production runtime and out of the core module graph. That value is
+//   real and is independent of the false statement above.
+
 //
 // Decision: matrix-tools-distill is its own world for offline distillation.
 // Use cases:
@@ -66,11 +84,34 @@ tasks.withType(JavaCompile).configureEach {
 
 tasks.withType(Test) {
     useJUnitPlatform()
-    def nvidiaLibs = fileTree('/home/alexandr-narbaev/Projects/agi/.venv/lib/python3.14/site-packages') {
-        include 'nvidia/*/lib'
+    // RUN 62: provide NVIDIA CUDA library path for ONNX runtime GPU.
+    //
+    // RECON-W38.4: the previous values were absolute paths into one developer's
+    // home directory plus one CUDA install. On any other machine they were
+    // simply wrong paths, and the five symlinks that carried the libraries
+    // were committed to git - one of them pointing into an untracked
+    // virtualenv, so a fresh clone had a dangling link. Candidates are now
+    // derived from the project root and from the standard CUDA environment
+    // variables, and each is included ONLY if it actually exists: an absent
+    // optional accelerator must not become a bogus library path.
+    // scripts/diagnose-cuda.sh --repair creates the local .onnx_libs/ links
+    // that this path picks up.
+    def cudaLibDirs = []
+    def venvLib = file("${rootDir}/.venv/lib")
+    if (venvLib.exists()) {
+        cudaLibDirs += fileTree(venvLib) { include '**/site-packages/nvidia/*/lib' }.files
     }
-    def nvidiaPaths = nvidiaLibs.collect { it.absolutePath }.join(':')
-    systemProperty 'java.library.path', "${nvidiaPaths}:/usr/local/cuda-13.1/lib64"
+    [System.getenv('CUDA_HOME'), System.getenv('CUDA_PATH'), '/usr/local/cuda']
+        .findAll { it }
+        .collect { file(it) }
+        .findAll { it.exists() }
+        .each { cudaLibDirs += fileTree(it) { include '**/lib64' }.files }
+    def onnxLibs = file("${rootDir}/.onnx_libs")
+    if (onnxLibs.exists()) cudaLibDirs << onnxLibs
+    def nvidiaPaths = cudaLibDirs.collect { it.absolutePath }.join(':')
+    if (!nvidiaPaths.isEmpty()) {
+        systemProperty 'java.library.path', nvidiaPaths
+    }
     jvmArgs '--enable-native-access=ALL-UNNAMED'
 }
 

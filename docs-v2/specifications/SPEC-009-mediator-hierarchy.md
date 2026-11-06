@@ -84,9 +84,9 @@ for each driver (sorted by weight desc):
 
 ## Связь с существующим
 
-- `brain/BrainPipeline` ([DESIGN-13](../designs/DESIGN-13-brain-pipeline.md))
+- `brain/BrainPipeline` ([DESIGN-13](../designs/DESIGN-03-pipeline.md))
   использует `InstanceMediator` как coordination layer.
-- `lifecycle/ConsolidationCycle` ([DESIGN-07](../designs/DESIGN-07-consolidation-cycle.md))
+- `lifecycle/ConsolidationCycle` ([DESIGN-07](../designs/DESIGN-07-lifecycle.md))
   потребляет драйвер `COMPUTE` от медиатора.
 - `ethics/EthicalFilter` → `FROZENFNLGuardian` ([SPEC-006](./SPEC-006-consciousness-deliberation.md))
   используется `MetaGoalValidator`.

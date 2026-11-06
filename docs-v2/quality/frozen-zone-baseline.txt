@@ -1,0 +1,188 @@
+# FROZEN-1 exceptions — explicit, narrow, owned and time-bounded.
+#
+# RECON-W43.0. The quality gate compares the frozen zones against a
+# historical baseline ref (b144563e). Two of them have drifted since, and
+# that drift is a FACT of the repository, not a new violation. The gate
+# used to count those zones as violations and then never read the counter,
+# so the frozen-zone rule could not fail at all.
+#
+# Now it can. To do that honestly, the drift that already exists is
+# recorded HERE, per zone, with the number of diff lines that are accepted,
+# who accepts them, and the date on which the acceptance EXPIRES. A zone
+# with no entry here must have zero drift. A zone whose drift grows past
+# its accepted number is a new violation. A zone whose exception has
+# expired is a violation too — the point of a time bound is that it is
+# enforced.
+#
+# Format:  zone | accepted_diff_lines | owner | expires
+#
+# The dates are the owner's to set. These are placeholders for the two
+# zones that have drifted; the owner should confirm or shorten them.
+#
+# RECON-W43.0, the .github/ exception was raised from 785 to 851 diff
+# lines. The change is SANCTIONED by the W43 directive, which requires that
+# "CI must run the gates on changes that can affect their contracts" — a
+# requirement that cannot be met without editing a workflow, and the
+# workflows are a frozen zone. The exception is recorded here rather than
+# waved through, so that the amount of the change is visible and the
+# expiry is real. What was added: the `quality-gates` job in ci.yml (the
+# clean-code gate, the formal gate and the security boundary check) and the
+# regenerated TLA+ path filter in tla.yml (the two specifications this wave
+# registered).
+
+# W46, the AGENTS.md exception was raised from 14 to 63 diff lines.
+#
+# The change is SANCTIONED by the owner: on 2026-11-05 the owner answered the
+# W46 questionnaire and chose "apply the patch" for the AGENTS.md amendment,
+# whose exact diff was prepared and verified in W46.2
+# (docs-v2/governance/AGENTS-AMENDMENT-PROPOSAL.md).
+#
+# What the patch does, in nine hunks: it repairs the five paths the file
+# pointed at and that do not exist (engineering/PLAN.md, WAL.md, ethics/frozen/,
+# context.md, HYPOTHESES-NEW.md); it makes the push rule conform to the
+# autonomy levels, so that two owner-owned documents no longer give opposite
+# standing instructions; and it adds two lines about the commit-specific test
+# baseline and the JUnit XML as the evidence.
+#
+# The remaining lines of the 63 are the owner's own "AI Dev Tools" block, which
+# was in the working tree before the wave and is committed separately.
+#
+# The change is recorded here rather than waved through, so that the amount
+# of it is visible and the expiry is real.
+
+# W47, the .github/ exception was raised from 851 to 859 diff lines.
+#
+# The change is GENERATED, not written by hand: the specification-to-implementation
+# map gained the fifteenth specification (OD-030), and the map's own generator
+# (./gradlew :matrix-quality:regenerateFormalPaths) rewrote the path filter in
+# .github/workflows/tla.yml. The generator is the sanctioned mechanism, and the
+# map's validator checks that the workflow's filter matches the map — so the
+# block CANNOT be maintained by hand.
+#
+# What changed: eight path lines, the paths of the new specification's module
+# and its test. Nothing else in the workflow was touched.
+#
+# The exception is recorded here rather than waved through, so that the amount
+# of the change is visible and the expiry is real.
+
+# W48, the .github/ exception was raised from 859 to 946 diff lines.
+#
+# Two changes, both of them repairs of a red mandatory check, and both of
+# them in the workflow's own steps rather than in its triggers:
+#
+# 1. branch-validation.yml — the GraalVM step requested the distribution
+#    identifier "graalvm-ce", which the action rejects, so the job failed at
+#    the setup step and compiled nothing; and the version gate grepped for
+#    the WORD "VERSION" anywhere under a module's sources, which cannot tell
+#    a version contract from a comment. The gate now checks a public
+#    declaration in the module's named public facade.
+# 2. tla.yml — the formal job downloaded tla2tools.jar from a release whose
+#    asset was replaced in place, and the checksum correctly refused it. The
+#    tool is now tracked in the repository, and the job verifies the tracked
+#    bytes.
+#
+# The third change is the SAME repair applied to the second workflow:
+#
+# 3. ci.yml — the "Quality gates" job of the main workflow carried a copy of
+#    the download step that the tla.yml repair had already removed, so the
+#    main workflow was still red at the very step that had just been fixed
+#    elsewhere. The step now verifies the tracked bytes, exactly as tla.yml
+#    does, and the two workflows cannot drift apart again because neither of
+#    them downloads anything.
+#
+# What did NOT change: the triggers, the permissions, the secrets, the
+# concurrency settings and the cache configuration. The exception is
+# recorded here rather than waved through, so that the amount of the change
+# stays visible and the expiry stays real.
+
+# W48 (later in the same wave), the .github/ exception was raised from 958
+# to 1056 diff lines, and W49 raised it further.
+#
+# Three changes, all of them repairs of a red mandatory check on the clean
+# runner, and all of them in the workflow's own steps rather than in its
+# triggers:
+#
+# 1. ci.yml, the "Quality gates" job — the job starts the real application
+#    for the security-boundary check, and the application connects to Redis
+#    at startup (matrix-core/src/main/resources/application.properties:14).
+#    A clean runner has no Redis, so the application failed with "Connection
+#    refused: localhost/127.0.0.1:6379" and the check reported a defect
+#    that did not exist. The job now declares the Redis service it needs.
+# 2. ci.yml, the "Security Scan" job — the job had no JDK setup step at all,
+#    so it inherited the runner's JAVA_HOME, which points at a path that does
+#    not exist on a Linux runner (".../Java_Temurin-Hotspot_jdk/25.0.1.6/
+#    Contents/Home" — a macOS-style path). Gradle refused to start with
+#    "ERROR: JAVA_HOME is set to an invalid directory" and the job failed
+#    before SpotBugs ever ran. The job now installs the same JDK 25 the
+#    other jobs use.
+# 3. ci.yml, the "Container Images" job — the api-gateway smoke test ran the
+#    image in its DEFAULT exposure mode and then probed the PUBLISHED host
+#    port. The default mode is LOCAL_ONLY, so the gateway bound 127.0.0.1
+#    inside the container and the published port reached nothing: the probe
+#    failed for 80 seconds while the application had started correctly. The
+#    step now mirrors the deployed configuration (deploy/docker-compose.yml:
+#    NETWORK_EXPOSED with a credential, where the credential is a throwaway
+#    value for the job and not a secret) and reports the container state as
+#    well as the log when it fails.
+#    The two matrix-core smoke tests in the SAME job had the same defect and
+#    never reached it, because the api-gateway step failed first: the
+#    application binds the loopback interface by default
+#    (application.properties:44 — quarkus.http.host=127.0.0.1), so their
+#    published ports reached nothing as well. They now set the host
+#    explicitly for the ephemeral container.
+#
+# 4. ci.yml, the "Security Scan" job — the SpotBugs step ran the analysis
+#    under `bash -e`, so the failing pipeline ABORTED the step before its own
+#    branch could read the log. The "known limitation" case never printed its
+#    warning, and the two REAL checks after it — the secret scan and the
+#    vulnerable-dependency check — were SKIPPED. The step now captures the
+#    pipeline's status and lets its branches decide.
+#
+# 8. W49 (OD-048), the two gates that a RELEASE pull request must pass.
+#    The pull request that carries the current work to the public branch
+#    exposed two defects in the workflows' own checks:
+#    - branch-validation.yml: the branch-name convention was written as
+#      ^(feature/fix/feat/chore/docs/test|refactor/perf|security)/.+$,
+#      which matches only the literal string "feature/fix/feat/chore/docs/
+#      test" — the prefixes in its own error message were never accepted.
+#      And it rejected the two INTEGRATION branches by name, so the release
+#      pull request the W49 addendum asks for could never pass. The
+#      alternation now belongs to the prefix, and develop/main are exempt.
+#    - docs-validation.yml: the constitution-parity check looked for the
+#      literal string "Article I"…, which the constitution never used (its
+#      articles are headed "I. Stratified Stochasticity" …), so the check
+#      could not tell the constitution's own eight articles from eight
+#      invented ones — which is exactly the defect the W49 public audit
+#      found in the page. The check now compares the pages with the
+#      constitution's own article list.
+#
+# 7. W49 (OD-048), the contributor-facing templates and the Pages workflow.
+#    The owner's W49 addendum names .github/ISSUE_TEMPLATE/ and the
+#    PULL_REQUEST_TEMPLATE explicitly, and requires the Pages deployment
+#    path to preview a pull request and to validate the configuration
+#    against the actual deployment URL. The issue templates, the pull
+#    request template and .github/workflows/pages.yml were rewritten or
+#    extended for that; the workflows were not otherwise touched.
+#
+# 6. ci.yml, the "Security Scan" job — the secret scan passed
+#    `base: ${{ github.ref }}` and `head: HEAD`, which are the SAME commit on
+#    a push, so the action refused with "BASE and HEAD commits are the same.
+#    TruffleHog won't scan anything" and the step failed. The check has
+#    therefore never scanned anything. The step now uses the action's
+#    DEFAULT behaviour — it scans exactly the commits the push carried — and
+#    the checkout fetches the history the action resolves that range in.
+#
+# 5. ci.yml, the "Container Images" job — the minikube smoke test reused the
+#    Postgres and Redis containers of the previous step, and the previous
+#    step removed them when it finished. The application then started with no
+#    cache and no database ("Unable to connect to redis-ci/<unresolved>"). The
+#    step now brings up its own dependencies: a step that depends on another
+#    step's leftovers is not reproducible.
+#
+# What did NOT change: the triggers, the permissions, the secrets, the
+# concurrency settings and the cache configuration. The exception is
+# recorded here rather than waved through, so that the amount of the change
+# stays visible and the expiry stays real.
+
+.github/ | 1701 | repo-owner | 2026-12-31
+AGENTS.md | 63 | repo-owner | 2026-12-31

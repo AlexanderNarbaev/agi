@@ -38,7 +38,7 @@ leakage, and produce a clean separation between runtime and offline tools.
 
 **RUN 141** — Qwen isolation
 - Move `api/OnnxChatResource`, `bridge/Qwen*`, `bridge/OnnxRuntimeAdapter`, etc.
-  into new package `tools/distill/`
+  into new package `tools/distill/` <!-- no-link: the v1 tree was removed by the migration to docs-v2 (Q-W46-21) -->
 - Keep as opt-in CLI / Gradle task; no REST endpoint
 - Tests: 3 — verify Qwen import goes through tools, not decision path
 - Evidence: grep confirms no LLM symbols in `consciousness/`, `brain/`,

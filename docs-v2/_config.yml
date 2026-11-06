@@ -1,7 +1,7 @@
-title: MATRIX Encyclopedia
-description: The AI That Thinks Like a Brain
+title: MATRIX
+description: "A deterministic neuro-symbolic research system. Two serving applications, a capability registry on four independent axes, and the negative results kept beside the positive ones."
 baseurl: /agi
-url: https://alexandr-narbaev.github.io
+url: https://alexandernarbaev.github.io
 
 remote_theme: just-the-docs/just-the-docs@v0.7.0
 
@@ -44,7 +44,7 @@ search.button: true
 # Custom CSS
 custom_css: "/assets/css/custom.css"
 
-footer_content: "MATRIX Hybrid Intelligence &mdash; Built with <a href=\"https://just-the-docs.com\">Just the Docs</a>."
+footer_content: "MATRIX &mdash; AGPL-3.0 &mdash; built with <a href=\"https://just-the-docs.com\">Just the Docs</a>."
 
 callouts:
   warning:

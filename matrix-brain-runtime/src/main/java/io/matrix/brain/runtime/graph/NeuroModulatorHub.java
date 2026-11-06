@@ -122,6 +122,11 @@ public final class NeuroModulatorHub {
         return fatigueIndex;
     }
 
+    /** The configured fatigue level above which sleep is requested. */
+    public double sleepDemandThreshold() {
+        return sleepDemandThreshold;
+    }
+
     /**
      * The effective retrieval floor for this cognitive state.
      *

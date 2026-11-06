@@ -1,0 +1,406 @@
+# The MATRIX Learning Workbench — a first-run guide
+
+**RECON-W40** · owner directive §18, §33, §34 · first release of the learning
+application
+
+A local application that acquires knowledge, answers questions from it with
+its sources, assesses what was learned, and keeps everything across a
+restart.
+
+---
+
+## 1. Start it
+
+```
+./gradlew :matrix-core:quarkusRun
+```
+
+Then open:
+
+```
+http://localhost:9091/workbench/
+```
+
+That is the whole procedure. There is **no** database server to install, **no**
+model provider to configure, **no** API key, and **no** account. The
+knowledge store is one SQLite file that the application creates for itself.
+
+Requirements: a JDK (the build expects a JDK 25 at `~/jdk25` on this
+machine) and the Gradle wrapper that is already in the repository. The
+application starts in about a second and listens on port 9091; set
+`QUARKUS_HTTP_PORT` to move it.
+
+If the port is taken, the failure is visible in the log line that says
+`Listening on: http://0.0.0.0:9091`.
+
+## 2. Load the demonstration knowledge
+
+Open the **Dashboard** tab and press **Load the demonstration knowledge
+pack**.
+
+The pack is the photosynthesis domain: 8 concepts, 17 claims, 4 sources,
+18 evidence links, 13 representations across four levels of abstraction, and
+one recorded revision. It ships inside the application, so the load needs no
+network.
+
+Every source in it was fetched and read before it was cited, and the
+excerpts are recorded verbatim in
+`matrix-core/src/main/resources/knowledge/photosynthesis.pack.json`:
+a peer-reviewed review in *Faculty Reviews* (DOI 10.12703/b/9-5) and three
+encyclopedia entries whose revision identifiers are in their locators. The
+distinction is not cosmetic — a claim that rests on an encyclopedia entry
+alone is marked `SUPPORTED`, not `VERIFIED`.
+
+## 3. Ask it something
+
+Go to the **Ask** tab. Type a question and choose a level:
+
+| Level | Who it is for |
+|---|---|
+| Introductory | a reader with no background in biology |
+| Intermediate | a reader who has finished an introductory course |
+| Advanced | an undergraduate in plant physiology |
+| Mechanistic | a researcher |
+
+The same question gives a different account at each level. The answer shows
+the claims it rests on, the sources behind those claims with their
+locators, the limitations that apply, and a confidence.
+
+Ask something the workspace does not know — *"What is the boiling point of
+mercury?"* — and it will not answer. It says that no claim covers enough of
+the question, and it names the terms it could not cover: `boil`, `point`,
+`mercury`. That is the behaviour to look for. A system that never refuses is
+one whose confidence cannot be read.
+
+## 4. Test it
+
+Go to the **Assess** tab. There are 22 items from a versioned dataset
+(`photosynthesis-v1`). Each item carries the terms that decide whether an
+answer passes, so the grading is transparent rather than a matter of
+opinion. Half the items are **held out**: they may not be used while
+learning, which is what makes the post-learning measurement independent of
+the learning that produced it.
+
+Answer an item, state how confident you are, and submit. The grade and the
+resulting learning state appear at once.
+
+## 5. Read the learning state
+
+The **Progress** tab shows one row per capability per concept. There is no
+single "intelligence percentage", because a concept can be recalled
+accurately and still not be understood, and a skill can be operationally
+competent while the theory behind it stays incomplete.
+
+The stages are `UNKNOWN`, `EXPLORATION`, `INITIAL_LEARNING`, `PRACTICE`,
+`COMPETENCE`, `UNDERSTANDING` and `KNOWLEDGE`. A stage is reached because
+recorded outcomes met stated criteria — never because something declared
+it. The note beside each row says how many outcomes it rests on, across
+how many variants, and how many were held out.
+
+Above the per-dimension rows there is the **capability ladder**: where the
+learner stands for each concept as a whole. `UNDERSTANDING` is not inferred
+from a high recall score — it needs competence on the causal, transfer and
+evaluation dimensions, because understanding means explaining causes,
+predicting outcomes and identifying counterexamples. `KNOWLEDGE` needs a
+teach-back that met its declared expectation, because generating an
+explanation is not proof of teaching. The note under each concept says
+which dimensions are short, by name.
+
+If a later outcome contradicts an earlier success, the state **falls** and
+the note says so. That is deliberate: keeping the old label would be the
+easy thing to do and the dishonest one.
+
+## 6. Watch MATRIX teach, and measure whether it worked
+
+Go to the **Teach** tab.
+
+1. Choose a concept and a level. MATRIX composes a teaching plan from the
+   accounts it holds — each step carries an explanation, an exercise and a
+   check, and the plan names the dataset version it was built against.
+2. Set the **declared expectation**: the minimum gain on the held-out set
+   that you consider a success. This is set *before* the run, because an
+   experiment whose outcome is decided after the fact is not an experiment.
+3. Press **Compose and teach back**.
+
+What happens: a second, synthetic learner is taught the plan, and is then
+measured **before and after** the lesson on the held-out items — the items
+the teacher never saw. The result shows the score before, the score after,
+the gain, the per-item measurement, and whether the declared expectation was
+met.
+
+Two runs, both measured on this machine. **These are the W40
+measurements.** RECON-W41 found that this path measures whether the *lesson
+contained* the item's key terms — the learner it measures echoes the taught
+statements — and it rebuilt the experiment around an independent closed-book
+learner, four disjoint phases, a leakage audit and a calibration report. The
+rebuilt experiment is reachable at
+`POST /v1/workbench/workspaces/{id}/teach-back-experiment`; the numbers below
+are kept as the historical record of the path the interface still calls.
+
+| Taught at | Declared expectation | Before | After | Gain | Outcome |
+|---|---|---|---|---|---|
+| Mechanistic | gain ≥ 0.2 | 0.00 | 0.81 | **0.81** | met |
+| Introductory | gain ≥ 0.9 | 0.00 | 0.702 | 0.702 | **not met** |
+
+The second run is reported as a failure, with the reason. That is the point
+of declaring the expectation in advance.
+
+One item scores zero in both runs: the **grounding** item, which asks
+where the account came from. The taught explanation carries no provenance,
+so a lesson that teaches what photosynthesis is does not teach where the
+knowledge came from. The gap is visible instead of being smoothed over.
+
+**What this measurement is.** The synthetic learner can only answer out of
+the accounts it was given, so the score measures whether the lesson
+*contained* the content the held-out items ask for. That is a necessary
+condition for transfer and a far from sufficient one: a person may
+understand an account without reusing its wording, and a machine may
+reproduce the wording without understanding it. This is a **machine-to-machine
+result** and says nothing about human teaching effectiveness.
+
+**The rebuilt experiment, for comparison.** Measured on the same concept
+(the photosynthesis account, the adversarial item set): PRE 0/2, POST 1/1,
+**DELAYED 0/1**, TRANSFER 1/2; the structured learner 1.00 against the
+legacy containment score 1.00 and a lexical baseline of 0.00; the
+calibration over 6 forecasts gives a Brier score of 0.322. The delayed phase
+**fails**, which is the point of the rebuild — the old path could not fail.
+
+## 7. Correct what the workspace believes
+
+Go to the **Knowledge** tab, to the bottom panel, **Correct what is known**.
+
+1. Choose the concept and, if you are correcting something, the claim.
+2. Write the corrected proposition and the **scope** — the condition under
+   which it holds. A claim that was true in one condition and false in
+   another is corrected by *adding* the condition, not by erasing the fact.
+3. Give the source it rests on. A human statement is a source, and it is
+   recorded as one, with its own authority and freshness.
+4. Press **Record the correction**.
+
+What happens, and what it deliberately does not do:
+
+- The **earlier claim is kept**, with the status `SUPERSEDED` and its
+  version advanced. Its proposition is unchanged: what was believed is still
+  visible, marked as no longer the account.
+- The **corrected claim is a new claim**, with its own scope, its own source
+  and the evidence link that makes it `SUPPORTED` rather than a draft.
+- The **revision** records what was added, which assumptions still hold,
+  which simplification stopped applying, and which new cases the refined
+  model now explains.
+- If you also give a **refined account**, that text becomes the account the
+  reader is given at that level, and it refines the one it replaced. The
+  earlier account stays in the chain and stays visible — it is simply no
+  longer the one that is read.
+
+Measured over HTTP, on the photosynthesis workspace:
+
+```
+before:  Photosynthetic performance is the net result of a chain of
+         competing processes rather than a single reaction. ...
+after:   Oxygenic photosynthesis releases oxygen by splitting water, and the
+         rate of that release falls as the light level falls; the earlier
+         account did not say so. ...
+```
+
+The answer changed because the knowledge changed, and the claim that was
+superseded is still in the store with its history.
+
+## 8. Stop it, start it again, and verify
+
+This is the part that matters, so do it explicitly:
+
+1. Press **Ctrl-C** in the terminal that is running the application.
+2. Run `./gradlew :matrix-core:quarkusRun` again.
+3. Open <http://localhost:9091/workbench/> again.
+4. Go to the **Persistence** tab.
+
+The counts shown there are read from the store on disk by the **new**
+process: the concepts, the claims, the sources, the evidence links, the
+representations, the revisions and the assessment outcomes. Nothing was
+re-imported — the pack was not loaded a second time.
+
+The store lives at `matrix-core/data/knowledge/workbench.sqlite`. It is one
+file: copy it to back the workspace up, and put it back to restore it.
+
+## 9. See what the workspace does not know
+
+Every question you ask is recorded, including the ones the workspace had to
+refuse. Two wordings of the same question are ONE record, so the count is a
+count of questions and not of wordings.
+
+On the **Progress** tab, **Consolidate the asked questions** does three
+things:
+
+- a question asked more than once and still unanswered is **promoted** into
+  the list of recurring gaps;
+- a question the workspace can now answer is marked **resolved and kept** —
+  the record of the gap is the evidence that the workspace learned something,
+  and the resolution survives a restart;
+- the gaps that remain are what the workspace does not know, written down.
+
+## 10. See the metrics, and what was not measured
+
+On the **Dashboard** tab, **Measured metrics** reports:
+
+- the software version, and **where it was read from**;
+- the dataset and its version;
+- the procedure that produced each number;
+- the sample size of each number;
+- the capability dimensions, with the outcomes each rests on.
+
+There is deliberately **no single intelligence score**: one number would
+hide the differences that matter. The report ends with the metrics that were
+NOT measured, listed rather than omitted.
+
+## 11. Let the system write down what it learned about you
+
+`POST /v1/workbench/workspaces/{photosynthesis}/learned-rule?conceptId=…`
+turns the acceptance model's measurement into a **claim** in the store, with
+a source and evidence. It is a claim like any other: it has a status, a
+scope, a readable provenance, and it can be superseded later. The source is
+an `OBSERVATION` — the measurement — and not an authority the system
+pretends to have.
+
+## 12. Hand the knowledge to another learner
+
+```
+curl -X POST "http://localhost:9091/v1/workbench/workspaces/photosynthesis/transfer?to=learner-b"
+
+# RECON-W41 — the reasoning interface, the goals, and the second domain
+curl -X POST http://localhost:9091/v1/workbench/workspaces/logic/load
+curl -X POST http://localhost:9091/v1/workbench/workspaces/logic/reason \
+  -H 'Content-Type: application/json' \
+  -d '{"question":"Does q follow from p and p implies q?","level":"INTRODUCTORY"}'
+curl http://localhost:9091/v1/workbench/workspaces/logic/derivations
+curl http://localhost:9091/v1/workbench/workspaces/logic/contradictions
+curl http://localhost:9091/v1/workbench/workspaces/photosynthesis/goals
+curl http://localhost:9091/v1/workbench/workspaces/photosynthesis/goals/resumable
+curl -X POST http://localhost:9091/v1/workbench/workspaces/photosynthesis/goals \
+  -H 'Content-Type: application/json' \
+  -d '{"description":"Learn the Calvin cycle","successCriteria":["the learner can explain the cycle"],
+       "budgetUnits":5,
+       "subtasks":[{"id":"read","description":"Read the source","required":true,
+                    "prerequisiteSubtaskIds":[]}]}'
+curl -X POST http://localhost:9091/v1/workbench/workspaces/photosynthesis/goals/GOAL_ID/subtasks/read/complete \
+  -H 'Content-Type: application/json' -d '{"evidenceIds":["e-1"],"note":"read the source"}'
+curl -X POST http://localhost:9091/v1/workbench/workspaces/photosynthesis/goals/GOAL_ID/checkpoint \
+  -H 'Content-Type: application/json' -d '{"checkpoint":"read the source","remainingWork":"explain"}'
+curl -X POST http://localhost:9091/v1/workbench/workspaces/photosynthesis/teach-back-experiment \
+  -H 'Content-Type: application/json' -d '{"conceptId":"c-photosynthesis-4d4bb673","expectedGain":0.2}'
+```
+
+## 16. The System Integrity View
+
+The **Persistence** screen carries the integrity of the store, and every part
+of it can be checked:
+
+- **the last durable write** — the newest record the store holds, with the
+  workspace it belongs to. It answers "is what I see what was written?",
+  not "is the disk healthy?";
+- **the backup state** — there is none. The store is a single SQLite file and
+  a copy of it is the backup, which is the operator's job;
+- **the write-ahead log's size** — the data is durable, but a large log
+  means a checkpoint would fold it back into the database file;
+- **the schema version** — the version of the store's shape, with what that
+  means for an operator's notes;
+- **the recovery warnings** — including, for every goal that was under way,
+  the goal and its recovery instructions. This is how a restarted process
+  says what it was doing.
+
+## 17. The screens of this wave
+
+The browser at `http://localhost:9091/workbench/` carries the screens this
+wave added, beside the ones it already had:
+
+- **Reasoning** — the question, the eight stages of the pipeline, the claims
+  the answer rests on with their warrants and derivation status, the recorded
+  rules with their verdicts, the sources, the limitations, and the recorded
+  conflicts.
+- **Goals** — every goal with its status, the budget spent, the remaining
+  work, the last checkpoint, the recovery instructions, the subtasks (each
+  with a button to complete one), the failed attempts, and a checkpoint
+  button.
+- A **domain selector** in the header: the biology package and the logic
+  package.
+
+The domain selector matters for the honest reading of every number in this
+document: a result on the photosynthesis package says something about that
+package, and the logic package exists so that the engine can be seen to work
+outside the package it was first demonstrated on.
+
+This is a **transfer**, not a backup. The export and the import put a
+workspace back exactly as it was; a transfer gives the knowledge to a
+different learner, so the identifiers are regenerated for the receiving
+workspace — a claim's identifier is derived from the workspace that holds
+it, and two workspaces must not share a row.
+
+What travels: the concepts, the claims, the sources with their locators,
+excerpts, authority and freshness, the evidence links, the representations
+with their refinement chains, the prerequisites and the revisions. The
+receiving learner can answer what the first one could.
+
+What does NOT travel: the learner's own history. The assessment outcomes and
+the record of the questions that were asked belong to the learner who
+produced them. A learner who has just received the knowledge has not
+demonstrated that they know it, and the receiving workspace's learning state
+starts empty rather than inheriting someone else's evidence.
+
+## 13. What this release does not do
+
+- **It is not a chat assistant.** The answer is composed from the claims and
+  representations in the store, not generated.
+- **It does not search the internet.** External retrieval is an optional
+  capability that is not implemented yet; the pack's sources were fetched
+  and recorded by hand, with their revision identifiers.
+- **The learning state is not a measurement of general intelligence.** It is
+  a measurement of one domain against one dataset version, and the note on
+  every row says which.
+- **The higher stages need their own evidence, and they are stricter.**
+  `UNDERSTANDING` needs competence on the causal, transfer and evaluation
+  dimensions; `KNOWLEDGE` needs a teach-back that met a declared
+  expectation. A learner with a perfect recall score and no causal
+  understanding stays at `COMPETENCE`, and the note says why.
+- **The metrics report does not hide what it could not measure.** The
+  Dashboard ends with the list of metrics that were NOT measured: transfer
+  to a human learner, long-term retention, generalisation beyond the
+  assessed dataset, causal attribution, the reliability of the sources
+  beyond their recorded authority, and efficiency.
+- **The teaching capability is demonstrated only machine-to-machine.** A
+  synthetic learner was taught and measured on held-out items; that shows the
+  lesson contained the assessed content, not that a person would learn it.
+
+## 14. Where the pieces are
+
+| Piece | Path |
+|---|---|
+| The records | `matrix-core/src/main/java/io/matrix/knowledge/` |
+| The store | `KnowledgeStore.java` (SQLite, versioned schema, atomic imports) |
+| The retriever | `KnowledgeRetriever.java`, `TextFeatures.java` |
+| The measurement | `LearningStateEvaluator.java`, `AssessmentGrader.java` |
+| The capability ladder | `CapabilityEvaluator.java`, `CapabilityState.java` |
+| The episodic log | `QuestionConsolidator.java`, `AskedQuestion.java` |
+| The transfer | `KnowledgeTransfer.java` |
+| The supervised learner | `AcceptanceModel.java`, `TextFeatureVector.java` |
+| The metrics | `MetricsReport.java` |
+| The formal models | `formal/KnowledgeLifecycle.tla`, `formal/KnowledgeStore.tla` |
+| The application | `KnowledgeWorkbench.java`, `LearningWorkbenchResource.java` |
+| The interface | `matrix-core/src/main/resources/META-INF/resources/workbench/index.html` |
+| The knowledge pack | `matrix-core/src/main/resources/knowledge/photosynthesis.pack.json` |
+| The dataset | `matrix-core/src/main/resources/knowledge/photosynthesis.assessment.json` |
+| The reconnaissance | `docs-v2/engineering/W40-RECONNAISSANCE.md` |
+
+## 15. The API, if you would rather not use the browser
+
+```
+curl http://localhost:9091/v1/workbench/status
+curl -X POST http://localhost:9091/v1/workbench/workspaces/photosynthesis/load
+curl -X POST http://localhost:9091/v1/workbench/workspaces/photosynthesis/ask \
+  -H 'Content-Type: application/json' \
+  -d '{"question":"What is photosynthesis?","level":"MECHANISTIC"}'
+curl http://localhost:9091/v1/workbench/workspaces/photosynthesis/learning-state
+curl http://localhost:9091/v1/workbench/workspaces/photosynthesis/capability
+curl http://localhost:9091/v1/workbench/workspaces/photosynthesis/metrics
+curl http://localhost:9091/v1/workbench/workspaces/photosynthesis/questions
+curl -X POST http://localhost:9091/v1/workbench/workspaces/photosynthesis/questions/consolidate
+curl -X POST "http://localhost:9091/v1/workbench/workspaces/photosynthesis/transfer?to=learner-b"
+```

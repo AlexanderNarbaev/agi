@@ -13,6 +13,11 @@ services:
     environment:
       STRIPE_WEBHOOK_SECRET: whsec_dev_secret
       LICENSE_SIGNING_SECRET: dev_signing_secret
+      # RECON-W43.0: the gateway is published, so it is declared exposed
+      # and requires a credential. The startup guard refuses to start it
+      # without one.
+      MATRIX_SECURITY_MODE: NETWORK_EXPOSED
+      MATRIX_SECURITY_TOKEN: ${MATRIX_SECURITY_TOKEN:?set MATRIX_SECURITY_TOKEN before starting this stack}
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/q/health"]
       interval: 30s

@@ -1,5 +1,60 @@
 # MATRIX W31 Brain — Edge-AI Hybrid Architecture: Combining Hyperdimensional Computing, BitLinear Ternary Weights, and Boolean Tables for CPU-Only Infant-Class Cognition
 
+**Status:** `HISTORICAL` · **Disposition:** 2026-11-06 — a historical draft; **not** a publication candidate, and **not** to be revised into one · **The decision and its reasons:** `docs-v2/research/PUBLICATION-CANDIDATES.md` §5
+
+> **The disposition — 2026-11-06 (W49-09, owner directive OD-048).**
+>
+> **This document stays as an explicitly historical draft. It is not submitted, and it is
+> not rewritten into a submission.** The body below is unchanged: it is the record of what
+> the W31 wave wrote in September 2026, and it is kept because it is part of the research
+> history — not because it is a publication.
+>
+> **Why, in one line:** most of the numbers in it were measured under a protocol that
+> does not permit an accept verdict, and two of its headline numbers are the cited
+> BitNet paper's numbers rather than MATRIX's own.
+>
+> **The specific findings, each traceable.**
+>
+> 1. **The headline speed-ups are not MATRIX's measurements.** The abstract says the
+>    BitLinear layers "yield 3.5× memory reduction and 2.7× faster inference vs FP16
+>    baselines" — those are Ma et al. (2024)'s numbers, cited in §2 as the BitNet paper's
+>    result, and restated here in the voice of this work. Under the publication
+>    pipeline's claim-strength rule
+>    (`docs-v2/research/PUBLICATION-PIPELINE.md` §3.1), a sentence whose number is not in
+>    a file in this repository does not go into a public text.
+> 2. **The throughput figures are single-run JVM measurements.** `37.9M ops/sec` and
+>    `21.4M ops/sec` are `nanoTime` numbers without warm-up. The repository's own
+>    protocol (`docs-v2/research/PROTOCOL.md`) classes that level as *preliminary
+>    numbers; НЕ даёт accept*.
+> 3. **The abstract contradicts §5.** The abstract claims "270 unit and integration
+>    tests"; §5 says "248 tests across 14 W31 brain classes plus 8 performance
+>    benchmarks". A draft that disagrees with itself on its own headline evidence has
+>    not been through the internal review.
+> 4. **The capability table reports implementation status, not capability.** The §4 table
+>    marks L0–L6 as implemented, which is a statement about the classes existing. The
+>    *targets* of those levels are not established: DESIGN-58's own registry section
+>    (`docs-v2/designs/DESIGN-58-capability-levels-roadmap.md` §6a) states that the
+>    workbench's measurements do **not** establish L6's 75 % two-hop retrieval target,
+>    and that no number in that section was re-measured.
+> 5. **The system the paper describes is not the system in the tree.** The brain runtime
+>    was restructured into the two isolated serving chains, and the current topology,
+>    the current routes and the current capability states are measured in
+>    `docs-v2/architecture/CAPABILITY-REGISTRY.yml` — a different picture from this
+>    draft's single-process description.
+> 6. **Every confirming measurement in the project is `synthetic-scope`** (the protocol's
+>    own term), and the draft names no dataset, no licence, no baseline measurement, no
+>    dispersion, no negative result and no implementation commit.
+>
+> **What to do with it.** Cite it as a historical artefact if a question about the W31
+> wave comes up. Do not cite it for a number. If the edge-AI hybrid question deserves a
+> paper, it deserves a **new** one, written from the artefacts of the present tree under
+> `docs-v2/research/PUBLICATION-PIPELINE.md` — not from this text.
+>
+> **The one thing this document still is good for:** it names the intended publication
+> venues for the capability-level question — a cognitive-model-evaluation workshop,
+> ALIFE, BICA (`docs-v2/designs/DESIGN-58-capability-levels-roadmap.md` §7). That
+> intention survives; the draft that carried it does not.
+
 ## Abstract
 
 We present MATRIX W31, an edge-AI brain architecture that combines Hyperdimensional Computing (HDC) with BitNet b1.58 ternary-weight linear layers and Boolean lookup tables, implementing measurable infant-class cognition capabilities on commodity CPU hardware without GPU acceleration. The architecture demonstrates all six DESIGN-58 capability levels (Level 0 Fabric through Level 6 Compositional Reasoning) including Pavlov operant conditioning, Spelke core knowledge (object permanence, A-not-B error), cross-modal audio-visual binding, neural cellular automata self-organization, symbol grounding via LLM preprocessing, and Pinker-style compositional grammar learning.

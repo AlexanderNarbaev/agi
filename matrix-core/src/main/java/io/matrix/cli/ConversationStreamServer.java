@@ -1,5 +1,6 @@
 package io.matrix.cli;
 
+import io.matrix.security.NetworkExposure;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
@@ -46,7 +47,13 @@ public final class ConversationStreamServer {
         bridge.setMaxNewTokens(128);
         bridge.load();
         
-        HttpServer server = HttpServer.create(new InetSocketAddress(port), 0);
+// RECON-W43.0: this listener binds through the shared boundary, so it
+        // cannot end up reachable from another host while the process is
+        // local-only, and it refuses to start when the process is exposed
+        // without a configured credential.
+        NetworkExposure.current().guard("ConversationStreamServer");
+        HttpServer server = HttpServer.create(new InetSocketAddress(
+                NetworkExposure.current().bindAddress(), port), 0);
         server.createContext("/", new PageHandler());
         server.createContext("/chat", new ChatHandler(bridge));
         server.createContext("/stream", new StreamHandler(bridge));

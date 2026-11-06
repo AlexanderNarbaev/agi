@@ -1,0 +1,20 @@
+{
+  "delegation_gate": false,
+  "require_declared_scope": false,
+  "scope_guard": false,
+  "scope": "security-only",
+  "authority": {
+    "default": "allow",
+    "rules": [
+      {
+        "agent": "*",
+        "action": "*",
+        "effect": "allow"
+      }
+    ]
+  },
+  "gates": {
+    "balanced": false,
+    "require_scope": false
+  }
+}

@@ -90,11 +90,11 @@ attention-loop без внешнего состояния.
 
 ## Связь с существующим
 
-- `brain/BrainPipeline` ([DESIGN-13](../designs/DESIGN-13-brain-pipeline.md))
+- `brain/BrainPipeline` ([DESIGN-13](../designs/DESIGN-03-pipeline.md))
   использует `BrcChain` как deliberative backbone.
 - `mcts/MctsTree` — каждый MCTS-rollout использует короткую
   `BrcChain` (1-3 шага) для эмуляции действия.
-- `lifecycle/ConsolidationCycle` ([DESIGN-07](../designs/DESIGN-07-consolidation-cycle.md))
+- `lifecycle/ConsolidationCycle` ([DESIGN-07](../designs/DESIGN-07-lifecycle.md))
   дренирует backlogs после `BrcChain.evaluate` в `ConsciousnessLoop`.
 - `mediator/InstanceMediator` ([SPEC-009](./SPEC-009-mediator-hierarchy.md))
   согласует `BrcState.vector` с импульсами от подсознания

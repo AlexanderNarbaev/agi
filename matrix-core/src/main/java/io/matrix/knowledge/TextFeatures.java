@@ -1,0 +1,274 @@
+package io.matrix.knowledge;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
+
+/**
+ * Explicit text features for retrieval (owner directive §21, §27).
+ *
+ * <p>The audit behind this mission found the repository's central weakness:
+ * every learner in it consumes a HASH of the text — an FNV hash of the first
+ * 64 characters, a 256-bit hash of "input + reply" — so two questions that
+ * mean the same thing share no features at all. A knowledge application has
+ * to do better than that, and the fix is not a cleverer hash: it is explicit
+ * features, so that "photosynthesis" and "photosynthetic" share the tokens
+ * that carry the meaning.
+ *
+ * <p>Everything here is deterministic and free of wall-clock time and random
+ * numbers, as CONSTITUTION Article I requires of anything that participates
+ * in a decision.
+ */
+public final class TextFeatures {
+
+    /**
+     * Words that carry no retrieval signal in a question or a proposition.
+     *
+     * <p>RECON-W42.3 moved the list into {@link TextProfiles}: the stopwords
+     * are a property of a language, not of a class. The English list itself
+     * is unchanged, so the W41 behaviour is unchanged.
+     */
+    private static final Set<String> STOPWORDS = TextProfiles.ENGLISH.stopwords();
+
+    private TextFeatures() {
+    }
+
+    /**
+     * Whether a word carries no retrieval signal.
+     *
+     * <p>RECON-W42.1. The stopword list was private, so a caller that needed
+     * to know which of a question's terms carry signal had to guess. The
+     * demand analysis needs exactly that: the demand of a question is
+     * carried by its content terms.
+     */
+    public static boolean isStopWord(String word) {
+        return word != null && STOPWORDS.contains(word);
+    }
+
+    /** The stopword list, for a caller that needs to show it. */
+    public static Set<String> stopWords() {
+        return STOPWORDS;
+    }
+
+    /**
+     * The profile of a text, detected.
+     *
+     * <p>RECON-W42.3. The text layer's language-dependent rules are a
+     * property of the language, so a caller that wants the Russian
+     * stopwords or the Russian case endings asks for the profile.
+     */
+    public static TextProfile profileOf(String text) {
+        return TextProfiles.ofText(text);
+    }
+
+    /** The profile of a language code. */
+    public static TextProfile profileByLanguage(String language) {
+        return TextProfiles.ofLanguage(language);
+    }
+
+    /**
+     * Split a text into retrieval tokens: lower-cased, punctuation removed,
+     * stopwords dropped, and a deliberately conservative suffix fold so that
+     * a plural or a gerund still matches its stem.
+     *
+     * <p>The fold is intentionally minimal. A full stemmer would merge words
+     * that are not the same word, and a retrieval system that confuses
+     * "gases" with "gases' boundary" is worse than one that misses.
+     */
+    public static List<String> tokens(String text) {
+        List<String> out = new ArrayList<>();
+        if (text == null || text.isBlank()) {
+            return out;
+        }
+        // RECON-W42.3: the stopwords and the fold are the language's, and
+        // the language is detected from the text. An English text folds
+        // exactly as it did in W41.
+        TextProfile profile = TextProfiles.ofText(text);
+        StringBuilder current = new StringBuilder();
+        for (char ch : text.toLowerCase(Locale.ROOT).toCharArray()) {
+            if (Character.isLetterOrDigit(ch)) {
+                current.append(ch);
+            } else {
+                emit(current, out, profile);
+            }
+        }
+        emit(current, out, profile);
+        return out;
+    }
+
+    /**
+     * Every word of the text, lowercased, with nothing removed.
+     *
+     * <p>The content tokens are not enough for some questions: a stopword
+     * is dropped, so "not" never reaches a caller that looks for a
+     * negation, and a one-letter token is dropped, so the propositional
+     * variables of a logic domain - p, q, r - are invisible. This method
+     * returns the words as they were written, so that a caller can ask
+     * about them.
+     *
+     * @param text the text to read
+     * @return every word, lowercased, in order
+     */
+    public static List<String> rawWords(String text) {
+        List<String> out = new ArrayList<>();
+        if (text == null || text.isBlank()) {
+            return out;
+        }
+        StringBuilder current = new StringBuilder();
+        for (char ch : text.toLowerCase(Locale.ROOT).toCharArray()) {
+            if (Character.isLetterOrDigit(ch)) {
+                current.append(ch);
+            } else {
+                emitRaw(current, out);
+            }
+        }
+        emitRaw(current, out);
+        return out;
+    }
+
+    private static void emitRaw(StringBuilder current, List<String> out) {
+        if (current.length() == 0) {
+            return;
+        }
+        out.add(current.toString());
+        current.setLength(0);
+    }
+
+    private static void emit(StringBuilder current, List<String> out, TextProfile profile) {
+        if (current.length() == 0) {
+            return;
+        }
+        String token = current.toString();
+        current.setLength(0);
+        if (token.length() < 3 && !Character.isDigit(token.charAt(0))) {
+            // A one-letter word is usually noise - but it is not always.
+            // The propositional variables of a logic domain are p, q and r,
+            // and a tokenizer that drops them makes that domain unaskable.
+            // The word is kept only when it is a letter on its own, so the
+            // short articles and prepositions ("a", "of") stay out.
+            if (token.length() != 1 || !Character.isLetter(token.charAt(0))) {
+                return;
+            }
+        }
+        // The stopword test is on the word as it was written, not on the
+        // folded stem: a fold would otherwise turn a stopword into a
+        // fragment that no longer looks like one.
+        if (profile.isStopWord(token)) {
+            return;
+        }
+        out.add(profile.fold(token));
+    }
+
+    /**
+     * A minimal suffix fold: plural, gerund, past tense and a trailing
+     * silent "e".
+     *
+     * <p>The trailing "e" matters for consistency: without it, "store",
+     * "stored" and "stores" would fold to three different stems and a
+     * question about memory storage would fail to match a claim about
+     * stored energy.
+     */
+    static String fold(String token) {
+        return TextProfiles.ENGLISH.fold(token);
+    }
+
+    /**
+     * The fold of a token in the language of the text it came from.
+     *
+     * <p>RECON-W42.3. A Russian question's words carry the case in the
+     * word itself, so the Russian fold strips the case ending — and the
+     * English fold is unchanged.
+     */
+    public static String foldIn(String token, String language) {
+        return TextProfiles.ofLanguage(language).fold(token);
+    }
+
+    static String foldEnglish(String token) {
+        String folded = token;
+        if (folded.length() > 5 && folded.endsWith("ing")) {
+            folded = folded.substring(0, folded.length() - 3);
+        } else if (folded.length() > 4 && folded.endsWith("ed")) {
+            folded = folded.substring(0, folded.length() - 2);
+        } else if (folded.length() > 4 && folded.endsWith("es")) {
+            folded = folded.substring(0, folded.length() - 2);
+        } else if (folded.length() > 3 && folded.endsWith("s") && !folded.endsWith("ss")) {
+            folded = folded.substring(0, folded.length() - 1);
+        }
+        if (folded.length() > 3 && folded.endsWith("e")) {
+            folded = folded.substring(0, folded.length() - 1);
+        }
+        return folded;
+    }
+
+    /**
+     * The inverse document frequency of every term over a set of documents.
+     *
+     * @param documents the token sets of the documents, one per document
+     * @return term to IDF weight; a term that appears in every document has a
+     *     weight near zero, which is exactly the behaviour a retrieval
+     *     system wants from a word like "the"
+     */
+    public static Map<String, Double> idf(List<Set<String>> documents) {
+        Map<String, Integer> documentFrequency = new HashMap<>();
+        for (Set<String> document : documents) {
+            for (String term : document) {
+                documentFrequency.merge(term, 1, Integer::sum);
+            }
+        }
+        int total = documents.size();
+        Map<String, Double> weights = new HashMap<>();
+        for (Map.Entry<String, Integer> entry : documentFrequency.entrySet()) {
+            weights.put(entry.getKey(), Math.log(1.0 + (double) total / entry.getValue()));
+        }
+        return weights;
+    }
+
+    /** The distinct terms of a text, in first-seen order. */
+    public static Set<String> terms(String text) {
+        return new LinkedHashSet<>(tokens(text));
+    }
+
+    /**
+     * The words of a text as they were written, without the suffix fold.
+     *
+     * <p>Matching uses the folded stem; showing the user the stem would be
+     * confusing ("rol" for "role"), so the surface form is kept for display.
+     */
+    public static List<String> originalTokens(String text) {
+        List<String> out = new ArrayList<>();
+        if (text == null || text.isBlank()) {
+            return out;
+        }
+        TextProfile profile = TextProfiles.ofText(text);
+        StringBuilder current = new StringBuilder();
+        for (char ch : text.toLowerCase(Locale.ROOT).toCharArray()) {
+            if (Character.isLetterOrDigit(ch)) {
+                current.append(ch);
+            } else {
+                emitOriginal(current, out, profile);
+            }
+        }
+        emitOriginal(current, out, profile);
+        return out;
+    }
+
+    private static void emitOriginal(StringBuilder current, List<String> out, TextProfile profile) {
+        if (current.length() == 0) {
+            return;
+        }
+        String token = current.toString();
+        current.setLength(0);
+        if (token.length() < 3 && !Character.isDigit(token.charAt(0))) {
+            return;
+        }
+        if (profile.isStopWord(token)) {
+            return;
+        }
+        out.add(token);
+    }
+}

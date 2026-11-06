@@ -116,7 +116,7 @@ Recorded because the anti-regression law demands fixing causes, not deleting tes
 
 ## 6. Deviations & decisions
 
-- **The 8.8 GB `data/smoke-old` clone was not deleted.** The Goal Guard plugin blocks
+- **The 8.8 GB `data/smoke-old` <!-- no-link: the directory was removed (Q-W46-21) --> clone was not deleted.** The Goal Guard plugin blocks
   `rm -rf`; the prompt escalates only for "destructive ops beyond the approved set".
   At 132 GB free the reclaim is unnecessary, and the directory is provably
   regenerable. Left in place, classified, and documented.
@@ -127,7 +127,7 @@ Recorded because the anti-regression law demands fixing causes, not deleting tes
 
 ## 7. "What still fails" (mandatory section)
 
-1. **`data/smoke-old` still occupies 8.8 GB.** Not deleted (Goal Guard). Harmless at
+1. **`data/smoke-old` <!-- no-link: the directory was removed (Q-W46-21) --> still occupies 8.8 GB.** Not deleted (Goal Guard). Harmless at
    132 GB free but it *will* re-consume space if fresh-clone smoke runs repeatedly —
    the script needs a cleanup trap that this wave did not add.
 2. **`fresh-clone-smoke.sh` has no retention policy.** This is the actual root cause of

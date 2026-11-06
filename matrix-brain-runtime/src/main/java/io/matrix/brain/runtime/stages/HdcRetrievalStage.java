@@ -186,6 +186,19 @@ public final class HdcRetrievalStage {
         return r;
     }
 
+    /**
+     * RECON-W38.0 — package-private teach into the IN-MEMORY path, so tests can
+     * exercise the in-memory retrieval branch with a deliberate corpus rather than
+     * only the six seed facts. The persistent path has {@link #teach(String, String)};
+     * the in-memory path is what CI mode runs on, so its floor behaviour deserves the
+     * same testability. No contradiction check: collisions overwrite, matching
+     * {@link #seed} semantics.
+     */
+    void teachInMemory(String id, String content) {
+        seed(id, content);
+        refreshDocumentFrequency();
+    }
+
     /** Number of stored facts (persistent or in-memory). */
     public int size() {
         return store != null ? store.size() : inMemoryVectors.size();
@@ -443,9 +456,17 @@ public HdcResult retrieve(String input, String originalInput,
             top.offer(e.getKey(), sim);
         }
         java.util.List<String> topIds = top.asList();
-        if (bestScore < ContentSimilarity.RETRIEVAL_FLOOR || bestId == null) {
+        // RECON-W38.0 — B4. This branch compared against the CONSTANT while the trace printed
+        // the caller's `retrievalFloor`, so the neuromodulator had no effect here and the trace
+        // reported a floor that was never applied. `Math.max` keeps the invariant monotonic: a
+        // modulator may raise the bar, never lower it below the value the published ROC was
+        // measured at.
+        // Redundant by-public-API (the outer retrieves clamp first) but load-bearing as a
+        // defence if a caller ever reaches this branch with a lower value directly.
+        double effectiveFloor = Math.max(ContentSimilarity.RETRIEVAL_FLOOR, retrievalFloor);
+        if (bestScore < effectiveFloor || bestId == null) {
             String ignoranceTrace = "mode=in-memory best_similarity=" + bestScore
-                + " floor=" + retrievalFloor
+                + " floor=" + effectiveFloor
                 + " nearest_fact_id=" + (bestId == null ? "none" : bestId)
                 + " top=" + topIds;
             trace.add(BrcStep.of("HDC_MEMORY", false, bestScore,
@@ -465,6 +486,6 @@ public HdcResult retrieve(String input, String originalInput,
         return HdcResult.hit(hReply,
             ContentSimilarity.confidenceFor(bestScore),
             "mode=in-memory best=" + bestId + " score=" + bestScore
-                + " floor=" + retrievalFloor);
+                + " floor=" + effectiveFloor);
     }
 }

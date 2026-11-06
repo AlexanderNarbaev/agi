@@ -1,0 +1,425 @@
+{
+  "dataset": {
+    "id": "photosynthesis-adversarial-v1",
+    "version": 1,
+    "description": "The adversarial teach-back set of RECON-W41. Every item offers a keyed correct answer and alternatives bound to named misconceptions, and the wrong alternatives are chosen so that their words overlap the lesson. A learner that matches on vocabulary rather than on structure is therefore fooled, and the set can tell the two measurements apart. The phases are DISJOINT: pre, post, delayed and transfer. The delayed phase is a LOGICAL delay supplied by the harness, never a wall-clock one; it validates the measurement machinery and the shape of the score, not human retention."
+  },
+  "items": [
+    {
+      "id": "adv-pre-1",
+      "concept": "Photosynthesis",
+      "dimension": "RECALL",
+      "prompt": "What gas does a plant release during photosynthesis, and where does it come from?",
+      "keyTerms": [
+        "oxygen",
+        "water"
+      ],
+      "difficulty": 1,
+      "variant": "pre",
+      "critical": false,
+      "heldOut": false,
+      "correctAlternativeId": "b",
+      "alternatives": [
+        {
+          "id": "a",
+          "text": "Oxygen, released as the waste product of the carbon dioxide the plant absorbs.",
+          "misconceptionId": "oxygen-from-co2"
+        },
+        {
+          "id": "b",
+          "text": "Oxygen, released when the plant splits water.",
+          "misconceptionId": ""
+        },
+        {
+          "id": "c",
+          "text": "Carbon dioxide, released when the plant breaks down sugars.",
+          "misconceptionId": "carbon-dioxide-out"
+        }
+      ]
+    },
+    {
+      "id": "adv-pre-2",
+      "concept": "Photosynthesis",
+      "dimension": "EXPLANATION",
+      "prompt": "How do plants and animals relate to one another in the energy cycle?",
+      "keyTerms": [
+        "photosynthesis",
+        "respiration"
+      ],
+      "difficulty": 1,
+      "variant": "pre",
+      "critical": false,
+      "heldOut": false,
+      "correctAlternativeId": "b",
+      "alternatives": [
+        {
+          "id": "a",
+          "text": "Plants photosynthesize and animals respire; neither needs the other.",
+          "misconceptionId": "no-interdependence"
+        },
+        {
+          "id": "b",
+          "text": "Plants photosynthesize to store energy and animals respire to release it.",
+          "misconceptionId": ""
+        },
+        {
+          "id": "c",
+          "text": "Plants and animals both photosynthesize when they are in light.",
+          "misconceptionId": "animals-photosynthesize"
+        }
+      ]
+    },
+    {
+      "id": "adv-pre-3",
+      "concept": "RuBisCO",
+      "dimension": "CAUSAL",
+      "prompt": "Why is the efficiency of photosynthesis lowered in C3 plants?",
+      "keyTerms": [
+        "rubisco",
+        "oxygenation"
+      ],
+      "difficulty": 1,
+      "variant": "pre",
+      "critical": false,
+      "heldOut": false,
+      "correctAlternativeId": "a",
+      "alternatives": [
+        {
+          "id": "a",
+          "text": "Because RuBisCO binds carbon dioxide and oxygen at the same time, and the oxygenation route wastes energy.",
+          "misconceptionId": ""
+        },
+        {
+          "id": "b",
+          "text": "Because RuBisCO is too slow to work in warm weather.",
+          "misconceptionId": "slow-enzyme"
+        },
+        {
+          "id": "c",
+          "text": "Because RuBisCO cannot split water under light.",
+          "misconceptionId": "no-water-splitting"
+        }
+      ]
+    },
+    {
+      "id": "adv-post-1",
+      "concept": "Photosynthesis",
+      "dimension": "RECALL",
+      "prompt": "Name the gas a green plant gives out during the light reactions, and name the molecule it comes from.",
+      "keyTerms": [
+        "oxygen",
+        "water"
+      ],
+      "difficulty": 1,
+      "variant": "post",
+      "critical": true,
+      "heldOut": true,
+      "correctAlternativeId": "a",
+      "alternatives": [
+        {
+          "id": "a",
+          "text": "Oxygen, and it comes from the water the plant takes up.",
+          "misconceptionId": ""
+        },
+        {
+          "id": "b",
+          "text": "Oxygen, and it comes from the carbon dioxide the plant takes in.",
+          "misconceptionId": "oxygen-from-co2"
+        },
+        {
+          "id": "c",
+          "text": "Carbon dioxide, and it comes from the sugars the plant breaks down.",
+          "misconceptionId": "carbon-dioxide-out"
+        }
+      ]
+    },
+    {
+      "id": "adv-post-2",
+      "concept": "Cellular respiration",
+      "dimension": "CAUSAL",
+      "prompt": "What does a photosynthetic organism need cellular respiration for?",
+      "keyTerms": [
+        "respiration",
+        "energy"
+      ],
+      "difficulty": 1,
+      "variant": "post",
+      "critical": true,
+      "heldOut": true,
+      "correctAlternativeId": "b",
+      "alternatives": [
+        {
+          "id": "a",
+          "text": "It needs respiration because photosynthesis gives it no usable energy at all.",
+          "misconceptionId": "no-respiration-needed"
+        },
+        {
+          "id": "b",
+          "text": "It needs respiration to release the energy stored in sugars that photosynthesis made.",
+          "misconceptionId": ""
+        },
+        {
+          "id": "c",
+          "text": "It needs respiration to make sugars from carbon dioxide.",
+          "misconceptionId": "respiration-makes-sugars"
+        }
+      ]
+    },
+    {
+      "id": "adv-post-3",
+      "concept": "RuBisCO",
+      "dimension": "EVALUATION",
+      "prompt": "A plant is supplied with carbon dioxide but the enzyme keeps binding oxygen. What is the consequence?",
+      "keyTerms": [
+        "photorespiration",
+        "rubisco"
+      ],
+      "difficulty": 1,
+      "variant": "post",
+      "critical": false,
+      "heldOut": true,
+      "correctAlternativeId": "b",
+      "alternatives": [
+        {
+          "id": "a",
+          "text": "The plant gains nothing, because the carbon dioxide cannot be fixed without RuBisCO.",
+          "misconceptionId": "no-co2-fixation"
+        },
+        {
+          "id": "b",
+          "text": "The plant loses energy, because the oxygenation route leads into the wasteful photorespiratory pathway.",
+          "misconceptionId": ""
+        },
+        {
+          "id": "c",
+          "text": "The plant respires faster, so it needs less light.",
+          "misconceptionId": "faster-respiration"
+        }
+      ]
+    },
+    {
+      "id": "adv-post-4",
+      "concept": "The Calvin-Benson cycle",
+      "dimension": "APPLICATION",
+      "prompt": "In which step of the Calvin-Benson cycle is carbon dioxide added to the molecule RuBisCO competes for?",
+      "keyTerms": [
+        "carboxylation",
+        "rubisco"
+      ],
+      "difficulty": 1,
+      "variant": "post",
+      "critical": false,
+      "heldOut": true,
+      "correctAlternativeId": "a",
+      "alternatives": [
+        {
+          "id": "a",
+          "text": "In the carboxylation step, where carbon dioxide is added to RuBP.",
+          "misconceptionId": ""
+        },
+        {
+          "id": "b",
+          "text": "In the regeneration step, where RuBP is rebuilt from sugar.",
+          "misconceptionId": "regeneration-step"
+        },
+        {
+          "id": "c",
+          "text": "In the reduction step, where the sugar is made from the acid.",
+          "misconceptionId": "reduction-step"
+        }
+      ]
+    },
+    {
+      "id": "adv-delayed-1",
+      "concept": "Photosynthesis",
+      "dimension": "RECALL",
+      "prompt": "Which molecule is broken apart to give a plant its released oxygen?",
+      "keyTerms": [
+        "water",
+        "oxygen"
+      ],
+      "difficulty": 1,
+      "variant": "delayed",
+      "critical": false,
+      "heldOut": true,
+      "correctAlternativeId": "b",
+      "alternatives": [
+        {
+          "id": "a",
+          "text": "The carbon dioxide, so the oxygen comes with the carbon.",
+          "misconceptionId": "oxygen-from-co2"
+        },
+        {
+          "id": "b",
+          "text": "The water, so the oxygen comes from the water the roots took up.",
+          "misconceptionId": ""
+        },
+        {
+          "id": "c",
+          "text": "The glucose, so the oxygen comes from the sugar.",
+          "misconceptionId": "oxygen-from-sugar"
+        }
+      ]
+    },
+    {
+      "id": "adv-delayed-2",
+      "concept": "Cellular respiration",
+      "dimension": "EXPLANATION",
+      "prompt": "Explain why a photosynthetic organism still needs to respire even though it makes its own food.",
+      "keyTerms": [
+        "respiration",
+        "sugars"
+      ],
+      "difficulty": 1,
+      "variant": "delayed",
+      "critical": false,
+      "heldOut": true,
+      "correctAlternativeId": "b",
+      "alternatives": [
+        {
+          "id": "a",
+          "text": "Because photosynthesis only works in light and respiration works in the dark.",
+          "misconceptionId": "light-only-excuse"
+        },
+        {
+          "id": "b",
+          "text": "Because the sugars it makes hold energy that respiration releases for use.",
+          "misconceptionId": ""
+        },
+        {
+          "id": "c",
+          "text": "Because plants cannot use the sugars they make.",
+          "misconceptionId": "cannot-use-sugars"
+        }
+      ]
+    },
+    {
+      "id": "adv-delayed-3",
+      "concept": "Stomatal conductance",
+      "dimension": "CAUSAL",
+      "prompt": "What happens to a leaf's stomatal conductance when the supply of carbon dioxide or water changes?",
+      "keyTerms": [
+        "stomatal",
+        "conductance"
+      ],
+      "difficulty": 1,
+      "variant": "delayed",
+      "critical": false,
+      "heldOut": true,
+      "correctAlternativeId": "a",
+      "alternatives": [
+        {
+          "id": "a",
+          "text": "It is affected by light, carbon dioxide and water supply.",
+          "misconceptionId": ""
+        },
+        {
+          "id": "b",
+          "text": "It is fixed by the plant's species and cannot change.",
+          "misconceptionId": "fixed-conductance"
+        },
+        {
+          "id": "c",
+          "text": "It changes only with the temperature of the air.",
+          "misconceptionId": "temperature-only"
+        }
+      ]
+    },
+    {
+      "id": "adv-transfer-1",
+      "concept": "Photosynthesis",
+      "dimension": "TRANSFER",
+      "prompt": "An aquatic plant makes sugar in bright light but cannot use the carbon dioxide in the water around it. Which part of the process has failed?",
+      "keyTerms": [
+        "carbon",
+        "dioxide"
+      ],
+      "difficulty": 1,
+      "variant": "transfer",
+      "critical": false,
+      "heldOut": true,
+      "correctAlternativeId": "a",
+      "alternatives": [
+        {
+          "id": "a",
+          "text": "The carbon dioxide has not reached the site where it is fixed.",
+          "misconceptionId": ""
+        },
+        {
+          "id": "b",
+          "text": "The light has not reached the leaves.",
+          "misconceptionId": "no-light"
+        },
+        {
+          "id": "c",
+          "text": "The water has not reached the roots.",
+          "misconceptionId": "no-water"
+        }
+      ]
+    },
+    {
+      "id": "adv-transfer-2",
+      "concept": "Photosynthesis",
+      "dimension": "TRANSFER",
+      "prompt": "A plant is given plenty of light and carbon dioxide but its sugars stop being made. Which enzyme has most likely stopped working?",
+      "keyTerms": [
+        "rubisco",
+        "carbon"
+      ],
+      "difficulty": 1,
+      "variant": "transfer",
+      "critical": false,
+      "heldOut": true,
+      "correctAlternativeId": "a",
+      "alternatives": [
+        {
+          "id": "a",
+          "text": "RuBisCO, the enzyme that fixes carbon dioxide.",
+          "misconceptionId": ""
+        },
+        {
+          "id": "b",
+          "text": "An enzyme that splits water in the light reactions.",
+          "misconceptionId": "water-splitting-enzyme"
+        },
+        {
+          "id": "c",
+          "text": "An enzyme that rebuilds RuBP from sugar.",
+          "misconceptionId": "regeneration-enzyme"
+        }
+      ]
+    },
+    {
+      "id": "adv-transfer-3",
+      "concept": "CO2-concentrating mechanisms",
+      "dimension": "TRANSFER",
+      "prompt": "A C4 plant and a cyanobacterium both raise the carbon dioxide around RuBisCO. What do they have in common?",
+      "keyTerms": [
+        "carbon",
+        "dioxide"
+      ],
+      "difficulty": 1,
+      "variant": "transfer",
+      "critical": false,
+      "heldOut": true,
+      "correctAlternativeId": "a",
+      "alternatives": [
+        {
+          "id": "a",
+          "text": "Both concentrate carbon dioxide so that RuBisCO fixes more of it.",
+          "misconceptionId": ""
+        },
+        {
+          "id": "b",
+          "text": "Both release oxygen in the light reactions of the thylakoid membrane.",
+          "misconceptionId": "oxygenic-thylakoid"
+        },
+        {
+          "id": "c",
+          "text": "Both respire at night to store sugar.",
+          "misconceptionId": "night-respiration"
+        }
+      ]
+    }
+  ]
+}

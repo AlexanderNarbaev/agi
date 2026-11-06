@@ -23,4 +23,4 @@
 
 ## Отложено
 
-- Полные цепи Ханселя — research wave (reduce для H-016 и связанных).
+- Полные цепи Ханселя — research wave (reduce для H-016 и связанных). <!-- no-id: the hypothesis register never declared it (Q-W46-19) -->

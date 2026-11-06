@@ -10,6 +10,11 @@ service:
   type: ClusterIP
   port: 8080
 
+# RECON-W43.0: this chart publishes the service through an ingress, so the
+# process is reachable from the network. The deployment therefore declares
+# MATRIX_SECURITY_MODE=NETWORK_EXPOSED and the application REFUSES TO START
+# without MATRIX_SECURITY_TOKEN. Put the token in the release's secret
+# under the key `security-token`, or do not enable the ingress.
 ingress:
   enabled: true
   className: nginx

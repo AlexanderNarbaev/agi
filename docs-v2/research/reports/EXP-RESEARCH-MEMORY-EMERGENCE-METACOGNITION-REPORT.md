@@ -2,7 +2,7 @@
 
 **Date:** 2026-09-13
 **Author:** Deep Research Mode
-**Status:** v1 — comprehensive synthesis, ready for DESIGN-{60..70} drafting
+**Status:`RESEARCH` — evidence and findings, not a commitment · ** v1 — comprehensive synthesis, ready for DESIGN-{60..70} drafting
 **Cross-references:** `MATRIX-CROSS-DISCIPLINARY-RESEARCH.md`, `HYPOTHESES-NEW.md`, `DESIGN-58-capability-levels-roadmap.md`, `SPEC-007-subconscious.md`
 
 ---
@@ -525,7 +525,7 @@ end
 | 4.5 Free-energy consolidator | `HdcBrain`, `MultiBrainEnsemble`, `BitLinearDreamer` | NEW: `subconscious/FreeEnergyConsolidator.java`. Generalizes `TwoStageConsolidator`. |
 | 4.6 Wu-wei policy | `ActionRegistry` (DESIGN-13), surprise channel | NEW: `consciousness/WuWeiPolicy.java`. Adds `noop` action to registry. |
 | 4.7 Embodied NCA cortex | `NcaBrainSimulator`, `HdcBinding`, `CrossModalPaired` | NEW: `brain/EmbodiedNcaCortex.java`. Extends DESIGN-59. |
-| 4.8 Hermeneutic loop | `CrossModalPaired`, `PredictiveCoder` | NEW: `consciousness/HermeneuticLoop.java`. Wraps `SymbolGrounding` (DESIGN-L5). |
+| 4.8 Hermeneutic loop | `CrossModalPaired`, `PredictiveCoder` | NEW: `consciousness/HermeneuticLoop.java`. Wraps `SymbolGrounding` (DESIGN-L5). | <!-- no-id: a level name, not an identifier -->
 
 ### Direct mappings to existing DESIGN-{NN}
 
@@ -594,7 +594,7 @@ Each task = 1 "wave" (~3 weeks solo work per AGENTS.md / DESIGN-58 cadence). Tar
 
 5. **Existing SPEC-007 invariant #1 (subconscious only via gate) may be violated by FreeEnergyConsolidator if it writes to M3 directly.** **Mitigation:** all consolidator writes must go through `FnlGate` (DESIGN-12) → `M3` is the only legal sink.
 
-6. **Capability Level L7 has not been defined yet in DESIGN-58.** Need to write `DESIGN-58-L7-self-model.md` before implementation starts.
+6. **Capability Level L7 has not been defined yet in DESIGN-58.** Need to write `DESIGN-58-L7-self-model.md` before implementation starts. <!-- no-id: the design was never written under this name (Q-W46-20) -->
 
 7. **Active Inference's "principle vs hypothesis" ambiguity** (Friston 2018 interview, cited in Active Inference article). We are implementing a *process hypothesis* (specific loss, specific update rules), not the principle itself. Document this distinction in code comments.
 
@@ -606,13 +606,13 @@ This report persists findings into the following locations per META-R2:
 
 - **This file:** `docs-v2/research/reports/EXP-RESEARCH-MEMORY-EMERGENCE-METACOGNITION-REPORT.md`
 - **New DESIGN files to author** (each Task in §7):
-  - `docs-v2/designs/DESIGN-60-two-stage-consolidation.md`
-  - `docs-v2/designs/DESIGN-61-free-energy-consolidation.md`
-  - `docs-v2/designs/DESIGN-62-self-model-loop.md`
-  - `docs-v2/designs/DESIGN-63-stigmergic-federation.md`
-  - `docs-v2/designs/DESIGN-64-wu-wei-policy.md`
-  - `docs-v2/designs/DESIGN-65-hermeneutic-pragmatic-loops.md`
-  - `docs-v2/designs/DESIGN-58-L7-self-model.md` (extends L7)
+  - `docs-v2/designs/DESIGN-60-two-stage-consolidation.md` <!-- no-link: the design was never written under this name; the DESIGN series was renumbered (Q-W46-20) -->
+  - `docs-v2/designs/DESIGN-61-free-energy-consolidation.md` <!-- no-link: the design was never written under this name; the DESIGN series was renumbered (Q-W46-20) -->
+  - `docs-v2/designs/DESIGN-62-self-model-loop.md` <!-- no-link: the design was never written under this name; the DESIGN series was renumbered (Q-W46-20) -->
+  - `docs-v2/designs/DESIGN-63-stigmergic-federation.md` <!-- no-link: the design was never written under this name; the DESIGN series was renumbered (Q-W46-20) -->
+  - `docs-v2/designs/DESIGN-64-wu-wei-policy.md` <!-- no-link: the design was never written under this name; the DESIGN series was renumbered (Q-W46-20) -->
+  - `docs-v2/designs/DESIGN-65-hermeneutic-pragmatic-loops.md` <!-- no-link: the design was never written under this name; the DESIGN series was renumbered (Q-W46-20) -->
+  - `docs-v2/designs/DESIGN-58-L7-self-model.md` <!-- no-link: the design was never written under this name; the DESIGN series was renumbered (Q-W46-20) --> (extends L7)
 - **Update `HYPOTHESES-NEW.md`** with H-069..H-077.
 - **Update `MATRIX-CROSS-DISCIPLINARY-RESEARCH.md`** META-R1 examples with these findings.
 

@@ -1,5 +1,6 @@
 package io.matrix.api.llm_quarantine;
 
+import io.matrix.security.NetworkExposure;
 import io.matrix.brain.BrainCycle;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
@@ -34,7 +35,13 @@ public final class BrainServer {
         SimpleKnowledgeBase kb = new SimpleKnowledgeBase();
         LlmBrainLoopRag brain = new LlmBrainLoopRag(modelPath, kb);
         
-        HttpServer server = HttpServer.create(new InetSocketAddress(port), 0);
+// RECON-W43.0: this listener binds through the shared boundary, so it
+        // cannot end up reachable from another host while the process is
+        // local-only, and it refuses to start when the process is exposed
+        // without a configured credential.
+        NetworkExposure.current().guard("BrainServer");
+        HttpServer server = HttpServer.create(new InetSocketAddress(
+                NetworkExposure.current().bindAddress(), port), 0);
         server.createContext("/", new UiHandler());
         server.createContext("/health", new HealthHandler());
         server.createContext("/info", new InfoHandler(kb));

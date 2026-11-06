@@ -1,7 +1,11 @@
 [tasks.test]
-description = "Run tests"
-run = "echo 'Add test command'"
+description = "Run the Gradle test suite"
+run = "./gradlew test --no-daemon --console=plain"
 
 [tasks.lint]
-description = "Run linter"
-run = "echo 'Add lint command'"
+description = "Run the quality gate (literals, provenance, FROZEN zero-diff)"
+run = "./scripts/quality-gate.sh"
+
+[tasks.build-info]
+description = "Regenerate matrix-core/src/main/resources/matrix-build-info.properties"
+run = "./gradlew :matrix-core:generateBuildInfo --no-daemon --console=plain"

@@ -10,7 +10,7 @@
 Wave owner (auto-generated from W347-W351 staging session)
 
 ## Summary
-Propose adding `.github/workflows/wal-checkpoint.yml` to automatically validate
+Propose adding `.github/workflows/wal-checkpoint.yml` <!-- no-link: the workflow was never created; the RFC is a proposal --> to automatically validate
 wave checkpoint integrity on every push to `main` and `feature/*` branches.
 
 ## Status: REJECTED (2026-09-18)
@@ -90,7 +90,7 @@ are missing/inconsistent, but does NOT create commits.
 
 ## Acceptance Criteria (if approved)
 1. RFC owner approval recorded below.
-2. Workflow file created at `.github/workflows/wal-checkpoint.yml`.
+2. Workflow file created at `.github/workflows/wal-checkpoint.yml` <!-- no-link: the workflow was never created; the RFC is a proposal -->.
 3. CI test confirms workflow runs on existing wave files.
 4. CI test confirms workflow fails on a deliberately broken wave file.
 

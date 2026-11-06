@@ -28,8 +28,22 @@ jobs:
           BRANCH="${{ steps.branch.outputs.branch }}"
           echo "Validating branch: $BRANCH"
 
+          # The two INTEGRATION branches are not feature branches. The
+          # convention below is about the name of a WORK branch; a pull
+          # request that carries the integration branch itself (develop ->
+          # main, the release path the W49 directive asks for) is a different
+          # kind of pull request and must not be rejected for its name.
+          if [[ "$BRANCH" == "develop" || "$BRANCH" == "main" ]]; then
+            echo "✅ Integration branch '$BRANCH' — the naming convention applies to work branches"
           # Allowed prefixes
-          if [[ "$BRANCH" =~ ^(feature/fix/feat/chore/docs/test|refactor/perf|security)/.+$ ]]; then
+          # The alternation used to be written as
+          # ^(feature/fix/feat/chore/docs/test|refactor/perf|security)/.+$,
+          # which matches only the literal string "feature/fix/feat/chore/
+          # docs/test" — the prefixes in the error message below ("fix/*",
+          # "chore/*", "docs/*", "test/*", "perf/*") were never accepted. The
+          # check contradicted its own contract. The alternation belongs to
+          # the PREFIX, not to the whole path.
+          elif [[ "$BRANCH" =~ ^(feature|fix|feat|chore|docs|test|refactor|perf|security)/.+$ ]]; then
             echo "✅ Branch name follows convention"
           elif [[ "$BRANCH" =~ ^backup-.+-[0-9]{8}-[0-9]{6}$ ]]; then
             echo "✅ Backup branch allowed"
@@ -82,17 +96,43 @@ jobs:
           echo "✅ No LLM imports in production runtime paths"
 
       - name: Require version constants in module facades
+        # W48-03. The gate used to grep for the WORD "VERSION" anywhere under
+        # the module's main sources. That cannot tell a version contract from a
+        # comment that happens to contain the word — it failed on matrix-sdk-java,
+        # whose public facade (MatrixClient) declares no version at all, and it
+        # would have passed on a module whose only mention of VERSION were in a
+        # comment.
+        #
+        # The gate now checks a real contract: a PUBLIC declaration of a String
+        # constant named VERSION, in the module's public facade. The facade is
+        # named per module, because the modules do not share a shape: four of
+        # them declare the version in a *Module class, and the SDK's facade is
+        # the client itself.
         run: |
-          echo "Checking T-01 modules have VERSION constants..."
-          for module in matrix-api-gateway matrix-sdk-java matrix-audit matrix-billing matrix-observability; do
-            if [ -d "$module/src/main" ]; then
-              if ! grep -rq "VERSION" "$module/src/main" 2>/dev/null; then
-                echo "❌ $module has no VERSION constant"
-                exit 1
-              fi
+          echo "Checking T-01 modules declare a version in their public facade..."
+          check_facade() {
+            module="$1"; facade="$2"
+            if [ ! -d "$module/src/main" ]; then
+              echo "— $module is not in the tree; nothing to check"
+              return 0
             fi
-          done
-          echo "✅ All T-01 modules declare VERSION constants"
+            if [ ! -f "$module/src/main/java/$facade" ]; then
+              echo "❌ $module has no public facade at $facade"
+              exit 1
+            fi
+            if ! grep -qE 'public +static +final +String +VERSION *=' "$module/src/main/java/$facade"; then
+              echo "❌ $module's facade $facade declares no public VERSION constant"
+              echo "   (a mention of the word in a comment is not a version contract)"
+              exit 1
+            fi
+            echo "✅ $module declares a version in $facade"
+          }
+          check_facade matrix-api-gateway      io/matrix/api/ApiModule.java
+          check_facade matrix-sdk-java         io/matrix/sdk/MatrixClient.java
+          check_facade matrix-audit            io/matrix/audit/AuditModule.java
+          check_facade matrix-billing          io/matrix/billing/BillingModule.java
+          check_facade matrix-observability    io/matrix/observability/ObservabilityModule.java
+          echo "✅ All T-01 modules declare a version in their public facade"
 
   ecosystem-compile:
     name: Compile all T-01 modules
@@ -101,11 +141,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up JDK 25 (GraalVM CE)
+      - name: Set up JDK 25 (GraalVM Community Edition)
+        # W48-03: the identifier was "graalvm-ce", which the action does not
+        # accept, so the job failed at the setup step and produced no
+        # compilation evidence at all. The supported identifier is
+        # "graalvm-community", and the Java version is pinned explicitly.
         uses: graalvm/setup-graalvm@v1
         with:
           java-version: '25'
-          distribution: 'graalvm-ce'
+          distribution: 'graalvm-community'
 
       - name: Build T-01 modules
         run: |

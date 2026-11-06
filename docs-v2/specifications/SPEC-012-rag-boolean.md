@@ -2,7 +2,7 @@
 
 **Status**: v1 · singleton normative
 **Package**: `io.matrix.rag`
-**Related**: [SPEC-002](./SPEC-002-boolean-compute-layer.md), [DESIGN-14](../designs/DESIGN-14-boolean-rag.md)
+**Related**: [SPEC-002](./SPEC-002-boolean-compute-layer.md), [DESIGN-14](../designs/DESIGN-14-bir-migration.md)
 
 ## Что
 
@@ -127,7 +127,7 @@ score документа в section S = score leaf + bonus за section-match.
   — другой retrieval-механизм (IDF + n-gram), не часть `rag/`.
 - `agent/LongHorizonPlanner` использует `HybridBooleanRag` для
   retrieval плановых контекстов.
-- `brain/BrainPipeline` ([DESIGN-13](../designs/DESIGN-13-brain-pipeline.md))
+- `brain/BrainPipeline` ([DESIGN-13](../designs/DESIGN-03-pipeline.md))
   использует `BooleanRag` для world-model retrieval.
 - `OpenAIChatResource` использует `IndexedBooleanRag` для
   document-grounded ответов (W7.3+).

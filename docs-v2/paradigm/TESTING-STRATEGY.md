@@ -158,5 +158,5 @@ EXP Markdown report template:
 | `memory/` | 80% | Persistence paths |
 | `mediator/` | 80% | Coordination |
 | `noosphere/` | 75% | Sharing layer |
-| `tools/distill/` | 70% | Offline, less critical |
+| `tools/distill/` <!-- no-link: the v1 tree was removed by the migration to docs-v2 (Q-W46-21) --> | 70% | Offline, less critical |
 | `cli/` | 60% | Wiring |

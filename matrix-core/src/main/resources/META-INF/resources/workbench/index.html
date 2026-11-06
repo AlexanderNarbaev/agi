@@ -1,0 +1,1644 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MATRIX Learning Workbench</title>
+<style>
+  :root {
+    --bg: #10151c; --panel: #182029; --panel-2: #1f2933; --line: #2c3846;
+    --text: #dfe7ef; --muted: #8fa3b8; --accent: #4db6a5; --warn: #e0a458;
+    --bad: #d97b7b; --good: #7fbf7f;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text);
+         font: 15px/1.55 ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  header { padding: 18px 24px; border-bottom: 1px solid var(--line); background: var(--panel);
+           display: flex; align-items: baseline; gap: 16px; flex-wrap: wrap; }
+  header h1 { font-size: 18px; margin: 0; letter-spacing: .02em; }
+  header .sub { color: var(--muted); font-size: 13px; }
+  nav { display: flex; gap: 2px; padding: 0 16px; background: var(--panel);
+        border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+  nav button { background: none; border: 0; color: var(--muted); padding: 11px 15px;
+               cursor: pointer; font-size: 14px; border-bottom: 2px solid transparent; }
+  nav button:hover { color: var(--text); }
+  nav button.active { color: var(--accent); border-bottom-color: var(--accent); }
+  main { padding: 22px 24px 60px; max-width: 1080px; }
+  section { display: none; }
+  section.active { display: block; }
+  h2 { font-size: 15px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted);
+       margin: 0 0 14px; }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 8px;
+          padding: 16px 18px; margin-bottom: 14px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; }
+  .metric { background: var(--panel-2); border: 1px solid var(--line); border-radius: 8px; padding: 14px; }
+  .metric .v { font-size: 24px; font-weight: 600; }
+  .metric .k { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .06em; }
+  input[type=text], textarea, select { width: 100%; background: var(--bg); color: var(--text);
+      border: 1px solid var(--line); border-radius: 6px; padding: 10px 12px; font: inherit; }
+  textarea { min-height: 84px; resize: vertical; }
+  button.action { background: var(--accent); color: #06231f; border: 0; border-radius: 6px;
+      padding: 10px 18px; font-weight: 600; cursor: pointer; margin-top: 10px; }
+  button.action:disabled { opacity: .5; cursor: default; }
+  button.ghost { background: var(--panel-2); color: var(--text); border: 1px solid var(--line);
+      border-radius: 6px; padding: 8px 14px; cursor: pointer; }
+  .row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+  .tag { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 11px;
+         border: 1px solid var(--line); color: var(--muted); margin-right: 5px; }
+  .tag.VERIFIED, .tag.COMPETENCE { color: var(--good); border-color: var(--good); }
+  .tag.SUPPORTED, .tag.PRACTICE { color: var(--accent); border-color: var(--accent); }
+  .tag.CONTESTED, .tag.REFUTED { color: var(--bad); border-color: var(--bad); }
+  .tag.DRAFT, .tag.UNKNOWN { color: var(--muted); }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 500; font-size: 12px; text-transform: uppercase; }
+  .muted { color: var(--muted); }
+  .answer { white-space: pre-wrap; font-size: 15px; }
+  .warn { border-left: 3px solid var(--warn); padding-left: 12px; }
+  .bad { border-left: 3px solid var(--bad); padding-left: 12px; }
+  .good { border-left: 3px solid var(--good); padding-left: 12px; }
+  pre { background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 12px;
+        overflow-x: auto; font-size: 12.5px; color: var(--muted); }
+  .hide { display: none !important; }
+</style>
+</head>
+<body>
+<header>
+  <h1>MATRIX Learning Workbench</h1>
+  <select id="ws-select" style="width:220px">
+    <option value="photosynthesis">photosynthesis (biology)</option>
+    <option value="logic">logic (propositional)</option>
+  </select>
+  <span class="sub" id="hdr-workspace">workspace: —</span>
+  <span class="sub" id="hdr-storage">storage: —</span>
+</header>
+
+<nav>
+  <button data-tab="dashboard" class="active">Dashboard</button>
+  <button data-tab="ask">Ask</button>
+  <button data-tab="reasoning">Reasoning</button>
+  <button data-tab="knowledge">Knowledge</button>
+  <button data-tab="epistemic">Epistemic</button>
+  <button data-tab="cognitive">Cognitive</button>
+  <button data-tab="corpus">Sources</button>
+  <button data-tab="graph">Graph</button>
+  <button data-tab="experiments">Experiments</button>
+  <button data-tab="assess">Assess</button>
+  <button data-tab="teach">Teach</button>
+  <button data-tab="progress">Progress</button>
+  <button data-tab="sessions">Sessions</button>
+  <button data-tab="goals">Goals</button>
+  <button data-tab="persistence">Persistence</button>
+</nav>
+
+<main>
+  <section id="tab-dashboard" class="active">
+    <h2>Dashboard</h2>
+    <div class="card">
+      <div class="row">
+        <button class="action" id="btn-load">Load the demonstration knowledge pack</button>
+        <span class="muted" id="load-note">The pack is the photosynthesis domain: 8 concepts, 17 claims,
+          4 sources, 13 representations across four levels of abstraction.</span>
+      </div>
+    </div>
+    <div class="card">
+      <h2 style="margin-top:0">Import a document</h2>
+      <p class="muted">A document is read by the extraction pipeline - TXT, Markdown, HTML, PDF, EPUB -
+        and becomes claims that carry their source, their excerpt and their place in the document.
+        The claims arrive as candidates: nothing has validated them yet. Two copies of the same file
+        are one source, not two confirmations.</p>
+      <div class="row">
+        <input type="file" id="doc-file" accept=".txt,.md,.markdown,.html,.htm,.xhtml,.pdf,.epub">
+        <input type="text" id="doc-language" placeholder="language, if known" style="width:180px">
+        <button class="action" id="btn-import">Import</button>
+        <span class="muted" id="doc-note">No document imported yet.</span>
+      </div>
+    </div>
+    <div class="grid" id="dash-metrics"></div>
+    <div class="card">
+      <h2 style="margin-top:0">Recent corrections and revisions</h2>
+      <div id="dash-revisions" class="muted">No revisions recorded.</div>
+    </div>
+    <div class="card">
+      <h2 style="margin-top:0">Measured metrics</h2>
+      <p class="muted" style="margin-top:0">Every number below is a measurement with its sample size, the
+        dataset it came from and the procedure that produced it. There is deliberately no single
+        intelligence score: one number would hide the differences that matter. The metrics that were
+        <em>not</em> measured are listed at the bottom rather than left out.</p>
+      <div id="dash-report" class="muted">—</div>
+    </div>
+  </section>
+
+  <section id="tab-ask">
+    <h2>Ask the workspace</h2>
+    <div class="card">
+      <div class="row">
+        <div style="flex:1; min-width:260px">
+          <input type="text" id="ask-q" placeholder="Ask about the knowledge this workspace holds…">
+        </div>
+        <select id="ask-level" style="width:190px">
+          <option value="INTRODUCTORY">Introductory</option>
+          <option value="INTERMEDIATE">Intermediate</option>
+          <option value="ADVANCED">Advanced</option>
+          <option value="MECHANISTIC">Mechanistic</option>
+        </select>
+        <button class="action" id="btn-ask" style="margin-top:0">Ask</button>
+      </div>
+      <div id="ask-result" style="margin-top:16px"></div>
+    </div>
+    <div class="card">
+      <h2 style="margin-top:0">The conversation</h2>
+      <p class="muted">What was said, in what class, and about which concepts. The history is
+        bounded, and a question that refers to something without naming it - "Explain this in more
+        detail" - is resolved against the last turn. The question you typed is always kept as you
+        typed it.</p>
+      <div id="dialogue-list" class="muted">—</div>
+    </div>
+    <div class="card">
+      <h2 style="margin-top:0">Unknown detection</h2>
+      <div class="muted" id="ask-gap">Ask a question to see which of its terms the workspace cannot cover.</div>
+    </div>
+  </section>
+
+  <section id="tab-reasoning">
+    <h2>Reasoning</h2>
+    <p class="muted">The evidence-grounded path. The answer shows how the question was read, what was
+      retrieved, which recorded rules were checked, whether a conflict was found, and what the
+      answer rests on. A question the workspace cannot cover is refused, not guessed.</p>
+    <div class="row">
+      <input type="text" id="reason-q" placeholder="Ask something that has to be worked out…">
+      <select id="reason-level" style="width:190px">
+        <option value="INTRODUCTORY">introductory</option>
+        <option value="INTERMEDIATE">intermediate</option>
+        <option value="ADVANCED">advanced</option>
+        <option value="MECHANISTIC">mechanistic</option>
+        <option value="OPERATIONAL">operational</option>
+      </select>
+      <button class="action" id="btn-reason" style="margin-top:0">Reason</button>
+    </div>
+    <div id="reason-result" style="margin-top:16px"></div>
+    <div class="card"><h2 style="margin-top:0">The recorded rules of this workspace</h2>
+      <div id="reason-rules" class="muted">—</div></div>
+    <div class="card"><h2 style="margin-top:0">The recorded conflicts</h2>
+      <div id="reason-conflicts" class="muted">—</div></div>
+  </section>
+
+  <section id="tab-knowledge">
+    <h2>Knowledge explorer</h2>
+    <div class="card"><h2 style="margin-top:0">Concepts</h2><div id="k-concepts" class="muted">—</div></div>
+    <div class="card"><h2 style="margin-top:0">Claims</h2><div id="k-claims" class="muted">—</div></div>
+    <div class="card"><h2 style="margin-top:0">Representations and their refinement chain</h2>
+      <div id="k-reprs" class="muted">—</div></div>
+    <div class="card"><h2 style="margin-top:0">Sources</h2><div id="k-sources" class="muted">—</div></div>
+    <div class="card">
+      <h2 style="margin-top:0">Correct what is known</h2>
+      <p class="muted" style="margin-top:0">A correction does not overwrite what was believed. The earlier
+        claim is kept and marked superseded, the corrected claim carries the source it rests on, and a
+        revision records what changed, which assumptions still hold, and which simplification stopped
+        applying.</p>
+      <div class="row">
+        <select id="ref-concept" style="width:230px"></select>
+        <select id="ref-claim" style="width:340px"></select>
+      </div>
+      <div style="margin-top:10px">
+        <input type="text" id="ref-proposition" placeholder="The corrected proposition…">
+      </div>
+      <div class="row" style="margin-top:10px">
+        <input type="text" id="ref-scope" placeholder="Scope (the condition under which it holds)" style="flex:1; min-width:240px">
+        <input type="text" id="ref-source" placeholder="Source title" style="flex:1; min-width:200px">
+      </div>
+      <div class="row" style="margin-top:10px">
+        <input type="text" id="ref-excerpt" placeholder="Source excerpt" style="flex:1; min-width:300px">
+        <button class="action" id="btn-refine" style="margin-top:0">Record the correction</button>
+      </div>
+      <div id="ref-result" style="margin-top:14px"></div>
+    </div>
+  </section>
+
+  <section id="tab-corpus">
+    <h2>Source browser — the corpus registry</h2>
+    <p class="muted" style="margin-top:0">What the workspace knows, where it came from, and how much
+      of it is <em>independent</em>. The independent confirmations are counted by the distinct content
+      hashes of the sources behind a claim: two documents with the same content are one source, and
+      ten copies of one source are one confirmation. The registry does not rank the sources — the
+      authority and the freshness are reported as they were authored, because a ranking nobody could
+      check would not be information.</p>
+    <div class="card"><div id="corpus-meta" class="muted">—</div></div>
+    <div class="card"><h2 style="margin-top:0">The registry</h2>
+      <div id="corpus-entries" class="muted">—</div></div>
+    <div class="card"><h2 style="margin-top:0">What the registry says</h2>
+      <div id="corpus-notes" class="muted">—</div></div>
+  </section>
+
+  <section id="tab-graph">
+    <h2>Knowledge graph</h2>
+    <p class="muted" style="margin-top:0">A <em>read-only projection</em> of the workspace: the
+      concepts, the claims and the sources, with the relations between them. It holds no state of its
+      own, so there is no second copy of the knowledge that could drift from the first. The weight of
+      a relation is the claim's own authored confidence — not a probability.</p>
+    <div class="card"><div id="graph-meta" class="muted">—</div></div>
+    <div class="card"><h2 style="margin-top:0">The entities</h2>
+      <div id="graph-entities" class="muted">—</div></div>
+    <div class="card"><h2 style="margin-top:0">The relations</h2>
+      <div id="graph-relations" class="muted">—</div></div>
+  </section>
+
+  <section id="tab-experiments">
+    <h2>Experiment dashboard</h2>
+    <p class="muted" style="margin-top:0">The measured instrument, not a claim. These numbers are
+      measured here and now, from this workspace, with the same instrument the reconnaissance has
+      used since W42.0 — they are not copied from a report.</p>
+    <div class="card"><div id="exp-meta" class="muted">—</div></div>
+    <div class="card"><h2 style="margin-top:0">By category</h2>
+      <div id="exp-categories" class="muted">—</div></div>
+    <div class="card"><h2 style="margin-top:0">By language</h2>
+      <div id="exp-languages" class="muted">—</div></div>
+    <div class="card"><h2 style="margin-top:0">The delayed-retention baseline</h2>
+      <p class="muted">The retention experiment measures a scripted learner under two selection
+        policies — the system's own error-driven selection, and a no-consolidation baseline that
+        retries the least recently asked items. It is a comparison of two policies over a scripted
+        learner, not a measurement of a person.</p>
+      <div class="row"><button class="action" id="btn-retention">Run the retention comparison</button>
+        <span class="muted" id="retention-note">Not run in this session.</span></div>
+      <div id="retention-result" style="margin-top:14px"></div>
+    </div>
+  </section>
+
+  <section id="tab-assess">
+    <h2>Assessment</h2>
+    <div class="card">
+      <h2 style="margin-top:0">The next exercise</h2>
+      <p class="muted">The system chooses what to practise next, from the learner's own state and
+        the workspace's gaps: the dimension that has not reached competence, a concept whose
+        prerequisites are missing, or the held-out item - the independent test. <strong>Since W42.7
+        the system writes assessment items for the concepts it acquired from a document</strong>: a
+        practice item and a held-out twin per dimension, with the key terms taken from the
+        workspace's own claims and from the excerpts of the sources behind them. It writes no content
+        of its own - the terms it checks an answer against are the workspace's own - and the held-out
+        twin asks the same thing in different words, so the independent test cannot be passed by
+        remembering the practice.</p>
+      <div class="row">
+        <button class="action" id="btn-next-exercise">What should I practise?</button>
+        <span class="muted" id="exercise-note">Nothing asked yet.</span>
+      </div>
+      <div id="exercise-item" style="margin-top:14px"></div>
+    </div>
+    <div class="card">
+      <div id="assess-meta" class="muted">—</div>
+      <div id="assess-items" style="margin-top:14px"></div>
+    </div>
+  </section>
+
+  <section id="tab-teach">
+    <h2>Teaching and teach-back</h2>
+    <div class="card">
+      <p class="muted" style="margin-top:0">MATRIX composes a teaching plan from the representations it
+        holds. A second, synthetic learner is then taught that plan and measured on the
+        <strong>held-out</strong> items, which the teacher never saw. The measurement is
+        machine-to-machine: it shows whether the lesson contained the content the evaluation
+        asks for, which is necessary for transfer and not sufficient for it.</p>
+      <div class="row">
+        <select id="teach-concept" style="width:280px"></select>
+        <select id="teach-level" style="width:190px">
+          <option value="INTRODUCTORY">Introductory</option>
+          <option value="INTERMEDIATE">Intermediate</option>
+          <option value="ADVANCED">Advanced</option>
+          <option value="MECHANISTIC">Mechanistic</option>
+        </select>
+        <input type="text" id="teach-expected" value="0.5" style="width:130px"
+               title="Declared expectation: the minimum gain on the held-out set">
+        <button class="action" id="btn-teach" style="margin-top:0">Compose and teach back</button>
+      </div>
+      <div id="teach-result" style="margin-top:16px"></div>
+    </div>
+    <div class="card">
+      <h2 style="margin-top:0">The teaching plan</h2>
+      <div id="teach-plan" class="muted">Choose a concept and press the button.</div>
+    </div>
+  </section>
+
+  <section id="tab-sessions">
+    <h2>Learning sessions</h2>
+    <p class="muted" style="margin-top:0">The learner practised in sessions, and a session is
+      evidence about the learner that a single item is not: how much was attempted, how much came
+      right, how much was held out from the learning, and which concepts the session touched.</p>
+    <div class="card"><div id="sessions-body" class="muted">—</div></div>
+  </section>
+
+  <section id="tab-progress">    <h2>Progress and mastery</h2>
+    <div class="card">
+      <p class="muted" style="margin-top:0">Each capability is shown separately. A concept may be recalled
+        accurately and still not understood, and the state says which.</p>
+      <div id="progress-states" class="muted">—</div>
+    </div>
+    <div class="card">
+      <h2 style="margin-top:0">Capability ladder</h2>
+      <p class="muted" style="margin-top:0">Where the learner stands for each concept, on the seven-stage
+        ladder: unknown, exploration, initial learning, practice, competence, understanding, and
+        teachable capability. Understanding needs competence on the causal, transfer and evaluation
+        dimensions, not a high recall score. The last stage needs a teach-back that met its declared
+        expectation — generating an explanation is not proof of teaching.</p>
+      <div id="progress-capability" class="muted">—</div>
+    </div>
+    <div class="card">
+      <p class="muted" style="margin-top:0">What the workspace was asked and could not answer. Two wordings of the
+        same question are one record, so the count is a count of questions, not of wordings. A question the
+        workspace can now answer is marked <em>resolved</em> and kept — the record of the gap is the evidence
+        that something was learned.</p>
+      <button id="consolidate-questions" class="action">Consolidate the asked questions</button>
+      <div id="progress-questions" class="muted">—</div>
+    </div>
+  </section>
+
+  <section id="tab-goals">
+    <h2>Persistent goals</h2>
+    <p class="muted">A goal is not part of the knowledge: it says what was being attempted, what
+      failed, how much of the budget is spent and where to pick up. It survives a restart, and a
+      restarted process can ask what it was doing.</p>
+    <div class="card"><h2 style="margin-top:0">The next action</h2>
+      <p class="muted">What the system itself would do next: the subtask whose dependencies are
+        met, the subtask that must be unblocked first, or the concept this workspace does not
+        hold yet. The cost is the number of prerequisites that are missing, so it can be checked
+        against the store.</p>
+      <div id="plan-list" class="muted">—</div></div>
+    <div class="card"><h2 style="margin-top:0">The goals of this workspace</h2>
+      <div id="goal-list" class="muted">—</div></div>
+    <div class="card"><h2 style="margin-top:0">The learning history</h2>
+      <p class="muted">Every change of a capability's state, with the outcome that caused it. A
+        regression is recorded as a regression and the earlier mastery stays in the log.</p>
+      <div id="transition-list" class="muted">—</div></div>
+    <div class="card"><h2 style="margin-top:0">Start a goal</h2>
+      <div class="row">
+        <input type="text" id="goal-desc" placeholder="What is the objective?">
+        <input type="text" id="goal-criteria" placeholder="Success criteria, separated by ;" style="width:320px">
+        <input type="number" id="goal-budget" value="10" min="1" style="width:90px">
+        <button class="action" id="btn-goal" style="margin-top:0">Start</button>
+      </div>
+      <div class="muted" id="goal-note">A goal with no subtasks is created with one required
+        subtask, so that it has something to resume.</div>
+    </div>
+  </section>
+
+  <section id="tab-persistence">
+    <h2>Persistence and recovery</h2>
+    <div class="card">
+      <div id="persist-status" class="muted">—</div>
+    </div>
+    <div class="card">
+      <h2 style="margin-top:0">System integrity</h2>
+      <div id="persist-integrity" class="muted">—</div>
+    </div>
+    <div class="card">
+      <h2 style="margin-top:0">How to verify the state survives a restart</h2>
+      <pre>1. Stop the application (Ctrl-C).
+2. Start it again:  ./gradlew :matrix-core:quarkusRun
+3. Open this page:  http://localhost:9091/workbench/
+The counts below are read back from the store on disk by this new process.</pre>
+    </div>
+  </section>
+
+  <section id="tab-epistemic">
+    <h2>Epistemic state</h2>
+    <p class="muted">
+      What the evidence says about each claim, and why. Every claim carries
+      its standing, the reading of a counterexample against its scope, the
+      evidence it rests on and what that evidence IS — a source, a direct
+      observation, a derived conclusion, a hypothesis, a contradiction or an
+      unknown — and the questions the system could not settle.
+    </p>
+    <div class="grid">
+      <div class="card">
+        <h3 style="margin-top:0">Claims</h3>
+        <div id="epi-claims" class="muted">No claims loaded.</div>
+      </div>
+      <div class="card">
+        <h3 style="margin-top:0">The claim, and the reasoning behind it</h3>
+        <div id="epi-detail" class="muted">Choose a claim.</div>
+      </div>
+    </div>
+    <div class="card">
+      <h3 style="margin-top:0">Record an observation</h3>
+      <div class="grid">
+        <div>
+          <label>What was observed</label>
+          <input type="text" id="epi-observation" placeholder="an observation, in your words"
+                 style="width:100%">
+          <label>Under which conditions</label>
+          <input type="text" id="epi-condition"
+                 placeholder="where and when it was seen — the system reads the scope against it"
+                 style="width:100%">
+          <div class="row">
+            <button class="action" id="epi-example">Record as an example</button>
+            <button class="action" id="epi-counterexample">Record as a counterexample</button>
+          </div>
+          <span class="muted" id="epi-note">Nothing recorded yet.</span>
+        </div>
+        <div>
+          <h3 style="margin-top:0">The revision history</h3>
+          <div id="epi-revisions" class="muted">No revisions recorded.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+  <section id="tab-cognitive">
+    <h2>Cognitive kernel</h2>
+    <p class="muted">
+      One cognitive cycle, end to end: what was perceived, what was predicted, which
+      computation was chosen and why, what was observed, what changed, and where the
+      system refused. The predictions, the errors, the promoted procedures and the
+      internal tasks below all survive a restart.
+    </p>
+    <div class="card">
+      <h3 style="margin-top:0">Run a cycle</h3>
+      <div class="row">
+        <input type="text" id="cog-assignment" value="power=1,switch=0"
+               placeholder="power=1,switch=0" style="width:280px">
+        <button class="action" id="cog-observe">Observe</button>
+        <span class="muted" id="cog-note">Nothing observed yet.</span>
+      </div>
+    </div>
+    <div class="grid">
+      <div class="card">
+        <h3 style="margin-top:0">The trace of the last cycle</h3>
+        <div id="cog-trace" class="muted">No cycle has been run.</div>
+      </div>
+      <div class="card">
+        <h3 style="margin-top:0">Predictions</h3>
+        <div id="cog-predictions" class="muted">No predictions recorded.</div>
+      </div>
+      <div class="card">
+        <h3 style="margin-top:0">Prediction errors</h3>
+        <div id="cog-errors" class="muted">No errors recorded.</div>
+      </div>
+      <div class="card">
+        <h3 style="margin-top:0">Promoted procedures</h3>
+        <div id="cog-procedures" class="muted">No procedure promoted.</div>
+      </div>
+      <div class="card">
+        <h3 style="margin-top:0">Internal tasks</h3>
+        <div id="cog-tasks" class="muted">No internal task generated.</div>
+      </div>
+      <div class="card">
+        <h3 style="margin-top:0">Cases — the observations and their conditions</h3>
+        <div id="cog-cases" class="muted">No case recorded.</div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<script>
+const API = '/v1/workbench';
+let WS = 'photosynthesis';
+let dataset = null;
+
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+async function api(path, options) {
+  const res = await fetch(API + path, options);
+  const text = await res.text();
+  let body = null;
+  try { body = text ? JSON.parse(text) : null; } catch (e) { body = { raw: text }; }
+  if (!res.ok) throw new Error((body && body.error) || ('HTTP ' + res.status));
+  return body;
+}
+
+document.querySelectorAll('nav button').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('section').forEach(s => s.classList.remove('active'));
+    btn.classList.add('active');
+    $('tab-' + btn.dataset.tab).classList.add('active');
+    // RECON-W42.3: the navigation had no branch for three of the nine
+    // tabs, so the Dashboard was empty on first paint and the Ask and
+    // Persistence tabs never loaded their content.
+    if (btn.dataset.tab === 'dashboard') { loadStatus(); loadMetrics(); }
+    if (btn.dataset.tab === 'ask') { loadDialogue(); }
+    if (btn.dataset.tab === 'knowledge') loadKnowledge();
+    if (btn.dataset.tab === 'epistemic') loadEpistemic();
+    if (btn.dataset.tab === 'cognitive') loadCognitive();
+    if (btn.dataset.tab === 'corpus') loadCorpus();
+    if (btn.dataset.tab === 'graph') loadGraph();
+    if (btn.dataset.tab === 'experiments') loadExperiments();
+    if (btn.dataset.tab === 'assess') { loadAssessment(); loadNextExercise(); }
+    if (btn.dataset.tab === 'teach') loadConceptsForTeaching();
+    if (btn.dataset.tab === 'progress') { loadProgress(); loadCapability(); loadQuestions(); }
+    if (btn.dataset.tab === 'sessions') loadSessions();
+    if (btn.dataset.tab === 'reasoning') loadRules();
+    if (btn.dataset.tab === 'goals') loadGoals();
+    if (btn.dataset.tab === 'persistence') loadStatus();
+  });
+});
+
+// RECON-W43.5: the workbench showed what the workspace KNEW, but not why
+// the system concluded anything. The epistemic panel is the answer to the
+// mission's §5: the user can inspect the evidence, the reading, the
+// questions the system could not settle, and the revision history.
+let EPI_CLAIM = null;
+
+async function loadEpistemic() {
+  try {
+    const claims = await api('/workspaces/' + WS + '/claims');
+    let html = '<table><tr><th>Claim</th><th>Status</th><th>Scope</th></tr>';
+    for (const claim of claims) {
+      html += '<tr><td><a href="#" data-epi-claim="' + esc(claim.id) + '">'
+        + esc(claim.proposition) + '</a></td>'
+        + '<td>' + esc(claim.status) + '</td>'
+        + '<td>' + esc(claim.scope ?? '') + '</td></tr>';
+    }
+    html += '</table>';
+    $('epi-claims').innerHTML = html;
+    document.querySelectorAll('[data-epi-claim]').forEach(a => {
+      a.addEventListener('click', (e) => {
+        e.preventDefault();
+        EPI_CLAIM = a.dataset.epiClaim;
+        loadEpistemicDetail();
+      });
+    });
+    if (!EPI_CLAIM && claims.length) {
+      EPI_CLAIM = claims[0].id;
+    }
+    await loadEpistemicDetail();
+    await loadEpistemicRevisions();
+  } catch (e) {
+    $('epi-claims').textContent = 'Could not load the claims: ' + e.message;
+  }
+}
+
+// WHAT THE EVIDENCE IS. The mission's §5 names six kinds, and the panel
+// says which one each piece of evidence is, so the user is never looking
+// at a link without knowing what kind of thing it points at.
+function evidenceKind(relation, sourceKind) {
+  if (sourceKind === 'OBSERVATION') return 'direct observation';
+  if (relation === 'CONTRADICTS') return 'contradiction';
+  if (relation === 'EXEMPLIFIES') return 'example';
+  if (relation === 'QUALIFIES') return 'qualification';
+  if (relation === 'FAILS_TO_SUPPORT' || relation === 'INSUFFICIENT') return 'unknown';
+  if (sourceKind === 'DOCUMENT' || sourceKind === 'HUMAN_ASSERTION') return 'source evidence';
+  return 'derived conclusion';
+}
+
+async function loadEpistemicDetail() {
+  if (!EPI_CLAIM) { $('epi-detail').textContent = 'Choose a claim.'; return; }
+  try {
+    const a = await api('/workspaces/' + WS + '/claims/' + EPI_CLAIM + '/assessment');
+    let html = '<p><strong>' + esc(a.proposition) + '</strong></p>';
+    html += '<p class="muted">the scope it states: ' + esc(a.scope ?? '— it states none') + '</p>';
+    html += '<p>standing: <strong>' + esc(a.standing) + '</strong><br>'
+      + '<span class="muted">' + esc(a.standingReason ?? '') + '</span></p>';
+    if (a.counterexampleReading) {
+      html += '<p>the reading of the counterexample: <strong>' + esc(a.counterexampleReading) + '</strong><br>'
+        + '<span class="muted">' + esc(a.readingReason ?? '') + '</span></p>';
+    }
+    if (a.alternativeExplanations && a.alternativeExplanations.length) {
+      html += '<p class="muted">it cannot exclude: ' + a.alternativeExplanations.map(esc).join('; ') + '</p>';
+    }
+    if (a.unresolved && a.unresolved.length) {
+      html += '<p class="muted">unresolved: ' + a.unresolved.map(esc).join('; ') + '</p>';
+    }
+    const rows = []
+      .concat(a.supporting || [], a.contradicting || [], a.qualifying || [],
+              a.exemplifying || [], a.insufficient || []);
+    if (rows.length) {
+      html += '<table><tr><th>Evidence</th><th>Relation</th><th>What it is</th>'
+        + '<th>Source</th></tr>';
+      for (const ref of rows) {
+        html += '<tr><td>' + esc((ref.excerpt ?? '').slice(0, 90)) + '</td>'
+          + '<td>' + esc(ref.relation) + '</td>'
+          + '<td>' + esc(evidenceKind(ref.relation, ref.sourceKind)) + '</td>'
+          + '<td>' + esc(ref.sourceTitle ?? ref.sourceId) + '</td></tr>';
+      }
+      html += '</table>';
+    } else {
+      html += '<p class="muted">No evidence is recorded for this claim.</p>';
+    }
+    if (a.proposedRefinement) {
+      html += '<p>the system proposes: <strong>' + esc(a.proposedRefinement) + '</strong><br>'
+        + '<span class="muted">' + esc(a.refinementReason ?? '') + '</span></p>'
+        + '<div class="row">'
+        + '<button class="action" id="epi-accept">Accept the refinement</button>'
+        + '<button class="action" id="epi-reject">Reject it</button></div>';
+    }
+    $('epi-detail').innerHTML = html;
+    if ($('epi-accept')) {
+      $('epi-accept').addEventListener('click', () => refine('accept', a.proposedRefinement));
+    }
+    if ($('epi-reject')) {
+      $('epi-reject').addEventListener('click', () => refine('reject', a.proposedRefinement));
+    }
+  } catch (e) {
+    $('epi-detail').textContent = 'Could not read the assessment: ' + e.message;
+  }
+}
+
+async function refine(action, proposition) {
+  try {
+    await api('/workspaces/' + WS + '/claims/' + EPI_CLAIM + '/refine/' + action, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ proposition: proposition, reason: 'accepted in the workbench' })
+    });
+    $('epi-note').textContent = action === 'accept'
+      ? 'The refinement was accepted. The original claim is kept, and the history says so.'
+      : 'The refinement was rejected, and the rejection is kept too.';
+    await loadEpistemic();
+  } catch (e) {
+    $('epi-note').textContent = 'The ' + action + ' was refused: ' + e.message;
+  }
+}
+
+async function loadEpistemicRevisions() {
+  try {
+    const revisions = await api('/workspaces/' + WS + '/revisions');
+    if (!revisions.length) { $('epi-revisions').innerHTML = 'No revisions recorded.'; return; }
+    let html = '<table><tr><th>Revision</th><th>Kind</th><th>Summary</th></tr>';
+    for (const r of revisions) {
+      html += '<tr><td>' + esc(r.id) + '</td><td>' + esc(r.kind ?? '') + '</td>'
+        + '<td>' + esc(r.summary ?? '') + '</td></tr>';
+    }
+    html += '</table>';
+    $('epi-revisions').innerHTML = html;
+  } catch (e) {
+    $('epi-revisions').textContent = 'Could not read the revisions: ' + e.message;
+  }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  const observation = () => $('epi-observation').value.trim();
+  const condition = () => $('epi-condition').value.trim();
+  const record = async (contradicts) => {
+    if (!EPI_CLAIM) { $('epi-note').textContent = 'Choose a claim first.'; return; }
+    if (!observation()) { $('epi-note').textContent = 'Write what was observed.'; return; }
+    try {
+      await api('/workspaces/' + WS + '/claims/' + EPI_CLAIM + '/examples', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          observation: observation(),
+          condition: condition() || null,
+          contradicts: contradicts
+        })
+      });
+      $('epi-note').textContent = contradicts
+        ? 'The counterexample is recorded. The original claim is kept.'
+        : 'The example is recorded.';
+      await loadEpistemic();
+    } catch (e) {
+      $('epi-note').textContent = 'The observation was refused: ' + e.message;
+    }
+  };
+  $('epi-example').addEventListener('click', () => record(false));
+  $('epi-counterexample').addEventListener('click', () => record(true));
+});
+
+async function loadMetrics() {
+  try {
+    const m = await api('/workspaces/' + WS + '/metrics');
+    const c = m.coverage || {};
+    const a = m.asking || {};
+    let html = '<table><tr><th>Metric</th><th>Value</th><th>Sample</th></tr>' +
+      '<tr><td>Concepts</td><td>' + c.concepts + '</td><td>whole workspace</td></tr>' +
+      '<tr><td>Claims</td><td>' + c.claims + '</td><td>whole workspace</td></tr>' +
+      '<tr><td>Established claims</td><td>' + c.establishedClaims + '</td><td>' + c.claims + ' claims</td></tr>' +
+      '<tr><td>Claims backed by evidence</td><td>' + c.claimsWithEvidence + ' (' +
+        Math.round(c.evidenceBackedShare * 100) + '%)</td><td>' + c.claims + ' claims</td></tr>' +
+      '<tr><td>Contested claims</td><td>' + c.contradictedClaims + '</td><td>' + c.claims + ' claims</td></tr>' +
+      '<tr><td>Sources</td><td>' + c.sources + '</td><td>whole workspace</td></tr>' +
+      '<tr><td>Evidence links</td><td>' + c.evidenceLinks + '</td><td>whole workspace</td></tr>' +
+      '<tr><td>Representations</td><td>' + c.representations + '</td><td>whole workspace</td></tr>' +
+      '<tr><td>Revisions</td><td>' + c.revisions + '</td><td>whole workspace</td></tr>' +
+      '<tr><td>Questions asked</td><td>' + a.questionsAsked + '</td><td>' + a.distinctQuestions +
+        ' distinct question(s)</td></tr>' +
+      '<tr><td>Questions refused</td><td>' + a.questionsRefused + ' (' +
+        Math.round(a.refusalRate * 100) + '%)</td><td>' + a.distinctQuestions + ' distinct question(s)</td></tr>' +
+      '<tr><td>Recurring gaps</td><td>' + a.recurringGaps + '</td><td>' + a.distinctQuestions +
+        ' distinct question(s)</td></tr></table>';
+
+    html += '<h2>Capability dimensions</h2>';
+    if (!m.dimensions || !m.dimensions.length) {
+      html += '<p class="muted">No dimension has been assessed yet, so none is reported. A dimension '
+        + 'with no outcome is not reported as zero.</p>';
+    } else {
+      html += '<table><tr><th>Concept</th><th>Dimension</th><th>Stage</th><th>Score</th><th>Evidence</th>'
+        + '<th>Note</th></tr>' + m.dimensions.map(d => '<tr><td>' + esc(d.conceptId) + '</td>' +
+          '<td>' + esc(d.dimension) + '</td><td><span class="tag ' + esc(d.stage) + '">' +
+          esc(d.stage) + '</span></td><td>' + d.score + '</td>' +
+          '<td>' + d.evidenceCount + ' outcome(s), ' + d.variantCount + ' variant(s)' +
+          (d.heldOutCount ? ', ' + d.heldOutCount + ' held out' : '') + '</td>' +
+          '<td class="muted">' + esc(d.note) + '</td></tr>').join('') + '</table>';
+    }
+
+    html += '<h2>Provenance of this report</h2><table>' +
+      '<tr><th>Software version</th><td>' + esc(m.softwareVersion) + ' <span class="muted">(' +
+        esc(m.softwareVersionSource) + ')</span></td></tr>' +
+      '<tr><th>Dataset</th><td>' + esc(m.datasetId) + ', version ' + esc(m.datasetVersion) + '</td></tr>' +
+      '<tr><th>Test procedure</th><td class="muted">' + esc(m.testProcedure) + '</td></tr></table>';
+
+    html += '<h2>What was NOT measured</h2><ul>' +
+      (m.unmeasured || []).map(u => '<li class="muted">' + esc(u) + '</li>').join('') + '</ul>';
+    if (m.notes && m.notes.length) {
+      html += '<h2>Notes</h2><ul>' + m.notes.map(n => '<li class="muted">' + esc(n) + '</li>').join('') + '</ul>';
+    }
+    $('dash-report').innerHTML = html;
+  } catch (e) {
+    $('dash-report').innerHTML = '<span class="muted">' + esc(e.message) + '</span>';
+  }
+}
+
+$('ws-select').addEventListener('change', function () {
+  WS = $('ws-select').value;
+  loadStatus();
+  loadMetrics();
+  loadRules();
+  loadGoals();
+  loadKnowledge();
+});
+
+function renderIntegrity(integrity) {
+  if (!integrity) { $('persist-integrity').innerHTML = '<span class="muted">—</span>'; return; }
+  let html = '<table>';
+  html += '<tr><th>Last durable write</th><td>' + esc(integrity.lastDurableWrite || 'none yet')
+    + ' <span class="muted">(' + esc(integrity.lastDurableWriteWorkspace || 'no workspace') + ')</span>'
+    + '<div class="muted">' + esc(integrity.lastDurableWriteMeaning || '') + '</div></td></tr>';
+  html += '<tr><th>Backup</th><td>' + esc(integrity.backupState || '—')
+    + '<div class="muted">the write-ahead log holds ' + esc(integrity.writeAheadLogBytes) + ' bytes</div></td></tr>';
+  html += '<tr><th>Store schema</th><td>' + esc(integrity.schemaVersion)
+    + '<div class="muted">' + esc(integrity.schemaVersionMeaning || '') + '</div></td></tr>';
+  html += '</table>';
+  const warnings = integrity.recoveryWarnings || [];
+  if (warnings.length) {
+    html += '<h3 style="margin-top:12px">Recovery warnings</h3><ul>';
+    warnings.forEach(function (warning) { html += '<li class="muted">' + esc(warning) + '</li>'; });
+    html += '</ul>';
+  } else {
+    html += '<div class="muted">No recovery warning: nothing is waiting to be picked up.</div>';
+  }
+  $('persist-integrity').innerHTML = html;
+}
+
+async function loadStatus() {
+  try {
+    const s = await api('/status');
+    $('hdr-workspace').textContent = 'workspace: ' + (s.workspaces.join(', ') || 'none loaded');
+    $('hdr-storage').textContent = 'storage: ' + s.schemaVersion + ' · ' + s.sizeBytes + ' bytes · ' + s.exists;
+    $('persist-status').innerHTML =
+      '<table><tr><th>Database</th><td>' + esc(s.databasePath) + '</td></tr>' +
+      '<tr><th>Exists</th><td>' + s.exists + '</td></tr>' +
+      '<tr><th>Size</th><td>' + s.sizeBytes + ' bytes</td></tr>' +
+      '<tr><th>Schema version</th><td>' + s.schemaVersion + '</td></tr>' +
+      '<tr><th>Workspaces</th><td>' + esc((s.workspaces || []).join(', ') || 'none') + '</td></tr></table>' +
+      '<pre>' + esc(JSON.stringify(s.counts, null, 2)) + '</pre>';
+    renderIntegrity(s.integrity);
+    const counts = (s.counts || {})[WS];
+    $('dash-metrics').innerHTML = counts ? [
+      ['Concepts', counts.concepts], ['Claims', counts.claims], ['Sources', counts.sources],
+      ['Evidence links', counts.evidence], ['Representations', counts.representations],
+      ['Revisions', counts.revisions], ['Assessments', counts.assessmentOutcomes]
+    ].map(([k, v]) => '<div class="metric"><div class="v">' + v + '</div><div class="k">' + k + '</div></div>').join('')
+      : '<div class="metric"><div class="v">0</div><div class="k">no workspace loaded</div></div>';
+  } catch (e) {
+    $('hdr-storage').textContent = 'storage: unavailable — ' + e.message;
+  }
+}
+
+$('btn-load').addEventListener('click', async () => {
+  $('btn-load').disabled = true;
+  try {
+    const r = await api('/workspaces/' + WS + '/load', { method: 'POST' });
+    $('load-note').textContent = 'Loaded ' + r.concepts + ' concepts, ' + r.claims + ' claims, ' +
+      r.sources + ' sources, ' + r.representations + ' representations.';
+    await loadStatus();
+    await loadKnowledge();
+    await loadMetrics();
+  } catch (e) {
+    $('load-note').textContent = 'Could not load the pack: ' + e.message;
+  } finally {
+    $('btn-load').disabled = false;
+  }
+});
+
+$('btn-import').addEventListener('click', async () => {
+  const input = $('doc-file');
+  if (!input.files || !input.files.length) {
+    $('doc-note').textContent = 'Choose a document first.';
+    return;
+  }
+  $('btn-import').disabled = true;
+  $('doc-note').textContent = 'Reading the document…';
+  try {
+    const body = new FormData();
+    body.append('file', input.files[0]);
+    const language = $('doc-language').value.trim();
+    if (language) body.append('language', language);
+    const r = await fetch('/v1/workbench/workspaces/' + WS + '/documents', {
+      method: 'POST', body: body
+    });
+    if (!r.ok) {
+      const error = await r.json().catch(function () { return {}; });
+      throw new Error(error.error || ('the server answered ' + r.status));
+    }
+    const report = await r.json();
+    $('doc-note').textContent = 'Imported ' + report.filename + ' (' + report.format +
+      '): ' + report.segments + ' segment(s), ' + report.claimsProposed +
+      ' candidate claim(s), ' + report.conceptsCreated + ' new concept(s). Source ' +
+      report.sourceId + ', hash ' + report.contentHash.slice(0, 12) + '…';
+    await loadKnowledge();
+    await loadStatus();
+  } catch (e) {
+    $('doc-note').textContent = 'Could not import the document: ' + e.message;
+  } finally {
+    $('btn-import').disabled = false;
+  }
+});
+
+$('btn-next-exercise').addEventListener('click', async () => {
+  await loadNextExercise();
+});
+
+$('btn-ask').addEventListener('click', async () => {
+  const q = $('ask-q').value.trim();
+  if (!q) return;
+  const out = $('ask-result');
+  out.innerHTML = '<span class="muted">Thinking…</span>';
+  try {
+    const a = await api('/workspaces/' + WS + '/ask', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ question: q, level: $('ask-level').value })
+    });
+    if (!a.answered) {
+      out.innerHTML = '<div class="card warn"><h2 style="margin-top:0">No answer</h2>' +
+        '<div>' + esc(a.abstentionReason) + '</div>' +
+        '<p class="muted">Terms this workspace does not cover: ' + esc((a.unmatchedTerms || []).join(', ')) + '</p></div>';
+    } else {
+      out.innerHTML = '<div class="card good"><h2 style="margin-top:0">Answer at ' + esc(a.level) + ' level</h2>' +
+        '<div class="answer">' + esc(a.statement) + '</div>' +
+        '<p class="muted">Support score ' + a.supportScore + ' · concepts: ' +
+        esc((a.concepts || []).map(c => c.name).join(', ')) + '</p>' +
+        (a.support ? '<p class="muted" style="margin-top:6px">' + esc(a.support.meaning) + '</p>' +
+          '<table><tr><th>Input</th><th>Value</th></tr>' +
+          '<tr><td>Evidence coverage</td><td>' + a.support.evidenceCoverage + '</td></tr>' +
+          '<tr><td>Mean source authority</td><td>' + a.support.meanSourceAuthority + '</td></tr>' +
+          '<tr><td>Mean source freshness</td><td>' + a.support.meanSourceFreshness + '</td></tr>' +
+          '<tr><td>Claims used</td><td>' + a.support.claimCount + '</td></tr>' +
+          '<tr><td>Sources used</td><td>' + a.support.sourceCount + '</td></tr>' +
+          '<tr><td>Scope match</td><td>' + esc(a.support.scopeMatch) + '</td></tr>' +
+          '<tr><td>Contradiction check</td><td>' + esc(a.support.contradiction) + '</td></tr>' +
+          '<tr><td>Calibration</td><td>' + esc(a.support.calibrationStatus) + '</td></tr></table>' : '') +
+        '</div>' +
+        (a.claims && a.claims.length ? '<div class="card"><h2 style="margin-top:0">Supporting claims</h2>' +
+          a.claims.map(c => '<div><span class="tag ' + esc(c.status) + '">' + esc(c.status) + '</span>' +
+          esc(c.proposition) + '<div class="muted">scope: ' + esc(c.scope || 'unstated') + '</div></div>').join('') +
+          '</div>' : '') +
+        (a.sources && a.sources.length ? '<div class="card"><h2 style="margin-top:0">Sources</h2>' +
+          a.sources.map(s => '<div><div>' + esc(s.title) + '</div><div class="muted">' + esc(s.locator) + '</div></div>').join('') +
+          '</div>' : '') +
+        (a.limitations && a.limitations.length ? '<div class="card warn"><h2 style="margin-top:0">Limitations</h2>' +
+          a.limitations.map(l => '<div>· ' + esc(l) + '</div>').join('') + '</div>' : '');
+    }
+    const gaps = await api('/workspaces/' + WS + '/gaps?question=' + encodeURIComponent(q));
+    $('ask-gap').innerHTML = '<div>Terms of the question nothing covers: <strong>' +
+      esc((gaps.uncoveredTerms || []).join(', ') || 'none') + '</strong></div>' +
+      '<div class="muted">Concepts represented but without an established claim: ' +
+      esc((gaps.conceptsWithoutEstablishedClaims || []).join(', ') || 'none') + '</div>';
+  } catch (e) {
+    out.innerHTML = '<div class="card bad">' + esc(e.message) + '</div>';
+  }
+});
+
+async function loadExperiments() {
+  try {
+    const e = await api('/workspaces/' + WS + '/experiments');
+    if (e.theError) {
+      $('exp-meta').innerHTML = '<span class="muted">' + esc(e.theError) + '</span>';
+      return;
+    }
+    $('exp-meta').innerHTML = 'the items: ' + e.theItems + ' · the answerable: ' + e.theAnswerable +
+      ' · the answered correctly: <strong>' + e.theAnsweredCorrectly + '</strong> · the accuracy: <strong>' +
+      e.theAnswerAccuracy + '</strong> · the refusals that had to happen: ' + e.theRefusedCorrectly +
+      ' of ' + e.theUnanswerable + ' (the abstention ' + e.theAbstentionQuality + ') · the BM25 overlap: ' +
+      e.theBm25Overlap + '<div class="muted" style="margin-top:8px">' + esc(e.theNote || '') + '</div>';
+    $('exp-categories').innerHTML = '<table><tr><th>Category</th><th>Items</th><th>Correct</th>' +
+      '<th>Refused correctly</th></tr>' + (e.theCategories || []).map(c =>
+        '<tr><td>' + esc(c.theCategory) + '</td><td>' + c.theItems + '</td><td>' + c.theCorrect +
+        '</td><td>' + c.theRefusedCorrectly + '</td></tr>').join('') + '</table>';
+    $('exp-languages').innerHTML = '<table><tr><th>Language</th><th>Items</th><th>Correct</th></tr>' +
+      (e.theLanguages || []).map(l => '<tr><td>' + esc(l.theLanguage) + '</td><td>' + l.theItems +
+        '</td><td>' + l.theCorrect + '</td></tr>').join('') + '</table>';
+  } catch (err) {
+    $('exp-meta').innerHTML = '<span class="muted">The experiments are not available: ' + esc(String(err)) + '</span>';
+  }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  const button = document.getElementById('btn-retention');
+  if (!button) return;
+  button.addEventListener('click', async () => {
+    $('retention-note').textContent = 'Running…';
+    try {
+      const r = await api('/workspaces/' + WS + '/retention-experiment?maxSessions=20');
+      const b = r.baseline || {}, c = r.consolidation || {};
+      $('retention-note').textContent = 'Done.';
+      $('retention-result').innerHTML = '<table><tr><th>Arm</th><th>Sessions</th><th>The retention stage</th>' +
+        '<th>The evidence</th></tr><tr><td>the no-consolidation baseline</td><td>' + b.sessions +
+        '</td><td>' + esc(b.theRetentionStage || '') + '</td><td>' + b.theRetentionEvidence +
+        '</td></tr><tr><td>the consolidation</td><td>' + c.sessions + '</td><td>' +
+        esc(c.theRetentionStage || '') + '</td><td>' + c.theRetentionEvidence + '</td></tr></table>';
+    } catch (err) {
+      $('retention-note').textContent = 'The comparison could not be run: ' + String(err);
+    }
+  });
+});
+
+async function loadGraph() {
+  try {
+    const g = await api('/workspaces/' + WS + '/graph');
+    $('graph-meta').innerHTML = 'the entities: <strong>' + g.theEntities + '</strong> · the relations: <strong>' +
+      g.theRelations + '</strong> · the most connected: ' + (g.theCentral || []).join(', ');
+    const types = {};
+    (g.theEntityList || []).forEach(e => { types[e.theType] = (types[e.theType] || 0) + 1; });
+    $('graph-entities').innerHTML = '<div class="muted">' + Object.keys(types).map(t =>
+      t + ': ' + types[t]).join(' · ') + '</div><table><tr><th>Id</th><th>Type</th><th>Properties</th></tr>' +
+      (g.theEntityList || []).map(e => '<tr><td class="muted">' + esc(e.theId) + '</td><td>' +
+        esc(e.theType) + '</td><td>' + esc(JSON.stringify(e.theProperties || {}).slice(0, 120)) +
+        '</td></tr>').join('') + '</table>';
+    $('graph-relations').innerHTML = '<table><tr><th>From</th><th>Predicate</th><th>To</th><th>Weight</th></tr>' +
+      (g.theRelationList || []).map(r => '<tr><td class="muted">' + esc(r.theFrom) + '</td><td>' +
+        esc(r.thePredicate) + '</td><td class="muted">' + esc(r.theTo) + '</td><td>' +
+        r.theWeight + '</td></tr>').join('') + '</table>' +
+      '<div class="muted" style="margin-top:10px">' + esc(g.theNote || '') + '</div>';
+  } catch (e) {
+    $('graph-meta').innerHTML = '<span class="muted">The graph is not available: ' + esc(String(e)) + '</span>';
+  }
+}
+
+async function loadCorpus() {
+  try {
+    const c = await api('/workspaces/' + WS + '/corpus');
+    $('corpus-meta').innerHTML = 'the sources: <strong>' + c.theSources + '</strong> · the imported: ' +
+      c.theImported + ' · the authored: ' + c.theAuthored + ' · the claims: ' + c.theClaims +
+      ' · the best independent confirmations: <strong>' + c.theIndependentConfirmations + '</strong>';
+    $('corpus-entries').innerHTML = '<table><tr><th>Source</th><th>Kind</th><th>Language</th>' +
+      '<th>Format</th><th>Claims</th><th>Independent confirmations</th><th>Content hash</th></tr>' +
+      (c.theRegistry || []).map(e =>
+        '<tr><td>' + esc(e.theTitle || e.theSource) + '<div class="muted">' + esc(e.theLocator || '') + '</div></td>' +
+        '<td><span class="tag">' + esc(e.theKind) + '</span></td>' +
+        '<td>' + esc(e.theLanguage || '—') + '</td>' +
+        '<td>' + esc(e.theFormat || '—') + '</td>' +
+        '<td>' + e.theClaimsSupported + '</td>' +
+        '<td>' + e.theIndependentConfirmations + '</td>' +
+        '<td class="muted">' + esc((e.theContentHash || '').slice(0, 16)) + '</td></tr>').join('') + '</table>';
+    $('corpus-notes').innerHTML = (c.theNotes || []).map(n => '<div>' + esc(n) + '</div>').join('');
+  } catch (e) {
+    $('corpus-meta').innerHTML = '<span class="muted">The registry is not available: ' + esc(String(e)) + '</span>';
+  }
+}
+
+async function loadKnowledge() {
+  try {
+    const [concepts, claims, reprs, sources, revs] = await Promise.all([
+      api('/workspaces/' + WS + '/concepts'), api('/workspaces/' + WS + '/claims'),
+      api('/workspaces/' + WS + '/representations'), api('/workspaces/' + WS + '/sources'),
+      api('/workspaces/' + WS + '/revisions')
+    ]);
+    window.__claims = claims;
+    $('k-concepts').innerHTML = concepts.map(c =>
+      '<div><strong>' + esc(c.name) + '</strong> <span class="muted">' + esc(c.domain || '') + '</span>' +
+      '<div class="muted">' + esc(c.definition || '') + '</div></div>').join('');
+    $('k-claims').innerHTML = '<table><tr><th>Status</th><th>Claim</th><th>Scope</th><th>Confidence</th></tr>' +
+      claims.map(c => '<tr><td><span class="tag ' + esc(c.status) + '">' + esc(c.status) + '</span></td><td>' +
+        esc(c.proposition) + '</td><td class="muted">' + esc(c.scope || '—') + '</td><td>' + c.confidence +
+        '</td></tr>').join('') + '</table>';
+    $('k-reprs').innerHTML = reprs.map(r =>
+      '<div style="margin-bottom:10px"><span class="tag">' + esc(r.level) + '</span>' +
+      '<div>' + esc(r.statement) + '</div>' +
+      '<div class="muted">assumes: ' + esc((r.assumptions || []).join('; ') || '—') +
+      ' · omits: ' + esc((r.omitted || []).join('; ') || '—') +
+      ' · valid when: ' + esc((r.validityConditions || []).join('; ') || '—') + '</div>' +
+      (r.refinesRepresentationId ? '<div class="muted">refines: ' + esc(r.refinesRepresentationId) + '</div>' : '') +
+      '</div>').join('');
+    $('k-sources').innerHTML = sources.map(s =>
+      '<div style="margin-bottom:10px"><strong>' + esc(s.title) + '</strong> ' +
+      '<span class="tag">' + esc(s.kind) + '</span>' +
+      '<div class="muted">' + esc(s.locator) + '</div>' +
+      '<div class="muted">authority ' + s.authority + ' · freshness ' + s.freshness + '</div></div>').join('');
+    $('dash-revisions').innerHTML = revs.length ? revs.map(r =>
+      '<div style="margin-bottom:10px"><span class="tag">' + esc(r.kind) + '</span><div>' + esc(r.summary) + '</div>' +
+      '<div class="muted">added: ' + esc((r.addedFacts || []).join('; ')) + '</div>' +
+      '<div class="muted">no longer applies: ' + esc((r.noLongerValidAssumptions || []).join('; ')) + '</div>' +
+      '<div class="muted">now explains: ' + esc((r.newlyExplainedCases || []).join('; ')) + '</div></div>').join('')
+      : 'No revisions recorded.';
+    fillRefinementSelectors(concepts, claims);
+  } catch (e) {
+    $('k-concepts').innerHTML = '<span class="muted">' + esc(e.message) + '</span>';
+  }
+}
+
+function fillRefinementSelectors(concepts, claims) {
+  const conceptSelect = $('ref-concept');
+  const previous = conceptSelect.value;
+  conceptSelect.innerHTML = concepts.map(c => '<option value="' + esc(c.id) + '">' + esc(c.name) + '</option>').join('');
+  if (previous) conceptSelect.value = previous;
+  fillClaimSelector();
+}
+
+function fillClaimSelector() {
+  const conceptId = $('ref-concept').value;
+  const claims = window.__claims || [];
+  const relevant = claims.filter(c => c.conceptId === conceptId);
+  $('ref-claim').innerHTML = '<option value="">(add a new claim — do not supersede anything)</option>' +
+    relevant.map(c => '<option value="' + esc(c.id) + '">' + esc(c.proposition.slice(0, 80)) + '</option>').join('');
+}
+
+$('ref-concept').addEventListener('change', fillClaimSelector);
+
+$('btn-refine').addEventListener('click', async () => {
+  const proposition = $('ref-proposition').value.trim();
+  if (!proposition) {
+    $('ref-result').innerHTML = '<div class="card bad">A corrected proposition is required.</div>';
+    return;
+  }
+  const body = {
+    conceptId: $('ref-concept').value,
+    supersededClaimId: $('ref-claim').value || null,
+    proposition,
+    scope: $('ref-scope').value || null,
+    status: 'SUPPORTED',
+    confidence: 0.8,
+    sourceKind: 'HUMAN_ASSERTION',
+    sourceTitle: $('ref-source').value || 'A human statement',
+    sourceExcerpt: $('ref-excerpt').value || null,
+    revisionKind: $('ref-claim').value ? 'CORRECTION' : 'REFINEMENT',
+    summary: $('ref-claim').value ? 'The claim was corrected.' : 'A new claim was added.',
+    addedFacts: [proposition],
+    stillValidAssumptions: [],
+    noLongerValidAssumptions: [],
+    newlyExplainedCases: []
+  };
+  $('ref-result').innerHTML = '<span class="muted">Recording…</span>';
+  try {
+    const r = await api('/workspaces/' + WS + '/refine', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body)
+    });
+    $('ref-result').innerHTML = '<div class="card good"><h2 style="margin-top:0">Recorded</h2>' +
+      '<div>' + r.claims.length + ' claim(s) written, ' + r.sources.length + ' source(s), ' +
+      r.evidence.length + ' evidence link(s), ' + r.revisions.length + ' revision(s).</div>' +
+      r.revisions.map(rev => '<div class="muted" style="margin-top:6px">' + esc(rev.summary) +
+        ' — no longer applies: ' + esc((rev.noLongerValidAssumptions || []).join('; ') || 'nothing recorded') +
+        '</div>').join('') + '</div>';
+    await loadKnowledge();
+    await loadStatus();
+  } catch (e) {
+    $('ref-result').innerHTML = '<div class="card bad">' + esc(e.message) + '</div>';
+  }
+});
+
+async function loadAssessment() {
+  try {
+    dataset = await api('/workspaces/' + WS + '/assessment');
+    $('assess-meta').textContent = 'Dataset ' + dataset.datasetId + ' v' + dataset.version +
+      ' · ' + dataset.items.length + ' items (' +
+      dataset.items.filter(i => i.heldOut).length + ' held out)';
+    $('assess-items').innerHTML = dataset.items.map(i =>
+      '<div style="border-bottom:1px solid var(--line); padding:10px 0">' +
+      '<div><span class="tag">' + esc(i.dimension) + '</span>' +
+      (i.heldOut ? '<span class="tag">held out</span>' : '<span class="tag">training</span>') +
+      (i.critical ? '<span class="tag REFUTED">critical</span>' : '') + '</div>' +
+      '<div style="margin:6px 0">' + esc(i.prompt) + '</div>' +
+      '<textarea data-item="' + esc(i.id) + '" placeholder="Your answer…"></textarea>' +
+      '<div class="row"><input type="text" data-conf="' + esc(i.id) + '" value="0.7" style="width:110px" ' +
+      'title="How confident are you? (0 to 1)"><button class="ghost" data-submit="' + esc(i.id) + '">Submit</button>' +
+      '<span data-result="' + esc(i.id) + '" class="muted"></span></div></div>').join('');
+    document.querySelectorAll('[data-submit]').forEach(btn => {
+      btn.addEventListener('click', () => submit(btn.dataset.submit));
+    });
+  } catch (e) {
+    $('assess-meta').textContent = 'Could not load the dataset: ' + e.message;
+  }
+}
+
+async function submit(itemId) {
+  const answerBox = document.querySelector('[data-item="' + itemId + '"]');
+  const confBox = document.querySelector('[data-conf="' + itemId + '"]');
+  const resultBox = document.querySelector('[data-result="' + itemId + '"]');
+  resultBox.textContent = 'Grading…';
+  try {
+    const r = await api('/workspaces/' + WS + '/assess', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ itemId, answer: answerBox.value, confidence: parseFloat(confBox.value) || 0,
+                             sessionId: 'ui' })
+    });
+    const o = r.outcome;
+    resultBox.className = o.correct ? 'good' : 'bad';
+    resultBox.innerHTML = o.correct
+      ? 'Correct — score ' + o.score + ', confidence claimed ' + o.claimedConfidence
+      : 'Not correct — score ' + o.score + '. The terms the answer was missing are shown on the item.';
+    await loadProgress();
+    await loadStatus();
+  } catch (e) {
+    resultBox.textContent = e.message;
+  }
+}
+
+async function loadConceptsForTeaching() {
+  try {
+    const concepts = await api('/workspaces/' + WS + '/concepts');
+    const select = $('teach-concept');
+    select.innerHTML = concepts.map(c => '<option value="' + esc(c.id) + '">' + esc(c.name) + '</option>').join('');
+  } catch (e) {
+    $('teach-concept').innerHTML = '<option value="">(could not load the concepts)</option>';
+  }
+}
+
+$('btn-teach').addEventListener('click', async () => {
+  const conceptId = $('teach-concept').value;
+  if (!conceptId) return;
+  const level = $('teach-level').value;
+  const expected = parseFloat($('teach-expected').value) || 0;
+  const out = $('teach-result');
+  out.innerHTML = '<span class="muted">Teaching and measuring…</span>';
+  try {
+    const plan = await api('/workspaces/' + WS + '/teaching-plan/' + encodeURIComponent(conceptId) + '?level=' + level);
+    $('teach-plan').innerHTML = '<div class="muted">' + esc(plan.conceptName) + ' · ' +
+      plan.steps.length + ' step(s) · dataset ' + esc(plan.datasetId) + ' v' + plan.datasetVersion + '</div>' +
+      plan.steps.map(s => '<div style="margin:10px 0"><span class="tag">' + esc(s.level) + '</span>' +
+        '<div>' + esc(s.statement) + '</div>' +
+        '<div class="muted">exercise: ' + esc(s.exercise) + '</div>' +
+        '<div class="muted">check: ' + esc(s.check) + '</div></div>').join('');
+
+    // The REBUILT experiment, not the W40 containment measurement.
+    //
+    // RECON-W42.1. The interface used to run the legacy teach-back, whose
+    // score measures whether the lesson CONTAINED the held-out item's key
+    // terms - a number that cannot fail, because the lesson was written
+    // from the same account the items were written from. The rebuilt
+    // experiment has four disjoint phases, an independent closed-book
+    // learner, a leakage audit and a calibration report, and its delayed
+    // phase DOES fail. An interface that only ever shows a measurement which
+    // cannot fail is an interface that cannot show a regression.
+    const r = await api('/workspaces/' + WS + '/teach-back-experiment', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ conceptId: conceptId, expectedGain: expected })
+    });
+    out.innerHTML = '<div class="card ' + (r.metExpectation ? 'good' : 'warn') + '">' +
+      '<h2 style="margin-top:0">Teach-back experiment</h2>' +
+      '<div>Concept ' + esc(r.conceptId) + ' · dataset ' + esc(r.datasetId) +
+      ' v' + r.datasetVersion + ' · expected gain ' + r.expectedMinimumGain +
+      ' <strong>' + (r.metExpectation ? 'met' : 'NOT met') + '</strong></div>' +
+      '<table><tr><th>Phase</th><th>Items</th><th>Correct</th><th>Accuracy</th><th>Note</th></tr>' +
+      r.phases.map(p => '<tr><td>' + esc(p.name) + '</td><td>' + p.itemsMeasured +
+        '</td><td>' + p.correct + '</td><td>' + p.accuracy +
+        '</td><td class="muted">' + esc(p.note) + '</td></tr>').join('') + '</table>' +
+      '<div class="muted">probes ' + r.probes + ' · restatements ' + r.restatements +
+      ' · legacy restatements ' + r.legacyRestatements + '</div>' +
+      '<div>Structured learner ' + r.structuredAccuracy +
+      ' · legacy containment ' + r.legacyAccuracy +
+      ' · lexical baseline ' + r.lexicalBaselineAccuracy + '</div>' +
+      (r.calibration ? '<div class="muted">calibration over ' + r.calibration.count +
+        ' forecast(s): Brier ' + r.calibration.brier + ' · mean confidence ' +
+        r.calibration.meanConfidence + ' · observed ' + r.calibration.observedFrequency +
+        '<br>' + esc(r.calibration.meaning) + '</div>' : '') +
+      '<p class="muted">' + esc(r.conclusion) + '</p></div>';
+  } catch (e) {
+    out.innerHTML = '<div class="card bad">' + esc(e.message) + '</div>';
+  }
+});
+
+async function loadSessions() {
+  try {
+    const sessions = await api('/workspaces/' + WS + '/sessions');
+    if (!sessions.length) {
+      $('sessions-body').innerHTML = '<span class="muted">No practice has been recorded yet. ' +
+        'Answer an item on the Assess tab and the session will appear here.</span>';
+      return;
+    }
+    $('sessions-body').innerHTML = '<table><tr><th>Session</th><th>The items</th><th>The correct</th>' +
+      '<th>The held-out ones</th><th>The concepts</th><th>From</th><th>To</th></tr>' +
+      sessions.map(s => '<tr><td class="muted">' + esc(s.sessionId) + '</td><td>' + s.items +
+        '</td><td>' + s.correct + '</td><td>' + s.heldOut + '</td><td class="muted">' +
+        (s.concepts || []).join(', ') + '</td><td class="muted">' +
+        new Date(s.firstAnsweredAt).toLocaleString() + '</td><td class="muted">' +
+        new Date(s.lastAnsweredAt).toLocaleString() + '</td></tr>').join('') + '</table>';
+  } catch (e) {
+    $('sessions-body').innerHTML = '<span class="muted">The sessions are not available: ' + esc(String(e)) + '</span>';
+  }
+}
+
+async function loadProgress() {
+  try {
+    const p = await api('/workspaces/' + WS + '/learning-state');
+    if (!p.states.length) {
+      $('progress-states').innerHTML = '<span class="muted">No assessment has been recorded yet. ' +
+        'Answer an item on the Assess tab and the state will appear here.</span>';
+      return;
+    }
+    const byConcept = {};
+    p.states.forEach(s => {
+      (byConcept[s.conceptId] = byConcept[s.conceptId] || []).push(s);
+    });
+    $('progress-states').innerHTML = Object.entries(byConcept).map(([cid, states]) =>
+      '<div style="margin-bottom:14px"><strong>' + esc(states[0].conceptId) + '</strong>' +
+      '<table><tr><th>Dimension</th><th>Stage</th><th>Score</th><th>Evidence</th><th>Note</th></tr>' +
+      states.map(s => '<tr><td>' + esc(s.dimension) + '</td>' +
+        '<td><span class="tag ' + esc(s.stage) + '">' + esc(s.stage) + '</span></td>' +
+        '<td>' + s.score + '</td><td>' + s.evidenceCount + ' outcome(s), ' + s.variantCount + ' variant(s)' +
+        (s.heldOutCount ? ', ' + s.heldOutCount + ' held out' : '') + '</td>' +
+        '<td class="muted">' + esc(s.note) + '</td></tr>').join('') + '</table></div>').join('');
+  } catch (e) {
+    $('progress-states').innerHTML = '<span class="muted">' + esc(e.message) + '</span>';
+  }
+}
+
+async function loadCapability() {
+  try {
+    const caps = await api('/workspaces/' + WS + '/capability');
+    if (!caps.length) {
+      $('progress-capability').innerHTML = '<span class="muted">Nothing has been assessed yet, so no '
+        + 'concept has a position on the ladder.</span>';
+      return;
+    }
+    $('progress-capability').innerHTML = caps.map(c => '<div style="margin-bottom:12px">'
+      + '<strong>' + esc(c.conceptId) + '</strong> &rarr; <span class="tag ' + esc(c.stage) + '">'
+      + esc(c.stage) + '</span>'
+      + '<div class="muted" style="margin-top:4px">' + esc(c.note) + '</div>'
+      + '<div class="muted" style="margin-top:4px">dimensions: '
+      + Object.entries(c.dimensions || {}).map(([d, s]) => esc(d) + '=' + esc(s)).join(', ')
+      + '</div></div>').join('');
+  } catch (e) {
+    $('progress-capability').innerHTML = '<span class="muted">' + esc(e.message) + '</span>';
+  }
+}
+
+async function loadQuestions() {
+  try {
+    const q = await api('/workspaces/' + WS + '/questions');
+    if (!q.length) {
+      $('progress-questions').innerHTML = '<span class="muted">Nothing has been asked yet. Ask a question on the ' +
+        'Ask tab — including one the workspace cannot answer — and it will appear here.</span>';
+      return;
+    }
+    $('progress-questions').innerHTML = '<table><tr><th>Question</th><th>Asked</th><th>Uncovered terms</th>' +
+      '<th>Status</th></tr>' + q.map(r => '<tr><td>' + esc(r.question) + '</td>' +
+        '<td>' + r.timesAsked + ' time(s)</td>' +
+        '<td class="muted">' + (r.uncoveredTerms || []).map(esc).join(', ') + '</td>' +
+        '<td><span class="tag ' + (r.status === 'OPEN' ? 'PRACTICE' : 'COMPETENCE') + '">' + esc(r.status) +
+        '</span></td></tr>').join('') + '</table>';
+  } catch (e) {
+    $('progress-questions').innerHTML = '<span class="muted">' + esc(e.message) + '</span>';
+  }
+}
+
+// ── Reasoning ───────────────────────────────────────────────────────────
+$('btn-reason').addEventListener('click', async () => {
+  const question = $('reason-q').value.trim();
+  if (!question) { $('reason-result').innerHTML = '<div class="card warn">Type a question first.</div>'; return; }
+  $('reason-result').innerHTML = '<div class="muted">Reasoning…</div>';
+  try {
+    const response = await fetch('/v1/workbench/workspaces/' + WS + '/reason', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ question: question, level: $('reason-level').value })
+    });
+    const result = await response.json();
+    let html = '';
+    if (!result.answered) {
+      html += '<div class="card warn"><h2 style="margin-top:0">Not answered</h2><div>'
+        + esc(result.abstentionReason || 'The workspace does not cover this question.')
+        + '</div></div>';
+    } else {
+      html += '<div class="card good"><h2 style="margin-top:0">Answer (' + esc(result.task) + ')</h2>'
+        + '<div class="answer">' + esc(result.answer) + '</div></div>';
+    }
+    html += '<div class="card"><h2 style="margin-top:0">How the question was handled</h2>'
+      + (result.steps || []).map(function (step) {
+          return '<div><b>' + esc(step.stage) + '</b><div class="muted">' + esc(step.detail) + '</div></div>';
+        }).join('') + '</div>';
+    if ((result.claims || []).length) {
+      html += '<div class="card"><h2 style="margin-top:0">The claims the answer rests on</h2>'
+        + result.claims.map(function (claim) {
+            return '<div><span class="tag ' + esc(claim.status) + '">' + esc(claim.status) + '</span> '
+              + esc(claim.proposition) + '<div class="muted">scope: ' + esc(claim.scope || 'unstated')
+              + ' · warrant: ' + esc(claim.warrant) + ' · derivation: ' + esc(claim.derivationStatus)
+              + '</div></div>';
+          }).join('') + '</div>';
+    }
+    if ((result.derivations || []).length) {
+      html += '<div class="card"><h2 style="margin-top:0">The rules that were checked</h2>'
+        + result.derivations.map(function (derivation) {
+            return '<div><b>' + esc(derivation.ruleName) + '</b> — ' + esc(derivation.status)
+              + '<div class="muted">premises: ' + (derivation.premiseClaimIds || []).join(', ')
+              + ' → ' + esc(derivation.conclusionClaimId) + '</div></div>';
+          }).join('') + '</div>';
+    }
+    if ((result.sources || []).length) {
+      html += '<div class="card"><h2 style="margin-top:0">The sources</h2>'
+        + result.sources.map(function (source) {
+            return '<div>' + esc(source.title) + '<div class="muted">' + esc(source.locator || '')
+              + '</div></div>';
+          }).join('') + '</div>';
+    }
+    if ((result.limitations || []).length) {
+      html += '<div class="card warn"><h2 style="margin-top:0">Limitations</h2>'
+        + result.limitations.map(function (item) { return '<div>' + esc(item) + '</div>'; }).join('')
+        + '</div>';
+    }
+    $('reason-result').innerHTML = html;
+  } catch (error) {
+    $('reason-result').innerHTML = '<div class="card warn">The request failed: ' + esc(String(error)) + '</div>';
+  }
+});
+
+async function loadRules() {
+  try {
+    const response = await fetch('/v1/workbench/workspaces/' + WS + '/derivations');
+    const rules = await response.json();
+    $('reason-rules').innerHTML = rules.length
+      ? rules.map(function (rule) {
+          return '<div><b>' + esc(rule.ruleName) + '</b> (' + esc(rule.connective) + ') — '
+            + (rule.premiseClaimIds || []).length + ' premise(s) → ' + esc(rule.conclusionClaimId)
+            + '</div>';
+        }).join('')
+      : '<span class="muted">No rule is recorded in this workspace, so no answer here can be '
+        + 'derived rather than retrieved.</span>';
+    const conflicts = await (await fetch('/v1/workbench/workspaces/' + WS + '/contradictions')).json();
+    $('reason-conflicts').innerHTML = conflicts.length
+      ? conflicts.map(function (conflict) {
+          return '<div>' + esc(conflict.kind) + '<div class="muted">' + esc(conflict.claimAId)
+            + ' and ' + esc(conflict.claimBId) + ' — neither side is preferred.</div></div>';
+        }).join('')
+      : '<span class="muted">No conflict has been recorded among the claims of this workspace.</span>';
+  } catch (error) {
+    $('reason-rules').innerHTML = '<span class="muted">Could not read the rules.</span>';
+  }
+}
+
+// ── Goals ───────────────────────────────────────────────────────────────
+async function loadNextExercise() {
+  try {
+    const r = await api('/workspaces/' + WS + '/exercises/next');
+    if (!r.selection) {
+      $('exercise-note').textContent = r.reason || 'there is nothing to practise';
+      $('exercise-item').innerHTML = '';
+      return;
+    }
+    $('exercise-note').textContent = r.reason;
+    const item = r.selection;
+    $('exercise-item').innerHTML = '<div class="card"><div class="muted">'
+      + esc(item.concept) + ' · ' + esc(item.dimension) + ' · difficulty ' + item.difficulty
+      + (item.heldOut ? ' · <strong>held-out item</strong>' : '') + '</div>'
+      + '<div style="margin-top:8px">' + esc(item.prompt) + '</div>'
+      + '<div class="muted">item ' + esc(item.id) + '</div></div>';
+  } catch (error) {
+    $('exercise-note').textContent = 'Could not read the next exercise: ' + error.message;
+  }
+}
+
+async function loadDialogue() {
+  try {
+    const turns = await (await fetch('/v1/workbench/workspaces/' + WS + '/dialogue')).json();
+    if (!turns.length) {
+      $('dialogue-list').innerHTML = '<span class="muted">Nothing has been said yet.</span>';
+      return;
+    }
+    $('dialogue-list').innerHTML = turns.map(function (turn) {
+      return '<div><span class="tag">' + esc(turn.act) + '</span> ' +
+        '<span class="muted">' + esc(turn.language) + ' · ' +
+        (turn.answered ? 'answered' : 'not answered') + '</span>' +
+        '<div>' + esc(turn.question) + '</div>' +
+        (turn.conceptNames && turn.conceptNames.length
+          ? '<div class="muted">about: ' + esc(turn.conceptNames.join(', ')) + '</div>' : '') +
+        '</div>';
+    }).join('');
+  } catch (error) {
+    $('dialogue-list').innerHTML = '<span class="muted">Could not read the conversation.</span>';
+  }
+}
+
+async function loadPlan() {
+  try {
+    const plans = await (await fetch('/v1/workbench/workspaces/' + WS + '/plan')).json();
+    if (!plans.length) {
+      $('plan-list').innerHTML = '<span class="muted">There is no goal to plan for.</span>';
+      return;
+    }
+    $('plan-list').innerHTML = plans.map(function (plan) {
+      if (!plan.actions.length) {
+        return '<div class="muted">' + esc(plan.summary) + '</div>';
+      }
+      return plan.actions.map(function (action) {
+        return '<div><span class="tag">' + esc(action.kind) + '</span> '
+          + esc(action.action)
+          + '<div class="muted">' + esc(action.reason)
+          + ' · estimated cost: ' + action.estimatedCost
+          + (action.missingConceptIds && action.missingConceptIds.length
+              ? ' · missing: ' + esc(action.missingConceptIds.join(', ')) : '')
+          + '</div></div>';
+      }).join('');
+    }).join('');
+  } catch (error) {
+    $('plan-list').innerHTML = '<span class="muted">Could not read the plan.</span>';
+  }
+}
+
+async function loadTransitions() {
+  try {
+    const transitions = await (await fetch(
+      '/v1/workbench/workspaces/' + WS + '/learning-transitions')).json();
+    if (!transitions.length) {
+      $('transition-list').innerHTML = '<span class="muted">No capability has changed state yet.</span>';
+      return;
+    }
+    $('transition-list').innerHTML = transitions.map(function (transition) {
+      const moved = transition.fromStage === transition.toStage ? '' : '';
+      return '<div><span class="tag ' + (transition.toStage < transition.fromStage ? 'REGRESSED' : '')
+        + '">' + esc(transition.fromStage) + ' → ' + esc(transition.toStage) + '</span> '
+        + esc(transition.dimension)
+        + '<div class="muted">' + esc(transition.reason)
+        + (transition.outcomeId ? ' · outcome ' + esc(transition.outcomeId) : '') + '</div></div>';
+    }).join('');
+  } catch (error) {
+    $('transition-list').innerHTML = '<span class="muted">Could not read the learning history.</span>';
+  }
+}
+
+async function loadGoals() {
+  loadPlan();
+  loadTransitions();
+  try {
+    const goals = await (await fetch('/v1/workbench/workspaces/' + WS + '/goals')).json();
+    if (!goals.length) {
+      $('goal-list').innerHTML = '<span class="muted">No goal has been started in this workspace.</span>';
+      return;
+    }
+    $('goal-list').innerHTML = goals.map(function (goal) {
+      let html = '<div class="card"><h3 style="margin-top:0">' + esc(goal.description)
+        + ' <span class="tag">' + esc(goal.status) + '</span></h3>';
+      html += '<div class="muted">budget: ' + goal.budgetUsed + ' of ' + goal.budgetUnits
+        + ' · remaining work: ' + esc(goal.remainingWork || 'none')
+        + '<br>checkpoint: ' + esc(goal.lastCheckpoint || 'none')
+        + '<br>recovery: ' + esc(goal.recoveryInstructions || 'none') + '</div>';
+      if ((goal.subtasks || []).length) {
+        html += '<div>' + goal.subtasks.map(function (subtask) {
+          return '<div><span class="tag ' + esc(subtask.status) + '">' + esc(subtask.status) + '</span> '
+            + esc(subtask.description) + (subtask.required ? ' <span class="muted">(required)</span>' : '')
+            + (subtask.status !== 'COMPLETED'
+                ? ' <button class="action" data-goal="' + esc(goal.id) + '" data-subtask="'
+                  + esc(subtask.id) + '">complete</button>'
+                : '')
+            + '</div>';
+        }).join('') + '</div>';
+      }
+      if ((goal.failedAttempts || []).length) {
+        html += '<div class="muted">failed attempts: ' + goal.failedAttempts.map(function (failure) {
+          return esc(failure.attempt) + ' — ' + esc(failure.reason);
+        }).join('; ') + '</div>';
+      }
+      html += '<div><button class="action" data-checkpoint="' + esc(goal.id) + '">checkpoint</button></div>';
+      html += '</div>';
+      return html;
+    }).join('');
+    document.querySelectorAll('[data-goal]').forEach(function (button) {
+      button.addEventListener('click', async function () {
+        await fetch('/v1/workbench/workspaces/' + WS + '/goals/' + button.dataset.goal
+          + '/subtasks/' + button.dataset.subtask + '/complete', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ evidenceIds: [], note: 'completed from the workbench' })
+        });
+        loadGoals();
+      });
+    });
+    document.querySelectorAll('[data-checkpoint]').forEach(function (button) {
+      button.addEventListener('click', async function () {
+        await fetch('/v1/workbench/workspaces/' + WS + '/goals/' + button.dataset.checkpoint
+          + '/checkpoint', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ checkpoint: 'checkpointed from the workbench', remainingWork: '' })
+        });
+        loadGoals();
+      });
+    });
+  } catch (error) {
+    $('goal-list').innerHTML = '<span class="muted">Could not read the goals.</span>';
+  }
+}
+
+$('btn-goal').addEventListener('click', async () => {
+  const description = $('goal-desc').value.trim();
+  if (!description) { $('goal-note').textContent = 'Describe the objective first.'; return; }
+  const criteria = $('goal-criteria').value.split(';').map(function (part) { return part.trim(); })
+    .filter(function (part) { return part.length > 0; });
+  try {
+    await fetch('/v1/workbench/workspaces/' + WS + '/goals', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        description: description,
+        successCriteria: criteria,
+        budgetUnits: parseInt($('goal-budget').value, 10) || 10,
+        subtasks: [{ id: 'first', description: 'The first step of the objective', required: true,
+          prerequisiteSubtaskIds: [] }]
+      })
+    });
+    $('goal-desc').value = '';
+    $('goal-criteria').value = '';
+    $('goal-note').textContent = 'The goal was started; it survives a restart.';
+    loadGoals();
+  } catch (error) {
+    $('goal-note').textContent = 'The goal could not be started.';
+  }
+});
+
+$('consolidate-questions').addEventListener('click', async () => {
+  const btn = $('consolidate-questions');
+  btn.disabled = true;
+  try {
+    const r = await api('/workspaces/' + WS + '/questions/consolidate', { method: 'POST' });
+    $('progress-questions').innerHTML = '<p>' + r.resolvedQuestions + ' resolved, ' + r.openQuestions +
+      ' still open, ' + r.promotedGaps + ' promoted to a recurring gap.</p>' +
+      (r.notes && r.notes.length ? '<ul>' + r.notes.map(n => '<li>' + esc(n) + '</li>').join('') + '</ul>' : '');
+    await loadQuestions();
+  } catch (e) {
+    $('progress-questions').innerHTML = '<span class="muted">' + esc(e.message) + '</span>';
+  } finally {
+    btn.disabled = false;
+  }
+});
+
+const COG_API = '/v1/cognitive';
+
+async function cogApi(path, options) {
+  const res = await fetch(COG_API + path, options);
+  const text = await res.text();
+  let body = null;
+  try { body = text ? JSON.parse(text) : null; } catch (e) { body = { raw: text }; }
+  if (!res.ok) throw new Error((body && body.error) || ('HTTP ' + res.status));
+  return body;
+}
+
+async function loadCognitive() {
+  try {
+    const [predictions, errors, procedures, tasks, cases] = await Promise.all([
+      cogApi('/predictions'), cogApi('/errors'), cogApi('/procedures'),
+      cogApi('/tasks'), cogApi('/cases')
+    ]);
+
+    $('cog-predictions').innerHTML = predictions.length ? predictions.map(function (p) {
+      return '<div><b>' + esc(p.subject) + '</b> &rarr; ' + esc(p.predictedValue) +
+        '<div class="muted">basis ' + esc(p.basis) + '@' + esc(p.basisVersion) +
+        ' &middot; confidence ' + esc(p.confidence) + '</div></div>';
+    }).join('') : '<span class="muted">No predictions recorded.</span>';
+
+    $('cog-errors').innerHTML = errors.length ? errors.map(function (e) {
+      return '<div>expected <b>' + esc(e.expected) + '</b>, observed <b>' + esc(e.observed) + '</b>' +
+        '<div class="muted">' + esc(e.disposition) + ' &middot; responsible for: ' +
+        esc(e.responsibleModel) + '@' + esc(e.responsibleVersion) + '</div></div>';
+    }).join('') : '<span class="muted">No errors recorded.</span>';
+
+    $('cog-procedures').innerHTML = procedures.length ? procedures.map(function (p) {
+      return '<div><b>' + esc(p.name) + '</b>' +
+        '<div class="muted">valid when ' + esc(p.applicability) +
+        ' &middot; agreed with the reference on ' + esc(p.validationCases) +
+        ' held-out case(s) &middot; falls back to ' + esc(p.referenceAlgorithmId) + '</div></div>';
+    }).join('') : '<span class="muted">No procedure promoted.</span>';
+
+    $('cog-tasks').innerHTML = tasks.length ? tasks.map(function (t) {
+      return '<div><b>' + esc(t.reason) + '</b>' +
+        '<div class="muted">' + esc(t.status) + ' &middot; budget ' + esc(t.budgetWallClockMillis) +
+        ' ms &middot; may: ' + esc((t.allowedActions || []).join(', ')) +
+        ' &middot; stops when: ' + esc(t.stopCondition) + '</div></div>';
+    }).join('') : '<span class="muted">No internal task generated.</span>';
+
+    $('cog-cases').innerHTML = cases.length ? cases.map(function (c) {
+      return '<div><b>' + esc(c.statement) + '</b>' +
+        '<div class="muted">under ' + esc(c.conditions) + ' &middot; ' + esc(c.origin) +
+        ' &middot; ' + esc(c.observedAt) + '</div></div>';
+    }).join('') : '<span class="muted">No case recorded.</span>';
+  } catch (error) {
+    $('cog-predictions').innerHTML = '<span class="muted">Could not read the cognitive state.</span>';
+  }
+}
+
+$('cog-observe').addEventListener('click', async () => {
+  const btn = $('cog-observe');
+  const assignment = $('cog-assignment').value.trim();
+  if (!assignment) { $('cog-note').textContent = 'Name an assignment first.'; return; }
+  btn.disabled = true;
+  try {
+    const outcome = await cogApi('/observe', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ assignment: assignment })
+    });
+    $('cog-trace').innerHTML = (outcome.trace || []).map(function (step) {
+      return '<div><b>' + esc(step.phase) + '</b> <span class="muted">' + esc(step.actor) + '</span>' +
+        '<div class="muted">' + esc(step.detail) + '</div></div>';
+    }).join('');
+    $('cog-note').textContent = outcome.status + ': ' + outcome.answer;
+    await loadCognitive();
+  } catch (error) {
+    $('cog-note').textContent = 'The cycle failed: ' + error.message;
+  } finally {
+    btn.disabled = false;
+  }
+});
+
+loadStatus();
+</script>
+</body>
+</html>

@@ -69,9 +69,50 @@ jobs:
           echo "✅ All ecosystem pages have frontmatter"
 
       - name: Verify CONSTITUTION articles are referenced
+        # W49: the previous check looked for the literal string "Article I"…
+        # "Article VIII". The constitution never used that spelling — its
+        # articles are headed "I. Stratified Stochasticity" … "VIII. The
+        # environment and explicitness" — so the check only ever validated a
+        # page that used the same invented spelling, and it could NOT tell
+        # the constitution's own eight articles from eight invented ones.
+        # That is exactly the defect the W49 public audit found in the page.
+        #
+        # The check now compares the page against the constitution's own
+        # article headings, which is the parity it was meant to enforce.
         run: |
           set -e
-          for article in "Article I" "Article II" "Article III" "Article IV" "Article V" "Article VI" "Article VII" "Article VIII"; do
-            grep -q "$article" docs-v2/ecosystem/constitution/index.md
-            echo "✅ $article documented in EN constitution"
+          MISSING=0
+          # The constitution's own article numerals, in its own order.
+          CONSTITUTION_ARTICLES="$(grep -oE '^## [IVX]+' CONSTITUTION.md | sed -E 's/^## //')"
+          COUNT="$(printf '%s\n' "$CONSTITUTION_ARTICLES" | grep -c '[IVX]')"
+          if [ "$COUNT" -ne 8 ]; then
+            echo "❌ the constitution carries $COUNT articles; the ecosystem pages must document all eight"
+            MISSING=1
+          fi
+          # The subjects are in Russian in the constitution and in the target
+          # language in the pages, so the parity that can be checked is the
+          # ORDER: the page must carry the same eight articles, in the same
+          # order, as the constitution itself. The previous check compared
+          # neither — it only looked for a spelling ("Article I") that the
+          # constitution never used, which is how eight INVENTED articles
+          # passed it.
+          for page in docs-v2/ecosystem/constitution/index.md docs-v2/ru/ecosystem/constitution/index.md; do
+            PAGE_ARTICLES="$(grep -oE '^### [IVX]+' "$page" | sed -E 's/^### //')"
+            PAGE_COUNT="$(printf '%s\n' "$PAGE_ARTICLES" | grep -c '[IVX]')"
+            if [ "$PAGE_COUNT" -ne "$COUNT" ]; then
+              echo "❌ $page documents $PAGE_COUNT articles; the constitution has $COUNT"
+              MISSING=1
+              continue
+            fi
+            if [ "$PAGE_ARTICLES" = "$CONSTITUTION_ARTICLES" ]; then
+              echo "✅ $page documents the constitution's eight articles, in its order"
+            else
+              echo "❌ $page does not carry the constitution's articles in its order"
+              printf '   the constitution: %s\n' "$(printf '%s ' $CONSTITUTION_ARTICLES)"
+              printf '   the page:       %s\n' "$(printf '%s ' $PAGE_ARTICLES)"
+              MISSING=1
+            fi
           done
+          if [ "$MISSING" -ne 0 ]; then
+            exit 1
+          fi

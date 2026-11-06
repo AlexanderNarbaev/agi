@@ -1,5 +1,8 @@
 # M.A.T.R.I.X. — Migration & Portability Guide
 
+**Status:** `HISTORICAL` — the state it records no longer exists; the successor is named in the canonical registers
+
+
 **Version:** v3.58
 **Last updated:** 2026-07-26
 
@@ -259,7 +262,7 @@ docker compose up -d matrix-core
 
 ### 6.2. Major Version Upgrade (v3.x → v4.0)
 
-Read [MIGRATION_GUIDE_v4.md](docs/MIGRATION_GUIDE_v4.md) (when published).
+Read `MIGRATION_GUIDE_v4.md` <!-- no-link: the v1 tree was removed by the migration to docs-v2; Q-W46-21 --> (when published).
 
 ---
 

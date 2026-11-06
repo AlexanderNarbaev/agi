@@ -20,7 +20,9 @@ class AuditChainLicenseFederationTest {
         assertThat(chain.size()).isZero();
         AuditChain.Entry e1 = chain.append("ANALYZE", "input=hi");
         assertThat(e1.index()).isEqualTo(1L);
-        assertThat(e1.prevHash()).isEqualTo("GENESIS");
+        // W42.9 / D-016: the chain is now the canonical engine's, so its head is
+        // the canonical genesis (64 zeros) and not this module's old "GENESIS" text.
+        assertThat(e1.prevHash()).isEqualTo("0".repeat(64));
         assertThat(e1.hash()).isNotBlank();
         AuditChain.Entry e2 = chain.append("TEACH", "fact=paris");
         assertThat(e2.prevHash()).isEqualTo(e1.hash());

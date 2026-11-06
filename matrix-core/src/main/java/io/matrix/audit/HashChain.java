@@ -51,7 +51,12 @@ public final class HashChain {
         Objects.requireNonNull(extra, "extra");
         lock.lock();
         try {
-            HashLink link = HashLink.extend(latest, payload, extra);
+            // RECON-W39: the timestamp now comes from the CONFIGURED clock.
+            // It used to be taken inside HashLink.extend() from
+            // System.currentTimeMillis(), which made the injected clock
+            // supplier dead code: a test could not reproduce a chain, and a
+            // wall-clock change silently altered the hashed content.
+            HashLink link = HashLink.extend(latest, payload, extra, clock.get());
             links.add(link);
             latest = link;
             return link;
@@ -102,7 +107,23 @@ public final class HashChain {
      *   <li>Each link's {@code previousHash} equals the previous link's
      *       {@code hash} (no gap, no fork).</li>
      *   <li>The first link's {@code previousHash} equals the genesis hash.</li>
+     *   <li>The sequence numbers are contiguous from zero: the link at index
+     *       {@code i} has {@code sequence == i}.</li>
      * </ol>
+     *
+     * <p>RECON-W39: the sequence rule was neither checked nor documented.
+     * {@link HashLink#extend} produces contiguous sequences, but a chain
+     * assembled by {@link #restore} from storage could carry gaps, duplicates
+     * or a reordered sequence and still verify, because the previous-hash
+     * linkage alone does not constrain the sequence numbers. The contract is
+     * now stated and enforced in both {@code verify()} and {@code restore()}.
+     *
+     * <p><b>Scope of this check.</b> The chain is tamper-EVIDENT against
+     * accidental corruption and against partial historical mutation. It is
+     * <b>not</b> protection against an attacker who can rewrite every stored
+     * record and replace the trusted chain head: such an attacker recomputes
+     * a consistent chain. See the threat model in
+     * {@code docs-v2/architecture/ADR-2026-10-30-003-hashchain-trust-model.md}.
      *
      * @return {@code true} when the chain is intact
      */
@@ -110,8 +131,10 @@ public final class HashChain {
         lock.lock();
         try {
             String expectedPrev = HashLink.genesisHash();
-            for (HashLink link : links) {
+            for (int i = 0; i < links.size(); i++) {
+                HashLink link = links.get(i);
                 if (!link.previousHash().equals(expectedPrev)) return false;
+                if (link.sequence() != i) return false;
                 if (!link.verify()) return false;
                 expectedPrev = link.hash();
             }
@@ -125,6 +148,13 @@ public final class HashChain {
      * Replace the chain with a list of pre-existing links. The supplied list
      * must be a valid chain (verified) and is appended verbatim.
      *
+     * <p>The list is rejected unless it is a well-formed chain: the
+     * predecessor hashes must link up from the genesis hash, every link's own
+     * hash must match its fields, and the sequence numbers must be
+     * contiguous from zero (RECON-W39 — the sequence rule was previously
+     * unenforced, so a chain read back from storage could carry gaps or
+     * duplicates and still be accepted).
+     *
      * @throws IllegalArgumentException when the supplied list is not a valid chain
      */
     public void restore(List<HashLink> restored) {
@@ -133,10 +163,16 @@ public final class HashChain {
         try {
             // Validate the chain we are about to install.
             String expectedPrev = HashLink.genesisHash();
-            for (HashLink link : restored) {
+            for (int i = 0; i < restored.size(); i++) {
+                HashLink link = restored.get(i);
                 if (!link.previousHash().equals(expectedPrev)) {
                     throw new IllegalArgumentException(
                             "Broken chain at seq=" + link.sequence() + ": bad previousHash");
+                }
+                if (link.sequence() != i) {
+                    throw new IllegalArgumentException(
+                            "Broken chain at index " + i + ": expected sequence " + i
+                                    + " but found " + link.sequence());
                 }
                 if (!link.verify()) {
                     throw new IllegalArgumentException(

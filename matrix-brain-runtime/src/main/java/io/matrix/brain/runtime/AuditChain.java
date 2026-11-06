@@ -1,16 +1,24 @@
 package io.matrix.brain.runtime;
 
+import io.matrix.audit.AuditEvent;
+import io.matrix.audit.HashChainedLog;
+
 import java.util.ArrayList;
 import java.util.List;
 
 /**
- * MIND-W7 — Lightweight SHA-256 audit chain.
+ * The runtime's audit chain — a face of the canonical engine.
  *
- * <p>Each entry contains a hash of the previous entry, forming a
- * tamper-evident chain (CONSTITUTION Article VIII — every decision is
- * auditable). This is a focused, lightweight chain suitable for the
- * gateway's audit log; the full {@code matrix-audit/HashChainedLog}
- * handles the heavy-weight policy chain.</p>
+ * <p>W42.9 / D-012: there were THREE implementations of a hash-chained audit log in this
+ * repository — {@code io.matrix.audit.HashChainedLog} (canonical), the gateway's bounded
+ * mirror {@code io.matrix.api.HashChainedAuditBuffer}, and this class. This one is now
+ * the runtime's view of the canonical engine: it keeps no hash logic of its own, so the
+ * chain format and the verification are the canonical ones (CONSTITUTION Article VIII —
+ * every decision is auditable, and the audit is tamper-evident by construction).</p>
+ *
+ * <p>The chain is in memory and grows with the number of recorded decisions. The
+ * gateway's own buffer is bounded; this one is not, and that is stated rather than
+ * hidden.</p>
  */
 public final class AuditChain {
 
@@ -23,63 +31,57 @@ public final class AuditChain {
         String hash
     ) {}
 
-    private final List<Entry> chain = new ArrayList<>();
-    private long index = 0;
+    private HashChainedLog log = new HashChainedLog();
 
+    /** Record one decision and return the entry that was written. */
     public synchronized Entry append(String action, String details) {
-        String prevHash = chain.isEmpty() ? "GENESIS" : chain.get(chain.size() - 1).hash();
-        long ts = System.currentTimeMillis();
-        index++;
-        String hash = sha256Hex(index + "|" + ts + "|" + action + "|" + details + "|" + prevHash);
-        Entry e = new Entry(index, ts, action, details, prevHash, hash);
-        chain.add(e);
-        return e;
+        AuditEvent event = log.append(AuditEvent.builder()
+            .userId("")
+            .action(action)
+            .target(details)
+            .statusCode(0));
+        return toEntry(event, log.size());
     }
 
+    /** The entry at the one-based index, or null when there is none. */
     public synchronized Entry get(long idx) {
-        if (idx < 1 || idx > chain.size()) return null;
-        return chain.get((int) idx - 1);
+        List<AuditEvent> all = log.all();
+        if (idx < 1 || idx > all.size()) return null;
+        return toEntry(all.get((int) idx - 1), (int) idx);
     }
 
     public synchronized int size() {
-        return chain.size();
+        return log.size();
     }
 
     public synchronized List<Entry> all() {
-        return new ArrayList<>(chain);
+        List<AuditEvent> events = log.all();
+        List<Entry> entries = new ArrayList<>(events.size());
+        for (int i = 0; i < events.size(); i++) {
+            entries.add(toEntry(events.get(i), i + 1));
+        }
+        return entries;
     }
 
-    /** Verify the chain: every entry's hash must match SHA-256 of its content. */
+    /** Verify the chain: true when every entry still hashes to its recorded value. */
     public synchronized boolean verify() {
-        String prev = "GENESIS";
-        for (Entry e : chain) {
-            String expected = sha256Hex(e.index + "|" + e.timestampMillis + "|"
-                + e.action + "|" + e.details + "|" + prev);
-            if (!expected.equals(e.hash)) return false;
-            if (!e.prevHash.equals(prev)) return false;
-            prev = e.hash;
-        }
-        return true;
+        return log.verify() == null;
     }
 
-    /** Test helper: tamper with the entry at {@code idx}. */
+    /** Test helper: rewrite the details of the entry at the one-based index. */
     public synchronized void tamper(long idx, String newDetails) {
-        if (idx < 1 || idx > chain.size()) throw new IllegalArgumentException();
-        Entry old = chain.get((int) idx - 1);
-        Entry tampered = new Entry(old.index, old.timestampMillis, old.action,
-            newDetails, old.prevHash, old.hash);
-        chain.set((int) idx - 1, tampered);
+        List<AuditEvent> events = new ArrayList<>(log.all());
+        if (idx < 1 || idx > events.size()) throw new IllegalArgumentException();
+        AuditEvent old = events.get((int) idx - 1);
+        events.set((int) idx - 1, new AuditEvent(
+            old.eventId(), old.timestamp(), old.prevHash(), old.hash(),
+            old.userId(), old.action(), newDetails, old.statusCode(),
+            old.explainId(), old.metadata(), old.tombstone()));
+        log = new HashChainedLog(events);
     }
 
-    private static String sha256Hex(String s) {
-        try {
-            byte[] digest = java.security.MessageDigest.getInstance("SHA-256")
-                .digest(s.getBytes(java.nio.charset.StandardCharsets.UTF_8));
-            StringBuilder hex = new StringBuilder();
-            for (byte b : digest) hex.append(String.format("%02x", b));
-            return hex.toString();
-        } catch (java.security.NoSuchAlgorithmException ex) {
-            return "no-sha256";
-        }
+    private static Entry toEntry(AuditEvent event, int index) {
+        return new Entry(index, event.timestamp().toEpochMilli(), event.action(),
+            event.target(), event.prevHash(), event.hash());
     }
 }

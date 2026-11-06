@@ -1,5 +1,6 @@
 package io.matrix.brain.runtime;
 
+import io.matrix.testsupport.RepositoryPaths;
 import org.junit.jupiter.api.Test;
 
 import java.nio.file.Files;
@@ -18,7 +19,7 @@ class PlanningCallerExistsTest {
 
     @Test
     void mctsTree_has_prod_caller() throws Exception {
-        Path p = Path.of("/home/alexandr-narbaev/Projects/agi/matrix-brain-runtime/src/main/java/io/matrix/brain/runtime/stages/PlanningStage.java");
+        Path p = RepositoryPaths.source("matrix-brain-runtime/src/main/java/io/matrix/brain/runtime/stages/PlanningStage.java");
         String src = Files.readString(p);
         assertThat(src).contains("tree.runSearch(");
         assertThat(src).containsPattern("MctsTree\\b");
@@ -26,7 +27,7 @@ class PlanningCallerExistsTest {
 
     @Test
     void latsReflector_has_prod_caller() throws Exception {
-        Path p = Path.of("/home/alexandr-narbaev/Projects/agi/matrix-brain-runtime/src/main/java/io/matrix/brain/runtime/stages/PlanningStage.java");
+        Path p = RepositoryPaths.source("matrix-brain-runtime/src/main/java/io/matrix/brain/runtime/stages/PlanningStage.java");
         String src = Files.readString(p);
         assertThat(src).containsPattern("LatsReflector\\b");
         assertThat(src).contains("reflector.reflect(");
@@ -34,7 +35,7 @@ class PlanningCallerExistsTest {
 
     @Test
     void latsNode_has_prod_caller() throws Exception {
-        Path p = Path.of("/home/alexandr-narbaev/Projects/agi/matrix-brain-runtime/src/main/java/io/matrix/brain/runtime/stages/PlanningStage.java");
+        Path p = RepositoryPaths.source("matrix-brain-runtime/src/main/java/io/matrix/brain/runtime/stages/PlanningStage.java");
         String src = Files.readString(p);
         assertThat(src).containsPattern("LatsNode\\b");
         // Either instantiated as root or used in instanceof check
@@ -48,7 +49,7 @@ class PlanningCallerExistsTest {
         Class<?> c = Class.forName("io.matrix.mcts.LatsValueFunction");
         assertThat(c).isNotNull();
         // PlanningStage uses Budgets.withLats(true) which enables LatsValueFunction
-        Path p = Path.of("/home/alexandr-narbaev/Projects/agi/matrix-brain-runtime/src/main/java/io/matrix/brain/runtime/stages/PlanningStage.java");
+        Path p = RepositoryPaths.source("matrix-brain-runtime/src/main/java/io/matrix/brain/runtime/stages/PlanningStage.java");
         String src = Files.readString(p);
         assertThat(src).containsPattern("useLats\\s*=\\s*\\w+");
     }
@@ -56,7 +57,7 @@ class PlanningCallerExistsTest {
     @Test
     void planningStage_registers_engine_call_in_registry() throws Exception {
         // The EngineCallRegistry is updated when PlanningStage.plan() is called.
-        Path p = Path.of("/home/alexandr-narbaev/Projects/agi/matrix-brain-runtime/src/main/java/io/matrix/brain/runtime/stages/PlanningStage.java");
+        Path p = RepositoryPaths.source("matrix-brain-runtime/src/main/java/io/matrix/brain/runtime/stages/PlanningStage.java");
         String src = Files.readString(p);
         assertThat(src).contains("engineRegistry.register(");
     }

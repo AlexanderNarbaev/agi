@@ -12,6 +12,14 @@
 #   2. MAGIC-2  numeric literals in production Java outside named constants
 #   3. CFG-1    the tuning env file exists and every variable is provenance-tagged
 #   4. FROZEN-1 the five frozen zones have zero diff against the wave baseline
+#   5. DOCS-1   the documentation links and the stable identifiers resolve
+#               (W46.3; the checker is scripts/docs-link-check.py)
+#   6. TEST-1   the test evidence catalogue agrees with the evidence on this
+#               machine (W46.3; scripts/validate-test-catalogue.py)
+#   7. RETENTION-1 the backup retention policy proves itself on a synthetic tree
+#   8. SNAPSHOT-RETENTION-1 the snapshot retention policy proves itself, the
+#               snapshot payload's size bound is configured, and the dry run
+#               leaves the owner's database byte-identical (W48.7)
 #
 # Exit 0 = clean, 1 = violations found. New violations BLOCK; a baseline file records
 # what already exists so this gate is adoptable without a 3000-line cleanup first.
@@ -27,6 +35,8 @@ REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$REPO_ROOT" || exit 1
 
 BASELINE_FILE="docs-v2/quality/quality-baseline.txt"
+# RECON-W43.0: the recorded, time-bounded exceptions for the frozen zones.
+FROZEN_EXCEPTIONS_FILE="docs-v2/quality/frozen-zone-baseline.txt"
 MODE="${1:-}"
 VIOLATIONS=0
 
@@ -147,9 +157,20 @@ check_java_magic() {
             # Numeric literals >= 3 digits, excluding the structural set and excluding
             # lines that define a named constant.
             local hits
+            # RECON-W43.0: the structural filter used to run on the NUMBERED
+            # line, and the number itself could match it — grep -n prints
+            # "2:...", and "2" is in the structural set, so a literal on
+            # line 2 (or 8, 16, 32, 64, 100, 101, 200, 400, 401, ...) was
+            # filtered out along with the line number. The gate was blind
+            # on thirty line numbers. Found by deliberately injecting a
+            # violation and watching the gate stay green.
+            #
+            # The filter now runs on the CONTENT: the line-number prefix is
+            # stripped before the structural test and restored afterwards.
             hits="$(grep -nE '(^|[^A-Za-z0-9_.])[0-9]{3,}([LlFfDd]?)([^A-Za-z0-9_]|$)' "$f" 2>/dev/null \
                 | grep -vE 'static final|final static|// |/\*|\* ' \
-                | grep -vE "$STRUCTURAL_LITERALS" || true)"
+                | awk -v structural="$STRUCTURAL_LITERALS" '{ content=$0; sub(/^[0-9]+:/, "", content); if (content !~ structural) print }' \
+                || true)"
             if [ -n "$hits" ]; then
                 local n
                 n="$(printf '%s\n' "$hits" | wc -l)"
@@ -204,18 +225,55 @@ check_frozen() {
     local total=0 z
     for z in ".github/" "CONSTITUTION.md" "AGENTS.md" "ethics/" \
              "matrix-brain-runtime/src/main/java/io/matrix/brain/runtime/EvalBattery.java"; do
-        local n
+        local n accepted expiry
         n="$(git diff "$BASELINE_REF" -- "$z" 2>/dev/null | wc -l)"
-        if [ "$n" -ne 0 ]; then
-            printf '  FROZEN-1 %s has %s diff lines vs %s\n' "$z" "$n" "$BASELINE_REF"
+        accepted="$(frozen_exception_lines "$z")"
+        if [ "$accepted" -lt 0 ]; then
+            # No exception is recorded for this zone: it must be untouched.
+            if [ "$n" -ne 0 ]; then
+                printf '  FROZEN-1 %s has %s diff lines vs %s and no recorded exception\n' \
+                       "$z" "$n" "$BASELINE_REF"
+                total=$((total + 1))
+            fi
+            continue
+        fi
+        expiry="$(frozen_exception_expiry "$z")"
+        if [ -n "$expiry" ] && [ "$(date +%s)" -gt "$(date -d "$expiry" +%s 2>/dev/null || echo 0)" ]; then
+            printf '  FROZEN-1 %s: the recorded exception expired on %s\n' "$z" "$expiry"
+            total=$((total + 1))
+            continue
+        fi
+        if [ "$n" -gt "$accepted" ]; then
+            printf '  FROZEN-1 %s has %s diff lines vs %s; the exception accepts %s\n' \
+                   "$z" "$n" "$BASELINE_REF" "$accepted"
             total=$((total + 1))
         fi
     done
     if [ "$total" -eq 0 ]; then
-        report FROZEN-1 "all 5 frozen zones at 0 diff vs $BASELINE_REF"
+        report FROZEN-1 "all 5 frozen zones within their recorded exceptions vs $BASELINE_REF"
     else
         VIOLATIONS=$((VIOLATIONS + total))
     fi
+}
+
+# The accepted diff-line count for a frozen zone, or -1 when none is recorded.
+frozen_exception_lines() {
+    local zone="$1"
+    [ -f "$FROZEN_EXCEPTIONS_FILE" ] || { echo -1; return; }
+    local row
+    row="$(grep -E "^[[:space:]]*${zone//\//\\/}[[:space:]]*\|" "$FROZEN_EXCEPTIONS_FILE" 2>/dev/null | head -1)"
+    [ -n "$row" ] || { echo -1; return; }
+    echo "$row" | awk -F'|' '{gsub(/[[:space:]]/,"",$2); print ($2 ~ /^[0-9]+$/) ? $2 : -1}'
+}
+
+# The expiry date of a frozen zone's exception, or an empty string.
+frozen_exception_expiry() {
+    local zone="$1"
+    [ -f "$FROZEN_EXCEPTIONS_FILE" ] || { echo ""; return; }
+    local row
+    row="$(grep -E "^[[:space:]]*${zone//\//\\/}[[:space:]]*\|" "$FROZEN_EXCEPTIONS_FILE" 2>/dev/null | head -1)"
+    [ -n "$row" ] || { echo ""; return; }
+    echo "$row" | awk -F'|' '{gsub(/[[:space:]]/,"",$4); print $4}'
 }
 
 echo "=============================================="
@@ -223,10 +281,170 @@ echo "  MATRIX clean-code gate"
 echo "  baseline ref: $BASELINE_REF"
 echo "=============================================="
 
+# ---------------------------------------------------------------------------
+# DOCS-1: the documentation links and the stable identifiers
+# ---------------------------------------------------------------------------
+#
+# W46.3. The link checker is a separate tool (scripts/docs-link-check.py) because it
+# is useful on its own; the gate calls it so that a broken link blocks the build.
+#
+# The checker's own strict set excludes the archive and the historical waves: they
+# describe the tree as it was, and their broken references are the history. A
+# current document that points at a document that is not there IS a defect, and it
+# fails the gate.
+check_docs_links() {
+    local checker="$REPO_ROOT/scripts/docs-link-check.py"
+    if [ ! -f "$checker" ]; then
+        report DOCS-1 "the link checker is absent: scripts/docs-link-check.py"
+        VIOLATIONS=$((VIOLATIONS + 1))
+        return
+    fi
+    local output
+    if ! output="$(python3 "$checker" --root "$REPO_ROOT" --strict 2>&1)"; then
+        printf '%s\n' "$output" | grep -E "BROKEN_LINK|BROKEN_ANCHOR|MISSING_PATH|UNDEFINED_IDENTIFIER|DUPLICATE_IDENTIFIER" | head -20
+        report DOCS-1 "the documentation links do not resolve"
+        VIOLATIONS=$((VIOLATIONS + 1))
+        return
+    fi
+    report DOCS-1 "the documentation links resolve"
+}
+
+# ---------------------------------------------------------------------------
+# TEST-1: the test evidence catalogue against the evidence on this machine
+# ---------------------------------------------------------------------------
+#
+# The catalogue is the project's claim about its own baseline. A stale claim is
+# worse than no claim, so the gate compares the catalogue with the JUnit XML
+# that the last run left behind.
+check_test_catalogue() {
+    local checker="$REPO_ROOT/scripts/validate-test-catalogue.py"
+    if [ ! -f "$checker" ]; then
+        report TEST-1 "the catalogue validator is absent"
+        VIOLATIONS=$((VIOLATIONS + 1))
+        return
+    fi
+    local output
+    if ! output="$(python3 "$checker" --root "$REPO_ROOT" --strict 2>&1)"; then
+        printf '%s\n' "$output" | grep -E "STALE_COUNT|UNKNOWN_COMMIT|MISSING_" | head -20
+        report TEST-1 "the test catalogue is stale"
+        VIOLATIONS=$((VIOLATIONS + 1))
+        return
+    fi
+    report TEST-1 "the test catalogue agrees with the evidence"
+}
+
+# ---------------------------------------------------------------------------
+# RETENTION-1: the backup retention policy proves itself on a synthetic tree
+# ---------------------------------------------------------------------------
+#
+# The retention script DELETES files. A policy that is not exercised is a
+# policy that is not known to work, so the gate runs the script's own
+# self-test: a synthetic tree of valid, expired, empty, corrupt and symlinked
+# backups, and every rule of the policy is checked against it.
+check_retention() {
+    local tool="$REPO_ROOT/scripts/backup-retention.py"
+    if [ ! -f "$tool" ]; then
+        report RETENTION-1 "the retention tool is absent"
+        VIOLATIONS=$((VIOLATIONS + 1))
+        return
+    fi
+    local output
+    if ! output="$(python3 "$tool" --self-test 2>&1)"; then
+        printf '%s\n' "$output" | grep -E "FAIL" | head -20
+        report RETENTION-1 "the retention policy does not hold"
+        VIOLATIONS=$((VIOLATIONS + 1))
+        return
+    fi
+    report RETENTION-1 "the retention policy holds"
+}
+
+# ---------------------------------------------------------------------------
+# SNAPSHOT-RETENTION-1: the snapshot retention policy, the payload's size bound
+# ---------------------------------------------------------------------------
+#
+# W48.7. The snapshot rows of the knowledge database get the same three-tier
+# calendar the backups have (OD-039), and the payload of a snapshot gets a size
+# bound that is a REFUSAL and never a trim.
+#
+# The check proves three things, and each of them can fail:
+#
+#   1. the retention tool's own self-test: a synthetic database of valid,
+#      expired, corrupt, undated and legacy snapshots, and every rule of the
+#      policy is checked against it;
+#   2. the size bound is CONFIGURED: the store reads it from a property, and a
+#      bound that is hard-coded is a bound that cannot be moved;
+#   3. the dry run is the DEFAULT: the tool runs against the owner's database
+#      without being told to apply, and the database is byte-identical
+#      afterwards.
+#
+# The third one is the load-bearing part: the tool DELETES rows, and a gate
+# that cannot show that the default does not delete is a gate that has not
+# proved the safe path.
+check_snapshot_retention() {
+    local tool="$REPO_ROOT/scripts/snapshot-retention.py"
+    if [ ! -f "$tool" ]; then
+        report SNAPSHOT-RETENTION-1 "the snapshot retention tool is absent"
+        VIOLATIONS=$((VIOLATIONS + 1))
+        return
+    fi
+
+    # 1. the policy proves itself on a synthetic database
+    local output
+    if ! output="$(python3 "$tool" --self-test 2>&1)"; then
+        printf '%s\n' "$output" | grep -E "FAIL" | head -20
+        report SNAPSHOT-RETENTION-1 "the snapshot retention policy does not hold"
+        VIOLATIONS=$((VIOLATIONS + 1))
+        return
+    fi
+
+    # 2. the bound on the payload is configured, not hard-coded
+    local store="$REPO_ROOT/matrix-core/src/main/java/io/matrix/knowledge/KnowledgeStore.java"
+    if [ ! -f "$store" ]; then
+        report SNAPSHOT-RETENTION-1 "the knowledge store is absent: the bound cannot be checked"
+        VIOLATIONS=$((VIOLATIONS + 1))
+        return
+    fi
+    if ! grep -q "matrix.knowledge.snapshot.max-payload-bytes" "$store"; then
+        report SNAPSHOT-RETENTION-1 "the bound on the snapshot payload is not configurable"
+        VIOLATIONS=$((VIOLATIONS + 1))
+        return
+    fi
+    if ! grep -q "DEFAULT_MAX_SNAPSHOT_PAYLOAD_BYTES" "$store"; then
+        report SNAPSHOT-RETENTION-1 "the default bound on the snapshot payload is not named"
+        VIOLATIONS=$((VIOLATIONS + 1))
+        return
+    fi
+
+    # 3. the dry run is the default, and it leaves the database alone
+    local database="$REPO_ROOT/data/knowledge/workbench.sqlite"
+    if [ -f "$database" ]; then
+        local before after
+        before="$(sha256sum "$database" | cut -d' ' -f1)"
+        if ! output="$(python3 "$tool" --database "$database" 2>&1)"; then
+            printf '%s\n' "$output" | grep -E "REFUSED" | head -5
+            report SNAPSHOT-RETENTION-1 "the retention pass refuses the owner's database"
+            VIOLATIONS=$((VIOLATIONS + 1))
+            return
+        fi
+        after="$(sha256sum "$database" | cut -d' ' -f1)"
+        if [ "$before" != "$after" ]; then
+            report SNAPSHOT-RETENTION-1 "the dry run changed the owner's database"
+            VIOLATIONS=$((VIOLATIONS + 1))
+            return
+        fi
+    fi
+
+    report SNAPSHOT-RETENTION-1 "the snapshot retention policy holds, the bound is configured, and the dry run changes nothing"
+}
+
 check_shell_magic
 check_java_magic
 check_env_provenance
 check_frozen
+check_docs_links
+check_test_catalogue
+check_retention
+check_snapshot_retention
 
 echo "----------------------------------------------"
 if [ "$MODE" = "--report" ]; then
@@ -277,6 +495,16 @@ if [ "$TOTAL_CANDIDATES" -gt "$ACCEPTED" ]; then
     echo "FAIL: literal candidates rose from $ACCEPTED to $TOTAL_CANDIDATES."
     echo "      $(( TOTAL_CANDIDATES - ACCEPTED )) new magic number(s). Extract them to a"
     echo "      named constant or scripts/matrix.env, or document why the literal is structural."
+    VIOLATIONS=$((VIOLATIONS + 1))
+fi
+
+# RECON-W43.0: the counter is finally READ.
+#
+# VIOLATIONS was incremented at three places and never read, so the CFG-1
+# and FROZEN-1 rules could not fail the run. A check that cannot fail is
+# not a check. Every rule now contributes to the exit status.
+if [ "$VIOLATIONS" -gt 0 ] && [ "$MODE" != "--report" ]; then
+    echo "FAIL: $VIOLATIONS violation(s) outside the accepted baseline."
     exit 1
 fi
-echo "PASS: $TOTAL_CANDIDATES candidate(s), at or below the accepted baseline of $ACCEPTED."
+echo "PASS: $TOTAL_CANDIDATES candidate(s), at or below the accepted baseline of $ACCEPTED; $VIOLATIONS other violation(s)."

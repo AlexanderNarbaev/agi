@@ -22,6 +22,12 @@ dependencies {
     implementation 'com.fasterxml.jackson.core:jackson-databind:2.18.2'
     implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.18.2'
 
+    // RECON-W39: the specification-to-implementation registry is YAML, and
+    // SpecImplementationMapTest parses it. The artifact is already in the
+    // dependency graph of matrix-core (Quarkus pulls in snakeyaml), so the
+    // reactor as a whole downloads nothing new.
+    testImplementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.18.3'
+
     testImplementation 'org.junit.jupiter:junit-jupiter:5.11.4'
     testImplementation 'org.junit.platform:junit-platform-launcher:1.11.4'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher:1.11.4'
@@ -35,4 +41,59 @@ application {
 tasks.withType(Test) {
     useJUnitPlatform()
     maxHeapSize = '2g'
+    // RECON-W38.4: ModuleLifecycleRegistryTest scans the repository working
+    // tree, which Gradle does not track as a test input. Without this the
+    // test task can be UP-TO-DATE from an earlier run and the guard would
+    // report a STALE result - the same vacuous-guard failure mode that
+    // RuntimeLlmGuardTest once had.
+    inputs.files(rootProject.file('settings.gradle'))
+    inputs.files(rootProject.file('docs-v2/architecture/MODULE-LIFECYCLE.md'))
+    // RECON-W39: the same trap applies to the registry guard, which reads the
+    // specification-to-implementation map and the workflow whose path filter
+    // it checks. Both are declared so the guard can never report a stale
+    // result.
+    inputs.files(rootProject.file('formal/spec-implementation-map.yml'))
+    inputs.files(rootProject.file('.github/workflows/tla.yml'))
+    // The guard also lists the top-level module DIRECTORIES; their names are
+    // what it checks, so they are declared as a property rather than as file
+    // contents (which would drag in node_modules).
+    inputs.property('moduleDirectoryNames',
+        rootProject.fileTree(rootProject.projectDir) { include 'matrix-*' }
+            .files.collect { it.name }.sort())
+    // W49: the same trap applies to the capability-claims guard. It reads the
+    // published front page and the canonical evidence files, and Gradle does
+    // not track those as test inputs: without this the task can be
+    // UP-TO-DATE from an earlier run and the guard reports a STALE result.
+    // W49 found this the hard way — a change to the front page did not
+    // re-run the guard until --rerun-tasks was passed by hand.
+    inputs.files(rootProject.file('docs-v2/index.md'))
+    inputs.files(rootProject.file('docs-v2/architecture/CAPABILITY-REGISTRY.yml'))
+    inputs.files(rootProject.file('docs-v2/engineering/TEST-CATALOGUE.yml'))
+    inputs.files(rootProject.file('docs-v2/governance/PROJECT-STATE.md'))
+    inputs.files(rootProject.file('docs-v2/engineering/W48-STATUS.md'))
+    inputs.files(rootProject.file('docs-v2/engineering/W48-GPU-BENCHMARK.md'))
+    inputs.files(rootProject.file('docs-v2/engineering/W49-STATUS.md'))
+    inputs.files(rootProject.file('docs-v2/engineering/W49-BASELINE.md'))
+    inputs.files(rootProject.file('scripts/quality-gate.sh'))
+}
+
+// RECON-W39: the registry is the single source of truth for the TLA+
+// workflow's path filter. This task rewrites the generated block in
+// .github/workflows/tla.yml from formal/spec-implementation-map.yml, so the
+// filter can never silently drift from the map. Run it after changing the
+// map:  ./gradlew :matrix-quality:regenerateFormalPaths
+tasks.register('regenerateFormalPaths', Test) {
+    description = 'Rewrites the generated path block of .github/workflows/tla.yml from the specification registry.'
+    group = 'verification'
+    useJUnitPlatform()
+    dependsOn tasks.named('testClasses')
+    // A Test task registered by hand does not inherit the Java plugin's
+    // test source set, so the class directories and classpath are set here.
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath
+    filter { includeTestsMatching 'io.matrix.quality.SpecImplementationMapTest' }
+    systemProperty 'matrix.formalPaths.write', 'true'
+    // A regeneration that finds nothing to change must still be able to run.
+    outputs.upToDateWhen { false }
+    testLogging { events 'passed', 'failed' }
 }

@@ -33,7 +33,7 @@ BRC decision ──→ ethics/FROZEN gate ──→ TaskCell.spawn(budget)
 - `lifecycle/TaskCell.State{CREATED, RUNNING, COMPLETED, FAILED, TIMEOUT, DESTROYED}`.
 - `execute(TaskExecutor)` с бюджетами CPU/mem/wall/ttl; `destroy()` принудительно по исчерпании.
 - `lifecycle/FnlGate` (SHADOW→CANDIDATE→PROMOTED|DEMOTED) для новых effectors: параллельная теневая проверка, promote после `score ≥ threshold`.
-- K8s: `matrix-operator/TaskCellResource` CRD — внешнее масштабирование.
+- K8s: `matrix-operator/TaskCellResource` <!-- no-link: a generic class name, not a path --> CRD — внешнее масштабирование.
 
 ### Concurrent action arbitration
 
@@ -71,7 +71,7 @@ BRC decision ──→ ethics/FROZEN gate ──→ TaskCell.spawn(budget)
 - `lifecycle/{TaskCell, FnlGate, CauldronProtocol}` — arena-обвязка.
 - `events/{EventJournal, KafkaEventJournal, R2dbcEventJournal, InMemoryEventJournal, BatchKafkaJournal, KafkaTopics, ClusterEvent, ClusterEventType}`.
 - `audit/{HashChain, HashLink, FrozenFNLHashChain}`.
-- `matrix-operator/TaskCellResource` (CRD) — внешнее.
+- `matrix-operator/TaskCellResource` <!-- no-link: a generic class name, not a path --> (CRD) — внешнее.
 - Тесты: `actions/*`, `lifecycle/*`, `events/*` (Testcontainers — `KafkaIntegrationTest` требует Docker-сервиса живого), `audit/*`.
 
 ## Отложено

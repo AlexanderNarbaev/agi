@@ -6,214 +6,121 @@ parent: Экосистема
 permalink: /ru/ecosystem/quickstart/
 ---
 
-# Быстрый старт — 5 минут от нуля до первого API-вызова
+**Статус:** ACTIVE · **Обновлено:** 2026-11-06
 
-## Требования
+# Быстрый старт — от клона до первого ответа
 
-- **Java 21+** (или GraalVM CE 25 для native)
-- **Git**
-- **MATRIX API ключ** (бесплатный тариф: 100 запросов/час)
+> **Размещённого MATRIX API не существует.** Нет ни `api.matrix.ai`, ни API-ключа, ни
+> тарифа, ни лимита. Есть репозиторий, и два приложения запускаются из исходников.
 
-Получите бесплатный API-ключ на [https://api.matrix.ai/console](https://api.matrix.ai/console).
+## Что нужно
 
-## Шаг 1 — Установите SDK
+- **JDK 25** — сборка выставляет `sourceCompatibility = VERSION_25`, поэтому JDK, который
+  видит сборка, должен быть 25, а не просто JRE в `PATH`. Проверьте `java -version`.
+- **Git.**
+- **Больше ничего.** Драйвер SQLite — объявленная зависимость, формальный инструмент
+  лежит в репозитории под `tools/`, его дайджест записан в `tools/README.md`.
 
-### Java (Maven)
-
-```xml
-<dependency>
-    <groupId>io.matrix</groupId>
-    <artifactId>matrix-sdk-java</artifactId>
-    <version>0.1.0</version>
-</dependency>
-```
-
-### Python (pip)
+## Шаг 1 — получить
 
 ```bash
-pip install matrix-ai
+git clone https://github.com/AlexanderNarbaev/agi.git
+cd agi
 ```
 
-### JavaScript (npm)
+## Шаг 2 — запустить цепочку A
 
 ```bash
-npm install @matrix/sdk
+./gradlew :matrix-core:quarkusDev
 ```
 
-## Шаг 2 — Установите API ключ
+Отвечает на **http://127.0.0.1:9091**. Health — `/q/health`:
 
 ```bash
-export MATRIX_API_KEY="sk-matrix-..."
+curl -s http://127.0.0.1:9091/q/health
 ```
 
-## Шаг 3 — Сделайте первый вызов
+**Проба готовности отвечает 503** — её включает реактивный источник PostgreSQL, и
+производственный код её не читает. Пользуйтесь пробой живости.
 
-### Java
-
-```java
-import io.matrix.sdk.MatrixClient;
-import io.matrix.sdk.AnalyzeResponse;
-
-public class HelloMatrix {
-    public static void main(String[] args) {
-        try (MatrixClient client = MatrixClient.builder()
-                .apiKey(System.getenv("MATRIX_API_KEY"))
-                .build()) {
-            AnalyzeResponse resp = client.analyze()
-                .text("Столица Франции?")
-                .call();
-            System.out.println("Ответ: " + resp.reply());
-            System.out.println("Уверенность: " + resp.confidence());
-            System.out.println("Explain ID: " + resp.explainId());
-        }
-    }
-}
-```
-
-### Python
-
-```python
-from matrix_ai import MatrixClient
-
-with MatrixClient() as client:
-    resp = client.analyze(
-        input="Столица Франции?",
-        content_type="text",
-    )
-    print(f"Ответ: {resp.reply}")
-    print(f"Уверенность: {resp.confidence}")
-```
-
-### JavaScript
-
-```javascript
-import { MatrixClient } from "@matrix/sdk";
-
-const client = new MatrixClient({ apiKey: process.env.MATRIX_API_KEY });
-const resp = await client.analyze({
-  input: "Столица Франции?",
-  contentType: "text",
-});
-console.log(`Ответ: ${resp.reply}`);
-```
-
-## Шаг 4 — Получите XAI-объяснение
+## Шаг 3 — запустить цепочку B
 
 ```bash
-curl -H "Authorization: Bearer $MATRIX_API_KEY" \
-     https://api.matrix.ai/v1/explain/abc123def456
+./gradlew :matrix-api-gateway:writeRuntimeClasspath --no-daemon --console=plain
+bash scripts/start-mind.sh
 ```
 
-## Что произошло?
+Отвечает на **http://127.0.0.1:8765**. Лаунчер выбирает production-режим, поэтому
+запускается настоящий мозг.
 
-1. Ваш input был **нормализован** (регистр, пунктуация, кодировка)
-2. **BIR-правила** сработали — факты типа "Париж — столица Франции"
-3. **HDC-память** извлекла похожие Q&A пары
-4. **MCTS** выбрал план с наивысшей уверенностью
-5. **4 модулятора** одобрили вывод — все прошли
-6. Ответ + полная **explain трасса** возвращены вам
+## Шаг 4 — проверить, какой мозг отвечает
 
-## Лимиты запросов
-
-| План | Запросов/час | Стоимость |
-|------|--------------|-----------|
-| **FREE** | 100 | $0 |
-| **PRO** | 1,000 | $49/мес |
-| **ENTERPRISE** | безлимитно | contact sales |
-
-## Следующие шаги
-
-- 📚 [API Reference →](/ru/ecosystem/api/) — полная документация эндпоинтов
-- 🔧 [SDK руководства →](/ru/ecosystem/sdks/) — языковые туториалы
-- 🔍 [Глубокое погружение в XAI →](/ru/ecosystem/xai/) — понимание трасс решений
-- 🏗️ [Архитектура →](/ru/ecosystem/architecture/) — обзор системы
-
----
-
-**Последнее обновление:** 2026-09-21 (Волна T-03)
-
----
-
-## Режимы мозга: STUB vs PRODUCTION
-
-API-шлюз MATRIX работает в двух режимах:
-
-| Режим | Триггер | Мозг | Применение |
-|-------|---------|------|------------|
-| **STUB** | (по умолчанию) | `StubBrainCycle` | Локальная разработка, CI-тесты |
-| **PRODUCTION** | `MATRIX_MODE=production` | Реальный `BirBrainCycle` (W1-W1500) | Живой инференс BIR/HDC/MCTS |
-
-### Режим STUB
-
-Возвращает детерминированные захардкоженные ответы. Используется в:
-- Юнит-тестах
-- CI-пайплайнах (без JAR)
-- Локальной разработке без сборки native
-
-### Режим PRODUCTION
-
-Рефлексивно загружает `matrix-core/build/libs/matrix-core-1.0.0.jar` и запускает реальный `BirBrainCycle`. Включает:
-- **BIR** (Boolean Inference Rules) — правиловый вывод
-- **HDC** (Hyperdimensional Computing) — поиск по памяти через косинусное сходство
-- **Модуляторы** — `ETHICAL_FILTER`, `SAFETY_MONITOR`, `CONSISTENCY_CHECKER`, `LIE_DETECTOR`
-- **База знаний** — семантический поиск
-- **Обучение** — `/v1/teach` добавляет документы для `/v1/analyze`
-
-### Сборка нативного ядра
+Это первое, что стоит проверить. Запущенный **без** `MATRIX_MODE=production`, шлюз
+отвечает из 87-строчной заглушки и сообщает `"brain_available": false`; запущенный через
+`scripts/start-mind.sh` — настоящий цикл.
 
 ```bash
-export JAVA_HOME=~/.sdkman/candidates/java/25.0.2-graalce
-./gradlew :matrix-core:nativeCompile
-# Бинарь: matrix-core/build/native/nativeCompile/matrix-core (126 МБ, ~46 сек)
+curl -s http://127.0.0.1:8765/health/live
 ```
 
-### Запуск в режиме PRODUCTION
+## Шаг 5 — задать вопрос
 
 ```bash
-MATRIX_MODE=production java -cp matrix-api-gateway/build/classes/java/main:<deps> \
-  -Dport=8765 io.matrix.api.MinimalHttpServer
-```
-
-### Проверка интеллекта
-
-```bash
-# 1. Проверить режим
-curl http://localhost:8765/health/live
-# {"mode":"production","brain_available":true,...}
-
-# 2. Обучить мозг
-TOKEN=$(curl -s -X POST http://localhost:8765/v1/auth/login \
+TOKEN=$(curl -s -X POST http://127.0.0.1:8765/v1/auth/login \
   -H "Content-Type: application/json" \
-  -d '{"email":"pro@test.com"}' \
+  -d '{"email":"you@example.com"}' \
   | python3 -c "import sys,json; print(json.load(sys.stdin)['token'])")
 
-curl -X POST http://localhost:8765/v1/teach \
-  -H "Authorization: Bearer $TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{"input":"Какая столица Франции?","response":"Париж — столица Франции"}'
+curl -s -X POST http://127.0.0.1:8765/v1/teach \
+  -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
+  -d '{"input":"What is the capital of France?","response":"Paris is the capital of France"}'
 
-# 3. Запрос
-curl -X POST http://localhost:8765/v1/analyze \
-  -H "Authorization: Bearer $TOKEN" \
-  -d '{"input":"Какая столица Франции?"}'
-# Ответ: {"answer":"- [taught-...] Париж...", "confidence":0.7, ...}
-
-# 4. Мультимодальное транскодирование
-curl -X POST http://localhost:8765/v1/transcode/audio \
-  -H "Authorization: Bearer $TOKEN" \
-  -d '{"input":"<base64 аудио>"}'
-
-curl -X POST http://localhost:8765/v1/transcode/image \
-  -H "Authorization: Bearer $TOKEN" \
-  -d '{"input":"<описание изображения>"}'
-
-# 5. Срабатывание модуляторов (СТАТЬЯ IV — ЗАМОРОЖЕННЫЕ модуляторы)
-curl -X POST http://localhost:8765/v1/analyze \
-  -H "Authorization: Bearer $TOKEN" \
-  -d '{"input":"Это опасно и небезопасно"}'
-# Ответ: modulators_fired: ["SAFETY_MONITOR"]
+curl -s -X POST http://127.0.0.1:8765/v1/analyze \
+  -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
+  -d '{"input":"What is the capital of France?"}'
 ```
 
-### Режимы отказа
+`/v1/teach` и `/v1/learn` в режиме `stub` отвечают **503 с указанием причины**: им нужен
+настоящий мозг.
 
-Если `matrix-core.jar` отсутствует, `ProductionBrainClient` бросает `BrainUnavailableException`, и шлюз возвращает `503 Service Unavailable` с заголовком `Retry-After: 5`. STUB — автоматический fallback.
+## Два режима
+
+| режим | как выбирается | что обслуживает | что вы получаете |
+|---|---|---|---|
+| **`stub`** — по умолчанию | ничего задавать не нужно | `StubBrainCycle`, 87 строк | детерминированный ответ по ключевым словам; маршруты, которым нужен настоящий мозг, отвечают 503 с причиной |
+| **`production`** | `MATRIX_MODE=production`, его выставляет `scripts/start-mind.sh` | `ProductionBrainClient` → `TrueMindCycle` → `BirBrainCycle` | настоящий мозг: BIR, HDC, модуляторы, база знаний, цикл обучения |
+
+Режим сообщает `GET /health/live`. **Это открытый вопрос владельца F-01**: шлюз, который
+по умолчанию обслуживает заглушку, — это шлюз, чья проверка здоровья может вводить в
+заблуждение.
+
+Если в production-режиме не найден JAR `matrix-core`, `ProductionBrainClient` бросает
+`BrainUnavailableException`, и шлюз отвечает **503** с `Retry-After: 5`; заглушка
+становится автоматической подменой.
+
+## В контейнерах
+
+```bash
+export MATRIX_SECURITY_TOKEN="$(openssl rand -hex 32)"
+docker compose up -d
+```
+
+Стек не стартует без токена, и приложение отказывает в открытых анонимных записях без
+него. Профиль **`native` на машине разработчика не работает**: инструментарий GraalVM
+отсутствует, native-scope отказывается запускаться, а возможность остаётся `BLOCKED`.
+
+## Тесты и гейты
+
+```bash
+./gradlew :matrix-core:test --tests "io.matrix.knowledge.*"
+bash scripts/quality-gate.sh
+bash scripts/security-boundary-check.sh
+```
+
+Проверка свежего клона: `./scripts/fresh-clone-smoke.sh`.
+
+## Дальше
+
+- [Руководство по началу работы](../../guide/getting-started.html) — полная последовательность и существующая конфигурация.
+- [Справочник API](/ru/ecosystem/api/) — реальные поверхности маршрутов.
+- [Архитектура](/ru/ecosystem/architecture/) — граф модулей.

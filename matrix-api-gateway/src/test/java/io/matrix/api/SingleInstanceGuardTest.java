@@ -1,5 +1,6 @@
 package io.matrix.api;
 
+import io.matrix.testsupport.RepositoryPaths;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -72,7 +73,7 @@ class SingleInstanceGuardTest {
 
     private static String readSource() throws Exception {
         // Read the source file to check for code references
-        var path = java.nio.file.Path.of("/home/alexandr-narbaev/Projects/agi/matrix-api-gateway/src/main/java/io/matrix/api/MinimalHttpServer.java");
+        var path = RepositoryPaths.source("matrix-api-gateway/src/main/java/io/matrix/api/MinimalHttpServer.java");
         return java.nio.file.Files.readString(path);
     }
 

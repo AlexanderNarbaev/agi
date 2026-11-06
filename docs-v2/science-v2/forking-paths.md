@@ -44,7 +44,7 @@ When tested with the same input 100 times, the LLM produced 47 different answers
 
 **Evidence:**
 - [BirBrainCycle](../../matrix-core/src/main/java/io/matrix/brain/BirBrainCycle.java) — BIR implementation
-- [LlmBrainLoopService](../../matrix-core/src/main/java/io/matrix/brain/LlmBrainLoopService.java) — DEPRECATED LLM brain
+- `LlmBrainLoopService` <!-- no-link: the class was proposed and never written; this document is a proposal --> — DEPRECATED LLM brain
 
 ### Decision Rationale
 
@@ -239,7 +239,7 @@ Heuristic was chosen for now because:
 
 ---
 
-*This document is updated whenever a major decision is made. See [archive/decisions/](../archive/decisions/) for full ADRs.*
+*This document is updated whenever a major decision is made. See `archive/decisions/` <!-- no-link: the decision archive was never created; the decisions live in governance/DECISION-REGISTER.md --> for full ADRs.*
 
 ---
 *[Edit this page](https://github.com/AlexanderNarbaev/agi/edit/main/docs-v2/science-v2/forking-paths.md)*

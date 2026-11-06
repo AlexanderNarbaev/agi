@@ -1,115 +1,102 @@
 ---
 layout: default
-title: BIR — Boolean Inference Rules
+title: BIR — Boolean Inference
 parent: Algorithms
 nav_order: 1
 permalink: /ecosystem/algorithms/bir/
 ---
 
-# BIR — Boolean Inference Rules
+**Status:** ACTIVE · **Updated:** 2026-11-06
 
-## What is BIR?
+# BIR — boolean inference
 
-**BIR** (Boolean Inference Rules) is the logic engine that fires first in
-every MATRIX inference cycle. It encodes domain knowledge as if-then rules
-over symbolic atoms, similar to Prolog but optimized for batch evaluation.
+> **What this page used to describe.** It described BIR as a forward-chaining engine over
+> Horn clauses — "similar to Prolog" — with a `RuleBase`, an `AtomStore`, a
+> `ForwardChainer` and an `ExplainTracer`. **None of those classes exists in this
+> repository.** BIR here is a compiler and a registry of **bit-level functions** in three
+> interchangeable forms, and the page below describes that.
 
-## Mathematical Foundation
+## What BIR is
 
-A BIR rule is a Horn clause:
+BIR is the logic substrate of MATRIX. An artefact in it is a **boolean function** over a
+bounded number of input bits, carried in one of three immutable, interchangeable forms:
 
-```
-R1: head ← body1 ∧ body2 ∧ ... ∧ bodyn
-```
+| the form | the class | what it is |
+|---|---|---|
+| **truth table** | `TtForm` | the function, tabulated |
+| **clause set** | `ClauseSetForm` | the minimised clause form of the same function |
+| **binary decision diagram** | `BddForm` | the same function as a DAG over the input bits |
 
-Example:
+Every artefact carries a **provenance** and a **fidelity** in `[0, 1]`. A form whose
+fidelity is below 1.0 can only be built through the factory that demands a **measured**
+fidelity value — a lossy form is never created silently, and the compiler marks the
+conversions that are lossy as such.
 
-```
-R42: capital(X, "Paris") ← country(X, "France") ∧ capital_is(X, "Paris")
-```
+## The compiler
 
-**Resolution** is forward-chaining: starting from the input atoms, repeatedly
-fire rules whose bodies are satisfied until either:
-- A rule fires whose head matches the goal (success)
-- No more rules can fire (failure)
-- A modulator vetoes the conclusion
+`io.matrix.bir.BirCompiler` converts between the three forms:
 
-Resolution is **deterministic** given the rule order and the input. There is
-no probabilistic sampling — every run with the same input produces the same
-output.
+| the conversion | is it exact? |
+|---|---|
+| TT ⇄ BDD | **exact** |
+| TT → CLAUSESET | **exact** — an espresso-type minimisation over the truth table |
+| CLAUSESET → TT | only for **k ≤ 20**, where k is the number of input bits |
 
-## Implementation
+The truth-table minimisation itself is `io.matrix.compression.TruthTableMinimizer`.
 
-Source: [`matrix-core/src/main/java/io/matrix/brain/BirBrainCycle.java`](https://github.com/AlexanderNarbaev/agi/blob/develop/matrix-core/src/main/java/io/matrix/brain/BirBrainCycle.java)
+**The bounds.** The constitution (Article II) sets **K_MAX = 20** for the boolean artefacts
+— raising it means revisiting every compiler and backend. Separately, `BirLimits` bounds
+the literals of a form at `matrix.bir.max-literals`, default **4096**, and a form that
+exceeds it cannot be constructed.
 
-Key components:
+## The registry
 
-- `RuleBase` — indexed collection of rules
-- `AtomStore` — deduplicated atom storage
-- `ForwardChainer` — fixed-point iteration engine
-- `ExplainTracer` — records which rules fired for XAI
+`io.matrix.bir.BirRegistry` is the catalogue of the artefacts. Each one is registered with
 
-Performance:
-- **1,000 rules, 10,000 atoms**: ~3ms per cycle
-- **10,000 rules, 100,000 atoms**: ~50ms per cycle
+- a unique id,
+- a **provenance chain**,
+- a **content hash** (SHA3-256) for integrity verification,
+- and the **monotonic functionals (Φ)** that make the lineage traceable.
 
-## History
+It answers lookups by id, by content hash and by function equivalence; it tracks lineage
+across conversions and compositions; it detects duplicates by hash; and it is the audit
+trail for the constitution's genesis protocol.
 
-BIR is rooted in:
-- **Prolog** (Colmerauer, 1972) — the original logic programming language
-- **Datalog** (Maier & Warren, 1988) — database-oriented subset
-- **Production systems** (Forgy, 1982, Rete algorithm) — pattern matching optimization
+## Evaluation
 
-MATRIX uses a custom Rete-like forward chainer optimized for the
-explainability requirement (every rule fire must be traceable).
+`io.matrix.bir.BooleanRuntime` evaluates a form. The evaluation is **deterministic**: the
+same artefact and the same input bits give the same output bits, every time. There is no
+probabilistic sampling anywhere in this path — the stochasticity, where it exists, is in
+the cognitive layer, and its seed is a pure function of the state (constitution, Article I).
 
-## Pros
+## Where BIR runs
 
-- ✅ Fully deterministic
-- ✅ Auditable (every rule fire is logged)
-- ✅ Compact representation (rules are smaller than neural weights)
-- ✅ Fast on small/medium rule bases
-- ✅ Modulator-friendly (each step is a clean yes/no)
+BIR is stage 6 of the ten-stage cycle of chain B — see
+[the mind cycle](/ecosystem/architecture/mindcycle/) — and it backs the `/v1/bir` route of
+the gateway and the `io.matrix.bir` package of chain A. It is one of the engines of the
+`BirBrainCycle`, and the algorithm portfolio's method selector admits a method only when
+every precondition the method declares is present in the request.
 
-## Cons
+## The history, kept as it was
 
-- ❌ Brittle on adversarial input (BIR cannot generalize)
-- ❌ Rule authoring is labor-intensive
-- ❌ Doesn't handle uncertainty well (modulator confidence fills this gap)
-- ❌ Doesn't handle natural language well (handled by HDC + ONNX)
+The lineage of the idea is real and worth naming: **Prolog** (Colmerauer, 1972) for logic
+programming, **Datalog** (Maier & Warren, 1988) for the database-oriented subset, and
+**production systems** (Forgy, 1982) for the Rete pattern-matching optimisation. What this
+implementation does *not* do is forward-chain over symbolic atoms — it compiles a boolean
+function and evaluates it.
 
-## When BIR fires in MATRIX
+## Pros and cons, as they apply here
 
-```
-POST /v1/analyze  { input: "What is the capital of France?" }
-  ↓
-[INPUT_NORMALIZED]
-  ↓
-[BIR_RULES_FIRED]   ← BIR runs here (typically 3-50ms)
-   ├─ rule-42 fires: question(capital_query, France)
-   ├─ rule-87 fires: country(France) → capital(Paris)
-   └─ 0..N more rules
-  ↓
-[HDC_MEMORY_RETRIEVED]   ← Next stage
-```
+| pros | cons |
+|---|---|
+| fully deterministic; the same input gives the same output | brittle on adversarial input — BIR cannot generalise |
+| auditable: the artefact has an id, a provenance chain and a content hash | authoring the artefacts is labour-intensive |
+| compact — a compiled form is smaller than a set of neural weights | no uncertainty model; the modulator confidence carries that |
+| fast on small and medium artefacts; the BDD form shares structure | it does not read natural language — HDC and the transcoders do that |
 
-The number of rules that fire is logged in the XAI trace.
+## The source
 
-## Code example
-
-```java
-RuleBase rules = new RuleBase();
-rules.add(new Rule("capital-of-france",
-    List.of(atom("country", "France")),
-    atom("capital", "Paris")));
-
-AtomStore atoms = new AtomStore();
-atoms.add(atom("country", "France"));
-
-ForwardChainer chainer = new ForwardChainer(rules, atoms);
-List<RuleFire> fires = chainer.run();  // [rule-42 fires]
-```
-
----
-
-**Last updated:** 2026-09-21 (Wave T-03)
+- `matrix-core/src/main/java/io/matrix/bir/` — `Bir`, `BirForm`, `TtForm`, `ClauseSetForm`,
+  `BddForm`, `BirCompiler`, `BirRegistry`, `BooleanRuntime`, `BirLimits`, `BirMetrics`.
+- The specification: `docs-v2/specifications/SPEC-002-boolean-compute-layer.md`.
+- The design: `docs-v2/designs/DESIGN-14-bir-migration.md` and `docs-v2/designs/DESIGN-01-units.md`.

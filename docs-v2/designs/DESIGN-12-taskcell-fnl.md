@@ -13,7 +13,7 @@
 - `lifecycle/FnlGate`: `enum GateState{SHADOW, CANDIDATE, PROMOTED, DEMOTED}`, `Map<String, GateState>`, `admit/advance/state` детерминированно.
 - `lifecycle/TaskCell`: `State{CREATED, RUNNING, COMPLETED, FAILED, TIMEOUT, DESTROYED}`; `execute(TaskExecutor)`, `destroy()`, `isTimeout`.
 - Связь с `lifecycle/CauldronProtocol`: каждый новый элемент стартует с `admit(...)` → `advance(score, threshold)` цикла.
-- K8s: `matrix-operator/TaskCellResource` CRD.
+- K8s: `matrix-operator/TaskCellResource` <!-- no-link: a generic class name, not a path --> CRD.
 
 Тесты: `FnlGateTest` (полная промоция, demotion, terminal stability); `TaskCellTest` интеграционный.
 
@@ -23,6 +23,6 @@
 
 ## Отложено
 
-- DOMAIN H-012: EXP.
+- DOMAIN H-012: EXP. <!-- no-id: the hypothesis register never declared it (Q-W46-19) -->
 - Адаптивный размер среза.
 - Двойной карантин IMPORT_M4 ↔ DESIGN-08 federation.

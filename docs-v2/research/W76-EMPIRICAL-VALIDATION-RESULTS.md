@@ -23,7 +23,7 @@ Per `W76-EMPIRICAL-VALIDATION-REPORT.md` (sub-agent deep research):
 
 13 unit tests for PatternGenerator all pass.
 
-### W76EmpiricalValidationTest (PR-2)
+### W76EmpiricalValidationTest (PR-2) <!-- no-id: a local numbering, not a register identifier -->
 4 hypothesis assertions:
 - **H-082a**: structured patterns > noise floor
 - **H-082b**: recurrent patterns show Φ_binary rising from baseline to post-consolidation

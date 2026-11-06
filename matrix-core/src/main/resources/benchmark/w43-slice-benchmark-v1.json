@@ -1,0 +1,730 @@
+{
+  "theDatasetId": "w43-slice-benchmark-v1",
+  "theDatasetVersion": "1",
+  "thePurpose": "The counterexample slice of RECON-W43.2: does the system read a counterexample against a claim's scope, and does it propose a narrowing only when the evidence supports one?",
+  "theNote": "The dataset is split into train, validation and test. The test cases are the held-out ones: the runner builds a FRESH store per case, so no case can leak into another, and the test split is measured once. The set carries the mission's own worked example: a penguin REFUTES 'All birds fly' and does NOT refute 'Most birds fly under ordinary conditions' - the system cannot decide that from the text, so it asks instead of proposing a narrowing.",
+  "theLanguageNote": "The slice's decisions are LANGUAGE-INDEPENDENT by construction: the reading depends on the evidence relation and on whether a condition was recorded, not on the words. The Russian subset therefore measures that the pipeline carries the text through unchanged and reads the structure, not that it understands Russian.",
+  "items": [
+    {
+      "id": "slice-en-001",
+      "language": "en",
+      "split": "train",
+      "category": "counterexample_with_condition",
+      "proposition": "Plants release oxygen during the day",
+      "scope": "in daylight",
+      "supporting": [],
+      "observations": [
+        {
+          "text": "a plant kept in the dark does not release oxygen",
+          "condition": "without light",
+          "contradicts": true
+        }
+      ],
+      "expect": {
+        "standing": "INSUFFICIENT_EVIDENCE",
+        "reading": "SCOPE_UNRESOLVED",
+        "proposal": false,
+        "proposalContains": null
+      }
+    },
+    {
+      "id": "slice-en-002",
+      "language": "en",
+      "split": "train",
+      "category": "counterexample_with_condition",
+      "proposition": "All birds fly",
+      "scope": "in ordinary flight conditions",
+      "supporting": [],
+      "observations": [
+        {
+          "text": "a penguin does not fly",
+          "condition": "for flightless species",
+          "contradicts": true
+        }
+      ],
+      "expect": {
+        "standing": "INSUFFICIENT_EVIDENCE",
+        "reading": "SCOPE_UNRESOLVED",
+        "proposal": false,
+        "proposalContains": null
+      }
+    },
+    {
+      "id": "slice-en-003",
+      "language": "en",
+      "split": "train",
+      "category": "counterexample_without_condition",
+      "proposition": "All birds fly",
+      "scope": "in ordinary flight conditions",
+      "supporting": [],
+      "observations": [
+        {
+          "text": "a penguin does not fly",
+          "condition": null,
+          "contradicts": true
+        }
+      ],
+      "expect": {
+        "standing": "INSUFFICIENT_EVIDENCE",
+        "reading": "INCONCLUSIVE",
+        "proposal": false,
+        "proposalContains": null
+      }
+    },
+    {
+      "id": "slice-en-004",
+      "language": "en",
+      "split": "train",
+      "category": "counterexample_unqualified_claim",
+      "proposition": "Every metal conducts electricity",
+      "scope": "",
+      "supporting": [],
+      "observations": [
+        {
+          "text": "mercury does not conduct electricity",
+          "condition": "at room temperature",
+          "contradicts": true
+        }
+      ],
+      "expect": {
+        "standing": "REFUTED",
+        "reading": "REFUTES",
+        "proposal": false,
+        "proposalContains": null
+      }
+    },
+    {
+      "id": "slice-en-005",
+      "language": "en",
+      "split": "validation",
+      "category": "positive_example_only",
+      "proposition": "Plants release oxygen during the day",
+      "scope": "in daylight",
+      "supporting": [],
+      "observations": [
+        {
+          "text": "a geranium on a windowsill releases oxygen in the light",
+          "condition": "in daylight",
+          "contradicts": false
+        }
+      ],
+      "expect": {
+        "standing": "SUPPORTED",
+        "reading": null,
+        "proposal": false,
+        "proposalContains": null
+      }
+    },
+    {
+      "id": "slice-en-006",
+      "language": "en",
+      "split": "validation",
+      "category": "supporting_and_contradicting",
+      "proposition": "Plants release oxygen during the day",
+      "scope": "in daylight",
+      "supporting": [
+        {
+          "text": "a textbook states that plants release oxygen in the light",
+          "condition": null,
+          "sourceTitle": "a textbook"
+        }
+      ],
+      "observations": [
+        {
+          "text": "a plant kept in the dark does not release oxygen",
+          "condition": "without light",
+          "contradicts": true
+        }
+      ],
+      "expect": {
+        "standing": "SUPPORTED",
+        "reading": "SCOPE_UNRESOLVED",
+        "proposal": false,
+        "proposalContains": null
+      }
+    },
+    {
+      "id": "slice-en-007",
+      "language": "en",
+      "split": "validation",
+      "category": "insufficient_evidence",
+      "proposition": "The boiling point of mercury is 357 degrees Celsius",
+      "scope": "at standard pressure",
+      "supporting": [],
+      "observations": [
+        {
+          "text": "a reference mentions mercury",
+          "condition": null,
+          "contradicts": false,
+          "relation": "FAILS_TO_SUPPORT"
+        }
+      ],
+      "expect": {
+        "standing": "INSUFFICIENT_EVIDENCE",
+        "reading": null,
+        "proposal": false,
+        "proposalContains": null
+      }
+    },
+    {
+      "id": "slice-en-008",
+      "language": "en",
+      "split": "test",
+      "category": "no_evidence",
+      "proposition": "Nothing has been established about this claim",
+      "scope": "",
+      "supporting": [],
+      "observations": [],
+      "expect": {
+        "standing": "UNKNOWN",
+        "reading": null,
+        "proposal": false,
+        "proposalContains": null
+      }
+    },
+    {
+      "id": "slice-en-009",
+      "language": "en",
+      "split": "test",
+      "category": "counterexample_with_condition",
+      "proposition": "Water boils at 100 degrees Celsius",
+      "scope": "at sea level",
+      "supporting": [],
+      "observations": [
+        {
+          "text": "water boils at 92 degrees on a high mountain",
+          "condition": "at high altitude",
+          "contradicts": true
+        }
+      ],
+      "expect": {
+        "standing": "INSUFFICIENT_EVIDENCE",
+        "reading": "SCOPE_UNRESOLVED",
+        "proposal": false,
+        "proposalContains": null
+      }
+    },
+    {
+      "id": "slice-en-010",
+      "language": "en",
+      "split": "test",
+      "category": "counterexample_without_condition",
+      "proposition": "Water boils at 100 degrees Celsius",
+      "scope": "at sea level",
+      "supporting": [],
+      "observations": [
+        {
+          "text": "water boils at 92 degrees on a high mountain",
+          "condition": null,
+          "contradicts": true
+        }
+      ],
+      "expect": {
+        "standing": "INSUFFICIENT_EVIDENCE",
+        "reading": "INCONCLUSIVE",
+        "proposal": false,
+        "proposalContains": null
+      }
+    },
+    {
+      "id": "slice-en-011",
+      "language": "en",
+      "split": "test",
+      "category": "counterexample_unqualified_claim",
+      "proposition": "Water boils at 100 degrees Celsius",
+      "scope": "",
+      "supporting": [],
+      "observations": [
+        {
+          "text": "water boils at 92 degrees on a high mountain",
+          "condition": "at high altitude",
+          "contradicts": true
+        }
+      ],
+      "expect": {
+        "standing": "REFUTED",
+        "reading": "REFUTES",
+        "proposal": false,
+        "proposalContains": null
+      }
+    },
+    {
+      "id": "slice-en-012",
+      "language": "en",
+      "split": "test",
+      "category": "positive_example_only",
+      "proposition": "The Sun is a star",
+      "scope": "",
+      "supporting": [],
+      "observations": [
+        {
+          "text": "the Sun fuses hydrogen in its core",
+          "condition": null,
+          "contradicts": false
+        }
+      ],
+      "expect": {
+        "standing": "SUPPORTED",
+        "reading": null,
+        "proposal": false,
+        "proposalContains": null
+      }
+    },
+    {
+      "id": "slice-ru-001",
+      "language": "ru",
+      "split": "train",
+      "category": "counterexample_with_condition",
+      "proposition": "Растения выделяют кислород днём",
+      "scope": "при дневном свете",
+      "supporting": [],
+      "observations": [
+        {
+          "text": "растение в темноте не выделяет кислород",
+          "condition": "без света",
+          "contradicts": true
+        }
+      ],
+      "expect": {
+        "standing": "INSUFFICIENT_EVIDENCE",
+        "reading": "SCOPE_UNRESOLVED",
+        "proposal": false,
+        "proposalContains": null
+      }
+    },
+    {
+      "id": "slice-ru-002",
+      "language": "ru",
+      "split": "train",
+      "category": "counterexample_with_condition",
+      "proposition": "Все птицы летают",
+      "scope": "в обычных условиях полёта",
+      "supporting": [],
+      "observations": [
+        {
+          "text": "пингвин не летает",
+          "condition": "для нелетающих видов",
+          "contradicts": true
+        }
+      ],
+      "expect": {
+        "standing": "INSUFFICIENT_EVIDENCE",
+        "reading": "SCOPE_UNRESOLVED",
+        "proposal": false,
+        "proposalContains": null
+      }
+    },
+    {
+      "id": "slice-ru-003",
+      "language": "ru",
+      "split": "train",
+      "category": "counterexample_without_condition",
+      "proposition": "Все птицы летают",
+      "scope": "в обычных условиях полёта",
+      "supporting": [],
+      "observations": [
+        {
+          "text": "пингвин не летает",
+          "condition": null,
+          "contradicts": true
+        }
+      ],
+      "expect": {
+        "standing": "INSUFFICIENT_EVIDENCE",
+        "reading": "INCONCLUSIVE",
+        "proposal": false,
+        "proposalContains": null
+      }
+    },
+    {
+      "id": "slice-ru-004",
+      "language": "ru",
+      "split": "train",
+      "category": "counterexample_unqualified_claim",
+      "proposition": "Любой металл проводит электричество",
+      "scope": "",
+      "supporting": [],
+      "observations": [
+        {
+          "text": "ртуть не проводит электричество",
+          "condition": "при комнатной температуре",
+          "contradicts": true
+        }
+      ],
+      "expect": {
+        "standing": "REFUTED",
+        "reading": "REFUTES",
+        "proposal": false,
+        "proposalContains": null
+      }
+    },
+    {
+      "id": "slice-ru-005",
+      "language": "ru",
+      "split": "validation",
+      "category": "positive_example_only",
+      "proposition": "Растения выделяют кислород днём",
+      "scope": "при дневном свете",
+      "supporting": [],
+      "observations": [
+        {
+          "text": "герань на подоконнике выделяет кислород на свету",
+          "condition": "при дневном свете",
+          "contradicts": false
+        }
+      ],
+      "expect": {
+        "standing": "SUPPORTED",
+        "reading": null,
+        "proposal": false,
+        "proposalContains": null
+      }
+    },
+    {
+      "id": "slice-ru-006",
+      "language": "ru",
+      "split": "validation",
+      "category": "supporting_and_contradicting",
+      "proposition": "Растения выделяют кислород днём",
+      "scope": "при дневном свете",
+      "supporting": [
+        {
+          "text": "учебник утверждает, что растения выделяют кислород на свету",
+          "condition": null,
+          "sourceTitle": "учебник"
+        }
+      ],
+      "observations": [
+        {
+          "text": "растение в темноте не выделяет кислород",
+          "condition": "без света",
+          "contradicts": true
+        }
+      ],
+      "expect": {
+        "standing": "SUPPORTED",
+        "reading": "SCOPE_UNRESOLVED",
+        "proposal": false,
+        "proposalContains": null
+      }
+    },
+    {
+      "id": "slice-ru-007",
+      "language": "ru",
+      "split": "validation",
+      "category": "insufficient_evidence",
+      "proposition": "Температура кипения ртути — 357 градусов Цельсия",
+      "scope": "при стандартном давлении",
+      "supporting": [],
+      "observations": [
+        {
+          "text": "справочник упоминает ртуть",
+          "condition": null,
+          "contradicts": false,
+          "relation": "FAILS_TO_SUPPORT"
+        }
+      ],
+      "expect": {
+        "standing": "INSUFFICIENT_EVIDENCE",
+        "reading": null,
+        "proposal": false,
+        "proposalContains": null
+      }
+    },
+    {
+      "id": "slice-ru-008",
+      "language": "ru",
+      "split": "test",
+      "category": "no_evidence",
+      "proposition": "Об этом утверждении ничего не установлено",
+      "scope": "",
+      "supporting": [],
+      "observations": [],
+      "expect": {
+        "standing": "UNKNOWN",
+        "reading": null,
+        "proposal": false,
+        "proposalContains": null
+      }
+    },
+    {
+      "id": "slice-ru-009",
+      "language": "ru",
+      "split": "test",
+      "category": "counterexample_with_condition",
+      "proposition": "Вода кипит при 100 градусах Цельсия",
+      "scope": "на уровне моря",
+      "supporting": [],
+      "observations": [
+        {
+          "text": "на высокой горе вода кипит при 92 градусах",
+          "condition": "на большой высоте",
+          "contradicts": true
+        }
+      ],
+      "expect": {
+        "standing": "INSUFFICIENT_EVIDENCE",
+        "reading": "SCOPE_UNRESOLVED",
+        "proposal": false,
+        "proposalContains": null
+      }
+    },
+    {
+      "id": "slice-ru-010",
+      "language": "ru",
+      "split": "test",
+      "category": "counterexample_without_condition",
+      "proposition": "Вода кипит при 100 градусах Цельсия",
+      "scope": "на уровне моря",
+      "supporting": [],
+      "observations": [
+        {
+          "text": "на высокой горе вода кипит при 92 градусах",
+          "condition": null,
+          "contradicts": true
+        }
+      ],
+      "expect": {
+        "standing": "INSUFFICIENT_EVIDENCE",
+        "reading": "INCONCLUSIVE",
+        "proposal": false,
+        "proposalContains": null
+      }
+    },
+    {
+      "id": "slice-ru-011",
+      "language": "ru",
+      "split": "test",
+      "category": "counterexample_unqualified_claim",
+      "proposition": "Вода кипит при 100 градусах Цельсия",
+      "scope": "",
+      "supporting": [],
+      "observations": [
+        {
+          "text": "на высокой горе вода кипит при 92 градусах",
+          "condition": "на большой высоте",
+          "contradicts": true
+        }
+      ],
+      "expect": {
+        "standing": "REFUTED",
+        "reading": "REFUTES",
+        "proposal": false,
+        "proposalContains": null
+      }
+    },
+    {
+      "id": "slice-ru-012",
+      "language": "ru",
+      "split": "test",
+      "category": "positive_example_only",
+      "proposition": "Солнце — это звезда",
+      "scope": "",
+      "supporting": [],
+      "observations": [
+        {
+          "text": "Солнце синтезирует водород в своём ядре",
+          "condition": null,
+          "contradicts": false
+        }
+      ],
+      "expect": {
+        "standing": "SUPPORTED",
+        "reading": null,
+        "proposal": false,
+        "proposalContains": null
+      }
+    },
+    {
+      "id": "slice-en-013",
+      "language": "en",
+      "split": "train",
+      "category": "unrestricted_claim_refuted",
+      "proposition": "All birds fly",
+      "scope": "",
+      "supporting": [],
+      "observations": [
+        {
+          "text": "a penguin does not fly",
+          "condition": "for flightless species",
+          "contradicts": true
+        }
+      ],
+      "expect": {
+        "standing": "REFUTED",
+        "reading": "REFUTES",
+        "proposal": false,
+        "proposalContains": null
+      }
+    },
+    {
+      "id": "slice-en-014",
+      "language": "en",
+      "split": "test",
+      "category": "narrower_claim_not_refuted",
+      "proposition": "Most birds fly under ordinary conditions",
+      "scope": "under ordinary conditions",
+      "supporting": [],
+      "observations": [
+        {
+          "text": "a penguin does not fly",
+          "condition": "for flightless species",
+          "contradicts": true
+        }
+      ],
+      "expect": {
+        "standing": "INSUFFICIENT_EVIDENCE",
+        "reading": "SCOPE_UNRESOLVED",
+        "proposal": false,
+        "proposalContains": null
+      }
+    },
+    {
+      "id": "slice-en-015",
+      "language": "en",
+      "split": "validation",
+      "category": "exception_qualifies",
+      "proposition": "Plants release oxygen during the day",
+      "scope": "in daylight",
+      "supporting": [
+        {
+          "text": "a textbook states that plants release oxygen in the light",
+          "condition": null,
+          "sourceTitle": "a textbook"
+        }
+      ],
+      "observations": [
+        {
+          "text": "a plant kept in the dark does not release oxygen",
+          "condition": "in darkness",
+          "contradicts": true,
+          "relation": "QUALIFIES"
+        }
+      ],
+      "expect": {
+        "standing": "SUPPORTED",
+        "reading": null,
+        "proposal": false,
+        "proposalContains": null
+      }
+    },
+    {
+      "id": "slice-ru-013",
+      "language": "ru",
+      "split": "train",
+      "category": "unrestricted_claim_refuted",
+      "proposition": "Все птицы летают",
+      "scope": "",
+      "supporting": [],
+      "observations": [
+        {
+          "text": "пингвин не летает",
+          "condition": "для нелетающих видов",
+          "contradicts": true
+        }
+      ],
+      "expect": {
+        "standing": "REFUTED",
+        "reading": "REFUTES",
+        "proposal": false,
+        "proposalContains": null
+      }
+    },
+    {
+      "id": "slice-ru-014",
+      "language": "ru",
+      "split": "test",
+      "category": "narrower_claim_not_refuted",
+      "proposition": "Большинство птиц летают при обычных условиях",
+      "scope": "при обычных условиях",
+      "supporting": [],
+      "observations": [
+        {
+          "text": "пингвин не летает",
+          "condition": "для нелетающих видов",
+          "contradicts": true
+        }
+      ],
+      "expect": {
+        "standing": "INSUFFICIENT_EVIDENCE",
+        "reading": "SCOPE_UNRESOLVED",
+        "proposal": false,
+        "proposalContains": null
+      }
+    },
+    {
+      "id": "slice-ru-015",
+      "language": "ru",
+      "split": "validation",
+      "category": "exception_qualifies",
+      "proposition": "Растения выделяют кислород днём",
+      "scope": "при дневном свете",
+      "supporting": [
+        {
+          "text": "учебник утверждает, что растения выделяют кислород на свету",
+          "condition": null,
+          "sourceTitle": "учебник"
+        }
+      ],
+      "observations": [
+        {
+          "text": "растение в темноте не выделяет кислород",
+          "condition": "в темноте",
+          "contradicts": true,
+          "relation": "QUALIFIES"
+        }
+      ],
+      "expect": {
+        "standing": "SUPPORTED",
+        "reading": null,
+        "proposal": false,
+        "proposalContains": null
+      }
+    },
+    {
+      "id": "slice-en-016",
+      "language": "en",
+      "split": "test",
+      "category": "counterexample_narrows_the_scope",
+      "proposition": "Plants release oxygen during the day",
+      "scope": "in daylight",
+      "supporting": [],
+      "observations": [
+        {
+          "text": "a plant in daylight during a heat wave does not release oxygen",
+          "condition": "in daylight during a heat wave",
+          "contradicts": true
+        }
+      ],
+      "expect": {
+        "standing": "REFUTED",
+        "reading": "REVEALS_MISSING_CONDITION",
+        "proposal": true,
+        "proposalContains": "heat wave"
+      }
+    },
+    {
+      "id": "slice-ru-016",
+      "language": "ru",
+      "split": "test",
+      "category": "counterexample_narrows_the_scope",
+      "proposition": "Растения выделяют кислород днём",
+      "scope": "при дневном свете",
+      "supporting": [],
+      "observations": [
+        {
+          "text": "растение при дневном свете в жару не выделяет кислород",
+          "condition": "при дневном свете в жару",
+          "contradicts": true
+        }
+      ],
+      "expect": {
+        "standing": "REFUTED",
+        "reading": "REVEALS_MISSING_CONDITION",
+        "proposal": true,
+        "proposalContains": "жару"
+      }
+    }
+  ],
+  "theTruth": "The expectations are the TRUTH, not the system's current answers. Where the system cannot decide from the text — whether a counterexample falls inside the scope a claim states — the truth is that it does not decide, and the case expects SCOPE_UNRESOLVED. The human truth for those cases is 'the observation does not bear on the claim in its scope'; the system's vocabulary has no word for that, and SCOPE_UNRESOLVED is the closest honest one: it neither refutes nor supports, and it asks."
+}

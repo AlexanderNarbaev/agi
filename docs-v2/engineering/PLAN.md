@@ -1,5 +1,10 @@
 # PLAN
 
+
+**Status:** `HISTORICAL` · **The canonical roadmap is `docs-v2/governance/ROADMAP.md`.**
+This document records what was planned up to W44; its last recorded wave is W44 and it is
+three waves behind. It is kept as the record of that plan and is **not** rewritten.
+
 Что реализовано и что осталось (synth-only).
 
 ## W32 Wave (Sep 11-12 2026) — HDC × BitLinear hybrid brain implementation
@@ -118,6 +123,18 @@ Java 25 · Quarkus 3.38.3 · GraalVM plugin 1.1.10 · Avro 1.12.2 · ONNX Runtim
 
 1. **W31 RUN 437-450** (см. секцию выше): HDC+BitLinear+Boolean brain до Capability Level 3.
 2. TLA+-спек-кандидаты (см. [architecture/FORMAL-CONTRACTS.md](../architecture/FORMAL-CONTRACTS.md)):
+   - **RECON-W39**: спе-каталог заменён реестром
+     [`formal/spec-implementation-map.yml`](../../formal/spec-implementation-map.yml)
+     (машинно-читаемый, проверяется автоматически). Для каждой спецификации
+     зафиксированы Java-исходники, production-вызывающие, тесты, свойства и
+     **явный статус соответствия**. Валидатор
+     `matrix-quality/.../SpecImplementationMapTest.java` не допускает статус
+     `PRODUCTION_PATH_VERIFIED` без названного production-вызывающего.
+   - **RECON-W39**: harness мутаций `scripts/mutation-harness.py` — гейт
+     проверяется на способность краснеть. Отчёт:
+     [`engineering/MUTATION-REPORT.md`](MUTATION-REPORT.md).
+   - **RECON-W39**: перечень рисков перепроверен и переведён в статусы —
+     [`engineering/RISK-REGISTER.md`](RISK-REGISTER.md).
    - `BRC-Step` (закрывает пробел `reasoning/`),
    - `ConjugateBudgeter-DP`,
    - `Memory-M4-Causal`,
@@ -142,3 +159,148 @@ Java 25 · Quarkus 3.38.3 · GraalVM plugin 1.1.10 · Avro 1.12.2 · ONNX Runtim
 - PhiID for discrete/binary systems (Icard-Finn-Mediano formulas)
 - Cross-disciplinary R-B (cybernetic) R-C (Soviet/Asian) R-D (learning) R-E (substrate) R-F (creativity) research waves for integration metrics
 - JNI/FFM acceleration of bipartitionMi / logDeterminant (~100× speedup)
+---
+
+## Wave W42 — Recon: локальная обучающая система (01–02 Nov 2026)
+
+**Директива владельца:** RECON-W42 MASTER DEVELOPMENT MISSION · 2026-11-01.
+**Ветка:** `develop` · **HEAD на 2026-11-02:** `6ea07101` (проверен через
+`git ls-remote origin develop`, не по памяти) · **старт W42:** `0296e83e`.
+
+> Файл `PLAN.md` не обновлялся с сентября 2026 (заканчивался на W92), а
+> процедура сессии в `AGENTS.md` читает его, чтобы найти текущую волну.
+> Поэтому раздел добавлен: без него следующая сессия не находит волну.
+
+### Что сделано
+
+| Волна | Что | Отчёт |
+|---|---|---|
+| W42.0 | Разведка реальности: 5 артефактов, инструмент бенчмарка, базовая линия | `W42-*.md` |
+| W42.1 | Ядро обучения: машина состояний, планировщик, проверка запроса, абстиненция 0.400 → 0.700 | `W42.1-LEARNING-CORE-REPORT.md` |
+| W42.2 | Приобретение знаний: TXT/MD/HTML/PDF/EPUB/DOCX/CSV, источник, слои промоушена, реестр корпуса | `W42.2-UNIVERSAL-ACQUISITION-REPORT.md` |
+| W42.3 | Диалог: локализованный текстовый слой, лексикон, опечатки, ограниченный контекст, 168 кейсов | `W42.3-DIALOG-INTELLIGENCE-REPORT.md` |
+| W42.4 | Обучение и оценка: отбор упражнений, отложенное удержание, композитор представлений | `W42.4-LEARNING-AND-REPRESENTATION-REPORT.md` |
+| W42.5 | Когнитивная интеграция: детектор ложной посылки, консолидация, error-driven отбор | `W42.5-COGNITIVE-INTEGRATION-REPORT.md` |
+| W42.6 | Local Alpha v0.3: 12 шагов по HTTP, переживает `SIGKILL` | `W42.6-LOCAL-ALPHA-V0.3.md` |
+| W42.7 | Открытые пункты: версии источников, Source Browser, Knowledge Graph, Experiment Dashboard, сохранённый диалог | `RECON-W42-BACKLOG.md` §W42.7 |
+| W42.9 | Асимметрия свёртки, ложная посылка по-русски, три независимых аудита | этот файл, §W42.9 |
+
+### Где стоит волна сейчас
+
+**Первый практический результат миссии показан на живом приложении:**
+концепция, приобретённая из настоящего документа, объясняется собственными
+знаниями системы, отвечается на четырёх уровнях, система знает свои
+пределы, отвечает на ложную посылку **на русском и на английском**,
+практикуется, оценивается независимо и переживает принудительный
+перезапуск.
+
+### Измерения на 2026-11-02
+
+| Что | Значение |
+|---|---|
+| Целевые тесты (5 пакетов) | 1483 теста, 0 падений (после трёх независимых аудитов) |
+| Формальный гейт | 14/14, exit 0 |
+| Гейт качества | exit 0 (263 кандидата при принятой базе 270) |
+| Бенчмарк W42 v1 | 34 пункта: точность 1.000, абстиненция 0.900, пересечение с BM25 0.610 |
+| Бенчмарк W42 v3 | 137 пунктов, ru+en, с holdout-расщеплением |
+
+### Следующее действие
+
+1. **Зафиксировать аудиты.** Три независимых проверки (`W42-VERIFICATION-*.md`)
+   нашли 93 расхождения в документации и 16 неверных утверждений в
+   отчётах. Основные — дубли строк статуса, числа мутационного гейта
+   (27/25/2 → 32/30/2), счётчик формального гейта (12/13/14 → 14),
+   «девять теневых классов» → шесть, статус `ModelToMatrix`.
+2. **Закрыть R32** — кросс-язычное сопоставление области действия: нужен
+   собственный дизайн и собственные тесты, глобальная правка ломает три
+   зелёных гейта (измерено).
+3. **Оценить старт приложения.** Признанное значение 1.571 s — из волны
+   W42.0; повторное измерение на упакованном JAR даёт иную картину
+   (в старте доминирует обучение цепочки) — требуется отдельная запись.
+
+## Wave W43 — Epistemic Foundation: evidence, meaning, learning from counterexamples (02 Nov 2026)
+
+**Директива владельца:** W43 — Epistemic Foundation · 2026-11-02.
+**Ветка:** `develop` · **старт W43:** `b303f22e` (проверен через
+`git ls-remote origin develop`) · **конец W43:** `cd2c6347`.
+
+**Направление волны, в одну строку:** не «ещё алгоритмов и ещё интерфейсов»,
+а чтобы MATRIX отличал **что наблюдалось**, **что источник говорит**,
+**что утверждение значит в данном контексте**, **что подтверждено**,
+**что опровергнуто**, **что лишь выведено** и **что неизвестно** — и чтобы
+контрпример мог оспорить утверждение, не уничтожив его историю.
+
+### Что сделано
+
+| Под-волна | Что | Отчёт / доказательство |
+|---|---|---|
+| W43.0 | **Граница безопасности и гейты, которые умеют краснеть.** Одна граница (`io.matrix.security.NetworkExposure`), 11 слушателей через неё, deny-by-default для мутаций, деплой падает закрытым, CI исполняет гейты | `W43-BASELINE.md` §3, `scripts/security-boundary-check.sh` (**0 нарушений**), `scripts/quality-gate.sh` (**инъекция → exit 1**) |
+| W43.1 | **ADR эпистемической модели** — до правок схемы. Что переиспользуется (`Source`, `Claim`, `Evidence`, `Derivation`, `KnowledgeRevision`, `ClaimStatus`), чего нет (`Case`), и что решает владелец | `ADR-W43-01-epistemic-model.md` |
+| W43.2 | **Вертикальный срез контрпримера.** Пример → контрпример → оценка → предложенное уточнение → принятие → история → `kill -9` → рестарт. На существующей схеме, без миграции | `CounterexampleCycleTest` (4 теста), `scripts/w43-counterexample-journey.sh` (**0 нарушений**) |
+| W43.3 | Оценка среза, EN+RU, с знаменателями | **НЕ СДЕЛАНО** — в бэклоге §2 |
+| W43.4 | Фундамент корпуса | **НЕ СДЕЛАНО** — в бэклоге §3 |
+
+### Измерения на 2026-11-02
+
+| Что | Значение | Знаменатель |
+|---|---|---|
+| Целевой набор | **1565 тестов, 0 падений** | 8 пакетов `matrix-core` |
+| Валидатор реестра | **9 из 9** | `SpecImplementationMapTest` |
+| Формальный гейт | **14 пройдено, 0 провалено** | 14 спецификаций `formal/` |
+| Граница безопасности | **0 нарушений** | 10 утверждений, 3 конфигурации процесса |
+| Сценарий контрпримера | **0 нарушений** | 18 утверждений, включая `kill -9` и рестарт |
+| Гейт качества | **exit 0** при 271 кандидате | базовая линия = измеренное значение |
+| Гейт детерминизма | **0 расхождений** | 20 групп / 48 находок в 3 корнях |
+
+### Что осталось за владельцем
+
+21 решение — в `RECON-W43-STATUS.md` §4. Блокирующие: миграция схемы-16 и
+объект `Case`; судьба `Evidence.quality`; кто решает чтение контрпримера;
+`POST /api/v1/tools/invoke` (запись в любой файл и shell — релиз-блокер);
+подписанный JWT; несоответствие OpenAPI; путь-параметр tenant в
+`TenantQaResource`.
+
+### W43.4 — The corpus foundation — DONE
+
+`docs-v2/engineering/W43-CORPUS.md` ✓. A controlled three-file corpus with a
+licence manifest, a measured parser table, an inspectable import report,
+the traceability from a claim to a span, and the measured idempotence ✓✓.
+Two defects found and recorded: R51 (fixed) and R52 (open) ✓✓.
+
+---
+
+## Wave W44 — Cognitive Kernel Foundation (02 Nov 2026)
+
+**Директива:** W44 — Cognitive Architecture, World Model, Neuromodulation & Adaptive Computation.
+**ADR:** `docs-v2/engineering/ADR-W44-01-cognitive-kernel.md`.
+**Карта возможностей:** `docs-v2/engineering/W44-CAPABILITY-MAP.md`.
+
+### Что сделано
+
+| Срез | Что | Где |
+|---|---|---|
+| W44.0 | Сверка: фактический HEAD, рабочее дерево, **две несвязанные цепочки обслуживания** (Quarkus-эпистемное ядро и `MinimalHttpServer`-мозговой рантайм), карта из 25 реализаций с состояниями, 4 мёртвые подсистемы и 1 недоказуемое GPU-утверждение | `W44-CAPABILITY-MAP.md` |
+| W44.1 | Контракты ядра: `Signal`, `Percept`, `Prediction`, `ErrorSignal`, `DriveSignal`, `AlgorithmCapability`, `ComputeBudget`, `AlgorithmDecision`, `LearningTrace`, `CognitiveTask` + **схема-16: объект `Case`** | `io.matrix.cognitive.*`, `io.matrix.knowledge.Case` |
+| W44.2 | Портфель алгоритмов с декларацией предусловий и **измеренной** стоимостью: точная арифметика, энтейлмент (существующий `EntailmentChecker`), Дейкстра/Беллман-Форд, ограниченный поиск, переиспользуемая процедура; селектор `accuracy − costWeight × relativeCost` | `io.matrix.cognitive.algorithms.*` |
+| W44.3 | **Новый** регуляторный слой: типизированные драйвы, ограниченное влияние (4 поля `RegulationBias`), запрет на ослабление гейтов; старые биохимические острова остаются INACTIVE и задокументированы | `io.matrix.cognitive.neuromodulation.*` |
+| W44.4 | Когнитивный микромир со **скрытым** правилом, конкурирующими гипотезами (все 16 булевых функций), различающим экспериментом, контрпримером и разделением предсказания и наблюдения | `io.matrix.cognitive.microworld.*` |
+| W44.5 | Сквозная интеграция: `POST /v1/cognitive/**`, вкладка «Cognitive» в существующем воркбенче, та же БД SQLite, переживание рестарта | `CognitiveService`, `CognitiveResource`, `workbench/index.html` |
+
+### Ключевые решения волны
+
+- Ядро живёт в `matrix-core` — единственном модуле с Quarkus, владельце эпистемного
+  хранилища и воркбенча. Новый модуль означал бы второе приложение.
+- **Ни один существующий «гормональный» подсистемный код не воскрешён**: `BiochemicalNetwork`,
+  `BiochemicalOrchestrator`, `KineticModulator`, `CognitiveModulationBridge`, `Impulse`,
+  `AttentionRouter` — недостижимые острова с рукописными коэффициентами без источников.
+- `Dijkstra` документирует «неотрицательные веса» и **не проверяет их**; обёртка портфеля
+  проверяет и отказывает, а fallback — Беллман-Форд.
+- `Case` реализован: это была отложенная миграция-16, решение владельца теперь дано
+  директивой W44.
+
+### Что НЕ сделано и не заявлено
+
+Слияние двух цепочек обслуживания; подключение пакета `graph` (159 тестов, 0 production-вызовов);
+GPU как выбираемый backend (провайдеры ONNX не наблюдаемы в рантайме); обученный мета-контроллер
+над портфелем (директива запрещает его до измеримой детерминированной базы); пятиклассовая
+таксономия памяти как код.

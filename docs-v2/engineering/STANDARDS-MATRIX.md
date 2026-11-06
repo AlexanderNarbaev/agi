@@ -1,5 +1,16 @@
 # STANDARDS-MATRIX
 
+
+**Status:** `ACTIVE` with three known errors · 2026-11-04.
+(a) The Java version is cited to `gradle.properties`, which carries **no version line** — it
+lives in `build.gradle:9-10` and `matrix-core/build.gradle:30-31,377`.
+(b) The ADR table lists five of the eight ADRs; `ADR-W43-01`, `ADR-W44-01` and
+`ADR-W45.2-01` live in `docs-v2/engineering/`, and `ADR-2026-10-26-002` is marked *Accepted*
+although W45.2 superseded its scope. The canonical list is
+`docs-v2/governance/DECISION-REGISTER.md`.
+(c) **Nothing in this matrix is enforced.** The gates live in a CI job named *«Quality gates
+(can fail)»*, so a gate does not block a merge — this document does not say so.
+
 Версии зависимостей и причины пропусков. Проверено онлайн (maven-metadata).
 
 | Компонент | Текущее | Источник | Решение |
@@ -37,5 +48,21 @@ Patch/minor — то же, но без RFC.
 | ADR | Дата | Решение | Статус |
 |---|---|---|---|
 | ADR-2026-09-12-001 | 2026-09-12 | Принять HDC × BitLinear hybrid brain как архитектурный примитив | ✅ Accepted |
+| ADR-2026-10-26-002 | 2026-10-26 | Единый когнитивный проводник (`TrueMindCycle`) | ✅ Accepted |
+| ADR-2026-10-30-003 | 2026-10-30 | Модель доверия `HashChain`: внедрённые часы, валидация, правило sequence, tamper-**evidence**, а не tamper-proof | ✅ Accepted |
+| ADR-2026-10-30-004 | 2026-10-30 | Семантика CRDT в Noosphere: одна семантика удаления на класс; `EpochAwareCausalSet` — явная epoch-aware реализация; tombstone-ы переживают сериализацию | ✅ Accepted |
+| ADR-2026-10-30-005 | 2026-10-30 | Производственный MCTS-поиск не имеет сигнала награды (константа 0.5); способности «планирует лучше жадного» не заявляется; замена награды требует отдельного решения | ✅ Accepted |
 
 Полные ADR в `docs-v2/architecture/`.
+
+## Формальный контур (RECON-W39)
+
+| Компонент | Версия | Решение |
+|---|---|---|
+| tla2tools | 1.8.0 (sha256 `fc6878c6…d6bdd63e`) | ✅ версия **и** контрольная сумма проверяются перед запуском гейта; jar не в исходниках (`*.jar` в `.gitignore`) |
+| jackson-dataformat-yaml | 2.18.3 | ✅ test-scope в `matrix-quality`: реестр `formal/spec-implementation-map.yml` разбирается Jackson-YAML; артефакт уже присутствует в графе зависимостей reactor'а (Quarkus тянет snakeyaml), новой загрузки для reactor'а нет |
+| PyYAML | — | ❌ не используется в CI: реестр и его валидатор — Java, поэтому проверка не зависит от того, есть ли PyYAML на раннере |
+
+Реестр соответствия и harness мутаций описаны в
+[`docs-v2/engineering/TLA-STATUS.md`](TLA-STATUS.md) и
+[`docs-v2/engineering/MUTATION-REPORT.md`](MUTATION-REPORT.md).

@@ -1,0 +1,427 @@
+# MATRIX — TEST CATALOGUE
+#
+# Status: CANONICAL
+# Date: 2026-11-04
+#
+# The registry of every verification scope the repository actually runs, with the exact
+# filter, the exact result, and the commit the result belongs to.
+#
+# THE RULES
+#   1. A BASELINE IS COMMIT-SPECIFIC. A stale count is not a baseline.
+#   2. THE JUNIT XML IS THE EVIDENCE, not the Gradle console summary. The XML lives in
+#      <module>/build/test-results/test/*.xml.
+#   3. THE COUNTS BELOW ARE SEPARATE AXES. Discovered, executed, successful, failed,
+#      errored, skipped, filtered and not-executed are different things.
+#   4. A SCOPE THAT CANNOT RUN IN THIS ENVIRONMENT IS NOT COUNTED AS PASSING. The
+#      native-binary scope is in this category: GraalVM is absent on this host, and
+#      since W48 the scope is NAMED and REFUSES to run rather than failing silently.
+#      It is EXCLUDED FROM THE DEFAULT JVM TASK on purpose, and the exclusion is
+#      stated here — an excluded scope is not an absent one.
+#   5. THE FULL matrix-core SUITE IS NOT IN THIS CATALOGUE. It needs the owner's approval
+#      and a resource estimate; the targeted scopes are the project's normal verification.
+
+schema_version: 1
+generated:
+  date: '2026-11-04'
+  commit: a6ded23338e069b8bc8a3744c234be5a03995f43
+  source: docs-v2/engineering/W45.2-TEST-REPORT.md
+  note: >-
+    Every result below was executed on that commit with OpenJDK 25.0.4.1 and Gradle 9.6.0.
+    The environment is the owner's machine; the JDK is at /home/alexandr-narbaev/jdk25.
+
+refreshed:
+  date: '2026-11-06'
+  note: >-
+    W48 refreshed two of the scopes below — SCOPE-COGNITIVE-KNOWLEDGE, whose
+    last_verified_commit is 33d199e2, and SCOPE-BRAIN-RUNTIME, whose last_verified_commit
+    is af9ba688 — and added SCOPE-NATIVE-BINARY and SCOPE-NATIVE-BUILD-CONFIG. Every count
+    was read from the JUnit XML that the run left on disk, not from the Gradle console
+    summary. The scopes that were not refreshed keep the commit and the date they were
+    measured at: a stale count is not a baseline, and a scope nobody re-ran is not
+    refreshed by a wave that touched something else.
+
+evidence_model:
+  primary: the JUnit XML under <module>/build/test-results/test/*.xml
+  secondary: the gate exit codes and the gate's own printed counts
+  forbidden:
+    - inferring the counts from the Gradle console summary alone when the XML exists
+    - reporting a scope as green when it was not executed
+    - carrying a count forward to a commit it was not measured on
+
+scopes:
+
+  - id: SCOPE-COGNITIVE-KNOWLEDGE
+    purpose: the cognitive kernel, the epistemic store, the request lifecycle, the
+      observation dispositions, the workspace snapshot and the single-writer guard
+    task: ':matrix-core:test'
+    filters:
+      - 'io.matrix.cognitive.*'
+      - 'io.matrix.knowledge.*'
+    source_packages: [io.matrix.cognitive, io.matrix.knowledge]
+    test_packages: [io.matrix.cognitive, io.matrix.knowledge]
+    last_verified_commit: f48427b7
+    last_execution: '2026-11-06'
+    result:
+      classes_discovered: 134
+      classes_executed: 134
+      methods_executed: 969
+      successful: 969
+      failed: 0
+      errored: 0
+      skipped: 0
+      aborted: 0
+      filtered: 0
+      not_executed: 0
+    known_skips: []
+    known_flakes:
+      - >-
+        ONE run of this scope on 2026-11-06 failed one method and the re-run did not:
+        io.matrix.cognitive.CognitiveResourceTest - a different method in each run. The
+        cause is the cycle budget, 250 ms of wall clock (CognitiveKernel.DEFAULT_CYCLE_BUDGET_MILLIS),
+        which the kernel reports as a terminal RESOURCE_LIMITED outcome and the resource
+        maps to 503. It is a statement about the machine's load, not about the code, and it
+        is recorded here rather than smoothed away.
+    environment_dependencies:
+      - the JDK 25 at /home/alexandr-narbaev/jdk25
+      - 'the writer-lock scope starts a second JVM and SIGKILLs a writer; it needs a
+        writable temporary directory and no other process holding the database'
+    next_verification_condition: any change under io/matrix/cognitive or io/matrix/knowledge
+
+  - id: SCOPE-W43-REGRESSION
+    purpose: the regression scope of the earlier waves - the memory, the brain, the API and
+      the RAG subsystems
+    task: ':matrix-core:test'
+    filters:
+      - 'io.matrix.memory.*'
+      - 'io.matrix.brain.*'
+      - 'io.matrix.api.*'
+      - 'io.matrix.rag.*'
+    source_packages: [io.matrix.memory, io.matrix.brain, io.matrix.api, io.matrix.rag]
+    test_packages: [io.matrix.memory, io.matrix.brain, io.matrix.api, io.matrix.rag]
+    last_verified_commit: a6ded23338e069b8bc8a3744c234be5a03995f43
+    last_execution: '2026-11-04'
+    result:
+      classes_discovered: 98
+      classes_executed: 98
+      methods_executed: 1036
+      successful: 1036
+      failed: 0
+      errored: 0
+      skipped: 0
+      aborted: 0
+      filtered: 0
+      not_executed: 0
+    known_skips: []
+    environment_dependencies:
+      - the JDK 25 at /home/alexandr-narbaev/jdk25
+      - >-
+        this scope MUST NOT run concurrently with another Gradle build in matrix-core: a
+        previous wave produced 16 spurious NoClassDefFoundError failures that way, and the
+        scope passed cleanly on a solo re-run (182 classes, 1563 tests, 0 failures)
+    next_verification_condition: any change under the four packages
+
+  - id: SCOPE-BRAIN-RUNTIME
+    purpose: the brain runtime - the TrueMindCycle pipeline, the stages, the graph cluster
+    task: ':matrix-brain-runtime:test'
+    filters: []
+    source_packages: [io.matrix.brain.runtime]
+    test_packages: [io.matrix.brain.runtime]
+    last_verified_commit: af9ba688
+    last_execution: '2026-11-06'
+    result:
+      classes_discovered: 120
+      classes_executed: 120
+      methods_executed: 919
+      successful: 917
+      failed: 0
+      errored: 0
+      skipped: 2
+      aborted: 0
+      filtered: 0
+      not_executed: 0
+    known_skips:
+      - >-
+        2 skipped, both in io.matrix.brain.runtime.RealOnnxDistillationTest
+        (distill_from_real_onnx_teacher_registers_rules and
+        distill_from_missing_onnx_throws_clean_error) - the JUnit assumption
+        'teacher exists precondition' is not met because the ONNX teacher model is not on
+        this machine. The class and the reason are in the JUnit XML under
+        matrix-brain-runtime/build/test-results/test/
+    environment_dependencies:
+      - the JDK 25 at /home/alexandr-narbaev/jdk25
+    next_verification_condition: any change under io/matrix/brain/runtime
+
+  - id: SCOPE-API-GATEWAY
+    purpose: the gateway - the hand-written HTTP server, the brain client, the chain B
+      entry points
+    task: ':matrix-api-gateway:test'
+    filters: []
+    source_packages: [io.matrix.api, io.matrix.api.brain, io.matrix.api.llm_quarantine]
+    test_packages: [io.matrix.api]
+    last_verified_commit: a6ded23338e069b8bc8a3744c234be5a03995f43
+    last_execution: '2026-11-04'
+    result:
+      classes_discovered: 43
+      classes_executed: 43
+      methods_executed: 240
+      successful: 240
+      failed: 0
+      errored: 0
+      skipped: 0
+      aborted: 0
+      filtered: 0
+      not_executed: 0
+    known_skips: []
+    environment_dependencies:
+      - the JDK 25 at /home/alexandr-narbaev/jdk25
+    next_verification_condition: any change under io/matrix/api
+
+  - id: SCOPE-NATIVE-BINARY
+    purpose: the native-binary scope - the eight test classes that need the compiled
+      native executable build/native/nativeCompile/matrix-core
+    task: ':matrix-core:nativeBinaryTest'
+    filters:
+      - 'native-binary'
+    source_packages: [io.matrix.nativebin, io.matrix.benchmark]
+    test_packages: [io.matrix.nativebin, io.matrix.benchmark]
+    status: BLOCKED
+    status_reason: >-
+      there is no native executable on this host, so the task REFUSES to run and says so:
+      'The native executable …/matrix-core/build/native/nativeCompile/matrix-core does not
+      exist, so the native-binary test scope cannot run. Build it with ./gradlew
+      :matrix-core:buildNative (GraalVM 25+ or Mandrel 24.x) and run this task again. This
+      scope is BLOCKED - it is not a pass, and the default JVM task does not cover it.'
+      The command exits 1 with that message; it does not report a pass and it does not
+      report a failure. BLOCKED is not PARTIAL and it is not a skip.
+    last_verified_commit: 31d8f832
+    last_execution: '2026-11-06'
+    result:
+      classes_discovered: 8
+      classes_executed: 0
+      methods_executed: 0
+      successful: 0
+      failed: 0
+      errored: 0
+      skipped: 0
+      aborted: 0
+      filtered: 0
+      not_executed: 25
+    what_the_counts_mean: >-
+      nothing in this scope was executed, because the task refuses to run before the test
+      JVM starts. The 8 classes and the 25 methods are COUNTED FROM THE SOURCE at this
+      commit: eight classes carry the tag 'native-binary', and NativeBinaryDockerTest
+      carries it on one method only - its other two methods belong to the build-configuration
+      scope. The 25 methods are 23 that failed in the full run of 2026-11-05 and 2 that
+      passed VACUOUSLY (File.length() is 0 for a missing file, so 'the binary is smaller
+      than 150 MB' held against no binary at all). The 23-failure split is reconciled in
+      docs-v2/engineering/W48-TEST-RECONCILIATION.md §2.
+    known_skips: []
+    excluded_from_the_default_task: >-
+      THIS SCOPE IS EXCLUDED FROM THE DEFAULT JVM TASK ON PURPOSE, and the exclusion is
+      declared rather than silent: the 'test' task excludes the tags 'native-binary' and
+      'native-build-config' (matrix-core/build.gradle:533-537). The negative control
+      proves it - './gradlew :matrix-core:test --tests "io.matrix.nativebin.*"' reports
+      'No tests found for given includes', where before commit 31d8f832 the same command
+      ran 27 tests and failed 23. An excluded scope is not an absent scope: it is named
+      here, it is BLOCKED, and the default task's green result says nothing about it.
+    environment_dependencies:
+      - the JDK 25 at /home/alexandr-narbaev/jdk25
+      - >-
+        the GraalVM native-image toolchain - GraalVM 25+ or Mandrel 24.x - and a compiled
+        executable at matrix-core/build/native/nativeCompile/matrix-core. Neither is present
+        on this host: 'command -v native-image' returns nothing.
+      - >-
+        in CI the only workflow that builds the native image is .github/workflows/native.yml,
+        and it triggers only on main. The workflow has 1403 runs on record and the last ten
+        are all failures; the most recent (2026-10-31) set the toolchain up successfully and
+        then died with 'Terminating due to java.lang.OutOfMemoryError: Java heap space'.
+        The scope is therefore unverified in
+        CI as well as locally.
+    next_verification_condition: >-
+      a native executable at matrix-core/build/native/nativeCompile/matrix-core - built by
+      './gradlew :matrix-core:buildNative' or by a native.yml run that does not die of OOM -
+      makes the task runnable, and the 25 methods it holds then have a result to report
+
+  - id: SCOPE-NATIVE-BUILD-CONFIG
+    purpose: the native build-configuration scope - the tests that validate the native BUILD
+      configuration (the Dockerfile) and need no executable, so they run on any host
+    task: ':matrix-core:nativeBuildConfigTest'
+    filters:
+      - 'native-build-config'
+    source_packages: [io.matrix.nativebin]
+    test_packages: [io.matrix.nativebin]
+    status: DONE
+    last_verified_commit: 31d8f832
+    last_execution: '2026-11-06'
+    result:
+      classes_discovered: 1
+      classes_executed: 1
+      methods_executed: 2
+      successful: 2
+      failed: 0
+      errored: 0
+      skipped: 0
+      aborted: 0
+      filtered: 0
+      not_executed: 0
+    known_skips: []
+    excluded_from_the_default_task: >-
+      this scope is ALSO excluded from the default JVM task (matrix-core/build.gradle:533-537),
+      and it is reported here so that the exclusion is visible. It runs on demand through
+      ':matrix-core:nativeBuildConfigTest' and needs no native executable.
+    environment_dependencies:
+      - the JDK 25 at /home/alexandr-narbaev/jdk25
+    next_verification_condition: >-
+      any change to the native build configuration - the Dockerfile, the Dockerfile.native-slim
+      or the tasks that build the image - requires this scope to be re-run
+
+  - id: GATE-CHAIN-ISOLATION
+    purpose: prove that the two serving chains do not meet - no chain B class reaches the
+      cognitive store, the epistemic store or the chain A surface
+    task: 'bash scripts/w45-chain-isolation-check.sh'
+    filters: []
+    evidence: 'the script''s own printed counts and its exit code'
+    last_verified_commit: a6ded23338e069b8bc8a3744c234be5a03995f43
+    last_execution: '2026-11-04'
+    result:
+      checks: 16
+      failed: 0
+      exit_code: 0
+    what_it_proves: >-
+      over 2909 classes and 76858 constant-pool edges, no class reachable from the four
+      chain B entry points reaches io.matrix.cognitive.**, the epistemic store's own
+      classes, the classes that name the epistemic database, or the chain A serving
+      surface; and at runtime the real chain B server answers 404 for three chain A
+      routes and leaves the owner's epistemic database byte-identical.
+    what_it_does_not_prove: >-
+      the proof is static - the constant pool does not resolve reflection, JNI or a native
+      image built from another class set; and the runtime part probes three
+      representative chain A routes rather than fuzzing the whole surface.
+    destructive_side_effects: none - it works on a private copy of the class files and
+      removes only its own temporary directory
+    environment_dependencies:
+      - the JDK 25 at /home/alexandr-narbaev/jdk25
+      - the compiled classes of the four modules
+    next_verification_condition: any change to the serving topology of either chain
+
+  - id: GATE-CHAIN-ISOLATION-SELFTEST
+    purpose: prove that the isolation gate CAN go red - a gate that cannot fail is not a gate
+    task: 'bash scripts/w45-chain-isolation-selftest.sh'
+    filters: []
+    evidence: 'the script''s own printed counts and its exit code'
+    last_verified_commit: a6ded23338e069b8bc8a3744c234be5a03995f43
+    last_execution: '2026-11-04'
+    result:
+      checks: 6
+      failed: 0
+      exit_code: 0
+    what_it_proves: >-
+      breaking the isolation in a PRIVATE COPY of the compiled classes - the repository is
+      never written to - produces FAIL 78 class(es) of the epistemic store are reachable
+      from chain B, and FAIL 1 route(s) of chain B belong to the chain A surface.
+    destructive_side_effects: none
+    next_verification_condition: any change to the gate itself
+
+  - id: INTEGRATION-SIGKILL-JOURNEY
+    purpose: prove that a request survives the death of its process - the crash-consistency
+      claim of W45.1
+    task: 'bash scripts/w45-cognitive-recovery-journey.sh'
+    filters: []
+    evidence: 'the script''s own printed counts and its exit code'
+    last_verified_commit: a6ded23338e069b8bc8a3744c234be5a03995f43
+    last_execution: '2026-11-04'
+    result:
+      checks: 37
+      failed: 0
+      exit_code: 0
+    what_it_proves: >-
+      three real SIGKILLs - confirmed by the exit status 137 = 128+9 - at the failpoints
+      CLAIMED, OBSERVATION_COMMITTED and IDEMPOTENCY_COMPLETED; the retry is re-executable
+      where nothing durable was written, INDETERMINATE where a durable effect exists, and a
+      replay where the outcome was already persisted.
+    what_it_does_not_prove: >-
+      the epistemic restoration is proved at the store-reopen level, not across a SIGKILL.
+    destructive_side_effects: none - it creates its own temporary database and removes it
+    environment_dependencies:
+      - the JDK 25 at /home/alexandr-narbaev/jdk25
+      - a writable temporary directory; the harness must not share one with another run
+    next_verification_condition: any change to the request lifecycle, the idempotency
+      registry or the writer lock
+
+  - id: GATE-QUALITY
+    purpose: keep the numeric-literal baseline - the gate that makes the magic numbers
+      visible
+    task: 'bash scripts/quality-gate.sh'
+    filters: []
+    evidence: 'the gate''s own report and its exit code'
+    last_verified_commit: a6ded23338e069b8bc8a3744c234be5a03995f43
+    last_execution: '2026-11-04'
+    result:
+      baseline: 271
+      observed: 271
+      shell_candidates: 78
+      java_candidates: 193
+      failed: 0
+      exit_code: 0
+    what_it_proves: >-
+      the count of two-or-more-digit numeric literals in the shell and Java sources has not
+      risen above the accepted baseline of 271. It is a COUNT, not a proof that the
+      literals are correct - the gate says so itself.
+    destructive_side_effects: none
+    next_verification_condition: any change to a Java or shell source
+
+  - id: GATE-SECURITY-BOUNDARY
+    purpose: the runtime authorisation boundary - an anonymous invocation is refused
+    task: 'bash scripts/security-boundary-check.sh'
+    filters: []
+    evidence: 'the script''s own printed counts and its exit code'
+    last_verified_commit: a6ded23338e069b8bc8a3744c234be5a03995f43
+    last_execution: '2026-11-04'
+    result:
+      violations: 0
+      exit_code: 0
+    what_it_proves: >-
+      the runtime authorisation boundary refuses an anonymous tool invocation with 401 on
+      the four protected properties and the two ports.
+    destructive_side_effects: none
+    next_verification_condition: any change to the authorisation filter or the exposure
+      configuration
+
+scopes_not_runnable_here:
+  - id: SCOPE-NATIVE-IMAGE
+    description: >-
+      the eight GraalVM-dependent test classes - 23 of the 24 W44 failures. Since W48 this
+      scope is NAMED and reported in `scopes` as SCOPE-NATIVE-BINARY, with the status
+      BLOCKED and the exact refusal the task prints. This entry keeps the W44 split, which
+      is the historical record.
+    reason: >-
+      GraalVM and Mandrel are absent on this host, the mandrel builder image is not in
+      the local docker, and matrix-core/build/native has never existed here.
+    status: NOT_EXECUTED - never counted as passing; since W48 the scope is named, and it
+      refuses to run rather than failing
+    owner_decision_required: false
+    note: >-
+      the true W44 split is 8 native-image classes / 23 failures PLUS 1 ordinary JVM
+      failure (io.matrix.consciousness.Exp228ComplianceTest, random=63, wallClock=47).
+      The W44 hypothesis map, which attributes all 24 failures to native-image, is wrong
+      on that one and is corrected in the W45 test-evidence reconciliation. The W48
+      reconciliation (docs-v2/engineering/W48-TEST-RECONCILIATION.md §2) confirms the 23
+      against the W44 measurement of 2026-11-04, class by class, and corrects the W47
+      report's "22 failures across 6 classes".
+  - id: SCOPE-FULL-MATRIX-CORE
+    description: the complete matrix-core suite
+    reason: >-
+      forbidden by the wave directive and by the repository's own rule - AGENTS.md
+      section Тестирование requires the owner's agreement because of the OOM risk.
+    status: NOT_EXECUTED - requires the owner's approval and a resource estimate
+    owner_decision_required: true
+    note: >-
+      the W44 archaeology measured 9816 executions with 24 failures in one run; that is a
+      FLOOR, not a total, and it is a year old. It must not be used as the baseline. The
+      suite WAS run once, on 2026-11-05, under the owner's OD-041: 1226 classes, 9051
+      executions, 23 skipped, 25 failures. Two of those 25 are fixed in W48 - the property
+      test by 241af1e1 and the compliance check by 4adbc664 - and the 23 native-binary
+      failures are now excluded from the default JVM task and reported as
+      SCOPE-NATIVE-BINARY. The suite is still NOT run routinely here, so there is still no
+      standing total, and the full suite is NOT green: the native scope cannot run at all
+      on this host.

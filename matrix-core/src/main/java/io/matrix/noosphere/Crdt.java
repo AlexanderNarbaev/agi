@@ -49,14 +49,30 @@ public interface Crdt<T> {
     }
 
     /**
-     * Mark a key as tombstoned at the given epoch. The tombstone is
-     * irreversible: any subsequent {@link #merge(Object)} or
-     * {@link #mergeCausal(Object)} that would re-introduce the key with
-     * epoch ≤ {@code epoch} is rejected.
+     * Mark a key as tombstoned at the given epoch.
      *
-     * <p>Default throws {@link UnsupportedOperationException} for CRDTs
-     * that do not support deletion (e.g. G-Set). Concrete deletion-aware
-     * CRDTs MUST override.
+     * <p><b>RECON-W39 — the contract was over-promised.</b> This javadoc used
+     * to say that "any subsequent merge that would re-introduce the key with
+     * epoch ≤ {@code epoch} is rejected", which is the epoch-ordered causal
+     * rule. It was a promise about <i>every</i> implementation, and
+     * {@link GrowOnlySet} does not keep it: it discards the epoch and
+     * forbids re-introduction at <i>any</i> epoch. The promise is now
+     * per-implementation:
+     *
+     * <ul>
+     *   <li>an implementation that does not support deletion leaves this
+     *       method unimplemented and throws
+     *       {@link UnsupportedOperationException};</li>
+     *   <li>an implementation with <b>epoch ordering</b>
+     *       ({@link EpochAwareCausalSet}) rejects a re-introduction with
+     *       epoch ≤ the tombstone's epoch, and permits a NEWER one;</li>
+     *   <li>an implementation with <b>permanent tombstones</b>
+     *       ({@link GrowOnlySet}) rejects a re-introduction at any epoch.</li>
+     * </ul>
+     *
+     * <p>Which rule an implementation follows is part of its own
+     * documentation, not of this interface. See
+     * {@code docs-v2/architecture/ADR-2026-10-30-004-noosphere-crdt-semantics.md}.
      *
      * @param key   the key to tombstone
      * @param epoch the logical clock value at which the tombstone is created

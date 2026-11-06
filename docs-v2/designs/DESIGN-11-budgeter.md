@@ -17,7 +17,7 @@
 
 ## Метрики / гейты
 
-H-021 — preliminary DP-strict baseline реализован; лестница Понтрягина shadow-price через конечные разности DP. Полный JMH + EXP-021 запланированы.
+H-021 — preliminary DP-strict baseline реализован; лестница Понтрягина shadow-price через конечные разности DP. Полный JMH + EXP-021 запланированы. <!-- no-id: the hypothesis register never declared it (Q-W46-19) -->
 
 ## Отложено
 

@@ -315,7 +315,7 @@ registered facts. The failure direction is safe — a collision is quarantined o
 when the conclusions actually differ — but the throughput ceiling is real and
 would need a wider identity (more input words) to raise.
 
-**`data/smoke-old` still occupies 8.8 GB.** Harmless at 133 GB free; the Goal
+**`data/smoke-old` <!-- no-link: the directory was removed (Q-W46-21) --> still occupies 8.8 GB.** Harmless at 133 GB free; the Goal
 Guard blocks `rm -rf`. `fresh-clone-smoke.sh` still has no retention policy, which
 is the actual cause.
 
@@ -377,7 +377,7 @@ both inspectable, both deterministic, neither a language model.
 | **B-7 federation depth** | **PARTIAL** | transfer/isolation/quarantine asserted 6/6. **Audit-chain verification, DP-noise, RBAC/rate-limit NOT DONE** — new capability, deferred |
 | **B-8 weekly CI** | **BLOCKED, needs operator** | `docs-v2/proposals/RFC-weekly-ci-smoke.md`; `.github/` byte-identical |
 | **B-9 per-wave diff + routing table** | **FIXED** | `scripts/benchmark-regression.sh` (negative-controlled), `MATRIX-ROUTING-TABLE.md` |
-| **B-10 `data/smoke-old` 8.8 GB** | **BLOCKED, needs operator** | Goal Guard denies `rm -rf` and `find -delete`; escalated in SESSION.md per Q-A |
+| **B-10 `data/smoke-old` <!-- no-link: the directory was removed (Q-W46-21) --> 8.8 GB** | **BLOCKED, needs operator** | Goal Guard denies `rm -rf` and `find -delete`; escalated in SESSION.md per Q-A |
 | **71 test failures** | **OPEN, all pre-existing** | triaged by family above; both changed modules are 0-failure |
 | **GE-6 world knowledge** | **OPEN by design** | deliberate refusal, not fitted to the probe |
 

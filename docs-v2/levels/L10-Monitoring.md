@@ -73,7 +73,7 @@ without manual steps.
 
 ## 8. SRE Practices
 
-Runbooks live under `docs/runbooks/` with one page per alert and a
+Runbooks live under `docs/runbooks/` <!-- no-link: the v1 tree was removed by the migration to docs-v2 (Q-W46-21) --> with one page per alert and a
 deterministic procedure. Periodic chaos drills (Chaos Mesh or
 Litmus): random pod kill, network partition, Kafka throttle —
 validate HADES, circuit breaker, and buffering. Post-deploy,

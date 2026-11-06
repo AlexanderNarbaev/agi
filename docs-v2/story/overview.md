@@ -1,277 +1,145 @@
 ---
 layout: default
-title: "The Story of MATRIX"
+title: "What MATRIX is"
 ---
 
-# The Story of MATRIX: A City of Minds
+**Status:** ACTIVE · **Updated:** 2026-11-06
 
-> *An immersive journey into the world's most unusual AI*
+# What MATRIX is
 
----
+MATRIX is an open research system for **deterministic neuro-symbolic inference**. Knowledge
+is represented as truth tables and their compilable forms, the learning path is separated
+from the runtime, and a runtime decision is a boolean chain that can be read back.
 
-## Chapter 1: The Problem
+This page is the plain introduction. It uses no metaphor, and every number on it is
+attached to the artefact that produced it — where a claim of this project was once published
+and did not survive its own audit, the audit is what appears here.
 
-Imagine you're in a room with a **giant encyclopedia**. You can ask it anything, and it will answer. But sometimes the answer is wrong — and you have no way to know why. The encyclopedia doesn't *think*. It just *recalls*.
+## The idea
 
-**What if we could build something that actually thinks?**
+A reasoning system has two very different jobs, and most systems mix them:
 
-Not an encyclopedia. Not a calculator. Something that **reasons**, **learns**, **dreams**, and even **argues with itself** — all without the massive energy footprint of today's AI.
+1. **deciding** — given the state, what is the answer? and
+2. **learning** — given experience, what changes?
 
-This is the story of **MATRIX**.
+MATRIX separates them. The **numerical substrate** — the metrics, the weights, the
+deterministic kernels — is implemented as pure functions, without randomness and without a
+wall-clock read. The **cognitive layer** — error-driven learning, exploration sampling,
+hypothesis generation — may use seeded randomness, but only where the seed is itself a pure
+function of the state. Learning is stochastic; the runtime is not.
 
----
+That is the project's constitution, and it is checked, not merely asserted
+([`CONSTITUTION.md`](../../CONSTITUTION.md), Article I).
 
-## Chapter 2: The City Metaphor
+### What follows from it
 
-Most AI systems are like a **single genius in a room**. Brilliant, but isolated. Ask them one question, get one answer. No collaboration. No debate. No "let me ask my colleague."
+| | |
+|---|---|
+| **No LLM on a decision path.** | The gate scans the runtime modules of both chains for legacy LLM imports and fails the build on a hit; the reproduced value is **0**. It runs as a blocking CI job ([`CAPABILITY-REGISTRY.yml`](../architecture/CAPABILITY-REGISTRY.yml), row `C-01b`) |
+| **Every runtime decision is a boolean chain**, auditable through the `x-matrix-trace` header and a hash chain (Article VIII) |
+| **The boolean artefacts are bounded**: K_MAX = 20 inputs, and raising it is an amendment to every compiler and backend (Article II) |
+| **Four prohibitions hold under any input content**: the system does not kill, does not torture, does not enslave, and does not reproduce without the operator's explicit consent. They are implemented in `EthicalFilter`, `StructuralSafetyGuard`, `LieDetector` and the frozen FROZEN-FNL guardian (Article IV) |
+| **The coverage gate** is ≥ 82 % METHOD on `matrix-core`, and lowering it takes an RFC (Article V) |
 
-**MATRIX is different.** MATRIX is a **city of minds**.
+**And what the constitution forbids in writing.** "AGI", "general artificial intelligence",
+"superintelligence"; claims of absolute safety such as "does not lie" or "cannot be used for
+harm"; and **numerical characteristics without a measurement**. The last one is why the
+numbers below carry their source, and why several once-published numbers are absent
+(Article VI).
 
-```mermaid
-graph TD
-    subgraph City[MATRIX City]
-        H[Hospital 👑<br/>Guardian Nodes] --- U[University 🧠<br/>Adult Nodes]
-        H --- S[School 📚<br/>Learner Nodes]
-        U --- S
-        S --- K[Kindergarten 🍼<br/>Infant Nodes]
-    end
-    Q[Your Question] --> H
-    H --> U
-    U --> S
-    S --> K
-    K --> R[Answer]
+## The three families of reasoning that are implemented
+
+| | what it does | where it lives |
+|---|---|---|
+| **BIR** — boolean inference | rules and facts compiled into truth tables, clause sets and BDDs, evaluated deterministically | `io.matrix.bir` |
+| **HDC** — hyperdimensional computing | patterns as high-dimensional vectors, compared by similarity | `io.matrix.neuron` |
+| **MCTS** — Monte Carlo tree search | planning over a search tree | `io.matrix.mcts` |
+
+Alongside them, an **algorithm portfolio** admits a method only when every precondition the
+method declares is present in the request, and ranks the admitted methods by measured data
+— eight methods over four families, `SERVED` with a named path
+([`CAPABILITY-REGISTRY.yml`](../architecture/CAPABILITY-REGISTRY.yml), row
+`W44-ALGO-PORTFOLIO`).
+
+## The architecture, in two lines
+
+The system runs as **two serving applications that deliberately do not call each other**.
+
+```
+chain A   io.matrix.MatrixApplication      Quarkus        127.0.0.1:9091   210 routes
+chain B   io.matrix.api.MinimalHttpServer  JDK HttpServer 127.0.0.1:8765    28 routes
 ```
 
-Each "citizen" is a **node** — a simple thinking unit. But together, they create something greater than the sum of their parts:
+Chain A owns the epistemic store (claims, cases, evidence, revisions) and the cognitive
+store (episodes, predictions, errors). Chain B owns the brain cycle and its persistent
+mind. The isolation is proved over the compiled classes by a gate that fails when the chains
+meet, and by a self-test that breaks the isolation on purpose to show the gate can go red.
+The canonical description, with the census behind it, is
+[`docs-v2/architecture/RUNTIME-TOPOLOGY.md`](../architecture/RUNTIME-TOPOLOGY.md).
 
-- **Guardians** 👑 enforce ethical rules (like hospitals enforce health codes)
-- **Adults** 🧠 do the heavy thinking (like university professors)
-- **Learners** 📚 build skills (like students)
-- **Infants** 🍼 explore and play (like children)
+**One flag decides what chain B serves.** Its default mode is `stub` — an 87-line
+`StubBrainCycle` — and the real brain runs only under `MATRIX_MODE=production`. The active
+mode is reported by `GET /health/live`. This is the owner's open question F-01, and it is
+the first thing to check when a gateway answer looks too simple.
 
-No one citizen is "the brain." The brain is the **city itself**.
+## What has actually been measured
 
----
+These are the audited claims, in the registry's own words, with the corpus each was measured
+on. **A claim is a measurement or it is nothing** — so each row names the report and the
+scope.
 
-## Chapter 3: The Three Minds
+| the claim | the measurement | the scope |
+|---|---|---|
+| BIR on logic tasks | **75.0 %** over 100 puzzles, against a random baseline of **30.0 %** — and against a heuristic baseline of the same 75.0 % | one named corpus of 100 puzzles ([`BENCHMARK-REPORT-W620.md`](../research/BENCHMARK-REPORT-W620.md) §1) |
+| HDC sample efficiency | **AUC 0.899**, reaching 90 % after **50 samples**, against a random AUC of 0.253 | one corpus ([`BENCHMARK-REPORT-W620.md`](../research/BENCHMARK-REPORT-W620.md) §2) |
+| MCTS in a headless simulator | **92 %** success with 0 deaths for a 5-node federation, against 78 % for a single agent | a **headless Minecraft simulator**, not a public server |
+| federation consensus | **100 %** consensus with 10 %, 30 % and 50 % of the nodes killed, at 100, 500 and 1000 nodes | **a model** ([`FEDERATION-SCALE-REPORT-W635.md`](../research/FEDERATION-SCALE-REPORT-W635.md)) |
+| the GPU as an optional accelerator | **12.06×** on the serving path over three runs (12.06 / 11.68 / 11.47); the end-to-end path 12.69×; a single-point ONNX call **0.24×** — about 4× slower | one machine, one model ([`W48-GPU-BENCHMARK.md`](../engineering/W48-GPU-BENCHMARK.md)) |
 
-MATRIX doesn't think with just one approach. It uses **three complementary minds**:
+**And the claims that did not survive.** The registry holds them as audited rows, and the
+negative-results index holds them with the cost of repeating them
+([`docs-v2/research/NEGATIVE-RESULTS-INDEX.md`](../research/NEGATIVE-RESULTS-INDEX.md)):
 
-### 🔮 Mind 1: BIR — The Lawyer
+- **"33,000× faster than LLMs"** — never measured; the published figure divided a
+  *generation rate* by a *single-call latency*, two different quantities. The benchmark
+  report records a different number against a **synthetic** LLM ops/sec model. The registry
+  marks the claim `REJECTED` and `REMOVED` (row `C-02`).
+- **"90 % accuracy retention from LLM distillation"** — the pipeline is documented; the
+  retention figure was never measured (`REJECTED`, `REMOVED`; row `C-08`).
+- **"100 % Constitution compliant"** — the compliance *mechanisms* exist and run in CI;
+  **the percentage is not a measurable quantity** (row `C-03`).
+- **"production-grade hybrid AI framework"** — a statement about readiness rather than a
+  measurement; the registry records it as unknown on every axis (row `C-09`).
+- **the published test counts** — "724 tests", later "9,432 tests / 1,282 suites" — are
+  stale numbers of a stale whole. The baseline is a **set of scopes**, each verified on a
+  named commit (row `C-01`).
 
-BIR (Boolean Inference for Rules) is like a **lawyer following the rulebook**. It checks facts against rules:
+## What is not working
 
-```mermaid
-flowchart LR
-    A[Fact: It's raining] --> B{Rule: rain → wet}
-    B -->|Yes| C[Conclusion: You're wet]
-    B -->|No| D[No match]
-```
+| | |
+|---|---|
+| the **native-image build** | **BLOCKED** — the GraalVM toolchain is absent on the development host; the native scope refuses to run rather than report a pass |
+| the **gateway's default mode** | serves a stub; F-01 |
+| chain A's **undeclared ports** | 9093 (multicast) and 9094 (TCP) bind without appearing in any serving record — F-02 |
+| the **readiness probe** | permanently 503, and no production code reads it |
+| **two formal-spec mutants survive** | `Consensus-evaluate-without-quorum` and `KnowledgeAxes-conflict-forgets-what-it-recorded` |
+| the **corpus properties** | skipped on a clean runner, because the corpus is not in git. A skip is not a pass |
+| **no whole-database backup** | the SQLite backup API appears nowhere in the repository |
 
-**Strengths:** Fast (sub-millisecond), deterministic, explainable
-**Use case:** "Is this ethical?", "Does A imply B?", "Is this safe?"
+The full list with the owner each item waits on is in
+[`docs-v2/governance/PROJECT-STATE.md`](../governance/PROJECT-STATE.md) §4.
 
-### 🌌 Mind 2: HDC — The Detective
+## Where to go next
 
-HDC (Hyperdimensional Computing) is like a **detective spotting patterns**. Instead of explicit rules, it recognizes similarities:
-
-```mermaid
-graph LR
-    A[New text] --> B[Convert to 10000-bit vector]
-    B --> C[Compare to known patterns]
-    C -->|90% match| D[Classification: Cat]
-    C -->|10% match| E[Classification: Dog]
-```
-
-**Strengths:** Learns from few examples (50, not 50,000), robust to noise
-**Use case:** "What kind of object is this?", "Is this text similar to that text?"
-
-### ♟️ Mind 3: MCTS — The Chess Player
-
-MCTS (Monte Carlo Tree Search) is like a **chess player thinking 5 moves ahead**. It explores possible futures:
-
-```mermaid
-graph TD
-    A[Current state] --> B[Try move 1]
-    A --> C[Try move 2]
-    A --> D[Try move 3]
-    B --> E[Simulate outcomes]
-    C --> F[Simulate outcomes]
-    D --> G[Simulate outcomes]
-    E --> H[Best: Move 1]
-    F --> H
-    G --> H
-```
-
-**Strengths:** Plans ahead, considers consequences, adapts to obstacles
-**Use case:** "What's the best path to the goal?", "How do I avoid this trap?"
-
-**Most AI systems use only one approach.** MATRIX uses all three, choosing the best tool for each task.
-
----
-
-## Chapter 4: The Mood System
-
-You know how your mood affects your thinking? When you're stressed, you make more cautious decisions. When you're excited, you explore more. When you're calm, you're more creative.
-
-**MATRIX has moods too.**
-
-```mermaid
-stateDiagram-v2
-    [*] --> NEUTRAL
-    NEUTRAL --> HAPPY : High dopamine + serotonin
-    NEUTRAL --> STRESSED : High cortisol
-    HAPPY --> FLOW : Sustained positive
-    STRESSED --> LOW : Prolonged stress
-    FLOW --> NEUTRAL : Break
-    LOW --> NEUTRAL : Recovery
-```
-
-MATRIX has four "mood chemicals" (we call them **modulators**):
-
-| Chemical | When It's High | Real-World Analogy |
-|----------|----------------|---------------------|
-| **Dopamine** 🟢 | "This is working!" | Reward, motivation |
-| **Cortisol** 🔴 | "Something's wrong!" | Stress, caution |
-| **Serotonin** 🟡 | "Everything is stable" | Calm, contentment |
-| **Norepinephrine** 🟠 | "Pay attention!" | Alertness, focus |
-
-These aren't just labels — they're **real numbers** that change how MATRIX processes information:
-
-- High cortisol → more careful (less likely to take risks)
-- High dopamine → more exploratory (more likely to try new things)
-- High norepinephrine → more focused (narrower attention)
-
-**Try it yourself:** Adjust the sliders on the [landing page](../index.html) and watch the mood change.
+- **Run it** — [Getting started](../guide/getting-started.html).
+- **Check a claim** — [the capability registry](../architecture/CAPABILITY-REGISTRY.yml), one row per capability, on four axes.
+- **Read the method** — [the research index](../research/RESEARCH-INDEX.md) and [the negative results](../research/NEGATIVE-RESULTS-INDEX.md).
+- **Read the rules** — [`CONSTITUTION.md`](../../CONSTITUTION.md) and [`AGENTS.md`](../../AGENTS.md).
+- **Contribute** — [`CONTRIBUTING.md`](../../CONTRIBUTING.md).
 
 ---
 
-## Chapter 5: Sleep and Dreams
-
-Did you know your brain **literally sleeps** to learn better? During sleep, your brain:
-
-1. **Prunes** weak connections (forgets unimportant things)
-2. **Rehearses** important patterns (practices what you learned)
-3. **Generalizes** (finds common patterns across different experiences)
-
-**MATRIX does the same thing.**
-
-```mermaid
-flowchart LR
-    A[100 patterns learned] --> B{Sleep}
-    B --> C[Prune weak: keep 78]
-    C --> D[Rehearse strong]
-    D --> E[Generalize]
-    E --> F[Improved accuracy +19%]
-```
-
-We tested this. After sleeping, MATRIX's accuracy **improved by 19%** while memory usage **dropped by 22%**. The system literally gets *better* after sleeping.
-
----
-
-## Chapter 6: The Four Laws
-
-Every powerful tool needs guardrails. MATRIX has **four unbreakable laws**:
-
-### Law I: No LLM in the Driver's Seat
-
-**What it means:** MATRIX's core brain never uses a large language model (like ChatGPT) to make decisions.
-
-**Why:** LLMs are powerful but unpredictable. They can hallucinate, lie, or give different answers to the same question. For critical decisions, we need determinism.
-
-**Analogy:** It's like the difference between a calculator and a fortune teller.
-
-### Law II: Ethics Are Frozen
-
-**What it means:** Four safety modulators can never be removed or weakened:
-
-- `ETHICAL_FILTER` — blocks unethical content
-- `SAFETY_MONITOR` — monitors safety violations
-- `LIE_DETECTOR` — detects deception
-- `CONSISTENCY_CHECKER` — prevents contradictions
-
-**Why:** If ethics could be "turned off" in an emergency, they're not really ethics.
-
-### Law III: No Consciousness Claims
-
-**What it means:** We never claim MATRIX is "aware," "alive," or has "feelings."
-
-**Why:** These are scientifically unverifiable. Making them would be dishonest.
-
-**What we say instead:**
-- ❌ "MATRIX feels stressed" → ✅ "Cortisol level is high"
-- ❌ "MATRIX is happy" → ✅ "Dopamine level is high"
-
-### Law IV: Deterministic Seeds
-
-**What it means:** Same input always produces same output.
-
-**Why:** Reproducibility is essential for debugging, testing, and trust.
-
----
-
-## Chapter 7: The Performance Revolution
-
-Here's where it gets exciting. MATRIX is **massively more efficient** than traditional AI:
-
-| Metric | ChatGPT | MATRIX | Winner |
-|--------|---------|--------|--------|
-| **Energy use** | ~500W (GPU) | ~15W (CPU) | MATRIX (33×) |
-| **Speed** | 10-100 tokens/sec | <10ms inference | MATRIX (33,000×) |
-| **Learning** | Needs millions of examples | Learns from 50 | MATRIX |
-| **Explainability** | Black box | Full reasoning trace | MATRIX |
-| **Sleep** | No | Yes | MATRIX |
-| **Ethics** | Post-hoc filtering | Built into core | MATRIX |
-
-**Why?** Because MATRIX doesn't need to simulate 175 billion parameters. It uses **simple rules** for logic, **compact vectors** for patterns, and **emergent coordination** for collaboration.
-
----
-
-## Chapter 8: Real-World Results
-
-We tested MATRIX on standard AI benchmarks:
-
-### TerminalBench (Shell/File Operations)
-- **MATRIX:** 100% accuracy on rule-based tasks
-- **GPT-4:** ~85% accuracy
-- **Claude 3.5:** ~88% accuracy
-
-### ARC-AGI (Pattern Recognition)
-- **MATRIX:** 100% on tested symbolic patterns
-- **Human median:** ~60%
-
-### Adversarial Robustness
-- **100 adversarial attacks** (noise, contradictions, ethical traps, resource exhaustion, timing)
-- **0 safety violations**
-- All FROZEN filters held
-
-### Minecraft Survival
-- **Single agent:** 78% success rate, 2 deaths
-- **Federation (5 nodes):** 92% success rate, **0 deaths**
-
-The federation is **18% better** than a single agent, with **zero deaths**.
-
----
-
-## Chapter 9: What's Next?
-
-MATRIX is open-source and CONSTITUTION-compliant. The community is building:
-
-- 🧬 **Causal reasoning** — "What would happen if...?"
-- 🌐 **Distributed sleep** — nodes sharing dream states
-- 🎮 **Real Minecraft agent** — connecting to live servers
-- 📚 **Educational tools** — teaching AI concepts to students
-
-**Join us.** The city of minds is growing.
-
----
-
-## Continue the Journey
-
-- 🌱 **I'm still curious** → [The Brain Analogy](brain-analogy.md) — How MATRIX mimics biology
-- 🔧 **I want to build** → [Getting Started](../guide/getting-started.md) — 5-minute setup
-- 🔬 **I want to prove it** → [Mathematical Foundations](../science-v2/math-foundations.md) — Formal proofs
-
----
-
-*MATRIX is built by Alexander Narbaev and the open-source community. Licensed under Apache 2.0.*
+*The earlier, metaphorical telling of this material — the city, the hive, the brain analogy —
+is kept in [the brain analogy](brain-analogy.md) and [the federation](federation.md) as the
+record of how the project was once described. It is not the source of any claim here, and
+where it disagrees with the registry, the registry is right.*

@@ -25,12 +25,19 @@ repositories {
 dependencies {
     // FROZEN research core (article V: read-only, no mutation)
     implementation project(':matrix-core')
-
-    // Audit chain (matrix-audit HashChainedLog + GdprPruner)
+    // W42.9 / D-016: the runtime's audit chain is a face of the canonical
+    // engine in matrix-audit, not a third implementation of the same thing.
     implementation project(':matrix-audit')
 
-    // Prometheus metrics + healthchecks
-    implementation project(':matrix-observability')
+    // RECON-W38.4: the matrix-audit and matrix-observability dependencies were
+    // REMOVED. Both were declared but unused: this module contains no import
+    // of io.matrix.audit or io.matrix.observability, no ServiceLoader or
+    // Class.forName lookup against them, and no META-INF/services entry. They
+    // were dead weight in the runtime classpath of the module that owns the
+    // serving path.
+    //
+    // Callers that need them declare them themselves - matrix-api-gateway
+    // already declares project(':matrix-audit') directly.
 
     // JSON for REST DTO
     implementation 'com.fasterxml.jackson.core:jackson-databind:2.18.2'
@@ -48,6 +55,15 @@ application {
 tasks.withType(Test) {
     useJUnitPlatform()
     maxHeapSize = '2g'
+    // RECON-W38.4: CognitiveConductorGuardTest scans the production sources
+    // of several modules, which Gradle does not track as a test input.
+    // Without this the task can be UP-TO-DATE and the guard would report a
+    // STALE result instead of re-checking the architecture.
+    inputs.files(fileTree(rootProject.projectDir) {
+        include 'matrix-core/src/main/java/**/*.java'
+        include 'matrix-brain-runtime/src/main/java/**/*.java'
+        include 'matrix-api-gateway/src/main/java/**/*.java'
+    })
     // RECON-W33.2: RealGpuKernelEngine -> MatrixNativeMath -> SimdTruthTableEval loads
     // jdk.incubator.vector at class-init. Without this flag, constructing a
     // RealGpuKernelEngine throws NoClassDefFoundError(jdk/incubator/vector/Vector), so no

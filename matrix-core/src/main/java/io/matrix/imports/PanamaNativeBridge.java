@@ -37,12 +37,41 @@ public class PanamaNativeBridge {
     private boolean loaded = false;
     private String loadError = null;
 
+    /**
+     * The native library, found relative to the working directory.
+     *
+     * <p>W48-02: the previous code named one absolute path on one machine. The
+     * candidates are the same ones {@code BitLinearGpu} uses, so the library is
+     * found wherever the module is built — and the failure, when it is not
+     * found, names the paths that were tried instead of a stranger's home.
+     */
+    private static java.nio.file.Path findLibraryPath() {
+        String cwd = System.getProperty("user.dir");
+        String[] candidates = {
+                cwd + "/src/main/c/libtruthy/libtruthy.so",
+                cwd + "/matrix-core/src/main/c/libtruthy/libtruthy.so",
+                cwd + "/../matrix-core/src/main/c/libtruthy/libtruthy.so"
+        };
+        for (String candidate : candidates) {
+            java.nio.file.Path path = java.nio.file.Path.of(candidate);
+            if (java.nio.file.Files.isRegularFile(path)) {
+                return path;
+            }
+        }
+        throw new IllegalStateException(
+                "the libtruthy native library was not found; the paths tried were: "
+                        + String.join(", ", candidates));
+    }
+
     @PostConstruct
     void init() {
         try {
-            java.nio.file.Path libPath = java.nio.file.Path.of(
-                    "/home/alexandr-narbaev/Projects/agi/matrix-core/src/main/c/libtruthy",
-                    "libtruthy.so");
+            // W48-02: the library used to be named by an absolute path into one
+            // developer's home directory, so the bridge could only load on that
+            // machine and failed everywhere else with a path error. The
+            // candidates are relative to the working directory, in the same
+            // order BitLinearGpu uses.
+            java.nio.file.Path libPath = findLibraryPath();
             // JDK 25 Panama: prefer SymbolLookup.libraryLookup(Path, Arena) for stable lifetime
             try (Arena shared = Arena.ofShared()) {
                 SymbolLookup lib = SymbolLookup.libraryLookup(libPath, shared);

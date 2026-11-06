@@ -16,6 +16,7 @@ import io.matrix.reflex.ReflexEngine;
 import io.matrix.safety.ConsistencyChecker;
 import io.matrix.safety.LieDetector;
 import io.matrix.safety.SafetyMonitor;
+import io.matrix.brain.runtime.graph.NeuroModulatorHub;
 import io.matrix.brain.runtime.safety.HarmfulIntentClassifier;
 import io.matrix.signals.SignalModule;
 import io.matrix.signals.SignalModuleRegistry;
@@ -85,6 +86,16 @@ public final class TrueMindCycle {
     private final SaliencyEngine saliencyEngine;
     private final BirBrainCycle brain;
     private final SafetyMonitor safety;
+
+    /**
+     * W37.2 — global cognitive state, consulted for the retrieval floor.
+     *
+     * <p>Defaults to {@link NeuroModulatorHub#productionDefault()}, which reproduces the measured
+     * production floor exactly. Wiring this in changes no behaviour until something raises
+     * attention: the point of landing it at neutral is that the plumbing is proven in the real
+     * serving path rather than only in tests.</p>
+     */
+    private final NeuroModulatorHub neuromodulator;
     private final CodebookMemory codebook;
     /** TRUE-W14: optional persistent HDC store for retrieval across queries. */
     private final io.matrix.brain.runtime.PersistentHdcStore hdcStore;
@@ -113,6 +124,8 @@ public TrueMindCycle() {
           this.hdcStore = hdcStore;
           this.harmfulIntent = harmfulIntent == null
                   ? HarmfulIntentClassifier.unavailable() : harmfulIntent;
+        // W37.2 — neutral by construction; see the field javadoc.
+        this.neuromodulator = NeuroModulatorHub.productionDefault();
         this.reflex = new ReflexEngine();
         // Register reflexive substring patterns (ReflexEngine uses String.contains).
         reflex.register("harm",
@@ -350,7 +363,12 @@ public TrueMindCycle() {
         HdcRetrievalStage hdc = (hdcStore != null)
             ? new HdcRetrievalStage(hdcStore)
             : new HdcRetrievalStage();
-        HdcRetrievalStage.HdcResult hdcResult = hdc.retrieve(input, original, obs, trace);
+        // W37.2 — the floor comes from the neuromodulator. At the neutral default this is exactly
+        // ContentSimilarity.RETRIEVAL_FLOOR, so behaviour is unchanged; if attention is ever raised
+        // the floor rises with it, and the stage clamps it so it can never fall below the value
+        // the published ROC was measured at.
+        HdcRetrievalStage.HdcResult hdcResult = hdc.retrieve(input, original, obs, trace,
+                neuromodulator.retrievalFloor());
 
         // ---- Stage 8: TSETLIN (real engine) ----
         TsetlinStage tsetlin = new TsetlinStage();

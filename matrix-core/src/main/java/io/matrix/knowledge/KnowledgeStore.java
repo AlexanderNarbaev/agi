@@ -1,0 +1,4905 @@
+package io.matrix.knowledge;
+
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import io.matrix.cognitive.microworld.ObservationDisposition;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+/**
+ * The durable store for learned knowledge (owner directive §17).
+ *
+ * <p>SQLite is the storage, chosen because it is already in the repository's
+ * dependency set ({@code org.xerial:sqlite-jdbc}), it is a single file that
+ * a user can copy, it is transactional, and it works offline with no server —
+ * which is what a single-user local application needs. Postgres is
+ * configured in {@code application.properties} but is not required for the
+ * knowledge store to work.
+ *
+ * <p>What the store guarantees, and what it therefore must be tested for:
+ *
+ * <ul>
+ *   <li><b>Atomic imports.</b> An import runs in one transaction. A snapshot
+ *       that fails validation imports NOTHING — there is no half-imported
+ *       workspace.</li>
+ *   <li><b>Durability.</b> {@code synchronous=FULL} and WAL journalling, so a
+ *       committed import survives an interrupted process.</li>
+ *   <li><b>Versioned schema.</b> {@code schema_meta} carries the version and
+ *       every change has a migration. The schema is never edited in place.</li>
+ *   <li><b>Provenance is never lost.</b> A claim's status may only be
+ *       established when the snapshot carries the evidence for it — the store
+ *       refuses an import that asserts a verified claim with no source.</li>
+ *   <li><b>History is never lost.</b> Revisions are appended, never replaced;
+ *       a superseded claim keeps its row.</li>
+ *   <li><b>A decision is never lost either.</b> W45.1: the disposition of an
+ *       observation is a PROJECTION of an append-only history of decisions
+ *       ({@code observation_adjudication}), and re-observing a fact never
+ *       overwrites the decision a review took about it.</li>
+ * </ul>
+ *
+ * <p>This class owns a single JDBC connection, and a connection is not
+ * thread-safe. The methods that WRITE the observation records synchronize on
+ * the store, so that two callers in one process are ordered by the store
+ * itself; the read methods do not synchronize, and a reader that wants a
+ * consistent view of several reads should read inside one of the write
+ * methods' transaction or take the store's lock.
+ */
+public final class KnowledgeStore implements AutoCloseable {
+
+    /**
+     * The schema version this build writes.
+     *
+     * <p>v16 adds the {@link Case} table and the {@code evidence.case_id} link. The case model
+     * was planned in {@code ADR-W43-01} §4.5 and landed in W44 (see
+     * {@code docs-v2/engineering/ADR-W44-01-cognitive-kernel.md}). The table is named
+     * {@code epistemic_case} rather than {@code case} because {@code CASE} is a reserved word in
+     * SQL and every query would then need quoting.</p>
+     *
+     * <p>v18 is W45.1: it adds the {@code observation_occurrence} table (one act of observing a
+     * canonical case) and the {@code observation_adjudication} table (the append-only history
+     * of the decisions about it), and it turns {@code observation_disposition} into a
+     * PROJECTION of that history. The v17 defect was that a case carried its decision in one
+     * row, so a later observation of the same fact — the same case id, because the micro-world
+     * derives the id from the conditions and the outcome — overwrote the decision a review had
+     * taken. The occurrence and the history are what let the fact, the act and the decision
+     * be three different things again.</p>
+     *
+     * <p>v19 is W45.2: it adds the {@code workspace_snapshot} table, so that a destructive
+     * workspace replacement leaves a recoverable snapshot of what it replaced. The owner's
+     * decision is that the reload fails closed and that the contradiction history is never
+     * silently erased.</p>
+     */
+    public static final int SCHEMA_VERSION = 19;
+
+    /**
+     * The disposition a prediction error carries when no hypothesis of the model explained the
+     * observation.
+     *
+     * <p>The name is the one the cognitive store writes, and it is repeated here as a literal
+     * because the two stores deliberately do not know each other's classes: the cognitive
+     * store exists so that the knowledge store does not have to import the cognitive records
+     * (see {@code ADR-W44-01} §2.4).</p>
+     */
+    private static final String MISSING_CONDITION = "MISSING_CONDITION";
+
+    /**
+     * The prefix of the identifiers this store derives for workspace snapshots.
+     *
+     * <p>The identifier of a snapshot is the workspace's identifier and the number of
+     * snapshots that workspace already holds, so it is unique, readable and derived — nothing
+     * is invented and nothing is random.</p>
+     */
+    private static final String SNAPSHOT_ID_PREFIX = "snap-";
+
+    /**
+     * How many content tables the emptiness of a workspace is decided by.
+     *
+     * <p>It is the number of the placeholders in the emptiness query, and it is named so
+     * that the query and this number cannot drift apart.</p>
+     */
+
+    /**
+     * The serialiser of a workspace's content.
+     *
+     * <p>It is a mapper of its own, and not the store's list mapper, because a snapshot has
+     * to survive a version that knows more fields than this one: an unknown field in a
+     * payload is ignored rather than refused, so that a snapshot taken by a later build can
+     * still be read by this one.</p>
+     */
+    private static final ObjectMapper SNAPSHOT_JSON = new ObjectMapper()
+            .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+
+    /**
+     * W47 — the version of the snapshot payload this build writes.
+     *
+     * <p>Version 1 is the bare knowledge content: the workspace's concepts, sources, claims,
+     * evidence, representations, prerequisites, revisions, derivations, contradictions and
+     * goals. Version 2 adds the rows of the observation tables, which version 1 could not
+     * carry because the erasure set did not yet erase them. A version 1 payload is still
+     * readable: a snapshot taken before this wave restores exactly as it did before.</p>
+     */
+    private static final int SNAPSHOT_PAYLOAD_VERSION = 2;
+
+    /**
+     * W48-07 — the system property that configures the bound on the size of a snapshot payload.
+     *
+     * <p>The name follows the house style of the other runtime knobs
+     * ({@code matrix.scratch.path}, {@code matrix.tombstone.backend}): a dotted name under the
+     * {@code matrix.} prefix, read with {@link System#getProperty(String)}.</p>
+     */
+    public static final String SNAPSHOT_MAX_PAYLOAD_BYTES_PROPERTY =
+            "matrix.knowledge.snapshot.max-payload-bytes";
+
+    /**
+     * W48-07 — the default bound on the size of a snapshot payload, in bytes.
+     *
+     * <p><b>Where the number comes from.</b> The owner's database was measured on 2026-11-06:
+     * its one workspace, {@code photosynthesis}, produces a payload of 103,075 bytes, and the
+     * largest payload measured over a fixture set of eight workspaces of growing content was
+     * 301,136 bytes. The default is 8 MiB — <b>81 times</b> the measured payload of the owner's
+     * own workspace and <b>27 times</b> the largest payload measured anywhere — so that a
+     * workspace can grow by more than an order of magnitude before the bound says anything, and
+     * a bound that a normal workspace can reach is a bound that only fires on a runaway.</p>
+     *
+     * <p><b>Why the bound is a bound and not a trim.</b> The payload is the ONLY recoverable
+     * copy of what a replacement destroyed. A snapshot that is cut short is not a smaller
+     * snapshot; it is a corrupt one, and a corrupt snapshot restores a workspace that has lost
+     * rows without saying so. So the payload is measured, and a payload over the bound is
+     * REFUSED with {@link SnapshotPayloadTooLargeException} — the snapshot is not written, the
+     * transaction rolls back, and the database is exactly as it was.</p>
+     *
+     * <p>The value is a constant and not a literal at the point of use, so that the gate can
+     * find it and so that the reason for it lives in one place.</p>
+     */
+    public static final long DEFAULT_MAX_SNAPSHOT_PAYLOAD_BYTES = 8L * 1024L * 1024L;
+
+    /**
+     * W47 — the tables a workspace replacement erases, and the rule that selects the rows of
+     * each of them.
+     *
+     * <p><b>Why the list is declared once.</b> Three things have to agree about what a
+     * replacement erases: the deletion itself, the preview that tells the caller what would
+     * be erased, and the emptiness check that decides whether the caller has to consent. A
+     * list that all three read is the only way for them to agree; three hand-written lists
+     * drift, and a drift here is a silent loss of history.</p>
+     *
+     * <p><b>The order is the reference order.</b> A row that points at another row goes
+     * first, so that no reference dangles while the rows are being removed: an occurrence
+     * points at a case, an adjudication points at a revision, a premise points at a
+     * derivation, a subtask points at a goal, a claim points at a concept and a source, and a
+     * case points at a concept and a source.</p>
+     *
+     * <p><b>What the owner's decision of 2026-11-05 added.</b> The four observation tables —
+     * the case, its occurrences, its disposition and its adjudication history. The erasure
+     * set predated the observation tables, so a replacement left a case and a disposition
+     * whose evidence rows were gone. The decision is OD-025: the case goes with its history
+     * and with its evidence.</p>
+     *
+     * <p><b>What the owner's decision of 2026-11-05 added the second time.</b> The eight
+     * learning tables — the assessment items, the learning errors, the learning state, the
+     * transitions, the outcomes, the dialogue turns, the asked questions and the Hebbian
+     * bindings. Before this decision they were kept, and the price of keeping them was a
+     * dangling reference: a replaced workspace held learning rows whose {@code concept_id}
+     * named a concept that the replacement had erased. The decision is that the learning
+     * state goes with the knowledge it describes.</p>
+     *
+     * <p><b>What is NOT erased.</b> The snapshot table is not erased: it is the recoverable
+     * copy of what the replacement destroyed. And the rows that belong to no workspace — the
+     * workspace table's own rows of other workspaces, and the cognitive store's tables,
+     * which live in the same file but are written by another store — are not erased either;
+     * a replacement is a decision about ONE workspace.</p>
+     */
+    private static final List<ErasedTable> ERASED_TABLES = List.of(
+            new ErasedTable("observation_occurrence", "workspace_id = ?", false),
+            new ErasedTable("observation_adjudication", "workspace_id = ?", false),
+            new ErasedTable("observation_disposition", "workspace_id = ?", false),
+            new ErasedTable("evidence", "workspace_id = ?", true),
+            new ErasedTable("revision", "workspace_id = ?", true),
+            new ErasedTable("derivation_premise",
+                    "derivation_id IN (SELECT id FROM derivation WHERE workspace_id = ?)", true),
+            new ErasedTable("derivation", "workspace_id = ?", true),
+            new ErasedTable("contradiction", "workspace_id = ?", true),
+            new ErasedTable("prerequisite", "workspace_id = ?", true),
+            new ErasedTable("representation", "workspace_id = ?", true),
+            new ErasedTable("learning_goal_subtask",
+                    "goal_id IN (SELECT id FROM learning_goal WHERE workspace_id = ?)", true),
+            new ErasedTable("learning_goal", "workspace_id = ?", true),
+            // W47 — the learner's own history. The owner's decision of 2026-11-05: the
+            // learning state goes with the knowledge it describes, so that a replaced
+            // workspace holds no row that points at a concept that is not there.
+            //
+            // The order is the reference order, and it is not a preference: a transition
+            // points at an outcome, an error and an outcome point at an item, so the
+            // referring rows go before the rows they point at. The learning tables have no
+            // declared foreign keys — the schema has none at all — so nothing would raise
+            // an error if the order were wrong; the order is here so that the reference is
+            // never broken, not merely never reported.
+            new ErasedTable("learning_transition", "workspace_id = ?", false),
+            new ErasedTable("learning_error", "workspace_id = ?", false),
+            new ErasedTable("assessment_outcome", "workspace_id = ?", false),
+            new ErasedTable("assessment_item", "workspace_id = ?", false),
+            new ErasedTable("learning_state", "workspace_id = ?", false),
+            new ErasedTable("dialogue_turn", "workspace_id = ?", false),
+            new ErasedTable("asked_question", "workspace_id = ?", false),
+            new ErasedTable("hebbian_binding", "workspace_id = ?", false),
+            new ErasedTable("claim", "workspace_id = ?", true),
+            new ErasedTable("epistemic_case", "workspace_id = ?", false),
+            new ErasedTable("source", "workspace_id = ?", true),
+            new ErasedTable("concept", "workspace_id = ?", true));
+
+    /**
+     * W47 — one table a workspace replacement erases.
+     *
+     * <p><b>What the three fields mean together.</b> The table is erased; the {@code where}
+     * clause selects the workspace's rows of it; and {@code carriedByTheTypedSnapshot} says
+     * whether the typed knowledge content already holds those rows — in which case the
+     * snapshot carries them through the typed content — or whether they are rows of a
+     * database that the typed content does not know about, in which case the snapshot has to
+     * carry them itself, verbatim, table by table.</p>
+     *
+     * <p><b>The eight learning tables are of the second kind.</b> The typed
+     * {@link KnowledgeSnapshot} carries the concepts, the sources, the claims, the evidence,
+     * the representations, the prerequisites, the revisions, the derivations, the
+     * contradictions and the goals — and nothing of the learner's own history. So the eight
+     * are captured with the very rule that selects them for deletion, and they are restored
+     * from that capture.</p>
+     *
+     * @param table                    the table
+     * @param where                   the rule that selects the workspace's rows of it
+     * @param carriedByTheTypedSnapshot whether the typed knowledge content already holds the
+     *                                 table's rows, or whether the snapshot has to carry them
+     *                                 separately
+     */
+    private record ErasedTable(String table, String where, boolean carriedByTheTypedSnapshot) {
+    }
+
+    /**
+     * W47 — what a snapshot holds: the typed knowledge content, and the rows of the tables
+     * the typed content does not carry.
+     */
+    private record SnapshotPayload(int version, KnowledgeSnapshot knowledge, List<SnapshotTable> tables) {
+    }
+
+    /** W47 — the rows of one table, captured verbatim. */
+    private record SnapshotTable(String table, List<Map<String, Object>> rows) {
+    }
+
+    /**
+     * W45.1 — how long SQLite waits for a writer that arrives while another writer holds
+     * the lock, in milliseconds. Ten seconds is far longer than a write of this size takes.
+     */
+    private static final int BUSY_TIMEOUT_MILLIS = 10_000;
+
+    /** The SQLite error code of a constraint violation. */
+    private static final int SQLITE_CONSTRAINT = 19;
+
+    /** The SQLite error code of a primary-key violation. */
+    private static final int SQLITE_CONSTRAINT_PRIMARYKEY = 1555;
+
+    private static final ObjectMapper JSON = new ObjectMapper();
+
+    private final Connection connection;
+
+    /**
+     * W48-07 — the bound on the size of a snapshot payload, in bytes.
+     *
+     * <p>It is read ONCE, when the store is opened: a bound that changed under a running store
+     * would make two snapshots of the same workspace answer to different limits. A caller that
+     * needs another bound opens another store.</p>
+     */
+    private final long maxSnapshotPayloadBytes;
+
+    /**
+     * W45.2 — the single-writer guard of this database file.
+     *
+     * <p>It is held by the PROCESS, not by this store: the cognitive store and the epistemic
+     * store open the same file, and both belong to one process. A second PROCESS is refused,
+     * because a second writer would make the recovery of an interrupted request unsafe.</p>
+     */
+    private io.matrix.cognitive.WriterLock writerLock;
+
+    /**
+     * Opens the store with the configured bound on the snapshot payload.
+     *
+     * <p>The bound comes from the system property
+     * {@link #SNAPSHOT_MAX_PAYLOAD_BYTES_PROPERTY}, and the default is
+     * {@link #DEFAULT_MAX_SNAPSHOT_PAYLOAD_BYTES}.</p>
+     *
+     * @param databaseFile the database file
+     */
+    public KnowledgeStore(Path databaseFile) {
+        this(databaseFile, configuredSnapshotPayloadBound());
+    }
+
+    /**
+     * W48-07 — opens the store with an explicit bound on the size of a snapshot payload.
+     *
+     * <p>The bound is a REFUSAL and never a trim: a payload over the bound is not written, and
+     * the database is exactly as it was. The constructor takes the bound as an argument so that
+     * a caller — and a test — can say what the limit is without changing the state of the
+     * whole process.</p>
+     *
+     * @param databaseFile          the database file
+     * @param maxSnapshotPayloadBytes the bound, in bytes; it must be positive
+     */
+    public KnowledgeStore(Path databaseFile, long maxSnapshotPayloadBytes) {
+        if (maxSnapshotPayloadBytes <= 0) {
+            throw new IllegalArgumentException("the bound on the snapshot payload must be "
+                    + "positive, and it is " + maxSnapshotPayloadBytes);
+        }
+        this.maxSnapshotPayloadBytes = maxSnapshotPayloadBytes;
+        // W45.2. The epistemic store opens the SAME file as the cognitive store, so the
+        // single-writer guard belongs to the FILE, not to one store. The lock is held by the
+        // PROCESS: a second store of this process joins it (the contract is one writer
+        // process), and a second PROCESS is refused — which is what keeps the W45.1 recovery
+        // of an interrupted request safe.
+        io.matrix.cognitive.WriterLock lock = io.matrix.cognitive.WriterLock
+                .acquire(databaseFile, io.matrix.cognitive.OwnershipToken.current());
+        this.writerLock = lock;
+        try {
+            Path parent = databaseFile.toAbsolutePath().getParent();
+            if (parent != null) {
+                Files.createDirectories(parent);
+            }
+            this.connection = DriverManager.getConnection("jdbc:sqlite:" + databaseFile);
+            this.connection.setAutoCommit(true);
+            configure();
+            migrate();
+        } catch (IOException | SQLException e) {
+            lock.close();
+            throw new IllegalStateException("Cannot open the knowledge store at " + databaseFile, e);
+        }
+    }
+
+    /**
+     * W48-07 — the bound on the snapshot payload that the configuration asks for.
+     *
+     * <p>The system property {@link #SNAPSHOT_MAX_PAYLOAD_BYTES_PROPERTY} wins; without it the
+     * default {@link #DEFAULT_MAX_SNAPSHOT_PAYLOAD_BYTES} applies. A property that is not a
+     * positive number is REFUSED at start-up rather than ignored: a bound that is silently
+     * ignored is a bound that does not exist, and a limit that cannot be read is a limit that
+     * cannot be trusted.</p>
+     *
+     * @return the bound, in bytes
+     */
+    private static long configuredSnapshotPayloadBound() {
+        String configured = System.getProperty(SNAPSHOT_MAX_PAYLOAD_BYTES_PROPERTY);
+        if (configured == null || configured.isBlank()) {
+            return DEFAULT_MAX_SNAPSHOT_PAYLOAD_BYTES;
+        }
+        long value;
+        try {
+            value = Long.parseLong(configured.trim());
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException("the bound on the snapshot payload, given by "
+                    + SNAPSHOT_MAX_PAYLOAD_BYTES_PROPERTY + ", is not a number: " + configured, e);
+        }
+        if (value <= 0) {
+            throw new IllegalArgumentException("the bound on the snapshot payload, given by "
+                    + SNAPSHOT_MAX_PAYLOAD_BYTES_PROPERTY + ", must be positive, and it is "
+                    + value);
+        }
+        return value;
+    }
+
+    private void configure() throws SQLException {
+        // Durability first: a committed write must be on disk before the
+        // call returns, so an interrupted process cannot lose it.
+        try (Statement st = connection.createStatement()) {
+            st.execute("PRAGMA journal_mode=WAL");
+            st.execute("PRAGMA synchronous=FULL");
+            st.execute("PRAGMA foreign_keys=ON");
+            // W45.1. SQLite serialises writers, and a writer that arrives while another
+            // writer holds the lock is told "the database is busy" rather than being made
+            // to wait. A busy timeout turns that refusal into a wait, which is what the
+            // concurrent-write contract needs: two callers that both write the same case
+            // must be ordered by the database, not by an accident of timing. Ten seconds is
+            // far longer than a write of this size takes.
+            st.execute("PRAGMA busy_timeout=" + BUSY_TIMEOUT_MILLIS);
+        }
+    }
+
+    // ── schema ────────────────────────────────────────────────────────────────
+
+    private void migrate() throws SQLException {
+        try (Statement st = connection.createStatement()) {
+            st.execute("CREATE TABLE IF NOT EXISTS schema_meta ("
+                    + "key TEXT PRIMARY KEY, value TEXT NOT NULL)");
+        }
+        int version = readSchemaVersion();
+        if (version == 0) {
+            createSchemaV1();
+            // The version is recorded as 1 and the migration path then runs,
+            // so a fresh database is built by the same code that upgrades an
+            // old one. A database that skips a migration is a database whose
+            // schema nobody has ever tested.
+            writeSchemaVersion(1);
+            version = 1;
+        }
+        while (version < SCHEMA_VERSION) {
+            version = migrateFrom(version);
+        }
+    }
+
+    /**
+     * The schema version this database is currently at.
+     *
+     * <p>Exposed so that a caller - and a test - can tell whether the
+     * migration chain ran, rather than assuming it did.
+     */
+    public int schemaVersion() {
+        try {
+            return readSchemaVersion();
+        } catch (SQLException e) {
+            return 0;
+        }
+    }
+
+    private int readSchemaVersion() throws SQLException {
+        try (Statement st = connection.createStatement();
+             ResultSet rs = st.executeQuery("SELECT value FROM schema_meta WHERE key='version'")) {
+            if (!rs.next()) {
+                return 0;
+            }
+            return Integer.parseInt(rs.getString(1));
+        } catch (SQLException e) {
+            return 0;
+        }
+    }
+
+    private void writeSchemaVersion(int version) throws SQLException {
+        try (PreparedStatement ps = connection.prepareStatement(
+                "INSERT INTO schema_meta(key, value) VALUES('version', ?) "
+                        + "ON CONFLICT(key) DO UPDATE SET value = excluded.value")) {
+            ps.setString(1, Integer.toString(version));
+            ps.executeUpdate();
+        }
+    }
+
+    private void createSchemaV1() throws SQLException {
+        try (Statement st = connection.createStatement()) {
+            st.execute("""
+                CREATE TABLE IF NOT EXISTS workspace (
+                    id TEXT PRIMARY KEY,
+                    name TEXT NOT NULL,
+                    created_at TEXT NOT NULL,
+                    version INTEGER NOT NULL
+                )""");
+            st.execute("""
+                CREATE TABLE IF NOT EXISTS concept (
+                    id TEXT PRIMARY KEY,
+                    workspace_id TEXT NOT NULL,
+                    name TEXT NOT NULL,
+                    definition TEXT,
+                    domain TEXT,
+                    created_at TEXT NOT NULL
+                )""");
+            st.execute("""
+                CREATE TABLE IF NOT EXISTS source (
+                    id TEXT PRIMARY KEY,
+                    workspace_id TEXT NOT NULL,
+                    kind TEXT NOT NULL,
+                    title TEXT NOT NULL,
+                    locator TEXT,
+                    authority INTEGER NOT NULL,
+                    freshness INTEGER NOT NULL,
+                    excerpt TEXT,
+                    added_at TEXT NOT NULL
+                )""");
+            st.execute("""
+                CREATE TABLE IF NOT EXISTS claim (
+                    id TEXT PRIMARY KEY,
+                    workspace_id TEXT NOT NULL,
+                    concept_id TEXT NOT NULL,
+                    proposition TEXT NOT NULL,
+                    scope TEXT,
+                    context TEXT,
+                    status TEXT NOT NULL,
+                    confidence REAL NOT NULL,
+                    version INTEGER NOT NULL,
+                    introduced_by_source_id TEXT,
+                    created_at TEXT NOT NULL,
+                    updated_at TEXT NOT NULL
+                )""");
+            st.execute("""
+                CREATE TABLE IF NOT EXISTS evidence (
+                    id TEXT PRIMARY KEY,
+                    workspace_id TEXT NOT NULL,
+                    claim_id TEXT NOT NULL,
+                    source_id TEXT NOT NULL,
+                    relation TEXT NOT NULL,
+                    excerpt TEXT,
+                    quality INTEGER NOT NULL,
+                    recorded_at TEXT NOT NULL
+                )""");
+            st.execute("""
+                CREATE TABLE IF NOT EXISTS representation (
+                    id TEXT PRIMARY KEY,
+                    workspace_id TEXT NOT NULL,
+                    concept_id TEXT NOT NULL,
+                    level TEXT NOT NULL,
+                    audience TEXT,
+                    statement TEXT NOT NULL,
+                    scope TEXT,
+                    assumptions TEXT NOT NULL,
+                    included_facts TEXT NOT NULL,
+                    omitted TEXT NOT NULL,
+                    validity_conditions TEXT NOT NULL,
+                    prerequisites TEXT NOT NULL,
+                    refines TEXT,
+                    confidence REAL NOT NULL,
+                    created_at TEXT NOT NULL
+                )""");
+            st.execute("""
+                CREATE TABLE IF NOT EXISTS prerequisite (
+                    workspace_id TEXT NOT NULL,
+                    concept_id TEXT NOT NULL,
+                    requires_concept_id TEXT NOT NULL,
+                    required INTEGER NOT NULL,
+                    note TEXT,
+                    PRIMARY KEY (workspace_id, concept_id, requires_concept_id)
+                )""");
+            st.execute("""
+                CREATE TABLE IF NOT EXISTS revision (
+                    id TEXT PRIMARY KEY,
+                    workspace_id TEXT NOT NULL,
+                    target_type TEXT NOT NULL,
+                    target_id TEXT NOT NULL,
+                    kind TEXT NOT NULL,
+                    summary TEXT NOT NULL,
+                    added_facts TEXT NOT NULL,
+                    still_valid TEXT NOT NULL,
+                    no_longer_valid TEXT NOT NULL,
+                    newly_explained TEXT NOT NULL,
+                    evidence_ids TEXT NOT NULL,
+                    recorded_at TEXT NOT NULL
+                )""");
+            st.execute("CREATE INDEX IF NOT EXISTS idx_concept_ws ON concept(workspace_id)");
+            st.execute("CREATE INDEX IF NOT EXISTS idx_claim_ws ON claim(workspace_id)");
+            st.execute("CREATE INDEX IF NOT EXISTS idx_claim_concept ON claim(concept_id)");
+            st.execute("CREATE INDEX IF NOT EXISTS idx_evidence_claim ON evidence(claim_id)");
+            st.execute("CREATE INDEX IF NOT EXISTS idx_repr_concept ON representation(concept_id)");
+            st.execute("CREATE INDEX IF NOT EXISTS idx_revision_target ON revision(target_id)");
+        }
+    }
+
+    /**
+     * Recovers the warrant of the claims that predate the axis.
+     *
+     * <p>A claim's warrant follows from the kind of the source behind its
+     * evidence, which the store already holds. A claim whose source was an
+     * observation or an experiment was established by perception; one whose
+     * source was a publication, a reference or a report was established by
+     * testimony; one whose source was a mathematical derivation was
+     * inferred. A claim with no source behind it gets no warrant: it was
+     * asserted, and asserting is not knowing.
+     *
+     * <p>The evidence is consulted rather than the claim's own source
+     * field, because a claim that only CONTRADICTS another claim is
+     * established by that contradicting source: what we know about it is
+     * that it does not hold.
+     */
+    private void backfillWarrant() throws SQLException {
+        try (Statement st = connection.createStatement();
+             ResultSet rs = st.executeQuery(
+                     "SELECT c.id, s.kind FROM claim c LEFT JOIN source s ON s.id = ("
+                             + "SELECT e.source_id FROM evidence e WHERE e.claim_id = c.id "
+                             + "ORDER BY e.id LIMIT 1)")) {
+            List<String[]> pending = new ArrayList<>();
+            while (rs.next()) {
+                String kind = rs.getString("kind");
+                pending.add(new String[]{rs.getString("id"), warrantOfKind(kind).name()});
+            }
+            try (PreparedStatement ps = connection.prepareStatement(
+                    "UPDATE claim SET warrant = ?, derivation_status = ? WHERE id = ?")) {
+                for (String[] row : pending) {
+                    ps.setString(1, row[1]);
+                    ps.setString(2, DerivationStatus.NOT_DERIVED.name());
+                    ps.setString(3, row[0]);
+                    ps.addBatch();
+                }
+                ps.executeBatch();
+            }
+        }
+    }
+
+    /**
+     * The warrant a source of this kind provides.
+     *
+     * @param kind the source kind, or null when there is no source
+     * @return the warrant the source establishes
+     */
+    public static ClaimWarrant warrantOfKind(String kind) {
+        if (kind == null) {
+            return ClaimWarrant.NONE;
+        }
+        return switch (SourceKind.valueOf(kind)) {
+            case OBSERVATION, EXPERIMENT -> ClaimWarrant.OBSERVED;
+            case AUTHORITATIVE_REFERENCE, PUBLICATION, SECONDARY_REPORT, DATASET, HUMAN_ASSERTION ->
+                    ClaimWarrant.TESTIMONY;
+            case MATHEMATICAL_DERIVATION -> ClaimWarrant.INFERRED;
+            case MODEL_GENERATED -> ClaimWarrant.NONE;
+        };
+    }
+
+    /**
+     * Fills the provenance of records that predate the provenance fields.
+     *
+     * <p>What can honestly be recovered is recovered: a source's content
+     * hash is computed from the excerpt that was actually stored, so the
+     * material it was read from is still identifiable. What cannot be
+     * recovered is marked as unknown rather than invented: no old record can
+     * say how it was extracted, and the migration will not pretend it did.
+     */
+    /**
+     * W45.0 — gives every case of a pre-v17 database a disposition.
+     *
+     * <p>The rule is conservative and it is stated once, here, so that it can be checked:</p>
+     * <ul>
+     *   <li>a case whose linked evidence CONTRADICTS the claim was a recorded conflict, and
+     *       it is HELD — {@code UNRESOLVED};</li>
+     *   <li>a case whose linked evidence SUPPORTS, EXEMPLIFIES or QUALIFIES the claim was
+     *       ordinary model data, and it is {@code ELIGIBLE};</li>
+     *   <li>a case with no linked evidence, or with any other relation, CANNOT be classified,
+     *       and it is {@code UNRESOLVED} — an observation that cannot be classified must not
+     *       silently become confirmed model data.</li>
+     * </ul>
+     *
+     * <h2>W45.1 — the rule follows the W45 semantic, not the W44 one</h2>
+     *
+     * <p><b>What the W44 wave actually did.</b> The W44 kernel wrote the evidence relation
+     * from ONE question — "does any surviving hypothesis explain this observation?" — and
+     * {@code CONTRADICTS} meant "no hypothesis explains it". The W44 session, on the other
+     * hand, held an observation out of the model whenever it disagreed with ANY prediction,
+     * settled or not. So a counterexample was two different things in W44, and the durable
+     * record of which one it was is the prediction error:</p>
+     * <ul>
+     *   <li>an error whose disposition is {@code UNRESOLVED} was a disagreement with a
+     *       SETTLED prediction — a belief — and the observation is HELD;</li>
+     *   <li>an error whose disposition is {@code MISSING_CONDITION} was an observation the
+     *       model had no account of, and under the W45 semantic that is ORDINARY LEARNING,
+     *       because the W45 rule holds an observation only when it disagrees with a
+     *       unanimous prediction.</li>
+     * </ul>
+     *
+     * <p><b>Why the classification reads the errors and not only the relation.</b> The
+     * relation alone cannot tell the two apart: both of them are {@code CONTRADICTS}. The
+     * error row can, and the prediction it names carries the confidence, which is 1.0 for a
+     * unanimous prediction and 0.0 for an unsettled one — so a v16 database CAN say which
+     * of the four situations a case was in.</p>
+     *
+     * <p><b>What a database without the cognitive tables gets.</b> The rule degrades to the
+     * relation-only rule above, which is the conservative one: a recorded conflict is held
+     * unless the records say it was ordinary learning. A knowledge database that never had a
+     * cognitive store has no errors to read, and holding is the safe answer there.</p>
+     */
+    private void backfillObservationDispositions() throws SQLException {
+        String eligible = ObservationDisposition.ELIGIBLE.name();
+        String unresolved = ObservationDisposition.UNRESOLVED.name();
+        Map<String, ErrorEvidence> errors = readCognitiveErrorEvidence();
+        List<String[]> rows = new ArrayList<>();
+        try (Statement st = connection.createStatement();
+             ResultSet rs = st.executeQuery(
+                     "SELECT c.id, c.workspace_id, c.observed_at, "
+                             + "(SELECT e.relation FROM evidence e WHERE e.case_id = c.id "
+                             + "ORDER BY e.recorded_at LIMIT 1) "
+                             + "FROM epistemic_case c")) {
+            while (rs.next()) {
+                String caseId = rs.getString("id");
+                String relation = rs.getString(4);
+                ErrorEvidence error = errors.get(caseId);
+                String disposition;
+                String reason;
+                if (error != null) {
+                    // The database's own error record says what kind of disagreement this was.
+                    if (error.unanimousPrediction()) {
+                        disposition = unresolved;
+                        reason = "the observation contradicted a settled prediction the model "
+                                + "made; it is held as an unresolved conflict";
+                    } else if (MISSING_CONDITION.equals(error.disposition())) {
+                        disposition = eligible;
+                        reason = "no hypothesis of the model explained the observation; the "
+                                + "disagreement was with an unsettled prediction, and an "
+                                + "observation of unknown cause is ordinary learning rather "
+                                + "than a conflict with a belief";
+                    } else {
+                        disposition = unresolved;
+                        reason = "the observation was recorded as a conflict whose cause was "
+                                + "not established; it is held as an unresolved conflict";
+                    }
+                } else if (relation != null) {
+                    switch (relation) {
+                        case "CONTRADICTS" -> {
+                            disposition = unresolved;
+                            reason = "the recorded evidence contradicts the model; the "
+                                    + "observation is held as an unresolved conflict";
+                        }
+                        case "SUPPORTS", "EXEMPLIFIES", "QUALIFIES" -> {
+                            disposition = eligible;
+                            reason = "the recorded evidence supports the model; the observation "
+                                    + "was ordinary model data";
+                        }
+                        default -> {
+                            disposition = unresolved;
+                            reason = "the recorded evidence relation '" + relation
+                                    + "' does not establish model eligibility";
+                        }
+                    }
+                } else {
+                    disposition = unresolved;
+                    reason = "the disposition could not be inferred from the record; "
+                            + "the observation is held rather than assumed to be model data";
+                }
+                rows.add(new String[]{caseId, rs.getString("workspace_id"),
+                        disposition, reason, rs.getString("observed_at")});
+            }
+        }
+        try (PreparedStatement ps = connection.prepareStatement(
+                "INSERT OR IGNORE INTO observation_disposition(case_id, workspace_id, disposition, "
+                        + "reason, recorded_at) VALUES (?,?,?,?,?)")) {
+            for (String[] row : rows) {
+                ps.setString(1, row[0]);
+                ps.setString(2, row[1]);
+                ps.setString(3, row[2]);
+                ps.setString(4, row[3]);
+                ps.setString(5, row[4]);
+                ps.addBatch();
+            }
+            ps.executeBatch();
+        }
+    }
+
+    /**
+     * W45.1 — what the database's own prediction errors say about each case.
+     *
+     * <p>A prediction error names the cases it is about, and it names the prediction it is
+     * about. The prediction's confidence is what tells a BELIEF (1.0, the surviving
+     * hypotheses agreed) from an unsettled prediction (0.0, they did not), so the two are
+     * told apart here and not guessed at.</p>
+     *
+     * <p>The cognitive tables live in the same file but belong to another store, and a
+     * knowledge database may have none of them. The read is therefore conditional: without
+     * the tables there are no errors to read, and the classification falls back to the
+     * relation alone.</p>
+     *
+     * @return the evidence each case has, by case id
+     */
+    private Map<String, ErrorEvidence> readCognitiveErrorEvidence() throws SQLException {
+        Map<String, ErrorEvidence> byCase = new HashMap<>();
+        if (!tableExists("cognitive_error")) {
+            return byCase;
+        }
+        boolean hasPredictions = tableExists("cognitive_prediction");
+        String sql = "SELECT e.case_ids, e.disposition, "
+                + (hasPredictions
+                        ? "(SELECT p.confidence FROM cognitive_prediction p WHERE p.id = e.prediction_id)"
+                        : "NULL")
+                + " FROM cognitive_error e";
+        try (Statement st = connection.createStatement();
+             ResultSet rs = st.executeQuery(sql)) {
+            while (rs.next()) {
+                String disposition = rs.getString(2);
+                double confidence = rs.getDouble(3);
+                boolean unanimous = !rs.wasNull() && confidence >= 1.0;
+                ErrorEvidence evidence = new ErrorEvidence(disposition, unanimous);
+                for (String caseId : splitCommaList(rs.getString(1))) {
+                    ErrorEvidence existing = byCase.get(caseId);
+                    // The most conservative of the errors that name the case wins: an
+                    // observation that contradicted a belief once is held, whatever else it
+                    // did later.
+                    if (existing == null || weight(evidence) > weight(existing)) {
+                        byCase.put(caseId, evidence);
+                    }
+                }
+            }
+        }
+        return byCase;
+    }
+
+    /** How much a piece of error evidence holds the observation back. */
+    private static int weight(ErrorEvidence evidence) {
+        if (evidence.unanimousPrediction()) {
+            return 2;
+        }
+        return MISSING_CONDITION.equals(evidence.disposition()) ? 0 : 1;
+    }
+
+    /** Whether a table is there at all. */
+    private boolean tableExists(String name) throws SQLException {
+        try (PreparedStatement ps = connection.prepareStatement(
+                "SELECT 1 FROM sqlite_master WHERE type='table' AND name = ?")) {
+            ps.setString(1, name);
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next();
+            }
+        }
+    }
+
+    /** Splits a list the way the cognitive store writes one. */
+    private static List<String> splitCommaList(String value) {
+        if (value == null || value.isBlank()) {
+            return List.of();
+        }
+        return List.of(value.split(","));
+    }
+
+    /**
+     * What a database's prediction error says about a case.
+     *
+     * @param disposition        the disposition of the error
+     * @param unanimousPrediction whether the prediction the error is about was unanimous
+     */
+    private record ErrorEvidence(String disposition, boolean unanimousPrediction) {
+    }
+
+    /**
+     * W45.1 — gives every disposition that predates the history a row in the history.
+     *
+     * <p>The rule is deliberately modest. A row written by W45.0 says that a case HAS a
+     * disposition; it says nothing about how it got there, because nothing was recorded. So
+     * the backfilled decision has no previous disposition and a decision id derived from the
+     * case id, and the history and the projection agree from the first row onwards.</p>
+     *
+     * <p>The write is {@code INSERT OR IGNORE} over a single statement, so it is atomic and
+     * it is safe to run again: a row that was copied is not copied twice, and a row that was
+     * not copied yet is copied by the next run.</p>
+     */
+    private void backfillAdjudicationHistory() throws SQLException {
+        try (PreparedStatement ps = connection.prepareStatement(
+                "INSERT OR IGNORE INTO observation_adjudication(decision_id, workspace_id, case_id, "
+                        + "previous_disposition, disposition, reason, contradicted_prediction_id, "
+                        + "resolved_by, resolved_at, model_revision_id, recorded_at, request_id) "
+                        + "SELECT 'adj-backfill-' || case_id, workspace_id, case_id, NULL, "
+                        + "disposition, reason, contradicted_prediction_id, resolved_by, "
+                        + "resolved_at, model_revision_id, recorded_at, NULL "
+                        + "FROM observation_disposition")) {
+            ps.executeUpdate();
+        }
+    }
+
+    private void backfillProvenance() throws SQLException {
+        String unknown = "unknown: the record predates the provenance fields";
+        try (PreparedStatement ps = connection.prepareStatement(
+                "UPDATE claim SET extraction_method = ? WHERE extraction_method IS NULL")) {
+            ps.setString(1, unknown);
+            ps.executeUpdate();
+        }
+        try (PreparedStatement ps = connection.prepareStatement(
+                "UPDATE claim SET validation_method = ? WHERE validation_method IS NULL")) {
+            ps.setString(1, unknown);
+            ps.executeUpdate();
+        }
+        try (Statement st = connection.createStatement();
+             ResultSet rs = st.executeQuery("SELECT id, excerpt FROM source WHERE content_hash IS NULL")) {
+            List<String[]> pending = new ArrayList<>();
+            while (rs.next()) {
+                pending.add(new String[]{rs.getString("id"),
+                        rs.getString("excerpt") == null ? "" : rs.getString("excerpt")});
+            }
+            try (PreparedStatement ps = connection.prepareStatement(
+                    "UPDATE source SET content_hash = ? WHERE id = ?")) {
+                for (String[] row : pending) {
+                    ps.setString(1, Ids.digest(row[1]));
+                    ps.setString(2, row[0]);
+                    ps.addBatch();
+                }
+                ps.executeBatch();
+            }
+        }
+    }
+
+    private int migrateFrom(int version) throws SQLException {
+        if (version == 18) {
+            // v19 adds the WORKSPACE SNAPSHOT: the recoverable copy of a workspace's content
+            // that a destructive replacement leaves behind.
+            //
+            // The reason is the owner's decision of the W45.2 wave. The reload replaced a
+            // workspace by deleting its rows and inserting the package's rows in one
+            // transaction, and the deletion took the contradiction history, the evidence and
+            // the revisions with it. Nothing said so, and nothing could take it back.
+            //
+            // The migration is ADDITIVE and there is nothing to backfill: the table is new,
+            // so it holds no legacy rows, and the rows it will hold are the snapshots that the
+            // destructive operations take from then on. A database that was written before
+            // this wave has no snapshot of its content — and that is not something a
+            // migration can invent, because a snapshot of a workspace that has already been
+            // replaced would be a snapshot of the wrong moment.
+            //
+            // The migration is safe to run again after an interruption: the table is created
+            // IF NOT EXISTS, nothing is copied, and the version is written last.
+            try (Statement st = connection.createStatement()) {
+                st.execute("CREATE TABLE IF NOT EXISTS workspace_snapshot ("
+                        + "id TEXT PRIMARY KEY, workspace_id TEXT NOT NULL, "
+                        + "created_at TEXT NOT NULL, kind TEXT NOT NULL, payload TEXT NOT NULL)");
+                st.execute("CREATE INDEX IF NOT EXISTS idx_workspace_snapshot_workspace "
+                        + "ON workspace_snapshot(workspace_id, created_at)");
+            }
+            writeSchemaVersion(19);
+            return 19;
+        }
+        if (version == 17) {
+            // v18 adds the OCCURRENCE and the ADJUDICATION HISTORY, and turns the disposition
+            // into a PROJECTION.
+            //
+            // The reason is a defect the W45.0 wave left behind. The disposition of a case
+            // lived in ONE row, and the micro-world derives a case id from the conditions AND
+            // the observed outcome — so the same fact comes back as the same case in a later
+            // episode. The production path wrote that row with INSERT OR REPLACE, and a
+            // review's adjudication was therefore erased by the next observation of the same
+            // fact. The observation and its evidence survived; the DECISION about whether they
+            // may constrain the model did not.
+            //
+            // The migration is ADDITIVE and it is BACKFILLED. No existing table changes shape,
+            // so no existing query can break, and the chain still builds a fresh database with
+            // exactly the code that upgrades an old one.
+            //
+            // The backfill says what honestly can be said about a row that was written before
+            // the history existed: that there IS a disposition, and that nothing is known about
+            // what came before it. The previous disposition is therefore null and the decision
+            // id is derived from the case id, so that the history and the projection agree for
+            // a database written by W45.0. The backfill is INSERT OR IGNORE and the tables are
+            // created IF NOT EXISTS, so an interrupted migration is safe to run again: the
+            // tables that were created stay, the rows that were copied are not copied twice,
+            // and the version is written last.
+            try (Statement st = connection.createStatement()) {
+                st.execute("CREATE TABLE IF NOT EXISTS observation_occurrence ("
+                        + "id TEXT PRIMARY KEY, workspace_id TEXT NOT NULL, case_id TEXT NOT NULL, "
+                        + "episode_id TEXT, signal_id TEXT, source_id TEXT, evidence_id TEXT, "
+                        + "observed_at TEXT NOT NULL, disposition TEXT NOT NULL, reason TEXT)");
+                st.execute("CREATE INDEX IF NOT EXISTS idx_occurrence_workspace "
+                        + "ON observation_occurrence(workspace_id, observed_at)");
+                st.execute("CREATE INDEX IF NOT EXISTS idx_occurrence_case "
+                        + "ON observation_occurrence(case_id)");
+                st.execute("CREATE TABLE IF NOT EXISTS observation_adjudication ("
+                        + "decision_id TEXT PRIMARY KEY, workspace_id TEXT NOT NULL, "
+                        + "case_id TEXT NOT NULL, previous_disposition TEXT, disposition TEXT NOT NULL, "
+                        + "reason TEXT, contradicted_prediction_id TEXT, resolved_by TEXT, "
+                        + "resolved_at TEXT, model_revision_id TEXT, recorded_at TEXT NOT NULL, "
+                        + "request_id TEXT)");
+                st.execute("CREATE INDEX IF NOT EXISTS idx_adjudication_workspace "
+                        + "ON observation_adjudication(workspace_id)");
+                st.execute("CREATE INDEX IF NOT EXISTS idx_adjudication_case "
+                        + "ON observation_adjudication(case_id)");
+            }
+            backfillAdjudicationHistory();
+            writeSchemaVersion(18);
+            return 18;
+        }
+        if (version == 16) {
+            // v17 adds the DISPOSITION of an observation: whether it may constrain the
+            // active model.
+            //
+            // The reason is a defect the W44 wave left behind. The knowledge store already
+            // recorded that an observation CONTRADICTED the model - as an evidence relation -
+            // but the micro-world's restoration path never read it back. A session rebuilt
+            // from the durable cases therefore applied a contradiction that the live session
+            // had deliberately kept out of its hypothesis set. The contradiction survived the
+            // restart as a RECORD and was lost as a DECISION.
+            //
+            // The disposition is a separate table and not a column on the case, because it
+            // answers a different question from the case's origin: the origin says where the
+            // observation came from, the disposition says what may be believed because of it.
+            // It also carries the adjudication - why it was held, who resolved it, when, and
+            // which model revision took it in - which the case table has no room for.
+            //
+            // The migration is ADDITIVE and it is BACKFILLED. A record from v16 whose
+            // disposition cannot be established is UNRESOLVED, never ELIGIBLE: an observation
+            // that cannot be classified must not silently become confirmed model data. Where
+            // the evidence relation CAN be read, it is used - CONTRADICTS means the
+            // observation was a recorded conflict and is held; a supporting relation means it
+            // was ordinary model data.
+            try (Statement st = connection.createStatement()) {
+                st.execute("CREATE TABLE IF NOT EXISTS observation_disposition ("
+                        + "case_id TEXT PRIMARY KEY, workspace_id TEXT NOT NULL, "
+                        + "disposition TEXT NOT NULL, reason TEXT, "
+                        + "contradicted_prediction_id TEXT, resolved_by TEXT, resolved_at TEXT, "
+                        + "model_revision_id TEXT, recorded_at TEXT NOT NULL)");
+                st.execute("CREATE INDEX IF NOT EXISTS idx_disposition_workspace "
+                        + "ON observation_disposition(workspace_id)");
+            }
+            backfillObservationDispositions();
+            writeSchemaVersion(17);
+            return 17;
+        }
+        if (version == 15) {
+            // v16 adds the CASE table and the link from evidence to it.
+            //
+            // The case model was planned in ADR-W43-01 §4.5 and recorded as
+            // PLANNED in RECON-W43-STATUS.md, waiting for the owner's
+            // schema-16 decision. The W44 directive is that decision.
+            //
+            // The reason a case needs its own table is that an observation
+            // carries the CONDITIONS it was made under. Before this table
+            // those conditions had no home: they lived in the locator of an
+            // OBSERVATION source, which is a field whose documented purpose
+            // is to say where a source came from.
+            //
+            // The migration is additive. No existing table changes shape, so
+            // no existing query can break, and the chain still builds a
+            // fresh database with exactly the code that upgrades an old one.
+            try (Statement st = connection.createStatement()) {
+                st.execute("CREATE TABLE IF NOT EXISTS epistemic_case ("
+                        + "id TEXT PRIMARY KEY, workspace_id TEXT NOT NULL, "
+                        + "concept_id TEXT, statement TEXT NOT NULL, "
+                        + "conditions TEXT NOT NULL, outcome TEXT NOT NULL, "
+                        + "source_id TEXT, origin TEXT NOT NULL, "
+                        + "observed_at TEXT NOT NULL)");
+                st.execute("CREATE INDEX IF NOT EXISTS idx_case_workspace "
+                        + "ON epistemic_case(workspace_id, observed_at)");
+                if (!tableColumnExists(st, "evidence", "case_id")) {
+                    st.execute("ALTER TABLE evidence ADD COLUMN case_id TEXT");
+                }
+            }
+            writeSchemaVersion(16);
+            return 16;
+        }
+        if (version == 14) {
+            // v15 adds the table of the HEBBIAN BINDINGS.
+            //
+            // The owner's decision D-012: the shadow classes are wired to
+            // the live engines. The ErrorDrivenLearner is the live engine
+            // of the error-driven forgetting, and the consolidation is the
+            // live phase that forgets. The state the decay acts on has to
+            // survive a restart - the mission's goal says the improvement
+            // must remain after a forced termination.
+            try (Statement st = connection.createStatement()) {
+                st.execute("CREATE TABLE IF NOT EXISTS hebbian_binding ("
+                        + "workspace_id TEXT NOT NULL, concept_id TEXT NOT NULL, "
+                        + "weights TEXT NOT NULL, accumulator TEXT NOT NULL, "
+                        + "updated_at TEXT NOT NULL, "
+                        + "PRIMARY KEY(workspace_id, concept_id))");
+            }
+            writeSchemaVersion(15);
+            return 15;
+        }
+        if (version == 13) {
+            // v14 adds the table of the GENERATED assessment items.
+            //
+            // The assessment dataset came from the knowledge package, so a
+            // concept the workspace acquired from a document had nothing
+            // to practise with. The generated items are part of the
+            // workspace's assessment, and they must survive a restart -
+            // the mission's goal says the improvement must remain after a
+            // forced termination.
+            try (Statement st = connection.createStatement()) {
+                st.execute("CREATE TABLE IF NOT EXISTS assessment_item ("
+                        + "id TEXT PRIMARY KEY, workspace_id TEXT NOT NULL, "
+                        + "concept_id TEXT NOT NULL, dimension TEXT NOT NULL, "
+                        + "prompt TEXT NOT NULL, key_terms TEXT NOT NULL, "
+                        + "difficulty INTEGER NOT NULL, variant TEXT NOT NULL, "
+                        + "critical INTEGER NOT NULL, held_out INTEGER NOT NULL, "
+                        + "recorded_at TEXT NOT NULL)");
+                st.execute("CREATE INDEX IF NOT EXISTS idx_assessment_item_workspace "
+                        + "ON assessment_item(workspace_id, id)");
+            }
+            writeSchemaVersion(14);
+            return 14;
+        }
+        if (version == 12) {
+            // v13 adds the language of a source.
+            //
+            // The importer DETECTS the language of a document and the
+            // corpus manager reports it, but the store dropped it on the
+            // way in - so the registry could not say what language a
+            // source was written in, which is part of the mission's §5.5's
+            // "structure of the source".
+            try (Statement st = connection.createStatement()) {
+                if (!sourceColumnExists(st, "language")) {
+                    st.execute("ALTER TABLE source ADD COLUMN language TEXT");
+                }
+                if (!sourceColumnExists(st, "format")) {
+                    st.execute("ALTER TABLE source ADD COLUMN format TEXT");
+                }
+            }
+            writeSchemaVersion(13);
+            return 13;
+        }
+        if (version == 11) {
+            // v12 adds the table of the conversation's turns.
+            //
+            // The mission's §6 asks for a bounded PERSISTED conversation
+            // history. The context was held in memory, so a restart lost
+            // it - and "explain this in more detail" had no referent after
+            // a restart, which is exactly the case the mission names.
+            //
+            // The table is bounded the way the context is: the live turns
+            // are the last MAXIMUM_TURNS. The turns that fall out of the
+            // working memory are MARKED, not deleted - the mission's §8
+            // forbids destroying the historical evidence, and the record
+            // of what was asked and how it was classified is evidence.
+            try (Statement st = connection.createStatement()) {
+                st.execute("CREATE TABLE IF NOT EXISTS dialogue_turn ("
+                        + "id TEXT PRIMARY KEY, workspace_id TEXT NOT NULL, "
+                        + "question TEXT NOT NULL, concept_ids TEXT NOT NULL, "
+                        + "concept_names TEXT NOT NULL, claim_ids TEXT NOT NULL, "
+                        + "language TEXT NOT NULL, answered INTEGER NOT NULL, "
+                        + "act TEXT NOT NULL, recorded_at TEXT NOT NULL, "
+                        + "forgotten_at INTEGER)");
+                st.execute("CREATE INDEX IF NOT EXISTS idx_dialogue_turn_workspace "
+                        + "ON dialogue_turn(workspace_id, recorded_at)");
+            }
+            writeSchemaVersion(12);
+            return 12;
+        }
+        if (version == 10) {
+            // v11 adds the table of the verified learning errors.
+            //
+            // The mission's §9: the error-driven learning integration
+            // happens only after the error is verified. A record of an
+            // error that has not been repeated is not evidence of a gap,
+            // and the outcomes keep it - the table holds the VERIFIED
+            // errors only.
+            try (Statement st = connection.createStatement()) {
+                st.execute("CREATE TABLE IF NOT EXISTS learning_error ("
+                        + "id TEXT PRIMARY KEY, workspace_id TEXT NOT NULL, "
+                        + "item_id TEXT NOT NULL, concept_id TEXT NOT NULL, "
+                        + "dimension TEXT NOT NULL, learner_answer TEXT NOT NULL, "
+                        + "expected_answer TEXT NOT NULL, verified INTEGER NOT NULL, "
+                        + "recorded_at TEXT NOT NULL, "
+                        + "UNIQUE (workspace_id, item_id))");
+                st.execute("CREATE INDEX IF NOT EXISTS idx_learning_error_workspace "
+                        + "ON learning_error(workspace_id, concept_id)");
+            }
+            writeSchemaVersion(11);
+            return 11;
+        }
+        if (version == 9) {
+            // v10 adds the tombstone columns of the dialogue memory.
+            //
+            // A forgotten record is MARKED, never deleted: the mission's
+            // §8 forbids destroying the historical evidence, and the record
+            // of what the user asked and what the system could not answer
+            // is exactly that evidence.
+            //
+            // The first version of this migration sat in the v2 block,
+            // where it only ever ran on a database that had never had the
+            // asked-question table - so on an existing database the columns
+            // were never added, and the consolidation endpoint answered
+            // with "no such column: forgotten_at". The migration belongs
+            // to the version it belongs to.
+            try (Statement st = connection.createStatement()) {
+                if (!askedColumnExists(st, "forgotten_at")) {
+                    st.execute("ALTER TABLE asked_question ADD COLUMN forgotten_at INTEGER");
+                }
+                if (!askedColumnExists(st, "forgotten_kind")) {
+                    st.execute("ALTER TABLE asked_question ADD COLUMN forgotten_kind TEXT");
+                }
+                if (!askedColumnExists(st, "forgotten_reason")) {
+                    st.execute("ALTER TABLE asked_question ADD COLUMN forgotten_reason TEXT");
+                }
+            }
+            writeSchemaVersion(10);
+            return 10;
+        }
+        if (version == 8) {
+            // v9 adds the learning state machine's tables: the state a
+            // capability is in, and the transitions it went through.
+            //
+            // The transitions are the point. A recomputed stage can say what
+            // the state is now; only a recorded transition can say when it
+            // changed, what changed it, and what it was before - and only a
+            // recorded transition can preserve the earlier mastery when new
+            // evidence contradicts the model.
+            try (Statement st = connection.createStatement()) {
+                st.execute("CREATE TABLE IF NOT EXISTS learning_state ("
+                        + "id TEXT PRIMARY KEY, workspace_id TEXT NOT NULL, "
+                        + "concept_id TEXT NOT NULL, dimension TEXT NOT NULL, "
+                        + "stage TEXT NOT NULL, score REAL NOT NULL, "
+                        + "evidence_count INTEGER NOT NULL, "
+                        + "transitioned_at TEXT NOT NULL, note TEXT, "
+                        + "UNIQUE (workspace_id, concept_id, dimension))");
+                st.execute("CREATE TABLE IF NOT EXISTS learning_transition ("
+                        + "id TEXT PRIMARY KEY, workspace_id TEXT NOT NULL, "
+                        + "concept_id TEXT NOT NULL, dimension TEXT NOT NULL, "
+                        + "from_stage TEXT, to_stage TEXT NOT NULL, "
+                        + "reason TEXT NOT NULL, outcome_id TEXT, "
+                        + "occurred_at TEXT NOT NULL)");
+                st.execute("CREATE INDEX IF NOT EXISTS idx_learning_state_workspace "
+                        + "ON learning_state(workspace_id)");
+                st.execute("CREATE INDEX IF NOT EXISTS idx_learning_transition_workspace "
+                        + "ON learning_transition(workspace_id, occurred_at)");
+            }
+            writeSchemaVersion(9);
+            return 9;
+        }
+        if (version == 7) {
+            // v8 adds the persistent goals. A goal is not part of the
+            // knowledge: the knowledge store can be restored and the goal
+            // still not be, which is exactly what the mission warns about.
+            try (Statement st = connection.createStatement()) {
+                st.execute("CREATE TABLE IF NOT EXISTS learning_goal ("
+                        + "id TEXT PRIMARY KEY, workspace_id TEXT NOT NULL, description TEXT NOT NULL, "
+                        + "success_criteria TEXT NOT NULL, prerequisites TEXT NOT NULL, "
+                        + "status TEXT NOT NULL, progress_evidence TEXT NOT NULL, "
+                        + "failed_attempts TEXT NOT NULL, remaining_work TEXT, "
+                        + "budget_units INTEGER NOT NULL, budget_used INTEGER NOT NULL, "
+                        + "last_checkpoint TEXT, recovery_instructions TEXT, "
+                        + "created_at TEXT NOT NULL, updated_at TEXT NOT NULL)");
+                st.execute("CREATE TABLE IF NOT EXISTS learning_goal_subtask ("
+                        + "goal_id TEXT NOT NULL, subtask_id TEXT NOT NULL, description TEXT NOT NULL, "
+                        + "required INTEGER NOT NULL, prerequisites TEXT NOT NULL, "
+                        + "status TEXT NOT NULL, evidence TEXT NOT NULL, note TEXT, "
+                        + "PRIMARY KEY (goal_id, subtask_id))");
+                st.execute("CREATE INDEX IF NOT EXISTS idx_goal_workspace "
+                        + "ON learning_goal(workspace_id)");
+            }
+            writeSchemaVersion(8);
+            return 8;
+        }
+        if (version == 6) {
+            // v7 adds the recorded conflicts. A conflict is a record ABOUT two
+            // claims; it neither deletes nor demotes either of them, and the
+            // store keeps no count of records agreeing with one side.
+            try (Statement st = connection.createStatement()) {
+                st.execute("CREATE TABLE IF NOT EXISTS contradiction ("
+                        + "id TEXT PRIMARY KEY, workspace_id TEXT NOT NULL, "
+                        + "claim_a_id TEXT NOT NULL, claim_b_id TEXT NOT NULL, "
+                        + "kind TEXT NOT NULL, detected_by TEXT NOT NULL, recorded_at TEXT NOT NULL)");
+                st.execute("CREATE INDEX IF NOT EXISTS idx_contradiction_workspace "
+                        + "ON contradiction(workspace_id)");
+            }
+            writeSchemaVersion(7);
+            return 7;
+        }
+        if (version == 5) {
+            // v6 adds the epistemic axes the claim now carries, and the
+            // table of recorded derivations.
+            //
+            // The warrant of an existing claim is recovered from the kind of
+            // the source behind it: an observation or an experiment
+            // established it by perception, a publication or a reference by
+            // testimony. A claim with no source behind it keeps no warrant
+            // - it was asserted, and asserting is not knowing.
+            try (Statement st = connection.createStatement()) {
+                st.execute("ALTER TABLE claim ADD COLUMN warrant TEXT");
+                st.execute("ALTER TABLE claim ADD COLUMN derivation_status TEXT");
+                st.execute("CREATE TABLE IF NOT EXISTS derivation ("
+                        + "id TEXT PRIMARY KEY, workspace_id TEXT NOT NULL, "
+                        + "rule_id TEXT NOT NULL, rule_name TEXT NOT NULL, "
+                        + "connective TEXT NOT NULL, conclusion_claim_id TEXT NOT NULL, "
+                        + "status TEXT NOT NULL, recorded_at TEXT NOT NULL)");
+                st.execute("CREATE TABLE IF NOT EXISTS derivation_premise ("
+                        + "derivation_id TEXT NOT NULL, ordinal INTEGER NOT NULL, "
+                        + "claim_id TEXT NOT NULL, PRIMARY KEY (derivation_id, ordinal))");
+                st.execute("CREATE INDEX IF NOT EXISTS idx_derivation_workspace "
+                        + "ON derivation(workspace_id)");
+                st.execute("CREATE INDEX IF NOT EXISTS idx_derivation_premise_claim "
+                        + "ON derivation_premise(claim_id)");
+            }
+            backfillWarrant();
+            writeSchemaVersion(6);
+            return 6;
+        }
+        if (version == 4) {
+            // NOTE: the v1 CREATE TABLE above must stay the v1 shape. A
+            // fresh database is built by the same code that upgrades an old
+            // one (see migrate()), so a column added here AND here would
+            // fail with "duplicate column name" on every fresh database.
+            // v5 adds the provenance the mission's §5.2 requires: the
+            // source's content hash and publication date, and the claim's
+            // extraction and validation methods. A claim that says where it
+            // came from must also say HOW it was extracted and HOW it was
+            // validated, or "it has provenance" means nothing.
+            try (Statement st = connection.createStatement()) {
+                st.execute("ALTER TABLE source ADD COLUMN content_hash TEXT");
+                st.execute("ALTER TABLE source ADD COLUMN published_at TEXT");
+                st.execute("ALTER TABLE claim ADD COLUMN extraction_method TEXT");
+                st.execute("ALTER TABLE claim ADD COLUMN validation_method TEXT");
+            }
+            backfillProvenance();
+            writeSchemaVersion(5);
+            return 5;
+        }
+        if (version == 3) {
+            // v4 adds the flag that says whether the workspace answered the
+            // question when it was last asked. Without it the refusal rate
+            // can only be guessed from the uncovered terms.
+            try (Statement st = connection.createStatement()) {
+                st.execute("ALTER TABLE asked_question ADD COLUMN answered INTEGER NOT NULL DEFAULT 0");
+            }
+            writeSchemaVersion(4);
+            return 4;
+        }
+        if (version == 2) {
+            // v3 adds the episodic log of the questions the workspace was
+            // asked. A learning application needs to know what it was asked
+            // and could not answer, or it cannot show the user what it does
+            // not know.
+            try (Statement st = connection.createStatement()) {
+                st.execute("""
+                    CREATE TABLE IF NOT EXISTS asked_question (
+                        id TEXT PRIMARY KEY,
+                        workspace_id TEXT NOT NULL,
+                        canonical_key TEXT NOT NULL,
+                        question TEXT NOT NULL,
+                        uncovered_terms TEXT NOT NULL,
+                        times_asked INTEGER NOT NULL,
+                        first_asked_at INTEGER NOT NULL,
+                        last_asked_at INTEGER NOT NULL,
+                        status TEXT NOT NULL,
+                        resolution_note TEXT
+                    )""");
+                st.execute("CREATE INDEX IF NOT EXISTS idx_asked_ws ON asked_question(workspace_id)");
+                st.execute("CREATE INDEX IF NOT EXISTS idx_asked_key ON asked_question(workspace_id, canonical_key)");
+            }
+            writeSchemaVersion(3);
+            return 3;
+        }
+        if (version == 1) {
+            // v2 adds the assessment history: the learning state must
+            // survive a restart, and the state is derived from the recorded
+            // outcomes, so the outcomes themselves have to be durable.
+            try (Statement st = connection.createStatement()) {
+                st.execute("""
+                    CREATE TABLE IF NOT EXISTS assessment_outcome (
+                        id TEXT PRIMARY KEY,
+                        workspace_id TEXT NOT NULL,
+                        item_id TEXT NOT NULL,
+                        concept_id TEXT NOT NULL,
+                        dimension TEXT NOT NULL,
+                        correct INTEGER NOT NULL,
+                        score REAL NOT NULL,
+                        claimed_confidence REAL NOT NULL,
+                        learner_answer TEXT,
+                        session_id TEXT,
+                        answered_at INTEGER NOT NULL,
+                        held_out INTEGER NOT NULL
+                    )""");
+                st.execute("CREATE INDEX IF NOT EXISTS idx_outcome_ws ON assessment_outcome(workspace_id)");
+                st.execute("CREATE INDEX IF NOT EXISTS idx_outcome_concept ON assessment_outcome(concept_id)");
+            }
+            writeSchemaVersion(2);
+            return 2;
+        }
+        throw new IllegalStateException("No migration is defined from schema version " + version);
+    }
+
+    // ── import ────────────────────────────────────────────────────────────────
+
+    /**
+     * Import a whole workspace atomically.
+     *
+     * <p>The snapshot is validated BEFORE anything is written, so an invalid
+     * snapshot leaves the store exactly as it was.
+     *
+     * <p><b>W45.2 — this method replaces, and it leaves a snapshot.</b> The replacement
+     * erases the workspace's contradictions, its evidence and its revisions, so the content
+     * that is erased is written down first: a caller of this method can no longer destroy a
+     * workspace's history without a recoverable copy of it existing. The refusal — the part
+     * that asks the caller whether it means the replacement — belongs to
+     * {@link #importWorkspaceWithSnapshot(KnowledgeSnapshot, boolean, String)}, which the
+     * workbench and the HTTP surface use.</p>
+     */
+    public void importWorkspace(KnowledgeSnapshot snapshot) {
+        replaceWorkspace(snapshot, WorkspaceSnapshot.Kind.LOAD, now());
+    }
+
+    // ── the recoverable snapshot ─────────────────────────────────────────────────
+
+    /**
+     * W45.2 — replaces a workspace's content and leaves a recoverable snapshot of what it
+     * replaced.
+     *
+     * <p><b>What this method promises.</b> Either the workspace holds the new content and a
+     * snapshot of the old content, or neither changed. There is no moment at which the
+     * workspace is destroyed without a snapshot of it existing: the snapshot is written in the
+     * SAME transaction as the replacement, so a transaction that rolls back takes the
+     * snapshot with it and leaves the workspace as it was.</p>
+     *
+     * <p><b>Why the load refuses by default.</b> A replacement erases the workspace's
+     * contradictions, its evidence and its revisions. The caller has to say that it means
+     * it: a load into a workspace that holds something is refused unless the caller asks for
+     * the replacement explicitly. The refusal happens BEFORE the transaction that would
+     * delete anything is opened, so a refused load leaves the workspace exactly as it was.</p>
+     *
+     * <p><b>Why the write lock is taken first.</b> The content of the snapshot is read
+     * inside the transaction, and a transaction that reads first and writes second cannot be
+     * upgraded to a write lock once another writer has committed (SQLite refuses that
+     * upgrade rather than letting the snapshot and the replacement disagree). Touching the
+     * workspace row without changing it takes the lock first, so that everything after it
+     * reads a state that no other writer can move.</p>
+     *
+     * @param snapshot  the content to load
+     * @param replace   whether the caller explicitly asks to replace a workspace that holds
+     *                  something
+     * @param createdAt when the snapshot was taken; the caller's instant, never a clock read
+     *                  inside the store
+     * @return the snapshot of what was replaced, or null when the workspace held nothing
+     * @throws WorkspaceReplacementRefused when the workspace holds something and the caller
+     *                                    did not ask for the replacement
+     */
+    public synchronized WorkspaceSnapshot importWorkspaceWithSnapshot(KnowledgeSnapshot snapshot,
+            boolean replace, String createdAt) {
+        validate(snapshot);
+        if (!replace && !isWorkspaceEmpty(snapshot.workspaceId())) {
+            throw new WorkspaceReplacementRefused(snapshot.workspaceId(),
+                    "the workspace '" + snapshot.workspaceId() + "' is not empty, and loading "
+                            + "would erase its content; send replace=true to replace it "
+                            + "anyway, or restore one of its snapshots instead");
+        }
+        return replaceWorkspace(snapshot, WorkspaceSnapshot.Kind.LOAD, createdAt);
+    }
+
+    /**
+     * W45.2 — replaces a workspace's content and leaves a recoverable snapshot of what it
+     * replaced.
+     *
+     * <p>This is the same operation as
+     * {@link #importWorkspaceWithSnapshot(KnowledgeSnapshot, boolean, String)} without the
+     * refusal: the caller has already said that it means the replacement. It exists for the
+     * callers that ARE the explicit request — the restore, and the legacy in-process load.</p>
+     *
+     * @param snapshot  the content to load
+     * @param kind      why the snapshot is taken
+     * @param createdAt when the snapshot was taken
+     * @return the snapshot of what was replaced, or null when the workspace held nothing
+     */
+    public synchronized WorkspaceSnapshot replaceWorkspace(KnowledgeSnapshot snapshot,
+            WorkspaceSnapshot.Kind kind, String createdAt) {
+        validate(snapshot);
+        try {
+            connection.setAutoCommit(false);
+            try {
+                // The write lock comes first, so that the content the snapshot holds is the
+                // content this very transaction replaces.
+                lockWorkspace(snapshot.workspaceId());
+                WorkspaceSnapshot taken = null;
+                if (!isWorkspaceEmpty(snapshot.workspaceId())) {
+                    // A snapshot of nothing is a snapshot of a moment in which there was
+                    // nothing to lose, and it is not worth a row: what the owner asked for
+                    // is a snapshot of what a replacement DESTROYED.
+                    taken = writeSnapshot(snapshot.workspaceId(), kind, createdAt);
+                    // W48-07 — the invariant: a replacement is never committed without a
+                    // COMPLETE recoverable snapshot of what it replaced. The check is here,
+                    // between the snapshot and the erasure, so that a refusal leaves the
+                    // workspace exactly as it was.
+                    requireCompleteSnapshot(taken);
+                }
+                deleteWorkspace(snapshot.workspaceId());
+                insertWorkspace(snapshot);
+                connection.commit();
+                return taken;
+            } catch (SQLException | RuntimeException e) {
+                connection.rollback();
+                throw e;
+            } finally {
+                connection.setAutoCommit(true);
+            }
+        } catch (SQLException e) {
+            throw new IllegalStateException("Failed to replace workspace " + snapshot.workspaceId(), e);
+        }
+    }
+
+    /**
+     * W45.2 — takes a snapshot of a workspace's content without changing the workspace.
+     *
+     * <p>The snapshot is written in its own transaction, and it is written before anything is
+     * read, so that the content it holds is the content of the moment the snapshot was
+     * taken.</p>
+     *
+     * @param workspaceId the workspace to snapshot
+     * @param kind        why the snapshot is taken
+     * @param createdAt   when the snapshot is taken
+     * @return what the snapshot holds
+     */
+    public synchronized WorkspaceSnapshot takeWorkspaceSnapshot(String workspaceId,
+            WorkspaceSnapshot.Kind kind, String createdAt) {
+        try {
+            connection.setAutoCommit(false);
+            try {
+                lockWorkspace(workspaceId);
+                WorkspaceSnapshot taken = writeSnapshot(workspaceId, kind, createdAt);
+                connection.commit();
+                return taken;
+            } catch (SQLException | RuntimeException e) {
+                connection.rollback();
+                throw e;
+            } finally {
+                connection.setAutoCommit(true);
+            }
+        } catch (SQLException e) {
+            throw new IllegalStateException("Failed to snapshot workspace " + workspaceId, e);
+        }
+    }
+
+    /**
+     * W45.2 — brings a workspace back from a snapshot.
+     *
+     * <p>The restore replaces the CURRENT content of the workspace, so it is exactly as
+     * destructive as a load — and it is exactly as safe: it takes a snapshot of what it
+     * replaces, unless the workspace holds nothing, in which case there is nothing to
+     * preserve.</p>
+     *
+     * @param snapshotId the snapshot to restore
+     * @param createdAt  when the snapshot of the replaced content was taken
+     * @return the snapshot of what the restore replaced, or null when the workspace held
+     *         nothing
+     */
+    public synchronized WorkspaceSnapshot restoreWorkspaceSnapshot(String snapshotId, String createdAt) {
+        SnapshotPayload payload = snapshotPayload(snapshotId);
+        KnowledgeSnapshot content = payload.knowledge();
+        validate(content);
+        // W48-01 — the compatibility check, BEFORE anything destructive.
+        //
+        // The restore erases the workspace and writes the payload back. If the payload
+        // was written by a build that did not capture a family the target holds, the
+        // erase would remove rows the payload cannot bring back — and nothing would
+        // say so afterwards, because the restore would succeed.
+        //
+        // The refusal happens here, before the transaction and before the write lock,
+        // so the database is exactly as it was.
+        SnapshotCoverage coverage = coverageOf(payload.tables());
+        if (coverage != SnapshotCoverage.FULL) {
+            List<String> missing = coverage.missingFamilies();
+            int observationRows = countWorkspaceRows(content.workspaceId(),
+                    SnapshotCoverage.OBSERVATION_TABLES);
+            int learningRows = countWorkspaceRows(content.workspaceId(),
+                    SnapshotCoverage.LEARNING_TABLES);
+            boolean losesObservations = coverage != SnapshotCoverage.OBSERVATION_HISTORY
+                    && observationRows > 0;
+            boolean losesLearning = coverage != SnapshotCoverage.FULL && learningRows > 0;
+            if (losesObservations || losesLearning) {
+                String detail = "the target workspace holds " + observationRows
+                        + " observation row(s) and " + learningRows
+                        + " learning row(s). The database was not changed.";
+                throw new IncompatibleSnapshotException(snapshotId, coverage, missing, detail);
+            }
+        }
+        try {
+            connection.setAutoCommit(false);
+            try {
+                lockWorkspace(content.workspaceId());
+                WorkspaceSnapshot taken = null;
+                if (!isWorkspaceEmpty(content.workspaceId())) {
+                    taken = writeSnapshot(content.workspaceId(),
+                            WorkspaceSnapshot.Kind.RESTORE, createdAt);
+                }
+                deleteWorkspace(content.workspaceId());
+                insertWorkspace(content);
+                insertUntypedTables(payload.tables());
+                connection.commit();
+                return taken;
+            } catch (SQLException | RuntimeException e) {
+                connection.rollback();
+                throw e;
+            } finally {
+                connection.setAutoCommit(true);
+            }
+        } catch (SQLException e) {
+            throw new IllegalStateException("Failed to restore the snapshot " + snapshotId, e);
+        }
+    }
+
+    /**
+     * W45.2 — the snapshots of a workspace, newest first.
+     *
+     * <p>The snapshots are INSPECTED here, not restored: the counts come from the snapshot's
+     * own content, so a reader can see what a snapshot is worth before deciding to bring it
+     * back.</p>
+     *
+     * @param workspaceId the workspace
+     * @return the snapshots the workspace holds
+     */
+    public List<WorkspaceSnapshot> workspaceSnapshots(String workspaceId) {
+        List<WorkspaceSnapshot> out = new ArrayList<>();
+        try (PreparedStatement ps = connection.prepareStatement(
+                "SELECT id, workspace_id, created_at, kind, payload FROM workspace_snapshot "
+                        + "WHERE workspace_id = ? ORDER BY created_at DESC, id DESC")) {
+            ps.setString(1, workspaceId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    out.add(describeSnapshot(rs.getString("id"), rs.getString("workspace_id"),
+                            rs.getString("created_at"),
+                            WorkspaceSnapshot.Kind.valueOf(rs.getString("kind")),
+                            rs.getString("payload")));
+                }
+            }
+        } catch (SQLException e) {
+            throw new IllegalStateException("failed to read the snapshots of " + workspaceId, e);
+        }
+        return out;
+    }
+
+    /**
+     * W45.2 — one snapshot, inspected.
+     *
+     * @param snapshotId the snapshot
+     * @return what the snapshot holds
+     */
+    public WorkspaceSnapshot workspaceSnapshot(String snapshotId) {
+        try (PreparedStatement ps = connection.prepareStatement(
+                "SELECT id, workspace_id, created_at, kind, payload FROM workspace_snapshot "
+                        + "WHERE id = ?")) {
+            ps.setString(1, snapshotId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return describeSnapshot(rs.getString("id"), rs.getString("workspace_id"),
+                            rs.getString("created_at"),
+                            WorkspaceSnapshot.Kind.valueOf(rs.getString("kind")),
+                            rs.getString("payload"));
+                }
+            }
+        } catch (SQLException e) {
+            throw new IllegalStateException("failed to read the snapshot " + snapshotId, e);
+        }
+        return null;
+    }
+
+    /**
+     * W45.2 — whether the workspace holds nothing that a replacement would erase.
+     *
+     * <p>The question is asked about the tables the replacement touches, and not about the
+     * workspace row itself: the row carries the workspace's name and the moment it was
+     * created, and a replacement rewrites it with the same values. The records that are NOT
+     * at risk from a replacement — the cognitive kernel's cases, their dispositions, their
+     * adjudication history, the assessment items, the asked questions — are not counted
+     * either, because a replacement does not erase them.</p>
+     *
+     * @param workspaceId the workspace
+     * @return true when the workspace holds nothing
+     */
+    /**
+     * W47 — whether the workspace holds nothing that a replacement would erase.
+     *
+     * <p>The question is asked of {@link #ERASED_TABLES}, the very set the deletion uses.
+     * Before this wave the check counted only the ten knowledge tables, so a workspace that
+     * held an epistemic case and nothing else counted as empty: the replacement would then
+     * have erased the case and its history WITHOUT asking, because the caller was told the
+     * workspace was empty. A refusal that depends on a second list of tables is a refusal
+     * that can be wrong, and this one was wrong in the direction of destroying history.</p>
+     */
+    public boolean isWorkspaceEmpty(String workspaceId) {
+        for (ErasedTable table : ERASED_TABLES) {
+            if (countRows(table, workspaceId) > 0) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /** W47 — how many rows of a table the erasure would remove. */
+    private int countRows(ErasedTable table, String workspaceId) {
+        try (PreparedStatement ps = connection.prepareStatement(
+                "SELECT count(*) FROM " + table.table() + " WHERE " + table.where())) {
+            ps.setString(1, workspaceId);
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next() ? rs.getInt(1) : 0;
+            }
+        } catch (SQLException e) {
+            throw new IllegalStateException("failed to count the rows of " + table.table(), e);
+        }
+    }
+
+    /**
+     * W47 — what a replacement of this workspace would erase.
+     *
+     * <p><b>Nothing is written.</b> The preview counts the rows the erasure would remove
+     * and lists the epistemic cases that would go with them, and it writes nothing: no row,
+     * no snapshot, no revision, no counter. A caller that asks and then decides not to
+     * replace has changed nothing at all.</p>
+     *
+     * <p><b>The counts and the deletion read the same declaration.</b> The preview is
+     * therefore a truthful account of the operation, and not a second opinion about it.</p>
+     *
+     * @param workspaceId the workspace
+     * @return what the replacement would erase
+     */
+    public synchronized ReplacementPreview previewWorkspaceReplacement(String workspaceId) {
+        Map<String, Integer> counts = new LinkedHashMap<>();
+        int total = 0;
+        for (ErasedTable table : ERASED_TABLES) {
+            int count = countRows(table, workspaceId);
+            counts.put(table.table(), count);
+            total += count;
+        }
+        return new ReplacementPreview(workspaceId, total > 0, counts, caseIds(workspaceId), total);
+    }
+
+    /** W47 — the epistemic cases a replacement of this workspace would erase. */
+    private List<String> caseIds(String workspaceId) {
+        List<String> ids = new ArrayList<>();
+        try (PreparedStatement ps = connection.prepareStatement(
+                "SELECT id FROM epistemic_case WHERE workspace_id = ? ORDER BY observed_at, id")) {
+            ps.setString(1, workspaceId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    ids.add(rs.getString(1));
+                }
+            }
+        } catch (SQLException e) {
+            throw new IllegalStateException("failed to read the cases of " + workspaceId, e);
+        }
+        return ids;
+    }
+
+    /**
+     * W45.2 — takes the write lock of the database without changing anything.
+     *
+     * <p>A deferred transaction that reads first and writes second cannot be upgraded to a
+     * write lock once another writer has committed: SQLite refuses the upgrade rather than
+     * letting the two disagree. Touching the workspace row without changing it takes the
+     * lock, so that the content read afterwards is a content no other writer can move while
+     * the transaction is open.</p>
+     */
+    private void lockWorkspace(String workspaceId) throws SQLException {
+        try (PreparedStatement ps = connection.prepareStatement(
+                "UPDATE workspace SET version = version WHERE id = ?")) {
+            ps.setString(1, workspaceId);
+            ps.executeUpdate();
+        }
+    }
+
+    /**
+     * W45.2 — writes the snapshot row and returns what it holds.
+     *
+     * <p>The content is read AFTER the lock is held, so that the snapshot is of the moment
+     * the replacement happens and not of a moment that another writer could have moved.</p>
+     */
+    private WorkspaceSnapshot writeSnapshot(String workspaceId, WorkspaceSnapshot.Kind kind,
+            String createdAt) throws SQLException {
+        KnowledgeSnapshot content = exportWorkspace(workspaceId);
+        // The rows that the typed content does not carry are captured with the same rules
+        // the erasure uses, in the same transaction, so that the snapshot holds exactly what
+        // the replacement is about to destroy.
+        List<SnapshotTable> tables = captureUntypedTables(workspaceId);
+        String payload = writeSnapshotPayload(content, tables);
+        // W48-07 — the bound on the size of the payload. The check is BEFORE the row is
+        // written, so a payload over the bound leaves no row and no half-row: the caller
+        // is told what exceeded which bound, and the transaction that called this rolls
+        // back. The payload is NEVER trimmed — a cut-short snapshot is a corrupt one.
+        int payloadBytes = payload.getBytes(StandardCharsets.UTF_8).length;
+        if (payloadBytes > maxSnapshotPayloadBytes) {
+            throw new SnapshotPayloadTooLargeException(workspaceId, payloadBytes,
+                    maxSnapshotPayloadBytes);
+        }
+        String id = nextSnapshotId(workspaceId);
+        try (PreparedStatement ps = connection.prepareStatement(
+                "INSERT INTO workspace_snapshot(id, workspace_id, created_at, kind, payload) "
+                        + "VALUES (?,?,?,?,?)")) {
+            ps.setString(1, id);
+            ps.setString(2, workspaceId);
+            ps.setString(3, createdAt);
+            ps.setString(4, kind.name());
+            ps.setString(5, payload);
+            ps.executeUpdate();
+        }
+        return describeSnapshot(id, workspaceId, createdAt, kind, payload);
+    }
+
+    /**
+     * W45.2 — the identifier of the next snapshot of a workspace.
+     *
+     * <p>The identifier is derived from the workspace and from the number of snapshots the
+     * workspace already holds, so it is unique, readable and derived — nothing is invented
+     * and nothing is random. The count is read inside the transaction that holds the write
+     * lock, so two snapshots of the same workspace cannot be handed the same number.</p>
+     */
+    private String nextSnapshotId(String workspaceId) throws SQLException {
+        int held;
+        try (PreparedStatement ps = connection.prepareStatement(
+                "SELECT count(*) FROM workspace_snapshot WHERE workspace_id = ?")) {
+            ps.setString(1, workspaceId);
+            try (ResultSet rs = ps.executeQuery()) {
+                rs.next();
+                held = rs.getInt(1);
+            }
+        }
+        return SNAPSHOT_ID_PREFIX + workspaceId + "-" + (held + 1);
+    }
+
+    /** W45.2 — what a snapshot holds, counted from its own content. */
+    private static WorkspaceSnapshot describeSnapshot(String id, String workspaceId, String createdAt,
+            WorkspaceSnapshot.Kind kind, String payload) {
+        SnapshotPayload decoded = readSnapshotPayload(payload);
+        List<SnapshotTable> tables = decoded.tables();
+        KnowledgeSnapshot content = decoded.knowledge();
+        return new WorkspaceSnapshot(id, workspaceId, createdAt, kind,
+                content.concepts().size(), content.claims().size(), content.sources().size(),
+                content.evidence().size(), content.representations().size(),
+                content.revisions().size(), content.contradictions().size(),
+                content.derivations().size(), content.prerequisites().size(),
+                content.goals().size(),
+                countRows(tables, "epistemic_case"), countRows(tables, "observation_occurrence"),
+                countRows(tables, "observation_disposition"),
+                countRows(tables, "observation_adjudication"),
+                coverageOf(tables), untypedCounts(tables));
+    }
+
+    /**
+     * W48-01 — what a payload's table list actually covers.
+     *
+     * @param tables the tables the payload holds an entry for
+     * @return the coverage the payload has
+     */
+    private static SnapshotCoverage coverageOf(List<SnapshotTable> tables) {
+        return SnapshotCoverage.of(tables.stream().map(SnapshotTable::table).toList());
+    }
+
+    /**
+     * W48-01 — how many rows the payload holds, per untyped table.
+     *
+     * <p>The counts of the record cover the knowledge content and the four observation
+     * tables; the eight learning tables were not among them, so a reader could not see
+     * that a snapshot carried learning rows. They are counted here, and the map says
+     * which table each number belongs to.</p>
+     */
+    private static java.util.Map<String, Integer> untypedCounts(List<SnapshotTable> tables) {
+        java.util.Map<String, Integer> counts = new java.util.LinkedHashMap<>();
+        for (SnapshotTable captured : tables) {
+            counts.put(captured.table(), captured.rows().size());
+        }
+        return java.util.Collections.unmodifiableMap(counts);
+    }
+
+    /**
+     * W48-01 — how many rows the workspace holds in the named tables.
+     *
+     * @param workspaceId the workspace
+     * @param tables      the tables to count
+     * @return the total number of rows the workspace holds in them
+     */
+    private int countWorkspaceRows(String workspaceId, List<String> tables) {
+        int total = 0;
+        try {
+            for (String table : tables) {
+                try (PreparedStatement ps = connection.prepareStatement(
+                        "SELECT COUNT(*) FROM " + table + " WHERE workspace_id = ?")) {
+                    ps.setString(1, workspaceId);
+                    try (ResultSet rs = ps.executeQuery()) {
+                        rs.next();
+                        total += rs.getInt(1);
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            throw new IllegalStateException("failed to count the workspace rows", e);
+        }
+        return total;
+    }
+
+    /** W47 — how many rows a captured table holds. */
+    private static int countRows(List<SnapshotTable> tables, String table) {
+        for (SnapshotTable captured : tables) {
+            if (captured.table().equals(table)) {
+                return captured.rows().size();
+            }
+        }
+        return 0;
+    }
+
+    /** W47 — the whole payload of a snapshot, for a restore. */
+    private SnapshotPayload snapshotPayload(String snapshotId) {
+        try (PreparedStatement ps = connection.prepareStatement(
+                "SELECT payload FROM workspace_snapshot WHERE id = ?")) {
+            ps.setString(1, snapshotId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return readSnapshotPayload(rs.getString(1));
+                }
+            }
+        } catch (SQLException e) {
+            throw new IllegalStateException("failed to read the snapshot " + snapshotId, e);
+        }
+        throw new IllegalArgumentException("there is no snapshot with the id " + snapshotId);
+    }
+
+    /**
+     * W47 — the serialised form of a workspace's content.
+     *
+     * <p>The payload names its version, so that a reader can tell a version 1 payload — the
+     * bare knowledge content, which every snapshot before this wave holds — from a version 2
+     * payload, which also holds the observation rows.</p>
+     */
+    private static String writeSnapshotPayload(KnowledgeSnapshot content, List<SnapshotTable> tables) {
+        try {
+            return SNAPSHOT_JSON.writeValueAsString(
+                    new SnapshotPayload(SNAPSHOT_PAYLOAD_VERSION, content, tables));
+        } catch (IOException e) {
+            throw new IllegalStateException("failed to serialise the workspace content", e);
+        }
+    }
+
+    /**
+     * W47 — the content a snapshot holds.
+     *
+     * <p>A payload that names a version this build does not know is refused: a snapshot is
+     * the only recoverable copy of what a replacement destroyed, and reading it as
+     * something else would restore the wrong thing quietly.</p>
+     */
+    private static SnapshotPayload readSnapshotPayload(String payload) {
+        try {
+            JsonNode tree = SNAPSHOT_JSON.readTree(payload);
+            if (tree.has("knowledge") && tree.has("version")) {
+                SnapshotPayload decoded = SNAPSHOT_JSON.readValue(payload,
+                        new TypeReference<SnapshotPayload>() {
+                        });
+                if (decoded.version() > SNAPSHOT_PAYLOAD_VERSION) {
+                    throw new IllegalArgumentException("the snapshot was written by a newer "
+                            + "build: its payload version is " + decoded.version()
+                            + " and this build reads up to " + SNAPSHOT_PAYLOAD_VERSION);
+                }
+                return decoded;
+            }
+            // Version 1: the bare knowledge content, without the observation rows.
+            return new SnapshotPayload(1, SNAPSHOT_JSON.readValue(payload, KnowledgeSnapshot.class),
+                    List.of());
+        } catch (IOException e) {
+            throw new IllegalStateException("failed to deserialise the workspace content", e);
+        }
+    }
+
+    /**
+     * W47 — erases a workspace, in the order that keeps every reference valid while the rows
+     * go.
+     *
+     * <p>The set is {@link #ERASED_TABLES}, and it is the same set the preview counts and
+     * the same set the emptiness check reads. The two tables that have no workspace of their
+     * own — a premise belongs to its derivation, a subtask belongs to its goal — are in the
+     * list with the rule that selects them, and they are deleted BEFORE the rows they point
+     * at, so that the subquery still finds them.</p>
+     *
+     * <p><b>The learning tables keep the same rule.</b> A transition points at an outcome,
+     * an error and an outcome point at an item, and a state, an item, an error, a
+     * transition and a Hebbian binding point at a concept. The referring rows are deleted
+     * first, so that no reference dangles while the rows go. Nothing would report a broken
+     * order — the schema declares no foreign key — which is exactly why the order is stated
+     * rather than left to chance.</p>
+     */
+    private void deleteWorkspace(String workspaceId) throws SQLException {
+        for (ErasedTable table : ERASED_TABLES) {
+            try (PreparedStatement ps = connection.prepareStatement(
+                    "DELETE FROM " + table.table() + " WHERE " + table.where())) {
+                ps.setString(1, workspaceId);
+                ps.executeUpdate();
+            }
+        }
+        try (PreparedStatement ps = connection.prepareStatement("DELETE FROM workspace WHERE id = ?")) {
+            ps.setString(1, workspaceId);
+            ps.executeUpdate();
+        }
+    }
+
+    /**
+     * W47 — the rows of the erased tables that the typed knowledge content does not carry.
+     *
+     * <p>The typed content carries the concepts, the sources, the claims, the evidence, the
+     * representations, the prerequisites, the revisions, the derivations, the contradictions
+     * and the goals. Two families of tables are not typed content — they are rows of a
+     * database: the four observation tables, and the eight learning tables. They are captured
+     * verbatim, table by table, with the very rule that selects them for deletion.</p>
+     *
+     * <p>The capture is generic: a table and a {@code WHERE} clause. A table joins the
+     * capture by being named in {@link #ERASED_TABLES} without the typed snapshot carrying
+     * it, and it needs no code of its own.</p>
+     *
+     * @param workspaceId the workspace
+     * @return the captured rows, table by table
+     */
+    private List<SnapshotTable> captureUntypedTables(String workspaceId) throws SQLException {
+        List<SnapshotTable> captured = new ArrayList<>();
+        for (ErasedTable table : ERASED_TABLES) {
+            if (table.carriedByTheTypedSnapshot()) {
+                continue;
+            }
+            captured.add(new SnapshotTable(table.table(), readRows(table, workspaceId)));
+        }
+        return captured;
+    }
+
+    /** W47 — the rows of one table that the erasure would remove. */
+    private List<Map<String, Object>> readRows(ErasedTable table, String workspaceId)
+            throws SQLException {
+        List<Map<String, Object>> rows = new ArrayList<>();
+        try (PreparedStatement ps = connection.prepareStatement(
+                "SELECT * FROM " + table.table() + " WHERE " + table.where())) {
+            ps.setString(1, workspaceId);
+            try (ResultSet rs = ps.executeQuery()) {
+                ResultSetMetaData meta = rs.getMetaData();
+                int columns = meta.getColumnCount();
+                while (rs.next()) {
+                    Map<String, Object> row = new LinkedHashMap<>();
+                    for (int column = 1; column <= columns; column++) {
+                        row.put(meta.getColumnLabel(column), rs.getObject(column));
+                    }
+                    rows.add(row);
+                }
+            }
+        }
+        return rows;
+    }
+
+    /**
+     * W47 — puts the captured rows back.
+     *
+     * <p>The table name comes from the snapshot's payload, so it is checked against the
+     * tables this store knows how to capture: a payload that names a table the store does
+     * not know is refused rather than executed.</p>
+     *
+     * <p><b>What is restored, and in which order.</b> Every row comes back with its own
+     * columns, written back with the value the capture read — a TEXT column as text, an
+     * INTEGER column as an integer, a REAL column as a real — so a row that goes out and
+     * comes back is byte-identical. The tables go back in the order they were captured,
+     * which is the order the erasure uses: the referring rows first. The schema declares no
+     * foreign key, so nothing would raise an error if the order were wrong; the order keeps
+     * the reference true while the rows go in, so that a reader of the database between two
+     * inserts never sees a row that points at nothing.</p>
+     */
+    private void insertUntypedTables(List<SnapshotTable> tables) throws SQLException {
+        for (SnapshotTable table : tables) {
+            if (!isCapturableTable(table.table())) {
+                throw new IllegalArgumentException("the snapshot names the table "
+                        + table.table() + ", which this store does not capture");
+            }
+            for (Map<String, Object> row : table.rows()) {
+                if (row.isEmpty()) {
+                    continue;
+                }
+                List<String> columns = new ArrayList<>(row.keySet());
+                StringBuilder sql = new StringBuilder("INSERT OR REPLACE INTO ")
+                        .append(table.table()).append(" (");
+                for (int i = 0; i < columns.size(); i++) {
+                    if (i > 0) {
+                        sql.append(", ");
+                    }
+                    sql.append(columns.get(i));
+                }
+                sql.append(") VALUES (");
+                for (int i = 0; i < columns.size(); i++) {
+                    if (i > 0) {
+                        sql.append(", ");
+                    }
+                    sql.append("?");
+                }
+                sql.append(")");
+                try (PreparedStatement ps = connection.prepareStatement(sql.toString())) {
+                    for (int i = 0; i < columns.size(); i++) {
+                        ps.setObject(i + 1, row.get(columns.get(i)));
+                    }
+                    ps.executeUpdate();
+                }
+            }
+        }
+    }
+
+    /** W47 — whether this store knows how to capture the rows of the table. */
+    private static boolean isCapturableTable(String table) {
+        for (ErasedTable erased : ERASED_TABLES) {
+            if (!erased.carriedByTheTypedSnapshot() && erased.table().equals(table)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private void insertWorkspace(KnowledgeSnapshot snapshot) throws SQLException {
+        try (PreparedStatement ps = connection.prepareStatement(
+                "INSERT OR REPLACE INTO workspace(id, name, created_at, version) VALUES (?,?,?,?)")) {
+            ps.setString(1, snapshot.workspaceId());
+            ps.setString(2, snapshot.workspaceName() == null ? snapshot.workspaceId() : snapshot.workspaceName());
+            ps.setString(3, now());
+            ps.setInt(4, 1);
+            ps.executeUpdate();
+        }
+        for (Concept c : snapshot.concepts()) {
+            try (PreparedStatement ps = connection.prepareStatement(
+                    "INSERT OR REPLACE INTO concept(id, workspace_id, name, definition, domain, created_at) "
+                            + "VALUES (?,?,?,?,?,?)")) {
+                ps.setString(1, c.id());
+                ps.setString(2, c.workspaceId());
+                ps.setString(3, c.name());
+                ps.setString(4, c.definition());
+                ps.setString(5, c.domain());
+                ps.setString(6, c.createdAt());
+                ps.executeUpdate();
+            }
+        }
+        for (Source s : snapshot.sources()) {
+            try (PreparedStatement ps = connection.prepareStatement(
+                    "INSERT OR REPLACE INTO source(id, workspace_id, kind, title, locator, authority, "
+                            + "freshness, excerpt, added_at, content_hash, published_at) "
+                            + "VALUES (?,?,?,?,?,?,?,?,?,?,?)")) {
+                ps.setString(1, s.id());
+                ps.setString(2, s.workspaceId());
+                ps.setString(3, s.kind().name());
+                ps.setString(4, s.title());
+                ps.setString(5, s.locator());
+                ps.setInt(6, s.authority());
+                ps.setInt(7, s.freshness());
+                ps.setString(8, s.excerpt());
+                ps.setString(9, s.addedAt());
+                ps.setString(10, s.contentHash());
+                ps.setString(11, s.publishedAt());
+                ps.executeUpdate();
+            }
+        }
+        for (Claim c : snapshot.claims()) {
+            try (PreparedStatement ps = connection.prepareStatement(
+                    "INSERT OR REPLACE INTO claim(id, workspace_id, concept_id, proposition, scope, "
+                            + "context, status, confidence, version, introduced_by_source_id, "
+                            + "extraction_method, validation_method, warrant, derivation_status, "
+                            + "created_at, updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)")) {
+                ps.setString(1, c.id());
+                ps.setString(2, c.workspaceId());
+                ps.setString(3, c.conceptId());
+                ps.setString(4, c.proposition());
+                ps.setString(5, c.scope());
+                ps.setString(6, c.context());
+                ps.setString(7, c.status().name());
+                ps.setDouble(8, c.confidence());
+                ps.setInt(9, c.version());
+                ps.setString(10, c.introducedBySourceId());
+                ps.setString(11, c.extractionMethod());
+                ps.setString(12, c.validationMethod());
+                ps.setString(13, c.warrant().name());
+                ps.setString(14, c.derivationStatus().name());
+                ps.setString(15, c.createdAt());
+                ps.setString(16, c.updatedAt());
+                ps.executeUpdate();
+            }
+        }
+        for (Derivation derivation : snapshot.derivations()) {
+            try (PreparedStatement ps = connection.prepareStatement(
+                    "INSERT OR REPLACE INTO derivation(id, workspace_id, rule_id, rule_name, "
+                            + "connective, conclusion_claim_id, status, recorded_at) "
+                            + "VALUES (?,?,?,?,?,?,?,?)")) {
+                ps.setString(1, derivation.id());
+                ps.setString(2, derivation.workspaceId());
+                ps.setString(3, derivation.ruleId());
+                ps.setString(4, derivation.ruleName());
+                ps.setString(5, derivation.connective().name());
+                ps.setString(6, derivation.conclusionClaimId());
+                ps.setString(7, derivation.status().name());
+                ps.setString(8, derivation.recordedAt());
+                ps.executeUpdate();
+            }
+            try (PreparedStatement ps = connection.prepareStatement(
+                    "INSERT OR REPLACE INTO derivation_premise(derivation_id, ordinal, claim_id) "
+                            + "VALUES (?,?,?)")) {
+                for (int i = 0; i < derivation.premiseClaimIds().size(); i++) {
+                    ps.setString(1, derivation.id());
+                    ps.setInt(2, i);
+                    ps.setString(3, derivation.premiseClaimIds().get(i));
+                    ps.addBatch();
+                }
+                ps.executeBatch();
+            }
+        }
+        for (Evidence e : snapshot.evidence()) {
+            try (PreparedStatement ps = connection.prepareStatement(
+                    "INSERT OR REPLACE INTO evidence(id, workspace_id, claim_id, source_id, relation, "
+                            + "excerpt, quality, recorded_at) VALUES (?,?,?,?,?,?,?,?)")) {
+                ps.setString(1, e.id());
+                ps.setString(2, e.workspaceId());
+                ps.setString(3, e.claimId());
+                ps.setString(4, e.sourceId());
+                ps.setString(5, e.relation().name());
+                ps.setString(6, e.excerpt());
+                ps.setInt(7, e.quality());
+                ps.setString(8, e.recordedAt());
+                ps.executeUpdate();
+            }
+        }
+        for (Representation r : snapshot.representations()) {
+            try (PreparedStatement ps = connection.prepareStatement(
+                    "INSERT OR REPLACE INTO representation(id, workspace_id, concept_id, level, audience, "
+                            + "statement, scope, assumptions, included_facts, omitted, validity_conditions, "
+                            + "prerequisites, refines, confidence, created_at) "
+                            + "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)")) {
+                ps.setString(1, r.id());
+                ps.setString(2, r.workspaceId());
+                ps.setString(3, r.conceptId());
+                ps.setString(4, r.level().name());
+                ps.setString(5, r.audience());
+                ps.setString(6, r.statement());
+                ps.setString(7, r.scope());
+                ps.setString(8, writeJson(r.assumptions()));
+                ps.setString(9, writeJson(r.includedFacts()));
+                ps.setString(10, writeJson(r.deliberatelyOmitted()));
+                ps.setString(11, writeJson(r.validityConditions()));
+                ps.setString(12, writeJson(r.prerequisiteConceptIds()));
+                ps.setString(13, r.refinesRepresentationId());
+                ps.setDouble(14, r.confidence());
+                ps.setString(15, r.createdAt());
+                ps.executeUpdate();
+            }
+        }
+        for (Prerequisite p : snapshot.prerequisites()) {
+            try (PreparedStatement ps = connection.prepareStatement(
+                    "INSERT OR REPLACE INTO prerequisite(workspace_id, concept_id, requires_concept_id, "
+                            + "required, note) VALUES (?,?,?,?,?)")) {
+                ps.setString(1, p.workspaceId());
+                ps.setString(2, p.conceptId());
+                ps.setString(3, p.requiresConceptId());
+                ps.setInt(4, p.required() ? 1 : 0);
+                ps.setString(5, p.note());
+                ps.executeUpdate();
+            }
+        }
+        for (KnowledgeRevision rev : snapshot.revisions()) {
+            try (PreparedStatement ps = connection.prepareStatement(
+                    "INSERT OR REPLACE INTO revision(id, workspace_id, target_type, target_id, kind, "
+                            + "summary, added_facts, still_valid, no_longer_valid, newly_explained, "
+                            + "evidence_ids, recorded_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)")) {
+                ps.setString(1, rev.id());
+                ps.setString(2, rev.workspaceId());
+                ps.setString(3, rev.targetType());
+                ps.setString(4, rev.targetId());
+                ps.setString(5, rev.kind().name());
+                ps.setString(6, rev.summary());
+                ps.setString(7, writeJson(rev.addedFacts()));
+                ps.setString(8, writeJson(rev.stillValidAssumptions()));
+                ps.setString(9, writeJson(rev.noLongerValidAssumptions()));
+                ps.setString(10, writeJson(rev.newlyExplainedCases()));
+                ps.setString(11, writeJson(rev.evidenceIds()));
+                ps.setString(12, rev.recordedAt());
+                ps.executeUpdate();
+            }
+        }
+        // W45.2: the recorded conflicts are part of the content. A replacement that dropped
+        // them would drop the evidence that the system had found a conflict at all.
+        for (Contradiction contradiction : snapshot.contradictions()) {
+            try (PreparedStatement ps = connection.prepareStatement(
+                    "INSERT OR REPLACE INTO contradiction(id, workspace_id, claim_a_id, claim_b_id, "
+                            + "kind, detected_by, recorded_at) VALUES (?,?,?,?,?,?,?)")) {
+                ps.setString(1, contradiction.id());
+                ps.setString(2, contradiction.workspaceId());
+                ps.setString(3, contradiction.claimAId());
+                ps.setString(4, contradiction.claimBId());
+                ps.setString(5, contradiction.kind().name());
+                ps.setString(6, contradiction.detectedBy());
+                ps.setString(7, contradiction.recordedAt());
+                ps.executeUpdate();
+            }
+        }
+        // W45.2: the goals and their subtasks are part of the content too. The mission says
+        // that restoring a knowledge database is NOT the same as restoring an active goal,
+        // and a replacement that dropped the goals would make that sentence true in the
+        // worst way possible.
+        for (LearningGoal goal : snapshot.goals()) {
+            recordGoal(goal);
+            insertGoalSubtasks(goal);
+        }
+    }
+
+    // ── validation ───────────────────────────────────────────────────────────
+
+    /**
+     * The rules a snapshot must satisfy. These are the rules that make a
+     * claim's status mean something.
+     */
+    static void validate(KnowledgeSnapshot snapshot) {
+        if (snapshot.workspaceId() == null || snapshot.workspaceId().isBlank()) {
+            throw new IllegalArgumentException("workspace id must not be blank");
+        }
+        Set<String> conceptIds = new HashSet<>();
+        for (Concept c : snapshot.concepts()) {
+            if (!conceptIds.add(c.id())) {
+                throw new IllegalArgumentException("duplicate concept id: " + c.id());
+            }
+        }
+        Set<String> sourceIds = new HashSet<>();
+        for (Source s : snapshot.sources()) {
+            if (!sourceIds.add(s.id())) {
+                throw new IllegalArgumentException("duplicate source id: " + s.id());
+            }
+        }
+        Set<String> claimIds = new HashSet<>();
+        for (Claim c : snapshot.claims()) {
+            if (!claimIds.add(c.id())) {
+                throw new IllegalArgumentException("duplicate claim id: " + c.id());
+            }
+            if (!conceptIds.contains(c.conceptId())) {
+                throw new IllegalArgumentException(
+                        "claim " + c.id() + " references unknown concept " + c.conceptId());
+            }
+        }
+        Set<String> representationIds = new HashSet<>();
+        for (Representation r : snapshot.representations()) {
+            representationIds.add(r.id());
+        }
+        for (Representation r : snapshot.representations()) {
+            if (!conceptIds.contains(r.conceptId())) {
+                throw new IllegalArgumentException(
+                        "representation " + r.id() + " references unknown concept " + r.conceptId());
+            }
+            if (r.refinesRepresentationId() != null
+                    && !representationIds.contains(r.refinesRepresentationId())) {
+                throw new IllegalArgumentException(
+                        "representation " + r.id() + " refines unknown representation "
+                                + r.refinesRepresentationId());
+            }
+            for (String prerequisite : r.prerequisiteConceptIds()) {
+                if (!conceptIds.contains(prerequisite)) {
+                    throw new IllegalArgumentException(
+                            "representation " + r.id() + " requires unknown concept " + prerequisite);
+                }
+            }
+        }
+        Map<String, Integer> evidencePerClaim = new HashMap<>();
+        for (Evidence e : snapshot.evidence()) {
+            if (!claimIds.contains(e.claimId())) {
+                throw new IllegalArgumentException(
+                        "evidence " + e.id() + " references unknown claim " + e.claimId());
+            }
+            if (!sourceIds.contains(e.sourceId())) {
+                throw new IllegalArgumentException(
+                        "evidence " + e.id() + " references unknown source " + e.sourceId());
+            }
+            evidencePerClaim.merge(e.claimId(), 1, Integer::sum);
+        }
+        for (Claim c : snapshot.claims()) {
+            // A source being available does not prove a claim. Only a claim
+            // with evidence may assert that it is supported, verified,
+            // contested, refuted or superseded.
+            boolean needsEvidence = c.status() == ClaimStatus.SUPPORTED
+                    || c.status() == ClaimStatus.VERIFIED
+                    || c.status() == ClaimStatus.CONTESTED
+                    || c.status() == ClaimStatus.REFUTED
+                    || c.status() == ClaimStatus.SUPERSEDED;
+            if (needsEvidence && evidencePerClaim.getOrDefault(c.id(), 0) == 0) {
+                throw new IllegalArgumentException(
+                        "claim " + c.id() + " is " + c.status() + " but carries no evidence");
+            }
+        }
+        // Prerequisites must be acyclic: a learner cannot require a concept
+        // that requires it back.
+        Map<String, Set<String>> graph = new HashMap<>();
+        for (Prerequisite p : snapshot.prerequisites()) {
+            if (!conceptIds.contains(p.conceptId()) || !conceptIds.contains(p.requiresConceptId())) {
+                throw new IllegalArgumentException(
+                        "prerequisite references an unknown concept: " + p.conceptId()
+                                + " -> " + p.requiresConceptId());
+            }
+            graph.computeIfAbsent(p.conceptId(), k -> new HashSet<>()).add(p.requiresConceptId());
+        }
+        for (String start : graph.keySet()) {
+            Set<String> visited = new HashSet<>();
+            if (hasCycle(graph, start, visited)) {
+                throw new IllegalArgumentException(
+                        "prerequisite cycle detected at concept " + start);
+            }
+        }
+    }
+
+    private static boolean hasCycle(Map<String, Set<String>> graph, String node, Set<String> visited) {
+        if (!visited.add(node)) {
+            return true;
+        }
+        for (String next : graph.getOrDefault(node, Set.of())) {
+            if (hasCycle(graph, next, visited)) {
+                return true;
+            }
+        }
+        visited.remove(node);
+        return false;
+    }
+
+    /**
+     * Apply incremental changes to a workspace, in one transaction.
+     *
+     * <p>Claims are upserted, evidence is inserted, and revisions are
+     * appended. A superseded claim keeps its row with its new status, so the
+     * history of what was believed is never destroyed.
+     *
+     * <p>The evidence rule still holds: a change that asserts an established
+     * status without evidence for it is rejected, and the rejection leaves
+     * the workspace exactly as it was.
+     */
+    public void applyChanges(String workspaceId, KnowledgeChanges changes) {
+        applyChanges(workspaceId, changes, List.of());
+    }
+
+    /**
+     * Applies a set of changes, with the concepts they need, in ONE
+     * transaction.
+     *
+     * <p>RECON-W42.7. The import is atomic only if EVERYTHING it writes
+     * is in the same transaction. The concepts were created before the
+     * transaction began, so a failure between the two left the workspace
+     * holding concepts with no claims — a half-imported document. The
+     * concepts now go in with the claims, the evidence, the
+     * representations and the source.
+     *
+     * @param workspaceId the workspace
+     * @param changes the changes
+     * @param concepts the concepts the changes need; an existing concept
+     *     is left alone
+     */
+    public void applyChanges(String workspaceId, KnowledgeChanges changes, List<Concept> concepts) {
+        KnowledgeSnapshot current = exportWorkspace(workspaceId);
+        List<Claim> allClaims = new ArrayList<>(current.claims());
+        allClaims.removeIf(c -> changes.claims().stream()
+                .anyMatch(changed -> changed.id().equals(c.id())));
+        allClaims.addAll(changes.claims());
+
+        List<Evidence> allEvidence = new ArrayList<>(current.evidence());
+        allEvidence.addAll(changes.evidence());
+
+        // The rule is checked against the evidence the workspace will have
+        // after the change, not only against the evidence being added.
+        Map<String, Integer> evidencePerClaim = new HashMap<>();
+        for (Evidence evidence : allEvidence) {
+            evidencePerClaim.merge(evidence.claimId(), 1, Integer::sum);
+        }
+        for (Claim claim : changes.claims()) {
+            boolean needsEvidence = claim.status() == ClaimStatus.SUPPORTED
+                    || claim.status() == ClaimStatus.VERIFIED
+                    || claim.status() == ClaimStatus.CONTESTED
+                    || claim.status() == ClaimStatus.REFUTED
+                    || claim.status() == ClaimStatus.SUPERSEDED;
+            if (needsEvidence && evidencePerClaim.getOrDefault(claim.id(), 0) == 0) {
+                throw new IllegalArgumentException(
+                        "claim " + claim.id() + " is " + claim.status() + " but carries no evidence");
+            }
+        }
+        for (Evidence evidence : changes.evidence()) {
+            boolean claimKnown = allClaims.stream()
+                    .anyMatch(c -> c.id().equals(evidence.claimId()));
+            if (!claimKnown) {
+                throw new IllegalArgumentException(
+                        "evidence " + evidence.id() + " references unknown claim " + evidence.claimId());
+            }
+            boolean sourceKnown = current.sources().stream()
+                    .anyMatch(s -> s.id().equals(evidence.sourceId()))
+                    || changes.sources().stream()
+                    .anyMatch(s -> s.id().equals(evidence.sourceId()));
+            if (!sourceKnown) {
+                throw new IllegalArgumentException(
+                        "evidence " + evidence.id() + " references unknown source " + evidence.sourceId());
+            }
+        }
+
+        try {
+            connection.setAutoCommit(false);
+            try {
+                for (Concept concept : concepts) {
+                    insertConceptIfAbsent(concept);
+                }
+                for (Source source : changes.sources()) {
+                    upsertSource(source);
+                }
+                for (Claim claim : changes.claims()) {
+                    upsertClaim(claim);
+                }
+                for (Evidence evidence : changes.evidence()) {
+                    insertEvidence(evidence);
+                }
+                for (Representation representation : changes.representations()) {
+                    upsertRepresentation(representation);
+                }
+                for (KnowledgeRevision revision : changes.revisions()) {
+                    insertRevision(revision);
+                }
+                connection.commit();
+            } catch (SQLException | RuntimeException e) {
+                connection.rollback();
+                throw e;
+            } finally {
+                connection.setAutoCommit(true);
+            }
+        } catch (SQLException e) {
+            throw new IllegalStateException("Failed to apply the knowledge changes", e);
+        }
+    }
+
+    /**
+     * Inserts a concept unless the workspace already holds one with the
+     * same id.
+     *
+     * @param concept the concept
+     */
+    private void insertConceptIfAbsent(Concept concept) throws SQLException {
+        try (PreparedStatement ps = connection.prepareStatement(
+                "INSERT OR IGNORE INTO concept(id, workspace_id, name, definition, domain, "
+                        + "created_at) VALUES (?,?,?,?,?,?)")) {
+            ps.setString(1, concept.id());
+            ps.setString(2, concept.workspaceId());
+            ps.setString(3, concept.name());
+            ps.setString(4, concept.definition());
+            ps.setString(5, concept.domain());
+            ps.setString(6, concept.createdAt());
+            ps.executeUpdate();
+        }
+    }
+
+    private void upsertSource(Source s) throws SQLException {
+        try (PreparedStatement ps = connection.prepareStatement(
+                "INSERT OR REPLACE INTO source(id, workspace_id, kind, title, locator, authority, "
+                        + "freshness, excerpt, added_at, content_hash, published_at, language, "
+                        + "format) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)")) {
+            ps.setString(1, s.id());
+            ps.setString(2, s.workspaceId());
+            ps.setString(3, s.kind().name());
+            ps.setString(4, s.title());
+            ps.setString(5, s.locator());
+            ps.setInt(6, s.authority());
+            ps.setInt(7, s.freshness());
+            ps.setString(8, s.excerpt());
+            ps.setString(9, s.addedAt());
+            ps.setString(10, s.contentHash());
+            ps.setString(11, s.publishedAt());
+            ps.setString(12, s.language());
+            ps.setString(13, s.format());
+            ps.executeUpdate();
+        }
+    }
+
+    private void upsertClaim(Claim c) throws SQLException {
+        try (PreparedStatement ps = connection.prepareStatement(
+                "INSERT OR REPLACE INTO claim(id, workspace_id, concept_id, proposition, scope, "
+                        + "context, status, confidence, version, introduced_by_source_id, "
+                        + "extraction_method, validation_method, warrant, derivation_status, "
+                        + "created_at, updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)")) {
+            ps.setString(1, c.id());
+            ps.setString(2, c.workspaceId());
+            ps.setString(3, c.conceptId());
+            ps.setString(4, c.proposition());
+            ps.setString(5, c.scope());
+            ps.setString(6, c.context());
+            ps.setString(7, c.status().name());
+            ps.setDouble(8, c.confidence());
+            ps.setInt(9, c.version());
+            ps.setString(10, c.introducedBySourceId());
+            ps.setString(11, c.extractionMethod());
+            ps.setString(12, c.validationMethod());
+            ps.setString(13, c.warrant().name());
+            ps.setString(14, c.derivationStatus().name());
+            ps.setString(15, c.createdAt());
+            ps.setString(16, c.updatedAt());
+            ps.executeUpdate();
+        }
+    }
+
+    private void insertEvidence(Evidence e) throws SQLException {
+        try (PreparedStatement ps = connection.prepareStatement(
+                "INSERT OR REPLACE INTO evidence(id, workspace_id, claim_id, source_id, relation, "
+                        + "excerpt, quality, recorded_at) VALUES (?,?,?,?,?,?,?,?)")) {
+            ps.setString(1, e.id());
+            ps.setString(2, e.workspaceId());
+            ps.setString(3, e.claimId());
+            ps.setString(4, e.sourceId());
+            ps.setString(5, e.relation().name());
+            ps.setString(6, e.excerpt());
+            ps.setInt(7, e.quality());
+            ps.setString(8, e.recordedAt());
+            ps.executeUpdate();
+        }
+    }
+
+    private void upsertRepresentation(Representation r) throws SQLException {
+        try (PreparedStatement ps = connection.prepareStatement(
+                "INSERT OR REPLACE INTO representation(id, workspace_id, concept_id, level, audience, "
+                        + "statement, scope, assumptions, included_facts, omitted, validity_conditions, "
+                        + "prerequisites, refines, confidence, created_at) "
+                        + "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)")) {
+            ps.setString(1, r.id());
+            ps.setString(2, r.workspaceId());
+            ps.setString(3, r.conceptId());
+            ps.setString(4, r.level().name());
+            ps.setString(5, r.audience());
+            ps.setString(6, r.statement());
+            ps.setString(7, r.scope());
+            ps.setString(8, writeJson(r.assumptions()));
+            ps.setString(9, writeJson(r.includedFacts()));
+            ps.setString(10, writeJson(r.deliberatelyOmitted()));
+            ps.setString(11, writeJson(r.validityConditions()));
+            ps.setString(12, writeJson(r.prerequisiteConceptIds()));
+            ps.setString(13, r.refinesRepresentationId());
+            ps.setDouble(14, r.confidence());
+            ps.setString(15, r.createdAt());
+            ps.executeUpdate();
+        }
+    }
+
+    private void insertRevision(KnowledgeRevision rev) throws SQLException {
+        try (PreparedStatement ps = connection.prepareStatement(
+                "INSERT OR REPLACE INTO revision(id, workspace_id, target_type, target_id, kind, "
+                        + "summary, added_facts, still_valid, no_longer_valid, newly_explained, "
+                        + "evidence_ids, recorded_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)")) {
+            ps.setString(1, rev.id());
+            ps.setString(2, rev.workspaceId());
+            ps.setString(3, rev.targetType());
+            ps.setString(4, rev.targetId());
+            ps.setString(5, rev.kind().name());
+            ps.setString(6, rev.summary());
+            ps.setString(7, writeJson(rev.addedFacts()));
+            ps.setString(8, writeJson(rev.stillValidAssumptions()));
+            ps.setString(9, writeJson(rev.noLongerValidAssumptions()));
+            ps.setString(10, writeJson(rev.newlyExplainedCases()));
+            ps.setString(11, writeJson(rev.evidenceIds()));
+            ps.setString(12, rev.recordedAt());
+            ps.executeUpdate();
+        }
+    }
+
+    // ── the episodic log of asked questions ───────────────────────────────────
+
+    /**
+     * Record that a question was asked, and fold it into the record of its
+     * canonical key.
+     *
+     * <p>Two wordings of the same question share one record: the count
+     * grows, the earliest asking is kept, and the most recent wording is
+     * kept because it is the one the user last used.
+     */
+    public AskedQuestion recordAskedQuestion(String workspaceId, String question,
+                                             List<String> uncoveredTerms, boolean answered,
+                                             long askedAt) {
+        String key = QuestionConsolidator.canonicalKey(question);
+        String id = Ids.askedQuestion(workspaceId, key);
+        try (PreparedStatement ps = connection.prepareStatement(
+                "SELECT times_asked, answered, first_asked_at, last_asked_at, status, "
+                        + "resolution_note FROM asked_question WHERE id = ?")) {
+            ps.setString(1, id);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    int times = rs.getInt("times_asked") + 1;
+                    boolean wasAnswered = answered || rs.getInt("answered") == 1;
+                    // A question the workspace could answer is not a gap.
+                    // The status says whether there is still something it
+                    // does not know, so an answered question is RESOLVED
+                    // from the start - and the record of the asking is kept
+                    // either way.
+                    AskedQuestion.Status newStatus = wasAnswered
+                            ? AskedQuestion.Status.RESOLVED
+                            : AskedQuestion.Status.OPEN;
+                    long first = rs.getLong("first_asked_at");
+                    AskedQuestion.Status status = AskedQuestion.Status.valueOf(rs.getString("status"));
+                    String note = rs.getString("resolution_note");
+                    try (PreparedStatement update = connection.prepareStatement(
+                            "UPDATE asked_question SET question = ?, uncovered_terms = ?, "
+                                    + "times_asked = ?, last_asked_at = ?, status = ?, "
+                                    + "resolution_note = ?, answered = ? WHERE id = ?")) {
+                        update.setString(1, question);
+                        update.setString(2, writeJson(uncoveredTerms));
+                        update.setInt(3, times);
+                        update.setLong(4, askedAt);
+                        update.setString(5, newStatus.name());
+                        update.setString(6, note);
+                        update.setInt(7, wasAnswered ? 1 : 0);
+                        update.setString(8, id);
+                        update.executeUpdate();
+                    }
+                    return new AskedQuestion(id, workspaceId, key, question, uncoveredTerms,
+                            times, wasAnswered, Instant.ofEpochMilli(first).toString(),
+                            Instant.ofEpochMilli(askedAt).toString(), newStatus, note,
+                            null, null, null);
+                }
+            }
+        } catch (SQLException e) {
+            throw new IllegalStateException("Failed to read the asked question", e);
+        }
+        try (PreparedStatement ps = connection.prepareStatement(
+                "INSERT INTO asked_question(id, workspace_id, canonical_key, question, "
+                        + "uncovered_terms, times_asked, first_asked_at, last_asked_at, status, "
+                        + "resolution_note, answered) VALUES (?,?,?,?,?,?,?,?,?,?,?)")) {
+            ps.setString(1, id);
+            ps.setString(2, workspaceId);
+            ps.setString(3, key);
+            ps.setString(4, question);
+            ps.setString(5, writeJson(uncoveredTerms));
+            ps.setInt(6, 1);
+            ps.setLong(7, askedAt);
+            ps.setLong(8, askedAt);
+            ps.setString(9, answered ? AskedQuestion.Status.RESOLVED.name()
+                    : AskedQuestion.Status.OPEN.name());
+            ps.setString(10, answered
+                    ? "The workspace answered this question when it was asked."
+                    : null);
+            ps.setInt(11, answered ? 1 : 0);
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            throw new IllegalStateException("Failed to record the asked question", e);
+        }
+        return new AskedQuestion(id, workspaceId, key, question, uncoveredTerms, 1, answered,
+                Instant.ofEpochMilli(askedAt).toString(), Instant.ofEpochMilli(askedAt).toString(),
+                answered ? AskedQuestion.Status.RESOLVED : AskedQuestion.Status.OPEN,
+                answered ? "The workspace answered this question when it was asked." : null,
+                null, null, null);
+    }
+
+    /** The asked questions of a workspace, most recently asked first. */
+    public List<AskedQuestion> askedQuestions(String workspaceId) {
+        return query("SELECT id, workspace_id, canonical_key, question, uncovered_terms, "
+                + "times_asked, first_asked_at, last_asked_at, status, resolution_note, answered, "
+                + "forgotten_at, forgotten_kind, forgotten_reason "
+                + "FROM asked_question WHERE workspace_id = ? ORDER BY times_asked DESC, "
+                + "last_asked_at DESC", workspaceId, rs -> new AskedQuestion(
+                rs.getString("id"), rs.getString("workspace_id"), rs.getString("canonical_key"),
+                rs.getString("question"), readJsonList(rs.getString("uncovered_terms")),
+                rs.getInt("times_asked"), rs.getInt("answered") == 1,
+                Instant.ofEpochMilli(rs.getLong("first_asked_at")).toString(),
+                Instant.ofEpochMilli(rs.getLong("last_asked_at")).toString(),
+                AskedQuestion.Status.valueOf(rs.getString("status")),
+                rs.getString("resolution_note"),
+                rs.getLong("forgotten_at") == 0 ? null
+                        : Instant.ofEpochMilli(rs.getLong("forgotten_at")).toString(),
+                rs.getString("forgotten_kind"),
+                rs.getString("forgotten_reason")));
+    }
+
+    /**
+     * Marks an asked question as forgotten.
+     *
+     * <p>The record is kept and marked, with the instant and the grounds of
+     * the forgetting. An audit that cannot see this cannot tell a
+     * forgetting from a loss.
+     *
+     * @param workspaceId the workspace
+     * @param id the record's id
+     * @param kind the rule that named the record
+     * @param reason why the rule named it
+     * @param nowMs the instant of the forgetting
+     * @return true when a record was marked
+     */
+    public boolean forgetAskedQuestion(String workspaceId, String id, String kind, String reason,
+                                       long nowMs) {
+        try (PreparedStatement ps = connection.prepareStatement(
+                "UPDATE asked_question SET forgotten_at = ?, forgotten_kind = ?, "
+                        + "forgotten_reason = ? WHERE workspace_id = ? AND id = ? "
+                        + "AND forgotten_at IS NULL")) {
+            ps.setLong(1, nowMs);
+            ps.setString(2, kind);
+            ps.setString(3, reason);
+            ps.setString(4, workspaceId);
+            ps.setString(5, id);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            throw new IllegalStateException("Failed to forget the asked question", e);
+        }
+    }
+
+    /**
+     * Reads the Hebbian state of a workspace's concept.
+     *
+     * @param workspaceId the workspace
+     * @param conceptId the concept
+     * @return the state, or null when the workspace holds none
+     */
+    public io.matrix.neuron.HebbianUpdater.State hebbianState(String workspaceId, String conceptId) {
+        try (PreparedStatement ps = connection.prepareStatement(
+                "SELECT weights, accumulator FROM hebbian_binding "
+                        + "WHERE workspace_id = ? AND concept_id = ?")) {
+            ps.setString(1, workspaceId);
+            ps.setString(2, conceptId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (!rs.next()) {
+                    return null;
+                }
+                return new io.matrix.neuron.HebbianUpdater.State(
+                        io.matrix.neuron.HdcEncoding.fromBits(rs.getString(1)),
+                        io.matrix.neuron.HdcEncoding.fromAccumulator(rs.getString(2)));
+            }
+        } catch (SQLException e) {
+            throw new IllegalStateException("Failed to read the hebbian state", e);
+        }
+    }
+
+    /**
+     * Writes the Hebbian state of a workspace's concept.
+     *
+     * @param workspaceId the workspace
+     * @param conceptId the concept
+     * @param state the state
+     */
+    @io.matrix.auditor.ArticleIPermitted(value = "the updated_at stamp of the stored binding; it "
+            + "records WHEN the binding was written, and no decision reads it")
+    public void saveHebbianState(String workspaceId, String conceptId,
+                                  io.matrix.neuron.HebbianUpdater.State state) {
+        try (PreparedStatement ps = connection.prepareStatement(
+                "INSERT INTO hebbian_binding(workspace_id, concept_id, weights, accumulator, "
+                        + "updated_at) VALUES(?, ?, ?, ?, ?) "
+                        + "ON CONFLICT(workspace_id, concept_id) DO UPDATE SET "
+                        + "weights = excluded.weights, accumulator = excluded.accumulator, "
+                        + "updated_at = excluded.updated_at")) {
+            ps.setString(1, workspaceId);
+            ps.setString(2, conceptId);
+            ps.setString(3, io.matrix.neuron.HdcEncoding.toBits(state.weights));
+            ps.setString(4, io.matrix.neuron.HdcEncoding.toAccumulator(state.accumulator));
+            ps.setString(5, Long.toString(System.currentTimeMillis()));
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            throw new IllegalStateException("Failed to save the hebbian state", e);
+        }
+    }
+
+    /**
+     * The concepts of a workspace that hold a Hebbian state.
+     *
+     * @param workspaceId the workspace
+     * @return the concept ids
+     */
+    public java.util.Set<String> hebbianConcepts(String workspaceId) {
+        try (PreparedStatement ps = connection.prepareStatement(
+                "SELECT concept_id FROM hebbian_binding WHERE workspace_id = ?")) {
+            ps.setString(1, workspaceId);
+            java.util.Set<String> ids = new java.util.LinkedHashSet<>();
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    ids.add(rs.getString(1));
+                }
+            }
+            return ids;
+        } catch (SQLException e) {
+            throw new IllegalStateException("Failed to read the hebbian concepts", e);
+        }
+    }
+
+    /**
+     * Brings a forgotten record back.
+     *
+     * <p>RECON-W42.7. The consolidation's acceptance criterion needs to be
+     * able to undo its own proposal: the sleep consolidator's rule is that
+     * a proposal is taken only if the held-out measurement does not fall,
+     * and the proposal is rolled back as a batch when it does. The record
+     * is marked forgotten, not deleted, so the rollback is a matter of
+     * clearing the mark.
+     *
+     * @param workspaceId the workspace
+     * @param id the record
+     * @return true when a record was brought back
+     */
+    public boolean reviveAskedQuestion(String workspaceId, String id) {
+        try (PreparedStatement ps = connection.prepareStatement(
+                "UPDATE asked_question SET forgotten_at = NULL, forgotten_kind = NULL, "
+                        + "forgotten_reason = NULL WHERE workspace_id = ? AND id = ? "
+                        + "AND forgotten_at IS NOT NULL")) {
+            ps.setString(1, workspaceId);
+            ps.setString(2, id);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            throw new IllegalStateException("Failed to revive the asked question", e);
+        }
+    }
+
+    /**
+     * Records the verified learning errors of a workspace.
+     *
+     * <p>A record of an error that has not been repeated is not evidence
+     * of a gap, and the outcomes keep it - the table holds the VERIFIED
+     * errors only.
+     *
+     * @param workspaceId the workspace
+     * @param errors the errors
+     */
+    @io.matrix.auditor.ArticleIPermitted(value = "the recorded_at stamp of a verified learning "
+            + "error; it records WHEN the error was verified, and no decision reads it")
+    public void recordLearningErrors(String workspaceId, List<LearningError> errors) {
+        if (errors == null || errors.isEmpty()) {
+            return;
+        }
+        try (PreparedStatement ps = connection.prepareStatement(
+                "INSERT OR REPLACE INTO learning_error(id, workspace_id, item_id, concept_id, "
+                        + "dimension, learner_answer, expected_answer, verified, recorded_at) "
+                        + "VALUES (?,?,?,?,?,?,?,?,?)")) {
+            for (LearningError error : errors) {
+                ps.setString(1, error.id());
+                ps.setString(2, error.workspaceId());
+                ps.setString(3, error.itemId());
+                ps.setString(4, error.conceptId());
+                ps.setString(5, error.dimension().name());
+                ps.setString(6, error.learnerAnswer());
+                ps.setString(7, error.expectedAnswer());
+                ps.setInt(8, error.verified() ? 1 : 0);
+                ps.setString(9, Instant.now().toString());
+                ps.addBatch();
+            }
+            ps.executeBatch();
+        } catch (SQLException e) {
+            throw new IllegalStateException("Failed to record the learning errors", e);
+        }
+    }
+
+    /**
+     * Records the generated assessment items of a workspace.
+     *
+     * @param workspaceId the workspace
+     * @param items the items
+     */
+    @io.matrix.auditor.ArticleIPermitted(value = "the recorded_at stamp of a generated assessment "
+            + "item; it records WHEN the item was generated, and no decision reads it")
+    public void recordAssessmentItems(String workspaceId, List<AssessmentItem> items) {
+        if (items == null || items.isEmpty()) {
+            return;
+        }
+        try (PreparedStatement ps = connection.prepareStatement(
+                "INSERT OR REPLACE INTO assessment_item(id, workspace_id, concept_id, dimension, "
+                        + "prompt, key_terms, difficulty, variant, critical, held_out, "
+                        + "recorded_at) VALUES (?,?,?,?,?,?,?,?,?,?,?)")) {
+            for (AssessmentItem item : items) {
+                ps.setString(1, item.id());
+                ps.setString(2, workspaceId);
+                ps.setString(3, item.conceptId());
+                ps.setString(4, item.dimension().name());
+                ps.setString(5, item.prompt());
+                ps.setString(6, String.join(",", item.keyTerms()));
+                ps.setInt(7, item.difficulty());
+                ps.setString(8, item.variant());
+                ps.setInt(9, item.critical() ? 1 : 0);
+                ps.setInt(10, item.heldOut() ? 1 : 0);
+                ps.setString(11, java.time.Instant.now().toString());
+                ps.addBatch();
+            }
+            ps.executeBatch();
+        } catch (SQLException e) {
+            throw new IllegalStateException("Failed to record the assessment items", e);
+        }
+    }
+
+    /**
+     * The generated assessment items of a workspace.
+     *
+     * @param workspaceId the workspace
+     * @return the items
+     */
+    public List<AssessmentItem> assessmentItems(String workspaceId) {
+        return query("SELECT id, workspace_id, concept_id, dimension, prompt, key_terms, "
+                + "difficulty, variant, critical, held_out FROM assessment_item "
+                + "WHERE workspace_id = ? ORDER BY id", workspaceId, rs -> new AssessmentItem(
+                rs.getString("id"), rs.getString("concept_id"),
+                LearningDimension.valueOf(rs.getString("dimension")),
+                rs.getString("prompt"), splitList(rs.getString("key_terms")),
+                rs.getInt("difficulty"), rs.getString("variant"),
+                rs.getInt("critical") != 0, rs.getInt("held_out") != 0,
+                List.of(), null));
+    }
+
+    /**
+     * Records a turn of the conversation.
+     *
+     * @param workspaceId the workspace
+     * @param turn the turn
+     */
+    @io.matrix.auditor.ArticleIPermitted(value = "the recorded_at stamp of a conversation turn; "
+            + "it records WHEN the turn was said, and the transcript is ordered by that record "
+            + "rather than decided by it")
+    public void recordDialogueTurn(String workspaceId, DialogueContext.Turn turn) {
+        try (PreparedStatement ps = connection.prepareStatement(
+                "INSERT OR REPLACE INTO dialogue_turn(id, workspace_id, question, concept_ids, "
+                        + "concept_names, claim_ids, language, answered, act, recorded_at, "
+                        + "forgotten_at) VALUES (?,?,?,?,?,?,?,?,?,?,NULL)")) {
+            ps.setString(1, turn.id());
+            ps.setString(2, workspaceId);
+            ps.setString(3, turn.question());
+            ps.setString(4, String.join(",", turn.conceptIds()));
+            ps.setString(5, String.join(",", turn.conceptNames()));
+            ps.setString(6, String.join(",", turn.claimIds()));
+            ps.setString(7, turn.language());
+            ps.setInt(8, turn.answered() ? 1 : 0);
+            ps.setString(9, turn.act().name());
+            ps.setLong(10, System.currentTimeMillis());
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            throw new IllegalStateException("Failed to record the dialogue turn", e);
+        }
+    }
+
+    /**
+     * The live turns of a workspace's conversation, oldest first.
+     *
+     * @param workspaceId the workspace
+     * @param limit how many to read
+     * @return the turns
+     */
+    public List<DialogueContext.Turn> dialogueTurns(String workspaceId, int limit) {
+        List<DialogueContext.Turn> turns = query("SELECT id, workspace_id, question, "
+                + "concept_ids, concept_names, claim_ids, language, answered, act "
+                + "FROM dialogue_turn WHERE workspace_id = ? AND forgotten_at IS NULL "
+                + "ORDER BY recorded_at DESC, id DESC LIMIT " + Math.max(1, limit),
+                workspaceId, rs -> new DialogueContext.Turn(
+                rs.getString("id"), rs.getString("question"),
+                splitList(rs.getString("concept_ids")), splitList(rs.getString("concept_names")),
+                splitList(rs.getString("claim_ids")), rs.getString("language"),
+                rs.getInt("answered") != 0,
+                DialogueAct.Act.valueOf(rs.getString("act"))));
+        // The store reads the newest first; the conversation is oldest
+        // first.
+        java.util.Collections.reverse(turns);
+        return turns;
+    }
+
+    /**
+     * Marks the turns that fall out of the working memory.
+     *
+     * <p>The turns are MARKED, not deleted: the mission's §8 forbids
+     * destroying the historical evidence, and the record of what was asked
+     * and how it was classified is evidence.
+     *
+     * @param workspaceId the workspace
+     * @param keep how many live turns to keep
+     * @return the number of turns that were marked
+     */
+    @io.matrix.auditor.ArticleIPermitted(value = "the forgotten_at stamp of a turn that fell out "
+            + "of the working memory; it records WHEN the turn was marked, and WHICH turns are "
+            + "marked is decided by the count and not by the clock")
+    public int forgetOldDialogueTurns(String workspaceId, int keep) {
+        try (PreparedStatement ps = connection.prepareStatement(
+                "UPDATE dialogue_turn SET forgotten_at = ? WHERE workspace_id = ? "
+                        + "AND forgotten_at IS NULL AND id NOT IN ("
+                        + "SELECT id FROM dialogue_turn WHERE workspace_id = ? "
+                        + "AND forgotten_at IS NULL ORDER BY recorded_at DESC, id DESC LIMIT ?)")) {
+            ps.setLong(1, System.currentTimeMillis());
+            ps.setString(2, workspaceId);
+            ps.setString(3, workspaceId);
+            ps.setInt(4, Math.max(0, keep));
+            return ps.executeUpdate();
+        } catch (SQLException e) {
+            throw new IllegalStateException("Failed to forget the old dialogue turns", e);
+        }
+    }
+
+    /** Whether the source table already has the column. */
+    private static boolean sourceColumnExists(Statement st, String column) throws SQLException {
+        return tableColumnExists(st, "source", column);
+    }
+
+    /**
+     * Whether a column is already present on a table.
+     *
+     * <p>The check exists because SQLite has no {@code ADD COLUMN IF NOT EXISTS}: running the
+     * same migration twice would fail, and a migration that is not idempotent is a migration
+     * that breaks the first time a database is copied.</p>
+     */
+    private static boolean tableColumnExists(Statement st, String table, String column)
+            throws SQLException {
+        try (var rs = st.executeQuery("PRAGMA table_info(" + table + ")")) {
+            while (rs.next()) {
+                if (column.equals(rs.getString("name"))) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    /** Splits a comma-separated list. */
+    private static List<String> splitList(String value) {
+        if (value == null || value.isBlank()) {
+            return List.of();
+        }
+        List<String> parts = new ArrayList<>();
+        for (String part : value.split(",")) {
+            if (!part.isBlank()) {
+                parts.add(part);
+            }
+        }
+        return parts;
+    }
+
+    /**
+     * The learning errors of a workspace.
+     *
+     * @param workspaceId the workspace
+     * @return the errors
+     */
+    public List<LearningError> learningErrors(String workspaceId) {
+        return query("SELECT id, workspace_id, item_id, concept_id, dimension, learner_answer, "
+                + "expected_answer, verified FROM learning_error WHERE workspace_id = ? "
+                + "ORDER BY concept_id, item_id", workspaceId, rs -> new LearningError(
+                rs.getString("id"), rs.getString("workspace_id"), rs.getString("item_id"),
+                rs.getString("concept_id"),
+                LearningDimension.valueOf(rs.getString("dimension")),
+                rs.getString("learner_answer"), rs.getString("expected_answer"),
+                rs.getInt("verified") != 0));
+    }
+
+    /**
+     * The records that were forgotten, and why.
+     *
+     * @param workspaceId the workspace
+     * @return the forgotten records
+     */
+    public List<AskedQuestion> forgottenAskedQuestions(String workspaceId) {
+        return askedQuestions(workspaceId).stream().filter(AskedQuestion::forgotten).toList();
+    }
+
+    /** Whether the asked-question table already has the column. */
+    private static boolean askedColumnExists(Statement st, String column) throws SQLException {
+        try (var rs = st.executeQuery("PRAGMA table_info(asked_question)")) {
+            while (rs.next()) {
+                if (column.equals(rs.getString("name"))) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Mark a question resolved.
+     *
+     * <p>The record is kept. A question that was once unanswerable and now
+     * is not is evidence that the workspace learned something, and deleting
+     * it would throw that evidence away.
+     */
+    public void resolveAskedQuestion(String workspaceId, String canonicalKey, String note) {
+        try (PreparedStatement ps = connection.prepareStatement(
+                "UPDATE asked_question SET status = ?, resolution_note = ? "
+                        + "WHERE workspace_id = ? AND canonical_key = ?")) {
+            ps.setString(1, AskedQuestion.Status.RESOLVED.name());
+            ps.setString(2, note);
+            ps.setString(3, workspaceId);
+            ps.setString(4, canonicalKey);
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            throw new IllegalStateException("Failed to resolve the asked question", e);
+        }
+    }
+
+    // ── assessment history ───────────────────────────────────────────────────
+    /**
+     * Record one assessment outcome.
+     *
+     * <p>The outcome is stored with the concept and dimension it belongs to,
+     * so the learning state can be derived after a restart without the
+     * dataset having to be present. Re-running the same item in the same
+     * session replaces the earlier outcome rather than doubling it.
+     */
+    public void recordOutcome(String workspaceId, AssessmentItem item, AssessmentOutcome outcome) {
+        String id = workspaceId + "|" + item.id() + "|" + outcome.sessionId() + "|"
+                + outcome.answeredAt();
+        try (PreparedStatement ps = connection.prepareStatement(
+                "INSERT OR REPLACE INTO assessment_outcome(id, workspace_id, item_id, concept_id, "
+                        + "dimension, correct, score, claimed_confidence, learner_answer, session_id, "
+                        + "answered_at, held_out) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)")) {
+            ps.setString(1, id);
+            ps.setString(2, workspaceId);
+            ps.setString(3, item.id());
+            ps.setString(4, item.conceptId());
+            ps.setString(5, item.dimension().name());
+            ps.setInt(6, outcome.correct() ? 1 : 0);
+            ps.setDouble(7, outcome.score());
+            ps.setDouble(8, outcome.claimedConfidence());
+            ps.setString(9, outcome.learnerAnswer());
+            ps.setString(10, outcome.sessionId());
+            ps.setLong(11, outcome.answeredAt());
+            ps.setInt(12, item.heldOut() ? 1 : 0);
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            throw new IllegalStateException("Failed to record the assessment outcome", e);
+        }
+    }
+
+    /** Every assessment outcome recorded for a workspace, oldest first. */
+    public List<AssessmentOutcome> outcomes(String workspaceId) {
+        return query("SELECT item_id, correct, score, claimed_confidence, learner_answer, "
+                + "session_id, answered_at, held_out FROM assessment_outcome WHERE workspace_id = ? "
+                + "ORDER BY answered_at, session_id, item_id", workspaceId, rs -> new AssessmentOutcome(
+                rs.getString("item_id"), rs.getInt("correct") != 0, rs.getDouble("score"),
+                rs.getDouble("claimed_confidence"), rs.getString("learner_answer"),
+                rs.getString("session_id"), rs.getLong("answered_at"),
+                rs.getInt("held_out") != 0));
+    }
+
+    /** The number of assessment outcomes recorded for a workspace. */
+    public int outcomeCount(String workspaceId) {
+        Integer count = queryOne("SELECT COUNT(*) AS n FROM assessment_outcome WHERE workspace_id = ?",
+                workspaceId, rs -> rs.getInt("n"));
+        return count == null ? 0 : count;
+    }
+
+    // ── reads ─────────────────────────────────────────────────────────────────
+
+    public List<Concept> concepts(String workspaceId) {
+        return query("SELECT id, workspace_id, name, definition, domain, created_at "
+                + "FROM concept WHERE workspace_id = ? ORDER BY name", workspaceId, rs -> new Concept(
+                rs.getString("id"), rs.getString("workspace_id"), rs.getString("name"),
+                rs.getString("definition"), rs.getString("domain"), rs.getString("created_at")));
+    }
+
+    public List<Source> sources(String workspaceId) {
+        return query("SELECT id, workspace_id, kind, title, locator, authority, freshness, excerpt, "
+                + "added_at, content_hash, published_at, language, format "
+                + "FROM source WHERE workspace_id = ? ORDER BY title", workspaceId, rs -> new Source(
+                rs.getString("id"), rs.getString("workspace_id"),
+                SourceKind.valueOf(rs.getString("kind")), rs.getString("title"),
+                rs.getString("locator"), rs.getInt("authority"), rs.getInt("freshness"),
+                rs.getString("excerpt"), rs.getString("added_at"),
+                rs.getString("content_hash"), rs.getString("published_at"),
+                rs.getString("language"), rs.getString("format")));
+    }
+
+    public List<Claim> claims(String workspaceId) {
+        return query("SELECT id, workspace_id, concept_id, proposition, scope, context, status, "
+                + "confidence, version, introduced_by_source_id, extraction_method, validation_method, "
+                + "warrant, derivation_status, created_at, updated_at "
+                + "FROM claim WHERE workspace_id = ? ORDER BY id", workspaceId, rs -> new Claim(
+                rs.getString("id"), rs.getString("workspace_id"), rs.getString("concept_id"),
+                rs.getString("proposition"), rs.getString("scope"), rs.getString("context"),
+                ClaimStatus.valueOf(rs.getString("status")), rs.getDouble("confidence"),
+                rs.getInt("version"), rs.getString("introduced_by_source_id"),
+                rs.getString("extraction_method"), rs.getString("validation_method"),
+                rs.getString("warrant") == null ? ClaimWarrant.NONE
+                        : ClaimWarrant.valueOf(rs.getString("warrant")),
+                rs.getString("derivation_status") == null ? DerivationStatus.NOT_DERIVED
+                        : DerivationStatus.valueOf(rs.getString("derivation_status")),
+                rs.getString("created_at"), rs.getString("updated_at")));
+    }
+
+    /**
+     * Records an inference: the rule, its premises in order, and the
+     * conclusion it produced.
+     *
+     * <p>A derivation that is not recorded cannot be shown, and the
+     * mission's §6.1 requires the answer to be explainable "through its
+     * supporting claims and operations".
+     */
+    public void recordDerivation(Derivation derivation) {
+        validateDerivation(derivation);
+        try {
+            connection.setAutoCommit(false);
+            try {
+            try (PreparedStatement ps = connection.prepareStatement(
+                    "INSERT OR REPLACE INTO derivation(id, workspace_id, rule_id, rule_name, "
+                            + "connective, conclusion_claim_id, status, recorded_at) "
+                            + "VALUES (?,?,?,?,?,?,?,?)")) {
+                ps.setString(1, derivation.id());
+                ps.setString(2, derivation.workspaceId());
+                ps.setString(3, derivation.ruleId());
+                ps.setString(4, derivation.ruleName());
+                ps.setString(5, derivation.connective().name());
+                ps.setString(6, derivation.conclusionClaimId());
+                ps.setString(7, derivation.status().name());
+                ps.setString(8, derivation.recordedAt());
+                ps.executeUpdate();
+            }
+            try (PreparedStatement ps = connection.prepareStatement(
+                    "DELETE FROM derivation_premise WHERE derivation_id = ?")) {
+                ps.setString(1, derivation.id());
+                ps.executeUpdate();
+            }
+            try (PreparedStatement ps = connection.prepareStatement(
+                    "INSERT INTO derivation_premise(derivation_id, ordinal, claim_id) "
+                            + "VALUES (?,?,?)")) {
+                for (int i = 0; i < derivation.premiseClaimIds().size(); i++) {
+                    ps.setString(1, derivation.id());
+                    ps.setInt(2, i);
+                    ps.setString(3, derivation.premiseClaimIds().get(i));
+                    ps.addBatch();
+                }
+                ps.executeBatch();
+            }
+            connection.commit();
+            } catch (SQLException | RuntimeException e) {
+                connection.rollback();
+                throw e;
+            } finally {
+                connection.setAutoCommit(true);
+            }
+        } catch (SQLException e) {
+            throw new IllegalStateException("failed to record the derivation", e);
+        }
+    }
+
+    /**
+     * Checks that a derivation can be recorded at all.
+     *
+     * <p>Three things must hold: the conclusion and every premise must be
+     * claims this workspace holds; the one-premise connectives must have
+     * exactly one premise, because IMPLIES and NOT read the first premise
+     * and a rule that gives them more has no determined meaning; and the
+     * derivation must name its rule.
+     */
+    private void validateDerivation(Derivation derivation) {
+        if (derivation == null) {
+            throw new IllegalArgumentException("the derivation must not be null");
+        }
+        if (derivation.ruleId() == null || derivation.ruleId().isBlank()) {
+            throw new IllegalArgumentException("a derivation must name its rule");
+        }
+        if (derivation.conclusionClaimId() == null || derivation.conclusionClaimId().isBlank()) {
+            throw new IllegalArgumentException("a derivation must name its conclusion");
+        }
+        if (derivation.premiseClaimIds().isEmpty()) {
+            throw new IllegalArgumentException("a derivation must have at least one premise");
+        }
+        if (derivation.connective().usesFirstPremiseOnly() && derivation.premiseClaimIds().size() > 1) {
+            throw new IllegalArgumentException("the connective " + derivation.connective()
+                    + " reads the first premise only, so the derivation must have exactly one");
+        }
+        for (String claimId : derivation.premiseClaimIds()) {
+            if (!claimExists(derivation.workspaceId(), claimId)) {
+                throw new IllegalArgumentException(
+                        "the premise " + claimId + " is not a claim of this workspace");
+            }
+        }
+        if (!claimExists(derivation.workspaceId(), derivation.conclusionClaimId())) {
+            throw new IllegalArgumentException(
+                    "the conclusion " + derivation.conclusionClaimId() + " is not a claim of this workspace");
+        }
+    }
+
+    private boolean claimExists(String workspaceId, String claimId) {
+        try (PreparedStatement ps = connection.prepareStatement(
+                "SELECT 1 FROM claim WHERE id = ? AND workspace_id = ?")) {
+            ps.setString(1, claimId);
+            ps.setString(2, workspaceId);
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next();
+            }
+        } catch (SQLException e) {
+            throw new IllegalStateException("failed to check the claim " + claimId, e);
+        }
+    }
+
+    /** The derivations recorded for a workspace, oldest first. */
+    public List<Derivation> derivations(String workspaceId) {
+        Map<String, List<String>> premises = new LinkedHashMap<>();
+        try (PreparedStatement ps = connection.prepareStatement(
+                "SELECT derivation_id, claim_id FROM derivation_premise "
+                        + "WHERE derivation_id IN (SELECT id FROM derivation WHERE workspace_id = ?) "
+                        + "ORDER BY derivation_id, ordinal")) {
+            ps.setString(1, workspaceId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    premises.computeIfAbsent(rs.getString("derivation_id"), key -> new ArrayList<>())
+                            .add(rs.getString("claim_id"));
+                }
+            }
+        } catch (SQLException e) {
+            throw new IllegalStateException("failed to read the derivation premises", e);
+        }
+        return query("SELECT id, workspace_id, rule_id, rule_name, connective, "
+                + "conclusion_claim_id, status, recorded_at FROM derivation "
+                + "WHERE workspace_id = ? ORDER BY recorded_at, id", workspaceId, rs -> new Derivation(
+                rs.getString("id"), rs.getString("workspace_id"), rs.getString("rule_id"),
+                rs.getString("rule_name"),
+                Derivation.Connective.valueOf(rs.getString("connective")),
+                rs.getString("conclusion_claim_id"),
+                premises.getOrDefault(rs.getString("id"), List.of()),
+                DerivationStatus.valueOf(rs.getString("status")),
+                rs.getString("recorded_at")));
+    }
+
+    /**
+     * Records a learning goal, replacing any earlier record of it.
+     *
+     * <p>The goal is written whole, in one statement, so a goal is never
+     * half-written: a process that dies mid-write leaves the previous
+     * version, not a mixture.
+     */
+    public void recordGoal(LearningGoal goal) {
+        try (PreparedStatement ps = connection.prepareStatement(
+                "INSERT OR REPLACE INTO learning_goal(id, workspace_id, description, "
+                        + "success_criteria, prerequisites, status, progress_evidence, "
+                        + "failed_attempts, remaining_work, budget_units, budget_used, "
+                        + "last_checkpoint, recovery_instructions, created_at, updated_at) "
+                        + "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)")) {
+            ps.setString(1, goal.id());
+            ps.setString(2, goal.workspaceId());
+            ps.setString(3, goal.description());
+            ps.setString(4, join(goal.successCriteria()));
+            ps.setString(5, join(goal.prerequisiteConceptIds()));
+            ps.setString(6, goal.status().name());
+            ps.setString(7, join(goal.progressEvidenceIds()));
+            ps.setString(8, join(goal.failedAttempts().stream()
+                    .map(attempt -> attempt.id() + "|" + attempt.attempt() + "|" + attempt.reason()
+                            + "|" + attempt.recordedAt())
+                    .toList()));
+            ps.setString(9, goal.remainingWork());
+            ps.setInt(10, goal.budgetUnits());
+            ps.setInt(11, goal.budgetUsed());
+            ps.setString(12, goal.lastCheckpoint());
+            ps.setString(13, goal.recoveryInstructions());
+            ps.setString(14, goal.createdAt());
+            ps.setString(15, goal.updatedAt());
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            throw new IllegalStateException("failed to record the goal " + goal.id(), e);
+        }
+    }
+
+    /** The goals of a workspace. */
+    public List<LearningGoal> goals(String workspaceId) {
+        return query("SELECT id, workspace_id, description, success_criteria, "
+                + "prerequisites, status, progress_evidence, failed_attempts, remaining_work, "
+                + "budget_units, budget_used, last_checkpoint, recovery_instructions, "
+                + "created_at, updated_at FROM learning_goal WHERE workspace_id = ? ORDER BY id",
+                workspaceId, rs -> {
+                    List<LearningGoal.FailedAttempt> failures = new ArrayList<>();
+                    for (String entry : split(rs.getString("failed_attempts"))) {
+                        String[] parts = entry.split("\\|", 4);
+                        failures.add(new LearningGoal.FailedAttempt(
+                                parts.length > 0 ? parts[0] : "",
+                                parts.length > 1 ? parts[1] : "",
+                                parts.length > 2 ? parts[2] : "",
+                                parts.length > 3 ? parts[3] : ""));
+                    }
+                    return new LearningGoal(
+                            rs.getString("id"), rs.getString("workspace_id"),
+                            rs.getString("description"),
+                            split(rs.getString("success_criteria")),
+                            split(rs.getString("prerequisites")),
+                            List.of(),
+                            LearningGoal.Status.valueOf(rs.getString("status")),
+                            split(rs.getString("progress_evidence")),
+                            failures,
+                            rs.getString("remaining_work"),
+                            rs.getInt("budget_units"), rs.getInt("budget_used"),
+                            rs.getString("last_checkpoint"), rs.getString("recovery_instructions"),
+                            rs.getString("created_at"), rs.getString("updated_at"));
+                });
+    }
+
+    /**
+     * Records a goal together with its subtasks.
+     *
+     * <p>The subtasks live in their own table so that a resumed goal can be
+     * inspected piece by piece, and so that a subtask's own evidence is
+     * reachable without parsing the whole goal.
+     */
+    public void recordGoalWithSubtasks(LearningGoal goal) {
+        recordGoal(goal);
+        try {
+            connection.setAutoCommit(false);
+            try {
+                insertGoalSubtasks(goal);
+                connection.commit();
+            } catch (SQLException | RuntimeException e) {
+                connection.rollback();
+                throw e;
+            } finally {
+                connection.setAutoCommit(true);
+            }
+        } catch (SQLException e) {
+            throw new IllegalStateException("failed to record the subtasks of " + goal.id(), e);
+        }
+    }
+
+    /**
+     * W45.2 — writes the subtasks of a goal.
+     *
+     * <p>The subtasks are written in the caller's transaction, so that a snapshot's restore
+     * brings a goal and its subtasks back together or not at all.</p>
+     */
+    private void insertGoalSubtasks(LearningGoal goal) throws SQLException {
+        try (PreparedStatement ps = connection.prepareStatement(
+                "DELETE FROM learning_goal_subtask WHERE goal_id = ?")) {
+            ps.setString(1, goal.id());
+            ps.executeUpdate();
+        }
+        try (PreparedStatement ps = connection.prepareStatement(
+                "INSERT INTO learning_goal_subtask(goal_id, subtask_id, description, "
+                        + "required, prerequisites, status, evidence, note) "
+                        + "VALUES (?,?,?,?,?,?,?,?)")) {
+            for (LearningGoal.Subtask subtask : goal.subtasks()) {
+                ps.setString(1, goal.id());
+                ps.setString(2, subtask.id());
+                ps.setString(3, subtask.description());
+                ps.setBoolean(4, subtask.required());
+                ps.setString(5, join(subtask.prerequisiteSubtaskIds()));
+                ps.setString(6, subtask.status().name());
+                ps.setString(7, join(subtask.evidenceIds()));
+                ps.setString(8, subtask.note());
+                ps.addBatch();
+            }
+            ps.executeBatch();
+        }
+    }
+
+    /** The goals of a workspace, with their subtasks attached. */
+    public List<LearningGoal> goalsWithSubtasks(String workspaceId) {
+        List<LearningGoal> goals = goals(workspaceId);
+        List<LearningGoal> withSubtasks = new ArrayList<>();
+        for (LearningGoal goal : goals) {
+            List<LearningGoal.Subtask> subtasks = new ArrayList<>();
+            try (PreparedStatement ps = connection.prepareStatement(
+                    "SELECT subtask_id, description, required, prerequisites, status, evidence, note "
+                            + "FROM learning_goal_subtask WHERE goal_id = ? ORDER BY subtask_id")) {
+                ps.setString(1, goal.id());
+                try (ResultSet rs = ps.executeQuery()) {
+                    while (rs.next()) {
+                        subtasks.add(new LearningGoal.Subtask(
+                                rs.getString("subtask_id"), rs.getString("description"),
+                                rs.getBoolean("required"),
+                                split(rs.getString("prerequisites")),
+                                LearningGoal.Status.valueOf(rs.getString("status")),
+                                split(rs.getString("evidence")), rs.getString("note")));
+                    }
+                }
+            } catch (SQLException e) {
+                throw new IllegalStateException("failed to read the subtasks of " + goal.id(), e);
+            }
+            withSubtasks.add(new LearningGoal(goal.id(), goal.workspaceId(), goal.description(),
+                    goal.successCriteria(), goal.prerequisiteConceptIds(), subtasks, goal.status(),
+                    goal.progressEvidenceIds(), goal.failedAttempts(), goal.remainingWork(),
+                    goal.budgetUnits(), goal.budgetUsed(), goal.lastCheckpoint(),
+                    goal.recoveryInstructions(), goal.createdAt(), goal.updatedAt()));
+        }
+        return withSubtasks;
+    }
+
+    /** Joins a list with the separator the store uses. */
+    private static String join(List<String> values) {
+        return values == null ? "" : String.join("\u001f", values);
+    }
+
+    /** Splits a stored list back apart. */
+    private static List<String> split(String stored) {
+        if (stored == null || stored.isEmpty()) {
+            return List.of();
+        }
+        return List.of(stored.split("\u001f", -1));
+    }
+
+    /**
+     * Records a conflict between two claims.
+     *
+     * <p>The record is about the two claims, not about either of them.
+     * Recording a conflict changes nothing else: no claim's status moves,
+     * and nothing is deleted.
+     */
+    public void recordContradiction(Contradiction contradiction) {
+        try (PreparedStatement ps = connection.prepareStatement(
+                "INSERT OR REPLACE INTO contradiction(id, workspace_id, claim_a_id, claim_b_id, "
+                        + "kind, detected_by, recorded_at) VALUES (?,?,?,?,?,?,?)")) {
+            ps.setString(1, contradiction.id());
+            ps.setString(2, contradiction.workspaceId());
+            ps.setString(3, contradiction.claimAId());
+            ps.setString(4, contradiction.claimBId());
+            ps.setString(5, contradiction.kind().name());
+            ps.setString(6, contradiction.detectedBy());
+            ps.setString(7, contradiction.recordedAt());
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            throw new IllegalStateException("failed to record the contradiction", e);
+        }
+    }
+
+    /**
+     * W45.0 — records an observation and EVERYTHING that hangs off it, in ONE transaction.
+     *
+     * <p>The W44 path wrote the same observation in three separate committed operations: the
+     * source and the evidence through {@code applyChanges}, then the case, then the link from
+     * the evidence to the case. A process that died between them left a half-written
+     * observation: evidence with no case, or a case with no evidence, or a case whose evidence
+     * pointed at nothing. None of those states is a state a reader can interpret, and the
+     * W45 acceptance criterion is that a failed epistemic write cannot leave a half-linked
+     * structure behind.</p>
+     *
+     * <p>This method writes the source, the evidence, the case, the evidence-to-case link and
+     * the observation's disposition in a single transaction. Either all of it is on disk, or
+     * none of it is.</p>
+     *
+     * @param workspaceId the workspace
+     * @param source      the source of the observation
+     * @param evidence    the evidence the observation provides
+     * @param observation the case
+     * @param disposition what the observation may be believed for
+     * @param reason      why it is in that disposition
+     * @param recordedAt  when the observation was recorded
+     */
+    public void recordObservationAtomically(String workspaceId, Source source, Evidence evidence,
+                                            Case observation, ObservationDisposition disposition,
+                                            String reason, String recordedAt) {
+        recordObservationOccurrence(workspaceId, source, evidence, observation, disposition,
+                reason, null, null, recordedAt);
+    }
+
+    /**
+     * W45.1 — records an observation as ONE occurrence of a canonical case.
+     *
+     * <p><b>Why this is not the same as writing the disposition.</b> The W45.0 method wrote
+     * the disposition with {@code INSERT OR REPLACE}, and the micro-world derives a case id
+     * from the conditions AND the observed outcome, so the same fact comes back as the same
+     * case in a later episode. The write therefore erased the adjudication a review had
+     * taken: the observation and its evidence survived, and the DECISION did not.</p>
+     *
+     * <p>The write is now split in two, because there are two different things to write:</p>
+     * <ul>
+     *   <li>the OCCURRENCE — that the fact was observed again, now, in this episode — which is
+     *       always written;</li>
+     *   <li>the DISPOSITION — where the case stands — which is written ONLY when the case
+     *       stands nowhere yet.</li>
+     * </ul>
+     *
+     * <p>A case that already has a disposition keeps it: a re-observation never adjudicates,
+     * and the rules are these.</p>
+     * <ul>
+     *   <li>no disposition yet — the disposition the session decided is written, and the
+     *       history records it as the first decision about the case;</li>
+     *   <li>the case is ELIGIBLE or UNRESOLVED — the state is NOT changed. The occurrence is
+     *       added, and the reason the session gave is kept WITH the occurrence, because the
+     *       reason belongs to the decision and the decision did not change;</li>
+     *   <li>the case is ACCEPTED or REJECTED — nothing is touched at all. A review's decision
+     *       is not undone by a later look at the same fact.</li>
+     * </ul>
+     *
+     * <p><b>Why the reason of a re-observation is not written over the decision's.</b> The
+     * projection has to be reconstructible from the history, and it can only be that if the
+     * history explains every column of it. A re-observation changes no decision, so it
+     * changes no column of the projection, and the reason it carries stays on the occurrence
+     * where it belongs.</p>
+     *
+     * @param workspaceId the workspace
+     * @param source      the source of the observation
+     * @param evidence    the evidence the observation provides
+     * @param observation the case
+     * @param disposition what the session decided the observation may be believed for
+     * @param reason      why the session decided that
+     * @param episodeId   the episode the observation belongs to, when it is known
+     * @param signalId    the signal that produced the observation, when it is known
+     * @param recordedAt  when the observation was recorded
+     * @return the occurrence that was recorded
+     */
+    public synchronized ObservationOccurrence recordObservationOccurrence(String workspaceId,
+            Source source, Evidence evidence, Case observation, ObservationDisposition disposition,
+            String reason, String episodeId, String signalId, String recordedAt) {
+        ObservationOccurrence occurrence = new ObservationOccurrence(
+                ObservationOccurrence.idForEvidence(evidence.id()), workspaceId, observation.id(),
+                episodeId, signalId, source.id(), evidence.id(), recordedAt, disposition, reason);
+        try {
+            connection.setAutoCommit(false);
+            try {
+                upsertSource(source);
+                insertEvidence(evidence);
+                insertCase(observation);
+                linkEvidenceToCase(evidence.id(), observation.id());
+
+                ObservationDisposition current = currentDisposition(observation.id());
+                if (current == null) {
+                    // The case stands nowhere yet, so this write is its first decision. A
+                    // case cannot be born ACCEPTED or REJECTED: those two states say that a
+                    // REVIEW happened, and the writing of an observation is not a review.
+                    if (!ObservationDisposition.canBeInitialDisposition(disposition)) {
+                        throw new ObservationConflictException(
+                                ObservationConflictException.Kind.TRANSITION,
+                                "the case '" + observation.id() + "' has no disposition yet, so it "
+                                        + "may only be recorded as ELIGIBLE or UNRESOLVED, and not as "
+                                        + disposition);
+                    }
+                    writeProjection(workspaceId, observation.id(), disposition, reason, null, null,
+                            null, null, recordedAt);
+                    appendAdjudication(ObservationAdjudication.decide(
+                            "adj-initial-" + observation.id(), workspaceId, observation.id(),
+                            disposition, reason, null, null, null, null, recordedAt, null));
+                }
+                // The case already has a disposition: the state is left exactly where the
+                // last decision put it, and only the occurrence is added.
+                writeOccurrence(occurrence);
+                connection.commit();
+            } catch (SQLException | RuntimeException e) {
+                connection.rollback();
+                throw e;
+            } finally {
+                connection.setAutoCommit(true);
+            }
+        } catch (SQLException e) {
+            throw new IllegalStateException("failed to record the observation atomically", e);
+        }
+        return occurrence;
+    }
+
+    /**
+     * W45.0 — the disposition of every case of a workspace.
+     *
+     * <p>A case that is ABSENT from the map has no established disposition. The caller must
+     * treat that as {@link ObservationDisposition#conservativeDefault()} — the conservative
+     * default is the caller's job because the store refuses to guess.</p>
+     *
+     * @param workspaceId the workspace
+     * @return the disposition of each case that has one
+     */
+    public Map<String, ObservationDisposition> caseDispositions(String workspaceId) {
+        Map<String, ObservationDisposition> out = new LinkedHashMap<>();
+        try (PreparedStatement ps = connection.prepareStatement(
+                "SELECT case_id, disposition FROM observation_disposition WHERE workspace_id = ?")) {
+            ps.setString(1, workspaceId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    out.put(rs.getString("case_id"),
+                            ObservationDisposition.valueOf(rs.getString("disposition")));
+                }
+            }
+        } catch (SQLException e) {
+            throw new IllegalStateException("failed to read the observation dispositions", e);
+        }
+        return out;
+    }
+
+    /**
+     * W45.0 — the reason an observation is in the disposition it is in.
+     *
+     * @param workspaceId the workspace
+     * @param caseId      the case
+     * @return the reason, or an empty string when the case has no disposition row
+     */
+    public String dispositionReason(String workspaceId, String caseId) {
+        try (PreparedStatement ps = connection.prepareStatement(
+                "SELECT reason FROM observation_disposition WHERE workspace_id = ? AND case_id = ?")) {
+            ps.setString(1, workspaceId);
+            ps.setString(2, caseId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    String reason = rs.getString("reason");
+                    return reason == null ? "" : reason;
+                }
+            }
+        } catch (SQLException e) {
+            throw new IllegalStateException("failed to read the disposition reason", e);
+        }
+        return "";
+    }
+
+    /**
+     * W45.0 — records the disposition of an observation that already exists.
+     *
+     * <p>This is the ADJUDICATION path: a review accepts or rejects a held observation. It
+     * never deletes anything - the observation, its source, its evidence and the link between
+     * them are all left exactly as they were.</p>
+     *
+     * <p><b>W45.1 — the decision id is derived from the content.</b> This entry point carries
+     * no id of its own, so the store derives one from what the decision says. The same
+     * decision therefore always has the same id: it is an idempotent no-op the second time,
+     * and a decision with a different content is a different decision, which the history
+     * keeps beside it. A caller that wants to hand the store a decision id of its own — and
+     * that wants the store to REFUSE a reused id — uses
+     * {@link #adjudicateObservation(ObservationAdjudication)}.</p>
+     *
+     * @param workspaceId                the workspace
+     * @param caseId                     the case
+     * @param disposition                the new disposition
+     * @param reason                     why
+     * @param contradictedPredictionId   the prediction the observation contradicted, if any
+     * @param resolvedBy                 who or what resolved the conflict
+     * @param resolvedAt                 when it was resolved
+     * @param modelRevisionId            the model revision that took the observation in
+     * @param recordedAt                 when the disposition was recorded
+     */
+    public void adjudicateObservation(String workspaceId, String caseId,
+                                       ObservationDisposition disposition, String reason,
+                                       String contradictedPredictionId, String resolvedBy,
+                                       String resolvedAt, String modelRevisionId,
+                                       String recordedAt) {
+        String decisionId = "adj-" + Ids.digest(caseId + "|" + disposition.name() + "|" + reason
+                + "|" + contradictedPredictionId + "|" + resolvedBy + "|" + resolvedAt + "|"
+                + modelRevisionId + "|" + recordedAt);
+        adjudicateObservation(ObservationAdjudication.decide(decisionId, workspaceId, caseId,
+                disposition, reason, contradictedPredictionId, resolvedBy, resolvedAt,
+                modelRevisionId, recordedAt, null));
+    }
+
+    /**
+     * W45.1 — takes a decision about a canonical case and writes it to the history.
+     *
+     * <p><b>What a decision does.</b> It appends a row to the adjudication history and it
+     * updates the projection, in ONE transaction: a reader that sees the new disposition sees
+     * the decision that produced it, and a reader that sees the decision sees the
+     * disposition. Nothing is ever deleted — the observation, its source, its evidence and
+     * every earlier decision stay exactly where they were, and a decision that is later
+     * overturned remains in the history as the decision that was taken.</p>
+     *
+     * <p><b>What happens when the decision arrives twice.</b> The same decision id with the
+     * same content is an idempotent no-op: the second delivery changes nothing and writes no
+     * second row. The same decision id with DIFFERENT content is a conflict — an exception,
+     * never a silent overwrite — because a decision id names one decision, and a store that
+     * let it name two would let a caller rewrite the past by accident.</p>
+     *
+     * <p><b>What happens when two decisions race.</b> The decision is written first, so that
+     * the write lock is held before the state is read; the state is then read again and
+     * compared with what it was when the decision was prepared. If it moved, another writer
+     * decided something in between, and the decision is refused as a conflict rather than
+     * applied to a state it was not written for.</p>
+     *
+     * <p><b>What may move where.</b> The transition is checked against
+     * {@link ObservationDisposition#canTransitionTo(ObservationDisposition)}, which is the
+     * whole transition table. A case that stands nowhere may be decided outright — that is
+     * the FIRST decision about it, not a transition — and a case that is REJECTED may not
+     * become ELIGIBLE, ever: only a review can change a rejection, and the history records
+     * that it happened.</p>
+     *
+     * @param decision the decision to take
+     */
+    public synchronized void adjudicateObservation(ObservationAdjudication decision) {
+        ObservationAdjudication existing = adjudicationById(decision.decisionId());
+        if (existing != null) {
+            if (existing.sameContentAs(decision)) {
+                // The same decision, delivered twice. Nothing changes.
+                return;
+            }
+            throw new ObservationConflictException(ObservationConflictException.Kind.DECISION,
+                    "the decision '" + decision.decisionId() + "' was already taken with a "
+                            + "different content; a decision id may not be reused for another "
+                            + "decision");
+        }
+        ObservationDisposition before = currentDisposition(decision.caseId());
+        try {
+            connection.setAutoCommit(false);
+            try {
+                try {
+                    appendAdjudication(new ObservationAdjudication(decision.decisionId(),
+                            decision.workspaceId(), decision.caseId(), before,
+                            decision.disposition(), decision.reason(),
+                            decision.contradictedPredictionId(), decision.resolvedBy(),
+                            decision.resolvedAt(), decision.modelRevisionId(),
+                            decision.recordedAt(), decision.requestId()));
+                } catch (SQLException e) {
+                    if (!isUniqueConstraintViolation(e)) {
+                        throw e;
+                    }
+                    // Another writer took the decision id while this one was preparing the
+                    // write. The decision is looked up again: the same content is the same
+                    // decision delivered twice, and a different content is a conflict.
+                    connection.rollback();
+                    ObservationAdjudication concurrent = adjudicationById(decision.decisionId());
+                    if (concurrent != null && concurrent.sameContentAs(decision)) {
+                        return;
+                    }
+                    throw new ObservationConflictException(
+                            ObservationConflictException.Kind.DECISION,
+                            "the decision '" + decision.decisionId() + "' was taken by another "
+                                    + "writer with a different content");
+                }
+                // The write lock is held from here on, so the state that is read is the state
+                // that every other writer has committed.
+                ObservationDisposition actual = currentDisposition(decision.caseId());
+                if (actual != before) {
+                    throw new ObservationConflictException(
+                            ObservationConflictException.Kind.DECISION,
+                            "the disposition of the case '" + decision.caseId() + "' changed while "
+                                    + "the decision '" + decision.decisionId() + "' was being taken");
+                }
+                if (before != null && !before.canTransitionTo(decision.disposition())) {
+                    throw new ObservationConflictException(
+                            ObservationConflictException.Kind.TRANSITION,
+                            "a case that is " + before + " may not become " + decision.disposition());
+                }
+                writeProjection(decision.workspaceId(), decision.caseId(), decision.disposition(),
+                        decision.reason(), decision.contradictedPredictionId(),
+                        decision.resolvedBy(), decision.resolvedAt(), decision.modelRevisionId(),
+                        decision.recordedAt());
+                connection.commit();
+            } catch (SQLException | RuntimeException e) {
+                connection.rollback();
+                throw e;
+            } finally {
+                connection.setAutoCommit(true);
+            }
+        } catch (SQLException e) {
+            throw new IllegalStateException("failed to record the adjudication", e);
+        }
+    }
+
+    /**
+     * W45.1 — the history of the decisions about the cases of a workspace, oldest first.
+     *
+     * <p>The history is APPEND-ONLY: a decision that was taken is never rewritten and never
+     * removed, and a decision that was later overturned stays in the list beside the one that
+     * overturned it. The order is the order the decisions were committed in.</p>
+     *
+     * @param workspaceId the workspace
+     * @return every decision the workspace holds
+     */
+    public List<ObservationAdjudication> adjudications(String workspaceId) {
+        List<ObservationAdjudication> out = new ArrayList<>();
+        try (PreparedStatement ps = connection.prepareStatement(
+                "SELECT decision_id, workspace_id, case_id, previous_disposition, disposition, reason, "
+                        + "contradicted_prediction_id, resolved_by, resolved_at, model_revision_id, "
+                        + "recorded_at, request_id FROM observation_adjudication WHERE workspace_id = ? "
+                        + "ORDER BY rowid")) {
+            ps.setString(1, workspaceId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    out.add(readAdjudication(rs));
+                }
+            }
+        } catch (SQLException e) {
+            throw new IllegalStateException("failed to read the adjudication history", e);
+        }
+        return out;
+    }
+
+    /**
+     * W45.1 — the history of the decisions about ONE case, oldest first.
+     *
+     * @param workspaceId the workspace
+     * @param caseId      the canonical case
+     * @return every decision that was taken about the case
+     */
+    public List<ObservationAdjudication> adjudicationsOfCase(String workspaceId, String caseId) {
+        List<ObservationAdjudication> out = new ArrayList<>();
+        try (PreparedStatement ps = connection.prepareStatement(
+                "SELECT decision_id, workspace_id, case_id, previous_disposition, disposition, reason, "
+                        + "contradicted_prediction_id, resolved_by, resolved_at, model_revision_id, "
+                        + "recorded_at, request_id FROM observation_adjudication "
+                        + "WHERE workspace_id = ? AND case_id = ? ORDER BY rowid")) {
+            ps.setString(1, workspaceId);
+            ps.setString(2, caseId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    out.add(readAdjudication(rs));
+                }
+            }
+        } catch (SQLException e) {
+            throw new IllegalStateException("failed to read the adjudication history of " + caseId, e);
+        }
+        return out;
+    }
+
+    /**
+     * W45.1 — every act of observing the cases of a workspace, oldest first.
+     *
+     * <p>An occurrence is a moment: this fact was seen again, now, in this episode. Two
+     * occurrences of the same case are two different acts and both of them are kept, which is
+     * what makes the difference between "the fact was observed twice" and "the fact was
+     * observed once and adjudicated once" readable.</p>
+     *
+     * @param workspaceId the workspace
+     * @return every occurrence the workspace holds
+     */
+    public List<ObservationOccurrence> occurrences(String workspaceId) {
+        List<ObservationOccurrence> out = new ArrayList<>();
+        try (PreparedStatement ps = connection.prepareStatement(
+                "SELECT id, workspace_id, case_id, episode_id, signal_id, source_id, evidence_id, "
+                        + "observed_at, disposition, reason FROM observation_occurrence "
+                        + "WHERE workspace_id = ? ORDER BY observed_at, id")) {
+            ps.setString(1, workspaceId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    out.add(readOccurrence(rs));
+                }
+            }
+        } catch (SQLException e) {
+            throw new IllegalStateException("failed to read the observation occurrences", e);
+        }
+        return out;
+    }
+
+    /**
+     * W45.1 — every act of observing ONE canonical case, oldest first.
+     *
+     * @param workspaceId the workspace
+     * @param caseId      the canonical case
+     * @return every occurrence of the case
+     */
+    public List<ObservationOccurrence> occurrencesOfCase(String workspaceId, String caseId) {
+        List<ObservationOccurrence> out = new ArrayList<>();
+        try (PreparedStatement ps = connection.prepareStatement(
+                "SELECT id, workspace_id, case_id, episode_id, signal_id, source_id, evidence_id, "
+                        + "observed_at, disposition, reason FROM observation_occurrence "
+                        + "WHERE workspace_id = ? AND case_id = ? ORDER BY observed_at, id")) {
+            ps.setString(1, workspaceId);
+            ps.setString(2, caseId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    out.add(readOccurrence(rs));
+                }
+            }
+        } catch (SQLException e) {
+            throw new IllegalStateException("failed to read the occurrences of " + caseId, e);
+        }
+        return out;
+    }
+
+    /**
+     * W45.1 — the cases that are waiting for a review.
+     *
+     * <p><b>Why this is not "the held cases".</b> A held case is one that does not constrain
+     * the model, and that is true of a case a review has REJECTED as well as of a case a
+     * review has not yet looked at. A queue that asked for the held cases would list the
+     * rejected ones as if they were still waiting, and every reader of the queue would be
+     * wrong about them. This method asks the question the queue is actually asking: which
+     * cases await an adjudication.</p>
+     *
+     * @param workspaceId the workspace
+     * @return the ids of the cases that await adjudication
+     */
+    public Set<String> casesAwaitingAdjudication(String workspaceId) {
+        Set<String> out = new LinkedHashSet<>();
+        try (PreparedStatement ps = connection.prepareStatement(
+                "SELECT case_id, disposition FROM observation_disposition WHERE workspace_id = ? "
+                        + "ORDER BY case_id")) {
+            ps.setString(1, workspaceId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    if (ObservationDisposition.valueOf(rs.getString("disposition"))
+                            .awaitingAdjudication()) {
+                        out.add(rs.getString("case_id"));
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            throw new IllegalStateException("failed to read the cases awaiting adjudication", e);
+        }
+        return out;
+    }
+
+    /**
+     * W45.1 — rebuilds the projection of the dispositions from the history and says whether
+     * it agreed with what was stored.
+     *
+     * <p><b>Why the projection has to be rebuildable.</b> The projection is derived state, and
+     * derived state that cannot be recomputed is a second source of truth. A reader must be
+     * able to ask "what does the history say the case stands at?" and get the same answer as
+     * "what does the case stand at?" — and the only way to know that the two agree is to
+     * compute one from the other.</p>
+     *
+     * <p><b>What the answer means.</b> The returned value says whether the STORED projection
+     * already agreed with the history. When it did not, the projection is repaired from the
+     * history and the method returns false, because a disagreement that was silently fixed
+     * would hide the fact that there was one. The history is the authority: it is
+     * append-only, and the projection is written from it in the same transaction as the
+     * decision.</p>
+     *
+     * <p>A projection row that the history does not know about is reported as a disagreement
+     * and is LEFT ALONE: it says something the history does not, and a store that deleted it
+     * would destroy a record on the strength of a comparison.</p>
+     *
+     * @param workspaceId the workspace
+     * @return true when the stored projection agreed with the history
+     */
+    public synchronized boolean rebuildDispositionProjection(String workspaceId) {
+        Map<String, ObservationAdjudication> expected = new LinkedHashMap<>();
+        try (PreparedStatement ps = connection.prepareStatement(
+                "SELECT decision_id, workspace_id, case_id, previous_disposition, disposition, reason, "
+                        + "contradicted_prediction_id, resolved_by, resolved_at, model_revision_id, "
+                        + "recorded_at, request_id FROM observation_adjudication WHERE workspace_id = ? "
+                        + "ORDER BY rowid")) {
+            ps.setString(1, workspaceId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    ObservationAdjudication decision = readAdjudication(rs);
+                    expected.put(decision.caseId(), decision);
+                }
+            }
+        } catch (SQLException e) {
+            throw new IllegalStateException("failed to read the adjudication history", e);
+        }
+
+        Map<String, String[]> stored = new LinkedHashMap<>();
+        try (PreparedStatement ps = connection.prepareStatement(
+                "SELECT case_id, disposition, reason, contradicted_prediction_id, resolved_by, "
+                        + "resolved_at, model_revision_id, recorded_at FROM observation_disposition "
+                        + "WHERE workspace_id = ?")) {
+            ps.setString(1, workspaceId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    stored.put(rs.getString("case_id"), new String[]{
+                            rs.getString("disposition"), rs.getString("reason"),
+                            rs.getString("contradicted_prediction_id"), rs.getString("resolved_by"),
+                            rs.getString("resolved_at"), rs.getString("model_revision_id"),
+                            rs.getString("recorded_at")});
+                }
+            }
+        } catch (SQLException e) {
+            throw new IllegalStateException("failed to read the disposition projection", e);
+        }
+
+        List<String> disagreeing = new ArrayList<>();
+        for (Map.Entry<String, ObservationAdjudication> entry : expected.entrySet()) {
+            ObservationAdjudication decision = entry.getValue();
+            String[] row = stored.get(entry.getKey());
+            if (row == null || !row[0].equals(decision.disposition().name())
+                    || !sameText(row[1], decision.reason())
+                    || !sameText(row[2], decision.contradictedPredictionId())
+                    || !sameText(row[3], decision.resolvedBy())
+                    || !sameText(row[4], decision.resolvedAt())
+                    || !sameText(row[5], decision.modelRevisionId())
+                    || !sameText(row[6], decision.recordedAt())) {
+                disagreeing.add(entry.getKey());
+            }
+        }
+        for (String caseId : stored.keySet()) {
+            if (!expected.containsKey(caseId)) {
+                disagreeing.add(caseId);
+            }
+        }
+        if (disagreeing.isEmpty()) {
+            return true;
+        }
+        try {
+            connection.setAutoCommit(false);
+            try {
+                for (String caseId : disagreeing) {
+                    ObservationAdjudication decision = expected.get(caseId);
+                    if (decision == null) {
+                        // The history says nothing about this case, so nothing is written.
+                        continue;
+                    }
+                    writeProjection(decision.workspaceId(), caseId, decision.disposition(),
+                            decision.reason(), decision.contradictedPredictionId(),
+                            decision.resolvedBy(), decision.resolvedAt(),
+                            decision.modelRevisionId(), decision.recordedAt());
+                }
+                connection.commit();
+            } catch (SQLException | RuntimeException e) {
+                connection.rollback();
+                throw e;
+            } finally {
+                connection.setAutoCommit(true);
+            }
+        } catch (SQLException e) {
+            throw new IllegalStateException("failed to rebuild the disposition projection", e);
+        }
+        return false;
+    }
+
+    /** Whether two stored texts say the same thing, treating a null as an empty string. */
+    private static boolean sameText(String left, String right) {
+        return (left == null ? "" : left).equals(right == null ? "" : right);
+    }
+
+    /**
+     * W45.1 — writes the PROJECTION of the adjudication history.
+     *
+     * <p>The projection is derived state: the history is the record, and this row is the
+     * answer to the question a reader asks most often — where does this case stand now. Every
+     * column of it is a column of the decision that produced it, which is what makes the
+     * rebuild possible: the projection can be recomputed from the history and compared with
+     * what is stored.</p>
+     *
+     * <p>The write is an upsert and not an {@code INSERT OR REPLACE}: the row is replaced
+     * deliberately, because that is what a projection IS, and it is replaced with exactly the
+     * columns of the decision, so that the projection never says anything the history does
+     * not.</p>
+     */
+    private void writeProjection(String workspaceId, String caseId,
+                                 ObservationDisposition disposition, String reason,
+                                 String contradictedPredictionId, String resolvedBy,
+                                 String resolvedAt, String modelRevisionId,
+                                 String recordedAt) throws SQLException {
+        try (PreparedStatement ps = connection.prepareStatement(
+                "INSERT INTO observation_disposition(case_id, workspace_id, disposition, "
+                        + "reason, contradicted_prediction_id, resolved_by, resolved_at, "
+                        + "model_revision_id, recorded_at) VALUES (?,?,?,?,?,?,?,?,?) "
+                        + "ON CONFLICT(case_id) DO UPDATE SET workspace_id = excluded.workspace_id, "
+                        + "disposition = excluded.disposition, reason = excluded.reason, "
+                        + "contradicted_prediction_id = excluded.contradicted_prediction_id, "
+                        + "resolved_by = excluded.resolved_by, resolved_at = excluded.resolved_at, "
+                        + "model_revision_id = excluded.model_revision_id, "
+                        + "recorded_at = excluded.recorded_at")) {
+            ps.setString(1, caseId);
+            ps.setString(2, workspaceId);
+            ps.setString(3, disposition.name());
+            ps.setString(4, reason);
+            ps.setString(5, contradictedPredictionId);
+            ps.setString(6, resolvedBy);
+            ps.setString(7, resolvedAt);
+            ps.setString(8, modelRevisionId);
+            ps.setString(9, recordedAt);
+            ps.executeUpdate();
+        }
+    }
+
+    /**
+     * W45.1 — writes the OCCURRENCE of an observation.
+     *
+     * <p>The occurrence is written once per act of observing. The same occurrence id with the
+     * same content is an idempotent no-op — a replayed request must not double the record —
+     * and the same occurrence id with different content is a conflict, because an occurrence
+     * is a moment and a moment does not happen twice with a different content.</p>
+     */
+    private void writeOccurrence(ObservationOccurrence occurrence) throws SQLException {
+        try (PreparedStatement ps = connection.prepareStatement(
+                "INSERT INTO observation_occurrence(id, workspace_id, case_id, episode_id, "
+                        + "signal_id, source_id, evidence_id, observed_at, disposition, reason) "
+                        + "VALUES (?,?,?,?,?,?,?,?,?,?)")) {
+            ps.setString(1, occurrence.id());
+            ps.setString(2, occurrence.workspaceId());
+            ps.setString(3, occurrence.caseId());
+            ps.setString(4, occurrence.episodeId());
+            ps.setString(5, occurrence.signalId());
+            ps.setString(6, occurrence.sourceId());
+            ps.setString(7, occurrence.evidenceId());
+            ps.setString(8, occurrence.observedAt());
+            ps.setString(9, occurrence.disposition().name());
+            ps.setString(10, occurrence.reason());
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            if (!isUniqueConstraintViolation(e)) {
+                throw e;
+            }
+            ObservationOccurrence existing = occurrenceById(occurrence.id());
+            if (existing != null && existing.equals(occurrence)) {
+                return;
+            }
+            throw new ObservationConflictException(ObservationConflictException.Kind.OCCURRENCE,
+                    "the occurrence '" + occurrence.id() + "' was already recorded with a "
+                            + "different content");
+        }
+    }
+
+    /** W45.1 — appends a decision to the append-only history. */
+    private void appendAdjudication(ObservationAdjudication decision) throws SQLException {
+        try (PreparedStatement ps = connection.prepareStatement(
+                "INSERT INTO observation_adjudication(decision_id, workspace_id, case_id, "
+                        + "previous_disposition, disposition, reason, contradicted_prediction_id, "
+                        + "resolved_by, resolved_at, model_revision_id, recorded_at, request_id) "
+                        + "VALUES (?,?,?,?,?,?,?,?,?,?,?,?)")) {
+            ps.setString(1, decision.decisionId());
+            ps.setString(2, decision.workspaceId());
+            ps.setString(3, decision.caseId());
+            ps.setString(4, decision.previousDisposition() == null
+                    ? null : decision.previousDisposition().name());
+            ps.setString(5, decision.disposition().name());
+            ps.setString(6, decision.reason());
+            ps.setString(7, decision.contradictedPredictionId());
+            ps.setString(8, decision.resolvedBy());
+            ps.setString(9, decision.resolvedAt());
+            ps.setString(10, decision.modelRevisionId());
+            ps.setString(11, decision.recordedAt());
+            ps.setString(12, decision.requestId());
+            ps.executeUpdate();
+        }
+    }
+
+    /** W45.1 — where a case stands, or null when it stands nowhere yet. */
+    private ObservationDisposition currentDisposition(String caseId) {
+        try (PreparedStatement ps = connection.prepareStatement(
+                "SELECT disposition FROM observation_disposition WHERE case_id = ?")) {
+            ps.setString(1, caseId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return ObservationDisposition.valueOf(rs.getString(1));
+                }
+            }
+        } catch (SQLException e) {
+            throw new IllegalStateException("failed to read the disposition of " + caseId, e);
+        }
+        return null;
+    }
+
+    /** W45.1 — the decision with this id, or null when there is none. */
+    private ObservationAdjudication adjudicationById(String decisionId) {
+        try (PreparedStatement ps = connection.prepareStatement(
+                "SELECT decision_id, workspace_id, case_id, previous_disposition, disposition, reason, "
+                        + "contradicted_prediction_id, resolved_by, resolved_at, model_revision_id, "
+                        + "recorded_at, request_id FROM observation_adjudication WHERE decision_id = ?")) {
+            ps.setString(1, decisionId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return readAdjudication(rs);
+                }
+            }
+        } catch (SQLException e) {
+            throw new IllegalStateException("failed to read the decision " + decisionId, e);
+        }
+        return null;
+    }
+
+    /** W45.1 — the occurrence with this id, or null when there is none. */
+    private ObservationOccurrence occurrenceById(String occurrenceId) {
+        try (PreparedStatement ps = connection.prepareStatement(
+                "SELECT id, workspace_id, case_id, episode_id, signal_id, source_id, evidence_id, "
+                        + "observed_at, disposition, reason FROM observation_occurrence WHERE id = ?")) {
+            ps.setString(1, occurrenceId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return readOccurrence(rs);
+                }
+            }
+        } catch (SQLException e) {
+            throw new IllegalStateException("failed to read the occurrence " + occurrenceId, e);
+        }
+        return null;
+    }
+
+    /** W45.1 — reads one row of the history. */
+    private static ObservationAdjudication readAdjudication(ResultSet rs) throws SQLException {
+        String previous = rs.getString("previous_disposition");
+        return new ObservationAdjudication(
+                rs.getString("decision_id"),
+                rs.getString("workspace_id"),
+                rs.getString("case_id"),
+                previous == null ? null : ObservationDisposition.valueOf(previous),
+                ObservationDisposition.valueOf(rs.getString("disposition")),
+                rs.getString("reason"),
+                rs.getString("contradicted_prediction_id"),
+                rs.getString("resolved_by"),
+                rs.getString("resolved_at"),
+                rs.getString("model_revision_id"),
+                rs.getString("recorded_at"),
+                rs.getString("request_id"));
+    }
+
+    /** W45.1 — reads one row of the occurrences. */
+    private static ObservationOccurrence readOccurrence(ResultSet rs) throws SQLException {
+        return new ObservationOccurrence(
+                rs.getString("id"),
+                rs.getString("workspace_id"),
+                rs.getString("case_id"),
+                rs.getString("episode_id"),
+                rs.getString("signal_id"),
+                rs.getString("source_id"),
+                rs.getString("evidence_id"),
+                rs.getString("observed_at"),
+                ObservationDisposition.valueOf(rs.getString("disposition")),
+                rs.getString("reason"));
+    }
+
+    /**
+     * Whether a failure is SQLite's refusal of a duplicate key.
+     *
+     * <p>The store has to tell a duplicate from every other failure, because a duplicate is a
+     * case it can reason about — the same record delivered twice — while anything else is a
+     * failure of the database itself.</p>
+     */
+    private static boolean isUniqueConstraintViolation(SQLException e) {
+        String message = e.getMessage() == null ? "" : e.getMessage();
+        if (message.contains("UNIQUE constraint failed") || message.contains("PRIMARY KEY constraint failed")) {
+            return true;
+        }
+        int code = e.getErrorCode();
+        return code == SQLITE_CONSTRAINT || code == SQLITE_CONSTRAINT_PRIMARYKEY;
+    }
+
+    /**
+     * Records one case: an observation, the conditions it was made under and what was seen.
+     *
+     * <p>The write is idempotent on the case id, so re-running the same observation does not
+     * create a parallel copy of it. That matters for the cognitive kernel, whose case ids are
+     * derived from the observation itself: a restart that replays an episode must not double the
+     * evidence.</p>
+     */
+    public void recordCase(Case observation) {
+        try {
+            insertCase(observation);
+        } catch (SQLException e) {
+            throw new IllegalStateException("failed to record the case", e);
+        }
+    }
+
+    private void insertCase(Case observation) throws SQLException {
+        try (PreparedStatement ps = connection.prepareStatement(
+                "INSERT OR REPLACE INTO epistemic_case(id, workspace_id, concept_id, statement, "
+                        + "conditions, outcome, source_id, origin, observed_at) "
+                        + "VALUES (?,?,?,?,?,?,?,?,?)")) {
+            ps.setString(1, observation.id());
+            ps.setString(2, observation.workspaceId());
+            ps.setString(3, observation.conceptId());
+            ps.setString(4, observation.statement());
+            ps.setString(5, observation.conditions());
+            ps.setString(6, observation.outcome());
+            ps.setString(7, observation.sourceId());
+            ps.setString(8, observation.origin().name());
+            ps.setString(9, observation.observedAt());
+            ps.executeUpdate();
+        }
+    }
+
+    /** Every case of a workspace, oldest first. */
+    public List<Case> cases(String workspaceId) {
+        List<Case> out = new ArrayList<>();
+        try (PreparedStatement ps = connection.prepareStatement(
+                "SELECT id, workspace_id, concept_id, statement, conditions, outcome, source_id, "
+                        + "origin, observed_at FROM epistemic_case WHERE workspace_id = ? "
+                        + "ORDER BY observed_at, id")) {
+            ps.setString(1, workspaceId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    out.add(new Case(
+                            rs.getString("id"),
+                            rs.getString("workspace_id"),
+                            rs.getString("concept_id"),
+                            rs.getString("statement"),
+                            rs.getString("conditions"),
+                            rs.getString("outcome"),
+                            rs.getString("source_id"),
+                            Case.Origin.valueOf(rs.getString("origin")),
+                            rs.getString("observed_at")));
+                }
+            }
+        } catch (SQLException e) {
+            throw new IllegalStateException("failed to read the cases", e);
+        }
+        return out;
+    }
+
+    /**
+     * Points an evidence link at the case that produced it.
+     *
+     * <p>The link is a separate statement rather than a column on {@link Evidence} because
+     * {@code Evidence} is a W43 record whose constructor is used by every writer in the
+     * repository. Adding a field to it would change a public constructor for the sake of one
+     * optional link, and the optional link is exactly the kind of thing that should not be able
+     * to break the records that do not need it.</p>
+     */
+    public void linkEvidenceToCase(String evidenceId, String caseId) {
+        try (PreparedStatement ps = connection.prepareStatement(
+                "UPDATE evidence SET case_id = ? WHERE id = ?")) {
+            ps.setString(1, caseId);
+            ps.setString(2, evidenceId);
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            throw new IllegalStateException("failed to link the evidence to its case", e);
+        }
+    }
+
+    /** The case an evidence link came from, or null when it came from none. */
+    public String caseIdForEvidence(String evidenceId) {
+        try (PreparedStatement ps = connection.prepareStatement(
+                "SELECT case_id FROM evidence WHERE id = ?")) {
+            ps.setString(1, evidenceId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getString("case_id");
+                }
+            }
+        } catch (SQLException e) {
+            throw new IllegalStateException("failed to read the case of an evidence link", e);
+        }
+        return null;
+    }
+
+    /**
+     * Records the learning state of a workspace and the transitions it went
+     * through, in one transaction.
+     *
+     * <p>The two tables move together: a state without its transition
+     * history is a label, and a transition without the state it produced is
+     * an orphan. Writing them atomically means a reader never sees one
+     * without the other.
+     */
+    @io.matrix.auditor.ArticleIPermitted(value = "the transitioned_at stamp of a recorded "
+            + "learning state; it records WHEN the state was recorded, and the stage itself is "
+            + "decided by the evidence and not by the clock")
+    public void recordLearningStates(String workspaceId, Map<String, LearningState> states,
+                                      List<LearningTransition> transitions) {
+        try {
+            connection.setAutoCommit(false);
+            try {
+                try (PreparedStatement ps = connection.prepareStatement(
+                        "INSERT OR REPLACE INTO learning_state(id, workspace_id, concept_id, "
+                                + "dimension, stage, score, evidence_count, transitioned_at, note) "
+                                + "VALUES (?,?,?,?,?,?,?,?,?)")) {
+                    for (LearningState state : states.values()) {
+                        ps.setString(1, Ids.digest(workspaceId + "|" + state.conceptId() + "|"
+                                + state.dimension().name()));
+                        ps.setString(2, workspaceId);
+                        ps.setString(3, state.conceptId());
+                        ps.setString(4, state.dimension().name());
+                        ps.setString(5, state.stage().name());
+                        ps.setDouble(6, state.score());
+                        ps.setInt(7, state.evidenceCount());
+                        ps.setString(8, java.time.Instant.now().toString());
+                        ps.setString(9, state.note());
+                        ps.addBatch();
+                    }
+                    ps.executeBatch();
+                }
+                try (PreparedStatement ps = connection.prepareStatement(
+                        "INSERT OR REPLACE INTO learning_transition(id, workspace_id, concept_id, "
+                                + "dimension, from_stage, to_stage, reason, outcome_id, occurred_at) "
+                                + "VALUES (?,?,?,?,?,?,?,?,?)")) {
+                    for (LearningTransition transition : transitions) {
+                        ps.setString(1, transition.id());
+                        ps.setString(2, transition.workspaceId());
+                        ps.setString(3, transition.conceptId());
+                        ps.setString(4, transition.dimension().name());
+                        ps.setString(5, transition.fromStage() == null ? null : transition.fromStage().name());
+                        ps.setString(6, transition.toStage().name());
+                        ps.setString(7, transition.reason());
+                        ps.setString(8, transition.outcomeId());
+                        ps.setString(9, transition.occurredAt());
+                        ps.addBatch();
+                    }
+                    ps.executeBatch();
+                }
+                connection.commit();
+            } catch (SQLException | RuntimeException e) {
+                connection.rollback();
+                throw e;
+            } finally {
+                connection.setAutoCommit(true);
+            }
+        } catch (SQLException e) {
+            throw new IllegalStateException("failed to record the learning states of " + workspaceId, e);
+        }
+    }
+
+    /** The recorded learning states of a workspace, keyed by concept and dimension. */
+    public Map<String, LearningState> recordedLearningStates(String workspaceId) {
+        Map<String, LearningState> states = new LinkedHashMap<>();
+        try (PreparedStatement ps = connection.prepareStatement(
+                "SELECT concept_id, dimension, stage, score, evidence_count, note "
+                        + "FROM learning_state WHERE workspace_id = ? ORDER BY concept_id, dimension")) {
+            ps.setString(1, workspaceId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    LearningDimension dimension =
+                            LearningDimension.valueOf(rs.getString("dimension"));
+                    LearningState state = new LearningState(
+                            rs.getString("concept_id"), dimension,
+                            LearningStage.valueOf(rs.getString("stage")),
+                            rs.getDouble("score"), rs.getInt("evidence_count"),
+                            0, 0, 0, List.of(), rs.getString("note"));
+                    states.put(LearningStateMachine.key(state.conceptId(), dimension), state);
+                }
+            }
+        } catch (SQLException e) {
+            throw new IllegalStateException("failed to read the learning states of " + workspaceId, e);
+        }
+        return states;
+    }
+
+    /** The recorded transitions of a workspace, oldest first. */
+    public List<LearningTransition> learningTransitions(String workspaceId) {
+        List<LearningTransition> transitions = new ArrayList<>();
+        try (PreparedStatement ps = connection.prepareStatement(
+                "SELECT id, workspace_id, concept_id, dimension, from_stage, to_stage, reason, "
+                        + "outcome_id, occurred_at FROM learning_transition WHERE workspace_id = ? "
+                        + "ORDER BY occurred_at, id")) {
+            ps.setString(1, workspaceId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    transitions.add(new LearningTransition(
+                            rs.getString("id"), rs.getString("workspace_id"),
+                            rs.getString("concept_id"),
+                            LearningDimension.valueOf(rs.getString("dimension")),
+                            rs.getString("from_stage") == null ? null
+                                    : LearningStage.valueOf(rs.getString("from_stage")),
+                            LearningStage.valueOf(rs.getString("to_stage")),
+                            rs.getString("reason"), rs.getString("outcome_id"),
+                            rs.getString("occurred_at")));
+                }
+            }
+        } catch (SQLException e) {
+            throw new IllegalStateException("failed to read the transitions of " + workspaceId, e);
+        }
+        return transitions;
+    }
+
+    /**
+     * The concept with this name in the workspace, created if it is absent.
+     *
+     * <p>RECON-W42.2. The store had no way to add a concept: the concepts
+     * came from the curated knowledge packages, and `KnowledgeRefiner`
+     * could not create one either — so a genuinely new topic had no runtime
+     * entry point even through the correction path. The acquisition
+     * pipeline needs one: a document's subject IS a new concept.
+     *
+     * <p>The identity is derived from the workspace and the name, so
+     * importing the same document twice finds the same concept rather than
+     * making a second one.
+     *
+     * @param workspaceId the workspace
+     * @param name the concept's name
+     * @param definition what the concept is, when the document says so
+     * @param domain the concept's domain, when the document says so
+     * @return the concept, existing or new
+     */
+    @io.matrix.auditor.ArticleIPermitted(value = "the created_at stamp of a concept; it records "
+            + "WHEN the concept was recorded, and no decision reads it")
+    public Concept ensureConcept(String workspaceId, String name, String definition,
+                                  String domain) {
+        if (workspaceId == null || workspaceId.isBlank()) {
+            throw new IllegalArgumentException("a workspace is required");
+        }
+        if (name == null || name.isBlank()) {
+            throw new IllegalArgumentException("a concept name is required");
+        }
+        String id = Ids.digest(workspaceId + "|concept|" + name.strip().toLowerCase(java.util.Locale.ROOT));
+        for (Concept concept : concepts(workspaceId)) {
+            if (concept.id().equals(id)) {
+                return concept;
+            }
+        }
+        Concept concept = new Concept(id, workspaceId, name.strip(), definition, domain,
+                java.time.Instant.now().toString());
+        try (PreparedStatement ps = connection.prepareStatement(
+                "INSERT OR IGNORE INTO concept(id, workspace_id, name, definition, domain, created_at) "
+                        + "VALUES (?,?,?,?,?,?)")) {
+            ps.setString(1, concept.id());
+            ps.setString(2, concept.workspaceId());
+            ps.setString(3, concept.name());
+            ps.setString(4, concept.definition());
+            ps.setString(5, concept.domain());
+            ps.setString(6, concept.createdAt());
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            throw new IllegalStateException("failed to create the concept " + name, e);
+        }
+        return concept;
+    }
+
+    /** The recorded conflicts of a workspace. */
+    public List<Contradiction> contradictions(String workspaceId) {
+        return query("SELECT id, workspace_id, claim_a_id, claim_b_id, kind, detected_by, "
+                + "recorded_at FROM contradiction WHERE workspace_id = ? ORDER BY id",
+                workspaceId, rs -> new Contradiction(
+                        rs.getString("id"), rs.getString("workspace_id"),
+                        rs.getString("claim_a_id"), rs.getString("claim_b_id"),
+                        Contradiction.Kind.valueOf(rs.getString("kind")),
+                        rs.getString("detected_by"), rs.getString("recorded_at")));
+    }
+
+    public List<Evidence> evidence(String workspaceId) {
+        return query("SELECT id, workspace_id, claim_id, source_id, relation, excerpt, quality, recorded_at "
+                + "FROM evidence WHERE workspace_id = ? ORDER BY id", workspaceId, rs -> new Evidence(
+                rs.getString("id"), rs.getString("workspace_id"), rs.getString("claim_id"),
+                rs.getString("source_id"), EvidenceRelation.valueOf(rs.getString("relation")),
+                rs.getString("excerpt"), rs.getInt("quality"), rs.getString("recorded_at")));
+    }
+
+    public List<Representation> representations(String workspaceId) {
+        return query("SELECT id, workspace_id, concept_id, level, audience, statement, scope, assumptions, "
+                + "included_facts, omitted, validity_conditions, prerequisites, refines, confidence, created_at "
+                + "FROM representation WHERE workspace_id = ? ORDER BY concept_id, level", workspaceId,
+                rs -> new Representation(
+                        rs.getString("id"), rs.getString("workspace_id"), rs.getString("concept_id"),
+                        AbstractionLevel.valueOf(rs.getString("level")), rs.getString("audience"),
+                        rs.getString("statement"), rs.getString("scope"),
+                        readJsonList(rs.getString("assumptions")),
+                        readJsonList(rs.getString("included_facts")),
+                        readJsonList(rs.getString("omitted")),
+                        readJsonList(rs.getString("validity_conditions")),
+                        readJsonList(rs.getString("prerequisites")),
+                        rs.getString("refines"), rs.getDouble("confidence"),
+                        rs.getString("created_at")));
+    }
+
+    public List<Prerequisite> prerequisites(String workspaceId) {
+        return query("SELECT workspace_id, concept_id, requires_concept_id, required, note "
+                + "FROM prerequisite WHERE workspace_id = ? ORDER BY concept_id", workspaceId,
+                rs -> new Prerequisite(rs.getString("workspace_id"), rs.getString("concept_id"),
+                        rs.getString("requires_concept_id"), rs.getInt("required") != 0,
+                        rs.getString("note")));
+    }
+
+    public List<KnowledgeRevision> revisions(String workspaceId) {
+        return query("SELECT id, workspace_id, target_type, target_id, kind, summary, added_facts, "
+                + "still_valid, no_longer_valid, newly_explained, evidence_ids, recorded_at "
+                + "FROM revision WHERE workspace_id = ? ORDER BY recorded_at, id", workspaceId,
+                rs -> new KnowledgeRevision(
+                        rs.getString("id"), rs.getString("workspace_id"), rs.getString("target_type"),
+                        rs.getString("target_id"), RevisionKind.valueOf(rs.getString("kind")),
+                        rs.getString("summary"), readJsonList(rs.getString("added_facts")),
+                        readJsonList(rs.getString("still_valid")),
+                        readJsonList(rs.getString("no_longer_valid")),
+                        readJsonList(rs.getString("newly_explained")),
+                        readJsonList(rs.getString("evidence_ids")), rs.getString("recorded_at")));
+    }
+
+    /** Export the whole workspace as one snapshot. */
+    public KnowledgeSnapshot exportWorkspace(String workspaceId) {
+        String name = queryOne("SELECT name FROM workspace WHERE id = ?", workspaceId,
+                rs -> rs.getString("name"));
+        return new KnowledgeSnapshot(workspaceId, name,
+                concepts(workspaceId), sources(workspaceId), claims(workspaceId), evidence(workspaceId),
+                representations(workspaceId), prerequisites(workspaceId), revisions(workspaceId),
+                derivations(workspaceId), contradictions(workspaceId), goalsWithSubtasks(workspaceId),
+                now());
+    }
+
+    /** The workspace identifiers this store holds. */
+    public List<String> workspaces() {
+        List<String> ids = new ArrayList<>();
+        try (Statement st = connection.createStatement();
+             ResultSet rs = st.executeQuery("SELECT id FROM workspace ORDER BY id")) {
+            while (rs.next()) {
+                ids.add(rs.getString(1));
+            }
+        } catch (SQLException e) {
+            throw new IllegalStateException("Failed to list workspaces", e);
+        }
+        return ids;
+    }
+
+    // ── plumbing ──────────────────────────────────────────────────────────────
+
+    private interface RowMapper<T> {
+        T map(ResultSet rs) throws SQLException;
+    }
+
+    private <T> List<T> query(String sql, String workspaceId, RowMapper<T> mapper) {
+        List<T> out = new ArrayList<>();
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setString(1, workspaceId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    out.add(mapper.map(rs));
+                }
+            }
+        } catch (SQLException e) {
+            throw new IllegalStateException("Query failed: " + sql, e);
+        }
+        return out;
+    }
+
+    private <T> T queryOne(String sql, String workspaceId, RowMapper<T> mapper) {
+        List<T> rows = query(sql, workspaceId, mapper);
+        return rows.isEmpty() ? null : rows.get(0);
+    }
+
+    private static String writeJson(List<String> values) {
+        try {
+            return JSON.writeValueAsString(values);
+        } catch (IOException e) {
+            throw new IllegalStateException("Failed to serialise a list", e);
+        }
+    }
+
+    private static List<String> readJsonList(String json) {
+        if (json == null || json.isBlank()) {
+            return List.of();
+        }
+        try {
+            return JSON.readValue(json, new TypeReference<List<String>>() {
+            });
+        } catch (IOException e) {
+            throw new IllegalStateException("Failed to deserialise a list: " + json, e);
+        }
+    }
+
+    /**
+     * The timestamp of a recorded workspace or snapshot.
+     *
+     * <p>It records WHEN the record was written. Nothing reads it to decide
+     * anything: the workspace's identity is its id, and a snapshot's identity
+     * is its content.
+     */
+    @io.matrix.auditor.ArticleIPermitted(value = "the timestamp of a recorded workspace or "
+            + "snapshot; it records WHEN the record was written, and no decision reads it")
+    private static String now() {
+        return java.time.Instant.now().toString();
+    }
+
+    /**
+     * W48-07 — the invariant of a replacement: it is never committed without a COMPLETE
+     * recoverable snapshot of what it replaced.
+     *
+     * <p><b>What "complete" means.</b> The snapshot carries the typed knowledge content AND
+     * the observation family AND the learning family — the whole of
+     * {@link SnapshotCoverage#FULL}. A snapshot that carries less is a snapshot that cannot
+     * bring back what the replacement is about to destroy, and a replacement that destroys
+     * what it cannot bring back is a silent loss of the owner's history.</p>
+     *
+     * <p><b>Why the check exists when the writer already captures everything.</b> Because the
+     * capture is a list of tables, and a list can change. The check turns that list into a
+     * promise that a reader can rely on, and it fires BEFORE the erasure, so that a refusal
+     * leaves the workspace exactly as it was.</p>
+     *
+     * @param snapshot the snapshot that was taken
+     * @throws IncompleteSnapshotException when the snapshot does not carry everything
+     */
+    static void requireCompleteSnapshot(WorkspaceSnapshot snapshot) {
+        if (snapshot.coverage() != SnapshotCoverage.FULL) {
+            throw new IncompleteSnapshotException(snapshot.id(), snapshot.coverage(),
+                    snapshot.coverage().missingFamilies());
+        }
+    }
+
+    @Override
+    public void close() {
+        try {
+            connection.close();
+        } catch (SQLException e) {
+            throw new IllegalStateException("Failed to close the knowledge store", e);
+        } finally {
+            if (writerLock != null) {
+                writerLock.close();
+                writerLock = null;
+            }
+        }
+    }
+
+    /**
+     * W48-07 — a snapshot payload that is larger than the configured bound.
+     *
+     * <p><b>What this refusal means.</b> The snapshot is the only recoverable copy of what a
+     * replacement destroyed, and a payload that exceeds the bound is NOT written. Nothing is
+     * trimmed: a shortened payload is a payload with rows missing, and a restore of it would
+     * bring back a workspace that has lost rows without saying so. The refusal is therefore
+     * total — the transaction rolls back, and the database is exactly as it was.</p>
+     *
+     * <p>The identifier is stable and is what a caller should match on:
+     * {@code SNAPSHOT_PAYLOAD_TOO_LARGE}. It is also the first line of the message, so a
+     * caller that only logs the message still carries the identifier.</p>
+     */
+    public static final class SnapshotPayloadTooLargeException extends IllegalStateException {
+
+        /** The stable identifier of this refusal. */
+        public static final String IDENTIFIER = "SNAPSHOT_PAYLOAD_TOO_LARGE";
+
+        private static final long serialVersionUID = 1L;
+
+        private final String workspaceId;
+        private final long payloadBytes;
+        private final long maxPayloadBytes;
+
+        /**
+         * @param workspaceId     the workspace the snapshot was of
+         * @param payloadBytes   the size of the payload that was refused, in bytes
+         * @param maxPayloadBytes the bound it exceeded, in bytes
+         */
+        public SnapshotPayloadTooLargeException(String workspaceId, long payloadBytes,
+                long maxPayloadBytes) {
+            super(IDENTIFIER + ": the snapshot of the workspace '" + workspaceId + "' is "
+                    + payloadBytes + " bytes and the bound is " + maxPayloadBytes + " bytes, so "
+                    + "the snapshot exceeds the bound by " + (payloadBytes - maxPayloadBytes)
+                    + " bytes. The snapshot was NOT written and the database was NOT changed. "
+                    + "The payload is never trimmed: raise the bound with -D"
+                    + SNAPSHOT_MAX_PAYLOAD_BYTES_PROPERTY + "=<bytes>, or reduce what the "
+                    + "workspace holds.");
+            this.workspaceId = workspaceId;
+            this.payloadBytes = payloadBytes;
+            this.maxPayloadBytes = maxPayloadBytes;
+        }
+
+        /** The workspace the snapshot was of. */
+        public String workspaceId() {
+            return workspaceId;
+        }
+
+        /** The size of the refused payload, in bytes. */
+        public long payloadBytes() {
+            return payloadBytes;
+        }
+
+        /** The bound the payload exceeded, in bytes. */
+        public long maxPayloadBytes() {
+            return maxPayloadBytes;
+        }
+    }
+
+    /**
+     * W48-07 — a replacement whose snapshot would not be a complete recoverable copy.
+     *
+     * <p>The refusal happens BEFORE the erasure, so the workspace is exactly as it was. The
+     * identifier is stable and is what a caller should match on:
+     * {@code SNAPSHOT_NOT_COMPLETE}.</p>
+     */
+    public static final class IncompleteSnapshotException extends IllegalStateException {
+
+        /** The stable identifier of this refusal. */
+        public static final String IDENTIFIER = "SNAPSHOT_NOT_COMPLETE";
+
+        private static final long serialVersionUID = 1L;
+
+        private final String snapshotId;
+        private final SnapshotCoverage coverage;
+        private final java.util.List<String> missingFamilies;
+
+        /**
+         * @param snapshotId      the snapshot that was refused
+         * @param coverage        what the snapshot carries
+         * @param missingFamilies the families it does not carry
+         */
+        public IncompleteSnapshotException(String snapshotId, SnapshotCoverage coverage,
+                java.util.List<String> missingFamilies) {
+            super(IDENTIFIER + ": the snapshot " + snapshotId + " carries "
+                    + coverage.name().toLowerCase(java.util.Locale.ROOT) + " content and not "
+                    + String.join(" nor ", missingFamilies) + ", so it is not a complete "
+                    + "recoverable copy. The replacement was NOT committed and the database was "
+                    + "NOT changed.");
+            this.snapshotId = snapshotId;
+            this.coverage = coverage;
+            this.missingFamilies = java.util.List.copyOf(missingFamilies);
+        }
+
+        /** The snapshot that was refused. */
+        public String snapshotId() {
+            return snapshotId;
+        }
+
+        /** What the snapshot carries. */
+        public SnapshotCoverage coverage() {
+            return coverage;
+        }
+
+        /** The families the snapshot does not carry. */
+        public java.util.List<String> missingFamilies() {
+            return missingFamilies;
+        }
+    }
+}

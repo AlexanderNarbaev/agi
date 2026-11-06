@@ -28,6 +28,13 @@ public class MatrixApplication implements QuarkusApplication {
      * static main that calls {@link Quarkus#run(Class, String...)}.
      */
     public static void main(String... args) {
+        // RECON-W43: the ONNX runtime extracts a native library of about
+        // 583 MB into a fresh temporary directory for EVERY session load and
+        // never removes it. Fifty-two of them filled the per-user quota of
+        // the /tmp tmpfs and took the build down with it. The application's
+        // scratch directory is its own, and the runs before this one are
+        // cleaned up here - BEFORE anything loads a model.
+        io.matrix.Scratch.prepare();
         Quarkus.run(MatrixApplication.class, args);
     }
 

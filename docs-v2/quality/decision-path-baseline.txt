@@ -1,0 +1,59 @@
+# The accepted decision-path findings — explicit, narrow, owned and time-bounded.
+#
+# RECON-W43.0. One accepted finding GROUP per line:
+#   <root>:<file>:<symbol> = <count> | <the reason it is permitted>
+#
+# The count is the number of accepted findings of that symbol in that file.
+# The LINE NUMBER is deliberately not part of the key: a key that moves when
+# unrelated code is inserted above it makes the baseline a maintenance trap,
+# and a baseline that is a trap is a baseline nobody maintains. The count
+# changes only when a finding is added or removed, which is exactly the
+# change the gate must catch.
+#
+# Every line is an EXCEPTION, not a pass. The gate fails when a group
+# appears that is not here, when a count does not match, AND when a group
+# here no longer holds — so the baseline cannot silently become a blanket.
+#
+# WHAT IS IN HERE
+# The wall-clock reads are timestamps: the time a goal was set, a row was
+# written, an episode was logged, a file was observed. They RECORD when
+# something happened and they decide nothing, which is what CONSTITUTION
+# Article I allows: it forbids wall-clock in a DECISION PATH, not the
+# recording of time.
+#
+# They were previously invisible because the determinism audit scanned
+# neither matrix-brain-runtime nor the knowledge core. The W43 audit found
+# them by widening the coverage, and they are listed here one by one, each
+# with its reason, rather than being waved through by a package-level
+# exemption.
+#
+# ONE EXCEPTION IS OF A DIFFERENT KIND
+# TrueDistillationFactory imports an ONNX activation teacher. That is a
+# TRAINING component: it teaches a distilled model and does not run on the
+# decision path. It is listed separately below rather than swept in with
+# the timestamps.
+#
+# WHAT W48 REMOVED FROM HERE
+# W48 replaced the knowledge core's wall-clock decision paths: seven sites
+# now take an injected Clock, and fourteen sites that only record a
+# timestamp carry an explicit @io.matrix.auditor.ArticleIPermitted("reason")
+# exemption. The nine knowledge-core groups below therefore STOPPED HOLDING
+# and the gate - which fails when a group here no longer holds - went red.
+# They are removed because the findings they accepted are GONE, not because
+# the gate was relaxed. The brain-runtime groups stay: those findings still
+# hold.
+#
+# owner: repo-owner
+expires=2026-12-31
+
+matrix-brain-runtime/src/main/java:io/matrix/brain/runtime/CreditLedger.java:wall-clock = 3 | the credit entry's timestamp; it decides nothing
+matrix-brain-runtime/src/main/java:io/matrix/brain/runtime/EpisodicLog.java:wall-clock = 1 | the episode's timestamp; it decides nothing
+matrix-brain-runtime/src/main/java:io/matrix/brain/runtime/FederationRegistry.java:wall-clock = 2 | the peer's registration timestamp; it decides nothing
+matrix-brain-runtime/src/main/java:io/matrix/brain/runtime/KnowledgeExchangeProtocol.java:wall-clock = 1 | the exchange's timestamp; it decides nothing
+matrix-brain-runtime/src/main/java:io/matrix/brain/runtime/ModelToMatrix.java:wall-clock = 4 | the mapping's timestamp; it decides nothing
+matrix-brain-runtime/src/main/java:io/matrix/brain/runtime/PersistentMind.java:wall-clock = 3 | the persisted state's timestamp; it decides nothing
+matrix-brain-runtime/src/main/java:io/matrix/brain/runtime/RealInboxWatcher.java:wall-clock = 1 | the observation timestamp of a watched file; it decides nothing
+matrix-brain-runtime/src/main/java:io/matrix/brain/runtime/RealSleepScheduler.java:wall-clock = 8 | the sleep cycle's timestamp; it decides nothing
+matrix-brain-runtime/src/main/java:io/matrix/brain/runtime/SparseHdcStore.java:wall-clock = 1 | the vector's timestamp; it decides nothing
+matrix-brain-runtime/src/main/java:io/matrix/brain/runtime/TrueDistillationFactory.java:io.matrix.distill.OnnxActivationTeacher = 1 | an ONNX activation TEACHER: it is a training-time component, not a runtime decision
+matrix-brain-runtime/src/main/java:io/matrix/brain/runtime/TrueDistillationFactory.java:wall-clock = 2 | the teacher's timestamp; it decides nothing

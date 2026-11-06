@@ -139,11 +139,15 @@ public final class BitLinearGpu {
      */
     private static String findLibraryPath() {
         String cwd = System.getProperty("user.dir");
+        // W48-02: the candidates are relative to the working directory, and the
+        // last one was an absolute path into one developer's home directory. It
+        // only ever matched on that machine, and a path that works nowhere else
+        // is not a fallback — it is a way of finding the library on exactly one
+        // computer.
         String[] candidates = {
                 cwd + "/src/main/c/cuda/libbitlinear_gpu.so",
                 cwd + "/matrix-core/src/main/c/cuda/libbitlinear_gpu.so",
-                cwd + "/../matrix-core/src/main/c/cuda/libbitlinear_gpu.so",
-                "/home/alexandr-narbaev/Projects/agi/matrix-core/src/main/c/cuda/libbitlinear_gpu.so"
+                cwd + "/../matrix-core/src/main/c/cuda/libbitlinear_gpu.so"
         };
         for (String path : candidates) {
             if (new java.io.File(path).exists()) {

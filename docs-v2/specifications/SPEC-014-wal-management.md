@@ -222,8 +222,8 @@ The replacement rule is **mandatory manual process**:
 
 **Scripts used (manual invocation):**
 - `./scripts/extract-waves.py` — extract waves from WAL.md
-- (Future) `./scripts/create-wave-checkpoint.sh` — write wave-NNN file with git hash
-- (Future) `./scripts/update-latest-wave.sh` — update INDEX.md with latest wave pointer
+- (Future) `./scripts/create-wave-checkpoint.sh` <!-- no-link: the script was never written; the RFC is a proposal --> — write wave-NNN file with git hash
+- (Future) `./scripts/update-latest-wave.sh` <!-- no-link: the script was never written; the RFC is a proposal --> — update INDEX.md with latest wave pointer
 
 All scripts are invoked manually by the wave owner, not by CI.
 
@@ -232,7 +232,7 @@ All scripts are invoked manually by the wave owner, not by CI.
 - [ ] Write `scripts/extract-waves.py`
 - [ ] Test extraction on W340-W346 (dry run)
 - [ ] Extract W297-W346 (production)
-- [ ] Create `docs-v2/archive/waves-001-296.tar.gz`
+- [ ] Create `docs-v2/archive/waves-001-296.tar.gz` <!-- no-link: the archive was removed to reclaim disk (Q-W46-21) -->
 - [ ] Create `LATEST.md` symlink
 - [ ] Update `docs-v2/INDEX.md`
 - [ ] Add navigation (prev/next) to wave template

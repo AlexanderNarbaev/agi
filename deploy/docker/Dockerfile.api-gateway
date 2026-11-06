@@ -1,14 +1,38 @@
 # WAVE T-09 — Multi-stage Dockerfile for matrix-api-gateway
-# Stage 1: Build with Gradle + Mandrel (GraalVM)
-FROM gradle:8.10-jdk25 AS build
-WORKDIR /home/gradle/src
-COPY --chown=gradle:gradle . .
-RUN ./gradlew :matrix-api-gateway:nativeCompile --no-daemon
+#
+# Packaging: JVM distribution produced by the Gradle `application` plugin.
+#
+#   ./gradlew :matrix-api-gateway:installDist
+#
+# The previous revision built a GraalVM native image by invoking
+# :matrix-api-gateway:nativeCompile. That task does not exist — the module
+# applies no GraalVM plugin — so this image could never be built, and CI hid
+# the failure behind `continue-on-error: true`.
+#
+# The gateway applies no Quarkus plugin on purpose: its JAX-RS resources are
+# plain classes and the routes are served by the JDK HttpServer in
+# io.matrix.api.MinimalHttpServer, which is the module's real entry point.
+# A JVM distribution therefore matches the application exactly; a native
+# image would need reflection configuration that no build currently provides.
+#
+# Build stage: eclipse-temurin:25-jdk. The Gradle wrapper (9.6.0) is used, not
+# a preinstalled Gradle, so the image does not pin a second, divergent
+# Gradle version.
+FROM eclipse-temurin:25-jdk AS build
+WORKDIR /src
+COPY . .
+RUN ./gradlew :matrix-api-gateway:installDist --no-daemon --console=plain
 
-# Stage 2: Minimal runtime image
-FROM ghcr.io/graalvm/native-image:25
-COPY --from=build /home/gradle/src/matrix-api-gateway/build/native/nativeCompile/matrix-api-gateway /app/matrix-api-gateway
-EXPOSE 8080
-ENV JAVA_OPTS="-XX:+UseG1GC"
-HEALTHCHECK --interval=30s --timeout=5s CMD curl -f http://localhost:8080/q/health || exit 1
-ENTRYPOINT ["/app/matrix-api-gateway"]
+FROM eclipse-temurin:25-jre AS runtime
+WORKDIR /app
+COPY --from=build /src/matrix-api-gateway/build/install/matrix-api-gateway/ /app/
+
+EXPOSE 8765
+
+# eclipse-temurin ships neither curl nor wget, so the health check uses
+# bash's /dev/tcp against the gateway's own readiness endpoint.
+HEALTHCHECK --interval=30s --timeout=5s --start-period=60s --retries=3 \
+    CMD bash -c 'exec 3<>/dev/tcp/127.0.0.1/8765 && printf "GET /health/ready HTTP/1.0\r\nHost: localhost\r\n\r\n" >&3 && grep -q "200 OK" <&3' || exit 1
+
+ENTRYPOINT ["/app/bin/matrix-api-gateway"]
+CMD []

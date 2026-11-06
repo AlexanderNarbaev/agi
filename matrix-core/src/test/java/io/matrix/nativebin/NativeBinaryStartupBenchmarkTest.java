@@ -1,6 +1,7 @@
 package io.matrix.nativebin;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Tag;
 import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -12,6 +13,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * <p>Verifies the GraalVM native-image binary exists, is executable,
  * and starts in under 500ms (vs JVM which takes 2-5s).
  */
+@Tag("native-binary")
 class NativeBinaryStartupBenchmarkTest {
 
     @Test

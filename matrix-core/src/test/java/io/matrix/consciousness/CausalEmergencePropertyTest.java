@@ -1,6 +1,7 @@
 package io.matrix.consciousness;
 
 import net.jqwik.api.*;
+import org.junit.jupiter.api.Test;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
@@ -31,8 +32,32 @@ class CausalEmergencePropertyTest {
     void propertyEIOfNonNegativeDistribution(@ForAll("distributions") double[] dist) {
         double ei = CausalEmergence.effectiveInformation(dist);
         if (!Double.isNaN(ei)) {
-            assertThat(ei).isGreaterThanOrEqualTo(0.0);
+            assertThat(ei).isGreaterThanOrEqualTo(-ROUND_OFF);
         }
+    }
+
+    /**
+     * W48-06 — the round-off the assertion tolerates.
+     *
+     * <p>The effective information is a difference of logarithms of sums, so the last bit
+     * of the result is a rounding artefact: the full run of 2026-11-05 produced
+     * -3.2034265038149176E-16 for a quantity that is mathematically non-negative. The
+     * assertion now accepts that much and no more — a materially negative value is still
+     * a failure, and {@link #aMateriallyNegativeValueIsStillRefused()} proves it.</p>
+     */
+    private static final double ROUND_OFF = 1e-12;
+
+    /**
+     * The negative control: the tolerance accepts the round-off and refuses the rest.
+     *
+     * <p>A tolerance that "just makes the test pass" is not a tolerance; this is the
+     * difference between the two, written down.</p>
+     */
+    @Test
+    void aMateriallyNegativeValueIsStillRefused() {
+        assertThat(-3.2034265038149176E-16).isGreaterThanOrEqualTo(-ROUND_OFF);
+        assertThat(-0.001).isLessThan(-ROUND_OFF);
+        assertThat(-1.0).isLessThan(-ROUND_OFF);
     }
 
     @Property(tries = 50)

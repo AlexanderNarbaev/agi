@@ -91,7 +91,7 @@ python3 scripts/capture_activations.py \
   false claim in a shipped document.
 - **Two production infinite loops existed and were only found in this campaign**
   (KolmogorovComplexity, DebateAgent). They are fixed, with regression locks.
-- **`data/smoke-old` still holds 8.8 GB** and `fresh-clone-smoke.sh` still has no
+- **`data/smoke-old` <!-- no-link: the directory was removed (Q-W46-21) --> still holds 8.8 GB** and `fresh-clone-smoke.sh` still has no
   cleanup trap. Harmless at 133 GB free.
 - **Two-node federation** and the **fresh-clone quickstart** are only
   partially verified; no full transcript, no CI job.

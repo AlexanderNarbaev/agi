@@ -1,5 +1,7 @@
 package io.matrix.research;
 
+import org.junit.jupiter.api.Assumptions;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -37,6 +39,35 @@ class Exp016ProductionCorpusTest {
     private static final Path CORPUS_PATH = resolveCorpusPath();
     private static final int SAMPLE_SIZE = 100;
     private static final Pattern TOKEN_SPLIT = Pattern.compile("[^\\p{L}\\p{N}]+");
+
+    /**
+     * W48-05 — the corpus is the OWNER'S data, not the repository's.
+     *
+     * <p>{@code models/} is git-ignored in this project, so a clean GitHub
+     * runner has no {@code models/training_data/qa_pairs.json}. Before W48 the
+     * class failed there with {@code NoSuchFileException}: the mandatory CI
+     * job was red for a reason that has nothing to do with the code under
+     * test. A test that cannot find its fixture must be SKIPPED with a
+     * recorded reason — never failed (the code is not broken) and never
+     * silently passed (the property was not checked).
+     *
+     * <p>Where the corpus IS present the assumption holds and every test in
+     * this class runs exactly as before. The status of the production-corpus
+     * property in CI is therefore NOT VERIFIED, and W48-TEST-RECONCILIATION.md
+     * records that.
+     */
+    @BeforeAll
+    static void requireTheProductionCorpus() {
+        Assumptions.assumeTrue(Files.exists(CORPUS_PATH),
+                "the production corpus is not in this checkout (" + CORPUS_PATH + "): "
+                        + "models/ is git-ignored, so the production-corpus property is "
+                        + "NOT VERIFIED here — it is neither a failure nor a pass");
+    }
+
+    /** The corpus path this class resolved — shared with the classes that reuse it. */
+    static Path corpusPath() {
+        return CORPUS_PATH;
+    }
 
     private static Path resolveCorpusPath() {
         // Try from CWD or parent (matrix-core is sometimes the test CWD).

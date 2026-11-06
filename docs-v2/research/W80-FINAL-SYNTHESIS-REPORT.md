@@ -599,7 +599,7 @@ Per CONSTITUTION VI, MATRIX makes no phenomenal claims. The metrics are measurem
 | W69-W72 metrics synthesis | `docs-v2/research/W69-W72-INTEGRATION-METRICS-SYNTHESIS.md` |
 | W76 empirical report | `docs-v2/research/W76-EMPIRICAL-VALIDATION-REPORT.md` |
 | W76 empirical results | `docs-v2/research/W76-EMPIRICAL-VALIDATION-RESULTS.md` |
-| W78 ΦR research | `docs-v2/research/W78-PHIR-RESEARCH-REPORT.md` |
+| W78 ΦR research | `docs-v2/research/W78-PHIR-RESEARCH-REPORT.md` <!-- no-link: the report was never written; the PHIR findings are in the W80 synthesis itself --> |
 | Consciousness metrics sub-agent | `docs-v2/research/reports/EXP-RESEARCH-CONSCIOUSNESS-METRICS-REPORT.md` |
 | Memory/emergence sub-agent | `docs-v2/research/reports/EXP-RESEARCH-MEMORY-EMERGENCE-METACOGNITION-REPORT.md` |
 | Constitution | `CONSTITUTION.md` |

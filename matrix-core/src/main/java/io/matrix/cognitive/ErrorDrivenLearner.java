@@ -46,12 +46,51 @@ public final class ErrorDrivenLearner {
      * @return the same state object (mutated)
      */
     public static State applyDecay(State state, CognitiveErrorStream stream, float eta) {
+        return applyDecay(state, stream, eta, HebbianUpdater.DEFAULT_THRESHOLD);
+    }
+
+    /**
+     * Apply decay to the binding at the observation direction for each
+     * error, with an explicit threshold.
+     *
+     * <p><b>THE MATH WAS VERIFIED IN W42.7, AND IT HAD A FLOOR
+     * MISSING.</b> The decay subtracted {@code 2 * eta} from the targeted
+     * accumulators and stopped there. Nothing bounded it: the same error,
+     * repeated, drove the accumulator arbitrarily far below zero, and the
+     * mission's §9 says plainly that the system must "not indiscriminately
+     * weaken neural associations after every unexpected event".
+     *
+     * <p>The floor is the lower edge of the Hebbian updater's deadband:
+     * below {@code -threshold} the bit is already cleared, and the
+     * accumulator's depth does not change the bit — it only makes the next
+     * Hebbian update have to climb further to bring the binding back. The
+     * decay therefore stops at the floor, and a repeated error cannot
+     * weaken the association without bound.
+     *
+     * <p>What the verification confirmed, and what the tests now pin:
+     * the decay touches ONLY the bits that are active AND present in the
+     * observation — the "what should be" is preserved, which is the whole
+     * point of a targeted forgetting rule.
+     *
+     * @param state the Hebbian state to update (mutated)
+     * @param stream source of errors; iterated in chronological order
+     * @param eta decay strength ∈ (0, 1]; small for stability (e.g. 0.1)
+     * @param threshold the Hebbian threshold; the accumulator's floor is
+     *     {@code -threshold}
+     * @return the same state object (mutated)
+     */
+    public static State applyDecay(State state, CognitiveErrorStream stream, float eta,
+                                   float threshold) {
         Objects.requireNonNull(state, "state");
         Objects.requireNonNull(stream, "stream");
         if (eta <= 0.0f || eta > 1.0f) {
             throw new IllegalArgumentException("eta must be in (0, 1]");
         }
+        if (threshold < 0.0f) {
+            throw new IllegalArgumentException("threshold must be >= 0");
+        }
         if (stream.isEmpty()) return state;
+        float floor = -threshold;
         for (CognitiveError error : stream) {
             long[] obs = observationToHdc(error.stateSnapshot());
             // Decay accumulator for bits where obs=1 AND weight is currently active.
@@ -71,10 +110,14 @@ public final class ErrorDrivenLearner {
                     // subtracting eta pushes it toward 0 and eventually negative.
                     // For active bits, acc is just above threshold (e.g. 0.1).
                     // We want to flip them to 0.
-                    state.accumulator[pos] -= 2.0f * eta;
-                    // Re-clamp: if it's now negative enough, the bit will
-                    // become 0 when thresholded (handled in HebbianUpdater
-                    // apply pass). If not, it stays at the (now smaller) positive.
+                    float updated = state.accumulator[pos] - 2.0f * eta;
+                    // THE FLOOR. Below the deadband's lower edge the bit is
+                    // already cleared, so the accumulator's depth changes
+                    // nothing about the binding - it only makes the next
+                    // Hebbian update have to climb further. The decay
+                    // therefore stops here, and a repeated error cannot
+                    // weaken the association without bound.
+                    state.accumulator[pos] = Math.max(floor, updated);
                 }
             }
         }

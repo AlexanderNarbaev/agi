@@ -1,19 +1,350 @@
 name: Formal Specs (TLA+)
 
-# On every PR or push that touches formal/, run TLC against each spec.
-# TLC is the TLA+ model checker; it explores bounded state spaces to verify
-# invariants (per CRITICAL_GAPS.md GAP-021).
+# RECON-W38.4 (owner directive target). This job used to run SANY only, and
+# its own comment said so: "For now we run only the parser to catch syntax
+# regressions early." Nine specifications had therefore never been parsed by
+# the TLA+ parser at all - the Java-side "formal gate" (TlaSpecSmokeTest) is a
+# TEXT-level smoke test that passes on files the TLA+ parser rejects. The job
+# now performs real model checking with TLC and reports, per specification,
+# which properties were actually evaluated.
 
 on:
   push:
-    branches: [main]
+    branches: [develop, main]
     paths:
       - 'formal/**'
       - '.github/workflows/tla.yml'
+      # RECON-W39 (owner directive §5.2): the formal gate used to watch
+      # formal/** only, so a Java change could alter a modelled behaviour
+      # without any model check running. The block below is GENERATED from
+      # formal/spec-implementation-map.yml and names every implementation,
+      # production caller and test the registry maps. It is regenerated with
+      #   ./gradlew :matrix-quality:regenerateFormalPaths
+      # and SpecImplementationMapTest fails when it drifts from the map.
+      # BEGIN generated-formal-paths (from formal/spec-implementation-map.yml)
+      - 'formal/spec-implementation-map.yml'
+      - 'matrix-api-gateway/src/main/java/io/matrix/api/brain/ProductionBrainClient.java'
+      - 'matrix-api-gateway/src/main/java/io/matrix/api/llm_quarantine/BrainIntegrated.java'
+      - 'matrix-api-gateway/src/main/java/io/matrix/api/llm_quarantine/BrainProduction.java'
+      - 'matrix-api-gateway/src/main/java/io/matrix/api/llm_quarantine/LlmBrainLoopService.java'
+      - 'matrix-brain-runtime/src/main/java/io/matrix/brain/runtime/TrueMindCycle.java'
+      - 'matrix-brain-runtime/src/main/java/io/matrix/brain/runtime/stages/ArithmeticStage.java'
+      - 'matrix-brain-runtime/src/main/java/io/matrix/brain/runtime/stages/PlanningStage.java'
+      - 'matrix-brain-runtime/src/test/java/io/matrix/brain/runtime/PlanningCallerExistsTest.java'
+      - 'matrix-brain-runtime/src/test/java/io/matrix/brain/runtime/stages/ArithmeticCompoundRoutingTest.java'
+      - 'matrix-brain-runtime/src/test/java/io/matrix/brain/runtime/stages/ArithmeticStagePlanningTest.java'
+      - 'matrix-brain-runtime/src/test/java/io/matrix/brain/runtime/stages/PlanningStageTest.java'
+      - 'matrix-core/src/main/java/io/matrix/agent/AgentLoop.java'
+      - 'matrix-core/src/main/java/io/matrix/agent/EthicsGuard.java'
+      - 'matrix-core/src/main/java/io/matrix/agent/react/ReActAgentLoop.java'
+      - 'matrix-core/src/main/java/io/matrix/api/BotEthicsPipeline.java'
+      - 'matrix-core/src/main/java/io/matrix/api/BotEthicsResource.java'
+      - 'matrix-core/src/main/java/io/matrix/api/OpenAIChatResource.java'
+      - 'matrix-core/src/main/java/io/matrix/audit/FrozenFNLHashChain.java'
+      - 'matrix-core/src/main/java/io/matrix/audit/HashChain.java'
+      - 'matrix-core/src/main/java/io/matrix/audit/HashLink.java'
+      - 'matrix-core/src/main/java/io/matrix/autonomy/AutonomyEngine.java'
+      - 'matrix-core/src/main/java/io/matrix/autonomy/SelfImprovingEngine.java'
+      - 'matrix-core/src/main/java/io/matrix/bir/BooleanRuntime.java'
+      - 'matrix-core/src/main/java/io/matrix/bir/DecisionTreeAdapter.java'
+      - 'matrix-core/src/main/java/io/matrix/bir/TruthTableAdapter.java'
+      - 'matrix-core/src/main/java/io/matrix/bir/TtForm.java'
+      - 'matrix-core/src/main/java/io/matrix/brain/BirBrainCycle.java'
+      - 'matrix-core/src/main/java/io/matrix/brain/DefaultBrainPipeline.java'
+      - 'matrix-core/src/main/java/io/matrix/budgeter/ConjugateBudgeter.java'
+      - 'matrix-core/src/main/java/io/matrix/consensus/ConsensusEngine.java'
+      - 'matrix-core/src/main/java/io/matrix/consensus/ConsensusLevel.java'
+      - 'matrix-core/src/main/java/io/matrix/consensus/Proposal.java'
+      - 'matrix-core/src/main/java/io/matrix/consensus/Vote.java'
+      - 'matrix-core/src/main/java/io/matrix/consensus/WeightedVoting.java'
+      - 'matrix-core/src/main/java/io/matrix/ethics/EthicalFilter.java'
+      - 'matrix-core/src/main/java/io/matrix/ethics/FROZENFNLGuardian.java'
+      - 'matrix-core/src/main/java/io/matrix/ethics/FROZENGDPREscalator.java'
+      - 'matrix-core/src/main/java/io/matrix/ethics/frozen/FrozenAxiomNeuron.java'
+      - 'matrix-core/src/main/java/io/matrix/ethics/frozen/FrozenEthicalFNL.java'
+      - 'matrix-core/src/main/java/io/matrix/ethics/frozen/TextFeatureExtractor.java'
+      - 'matrix-core/src/main/java/io/matrix/ethics/frozen/TruthTableUtil.java'
+      - 'matrix-core/src/main/java/io/matrix/federation/consensus/LocalConsensusEngine.java'
+      - 'matrix-core/src/main/java/io/matrix/federation/liquid/MCTSPlanner.java'
+      - 'matrix-core/src/main/java/io/matrix/federation/runtime/FederationRuntime.java'
+      - 'matrix-core/src/main/java/io/matrix/knowledge/Claim.java'
+      - 'matrix-core/src/main/java/io/matrix/knowledge/ClaimWarrant.java'
+      - 'matrix-core/src/main/java/io/matrix/knowledge/Contradiction.java'
+      - 'matrix-core/src/main/java/io/matrix/knowledge/ContradictionDetector.java'
+      - 'matrix-core/src/main/java/io/matrix/knowledge/Derivation.java'
+      - 'matrix-core/src/main/java/io/matrix/knowledge/DerivationStatus.java'
+      - 'matrix-core/src/main/java/io/matrix/knowledge/Evidence.java'
+      - 'matrix-core/src/main/java/io/matrix/knowledge/KnowledgeChanges.java'
+      - 'matrix-core/src/main/java/io/matrix/knowledge/KnowledgeImporter.java'
+      - 'matrix-core/src/main/java/io/matrix/knowledge/KnowledgeRefiner.java'
+      - 'matrix-core/src/main/java/io/matrix/knowledge/KnowledgeRevision.java'
+      - 'matrix-core/src/main/java/io/matrix/knowledge/KnowledgeSnapshot.java'
+      - 'matrix-core/src/main/java/io/matrix/knowledge/KnowledgeStore.java'
+      - 'matrix-core/src/main/java/io/matrix/knowledge/KnowledgeWorkbench.java'
+      - 'matrix-core/src/main/java/io/matrix/knowledge/LearningStateMachine.java'
+      - 'matrix-core/src/main/java/io/matrix/knowledge/LearningWorkbenchResource.java'
+      - 'matrix-core/src/main/java/io/matrix/knowledge/Representation.java'
+      - 'matrix-core/src/main/java/io/matrix/knowledge/Representations.java'
+      - 'matrix-core/src/main/java/io/matrix/knowledge/acquisition/ClaimValidator.java'
+      - 'matrix-core/src/main/java/io/matrix/knowledge/acquisition/DocumentImporter.java'
+      - 'matrix-core/src/main/java/io/matrix/knowledge/acquisition/PromotionPolicy.java'
+      - 'matrix-core/src/main/java/io/matrix/knowledge/acquisition/PromotionStage.java'
+      - 'matrix-core/src/main/java/io/matrix/lifecycle/ImpulseScheduler.java'
+      - 'matrix-core/src/main/java/io/matrix/mcts/LatsNode.java'
+      - 'matrix-core/src/main/java/io/matrix/mcts/LatsReflector.java'
+      - 'matrix-core/src/main/java/io/matrix/mcts/LatsValueFunction.java'
+      - 'matrix-core/src/main/java/io/matrix/mcts/MctsAction.java'
+      - 'matrix-core/src/main/java/io/matrix/mcts/MctsNode.java'
+      - 'matrix-core/src/main/java/io/matrix/mcts/MctsTree.java'
+      - 'matrix-core/src/main/java/io/matrix/minecraft/HeadlessBotRegistry.java'
+      - 'matrix-core/src/main/java/io/matrix/neuron/DecisionTree.java'
+      - 'matrix-core/src/main/java/io/matrix/neuron/HierarchicalBrain.java'
+      - 'matrix-core/src/main/java/io/matrix/neuron/NeuralMemoryResponse.java'
+      - 'matrix-core/src/main/java/io/matrix/neuron/NeuronLayer.java'
+      - 'matrix-core/src/main/java/io/matrix/neuron/TruthTable.java'
+      - 'matrix-core/src/main/java/io/matrix/noosphere/CausalCrdt.java'
+      - 'matrix-core/src/main/java/io/matrix/noosphere/Crdt.java'
+      - 'matrix-core/src/main/java/io/matrix/noosphere/EpochAwareCausalSet.java'
+      - 'matrix-core/src/main/java/io/matrix/noosphere/GrowOnlySet.java'
+      - 'matrix-core/src/main/java/io/matrix/noosphere/MeshFederation.java'
+      - 'matrix-core/src/main/java/io/matrix/reasoning/BrainLoopService.java'
+      - 'matrix-core/src/main/java/io/matrix/reasoning/BrcChain.java'
+      - 'matrix-core/src/main/java/io/matrix/reasoning/BrcState.java'
+      - 'matrix-core/src/main/java/io/matrix/reasoning/BrcStep.java'
+      - 'matrix-core/src/main/java/io/matrix/reasoning/ConsciousnessLoop.java'
+      - 'matrix-core/src/main/java/io/quarkus/runner/ApplicationImpl.java'
+      - 'matrix-core/src/test/java/io/matrix/agent/EthicsGuardTest.java'
+      - 'matrix-core/src/test/java/io/matrix/agent/MultiAgentLoopTest.java'
+      - 'matrix-core/src/test/java/io/matrix/api/BotEthicsPipelineTest.java'
+      - 'matrix-core/src/test/java/io/matrix/api/BotEthicsResourceTest.java'
+      - 'matrix-core/src/test/java/io/matrix/audit/FrozenFNLHashChainTest.java'
+      - 'matrix-core/src/test/java/io/matrix/audit/HashChainIntegrityTest.java'
+      - 'matrix-core/src/test/java/io/matrix/audit/HashChainTest.java'
+      - 'matrix-core/src/test/java/io/matrix/budgeter/ConjugateBudgeterStepTest.java'
+      - 'matrix-core/src/test/java/io/matrix/budgeter/ConjugateBudgeterTest.java'
+      - 'matrix-core/src/test/java/io/matrix/budgeter/ConjugateBudgeterTraceConformanceTest.java'
+      - 'matrix-core/src/test/java/io/matrix/budgeter/ConjugateBudgeterVsGreedyTest.java'
+      - 'matrix-core/src/test/java/io/matrix/concurrent/ThreadSafeNeuronLayerTest.java'
+      - 'matrix-core/src/test/java/io/matrix/consensus/ConsensusBenchmarkTest.java'
+      - 'matrix-core/src/test/java/io/matrix/consensus/ConsensusEngineTest.java'
+      - 'matrix-core/src/test/java/io/matrix/consensus/ConsensusTypesTest.java'
+      - 'matrix-core/src/test/java/io/matrix/e2e/E2EIntegrationTest.java'
+      - 'matrix-core/src/test/java/io/matrix/e2e/MasterPipelineE2ETest.java'
+      - 'matrix-core/src/test/java/io/matrix/ethics/EthicalFilterFrozenIntegrationTest.java'
+      - 'matrix-core/src/test/java/io/matrix/ethics/FROZENFNLGuardianTest.java'
+      - 'matrix-core/src/test/java/io/matrix/ethics/FROZENGDPREscalatorTest.java'
+      - 'matrix-core/src/test/java/io/matrix/ethics/frozen/FrozenEthicalFNLTest.java'
+      - 'matrix-core/src/test/java/io/matrix/federation/formal/ConsensusModelCheckerTest.java'
+      - 'matrix-core/src/test/java/io/matrix/federation/liquid/MCTSPlannerTest.java'
+      - 'matrix-core/src/test/java/io/matrix/integration/BrcIntegrationTest.java'
+      - 'matrix-core/src/test/java/io/matrix/integration/BrcMctsIntegrationTest.java'
+      - 'matrix-core/src/test/java/io/matrix/integration/EndToEndTest.java'
+      - 'matrix-core/src/test/java/io/matrix/integration/L1toL5IntegrationTest.java'
+      - 'matrix-core/src/test/java/io/matrix/integration/MctsIntegrationTest.java'
+      - 'matrix-core/src/test/java/io/matrix/integration/RagAgentLoopIntegrationTest.java'
+      - 'matrix-core/src/test/java/io/matrix/knowledge/KnowledgeImporterTest.java'
+      - 'matrix-core/src/test/java/io/matrix/knowledge/KnowledgeProvenanceTest.java'
+      - 'matrix-core/src/test/java/io/matrix/knowledge/KnowledgeRefinerTest.java'
+      - 'matrix-core/src/test/java/io/matrix/knowledge/KnowledgeStoreTest.java'
+      - 'matrix-core/src/test/java/io/matrix/knowledge/KnowledgeWorkbenchTest.java'
+      - 'matrix-core/src/test/java/io/matrix/knowledge/LearningStateMachineTest.java'
+      - 'matrix-core/src/test/java/io/matrix/knowledge/LogicDomainTest.java'
+      - 'matrix-core/src/test/java/io/matrix/knowledge/acquisition/ClaimValidatorTest.java'
+      - 'matrix-core/src/test/java/io/matrix/knowledge/acquisition/DocumentImportTest.java'
+      - 'matrix-core/src/test/java/io/matrix/lifecycle/ImpulseSchedulerTest.java'
+      - 'matrix-core/src/test/java/io/matrix/mcts/LatsNodeTest.java'
+      - 'matrix-core/src/test/java/io/matrix/mcts/LatsReflectorTest.java'
+      - 'matrix-core/src/test/java/io/matrix/mcts/LatsValueFunctionTest.java'
+      - 'matrix-core/src/test/java/io/matrix/mcts/MctsLatsConvergenceTest.java'
+      - 'matrix-core/src/test/java/io/matrix/mcts/MctsNodeTest.java'
+      - 'matrix-core/src/test/java/io/matrix/mcts/MctsTreeLatsTest.java'
+      - 'matrix-core/src/test/java/io/matrix/mcts/MctsTreeTest.java'
+      - 'matrix-core/src/test/java/io/matrix/neuron/DecisionTreeTest.java'
+      - 'matrix-core/src/test/java/io/matrix/neuron/HierarchicalBrainTest.java'
+      - 'matrix-core/src/test/java/io/matrix/neuron/NeuronLayerTest.java'
+      - 'matrix-core/src/test/java/io/matrix/neuron/SimdTruthTableEvalTest.java'
+      - 'matrix-core/src/test/java/io/matrix/neuron/TruthTableTest.java'
+      - 'matrix-core/src/test/java/io/matrix/noosphere/EpochAwareCausalSetTest.java'
+      - 'matrix-core/src/test/java/io/matrix/noosphere/GlobalMediatorTest.java'
+      - 'matrix-core/src/test/java/io/matrix/noosphere/GrowOnlySetCausalTest.java'
+      - 'matrix-core/src/test/java/io/matrix/noosphere/GrowOnlySetPersistenceTest.java'
+      - 'matrix-core/src/test/java/io/matrix/reasoning/ArousalDynamicsIntegrationTest.java'
+      - 'matrix-core/src/test/java/io/matrix/reasoning/BrcChainComposeTest.java'
+      - 'matrix-core/src/test/java/io/matrix/reasoning/BrcChainTest.java'
+      - 'matrix-core/src/test/java/io/matrix/reasoning/ConsciousnessLoopFeedbackTest.java'
+      - 'matrix-core/src/test/java/io/matrix/reasoning/Exp146BrcStepVerifierTest.java'
+      - 'matrix-core/src/test/java/io/matrix/reasoning/StageLatencyTrackerIntegrationTest.java'
+      - 'matrix-core/src/test/java/io/matrix/research/Exp045FreezeRecoveryTest.java'
+      - 'matrix-core/src/test/java/io/matrix/verification/SafetyPropertiesTest.java'
+      - 'matrix-core/src/test/java/io/matrix/verification/SystemIntegrationTest.java'
+      - 'matrix-quality/build.gradle'
+      - 'matrix-quality/src/test/java/io/matrix/quality/SpecImplementationMapTest.java'
+      # END generated-formal-paths
   pull_request:
-    branches: [main]
+    branches: [develop, main]
     paths:
       - 'formal/**'
+      - '.github/workflows/tla.yml'
+      # BEGIN generated-formal-paths (from formal/spec-implementation-map.yml)
+      - 'formal/spec-implementation-map.yml'
+      - 'matrix-api-gateway/src/main/java/io/matrix/api/brain/ProductionBrainClient.java'
+      - 'matrix-api-gateway/src/main/java/io/matrix/api/llm_quarantine/BrainIntegrated.java'
+      - 'matrix-api-gateway/src/main/java/io/matrix/api/llm_quarantine/BrainProduction.java'
+      - 'matrix-api-gateway/src/main/java/io/matrix/api/llm_quarantine/LlmBrainLoopService.java'
+      - 'matrix-brain-runtime/src/main/java/io/matrix/brain/runtime/TrueMindCycle.java'
+      - 'matrix-brain-runtime/src/main/java/io/matrix/brain/runtime/stages/ArithmeticStage.java'
+      - 'matrix-brain-runtime/src/main/java/io/matrix/brain/runtime/stages/PlanningStage.java'
+      - 'matrix-brain-runtime/src/test/java/io/matrix/brain/runtime/PlanningCallerExistsTest.java'
+      - 'matrix-brain-runtime/src/test/java/io/matrix/brain/runtime/stages/ArithmeticCompoundRoutingTest.java'
+      - 'matrix-brain-runtime/src/test/java/io/matrix/brain/runtime/stages/ArithmeticStagePlanningTest.java'
+      - 'matrix-brain-runtime/src/test/java/io/matrix/brain/runtime/stages/PlanningStageTest.java'
+      - 'matrix-core/src/main/java/io/matrix/agent/AgentLoop.java'
+      - 'matrix-core/src/main/java/io/matrix/agent/EthicsGuard.java'
+      - 'matrix-core/src/main/java/io/matrix/agent/react/ReActAgentLoop.java'
+      - 'matrix-core/src/main/java/io/matrix/api/BotEthicsPipeline.java'
+      - 'matrix-core/src/main/java/io/matrix/api/BotEthicsResource.java'
+      - 'matrix-core/src/main/java/io/matrix/api/OpenAIChatResource.java'
+      - 'matrix-core/src/main/java/io/matrix/audit/FrozenFNLHashChain.java'
+      - 'matrix-core/src/main/java/io/matrix/audit/HashChain.java'
+      - 'matrix-core/src/main/java/io/matrix/audit/HashLink.java'
+      - 'matrix-core/src/main/java/io/matrix/autonomy/AutonomyEngine.java'
+      - 'matrix-core/src/main/java/io/matrix/autonomy/SelfImprovingEngine.java'
+      - 'matrix-core/src/main/java/io/matrix/bir/BooleanRuntime.java'
+      - 'matrix-core/src/main/java/io/matrix/bir/DecisionTreeAdapter.java'
+      - 'matrix-core/src/main/java/io/matrix/bir/TruthTableAdapter.java'
+      - 'matrix-core/src/main/java/io/matrix/bir/TtForm.java'
+      - 'matrix-core/src/main/java/io/matrix/brain/BirBrainCycle.java'
+      - 'matrix-core/src/main/java/io/matrix/brain/DefaultBrainPipeline.java'
+      - 'matrix-core/src/main/java/io/matrix/budgeter/ConjugateBudgeter.java'
+      - 'matrix-core/src/main/java/io/matrix/consensus/ConsensusEngine.java'
+      - 'matrix-core/src/main/java/io/matrix/consensus/ConsensusLevel.java'
+      - 'matrix-core/src/main/java/io/matrix/consensus/Proposal.java'
+      - 'matrix-core/src/main/java/io/matrix/consensus/Vote.java'
+      - 'matrix-core/src/main/java/io/matrix/consensus/WeightedVoting.java'
+      - 'matrix-core/src/main/java/io/matrix/ethics/EthicalFilter.java'
+      - 'matrix-core/src/main/java/io/matrix/ethics/FROZENFNLGuardian.java'
+      - 'matrix-core/src/main/java/io/matrix/ethics/FROZENGDPREscalator.java'
+      - 'matrix-core/src/main/java/io/matrix/ethics/frozen/FrozenAxiomNeuron.java'
+      - 'matrix-core/src/main/java/io/matrix/ethics/frozen/FrozenEthicalFNL.java'
+      - 'matrix-core/src/main/java/io/matrix/ethics/frozen/TextFeatureExtractor.java'
+      - 'matrix-core/src/main/java/io/matrix/ethics/frozen/TruthTableUtil.java'
+      - 'matrix-core/src/main/java/io/matrix/federation/consensus/LocalConsensusEngine.java'
+      - 'matrix-core/src/main/java/io/matrix/federation/liquid/MCTSPlanner.java'
+      - 'matrix-core/src/main/java/io/matrix/federation/runtime/FederationRuntime.java'
+      - 'matrix-core/src/main/java/io/matrix/knowledge/Claim.java'
+      - 'matrix-core/src/main/java/io/matrix/knowledge/ClaimWarrant.java'
+      - 'matrix-core/src/main/java/io/matrix/knowledge/Contradiction.java'
+      - 'matrix-core/src/main/java/io/matrix/knowledge/ContradictionDetector.java'
+      - 'matrix-core/src/main/java/io/matrix/knowledge/Derivation.java'
+      - 'matrix-core/src/main/java/io/matrix/knowledge/DerivationStatus.java'
+      - 'matrix-core/src/main/java/io/matrix/knowledge/Evidence.java'
+      - 'matrix-core/src/main/java/io/matrix/knowledge/KnowledgeChanges.java'
+      - 'matrix-core/src/main/java/io/matrix/knowledge/KnowledgeImporter.java'
+      - 'matrix-core/src/main/java/io/matrix/knowledge/KnowledgeRefiner.java'
+      - 'matrix-core/src/main/java/io/matrix/knowledge/KnowledgeRevision.java'
+      - 'matrix-core/src/main/java/io/matrix/knowledge/KnowledgeSnapshot.java'
+      - 'matrix-core/src/main/java/io/matrix/knowledge/KnowledgeStore.java'
+      - 'matrix-core/src/main/java/io/matrix/knowledge/KnowledgeWorkbench.java'
+      - 'matrix-core/src/main/java/io/matrix/knowledge/LearningStateMachine.java'
+      - 'matrix-core/src/main/java/io/matrix/knowledge/LearningWorkbenchResource.java'
+      - 'matrix-core/src/main/java/io/matrix/knowledge/Representation.java'
+      - 'matrix-core/src/main/java/io/matrix/knowledge/Representations.java'
+      - 'matrix-core/src/main/java/io/matrix/knowledge/acquisition/ClaimValidator.java'
+      - 'matrix-core/src/main/java/io/matrix/knowledge/acquisition/DocumentImporter.java'
+      - 'matrix-core/src/main/java/io/matrix/knowledge/acquisition/PromotionPolicy.java'
+      - 'matrix-core/src/main/java/io/matrix/knowledge/acquisition/PromotionStage.java'
+      - 'matrix-core/src/main/java/io/matrix/lifecycle/ImpulseScheduler.java'
+      - 'matrix-core/src/main/java/io/matrix/mcts/LatsNode.java'
+      - 'matrix-core/src/main/java/io/matrix/mcts/LatsReflector.java'
+      - 'matrix-core/src/main/java/io/matrix/mcts/LatsValueFunction.java'
+      - 'matrix-core/src/main/java/io/matrix/mcts/MctsAction.java'
+      - 'matrix-core/src/main/java/io/matrix/mcts/MctsNode.java'
+      - 'matrix-core/src/main/java/io/matrix/mcts/MctsTree.java'
+      - 'matrix-core/src/main/java/io/matrix/minecraft/HeadlessBotRegistry.java'
+      - 'matrix-core/src/main/java/io/matrix/neuron/DecisionTree.java'
+      - 'matrix-core/src/main/java/io/matrix/neuron/HierarchicalBrain.java'
+      - 'matrix-core/src/main/java/io/matrix/neuron/NeuralMemoryResponse.java'
+      - 'matrix-core/src/main/java/io/matrix/neuron/NeuronLayer.java'
+      - 'matrix-core/src/main/java/io/matrix/neuron/TruthTable.java'
+      - 'matrix-core/src/main/java/io/matrix/noosphere/CausalCrdt.java'
+      - 'matrix-core/src/main/java/io/matrix/noosphere/Crdt.java'
+      - 'matrix-core/src/main/java/io/matrix/noosphere/EpochAwareCausalSet.java'
+      - 'matrix-core/src/main/java/io/matrix/noosphere/GrowOnlySet.java'
+      - 'matrix-core/src/main/java/io/matrix/noosphere/MeshFederation.java'
+      - 'matrix-core/src/main/java/io/matrix/reasoning/BrainLoopService.java'
+      - 'matrix-core/src/main/java/io/matrix/reasoning/BrcChain.java'
+      - 'matrix-core/src/main/java/io/matrix/reasoning/BrcState.java'
+      - 'matrix-core/src/main/java/io/matrix/reasoning/BrcStep.java'
+      - 'matrix-core/src/main/java/io/matrix/reasoning/ConsciousnessLoop.java'
+      - 'matrix-core/src/main/java/io/quarkus/runner/ApplicationImpl.java'
+      - 'matrix-core/src/test/java/io/matrix/agent/EthicsGuardTest.java'
+      - 'matrix-core/src/test/java/io/matrix/agent/MultiAgentLoopTest.java'
+      - 'matrix-core/src/test/java/io/matrix/api/BotEthicsPipelineTest.java'
+      - 'matrix-core/src/test/java/io/matrix/api/BotEthicsResourceTest.java'
+      - 'matrix-core/src/test/java/io/matrix/audit/FrozenFNLHashChainTest.java'
+      - 'matrix-core/src/test/java/io/matrix/audit/HashChainIntegrityTest.java'
+      - 'matrix-core/src/test/java/io/matrix/audit/HashChainTest.java'
+      - 'matrix-core/src/test/java/io/matrix/budgeter/ConjugateBudgeterStepTest.java'
+      - 'matrix-core/src/test/java/io/matrix/budgeter/ConjugateBudgeterTest.java'
+      - 'matrix-core/src/test/java/io/matrix/budgeter/ConjugateBudgeterTraceConformanceTest.java'
+      - 'matrix-core/src/test/java/io/matrix/budgeter/ConjugateBudgeterVsGreedyTest.java'
+      - 'matrix-core/src/test/java/io/matrix/concurrent/ThreadSafeNeuronLayerTest.java'
+      - 'matrix-core/src/test/java/io/matrix/consensus/ConsensusBenchmarkTest.java'
+      - 'matrix-core/src/test/java/io/matrix/consensus/ConsensusEngineTest.java'
+      - 'matrix-core/src/test/java/io/matrix/consensus/ConsensusTypesTest.java'
+      - 'matrix-core/src/test/java/io/matrix/e2e/E2EIntegrationTest.java'
+      - 'matrix-core/src/test/java/io/matrix/e2e/MasterPipelineE2ETest.java'
+      - 'matrix-core/src/test/java/io/matrix/ethics/EthicalFilterFrozenIntegrationTest.java'
+      - 'matrix-core/src/test/java/io/matrix/ethics/FROZENFNLGuardianTest.java'
+      - 'matrix-core/src/test/java/io/matrix/ethics/FROZENGDPREscalatorTest.java'
+      - 'matrix-core/src/test/java/io/matrix/ethics/frozen/FrozenEthicalFNLTest.java'
+      - 'matrix-core/src/test/java/io/matrix/federation/formal/ConsensusModelCheckerTest.java'
+      - 'matrix-core/src/test/java/io/matrix/federation/liquid/MCTSPlannerTest.java'
+      - 'matrix-core/src/test/java/io/matrix/integration/BrcIntegrationTest.java'
+      - 'matrix-core/src/test/java/io/matrix/integration/BrcMctsIntegrationTest.java'
+      - 'matrix-core/src/test/java/io/matrix/integration/EndToEndTest.java'
+      - 'matrix-core/src/test/java/io/matrix/integration/L1toL5IntegrationTest.java'
+      - 'matrix-core/src/test/java/io/matrix/integration/MctsIntegrationTest.java'
+      - 'matrix-core/src/test/java/io/matrix/integration/RagAgentLoopIntegrationTest.java'
+      - 'matrix-core/src/test/java/io/matrix/knowledge/KnowledgeImporterTest.java'
+      - 'matrix-core/src/test/java/io/matrix/knowledge/KnowledgeProvenanceTest.java'
+      - 'matrix-core/src/test/java/io/matrix/knowledge/KnowledgeRefinerTest.java'
+      - 'matrix-core/src/test/java/io/matrix/knowledge/KnowledgeStoreTest.java'
+      - 'matrix-core/src/test/java/io/matrix/knowledge/KnowledgeWorkbenchTest.java'
+      - 'matrix-core/src/test/java/io/matrix/knowledge/LearningStateMachineTest.java'
+      - 'matrix-core/src/test/java/io/matrix/knowledge/LogicDomainTest.java'
+      - 'matrix-core/src/test/java/io/matrix/knowledge/acquisition/ClaimValidatorTest.java'
+      - 'matrix-core/src/test/java/io/matrix/knowledge/acquisition/DocumentImportTest.java'
+      - 'matrix-core/src/test/java/io/matrix/lifecycle/ImpulseSchedulerTest.java'
+      - 'matrix-core/src/test/java/io/matrix/mcts/LatsNodeTest.java'
+      - 'matrix-core/src/test/java/io/matrix/mcts/LatsReflectorTest.java'
+      - 'matrix-core/src/test/java/io/matrix/mcts/LatsValueFunctionTest.java'
+      - 'matrix-core/src/test/java/io/matrix/mcts/MctsLatsConvergenceTest.java'
+      - 'matrix-core/src/test/java/io/matrix/mcts/MctsNodeTest.java'
+      - 'matrix-core/src/test/java/io/matrix/mcts/MctsTreeLatsTest.java'
+      - 'matrix-core/src/test/java/io/matrix/mcts/MctsTreeTest.java'
+      - 'matrix-core/src/test/java/io/matrix/neuron/DecisionTreeTest.java'
+      - 'matrix-core/src/test/java/io/matrix/neuron/HierarchicalBrainTest.java'
+      - 'matrix-core/src/test/java/io/matrix/neuron/NeuronLayerTest.java'
+      - 'matrix-core/src/test/java/io/matrix/neuron/SimdTruthTableEvalTest.java'
+      - 'matrix-core/src/test/java/io/matrix/neuron/TruthTableTest.java'
+      - 'matrix-core/src/test/java/io/matrix/noosphere/EpochAwareCausalSetTest.java'
+      - 'matrix-core/src/test/java/io/matrix/noosphere/GlobalMediatorTest.java'
+      - 'matrix-core/src/test/java/io/matrix/noosphere/GrowOnlySetCausalTest.java'
+      - 'matrix-core/src/test/java/io/matrix/noosphere/GrowOnlySetPersistenceTest.java'
+      - 'matrix-core/src/test/java/io/matrix/reasoning/ArousalDynamicsIntegrationTest.java'
+      - 'matrix-core/src/test/java/io/matrix/reasoning/BrcChainComposeTest.java'
+      - 'matrix-core/src/test/java/io/matrix/reasoning/BrcChainTest.java'
+      - 'matrix-core/src/test/java/io/matrix/reasoning/ConsciousnessLoopFeedbackTest.java'
+      - 'matrix-core/src/test/java/io/matrix/reasoning/Exp146BrcStepVerifierTest.java'
+      - 'matrix-core/src/test/java/io/matrix/reasoning/StageLatencyTrackerIntegrationTest.java'
+      - 'matrix-core/src/test/java/io/matrix/research/Exp045FreezeRecoveryTest.java'
+      - 'matrix-core/src/test/java/io/matrix/verification/SafetyPropertiesTest.java'
+      - 'matrix-core/src/test/java/io/matrix/verification/SystemIntegrationTest.java'
+      - 'matrix-quality/build.gradle'
+      - 'matrix-quality/src/test/java/io/matrix/quality/SpecImplementationMapTest.java'
+      # END generated-formal-paths
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -33,30 +364,137 @@ jobs:
           distribution: 'temurin'
           java-version: '25'
 
-      - name: Download tla2tools.jar
+      - name: The pinned formal tool (the bytes are in the repository)
+        # W48-04. The step used to DOWNLOAD the tool from the tlaplus v1.8.0
+        # release and verify its digest. That release was recreated on
+        # 2026-11-06 and now serves different bytes — the upstream asset was
+        # replaced in place — so the download failed its own checksum and the
+        # job could not start. The tlaplus repository does not track the jar
+        # and Maven Central does not publish it, so there is no immutable
+        # upstream copy to point at.
+        #
+        # The tool is therefore TRACKED: the bytes the local gate uses are the
+        # bytes the CI uses, and the digest is verified on every run. The
+        # provenance and the reasoning are in tools/README.md.
         run: |
-          mkdir -p tools
-          curl -fsSL -o tools/tla2tools.jar \
-            https://github.com/tlaplus/tlaplus/releases/download/v1.8.0/tla2tools.jar
+          echo "fc6878c603f0fdc18b9fe3e5bf51860cb90ab5b1154e3c371660c036d6bdd63e  tools/tla2tools.jar" \
+            | sha256sum --check --strict
           ls -lh tools/tla2tools.jar
+          # The main class in the current tla2tools build is tlc2.TLC.
+          unzip -l tools/tla2tools.jar | grep -E 'tlc2/TLC.class' | head -1
 
-      - name: Sanity-check each spec parses
+      # Required. SANY exits 255 on a parse error but 0 on a SEMANTIC error,
+      # so the exit code alone is not the gate: the step also greps for the
+      # error markers SANY prints.
+      - name: Parse and semantic-check every spec (SANY)
         run: |
-          set -e
+          set -uo pipefail
+          failed=0
           for spec in formal/*.tla; do
-            echo "--- SANY parse check: $spec ---"
-            java -cp tools/tla2tools.jar tla2sany.SANY "$spec" || {
-              echo "::error::TLA+ spec $spec failed to parse"
-              exit 1
-            }
+            echo "--- SANY: $spec ---"
+            out="$(java -cp tools/tla2tools.jar tla2sany.SANY "$spec" 2>&1)"
+            rc=$?
+            echo "$out" | grep -E "Unknown operator|Parse Error|Encountered|\*\*\* Errors:" | head -5 || true
+            if [ "$rc" != "0" ] || echo "$out" | grep -qE "Unknown operator|Parse Error|Encountered"; then
+              echo "::error::$spec failed the SANY parse/semantic check"
+              failed=1
+            else
+              echo "✅ $spec parses cleanly"
+            fi
           done
+          [ "$failed" = "0" ] || exit 1
 
-      # Full TLC model-checking requires a config file (Cfg) for each spec.
-      # These are added as a follow-up when concrete parameters are fixed
-      # (see formal/README.md). For now we run only the parser to catch
-      # syntax regressions early.
-      - name: Summary
-        if: success()
+      # Required. Real model checking.
+      - name: Model-check every spec that has a configuration (TLC)
         run: |
-          echo "All $(ls formal/*.tla | wc -l) TLA+ specs parse cleanly."
-          echo "Add *.cfg files to enable bounded state-space model checking."
+          set -uo pipefail
+          # Specifications with a KNOWN, recorded, genuinely false property.
+          # Each needs an author decision (the property, not the syntax, is
+          # wrong); they are reported loudly and do not fail this job. Any
+          # other failure fails the job.
+          KNOWN_FAILING=""
+
+          # RECON-W38.5: the list is EMPTY. Five specifications used to carry
+          # a recorded property failure; each was traced to the Java it models
+          # and fixed there or in the specification:
+          #   MPDTNeuron          Init seeded a memoised output that
+          #                       contradicted the truth table
+          #   MemoryM4Causal      F1's implication was inverted against its own
+          #                       comment; the Insert guard was inverted against
+          #                       F2, and the helper that encoded the right
+          #                       direction was dead code
+          #   MctsLatsVisit       Expand allowed a node to be its own child;
+          #                       Spec encoded no fairness, so the search could
+          #                       stutter forever
+          #   ConjugateBudgeterDP the witness reconstruction unioned the skip
+          #                       and take witnesses, so the selected set could
+          #                       exceed the envelope; and the lambda-monotonicity
+          #                       claim was mathematically FALSE (it was also
+          #                       false in the Java's javadoc)
+          #   FrozenEthicalFNL    the model accumulated one axiom per step while
+          #                       the Java evaluates every neuron against the
+          #                       same features in one call
+          # The mechanism is kept: if a future change makes a model check fail,
+          # the specification is named here and the job reports it loudly
+          # rather than hiding it.
+          mkdir -p /tmp/tlc-meta
+          checked=0
+          failed=0
+          skipped=0
+          for cfg in formal/*.cfg; do
+            spec="$(basename "$cfg" .cfg)"
+            tla="formal/$spec.tla"
+            if [ ! -f "$tla" ]; then
+              echo "::warning::$cfg has no matching specification"
+              continue
+            fi
+            echo "=== TLC model check: $spec ==="
+            set +e
+            out="$(cd formal && java -cp ../tools/tla2tools.jar tlc2.TLC \
+                     -metadir "/tmp/tlc-meta/$spec" \
+                     -config "$spec.cfg" "$spec.tla" 2>&1)"
+            rc=$?
+            set -e
+            checked=$((checked+1))
+            echo "$out" | grep -E "states generated|No error has been found|^Error:" | head -6 || true
+            if [ "$rc" = "0" ]; then
+              echo "✅ $spec: model check passed"
+            elif echo " $KNOWN_FAILING " | grep -q " $spec "; then
+              echo "::warning::$spec: model check FAILED (rc=$rc). This is a KNOWN, recorded property failure that needs an author decision - see docs-v2/engineering/TLA-STATUS.md. It is reported, not hidden, and it is NOT a passing check."
+            else
+              echo "::error::$spec: model check FAILED (rc=$rc)"
+              failed=$((failed+1))
+            fi
+          done
+          for spec in formal/*.tla; do
+            base="$(basename "$spec" .tla)"
+            if [ ! -f "formal/$base.cfg" ]; then
+              skipped=$((skipped+1))
+              echo "::notice::$base has no configuration: syntax-checked only, no property was model-checked. See docs-v2/engineering/TLA-STATUS.md."
+            fi
+          done
+          echo "Model-checked $checked specification(s); $skipped syntax-checked only; $failed failed."
+          [ "$failed" = "0" ] || exit 1
+
+      # RECON-W39: a gate that cannot go red is not a gate. This step applies
+      # deliberate defects to COPIES of the specifications in an isolated
+      # temporary directory and checks that the properties still reject them.
+      # The real source tree is never modified. A mutant that starts to
+      # survive, or that stops being reproducible, fails this job.
+      - name: Mutation harness - can the gate still go red?
+        run: |
+          set -uo pipefail
+          python3 scripts/mutation-harness.py \
+            --report docs-v2/engineering/MUTATION-REPORT.md
+          rc=$?
+          if [ "$rc" != "0" ]; then
+            echo "::error::the mutation harness found a hole in the formal gate (rc=$rc)"
+            exit 1
+          fi
+
+      - name: Summary
+        if: always()
+        run: |
+          echo "TLA+ status is recorded in docs-v2/engineering/TLA-STATUS.md."
+          echo "A specification is 'model-checked' only when TLC ran to completion over its"
+          echo "configured state space; a specification without a .cfg is syntax-checked only."

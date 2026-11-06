@@ -5,6 +5,11 @@ on:
     branches: [main]
     paths:
       - 'docs-v2/**'
+  pull_request:
+    paths:
+      - 'docs-v2/**'
+      - '.github/workflows/pages.yml'
+      - 'scripts/validate-pages-config.sh'
   workflow_dispatch:
 
 permissions:
@@ -26,6 +31,17 @@ jobs:
       - name: Setup Pages
         uses: actions/configure-pages@v4
 
+      # W49 (OD-048): the configuration is checked against the ACTUAL
+      # deployment before anything is built or published. The site used to
+      # carry a `url` value that named a host which does not serve it, and
+      # the build succeeded anyway — every canonical link it generated was
+      # wrong and nothing failed.
+      - name: The configuration matches the deployment
+        run: bash scripts/validate-pages-config.sh
+
+      - name: The documentation links resolve
+        run: python3 scripts/docs-link-check.py --root . --strict
+
       - name: Build with Jekyll
         uses: actions/jekyll-build-pages@v1
         with:
@@ -35,7 +51,11 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
 
+  # W49 (OD-048): a pull request builds the site and validates it, but it
+  # does NOT publish. Publishing stays on the reviewed `main` path — the
+  # default branch is the owner's decision and is not changed by this wave.
   deploy:
+    if: github.event_name != 'pull_request'
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}

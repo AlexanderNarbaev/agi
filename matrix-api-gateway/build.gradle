@@ -5,10 +5,30 @@
 plugins {
     id 'java'
     id 'jacoco'
+    // RECON-W38.4: this module needs a runnable, self-contained distribution.
+    // The previous deploy/docker/Dockerfile.api-gateway invoked
+    // :matrix-api-gateway:nativeCompile — a task that does not exist here
+    // (the module applies no GraalVM plugin), so the gateway image could
+    // never be built and CI hid the failure behind continue-on-error.
+    // `application` + installDist produces a real, runnable distribution:
+    //   ./gradlew :matrix-api-gateway:installDist
+    //   matrix-api-gateway/build/install/matrix-api-gateway/bin/matrix-api-gateway
+    id 'application'
 }
 
 group = 'io.matrix'
 version = '0.1.0-T02-SNAPSHOT'
+
+// The gateway's own entry point: a JDK HttpServer serving the REST facade.
+// The JAX-RS resources in io.matrix.api.resource are deliberately not mounted
+// (the module applies no Quarkus plugin), so this is the real entry point.
+application {
+    mainClass = 'io.matrix.api.MinimalHttpServer'
+    applicationDefaultJvmArgs = [
+        '--add-modules=jdk.incubator.vector',
+        '--enable-native-access=ALL-UNNAMED'
+    ]
+}
 
 java {
     sourceCompatibility = JavaVersion.VERSION_25

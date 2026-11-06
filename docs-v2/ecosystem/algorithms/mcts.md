@@ -49,14 +49,14 @@ After the budget is exhausted, select the child with the highest visit count.
 Source: [`matrix-core/src/main/java/io/matrix/mcts/`](https://github.com/AlexanderNarbaev/agi/tree/develop/matrix-core/src/main/java/io/matrix/mcts)
 
 Key classes:
-- `TreeNode` — state, parent, children, wins, visits
-- `MctsPlanner` — runs the 4-phase loop
-- `RolloutPolicy` — random vs heuristic simulation
+- `MctsNode` — state, parent, children, wins, visits
+- `MCTSPlanner` — runs the planning loop (`io.matrix.federation.liquid`)
+- `MctsTree` — the tree itself (`io.matrix.mcts`)
 
-Performance:
-- **1,000 iterations**: ~50ms
-- **10,000 iterations**: ~500ms
-- **100,000 iterations**: ~5s
+Performance: the iteration cost is measured by a JMH run, not by a timer — the method
+is `docs-v2/research/PROTOCOL.md`, and the gate evidence is
+`docs-v2/engineering/JMH-GATE-EVIDENCE.md`. The figures this page used to quote here
+were never produced by a measurement and have been removed.
 
 ## History
 

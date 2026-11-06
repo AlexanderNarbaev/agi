@@ -25,7 +25,7 @@ import java.util.concurrent.ConcurrentHashMap;
  *
  * <p>Indexes: level, domain, importance, (level, importance DESC) composite.
  */
-public final class SqliteMemoryBackend {
+public final class SqliteMemoryBackend implements AutoCloseable {
 
     private final String dbPath;
     private Connection conn;
@@ -54,6 +54,19 @@ public final class SqliteMemoryBackend {
                         child_ids TEXT DEFAULT ''
                     )
                     """);
+                // The tombstone columns (RECON-W42.5). A forgotten entry
+                // keeps its content: forgetting must not destroy the
+                // historical evidence, it must mark it as no longer part of
+                // the live memory.
+                // The columns are added only when they are missing: SQLite
+                // refuses to add a column twice, and the backend is opened
+                // on every start.
+                if (!hasColumn(st, "forgotten_at")) {
+                    st.execute("ALTER TABLE memory ADD COLUMN forgotten_at INTEGER");
+                }
+                if (!hasColumn(st, "forgotten_reason")) {
+                    st.execute("ALTER TABLE memory ADD COLUMN forgotten_reason TEXT");
+                }
                 st.execute("CREATE INDEX IF NOT EXISTS idx_level ON memory(level)");
                 st.execute("CREATE INDEX IF NOT EXISTS idx_domain ON memory(domain)");
                 st.execute("CREATE INDEX IF NOT EXISTS idx_importance ON memory(importance)");
@@ -62,6 +75,18 @@ public final class SqliteMemoryBackend {
         } catch (SQLException e) {
             throw new RuntimeException("SQLite backend init failed: " + dbPath, e);
         }
+    }
+
+    /** Whether the table already has the column. */
+    private static boolean hasColumn(Statement st, String column) throws SQLException {
+        try (var rs = st.executeQuery("PRAGMA table_info(memory)")) {
+            while (rs.next()) {
+                if (column.equals(rs.getString("name"))) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     /** Save a memory entry. */
@@ -93,7 +118,7 @@ public final class SqliteMemoryBackend {
     /** Load all entries. */
     public Map<String, HierarchicalMemory.MemoryEntry> loadAll() {
         Map<String, HierarchicalMemory.MemoryEntry> result = new ConcurrentHashMap<>();
-        String sql = "SELECT * FROM memory";
+        String sql = "SELECT * FROM memory WHERE forgotten_at IS NULL";
         try (var st = conn.createStatement(); var rs = st.executeQuery(sql)) {
             while (rs.next()) {
                 var entry = entryFromRow(rs);
@@ -117,7 +142,7 @@ public final class SqliteMemoryBackend {
 
     /** Lists entries at a specific level, sorted by importance descending. */
     public List<HierarchicalMemory.MemoryEntry> listByLevel(int level) {
-        String sql = "SELECT * FROM memory WHERE level = ? ORDER BY importance DESC";
+        String sql = "SELECT * FROM memory WHERE level = ? AND forgotten_at IS NULL ORDER BY importance DESC";
         List<HierarchicalMemory.MemoryEntry> result = new ArrayList<>();
         try (var ps = conn.prepareStatement(sql)) {
             ps.setInt(1, level);
@@ -132,7 +157,7 @@ public final class SqliteMemoryBackend {
 
     /** Lists entries created within [startMs, endMs], ordered by created_at. */
     public List<HierarchicalMemory.MemoryEntry> listByTimeRange(long startMs, long endMs) {
-        String sql = "SELECT * FROM memory WHERE created_at >= ? AND created_at <= ? ORDER BY created_at";
+        String sql = "SELECT * FROM memory WHERE created_at >= ? AND created_at <= ? AND forgotten_at IS NULL ORDER BY created_at";
         List<HierarchicalMemory.MemoryEntry> result = new ArrayList<>();
         try (var ps = conn.prepareStatement(sql)) {
             ps.setLong(1, startMs);
@@ -149,25 +174,73 @@ public final class SqliteMemoryBackend {
     /**
      * Compacts low-importance L0 entries beyond max age.
      *
+     * <p><b>The entries are not deleted.</b> The first version of this
+     * method issued a DELETE, and a delete is the one thing the mission's
+     * section 8 forbids outright: forgetting must not silently destroy the
+     * historical evidence. A forgotten entry is MARKED - it keeps its
+     * content, its id and the moment it was forgotten - and the live reads
+     * stop returning it. The evidence is still there, and
+     * {@link #tombstones()} can reach it.
+     *
      * @param maxImportance entries with importance BELOW this threshold are candidates
      * @param maxAgeMs      entries older than this (ms) are candidates
-     * @return number of deleted entries
+     * @return number of forgotten entries
      */
     public int compact(double maxImportance, long maxAgeMs) {
         long cutoff = System.currentTimeMillis() - maxAgeMs;
-        String sql = "DELETE FROM memory WHERE level = 0 AND importance < ? AND created_at < ?";
+        String sql = "UPDATE memory SET forgotten_at = ?, forgotten_reason = ? "
+                + "WHERE level = 0 AND importance < ? AND created_at < ? AND forgotten_at IS NULL";
         try (var ps = conn.prepareStatement(sql)) {
-            ps.setDouble(1, maxImportance);
-            ps.setLong(2, cutoff);
+            ps.setLong(1, System.currentTimeMillis());
+            ps.setString(2, "compacted: below the importance threshold and past the age window");
+            ps.setDouble(3, maxImportance);
+            ps.setLong(4, cutoff);
             return ps.executeUpdate();
         } catch (SQLException e) {
             throw new RuntimeException("Compact failed", e);
         }
     }
 
+    /**
+     * The entries that were forgotten, and why.
+     *
+     * <p>The historical evidence of a forgetting: what left the live memory,
+     * when, and on what grounds. An audit that cannot see this cannot tell
+     * a forgetting from a loss.
+     *
+     * @return the forgotten entries
+     */
+    public List<HierarchicalMemory.MemoryEntry> tombstones() {
+        List<HierarchicalMemory.MemoryEntry> result = new ArrayList<>();
+        String sql = "SELECT * FROM memory WHERE forgotten_at IS NOT NULL ORDER BY forgotten_at";
+        try (var ps = conn.prepareStatement(sql);
+             var rs = ps.executeQuery()) {
+            while (rs.next()) result.add(entryFromRow(rs));
+        } catch (SQLException e) {
+            throw new RuntimeException("tombstones failed", e);
+        }
+        return result;
+    }
+
+    /**
+     * Restores a forgotten entry to the live memory.
+     *
+     * @param id the entry's id
+     * @return true when an entry was restored
+     */
+    public boolean restore(String id) {
+        String sql = "UPDATE memory SET forgotten_at = NULL, forgotten_reason = NULL WHERE id = ?";
+        try (var ps = conn.prepareStatement(sql)) {
+            ps.setString(1, id);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            throw new RuntimeException("restore failed", e);
+        }
+    }
+
     /** Searches entries by domain prefix (max 100 results). */
     public List<HierarchicalMemory.MemoryEntry> searchByDomain(String domainPrefix) {
-        String sql = "SELECT * FROM memory WHERE domain LIKE ? ORDER BY importance DESC LIMIT 100";
+        String sql = "SELECT * FROM memory WHERE domain LIKE ? AND forgotten_at IS NULL ORDER BY importance DESC LIMIT 100";
         List<HierarchicalMemory.MemoryEntry> result = new ArrayList<>();
         try (var ps = conn.prepareStatement(sql)) {
             ps.setString(1, domainPrefix + "%");
@@ -191,6 +264,7 @@ public final class SqliteMemoryBackend {
     }
 
     /** Close the connection. */
+    @Override
     public void close() {
         try { if (conn != null) conn.close(); } catch (SQLException e) { /* ignore */ }
     }

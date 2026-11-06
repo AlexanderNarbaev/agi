@@ -101,24 +101,81 @@ public class ApplicationImpl extends Application {
         System.out.println("MATRIX Native Binary Status:");
         System.out.println("  Version:  v" + VERSION);
         System.out.println("  Build:    " + BUILD_DATE);
-        System.out.println("  GC:       epsilon");
+        System.out.println("  GC:       " + garbageCollectorName());
         System.out.println("  Uptime:   " + uptimeMs + "ms");
         System.out.println("  MaxMem:   " + (maxMem / (1024*1024)) + " MB");
         System.out.println("  TotalMem: " + (totalMem / (1024*1024)) + " MB");
         System.out.println("  FreeMem:  " + (freeMem / (1024*1024)) + " MB");
     }
 
+    /**
+     * Loads the build metadata generated at build time by the
+     * {@code :matrix-core:generateBuildInfo} Gradle task.
+     *
+     * <p>The binary used to print hardcoded headline numbers ("171+ cognitive
+     * measurement classes", "6,700+ test methods across 940+ test files").
+     * Those numbers were true once, were never updated, and a shipped binary
+     * cannot verify them at runtime. The counts are now measured from the
+     * source tree at build time and written into a resource, so what a binary
+     * prints always describes the tree it was built from.</p>
+     *
+     * <p>When the resource is absent - a binary built without the generation
+     * step - the counts are reported as unavailable rather than guessed.</p>
+     */
+    private static java.util.Properties loadBuildInfo() {
+        java.util.Properties props = new java.util.Properties();
+        try (java.io.InputStream in = ApplicationImpl.class.getResourceAsStream(
+                "/matrix-build-info.properties")) {
+            if (in != null) {
+                props.load(in);
+            }
+        } catch (java.io.IOException e) {
+            // A missing or unreadable metadata file must not stop the binary
+            // from reporting what it can report.
+        }
+        return props;
+    }
+
     private static void printInfo() {
         System.out.println("MATRIX Native Binary Info:");
         System.out.println("  Version:    v" + VERSION);
         System.out.println("  Build:      " + BUILD_DATE);
-        System.out.println("  VM:         GraalVM CE 25.0.2");
-        System.out.println("  GC:         epsilon (no GC overhead)");
-        System.out.println("  Image size: 126MB (with --gc=epsilon)");
-        System.out.println("  Startup:    ~100ms (vs JVM 2-5s)");
-        System.out.println("  Modules:    171+ cognitive measurement classes");
-        System.out.println("  Tests:      6,700+ test methods across 940+ test files");
+        System.out.println("  VM:         " + System.getProperty("java.vm.name", "unknown")
+                + " " + System.getProperty("java.version", "unknown")
+                + " (" + System.getProperty("java.vendor", "unknown") + ")");
+        System.out.println("  GC:         " + garbageCollectorName());
+        System.out.println("  Uptime:     " + (System.currentTimeMillis() - START_TIME_MS) + "ms");
+        java.util.Properties info = loadBuildInfo();
+        String method = info.getProperty("build.counting.method");
+        if (method == null) {
+            System.out.println("  Modules:    (not available: this binary was built without build metadata)");
+            System.out.println("  Tests:      (not available: this binary was built without build metadata)");
+        } else {
+            System.out.println("  Consciousness package: "
+                    + info.getProperty("build.consciousness.package.files", "?")
+                    + " classes (" + info.getProperty("build.consciousness.package.named.cognitive", "?")
+                    + " of them named Cognitive*)");
+            System.out.println("  Tests:      " + info.getProperty("build.test.methods", "?")
+                    + " @Test methods across " + info.getProperty("build.test.files", "?")
+                    + " test files (" + info.getProperty("build.test.classes", "?") + " test classes)");
+            System.out.println("  Counting:   " + method);
+        }
         System.out.println("  CONSTITUTION: Articles I (seeded Random) + VI (no consciousness claim)");
+    }
+
+    /** Name of the garbage collector this JVM is actually running. */
+    private static String garbageCollectorName() {
+        try {
+            for (java.lang.management.GarbageCollectorMXBean gc
+                    : java.lang.management.ManagementFactory.getGarbageCollectorMXBeans()) {
+                if (gc.getName() != null && !gc.getName().isBlank()) {
+                    return gc.getName();
+                }
+            }
+        } catch (RuntimeException e) {
+            // fall through
+        }
+        return "unknown";
     }
 
     private static void runBench() {

@@ -13,3 +13,61 @@ java {
 repositories {
     mavenCentral()
 }
+
+// RECON-W42.7 — a reproducible archive.
+//
+// A jar's entries carry the timestamp of the moment they were written and
+// the order the filesystem happened to hand them over, so two builds of
+// the same sources produce two DIFFERENT archives. The compilation was
+// already byte-identical between two clean builds; this makes the archive
+// byte-identical too.
+//
+// The mission's §14 asks for a reproducible build, and it names the
+// distinction: the compilation is reproducible and the archive was not.
+// The distinction is closed here rather than reported as a half-measure.
+allprojects {
+    tasks.withType(AbstractArchiveTask).configureEach {
+        preserveFileTimestamps = false
+        reproducibleFileOrder = true
+    }
+}
+
+// W48-02 — the repository root is a PROPERTY, not a developer's home path.
+//
+// The source-integrity tests verify that a production file says what it must say, and
+// they used to name that file by an absolute path into one developer's home directory.
+// On a clean runner that path does not exist, so the tests failed there and passed
+// here. The root now travels with the build, so a test and the tree it checks are
+// always the same tree — on a developer's machine and on a runner.
+//
+// The property is set AFTER every plugin has had its say: the Quarkus plugin
+// replaces the test task's system properties, so a property set from the root
+// build script's own configuration phase is gone by the time the test runs. It
+// is set in `projectsEvaluated`, which is the last moment before the tasks
+// execute.
+gradle.projectsEvaluated {
+    subprojects { project ->
+        project.tasks.withType(org.gradle.api.tasks.testing.Test).configureEach { task ->
+            task.systemProperty 'matrix.repoRoot', project.rootProject.projectDir.absolutePath
+        }
+    }
+}
+
+// The shared test support: one copy of the repository-root resolution, used by every
+// module whose tests verify files in the tree.
+//
+// The SUBPROJECTS, not the root: the root project has no tests, and giving
+// its test task the shared sources made it fail with "there are test sources
+// present and no filters are applied, but the test task did not discover any
+// tests to execute" — a root task that had been NO-SOURCE until then.
+subprojects {
+    plugins.withId('java') {
+        sourceSets {
+            test {
+                java {
+                    srcDir rootProject.file('test-support/java')
+                }
+            }
+        }
+    }
+}

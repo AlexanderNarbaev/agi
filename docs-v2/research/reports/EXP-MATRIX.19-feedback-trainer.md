@@ -44,8 +44,8 @@ via `POST /v1/chat/feedback`. The system should:
 
 ## Cross-references
 
-- [SPEC-006-consciousness-deliberation.md](../specifications/SPEC-006-consciousness-deliberation.md)
+- [SPEC-006-consciousness-deliberation.md](../../specifications/SPEC-006-consciousness-deliberation.md)
   (gate feedback)
-- [CHAT-DRIVEN-TRAINER](../../matrix-core/src/main/java/io/matrix/chat/ChatDrivenTrainer.java)
+- [CHAT-DRIVEN-TRAINER](../../../matrix-core/src/main/java/io/matrix/chat/ChatDrivenTrainer.java)
   (existing background trainer)
 - `ConversationFeedbackResource` — feedback endpoint

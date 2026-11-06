@@ -1,5 +1,5 @@
 ---
-status: normative
+status: `HISTORICAL` — the state it records no longer exists; the successor is named in the canonical registers · normative
 ---
 
 Карта корня документации v2. Сжатие оригинального idx_w20.md до рабочего ориентира.

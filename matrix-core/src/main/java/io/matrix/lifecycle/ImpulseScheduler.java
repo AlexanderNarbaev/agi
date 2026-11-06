@@ -29,14 +29,34 @@ public final class ImpulseScheduler {
         REJECTED_UNKNOWN
     }
 
-    /** A single fire record. */
+    /**
+     * A single fire record.
+     *
+     * <p>W49: the record carries the shadow price of the allocation that
+     * accepted the impulse. The proposal consumer of
+     * {@code ADR-W48-AUTONOMY-IMPULSE-CONSUMER.md} §5.2 has to record "the
+     * shadow price at the moment of the allocation", and the scheduler is the
+     * only place that allocation happens — so the price travels with the
+     * record instead of being recomputed somewhere else. The consumer never
+     * allocates on its own (the ADR's S4).
+     */
     public record FireRecord(AutonomyImpulse impulse,
                              ImpulseOutcome outcome,
                              long envelopeSpent,
-                             int rowsAllocated) {
+                             int rowsAllocated,
+                             double shadowPrice) {
         public FireRecord {
             Objects.requireNonNull(impulse, "impulse");
             Objects.requireNonNull(outcome, "outcome");
+            if (envelopeSpent < 0) {
+                throw new IllegalArgumentException("envelopeSpent must be ≥ 0");
+            }
+            if (rowsAllocated < 0) {
+                throw new IllegalArgumentException("rowsAllocated must be ≥ 0");
+            }
+            if (shadowPrice < 0.0 || !Double.isFinite(shadowPrice)) {
+                throw new IllegalArgumentException("shadowPrice must be finite and ≥ 0");
+            }
         }
     }
 
@@ -70,19 +90,19 @@ public final class ImpulseScheduler {
         if (impulse == null) {
             rejectionCounter.incrementAndGet();
             return new FireRecord(AutonomyImpulse.CONSOLIDATION,
-                    ImpulseOutcome.REJECTED_UNKNOWN, 0L, 0);
+                    ImpulseOutcome.REJECTED_UNKNOWN, 0L, 0, 0.0);
         }
         if (ethics != null
                 && ethics.frozenViolatedAxiom(impulse.name()) != null) {
             rejectionCounter.incrementAndGet();
-            return new FireRecord(impulse, ImpulseOutcome.REJECTED_ETHICS, 0L, 0);
+            return new FireRecord(impulse, ImpulseOutcome.REJECTED_ETHICS, 0L, 0, 0.0);
         }
 
         // Budget check: build a synthetic Row and run allocate.
         long cost = costFor(impulse, envelope);
         if (cost > envelope) {
             rejectionCounter.incrementAndGet();
-            return new FireRecord(impulse, ImpulseOutcome.REJECTED_BUDGET, 0L, 0);
+            return new FireRecord(impulse, ImpulseOutcome.REJECTED_BUDGET, 0L, 0, 0.0);
         }
         ConjugateBudgeter.Row[] rows = {
             new ConjugateBudgeter.Row(impulse.name(), valueFor(impulse), cost)
@@ -91,10 +111,10 @@ public final class ImpulseScheduler {
         if (alloc.mode() != ConjugateBudgeter.Mode.CONJUGATE
                 || !alloc.selected()[0]) {
             rejectionCounter.incrementAndGet();
-            return new FireRecord(impulse, ImpulseOutcome.REJECTED_BUDGET, 0L, 0);
+            return new FireRecord(impulse, ImpulseOutcome.REJECTED_BUDGET, 0L, 0, 0.0);
         }
         return new FireRecord(impulse, ImpulseOutcome.FIRED,
-                alloc.spentEnvelope(), 1);
+                alloc.spentEnvelope(), 1, alloc.shadowPrice());
     }
 
     private static long costFor(AutonomyImpulse impulse, long envelope) {

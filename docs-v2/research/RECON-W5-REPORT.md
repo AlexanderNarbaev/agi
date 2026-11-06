@@ -70,7 +70,7 @@ score(A+B) >= max(score(A), score(B))  ✓ (structural super-additivity)
 
 ## Honest Limitations
 
-1. **No real ONNX model.** Pipeline uses synthetic teachers (and/or/xor/imply/transitive) and local DatasetConnectorV2. Real ONNX integration requires user consent for download (per Q-3); queued as follow-up.
+1. **No real ONNX model.** Pipeline uses synthetic teachers (and/or/xor/imply/transitive) and local DatasetConnectorV2. Real ONNX integration requires user consent for download (per Q-3); queued as follow-up. <!-- no-id: a local numbering, not a register identifier -->
 2. **No rollback removal.** `DistillationMerge.rollback()` is soft-rollback (BirRegistry.remove() requires Article VII RFC).
 3. **Semantic contradiction detection** is not implemented (only provenance-based dedup).
 4. **Super-additivity is structural, not numerical.** A real numerical study (A vs A+B score delta on held-out query set) is queued for W9.

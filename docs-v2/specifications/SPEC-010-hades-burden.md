@@ -2,7 +2,7 @@
 
 **Status**: v1 · singleton normative
 **Package**: `io.matrix.hades`
-**Related**: [SPEC-006](./SPEC-006-consciousness-deliberation.md), [DESIGN-04](../designs/DESIGN-04-hades-burden.md)
+**Related**: [SPEC-006](./SPEC-006-consciousness-deliberation.md), [DESIGN-04](../designs/DESIGN-10-binary-reservoir.md)
 
 ## Что
 
@@ -97,7 +97,7 @@ repetitionCount == 0 ∧ stuckCounter == 0 ∧ entropy > 0.3
   использует `DerangementDetector` для circuit-breaker на stuck-нейронах.
 - `agent/AgentBrainService` имеет `initializeRandom()` —
   эквивалент `FULL_RELOAD` recommendation.
-- `lifecycle/ConsolidationCycle` ([DESIGN-07](../designs/DESIGN-07-consolidation-cycle.md))
+- `lifecycle/ConsolidationCycle` ([DESIGN-07](../designs/DESIGN-07-lifecycle.md))
   используется в `BurdenLiftingRitual.lift()` для дренажа backlogs.
 
 ## Тесты

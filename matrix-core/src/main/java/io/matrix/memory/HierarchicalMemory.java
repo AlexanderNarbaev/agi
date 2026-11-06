@@ -31,6 +31,17 @@ public final class HierarchicalMemory {
     /**
      * Memory level in the hierarchy.
      */
+    /**
+     * The tag that marks a record as an EPISODE - something that was said,
+     * not something that was learned.
+     *
+     * <p>RECON-W41 §5.1: "A conversational answer may be preserved as an
+     * episodic record of what was said. It may not become a verified fact
+     * without the corresponding evidence process." The tag is what lets the
+     * retrieval tell the two apart.
+     */
+    public static final String EPISODE_TAG = "generated-dialogue";
+
     public enum Level {
         /** Raw artifacts (ephemeral, auto-expire). */
         L0_ARTIFACT(0, "Raw Artifact", 0.1),
@@ -117,6 +128,8 @@ public final class HierarchicalMemory {
     }
     private final Map<String, Set<String>> domainIndex = new ConcurrentHashMap<>();
     private final AtomicLong idCounter = new AtomicLong(0);
+    /** The entries removed to keep the memory within its capacity. */
+    private final AtomicLong evictedCount = new AtomicLong(0);
     private final int maxEntries;
 
     public HierarchicalMemory(int maxEntries) {
@@ -191,8 +204,26 @@ public final class HierarchicalMemory {
      * Searches for entries matching the query across all levels.
      */
     public List<MemoryEntry> search(String query, int limit) {
+        return search(query, limit, Set.of());
+    }
+
+    /**
+     * Search, optionally excluding records carrying a given tag.
+     *
+     * <p>RECON-W41: the search is used to build the CONTEXT a generation is
+     * conditioned on, and that context must be what the system has LEARNED,
+     * not what it has SAID. A generated answer stored as an episode is a
+     * legitimate record of the interaction, but serving it back as retrieved
+     * knowledge makes the system condition on its own output. The tag is
+     * how the two are told apart.
+     *
+     * @param excludedTags tags whose records are withheld from the result
+     */
+    public List<MemoryEntry> search(String query, int limit, Set<String> excludedTags) {
         String lowerQuery = query.toLowerCase();
+        Set<String> excluded = excludedTags == null ? Set.of() : excludedTags;
         return entries.values().stream()
+                .filter(e -> excluded.stream().noneMatch(e.tags()::contains))
                 .filter(e -> e.content().toLowerCase().contains(lowerQuery)
                         || e.domain().toLowerCase().contains(lowerQuery)
                         || e.tags().stream().anyMatch(t -> t.toLowerCase().contains(lowerQuery)))
@@ -328,17 +359,43 @@ public final class HierarchicalMemory {
         }
     }
 
+    /**
+     * Evicts one entry when the memory is over capacity.
+     *
+     * <p>RECON-W42.1 fixed a defect here. The eviction used to look only at
+     * L0 — the raw artifacts — while the production path writes only L2
+     * (the pipeline stores every interaction as an L2 module). The eviction
+     * therefore never fired on the live path, and the entry map grew
+     * without bound: the capacity was checked, the check always passed, and
+     * nothing was ever removed.
+     *
+     * <p>The rule now is what the name says: evict from the lowest level
+     * that actually holds something. The entries removed are counted, so the
+     * bound is observable rather than asserted.
+     */
     private void evictLowestLevel() {
-        Set<String> l0Ids = levelIndex.get(Level.L0_ARTIFACT);
-        if (l0Ids != null && !l0Ids.isEmpty()) {
-            String oldest = l0Ids.stream()
+        for (Level level : Level.values()) {
+            Set<String> ids = levelIndex.get(level);
+            if (ids == null || ids.isEmpty()) {
+                continue;
+            }
+            String oldest = ids.stream()
                     .map(entries::get)
                     .filter(Objects::nonNull)
                     .min(Comparator.comparingLong(MemoryEntry::lastAccessedAt))
                     .map(MemoryEntry::id)
                     .orElse(null);
-            if (oldest != null) remove(oldest);
+            if (oldest != null) {
+                remove(oldest);
+                evictedCount.incrementAndGet();
+                return;
+            }
         }
+    }
+
+    /** The entries removed to keep the memory within its capacity. */
+    public long evictedCount() {
+        return evictedCount.get();
     }
 
     private double computeDriftScore(MemoryEntry entry, String otherDomain) {

@@ -1,5 +1,6 @@
 package io.matrix.brain;
 
+import io.matrix.security.NetworkExposure;
 import io.matrix.knowledge.SimpleKnowledgeBase;
 
 import java.io.IOException;
@@ -36,7 +37,13 @@ import com.sun.net.httpserver.HttpServer;
     }
     
     public void start() throws IOException {
-        HttpServer server = HttpServer.create(new InetSocketAddress(DEFAULT_PORT), 0);
+// RECON-W43.0: this listener binds through the shared boundary, so it
+        // cannot end up reachable from another host while the process is
+        // local-only, and it refuses to start when the process is exposed
+        // without a configured credential.
+        NetworkExposure.current().guard("BrainTelemetry");
+        HttpServer server = HttpServer.create(new InetSocketAddress(
+                NetworkExposure.current().bindAddress(), DEFAULT_PORT), 0);
         server.createContext("/metrics", new MetricsHandler());
         server.createContext("/health", new HealthHandler());
         server.createContext("/stats", new StatsHandler());

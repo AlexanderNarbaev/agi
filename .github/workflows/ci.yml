@@ -10,6 +10,10 @@ on:
   pull_request:
     branches: [develop, main, release/**]
   workflow_dispatch:
+  schedule:
+    # RECON-W38.0, D7 RFC APPROVED: weekly scheduled run of the research/property
+    # suites only (not the full pipeline). Minimal change per operator directive.
+    - cron: "0 4 * * 1"
 
 env:
   GRADLE_OPTS: "-Xmx8g -Dorg.gradle.daemon=false"
@@ -21,6 +25,7 @@ jobs:
     name: Build & Test (Java)
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    if: github.event_name != 'schedule'  # weekly schedule runs research-suites only
     steps:
       - uses: actions/checkout@v4
 
@@ -45,9 +50,8 @@ jobs:
              matrix-audit/src/main matrix-billing/src/main matrix-observability/src/main \
              2>/dev/null && echo "✅ No LLM imports in production runtime paths"
 
-      - name: Build native binary (api-gateway)
-        run: ./gradlew :matrix-api-gateway:nativeCompile --no-daemon
-        continue-on-error: true   # Native build requires special image; skip in CI
+      - name: Build gateway distribution
+        run: ./gradlew :matrix-api-gateway:installDist --no-daemon --console=plain
 
       - name: Upload coverage
         if: matrix.event_name == 'push'
@@ -56,25 +60,373 @@ jobs:
           name: coverage-report
           path: '**/build/reports/jacoco/test/html'
 
+  # Stage 1a: matrix-web-ui — the web console's own test suite (required gate)
+  #
+  # RECON-W38.4: matrix-web-ui declares a jest suite, but nothing ever ran it.
+  # The suite could not even start: `setupFilesAfterEach` is not a Jest option
+  # (the correct name is `setupFilesAfterEnv`, so jest.setup.ts was never
+  # loaded), the transform named `ts-jest` which was not a declared dependency,
+  # and `testEnvironment: 'jsdom'` needed `jest-environment-jsdom`, which Jest
+  # 28+ no longer ships. The suite is now runnable and green, and it is a
+  # required check like every other one.
+  #
+  # `--legacy-peer-deps` is required because of a PRE-EXISTING peer conflict:
+  # eslint-config-next@16.3.6 requires eslint >= 9 while the project pins
+  # eslint 8.57.1. Aligning them is a major dependency upgrade, which needs an
+  # explicit RFC, so the conflict is worked around here and recorded in
+  # docs-v2/architecture/MODULE-LIFECYCLE.md rather than silently resolved.
+  # Stage 2: the gates that can actually fail.
+  #
+  # RECON-W43.0. The W42 audit found that scripts/quality-gate.sh and
+  # scripts/formal-gate.sh were run by ZERO workflows, and that the quality
+  # gate's VIOLATIONS counter was incremented and never read — so the gate
+  # could not fail even when it was run. Both are fixed, and the gates are
+  # now wired into CI so that a violation is a red build rather than a
+  # sentence in a report.
+  #
+  # The checkout is full-depth because the quality gate compares the frozen
+  # zones against a historical baseline ref; a shallow clone would make the
+  # frozen check SKIP, and a check that skips silently is how a frozen zone
+  # gets edited.
+  quality-gates:
+    name: Quality gates (can fail)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    if: github.event_name != 'schedule'
+    # W48-05. The security-boundary check starts the real application, and
+    # the application connects to Redis at startup
+    # (matrix-core/src/main/resources/application.properties:14 —
+    #  redis.uri=${REDIS_URI:redis://localhost:6379}). On a clean runner
+    # there is no Redis, so the application failed with
+    # "Connection refused: localhost/127.0.0.1:6379" and the check reported
+    # a false defect. The dependency is declared here instead of being
+    # satisfied by whatever the developer happens to run locally.
+    services:
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up JDK 25
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '25'
+          cache: gradle
+
+      - name: The clean-code gate
+        run: scripts/quality-gate.sh
+
+      - name: The pinned formal tool (the bytes are in the repository)
+        # W48-04. This step used to DOWNLOAD the tool from the tlaplus v1.8.0
+        # release and verify its digest. That release was recreated on
+        # 2026-11-06 and now serves different bytes — the upstream asset was
+        # replaced in place — so the download failed its own checksum and the
+        # "Quality gates" job of this workflow was red. The tlaplus repository
+        # does not track the jar and Maven Central does not publish it, so
+        # there is no immutable upstream copy to point at.
+        #
+        # The tool is therefore TRACKED: the bytes the local gate uses are the
+        # bytes the CI uses, and the digest is verified on every run. The
+        # provenance and the reasoning are in tools/README.md. The same step
+        # exists in .github/workflows/tla.yml.
+        run: |
+          echo "fc6878c603f0fdc18b9fe3e5bf51860cb90ab5b1154e3c371660c036d6bdd63e  tools/tla2tools.jar" \
+            | sha256sum --check --strict
+          ls -lh tools/tla2tools.jar
+          # The main class in the current tla2tools build is tlc2.TLC.
+          unzip -l tools/tla2tools.jar | grep -E 'tlc2/TLC.class' | head -1
+
+      - name: The formal gate (every specification is model-checked)
+        run: scripts/formal-gate.sh
+
+      - name: Build the application
+        run: ./gradlew :matrix-core:quarkusBuild --no-daemon --console=plain
+
+      - name: The security boundary (anonymous writes are refused)
+        run: scripts/security-boundary-check.sh
+
+  web-ui-tests:
+    name: Web UI Tests (matrix-web-ui)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    if: github.event_name != 'schedule'
+    defaults:
+      run:
+        working-directory: matrix-web-ui
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: matrix-web-ui/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci --legacy-peer-deps --no-audit --no-fund
+
+      - name: Run the web console test suite
+        run: npx jest --ci
+
+  # Stage 1b: Container images — build and smoke test (required gate)
+  #
+  # RECON-W38.4: the root Dockerfiles and the gateway Dockerfile had no CI
+  # coverage at all, and each of them was broken (they copied a
+  # matrix-core-*-runner.jar that no supported packaging mode produces, and
+  # the gateway invoked :matrix-api-gateway:nativeCompile, a task that does
+  # not exist in that module). This job builds every image from a fresh
+  # checkout and asserts that it starts and reports healthy.
+  container-images:
+    name: Container Images (build + smoke)
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    needs: [build-test]
+    if: github.event_name != 'schedule'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 25
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '25'
+          cache: gradle
+
+      - name: Build matrix-core (Quarkus fast-jar)
+        run: ./gradlew :matrix-core:quarkusBuild --no-daemon --console=plain
+
+      - name: Build gateway distribution
+        run: ./gradlew :matrix-api-gateway:installDist --no-daemon --console=plain
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build matrix-core image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: Dockerfile
+          tags: matrix-core:ci
+          load: true
+
+      - name: Build matrix-core minikube image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: Dockerfile.minikube
+          tags: matrix-core:minikube-ci
+          load: true
+
+      - name: Build api-gateway image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: deploy/docker/Dockerfile.api-gateway
+          tags: matrix-api-gateway:ci
+          load: true
+
+      - name: Smoke test api-gateway image
+        # W48-05. This step ran the image in its DEFAULT exposure mode and
+        # then probed the PUBLISHED host port. The default mode is
+        # LOCAL_ONLY (matrix-core/src/main/java/io/matrix/security/
+        # NetworkExposure.java), so the gateway bound 127.0.0.1 INSIDE the
+        # container; the published port reached nothing and the probe failed
+        # for 80 seconds even though the application had started correctly.
+        # The application's own log line claimed "0.0.0.0" because it was a
+        # hardcoded string, which is what made the failure look like a
+        # startup problem instead of a boundary problem.
+        #
+        # The step now mirrors the deployed configuration
+        # (deploy/docker-compose.yml): NETWORK_EXPOSED with a credential.
+        # The credential is a throwaway value for this job, not a secret.
+        run: |
+          set -euo pipefail
+          docker run -d --name gw-ci -p 8765:8765 \
+            -e MATRIX_SECURITY_MODE=NETWORK_EXPOSED \
+            -e MATRIX_SECURITY_TOKEN=ci-smoke-token-not-a-secret \
+            matrix-api-gateway:ci
+          ok=0
+          for i in $(seq 1 40); do
+            if curl -fsS http://127.0.0.1:8765/health/ready >/dev/null 2>&1; then ok=1; break; fi
+            sleep 2
+          done
+          if [ "$ok" != "1" ]; then
+            echo "::error::api-gateway image did not become ready"
+            echo "--- container state ---"
+            docker inspect -f 'status={{.State.Status}} exit={{.State.ExitCode}}' gw-ci || true
+            echo "--- container logs ---"
+            docker logs gw-ci || true
+            exit 1
+          fi
+          echo "✅ api-gateway image healthy"
+          docker rm -f gw-ci
+
+      - name: Smoke test matrix-core image
+        # W48-05. The application binds the loopback interface by default
+        # (matrix-core/src/main/resources/application.properties:44 —
+        #  quarkus.http.host=${QUARKUS_HTTP_HOST:127.0.0.1}), so the
+        # published port reached nothing and the probe could not succeed.
+        # The host is set explicitly for this ephemeral container, which is
+        # the only reason the port is published at all.
+        run: |
+          set -euo pipefail
+          docker network create matrix-ci
+          docker run -d --name pg-ci --network matrix-ci \
+            -e POSTGRES_USER=matrix -e POSTGRES_PASSWORD=matrix -e POSTGRES_DB=matrix \
+            postgres:17-alpine
+          docker run -d --name redis-ci --network matrix-ci redis:7-alpine
+          docker run -d --name core-ci --network matrix-ci -p 9091:9091 \
+            -e QUARKUS_HTTP_HOST=0.0.0.0 \
+            -e REDIS_URI=redis://redis-ci:6379 \
+            -e DB_HOST=pg-ci -e DB_PORT=5432 \
+            matrix-core:ci
+          ok=0
+          for i in $(seq 1 60); do
+            if curl -fsS http://127.0.0.1:9091/q/health/ready >/dev/null 2>&1; then ok=1; break; fi
+            sleep 2
+          done
+          if [ "$ok" != "1" ]; then
+            echo "::error::matrix-core image did not become ready"
+            docker logs core-ci || true
+            exit 1
+          fi
+          echo "✅ matrix-core image healthy"
+          docker rm -f core-ci pg-ci redis-ci
+          docker network rm matrix-ci
+
+      - name: Smoke test matrix-core minikube image
+        # W48-05. Same bound interface as the matrix-core image above.
+        #
+        # The step also brings up ITS OWN Postgres and Redis. It used to reuse
+        # the containers of the previous step, and the previous step removed
+        # them when it finished — so this step's application started with no
+        # cache and no database ("Unable to connect to redis-ci/<unresolved>").
+        # A step that depends on a step's leftovers is not reproducible.
+        run: |
+          set -euo pipefail
+          docker network create matrix-minikube-ci
+          docker run -d --name pg-mini-ci --network matrix-minikube-ci \
+            -e POSTGRES_USER=matrix -e POSTGRES_PASSWORD=matrix -e POSTGRES_DB=matrix \
+            postgres:17-alpine
+          docker run -d --name redis-mini-ci --network matrix-minikube-ci redis:7-alpine
+          docker run -d --name mini-ci -p 9092:9091 \
+            --network matrix-minikube-ci \
+            -e QUARKUS_HTTP_HOST=0.0.0.0 \
+            -e REDIS_URI=redis://redis-mini-ci:6379 \
+            -e DB_HOST=pg-mini-ci -e DB_PORT=5432 \
+            matrix-core:minikube-ci
+          ok=0
+          for i in $(seq 1 60); do
+            if curl -fsS http://127.0.0.1:9092/q/health/ready >/dev/null 2>&1; then ok=1; break; fi
+            sleep 2
+          done
+          if [ "$ok" != "1" ]; then
+            echo "::error::matrix-core minikube image did not become ready"
+            echo "--- container state ---"
+            docker inspect -f 'status={{.State.Status}} exit={{.State.ExitCode}}' mini-ci || true
+            echo "--- container logs ---"
+            docker logs mini-ci || true
+            exit 1
+          fi
+          echo "✅ matrix-core minikube image healthy"
+          docker rm -f mini-ci pg-mini-ci redis-mini-ci
+          docker network rm matrix-minikube-ci
+
   # Stage 2: Security scan
   security:
     name: Security Scan
     runs-on: ubuntu-latest
     needs: build-test
+    if: github.event_name != 'schedule'  # weekly schedule runs research-suites only
     steps:
       - uses: actions/checkout@v4
+        with:
+          # W48-05. The secret scan below needs the history: the action
+          # resolves the range of commits the push carried inside the
+          # checkout, and a shallow clone does not contain it.
+          fetch-depth: 0
+
+      - name: Set up JDK 25
+        # W48-05. This job had no JDK setup step at all, so it inherited the
+        # runner's JAVA_HOME, which on a clean runner points at a path that
+        # does not exist ("/opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/
+        # 25.0.1.6/Contents/Home" — a macOS-style path). Gradle refused to
+        # start with "ERROR: JAVA_HOME is set to an invalid directory", so
+        # the job failed before SpotBugs ever ran.
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '25'
+          cache: gradle
 
       - name: SpotBugs static analysis
-        run: ./gradlew :matrix-core:spotbugsMain :matrix-core:spotbugsTest --no-daemon
-        continue-on-error: true
+        # RECON-W38.4: this step used to be `continue-on-error: true`, which
+        # hid the fact that the analysis had NEVER produced evidence: the
+        # resolved SpotBugs engine cannot read Java 25 bytecode ("Unsupported
+        # class file major version 69"), so the task exited 4 and wrote a
+        # 0-byte report. That is a skip, not a pass, and it must not be
+        # reported as a pass.
+        #
+        # The step now distinguishes the two cases explicitly:
+        #   - the known engine limitation  -> loud skip notice, job continues
+        #   - any other SpotBugs failure   -> the job FAILS
+        run: |
+          set -o pipefail
+          # W48-05. The runner executes every `run:` block with `bash -e`, so
+          # the failing pipeline ABORTED the step before the branch below could
+          # read the log: the "known limitation" case never printed its
+          # warning, and the two REAL security checks after it (the secret
+          # scan and the vulnerable-dependency check) were SKIPPED. The
+          # pipeline's own failure is captured here and the branches decide.
+          set +e
+          ./gradlew :matrix-core:spotbugsMain :matrix-core:spotbugsTest --no-daemon --console=plain 2>&1 | tee /tmp/spotbugs.log
+          status=${PIPESTATUS[0]}
+          set -e
+          if [ "$status" = "0" ]; then
+            echo "✅ SpotBugs analysis completed"
+            exit 0
+          fi
+          if grep -q "Unsupported class file major version" /tmp/spotbugs.log; then
+            echo "::warning::SpotBugs SKIPPED — the resolved engine cannot read Java 25 bytecode (class file major version 69). Latest release 4.9.3 bundles ASM 9.7.1 (max major 68). No static-analysis evidence was produced for this run. This is a known, tracked limitation, NOT a passing check."
+            echo "::warning::Track: replace the SpotBugs engine as soon as a Java 25-capable release ships."
+            exit 0
+          fi
+          echo "::error::SpotBugs failed for a reason other than the known Java 25 engine limitation"
+          exit 1
 
       - name: Check for secrets in code
+        # RECON-W38.4: this was `continue-on-error: true`, which turned a
+        # critical security check into a no-op that could never fail the
+        # pipeline. It is now required: a detected secret fails the job.
+        # Verified locally on the committed tree before the change: no
+        # high-signal secret patterns (AWS keys, private keys, GitHub
+        # tokens, Slack tokens, Google keys, live Stripe keys) in any
+        # tracked file.
+        #
+        # W48-05: the step ALSO never scanned anything. It passed
+        # `base: ${{ github.ref }}` and `head: HEAD`, and on a push those
+        # are the SAME commit, so the action refused with "BASE and HEAD
+        # commits are the same. TruffleHog won't scan anything" and the
+        # step failed — and the check after it (the vulnerable-dependency
+        # check) was skipped. The action's DEFAULT behaviour scans exactly
+        # the commits the push carried, which is the scope this check
+        # wants, and the action's own documentation recommends it over
+        # passing base and head by hand.
         uses: trufflesecurity/trufflehog@main
         with:
           path: ./
-          base: ${{ github.ref }}
-          head: HEAD
-        continue-on-error: true
+          extra_args: --results=verified,unverified,unknown
 
       - name: OWASP dependency check
         run: |
@@ -86,11 +438,14 @@ jobs:
           fi
           echo "✅ No known-vulnerable dependencies"
 
-  # Stage 3: Build Docker images (on develop/main)
+  # Stage 3: Docker images (on develop/main)
   docker:
     name: Docker Build & Push
     runs-on: ubuntu-latest
-    needs: [build-test, security]
+    # RECON-W38.4: publishing now depends on container-images, so an image is
+    # never pushed unless it was built from a fresh checkout and passed its
+    # startup/health smoke test.
+    needs: [build-test, security, container-images, web-ui-tests]
     if: github.event_name == 'push' && (github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/main')
     strategy:
       matrix:
@@ -180,3 +535,33 @@ jobs:
           sleep 60
           curl -f https://api.matrix.ai/q/health || exit 1
           echo "✅ Production deployment healthy"
+
+  # RECON-W38.0, D7: weekly scheduled run of the research/property suites.
+  # These suites are currently exercised only when someone runs them locally.
+  # Self-contained job; no coupling to the deploy pipeline.
+  research-suites:
+    name: Weekly Research & Property Suites
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule'
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 25
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '25'
+          cache: gradle
+
+      - name: Run property / research suites (matrix-core)
+        run: ./gradlew :matrix-core:test --no-daemon \
+          --tests "io.matrix.**.*PropertyTest" \
+          --tests "io.matrix.**.*PropertyBasedVerifierTest" \
+          --tests "io.matrix.**.*StudyTest"
+
+      - name: Run property / research suites (matrix-brain-runtime)
+        run: ./gradlew :matrix-brain-runtime:test --no-daemon \
+          --tests "io.matrix.**.*PropertyTest" \
+          --tests "io.matrix.**.*Pbt*Test" \
+          --tests "io.matrix.**.*StudyTest"

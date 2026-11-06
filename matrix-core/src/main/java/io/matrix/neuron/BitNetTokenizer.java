@@ -38,6 +38,17 @@ import java.util.regex.Pattern;
  * No RNG, no wall-clock. Loads from classpath at construction.
  */
 public final class BitNetTokenizer {
+    /**
+     * The GPT-2 byte-to-unicode map, in the three ranges it is built from:
+     * the printable ASCII bytes, the Latin-1 letters, and the rest of Latin-1.
+     */
+    private static final int PRINTABLE_ASCII_FIRST = 33;
+    private static final int PRINTABLE_ASCII_LAST = 126;
+    private static final int LATIN1_LETTERS_FIRST = 161;
+    private static final int LATIN1_LETTERS_LAST = 172;
+    private static final int LATIN1_TAIL_FIRST = 174;
+    private static final int LATIN1_TAIL_LAST = 255;
+
 
     /** Llama pre-tokenization regex (from HuggingFace LlamaTokenizer). */
     private static final Pattern PRETOKENIZE_PATTERN = Pattern.compile(
@@ -273,13 +284,13 @@ public final class BitNetTokenizer {
     private static Map<Integer, String> buildByteToUnicode() {
         Map<Integer, String> map = new HashMap<>();
         // Printable ASCII bytes map to themselves
-        for (int b = 33; b <= 126; b++) {
+        for (int b = PRINTABLE_ASCII_FIRST; b <= PRINTABLE_ASCII_LAST; b++) {
             map.put(b, new String(Character.toChars(b)));
         }
-        for (int b = 161; b <= 172; b++) {
+        for (int b = LATIN1_LETTERS_FIRST; b <= LATIN1_LETTERS_LAST; b++) {
             map.put(b, new String(Character.toChars(b)));
         }
-        for (int b = 174; b <= 255; b++) {
+        for (int b = LATIN1_TAIL_FIRST; b <= LATIN1_TAIL_LAST; b++) {
             map.put(b, new String(Character.toChars(b)));
         }
         // Remaining bytes (0-32, 127-160, 173) get mapped to 256+i

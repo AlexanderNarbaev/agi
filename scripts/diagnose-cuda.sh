@@ -34,7 +34,18 @@ set -uo pipefail
 
 REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 LIBS="$REPO/.onnx_libs"
-NV_PIP="$REPO/.venv/lib/python3.14/site-packages/nvidia"
+# RECON-W38.4: the python version was hardcoded (3.14), so the script looked in a
+# directory that does not exist on any machine with a different interpreter. The
+# version is now discovered from the virtualenv, and the nvidia package location
+# is reported when it is not found, rather than silently pointing nowhere.
+NV_PIP=""
+for cand in "$REPO"/.venv/lib/python*/site-packages/nvidia; do
+  [ -d "$cand" ] && NV_PIP="$cand" && break
+done
+if [ -z "$NV_PIP" ]; then
+  echo "  NOTE: no nvidia CUDA pip package found under $REPO/.venv/lib/python*/site-packages/nvidia"
+  echo "        (install torch/nvidia-cuda wheels into .venv, or set CUDA_HOME)"
+fi
 
 # Named `printf` rather than a helper like `say` so the quality gate's existing
 # exemption for human-facing printf output applies rather than being extended.
@@ -101,6 +112,7 @@ if [ "${1:-}" = "--repair" ] && [ "$masked" -gt 0 ]; then
   for name in "${!SRC[@]}"; do
     target="${SRC[$name]}"
     if [ -e "$target" ]; then
+      mkdir -p "$LIBS"
       ln -sfn "$target" "$LIBS/$name"
       say "  $name -> $(readlink -f "$target" | sed 's#.*/##')"
     else

@@ -1,47 +1,55 @@
-# Mission: MATRIX MIND REALIZATION (MIND-W1..W11)
+# Mission: RECON-W38 — Operational Integrity & Connectome Activation
 
-> Active mission: transform MATRIX from infrastructure draft to living mind.
+Operator: binding decisions §0 (Ce3 local-only subagents, attention neutral, D7 CI approved,
+GpuKernelEngine.deprecate runKernel, opencode.json ignored, native image report-unsupported,
+hdc_kb tracked). Missing items are carry-over from the 2026-10-12 session: hdc_kb.ndjson
+tracked via commit 11249775, lost sleep test recovered as EpisodicLogPersistenceTest + preserved
+text in docs-v2/quality/lost-capability-tests/, data/smoke already absent from disk.
 
-## Progress
-- ✅ MIND-W1: Cognitive Orchestration Layer    PR #16 → develop MERGED
-- ✅ MIND-W2: Persistent Mind                  PR #18 → develop MERGED
-- ✅ MIND-W3: Sleep & Consolidation Engine     PR #20 → develop MERGED
-- ✅ MIND-W4: Autonomy, Goals & Stimuli        PR #22 → develop MERGED
-- ✅ MIND-W5: Distillation Factory             PR #23 → develop MERGED
-- ✅ MIND-W6: GPU Acceleration                 PR #25 → develop MERGED
+## M2: RECON-W38.0 Corrections | status: completed
+### T2.1: Verify + commit uncommitted W38.0 code changes | status: completed 7210484f
+- [x] S2.1.1: :matrix-brain-runtime:test full module — BUILD SUCCESSFUL (incl. RetrievalFloorAppliedTest 3/0)
+- [x] S2.1.2: commit 7210484f 'WAL: RECON-W38.0 — retrieval floor…' (KnownFailures.md + HdcRetrievalStage + stages/RetrievalFloorAppliedTest; pushed gitverse develop)
+### T2.2: Documentation drift | status: completed
+- [x] S2.2.1: KnownFailures.md Exp228 → "RESOLVED in W36.1 via Article I classification" (commit 7210484f)
+- [x] S2.2.2: OPEN-DECISIONS.md CLOSED decisions section D1/D2/D3/D5/D6/D7 (commit 04893c7f)
+- [x] S2.2.3: .opencode/w37-plan.md → completed 2026-10-16, final 9324/0, W37.5 pointers
+- [x] S2.2.4: DESIGN-68 → "Neuromodulation→retrieval partially verified (W38.0)" with measured limits (commit 6f42212c)
+- [x] S2.2.5: V18 report → close-out 9,324/0 + cross-validation note (commit 6f42212c)
+### T2.3: DISK-LEDGER | status: completed
+- [x] S2.3.1: data/smoke verified ABSENT; nothing reclaimed this session → no ledger append needed
+### T2.4: Meta-R1 compliance | status: completed
+- [x] S2.4.1: docs-v2/research/RECON-W37-MCMC-SAMPLING.md created (no MCMC in shipped path; hill-climb; Gibbs gated on W38.3) (commit 04893c7f)
+### T2.5: D7 CI implementation | status: completed
+- [x] S2.5.1: .github/workflows/ci.yml weekly schedule + research-suites job, guards on build-test/security; structural check rc=0; limitation: actionlint binary absent locally (commit 6a15f178)
 
-## MIND-W6 Sub-tasks (ALL DONE)
-- [x] S6.1: GpuKernelEngine (auto-detect CPU/GPU, Prometheus metrics)
-- [x] S6.2: HDC bit-cosine kernel (10k-bit vectors, AND/OR over 64-bit lanes)
-- [x] S6.3: Tsetlin batch clause-update kernel (bitwise AND)
-- [x] S6.4: Adaptive dispatch (small inputs < 1024 → CPU)
-- [x] S6.5: Prometheus metrics (backend, dispatched, on_gpu, k/s, speedup, util)
-- [x] S6.6: 16 tests (kernels, correctness, dispatch, prometheus format, throughput)
-- [x] HDC search of 10k-bit vectors works (bit_cosine_handles_10k_bit_vectors)
-- [x] identical results CPU == GPU (kernel_results_cpu_equals_kernel_results_gpu_reference)
+## M3: RECON-W38.1 Runtime Wiring (Neutral Graph) | status: completed 72a447b1
+- [x] S3.1: Audit done — TrueMindCycle L363-371 builds stage directly (linear only); connectome NOT wired into serving path (confirms V18 'NOT WIRED')
+- [x] S3.2: HdcNode retrieval overload added — process(input, query, obs, trace, floor) → stage().retrieve(); signal = confidence*weight; tags hdc.matched / hdc.confidence
+- [x] S3.3: Connectome.propagateWithRetrieval(input, query, obs, trace, floor, topK) mirrors propagate (topK, |weight| desc, NodeId tie-break, prune filter); propagate untouched
+- [x] S3.4: HdcNodeServingPathTest 4/0 BDD green (neutral hit/miss equality, floor-0.35 divergence, decay-weighted scaling)
+- [x] S3.5: Mutation campaign rc=0 — M1_weight_ignored KILLED (1 fail), M2_const_signal KILLED (4 fails), M3_query_ignored KILLED (3 fails); canonical files restored (md5 verified); targeted gradle green
 
-## Current Pipeline
-- main @ 10da39a7
-- release/v1.0 @ 678b7091
-- develop @ 2f2d83e2 (W1+W2+W3+W4+W5+W6 merged)
-- 287/287 ecosystem tests
-- Goal Guard 100/100 (13/13 reviewers green)
+## M4: RECON-W38.2 Live Neuromodulation Aggregation | status: pending
+- [ ] S4.1: Fatigue (query volume) + Uncertainty (similarity variance) aggregators
+- [ ] S4.2: Feedback loops + attention safety floor
+- [ ] S4.3: Simulation test: noisy stream → fatigue rise → sleep demand signal
 
-## MIND-W7: Audit/Billing/Federation wired for real — [ACTIVE]
+## M5: RECON-W38.3 True Stochastic Exploration (MCMC) | status: pending
+- [ ] S5.1: Gibbs sampler for Tsetlin clauses (seeded)
+- [ ] S5.2: Temperature cooling in SleepConsolidator
+- [ ] S5.3: Parity k≥7 convergence test vs hill-climb baseline
 
-### Goal
-Close D-2 (AuditResource → HashChainedLog); activate billing credits per
-cognitive cycle; connect federation layer.
+## M6: RECON-W38.4 Active Sleep Consolidation | status: pending
+- [ ] S6.1: RealSleepScheduler ← Fatigue_Index hook
+- [ ] S6.2: Replay episodes through Graph + Hebbian weight update
+- [ ] S6.3: CV-validated pruning execution during sleep + logging
+- [ ] S6.4: End-to-end cycle test: train → fatigue → auto-sleep → wake → stability
 
-### Sub-tasks
-- [x] S7.1: Wire AuditResource → matrix-audit HashChainedLog with verify endpoint
-- [x] S7.2: Add tamper test (mutated entry → MatrixAuditChainTampered alert)
-- [x] S7.3: Billing credit ledger (1 credit per analyze, N per think-with-MCTS)
-- [x] S7.4: Federation: 2-gateway-instance discovery + KnowledgeExchangeProtocol
-- [x] S7.5: License-gated features (FREE/PRO/ENTERPRISE tier check)
-- [x] S7.6: /v1/billing/usage endpoint
-- [x] S7.7: 10+ tests (audit chain verify, billing deduction, federation sync)
+## M7: RECON-W38.5 Federation Weight Diffusion | status: pending
+- [ ] S7.1: SynapseDeltaMessage (top-K weight changes)
+- [ ] S7.2: Periodic exchange + conservative merge policy
+- [ ] S7.3: Two-node sim test: A learns → sync → B retrieves faster
 
-### PASS checklist
-- [x] docker-compose brings up TWO gateway instances; teach in A → recall in B
-- [x] audit chain verifies; credits deducted; rate-limit + RBAC still enforced
+## End-of-session ritual (AGENTS.md)
+- [ ] S8.1: SESSION.md append-only entry; WAL wave doc; commit+push

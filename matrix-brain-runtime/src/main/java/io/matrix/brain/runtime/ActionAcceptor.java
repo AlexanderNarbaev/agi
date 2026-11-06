@@ -40,6 +40,15 @@ public final class ActionAcceptor {
      * @param actual    actual outcome (e.g. reward from user feedback)
      * @return verdict + magnitude
      */
+    /** The chain that records every decision this acceptor makes (CONSTITUTION Article VIII). */
+    private AuditChain auditChain;
+
+    /** Attach the chain that records every decision; returns this acceptor. */
+    public ActionAcceptor withAuditChain(AuditChain chain) {
+        this.auditChain = chain;
+        return this;
+    }
+
     public Verdict accept(String stageName, double predicted, double actual) {
         if (stageName == null || stageName.isBlank())
             throw new IllegalArgumentException("stageName required");
@@ -57,6 +66,9 @@ public final class ActionAcceptor {
         } else {
             v = Verdict.MISMATCH_LARGE;
             totalLargeMismatches++;
+        }
+        if (auditChain != null) {
+            auditChain.append("action.accept", stageName + "|" + v + "|error=" + err);
         }
         return v;
     }

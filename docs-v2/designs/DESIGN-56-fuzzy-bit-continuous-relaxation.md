@@ -36,7 +36,7 @@ Aggregation:
   sum_x μ(x) · 2^μ(x)^mode   (mode typically min, max, or sum)
 
 Quantization:
-  b = Round(μ · (Q-1))      where Q = number of quantization states
+  b = Round(μ · (Q-1))      where Q = number of quantization states <!-- no-id: a local numbering, not a register identifier -->
 ```
 
 ## 4. Реализация

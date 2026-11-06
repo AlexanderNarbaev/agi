@@ -1,5 +1,15 @@
 # ARCHITECTURE — OVERVIEW
 
+
+**Status:** `ACTIVE` but **incomplete** · 2026-11-04.
+This overview names **no serving chain and no cycle**: it is a one-layer diagram, while the
+code has **two non-intersecting serving chains** and **six** cognitive cycles. The measured
+topology — the routes, the closures, the cycles and the persistence — is in
+`docs-v2/engineering/W46-ARCHITECTURE-TRUTH-MAP.md`, which is promoted to
+`docs-v2/architecture/RUNTIME-TOPOLOGY.md` in W46.2. The path
+`ethics/frozen/FROZENFNLGuardian` below is wrong: the class is at
+`io/matrix/ethics/FROZENFNLGuardian.java`.
+
 MATRIX — детерминированное нейро-символическое ядро: «знание» = булевы таблицы, обучение вне рантайма, исполнение — единая BIR-точка.
 
 ## Слои

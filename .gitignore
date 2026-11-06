@@ -5,6 +5,10 @@ build/
 # JAR files except gradle wrapper
 *.jar
 !/gradle/wrapper/gradle-wrapper.jar
+# W48-04: the formal tool is tracked, so that the local gate and the CI run
+# against the SAME verified bytes. The upstream release asset was replaced in
+# place on 2026-11-06, so a download is not an immutable source any more.
+!/tools/tla2tools.jar
 *.log
 *.tmp
 *.swp
@@ -70,7 +74,14 @@ models/pretrained/qwen2.5-1.5b/
 models/pretrained/qwen3-0.6b/
 models/pretrained/qwen3-1.7b/
 models/pretrained/smollm2-360m/
-data/
+# RECON-W38.0 — data/ is ignored wholesale, but ProfessionalBaselineTest asserts the
+# live store EXISTS and fails rather than skipping. An ignored fixture is a test that
+# passes only on the machine that already has it. The baseline store is 285 KB and is
+# the specification of what the system knows at startup, so it is tracked.
+data/*
+!data/mind/
+data/mind/*
+!data/mind/hdc_kb.ndjson
 models/training_data/auto_generated.jsonl
 models/trained/
 matrix-core/models/HuggingFaceTB_SmolLM2-360M-Instruct/
@@ -100,6 +111,10 @@ matrix-core/models/Qwen*
 /matrix-core/reflect-config.json
 /matrix-core/resource-config.json
 /.opencode/state/
+# The agent's runtime state: per-session JSON, lock files and scratch backups.
+# The CONFIGURATION belongs in the repository; the state of one machine does not.
+/.opencode/goals/
+/.opencode/tmp/
 
 # Large runtime/data files (rev 2026-08-10)
 /memory/
@@ -175,3 +190,13 @@ docs-v2/operations/bench/w30-perf-20261002-122937.json
 data/models/bitnet-checkpoint/
 data/models/**/*.safetensors
 data/models/**/*.safetensors.sha256
+
+# AI for OpenIDE — local agent state (chat transcripts, memory, snapshots; may contain secrets).
+.aiforopenide/
+!.aiforopenide/config.json
+
+# RECON-W38.4: CUDA/ONNX native-library links are machine-local state. They were
+# committed to git and pointed into one developer's untracked virtualenv and a
+# single CUDA install, so a fresh clone had dangling links. scripts/diagnose-cuda.sh
+# --repair recreates them locally; they are never committed.
+.onnx_libs/

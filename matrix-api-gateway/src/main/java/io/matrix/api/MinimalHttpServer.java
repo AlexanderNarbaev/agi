@@ -13,6 +13,7 @@ import io.matrix.api.dto.AnalyzeRequest;
 import io.matrix.api.dto.AnalyzeResponse;
 import io.matrix.api.dto.ExplainResponse;
 import io.matrix.api.security.JwtAuthFilter;
+import io.matrix.security.NetworkExposure;
 import io.matrix.api.security.RateLimiter;
 import io.matrix.api.security.RbacChecker;
 
@@ -58,6 +59,15 @@ public final class MinimalHttpServer {
         new com.fasterxml.jackson.databind.ObjectMapper();
 
     private final int port;
+    /**
+     * W48-05: the address the listener actually bound.
+     *
+     * <p>The startup line used to print a hardcoded "0.0.0.0", which was
+     * false in the default LOCAL_ONLY mode: the listener binds the loopback
+     * address, so a published container port reaches nothing. A log that
+     * states the wrong interface turns a boundary fact into a mystery.
+     */
+    private final String bindAddress;
     private final HttpServer http;
     private final BrainCycle brain;
     /** TRUE-W14: persistent HDC store, kept as instance field so /v1/federate can dump/load. */
@@ -305,8 +315,16 @@ public final class MinimalHttpServer {
         }
         this.jwt = new JwtAuthFilter();
         this.rateLimiter = new RateLimiter(60_000);
+        // RECON-W43.0: the gateway binds through the SHARED boundary, so it
+        // cannot end up on a different interface than the rest of the
+        // process. In local-only mode that is the loopback address; in
+        // network-exposed mode it is every interface, and the startup guard
+        // refuses to continue without a configured credential.
+        NetworkExposure exposure = NetworkExposure.current();
+        exposure.guard("the API gateway");
+        this.bindAddress = exposure.bindAddress();
         try {
-            http = HttpServer.create(new InetSocketAddress(port), 0);
+            http = HttpServer.create(new InetSocketAddress(exposure.bindAddress(), port), 0);
         } catch (IOException e) {
             throw new IllegalStateException("Cannot bind port " + port, e);
         }
@@ -314,52 +332,116 @@ public final class MinimalHttpServer {
         registerRoutes();
     }
 
+    /**
+     * Registers a route.
+     *
+     * <p>RECON-W43.0. Every route of this gateway goes through here, and a
+     * state-changing request is REFUSED when the process is exposed to the
+     * network and the request carries no configured credential. The rule is
+     * here rather than in each handler because the handlers are twenty-seven
+     * in number, and a rule that has to be remembered in twenty-seven places
+     * is a rule that will be forgotten in one of them.
+     *
+     * <p>Read-only routes are unaffected: reading is what the owner does
+     * with the system, and in local-only mode the process is not reachable
+     * from another host anyway.
+     *
+     * @param path the route path
+     * @param handler the handler
+     */
+    private void createContext(String path, com.sun.net.httpserver.HttpHandler handler) {
+        http.createContext(path, exchange -> {
+            if (mutatesState(exchange.getRequestMethod())
+                    && !NetworkExposure.current().isAuthorized(
+                            exchange.getRequestHeaders().getFirst("Authorization"))) {
+                writeJson(exchange, 401,
+                    "{\"error\":\"unauthorized\",\"detail\":\"this process is exposed to the "
+                    + "network and this request carries no valid credential\"}");
+                return;
+            }
+            handler.handle(exchange);
+        });
+    }
+
+    /**
+     * Whether a method changes state.
+     *
+     * @param method the HTTP method
+     * @return whether the method may write
+     */
+    static boolean mutatesState(String method) {
+        if (method == null) return false;
+        return switch (method.toUpperCase(java.util.Locale.ROOT)) {
+            case "POST", "PUT", "PATCH", "DELETE" -> true;
+            default -> false;
+        };
+    }
+
     private void registerRoutes() {
-        http.createContext("/v1/analyze", this::handleAnalyze);
-        http.createContext("/v1/explain/", this::handleExplainById);
-        http.createContext("/v1/explain", exchange -> writeJson(exchange, 200,
+        this.createContext("/v1/analyze", this::handleAnalyze);
+        this.createContext("/v1/explain/", this::handleExplainById);
+        this.createContext("/v1/explain", exchange -> writeJson(exchange, 200,
             "{\"explainments\":" + explanations.size() + "}"));
-        http.createContext("/v1/audit/logs", this::handleAuditLogs);
-        http.createContext("/v1/audit/verify", this::handleAuditVerify);
-        http.createContext("/v1/distill", this::handleDistill);
-        http.createContext("/v1/bir", this::handleBir);
-        http.createContext("/v1/conflicts", this::handleConflicts);
-        http.createContext("/v1/generalize", this::handleGeneralize);
-        http.createContext("/v1/gpu", this::handleGpu);
-        http.createContext("/v1/audit", exchange -> writeJson(exchange, 200,
+        this.createContext("/v1/audit/logs", this::handleAuditLogs);
+        // W42.9 / D-016: the promotion decisions of the runtime — the refusals
+        // included — are readable here. Before this, a lesson that did NOT
+        // become knowledge left only a counter behind.
+        this.createContext("/v1/audit/promotions", this::handlePromotionDecisions);
+        this.createContext("/v1/audit/verify", this::handleAuditVerify);
+        this.createContext("/v1/distill", this::handleDistill);
+        this.createContext("/v1/bir", this::handleBir);
+        this.createContext("/v1/conflicts", this::handleConflicts);
+        this.createContext("/v1/generalize", this::handleGeneralize);
+        this.createContext("/v1/gpu", this::handleGpu);
+        this.createContext("/v1/audit", exchange -> writeJson(exchange, 200,
             "{\"audit\":\"" + auditEvents.size() + " events\"}"));
-        http.createContext("/v1/federate", this::handleFederate);
-        http.createContext("/v1/auth/login", this::handleLogin);
-        http.createContext("/v1/learn", this::handleLearn);
-        http.createContext("/v1/transcode/audio", this::handleTranscodeAudio);
-        http.createContext("/v1/transcode/image", this::handleTranscodeImage);
-        http.createContext("/v1/teach", this::handleTeach);
-        http.createContext("/v1/sleep", this::handleSleep);
-        http.createContext("/v1/status", this::handleStatus);
-        http.createContext("/v1/goals", this::handleGoals);
-        http.createContext("/v1/inbox/scan", this::handleInboxScan);
-        http.createContext("/health/live", exchange -> writeJson(exchange, 200,
+        this.createContext("/v1/federate", this::handleFederate);
+        this.createContext("/v1/auth/login", this::handleLogin);
+        this.createContext("/v1/learn", this::handleLearn);
+        this.createContext("/v1/transcode/audio", this::handleTranscodeAudio);
+        this.createContext("/v1/transcode/image", this::handleTranscodeImage);
+        this.createContext("/v1/teach", this::handleTeach);
+        this.createContext("/v1/sleep", this::handleSleep);
+        this.createContext("/v1/status", this::handleStatus);
+        this.createContext("/v1/goals", this::handleGoals);
+        this.createContext("/v1/inbox/scan", this::handleInboxScan);
+        this.createContext("/health/live", exchange -> writeJson(exchange, 200,
             "{\"status\":\"UP\",\"service\":\"matrix-api-gateway\","
             + "\"mode\":\"" + (prodBrain != null ? "production" : "stub") + "\","
             + "\"brain_available\":" + (prodBrain != null && prodBrain.isAvailable())
             + ",\"version\":\"0.1.0-T10\"}"));
-        http.createContext("/health/ready", exchange -> writeJson(exchange, 200,
+        this.createContext("/health/ready", exchange -> writeJson(exchange, 200,
             "{\"status\":\"UP\",\"checks\":{\"core\":\""
             + (prodBrain != null && prodBrain.isAvailable() ? "UP" : "STUB")
             + "\",\"audit\":\"UP\","
             + "\"explain\":\"UP\",\"federate\":\"UP\"}}"));
-        http.createContext("/q/openapi", this::handleOpenApi);
-        http.createContext("/metrics", exchange -> writeMetrics(exchange));
-        http.createContext("/", exchange -> writeJson(exchange, 404,
+        this.createContext("/q/openapi", this::handleOpenApi);
+        this.createContext("/metrics", exchange -> writeMetrics(exchange));
+        this.createContext("/", exchange -> writeJson(exchange, 404,
             "{\"error\":\"not found: " + exchange.getRequestURI().getPath() + "\"}"));
     }
 
     public void start() {
         http.start();
-        LOG.log(Level.INFO, "matrix-api-gateway listening on http://0.0.0.0:{0}", port);
+        // Concatenated, not MessageFormat-formatted: the formatter renders a
+        // number with a locale grouping separator, so the port appeared as
+        // "8,765" — a port that does not exist.
+        LOG.log(Level.INFO, "matrix-api-gateway listening on http://" + bindAddress + ":" + port);
     }
 
     public void stop() { http.stop(0); }
+
+    /**
+     * W48-05: the address this listener bound.
+     *
+     * <p>Package-private for the boundary test: the fact that the default
+     * exposure holds the loopback is what makes "publish the port" an
+     * invalid probe, so it is pinned against the server itself and not
+     * only against the configuration it was derived from.
+     *
+     * @return the bound interface address
+     */
+    String boundAddress() { return bindAddress; }
 
     /* ------------------------------------------------------------ */
     /* Route handlers                                               */
@@ -525,6 +607,33 @@ public final class MinimalHttpServer {
             first = false;
         }
         sb.append("],\"count\":").append(auditEvents.size()).append("}");
+        writeJson(ex, 200, sb.toString());
+    }
+
+    /** The promotion decisions of the runtime's episodic log, refusals included. */
+    private void handlePromotionDecisions(HttpExchange ex) throws IOException {
+        if (!"GET".equalsIgnoreCase(ex.getRequestMethod())) {
+            writeJson(ex, 405, "{\"error\":\"method not allowed\"}");
+            return;
+        }
+        if (episodicLog == null) {
+            writeJson(ex, 200, "{\"decisions\":[],\"count\":0,\"verified\":true}");
+            return;
+        }
+        io.matrix.brain.runtime.AuditChain chain = episodicLog.auditChain();
+        StringBuilder sb = new StringBuilder("{\"decisions\":[");
+        boolean first = true;
+        for (var e : chain.all()) {
+            if (!first) sb.append(",");
+            sb.append("{\"index\":").append(e.index())
+              .append(",\"action\":\"").append(esc(e.action())).append("\"")
+              .append(",\"details\":\"").append(esc(e.details())).append("\"")
+              .append(",\"timestamp\":").append(e.timestampMillis())
+              .append(",\"hash\":\"").append(e.hash()).append("\"}");
+            first = false;
+        }
+        sb.append("],\"count\":").append(chain.size())
+          .append(",\"verified\":").append(chain.verify()).append("}");
         writeJson(ex, 200, sb.toString());
     }
 
@@ -886,9 +995,17 @@ public final class MinimalHttpServer {
     private void handleLogin(HttpExchange ex) throws IOException {
         if ("POST".equalsIgnoreCase(ex.getRequestMethod())) {
             String body = readBody(ex);
-            // Very simple stub: return a Bearer dev-token for any login
+            // RECON-W43.0: a development token must never be issued SILENTLY
+            // by a login endpoint. In local-only mode the caller already
+            // owns the machine and the token is a convenience; in
+            // network-exposed mode the login does not hand one out to a
+            // caller that does not already hold the configured credential.
+            //
+            // And the tier is NOT inferred from an email address: an
+            // address is chosen by the person who types it, so a substring
+            // of it is not a subscription. The tier is a configuration.
             String email = emailFromJson(body);
-            String tier = inferTierFromEmail(email);
+            String tier = configuredTier();
             long exp = System.currentTimeMillis() / 1000L + 3600;
             String token = "dev-" + UUID.randomUUID().toString().substring(0, 8)
                 + "|" + email + "|" + exp + "|" + tier + "|DEVELOPER";
@@ -1095,8 +1212,8 @@ public final class MinimalHttpServer {
      * including inside another field's string value, and never decoded JSON escapes.
      * A body such as
      * {@code {"note":"my email is whatever","email":"user@corp.example"}}
-     * returned the note's tail rather than the email field, and the result feeds
-     * {@link #inferTierFromEmail} — so a crafted body could steer tier selection
+     * returned the note's tail rather than the email field, and the result used to feed
+     * a tier inferred from the address — so a crafted body could steer tier selection
      * through parser confusion. Now a real JSON parse, with the note that a lenient
      * fallback is deliberately NOT used here: a body we cannot parse is anonymous,
      * not a body we guess at.</p>
@@ -1148,12 +1265,30 @@ public final class MinimalHttpServer {
         }
     }
 
-    private static String inferTierFromEmail(String email) {
-        String e = email.toLowerCase();
-        if (e.contains("ent") || e.contains("enterprise") || e.contains("ent@")) return "ENTERPRISE";
-        if (e.contains("pro") || e.contains("pro@")) return "PRO";
-        if (e.contains("free") || e.contains("free@")) return "FREE";
-        return "FREE";
+    /**
+     * The subscription tier of this deployment.
+     *
+     * <p>RECON-W43.0. The tier used to be inferred from a substring of the
+     * email in the login body — {@code "ent"} anywhere in the address meant
+     * ENTERPRISE. An email address is chosen by the person who types it, so
+     * that is a feature the caller has, not a subscription. The tier is now
+     * a configuration value, and it is {@code FREE} when none is set.
+     *
+     * @return the tier
+     */
+    static String configuredTier() {
+        String tier = System.getProperty("matrix.billing.tier");
+        if (tier == null || tier.isBlank()) {
+            tier = System.getenv("MATRIX_BILLING_TIER");
+        }
+        if (tier == null || tier.isBlank()) {
+            return "FREE";
+        }
+        String normalized = tier.strip().toUpperCase(java.util.Locale.ROOT);
+        return switch (normalized) {
+            case "FREE", "PRO", "ENTERPRISE" -> normalized;
+            default -> "FREE";
+        };
     }
 
     private record AuditEvent(long id, String eventType, String userId,

@@ -43,7 +43,7 @@
 
 - [Wave Logs](waves/) — Per-wave documentation (W1-W655+)
 - [Failures & Lessons](archive/failures.md) — What didn't work and why
-- [Architecture Decisions](archive/decisions/) — ADRs
+- `Architecture Decisions` <!-- no-link: the decision archive was never created; the decisions live in governance/DECISION-REGISTER.md --> — ADRs
 
 ---
 
@@ -52,7 +52,7 @@
 - [Style Guide](STYLE-GUIDE.md) — Documentation standards
 - [Research Reports](research/) — Benchmark, federation, sleep, Minecraft
 - [Design Documents](designs/) — DESIGN-01 through DESIGN-58
-- [TLA+ Specifications](tla/) — Formal verification specs
+- [TLA+ Specifications](../formal/) — Formal verification specs
 
 ---
 

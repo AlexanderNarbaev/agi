@@ -25,7 +25,7 @@
 ## Лингвистика и семантика
 
 - **ТLA+ как формальный язык**: `formal/` каталог (см. `architecture/FORMAL-CONTRACTS.md`).
-- **JSON-LD/OpenAPI**: `docs/openapi.yaml`, `api/ChatCompletionRequest/Response`, `EmbeddingRequest/Response`.
+- **JSON-LD/OpenAPI**: `docs/openapi.yaml` <!-- no-link: the v1 tree was removed by the migration to docs-v2 (Q-W46-21) -->, `api/ChatCompletionRequest/Response`, `EmbeddingRequest/Response`.
 
 ## Отвергнуто осознанно
 

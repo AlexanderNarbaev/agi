@@ -42,6 +42,6 @@
 
 - Полные Hansel chains (оптимальный выбор следующей вершины, а не layerwise) — research wave.
 - Расширение `k > 16` (потеря exhaustive verify; `fidelity = NaN`).
-- Связь с задачей H-016 (Reduce к монотонной форме) — отложено.
+- Связь с задачей H-016 (Reduce к монотонной форме) — отложено. <!-- no-id: the hypothesis register never declared it (Q-W46-19) -->
 
 Next: см. файл Ricci-Fingerprint.md в той же папке для следующей темы.

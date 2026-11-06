@@ -200,6 +200,19 @@ public final class KnowledgeGraphStore {
         return relations.size();
     }
 
+    /**
+     * Returns all the entities.
+     *
+     * <p>RECON-W42.7. The projection of the workspace needs to be read as
+     * a whole - the graph view and the MCP traversal both do - and the
+     * store only offered the ids and the single-entity lookup.
+     *
+     * @return the entities
+     */
+    public List<Entity> entities() {
+        return List.copyOf(entities.values());
+    }
+
     /** Returns all entity IDs. */
     public Set<String> entityIds() {
         return Set.copyOf(entities.keySet());

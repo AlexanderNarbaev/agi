@@ -1,5 +1,6 @@
 package io.matrix.cli;
 
+import io.matrix.security.NetworkExposure;
 import io.matrix.api.QwenChatTemplate;
 import io.matrix.api.QwenOnnxBridge;
 
@@ -58,7 +59,13 @@ public final class RealConversationServer {
         bridge.setMaxNewTokens(MAX_NEW_TOKENS);
         bridge.load();
         
-        HttpServer server = HttpServer.create(new InetSocketAddress(port), 0);
+// RECON-W43.0: this listener binds through the shared boundary, so it
+        // cannot end up reachable from another host while the process is
+        // local-only, and it refuses to start when the process is exposed
+        // without a configured credential.
+        NetworkExposure.current().guard("RealConversationServer");
+        HttpServer server = HttpServer.create(new InetSocketAddress(
+                NetworkExposure.current().bindAddress(), port), 0);
         server.createContext("/health", new HealthHandler());
         server.createContext("/sessions", new SessionsHandler());
         server.createContext("/chat", new ChatHandler(bridge));

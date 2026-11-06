@@ -1,5 +1,6 @@
 package io.matrix.noosphere.p2p;
 
+import io.matrix.security.NetworkExposure;
 import io.matrix.noosphere.FnlPackage;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.annotation.PostConstruct;
@@ -103,7 +104,9 @@ public class P2PNetwork {
 
     private void startMulticastListener() {
         try {
-            multicastSocket = new DatagramSocket(MULTICAST_PORT);
+            NetworkExposure.current().guard("the P2P multicast socket");
+            multicastSocket = new DatagramSocket(MULTICAST_PORT,
+                    java.net.InetAddress.getByName(NetworkExposure.current().bindAddress()));
             InetAddress group = InetAddress.getByName(MULTICAST_GROUP);
             // Note: Multicast not fully implemented - using TCP direct connection
             scheduler.scheduleWithFixedDelay(this::discoverPeers, 0, 30, TimeUnit.SECONDS);
@@ -114,7 +117,9 @@ public class P2PNetwork {
 
     private void startTcpServer() {
         try {
-            tcpServer = new ServerSocket(TCP_PORT);
+            NetworkExposure.current().guard("the P2P network");
+            tcpServer = new ServerSocket(TCP_PORT, 50,
+                    java.net.InetAddress.getByName(NetworkExposure.current().bindAddress()));
             Thread acceptThread = new Thread(() -> {
                 while (running) {
                     try {

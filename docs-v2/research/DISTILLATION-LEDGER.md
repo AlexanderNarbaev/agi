@@ -60,7 +60,7 @@ same provenance + same Bir content.
 1. No real ONNX model distillation. The pipeline uses synthetic teachers
    (and/or/xor/imply/transitive) and local dataset generation via
    DatasetConnectorV2. Real ONNX integration requires user consent for
-   downloading a tiny public model (per Q-3 default), and is queued as a
+   downloading a tiny public model (per Q-3 default), and is queued as a <!-- no-id: a local numbering, not a register identifier -->
    follow-up commit.
 2. No rollback removal. DistillationMerge.rollback() is a soft-rollback
    (caller is responsible for not adding new rules after rollback). A full

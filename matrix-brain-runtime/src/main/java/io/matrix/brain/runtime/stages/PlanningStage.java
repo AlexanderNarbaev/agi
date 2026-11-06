@@ -159,9 +159,20 @@ public final class PlanningStage {
 
         if (trace != null) {
             java.util.List<String> ev = new ArrayList<>();
+            // RECON-W39: the trace named the engine and its arguments but not
+            // the SELECTION RULE, and the rule is not a detail here: the tier
+            // budget may request LATS, while the tree is built with the
+            // six-argument MctsTree constructor, which hard-codes
+            // latsMode = false. The tree is therefore driven by UCB1 and the
+            // PUCT selection, the value function and the in-search reflection
+            // never run. The trace now says which rule actually ran, so a
+            // reader cannot infer LATS from the tier alone.
             ev.add("engine=MctsTree.runSearch(args=iter=" + budget.iterations
-                       + ",depth=" + budget.simulationDepth + ")");
-            if (budget.useLats) ev.add("engine=LatsReflector.reflect(args=tree,out=String)");
+                       + ",depth=" + budget.simulationDepth
+                       + ",selection=UCB1,latsMode=false)");
+            if (budget.useLats) {
+                ev.add("engine=LatsReflector.reflect(args=tree,out=String,phase=post-search)");
+            }
             if (best != null) ev.add("bestAction=" + best.type());
             ev.add("tier=" + tier);
             ev.add("durationMs=" + durationMs);

@@ -34,12 +34,14 @@ constants tuned to give biologically-plausible dynamics:
 
 ## Implementation
 
-Source: [`matrix-core/src/main/java/io/matrix/brain/modulators/`](https://github.com/AlexanderNarbaev/agi/tree/develop/matrix-core/src/main/java/io/matrix/brain/modulators)
+Source: `matrix-core/src/main/java/io/matrix/federation/liquid/biochemistry/` and
+`matrix-core/src/main/java/io/matrix/federation/registry/`
 
 Key classes:
-- `BiochemicalNetwork` — the 4-ODE system
-- `Modulator` — wraps level + threshold + veto rule
-- `ModulatorRegistry` — the 4 FROZEN entries
+- `BiochemicalNetwork` — the 4-ODE system (`io.matrix.federation.liquid.biochemistry`)
+- `KineticModulator` — the kinetic modulator (`io.matrix.federation.liquid`)
+- `DynamicModulatorRegistry` and `ModulatorRegistryStore` — the registry and its store
+  (`io.matrix.federation.registry`)
 
 Performance:
 - **1 step**: ~10µs (4 simple ODEs)
