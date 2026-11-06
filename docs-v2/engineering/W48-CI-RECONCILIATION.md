@@ -863,6 +863,60 @@ something, that is a finding, not a CI defect.
 
 ---
 
+### 4.11 The clean runner after the third repair: all five mandatory jobs are GREEN
+
+The run that carries the third repair is `42206946030` at `f6e2be9f`.
+
+| the job | the verdict |
+|---|---|
+| Build & Test (Java) | **success** |
+| Web UI Tests | **success** |
+| Quality gates (can fail) | **success** — the clean-code gate, the pinned formal tool, the formal gate (15 specifications), the build, and **the security boundary** |
+| Security Scan | **success** — the SpotBugs step reports the known engine limitation as a loud warning, **the secret scan ran and found nothing**, and the vulnerable-dependency check ran |
+| Container Images (build + smoke) | **success** — all three smoke tests |
+| Docker Build & Push (api-gateway) | **failure** — not a mandatory check, and the cause is external (below) |
+
+**The mandatory CI checks pass on a clean runner.** That is the W48 mandate's
+second priority, and it took four runs to observe it.
+
+#### 4.11.1 The secret scan ran for the first time and found nothing
+
+The step that never scanned anything (§4.10.3) now scans the commits the push
+carried. The job is green, so the scan completed and reported no secret — for
+the first time in this repository's history. The vulnerable-dependency check
+that follows it ran as well, for the first time as well.
+
+#### 4.11.2 The one red job is the release path, and its cause is external
+
+"Docker Build & Push (api-gateway)" fails at its FIRST step:
+
+```
+- Login to Docker Hub -> failure
+::[error]Username and password required
+```
+
+The step needs `secrets.DOCKERHUB_USERNAME` and `secrets.DOCKERHUB_TOKEN`
+(`.github/workflows/ci.yml:460-463`), and **the repository has no secrets
+configured at all**:
+
+```
+$ gh secret list
+$ gh variable list
+```
+
+Both are empty. The same job's downstream deploy steps need
+`K8S_STAGING_KUBECONFIG`, `K8S_PROD_KUBECONFIG`, `STRIPE_WEBHOOK_SECRET` and
+`LICENSE_SIGNING_SECRET`, which are equally absent.
+
+**This is a precise external blocker, not a defect of the wave:** the release
+path cannot run because the credentials that drive it are the owner's to
+configure. It is not one of the mandatory checks (the five jobs above are the
+mandatory ones, and all five are green), and no code change can substitute for
+a credential. The records that state it are `docs-v2/engineering/W48-STATUS.md`
+§8 and the risk register's R-W48-04.
+
+---
+
 ## 5. The negative controls
 
 **A fix that cannot fail is not a fix.** Each of the seven causes has a control that

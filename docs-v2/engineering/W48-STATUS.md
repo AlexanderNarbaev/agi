@@ -209,11 +209,16 @@ The evidence is the JUnit XML under `<module>/build/test-results/`.
    and it was used in W47; a second needs fresh approval. The full-suite denominators
    (1 226 classes / 9 051 executions) are cited from the W47 report and are **not
    re-verified here**.
-5. **A green `ci` run is still not observed.** The run `42198961133` (`bc87935c`)
-   is green in three of the five jobs — including the security boundary and the
-   formal gate — and the two red jobs are repaired in `e0de8419`. The wave has
-   not yet seen the run that carries that repair, so the verdict stays open until
-   it does.
+5. **The mandatory CI checks are GREEN on a clean runner** — run `42206946030`
+   (`f6e2be9f`): Build & Test, the Web UI tests, the quality gates (the clean-code
+   gate, the pinned formal tool, the formal gate over 15 specifications, the build
+   and **the security boundary**), the security scan (the secret scan ran for the
+   first time and found nothing; the vulnerable-dependency check ran) and the
+   container images (three smoke tests). **What is still red is the release path
+   only**: "Docker Build & Push" fails at its first step with "Username and
+   password required", because the repository has no secrets configured
+   (`gh secret list` → empty). The credentials are the owner's to set; no code
+   change substitutes for them.
 6. **The W47 full-suite XML was not retained**, so the per-method identity of the 23
    native failures in the W47 run itself is **derived**, not read from that run's XML.
 7. **Two formal-spec mutants SURVIVED** (`Consensus-evaluate-without-quorum`,
@@ -268,9 +273,16 @@ The evidence is the JUnit XML under `<module>/build/test-results/`.
    succeeds.
 3. **The GPU as an optional accelerator** (OD-047) — the registry states the optional
    role; no serving-path change is required or proposed.
-4. **The CI observation** — watch the `ci` run of the W48 commits; the fixes are
-   committed, but the wave has not yet seen a green run.
-5. **The two known holes** — the auditor's import-line exemption and the
+4. **The release path** — the mandatory checks are green, but "Docker Build & Push"
+   cannot run: the repository has no `DOCKERHUB_USERNAME`/`DOCKERHUB_TOKEN` and no
+   Kubernetes kubeconfig secrets. Either configure them, or mark the release job
+   as one that only runs where they exist — a release job that cannot run is a
+   red job, not a safety net.
+5. **The static-analysis policy** — the pinned SpotBugs engine (4.9.3) cannot read
+   Java 25 bytecode, so the check produces no evidence; 4.10.5 (ASM 9.11) can and
+   reports 1 414 findings locally, 981 of them `EI_EXPOSE_REP*`. The policy for
+   those categories is the owner's decision.
+6. **The two known holes** — the auditor's import-line exemption and the
    non-reproducible transition id.
 
 ## 11. The changed files
@@ -296,6 +308,8 @@ document (`git diff --shortstat eca23bfd..HEAD`). The groups:
 | `ci` (later reading) | `42181161742` at `0eac36c3` | **failure** — Build & Test: 9070 tests, 12 failed, 132 skipped; Quality gates: DOCS-1 **PASS**, the security boundary failed on its startup window | the twelve failures are diagnosed and fixed in `64f43f74`, the startup window and the missing log in the same commit; the detailed evidence is `docs-v2/engineering/W48-CI-RECONCILIATION.md` §4.7 |
 | `ci` (later reading) | `42184035743` at `63d440b1` | **failure** — Build & Test **success**; Quality gates: the application could not reach a Redis the runner does not have; Security Scan: no JDK, an invalid `JAVA_HOME`; Container Images: the published port vs. the loopback bind | all three causes are diagnosed and fixed in `bc87935c`; the evidence is `docs-v2/engineering/W48-CI-RECONCILIATION.md` §4.8 |
 | `ci` (later reading) | `42198961133` at `bc87935c` | **failure** — Build & Test, Web UI and **Quality gates are green** (the security boundary and the formal gate both hold on the clean runner); Security Scan: `bash -e` aborted the SpotBugs step and skipped the secret scan; Container Images: the api-gateway and matrix-core smoke tests are green, the minikube one had no database | both remaining causes are in the workflow's own steps and are fixed in `e0de8419`; the evidence is `docs-v2/engineering/W48-CI-RECONCILIATION.md` §4.9 |
+| `ci` (later reading) | `42203414243` at `2c633579` | **failure** — Build & Test, Web UI, Quality gates and **Container Images are green** (all three smoke tests); Security Scan: the SpotBugs step now behaves as documented, and the secret scan below it turns out to have never scanned anything | both causes are repaired in `f6e2be9f`; the evidence is `docs-v2/engineering/W48-CI-RECONCILIATION.md` §4.10 |
+| `ci` (later reading) | `42206946030` at `f6e2be9f` | **failure** — **all five mandatory jobs are GREEN**: Build & Test, Web UI, Quality gates (the security boundary and the formal gate), Security Scan (the secret scan ran for the first time and found nothing) and Container Images (three smoke tests). The only red job is "Docker Build & Push", whose FIRST step fails with "Username and password required" | the release path needs the owner's Docker Hub and Kubernetes credentials, and the repository has **no secrets configured** (`gh secret list` is empty). That is an external blocker, not a wave defect; the evidence is `docs-v2/engineering/W48-CI-RECONCILIATION.md` §4.11 |
 | `branch-validation` | `42170865265` | success | the GraalVM distribution and the version contract are fixed (`02d2a516`) |
 | `Formal Specs (TLA+)` | `42170865258` | success — 15 specifications, `tools/tla2tools.jar: OK` | the tool is tracked and verified by digest in both workflows (`16a2d0c5`, `9bb6bf5c`) |
 | `docs-validation` | `42167940985` (at `4084538a`) | success | path-filtered on `docs-v2/**`; no run exists at the preflight commit |
