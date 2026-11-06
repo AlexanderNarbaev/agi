@@ -5,7 +5,7 @@ import io.matrix.brain.ConfidenceFilteredBrain;
 import io.matrix.brain.ConfidenceFilter;
 import io.matrix.brain.BrainCycle;
 import io.matrix.autonomy.AutonomyEngine;
-import io.matrix.autonomy.AutonomyEngine;
+import io.matrix.autonomy.ImpulseProposalConsumer;
 import io.matrix.budgeter.ConjugateBudgeter;
 import io.matrix.ethics.EthicalFilter;
 import io.matrix.knowledge.SimpleKnowledgeBase;
@@ -51,7 +51,11 @@ public final class BrainProduction {
         ConjugateBudgeter budgeter = new ConjugateBudgeter();
         EthicalFilter ethics = new EthicalFilter();
         ImpulseScheduler scheduler = new ImpulseScheduler(budgeter, ethics);
-        this.autonomy = new AutonomyEngine(filteredBrain, scheduler);
+        // W49 (OD-045): the accepted impulses become bounded internal
+        // proposals. The consumer records an intent and nothing else — it sends
+        // no message, runs no command, and never touches Chain A.
+        ImpulseProposalConsumer proposals = ImpulseProposalConsumer.forServing(ethics);
+        this.autonomy = new AutonomyEngine(filteredBrain, scheduler, proposals);
         
         // HTTP server
 // RECON-W43.0: this listener binds through the shared boundary, so it

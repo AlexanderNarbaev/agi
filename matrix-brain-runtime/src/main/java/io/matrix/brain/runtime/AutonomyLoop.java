@@ -1,6 +1,7 @@
 package io.matrix.brain.runtime;
 
 import io.matrix.autonomy.AutonomyEngine;
+import io.matrix.autonomy.ImpulseProposalConsumer;
 import io.matrix.brain.BrainCycle;
 import io.matrix.budgeter.ConjugateBudgeter;
 import io.matrix.ethics.EthicalFilter;
@@ -55,7 +56,11 @@ public final class AutonomyLoop implements AutoCloseable {
         // that gates it.
         ImpulseScheduler scheduler =
                 new ImpulseScheduler(new ConjugateBudgeter(), new EthicalFilter());
-        this.engine = new AutonomyEngine(brain, scheduler);
+        // W49 (OD-045): the accepted impulses become bounded internal
+        // proposals. The consumer records an intent and does nothing else.
+        ImpulseProposalConsumer proposals =
+                ImpulseProposalConsumer.forServing(new EthicalFilter());
+        this.engine = new AutonomyEngine(brain, scheduler, proposals);
         this.arousal = new ArousalDynamics(0.20, 0.05);
         this.emergence = new EmergenceAnalyzer(42L);
         this.goals = new GoalTracker();

@@ -53,6 +53,15 @@ class AutonomyEngineTest {
     }
 
     /** The scheduler construction the gateway path uses. */
+    /** The proposal consumer the engine records its accepted impulses in (W49, OD-045). */
+    private static ImpulseProposalConsumer proposals() {
+        return new ImpulseProposalConsumer(
+                new BoundedImpulseProposalStore(8),
+                name -> false,
+                () -> 0L,
+                1_000_000L);
+    }
+
     private static ImpulseScheduler realScheduler() {
         return new ImpulseScheduler(new ConjugateBudgeter(), new EthicalFilter());
     }
@@ -61,7 +70,7 @@ class AutonomyEngineTest {
     void theEngineRefusesANullScheduler() {
         // The contract is enforced at construction: a null scheduler is not a
         // degraded engine, it is an engine whose drives can never be expressed.
-        assertThatThrownBy(() -> new AutonomyEngine(new RecordingBrain(), null))
+        assertThatThrownBy(() -> new AutonomyEngine(new RecordingBrain(), null, proposals()))
                 .isInstanceOf(NullPointerException.class)
                 .hasMessageContaining("scheduler");
     }
@@ -69,14 +78,14 @@ class AutonomyEngineTest {
     @Test
     void theEngineExposesTheSchedulerItFiresThrough() {
         ImpulseScheduler scheduler = realScheduler();
-        AutonomyEngine engine = new AutonomyEngine(new RecordingBrain(), scheduler);
+        AutonomyEngine engine = new AutonomyEngine(new RecordingBrain(), scheduler, proposals());
         assertThat(engine.scheduler()).isSameAs(scheduler);
     }
 
     @Test
     void theCuriosityCycleFiresItsDriveAndSurvives() {
         ImpulseScheduler scheduler = realScheduler();
-        AutonomyEngine engine = new AutonomyEngine(new RecordingBrain(), scheduler);
+        AutonomyEngine engine = new AutonomyEngine(new RecordingBrain(), scheduler, proposals());
 
         long firesBefore = scheduler.totalFires();
         assertThatCode(engine::curiosityCycle).doesNotThrowAnyException();
@@ -95,7 +104,7 @@ class AutonomyEngineTest {
         // declined on every cycle. A drive that can never be paid for is not a
         // drive, and the conjugate budget's number is the owner's to set.
         ImpulseScheduler scheduler = realScheduler();
-        AutonomyEngine engine = new AutonomyEngine(new RecordingBrain(), scheduler);
+        AutonomyEngine engine = new AutonomyEngine(new RecordingBrain(), scheduler, proposals());
 
         long rejectionsBefore = scheduler.totalRejections();
         assertThatCode(engine::curiosityCycle).doesNotThrowAnyException();
@@ -112,7 +121,7 @@ class AutonomyEngineTest {
         // be asked to validate.
         ImpulseScheduler scheduler = realScheduler();
         RecordingBrain brain = new RecordingBrain();
-        AutonomyEngine engine = new AutonomyEngine(brain, scheduler);
+        AutonomyEngine engine = new AutonomyEngine(brain, scheduler, proposals());
 
         assertThatCode(engine::integrityCycle).doesNotThrowAnyException();
 
@@ -134,7 +143,7 @@ class AutonomyEngineTest {
 
             @Override
             public void close() { }
-        }, scheduler);
+        }, scheduler, proposals());
 
         long firesBefore = scheduler.totalFires();
         assertThatCode(engine::idleCycle).doesNotThrowAnyException();
@@ -149,7 +158,7 @@ class AutonomyEngineTest {
         // An exception escaping a scheduleAtFixedRate task cancels that task for
         // good, silently. The cycle must therefore swallow the failure, log it
         // and let the next one run.
-        AutonomyEngine engine = new AutonomyEngine(new FailingBrain(), realScheduler());
+        AutonomyEngine engine = new AutonomyEngine(new FailingBrain(), realScheduler(), proposals());
 
         assertThatCode(engine::curiosityCycle).doesNotThrowAnyException();
         assertThatCode(engine::integrityCycle).doesNotThrowAnyException();
@@ -162,7 +171,7 @@ class AutonomyEngineTest {
 
     @Test
     void theCycleCountKeepsGrowingAcrossRepeatedCycles() {
-        AutonomyEngine engine = new AutonomyEngine(new RecordingBrain(), realScheduler());
+        AutonomyEngine engine = new AutonomyEngine(new RecordingBrain(), realScheduler(), proposals());
         engine.curiosityCycle();
         engine.curiosityCycle();
         engine.integrityCycle();
@@ -174,7 +183,7 @@ class AutonomyEngineTest {
         // The reflection counter belongs to the idle cycle; the curiosity cycle
         // records its last reflection but does not count itself.
         RecordingBrain brain = new RecordingBrain();
-        AutonomyEngine engine = new AutonomyEngine(brain, realScheduler());
+        AutonomyEngine engine = new AutonomyEngine(brain, realScheduler(), proposals());
         engine.idleCycle();
         engine.idleCycle();
         assertThat(engine.getTotalReflections()).isEqualTo(2L);

@@ -1,6 +1,7 @@
 package io.matrix.api.llm_quarantine;
 
 import io.matrix.security.NetworkExposure;
+import io.matrix.autonomy.ImpulseProposalConsumer;
 import io.matrix.brain.BrainCycle;
 import io.matrix.autonomy.AutonomyEngine;
 import io.matrix.autonomy.AutonomyEngine;
@@ -55,9 +56,10 @@ public final class BrainIntegrated {
         ConjugateBudgeter budgeter = new ConjugateBudgeter();
         EthicalFilter ethics = new EthicalFilter();
         ImpulseScheduler scheduler = new ImpulseScheduler(budgeter, ethics);
+        ImpulseProposalConsumer proposals = ImpulseProposalConsumer.forServing(ethics);
         
         // Start autonomy engine
-        AutonomyEngine autonomy = new AutonomyEngine(rag, scheduler);
+        AutonomyEngine autonomy = new AutonomyEngine(rag, scheduler, proposals);
         autonomy.start();
         System.out.println("Autonomy engine started (self-initiating cycles)");
         

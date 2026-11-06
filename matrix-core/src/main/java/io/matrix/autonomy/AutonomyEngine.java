@@ -34,6 +34,7 @@ public final class AutonomyEngine {
 
     private final BrainCycle brain;
     private final ImpulseScheduler scheduler;
+    private final ImpulseProposalConsumer proposals;
     private final ScheduledExecutorService clock;
     private final AtomicLong cycleCount = new AtomicLong();
     private final AtomicLong totalReflections = new AtomicLong();
@@ -48,15 +49,26 @@ public final class AutonomyEngine {
      *        is an engine whose drives can never be expressed, and the failure
      *        used to arrive silently one hundred and twenty seconds later, when
      *        the first scheduled cycle dereferenced it
+     * @param proposals the consumer that turns an ACCEPTED impulse into a
+     *        bounded internal proposal (W49, OD-045). It is required for the
+     *        same reason the scheduler is: an accepted impulse that nobody
+     *        consumes is an impulse that vanishes, and the whole point of the
+     *        consumer is that the acceptance is recorded somewhere.
      */
-    public AutonomyEngine(BrainCycle brain, ImpulseScheduler scheduler) {
+    public AutonomyEngine(BrainCycle brain,
+                           ImpulseScheduler scheduler,
+                           ImpulseProposalConsumer proposals) {
         this.brain = Objects.requireNonNull(brain, "brain");
         this.scheduler = Objects.requireNonNull(scheduler, "scheduler");
+        this.proposals = Objects.requireNonNull(proposals, "proposals");
         this.clock = Executors.newScheduledThreadPool(2);
     }
 
     /** The scheduler this engine fires its drives through. */
     public ImpulseScheduler scheduler() { return scheduler; }
+
+    /** The consumer that records the accepted impulses as bounded internal proposals. */
+    public ImpulseProposalConsumer proposals() { return proposals; }
 
     public void start() {
         if (running) return;
@@ -79,8 +91,11 @@ public final class AutonomyEngine {
             totalReflections.incrementAndGet();
             lastReflection.set(r.reply());
             if (r.action().contains("GOAL:") || r.reply().toLowerCase().contains("investigate")) {
-                fire(AutonomyImpulse.CURIOSITY, 100);
+                fire(AutonomyImpulse.CURIOSITY, 100, "idle");
             }
+            // W49 (OD-045): the proposals that outlived their expiry are closed
+            // here, so the bounded queue never fills with dead entries.
+            proposals.sweep();
         } catch (Exception e) {
             // A scheduled task that throws is CANCELLED by the executor, silently
             // and for good. A cycle that dies here is a dead cycle, so the failure
@@ -113,7 +128,7 @@ public final class AutonomyEngine {
             // number is the owner's: the owner's answer of 2026-11-05 was to
             // raise the envelope to the cost, and to keep the refusal path for
             // the drives that SHOULD be refused.
-            fire(AutonomyImpulse.CURIOSITY, 100);
+            fire(AutonomyImpulse.CURIOSITY, 100, "curiosity");
         } catch (Exception e) {
             log.warn("AutonomyEngine: the curiosity cycle failed: {}", e.getMessage());
         }
@@ -122,7 +137,7 @@ public final class AutonomyEngine {
 
     void integrityCycle() {
         try (var span = trace.begin("autonomy.integrity")) {
-            fire(AutonomyImpulse.INTEGRITY_CHECK, 25);
+            fire(AutonomyImpulse.INTEGRITY_CHECK, 25, "integrity");
             brain.cycle("Validate current state.");
         } catch (Exception e) {
             log.warn("AutonomyEngine: the integrity cycle failed: {}", e.getMessage());
@@ -137,11 +152,26 @@ public final class AutonomyEngine {
      * the refusal is logged, because a curiosity that never fires and a curiosity
      * that was refused look identical from the outside otherwise.
      */
-    private void fire(AutonomyImpulse impulse, long envelope) {
+    private void fire(AutonomyImpulse impulse, long envelope, String drive) {
         ImpulseScheduler.FireRecord record = scheduler.fire(impulse, envelope, Map.of());
         if (record.outcome() != ImpulseScheduler.ImpulseOutcome.FIRED) {
             log.info("AutonomyEngine: the {} impulse was not fired: {}",
                     impulse, record.outcome());
+            return;
+        }
+        // W49 (OD-045): the accepted impulse becomes a bounded internal
+        // proposal. The proposal RECORDS an intent — nothing is executed, no
+        // message is sent, and Chain A is untouched.
+        ImpulseProposalConsumer.Consumption consumption = proposals.consume(
+                record, "cycle-" + cycleCount.get(), drive);
+        if (consumption != null && consumption.created()) {
+            log.info("AutonomyEngine: the {} impulse became the proposal {} ({})",
+                    impulse,
+                    consumption.proposal().orElseThrow().id(),
+                    consumption.proposal().orElseThrow().kind());
+        } else if (consumption != null) {
+            log.info("AutonomyEngine: the {} impulse was accepted but not proposed: {}",
+                    impulse, consumption.state());
         }
     }
 

@@ -41,7 +41,8 @@ public final class SelfImprovingEngineLauncher {
         var ethics = new io.matrix.ethics.EthicalFilter();
         var scheduler = new ImpulseScheduler(budgeter, ethics);
         
-        SelfImprovingEngine engine = new SelfImprovingEngine(loop, scheduler);
+        var proposals = io.matrix.autonomy.ImpulseProposalConsumer.forServing(ethics);
+        SelfImprovingEngine engine = new SelfImprovingEngine(loop, scheduler, proposals);
         engine.start();
         
         System.out.println("Talk to the brain (type 'quit' to stop):");

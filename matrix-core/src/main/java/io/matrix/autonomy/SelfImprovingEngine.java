@@ -24,13 +24,23 @@ public final class SelfImprovingEngine {
     
     private final LearningLoop learningLoop;
     private final ImpulseScheduler scheduler;
+    private final ImpulseProposalConsumer proposals;
     private final AtomicLong learnCycles = new AtomicLong();
     private final AtomicLong talkCycles = new AtomicLong();
     private volatile boolean running = false;
     
-    public SelfImprovingEngine(LearningLoop learningLoop, ImpulseScheduler scheduler) {
+    /**
+     * @param learningLoop the learning loop
+     * @param scheduler    the scheduler the impulses are fired through
+     * @param proposals    the consumer that records an accepted impulse as a
+     *                     bounded internal proposal (W49, OD-045)
+     */
+    public SelfImprovingEngine(LearningLoop learningLoop,
+                                ImpulseScheduler scheduler,
+                                ImpulseProposalConsumer proposals) {
         this.learningLoop = learningLoop;
         this.scheduler = scheduler;
+        this.proposals = java.util.Objects.requireNonNull(proposals, "proposals");
     }
     
     /**
@@ -57,7 +67,14 @@ public final class SelfImprovingEngine {
     public String talk(String message) {
         talkCycles.incrementAndGet();
         var result = learningLoop.talk(message);
-        scheduler.fire(AutonomyImpulse.CURIOSITY, 50, java.util.Map.of());
+        ImpulseScheduler.FireRecord record =
+                scheduler.fire(AutonomyImpulse.CURIOSITY, 50, java.util.Map.of());
+        // W49 (OD-045): an accepted impulse becomes a bounded internal
+        // proposal; a refused one stays a refusal.
+        if (record.outcome() == ImpulseScheduler.ImpulseOutcome.FIRED) {
+            proposals.consume(record, "talk-" + talkCycles.get(), "self-improving");
+        }
+        proposals.sweep();
         return result.reply();
     }
     
