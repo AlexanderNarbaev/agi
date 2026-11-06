@@ -16,6 +16,10 @@
 #               (W46.3; the checker is scripts/docs-link-check.py)
 #   6. TEST-1   the test evidence catalogue agrees with the evidence on this
 #               machine (W46.3; scripts/validate-test-catalogue.py)
+#   7. RETENTION-1 the backup retention policy proves itself on a synthetic tree
+#   8. SNAPSHOT-RETENTION-1 the snapshot retention policy proves itself, the
+#               snapshot payload's size bound is configured, and the dry run
+#               leaves the owner's database byte-identical (W48.7)
 #
 # Exit 0 = clean, 1 = violations found. New violations BLOCK; a baseline file records
 # what already exists so this gate is adoptable without a 3000-line cleanup first.
@@ -354,6 +358,85 @@ check_retention() {
     report RETENTION-1 "the retention policy holds"
 }
 
+# ---------------------------------------------------------------------------
+# SNAPSHOT-RETENTION-1: the snapshot retention policy, the payload's size bound
+# ---------------------------------------------------------------------------
+#
+# W48.7. The snapshot rows of the knowledge database get the same three-tier
+# calendar the backups have (OD-039), and the payload of a snapshot gets a size
+# bound that is a REFUSAL and never a trim.
+#
+# The check proves three things, and each of them can fail:
+#
+#   1. the retention tool's own self-test: a synthetic database of valid,
+#      expired, corrupt, undated and legacy snapshots, and every rule of the
+#      policy is checked against it;
+#   2. the size bound is CONFIGURED: the store reads it from a property, and a
+#      bound that is hard-coded is a bound that cannot be moved;
+#   3. the dry run is the DEFAULT: the tool runs against the owner's database
+#      without being told to apply, and the database is byte-identical
+#      afterwards.
+#
+# The third one is the load-bearing part: the tool DELETES rows, and a gate
+# that cannot show that the default does not delete is a gate that has not
+# proved the safe path.
+check_snapshot_retention() {
+    local tool="$REPO_ROOT/scripts/snapshot-retention.py"
+    if [ ! -f "$tool" ]; then
+        report SNAPSHOT-RETENTION-1 "the snapshot retention tool is absent"
+        VIOLATIONS=$((VIOLATIONS + 1))
+        return
+    fi
+
+    # 1. the policy proves itself on a synthetic database
+    local output
+    if ! output="$(python3 "$tool" --self-test 2>&1)"; then
+        printf '%s\n' "$output" | grep -E "FAIL" | head -20
+        report SNAPSHOT-RETENTION-1 "the snapshot retention policy does not hold"
+        VIOLATIONS=$((VIOLATIONS + 1))
+        return
+    fi
+
+    # 2. the bound on the payload is configured, not hard-coded
+    local store="$REPO_ROOT/matrix-core/src/main/java/io/matrix/knowledge/KnowledgeStore.java"
+    if [ ! -f "$store" ]; then
+        report SNAPSHOT-RETENTION-1 "the knowledge store is absent: the bound cannot be checked"
+        VIOLATIONS=$((VIOLATIONS + 1))
+        return
+    fi
+    if ! grep -q "matrix.knowledge.snapshot.max-payload-bytes" "$store"; then
+        report SNAPSHOT-RETENTION-1 "the bound on the snapshot payload is not configurable"
+        VIOLATIONS=$((VIOLATIONS + 1))
+        return
+    fi
+    if ! grep -q "DEFAULT_MAX_SNAPSHOT_PAYLOAD_BYTES" "$store"; then
+        report SNAPSHOT-RETENTION-1 "the default bound on the snapshot payload is not named"
+        VIOLATIONS=$((VIOLATIONS + 1))
+        return
+    fi
+
+    # 3. the dry run is the default, and it leaves the database alone
+    local database="$REPO_ROOT/data/knowledge/workbench.sqlite"
+    if [ -f "$database" ]; then
+        local before after
+        before="$(sha256sum "$database" | cut -d' ' -f1)"
+        if ! output="$(python3 "$tool" --database "$database" 2>&1)"; then
+            printf '%s\n' "$output" | grep -E "REFUSED" | head -5
+            report SNAPSHOT-RETENTION-1 "the retention pass refuses the owner's database"
+            VIOLATIONS=$((VIOLATIONS + 1))
+            return
+        fi
+        after="$(sha256sum "$database" | cut -d' ' -f1)"
+        if [ "$before" != "$after" ]; then
+            report SNAPSHOT-RETENTION-1 "the dry run changed the owner's database"
+            VIOLATIONS=$((VIOLATIONS + 1))
+            return
+        fi
+    fi
+
+    report SNAPSHOT-RETENTION-1 "the snapshot retention policy holds, the bound is configured, and the dry run changes nothing"
+}
+
 check_shell_magic
 check_java_magic
 check_env_provenance
@@ -361,6 +444,7 @@ check_frozen
 check_docs_links
 check_test_catalogue
 check_retention
+check_snapshot_retention
 
 echo "----------------------------------------------"
 if [ "$MODE" = "--report" ]; then

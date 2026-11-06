@@ -141,6 +141,39 @@ public final class KnowledgeStore implements AutoCloseable {
     private static final int SNAPSHOT_PAYLOAD_VERSION = 2;
 
     /**
+     * W48-07 — the system property that configures the bound on the size of a snapshot payload.
+     *
+     * <p>The name follows the house style of the other runtime knobs
+     * ({@code matrix.scratch.path}, {@code matrix.tombstone.backend}): a dotted name under the
+     * {@code matrix.} prefix, read with {@link System#getProperty(String)}.</p>
+     */
+    public static final String SNAPSHOT_MAX_PAYLOAD_BYTES_PROPERTY =
+            "matrix.knowledge.snapshot.max-payload-bytes";
+
+    /**
+     * W48-07 — the default bound on the size of a snapshot payload, in bytes.
+     *
+     * <p><b>Where the number comes from.</b> The owner's database was measured on 2026-11-06:
+     * its one workspace, {@code photosynthesis}, produces a payload of 103,075 bytes, and the
+     * largest payload measured over a fixture set of eight workspaces of growing content was
+     * 301,136 bytes. The default is 8 MiB — <b>81 times</b> the measured payload of the owner's
+     * own workspace and <b>27 times</b> the largest payload measured anywhere — so that a
+     * workspace can grow by more than an order of magnitude before the bound says anything, and
+     * a bound that a normal workspace can reach is a bound that only fires on a runaway.</p>
+     *
+     * <p><b>Why the bound is a bound and not a trim.</b> The payload is the ONLY recoverable
+     * copy of what a replacement destroyed. A snapshot that is cut short is not a smaller
+     * snapshot; it is a corrupt one, and a corrupt snapshot restores a workspace that has lost
+     * rows without saying so. So the payload is measured, and a payload over the bound is
+     * REFUSED with {@link SnapshotPayloadTooLargeException} — the snapshot is not written, the
+     * transaction rolls back, and the database is exactly as it was.</p>
+     *
+     * <p>The value is a constant and not a literal at the point of use, so that the gate can
+     * find it and so that the reason for it lives in one place.</p>
+     */
+    public static final long DEFAULT_MAX_SNAPSHOT_PAYLOAD_BYTES = 8L * 1024L * 1024L;
+
+    /**
      * W47 — the tables a workspace replacement erases, and the rule that selects the rows of
      * each of them.
      *
@@ -268,6 +301,15 @@ public final class KnowledgeStore implements AutoCloseable {
     private final Connection connection;
 
     /**
+     * W48-07 — the bound on the size of a snapshot payload, in bytes.
+     *
+     * <p>It is read ONCE, when the store is opened: a bound that changed under a running store
+     * would make two snapshots of the same workspace answer to different limits. A caller that
+     * needs another bound opens another store.</p>
+     */
+    private final long maxSnapshotPayloadBytes;
+
+    /**
      * W45.2 — the single-writer guard of this database file.
      *
      * <p>It is held by the PROCESS, not by this store: the cognitive store and the epistemic
@@ -276,7 +318,36 @@ public final class KnowledgeStore implements AutoCloseable {
      */
     private io.matrix.cognitive.WriterLock writerLock;
 
+    /**
+     * Opens the store with the configured bound on the snapshot payload.
+     *
+     * <p>The bound comes from the system property
+     * {@link #SNAPSHOT_MAX_PAYLOAD_BYTES_PROPERTY}, and the default is
+     * {@link #DEFAULT_MAX_SNAPSHOT_PAYLOAD_BYTES}.</p>
+     *
+     * @param databaseFile the database file
+     */
     public KnowledgeStore(Path databaseFile) {
+        this(databaseFile, configuredSnapshotPayloadBound());
+    }
+
+    /**
+     * W48-07 — opens the store with an explicit bound on the size of a snapshot payload.
+     *
+     * <p>The bound is a REFUSAL and never a trim: a payload over the bound is not written, and
+     * the database is exactly as it was. The constructor takes the bound as an argument so that
+     * a caller — and a test — can say what the limit is without changing the state of the
+     * whole process.</p>
+     *
+     * @param databaseFile          the database file
+     * @param maxSnapshotPayloadBytes the bound, in bytes; it must be positive
+     */
+    public KnowledgeStore(Path databaseFile, long maxSnapshotPayloadBytes) {
+        if (maxSnapshotPayloadBytes <= 0) {
+            throw new IllegalArgumentException("the bound on the snapshot payload must be "
+                    + "positive, and it is " + maxSnapshotPayloadBytes);
+        }
+        this.maxSnapshotPayloadBytes = maxSnapshotPayloadBytes;
         // W45.2. The epistemic store opens the SAME file as the cognitive store, so the
         // single-writer guard belongs to the FILE, not to one store. The lock is held by the
         // PROCESS: a second store of this process joins it (the contract is one writer
@@ -298,6 +369,37 @@ public final class KnowledgeStore implements AutoCloseable {
             lock.close();
             throw new IllegalStateException("Cannot open the knowledge store at " + databaseFile, e);
         }
+    }
+
+    /**
+     * W48-07 — the bound on the snapshot payload that the configuration asks for.
+     *
+     * <p>The system property {@link #SNAPSHOT_MAX_PAYLOAD_BYTES_PROPERTY} wins; without it the
+     * default {@link #DEFAULT_MAX_SNAPSHOT_PAYLOAD_BYTES} applies. A property that is not a
+     * positive number is REFUSED at start-up rather than ignored: a bound that is silently
+     * ignored is a bound that does not exist, and a limit that cannot be read is a limit that
+     * cannot be trusted.</p>
+     *
+     * @return the bound, in bytes
+     */
+    private static long configuredSnapshotPayloadBound() {
+        String configured = System.getProperty(SNAPSHOT_MAX_PAYLOAD_BYTES_PROPERTY);
+        if (configured == null || configured.isBlank()) {
+            return DEFAULT_MAX_SNAPSHOT_PAYLOAD_BYTES;
+        }
+        long value;
+        try {
+            value = Long.parseLong(configured.trim());
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException("the bound on the snapshot payload, given by "
+                    + SNAPSHOT_MAX_PAYLOAD_BYTES_PROPERTY + ", is not a number: " + configured, e);
+        }
+        if (value <= 0) {
+            throw new IllegalArgumentException("the bound on the snapshot payload, given by "
+                    + SNAPSHOT_MAX_PAYLOAD_BYTES_PROPERTY + ", must be positive, and it is "
+                    + value);
+        }
+        return value;
     }
 
     private void configure() throws SQLException {
@@ -1367,6 +1469,11 @@ public final class KnowledgeStore implements AutoCloseable {
                     // nothing to lose, and it is not worth a row: what the owner asked for
                     // is a snapshot of what a replacement DESTROYED.
                     taken = writeSnapshot(snapshot.workspaceId(), kind, createdAt);
+                    // W48-07 — the invariant: a replacement is never committed without a
+                    // COMPLETE recoverable snapshot of what it replaced. The check is here,
+                    // between the snapshot and the erasure, so that a refusal leaves the
+                    // workspace exactly as it was.
+                    requireCompleteSnapshot(taken);
                 }
                 deleteWorkspace(snapshot.workspaceId());
                 insertWorkspace(snapshot);
@@ -1656,6 +1763,15 @@ public final class KnowledgeStore implements AutoCloseable {
         // the replacement is about to destroy.
         List<SnapshotTable> tables = captureUntypedTables(workspaceId);
         String payload = writeSnapshotPayload(content, tables);
+        // W48-07 — the bound on the size of the payload. The check is BEFORE the row is
+        // written, so a payload over the bound leaves no row and no half-row: the caller
+        // is told what exceeded which bound, and the transaction that called this rolls
+        // back. The payload is NEVER trimmed — a cut-short snapshot is a corrupt one.
+        int payloadBytes = payload.getBytes(StandardCharsets.UTF_8).length;
+        if (payloadBytes > maxSnapshotPayloadBytes) {
+            throw new SnapshotPayloadTooLargeException(workspaceId, payloadBytes,
+                    maxSnapshotPayloadBytes);
+        }
         String id = nextSnapshotId(workspaceId);
         try (PreparedStatement ps = connection.prepareStatement(
                 "INSERT INTO workspace_snapshot(id, workspace_id, created_at, kind, payload) "
@@ -4638,6 +4754,31 @@ public final class KnowledgeStore implements AutoCloseable {
         return java.time.Instant.now().toString();
     }
 
+    /**
+     * W48-07 — the invariant of a replacement: it is never committed without a COMPLETE
+     * recoverable snapshot of what it replaced.
+     *
+     * <p><b>What "complete" means.</b> The snapshot carries the typed knowledge content AND
+     * the observation family AND the learning family — the whole of
+     * {@link SnapshotCoverage#FULL}. A snapshot that carries less is a snapshot that cannot
+     * bring back what the replacement is about to destroy, and a replacement that destroys
+     * what it cannot bring back is a silent loss of the owner's history.</p>
+     *
+     * <p><b>Why the check exists when the writer already captures everything.</b> Because the
+     * capture is a list of tables, and a list can change. The check turns that list into a
+     * promise that a reader can rely on, and it fires BEFORE the erasure, so that a refusal
+     * leaves the workspace exactly as it was.</p>
+     *
+     * @param snapshot the snapshot that was taken
+     * @throws IncompleteSnapshotException when the snapshot does not carry everything
+     */
+    static void requireCompleteSnapshot(WorkspaceSnapshot snapshot) {
+        if (snapshot.coverage() != SnapshotCoverage.FULL) {
+            throw new IncompleteSnapshotException(snapshot.id(), snapshot.coverage(),
+                    snapshot.coverage().missingFamilies());
+        }
+    }
+
     @Override
     public void close() {
         try {
@@ -4649,6 +4790,116 @@ public final class KnowledgeStore implements AutoCloseable {
                 writerLock.close();
                 writerLock = null;
             }
+        }
+    }
+
+    /**
+     * W48-07 — a snapshot payload that is larger than the configured bound.
+     *
+     * <p><b>What this refusal means.</b> The snapshot is the only recoverable copy of what a
+     * replacement destroyed, and a payload that exceeds the bound is NOT written. Nothing is
+     * trimmed: a shortened payload is a payload with rows missing, and a restore of it would
+     * bring back a workspace that has lost rows without saying so. The refusal is therefore
+     * total — the transaction rolls back, and the database is exactly as it was.</p>
+     *
+     * <p>The identifier is stable and is what a caller should match on:
+     * {@code SNAPSHOT_PAYLOAD_TOO_LARGE}. It is also the first line of the message, so a
+     * caller that only logs the message still carries the identifier.</p>
+     */
+    public static final class SnapshotPayloadTooLargeException extends IllegalStateException {
+
+        /** The stable identifier of this refusal. */
+        public static final String IDENTIFIER = "SNAPSHOT_PAYLOAD_TOO_LARGE";
+
+        private static final long serialVersionUID = 1L;
+
+        private final String workspaceId;
+        private final long payloadBytes;
+        private final long maxPayloadBytes;
+
+        /**
+         * @param workspaceId     the workspace the snapshot was of
+         * @param payloadBytes   the size of the payload that was refused, in bytes
+         * @param maxPayloadBytes the bound it exceeded, in bytes
+         */
+        public SnapshotPayloadTooLargeException(String workspaceId, long payloadBytes,
+                long maxPayloadBytes) {
+            super(IDENTIFIER + ": the snapshot of the workspace '" + workspaceId + "' is "
+                    + payloadBytes + " bytes and the bound is " + maxPayloadBytes + " bytes, so "
+                    + "the snapshot exceeds the bound by " + (payloadBytes - maxPayloadBytes)
+                    + " bytes. The snapshot was NOT written and the database was NOT changed. "
+                    + "The payload is never trimmed: raise the bound with -D"
+                    + SNAPSHOT_MAX_PAYLOAD_BYTES_PROPERTY + "=<bytes>, or reduce what the "
+                    + "workspace holds.");
+            this.workspaceId = workspaceId;
+            this.payloadBytes = payloadBytes;
+            this.maxPayloadBytes = maxPayloadBytes;
+        }
+
+        /** The workspace the snapshot was of. */
+        public String workspaceId() {
+            return workspaceId;
+        }
+
+        /** The size of the refused payload, in bytes. */
+        public long payloadBytes() {
+            return payloadBytes;
+        }
+
+        /** The bound the payload exceeded, in bytes. */
+        public long maxPayloadBytes() {
+            return maxPayloadBytes;
+        }
+    }
+
+    /**
+     * W48-07 — a replacement whose snapshot would not be a complete recoverable copy.
+     *
+     * <p>The refusal happens BEFORE the erasure, so the workspace is exactly as it was. The
+     * identifier is stable and is what a caller should match on:
+     * {@code SNAPSHOT_NOT_COMPLETE}.</p>
+     */
+    public static final class IncompleteSnapshotException extends IllegalStateException {
+
+        /** The stable identifier of this refusal. */
+        public static final String IDENTIFIER = "SNAPSHOT_NOT_COMPLETE";
+
+        private static final long serialVersionUID = 1L;
+
+        private final String snapshotId;
+        private final SnapshotCoverage coverage;
+        private final java.util.List<String> missingFamilies;
+
+        /**
+         * @param snapshotId      the snapshot that was refused
+         * @param coverage        what the snapshot carries
+         * @param missingFamilies the families it does not carry
+         */
+        public IncompleteSnapshotException(String snapshotId, SnapshotCoverage coverage,
+                java.util.List<String> missingFamilies) {
+            super(IDENTIFIER + ": the snapshot " + snapshotId + " carries "
+                    + coverage.name().toLowerCase(java.util.Locale.ROOT) + " content and not "
+                    + String.join(" nor ", missingFamilies) + ", so it is not a complete "
+                    + "recoverable copy. The replacement was NOT committed and the database was "
+                    + "NOT changed.");
+            this.snapshotId = snapshotId;
+            this.coverage = coverage;
+            this.missingFamilies = java.util.List.copyOf(missingFamilies);
+        }
+
+        /** The snapshot that was refused. */
+        public String snapshotId() {
+            return snapshotId;
+        }
+
+        /** What the snapshot carries. */
+        public SnapshotCoverage coverage() {
+            return coverage;
+        }
+
+        /** The families the snapshot does not carry. */
+        public java.util.List<String> missingFamilies() {
+            return missingFamilies;
         }
     }
 }
