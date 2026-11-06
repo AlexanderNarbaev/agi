@@ -78,6 +78,35 @@ STATUS_LINE_WINDOW = 14
 
 # The directories that are scanned read-only and reported in their own group.
 ARCHIVE_PREFIX = "docs-v2/_raw/"
+
+# W48-05 — the RUNTIME paths.
+#
+# The repository documents where the runtime keeps its data ("data/mind/mind.sqlite",
+# "data/knowledge/", "formal/states/"), and those paths are NOT tracked in git: the
+# owner's live database, the runtime's scratch directories and the build outputs are
+# machine state, not documentation. The checker's rule — "the parent directory exists,
+# so the path must exist" — therefore decided, on the developer's machine, that a
+# document was correct, and on a clean runner, that the same document was broken.
+#
+# The gate was therefore GREEN locally and RED in CI over the same commit, and the
+# difference was a file that never belonged to the repository.
+#
+# A path under one of these prefixes is a RUNTIME ARTEFACT: it is reported (so it
+# stays discoverable), it is never a strict failure (its presence depends on the
+# machine, not on the repository), and the difference between "the document names
+# something that does not exist" and "the document names where the runtime keeps
+# its data" is no longer decided by whether the developer happens to have run the
+# system.
+RUNTIME_PREFIXES = (
+    "data/",
+    "bin/",
+    "formal/states/",
+    "matrix-core/bin/",
+    "matrix-core/data/",
+    "matrix-core/build/",
+    "target/",
+    "build/",
+)
 WAVES_PREFIX = "docs-v2/waves/"
 
 # The paths that are NOT the documentation of this repository and are never
@@ -194,6 +223,7 @@ MISSING_PATH = "MISSING_PATH"
 UNDEFINED_IDENTIFIER = "UNDEFINED_IDENTIFIER"
 DUPLICATE_IDENTIFIER = "DUPLICATE_IDENTIFIER"
 CURRENT_TO_HISTORICAL = "CURRENT_TO_HISTORICAL"
+RUNTIME_ARTEFACT = "RUNTIME_ARTEFACT"
 UNREACHABLE_FROM_INDEX = "UNREACHABLE_FROM_INDEX"
 STATUS_OUT_OF_VOCABULARY = "STATUS_OUT_OF_VOCABULARY"
 
@@ -677,8 +707,29 @@ class Checker:
                         "line": number,
                         "target": token,
                     })
+                if self.is_runtime_artefact(candidate):
+                    # W48-05: the runtime's own paths are machine state. They are
+                    # reported, so they stay discoverable, and they never fail the
+                    # gate: the same document is correct on a machine that has run
+                    # the system and on one that has not.
+                    self.add(path, number, RUNTIME_ARTEFACT, token,
+                             "a runtime artefact: its presence depends on the machine, "
+                             "not on the repository")
+                    continue
                 self.add(path, number, MISSING_PATH, token,
                          "the path does not exist")
+
+    def is_runtime_artefact(self, candidate: str) -> bool:
+        """Whether a path names a runtime artefact rather than a repository file.
+
+        A runtime artefact is a path the RUNTIME owns: the owner's live database,
+        the runtime's scratch directories, the build outputs and the formal gate's
+        state directories. They are not tracked in git, so their absence says
+        nothing about the repository — and their presence on one machine says
+        nothing about it either.
+        """
+        normalised = candidate.replace("\\", "/")
+        return normalised.startswith(RUNTIME_PREFIXES)
 
     def remember(self, bucket: str, token: str) -> None:
         if len(self.excluded_samples[bucket]) < 5:
