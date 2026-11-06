@@ -95,5 +95,46 @@
 # recorded here rather than waved through, so that the amount of the change
 # stays visible and the expiry stays real.
 
-.github/ | 958 | repo-owner | 2026-12-31
+# W48 (later in the same wave), the .github/ exception was raised from 958
+# to 1017 diff lines.
+#
+# Three changes, all of them repairs of a red mandatory check on the clean
+# runner, and all of them in the workflow's own steps rather than in its
+# triggers:
+#
+# 1. ci.yml, the "Quality gates" job — the job starts the real application
+#    for the security-boundary check, and the application connects to Redis
+#    at startup (matrix-core/src/main/resources/application.properties:14).
+#    A clean runner has no Redis, so the application failed with "Connection
+#    refused: localhost/127.0.0.1:6379" and the check reported a defect
+#    that did not exist. The job now declares the Redis service it needs.
+# 2. ci.yml, the "Security Scan" job — the job had no JDK setup step at all,
+#    so it inherited the runner's JAVA_HOME, which points at a path that does
+#    not exist on a Linux runner (".../Java_Temurin-Hotspot_jdk/25.0.1.6/
+#    Contents/Home" — a macOS-style path). Gradle refused to start with
+#    "ERROR: JAVA_HOME is set to an invalid directory" and the job failed
+#    before SpotBugs ever ran. The job now installs the same JDK 25 the
+#    other jobs use.
+# 3. ci.yml, the "Container Images" job — the api-gateway smoke test ran the
+#    image in its DEFAULT exposure mode and then probed the PUBLISHED host
+#    port. The default mode is LOCAL_ONLY, so the gateway bound 127.0.0.1
+#    inside the container and the published port reached nothing: the probe
+#    failed for 80 seconds while the application had started correctly. The
+#    step now mirrors the deployed configuration (deploy/docker-compose.yml:
+#    NETWORK_EXPOSED with a credential, where the credential is a throwaway
+#    value for the job and not a secret) and reports the container state as
+#    well as the log when it fails.
+#    The two matrix-core smoke tests in the SAME job had the same defect and
+#    never reached it, because the api-gateway step failed first: the
+#    application binds the loopback interface by default
+#    (application.properties:44 — quarkus.http.host=127.0.0.1), so their
+#    published ports reached nothing as well. They now set the host
+#    explicitly for the ephemeral container.
+#
+# What did NOT change: the triggers, the permissions, the secrets, the
+# concurrency settings and the cache configuration. The exception is
+# recorded here rather than waved through, so that the amount of the change
+# stays visible and the expiry stays real.
+
+.github/ | 1017 | repo-owner | 2026-12-31
 AGENTS.md | 63 | repo-owner | 2026-12-31

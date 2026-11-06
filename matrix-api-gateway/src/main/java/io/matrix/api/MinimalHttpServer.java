@@ -59,6 +59,15 @@ public final class MinimalHttpServer {
         new com.fasterxml.jackson.databind.ObjectMapper();
 
     private final int port;
+    /**
+     * W48-05: the address the listener actually bound.
+     *
+     * <p>The startup line used to print a hardcoded "0.0.0.0", which was
+     * false in the default LOCAL_ONLY mode: the listener binds the loopback
+     * address, so a published container port reaches nothing. A log that
+     * states the wrong interface turns a boundary fact into a mystery.
+     */
+    private final String bindAddress;
     private final HttpServer http;
     private final BrainCycle brain;
     /** TRUE-W14: persistent HDC store, kept as instance field so /v1/federate can dump/load. */
@@ -313,6 +322,7 @@ public final class MinimalHttpServer {
         // refuses to continue without a configured credential.
         NetworkExposure exposure = NetworkExposure.current();
         exposure.guard("the API gateway");
+        this.bindAddress = exposure.bindAddress();
         try {
             http = HttpServer.create(new InetSocketAddress(exposure.bindAddress(), port), 0);
         } catch (IOException e) {
@@ -413,10 +423,25 @@ public final class MinimalHttpServer {
 
     public void start() {
         http.start();
-        LOG.log(Level.INFO, "matrix-api-gateway listening on http://0.0.0.0:{0}", port);
+        // Concatenated, not MessageFormat-formatted: the formatter renders a
+        // number with a locale grouping separator, so the port appeared as
+        // "8,765" — a port that does not exist.
+        LOG.log(Level.INFO, "matrix-api-gateway listening on http://" + bindAddress + ":" + port);
     }
 
     public void stop() { http.stop(0); }
+
+    /**
+     * W48-05: the address this listener bound.
+     *
+     * <p>Package-private for the boundary test: the fact that the default
+     * exposure holds the loopback is what makes "publish the port" an
+     * invalid probe, so it is pinned against the server itself and not
+     * only against the configuration it was derived from.
+     *
+     * @return the bound interface address
+     */
+    String boundAddress() { return bindAddress; }
 
     /* ------------------------------------------------------------ */
     /* Route handlers                                               */

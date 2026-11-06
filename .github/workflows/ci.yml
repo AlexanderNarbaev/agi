@@ -93,6 +93,24 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     if: github.event_name != 'schedule'
+    # W48-05. The security-boundary check starts the real application, and
+    # the application connects to Redis at startup
+    # (matrix-core/src/main/resources/application.properties:14 —
+    #  redis.uri=${REDIS_URI:redis://localhost:6379}). On a clean runner
+    # there is no Redis, so the application failed with
+    # "Connection refused: localhost/127.0.0.1:6379" and the check reported
+    # a false defect. The dependency is declared here instead of being
+    # satisfied by whatever the developer happens to run locally.
+    services:
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
     steps:
       - uses: actions/checkout@v4
         with:
@@ -219,9 +237,25 @@ jobs:
           load: true
 
       - name: Smoke test api-gateway image
+        # W48-05. This step ran the image in its DEFAULT exposure mode and
+        # then probed the PUBLISHED host port. The default mode is
+        # LOCAL_ONLY (matrix-core/src/main/java/io/matrix/security/
+        # NetworkExposure.java), so the gateway bound 127.0.0.1 INSIDE the
+        # container; the published port reached nothing and the probe failed
+        # for 80 seconds even though the application had started correctly.
+        # The application's own log line claimed "0.0.0.0" because it was a
+        # hardcoded string, which is what made the failure look like a
+        # startup problem instead of a boundary problem.
+        #
+        # The step now mirrors the deployed configuration
+        # (deploy/docker-compose.yml): NETWORK_EXPOSED with a credential.
+        # The credential is a throwaway value for this job, not a secret.
         run: |
           set -euo pipefail
-          docker run -d --name gw-ci -p 8765:8765 matrix-api-gateway:ci
+          docker run -d --name gw-ci -p 8765:8765 \
+            -e MATRIX_SECURITY_MODE=NETWORK_EXPOSED \
+            -e MATRIX_SECURITY_TOKEN=ci-smoke-token-not-a-secret \
+            matrix-api-gateway:ci
           ok=0
           for i in $(seq 1 40); do
             if curl -fsS http://127.0.0.1:8765/health/ready >/dev/null 2>&1; then ok=1; break; fi
@@ -229,6 +263,9 @@ jobs:
           done
           if [ "$ok" != "1" ]; then
             echo "::error::api-gateway image did not become ready"
+            echo "--- container state ---"
+            docker inspect -f 'status={{.State.Status}} exit={{.State.ExitCode}}' gw-ci || true
+            echo "--- container logs ---"
             docker logs gw-ci || true
             exit 1
           fi
@@ -236,6 +273,12 @@ jobs:
           docker rm -f gw-ci
 
       - name: Smoke test matrix-core image
+        # W48-05. The application binds the loopback interface by default
+        # (matrix-core/src/main/resources/application.properties:44 —
+        #  quarkus.http.host=${QUARKUS_HTTP_HOST:127.0.0.1}), so the
+        # published port reached nothing and the probe could not succeed.
+        # The host is set explicitly for this ephemeral container, which is
+        # the only reason the port is published at all.
         run: |
           set -euo pipefail
           docker network create matrix-ci
@@ -244,6 +287,7 @@ jobs:
             postgres:17-alpine
           docker run -d --name redis-ci --network matrix-ci redis:7-alpine
           docker run -d --name core-ci --network matrix-ci -p 9091:9091 \
+            -e QUARKUS_HTTP_HOST=0.0.0.0 \
             -e REDIS_URI=redis://redis-ci:6379 \
             -e DB_HOST=pg-ci -e DB_PORT=5432 \
             matrix-core:ci
@@ -261,10 +305,12 @@ jobs:
           docker rm -f core-ci pg-ci redis-ci
 
       - name: Smoke test matrix-core minikube image
+        # W48-05. Same bound interface as the matrix-core image above.
         run: |
           set -euo pipefail
           docker run -d --name mini-ci -p 9092:9091 \
             --network matrix-ci \
+            -e QUARKUS_HTTP_HOST=0.0.0.0 \
             -e REDIS_URI=redis://redis-ci:6379 \
             -e DB_HOST=pg-ci -e DB_PORT=5432 \
             matrix-core:minikube-ci
@@ -290,6 +336,19 @@ jobs:
     if: github.event_name != 'schedule'  # weekly schedule runs research-suites only
     steps:
       - uses: actions/checkout@v4
+
+      - name: Set up JDK 25
+        # W48-05. This job had no JDK setup step at all, so it inherited the
+        # runner's JAVA_HOME, which on a clean runner points at a path that
+        # does not exist ("/opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/
+        # 25.0.1.6/Contents/Home" — a macOS-style path). Gradle refused to
+        # start with "ERROR: JAVA_HOME is set to an invalid directory", so
+        # the job failed before SpotBugs ever ran.
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '25'
+          cache: gradle
 
       - name: SpotBugs static analysis
         # RECON-W38.4: this step used to be `continue-on-error: true`, which
