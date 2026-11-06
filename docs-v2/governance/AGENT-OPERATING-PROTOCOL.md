@@ -476,6 +476,37 @@ decision is a sentence, and the sentence names what you searched.
   (`docs-v2/engineering/W46-CAPABILITY-RECONCILIATION.csv`). "Implemented" is not
   "integrated"; "integrated" is not "served"; "served" is not "operational".
 
+### 6.3 The Public Research Impact Check — OD-048, every wave
+
+**The rule.** Every wave's handoff carries a brief **Public Research Impact
+Check** (the owner's decision OD-048, 2026-11-06). Five questions:
+
+1. Did this wave produce a result worth explaining externally?
+2. Is there evidence strong enough to publish it?
+3. Did any public capability claim become stale?
+4. Is there an experiment that an external researcher could reproduce?
+5. Is there a concrete opportunity for independent testing or collaboration?
+
+**What it is for.** The project's public presence must not drift from its
+evidence, and its evidence must not be locked away where nobody outside can
+see it. The check is small: it normally takes a few minutes, and it must
+never block an unrelated engineering task.
+
+**What it is not.** It is not a marketing step. The measure of the workstream
+is independent validation, useful research criticism, reproducible
+improvements and concrete domain testing — not views, stars, downloads,
+grants, publicity or the number of contributors. A wave that produced
+nothing publishable answers "no" to question 1 and moves on.
+
+**Where the answers go.** The wave report's handoff section, and — when the
+answer is a real question for the owner — a record in
+`docs-v2/governance/OPEN-QUESTIONS.md`. The public materials are governed by
+the evidence policy: every public capability statement is traceable to
+`docs-v2/architecture/CAPABILITY-REGISTRY.yml`,
+`docs-v2/engineering/TEST-CATALOGUE.yml`, `docs-v2/governance/PROJECT-STATE.md`,
+a wave report, a research protocol, a model-check result, or a committed
+benchmark and its output.
+
 ---
 
 ## 7. The verification commands this repository actually has
