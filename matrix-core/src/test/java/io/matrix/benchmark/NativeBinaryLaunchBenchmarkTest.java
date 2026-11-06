@@ -1,6 +1,7 @@
 package io.matrix.benchmark;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Tag;
 import java.io.InputStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -12,6 +13,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * <p>Measures startup + execution time of the native binary
  * for repeated invocations.
  */
+@Tag("native-binary")
 class NativeBinaryLaunchBenchmarkTest {
 
     private static final Path BINARY = Paths.get("build/native/nativeCompile/matrix-core");

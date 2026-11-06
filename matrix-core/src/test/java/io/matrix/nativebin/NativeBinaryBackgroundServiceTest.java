@@ -3,6 +3,7 @@ package io.matrix.nativebin;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Tag;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
@@ -16,6 +17,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  *
  * <p>Runs native binary as background process, verifies CLI operations.
  */
+@Tag("native-binary")
 class NativeBinaryBackgroundServiceTest {
 
     private static final Path BINARY = Paths.get("build/native/nativeCompile/matrix-core");

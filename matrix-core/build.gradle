@@ -508,6 +508,64 @@ tasks.register('runNative', Exec) {
 
 // nativeTest is provided by GraalVM plugin as NativeRunTask
 
+// ─── W48: the native-binary test scope ───────────────────────────────────────
+//
+// The native-binary tests launch build/native/nativeCompile/matrix-core. On a
+// host without a native build they failed with
+// "Cannot run program build/native/nativeCompile/matrix-core" — 23 failures
+// that said nothing about the code under test and made the default JVM task
+// untrustworthy.
+//
+// The scope is now separated into three, and none of them is silently dropped:
+//
+//   1. the default `test` task   — ordinary JVM tests; the native-binary and
+//                                  native-build-configuration scopes are excluded;
+//   2. `nativeBinaryTest`        — the tests that need the compiled executable;
+//                                  it REFUSES to run with a clear message when
+//                                  the executable is absent;
+//   3. `nativeBuildConfigTest`   — the tests that validate the native BUILD
+//                                  configuration (the Dockerfile) and need no
+//                                  executable, so they run on any host.
+//
+// The exclusion is reported in docs-v2/engineering/TEST-CATALOGUE.yml and in
+// docs-v2/engineering/W48-TEST-RECONCILIATION.md, and the native capability
+// stays BLOCKED in CAPABILITY-REGISTRY.yml until an executable exists.
+tasks.named('test') {
+    useJUnitPlatform {
+        excludeTags 'native-binary', 'native-build-config'
+    }
+}
+
+tasks.register('nativeBinaryTest', Test) {
+    group = 'native'
+    description = 'Run the native-binary test scope (requires a compiled native executable)'
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath
+    useJUnitPlatform {
+        includeTags 'native-binary'
+    }
+    def nativeBinary = file("${project.layout.buildDirectory.get()}/native/nativeCompile/matrix-core")
+    doFirst {
+        if (!nativeBinary.exists()) {
+            throw new GradleException(
+                "The native executable ${nativeBinary} does not exist, so the native-binary " +
+                "test scope cannot run. Build it with ./gradlew :matrix-core:buildNative " +
+                "(GraalVM 25+ or Mandrel 24.x) and run this task again. This scope is " +
+                "BLOCKED - it is not a pass, and the default JVM task does not cover it.")
+        }
+    }
+}
+
+tasks.register('nativeBuildConfigTest', Test) {
+    group = 'native'
+    description = 'Run the native build-configuration test scope (no executable required)'
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath
+    useJUnitPlatform {
+        includeTags 'native-build-config'
+    }
+}
+
 tasks.register('nativeReflectionTest', Test) {
     group = 'native'
     description = 'Run native image reflection tests (JVM mode)'

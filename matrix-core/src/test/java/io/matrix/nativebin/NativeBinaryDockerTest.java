@@ -1,6 +1,7 @@
 package io.matrix.nativebin;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Tag;
 import static org.assertj.core.api.Assertions.assertThat;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -14,12 +15,14 @@ import java.nio.file.Paths;
 class NativeBinaryDockerTest {
 
     @Test
+    @Tag("native-build-config")
     void dockerfileExists() {
         Path dockerfile = Paths.get("Dockerfile.native-slim");
         assertThat(dockerfile.toFile().exists()).isTrue();
     }
 
     @Test
+    @Tag("native-build-config")
     void dockerfileReferencesBinary() throws Exception {
         String content = new String(java.nio.file.Files.readAllBytes(
             Paths.get("Dockerfile.native-slim")));
@@ -28,6 +31,7 @@ class NativeBinaryDockerTest {
     }
 
     @Test
+    @Tag("native-binary")
     void nativeBinaryIsBuildable() {
         // Verify the source binary exists (the Docker build depends on it)
         Path binary = Paths.get("build/native/nativeCompile/matrix-core");
