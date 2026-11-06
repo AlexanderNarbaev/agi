@@ -42,7 +42,21 @@ TOKEN="w43-boundary-check-token"
 readonly LOOPBACK_ADDRESS='127.0.0.1'
 
 # How long the check waits for the application to reach its startup event.
-readonly STARTUP_WAIT_SECONDS=60
+#
+# W48-05. This was 60 seconds, and the check FAILED on the clean GitHub
+# runner for that reason alone: the application did not open its port within
+# the window, and the script printed no log, so the reason could not be read
+# from the CI run. A cold runner extracts the ONNX runtime's native library
+# (about 583 MB) into a fresh temporary directory while the JVM starts, with
+# no warm page cache and no second core to spare. The wait is a bound on the
+# CHECK, not a claim about the application's startup time; the boundary
+# assertions are what the gate is for, and they are unchanged.
+readonly STARTUP_WAIT_SECONDS=180
+
+# How many lines of the application's own log the check prints when the
+# application does not come up. Without this the CI log says only "the
+# service did not start" and the reason is lost.
+readonly LOG_TAIL_LINES=25
 
 # Where the application's temporary files go.
 #
@@ -121,6 +135,9 @@ cleanup() {
 trap cleanup EXIT
 
 # Waits for the service to answer, or gives up.
+#
+# W48-05: the wait also watches the PROCESS. A JVM that died during startup
+# cannot answer, and waiting the whole window for it says nothing.
 wait_up() {
   local port=$1
   for _ in $(seq 1 "$STARTUP_WAIT_SECONDS"); do
@@ -128,8 +145,27 @@ wait_up() {
     if curl -s -o /dev/null -m 2 "http://127.0.0.1:$port/q/health" 2>/dev/null; then
       return 0
     fi
+    if [ -n "$APP_PID" ] && ! kill -0 "$APP_PID" 2>/dev/null; then
+      echo "  the application process exited before it opened the port"
+      return 1
+    fi
   done
   return 1
+}
+
+# Prints the tail of the application's own log.
+#
+# W48-05: the CI run that failed on the startup window printed only "the
+# service did not start"; the reason was in the log, on the runner, and
+# nowhere else. The gate must be readable by whoever has to fix it.
+dump_log() {
+  local file=$1
+  if [ -f "$file" ]; then
+    echo "  the last lines of $file:"
+    tail -n "$LOG_TAIL_LINES" "$file" | sed 's/^/    /'
+  else
+    echo "  there is no log at $file"
+  fi
 }
 
 # The HTTP status of a request.
@@ -201,7 +237,8 @@ if wait_up "$PORT_LOCAL"; then
     fail "an anonymous write returned $CODE in local-only mode"
   fi
 else
-  fail "the service did not start in local-only mode (see /tmp/w43-security-local.log)"
+  fail "the service did not start in local-only mode"
+  dump_log /tmp/w43-security-local.log
 fi
 cleanup
 sleep 2
@@ -233,6 +270,7 @@ else
     pass "the process refused to start, and said why"
   else
     fail "the process stopped, but not with the guard's message"
+    dump_log /tmp/w43-security-guard.log
   fi
 fi
 sleep 2
@@ -285,7 +323,8 @@ if wait_up "$PORT_EXPOSED"; then
     fail "an anonymous tool invocation returned $CODE, expected $STATUS_UNAUTHORIZED"
   fi
 else
-  fail "the service did not start in network-exposed mode (see /tmp/w43-security-exposed.log)"
+  fail "the service did not start in network-exposed mode"
+  dump_log /tmp/w43-security-exposed.log
 fi
 cleanup
 

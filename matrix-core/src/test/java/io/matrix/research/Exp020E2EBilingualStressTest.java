@@ -3,9 +3,12 @@ package io.matrix.research;
 import io.matrix.api.QaCorpusIndex;
 import io.matrix.ethics.EthicalFilter;
 import io.matrix.ethics.EthicalVerdict;
+import org.junit.jupiter.api.Assumptions;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -40,6 +43,22 @@ class Exp020E2EBilingualStressTest {
     private EthicalFilter ethicalFilter;
     private List<String[]> sample;
     private final Pattern CYRILLIC = Pattern.compile("[Ѐ-ӿ]");
+
+    /**
+     * W48-05 — the same rule as {@link Exp016ProductionCorpusTest}: the corpus
+     * is the owner's data and {@code models/} is git-ignored, so on a clean
+     * runner this class is SKIPPED with a recorded reason. It is neither a
+     * failure (the code under test is not broken) nor a pass (the property
+     * was not checked).
+     */
+    @BeforeAll
+    static void requireTheProductionCorpus() {
+        java.nio.file.Path corpus = Exp016ProductionCorpusTest.corpusPath();
+        Assumptions.assumeTrue(Files.exists(corpus),
+                "the production corpus is not in this checkout (" + corpus + "): "
+                        + "models/ is git-ignored, so the bilingual stress property is "
+                        + "NOT VERIFIED here — it is neither a failure nor a pass");
+    }
 
     @BeforeEach
     void setUp() throws Exception {

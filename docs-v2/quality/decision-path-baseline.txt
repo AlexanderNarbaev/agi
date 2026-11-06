@@ -33,6 +33,16 @@
 # decision path. It is listed separately below rather than swept in with
 # the timestamps.
 #
+# WHAT W48 REMOVED FROM HERE
+# W48 replaced the knowledge core's wall-clock decision paths: seven sites
+# now take an injected Clock, and fourteen sites that only record a
+# timestamp carry an explicit @io.matrix.auditor.ArticleIPermitted("reason")
+# exemption. The nine knowledge-core groups below therefore STOPPED HOLDING
+# and the gate - which fails when a group here no longer holds - went red.
+# They are removed because the findings they accepted are GONE, not because
+# the gate was relaxed. The brain-runtime groups stay: those findings still
+# hold.
+#
 # owner: repo-owner
 expires=2026-12-31
 
@@ -47,12 +57,3 @@ matrix-brain-runtime/src/main/java:io/matrix/brain/runtime/RealSleepScheduler.ja
 matrix-brain-runtime/src/main/java:io/matrix/brain/runtime/SparseHdcStore.java:wall-clock = 1 | the vector's timestamp; it decides nothing
 matrix-brain-runtime/src/main/java:io/matrix/brain/runtime/TrueDistillationFactory.java:io.matrix.distill.OnnxActivationTeacher = 1 | an ONNX activation TEACHER: it is a training-time component, not a runtime decision
 matrix-brain-runtime/src/main/java:io/matrix/brain/runtime/TrueDistillationFactory.java:wall-clock = 2 | the teacher's timestamp; it decides nothing
-matrix-core/src/main/java:io/matrix/knowledge/GoalManager.java:wall-clock = 1 | the goal's timestamp; it decides nothing
-matrix-core/src/main/java:io/matrix/knowledge/KnowledgeImporter.java:wall-clock = 1 | the import timestamp; it decides nothing
-matrix-core/src/main/java:io/matrix/knowledge/KnowledgeRefiner.java:wall-clock = 1 | the timestamp of the refinement; it decides nothing
-matrix-core/src/main/java:io/matrix/knowledge/KnowledgeStore.java:wall-clock = 8 | the row's created/updated timestamp; it decides nothing
-matrix-core/src/main/java:io/matrix/knowledge/KnowledgeWorkbench.java:wall-clock = 4 | the timestamp of the recorded event; it decides nothing
-matrix-core/src/main/java:io/matrix/knowledge/LearnedRuleRegistrar.java:wall-clock = 3 | the rule's registration timestamp; it decides nothing
-matrix-core/src/main/java:io/matrix/knowledge/LearningWorkbenchResource.java:wall-clock = 1 | the timestamp of the consolidation; it decides nothing
-matrix-core/src/main/java:io/matrix/knowledge/acquisition/ClaimValidator.java:wall-clock = 1 | the claim's creation timestamp; it decides nothing
-matrix-core/src/main/java:io/matrix/knowledge/acquisition/DocumentImporter.java:wall-clock = 1 | the source's import timestamp; it decides nothing
