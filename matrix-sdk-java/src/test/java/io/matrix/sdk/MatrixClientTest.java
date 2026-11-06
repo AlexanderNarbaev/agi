@@ -7,6 +7,24 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class MatrixClientTest {
 
+    /**
+     * W48-03 — the facade declares a version, and the version is the module's.
+     *
+     * <p>The branch-validation gate requires a real version contract in every
+     * T-01 module's public facade. This is that contract, and the test is what
+     * makes it more than a string: it checks that the constant exists, that it
+     * is not empty, and that it carries the module's own version prefix rather
+     * than a placeholder.
+     */
+    @Test
+    void theFacadeDeclaresItsVersion() {
+        assertNotNull(MatrixClient.VERSION, "the public facade must declare a version");
+        assertFalse(MatrixClient.VERSION.isBlank(), "the version must not be blank");
+        assertTrue(MatrixClient.VERSION.startsWith("0.1.0-T"),
+                "the version must be the module's own, not a placeholder: " + MatrixClient.VERSION);
+        assertEquals(MatrixClient.VERSION, MatrixClient.version());
+    }
+
     @Test
     void testBuilderRequiresApiKey() {
         assertThrows(IllegalStateException.class,

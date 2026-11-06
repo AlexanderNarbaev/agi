@@ -32,6 +32,25 @@ import java.util.concurrent.CompletableFuture;
  */
 public final class MatrixClient implements AutoCloseable {
 
+    /**
+     * The version of this SDK.
+     *
+     * <p>W48-03: the branch-validation gate requires every T-01 module's public
+     * facade to declare a version, and the SDK's facade — this class — declared
+     * none. The other four modules declare theirs in a {@code *Module} class
+     * ({@code ApiModule}, {@code AuditModule}, {@code BillingModule},
+     * {@code ObservabilityModule}); the SDK has no such class, and its facade is
+     * this one. A client library that cannot say which version it is cannot be
+     * pinned by the application that uses it, so the constant is a real part of
+     * the public API and it is the same version the module's build declares.
+     */
+    public static final String VERSION = "0.1.0-T08";
+
+    /** The version of this SDK, as the module's build declares it. */
+    public static String version() {
+        return VERSION;
+    }
+
     private static final String DEFAULT_BASE_URL = "https://api.matrix.ai";
     private static final Duration DEFAULT_TIMEOUT = Duration.ofSeconds(30);
 

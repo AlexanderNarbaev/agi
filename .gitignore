@@ -5,6 +5,10 @@ build/
 # JAR files except gradle wrapper
 *.jar
 !/gradle/wrapper/gradle-wrapper.jar
+# W48-04: the formal tool is tracked, so that the local gate and the CI run
+# against the SAME verified bytes. The upstream release asset was replaced in
+# place on 2026-11-06, so a download is not an immutable source any more.
+!/tools/tla2tools.jar
 *.log
 *.tmp
 *.swp
