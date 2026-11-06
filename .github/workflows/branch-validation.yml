@@ -28,8 +28,22 @@ jobs:
           BRANCH="${{ steps.branch.outputs.branch }}"
           echo "Validating branch: $BRANCH"
 
+          # The two INTEGRATION branches are not feature branches. The
+          # convention below is about the name of a WORK branch; a pull
+          # request that carries the integration branch itself (develop ->
+          # main, the release path the W49 directive asks for) is a different
+          # kind of pull request and must not be rejected for its name.
+          if [[ "$BRANCH" == "develop" || "$BRANCH" == "main" ]]; then
+            echo "✅ Integration branch '$BRANCH' — the naming convention applies to work branches"
           # Allowed prefixes
-          if [[ "$BRANCH" =~ ^(feature/fix/feat/chore/docs/test|refactor/perf|security)/.+$ ]]; then
+          # The alternation used to be written as
+          # ^(feature/fix/feat/chore/docs/test|refactor/perf|security)/.+$,
+          # which matches only the literal string "feature/fix/feat/chore/
+          # docs/test" — the prefixes in the error message below ("fix/*",
+          # "chore/*", "docs/*", "test/*", "perf/*") were never accepted. The
+          # check contradicted its own contract. The alternation belongs to
+          # the PREFIX, not to the whole path.
+          elif [[ "$BRANCH" =~ ^(feature|fix|feat|chore|docs|test|refactor|perf|security)/.+$ ]]; then
             echo "✅ Branch name follows convention"
           elif [[ "$BRANCH" =~ ^backup-.+-[0-9]{8}-[0-9]{6}$ ]]; then
             echo "✅ Backup branch allowed"

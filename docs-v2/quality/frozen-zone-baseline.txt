@@ -96,7 +96,7 @@
 # stays visible and the expiry stays real.
 
 # W48 (later in the same wave), the .github/ exception was raised from 958
-# to 1056 diff lines, and W49 raised it to 1619.
+# to 1056 diff lines, and W49 raised it further.
 #
 # Three changes, all of them repairs of a red mandatory check on the clean
 # runner, and all of them in the workflow's own steps rather than in its
@@ -138,6 +138,24 @@
 #    vulnerable-dependency check — were SKIPPED. The step now captures the
 #    pipeline's status and lets its branches decide.
 #
+# 8. W49 (OD-048), the two gates that a RELEASE pull request must pass.
+#    The pull request that carries the current work to the public branch
+#    exposed two defects in the workflows' own checks:
+#    - branch-validation.yml: the branch-name convention was written as
+#      ^(feature/fix/feat/chore/docs/test|refactor/perf|security)/.+$,
+#      which matches only the literal string "feature/fix/feat/chore/docs/
+#      test" — the prefixes in its own error message were never accepted.
+#      And it rejected the two INTEGRATION branches by name, so the release
+#      pull request the W49 addendum asks for could never pass. The
+#      alternation now belongs to the prefix, and develop/main are exempt.
+#    - docs-validation.yml: the constitution-parity check looked for the
+#      literal string "Article I"…, which the constitution never used (its
+#      articles are headed "I. Stratified Stochasticity" …), so the check
+#      could not tell the constitution's own eight articles from eight
+#      invented ones — which is exactly the defect the W49 public audit
+#      found in the page. The check now compares the pages with the
+#      constitution's own article list.
+#
 # 7. W49 (OD-048), the contributor-facing templates and the Pages workflow.
 #    The owner's W49 addendum names .github/ISSUE_TEMPLATE/ and the
 #    PULL_REQUEST_TEMPLATE explicitly, and requires the Pages deployment
@@ -166,5 +184,5 @@
 # recorded here rather than waved through, so that the amount of the change
 # stays visible and the expiry stays real.
 
-.github/ | 1619 | repo-owner | 2026-12-31
+.github/ | 1701 | repo-owner | 2026-12-31
 AGENTS.md | 63 | repo-owner | 2026-12-31
