@@ -1,7 +1,7 @@
-# ADR-W48 — An autonomy impulse consumer (PROPOSED)
+# ADR-W48-AUTONOMY-IMPULSE-CONSUMER — An autonomy impulse consumer
 
-**Wave:** W48 · **Task:** W48-11 · **Status:** **PROPOSED — NOT IMPLEMENTED, NOT APPROVED**
-**Date:** 2026-11-06 · **Owner decision:** pending (see §9)
+**Wave:** W48 · **Task:** W48-11 · **Status:** **APPROVED for the next wave — NOT IMPLEMENTED**
+**Date:** 2026-11-06 · **Owner decision:** **OD-045** (option A), answered 2026-11-06 (see §10)
 
 ---
 
@@ -163,9 +163,15 @@ proposal-creating consumer that records internal proposals and does nothing else
 
 | the option | the meaning |
 |---|---|
-| **OD-045 · approve the proposal-creating consumer** | the next wave implements §5 exactly, with the tests of §9 |
-| **OD-046 · keep the scope at "record only"** | the consumer creates and records proposals; no proposal is ever accepted for review — the terminal outcomes of §5 are reduced to `EXPIRED`, `DUPLICATE` and the two refusals |
-| **OD-047 · do not build a consumer** | the scheduler stays the whole autonomy story; the capability is then described as "decides, does not act", and the gap is recorded in the registry rather than closed |
+| **option A · approve the proposal-creating consumer** | the next wave implements §5 exactly, with the tests of §9 |
+| **option B · keep the scope at "record only"** | the consumer creates and records proposals; no proposal is ever accepted for review — the terminal outcomes of §5 are reduced to `EXPIRED`, `DUPLICATE` and the two refusals |
+| **option C · do not build a consumer** | the scheduler stays the whole autonomy story; the capability is then described as "decides, does not act", and the gap is recorded in the registry rather than closed |
+
+The question is **Q-W48-01** of `docs-v2/engineering/W48-QUESTIONNAIRE.md`. The
+`OD-` id is assigned to the answer when it is recorded in
+`docs-v2/governance/DECISION-REGISTER.md` — this ADR does not reserve one, because a
+decision id that names an undecided question is a claim of a decision that was never
+taken.
 
 **Until the owner answers, the status of every autonomy capability in the registry stays
 as it is today: the scheduler accepts impulses, nothing consumes them.**

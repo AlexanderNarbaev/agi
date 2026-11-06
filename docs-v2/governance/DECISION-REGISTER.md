@@ -82,6 +82,9 @@ decisions, then the proposals. Within a kind the newest wave comes first.
 | OD-044 | The curiosity drive's envelope is raised to the COST (100), so that the drive can be paid for; the refusal path stays for the drives that should be refused | owner | 2026-11-05 | ACCEPTED | OD-038 (the fix it completes) | `matrix-core/src/main/java/io/matrix/autonomy/AutonomyEngine.java` | a serving-path change: the gateway's curiosity cycle starts SPENDING budget, and that is observable in the budgeter | the answer to Q-W47-06 of the end-of-wave questionnaire of 2026-11-05; the conjugate budget's number is the owner's to set |
 | OD-038 | The null ImpulseScheduler in the gateway's autonomy loop is fixed in W47, not deferred | owner | 2026-11-05 | ACCEPTED | — | `docs-v2/specifications/SPEC-015-autonomy-impulses.md` (the invariant the fix satisfies) | a serving-path change in chain B | the owner's answer of 2026-11-05 to the W47 questionnaire; the defect is at `matrix-brain-runtime/.../AutonomyLoop.java:38` and `matrix-core/src/main/java/io/matrix/autonomy/AutonomyEngine.java:75` |
 | OD-034 | The four skill packages whose declared name differs from their directory are FIXED: the names are corrected | owner | 2026-11-05 | ACCEPTED | — | `docs-v2/governance/SKILL-INVENTORY.md` §1 and §3 | the owner's library and the plugin bundle — NOT changed in W46 | the owner's answer of 2026-11-05; the implementation is TASK-W46-22 |
+| OD-045 | An autonomy impulse CONSUMER is built: it turns an accepted impulse into a bounded internal proposal, records it inside Chain B, and never produces an external effect | owner | 2026-11-06 | ACCEPTED | — | `docs-v2/engineering/ADR-W48-AUTONOMY-IMPULSE-CONSUMER.md` §5; the question in `docs-v2/engineering/W48-QUESTIONNAIRE.md` (Q-W48-01) | a new component in Chain B — NOT implemented in W48; the implementation is the first task of the next wave | the owner's answer of 2026-11-06 to the W48 questionnaire: option A — the proposal-creating consumer with stable ids, provenance, an accounted budget, a bounded queue with explicit backpressure, expiry, deduplication, a fresh FROZEN check at execution time and an observable terminal outcome |
+| OD-046 | The native-image build gets a MEASURED resource budget in the next wave — the heap and the runner size it actually needs are recorded — and the native capability stays BLOCKED until a build succeeds | owner | 2026-11-06 | ACCEPTED | — | the `W48-NATIVE-IMAGE` row of `docs-v2/architecture/CAPABILITY-REGISTRY.yml`; the question in `docs-v2/engineering/W48-QUESTIONNAIRE.md` (Q-W48-02) | a resource decision for the next wave — nothing is built in W48; the nine recorded failures of `.github/workflows/native.yml` are an OOM in the build, after the toolchain installed successfully | the owner's answer of 2026-11-06 to the W48 questionnaire; the W48 directive forbids creating a native build requirement without measuring its resource cost |
+| OD-047 | The GPU is an OPTIONAL ACCELERATOR, not part of the default serving path: the measurement is kept, the silent CPU fallback stays visible in the registry, and no deployment is obliged to provide the CUDA libraries | owner | 2026-11-06 | ACCEPTED | — | the `W46-GPU` row of `docs-v2/architecture/CAPABILITY-REGISTRY.yml`; the measurement in `docs-v2/engineering/W48-GPU-BENCHMARK.md`; the question in `docs-v2/engineering/W48-QUESTIONNAIRE.md` (Q-W48-03) | a description, not a behaviour — the serving path does not change; the 12.6× digit stays HISTORICAL and bounded by the 12.06×–12.69× measurement | the owner's answer of 2026-11-06 to the W48 questionnaire; the W46 registry row had carried "the owner must also decide whether the GPU is in scope for MATRIX at all" since W46 |
 | ADR-2026-09-12-001 | Adopt an HDC × BitLinear × Boolean hybrid brain as an architectural primitive, orthogonal to MPDP | normative | 2026-09-12 | ACCEPTED | — | `docs-v2/architecture/ADR-2026-09-12-001-hdc-bitlinear-hybrid-brain.md` | a contract | the document names no decider; it is a standing architectural rule, referenced by `docs-v2/engineering/STANDARDS-MATRIX.md` as Accepted |
 | ADR-2026-10-26-002 | `TrueMindCycle` is the one cognitive conductor — of the brain runtime | owner | 2026-10-26 | ACCEPTED | ADR-W45.2-01 (for the epistemic application only) | `docs-v2/architecture/ADR-2026-10-26-002-single-cognitive-conductor.md` | a contract | decided by the repository owner via MASTER ENGINEERING DIRECTIVE v2, §13, for `matrix-brain-runtime` and `matrix-api-gateway`. The header carries a scope annotation of 2026-11-04: the decision holds for the brain runtime, is **not** the conductor of the epistemic application, and the body was not rewritten |
 | ADR-2026-10-30-003 | The HashChain trust model: an injected clock, sequence validation, and tamper-evidence rather than tamper-proofness | normative | 2026-10-30 | ACCEPTED | — | `docs-v2/architecture/ADR-2026-10-30-003-hashchain-trust-model.md` | a contract | the document names no decider; it records the RECON-W39 findings on `io.matrix.audit.HashChain` and the rules that follow |
@@ -453,6 +456,36 @@ create are in `docs-v2/governance/ROADMAP.md` §4.6.
 - **the document that holds it**: `matrix-core/src/main/java/io/matrix/autonomy/AutonomyEngine.java`
 - **the effect on the runtime**: a serving-path change: the gateway's curiosity cycle starts SPENDING budget, and that is observable in the budgeter
 - **the evidence or the scope of the approval**: the answer to Q-W47-06 of the end-of-wave questionnaire of 2026-11-05; the conjugate budget's number is the owner's to set
+
+### OD-045 — An autonomy impulse CONSUMER is built: it turns an accepted impulse into a bounded internal proposal, records it inside Chain B, and never produces an external effect
+
+- **kind**: owner
+- **the date**: 2026-11-06
+- **the status**: ACCEPTED
+- **the successor**: —
+- **the document that holds it**: `docs-v2/engineering/ADR-W48-AUTONOMY-IMPULSE-CONSUMER.md` §5 (the scope), §6 (the safety invariants), §9 (the tests)
+- **the effect on the runtime**: a new component in Chain B — **NOT implemented in W48**; the implementation is the first task of the next wave
+- **the evidence or the scope of the approval**: the answer to Q-W48-01 of the end-of-wave questionnaire of 2026-11-06: option A. The scope is exactly the ADR's: stable proposal ids derived from the impulse, the cycle and a counter; the provenance; the budget accounted once, from the `FireRecord`; a bounded queue that refuses with an explicit backpressure; expiry and deduplication; a fresh FROZEN check at execution time; and an observable terminal outcome for every proposal. **No external effect, no bridge to Chain A, no executor.**
+
+### OD-046 — The native-image build gets a MEASURED resource budget in the next wave, and the native capability stays BLOCKED until a build succeeds
+
+- **kind**: owner
+- **the date**: 2026-11-06
+- **the status**: ACCEPTED
+- **the successor**: —
+- **the document that holds it**: the `W48-NATIVE-IMAGE` row of `docs-v2/architecture/CAPABILITY-REGISTRY.yml`; the scope in `docs-v2/engineering/W48-QUESTIONNAIRE.md` (Q-W48-02)
+- **the effect on the runtime**: a resource decision for the next wave — **nothing is built in W48**; the capability stays BLOCKED
+- **the evidence or the scope of the approval**: the answer to Q-W48-02 of the end-of-wave questionnaire of 2026-11-06. The recorded failures of `.github/workflows/native.yml` are an `OutOfMemoryError: Java heap space` in the build, after the toolchain installed successfully — the W48 directive forbids creating a native build requirement without measuring its resource cost.
+
+### OD-047 — The GPU is an OPTIONAL ACCELERATOR, not part of the default serving path
+
+- **kind**: owner
+- **the date**: 2026-11-06
+- **the status**: ACCEPTED
+- **the successor**: —
+- **the document that holds it**: the `W46-GPU` row of `docs-v2/architecture/CAPABILITY-REGISTRY.yml`; the measurement in `docs-v2/engineering/W48-GPU-BENCHMARK.md`
+- **the effect on the runtime**: a description, not a behaviour — the serving path does not change, and no deployment is obliged to provide the CUDA libraries; the silent CPU fallback stays visible in the registry rather than in a catch block
+- **the evidence or the scope of the approval**: the answer to Q-W48-03 of the end-of-wave questionnaire of 2026-11-06. The committed benchmark measures 12.06× / 11.68× / 11.47× over three runs on the serving path and positively verifies the CUDA execution provider; the historical 12.6× digit stays HISTORICAL and bounded by that measurement.
 
 ## 4. The duplicate-identifier problem
 
