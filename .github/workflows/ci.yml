@@ -351,6 +351,11 @@ jobs:
     if: github.event_name != 'schedule'  # weekly schedule runs research-suites only
     steps:
       - uses: actions/checkout@v4
+        with:
+          # W48-05. The secret scan below needs the history: the action
+          # resolves the range of commits the push carried inside the
+          # checkout, and a shallow clone does not contain it.
+          fetch-depth: 0
 
       - name: Set up JDK 25
         # W48-05. This job had no JDK setup step at all, so it inherited the
@@ -408,11 +413,20 @@ jobs:
         # high-signal secret patterns (AWS keys, private keys, GitHub
         # tokens, Slack tokens, Google keys, live Stripe keys) in any
         # tracked file.
+        #
+        # W48-05: the step ALSO never scanned anything. It passed
+        # `base: ${{ github.ref }}` and `head: HEAD`, and on a push those
+        # are the SAME commit, so the action refused with "BASE and HEAD
+        # commits are the same. TruffleHog won't scan anything" and the
+        # step failed — and the check after it (the vulnerable-dependency
+        # check) was skipped. The action's DEFAULT behaviour scans exactly
+        # the commits the push carried, which is the scope this check
+        # wants, and the action's own documentation recommends it over
+        # passing base and head by hand.
         uses: trufflesecurity/trufflehog@main
         with:
           path: ./
-          base: ${{ github.ref }}
-          head: HEAD
+          extra_args: --results=verified,unverified,unknown
 
       - name: OWASP dependency check
         run: |

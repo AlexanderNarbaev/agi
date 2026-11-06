@@ -2,14 +2,14 @@
 
 **Status:** `CANONICAL` · **This document is a SNAPSHOT, not a history.** It describes the
 project at one commit and is replaced, not appended to, when the state moves.
-**Snapshot of:** `0eac36c342f5b716bb7398cf77b0c24eb178099f` · **Date:** 2026-11-06
+**Snapshot of:** `0e647a45a8ca18e16fd413ad1ebb7e04ab245027` · **Date:** 2026-11-06
 **Validation:** `scripts/validate-project-state.py --strict` — it checks that the commit below
 is the repository's HEAD, that the wave and the baseline below are the current ones, and that
 the canonical documents it names exist. It reports a lag of one commit as an OBSERVATION, not
 as a defect: the snapshot names the commit it was written at, and the commit that follows it
 is the one that carries the snapshot itself.
 **The wave that produced this snapshot is still running.** The commit named above is the one
-observed at 2026-11-06T10:32:16+03:00 (`git rev-parse HEAD`); `origin/develop` pointed at
+observed at 2026-11-06T14:05:00+03:00 (`git rev-parse HEAD`); `origin/develop` pointed at
 the same commit at that moment. **The wave moves HEAD while it runs**, so a reader must
 expect the repository to be ahead of the commit written here — and must not read the lag as
 a defect.
@@ -37,12 +37,12 @@ and "served" is the single most important fact about this repository, and it is 
 | | |
 |---|---|
 | the branch | `develop` |
-| the commit | `0eac36c342f5b716bb7398cf77b0c24eb178099f` — the W48 commit observed at 2026-11-06T10:32:16+03:00; this snapshot is carried by the commit that follows it |
+| the commit | `0e647a45a8ca18e16fd413ad1ebb7e04ab245027` — the W48 commit observed at 2026-11-06T14:05:00+03:00; this snapshot is carried by the commit that follows it |
 | the remote | `origin/develop` — **the same commit** at the moment of writing (the local and the remote do not diverge). The wave is still running, so the remote moves with it |
 | the release version | **none.** The tags `v1.0.0` and `v16.0.0-mind` exist, but no release process is defined and the `v16.0.0-mind` tag predates three waves of work |
 | the latest completed wave | **W47** — the implementation of the owner's decisions of 2026-11-05 (OD-025…OD-044). Its sequence is **thirteen changesets after** the starting W46 commit `84955ec9`, and **fourteen entries with it**, through `eca23bfd`; before it, **W46** — the consolidation (`233af984`), and **W45.2** — the owner's four architecture decisions (`a6ded233`) |
 | the previous waves | W45.1 (`509d23ba`) — the crash consistency; W45.0 (`eae6003f`) — the cognitive kernel integrity; RECON-W44.0 (`ae6c017b`) — the bytecode archaeology |
-| the active wave | **W48 — its commits and its own report are in the history, and the owner has answered the three questions of 2026-11-06 (OD-045, OD-046, OD-047). The wave's report is `docs-v2/engineering/W48-STATUS.md`.** **What is still open, and named:** the **23 native-binary test failures** — `BLOCKED`, the GraalVM toolchain is absent on this host, and OD-046 puts the resource budget in the next wave (`docs-v2/engineering/W48-TEST-RECONCILIATION.md`); the **impulse consumer** — **approved (OD-045) and NOT implemented**: the ADR is the scope, the implementation is the next wave's first task (`docs-v2/engineering/ADR-W48-AUTONOMY-IMPULSE-CONSUMER.md`); the **CI observation** — the fixes are committed, but no green `ci` run has been observed after them; the **two formal-spec mutants** that SURVIVED (`Consensus-evaluate-without-quorum`, `KnowledgeAxes-conflict-forgets-what-it-recorded`). **The next wave is W49, opened by OD-045.** **No W48 task is claimed here as done beyond what its own committed document states** |
+| the active wave | **W48 — its commits and its own report are in the history, and the owner has answered the three questions of 2026-11-06 (OD-045, OD-046, OD-047). The wave's report is `docs-v2/engineering/W48-STATUS.md`.** **What is still open, and named:** the **23 native-binary test failures** — `BLOCKED`, the GraalVM toolchain is absent on this host, and OD-046 puts the resource budget in the next wave (`docs-v2/engineering/W48-TEST-RECONCILIATION.md`); the **impulse consumer** — **approved (OD-045) and NOT implemented**: the ADR is the scope, the implementation is the next wave's first task (`docs-v2/engineering/ADR-W48-AUTONOMY-IMPULSE-CONSUMER.md`); the **CI observation** — the clean runner `42198961133` is GREEN in Build & Test, the Web UI tests and the quality gates (the security boundary and the formal gate both hold there), and the two jobs that were still red — the security scan and the container smoke tests — are repaired in `e0de8419`; the verdict of the run that carries that repair is still to be observed; the **two formal-spec mutants** that SURVIVED (`Consensus-evaluate-without-quorum`, `KnowledgeAxes-conflict-forgets-what-it-recorded`). **The next wave is W49, opened by OD-045.** **No W48 task is claimed here as done beyond what its own committed document states** |
 | the modules | **14** included in `settings.gradle`, 3 commented out, 2 outside Gradle, 1 stray orphan file |
 | the serving entry points | **2** applications — the Quarkus app on **9091** (210 routes) and the brain runtime's JDK server on **8765** (28 routes) |
 | the CLI entry points | **79** |

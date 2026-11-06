@@ -96,7 +96,7 @@
 # stays visible and the expiry stays real.
 
 # W48 (later in the same wave), the .github/ exception was raised from 958
-# to 1040 diff lines.
+# to 1056 diff lines.
 #
 # Three changes, all of them repairs of a red mandatory check on the clean
 # runner, and all of them in the workflow's own steps rather than in its
@@ -138,6 +138,14 @@
 #    vulnerable-dependency check — were SKIPPED. The step now captures the
 #    pipeline's status and lets its branches decide.
 #
+# 6. ci.yml, the "Security Scan" job — the secret scan passed
+#    `base: ${{ github.ref }}` and `head: HEAD`, which are the SAME commit on
+#    a push, so the action refused with "BASE and HEAD commits are the same.
+#    TruffleHog won't scan anything" and the step failed. The check has
+#    therefore never scanned anything. The step now uses the action's
+#    DEFAULT behaviour — it scans exactly the commits the push carried — and
+#    the checkout fetches the history the action resolves that range in.
+#
 # 5. ci.yml, the "Container Images" job — the minikube smoke test reused the
 #    Postgres and Redis containers of the previous step, and the previous
 #    step removed them when it finished. The application then started with no
@@ -150,5 +158,5 @@
 # recorded here rather than waved through, so that the amount of the change
 # stays visible and the expiry stays real.
 
-.github/ | 1040 | repo-owner | 2026-12-31
+.github/ | 1056 | repo-owner | 2026-12-31
 AGENTS.md | 63 | repo-owner | 2026-12-31
