@@ -1,279 +1,295 @@
 ---
 layout: default
-title: "MATRIX: The Hybrid Intelligence Encyclopedia"
-description: "An open-source hybrid neuro-symbolic AI system that thinks like a city of minds."
+title: "MATRIX — a deterministic neuro-symbolic research system"
+description: "An open research system for deterministic neuro-symbolic inference: two serving applications that do not meet, a capability registry on four independent axes, and the negative results kept beside the positive ones."
 ---
 
-<div class="hero-section">
-  <div class="hero-background">
-    <svg width="100%" height="400" viewBox="0 0 800 400" xmlns="http://www.w3.org/2000/svg">
-      <defs>
-        <radialGradient id="nodeGrad" cx="50%" cy="50%" r="50%">
-          <stop offset="0%" style="stop-color:#4fc3f7;stop-opacity:1" />
-          <stop offset="100%" style="stop-color:#1976d2;stop-opacity:0.3" />
-        </radialGradient>
-        <radialGradient id="pulseGrad" cx="50%" cy="50%" r="50%">
-          <stop offset="0%" style="stop-color:#ff6b6b;stop-opacity:0.8" />
-          <stop offset="100%" style="stop-color:#ff6b6b;stop-opacity:0" />
-        </radialGradient>
-      </defs>
-      <!-- Animated neural network background -->
-      <g stroke="#4fc3f7" stroke-width="0.5" opacity="0.4">
-        <line x1="100" y1="100" x2="300" y2="200">
-          <animate attributeName="opacity" values="0.2;0.8;0.2" dur="3s" repeatCount="indefinite"/>
-        </line>
-        <line x1="300" y1="200" x2="500" y2="150">
-          <animate attributeName="opacity" values="0.2;0.8;0.2" dur="2.5s" repeatCount="indefinite"/>
-        </line>
-        <line x1="500" y1="150" x2="700" y2="250">
-          <animate attributeName="opacity" values="0.2;0.8;0.2" dur="4s" repeatCount="indefinite"/>
-        </line>
-        <line x1="200" y1="300" x2="400" y2="100">
-          <animate attributeName="opacity" values="0.2;0.8;0.2" dur="3.5s" repeatCount="indefinite"/>
-        </line>
-        <line x1="400" y1="100" x2="600" y2="350">
-          <animate attributeName="opacity" values="0.2;0.8;0.2" dur="2s" repeatCount="indefinite"/>
-        </line>
-      </g>
-      <!-- Nodes -->
-      <circle cx="100" cy="100" r="20" fill="url(#nodeGrad)">
-        <animate attributeName="r" values="20;25;20" dur="2s" repeatCount="indefinite"/>
-      </circle>
-      <circle cx="300" cy="200" r="25" fill="url(#nodeGrad)">
-        <animate attributeName="r" values="25;30;25" dur="3s" repeatCount="indefinite"/>
-      </circle>
-      <circle cx="500" cy="150" r="22" fill="url(#nodeGrad)">
-        <animate attributeName="r" values="22;27;22" dur="2.5s" repeatCount="indefinite"/>
-      </circle>
-      <circle cx="700" cy="250" r="20" fill="url(#nodeGrad)">
-        <animate attributeName="r" values="20;25;20" dur="3.5s" repeatCount="indefinite"/>
-      </circle>
-      <circle cx="200" cy="300" r="18" fill="url(#nodeGrad)">
-        <animate attributeName="r" values="18;23;18" dur="2s" repeatCount="indefinite"/>
-      </circle>
-      <circle cx="400" cy="100" r="22" fill="url(#nodeGrad)">
-        <animate attributeName="r" values="22;27;22" dur="3s" repeatCount="indefinite"/>
-      </circle>
-      <circle cx="600" cy="350" r="20" fill="url(#nodeGrad)">
-        <animate attributeName="r" values="20;25;20" dur="2.5s" repeatCount="indefinite"/>
-      </circle>
-      <!-- Pulsing center -->
-      <circle cx="400" cy="200" r="40" fill="url(#pulseGrad)">
-        <animate attributeName="r" values="40;60;40" dur="2s" repeatCount="indefinite"/>
-        <animate attributeName="opacity" values="0.5;0.1;0.5" dur="2s" repeatCount="indefinite"/>
-      </circle>
-    </svg>
-  </div>
+**Status:** ACTIVE · **Updated:** 2026-11-06
+**Repository:** `AlexanderNarbaev/agi`
 
-  <div class="hero-content">
-    <h1 class="hero-title">🧠 MATRIX</h1>
-    <p class="hero-tagline">The Hybrid Intelligence Encyclopedia</p>
-    <p class="hero-description">
-      An open-source <strong>neuro-symbolic</strong> AI system that combines boolean logic,
-      hyperdimensional computing, and emergent swarm intelligence — without the bloat of large language models.
-    </p>
+# MATRIX
 
-    <div class="hero-stats">
-      <div class="stat">
-        <span class="stat-number">9,432</span>
-        <span class="stat-label">Tests passing, 14 modules</span>
-      </div>
-      <div class="stat">
-        <span class="stat-number">0</span>
-        <span class="stat-label">LLM calls in the decision path</span>
-      </div>
-      <div class="stat">
-        <span class="stat-number">9</span>
-        <span class="stat-label">TLA+ specs, model-checked in CI</span>
-      </div>
-    </div>
+MATRIX is an open research system for **deterministic neuro-symbolic inference**. Knowledge is
+represented as truth tables and their compilable forms, the learning path is separated from the
+runtime, and a runtime decision is a verifiable boolean chain — with no LLM call and no
+randomness on the decision path. That description is the project's own, and it is the one the
+code implements: [`docs-v2/governance/PROJECT-STATE.md`](governance/PROJECT-STATE.md).
 
-    <div class="hero-buttons">
-      <a href="story/overview.html" class="btn btn-primary">🚀 Start the Journey</a>
-      <a href="guide/getting-started.html" class="btn btn-secondary">⚡ Quick Start</a>
-      <a href="science-v2/math-foundations.html" class="btn btn-secondary">📐 The Math</a>
-    </div>
-  </div>
-</div>
+This page is the honest entrance. It states what runs, what has been measured, what is
+blocked, and **where the evidence for each claim lives**, so that a reader can check any
+sentence here against the artefact that produced it. Where a number could not be sourced, it
+is not on this page.
 
-<div class="audience-toggles" id="audience-toggles">
-  <h2>Who are you?</h2>
-  <div class="toggle-buttons">
-    <button class="toggle-btn active" data-audience="beginner">🌱 I'm Curious</button>
-    <button class="toggle-btn" data-audience="engineer">🔧 I Build Things</button>
-    <button class="toggle-btn" data-audience="scientist">🔬 I Prove Things</button>
-  </div>
-  <div class="toggle-content" id="beginner-content">
-    <h3>Welcome, curious mind!</h3>
-    <p>MATRIX is like a <strong>city of minds</strong>. Each "citizen" is a simple thinking unit, but together they create something greater than the sum of their parts. No one citizen is in charge — the intelligence emerges from their collaboration.</p>
-    <p><a href="story/overview.html">→ Read the Story</a></p>
-  </div>
-  <div class="toggle-content hidden" id="engineer-content">
-    <h3>Welcome, builder!</h3>
-    <p>MATRIX is a <strong>hybrid neuro-symbolic AI framework</strong>. BIR for logic, HDC for patterns, MCTS for planning, biochemical modulators for adaptive behavior. No LLM in the decision path — enforced by a CI gate. 9,432 tests passing across 14 modules.</p>
-    <p><a href="guide/getting-started.html">→ Get Started in 5 Minutes</a></p>
-  </div>
-  <div class="toggle-content hidden" id="scientist-content">
-    <h3>Welcome, researcher!</h3>
-    <p>MATRIX is a <strong>mathematically rigorous system</strong>: TLA+ specifications that are parsed and model-checked in CI, and published benchmark reports. Every capability claim on this page is listed in the <a href="../architecture/CAPABILITY-REGISTRY.md">capability registry</a>, with the measurement behind it — including the claims that had none, and what replaced them.</p>
-    <p><a href="science-v2/math-foundations.html">→ See the Math</a></p>
-  </div>
-</div>
+## What this project is — and what it is not
 
-<div class="key-concepts">
-  <h2>The Five Pillars of MATRIX</h2>
-  <div class="pillar-grid">
-    <div class="pillar">
-      <div class="pillar-icon">🔮</div>
-      <h3>BIR: Logic</h3>
-      <p>Boolean inference engine — fast, deterministic, explainable. 75% accuracy on 100 logic puzzles (random baseline 30%).</p>
-      <a href="story/brain-analogy.html#bir">Learn more →</a>
-    </div>
-    <div class="pillar">
-      <div class="pillar-icon">🌌</div>
-      <h3>HDC: Patterns</h3>
-      <p>Hyperdimensional computing — 0.899 AUC with 50 training examples, against a random 0.253.</p>
-      <a href="story/brain-analogy.html#hdc">Learn more →</a>
-    </div>
-    <div class="pillar">
-      <div class="pillar-icon">♟️</div>
-      <h3>MCTS: Planning</h3>
-      <p>Monte Carlo Tree Search — 92% success in the headless Minecraft pilot, 0 deaths, against 78% for a single agent.</p>
-      <a href="story/brain-analogy.html#mcts">Learn more →</a>
-    </div>
-    <div class="pillar">
-      <div class="pillar-icon">🧪</div>
-      <h3>Biochemistry</h3>
-      <p>Non-linear modulator interactions — creates realistic "moods" and stress responses.</p>
-      <a href="story/brain-analogy.html#biochemistry">Learn more →</a>
-    </div>
-    <div class="pillar">
-      <div class="pillar-icon">🐝</div>
-      <h3>Federation</h3>
-      <p>Liquid swarm of nodes that share knowledge and emerge solutions collectively.</p>
-      <a href="story/federation.html">Learn more →</a>
-    </div>
-  </div>
-</div>
+MATRIX is:
 
-<div class="interactive-demo">
-  <h2>Try It: Interactive Modulator Simulator</h2>
-  <p>Adjust the sliders to see how modulators interact in real-time. This runs entirely in your browser — no server calls.</p>
+- a **deterministic core** in which a decision is a boolean chain rather than a sampled
+  continuation;
+- a **research repository** in which a claim is a preregistered measurement, and a refuted
+  hypothesis is kept as evidence with the same care as an accepted one;
+- **two serving applications that do not meet** — an epistemic application and a brain
+  runtime, separated by a gate that fails when they do
+  ([`docs-v2/architecture/RUNTIME-TOPOLOGY.md`](architecture/RUNTIME-TOPOLOGY.md));
+- a body of **implemented but unserved** subsystems, documented as such rather than hidden.
 
-  <div id="modulator-simulator" class="simulator-container">
-    <div class="slider-row">
-      <label>DOPAMINE: <span id="sim-dop">0.50</span></label>
-      <input type="range" id="sim-dop-slider" min="0" max="1" step="0.05" value="0.5">
-    </div>
-    <div class="slider-row">
-      <label>CORTISOL: <span id="sim-cor">0.20</span></label>
-      <input type="range" id="sim-cor-slider" min="0" max="1" step="0.05" value="0.2">
-    </div>
-    <div class="slider-row">
-      <label>SEROTONIN: <span id="sim-ser">0.50</span></label>
-      <input type="range" id="sim-ser-slider" min="0" max="1" step="0.05" value="0.5">
-    </div>
-    <div class="slider-row">
-      <label>NOREPINEPHRINE: <span id="sim-nor">0.30</span></label>
-      <input type="range" id="sim-nor-slider" min="0" max="1" step="0.05" value="0.3">
-    </div>
-    <div class="mood-display">
-      <strong>Current Mood: <span id="sim-mood">NEUTRAL</span></strong>
-    </div>
-    <div class="stress-cascade">
-      <strong>Stress Cascade Active: <span id="sim-cascade">No</span></strong>
-    </div>
-  </div>
-</div>
+It is **not** a general LLM agent, **not** a single cognitive cycle, and **not** a system in
+which every implemented class is reachable from a request. The distance between *implemented*
+and *served* is the single most important fact about this repository, and it is measured
+rather than asserted, in the capability registry
+([`docs-v2/architecture/CAPABILITY-REGISTRY.yml`](architecture/CAPABILITY-REGISTRY.yml)).
 
-<div class="benchmark-section">
-  <h2>Performance at a Glance</h2>
-  <div class="benchmark-grid">
-    <div class="benchmark-card">
-      <h3>Logic Tasks</h3>
-      <div class="benchmark-value">75%</div>
-      <p>BIR on 100 puzzles; random baseline 30%</p>
-    </div>
-    <div class="benchmark-card">
-      <h3>Sample Efficiency</h3>
-      <div class="benchmark-value">89.9%</div>
-      <p>AUC with only 50 examples (random 25.3%)</p>
-    </div>
-    <div class="benchmark-card">
-      <h3>Speedup</h3>
-      <div class="benchmark-value">100,000×</div>
-      <p>BIR vs a synthetic LLM ops/sec model</p>
-    </div>
-    <div class="benchmark-card">
-      <h3>Federation Resilience</h3>
-      <div class="benchmark-value">100%</div>
-      <p>consensus with 50% nodes killed</p>
-    </div>
-  </div>
-  <p><a href="research/BENCHMARK-REPORT-W620.html">→ Full benchmark report</a> ·
-     <a href="architecture/CAPABILITY-REGISTRY.md">→ Capability registry: every claim and its evidence</a></p>
-  <p class="benchmark-note">The speedup figure is a comparison against a synthetic LLM ops/sec model, not an end-to-end measurement against a served LLM. Sources: <code>research/BENCHMARK-REPORT-W620.md</code> (logic, sample efficiency, speedup), <code>research/FEDERATION-SCALE-REPORT-W635.md</code> (resilience), <code>waves/WAL-620.md</code> (Minecraft pilot).</p>
-</div>
+## Vision and scope
 
-<div class="cta-section">
-  <h2>Ready to dive deeper?</h2>
-  <div class="cta-grid">
-    <a href="story/overview.html" class="cta-card">
-      <h3>📖 Read the Story</h3>
-      <p>Understand MATRIX through analogies and visualizations. No jargon.</p>
-    </a>
-    <a href="guide/getting-started.html" class="cta-card">
-      <h3>⚡ Get Started</h3>
-      <p>5-minute setup. Docker, native, or JVM. Run your first query in minutes.</p>
-    </a>
-    <a href="science-v2/math-foundations.html" class="cta-card">
-      <h3>🔬 See the Science</h3>
-      <p>Formal proofs, benchmarks, and mathematical foundations.</p>
-    </a>
-  </div>
-</div>
+**The vision.** Reasoning that can be checked. A system whose decisions are reproducible from
+their inputs, whose evidence is attached to the claim rather than to the prose around it, and
+whose failures are published with the same visibility as its successes.
 
-<script>
-// Audience toggle
-document.querySelectorAll('.toggle-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    document.querySelectorAll('.toggle-content').forEach(c => c.classList.add('hidden'));
-    const target = btn.getAttribute('data-audience') + '-content';
-    document.getElementById(target).classList.remove('hidden');
-  });
-});
+**The scope, in the project's own terms.** The core is knowledge representation and
+deterministic inference; around it sit research subsystems — consolidation, replay,
+federation, digests, modulators — whose maturity differs sharply and is recorded per
+subsystem. The repository's own governance carries the principles
+([`CONSTITUTION.md`](../CONSTITUTION.md)) and the session rules
+([`AGENTS.md`](../AGENTS.md)).
 
-// Modulator simulator
-function updateSimulator() {
-  const dop = parseFloat(document.getElementById('sim-dop-slider').value);
-  const cor = parseFloat(document.getElementById('sim-cor-slider').value);
-  const ser = parseFloat(document.getElementById('sim-ser-slider').value);
-  const nor = parseFloat(document.getElementById('sim-nor-slider').value);
+**Out of scope, stated plainly.** There is no hosted service and no hosted API: this
+repository is the deliverable, and the two applications are run from source. There is no
+release version — the tags that exist predate several waves of work
+([`docs-v2/governance/PROJECT-STATE.md`](governance/PROJECT-STATE.md)).
 
-  document.getElementById('sim-dop').textContent = dop.toFixed(2);
-  document.getElementById('sim-cor').textContent = cor.toFixed(2);
-  document.getElementById('sim-ser').textContent = ser.toFixed(2);
-  document.getElementById('sim-nor').textContent = nor.toFixed(2);
+## The architecture that actually runs
 
-  let mood = "NEUTRAL";
-  if (cor > 0.7 && ser < 0.3) mood = "STRESSED";
-  else if (dop > 0.7 && ser > 0.6) mood = "HAPPY";
-  else if (dop < 0.3 && ser < 0.3) mood = "LOW";
-  else if (nor > 0.7) mood = "ALERT";
-  else if (dop > 0.5 && nor > 0.5) mood = "FLOW";
+Two applications, measured by a constant-pool census of the compiled classes rather than
+described from intent ([`docs-v2/architecture/RUNTIME-TOPOLOGY.md`](architecture/RUNTIME-TOPOLOGY.md),
+whose evidence is `docs-v2/engineering/W46-ARCHITECTURE-TRUTH-MAP.md`).
 
-  document.getElementById('sim-mood').textContent = mood;
+### Chain A — the epistemic application
 
-  // Stress cascade: high cortisol suppresses dopamine
-  const cascade = cor > 0.5;
-  document.getElementById('sim-cascade').textContent = cascade ? "Yes (Cortisol → Dopamine suppression)" : "No";
-  document.getElementById('sim-cascade').style.color = cascade ? "#ff6b6b" : "#51cf66";
-}
+`io.matrix.MatrixApplication` — one Quarkus process.
 
-document.querySelectorAll('#modulator-simulator input[type="range"]').forEach(slider => {
-  slider.addEventListener('input', updateSimulator);
-});
-updateSimulator();
-</script>
+| | |
+|---|---|
+| binds | **9091** HTTP by default, on `127.0.0.1` (`matrix-core/src/main/resources/application.properties`) |
+| also binds | **9094** TCP and **9093** multicast, bound by `P2PNetwork` and declared in no configuration — an open question of the owner (F-02), recorded and not fixed |
+| routes | **210** — 57 under `/v1/workbench`, 11 under `/v1/cognitive`, 6 OpenAI-compatible chat routes, 136 across 36 further resources |
+| owns | the epistemic store (claims, cases, evidence, revisions) and the cognitive store (episodes, predictions, errors) |
+
+### Chain B — the brain runtime
+
+`io.matrix.api.MinimalHttpServer` — a JDK `HttpServer`, not a Quarkus application.
+
+| | |
+|---|---|
+| binds | **8765**, on `127.0.0.1` unless the security mode says otherwise |
+| routes | **28** — `/v1/analyze`, `/v1/explain`, `/v1/learn`, `/v1/teach`, `/v1/sleep`, `/v1/goals`, `/v1/federate`, `/v1/audit*`, `/v1/gpu`, `/v1/distill`, `/v1/bir`, `/v1/conflicts`, `/v1/generalize`, `/v1/status`, `/v1/inbox/scan`, `/v1/transcode/*`, `/v1/auth/login`, plus `/health/live`, `/health/ready`, `/q/openapi`, `/metrics`, `/openapi.yaml` |
+| default mode | **`stub`** — an 87-line `StubBrainCycle`. The real brain (`TrueMindCycle` → `BirBrainCycle`) runs only under `MATRIX_MODE=production`. This is the owner's open question F-01: a gateway whose default answers come from a stub is a gateway whose health check can mislead |
+| owns | the brain cycle, the persistent mind (`data/mind/mind.sqlite`), the goal tracker, the hierarchical memory |
+
+**They do not meet.** Chain B reaches zero classes of the epistemic and cognitive stores; the
+isolation is proved by a gate that fails when the chains meet, and by a self-test that
+deliberately breaks the isolation to show the gate can go red
+(`scripts/w45-chain-isolation-check.sh`, `scripts/w45-chain-isolation-selftest.sh`).
+
+**Six cycles, not five.** The served nine-stage loop, the consciousness loop and the
+cognitive kernel are served by chain A; the true mind and the BIR brain by chain B in
+production mode; the CLI mind is reachable from the command line only. Two classes named
+`BrainLoopService` are not the same thing, and the earlier map named the wrong one.
+
+## How to read a capability: four independent axes
+
+A capability in this repository is described on **four axes that never collapse into one
+green checkmark** ([`docs-v2/architecture/CAPABILITY-REGISTRY.yml`](architecture/CAPABILITY-REGISTRY.yml),
+35 rows):
+
+| the axis | the question | the values |
+|---|---|---|
+| **implementation** | does the source exist? | `PROPOSED` · `DESIGNED` · `IMPLEMENTED` · `INACTIVE` · `BLOCKED` · `UNKNOWN` |
+| **integration** | is it wired into a production path? | `ISLAND` · `INTEGRATED` · `INTEGRATION_TESTED` · `UNKNOWN` |
+| **verification** | what has been executed, and what does that execution prove? | `UNTESTED` · `TESTED` · `INTEGRATION_TESTED` · `MEASURED` · `FORMALLY_VERIFIED` · `REJECTED` · `UNKNOWN` |
+| **operational** | what is it doing in production right now? | `DORMANT` · `EXPERIMENTAL` · `ACTIVE` · `SERVED` · `DEPRECATED` · `REMOVED` · `UNKNOWN` |
+
+Three rules make those axes usable rather than decorative:
+
+1. A capability may not be `SERVED` without a **named serving path** — an HTTP route, a CLI,
+   a runtime wiring.
+2. A capability may not be `MEASURED` without a **reproducible benchmark**.
+3. A capability may not be `FORMALLY_VERIFIED` because a TLA+ file exists; it needs the
+   model-check evidence.
+
+Two further labels belong to the **wave reports** rather than to the registry, and they are
+used the same way here: **BLOCKED** (the capability is real, and something outside the code
+prevents it — for example a toolchain that is absent on the host) and **NOT VERIFIED** (the
+check was run and produced no evidence, which is not a pass).
+
+## The validation evidence
+
+### The test baseline is a set of scopes, not one number
+
+The full `matrix-core` suite is not run in this repository's practice — it needs the owner's
+approval because of its memory cost. The baseline is therefore a set of **scopes**, each
+verified on a named commit
+([`docs-v2/governance/PROJECT-STATE.md`](governance/PROJECT-STATE.md) §3, and the per-scope
+registry `docs-v2/engineering/TEST-CATALOGUE.yml`):
+
+| the scope | the result | the commit |
+|---|---|---|
+| the cognitive kernel and the epistemic store | 128 classes, 910 tests, 0 failures, 0 skipped | `a6ded233` |
+| the W43 regression scope | 98 classes, 1 036 tests, 0 failures | `a6ded233` |
+| the brain runtime | 119 classes, 914 tests, 0 failures, 2 skipped | `a6ded233` |
+| the API gateway | 43 classes, 240 tests, 0 failures | `a6ded233` |
+| the chain-isolation gate and its negative control | 16 checks and 6 checks, 0 failed | `a6ded233` |
+| the SIGKILL recovery journey | 37 checks, 0 failed | `a6ded233` |
+| the quality gate | 271 literal candidates at the baseline of 271 | `a6ded233` |
+| the security boundary | 0 violations | `a6ded233` |
+
+**The total test population is unknown.** An older measurement of 9 816 executions with 24
+failures is a floor from a past wave, not a total, and this page does not present it as one.
+
+### The CI record
+
+The **five mandatory checks are green on a clean runner** — run `42206946030` at `f6e2be9f`:
+Build & Test, the Web UI tests, the quality gates (the clean-code gate, the pinned formal
+tool, the formal gate over **15 TLA+ specifications**, and the security boundary), the
+security scan (the secret scan ran for the first time and found nothing) and the container
+images (three smoke tests). The only red job is the **release path**, which needs the
+owner's Docker Hub and Kubernetes credentials — the repository has no secrets configured, and
+that is recorded as `R-W48-04`
+([`docs-v2/engineering/W48-STATUS.md`](engineering/W48-STATUS.md) §8 and §12,
+[`docs-v2/engineering/W48-CI-RECONCILIATION.md`](engineering/W48-CI-RECONCILIATION.md)).
+
+### The formal method
+
+The specification set is **15 TLA+ specifications**, model-checked in CI by a tool that is
+**tracked in the repository and pinned by digest** (`tools/tla2tools.jar`, its provenance in
+`tools/README.md`) rather than downloaded from a URL that can be replaced in place. The local
+formal gate reports 15 passed, 0 failed.
+
+### The GPU measurement
+
+The GPU is an **optional accelerator** — the owner's decision OD-047 of 2026-11-06 — and not
+part of the default serving path
+([`docs-v2/engineering/W48-GPU-BENCHMARK.md`](engineering/W48-GPU-BENCHMARK.md)).
+
+| the path | the factor |
+|---|---|
+| the MATRIX forward call | **12.06×** — four independent runs on one machine: 12.06 / 11.68 / 11.47 / 13.62 |
+| the end-to-end path | **12.69×** (11.17× in the fourth run) |
+| a single-point ONNX call | **0.24×** — the GPU is about **4× slower** here (0.25× in the fourth run) |
+
+The historical 12.6× figure does not reproduce and is kept as history, bounded by the
+measurement above. The benchmark refuses to publish a GPU number when the execution profile
+does not name the CUDA provider.
+
+## What is not working
+
+The blockers are published with the same care as the results
+([`docs-v2/governance/PROJECT-STATE.md`](governance/PROJECT-STATE.md) §4):
+
+| the blocker | the state |
+|---|---|
+| the **native-image build** | **BLOCKED** — the GraalVM toolchain is absent on this host; the scope refuses to run rather than report a pass (8 classes, 25 discovered tests) |
+| the **gateway's default mode** | serves an 87-line stub unless `MATRIX_MODE=production` is set — the owner's open question F-01 |
+| chain A's **undeclared ports** | 9093 (multicast) and 9094 (TCP) bind without appearing in any serving record — F-02 |
+| the **readiness probe** | permanently 503; the reactive PostgreSQL datasource gates it, and no production code reads it |
+| **no whole-database backup** | the SQLite backup API appears nowhere in the repository and the runbook has no backup procedure |
+| the **quality gates** | they run in a CI job named "Quality gates (can fail)", and the standards document does not say so |
+| **two formal-spec mutants survive** | `Consensus-evaluate-without-quorum` and `KnowledgeAxes-conflict-forgets-what-it-recorded` — recorded findings, not new failures |
+| the **corpus properties** | the two classes that need the owner's corpus **skip** on a clean runner, because the corpus is not in git. A skip is not a pass |
+| the **static analysis** | the pinned SpotBugs engine cannot read Java 25 bytecode, so the check produces no evidence; the capability stays NOT VERIFIED |
+| the **release path** | "Docker Build & Push" fails at its first step for want of the owner's credentials |
+
+## For researchers
+
+The research body is the part of this repository that is meant to be argued with.
+
+- **[`docs-v2/research/RESEARCH-INDEX.md`](research/RESEARCH-INDEX.md)** — the index of the
+  body: two hypothesis registers, 20 preregistration protocols, 62 experiment reports and 6
+  syntheses.
+- **[`docs-v2/research/NEGATIVE-RESULTS-INDEX.md`](research/NEGATIVE-RESULTS-INDEX.md)** — 37
+  indexed negative results: refuted hypotheses, rejected capabilities, corrected claims,
+  defects and non-reproducible experiments. **A negative result is evidence and is kept.**
+- **[`docs-v2/research/HYPOTHESES-NEW.md`](research/HYPOTHESES-NEW.md)** — where a new
+  hypothesis is registered, **before** the run, with its gate fixed in advance.
+- **[`docs-v2/research/PROTOCOL.md`](research/PROTOCOL.md)** — the method, and the evidence
+  levels that decide what a verdict may say.
+
+The separation rule the body is built on: a research proposal must not become a normative
+specification by the passage of time, and a research finding does not authorise a production
+integration.
+
+## For contributors
+
+Start with **[`CONTRIBUTING.md`](../CONTRIBUTING.md)** — it carries the two contribution paths
+(engineering and research), the prerequisites, the known-good scopes and the gates.
+
+```bash
+git clone https://github.com/AlexanderNarbaev/agi.git
+cd agi
+
+# chain A — the epistemic application, then http://localhost:9091
+./gradlew :matrix-core:quarkusDev
+
+# chain B — the brain runtime, then http://localhost:8765
+./gradlew :matrix-api-gateway:writeRuntimeClasspath --no-daemon --console=plain
+bash scripts/start-mind.sh
+
+# a targeted scope, and the gates
+./gradlew :matrix-core:test --tests "io.matrix.knowledge.*"
+bash scripts/quality-gate.sh
+bash scripts/security-boundary-check.sh
+```
+
+The repository's own guides: [Getting started](guide/getting-started.html) ·
+[Architecture](architecture/RUNTIME-TOPOLOGY.html) ·
+[Contributing](../CONTRIBUTING.md) ·
+[Project state](governance/PROJECT-STATE.html) ·
+[Decision register](governance/DECISION-REGISTER.html) ·
+[Roadmap](governance/ROADMAP.html) ·
+[Open questions](governance/OPEN-QUESTIONS.html).
+
+## Publication and collaboration
+
+The code is licensed under the **GNU Affero General Public License v3** (`LICENSE`; the
+licensing decision is `docs-v2/levels/L12-Legal.md`). The collaboration rules are recorded in
+`docs-v2/levels/L22.md`:
+
+- **academic freedom** — confirming and refuting results are equally welcome;
+- **open access** — code under AGPLv3 plus the ethical terms, datasets under CC0 or CC BY,
+  papers at minimum as arXiv preprints;
+- **no dual-use** — partnerships with military departments, weapons laboratories and
+  mass-surveillance vendors are excluded, and partners undergo the L7 ethical audit;
+- **attribution** — co-authorship follows substantial intellectual contribution; technical
+  help goes in the acknowledgements.
+
+**How to start a collaboration.** Open an issue that names the problem and the scope — a bug
+report, a feature request, or an RFC for an architectural change. For research, register a
+hypothesis card in `docs-v2/research/HYPOTHESES-NEW.md` with its gate fixed in advance, and
+report the result **whether it is accepted or refuted**.
+
+## Project status
+
+**2026-11-06 — commit `ed3725d5`, branch `develop`.** The wave that produced this page is
+**W49**; the wave that preceded it, **W48**, is closed, and its report is
+[`docs-v2/engineering/W48-STATUS.md`](engineering/W48-STATUS.md). The canonical snapshot of
+the project state is
+[`docs-v2/governance/PROJECT-STATE.md`](governance/PROJECT-STATE.md) — it is replaced, not
+appended to, as the state moves, and it names the commit it was written at.
+
+| the record | the document |
+|---|---|
+| what the project is, right now | [`docs-v2/governance/PROJECT-STATE.md`](governance/PROJECT-STATE.md) |
+| what actually runs | [`docs-v2/architecture/RUNTIME-TOPOLOGY.md`](architecture/RUNTIME-TOPOLOGY.md) |
+| what each capability is, on four axes | [`docs-v2/architecture/CAPABILITY-REGISTRY.yml`](architecture/CAPABILITY-REGISTRY.yml) |
+| the test scopes and their commits | [`docs-v2/engineering/TEST-CATALOGUE.yml`](engineering/TEST-CATALOGUE.yml) |
+| the last completed wave | [`docs-v2/engineering/W48-STATUS.md`](engineering/W48-STATUS.md) |
+| the CI record | [`docs-v2/engineering/W48-CI-RECONCILIATION.md`](engineering/W48-CI-RECONCILIATION.md) |
+| the GPU measurement | [`docs-v2/engineering/W48-GPU-BENCHMARK.md`](engineering/W48-GPU-BENCHMARK.md) |
+| the decisions and their dates | [`docs-v2/governance/DECISION-REGISTER.md`](governance/DECISION-REGISTER.md) |
+| the open questions | [`docs-v2/governance/OPEN-QUESTIONS.md`](governance/OPEN-QUESTIONS.md) |
+| the research and the negative results | [`docs-v2/research/RESEARCH-INDEX.md`](research/RESEARCH-INDEX.md) · [`docs-v2/research/NEGATIVE-RESULTS-INDEX.md`](research/NEGATIVE-RESULTS-INDEX.md) |
+
+---
+
+*The published site is <https://alexandernarbaev.github.io/agi/>. The source of this page is
+`docs-v2/index.md`; the commit above is the one it was written at, and the wave moves the
+branch while it runs.*

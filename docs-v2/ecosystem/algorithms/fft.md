@@ -34,7 +34,7 @@ Source: [`matrix-core/src/main/java/io/matrix/transcoders/AudioFFTEncoder.java`]
 Key methods:
 - `forward(double[] samples)` — returns magnitude spectrum
 - `frequencyBands(magnitudes)` — groups into 8 perceptual bands
-- `toHdc(bands)` — encodes as 10,000-bit HDC vector
+- `toHdc(bands)` — encodes as 1 024-bit HDC vector
 
 Performance:
 - **1024 samples**: ~50µs
@@ -73,7 +73,7 @@ POST /v1/analyze  { input: <base64-wav>, content_type: "audio" }
 [AudioFFTEncoder.encode]
    ├─ FFT → magnitude spectrum
    ├─ Frequency banding (8 bands)
-   └─ HDC encoding → 10,000-bit vector
+   └─ HDC encoding → 1 024-bit vector
   ↓
 [BIR rules fire on detected frequency patterns]
 ```

@@ -1,78 +1,116 @@
 # Code of Conduct
 
-## Our Pledge
+## 1. What this document is, and how it relates to the others
 
-We, as members, contributors, and maintainers of the MATRIX project,
-pledge to make participation in our community a harassment-free
-experience for everyone, regardless of age, body size, disability,
-ethnicity, gender identity and expression, level of experience,
-nationality, personal appearance, race, religion, sexual identity and
-orientation, or any other characteristic.
+This repository has four documents that bind participants, and they are not interchangeable.
+Confusing them is the mistake this section exists to prevent.
 
-We pledge to uphold the **Three Prohibitions** at the core of MATRIX
-philosophy ([L0](docs/L0_manifesto.md)):
+| the document | what it binds | what it is not |
+|---|---|---|
+| `LICENSE` | the **legal** terms: the GNU Affero General Public License, version 3, with additional conditions on the permitted use appended to the same file | not a code of conduct, and not a second licence — AGPL-3.0 is the only licence here |
+| `CONSTITUTION.md` | the **normative invariants of the system** — the four prohibitions in Article IV, the determinism rule in Article I, the coverage gate in Article V, the frozen zones in Article III, the forbidden claims in Article VI | not a legal document; it binds the code and the claims, not the person |
+| `CODE_OF_CONDUCT` (this file) | the **behaviour of participants** — how people and agents treat each other in issues, pull requests and reviews | not an enforcement body, and it promises no response time (see §5) |
+| `CONTRIBUTING.md` | the **contribution rules** — the two kinds of contribution, the verification scopes, the research lifecycle, what a change must contain | not a licence and not a code of conduct |
 
-1. **No Killing** — we reject violence, weapons development, and lethal
-   autonomous systems.
-2. **No Torture** — we reject infliction of suffering, physical or
-   psychological.
-3. **No Enslavement** — we reject coercion, trafficking, social scoring,
-   and deprivation of autonomy without consent.
+**The operational safety restrictions** are separate from all four, and they are enforced by
+code and by gates rather than by this document:
 
-## Standards
+- the four prohibitions are implemented in `matrix-core/src/main/java/io/matrix/ethics/` — the
+  `FrozenEthicalFNL` class is the one mathematically checkable carrier of them;
+- the authorisation boundary is checked by `scripts/security-boundary-check.sh`: a
+  network-exposed process refuses to start without a credential, and an anonymous write is
+  refused in every mode;
+- the frozen zones (`CONSTITUTION.md`, Article III) are checked by
+  `scripts/quality-gate.sh`, which fails on a diff in them.
 
-### Expected Behavior
+A participant who follows this document but violates the licence still violates the licence.
+A participant who follows the licence but harasses someone still violates this document.
 
-- Be respectful and constructive.
-- Critique ideas, not people.
-- Assume good faith. Clarify before judging.
-- Help newcomers. Every expert was once a beginner.
-- Use inclusive language. Avoid idioms that may exclude non-native
-  speakers.
-- Respect privacy and confidentiality.
+## 2. The pledge
 
-### Unacceptable Behavior
+We, as members, contributors and maintainers of the MATRIX project, pledge to make
+participation a harassment-free experience for everyone, regardless of age, body size,
+disability, ethnicity, gender identity and expression, level of experience, nationality,
+personal appearance, race, religion, sexual identity and orientation, or any other
+characteristic.
+
+We pledge to uphold the **four prohibitions** of `CONSTITUTION.md`, Article IV, in the
+project's artefacts and in the project's discussions:
+
+1. **No killing** — we reject violence, weapons development, and lethal autonomous systems.
+2. **No torture** — we reject the infliction of suffering, physical or psychological.
+3. **No enslavement** — we reject coercion, trafficking, social scoring, and the deprivation
+   of autonomy without consent.
+4. **No reproduction without the operator's explicit consent** — we reject any capability that
+   replicates or propagates itself without an explicit human decision.
+
+Advocating, implementing or encouraging the violation of any of the four is not a matter of
+tone; it is a matter of the project's purpose.
+
+## 3. Expected behaviour
+
+- Be respectful and constructive. Critique the idea, not the person.
+- Assume good faith; clarify before judging.
+- Help newcomers — every expert was once a beginner.
+- Use inclusive language and avoid idioms that may exclude non-native speakers.
+- Respect privacy and confidentiality; do not publish others' private information.
+- State what you measured and how. A number without a run behind it is not an argument.
+
+## 4. Unacceptable behaviour
 
 - Harassment, intimidation, or personal attacks.
-- Discrimination based on protected characteristics.
+- Discrimination based on the protected characteristics above.
 - Publishing others' private information without consent.
 - Sexual language or imagery in project spaces.
-- Advocating for or encouraging violation of the Three Prohibitions.
+- Advocating for, or encouraging the violation of, the four prohibitions.
 - Trolling, flaming, or sustained disruption of discussions.
+- Presenting an unmeasured claim as a measured result — this project forbids it in its code
+  (`CONSTITUTION.md`, Article VI), and it applies to prose as well.
 
-## Enforcement
+## 5. Reporting a violation
 
-### Reporting
+**The issue tracker is the only reporting channel this project currently provides.** There is
+no moderated private channel, no dedicated support service, no moderation team and no
+maintainer mailbox — and this document will not invent one.
 
-Report violations to maintainers via:
-- GitHub: open an issue marked `[CoC]`.
-- Email: `conduct@matrix-ai.org` (will be established).
+Report a violation by opening an issue in this repository's issue tracker and marking it
+`[CoC]`.
 
-All reports are confidential. Maintainers will respond within 48 hours.
+Please state:
 
-### Consequences
+- what happened, and where (an issue, a pull request, a review, a document);
+- when it happened, and which artefact;
+- what you would like to happen.
 
-Violations may result in:
-1. **Warning** — private communication about the violation.
-2. **Temporary ban** — removal from project spaces for a specified period.
-3. **Permanent ban** — expulsion from the community.
+**A report made this way is public.** It is visible to anyone watching the repository. The
+project does not currently offer a private reporting route; if you need one, say so in the
+issue and the limitation will be recorded rather than papered over.
 
-Violations of the Three Prohibitions result in immediate and permanent
-expulsion.
+**No response time is promised.** The project is maintained by its owner together with AI
+agents (`AGENTS.md`); there is no rota and no service-level agreement, so none is claimed
+here. Reports are read, and the outcome is recorded in the issue or in
+`docs-v2/governance/DECISION-REGISTER.md`.
 
-## Scope
+## 6. Consequences
 
-This Code of Conduct applies to all project spaces: GitHub, chat,
-forums, video calls, conferences, and any other venue where MATRIX is
-discussed. It also applies when an individual represents the project in
-public.
+A violation may result in:
 
-## Attribution
+1. **A warning** — a public note in the issue or pull request where it happened.
+2. **A temporary exclusion** — removal from the project's issue tracker and pull requests for
+   a stated period.
+3. **A permanent exclusion** — expulsion from participation in the project.
 
-This Code of Conduct is based on the [Contributor Covenant](https://www.contributor-covenant.org),
-version 2.1, adapted with MATRIX-specific principles from
-[L11 §6](docs/L11_Mangement.md) and [L0](docs/L0_manifesto.md).
+A violation of the four prohibitions, or of the licence terms, results in immediate and
+permanent exclusion and in the withdrawal of the contribution concerned.
 
----
+## 7. Scope
 
-*Ref: L11 §6, L0*
+This Code of Conduct applies to every project space: the issue tracker, the pull requests,
+the documents in this repository, and any other venue where MATRIX is discussed. It also
+applies when an individual represents the project in public.
+
+## 8. Attribution
+
+This Code of Conduct is adapted from the
+[Contributor Covenant](https://www.contributor-covenant.org), version 2.1, with the four
+prohibitions of `CONSTITUTION.md`, Article IV, added as the project's substantive standard.

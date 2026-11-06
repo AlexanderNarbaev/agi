@@ -48,7 +48,7 @@ Source: [`matrix-core/src/main/java/io/matrix/transcoders/VisionEdgeEncoder.java
 Key methods:
 - `encode(byte[] image)` — returns edge map
 - `extractShapes(edges)` — clusters edges into shape primitives
-- `toHdc(edges)` — converts edge map to 10,000-bit HDC vector
+- `toHdc(edges)` — converts edge map to 1 024-bit HDC vector
 
 Performance:
 - **256×256 image**: ~5ms
@@ -82,7 +82,7 @@ POST /v1/analyze  { input: <base64-image>, content_type: "image" }
 [VisionEdgeEncoder.encode]
    ├─ Sobel filter → edge map
    ├─ Shape clustering → primitives
-   └─ HDC encoding → 10,000-bit vector
+   └─ HDC encoding → 1 024-bit vector
   ↓
 [BIR rules fire on detected shapes]
 ```

@@ -51,12 +51,15 @@ partner = argmax_B pheromone(self, B)
 
 ## Implementation
 
-Source: [`matrix-core/src/main/java/io/matrix/federation/stigmergy/` <!-- no-link: the package is elsewhere; the stigmergy code is in matrix-core/src/main/java/io/matrix/federation/ -->](https://github.com/AlexanderNarbaev/agi/tree/develop/matrix-core/src/main/java/io/matrix/federation/stigmergy)
+Source: `matrix-core/src/main/java/io/matrix/neuron/StigmergicFederation.java` and
+`matrix-core/src/main/java/io/matrix/federation/liquid/biochemistry/StigmergyProtocol.java`
 
 Key classes:
-- `PheromoneTable` — distributed hash map with TTL-based evaporation
-- `StigmergicRouter` — partner selection algorithm
-- `EvaporationDaemon` — background tick that decays pheromone values
+- `StigmergicFederation` — the pheromone-mediated federation
+  (`io.matrix.neuron`)
+- `StigmergyProtocol` — the protocol (`io.matrix.federation.liquid.biochemistry`)
+- `EmergentBehaviorMonitor` — the observer of the emergent behaviour
+  (`io.matrix.federated`)
 
 Performance:
 - **Deposit**: ~50µs

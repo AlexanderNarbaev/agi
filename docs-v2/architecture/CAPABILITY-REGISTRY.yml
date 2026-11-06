@@ -75,13 +75,16 @@ generated:
   branch: "develop"
   source: "docs-v2/engineering/W46-CAPABILITY-RECONCILIATION.csv"
   source_rows: 27
-  capabilities_in_this_file: 35
+  capabilities_in_this_file: 36
   additions_from_source: 8
   method: "the constant pool of the compiled classes (javap -p -c) over 2978 classes, the current "
   method_note: "source, and the current configuration. Every source_path, test_path and production "
   method_note_2: "caller in this file was resolved and checked for existence at the commit named "
   method_note_3: "above; every caller count was resolved from the compiled constant pool, not from "
   method_note_4: "a text search."
+  w49_addition: "W49 added one row — W49-AUTONOMY-PROPOSALS, the autonomy impulse
+    consumer of OD-045 — and took the file from 35 rows to 36. The addition was made
+    from the source and from the executed test evidence, not from the ADR's own claim."
   supersedes:
     - "docs-v2/architecture/CAPABILITY-REGISTRY.md"
     - "docs-v2/engineering/W44-CAPABILITY-REGISTRY.md"
@@ -1515,4 +1518,43 @@ capabilities:
 #   and four rows are missing a cell outright. Every reconstruction is recorded
 #   in the `notes` of the row it affects.
 #
+
+  -
+    id: "W49-AUTONOMY-PROPOSALS"
+    name: "an accepted autonomy impulse becomes a bounded internal proposal"
+    description: "io.matrix.autonomy.ImpulseProposalConsumer: the consumer of an ACCEPTED impulse from io.matrix.lifecycle.ImpulseScheduler. It records a typed internal proposal carrying its provenance (the impulse, the cycle, the source), its budget (the envelope, the allocated rows, the shadow price at the moment of the allocation), a stable id, an expiry and an observable terminal outcome. It is NOT an executor: no message is sent, no command is run, no external service is touched, and Chain A is never written."
+    domain: "cognitive-architecture"
+    implementation: "IMPLEMENTED"
+    integration: "INTEGRATED"
+    verification: "TESTED"
+    operational: "SERVED"
+    source_paths:
+      - "matrix-core/src/main/java/io/matrix/autonomy/ImpulseProposalConsumer.java"
+      - "matrix-core/src/main/java/io/matrix/autonomy/ImpulseProposal.java"
+      - "matrix-core/src/main/java/io/matrix/autonomy/ImpulseProposalStore.java"
+      - "matrix-core/src/main/java/io/matrix/autonomy/BoundedImpulseProposalStore.java"
+    production_callers:
+      - "io.matrix.autonomy.AutonomyEngine — matrix-core/src/main/java/io/matrix/autonomy/AutonomyEngine.java"
+      - "io.matrix.autonomy.SelfImprovingEngine — matrix-core/src/main/java/io/matrix/autonomy/SelfImprovingEngine.java"
+      - "io.matrix.brain.runtime.AutonomyLoop — matrix-brain-runtime/src/main/java/io/matrix/brain/runtime/AutonomyLoop.java"
+    serving_chain: "chain-b"
+    serving_path: "the autonomy drives of the gateway's brain runtime: an accepted impulse is recorded as a proposal in Chain B's own store, and the proposal is never executed"
+    test_paths:
+      - "matrix-core/src/test/java/io/matrix/autonomy/ImpulseProposalConsumerTest.java"
+    test_evidence: "executed — 12 tests in the impulse-proposal suite (the ten acceptance tests of ADR-W48-AUTONOMY-IMPULSE-CONSUMER.md §9 and two contract tests), 0 failures, 0 errors, 0 skipped"
+    benchmark_evidence: "none — the guarantee is a bounded record, not a number"
+    formal_spec: "none"
+    dependencies:
+      - "io.matrix.lifecycle.ImpulseScheduler (the accepted impulse)"
+      - "io.matrix.ethics.EthicalFilter (the FROZEN gate, consulted at creation and at execution)"
+    limitations: "the store is in memory: an open proposal does not survive a restart — the sweep closes what expired, but a restart loses the open queue, so the durable store is a later change with its own mandate. The terminal outcome ACCEPTED_FOR_REVIEW means 'recorded and waiting for a human or a later mandated wave'; it does not mean the work was executed, and nothing in the proposal path executes anything"
+    risks:
+      - "a proposal accepted for review and never acted upon is a promise nobody keeps — the queue is bounded, and the expiry bounds the wait"
+    owner: "the owner (OD-045, option A, 2026-11-06)"
+    decision_ref: "docs-v2/engineering/ADR-W48-AUTONOMY-IMPULSE-CONSUMER.md §5 and §9; docs-v2/governance/DECISION-REGISTER.md OD-045"
+    last_verified_commit: "c86f6898"
+    last_verified_at: "2026-11-06"
+    next_verification_condition: "a change to the proposal record, the queue bound, the expiry or the FROZEN gate requires the impulse-proposal suite to be re-run"
+    notes: "W49: this row did not exist, because the autonomy impulse path had no row at all — neither the scheduler nor the consumer was in the registry. The row is written from the source, not from the ADR's own claim. The consumer is IMPLEMENTED, INTEGRATED into the serving paths and TESTED by the ADR's ten tests; it is SERVED in the sense that the gateway's autonomy drives record proposals — it is never an executor and must never be described as one."
+
 # =============================================================================

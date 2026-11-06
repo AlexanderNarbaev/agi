@@ -1,36 +1,48 @@
 ---
 name: Bug Report
-about: Report a bug or unexpected behavior
+about: Report a bug or unexpected behaviour
 title: "[BUG] "
 labels: bug
 assignees: ""
----
+-->
 
-## Description
+## What happens
 
-Clear description of the bug.
+<!-- The observed behaviour, in one or two sentences. -->
 
-## Steps to Reproduce
+## What was expected
 
-1. Run `...`
-2. Call `...`
-3. See error
+<!-- And what should have happened instead. -->
 
-## Expected Behavior
+## How to reproduce
 
-What should have happened.
+<!-- The exact commands, not a description of them. A reproduction that is a command can be
+     re-run; a reproduction that is a story has to be re-derived. -->
 
-## Actual Behavior
+```
+./gradlew :matrix-core:test --tests "io.matrix.cognitive.*"
+```
 
-What actually happened (logs, stack traces).
+- **The failing test or route** (the class, the method, the route):
+- **The scope it belongs to** (from `docs-v2/engineering/TEST-CATALOGUE.yml`):
+- **The output** (the stack trace, or the failing assertion — in full, not summarised):
 
 ## Environment
 
-- OS: [e.g. Linux, macOS]
-- Java version: [e.g. 25]
-- Gradle version: [e.g. 9.1.0]
-- MATRIX version / commit: [e.g. 4e845db]
+- **Commit:** `git rev-parse --short HEAD`
+- **JDK:** 25 (`java -version`)
+- **Gradle:** 9.6.0 (`./gradlew --version`)
+- **OS:**
+- **How MATRIX was run** (`:matrix-core:quarkusDev`, `scripts/start-mind.sh`, a test, …):
 
-## Additional Context
+## Evidence
 
-Any other information that might help.
+<!-- The project's evidence is the JUnit XML, not the console. Attach or name the file. -->
+
+- **JUnit XML:** `<module>/build/test-results/test/*.xml`
+- **Gate exit code**, if a gate is involved (`scripts/quality-gate.sh`,
+  `scripts/formal-gate.sh`, `scripts/security-boundary-check.sh`):
+
+## Notes
+
+<!-- Anything else that helps: a reproducer, a minimal input, a related issue. -->

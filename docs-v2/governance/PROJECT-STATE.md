@@ -2,14 +2,14 @@
 
 **Status:** `CANONICAL` · **This document is a SNAPSHOT, not a history.** It describes the
 project at one commit and is replaced, not appended to, when the state moves.
-**Snapshot of:** `1f7a18a09680117b995c2e9dcf23c089b763644c` · **Date:** 2026-11-06
+**Snapshot of:** `c86f6898416e0483a83f1ea011420d59f293c6e2` · **Date:** 2026-11-06
 **Validation:** `scripts/validate-project-state.py --strict` — it checks that the commit below
 is the repository's HEAD, that the wave and the baseline below are the current ones, and that
 the canonical documents it names exist. It reports a lag of one commit as an OBSERVATION, not
 as a defect: the snapshot names the commit it was written at, and the commit that follows it
 is the one that carries the snapshot itself.
 **The wave that produced this snapshot is still running.** The commit named above is the one
-observed at 2026-11-06T14:05:00+03:00 (`git rev-parse HEAD`); `origin/develop` pointed at
+observed at 2026-11-06T17:30:00+03:00 (`git rev-parse HEAD`); `origin/develop` pointed at
 the same commit at that moment. **The wave moves HEAD while it runs**, so a reader must
 expect the repository to be ahead of the commit written here — and must not read the lag as
 a defect.
@@ -37,13 +37,12 @@ and "served" is the single most important fact about this repository, and it is 
 | | |
 |---|---|
 | the branch | `develop` |
-| the commit | `1f7a18a09680117b995c2e9dcf23c089b763644c` — the W48 commit observed at 2026-11-06T14:40:00+03:00; this snapshot is carried by the commit that follows it |
+| the commit | `c86f6898416e0483a83f1ea011420d59f293c6e2` — the W48 commit observed at 2026-11-06T14:40:00+03:00; this snapshot is carried by the commit that follows it |
 | the remote | `origin/develop` — **the same commit** at the moment of writing (the local and the remote do not diverge). The wave is still running, so the remote moves with it |
 | the release version | **none.** The tags `v1.0.0` and `v16.0.0-mind` exist, but no release process is defined and the `v16.0.0-mind` tag predates three waves of work |
 | the latest completed wave | **W47** — the implementation of the owner's decisions of 2026-11-05 (OD-025…OD-044). Its sequence is **thirteen changesets after** the starting W46 commit `84955ec9`, and **fourteen entries with it**, through `eca23bfd`; before it, **W46** — the consolidation (`233af984`), and **W45.2** — the owner's four architecture decisions (`a6ded233`) |
 | the previous waves | W45.1 (`509d23ba`) — the crash consistency; W45.0 (`eae6003f`) — the cognitive kernel integrity; RECON-W44.0 (`ae6c017b`) — the bytecode archaeology |
-| the active wave | **W48 — its commits and its own report are in the history, and the owner has answered the three questions of 2026-11-06 (OD-045, OD-046, OD-047). The wave's report is `docs-v2/engineering/W48-STATUS.md`.** **What is still open, and named:** the **23 native-binary test failures** — `BLOCKED`, the GraalVM toolchain is absent on this host, and OD-046 puts the resource budget in the next wave (`docs-v2/engineering/W48-TEST-RECONCILIATION.md`); the **impulse consumer** — **approved (OD-045) and NOT implemented**: the ADR is the scope, the implementation is the next wave's first task (`docs-v2/engineering/ADR-W48-AUTONOMY-IMPULSE-CONSUMER.md`); the **CI observation** — **the five mandatory checks are GREEN on a clean runner** (`42206946030`): Build & Test, the Web UI tests, the quality gates (the security boundary and the formal gate both hold there), the security scan (the secret scan ran for the first time and found nothing) and the container images (three smoke tests). The only red job is the release path, which needs the owner's Docker Hub and Kubernetes credentials — the repository has no secrets configured (`gh secret list` is empty), which is recorded as R-W48-04; the **two formal-spec mutants** that SURVIVED (`Consensus-evaluate-without-quorum`, `KnowledgeAxes-conflict-forgets-what-it-recorded`). **The next wave is W49, opened by OD-045.** **No W48 task is claimed here as done beyond what its own committed document states** |
-| the modules | **14** included in `settings.gradle`, 3 commented out, 2 outside Gradle, 1 stray orphan file |
+| the active wave | **W49 — the public-research workstream (OD-048) and the two implementation tasks W48 left approved. The wave's report is `docs-v2/engineering/W49-STATUS.md`.** **What it did:** the owner-approved autonomy impulse consumer is implemented and wired into the serving paths (`c86f6898`; 12 tests, 0 failures), the native-image build's **heap and runner budget is measured** instead of guessed (`docs-v2/engineering/W49-NATIVE-BUDGET.md`; the capability stays BLOCKED), and the public face — the README, the site, the onboarding, the publication pipeline and the collaboration brief — now states what the repository actually does, with every claim traceable to an artefact. **What is still open, and named:** the **default branch is 357 commits behind** and the site is published from it (R-W49-02, Q-W49-01); the **release path** has no credentials (R-W48-04); the **static analysis produces no evidence** and the Java 25-capable engine reports 1 414 findings (Q-W49-06); the **native build** needs a larger runner and one dependency (Q-W49-05); and **six owner questions** were raised (Q-W49-01…Q-W49-06). **No W48 task is claimed here as done beyond what its own committed document states** || the modules | **14** included in `settings.gradle`, 3 commented out, 2 outside Gradle, 1 stray orphan file |
 | the serving entry points | **2** applications — the Quarkus app on **9091** (210 routes) and the brain runtime's JDK server on **8765** (28 routes) |
 | the CLI entry points | **79** |
 | the databases | **one canonical** SQLite file (`data/knowledge/workbench.sqlite`, the knowledge schema **v19** — `KnowledgeStore.SCHEMA_VERSION = 19`) plus chain B's own `data/mind/mind.sqlite` |

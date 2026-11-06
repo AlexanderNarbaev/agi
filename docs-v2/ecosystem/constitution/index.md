@@ -6,155 +6,121 @@ parent: Ecosystem
 permalink: /ecosystem/constitution/
 ---
 
-# Constitution
+**Status:** ACTIVE · **Updated:** 2026-11-06
 
-The **MATRIX Constitution** is the project's ethical and technical charter.
-It defines hard constraints that cannot be violated — by anyone, for any reason,
-including commercial pressure.
+# The Constitution
 
-The full source is at [`CONSTITUTION.md`](https://github.com/AlexanderNarbaev/agi/blob/develop/CONSTITUTION.md).
+The MATRIX Constitution is the project's normative charter: eight articles, each binding on
+the code, and each change to it a separate normative commit.
 
-## The Articles
+**The source of truth is [`CONSTITUTION.md`](../../../CONSTITUTION.md)** — a *singleton
+normative* file, revised 2026-09-16 (v3). This page is an English summary of it.
 
-### Article I — No LLM in Runtime
+> **What this page used to say.** It listed eight articles of its own — "No LLM in Runtime",
+> "Pure Hybrid Inference", "Reproducibility", "FROZEN Modulators", "Privacy", "No
+> Consciousness Claims", "No Deception", "Open Source Core" — and named the core as
+> Apache-2.0. **Those articles are not the constitution**: they do not match the file, which
+> has been normative since the beginning. The page has been rewritten against the file
+> rather than kept, because a summary that invents articles is worse than no summary.
 
-> **No Large Language Model shall be invoked in the runtime inference path.**
+## The eight articles
 
-All inference runs on:
-- BIR (symbolic rules)
-- HDC (vector memory)
-- MCTS (planning)
-- Seeded Random (deterministic)
-- FROZEN modulators (vetos)
+### I — Stratified stochasticity
 
-LLMs are allowed **only**:
-- In build-time tools (e.g., ONNX distillation of small perception models)
-- In developer-side tooling (e.g., IDE autocomplete)
-- Never in `/v1/analyze`, `/v1/explain`, `/v1/federate` request paths
+The numerical substrate — integration metrics, integration weights, weight inference,
+deterministic kernels — is implemented as **pure functions, without randomness and without a
+wall-clock read**. The cognitive layer — error-driven learning, exploration sampling,
+hypothesis generation — **may** use seeded randomness, where the seed is itself a pure
+function of the state (the episode id, the prior trajectory hash, the deterministic
+context). Adversarial mode may use unbounded randomness, and only behind the build flag
+`-Pexperimental=true` or in explicitly marked tests.
 
-**Enforcement:** CI guard in `.github/workflows/branch-validation.yml` blocks
-any PR adding `openai`, `anthropic`, `cohere`, or `gemini` imports to
-production runtime modules.
+**LLM calls in decision paths remain forbidden. Wall-clock reads in decision paths remain
+forbidden** — the deterministic replay requirement is what makes debugging and auditing
+possible. Learning is stochastic, and learning lives outside the runtime loop.
 
-### Article II — Pure Hybrid Inference
+### II — K_MAX = 20
 
-> **Every decision must be grounded in both logic and memory.**
+The boolean artefacts are bounded to **20 inputs**. Raising the bound means revisiting every
+compiler and backend of the BIR.
 
-Pure LLM (logic only) and pure database lookup (memory only) are forbidden
-for primary decisions. MATRIX always runs:
+### III — The frozen zones
 
-1. BIR rule firing (logic)
-2. HDC memory retrieval (memory)
-3. MCTS plan search (planning)
-4. Modulator gates (veto)
+These are **not changed without an explicit RFC**: `CONSTITUTION.md` itself, `AGENTS.md`,
+`matrix-core/src/main/java/io/matrix/ethics/frozen/**` and the analogous frozen packages,
+`matrix-core/src/main/resources/avro/**` (the schemas — only reversibly compatible
+changes), and `.github/workflows/**`.
 
-### Article III — Reproducibility
+The check that holds this is in the CI: `scripts/quality-gate.sh` reports the frozen zones
+against their recorded exceptions.
 
-> **All decisions must be reproducible from the same input and seed.**
+### IV — The four prohibitions
 
-Every inference uses **seeded Random** (`java.util.Random` with explicit seed
-or `SplittableRandom`). No `Math.random()`, no `System.nanoTime()` in the
-inference path.
+The system does not violate these invariants under any circumstances and for any content of
+the inputs:
 
-This means:
-- Two requests with the same input return the same output
-- Auditors can replay any past decision
-- Debugging is deterministic
+1. it does not kill,
+2. it does not torture,
+3. it does not enslave,
+4. it does not reproduce without the operator's explicit consent.
 
-### Article IV — FROZEN Modulators
+They are implemented in `EthicalFilter`, `StructuralSafetyGuard`, `LieDetector` and the
+frozen FROZEN-FNL guardian — the only mathematically verifiable carrier of the
+prohibitions.
 
-> **The four modulators are immutable.**
+### V — The coverage gate
 
-| Modulator | Purpose |
-|-----------|---------|
-| **ETHICAL_FILTER** | Refuses outputs violating ethical guidelines |
-| **SAFETY_MONITOR** | Refuses outputs that could cause harm |
-| **CONSISTENCY_CHECKER** | Refuses outputs contradicting prior state |
-| **LIE_DETECTOR** | Refuses outputs misrepresenting source data |
+JaCoCo coverage of **≥ 82 % METHOD on `matrix-core`**. Lowering it requires a separate RFC
+with a justification.
 
-All four must pass for `accepted: true`. **No developer can override them.**
-No PR can modify their logic without an explicit CONSTITUTION amendment.
+### VI — The forbidden claims
 
-### Article V — Privacy
+In code, documentation, reports and comments, the following are forbidden:
 
-> **User data is sovereign.**
+- "AGI", "general artificial intelligence", "superintelligence" and the like;
+- "does not lie", "does not forget", "cannot be used for harm" — claims of absolute safety;
+- **numerical characteristics without measurements or benchmarks**.
 
-- Inference runs on-prem by default
-- Cloud option uses encryption-at-rest and in-transit
-- "Right to be forgotten" (GDPR) is honored via the `GdprPruner` in
-  `matrix-audit` (T-06)
-- Data retention policies are configurable per plan
+**Any number comes only from a real run with an explicit methodological protocol.** This
+article is the reason several once-published figures are absent from the public pages, and
+the reason the audited claims are published with their scope attached.
 
-### Article VI — No Consciousness Claims
+### VII — The stack
 
-> **MATRIX does not claim consciousness, sentience, or any form of inner experience.**
+The permitted dependencies are listed in `docs-v2/engineering/STANDARDS-MATRIX.md` with
+their current versions. A major upgrade is a separate RFC with measurements.
 
-We use metaphors like "civilization" and "brain" to explain complex systems
-to humans. These are pedagogical tools, not claims about the system's
-metaphysical status.
+### VIII — The environment and explicitness
 
-When you read docs:
-- "the brain decides" → the BIR/HDC/MCTS pipeline produced an output
-- "the civilization coordinates" → multiple instances reached consensus
-- "the modulator fired" → the veto threshold was crossed
+Every artefact of the system is applicable as public open source. There is no "shadow"
+logic. Every runtime decision is a **boolean chain (BRC)**, auditable through the
+`x-matrix-trace` header and the hash chain
+(`docs-v2/architecture/FORMAL-CONTRACTS.md`).
 
-These are engineering shorthand, **not** metaphysical claims.
+## The licensing, stated correctly
 
-### Article VII — No Deception
-
-> **MATRIX must never knowingly deceive its users.**
-
-- If confidence is low, the system says so
-- If a modulator fails, the system says so
-- If the system doesn't know, it says so
-- Hallucination is structurally impossible (BIR enforces facts)
-
-### Article VIII — Open Source Core
-
-> **The research core is open source.**
-
-`matrix-core` is licensed under Apache-2.0. The ecosystem modules
-(`matrix-api-gateway`, `matrix-sdk-java`, etc.) are also open source.
-
-Commercial offerings are around:
-- Hosted SLA (enterprise tier)
-- Compliance certification (T-06 audit + T-07 license validation)
-- Priority support
-
-Not around hiding the core algorithm.
-
----
+The code is under the **GNU Affero General Public License v3** — `LICENSE` in the root, and
+the licensing decision in `docs-v2/levels/L12-Legal.md`. The collaboration terms, the
+dataset licences and the publication floor are in `docs-v2/levels/L22.md`.
 
 ## Amendments
 
-The Constitution can be amended only by:
-1. Public RFC in `docs-v2/proposals/`
-2. 2-week comment period
-3. Approval by 3 maintainers
-4. Version bump of CONSTITUTION.md
-
-No silent edits.
+The Constitution is amended by a separate normative commit of the series
+`WAL: CONST amend`. **There are no silent edits**, and the file is a frozen zone: changing
+it needs an explicit RFC.
 
 ## Enforcement
 
-| Article | CI Check |
-|---------|----------|
-| I | No LLM imports in production modules |
-| II | Inference must use both BIR and HDC |
-| III | No `Math.random()`, no `System.nanoTime()` |
-| IV | Modulators cannot be overridden in PR |
-| V | GdprPruner must be present in `matrix-audit` |
-| VI | No consciousness-claiming language in docs |
-| VII | No false-positive confidence in tests |
-| VIII | `matrix-core` stays Apache-2.0 |
+| the article | what holds it |
+|---|---|
+| I, and the ban on LLM calls and wall-clock reads in decision paths | the runtime-guard test and the branch validation gate; the reproduced value is 0 legacy LLM imports on a decision path (registry row `C-01b`) |
+| III | the frozen-zone check in the quality gate |
+| V | the JaCoCo coverage gate on `matrix-core` |
+| VI | the governance of the documents — and the audited claims in the capability registry, which exist because the rule was once broken |
+| VIII | the audit surfaces of the runtime and the hash chain |
 
-## Compliance
+## If you believe a violation occurred
 
-If you believe a CONSTITUTION violation has occurred:
-1. Open an issue tagged `constitution-violation`
-2. Include the article number, the offending code/docs, and the expected fix
-3. Maintainers have 24 hours to acknowledge
-
----
-
-**Last updated:** 2026-09-21 (Wave T-03)
+Open an issue that names the article, the code or document, and what the expected behaviour
+is. The governance records are in `docs-v2/governance/` — the decision register, the risk
+register and the open questions.

@@ -1,6 +1,6 @@
 # MATRIX — OPEN QUESTIONS
 
-**Status:** `CANONICAL` · **Date:** 2026-11-05
+**Status:** `CANONICAL` · **Date:** 2026-11-06
 **The machine-readable snapshot of this register** is
 `docs-v2/engineering/W46-OPEN-QUESTIONS.csv` — the W46.0 audit's evidence. **This document is
 the register of record.** When the two disagree, this document is authoritative.
@@ -38,6 +38,12 @@ which.
 | Q-W46-21 | engineering-uncertainty | The migration from the v1 tree to docs-v2 removed the tree, and 41 references to it survive in the historical and the current documents (docs/spec/, docs/research/, docs/GLOSSARY.md, data/smoke-old, the archive tarball). Should they be pointed at the v2 equivalents, or marked as the removed tree? | no | OPEN |
 | Q-W46-22 | operational-blocker | The harness reads its skills from `.agents/skills/`, `.dsh/skills/` and the user directories — NOT from `.opencode/skills/`. The repository's 27 packages there are invisible to a session (25 arrive through byte-identical mirrors, `coprocessor` through a mirror with 13 extra lines, `matt-pocock` not at all). Should the four recommended MATRIX skills be registered in the harness's trigger table (`src/lib/53-auto-skills.sh` and its mirror), or is the directory enough? | no | CLOSED |
 | Q-W46-23 | operational-blocker | Four skill packages declare a name that does not match their directory (`seatch-first`→`search-first`, `scientific-thinking-scholar-evaluation`→`scholar-evaluation`, `plan.retired-backup`→`plan`, and `matt-pocock` without a root SKILL.md). Should they be corrected? | no | CLOSED |
+| Q-W49-01 | architecture-decision | The default branch is 357 commits behind `develop` and the public site is built from it. Should `main` be moved to the current work, or should the site publish from `develop` through a reviewed path? | **yes** | OPEN |
+| Q-W49-02 | product-decision | Should the recommended repository description and topic tags be applied, and should GitHub's private vulnerability reporting be enabled (there is no private channel today)? | **yes** | OPEN |
+| Q-W49-03 | architecture-decision | Who are the authors, in what order, and is a formal release wanted? Without them a `CITATION.cff` could only carry invented values, so the citeable unit is a versioned commit for now. | **yes** | OPEN |
+| Q-W49-04 | product-decision | Which of the two ready publication candidates goes first: B (evidence-preserving state and recovery) or C (workload-dependent CPU/CUDA acceleration)? | **yes** | OPEN |
+| Q-W49-05 | operational-blocker | The native build needs more than 8 GB of heap and more than GitHub's 16 GB runner, and PDFBox's optional BouncyCastle module is missing. Is a larger runner acceptable, and should MATRIX carry BouncyCastle? | **yes** | OPEN |
+| Q-W49-06 | architecture-decision | The static-analysis gate produces no evidence because the pinned engine cannot read Java 25 bytecode; the engine that can reports 1 414 findings, 981 of them `EI_EXPOSE_REP*`. What is the policy for those categories — fix, exclude, or accept? | **yes** | OPEN |
 
 ---
 
@@ -415,6 +421,90 @@ decisions and to leave the code to W47. Every closed question names the task tha
 > its name carries a dot, which the harness's own name rule forbids
 > (`^[a-z0-9]+(?:-[a-z0-9]+)*$`). Both refusals are recorded in
 > `docs-v2/governance/DECISION-REGISTER.md` OD-034 with the reason.
+
+### Q-W49-01 — The default branch is 357 commits behind `develop`, and the public site is built from it
+
+- **type**: architecture-decision
+- **why it matters**: A visitor to the repository sees the W37.5 state of the project, and the deployed site carries the withdrawn positioning — because both are published from `main`, which is `7a0ed0cc` of 2026-10-12. The wave rewrote the site and the README on `develop`; nothing a visitor sees changes until the publication path is decided.
+- **what is known**: the gap is **357 commits** (`git rev-list --count main..develop`); the deployed URL and its build branch were read from `gh api repos/AlexanderNarbaev/agi/pages`; the W49 wave added a pull-request build that validates the site **without publishing**, and the publication stays on the reviewed `main` path.
+- **evidence**: `docs-v2/engineering/W49-BASELINE.md` §1 and §3.1; `.github/workflows/pages.yml`; `scripts/validate-pages-config.sh`
+- **competing explanations**: (a) `main` is moved to the current work through a verified pull request; (b) the site publishes from `develop` and the default branch stays a release branch; (c) the gap is accepted and the README carries the pointer to `develop` that it carries now
+- **available experiments**: none needed — the three options are configurations, and the second and the third are already implemented
+- **cost of resolving**: one pull request and one deployment, or one workflow change
+- **risk of not resolving**: the project's public face describes a project that no longer exists in the repository
+- **owner decision required**: **yes** — the directive forbids changing the default branch without a separate decision
+- **dependencies**: none
+- **status**: OPEN
+
+### Q-W49-02 — Should the recommended repository metadata be applied, and should a private security channel exist?
+
+- **type**: product-decision
+- **why it matters**: the repository has no description, no topics and no homepage; and it has **no private security-reporting channel** — `private_vulnerability_reporting` is not enabled, so the security template had nothing real to point at.
+- **what is known**: a description and twelve topic tags are **recommended** in `docs-v2/engineering/W49-BASELINE.md` §7; the security template now states plainly that no private channel exists and asks the reader to request one rather than pointing at a file that does not exist; Discussions stays disabled, because no moderation or reporting arrangement exists.
+- **evidence**: `gh api repos/AlexanderNarbaev/agi` → `description: null`, `topics: []`, `has_discussions: false`, `private_vulnerability_reporting: null`; `.github/ISSUE_TEMPLATE/security.md`
+- **competing explanations**: (a) apply the description and the topics, and enable GitHub's private vulnerability reporting; (b) apply the description only, and leave the security channel as it is — a public issue tracker with no private route; (c) apply nothing and leave the repository as it is
+- **available experiments**: none — these are settings
+- **cost of resolving**: minutes
+- **risk of not resolving**: a repository that is hard to find and a security contact that does not exist
+- **owner decision required**: **yes**
+- **dependencies**: none
+- **status**: OPEN
+
+### Q-W49-03 — Who are the authors, in what order, and is a formal release wanted?
+
+- **type**: architecture-decision
+- **why it matters**: `CITATION.cff` is the machine-readable citation, and the file would have to carry the author order, a DOI, a publisher, a release version and a release date. **None of those exists**: `gh release list` is empty, the tags stop at `v18.0.0-mind` (`7a0ed0cc`, 2026-10-12, an ancestor of `develop`), and there is no author list.
+- **what is known**: the licence is AGPL-3.0 and the publication pipeline records that **until a release exists, the citeable unit is a versioned commit**.
+- **evidence**: `gh release list` → empty; `docs-v2/research/PUBLICATION-PIPELINE.md` §5; `docs-v2/engineering/W49-BASELINE.md` §3.3
+- **competing explanations**: (a) a formal release is cut and `CITATION.cff` is added with it; (b) no release is cut and the citation is the commit hash, as the pipeline says; (c) the author order is supplied and the rest waits for a release
+- **available experiments**: none
+- **cost of resolving**: a release procedure, or one sentence in the README
+- **risk of not resolving**: the work cannot be cited in the way the field expects
+- **owner decision required**: **yes** — the author order and the DOI are the owner's, and they must not be invented
+- **dependencies**: none
+- **status**: OPEN
+
+### Q-W49-04 — Which publication candidate goes first: B or C?
+
+- **type**: product-decision
+- **why it matters**: two candidates are ready to be written up, and they need different things: **B** (evidence-preserving state and recovery) needs almost nothing external, while **C** (workload-dependent CPU/CUDA acceleration) needs a second GPU to be reproduced on.
+- **what is known**: the verdicts and the missing evidence for each are in `docs-v2/research/PUBLICATION-CANDIDATES.md`: **B → PROCEED**, **C → PROCEED**, **A → REVISE**. The broad-AGI paper is not proposed, on the repository's own evidence.
+- **evidence**: `docs-v2/research/PUBLICATION-CANDIDATES.md`; the reproducible opportunities in `docs-v2/research/REPRODUCIBLE-OPPORTUNITIES.md`
+- **competing explanations**: (a) B first, because it needs no external resource; (b) C first, because the negative half — the single-point call is four times SLOWER on the GPU — is the more transferable result; (c) neither yet, and the collaboration brief's six requests come first
+- **available experiments**: both are already measured; what is missing is the writing and the review
+- **cost of resolving**: the order of two writing tasks
+- **risk of not resolving**: both sit half-written
+- **owner decision required**: **yes**
+- **dependencies**: Q-W49-03 for the citation metadata
+- **status**: OPEN
+
+### Q-W49-05 — Is a larger runner acceptable for the native build, and should MATRIX carry BouncyCastle?
+
+- **type**: operational-blocker
+- **why it matters**: the native-image build cannot succeed on the runner the workflow selects. The measurement says the heap must exceed 8 GB and the runner must have more than the standard 16 GB; and with the memory resolved the build stops on PDFBox's **optional** BouncyCastle dependency, which the application does not declare.
+- **what is known**: the heap and the runner figures are measured (`docs-v2/engineering/W49-NATIVE-BUDGET.md`); the build is feasible on a 59 GiB host with GraalVM installed outside the repository; the fix is one line — `bcpkix-jdk18on` at the version PDFBox 3.0.3's parent declares.
+- **evidence**: `docs-v2/engineering/W49-NATIVE-BUDGET.md` §2 and §4; the CI run `41219224376` log
+- **competing explanations**: (a) a larger runner and the dependency — the native path becomes real; (b) a larger runner only — the build then fails on the dependency; (c) neither — the capability stays BLOCKED and the measurement is the deliverable
+- **available experiments**: both are one configuration change and one dependency line
+- **cost of resolving**: a larger runner is a **cost decision**; the dependency is a runtime dependency the project either carries or does not
+- **risk of not resolving**: the native capability stays BLOCKED, and the 25 native-binary test failures stay "neither passing nor failing"
+- **owner decision required**: **yes** — the runner is a cost, and the dependency changes the application's footprint
+- **dependencies**: none
+- **status**: OPEN
+
+### Q-W49-06 — What is the policy for the 1 414 findings the Java 25-capable SpotBugs engine reports?
+
+- **type**: architecture-decision
+- **why it matters**: the static-analysis gate produces **no evidence** today, because the pinned engine (4.9.3, ASM 9.7.1) cannot read Java 25 bytecode. The engine that can — 4.10.5, ASM 9.11 — was measured locally and reports **1 414 findings**, 981 of them `EI_EXPOSE_REP`/`EI_EXPOSE_REP2` ("may expose an internal representation by returning a mutable object").
+- **what is known**: the W48 wave replaced the step's `errexit` bug, so the known limitation is now reported as a loud warning and the two real checks after it (the secret scan and the vulnerable-dependency check) actually run; the pin was **not** changed, because turning the engine on is a decision about 1 414 findings, not a version bump.
+- **evidence**: `docs-v2/engineering/W48-CI-RECONCILIATION.md` §4.9.2; the local run with the 4.10.5 engine
+- **competing explanations**: (a) upgrade the engine and triage the findings by category; (b) upgrade the engine and exclude the low-signal categories with a recorded exclusion list; (c) keep the pin and accept that no static-analysis evidence is produced
+- **available experiments**: the engine has already been run once; the triage is the work
+- **cost of resolving**: one wave of triage, and possibly a large refactor under option (a)
+- **risk of not resolving**: the repository has no static-analysis evidence at all, and a gate that silently produces nothing is the failure mode the W48 wave fixed elsewhere
+- **owner decision required**: **yes**
+- **dependencies**: none
+- **status**: OPEN
 
 ---
 

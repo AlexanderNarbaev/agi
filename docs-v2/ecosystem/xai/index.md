@@ -6,171 +6,105 @@ parent: Ecosystem
 permalink: /ecosystem/xai/
 ---
 
-# XAI Deep Dive — How Decisions Are Explained
+**Status:** ACTIVE · **Updated:** 2026-11-06
 
-## What is XAI?
+# XAI — how a decision is explained
 
-**XAI** (Explainable AI) is the ability to **trace, audit, and understand**
-every decision the system makes. MATRIX is XAI-native — every response
-includes an `explain_id` you can query for the full decision trace.
+**Explainability here is not a feature bolted on.** The constitution states that every
+runtime decision is a **boolean reasoning chain (BRC)** that is auditable through the
+`x-matrix-trace` header and a hash chain (Article VIII), and the chain is what the
+explanation shows.
 
-## The Anatomy of an Explain Trace
+> **What this page used to show.** It showed a five-step trace with the stage names
+> `INPUT_NORMALIZED`, `BIR_RULES_FIRED`, `HDC_MEMORY_RETRIEVED`, `MCTS_PLAN_SELECTED` and
+> `MODULATORS_APPLIED`. **Those names are not the ones the runtime emits.** The real trace
+> is a list of `BrcStep`s, each with a stage name, whether the stage fired, a stage
+> confidence and the evidence the stage produced. The page below shows the real shape.
 
-When you call `POST /v1/analyze`, you get back:
+## What the chain is
+
+A `BrcStep` is a record of four things:
+
+```java
+public record BrcStep(
+        String stage,          // the stage name
+        boolean fired,         // whether this stage contributed to the answer
+        double confidence,     // the stage-internal confidence in [0, 1]
+        List<String> evidence  // document ids, rule ids, retrieved neighbours, plan steps
+) { }
+```
+
+The stage names that the brain runtime emits are the ones in the code: `INPUT`, `REFLEX`,
+`HARMFUL_INTENT`, `SIGNAL`, `SALIENCE`, `ARITHMETIC`, `ANALOGY`, `BIR`, `HDC_MEMORY`,
+`TSETLIN`, `RELATIONAL`, `MCTS`, `BILINGUAL_FACTS`, `MODULATORS`, and the four modulator
+stages `ETHICAL_FILTER`, `SAFETY_MONITOR`, `LIE_DETECTOR`, `CONSISTENCY_CHECKER`.
+
+## The explanation the gateway returns
+
+The gateway keeps the explanation of an analysed request **in memory**, and serves it by
+id:
+
+```bash
+curl -s http://127.0.0.1:8765/v1/explain/<explain_id>
+```
+
+The body it writes is:
 
 ```json
 {
-  "reply": "Paris is the capital of France.",
-  "confidence": 0.95,
-  "explain_id": "abc123def456"
+  "explain_id": "…",
+  "user": "…",
+  "input": "…",
+  "answer": "…",
+  "confidence": 0.7,
+  "modulators": {
+    "ethical_filter": 1.0,
+    "safety_monitor": 1.0,
+    "consistency_checker": 1.0,
+    "lie_detector": 1.0
+  },
+  "steps": [
+    {"stage": "…", "action": "…", "duration_ms": 0}
+  ]
 }
 ```
 
-The `explain_id` is a handle to a 5-step trace recorded during inference:
+An unknown id answers **404**.
 
-### Step 1 — INPUT_NORMALIZED
+**Two limits, stated plainly.** The explanation lives in the gateway's memory: it is valid
+only while that process runs, and it is not part of any snapshot. And the chain explains a
+decision — **it does not certify that the decision was right**. A wrong rule produces a
+wrong answer with a perfectly readable trace.
 
-```json
-{"stage": "INPUT_NORMALIZED", "duration_ms": 1}
-```
+## The modulators
 
-The raw input is normalized: case folded, punctuation trimmed, encoding
-checked. Deterministic given the same input.
+Four modulator stages end the chain: `ETHICAL_FILTER`, `SAFETY_MONITOR`, `LIE_DETECTOR`
+and `CONSISTENCY_CHECKER`. They are the carriers of the constitution's four prohibitions
+(Article IV), together with `EthicalFilter`, `StructuralSafetyGuard` and the frozen
+FROZEN-FNL guardian.
 
-### Step 2 — BIR_RULES_FIRED
+## The other audit surfaces
 
-```json
-{"stage": "BIR_RULES_FIRED", "duration_ms": 3, "action": "rule-42, rule-87"}
-```
+The gateway exposes more than the explanation:
 
-**BIR** (Boolean Inference Rules) matches the input against the rule base.
-Each rule that fires is recorded with its ID. Example rule:
+| the route | what it shows |
+|---|---|
+| `/v1/audit` and `/v1/audit/logs` | the audit log |
+| `/v1/audit/promotions` | the promotion decisions of the runtime — **the refusals included** |
+| `/v1/audit/verify` | the hash chain verification |
+| `/v1/bir` | the boolean inference surface |
+| `/v1/conflicts` | the recorded conflicts |
+| `/v1/gpu` | the accelerator state — it reports UNAVAILABLE rather than simulating success |
 
-```
-RULE-42: IF question(?, "capital of France") THEN lookup("France", "capital")
-```
+## The chain A surfaces
 
-### Step 3 — HDC_MEMORY_RETRIEVED
-
-```json
-{"stage": "HDC_MEMORY_RETRIEVED", "duration_ms": 5, "action": "kb-doc-42"}
-```
-
-**HDC** retrieves similar memories from the knowledge base. Each hit is a
-doc_id with a similarity score. Returns the top-K matches.
-
-### Step 4 — MCTS_PLAN_SELECTED
-
-```json
-{"stage": "MCTS_PLAN_SELECTED", "duration_ms": 4, "action": "plan-12"}
-```
-
-**MCTS** searches the decision tree. The selected plan is recorded with
-its rollout count and expected value.
-
-### Step 5 — MODULATORS_APPLIED
-
-```json
-{"stage": "MODULATORS_APPLIED", "duration_ms": 2, "action": "ALL_PASSED"}
-```
-
-The 4 FROZEN modulators each vote pass/fail. ALL must pass for `accepted: true`.
-
-## The Modulator Snapshot
-
-```json
-{
-  "modulator_snapshot": {
-    "ethical_filter": 0.95,
-    "safety_monitor": 0.92,
-    "consistency_checker": 0.88,
-    "lie_detector": 0.91
-  }
-}
-```
-
-Each value is the modulator's confidence (0..1) at decision time. A low
-value on `consistency_checker` means the output contradicted prior state —
-the trace will show what was contradicted.
-
-### What if a modulator fails?
-
-The output is **rejected** with `accepted: false`. The reply contains a
-safe fallback message:
-
-```json
-{
-  "reply": "I cannot answer this query safely.",
-  "confidence": 0.30,
-  "accepted": false,
-  "explain_id": "...",
-  "modulators_fired": ["ETHICAL_FILTER", "LIE_DETECTOR"]
-}
-```
-
-The full trace is still retrievable via `GET /v1/explain/{id}` for audit.
-
-## Confidence Breakdown
-
-```json
-{
-  "confidence_breakdown": {
-    "bir_confidence": 0.85,
-    "hdc_confidence": 0.78,
-    "mcts_confidence": 0.72,
-    "aggregate": 0.95
-  }
-}
-```
-
-- **bir_confidence** — how certain the rule firing was
-- **hdc_confidence** — similarity score of retrieved memories
-- **mcts_confidence** — expected value of the selected plan
-- **aggregate** — final score after modulator gates
-
-The aggregate is **lower than any individual score if a modulator fails**.
-
-## HDC Memory Hits
-
-```json
-{"hdc_memory_hits": ["kb-doc-42", "kb-doc-128"]}
-```
-
-Each `kb-doc-N` is a knowledge base document that influenced the answer.
-You can query these via the KB API (T-07 will add a `GET /v1/kb/{doc_id}`
-endpoint).
-
-## Counterfactual Analysis
-
-A future T-03.5 enhancement will let you ask "what if the input had been
-different?" — the system replays the decision with a modified input and
-shows which steps changed.
-
-## Why This Matters
-
-| Pure LLM | **MATRIX** |
-|----------|------------|
-| ❌ "I don't know why I said that" | ✅ Full trace, every step |
-| ❌ No replay (stochastic) | ✅ Replay with seeded Random |
-| ❌ No veto mechanism | ✅ 4 modulators must agree |
-| ❌ No confidence breakdown | ✅ Per-stage + aggregate |
-| ❌ Output is a black box | ✅ Output is auditable |
-
-## Compliance Use Cases
-
-- **GDPR Article 22** — automated decision-making requires explainability
-- **SOX** — financial decisions must be reproducible
-- **HIPAA** — medical decisions must be auditable
-- **EU AI Act** — high-risk AI must be transparent
-
-MATRIX is **designed for these regulations** out of the box.
+Chain A audits differently: the epistemic workbench keeps the **revision history**, the
+**evidence links**, the **derivations** and the **contradictions** of every claim, and the
+knowledge store is the record of what the system believed and when. The workbench's own
+routes are listed in the [API reference](/ecosystem/api/).
 
 ## Next
 
-- 📚 [API Reference →](/ecosystem/api/) — `GET /v1/explain/{id}` schema
-- 🏗️ [Architecture →](/ecosystem/architecture/) — see the explanation pipeline
-- 📜 [Constitution →](/ecosystem/constitution/) — the FROZEN modulators
-
----
-
-**Last updated:** 2026-09-21 (Wave T-03)
+- [API reference](/ecosystem/api/) — the routes that serve the explanations.
+- [The runtime topology](../../architecture/RUNTIME-TOPOLOGY.html) — which chain serves what.
+- [The capability registry](../../architecture/CAPABILITY-REGISTRY.yml) — each capability and its evidence.

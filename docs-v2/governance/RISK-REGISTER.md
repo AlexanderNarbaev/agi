@@ -46,6 +46,8 @@ implemented, tested and never called has no exposure, and saying so is part of t
 | [R-W48-02](#r-w48-02--the-ci-toolchain-is-not-reproducible-and-the-gpu-path-is-not-exercised-by-any-ci-job)| The CI toolchain is not reproducible, and the GPU path is not exercised by any CI job | medium | medium | PARTIALLY CLOSED — the formal tool is tracked and verified (16a2d0c5, 9bb6bf5c). The GPU path is NOT exercised in CI: no workflow contains a gpu/cuda/nvidia job |
 | [R-W48-03](#r-w48-03--the-mandatory-ci-jobs-depended-on-things-the-runner-does-not-have-and-on-steps-that-had-never-run)| The mandatory CI jobs depended on things the runner does not have, and on steps that had never run | high | high | CLOSED — the three causes are diagnosed from the runner's own logs and fixed (bc87935c, e0de8419); the security boundary and the formal gate are green on a clean runner |
 | [R-W48-04](#r-w48-04--the-release-path-needs-credentials-the-repository-does-not-have-so-it-is-red-on-every-push)| The release path needs credentials the repository does not have, so it is red on every push | medium | high | OPEN — external: `gh secret list` is empty; the owner's credentials are required |
+| [R-W49-01](#r-w49-01--the-native-build-cannot-succeed-on-the-runner-the-workflow-selects-and-its-second-blocker-is-a-missing-dependency)| The native build cannot succeed on the runner the workflow selects, and its second blocker is a missing dependency | medium | high | MEASURED — the heap and the runner budget are recorded; the capability stays BLOCKED (OD-046) |
+| [R-W49-02](#r-w49-02--the-public-face-is-published-from-a-branch-that-is-357-commits-behind)| The public face is published from a branch that is 357 commits behind | high | high | OPEN — the owner's decision: move `main`, or publish from `develop` (Q-W49-01) |
 
 ---
 
@@ -415,6 +417,30 @@ implemented, tested and never called has no exposure, and saying so is part of t
 - **mitigation**: Either the owner configures the credentials, or the release job is declared to run only where they exist (a job that cannot run is a red job, not a safety net). W48 does neither: the credentials are the owner's to set, and marking the job away would remove the release path from the pipeline without an owner decision.
 - **owner**: the owner — the credentials and the release policy are both owner decisions.
 - **status**: OPEN — external, precisely stated. The five mandatory checks are green (`docs-v2/engineering/W48-CI-RECONCILIATION.md` §4.11); this record is the release path, not the verification path.
+
+### R-W49-01 — The native build cannot succeed on the runner the workflow selects, and its second blocker is a missing dependency
+
+- **category**: operational
+- **severity**: medium
+- **probability**: high
+- **impact**: high
+- **evidence**: The native workflow builds with Quarkus's default native-image heap, which is **8 GB** — the CI's own log says `7.64GB of memory (45.6% of system memory, set via '-Xmx8g')`, i.e. a ≈16.75 GB machine — and it dies with `java.lang.OutOfMemoryError: Java heap space`. W49 measured the budget directly (`docs-v2/engineering/W49-NATIVE-BUDGET.md`): **8 GB fails**, **16 GB clears the memory wall**, and a build that needs more than 8 GB of heap does not fit on the standard 16 GB runner. With the memory resolved, the build stops at a second blocker: `NoClassDefFoundError: org/bouncycastle/cms/CMSException` — PDFBox declares BouncyCastle as an **optional** dependency and `matrix-core/build.gradle:72` does not add it.
+- **exposure**: The native capability is **BLOCKED** and has been for 1 403 recorded CI runs. The 25 native-binary test failures are counted as neither passing nor failing, so the project's total test population stays unknown (R-W46-10). The risk is not "the build is flaky" — it is that the build **cannot** succeed on the runner the workflow selects, so no configuration of the code alone can fix it.
+- **mitigation**: measured, not guessed. The workflow needs a runner with more than 16 GB, and the application needs the BouncyCastle module that PDFBox's own POM declares. Both are one line each. The W49 wave measured and recorded them; it did not apply the dependency, because it is the owner's call (Q-W49-05).
+- **owner**: the owner — a larger runner is a cost decision, and the dependency changes the application's footprint
+- **status**: MEASURED, not closed — the budget is known (`docs-v2/engineering/W49-NATIVE-BUDGET.md`) and the capability stays **BLOCKED** until a build succeeds.
+
+### R-W49-02 — The public face is published from a branch that is 357 commits behind
+
+- **category**: operational
+- **severity**: high
+- **probability**: high
+- **impact**: high
+- **evidence**: The repository's default branch is `main`, and it is at `7a0ed0cc` — 2026-10-12, the W37.5 release. `git rev-list --count main..develop` → **357 commits**. The GitHub Pages site is built from `main` (`.github/workflows/pages.yml` → `on: push: branches: [main]`), so the deployed site carried the withdrawn positioning — the title "MATRIX: The Hybrid Intelligence Encyclopedia", "city of minds" ×4, "W1500" ×2 and wave references from W30 to W33 — while `develop` carried the current implementation and the W48 evidence.
+- **exposure**: Everything the wave wrote — the rewritten README, the landing page, the corrected configuration, the onboarding, the publication pipeline and the collaboration brief — is on `develop` and therefore **invisible** to a visitor. The directive forbids changing the default branch without a separate decision, so the wave cannot close this itself.
+- **mitigation**: the wave made the publication path observable and correct without changing the branch: the Pages workflow now builds and validates the site on a pull request without publishing, `scripts/validate-pages-config.sh` checks the configuration against the deployment URL read from the GitHub API, and the rewritten site is ready to publish the moment the owner decides where publishing happens from.
+- **owner**: the owner (Q-W49-01) — the default branch, and the publication path, are owner decisions
+- **status**: OPEN — the content is ready; the decision is not.
 
 ---
 

@@ -6,6 +6,8 @@ parent: Экосистема
 permalink: /ru/ecosystem/algorithms/
 ---
 
+**Статус:** ACTIVE · **Обновлено:** 2026-11-06
+
 # Алгоритмы
 
 > **EN-документация является канонической.** Переводы добавляются постепенно.
@@ -13,16 +15,21 @@ permalink: /ru/ecosystem/algorithms/
 
 ## Основные алгоритмы
 
-- [BIR](/ecosystem/algorithms/bir/) — Boolean Inference Rules (логика)
-- [HDC](/ecosystem/algorithms/hdc/) — Hyperdimensional Computing (память)
-- [MCTS](/ecosystem/algorithms/mcts/) — Monte Carlo Tree Search (планирование)
-- [Sobel](/ecosystem/algorithms/sobel/) — детекция границ (vision)
-- [FFT](/ecosystem/algorithms/fft/) — спектральный анализ (audio)
-- [Biochemical Network](/ecosystem/algorithms/biochemical/) — FROZEN модуляторы
-- [Stigmergy](/ecosystem/algorithms/stigmergy/) — federation координация
+| алгоритм | где работает |
+|---|---|
+| [BIR](/ecosystem/algorithms/bir/) — булев вывод | стадия 6 десятистадийного цикла; логический субстрат |
+| [HDC](/ecosystem/algorithms/hdc/) — гиперразмерные вычисления | стадия 7; память образов, `HdcEncoding.DIM = 1024` |
+| [MCTS](/ecosystem/algorithms/mcts/) — поиск по дереву Монте-Карло | стадия 9; планирование |
+| [Sobel](/ecosystem/algorithms/sobel/) — детекция границ | видео-транскодер, `io.matrix.transcoders.VisionEdgeEncoder` |
+| [FFT](/ecosystem/algorithms/fft/) — спектральный анализ | аудио-транскодер, `io.matrix.transcoders.AudioFFTEncoder` |
+| [Биохимическая сеть](/ecosystem/algorithms/biochemical/) — динамика модуляторов | `io.matrix.federation.liquid.biochemistry` — **остров, без обслуживающего пути** |
+| [Стегимергия](/ecosystem/algorithms/stigmergy/) — непрямая координация | `io.matrix.neuron.StigmergicFederation` |
 
-Подробная документация на английском: [Algorithms →](/ecosystem/algorithms/)
+**Оговорка.** Раньше эта страница утверждала, что эти алгоритмы «питают каждый вызов
+`/v1/analyze`». Это не так: режим шлюза по умолчанию — `stub`, а настоящий цикл работает
+только при `MATRIX_MODE=production`; и даже там не каждая стадия срабатывает на каждом
+входе.
 
----
-
-**Последнее обновление:** 2026-09-21 (Волна T-03)
+Полные страницы на английском: [Algorithms →](/ecosystem/algorithms/) ·
+реестр возможностей: `docs-v2/architecture/CAPABILITY-REGISTRY.yml` ·
+индекс отрицательных результатов: `docs-v2/research/NEGATIVE-RESULTS-INDEX.md`.

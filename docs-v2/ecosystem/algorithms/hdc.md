@@ -12,12 +12,14 @@ permalink: /ecosystem/algorithms/hdc/
 
 **HDC** (Hyperdimensional Computing, aka Vector Symbolic Architectures) is a
 method of representing and manipulating concepts as **high-dimensional binary
-vectors** (typically 10,000 bits). It gives neural-network-like generalization
+vectors** — **1 024 bits** in this implementation (`HdcEncoding.DIM`), where the
+literature commonly uses 10 000. It gives neural-network-like generalization
 to purely symbolic systems.
 
 ## Mathematical Foundation
 
-A concept is represented as a vector **v ∈ {-1, +1}^D** where D ≈ 10,000.
+A concept is represented as a vector **v ∈ {-1, +1}^D** where D = 1 024 in this
+implementation (`HdcEncoding.DIM`).
 
 Three primitive operations:
 
@@ -33,7 +35,7 @@ Similarity is **cosine** (or equivalently Hamming distance for binary vectors):
 sim(a, b) = (a · b) / (||a|| ||b||)
 ```
 
-**Key property**: random vectors are approximately orthogonal. With D = 10,000,
+**Key property**: random vectors are approximately orthogonal. With D = 1 024,
 the probability that two random vectors have similarity > 0.1 is less than 0.01%.
 
 ## Implementation
@@ -41,9 +43,10 @@ the probability that two random vectors have similarity > 0.1 is less than 0.01%
 Source: [`matrix-core/src/main/java/io/matrix/hdc/` <!-- no-link: the package is elsewhere; the HDC code is in matrix-core/src/main/java/io/matrix/bir/ -->](https://github.com/AlexanderNarbaev/agi/tree/develop/matrix-core/src/main/java/io/matrix/hdc)
 
 Key classes:
-- `HyperVector` — 10,000-bit binary vector with operations
-- `HdcMemory` — append-only store with similarity-based retrieval
-- `Codebook` — manages the random basis vectors for known symbols
+- `HdcEncoding` — the vector itself: `DIM = 1024`, packed into 16 `long` words
+- `HdcBinding` — the binding operation
+- `CodebookMemory` — the store, with similarity-based retrieval
+- `HdcConditioning` — the conditioning operation over the vectors
 
 Performance:
 - **Bind**: ~50ns (XOR + bit-count)
@@ -60,7 +63,7 @@ Key followups:
 - **Ross Gayler** (2003) — Vector Symbolic Architectures
 - **Dmitri Kanev** et al. (2018) — HDC for few-shot learning
 
-MATRIX uses Kanerva's framework with D = 10,000, binary representation, and
+MATRIX uses Kanerva's framework with D = 1 024, binary representation, and
 locality-sensitive hashing for fast retrieval.
 
 ## Pros
@@ -73,7 +76,7 @@ locality-sensitive hashing for fast retrieval.
 
 ## Cons
 
-- ❌ Capacity limited by D (10,000 bits ≈ 1M-10M distinct concepts)
+- ❌ Capacity is limited by D
 - ❌ Not as expressive as neural networks for perceptual tasks
 - ❌ Hash collisions can cause false positives (mitigated by modulator)
 - ❌ Bundle operation loses information (majority is lossy)

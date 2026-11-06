@@ -96,7 +96,7 @@
 # stays visible and the expiry stays real.
 
 # W48 (later in the same wave), the .github/ exception was raised from 958
-# to 1056 diff lines.
+# to 1056 diff lines, and W49 raised it to 1619.
 #
 # Three changes, all of them repairs of a red mandatory check on the clean
 # runner, and all of them in the workflow's own steps rather than in its
@@ -138,6 +138,14 @@
 #    vulnerable-dependency check — were SKIPPED. The step now captures the
 #    pipeline's status and lets its branches decide.
 #
+# 7. W49 (OD-048), the contributor-facing templates and the Pages workflow.
+#    The owner's W49 addendum names .github/ISSUE_TEMPLATE/ and the
+#    PULL_REQUEST_TEMPLATE explicitly, and requires the Pages deployment
+#    path to preview a pull request and to validate the configuration
+#    against the actual deployment URL. The issue templates, the pull
+#    request template and .github/workflows/pages.yml were rewritten or
+#    extended for that; the workflows were not otherwise touched.
+#
 # 6. ci.yml, the "Security Scan" job — the secret scan passed
 #    `base: ${{ github.ref }}` and `head: HEAD`, which are the SAME commit on
 #    a push, so the action refused with "BASE and HEAD commits are the same.
@@ -158,5 +166,5 @@
 # recorded here rather than waved through, so that the amount of the change
 # stays visible and the expiry stays real.
 
-.github/ | 1056 | repo-owner | 2026-12-31
+.github/ | 1619 | repo-owner | 2026-12-31
 AGENTS.md | 63 | repo-owner | 2026-12-31

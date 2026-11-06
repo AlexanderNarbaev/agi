@@ -170,6 +170,29 @@ registry, and no deployment is obliged to provide the CUDA libraries; **no servi
 change is required or proposed**. Neither decision creates an implementation task inside
 W48.
 
+### 4.8 The tasks the W49 wave created
+
+**W49 carries two kinds of work: the two implementation tasks the W48 wave left approved (TASK-W48-03 and OD-046), and the public-research workstream the owner opened with OD-048.** The ids of this roadmap are stable and are the ones to use.
+
+| the id | the task | the goal | the state | the evidence |
+|---|---|---|---|---|
+| **TASK-W49-01** | the autonomy impulse consumer | an impulse the scheduler **accepted** becomes a bounded internal proposal with provenance, an accounted budget, a stable id, an expiry and an observable terminal outcome — and **nothing else happens** | **done — `c86f6898`** — the scope is `docs-v2/engineering/ADR-W48-AUTONOMY-IMPULSE-CONSUMER.md` §5 and the acceptance criteria are its §9's ten tests and §6's eight safety invariants | `docs-v2/engineering/W49-STATUS.md` §3 — 12 tests, 0 failures, and a negative control that goes red |
+| **TASK-W49-02** | the native-image resource budget | the heap and the runner size the native build actually needs are **measured**, and the capability stays `BLOCKED` until a build succeeds | **done — the measurement, not a build (OD-046)** — the heap is **> 8 GB** (8 GB OOMs; 16 GB clears the memory wall) and the runner needs **more than GitHub's standard 16 GB**; the build still fails on PDFBox's missing optional BouncyCastle module | `docs-v2/engineering/W49-NATIVE-BUDGET.md` — two measured attempts; the capability stays BLOCKED |
+| **TASK-W49-03** | the public-presence audit | every high-visibility public document is compared with the repository, and the differences are listed before anything is rewritten | **done** | the audit in `docs-v2/engineering/W49-PUBLIC-PRESENCE-AUDIT.md` |
+| **TASK-W49-04** | the root README | an English README with a Russian companion, a clear language switch, and no stale claim | **done** — the README and its Russian companion | `README.md`, `README.ru.md` |
+| **TASK-W49-05** | the Pages landing page and the high-visibility pages | the site's entry pages describe the current architecture, the capability maturity and the evidence | **done** — 35 pages rewritten or corrected, plus their Russian equivalents | `docs-v2/index.md`, `docs-v2/ecosystem/**`, `docs-v2/guide/getting-started.md` |
+| **TASK-W49-06** | the Pages deployment path | the Jekyll build is **previewed** for pull requests, `url`/`baseurl` are validated against the **actual** deployment URL, and publishing stays on the reviewed `main` path | **done** — a pull-request build that does not publish, and a validator that checks the configuration against the deployment URL read from the API | `.github/workflows/pages.yml`; the recorded deployment URL and commit |
+| **TASK-W49-07** | the contributor onboarding | a newcomer can participate without reading the wave archive; the research and pilot pathways ask for reproducibility | **done** | `CONTRIBUTING.md`, the issue templates, `CODE_OF_CONDUCT` |
+| **TASK-W49-08** | the publication pipeline | a technical report has a defined lifecycle — `IDEA → OUTLINE → DRAFT → INTERNAL_REVIEW → REPRODUCED → SUBMITTED → PUBLISHED` — with the evidence each state requires | **done** | `docs-v2/research/PUBLICATION-PIPELINE.md` |
+| **TASK-W49-09** | the collaboration brief and a reproducible opportunity | one concrete opportunity an external researcher can actually execute, and a brief that names what MATRIX is and is not | **done** — three opportunities, each one executed | `docs-v2/research/COLLABORATION-BRIEF.md`, `docs-v2/research/REPRODUCIBLE-OPPORTUNITIES.md` |
+| **TASK-W49-10** | the wave report and the governance reconciliation | the wave's own report, the registers, and the **Public Research Impact Check** that every future wave must carry | **done** | `docs-v2/engineering/W49-STATUS.md` |
+
+**What TASK-W49-01 is.** It is the implementation `TASK-W48-03` asked for. The scope is
+**unchanged** from the approved ADR: the consumer creates and records typed internal
+proposals and does nothing else — no messages, no shell commands, no external services,
+no Chain A mutation. **The scheduler's `FIRED` outcome still means "accepted", and after
+this task it means "accepted and recorded as a proposal" — never "executed".**
+
 ## 5. The blocked tasks
 
 **TASK-W46-9 is no longer here**: the owner's decision OD-028 of 2026-11-05 unblocked it, and

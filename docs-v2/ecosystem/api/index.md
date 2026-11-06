@@ -6,215 +6,104 @@ parent: Ecosystem
 permalink: /ecosystem/api/
 ---
 
+**Status:** ACTIVE · **Updated:** 2026-11-06
+
 # API Reference
 
-MATRIX exposes a secure REST API at `https://api.matrix.ai`. All endpoints
-return JSON. Authentication via Bearer token.
+> **There is no hosted MATRIX API.** This repository serves two applications from source, on
+> two ports, and this page describes the routes they actually register. The previous
+> description of a hosted endpoint at `api.matrix.ai`, with API keys, plans and rate
+> limits, described a service that does not exist and has been removed rather than kept.
 
-## Base URL
+Everything below is read from the code and from the constant-pool census behind
+[`docs-v2/architecture/RUNTIME-TOPOLOGY.md`](../../architecture/RUNTIME-TOPOLOGY.md).
 
-```
-https://api.matrix.ai
-```
+## The two surfaces
 
-## Authentication
+| | **chain A** | **chain B** |
+|---|---|---|
+| the address | `http://127.0.0.1:9091` | `http://127.0.0.1:8765` |
+| the process | Quarkus, `io.matrix.MatrixApplication` | JDK `HttpServer`, `io.matrix.api.MinimalHttpServer` |
+| the routes | **210** | **28** |
+| the authentication | the security mode of the deployment; the compose stack requires `MATRIX_SECURITY_TOKEN` and the application refuses exposed anonymous writes without it | `/v1/auth/login` returns a bearer token |
 
-Every request must include a Bearer token:
+## Chain A — the epistemic application
+
+JAX-RS resources, served by Quarkus. The route counts are the census of 2026-11-04.
+
+| the surface | the routes | the resource |
+|---|---|---|
+| `/v1/workbench` | 57 | `LearningWorkbenchResource` — the epistemic workbench: workspaces, documents, concepts, claims, sources, evidence, representations, revisions, the destructive load and the restore |
+| `/v1/cognitive` | 11 | `CognitiveResource` — observe, solve, summary, predictions, errors, procedures, tasks |
+| `/v1` (chat) | 6 | `OpenAIChatResource` — `/v1/chat/completions`, `/v1/models`, `/v1/embeddings`, and the `/v1/brain/**` routes (`think`, `plan`, `subagent`) |
+| 36 further resources | 136 | `/api/v1/**` and `/v1/**`: `agent`, `benchmark`, `chain-debug`, `chain-status`, `chat/feedback`, `chat/status`, `generate`, `health`, `metrics`, `models-registry`, `onnx`, `qa`, `sandbox`, `state`, `tenant`, `train`, and the `/api/v1/**` family (`bot/ethics`, `bot/headless`, `explain`, `federated`, `generation`, `import`, `ingest`, `multimodal`, `noosphere`, `noosphere/p2p`, `privacy`, `privacy/cascade`, `self-agent`, `tools`, `verification`) |
+
+Health is under the SmallRye root path `/q/health`. **The readiness probe answers 503** — the
+reactive PostgreSQL datasource gates it, and no production code reads it.
+
+## Chain B — the brain runtime
+
+The contexts registered by `MinimalHttpServer`:
+
+| the route | what it does |
+|---|---|
+| `/v1/analyze` | the inference request |
+| `/v1/explain` | the count of the stored explanations |
+| `/v1/explain/{id}` | one stored explanation, as a trace |
+| `/v1/audit`, `/v1/audit/logs`, `/v1/audit/promotions`, `/v1/audit/verify` | the audit log, the promotion decisions — the refusals included — and the chain verification |
+| `/v1/bir` | the boolean inference surface |
+| `/v1/conflicts` | the recorded conflicts |
+| `/v1/distill` | the distillation surface |
+| `/v1/federate` | the federation surface |
+| `/v1/generalize` | the generalisation surface |
+| `/v1/gpu` | the accelerator state — it reports UNAVAILABLE when there is no GPU, and never simulates success |
+| `/v1/goals` | the goal tracker |
+| `/v1/inbox/scan` | the inbox scan |
+| `/v1/learn`, `/v1/teach` | the teaching loop — both answer 503 in stub mode |
+| `/v1/sleep` | the sleep cycle |
+| `/v1/status` | the runtime status |
+| `/v1/transcode/audio`, `/v1/transcode/image` | the transcoders |
+| `/v1/auth/login` | the bearer token |
+| `/health/live`, `/health/ready` | the probes |
+| `/metrics`, `/q/openapi`, `/openapi.yaml`, `/` | the operational and the schema surfaces |
+
+**Two limits of this surface, stated plainly.** The explanations are held **in memory** in
+the gateway process, so an `explain_id` is valid only while that process lives. And the
+**default mode is `stub`**: without `MATRIX_MODE=production`, `/v1/analyze` answers from an
+87-line `StubBrainCycle`, and the mode is reported by `GET /health/live`.
+
+## A first exchange, as it actually is
 
 ```bash
-Authorization: Bearer sk-matrix-...
+TOKEN=$(curl -s -X POST http://127.0.0.1:8765/v1/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"you@example.com"}' \
+  | python3 -c "import sys,json; print(json.load(sys.stdin)['token'])")
+
+curl -s -X POST http://127.0.0.1:8765/v1/analyze \
+  -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
+  -d '{"input":"What is the capital of France?"}'
 ```
 
-Get a token at the [console](https://api.matrix.ai/console). All requests are
-TLS 1.3 encrypted.
+**The response shape depends on the mode.** In stub mode the answer is a deterministic
+keyword reply; in production mode it comes from the real cycle and carries what that cycle
+produced. The two are not interchangeable, and the health endpoint says which one you are
+talking to.
 
-## Endpoints
+An unknown `explain_id` answers **404**; a missing or invalid token answers **401**.
 
-### `POST /v1/analyze`
+## What is not here
 
-Run hybrid inference on text, audio, or image input.
+- **No hosted endpoint, no key, no plan and no rate limit.** Nothing in this repository
+  implements them.
+- **No separately published OpenAPI document** — the gateway serves its own schema at
+  `/q/openapi` and `/openapi.yaml`.
+- **Nine declared JAX-RS routes on the gateway are not mounted**: `BrainQuarkusResource`
+  (4), `AnalyzeResource`, `AuditResource`, `ExplainResource` (2) and `FederateResource` (2).
+  A path that is declared and not mounted answers 404.
 
-**Required role:** DEVELOPER or higher
+## Next
 
-**Request body:**
-
-```json
-{
-  "input": "string (1 MiB max)",
-  "content_type": "text | audio | image",
-  "context": "string (64 KiB max, optional)",
-  "model": "string (default: 'default')"
-}
-```
-
-**Response 200:**
-
-```json
-{
-  "reply": "Paris is the capital of France.",
-  "confidence": 0.95,
-  "duration_ms": 23,
-  "accepted": true,
-  "explain_id": "abc123def456",
-  "modulators_fired": ["ETHICAL_FILTER", "CONSISTENCY_CHECKER"]
-}
-```
-
-**Status codes:**
-- `200` — Success
-- `400` — Invalid input (size, encoding, content-type)
-- `401` — Missing or invalid Bearer token
-- `403` — Insufficient role (need DEVELOPER+)
-- `429` — Rate limit exceeded
-
----
-
-### `GET /v1/explain/{id}`
-
-Retrieve the full XAI breakdown for a previous decision.
-
-**Required role:** VIEWER or higher
-
-**Path parameters:**
-- `id` — opaque explain_id from a previous `analyze` response
-
-**Response 200:**
-
-```json
-{
-  "explain_id": "abc123def456",
-  "steps": [
-    {"stage": "INPUT_NORMALIZED", "action": "normalized", "duration_ms": 1},
-    {"stage": "BIR_RULES_FIRED", "action": "rule-42, rule-87", "duration_ms": 3},
-    {"stage": "HDC_MEMORY_RETRIEVED", "action": "kb-doc-42", "duration_ms": 5},
-    {"stage": "MCTS_PLAN_SELECTED", "action": "plan-12", "duration_ms": 4},
-    {"stage": "MODULATORS_APPLIED", "action": "ALL_PASSED", "duration_ms": 2}
-  ],
-  "modulator_snapshot": {
-    "ethical_filter": 0.95,
-    "safety_monitor": 0.92,
-    "consistency_checker": 0.88,
-    "lie_detector": 0.91
-  },
-  "hdc_memory_hits": ["kb-doc-42", "kb-doc-128"],
-  "confidence_breakdown": {
-    "bir_confidence": 0.85,
-    "hdc_confidence": 0.78,
-    "mcts_confidence": 0.72,
-    "aggregate": 0.95
-  }
-}
-```
-
-**Status codes:**
-- `200` — Success
-- `404` — Unknown explain_id
-
----
-
-### `POST /v1/federate`
-
-Join a new federation node to the MATRIX liquid federation pool.
-
-**Required role:** DEVELOPER or higher
-
-**Request body:**
-
-```json
-{
-  "region": "us-east | eu-west | ap-south | ...",
-  "shard_capacity": 100
-}
-```
-
-**Response 201:**
-
-```json
-{
-  "node_id": "node_abc123def456",
-  "region": "us-east",
-  "shard_capacity": 100,
-  "joined_at": "2026-09-21T17:00:00Z",
-  "total_nodes": 42
-}
-```
-
-**Status codes:**
-- `201` — Node joined
-- `400` — Invalid region or shard_capacity
-
----
-
-### `GET /v1/federate`
-
-List all federation nodes in the current pool.
-
-**Required role:** VIEWER or higher
-
-**Response 200:**
-
-```json
-[
-  {"node_id": "node_abc", "region": "us-east", "shard_capacity": 100, "joined_at": "..."},
-  {"node_id": "node_def", "region": "eu-west", "shard_capacity": 200, "joined_at": "..."}
-]
-```
-
----
-
-### `GET /v1/audit/logs`
-
-Retrieve the immutable action log (admin only).
-
-**Required role:** ADMIN
-
-**Query parameters:**
-- `limit` — 1..1000 (default 100)
-
-**Response 200:**
-
-```json
-[
-  {
-    "timestamp": "2026-09-21T17:00:00Z",
-    "user_id": "user-1",
-    "action": "POST /v1/analyze",
-    "target": "alice@example.com",
-    "status_code": 200
-  }
-]
-```
-
-## Rate limits
-
-| Plan | Requests/hour |
-|------|---------------|
-| FREE | 100 |
-| PRO | 1,000 |
-| ENTERPRISE | unlimited |
-
-Rate-limited responses include:
-
-```
-X-RateLimit-Plan: FREE
-X-RateLimit-Used: 0.42
-```
-
-## Error responses
-
-All errors return JSON in the form:
-
-```json
-{"error": "Human-readable error message"}
-```
-
-## OpenAPI spec
-
-The full OpenAPI 3.0 spec is at
-[`src/main/resources/openapi.yaml`](https://github.com/AlexanderNarbaev/agi/blob/develop/matrix-api-gateway/src/main/resources/openapi.yaml).
-
-Interactive Swagger UI is at `/q/swagger-ui` when running the gateway locally.
-
----
-
-**Last updated:** 2026-09-21 (Wave T-03)
+- [Quickstart](/ecosystem/quickstart/) — the commands that work.
+- [The runtime topology](../../architecture/RUNTIME-TOPOLOGY.html) — the measured route census.
+- [Getting started](../../guide/getting-started.html) — the full sequence.
