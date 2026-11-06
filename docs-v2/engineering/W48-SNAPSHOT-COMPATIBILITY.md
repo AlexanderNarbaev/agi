@@ -137,6 +137,45 @@ than a transaction that was never started.
 
 ---
 
+### 3.4 The HTTP surface of the refusal
+
+A refusal that the caller cannot read is a refusal the caller will retry, and a retry of a
+refused restore is a restore. The directive therefore asks that the **API response**
+identify an incomplete legacy snapshot, and the endpoint does:
+
+```
+POST /v1/workbench/workspaces/{id}/restore/{snapshotId}
+→ 409 Conflict
+{
+  "error":            "INCOMPLETE_LEGACY_SNAPSHOT: the snapshot snap-legacy-… carries …",
+  "identifier":       "INCOMPLETE_LEGACY_SNAPSHOT",
+  "snapshotId":       "snap-legacy-…",
+  "coverage":         "KNOWLEDGE_ONLY",
+  "missingFamilies":  ["the learning state"]
+}
+```
+
+The status is **409 Conflict**, not 404 and not 500: the snapshot exists, the request is
+well-formed, and the server refuses it on purpose because it would destroy what it cannot
+bring back. The `identifier` field is the stable contract a client matches on; the message
+carries it as its first line as well, so a client that only logs the message still has it.
+
+The same shape is returned for `SNAPSHOT_NOT_COMPLETE` — the refusal of a replacement whose
+snapshot would not be a complete recoverable copy (W48-07).
+
+**The test:** `matrix-core/src/test/java/io/matrix/knowledge/SnapshotRestoreEndpointTest.java`
+drives the resource the way the HTTP layer does — through the method — with a version-1
+payload in the table and one row of learning state in the target, and asserts the status,
+the identifier, the coverage and the missing families.
+
+**The negative control:** the same test was run with the two catch blocks removed from
+`LearningWorkbenchResource.restore(...)` — it went RED (`SnapshotRestoreEndpointTest >
+the endpoint refuses a legacy snapshot and says WHICH refusal it is FAILED`), and the
+blocks were restored. The test detects the absence of the handling; it is not a test that
+passes because the exception never arrives.
+
+---
+
 ## 4. The inspection contract
 
 `WorkspaceSnapshot.empty()` used to answer "does this snapshot hold **knowledge

@@ -307,6 +307,27 @@ public class LearningWorkbenchResource {
         WorkspaceSnapshot replaced;
         try {
             replaced = workbench.restoreWorkspaceSnapshot(workspaceId, snapshotId);
+        } catch (IncompatibleSnapshotException refused) {
+            // W48-01/§4.4 — the caller must be told WHICH refusal this is.
+            // The refusal happens before anything is destroyed, so the answer
+            // is a conflict, not a failure of the server.
+            return Response.status(Response.Status.CONFLICT)
+                    .entity(Map.of(
+                            "error", refused.getMessage(),
+                            "identifier", IncompatibleSnapshotException.IDENTIFIER,
+                            "snapshotId", refused.snapshotId(),
+                            "coverage", refused.coverage().name(),
+                            "missingFamilies", refused.missingFamilies()))
+                    .build();
+        } catch (KnowledgeStore.IncompleteSnapshotException refused) {
+            return Response.status(Response.Status.CONFLICT)
+                    .entity(Map.of(
+                            "error", refused.getMessage(),
+                            "identifier", KnowledgeStore.IncompleteSnapshotException.IDENTIFIER,
+                            "snapshotId", refused.snapshotId(),
+                            "coverage", refused.coverage().name(),
+                            "missingFamilies", refused.missingFamilies()))
+                    .build();
         } catch (IllegalArgumentException unknown) {
             return Response.status(Response.Status.NOT_FOUND)
                     .entity(Map.of("error", unknown.getMessage()))
