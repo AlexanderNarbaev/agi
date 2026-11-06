@@ -17,6 +17,27 @@ that the subject is **written, not mapped**. The implementation is TASK-W46-19
 `BENCHMARKED` · `OPERATIONAL` · `PROPOSED`. **A class that has no caller is never called
 `SERVED`.** Every claim below carries its evidence as `path:line`.
 
+> **W48 note — 2026-11-06.** Two statements of this document are **superseded**, and both are
+> marked in place with a dated note; **the historical text is preserved**, because a finding
+> that was true when it was written is evidence of what was considered.
+>
+> 1. **Defect (a) is FIXED.** "The `Anonymizer` does not count node IDs" was the audit
+>    finding of the W46 wave. The owner decided **OD-037** on 2026-11-05 (`ACCEPTED`): *k
+>    counts the distinct nodes, as the class promises*. The W47 wave implemented it in
+>    `dec51fc1`. The counter now holds **the set of contributing node ids per content hash**
+>    (`matrix-core/src/main/java/io/matrix/federation/Anonymizer.java:29`), the contribution
+>    adds the node to that set (`:45`, `:48`), the anonymity level is **the size of the set**
+>    (`:58`), and the class's own javadoc says so (`:16`). **Status: `IMPLEMENTED`, `TESTED`,
+>    and the defect is closed.**
+> 2. **The implementation status is unchanged, and re-verified on 2026-11-06.** The release
+>    path is **`IMPLEMENTED` and `TESTED`, and still NOT `REACHABLE` and NOT `SERVED`**: no
+>    production code creates a `KnowledgeShare` — `grep -rn "new KnowledgeShare" --include=*.java .`
+>    matches **only** `matrix-core/src/test/java/io/matrix/federation/KnowledgeShareTest.java`
+>    — and `docs-v2/architecture/CAPABILITY-REGISTRY.yml` holds **no row at all** for the
+>    digest path. The **counting** stage is `REACHABLE` (the gateway builds an `Anonymizer`
+>    at `matrix-api-gateway/src/main/java/io/matrix/api/MinimalHttpServer.java:262`) and is
+>    still **NOT `SERVED`**: it counts, it does not release.
+
 ---
 
 ## Что
@@ -44,9 +65,9 @@ implementation of the *release* path exists but is not reachable (§ FR).
 count → bucket → noise → emit → dispatch
 
 Anonymizer                — счётчик k-анонимности      io.matrix.federation.Anonymizer
-  recordContribution(hash, nodeId)                       Anonymizer.java:25
-  isAnonymous(hash) / anonymityLevel(hash)                Anonymizer.java:30,35
-  snapshotEntries()                                        Anonymizer.java:43
+  recordContribution(hash, nodeId)                       Anonymizer.java:45  **[W48 correction — 2026-11-06: the method moved from :25 to :45 when W47 changed the counter to count the distinct nodes]**
+  isAnonymous(hash) / anonymityLevel(hash)                Anonymizer.java:53,58  **[W48 correction — 2026-11-06: the methods moved from :30,:35 to :53,:58 when W47 changed the counter to count the distinct nodes]**
+  snapshotEntries()                                        Anonymizer.java:66  **[W48 correction — 2026-11-06: was :43]**
         │
         ▼
 DecentralizedDigestPipeline — бакинг + DP-шум Laplace   io.matrix.federation.DecentralizedDigestPipeline
@@ -77,7 +98,8 @@ ElspChannelMlDsa          — канал подписи (ML-DSA)      io.matrix.
 `io.matrix.sleep.SleepCycle` держит `Anonymizer` (`matrix-core/src/main/java/io/matrix/sleep/SleepCycle.java:31`)
 и вызывает `anonymizer.recordContribution(...)` (`SleepCycle.java:81`).
 `Anonymizer` создаётся гейтвеем при старте — `new io.matrix.federation.Anonymizer(2)`
-(`matrix-api-gateway/src/main/java/io/matrix/api/MinimalHttpServer.java:263`).
+(`matrix-api-gateway/src/main/java/io/matrix/api/MinimalHttpServer.java:262` **[W48 correction —
+2026-11-06: the line was :263; the construction is on :262]**).
 `DecentralizedDigestPipeline`, `KnowledgeShare`, `FederationDigest`, `ElspChannelMlDsa` и
 `ShareImpulseFirer` **не имеют ни одного production-вызывающего** — измерено поиском по
 `matrix-core/src/main`, `matrix-brain-runtime/src/main`, `matrix-api-gateway/src/main`.
@@ -109,6 +131,11 @@ ElspChannelMlDsa          — канал подписи (ML-DSA)      io.matrix.
   nodeId)` (`:25`), `isAnonymous(contentHash)` (`:30`), `anonymityLevel(contentHash)`
   (`:35`), `snapshotEntries()` (`:43`), `kThreshold()` (`:40`), `clear()` (`:48`).
   **Status: `IMPLEMENTED`, `REACHABLE` (из окна сна).**
+  **[W48 correction — 2026-11-06: the line references above are the pre-W47 ones. The
+  methods are now at `:45`, `:53`, `:58`, `:66`, `:63` and `:73`, and the constructor's own
+  check is at `:32`. The status is unchanged — `IMPLEMENTED`, `REACHABLE` from the sleep
+  window, and still NOT `SERVED` — and the counter now counts the DISTINCT NODES
+  (OD-037, `dec51fc1`), which is what the class's javadoc promised all along.]**
 - `federation/DecentralizedDigestPipeline` — бакинг + DP-шум.
   `DecentralizedDigestPipeline(Anonymizer, double epsilon)` (`:54`) и перегрузка с явным
   `Random` (`:58`); `epsilon <= 0` отвергается (`:59`). `emitDigests()` (`:71`) возвращает
@@ -208,6 +235,8 @@ ElspChannelMlDsa          — канал подписи (ML-DSA)      io.matrix.
   ML-DSA v2, k-анонимность. **Его § Тесты называет `AnonymizerTest` и `ArtifactSignerTest`
   (`DESIGN-08-federation.md:19`) — обоих файлов в репозитории нет.** Это расхождение
   фиксируется здесь и не исправляется в этой волне (§ Отложено).
+  **[W48 correction — 2026-11-06: `AnonymizerTest` exists since the W47 wave; only
+  `ArtifactSignerTest` is still missing.]**
 - [SPEC-007-subconscious](./SPEC-007-subconscious.md) — гейт, через который проходит
   шэринг: *"Gossip (share): M3-артефакты, прошедшие IntegrityCheck, отправляются в
   `noosphere/MeshFederation` для quorum M4"* (`SPEC-007-subconscious.md:47`).
@@ -246,11 +275,31 @@ ElspChannelMlDsa          — канал подписи (ML-DSA)      io.matrix.
 | `AnonymizerTest` | **файла нет** — но назван в `docs-v2/designs/DESIGN-08-federation.md:19` | — | — | `PROPOSED` |
 | `ArtifactSignerTest` | **файла нет** — но назван там же | — | — | `PROPOSED` |
 
+> **[W48 correction — 2026-11-06] The `AnonymizerTest` row above is the historical state; the
+> file exists now.** The W47 wave created
+> `matrix-core/src/test/java/io/matrix/federation/AnonymizerTest.java` — **10 `@Test`
+> methods** — and it is the test that holds OD-037's contract (the same hash from two nodes
+> counts 2; the same hash twice from one node counts 1). **Current status: `TESTED`.**
+> `ArtifactSignerTest` still does not exist — that row stands as it is. The **divergence of
+> `docs-v2/designs/DESIGN-08-federation.md:19`** — it names two test files, of which one now
+> exists and one does not — remains, and is not fixed by this correction.
+
 **Честно о покрытии.** Нет ни одного теста, который проверяет, что **k-порог
 открывается**: ни один тест не строит сценарий «k разных узлов прислали один и тот же
 хеш». Тест на двух JVM — это один процесс (`TwoJvmFederationSmokeTest.java:34-37`), и
 `docs-v2/vision/USAGE.md:230` фиксирует то же: *"the M3→M4 gossip pipeline exists but
 hasn't been tested between 2 JVMs"*.
+
+> **[W48 correction — 2026-11-06] The first sentence of this paragraph is stale: the
+> scenario it says no test builds is now built, and it was built by the W47 wave.**
+> `matrix-core/src/test/java/io/matrix/federation/AnonymizerTest.java` (10 `@Test` methods)
+> contains exactly that scenario — `theSecondDistinctNodeCompletesTheGroup` records the same
+> hash from three different nodes and asserts `isAnonymous("hash")` is **true** — together
+> with the discriminating case `theSameNodeTwiceCountsAsOne` (the same node twice counts
+> **1**) and `aSingleNodeCannotMakeADigestAnonymousByReplayingIt` (100 replays from one node
+> leave the level at **1**). The tests are written so that they **fail against the old
+> per-contribution counter**. **What is still true:** the two-JVM test is still one process,
+> and the M3→M4 gossip pipeline is still untested across two JVMs.
 
 ---
 
@@ -281,6 +330,9 @@ content-fidelity metric"* (`:44-47`). **Вывод: полезность дай�
 
 **Гейт конституции.** Ни один из этих замеров не проверяет, что дайджест не несёт
 payload, и ни один не проверяет, что k считает **узлы** (см. § Дефекты).
+**[W48 correction — 2026-11-06: the second half of this sentence is still true — no
+measurement in this table verifies the distinct-node rule — but the *code* now implements
+it (OD-037, `dec51fc1`). What is missing is the measurement, not the contract.]**
 
 ---
 
@@ -299,6 +351,37 @@ k **distinct nodes**"* (`Anonymizer.java:9-11`). То есть k-анонимн�
 класс заявляет, — не тот контракт, который класс реализует.
 **Status: `PROPOSED` (требование «k различных узлов») против `IMPLEMENTED` (k вкладов).**
 Дефект зафиксирован, код **не** исправлен в этой волне.
+
+> **[W48 correction — 2026-11-06] Defect (a) is CLOSED. The finding above is the historical
+> audit finding and stays as it was written; the code it quotes no longer exists.**
+>
+> The owner decided **OD-037** on 2026-11-05 (`ACCEPTED` in
+> `docs-v2/governance/DECISION-REGISTER.md`): *the k-anonymity counter counts the DISTINCT
+> NODES, as the class promises, not the contributions of one hash*. The W47 wave implemented
+> it — commit `dec51fc1` — and the class now reads:
+>
+> ```java
+> private final Map<String, Set<String>> contributors = new ConcurrentHashMap<>();   // :29
+>
+> public void recordContribution(String contentHash, String nodeId) {                  // :45
+>     Objects.requireNonNull(contentHash, "contentHash");
+>     Objects.requireNonNull(nodeId, "nodeId");
+>     contributors.computeIfAbsent(contentHash, key -> ConcurrentHashMap.newKeySet())
+>             .add(nodeId);                                                            // :48
+> }
+> ```
+>
+> `nodeId` **is** used now: the anonymity level is **the size of the set of distinct
+> contributing nodes** (`:58`), and the class's javadoc states the same rule in bold
+> (`:16`). **Current status: `IMPLEMENTED`, `TESTED` — the defect is closed.** The test
+> `matrix-core/src/test/java/io/matrix/federation/AnonymizerTest.java` (10 `@Test`
+> methods) holds the contract: the same hash from two nodes counts 2, the same hash twice
+> from one node counts 1.
+>
+> **What did NOT change:** the *release* path is still **NOT `REACHABLE` and NOT `SERVED`**
+> (see the note at the top of this document), and defect **(b)** — the sleep window's digest
+> being `identityHash + wallClock` — is **still open**; `SleepCycle.java:79-81` still builds
+> the hash that way and still calls `System.currentTimeMillis()`.
 
 **(b) Дайджест окна сна — это `identityHash + wallClock`, и он нов на каждом цикле.**
 `matrix-core/src/main/java/io/matrix/sleep/SleepCycle.java:79-81`:
@@ -319,6 +402,18 @@ anonymizer.recordContribution(contentHash, "sleep-cycle");
    wall-clock в рантайм-пути решений без явного RFC-мандата. Здесь время участвует в
    решении «выпускать или подавить дайджест».
 **Status: `IMPLEMENTED` (как есть), дефект зафиксирован, код **не** исправлен в этой волне.**
+
+> **[W48 correction — 2026-11-06] Defect (b) is still OPEN, and it was re-verified on
+> 2026-11-06.** `matrix-core/src/main/java/io/matrix/sleep/SleepCycle.java:79-81` still
+> builds the hash as `identityHash + wallClock` and still calls `System.currentTimeMillis()`
+> on the decision path — the W48 wave did not touch it. One mechanism sentence is now
+> stale: the counter no longer "grows per hash" — it holds the **set of distinct nodes**
+> per hash (OD-037, `dec51fc1`) — but **the conclusion is unchanged and for the same
+> reason**: the hash is new on every cycle, so the set holds exactly **one** node forever,
+> `isAnonymous` (`Anonymizer.java:53`) stays `false`, and
+> `DecentralizedDigestPipeline.emitDigests()` never sets `shared = true` for such a digest
+> (`DecentralizedDigestPipeline.java:76`). **The wall-clock on the decision path is the
+> open part.**
 
 ---
 
@@ -356,6 +451,10 @@ Dwork & Nissim — определение (ε, δ)-DP и механизм Лап
 - **Дефект (a)** — `nodeId` игнорируется в `Anonymizer.recordContribution`
   (`Anonymizer.java:25-27`). Требуется решение владельца: считать k **узлами** или
   **вкладами**; от него зависит смысл всей спецификации. **Не исправлено.**
+  **[W48 correction — 2026-11-06: this bullet is CLOSED. The owner's answer was OD-037
+  (2026-11-05) — k counts the distinct nodes — and the W47 wave implemented it in
+  `dec51fc1`. The bullet above is kept as the historical finding; the code it quotes no
+  longer exists.]**
 - **Дефект (b)** — дайджест окна сна есть `identityHash + wallClock`
   (`SleepCycle.java:79-81`); k-порог для него не открывается, и wall-clock стоит на пути
   решения. **Не исправлено.**
@@ -373,6 +472,10 @@ Dwork & Nissim — определение (ε, δ)-DP и механизм Лап
 - **Расхождение `DESIGN-08-federation.md:19`** — документ называет `AnonymizerTest` и
   `ArtifactSignerTest`, которых нет. Исправление документа — не в моей зоне записи
   (реестры и индексы принадлежат координатору). **Не исправлено.**
+  **[W48 correction — 2026-11-06: `AnonymizerTest` EXISTS since the W47 wave
+  (`matrix-core/src/test/java/io/matrix/federation/AnonymizerTest.java`); `ArtifactSignerTest`
+  still does not. The divergence of the DESIGN document therefore shrank from two missing
+  files to one — and the document itself is still not corrected.]**
 - **Первоисточники (META-R3)** — см. § Исследовательские перспективы. **Не добавлены.**
 - **Зерно дайджеста над базой знаний** не определено. **Не определено.**
 

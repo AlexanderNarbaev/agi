@@ -153,13 +153,23 @@ layer whose acceptance looks like completion.
 
 ## 10. The owner decision
 
-This ADR is **PROPOSED**. Nothing in §5 has been implemented. The W48 directive is
-explicit: *do not implement autonomous side effects without a new owner decision*, and
-*ask the owner before implementing this behaviour*.
+**Status history (dated, so that the record is not rewritten):**
 
-The question put to the owner is in the wave questionnaire: **whether the first
-consumer may be built at all**, and if so, whether its scope is the one in §5 — a
-proposal-creating consumer that records internal proposals and does nothing else.
+- **2026-11-06, earlier in W48 — PROPOSED.** This ADR was written as a proposal. At
+  that moment nothing in §5 had been implemented. The W48 directive is explicit:
+  *do not implement autonomous side effects without a new owner decision*, and *ask
+  the owner before implementing this behaviour*.
+- **2026-11-06 — APPROVED, option A, as `OD-045`.** The owner answered
+  **Q-W48-01** of `docs-v2/engineering/W48-QUESTIONNAIRE.md` with **option A**: the
+  proposal-creating consumer of §5 may be built, with the tests of §9.
+  The decision is recorded in `docs-v2/governance/DECISION-REGISTER.md` as **OD-045**.
+- **Still true in W48: nothing in §5 has been implemented.** The approval authorises
+  the NEXT wave (W49) to build it. W48 did not write a single line of the consumer:
+  no proposal type, no queue, no consumer class. The gap the approval opens is a
+  W49 task, and `docs-v2/governance/ROADMAP.md` records it as **TASK-W48-03 —
+  APPROVED (OD-045) and NOT IMPLEMENTED**.
+
+The question that was put to the owner, and the options as they were written:
 
 | the option | the meaning |
 |---|---|
@@ -167,11 +177,12 @@ proposal-creating consumer that records internal proposals and does nothing else
 | **option B · keep the scope at "record only"** | the consumer creates and records proposals; no proposal is ever accepted for review — the terminal outcomes of §5 are reduced to `EXPIRED`, `DUPLICATE` and the two refusals |
 | **option C · do not build a consumer** | the scheduler stays the whole autonomy story; the capability is then described as "decides, does not act", and the gap is recorded in the registry rather than closed |
 
-The question is **Q-W48-01** of `docs-v2/engineering/W48-QUESTIONNAIRE.md`. The
-`OD-` id is assigned to the answer when it is recorded in
-`docs-v2/governance/DECISION-REGISTER.md` — this ADR does not reserve one, because a
-decision id that names an undecided question is a claim of a decision that was never
-taken.
+**The owner chose option A.** The scope is §5, unchanged: the consumer creates and
+records typed internal proposals and does nothing else — no messages, no shell
+commands, no external services, no Chain A mutation. The safety invariants of §6
+and the tests of §9 are the acceptance criteria of the W49 implementation.
 
-**Until the owner answers, the status of every autonomy capability in the registry stays
-as it is today: the scheduler accepts impulses, nothing consumes them.**
+**Until W49 implements it, the status of every autonomy capability in the registry
+stays as it is today: the scheduler accepts impulses, nothing consumes them.** An
+approved ADR is not an implemented capability.
+

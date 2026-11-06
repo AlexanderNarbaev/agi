@@ -41,9 +41,17 @@ cycle, and whose current state existed in four documents of four different ages.
 
 ## 3. The active wave
 
+### W48 — the truth of the evidence (**the wave's work is committed**)
+
+**The wave is committed and its report is written.** It started at `eca23bfd` (the last
+commit of W47); its preflight is `docs-v2/engineering/W48-BASELINE.md`, its own report is
+`docs-v2/engineering/W48-STATUS.md`, and the tasks it created are in §4.7. **The owner
+answered the wave's three questions on 2026-11-06 — OD-045, OD-046 and OD-047.** The next
+wave is **W49**, opened by OD-045.
+
 ### W46 — the consolidation and the autonomous engineering system
 
-The active wave is described in full by its own report: `docs-v2/engineering/W46.0-FINAL-REPORT.md`.
+W46 is described in full by its own report: `docs-v2/engineering/W46.0-FINAL-REPORT.md`.
 
 ---
 
@@ -121,17 +129,46 @@ owner's decisions, and each one is an implementation task.
 
 **Six questions, six answers, through the harness's `ask_user_question` tool, on 2026-11-05.**
 The questions and their alternatives are in `docs-v2/engineering/W47-QUESTIONNAIRE.md`; the
-answers are OD-039…OD-044. Two of them are implemented in this wave; four are the first
-tasks of W48.
+answers are OD-039…OD-044. Two of them are implemented in this wave; one more was approved
+and run here; and **three are the first tasks of W48 — and all three are now done**
+(TASK-W47-01, TASK-W47-02, TASK-W47-03; see the status column).
 
 | the id | the task | the goal | the decision | the status |
 |---|---|---|---|---|
-| **TASK-W46-26** | the container `matt-pocock` gets a root manifest | the owner decided that the container SHOULD change: it becomes one skill whose body indexes the seventeen disciplines inside it | OD-040 | **done in W47** — `.opencode/skills/matt-pocock/SKILL.md`, and the harness now discovers it |
+| **TASK-W46-26** | the container `matt-pocock` gets a root manifest | the owner decided that the container SHOULD change: it becomes one skill whose body indexes the seventeen disciplines inside it | OD-040 | **done in W47** — `.opencode/skills/matt-pocock/SKILL.md`, tracked in git and committed by `1371774e` (the harness's own discovery of it was not re-run in W48, so that half of the claim is NOT VERIFIED) |
 | **TASK-W46-27** | the curiosity drive's envelope is the cost | the drive can be paid for, and the refusal path stays for the drives that should be refused | OD-044 | **done in W47** — `AutonomyEngine.java:116`, with a test that fails against the old envelope |
-| **TASK-W47-01** | the snapshot's size bound, and the three-tier calendar on the rows | the database's own growth is bounded the way the backups are | OD-039 | **W48** — the first task of the next wave |
-| **TASK-W47-02** | the restore drill | a restore is performed against a COPY of the live database, and the result is written into the runbook | OD-042 | **W48** |
-| **TASK-W47-03** | the committed GPU benchmark | the 12.6× claim becomes a re-runnable measurement or nothing | OD-043 | **W48** |
+| **TASK-W47-01** | the snapshot's size bound, and the three-tier calendar on the rows | the database's own growth is bounded the way the backups are | OD-039 | **W48 — done.** `33d199e2`: the 8 MiB payload bound with the typed refusal `SNAPSHOT_PAYLOAD_TOO_LARGE` **before** the write, and the three-tier retention on the `workspace_snapshot` rows. The record is `docs-v2/engineering/W48-SNAPSHOT-RETENTION.md` |
+| **TASK-W47-02** | the restore drill | a restore is performed against a COPY of the live database, and the result is written into the runbook | OD-042 | **W48 — done.** `090247cb`: `scripts/restore-drill.sh` performs the drill against a copy; the result and the elapsed time are written into `docs-v2/operations/RECOVERY-RUNBOOK.md` §9 |
+| **TASK-W47-03** | the committed GPU benchmark | the 12.6× claim becomes a re-runnable measurement or nothing | OD-043 | **W48 — done.** `75937934`: `scripts/gpu-benchmark.sh` and its harness. The record is `docs-v2/engineering/W48-GPU-BENCHMARK.md`. **The claim reproduces (≈12× on MATRIX's own forward call); the digit 12.6× does not** — three runs give 12.06× / 11.68× / 11.47×, and the historical figure stays **HISTORICAL**, bounded by that measurement |
 | **TASK-W46-11** | the full `matrix-core` suite | the project's total test population becomes a number | OD-041 | **approved and run in W47** — one JVM, an 8 GiB heap, the other daemons stopped |
+
+### 4.7 The tasks the W48 wave created
+
+**Three tasks, and only two of them are implementations.** The wave's own task ids are in the
+fourth column; the ids of this roadmap are stable and are the ones to use.
+
+| the id | the task | the goal | the wave's task | the state | the evidence |
+|---|---|---|---|---|---|
+| **TASK-W48-01** | the legacy-snapshot compatibility | a restore must not destroy what the payload does not carry: an incomplete legacy payload is **refused before any destructive change**, and the refusal is typed | **W48-01** — the preflight's **P0** | **done** — `4084538a` (the guard) and `4ddcb58d` (the contract) | `SnapshotCoverage` and `IncompatibleSnapshotException`, identifier `INCOMPLETE_LEGACY_SNAPSHOT`; the contract is `docs-v2/engineering/W48-SNAPSHOT-COMPATIBILITY.md` |
+| **TASK-W48-02** | the CI stabilisation | the three red workflows of the preflight become green, and every fix is proved by a check that can still fail | **W48-02 … W48-05** | **done** — `0c5b3980` (the gateway's path-portable tests), `d1f2e0fb` (the security check cannot open the live database), `f5870f4c` (the documentation gate is classified, not hidden), `02d2a516` (the GraalVM distribution and the SDK version contract), `16a2d0c5` and `9bb6bf5c` (the formal tool is pinned by bytes and verified by digest in both workflows) | `docs-v2/engineering/W48-CI-RECONCILIATION.md` — the state of every workflow, the cause behind every failure, and the negative control of every fix |
+| **TASK-W48-03** | the autonomy impulse consumer | an impulse that the scheduler **accepted** should be **consumed** by a bounded internal proposal — and not by anything that acts | **W48-11** | **APPROVED by the owner on 2026-11-06 (OD-045, option A) — and NOT IMPLEMENTED.** The scope is the ADR's §5 with the ten tests of its §9; the implementation is the **first task of the next wave**. W48 wrote the ADR and nothing else |
+
+**What TASK-W48-03 is not.** It is **not** an implementation task in execution: no consumer
+exists, no proposal is created, and the scheduler's `FIRED` outcome still means only that
+the scheduler **accepted** the impulse — not that work was dispatched, consumed, executed or
+completed. The ADR that scopes it is
+`docs-v2/engineering/ADR-W48-AUTONOMY-IMPULSE-CONSUMER.md` <!-- no-id: the ADR declares this identifier in its own heading; this line references the document, it does not define it --> —
+**approved, not implemented**. Until the next wave writes it, the truth is unchanged: **the
+scheduler accepts impulses, nothing consumes them.**
+
+**Two more decisions of 2026-11-06, and what they leave open.** **OD-046** — the native-image
+build gets a **measured** resource budget in the next wave (the heap and the runner size it
+actually needs are recorded), and the native capability **stays `BLOCKED`** until a build
+succeeds. **OD-047** — the GPU is an **optional accelerator**, not part of the default
+serving path: the measurement is kept, the silent CPU fallback stays visible in the
+registry, and no deployment is obliged to provide the CUDA libraries; **no serving-path
+change is required or proposed**. Neither decision creates an implementation task inside
+W48.
 
 ## 5. The blocked tasks
 
@@ -156,8 +193,18 @@ The full register is `docs-v2/governance/OPEN-QUESTIONS.md`. The decisions that 
 | **Q-W46-01** | the destructive reload's consent parameter | `?replace=true` or the `replaceExisting: true` body field? | a destructive operation's consent parameter may not be the one the owner has in mind |
 | **Q-W46-02** | the preview mode | a dry-run that names what would be replaced — yes or no? | a caller must guess what a destructive operation destroys |
 | **Q-W46-03** | the erasure scope of a workspace replacement | does the observation's evidence belong to the workspace? | an epistemic record survives its own evidence |
-| **Q-W46-07** | the GPU path | may the launcher export `LD_LIBRARY_PATH`, and how should the diagnostic report the truth? | the serving path runs a 12.6×-slower provider while a diagnostic claims "CPU" |
+| **Q-W46-07** | the GPU path | may the launcher export `LD_LIBRARY_PATH`, and how should the diagnostic report the truth? | **CLOSED on 2026-11-06 — OD-047:** the GPU is an **optional accelerator**, not part of the default serving path; the measurement is kept, the silent CPU fallback stays visible in the registry, and no deployment is obliged to provide the CUDA libraries. The measurement itself is committed (`75937934`, `docs-v2/engineering/W48-GPU-BENCHMARK.md`) and the historical 12.6× digit does not reproduce — it stays historical, bounded by the 12.06×–12.69× measurement |
 | **Q-W46-13** | the retention policy | the append-only histories grow without bound | an audit trail that exhausts the disk, or a silent deletion of evidence |
+
+**One more decision was asked and has been answered.** Whether the **first impulse consumer
+may be built at all** — and if so, whether its scope is a proposal-creating consumer that
+records internal proposals and does nothing else — was put to the owner in the wave's
+end-of-wave questionnaire of 2026-11-06. **The answer is OD-045 (option A): the consumer is
+approved for the next wave and is NOT implemented in W48.** The ADR that states the question,
+the evidence and the three options is
+`docs-v2/engineering/ADR-W48-AUTONOMY-IMPULSE-CONSUMER.md` <!-- no-id: the ADR declares this identifier in its own heading; this line references the document, it does not define it -->.
+**Until the next wave writes it, nothing changes: the scheduler accepts impulses, nothing
+consumes them.**
 
 ---
 

@@ -4,6 +4,31 @@
 **Package**: `io.matrix.lifecycle`
 **Related**: [SPEC-005](./SPEC-005-action.md), [SPEC-007](./SPEC-007-subconscious.md), [SPEC-009](./SPEC-009-mediator-hierarchy.md), [DESIGN-11](../designs/DESIGN-11-budgeter.md), [DESIGN-12](../designs/DESIGN-12-taskcell-fnl.md), [AR](../architecture/REQUEST-autonomy-impulses.md)
 
+> **W48 note — 2026-11-06.** This document describes the **scheduler**, and the scheduler is
+> **not** an executor. The distinction below is stated here because the rest of the document
+> depends on it, and because the wave found it worth a document of its own:
+>
+> - **`FIRED` means ACCEPTED, not CONSUMED.** `ImpulseScheduler.fire(...)`
+>   (`matrix-core/src/main/java/io/matrix/lifecycle/ImpulseScheduler.java:59`) returns a
+>   `FireRecord` (`:33`). A `FIRED` outcome means the impulse **passed the FROZEN gate and
+>   the conjugate budget was allocated to it** — nothing more. It does **not** mean that
+>   work was dispatched, consumed, executed or completed.
+> - **There is no downstream consumer.** The only two production call sites of
+>   `scheduler.fire(...)` are `matrix-core/src/main/java/io/matrix/autonomy/AutonomyEngine.java:141`
+>   and `matrix-core/src/main/java/io/matrix/autonomy/SelfImprovingEngine.java:60`. The
+>   `FireRecord` is **read** in exactly one place: `AutonomyEngine.fire(...)` logs a
+>   **refusal** and **drops** a `FIRED` record (`:141-145`). The `AutonomyEngine` **records
+>   and logs** outcomes — it executes nothing.
+> - **The curiosity cycle is not a completed autonomous work system.** It decides that it may
+>   want to do something, pays for the wanting, and writes the decision in a log. There is
+>   no queue, no proposal and no executor.
+>
+> The ADR that would close the gap is **APPROVED by the owner on 2026-11-06 — OD-045,
+> option A — and it is NOT IMPLEMENTED**:
+> `docs-v2/engineering/ADR-W48-AUTONOMY-IMPULSE-CONSUMER.md` <!-- no-id: the ADR declares this identifier in its own heading; this line references the document, it does not define it -->. **No consumer
+> exists**, the implementation is the **first task of the next wave**, and nothing in this
+> specification may be read as describing a consumer that is already there.
+
 ## Что
 
 Спецификация **автономных импульсов** — фоновых единиц работы, которые система может запустить
@@ -27,6 +52,15 @@
 - **IMPLEMENTED** — сам Budgeter и FROZEN-гейт живут в других классах, спецификация импульсов их только вызывает. Evidence: `matrix-core/src/main/java/io/matrix/lifecycle/ImpulseScheduler.java:87-95` (бюджет), `:75-79` (этика).
 - **PROPOSED** — импульс **не является привилегией**: он получает ровно те же гейты, что и действие по запросу пользователя. Evidence: `docs-v2/architecture/REQUEST-autonomy-impulses.md:94-99` (директива), `docs-v2/specifications/SPEC-005-action.md:49-62` (сам гейт живёт в другой спецификации — см. § «Связь с существующим»).
 - **PROPOSED** — никаких «свободы воли», «воли» или «желаний»: формулировки запрещены CONSTITUTION VI. Evidence: `docs-v2/architecture/REQUEST-autonomy-impulses.md:119-121`.
+- **[W48 note — 2026-11-06] IMPLEMENTED — `FIRED` means ACCEPTED by the scheduler, not
+  EXECUTED.** `fire()` returns a `FireRecord`; the `FIRED` outcome means the impulse passed
+  the FROZEN gate and the budget was allocated to it — **not** that work was dispatched,
+  consumed, executed or completed. There is no consumer: the `FireRecord` is read in exactly
+  one place (`AutonomyEngine.java:141-145`), where a refusal is logged and a `FIRED` record
+  is dropped. Evidence:
+  `matrix-core/src/main/java/io/matrix/lifecycle/ImpulseScheduler.java:59`;
+  `matrix-core/src/main/java/io/matrix/autonomy/AutonomyEngine.java:141-145`. **See the W48
+  note at the top of this document.**
 
 ### Таблица четырёх импульсов
 
@@ -46,6 +80,13 @@
 деятельность либо не существует, либо существует вследую. Спецификация фиксирует не
 «метафору самостоятельности», а **набор из четырёх записей, у каждой из которых есть
 стоимость, ценность, гейт и наблюдаемый исход**.
+
+> **[W48 note — 2026-11-06] What is visible today is the DECISION, not the work.** The
+> motivation above is the design intent, and it is not yet a fact on the ground: the
+> observable outcome of a fired impulse today is the scheduler's `FireRecord`, and nothing
+> consumes it. **The curiosity cycle is not a completed autonomous work system** — it is a
+> cycle that decides, pays for and records the wish to work, and then has nowhere to put it.
+> The proposal that would give it somewhere to put it is in § «Отложено».
 
 ### Три исследовательские перспективы (META-R1)
 
@@ -102,6 +143,15 @@ precision 1.000, recall 0.742 (n=200). Но её **указатель на ре�
 - **IMPLEMENTED** — бюджетный конвейер: одна строка `Row(имя, ценность, стоимость)`, `ConjugateBudgeter.allocate`, отбор только в режиме `CONJUGATE`. Evidence: `matrix-core/src/main/java/io/matrix/lifecycle/ImpulseScheduler.java:87-95`.
 - **IMPLEMENTED** — набор импульсов **закрыт allow-list'ом**: только четыре значения enum могут быть выстреляны; комментарий в коде фиксирует, что это закрывает дыру, найденную в H-046. Evidence: `matrix-core/src/main/java/io/matrix/lifecycle/ImpulseScheduler.java:63-74`.
 - **IMPLEMENTED** — решение о запуске **не использует ни Random, ни wall-clock**: `ImpulseScheduler` не содержит ни того, ни другого (проверено grep по файлу). Evidence: `matrix-core/src/main/java/io/matrix/lifecycle/ImpulseScheduler.java:59-98`.
+- **[W48 note — 2026-11-06] IMPLEMENTED — the `FIRED` outcome is NOT consumed by anything.**
+  `fire()` returns the `FireRecord` to its caller, and the **only** place in the tree that
+  reads one is `AutonomyEngine.fire(...)`: it logs a **refusal** and **drops** a `FIRED`
+  record. There is no dispatcher, no queue, no proposal store and no executor. The
+  `AutonomyEngine` **records and logs** outcomes — it does not perform the work an impulse
+  names. Evidence: `matrix-core/src/main/java/io/matrix/autonomy/AutonomyEngine.java:140-146`;
+  the two production call sites of `scheduler.fire(...)` are
+  `matrix-core/src/main/java/io/matrix/autonomy/AutonomyEngine.java:141` and
+  `matrix-core/src/main/java/io/matrix/autonomy/SelfImprovingEngine.java:60`.
 - **PROPOSED** — дефицит бюджета означает **задержку, а не голод**: любой импульс может быть отложен, но не потерян. Evidence: `docs-v2/architecture/REQUEST-autonomy-impulses.md:84-90` — в коде отложенного импульса нет, есть только `REJECTED_BUDGET` (`matrix-core/src/main/java/io/matrix/lifecycle/ImpulseScheduler.java:83-86`).
 - **PROPOSED** — каждый импульс обязан писать в `audit/HashChain` с trigger-id. Evidence: `docs-v2/architecture/REQUEST-autonomy-impulses.md:99` — **в `ImpulseScheduler` обращения к журналу аудита нет**.
 - **PROPOSED** — полный FROZEN-конвейер `EthicalFilter → StructuralSafetyGuard → LieDetector → HashChain`. Evidence: `docs-v2/architecture/REQUEST-autonomy-impulses.md:94-99` — реализован только первый шаг (`matrix-core/src/main/java/io/matrix/lifecycle/ImpulseScheduler.java:75-79`).
@@ -163,6 +213,21 @@ precision 1.000, recall 0.742 (n=200). Но её **указатель на ре�
 `:53`, `:35`, `:57`, `:42` четырёх файлов; ни один из них не смонтирован в маршрутизатор
 (`matrix-core/src/main/java/io/matrix/api/CanonicalEntryPoint.java:123` фиксирует, что
 `BrainHttpServer` из этого пакета **не смонтирован**).
+
+> **[W48 correction — 2026-11-06] The paragraph above is the PRE-W47 state and is no longer
+> true. The scheduler IS built on a served path — and still nothing consumes what it
+> accepts.**
+>
+> | | then (pre-W47) | now (verified 2026-11-06) |
+> |---|---|---|
+> | where the `ImpulseScheduler` is built | only in the unmounted quarantine package | **also** in chain B's served loop: `matrix-brain-runtime/src/main/java/io/matrix/brain/runtime/AutonomyLoop.java:57` — `new ImpulseScheduler(new ConjugateBudgeter(), new EthicalFilter())` — and the engine is built with it at `:58` |
+> | is that loop served | no | **yes** — the gateway creates and starts it in production mode: `matrix-api-gateway/src/main/java/io/matrix/api/MinimalHttpServer.java:208`, `:210` (in stub mode it is deliberately skipped, `:214`) |
+> | are the drives reached | no — the null scheduler killed the curiosity cycle and the integrity cycle never ran | **yes** — `CURIOSITY` every 120 s and `INTEGRITY_CHECK` every 300 s go through the real scheduler (`matrix-core/src/main/java/io/matrix/autonomy/AutonomyEngine.java:75`, `:82`) |
+> | is the accepted impulse consumed | — | **NO.** The `FireRecord` is read in one place only (`AutonomyEngine.java:141-145`), where a refusal is logged and a `FIRED` record is dropped. **The impulse is ACCEPTED; nothing CONSUMES it.** |
+>
+> **So the honest sentence is not "no impulse is served" and not "the curiosity cycle
+> performs work". It is: the drives are expressed and paid for on a served path, and the
+> result of that expression is a decision in a log — not a unit of autonomous work.**
 
 ## Связь с существующим
 
@@ -228,6 +293,17 @@ precision 1.000, recall 0.742 (n=200). Но её **указатель на ре�
 и ни один не проверяет запись выстрела в журнал аудита.
 
 ## Отложено
+
+- **[W48 note — 2026-11-06] APPROVED, NOT IMPLEMENTED — the impulse consumer, and the ADR
+  that scopes it.** The subject is the gap between **ACCEPTED** and **CONSUMED**: what should
+  happen to an impulse the scheduler accepted. The ADR is
+  `docs-v2/engineering/ADR-W48-AUTONOMY-IMPULSE-CONSUMER.md` <!-- no-id: the ADR declares this identifier in its own heading; this line references the document, it does not define it --> —
+  **approved by the owner on 2026-11-06 (OD-045, option A), NOT IMPLEMENTED.** Its scope is
+  a proposal-creating consumer: it turns an accepted impulse into a bounded internal
+  proposal, records it inside Chain B, and produces **no external effect**. **No code of
+  that ADR exists**, and this specification does not treat it as implemented. **Until the
+  next wave writes it, the truth is unchanged: the scheduler accepts impulses, nothing
+  consumes them.**
 
 - **IMPLEMENTED** — дефект **I6** (null-планировщик в `AutonomyLoop`) **исправлен в W47** по решению
   владельца OD-038: цикл строит настоящий планировщик, а конструктор двигателя отвергает null.

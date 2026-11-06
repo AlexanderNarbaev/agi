@@ -390,7 +390,7 @@ the native executable is never built, because the native-image toolchain is abse
 | the toolchain on this host | `command -v native-image` → **nothing**; `command -v gu` → **nothing**; `GRAALVM_HOME` → **unset**; `JAVA_HOME` → **unset**; `java -version` → `openjdk version 25.0.4.1` — an **OpenJDK**, not GraalVM |
 | what the build says it needs | `matrix-core/build.gradle:367-369` — "Local build: `./gradlew :matrix-core:build -Dquarkus.package.type=native` / Requires: GraalVM 25+ or Mandrel 24.x (container), native-image installed" |
 | the only CI workflow that builds it | `.github/workflows/native.yml` — `on: push: branches: [main]` and `pull_request: branches: [main]`. **It does not run on `develop`.** |
-| what it does when it does run | `gh run list --workflow native.yml` → 9 runs, **every one a failure**. The most recent (`41219224376`, 2026-10-31) installed the toolchain successfully — `Successfully set up 'graalvm-jdk-25.0.4+7.1'` — and then died at `Terminating due to java.lang.OutOfMemoryError: Java heap space`. The last `main` push run (`38274906793`, 2026-10-12) failed the same way: `Terminating due to java.lang.OutOfMemoryError: Java heap space` / `BUILD FAILED in 3m 29s` |
+| what it does when it does run | `gh api "repos/AlexanderNarbaev/agi/actions/workflows/native.yml/runs?per_page=1" --jq '.total_count'` → **1403** runs on record; the **last ten are all `failure`** (`per_page=10`). The most recent (`41219224376`, 2026-10-31) installed the toolchain successfully — `Successfully set up 'graalvm-jdk-25.0.4+7.1'` — and then died at `Terminating due to java.lang.OutOfMemoryError: Java heap space`. The last `main` push run (`38274906793`, 2026-10-12) failed the same way: `Terminating due to java.lang.OutOfMemoryError: Java heap space` / `BUILD FAILED in 3m 29s` |
 | whether CI reaches those classes | **no.** `:matrix-core:test` never ran in the `ci` job at `4adbc664`: the log contains no `:matrix-core:test` line, because the build stopped at `:matrix-brain-runtime:test`. The eight native classes live in `matrix-core` |
 
 **So: the native-image classes are UNVERIFIED in CI as well as locally.** They are
@@ -464,6 +464,89 @@ document that reports "success" without them would be reporting half the state.*
    `docs-v2/engineering/W48-TEST-RECONCILIATION.md`, not re-derived here.
 6. **No claim is made about the tree after `4adbc664`.** A CI state is a claim about a
    moment and a commit; the moment is §3's header and the commit is `4adbc664`.
+
+### 4.7 The clean runner AFTER the fixes: twelve failures, all diagnosed
+
+This subsection is a LATER reading than §3, and it is dated separately because a CI
+state is a claim about a moment and a commit. §3 describes the tree at `4adbc664`;
+this one describes the tree at `0eac36c3`.
+
+```
+gh run list --branch develop --limit 4 \
+  --json databaseId,headSha,status,conclusion,name
+42181161855 0eac36c34 docs-validation completed success
+42181161808 0eac36c34 branch-validation completed success
+42181161742 0eac36c34 ci completed failure
+```
+
+**`docs-validation` and `branch-validation` are green. The `ci` workflow is not.**
+
+**The `Quality gates (can fail)` job: DOCS-1 is GREEN.** The archive classification
+works on the runner — the same job's log says
+
+```
+DOCS-1     the documentation links resolve
+PASS: 271 candidate(s), at or below the accepted baseline of 271; 0 other violation(s).
+```
+
+That is the W48-05 fix (the archive is scanned read-only and reported in its own
+group, and its defects do not fail the gate) **verified on a clean runner** — the
+failure of §3's run is gone. The job is still red, but for a different step: the
+security boundary check.
+
+**The `Build & Test (Java)` job: 9070 tests completed, 12 failed, 132 skipped.** The
+twelve are not the native-binary classes (W48-06 separated those into
+`nativeBinaryTest`, and the default JVM task excludes them). They are:
+
+| the failure | the count | the cause | the fix |
+|---|---|---|---|
+| `DecisionPathGateTest > no decision path introduces a nondeterministic decision` | 1 | the accepted decision-path baseline still listed nine knowledge-core groups that W48's wall-clock work REMOVED | the nine stale groups were deleted from `docs-v2/quality/decision-path-baseline.txt` — the findings are gone, so the exceptions are gone |
+| `Exp144DecisionPathAuditTest > auditReality()` | 1 | the same baseline | the same |
+| `Exp016ProductionCorpusTest > …` | 4 | `NoSuchFileException`: the corpus `models/training_data/qa_pairs.json` is the OWNER'S data and `/models/` is git-ignored, so a clean runner has no corpus | the class now SKIPS with a recorded reason when the corpus is absent |
+| `Exp020E2EBilingualStressTest > …` | 6 | the same corpus | the same |
+
+The corpus case is the honest one, and it is NOT a "fixed test": on a clean runner
+the production-corpus properties are **NOT VERIFIED** — they are skipped with a
+reason, which is neither a failure (the code under test is not broken) nor a pass
+(the property was not checked). The evidence is the negative control below.
+
+**The negative control for the corpus skip** — the corpus was moved aside, the two
+classes were re-run, and the file was restored:
+
+```
+mv models/training_data/qa_pairs.json /tmp/qa_pairs.json.bak
+./gradlew :matrix-core:test --tests "io.matrix.research.Exp016ProductionCorpusTest" \
+                         --tests "io.matrix.research.Exp020E2EBilingualStressTest"
+```
+
+| the class | tests | failures | skipped |
+|---|---|---|---|
+| `io.matrix.research.Exp016ProductionCorpusTest` | 5 | 0 | 5 |
+| `io.matrix.research.Exp020E2EBilingualStressTest` | 6 | 0 | 6 |
+
+With the corpus present again, the same two classes execute and pass (5 and 6 tests,
+0 failures) — the skip is conditional on the corpus, not on the code.
+
+**The security boundary check on the runner: the application did not open its port
+within the check's 60-second window.** The check's own log on the runner said only
+"the service did not start in local-only mode (see /tmp/w43-security-local.log)" and
+the log was never printed, so the reason could not be read from the CI run at all.
+Two things changed, and neither of them touches the boundary assertions:
+
+1. the startup window is 180 seconds instead of 60 — a cold runner extracts the ONNX
+   runtime's native library (about 583 MB) into a fresh temporary directory while
+   the JVM starts, with no warm page cache;
+2. the check now prints the tail of the application's own log when the service does
+   not come up, and it stops waiting early if the JVM died — so the next red run
+   says WHY.
+
+**Locally the check still holds every assertion** (`scripts/security-boundary-check.sh`
+→ "the security boundary: 0 — every assertion held, and the live data is untouched").
+
+**What is still unverified after this subsection:** the security boundary on the
+clean runner (the next run decides it), and the production-corpus properties in CI
+(they need the owner's corpus, which is not in the repository — and is not going to
+be, because `/models/` is git-ignored on purpose).
 
 ---
 

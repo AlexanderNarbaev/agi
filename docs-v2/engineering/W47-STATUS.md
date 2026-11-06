@@ -9,6 +9,14 @@
 
 ---
 
+> **SUPERSEDED BY W48 — 2026-11-06.** This document remains the record of what the W47 wave
+> did on 2026-11-05, and **nothing in the body was deleted**. Four of its statements were
+> wrong or stale, and each is now marked **in place** with a dated `[W48 correction]` note;
+> §23 lists the four and points at the evidence. The per-method reconciliation of the 25
+> failures of the full-suite run is `docs-v2/engineering/W48-TEST-RECONCILIATION.md`; the
+> wave's preflight is `docs-v2/engineering/W48-BASELINE.md`; the CI record is
+> `docs-v2/engineering/W48-CI-RECONCILIATION.md`.
+
 ## 1. The starting state
 
 The W46 wave left the repository in a known state and **deliberately did not implement the
@@ -34,6 +42,21 @@ What the wave inherited, measured:
 |---|---|
 | the start | `84955ec9` — "WAL: the workspace replacement — the case goes with its history" (W46's last) |
 | the end | the commit that carries this document — 10 commits later |
+
+**[W48 correction — 2026-11-06] The commit counts, reconciled against the history.**
+The report's own "10" (§2, §19) is the count it could enumerate when it was written: the
+starting commit plus the nine task commits through `42d5d04f`. The diffstat it quotes is
+exactly that range's — `git diff --shortstat 84955ec9..42d5d04f` → **61 files changed, 5244
+insertions(+), 421 deletions(-)**, which matches §2 and §9 verbatim. The wave as it actually
+ended was **three commits longer**: `git log --oneline 84955ec9..eca23bfd | wc -l` → **13**
+changesets after the starting W46 commit, and **14 entries** through `eca23bfd` when the
+starting commit is counted (`git log --oneline 84955ec9^..eca23bfd | wc -l` → 14). The three
+that landed after the table was written are `1371774e` (the end-of-wave questionnaire),
+`583358df` (the curiosity drive's envelope) and `a2cf34d6` (the full-suite run); `eca23bfd`
+closed the wave. This document was first added in `1371774e` and last updated in `a2cf34d6`
+(`git log --oneline -- docs-v2/engineering/W47-STATUS.md`). **The three numbers are three
+different questions**, and none of them contradicts the others: *10* = the commits the report
+enumerated, *13* = the changesets after the start, *14* = the entries with the start.
 
 **The commit list, in order:**
 
@@ -65,7 +88,7 @@ The eight tasks of the W46 directive, and the three the questionnaire created:
 | TASK-W46-19 | OD-031 | the four missing documents | **done** |
 | TASK-W46-20 | OD-032 | PR-002 and PR-006 reach a terminal status | **done** |
 | TASK-W46-21 | OD-033 | the four MATRIX skills are installed and registered | **done** |
-| TASK-W46-22 | OD-034 | the four package names | **done on two of four — the other two are refused, with reasons** |
+| TASK-W46-22 | OD-034 | the four package names | **done on two of four — the other two are refused, with reasons** · **[W48 correction — 2026-11-06: the owner's answer of 2026-11-05 (OD-040) reversed the `matt-pocock` refusal — it got its root manifest and is done. The `plan.retired-backup` refusal stands and is final. The two renames are unaffected]** |
 | TASK-W46-9 | OD-028 | the GPU launcher and the truthful diagnostics | **done** |
 | TASK-W46-23 | OD-036 | the learning state goes with the knowledge | **done** |
 | TASK-W46-24 | OD-037 | k counts the distinct nodes | **done** |
@@ -127,6 +150,21 @@ on purpose**, and the refusal is recorded in OD-034:
 - **`plan.retired-backup`** — a retired, untracked asset of the opencode-swarm plugin that
   the plugin reinstalls by itself; its declared name `plan` collides with a live `plan`, and
   its name carries a dot, which the harness's own rule forbids.
+
+**[W48 correction — 2026-11-06] The first refusal was reversed by the owner; the second
+stands, on purpose.** The two bullets above record the wave's *reasoning* at the moment it was
+written, and the owner's answer of 2026-11-05 (Q-W47-02 → **OD-040**, `ACCEPTED`) went the
+other way for `matt-pocock`:
+
+| the package | what the wave recommended | what the owner decided | the state **now** (verified 2026-11-06) |
+|---|---|---|---|
+| `matt-pocock` | refuse — no root manifest | **give it one** — the container becomes ONE skill whose body indexes the seventeen disciplines | **DONE.** The root manifest exists: `.opencode/skills/matt-pocock/SKILL.md`, 3300 bytes, its frontmatter declares `name: matt-pocock` and a description. It is **tracked in git** (`git ls-files .opencode/skills/matt-pocock/` lists it) and was committed by `1371774e`. **NOT VERIFIED:** that the harness *discovers* it — the file and its frontmatter are verified, the harness's own discovery run was not repeated here |
+| `plan.retired-backup` | refuse | the refusal is **kept** — this is a known, intentionally refused external asset, not an open task | **REFUSED, by decision.** The file is `.swarm/bundled-skills/plan.retired-backup/SKILL.md` and its frontmatter still declares `name: plan`, which collides with the live `plan` skill. It is an **external asset of the opencode-swarm plugin**: the plugin reinstalls it by itself, it is untracked in git, and it is outside the project's write scope. The risk is recorded as **R-W47-02**, state `ACCEPTED-BY-DECISION` (`docs-v2/governance/RISK-REGISTER.md:41`) |
+
+**What this changes for the reader.** `matt-pocock` is **not** a pending refusal and **not** an
+open item — the owner decided it and it is done. `plan.retired-backup` is **not** an open
+question either: it is a refusal that is final, and the only thing that can revive it is the
+plugin reinstalling the bundle. **Nothing about either package is pending.**
 
 **TASK-W46-9 — the launcher and the diagnostics are done; the benchmark is not.** The
 12.6× comparison in the hardware report came from an ad-hoc probe that was never preserved,
@@ -210,14 +248,40 @@ summary.
 
 | | why | what it means |
 |---|---|---|
-| ~~the full `matrix-core` suite~~ | **it was run** — the owner approved it on 2026-11-05 (OD-041), and it ran: 1226 classes, 9051 executions, 23 skipped, **25 failures**, of which 22 are the GraalVM native-binary classes and 3 are examined below | the population is now a number. The failures are NOT the wave's — see §11 |
-| the GraalVM / native-image classes | the toolchain is not usable in this environment | they are counted as neither passing nor failing — R-W46-11, and now MEASURED: **22 failures across 6 classes**, not the eight classes the register guessed |
+| ~~the full `matrix-core` suite~~ | **it was run** — the owner approved it on 2026-11-05 (OD-041), and it ran: 1226 classes, 9051 executions, 23 skipped, **25 failures** | the population is now a number. The failures are NOT the wave's — see §11 |
+| the GraalVM / native-image classes | the toolchain is not usable in this environment | they are counted as neither passing nor failing — R-W46-11, and now MEASURED |
+
+**[W48 correction — 2026-11-06] The breakdown of the 25 is corrected: 23 native-binary + 1
+wall-clock compliance + 1 numerical.** The row above used to read *"of which 22 are the
+GraalVM native-binary classes and 3 are examined below"*, and the row below it used to read
+*"**22 failures across 6 classes**, not the eight classes the register guessed"*. **Both were
+wrong**, and the wave's own commit `a2cf34d6` is where the error entered the report (its
+message says *"the run MEASURED six classes and 22 failures"*). The measured truth:
+
+| | the count | the proof |
+|---|---|---|
+| the native-binary failures | **23**, in **eight** classes | the W44 per-class measurement — `docs-v2/engineering/W44-TEST-MAP.csv` — records 8 + 3 + 3 + 3 + 2 + 2 + 1 + 1 = **23** over exactly the eight classes the table below names, and today's re-measurement of the same scope prints `27 tests completed, 23 failed` with the same per-class counts |
+| the wall-clock compliance failure | **1** | `io.matrix.consciousness.Exp228ComplianceTest` |
+| the numerical-tolerance failure | **1** | `io.matrix.consciousness.CausalEmergencePropertyTest` |
+| **the total** | **25** | 23 + 1 + 1 = 25 exactly |
+
+The arithmetic closes under 23 + 1 + 1 and **not** under 22 + 1 + 1 (which gives 24), and no
+grouping of the eight classes into six reproduces 23 failures. The full per-method table —
+one row per failure, with its category, whether it pre-existed W47, and whether W48 fixed it
+— is `docs-v2/engineering/W48-TEST-RECONCILIATION.md` (§4, 25 rows). **Two of the 25 are
+fixed in W48 and committed**: the numerical tolerance (`241af1e1`) and the wall-clock
+compliance (`4adbc664`). **The 23 native ones are still `BLOCKED`** — the GraalVM toolchain
+is absent on this host — and they are now a scope of their own (`31d8f832`).
+
+**Executed is not passed.** The suite **was executed** (OD-041, one JVM, an 8 GiB heap, the
+other daemons stopped) and it **was not green**: 25 failures. "The full suite is green" was
+never true; §20's item 7 is corrected below.
 
 **The 25 failures of the full run, one by one — and whether the wave caused them.**
 
 | the failure | the count | the cause | the wave's fault |
 |---|---|---|---|
-| the native-binary classes (`NativeBinaryCLITest`, `NativeBinaryBackgroundServiceTest`, `NativeBinaryStartupBenchmarkTest`, `NativeBinaryFullIntegrationTest`, `NativeBinaryPerformanceBenchmarkTest`, `NativeBinaryDockerTest`, `NativeBinaryLaunchBenchmarkTest`, `JVMvsNativeBenchmarkTest`) | **22** | `java.io.IOException: Cannot run program "build/native/nativeCompile/matrix-core"` — the native binary was never built, because the GraalVM toolchain is not usable here | **no** — R-W46-11, measured now instead of guessed |
+| the native-binary classes (`NativeBinaryCLITest`, `NativeBinaryBackgroundServiceTest`, `NativeBinaryStartupBenchmarkTest`, `NativeBinaryFullIntegrationTest`, `NativeBinaryPerformanceBenchmarkTest`, `NativeBinaryDockerTest`, `NativeBinaryLaunchBenchmarkTest`, `JVMvsNativeBenchmarkTest`) | **23** **[W48 correction — 2026-11-06: the report said 22; the measured count is 23, over eight classes]** | `java.io.IOException: Cannot run program "build/native/nativeCompile/matrix-core"` — the native binary was never built, because the GraalVM toolchain is not usable here | **no** — R-W46-11, measured now instead of guessed |
 | `io.matrix.consciousness.Exp228ComplianceTest.realProjectCompliance` | **1** | the check finds **21 unadjudicated wall-clock sites** in the decision-path packages, the first being `io/matrix/knowledge/acquisition/DocumentImporter.java:127` | **no — and this is MEASURED, not asserted**: the same test on a worktree of the pre-wave commit `84955ec9` fails with the SAME numbers (`random=63, wallClock=47`, 21 sites) |
 | `io.matrix.consciousness.CausalEmergencePropertyTest.propertyEIOfNonNegativeDistribution` | **1** | the assertion is `ei >= 0.0` with **no tolerance**, and the effective information of a random sample can come out as `-3.2e-16` — a floating-point artefact | **no**: the same test PASSES on the pre-wave worktree in a standalone run (6 tests, 0 failures). It is a FLAKY property test whose seed varies per run. The fix is a tolerance — a one-line change in a package this wave did not touch, and it is named as a task rather than slipped in |
 
@@ -264,6 +328,14 @@ The one measured performance number of this wave is the fifteenth specification'
 check: **1.6 seconds, 35,937 distinct states** — a measurement of the gate's cost, not of
 the system.
 
+**[W48 correction — 2026-11-06] The benchmark this section says was never produced WAS
+produced, in W48.** `75937934` committed `scripts/gpu-benchmark.sh` and its harness; the
+record is `docs-v2/engineering/W48-GPU-BENCHMARK.md`. **The claim reproduces; the digit does
+not.** Three runs measure **12.06× / 11.68× / 11.47×** on MATRIX's own forward call and
+**12.69×** on the end-to-end path, against the historical **12.6×** — which is therefore
+**HISTORICAL** and *bounded* by the new measurement rather than repeated. The section above
+remains the W47 record.
+
 ## 14. The resource usage
 
 Measured on this machine, 2026-11-05:
@@ -301,15 +373,19 @@ temporary directory.
 | R-W46-19 — the documentation link graph is not checked by anything | **CLOSED**: `scripts/docs-link-check.py --strict` runs in the quality gate, and this wave added the retention self-test beside it |
 | R-W46-21 — two agents editing the same file in one wave | **mitigated, not closed**: this wave used disjoint write scopes and the coordinator owned every register; the lesson stands |
 | R-W46-10 — the full suite is not run | **CLOSED for this commit**: the owner approved one run (OD-041) and it ran — 1226 classes, 9051 executions, 23 skipped, **25 failures**, and none of the 25 is the wave's (§11) |
-| R-W46-11 — the GraalVM classes are red here | **OPEN and now MEASURED**: 22 failures across 6 classes — the register's guess of eight was low. They are why the suite is red, and they are counted as neither passing nor failing |
+| R-W46-11 — the GraalVM classes are red here | **OPEN and now MEASURED**: **[W48 correction — 2026-11-06: the report said "22 failures across 6 classes"; the measured truth is 23 failures across EIGHT classes]** — the register's guess of eight was exactly right, not low. They are why the suite is red, and they are counted as neither passing nor failing. In W48 they became a scope of their own (`31d8f832`), and their state is `BLOCKED` in `docs-v2/engineering/W48-TEST-RECONCILIATION.md` §4 |
 | the flaky property test | **OPEN**: one line — a missing offset in `CausalEmergencePropertyTest`. It is one of the 25 failures, and it is a false one |
 | the trigger table's fork | **OPEN**: the authoritative copy of the generator lives in `opencode_initializer` and does not know the four new slugs; the installer's progress file currently protects them, and a reset of that file would silently drop them |
 | the identity collision of `plan.retired-backup` | **OPEN by decision**: refusing to revive a retired bundle was the right call; the collision remains and is recorded in OD-034 |
 
 ## 17. The limitations
 
-1. The full `matrix-core` suite was **run** (the owner approved it, OD-041) and it is **red in 25 places**: 22 native-binary classes that cannot build here, one pre-existing compliance check (proved on the pre-wave commit), and one flaky property test with no floating-point tolerance. The wave's own scopes are green.
+1. The full `matrix-core` suite was **run** (the owner approved it, OD-041) and it is **red in 25 places**: **[W48 correction — 2026-11-06: 23 native-binary failures across eight classes that cannot build here, one pre-existing compliance check (proved on the pre-wave commit), and one flaky property test with no floating-point tolerance]** — the report said "22 native-binary classes"; the count of failures is **23** and the count of classes is **eight**. The wave's own scopes are green.
 2. The GPU speed-up is not a committed benchmark, and the registry says so.
+   **[W48 correction — 2026-11-06: this limitation is closed. W48 committed the benchmark
+   (`75937934`, `scripts/gpu-benchmark.sh`); the record is
+   `docs-v2/engineering/W48-GPU-BENCHMARK.md`. The ≈12× claim reproduces; the historical
+   12.6× digit does not, and stays historical.]**
 3. The fifteenth specification says nothing about a federation with more than three voters,
    and its deadlock check is off.
 4. `WeightMonotonic` in that specification is vacuous by construction, and the map says so.
@@ -322,7 +398,7 @@ temporary directory.
 8. A fired impulse still has no consumer: `ImpulseScheduler.fire` dispatches to nobody.
 9. `SelfImprovingEngine` has the same shape as the fixed defect — an unguarded scheduler —
    and is `UNREACHABLE` today.
-10. The two refused package names are still mismatched, by decision.
+10. **[W48 correction — 2026-11-06]** The two package names are no longer both mismatched. `matt-pocock` **got its root manifest** — the owner's decision OD-040 of 2026-11-05, implemented and committed (`1371774e`); `.opencode/skills/matt-pocock/SKILL.md` exists and is tracked. `plan.retired-backup` **stays refused, by decision**: it is a known, intentionally refused external asset of the opencode-swarm plugin (`R-W47-02`, `ACCEPTED-BY-DECISION`), and the collision is recorded rather than pending. **Nothing about either package is waiting for an answer.**
 
 ## 18. The owner approvals
 
@@ -330,13 +406,18 @@ temporary directory.
 |---|---|
 | the W47 questionnaire of 2026-11-05 — the retention's three tiers, the learning state, k counts the nodes, the null scheduler now | `ask_user_question` — the answers are in §21 |
 | the push after every completed task | the owner's standing instruction of this session: "every time when job finished — push all work" |
-| the two refusals of TASK-W46-22 | not yet an approval — **they are pending the owner's answer in the questionnaire of §21** |
+| the two refusals of TASK-W46-22 | **[W48 correction — 2026-11-06: this row said the refusals were "pending the owner's answer in the questionnaire of §21". The answer is given and nothing is pending.]** Q-W47-02 → **OD-040** (`ACCEPTED`, 2026-11-05): `matt-pocock` **gets** a root `SKILL.md` — done and committed (`1371774e`), the file exists and is tracked. `plan.retired-backup` keeps the refusal, which is final and is recorded as `R-W47-02` / `ACCEPTED-BY-DECISION`. **NOT VERIFIED:** the harness's own discovery of the new root manifest was not re-run here |
 
 ## 19. The commits
 
-Ten commits, listed in §2, each one a single significant change, each pushed to
-`origin/develop` as it was finished. The working tree at the end of the wave carries no
-uncommitted change of the coordinator's own.
+**[W48 correction — 2026-11-06]** The wave was **ten** commits long when this table was
+written — the starting commit plus the nine task commits through `42d5d04f`, each one a
+single significant change, each pushed to `origin/develop` as it was finished. **The W47
+sequence as it ended was thirteen changesets after the starting commit, and fourteen entries
+with it**: `git log --oneline 84955ec9..eca23bfd | wc -l` → 13, and
+`git log --oneline 84955ec9^..eca23bfd | wc -l` → 14. The commits that follow `eca23bfd`
+belong to the **W48** wave, not to this one. The working tree at the end of the wave
+carried no uncommitted change of the coordinator's own.
 
 ## 20. The next-wave recommendations
 
@@ -350,8 +431,17 @@ uncommitted change of the coordinator's own.
    subscribes to the impulse.
 5. **The trigger table's fork** — either the two copies are brought together or the
    repository's copy is declared the source of truth in writing.
-6. **The two refused names** — the owner's answer decides whether they stay.
-7. **The full suite is green** — it was run (OD-041) and its 25 failures are the native-binary classes, the pre-existing compliance check, and the flaky property test. The last two are one line each; the first needs the GraalVM toolchain or an explicit exclusion.
+6. **The two refused names — closed.** **[W48 correction — 2026-11-06: the owner's answer has
+   come.]** `matt-pocock` got its root manifest (OD-040, done, committed `1371774e`);
+   `plan.retired-backup` keeps the refusal by decision (R-W47-02). Nothing is pending.
+7. **The full suite was executed; it was NOT green.** **[W48 correction — 2026-11-06: the
+   heading of this item used to read "The full suite is green", which was never true.]** It
+   was run (OD-041) and it **failed in 25 places**: **23 native-binary failures across eight
+   classes**, **one** pre-existing wall-clock compliance check, and **one** flaky property
+   test with no floating-point tolerance. The two non-native ones are now **fixed and
+   committed in W48** (`241af1e1` and `4adbc664`); the 23 need the GraalVM toolchain or an
+   explicit owner-approved exclusion, and they are `BLOCKED`
+   (`docs-v2/engineering/W48-TEST-RECONCILIATION.md`). **Executed ≠ passed.**
 8. **The flaky property test** — one offset, one line (R-W47-05).
 
 ## 21. The questionnaire results
@@ -373,7 +463,7 @@ blocking status are in `docs-v2/engineering/W47-QUESTIONNAIRE.md`.
 | the question | the answer | the decision | the task | the state |
 |---|---|---|---|---|
 | Q-W47-01 — the snapshot's bound | a size bound on the payload, plus the same three-tier calendar on the rows | OD-039 | TASK-W47-01 | **W48** — the first task of the next wave |
-| Q-W47-02 — the two refused package names | **add a root `SKILL.md` to `matt-pocock`** — the owner chose the option the wave had recommended against | OD-040 | TASK-W46-26 | **done in W47** — the harness discovers the container now |
+| Q-W47-02 — the two refused package names | **add a root `SKILL.md` to `matt-pocock`** — the owner chose the option the wave had recommended against | OD-040 | TASK-W46-26 | **done in W47** — the harness discovers the container now · **[W48 correction — 2026-11-06: the file is verified — `.opencode/skills/matt-pocock/SKILL.md` exists, its frontmatter declares `name: matt-pocock`, it is tracked in git and it was committed by `1371774e`. The harness's own discovery of it was NOT re-run here, so that half of the sentence stands as the W47 claim and is NOT VERIFIED]** |
 | Q-W47-03 — the full `matrix-core` suite | one run, one test JVM, an 8 GiB heap, the other daemons stopped | OD-041 | TASK-W46-11 | **approved and run in W47** — the result is in §10 |
 | Q-W47-04 — the restore drill | yes — against a COPY, in a temporary directory, and the result written into the runbook | OD-042 | TASK-W47-02 | **W48** |
 | Q-W47-05 — the GPU benchmark | yes — a committed script, the same model, a warm-up, a median with the dispersion | OD-043 | TASK-W47-03 | **W48** |
@@ -413,3 +503,26 @@ cd /home/alexandr-narbaev/Projects/agi && git status --short --branch && git log
    at 859 diff lines; the generator, not a hand edit, is what changes that file.
 7. Commit with the `WAL: <description>` format, one significant change per commit, and push
    after each completed task.
+
+## 23. The W48 corrections — the index
+
+**Added 2026-11-06.** Every correction made to this document by the W48 wave, in one place.
+Nothing was deleted; each correction is marked in the body with a dated
+`[W48 correction — 2026-11-06]` note, and the original wording is still there to be read
+against it.
+
+| # | what this document said | what the measurement says | where the correction is | the proof |
+|---|---|---|---|---|
+| 1 | "22 native-binary failures", "**22 failures across 6 classes**", "3 are examined below", and "the register's guess of eight was low" | **23 native-binary failures across EIGHT classes**, + 1 wall-clock compliance + 1 numerical = 25 | §11 (both tables), §16 (R-W46-11), §17 item 1 | the W44 per-class measurement in `docs-v2/engineering/W44-TEST-MAP.csv` (8+3+3+3+2+2+1+1 = 23) and today's re-measurement (`27 tests completed, 23 failed`); the per-method table is `docs-v2/engineering/W48-TEST-RECONCILIATION.md` §4 |
+| 2 | "**The full suite is green**" | the suite **was executed** and **failed in 25 places**; executed ≠ passed | §20 item 7 | `docs-v2/engineering/W47-STATUS.md` §10 (the run) and `docs-v2/engineering/W48-TEST-RECONCILIATION.md` §5 |
+| 3 | "the two refusals … are **pending the owner's answer**", "The two refused package names are still mismatched, by decision", and §6's `matt-pocock` bullet | `matt-pocock` **got** its root manifest (OD-040, `ACCEPTED`, 2026-11-05) and is done; `plan.retired-backup` **keeps** the refusal and is a known, intentionally refused external asset (R-W47-02, `ACCEPTED-BY-DECISION`). **Nothing is pending** | §3 (TASK-W46-22 row), §6, §17 item 10, §18, §20 item 6, §21 (Q-W47-02 row) | `.opencode/skills/matt-pocock/SKILL.md` exists, is tracked and was committed by `1371774e`; `.swarm/bundled-skills/plan.retired-backup/SKILL.md` still declares `name: plan` |
+| 4 | "Ten commits" / "the commit that carries this document — 10 commits later" | the W47 sequence is **13 changesets after `84955ec9`** and **14 entries with it**, through `eca23bfd`; the quoted diffstat (61 files, 5244 insertions, 421 deletions) is exactly `84955ec9..42d5d04f`'s | §2, §19 | `git log --oneline 84955ec9..eca23bfd \| wc -l` → 13; `git log --oneline 84955ec9^..eca23bfd \| wc -l` → 14; `git diff --shortstat 84955ec9..42d5d04f` → `61 files changed, 5244 insertions(+), 421 deletions(-)` |
+
+**One difference that is recorded and not resolved.** The W47 report names the first
+unadjudicated wall-clock site as
+`matrix-core/src/main/java/io/matrix/knowledge/acquisition/DocumentImporter.java:127`; the
+W48 re-measurement names
+`matrix-core/src/main/java/io/matrix/knowledge/KnowledgeImporter.java:51`. The **counts** are
+identical (21 sites, 63 random, 47 wall-clock), and the repository retains nothing that
+settles which is right — the W47 JUnit XML is gone. `docs-v2/engineering/W48-TEST-RECONCILIATION.md`
+§8 records the difference instead of resolving it.
