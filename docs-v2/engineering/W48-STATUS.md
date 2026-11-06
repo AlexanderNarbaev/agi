@@ -50,7 +50,32 @@ The wave's preflight, with the baseline that was frozen before anything changed,
 | `4ddcb58d` | the snapshot payload contract is written down, with its refusals and its limits |
 | `31989733` | the autonomy impulse consumer is proposed, not built |
 
-## 3. What the directive asked, and what answered it
+## 3. The tasks, with their status labels
+
+The labels are the directive's: **DONE**, **PARTIAL**, **BLOCKED**, **REFUSED**,
+**DEFERRED**, **NOT VERIFIED**. The evidence column says **how** it was established —
+locally tested, CI tested, model-checked, native-image tested, hardware measured,
+operationally rehearsed, or documented.
+
+| the task | the subject | the status | the evidence | the commit |
+|---|---|---|---|---|
+| W48-00 | the baseline and the current-state snapshot | **DONE** | documented — every statement carries a command | `docs-v2/engineering/W48-BASELINE.md` |
+| W48-01 | the legacy-snapshot restore compatibility | **DONE** | locally tested — 12 tests on real temporary SQLite databases | `4084538a`, `4ddcb58d` |
+| W48-02 | the gateway's path-portable tests | **DONE** | locally tested | `0c5b3980` |
+| W48-03 | the branch validation and the GraalVM action | **DONE** | CI tested — the workflow's own steps; the compile was reached in CI | `02d2a516` |
+| W48-04 | the TLA artifact's immutability and the CI formal execution | **DONE** | CI tested + model-checked — 15 specifications, `tools/tla2tools.jar: OK` | `16a2d0c5`, `9bb6bf5c` |
+| W48-05 | the quality gate's scope and the historical documents | **DONE** | locally tested + CI tested — 0 strict link failures, with the historical archive reported separately | `f5870f4c`, `d1f2e0fb` |
+| W48-06 | the full-suite failure reconciliation and the numerical/compliance repairs | **DONE** for 2 of 25, **BLOCKED** for the 23 native | locally tested — the 23 re-measured, 2 fixed and green | `241af1e1`, `4adbc664`, `31d8f832`, `40b0942c` |
+| W48-07 | the snapshot size measurement, the bound and the row retention | **DONE** | locally tested — 12 tests and the tool's own 40 checks; the measurement was taken on a copy | `33d199e2` |
+| W48-08 | the restore drill against a copy | **DONE** | operationally rehearsed — the live file byte-identical before and after | `090247cb` |
+| W48-09 | the reproducible GPU benchmark | **DONE** | hardware measured — three independent runs on the GPU; the CUDA provider positively verified | `75937934` |
+| W48-10 | the governance and the registry reconciliation | **DONE** | documented — 4 validators, 0 defects | `93350867`, `b0b8e110` |
+| W48-11 | the autonomy consumer's ADR and the owner decision | **DONE** — the ADR and the decision; the consumer itself is **DEFERRED** to W49 | documented — the owner's answer is OD-045 | `31989733` |
+| — | the native-image capability | **BLOCKED** | not executed — the toolchain is absent; the scope refuses to run | `31d8f832` |
+| — | the GPU path in CI | **NOT VERIFIED** | no gpu/cuda/nvidia job exists in any of the seven workflows | — |
+| — | the retention pass on a schedule | **DEFERRED** | the tool is tested; who runs it and when is the operator's | `33d199e2` |
+
+## 4. What the directive asked, and what answered it
 
 ### 3.1 The loss of knowledge and learning history — CLOSED
 
@@ -127,7 +152,7 @@ alternatives, the recommended scope, the safety invariants, the cost, the failur
 and the tests. **Nothing was implemented** — the owner's answer (OD-045) approves the
 scope **for the next wave**.
 
-## 4. The owner decisions of 2026-11-06
+## 5. The owner decisions of 2026-11-06
 
 | the decision | the answer |
 |---|---|
@@ -135,7 +160,7 @@ scope **for the next wave**.
 | **OD-046** — the native-image build | measure the resource cost and fix the build in the next wave; the capability stays **BLOCKED** until a build succeeds |
 | **OD-047** — the role of the GPU | an **optional accelerator**, not part of the default serving path; the silent CPU fallback stays visible in the registry |
 
-## 5. The tests, with their exact counts
+## 6. The tests, with their exact counts
 
 | the scope | the classes | the methods | the failures | the commit |
 |---|---|---|---|---|
@@ -146,7 +171,7 @@ scope **for the next wave**.
 
 The evidence is the JUnit XML under `<module>/build/test-results/`.
 
-## 6. The negative controls
+## 7. The negative controls
 
 | the control | the command | the result |
 |---|---|---|
@@ -156,7 +181,7 @@ The evidence is the JUnit XML under `<module>/build/test-results/`.
 | the version gate's negative control | the gate against a comment-only file | the gate **fails**, as it must |
 | the compatibility refusal leaves no trace | the fingerprint before and after the refusal | **identical** (6 of the 12 tests) |
 
-## 7. What was NOT verified — the honest list
+## 8. What was NOT verified — the honest list
 
 1. **The payload restore was not exercised by the drill.** The live
    `workspace_snapshot` table holds 0 rows; the payload path is covered by unit tests
@@ -178,7 +203,7 @@ The evidence is the JUnit XML under `<module>/build/test-results/`.
    `KnowledgeAxes-conflict-forgets-what-it-recorded`) — known holes the gate logs, not
    new failures.
 
-## 8. The deliberate non-actions
+## 9. The deliberate non-actions
 
 | the item | why it was not done in W48 |
 |---|---|
@@ -188,7 +213,7 @@ The evidence is the JUnit XML under `<module>/build/test-results/`.
 | the auditor's import-line exemption | a real latent bug — a plain import exempts the whole file; it needs a follow-up wave |
 | the snapshot retention pass is not scheduled | the tool exists and is tested; **who runs it and when is the operator's** — the calendar is a policy, not a cron |
 
-## 9. The next wave's proposal
+## 10. The next wave's proposal
 
 1. **The autonomy impulse consumer** (OD-045) — implement §5 of the ADR exactly, with
    the ten tests of §9. No external effect, no bridge to Chain A, no executor.
@@ -202,7 +227,73 @@ The evidence is the JUnit XML under `<module>/build/test-results/`.
 5. **The two known holes** — the auditor's import-line exemption and the
    non-reproducible transition id.
 
-## 10. The instructions for the next session
+## 11. The changed files
+
+**73 files, +10 705 / −156 lines**, from `eca23bfd` to the commit that carries this
+document. The groups:
+
+| the group | the files |
+|---|---|
+| the workflows (a frozen zone, excepted with a recorded reason) | `.github/workflows/ci.yml`, `branch-validation.yml`, `tla.yml`; `docs-v2/quality/frozen-zone-baseline.txt` |
+| the build | `build.gradle`, `matrix-core/build.gradle`, `.gitignore` |
+| the formal tool | `tools/tla2tools.jar` (tracked), `tools/README.md` (the provenance) |
+| the production code | `KnowledgeStore`, `WorkspaceSnapshot`, `SnapshotCoverage`, `IncompatibleSnapshotException`, `LearningWorkbenchResource`, `KnowledgeWorkbench`, `DiskBudget`, and the ten decision-path classes that got a clock or a reason |
+| the test code | the shared `RepositoryPaths` helper and its users, the 12 compatibility tests, the 12 retention tests, the 4 drill-probe tests, the 8 GPU-harness tests, the new `KnowledgeClockInjectionTest`, and the 8 native classes that got a tag |
+| the scripts | `scripts/gpu-benchmark.sh`, `scripts/restore-drill.sh`, `scripts/snapshot-retention.py`, `scripts/quality-gate.sh` |
+| the documents | the eight W48 deliverables, the questionnaire, the runbook, and the five governance registers |
+
+## 12. The CI record
+
+| the workflow | the run at the preflight | the conclusion | the state now |
+|---|---|---|---|
+| `ci` | `42170865426` | **failure** — Build & Test `127738106005`, Quality gates `127738106021`; Web UI `127738105543` success | the causes are fixed and committed (§4.2); **the wave has not yet observed a green `ci` run** |
+| `branch-validation` | `42170865265` | success | the GraalVM distribution and the version contract are fixed (`02d2a516`) |
+| `Formal Specs (TLA+)` | `42170865258` | success — 15 specifications, `tools/tla2tools.jar: OK` | the tool is tracked and verified by digest in both workflows (`16a2d0c5`, `9bb6bf5c`) |
+| `docs-validation` | `42167940985` (at `4084538a`) | success | path-filtered on `docs-v2/**`; no run exists at the preflight commit |
+| `native` | 1 403 runs on record; the last ten are all `failure` | the OOM in the build | **BLOCKED** (OD-046) |
+
+The per-run evidence — the log lines, the job ids and the conclusion of every step — is
+in `docs-v2/engineering/W48-CI-RECONCILIATION.md` §3.
+
+## 13. The snapshot compatibility matrix
+
+The full matrix is in `docs-v2/engineering/W48-SNAPSHOT-COMPATIBILITY.md` §2 and §3.1;
+the short form:
+
+| the payload | the target holds | the outcome |
+|---|---|---|
+| legacy (v1) | learning rows | **REFUSED** — `INCOMPLETE_LEGACY_SNAPSHOT` |
+| legacy (v1) | observation rows | **REFUSED** — `INCOMPLETE_LEGACY_SNAPSHOT` |
+| v2 without the learning family | learning rows | **REFUSED** — `INCOMPLETE_LEGACY_SNAPSHOT` |
+| legacy (v1) | nothing of the missing families | **ALLOWED**, and the snapshot says what it does not carry |
+| complete (v2 with the learning family) | anything | **ALLOWED** |
+| a future version | anything | **REFUSED** — fail closed |
+| corrupt | anything | **REFUSED** — fail closed |
+| over the 8 MiB bound | anything | **REFUSED** — `SNAPSHOT_PAYLOAD_TOO_LARGE`, before the write |
+
+## 14. The risk register and the capability registry
+
+**The risks:** two new (`R-W48-01` the incomplete-legacy-snapshot restore — closed by
+the coverage contract, with the residual stated; `R-W48-02` CI reproducibility — partly
+closed), six updated, **none deleted**.
+
+**The capability registry:** 35 rows (was 34) — the new one is `W48-NATIVE-IMAGE`,
+which did not exist before W48 at all. Four rows were refreshed (`C-01`,
+`W45-FAILCLOSED`, `W45-SNAPSHOT`, `W46-GPU`). The audited-FALSE finding about the GPU
+is preserved as history, and the current state is appended beside it.
+
+## 15. The security and the chain-isolation confirmation
+
+| the invariant | the state | the evidence |
+|---|---|---|
+| the live database is never a test database | **held** | the drill used `VACUUM INTO` on a read-only copy; the original's sha256 (and its `-wal`/`-shm`) are unchanged before and after |
+| the security check cannot open the owner's live database | **held** | `d1f2e0fb` — the check now runs against an isolated copy and proves it |
+| no implicit bridge between Chain A and Chain B | **held** | nothing in this wave touches the chain boundary; the autonomy consumer is **not implemented** |
+| no new network surface | **held** | no listener, port or route was added |
+| no destructive operation without a recoverable snapshot | **held** | the coverage check and the size bound both run before the erasure |
+| no unapproved autonomous behaviour | **held** | the consumer is an ADR and a decision (OD-045) for the next wave |
+
+## 11. The instructions for the next session
 
 1. Read this document, then `docs-v2/governance/PROJECT-STATE.md`,
    `docs-v2/governance/ROADMAP.md`, `docs-v2/governance/DECISION-REGISTER.md` and
