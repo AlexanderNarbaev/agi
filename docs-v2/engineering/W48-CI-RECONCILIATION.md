@@ -689,6 +689,111 @@ raised from 958 to 1017 diff lines, with the reason recorded in the file.
 
 ---
 
+### 4.9 The clean runner after the CI repairs: three jobs green, two causes left, both in the workflow
+
+The run that carries the three job repairs is `42198961133` at `bc87935c`.
+
+```
+gh run view --json status,conclusion,jobs 42198961133
+```
+
+| the job | the verdict | what it proves |
+|---|---|---|
+| Build & Test (Java) | **success** | the Java suite is green on a clean runner |
+| Web UI Tests | **success** | — |
+| Quality gates (can fail) | **success** | every step green, including **the security boundary** and **the formal gate** |
+| Security Scan | **failure** | the SpotBugs step aborted before its own branch — and skipped two real checks |
+| Container Images (build + smoke) | **failure** | the api-gateway and matrix-core smoke tests are green; the minikube one had no database |
+
+#### 4.9.1 The quality-gates job is green — and the security boundary now HOLDS there
+
+The job's own step list, on the runner:
+
+```
+- Initialize containers                      -> success   (the Redis service started)
+- The clean-code gate                        -> success
+- The pinned formal tool (the bytes are in the repository) -> success
+- The formal gate (every specification is model-checked)   -> success
+- Build the application                     -> success
+- The security boundary (anonymous writes are refused)    -> success
+```
+
+**The security boundary is verified on a clean runner** — that is the check §4.7
+could not observe, and it is the one that proves the Redis service container is
+the whole cause of the earlier failure. The formal gate ran there too, so the 15
+specifications are model-checked in CI and not only locally.
+
+#### 4.9.2 The security job: `bash -e` aborted the step before its own branch
+
+The SpotBugs step failed with the **known** engine limitation in its log:
+
+```
+> Task :matrix-core:spotbugsMain
+The following errors occurred during analysis:
+  Error scanning io/quarkus/runner/ApplicationImpl for referenced classes
+    java.lang.IllegalArgumentException: Unsupported class file major version 69
+```
+
+and the step's own "known limitation" branch never ran — its warning line is
+absent from the log. The cause is in the step's own script: GitHub executes
+every `run:` block with `bash -e`, so the failing pipeline
+(`./gradlew … | tee /tmp/spotbugs.log`) aborted the step before
+`status=${PIPESTATUS[0]}` could be read. The job therefore failed for the
+wrong reason, **and the two real checks after it were skipped**:
+
+```
+- SpotBugs static analysis -> failure
+- Check for secrets in code -> skipped      (trufflehog)
+- OWASP dependency check  -> skipped
+```
+
+A security job that skips its secret scan is worse than a red one. The step now
+captures the pipeline's status and lets its own branches decide, so the known
+limitation produces a loud warning (and no static-analysis evidence), and any
+other failure still fails the job.
+
+**What the limitation now costs, precisely.** The engine is pinned to 4.9.3,
+which bundles ASM 9.7.1 (class file major 68 at most). The engine that CAN read
+Java 25 bytecode exists: **SpotBugs 4.10.5 bundles ASM 9.11** (verified against
+Maven Central's POM). Measured locally with that engine, the analysis runs and
+reports **1 414 findings**, of which **981** are `EI_EXPOSE_REP`/`EI_EXPOSE_REP2`
+("may expose an internal representation by returning a mutable object"). Turning
+the engine on is therefore not a one-line change: it is a decision about 1 414
+findings, and the policy for them (fix, exclude, or accept) belongs to the owner.
+W48 does not change the pin. The capability stays **NOT VERIFIED** — no
+static-analysis evidence is produced by the current engine.
+
+#### 4.9.3 The container smoke tests: two green, one without a database
+
+```
+- Smoke test api-gateway image        -> success
+- Smoke test matrix-core image        -> success
+- Smoke test matrix-core minikube image -> failure
+```
+
+The api-gateway and matrix-core smoke tests are green on the clean runner: the
+gateway serves its readiness endpoint on the published port, and so does the
+core image. The minikube image failed because the step reused the Postgres and
+Redis containers of the previous step — and the previous step removed them when
+it finished:
+
+```
+Caused by: io.lettuce.core.RedisConnectionException:
+  Unable to connect to redis-ci/<unresolved>:6379
+```
+
+The step now brings up its own dependencies. A step that depends on another
+step's leftovers is not reproducible.
+
+#### 4.9.4 The verdict after this subsection
+
+The remaining red items are both in the workflow's own steps and both are fixed
+in the commit that follows this run (`e0de8419`). What is **NOT VERIFIED** until
+a run carries them: the security job with its secret scan and its
+vulnerable-dependency check actually running, and the minikube smoke test.
+
+---
+
 ## 5. The negative controls
 
 **A fix that cannot fail is not a fix.** Each of the seven causes has a control that

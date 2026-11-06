@@ -203,9 +203,11 @@ The evidence is the JUnit XML under `<module>/build/test-results/`.
    and it was used in W47; a second needs fresh approval. The full-suite denominators
    (1 226 classes / 9 051 executions) are cited from the W47 report and are **not
    re-verified here**.
-5. **The CI's own verdict is not yet observed.** The fixes are committed, but the wave
-   did not observe a green `ci` run after them. The run that carries the three job
-   repairs is `42198961133` (`bc87935c`).
+5. **A green `ci` run is still not observed.** The run `42198961133` (`bc87935c`)
+   is green in three of the five jobs — including the security boundary and the
+   formal gate — and the two red jobs are repaired in `e0de8419`. The wave has
+   not yet seen the run that carries that repair, so the verdict stays open until
+   it does.
 6. **The W47 full-suite XML was not retained**, so the per-method identity of the 23
    native failures in the W47 run itself is **derived**, not read from that run's XML.
 7. **Two formal-spec mutants SURVIVED** (`Consensus-evaluate-without-quorum`,
@@ -216,12 +218,17 @@ The evidence is the JUnit XML under `<module>/build/test-results/`.
    git-ignored, so the two corpus classes (11 methods) SKIP there with a recorded
    reason. They execute and pass where the corpus is present. A skip is not a pass,
    and this is recorded rather than smoothed away.
-9. **The security boundary on the clean runner is not yet observed.** The check holds
-   every assertion locally; the runner's failure was its 60-second startup window,
-   which `64f43f74` changed to 180 seconds and made readable. The run at `63d440b1`
-   then failed for a different and now-identified reason — the application could not
-   reach a Redis that the clean runner does not have — and `bc87935c` declares that
-   dependency as a service container. The verdict still has to be observed.
+9. **The security boundary on the clean runner is now VERIFIED.** The run
+   `42198961133` carries the step "The security boundary (anonymous writes are
+   refused)" as **success** — the check that §4.7 could not observe. The
+   application had failed on the runner for two unrelated reasons in a row (its
+   60-second startup window, and a Redis the runner does not have); both were
+   repaired, and the boundary now holds there.
+   **The static analysis, however, produced NO evidence in that run:** the pinned
+   SpotBugs engine (4.9.3, ASM 9.7.1) cannot read Java 25 bytecode. An engine
+   that can — 4.10.5, ASM 9.11 — exists and reports **1 414 findings** locally,
+   981 of them `EI_EXPOSE_REP*`. The capability therefore stays **NOT VERIFIED**,
+   and the decision about those findings is the owner's.
 10. **The container smoke tests for the matrix-core and minikube images have never run
     on a clean runner.** The api-gateway step failed first and the job stopped there.
     Their configuration was corrected in `bc87935c` (the application binds the
@@ -281,6 +288,8 @@ document. The groups:
 |---|---|---|---|
 | `ci` | `42170865426` | **failure** — Build & Test `127738106005`, Quality gates `127738106021`; Web UI `127738105543` success | the causes are fixed and committed (§4.2); **the wave has not yet observed a green `ci` run** |
 | `ci` (later reading) | `42181161742` at `0eac36c3` | **failure** — Build & Test: 9070 tests, 12 failed, 132 skipped; Quality gates: DOCS-1 **PASS**, the security boundary failed on its startup window | the twelve failures are diagnosed and fixed in `64f43f74`, the startup window and the missing log in the same commit; the detailed evidence is `docs-v2/engineering/W48-CI-RECONCILIATION.md` §4.7 |
+| `ci` (later reading) | `42184035743` at `63d440b1` | **failure** — Build & Test **success**; Quality gates: the application could not reach a Redis the runner does not have; Security Scan: no JDK, an invalid `JAVA_HOME`; Container Images: the published port vs. the loopback bind | all three causes are diagnosed and fixed in `bc87935c`; the evidence is `docs-v2/engineering/W48-CI-RECONCILIATION.md` §4.8 |
+| `ci` (later reading) | `42198961133` at `bc87935c` | **failure** — Build & Test, Web UI and **Quality gates are green** (the security boundary and the formal gate both hold on the clean runner); Security Scan: `bash -e` aborted the SpotBugs step and skipped the secret scan; Container Images: the api-gateway and matrix-core smoke tests are green, the minikube one had no database | both remaining causes are in the workflow's own steps and are fixed in `e0de8419`; the evidence is `docs-v2/engineering/W48-CI-RECONCILIATION.md` §4.9 |
 | `branch-validation` | `42170865265` | success | the GraalVM distribution and the version contract are fixed (`02d2a516`) |
 | `Formal Specs (TLA+)` | `42170865258` | success — 15 specifications, `tools/tla2tools.jar: OK` | the tool is tracked and verified by digest in both workflows (`16a2d0c5`, `9bb6bf5c`) |
 | `docs-validation` | `42167940985` (at `4084538a`) | success | path-filtered on `docs-v2/**`; no run exists at the preflight commit |
