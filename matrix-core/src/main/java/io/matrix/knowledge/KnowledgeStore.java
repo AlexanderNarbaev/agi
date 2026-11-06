@@ -1432,6 +1432,32 @@ public final class KnowledgeStore implements AutoCloseable {
         SnapshotPayload payload = snapshotPayload(snapshotId);
         KnowledgeSnapshot content = payload.knowledge();
         validate(content);
+        // W48-01 — the compatibility check, BEFORE anything destructive.
+        //
+        // The restore erases the workspace and writes the payload back. If the payload
+        // was written by a build that did not capture a family the target holds, the
+        // erase would remove rows the payload cannot bring back — and nothing would
+        // say so afterwards, because the restore would succeed.
+        //
+        // The refusal happens here, before the transaction and before the write lock,
+        // so the database is exactly as it was.
+        SnapshotCoverage coverage = coverageOf(payload.tables());
+        if (coverage != SnapshotCoverage.FULL) {
+            List<String> missing = coverage.missingFamilies();
+            int observationRows = countWorkspaceRows(content.workspaceId(),
+                    SnapshotCoverage.OBSERVATION_TABLES);
+            int learningRows = countWorkspaceRows(content.workspaceId(),
+                    SnapshotCoverage.LEARNING_TABLES);
+            boolean losesObservations = coverage != SnapshotCoverage.OBSERVATION_HISTORY
+                    && observationRows > 0;
+            boolean losesLearning = coverage != SnapshotCoverage.FULL && learningRows > 0;
+            if (losesObservations || losesLearning) {
+                String detail = "the target workspace holds " + observationRows
+                        + " observation row(s) and " + learningRows
+                        + " learning row(s). The database was not changed.";
+                throw new IncompatibleSnapshotException(snapshotId, coverage, missing, detail);
+            }
+        }
         try {
             connection.setAutoCommit(false);
             try {
@@ -1679,7 +1705,60 @@ public final class KnowledgeStore implements AutoCloseable {
                 content.goals().size(),
                 countRows(tables, "epistemic_case"), countRows(tables, "observation_occurrence"),
                 countRows(tables, "observation_disposition"),
-                countRows(tables, "observation_adjudication"));
+                countRows(tables, "observation_adjudication"),
+                coverageOf(tables), untypedCounts(tables));
+    }
+
+    /**
+     * W48-01 — what a payload's table list actually covers.
+     *
+     * @param tables the tables the payload holds an entry for
+     * @return the coverage the payload has
+     */
+    private static SnapshotCoverage coverageOf(List<SnapshotTable> tables) {
+        return SnapshotCoverage.of(tables.stream().map(SnapshotTable::table).toList());
+    }
+
+    /**
+     * W48-01 — how many rows the payload holds, per untyped table.
+     *
+     * <p>The counts of the record cover the knowledge content and the four observation
+     * tables; the eight learning tables were not among them, so a reader could not see
+     * that a snapshot carried learning rows. They are counted here, and the map says
+     * which table each number belongs to.</p>
+     */
+    private static java.util.Map<String, Integer> untypedCounts(List<SnapshotTable> tables) {
+        java.util.Map<String, Integer> counts = new java.util.LinkedHashMap<>();
+        for (SnapshotTable captured : tables) {
+            counts.put(captured.table(), captured.rows().size());
+        }
+        return java.util.Collections.unmodifiableMap(counts);
+    }
+
+    /**
+     * W48-01 — how many rows the workspace holds in the named tables.
+     *
+     * @param workspaceId the workspace
+     * @param tables      the tables to count
+     * @return the total number of rows the workspace holds in them
+     */
+    private int countWorkspaceRows(String workspaceId, List<String> tables) {
+        int total = 0;
+        try {
+            for (String table : tables) {
+                try (PreparedStatement ps = connection.prepareStatement(
+                        "SELECT COUNT(*) FROM " + table + " WHERE workspace_id = ?")) {
+                    ps.setString(1, workspaceId);
+                    try (ResultSet rs = ps.executeQuery()) {
+                        rs.next();
+                        total += rs.getInt(1);
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            throw new IllegalStateException("failed to count the workspace rows", e);
+        }
+        return total;
     }
 
     /** W47 — how many rows a captured table holds. */

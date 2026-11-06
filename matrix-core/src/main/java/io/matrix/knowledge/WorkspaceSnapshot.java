@@ -83,7 +83,9 @@ public record WorkspaceSnapshot(
         int caseCount,
         int occurrenceCount,
         int dispositionCount,
-        int adjudicationCount) {
+        int adjudicationCount,
+        SnapshotCoverage coverage,
+        java.util.Map<String, Integer> untypedCounts) {
 
     /**
      * The counts of the knowledge content alone.
@@ -99,6 +101,24 @@ public record WorkspaceSnapshot(
         this(id, workspaceId, createdAt, kind, conceptCount, claimCount, sourceCount, evidenceCount,
                 representationCount, revisionCount, contradictionCount, derivationCount,
                 prerequisiteCount, goalCount, 0, 0, 0, 0);
+    }
+
+    /**
+     * The shape before W48-01 added the coverage.
+     *
+     * <p>A reader of the older shape is not broken by the newer one: the coverage of a
+     * payload that carries no untyped tables is {@link SnapshotCoverage#KNOWLEDGE_ONLY},
+     * which is what the older payload versions hold.</p>
+     */
+    public WorkspaceSnapshot(String id, String workspaceId, String createdAt, Kind kind,
+            int conceptCount, int claimCount, int sourceCount, int evidenceCount,
+            int representationCount, int revisionCount, int contradictionCount,
+            int derivationCount, int prerequisiteCount, int goalCount,
+            int caseCount, int occurrenceCount, int dispositionCount, int adjudicationCount) {
+        this(id, workspaceId, createdAt, kind, conceptCount, claimCount, sourceCount, evidenceCount,
+                representationCount, revisionCount, contradictionCount, derivationCount,
+                prerequisiteCount, goalCount, caseCount, occurrenceCount, dispositionCount,
+                adjudicationCount, SnapshotCoverage.KNOWLEDGE_ONLY, java.util.Map.of());
     }
 
     /** Why the snapshot was taken. */
@@ -127,24 +147,32 @@ public record WorkspaceSnapshot(
     }
 
     /**
-     * Whether the snapshot holds any of the KNOWLEDGE content.
+     * Whether the snapshot holds nothing that a replacement would destroy.
      *
      * <p>A snapshot of an empty workspace is a record that the workspace was empty when it was
      * replaced — which is worth keeping, because it says that the replacement destroyed
      * nothing.</p>
      *
-     * <p><b>What it does not say.</b> The counts are the counts of the knowledge content and
-     * of the observation tables; the eight learning tables are not counted. So a snapshot
-     * that holds only learning rows reports {@code empty() == true} while the replacement
-     * that took it did destroy something. The method is kept as it was — it answers "does
-     * this snapshot hold knowledge content?" — and the rows it does not speak about are in
-     * the payload.</p>
+     * <p><b>W48-01 — what it says now.</b> It used to answer "does this snapshot hold
+     * knowledge content?", and the counts of the eight learning tables were not among
+     * them. So a snapshot that held ONLY learning rows reported {@code empty() == true}
+     * while the replacement that took it had destroyed the learner's history. That is an
+     * ambiguous and unsafe inspection contract: a reader would decide that nothing was at
+     * risk, and something was.</p>
      *
-     * @return true when the snapshot holds no knowledge content
+     * <p>The answer now covers everything the payload carries — the knowledge content and
+     * every untyped table — so a snapshot that holds learning rows is not empty, and
+     * {@link #coverage()} says what the payload carries and {@link #untypedCounts()} says
+     * how much of it.</p>
+     *
+     * @return true when the snapshot holds nothing that a replacement would destroy
      */
     public boolean empty() {
         return conceptCount == 0 && claimCount == 0 && sourceCount == 0 && evidenceCount == 0
                 && representationCount == 0 && revisionCount == 0 && contradictionCount == 0
-                && derivationCount == 0 && prerequisiteCount == 0 && goalCount == 0;
+                && derivationCount == 0 && prerequisiteCount == 0 && goalCount == 0
+                && caseCount == 0 && occurrenceCount == 0 && dispositionCount == 0
+                && adjudicationCount == 0
+                && untypedCounts.values().stream().allMatch(count -> count == 0);
     }
 }
