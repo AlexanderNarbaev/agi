@@ -249,6 +249,16 @@ lists, and a backup name — and still rejects a name that matches none of
 them; the parity check accepts both constitution pages and — the negative
 control — goes red when an invented ninth article is put on the page.
 
+**The pull request's final state** (run `42261409548` / `42261421128` at
+`c4f2dff9`): SUCCESS — Build & Test (Java), the Web UI tests, the quality
+gates, the security scan, the container images, the TLA+ model-check, the
+CONSTITUTION compliance check, the T-01 compile, the branch-name check
+(the repair), the RU/EN parity check (the repair) and the Pages **build**
+(the deploy is correctly SKIPPED on a pull request — the preview path).
+FAILURE — the release path's Docker push (the owner's credentials), the
+native build (the measured blocker) and the inherited ShellCheck gate.
+No other job is red.
+
 ---
 
 ## 7. The capability registry
