@@ -226,6 +226,29 @@ disabled), the Pages configuration validator (it rejects the withdrawn
 positioning strings and a wrong url), and the formal gate's two surviving
 mutants, which the gate logs rather than hides.
 
+### 6.1 The release pull request — the gates it exposed
+
+Pull request **#44** (`develop` → `main`) is the prepared path to the branch
+the public sees (§14. Opening it ran the workflows that only ever run on a
+pull request to `main`, and three of them were red. Two of the three were
+defects in the checks themselves, and both are now repaired and committed
+(`95d5e17e`); the third is the native build, which §4 already measured and
+which needs the owner's dependency decision (Q-W49-05).
+
+| the check | the state before | what it was | now |
+|---|---|---|---|
+| **Validate branch name** | red | the convention was written as `^(feature/fix/feat/chore/docs/test\|refactor/perf\|security)/.+$` — it matched only the literal string `feature/fix/feat/chore/docs/test`, so the prefixes in its own error message were never accepted; and it rejected `develop` and `main` by name, so the release pull request could never pass | the alternation belongs to the prefix; the two integration branches are exempt; a name that matches nothing is still rejected |
+| **Validate ecosystem docs (RU/EN parity)** | red | the check looked for the literal string `Article I`…`Article VIII` — a spelling the constitution never used, so it could not tell the constitution's own eight articles from eight invented ones, which is exactly the defect the W49 audit found in the page | the check compares both constitution pages with the constitution's own article list: the same eight articles, in the same order |
+| **native-build** | red | the memory wall (§4): the standard runner has ~16.75 GB and the default `-Xmx8g` dies with `OutOfMemoryError`; past the wall a missing PDFBox/BouncyCastle dependency stops the build | unchanged and **BLOCKED** — a measured blocker, not a silent failure. The dependency decision is Q-W49-05 |
+| **ShellCheck** | red | **inherited, not this wave's.** The workflow has been failing since at least run `41219224444` (2026-10-31) — it only ever runs on a pull request to `main`, and this repository has had none. It reports 130 findings across ~30 inherited scripts (SC2086, SC2155, SC2164 and the like); **none of them is in this wave's scripts** — `scripts/validate-pages-config.sh` is not among the reported files | **not repaired here.** Fixing 130 findings across 30 operational scripts — among them the isolation and recovery checkers — is a separate wave with its own risk; the honest record is that the gate has been red for months and is not caused by this work. Recorded as R-W49-03 |
+| **Build & Test**, **Web UI**, **Quality gates**, **Security Scan**, **Container Images** | green | — | green |
+
+The two repairs are verified locally before and after: the branch check now
+accepts the two integration branches, every prefix its own error message
+lists, and a backup name — and still rejects a name that matches none of
+them; the parity check accepts both constitution pages and — the negative
+control — goes red when an invented ninth article is put on the page.
+
 ---
 
 ## 7. The capability registry

@@ -48,6 +48,7 @@ implemented, tested and never called has no exposure, and saying so is part of t
 | [R-W48-04](#r-w48-04--the-release-path-needs-credentials-the-repository-does-not-have-so-it-is-red-on-every-push)| The release path needs credentials the repository does not have, so it is red on every push | medium | high | OPEN — external: `gh secret list` is empty; the owner's credentials are required |
 | [R-W49-01](#r-w49-01--the-native-build-cannot-succeed-on-the-runner-the-workflow-selects-and-its-second-blocker-is-a-missing-dependency)| The native build cannot succeed on the runner the workflow selects, and its second blocker is a missing dependency | medium | high | MEASURED — the heap and the runner budget are recorded; the capability stays BLOCKED (OD-046) |
 | [R-W49-02](#r-w49-02--the-public-face-is-published-from-a-branch-that-is-357-commits-behind)| The public face is published from a branch that is 357 commits behind | high | high | OPEN — the owner's decision: move `main`, or publish from `develop` (Q-W49-01) |
+| [R-W49-03](#r-w49-03--the-shellcheck-workflow-has-been-red-since-at-least-2026-10-31)| The ShellCheck workflow has been red since at least 2026-10-31 | low | low | OPEN — inherited, recorded, not repaired in this wave |
 
 ---
 
@@ -441,6 +442,20 @@ implemented, tested and never called has no exposure, and saying so is part of t
 - **mitigation**: the wave made the publication path observable and correct without changing the branch: the Pages workflow now builds and validates the site on a pull request without publishing, `scripts/validate-pages-config.sh` checks the configuration against the deployment URL read from the GitHub API, and the rewritten site is ready to publish the moment the owner decides where publishing happens from.
 - **owner**: the owner (Q-W49-01) — the default branch, and the publication path, are owner decisions
 - **status**: OPEN — the content is ready; the decision is not.
+
+---
+
+### R-W49-03 — The ShellCheck workflow has been red since at least 2026-10-31
+
+- **category**: operational
+- **severity**: low
+- **probability**: high
+- **impact**: low
+- **evidence**: `.github/workflows/shellcheck.yml` runs only on a pull request to `main`, and this repository has had none — so the gate has not run since the W48 native-image attempt. Its last runs are `41219224444` (2026-10-31, at `e3dc1825`), `39316277048` and `39125667404`: **all failed**. The pull request that carries the W49 work to `main` (#44) ran it for the first time in months: **130 findings across ~30 inherited scripts** (SC2086, SC2155, SC2164, SC2034 and the like). **None of the findings is in this wave's scripts** — `scripts/validate-pages-config.sh` is not among the reported files.
+- **exposure**: a red gate on every release pull request, and no signal about new findings — the gate cannot distinguish "nothing new" from "never ran". The findings themselves are style and quoting issues in operational scripts; one of them (`SC2086`, an unquoted expansion) can split a word, which is a real defect class in a path-handling script.
+- **mitigation**: none in this wave, deliberately. Repairing 130 findings across ~30 scripts — among them `w45-chain-isolation-check.sh`, `w45-cognitive-recovery-journey.sh` and `security-boundary-check.sh`, the operational checkers themselves — means editing the scripts that decide whether the system is considered healthy, and that deserves its own wave with its own evidence. The honest record is that the gate was already red before this wave and that nothing in this wave made it worse.
+- **owner**: the owner — whether the shell gate is repaired, or its scope is narrowed to the scripts this repository maintains, is a decision about the gate's meaning, not a mechanical fix
+- **status**: OPEN — inherited, recorded, not repaired
 
 ---
 
