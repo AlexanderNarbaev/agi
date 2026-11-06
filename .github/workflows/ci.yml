@@ -303,16 +303,28 @@ jobs:
           fi
           echo "✅ matrix-core image healthy"
           docker rm -f core-ci pg-ci redis-ci
+          docker network rm matrix-ci
 
       - name: Smoke test matrix-core minikube image
         # W48-05. Same bound interface as the matrix-core image above.
+        #
+        # The step also brings up ITS OWN Postgres and Redis. It used to reuse
+        # the containers of the previous step, and the previous step removed
+        # them when it finished — so this step's application started with no
+        # cache and no database ("Unable to connect to redis-ci/<unresolved>").
+        # A step that depends on a step's leftovers is not reproducible.
         run: |
           set -euo pipefail
+          docker network create matrix-minikube-ci
+          docker run -d --name pg-mini-ci --network matrix-minikube-ci \
+            -e POSTGRES_USER=matrix -e POSTGRES_PASSWORD=matrix -e POSTGRES_DB=matrix \
+            postgres:17-alpine
+          docker run -d --name redis-mini-ci --network matrix-minikube-ci redis:7-alpine
           docker run -d --name mini-ci -p 9092:9091 \
-            --network matrix-ci \
+            --network matrix-minikube-ci \
             -e QUARKUS_HTTP_HOST=0.0.0.0 \
-            -e REDIS_URI=redis://redis-ci:6379 \
-            -e DB_HOST=pg-ci -e DB_PORT=5432 \
+            -e REDIS_URI=redis://redis-mini-ci:6379 \
+            -e DB_HOST=pg-mini-ci -e DB_PORT=5432 \
             matrix-core:minikube-ci
           ok=0
           for i in $(seq 1 60); do
@@ -321,12 +333,15 @@ jobs:
           done
           if [ "$ok" != "1" ]; then
             echo "::error::matrix-core minikube image did not become ready"
+            echo "--- container state ---"
+            docker inspect -f 'status={{.State.Status}} exit={{.State.ExitCode}}' mini-ci || true
+            echo "--- container logs ---"
             docker logs mini-ci || true
             exit 1
           fi
           echo "✅ matrix-core minikube image healthy"
-          docker rm -f mini-ci pg-ci redis-ci
-          docker network rm matrix-ci
+          docker rm -f mini-ci pg-mini-ci redis-mini-ci
+          docker network rm matrix-minikube-ci
 
   # Stage 2: Security scan
   security:
@@ -363,8 +378,16 @@ jobs:
         #   - any other SpotBugs failure   -> the job FAILS
         run: |
           set -o pipefail
+          # W48-05. The runner executes every `run:` block with `bash -e`, so
+          # the failing pipeline ABORTED the step before the branch below could
+          # read the log: the "known limitation" case never printed its
+          # warning, and the two REAL security checks after it (the secret
+          # scan and the vulnerable-dependency check) were SKIPPED. The
+          # pipeline's own failure is captured here and the branches decide.
+          set +e
           ./gradlew :matrix-core:spotbugsMain :matrix-core:spotbugsTest --no-daemon --console=plain 2>&1 | tee /tmp/spotbugs.log
           status=${PIPESTATUS[0]}
+          set -e
           if [ "$status" = "0" ]; then
             echo "✅ SpotBugs analysis completed"
             exit 0
