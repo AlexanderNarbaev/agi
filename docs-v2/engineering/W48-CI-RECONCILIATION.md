@@ -552,9 +552,146 @@ be, because `/models/` is git-ignored on purpose).
 
 ---
 
+### 4.8 The clean runner AFTER the CI repairs: three red jobs, three causes that were not defects
+
+This subsection is dated separately again, because a CI state is a claim about a
+moment and a commit. §4.7 describes the tree at `0eac36c3`; this one describes
+the tree at `63d440b1` and the repair that followed at `bc87935c`.
+
+```
+gh run view --json jobs --limit 1  # run 42184035743, commit 63d440b1
+```
+
+| the job | the verdict at `63d440b1` | the cause |
+|---|---|---|
+| Build & Test (Java) | **success** | — the twelve failures of §4.7 are gone |
+| Web UI Tests | **success** | — |
+| Quality gates (can fail) | **failure** | the application could not connect to Redis |
+| Security Scan | **failure** | the job had no JDK and inherited an invalid `JAVA_HOME` |
+| Container Images (build + smoke) | **failure** | the smoke test probed a published port the process does not hold |
+
+#### 4.8.1 The quality-gates job: Redis
+
+The job starts the real application for the security-boundary check. The runner's
+log for that step carried the cause:
+
+```
+Caused by: io.netty.channel.AbstractChannel$AnnotatedConnectException:
+Connection refused (connect failed): localhost/127.0.0.1:6379
+	at io.matrix.redis.NeuronCacheService_Bean.get(...)
+```
+
+`matrix-core/src/main/resources/application.properties:14` declares
+`redis.uri=${REDIS_URI:redis://localhost:6379}`, and the application opens the
+cache eagerly. A clean runner has no Redis, so the application could not start and
+the check reported a defect that does not exist.
+
+**The repair:** the job declares the dependency it has — a `redis:7-alpine`
+service container with a health check — instead of inheriting whatever the
+developer happens to run locally. The application was not changed.
+
+#### 4.8.2 The security job: no JDK
+
+The job had no `actions/setup-java` step, so it inherited the runner's
+`JAVA_HOME`:
+
+```
+JAVA_HOME: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/25.0.1.6/Contents/Home
+```
+
+That path does not exist on a Linux runner — it is a macOS-style path — and Gradle
+refused to start with "ERROR: JAVA_HOME is set to an invalid directory". The job
+failed before SpotBugs ever ran, which is why the run carried no static-analysis
+evidence at all.
+
+**The repair:** the job installs the same JDK 25 the other jobs use. The known
+Java-25 SpotBugs engine limitation is unchanged and still reported as a loud skip,
+never as a pass.
+
+#### 4.8.3 The container-images job: a published port the process does not hold
+
+The api-gateway smoke test ran the image in its **default** exposure mode and then
+probed the **published** host port:
+
+```bash
+docker run -d --name gw-ci -p 8765:8765 matrix-api-gateway:ci
+...
+if curl -fsS http://127.0.0.1:8765/health/ready ...
+```
+
+The probe failed for the whole 80-second window, while the container's own log
+said the application had started:
+
+```
+Nov 06, 2026 8:12:40 AM io.matrix.api.MinimalHttpServer start
+INFO: matrix-api-gateway listening on http://0.0.0.0:8,765
+```
+
+**The cause is the exposure boundary, and the log line was lying about it.**
+`matrix-core/src/main/java/io/matrix/security/NetworkExposure.java` defaults to
+`Mode.LOCAL_ONLY`, and `bindAddress()` then returns the loopback address
+(line 68 and line 182); the gateway binds through it
+(`MinimalHttpServer.java:317`). Inside the container the listener therefore held
+**127.0.0.1**, and the published port reached nothing. The startup line printed a
+hardcoded `0.0.0.0`, so the log claimed an interface the process did not hold —
+which is exactly why this looked like a startup failure instead of a boundary
+fact.
+
+The reproduction is local and takes seconds: with the default exposure the
+gateway answers on the loopback and the published port is dead.
+
+**The repair:**
+
+1. the startup line names the address and the port the listener actually bound
+   (the port is concatenated rather than MessageFormat-formatted, because the
+   formatter rendered it as `8,765` — a port that does not exist);
+2. the smoke test mirrors the deployed configuration
+   (`deploy/docker-compose.yml`: `NETWORK_EXPOSED` with a credential, where the
+   credential is a throwaway value for the job and not a secret) and reports the
+   container state as well as the log when it fails;
+3. the two matrix-core smoke tests in the same job had the same defect
+   (`quarkus.http.host=${QUARKUS_HTTP_HOST:127.0.0.1}`,
+   `application.properties:44`) and **never reached it**, because the api-gateway
+   step failed first. They now set the host explicitly for the ephemeral
+   container.
+
+**The regression test** `matrix-api-gateway/src/test/java/io/matrix/api/
+GatewayExposureBoundaryTest.java` pins the boundary itself: in the default
+exposure the listener holds the loopback (so "publish the port" is an invalid
+probe), and the startup line names the bound address and the bound port.
+
+```
+./gradlew :matrix-api-gateway:test --tests "io.matrix.api.GatewayExposureBoundaryTest"
+-> 2 tests completed, 0 failed
+```
+
+**The negative control:** with the hardcoded `0.0.0.0` restored in the startup
+line, the second test goes RED ("the startup line must not claim an interface the
+listener does not hold"); the fix was then restored and the class is green again.
+
+**The frozen-zone exception** in `docs-v2/quality/frozen-zone-baseline.txt` is
+raised from 958 to 1017 diff lines, with the reason recorded in the file.
+
+#### 4.8.4 What is still unverified after this subsection
+
+- the CI verdict of the run that carries `bc87935c` (the repair itself);
+- the container smoke tests for the matrix-core and minikube images — they never
+  ran on a clean runner, because the api-gateway step failed first. Their
+  configuration was corrected, but their verdict is NOT VERIFIED until a run
+  reaches them;
+- the Helm chart's own mismatch, which this wave did NOT change: the chart
+  declares `containerPort: 8080` and probes `/q/health/live`, while the
+  application serves on `QUARKUS_HTTP_PORT` (default 9091) and binds
+  `QUARKUS_HTTP_HOST` (default 127.0.0.1). The chart sets neither. That is a
+  deployment-configuration defect, it needs an owner-level decision about the
+  port the platform serves, and it is recorded here as an open item rather
+  than repaired inside W48.
+
+---
+
 ## 5. The negative controls
 
-**A fix that cannot fail is not a fix.** Each of the six causes has a control that
+**A fix that cannot fail is not a fix.** Each of the seven causes has a control that
 proves the new check is still able to go red.
 
 | the cause | the negative control | the result |
@@ -564,6 +701,7 @@ proves the new check is still able to go red.
 | **C** — the GraalVM distribution | the old identifier **is** the control: the action rejected `graalvm-ce` and the job died at the setup step, producing no compilation evidence | the action's own rejection is the proof that the identifier is checked and not ignored. The success of the same job at `4adbc664` is what proves the new one is accepted |
 | **D** — the version gate | a facade whose **only** mention of `VERSION` is in a comment | run against a fixture (`/tmp/w48-negctl/CommentOnly.java`): the **new** check `grep -qE 'public +static +final +String +VERSION *='` → **fails with exit 1**; the **old** check `grep -rq "VERSION"` → **passes**. That difference is the whole defect |
 | **E** — the pinned tool | the digest check refuses bytes that are not the pinned ones | the upstream's current bytes (`654aa501…`, 4 509 176 bytes) are refused by `sha256sum --check --strict` — this is exactly what the CI does today at job 127738106021: `sha256sum: WARNING: 1 computed checksum did NOT match`. `scripts/formal-gate.sh:39-53` refuses the same way and exits 1 with "the formal tool is not the pinned one" |
+| **G** — the gateway's bind log | the hardcoded interface is the control: with `0.0.0.0` restored in the startup line, `GatewayExposureBoundaryTest > the startup line names the address and the port the listener actually bound` goes RED | the run with the hardcoded line restored: `2 tests completed, 1 failed` — the assertion "the startup line must not claim an interface the listener does not hold". With the fix in place: `2 tests completed, 0 failed` |
 | **F** — the root project's task | the root's task is **NO-SOURCE** again — if the shared sources were still wired into the root, the CI's `Run unit tests` step would fail on the root's task before reaching a module | the CI at `4adbc664` reaches `:matrix-api-gateway:test`, so the root's task did not fail. And the modules still get the property: `RepositoryPathsTest.theRootIsTheOneTheBuildDeclares` reads `matrix.repoRoot` and compares it with the resolved root |
 
 ---
@@ -577,7 +715,7 @@ workflow are byte-identical between the preflight's commit and HEAD:
 
 | the workflow | the file | what was touched |
 |---|---|---|
-| `ci` | `.github/workflows/ci.yml` | only one step: the tool download became a digest verification of the tracked bytes, the same repair `tla.yml` already had (`9bb6bf5c`). The `permissions:` block is unchanged |
+| `ci` | `.github/workflows/ci.yml` | the tool download became a digest verification of the tracked bytes, the same repair `tla.yml` already had (`9bb6bf5c`); and, in the same wave, the three job repairs of §4.8 — the Redis service of the quality-gates job, the JDK setup of the security job, and the container smoke tests of the container-images job. The `permissions:` block is unchanged |
 | `branch-validation` | `.github/workflows/branch-validation.yml` | only two steps: the version-contract check and the GraalVM setup (`distribution`, `java-version`) |
 | `Formal Specs (TLA+)` | `.github/workflows/tla.yml` | only the tool step: the download became a digest verification of the tracked bytes. The `permissions:` block (line 349) is unchanged |
 | `docs-validation` | `.github/workflows/docs-validation.yml` | **nothing** |

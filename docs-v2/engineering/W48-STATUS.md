@@ -54,6 +54,7 @@ The wave's preflight, with the baseline that was frozen before anything changed,
 | `0eac36c3` | the wave report carries the task labels, the CI record and the confirmations |
 | `64f43f74` | the clean runner's twelve failures are diagnosed and fixed |
 | `63d440b1` | the governance records now agree with what was committed and answered |
+| `bc87935c` | the three red CI jobs are repaired, and the gateway's bind log stops lying about the interface it holds |
 
 ## 3. The tasks, with their status labels
 
@@ -70,6 +71,7 @@ operationally rehearsed, or documented.
 | W48-03 | the branch validation and the GraalVM action | **DONE** | CI tested — the workflow's own steps; the compile was reached in CI | `02d2a516` |
 | W48-04 | the TLA artifact's immutability and the CI formal execution | **DONE** | CI tested + model-checked — 15 specifications, `tools/tla2tools.jar: OK`; and the LOCAL formal gate: **15 passed, 0 failed** | `16a2d0c5`, `9bb6bf5c` |
 | W48-05 | the quality gate's scope and the historical documents | **DONE** | locally tested + CI tested — 0 strict link failures locally, and DOCS-1 **PASS** on the clean runner (`42181161742`), with the historical archive reported separately | `f5870f4c`, `d1f2e0fb`, `64f43f74` |
+| W48-05b | the three red jobs of the clean runner (Redis, the missing JDK, the published port) | **DONE** — locally tested | each cause was read out of the runner's own log; the gateway's boundary is pinned by `GatewayExposureBoundaryTest` (2 tests) with a red/green control | `bc87935c` |
 | W48-06 | the full-suite failure reconciliation and the numerical/compliance repairs | **DONE** for 2 of 25, **BLOCKED** for the 23 native | locally tested — the 23 re-measured, 2 fixed and green | `241af1e1`, `4adbc664`, `31d8f832`, `40b0942c` |
 | W48-07 | the snapshot size measurement, the bound and the row retention | **DONE** | locally tested — 12 tests and the tool's own 40 checks; the measurement was taken on a copy | `33d199e2` |
 | W48-08 | the restore drill against a copy | **DONE** | operationally rehearsed — the live file byte-identical before and after | `090247cb` |
@@ -202,7 +204,8 @@ The evidence is the JUnit XML under `<module>/build/test-results/`.
    (1 226 classes / 9 051 executions) are cited from the W47 report and are **not
    re-verified here**.
 5. **The CI's own verdict is not yet observed.** The fixes are committed, but the wave
-   did not observe a green `ci` run after them.
+   did not observe a green `ci` run after them. The run that carries the three job
+   repairs is `42198961133` (`bc87935c`).
 6. **The W47 full-suite XML was not retained**, so the per-method identity of the 23
    native failures in the W47 run itself is **derived**, not read from that run's XML.
 7. **Two formal-spec mutants SURVIVED** (`Consensus-evaluate-without-quorum`,
@@ -215,7 +218,21 @@ The evidence is the JUnit XML under `<module>/build/test-results/`.
    and this is recorded rather than smoothed away.
 9. **The security boundary on the clean runner is not yet observed.** The check holds
    every assertion locally; the runner's failure was its 60-second startup window,
-   which `64f43f74` changed to 180 seconds and made readable.
+   which `64f43f74` changed to 180 seconds and made readable. The run at `63d440b1`
+   then failed for a different and now-identified reason — the application could not
+   reach a Redis that the clean runner does not have — and `bc87935c` declares that
+   dependency as a service container. The verdict still has to be observed.
+10. **The container smoke tests for the matrix-core and minikube images have never run
+    on a clean runner.** The api-gateway step failed first and the job stopped there.
+    Their configuration was corrected in `bc87935c` (the application binds the
+    loopback interface by default, so their published ports reached nothing), but
+    their verdict is **NOT VERIFIED** until a run reaches them.
+11. **The Helm chart's own port and interface mismatch was NOT repaired.** The chart
+    declares `containerPort: 8080` and probes `/q/health/live`, while the application
+    serves on `QUARKUS_HTTP_PORT` (default 9091) and binds `QUARKUS_HTTP_HOST`
+    (default 127.0.0.1); the chart sets neither. Which port the platform serves is an
+    owner-level decision, so the wave records the defect instead of changing the
+    deployment.
 
 ## 9. The deliberate non-actions
 
