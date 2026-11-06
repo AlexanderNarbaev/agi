@@ -226,6 +226,8 @@ The evidence is the JUnit XML under `<module>/build/test-results/`.
 | `LearningStateMachine.reconcile` builds the transition id from a digest that includes `occurredAt` | the id is therefore not reproducible; it needs its own change and its own mandate |
 | the auditor's import-line exemption | a real latent bug — a plain import exempts the whole file; it needs a follow-up wave |
 | the snapshot retention pass is not scheduled | the tool exists and is tested; **who runs it and when is the operator's** — the calendar is a policy, not a cron |
+| `.opencode/status.md` was not rewritten | it is an **untracked local file** (`git ls-files .opencode/status.md` → nothing) that still describes waves 16–34 at an Evidence Snapshot of 2026-08-23. It is not the project's status of record: that is `docs-v2/governance/PROJECT-STATE.md` (canonical, validated) and the wave report. Overwriting an untracked owner-side file is not a documentation fix, so W48 records the fact instead — the file is stale by construction and the authoritative source is named above |
+| the MATRIX-specific skill triggers were not merged into a project overlay | the directive's rule is *recommended*, and the trigger table lives in the **opencode-swarm plugin bundle** — another project's asset, which the directive forbids modifying without approval. The MATRIX packages themselves are tracked (`git ls-files .opencode/skills/` → 82 files, including the `matt-pocock` root manifest of OD-040). The overlay is therefore a **next-wave** item with its own mandate, not a W48 edit |
 
 ## 10. The next wave's proposal
 
@@ -296,6 +298,17 @@ closed), six updated, **none deleted**.
 which did not exist before W48 at all. Four rows were refreshed (`C-01`,
 `W45-FAILCLOSED`, `W45-SNAPSHOT`, `W46-GPU`). The audited-FALSE finding about the GPU
 is preserved as history, and the current state is appended beside it.
+
+**The skill packages and the status file** (the directive's §10.8 and the skill-ownership
+paragraph): `.opencode/status.md` is an **untracked local generated snapshot** of an
+earlier wave and was deliberately NOT overwritten — the authoritative status source is
+`docs-v2/governance/PROJECT-STATE.md`, and this report. The MATRIX skill packages are
+tracked in the repository (`git ls-files .opencode/skills/` → 82 files; the
+`matt-pocock` root manifest that OD-040 asked for is `.opencode/skills/matt-pocock/SKILL.md`),
+and the generic upstream trigger table belongs to another project's plugin bundle, which
+W48 does not touch. The rule that the directive *recommends* — a version-controlled
+MATRIX-owned overlay that the installer merges deterministically — is therefore recorded
+as a **next-wave** item rather than performed here.
 
 ## 15. The security and the chain-isolation confirmation
 
