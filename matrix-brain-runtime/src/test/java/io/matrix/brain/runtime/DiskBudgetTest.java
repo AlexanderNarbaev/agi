@@ -20,13 +20,28 @@ class DiskBudgetTest {
     }
 
     @Test
+    void free_gigabytes_uses_1024_cubed_bytes(@TempDir Path tmp) {
+        // W48 — the unit is asserted against a CONTROLLED reading, not against
+        // whatever the machine happened to have free. The old assertion compared
+        // freeGigabytes() (1024^3 bytes, the unit the thresholds use) with
+        // freeBytes()/1e9 (SI gigabytes). The two units differ by 7.4 %, so the
+        // assertion only held while the filesystem had less than ~72.8 GB free:
+        // the gap is bytes x 6.87e-11 and the tolerance was +/-5 GB.
+        long bytes = 40L * 1024 * 1024 * 1024;
+        DiskBudget b = DiskBudget.withFreeBytes(tmp, bytes);
+        assertThat(b.freeBytes()).isEqualTo(bytes);
+        assertThat(b.freeGigabytes()).isEqualTo(40.0);
+    }
+
+    @Test
     void free_gigabytes_matches_bytes(@TempDir Path tmp) {
         DiskBudget b = DiskBudget.forRoot(tmp);
-        // Read bytes + GB close together (since FS usage can drift between calls).
+        // Read bytes + GiB close together (since FS usage can drift between calls).
         long bytes = b.freeBytes();
-        double gb = b.freeGigabytes();
-        // Allow up to 5 GB drift between calls (theoretical worst case under load)
-        assertThat(gb).isBetween(bytes / 1e9 - 5, bytes / 1e9 + 5);
+        double gib = b.freeGigabytes();
+        double expected = bytes / (double) DiskBudget.BYTES_PER_GIB;
+        // Allow up to 5 GiB drift between calls (theoretical worst case under load)
+        assertThat(gib).isBetween(expected - 5.0, expected + 5.0);
     }
 
     @Test

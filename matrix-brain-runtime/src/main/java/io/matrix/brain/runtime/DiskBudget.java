@@ -27,8 +27,14 @@ import java.util.logging.Logger;
 public final class DiskBudget {
 
     private static final Logger LOG = Logger.getLogger(DiskBudget.class.getName());
-    public static final long WARN_THRESHOLD_BYTES = 25L * 1024 * 1024 * 1024;  // 25 GB
-    public static final long REFUSE_THRESHOLD_BYTES = 10L * 1024 * 1024 * 1024; // 10 GB
+    /**
+     * The unit this class calls "GB": 1024^3 bytes (GiB). The thresholds, the
+     * tier classification and {@link #freeGigabytes()} all use it, so the
+     * ledger's {@code free_gb} column and the thresholds agree.
+     */
+    public static final long BYTES_PER_GIB = 1024L * 1024L * 1024L;
+    public static final long WARN_THRESHOLD_BYTES = 25L * BYTES_PER_GIB;   // 25 GB
+    public static final long REFUSE_THRESHOLD_BYTES = 10L * BYTES_PER_GIB;  // 10 GB
 
     private final Path root;
 private long ledgerBytes = 0;
@@ -85,9 +91,9 @@ public long freeBytes() {
         }
     }
 
-    /** GB free at {@link #root}. */
+    /** Free space at {@link #root}, in GiB (1024^3 bytes) — the unit the thresholds use. */
     public double freeGigabytes() {
-        return freeBytes() / (1024.0 * 1024.0 * 1024.0);
+        return freeBytes() / (double) BYTES_PER_GIB;
     }
 
     /** Classify free space into one of three tiers. */
