@@ -794,6 +794,75 @@ vulnerable-dependency check actually running, and the minikube smoke test.
 
 ---
 
+### 4.10 The clean runner after the second repair: the container job is green, and the secret scan is found to have never scanned
+
+The run that carries the second repair is `42203414243` at `2c633579`.
+
+| the job | the verdict | what it proves |
+|---|---|---|
+| Build & Test (Java) | **success** | — |
+| Web UI Tests | **success** | — |
+| Quality gates (can fail) | **success** | the security boundary and the formal gate hold on the clean runner |
+| Container Images (build + smoke) | **success** | **all three smoke tests pass**: the api-gateway, the matrix-core and the minikube image |
+| Security Scan | **failure** | the SpotBugs step now behaves as documented, and the secret scan below it turns out to have never scanned anything |
+
+#### 4.10.1 The container job is green
+
+The step list of the job:
+
+```
+- Smoke test api-gateway image        -> success
+- Smoke test matrix-core image        -> success
+- Smoke test matrix-core minikube image -> success
+```
+
+The minikube image now starts with its OWN Postgres and Redis, so the image is
+verified as an image and not as a step's leftover.
+
+#### 4.10.2 The SpotBugs step now behaves as its own comment describes
+
+```
+- SpotBugs static analysis -> success
+```
+
+and the job's log carries the warning the step's comment promised:
+
+```
+::warning::SpotBugs SKIPPED — the resolved engine cannot read Java 25 bytecode
+(class file major version 69). ... No static-analysis evidence was produced for
+this run. This is a known, tracked limitation, NOT a passing check.
+```
+
+The step reaches its own branch now. **The static analysis still produces no
+evidence** — the engine is the limitation (§4.9.2) — and the warning says so.
+
+#### 4.10.3 The secret scan had never scanned anything
+
+With the SpotBugs step fixed, the next step ran — and failed with the action's
+own message:
+
+```
+::error::BASE and HEAD commits are the same. TruffleHog won't scan anything.
+```
+
+The step passed `base: ${{ github.ref }}` and `head: HEAD`. On a push to
+`develop`, `github.ref` is `refs/heads/develop` and `HEAD` is the commit that
+was just pushed — **the same commit** — so the action had nothing to scan and
+refused. The scan has therefore never examined a single line of this
+repository, and the check after it (the vulnerable-dependency check) was
+skipped on every run.
+
+**The repair** uses the action's documented default, which scans exactly the
+commits the push carried — the scope this check wants — and the checkout now
+fetches the history the action resolves that range in (`fetch-depth: 0`).
+
+**What this means for the wave's claims:** the secret scan is a check that has
+never produced evidence, and it is now going to produce it for the first time.
+Whether it is GREEN is not known until a run carries the repair; if it finds
+something, that is a finding, not a CI defect.
+
+---
+
 ## 5. The negative controls
 
 **A fix that cannot fail is not a fix.** Each of the seven causes has a control that
