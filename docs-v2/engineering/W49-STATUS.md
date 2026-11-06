@@ -372,8 +372,9 @@ The five questions the directive requires of every future wave:
 ## 14. The next wave's proposal
 
 1. **The default branch and the site.** The gap is 357 commits and the live
-   site is stale. The decision — move `main`, or publish the site from
-   `develop` through a reviewed path — is the owner's.
+   site is stale. **The path is prepared**: pull request #44
+   (`develop` → `main`) carries the current work, and its own run builds and
+   validates the site without publishing. The merge is the owner's decision.
 2. **The release path.** The repository has no secrets; "Docker Build & Push"
    is red on every push. Configure them, or declare the job as one that runs
    only where they exist.

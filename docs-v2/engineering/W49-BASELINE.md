@@ -27,7 +27,13 @@ tell what the wave changed from what it found.
 
 **What this means for a visitor.** The default branch is 357 commits behind the
 development branch (2026-10-12 against 2026-11-06), and the public site is
-built from that default branch. A
+built from that default branch.
+
+**The prepared path.** Pull request **#44** (`develop` → `main`,
+https://github.com/AlexanderNarbaev/agi/pull/44) carries the current work to
+the branch the public sees. It does not merge itself: the merge is the
+owner's decision, and the pull request's own run builds and validates the
+site **without publishing** — the preview path the W49 addendum asked for. A
 visitor who lands on the repository sees the W37.5 state of the project, not the
 current one. The W49 directive is explicit that the default branch is not to be
 changed without a separate decision, so W49 does not change it.
