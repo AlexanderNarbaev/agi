@@ -308,6 +308,9 @@ public final class ClaimValidator {
      * @param method the validation method that changed it
      * @return the claim with the new status
      */
+    @io.matrix.auditor.ArticleIPermitted(value = "the timestamp of a claim whose status the "
+            + "validation changed; it records WHEN the validation ran, and the status itself is "
+            + "decided by the evidence and not by the clock")
     private static Claim withStatus(Claim claim, ClaimStatus status, String method) {
         return new Claim(claim.id(), claim.workspaceId(), claim.conceptId(),
                 claim.proposition(), claim.scope(), claim.context(), status,

@@ -2686,6 +2686,8 @@ public final class KnowledgeStore implements AutoCloseable {
      * @param conceptId the concept
      * @param state the state
      */
+    @io.matrix.auditor.ArticleIPermitted(value = "the updated_at stamp of the stored binding; it "
+            + "records WHEN the binding was written, and no decision reads it")
     public void saveHebbianState(String workspaceId, String conceptId,
                                   io.matrix.neuron.HebbianUpdater.State state) {
         try (PreparedStatement ps = connection.prepareStatement(
@@ -2764,6 +2766,8 @@ public final class KnowledgeStore implements AutoCloseable {
      * @param workspaceId the workspace
      * @param errors the errors
      */
+    @io.matrix.auditor.ArticleIPermitted(value = "the recorded_at stamp of a verified learning "
+            + "error; it records WHEN the error was verified, and no decision reads it")
     public void recordLearningErrors(String workspaceId, List<LearningError> errors) {
         if (errors == null || errors.isEmpty()) {
             return;
@@ -2796,6 +2800,8 @@ public final class KnowledgeStore implements AutoCloseable {
      * @param workspaceId the workspace
      * @param items the items
      */
+    @io.matrix.auditor.ArticleIPermitted(value = "the recorded_at stamp of a generated assessment "
+            + "item; it records WHEN the item was generated, and no decision reads it")
     public void recordAssessmentItems(String workspaceId, List<AssessmentItem> items) {
         if (items == null || items.isEmpty()) {
             return;
@@ -2848,6 +2854,9 @@ public final class KnowledgeStore implements AutoCloseable {
      * @param workspaceId the workspace
      * @param turn the turn
      */
+    @io.matrix.auditor.ArticleIPermitted(value = "the recorded_at stamp of a conversation turn; "
+            + "it records WHEN the turn was said, and the transcript is ordered by that record "
+            + "rather than decided by it")
     public void recordDialogueTurn(String workspaceId, DialogueContext.Turn turn) {
         try (PreparedStatement ps = connection.prepareStatement(
                 "INSERT OR REPLACE INTO dialogue_turn(id, workspace_id, question, concept_ids, "
@@ -2904,6 +2913,9 @@ public final class KnowledgeStore implements AutoCloseable {
      * @param keep how many live turns to keep
      * @return the number of turns that were marked
      */
+    @io.matrix.auditor.ArticleIPermitted(value = "the forgotten_at stamp of a turn that fell out "
+            + "of the working memory; it records WHEN the turn was marked, and WHICH turns are "
+            + "marked is decided by the count and not by the clock")
     public int forgetOldDialogueTurns(String workspaceId, int keep) {
         try (PreparedStatement ps = connection.prepareStatement(
                 "UPDATE dialogue_turn SET forgotten_at = ? WHERE workspace_id = ? "
@@ -4322,6 +4334,9 @@ public final class KnowledgeStore implements AutoCloseable {
      * an orphan. Writing them atomically means a reader never sees one
      * without the other.
      */
+    @io.matrix.auditor.ArticleIPermitted(value = "the transitioned_at stamp of a recorded "
+            + "learning state; it records WHEN the state was recorded, and the stage itself is "
+            + "decided by the evidence and not by the clock")
     public void recordLearningStates(String workspaceId, Map<String, LearningState> states,
                                       List<LearningTransition> transitions) {
         try {
@@ -4447,6 +4462,8 @@ public final class KnowledgeStore implements AutoCloseable {
      * @param domain the concept's domain, when the document says so
      * @return the concept, existing or new
      */
+    @io.matrix.auditor.ArticleIPermitted(value = "the created_at stamp of a concept; it records "
+            + "WHEN the concept was recorded, and no decision reads it")
     public Concept ensureConcept(String workspaceId, String name, String definition,
                                   String domain) {
         if (workspaceId == null || workspaceId.isBlank()) {
@@ -4608,6 +4625,15 @@ public final class KnowledgeStore implements AutoCloseable {
         }
     }
 
+    /**
+     * The timestamp of a recorded workspace or snapshot.
+     *
+     * <p>It records WHEN the record was written. Nothing reads it to decide
+     * anything: the workspace's identity is its id, and a snapshot's identity
+     * is its content.
+     */
+    @io.matrix.auditor.ArticleIPermitted(value = "the timestamp of a recorded workspace or "
+            + "snapshot; it records WHEN the record was written, and no decision reads it")
     private static String now() {
         return java.time.Instant.now().toString();
     }

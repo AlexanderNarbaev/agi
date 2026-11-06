@@ -1,6 +1,6 @@
 package io.matrix.knowledge;
 
-import java.time.Instant;
+import java.time.Clock;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -28,6 +28,33 @@ import java.util.List;
  * them in one transaction with everything else the refinement involves.
  */
 public final class KnowledgeRefiner {
+
+    /**
+     * The clock the refined records are stamped with.
+     *
+     * <p>The stamp is not decoration: it becomes the {@code createdAt} of the
+     * refined representation, and {@code Representations.activeAt} picks the
+     * active account of a level by comparing those stamps - so the refinement
+     * decides WHICH account is the previous one it refines. A wall clock read
+     * there would decide what the system believes, so the instant is injected
+     * (Article I) and the default is the system clock.
+     */
+    private final Clock clock;
+
+    /** The refiner that stamps its records with the system clock. */
+    public KnowledgeRefiner() {
+        this(Clock.systemUTC());
+    }
+
+    /**
+     * The refiner that stamps its records with a chosen clock.
+     *
+     * @param clock the instant the refinement is stamped with; the system
+     *     clock when null
+     */
+    public KnowledgeRefiner(Clock clock) {
+        this.clock = clock == null ? Clock.systemUTC() : clock;
+    }
 
     /**
      * A refinement: what is now believed, on what authority, and what
@@ -72,7 +99,7 @@ public final class KnowledgeRefiner {
      */
     public KnowledgeChanges refine(String workspaceId, KnowledgeSnapshot snapshot, Refinement request) {
         Concept concept = concept(snapshot, request.conceptId());
-        String now = Instant.now().toString();
+        String now = clock.instant().toString();
 
         Claim superseded = null;
         if (request.supersededClaimId() != null && !request.supersededClaimId().isBlank()) {

@@ -6,7 +6,7 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.time.Instant;
+import java.time.Clock;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -48,7 +48,33 @@ public final class KnowledgeImporter {
      */
     public static final int MAX_EXCERPT_CHARACTERS = 64 * 1024;
 
-    private final String importedAt = Instant.now().toString();
+    /**
+     * The instant the package was imported at.
+     *
+     * <p>Read once, when the importer is built, so that every record of one
+     * import carries the same stamp. The stamp is not decoration: it becomes
+     * the {@code createdAt} of the representations the package carries, and
+     * {@code Representations.activeAt} picks the active account of a level by
+     * comparing those stamps. A wall clock read there would decide WHICH
+     * account the system believes, so the instant is injected (Article I) and
+     * the default is the system clock.
+     */
+    private final String importedAt;
+
+    /** The importer that stamps its records with the system clock. */
+    public KnowledgeImporter() {
+        this(Clock.systemUTC());
+    }
+
+    /**
+     * The importer that stamps its records with a chosen clock.
+     *
+     * @param clock the instant the import is stamped with; the system clock
+     *     when null
+     */
+    public KnowledgeImporter(Clock clock) {
+        this.importedAt = (clock == null ? Clock.systemUTC() : clock).instant().toString();
+    }
 
     /** Import a package from a file. */
     public KnowledgeSnapshot importPack(Path file) {

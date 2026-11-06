@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.Clock;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
@@ -66,6 +67,19 @@ public class KnowledgeWorkbench implements AutoCloseable {
     private KnowledgeStore store;
     private final Map<String, AssessmentDataset> datasets = new LinkedHashMap<>();
 
+    /**
+     * The clock the recorded instants come from.
+     *
+     * <p>Two of the workbench's records are read back and COMPARED, not just
+     * displayed: the answer time of an outcome is compared with the update
+     * time of a goal to name the last durable write, and the time a question
+     * was asked is the age the consolidation measures its forgetting window
+     * against. A wall clock read at those points would decide what the
+     * system believes, so the instant is injected (Article I) and the
+     * default is the system clock.
+     */
+    private final Clock clock;
+
     @Inject
     public KnowledgeWorkbench(
             @ConfigProperty(name = "matrix.knowledge.path", defaultValue = "data/knowledge/workbench.sqlite")
@@ -84,20 +98,58 @@ public class KnowledgeWorkbench implements AutoCloseable {
             @ConfigProperty(name = "matrix.knowledge.logic.assessment",
                     defaultValue = "knowledge/logic.assessment.json")
             String logicAssessmentResource) {
+        this(databasePath, packResource, assessmentResource, adversarialResource,
+                logicPackResource, logicAssessmentResource, Clock.systemUTC());
+    }
+
+    /**
+     * The workbench over a store at a chosen path and a chosen clock.
+     *
+     * @param databasePath the store's file
+     * @param packResource the bundled package
+     * @param assessmentResource the bundled assessment
+     * @param adversarialResource the bundled adversarial set
+     * @param logicPackResource the bundled logic package
+     * @param logicAssessmentResource the bundled logic assessment
+     * @param clock the instant the recorded times come from; the system clock
+     *     when null
+     */
+    public KnowledgeWorkbench(
+            String databasePath,
+            String packResource,
+            String assessmentResource,
+            String adversarialResource,
+            String logicPackResource,
+            String logicAssessmentResource,
+            Clock clock) {
         this.databasePath = databasePath;
         this.packResource = packResource;
         this.assessmentResource = assessmentResource;
         this.adversarialResource = adversarialResource;
         this.logicPackResource = logicPackResource;
         this.logicAssessmentResource = logicAssessmentResource;
+        this.clock = clock == null ? Clock.systemUTC() : clock;
     }
 
     /** The workbench over a store at a chosen path, for tests and tools. */
     public static KnowledgeWorkbench at(String databasePath) {
+        return at(databasePath, Clock.systemUTC());
+    }
+
+    /**
+     * The workbench over a store at a chosen path, stamping its records with
+     * a chosen clock.
+     *
+     * @param databasePath the store's file
+     * @param clock the instant the recorded times come from; the system clock
+     *     when null
+     * @return the workbench
+     */
+    public static KnowledgeWorkbench at(String databasePath, Clock clock) {
         return new KnowledgeWorkbench(databasePath,
                 "knowledge/photosynthesis.pack.json", "knowledge/photosynthesis.assessment.json",
                 "knowledge/photosynthesis.adversarial.json",
-                "knowledge/logic.pack.json", "knowledge/logic.assessment.json");
+                "knowledge/logic.pack.json", "knowledge/logic.assessment.json", clock);
     }
 
     /** The knowledge store, opened on first use. */
@@ -634,7 +686,7 @@ public class KnowledgeWorkbench implements AutoCloseable {
         double score = AssessmentGrader.score(item, answer);
         boolean correct = AssessmentGrader.isCorrect(item, answer);
         AssessmentOutcome outcome = new AssessmentOutcome(itemId, correct, score, claimedConfidence,
-                answer, sessionId == null ? "default" : sessionId, System.currentTimeMillis(),
+                answer, sessionId == null ? "default" : sessionId, clock.millis(),
                 item.heldOut());
         store().recordOutcome(workspaceId, item, outcome);
         // The state machine reconciles after every outcome: this is the
@@ -657,6 +709,9 @@ public class KnowledgeWorkbench implements AutoCloseable {
      * @param causeId the outcome that caused the reconciliation, or null
      * @return the transitions that happened
      */
+    @io.matrix.auditor.ArticleIPermitted(value = "the timestamp of a recorded learning-state "
+            + "transition; it records WHEN the reconciliation ran, and the stage the capability "
+            + "moved to is decided by the evidence and not by the clock")
     public List<LearningTransition> reconcileLearningStates(String workspaceId, String causeId) {
         List<LearningState> computed = learningStates(workspaceId);
         Map<String, LearningState> recorded = store().recordedLearningStates(workspaceId);
@@ -1877,7 +1932,7 @@ public class KnowledgeWorkbench implements AutoCloseable {
     public AskedQuestion recordAsk(String workspaceId, String question, List<String> uncoveredTerms,
                                    boolean answered) {
         return store().recordAskedQuestion(workspaceId, question, uncoveredTerms, answered,
-                System.currentTimeMillis());
+                clock.millis());
     }
 
     /**
@@ -1947,6 +2002,9 @@ public class KnowledgeWorkbench implements AutoCloseable {
      * <p>This is the evidence-grounded path: the pipeline of the mission's
      * §6.1, with every stage recorded in the result.
      */
+    @io.matrix.auditor.ArticleIPermitted(value = "the timestamp of a recorded derivation verdict; "
+            + "it records WHEN the check ran, and the verdict itself is computed from the claims "
+            + "and not from the clock")
     public ReasoningEngine.Result reason(String workspaceId, String question, AbstractionLevel level) {
         KnowledgeSnapshot snapshot = workspace(workspaceId);
         ReasoningEngine.Result result = new ReasoningEngine().reason(snapshot, question, level);

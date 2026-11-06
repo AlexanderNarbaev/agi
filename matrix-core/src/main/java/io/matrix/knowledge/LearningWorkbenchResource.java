@@ -14,6 +14,7 @@ import jakarta.ws.rs.core.Response;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
+import java.time.Clock;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -54,6 +55,27 @@ public class LearningWorkbenchResource {
 
     @Inject
     KnowledgeWorkbench workbench;
+
+    /**
+     * The clock the consolidation's instant comes from.
+     *
+     * <p>The consolidation DECIDES with it: it is subtracted from the time a
+     * record was last asked, and the result is compared with the age window
+     * to decide which records have decayed. A wall clock read there would
+     * decide what the system forgets, so the instant is injected (Article I)
+     * and the default is the system clock.
+     */
+    private Clock clock = Clock.systemUTC();
+
+    /**
+     * The clock the consolidation's instant comes from.
+     *
+     * @param clock the instant the consolidation runs at; the system clock
+     *     when null
+     */
+    public void setClock(Clock clock) {
+        this.clock = clock == null ? Clock.systemUTC() : clock;
+    }
 
     /** The body of an ask request. */
     public record AskRequest(String question, String level) {
@@ -743,7 +765,7 @@ public class LearningWorkbenchResource {
         long window = ageWindowDays == null || ageWindowDays < 0
                 ? 30L * 24 * 60 * 60 * 1000
                 : ageWindowDays * 24L * 60 * 60 * 1000;
-        long now = nowMs == null ? System.currentTimeMillis() : nowMs;
+        long now = nowMs == null ? clock.millis() : nowMs;
         KnowledgeConsolidator.Report report = KnowledgeConsolidator.consolidate(workbench,
                 workspaceId, now, new KnowledgeConsolidator.Budget(max, window));
 

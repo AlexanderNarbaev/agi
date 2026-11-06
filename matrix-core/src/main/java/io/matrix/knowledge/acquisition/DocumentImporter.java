@@ -16,7 +16,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.time.Instant;
+import java.time.Clock;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -52,8 +52,32 @@ public final class DocumentImporter {
 
     private final KnowledgeStore store;
 
+    /**
+     * The clock the import stamps its records with.
+     *
+     * <p>The stamp is not decoration: it becomes the {@code createdAt} of the
+     * representations the import writes, and {@code Representations.activeAt}
+     * picks the active account of a level by comparing those stamps. A wall
+     * clock read there would decide WHICH account the system believes, so
+     * the instant is injected (Article I) and the default is the system
+     * clock.
+     */
+    private final Clock clock;
+
     public DocumentImporter(KnowledgeStore store) {
+        this(store, Clock.systemUTC());
+    }
+
+    /**
+     * The importer over a store, stamping its records with a chosen clock.
+     *
+     * @param store the store to import into
+     * @param clock the instant the import stamps its records with; the system
+     *     clock when null
+     */
+    public DocumentImporter(KnowledgeStore store, Clock clock) {
         this.store = store;
+        this.clock = clock == null ? Clock.systemUTC() : clock;
     }
 
     /** What an import did. */
@@ -124,7 +148,7 @@ public final class DocumentImporter {
 
         SourceRecord.Builder source = new SourceRecord.Builder(
                 sourceId(workspaceId, hash), filename, hash, format)
-                .importedAt(Instant.now().toString())
+                .importedAt(clock.instant().toString())
                 .processed("read " + size + " bytes");
 
         ExtractedDocument document = new DocumentExtractorRegistry().extract(format, content,

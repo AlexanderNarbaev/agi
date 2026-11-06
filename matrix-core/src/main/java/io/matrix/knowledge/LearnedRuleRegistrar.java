@@ -52,6 +52,9 @@ public final class LearnedRuleRegistrar {
      * @param datasetId the dataset the measurement came from
      * @param evaluation the measurement
      */
+    @io.matrix.auditor.ArticleIPermitted(value = "the timestamps of the recorded measurement - "
+            + "its source, its claim and its evidence; they record WHEN the acceptance model ran, "
+            + "and the rule itself is decided by the measurement and not by the clock")
     public static Registration registration(String workspaceId, String conceptId,
                                             String datasetId,
                                             AcceptanceModel.Evaluation evaluation) {

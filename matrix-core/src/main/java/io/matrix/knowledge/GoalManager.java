@@ -1,5 +1,6 @@
 package io.matrix.knowledge;
 
+import java.time.Clock;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -27,8 +28,31 @@ public final class GoalManager {
 
     private final KnowledgeStore store;
 
+    /**
+     * The clock the recorded instants come from.
+     *
+     * <p>The goal's update time is read back and COMPARED, not just
+     * displayed: {@code KnowledgeWorkbench.integrity()} compares it with the
+     * answer time of an outcome to name the last durable write. A wall clock
+     * read there would decide what the system reports it holds, so the
+     * instant is injected (Article I) and the default is the system clock.
+     */
+    private final Clock clock;
+
     public GoalManager(KnowledgeStore store) {
+        this(store, Clock.systemUTC());
+    }
+
+    /**
+     * The manager over a store, stamping its records with a chosen clock.
+     *
+     * @param store the store the goals live in
+     * @param clock the instant the recorded times come from; the system clock
+     *     when null
+     */
+    public GoalManager(KnowledgeStore store, Clock clock) {
         this.store = store;
+        this.clock = clock == null ? Clock.systemUTC() : clock;
     }
 
     /**
@@ -242,7 +266,7 @@ public final class GoalManager {
         return String.join(", ", remaining);
     }
 
-    private static String now() {
-        return java.time.Instant.now().toString();
+    private String now() {
+        return clock.instant().toString();
     }
 }
