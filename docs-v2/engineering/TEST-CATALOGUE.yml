@@ -59,13 +59,13 @@ scopes:
       - 'io.matrix.knowledge.*'
     source_packages: [io.matrix.cognitive, io.matrix.knowledge]
     test_packages: [io.matrix.cognitive, io.matrix.knowledge]
-    last_verified_commit: 33d199e2
+    last_verified_commit: f48427b7
     last_execution: '2026-11-06'
     result:
-      classes_discovered: 133
-      classes_executed: 133
-      methods_executed: 968
-      successful: 968
+      classes_discovered: 134
+      classes_executed: 134
+      methods_executed: 969
+      successful: 969
       failed: 0
       errored: 0
       skipped: 0

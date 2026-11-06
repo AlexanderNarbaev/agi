@@ -170,7 +170,7 @@ scope **for the next wave**.
 
 | the scope | the classes | the methods | the failures | the commit |
 |---|---|---|---|---|
-| SCOPE-COGNITIVE-KNOWLEDGE (`io.matrix.cognitive.*`, `io.matrix.knowledge.*`) | 133 | 968 | **0** | `33d199e2` |
+| SCOPE-COGNITIVE-KNOWLEDGE (`io.matrix.cognitive.*`, `io.matrix.knowledge.*`) | 134 | 969 | **0** | `f48427b7` |
 | SCOPE-BRAIN-RUNTIME (`io.matrix.brain.runtime.*`) | 120 | 919 (2 skipped) | **0** | `af9ba688` |
 | SCOPE-NATIVE-BUILD-CONFIG | 1 | 2 | **0** | `31d8f832` |
 | SCOPE-NATIVE-BINARY | 8 | 25 discovered | **not executed — BLOCKED** | `31d8f832` |
