@@ -49,6 +49,11 @@ The wave's preflight, with the baseline that was frozen before anything changed,
 | `40b0942c` | the 25 failures are reconciled, and two of them are fixed with a commit |
 | `4ddcb58d` | the snapshot payload contract is written down, with its refusals and its limits |
 | `31989733` | the autonomy impulse consumer is proposed, not built |
+| `93350867` | the registries carry the W48 measurements, and the native capability finally has a row |
+| `b0b8e110` | the owner answered three questions, and the wave report says what is still unproven |
+| `0eac36c3` | the wave report carries the task labels, the CI record and the confirmations |
+| `64f43f74` | the clean runner's twelve failures are diagnosed and fixed |
+| `63d440b1` | the governance records now agree with what was committed and answered |
 
 ## 3. The tasks, with their status labels
 
@@ -64,15 +69,16 @@ operationally rehearsed, or documented.
 | W48-02 | the gateway's path-portable tests | **DONE** | locally tested | `0c5b3980` |
 | W48-03 | the branch validation and the GraalVM action | **DONE** | CI tested — the workflow's own steps; the compile was reached in CI | `02d2a516` |
 | W48-04 | the TLA artifact's immutability and the CI formal execution | **DONE** | CI tested + model-checked — 15 specifications, `tools/tla2tools.jar: OK` | `16a2d0c5`, `9bb6bf5c` |
-| W48-05 | the quality gate's scope and the historical documents | **DONE** | locally tested + CI tested — 0 strict link failures, with the historical archive reported separately | `f5870f4c`, `d1f2e0fb` |
+| W48-05 | the quality gate's scope and the historical documents | **DONE** | locally tested + CI tested — 0 strict link failures locally, and DOCS-1 **PASS** on the clean runner (`42181161742`), with the historical archive reported separately | `f5870f4c`, `d1f2e0fb`, `64f43f74` |
 | W48-06 | the full-suite failure reconciliation and the numerical/compliance repairs | **DONE** for 2 of 25, **BLOCKED** for the 23 native | locally tested — the 23 re-measured, 2 fixed and green | `241af1e1`, `4adbc664`, `31d8f832`, `40b0942c` |
 | W48-07 | the snapshot size measurement, the bound and the row retention | **DONE** | locally tested — 12 tests and the tool's own 40 checks; the measurement was taken on a copy | `33d199e2` |
 | W48-08 | the restore drill against a copy | **DONE** | operationally rehearsed — the live file byte-identical before and after | `090247cb` |
 | W48-09 | the reproducible GPU benchmark | **DONE** | hardware measured — three independent runs on the GPU; the CUDA provider positively verified | `75937934` |
-| W48-10 | the governance and the registry reconciliation | **DONE** | documented — 4 validators, 0 defects | `93350867`, `b0b8e110` |
+| W48-10 | the governance and the registry reconciliation | **DONE** | documented — 4 validators, 0 defects | `93350867`, `b0b8e110`, `63d440b1` |
 | W48-11 | the autonomy consumer's ADR and the owner decision | **DONE** — the ADR and the decision; the consumer itself is **DEFERRED** to W49 | documented — the owner's answer is OD-045 | `31989733` |
 | — | the native-image capability | **BLOCKED** | not executed — the toolchain is absent; the scope refuses to run | `31d8f832` |
 | — | the GPU path in CI | **NOT VERIFIED** | no gpu/cuda/nvidia job exists in any of the seven workflows | — |
+| — | the clean runner's own twelve failures | **DONE** | CI tested — the twelve were diagnosed from the job log and fixed; the corpus classes now SKIP there with a reason, and the security check's startup window is readable | `64f43f74` |
 | — | the retention pass on a schedule | **DEFERRED** | the tool is tested; who runs it and when is the operator's | `33d199e2` |
 
 ## 4. What the directive asked, and what answered it
@@ -202,6 +208,14 @@ The evidence is the JUnit XML under `<module>/build/test-results/`.
 7. **Two formal-spec mutants SURVIVED** (`Consensus-evaluate-without-quorum`,
    `KnowledgeAxes-conflict-forgets-what-it-recorded`) — known holes the gate logs, not
    new failures.
+8. **The production-corpus properties are NOT VERIFIED on a clean runner.** The corpus
+   `models/training_data/qa_pairs.json` is the owner's data and `/models/` is
+   git-ignored, so the two corpus classes (11 methods) SKIP there with a recorded
+   reason. They execute and pass where the corpus is present. A skip is not a pass,
+   and this is recorded rather than smoothed away.
+9. **The security boundary on the clean runner is not yet observed.** The check holds
+   every assertion locally; the runner's failure was its 60-second startup window,
+   which `64f43f74` changed to 180 seconds and made readable.
 
 ## 9. The deliberate non-actions
 
@@ -247,6 +261,7 @@ document. The groups:
 | the workflow | the run at the preflight | the conclusion | the state now |
 |---|---|---|---|
 | `ci` | `42170865426` | **failure** — Build & Test `127738106005`, Quality gates `127738106021`; Web UI `127738105543` success | the causes are fixed and committed (§4.2); **the wave has not yet observed a green `ci` run** |
+| `ci` (later reading) | `42181161742` at `0eac36c3` | **failure** — Build & Test: 9070 tests, 12 failed, 132 skipped; Quality gates: DOCS-1 **PASS**, the security boundary failed on its startup window | the twelve failures are diagnosed and fixed in `64f43f74`, the startup window and the missing log in the same commit; the detailed evidence is `docs-v2/engineering/W48-CI-RECONCILIATION.md` §4.7 |
 | `branch-validation` | `42170865265` | success | the GraalVM distribution and the version contract are fixed (`02d2a516`) |
 | `Formal Specs (TLA+)` | `42170865258` | success — 15 specifications, `tools/tla2tools.jar: OK` | the tool is tracked and verified by digest in both workflows (`16a2d0c5`, `9bb6bf5c`) |
 | `docs-validation` | `42167940985` (at `4084538a`) | success | path-filtered on `docs-v2/**`; no run exists at the preflight commit |
