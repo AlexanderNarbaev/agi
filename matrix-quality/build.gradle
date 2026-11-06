@@ -60,6 +60,21 @@ tasks.withType(Test) {
     inputs.property('moduleDirectoryNames',
         rootProject.fileTree(rootProject.projectDir) { include 'matrix-*' }
             .files.collect { it.name }.sort())
+    // W49: the same trap applies to the capability-claims guard. It reads the
+    // published front page and the canonical evidence files, and Gradle does
+    // not track those as test inputs: without this the task can be
+    // UP-TO-DATE from an earlier run and the guard reports a STALE result.
+    // W49 found this the hard way — a change to the front page did not
+    // re-run the guard until --rerun-tasks was passed by hand.
+    inputs.files(rootProject.file('docs-v2/index.md'))
+    inputs.files(rootProject.file('docs-v2/architecture/CAPABILITY-REGISTRY.yml'))
+    inputs.files(rootProject.file('docs-v2/engineering/TEST-CATALOGUE.yml'))
+    inputs.files(rootProject.file('docs-v2/governance/PROJECT-STATE.md'))
+    inputs.files(rootProject.file('docs-v2/engineering/W48-STATUS.md'))
+    inputs.files(rootProject.file('docs-v2/engineering/W48-GPU-BENCHMARK.md'))
+    inputs.files(rootProject.file('docs-v2/engineering/W49-STATUS.md'))
+    inputs.files(rootProject.file('docs-v2/engineering/W49-BASELINE.md'))
+    inputs.files(rootProject.file('scripts/quality-gate.sh'))
 }
 
 // RECON-W39: the registry is the single source of truth for the TLA+
