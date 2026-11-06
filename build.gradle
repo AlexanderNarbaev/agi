@@ -46,7 +46,7 @@ allprojects {
 // is set in `projectsEvaluated`, which is the last moment before the tasks
 // execute.
 gradle.projectsEvaluated {
-    allprojects { project ->
+    subprojects { project ->
         project.tasks.withType(org.gradle.api.tasks.testing.Test).configureEach { task ->
             task.systemProperty 'matrix.repoRoot', project.rootProject.projectDir.absolutePath
         }
@@ -55,7 +55,12 @@ gradle.projectsEvaluated {
 
 // The shared test support: one copy of the repository-root resolution, used by every
 // module whose tests verify files in the tree.
-allprojects {
+//
+// The SUBPROJECTS, not the root: the root project has no tests, and giving
+// its test task the shared sources made it fail with "there are test sources
+// present and no filters are applied, but the test task did not discover any
+// tests to execute" — a root task that had been NO-SOURCE until then.
+subprojects {
     plugins.withId('java') {
         sourceSets {
             test {
