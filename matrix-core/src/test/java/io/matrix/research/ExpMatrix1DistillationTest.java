@@ -5,6 +5,7 @@ import io.matrix.bir.BooleanRuntime;
 import io.matrix.bir.TtForm;
 import io.matrix.distill.Distiller;
 import io.matrix.distill.OnnxActivationTeacher;
+import io.matrix.testsupport.RepositoryPaths;
 import org.junit.jupiter.api.Test;
 
 import java.io.InputStream;
@@ -118,9 +119,13 @@ class ExpMatrix1DistillationTest {
             }
         }
         for (Path candidate : new Path[]{
+                // W48-02: the repository root comes from the build, not from a
+                // developer's home directory. The model is not tracked in git —
+                // it is a local artefact — so the candidates are tried and the
+                // test reports the absence rather than pretending to have run.
+                RepositoryPaths.maybe("models/teacher/teacher_ffn16.onnx"),
                 Path.of("models/teacher/teacher_ffn16.onnx"),
-                Path.of("../models/teacher/teacher_ffn16.onnx"),
-                Path.of("/home/alexandr-narbaev/Projects/agi/models/teacher/teacher_ffn16.onnx")
+                Path.of("../models/teacher/teacher_ffn16.onnx")
         }) {
             if (Files.isRegularFile(candidate)) return candidate.toAbsolutePath();
         }

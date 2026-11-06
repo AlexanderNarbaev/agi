@@ -31,3 +31,38 @@ allprojects {
         reproducibleFileOrder = true
     }
 }
+
+// W48-02 — the repository root is a PROPERTY, not a developer's home path.
+//
+// The source-integrity tests verify that a production file says what it must say, and
+// they used to name that file by an absolute path into one developer's home directory.
+// On a clean runner that path does not exist, so the tests failed there and passed
+// here. The root now travels with the build, so a test and the tree it checks are
+// always the same tree — on a developer's machine and on a runner.
+//
+// The property is set AFTER every plugin has had its say: the Quarkus plugin
+// replaces the test task's system properties, so a property set from the root
+// build script's own configuration phase is gone by the time the test runs. It
+// is set in `projectsEvaluated`, which is the last moment before the tasks
+// execute.
+gradle.projectsEvaluated {
+    allprojects { project ->
+        project.tasks.withType(org.gradle.api.tasks.testing.Test).configureEach { task ->
+            task.systemProperty 'matrix.repoRoot', project.rootProject.projectDir.absolutePath
+        }
+    }
+}
+
+// The shared test support: one copy of the repository-root resolution, used by every
+// module whose tests verify files in the tree.
+allprojects {
+    plugins.withId('java') {
+        sourceSets {
+            test {
+                java {
+                    srcDir rootProject.file('test-support/java')
+                }
+            }
+        }
+    }
+}
