@@ -75,8 +75,8 @@ generated:
   branch: "develop"
   source: "docs-v2/engineering/W46-CAPABILITY-RECONCILIATION.csv"
   source_rows: 27
-  capabilities_in_this_file: 34
-  additions_from_source: 7
+  capabilities_in_this_file: 35
+  additions_from_source: 8
   method: "the constant pool of the compiled classes (javap -p -c) over 2978 classes, the current "
   method_note: "source, and the current configuration. Every source_path, test_path and production "
   method_note_2: "caller in this file was resolved and checked for existence at the commit named "
@@ -85,7 +85,7 @@ generated:
   supersedes:
     - "docs-v2/architecture/CAPABILITY-REGISTRY.md"
     - "docs-v2/engineering/W44-CAPABILITY-REGISTRY.md"
-  notes: "the two superseded registries stay on disk as evidence; the coordinator annotates them."
+  notes: "the two superseded registries stay on disk as evidence; the coordinator annotates them. W48 (2026-11-06) added one row from the source — W48-NATIVE-IMAGE — and refreshed four rows (C-01, W45-FAILCLOSED, W45-SNAPSHOT, W46-GPU). The reconciliation itself is still the W46.0 one: the date and commit above are the ones it was made at."
 
 status_vocabularies:
   implementation:
@@ -141,21 +141,21 @@ capabilities:
     serving_chain: "none"
     serving_path: "none — a claim has no serving path"
     test_paths: []
-    test_evidence: "the last full-scoped measurement on record: 9816 executions / 1320 classes / 24 failures / 26 skipped (W45-TEST-EVIDENCE-RECONCILIATION.md §1). The result set on disk at this commit is 2422 tests / 4 skipped / 0 failures across 11 modules (partial scopes only)."
+    test_evidence: "the last full-scoped measurement on record: 9816 executions / 1320 classes / 24 failures / 26 skipped (W45-TEST-EVIDENCE-RECONCILIATION.md §1). The result set on disk at this commit is 2422 tests / 4 skipped / 0 failures across 11 modules (partial scopes only). W48 added two later measurements of the same quantity, both narrower and both commit-specific: the full matrix-core suite was run once, on 2026-11-05, under the owner's OD-041 — 1226 classes / 9051 executions / 23 skipped / 25 failures, 25m45s, one test JVM, an 8 GiB heap (docs-v2/engineering/W47-STATUS.md §10); and the targeted scopes of 2026-11-06 — the cognitive+knowledge scope 133 classes / 968 tests / 0 failures / 0 errors, the brain-runtime scope 120 classes / 919 tests / 2 skipped / 0 failures, the native build-configuration scope 2 tests / 0 failures."
     benchmark_evidence: "scripts/count-tests.sh — the source-side count, reproducible in seconds; the executed count is produced by the build and is recorded in docs-v2/engineering/W45-TEST-EVIDENCE-RECONCILIATION.md §1. The module total for matrix-core alone is 8284 tests (W44-BENCHMARK.md §7.7); the W43 targeted scope was 1518 (W44-BENCHMARK.md §1)."
     formal_spec: "none"
     dependencies:
       - "the Gradle test task of all 14 modules"
-      - "the GraalVM native-image toolchain, absent on this host, which is why 23 of the 24 recorded failures cannot be executed here"
-    limitations: "9816 is a FLOOR, not a total (33 executions are lost in matrix-brain-runtime); the 24 failures are 23 native-image + 1 source-compliance, NOT zero. The full matrix-core suite is never run here, so no single total is established."
+      - "the GraalVM native-image toolchain, absent on this host, which is why 23 of the 24 recorded failures cannot be executed here — since W48 (commit 31d8f832) those 23 are a scope of their own (`:matrix-core:nativeBinaryTest`), the scope REFUSES to run when the executable is absent, and the default JVM task excludes them"
+    limitations: "9816 is a FLOOR, not a total (33 executions are lost in matrix-brain-runtime); the 24 failures are 23 native-image + 1 source-compliance, NOT zero. The full matrix-core suite is never run here, so no single total is established. That statement is the W46 record and it is now superseded by the current state: the suite WAS run once, on 2026-11-05 (1226 classes / 9051 executions / 23 skipped / 25 failures), two of those 25 are fixed in W48 — the property test by 241af1e1 and the compliance check by 4adbc664 — and the 23 native-binary failures are now excluded from the default JVM task and reported as a BLOCKED scope of their own. The full suite is STILL not run routinely here, so there is still no single standing total."
     risks:
       - "the published 9,432 / 1,282 figure does not correspond to any current run (R-W46-10)"
       - "a reader who takes any one of these numbers for THE total is wrong: 9,432, 9,816, 8,284 and 2,422 are four different scopes"
     owner: "the owner (RECON-W38.4 §20)"
     decision_ref: "docs-v2/engineering/W46-CAPABILITY-RECONCILIATION.csv row C-01; RECON-W38.4 §20"
-    last_verified_commit: "a6ded23338e069b8bc8a3744c234be5a03995f43"
-    last_verified_at: "2026-11-04"
-    next_verification_condition: "a full-suite run on a quiet machine with the GraalVM-dependent classes excluded, which needs the owner's approval (Q-W46-06), would establish the total and retire this row's staleness"
+    last_verified_commit: "40b0942c"
+    last_verified_at: "2026-11-06"
+    next_verification_condition: "a full-suite run on a quiet machine with the GraalVM-dependent classes excluded, which needs the owner's approval (Q-W46-06), would establish the total and retire this row's staleness; until then the row's numbers are the W47 full run of 2026-11-05 (1226 / 9051 / 23 skipped / 25 failures) reconciled by docs-v2/engineering/W48-TEST-RECONCILIATION.md"
     notes: "the CSV row is structurally damaged: the name field contains an unescaped comma and the row has 17 fields against a 15-field header. Its literal status cells are preserved here — implementation='MEASURED (the number is stale)', verification='STALE — the published numbers do not match the current measurement', operational='STALE — the published figure does not correspond to the current run'. 'MEASURED' and 'STALE' are not values of this registry's vocabularies, so the four axes above are the honest reading and the literal cells are kept here. The CSV's serving_chain cell reads 'all 14 modules' — a scope, not a chain."
 
   -
@@ -900,7 +900,7 @@ capabilities:
   -
     id: "W45-FAILCLOSED"
     name: "the destructive reload fails closed"
-    description: "POST /v1/workbench/workspaces/{id}/load refuses to replace a non-empty workspace unless the caller passes ?replace=true, and takes a snapshot in the SAME transaction as the replacement, so a replacement cannot happen without a recovery point."
+    description: "POST /v1/workbench/workspaces/{id}/load refuses to replace a non-empty workspace unless the caller passes ?replace=true, and takes a snapshot in the SAME transaction as the replacement, so a replacement cannot happen without a recovery point. Since W48 the recovery point is also CHECKED: the replacement is refused outright when the snapshot it would take is not COMPLETE — the typed refusal KnowledgeStore.IncompleteSnapshotException, identifier SNAPSHOT_NOT_COMPLETE — and the guard runs BEFORE the erasure, so the workspace is exactly as it was."
     domain: "durability"
     implementation: "IMPLEMENTED"
     integration: "INTEGRATION_TESTED"
@@ -909,6 +909,7 @@ capabilities:
     source_paths:
       - "matrix-core/src/main/java/io/matrix/knowledge/LearningWorkbenchResource.java"
       - "matrix-core/src/main/java/io/matrix/knowledge/KnowledgeStore.java"
+      - "matrix-core/src/main/java/io/matrix/knowledge/SnapshotCoverage.java"
     production_callers:
       - "io.matrix.knowledge.LearningWorkbenchResource — matrix-core/src/main/java/io/matrix/knowledge/LearningWorkbenchResource.java"
     serving_chain: "chain-a"
@@ -916,21 +917,24 @@ capabilities:
     test_paths:
       - "matrix-core/src/test/java/io/matrix/knowledge/WorkspaceLoadEndpointTest.java"
       - "matrix-core/src/test/java/io/matrix/knowledge/WorkspaceSnapshotTest.java"
-    test_evidence: "executed — 7 cases in the load-endpoint suite and 12 in the snapshot suite"
+      - "matrix-core/src/test/java/io/matrix/knowledge/SnapshotRetentionBoundTest.java"
+    test_evidence: "executed — 7 cases in the load-endpoint suite and 12 in the snapshot suite (the W46 measurement). W48 added the guard of the invariant: SnapshotRetentionBoundTest covers the completeness refusal and the payload bound, and the whole cognitive+knowledge scope passes on 2026-11-06 with 133 classes / 968 tests / 0 failures / 0 errors."
     benchmark_evidence: "none"
     formal_spec: "none"
     dependencies:
       - "io.matrix.knowledge.WorkspaceSnapshot (the recovery point)"
       - "io.matrix.knowledge.WorkspaceReplacementRefused (the refusal)"
-    limitations: "the snapshot is taken in the same transaction; there is no HTTP endpoint for reading a snapshot, so the recovery point is inspectable only programmatically through store.workspaceSnapshots(workspaceId)."
+      - "io.matrix.knowledge.SnapshotCoverage (what the recovery point actually carries)"
+    limitations: "the snapshot is taken in the same transaction; there is no HTTP endpoint for reading a snapshot, so the recovery point is inspectable only programmatically through store.workspaceSnapshots(workspaceId). The completeness guard is a REFUSAL, not a repair: a replacement whose snapshot cannot be complete does not happen at all, and the refusal is the caller's to handle."
     risks:
       - "the erasure set predates the observation tables: a replacement erases the evidence rows the observation wrote while keeping the case, the disposition and the adjudication history (R-W46-01, Q-W46-03 — the owner's decision D3-c)"
       - "the consent parameter's SHAPE is unsettled: the implementation uses the query parameter ?replace=true and the W46 target contract names a body field replaceExisting (Q-W46-01)"
+      - "the snapshot payload is now BOUNDED at 8 MiB by default, so a workspace whose payload crosses the bound cannot be replaced at all until the bound is raised — the refusal is SNAPSHOT_PAYLOAD_TOO_LARGE and it rolls the transaction back"
     owner: "the owner (YES)"
-    decision_ref: "docs-v2/engineering/W46-CAPABILITY-RECONCILIATION.csv row W45-FAILCLOSED; docs-v2/engineering/W45.2-STATUS.md §2"
-    last_verified_commit: "a6ded23338e069b8bc8a3744c234be5a03995f43"
-    last_verified_at: "2026-11-04"
-    next_verification_condition: "a decision on the erasure set (D3-c) and on the consent parameter's shape (Q-W46-01) would change this row; a change to the erasure set requires a migration test"
+    decision_ref: "docs-v2/engineering/W46-CAPABILITY-RECONCILIATION.csv row W45-FAILCLOSED; docs-v2/engineering/W45.2-STATUS.md §2; docs-v2/engineering/W48-SNAPSHOT-RETENTION.md §6"
+    last_verified_commit: "33d199e2"
+    last_verified_at: "2026-11-06"
+    next_verification_condition: "a decision on the erasure set (D3-c) and on the consent parameter's shape (Q-W46-01) would change this row; a change to the erasure set requires a migration test, and a change to the capture list or to the payload bound requires the cognitive+knowledge scope to be re-run"
     notes: "the CSV row has 14 fields against a 15-field header: its production_callers cell is absent. The caller listed above was resolved from the constant pool at this commit."
 
   -
@@ -973,17 +977,21 @@ capabilities:
   -
     id: "W45-SNAPSHOT"
     name: "the workspace snapshot"
-    description: "The per-workspace logical snapshot: a recovery point taken in the same transaction as a workspace replacement, materialised as a logical export in the workspace_snapshot table (knowledge schema v19)."
+    description: "The per-workspace logical snapshot: a recovery point taken in the same transaction as a workspace replacement, materialised as a logical export in the workspace_snapshot table (knowledge schema v19). Since W48 the recovery point is BOUNDED, CHECKED and GOVERNED: the payload has a size bound and an over-bound payload is refused before the write, the payload's COVERAGE is derived from the payload's own table list and an incomplete legacy payload is refused before any destructive change, and the snapshot rows themselves are aged on a three-tier retention calendar."
     domain: "durability"
     implementation: "IMPLEMENTED"
     integration: "INTEGRATION_TESTED"
-    verification: "TESTED"
+    verification: "MEASURED"
     operational: "SERVED"
     source_paths:
       - "matrix-core/src/main/java/io/matrix/knowledge/WorkspaceSnapshot.java"
       - "matrix-core/src/main/java/io/matrix/knowledge/WorkspaceLoad.java"
       - "matrix-core/src/main/java/io/matrix/knowledge/WorkspaceReplacementRefused.java"
       - "matrix-core/src/main/java/io/matrix/knowledge/KnowledgeStore.java"
+      - "matrix-core/src/main/java/io/matrix/knowledge/SnapshotCoverage.java"
+      - "matrix-core/src/main/java/io/matrix/knowledge/IncompatibleSnapshotException.java"
+      - "scripts/snapshot-retention.py"
+      - "docs-v2/engineering/W48-SNAPSHOT-RETENTION.md"
     production_callers:
       - "io.matrix.knowledge.KnowledgeWorkbench — matrix-core/src/main/java/io/matrix/knowledge/KnowledgeWorkbench.java"
       - "io.matrix.knowledge.LearningWorkbenchResource — matrix-core/src/main/java/io/matrix/knowledge/LearningWorkbenchResource.java"
@@ -993,31 +1001,35 @@ capabilities:
       - "matrix-core/src/test/java/io/matrix/knowledge/WorkspaceSnapshotTest.java"
       - "matrix-core/src/test/java/io/matrix/knowledge/WorkspaceSnapshotMigrationTest.java"
       - "matrix-core/src/test/java/io/matrix/knowledge/WorkspaceLoadEndpointTest.java"
-    test_evidence: "23 executed tests (12 + 4 + 7)"
-    benchmark_evidence: "none"
+      - "matrix-core/src/test/java/io/matrix/knowledge/SnapshotRetentionBoundTest.java"
+      - "matrix-core/src/test/java/io/matrix/knowledge/SnapshotRestoreCompatibilityTest.java"
+    test_evidence: "23 executed tests (12 + 4 + 7) — the W46 measurement. W48 added the bound, the coverage contract and the refusals: SnapshotRestoreCompatibilityTest (the coverage contract, 12 tests) and SnapshotRetentionBoundTest (the bound and the invariant, 12 tests), both inside the cognitive+knowledge scope, which passes on 2026-11-06 with 133 classes / 968 tests / 0 failures / 0 errors. The retention tool's own self-test: 40 checks, 0 failures."
+    benchmark_evidence: "scripts/snapshot-retention.py --report-sizes reads the database read-only and reports the payload size distribution. The owner's one workspace, measured with the store's own code on a COPY of the live file, is 103075 bytes (the typed knowledge content 57789 / the observation rows 171 / the learning rows 45066); the fixture distribution over eight workspaces is min 3312, median 28681, p95 301136, max 301136. The bound is therefore 8 MiB — 81 times the measured payload of the owner's own workspace — and the accepted behaviour is a REFUSAL, never a trim: the typed error SNAPSHOT_PAYLOAD_TOO_LARGE is raised before the row is written and the transaction rolls back."
     formal_spec: "none"
     dependencies:
       - "io.matrix.cognitive.WriterLock (the guard on the file)"
       - "the knowledge store's schema v19"
-    limitations: "the snapshot is a logical export, not a file-level backup; no whole-database backup exists. There is no HTTP endpoint for reading a snapshot back."
+    limitations: "the snapshot is a logical export, not a file-level backup; no whole-database backup exists. There is no HTTP endpoint for reading a snapshot back. The bound applies to the snapshot PAYLOAD only — not to the database file, not to the learning tables outside a snapshot. The retention calendar is applied per workspace and by hand: nothing puts the pass on a timer. The application property route is not wired; the bound is read once, when the store is opened, from the system property matrix.knowledge.snapshot.max-payload-bytes, and a non-numeric or non-positive value is refused at start-up."
     risks:
       - "a corruption of the file itself, or a bad migration, is not recoverable from anything in the repository (R-W46-02, Q-W46-05)"
       - "the snapshot cannot restore the observation tables that the erasure set leaves behind (Q-W46-03)"
+      - "the coverage contract refuses an INCOMPLETE LEGACY payload only when the TARGET holds rows of the missing family; against a target that holds none of them the legacy payload is accepted, and the restored workspace then has less history than the build that wrote the payload — the refusal is conditional on what the target holds"
+      - "the retention calendar keeps up to 23 snapshots per workspace (7 daily, 4 weekly, 12 monthly) and the pass is not scheduled, so a workspace replaced daily keeps growing until somebody runs the tool"
     owner: "the owner (YES)"
-    decision_ref: "docs-v2/engineering/W46-CAPABILITY-RECONCILIATION.csv row W45-SNAPSHOT; docs-v2/engineering/W45.2-STATUS.md §2"
-    last_verified_commit: "a6ded23338e069b8bc8a3744c234be5a03995f43"
-    last_verified_at: "2026-11-04"
-    next_verification_condition: "a file-level backup command with a restore drill, and a runbook section, would close R-W46-02 and change this row's limitations"
-    notes: "the CSV row has 14 fields against a 15-field header: its production_callers cell is absent. The callers listed above were resolved from the constant pool at this commit."
+    decision_ref: "docs-v2/engineering/W46-CAPABILITY-RECONCILIATION.csv row W45-SNAPSHOT; docs-v2/engineering/W45.2-STATUS.md §2; docs-v2/engineering/W48-SNAPSHOT-RETENTION.md; OD-039"
+    last_verified_commit: "33d199e2"
+    last_verified_at: "2026-11-06"
+    next_verification_condition: "a change to the capture list, to the payload bound or to the retention calendar requires the cognitive+knowledge scope to be re-run and the size distribution to be re-measured; wiring the application property route (the store is constructed by KnowledgeWorkbench, outside that wave's write scope) and scheduling the retention pass would change this row's limitations"
+    notes: "the CSV row has 14 fields against a 15-field header: its production_callers cell is absent. The callers listed above were resolved from the constant pool at this commit. W48 (OD-039, commit 33d199e2) added the bound, the calendar and the gate SNAPSHOT-RETENTION-1; the coverage contract itself is W48-01, commit 4084538a (SnapshotCoverage, IncompatibleSnapshotException, identifier INCOMPLETE_LEGACY_SNAPSHOT)."
 
   -
     id: "W46-GPU"
     name: "the published claim: \"the GPU is used by MATRIX\""
-    description: "An audited claim, not a capability identity. The claim is FALSE as written: the ONNX Runtime GPU build is on the classpath and the CUDA provider is compiled in, but MATRIX's Java path requests the GPU inside a catch block and silently falls back to the CPU."
+    description: "An audited claim, not a capability identity. The claim was audited as FALSE as written, and that finding is the historical record and is kept: the ONNX Runtime GPU build is on the classpath and the CUDA provider is compiled in, but MATRIX's Java path requests the GPU inside a catch block and falls back to the CPU. The current state is measured. The CUDA provider DOES execute when LD_LIBRARY_PATH names a libcudart that exports cudaLibraryGetKernel, and the measured speed-up of the serving path is 12.06x — 12.06 / 11.68 / 11.47 over three independent runs; the historical digit 12.6x stays HISTORICAL and is BOUNDED, not replaced. The provider executing is NOT the claim that MATRIX always uses the GPU: the serving path still falls back to the CPU unless the loader path is set."
     domain: "hardware"
     implementation: "IMPLEMENTED"
     integration: "INTEGRATION_TESTED"
-    verification: "TESTED"
+    verification: "MEASURED"
     operational: "SERVED"
     source_paths:
       - "matrix-core/src/main/java/io/matrix/api/OnnxRuntimeAdapter.java"
@@ -1026,30 +1038,36 @@ capabilities:
       - "matrix-core/build.gradle:135-155"
       - "docs-v2/engineering/W46-HARDWARE-AND-RESOURCE-REPORT.md"
       - "models/onnx/qwen05b/model.onnx"
+      - "scripts/gpu-benchmark.sh"
+      - "docs-v2/engineering/W48-GPU-BENCHMARK.md"
+      - "matrix-core/src/test/java/io/matrix/benchmark/GpuBenchmarkHarness.java"
     production_callers:
       - "io.matrix.api.OnnxRuntimeAdapter — matrix-core/src/main/java/io/matrix/api/OnnxRuntimeAdapter.java"
     serving_chain: "chain-a"
-    serving_path: "POST /v1/chat/completions — QwenOnnxBridge — OnnxRuntimeAdapter. With the launcher's LD_LIBRARY_PATH the CUDA provider registers and the execution profile names it; without it the adapter records the fallback and its cause"
+    serving_path: "POST /v1/chat/completions — QwenOnnxBridge — OnnxRuntimeAdapter. With the launcher's LD_LIBRARY_PATH the CUDA provider registers and the execution profile names it; without it the adapter records the fallback and its cause. The GPU is served CONDITIONALLY: the CPU provider serves the same route when the loader finds a libcudart that does not export cudaLibraryGetKernel."
     test_paths:
       - "matrix-core/src/test/java/io/matrix/api/OnnxRuntimeGpuTest.java"
       - "matrix-core/src/test/java/io/matrix/api/OnnxRuntimeAdapterTest.java"
       - "matrix-core/src/test/java/io/matrix/api/OnnxRuntimeGpuDiagnosticTest.java"
-    test_evidence: "29 executions, 0 failures, 0 errors: OnnxRuntimeGpuTest (7), OnnxRuntimeAdapterTest (9) and OnnxRuntimeGpuDiagnosticTest (13). The decision table of the seven GPU states is exercised with no GPU, no model and no ONNX Runtime. Without LD_LIBRARY_PATH one test is SKIPPED with its reason in the JUnit XML; with LD_LIBRARY_PATH exported all 29 run and the execution profile names the CUDA provider."
-    benchmark_evidence: "W46-HARDWARE-AND-RESOURCE-REPORT.md §6: with LD_LIBRARY_PATH exported the provider loads; without it the loader finds the distro's libcudart.so.12 (CUDA 12.4), which lacks cudaLibraryGetKernel. Measured on the same model (models/onnx/qwen05b/model.onnx, sequence length 32, 10 iterations after one warm-up): 191.367 ms per forward on the CPU against 15.190 ms on the CUDA (12.6×). The historical EXP-009C reproduces within 1.4% on the torch path. The measurement is reproducible by running scripts/bench_gpu_vs_bir.py and the ONNX probe with and without LD_LIBRARY_PATH."
+      - "matrix-core/src/test/java/io/matrix/benchmark/GpuBenchmarkHarnessTest.java"
+    test_evidence: "29 executions, 0 failures, 0 errors: OnnxRuntimeGpuTest (7), OnnxRuntimeAdapterTest (9) and OnnxRuntimeGpuDiagnosticTest (13) — the W46 measurement. The decision table of the seven GPU states is exercised with no GPU, no model and no ONNX Runtime. Without LD_LIBRARY_PATH one test is SKIPPED with its reason in the JUnit XML; with LD_LIBRARY_PATH exported all 29 run and the execution profile names the CUDA provider. W48 added the harness's own arithmetic: GpuBenchmarkHarnessTest — 8 executions, 0 failures, 0 errors, measured on 2026-11-06 (matrix-core/build/test-results/test/TEST-io.matrix.benchmark.GpuBenchmarkHarnessTest.xml)."
+    benchmark_evidence: "scripts/gpu-benchmark.sh (committed at 75937934) with the harness matrix-core/src/test/java/io/matrix/benchmark/GpuBenchmarkHarness.java — the reproducible measurement of the ONNX provider path; the report is docs-v2/engineering/W48-GPU-BENCHMARK.md. The device is an NVIDIA GeForce RTX 5070 Ti Laptop GPU with 12227 MiB of VRAM, driver 595.99.02, and the CUDA version the driver supports is 13.2. On models/onnx/qwen05b/model.onnx (graph sha256 5f59f2cd3eb36963746ca22411f83bde429e9dece9722389653882dfc4e0145d, external weights model.onnx_data sha256 72303ef1d77c02e4efc46a35b5cc60a841213518baa0ddae6247d44f1686265a), sequence length 32, 5 warm-ups and 20 timed iterations, with LD_LIBRARY_PATH exported for the CPU and the CUDA case alike so that the provider is the only variable: the MATRIX forward call is 160.995 ms on the CPU against 13.345 ms on the CUDA — 12.06x; the raw session.run is 173.846 ms against 7.325 ms — 23.73x; the end-to-end path is 2220.734 ms against 174.952 ms — 12.69x; the ONNX point call is 0.008 ms against 0.034 ms — 0.24x, so the GPU is 4x SLOWER on a single-point call; the BIR point call is 0.075 µs against 0.080 µs and has no GPU path at all. Three independent runs of the same protocol give 12.06x / 11.68x / 11.47x on the serving path. The historical figure — 191.367 ms against 15.190 ms, 12.6x, from W46-HARDWARE-AND-RESOURCE-REPORT.md §6 — stays HISTORICAL and is BOUNDED by this measurement: every re-measurement lands 4.3-9.0% below it, and both of its absolute figures are 12-27% higher than today's. The benchmark REFUSES to publish a GPU number when the execution profile does not name CUDAExecutionProvider (exit 5) and reports NOT VERIFIED (exit 3) when the device, the CUDA libraries, the ONNX Runtime GPU jar or the model is missing; both paths were exercised on this machine."
     formal_spec: "none"
     dependencies:
       - "com.microsoft.onnxruntime:onnxruntime_gpu:1.29.0 (matrix-core/build.gradle:77)"
       - "the CUDA runtime the loader actually finds — LD_LIBRARY_PATH, not -Djava.library.path"
-    limitations: "ONNX Runtime 1.29.0 exposes no OrtSession.getProviders(), so the truth comes from getEpDevices(), getModelCompatibilityForEpDevices() and the execution profile — and getModelCompatibilityForEpDevices SEGFAULTS the JVM when a CUDA device is in the list, so it is not called. Without profiling the ladder stops at CUDA_REGISTERED, and the diagnostic does not claim the two profile-dependent states it cannot observe. The speed-up is TRUE for a transformer forward pass and FALSE for point calls (EXP-009C: 17.49 µs per call against ~62 ns for a BIR evaluation). There is still no COMMITTED benchmark for the ONNX provider path: the 191.367 ms against 15.190 ms figures come from an ad-hoc probe that was never preserved."
+      - "the model graph and its external weights file — models/onnx/qwen05b/model.onnx and model.onnx_data, whose two digests the benchmark records"
+    limitations: "ONNX Runtime 1.29.0 exposes no OrtSession.getProviders(), so the truth comes from getEpDevices(), getModelCompatibilityForEpDevices() and the execution profile — and getModelCompatibilityForEpDevices SEGFAULTS the JVM when a CUDA device is in the list, so it is not called. The CUDA provider does NOT take the whole graph: 1170 of the 2600 nodes still ran on the CPU in the measured session, so the figure is the figure of a partially offloaded graph. The adapter reports the CONFIGURED provider set until the execution profile is captured: activeProviders is assigned from cudaRegistered (OnnxRuntimeAdapter.java:526-528), and captureExecutionProviders() replaces it with the OBSERVED names read from the profile (OnnxRuntimeAdapter.java:284-311). The speed-up is TRUE for a transformer forward pass and FALSE for point calls. The GPU is served CONDITIONALLY: without LD_LIBRARY_PATH the loader finds the distro's libcudart.so.12, which exports cudaLibraryGetKernel zero times, addCUDA() throws, the catch records the cause and the session is created with the CPU provider only. The benchmark needs a five-entry explicit classpath, because a long command-line classpath SEGFAULTS the JVM on this machine (W48-GPU-BENCHMARK.md §8.1)."
     risks:
       - "LD_LIBRARY_PATH is consulted by the OS loader for EVERY native library the process loads, so a wrong library there can break unrelated native code. The launcher prepends only .onnx_libs, and only when the directory exists, so a fresh clone behaves exactly as before."
       - "the claim was published as true and the hardware report of the W620 wave recorded 'the GPU is unavailable to this machine' — both are loader-path facts, not hardware facts"
-    owner: "the owner (NO — the claim is false as written; it needs the owner's decision)"
-    decision_ref: "docs-v2/engineering/W46-CAPABILITY-RECONCILIATION.csv row W46-GPU; docs-v2/engineering/W46-HARDWARE-AND-RESOURCE-REPORT.md §6"
-    last_verified_commit: "a6ded23338e069b8bc8a3744c234be5a03995f43"
-    last_verified_at: "2026-11-04"
-    next_verification_condition: "a COMMITTED benchmark for the ONNX provider path — the 191.367 ms against 15.190 ms figures come from an ad-hoc probe that was never preserved, and a number nobody can re-run is not a measurement. The owner must also decide whether the GPU is in scope for MATRIX at all."
-    notes: "W47 (OD-028) changed this row. The CSV's integration cell was 'NOT INTEGRATED (the registration fails)', which is not a member of this registry's integration vocabulary, and its operational cell was 'INACTIVE', which is not a member of the operational vocabulary: the axes now say what the wave measured — INTEGRATION_TESTED, TESTED and SERVED — and the CSV keeps its literal cells as the historical record."
+      - "no CI job exercises the GPU path: grep -niE \"gpu|cuda|nvidia\" .github/workflows/ci.yml returns no match, and .onnx_libs is gitignored, so the CUDA libraries the measurement needs are not in the repository. The measurement is reproducible on the owner's machine only."
+    owner: "the owner (NO — the claim was false as written; whether the GPU belongs in the serving path is still the owner's open question Q-W46-07, and the measurement half of it is now answered)"
+    decision_ref: "docs-v2/engineering/W46-CAPABILITY-RECONCILIATION.csv row W46-GPU; docs-v2/engineering/W46-HARDWARE-AND-RESOURCE-REPORT.md §6; docs-v2/engineering/W48-GPU-BENCHMARK.md; OD-043"
+    last_verified_commit: "75937934"
+    last_verified_at: "2026-11-06"
+    next_verification_condition: "the benchmark runs again on a machine that has the CUDA libraries and the documented model digests — the graph sha256 5f59f2cd… and the external weights sha256 72303ef1… — with scripts/gpu-benchmark.sh, LD_LIBRARY_PATH exported for the CPU and the CUDA case alike, and three runs. The serving path still falls back to the CPU unless LD_LIBRARY_PATH is set, so the GPU is NOT unconditionally served: this row's own claim becomes true only when the launcher sets the loader path itself and the adapter reports the provider that actually ran. The owner must also decide whether the GPU is in scope for MATRIX at all (Q-W46-07)."
+    notes: "W47 (OD-028) changed this row. The CSV's integration cell was 'NOT INTEGRATED (the registration fails)', which is not a member of this registry's integration vocabulary, and its operational cell was 'INACTIVE', which is not a member of the operational vocabulary: the axes now say what the wave measured — INTEGRATION_TESTED, TESTED and SERVED — and the CSV keeps its literal cells as the historical record. W48 (OD-043, commit 75937934) changed it again: the ad-hoc probe is replaced by a committed benchmark, the verification axis moves from TESTED to MEASURED, and the audit finding is KEPT as the historical record rather than deleted. ONE CORRECTION to the report this row cites: W48-GPU-BENCHMARK.md §8.2 calls the adapter's activeProviders a hardcoded string, but at that commit the assignment is conditional (OnnxRuntimeAdapter.java:526-528) and captureExecutionProviders() replaces it with the OBSERVED provider names (OnnxRuntimeAdapter.java:284-311) — this row therefore states the code as it is."
 
   -
     id: "W46-MODULE-GRAPH"
@@ -1391,6 +1409,53 @@ capabilities:
     last_verified_at: "2026-11-04"
     next_verification_condition: "a change to the portfolio's method set, to the cost ledger, or to the selector's scoring requires the package's 104 tests and the benchmark to be re-run"
     notes: "ADDED IN W46.1. This capability is not in the W46.0 reconciliation CSV; it is added from the source, which the W46.1 directive permits ('Add to it only from the source'). The numbers in benchmark_evidence are the ones the benchmark printed, quoted from docs-v2/engineering/W44-BENCHMARK.md §2."
+
+  -
+    id: "W48-NATIVE-IMAGE"
+    name: "the native (GraalVM) image of matrix-core"
+    description: "The native-image build of matrix-core and the eight test classes that need the compiled executable. The capability is BLOCKED: there is no native executable on this host (command -v native-image gives nothing, and matrix-core/build/native/nativeCompile/matrix-core does not exist), so the native-binary test methods that failed with 'Cannot run program build/native/nativeCompile/matrix-core' cannot be executed here. Since W48 they are a scope of their own: the default JVM task excludes them, and the task :matrix-core:nativeBinaryTest REFUSES to run with an explicit message rather than reporting a pass or a failure."
+    domain: "delivery"
+    implementation: "BLOCKED"
+    integration: "ISLAND"
+    verification: "UNTESTED"
+    operational: "DORMANT"
+    source_paths:
+      - "matrix-core/build.gradle:366-369"
+      - "matrix-core/build.gradle:539-567"
+      - "Dockerfile.native"
+      - "matrix-core/Dockerfile.native-slim"
+      - ".github/workflows/native.yml"
+      - "docs-v2/engineering/W48-TEST-RECONCILIATION.md"
+      - "docs-v2/engineering/W48-CI-RECONCILIATION.md"
+    production_callers: []
+    serving_chain: "none"
+    serving_path: "none — the native image is not a serving path; the JVM serves every route"
+    test_paths:
+      - "matrix-core/src/test/java/io/matrix/nativebin/NativeBinaryCLITest.java"
+      - "matrix-core/src/test/java/io/matrix/nativebin/NativeBinaryDockerTest.java"
+      - "matrix-core/src/test/java/io/matrix/nativebin/NativeBinaryFullIntegrationTest.java"
+      - "matrix-core/src/test/java/io/matrix/nativebin/NativeBinaryBackgroundServiceTest.java"
+      - "matrix-core/src/test/java/io/matrix/nativebin/NativeBinaryPerformanceBenchmarkTest.java"
+      - "matrix-core/src/test/java/io/matrix/nativebin/NativeBinaryStartupBenchmarkTest.java"
+      - "matrix-core/src/test/java/io/matrix/benchmark/NativeBinaryLaunchBenchmarkTest.java"
+      - "matrix-core/src/test/java/io/matrix/benchmark/JVMvsNativeBenchmarkTest.java"
+    test_evidence: "the native BINARY is untested here. The scope is 8 classes / 25 methods: 23 of them failed in the full run of 2026-11-05, and 2 passed VACUOUSLY — File.length() is 0 for a missing file, so 'the binary is smaller than 150 MB' held against no binary at all. The task refuses to run: `./gradlew :matrix-core:nativeBinaryTest` exits 1 with 'The native executable …/build/native/nativeCompile/matrix-core does not exist, so the native-binary test scope cannot run. … This scope is BLOCKED - it is not a pass, and the default JVM task does not cover it.' The BUILD CONFIGURATION is tested: `./gradlew :matrix-core:nativeBuildConfigTest` passes — 1 class / 2 tests / 0 failures / 0 errors (NativeBinaryDockerTest: dockerfileExists(), dockerfileReferencesBinary()), measured on 2026-11-06. The negative control: `./gradlew :matrix-core:test --tests \"io.matrix.nativebin.*\"` reports 'No tests found for given includes', where before 31d8f832 the same command ran 27 tests and failed 23."
+    benchmark_evidence: "none — the capability is blocked on a missing toolchain, and no number can stand in for the executable that does not exist"
+    formal_spec: "none"
+    dependencies:
+      - "the GraalVM native-image toolchain — GraalVM 25+ or Mandrel 24.x (matrix-core/build.gradle:366-369)"
+      - "a compiled executable at matrix-core/build/native/nativeCompile/matrix-core"
+    limitations: "the build CONFIGURATION is verified; the ARTIFACT is not. The native image is not produced on develop: .github/workflows/native.yml triggers only on main (push and pull_request), and the most recent run (41219224376, 2026-10-31) installed the toolchain successfully — 'Successfully set up graalvm-jdk-25.0.4+7.1' — and then died with 'Terminating due to java.lang.OutOfMemoryError: Java heap space', BUILD FAILED in 3m 27s. The native classes were never executed against a real binary on any host, so their assertions about startup time and size are unproven everywhere."
+    risks:
+      - "the only workflow that could produce the executable produces nothing: native.yml has 1403 runs on record, and its last 100 are 99 failures and 1 cancelled; the capability is therefore unverified in CI as well as locally"
+      - "the exclusion of the native-binary scope from the default JVM task means the default task's green result no longer says anything about the native path — that is the point of the change, and it is also the loss"
+      - "the native.yml job dies of OOM after the toolchain is installed, so the block is a RESOURCE question as well as a toolchain question, and installing the toolchain alone would not close it"
+    owner: "the owner (NO — the capability needs the toolchain; whether the native image is in scope at all is the owner's question)"
+    decision_ref: "docs-v2/engineering/W48-TEST-RECONCILIATION.md §2 and §5; docs-v2/engineering/W48-CI-RECONCILIATION.md §4.3"
+    last_verified_commit: "31d8f832"
+    last_verified_at: "2026-11-06"
+    next_verification_condition: "a native executable at matrix-core/build/native/nativeCompile/matrix-core — built by `./gradlew :matrix-core:buildNative` with GraalVM 25+ or Mandrel 24.x, or by a native.yml run that does not die of OOM — makes `:matrix-core:nativeBinaryTest` runnable, and the 25 methods it holds then have a result to report"
+    notes: "ADDED IN W48. This capability is not in the W46.0 reconciliation CSV; it is added from the source, which the registry's own rule permits. The class count and the method count are counted from the source at this commit: eight classes carry the native-binary tag, and NativeBinaryDockerTest carries it on one method only — its other two are the build-configuration scope. The 23-failure split is reconciled in docs-v2/engineering/W48-TEST-RECONCILIATION.md §2 and agrees with the W44 measurement of 2026-11-04. The CI reconciliation's statement that this row reads BLOCKED became true only with this addition: before it, the registry carried no native-image row at all. ONE CORRECTION to that document: it records '9 runs, every one a failure' for native.yml, which is what `gh run list --limit 10` shows; the workflow has 1403 runs on record, and the last 100 are 99 failures and 1 cancelled."
 
 
 # =============================================================================
