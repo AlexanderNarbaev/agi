@@ -364,16 +364,19 @@ jobs:
           distribution: 'temurin'
           java-version: '25'
 
-      - name: Download tla2tools.jar
+      - name: The pinned formal tool (the bytes are in the repository)
+        # W48-04. The step used to DOWNLOAD the tool from the tlaplus v1.8.0
+        # release and verify its digest. That release was recreated on
+        # 2026-11-06 and now serves different bytes — the upstream asset was
+        # replaced in place — so the download failed its own checksum and the
+        # job could not start. The tlaplus repository does not track the jar
+        # and Maven Central does not publish it, so there is no immutable
+        # upstream copy to point at.
+        #
+        # The tool is therefore TRACKED: the bytes the local gate uses are the
+        # bytes the CI uses, and the digest is verified on every run. The
+        # provenance and the reasoning are in tools/README.md.
         run: |
-          mkdir -p tools
-          curl -fsSL -o tools/tla2tools.jar \
-            https://github.com/tlaplus/tlaplus/releases/download/v1.8.0/tla2tools.jar
-          # RECON-W39: the toolchain is pinned by digest. The version alone
-          # does not pin the bytes - a substituted or truncated jar would
-          # otherwise reach the gate silently. This is the sha256 the GitHub
-          # release API reports for the v1.8.0 asset, and it was verified
-          # against the artifact this repository's own model checks used.
           echo "fc6878c603f0fdc18b9fe3e5bf51860cb90ab5b1154e3c371660c036d6bdd63e  tools/tla2tools.jar" \
             | sha256sum --check --strict
           ls -lh tools/tla2tools.jar

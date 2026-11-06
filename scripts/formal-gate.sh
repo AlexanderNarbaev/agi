@@ -29,8 +29,28 @@ readonly TIMEOUT_SECONDS=300
 
 if [ ! -f "$JAR" ]; then
   printf 'the TLC jar is missing: %s\n' "$JAR"
-  printf 'it is downloaded by .github/workflows/tla.yml (tla2tools 1.8.0)\n'
+  printf 'it is tracked in the repository (tools/tla2tools.jar); see tools/README.md\n'
   exit 1
+fi
+
+# W48-04 — the tool is verified, not assumed.
+#
+# The jar is tracked so that the local gate and the CI model-check with the same
+# bytes, and the upstream release it came from was replaced in place (the
+# provenance is in tools/README.md). A jar of a different size would mean that
+# the tool changed underneath the specifications, and every property that was
+# model-checked would have to be model-checked again.
+readonly JAR_SHA256="fc6878c603f0fdc18b9fe3e5bf51860cb90ab5b1154e3c371660c036d6bdd63e"
+if command -v sha256sum >/dev/null 2>&1; then
+    ACTUAL_SHA256="$(sha256sum "$JAR" | awk '{print $1}')"
+    if [ "$ACTUAL_SHA256" != "$JAR_SHA256" ]; then
+        printf 'the formal tool is not the pinned one:\n'
+        printf '  expected %s\n' "$JAR_SHA256"
+        printf '  actual   %s\n' "$ACTUAL_SHA256"
+        printf 'the specifications were model-checked with the pinned bytes; a different\n'
+        printf 'tool must be a deliberate upgrade, not an accident\n'
+        exit 1
+    fi
 fi
 
 if ! command -v java >/dev/null 2>&1; then
