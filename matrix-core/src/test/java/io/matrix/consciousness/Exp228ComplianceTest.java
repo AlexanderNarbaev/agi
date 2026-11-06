@@ -31,8 +31,13 @@ class Exp228ComplianceTest {
             if (cwd == null) break;
         }
         if (target == null) {
-            System.out.println("[COMPLIANCE-EXP] could not find source dir");
-            return;
+            // W48-06: a source-integrity check that cannot find the source must FAIL.
+            // The previous version printed a line and returned, and the test passed —
+            // a check that verifies nothing while reporting success.
+            throw new IllegalStateException(
+                    "[COMPLIANCE-EXP] the source tree could not be located from "
+                            + Path.of(".").toAbsolutePath()
+                            + ": the compliance check cannot verify what it cannot find");
         }
         var result = BrainLoopCompliance.check(target);
         System.out.printf("[COMPLIANCE-EXP] %s, onnx=%d, random=%d, wallClock=%d, note=%s%n",
