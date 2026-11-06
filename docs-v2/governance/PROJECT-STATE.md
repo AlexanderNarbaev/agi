@@ -2,7 +2,7 @@
 
 **Status:** `CANONICAL` · **This document is a SNAPSHOT, not a history.** It describes the
 project at one commit and is replaced, not appended to, when the state moves.
-**Snapshot of:** `c86f6898416e0483a83f1ea011420d59f293c6e2` · **Date:** 2026-11-06
+**Snapshot of:** `26e37a11fde7f5e8b3046e432e69bc306eb799b9` · **Date:** 2026-11-06
 **Validation:** `scripts/validate-project-state.py --strict` — it checks that the commit below
 is the repository's HEAD, that the wave and the baseline below are the current ones, and that
 the canonical documents it names exist. It reports a lag of one commit as an OBSERVATION, not
@@ -37,7 +37,7 @@ and "served" is the single most important fact about this repository, and it is 
 | | |
 |---|---|
 | the branch | `develop` |
-| the commit | `c86f6898416e0483a83f1ea011420d59f293c6e2` — the W48 commit observed at 2026-11-06T14:40:00+03:00; this snapshot is carried by the commit that follows it |
+| the commit | `26e37a11fde7f5e8b3046e432e69bc306eb799b9` — the W48 commit observed at 2026-11-06T14:40:00+03:00; this snapshot is carried by the commit that follows it |
 | the remote | `origin/develop` — **the same commit** at the moment of writing (the local and the remote do not diverge). The wave is still running, so the remote moves with it |
 | the release version | **none.** The tags `v1.0.0` and `v16.0.0-mind` exist, but no release process is defined and the `v16.0.0-mind` tag predates three waves of work |
 | the latest completed wave | **W47** — the implementation of the owner's decisions of 2026-11-05 (OD-025…OD-044). Its sequence is **thirteen changesets after** the starting W46 commit `84955ec9`, and **fourteen entries with it**, through `eca23bfd`; before it, **W46** — the consolidation (`233af984`), and **W45.2** — the owner's four architecture decisions (`a6ded233`) |

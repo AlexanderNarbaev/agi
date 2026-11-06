@@ -25,6 +25,8 @@ actually does, with every claim traceable to an artefact.
 |---|---|
 | `c86f6898` | the autonomy impulse consumer (OD-045): the record, the store, the consumer, the wiring, and the ADR's ten acceptance tests |
 | `4d86c5f4` | the public-presence wave: the README, the site, the onboarding, the publication pipeline, the collaboration brief, the audits, the native measurement, and this report |
+| `72a3f8e8` | the wave report carries the CI verdicts and the fresh-clone check |
+| `26e37a11` | the capability-claims guard follows the front page it guards — the repair the CI demanded |
 
 The wave started at `ed3725d58c9747533c44a5e03298fd473693a9cb` (the W48 close)
 on `develop`, and `origin/develop` carried every commit.
@@ -215,6 +217,7 @@ arrangement, and the directive forbids enabling it until there is one.
 | the native build | two attempts, measured | **both failed** — see §4 |
 | the fresh-clone smoke | `bash scripts/fresh-clone-smoke.sh` | **PASS** — "the mind is awake and answering"; the five repro commands are printed by the script itself. This is the check behind the acceptance criterion "the contributor instructions work from a clean clone" |
 | the CI | run `42206946030` at `f6e2be9f` | the five mandatory jobs **green**; the release path red for want of the owner's credentials |
+| the CI (the final run) | run `42239049765` at `26e37a11` | **all five mandatory jobs GREEN** — Build & Test (which runs the quality module's own gates, including the re-pointed capability-claims guard), the Web UI tests, the quality gates, the security scan and the container images. The only red job is "Docker Build & Push" — the release path, and the external blocker R-W48-04 |
 | the CI (the public-presence run) | run `42234446757` at `4d86c5f4` | **failure — and the failure is this wave's own**: the rewritten front page broke the capability-claims guard, which is the repository's own check that a published number is registered. It was re-pointed at the page's markdown tables (the hero's HTML tiles are gone, and the test's own message says the guard must be re-pointed when the page is restructured), its evidence set now names the canonical documents, and its inputs are declared so it can never report a stale result. **The negative control**: an unregistered figure on the front page makes it go RED |
 | the CI (the consumer's own run) | run `42228476279` at `c86f6898` | **all five mandatory jobs green again** — Build & Test (which executed the consumer's 12 tests), the Web UI tests, the quality gates, the security scan and the container images. The only red job is "Docker Build & Push", which fails at its first step with "Username and password required" — the release path, and the external blocker of R-W48-04 |
 
