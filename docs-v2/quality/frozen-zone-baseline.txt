@@ -65,5 +65,26 @@
 # The exception is recorded here rather than waved through, so that the amount
 # of the change is visible and the expiry is real.
 
-.github/ | 859 | repo-owner | 2026-12-31
+# W48, the .github/ exception was raised from 859 to 946 diff lines.
+#
+# Two changes, both of them repairs of a red mandatory check, and both of
+# them in the workflow's own steps rather than in its triggers:
+#
+# 1. branch-validation.yml — the GraalVM step requested the distribution
+#    identifier "graalvm-ce", which the action rejects, so the job failed at
+#    the setup step and compiled nothing; and the version gate grepped for
+#    the WORD "VERSION" anywhere under a module's sources, which cannot tell
+#    a version contract from a comment. The gate now checks a public
+#    declaration in the module's named public facade.
+# 2. tla.yml — the formal job downloaded tla2tools.jar from a release whose
+#    asset was replaced in place, and the checksum correctly refused it. The
+#    tool is now tracked in the repository, and the job verifies the tracked
+#    bytes.
+#
+# What did NOT change: the triggers, the permissions, the secrets, the
+# concurrency settings and the cache configuration. The exception is
+# recorded here rather than waved through, so that the amount of the change
+# stays visible and the expiry stays real.
+
+.github/ | 946 | repo-owner | 2026-12-31
 AGENTS.md | 63 | repo-owner | 2026-12-31
