@@ -55,6 +55,12 @@ The wave's preflight, with the baseline that was frozen before anything changed,
 | `64f43f74` | the clean runner's twelve failures are diagnosed and fixed |
 | `63d440b1` | the governance records now agree with what was committed and answered |
 | `bc87935c` | the three red CI jobs are repaired, and the gateway's bind log stops lying about the interface it holds |
+| `9f4d1280` | the wave report records the three CI repairs and their causes |
+| `e0de8419` | the security step's errexit no longer skips two real checks, and the minikube smoke test brings its own database |
+| `2c633579` | the wave report records the clean runner's verdict after the CI repairs |
+| `0e647a45` | the risk register carries the CI jobs' hidden dependencies |
+| `f6e2be9f` | the secret scan scans the commits the push carried, and the state names the current commit |
+| `e84422f4` | the reconciliation records the second reading and the secret scan's silence |
 
 ## 3. The tasks, with their status labels
 
@@ -269,8 +275,8 @@ The evidence is the JUnit XML under `<module>/build/test-results/`.
 
 ## 11. The changed files
 
-**73 files, +10 705 / −156 lines**, from `eca23bfd` to the commit that carries this
-document. The groups:
+**85 files, +12 409 / −229 lines**, from `eca23bfd` to the commit that carries this
+document (`git diff --shortstat eca23bfd..HEAD`). The groups:
 
 | the group | the files |
 |---|---|
