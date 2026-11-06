@@ -52,8 +52,13 @@ repository, and the isolation between them is proved by a gate, not by conventio
 ## 3. Get it, build it, run it
 
 ```bash
-git clone <the repository URL you were given>
+git clone https://github.com/AlexanderNarbaev/agi.git
 cd agi
+
+# `develop` is the working branch. The default branch `main` is the release
+# branch and currently lags it by 357 commits — a fresh clone that stays on
+# `main` gets the older state of the project.
+git checkout develop
 
 # The epistemic application (chain A) — the cognitive kernel and the workbench
 ./gradlew :matrix-core:quarkusDev          # then http://localhost:9091

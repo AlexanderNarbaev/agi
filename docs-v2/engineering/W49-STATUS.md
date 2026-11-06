@@ -24,7 +24,7 @@ actually does, with every claim traceable to an artefact.
 | the commit | what it carries |
 |---|---|
 | `c86f6898` | the autonomy impulse consumer (OD-045): the record, the store, the consumer, the wiring, and the ADR's ten acceptance tests |
-| _(this document's commit)_ | the public-presence wave: the README, the site, the onboarding, the publication pipeline, the collaboration brief, the audits, the native measurement, and this report |
+| `4d86c5f4` | the public-presence wave: the README, the site, the onboarding, the publication pipeline, the collaboration brief, the audits, the native measurement, and this report |
 
 The wave started at `ed3725d58c9747533c44a5e03298fd473693a9cb` (the W48 close)
 on `develop`, and `origin/develop` carried every commit.
@@ -213,7 +213,9 @@ arrangement, and the directive forbids enabling it until there is one.
 | the formal gate | `bash scripts/formal-gate.sh` | **15 specifications, 15 passed, 0 failed**, 18.8 s |
 | the GPU benchmark | `bash scripts/gpu-benchmark.sh` | **exit 0**, 2 m 37 s — the CUDA provider is positively observed (`CUDAExecutionProvider ×1431`); see §10 |
 | the native build | two attempts, measured | **both failed** — see §4 |
+| the fresh-clone smoke | `bash scripts/fresh-clone-smoke.sh` | **PASS** — "the mind is awake and answering"; the five repro commands are printed by the script itself. This is the check behind the acceptance criterion "the contributor instructions work from a clean clone" |
 | the CI | run `42206946030` at `f6e2be9f` | the five mandatory jobs **green**; the release path red for want of the owner's credentials |
+| the CI (the consumer's own run) | run `42228476279` at `c86f6898` | **all five mandatory jobs green again** — Build & Test (which executed the consumer's 12 tests), the Web UI tests, the quality gates, the security scan and the container images. The only red job is "Docker Build & Push", which fails at its first step with "Username and password required" — the release path, and the external blocker of R-W48-04 |
 
 **The negative controls**: the consumer's execution-time gate (red when
 disabled), the Pages configuration validator (it rejects the withdrawn

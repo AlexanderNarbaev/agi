@@ -87,6 +87,7 @@ $ gh api repos/AlexanderNarbaev/agi/pages
 |---|---|
 | the deployed URL | `https://alexandernarbaev.github.io/agi/` |
 | the branch it is built from | `main` (`.github/workflows/pages.yml` → `on: push: branches: [main]`) |
+| the deployed commit | **`7a0ed0cc`** — the head of `main`; the legacy build type keeps no deployment records, so the deployed content is the content of `main` at that commit | `git log --oneline -1 main` |
 | the build | Jekyll, from `docs-v2/` (`actions/jekyll-build-pages@v1`, `source: ./docs-v2`) |
 | the deployments API | `repos/AlexanderNarbaev/agi/pages/deployments` → **404** — the legacy build type keeps no deployment records, so the deployed commit cannot be read from that API |
 | the live title | `MATRIX: The Hybrid Intelligence Encyclopedia | MATRIX Encyclopedia` |
