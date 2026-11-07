@@ -1,8 +1,8 @@
 # MATRIX — ENGINEERING ROADMAP
 
-**Status:** `CANONICAL` · **Date:** 2026-11-04
+**Status:** `CANONICAL` · **Date:** 2026-11-07
 **This document supersedes the role of `docs-v2/engineering/PLAN.md`.** That document remains
-on disk as the record of what was planned up to W44; it is three waves behind and it points
+on disk as the record of what was planned up to W44; it is six waves behind and it points
 here.
 
 ---
@@ -41,13 +41,28 @@ cycle, and whose current state existed in four documents of four different ages.
 
 ## 3. The active wave
 
+### W50 — the local evidence-grounded demonstrator (**the wave's work is committed; the closeout is open**)
+
+**The wave's work is committed and its report is written.** It started at `8f617ce6` (the
+W49 close) on `develop`; its own report is `docs-v2/engineering/W50-STATUS.md`, the
+measured local-model evaluation is `docs-v2/engineering/W50-LOCAL-MODEL.md`, and the tasks
+it created are in §4.9. **The wave's own order is W50-00 … W50-08**, and the closeout is
+the one task that is not an implementation: the lead opens the pull request `develop` →
+`main`, and **an agent does not merge it**.
+
+### W49 — the public-research workstream (**merged**)
+
+**The wave is complete and merged.** Pull request #44 (`develop` → `main`) was merged on
+2026-11-06 as the squash `79045c57`; its own report is `docs-v2/engineering/W49-STATUS.md`
+and the tasks it created are in §4.8.
+
 ### W48 — the truth of the evidence (**the wave's work is committed**)
 
 **The wave is committed and its report is written.** It started at `eca23bfd` (the last
 commit of W47); its preflight is `docs-v2/engineering/W48-BASELINE.md`, its own report is
 `docs-v2/engineering/W48-STATUS.md`, and the tasks it created are in §4.7. **The owner
-answered the wave's three questions on 2026-11-06 — OD-045, OD-046 and OD-047.** The next
-wave is **W49**, opened by OD-045.
+answered the wave's three questions on 2026-11-06 — OD-045, OD-046 and OD-047.** The wave
+that followed it was **W49**, opened by OD-045, and it is **merged**.
 
 ### W46 — the consolidation and the autonomous engineering system
 
@@ -193,6 +208,32 @@ proposals and does nothing else — no messages, no shell commands, no external 
 no Chain A mutation. **The scheduler's `FIRED` outcome still means "accepted", and after
 this task it means "accepted and recorded as a proposal" — never "executed".**
 
+### 4.9 The tasks the W50 wave created
+
+**W50 is the wave that turned research subsystems into a runnable, evidence-grounded
+learning system.** The ids of this roadmap are stable and are the ones to use; the wave's
+own task ids are in the fourth column.
+
+| the id | the task | the goal | the wave's task | the state | the evidence |
+|---|---|---|---|---|---|
+| **TASK-W50-01** | the continuity and the preflight | the wave starts from a known state and writes down what is **not** done before it changes anything | **W50-00** | **done** | `docs-v2/engineering/W50-STATUS.md` — the honest opening state, written before the work |
+| **TASK-W50-02** | the design | the demonstrator's shape — the learning path, the interface, the acquisition boundary — is written before it is built | **W50-01** | **done** | the same report, §"What exists now" |
+| **TASK-W50-03** | the corpus and the acquisition | a bounded, licensed corpus in **one** domain, and a bounded acquisition cycle over a pre-cached pool | **W50-02** | **done** | `matrix-core/src/main/resources/corpus/plate-tectonics/corpus-manifest.json` and `matrix-core/src/main/resources/research-pool/plate-tectonics/corpus-manifest.json`; the seed import produced **348 claims**, the cycle **3 documents and 324 claims** |
+| **TASK-W50-04** | the local model evaluation | one local open-weight model is measured against the deterministic extractor, and the teacher is kept or dropped **on the measurement** | **W50-03** | **done — the measurement, and the verdict: the teacher is not better and is not called** | `docs-v2/engineering/W50-LOCAL-MODEL.md` — **0** teacher invocations during the deterministic acquisition, and **72.7 %** of the teacher's propositions verbatim against the deterministic path's **100 %**; the decision is OD-049 |
+| **TASK-W50-05** | the validation and the revision | a new source can revise the model, and the earlier claim **stays in the history** | **W50-04** | **done** | the demonstration's turn 4: **exactly one** supersession (relatedness 0.83) — the earlier claim SUPERSEDED (version 2), the new one SUPPORTED (version 2) |
+| **TASK-W50-06** | the runnable local application | the demonstrator runs on the owner's machine from one command, with no network and no model | **W50-05** | **done** | `scripts/run-local.sh`; the packaged jar on `http://127.0.0.1:9091` |
+| **TASK-W50-07** | the four-turn demonstration and its evaluation | the demonstration is actually **run**, and its answers are checked against a key that is **not** in the application | **W50-06** | **done** | `docs-v2/demos/local-learning-loop/OWNER-SEQUENCE.md` and `docs-v2/demos/local-learning-loop/ANSWER-KEY.md` — the run of 2026-11-07 |
+| **TASK-W50-08** | the public demo package | a reader who has never seen the demonstration can reproduce it | **W50-07** | **done** | `docs-v2/demos/local-learning-loop/README.md` |
+| **TASK-W50-09** | the closeout | the canonical registers are refreshed and the release pull request is opened | **W50-08** | **the registers are refreshed; the pull request `develop` → `main` is opened by the lead and is NOT merged by an agent** | this section; the wave report |
+
+**What the wave's scope does NOT include.** The demonstrator is one bounded domain —
+plate tectonics — on one local machine. The false-premise judgement is **lexical**, not
+semantic; an answer's support value is **0.0**, because an imported claim carries no
+authored confidence; the pool is **pre-cached and versioned**, not a live web search; and
+the status route leaves the workspace list and the counts empty. Those are the risks
+R-W50-01…R-W50-03 and the questions Q-W50-01…Q-W50-03 — named limits, not a defect of the
+wave.
+
 ## 5. The blocked tasks
 
 **TASK-W46-9 is no longer here**: the owner's decision OD-028 of 2026-11-05 unblocked it, and
@@ -218,6 +259,9 @@ The full register is `docs-v2/governance/OPEN-QUESTIONS.md`. The decisions that 
 | **Q-W46-03** | the erasure scope of a workspace replacement | does the observation's evidence belong to the workspace? | an epistemic record survives its own evidence |
 | **Q-W46-07** | the GPU path | may the launcher export `LD_LIBRARY_PATH`, and how should the diagnostic report the truth? | **CLOSED on 2026-11-06 — OD-047:** the GPU is an **optional accelerator**, not part of the default serving path; the measurement is kept, the silent CPU fallback stays visible in the registry, and no deployment is obliged to provide the CUDA libraries. The measurement itself is committed (`75937934`, `docs-v2/engineering/W48-GPU-BENCHMARK.md`) and the historical 12.6× digit does not reproduce — it stays historical, bounded by the 12.06×–12.69× measurement |
 | **Q-W46-13** | the retention policy | the append-only histories grow without bound | an audit trail that exhausts the disk, or a silent deletion of evidence |
+| **Q-W50-01** | whether the repository's own AGPL-3.0 licence interacts with the share-alike of the CC BY-SA 4.0 Wikipedia extracts the corpus embeds | the texts are verbatim and unmodified and the per-file manifest records the attribution — but the interaction is the owner's to sign off | the corpus ships inside the repository without a signed-off licence position |
+| **Q-W50-02** | whether the audit trace of an imported claim must carry the byte offset of the quoted span | the import stores the source text as the source excerpt, and the trace carries no offset | an imported claim cannot be located in its source by an offset |
+| **Q-W50-03** | whether the Workbench status route must report the workspace list and the counts | it reports the database path and its size and leaves the rest empty | the demonstrator's own workspace is invisible to the route that describes it |
 
 **One more decision was asked and has been answered.** Whether the **first impulse consumer
 may be built at all** — and if so, whether its scope is a proposal-creating consumer that
@@ -228,6 +272,14 @@ the evidence and the three options is
 `docs-v2/engineering/ADR-W48-AUTONOMY-IMPULSE-CONSUMER.md` <!-- no-id: the ADR declares this identifier in its own heading; this line references the document, it does not define it -->.
 **Until the next wave writes it, nothing changes: the scheduler accepts impulses, nothing
 consumes them.**
+
+**And the W50 wave's four boundaries are recorded as OD-049…OD-052** — the deterministic
+extraction path stays the critical path and the teacher stays a teacher; the acquisition
+boundary is a pre-cached, versioned, licensed pool and **no live web request is made**; a
+user assertion is an input to evaluate and is **never promoted** into the store; and the
+corpus is one bounded domain whose per-file licence, revision and sha256 live in a
+manifest that the import verifies. They are in
+`docs-v2/governance/DECISION-REGISTER.md`.
 
 ---
 

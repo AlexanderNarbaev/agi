@@ -1,6 +1,6 @@
 # MATRIX — OPEN QUESTIONS
 
-**Status:** `CANONICAL` · **Date:** 2026-11-06
+**Status:** `CANONICAL` · **Date:** 2026-11-07
 **The machine-readable snapshot of this register** is
 `docs-v2/engineering/W46-OPEN-QUESTIONS.csv` — the W46.0 audit's evidence. **This document is
 the register of record.** When the two disagree, this document is authoritative.
@@ -38,12 +38,15 @@ which.
 | Q-W46-21 | engineering-uncertainty | The migration from the v1 tree to docs-v2 removed the tree, and 41 references to it survive in the historical and the current documents (docs/spec/, docs/research/, docs/GLOSSARY.md, data/smoke-old, the archive tarball). Should they be pointed at the v2 equivalents, or marked as the removed tree? | no | OPEN |
 | Q-W46-22 | operational-blocker | The harness reads its skills from `.agents/skills/`, `.dsh/skills/` and the user directories — NOT from `.opencode/skills/`. The repository's 27 packages there are invisible to a session (25 arrive through byte-identical mirrors, `coprocessor` through a mirror with 13 extra lines, `matt-pocock` not at all). Should the four recommended MATRIX skills be registered in the harness's trigger table (`src/lib/53-auto-skills.sh` and its mirror), or is the directory enough? | no | CLOSED |
 | Q-W46-23 | operational-blocker | Four skill packages declare a name that does not match their directory (`seatch-first`→`search-first`, `scientific-thinking-scholar-evaluation`→`scholar-evaluation`, `plan.retired-backup`→`plan`, and `matt-pocock` without a root SKILL.md). Should they be corrected? | no | CLOSED |
-| Q-W49-01 | architecture-decision | The default branch is 357 commits behind `develop` and the public site is built from it. Should `main` be moved to the current work, or should the site publish from `develop` through a reviewed path? | **yes** | OPEN |
+| Q-W49-01 | architecture-decision | The public site is built from `main`, which now carries W49 (the squash `79045c57`) and is behind `develop` by the W50 work. Should `main` be moved again at every wave, or should the site publish from `develop` through a reviewed path? | **yes** | OPEN |
 | Q-W49-02 | product-decision | Should the recommended repository description and topic tags be applied, and should GitHub's private vulnerability reporting be enabled (there is no private channel today)? | **yes** | OPEN |
 | Q-W49-03 | architecture-decision | Who are the authors, in what order, and is a formal release wanted? Without them a `CITATION.cff` could only carry invented values, so the citeable unit is a versioned commit for now. | **yes** | OPEN |
 | Q-W49-04 | product-decision | Which of the two ready publication candidates goes first: B (evidence-preserving state and recovery) or C (workload-dependent CPU/CUDA acceleration)? | **yes** | OPEN |
 | Q-W49-05 | operational-blocker | The native build needs more than 8 GB of heap and more than GitHub's 16 GB runner, and PDFBox's optional BouncyCastle module is missing. Is a larger runner acceptable, and should MATRIX carry BouncyCastle? | **yes** | OPEN |
 | Q-W49-06 | architecture-decision | The static-analysis gate produces no evidence because the pinned engine cannot read Java 25 bytecode; the engine that can reports 1 414 findings, 981 of them `EI_EXPOSE_REP*`. What is the policy for those categories — fix, exclude, or accept? | **yes** | OPEN |
+| Q-W50-01 | architecture-decision | The corpus embeds CC BY-SA 4.0 Wikipedia extracts inside an AGPL-3.0 repository. The texts are verbatim and unmodified and the per-file manifest records the attribution, but does the repository's own licence interact with the share-alike of the quoted texts? | **yes** | OPEN |
+| Q-W50-02 | missing-implementation | The import stores the source text as the source excerpt, and the audit trace of an imported claim does not carry the byte offset of the quoted span. Must the trace carry it? | no | OPEN |
+| Q-W50-03 | missing-implementation | The Workbench status route reports the database path and its size but leaves the workspace list and the counts empty. Must it report the workspace the demonstrator itself created? | no | OPEN |
 
 ---
 
@@ -422,13 +425,13 @@ decisions and to leave the code to W47. Every closed question names the task tha
 > (`^[a-z0-9]+(?:-[a-z0-9]+)*$`). Both refusals are recorded in
 > `docs-v2/governance/DECISION-REGISTER.md` OD-034 with the reason.
 
-### Q-W49-01 — The default branch is 357 commits behind `develop`, and the public site is built from it
+### Q-W49-01 — The public site is built from `main`, which now carries W49 and is behind `develop` by the W50 work
 
 - **type**: architecture-decision
-- **why it matters**: A visitor to the repository sees the W37.5 state of the project, and the deployed site carries the withdrawn positioning — because both are published from `main`, which is `7a0ed0cc` of 2026-10-12. The wave rewrote the site and the README on `develop`; nothing a visitor sees changes until the publication path is decided.
-- **what is known**: the gap is **357 commits** (`git rev-list --count main..develop`); the deployed URL and its build branch were read from `gh api repos/AlexanderNarbaev/agi/pages`; the W49 wave added a pull-request build that validates the site **without publishing**, and the publication stays on the reviewed `main` path.
+- **why it matters**: A visitor to the repository sees the W37.5 state of the project, and the deployed site carries the withdrawn positioning — because both are published from `main`, which was `7a0ed0cc` of 2026-10-12 when the wave made its audit. The wave rewrote the site and the README on `develop`; nothing a visitor sees changes until the publication path is decided.
+- **what is known**: the branch has been moved **once** — pull request #44 (`develop` → `main`) was merged on 2026-11-06 as the squash `79045c57`, whose tree is identical to the W49 close `8f617ce6` — so `main` now carries W49 and the gap is the W50 work: **374** commits of history and **27** files of content (`git rev-list --count origin/main..develop`; `git diff --name-only origin/main develop`). The deployed URL and its build branch were read from `gh api repos/AlexanderNarbaev/agi/pages`; the W49 wave added a pull-request build that validates the site **without publishing**, and the publication stays on the reviewed `main` path.
 - **evidence**: `docs-v2/engineering/W49-BASELINE.md` §1 and §3.1; `.github/workflows/pages.yml`; `scripts/validate-pages-config.sh`
-- **competing explanations**: (a) `main` is moved to the current work through a verified pull request; (b) the site publishes from `develop` and the default branch stays a release branch; (c) the gap is accepted and the README carries the pointer to `develop` that it carries now
+- **competing explanations**: (a) `main` is moved to the current work at every wave through a verified pull request — **this is what happened for W49**, and it is the path W50's closeout prepares again; (b) the site publishes from `develop` and the default branch stays a release branch; (c) the gap is accepted and the README carries the pointer to `develop` that it carries now
 - **available experiments**: none needed — the three options are configurations, and the second and the third are already implemented
 - **cost of resolving**: one pull request and one deployment, or one workflow change
 - **risk of not resolving**: the project's public face describes a project that no longer exists in the repository
@@ -503,6 +506,48 @@ decisions and to leave the code to W47. Every closed question names the task tha
 - **cost of resolving**: one wave of triage, and possibly a large refactor under option (a)
 - **risk of not resolving**: the repository has no static-analysis evidence at all, and a gate that silently produces nothing is the failure mode the W48 wave fixed elsewhere
 - **owner decision required**: **yes**
+- **dependencies**: none
+- **status**: OPEN
+
+### Q-W50-01 — Does the repository's own AGPL-3.0 licence interact with the share-alike of the CC BY-SA 4.0 Wikipedia extracts the corpus embeds?
+
+- **type**: architecture-decision
+- **why it matters**: The corpus is not a quotation in prose — it is a **copy** of the source texts, shipped inside the repository, under the repository's own licence. CC BY-SA 4.0 requires attribution and share-alike; AGPL-3.0 is the repository's licence. Whether the two interact is a licence question, and an agent must not answer it.
+- **what is known**: the texts are **verbatim and unmodified** — the corpus files are the imported bytes, and the manifest carries the sha256 of exactly those bytes, so the importer verifies that what ships is what was recorded. The seed corpus is the USGS *This Dynamic Earth* (US public domain) and Wikipedia *Plate tectonics* (CC BY-SA 4.0, oldid 1381934246); the research pool is **seven** Wikipedia snapshots, all CC BY-SA 4.0. Every entry carries its licence, its licence URL, its canonical URL, its access date, its revision and its attribution, so **the attribution requirement is met**. What the manifest cannot settle is whether the *share-alike* of the quoted texts reaches the repository's own licence.
+- **evidence**: `matrix-core/src/main/resources/corpus/plate-tectonics/corpus-manifest.json`; `matrix-core/src/main/resources/research-pool/plate-tectonics/corpus-manifest.json`; the repository's own licence (AGPL-3.0); the decision that fixes the boundary the corpus lives in — OD-050
+- **competing explanations**: (a) the texts are unmodified quotations and the manifest's attribution discharges the licence, so the repository's licence is unaffected; (b) the corpus is a copy distributed with the software, so the share-alike clause reaches the distribution and the two licences must be reconciled; (c) the pool must be licensed or fetched separately, so that no copy of the texts lives inside the AGPL-3.0 tree at all
+- **available experiments**: none that a code change can answer — this is a reading of two licences, and the owner may want a written legal opinion before the corpus is published
+- **cost of resolving**: one owner decision, and possibly a licence note in the corpus manifest
+- **risk of not resolving**: the repository ships a corpus whose licence position has never been signed off, and the evidence standard of OD-048 requires every public claim to be traceable — this one is traceable only to a decision that has not been taken
+- **owner decision required**: **yes** — the interaction between two licences is the owner's, and it must not be inferred by an agent
+- **dependencies**: none; the boundary it concerns is OD-050
+- **status**: OPEN
+
+### Q-W50-02 — The import stores the source text as the source excerpt, and the audit trace of an imported claim does not carry the byte offset of the quoted span
+
+- **type**: missing-implementation
+- **why it matters**: an imported claim's evidence is a **quote**. The quote is verifiable by reading the document, but it cannot be *located* in it by the record that carries it — and the excerpt the import stores is not the excerpt that was quoted.
+- **what is known**: the import writes the **source text** into `source.excerpt`: the demonstration's database holds the first **8 000 characters** of each imported document under the locator "the whole document", while the **evidence** row carries the quoted span itself as its own excerpt. Nothing carries a byte offset — the `evidence` table has no position column, and neither has `claim`. The manifest pins the *document* (its sha256); the *span* is not pinned.
+- **evidence**: the demonstration's database `data/knowledge/workbench.sqlite` — `source.excerpt` is 8 000 characters per document and `evidence.excerpt` holds the quoted sentence; `matrix-core/src/main/java/io/matrix/knowledge/acquisition/DocumentImporter.java`; the columns of the `evidence` table
+- **competing explanations**: (a) the evidence excerpt plus the document's sha256 is enough to re-derive the span deterministically, so an offset is a convenience; (b) the audit rule requires the trace itself to carry the location, so the offset is part of the contract; (c) the two excerpts are a defect of the import path — the source excerpt should be the quoted span, and the whole document belongs to the corpus, not to the store
+- **available experiments**: extend the evidence row with the offset of the quoted span in the imported bytes, and let a test assert that the stored source excerpt and the evidence excerpt are the same span
+- **cost of resolving**: one small change inside the import path, plus a test
+- **risk of not resolving**: an imported claim is quotable but not locatable, and a reader who must find the quote inside a 58 972-byte document does it by hand
+- **owner decision required**: no — this is a defect inside an existing contract (the evidence rule), and the repair is inside the agent's remit
+- **dependencies**: none
+- **status**: OPEN
+
+### Q-W50-03 — The Workbench status route reports the database path and its size but leaves the workspace list and the counts empty
+
+- **type**: missing-implementation
+- **why it matters**: the status route is the one HTTP surface that describes the store to a reader. A demonstrator whose own workspace is invisible on that surface cannot be checked from it.
+- **what is known**: `GET /v1/workbench/status` returns the database path, its size in bytes, the schema version and the integrity result — and the **workspace list and the per-workspace counts are empty**. The cause is one row that is never written: the acquisition cycle creates the claims, the sources and the evidence under the workspace id `plate-tectonics`, but it does not insert a row into the `workspace` table, so the store's workspace list is empty and the counts loop has nothing to count. The demonstration's workspace holds **687 claims**, and the route reports none of them.
+- **evidence**: the demonstration's database `data/knowledge/workbench.sqlite` — the `workspace` table holds **0** rows while `claim` holds 687 rows with `workspace_id = 'plate-tectonics'`; `matrix-core/src/main/java/io/matrix/knowledge/KnowledgeWorkbench.java` (the route's body) and `matrix-core/src/main/java/io/matrix/knowledge/KnowledgeStore.java` (the query that reads the `workspace` table)
+- **competing explanations**: (a) the defect is the missing registration — the route is right, and the writer must register the workspace it creates; (b) the defect is the route — it should enumerate the workspace ids the way the rest of the API does; (c) the counts are the wrong signal for a demonstrator, and the route should report the workspace's documents and claims directly
+- **available experiments**: register the workspace when the seed is loaded, then re-run the demonstration and read the route's `workspaces` and `counts` fields
+- **cost of resolving**: one row in the writer and one read in the route, plus a test that asserts the route's counts for a workspace that holds claims
+- **risk of not resolving**: the demonstrator's own state is invisible on the surface that reports the state
+- **owner decision required**: no — the route must report what the workspace holds, and the repair is inside the agent's remit
 - **dependencies**: none
 - **status**: OPEN
 

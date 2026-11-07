@@ -30,15 +30,24 @@ generated:
     The environment is the owner's machine; the JDK is at /home/alexandr-narbaev/jdk25.
 
 refreshed:
-  date: '2026-11-06'
-  note: >-
-    W48 refreshed two of the scopes below — SCOPE-COGNITIVE-KNOWLEDGE, whose
-    last_verified_commit is 33d199e2, and SCOPE-BRAIN-RUNTIME, whose last_verified_commit
-    is af9ba688 — and added SCOPE-NATIVE-BINARY and SCOPE-NATIVE-BUILD-CONFIG. Every count
-    was read from the JUnit XML that the run left on disk, not from the Gradle console
-    summary. The scopes that were not refreshed keep the commit and the date they were
-    measured at: a stale count is not a baseline, and a scope nobody re-ran is not
-    refreshed by a wave that touched something else.
+  - date: '2026-11-06'
+    note: >-
+      W48 refreshed two of the scopes below — SCOPE-COGNITIVE-KNOWLEDGE, whose
+      last_verified_commit is 33d199e2, and SCOPE-BRAIN-RUNTIME, whose last_verified_commit
+      is af9ba688 — and added SCOPE-NATIVE-BINARY and SCOPE-NATIVE-BUILD-CONFIG. Every count
+      was read from the JUnit XML that the run left on disk, not from the Gradle console
+      summary. The scopes that were not refreshed keep the commit and the date they were
+      measured at: a stale count is not a baseline, and a scope nobody re-ran is not
+      refreshed by a wave that touched something else.
+  - date: '2026-11-07'
+    note: >-
+      W50 added one scope below — SCOPE-W50-LEARNING — and refreshed none of the scopes
+      that were already there: a scope nobody re-ran is not refreshed by a wave that touched
+      something else. The counts of the new scope were read from the JUnit XML that the run
+      of 2026-11-07 left on disk under matrix-core/build/test-results/test/, not from the
+      Gradle console summary. The scope belongs to the commit 71b5b5c6 of the branch
+      develop, together with the W50 documentation that is not committed yet. The full
+      matrix-core suite was NOT run and is not in this catalogue.
 
 evidence_model:
   primary: the JUnit XML under <module>/build/test-results/test/*.xml
@@ -274,6 +283,70 @@ scopes:
     next_verification_condition: >-
       any change to the native build configuration - the Dockerfile, the Dockerfile.native-slim
       or the tasks that build the image - requires this scope to be re-run
+
+  - id: SCOPE-W50-LEARNING
+    purpose: the W50 learning path - the licensed corpus and its provenance, the bounded
+      acquisition cycle, the whole-sentence extraction, the revision decision and the premise
+      check
+    task: ':matrix-core:test'
+    filters:
+      - 'io.matrix.knowledge.acquisition.*'
+      - 'io.matrix.knowledge.PremiseAssessmentTest'
+    source_packages: [io.matrix.knowledge.acquisition, io.matrix.knowledge]
+    test_packages: [io.matrix.knowledge.acquisition, io.matrix.knowledge]
+    last_verified_commit: 71b5b5c6
+    last_execution: '2026-11-07'
+    result:
+      classes_discovered: 11
+      classes_executed: 11
+      methods_executed: 60
+      successful: 60
+      failed: 0
+      errored: 0
+      skipped: 0
+      aborted: 0
+      filtered: 0
+      not_executed: 0
+    evidence: >-
+      the JUnit XML under matrix-core/build/test-results/test/ - the eleven files of this
+      scope and no others: TEST-io.matrix.knowledge.PremiseAssessmentTest.xml,
+      TEST-io.matrix.knowledge.acquisition.AcquisitionCycleTest.xml,
+      TEST-io.matrix.knowledge.acquisition.AtomicImportTest.xml,
+      TEST-io.matrix.knowledge.acquisition.ClaimValidatorTest.xml,
+      TEST-io.matrix.knowledge.acquisition.CorpusFoundationTest.xml,
+      TEST-io.matrix.knowledge.acquisition.CorpusManagerTest.xml,
+      TEST-io.matrix.knowledge.acquisition.CorpusVersionsTest.xml,
+      TEST-io.matrix.knowledge.acquisition.DocumentFormatCoverageTest.xml,
+      TEST-io.matrix.knowledge.acquisition.DocumentFormatVerificationTest.xml,
+      TEST-io.matrix.knowledge.acquisition.DocumentImportTest.xml and
+      TEST-io.matrix.knowledge.acquisition.ImportSecurityTest.xml. The counts above are
+      read from those eleven files - 11 classes, 60 tests, 0 failures, 0 errors, 0 skipped -
+      and not from the Gradle console summary.
+    what_it_proves: >-
+      the W50 learning path executes on the commit 71b5b5c6 of the branch develop, together
+      with the W50 documentation that is not committed yet: the licensed corpus is read with
+      its provenance, the acquisition cycle is bounded and reports the boundary, the
+      extractor proposes whole sentences, the revision decision is made against the real
+      corpus and the real store, and the premise check returns its verdict while writing
+      nothing.
+    what_it_does_not_prove: >-
+      this is a TARGETED scope, not the matrix-core suite: the full suite was NOT run, it is
+      not in this catalogue (rule 5) and this scope says nothing about it. The scope also
+      covers no HTTP route: the five routes of the learning surface are driven by no test
+      class in the tree, so their evidence is the recorded run of 2026-11-07 and not this
+      scope.
+    known_skips: []
+    known_flakes: []
+    environment_dependencies:
+      - the JDK 25 at /home/alexandr-narbaev/jdk25
+      - >-
+        the acquisition tests read the licensed corpus that ships with the application, so
+        they need no network access and no model weights; the premise test builds its own
+        workspace in a temporary directory
+    next_verification_condition: >-
+      any change under io/matrix/knowledge/acquisition or to io.matrix.knowledge.PremiseAssessment
+      requires this scope to be re-run, and the counts it carries then belong to a new
+      commit
 
   - id: GATE-CHAIN-ISOLATION
     purpose: prove that the two serving chains do not meet - no chain B class reaches the

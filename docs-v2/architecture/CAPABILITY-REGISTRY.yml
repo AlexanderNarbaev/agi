@@ -75,7 +75,7 @@ generated:
   branch: "develop"
   source: "docs-v2/engineering/W46-CAPABILITY-RECONCILIATION.csv"
   source_rows: 27
-  capabilities_in_this_file: 36
+  capabilities_in_this_file: 43
   additions_from_source: 8
   method: "the constant pool of the compiled classes (javap -p -c) over 2978 classes, the current "
   method_note: "source, and the current configuration. Every source_path, test_path and production "
@@ -85,10 +85,18 @@ generated:
   w49_addition: "W49 added one row — W49-AUTONOMY-PROPOSALS, the autonomy impulse
     consumer of OD-045 — and took the file from 35 rows to 36. The addition was made
     from the source and from the executed test evidence, not from the ADR's own claim."
+  w50_addition: "W50 added seven rows — W50-CLASSPATH-CORPUS, W50-ACQUISITION-CYCLE,
+    W50-CLAIM-EXTRACTOR, W50-REVISION-DECIDER, W50-PREMISE-ASSESSMENT,
+    W50-LEARNING-RESOURCE and W50-LOCAL-DEMONSTRATOR — and took the file from 36 rows
+    to 43. The additions were made from the source, from the executed test evidence and
+    from the recorded run of 2026-11-07; no row that was already there was renumbered,
+    rewritten or deleted. The demonstrator itself is NOT a service: its operational
+    axis is EXPERIMENTAL, and the six components that sit on a serving path say which
+    route reaches them."
   supersedes:
     - "docs-v2/architecture/CAPABILITY-REGISTRY.md"
     - "docs-v2/engineering/W44-CAPABILITY-REGISTRY.md"
-  notes: "the two superseded registries stay on disk as evidence; the coordinator annotates them. W48 (2026-11-06) added one row from the source — W48-NATIVE-IMAGE — and refreshed four rows (C-01, W45-FAILCLOSED, W45-SNAPSHOT, W46-GPU). The reconciliation itself is still the W46.0 one: the date and commit above are the ones it was made at."
+  notes: "the two superseded registries stay on disk as evidence; the coordinator annotates them. W48 (2026-11-06) added one row from the source — W48-NATIVE-IMAGE — and refreshed four rows (C-01, W45-FAILCLOSED, W45-SNAPSHOT, W46-GPU). W50 (2026-11-07) added seven rows from the source and from the executed test evidence, and refreshed no row that was already there. The reconciliation itself is still the W46.0 one: the date and commit above are the ones it was made at."
 
 status_vocabularies:
   implementation:
@@ -1556,5 +1564,254 @@ capabilities:
     last_verified_at: "2026-11-06"
     next_verification_condition: "a change to the proposal record, the queue bound, the expiry or the FROZEN gate requires the impulse-proposal suite to be re-run"
     notes: "W49: this row did not exist, because the autonomy impulse path had no row at all — neither the scheduler nor the consumer was in the registry. The row is written from the source, not from the ADR's own claim. The consumer is IMPLEMENTED, INTEGRATED into the serving paths and TESTED by the ADR's ten tests; it is SERVED in the sense that the gateway's autonomy drives record proposals — it is never an executor and must never be described as one."
+
+  -
+    id: "W50-CLASSPATH-CORPUS"
+    name: "the licensed corpus, read from the classpath with the provenance of every file"
+    description: "io.matrix.knowledge.acquisition.ClasspathCorpus: the reader of the two corpora that ship inside the application — the seed corpus of 2 documents and the research pool of 7. The manifest is the index, because a classpath directory cannot be listed from inside a jar: every file is read by name, copied out of the jar unchanged, and the copy is verified against the manifest before anything is imported. Every entry keeps its licence, the licence URL, the attribution, the canonical URL, the access date, the snapshot revision and the sha256 of the imported bytes."
+    domain: "epistemic-architecture"
+    implementation: "IMPLEMENTED"
+    integration: "INTEGRATED"
+    verification: "TESTED"
+    operational: "SERVED"
+    source_paths:
+      - "matrix-core/src/main/java/io/matrix/knowledge/acquisition/ClasspathCorpus.java"
+      - "matrix-core/src/main/java/io/matrix/knowledge/acquisition/CorpusManifest.java"
+      - "matrix-core/src/main/resources/corpus/plate-tectonics/corpus-manifest.json"
+      - "matrix-core/src/main/resources/research-pool/plate-tectonics/corpus-manifest.json"
+    production_callers:
+      - "io.matrix.knowledge.acquisition.AcquisitionCycle — matrix-core/src/main/java/io/matrix/knowledge/acquisition/AcquisitionCycle.java"
+      - "io.matrix.knowledge.LearningCycleResource — matrix-core/src/main/java/io/matrix/knowledge/LearningCycleResource.java"
+    serving_chain: "chain-a"
+    serving_path: "GET /v1/learning/catalogue serves what the corpus holds — the licence, the licence URL, the canonical URL, the access date, the revision and the sha256 of every entry of the pool; POST /v1/learning/workspaces/{id}/seed and POST /v1/learning/workspaces/{id}/learn read the corpus the catalogue names"
+    test_paths:
+      - "matrix-core/src/test/java/io/matrix/knowledge/acquisition/AcquisitionCycleTest.java"
+    test_evidence: "executed on 2026-11-07 inside the targeted W50 scope — 60 tests in 11 classes, 0 failures, 0 errors, 0 skipped. The reader has no test class of its own: it is exercised through the cycle, by AcquisitionCycleTest, which extracts the research pool and checks that every entry carries a licence, a licence URL, a source URL, a sha256 and a revision, and by the seed import, which brought 348 claims from 2 licensed documents in the measured run. The evidence is the JUnit XML under matrix-core/build/test-results/test/ — TEST-io.matrix.knowledge.acquisition.AcquisitionCycleTest.xml among the eleven files of the scope."
+    benchmark_evidence: "none — the corpus reader publishes no number of its own; the numbers of the run belong to the acquisition cycle"
+    formal_spec: "none"
+    dependencies:
+      - "the manifest of each corpus — matrix-core/src/main/resources/corpus/plate-tectonics/corpus-manifest.json and matrix-core/src/main/resources/research-pool/plate-tectonics/corpus-manifest.json"
+      - "the temporary directory the importer reads the copied bytes from"
+    limitations: "the corpus is fixed at the build: the pool is a pre-cached, versioned and licensed set that ships with the application, so the boundary is a fact and not a promise — no request leaves the machine and no live web search is performed. The reader is not a fetcher and cannot be pointed at a live source. The question of the repository's own AGPL-3.0 licence meeting the share-alike of CC BY-SA 4.0 texts is the owner's open question Q-W50-01 and is not settled here."
+    risks:
+      - "a corpus that ships with the binary cannot be refreshed without a new build, so the provenance the manifest records is the provenance of that build and of no later snapshot"
+      - "the bytes are copied out of the jar before they are hashed, and the reader is the only thing that verifies the copy against the manifest"
+    owner: "the owner (OD-052, 2026-11-07)"
+    decision_ref: "docs-v2/governance/DECISION-REGISTER.md OD-052; docs-v2/engineering/W50-STATUS.md §2"
+    last_verified_commit: "71b5b5c6"
+    last_verified_at: "2026-11-07"
+    next_verification_condition: "a change to either manifest, to the corpus files or to the verification of the copied bytes requires the W50 targeted scope to be re-run"
+    notes: "ADDED IN W50. The row is written from the source and from the executed test evidence, not from the wave report's own claim. The seed corpus is USGS This Dynamic Earth (US public domain) and Wikipedia Plate tectonics (CC BY-SA 4.0, oldid 1381934246); the pool holds seven Wikipedia snapshots under CC BY-SA 4.0, each with its own revision in the manifest. The deployment in which the corpus was exercised is the local demonstrator on 127.0.0.1:9091; no production deployment of the learning surface exists."
+
+  -
+    id: "W50-ACQUISITION-CYCLE"
+    name: "the bounded acquisition cycle"
+    description: "io.matrix.knowledge.acquisition.AcquisitionCycle: the bounded cycle that closes a gap — the terms of the question the workspace does not cover, the declared catalogue of the research pool, at most three documents, the ordinary import path, and a report of what was acquired, what was skipped and what entered the workspace. The selection follows the question: an uncovered term weighs more than a covered one. The cycle also carries the revision: it acquires one named document of the pool, compares the new claims with the established ones and applies the supersessions the decider warrants."
+    domain: "learning"
+    implementation: "IMPLEMENTED"
+    integration: "INTEGRATION_TESTED"
+    verification: "MEASURED"
+    operational: "SERVED"
+    source_paths:
+      - "matrix-core/src/main/java/io/matrix/knowledge/acquisition/AcquisitionCycle.java"
+      - "matrix-core/src/main/java/io/matrix/knowledge/acquisition/DocumentImporter.java"
+    production_callers:
+      - "io.matrix.knowledge.LearningCycleResource — matrix-core/src/main/java/io/matrix/knowledge/LearningCycleResource.java"
+    serving_chain: "chain-a"
+    serving_path: "POST /v1/learning/workspaces/{id}/learn — the cycle itself, one bounded run per question; POST /v1/learning/workspaces/{id}/revise — the acquisition of one named document of the pool with the comparison against the model"
+    test_paths:
+      - "matrix-core/src/test/java/io/matrix/knowledge/acquisition/AcquisitionCycleTest.java"
+    test_evidence: "executed on 2026-11-07 inside the targeted W50 scope — 60 tests in 11 classes, 0 failures, 0 errors, 0 skipped; the cycle's own suite is AcquisitionCycleTest (4 tests), which drives the real workbench, the real corpus and the real store, and asserts that the cycle is bounded, that its report names the boundary, and that every document it touches carries its licence and its source URL. The evidence is the JUnit XML under matrix-core/build/test-results/test/ — TEST-io.matrix.knowledge.acquisition.AcquisitionCycleTest.xml among the eleven files of the scope."
+    benchmark_evidence: "the measured four-turn run of 2026-11-07 on the packaged jar at 127.0.0.1:9091, reproducible by scripts/run-local.sh and the four prompts of docs-v2/demos/local-learning-loop/OWNER-SEQUENCE.md, recorded in docs-v2/engineering/W50-STATUS.md §3: the seed import brought 348 claims from 2 licensed documents, the acquisition cycle acquired 3 documents of the pool and added 324 claims, and the revision of turn 4 added 14 claims and applied exactly 1 supersession"
+    formal_spec: "none"
+    dependencies:
+      - "io.matrix.knowledge.acquisition.ClasspathCorpus (the seed corpus and the research pool)"
+      - "io.matrix.knowledge.KnowledgeWorkbench (the store it writes into)"
+      - "io.matrix.knowledge.ModelRevisionDecider (the revision decision)"
+      - "io.matrix.knowledge.acquisition.DocumentImporter (the ordinary import path)"
+    limitations: "the pool is pre-cached and ships with the application: the boundary is a fact, not a promise — no request leaves the machine and no live web search is performed. The cycle takes at most three documents per question, and the route clamps what the caller asks for to that bound. The question drives the selection, so a question the workspace already covers acquires nothing. The deployment measured is the local demonstrator, not a production deployment."
+    risks:
+      - "the bound counts documents, not what was learned: three documents of the pool can add hundreds of claims, and the report says nothing about their quality"
+      - "the licence of the acquired text is the licence the manifest records; the question of the AGPL repository carrying CC BY-SA text is the owner's Q-W50-01 and it is open"
+    owner: "the owner (OD-050, 2026-11-07)"
+    decision_ref: "docs-v2/governance/DECISION-REGISTER.md OD-050; docs-v2/engineering/W50-STATUS.md §2 and §3"
+    last_verified_commit: "71b5b5c6"
+    last_verified_at: "2026-11-07"
+    next_verification_condition: "a change to the bound, to the selection rule or to the report requires the W50 targeted scope to be re-run and the four-turn run to be repeated"
+    notes: "ADDED IN W50. The three documents the cycle acquired in the measured run were wikipedia-continental-drift.md (oldid 1376987312), wikipedia-mid-ocean-ridge.md (oldid 1383981232) and wikipedia-subduction.md (oldid 1381148652). Every report the cycle returns names the terms of the question the workspace could not cover and states the boundary of the acquisition."
+
+  -
+    id: "W50-CLAIM-EXTRACTOR"
+    name: "the claim extractor — whole sentences, never rewritten"
+    description: "io.matrix.knowledge.acquisition.ClaimExtractor: the extractor that proposes a claim out of a document. It proposes only declarative sentences — a sentence with a copula or a causal verb — it never rewrites one, so the proposition is the sentence as the document wrote it and a reader can check it against the source, and it keeps the segment and the location, so every proposal carries the place it came from. It judges nothing: a proposal is a candidate, and the promotion rules decide what happens to it."
+    domain: "learning"
+    implementation: "IMPLEMENTED"
+    integration: "INTEGRATION_TESTED"
+    verification: "TESTED"
+    operational: "SERVED"
+    source_paths:
+      - "matrix-core/src/main/java/io/matrix/knowledge/acquisition/ClaimExtractor.java"
+      - "matrix-core/src/main/java/io/matrix/knowledge/acquisition/DocumentImporter.java"
+    production_callers:
+      - "io.matrix.knowledge.acquisition.DocumentImporter — matrix-core/src/main/java/io/matrix/knowledge/acquisition/DocumentImporter.java"
+    serving_chain: "chain-a"
+    serving_path: "POST /v1/workbench/workspaces/{id}/documents — the ordinary import path of the workbench, which reaches the extractor through io.matrix.knowledge.KnowledgeWorkbench.importDocument; POST /v1/learning/workspaces/{id}/seed and POST /v1/learning/workspaces/{id}/learn reach it through the same import path"
+    test_paths:
+      - "matrix-core/src/test/java/io/matrix/knowledge/acquisition/DocumentImportTest.java"
+      - "matrix-core/src/test/java/io/matrix/knowledge/acquisition/DocumentFormatCoverageTest.java"
+      - "matrix-core/src/test/java/io/matrix/knowledge/acquisition/ImportSecurityTest.java"
+    test_evidence: "executed on 2026-11-07 inside the targeted W50 scope — 60 tests in 11 classes, 0 failures, 0 errors, 0 skipped. The extractor has no test class of its own: it is exercised through the import path by DocumentImportTest, DocumentFormatCoverageTest, ImportSecurityTest, AtomicImportTest and ClaimValidatorTest. The evidence is the JUnit XML under matrix-core/build/test-results/test/ — TEST-io.matrix.knowledge.acquisition.DocumentImportTest.xml, TEST-io.matrix.knowledge.acquisition.DocumentFormatCoverageTest.xml and TEST-io.matrix.knowledge.acquisition.ImportSecurityTest.xml among the eleven files of the scope."
+    benchmark_evidence: "none — the extractor publishes no number of its own. The comparison of the deterministic extraction against the evaluated local model is measured in docs-v2/engineering/W50-LOCAL-MODEL.md §4: 92 of 92 propositions verbatim for the deterministic extractor (100 %) against 8 of 11 (72.7 %) for the model — the 72.7 % is the model's number, not the extractor's"
+    formal_spec: "none"
+    dependencies:
+      - "io.matrix.knowledge.acquisition.DocumentImporter (its only caller)"
+    limitations: "the sentence is recognised by a heuristic verb list of 166 verbs in English and Russian, so a sentence it does not recognise is simply not proposed; the list is a heuristic and says so. The extractor is not new in this wave — it was written earlier (RECON-W42.2) — and what W50 measured is how it behaves on the licensed corpus. The class predates the wave, so its row is a registration of an existing component and not a new capability."
+    risks:
+      - "a proposition that is not verbatim cannot be checked against its source, and the heuristic list silently dropped the scientific register before it was extended"
+    owner: "the owner (OD-049, 2026-11-07)"
+    decision_ref: "docs-v2/governance/DECISION-REGISTER.md OD-049; docs-v2/engineering/W50-LOCAL-MODEL.md §4"
+    last_verified_commit: "71b5b5c6"
+    last_verified_at: "2026-11-07"
+    next_verification_condition: "a change to the verb list, to the sentence rule or to the location the proposal keeps requires the W50 targeted scope to be re-run"
+    notes: "ADDED IN W50. The row is written from the source; the registry carried no row for this class before, and the class is not part of what the wave wrote."
+
+  -
+    id: "W50-REVISION-DECIDER"
+    name: "the revision decision — whether new evidence revises the model"
+    description: "io.matrix.knowledge.ModelRevisionDecider: the decider that says whether a new claim revises the established model. It weighs the relatedness of the propositions, uses the text of the new source as a bridge to the older claim's subject, compares the strength — the authored confidence, the number of independent sources, the authority and the freshness — and holds the one branch the demonstration needed, a DENIAL: a new claim that denies what the earlier claim asserted revises it even when the two rest on the same evidence. The rule is topic-agnostic; there is no branch for the subject the demonstration used."
+    domain: "learning"
+    implementation: "IMPLEMENTED"
+    integration: "INTEGRATION_TESTED"
+    verification: "MEASURED"
+    operational: "SERVED"
+    source_paths:
+      - "matrix-core/src/main/java/io/matrix/knowledge/ModelRevisionDecider.java"
+      - "matrix-core/src/main/java/io/matrix/knowledge/KnowledgeRevision.java"
+      - "matrix-core/src/main/java/io/matrix/knowledge/KnowledgeRefiner.java"
+    production_callers:
+      - "io.matrix.knowledge.acquisition.AcquisitionCycle — matrix-core/src/main/java/io/matrix/knowledge/acquisition/AcquisitionCycle.java"
+    serving_chain: "chain-a"
+    serving_path: "POST /v1/learning/workspaces/{id}/learn — the cycle applies the decisions the decider returns; POST /v1/learning/workspaces/{id}/revise — the acquisition of one named document of the pool with the comparison against the model"
+    test_paths:
+      - "matrix-core/src/test/java/io/matrix/knowledge/acquisition/AcquisitionCycleTest.java"
+    test_evidence: "executed on 2026-11-07 inside the targeted W50 scope — 60 tests in 11 classes, 0 failures, 0 errors, 0 skipped; the decision is exercised by AcquisitionCycleTest (4 tests), which decides the revision on the real corpus and the real store. The evidence is the JUnit XML under matrix-core/build/test-results/test/ — TEST-io.matrix.knowledge.acquisition.AcquisitionCycleTest.xml among the eleven files of the scope."
+    benchmark_evidence: "the measured four-turn run of 2026-11-07 on the packaged jar at 127.0.0.1:9091, reproducible by scripts/run-local.sh and the four prompts of docs-v2/demos/local-learning-loop/OWNER-SEQUENCE.md, recorded in docs-v2/engineering/W50-STATUS.md §3: the revision of turn 4 added 14 claims and applied exactly 1 supersession with a relatedness of 0.83, the earlier claim was kept as SUPERSEDED version 2 and the new claim was SUPPORTED version 2, and the answer moved from 118 claims of 5 sources to 128 claims of 7 sources"
+    formal_spec: "none"
+    dependencies:
+      - "io.matrix.knowledge.KnowledgeSnapshot (the workspace before the new claim)"
+      - "io.matrix.knowledge.KnowledgeRefiner (the refinement the decision builds — the decider builds it, the caller applies it)"
+    limitations: "the decision rests on a lexical overlap of the two propositions and on the text of the new source as a bridge; there is no semantic relation check. The relatedness threshold is a named constant of the class, not a calibrated one. The decider decides and builds the refinement; the caller applies it through KnowledgeRefiner, so the decider writes nothing itself. The run recorded that the superseded claim stays in the history rather than disappearing."
+    risks:
+      - "a relatedness score is not a truth test: a new source that talks about the same subject in different words can be judged unrelated, and a source that repeats the same words can be judged related"
+    owner: "the owner (W50, 2026-11-07 — the revision rule is the wave's own; the boundary around it is OD-050)"
+    decision_ref: "docs-v2/engineering/W50-STATUS.md §2 and §3; docs-v2/governance/DECISION-REGISTER.md OD-050"
+    last_verified_commit: "71b5b5c6"
+    last_verified_at: "2026-11-07"
+    next_verification_condition: "a change to the relatedness rule, to the denial branch or to the strength comparison requires the W50 targeted scope to be re-run and the turn-4 revision to be repeated"
+    notes: "ADDED IN W50. The one supersession of the measured run is a denial: the new claim denied what the earlier claim asserted, and the earlier claim was kept in the store as SUPERSEDED version 2 with its source, which is the point of the demonstration — the previous model stays historically inspectable."
+
+  -
+    id: "W50-PREMISE-ASSESSMENT"
+    name: "the premise check — a statement against the evidence the workspace holds"
+    description: "io.matrix.knowledge.PremiseAssessment: the check that puts a statement against the claims the workspace already holds and returns SUPPORTED, CONTRADICTED, UNSUPPORTED or UNRESOLVED, with the disputed premise and the contradicting claim and its source named. It never writes: an assertion is an input to evaluate, not a confirmation, and the assessment says so in its own knowledge-effect field. It is deterministic and lexical — no model, no network, no random number and no wall-clock in any decision path — and it is domain-neutral."
+    domain: "reasoning"
+    implementation: "IMPLEMENTED"
+    integration: "INTEGRATION_TESTED"
+    verification: "TESTED"
+    operational: "SERVED"
+    source_paths:
+      - "matrix-core/src/main/java/io/matrix/knowledge/PremiseAssessment.java"
+      - "matrix-core/src/main/java/io/matrix/knowledge/KnowledgeRetriever.java"
+    production_callers:
+      - "io.matrix.knowledge.LearningCycleResource — matrix-core/src/main/java/io/matrix/knowledge/LearningCycleResource.java"
+    serving_chain: "chain-a"
+    serving_path: "POST /v1/learning/workspaces/{id}/assess — the check of one assertion against the workspace; the route refuses a blank assertion and writes nothing"
+    test_paths:
+      - "matrix-core/src/test/java/io/matrix/knowledge/PremiseAssessmentTest.java"
+    test_evidence: "executed on 2026-11-07 inside the targeted W50 scope — 60 tests in 11 classes, 0 failures, 0 errors, 0 skipped; the check's own suite is PremiseAssessmentTest (5 tests), which builds a real workspace and asserts that a contradicted premise is CONTRADICTED, an unknown premise is UNSUPPORTED, a stated premise is SUPPORTED, an unsettled one is UNRESOLVED, and that the claims, the evidence and the statuses are exactly what they were — nothing is written. The evidence is the JUnit XML under matrix-core/build/test-results/test/ — TEST-io.matrix.knowledge.PremiseAssessmentTest.xml among the eleven files of the scope."
+    benchmark_evidence: "none — the check returns a verdict, not a number. The verdict of the measured run is recorded in docs-v2/engineering/W50-STATUS.md §3: CONTRADICTED with promoted = false"
+    formal_spec: "none"
+    dependencies:
+      - "io.matrix.knowledge.KnowledgeRetriever (the canonical retrieval the candidates come from)"
+      - "io.matrix.knowledge.KnowledgeWorkbench (the snapshot it reads)"
+    limitations: "the check is LEXICAL: it matches terms, so a truncated premise can read as contradicted by any claim that covers its terms. A semantic relation check does not exist. The absence of evidence is reported as UNSUPPORTED and never as a contradiction, and an assessment is a reading of the stored claims, not a judgement of their truth. The deployment measured is the local demonstrator on 127.0.0.1:9091."
+    risks:
+      - "a lexical match can make a claim look contradicted where the text only overlaps; the verdict names the claim and its source so that a reader can check it"
+    owner: "the owner (OD-051, 2026-11-07)"
+    decision_ref: "docs-v2/governance/DECISION-REGISTER.md OD-051; docs-v2/engineering/W50-STATUS.md §2 and §6"
+    last_verified_commit: "71b5b5c6"
+    last_verified_at: "2026-11-07"
+    next_verification_condition: "a change to the premise rules, to the verdict vocabulary or to the retrieval the candidates come from requires the W50 targeted scope to be re-run"
+    notes: "ADDED IN W50. The class is not the earlier io.matrix.knowledge.PremiseChecker: the checker of the older waves and this assessment are different components, and this row is about the assessment. The premise the measured run contradicted is the claim that the idea that the continents could move was widely rejected when it was first proposed, and the contradicting claim is in wikipedia-continental-drift.md."
+
+  -
+    id: "W50-LEARNING-RESOURCE"
+    name: "the learning surface — five routes of the Workbench"
+    description: "io.matrix.knowledge.LearningCycleResource: the HTTP surface of the learning loop — GET /v1/learning/catalogue (what the cycle may acquire, and under which licence), POST /v1/learning/workspaces/{id}/seed (the licensed seed corpus), POST /v1/learning/workspaces/{id}/learn (one bounded acquisition cycle for a question), POST /v1/learning/workspaces/{id}/revise (one named document of the pool, compared with the model) and POST /v1/learning/workspaces/{id}/assess (a premise checked against the workspace). Each route returns a report that says what was acquired, from where, under which licence, and what was skipped."
+    domain: "epistemic-architecture"
+    implementation: "IMPLEMENTED"
+    integration: "INTEGRATED"
+    verification: "MEASURED"
+    operational: "SERVED"
+    source_paths:
+      - "matrix-core/src/main/java/io/matrix/knowledge/LearningCycleResource.java"
+    production_callers:
+      - "io.matrix.MatrixApplication — matrix-core/src/main/java/io/matrix/MatrixApplication.java"
+    serving_chain: "chain-a"
+    serving_path: "GET /v1/learning/catalogue, POST /v1/learning/workspaces/{id}/seed, POST /v1/learning/workspaces/{id}/learn, POST /v1/learning/workspaces/{id}/revise and POST /v1/learning/workspaces/{id}/assess — five routes of the chain-A application; the Learn panel and the Check a premise panel of the Workbench drive them from the browser"
+    test_paths: []
+    test_evidence: "NO automated test drives these five routes: the targeted W50 scope of 2026-11-07 covers the acquisition package and PremiseAssessmentTest, and no test class in the tree references this resource. The routes were executed by hand in the measured four-turn run of 2026-11-07 on the packaged jar at 127.0.0.1:9091, and every response is recorded in docs-v2/engineering/W50-STATUS.md §3 — the seed import of 348 claims from 2 licensed documents, the acquisition of 3 pool documents and 324 claims, the premise verdict CONTRADICTED with promoted = false, and the revision of 14 added claims with exactly 1 supersession at a relatedness of 0.83."
+    benchmark_evidence: "the four-turn run of 2026-11-07 on the packaged jar, reproducible by scripts/run-local.sh with the four prompts of docs-v2/demos/local-learning-loop/OWNER-SEQUENCE.md; the responses are recorded in docs-v2/engineering/W50-STATUS.md §3 and the expected answers are in docs-v2/demos/local-learning-loop/ANSWER-KEY.md, which is never loaded into the application"
+    formal_spec: "none"
+    dependencies:
+      - "io.matrix.knowledge.KnowledgeWorkbench (the store every route reads or writes)"
+      - "io.matrix.knowledge.acquisition.AcquisitionCycle (the cycle and the revision)"
+      - "io.matrix.knowledge.PremiseAssessment (the premise check)"
+      - "io.matrix.knowledge.acquisition.ClasspathCorpus (the catalogue the seed and learn routes read)"
+    limitations: "no automated test drives the five routes, so the evidence of the surface is a recorded run and not a test suite. The surface was exercised on 127.0.0.1:9091 — the local demonstrator — and no production deployment of it exists. The learn route takes the question as a query parameter and the revise route the name of the file; a request without them is refused with 400 and no state is touched. The resource is mounted by the JAX-RS runtime, so it has no caller in the source."
+    risks:
+      - "a route that no test drives can rot without a signal: the wave left the surface unverified by an automated test, and the recorded run is the only evidence it has"
+    owner: "the owner (W50, 2026-11-07 — the boundaries the surface enforces are OD-050 and OD-051)"
+    decision_ref: "docs-v2/engineering/W50-STATUS.md §2 and §3; docs-v2/governance/DECISION-REGISTER.md OD-050 and OD-051"
+    last_verified_commit: "71b5b5c6"
+    last_verified_at: "2026-11-07"
+    next_verification_condition: "a change to any of the five routes, or to the Workbench panel that drives them, requires the four-turn run to be repeated and a route test to be added"
+    notes: "ADDED IN W50. The five routes are the visible part of the learning loop and the wave measured the surface from the outside, through a browser. The row says plainly that no test drives it: the verification axis rests on the recorded run and on nothing else."
+
+  -
+    id: "W50-LOCAL-DEMONSTRATOR"
+    name: "the local evidence-grounded demonstrator"
+    description: "scripts/run-local.sh and docs-v2/demos/local-learning-loop/: the demonstrator of the wave — one command, one browser, four prompts. The command builds the runnable application when the jar is missing and starts it on 127.0.0.1:9091 with no Docker, no native image, no model weights and no network access; the folder holds the prompts to send one at a time (OWNER-SEQUENCE.md), the expected answers (ANSWER-KEY.md, deliberately kept outside the application) and the README that states the acquisition boundary."
+    domain: "delivery"
+    implementation: "IMPLEMENTED"
+    integration: "ISLAND"
+    verification: "MEASURED"
+    operational: "EXPERIMENTAL"
+    source_paths:
+      - "scripts/run-local.sh"
+      - "docs-v2/demos/local-learning-loop/README.md"
+      - "docs-v2/demos/local-learning-loop/OWNER-SEQUENCE.md"
+      - "docs-v2/demos/local-learning-loop/ANSWER-KEY.md"
+    production_callers: []
+    serving_chain: "none"
+    serving_path: "none — the demonstrator is not a serving path: scripts/run-local.sh starts the chain-A application locally on 127.0.0.1:9091 and the four prompts are driven through the Workbench in a browser, exactly as a user would"
+    test_paths: []
+    test_evidence: "the four-turn run of 2026-11-07 on the packaged jar matrix-core/build/quarkus-app/quarkus-run.jar at http://127.0.0.1:9091, every response recorded in docs-v2/engineering/W50-STATUS.md §3: the seed import of 348 claims from 2 licensed documents; the acquisition of 3 documents of the pool and 324 claims; the first answer of 153 claims of 2 sources at an evidenceCoverage of 0.458; the follow-up answer of 25 claims of 4 sources at an evidenceCoverage of 0.293; the premise verdict CONTRADICTED with promoted = false; the revision of 14 added claims with exactly 1 supersession at a relatedness of 0.83, the earlier claim kept as SUPERSEDED version 2 and the new claim SUPPORTED version 2; the answer moving from 118 claims of 5 sources to 128 claims of 7 sources; and, after the application was stopped and started again, the byte-identical answer."
+    benchmark_evidence: "the demonstrator is its own measurement: the four-turn run of 2026-11-07, reproducible by scripts/run-local.sh with the four prompts of docs-v2/demos/local-learning-loop/OWNER-SEQUENCE.md, together with the local model evaluation of docs-v2/engineering/W50-LOCAL-MODEL.md — 0 teacher invocations during the deterministic acquisition (a counter validated by a known call moving it from 25 to 26) and 72.7 % of the evaluated model's propositions verbatim in the source against 100 % for the deterministic path"
+    formal_spec: "none"
+    dependencies:
+      - "the JDK 25 — JAVA_HOME must point at it"
+      - "the packaged application matrix-core/build/quarkus-app/quarkus-run.jar, which the script builds when it is missing"
+      - "the chain-A application on 127.0.0.1:9091"
+    limitations: "it is a LOCAL, SINGLE-PROCESS demonstrator reachable on 127.0.0.1 — not a service, not a deployment and not a production path; that is why its operational axis is EXPERIMENTAL and its serving chain is none. The first start seeds the store and takes about two and a half minutes on this machine. The corpus is a pre-cached pool: no request leaves the machine and no live web search is performed. The prompt deck and the answer key are separate files, and the key is never loaded into the application. The status route reports the database path and its size but leaves the workspace list and the counts empty (Q-W50-03)."
+    risks:
+      - "a demonstrator that runs on 127.0.0.1 can be mistaken for a service: it has no supervision, no authentication, no backup and no deployment of any kind"
+      - "the restart check proves that the answer survives a restart of the same store, not that the store survives the failure of the machine"
+    owner: "the owner (W50, 2026-11-07 — the boundary the demonstrator states is OD-050)"
+    decision_ref: "docs-v2/engineering/W50-STATUS.md §3 and §5; docs-v2/governance/DECISION-REGISTER.md OD-049 and OD-050"
+    last_verified_commit: "71b5b5c6"
+    last_verified_at: "2026-11-07"
+    next_verification_condition: "a change to the start command, to the corpus, to the routes or to the prompt deck requires the four-turn run to be repeated and its responses recorded again"
+    notes: "ADDED IN W50. The script is not in git at this commit — it is an uncommitted file of the wave — and the row says so rather than claiming a committed artefact. The measured model evaluation of the wave is docs-v2/engineering/W50-LOCAL-MODEL.md: the evaluated model (Qwen2.5-1.5B-Instruct-GGUF, Apache-2.0) loads in 0.839 s and generates 252 to 297 tok/s end to end, but it is not better at extraction than the deterministic path, so the deterministic path stays the critical path and the teacher stays a teacher."
 
 # =============================================================================
