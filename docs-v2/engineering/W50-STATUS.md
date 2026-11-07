@@ -166,6 +166,27 @@ named constants, so MAGIC-1 stays at its baseline of 78 shell candidates. The na
 the runner's memory budget, and the Docker push remains blocked by the owner's
 credentials — both are inherited from W49 and neither blocks the demonstrator.
 
+The state of the pull request's own CI at the end of the wave, job by job:
+
+| job | result | what it means |
+|---|---|---|
+| Build & Test (Java) ×2 | **pass** (18m53s, 14m21s) | the full `matrix-core` suite runs green on the runner |
+| Quality gates (can fail) ×2 | **pass** | the repository's own gate job is green |
+| CONSTITUTION compliance check ×2 | **pass** | no LLM import in the core |
+| Compile all T-01 modules ×2 | **pass** | — |
+| Container Images (build + smoke) | **pass** | the image builds and smokes; only the **push** lacks credentials |
+| Model-check TLA+ specs | **pass** (18m5s) | — |
+| Web UI Tests (matrix-web-ui) ×2 | **pass** | — |
+| Security Scan | **pass** in one run, **fail** in the other | the failing run is the TruffleHog action's own guard — "BASE and HEAD commits are the same. TruffleHog won't scan anything", exit 183; the same job passes in the run that has a diff |
+| Validate branch name, Validate ecosystem docs ×2, build | **pass** | — |
+| shellcheck | **fail** | the inherited findings; the log names neither script this wave added |
+| native-build | **fail** | `java.lang.OutOfMemoryError: Java heap space` with `-Xmx8g` — the inherited memory blocker, not a W50 regression |
+
+Three jobs are red and all three are accounted for: two are the inherited W49
+blockers, and the third is the secret scanner refusing to run on a push event
+without a diff. None of them touches the demonstrator, and none of them was
+introduced by this wave.
+
 ## 9. The measured evaluation
 
 `docs-v2/engineering/W50-EVALUATION.md` reports twenty-nine cases of the
