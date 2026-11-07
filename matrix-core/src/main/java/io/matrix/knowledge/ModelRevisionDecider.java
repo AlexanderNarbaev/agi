@@ -60,7 +60,7 @@ public final class ModelRevisionDecider {
         double bestRelatedness = 0.0;
         double bestStrength = 0.0;
         for (Claim claim : snapshot.claims()) {
-            if (!claim.isEstablished()) {
+            if (!inForce(claim)) {
                 continue;
             }
             if (normalise(claim.proposition()).equals(normalise(newProposition))) {
@@ -106,6 +106,25 @@ public final class ModelRevisionDecider {
                         bestRelatedness, newStrength, bestStrength);
         return new Decision(true, best.conceptId(), best.id(), reason,
                 bestRelatedness, bestStrength, newStrength);
+    }
+
+    /**
+     * Whether a claim is part of the model that a new claim can revise.
+     *
+     * <p>A claim that the workspace imported and has not yet corroborated is
+     * still part of the model: it is what the workspace believes, and a
+     * new source that contradicts it revises it. What is not part of the
+     * model is a draft, a claim that has been refuted or superseded, and a
+     * claim whose state is simply unknown.
+     *
+     * @param claim the claim
+     * @return whether the claim is in force
+     */
+    private static boolean inForce(Claim claim) {
+        return claim.status() != ClaimStatus.DRAFT
+                && claim.status() != ClaimStatus.REFUTED
+                && claim.status() != ClaimStatus.SUPERSEDED
+                && claim.status() != ClaimStatus.UNKNOWN;
     }
 
     /**

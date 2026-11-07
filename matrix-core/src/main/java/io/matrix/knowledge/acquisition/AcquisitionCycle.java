@@ -53,6 +53,7 @@ public final class AcquisitionCycle {
 
     /** What the cycle did. */
     public record Report(String workspaceId, String question, List<String> uncoveredTerms,
+                         List<String> questionTerms,
                          List<String> candidatesConsidered, List<String> acquired, List<Step> steps,
                          String boundary, int documentsAcquired, int claimsAdded, List<String> warnings) {
     }
@@ -74,16 +75,22 @@ public final class AcquisitionCycle {
                               int maximumDocuments) throws IOException {
         List<String> warnings = new ArrayList<>();
         List<String> uncovered = workbench.gapDetector(workspaceId).uncoveredTerms(question);
+        List<String> questionTerms = termsOf(question);
         ClasspathCorpus pool = ClasspathCorpus.extract(RESEARCH_POOL);
         List<ClasspathCorpus.Entry> considered = new ArrayList<>(pool.entries());
         List<Map.Entry<ClasspathCorpus.Entry, Integer>> scored = new ArrayList<>();
         for (ClasspathCorpus.Entry entry : considered) {
-            int hits = score(pool, entry, uncovered);
+            int hits = score(pool, entry, questionTerms, uncovered);
             if (hits > 0) {
                 scored.add(Map.entry(entry, hits));
             }
         }
-        scored.sort(Map.Entry.<ClasspathCorpus.Entry, Integer>comparingByValue().reversed());
+        // The order is the score first and the name second, so the same
+        // question always selects the same documents.
+        scored.sort((left, right) -> {
+            int byScore = Integer.compare(right.getValue(), left.getValue());
+            return byScore != 0 ? byScore : left.getKey().file().compareTo(right.getKey().file());
+        });
         List<ClasspathCorpus.Entry> selected = new ArrayList<>();
         for (Map.Entry<ClasspathCorpus.Entry, Integer> item : scored) {
             if (selected.size() >= Math.max(0, maximumDocuments)) {
@@ -111,8 +118,8 @@ public final class AcquisitionCycle {
         for (ClasspathCorpus.Entry entry : considered) {
             consideredNames.add(entry.file());
         }
-        return new Report(workspaceId, question, uncovered, consideredNames, acquired, steps, BOUNDARY,
-                acquired.size(), claimsAdded, warnings);
+        return new Report(workspaceId, question, uncovered, questionTerms, consideredNames, acquired, steps,
+                BOUNDARY, acquired.size(), claimsAdded, warnings);
     }
 
     /**
@@ -138,7 +145,7 @@ public final class AcquisitionCycle {
             acquired.add(entry.file());
             claimsAdded += result.claimsAdded();
         }
-        return new Report(workspaceId, "seed corpus", List.of(), acquired, acquired, steps,
+        return new Report(workspaceId, "seed corpus", List.of(), List.of(), acquired, acquired, steps,
                 "the licensed seed corpus that ships with the application", acquired.size(), claimsAdded,
                 warnings);
     }
@@ -209,6 +216,37 @@ public final class AcquisitionCycle {
                 result.claimsAdded(), decisions, applied, warnings);
     }
 
+    /** The words a question is built from that say nothing about the subject. */
+    private static final java.util.Set<String> QUESTION_STOP_WORDS = java.util.Set.of(
+            "what", "which", "how", "does", "did", "the", "and", "for", "that", "this",
+            "with", "from", "are", "was", "were", "have", "has", "been", "they", "their",
+            "there", "here", "into", "about", "tell", "give", "explain", "describe",
+            "much", "many", "more", "when", "where", "why", "will", "would");
+
+    /**
+     * The content terms of a question.
+     *
+     * <p>The selection of a document has to follow the question, not the
+     * order the pool happens to be in: a document that talks about the
+     * subject of the question is the one worth acquiring.
+     *
+     * @param question the question
+     * @return the content terms, in the order they appear
+     */
+    private static List<String> termsOf(String question) {
+        List<String> terms = new ArrayList<>();
+        if (question == null) {
+            return terms;
+        }
+        for (String word : question.toLowerCase(Locale.ROOT).split("[^a-z0-9-]+")) {
+            if (word.length() < 4 || QUESTION_STOP_WORDS.contains(word) || terms.contains(word)) {
+                continue;
+            }
+            terms.add(word);
+        }
+        return terms;
+    }
+
     private static Source sourceOf(KnowledgeSnapshot snapshot, String sourceId) {
         for (Source source : snapshot.sources()) {
             if (source.id().equals(sourceId)) {
@@ -218,13 +256,15 @@ public final class AcquisitionCycle {
         return null;
     }
 
-    private static int score(ClasspathCorpus pool, ClasspathCorpus.Entry entry, List<String> uncovered)
-            throws IOException {
+    private static int score(ClasspathCorpus pool, ClasspathCorpus.Entry entry, List<String> questionTerms,
+                             List<String> uncovered) throws IOException {
         String text = pool.textOf(entry).toLowerCase(Locale.ROOT);
         int hits = 0;
-        for (String term : uncovered) {
-            if (term != null && !term.isBlank() && text.contains(term.toLowerCase(Locale.ROOT))) {
-                hits++;
+        for (String term : questionTerms) {
+            if (text.contains(term)) {
+                // A term the workspace cannot cover weighs more than one
+                // it already covers: the cycle is here to close a gap.
+                hits += uncovered.contains(term) ? 3 : 1;
             }
         }
         return hits;
