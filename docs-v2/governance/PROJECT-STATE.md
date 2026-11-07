@@ -2,14 +2,14 @@
 
 **Status:** `CANONICAL` · **This document is a SNAPSHOT, not a history.** It describes the
 project at one commit and is replaced, not appended to, when the state moves.
-**Snapshot of:** `c4f2dff98a0dbfc0eb89309582e64b11ba19313c` · **Date:** 2026-11-06
+**Snapshot of:** `71b5b5c66907883c1eaf9c38433197ba3191c5db` · **Date:** 2026-11-07
 **Validation:** `scripts/validate-project-state.py --strict` — it checks that the commit below
 is the repository's HEAD, that the wave and the baseline below are the current ones, and that
 the canonical documents it names exist. It reports a lag of one commit as an OBSERVATION, not
 as a defect: the snapshot names the commit it was written at, and the commit that follows it
 is the one that carries the snapshot itself.
 **The wave that produced this snapshot is still running.** The commit named above is the one
-observed at 2026-11-06T17:30:00+03:00 (`git rev-parse HEAD`); `origin/develop` pointed at
+observed at 2026-11-07T20:48:27+03:00 (`git rev-parse HEAD`); `origin/develop` pointed at
 the same commit at that moment. **The wave moves HEAD while it runs**, so a reader must
 expect the repository to be ahead of the commit written here — and must not read the lag as
 a defect.
@@ -37,19 +37,21 @@ and "served" is the single most important fact about this repository, and it is 
 | | |
 |---|---|
 | the branch | `develop` |
-| the commit | `c4f2dff98a0dbfc0eb89309582e64b11ba19313c` — the W48 commit observed at 2026-11-06T14:40:00+03:00; this snapshot is carried by the commit that follows it |
-| the remote | `origin/develop` — **the same commit** at the moment of writing (the local and the remote do not diverge). The wave is still running, so the remote moves with it |
+| the commit | `71b5b5c66907883c1eaf9c38433197ba3191c5db` — the W50 commit observed at 2026-11-07T20:48:27+03:00; this snapshot is carried by the commit that follows it |
+| the remote | `origin/develop` — **the same commit** at the moment of writing (the local and the remote do not diverge). The wave is still running, so the remote moves with it. `origin/main` is `79045c57` — the **squash merge of pull request #44** (W49), merged on 2026-11-06 |
 | the release version | **none.** The tags `v1.0.0` and `v16.0.0-mind` exist, but no release process is defined and the `v16.0.0-mind` tag predates three waves of work |
-| the latest completed wave | **W47** — the implementation of the owner's decisions of 2026-11-05 (OD-025…OD-044). Its sequence is **thirteen changesets after** the starting W46 commit `84955ec9`, and **fourteen entries with it**, through `eca23bfd`; before it, **W46** — the consolidation (`233af984`), and **W45.2** — the owner's four architecture decisions (`a6ded233`) |
-| the previous waves | W45.1 (`509d23ba`) — the crash consistency; W45.0 (`eae6003f`) — the cognitive kernel integrity; RECON-W44.0 (`ae6c017b`) — the bytecode archaeology |
-| the active wave | **W49 — the public-research workstream (OD-048) and the two implementation tasks W48 left approved. The wave's report is `docs-v2/engineering/W49-STATUS.md`.** **What it did:** the owner-approved autonomy impulse consumer is implemented and wired into the serving paths (`c86f6898`; 12 tests, 0 failures), the native-image build's **heap and runner budget is measured** instead of guessed (`docs-v2/engineering/W49-NATIVE-BUDGET.md`; the capability stays BLOCKED), and the public face — the README, the site, the onboarding, the publication pipeline and the collaboration brief — now states what the repository actually does, with every claim traceable to an artefact. **What is still open, and named:** the **default branch is 357 commits behind** and the site is published from it (R-W49-02, Q-W49-01); the **release path** has no credentials (R-W48-04); the **static analysis produces no evidence** and the Java 25-capable engine reports 1 414 findings (Q-W49-06); the **native build** needs a larger runner and one dependency (Q-W49-05); and **six owner questions** were raised (Q-W49-01…Q-W49-06). **No W48 task is claimed here as done beyond what its own committed document states** || the modules | **14** included in `settings.gradle`, 3 commented out, 2 outside Gradle, 1 stray orphan file |
+| the latest completed wave | **W49** — the public-research workstream (OD-048) and the two implementation tasks W48 left approved. It is **merged into `main`**: pull request #44, squash `79045c57`, 2026-11-06. Before it, **W48** — the truth of the evidence (the CI reconciliation, the capability-claims guard, the measured native budget), and before that **W47** — the implementation of the owner's decisions of 2026-11-05 (OD-025…OD-044) |
+| the previous waves | W48 — the CI reconciliation and the native budget; W47 — the owner's four architecture decisions (`a6ded233`); W45.1 (`509d23ba`) — the crash consistency; W45.0 (`eae6003f`) — the cognitive kernel integrity; RECON-W44.0 (`ae6c017b`) — the bytecode archaeology |
+| the active wave | **W50 — MATRIX Local Evidence-Grounded Demonstrator: from research subsystems to a runnable, evidence-grounded learning system. Its report is `docs-v2/engineering/W50-STATUS.md`; the measured model evaluation is `docs-v2/engineering/W50-LOCAL-MODEL.md`.** **What it delivered:** a **bounded, licensed corpus in one domain** (plate tectonics) — 2 seed documents (USGS *This Dynamic Earth*, US public domain; Wikipedia *Plate tectonics*, CC BY-SA 4.0, oldid 1381934246) and a **7-document pre-cached research pool** of versioned Wikipedia snapshots, every file carrying its licence, its revision and its sha256 in a manifest that the import verifies; the seed import produced **348 claims** and the bounded acquisition cycle **3 pool documents and 324 claims**. The **four-turn demonstration ran on the packaged jar** (`matrix-core/build/quarkus-app/quarkus-run.jar`, `http://127.0.0.1:9091`): Q1 answered from **153 claims of 2 sources**; Q2 from **25 claims of 4 sources** after the acquisition; Q3 a **CONTRADICTED** verdict that names the disputed premise and the contradicting claim and its source, with `promoted=false` — the assertion was never stored; Q4 acquired the *Slab pull* document (**14 claims**) and applied **exactly one supersession** (relatedness 0.83) — the earlier claim stays in the history as SUPERSEDED (version 2), the new one is SUPPORTED (version 2), and the answer moves from **118 claims of 5 sources** to **128 claims of 7 sources**. **The teacher stays off** (OD-049): the local model evaluation measured **0 teacher invocations** during the deterministic acquisition, and the teacher is **not** more faithful (72.7 % of its propositions are verbatim against the deterministic path's 100 %). **What is still open, and named:** the false-premise judgement is **lexical, not semantic**; an answer's support value is **0.0**, because an imported claim carries no authored confidence; the pool is pre-cached and versioned, **not live web** — no request leaves the machine; and the status route leaves the workspace list and the counts empty (the three risks R-W50-01…R-W50-03, and the question Q-W50-03). **The public face is published from `main`, which now carries W49** (the squash `79045c57`) and is behind `develop` by the W50 work (R-W49-02, Q-W49-01); the **release path** has no credentials (R-W48-04); the **static analysis produces no evidence** and the Java 25-capable engine reports 1 414 findings (Q-W49-06); the **native build** needs a larger runner and one dependency (Q-W49-05) |
+| the modules | **14** included in `settings.gradle`, 3 commented out, 2 outside Gradle, 1 stray orphan file |
 | the serving entry points | **2** applications — the Quarkus app on **9091** (210 routes) and the brain runtime's JDK server on **8765** (28 routes) |
 | the CLI entry points | **79** |
-| the databases | **one canonical** SQLite file (`data/knowledge/workbench.sqlite`, the knowledge schema **v19** — `KnowledgeStore.SCHEMA_VERSION = 19`) plus chain B's own `data/mind/mind.sqlite` |
+| the databases | **one canonical** SQLite file (`data/knowledge/workbench.sqlite`, the knowledge schema **v19** — `KnowledgeStore.SCHEMA_VERSION = 19`) plus chain B's own `data/mind/mind.sqlite`. The W50 demonstration ran on that canonical file and left **687 claims** in each of its two workspaces; the claims carry the workspace id, but the `workspace` table itself holds no row — which is why the status route's workspace list comes back empty (Q-W50-03) |
 
-**What this snapshot re-verified, and what it carried.** Re-verified on 2026-11-06: the
+**What this snapshot re-verified, and what it carried.** Re-verified on 2026-11-07: the
 branch and the remote (`git rev-parse HEAD`, `git rev-parse origin/develop` — the same
-commit at the moment of writing), the wave that is active, and the schema version
+commit at the moment of writing), the merge of W49 into `main` (the squash `79045c57`), the
+wave that is active, and the schema version
 (`matrix-core/src/main/java/io/matrix/knowledge/KnowledgeStore.java:92` → `SCHEMA_VERSION = 19`).
 **Carried unchanged from the W46/W47 measurement**, because this wave did not re-measure them:
 the module count, the serving entry points and their route counts, the CLI entry point count
@@ -79,11 +81,17 @@ of **scopes**, each verified on a named commit.
 | the wall-clock compliance scope (the 21 adjudicated sites) | `./gradlew :matrix-core:test --tests "io.matrix.consciousness.Exp228ComplianceTest"` | **1 test, 0 failures, 0 errors, 0 skipped** | `4adbc664` | JVM |
 | the disk-budget scope (the unit defect) | `./gradlew :matrix-brain-runtime:test --tests "io.matrix.brain.runtime.DiskBudgetTest"` | **10 tests, 0 failures, 0 errors, 0 skipped** | `af9ba688` | JVM |
 | the GPU benchmark harness's own arithmetic | `./gradlew :matrix-core:test --tests "io.matrix.benchmark.GpuBenchmarkHarnessTest"` | **8 executions, 0 failures, 0 errors** | `75937934` | JVM |
+| the W50 acquisition and premise scope | `./gradlew :matrix-core:test --tests "io.matrix.knowledge.acquisition.*" --tests "io.matrix.knowledge.PremiseAssessmentTest" --rerun-tasks` | **11 classes, 60 tests, 0 failures, 0 errors, 0 skipped** | `71b5b5c6` | JVM |
 
 **The four W48 rows are quoted from the wave's own committed records**, not re-run here:
 `docs-v2/engineering/W48-TEST-RECONCILIATION.md` §3 (the two test scopes),
 `docs-v2/engineering/W48-CI-RECONCILIATION.md` §4.1 (the disk-budget scope) and
 `docs-v2/engineering/W48-GPU-BENCHMARK.md` §9 (the harness's arithmetic).
+
+**The W50 row is the wave's own scope**, counted from its retained JUnit XML under
+`matrix-core/build/test-results/test/`: the eleven classes of `io.matrix.knowledge.acquisition.*`
+plus `io.matrix.knowledge.PremiseAssessmentTest`. It is a **scope**, not the project's total
+test population — the full suite is still not run here (R-W46-10).
 
 **Three things this baseline does NOT say:**
 
@@ -121,7 +129,8 @@ of **scopes**, each verified on a named commit.
 ## 5. The pending owner decisions
 
 The full register, with the competing explanations and the experiment that would resolve each,
-is `docs-v2/governance/OPEN-QUESTIONS.md`. The four that block the next work:
+is `docs-v2/governance/OPEN-QUESTIONS.md`. The owner questions that block the next work — the
+three this wave raised are at the bottom:
 
 | the ID | the question | what a decision unblocks |
 |---|---|---|
@@ -129,6 +138,13 @@ is `docs-v2/governance/OPEN-QUESTIONS.md`. The four that block the next work:
 | **Q-W46-02** | a dry-run / preview mode for the destructive reload? | a new HTTP surface on a destructive path |
 | **Q-W46-03** | what may a workspace replacement erase? | the erasure set of the workspace replacement |
 | **Q-W46-13** | the retention policy for the append-only observation, adjudication and request-event histories | the unbounded growth of the audit trail |
+| **Q-W50-01** | does the repository's own AGPL-3.0 licence interact with the share-alike of the CC BY-SA 4.0 Wikipedia extracts the corpus embeds? | whether the corpus may ship inside the repository as it does |
+| **Q-W50-02** | the import stores the source text as the source excerpt, and the audit trace of an imported claim does not carry the byte offset of the quoted span | the auditability of every imported claim |
+| **Q-W50-03** | the Workbench status route reports the database path and its size but leaves the workspace list and the counts empty | the observability of the demonstrator's own workspace |
+
+**The first three rows are CLOSED in the register** (OD-025, OD-026 and OD-027, answered on
+2026-11-05) and are kept here for the record; only **Q-W46-13** and the three W50 questions
+are pending.
 
 **One of the five this section used to list is now CLOSED and is no longer pending:**
 **Q-W46-07** (the GPU path) was answered on 2026-11-06 — **OD-047**: the GPU is an **optional
@@ -139,29 +155,29 @@ accelerator**, not part of the default serving path. The register records it as 
 
 ## 6. The next recommended work
 
-The canonical roadmap is `docs-v2/governance/ROADMAP.md`. The W46 tasks that this section
-used to list (TASK-W46-2…TASK-W46-6) are **done** and live in §4.1 of the roadmap. **What
-is open now, in order** — this is the next wave's list, and it is the wave's own proposal
-(`docs-v2/engineering/W48-STATUS.md` §9):
+The canonical roadmap is `docs-v2/governance/ROADMAP.md`. The tasks this section used to
+list (TASK-W46-2…TASK-W46-6, TASK-W48-01…TASK-W48-03 and TASK-W49-01…TASK-W49-10) are
+**done** and live in §4.1, §4.7 and §4.8 of the roadmap. **What is open now, in order:**
 
-1. **The autonomy impulse consumer** — **approved (OD-045, 2026-11-06, option A) and NOT
-   implemented.** The scope is `docs-v2/engineering/ADR-W48-AUTONOMY-IMPULSE-CONSUMER.md`
-   §5 and the ten tests of its §9; the roadmap task is **TASK-W48-03**. **Until it is
-   written, the truth is unchanged: the scheduler accepts impulses, nothing consumes them.**
-2. **The native-image resource budget** — **OD-046**: measure the heap and the runner size
-   the build actually needs, record them, and keep the capability **BLOCKED** until a build
-   succeeds. The 23 native-binary failures stay `BLOCKED`
-   (`docs-v2/engineering/W48-TEST-RECONCILIATION.md` §4).
-3. **The GPU as an optional accelerator** — **OD-047**: the registry states the optional
-   role; **no serving-path change is required or proposed**, and the serving path does not
-   change.
-4. **The CI observation** — the fixes of the W48 wave are committed, but **no green `ci` run
-   has been observed after them** (`docs-v2/engineering/W48-CI-RECONCILIATION.md` §3).
-5. **The two surviving mutants of the formal gate** — recorded findings, not failures:
-   `Consensus-evaluate-without-quorum` and `KnowledgeAxes-conflict-forgets-what-it-recorded`
-   (`docs-v2/engineering/W48-CI-RECONCILIATION.md` §4.5).
-6. **The wave's own report** — `docs-v2/engineering/W48-STATUS.md`. It is committed; this
-   snapshot names it, and does not restate it.
+1. **The release pull request** — the lead opens `develop` → `main` at the end of the wave,
+   and **an agent does not merge it**. The pull request is a prepared path, not a release;
+   the merge is the owner's decision (Q-W49-01).
+2. **The three owner questions this wave raised** — the licence interaction of the corpus
+   inside the repository (Q-W50-01), the audit trace of an imported claim (Q-W50-02) and the
+   status route's empty workspace list and counts (Q-W50-03). They are in §5 above and in
+   the register.
+3. **The honest limits of the demonstrator** — the false-premise judgement is lexical, not
+   semantic (R-W50-01); the extractor's corpus vocabulary is a heuristic verb list
+   (R-W50-02); the answering path proves zero LLM calls by instrumentation, and the
+   assertion check is itself a deterministic lexical pass (R-W50-03). They are named, not
+   hidden.
+4. **The W49 owner questions, unchanged** — the release path's missing credentials
+   (R-W48-04), the static-analysis policy for the 1 414 findings of the Java 25-capable
+   engine (Q-W49-06), and the native build's larger runner and one missing dependency
+   (Q-W49-05).
+5. **The wave's own report** — `docs-v2/engineering/W50-STATUS.md` and
+   `docs-v2/engineering/W50-LOCAL-MODEL.md`. This snapshot names them and does not restate
+   them.
 
 ---
 
@@ -189,6 +205,7 @@ validator says so.
 | the procedures | `docs-v2/operations/RUNBOOK.md` and `docs-v2/operations/RECOVERY-RUNBOOK.md` (the backup and the restore — W46.2) |
 | the test scopes | `docs-v2/engineering/TEST-CATALOGUE.yml` |
 | the waves | `docs-v2/waves/INDEX.md` — the chronological work log (W46.2) — and `docs-v2/engineering/W4*.md`, the record of what was done, **immutable** |
+| the W50 demonstrator | `docs-v2/engineering/W50-STATUS.md` (the wave's own report) and `docs-v2/engineering/W50-LOCAL-MODEL.md` (the measured local-model evaluation); the demonstration itself is `docs-v2/demos/local-learning-loop/README.md`, its four prompts are `docs-v2/demos/local-learning-loop/OWNER-SEQUENCE.md`, and the expected answers are `docs-v2/demos/local-learning-loop/ANSWER-KEY.md` — deliberately kept outside the application |
 | the research and the negative results | `docs-v2/research/RESEARCH-INDEX.md` and `docs-v2/research/NEGATIVE-RESULTS-INDEX.md` (W46.2) |
 | the documentation navigation | `README.md` and `docs-v2/INDEX.md` — both reconciled in W46.2 |
 | the agent's skills | `docs-v2/governance/SKILL-INVENTORY.md` (what exists) and `docs-v2/governance/SKILLS.md` (what is recommended) |
@@ -227,7 +244,7 @@ assumption.**
 
 ## 9. The owner's working tree — the set has changed, and the change is a fact
 
-**This section was rewritten on 2026-11-06, against the observed tree.** The W47 snapshot
+**This section was rewritten on 2026-11-07, against the observed tree.** The W47 snapshot
 named **eleven** owner entries that were *uncommitted* at that time. **At the commit this
 snapshot names, eight of them are tracked in git** — they were committed by the waves that
 followed, and they are still the owner's:
@@ -242,14 +259,13 @@ the index (`git ls-files opencode.json.bak` → empty). The local journal
 `wal/SESSION_WAL.md` is **tracked**, as it has been since the early waves; only
 `wal/state.yaml` is excluded and does not exist <!-- no-link: the file is excluded by .gitignore and does not exist -->.
 
-**The working tree carries the W48 wave's own working files and nothing of the owner's.**
-At 2026-11-06T10:29:32+03:00 `git ls-files -m -o --exclude-standard` returned **seven**
-entries, all of them W48's: the six documents this snapshot corrects
-(`docs-v2/engineering/W47-STATUS.md`, `docs-v2/engineering/W45.2-STATUS.md`,
-`docs-v2/governance/PROJECT-STATE.md`, `docs-v2/governance/ROADMAP.md`,
-`docs-v2/specifications/SPEC-015-autonomy-impulses.md`,
-`docs-v2/specifications/SPEC-016-decentralized-digests.md`) and one more that the wave's
-own agent is still writing, `docs-v2/engineering/W48-CI-RECONCILIATION.md`. **The set
+**The working tree carries the W50 wave's own working files and nothing of the owner's.**
+At 2026-11-07T20:51:28+03:00 `git ls-files -m -o --exclude-standard` returned **five**
+entries: the three documents of the demonstration
+(`docs-v2/demos/local-learning-loop/README.md`, `docs-v2/demos/local-learning-loop/OWNER-SEQUENCE.md`
+and `docs-v2/demos/local-learning-loop/ANSWER-KEY.md`), the launcher `scripts/run-local.sh`
+— **untracked**, so it is in no commit yet — and one file that is neither the wave's nor the
+owner's, `.dsh-project-memory/admission-shadow.jsonl`, which the harness writes. **The set
 changes as the wave runs**; what does not change is that **no owner entry is in it**.
 
 **A session that finds a different set of owner entries is not a failure — it is a fact that

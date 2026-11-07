@@ -1,6 +1,6 @@
 # DECISION REGISTER — MATRIX
 
-**Status:** CANONICAL · 2026-11-04 · branch `develop` · HEAD `a6ded233`
+**Status:** CANONICAL · 2026-11-07 · branch `develop` · HEAD `71b5b5c6`
 **Kind:** an index. Nothing in this file is a decision; every row points at the document that
 holds the decision, and the full text, the rejected alternatives and the evidence live there.
 
@@ -86,6 +86,10 @@ decisions, then the proposals. Within a kind the newest wave comes first.
 | OD-046 | The native-image build gets a MEASURED resource budget in the next wave — the heap and the runner size it actually needs are recorded — and the native capability stays BLOCKED until a build succeeds | owner | 2026-11-06 | ACCEPTED | — | the `W48-NATIVE-IMAGE` row of `docs-v2/architecture/CAPABILITY-REGISTRY.yml`; the question in `docs-v2/engineering/W48-QUESTIONNAIRE.md` (Q-W48-02) | a resource decision for the next wave — nothing is built in W48; the nine recorded failures of `.github/workflows/native.yml` are an OOM in the build, after the toolchain installed successfully | the owner's answer of 2026-11-06 to the W48 questionnaire; the W48 directive forbids creating a native build requirement without measuring its resource cost |
 | OD-047 | The GPU is an OPTIONAL ACCELERATOR, not part of the default serving path: the measurement is kept, the silent CPU fallback stays visible in the registry, and no deployment is obliged to provide the CUDA libraries | owner | 2026-11-06 | ACCEPTED | — | the `W46-GPU` row of `docs-v2/architecture/CAPABILITY-REGISTRY.yml`; the measurement in `docs-v2/engineering/W48-GPU-BENCHMARK.md`; the question in `docs-v2/engineering/W48-QUESTIONNAIRE.md` (Q-W48-03) | a description, not a behaviour — the serving path does not change; the 12.6× digit stays HISTORICAL and bounded by the 12.06×–12.69× measurement | the owner's answer of 2026-11-06 to the W48 questionnaire; the W46 registry row had carried "the owner must also decide whether the GPU is in scope for MATRIX at all" since W46 |
 | OD-048 | MATRIX's PUBLIC RESEARCH PRESENCE becomes a permanent workstream: the README, the GitHub Pages site, the contributor-facing material, the publication pipeline and the collaboration brief are kept aligned with the repository's ACTUAL state, and every public capability statement is traceable to an artifact | owner | 2026-11-06 | ACCEPTED | — | `docs-v2/engineering/W49-STATUS.md`; the W49 public workstream in `docs-v2/governance/ROADMAP.md` §4.8 | a permanent direction, not a campaign — the measure is independent validation, useful research criticism, reproducible improvements and concrete domain testing, and never views, stars, downloads or publicity | the owner's W49 directive addendum of 2026-11-06. The decision is a DIRECTION and a STANDARD: public communication follows the same evidence rules as engineering, and the three descriptions — vision, current implementation, evidence and limitations — are never merged into one claim |
+| OD-049 | The DETERMINISTIC EXTRACTION PATH STAYS THE CRITICAL PATH and the teacher stays a teacher: no model is called on the acquisition path or on the answering path | owner | 2026-11-07 | ACCEPTED | — | `docs-v2/engineering/W50-LOCAL-MODEL.md` (the measurement and its verdict); the wave report `docs-v2/engineering/W50-STATUS.md` | none — the teacher stays off; the acquisition path stays deterministic and the answering path makes no model call | the measurement of 2026-11-07: the teacher was **invoked 0 times** during the deterministic acquisition, and it is **not** better at extraction — 72.7 % of its propositions are verbatim in the source against the deterministic path's **100 %** |
+| OD-050 | The ACQUISITION BOUNDARY is a pre-cached, versioned, licensed pool that ships with the application: no live web request is made | owner | 2026-11-07 | ACCEPTED | — | `docs-v2/engineering/W50-STATUS.md`; the pool's manifest `matrix-core/src/main/resources/research-pool/plate-tectonics/corpus-manifest.json` | the learning cycle reads a classpath catalogue, at most three documents per question, and every report says what it considered, what it acquired and what it skipped | the run of 2026-11-07: the cycle acquired **3** pool documents and **324 claims**, each document carrying its licence, its `oldid` and its access date — and **no request left the machine** |
+| OD-051 | A USER ASSERTION IS AN INPUT TO EVALUATE and is never promoted into the store: the assessment route never writes | owner | 2026-11-07 | ACCEPTED | — | `docs-v2/engineering/W50-STATUS.md`; `matrix-core/src/main/java/io/matrix/knowledge/PremiseAssessment.java` | the assessment route returns a verdict with `promoted=false`; it creates no claim, no evidence and no status | the demonstration's turn 3: the verdict was **CONTRADICTED**, the disputed premise and the contradicting claim and its source were named, and the store held no trace of the assertion |
+| OD-052 | The CORPUS IS ONE BOUNDED DOMAIN, with the per-file licence, revision and sha256 in a manifest that the import verifies | owner | 2026-11-07 | ACCEPTED | — | `matrix-core/src/main/resources/corpus/plate-tectonics/corpus-manifest.json`; `matrix-core/src/main/resources/research-pool/plate-tectonics/corpus-manifest.json` | the import refuses a corpus file whose bytes are not the recorded bytes; the seed import produced **348 claims** and the bounded cycle **324** more | the seed corpus is 2 documents (USGS *This Dynamic Earth*, US public domain; Wikipedia *Plate tectonics*, CC BY-SA 4.0, oldid 1381934246) and the pool is 7 versioned Wikipedia snapshots. The licence question the corpus raises is **not** answered by this decision — it is Q-W50-01 |
 | ADR-2026-09-12-001 | Adopt an HDC × BitLinear × Boolean hybrid brain as an architectural primitive, orthogonal to MPDP | normative | 2026-09-12 | ACCEPTED | — | `docs-v2/architecture/ADR-2026-09-12-001-hdc-bitlinear-hybrid-brain.md` | a contract | the document names no decider; it is a standing architectural rule, referenced by `docs-v2/engineering/STANDARDS-MATRIX.md` as Accepted |
 | ADR-2026-10-26-002 | `TrueMindCycle` is the one cognitive conductor — of the brain runtime | owner | 2026-10-26 | ACCEPTED | ADR-W45.2-01 (for the epistemic application only) | `docs-v2/architecture/ADR-2026-10-26-002-single-cognitive-conductor.md` | a contract | decided by the repository owner via MASTER ENGINEERING DIRECTIVE v2, §13, for `matrix-brain-runtime` and `matrix-api-gateway`. The header carries a scope annotation of 2026-11-04: the decision holds for the brain runtime, is **not** the conductor of the epistemic application, and the body was not rewritten |
 | ADR-2026-10-30-003 | The HashChain trust model: an injected clock, sequence validation, and tamper-evidence rather than tamper-proofness | normative | 2026-10-30 | ACCEPTED | — | `docs-v2/architecture/ADR-2026-10-30-003-hashchain-trust-model.md` | a contract | the document names no decider; it records the RECON-W39 findings on `io.matrix.audit.HashChain` and the rules that follow |
@@ -499,6 +503,52 @@ create are in `docs-v2/governance/ROADMAP.md` §4.6.
 - **the evidence or the scope of the approval**: the owner's W49 directive addendum of 2026-11-06. Its audit found that the default branch (`main`) is at the 2026-10-12 commit `7a0ed0cc` while `develop` carries the current work; that the deployed Pages site still carries the "Hybrid Intelligence Encyclopedia" positioning, "city of minds", a W1500 claim and a test count that no longer holds; that the site's `_config.yml` names `https://alexandr-narbaev.github.io` while the actual deployment URL, read from the GitHub API, is `https://alexandernarbaev.github.io/agi/`; and that the contributor-facing material names paths, channels and response promises that do not exist. The decision's binding part is the EVIDENCE STANDARD: every public capability statement must be traceable to `docs-v2/architecture/CAPABILITY-REGISTRY.yml`, `docs-v2/engineering/TEST-CATALOGUE.yml`, `docs-v2/governance/PROJECT-STATE.md`, the wave reports, the research protocols, the formal specifications with their model-check results, or a committed benchmark and its output. **A skipped test is not a pass; a proposed feature is not implemented; an isolated class is not a production capability; the blocked native-image build is not supported; the GPU is optional (OD-047); the approved autonomy consumer is not implemented until it is implemented.**
 - **the deliberate non-actions**: the default branch is NOT changed (that is a separate decision); GitHub Discussions are NOT enabled (no moderation and reporting arrangement exists); no maintainer address, response SLA or support service is invented; no journal submission and no partner are required of the project.
 
+## 3.4 The W50 boundaries — the wave of 2026-11-07
+
+**Four decisions, taken under the owner's W50 directive of 2026-11-07.** They are the boundaries the
+local demonstrator is allowed to have, and they are recorded here because each of them changes what the
+runtime does — or, in the first case, deliberately changes what it does not do.
+
+### OD-049 — The deterministic extraction path stays the critical path, and the teacher stays a teacher
+
+- **kind**: owner
+- **the date**: 2026-11-07
+- **the status**: ACCEPTED
+- **the successor**: —
+- **the document that holds it**: `docs-v2/engineering/W50-LOCAL-MODEL.md` (the measurement and its verdict); the wave report `docs-v2/engineering/W50-STATUS.md`
+- **the effect on the runtime**: none — the teacher stays **off**. The acquisition path stays deterministic, and the answering path makes no model call at all
+- **the evidence or the scope of the approval**: the measurement of 2026-11-07 on this machine. The teacher — Qwen2.5-1.5B-Instruct-GGUF, revision `91cad51170dc346986eccefdc2dd33a9da36ead9`, Apache-2.0, sha256 `6a1a2eb6d15622bf3c96857206351ba97e1af16c30d7a74ee38970e434e9407e`, Q4_K_M, run with llama.cpp on the RTX 5070 Ti — was **invoked 0 times** during the deterministic acquisition, measured with a counter that a known model call was proved to increment. And it is **not better at extraction**: 72.7 % of its propositions are verbatim in the source, against the deterministic path's 100 %. The teacher therefore stays a teacher: it may be offered behind an adapter, **off by default**, and anything it produces must pass the same verbatim-and-located evidence rule the deterministic path passes at 100 %.
+
+### OD-050 — The acquisition boundary is a pre-cached, versioned, licensed pool that ships with the application
+
+- **kind**: owner
+- **the date**: 2026-11-07
+- **the status**: ACCEPTED
+- **the successor**: —
+- **the document that holds it**: `docs-v2/engineering/W50-STATUS.md`; the pool's manifest `matrix-core/src/main/resources/research-pool/plate-tectonics/corpus-manifest.json`
+- **the effect on the runtime**: the learning cycle reads a **classpath catalogue**, takes at most three documents per question, and reports which documents it considered, which it acquired, under which licence, and what it skipped. **No request leaves the machine.** There is no web search, and the word "research" in the panel's name does not imply one
+- **the evidence or the scope of the approval**: the run of 2026-11-07. The cycle acquired **3** pool documents (continental drift, mid-ocean ridge, subduction) and **324 claims**, each document carrying its licence, its source URL, its `oldid` revision and its access date; the report states the boundary in the words the demonstration's answer key requires — *a pre-cached, versioned and licensed pool that ships with the application, no request leaves the machine*
+
+### OD-051 — A user assertion is an input to evaluate and is never promoted into the store
+
+- **kind**: owner
+- **the date**: 2026-11-07
+- **the status**: ACCEPTED
+- **the successor**: —
+- **the document that holds it**: `docs-v2/engineering/W50-STATUS.md`; `matrix-core/src/main/java/io/matrix/knowledge/PremiseAssessment.java`; the route in `matrix-core/src/main/java/io/matrix/knowledge/LearningCycleResource.java`
+- **the effect on the runtime**: the assessment route **never writes**. It returns a verdict — supported, contradicted, unsupported or unresolved — together with the disputed premise, the contradicting claim and its source, and `promoted=false`. No claim, no evidence and no status is created by a check
+- **the evidence or the scope of the approval**: the demonstration's turn 3. The verdict was **CONTRADICTED**, the disputed premise was named, the contradiction pointed at the claim that carries it and at the source that claim came from, and the store held no trace of the assertion. An assertion is an input to evaluate, never a confirmation to store
+
+### OD-052 — The corpus is one bounded domain, with the per-file licence, revision and sha256 in a verified manifest
+
+- **kind**: owner
+- **the date**: 2026-11-07
+- **the status**: ACCEPTED
+- **the successor**: —
+- **the document that holds it**: `matrix-core/src/main/resources/corpus/plate-tectonics/corpus-manifest.json`; `matrix-core/src/main/resources/research-pool/plate-tectonics/corpus-manifest.json`
+- **the effect on the runtime**: the corpus is **one bounded domain** — plate tectonics — and every file is listed in a manifest with its licence, its licence URL, its canonical URL, its access date, its revision and the sha256 of the imported bytes. The import **verifies the manifest** before it reads a file, so a corpus file that is not the recorded bytes is refused. The seed import produced **348 claims**, and the bounded cycle added **324** more
+- **the evidence or the scope of the approval**: the seed corpus is two documents — USGS *This Dynamic Earth* (US public domain) and Wikipedia *Plate tectonics* (CC BY-SA 4.0, oldid 1381934246) — and the research pool is seven versioned Wikipedia snapshots with their `oldid`s recorded. **This decision does not answer the licence question the corpus raises**: the interaction between the repository's own AGPL-3.0 licence and the share-alike of the quoted CC BY-SA 4.0 texts is **Q-W50-01**, and it is the owner's
+
 ## 4. The duplicate-identifier problem
 
 The repository has one, and this register does not hide it. There are three distinguishable
@@ -609,4 +659,4 @@ means three.**
   `normative` — a standing rule whose document names no decider. `proposal` — written down,
   not decided.
 * **The register is dated and bounded.** It describes the decisions recorded in the repository
-  at `a6ded233` on 2026-11-04. A decision taken afterwards is not here until it is indexed.
+  at `71b5b5c6` on 2026-11-07. A decision taken afterwards is not here until it is indexed.
