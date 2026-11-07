@@ -159,8 +159,10 @@ magic-number, configuration, frozen-zone, documentation, test and retention
 gates pass. The ShellCheck CI job runs `shellcheck` over every `*.sh` and
 fails on any finding; it failed on the merged W49 commit `79045c57` as well,
 so the failure is inherited. The two scripts this wave added
-(`scripts/run-local.sh`, `scripts/offline-answer-proof.sh`) produce no
-finding: the job's log names neither of them. The native image remains blocked by
+(`scripts/run-local.sh`, `scripts/offline-answer-proof.sh`) are clean under
+ShellCheck 0.10.0 (`shellcheck scripts/offline-answer-proof.sh
+scripts/run-local.sh` exits 0), and the numeric literals they carry are
+named constants, so MAGIC-1 stays at its baseline of 78 shell candidates. The native image remains blocked by
 the runner's memory budget, and the Docker push remains blocked by the owner's
 credentials — both are inherited from W49 and neither blocks the demonstrator.
 
