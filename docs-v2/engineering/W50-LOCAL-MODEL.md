@@ -267,7 +267,8 @@ cache is `~/.cache/w50/` (§3).
 - `scripts/download_models.sh` — a HuggingFace `snapshot_download` → Avro converter for
   ten models (SmolLM2-360M, Qwen2.5-1.5B, Qwen3-0.6B/1.7B, DeepSeek-R1-Distill-Qwen-1.5B,
   Gemma-3-1B, Llama-3.2-3B, Phi-4-mini, Yi-1.5-Chat-6B, Mistral-7B), writing to
-  `models/pretrained/`. **Not run in this wave** — it produces Avro neuron tables, not
+  `models/pretrained/`. <!-- no-link: the directory is an output of the script and is not in the repository -->
+  **Not run in this wave** — it produces Avro neuron tables, not
   what W50-03 measures — and it ignores `*.gguf` on download, so it is not a GGUF path.
 - `scripts/download_distilbert_onnx.py`, `scripts/distill-onnx.sh`,
   `scripts/import_qwen_weights.py`, `scripts/gen_teacher_onnx.py` — ONNX-side helpers.
