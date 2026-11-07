@@ -386,6 +386,22 @@ curl -s -X POST http://127.0.0.1:9091/v1/workbench/workspaces/photosynthesis/ask
 The answer carries the claims it used and the sources behind them. The knowledge store is a
 single SQLite file (`data/knowledge/workbench.sqlite` by default), created on first use.
 
+### The local learning demonstrator (W50)
+
+One command, one browser, four prompts — a MATRIX instance that learns a subject from
+real licensed sources, answers from its own knowledge base, refuses a false premise and
+revises its model when new evidence arrives:
+
+```bash
+./scripts/run-local.sh
+```
+
+Then open <http://127.0.0.1:9091/workbench/>, press **Load the seed corpus** in the
+**Learn** panel and follow `docs-v2/demos/local-learning-loop/OWNER-SEQUENCE.md`. The
+prompts, the expected answers and what the wave does not prove are in the same folder;
+the measured report is `docs-v2/engineering/W50-STATUS.md`. No Docker, no native image,
+no model weights, no network access.
+
 > The destructive load route **fails closed**: replacing a workspace that holds something
 > requires `?replace=true` (or the body field `replaceExisting`), and it leaves a
 > recoverable snapshot of what it replaced. The exact shape of that consent parameter is an

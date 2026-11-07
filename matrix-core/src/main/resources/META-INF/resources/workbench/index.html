@@ -1721,7 +1721,9 @@ $('btn-learn').addEventListener('click', async () => {
     const q = $('learn-q').value.trim();
     const r = await learningApi('/workspaces/' + WS + '/learn?question=' + encodeURIComponent(q),
       { method: 'POST' });
-    let html = '<div class="muted">Uncovered terms: '
+    let html = '<div class="muted">Question terms: '
+      + esc((r.questionTerms || []).join(', ') || 'none') + '</div>';
+    html += '<div class="muted">Uncovered terms: '
       + esc((r.uncoveredTerms || []).join(', ') || 'none') + '</div>';
     html += '<div class="muted">Acquired ' + r.documentsAcquired + ' document(s), ' + r.claimsAdded
       + ' claims entered. Boundary: ' + esc(r.boundary) + '</div>';
