@@ -212,3 +212,86 @@ a ranking problem, the second a calibration problem. Both are recorded
    its rules are written down in `PremiseAssessment`; a second domain with a
    different vocabulary would say more about the rule than a second opinion on
    this one.
+
+## 11. The fifteen questions
+
+1. **What can the owner run, and with which exact command?** `./scripts/run-local.sh`
+   builds the packaged jar if needed and starts it; the Workbench is at
+   `http://127.0.0.1:9091/workbench/`. The four prompts are in
+   `docs-v2/demos/local-learning-loop/OWNER-SEQUENCE.md`.
+2. **What real material did MATRIX ingest?** The seed corpus: USGS *This
+   Dynamic Earth* (US public domain, snapshot 2026-11-07, sha256 `a82d4ca7…`)
+   and Wikipedia *Plate tectonics* (CC BY-SA 4.0, oldid 1381934246). The
+   acquisition pool adds seven Wikipedia articles (CC BY-SA 4.0) with their
+   own oldids, listed in `matrix-core/src/main/resources/research-pool/
+   plate-tectonics/corpus-manifest.json`.
+3. **Which local model, if any, was used during acquisition?** None in the
+   critical path. The evaluated model was Qwen2.5-1.5B-Instruct-GGUF
+   (revision `91cad51170dc346986eccefdc2dd33a9da36ead9`, Apache-2.0,
+   sha256 `6a1a2eb6d15622bf3c96857206351ba97e1af16c30d7a74ee38970e434e9407e`,
+   Q4_K_M, llama.cpp b12189 on the RTX 5070 Ti). The measured teacher
+   invocations during the deterministic acquisition were **0**.
+4. **What did the model contribute that the deterministic baseline could
+   not?** Nothing that survived measurement: 8 of 11 propositions verbatim
+   (72.7 %) against 92 of 92 (100 %) for the deterministic extractor, and
+   recall 0 of 358 against 92 of 358. It therefore stays a teacher.
+5. **How many extracted claims were accepted, rejected, left uncertain or
+   superseded?** The seed import proposed 348 claims; the store after the
+   four turns holds 687 claims — 685 CANDIDATE, 1 SUPPORTED (version 2) and
+   1 SUPERSEDED (version 2). Promotion requires two distinct source content
+   hashes behind one proposition, so one imported corpus promotes almost
+   nothing by design.
+6. **Can MATRIX answer the first question without a model?** Yes: turn 1
+   answered from 153 claims of 2 sources, `evidenceCoverage` 0.458,
+   `scopeMatch MATCHES` — and the same answer is produced by the offline run
+   whose HTTP clients point at a closed proxy.
+7. **What happened during the follow-up learning cycle?** The cycle named the
+   uncovered terms, considered 7 pool candidates, acquired 3
+   (`wikipedia-continental-drift.md` oldid 1376987312,
+   `wikipedia-mid-ocean-ridge.md` oldid 1383981232,
+   `wikipedia-subduction.md` oldid 1381148652) for 324 claims, reported
+   every licence, and the re-answer cited 25 claims of 4 sources with
+   `evidenceCoverage` 0.293 and one named gap.
+8. **Which false premise was rejected and what evidence disproved it?** The
+   premise "the idea that the continents could move was widely accepted by
+   geologists when it was first proposed in the early twentieth century" —
+   verdict **CONTRADICTED** by the stored claim "When initially proposed as a
+   scientific theory in the early 20th century, the idea that continents could
+   move was widely rejected." (`wikipedia-continental-drift.md`). The
+   assertion was not promoted (`promoted = false`) and the claim count did not
+   move.
+9. **What new evidence changed the conceptual model during the fourth turn?**
+   `wikipedia-slab-pull.md`: the asthenosphere does not directly cause motion
+   by basal friction, slab pull and slab suction account for almost all of
+   the driving force, and ridge push contributes only 5 to 10 per cent.
+10. **What was the model before and after revision?** Before: 118 claims of 5
+    sources, `evidenceCoverage` 0.481. After: 128 claims of 7 sources,
+    `evidenceCoverage` 0.483, 14 claims added and exactly **1** supersession
+    applied (relatedness 0.83, with the reason recorded); the earlier claim
+    is kept as SUPERSEDED version 2 and the new one is SUPPORTED version 2.
+11. **Did the system retain its revision history after restart?** Yes: after
+    the restart the database is 5 935 104 B at schema 19, the 687 claims, the
+    superseded claim and its version are there, and the answer is identical
+    to the pre-restart answer.
+12. **Did the final answering path make zero LLM calls?** Yes, and it is
+    measured three ways: the offline run produced the answers and the
+    revision with no outbound request possible; the compiled epistemic core
+    references no network client and no model runtime; the teacher counter
+    stayed at 25 across the deterministic acquisition.
+13. **What were the measured accuracy, abstention, provenance and resource
+    results?** §9 for the evaluation (12 of 29 cases, 2 of 8 answerable, 3 of
+    6 abstentions, 5 of 5 premises unpromoted, 689 of 689 cited claims with a
+    source identity), §4 for the model and its resources (load 0.839 s,
+    252–297 tok/s, ≈1.41 GiB host RAM, 2685 MiB VRAM), §3 for the four turns.
+14. **What remains incomplete?** The retriever cites the claims it ranks
+    rather than the claims the question needs (2 of 8 answerable cases), the
+    answering path answers where it should refuse (3 of 6), no claim carries a
+    byte offset into its document (Q-W50-02), the status route reports empty
+    counts (Q-W50-03), the acquisition is a pre-cached pool and not the live
+    web, and a refinement rewrote one source record (Q-W50-04).
+15. **What should be the next concrete practical milestone?** A controlled
+    HTTP acquisition adapter behind the same boundary, so the second turn
+    fetches a live source under an explicit licence and size limit; together
+    with a byte-offset locator and an abstention gate for the retriever, so
+    the answer cites what the question needs and refuses what the workspace
+    does not hold.
