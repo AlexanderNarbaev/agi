@@ -114,13 +114,68 @@ public final class ClaimExtractor {
         if (text == null || text.isBlank()) {
             return sentences;
         }
+        // THE HARD WRAP IS NOT A SENTENCE BOUNDARY.
+        //
+        // A Markdown document wraps its paragraphs at a fixed width, so a
+        // paragraph is a set of lines that together make one sentence.
+        // Splitting on the newline turned 76 of the 92 propositions of the
+        // USGS corpus into line fragments - and a fragment is not a claim:
+        // it cannot be quoted as evidence and it cannot be checked.
+        StringBuilder block = new StringBuilder();
+        for (String line : text.split("\n", -1)) {
+            String trimmed = line.strip();
+            if (trimmed.isEmpty()) {
+                flush(block, sentences);
+                continue;
+            }
+            if (startsBlock(trimmed)) {
+                flush(block, sentences);
+                sentences.add(trimmed);
+                continue;
+            }
+            if (!block.isEmpty()) {
+                block.append(' ');
+            }
+            block.append(trimmed);
+        }
+        flush(block, sentences);
+        return sentences;
+    }
+
+    /** Whether a line starts a block of its own. */
+    private static boolean startsBlock(String line) {
+        if (line.startsWith("#") || line.startsWith("|") || line.startsWith(">")) {
+            return true;
+        }
+        if (line.startsWith("- ") || line.startsWith("* ") || line.startsWith("+ ")) {
+            return true;
+        }
+        int i = 0;
+        while (i < line.length() && Character.isDigit(line.charAt(i))) {
+            i++;
+        }
+        return i > 0 && i + 1 < line.length() && line.charAt(i) == '.' && line.charAt(i + 1) == ' ';
+    }
+
+    /** The sentences of one block, and the block itself. */
+    private static void flush(StringBuilder block, List<String> sentences) {
+        if (block.isEmpty()) {
+            return;
+        }
+        for (String sentence : splitSentences(block.toString())) {
+            sentences.add(sentence);
+        }
+        block.setLength(0);
+    }
+
+    /** The sentences of one block: the split is on the terminators, not on the wraps. */
+    private static List<String> splitSentences(String text) {
+        List<String> sentences = new ArrayList<>();
         StringBuilder current = new StringBuilder();
         for (int i = 0; i < text.length(); i++) {
             char c = text.charAt(i);
             current.append(c);
-            if (c == '.' || c == '!' || c == '?' || c == '\n') {
-                // An abbreviation's dot, or a decimal point, does not end a
-                // sentence.
+            if (c == '.' || c == '!' || c == '?') {
                 if (c == '.' && i + 1 < text.length() && Character.isDigit(text.charAt(i + 1))) {
                     continue;
                 }

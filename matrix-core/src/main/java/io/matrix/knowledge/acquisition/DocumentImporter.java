@@ -50,6 +50,9 @@ public final class DocumentImporter {
     /** The bytes a document may be. */
     public static final long MAXIMUM_DOCUMENT_BYTES = 32L * 1024 * 1024;
 
+    /** How much of a source's text the stored excerpt keeps. */
+    public static final int EXCERPT_LIMIT = 8000;
+
     private final KnowledgeStore store;
 
     /**
@@ -177,9 +180,18 @@ public final class DocumentImporter {
         // authoritative, and it does not pretend to - the authority and the
         // freshness are middling, and the promotion rules are what decide
         // what the document is worth.
+        // THE EXCERPT IS THE TEXT OF THE SOURCE.
+        //
+        // The excerpt used to hold the processing note ("read 17144 bytes"),
+        // which says nothing about what the source says and cannot be
+        // shown as evidence. The source's own text is what a reader needs
+        // to check a claim against, so that is what the excerpt carries.
+        String excerpt = document.text().strip();
+        if (excerpt.length() > EXCERPT_LIMIT) {
+            excerpt = excerpt.substring(0, EXCERPT_LIMIT);
+        }
         Source storeSource = new Source(record.sourceId(), workspaceId, SourceKind.HUMAN_ASSERTION,
-                record.filename(), record.location(), 50, 50,
-                record.processingHistory().isEmpty() ? "" : record.processingHistory().get(0),
+                record.filename(), record.location(), 50, 50, excerpt,
                 record.importedAt(), record.contentHash(), record.publicationDate(),
                 record.language(), record.format().name().toLowerCase(java.util.Locale.ROOT));
 
