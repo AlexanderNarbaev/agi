@@ -570,3 +570,21 @@ decisions and to leave the code to W47. Every closed question names the task tha
 A question is closed when **the evidence that settles it exists and is named**. The record
 stays, with the closing evidence — a closed question is the proof that the project once did
 not know.
+
+### Q-W50-04 — the answering path answers where it should abstain, and a refinement rewrote a source record
+
+**Question.** The measured evaluation (`docs-v2/engineering/W50-EVALUATION.md`)
+answers three of the six unanswerable questions instead of abstaining, and in
+one revision case the source record of a claim was rewritten to point at a
+different document than the one the claim came from. Is the abstention rule a
+calibration defect to be fixed inside the retriever, and is a refinement
+allowed to change a source record at all?
+
+**Why it is an owner question.** Both behaviours touch contracts that the
+wave was told not to change silently: the abstention rule decides what the
+answer mechanism guarantees, and the source record is part of the provenance
+model. The owner decides whether the fix belongs in the retriever, in the
+answering contract, or in the refiner.
+
+**Evidence.** `docs-v2/engineering/W50-EVALUATION.md` (cases U-01, U-03, U-04,
+U-06 and the R-01 source record). **Status:** OPEN — not answered by the wave.

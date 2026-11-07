@@ -120,7 +120,7 @@ the teacher stays a teacher.
 | 8 | new evidence causes a real, traceable revision | **MET** | turn 4: 1 supersession, reason, relatedness 0.83, the old claim kept as SUPERSEDED v2 |
 | 9 | the previous model stays historically inspectable | **MET** | the superseded claim, its version and its source are in the store and in the claims view |
 | 10 | the revised answer survives a restart | **MET** | after the restart the answer is byte-identical to the pre-restart answer |
-| 11 | the answering path makes no LLM call | **MET BY CONSTRUCTION, PARTIALLY MEASURED** | the answer is rendered by the canonical `KnowledgeRetriever` over the stored claims; the teacher counter stayed at 0 across the deterministic acquisition. **Not yet done**: a run with the network blocked |
+| 11 | the answering path makes no LLM call | **MET** | `scripts/offline-answer-proof.sh` runs the turns against an instance whose HTTP and HTTPS clients point at a closed proxy: 153 claims on turn 1, 123 after the revision, `revisionsApplied` 1 — the answers are produced with no outbound request possible. `OfflineAnswerPathTest` scans the compiled epistemic core for any network or model runtime reference and asks a seeded workspace a question. The W50-03 counter measured 0 teacher invocations during the deterministic acquisition |
 | 12 | the prompt deck is separate from the answer key | **MET** | `OWNER-SEQUENCE.md` and `ANSWER-KEY.md` are separate files; the key is never loaded into the application |
 | 13 | a measured report with failures, abstentions, resources and limits | **MET** | §3 and §6 of this report, `W50-LOCAL-MODEL.md` |
 | 14 | an independently runnable module with reusable boundaries | **MET** | `scripts/run-local.sh`; the new components (`ClaimExtractor`, `ClasspathCorpus`, `AcquisitionCycle`, `ModelRevisionDecider`, `PremiseAssessment`) are topic-agnostic and carry their own tests |
@@ -142,7 +142,7 @@ the teacher stays a teacher.
   silently dropped; it is a heuristic and it says so.
 - The status route reports the database path and its size but leaves the
   workspace list and the counts empty (`Q-W50-03`).
-- The zero-LLM-call claim is instrumented, not network-blocked (§5, #11).
+- The offline proof points the JVM's HTTP and HTTPS clients at a closed proxy; it does not remove the network interface, and the static scan covers the epistemic core rather than the whole application. A raw socket opened from the core would slip past the first and is ruled out by the second.
 
 ## 7. The owner questions
 
@@ -156,12 +156,38 @@ has to make; the wave does not answer it.
 
 `scripts/quality-gate.sh` — the baseline (271 findings) is not raised; the
 magic-number, configuration, frozen-zone, documentation, test and retention
-gates pass. The inherited ShellCheck findings in the older scripts are left
-alone and are listed as known blockers. The native image remains blocked by
+gates pass. The ShellCheck CI job runs `shellcheck` over every `*.sh` and
+fails on any finding; it failed on the merged W49 commit `79045c57` as well,
+so the failure is inherited. The two scripts this wave added
+(`scripts/run-local.sh`, `scripts/offline-answer-proof.sh`) produce no
+finding: the job's log names neither of them. The native image remains blocked by
 the runner's memory budget, and the Docker push remains blocked by the owner's
 credentials — both are inherited from W49 and neither blocks the demonstrator.
 
-## 9. The Public Research Impact Check
+## 9. The measured evaluation
+
+`docs-v2/engineering/W50-EVALUATION.md` reports twenty-nine cases of the
+versioned dataset in `EVALUATION-SET.md`, split by source document and
+group, with the expectations written before the run and the answer key kept
+outside the application. **12 of 29 cases pass.** The failures are the
+honest result of the run, not a formatting problem:
+
+| case group | observed |
+|---|---|
+| answerable (8) | the expected claim was cited in 2 of 8 |
+| unanswerable (6) | 3 abstentions, 3 answers that should have been refused |
+| false premise (5) | the verdict matched in 3 of 5; **the assertion was promoted in 0 of 5** and the claim count did not move |
+| multi-claim (3) | fully answered in 1 of 3 |
+| revision (5) | a supersession was applied in 4 of 4 acquisitions; the "must not revise" expectation held in 0 of 3 |
+| provenance (689 cited claims over 19 answers) | 689 of 689 carry a source identity and an evidence row; **0 of 689 carry an exact location inside the document** |
+
+Two defects of the demonstrator are therefore named rather than hidden: the
+retriever cites the claims it ranks rather than the claims the question
+needs, and the answering path answers where it should abstain. The first is
+a ranking problem, the second a calibration problem. Both are recorded
+(Q-W50-04 for the second, and the ranking gap in the wave's limits).
+
+## 10. The Public Research Impact Check
 
 1. **Did this wave produce a result worth explaining externally?** Yes — a
    runnable demonstrator that learns a subject from licensed sources, refuses a
