@@ -81,6 +81,7 @@
   <button data-tab="epistemic">Epistemic</button>
   <button data-tab="cognitive">Cognitive</button>
   <button data-tab="corpus">Sources</button>
+  <button data-tab="learn">Learn</button>
   <button data-tab="graph">Graph</button>
   <button data-tab="experiments">Experiments</button>
   <button data-tab="assess">Assess</button>
@@ -230,6 +231,34 @@
       <div id="corpus-notes" class="muted">—</div></div>
   </section>
 
+  <section id="tab-learn">
+    <div class="card">
+      <h2 style="margin-top:0">Learn / research</h2>
+      <p class="muted">The cycle finds the terms of your question that this workspace cannot cover,
+        takes at most three documents from the declared research pool, imports them through the ordinary
+        extraction and validation path, and reports what it acquired, what it skipped and what entered
+        the knowledge base.</p>
+      <div class="row">
+        <input type="text" id="learn-q" placeholder="Which part of the subject does the workspace not cover yet?">
+        <button class="action" id="btn-learn">Start the learning cycle</button>
+        <button class="action" id="btn-seed">Load the seed corpus</button>
+      </div>
+      <div class="muted" id="learn-note">The cycle has not run yet.</div>
+      <div id="learn-report"></div>
+    </div>
+    <div class="card">
+      <h2 style="margin-top:0">New evidence</h2>
+      <p class="muted">Acquire one document of the pool and compare it with the model. When the new claim
+        is about the same subject and better supported, the earlier claim is superseded and kept in the
+        history; the reason and the numbers behind it are reported.</p>
+      <div class="row">
+        <select id="revise-file"></select>
+        <button class="action" id="btn-revise">Acquire and compare</button>
+      </div>
+      <div class="muted" id="revise-note">Nothing has been acquired yet.</div>
+      <div id="revise-report"></div>
+    </div>
+  </section>
   <section id="tab-graph">
     <h2>Knowledge graph</h2>
     <p class="muted" style="margin-top:0">A <em>read-only projection</em> of the workspace: the
@@ -488,7 +517,10 @@ The counts below are read back from the store on disk by this new process.</pre>
 
 <script>
 const API = '/v1/workbench';
-let WS = 'photosynthesis';
+const PARAMS = new URLSearchParams(location.search);
+// W50: the demonstrator workspace is opened by its name, so the owner can point the
+// same Workbench at the corpus it is meant to show.
+let WS = PARAMS.get('workspace') || 'photosynthesis';
 let dataset = null;
 
 const $ = (id) => document.getElementById(id);
@@ -518,6 +550,7 @@ document.querySelectorAll('nav button').forEach(btn => {
     if (btn.dataset.tab === 'epistemic') loadEpistemic();
     if (btn.dataset.tab === 'cognitive') loadCognitive();
     if (btn.dataset.tab === 'corpus') loadCorpus();
+    if (btn.dataset.tab === 'learn') loadCatalogue();
     if (btn.dataset.tab === 'graph') loadGraph();
     if (btn.dataset.tab === 'experiments') loadExperiments();
     if (btn.dataset.tab === 'assess') { loadAssessment(); loadNextExercise(); }
@@ -1639,6 +1672,97 @@ $('cog-observe').addEventListener('click', async () => {
 });
 
 loadStatus();
+
+const LEARNING = '/v1/learning';
+
+async function learningApi(path, options) {
+  const res = await fetch(LEARNING + path, options);
+  const text = await res.text();
+  let body = null;
+  try { body = text ? JSON.parse(text) : null; } catch (e) { body = { raw: text }; }
+  if (!res.ok) throw new Error((body && body.error) || ('HTTP ' + res.status));
+  return body;
+}
+
+async function loadCatalogue() {
+  try {
+    const c = await learningApi('/catalogue');
+    const select = $('revise-file');
+    select.innerHTML = '';
+    for (const d of c.documents) {
+      const option = document.createElement('option');
+      option.value = d.file;
+      option.textContent = d.file + ' - ' + d.licence;
+      select.appendChild(option);
+    }
+    $('learn-note').textContent = c.boundary;
+  } catch (e) {
+    $('learn-note').textContent = 'The catalogue could not be read: ' + e.message;
+  }
+}
+
+$('btn-learn').addEventListener('click', async () => {
+  $('btn-learn').disabled = true;
+  try {
+    const q = $('learn-q').value.trim();
+    const r = await learningApi('/workspaces/' + WS + '/learn?question=' + encodeURIComponent(q),
+      { method: 'POST' });
+    let html = '<div class="muted">Uncovered terms: '
+      + esc((r.uncoveredTerms || []).join(', ') || 'none') + '</div>';
+    html += '<div class="muted">Acquired ' + r.documentsAcquired + ' document(s), ' + r.claimsAdded
+      + ' claims entered. Boundary: ' + esc(r.boundary) + '</div>';
+    for (const s of r.steps || []) {
+      html += '<div class="row"><strong>' + esc(s.file) + '</strong> - ' + esc(s.licence) + ', '
+        + esc(s.sourceUrl) + ' (revision ' + esc(s.revision) + ', accessed ' + esc(s.accessedAt) + ')<br>'
+        + 'segments ' + s.segments + ', proposed ' + s.claimsProposed + ', added ' + s.claimsAdded
+        + ', concepts ' + s.conceptsCreated + ', skipped ' + (s.skipped || []).length + '</div>';
+    }
+    for (const w of r.warnings || []) { html += '<div class="muted">' + esc(w) + '</div>'; }
+    $('learn-report').innerHTML = html;
+    await loadStatus();
+  } catch (e) {
+    $('learn-note').textContent = 'The cycle could not run: ' + e.message;
+  } finally {
+    $('btn-learn').disabled = false;
+  }
+});
+
+$('btn-seed').addEventListener('click', async () => {
+  $('btn-seed').disabled = true;
+  try {
+    const r = await learningApi('/workspaces/' + WS + '/seed', { method: 'POST' });
+    $('learn-note').textContent = 'The seed corpus was imported: ' + r.acquired.length
+      + ' document(s), ' + r.claimsAdded + ' claims entered.';
+    await loadStatus();
+  } catch (e) {
+    $('learn-note').textContent = 'The seed corpus could not be loaded: ' + e.message;
+  } finally {
+    $('btn-seed').disabled = false;
+  }
+});
+
+$('btn-revise').addEventListener('click', async () => {
+  $('btn-revise').disabled = true;
+  try {
+    const file = $('revise-file').value;
+    const r = await learningApi('/workspaces/' + WS + '/revise?file=' + encodeURIComponent(file),
+      { method: 'POST' });
+    let html = '<div class="muted">' + esc(r.file) + ': ' + r.claimsAdded + ' claims added, '
+      + r.revisionsApplied + ' revision(s) applied.</div>';
+    for (const d of r.decisions || []) {
+      html += '<div class="row">' + (d.revised ? '<strong>Revised</strong>' : '<strong>Not revised</strong>')
+        + ' - ' + esc(d.reason) + '</div>';
+    }
+    for (const w of r.warnings || []) { html += '<div class="muted">' + esc(w) + '</div>'; }
+    $('revise-report').innerHTML = html;
+    await loadStatus();
+  } catch (e) {
+    $('revise-note').textContent = 'The acquisition could not run: ' + e.message;
+  } finally {
+    $('btn-revise').disabled = false;
+  }
+});
+
 </script>
 </body>
 </html>
