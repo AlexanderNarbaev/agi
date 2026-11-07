@@ -258,6 +258,20 @@
       <div class="muted" id="revise-note">Nothing has been acquired yet.</div>
       <div id="revise-report"></div>
     </div>
+    <div class="card">
+      <h2 style="margin-top:0">Check a premise</h2>
+      <p class="muted">Put a statement forward and the workspace checks it against the evidence it
+        holds. The check never changes the knowledge base: an assertion from the user is an input to
+        evaluate, not an independent confirmation. The verdict names the disputed premise, the
+        contradictory evidence and its source, and whether the statement is refuted or merely
+        unsupported.</p>
+      <div class="row">
+        <input type="text" id="assert-q" placeholder="A statement about the subject">
+        <button class="action" id="btn-assert">Check it</button>
+      </div>
+      <div class="muted" id="assert-note">No premise has been checked yet.</div>
+      <div id="assert-report"></div>
+    </div>
   </section>
   <section id="tab-graph">
     <h2>Knowledge graph</h2>
@@ -1738,6 +1752,38 @@ $('btn-seed').addEventListener('click', async () => {
     $('learn-note').textContent = 'The seed corpus could not be loaded: ' + e.message;
   } finally {
     $('btn-seed').disabled = false;
+  }
+});
+
+$('btn-assert').addEventListener('click', async () => {
+  $('btn-assert').disabled = true;
+  try {
+    const assertion = $('assert-q').value.trim();
+    const r = await learningApi('/workspaces/' + WS + '/assess', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ assertion: assertion })
+    });
+    let html = '';
+    for (const f of r.findings || []) {
+      html += '<div class="row"><strong>' + esc(f.verdict) + '</strong>'
+        + (f.disputedPremise ? ' - disputed premise: ' + esc(f.disputedPremise) : '') + '<br>'
+        + esc(f.reason) + '</div>';
+      for (const e of f.evidence || []) {
+        html += '<div class="muted">' + esc(e.relation) + ' - claim ' + esc(e.claimId)
+          + ' (' + esc(e.claimStatus) + ') from ' + esc(e.sourceTitle)
+          + ' (' + esc(e.sourceLocator) + ')<br>&quot;' + esc(e.excerpt) + '&quot;</div>';
+      }
+    }
+    html += '<div class="muted">' + esc(r.summary) + '</div>';
+    html += '<div class="muted">Promoted into the knowledge base: ' + (r.promoted ? 'yes' : 'no')
+      + '. ' + esc(r.knowledgeEffect) + '</div>';
+    $('assert-report').innerHTML = html;
+    $('assert-note').textContent = 'The premise was checked against the stored evidence.';
+  } catch (e) {
+    $('assert-note').textContent = 'The premise could not be checked: ' + e.message;
+  } finally {
+    $('btn-assert').disabled = false;
   }
 });
 

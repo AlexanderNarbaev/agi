@@ -3,6 +3,7 @@ package io.matrix.knowledge;
 import io.matrix.knowledge.acquisition.AcquisitionCycle;
 import io.matrix.knowledge.acquisition.ClasspathCorpus;
 import jakarta.inject.Inject;
+import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.DefaultValue;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.POST;
@@ -111,6 +112,46 @@ public class LearningCycleResource {
             return Response.ok(report).build();
         } catch (IOException failure) {
             return Response.status(500).entity(Map.of("error", failure.getMessage())).build();
+        }
+    }
+
+    /**
+     * The assertion to check.
+     *
+     * @param assertion the statement the user puts forward
+     */
+    public record AssertionRequest(String assertion) {
+    }
+
+    /**
+     * Checks a premise against the evidence the workspace holds.
+     *
+     * <p>The check never changes the workspace: an assertion from the user
+     * is an input to evaluate, not an independent confirmation. The answer
+     * says which premise is disputed, what the verdict is, and which claim
+     * with which source the verdict rests on.
+     *
+     * @param workspaceId the workspace to check against
+     * @param request the assertion to check
+     * @return the assessment
+     */
+    @POST
+    @Path("/workspaces/{id}/assess")
+    @Consumes(MediaType.APPLICATION_JSON)
+    public Response assess(@PathParam("id") String workspaceId, AssertionRequest request) {
+        if (request == null || request.assertion() == null || request.assertion().isBlank()) {
+            return Response.status(400)
+                    .entity(Map.of("error", "the check needs an assertion to look at"))
+                    .build();
+        }
+        try {
+            PremiseAssessment.Assessment assessment =
+                    PremiseAssessment.assess(workbench, workspaceId, request.assertion());
+            return Response.ok(assessment).build();
+        } catch (RuntimeException failure) {
+            return Response.status(400)
+                    .entity(Map.of("error", String.valueOf(failure.getMessage())))
+                    .build();
         }
     }
 
