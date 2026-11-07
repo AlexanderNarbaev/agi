@@ -1,0 +1,35 @@
+{
+  "theNote": "The W50 seed corpus: real, licensed scientific sources for the plate-tectonics demonstrator. Every entry names its licence, its canonical URL, the exact snapshot revision, the access date and the sha256 of the imported bytes. The importer verifies the hash before it reads the file.",
+  "theCorpus": "corpus-manifest.json",
+  "entries": [
+    {
+      "format": "MARKDOWN",
+      "language": "en",
+      "licence": "US-PUBLIC-DOMAIN",
+      "licenceUrl": "https://www.usgs.gov/information-policies-and-instructions/copyrights-and-credits",
+      "attribution": "U.S. Geological Survey, 'This Dynamic Earth' (public domain)",
+      "sourceUrl": "https://pubs.usgs.gov/gip/dynamic/understanding.html",
+      "revision": "snapshot 2026-11-07",
+      "accessedAt": "2026-11-07",
+      "purpose": "the seed corpus: what plate tectonics is, the three boundary types, and the historical development of the theory",
+      "file": "usgs-this-dynamic-earth.md",
+      "sha256": "a82d4ca7143a018710193839fcbeb982998c3ac73db5edd621bf29ecb2467cdc",
+      "bytes": 17144
+    },
+    {
+      "format": "MARKDOWN",
+      "language": "en",
+      "licence": "CC-BY-SA-4.0",
+      "licenceUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+      "attribution": "'Plate tectonics', Wikipedia (CC BY-SA 4.0), revision 1381934246, 2026-10-25T18:21:16Z",
+      "sourceUrl": "https://en.wikipedia.org/w/index.php?title=Plate%20tectonics&oldid=1381934246",
+      "revision": "oldid=1381934246",
+      "revisionDate": "2026-10-25T18:21:16Z",
+      "accessedAt": "2026-11-07",
+      "purpose": "the seed corpus: the modern theory, its evidence and its vocabulary",
+      "file": "wikipedia-plate-tectonics.md",
+      "sha256": "db794272ec30fb62ce4d9076e43db0fadc2b1037fc9d437a51a690da8fc1c853",
+      "bytes": 58972
+    }
+  ]
+}
