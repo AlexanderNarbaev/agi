@@ -1,6 +1,6 @@
 # MATRIX — RISK REGISTER
 
-**Status:** `CANONICAL` · **Date:** 2026-11-06 (the W46.0 audit of 2026-11-04, refreshed by W48 on 2026-11-06)
+**Status:** `CANONICAL` · **Date:** 2026-11-07 (the W46.0 audit of 2026-11-04, refreshed by W48 on 2026-11-06 and by W50 on 2026-11-07)
 **The machine-readable snapshot of this register** is `docs-v2/engineering/W46-RISK-REGISTER.csv` —
 the W46.0 audit's evidence. **This document is the register of record**: it is what an agent
 reads, what a reviewer diffs, and what the owner decides against. When the two disagree, this
@@ -47,8 +47,11 @@ implemented, tested and never called has no exposure, and saying so is part of t
 | [R-W48-03](#r-w48-03--the-mandatory-ci-jobs-depended-on-things-the-runner-does-not-have-and-on-steps-that-had-never-run)| The mandatory CI jobs depended on things the runner does not have, and on steps that had never run | high | high | CLOSED — the three causes are diagnosed from the runner's own logs and fixed (bc87935c, e0de8419); the security boundary and the formal gate are green on a clean runner |
 | [R-W48-04](#r-w48-04--the-release-path-needs-credentials-the-repository-does-not-have-so-it-is-red-on-every-push)| The release path needs credentials the repository does not have, so it is red on every push | medium | high | OPEN — external: `gh secret list` is empty; the owner's credentials are required |
 | [R-W49-01](#r-w49-01--the-native-build-cannot-succeed-on-the-runner-the-workflow-selects-and-its-second-blocker-is-a-missing-dependency)| The native build cannot succeed on the runner the workflow selects, and its second blocker is a missing dependency | medium | high | MEASURED — the heap and the runner budget are recorded; the capability stays BLOCKED (OD-046) |
-| [R-W49-02](#r-w49-02--the-public-face-is-published-from-a-branch-that-is-357-commits-behind)| The public face is published from a branch that is 357 commits behind | high | high | OPEN — the owner's decision: move `main`, or publish from `develop` (Q-W49-01) |
+| [R-W49-02](#r-w49-02--the-public-face-is-published-from-main-which-now-carries-w49-and-is-behind-develop-by-the-w50-work)| The public face is published from `main`, which now carries W49 and is behind `develop` by the W50 work | high | high | OPEN — the owner's decision: move `main` again, or publish from `develop` (Q-W49-01) |
 | [R-W49-03](#r-w49-03--the-shellcheck-workflow-has-been-red-since-at-least-2026-10-31)| The ShellCheck workflow has been red since at least 2026-10-31 | low | low | OPEN — inherited, recorded, not repaired in this wave |
+| [R-W50-01](#r-w50-01--the-premise-check-is-lexical-so-a-truncated-premise-can-read-as-contradicted-by-any-claim-that-covers-its-terms)| The premise check is lexical, so a truncated premise can read as contradicted by any claim that covers its terms | medium | medium | OPEN — a named limit of the demonstrator: the verdict is lexical, and nothing is stored |
+| [R-W50-02](#r-w50-02--the-extracted-propositions-are-whole-sentences-now-but-the-extractors-corpus-vocabulary-is-a-heuristic-verb-list)| The extracted propositions are whole sentences now, but the extractor's corpus vocabulary is a heuristic verb list | medium | medium | OPEN — the deterministic path stays the critical path; the heuristic is measured, not replaced |
+| [R-W50-03](#r-w50-03--the-answering-path-proves-zero-llm-calls-by-instrumentation-and-the-assertion-check-itself-is-a-deterministic-lexical-pass)| The answering path proves zero LLM calls by instrumentation, and the assertion check itself is a deterministic lexical pass | low | medium | OPEN — measured for the acquisition path (0 invocations), proved by construction for the answering path |
 
 ---
 
@@ -431,17 +434,17 @@ implemented, tested and never called has no exposure, and saying so is part of t
 - **owner**: the owner — a larger runner is a cost decision, and the dependency changes the application's footprint
 - **status**: MEASURED, not closed — the budget is known (`docs-v2/engineering/W49-NATIVE-BUDGET.md`) and the capability stays **BLOCKED** until a build succeeds.
 
-### R-W49-02 — The public face is published from a branch that is 357 commits behind
+### R-W49-02 — The public face is published from `main`, which now carries W49 and is behind `develop` by the W50 work
 
 - **category**: operational
 - **severity**: high
 - **probability**: high
 - **impact**: high
-- **evidence**: The repository's default branch is `main`, and it is at `7a0ed0cc` — 2026-10-12, the W37.5 release. `git rev-list --count main..develop` → **357 commits**. The GitHub Pages site is built from `main` (`.github/workflows/pages.yml` → `on: push: branches: [main]`), so the deployed site carried the withdrawn positioning — the title "MATRIX: The Hybrid Intelligence Encyclopedia", "city of minds" ×4, "W1500" ×2 and wave references from W30 to W33 — while `develop` carried the current implementation and the W48 evidence.
-- **exposure**: Everything the wave wrote — the rewritten README, the landing page, the corrected configuration, the onboarding, the publication pipeline and the collaboration brief — is on `develop` and therefore **invisible** to a visitor. The directive forbids changing the default branch without a separate decision, so the wave cannot close this itself.
+- **evidence**: The repository's default branch is `main`, and it **now carries W49**: pull request #44 (`develop` → `main`) was merged on 2026-11-06 as the squash `79045c57`, whose tree is identical to the W49 close `8f617ce6`. The gap is therefore the W50 work: `git rev-list --count origin/main..develop` → **374** commits of history (the squash keeps `main`'s own history), and the **content** difference between the two branches is exactly **27 files** — the W50 corpus, the learning routes and the demonstration. The GitHub Pages site is still built from `main` (`.github/workflows/pages.yml` → `on: push: branches: [main]`), so a visitor sees W49 and not W50.
+- **exposure**: Everything the W50 wave wrote — the corpus, the learning routes, the premise assessment, the revision and the demonstration — is on `develop` and therefore **invisible** to a visitor. The directive forbids changing the default branch without a separate decision, so the wave cannot close this itself.
 - **mitigation**: the wave made the publication path observable and correct without changing the branch: the Pages workflow now builds and validates the site on a pull request without publishing, `scripts/validate-pages-config.sh` checks the configuration against the deployment URL read from the GitHub API, and the rewritten site is ready to publish the moment the owner decides where publishing happens from.
 - **owner**: the owner (Q-W49-01) — the default branch, and the publication path, are owner decisions
-- **status**: OPEN — the content is ready; the decision is not.
+- **status**: OPEN — the W49 content is now on `main`; what is left is the W50 gap and the decision on where publishing happens from.
 
 ---
 
@@ -456,6 +459,44 @@ implemented, tested and never called has no exposure, and saying so is part of t
 - **mitigation**: none in this wave, deliberately. Repairing 130 findings across ~30 scripts — among them `w45-chain-isolation-check.sh`, `w45-cognitive-recovery-journey.sh` and `security-boundary-check.sh`, the operational checkers themselves — means editing the scripts that decide whether the system is considered healthy, and that deserves its own wave with its own evidence. The honest record is that the gate was already red before this wave and that nothing in this wave made it worse.
 - **owner**: the owner — whether the shell gate is repaired, or its scope is narrowed to the scripts this repository maintains, is a decision about the gate's meaning, not a mechanical fix
 - **status**: OPEN — inherited, recorded, not repaired
+
+---
+
+### R-W50-01 — The premise check is lexical, so a truncated premise can read as contradicted by any claim that covers its terms
+
+- **category**: evidence-quality
+- **severity**: medium
+- **probability**: medium
+- **impact**: high
+- **evidence**: `PremiseAssessment` decides `CONTRADICTED` from **terms**, not from meaning: the minimum subject overlap is 0.30, the minimum shared terms is 2 and the minimum denial coverage is 0.50 (`matrix-core/src/main/java/io/matrix/knowledge/PremiseAssessment.java:168`, `:171`, `:181`). Nothing in the decision is semantic. The demonstration's turn 3 returned `CONTRADICTED` for the premise "…was widely accepted by geologists when it was first proposed in the early twentieth century", contradicted by the claim that "…was widely rejected" — and that verdict is right. But the same rule applied to a **truncated** premise ("continental drift was proposed in the early twentieth century") covers the terms of that claim without being denied by it, so it would read as contradicted too.
+- **exposure**: real and bounded: the route assesses one statement at a time, the report names the disputed premise and the contradicting claim and its source, and **nothing is stored** — the response carries `promoted=false` and the assertion never becomes a claim. A wrong verdict therefore corrupts no state; it misleads the reader.
+- **mitigation**: keep the check lexical and say so — the route's own response says it is a deterministic check — and require the report to name the contradicting claim and its source, so a reader can check the match by hand. A semantic check would put a model on a decision path, which `CONSTITUTION.md` forbids.
+- **owner**: agent (the record); the owner (whether a semantic check is ever wanted)
+- **status**: OPEN — a named limit of the demonstrator, not a defect the wave repaired
+
+### R-W50-02 — The extracted propositions are whole sentences now, but the extractor's corpus vocabulary is a heuristic verb list
+
+- **category**: evidence-quality
+- **severity**: medium
+- **probability**: medium
+- **impact**: medium
+- **evidence**: `ClaimExtractor` proposes a sentence only when it recognises the sentence as declarative, and it recognises it through `DECLARATIVE_VERBS` — a hard-coded list of base forms, matched with a trailing-`s` fold, an `-es` fold and, since W50, a past-tense fold. The class's own javadoc says the list is a heuristic and that a full part-of-speech tagger would be the proper instrument. W50 extended the list by **24** verbs of the scientific register (142 verbs → 166: "envision", "believe", "suggest", "publish", "measure", "infer", …) and taught the extractor to set aside a leading discourse marker, so that the corpus's own sentences are proposed instead of dropped. The propositions are now **whole sentences** — the Markdown's hard wrap is no longer a sentence boundary — but a sentence whose verb is not in the list is still **not proposed**, and a sentence is proposed on the strength of that verb alone: the text before it is taken as the subject when it is a phrase and not a clause.
+- **exposure**: real and bounded: it is a **recall** limit on the corpus vocabulary, and it is visible — the corpus is one bounded domain, the manifest lists every document, and the propositions per document are measurable. The consequence is that a claim the corpus states but the list does not recognise never enters the store.
+- **mitigation**: re-measure the extraction against the corpus whenever the list changes — the numbers are in `docs-v2/engineering/W50-LOCAL-MODEL.md` §4 — and tie the list's growth to a measured gap rather than to a guess.
+- **owner**: agent (Level 1)
+- **status**: OPEN — a named limit of the deterministic path; the wave measured it and did not replace the heuristic
+
+### R-W50-03 — The answering path proves zero LLM calls by instrumentation, and the assertion check itself is a deterministic lexical pass
+
+- **category**: verification
+- **severity**: low
+- **probability**: medium
+- **impact**: medium
+- **evidence**: the local-model evaluation counted the teacher's invocations on the deterministic acquisition path with a **validated** counter — a known model call incremented it by 1, and the deterministic path incremented it by **0** — and the cost was 0.04–0.05 s and 58–61 MB of resident memory, against the teacher's 0.31–5.52 s per chunk and 1.41 GiB. That is a **measurement** about the acquisition path. The **answering** path is proved by construction, not by the counter: `KnowledgeRetriever.answer(...)` renders the stored representations, computes the support from the claims' own stored `confidence` and lists what is not covered. And the premise check is a **deterministic lexical pass** — no model is involved in it either, but it is also not an evidence proof: it is the term matching of R-W50-01.
+- **exposure**: low, and it is named: the "no model on the path" property is established for the acquisition path **by measurement** and for the answering path **by reading the code**, and the assertion check is lexical in both senses.
+- **mitigation**: keep the instrumentation point — the counter, the cost accounting and the kill switch — in front of any model that might ever be plugged in, and keep the answering path free of a model, because `CONSTITUTION.md` forbids LLM calls in decision paths.
+- **owner**: agent (Level 1)
+- **status**: OPEN — the measurement is the mitigation's evidence, and the property it establishes is narrower than "MATRIX never calls a model"
 
 ---
 

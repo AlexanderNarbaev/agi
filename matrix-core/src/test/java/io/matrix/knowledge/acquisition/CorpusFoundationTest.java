@@ -118,13 +118,21 @@ class CorpusFoundationTest {
                 }
             }
 
-            // The imported claims enter as CANDIDATE. The import does not
-            // promote anything, and nothing it read is a VERIFIED claim.
+            // The import does not promote anything by itself. A claim is
+            // VERIFIED only when two independent sources state it; every
+            // other claim stays CANDIDATE.
             List<Claim> imported = workbench.storeForValidation().claims(WORKSPACE).stream()
                     .filter(claim -> claim.introducedBySourceId() != null)
                     .toList();
             assertThat(imported).isNotEmpty();
-            assertThat(imported).allMatch(claim -> claim.status() == ClaimStatus.CANDIDATE);
+            List<Claim> promoted = imported.stream()
+                    .filter(claim -> claim.status() == ClaimStatus.VERIFIED)
+                    .toList();
+            assertThat(promoted).as("the claims two independent sources agree on")
+                    .hasSizeLessThan(imported.size());
+            assertThat(imported).allMatch(claim -> claim.status() == ClaimStatus.CANDIDATE
+                    || claim.validationMethod().contains("independent sources")
+                    || claim.validationMethod().contains("as well"));
         }
     }
 
