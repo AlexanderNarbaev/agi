@@ -2,8 +2,9 @@
 
 **Wave:** W50 — MATRIX local evidence-grounded demonstrator: from research
 subsystems to a runnable, evidence-grounded learning system.
-**State:** the wave is implemented and measured; the closeout (the pull request
-`develop` → `main`) is opened by the lead and is **not** merged by an agent.
+**State:** the wave is implemented and measured; the closeout pull request
+[#47](https://github.com/AlexanderNarbaev/agi/pull/47) (`develop` → `main`) is open and
+is **not** merged by an agent.
 **Measured on:** 2026-11-07, AMD Ryzen 9 9955HX / RTX 5070 Ti, JDK 25, the
 packaged jar `matrix-core/build/quarkus-app/quarkus-run.jar` on
 `http://127.0.0.1:9091`.
