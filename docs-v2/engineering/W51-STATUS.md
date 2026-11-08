@@ -343,8 +343,32 @@ cognitive and knowledge packages running together.
 |---|---|---|
 | SpotBugs cannot read Java 25 bytecode (plugin 6.1.7, engine 4.9.3 → ASM 9.7.1 → major 68 vs 69) | **still present** | the `security` job yields no static-analysis evidence. **Not suppressed.** Fixing it means moving the engine to a version whose ASM reads major 69 — a build change that belongs to the owner. |
 | TruffleHog: five unverified PostgreSQL-like findings | **still present; they are documentation placeholders**, not secrets | all five live in `.veai/skills/**` (`deployment-patterns/SKILL.md:340`, `docker-patterns/SKILL.md:39,162`, `prisma-patterns/SKILL.md:221,224`) and hold literal `user`/`pass`/`host`/`db`. No ignore file exists, and **none was added**. |
-| ShellCheck: 106 findings across 41 files | **still present** | the workflow triggers on `main` only. Pre-existing; the wave's own scripts add none. |
+| ShellCheck: 106 findings across 41 files | **still present, and the wave REDUCED it** | measured with ShellCheck 0.10.0 on the same scope (`find . -name "*.sh" -exec shellcheck {} +`): the tree at `a098f283` had **210** findings and the wave's tree has **182**. **The wave's own four scripts are clean — zero findings** — and the twenty-eight it removed are in the two gate scripts the wave extended. The job is red on `main` at `67b3410d`, `79045c57` and `7a0ed0cc` as well, so it is pre-existing and was not this wave's to fix. |
 | The native-image job dies of memory exhaustion | **still present** | `native.yml:28-34` sets no memory limit; `-J-Xmx8g` with `--gc=epsilon` is a hard wall. **Native-image compilation is not a prerequisite of this wave's deliverable**, and the gate was not weakened to make it green. |
+
+### 5.10 The state of pull request #48 on the day it was opened
+
+The owner authorised the commit and the push on 2026-11-08, and pull request #48
+(`develop` → `main`) was opened. **It is not merged by an agent.** Its own CI:
+
+| the job | the state | the cause |
+|---|---|---|
+| Build & Test (Java) | **green** | the full suite on a clean runner |
+| Container Images (build + smoke) | **green** | — |
+| Web UI Tests | **green** | — |
+| Quality gates | **green** (after a re-run) | the first attempt failed to resolve the SpotBugs plugin from the Gradle plugin portal — a transient repository failure, not a code defect; the same head passed in the push run |
+| Compile all T-01 modules | **green** | the pull-request attempt hit the same transient plugin-portal failure |
+| CONSTITUTION compliance | **green** | — |
+| Model-check TLA+ specs | **green** | — |
+| Validate ecosystem docs (RU/EN parity) | **green** | — |
+| Security Scan | **red** | the inherited findings of §5.9: SpotBugs yields no static analysis (6 645 `Unsupported class file major version` lines) and TruffleHog exits 183 with **0 verified secrets** and 8 unverified documentation placeholders |
+| ShellCheck | **red** | the inherited findings of §5.9, reduced by the wave and untouched by it |
+| native-build | **red** | the inherited heap budget of §5.9: `OutOfMemoryError: Java heap space` in the image build |
+
+**One defect of the wave's own was found by the CI and fixed:** the reconnaissance inventory
+linked the virtual environment's and the web console's installed directories, which exist on
+a developer machine and are gitignored — so the link resolved locally and broke in the clean
+checkout. The sentence now names them in words, and the gate passes in a clean worktree.
 
 ---
 
