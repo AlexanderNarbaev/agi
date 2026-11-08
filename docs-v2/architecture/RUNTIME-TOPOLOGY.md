@@ -71,6 +71,11 @@ io.matrix.api.MinimalHttpServer  (matrix-api-gateway/.../MinimalHttpServer.java:
 > in `GET /health/live`, in the field `"mode"`. **This is the owner's open question F-01**: a
 > gateway that serves a stub by default is a gateway whose health check lies.
 
+**The edges between these parts** — which class calls which, across which boundary, carrying what,
+and who is the single writer of the state it lands in — are mapped in
+`docs-v2/engineering/W51-ARCHITECTURE-MAP.md` (2026-11-08). That document complements this one; it
+does not replace it.
+
 ---
 
 ## 2. The naming trap
@@ -148,6 +153,7 @@ self-test is the negative control that shows it does.
 | the undeclared ports | `P2PNetwork.java:28-29, 37, 108, 121` |
 | the capability statuses | `docs-v2/architecture/CAPABILITY-REGISTRY.yml` |
 | the persistence | `docs-v2/architecture/DATA-AND-MEMORY-ARCHITECTURE.md` |
+| the transitions between the parts, and the one crossing between the chains | `docs-v2/engineering/W51-ARCHITECTURE-MAP.md` |
 
 ---
 
