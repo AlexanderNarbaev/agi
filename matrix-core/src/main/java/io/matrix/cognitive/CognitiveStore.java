@@ -143,7 +143,8 @@ public final class CognitiveStore implements AutoCloseable {
                 Files.createDirectories(parent);
             }
             this.writerLock = writerLock;
-            this.connection = DriverManager.getConnection("jdbc:sqlite:" + databaseFile);
+            this.connection = DriverManager.getConnection("jdbc:sqlite:" + databaseFile,
+                    sqliteConfiguration());
             this.connection.setAutoCommit(true);
             configure();
             migrate();
@@ -164,11 +165,41 @@ public final class CognitiveStore implements AutoCloseable {
         return java.util.Optional.ofNullable(writerLock);
     }
 
+    /**
+     * How long a writer waits for the lock, in milliseconds.
+     *
+     * <p>W51. The cognitive store and the epistemic store open the SAME file, so two
+     * connections in one process write the same database. SQLite serialises the writers,
+     * and a writer that arrives while another holds the lock is told "the database is
+     * busy" rather than being made to wait. The busy timeout turns that refusal into a
+     * wait.</p>
+     */
+    public static final int BUSY_TIMEOUT_MILLIS = 10_000;
+
     private void configure() throws SQLException {
         try (Statement st = connection.createStatement()) {
             st.execute("PRAGMA journal_mode=WAL");
             st.execute("PRAGMA synchronous=FULL");
+            st.execute("PRAGMA busy_timeout=" + BUSY_TIMEOUT_MILLIS);
         }
+    }
+
+    /**
+     * The driver's configuration: the write transactions are IMMEDIATE, not DEFERRED.
+     *
+     * <p>A deferred transaction takes the write lock only when it first WRITES, and it
+     * cannot be upgraded once another connection has committed: SQLite fails that with
+     * SQLITE_BUSY at once, and the busy timeout does not apply, because waiting cannot
+     * help a stale snapshot. An IMMEDIATE transaction takes the lock when it begins, so
+     * the wait is a wait and the upgrade can never fail. The same reasoning and the same
+     * fix are in {@code io.matrix.knowledge.KnowledgeStore}.</p>
+     *
+     * @return the configuration
+     */
+    private static java.util.Properties sqliteConfiguration() {
+        java.util.Properties properties = new java.util.Properties();
+        properties.setProperty("transaction_mode", "IMMEDIATE");
+        return properties;
     }
 
     /**

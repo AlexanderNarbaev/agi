@@ -24,7 +24,8 @@ public record CognitiveOutcome(
         ErrorSignal error,
         AlgorithmDecision decision,
         LearningTrace trace,
-        List<String> notes) {
+        List<String> notes,
+        io.matrix.contract.Reflection reflection) {
 
     /** How the cycle ended. */
     public enum Status {
@@ -40,6 +41,29 @@ public record CognitiveOutcome(
 
     public CognitiveOutcome {
         notes = notes == null ? List.of() : List.copyOf(notes);
+    }
+
+    /**
+     * The outcome of a cycle that produced no reflection.
+     *
+     * <p>W51. The reflection was added to the outcome in the middle of the wave, and the
+     * callers that construct an outcome for a refusal or an interruption have no reflection
+     * to hand: a cycle that never got to the end did not evaluate itself.</p>
+     *
+     * @param episodeId  the episode
+     * @param status     how the cycle ended
+     * @param answer     what the cycle answered
+     * @param percept    what was perceived
+     * @param prediction what was predicted
+     * @param error      the comparison of the prediction with the outcome
+     * @param decision   the method decision
+     * @param trace      the trace of the cycle
+     * @param notes      the notes of the cycle
+     */
+    public CognitiveOutcome(String episodeId, Status status, String answer, Percept percept,
+                            Prediction prediction, ErrorSignal error, AlgorithmDecision decision,
+                            LearningTrace trace, List<String> notes) {
+        this(episodeId, status, answer, percept, prediction, error, decision, trace, notes, null);
     }
 
     /** True when the cycle found a prediction error. */
