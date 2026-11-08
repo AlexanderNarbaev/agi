@@ -282,7 +282,8 @@ Decision-Table* neuron (a truth table in flash / an Avro record), plus a GA vari
   `matrix-fpga/test_mpdt_fpga.py` — an FPGA-side check for the same table;
   `matrix-micro/tools/{ldn2h.py, test_ldn2h.c, test_sample.ldn}` — `.ldn` → C header generator.
 
-**Every MATRIX-owned `.c`/`.h` in the repo** (`.venv/` torch/triton headers and `matrix-web-ui/node_modules` excluded):
+**Every MATRIX-owned `.c`/`.h` in the repo** (the virtual environment's torch and triton
+headers, and the web console's installed packages, are excluded — neither is MATRIX's own source):
 
 | File | What it is |
 |---|---|
