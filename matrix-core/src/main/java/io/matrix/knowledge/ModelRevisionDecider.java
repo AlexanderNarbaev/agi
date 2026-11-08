@@ -55,10 +55,24 @@ public final class ModelRevisionDecider {
         double newStrength = strength(newConfidence, List.of(newSource), newSource);
         String newText = newSource == null || newSource.excerpt() == null
                 ? "" : newSource.excerpt();
-        boolean denies = denies(newProposition);
+        // W51 §6 — THE CANDIDATE IS CHOSEN BY THE PROPOSITION, NOT BY THE
+        // DOCUMENT.
+        //
+        // The candidate used to be the claim with the highest overlap with
+        // the new SOURCE'S TEXT — and a document about anything shares
+        // words with a document about something else. The W50 evaluation
+        // measured the consequence: the claim that was superseded was not
+        // the claim the new evidence denied, and three documents that were
+        // supposed to change nothing changed the model.
+        //
+        // The overlap with the new document's text is still MEASURED, and
+        // it is reported, but it does not select the candidate: the two
+        // PROPOSITIONS have to be about the same subject.
         Claim best = null;
         double bestRelatedness = 0.0;
         double bestStrength = 0.0;
+        double bestBridge = 0.0;
+        boolean bestDenied = false;
         for (Claim claim : snapshot.claims()) {
             if (!inForce(claim)) {
                 continue;
@@ -68,18 +82,24 @@ public final class ModelRevisionDecider {
             }
             Set<String> oldTerms = terms(claim.proposition());
             double direct = relatedness(newTerms, oldTerms);
-            double bridge = bridge(oldTerms, newText);
-            double subject = Math.max(direct, bridge);
-            if (subject < MINIMUM_RELATEDNESS) {
+            if (direct < MINIMUM_RELATEDNESS) {
                 continue;
             }
+            double bridge = bridge(oldTerms, newText);
             double strength = strength(claim.confidence(), sourcesOf(snapshot, claim.id()),
                     sourceOf(snapshot, claim.introducedBySourceId()));
-            if (best == null || subject > bestRelatedness
-                    || (subject == bestRelatedness && strength > bestStrength)) {
+            boolean denied = deniesAbout(newProposition, claim);
+            // A claim the new proposition ACTUALLY denies outranks a claim
+            // that is merely about the same subject.
+            if (best == null
+                    || (denied && !bestDenied)
+                    || (denied == bestDenied && (direct > bestRelatedness
+                            || (direct == bestRelatedness && strength > bestStrength)))) {
                 best = claim;
-                bestRelatedness = subject;
+                bestRelatedness = direct;
                 bestStrength = strength;
+                bestBridge = bridge;
+                bestDenied = denied;
             }
         }
         if (best == null) {
@@ -87,18 +107,28 @@ public final class ModelRevisionDecider {
                     "no established claim of the workspace is about the same subject, so the new claim is "
                             + "an addition rather than a revision", 0.0, 0.0, newStrength);
         }
-        if (!denies && newStrength <= bestStrength) {
+        // W51 §6 — THE DENIAL MUST BE SCOPED, AND IT IS LEXICAL.
+        //
+        // A negation marker on its own is not a revision: the sentence has
+        // to deny what THIS claim asserts. The reason says so, and it says
+        // that the denial was read from the text — the relation is a
+        // lexical candidate that the scoping confirmed, and a reader can
+        // check both.
+        if (!bestDenied && newStrength <= bestStrength) {
             return new Decision(false, best.conceptId(), best.id(),
                     "the new evidence is not stronger than the evidence the claim already rests on "
                             + String.format(Locale.ROOT, "(%.3f against %.3f), so the claim stands",
                             newStrength, bestStrength),
                     bestRelatedness, bestStrength, newStrength);
         }
-        String reason = denies
+        String reason = bestDenied
                 ? String.format(Locale.ROOT,
-                        "the new evidence is about the same subject (relatedness %.2f) and denies what "
-                                + "the earlier claim asserted, so the earlier claim is superseded and "
-                                + "kept in the history", bestRelatedness)
+                        "the new evidence is about the same subject (relatedness %.2f, and the "
+                                + "negated clause is about this claim) and denies what the earlier "
+                                + "claim asserted, so the earlier claim is superseded and kept in "
+                                + "the history; the denial is read from the text of the two "
+                                + "propositions and is a lexical relation, not a demonstration of "
+                                + "meaning", bestRelatedness)
                 : String.format(Locale.ROOT,
                         "the new claim is about the same subject (relatedness %.2f) and is better "
                                 + "supported (%.3f against %.3f), so the earlier claim is superseded "
@@ -111,21 +141,148 @@ public final class ModelRevisionDecider {
     /**
      * Whether a claim is part of the model that a new claim can revise.
      *
-     * <p>A claim that the workspace imported and has not yet corroborated is
-     * still part of the model: it is what the workspace believes, and a
-     * new source that contradicts it revises it. What is not part of the
-     * model is a draft, a claim that has been refuted or superseded, and a
-     * claim whose state is simply unknown.
+     * <p><b>W51 §6 — A REVISION MAY ONLY REPLACE A CLAIM OF SUFFICIENT
+     * SUPPORT.</b> The rule used to be "not a draft, not refuted, not
+     * superseded, not unknown" — which left a CANDIDATE claim, an
+     * extraction that no procedure had ever examined, as something a new
+     * claim could supersede. A claim the workspace never established is
+     * not part of what it believes, and replacing it would put a
+     * resolution into the history of something that was never asserted.
+     *
+     * <p>The rule now comes from {@link EpistemicPolicy}: a claim may be
+     * revised when it may be cited — that is, when the workspace
+     * established it.
      *
      * @param claim the claim
      * @return whether the claim is in force
      */
     private static boolean inForce(Claim claim) {
-        return claim.status() != ClaimStatus.DRAFT
-                && claim.status() != ClaimStatus.REFUTED
-                && claim.status() != ClaimStatus.SUPERSEDED
-                && claim.status() != ClaimStatus.UNKNOWN;
+        return EpistemicPolicy.isInForce(claim.status());
     }
+
+    /**
+     * Whether the new proposition denies what the candidate claim asserts.
+     *
+     * <p><b>W51 §6 — THE DENIAL MUST BE ABOUT THIS CLAIM.</b> A negation
+     * marker on its own says only that the sentence carries a negation.
+     * The W50 evaluation measured what the rule did with that: of the
+     * three documents of the pool that the dataset expected to leave the
+     * model alone, every one of them produced a supersession, and the
+     * claim that was superseded was chosen by the highest overlap with the
+     * new DOCUMENT'S TEXT — a sentence in a document about anything at all
+     * shares words with it.
+     *
+     * <p>The denial is therefore scoped, and it is scoped to the DENIED
+     * CLAUSE: the text the negation applies to, not the whole sentence.
+     * "However, most scientists working today believe that the asthenosphere
+     * does not directly cause motion by the friction of such basal forces"
+     * denies the cause of the motion, and the claim it denies is the one
+     * about the asthenosphere's competence — the words before the negation
+     * ("most scientists working today believe") are the sentence's frame
+     * and are not part of what it denies.
+     *
+     * <p>The rule is the one {@link PremiseAssessment} already applies to
+     * a premise: the share of the denied clause's distinctive terms that
+     * the candidate claim carries must reach
+     * {@value #MINIMUM_DENIAL_COVERAGE}. A sentence that denies something
+     * else does not deny this claim, however many words the two share.
+     *
+     * @param newProposition the proposition of the new claim
+     * @param candidate the claim that might be denied
+     * @return whether the new proposition denies the candidate
+     */
+    public static boolean deniesAbout(String newProposition, Claim candidate) {
+        if (newProposition == null || candidate == null) {
+            return false;
+        }
+        String clause = deniedClause(newProposition);
+        if (clause == null) {
+            return false;
+        }
+        Set<String> clauseStems = PremiseAssessment.distinctiveStems(clause);
+        Set<String> candidateStems = PremiseAssessment.distinctiveStems(candidate.proposition());
+        if (!PremiseAssessment.covers(clauseStems, candidateStems)) {
+            return false;
+        }
+        // BOTH SIDES DENY THE SAME THING IS AN AGREEMENT, NOT A DENIAL.
+        //
+        // "In some regions, the boundaries are not well defined" and "Plate
+        // boundary zones -- broad belts in which boundaries are not well
+        // defined" say the SAME thing, and the lexical reading of the
+        // negation would call the second a denial of the first. The
+        // candidate's own denial is the check: when the candidate carries a
+        // negation of the same clause, the two agree, and a revision is not
+        // what is happening.
+        String candidateClause = deniedClause(candidate.proposition());
+        if (candidateClause != null) {
+            Set<String> candidateClauseStems = PremiseAssessment.distinctiveStems(candidateClause);
+            if (PremiseAssessment.covers(candidateClauseStems, clauseStems)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * The clause a negation applies to, or null when the proposition
+     * carries no negation.
+     *
+     * <p>The clause is the text from the negation onwards, and it stops at
+     * the reason: "the boundaries are not well defined BECAUSE the plate
+     * movement deforms them" denies that the boundaries are well defined,
+     * and the reason is not part of what is denied — and it is the reason
+     * that shares its words with every other claim about plate movement.
+     *
+     * <p>What comes before the negation is the frame of the sentence —
+     * "however", "most scientists working today believe" — and it is not
+     * part of what is denied either.
+     *
+     * @param proposition the proposition
+     * @return the denied clause, or null
+     */
+    public static String deniedClause(String proposition) {
+        if (proposition == null) {
+            return null;
+        }
+        String lower = proposition.toLowerCase(Locale.ROOT);
+        int at = -1;
+        int length = 0;
+        for (String marker : DENIAL_MARKERS) {
+            int found = lower.indexOf(marker);
+            if (found >= 0 && (at < 0 || found < at)) {
+                at = found;
+                length = marker.length();
+            }
+        }
+        if (at < 0) {
+            return null;
+        }
+        String clause = proposition.substring(at + length).strip();
+        String lowerClause = clause.toLowerCase(Locale.ROOT);
+        for (String reason : REASON_MARKERS) {
+            int found = lowerClause.indexOf(reason);
+            if (found > 0) {
+                clause = clause.substring(0, found).strip();
+                lowerClause = clause.toLowerCase(Locale.ROOT);
+            }
+        }
+        return clause.isBlank() ? null : clause;
+    }
+
+    /**
+     * The connectives that introduce the REASON of a denial.
+     *
+     * <p>The reason is not part of what is denied, and it is the part that
+     * shares its words with the rest of the corpus.
+     */
+    private static final List<String> REASON_MARKERS = List.of(
+            " because ", " owing to ", " due to ", " as a result of ", " since ");
+
+    /**
+     * The share of a denied clause's distinctive terms that the candidate
+     * claim must carry for the denial to be about it.
+     */
+    public static final double MINIMUM_DENIAL_COVERAGE = 0.50;
 
     /**
      * How much of the older claim the new source's own text talks about.
@@ -155,15 +312,20 @@ public final class ModelRevisionDecider {
     }
 
     /**
-     * Whether the proposition denies what another claim asserts.
+     * Whether the proposition carries a denial marker.
      *
-     * <p>The markers are the words a denial is written with. A claim that
-     * denies an earlier one is a revision even when it rests on the same
-     * number of sources: the earlier claim is no longer adequate, and the
-     * reason has to say so.
+     * <p>The markers are the words a denial is written with.
+     *
+     * <p><b>W51 §6 — THIS IS A LEXICAL CANDIDATE, NOT A VERDICT.</b> The
+     * marker says that the sentence carries a negation; it says nothing
+     * about WHAT is negated, and it says nothing about whether the
+     * negation is true. A revision is made on the strength of
+     * {@link #deniesAbout(String, Claim)}, which requires the negated
+     * clause to be about the claim it revises, and the reason the decision
+     * gives says that the relation was read from the text.
      *
      * @param proposition the proposition
-     * @return whether it denies
+     * @return whether it carries a denial marker
      */
     public static boolean denies(String proposition) {
         if (proposition == null) {
@@ -208,7 +370,10 @@ public final class ModelRevisionDecider {
                 decision.reason(), List.of(newClaim.proposition()), List.of(),
                 List.of(old.proposition()), List.of(),
                 representation == null ? null : representation.statement(),
-                representation == null ? null : representation.level());
+                representation == null ? null : representation.level(),
+                // W51 §6: the refinement names the source it was read from,
+                // so that its own source record is its own record.
+                newSource.id());
     }
 
     /**

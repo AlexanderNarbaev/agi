@@ -34,6 +34,34 @@ public final class Ids {
         return "s-" + slug(kind.name().toLowerCase(Locale.ROOT)) + "-" + digest(workspaceId + "|" + kind + "|" + locator);
     }
 
+    /**
+     * The identifier of the source a REFINEMENT rests on.
+     *
+     * <p><b>W51 §6 — THE IDENTITY OF A SOURCE IS NEVER ITS LOCATOR.</b> The
+     * W50 evaluation measured that the refinement's source identifier was
+     * derived from the locator, and that the locator of every imported
+     * document is the constant "the whole document" — so every refinement
+     * in a workspace derived the SAME identifier, and the second revision
+     * overwrote the first revision's source record in place. Five claims
+     * followed that record to a document they were not read from.
+     *
+     * <p>The identity of a refinement's source is therefore derived from
+     * WHAT it is: the source it refines and the proposition it carries.
+     * Two refinements of two different documents are two records, and two
+     * refinements of the same document are two records as well.
+     *
+     * @param workspaceId the workspace
+     * @param kind the kind of the source
+     * @param refinedSourceId the source the refinement was read from
+     * @param proposition the proposition the refinement carries
+     * @return the identifier
+     */
+    public static String refinementSource(String workspaceId, SourceKind kind, String refinedSourceId,
+                                          String proposition) {
+        return "s-" + slug(kind.name().toLowerCase(Locale.ROOT)) + "-"
+                + digest(workspaceId + "|" + kind + "|" + refinedSourceId + "|" + proposition);
+    }
+
     public static String evidence(String workspaceId, String claimId, String sourceId) {
         return "e-" + digest(workspaceId + "|" + claimId + "|" + sourceId);
     }

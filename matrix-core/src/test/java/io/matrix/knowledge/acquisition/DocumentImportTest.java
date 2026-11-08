@@ -49,11 +49,30 @@ class DocumentImportTest {
             assertThat(result.source().format()).isEqualTo(DocumentFormat.TXT);
             assertThat(result.source().contentHash()).hasSize(64);
 
-            // The claims are CANDIDATES, not facts: nothing has validated
-            // them yet.
+            // W51 §6 — THE CLAIMS ARE SUPPORTED, AND THE SUPPORT IS EARNED.
+            //
+            // The old expectation was CANDIDATE, with the reason "nothing
+            // has validated them yet". But the import IS the validation
+            // stage - it runs ClaimValidator at the end of it - and the
+            // promotion policy has always allowed CANDIDATE -> SUPPORTED
+            // with one independent source and evidence behind it (this
+            // very test asserts that at the bottom). What the old
+            // expectation really pinned was the DEFECT: the gate for
+            // VERIFIED - two INDEPENDENT content hashes - was applied to the
+            // step that only needs ONE supporting source, so every
+            // imported claim stayed a candidate for ever and the W50
+            // demonstrator had to answer from claims it had never
+            // established.
+            //
+            // The new expectation: the claim is SUPPORTED - one source
+            // supports it, which is what ClaimStatus.SUPPORTED means - and
+            // it is NOT verified, because verification needs a second
+            // independent source.
             assertThat(store.claims("ws")).isNotEmpty();
             assertThat(store.claims("ws")).allSatisfy(claim ->
-                    assertThat(claim.status()).isEqualTo(ClaimStatus.CANDIDATE));
+                    assertThat(claim.status()).isEqualTo(ClaimStatus.SUPPORTED));
+            assertThat(store.claims("ws")).allSatisfy(claim ->
+                    assertThat(claim.validationMethod()).contains("the validation"));
 
             // Every claim has evidence pointing at the source, with the
             // excerpt and the location.

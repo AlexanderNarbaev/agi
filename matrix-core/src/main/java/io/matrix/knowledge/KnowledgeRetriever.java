@@ -385,6 +385,38 @@ public final class KnowledgeRetriever {
 
         List<ScoredClaim> relevant = scored.stream()
                 .filter(s -> s.coverage() >= minimumCoverage)
+                .filter(s -> EpistemicPolicy.isCitable(s.claim().status()))
+                .toList();
+
+        // W51 §6 — THE STATUS FILTER, AND WHAT IT COST.
+        //
+        // A claim the workspace has not established is not evidence, and a
+        // claim the workspace has withdrawn is never evidence. The W50
+        // evaluation measured the consequence of not saying so: 569 of the
+        // 571 claims an answer cited were CANDIDATE claims nobody had
+        // validated, and one was a claim the model had itself superseded.
+        //
+        // The rule lives in EpistemicPolicy, so that there is ONE place
+        // where it can be read and tightened, and the number of claims the
+        // filter removed is REPORTED rather than dropped silently: a reader
+        // who sees that the workspace holds more than the answer used must
+        // be able to ask why.
+        long unestablished = scored.stream()
+                .filter(s -> s.coverage() >= minimumCoverage)
+                .filter(s -> !EpistemicPolicy.isCitable(s.claim().status()))
+                .count();
+
+        // The claims that were dropped because the workspace has withdrawn
+        // them: superseded by a later revision, or refuted by the evidence.
+        // They are not evidence and they are not in the answer's evidence
+        // list, but the reader is told they exist: a claim the workspace
+        // once believed and has since taken back is exactly the thing a
+        // learner has to know about.
+        List<Claim> withdrawn = scored.stream()
+                .filter(s -> s.coverage() >= minimumCoverage)
+                .map(ScoredClaim::claim)
+                .filter(claim -> EpistemicPolicy.isWithdrawn(claim.status()))
+                .distinct()
                 .toList();
 
         // THE CONCEPT BRIDGE. A concept can be reached through its own
@@ -414,7 +446,10 @@ public final class KnowledgeRetriever {
         for (Map.Entry<String, Double> entry : representationCoverages.entrySet()) {
             if (entry.getValue() >= minimumCoverage && !claimsAlready.contains(entry.getKey())) {
                 for (Claim claim : snapshot.claims()) {
-                    if (claim.conceptId().equals(entry.getKey())) {
+                    // The bridge reaches a CONCEPT; it does not launder a
+                    // claim the workspace has not established into evidence.
+                    if (claim.conceptId().equals(entry.getKey())
+                            && EpistemicPolicy.isCitable(claim.status())) {
                         bridgedClaims.add(claim);
                     }
                 }
@@ -424,9 +459,20 @@ public final class KnowledgeRetriever {
         if (relevant.isEmpty() && bridgedClaims.isEmpty()) {
             // The frame's sentence is said in the language of the
             // question; the knowledge is not translated.
+            //
+            // W51 §6: the refusal says WHICH gate refused. A workspace that
+            // holds the subject but not an established claim about it has
+            // to say so, because the reader's next question is "what does
+            // it hold?" — and the answer "it holds something, but not
+            // something established" is a different answer from "it holds
+            // nothing".
+            String reason = unestablished > 0
+                    ? "The workspace holds " + unestablished + " claim(s) that cover the question, "
+                            + "but none of them is established: a claim the workspace has not "
+                            + "validated is not evidence, and the question is not answered from one."
+                    : "No claim in this workspace covers enough of the question to answer it.";
             return new Answer(question, wanted, false,
-                    ResponseFrame.in(TextProfiles.detect(question),
-                            "No claim in this workspace covers enough of the question to answer it."),
+                    ResponseFrame.in(TextProfiles.detect(question), reason),
                     "", 0.0, SupportScore.none(), List.of(), List.of(), List.of(),
                     List.of("the workspace holds " + snapshot.claims().size() + " claims about "
                             + snapshot.concepts().size() + " concepts"),
@@ -544,13 +590,31 @@ public final class KnowledgeRetriever {
             }
         }
 
-        // The support score: the mean of the matched claims' OWN confidence
-        // field - which was authored by hand in the knowledge package -
-        // multiplied by the retrieval coverage. The VALUE is unchanged from
-        // RECON-W40, so nothing that depended on it breaks; what changed is
-        // that it is now called a support score, decomposed, and shipped with
-        // a statement of what it is not. See SupportScore.
-        double claimConfidence = claims.stream().mapToDouble(Claim::confidence).average().orElse(0.0);
+        // THE SUPPORT SCORE, AND WHAT IT IS NOT (W51 §6).
+        //
+        // The score is the mean of the matched claims' OWN confidence field
+        // - which was authored by hand in the knowledge package - multiplied
+        // by the retrieval coverage. The VALUE is unchanged from RECON-W40,
+        // so nothing that depended on it breaks; what changed is that it is
+        // now called a support score, decomposed, and shipped with a
+        // statement of what it is not. See SupportScore.
+        //
+        // W51 §6 SEPARATES RELEVANCE FROM EPISTEMIC SUPPORT. The claims
+        // that carry the score are the ESTABLISHED ones: a claim the
+        // workspace has not established contributes no numeric support, and
+        // it does not drag the mean of the established ones down either.
+        // The count of the claims that carry no numeric support is
+        // REPORTED, because the W50 evaluation measured that every answer
+        // of the demonstrator carried a support value of 0.0 and no
+        // explanation of why.
+        List<Claim> established = claims.stream()
+                .filter(claim -> EpistemicPolicy.isEstablished(claim.status()))
+                .toList();
+        List<Claim> withoutNumericSupport = claims.stream()
+                .filter(claim -> !EpistemicPolicy.carriesNumericSupport(claim))
+                .toList();
+        double claimConfidence = established.isEmpty() ? 0.0
+                : established.stream().mapToDouble(Claim::confidence).average().orElse(0.0);
         double coverage = relevant.stream().mapToDouble(ScoredClaim::coverage).average().orElse(0.0);
         double supportScore = Math.round(claimConfidence * coverage * 100.0) / 100.0;
 
@@ -572,6 +636,21 @@ public final class KnowledgeRetriever {
             } else if (claim.status() == ClaimStatus.SUPPORTED) {
                 limitations.add("Supported but not independently verified: " + claim.proposition());
             }
+        }
+        if (!withoutNumericSupport.isEmpty()) {
+            limitations.add(withoutNumericSupport.size() + " of the " + claims.size()
+                    + " cited claims carry no authored confidence: the support score is 0.0 for "
+                    + "them, and the citation is not a probability.");
+        }
+        if (unestablished > 0) {
+            limitations.add(unestablished + " claim(s) of the workspace cover the question but are "
+                    + "not established, and are therefore not cited as evidence.");
+        }
+        for (Claim claim : withdrawn) {
+            limitations.add((claim.status() == ClaimStatus.REFUTED
+                    ? "The workspace holds a refuted claim about this, which is not evidence: "
+                    : "The workspace superseded a claim about this, which is not evidence: ")
+                    + claim.proposition());
         }
         if (!unmatchedStems.isEmpty()) {
             limitations.add("Not covered by the workspace: " + String.join(", ", unmatched));

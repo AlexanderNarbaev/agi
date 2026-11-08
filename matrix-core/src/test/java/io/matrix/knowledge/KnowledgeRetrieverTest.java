@@ -124,7 +124,7 @@ class KnowledgeRetrieverTest {
                 .findFirst().orElseThrow();
 
         if (answer.answered()) {
-            // THE INVARIANT, NOT A PROXY.
+            // THE INVARIANT, NOT A PROXY — AND NOW THE INVARIANT ITSELF.
             //
             // The first version of this asserted that NO claim in the
             // answer is VERIFIED. That was a proxy for "the refuted
@@ -135,13 +135,20 @@ class KnowledgeRetrieverTest {
             // verified - correctly so, since they are not the
             // misconception.
             //
-            // The invariant itself is asserted here: the refuted claim
-            // appears as REFUTED, and the answer's statement does not
-            // assert it.
-            assertThat(answer.claims()).filteredOn(claim -> claim.id().equals(refuted.id()))
-                    .isNotEmpty()
-                    .allSatisfy(claim ->
-                            assertThat(claim.status()).isEqualTo(ClaimStatus.REFUTED));
+            // The second version asserted that the refuted claim APPEARS
+            // in the answer's claims, marked REFUTED, so that a learner
+            // could be shown the mistake to correct. W51 §6 removed that:
+            // the answer's claims ARE the evidence, and a claim the
+            // workspace has withdrawn is never evidence - the W50
+            // evaluation measured 569 unestablished claims and one
+            // withdrawn claim inside the evidence of the answers.
+            //
+            // The invariant is now asserted directly: the withdrawn claim
+            // is NOT evidence, the answer says that the workspace holds it,
+            // and the answer's statement does not assert it.
+            assertThat(answer.claims()).noneMatch(claim -> claim.id().equals(refuted.id()));
+            assertThat(answer.limitations()).anySatisfy(limitation ->
+                    assertThat(limitation).contains(refuted.proposition()));
             assertThat(answer.statement()).doesNotContain(refuted.proposition());
             // And the correct claim about the oxygen is there too.
             assertThat(answer.claims()).anySatisfy(claim ->

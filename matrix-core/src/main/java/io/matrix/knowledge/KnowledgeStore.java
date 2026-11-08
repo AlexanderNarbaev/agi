@@ -361,7 +361,23 @@ public final class KnowledgeStore implements AutoCloseable {
             if (parent != null) {
                 Files.createDirectories(parent);
             }
-            this.connection = DriverManager.getConnection("jdbc:sqlite:" + databaseFile);
+            // W51 — the write transactions are IMMEDIATE, not DEFERRED.
+            //
+            // A deferred transaction takes the write lock only when it first WRITES. If
+            // another connection committed in the meantime, SQLite cannot upgrade the
+            // transaction's snapshot, and it fails IMMEDIATELY with SQLITE_BUSY — the busy
+            // timeout does not apply to that case, because waiting cannot help: the
+            // snapshot is already stale. The failure is real and was observed: the atomic
+            // observation write failed about one run in three when a second connection in
+            // the same process was writing the same file.
+            //
+            // An IMMEDIATE transaction takes the write lock when it BEGINS, so the busy
+            // timeout applies to the wait for it, and the transaction can never be in the
+            // state where it cannot be upgraded. The cost is that the lock is held from
+            // the first statement rather than from the first write; the transactions of
+            // this store are short, and the guarantee is worth more than the lock's span.
+            this.connection = DriverManager.getConnection("jdbc:sqlite:" + databaseFile,
+                    sqliteConfiguration());
             this.connection.setAutoCommit(true);
             configure();
             migrate();
@@ -400,6 +416,17 @@ public final class KnowledgeStore implements AutoCloseable {
                     + value);
         }
         return value;
+    }
+
+    /**
+     * The driver's configuration: the write transactions are IMMEDIATE.
+     *
+     * @return the configuration
+     */
+    private static java.util.Properties sqliteConfiguration() {
+        java.util.Properties properties = new java.util.Properties();
+        properties.setProperty("transaction_mode", "IMMEDIATE");
+        return properties;
     }
 
     private void configure() throws SQLException {
@@ -2472,6 +2499,22 @@ public final class KnowledgeStore implements AutoCloseable {
         try {
             connection.setAutoCommit(false);
             try {
+                // W51 §6 — THE WORKSPACE IS REGISTERED BY ITS FIRST WRITE.
+                //
+                // The status route counted the workspaces by reading the
+                // `workspace` table, and the learning path — the one W50
+                // built — never wrote that table: `applyChanges` wrote
+                // concepts, sources, claims, evidence, representations and
+                // revisions, and nothing else. The W50 evaluation measured
+                // the consequence: six workspaces holding 4 080 claims and
+                // a status route that reported `"workspaces": []` and
+                // `"counts": {}`.
+                //
+                // The row is written ONCE, with OR IGNORE, so that the
+                // workspace's name and creation instant are the ones its
+                // first write recorded and a later write does not rewrite
+                // them.
+                registerWorkspace(workspaceId);
                 for (Concept concept : concepts) {
                     insertConceptIfAbsent(concept);
                 }
@@ -2503,6 +2546,28 @@ public final class KnowledgeStore implements AutoCloseable {
     }
 
     /**
+     * Registers a workspace, once.
+     *
+     * <p>W51 §6. The `workspace` table is the registry the status route
+     * counts, and the learning path never wrote it. The row is inserted
+     * with OR IGNORE, so the workspace's name and creation instant are the
+     * ones its FIRST write recorded; a later write does not rewrite them,
+     * and a workspace that is written twice is still one workspace.
+     *
+     * @param workspaceId the workspace
+     */
+    private void registerWorkspace(String workspaceId) throws SQLException {
+        try (PreparedStatement ps = connection.prepareStatement(
+                "INSERT OR IGNORE INTO workspace(id, name, created_at, version) VALUES (?,?,?,?)")) {
+            ps.setString(1, workspaceId);
+            ps.setString(2, workspaceId);
+            ps.setString(3, now());
+            ps.setInt(4, 1);
+            ps.executeUpdate();
+        }
+    }
+
+    /**
      * Inserts a concept unless the workspace already holds one with the
      * same id.
      *
@@ -2522,9 +2587,56 @@ public final class KnowledgeStore implements AutoCloseable {
         }
     }
 
+    /**
+     * Writes a source record, and never rewrites one that is already there.
+     *
+     * <p><b>W51 §6 — A SOURCE RECORD IS IMMUTABLE.</b> The W50 evaluation
+     * measured that the source record of a refinement was rewritten in
+     * place: the record {@code s-publication-66bb6e0c} was titled
+     * "wikipedia-slab-pull.md" after the first revision and
+     * "wikipedia-paleomagnetism.md" after the second, and the five claims
+     * that pointed at it followed it to a document they were not read from.
+     *
+     * <p>Two rules together make that impossible. The identity of a source
+     * is derived from the CONTENT it carries and never from its locator
+     * (see {@link io.matrix.knowledge.Ids}), so two different documents can
+     * no longer share an identifier; and the write itself refuses to
+     * overwrite an existing record, so a re-import leaves the record that
+     * is already there exactly as it was.
+     *
+     * <p>A record that is already present with a DIFFERENT content hash is
+     * a collision, and the write is refused rather than silently replacing
+     * a record that claims hold.
+     *
+     * @param s the source
+     */
     private void upsertSource(Source s) throws SQLException {
+        boolean exists = false;
+        String existingHash = null;
         try (PreparedStatement ps = connection.prepareStatement(
-                "INSERT OR REPLACE INTO source(id, workspace_id, kind, title, locator, authority, "
+                "SELECT content_hash FROM source WHERE id = ?")) {
+            ps.setString(1, s.id());
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    exists = true;
+                    existingHash = rs.getString(1);
+                }
+            }
+        }
+        if (exists) {
+            if (s.contentHash() != null && existingHash != null
+                    && !s.contentHash().equals(existingHash)) {
+                throw new IllegalArgumentException("the source " + s.id() + " already exists with a "
+                        + "different content hash; a source record is immutable and two documents "
+                        + "may not share an identity");
+            }
+            // The record is already there and it says the same thing: the
+            // write is a no-op, and the record keeps the instant and the
+            // fields its first write gave it.
+            return;
+        }
+        try (PreparedStatement ps = connection.prepareStatement(
+                "INSERT INTO source(id, workspace_id, kind, title, locator, authority, "
                         + "freshness, excerpt, added_at, content_hash, published_at, language, "
                         + "format) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)")) {
             ps.setString(1, s.id());
@@ -2542,6 +2654,55 @@ public final class KnowledgeStore implements AutoCloseable {
             ps.setString(13, s.format());
             ps.executeUpdate();
         }
+    }
+
+    /**
+     * The content hash of the source record with this identifier, or null
+     * when the store holds no such record.
+     *
+     * @param sourceId the identifier
+     * @return the content hash, or null
+     */
+    private String sourceContentHash(String sourceId) {
+        try (PreparedStatement ps = connection.prepareStatement(
+                "SELECT content_hash FROM source WHERE id = ?")) {
+            ps.setString(1, sourceId);
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next() ? rs.getString(1) : null;
+            }
+        } catch (SQLException e) {
+            throw new IllegalStateException("Failed to read the source record", e);
+        }
+    }
+
+    /**
+     * The claims of a workspace, counted by their status.
+     *
+     * <p>W51 §6. The status route reported how many claims a workspace
+     * held and nothing about what they were: the breakdown by
+     * {@link io.matrix.knowledge.ClaimStatus} existed nowhere in the
+     * repository, and it is the number a reader of an epistemic store asks
+     * for first — how much of what is held is established, and how much has
+     * been withdrawn.
+     *
+     * @param workspaceId the workspace
+     * @return the count of each status that occurs, by status name
+     */
+    public java.util.Map<String, Integer> claimStatusCounts(String workspaceId) {
+        java.util.Map<String, Integer> counts = new java.util.LinkedHashMap<>();
+        try (PreparedStatement ps = connection.prepareStatement(
+                "SELECT status, COUNT(*) AS n FROM claim WHERE workspace_id = ? GROUP BY status "
+                        + "ORDER BY status")) {
+            ps.setString(1, workspaceId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    counts.put(rs.getString("status"), rs.getInt("n"));
+                }
+            }
+        } catch (SQLException e) {
+            throw new IllegalStateException("Failed to count the claims by status", e);
+        }
+        return counts;
     }
 
     private void upsertClaim(Claim c) throws SQLException {

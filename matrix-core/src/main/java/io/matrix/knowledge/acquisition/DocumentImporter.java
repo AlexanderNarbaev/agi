@@ -152,7 +152,13 @@ public final class DocumentImporter {
         SourceRecord.Builder source = new SourceRecord.Builder(
                 sourceId(workspaceId, hash), filename, hash, format)
                 .importedAt(clock.instant().toString())
-                .processed("read " + size + " bytes");
+                .processed("read " + size + " bytes")
+                // W51 §6 — THE EXTENT OF THE SOURCE IS SAID EXPLICITLY.
+                // The source IS the whole document, and the claim's own
+                // span says where in it the sentence sat. The locator used
+                // to be the bare constant "the whole document", which said
+                // the same thing and named nothing.
+                .location(filename + " (" + SourceRecord.WHOLE_DOCUMENT + ")");
 
         ExtractedDocument document = new DocumentExtractorRegistry().extract(format, content,
                 filename, source);
@@ -225,7 +231,12 @@ public final class DocumentImporter {
             conceptIds.add(concept.id());
             String claimId = claimId(workspaceId, record.contentHash(), proposal.proposition());
             claims.add(new Claim(claimId, workspaceId, concept.id(), proposal.proposition(),
-                    proposal.subject(), proposal.location(),
+                    proposal.subject(),
+                    // W51 §6 — THE CLAIM CARRIES ITS SPAN. The context is
+                    // the place the claim came from, and the place is now
+                    // exact: the file, the heading, the line and the
+                    // characters of the extracted text the sentence covers.
+                    io.matrix.knowledge.ClaimSpan.format(proposal.location(), proposal.span()),
                     ClaimStatus.CANDIDATE, 0.0, 1, record.sourceId(),
                     "document extraction", "not validated", null, null,
                     record.importedAt(), record.importedAt()));
