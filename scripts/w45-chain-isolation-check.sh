@@ -79,20 +79,24 @@ readonly GRADLE="./gradlew"
 readonly MODULES="matrix-core matrix-brain-runtime matrix-api-gateway matrix-audit"
 
 # The task that compiles the classes the proof is made over.
-readonly BUILD_TASK=":matrix-core:classes :matrix-brain-runtime:classes :matrix-api-gateway:classes :matrix-audit:classes"
+# The classes of the two chains, as a LIST of Gradle tasks. It is an array and
+# not one string because Gradle takes several task names in one invocation, and
+# a quoted string would be one task name with spaces in it.
+readonly BUILD_TASKS=(":matrix-core:classes" ":matrix-brain-runtime:classes"
+  ":matrix-api-gateway:classes" ":matrix-audit:classes")
 
 # The task that assembles the runnable distribution of the chain B server.
 readonly DIST_TASK=":matrix-api-gateway:installDist"
 
-# The entry points of chain B, as the owner decision names them.
-readonly CHAIN_B_ENTRY_POINTS="io.matrix.api.MinimalHttpServer io.matrix.api.llm_quarantine.BrainProduction io.matrix.api.brain.ProductionBrainClient io.matrix.brain.runtime.TrueMindCycle"
+# The entry points of chain B live in the reachability tool, which owns the
+# graph: scripts/w45-chain-isolation-reachability.py. They are NOT repeated
+# here, so the two cannot drift apart.
 
 # The HTTP status codes the runtime part asserts.
 readonly HTTP_OK=200
 readonly HTTP_NOT_FOUND=404
 
 # How long the gate waits for the chain B server to answer.
-readonly STARTUP_WAIT_SECONDS=60
 readonly READY_WAIT_SECONDS=60
 readonly REQUEST_TIMEOUT_SECONDS=10
 
@@ -160,6 +164,7 @@ except Exception:
 
 # ── the private directory ────────────────────────────────────────────────────
 
+# shellcheck disable=SC2317  # the function is invoked by the EXIT trap below
 cleanup() {
   if [ -n "$SERVER_PID" ] && kill -0 "$SERVER_PID" 2>/dev/null; then
     kill -9 "$SERVER_PID" 2>/dev/null
@@ -176,8 +181,8 @@ cleanup() {
   fi
 }
 trap cleanup EXIT
-trap "exit $EXIT_INTERRUPTED" INT
-trap "exit $EXIT_TERMINATED" TERM
+trap 'exit "$EXIT_INTERRUPTED"' INT
+trap 'exit "$EXIT_TERMINATED"' TERM
 
 # ── the tools ────────────────────────────────────────────────────────────────
 
@@ -195,8 +200,8 @@ build_all() {
   if [ "${W45_SKIP_BUILD:-0}" = "1" ]; then
     note "the build is skipped (W45_SKIP_BUILD=1)"
   else
-    note "the build: $GRADLE $BUILD_TASK"
-    if ! "$GRADLE" $BUILD_TASK --console=plain; then
+    note "the build: $GRADLE ${BUILD_TASKS[*]}"
+    if ! "$GRADLE" "${BUILD_TASKS[@]}" --console=plain; then
       fail "the compiled classes of the two chains could not be built"
       return 1
     fi
@@ -339,7 +344,15 @@ runtime_part() {
   fi
 
   # The server must have kept its own state inside the private directory.
-  if [ -d "$work/data" ] || [ -d "$work/logs" ] || [ -n "$(ls -A "$work" 2>/dev/null | grep -v '^server.log$')" ]; then
+  other=""
+  for entry in "$work"/* "$work"/.[!.]*; do
+    [ -e "$entry" ] || continue
+    case "$(basename "$entry")" in
+      server.log) ;;
+      *) other="yes" ;;
+    esac
+  done
+  if [ -d "$work/data" ] || [ -d "$work/logs" ] || [ -n "$other" ]; then
     pass "the chain B server wrote only inside its own private directory"
   else
     note "the chain B server wrote nothing at all: it holds no state of its own in this mode"

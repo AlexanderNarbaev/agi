@@ -63,6 +63,7 @@ fail() { CHECKS=$((CHECKS + 1)); FAILURES=$((FAILURES + 1)); printf '  FAIL  %s\
 note() { printf '  ..    %s\n' "$1"; }
 head1() { printf '\n===== %s =====\n' "$1"; }
 
+# shellcheck disable=SC2317  # the function is invoked by the EXIT trap below
 cleanup() {
   if [ -n "$PRIV" ] && [ -d "$PRIV" ]; then
     rm -rf "$PRIV"
@@ -70,8 +71,8 @@ cleanup() {
   fi
 }
 trap cleanup EXIT
-trap "exit $EXIT_INTERRUPTED" INT
-trap "exit $EXIT_TERMINATED" TERM
+trap 'exit "$EXIT_INTERRUPTED"' INT
+trap 'exit "$EXIT_TERMINATED"' TERM
 
 if [ ! -x "$JAVAC" ]; then
   echo "the compiler is absent: $JAVAC — the negative control cannot run"

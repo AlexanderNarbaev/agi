@@ -57,6 +57,7 @@ fail() { CHECKS=$((CHECKS + 1)); FAILURES=$((FAILURES + 1)); printf '  FAIL  %s\
 note() { printf '  ..    %s\n' "$1"; }
 head1() { printf '\n===== %s =====\n' "$1"; }
 
+# shellcheck disable=SC2317  # the function is invoked by the EXIT trap below
 cleanup() {
   if [ -n "$CHAIN_A_PID" ] && kill -0 "$CHAIN_A_PID" 2>/dev/null; then
     kill "$CHAIN_A_PID" 2>/dev/null
@@ -68,8 +69,8 @@ cleanup() {
   fi
 }
 trap cleanup EXIT
-trap "exit $EXIT_INTERRUPTED" INT
-trap "exit $EXIT_TERMINATED" TERM
+trap 'exit "$EXIT_INTERRUPTED"' INT
+trap 'exit "$EXIT_TERMINATED"' TERM
 
 PRIV="$(mktemp -d "${TMPDIR:-/tmp}/w51-bridge-demo-XXXXXX")" || exit 1
 note "the private directory: $PRIV"
