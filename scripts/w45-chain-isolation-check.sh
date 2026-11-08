@@ -29,6 +29,17 @@
 #       writes to the epistemic store
 #   G6  at runtime: the chain B server refuses the chain A surface, and the
 #       epistemic database of the owner is byte-identical before and after
+#   G7  W51: the shared contract layer is PURE. A class of io.matrix.contract.**
+#       that chain B can reach must not open a database, serve a route or
+#       reach a store. The contract layer is shared by two processes; a shared
+#       class that can open a database is a class both processes can call.
+#   G8  W51: the bridge is the ONLY crossing. No class may be reachable from
+#       chain B AND from chain A's store, and chain B must not reach the chain A
+#       bridge server at all. The crossing happens over the network, not inside
+#       one class graph.
+#   G9  W51: the chain B bridge client reaches no class of the store. The
+#       client is compiled into matrix-core, which chain B depends on, so the
+#       property has to be checked rather than assumed.
 #
 # HYGIENE
 # Everything the gate touches is inside ONE private temporary directory that
@@ -482,6 +493,51 @@ if [ "${W45_SKIP_RUNTIME:-0}" = "1" ]; then
   note "the runtime part is skipped (W45_SKIP_RUNTIME=1)"
 else
   runtime_part
+fi
+
+# ── G7 — the shared contract layer is pure ──────────────────────────────────
+head1 "G7 — the shared contract layer is pure"
+G7="$(report_size "$REPORT" chain_b.reachable_contract_impure)"
+note "the classes of io.matrix.contract.** reached from chain B: $(report_size "$REPORT" chain_b.reachable_contract)"
+note "of those, the ones that can open a database, serve a route or reach a store: $G7"
+if [ "$G7" = "0" ]; then
+  pass "no class of the shared contract layer reached from chain B can open a database,"
+  pass "serve a route or reach a store: the contract layer is pure"
+else
+  fail "$G7 class(es) of the shared contract layer are impure"
+  report_field "$REPORT" chain_b.reachable_contract_impure
+fi
+
+# ── G8 — the bridge is the only crossing ────────────────────────────────────
+head1 "G8 — the bridge is the only crossing"
+G8="$(report_size "$REPORT" chain_b.crossings)"
+G8B="$(report_size "$REPORT" chain_b.reaches_bridge_server)"
+note "the classes reachable from chain B that also reach chain A's store: $G8"
+note "the chain A bridge server classes reached from chain B: $G8B"
+if [ "$G8" = "0" ]; then
+  pass "no class is reachable from chain B and from chain A's store: the crossing"
+  pass "happens over the network and not inside one class graph"
+else
+  fail "$G8 class(es) cross from chain B into chain A's store"
+  report_field "$REPORT" chain_b.crossings
+fi
+if [ "$G8B" = "0" ]; then
+  pass "chain B reaches no class of the chain A bridge server"
+else
+  fail "$G8B class(es) of the chain A bridge server are reachable from chain B"
+  report_field "$REPORT" chain_b.reaches_bridge_server
+fi
+
+# ── G9 — the chain B bridge client reaches no store ─────────────────────────
+head1 "G9 — the chain B bridge client reaches no store"
+G9="$(report_size "$REPORT" chain_b.bridge_client_reaches_store)"
+note "the chain B bridge client: $(report_field "$REPORT" chain_b.bridge_client_reachable)"
+note "the classes of the store its own closure reaches: $G9"
+if [ "$G9" = "0" ]; then
+  pass "the chain B bridge client reaches no class of the epistemic store"
+else
+  fail "$G9 class(es) of the store are reachable from the chain B bridge client"
+  report_field "$REPORT" chain_b.bridge_client_reaches_store
 fi
 
 # ── the summary ─────────────────────────────────────────────────────────────

@@ -100,6 +100,22 @@ WRITE_METHODS = ("POST", "PUT", "DELETE", "PATCH")
 # chain A and must not be reachable from chain B.
 CHAIN_A_ROUTE_PREFIXES = ("/v1/cognitive", "/v1/workbench")
 
+# W51 — the package of the canonical contract layer. Both chains may READ it:
+# it is the shared vocabulary of the bridge. It must not be able to open a
+# database, serve a route or reach a store, because it is shared by two
+# processes and a shared class is a class both of them can call.
+CONTRACT_PACKAGE = "io.matrix.contract."
+
+# W51 — the package of the chain A bridge server. It owns the write path of
+# the bridge, so chain B must never reach it: the crossing happens over the
+# network, not inside one class graph.
+BRIDGE_SERVER_PACKAGE = "io.matrix.bridge."
+
+# W51 — the chain B side of the bridge. It is the only class of chain B that
+# talks to chain A, and the gate names it so that "the bridge is the only
+# crossing" is a checked statement.
+BRIDGE_CLIENT = "io.matrix.brain.runtime.bridge.BridgePublisher"
+
 # The annotation names of the JAX-RS surface.
 HTTP_METHOD_ANNOTATIONS = {
     "jakarta.ws.rs.GET": "GET",
@@ -461,6 +477,40 @@ def main(argv: list[str]) -> int:
     chain_b_reaches_chain_a_surface = sorted(
         c for c in chain_b_closure if c in set(chain_a_surface_classes))
 
+    # ── W51: the bridge, the contract layer and the crossings ───────────────
+    #
+    # The contract layer is shared substrate: chain B reads it and chain A
+    # reads it. It is allowed to be shared ONLY while it is pure. A contract
+    # class that can open a database is a class that both processes can call
+    # to open one, and the isolation stops being an isolation.
+    chain_b_contract = sorted(c for c in chain_b_closure if c.startswith(CONTRACT_PACKAGE))
+    chain_b_contract_impure = sorted(
+        c for c in chain_b_contract
+        if persistence.get(c) or c in set(chain_a_surface_classes)
+        or c in set(store_own))
+
+    # The crossing: a class that chain B can reach AND that is one of the
+    # STORE'S OWN classes. There must be none: the bridge crosses over the
+    # network, not inside one class graph.
+    #
+    # The store's OWN classes and not the store's whole closure: the shared
+    # substrate — the truth tables, the Tsetlin automaton, the HDC encoding —
+    # is reachable from both chains and is not a path to the store. That is
+    # the distinction W45.2 §4.4 draws, and G2 uses the same one.
+    crossing = sorted(chain_b_closure & set(store_own))
+
+    # The chain A bridge server must not be reachable from chain B.
+    chain_b_reaches_bridge_server = sorted(
+        c for c in chain_b_closure if c.startswith(BRIDGE_SERVER_PACKAGE))
+
+    # The chain B bridge client: it must be reachable, and it must reach no
+    # class of the store.
+    bridge_client_reachable = BRIDGE_CLIENT in chain_b_closure
+    # The client's own closure is computed even when chain B does not call it
+    # yet: the property that matters is that the class CANNOT reach the store,
+    # and that is true whether or not anybody calls it.
+    bridge_client_reaches_store = sorted(closure_of(BRIDGE_CLIENT) & set(store_own))
+
     report = {
         "modules": [
             {"name": module, "role": module_of[module], "classes": len(module_classes[module])}
@@ -479,6 +529,12 @@ def main(argv: list[str]) -> int:
             "reaches_chain_a_surface": chain_b_reaches_chain_a_surface,
             "reachable_persistence": chain_b_persistence,
             "reachable_knowledge_persistence": chain_b_knowledge_persistence,
+            "reachable_contract": chain_b_contract,
+            "reachable_contract_impure": chain_b_contract_impure,
+            "reaches_bridge_server": chain_b_reaches_bridge_server,
+            "crossings": crossing,
+            "bridge_client_reachable": bridge_client_reachable,
+            "bridge_client_reaches_store": bridge_client_reaches_store,
         },
         "chain_a": {
             "store_subsystem_classes": len(store_closure),
