@@ -41,7 +41,7 @@ cycle, and whose current state existed in four documents of four different ages.
 
 ## 3. The active wave
 
-### W51 — the unified cognitive runtime, the world model and the safe self-extension (**the wave's work is in the working tree; the commit is the owner's**)
+### W51 — the unified cognitive runtime, the world model and the safe self-extension (**the wave's work is committed; pull request #48 is open**)
 
 **W51 is the wave that made the parts of MATRIX interact.** Its own report is
 `docs-v2/engineering/W51-STATUS.md`, the audit and the subsystem classification are
@@ -55,11 +55,12 @@ separate databases and separate single writers, and the *bridge* became the one 
 crossing between them — the contract the repository had already written down in W45.2 and
 never implemented.
 
-**What it did NOT do:** it did not merge anything into `main`, it did not delete a subsystem,
-and it did not commit. **Committing and pushing are Level 3 operations under
-`AGENT-OPERATING-PROTOCOL.md` §3, and the wave's own directive did not name them** — the
-wave's work is therefore in the working tree, reviewed and measured, and awaits the owner's
-explicit authorisation.
+**What it did NOT do:** it did not merge anything into `main` and it did not delete a
+subsystem. The wave's own directive did not name the commit and the push — they are Level 3
+operations under `AGENT-OPERATING-PROTOCOL.md` §3 — and the wave left the work in the
+working tree, reviewed and measured. **The owner authorised the commit and the push on
+2026-11-08**, and the wave's work is now eleven commits on `develop`, with pull request #48
+(`develop` → `main`) open and **not merged by an agent**.
 
 **The measured results:** the end-to-end demonstration performs **15 of 15** acceptance
 points; the cross-process demonstration performs **10 of 10**; the isolation gate passes
@@ -70,14 +71,14 @@ on a clean worktree at `a098f283`; the wave's own test scopes are
 `matrix-brain-runtime`;
 the quality gate holds at **271** magic-literal candidates against a baseline of **271**.
 
-### W50 — the local evidence-grounded demonstrator (**the wave's work is committed; the closeout is open**)
+### W50 — the local evidence-grounded demonstrator (**merged**)
 
-**The wave's work is committed and its report is written.** It started at `8f617ce6` (the
-W49 close) on `develop`; its own report is `docs-v2/engineering/W50-STATUS.md`, the
-measured local-model evaluation is `docs-v2/engineering/W50-LOCAL-MODEL.md`, and the tasks
-it created are in §4.9. **The wave's own order is W50-00 … W50-08**, and the closeout is
-the one task that is not an implementation: the lead opens the pull request `develop` →
-`main`, and **an agent does not merge it**.
+**The wave is complete and merged.** It started at `8f617ce6` (the W49 close) on `develop`;
+its own report is `docs-v2/engineering/W50-STATUS.md`, the measured local-model evaluation
+is `docs-v2/engineering/W50-LOCAL-MODEL.md`, and the tasks it created are in §4.9. **The
+wave's own order was W50-00 … W50-08.** Pull request #47 (`develop` → `main`) was merged by
+the **owner** on 2026-11-07 as the squash `67b3410d`; an agent opened it and did not merge
+it.
 
 ### W49 — the public-research workstream (**merged**)
 
