@@ -1,0 +1,226 @@
+{
+  "wave" : "W51",
+  "instant" : "2026-11-08T00:00:00Z",
+  "runtime" : {
+    "componentCount" : 7,
+    "capabilityCount" : 7,
+    "components" : [ {
+      "id" : "epistemic-store",
+      "kind" : "MEMORY",
+      "health" : "UNKNOWN",
+      "remote" : false,
+      "requires" : [ ],
+      "capabilities" : [ "memory.claims" ],
+      "unmetDependencies" : [ ]
+    }, {
+      "id" : "cognitive-store",
+      "kind" : "MEMORY",
+      "health" : "UNKNOWN",
+      "remote" : false,
+      "requires" : [ "epistemic-store" ],
+      "capabilities" : [ "memory.episodes" ],
+      "unmetDependencies" : [ "epistemic-store" ]
+    }, {
+      "id" : "cognitive-kernel",
+      "kind" : "REASONING",
+      "health" : "UNKNOWN",
+      "remote" : false,
+      "requires" : [ "cognitive-store", "micro-world", "algorithm-portfolio" ],
+      "capabilities" : [ "reasoning.cycle" ],
+      "unmetDependencies" : [ "cognitive-store", "micro-world", "algorithm-portfolio" ]
+    }, {
+      "id" : "algorithm-portfolio",
+      "kind" : "REASONING",
+      "health" : "UNKNOWN",
+      "remote" : false,
+      "requires" : [ ],
+      "capabilities" : [ "reasoning.method-selection" ],
+      "unmetDependencies" : [ ]
+    }, {
+      "id" : "micro-world",
+      "kind" : "ACTION",
+      "health" : "UNKNOWN",
+      "remote" : false,
+      "requires" : [ ],
+      "capabilities" : [ "action.probe" ],
+      "unmetDependencies" : [ ]
+    }, {
+      "id" : "regulation",
+      "kind" : "LEARNING",
+      "health" : "UNKNOWN",
+      "remote" : false,
+      "requires" : [ ],
+      "capabilities" : [ "governance.regulation" ],
+      "unmetDependencies" : [ ]
+    }, {
+      "id" : "bridge",
+      "kind" : "BRIDGE",
+      "health" : "UP",
+      "remote" : false,
+      "requires" : [ "epistemic-store" ],
+      "capabilities" : [ "bridge.ingest" ],
+      "unmetDependencies" : [ "epistemic-store" ]
+    } ]
+  },
+  "cycle" : {
+    "episodeId" : "ep-sig-w51-1",
+    "status" : "COMPLETED",
+    "answer" : "The experiment was run and the outcome observed: lamp=false.",
+    "selectedMethod" : "micro-world-hypothesis-enumeration",
+    "methodDecision" : "selected micro-world-hypothesis-enumeration@v1 with score 1.0 over 1 admitted candidate(s); the accuracy evidence was 1.0 over 16 case(s); the cost came from DECLARED_COMPLEXITY and was weighed with a cost weight of 1.0",
+    "predictionId" : "prd-ep-sig-w51-1",
+    "predictedValue" : "false",
+    "predictionBasis" : "surviving-hypotheses",
+    "errorMagnitude" : null,
+    "errorDisposition" : null,
+    "observedValue" : null,
+    "traceSteps" : 15,
+    "tracePhases" : [ "PERCEIVE", "RESTORE", "RESTORE", "PREDICT", "SELECT", "COMPUTE", "PROPOSE", "PROBE", "WORLD", "OBSERVE", "LEARN", "REGULATE", "REGULATE", "REFLECT", "ANSWER" ],
+    "worldState" : [ "RESTORE: the world state was rebuilt: revision 0, 0 situation(s) known, 0 transition(s)", "WORLD: the transition wtr-obs-1 moved the state from wst-micro-world.lamp-0 to wst-micro-world.lamp-1; changed={assign:power=0,switch=0#lamp=false}; the state is now at revision 1" ],
+    "reflection" : {
+      "id" : "ref-ep-sig-w51-1",
+      "methodId" : "micro-world-hypothesis-enumeration",
+      "reuseMethod" : true,
+      "predicted" : "false",
+      "observed" : null,
+      "learned" : [ "the observation was written as case case-aed5f06b and as evidence on claim clm-f41af680-bd39-4d62-bf90-5f312b2b7f8e (the model explains it)", "the model holds 8 surviving hypothesis(es) over 0 remembered case(s)" ],
+      "uncertainties" : [ "the surviving hypotheses disagree: 8 of them" ],
+      "decisions" : [ "LEAVE_UNRESOLVED ep-sig-w51-1 — the cycle left something unresolved and says what" ]
+    }
+  },
+  "metaMemory" : {
+    "statusCounts" : {
+      "CANDIDATE" : 1
+    },
+    "sources" : [ {
+      "sourceId" : "src-40380d2c-1378-4959-bc2d-38788d111216",
+      "claimsRevised" : 0,
+      "claimsIntroduced" : 1,
+      "revisionRate" : 0.0
+    } ],
+    "evaluation" : {
+      "claims.revised" : {
+        "value" : 0.0,
+        "sampleSize" : 1
+      },
+      "claims.established" : {
+        "value" : 0.0,
+        "sampleSize" : 1
+      },
+      "sources.known" : {
+        "value" : 1.0,
+        "sampleSize" : 1
+      }
+    }
+  },
+  "episode" : {
+    "cycles" : 3,
+    "survivorsPerCycle" : [ 4, 2, 1 ],
+    "probes" : [ "the sandbox answered lamp=false for power=0,switch=1 (the model does not settle the case)", "the sandbox answered lamp=false for power=1,switch=0 (the model does not settle the case)", "the sandbox answered lamp=true for power=1,switch=1 (the model does not settle the case)" ],
+    "finalSurvivors" : 1,
+    "survivorId" : "h-0001",
+    "rememberedObservations" : 4,
+    "freshHypotheses" : 16,
+    "methodDecisions" : [ "selected micro-world-hypothesis-enumeration@v1 with score 1.0 over 1 admitted candidate(s); the accuracy evidence was 1.0 over 16 case(s); the cost came from DECLARED_COMPLEXITY and was weighed with a cost weight of 1.0", "selected micro-world-hypothesis-enumeration@v1 with score 1.0 over 1 admitted candidate(s); the accuracy evidence was 1.0 over 16 case(s); the cost came from MEASURED and was weighed with a cost weight of 1.0", "selected micro-world-hypothesis-enumeration@v1 with score 1.0 over 1 admitted candidate(s); the accuracy evidence was 1.0 over 16 case(s); the cost came from MEASURED and was weighed with a cost weight of 1.0" ],
+    "costBasisMeasured" : true
+  },
+  "restart" : {
+    "claimsBefore" : 1,
+    "casesBefore" : 4,
+    "claimsAfter" : 1,
+    "casesAfter" : 4
+  },
+  "plugin" : {
+    "purpose" : "decides whether a measured score is high enough",
+    "finalStage" : "ACTIVE",
+    "declaredCases" : 2,
+    "lifecycle" : [ "the plugin moved to BUILDING: the artefact was generated", "the plugin moved to SANDBOXED: the artefact runs inside the DECLARATIVE sandbox", "the plugin moved to VALIDATED: 2 declared case(s) passed", "the plugin moved to SHADOW: the plugin runs without influencing the real path yet", "the plugin moved to ACTIVE: the plugin's results are used" ],
+    "artifactDigest" : "sha256:45200b2efa8a68c5d1b220daac801a9b7c2203d19695047a4c303661cbf799ad"
+  },
+  "bridge" : {
+    "requestId" : "req-w51-1",
+    "decision" : "ACCEPTED",
+    "auditId" : "audit-req-w51-1-1",
+    "reason" : "the message satisfies the contract",
+    "candidateClaims" : 1,
+    "workspace" : "bridged"
+  },
+  "acceptance" : [ {
+    "number" : 1,
+    "requirement" : "MATRIX starts using the supported local workflow",
+    "status" : "DEMONSTRATED",
+    "evidence" : "the demonstration opens the canonical store and builds the kernel"
+  }, {
+    "number" : 2,
+    "requirement" : "the runtime discovers or initializes the available subsystems",
+    "status" : "DEMONSTRATED",
+    "evidence" : "io.matrix.runtime.CognitiveRuntime declares 7 component(s) and 7 capability(ies): [{id=epistemic-store, kind=MEMORY, health=UNKNOWN, remote=false, requires=[], capabilities=[memory.claims], unmetDependencies=[]}, {id=cognitive-store, kind=MEMORY, health=UNKNOWN, remote=false, requires=[epistemic-store], capabilities=[memory.episodes], unmetDependencies=[epistemic-store]}, {id=cognitive-kernel, kind=REASONING, health=UNKNOWN, remote=false, requires=[cognitive-store, micro-world, algorithm-portfolio], capabilities=[reasoning.cycle], unmetDependencies=[cognitive-store, micro-world, algorithm-portfolio]}, {id=algorithm-portfolio, kind=REASONING, health=UNKNOWN, remote=false, requires=[], capabilities=[reasoning.method-selection], unmetDependencies=[]}, {id=micro-world, kind=ACTION, health=UNKNOWN, remote=false, requires=[], capabilities=[action.probe], unmetDependencies=[]}, {id=regulation, kind=LEARNING, health=UNKNOWN, remote=false, requires=[], capabilities=[governance.regulation], unmetDependencies=[]}, {id=bridge, kind=BRIDGE, health=UP, remote=false, requires=[epistemic-store], capabilities=[bridge.ingest], unmetDependencies=[epistemic-store]}]"
+  }, {
+    "number" : 3,
+    "requirement" : "a structured observation enters the cognitive system",
+    "status" : "DEMONSTRATED",
+    "evidence" : "CognitiveSignal.structured(\"sig-w51-1\", {\"power\":true,\"switch\":true}) was processed by io.matrix.cognitive.CognitiveKernel in episode ep-sig-w51-1"
+  }, {
+    "number" : 4,
+    "requirement" : "knowledge and memory are updated through the canonical contracts",
+    "status" : "DEMONSTRATED",
+    "evidence" : "the store holds 1 claim(s), 1 evidence link(s) and 1 case(s) after the cycle; the world-state memory, rebuilt from the durable case log, holds the estimate of the domain and the transitions that produced it: [RESTORE: the world state was rebuilt: revision 0, 0 situation(s) known, 0 transition(s), WORLD: the transition wtr-obs-1 moved the state from wst-micro-world.lamp-0 to wst-micro-world.lamp-1; changed={assign:power=0,switch=0#lamp=false}; the state is now at revision 1]"
+  }, {
+    "number" : 5,
+    "requirement" : "a goal or task is processed",
+    "status" : "DEMONSTRATED",
+    "evidence" : "the goal \"State the rule that governs the lamp\" was started with the success criterion [the learner can state the rule that holds] and the budget 3; the kernel's own internal tasks are the bounded units of work the cycle declares"
+  }, {
+    "number" : 6,
+    "requirement" : "the system selects an appropriate method",
+    "status" : "DEMONSTRATED",
+    "evidence" : "the selector chose micro-world-hypothesis-enumeration; the decision record says: selected micro-world-hypothesis-enumeration@v1 with score 1.0 over 1 admitted candidate(s); the accuracy evidence was 1.0 over 16 case(s); the cost came from DECLARED_COMPLEXITY and was weighed with a cost weight of 1.0"
+  }, {
+    "number" : 7,
+    "requirement" : "at least one prediction or hypothesis is recorded",
+    "status" : "DEMONSTRATED",
+    "evidence" : "prediction prd-ep-sig-w51-1 says \"false\" on the basis of surviving-hypotheses"
+  }, {
+    "number" : 8,
+    "requirement" : "an experiment or action is performed in the environment",
+    "status" : "DEMONSTRATED",
+    "evidence" : "the trace holds 15 step(s): [PERCEIVE, RESTORE, RESTORE, PREDICT, SELECT, COMPUTE, PROPOSE, PROBE, WORLD, OBSERVE, LEARN, REGULATE, REGULATE, REFLECT, ANSWER]"
+  }, {
+    "number" : 9,
+    "requirement" : "the observed result is compared with the prediction",
+    "status" : "DEMONSTRATED",
+    "evidence" : "the prediction was \"false\" and the observation matched it, so the cycle recorded NO error signal — the absence of the error IS the outcome of the comparison, and the prediction was settled BEFORE the probe (the trace holds the PROBE step after the PREDICT step)"
+  }, {
+    "number" : 10,
+    "requirement" : "a justified learning or revision event is persisted",
+    "status" : "DEMONSTRATED",
+    "evidence" : "the cognitive runtime narrowed the hypothesis space over 3 cycle(s): [4, 2, 1]; the cases it wrote are in the store and are read back: 4 observation(s) restored"
+  }, {
+    "number" : 11,
+    "requirement" : "a previously learned procedure or skill is reused in a later task",
+    "status" : "DEMONSTRATED",
+    "evidence" : "the session rebuilt from the durable cases starts with 1 surviving hypothesis(es) instead of the 16 of a fresh one, and it answers from the rule it learned"
+  }, {
+    "number" : 12,
+    "requirement" : "the workflow survives a restart",
+    "status" : "DEMONSTRATED",
+    "evidence" : "the store was closed and opened again: 1 claim(s) and 4 case(s) became 1 and 4"
+  }, {
+    "number" : 13,
+    "requirement" : "a generated plugin completes its declared validation and lifecycle, within its granted permissions",
+    "status" : "DEMONSTRATED",
+    "evidence" : "the creator produced the plugin \"decides whether a measured score is high enough\", the validation ran 2 declared case(s), and the lifecycle was [the plugin moved to BUILDING: the artefact was generated, the plugin moved to SANDBOXED: the artefact runs inside the DECLARATIVE sandbox, the plugin moved to VALIDATED: 2 declared case(s) passed, the plugin moved to SHADOW: the plugin runs without influencing the real path yet, the plugin moved to ACTIVE: the plugin's results are used]"
+  }, {
+    "number" : 14,
+    "requirement" : "cross-chain interaction is demonstrated without merging process or database ownership",
+    "status" : "DEMONSTRATED",
+    "evidence" : "a message signed by chain B was accepted by chain A's bridge service and arrived as 1 candidate claim(s) in the workspace \"bridged\"; the decision says: the message satisfies the contract"
+  }, {
+    "number" : 15,
+    "requirement" : "the Java/native experiment produces reproducible correctness and performance results, or documents why native execution is not selected",
+    "status" : "DEMONSTRATED",
+    "evidence" : "the measured decision: the Java path stays the selected path for the BIR truth-table kernel — the native path is 17 to 20 times faster than the BIR reference API, but only 0.75 to 1.02 times the SAME reference code called on flat data, and 67 % of the native call is the marshalling. The equivalence is exact over 2^18 rows, the policy carries nativeEnabled=false, and the method, the raw numbers and the limitations are in docs-v2/engineering/W51-JAVA-C-BOUNDARY.md"
+  } ],
+  "acceptanceTotal" : 15,
+  "acceptanceDemonstrated" : 15
+}
