@@ -1,6 +1,7 @@
 {
   "wave" : "W51",
   "instant" : "2026-11-08T00:00:00Z",
+  "whatIsVolatile" : "the source, evidence and claim identifiers in this record are the random UUIDs the workbench's production path assigns to a new record; they differ between runs BY DESIGN and are the only part of this file that does. The structure, the counts, the decisions, the trace's phases and the acceptance table are reproducible: the same run of this demonstration produces the same file apart from those identifiers.",
   "runtime" : {
     "componentCount" : 7,
     "capabilityCount" : 7,
@@ -83,7 +84,7 @@
       "reuseMethod" : true,
       "predicted" : "false",
       "observed" : null,
-      "learned" : [ "the observation was written as case case-aed5f06b and as evidence on claim clm-f41af680-bd39-4d62-bf90-5f312b2b7f8e (the model explains it)", "the model holds 8 surviving hypothesis(es) over 0 remembered case(s)" ],
+      "learned" : [ "the observation was written as case case-aed5f06b and as evidence on claim clm-556bc97e-a55d-41fc-a0bc-58e94ea3b079 (the model explains it)", "the model holds 8 surviving hypothesis(es) over 0 remembered case(s)" ],
       "uncertainties" : [ "the surviving hypotheses disagree: 8 of them" ],
       "decisions" : [ "LEAVE_UNRESOLVED ep-sig-w51-1 — the cycle left something unresolved and says what" ]
     }
@@ -93,22 +94,22 @@
       "CANDIDATE" : 1
     },
     "sources" : [ {
-      "sourceId" : "src-40380d2c-1378-4959-bc2d-38788d111216",
-      "claimsRevised" : 0,
+      "revisionRate" : 0.0,
       "claimsIntroduced" : 1,
-      "revisionRate" : 0.0
+      "claimsRevised" : 0,
+      "sourceId" : "src-50c1a408-a6e9-43d5-a540-da612eb042d5"
     } ],
     "evaluation" : {
-      "claims.revised" : {
-        "value" : 0.0,
+      "sources.known" : {
+        "value" : 1.0,
         "sampleSize" : 1
       },
       "claims.established" : {
         "value" : 0.0,
         "sampleSize" : 1
       },
-      "sources.known" : {
-        "value" : 1.0,
+      "claims.revised" : {
+        "value" : 0.0,
         "sampleSize" : 1
       }
     }

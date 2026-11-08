@@ -120,6 +120,14 @@ public final class W51Demonstration {
         List<Map<String, Object>> acceptance = new ArrayList<>();
         report.put("wave", "W51");
         report.put("instant", FIXED_INSTANT);
+        report.put("whatIsVolatile",
+                "the source, evidence and claim identifiers in this record are the random UUIDs"
+                        + " the workbench's production path assigns to a new record; they"
+                        + " differ between runs BY DESIGN and are the only part of this file"
+                        + " that does. The structure, the counts, the decisions, the trace's"
+                        + " phases and the acceptance table are reproducible: the same run of"
+                        + " this demonstration produces the same file apart from those"
+                        + " identifiers.");
 
         Path knowledgeFile = dataDirectory.resolve("knowledge.sqlite");
         KnowledgeWorkbench workbench = KnowledgeWorkbench.at(knowledgeFile.toString());
