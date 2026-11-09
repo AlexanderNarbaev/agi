@@ -44,6 +44,21 @@ are **served**; the shared runtime, the plugin system, the meta-memory and the n
 boundary are **not** — their only caller today is the wave's demonstration. The registry says
 so on each of those rows, and §2 of this snapshot repeats it.
 
+**What changed in W53:** the system's **procedural memory is no longer empty**. When the
+cognitive runtime's model settles on exactly one rule, the system writes the procedure down
+— with the standing it actually has, the episode it was learned in, and a note that says
+what the agreement rests on — and a later cycle **consults that record and names it**, which
+is the mandate's acceptance point 11 read literally. The reason the earlier wave refused to
+write anything (the lamp world's input domain is exhausted once the model settles) is now
+**proved in a test** rather than asserted: with V inputs the space holds 2^(2^V) candidates,
+each distinct assignment eliminates half of them, and the model settles only after every
+assignment the domain has. One epistemic rule changed — a supersession now requires a scoped
+denial rather than a better-supported claim with lexically similar words — and the whole
+29-case evaluation was re-run with it in place: **18 of 29, unchanged, the same eleven
+failures**. The change is therefore not a score-motivated one, and the report names what it
+does not fix: the denial's own scoping is still lexical, and the eight citation failures need
+a match that does not require a shared rare term.
+
 **What changed in W52:** the two serving applications **now talk in both directions** — chain
 A's epistemic core offers what it has established and chain B's brain takes it into its own
 memory, under the same signature, the same capability check, the same budget, the same
@@ -63,12 +78,12 @@ abstentions worse.
 | | |
 |---|---|
 | the branch | `develop` |
-| the commit | `178e0d8c` — the W52 commit observed at 2026-11-09; this snapshot is carried by the commit that follows it |
+| the commit | `178e0d8c` — the W52 commit observed at 2026-11-09; this snapshot is carried by the commit that follows it, which is the W53 wave's own commit |
 | the remote | `origin/develop` — **the same commit** at the moment of writing (the local and the remote do not diverge). The wave is still running, so the remote moves with it. `origin/main` is `3ef8a5c8` — the **squash merge of pull request #48** (W51), merged on 2026-11-09; before it `67b3410d` was the squash of pull request #47 (W50) and `79045c57` the squash of pull request #44 (W49) |
 | the release version | **none.** The tags `v1.0.0` and `v16.0.0-mind` exist, but no release process is defined and the `v16.0.0-mind` tag predates three waves of work |
 | the latest completed wave | **W51** — the unified cognitive runtime, the world model and the safe self-extension. It is **merged into `main`**: pull request #48, squash `3ef8a5c8`, 2026-11-09, **merged by the owner** on the same day. Its report is `docs-v2/engineering/W51-STATUS.md`, its audit is `docs-v2/engineering/W51-AUDIT.md`, its architecture map is `docs-v2/engineering/W51-ARCHITECTURE-MAP.md` and its decisions are **CD-020 … CD-025** in `docs-v2/governance/DECISION-REGISTER.md`. Before it, **W50** — the local evidence-grounded demonstrator (pull request #47, squash `67b3410d`, 2026-11-07), **W49** (pull request #44, squash `79045c57`, 2026-11-06) and **W48** — the truth of the evidence |
 | the previous waves | **W50** — the local evidence-grounded demonstrator: a bounded, licensed corpus in one domain (plate tectonics) — 2 seed documents and a 7-document pre-cached research pool, every file carrying its licence, its revision and its sha256 in a manifest the import verifies; the seed import produced **348 claims** and the bounded acquisition cycle **3 pool documents and 324 claims**; the four-turn demonstration ran on the packaged jar: Q1 answered from **153 claims of 2 sources**, Q2 from **25 claims of 4 sources**, Q3 a **CONTRADICTED** verdict that names the disputed premise and the contradicting claim with `promoted=false`, Q4 applied **exactly one supersession**; the teacher stays off (OD-049) with **0 teacher invocations** measured. Its report is `docs-v2/engineering/W50-STATUS.md`. Before it, W48 — the CI reconciliation and the native budget; W47 — the owner's four architecture decisions (`a6ded233`); W45.1 (`509d23ba`) — the crash consistency; W45.0 (`eae6003f`) — the cognitive kernel integrity; RECON-W44.0 (`ae6c017b`) — the bytecode archaeology |
-| the active wave | **W52 — The Canonical Path, the Second Direction, and the Registers in Truth.** W51 is merged, so the wave that follows it closes the three gaps W51 named: the canonical contracts that have no producer in the runtime, the inter-chain contract that has only one direction, and the repository's own instruments that do not know about the wave. **The wave's work is done and its report is written** — `docs-v2/engineering/W52-STATUS.md` — and the wave is closed by the owner's merge of its pull request. Its task list is §4.11 of `docs-v2/governance/ROADMAP.md`, where every task is now closed with its evidence. |
+| the active wave | **W53 — The Reusable Procedure, the Proved Exhaustion, and the Measured Rule.** W52 is merged into `main` as pull request #48's successor — pull request **#49** (`develop` → `main`) is open and **not merged by an agent** — so the wave that follows it closes the one bullet of the W51 mandate's Definition of Done that the system did not meet: *persistent, reusable skills or procedures*. The wave's work is done and its report is written — `docs-v2/engineering/W53-STATUS.md` — and the wave is closed by the owner's merge of its pull request. Its task list is §4.12 of `docs-v2/governance/ROADMAP.md`, where every task is closed with its evidence. |
 | the modules | **14** included in `settings.gradle`, 3 commented out, 2 outside Gradle, 1 stray orphan file |
 | the serving entry points | **2** applications — the Quarkus app on **9091** and the brain runtime's JDK server on **8765**. **Measured 2026-11-09:** chain A carries **205** HTTP method endpoints (the count of the `@Path` annotations that carry an HTTP method) and chain B's gateway registers **34** route contexts (the count of the distinct `createContext` paths — 33 of them literal and one, the second direction of the bridge, named by the constant `io.matrix.api.bridge.KnowledgeBridge.KNOWLEDGE_PATH`). The earlier figures in this snapshot — 210 and 28 — were measured by a different method and are not comparable; the method is written with each number here so that the next reader can reproduce it. |
 | the CLI entry points | **13** `@Command` classes in chain A's two modules, measured 2026-11-09 by the count of the classes that carry the `@Command` annotation (`git grep -lE "@Command" -- matrix-core/src/main/java matrix-brain-runtime/src/main/java`). The previous snapshot said **12** and the method it named — the count of the annotations — gives **15** occurrences across the same 13 classes; the number here is the one the stated method reproduces, and the earlier figures of 79 and 12 were replaced rather than restated. |
@@ -166,6 +181,7 @@ the full suite is still not run here.
 | the **static analysis produces no evidence** — the pinned SpotBugs plugin 6.1.7 resolves the engine 4.9.3, whose ASM 9.7.1 reads class-file major 68 and the code is major 69; the run yields **6 645** `Unsupported class file major version` lines and **no** findings | an inherited infrastructure limitation, **measured 2026-11-09** | nothing in the cognitive architecture — the gate is not a prerequisite of the deliverable | the owner (Q-W49-06) |
 | the **secret scan exits 183** — TruffleHog finishes with **0 verified secrets** and **8 unverified** PostgreSQL-like findings, all documentation placeholders in `.veai/skills/**`; the job is red on the action's own exit code, not on a finding | an inherited infrastructure limitation, **measured 2026-11-09** | the job's green state, not the repository's secrets | the coordinator |
 | the **ShellCheck job is red on the repository's other scripts** — **182** findings at the wave's head, where the base commit `a098f283` had **210**; the wave's own four scripts have **zero**. The job is red on `main` at `67b3410d`, `79045c57` and `7a0ed0cc` as well | an inherited infrastructure limitation, **measured 2026-11-09** | the job's green state, not the wave's scripts | the coordinator |
+| the **workspace has no identity for a subject** beyond the words two sentences share — its concepts are scoped to the sentence they came from, and its scope and context are the sentence's own beginning | a missing capability | the eight citation failures (the answering claims rank immediately below the relevance floor, 10th of 161, because the question's rare terms carry the IDF weight and the claims do not contain them) and the two revision false positives (the denial's scoping is lexical) | the coordinator (Level 1 — a retriever that matches without a shared rare term, or a subject identity) |
 | the **native image runs out of memory** — `native.yml:28-34` sets no memory limit, `-J-Xmx8g` with `--gc=epsilon` is a hard wall, and the build dies with `OutOfMemoryError: Java heap space` | an inherited infrastructure limitation, **measured 2026-11-09** | nothing in the cognitive architecture — the mandate says the native image is not a prerequisite | the owner (Q-W49-05) |
 
 ---
@@ -205,15 +221,16 @@ list (TASK-W46-2…TASK-W46-6, TASK-W48-01…TASK-W48-03 and TASK-W49-01…TASK-
 done as well, with one exception — TASK-W51-11, the closeout, was open at the moment this
 snapshot was taken and is closed by the merge. **What is open now, in order:**
 
-1. **The W52 tasks** — §4.11 of the roadmap. In order: the canonical contracts get their
-   producers in the runtime and the two vocabularies get an explicit, tested mapping; the
-   inter-chain contract gets its second direction, chain A → chain B, under the same
-   governance; the meta-memory's method facet gets closed across a restart; the epistemic
-   failures that have an honest fix get fixed and the rest stay named; and the wave's
-   measurement, its report and its registers follow.
+1. **The W53 tasks** — §4.12 of the roadmap, all closed with their evidence: the procedure
+   of the settled model is written down with the standing it actually has; a later cycle
+   consults it and names it; the reason an independent validation is unreachable in the
+   micro-world is proved in a test instead of asserted; the canonical `Procedure` and `Skill`
+   are filled by the runtime's own record; and one epistemic rule was changed and measured —
+   the score did not move, and the report says so.
 2. **The release pull request** — the lead opens `develop` → `main` at the end of the wave,
    and **an agent does not merge it**. The pull request is a prepared path, not a release;
-   the merge is the owner's decision (Q-W49-01). **The owner merged W50's pull request
+   the merge is the owner's decision (Q-W49-01). **W52's pull request (#49) is open and
+   unmerged; W53's pull request follows it. The owner merged W50's pull request
    (#47) and W51's (#48) on 2026-11-07 and 2026-11-09.**
 3. **The three W50 owner questions** — the licence interaction of the corpus inside the
    repository (Q-W50-01), the audit trace of an imported claim (Q-W50-02) and the status
@@ -260,6 +277,7 @@ validator says so.
 | the waves | `docs-v2/waves/INDEX.md` — the chronological work log (W46.2) — and `docs-v2/engineering/W4*.md`, the record of what was done, **immutable** |
 | the W50 demonstrator | `docs-v2/engineering/W50-STATUS.md` (the wave's own report) and `docs-v2/engineering/W50-LOCAL-MODEL.md` (the measured local-model evaluation); the demonstration itself is `docs-v2/demos/local-learning-loop/README.md`, its four prompts are `docs-v2/demos/local-learning-loop/OWNER-SEQUENCE.md`, and the expected answers are `docs-v2/demos/local-learning-loop/ANSWER-KEY.md` — deliberately kept outside the application |
 | the W51 wave | `docs-v2/engineering/W51-STATUS.md` (the wave's own report) · `docs-v2/engineering/W51-AUDIT.md` (the audit and the classification of nineteen subsystems) · `docs-v2/engineering/W51-ARCHITECTURE-MAP.md` (the actual runtime interactions, with the file:line references) · `docs-v2/engineering/ADR-W51-01-cognitive-runtime-and-bridge.md` (the inter-chain model and the preserved boundaries) · `docs-v2/engineering/W51-PERFORMANCE.md` (the measured hot paths) · `docs-v2/engineering/W51-EPISTEMIC-EVALUATION.md` and `docs-v2/engineering/W51-JAVA-C-BOUNDARY.md` (the two measurements the mandate names) · `docs-v2/engineering/W51-DEMONSTRATION.json` (the machine-readable trace) |
+| the W53 wave | `docs-v2/engineering/W53-STATUS.md` (the wave's own report, with the five categories) · `docs-v2/engineering/W53-EPISTEMIC-EVALUATION.json` (the epistemic evaluation, machine-readable, with the supersession rule in place: 18 of 29, the same eleven failures) · the decisions **CD-030 and CD-031** in `docs-v2/governance/DECISION-REGISTER.md` · the proof of the exhaustion: `matrix-core/src/test/java/io/matrix/cognitive/microworld/DomainExhaustionTest.java` |
 | the W52 wave | `docs-v2/engineering/W52-STATUS.md` (the wave's own report, with the five categories) · `docs-v2/engineering/W52-EPISTEMIC-EVALUATION.json` (the epistemic evaluation, machine-readable, and the three measured configurations of the relevance floor in §5.4 of the report) · the decisions **CD-026 to CD-029** in `docs-v2/governance/DECISION-REGISTER.md` · the cross-process demonstration of both directions: `scripts/w52-bridge-both-directions-demo.sh` |
 | the canonical cognitive contracts | `docs-v2/engineering/ADR-W51-01-cognitive-runtime-and-bridge.md` (the model) and the package `io.matrix.contract` (the records themselves); the compatibility and migration strategy is §5 of `docs-v2/engineering/W51-STATUS.md`; **the producers and the boundary between the runtime's own records and the canonical ones are §5.2 of `docs-v2/engineering/W52-STATUS.md`**, and the acceptance is `CanonicalContractCoverageTest` |
 | the inter-chain contract | `docs-v2/engineering/ADR-W51-01-cognitive-runtime-and-bridge.md` and the decisions CD-020 to CD-025 in `docs-v2/governance/DECISION-REGISTER.md`; the evidence that the crossing is the only one is the gate `scripts/w45-chain-isolation-check.sh` and its negative control `scripts/w45-chain-isolation-selftest.sh` |

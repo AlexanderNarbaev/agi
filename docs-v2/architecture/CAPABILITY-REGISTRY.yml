@@ -93,6 +93,14 @@ generated:
     rewritten or deleted. The demonstrator itself is NOT a service: its operational
     axis is EXPERIMENTAL, and the six components that sit on a serving path say which
     route reaches them."
+  w53_addition: "W53 added one row — W53-PROCEDURE-MEMORY, the procedural memory that holds
+    the procedure the system learned, what its standing rests on and the episode it was learned
+    in — and took the file from 54 rows to 55. It refreshed no row that was already there. The
+    addition was made from the source, from the executed test evidence and from the recorded
+    runs of 2026-11-09; no row was renumbered, rewritten or deleted. The row that names the
+    two canonical contracts W51 left without producers is not touched: the canonical
+    Procedure and the canonical Skill are filled by the W53 record, and the W51 row keeps
+    describing what the W51 wave measured."
   w52_addition: "W52 added one row — W52-METHOD-PROFILE, the durable profile of the system's own methods — and took the file from 53 rows to 54. It refreshed two rows from the source: W51-BRIDGE, which grew the second direction of the bridge, and W51-CANONICAL-CONTRACTS, whose twenty-two contracts now have producers. The additions were made from the source, from the executed test evidence and from the recorded runs of 2026-11-09; no row that was already there was renumbered, rewritten or deleted."
   w51_addition: "W51 added ten rows — W51-CANONICAL-CONTRACTS, W51-BRIDGE,
     W51-SHARED-RUNTIME, W51-PLUGIN-SYSTEM, W51-WORLD-STATE-MEMORY,
@@ -1963,6 +1971,48 @@ capabilities:
     last_verified_at: "2026-11-09"
     next_verification_condition: "a change to the ledger, to the profile's table or to the selector's reading of it requires the profile's own test to be re-run"
     notes: "ADDED IN W52. The mandate asks the method-selection layer to weigh the historical measured performance of a method and the previous outcomes of that method; before this wave the first was possible only inside one process's lifetime and the second was not possible at all."
+
+  -
+    id: "W53-PROCEDURE-MEMORY"
+    name: "the procedural memory: the procedure the system learned, what it rests on, and where it was learned"
+    description: "The system's own record of the procedure it learned from the environment. Before W53 the fast path — the settled-model lookup — was used but never written down: the W45 finding said that the lamp world's input domain is exhausted once the model settles, so no observation can be both independent of the model and available, and the promotion rule therefore wrote NOTHING and reported that the fast path was 'an in-sample derived shortcut of the reference, not a validated procedure'. That was half the story: the shortcut was being used, its standing was never recorded, the system's procedural memory was empty, and the system could not claim that it had learned a procedure. Now the procedure is written when the model settles: the rule it encodes, the precondition under which it applies, the method it falls back to, the episode it was learned in, and WHAT ITS STANDING RESTS ON — the validation kind (IN_SAMPLE or INDEPENDENT), the case count, the agreement, and a note that says in words what the agreement rests on. A later cycle consults that record, and the trace names the procedure and the episode it came from."
+    domain: "learning"
+    implementation: "IMPLEMENTED"
+    integration: "INTEGRATED"
+    verification: "INTEGRATION_TESTED"
+    operational: "SERVED"
+    serving_chain: "chain-a"
+    serving_path: "the kernel writes the procedure in the LEARN phase of every cycle and reads it in the SELECT phase of every later cycle: POST /v1/cognitive/observe and POST /v1/cognitive/solve on chain A (io.matrix.cognitive.CognitiveResource). The procedure is not a route of its own; it is the memory the fast path reads."
+    source_paths:
+      - "matrix-core/src/main/java/io/matrix/cognitive/CognitiveKernel.java"
+      - "matrix-core/src/main/java/io/matrix/cognitive/algorithms/Procedure.java"
+      - "matrix-core/src/main/java/io/matrix/cognitive/algorithms/ValidationKind.java"
+      - "matrix-core/src/main/java/io/matrix/cognitive/CognitiveStore.java"
+      - "matrix-core/src/main/java/io/matrix/cognitive/canonical/CanonicalCycleBuilder.java"
+    production_callers:
+      - "io.matrix.cognitive.CognitiveKernel — matrix-core/src/main/java/io/matrix/cognitive/CognitiveKernel.java"
+      - "io.matrix.cognitive.MicroWorldSettledModelMethod — matrix-core/src/main/java/io/matrix/cognitive/MicroWorldSettledModelMethod.java"
+    test_paths:
+      - "matrix-core/src/test/java/io/matrix/cognitive/CognitiveKernelTest.java"
+      - "matrix-core/src/test/java/io/matrix/cognitive/microworld/DomainExhaustionTest.java"
+      - "matrix-core/src/test/java/io/matrix/cognitive/canonical/CanonicalContractCoverageTest.java"
+      - "matrix-core/src/test/java/io/matrix/w51/W51DemonstrationTest.java"
+    test_evidence: "CognitiveKernelTest — the procedure is written when the model settles and the record says what it rests on; a later episode consults the procedure the earlier one wrote and the trace names it and the episode it was learned in; nothing is PROMOTED without independent evidence, and the in-sample procedure is not a validated one. DomainExhaustionTest — the exhaustion is proved, not asserted: the space holds every function of the inputs (sixteen for two variables), each distinct assignment halves it (16, 8, 4, 2, 1), and the model settles exactly when every assignment of the domain has been observed, so the validation set can never hold an observation. CanonicalContractCoverageTest — the canonical Procedure and Skill are filled by the runtime's own record, with nothing seeded into the store. W51DemonstrationTest — the wave's demonstration writes the procedure down and consults it in a later cycle, and the mandate's acceptance point 11 carries the stronger evidence."
+    benchmark_evidence: "the wave's own scope: 1162 tests, 0 failures, 0 errors. The procedure's agreement is measured against the reference method over the cases the model was built from — 4 case(s) of IN_SAMPLE evidence with an agreement of 1.0 — and the measurement is visible in the record the cycle carries, not only in the heap."
+    formal_spec: "none"
+    dependencies:
+      - "the micro-world's model — the procedure is the settled model's rule, and without a settled model there is nothing to write"
+      - "the cognitive database — the single writer of it holds the procedural memory"
+    limitations: "the procedure is an IN-SAMPLE shortcut of the reference: the agreement was measured over the cases the model was built from, which licenses the shortcut and says nothing about whether the model generalises. The exhaustion that makes an independent validation impossible is a fact about the domain, and it is proved in a test; it is not a defect of the world and it cannot be worked around inside this environment. A validated procedure still needs an environment whose hypothesis space is smaller than its input domain."
+    risks:
+      - "a procedure whose standing is an in-sample consistency check can be read as a validated one — the record names the kind and the note, and the canonical form carries both"
+      - "the procedure's id is shared by every rule the micro-world settles on: a rule that changes gets the next version, and the old version stays where it is"
+    owner: "the owner (W53, 2026-11-09)"
+    decision_ref: "docs-v2/governance/DECISION-REGISTER.md CD-031"
+    last_verified_commit: "develop"
+    last_verified_at: "2026-11-09"
+    next_verification_condition: "a change to the promotion rule, to the procedure's record or to the fast path's reading of it requires the kernel's procedure tests and the exhaustion test to be re-run"
+    notes: "ADDED IN W53. The mandate's Definition of Done asks for persistent, reusable skills or procedures; until this wave the system could produce the contracts but not the record behind them."
 
   -
     id: "W51-SHARED-RUNTIME"
