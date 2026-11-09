@@ -61,7 +61,7 @@ named, and nothing else is in scope:
 subsystem, and it does not rewrite the W45.1 recovery contracts. The commit and the push are
 authorised by the owner's directive of 2026-11-08; **the merge into `main` is the owner's**.
 
-**The tasks are in §4.11**, and the wave's report will be `docs-v2/engineering/W52-STATUS.md`.
+**The tasks are in §4.11**, and the wave's report will be `docs-v2/engineering/W52-STATUS.md` <!-- no-link: the wave's report is written at its close; the document does not exist yet -->.
 
 ### W51 — the unified cognitive runtime, the world model and the safe self-extension (**merged**)
 
