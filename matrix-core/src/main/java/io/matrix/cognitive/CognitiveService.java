@@ -244,7 +244,13 @@ public class CognitiveService {
         // ONE registry holds the whole portfolio and the two micro-world methods, and ONE
         // ledger holds the measured costs of all of them. A method's cost is only comparable
         // with another method's cost when they were measured the same way.
-        CostLedger ledger = new CostLedger();
+        // W52: the ledger of measured costs is DURABLE. It used to live in the heap, so
+        // every restart forgot how the system's own methods behave and the selector fell
+        // back to the DECLARED complexity — a person's estimate where a measurement
+        // belongs. The profile is written by the single writer of the cognitive database
+        // and read back when the application starts.
+        CostLedger ledger = new CostLedger(store(),
+                io.matrix.cognitive.CognitiveKernel.WORKSPACE_ID);
         AlgorithmRegistry registry = Portfolio.defaultRegistry()
                 .register(new MicroWorldReferenceMethod())
                 .register(new MicroWorldSettledModelMethod());
