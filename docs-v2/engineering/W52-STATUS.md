@@ -47,7 +47,7 @@ made the abstentions worse.
 | 4 | **The second direction of the bridge** | `io.matrix.bridge.KnowledgePublisher` (chain A), `io.matrix.api.bridge.KnowledgeBridge` (chain B), `POST /v1/bridge/knowledge` | `KnowledgeDirectionTest` (9 tests), `KnowledgePublisherTest` (2), `KnowledgeBridgeTest` (6) |
 | 5 | **The protocol that governs both directions** | `io.matrix.contract.bridge` — the `KNOWLEDGE` right, version 2, the answer that carries the effect | the version rule: version 1 (the first direction) is still read, a version this build has never heard of is refused with its number named |
 | 6 | **The gate that measures the second direction** | `scripts/w45-chain-isolation-check.sh` — **G10** | **25 checks, 0 failed**: neither side of the second direction reaches a class of the epistemic store, and the receiver reaches no class of chain A's bridge server |
-| 7 | **The cross-process demonstration of both directions** | `scripts/w52-bridge-both-directions-demo.sh` | **10 checks, 0 failed**: chain B publishes an observation to chain A; chain A publishes established knowledge to chain B; chain B's brain takes it and its memory grows from **1 to 2** |
+| 7 | **The cross-process demonstration of both directions** | `scripts/w52-bridge-both-directions-demo.sh` | **11 checks, 0 failed**: chain B publishes an observation to chain A; chain A publishes established knowledge to chain B; chain B's brain takes it and its memory grows from **1 to 2** |
 | 8 | **The durable profile of the system's own methods** | `cognitive_method_measurement` (the cognitive database), `io.matrix.cognitive.algorithms.MethodMeasurementStore`, `CostLedger` | `MethodProfileDurabilityTest` — 5 tests: the measurement is written, the store is closed, the store is opened again, and the selector weighs the restored measurement and names it |
 | 9 | **The epistemic evaluation, re-run and measured three more times** | `docs-v2/engineering/W52-EPISTEMIC-EVALUATION.json`, `scripts/w51-epistemic-eval.py` | **18 of 29** — the same as W51, no regression; §5.4 holds the three measurements and the decision they forced |
 | 10 | **The registers that tell the truth about all of it** | `docs-v2/architecture/CAPABILITY-REGISTRY.yml`, `docs-v2/governance/PROJECT-STATE.md`, `docs-v2/governance/ROADMAP.md` §4.11, `docs-v2/governance/DECISION-REGISTER.md` CD-026…CD-029 | the capability registry grows from **53 to 54** rows; the roadmap's §4.11 is closed task by task |
@@ -126,7 +126,7 @@ made the abstentions worse.
 
 ### 5.3 The bridge, in both directions
 
-- the cross-process demonstration (`scripts/w52-bridge-both-directions-demo.sh`): **10 checks,
+- the cross-process demonstration (`scripts/w52-bridge-both-directions-demo.sh`): **11 checks,
   0 failed**. Both chains run as separate processes on ports the operating system chose;
 - the first direction: chain B's publisher is accepted by chain A;
 - the second direction: chain A's publisher is accepted by chain B, and the answer carries the
@@ -223,7 +223,7 @@ The causes of the eleven failures, named:
 - **the durable method profile** — `MethodProfileDurabilityTest` (5 tests), including the
   restart and the selector's reading of it;
 - **the gate's G10** — 25 checks, 0 failed;
-- **the cross-process demonstration of both directions** — 10 checks, 0 failed, with the
+- **the cross-process demonstration of both directions** — 11 checks, 0 failed, with the
   brain's memory measured before and after;
 - **the demonstration's canonical section** — the report says which contracts the cycle filled
   and which it did not.
