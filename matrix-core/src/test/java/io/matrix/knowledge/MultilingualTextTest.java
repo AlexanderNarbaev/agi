@@ -123,14 +123,15 @@ class MultilingualTextTest {
             // The support score of the W40 measurement is pinned by
             // SupportScoreTest: the lexicon must not move it.
             //
-            // The value is 0.85 since W42.7, and the reason is recorded
-            // in SupportScoreTest: the concept bridge added one more claim
-            // to the answer's evidence, and the score is the mean of the
-            // evidence's confidences. The lexicon itself still moves
-            // nothing - the same value comes with and without it.
+            // The value is 0.84 since W51 §6, and the reason is recorded
+            // in SupportScoreTest: the score is the mean of the
+            // confidences of the claims the answer CITES, and a claim the
+            // workspace has withdrawn is not cited. The lexicon itself
+            // still moves nothing - the same value comes with and without
+            // it.
             Answer answer = workbench.ask("photosynthesis", "What is photosynthesis?",
                     AbstractionLevel.INTRODUCTORY);
-            assertThat(answer.supportScore()).isEqualTo(0.85);
+            assertThat(answer.supportScore()).isEqualTo(0.84);
         }
     }
 

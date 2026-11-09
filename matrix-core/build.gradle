@@ -618,3 +618,28 @@ tasks.register('coverageTest', Test) {
 
 // Enable zip64 for JMH jar
 tasks.named("jmhJar") { zip64 = true }
+
+// W51 — the end-to-end demonstration of the cognitive system.
+//
+// The one documented local path of the wave: it opens the canonical store, runs one
+// cognitive cycle, learns in an environment, survives a restart, creates and validates a
+// plugin, and accepts a message over the bridge — then writes the machine-readable trace
+// that connects them.
+//
+//   ./gradlew :matrix-core:w51Demonstration
+//
+// The arguments are the data directory and the report path; both have defaults.
+tasks.register('w51Demonstration', JavaExec) {
+    group = 'verification'
+    description = 'Runs the W51 end-to-end demonstration and writes its machine-readable trace'
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'io.matrix.w51.W51Demonstration'
+    // The demonstration's paths are relative to the REPOSITORY root: the report belongs
+    // to docs-v2/engineering and the data directory to the repository's own data/.
+    workingDir = rootProject.projectDir
+    args = [
+        project.findProperty('w51.data') ?: 'data/w51',
+        project.findProperty('w51.report') ?: 'docs-v2/engineering/W51-DEMONSTRATION.json'
+    ]
+    jvmArgs '--add-modules=jdk.incubator.vector'
+}

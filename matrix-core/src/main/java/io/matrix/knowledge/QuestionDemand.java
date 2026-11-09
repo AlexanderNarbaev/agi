@@ -56,7 +56,12 @@ public final class QuestionDemand {
         /** A question about the future. */
         FUTURE,
         /** A question whose referent is not settled. */
-        AMBIGUOUS
+        AMBIGUOUS,
+        /**
+         * W51 §6. A question that asks for a MEASURED QUANTITY — a count, a
+         * percentage, a temperature, a probability.
+         */
+        QUANTITY
     }
 
     /** The analysis of one question. */
@@ -155,6 +160,24 @@ public final class QuestionDemand {
         if (ambiguity != null) {
             return new Analysis(Kind.AMBIGUOUS, ambiguity, coverage(unmatched, contentTerms),
                     unmatched, clarificationFor(question));
+        }
+
+        // THE QUANTITY DEMAND (W51 §6).
+        //
+        // A question that asks for a NUMBER asks for something the
+        // workspace either holds or does not. The W50 evaluation measured
+        // that the coverage floor cannot tell the two apart — the
+        // unanswerable "How many tonnes of basalt are produced each year by
+        // the Mid-Atlantic Ridge?" scored 0.288 against a floor of 0.25,
+        // while the answerable "How does subduction at a convergent
+        // boundary produce deep earthquakes and volcanoes?" scored 0.286
+        // and had to be answered. A lexical coverage is a RELEVANCE
+        // measure; the question "what is being asked for" is a different
+        // question, and this is it.
+        String quantity = quantityPattern(lower);
+        if (quantity != null) {
+            return new Analysis(Kind.QUANTITY, quantity, coverage(unmatched, contentTerms),
+                    unmatched, null);
         }
 
         // THE UNSETTLED REFERENT.
@@ -257,9 +280,85 @@ public final class QuestionDemand {
         return null;
     }
 
-    /** The clarification to ask instead of answering. */
+    /**
+     * The clarification to ask instead of answering.
+     *
+     * @param question the question
+     * @return the clarification
+     */
     private static String clarificationFor(String question) {
         return "The question leaves the referent open (\"" + question + "\"). Which of the "
                 + "alternatives do you mean?";
     }
+
+    /**
+     * The quantity the question asks for, or null when it asks for none.
+     *
+     * <p>The markers are the phrases a question about a measured quantity
+     * is written with. They are a form of the QUESTION, not a judgement
+     * about the world: a question that asks "how many" asks for a number,
+     * and the workspace either holds one or it does not.
+     *
+     * <p>The list is deliberately narrow. "How is", "how does" and "what
+     * are" are not quantity demands: they ask for a description, and the
+     * W50 evaluation measured that the answerable case "How is the rate of
+     * plate movement measured with GPS and other space-geodetic
+     * techniques?" must still be answered.
+     *
+     * @param lower the question, lower-cased
+     * @return the reason, or null
+     */
+    private static String quantityPattern(String lower) {
+        for (String marker : QUANTITY_MARKERS) {
+            if (lower.contains(marker)) {
+                return "the question asks for a measured quantity (\"" + marker + "\"), and the "
+                        + "workspace either holds that quantity or it does not";
+            }
+        }
+        return null;
+    }
+
+    /**
+     * The phrases that ask for a measured quantity.
+     *
+     * <p>English and Russian, because a rule that works in one language and
+     * silently fails in the next is a rule that works only where it was
+     * tested.
+     */
+    private static final List<String> QUANTITY_MARKERS = List.of(
+            "how many", "how much", "how long does it take", "how far", "how old is",
+            "what percentage", "what percent", "what proportion", "what probability",
+            "what temperature", "what is the boiling point", "what is the freezing point",
+            "in degrees", "per second", "per minute", "per hour", "per day", "per year",
+            "сколько", "каков процент", "какая температура");
+
+    /**
+     * The number of the cited claims that state a quantity.
+     *
+     * <p>A claim states a quantity when its proposition carries a number.
+     * The rule is deliberately coarse: it cannot tell a measurement from a
+     * date, and it does not try to. It answers one question — "is there a
+     * number in the evidence at all?" — and the demand analysis uses that
+     * to decide whether the workspace can answer a question that asked for
+     * one.
+     *
+     * @param claims the cited claims
+     * @return the number of claims that state a quantity
+     */
+    public static int quantityEvidence(List<Claim> claims) {
+        if (claims == null || claims.isEmpty()) {
+            return 0;
+        }
+        int count = 0;
+        for (Claim claim : claims) {
+            if (claim.proposition() != null && QUANTITY_NUMBER.matcher(claim.proposition()).find()) {
+                count++;
+            }
+        }
+        return count;
+    }
+
+    /** A number in a proposition. */
+    private static final java.util.regex.Pattern QUANTITY_NUMBER =
+            java.util.regex.Pattern.compile("\\d");
 }

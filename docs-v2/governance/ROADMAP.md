@@ -41,14 +41,44 @@ cycle, and whose current state existed in four documents of four different ages.
 
 ## 3. The active wave
 
-### W50 — the local evidence-grounded demonstrator (**the wave's work is committed; the closeout is open**)
+### W51 — the unified cognitive runtime, the world model and the safe self-extension (**the wave's work is committed; pull request #48 is open**)
 
-**The wave's work is committed and its report is written.** It started at `8f617ce6` (the
-W49 close) on `develop`; its own report is `docs-v2/engineering/W50-STATUS.md`, the
-measured local-model evaluation is `docs-v2/engineering/W50-LOCAL-MODEL.md`, and the tasks
-it created are in §4.9. **The wave's own order is W50-00 … W50-08**, and the closeout is
-the one task that is not an implementation: the lead opens the pull request `develop` →
-`main`, and **an agent does not merge it**.
+**W51 is the wave that made the parts of MATRIX interact.** Its own report is
+`docs-v2/engineering/W51-STATUS.md`, the audit and the subsystem classification are
+`docs-v2/engineering/W51-AUDIT.md`, the architecture map of the actual runtime
+interactions is `docs-v2/engineering/W51-ARCHITECTURE-MAP.md`, the measured hot paths are
+`docs-v2/engineering/W51-PERFORMANCE.md`, and the boundary decision is
+`docs-v2/engineering/ADR-W51-01-cognitive-runtime-and-bridge.md`.
+
+**What changed, in one sentence:** the two serving chains stayed separate processes with
+separate databases and separate single writers, and the *bridge* became the one governed
+crossing between them — the contract the repository had already written down in W45.2 and
+never implemented.
+
+**What it did NOT do:** it did not merge anything into `main` and it did not delete a
+subsystem. The wave's own directive did not name the commit and the push — they are Level 3
+operations under `AGENT-OPERATING-PROTOCOL.md` §3 — and the wave left the work in the
+working tree, reviewed and measured. **The owner authorised the commit and the push on
+2026-11-08**, and the wave's work is now eleven commits on `develop`, with pull request #48
+(`develop` → `main`) open and **not merged by an agent**.
+
+**The measured results:** the end-to-end demonstration performs **15 of 15** acceptance
+points; the cross-process demonstration performs **10 of 10**; the isolation gate passes
+**22 of 22** checks and its negative control **12 of 12**; the W50 epistemic evaluation
+went from **12/29 to 18/29** on the wave's own runner, with the baseline reproduced first
+on a clean worktree at `a098f283`; the wave's own test scopes are
+**1 323 tests, 0 failures, 0 errors** in `matrix-core` and **3, 0 failures** in
+`matrix-brain-runtime`;
+the quality gate holds at **271** magic-literal candidates against a baseline of **271**.
+
+### W50 — the local evidence-grounded demonstrator (**merged**)
+
+**The wave is complete and merged.** It started at `8f617ce6` (the W49 close) on `develop`;
+its own report is `docs-v2/engineering/W50-STATUS.md`, the measured local-model evaluation
+is `docs-v2/engineering/W50-LOCAL-MODEL.md`, and the tasks it created are in §4.9. **The
+wave's own order was W50-00 … W50-08.** Pull request #47 (`develop` → `main`) was merged by
+the **owner** on 2026-11-07 as the squash `67b3410d`; an agent opened it and did not merge
+it.
 
 ### W49 — the public-research workstream (**merged**)
 
@@ -233,6 +263,30 @@ authored confidence; the pool is **pre-cached and versioned**, not a live web se
 the status route leaves the workspace list and the counts empty. Those are the risks
 R-W50-01…R-W50-03 and the questions Q-W50-01…Q-W50-03 — named limits, not a defect of the
 wave.
+
+### 4.10 The tasks the W51 wave created
+
+**W51 is the wave that turned a collection of subsystems into one interacting cognitive
+system.** The ids of this roadmap are stable and are the ones to use; the wave's own task
+ids are in the fourth column.
+
+| the id | the task | the goal | the wave's task | the state | the evidence |
+|---|---|---|---|---|---|
+| **TASK-W51-01** | the audit and the classification | every subsystem is classified as KEEP / INTEGRATE / ADAPT / REWRITE CANDIDATE / ARCHIVE, with a path, a caller and a reason | **W51-00** | **done** | `docs-v2/engineering/W51-AUDIT.md` §2 — 19 subsystems classified; §7 — 12 entries that remain disconnected, experimental or archived, with the reason |
+| **TASK-W51-02** | the canonical cognitive contracts | the concepts of the mandate are meaningful data contracts, not empty interfaces, and a candidate belief can never become an established one by similarity | **W51-01** | **done** | `io.matrix.contract` — 23 records; `CanonicalContractsTest` — **33 tests, 0 failures**; the status vocabulary separates OBSERVED / ASSERTED / CANDIDATE / SUPPORTED / CONTESTED / REFUTED / UNRESOLVED / SUPERSEDED |
+| **TASK-W51-03** | the bridge between the chains | the parts of MATRIX interact through explicit, versioned, governed contracts — and the crossing is the only one | **W51-02** | **done** | `io.matrix.contract.bridge` (the protocol), `io.matrix.bridge` (the chain A service), `io.matrix.brain.runtime.bridge` (the chain B client); **76 tests, 0 failures**; the cross-process demonstration `scripts/w51-bridge-demo.sh` — **10 checks, 0 failed**; the gate's G7/G8/G9 and the controls C3/C4 |
+| **TASK-W51-04** | the integrated cognitive runtime | the parts of the system are declared, their capabilities are named, and their dependencies are checked | **W51-03** | **done** | `io.matrix.runtime.{CognitiveRuntime,MatrixRuntimeComposition}` — **6 tests, 0 failures**; the decision is CD-022 (a declaration registry, not a service locator and not a global bus) |
+| **TASK-W51-12** | the world-state memory | the role the audit found missing: a memory of the system's estimate of a domain, consulted before an action, with its transitions recorded | **W51-11** | **done** | `io.matrix.cognitive.worldstate.{WorldStateMemory,StateFact,MicroWorldStateAdapter}` — **6 tests, 0 failures**; it is a projection over the append-only case log, so it survives a restart without a sixth database; the canonical `WorldState` and `StateTransition` contracts got their first production user, and the cycle's trace carries a `WORLD` step |
+| **TASK-W51-05** | the learning through an environment | the system learns by interaction, persists what it learned, and reuses it | **W51-04** | **done** | `io.matrix.learning.env` over the existing micro-world — **13 tests, 0 failures**; and the loop is now run **through the cognitive runtime** in the demonstration: 16 → 4 → 2 → 1 surviving hypotheses over three cycles, every probe a durable case, and the restored session starts with one survivor instead of sixteen |
+| **TASK-W51-13** | the method-performance memory | the method-selection layer can weigh historical measured performance and previous outcomes — which it could not, because nothing ever recorded a measurement | **W51-12** | **done** | the kernel measures the method it runs and records it in the shared `CostLedger`; the demonstration's decision record shows the transition — the first cycle says `DECLARED_COMPLEXITY`, the second and third say `MEASURED` |
+| **TASK-W51-14** | the cycle's reflection | reflection as an evaluation of the actual decision and outcome, producing machine-readable decisions — not more text about the result | **W51-13** | **done** | `io.matrix.cognitive.reflection.CycleReflection` — **5 tests, 0 failures**; the canonical `Reflection` and `Evaluation` contracts had no producer and now have one; the cycle's trace carries a `REFLECT` phase and the outcome carries the reflection, its learned items, its uncertainties and its decisions |
+| **TASK-W51-15** | the meta-memory | what the system knows about the reliability of its own knowledge — the last of §4's six memory roles that had no carrier | **W51-14** | **done** | `io.matrix.knowledge.meta.KnowledgeReliability` — **4 tests, 0 failures**; a projection over the durable claims and revisions: how many of a source's claims and of a validation method's claims were revised afterwards, with the reasons carried next to the numbers; it decides nothing about citability — that stays with the claim's own status |
+| **TASK-W51-06** | the plugin architecture and creator mode | a capability can be created, validated, granted, used and revoked, inside an isolation that is a boundary | **W51-05** | **done** | `io.matrix.plugin` — **21 tests, 0 failures**; the lifecycle PROPOSED → BUILDING → SANDBOXED → VALIDATED → SHADOW → ACTIVE is walked in full; the isolation is a closed declarative interpreter (CD-023) and the creator is bounded to one family of capability (CD-024) |
+| **TASK-W51-07** | the Java/C boundary | the question "is the native path faster?" is answered by measurement, with the equivalence proved | **W51-06** | **done — and the answer is that the Java path stays selected** | `docs-v2/engineering/W51-JAVA-C-BOUNDARY.md`; **31 tests, 0 failures**; the native path is 17–20× faster than the BIR reference API but only **0.75–1.02×** against the same reference code on flat data, and **67 %** of the native call is the marshalling; the decision is CD-025 |
+| **TASK-W51-08** | the W50 epistemic reliability | the 29-case evaluation is machine-readable, has a committed runner, and the eight named defects are fixed | **W51-07** | **done — 12/29 → 18/29, and the eleven that still fail are named** | `scripts/w51-epistemic-eval.py`, `matrix-core/src/main/resources/epistemic-eval/cases.json`, `docs-v2/engineering/W51-EPISTEMIC-EVALUATION.md` + `.json`; the **baseline was reproduced on the same runner** in a clean worktree at `a098f283` (12 PASS / 17 FAIL) before the fixes were credited; per category: unanswerable 2/6 → 6/6, revision 1/5 → 3/5; the knowledge scope is **641 tests, 0 failures** (+13); four existing expectations changed and each became **stricter** |
+| **TASK-W51-09** | the safety, isolation and failure handling | the failure modes of §11 are tested against the real components | **W51-08** | **done** | `io.matrix.safety` — **27 tests, 0 failures** over the eleven failure modes; the matrix found **three real defects**, all fixed in this wave and covered by tests of their own (the wall-clock budget of the sandbox, the absent consumer of `RetryPolicy`, the capability check that happened only at activation). A **fourth** defect was found by the final test scope: the two stores that share the owner's database file wrote DEFERRED transactions, so a concurrent write could fail with `SQLITE_BUSY` in about one run in three; both now write IMMEDIATE transactions (§5.7 of the status report) |
+| **TASK-W51-10** | the resource and configuration governance | the wave adds no magic numbers, and the touched paths are measured | **W51-09** | **done** | the quality gate: **271 candidates against a baseline of 271** — the wave adds **zero**; the measurements are in `docs-v2/engineering/W51-PERFORMANCE.md` |
+| **TASK-W51-11** | the closeout | the report, the canonical registers and the commit | **W51-10** | **open — the commit is the owner's** | `docs-v2/engineering/W51-STATUS.md`; the decisions are CD-020 … CD-025 in the decision register; the commit and the push are Level 3 operations under `AGENT-OPERATING-PROTOCOL.md` §3 |
 
 ## 5. The blocked tasks
 

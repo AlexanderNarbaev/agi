@@ -35,18 +35,21 @@ class SupportScoreTest {
     void theValueIsUnchanged() {
         Answer answer = retriever.answer("What is photosynthesis?", AbstractionLevel.INTRODUCTORY);
 
-        // The number did not move, so nothing that depended on it breaks.
-        // What moved is its name and its disclosure.
+        // W51 §6 MOVED IT, AND THE REASON IS KNOWN.
         //
-        // RECON-W42.7 moved it once, from 0.84 to 0.85, and the reason is
-        // known: the concept bridge let a question reach a concept through
-        // the workspace's own explanation, and for "What is
-        // photosynthesis?" the answer's evidence grew by one claim. The
-        // support score is the mean of the matched claims' confidences, so
-        // the mean moved with the evidence. The retrieval of the claims
-        // themselves did not change: the same seven claims are matched,
-        // with the same coverages.
-        assertThat(answer.supportScore()).isEqualTo(0.85);
+        // The score is the mean of the confidences of the claims the
+        // answer CITES, and the score now counts the ESTABLISHED claims
+        // only. The refuted misconception — the claim that the workspace
+        // holds about the oxygen a plant releases, marked REFUTED — used to
+        // be in the answer's evidence and used to carry its confidence into
+        // the mean. A claim the workspace has withdrawn is not evidence,
+        // and a withdrawn claim's confidence is not support.
+        //
+        // The value therefore moved from 0.85 back to 0.84: the evidence
+        // shrank by the claim that was never evidence. The retrieval did
+        // not change - the same claims are matched, with the same
+        // coverages - and the number still means what it says it means.
+        assertThat(answer.supportScore()).isEqualTo(0.84);
     }
 
     @Test

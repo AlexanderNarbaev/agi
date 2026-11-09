@@ -17,18 +17,18 @@ import io.matrix.cognitive.algorithms.ProblemRequest;
  * before it can be preferred, and a measurement that is thrown away at the end of the cycle
  * would mean the selector never learns anything.</p>
  */
-final class KernelSelector implements CognitiveKernel.AlgorithmSelectorBridge {
+public final class KernelSelector implements CognitiveKernel.AlgorithmSelectorBridge {
 
     private final AlgorithmRegistry registry;
     private final CostLedger ledger;
 
     /** Creates the adapter over a registry with an empty ledger. */
-    KernelSelector(AlgorithmRegistry registry) {
+    public KernelSelector(AlgorithmRegistry registry) {
         this(registry, new CostLedger());
     }
 
     /** Creates the adapter over a registry with a shared ledger. */
-    KernelSelector(AlgorithmRegistry registry, CostLedger ledger) {
+    public KernelSelector(AlgorithmRegistry registry, CostLedger ledger) {
         this.registry = registry;
         this.ledger = ledger;
     }
@@ -44,5 +44,24 @@ final class KernelSelector implements CognitiveKernel.AlgorithmSelectorBridge {
     /** The ledger the measured costs are recorded in. */
     CostLedger ledger() {
         return ledger;
+    }
+
+    /**
+     * W51 §5 — runs the method and records what it cost.
+     *
+     * <p>This is the adapter's whole reason for existing as a holder of the ledger: the
+     * ledger is shared and lives across cycles, so a method's cost is MEASURED once and
+     * every later decision prefers it on the measurement instead of on the declared
+     * complexity. Before this, nothing ever wrote to the ledger and the selector never
+     * learned anything.</p>
+     *
+     * @param methodId the method being run
+     * @param body     the work
+     * @param <T>      what the work produces
+     * @return what the work produced
+     */
+    @Override
+    public <T> T measure(String methodId, java.util.function.Supplier<T> body) {
+        return ledger.measure(methodId, body);
     }
 }

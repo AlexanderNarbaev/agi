@@ -131,9 +131,6 @@ public final class ClaimValidator {
 
         for (Map.Entry<String, List<Claim>> entry : byProposition.entrySet()) {
             List<Claim> group = entry.getValue();
-            if (group.size() < 2) {
-                continue;
-            }
             // The independent sources behind the group: the DISTINCT
             // content hashes, not the number of evidence records.
             Set<String> hashes = new LinkedHashSet<>();
@@ -146,8 +143,50 @@ public final class ClaimValidator {
                 }
             }
             int independent = PromotionPolicy.independentSources(new ArrayList<>(hashes));
+            if (group.size() == 1) {
+                // THE TWO GATES ARE SEPARATE (W51 §6).
+                //
+                // The W50 evaluation measured that every claim of an imported
+                // document stayed CANDIDATE for ever, because the gate for
+                // VERIFIED — two INDEPENDENT content hashes — was also
+                // applied to the step that only needs ONE supporting source.
+                // That gate is right for verification and wrong for support:
+                // `ClaimStatus.SUPPORTED` is defined as "at least one source
+                // supports it", and `PromotionPolicy` has always allowed
+                // CANDIDATE -> SUPPORTED with one independent source and
+                // evidence behind it. The step was never taken, so the rule
+                // the policy declares was not the rule the store applied.
+                //
+                // The status is therefore EARNED here, by the validation
+                // stage, and not assigned at extraction: the import still
+                // writes CANDIDATE, and this stage is what promotes it.
+                Claim only = group.get(0);
+                if (only.status() == ClaimStatus.CANDIDATE && independent >= 1
+                        && hasSupportingEvidence(byClaim, only)) {
+                    Promotion promotion = promote(only, independent, promotions, refusals);
+                    if (promotion != null) {
+                        changedClaims.add(withStatus(only, promotion.to(),
+                                "the validation: " + promotion.reason()));
+                    }
+                }
+                continue;
+            }
             if (independent < 2) {
-                // One source, seen twice, is not a confirmation.
+                // One source, seen twice, is not a confirmation. Two claims
+                // that state the same thing may still be SUPPORTED — each by
+                // its own source — but they are not VERIFIED, because
+                // verification is the claim two independent sources agree on.
+                for (Claim claim : group) {
+                    if (claim.status() != ClaimStatus.CANDIDATE || independent < 1
+                            || !hasSupportingEvidence(byClaim, claim)) {
+                        continue;
+                    }
+                    Promotion promotion = promote(claim, independent, promotions, refusals);
+                    if (promotion != null) {
+                        changedClaims.add(withStatus(claim, promotion.to(),
+                                "the validation: " + promotion.reason()));
+                    }
+                }
                 continue;
             }
 
@@ -238,9 +277,21 @@ public final class ClaimValidator {
         // at CANDIDATE, and it refused to promote the claims the packages
         // already hold - which are SUPPORTED - with the reason "SUPPORTED
         // does not move to SUPPORTED".
-        List<ClaimStatus> path = current == ClaimStatus.SUPPORTED
-                ? List.of(ClaimStatus.VERIFIED)
-                : List.of(ClaimStatus.SUPPORTED, ClaimStatus.VERIFIED);
+        //
+        // W51 §6 — THE TWO GATES ARE SEPARATE. The path to SUPPORTED needs
+        // one supporting source with a supporting evidence link; the path to
+        // VERIFIED needs two INDEPENDENT sources. A claim with one source is
+        // therefore supported and not verified, which is exactly what the
+        // two statuses mean.
+        List<ClaimStatus> path;
+        if (current == ClaimStatus.SUPPORTED) {
+            path = List.of(ClaimStatus.VERIFIED);
+        } else if (current == ClaimStatus.CANDIDATE && independent < 2) {
+            path = List.of(ClaimStatus.SUPPORTED);
+        } else {
+            path = List.of(ClaimStatus.SUPPORTED, ClaimStatus.VERIFIED);
+        }
+        ClaimStatus reached = current;
         for (ClaimStatus step : path) {
             boolean allowed = PromotionPolicy.mayPromote(stageOf(current), stageOf(step),
                     independent, true, false);
@@ -251,13 +302,36 @@ public final class ClaimValidator {
                         independent, true));
                 return null;
             }
-            current = step;
+            reached = step;
         }
+        String reason = reached == ClaimStatus.SUPPORTED
+                ? "the claim is supported by " + independent + " independent source with a "
+                        + "supporting evidence link; verification needs 2 independent sources"
+                : "the claim is stated by " + independent + " independent sources";
         Promotion promotion = new Promotion(claim.id(), claim.proposition(), claim.status(),
-                ClaimStatus.VERIFIED, independent,
-                "the claim is stated by " + independent + " independent sources");
+                reached, independent, reason);
         promotions.add(promotion);
         return promotion;
+    }
+
+    /**
+     * Whether a claim has an evidence link that SUPPORTS it.
+     *
+     * <p>The link is what makes the claim supported: a claim with no
+     * evidence, or with evidence that only mentions it, stays a candidate,
+     * and the store refuses an established claim with no evidence behind it.
+     *
+     * @param byClaim the evidence of each claim
+     * @param claim the claim
+     * @return whether a supporting link exists
+     */
+    private static boolean hasSupportingEvidence(Map<String, List<Evidence>> byClaim, Claim claim) {
+        for (Evidence item : byClaim.getOrDefault(claim.id(), List.of())) {
+            if (item.relation() == EvidenceRelation.SUPPORTS) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**

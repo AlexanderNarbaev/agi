@@ -1,0 +1,864 @@
+{
+  "dataset": "w50-plate-tectonics",
+  "version": "1.1",
+  "date": "2026-11-07",
+  "source": "docs-v2/demos/local-learning-loop/EVALUATION-SET.md",
+  "note": "The same 29 cases as the versioned dataset, transcribed mechanically. No expectation was changed, no case was excluded, and the answer key is not part of this file.",
+  "passConditions": {
+    "answerable": "answered=true; the named source among sources[].title; every named proposition present verbatim in claims[].proposition; at least the required number of distinct claims (and sources, where stated).",
+    "unanswerable": "answered=false; statement empty; no source cited; no claim cited.",
+    "false-premise": "the verdict is the named one; the disputed premise is named where one exists; the contradicting claim and its source are named; promoted=false; the claim count is unchanged by the check.",
+    "multi-claim": "as answerable, and the number of distinct cited claims (and sources) is at least the number the case requires.",
+    "knows-what-it-does-not-know": "answered=true; the named claim is cited; the gap list names the term the case says is missing.",
+    "revision": "the counts of the report; the status and version of the claims before and after; the reason the application gives."
+  },
+  "scopes": {
+    "S1": {
+      "workspace": "plate-tectonics-eval-seed",
+      "prepare": [
+        {
+          "method": "POST",
+          "path": "/v1/learning/workspaces/{workspace}/seed"
+        }
+      ],
+      "description": "the two seed documents, 348 claims, 2 sources, no pool document",
+      "cases": [
+        "A-01",
+        "A-02",
+        "A-03",
+        "A-04",
+        "A-05",
+        "A-06",
+        "U-01",
+        "U-02",
+        "U-03",
+        "U-04",
+        "U-05",
+        "F-01",
+        "F-02",
+        "F-03",
+        "F-04",
+        "M-01",
+        "M-02",
+        "K-01",
+        "K-02"
+      ]
+    },
+    "P1": {
+      "workspace": "plate-tectonics-eval",
+      "prepare": [
+        {
+          "method": "POST",
+          "path": "/v1/learning/workspaces/{workspace}/seed"
+        },
+        {
+          "method": "POST",
+          "path": "/v1/learning/workspaces/{workspace}/learn",
+          "query": {
+            "question": "How do we know the continents have moved? What is the evidence for continental drift, and how do mid-ocean ridges and subduction zones fit together?",
+            "documents": 3
+          }
+        }
+      ],
+      "description": "S1 plus the three documents the bounded cycle acquires",
+      "cases": [
+        "P-01",
+        "P-02",
+        "U-06",
+        "F-05",
+        "M-03",
+        "R-01"
+      ]
+    },
+    "R1": {
+      "workspace": "plate-tectonics-eval",
+      "prepare": [
+        {
+          "method": "POST",
+          "path": "/v1/learning/workspaces/{workspace}/seed"
+        },
+        {
+          "method": "POST",
+          "path": "/v1/learning/workspaces/{workspace}/learn",
+          "query": {
+            "question": "How do we know the continents have moved? What is the evidence for continental drift, and how do mid-ocean ridges and subduction zones fit together?",
+            "documents": 3
+          }
+        },
+        {
+          "method": "POST",
+          "path": "/v1/learning/workspaces/{workspace}/revise",
+          "query": {
+            "file": "wikipedia-slab-pull.md"
+          }
+        }
+      ],
+      "description": "P1 plus wikipedia-slab-pull.md",
+      "cases": [
+        "R-03"
+      ]
+    },
+    "R2": {
+      "workspace": "plate-tectonics-eval",
+      "prepare": [
+        {
+          "method": "POST",
+          "path": "/v1/learning/workspaces/{workspace}/seed"
+        },
+        {
+          "method": "POST",
+          "path": "/v1/learning/workspaces/{workspace}/learn",
+          "query": {
+            "question": "How do we know the continents have moved? What is the evidence for continental drift, and how do mid-ocean ridges and subduction zones fit together?",
+            "documents": 3
+          }
+        },
+        {
+          "method": "POST",
+          "path": "/v1/learning/workspaces/{workspace}/revise",
+          "query": {
+            "file": "wikipedia-slab-pull.md"
+          }
+        },
+        {
+          "method": "POST",
+          "path": "/v1/learning/workspaces/{workspace}/revise",
+          "query": {
+            "file": "wikipedia-paleomagnetism.md"
+          }
+        }
+      ],
+      "description": "R1 plus wikipedia-paleomagnetism.md",
+      "cases": [
+        "R-02"
+      ]
+    },
+    "P1'": {
+      "workspace": "plate-tectonics-eval-neg",
+      "prepare": [
+        {
+          "method": "POST",
+          "path": "/v1/learning/workspaces/{workspace}/seed"
+        },
+        {
+          "method": "POST",
+          "path": "/v1/learning/workspaces/{workspace}/learn",
+          "query": {
+            "question": "How do we know the continents have moved? What is the evidence for continental drift, and how do mid-ocean ridges and subduction zones fit together?",
+            "documents": 3
+          }
+        }
+      ],
+      "description": "a fresh copy of P1",
+      "cases": [
+        "R-04"
+      ]
+    },
+    "P1''": {
+      "workspace": "plate-tectonics-eval-neg2",
+      "prepare": [
+        {
+          "method": "POST",
+          "path": "/v1/learning/workspaces/{workspace}/seed"
+        },
+        {
+          "method": "POST",
+          "path": "/v1/learning/workspaces/{workspace}/learn",
+          "query": {
+            "question": "How do we know the continents have moved? What is the evidence for continental drift, and how do mid-ocean ridges and subduction zones fit together?",
+            "documents": 3
+          }
+        }
+      ],
+      "description": "a second fresh copy of P1",
+      "cases": [
+        "R-05"
+      ]
+    }
+  },
+  "cases": [
+    {
+      "id": "A-01",
+      "category": "answerable",
+      "scope": "S1",
+      "question": "What is plate tectonics and what does it say about the Earth's lithosphere?",
+      "call": {
+        "method": "POST",
+        "path": "/v1/workbench/workspaces/{workspace}/ask",
+        "body": {
+          "question": "What is plate tectonics and what does it say about the Earth's lithosphere?",
+          "level": "INTRODUCTORY"
+        }
+      },
+      "expect": {
+        "answered": true,
+        "minDistinctClaims": 2,
+        "minDistinctSources": null,
+        "requiredSource": "wikipedia-plate-tectonics.md",
+        "requiredPropositions": [
+          "Plate tectonics (from Latin tectonicus, from Ancient Greek τεκτονικός (tektonikós) 'pertaining to building') is the scientific theory that Earth's lithosphere comprises a number of large tectonic plates, which have been slowly moving since 3–4 billion years ago.",
+          "Earth's lithosphere, the rigid outer shell of the planet including the crust and upper mantle, is fractured into seven or eight major plates (depending on how they are defined) and many minor plates or \"platelets\"."
+        ]
+      }
+    },
+    {
+      "id": "A-02",
+      "category": "answerable",
+      "scope": "S1",
+      "question": "What are the three types of plate boundaries and what happens at each of them?",
+      "call": {
+        "method": "POST",
+        "path": "/v1/workbench/workspaces/{workspace}/ask",
+        "body": {
+          "question": "What are the three types of plate boundaries and what happens at each of them?",
+          "level": "INTRODUCTORY"
+        }
+      },
+      "expect": {
+        "answered": true,
+        "minDistinctClaims": 3,
+        "minDistinctSources": null,
+        "requiredSource": "wikipedia-plate-tectonics.md",
+        "requiredPropositions": [
+          "Types of plate boundaries Three types of plate boundaries exist, characterized by the way the plates move relative to each other.",
+          "Where the plates meet, their relative motion determines the type of plate boundary (or fault): convergent, divergent, or transform.",
+          "Convergent boundaries (destructive boundaries or active margins) occur where two plates slide toward each other to form either a subduction zone (one plate moving underneath the other) or a continental collision."
+        ]
+      }
+    },
+    {
+      "id": "A-03",
+      "category": "answerable",
+      "scope": "S1",
+      "question": "What drives the motion of the tectonic plates, and which force is considered the strongest?",
+      "call": {
+        "method": "POST",
+        "path": "/v1/workbench/workspaces/{workspace}/ask",
+        "body": {
+          "question": "What drives the motion of the tectonic plates, and which force is considered the strongest?",
+          "level": "INTRODUCTORY"
+        }
+      },
+      "expect": {
+        "answered": true,
+        "minDistinctClaims": 3,
+        "minDistinctSources": null,
+        "requiredSource": "wikipedia-plate-tectonics.md",
+        "requiredPropositions": [
+          "Driving forces of plate motion Tectonic plates are able to move because of the relative density of oceanic lithosphere and the relative weakness of the asthenosphere.",
+          "The greater density of old lithosphere relative to the underlying asthenosphere allows it to sink into the deep mantle at subduction zones, providing most of the driving force for plate movement.",
+          "In modern views, gravity is invoked as the major driving force, through slab pull along subduction zones."
+        ]
+      }
+    },
+    {
+      "id": "A-04",
+      "category": "answerable",
+      "scope": "S1",
+      "question": "How is the rate of plate movement measured with GPS and other space-geodetic techniques?",
+      "call": {
+        "method": "POST",
+        "path": "/v1/workbench/workspaces/{workspace}/ask",
+        "body": {
+          "question": "How is the rate of plate movement measured with GPS and other space-geodetic techniques?",
+          "level": "INTRODUCTORY"
+        }
+      },
+      "expect": {
+        "answered": true,
+        "minDistinctClaims": 3,
+        "minDistinctSources": null,
+        "requiredSource": "usgs-this-dynamic-earth.md",
+        "requiredPropositions": [
+          "GPS Satellite and Ground Receiver [63 k] Current plate movement can be tracked directly by means of ground-based or space-based geodetic measurements; geodesy is the science of the size and shape of the Earth.",
+          "However, because plate motions are global in scale, they are best measured by satellite-based methods.",
+          "The three most commonly used space-geodetic techniques -- very long baseline interferometry (VLBI), satellite laser ranging (SLR), and the Global Positioning System (GPS) -- are based on technologies developed for military and aerospace research, notably radio astronomy and satellite tracking."
+        ]
+      }
+    },
+    {
+      "id": "A-05",
+      "category": "answerable",
+      "scope": "S1",
+      "question": "What is seafloor spreading and what evidence supports it?",
+      "call": {
+        "method": "POST",
+        "path": "/v1/workbench/workspaces/{workspace}/ask",
+        "body": {
+          "question": "What is seafloor spreading and what evidence supports it?",
+          "level": "INTRODUCTORY"
+        }
+      },
+      "expect": {
+        "answered": true,
+        "minDistinctClaims": 4,
+        "minDistinctSources": 2,
+        "requiredSource": "usgs-this-dynamic-earth.md",
+        "requiredPropositions": [
+          "Oceanic crust is formed at sea-floor spreading centers.",
+          "The lost surface is balanced by the formation of new oceanic crust along divergent margins by seafloor spreading, keeping the total surface area constant in a tectonic \"conveyor belt\".",
+          "When these magnetic patterns were mapped over a wide region, the ocean floor showed a zebra-like pattern: one stripe with normal polarity and the adjoining stripe with reversed polarity.",
+          "Seafloor spreading over the past 100 to 200 million years has caused the Atlantic Ocean to grow from a tiny inlet of water between the continents of Europe, Africa, and the Americas into the vast ocean that exists today."
+        ]
+      }
+    },
+    {
+      "id": "A-06",
+      "category": "answerable",
+      "scope": "S1",
+      "question": "How does subduction at a convergent boundary produce deep earthquakes and volcanoes?",
+      "call": {
+        "method": "POST",
+        "path": "/v1/workbench/workspaces/{workspace}/ask",
+        "body": {
+          "question": "How does subduction at a convergent boundary produce deep earthquakes and volcanoes?",
+          "level": "INTRODUCTORY"
+        }
+      },
+      "expect": {
+        "answered": true,
+        "minDistinctClaims": 3,
+        "minDistinctSources": null,
+        "requiredSource": "usgs-this-dynamic-earth.md",
+        "requiredPropositions": [
+          "The descending plate also provides a source of stress as the two plates interact, leading to frequent moderate to strong earthquakes.",
+          "Subduction processes in oceanic-oceanic plate convergence also result in the formation of volcanoes.",
+          "Magmas that form island arcs are produced by the partial melting of the descending plate and/or the overlying oceanic lithosphere."
+        ]
+      }
+    },
+    {
+      "id": "P-01",
+      "category": "answerable",
+      "scope": "P1",
+      "question": "What is a mid-ocean ridge and what happens at one?",
+      "call": {
+        "method": "POST",
+        "path": "/v1/workbench/workspaces/{workspace}/ask",
+        "body": {
+          "question": "What is a mid-ocean ridge and what happens at one?",
+          "level": "INTRODUCTORY"
+        }
+      },
+      "expect": {
+        "answered": true,
+        "minDistinctClaims": 3,
+        "minDistinctSources": null,
+        "requiredSource": "wikipedia-mid-ocean-ridge.md",
+        "requiredPropositions": [
+          "This feature is where seafloor spreading takes place along a divergent plate boundary.",
+          "It typically has a depth of about 2,600 meters (8,500 ft) and rises about 2,000 meters (6,600 ft) above the deepest portion of an ocean basin.",
+          "In the 1960s, geologists discovered and began to propose mechanisms for seafloor spreading."
+        ]
+      }
+    },
+    {
+      "id": "P-02",
+      "category": "answerable",
+      "scope": "P1",
+      "question": "What is subduction, and what does it produce?",
+      "call": {
+        "method": "POST",
+        "path": "/v1/workbench/workspaces/{workspace}/ask",
+        "body": {
+          "question": "What is subduction, and what does it produce?",
+          "level": "INTRODUCTORY"
+        }
+      },
+      "expect": {
+        "answered": true,
+        "minDistinctClaims": 3,
+        "minDistinctSources": null,
+        "requiredSource": "wikipedia-subduction.md",
+        "requiredPropositions": [
+          "Oceanic trenches are the deepest parts of the ocean floor.",
+          "Beyond the forearc basin, volcanoes are found in long chains called volcanic arcs.",
+          "Since the Earth's circumference has not changed over geologic time, Hess concluded that older seafloor has to be consumed somewhere else, and suggested that this process takes place at oceanic trenches, where the crust would be melted and recycled into the Earth's mantle."
+        ]
+      }
+    },
+    {
+      "id": "U-01",
+      "category": "unanswerable",
+      "scope": "S1",
+      "question": "What is the boiling point of water at the summit of Mount Kilimanjaro in degrees Celsius?",
+      "call": {
+        "method": "POST",
+        "path": "/v1/workbench/workspaces/{workspace}/ask",
+        "body": {
+          "question": "What is the boiling point of water at the summit of Mount Kilimanjaro in degrees Celsius?",
+          "level": "INTRODUCTORY"
+        }
+      },
+      "expect": {
+        "answered": false,
+        "statementEmpty": true,
+        "noSources": true,
+        "noClaims": true
+      }
+    },
+    {
+      "id": "U-02",
+      "category": "unanswerable",
+      "scope": "S1",
+      "question": "What is the annual tourism revenue of Iceland in euros?",
+      "call": {
+        "method": "POST",
+        "path": "/v1/workbench/workspaces/{workspace}/ask",
+        "body": {
+          "question": "What is the annual tourism revenue of Iceland in euros?",
+          "level": "INTRODUCTORY"
+        }
+      },
+      "expect": {
+        "answered": false,
+        "statementEmpty": true,
+        "noSources": true,
+        "noClaims": true
+      }
+    },
+    {
+      "id": "U-03",
+      "category": "unanswerable",
+      "scope": "S1",
+      "question": "What is the probability of a magnitude 8 earthquake occurring in Istanbul within the next decade?",
+      "call": {
+        "method": "POST",
+        "path": "/v1/workbench/workspaces/{workspace}/ask",
+        "body": {
+          "question": "What is the probability of a magnitude 8 earthquake occurring in Istanbul within the next decade?",
+          "level": "INTRODUCTORY"
+        }
+      },
+      "expect": {
+        "answered": false,
+        "statementEmpty": true,
+        "noSources": true,
+        "noClaims": true
+      }
+    },
+    {
+      "id": "U-04",
+      "category": "unanswerable",
+      "scope": "S1",
+      "question": "How many tonnes of basalt are produced each year by the Mid-Atlantic Ridge?",
+      "call": {
+        "method": "POST",
+        "path": "/v1/workbench/workspaces/{workspace}/ask",
+        "body": {
+          "question": "How many tonnes of basalt are produced each year by the Mid-Atlantic Ridge?",
+          "level": "INTRODUCTORY"
+        }
+      },
+      "expect": {
+        "answered": false,
+        "statementEmpty": true,
+        "noSources": true,
+        "noClaims": true
+      }
+    },
+    {
+      "id": "U-05",
+      "category": "unanswerable",
+      "scope": "S1",
+      "question": "Which company announced the discovery of the exoplanet 55 Cancri e?",
+      "call": {
+        "method": "POST",
+        "path": "/v1/workbench/workspaces/{workspace}/ask",
+        "body": {
+          "question": "Which company announced the discovery of the exoplanet 55 Cancri e?",
+          "level": "INTRODUCTORY"
+        }
+      },
+      "expect": {
+        "answered": false,
+        "statementEmpty": true,
+        "noSources": true,
+        "noClaims": true
+      }
+    },
+    {
+      "id": "U-06",
+      "category": "unanswerable",
+      "scope": "P1",
+      "question": "How many research vessels are surveying the mid-ocean ridges at the moment?",
+      "call": {
+        "method": "POST",
+        "path": "/v1/workbench/workspaces/{workspace}/ask",
+        "body": {
+          "question": "How many research vessels are surveying the mid-ocean ridges at the moment?",
+          "level": "INTRODUCTORY"
+        }
+      },
+      "expect": {
+        "answered": false,
+        "statementEmpty": true,
+        "noSources": true,
+        "noClaims": true
+      }
+    },
+    {
+      "id": "F-01",
+      "category": "false-premise",
+      "scope": "S1",
+      "assertion": "Plate tectonics is the scientific theory that Earth's lithosphere comprises a number of large tectonic plates.",
+      "call": {
+        "method": "POST",
+        "path": "/v1/learning/workspaces/{workspace}/assess",
+        "body": {
+          "assertion": "Plate tectonics is the scientific theory that Earth's lithosphere comprises a number of large tectonic plates."
+        }
+      },
+      "expect": {
+        "verdict": "SUPPORTED",
+        "promoted": false,
+        "requiredSource": "wikipedia-plate-tectonics.md",
+        "requiredPropositions": [
+          "Plate tectonics (from Latin tectonicus, from Ancient Greek τεκτονικός (tektonikós) 'pertaining to building') is the scientific theory that Earth's lithosphere comprises a number of large tectonic plates, which have been slowly moving since 3–4 billion years ago."
+        ],
+        "disputedPremise": "not-applicable"
+      }
+    },
+    {
+      "id": "F-02",
+      "category": "false-premise",
+      "scope": "S1",
+      "assertion": "Trenches are not created by subduction.",
+      "call": {
+        "method": "POST",
+        "path": "/v1/learning/workspaces/{workspace}/assess",
+        "body": {
+          "assertion": "Trenches are not created by subduction."
+        }
+      },
+      "expect": {
+        "verdict": "CONTRADICTED",
+        "promoted": false,
+        "requiredSource": "usgs-this-dynamic-earth.md",
+        "requiredPropositions": [
+          "Trenches are the deepest parts of the ocean floor and are created by subduction."
+        ],
+        "disputedPremise": "named"
+      }
+    },
+    {
+      "id": "F-03",
+      "category": "false-premise",
+      "scope": "S1",
+      "assertion": "The national budget of Iceland was increased by 12 percent in 2019.",
+      "call": {
+        "method": "POST",
+        "path": "/v1/learning/workspaces/{workspace}/assess",
+        "body": {
+          "assertion": "The national budget of Iceland was increased by 12 percent in 2019."
+        }
+      },
+      "expect": {
+        "verdict": "UNSUPPORTED",
+        "promoted": false,
+        "requiredSource": null,
+        "requiredPropositions": [],
+        "noEvidence": true,
+        "reasonContains": [
+          "absence of evidence is not a contradiction"
+        ],
+        "disputedPremise": "not-applicable"
+      }
+    },
+    {
+      "id": "F-04",
+      "category": "false-premise",
+      "scope": "S1",
+      "assertion": "The Earth's lithosphere is not fractured into plates that move.",
+      "call": {
+        "method": "POST",
+        "path": "/v1/learning/workspaces/{workspace}/assess",
+        "body": {
+          "assertion": "The Earth's lithosphere is not fractured into plates that move."
+        }
+      },
+      "expect": {
+        "verdict": "UNRESOLVED",
+        "promoted": false,
+        "requiredSource": "wikipedia-plate-tectonics.md",
+        "requiredPropositions": [
+          "Earth's lithosphere, the rigid outer shell of the planet including the crust and upper mantle, is fractured into seven or eight major plates (depending on how they are defined) and many minor plates or \"platelets\".",
+          "Plate tectonics (from Latin tectonicus, from Ancient Greek τεκτονικός (tektonikós) 'pertaining to building') is the scientific theory that Earth's lithosphere comprises a number of large tectonic plates, which have been slowly moving since 3–4 billion years ago."
+        ],
+        "disputedPremise": "named"
+      }
+    },
+    {
+      "id": "F-05",
+      "category": "false-premise",
+      "scope": "P1",
+      "assertion": "The idea that the continents could move was widely accepted by geologists when it was first proposed in the early twentieth century.",
+      "call": {
+        "method": "POST",
+        "path": "/v1/learning/workspaces/{workspace}/assess",
+        "body": {
+          "assertion": "The idea that the continents could move was widely accepted by geologists when it was first proposed in the early twentieth century."
+        }
+      },
+      "expect": {
+        "verdict": "CONTRADICTED",
+        "promoted": false,
+        "requiredSource": "wikipedia-continental-drift.md",
+        "requiredPropositions": [
+          "When initially proposed as a scientific theory in the early 20th century, the idea that continents could move was widely rejected."
+        ],
+        "disputedPremise": "named"
+      }
+    },
+    {
+      "id": "M-01",
+      "category": "multi-claim",
+      "scope": "S1",
+      "question": "What are the three types of plate boundaries, and what happens at each of them?",
+      "call": {
+        "method": "POST",
+        "path": "/v1/workbench/workspaces/{workspace}/ask",
+        "body": {
+          "question": "What are the three types of plate boundaries, and what happens at each of them?",
+          "level": "INTRODUCTORY"
+        }
+      },
+      "expect": {
+        "answered": true,
+        "minDistinctClaims": 3,
+        "minDistinctSources": null,
+        "requiredSource": "wikipedia-plate-tectonics.md",
+        "requiredPropositions": [
+          "Types of plate boundaries Three types of plate boundaries exist, characterized by the way the plates move relative to each other.",
+          "Convergent boundaries (destructive boundaries or active margins) occur where two plates slide toward each other to form either a subduction zone (one plate moving underneath the other) or a continental collision.",
+          "The San Andreas Fault in California is an example of a transform boundary exhibiting dextral motion."
+        ]
+      }
+    },
+    {
+      "id": "M-02",
+      "category": "multi-claim",
+      "scope": "S1",
+      "question": "What drives the motion of the tectonic plates?",
+      "call": {
+        "method": "POST",
+        "path": "/v1/workbench/workspaces/{workspace}/ask",
+        "body": {
+          "question": "What drives the motion of the tectonic plates?",
+          "level": "INTRODUCTORY"
+        }
+      },
+      "expect": {
+        "answered": true,
+        "minDistinctClaims": 3,
+        "minDistinctSources": null,
+        "requiredSource": "wikipedia-plate-tectonics.md",
+        "requiredPropositions": [
+          "Driving forces of plate motion Tectonic plates are able to move because of the relative density of oceanic lithosphere and the relative weakness of the asthenosphere.",
+          "The greater density of old lithosphere relative to the underlying asthenosphere allows it to sink into the deep mantle at subduction zones, providing most of the driving force for plate movement.",
+          "In modern views, gravity is invoked as the major driving force, through slab pull along subduction zones."
+        ]
+      }
+    },
+    {
+      "id": "M-03",
+      "category": "multi-claim",
+      "scope": "P1",
+      "question": "How do we know the continents have moved? What is the evidence for continental drift, and how do mid-ocean ridges and subduction zones fit together?",
+      "call": {
+        "method": "POST",
+        "path": "/v1/workbench/workspaces/{workspace}/ask",
+        "body": {
+          "question": "How do we know the continents have moved? What is the evidence for continental drift, and how do mid-ocean ridges and subduction zones fit together?",
+          "level": "INTRODUCTORY"
+        }
+      },
+      "expect": {
+        "answered": true,
+        "minDistinctClaims": 6,
+        "minDistinctSources": 3,
+        "requiredSource": null,
+        "requiredPropositions": [
+          "Similar plant and animal fossils are found around the shores of different continents, suggesting that they were once joined.",
+          "The fossils of Mesosaurus, a freshwater reptile rather like a small crocodile, found both in Brazil and South Africa, are one example; another is the discovery of fossils of the land reptile Lystrosaurus in rocks of the same age at locations in Africa, India, and Antarctica.",
+          "This feature is where seafloor spreading takes place along a divergent plate boundary.",
+          "Beyond the forearc basin, volcanoes are found in long chains called volcanic arcs.",
+          "Oceanic trenches are the deepest parts of the ocean floor."
+        ]
+      }
+    },
+    {
+      "id": "K-01",
+      "category": "knows-what-it-does-not-know",
+      "scope": "S1",
+      "question": "What are the three types of plate boundaries and which can produce a tsunami?",
+      "call": {
+        "method": "POST",
+        "path": "/v1/workbench/workspaces/{workspace}/ask",
+        "body": {
+          "question": "What are the three types of plate boundaries and which can produce a tsunami?",
+          "level": "INTRODUCTORY"
+        }
+      },
+      "expect": {
+        "answered": true,
+        "minDistinctClaims": null,
+        "minDistinctSources": null,
+        "requiredSource": null,
+        "requiredPropositions": [
+          "Types of plate boundaries Three types of plate boundaries exist, characterized by the way the plates move relative to each other."
+        ],
+        "requiredGapTerms": [
+          "tsunami"
+        ]
+      }
+    },
+    {
+      "id": "K-02",
+      "category": "knows-what-it-does-not-know",
+      "scope": "S1",
+      "question": "How do subduction zones produce earthquakes and volcanic island arcs, and how are tsunamis generated in them?",
+      "call": {
+        "method": "POST",
+        "path": "/v1/workbench/workspaces/{workspace}/ask",
+        "body": {
+          "question": "How do subduction zones produce earthquakes and volcanic island arcs, and how are tsunamis generated in them?",
+          "level": "INTRODUCTORY"
+        }
+      },
+      "expect": {
+        "answered": true,
+        "minDistinctClaims": null,
+        "minDistinctSources": null,
+        "requiredSource": null,
+        "requiredPropositionsAny": [
+          "The trenches are the key to understanding how island arcs such as the Marianas and the Aleutian Islands have formed and why they experience numerous strong earthquakes.",
+          "Magmas that form island arcs are produced by the partial melting of the descending plate and/or the overlying oceanic lithosphere."
+        ],
+        "requiredGapTerms": [
+          "tsunami"
+        ]
+      }
+    },
+    {
+      "id": "R-01",
+      "category": "revision",
+      "scope": "P1->R1",
+      "file": "wikipedia-slab-pull.md",
+      "call": {
+        "method": "POST",
+        "path": "/v1/learning/workspaces/{workspace}/revise",
+        "query": {
+          "file": "wikipedia-slab-pull.md"
+        }
+      },
+      "expect": {
+        "claimsAddedGreaterThan": 0,
+        "revisionsApplied": "atLeastOne",
+        "requiredReasonAny": [
+          "denies what the earlier claim asserted"
+        ],
+        "requiredClaim": {
+          "proposition": "Slab pull: Scientific opinion is that the asthenosphere is insufficiently competent or rigid to directly cause motion by friction along the base of the lithosphere.",
+          "status": "SUPERSEDED",
+          "version": 2
+        },
+        "requiredNewClaim": {
+          "proposition": "However, most scientists working today believe that the asthenosphere does not directly cause motion by the friction of such basal forces.",
+          "status": "SUPPORTED",
+          "version": 2
+        }
+      }
+    },
+    {
+      "id": "R-02",
+      "category": "revision",
+      "scope": "R1->R2",
+      "file": "wikipedia-paleomagnetism.md",
+      "call": {
+        "method": "POST",
+        "path": "/v1/learning/workspaces/{workspace}/revise",
+        "query": {
+          "file": "wikipedia-paleomagnetism.md"
+        }
+      },
+      "expect": {
+        "claimsAddedGreaterThan": 0,
+        "revisionsApplied": "none",
+        "requiredReasonAny": [
+          "no established claim of the workspace is about the same subject",
+          "the new evidence is not stronger than the evidence"
+        ],
+        "noClaimChangesStatus": true
+      }
+    },
+    {
+      "id": "R-03",
+      "category": "revision",
+      "scope": "R1",
+      "question": "What drives the motion of the tectonic plates?",
+      "call": {
+        "method": "POST",
+        "path": "/v1/workbench/workspaces/{workspace}/ask",
+        "body": {
+          "question": "What drives the motion of the tectonic plates?",
+          "level": "INTRODUCTORY"
+        }
+      },
+      "expect": {
+        "answered": true,
+        "minDistinctClaims": 5,
+        "minDistinctSources": 5,
+        "requiredSource": null,
+        "requiredPropositions": [
+          "This force and slab suction account for almost all of the force driving plate tectonics.",
+          "However, most scientists working today believe that the asthenosphere does not directly cause motion by the friction of such basal forces."
+        ]
+      }
+    },
+    {
+      "id": "R-04",
+      "category": "revision",
+      "scope": "P1'",
+      "file": "wikipedia-seafloor-spreading.md",
+      "call": {
+        "method": "POST",
+        "path": "/v1/learning/workspaces/{workspace}/revise",
+        "query": {
+          "file": "wikipedia-seafloor-spreading.md"
+        }
+      },
+      "expect": {
+        "claimsAddedGreaterThan": 0,
+        "revisionsApplied": "none",
+        "requiredReasonAny": [
+          "no established claim of the workspace is about the same subject",
+          "the new evidence is not stronger than the evidence"
+        ],
+        "noClaimChangesStatus": true
+      }
+    },
+    {
+      "id": "R-05",
+      "category": "revision",
+      "scope": "P1''",
+      "file": "wikipedia-mantle-convection.md",
+      "call": {
+        "method": "POST",
+        "path": "/v1/learning/workspaces/{workspace}/revise",
+        "query": {
+          "file": "wikipedia-mantle-convection.md"
+        }
+      },
+      "expect": {
+        "claimsAddedGreaterThan": 0,
+        "revisionsApplied": "none",
+        "requiredReasonAny": [
+          "no established claim of the workspace is about the same subject",
+          "the new evidence is not stronger than the evidence"
+        ],
+        "noClaimChangesStatus": true
+      }
+    }
+  ]
+}

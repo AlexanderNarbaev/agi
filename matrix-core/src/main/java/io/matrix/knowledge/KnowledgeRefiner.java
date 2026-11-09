@@ -59,6 +59,12 @@ public final class KnowledgeRefiner {
     /**
      * A refinement: what is now believed, on what authority, and what
      * changed.
+     *
+     * @param refinedSourceId W51 §6. The identifier of the source the
+     *     refinement was READ FROM — the document whose text carries the
+     *     new claim. It is the identity of the refinement's own source
+     *     record, and it is what keeps two refinements of two documents
+     *     from sharing one source record.
      */
     public record Refinement(
             String conceptId,
@@ -81,13 +87,50 @@ public final class KnowledgeRefiner {
             List<String> noLongerValidAssumptions,
             List<String> newlyExplainedCases,
             String refinedRepresentation,
-            AbstractionLevel refinedRepresentationLevel) {
+            AbstractionLevel refinedRepresentationLevel,
+            String refinedSourceId) {
 
         public Refinement {
             addedFacts = List.copyOf(addedFacts == null ? List.of() : addedFacts);
             stillValidAssumptions = List.copyOf(stillValidAssumptions == null ? List.of() : stillValidAssumptions);
             noLongerValidAssumptions = List.copyOf(noLongerValidAssumptions == null ? List.of() : noLongerValidAssumptions);
             newlyExplainedCases = List.copyOf(newlyExplainedCases == null ? List.of() : newlyExplainedCases);
+        }
+
+        /**
+         * A refinement that does not name the source it was read from.
+         *
+         * <p>The identity of the refinement's source is then derived from
+         * its locator alone, which is the W50 behaviour this wave removed;
+         * a caller that can name the source it read from should.
+         */
+        public Refinement(
+                String conceptId,
+                String supersededClaimId,
+                String proposition,
+                String scope,
+                String context,
+                ClaimStatus status,
+                double confidence,
+                SourceKind sourceKind,
+                String sourceTitle,
+                String sourceLocator,
+                String sourceExcerpt,
+                int sourceAuthority,
+                int sourceFreshness,
+                RevisionKind revisionKind,
+                String summary,
+                List<String> addedFacts,
+                List<String> stillValidAssumptions,
+                List<String> noLongerValidAssumptions,
+                List<String> newlyExplainedCases,
+                String refinedRepresentation,
+                AbstractionLevel refinedRepresentationLevel) {
+            this(conceptId, supersededClaimId, proposition, scope, context, status, confidence,
+                    sourceKind, sourceTitle, sourceLocator, sourceExcerpt, sourceAuthority,
+                    sourceFreshness, revisionKind, summary, addedFacts, stillValidAssumptions,
+                    noLongerValidAssumptions, newlyExplainedCases, refinedRepresentation,
+                    refinedRepresentationLevel, null);
         }
     }
 
@@ -124,8 +167,25 @@ public final class KnowledgeRefiner {
                 request.proposition() + "#v" + version);
 
         Source source = new Source(
-                Ids.source(workspaceId, request.sourceKind(),
-                        request.sourceLocator() == null ? request.sourceTitle() : request.sourceLocator()),
+                // W51 §6 — THE IDENTITY OF THE REFINEMENT'S SOURCE.
+                //
+                // It used to be derived from the locator, and the locator
+                // of every imported document is the constant "the whole
+                // document" — so every refinement in a workspace derived
+                // the SAME source identifier, and the second revision
+                // overwrote the first revision's record in place. The W50
+                // evaluation measured the consequence: the claims that
+                // pointed at that record followed it to a document they
+                // were not read from.
+                //
+                // The identity is now derived from the source the
+                // refinement was read from and the proposition it carries.
+                request.refinedSourceId() != null
+                        ? Ids.refinementSource(workspaceId, request.sourceKind(),
+                                request.refinedSourceId(), request.proposition())
+                        : Ids.source(workspaceId, request.sourceKind(),
+                                request.sourceLocator() == null ? request.sourceTitle()
+                                        : request.sourceLocator()),
                 workspaceId, request.sourceKind(), request.sourceTitle(), request.sourceLocator(),
                 request.sourceAuthority(), request.sourceFreshness(), request.sourceExcerpt(), now,
                 // The hash of the material the correction was read from.

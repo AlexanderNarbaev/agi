@@ -21,7 +21,7 @@ import java.util.function.Supplier;
  * function of (state, events). Holding the state in the adapter means the kernel does not have
  * to, and means a test can build an adapter with a fixed state and a fixed clock.</p>
  */
-final class KernelRegulator implements CognitiveKernel.RegulatoryBridge {
+public final class KernelRegulator implements CognitiveKernel.RegulatoryBridge {
 
     private final DriveDynamics dynamics;
     private final RegulationController controller;
@@ -31,13 +31,13 @@ final class KernelRegulator implements CognitiveKernel.RegulatoryBridge {
     private List<RegulatoryEvent> lastEvents = List.of();
 
     /** Creates the adapter with the standard dynamics and a wall-clock stamp. */
-    KernelRegulator() {
+    public KernelRegulator() {
         this(DriveDynamics.standard(), new RegulationController(),
                 () -> java.time.Instant.now().toString());
     }
 
     /** Creates the adapter with explicit collaborators, for tests. */
-    KernelRegulator(DriveDynamics dynamics, RegulationController controller,
+    public KernelRegulator(DriveDynamics dynamics, RegulationController controller,
                     Supplier<String> timestamps) {
         this.dynamics = dynamics;
         this.controller = controller;

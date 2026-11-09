@@ -143,9 +143,14 @@ public final class CorpusImport {
      * The claims of a source, and the span of the file each came from.
      *
      * <p>The span is the claim's own location, which the extraction stage
-     * recorded: the segment of the document the claim was read from. A
-     * claim without a span is a claim that cannot be traced, and it is
-     * reported with an empty span rather than with a plausible one.
+     * recorded: the segment of the document the claim was read from, with
+     * the characters of the extracted text it covers. A claim without a
+     * span is a claim that cannot be traced, and it is reported with an
+     * empty span rather than with a plausible one.
+     *
+     * <p>W51 §6: the report used to carry the claim's SUBJECT in the span
+     * column, which is the phrase the sentence is about and not the place
+     * the sentence came from. It carries the context now.
      */
     private static List<ClaimTrace> traces(KnowledgeWorkbench workbench, String workspaceId,
                                            String sourceId) {
@@ -155,7 +160,7 @@ public final class CorpusImport {
                 continue;
             }
             traces.add(new ClaimTrace(claim.id(), claim.proposition(), claim.introducedBySourceId(),
-                    claim.scope()));
+                    claim.context()));
         }
         return traces;
     }

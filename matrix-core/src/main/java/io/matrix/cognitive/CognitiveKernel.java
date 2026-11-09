@@ -13,6 +13,8 @@ import io.matrix.cognitive.microworld.Observation;
 import io.matrix.cognitive.microworld.ObservationDisposition;
 import io.matrix.cognitive.microworld.WorldInput;
 import io.matrix.cognitive.neuromodulation.RegulatoryState;
+import io.matrix.cognitive.worldstate.MicroWorldStateAdapter;
+import io.matrix.cognitive.worldstate.WorldStateMemory;
 import io.matrix.cognitive.neuromodulation.RegulationBias;
 import io.matrix.knowledge.Claim;
 import io.matrix.knowledge.Evidence;
@@ -153,6 +155,30 @@ public final class CognitiveKernel {
         /** One chosen method and the decision that chose it. */
         record Selection(AlgorithmMethod<MicroWorldComputation, Boolean> method,
                          AlgorithmDecision decision) {
+        }
+
+        /**
+         * W51 §5 — runs a method and records what it cost and whether it succeeded.
+         *
+         * <p><b>Why the kernel has to ask for this.</b> The selector scores a method by its
+         * measured cost when the ledger holds a measurement, and by its DECLARED complexity
+         * when it does not. The kernel was the only place where a method is actually run,
+         * and it never recorded anything: the ledger stayed empty for the life of the
+         * process, so every decision in every cycle fell back on the declared complexity and
+         * the system never learned what its methods actually cost. The adapter's own javadoc
+         * promised that "a measurement that is thrown away at the end of the cycle would
+         * mean the selector never learns anything" — and the measurement was thrown away.</p>
+         *
+         * <p>The default runs the body and measures nothing, so an adapter that has no
+         * ledger still works; the one that has a ledger records through it.</p>
+         *
+         * @param methodId the method being run
+         * @param body     the work
+         * @param <T>      what the work produces
+         * @return what the work produced
+         */
+        default <T> T measure(String methodId, java.util.function.Supplier<T> body) {
+            return body.get();
         }
     }
 
@@ -306,6 +332,9 @@ public final class CognitiveKernel {
         String now = timestamps.get();
         LearningTrace.Builder trace = LearningTrace.builder(episodeId, episodeId);
         List<String> notes = new ArrayList<>();
+        // W51 §4 — what the cycle TEACHED, collected as it happens, so that the reflection
+        // at the end names the real things rather than a summary of them.
+        List<String> learned = new ArrayList<>();
         store.startEpisode(episodeId, WORKSPACE_ID, "a cognitive cycle on " + signal.channel(), now);
         listener.at(RequestCheckpoint.EPISODE_OPENED);
 
@@ -350,6 +379,16 @@ public final class CognitiveKernel {
                         + session.quarantinedObservations().size()
                         + " are held as unresolved conflicts; the model holds "
                         + session.survivingHypotheses().size() + " surviving hypothesis(es)");
+        // W51 §4 — the WORLD-STATE MEMORY. It is rebuilt by replaying the durable case
+        // log, so it survives a restart without a database of its own, and it is the
+        // component that answers "do we already know this situation?". The session holds
+        // what the system BELIEVES; this holds what the system SAW.
+        WorldStateMemory world = MicroWorldStateAdapter.replay(WORKSPACE_ID,
+                io.matrix.contract.Provenance.of("cognitive-kernel", now), remembered);
+        trace.step("RESTORE", "WorldStateMemory",
+                "the world state was rebuilt: revision " + world.revision()
+                        + ", " + world.state().entities().size() + " situation(s) known, "
+                        + world.transitions().size() + " transition(s)");
 
         deadline.check("RESTORE");
         // ── 3. READ THE REQUESTED ASSIGNMENT ──────────────────────────────────
@@ -389,13 +428,10 @@ public final class CognitiveKernel {
         // ── 5. SELECT A COMPUTATIONAL METHOD ──────────────────────────────────
         RegulationBias bias = regulator.bias(regulator.state(),
                 DriveSignal.Effect.ALGORITHM_COST_PREFERENCE);
-        boolean alreadyObserved = false;
-        for (Observation seen : remembered) {
-            if (MicroWorldCodec.describe(seen.input()).equals(MicroWorldCodec.describe(requested))) {
-                alreadyObserved = true;
-                break;
-            }
-        }
+        // The world-state memory answers this, not a scan of the case list: the memory and
+        // the estimate it holds cannot drift apart, because they are the same object.
+        boolean alreadyObserved = world.knows(MicroWorldStateAdapter.entityId(requested),
+                MicroWorldStateAdapter.PROPERTY_LAMP);
         Set<String> facts = MicroWorldCodec.facts(requested, alreadyObserved);
         if (session.survivingHypotheses().size() == 1) {
             // The model has settled on exactly one hypothesis. That is the fact the fast path
@@ -426,9 +462,15 @@ public final class CognitiveKernel {
         // ── 6. COMPUTE AND, WHEN THE MODEL IS UNSETTLED, ACT ────────────────
         Boolean computed = null;
         try {
-            computed = selection.method().execute(computation, budget);
+            // W51 §5 — the method's cost is MEASURED, and the measurement goes into the
+            // ledger that the next cycle's selection reads. Without this the cost term of
+            // every decision was the declared complexity, forever.
+            final AlgorithmSelectorBridge.Selection chosen = selection;
+            computed = selector.measure(chosen.method().capability().id(),
+                    () -> chosen.method().execute(computation, budget));
             trace.step("COMPUTE", selection.method().capability().id(),
-                    "the method returned " + computed);
+                    "the method returned " + computed
+                            + "; the cost was measured and recorded in the ledger");
         } catch (RuntimeException e) {
             trace.step("COMPUTE", selection.method().capability().id(),
                     "the method refused: " + e.getMessage());
@@ -501,6 +543,19 @@ public final class CognitiveKernel {
                     "the sandbox answered lamp=" + observed.lamp() + " for "
                             + MicroWorldCodec.describe(probed)
                             + " (" + probeReason + ")");
+            // The world-state memory records what the world DID, with the action that
+            // caused it. The hypothesis space records what the system THINKS; the two are
+            // separate on purpose, and a fact the session later holds as a conflict stays
+            // in the world state because the world really did answer.
+            io.matrix.contract.StateTransition transition = world.apply(
+                    MicroWorldStateAdapter.fact(observed,
+                            io.matrix.contract.StateTransition.Cause.ACTION,
+                            "act-" + episodeId + "-" + probed));
+            trace.step("WORLD", "WorldStateMemory",
+                    "the transition " + transition.id() + " moved the state from "
+                            + transition.fromStateId() + " to " + transition.toStateId()
+                            + "; changed=" + transition.changedProperties()
+                            + "; the state is now at revision " + world.revision());
         }
 
         deadline.check("PROBE");
@@ -559,6 +614,9 @@ public final class CognitiveKernel {
                     episodeId,
                     signal.id());
             observationCommitted = true;
+            learned.add("the observation was written as case " + caseId + " and as evidence on "
+                    + "claim " + model.id() + " (the model "
+                    + (explained ? "explains it" : "does NOT explain it") + ")");
             listener.at(RequestCheckpoint.OBSERVATION_COMMITTED);
             trace.step("OBSERVE", "CognitiveStore",
                     "the outcome was written as case " + caseId
@@ -599,6 +657,8 @@ public final class CognitiveKernel {
                                 + " budget=" + task.budgetWallClockMillis() + "ms"
                                 + " actions=" + task.allowedActions());
                 notes.add("a bounded investigation task was generated: " + task.id());
+                learned.add("the disagreement was recorded as an error and a bounded "
+                        + "investigation task was generated: " + task.id());
             }
         }
 
@@ -612,6 +672,8 @@ public final class CognitiveKernel {
                             + promotion.validationCases() + " INDEPENDENT case(s) — cases the "
                             + "model was not built from");
             notes.add("an independently validated procedure was promoted: " + promotion.id());
+            learned.add("a procedure was promoted after agreeing with the reference on "
+                    + promotion.validationCases() + " independent case(s): " + promotion.id());
         } else {
             trace.step("LEARN", "CognitiveKernel",
                     lastPromotionRefusal == null
@@ -661,8 +723,39 @@ public final class CognitiveKernel {
                 "the regulatory state was persisted at version " + regulatoryVersion
                         + " with " + regulatoryRecords.size() + " event(s) of provenance");
 
-        // ── 10. ANSWER ────────────────────────────────────────────────────────
-        deadline.check("REGULATE");
+        // ── 10. REFLECT ───────────────────────────────────────────────────────
+        // W51 §4 — the reflection. The cycle evaluates ITSELF: what it attempted, which
+        // method it chose and why, what it predicted, what happened, what it learned and
+        // what is still uncertain. The decisions it carries are things that can be carried
+        // out — prefer a method, withdraw a method, leave a proposition unresolved — and
+        // they are produced by the outcome, not by a feeling about the outcome.
+        learned.add("the model holds " + session.survivingHypotheses().size()
+                + " surviving hypothesis(es) over " + remembered.size() + " remembered case(s)");
+        List<String> uncertainties = new ArrayList<>();
+        if (!forecast.unanimous()) {
+            uncertainties.add("the surviving hypotheses disagree: "
+                    + forecast.disagreeingHypothesisIds().size() + " of them");
+        }
+        if (session.quarantinedObservations().size() > 0) {
+            uncertainties.add("the session holds " + session.quarantinedObservations().size()
+                    + " observation(s) as unresolved conflicts");
+        }
+        if (error != null) {
+            uncertainties.add("the prediction and the observation disagree: "
+                    + error.disposition());
+        }
+        io.matrix.contract.Reflection reflection = io.matrix.cognitive.reflection.CycleReflection.of(
+                episodeId, "task-" + episodeId, decision, prediction, error, computed,
+                learned, uncertainties, now);
+        trace.step("REFLECT", "CycleReflection",
+                "the cycle evaluated itself: the method " + reflection.methodId()
+                        + " is " + (reflection.reuseMethod() ? "reusable" : "NOT reusable")
+                        + "; " + reflection.learned().size() + " thing(s) learned; "
+                        + reflection.uncertainties().size() + " uncertainty(ies) remaining; "
+                        + reflection.decisions().size() + " decision(s) produced");
+
+        // ── 11. ANSWER ────────────────────────────────────────────────────────
+        deadline.check("REFLECT");
         String answer = answerFor(forecast, computed, observed, error);
         trace.step("ANSWER", "CognitiveKernel", answer);
         store.closeEpisode(episodeId, now);
@@ -670,7 +763,7 @@ public final class CognitiveKernel {
         LearningTrace completed = persist(trace, episodeId, now);
         listener.at(RequestCheckpoint.OUTCOME_PERSISTED);
         return new CognitiveOutcome(episodeId, CognitiveOutcome.Status.COMPLETED, answer,
-                percept, prediction, error, decision, completed, notes);
+                percept, prediction, error, decision, completed, notes, reflection);
         } catch (CycleTimeoutException timeout) {
             // W45.0. The cycle ran out of its budget. The episode ends, the trace is kept, and
             // the notes say exactly what had already happened — so that a reader can tell an

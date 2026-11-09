@@ -192,6 +192,20 @@ public final class MinimalHttpServer {
             // engine is RealSleepScheduler which is constructed below).
             ProductionBrainClient prod = new ProductionBrainClient(
                 hdcStore, episodicLog, null);
+            // W51: attach the bridge to chain A, when the deployment configures one.
+            // The bridge is OPTIONAL: without it the brain runtime behaves exactly
+            // as it did before this wave, and with it the conclusions of the cycles
+            // are published to chain A as observations with their provenance. The
+            // configuration is read from the same property names the chain A side
+            // reads, and it is fail-closed: without a secret there is no publisher.
+            io.matrix.brain.runtime.bridge.BridgeClientConfiguration bridgeConfig =
+                io.matrix.brain.runtime.bridge.BridgeClientConfiguration
+                    .fromSystemProperties().orElse(null);
+            if (bridgeConfig != null && prod != null) {
+                prod.attachBridge(bridgeConfig.publisher());
+                LOG.log(Level.INFO, "the bridge to chain A is armed at {0} as {1}",
+                    new Object[]{bridgeConfig.endpoint(), bridgeConfig.senderId()});
+            }
             // RECON-W2 D-12: PersistentMind promoted — single knowledge store.
             // Wraps the brain's SimpleKnowledgeBase + a SQLite-backed SqliteMemoryBackend.
             if (prod != null && prod.isAvailable() && hdcStore != null) {

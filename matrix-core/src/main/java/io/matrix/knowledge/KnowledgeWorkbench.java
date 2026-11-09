@@ -636,6 +636,36 @@ public class KnowledgeWorkbench implements AutoCloseable {
                 && demand.demandCoverage() >= QuestionDemand.MINIMUM_DEMAND_COVERAGE) {
             return answer;
         }
+        // THE QUANTITY BOUNDARY (W51 §6).
+        //
+        // A question that asks for a number is answered only when the
+        // evidence states one. The W50 evaluation measured that the
+        // retrieval's coverage floor cannot make that distinction — the
+        // unanswerable "How many tonnes of basalt are produced each year
+        // by the Mid-Atlantic Ridge?" cleared the floor with 0.288 — and
+        // that the workspace then answered a question about a tonnage it
+        // never read. The threshold is named, it is in EpistemicPolicy, and
+        // it says which of the two things the workspace does not have: the
+        // number.
+        if (demand.kind() == QuestionDemand.Kind.QUANTITY) {
+            int stated = QuestionDemand.quantityEvidence(answer.claims());
+            if (stated >= EpistemicPolicy.MINIMUM_QUANTITY_EVIDENCE) {
+                return answer;
+            }
+            String reason = "the question asks for a measured quantity, and none of the "
+                    + answer.claims().size() + " claim(s) this workspace holds about it states "
+                    + "one: a description of the subject is not a measurement of it, and the "
+                    + "question is not answered from one";
+            List<String> limitations = new ArrayList<>(answer.limitations());
+            limitations.add(reason);
+            if (!answer.unmatchedTerms().isEmpty()) {
+                limitations.add("Not covered by the workspace: "
+                        + String.join(", ", answer.unmatchedTerms()));
+            }
+            return new Answer(answer.question(), answer.level(), false, reason, "",
+                    answer.supportScore(), answer.support(), answer.concepts(),
+                    List.of(), List.of(), limitations, answer.gaps(), answer.unmatchedTerms());
+        }
         if (demand.kind() == QuestionDemand.Kind.AMBIGUOUS) {
             List<String> limitations = new ArrayList<>(answer.limitations());
             limitations.add(demand.reason());
@@ -644,7 +674,7 @@ public class KnowledgeWorkbench implements AutoCloseable {
                     demand.reason() + " The system asks rather than guesses: "
                             + demand.clarification(),
                     "", answer.supportScore(), answer.support(), answer.concepts(),
-                    answer.claims(), answer.sources(), limitations, answer.gaps(),
+                    List.of(), List.of(), limitations, answer.gaps(),
                     answer.unmatchedTerms());
         }
         String reason = demand.kind() == QuestionDemand.Kind.KNOWLEDGE
@@ -659,9 +689,17 @@ public class KnowledgeWorkbench implements AutoCloseable {
             limitations.add("Not covered by the workspace: "
                     + String.join(", ", demand.unmatchedTerms()));
         }
+        // W51 §6 — A REFUSAL CITES NOTHING.
+        //
+        // The W50 evaluation measured that an abstention still carried the
+        // claims and the source document the retrieval had found: the
+        // workspace knew what it did not know and answered anyway. A
+        // refusal that carries its evidence is not a refusal — it is an
+        // answer with the statement taken away. The refusal names the
+        // uncovered terms and cites nothing.
         return new Answer(answer.question(), answer.level(), false, reason,
                 "", answer.supportScore(), answer.support(), answer.concepts(),
-                answer.claims(), answer.sources(), limitations, answer.gaps(),
+                List.of(), List.of(), limitations, answer.gaps(),
                 answer.unmatchedTerms());
     }
 
@@ -2127,12 +2165,40 @@ public class KnowledgeWorkbench implements AutoCloseable {
             per.put("representations", store().representations(workspace).size());
             per.put("revisions", store().revisions(workspace).size());
             per.put("assessmentOutcomes", store().outcomeCount(workspace));
+            // W51 §6 — THE BREAKDOWN BY STATUS.
+            //
+            // The count of the claims is not the count that matters: a
+            // workspace of 700 CANDIDATE claims and a workspace of 700
+            // SUPPORTED ones hold the same number of rows and a different
+            // amount of knowledge. The breakdown existed nowhere in the
+            // repository, and it is the number the owner of an epistemic
+            // store asks for first.
+            per.put("claimsByStatus", store().claimStatusCounts(workspace));
             counts.put(workspace, per);
         }
         status.put("counts", counts);
         status.put("integrity", integrity());
         status.put("ok", true);
         return status;
+    }
+
+    /**
+     * W51 §4 — the META-MEMORY: what the system knows about the reliability of its own
+     * knowledge.
+     *
+     * <p>It is computed from the claims and the revisions the store already holds, so it
+     * cannot disagree with them and it survives a restart without anything of its own
+     * being written. It does not decide what is citable — that is the
+     * {@code EpistemicPolicy}'s business, and it is decided by the claim's own status —
+     * it says which sources and which validation methods have been revised often, and
+     * carries the reasons with the numbers.</p>
+     *
+     * @param workspaceId the workspace
+     * @return the reliability of what the workspace holds
+     */
+    public io.matrix.knowledge.meta.KnowledgeReliability reliability(String workspaceId) {
+        return io.matrix.knowledge.meta.KnowledgeReliability.of(store().claims(workspaceId),
+                store().revisions(workspaceId));
     }
 
     /**

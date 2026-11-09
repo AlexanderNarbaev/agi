@@ -240,6 +240,30 @@ public final class PremiseAssessment {
     /** The words that separate one clause from the next. */
     private static final Set<String> CLAUSE_SEPARATORS = Set.of("and", "but", "because");
 
+    /**
+     * The basis of every relation this class reads.
+     *
+     * <p><b>W51 §6 — A LEXICAL CANDIDATE, NOT A DEMONSTRATION.</b> The
+     * relation between a premise and a claim is read from the TEXT of the
+     * two sides: the terms they share and the negations they carry. That is
+     * a candidate for a relation, and it is not a demonstration of one — a
+     * premise that shares terms with a claim is "about the same subject"
+     * whether or not the two mean the same thing.
+     *
+     * <p>The verdict is therefore the honest one: CONTRADICTED when the
+     * contradicting evidence SETTLES the premise, UNRESOLVED when the
+     * workspace holds contradicting accounts that do not settle each
+     * other, SUPPORTED when the workspace states the same thing, and
+     * UNSUPPORTED when nothing bears on the subject. Every reason says
+     * which basis the relation was read on, so that a reader knows that
+     * the verdict rests on a lexical reading and can go and look.
+     */
+    public static final String RELATION_BASIS =
+            "The relation was read from the text of the two sides - the terms they share and the "
+                    + "negations they carry - so it is a lexical candidate and not a demonstration "
+                    + "of meaning: a premise that shares terms with a claim is about the same "
+                    + "subject whether or not the two mean the same thing.";
+
     /** What the assessment did to the workspace: nothing. */
     private static final String NO_CHANGE =
             "The assertion was evaluated against the workspace's stored claims and was not "
@@ -514,7 +538,7 @@ public final class PremiseAssessment {
      * @return the denied clause, or null when the text does not deny the
      *     other side's subject
      */
-    private static String denialAbout(String text, Set<String> otherStems) {
+    static String denialAbout(String text, Set<String> otherStems) {
         for (String fragment : fragmentsOf(text)) {
             if (!denied(fragment)) {
                 continue;
@@ -538,7 +562,7 @@ public final class PremiseAssessment {
      * @return whether at least {@value #MINIMUM_DENIAL_COVERAGE} of the terms
      *     are covered
      */
-    private static boolean covers(Set<String> terms, Set<String> otherStems) {
+    static boolean covers(Set<String> terms, Set<String> otherStems) {
         if (terms.isEmpty()) {
             return false;
         }
@@ -692,14 +716,14 @@ public final class PremiseAssessment {
         return "The workspace contradicts this premise: claim " + ref.claimId() + " of \""
                 + titleOf(ref) + "\" states \"" + ref.proposition() + "\", and the evidence "
                 + "behind that claim contradicts the premise rather than merely failing to "
-                + "support it.";
+                + "support it. " + RELATION_BASIS;
     }
 
     /** The reason a premise is supported. */
     private static String supportedReason(EvidenceRef ref) {
         return "The workspace supports this premise: claim " + ref.claimId() + " of \""
                 + titleOf(ref) + "\" states the same proposition (\"" + ref.proposition()
-                + "\") and carries evidence for it.";
+                + "\") and carries evidence for it. " + RELATION_BASIS;
     }
 
     /** The reason a premise is left unresolved. */
@@ -718,7 +742,8 @@ public final class PremiseAssessment {
                     .append(" of \"").append(titleOf(supporting.get(0)))
                     .append("\" states it as well");
         }
-        reason.append(". The system does not decide between them.");
+        reason.append(". The system does not decide between them. ");
+        reason.append(RELATION_BASIS);
         return reason.toString();
     }
 
@@ -947,7 +972,7 @@ public final class PremiseAssessment {
      * @param text the text
      * @return the terms
      */
-    private static Set<String> distinctiveStems(String text) {
+    static Set<String> distinctiveStems(String text) {
         Set<String> stems = new LinkedHashSet<>();
         TextProfile profile = TextProfiles.ofText(text == null ? "" : text);
         for (String word : wordsOf(text)) {
@@ -1113,7 +1138,7 @@ public final class PremiseAssessment {
      * @param text the text
      * @return whether it denies
      */
-    private static boolean denied(String text) {
+    static boolean denied(String text) {
         if (text == null || text.isBlank()) {
             return false;
         }

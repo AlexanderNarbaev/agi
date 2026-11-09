@@ -25,14 +25,23 @@ public record ExtractedDocument(
         segments = List.copyOf(segments == null ? List.of() : segments);
     }
 
-    /** One located piece of the document. */
+    /**
+     * One located piece of the document.
+     *
+     * @param span W51 §6. The exact region of the extracted text this
+     *     segment covers: characters of the extracted text, the start
+     *     inclusive and the end exclusive. It is null when the extractor
+     *     cannot say — and null means "the whole document", which is
+     *     recorded as such and never as an invented offset.
+     */
     public record Segment(
             String id,
             String text,
             String location,
             int order,
             String heading,
-            String language) {
+            String language,
+            io.matrix.contract.Provenance.Span span) {
 
         public Segment {
             if (id == null || id.isBlank()) {
@@ -41,6 +50,17 @@ public record ExtractedDocument(
             if (text == null) {
                 throw new IllegalArgumentException("a segment must have text");
             }
+        }
+
+        /** A segment whose document gives no exact span. */
+        public Segment(
+                String id,
+                String text,
+                String location,
+                int order,
+                String heading,
+                String language) {
+            this(id, text, location, order, heading, language, null);
         }
     }
 

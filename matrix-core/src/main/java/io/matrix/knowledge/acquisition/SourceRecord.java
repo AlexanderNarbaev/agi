@@ -48,6 +48,15 @@ public record SourceRecord(
     public static final String UNKNOWN = "unknown";
 
     /**
+     * The extent of a source the reader cannot narrow down.
+     *
+     * <p>W51 §6. It is said EXPLICITLY, in the place where a span would be
+     * written, and never as a plausible-looking offset. A source that
+     * cannot say where a piece of text sits says so; it does not guess.
+     */
+    public static final String WHOLE_DOCUMENT = "the whole document";
+
+    /**
      * The builder for a source record.
      *
      * <p>Every field that the document does not state is left absent, and
@@ -62,7 +71,7 @@ public record SourceRecord(
         private String author = UNKNOWN;
         private String publicationDate = UNKNOWN;
         private String importedAt;
-        private String location = "the whole document";
+        private String location = WHOLE_DOCUMENT;
         private String extractedStructure = "plain text";
         private final List<String> pageReferences = new ArrayList<>();
         private double extractionQuality;

@@ -75,13 +75,31 @@ public final class ClaimExtractor {
     private ClaimExtractor() {
     }
 
-    /** One proposed claim. */
+    /**
+     * One proposed claim.
+     *
+     * @param span W51 §6. The exact region of the extracted text the
+     *     proposition was read from, in the convention
+     *     io.matrix.contract.Provenance.Span declares. It is null when the
+     *     document gives no exact span, and null is recorded as such.
+     */
     public record Proposal(
             String proposition,
             String subject,
             String segmentId,
             String location,
-            String language) {
+            String language,
+            io.matrix.contract.Provenance.Span span) {
+
+        /** A proposal from a document that gives no exact span. */
+        public Proposal(
+                String proposition,
+                String subject,
+                String segmentId,
+                String location,
+                String language) {
+            this(proposition, subject, segmentId, location, language, null);
+        }
     }
 
     /**
@@ -99,7 +117,7 @@ public final class ClaimExtractor {
                     continue;
                 }
                 proposals.add(new Proposal(sentence, subject, segment.id(),
-                        segment.location(), segment.language()));
+                        segment.location(), segment.language(), segment.span()));
             }
         }
         return proposals;

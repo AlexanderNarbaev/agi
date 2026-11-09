@@ -91,29 +91,46 @@ public final class TextDocumentExtractor implements DocumentExtractor {
         StringBuilder current = new StringBuilder();
         int order = 0;
         int paragraphStart = 1;
+        int segmentStart = 0;
 
         List<String> lines = List.of(text.split("\n", -1));
         int lineNumber = 0;
+        // The character offset of the line being read. Every line of the
+        // extracted text is followed by a newline except the last, so the
+        // offset of the next line is this one plus the line plus one.
+        //
+        // W51 §6 — EVERY SEGMENT CARRIES ITS SPAN. The offsets are counted
+        // in characters of the EXTRACTED TEXT — the text this class
+        // returns, after the normalisation — the start inclusive and the
+        // end exclusive. The convention is the one
+        // io.matrix.contract.Provenance.Span declares, and the span is
+        // measured rather than approximated: the extractor knows where
+        // every segment begins and ends, because it cut the text itself.
+        int offset = 0;
         for (String line : lines) {
             lineNumber++;
+            int lineStart = offset;
+            offset += line.length() + 1;
             String markdownHeading = markdownHeading(line);
             if (markdownHeading != null) {
                 if (!current.isEmpty()) {
                     segments.add(segmentOf(segments.size(), order++, heading, current.toString(),
-                            paragraphStart, filename));
+                            paragraphStart, filename, segmentStart, lineStart));
                     current.setLength(0);
                 }
                 heading = markdownHeading;
                 paragraphStart = lineNumber;
+                segmentStart = lineStart;
                 continue;
             }
             if (line.isBlank()) {
                 if (!current.isEmpty()) {
                     segments.add(segmentOf(segments.size(), order++, heading, current.toString(),
-                            paragraphStart, filename));
+                            paragraphStart, filename, segmentStart, lineStart));
                     current.setLength(0);
                     paragraphStart = lineNumber + 1;
                 }
+                segmentStart = offset;
                 continue;
             }
             if (!current.isEmpty()) {
@@ -123,7 +140,7 @@ public final class TextDocumentExtractor implements DocumentExtractor {
         }
         if (!current.isEmpty()) {
             segments.add(segmentOf(segments.size(), order++, heading, current.toString(),
-                    paragraphStart, filename));
+                    paragraphStart, filename, segmentStart, offset));
         }
         return segments;
     }
@@ -151,13 +168,18 @@ public final class TextDocumentExtractor implements DocumentExtractor {
     }
 
     private ExtractedDocument.Segment segmentOf(int index, int order, String heading,
-                                                String text, int line, String filename) {
+                                                String text, int line, String filename,
+                                                int spanStart, int spanEnd) {
         String location = heading == null
                 ? filename + ":" + line
                 : filename + ": \"" + heading + "\" (line " + line + ")";
+        io.matrix.contract.Provenance.Span span = spanEnd > spanStart
+                ? new io.matrix.contract.Provenance.Span(spanStart, (long) spanEnd,
+                        io.matrix.contract.Provenance.Span.Unit.CHARACTERS)
+                : null;
         return new ExtractedDocument.Segment(
                 "seg-" + index + "-" + order, text.strip(), location, order, heading,
-                guessLanguage(text));
+                guessLanguage(text), span);
     }
 
     /**

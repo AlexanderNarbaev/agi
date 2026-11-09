@@ -85,6 +85,17 @@ public final class ProductionBrainClient implements BrainCycle {
     private final EpisodicLog episodicLog;
 
     /**
+     * W51: the OPTIONAL bridge to chain A. When it is attached, the conclusion of a cycle
+     * is published to chain A as an OBSERVATION with its provenance — never as a claim, never
+     * as a fact. Chain A holds the only writer of the epistemic store; the bridge adds an
+     * observation and nothing else.
+     *
+     * <p>It is absent unless the deployment configures it, and the brain runtime behaves
+     * exactly as it did before this wave when it is absent.</p>
+     */
+    private volatile io.matrix.brain.runtime.bridge.BridgePublisher bridge;
+
+    /**
      * Episodic writes that failed since the last success. Unit: calls.
      *
      * <p>RECON-W32.26. Non-zero means interactions are being ANSWERED but not LEARNED
@@ -98,6 +109,37 @@ public final class ProductionBrainClient implements BrainCycle {
     /** Default in-memory constructor (used by tests and the gateway default). */
     public ProductionBrainClient() {
         this(null, null, null);
+    }
+
+    /**
+     * W51 — attaches the bridge to chain A.
+     *
+     * <p>The bridge is attached AFTER the client is built, because it is optional and the
+     * client is constructed in several places. A publication that fails is counted and does
+     * not cost the caller their reply: the brain runtime's answer is the product of this
+     * process, and the bridge is a report about it.</p>
+     *
+     * @param publisher the publisher, or {@code null} to detach the bridge
+     */
+    public void attachBridge(io.matrix.brain.runtime.bridge.BridgePublisher publisher) {
+        this.bridge = publisher;
+    }
+
+    /**
+     * W51 — the number of publications that failed.
+     *
+     * <p>Unit: calls. A non-zero value means the conclusions of this process are NOT
+     * reaching chain A's model, and the reason is in the log next to the counter.</p>
+     */
+    private int bridgePublicationFailures = 0;
+
+    /**
+     * W51 — the number of publications that failed.
+     *
+     * @return the count
+     */
+    public int bridgePublicationFailures() {
+        return bridgePublicationFailures;
     }
 
     /** Persistent constructor — pass a {@link PersistentHdcStore} for W2 durability. */
@@ -357,6 +399,11 @@ public final class ProductionBrainClient implements BrainCycle {
                     }
                 }
                 
+                // W51: publish the conclusion to chain A as an observation. The
+                // publication is a REPORT: it says what this process concluded, and
+                // chain A decides what to do with it. It is never a claim.
+                publishToBridge(input, mr);
+
                 return new CycleResult(
                     mr.reply(),
                     mr.confidence(),
@@ -405,6 +452,42 @@ public final class ProductionBrainClient implements BrainCycle {
     }
 
     /** Cache per-modulator and per-stage confidences from the most recent cycle for buildExplain. */
+    /**
+     * W51 — publishes the conclusion of a cycle to chain A, when the bridge is attached.
+     *
+     * <p>A publication that fails is counted and logged once, and never costs the caller
+     * their reply. The bridge is a report about this process; the reply is this process's
+     * product, and a bridge that is down must not take the brain runtime down with it.</p>
+     *
+     * @param input the input the cycle ran on
+     * @param result the result of the cycle
+     */
+    private void publishToBridge(String input, MindResult result) {
+        io.matrix.brain.runtime.bridge.BridgePublisher publisher = this.bridge;
+        if (publisher == null) {
+            return;
+        }
+        try {
+            String requestId = "chain-b-" + java.util.UUID.randomUUID();
+            io.matrix.contract.Observation observation = io.matrix.contract.Observation.ofText(
+                    "obs-" + requestId,
+                    result.reply() == null ? input : result.reply(),
+                    java.time.Instant.now().toString(),
+                    io.matrix.contract.Provenance.of("chain-b", java.time.Instant.now().toString()));
+            publisher.publishObservation(requestId, observation,
+                    io.matrix.contract.Provenance.of("chain-b", java.time.Instant.now().toString()),
+                    java.time.Instant.now().toString());
+            bridgePublicationFailures = 0;
+        } catch (Exception e) {
+            bridgePublicationFailures++;
+            if (bridgePublicationFailures == 1) {
+                LOG.log(java.util.logging.Level.WARNING,
+                    "the bridge publication FAILED: " + e
+                        + " - this conclusion will NOT reach chain A's model", e);
+            }
+        }
+    }
+
     private void cacheExplainConfidences(MindResult mr) {
         // Walk the BRC trace and pick out the stages whose names map to modulator names.
         double ethical = 0.0, safety = 0.0, consistency = 0.0, lie = 0.0;
