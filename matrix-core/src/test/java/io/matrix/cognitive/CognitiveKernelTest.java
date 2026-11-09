@@ -172,40 +172,102 @@ class CognitiveKernelTest {
     }
 
     @Test
-    @DisplayName("the fast path is not used before it has been validated")
-    void theFastPathIsNotUsedBeforeItIsValidated() {
+    @DisplayName("no procedure is written before the model has settled")
+    void noProcedureIsWrittenBeforeTheModelHasSettled() {
         observe("power=1,switch=0");
 
-        assertThat(store.procedures(CognitiveKernel.WORKSPACE_ID)).isEmpty();
+        assertThat(store.procedures(CognitiveKernel.WORKSPACE_ID))
+                .withFailMessage("a procedure is a procedure of a settled model; before "
+                        + "that there is no rule to write down")
+                .isEmpty();
     }
 
     @Test
-    @DisplayName("once the model settles, the fast path is used as a derived shortcut — and "
-            + "NO procedure is promoted, because no independent evidence exists")
-    void onceTheModelSettlesTheFastPathIsSelected() {
+    @DisplayName("once the model settles, the procedure is WRITTEN — and it says that it "
+            + "rests on the model's own cases, not on independent evidence")
+    void onceTheModelSettlesTheProcedureIsWritten() {
         // Four cycles over the four assignments: the model settles on the conjunction.
+        List<CognitiveOutcome> outcomes = new java.util.ArrayList<>();
+        for (int i = 0; i < 8; i++) {
+            outcomes.add(observe("power=" + (i % 2) + ",switch=" + ((i / 2) % 2)));
+        }
+
+        // The cycle in which the model settled is the cycle that wrote the procedure down.
+        CognitiveOutcome writing = outcomes.stream()
+                .filter(outcome -> outcome.trace().phase("LEARN").get(0).detail()
+                        .contains("the procedure") 
+                        && outcome.trace().phase("LEARN").get(0).detail().contains("was written"))
+                .findFirst()
+                .orElseThrow(() -> new AssertionError("no cycle wrote the procedure"));
+        String learn = writing.trace().phase("LEARN").get(0).detail();
+        assertThat(learn).contains("IN_SAMPLE");
+        assertThat(learn).contains("consistency check");
+        assertThat(learn).contains("the model was built from");
+
+        // W53. The procedure is written down: the rule it encodes, the precondition it
+        // applies under, the method it falls back to, and WHAT ITS STANDING RESTS ON.
+        List<io.matrix.cognitive.algorithms.Procedure> procedures =
+                store.procedures(CognitiveKernel.WORKSPACE_ID);
+        assertThat(procedures)
+                .withFailMessage("the settled model writes its procedure down")
+                .isNotEmpty();
+        io.matrix.cognitive.algorithms.Procedure procedure = procedures.get(0);
+        assertThat(procedure.validationKind())
+                .isEqualTo(io.matrix.cognitive.algorithms.ValidationKind.IN_SAMPLE);
+        assertThat(procedure.validated())
+                .withFailMessage("an in-sample agreement is a consistency check, not a "
+                        + "validation, and the record must not call it one")
+                .isFalse();
+        assertThat(procedure.validationCases()).isPositive();
+        assertThat(procedure.validationNote())
+                .withFailMessage("the record says what its standing rests on")
+                .contains("the model was built from");
+        assertThat(procedure.learnedInEpisode()).isNotBlank();
+        assertThat(procedure.referenceAlgorithmId())
+                .isEqualTo(io.matrix.cognitive.MicroWorldReferenceMethod.ID);
+    }
+
+    @Test
+    @DisplayName("a later episode consults the procedure the earlier one wrote, and the "
+            + "trace names it")
+    void aLaterEpisodeConsultsTheProcedureTheEarlierOneWrote() {
+        for (int i = 0; i < 8; i++) {
+            observe("power=" + (i % 2) + ",switch=" + ((i / 2) % 2));
+        }
+        List<io.matrix.cognitive.algorithms.Procedure> written =
+                store.procedures(CognitiveKernel.WORKSPACE_ID);
+        assertThat(written).isNotEmpty();
+        String learnedIn = written.get(0).learnedInEpisode();
+
+        CognitiveOutcome outcome = observe("power=1,switch=0");
+
+        String select = outcome.trace().phase("SELECT").get(0).detail();
+        assertThat(select)
+                .withFailMessage("the trace names the procedure the cycle consulted")
+                .contains("was consulted");
+        assertThat(select).contains(learnedIn);
+        assertThat(outcome.notes())
+                .anyMatch(note -> note.contains("reused from the procedural memory"));
+    }
+
+    @Test
+    @DisplayName("nothing is PROMOTED without independent evidence: the in-sample procedure "
+            + "is not a validated one")
+    void nothingIsPromotedWithoutIndependentEvidence() {
         for (int i = 0; i < 8; i++) {
             observe("power=" + (i % 2) + ",switch=" + ((i / 2) % 2));
         }
 
-        // W45.0. NO procedure is promoted. The lamp world's input domain is four
-        // assignments; a model that has settled has seen all four, so the set of
-        // observations the model was NOT built from is empty, and there is no independent
-        // evidence a promotion could rest on. The W44 wave promoted a procedure here on the
-        // model's OWN data and called the agreement a held-out validation.
-        List<io.matrix.cognitive.algorithms.Procedure> procedures =
-                store.procedures(CognitiveKernel.WORKSPACE_ID);
-        assertThat(procedures)
-                .withFailMessage("nothing may be promoted without independent evidence")
-                .isEmpty();
-
-        // And the refusal says why, in the trace a reader can check.
-        CognitiveOutcome outcome = observe("power=1,switch=0");
-        String learn = outcome.trace().phase("LEARN").get(0).detail();
-        assertThat(learn).contains("no procedure was promoted");
-        assertThat(learn).contains("independent observations are required");
-        assertThat(outcome.notes())
-                .anyMatch(note -> note.contains("not a validated procedure"));
+        // The lamp world's input domain is four assignments; a model that has settled has
+        // seen all four, so the set of observations the model was NOT built from is empty,
+        // and there is no independent evidence a PROMOTION could rest on.
+        for (io.matrix.cognitive.algorithms.Procedure procedure
+                : store.procedures(CognitiveKernel.WORKSPACE_ID)) {
+            assertThat(procedure.validationKind())
+                    .withFailMessage("a procedure promoted without independent evidence")
+                    .isNotEqualTo(io.matrix.cognitive.algorithms.ValidationKind.INDEPENDENT);
+            assertThat(procedure.validated()).isFalse();
+        }
     }
 
     @Test

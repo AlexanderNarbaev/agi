@@ -160,8 +160,8 @@ class W51DemonstrationTest {
         @SuppressWarnings("unchecked")
         List<String> absent = (List<String>) canonical.get("absent");
         assertTrue(absent.containsAll(List.of("Skill", "Procedure")),
-                "the micro-world cannot promote a validated procedure, and the report says so: "
-                        + absent);
+                "in the FIRST cycle the model has not settled, so there is no procedure to "
+                        + "carry, and the report says so: " + absent);
         assertEquals(22, produced.size() + absent.size(),
                 "every contract of the mandate is either produced or named as absent");
 
@@ -173,6 +173,40 @@ class W51DemonstrationTest {
         assertEquals("ACCEPTED", bridge.get("decision"));
         assertEquals(1, ((Number) bridge.get("candidateClaims")).intValue(),
                 "the bridged observation must arrive as exactly one candidate");
+    }
+
+    @SuppressWarnings("unchecked")
+    @Test
+    @DisplayName("W53: the procedure is written when the model settles, and a later cycle "
+            + "consults it")
+    void theProcedureIsWrittenAndReused() throws Exception {
+        Map<String, Object> report = W51Demonstration.run(directory.resolve("procedure"));
+
+        Map<String, Object> procedure = (Map<String, Object>) report.get("procedure");
+        assertNotNull(procedure, "the report must carry the procedure the system learned");
+        assertNotNull(procedure.get("written"), "the procedure must be written down");
+        assertNotNull(procedure.get("learnedInEpisode"), "the procedure must say where it "
+                + "was learned");
+        assertEquals("IN_SAMPLE", procedure.get("validationKind"),
+                "the procedure rests on the model's own cases, and the record says so");
+        assertTrue(((Number) procedure.get("validationCases")).intValue() > 0,
+                "the consistency check must have cases to rest on");
+        assertNotNull(procedure.get("whatItRestsOn"), "the record must say what its standing "
+                + "rests on");
+        assertTrue(String.valueOf(procedure.get("theCycleThatWroteIt")).contains("was written"),
+                "the cycle that wrote the procedure must say so");
+        assertTrue(String.valueOf(procedure.get("theCycleThatConsultedIt"))
+                        .contains("was consulted"),
+                "a later cycle must consult the procedure, and say so");
+
+        // And the mandate's acceptance point 11 now carries the stronger evidence.
+        for (Map<String, Object> point : acceptanceOf(report)) {
+            if (Integer.valueOf(11).equals(point.get("number"))) {
+                assertTrue(String.valueOf(point.get("evidence")).toLowerCase().contains("consult"),
+                        "the reuse of a procedure is the acceptance point 11, and the "
+                                + "evidence must say it: " + point.get("evidence"));
+            }
+        }
     }
 
     @Test

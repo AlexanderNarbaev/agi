@@ -436,6 +436,18 @@ public final class CanonicalCycleBuilder {
                 ? "UNKNOWN" : internal.validationKind().name());
         parameters.put("validationCases", Integer.toString(internal.validationCases()));
         parameters.put("validationAgreement", Double.toString(internal.validationAgreement()));
+        parameters.put("learnedInEpisode", internal.learnedInEpisode() == null
+                ? "" : internal.learnedInEpisode());
+        if (internal.validationNote() != null && !internal.validationNote().isBlank()) {
+            parameters.put("validationNote", internal.validationNote());
+        }
+        // The procedure's OWN provenance: the episode that wrote it, not the episode that
+        // happened to consult it. A procedure that a cycle used is not a procedure that
+        // cycle learned.
+        Provenance own = internal.learnedInEpisode() == null
+                ? provenance
+                : Provenance.of("the cognitive kernel, episode " + internal.learnedInEpisode(),
+                        internal.promotedAt() == null ? at : internal.promotedAt());
         return new Procedure(internal.id(),
                 1,
                 internal.name(),
@@ -446,7 +458,7 @@ public final class CanonicalCycleBuilder {
                 List.of("the method answered the request"),
                 parameters,
                 "the cognitive kernel",
-                provenance);
+                own);
     }
 
     private static Skill skill(CycleFacts facts, Procedure procedure, String at,
@@ -455,19 +467,26 @@ public final class CanonicalCycleBuilder {
         if (internal == null || procedure == null) {
             return null;
         }
-        // A skill is a procedure that has been VALIDATED and may be reused. The record
-        // says the truth either way: the internal procedure knows whether it rests on
-        // independent evidence, and a procedure that does not is NOT marked reusable —
-        // the micro-world's fast path is an in-sample shortcut, and the W45 finding says
-        // so, and the canonical record must say it too.
+        // W53 — REUSE IS A DECISION, NOT A FACT, and the canonical contract says so: the
+        // skill's `reusable` is "the system's own judgement that the procedure should be
+        // offered again", and it is set by what happened. The system's judgement about the
+        // settled-model lookup is that it SHOULD be offered again — it is the fast path,
+        // and the fast path is used — so the skill says so.
+        //
+        // What the skill does NOT say is that the procedure is VALIDATED. That is a
+        // different claim, it is carried by the procedure's own record (the validation
+        // kind, the case count and the note that says what the agreement rests on), and
+        // conflating the two would be exactly the confusion the mandate forbids.
+        List<String> learnedFrom = internal.learnedInEpisode() == null
+                ? List.of(facts.episodeId()) : List.of(internal.learnedInEpisode());
         return new Skill("skill-" + internal.id(),
                 internal.name(),
                 procedure.id(),
                 List.of(),
                 internal.useCount(),
                 Math.max(0, internal.useCount() - internal.failureCount()),
-                internal.validated(),
-                List.of(facts.episodeId()),
+                internal.active(),
+                learnedFrom,
                 1,
                 provenance);
     }

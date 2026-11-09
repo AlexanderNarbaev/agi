@@ -46,12 +46,15 @@ import static org.assertj.core.api.Assertions.assertThat;
  * facts the mapper needs. A contract that only a hand-built fact can fill is not a contract
  * the system has.</p>
  *
- * <p><b>Why the world contradicts itself twice.</b> The procedure and the skill are promoted
- * only when the model has settled AND at least two independent observations — observations
- * the model was not built from — agree with the reference. Independent observations come from
- * disagreements: a world that always agrees leaves the system nothing to validate against.
- * The scenario is therefore part of the acceptance, and it is the scenario the W45
- * contradiction machinery exists for.</p>
+ * <p><b>Why the cycle walks the whole domain (W53).</b> The procedure and the skill come from
+ * the procedural memory, and the memory fills when the model settles — that is, when the
+ * system has observed every assignment the environment has. The test therefore asks about
+ * all four assignments, in order, and lets the system settle on its own; nothing is seeded
+ * into the store. In W52 this test had to SEED a promoted procedure, because the wave's
+ * promotion rule refused to write anything without independent evidence, and the micro-world
+ * cannot produce any. W53 changed the rule: the procedure of the settled model is written
+ * down with the standing it actually has, and the test now proves that the runtime itself
+ * fills the two contracts.</p>
  */
 class CanonicalContractCoverageTest {
 
@@ -88,6 +91,13 @@ class CanonicalContractCoverageTest {
             workbench.close();
         }
     }
+
+    /** The assignments the environment has. */
+    private static final List<String> THE_ASSIGNMENTS = List.of(
+            "{\"power\":false,\"switch\":false}",
+            "{\"power\":false,\"switch\":true}",
+            "{\"power\":true,\"switch\":false}",
+            "{\"power\":true,\"switch\":true}");
 
     /**
      * The world that disagrees twice, so that the system has something to validate against.
@@ -137,45 +147,35 @@ class CanonicalContractCoverageTest {
     @Test
     @DisplayName("the cognitive cycle fills the canonical contracts the mandate names")
     void theCycleFillsTheCanonicalContracts() {
-        ContradictingEnvironment environment = new ContradictingEnvironment(2);
+        MicroWorldEnvironment environment = new LampEnvironment();
         CognitiveKernel kernel = kernel(environment);
 
         List<CognitiveCycle> cycles = new ArrayList<>();
         for (int index = 0; index < 12; index++) {
             CognitiveOutcome outcome = kernel.process(CognitiveSignal.structured(
-                    "sig-canon-" + index, ASSIGNMENT, "the coverage run", index + 1L));
+                    "sig-canon-" + index, THE_ASSIGNMENTS.get(index % THE_ASSIGNMENTS.size()),
+                    "the coverage run", index + 1L));
             if (outcome.canonical() != null) {
                 cycles.add(outcome.canonical());
             }
         }
 
-        // The PROCEDURE and the SKILL come from the procedural memory, and the memory is
-        // seeded through the store's own promotion API. The seed is what the promotion
-        // path itself writes; it is here because the micro-world cannot reach the
-        // promotion on its own — its input domain is exhausted once the model settles,
-        // so the validation set can never hold the two independent observations the
-        // promotion requires. That is the W45 finding, and it is named rather than
-        // worked around: the procedure is written into the memory the way the promotion
-        // writes it, and the cycle then finds it, exactly as it finds a promoted one.
-        store.recordProcedure(CognitiveKernel.WORKSPACE_ID, new io.matrix.cognitive.algorithms.Procedure(
-                CognitiveKernel.PROCEDURE_ID,
-                "the settled-model lookup",
-                CognitiveKernel.FAMILY_MICRO_WORLD,
-                "v1",
-                "the model has settled on exactly one surviving hypothesis",
-                java.util.Set.of(MicroWorldSettledModelMethod.PRECONDITION_MODEL_SETTLED),
-                MicroWorldReferenceMethod.ID,
-                2, 1.0, 3, 0, "2026-11-09T00:00:00Z", null,
-                io.matrix.cognitive.algorithms.ValidationKind.INDEPENDENT));
-        CognitiveOutcome afterSeed = kernel.process(CognitiveSignal.structured(
-                "sig-canon-seeded", ASSIGNMENT, "the coverage run", 99L));
-        assertThat(afterSeed.canonical()).isNotNull();
-        cycles.add(afterSeed.canonical());
-        assertThat(afterSeed.canonical().produced("Procedure")).isTrue();
-        assertThat(afterSeed.canonical().produced("Skill")).isTrue();
-        assertThat(afterSeed.canonical().skill().reusable()).isTrue();
-        assertThat(afterSeed.canonical().procedure().parameters())
-                .containsEntry("validationKind", "INDEPENDENT");
+        // The PROCEDURE and the SKILL come from the procedural memory, and NOTHING was
+        // seeded into it: the system settled on one hypothesis, wrote its procedure down,
+        // and the later cycles found it. That is the W53 acceptance — the two contracts
+        // are filled by the runtime's own record, not by a test's.
+        CognitiveCycle withProcedure = cycles.stream()
+                .filter(cycle -> cycle.produced("Procedure"))
+                .findFirst()
+                .orElseThrow(() -> new AssertionError(
+                        "no cycle carried a procedure: the runtime did not fill the contract"));
+        assertThat(withProcedure.produced("Skill")).isTrue();
+        assertThat(withProcedure.procedure().parameters())
+                .containsEntry("validationKind", "IN_SAMPLE");
+        assertThat(withProcedure.procedure().parameters().get("learnedInEpisode"))
+                .isNotBlank();
+        assertThat(withProcedure.skill().reusable()).isTrue();
+        assertThat(withProcedure.skill().learnedFromEpisodeIds()).isNotEmpty();
 
         // The PLUGIN contract is not produced by a cognitive cycle — it is produced by the
         // plugin registry, which is the runtime path that owns it.

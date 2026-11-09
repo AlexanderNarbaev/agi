@@ -116,11 +116,18 @@ class CanonicalCycleBuilderTest {
     }
 
     @Test
-    @DisplayName("a procedure that was not validated is not marked reusable")
-    void anUnvalidatedProcedureIsNotReusable() {
+    @DisplayName("reuse is a decision, not a fact: an active procedure is offered again, and "
+            + "what its agreement rests on is named in its own record")
+    void reuseIsADecisionNotAFact() {
+        // W53. The canonical contract says: "reusable() is the system's own judgement that
+        // the procedure should be offered again. It is set by what happened, and it can be
+        // withdrawn." The settled-model lookup IS offered again — it is the fast path — so
+        // the skill says so. What the skill does NOT say is that the procedure is
+        // VALIDATED: that is a different claim, and it is carried by the procedure.
         Procedure inSample = new Procedure("proc-1", "the shortcut", "micro-world-outcome",
                 "v1", "the model settled", java.util.Set.of("MODEL_SETTLED"), "the-reference",
-                0, 0.0, 3, 1, AT, null, ValidationKind.IN_SAMPLE);
+                4, 1.0, 3, 1, AT, null, ValidationKind.IN_SAMPLE, "ep-4",
+                "the agreement was measured over the 4 case(s) the model was built from");
 
         CognitiveCycle cycle = CanonicalCycleBuilder.build(new CycleFacts(
                 "ep-5", AT, "sig-5", io.matrix.cognitive.CognitiveSignal.Channel.STRUCTURED,
@@ -129,10 +136,35 @@ class CanonicalCycleBuilderTest {
 
         assertThat(cycle.procedure()).isNotNull();
         assertThat(cycle.procedure().parameters()).containsEntry("validationKind", "IN_SAMPLE");
+        assertThat(cycle.procedure().parameters()).containsEntry("learnedInEpisode", "ep-4");
+        assertThat(cycle.procedure().parameters())
+                .containsEntry("validationNote", inSample.validationNote());
         assertThat(cycle.skill()).isNotNull();
-        assertThat(cycle.skill().reusable()).isFalse();
+        assertThat(cycle.skill().reusable())
+                .withFailMessage("the system offers the settled-model lookup again")
+                .isTrue();
+        assertThat(cycle.skill().learnedFromEpisodeIds()).containsExactly("ep-4");
         assertThat(cycle.skill().attempts()).isEqualTo(3);
         assertThat(cycle.skill().successes()).isEqualTo(2);
+    }
+
+    @Test
+    @DisplayName("a withdrawn procedure is not offered again")
+    void aWithdrawnProcedureIsNotOfferedAgain() {
+        Procedure withdrawn = new Procedure("proc-3", "the shortcut", "micro-world-outcome",
+                "v1", "the model settled", java.util.Set.of("MODEL_SETTLED"), "the-reference",
+                4, 1.0, 3, 1, AT, AT, ValidationKind.IN_SAMPLE, "ep-4",
+                "the agreement was measured over the 4 case(s) the model was built from");
+
+        CognitiveCycle cycle = CanonicalCycleBuilder.build(new CycleFacts(
+                "ep-8", AT, "sig-8", io.matrix.cognitive.CognitiveSignal.Channel.STRUCTURED,
+                "the assignment", null, List.of(), null, null, null, null, null, null,
+                withdrawn, null, null, null));
+
+        assertThat(cycle.skill()).isNotNull();
+        assertThat(cycle.skill().reusable())
+                .withFailMessage("a withdrawn procedure is not offered again")
+                .isFalse();
     }
 
     @Test
@@ -150,6 +182,8 @@ class CanonicalCycleBuilderTest {
         assertThat(cycle.procedure().parameters()).containsEntry("validationKind", "INDEPENDENT");
         assertThat(cycle.procedure().parameters()).containsEntry("validationCases", "2");
         assertThat(cycle.skill().reusable()).isTrue();
+        // The validation's standing is the procedure's own claim, and it is visible here.
+        assertThat(cycle.procedure().parameters()).containsEntry("validationKind", "INDEPENDENT");
     }
 
     @Test
