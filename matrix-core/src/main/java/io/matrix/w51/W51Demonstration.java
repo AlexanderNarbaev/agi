@@ -96,6 +96,13 @@ public final class W51Demonstration {
      */
     public static final int MAX_LEARNING_CYCLES = 8;
 
+    /** The canonical contracts the mandate names, and the coverage test checks. */
+    public static final List<String> CANONICAL_CONTRACTS = List.of(
+            "Entity", "Relation", "Property", "WorldState", "StateTransition", "Event",
+            "Observation", "Evidence", "Belief", "Hypothesis", "Prediction", "Experiment",
+            "Action", "Outcome", "Goal", "Task", "Skill", "Procedure", "Algorithm", "Plugin",
+            "Evaluation", "Reflection");
+
     /** The workspace the bridged records belong to. */
     public static final String BRIDGED_WORKSPACE = "bridged";
 
@@ -276,6 +283,32 @@ public final class W51Demonstration {
                         .map(decision -> decision.kind() + " " + decision.subjectId()
                                 + " — " + decision.rationale()).toList());
                 cycle.put("reflection", reflection);
+            }
+            // W52 §3 — the CANONICAL form of the cycle: the same cycle in the vocabulary
+            // the rest of the system exchanges. The report says which contracts the
+            // runtime filled, because a contract nobody fills is a shape without a
+            // meaning.
+            if (outcome.canonical() != null) {
+                io.matrix.contract.CognitiveCycle canonical = outcome.canonical();
+                Map<String, Object> canonicalSection = new LinkedHashMap<>();
+                canonicalSection.put("id", canonical.id());
+                canonicalSection.put("goal", canonical.goal() == null ? null : canonical.goal().id());
+                canonicalSection.put("task", canonical.task() == null ? null : canonical.task().id());
+                canonicalSection.put("algorithm", canonical.algorithm() == null
+                        ? null : canonical.algorithm().id());
+                canonicalSection.put("hypotheses", canonical.hypotheses().size());
+                canonicalSection.put("entities", canonical.worldState() == null
+                        ? 0 : canonical.worldState().entities().size());
+                canonicalSection.put("relations", canonical.worldState() == null
+                        ? 0 : canonical.worldState().relations().size());
+                canonicalSection.put("properties", canonical.worldState() == null
+                        ? 0 : canonical.worldState().properties().size());
+                canonicalSection.put("transitions", canonical.transitions().size());
+                canonicalSection.put("produced", CANONICAL_CONTRACTS.stream()
+                        .filter(canonical::produced).toList());
+                canonicalSection.put("absent", CANONICAL_CONTRACTS.stream()
+                        .filter(contract -> !canonical.produced(contract)).toList());
+                cycle.put("canonical", canonicalSection);
             }
             report.put("cycle", cycle);
 

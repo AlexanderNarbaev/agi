@@ -25,7 +25,8 @@ public record CognitiveOutcome(
         AlgorithmDecision decision,
         LearningTrace trace,
         List<String> notes,
-        io.matrix.contract.Reflection reflection) {
+        io.matrix.contract.Reflection reflection,
+        io.matrix.contract.CognitiveCycle canonical) {
 
     /** How the cycle ended. */
     public enum Status {
@@ -44,9 +45,9 @@ public record CognitiveOutcome(
     }
 
     /**
-     * The outcome of a cycle that produced no reflection.
+     * The outcome of a cycle that produced no reflection and no canonical form.
      *
-     * <p>W51. The reflection was added to the outcome in the middle of the wave, and the
+     * <p>W51. The reflection was added to the outcome in the middle of that wave, and the
      * callers that construct an outcome for a refusal or an interruption have no reflection
      * to hand: a cycle that never got to the end did not evaluate itself.</p>
      *
@@ -63,7 +64,34 @@ public record CognitiveOutcome(
     public CognitiveOutcome(String episodeId, Status status, String answer, Percept percept,
                             Prediction prediction, ErrorSignal error, AlgorithmDecision decision,
                             LearningTrace trace, List<String> notes) {
-        this(episodeId, status, answer, percept, prediction, error, decision, trace, notes, null);
+        this(episodeId, status, answer, percept, prediction, error, decision, trace, notes,
+                null, null);
+    }
+
+    /**
+     * The outcome of a cycle that produced a reflection but no canonical form.
+     *
+     * <p>W52. The canonical form is added at the end of the wave, and the callers that
+     * construct an outcome for a refusal have neither: a cycle that never got to the end
+     * did not fill the canonical vocabulary either.</p>
+     *
+     * @param episodeId  the episode
+     * @param status     how the cycle ended
+     * @param answer     what the cycle answered
+     * @param percept    what was perceived
+     * @param prediction what was predicted
+     * @param error      the comparison of the prediction with the outcome
+     * @param decision   the method decision
+     * @param trace      the trace of the cycle
+     * @param notes      the notes of the cycle
+     * @param reflection the cycle's reflection
+     */
+    public CognitiveOutcome(String episodeId, Status status, String answer, Percept percept,
+                            Prediction prediction, ErrorSignal error, AlgorithmDecision decision,
+                            LearningTrace trace, List<String> notes,
+                            io.matrix.contract.Reflection reflection) {
+        this(episodeId, status, answer, percept, prediction, error, decision, trace, notes,
+                reflection, null);
     }
 
     /** True when the cycle found a prediction error. */

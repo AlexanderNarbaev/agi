@@ -147,6 +147,24 @@ class W51DemonstrationTest {
         assertTrue(lifecycle.get(0).contains("BUILDING"), lifecycle.get(0));
         assertTrue(lifecycle.get(lifecycle.size() - 1).contains("ACTIVE"),
                 lifecycle.get(lifecycle.size() - 1));
+        Map<String, Object> cycle = (Map<String, Object>) report.get("cycle");
+        Map<String, Object> canonical = (Map<String, Object>) cycle.get("canonical");
+        assertNotNull(canonical, "the report must carry the canonical form of the cycle");
+        @SuppressWarnings("unchecked")
+        List<String> produced = (List<String>) canonical.get("produced");
+        assertTrue(produced.containsAll(List.of("Entity", "Relation", "Property", "WorldState",
+                        "StateTransition", "Event", "Observation", "Evidence", "Belief",
+                        "Hypothesis", "Prediction", "Experiment", "Action", "Outcome", "Goal",
+                        "Task", "Algorithm", "Evaluation", "Reflection")),
+                "the cycle must fill the canonical contracts it can: " + produced);
+        @SuppressWarnings("unchecked")
+        List<String> absent = (List<String>) canonical.get("absent");
+        assertTrue(absent.containsAll(List.of("Skill", "Procedure")),
+                "the micro-world cannot promote a validated procedure, and the report says so: "
+                        + absent);
+        assertEquals(22, produced.size() + absent.size(),
+                "every contract of the mandate is either produced or named as absent");
+
         Map<String, Object> meta = (Map<String, Object>) report.get("metaMemory");
         assertNotNull(meta.get("statusCounts"), "the meta-memory must report what the system holds");
         assertNotNull(meta.get("evaluation"), "the meta-memory must produce an evaluation");

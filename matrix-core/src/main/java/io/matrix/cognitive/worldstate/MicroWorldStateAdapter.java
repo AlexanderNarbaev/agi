@@ -46,6 +46,15 @@ public final class MicroWorldStateAdapter {
     /** The prefix of the entities the adapter produces. */
     public static final String ENTITY_ID_PREFIX = "assign";
 
+    /** The identity of the lamp the micro-world has. */
+    public static final String LAMP_ENTITY_ID = "micro-world.lamp";
+
+    /** The type of the lamp the micro-world has. */
+    public static final String LAMP_ENTITY_TYPE = "micro-world.lamp";
+
+    /** The connection an assignment has with the lamp. */
+    public static final String RELATION_DETERMINES = "determines";
+
     private MicroWorldStateAdapter() {
         throw new AssertionError("no instances");
     }
@@ -88,7 +97,11 @@ public final class MicroWorldStateAdapter {
                 cause,
                 actionId,
                 BeliefStatus.OBSERVED,
-                observation.observedAt());
+                observation.observedAt(),
+                // The DOMAIN knows that the assignment determines the lamp; the system does
+                // not know it until the cases say so. The connection is asserted here and
+                // the memory records it with the system's own evidence.
+                new StateRelation(RELATION_DETERMINES, LAMP_ENTITY_ID, LAMP_ENTITY_TYPE, true));
         // A FAULT-INJECTING probe answers inconsistently on purpose: the answer is a fact
         // about the INSTRUMENT, not about the world. The fact is recorded, because the
         // answer happened, but it does not establish anything about the world.

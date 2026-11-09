@@ -762,8 +762,22 @@ public final class CognitiveKernel {
         listener.at(RequestCheckpoint.EPISODE_CLOSED);
         LearningTrace completed = persist(trace, episodeId, now);
         listener.at(RequestCheckpoint.OUTCOME_PERSISTED);
+        // W52 §3 — the CANONICAL form of the cycle. The runtime holds its own vocabulary —
+        // its own prediction, its own percept, the micro-world's own hypotheses and
+        // experiment — and the canonical vocabulary is the one the rest of the system
+        // exchanges. This is the explicit boundary between them: one named, pure, tested
+        // mapping, and the cycle's outcome carries both.
+        io.matrix.contract.CognitiveCycle canonical =
+                io.matrix.cognitive.canonical.CanonicalCycleBuilder.build(
+                        new io.matrix.cognitive.canonical.CycleFacts(
+                                episodeId, now, signal.id(), signal.channel(),
+                                requested == null ? null
+                                        : MicroWorldCodec.describe(requested),
+                                percept, session.survivingHypotheses(), experiment, prediction,
+                                observed, error, decision, world, procedure, completed,
+                                reflection, selection.method().capability().id()));
         return new CognitiveOutcome(episodeId, CognitiveOutcome.Status.COMPLETED, answer,
-                percept, prediction, error, decision, completed, notes, reflection);
+                percept, prediction, error, decision, completed, notes, reflection, canonical);
         } catch (CycleTimeoutException timeout) {
             // W45.0. The cycle ran out of its budget. The episode ends, the trace is kept, and
             // the notes say exactly what had already happened — so that a reader can tell an
