@@ -345,3 +345,58 @@ Status: **proposed** → **running** по мере реализации RUN 437-
   Open Science Collaboration 2015, *Science* 349(6251), DOI 10.1126/science.aac4716.
   *Статус:* **ОТКРЫТА** — `ProcedureValidator` требует согласия на отложенных случаях, второй
   серии нет.
+
+## W53 — distributed cognition (2026-11-09)
+
+| The hypothesis | What it claims | The status | The evidence |
+|---|---|---|---|
+| **H-129** | a durable inbox and a durable intent are enough to cross two independently owned databases, without a distributed transaction | CONFIRMED in W53 | the peer's inbox: one row after the restart, its `updatedAt` equal to its `createdAt` |
+| **H-130** | a confidence declared by another process is not independent evidence and cannot make a proposition supported | CONFIRMED | `RemoteReportAssessor`; the recorded verdict is `UNRESOLVED` even though every exchange succeeded |
+| **H-131** | information that returned through another process is not independent corroboration | CONFIRMED IN PART | the lineage travels and is compared with what was supplied (`QUALIFIED`); the full propositional predicate is not written |
+| **H-132** | reliability must stay out of the score until the evidence base is representative | OPEN | the direction is recorded in `docs-v2/research/W53-RESEARCH-D-RELIABILITY-CALIBRATION.md`; the estimate does not enter the selector |
+| **H-133** | a delegation without the criterion by which the answer is judged is an open loop | CONFIRMED | the expectation travels in the request's context (`EXPECTATION_KEY`) |
+
+- **H-129**: Соглашение между двумя процессами, каждый со своей базой, **не требует**
+  распределённой транзакции: достаточно долговременного inbox у получателя, долговременного
+  intent у отправителя и идемпотентного эффекта. *Источник:* Gray & Reuter, 1993,
+  *Transaction Processing: Concepts and Techniques*; Kleppmann, 2018, *Designing
+  Data-Intensive Applications*, ch. 11; Lamport, 1998, *Time and Clocks*. *Статус:*
+  **ПОДТВЕРЖДЕНА** в волне W53 — входящий журнал пира, ключ по request id и хэшу полезной
+  нагрузки, повтор возвращает первый результат; доказано в демонстрации двух процессов
+  (`docs-v2/engineering/W53-DISTRIBUTED-DEMONSTRATION.json`: после перезапуска пира в его
+  долговременном инбоксе — **одна** строка на request id, и в ней **один** сохранённый
+  результат; доказательство — счётчик строк и сохранённый результат, а не временные
+  метки: пир пишет один момент на весь запрос, поэтому `updatedAt` равен `createdAt` на
+  каждой строке и ничего не говорит о единственном исполнении). *Что не следует:* ровно-однократное исполнение в
+  распределённом смысле — его нет и не будет без распределённой транзакции.
+- **H-130**: Уверенность, объявленная другим процессом, **не является** независимым
+  доказательством и не может сделать утверждение поддержанным; основа `DECLARED` или
+  `MEASURED` — это заявление о происхождении числа, а не второе наблюдение. *Источник:*
+  Pearl, 1988, *Probabilistic Reasoning in Intelligent Systems*; Hájek, 1997 (coherence and
+  entailment in evidence); Nisbett & Ross, 1981 (*Human Inference*, the
+  source-monitoring errors). *Статус:* **ПОДТВЕРЖДЕНА** — `RemoteReportAssessor` не даёт
+  `SUPPORTED` без собственного свидетельства Chain A; в записанной демонстрации вердикт —
+  `UNRESOLVED` при успешном обмене.
+- **H-131**: Информация, вернувшаяся через другой процесс, **не является** независимой
+  корроборацией: происхождение нужно сохранять через оба направления моста, и отчёт,
+  выведенный из того, что Chain A сам передал, должен быть квалифицирован, а не поддержан.
+  *Источник:* Sperber & Wilson, 1986 (relevance and the anti-occlusion of reasoning);
+  Campagne & Gordon, 2008 (resource-dependent communication); Hutchins, 1995, *The Wizard of
+  Oz* (coordination as a distributed cognitive system). *Статус:* **ПОДТВЕРЖДЕНА ЧАСТИЧНО** —
+  родословна едет и сравнивается с переданным (`QUALIFIED`), но полная предикатная проверка
+  «это утверждение вернулось от меня» не написана.
+- **H-132**: Надёжность метода по нескольким наблюдениям **не должна** входить в счёт
+  до тех пор, пока доказательная база не представительна; Уилсоновская нижняя граница
+  даёт интервал, который при одном наблюдении из одного имеет ширину 0.730 и не различает
+  ничего. *Источник:* Wilson, 1927, *JASA* 22(158); Brown, Cai & DasGupta, 2001,
+  *Statistical Science* 16(2); Gelman, Carlin, Stern & Rubin, 2013 (hierarchical models for
+  the "hockey stick" problem). *Статус:* **ОТКРЫТА** — направление решено и записано
+  (`docs-v2/research/W53-RESEARCH-D-RELIABILITY-CALIBRATION.md`), оценка в счёт селектора не
+  входит; удерживающий набор задач не измерен.
+- **H-133**: Согласованность без центрального управления требует, чтобы запрос нёс
+  **критерий** оценки ответа, а не только задачу: без критерия замыкание петли регулятора
+  отсутствует, и делегирование превращается в открытый контур. *Источник:* Wiener, 1948,
+  *Cybernetics*; Ashby, 1956, *An Introduction to Cybernetics* (requisite variety);
+  Beer, 1972, *Brain as a Metastable Multicomponent System* (the law of requisite variety in
+  the organisation). *Статус:* **ПОДТВЕРЖДЕНА** — ожидание координатора едет в контексте
+  запроса (`EXPECTATION_KEY`), и без него ответ нечем оценивать.

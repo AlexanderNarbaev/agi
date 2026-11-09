@@ -1,0 +1,205 @@
+{
+  "schema": "matrix.w53.distributed-demonstration/v2",
+  "generatedBy": "scripts/w53-distributed-demo.sh",
+  "taskId": "w53-demo-1794256541",
+  "requestId": "req-w53-demo-1794256541",
+  "commit": "375ed3f3b98ab910bc60ebefec0196c93db6fc84",
+  "chainA": {
+    "kind": "quarkus",
+    "port": 9191,
+    "entryPoint": "POST /v1/cognitive/task"
+  },
+  "chainB": {
+    "kind": "jdk-http-server",
+    "port": 8765,
+    "entryPoint": "POST /v1/bridge/task",
+    "mode": "production"
+  },
+  "stages": [
+    {
+      "stage": "TASK_RECEIVED",
+      "process": "chain-a",
+      "status": "OK"
+    },
+    {
+      "stage": "DISPATCH_INTENT_PERSISTED",
+      "process": "chain-a",
+      "status": "OK"
+    },
+    {
+      "stage": "REQUEST_AUTHENTICATED",
+      "process": "chain-b",
+      "status": "OK"
+    },
+    {
+      "stage": "REQUEST_ADMITTED_DURABLY",
+      "process": "chain-b",
+      "status": "OK"
+    },
+    {
+      "stage": "PRODUCTION_COGNITIVE_PATH_EXECUTED",
+      "process": "chain-b",
+      "status": "OK"
+    },
+    {
+      "stage": "RESPONSE_AND_REPORT_SIGNED",
+      "process": "chain-b",
+      "status": "OK"
+    },
+    {
+      "stage": "RESPONSE_VERIFIED",
+      "process": "chain-a",
+      "status": "OK"
+    },
+    {
+      "stage": "REPORT_ADMITTED_AS_CANDIDATE",
+      "process": "chain-a",
+      "status": "OK"
+    },
+    {
+      "stage": "REPORT_EVALUATED",
+      "process": "chain-a",
+      "status": "OK"
+    },
+    {
+      "stage": "DISPOSITION_RECORDED",
+      "process": "chain-a",
+      "status": "OK"
+    },
+    {
+      "stage": "RESTART_AND_REPLAY",
+      "process": "chain-b",
+      "status": "OK"
+    },
+    {
+      "stage": "UNSERVED_CAPABILITY_REFUSED",
+      "process": "chain-b",
+      "status": "OK"
+    },
+    {
+      "stage": "CONFLICTING_PAYLOAD_REFUSED",
+      "process": "chain-a",
+      "status": "OK"
+    },
+    {
+      "stage": "FORGED_REQUEST_REFUSED",
+      "process": "chain-b",
+      "status": "OK"
+    }
+  ],
+  "refusals": {
+    "unservedCapability": {
+      "taskId": "w53-demo-unserved-w53-demo-1794256541",
+      "requestId": "req-w53-demo-unserved-w53-demo-1794256541",
+      "state": "ADJUDICATED",
+      "disposition": "UNRESOLVED",
+      "reason": "the peer did not complete the execution: UNSUPPORTED",
+      "reportDisposition": "ACCEPTED: the message satisfies the contract",
+      "timingsNanos": {
+        "intent_written_nanos": 1054782,
+        "dispatch_nanos": 32208356,
+        "report_admission_nanos": 10474019,
+        "assessment_nanos": 75041,
+        "total_nanos": 45856199
+      }
+    },
+    "conflictingPayload": {
+      "httpStatus": "409",
+      "body": {
+        "conflict": "IMMUTABLE_RECORD",
+        "requestId": "req-w53-demo-1794256541",
+        "taskId": "w53-demo-1794256541",
+        "error": "the request id req-w53-demo-1794256541 is already dispatched"
+      }
+    },
+    "forgedRequest": {
+      "status": "REFUSED",
+      "reason": "the signature does not verify: the signature does not verify under the configured secret",
+      "auditId": "audit-req-w53-forged-3"
+    },
+    "whatTheseShow": [
+      "a capability the peer does not serve is refused by the peer itself, and the refusal travels back as a signed answer — the capability id on the wire reaches no class and no reflection call",
+      "the same request id under a different payload is refused as a conflict: the first dispatch's record stays untouched, and the caller is told the reason",
+      "a forged request is refused because the signature does not verify; the demonstration checks the refusal's reason, so it cannot silently prove something else"
+    ]
+  },
+  "outcome": {
+    "taskId": "w53-demo-1794256541",
+    "requestId": "req-w53-demo-1794256541",
+    "state": "ADJUDICATED",
+    "disposition": "UNRESOLVED",
+    "reason": "the peer's confidence rests on MEASURED, which is not independent evidence, and chain A's own records settle nothing",
+    "reportDisposition": "ACCEPTED: the message satisfies the contract",
+    "timingsNanos": {
+      "intent_written_nanos": 28944644,
+      "dispatch_nanos": 213618606,
+      "report_admission_nanos": 30662893,
+      "assessment_nanos": 4655146,
+      "total_nanos": 315885625
+    }
+  },
+  "durableTrace": {
+    "dispatches": [
+      {
+        "taskId": "w53-demo-1794256541",
+        "requestId": "req-w53-demo-1794256541",
+        "state": "ADJUDICATED",
+        "capabilityId": "brain.cognitive-inference",
+        "remoteResponder": "chain-b-brain-runtime",
+        "remoteStatus": "COMPLETED",
+        "disposition": "UNRESOLVED",
+        "dispositionReason": "the peer's confidence rests on MEASURED, which is not independent evidence, and chain A's own records settle nothing",
+        "reportDisposition": "ACCEPTED: the message satisfies the contract",
+        "createdAt": "2026-11-09T20:35:41.933886739Z",
+        "updatedAt": "2026-11-09T20:35:42.249703915Z"
+      }
+    ],
+    "taskId": "w53-demo-1794256541"
+  },
+  "replayAfterRestart": {
+    "taskId": "w53-demo-1794256541",
+    "requestId": "req-w53-demo-1794256541",
+    "state": "ADJUDICATED",
+    "disposition": "UNRESOLVED",
+    "reason": "the peer's confidence rests on MEASURED, which is not independent evidence, and chain A's own records settle nothing",
+    "reportDisposition": "ACCEPTED: the message satisfies the contract"
+  },
+  "peerDurableInbox": [
+    {
+      "requestId": "req-w53-demo-1794256541",
+      "state": "COMPLETED",
+      "effectCommitted": false,
+      "createdAt": "2026-11-09T20:35:42.088344398Z",
+      "updatedAt": "2026-11-09T20:35:42.088344398Z"
+    },
+    {
+      "requestId": "req-w53-demo-unserved-w53-demo-1794256541",
+      "state": "UNSUPPORTED",
+      "effectCommitted": false,
+      "createdAt": "2026-11-09T20:35:43.583236767Z",
+      "updatedAt": "2026-11-09T20:35:43.583236767Z"
+    }
+  ],
+  "peerDurableInboxForTheTask": [
+    {
+      "requestId": "req-w53-demo-1794256541",
+      "state": "COMPLETED",
+      "effectCommitted": false,
+      "createdAt": "2026-11-09T20:35:42.088344398Z",
+      "updatedAt": "2026-11-09T20:35:42.088344398Z"
+    }
+  ],
+  "whatTheInboxShows": [
+    "one row for THIS request id: the replay after the restart did not create a second row. The inbox also holds the row of the refusal scenario, which is a different request id and was refused, not executed",
+    "the row holds the result of one execution: the replay did not run the task a second time — the evidence is the row count and the stored result, NOT the timestamps (the peer writes one instant for the whole request, so updatedAt equals createdAt on every row and says nothing about a single execution)",
+    "the state is COMPLETED: the first delivery finished the execution and the result is still on disk after the restart"
+  ],
+  "reportAdmission": "ACCEPTED: the message satisfies the contract",
+  "whatThisReportDoesNotClaim": [
+    "it does not claim that the remote answer was correct",
+    "it does not claim that the proposition is established: the remote report is a candidate, and the disposition is chain A's own judgement",
+    "it does not claim distributed exactly-once execution: the delivery is at-least-once with a durable deduplication at the receiver",
+    "it does not claim that the replay did not reach the peer — it claims that the peer's durable inbox did not execute the task a second time",
+    "it does not claim that the refusals were the peer's doing when the peer was not reached: each refusal carries the reason its own receiver gave"
+  ]
+}

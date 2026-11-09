@@ -1,0 +1,121 @@
+{
+  "record": "W53-BASELINE",
+  "version": "1.0",
+  "date": "2026-11-09",
+  "whatThisIs": "The W52 results, reproduced at the commit that opens the W53 wave. Every number here was produced by the command written next to it, on this machine, at this commit.",
+  "commit": "375ed3f3b98ab910bc60ebefec0196c93db6fc84",
+  "branch": "feature/w53-distributed-cognition",
+  "base": {
+    "origin/main": "7709dc9e5ebd3bd641124ad2a3f6bb053ac2dab6",
+    "origin/develop": "375ed3f3b98ab910bc60ebefec0196c93db6fc84",
+    "note": "PR #49 was merged by the owner on 2026-11-09 (7709dc9e); the branch for this wave is cut from origin/develop, which carries the same content as the merged main."
+  },
+  "measurements": [
+    {
+      "area": "the W52 targeted scope (matrix-core)",
+      "command": "JAVA_HOME=$HOME/jdk25 ./gradlew :matrix-core:test --tests \"io.matrix.contract.*\" --tests \"io.matrix.plugin.*\" --tests \"io.matrix.runtime.*\" --tests \"io.matrix.bridge.*\" --tests \"io.matrix.learning.env.*\" --tests \"io.matrix.nativekernel.*\" --tests \"io.matrix.w51.*\" --tests \"io.matrix.safety.*\" --tests \"io.matrix.knowledge.*\" --tests \"io.matrix.benchmark.w51.*\" --tests \"io.matrix.cognitive.*\" --offline",
+      "tests": 1358,
+      "passed": 1358,
+      "failed": 0,
+      "errors": 0,
+      "skipped": 0,
+      "aborted": 0,
+      "evidence": "matrix-core/build/test-results/test/TEST-io.matrix.*.xml (JUnit XML, counted from the files)",
+      "note": "the W52 report recorded 1352 tests at 178e0d8c; the difference is the reusable-procedure wave, which added six tests in the same scopes."
+    },
+    {
+      "area": "the gateway module",
+      "command": "JAVA_HOME=$HOME/jdk25 ./gradlew :matrix-api-gateway:test --offline",
+      "result": "green",
+      "evidence": "matrix-api-gateway/build/test-results/test/*.xml"
+    },
+    {
+      "area": "the chain isolation gate",
+      "command": "bash scripts/w45-chain-isolation-check.sh",
+      "checks": 25,
+      "failed": 0
+    },
+    {
+      "area": "the isolation negative control",
+      "command": "bash scripts/w45-chain-isolation-selftest.sh",
+      "checks": 12,
+      "failed": 0
+    },
+    {
+      "area": "the quality gate",
+      "command": "bash scripts/quality-gate.sh",
+      "literalCandidates": 271,
+      "baseline": 271,
+      "result": "PASS"
+    },
+    {
+      "area": "the capability registry",
+      "command": "python3 scripts/validate-project-registry.py --strict",
+      "capabilities": 55,
+      "fieldsPerRecord": 24,
+      "defects": 0
+    },
+    {
+      "area": "the project state",
+      "command": "python3 scripts/validate-project-state.py --strict",
+      "defects": 0
+    },
+    {
+      "area": "the epistemic evaluation",
+      "command": "python3 scripts/w51-epistemic-eval.py --work /tmp/w53-eval-base --report <report>",
+      "passed": 18,
+      "total": 29,
+      "byCategory": {
+        "answerable": {
+          "passed": 2,
+          "failed": 6
+        },
+        "unanswerable": {
+          "passed": 6,
+          "failed": 0
+        },
+        "false-premise": {
+          "passed": 4,
+          "failed": 1
+        },
+        "multi-claim": {
+          "passed": 1,
+          "failed": 2
+        },
+        "knows-what-it-does-not-know": {
+          "passed": 2,
+          "failed": 0
+        },
+        "revision": {
+          "passed": 3,
+          "failed": 2
+        }
+      },
+      "failures": [
+        "A-02",
+        "A-04",
+        "A-05",
+        "A-06",
+        "F-02",
+        "M-01",
+        "M-03",
+        "P-01",
+        "P-02",
+        "R-04",
+        "R-05"
+      ],
+      "evidence": "docs-v2/engineering/W52-EPISTEMIC-EVALUATION.json holds the same run's numbers; the W53 base reproduces them exactly."
+    }
+  ],
+  "ci": {
+    "pullRequest": 49,
+    "state": "MERGED by the owner on 2026-11-09",
+    "mergeCommit": "7709dc9e5ebd3bd641124ad2a3f6bb053ac2dab6",
+    "note": "the wave does not modify PR #49; the W53 work is cut onto feature/w53-distributed-cognition."
+  },
+  "whatThisBaselineDoesNotClaim": [
+    "it does not claim that the full repository test suite was run — the owner-approved scope is the one written above",
+    "it does not claim the native build or the security scan is green — those were red at the W52 base and are inherited",
+    "it does not claim that 18 of 29 is good enough — the eleven failures are named, with their causes, in the W52 and W53 reports"
+  ]
+}

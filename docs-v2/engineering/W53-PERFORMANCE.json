@@ -1,0 +1,860 @@
+{
+  "schema": "matrix.w53.distributed-performance/v1",
+  "generatedBy": "scripts/w53-distributed-benchmark.sh",
+  "commit": "375ed3f3b98ab910bc60ebefec0196c93db6fc84",
+  "environment": {
+    "os": "Ubuntu 26.04.1 LTS",
+    "jdk": "openjdk version \"25.0.4.1\" 2026-08-18",
+    "hardware": "x86_64",
+    "jvmArguments": "the default of the Quarkus fast-jar and of the gateway's start script"
+  },
+  "workload": {
+    "tasks": 30,
+    "concurrency": 1,
+    "runStamp": "1794244482-780065",
+    "requestIds": "w53-bench-<runStamp>-<index> — unique per run, because chain A's cognitive database is persistent and a request id is the identity of a dispatch",
+    "payloadSize": "one sentence of input and one expectation",
+    "seed": "none — the workload has no randomness",
+    "procedure": "the tasks go through POST /v1/cognitive/task on chain A, as many at a time as the concurrency allows; the latency is the client's round trip, the stage times are chain A's own monotonic measurements of the parts it can time"
+  },
+  "endToEndMillis": {
+    "p50": 20.769,
+    "p95": 28.247,
+    "p99": 330.835,
+    "min": 16.339,
+    "max": 330.835,
+    "mean": 31.416166666666665
+  },
+  "throughputTasksPerSecond": 31.830745316901595,
+  "stagesMillis": {
+    "assessment_nanos": {
+      "p50": 0.010419,
+      "p95": 0.033743,
+      "count": 30
+    },
+    "dispatch_nanos": {
+      "p50": 6.595286,
+      "p95": 12.517652,
+      "count": 30
+    },
+    "intent_written_nanos": {
+      "p50": 0.813093,
+      "p95": 1.266729,
+      "count": 30
+    },
+    "report_admission_nanos": {
+      "p50": 7.651507,
+      "p95": 12.35751,
+      "count": 30
+    },
+    "total_nanos": {
+      "p50": 17.233484,
+      "p95": 24.835326,
+      "count": 30
+    }
+  },
+  "stageMeanings": {
+    "intent_written_nanos": "chain A: the durable dispatch intent, written before the send",
+    "dispatch_nanos": "chain A: signing the request, the network round trip, chain B's authentication, its durable inbox write, the production inference, the signed answer and its verification",
+    "report_admission_nanos": "chain A: the report entering the epistemic model through chain A's own bridge receiver",
+    "assessment_nanos": "chain A: the epistemic evaluation of the answer",
+    "total_nanos": "chain A: the whole task, as chain A can see it"
+  },
+  "whatThisReportDoesNotClaim": [
+    "it does not claim a p99 from a sample of this size",
+    "it does not separate chain B's stages from the network round trip — chain A times the crossing as one interval, because the stages inside the peer are the peer's to measure",
+    "it does not claim that these numbers are comparable with a run on another machine",
+    "no optimization was accepted on the strength of this run alone"
+  ],
+  "samples": [
+    {
+      "index": 1,
+      "disposition": "UNRESOLVED",
+      "state": "ADJUDICATED",
+      "timingsNanos": {
+        "intent_written_nanos": 53960071,
+        "dispatch_nanos": 173270729,
+        "report_admission_nanos": 28214608,
+        "assessment_nanos": 285008,
+        "total_nanos": 302436790
+      }
+    },
+    {
+      "index": 2,
+      "disposition": "UNRESOLVED",
+      "state": "ADJUDICATED",
+      "timingsNanos": {
+        "intent_written_nanos": 1121385,
+        "dispatch_nanos": 9459766,
+        "report_admission_nanos": 11309284,
+        "assessment_nanos": 15239,
+        "total_nanos": 23113270
+      }
+    },
+    {
+      "index": 3,
+      "disposition": "UNRESOLVED",
+      "state": "ADJUDICATED",
+      "timingsNanos": {
+        "intent_written_nanos": 966843,
+        "dispatch_nanos": 12517652,
+        "report_admission_nanos": 9672978,
+        "assessment_nanos": 13315,
+        "total_nanos": 24835326
+      }
+    },
+    {
+      "index": 4,
+      "disposition": "UNRESOLVED",
+      "state": "ADJUDICATED",
+      "timingsNanos": {
+        "intent_written_nanos": 833942,
+        "dispatch_nanos": 8258271,
+        "report_admission_nanos": 9972813,
+        "assessment_nanos": 12394,
+        "total_nanos": 20326375
+      }
+    },
+    {
+      "index": 5,
+      "disposition": "UNRESOLVED",
+      "state": "ADJUDICATED",
+      "timingsNanos": {
+        "intent_written_nanos": 1161961,
+        "dispatch_nanos": 9215386,
+        "report_admission_nanos": 7889957,
+        "assessment_nanos": 7424,
+        "total_nanos": 19398887
+      }
+    },
+    {
+      "index": 6,
+      "disposition": "UNRESOLVED",
+      "state": "ADJUDICATED",
+      "timingsNanos": {
+        "intent_written_nanos": 625799,
+        "dispatch_nanos": 7355369,
+        "report_admission_nanos": 7576495,
+        "assessment_nanos": 11581,
+        "total_nanos": 16924530
+      }
+    },
+    {
+      "index": 7,
+      "disposition": "UNRESOLVED",
+      "state": "ADJUDICATED",
+      "timingsNanos": {
+        "intent_written_nanos": 794758,
+        "dispatch_nanos": 9548032,
+        "report_admission_nanos": 7407867,
+        "assessment_nanos": 10039,
+        "total_nanos": 18978764
+      }
+    },
+    {
+      "index": 8,
+      "disposition": "UNRESOLVED",
+      "state": "ADJUDICATED",
+      "timingsNanos": {
+        "intent_written_nanos": 788106,
+        "dispatch_nanos": 8859885,
+        "report_admission_nanos": 11406367,
+        "assessment_nanos": 14858,
+        "total_nanos": 22484764
+      }
+    },
+    {
+      "index": 9,
+      "disposition": "UNRESOLVED",
+      "state": "ADJUDICATED",
+      "timingsNanos": {
+        "intent_written_nanos": 813093,
+        "dispatch_nanos": 7845222,
+        "report_admission_nanos": 12357510,
+        "assessment_nanos": 16150,
+        "total_nanos": 22197182
+      }
+    },
+    {
+      "index": 10,
+      "disposition": "UNRESOLVED",
+      "state": "ADJUDICATED",
+      "timingsNanos": {
+        "intent_written_nanos": 707003,
+        "dispatch_nanos": 7338286,
+        "report_admission_nanos": 7078196,
+        "assessment_nanos": 7725,
+        "total_nanos": 16227677
+      }
+    },
+    {
+      "index": 11,
+      "disposition": "UNRESOLVED",
+      "state": "ADJUDICATED",
+      "timingsNanos": {
+        "intent_written_nanos": 566718,
+        "dispatch_nanos": 6574206,
+        "report_admission_nanos": 7983733,
+        "assessment_nanos": 8176,
+        "total_nanos": 16169467
+      }
+    },
+    {
+      "index": 12,
+      "disposition": "UNRESOLVED",
+      "state": "ADJUDICATED",
+      "timingsNanos": {
+        "intent_written_nanos": 547262,
+        "dispatch_nanos": 6285191,
+        "report_admission_nanos": 6848743,
+        "assessment_nanos": 7094,
+        "total_nanos": 14856281
+      }
+    },
+    {
+      "index": 13,
+      "disposition": "UNRESOLVED",
+      "state": "ADJUDICATED",
+      "timingsNanos": {
+        "intent_written_nanos": 830476,
+        "dispatch_nanos": 6569046,
+        "report_admission_nanos": 8545513,
+        "assessment_nanos": 33743,
+        "total_nanos": 20090591
+      }
+    },
+    {
+      "index": 14,
+      "disposition": "UNRESOLVED",
+      "state": "ADJUDICATED",
+      "timingsNanos": {
+        "intent_written_nanos": 1075168,
+        "dispatch_nanos": 6946647,
+        "report_admission_nanos": 10914129,
+        "assessment_nanos": 18675,
+        "total_nanos": 20250072
+      }
+    },
+    {
+      "index": 15,
+      "disposition": "UNRESOLVED",
+      "state": "ADJUDICATED",
+      "timingsNanos": {
+        "intent_written_nanos": 807833,
+        "dispatch_nanos": 6526305,
+        "report_admission_nanos": 10536347,
+        "assessment_nanos": 7654,
+        "total_nanos": 19011526
+      }
+    },
+    {
+      "index": 16,
+      "disposition": "UNRESOLVED",
+      "state": "ADJUDICATED",
+      "timingsNanos": {
+        "intent_written_nanos": 716811,
+        "dispatch_nanos": 8170936,
+        "report_admission_nanos": 7729384,
+        "assessment_nanos": 10419,
+        "total_nanos": 17796856
+      }
+    },
+    {
+      "index": 17,
+      "disposition": "UNRESOLVED",
+      "state": "ADJUDICATED",
+      "timingsNanos": {
+        "intent_written_nanos": 862196,
+        "dispatch_nanos": 6284420,
+        "report_admission_nanos": 7187391,
+        "assessment_nanos": 7754,
+        "total_nanos": 15503682
+      }
+    },
+    {
+      "index": 18,
+      "disposition": "UNRESOLVED",
+      "state": "ADJUDICATED",
+      "timingsNanos": {
+        "intent_written_nanos": 706823,
+        "dispatch_nanos": 6397633,
+        "report_admission_nanos": 6848784,
+        "assessment_nanos": 8827,
+        "total_nanos": 15056769
+      }
+    },
+    {
+      "index": 19,
+      "disposition": "UNRESOLVED",
+      "state": "ADJUDICATED",
+      "timingsNanos": {
+        "intent_written_nanos": 1202988,
+        "dispatch_nanos": 6920910,
+        "report_admission_nanos": 6877027,
+        "assessment_nanos": 8726,
+        "total_nanos": 16562899
+      }
+    },
+    {
+      "index": 20,
+      "disposition": "UNRESOLVED",
+      "state": "ADJUDICATED",
+      "timingsNanos": {
+        "intent_written_nanos": 1061431,
+        "dispatch_nanos": 6021814,
+        "report_admission_nanos": 7341542,
+        "assessment_nanos": 11641,
+        "total_nanos": 15725240
+      }
+    },
+    {
+      "index": 21,
+      "disposition": "UNRESOLVED",
+      "state": "ADJUDICATED",
+      "timingsNanos": {
+        "intent_written_nanos": 900868,
+        "dispatch_nanos": 5641677,
+        "report_admission_nanos": 7651507,
+        "assessment_nanos": 12183,
+        "total_nanos": 15379357
+      }
+    },
+    {
+      "index": 22,
+      "disposition": "UNRESOLVED",
+      "state": "ADJUDICATED",
+      "timingsNanos": {
+        "intent_written_nanos": 1266729,
+        "dispatch_nanos": 6683712,
+        "report_admission_nanos": 8136091,
+        "assessment_nanos": 11121,
+        "total_nanos": 17233484
+      }
+    },
+    {
+      "index": 23,
+      "disposition": "UNRESOLVED",
+      "state": "ADJUDICATED",
+      "timingsNanos": {
+        "intent_written_nanos": 806631,
+        "dispatch_nanos": 6073852,
+        "report_admission_nanos": 9648022,
+        "assessment_nanos": 11432,
+        "total_nanos": 17638337
+      }
+    },
+    {
+      "index": 24,
+      "disposition": "UNRESOLVED",
+      "state": "ADJUDICATED",
+      "timingsNanos": {
+        "intent_written_nanos": 1178642,
+        "dispatch_nanos": 6595286,
+        "report_admission_nanos": 7117420,
+        "assessment_nanos": 9378,
+        "total_nanos": 16121948
+      }
+    },
+    {
+      "index": 25,
+      "disposition": "UNRESOLVED",
+      "state": "ADJUDICATED",
+      "timingsNanos": {
+        "intent_written_nanos": 1125963,
+        "dispatch_nanos": 6556893,
+        "report_admission_nanos": 7184617,
+        "assessment_nanos": 9428,
+        "total_nanos": 16125535
+      }
+    },
+    {
+      "index": 26,
+      "disposition": "UNRESOLVED",
+      "state": "ADJUDICATED",
+      "timingsNanos": {
+        "intent_written_nanos": 709478,
+        "dispatch_nanos": 6367586,
+        "report_admission_nanos": 6837261,
+        "assessment_nanos": 6873,
+        "total_nanos": 14937224
+      }
+    },
+    {
+      "index": 27,
+      "disposition": "UNRESOLVED",
+      "state": "ADJUDICATED",
+      "timingsNanos": {
+        "intent_written_nanos": 600923,
+        "dispatch_nanos": 5891167,
+        "report_admission_nanos": 7116478,
+        "assessment_nanos": 7884,
+        "total_nanos": 14695909
+      }
+    },
+    {
+      "index": 28,
+      "disposition": "UNRESOLVED",
+      "state": "ADJUDICATED",
+      "timingsNanos": {
+        "intent_written_nanos": 594120,
+        "dispatch_nanos": 5529726,
+        "report_admission_nanos": 6836911,
+        "assessment_nanos": 7985,
+        "total_nanos": 14008713
+      }
+    },
+    {
+      "index": 29,
+      "disposition": "UNRESOLVED",
+      "state": "ADJUDICATED",
+      "timingsNanos": {
+        "intent_written_nanos": 668832,
+        "dispatch_nanos": 6123576,
+        "report_admission_nanos": 9847467,
+        "assessment_nanos": 14407,
+        "total_nanos": 17977447
+      }
+    },
+    {
+      "index": 30,
+      "disposition": "UNRESOLVED",
+      "state": "ADJUDICATED",
+      "timingsNanos": {
+        "intent_written_nanos": 1127125,
+        "dispatch_nanos": 7246583,
+        "report_admission_nanos": 7634795,
+        "assessment_nanos": 18565,
+        "total_nanos": 17421708
+      }
+    }
+  ],
+  "concurrentRun": {
+    "schema": "matrix.w53.distributed-performance/v1",
+    "generatedBy": "scripts/w53-distributed-benchmark.sh",
+    "commit": "375ed3f3b98ab910bc60ebefec0196c93db6fc84",
+    "environment": {
+      "os": "Ubuntu 26.04.1 LTS",
+      "jdk": "openjdk version \"25.0.4.1\" 2026-08-18",
+      "hardware": "x86_64",
+      "jvmArguments": "the default of the Quarkus fast-jar and of the gateway's start script"
+    },
+    "workload": {
+      "tasks": 24,
+      "concurrency": 4,
+      "runStamp": "1794244219-778963",
+      "requestIds": "w53-bench-<runStamp>-<index> — unique per run, because chain A's cognitive database is persistent and a request id is the identity of a dispatch",
+      "payloadSize": "one sentence of input and one expectation",
+      "seed": "none — the workload has no randomness",
+      "procedure": "the tasks go through POST /v1/cognitive/task on chain A, as many at a time as the concurrency allows; the latency is the client's round trip, the stage times are chain A's own monotonic measurements of the parts it can time"
+    },
+    "endToEndMillis": {
+      "p50": 36.306,
+      "p95": 358.464,
+      "p99": 358.829,
+      "min": 24.525000000000002,
+      "max": 358.829,
+      "mean": 89.62774999999999
+    },
+    "throughputTasksPerSecond": 11.15725877309204,
+    "stagesMillis": {
+      "assessment_nanos": {
+        "p50": 0.011452,
+        "p95": 0.028243,
+        "count": 24
+      },
+      "dispatch_nanos": {
+        "p50": 10.483462,
+        "p95": 198.504804,
+        "count": 24
+      },
+      "intent_written_nanos": {
+        "p50": 1.968543,
+        "p95": 57.935985,
+        "count": 24
+      },
+      "report_admission_nanos": {
+        "p50": 15.336243,
+        "p95": 41.627718,
+        "count": 24
+      },
+      "total_nanos": {
+        "p50": 33.015697,
+        "p95": 335.993705,
+        "count": 24
+      }
+    },
+    "stageMeanings": {
+      "intent_written_nanos": "chain A: the durable dispatch intent, written before the send",
+      "dispatch_nanos": "chain A: signing the request, the network round trip, chain B's authentication, its durable inbox write, the production inference, the signed answer and its verification",
+      "report_admission_nanos": "chain A: the report entering the epistemic model through chain A's own bridge receiver",
+      "assessment_nanos": "chain A: the epistemic evaluation of the answer",
+      "total_nanos": "chain A: the whole task, as chain A can see it"
+    },
+    "whatThisReportDoesNotClaim": [
+      "it does not claim a p99 from a sample of this size",
+      "it does not separate chain B's stages from the network round trip — chain A times the crossing as one interval, because the stages inside the peer are the peer's to measure",
+      "it does not claim that these numbers are comparable with a run on another machine",
+      "no optimization was accepted on the strength of this run alone"
+    ],
+    "samples": [
+      {
+        "index": 2,
+        "disposition": "UNRESOLVED",
+        "state": "ADJUDICATED",
+        "timingsNanos": {
+          "intent_written_nanos": 57245353,
+          "dispatch_nanos": 198504804,
+          "report_admission_nanos": 30674812,
+          "assessment_nanos": 320083,
+          "total_nanos": 327799090
+        }
+      },
+      {
+        "index": 4,
+        "disposition": "UNRESOLVED",
+        "state": "ADJUDICATED",
+        "timingsNanos": {
+          "intent_written_nanos": 56566012,
+          "dispatch_nanos": 199214042,
+          "report_admission_nanos": 42151016,
+          "assessment_nanos": 7384,
+          "total_nanos": 337936349
+        }
+      },
+      {
+        "index": 3,
+        "disposition": "UNRESOLVED",
+        "state": "ADJUDICATED",
+        "timingsNanos": {
+          "intent_written_nanos": 58552478,
+          "dispatch_nanos": 197254597,
+          "report_admission_nanos": 33248485,
+          "assessment_nanos": 12494,
+          "total_nanos": 331529225
+        }
+      },
+      {
+        "index": 1,
+        "disposition": "UNRESOLVED",
+        "state": "ADJUDICATED",
+        "timingsNanos": {
+          "intent_written_nanos": 57935985,
+          "dispatch_nanos": 197869797,
+          "report_admission_nanos": 41627718,
+          "assessment_nanos": 10380,
+          "total_nanos": 335993705
+        }
+      },
+      {
+        "index": 8,
+        "disposition": "UNRESOLVED",
+        "state": "ADJUDICATED",
+        "timingsNanos": {
+          "intent_written_nanos": 1419999,
+          "dispatch_nanos": 26458229,
+          "report_admission_nanos": 9679315,
+          "assessment_nanos": 10980,
+          "total_nanos": 39393105
+        }
+      },
+      {
+        "index": 5,
+        "disposition": "UNRESOLVED",
+        "state": "ADJUDICATED",
+        "timingsNanos": {
+          "intent_written_nanos": 2435874,
+          "dispatch_nanos": 25433917,
+          "report_admission_nanos": 12742772,
+          "assessment_nanos": 11452,
+          "total_nanos": 43560654
+        }
+      },
+      {
+        "index": 6,
+        "disposition": "UNRESOLVED",
+        "state": "ADJUDICATED",
+        "timingsNanos": {
+          "intent_written_nanos": 1961329,
+          "dispatch_nanos": 26068635,
+          "report_admission_nanos": 15336243,
+          "assessment_nanos": 7775,
+          "total_nanos": 47822722
+        }
+      },
+      {
+        "index": 7,
+        "disposition": "UNRESOLVED",
+        "state": "ADJUDICATED",
+        "timingsNanos": {
+          "intent_written_nanos": 902613,
+          "dispatch_nanos": 27112814,
+          "report_admission_nanos": 19616987,
+          "assessment_nanos": 8926,
+          "total_nanos": 51635714
+        }
+      },
+      {
+        "index": 12,
+        "disposition": "UNRESOLVED",
+        "state": "ADJUDICATED",
+        "timingsNanos": {
+          "intent_written_nanos": 2747893,
+          "dispatch_nanos": 9120882,
+          "report_admission_nanos": 11231132,
+          "assessment_nanos": 13115,
+          "total_nanos": 24553277
+        }
+      },
+      {
+        "index": 10,
+        "disposition": "UNRESOLVED",
+        "state": "ADJUDICATED",
+        "timingsNanos": {
+          "intent_written_nanos": 2281162,
+          "dispatch_nanos": 9607630,
+          "report_admission_nanos": 13780700,
+          "assessment_nanos": 11612,
+          "total_nanos": 28147466
+        }
+      },
+      {
+        "index": 9,
+        "disposition": "UNRESOLVED",
+        "state": "ADJUDICATED",
+        "timingsNanos": {
+          "intent_written_nanos": 1162092,
+          "dispatch_nanos": 10717493,
+          "report_admission_nanos": 18093163,
+          "assessment_nanos": 13806,
+          "total_nanos": 32790532
+        }
+      },
+      {
+        "index": 11,
+        "disposition": "UNRESOLVED",
+        "state": "ADJUDICATED",
+        "timingsNanos": {
+          "intent_written_nanos": 1754198,
+          "dispatch_nanos": 10130356,
+          "report_admission_nanos": 18715437,
+          "assessment_nanos": 7043,
+          "total_nanos": 33926214
+        }
+      },
+      {
+        "index": 13,
+        "disposition": "UNRESOLVED",
+        "state": "ADJUDICATED",
+        "timingsNanos": {
+          "intent_written_nanos": 2130588,
+          "dispatch_nanos": 9559930,
+          "report_admission_nanos": 9413905,
+          "assessment_nanos": 9007,
+          "total_nanos": 22728335
+        }
+      },
+      {
+        "index": 15,
+        "disposition": "UNRESOLVED",
+        "state": "ADJUDICATED",
+        "timingsNanos": {
+          "intent_written_nanos": 988705,
+          "dispatch_nanos": 10714998,
+          "report_admission_nanos": 12162838,
+          "assessment_nanos": 6682,
+          "total_nanos": 26172961
+        }
+      },
+      {
+        "index": 14,
+        "disposition": "UNRESOLVED",
+        "state": "ADJUDICATED",
+        "timingsNanos": {
+          "intent_written_nanos": 2665026,
+          "dispatch_nanos": 9062292,
+          "report_admission_nanos": 14722206,
+          "assessment_nanos": 5680,
+          "total_nanos": 29754887
+        }
+      },
+      {
+        "index": 16,
+        "disposition": "UNRESOLVED",
+        "state": "ADJUDICATED",
+        "timingsNanos": {
+          "intent_written_nanos": 1505579,
+          "dispatch_nanos": 10212009,
+          "report_admission_nanos": 18790599,
+          "assessment_nanos": 12083,
+          "total_nanos": 33015697
+        }
+      },
+      {
+        "index": 20,
+        "disposition": "UNRESOLVED",
+        "state": "ADJUDICATED",
+        "timingsNanos": {
+          "intent_written_nanos": 1841533,
+          "dispatch_nanos": 9665829,
+          "report_admission_nanos": 8628714,
+          "assessment_nanos": 8456,
+          "total_nanos": 21454673
+        }
+      },
+      {
+        "index": 19,
+        "disposition": "UNRESOLVED",
+        "state": "ADJUDICATED",
+        "timingsNanos": {
+          "intent_written_nanos": 1336100,
+          "dispatch_nanos": 10422767,
+          "report_admission_nanos": 12712986,
+          "assessment_nanos": 12254,
+          "total_nanos": 26494658
+        }
+      },
+      {
+        "index": 17,
+        "disposition": "UNRESOLVED",
+        "state": "ADJUDICATED",
+        "timingsNanos": {
+          "intent_written_nanos": 2337318,
+          "dispatch_nanos": 9655921,
+          "report_admission_nanos": 14941349,
+          "assessment_nanos": 9428,
+          "total_nanos": 29946067
+        }
+      },
+      {
+        "index": 18,
+        "disposition": "UNRESOLVED",
+        "state": "ADJUDICATED",
+        "timingsNanos": {
+          "intent_written_nanos": 817582,
+          "dispatch_nanos": 11396073,
+          "report_admission_nanos": 18566817,
+          "assessment_nanos": 26931,
+          "total_nanos": 34059826
+        }
+      },
+      {
+        "index": 23,
+        "disposition": "UNRESOLVED",
+        "state": "ADJUDICATED",
+        "timingsNanos": {
+          "intent_written_nanos": 949601,
+          "dispatch_nanos": 10483462,
+          "report_admission_nanos": 10916368,
+          "assessment_nanos": 10931,
+          "total_nanos": 23960018
+        }
+      },
+      {
+        "index": 21,
+        "disposition": "UNRESOLVED",
+        "state": "ADJUDICATED",
+        "timingsNanos": {
+          "intent_written_nanos": 1490852,
+          "dispatch_nanos": 9973159,
+          "report_admission_nanos": 13702954,
+          "assessment_nanos": 12884,
+          "total_nanos": 27648534
+        }
+      },
+      {
+        "index": 24,
+        "disposition": "UNRESOLVED",
+        "state": "ADJUDICATED",
+        "timingsNanos": {
+          "intent_written_nanos": 2602178,
+          "dispatch_nanos": 8843909,
+          "report_admission_nanos": 16544863,
+          "assessment_nanos": 16481,
+          "total_nanos": 31765048
+        }
+      },
+      {
+        "index": 22,
+        "disposition": "UNRESOLVED",
+        "state": "ADJUDICATED",
+        "timingsNanos": {
+          "intent_written_nanos": 1968543,
+          "dispatch_nanos": 9510076,
+          "report_admission_nanos": 22745046,
+          "assessment_nanos": 28243,
+          "total_nanos": 39721113
+        }
+      }
+    ],
+    "coldStart": {
+      "rule": "the first 4 samples of the run are the cold start: the first write to a fresh database and the peer's first cognitive cycle. They are reported separately and are not part of the steady-state numbers.",
+      "samples": 4,
+      "endToEndMillis": {
+        "p50": 358.464,
+        "p95": 358.829,
+        "p99": 358.829,
+        "min": 358.265,
+        "max": 358.829,
+        "mean": 358.4665,
+        "samples": 4
+      },
+      "whatTheColdStartCosts": "the first batch pays for the SQLite page cache and the WAL, for the class loading of the dispatch path and for the peer's first cycle; the later batches are warm"
+    },
+    "steadyState": {
+      "samples": 20,
+      "endToEndMillis": {
+        "p50": 35.574,
+        "p95": 51.532000000000004,
+        "p99": 55.309999999999995,
+        "min": 24.525000000000002,
+        "max": 55.309999999999995,
+        "mean": 35.86,
+        "samples": 20
+      },
+      "throughputTasksPerSecond": 27.88622420524261,
+      "stagesMillis": {
+        "intent_written_nanos": {
+          "p50": 1.841533,
+          "mean": 1.7649382500000002,
+          "max": 2.747893
+        },
+        "dispatch_nanos": {
+          "p50": 10.212009,
+          "mean": 13.207519049999998,
+          "max": 27.112814
+        },
+        "report_admission_nanos": {
+          "p50": 14.722206,
+          "mean": 14.6522197,
+          "max": 22.745046
+        },
+        "assessment_nanos": {
+          "p50": 0.011452,
+          "mean": 0.01218845,
+          "max": 0.028243
+        },
+        "total_nanos": {
+          "p50": 31.765048,
+          "mean": 32.42757505,
+          "max": 51.635714
+        }
+      }
+    },
+    "whatThisRunShows": [
+      "every one of the 24 tasks was adjudicated and every disposition was UNRESOLVED — the concurrent path produces the same epistemic result as the single-task path",
+      "the write of the remote report into chain A's knowledge store no longer loses a transaction under concurrent writers: the store's write path is serialized on the store's own monitor, and the regression test proves it",
+      "the run before this one never finished: the benchmark's bare `wait` waited for the two servers as well as for the tasks, so the measurement stopped after the first batch. That was a defect of the measurement, and it is fixed in scripts/w53-distributed-benchmark.sh"
+    ],
+    "whatThisRunDoesNotShow": [
+      "it is not a comparison with a different machine: the environment block is the one of this run",
+      "the p99 of 24 samples is a sample, not a percentile of a population",
+      "it does not claim that the concurrent path is faster than the single-task one: it is slower per task, because the four in-flight tasks contend for the same store and the same peer, and the throughput number includes the cold start"
+    ]
+  },
+  "howTheTwoRunsRelate": [
+    "the main body of this report is the single-task run: 30 tasks, one at a time",
+    "the `concurrentRun` section is a separate run of the same script with the same workload and a concurrency of 4",
+    "both runs happened on this machine, in this order, with the same code",
+    "the numbers are not comparable across machines, and neither run is a claim about a different machine"
+  ]
+}

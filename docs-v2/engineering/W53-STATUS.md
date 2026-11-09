@@ -1,335 +1,415 @@
-# W53 — Completion report
+# W53 — Distributed Cognition, Durable Task Execution & Closed-Loop Collaboration
 
-**Status:** `CANONICAL` for the wave · **Date:** 2026-11-09 · **Branch:** `develop`
-**The objective:** *"Develop MATRIX into a coherent, interacting cognitive computing system."*
-**The primary success criterion, in the mandate's own words:** *"not the volume of code written
-… a coherent, testable system in which perception, knowledge, memory, reasoning, learning,
-action, reflection and extensibility work together."*
+**Status:** `IN PROGRESS` — the distributed path works end to end; the closeout is not finished
+**Date:** 2026-11-09 · **Branch:** `feature/w53-distributed-cognition` (from `develop` @ `375ed3f3`)
+**The objective:** *"make MATRIX capable of assigning a bounded cognitive task to another running cognitive process, receiving its actual result, evaluating that result, and completing the original task with a durable, verifiable execution trace."*
+**The central rule, honoured:** *"A remote cognitive process is a capability provider. Its output is a report that must be evaluated, not an automatic source of truth."*
 
-W51 built the pieces. W52 made them speak to each other. **W53 makes the system remember what
-it learned** — the procedure it derived from the environment is written down with the standing
-it actually has, a later cycle consults that record and names it, and the one claim the W45
-finding rested on is **proved** instead of asserted. The wave also changed one epistemic rule
-and **measured** it: the score did not move, which is reported as the score did not move.
+> **A note on the name.** An earlier W53 wave — the one that made the system's procedural
+> memory non-empty — already had a report. It is now
+> `docs-v2/engineering/W53-PROCEDURE-MEMORY-STATUS.md`, and this document is the report of the
+> distributed-cognition wave.
 
 ---
 
 ## 1. The one-paragraph answer
 
-MATRIX's **procedural memory is no longer empty**. When the cognitive runtime's model settles
-on exactly one rule, the system now writes the procedure down — the rule it encodes, the
-precondition under which it applies, the method it falls back to, the episode it was learned
-in, and **what its standing rests on**: the validation kind, the case count, the measured
-agreement, and a note in words that says the agreement was measured over the cases the model
-was built from. A later cycle **consults that record**, and the trace of that cycle names the
-procedure and the episode it came from — which is the mandate's acceptance point 11 read
-literally ("a previously learned **procedure or skill** is reused in a later task"), where
-before the wave the same point was demonstrated by a learned *rule* and the system's
-procedural memory held nothing at all. The reason the earlier wave refused to write anything
-— the lamp world's input domain is exhausted once the model settles, so no observation can be
-both independent of the model and available — is **now proved in a test** rather than repeated
-as a sentence: with V inputs the space holds 2^(2^V) candidates, each distinct assignment
-eliminates exactly half of them, and the model therefore settles only after every assignment
-the domain has. On the epistemic side the wave changed one rule — a supersession now requires a
-**scoped denial** instead of a better-supported claim with lexically similar words — and
-measured the whole 29-case evaluation with it in place: **18 of 29, unchanged, the same eleven
-failures**. The change is therefore not a score-motivated one, and the report names what it
-does **not** fix: the denial's own scoping is still lexical, which is exactly why the two
-revision cases that expect no supersession still get one.
+MATRIX can now **delegate a bounded cognitive task to another running process and judge what
+comes back**. Chain A writes its intent down *before* it sends, chain B receives the request
+into a durable inbox of its own, runs its real production cognitive path, answers with a
+signed response and a signed report, and chain A admits that report into its own epistemic
+model **as a candidate** and then reaches its own verdict about the proposition. In the
+recorded run of the real two-process demonstration that verdict was **UNRESOLVED** — the
+peer's confidence was `MEASURED`, which is not independent evidence, and chain A's own
+records settled nothing. That is the intended behaviour, not a shortfall: a successful
+exchange is not a supported belief. After chain B was restarted and the same request was sent
+again, chain B's own durable inbox still held **one** row for that request id, with the
+result stored once — the second delivery created no second row and ran the task no second
+time. (The row's `updatedAt` equals its `createdAt` because the peer writes one instant
+for the whole request; that equality is *not* the evidence of a single execution, and an
+earlier draft of this report treated it as if it were. The evidence is the row count and
+the stored result.)
 
 ---
 
-## 2. The deliverables of this wave
+## 2. What exists now, and where
 
-| # | the deliverable | where it is | the evidence |
-|---|---|---|---|
-| 1 | **The procedure is written when the model settles** | `io.matrix.cognitive.CognitiveKernel` — `procedureOfTheSettledModel` | `CognitiveKernelTest` — the procedure is written, its kind is `IN_SAMPLE`, its note says what the agreement rests on, and it names the episode it was learned in |
-| 2 | **The procedure is reused, and the reuse is named** | the same class — the `SELECT` phase names the consulted procedure; the `LEARN` phase names the reused one | `CognitiveKernelTest` — "a later episode consults the procedure the earlier one wrote, and the trace names it"; `W51DemonstrationTest` — the wave's demonstration writes it and consults it |
-| 3 | **The validation's precondition is explicit, and the reason is proved** | `io.matrix.cognitive.algorithms.Procedure` — `learnedInEpisode`, `validationNote`; `CognitiveStore` — the two columns and the immutability check that includes them | `DomainExhaustionTest` — the space holds every function of the inputs, each distinct assignment halves it, and the model settles exactly when the domain is exhausted |
-| 4 | **The canonical `Procedure` and `Skill` are filled by the runtime** | `io.matrix.cognitive.canonical.CanonicalCycleBuilder` | `CanonicalContractCoverageTest` — **nothing is seeded**: the runtime settles, writes and carries the two contracts, and the coverage test asserts them |
-| 5 | **One epistemic rule changed, and measured** | `io.matrix.knowledge.ModelRevisionDecider` | the whole 29-case evaluation re-run: **18 of 29, unchanged**; `docs-v2/engineering/W53-EPISTEMIC-EVALUATION.json`; CD-030 |
-| 6 | **The registers tell the truth** | `CAPABILITY-REGISTRY.yml` (55 rows, 0 defects), `PROJECT-STATE.md` (0 defects), `ROADMAP.md` §4.12, `DECISION-REGISTER.md` CD-030…CD-031 | the two validators and the docs link check |
-| 7 | **The report and the closeout** | this document | the commits, the push and the pull request — **the merge is the owner's** |
-
----
-
-## 3. What the system can now do, and what it cannot
-
-### 3.1 It can
-
-- **Write down a procedure it derived from the environment**, with the standing that procedure
-  actually has — and say which episode it was learned in.
-- **Reuse that procedure in a later cycle**, and name it — in the trace, in the notes, and in
-  the canonical form the cycle carries.
-- **Distinguish a consistency check from a validation** in its own record, and refuse to call
-  the first one the second.
-- **Prove, in a test, why an independent validation is unreachable in the environment it has** —
-  instead of asserting it in a comment.
-- **Refuse to supersede a belief because a new sentence shares words with it**, and say which
-  similarity it refused to act on.
-- **Say what it cannot do**: the eight citation failures and the two revision false positives
-  are named, measured and left visible in §7.4.
-
-### 3.2 It cannot
-
-- **Validate a procedure independently** in the micro-world — the domain is exhausted when the
-  model settles, and that is arithmetic, not a defect (§3.2's proof is the test).
-- **Say that its learned procedure generalises** — the record says `IN_SAMPLE`, and the note
-  says what that means.
-- **Answer a question whose answer needs a claim the retrieval does not reach** — the eight
-  citation failures are a retrieval limit, and §5.5 names it.
-- **Tell two claims about the same subject apart** without the words they share — the workspace
-  has no other identity for a subject, and that is why the two revision false positives remain.
-
----
-
-## 4. The architectural decisions of this wave
-
-**CD-031 — the procedure of the settled model is written down, with the standing it has.**
-The W45 finding was true and was also half the story. The fast path was being used as an
-in-sample shortcut of the reference, and the record that said so was never written, so the
-procedural memory was empty and the system could not claim to have learned a procedure. The
-record now says what it rests on: the validation kind, the case count, the agreement, the
-episode, and a note that states the limitation in words. The exhaustion is not a defect of the
-world; it is the arithmetic of the hypothesis space, and it is proved.
-
-**CD-030 — a supersession requires a scoped denial.** The old rule was "the new claim is about
-the same subject **and** it is better supported", and "about the same subject" was decided by
-the words two sentences share. The mandate forbids inferring a supersession from a weak lexical
-similarity alone, so the relation that decides it is now a relation: the new sentence must deny
-what the older claim asserted. A better-supported claim that denies nothing is an addition, and
-the decision says so.
-
----
-
-## 5. The measurements
-
-### 5.1 The wave's own scopes
-
-`JAVA_HOME=$HOME/jdk25 ./gradlew :matrix-core:test --tests "io.matrix.cognitive.*" --tests
-"io.matrix.contract.*" --tests "io.matrix.w51.*" --tests "io.matrix.knowledge.*" --tests
-"io.matrix.bridge.*" --offline` → **1162 tests, 0 failures, 0 errors, 0 skipped** (the count is
-the JUnit XML in `matrix-core/build/test-results/test/`).
-
-The quality gate: `bash scripts/quality-gate.sh` → **PASS at 271 candidate literals**, at the
-accepted baseline of 271 — the wave added no new magic literal.
-
-### 5.2 The procedure's life
-
-| the moment | what the system says |
-|---|---|
-| the model settles | `LEARN`: "the procedure `proc-microworld-settled-model` was written: the settled-model lookup for: lamp is true exactly when power=1,switch=1; it rests on 4 case(s) of IN_SAMPLE evidence (agreement 1.0); the agreement was measured over the 4 case(s) the model was built from: a consistency check, which licenses the shortcut and says nothing about whether the model generalises. The validation set holds 0 observation(s) the model was not built from, and the environment's input domain is exhausted once the model settles, so no observation can be both independent of the model and available" |
-| a later cycle | `SELECT`: "the procedure `proc-microworld-settled-model` was consulted — learned in episode `ep-sig-w51-learn-2`, resting on 4 case(s) of IN_SAMPLE evidence" |
-| the canonical form | the `Procedure` carries the kind, the case count, the note and **its own provenance** (the episode that wrote it, not the episode that consulted it); the `Skill` carries `learnedFromEpisodeIds` = that episode, and `reusable` = the system's own judgement that the procedure should be offered again — the canonical contract says so: *"Reuse is a decision, not a fact"* |
-
-### 5.3 The exhaustion, proved
-
-`DomainExhaustionTest`:
-
-- the hypothesis space holds every function of the inputs — **16** for the lamp world's two
-  variables (2^(2^2));
-- each distinct assignment eliminates exactly half: **16 → 8 → 4 → 2 → 1**;
-- the model settles **exactly** when every assignment of the domain has been observed;
-- the set the promotion rule asks for — the observations the model was **not** built from — is
-  empty, and stays empty: there is no assignment left to observe.
-
-⇒ The W45 sentence is now an arithmetic identity with a test, and the record's refusal is
-backed by it.
-
-### 5.4 The epistemic evaluation — 18 of 29, and a rule that did not move the score
-
-`python3 scripts/w51-epistemic-eval.py --work /tmp/w53-eval-a --report
-docs-v2/engineering/W53-EPISTEMIC-EVALUATION.json`
-
-| the category | the W52 result | the W53 result |
+| The piece | The file | What it does |
 |---|---|---|
-| answerable | 2 / 8 | 2 / 8 |
-| unanswerable | 6 / 6 | 6 / 6 |
-| false-premise | 4 / 5 | 4 / 5 |
-| multi-claim | 1 / 3 | 1 / 3 |
-| knows-what-it-does-not-know | 2 / 2 | 2 / 2 |
-| revision | 3 / 5 | 3 / 5 |
-| **the total** | **18 / 29** | **18 / 29** |
-
-**The eleven failures are the same eleven:** A-02, A-04, A-05, A-06, F-02, M-01, M-03, P-01,
-P-02, R-04, R-05. No case was excluded, no expectation was changed, no assertion was weakened,
-and the dataset was not touched.
-
-**What was measured, and what came of it.**
-
-1. **The candidate the wave set out to test — "for a demand that asks for a quantity, the
-   number must come from evidence that covers the demand's content terms" — is moot on this
-   dataset.** The unanswerable family already abstains **6 of 6** under the shipped
-   configuration, including both quantity cases ("How many tonnes of basalt…" and "How many
-   research vessels…"). A rule that changes no case cannot be shown by this dataset to help,
-   so it was **not adopted**: shipping an unmeasurable rule would add behaviour without
-   evidence, which is the opposite of what the mandate asks for.
-2. **The rule that was adopted changes the score by nothing.** The supersession rule was
-   replaced and the whole evaluation re-run: **18 of 29, the same eleven failures**. It is
-   therefore not a score-motivated change — it is a correctness-motivated one, and the
-   measurement is reported so that nobody reads it as an improvement.
-3. **The eight citation failures are a retrieval limit, and it is located.** The required
-   proposition of A-04 — *"However, because plate motions are global in scale, they are best
-   measured by satellite-based methods."* — **exists** in the corpus, its status is
-   `SUPPORTED` (so it is citable), and at a floor of 0 it ranks **10th of 161**. At the shipped
-   floor of 0.25 it falls out, because it covers three of the question's terms ("plate",
-   "motions"↔"movement", "measured") and none of the rare ones ("gps", "space-geodetic",
-   "techniques") that carry the IDF weight. **The claim is lexically weaker and semantically
-   right**: no threshold on coverage can separate it from the noise, and a lexical discriminator
-   cannot either. What it needs is a match that does not require a shared rare term — a
-   semantic one — and the workspace has none. That is the blocker.
-4. **The two revision false positives are the same blocker from the other side.** The denial's
-   own scoping is lexical, so a denial can still be read onto a claim about a different
-   subject.
-
-### 5.5 The registers
-
-- the capability registry: **55 rows, 24 fields, 0 defects** (`scripts/validate-project-registry.py --strict`);
-- the project state: **0 defects** (`scripts/validate-project-state.py --strict`);
-- the decisions: **CD-030** and **CD-031**;
-- the docs link check: exit **0** (`python3 scripts/docs-link-check.py --root "$PWD" --strict`).
+| The typed request | `io.matrix.contract.bridge.CognitiveTaskRequest` | 19 fields: ids, correlation, capability, kind, bounded input, context, constraints, output contract, budget, deadline, payload limit, hop limit, provenance, payload hash, retry |
+| The typed response | `io.matrix.contract.bridge.CognitiveTaskResponse` | eight statuses (`COMPLETED` … `IN_PROGRESS`), the structured result, the confidence **with its basis**, the limitations, the trace reference |
+| The secondary report | `io.matrix.contract.bridge.CognitiveTaskReport` | the relation (`SUPPORTS` / `CONTRADICTS` / `INDEPENDENT`), the lineage (`derivedFrom`), the responder, the capability, the provenance |
+| The bridge, extended | `io.matrix.contract.bridge.BridgeProtocol` (**version 3**) · `BridgeCapability` (`INFERENCE_REQUEST`, `INFERENCE_RESPONSE`) · `BridgePayload` (8 components) | version 1 and 2 stay readable; the new rights are explicit |
+| Chain A's coordinator | `io.matrix.cognitive.distributed.CognitiveCoordinator` | one owner of the distributed task: intent → dispatch → check → evaluate → record; the transport is a **port** |
+| Chain A's outbox | `io.matrix.cognitive.DispatchIntent` + the `cognitive_task_dispatch` table | the intent is durable **before** the send; nine states; the peer's vocabulary is mapped explicitly |
+| Chain A's evaluation | `io.matrix.cognitive.RemoteReportAssessor` | six dispositions: `INVALID`, `REJECTED`, `QUALIFIED`, `SUPPORTED`, `UNRESOLVED`, `ABSTAINED` |
+| Chain A's own evidence | `io.matrix.cognitive.KnowledgeStoreEvidence` | the adjudicator reads chain A's **own** knowledge store: a citable claim with supporting evidence supports the proposition, a candidate supports nothing, and a claim whose evidence contradicts it contradicts it. Until round 18 the only implementation of that question was "nothing", so every remote report came back unresolved for want of a reading rather than for want of evidence |
+| Chain B's receiver | `io.matrix.api.bridge.TaskBridge` + `RemoteTaskStore` | the durable inbox: request id, payload hash, state, result; a duplicate returns the first result |
+| Chain B's production adapter | `io.matrix.api.bridge.CognitiveCapability.standard(BrainCycle)` | the real brain of the gateway — never `StubBrainCycle` |
+| Chain A's entry point | `io.matrix.cognitive.distributed.DistributedTaskResource` | `POST /v1/cognitive/task`, `POST /v1/cognitive/task/replay`, `GET /v1/cognitive/task/{id}` |
+| Chain B's route | `POST /v1/bridge/task` on the gateway's own JDK server | the same server, the same port, the same process — no new port |
 
 ---
 
-## 6. What changed in the repository
+## 3. The evidence
 
-| the file | the change |
-|---|---|
-| `matrix-core/src/main/java/io/matrix/cognitive/CognitiveKernel.java` | the procedure of the settled model is written, read and named; `promotedProcedure()` became `activeProcedure()` |
-| `matrix-core/src/main/java/io/matrix/cognitive/algorithms/Procedure.java` | `learnedInEpisode` and `validationNote`, with the previous shape kept as a constructor |
-| `matrix-core/src/main/java/io/matrix/cognitive/CognitiveStore.java` | the two columns, their migration, the write, the read, and the immutability check that includes them |
-| `matrix-core/src/main/java/io/matrix/cognitive/canonical/CanonicalCycleBuilder.java` | the procedure's own provenance, the note and the episode in the canonical parameters; the skill's `reusable` is the system's judgement, not a claim of validation |
-| `matrix-core/src/main/java/io/matrix/knowledge/ModelRevisionDecider.java` | a supersession requires a scoped denial |
-| `matrix-core/src/main/java/io/matrix/w51/W51Demonstration.java` | the wave's demonstration section: the procedure is written, consulted and reported |
-| `matrix-core/src/test/java/io/matrix/cognitive/microworld/DomainExhaustionTest.java` | **new** — the proof of the exhaustion |
-| `matrix-core/src/test/java/io/matrix/cognitive/CognitiveKernelTest.java` | the procedure's life, and the honest replacement of the W45 assertion |
-| `matrix-core/src/test/java/io/matrix/cognitive/canonical/CanonicalContractCoverageTest.java` | **no seeding any more** — the runtime fills the two contracts |
-| `matrix-core/src/test/java/io/matrix/cognitive/canonical/CanonicalCycleBuilderTest.java` | reuse is a decision, not a fact; a withdrawn procedure is not offered again |
-| `matrix-core/src/test/java/io/matrix/w51/W51DemonstrationTest.java` | the demonstration's procedure section |
-| `docs-v2/architecture/CAPABILITY-REGISTRY.yml` | the row `W53-PROCEDURE-MEMORY` (54 → 55) |
-| `docs-v2/governance/ROADMAP.md` | §4.12 — the wave's tasks |
-| `docs-v2/governance/DECISION-REGISTER.md` | CD-030, CD-031 |
-| `docs-v2/governance/PROJECT-STATE.md` | the snapshot of the wave |
-| `docs-v2/engineering/W53-STATUS.md` | this report |
-| `docs-v2/engineering/W53-EPISTEMIC-EVALUATION.json` | the machine-readable evaluation |
+| The claim | The proof | The command |
+|---|---|---|
+| The contracts hold | 10 contract tests | `./gradlew :matrix-core:test --tests "io.matrix.contract.*" --offline` |
+| The intent is durable before the send | 5 coordinator tests | `./gradlew :matrix-core:test --tests "io.matrix.cognitive.distributed.*" --offline` |
+| The report becomes a candidate, and the verdict stays chain A's | 4 loop tests | the same |
+| A contradicting report is recorded as a contradiction | 4 sink tests | `./gradlew :matrix-core:test --tests "io.matrix.bridge.*" --offline` |
+| The peer deduplicates durably | 7 store tests | `./gradlew :matrix-api-gateway:test --offline` |
+| The round trip is real and a forged report is dropped | 2 round-trip tests | the same |
+| The whole scope is green | **1558 tests, 0 failures, 0 errors** (matrix-core + gateway) | the scope command in the wave's baseline record |
+| The quality gate holds | **PASS: 271 candidates, at or below the baseline of 271** | `bash scripts/quality-gate.sh` |
+| The isolation gate holds | **30 checks, 0 failed** (G11 added) | `bash scripts/w45-chain-isolation-check.sh` |
+| The new gate can go red | **15 checks, 0 failed** (C5 added: the task receiver is replaced with one that calls chain A's store, and the gate names the violation) | `bash scripts/w45-chain-isolation-selftest.sh` |
+| The epistemic benchmark does not regress | **18/29** — the same eleven failures (A-02, A-04, A-05, A-06, M-01, M-03, P-01, P-02, F-02, R-04, R-05) | `python3 scripts/w51-epistemic-eval.py` |
+| The two-process demonstration | the report `docs-v2/engineering/W53-DISTRIBUTED-DEMONSTRATION.json` | `bash scripts/w53-distributed-demo.sh` |
 
 ---
 
-## 7. The five categories
+## 4. The demonstration, stage by stage
 
-### 7.1 Implemented and verified
+`scripts/w53-distributed-demo.sh` starts two **real** processes — the Quarkus application and
+the gateway's own JDK server in production mode — each in its own directory with its own
+database, and runs one bounded cognitive task through them.
 
-- **The procedure is written, reused and named** — `CognitiveKernelTest`, `W51DemonstrationTest`
-  and the demonstration's own report.
-- **The canonical `Procedure` and `Skill` are filled by the runtime** — `CanonicalContractCoverageTest`,
-  with nothing seeded into the store.
-- **The exhaustion is proved** — `DomainExhaustionTest`.
-- **A supersession requires a denial** — the rule changed and the whole evaluation was re-run;
-  the score did not move, and that is reported.
-- **The gates hold**: 1162 tests / 0 failures; the quality gate at 271; the registry at 0
-  defects; the project state at 0 defects; the docs link check at exit 0.
+1. Chain A receives the task at `POST /v1/cognitive/task`.
+2. The coordinator writes the dispatch intent **before** the send.
+3. The signed, versioned request crosses the bridge.
+4. Chain B authenticates it, checks the granted right, and admits it into its durable inbox.
+5. Chain B runs its production cognitive path and produces a structured result and a trace.
+6. Chain B persists the result and answers with a signed response and a signed report.
+7. Chain A verifies both signatures, admits the report into its own epistemic model through
+   its own bridge receiver — **as a candidate**, with the peer's relation and chain A's own
+   confidence (which is none).
+8. Chain A evaluates the result against its own evidence and records the verdict.
+9. Chain B is restarted; the same request is sent again; the peer's inbox shows **one**
+   row for that request id, with the result stored once.
+9a. A capability the peer does not serve is **refused by the peer**, and the refusal travels
+    back as a signed answer.
+9b. The same request id under a **different payload** is refused as a conflict (HTTP 409),
+    and the first dispatch's record stays untouched.
+9c. A **forged request** — one whose signature was made with the wrong secret — is refused
+    by the peer, and the demonstration checks the refusal's *reason*, so it cannot silently
+    prove something else.
 
-### 7.2 Implemented but not fully verified
+**What the report does not claim**, in its own words: it does not claim that the remote answer
+was correct, that the proposition is established, or that the system has distributed
+exactly-once execution. The delivery is at-least-once with a durable deduplication at the
+receiver; that is what the inbox row proves, and it is what the report says.
 
-- **The procedure's durability across a restart.** The procedure is written to the cognitive
-  database and read back from it in the same store; the restart path was exercised through the
-  demonstration's own restart section, but the procedure's own round-trip after a *process*
-  restart was not measured separately.
-- **The rule change's effect on the corpus outside the evaluation dataset.** The 29 cases are
-  the measurement; the corpus is larger.
-
-### 7.3 Designed but not implemented
-
-- **A validated procedure.** The record can hold one (`ValidationKind.INDEPENDENT`) and the
-  promotion path can write one, but no environment in the repository can supply the independent
-  evidence — the hypothesis space is the set of all functions of the inputs, so the domain is
-  exhausted at the moment the model settles. An environment whose hypothesis space is *smaller*
-  than its input domain would.
-- **A semantic retriever.** §5.4's third item names exactly what the eight citation failures
-  need, and it is not a threshold, a weight or a heuristic.
-
-### 7.4 Blocked
-
-- **The eight citation failures (A-02, A-04, A-05, A-06, M-01, M-03, P-01, P-02).** The
-  required claims exist and are citable; they rank immediately below the relevance floor
-  because the question's rare terms carry the IDF weight and the answering claims do not
-  contain them. **The blocker: the workspace has no match that does not require a shared rare
-  term.**
-- **The two revision false positives (R-04, R-05).** The denial's scoping is lexical, and the
-  workspace has no identity for a subject beyond the words two sentences share. **The blocker
-  is the same one, from the other side.**
-- **F-02's contradiction verdict** (the lexical rule that decides whether a premise is
-  contradicted) — unchanged by this wave and named in the W52 report.
-
-### 7.5 Deferred
-
-- The method profile's reliability reaching the selector's **score** (it is reported, not
-  scored) — W52's finding, unchanged.
-- Chain B's request-id registry for the second direction of the bridge is process-scoped.
-- The six ARCHIVE candidates from the W51 audit are the owner's call.
+**The report's schema** is `matrix.w53.distributed-demonstration/v2` since round 22: the
+`refusals` section (the unserved capability, the conflicting payload and the forged
+request, each with the reason its own receiver gave) and the three matching stages were
+added. The version moved because the section is new: a reader that knows only v1 must be
+able to tell that it is looking at something v1 never had.
 
 ---
 
-## 8. The honest limits, in one list
+### 4a. The peer's own recovery, and what round 20 closed
 
-1. The procedure is an **in-sample** shortcut. The record says so, the note says so, and the
-   canonical form carries both. It is not a validated procedure and the system does not call it
-   one.
-2. The **exhaustion is a property of this environment**, proved and not worked around. A
-   different environment would have to be built before a validated procedure could exist.
-3. The epistemic score **did not move** (18 of 29, the same eleven failures). The wave's rule
-   change is a correctness change, and nothing in this report should be read as an improvement
-   in the score.
-4. The eight citation failures and the two revision false positives **need a capability the
-   workspace does not have** — a match that does not require a shared rare term, or an identity
-   for a subject that is not the words two sentences share.
-5. The wave changed **one** epistemic rule. It did not touch the relevance floor, the status
-   filter, the demand analysis or the quantity gate, because none of them was measured to be
-   the cause of a named failure.
-6. The quantity discriminator the wave set out to test was **measured and found moot** on this
-   dataset, and was **not adopted** — no behaviour was shipped without evidence.
-7. No claim is made here of general intelligence, human-like understanding, universal learning
-   or reliable autonomous self-improvement. What the system demonstrates is a cognitive cycle
-   that writes down what it learned, reuses it, and says what it cannot do.
+The peer's inbox documented a promise it did not keep: "a request found in a
+non-terminal state after a restart is visible to the reconciliation pass, and is neither
+silently re-run nor silently failed". The reconciliation pass existed on chain A's side
+(`DispatchReconciler`) but **not on the peer's** — and the peer's inbox already had the
+method the promise named (`unfinished()`), unused.
+
+The consequence was real: a request that was in flight when chain B died stayed
+`ACCEPTED` or `RUNNING` for ever. Every later delivery of it was answered as "still
+running", so the caller waited for a task nobody was doing — and, after round 19, it
+waited with a signed `IN_PROGRESS` rather than with silence, which is honest but still a
+wait for nothing.
+
+**What the peer does now, at startup.** It closes the rows it finds unfinished as a
+**reasoned failure**: the peer keeps the request's digest and not its payload, so it
+cannot finish the execution itself, and re-running it would risk a second effect for a
+task whose first effect may have landed. The row says exactly that — "the peer restarted
+while this task was unfinished; the request was not kept, so the execution could not be
+finished and its outcome is unknown" — and a later delivery of that task is answered
+with the **failure**, not with "still running".
+
+**What this does not claim.** The interrupted work is lost, not resumed. The caller
+learns that it was lost and why, and the trace says so; the dispatch can be sent again
+by the caller as a new attempt, which is a decision the caller owns.
+
+### 4e. What round 22 added to the demonstration: the refusals
+
+The mandate's acceptance list asks for three refusals beside the happy path (§13.24–26):
+a conflicting payload under the same request id, a forged request or response, and a
+capability violation. The wave *tested* all three, but the demonstration showed only the
+happy path — and a scenario that shows only the happy path cannot show that the boundary
+holds.
+
+The demonstration now carries a `refusals` section (the report's schema moved to
+`matrix.w53.distributed-demonstration/v2`):
+
+| the scenario | who refused it | what the report shows |
+|---|---|---|
+| a capability the peer does not serve | **the peer** | the refusal travels back as a signed answer (`UNSUPPORTED`) |
+| the same request id under a different payload | **chain A** | HTTP 409 with the reason; the first dispatch's record stays untouched |
+| a forged request (a signature made with the wrong secret) | **the peer** | `REFUSED` with the reason *the signature does not verify* |
+
+The forgery is checked by its **reason**, not by its status: `scripts/w53-forge-request.py`
+builds the message so that only the signature is wrong, and it exits with a failure if the
+peer refuses for any other reason. A demonstration that proved the wrong thing because the
+message was malformed would be worse than no demonstration.
+
+**One more defect the demonstration exposed.** The peer's durable row recorded a task it
+does not serve as `FAILED` — the row said the peer tried and could not, when the truth is
+that it never served that capability. The row's state now follows the peer's own reason
+(`UNSUPPORTED`, `REFUSED`, `TIMED_OUT`, `CANCELLED`, `FAILED`), and the negative control
+(with the mapping flattened) makes the matching test go red.
+
+### 4c. What round 21 found in the reconciliation path, and what it changed
+
+The round-19 change — the peer answers a duplicate with the task's status, and the
+caller waits inside its budget — was applied to the **first** dispatch. The **replay**
+path, which is what the reconciliation pass uses after a crash, did not know about
+`IN_PROGRESS` at all: a replayed request that the peer was still running was **judged**,
+and the task was closed with the verdict "the peer did not complete the execution:
+IN_PROGRESS" while the peer was still working on it. The same defect, one path over.
+
+Now both paths wait: a replayed task that the peer is still running stays `DISPATCHED`,
+gets no verdict, and keeps its place in the reconciliation's report as "still in flight".
+
+### 4d. What round 21 changed about the episode
+
+§8.1 asks that the same logical task id and correlation be visible across both
+processes, and that the final output be attributable to the originating task. The
+correlation was travelling with the placeholder `"ep-parent"` — a name that stood for an
+episode that did not exist — and the dispatch row did not name any episode at all.
+
+Now the correlation carries the **real** episode id when the task was delegated from a
+kernel episode, the dispatch row records it (`parent_episode_id`), and a task arranged
+outside an episode names **no** episode rather than a made-up one. The kernel's trace
+and the dispatch row now name each other, and the peer's request carries the same
+episode id.
+
+### 4b. What round 19 found in the demonstration, and what it changed
+
+The demonstration failed twice in a row under machine load, and the failure was **not** a
+flaw in the happy path: chain A reported "the peer did not answer the task and the retry
+budget of 4 attempt(s) is spent", while chain B's own record showed the task
+**completed** — the work was done, and the caller never learned it.
+
+The cause was a contract gap, not a race: the idempotency rules say that a duplicate
+request returns the *existing status*, and the peer returned **no status at all** for a
+task that was still running. The caller had no way to tell "the peer is working on it"
+from "the peer has not heard of it", so it spent its budget discovering a delay the peer
+knew about and could have named.
+
+Two changes followed, both measured:
+
+1. **The peer answers a duplicate with the task's status.** A task that is still running is
+   answered with a signed response whose status is `IN_PROGRESS` — the status the contract
+   already had for it. The caller's question ("is it running?") now has an answer.
+2. **Chain A waits inside its budget.** The coordinator does not treat `IN_PROGRESS` as an
+   answer and does not judge it: it asks again within the retry budget, and it judges only
+   what finally arrives. A task that is still running when the budget is spent ends as
+   `DISPATCHED` — still in flight, still not judged — and the peer's record keeps the
+   result.
+
+The peer's own server serves on a pool of threads (`MinimalHttpServer`: a fixed pool of
+eight), so it can answer a second delivery while the first task runs; the test's server
+now does the same, because a single-threaded test server would have measured the queue
+rather than the peer.
+
+**What this does not claim.** The caller's budget is still bounded, and a peer that is
+slower than the budget still loses the answer: the result stays on the peer, and the
+dispatch can be sent again with the same request id. The change makes the loss *visible*
+instead of misreported.
+
+## 5. The decisions the research forced
+
+| The research | The decision it forced | Where |
+|---|---|---|
+| Track A — durable execution | the intent is written **before** the send; at-least-once with effectively-once logical effects, never a distributed exactly-once claim | `ADR-W53-01` §2c |
+| Track B — cybernetics | the request **carries the criterion** by which the answer will be judged (the `expectation` travels in the request's context); a failed delegation must change the next one | `ADR-W53-01` §2b |
+| Track C — cooperative reasoning | the remote report carries the **relation and the lineage**; the sink must never invent a `SUPPORTS`; a report that rests on what chain A supplied is qualified, not supported | `ADR-W53-01` §2b, `RemoteReportAssessor` |
+| Track D — reliability | a Wilson **lower** bound, and the evidence count has to be large enough before the estimate may enter the score (1 of 1 ⇒ an interval of width 0.730, which settles nothing) | `docs-v2/research/W53-RESEARCH-D-RELIABILITY-CALIBRATION.md` |
 
 ---
 
-## 9. How to reproduce everything in this report
+## 6. What is **not** done — the honest list
 
-```bash
-export JAVA_HOME=$HOME/jdk25
+These are the gaps between this wave and the mandate's Definition of Done. Each names what
+is missing, not a paraphrase of "future work".
 
-# the wave's scopes — 1162 tests
-./gradlew :matrix-core:test --tests "io.matrix.cognitive.*" --tests "io.matrix.contract.*" \
-  --tests "io.matrix.w51.*" --tests "io.matrix.knowledge.*" --tests "io.matrix.bridge.*" --offline
+1. ~~The coordinator is not yet inside the `CognitiveKernel`'s phase sequence.~~ **Done in
+   round 7.** The kernel grew a **port** (`RemoteExecutor`), not a second selector: the
+   `AlgorithmSelector` still chooses the method, and the port is asked only whether the
+   capability that was already chosen is one another process can serve. When the delegation
+   happens, the episode's trace shows four real transitions — `DISPATCH_REMOTE`, `RECEIVE`,
+   `VALIDATE`, `EVALUATE_EVIDENCE` — and the peer's answer enters the cycle as a note that
+   says in words that it is a report and not a settled fact; the local computation still
+   decides the cycle's outcome. **Done in round 21:** the delegated task now belongs to
+   the episode it was delegated in — the correlation carries the episode's real id instead
+   of the placeholder `ep-parent`, and the dispatch row records it durably, so the
+   kernel's trace and the row name each other and the peer's request carries the same
+   episode. What remains: the episode and the dispatch are still two records in two
+   stores, and a task arranged outside an episode names no episode at all.
+2. ~~The reconciliation pass is not automatic.~~ **Done in round 12.** The request now
+   travels with the durable intent (`cognitive_task_dispatch.request_json`), so after a
+   crash the *same* request — the same request id, the same payload hash — can be sent
+   again; `DispatchReconciler` walks the unfinished dispatches and sends each of them
+   again, and chain A's entry point runs that pass when the process starts. The peer's
+   durable inbox recognises the request id, so the logical effect still happens once.
+   What remains: the pass runs at startup, not on a timer, so an answer lost while the
+   process stayed up waits for the next restart; and the peer is not told that a dispatch
+   was cancelled, so it may still be working on it.
+3. ~~Cancellation and deadline propagation are not implemented.~~ **Done in round 11 on
+   chain A's side.** The deadline is now honoured: a late answer produces the distinct
+   `TIMED_OUT` state, and the answer the peer sent stays on record in the dispatch row —
+   a timeout does not delete what the peer said, it removes chain A's judgement of it. A
+   task can be cancelled while it is in flight, and a cancelled task ends as `CANCELLED`
+   with no verdict. **Done in round 19 on the peer's side as well.** The withdrawal now
+   travels to the peer as its own signed kind (`INFERENCE_CANCEL`, a right the peer
+   grants — not a field of the request), and the peer keeps its own state machine: a task
+   withdrawn before it started is never executed, a task withdrawn while it runs cannot be
+   interrupted (the brain cannot be interrupted) so the work finishes and the row is
+   closed as cancelled with the answer kept, and a task that already finished is not
+   withdrawn at all — a cancellation cannot undo a committed effect. What remains: the
+   deadline is not yet propagated to the peer's own work budget.
+4. ~~**Circular evidence is detected by lineage, not by proposition.**~~ **Done in round
+   18.** The assessor compares the report's `derivedFrom` with what chain A supplied, **and**
+   the report's proposition with the propositions of those records: a peer that states the
+   very proposition chain A supplied cannot make it independent by leaving its lineage
+   undeclared. What remains: the comparison is literal, not semantic — two differently
+   worded statements of the same thing are still not recognised as one proposition.
+5. **The reliability estimate is researched, not scored.** The direction (Wilson lower bound,
+   an evidence-count threshold) is settled and recorded, but the selector does not yet read
+   it, and no held-out set has been measured to show that it would improve the selection.
+6. ~~The distributed path is measured one task at a time; the concurrent path fails.~~
+   **Done in round 15 — the defect was real, and it was fixed.** The write of the remote
+   report into chain A's knowledge store died under concurrent writers with
+   `SQLException: database in auto-commit mode`: the store owns one SQLite connection,
+   every write opens a transaction on it, and `applyChanges` was **not** serialized while
+   the rest of the class was. One writer's `setAutoCommit(true)` undid another's
+   transaction, and the report that was being written was lost with it. The store's write
+   transactions are now serialized on the store's own monitor, and
+   `KnowledgeStoreConcurrencyTest` holds the line: four writers, one store, one workspace,
+   and the check is the **state** afterwards — every claim on record, and still on record
+   after a restart. With the serialization removed, both of its tests go red.
 
-# the proof of the exhaustion
-./gradlew :matrix-core:test --tests "io.matrix.cognitive.microworld.DomainExhaustionTest" --offline
+   A second defect was in the **measurement itself**: the benchmark's concurrent branch
+   ended with a bare `wait`, which waits for the two servers as well as for the tasks, so
+   the run stopped after the first batch and hung there. The script now waits for its own
+   jobs.
 
-# the procedure's life
-./gradlew :matrix-core:test --tests "io.matrix.cognitive.CognitiveKernelTest" --offline
-
-# the canonical contracts, filled by the runtime
-./gradlew :matrix-core:test --tests "io.matrix.cognitive.canonical.*" --offline
-
-# the epistemic evaluation — 18 of 29
-./gradlew :matrix-core:quarkusBuild --offline
-python3 scripts/w51-epistemic-eval.py --work /tmp/w53-eval-a \
-  --report docs-v2/engineering/W53-EPISTEMIC-EVALUATION.json
-
-# the gates
-bash scripts/quality-gate.sh                    # PASS at 271
-bash scripts/w45-chain-isolation-check.sh        # the isolation gate
-bash scripts/w45-chain-isolation-selftest.sh    # the gate's own control
-python3 scripts/validate-project-registry.py --strict   # 0 defects
-python3 scripts/validate-project-state.py --strict      # 0 defects
-python3 scripts/docs-link-check.py --root "$PWD" --strict
-```
+   The numbers, from `docs-v2/engineering/W53-PERFORMANCE.json`: the single-task path
+   (30 tasks) — p50 **20.77 ms**, p95 **28.25 ms**,
+   throughput **31.83 tasks/s**, every sample `UNRESOLVED`; the concurrent path
+   (24 tasks, four at a time) — every task adjudicated
+   `UNRESOLVED`, the steady state (after the cold start of the first
+   4 samples) p50 **35.57 ms**,
+   **27.89 tasks/s**. The concurrent path is
+   **slower per task** than the single-task one — four tasks in flight contend for the same
+   store and the same peer — and the report says so rather than quoting the throughput of a
+   run without its cold start.
+7. **The earlier "concurrency defect" was a defect of the benchmark; the correction is
+   recorded here rather than left in a chat.** The refusal `the request id
+   req-w53-bench-N is already dispatched` was **correct behaviour**: chain A's cognitive
+   database is persistent by design and the benchmark reused the request ids of the previous
+   run, so the second run measured the durable idempotency instead of the path. The
+   benchmark now stamps every run (`w53-bench-<runStamp>-<index>`) and the report states the
+   stamp. `CognitiveStoreConcurrencyTest` shows that four threads with four distinct request
+   ids are all recorded on one store — the store's own concurrency is sound. What the
+   round-9 narrowing of the duplicate test changed: a busy or a not-null violation is no
+   longer misreported as "already dispatched"; the SQL cause is kept on the exception.
+8. ~~The concurrency and resource limits are not enforced at the boundary.~~ **Done in
+   round 11 on chain A's side, and fixed in round 12.** The limits themselves were right,
+   but the coordinator was built **per request** — so the concurrency cap counted every
+   request as the only one in flight and was unreachable in production. The coordinator is
+   now one per process, held by chain A's entry point, exactly like the store that is
+   this process's single writer. The rest of the round-11 account stands: The coordinator now keeps its bounds in one named place
+   (`DispatchPolicy`) and enforces them: a task whose input does not fit is refused
+   **before** anything is written or sent, the number of dispatches in flight is capped
+   and the work that exceeds the cap is refused rather than queued, the deadline is
+   measured with an injected monotonic clock and a late answer is a **TIMED_OUT** state
+   rather than a silent failure, and a task can be **cancelled** while it is in flight.
+   **The peer's own side of the rule was closed in round 13**: the durable inbox is
+   bounded on the work in flight, an input larger than the limit the task itself
+   declared is refused before it reaches the brain, and work that outlasts the task's
+   deadline is answered as `TIMED_OUT` with the result kept — a deadline that passes
+   does not delete what was computed. Every refusal is durable and travels as a signed
+   response, so the caller learns the reason from the peer instead of discovering it as
+   a timeout. The negative control: with the four guards disabled, exactly the four
+   matching tests of `CognitiveCoordinatorLimitsTest` went red; and with the peer's
+   three bounds disabled, exactly the four matching tests of `TaskPeerBoundsTest` went
+   red. **Done in round 19:** the withdrawal now reaches the peer, and the peer's own
+   record says what became of the task (see §6.5 below).
+9. ~~The retry budget is named but not spent.~~ **Done in round 14.** The count of the
+   delivery attempts lives in the dispatch's own row (`attempts`), so the budget belongs
+   to the *task* and not to the life of a process: a restart does not hand the task a
+   fresh one, and a peer that stays down is dialled a bounded number of times in total.
+   A delivery that failed is retried with the same request id — which is what makes the
+   retry safe, because the peer's durable inbox recognises it — and when the budget is
+   spent the dispatch becomes a **finished, traceable failure** with the reason written
+   down, not a request that is dialled for ever. A defect in the coordinator is *not* a
+   delivery failure: it is allowed to escape, so the dispatch stays unfinished and the
+   reconciliation pass after the restart is what finishes it. The negative control: with
+   the budget widened past the policy, exactly the two matching tests of
+   `CognitiveCoordinatorRetryTest` went red.
+10. ~~The capability registry, the test catalogue and the project state have not been
+   updated.~~ **Done in round 7**: the registry carries **C-53** (the four axes, the serving
+   path, the test evidence and the limitations), the catalogue carries **SCOPE-W53-DISTRIBUTED**,
+   the project state names the wave, and the decision register carries **CD-034**. The
+   **per-case epistemic comparison** was added in round 14 as
+   `docs-v2/engineering/W53-EPISTEMIC-COMPARISON.md`: all 29 cases, their observation and
+   the cause of each of the eleven failures, plus what the distributed path does — and
+   does not do — to the epistemic model.
+11. **The plugin path is partly exercised.** **Done in round 17 on the peer's side.** The
+    remote execution's policy is the peer's allowlist, and it now checks what §11 names on
+    the path the peer owns: the capability must be **registered** (the allowlist — there is
+    no path from a name on the wire to a class or a reflection call), its **version** must
+    be one this process serves (a task that asks for `v2` of a `v1` capability is refused
+    with `UNSUPPORTED`, and the brain is never asked), and a capability that was
+    **withdrawn** must not run again — the check happens on every invocation, so a
+    revocation takes effect on the next call and the caller is told that it was withdrawn
+    rather than that it never existed. `CognitiveCapabilityPolicyTest` — 4 tests; with the
+    version check and the revocation check disabled, exactly the two matching tests went
+    red. **What remains:** the *chain A* plugin registry's own lifecycle, health and budget
+    checks are still not consulted — chain B must not and cannot reach chain A's classes
+    (the isolation gate holds that), so the remote capability's lifecycle is the peer's
+    business, and a plugin that serves a remote capability must register it there.
+12. **The wave is not committed.** Every change is in the working tree; the mandate withholds
+    the authorization that commit and push require.
 
 ---
 
-## 10. The state of the working tree
+## 7. The closeout, still to do
 
-The wave's changes are committed on `develop` and pushed. The pull request `develop` → `main`
-is **prepared and reviewed by an agent, and NOT merged by one**: the merge is the owner's
-decision, as it was for every previous wave.
+The remaining deliverables of §20: the per-case epistemic comparison, the before/after
+measurements for any accepted optimization, and the list of the remaining experimental
+components. **The performance report with the stage-by-stage breakdown is written**
+(`docs-v2/engineering/W53-PERFORMANCE.md` beside its machine-readable form) — it states the
+single-task numbers, the concurrent numbers with the cold start separated, the two defects
+that stood in the way (the knowledge store's unserialized writes and the benchmark's bare
+`wait`), and the correction of the benchmark's request-id defect. The research documents
+are persisted (`docs-v2/research/W53-RESEARCH-A-DURABLE-EXECUTION.md`,
+`docs-v2/research/W53-RESEARCH-B-CYBERNETICS.md`,
+`docs-v2/research/W53-RESEARCH-C-COOPERATIVE-REASONING.md`,
+`docs-v2/research/W53-RESEARCH-D-RELIABILITY-CALIBRATION.md`), and per **META-R2** their
+findings are carried into `MATRIX-CROSS-DISCIPLINARY-RESEARCH.md` (§ W53), into
+`docs-v2/designs/DESIGN-84-distributed-cognitive-bridge.md` and into the hypotheses
+**H-129 … H-133** of `HYPOTHESES-NEW.md`.
+
+### The components that remain experimental, disconnected or deferred
+
+The list §20 asks for, and it is a list of facts, not of excuses:
+
+| the component | the state | why |
+|---|---|---|
+| the method reliability term in the selector's score | **deferred** | the direction is researched (Wilson lower bound), but there is no representative evidence base and no held-out set that would show the term helps; an unjustified number is worse than none (H-132) |
+| the full circular-evidence predicate | **partial, and one step further** | the lineage travels with the report and is compared with what chain A supplied — a report resting on it is QUALIFIED, not SUPPORTED — and since round 18 the **proposition itself** is compared too: a report that states the very proposition chain A supplied is QUALIFIED even when the peer declares no lineage at all (H-131). What remains: the comparison is literal, not semantic — two differently worded statements of the same thing are not recognised as the same proposition |
+| the plugin registry's lifecycle, version, health and budget checks in the remote receiver | **not wired in** | the receiver resolves capability ids through an explicit, allowlisted map, which is the boundary §11 asks for, but the registry's own checks are not part of it yet |
+| the peer's cancellation | **implemented in round 19** | the withdrawal travels as its own signed kind and the peer acts on it: a task withdrawn before it started is never executed, a task withdrawn while it runs finishes and is closed as cancelled with the answer kept, and a finished task is not withdrawn. What remains: the peer cannot interrupt the brain cycle it is inside, so a running task always runs to its end — the cancellation changes the record, not the computation |
+| the reconciliation on a timer | **startup only** | the pass runs when chain A starts — the unfinished work exists exactly after a crash — but an answer lost while the process stayed up waits for the next restart |
+| the peer's own unfinished rows after a crash | **closed in round 20** | the peer's inbox keeps the request's digest and not its payload, so it cannot finish an interrupted execution; the rows it finds in `ACCEPTED` or `RUNNING` are closed as a reasoned failure when the process starts (`RemoteTaskStore.reconcileUnfinished`), and a later delivery of such a task is answered with that failure rather than with "still running". What remains: the interrupted work is lost rather than resumed — the peer cannot resume it, and re-running it would risk a second effect for a task whose first effect may have landed |
+| the eleven remaining epistemic failures | **deferred to a follow-up wave** | they are a retrieval question (the relevance floor and the status filter in `KnowledgeRetriever`), and §14 forbids turning W53 into a rewrite of the retriever |
+| the native and GPU paths | **not enabled** | §10.4 keeps the Java path selected; nothing in the end-to-end profile exposed a computational bottleneck that would justify the marshalling cost |
+| the concurrency of the distributed path | **measured, not optimized** | the concurrent path is slower per task than the single-task one; no optimization was accepted, because nothing was profiled as a profile (CD-W42-01) |
+| the wave's commit, push and pull request | **not done** | they need the owner's authorization, which this wave does not have |
