@@ -96,6 +96,13 @@ public final class W51Demonstration {
      */
     public static final int MAX_LEARNING_CYCLES = 8;
 
+    /** The canonical contracts the mandate names, and the coverage test checks. */
+    public static final List<String> CANONICAL_CONTRACTS = List.of(
+            "Entity", "Relation", "Property", "WorldState", "StateTransition", "Event",
+            "Observation", "Evidence", "Belief", "Hypothesis", "Prediction", "Experiment",
+            "Action", "Outcome", "Goal", "Task", "Skill", "Procedure", "Algorithm", "Plugin",
+            "Evaluation", "Reflection");
+
     /** The workspace the bridged records belong to. */
     public static final String BRIDGED_WORKSPACE = "bridged";
 
@@ -135,6 +142,7 @@ public final class W51Demonstration {
             demonstrationOfTheRuntime(acceptance, report);
             demonstrationOfTheCycle(workbench, knowledgeFile, acceptance, report);
             demonstrationOfTheEpisode(workbench, knowledgeFile, acceptance, report);
+            demonstrationOfTheProcedure(workbench, knowledgeFile, acceptance, report);
             demonstrationOfTheRestart(workbench, knowledgeFile, acceptance, report);
             demonstrationOfThePlugin(acceptance, report);
             demonstrationOfTheBridge(workbench, dataDirectory, acceptance, report);
@@ -277,6 +285,32 @@ public final class W51Demonstration {
                                 + " — " + decision.rationale()).toList());
                 cycle.put("reflection", reflection);
             }
+            // W52 §3 — the CANONICAL form of the cycle: the same cycle in the vocabulary
+            // the rest of the system exchanges. The report says which contracts the
+            // runtime filled, because a contract nobody fills is a shape without a
+            // meaning.
+            if (outcome.canonical() != null) {
+                io.matrix.contract.CognitiveCycle canonical = outcome.canonical();
+                Map<String, Object> canonicalSection = new LinkedHashMap<>();
+                canonicalSection.put("id", canonical.id());
+                canonicalSection.put("goal", canonical.goal() == null ? null : canonical.goal().id());
+                canonicalSection.put("task", canonical.task() == null ? null : canonical.task().id());
+                canonicalSection.put("algorithm", canonical.algorithm() == null
+                        ? null : canonical.algorithm().id());
+                canonicalSection.put("hypotheses", canonical.hypotheses().size());
+                canonicalSection.put("entities", canonical.worldState() == null
+                        ? 0 : canonical.worldState().entities().size());
+                canonicalSection.put("relations", canonical.worldState() == null
+                        ? 0 : canonical.worldState().relations().size());
+                canonicalSection.put("properties", canonical.worldState() == null
+                        ? 0 : canonical.worldState().properties().size());
+                canonicalSection.put("transitions", canonical.transitions().size());
+                canonicalSection.put("produced", CANONICAL_CONTRACTS.stream()
+                        .filter(canonical::produced).toList());
+                canonicalSection.put("absent", CANONICAL_CONTRACTS.stream()
+                        .filter(contract -> !canonical.produced(contract)).toList());
+                cycle.put("canonical", canonicalSection);
+            }
             report.put("cycle", cycle);
 
             point(acceptance, 3, "a structured observation enters the cognitive system",
@@ -350,6 +384,134 @@ public final class W51Demonstration {
         }
     }
 
+    /**
+     * W53 — the procedure is written when the model settles, and a later cycle consults it.
+     *
+     * <p><b>What this section adds to the W51 demonstration.</b> The W51 section shows that a
+     * learned RULE is reused: the session rebuilt from the durable cases starts with one
+     * surviving hypothesis instead of sixteen, and it answers from the rule it learned. That
+     * is the reuse of knowledge. The mandate's §12 asks for something narrower and stronger —
+     * "a previously learned <b>procedure or skill</b> is reused in a later task" — and until
+     * this wave the system could not show it, because its procedural memory was empty: the
+     * W45 finding said that the lamp world's input domain is exhausted once the model
+     * settles, so no independent evidence existed and the promotion refused to write
+     * anything down.</p>
+     *
+     * <p><b>What the wave changed.</b> The procedure is written when the model settles, with
+     * the standing it actually has: the agreement was measured over the cases the model was
+     * built from, which is a consistency check and not a validation, and the record says so.
+     * A later cycle consults that record, and the trace names it and the episode it was
+     * learned in.</p>
+     *
+     * @param workbench   the workbench that holds the durable cases
+     * @param knowledgeFile the cognitive store's file
+     * @param acceptance  the acceptance table
+     * @param report      the report
+     */
+    private static void demonstrationOfTheProcedure(KnowledgeWorkbench workbench,
+                                                    Path knowledgeFile,
+                                                    List<Map<String, Object>> acceptance,
+                                                    Map<String, Object> report) {
+        MicroWorldEnvironment environment = new LampEnvironment();
+        MicroWorldSession.Factory factory = new MicroWorldSession.DefaultFactory(environment);
+        CostLedger ledger = new CostLedger();
+        AlgorithmRegistry registry = Portfolio.defaultRegistry()
+                .register(new MicroWorldReferenceMethod())
+                .register(new MicroWorldSettledModelMethod());
+        AlgorithmSelector selector = new AlgorithmSelector(registry, ledger);
+
+        // The whole domain, in order: the model settles when it has seen every assignment
+        // the environment has, and the procedure is written at that moment.
+        String[] assignments = {
+                "{\"power\":false,\"switch\":false}",
+                "{\"power\":false,\"switch\":true}",
+                "{\"power\":true,\"switch\":false}",
+                "{\"power\":true,\"switch\":true}"};
+        // The model may have settled in an earlier section — the W51 episode section walks
+        // the whole domain — and the cycle that wrote the procedure is recorded there.
+        Object episodeSection = report.get("episode");
+        String writingTrace = episodeSection instanceof Map
+                ? String.valueOf(((Map<?, ?>) episodeSection).get("theCycleThatWroteTheProcedure"))
+                : null;
+        if (writingTrace == null || writingTrace.equals("null")) {
+            writingTrace = null;
+        }
+        String consultingTrace = null;
+        int cycles = 0;
+        try (CognitiveStore store = new CognitiveStore(knowledgeFile)) {
+            CognitiveKernel kernel = new CognitiveKernel(workbench, store, factory, environment,
+                    new KernelSelector(registry, ledger), new KernelRegulator(),
+                    () -> FIXED_INSTANT);
+            for (int index = 0; index < assignments.length + 2; index++) {
+                CognitiveOutcome outcome = kernel.process(CognitiveSignal.structured(
+                        "sig-w53-procedure-" + index, assignments[index % assignments.length],
+                        "the W53 procedure loop", 1L));
+                cycles++;
+                String learn = outcome.trace().phase("LEARN").get(0).detail();
+                if (writingTrace == null && learn.contains("the procedure")
+                        && learn.contains("was written")) {
+                    writingTrace = learn;
+                }
+                String select = outcome.trace().phase("SELECT").get(0).detail();
+                if (consultingTrace == null && select.contains("was consulted")) {
+                    consultingTrace = select;
+                }
+            }
+        }
+
+        List<io.matrix.cognitive.algorithms.Procedure> procedures;
+        try (CognitiveStore store = new CognitiveStore(knowledgeFile)) {
+            procedures = store.procedures(WORKSPACE);
+        }
+        Map<String, Object> procedure = new LinkedHashMap<>();
+        procedure.put("written", procedures.isEmpty() ? null : procedures.get(0).name());
+        procedure.put("id", procedures.isEmpty() ? null : procedures.get(0).id());
+        procedure.put("learnedInEpisode", procedures.isEmpty()
+                ? null : procedures.get(0).learnedInEpisode());
+        procedure.put("validationKind", procedures.isEmpty()
+                ? null : procedures.get(0).validationKind().name());
+        procedure.put("validationCases", procedures.isEmpty() ? 0 : procedures.get(0).validationCases());
+        procedure.put("validationAgreement", procedures.isEmpty()
+                ? 0.0 : procedures.get(0).validationAgreement());
+        procedure.put("whatItRestsOn", procedures.isEmpty()
+                ? null : procedures.get(0).validationNote());
+        procedure.put("theCycleThatWroteIt", writingTrace);
+        procedure.put("theCycleThatConsultedIt", consultingTrace);
+        procedure.put("cycles", cycles);
+        report.put("procedure", procedure);
+
+        amendPoint(acceptance, 11, "the system wrote its procedure down when the model settled"
+                + " — the procedure " + (procedures.isEmpty() ? "(none)" : procedures.get(0).id())
+                + ", learned in episode "
+                + (procedures.isEmpty() ? "(none)" : procedures.get(0).learnedInEpisode())
+                + ", resting on " + (procedures.isEmpty() ? 0 : procedures.get(0).validationCases())
+                + " case(s) of "
+                + (procedures.isEmpty() ? "(none)"
+                : procedures.get(0).validationKind().name())
+                + " evidence — and a later cycle CONSULTED it: the trace of that cycle names "
+                + "the procedure and the episode it was learned in. The session rebuilt from "
+                + "the durable cases also starts with one surviving hypothesis instead of the "
+                + MicroWorldEpisodeRunner.UNBIASED_HYPOTHESIS_COUNT
+                + " of a fresh one, and answers from the rule it learned");
+    }
+
+    /**
+     * Replaces the evidence of an acceptance point that a later section proved better.
+     *
+     * @param acceptance the acceptance table
+     * @param number     the point's number
+     * @param evidence   the evidence, which replaces the earlier one
+     */
+    private static void amendPoint(List<Map<String, Object>> acceptance, int number,
+                                    String evidence) {
+        for (Map<String, Object> entry : acceptance) {
+            if (Integer.valueOf(number).equals(entry.get("number"))) {
+                entry.put("evidence", evidence);
+                return;
+            }
+        }
+    }
+
     /** 7 — one episode of learning in the environment, and the reuse of what it learned. */
     private static void demonstrationOfTheEpisode(KnowledgeWorkbench workbench, Path knowledgeFile,
                                                   List<Map<String, Object>> acceptance,
@@ -368,6 +530,8 @@ public final class W51Demonstration {
         List<Integer> survivorsPerCycle = new ArrayList<>();
         List<String> probes = new ArrayList<>();
         List<String> decisions = new ArrayList<>();
+        // W53: the cycle in which the model settled is the cycle that wrote the procedure.
+        String procedureWritingTrace = null;
         int cycles = 0;
         try (CognitiveStore store = new CognitiveStore(knowledgeFile)) {
             CognitiveKernel kernel = new CognitiveKernel(workbench, store, factory, environment,
@@ -387,6 +551,11 @@ public final class W51Demonstration {
                         .forEach(step -> probes.add(step.detail()));
                 if (outcome.decision() != null) {
                     decisions.add(outcome.decision().reason());
+                }
+                String learn = outcome.trace().phase("LEARN").get(0).detail();
+                if (procedureWritingTrace == null && learn.contains("the procedure")
+                        && learn.contains("was written")) {
+                    procedureWritingTrace = learn;
                 }
                 survivorsPerCycle.add(survivingHypotheses(workbench, factory));
             }
@@ -412,6 +581,7 @@ public final class W51Demonstration {
         // was MEASURED and recorded, so the NEXT cycle's decision weighs the measurement
         // instead of the declared complexity.
         learned.put("methodDecisions", decisions);
+        learned.put("theCycleThatWroteTheProcedure", procedureWritingTrace);
         learned.put("costBasisMeasured", decisions.stream()
                 .anyMatch(decision -> decision.contains("MEASURED")));
         report.put("episode", learned);

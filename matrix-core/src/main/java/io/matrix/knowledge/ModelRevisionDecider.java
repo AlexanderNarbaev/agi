@@ -121,6 +121,36 @@ public final class ModelRevisionDecider {
                             newStrength, bestStrength),
                     bestRelatedness, bestStrength, newStrength);
         }
+        // W53 — A SUPERSESSION IS A RELATION, NOT A SIMILARITY.
+        //
+        // The rule used to be: "the new claim is about the same subject AND it is better
+        // supported". The first half of that rule is a LEXICAL similarity — the two
+        // propositions share content terms — and the mandate says in as many words that a
+        // supersession "must not be inferred from weak lexical similarity alone". The
+        // workspace has no other identity for a subject: its concepts are scoped to the
+        // sentence they came from, and its scope and context are the sentence's own
+        // beginning, so "the same subject" can only be established by the words two
+        // sentences share.
+        //
+        // A denial is a different kind of evidence. It says that the new sentence is about
+        // WHAT THE OLD SENTENCE ASSERTS and contradicts it — the relation is scoped to the
+        // claim it denies, and the reason says so. So the rule now is: a supersession
+        // requires a scoped denial. A new claim that is merely better supported is an
+        // ADDITION, and the workspace says so instead of quietly replacing what it
+        // believed.
+        if (!bestDenied) {
+            return new Decision(false, best.conceptId(), best.id(),
+                    "the new claim is better supported ("
+                            + String.format(Locale.ROOT, "%.3f against %.3f", newStrength, bestStrength)
+                            + ") and lexically similar to an established claim (relatedness "
+                            + String.format(Locale.ROOT, "%.2f", bestRelatedness)
+                            + "), but it does not deny what that claim asserts, and the "
+                            + "workspace has no identity for a subject other than the words two "
+                            + "sentences share: a supersession is not inferred from a lexical "
+                            + "similarity alone, so the new claim is an addition and the claim "
+                            + "stands",
+                    bestRelatedness, bestStrength, newStrength);
+        }
         String reason = bestDenied
                 ? String.format(Locale.ROOT,
                         "the new evidence is about the same subject (relatedness %.2f, and the "

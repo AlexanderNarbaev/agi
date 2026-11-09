@@ -374,8 +374,18 @@ public final class AlgorithmSelector {
     private CostAssessment assessCost(AlgorithmCapability capability) {
         long measured = costLedger.measuredNanos(capability.id());
         if (measured != CostLedger.UNMEASURED) {
-            return new CostAssessment(measured, 0, CostBasis.MEASURED,
-                    "measured " + measured + "ns");
+            // W52: the measurement carries the OUTCOMES as well as the cost, and the
+            // decision says so: the mandate asks the selector to weigh the previous
+            // outcomes of a method, and a decision that does not name them cannot show
+            // that it did.
+            CostLedger.Measurement profile = costLedger.measurement(capability.id());
+            String detail = "measured " + measured + "ns";
+            if (profile != null) {
+                detail = detail + "; " + profile.calls() + " call(s), "
+                        + profile.successes() + " success(es), "
+                        + profile.failures() + " failure(es)";
+            }
+            return new CostAssessment(measured, 0, CostBasis.MEASURED, detail);
         }
         DeclaredCost.Cost declared = DeclaredCost.parse(capability.complexity().time());
         return new CostAssessment(declared.nanos(), declared.nodes(), CostBasis.DECLARED_COMPLEXITY,

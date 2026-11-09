@@ -35,7 +35,28 @@ public enum BridgeCapability {
     CANDIDATE,
 
     /** The right to offer a link to evidence bearing on a proposition. */
-    EVIDENCE_LINK;
+    EVIDENCE_LINK,
+
+    /**
+     * W52 — the right to offer ESTABLISHED KNOWLEDGE.
+     *
+     * <p><b>This is the second direction of the bridge.</b> The three rights above travel
+     * from chain B to chain A: something arrived, a proposition is proposed, evidence bears
+     * on it. This one travels the other way — chain A's epistemic core offers what it has
+     * established, and chain B's brain takes it into its own memory, so that the brain can
+     * answer with what the epistemic core knows.</p>
+     *
+     * <p><b>The direction is carried by the right, not by a flag.</b> A receiver grants the
+     * rights it accepts, so chain A grants {@code OBSERVATION}, {@code CANDIDATE} and
+     * {@code EVIDENCE_LINK} — and chain B grants {@code KNOWLEDGE}. A message of the wrong
+     * direction is refused as a right that was never granted, which is the same refusal the
+     * first direction already had.</p>
+     *
+     * <p><b>The same proposition, two rights.</b> A CANDIDATE and an ESTABLISHED belief are
+     * both the canonical {@code Belief}; what separates them is not the shape but the
+     * standing behind it — and the standing is what the right names.</p>
+     */
+    KNOWLEDGE;
 
     /**
      * True when this right is among the ones the bridge granted (BRIDGE-5).

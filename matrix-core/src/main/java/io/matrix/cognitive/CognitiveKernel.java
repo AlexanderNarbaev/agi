@@ -9,6 +9,7 @@ import io.matrix.cognitive.algorithms.ProblemRequest;
 import io.matrix.cognitive.microworld.Experiment;
 import io.matrix.cognitive.microworld.HypothesisPrediction;
 import io.matrix.cognitive.microworld.MicroWorldSession;
+import io.matrix.cognitive.microworld.RuleHypothesis;
 import io.matrix.cognitive.microworld.Observation;
 import io.matrix.cognitive.microworld.ObservationDisposition;
 import io.matrix.cognitive.microworld.WorldInput;
@@ -131,6 +132,15 @@ public final class CognitiveKernel {
      * the cycle rather than only in a log line.</p>
      */
     private String lastPromotionRefusal;
+
+    /**
+     * W53 — whether the last cycle WROTE the procedure or found the one it had written.
+     *
+     * <p>The trace says which, because the difference is the whole point of the wave: a
+     * procedure the system wrote is a procedure it learned, and a procedure it found is a
+     * procedure it remembered.</p>
+     */
+    private boolean lastProcedureWasWritten;
 
     /**
      * The narrow view of the algorithm selector that the kernel needs.
@@ -439,7 +449,7 @@ public final class CognitiveKernel {
             facts = new java.util.LinkedHashSet<>(facts);
             facts.add(MicroWorldSettledModelMethod.PRECONDITION_MODEL_SETTLED);
         }
-        Procedure procedure = promotedProcedure();
+        Procedure procedure = activeProcedure();
         MicroWorldComputation computation =
                 new MicroWorldComputation(requested, session, facts, procedure);
         ComputeBudget budget = ComputeBudget.millis(DEFAULT_CYCLE_BUDGET_MILLIS);
@@ -450,7 +460,16 @@ public final class CognitiveKernel {
         trace.step("SELECT", "AlgorithmSelector",
                 "selected=" + decision.selectedAlgorithmId() + " status=" + decision.status()
                         + " reason=" + decision.reason()
-                        + " rejected=" + decision.rejected().size());
+                        + " rejected=" + decision.rejected().size()
+                        // W53 — the procedure the cycle CONSULTED is named here, because a
+                        // procedure the system cannot name is a procedure it cannot claim to
+                        // have reused.
+                        + (procedure == null
+                        ? "; the procedural memory holds no procedure for this family yet"
+                        : "; the procedure " + procedure.id() + " was consulted — learned in "
+                                + "episode " + procedure.learnedInEpisode() + ", resting on "
+                                + procedure.validationCases() + " case(s) of "
+                                + procedure.validationKind() + " evidence"));
         if (decision.status() == AlgorithmDecision.Status.REFUSED) {
             store.closeEpisode(episodeId, now);
             return new CognitiveOutcome(episodeId, CognitiveOutcome.Status.REFUSED,
@@ -663,21 +682,31 @@ public final class CognitiveKernel {
         }
 
         deadline.check("OBSERVE");
-        // ── 8. LEARN: promote a fast path only after it is validated ─────────
-        Procedure promotion = promoteIfValidated(session, remembered);
+        // ── 8. LEARN: write the procedure of the settled model, and say what it rests on ──
+        Procedure promotion = procedureOfTheSettledModel(session, remembered, episodeId, now);
         procedureChanged = promotion != null;
-        if (promotion != null) {
+        if (promotion != null && lastProcedureWasWritten) {
             trace.step("LEARN", "CognitiveKernel",
-                    "the fast path was promoted after agreeing with the reference on "
-                            + promotion.validationCases() + " INDEPENDENT case(s) — cases the "
-                            + "model was not built from");
-            notes.add("an independently validated procedure was promoted: " + promotion.id());
-            learned.add("a procedure was promoted after agreeing with the reference on "
-                    + promotion.validationCases() + " independent case(s): " + promotion.id());
+                    "the procedure " + promotion.id() + " was written: " + promotion.name()
+                            + "; it rests on " + promotion.validationCases() + " case(s) of "
+                            + promotion.validationKind() + " evidence (agreement "
+                            + promotion.validationAgreement() + "); " + promotion.validationNote());
+            notes.add("a procedure was written from the settled model: " + promotion.id()
+                    + " (" + promotion.validationKind() + ")");
+            learned.add("a procedure was written from the settled model: " + promotion.id()
+                    + " — " + promotion.validationNote());
+        } else if (promotion != null) {
+            trace.step("LEARN", "CognitiveKernel",
+                    "the procedure " + promotion.id() + " was learned in episode "
+                            + promotion.learnedInEpisode() + " and stands unchanged; it rests on "
+                            + promotion.validationCases() + " case(s) of "
+                            + promotion.validationKind() + " evidence");
+            notes.add("the procedure " + promotion.id() + " was reused from the procedural "
+                    + "memory; it was learned in episode " + promotion.learnedInEpisode());
         } else {
             trace.step("LEARN", "CognitiveKernel",
                     lastPromotionRefusal == null
-                            ? "no procedure was promoted: the model has not settled on a single "
+                            ? "no procedure was written: the model has not settled on a single "
                                     + "hypothesis yet"
                             : lastPromotionRefusal);
             notes.add("the fast path is an in-sample derived shortcut of the reference; it is "
@@ -762,8 +791,22 @@ public final class CognitiveKernel {
         listener.at(RequestCheckpoint.EPISODE_CLOSED);
         LearningTrace completed = persist(trace, episodeId, now);
         listener.at(RequestCheckpoint.OUTCOME_PERSISTED);
+        // W52 §3 — the CANONICAL form of the cycle. The runtime holds its own vocabulary —
+        // its own prediction, its own percept, the micro-world's own hypotheses and
+        // experiment — and the canonical vocabulary is the one the rest of the system
+        // exchanges. This is the explicit boundary between them: one named, pure, tested
+        // mapping, and the cycle's outcome carries both.
+        io.matrix.contract.CognitiveCycle canonical =
+                io.matrix.cognitive.canonical.CanonicalCycleBuilder.build(
+                        new io.matrix.cognitive.canonical.CycleFacts(
+                                episodeId, now, signal.id(), signal.channel(),
+                                requested == null ? null
+                                        : MicroWorldCodec.describe(requested),
+                                percept, session.survivingHypotheses(), experiment, prediction,
+                                observed, error, decision, world, procedure, completed,
+                                reflection, selection.method().capability().id()));
         return new CognitiveOutcome(episodeId, CognitiveOutcome.Status.COMPLETED, answer,
-                percept, prediction, error, decision, completed, notes, reflection);
+                percept, prediction, error, decision, completed, notes, reflection, canonical);
         } catch (CycleTimeoutException timeout) {
             // W45.0. The cycle ran out of its budget. The episode ends, the trace is kept, and
             // the notes say exactly what had already happened — so that a reader can tell an
@@ -905,25 +948,118 @@ public final class CognitiveKernel {
      *
      * @return the promoted procedure, or null when nothing was promoted
      */
-    private Procedure promoteIfValidated(MicroWorldSession session, List<Observation> remembered) {
+    /**
+     * W53 — THE PROCEDURE OF THE SETTLED MODEL, AND WHAT IT RESTS ON.
+     *
+     * <p><b>What the wave changed and why.</b> The W45 finding was that the lamp world's
+     * input domain is exhausted once the model settles, so no observation can be both
+     * independent of the model and available — and the W45 code therefore wrote NOTHING
+     * down and said that the fast path was "an in-sample derived shortcut of the reference,
+     * not as a validated procedure". That was half true: the shortcut was used, and its
+     * standing was never recorded, so the system's procedural memory was empty and the
+     * system could not say that it had learned a procedure.</p>
+     *
+     * <p><b>What is written now.</b> When the model settles on exactly one hypothesis, the
+     * system writes the procedure down: the rule it encodes, the precondition under which
+     * it applies, the method it falls back to, and — the part that matters — WHAT ITS
+     * STANDING RESTS ON. When there is no independent evidence, the record says
+     * {@link ValidationKind#IN_SAMPLE}: the agreement was measured over the cases the model
+     * was built from, which is a consistency check and licenses the shortcut, and is not
+     * evidence that the model generalises. When there IS independent evidence, the record
+     * says {@link ValidationKind#INDEPENDENT} and the procedure is a validated one.</p>
+     *
+     * <p><b>Why the exhaustion is a fact and not a defect.</b> The hypothesis space is the
+     * set of all functions of the environment's inputs: with V inputs there are 2^(2^V)
+     * candidates, and each observation of a distinct assignment eliminates exactly half of
+     * them, so the model settles only after every assignment the domain has been observed.
+     * A model that has settled has therefore seen the whole domain, and there is nothing
+     * left to observe independently. Splitting the same rows in two and calling the halves
+     * independent is a claim the domain cannot support. The test that proves this for the
+     * micro-world is in the wave's own scope.</p>
+     *
+     * @param session    the session, holding what the model was built from
+     * @param remembered every observation the workspace holds
+     * @param episodeId  the episode the procedure is written in
+     * @param now        the instant of the writing
+     * @return the procedure, or null when the model has not settled
+     */
+    private Procedure procedureOfTheSettledModel(MicroWorldSession session,
+                                                 List<Observation> remembered,
+                                                 String episodeId, String now) {
         if (session.survivingHypotheses().size() != 1) {
+            lastPromotionRefusal = "no procedure was written: the model has not settled on a "
+                    + "single hypothesis yet";
+            lastProcedureWasWritten = false;
             return null;
         }
-        List<Observation> cases = independentValidationCandidates(session, remembered);
-        if (cases.size() < MINIMUM_VALIDATION_CASES) {
-            // The refusal is the finding. The lamp world's input domain is exhausted once the
-            // model settles, so no independent evidence exists and no procedure may be
-            // promoted. The fast path still runs as a DERIVED SHORTCUT of the reference, and
-            // the trace says so — but nothing calls it validated.
-            lastPromotionRefusal = "no procedure was promoted: the validation set holds "
-                    + cases.size() + " observation(s) the model was not built from, and "
-                    + MINIMUM_VALIDATION_CASES + " independent observations are required; "
-                    + "the fast path is used as an in-sample derived shortcut of the reference, "
-                    + "not as a validated procedure";
+        RuleHypothesis settled = session.survivingHypotheses().get(0);
+        String name = "the settled-model lookup for: " + settled.statement();
+        List<Observation> independent = independentValidationCandidates(session, remembered);
+        List<Observation> inSample = session.appliedObservations();
+
+        // The procedure that is already there and already says this is the procedure.
+        Procedure active = activeProcedure();
+        if (active != null && active.name().equals(name)
+                && active.validationKind() == ValidationKind.IN_SAMPLE) {
+            lastPromotionRefusal = null;
+            lastProcedureWasWritten = false;
+            return active;
+        }
+
+        double agreement;
+        int cases;
+        ValidationKind kind;
+        String note;
+        if (independent.size() >= MINIMUM_VALIDATION_CASES) {
+            kind = ValidationKind.INDEPENDENT;
+            cases = independent.size();
+            agreement = agreementWithTheReference(session, independent);
+            note = "the agreement was measured over " + cases + " observation(s) the model "
+                    + "was not built from";
+        } else {
+            kind = ValidationKind.IN_SAMPLE;
+            cases = inSample.size();
+            agreement = agreementWithTheReference(session, inSample);
+            note = "the agreement was measured over the " + cases + " case(s) the model was "
+                    + "built from: a consistency check, which licenses the shortcut and says "
+                    + "nothing about whether the model generalises. The validation set holds "
+                    + independent.size() + " observation(s) the model was not built from, and "
+                    + "the environment's input domain is exhausted once the model settles, so "
+                    + "no observation can be both independent of the model and available";
+        }
+        if (kind == ValidationKind.INDEPENDENT && agreement < 1.0) {
+            lastPromotionRefusal = "no procedure was promoted: the fast path disagreed with the "
+                    + "reference on " + Math.round((1.0 - agreement) * cases) + " of " + cases
+                    + " independent observation(s)";
+            lastProcedureWasWritten = false;
             return null;
+        }
+        Procedure written = new Procedure(PROCEDURE_ID, name, FAMILY_MICRO_WORLD,
+                nextProcedureVersion(), "the model has settled on exactly one surviving "
+                + "hypothesis",
+                Set.of(MicroWorldSettledModelMethod.PRECONDITION_MODEL_SETTLED),
+                MicroWorldReferenceMethod.ID,
+                cases, agreement, 0, 0, now, null, kind, episodeId, note);
+        store.recordProcedure(WORKSPACE_ID, written);
+        lastPromotionRefusal = null;
+        lastProcedureWasWritten = true;
+        return written;
+    }
+
+    /**
+     * W53 — the agreement of the fast path with the reference over a set of observations.
+     *
+     * @param session      the session, holding the model
+     * @param observations the observations to measure over
+     * @return the fraction of the observations the two agree on
+     */
+    private double agreementWithTheReference(MicroWorldSession session,
+                                             List<Observation> observations) {
+        if (observations.isEmpty()) {
+            return 0.0;
         }
         int agreed = 0;
-        for (Observation observation : cases) {
+        for (Observation observation : observations) {
             boolean reference;
             try {
                 reference = new MicroWorldReferenceMethod()
@@ -933,36 +1069,42 @@ public final class CognitiveKernel {
             } catch (RuntimeException e) {
                 // The reference method refused: no hypothesis fits the recorded observations.
                 // That means the model has no account of its own data, and nothing may be
-                // promoted on top of it. The refusal is the finding; promoting a procedure
-                // would bury it.
-                lastPromotionRefusal = "no procedure was promoted: the reference method refused "
-                        + "on the independent validation set (" + e.getMessage() + ")";
-                return null;
+                // written on top of it. The refusal is the finding.
+                lastPromotionRefusal = "no procedure was written: the reference method refused "
+                        + "on the model's own data (" + e.getMessage() + ")";
+                return 0.0;
             }
             boolean fast = session.survivingHypotheses().get(0).evaluate(observation.input());
             if (reference == fast) {
                 agreed++;
             }
         }
-        double agreement = (double) agreed / (double) cases.size();
-        if (agreement < 1.0) {
-            lastPromotionRefusal = "no procedure was promoted: the fast path disagreed with the "
-                    + "reference on " + (cases.size() - agreed) + " of " + cases.size()
-                    + " independent observation(s)";
-            return null;
+        return (double) agreed / (double) observations.size();
+    }
+
+    /**
+     * W53 — the version the next definition of the procedure carries.
+     *
+     * <p>A procedure's version is never rewritten: the store treats a version as an
+     * immutable record. When the rule the procedure encodes changes, the new definition
+     * gets the next version, and the old one stays where it is.</p>
+     *
+     * @return the version
+     */
+    private String nextProcedureVersion() {
+        int highest = 0;
+        for (Procedure procedure : store.procedures(WORKSPACE_ID)) {
+            if (!PROCEDURE_ID.equals(procedure.id()) || procedure.version() == null
+                    || !procedure.version().startsWith("v")) {
+                continue;
+            }
+            try {
+                highest = Math.max(highest, Integer.parseInt(procedure.version().substring(1)));
+            } catch (NumberFormatException e) {
+                // A version this wave does not know the shape of is left alone.
+            }
         }
-        Procedure promoted = new Procedure(PROCEDURE_ID,
-                "the settled-model lookup for: "
-                        + session.survivingHypotheses().get(0).statement(),
-                FAMILY_MICRO_WORLD, "v1",
-                "the model has settled on exactly one surviving hypothesis",
-                Set.of(MicroWorldSettledModelMethod.PRECONDITION_MODEL_SETTLED),
-                MicroWorldReferenceMethod.ID,
-                cases.size(), agreement, 0, 0, timestamps.get(), null,
-                ValidationKind.INDEPENDENT);
-        store.recordProcedure(WORKSPACE_ID, promoted);
-        lastPromotionRefusal = null;
-        return promoted;
+        return "v" + (highest + 1);
     }
 
     /**
@@ -1014,8 +1156,16 @@ public final class CognitiveKernel {
         return persisted;
     }
 
-    /** The promoted procedure for the micro-world family, when there is one. */
-    private Procedure promotedProcedure() {
+    /**
+     * The procedure the micro-world family may use, when there is one.
+     *
+     * <p>W53: the procedure is not only a promoted one. The system writes down the
+     * procedure of the settled model — with its standing, in-sample or validated — and a
+     * later episode consults it. This is the reader of that record.</p>
+     *
+     * @return the active procedure, or null when there is none
+     */
+    private Procedure activeProcedure() {
         for (Procedure procedure : store.procedures(WORKSPACE_ID)) {
             if (PROCEDURE_ID.equals(procedure.id()) && procedure.active()) {
                 return procedure;

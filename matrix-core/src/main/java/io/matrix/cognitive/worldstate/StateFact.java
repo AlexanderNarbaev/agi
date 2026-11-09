@@ -29,6 +29,7 @@ import java.util.Map;
  * @param actionId   the action that caused it, when the cause was an action
  * @param status     how much the system believes the fact
  * @param at         when it happened
+ * @param relation   the connection the fact asserts, or {@code null} when it asserts none
  */
 public record StateFact(
         String id,
@@ -39,7 +40,8 @@ public record StateFact(
         StateTransition.Cause cause,
         String actionId,
         BeliefStatus status,
-        String at) {
+        String at,
+        StateRelation relation) {
 
     public StateFact {
         if (id == null || id.isBlank()) {
@@ -88,7 +90,7 @@ public record StateFact(
     public static StateFact observed(String id, String entityId, String entityType,
                                      String entityName, Map<String, Object> properties, String at) {
         return new StateFact(id, entityId, entityType, entityName, properties,
-                StateTransition.Cause.OBSERVATION, null, BeliefStatus.OBSERVED, at);
+                StateTransition.Cause.OBSERVATION, null, BeliefStatus.OBSERVED, at, null);
     }
 
     /**
@@ -107,7 +109,7 @@ public record StateFact(
                                   String entityName, Map<String, Object> properties,
                                   String actionId, String at) {
         return new StateFact(id, entityId, entityType, entityName, properties,
-                StateTransition.Cause.ACTION, actionId, BeliefStatus.OBSERVED, at);
+                StateTransition.Cause.ACTION, actionId, BeliefStatus.OBSERVED, at, null);
     }
 
     /**
@@ -122,6 +124,22 @@ public record StateFact(
      */
     public StateFact withStatus(BeliefStatus newStatus) {
         return new StateFact(id, entityId, entityType, entityName, properties,
-                cause, actionId, newStatus, at);
+                cause, actionId, newStatus, at, relation);
+    }
+
+    /**
+     * The same fact, with a connection asserted as well.
+     *
+     * <p>W52. A fact may say that the entity it is about is connected to another one — the
+     * micro-world's assignment is connected to the lamp it determines. The connection is
+     * asserted by the DOMAIN, and the memory records it with its own bookkeeping: the
+     * evidence, the count and the confidence are the memory's, not the domain's.</p>
+     *
+     * @param newRelation the connection the fact asserts
+     * @return the fact
+     */
+    public StateFact withRelation(StateRelation newRelation) {
+        return new StateFact(id, entityId, entityType, entityName, properties,
+                cause, actionId, status, at, newRelation);
     }
 }

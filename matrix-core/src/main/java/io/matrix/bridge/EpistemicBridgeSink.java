@@ -63,7 +63,7 @@ final class EpistemicBridgeSink implements BridgeSink {
     }
 
     @Override
-    public void accept(BridgeEnvelope envelope) {
+    public io.matrix.contract.Outcome accept(BridgeEnvelope envelope) {
         BridgePayload payload = codec.decode(envelope.payload());
         Provenance provenance = payload.provenance();
         String now = clock.get();
@@ -74,6 +74,10 @@ final class EpistemicBridgeSink implements BridgeSink {
             default -> throw new IllegalStateException("the bridge cannot carry "
                     + payload.kind());
         }
+        // The delivery direction has nothing to report back: the decision says the message
+        // was accepted, and the effect is in the epistemic store, which the sender cannot
+        // and must not read.
+        return null;
     }
 
     private void writeObservation(BridgeEnvelope envelope, Observation observation,

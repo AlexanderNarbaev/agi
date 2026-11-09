@@ -54,7 +54,11 @@ class WorldStateMemoryTest {
 
         WorldState state = memory.state();
         assertEquals(1L, state.revision());
-        assertEquals(1, state.entities().size());
+        // W52: the state holds the assignment AND the lamp it is connected to — the
+        // connection is what the canonical Relation describes, and a relation may not
+        // point at something the state does not hold.
+        assertEquals(2, state.entities().size());
+        assertTrue(state.entities().containsKey(MicroWorldStateAdapter.LAMP_ENTITY_ID));
         assertEquals(1, state.properties().size());
         assertTrue(memory.knows(MicroWorldStateAdapter.entityId(assignment(false, true)),
                 MicroWorldStateAdapter.PROPERTY_LAMP));
@@ -139,6 +143,48 @@ class WorldStateMemoryTest {
         assertFalse(before.knows(MicroWorldStateAdapter.entityId(assignment(true, false)),
                 MicroWorldStateAdapter.PROPERTY_LAMP),
                 "an assignment nobody probed is not known");
+    }
+
+    @Test
+    @DisplayName("the connection the domain asserts is recorded with the system's own evidence")
+    void theConnectionIsRecordedWithTheSystemsEvidence() {
+        WorldStateMemory memory = new WorldStateMemory("micro-world.lamp", "ws", PROVENANCE);
+        WorldInput input = assignment(false, true);
+
+        memory.apply(MicroWorldStateAdapter.fact(observation("obs-1", input, false),
+                StateTransition.Cause.OBSERVATION, null));
+        memory.apply(MicroWorldStateAdapter.fact(observation("obs-2", input, false),
+                StateTransition.Cause.OBSERVATION, null));
+
+        List<io.matrix.contract.Relation> relations = memory.state().relations();
+        assertEquals(1, relations.size());
+        io.matrix.contract.Relation relation = relations.get(0);
+        assertEquals(MicroWorldStateAdapter.RELATION_DETERMINES, relation.type());
+        assertEquals(MicroWorldStateAdapter.entityId(input), relation.sourceEntityId());
+        assertEquals(MicroWorldStateAdapter.LAMP_ENTITY_ID, relation.targetEntityId());
+        assertTrue(relation.causallyRelevant(),
+                "the connection asserts a causal role, and the record says so");
+        assertEquals(2, relation.observationCount(),
+                "the count is the system's own: two observations carried the connection");
+        assertEquals(2, relation.evidenceIds().size());
+        assertEquals(BeliefStatus.OBSERVED, relation.status());
+    }
+
+    @Test
+    @DisplayName("a contradicting observation makes the connection contested, not observed")
+    void aContradictingObservationMakesTheConnectionContested() {
+        WorldStateMemory memory = new WorldStateMemory("micro-world.lamp", "ws", PROVENANCE);
+        WorldInput input = assignment(false, true);
+
+        memory.apply(MicroWorldStateAdapter.fact(observation("obs-1", input, false),
+                StateTransition.Cause.OBSERVATION, null));
+        Observation adversarial = new Observation("obs-adv", input, true, true, AT);
+        memory.apply(MicroWorldStateAdapter.fact(adversarial,
+                StateTransition.Cause.OBSERVATION, null));
+
+        io.matrix.contract.Relation relation = memory.state().relations().get(0);
+        assertEquals(BeliefStatus.CONTESTED, relation.status(),
+                "the weaker stance wins: one answer from a fault-injecting probe contests it");
     }
 
     @Test

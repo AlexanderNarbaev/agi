@@ -379,8 +379,9 @@ public final class W51Benchmarks {
         private long accepted;
 
         @Override
-        public void accept(BridgeEnvelope envelope) {
+        public io.matrix.contract.Outcome accept(BridgeEnvelope envelope) {
             accepted++;
+            return null;
         }
     }
 

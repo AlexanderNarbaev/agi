@@ -4,6 +4,7 @@ import io.matrix.contract.BeliefStatus;
 import io.matrix.contract.Confidence;
 import io.matrix.contract.Entity;
 import io.matrix.contract.Property;
+import io.matrix.contract.Relation;
 import io.matrix.contract.Provenance;
 import io.matrix.contract.StateTransition;
 import io.matrix.contract.WorldState;
@@ -67,6 +68,7 @@ public final class WorldStateMemory {
     private final Provenance provenance;
     private final Map<String, Entity> entities = new LinkedHashMap<>();
     private final Map<String, Property> properties = new LinkedHashMap<>();
+    private final Map<String, Relation> relations = new LinkedHashMap<>();
     private final List<StateTransition> transitions = new ArrayList<>();
     private long revision;
 
@@ -127,7 +129,7 @@ public final class WorldStateMemory {
                 environmentId,
                 revision,
                 entities,
-                List.of(),
+                List.copyOf(relations.values()),
                 List.copyOf(properties.values()),
                 provenance.recordedAt(),
                 provenance);
@@ -206,6 +208,51 @@ public final class WorldStateMemory {
                 existing == null ? Map.of() : existing.attributes(),
                 provenance);
         entities.put(fact.entityId(), entity);
+        // The connection, when the fact asserts one. The memory owns the bookkeeping: the
+        // count of the observations that carried it, the evidence they were, and the
+        // confidence that rests on them. A domain may assert a connection; it may not
+        // assert how well supported it is.
+        if (fact.relation() != null) {
+            Entity target = entities.get(fact.relation().targetEntityId());
+            if (target == null) {
+                entities.put(fact.relation().targetEntityId(), new Entity(
+                        fact.relation().targetEntityId(),
+                        fact.relation().targetEntityType(),
+                        fact.relation().targetEntityId(),
+                        workspaceId,
+                        Map.of(),
+                        provenance));
+            }
+            String relationKey = fact.relation().type() + "|" + fact.entityId()
+                    + "|" + fact.relation().targetEntityId();
+            Relation current = relations.get(relationKey);
+            int count = current == null ? 0 : current.observationCount();
+            List<String> evidence = new ArrayList<>();
+            if (current != null) {
+                evidence.addAll(current.evidenceIds());
+            }
+            evidence.add(fact.id());
+            // A fact the system believes less makes the connection less settled, and the
+            // weaker stance wins: a connection that one contradicting observation touched
+            // is CONTESTED, whatever the other observations said.
+            BeliefStatus relationStatus = current == null ? fact.status()
+                    : (current.status() == BeliefStatus.CONTESTED || fact.status()
+                    == BeliefStatus.CONTESTED ? BeliefStatus.CONTESTED : fact.status());
+            relations.put(relationKey, new Relation(
+                    relationKey,
+                    fact.relation().type(),
+                    fact.entityId(),
+                    fact.relation().targetEntityId(),
+                    relationStatus,
+                    Confidence.measured(OBSERVED_CONFIDENCE, count + 1, 0, OBSERVED_METHOD,
+                            List.of("the connection was carried by " + (count + 1)
+                                    + " observation(s)")),
+                    1.0,
+                    count + 1,
+                    fact.relation().causallyRelevant(),
+                    evidence,
+                    provenance));
+        }
 
         Map<String, Object> changed = new LinkedHashMap<>();
         for (Map.Entry<String, Object> entry : fact.properties().entrySet()) {

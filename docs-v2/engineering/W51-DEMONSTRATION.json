@@ -84,9 +84,22 @@
       "reuseMethod" : true,
       "predicted" : "false",
       "observed" : null,
-      "learned" : [ "the observation was written as case case-aed5f06b and as evidence on claim clm-556bc97e-a55d-41fc-a0bc-58e94ea3b079 (the model explains it)", "the model holds 8 surviving hypothesis(es) over 0 remembered case(s)" ],
+      "learned" : [ "the observation was written as case case-aed5f06b and as evidence on claim clm-8336ba49-5853-4e9a-8564-c4c58bea46ef (the model explains it)", "the model holds 8 surviving hypothesis(es) over 0 remembered case(s)" ],
       "uncertainties" : [ "the surviving hypotheses disagree: 8 of them" ],
       "decisions" : [ "LEAVE_UNRESOLVED ep-sig-w51-1 — the cycle left something unresolved and says what" ]
+    },
+    "canonical" : {
+      "id" : "cyc-ep-sig-w51-1",
+      "goal" : "goal-ep-sig-w51-1",
+      "task" : "task-ep-sig-w51-1",
+      "algorithm" : "micro-world-hypothesis-enumeration",
+      "hypotheses" : 8,
+      "entities" : 2,
+      "relations" : 1,
+      "properties" : 1,
+      "transitions" : 1,
+      "produced" : [ "Entity", "Relation", "Property", "WorldState", "StateTransition", "Event", "Observation", "Evidence", "Belief", "Hypothesis", "Prediction", "Experiment", "Action", "Outcome", "Goal", "Task", "Algorithm", "Evaluation", "Reflection" ],
+      "absent" : [ "Skill", "Procedure", "Plugin" ]
     }
   },
   "metaMemory" : {
@@ -97,7 +110,7 @@
       "revisionRate" : 0.0,
       "claimsIntroduced" : 1,
       "claimsRevised" : 0,
-      "sourceId" : "src-50c1a408-a6e9-43d5-a540-da612eb042d5"
+      "sourceId" : "src-a7ce2806-7d89-4a5a-9d55-0eda3724b3b5"
     } ],
     "evaluation" : {
       "sources.known" : {

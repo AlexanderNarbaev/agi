@@ -100,7 +100,7 @@ public final class BridgeJournal implements BridgeIdempotency, BridgeAudit, Auto
                 BridgeDecision decision = new BridgeDecision(
                         BridgeDecision.Status.valueOf(rows.getString("status")), requestId,
                         rows.getString("audit_id"), rows.getString("reason"));
-                return Optional.of(new Outcome(decision, rows.getString("payload_digest")));
+                return Optional.of(Outcome.of(decision, rows.getString("payload_digest")));
             }
         } catch (SQLException e) {
             throw new IllegalStateException("the bridge journal could not be read: "

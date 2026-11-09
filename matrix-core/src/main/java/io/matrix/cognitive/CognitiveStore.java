@@ -91,7 +91,8 @@ import java.util.Locale;
  * process is killed: the lock file is left behind with the dead owner's record in it, and the
  * next writer takes it over because that owner is dead.</p>
  */
-public final class CognitiveStore implements AutoCloseable {
+public final class CognitiveStore
+        implements AutoCloseable, io.matrix.cognitive.algorithms.MethodMeasurementStore {
 
     /** The schema version this build writes. */
     public static final int SCHEMA_VERSION = 4;
@@ -297,6 +298,23 @@ public final class CognitiveStore implements AutoCloseable {
             // W45.0: the durable counter. A row per sequence name, incremented in a
             // transaction, so that a restart cannot reset it and two concurrent callers
             // cannot be handed the same number.
+            // W52: the durable PROFILE of the system's own methods. The ledger of measured
+            // costs was in the heap, so every restart threw away what the system had
+            // learned about how its methods behave, and the selector fell back to the
+            // DECLARED complexity — a person's estimate where a measurement belongs. The
+            // table holds the aggregate, and the single writer of this database is the only
+            // thing that writes it.
+            st.execute("""
+                    CREATE TABLE IF NOT EXISTS cognitive_method_measurement (
+                        workspace_id TEXT NOT NULL,
+                        method_id TEXT NOT NULL,
+                        total_nanos INTEGER NOT NULL,
+                        calls INTEGER NOT NULL,
+                        successes INTEGER NOT NULL,
+                        failures INTEGER NOT NULL,
+                        updated_at TEXT NOT NULL,
+                        PRIMARY KEY (workspace_id, method_id)
+                    )""");
             st.execute("""
                     CREATE TABLE IF NOT EXISTS cognitive_sequence (
                         name TEXT PRIMARY KEY,
@@ -409,6 +427,15 @@ public final class CognitiveStore implements AutoCloseable {
             return;
         }
         if (!procedureTableNeedsVersionKey()) {
+            // W53: the table has the right key, and it may still be a table written
+            // before the wave added the episode and the note. The two columns are added
+            // here, and the rows that predate them keep null in both — a procedure that
+            // was learned before the wave can say neither where it was learned nor what
+            // its standing rests on, and that is the truth about it.
+            try (Statement st = connection.createStatement()) {
+                addColumnIfMissing(st, "cognitive_procedure", "learned_in_episode", "TEXT");
+                addColumnIfMissing(st, "cognitive_procedure", "validation_note", "TEXT");
+            }
             return;
         }
         try (Statement st = connection.createStatement()) {
@@ -430,6 +457,8 @@ public final class CognitiveStore implements AutoCloseable {
                         promoted_at TEXT NOT NULL,
                         invalidated_at TEXT,
                         validation_kind TEXT,
+                        learned_in_episode TEXT,
+                        validation_note TEXT,
                         PRIMARY KEY (id, version)
                     )""");
             // A table written before the validation kind existed carries no such column,
@@ -468,6 +497,8 @@ public final class CognitiveStore implements AutoCloseable {
                         promoted_at TEXT NOT NULL,
                         invalidated_at TEXT,
                         validation_kind TEXT,
+                        learned_in_episode TEXT,
+                        validation_note TEXT,
                         PRIMARY KEY (id, version)
                     )""");
         }
@@ -986,8 +1017,9 @@ public final class CognitiveStore implements AutoCloseable {
                 "INSERT INTO cognitive_procedure(id, workspace_id, name, problem_family, "
                         + "version, applicability, required_facts, reference_algorithm_id, "
                         + "validation_cases, validation_agreement, use_count, failure_count, "
-                        + "promoted_at, invalidated_at, validation_kind) "
-                        + "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)")) {
+                        + "promoted_at, invalidated_at, validation_kind, learned_in_episode, "
+                        + "validation_note) "
+                        + "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)")) {
             ps.setString(1, procedure.id());
             ps.setString(2, workspaceId);
             ps.setString(3, procedure.name());
@@ -1004,6 +1036,8 @@ public final class CognitiveStore implements AutoCloseable {
             ps.setString(14, procedure.invalidatedAt());
             ps.setString(15, procedure.validationKind() == null
                     ? ValidationKind.IN_SAMPLE.name() : procedure.validationKind().name());
+            ps.setString(16, procedure.learnedInEpisode());
+            ps.setString(17, procedure.validationNote());
             ps.executeUpdate();
         } catch (SQLException e) {
             if (isConstraintViolation(e)) {
@@ -1020,7 +1054,8 @@ public final class CognitiveStore implements AutoCloseable {
     private List<String> procedureContent(String procedureId, String version) {
         try (PreparedStatement ps = connection.prepareStatement(
                 "SELECT name, problem_family, applicability, required_facts, "
-                        + "reference_algorithm_id, validation_agreement, validation_kind "
+                        + "reference_algorithm_id, validation_agreement, validation_kind, "
+                        + "learned_in_episode, validation_note "
                         + "FROM cognitive_procedure WHERE id = ? AND version = ?")) {
             ps.setString(1, procedureId);
             ps.setString(2, version);
@@ -1039,6 +1074,11 @@ public final class CognitiveStore implements AutoCloseable {
                 // consistency check it was, and the record says the same thing.
                 String kind = rs.getString(7);
                 content.add(kind == null ? ValidationKind.IN_SAMPLE.name() : kind);
+                // W53: the episode the procedure was learned in and the note that says
+                // what its standing rests on are part of its definition. A procedure whose
+                // definition may change in place is not an immutable record.
+                content.add(rs.getString(8));
+                content.add(rs.getString(9));
                 return content;
             }
         } catch (SQLException e) {
@@ -1056,6 +1096,10 @@ public final class CognitiveStore implements AutoCloseable {
         content.add(Double.toString(procedure.validationAgreement()));
         content.add(procedure.validationKind() == null
                 ? ValidationKind.IN_SAMPLE.name() : procedure.validationKind().name());
+        // W53: the episode the procedure was learned in and the note that says what its
+        // standing rests on are part of its definition.
+        content.add(procedure.learnedInEpisode());
+        content.add(procedure.validationNote());
         return content;
     }
 
@@ -1073,7 +1117,8 @@ public final class CognitiveStore implements AutoCloseable {
         try (PreparedStatement ps = connection.prepareStatement(
                 "SELECT id, name, problem_family, version, applicability, required_facts, "
                         + "reference_algorithm_id, validation_cases, validation_agreement, "
-                        + "use_count, failure_count, promoted_at, invalidated_at, validation_kind "
+                        + "use_count, failure_count, promoted_at, invalidated_at, validation_kind, "
+                        + "learned_in_episode, validation_note "
                         + "FROM cognitive_procedure WHERE workspace_id = ? "
                         + "ORDER BY id, promoted_at DESC, version DESC")) {
             ps.setString(1, workspaceId);
@@ -1088,13 +1133,94 @@ public final class CognitiveStore implements AutoCloseable {
                             rs.getInt("use_count"), rs.getInt("failure_count"),
                             rs.getString("promoted_at"), rs.getString("invalidated_at"),
                             kind == null ? ValidationKind.IN_SAMPLE
-                                    : ValidationKind.valueOf(kind)));
+                                    : ValidationKind.valueOf(kind),
+                            rs.getString("learned_in_episode"),
+                            rs.getString("validation_note")));
                 }
             }
         } catch (SQLException e) {
             throw new IllegalStateException("failed to read the procedures", e);
         }
         return out;
+    }
+
+    // ── the durable profile of the methods ───────────────────────────────────
+
+    /**
+     * W52 — records one measured call of a method.
+     *
+     * <p>The aggregate is updated in place: the profile is the sum of what the system has
+     * measured, and a call that arrives after a restart adds to what the previous process
+     * left behind. That is the whole point of the table — the measurement of the method is
+     * not the measurement of the process.</p>
+     *
+     * @param workspaceId the workspace the measurement belongs to
+     * @param methodId    the method that was run
+     * @param nanos       how long it took, in nanoseconds
+     * @param succeeded   whether it completed without throwing
+     * @param at          the instant of the measurement
+     */
+    @Override
+    public void recordMeasurement(String workspaceId, String methodId, long nanos,
+                                   boolean succeeded, String at) {
+        if (workspaceId == null || workspaceId.isBlank()) {
+            throw new IllegalArgumentException("the workspace of a measurement must not be blank");
+        }
+        if (methodId == null || methodId.isBlank()) {
+            throw new IllegalArgumentException("the method of a measurement must not be blank");
+        }
+        if (nanos < 0L) {
+            throw new IllegalArgumentException("measured nanoseconds must not be negative");
+        }
+        try (PreparedStatement ps = connection.prepareStatement(
+                "INSERT INTO cognitive_method_measurement(workspace_id, method_id, total_nanos, "
+                        + "calls, successes, failures, updated_at) VALUES (?,?,?,?,?,?,?) "
+                        + "ON CONFLICT(workspace_id, method_id) DO UPDATE SET "
+                        + "total_nanos = total_nanos + excluded.total_nanos, "
+                        + "calls = calls + excluded.calls, "
+                        + "successes = successes + excluded.successes, "
+                        + "failures = failures + excluded.failures, "
+                        + "updated_at = excluded.updated_at")) {
+            ps.setString(1, workspaceId);
+            ps.setString(2, methodId);
+            ps.setLong(3, nanos);
+            ps.setInt(4, 1);
+            ps.setInt(5, succeeded ? 1 : 0);
+            ps.setInt(6, succeeded ? 0 : 1);
+            ps.setString(7, at == null ? "" : at);
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            throw new IllegalStateException("the measurement could not be written: "
+                    + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * W52 — the measurements of a workspace, read back after a restart.
+     *
+     * @param workspaceId the workspace
+     * @return the measurements, never null
+     */
+    @Override
+    public List<io.matrix.cognitive.algorithms.CostLedger.Measurement> measurements(String workspaceId) {
+        List<io.matrix.cognitive.algorithms.CostLedger.Measurement> out = new ArrayList<>();
+        try (PreparedStatement ps = connection.prepareStatement(
+                "SELECT method_id, total_nanos, calls, successes, failures "
+                        + "FROM cognitive_method_measurement WHERE workspace_id = ? "
+                        + "ORDER BY method_id")) {
+            ps.setString(1, workspaceId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    out.add(new io.matrix.cognitive.algorithms.CostLedger.Measurement(rs.getString("method_id"),
+                            rs.getLong("total_nanos"), rs.getInt("calls"),
+                            rs.getInt("successes"), rs.getInt("failures")));
+                }
+            }
+        } catch (SQLException e) {
+            throw new IllegalStateException("the measurements could not be read: "
+                    + e.getMessage(), e);
+        }
+        return List.copyOf(out);
     }
 
     // ── tasks ────────────────────────────────────────────────────────────────

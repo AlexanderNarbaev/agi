@@ -30,7 +30,23 @@ public final class BridgeProtocol {
     public static final String NAME = "matrix.bridge";
 
     /** The version of the bridge protocol this build speaks (BRIDGE-2). */
-    public static final int VERSION = 1;
+    public static final int VERSION = 2;
+
+    /**
+     * W52 — the oldest version this build still reads.
+     *
+     * <p><b>Why an old version is still readable.</b> Version 1 carried the first direction
+     * of the bridge — an observation, a candidate, an evidence link — and every message of
+     * that version says exactly what it means in a form this build understands. Version 2
+     * adds the second direction: a task. A reader that understands both does not have to
+     * <i>guess</i> what a version-1 message meant, so reading it is not the guess BRIDGE-2
+     * forbids; refusing it would break a peer that has not been upgraded yet, for no gain.</p>
+     *
+     * <p><b>What is still refused.</b> A version this build has never heard of is refused
+     * with its number named, exactly as before: the rule is not "close enough", it is "this
+     * reader understands this version".</p>
+     */
+    public static final int MINIMUM_READABLE_VERSION = 1;
 
     /** The header carrying {@link #NAME}. */
     public static final String HEADER_PROTOCOL = "X-Matrix-Bridge-Protocol";
@@ -83,7 +99,7 @@ public final class BridgeProtocol {
      * @return true when the message may be read
      */
     public static boolean supportedVersion(int offered) {
-        return compatible(offered, VERSION);
+        return offered >= MINIMUM_READABLE_VERSION && offered <= VERSION;
     }
 
     private BridgeProtocol() {

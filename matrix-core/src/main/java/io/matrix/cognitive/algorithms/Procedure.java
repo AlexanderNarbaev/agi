@@ -46,7 +46,51 @@ public record Procedure(
         int failureCount,
         String promotedAt,
         String invalidatedAt,
-        ValidationKind validationKind) {
+        ValidationKind validationKind,
+        String learnedInEpisode,
+        String validationNote) {
+
+    /**
+     * W53 — the shape the W44 record had.
+     *
+     * <p>The two fields the wave added carry the episode that wrote the procedure and the
+     * note that says what its standing rests on; a procedure written before the wave has
+     * neither, and says so by having neither.</p>
+     *
+     * @param id                    the identity of the procedure
+     * @param name                  what the procedure is called
+     * @param problemFamily         the family of problems it answers
+     * @param version               the version of the procedure's definition
+     * @param applicability         the domain it may be used in
+     * @param requiredFacts         the facts that must hold for it to apply
+     * @param referenceAlgorithmId  the method it falls back to
+     * @param validationCases       the cases its agreement was measured over
+     * @param validationAgreement   the measured agreement with the reference
+     * @param useCount              how often it has been used
+     * @param failureCount          how often it has failed
+     * @param promotedAt            the instant it entered the active set
+     * @param invalidatedAt         the instant it was withdrawn, or null
+     * @param validationKind        what its agreement actually shows
+     */
+    public Procedure(
+            String id,
+            String name,
+            String problemFamily,
+            String version,
+            String applicability,
+            Set<String> requiredFacts,
+            String referenceAlgorithmId,
+            int validationCases,
+            double validationAgreement,
+            int useCount,
+            int failureCount,
+            String promotedAt,
+            String invalidatedAt,
+            ValidationKind validationKind) {
+        this(id, name, problemFamily, version, applicability, requiredFacts,
+                referenceAlgorithmId, validationCases, validationAgreement, useCount, failureCount,
+                promotedAt, invalidatedAt, validationKind, null, null);
+    }
 
     public Procedure {
         if (id == null || id.isBlank()) {
@@ -85,7 +129,8 @@ public record Procedure(
     public Procedure invalidatedAt(String moment) {
         return new Procedure(id, name, problemFamily, version, applicability, requiredFacts,
                 referenceAlgorithmId, validationCases, validationAgreement,
-                useCount, failureCount, promotedAt, moment, validationKind);
+                useCount, failureCount, promotedAt, moment, validationKind,
+                learnedInEpisode, validationNote);
     }
 
     /** True when the given facts satisfy the procedure's applicability domain. */
@@ -98,6 +143,6 @@ public record Procedure(
         return new Procedure(id, name, problemFamily, version, applicability, requiredFacts,
                 referenceAlgorithmId, validationCases, validationAgreement,
                 useCount + 1, failureCount + (succeeded ? 0 : 1), promotedAt, invalidatedAt,
-                validationKind);
+                validationKind, learnedInEpisode, validationNote);
     }
 }

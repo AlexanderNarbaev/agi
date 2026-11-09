@@ -1,0 +1,1095 @@
+{
+  "dataset": "w50-plate-tectonics",
+  "datasetVersion": "1.1",
+  "source": "docs-v2/demos/local-learning-loop/EVALUATION-SET.md",
+  "runner": "scripts/w51-epistemic-eval.py",
+  "offline": true,
+  "boundary": "the JVM's HTTP and HTTPS clients are pointed at a closed port on the loopback interface; no request leaves the machine and no model is called",
+  "preparations": [
+    {
+      "scope": "S1",
+      "askedIn": "plate-tectonics-eval-seed",
+      "description": "the two seed documents, 348 claims, 2 sources, no pool document",
+      "steps": [
+        {
+          "call": "POST /v1/learning/workspaces/{workspace}/seed",
+          "workspace": "plate-tectonics-eval-seed",
+          "httpError": null,
+          "documentsAcquired": 2,
+          "claimsAdded": 348,
+          "acquired": [
+            "usgs-this-dynamic-earth.md",
+            "wikipedia-plate-tectonics.md"
+          ],
+          "revisionsApplied": null
+        }
+      ]
+    },
+    {
+      "scope": "S1",
+      "askedIn": "plate-tectonics-eval-seed",
+      "description": "the two seed documents, 348 claims, 2 sources, no pool document",
+      "steps": [
+        {
+          "call": "POST /v1/learning/workspaces/{workspace}/seed",
+          "workspace": "plate-tectonics-eval-seed",
+          "httpError": null,
+          "documentsAcquired": 2,
+          "claimsAdded": 348,
+          "acquired": [
+            "usgs-this-dynamic-earth.md",
+            "wikipedia-plate-tectonics.md"
+          ],
+          "revisionsApplied": null
+        }
+      ]
+    },
+    {
+      "scope": "S1",
+      "askedIn": "plate-tectonics-eval-seed",
+      "description": "the two seed documents, 348 claims, 2 sources, no pool document",
+      "steps": [
+        {
+          "call": "POST /v1/learning/workspaces/{workspace}/seed",
+          "workspace": "plate-tectonics-eval-seed",
+          "httpError": null,
+          "documentsAcquired": 2,
+          "claimsAdded": 348,
+          "acquired": [
+            "usgs-this-dynamic-earth.md",
+            "wikipedia-plate-tectonics.md"
+          ],
+          "revisionsApplied": null
+        }
+      ]
+    },
+    {
+      "scope": "S1",
+      "askedIn": "plate-tectonics-eval-seed",
+      "description": "the two seed documents, 348 claims, 2 sources, no pool document",
+      "steps": [
+        {
+          "call": "POST /v1/learning/workspaces/{workspace}/seed",
+          "workspace": "plate-tectonics-eval-seed",
+          "httpError": null,
+          "documentsAcquired": 2,
+          "claimsAdded": 348,
+          "acquired": [
+            "usgs-this-dynamic-earth.md",
+            "wikipedia-plate-tectonics.md"
+          ],
+          "revisionsApplied": null
+        }
+      ]
+    },
+    {
+      "scope": "S1",
+      "askedIn": "plate-tectonics-eval-seed",
+      "description": "the two seed documents, 348 claims, 2 sources, no pool document",
+      "steps": [
+        {
+          "call": "POST /v1/learning/workspaces/{workspace}/seed",
+          "workspace": "plate-tectonics-eval-seed",
+          "httpError": null,
+          "documentsAcquired": 2,
+          "claimsAdded": 348,
+          "acquired": [
+            "usgs-this-dynamic-earth.md",
+            "wikipedia-plate-tectonics.md"
+          ],
+          "revisionsApplied": null
+        }
+      ]
+    },
+    {
+      "scope": "S1",
+      "askedIn": "plate-tectonics-eval-seed",
+      "description": "the two seed documents, 348 claims, 2 sources, no pool document",
+      "steps": [
+        {
+          "call": "POST /v1/learning/workspaces/{workspace}/seed",
+          "workspace": "plate-tectonics-eval-seed",
+          "httpError": null,
+          "documentsAcquired": 2,
+          "claimsAdded": 348,
+          "acquired": [
+            "usgs-this-dynamic-earth.md",
+            "wikipedia-plate-tectonics.md"
+          ],
+          "revisionsApplied": null
+        }
+      ]
+    },
+    {
+      "scope": "S1",
+      "askedIn": "plate-tectonics-eval-seed",
+      "description": "the two seed documents, 348 claims, 2 sources, no pool document",
+      "steps": [
+        {
+          "call": "POST /v1/learning/workspaces/{workspace}/seed",
+          "workspace": "plate-tectonics-eval-seed",
+          "httpError": null,
+          "documentsAcquired": 2,
+          "claimsAdded": 348,
+          "acquired": [
+            "usgs-this-dynamic-earth.md",
+            "wikipedia-plate-tectonics.md"
+          ],
+          "revisionsApplied": null
+        }
+      ]
+    },
+    {
+      "scope": "S1",
+      "askedIn": "plate-tectonics-eval-seed",
+      "description": "the two seed documents, 348 claims, 2 sources, no pool document",
+      "steps": [
+        {
+          "call": "POST /v1/learning/workspaces/{workspace}/seed",
+          "workspace": "plate-tectonics-eval-seed",
+          "httpError": null,
+          "documentsAcquired": 2,
+          "claimsAdded": 348,
+          "acquired": [
+            "usgs-this-dynamic-earth.md",
+            "wikipedia-plate-tectonics.md"
+          ],
+          "revisionsApplied": null
+        }
+      ]
+    },
+    {
+      "scope": "S1",
+      "askedIn": "plate-tectonics-eval-seed",
+      "description": "the two seed documents, 348 claims, 2 sources, no pool document",
+      "steps": [
+        {
+          "call": "POST /v1/learning/workspaces/{workspace}/seed",
+          "workspace": "plate-tectonics-eval-seed",
+          "httpError": null,
+          "documentsAcquired": 2,
+          "claimsAdded": 348,
+          "acquired": [
+            "usgs-this-dynamic-earth.md",
+            "wikipedia-plate-tectonics.md"
+          ],
+          "revisionsApplied": null
+        }
+      ]
+    },
+    {
+      "scope": "S1",
+      "askedIn": "plate-tectonics-eval-seed",
+      "description": "the two seed documents, 348 claims, 2 sources, no pool document",
+      "steps": [
+        {
+          "call": "POST /v1/learning/workspaces/{workspace}/seed",
+          "workspace": "plate-tectonics-eval-seed",
+          "httpError": null,
+          "documentsAcquired": 2,
+          "claimsAdded": 348,
+          "acquired": [
+            "usgs-this-dynamic-earth.md",
+            "wikipedia-plate-tectonics.md"
+          ],
+          "revisionsApplied": null
+        }
+      ]
+    },
+    {
+      "scope": "S1",
+      "askedIn": "plate-tectonics-eval-seed",
+      "description": "the two seed documents, 348 claims, 2 sources, no pool document",
+      "steps": [
+        {
+          "call": "POST /v1/learning/workspaces/{workspace}/seed",
+          "workspace": "plate-tectonics-eval-seed",
+          "httpError": null,
+          "documentsAcquired": 2,
+          "claimsAdded": 348,
+          "acquired": [
+            "usgs-this-dynamic-earth.md",
+            "wikipedia-plate-tectonics.md"
+          ],
+          "revisionsApplied": null
+        }
+      ]
+    },
+    {
+      "scope": "S1",
+      "askedIn": "plate-tectonics-eval-seed",
+      "description": "the two seed documents, 348 claims, 2 sources, no pool document",
+      "steps": [
+        {
+          "call": "POST /v1/learning/workspaces/{workspace}/seed",
+          "workspace": "plate-tectonics-eval-seed",
+          "httpError": null,
+          "documentsAcquired": 2,
+          "claimsAdded": 348,
+          "acquired": [
+            "usgs-this-dynamic-earth.md",
+            "wikipedia-plate-tectonics.md"
+          ],
+          "revisionsApplied": null
+        }
+      ]
+    },
+    {
+      "scope": "S1",
+      "askedIn": "plate-tectonics-eval-seed",
+      "description": "the two seed documents, 348 claims, 2 sources, no pool document",
+      "steps": [
+        {
+          "call": "POST /v1/learning/workspaces/{workspace}/seed",
+          "workspace": "plate-tectonics-eval-seed",
+          "httpError": null,
+          "documentsAcquired": 2,
+          "claimsAdded": 348,
+          "acquired": [
+            "usgs-this-dynamic-earth.md",
+            "wikipedia-plate-tectonics.md"
+          ],
+          "revisionsApplied": null
+        }
+      ]
+    },
+    {
+      "scope": "S1",
+      "askedIn": "plate-tectonics-eval-seed",
+      "description": "the two seed documents, 348 claims, 2 sources, no pool document",
+      "steps": [
+        {
+          "call": "POST /v1/learning/workspaces/{workspace}/seed",
+          "workspace": "plate-tectonics-eval-seed",
+          "httpError": null,
+          "documentsAcquired": 2,
+          "claimsAdded": 348,
+          "acquired": [
+            "usgs-this-dynamic-earth.md",
+            "wikipedia-plate-tectonics.md"
+          ],
+          "revisionsApplied": null
+        }
+      ]
+    },
+    {
+      "scope": "S1",
+      "askedIn": "plate-tectonics-eval-seed",
+      "description": "the two seed documents, 348 claims, 2 sources, no pool document",
+      "steps": [
+        {
+          "call": "POST /v1/learning/workspaces/{workspace}/seed",
+          "workspace": "plate-tectonics-eval-seed",
+          "httpError": null,
+          "documentsAcquired": 2,
+          "claimsAdded": 348,
+          "acquired": [
+            "usgs-this-dynamic-earth.md",
+            "wikipedia-plate-tectonics.md"
+          ],
+          "revisionsApplied": null
+        }
+      ]
+    },
+    {
+      "scope": "S1",
+      "askedIn": "plate-tectonics-eval-seed",
+      "description": "the two seed documents, 348 claims, 2 sources, no pool document",
+      "steps": [
+        {
+          "call": "POST /v1/learning/workspaces/{workspace}/seed",
+          "workspace": "plate-tectonics-eval-seed",
+          "httpError": null,
+          "documentsAcquired": 2,
+          "claimsAdded": 348,
+          "acquired": [
+            "usgs-this-dynamic-earth.md",
+            "wikipedia-plate-tectonics.md"
+          ],
+          "revisionsApplied": null
+        }
+      ]
+    },
+    {
+      "scope": "S1",
+      "askedIn": "plate-tectonics-eval-seed",
+      "description": "the two seed documents, 348 claims, 2 sources, no pool document",
+      "steps": [
+        {
+          "call": "POST /v1/learning/workspaces/{workspace}/seed",
+          "workspace": "plate-tectonics-eval-seed",
+          "httpError": null,
+          "documentsAcquired": 2,
+          "claimsAdded": 348,
+          "acquired": [
+            "usgs-this-dynamic-earth.md",
+            "wikipedia-plate-tectonics.md"
+          ],
+          "revisionsApplied": null
+        }
+      ]
+    },
+    {
+      "scope": "S1",
+      "askedIn": "plate-tectonics-eval-seed",
+      "description": "the two seed documents, 348 claims, 2 sources, no pool document",
+      "steps": [
+        {
+          "call": "POST /v1/learning/workspaces/{workspace}/seed",
+          "workspace": "plate-tectonics-eval-seed",
+          "httpError": null,
+          "documentsAcquired": 2,
+          "claimsAdded": 348,
+          "acquired": [
+            "usgs-this-dynamic-earth.md",
+            "wikipedia-plate-tectonics.md"
+          ],
+          "revisionsApplied": null
+        }
+      ]
+    },
+    {
+      "scope": "S1",
+      "askedIn": "plate-tectonics-eval-seed",
+      "description": "the two seed documents, 348 claims, 2 sources, no pool document",
+      "steps": [
+        {
+          "call": "POST /v1/learning/workspaces/{workspace}/seed",
+          "workspace": "plate-tectonics-eval-seed",
+          "httpError": null,
+          "documentsAcquired": 2,
+          "claimsAdded": 348,
+          "acquired": [
+            "usgs-this-dynamic-earth.md",
+            "wikipedia-plate-tectonics.md"
+          ],
+          "revisionsApplied": null
+        }
+      ]
+    },
+    {
+      "scope": "P1",
+      "askedIn": "plate-tectonics-eval",
+      "description": "S1 plus the three documents the bounded cycle acquires",
+      "steps": [
+        {
+          "call": "POST /v1/learning/workspaces/{workspace}/seed",
+          "workspace": "plate-tectonics-eval",
+          "httpError": null,
+          "documentsAcquired": 2,
+          "claimsAdded": 348,
+          "acquired": [
+            "usgs-this-dynamic-earth.md",
+            "wikipedia-plate-tectonics.md"
+          ],
+          "revisionsApplied": null
+        },
+        {
+          "call": "POST /v1/learning/workspaces/{workspace}/learn?question=How+do+we+know+the+continents+have+moved%3F+What+is+the+evidence+for+continental+drift%2C+and+how+do+mid-ocean+ridges+and+subduction+zones+fit+together%3F&documents=3",
+          "workspace": "plate-tectonics-eval",
+          "httpError": null,
+          "documentsAcquired": 3,
+          "claimsAdded": 324,
+          "acquired": [
+            "wikipedia-continental-drift.md",
+            "wikipedia-mid-ocean-ridge.md",
+            "wikipedia-subduction.md"
+          ],
+          "revisionsApplied": null
+        }
+      ]
+    },
+    {
+      "scope": "P1",
+      "askedIn": "plate-tectonics-eval",
+      "description": "S1 plus the three documents the bounded cycle acquires",
+      "steps": [
+        {
+          "call": "POST /v1/learning/workspaces/{workspace}/seed",
+          "workspace": "plate-tectonics-eval",
+          "httpError": null,
+          "documentsAcquired": 2,
+          "claimsAdded": 348,
+          "acquired": [
+            "usgs-this-dynamic-earth.md",
+            "wikipedia-plate-tectonics.md"
+          ],
+          "revisionsApplied": null
+        },
+        {
+          "call": "POST /v1/learning/workspaces/{workspace}/learn?question=How+do+we+know+the+continents+have+moved%3F+What+is+the+evidence+for+continental+drift%2C+and+how+do+mid-ocean+ridges+and+subduction+zones+fit+together%3F&documents=3",
+          "workspace": "plate-tectonics-eval",
+          "httpError": null,
+          "documentsAcquired": 3,
+          "claimsAdded": 324,
+          "acquired": [
+            "wikipedia-continental-drift.md",
+            "wikipedia-mid-ocean-ridge.md",
+            "wikipedia-subduction.md"
+          ],
+          "revisionsApplied": null
+        }
+      ]
+    },
+    {
+      "scope": "P1",
+      "askedIn": "plate-tectonics-eval",
+      "description": "S1 plus the three documents the bounded cycle acquires",
+      "steps": [
+        {
+          "call": "POST /v1/learning/workspaces/{workspace}/seed",
+          "workspace": "plate-tectonics-eval",
+          "httpError": null,
+          "documentsAcquired": 2,
+          "claimsAdded": 348,
+          "acquired": [
+            "usgs-this-dynamic-earth.md",
+            "wikipedia-plate-tectonics.md"
+          ],
+          "revisionsApplied": null
+        },
+        {
+          "call": "POST /v1/learning/workspaces/{workspace}/learn?question=How+do+we+know+the+continents+have+moved%3F+What+is+the+evidence+for+continental+drift%2C+and+how+do+mid-ocean+ridges+and+subduction+zones+fit+together%3F&documents=3",
+          "workspace": "plate-tectonics-eval",
+          "httpError": null,
+          "documentsAcquired": 3,
+          "claimsAdded": 324,
+          "acquired": [
+            "wikipedia-continental-drift.md",
+            "wikipedia-mid-ocean-ridge.md",
+            "wikipedia-subduction.md"
+          ],
+          "revisionsApplied": null
+        }
+      ]
+    },
+    {
+      "scope": "P1",
+      "askedIn": "plate-tectonics-eval",
+      "description": "S1 plus the three documents the bounded cycle acquires",
+      "steps": [
+        {
+          "call": "POST /v1/learning/workspaces/{workspace}/seed",
+          "workspace": "plate-tectonics-eval",
+          "httpError": null,
+          "documentsAcquired": 2,
+          "claimsAdded": 348,
+          "acquired": [
+            "usgs-this-dynamic-earth.md",
+            "wikipedia-plate-tectonics.md"
+          ],
+          "revisionsApplied": null
+        },
+        {
+          "call": "POST /v1/learning/workspaces/{workspace}/learn?question=How+do+we+know+the+continents+have+moved%3F+What+is+the+evidence+for+continental+drift%2C+and+how+do+mid-ocean+ridges+and+subduction+zones+fit+together%3F&documents=3",
+          "workspace": "plate-tectonics-eval",
+          "httpError": null,
+          "documentsAcquired": 3,
+          "claimsAdded": 324,
+          "acquired": [
+            "wikipedia-continental-drift.md",
+            "wikipedia-mid-ocean-ridge.md",
+            "wikipedia-subduction.md"
+          ],
+          "revisionsApplied": null
+        }
+      ]
+    },
+    {
+      "scope": "P1",
+      "askedIn": "plate-tectonics-eval",
+      "description": "S1 plus the three documents the bounded cycle acquires",
+      "steps": [
+        {
+          "call": "POST /v1/learning/workspaces/{workspace}/seed",
+          "workspace": "plate-tectonics-eval",
+          "httpError": null,
+          "documentsAcquired": 2,
+          "claimsAdded": 348,
+          "acquired": [
+            "usgs-this-dynamic-earth.md",
+            "wikipedia-plate-tectonics.md"
+          ],
+          "revisionsApplied": null
+        },
+        {
+          "call": "POST /v1/learning/workspaces/{workspace}/learn?question=How+do+we+know+the+continents+have+moved%3F+What+is+the+evidence+for+continental+drift%2C+and+how+do+mid-ocean+ridges+and+subduction+zones+fit+together%3F&documents=3",
+          "workspace": "plate-tectonics-eval",
+          "httpError": null,
+          "documentsAcquired": 3,
+          "claimsAdded": 324,
+          "acquired": [
+            "wikipedia-continental-drift.md",
+            "wikipedia-mid-ocean-ridge.md",
+            "wikipedia-subduction.md"
+          ],
+          "revisionsApplied": null
+        }
+      ]
+    },
+    {
+      "scope": "P1->R1",
+      "askedIn": "plate-tectonics-eval",
+      "description": "S1 plus the three documents the bounded cycle acquires",
+      "steps": [
+        {
+          "call": "POST /v1/learning/workspaces/{workspace}/seed",
+          "workspace": "plate-tectonics-eval",
+          "httpError": null,
+          "documentsAcquired": 2,
+          "claimsAdded": 348,
+          "acquired": [
+            "usgs-this-dynamic-earth.md",
+            "wikipedia-plate-tectonics.md"
+          ],
+          "revisionsApplied": null
+        },
+        {
+          "call": "POST /v1/learning/workspaces/{workspace}/learn?question=How+do+we+know+the+continents+have+moved%3F+What+is+the+evidence+for+continental+drift%2C+and+how+do+mid-ocean+ridges+and+subduction+zones+fit+together%3F&documents=3",
+          "workspace": "plate-tectonics-eval",
+          "httpError": null,
+          "documentsAcquired": 3,
+          "claimsAdded": 324,
+          "acquired": [
+            "wikipedia-continental-drift.md",
+            "wikipedia-mid-ocean-ridge.md",
+            "wikipedia-subduction.md"
+          ],
+          "revisionsApplied": null
+        }
+      ]
+    },
+    {
+      "scope": "R1",
+      "askedIn": "plate-tectonics-eval",
+      "description": "P1 plus wikipedia-slab-pull.md",
+      "steps": [
+        {
+          "call": "POST /v1/learning/workspaces/{workspace}/seed",
+          "workspace": "plate-tectonics-eval",
+          "httpError": null,
+          "documentsAcquired": 2,
+          "claimsAdded": 348,
+          "acquired": [
+            "usgs-this-dynamic-earth.md",
+            "wikipedia-plate-tectonics.md"
+          ],
+          "revisionsApplied": null
+        },
+        {
+          "call": "POST /v1/learning/workspaces/{workspace}/learn?question=How+do+we+know+the+continents+have+moved%3F+What+is+the+evidence+for+continental+drift%2C+and+how+do+mid-ocean+ridges+and+subduction+zones+fit+together%3F&documents=3",
+          "workspace": "plate-tectonics-eval",
+          "httpError": null,
+          "documentsAcquired": 3,
+          "claimsAdded": 324,
+          "acquired": [
+            "wikipedia-continental-drift.md",
+            "wikipedia-mid-ocean-ridge.md",
+            "wikipedia-subduction.md"
+          ],
+          "revisionsApplied": null
+        },
+        {
+          "call": "POST /v1/learning/workspaces/{workspace}/revise?file=wikipedia-slab-pull.md",
+          "workspace": "plate-tectonics-eval",
+          "httpError": null,
+          "documentsAcquired": null,
+          "claimsAdded": 14,
+          "acquired": null,
+          "revisionsApplied": 1
+        }
+      ]
+    },
+    {
+      "scope": "R1->R2",
+      "askedIn": "plate-tectonics-eval",
+      "description": "R1 plus wikipedia-paleomagnetism.md",
+      "steps": [
+        {
+          "call": "POST /v1/learning/workspaces/{workspace}/seed",
+          "workspace": "plate-tectonics-eval",
+          "httpError": null,
+          "documentsAcquired": 2,
+          "claimsAdded": 348,
+          "acquired": [
+            "usgs-this-dynamic-earth.md",
+            "wikipedia-plate-tectonics.md"
+          ],
+          "revisionsApplied": null
+        },
+        {
+          "call": "POST /v1/learning/workspaces/{workspace}/learn?question=How+do+we+know+the+continents+have+moved%3F+What+is+the+evidence+for+continental+drift%2C+and+how+do+mid-ocean+ridges+and+subduction+zones+fit+together%3F&documents=3",
+          "workspace": "plate-tectonics-eval",
+          "httpError": null,
+          "documentsAcquired": 3,
+          "claimsAdded": 324,
+          "acquired": [
+            "wikipedia-continental-drift.md",
+            "wikipedia-mid-ocean-ridge.md",
+            "wikipedia-subduction.md"
+          ],
+          "revisionsApplied": null
+        },
+        {
+          "call": "POST /v1/learning/workspaces/{workspace}/revise?file=wikipedia-slab-pull.md",
+          "workspace": "plate-tectonics-eval",
+          "httpError": null,
+          "documentsAcquired": null,
+          "claimsAdded": 14,
+          "acquired": null,
+          "revisionsApplied": 1
+        },
+        {
+          "call": "POST /v1/learning/workspaces/{workspace}/revise?file=wikipedia-paleomagnetism.md",
+          "workspace": "plate-tectonics-eval",
+          "httpError": null,
+          "documentsAcquired": null,
+          "claimsAdded": 65,
+          "acquired": null,
+          "revisionsApplied": 0
+        }
+      ]
+    },
+    {
+      "scope": "P1'",
+      "askedIn": "plate-tectonics-eval-neg",
+      "description": "a fresh copy of P1",
+      "steps": [
+        {
+          "call": "POST /v1/learning/workspaces/{workspace}/seed",
+          "workspace": "plate-tectonics-eval-neg",
+          "httpError": null,
+          "documentsAcquired": 2,
+          "claimsAdded": 348,
+          "acquired": [
+            "usgs-this-dynamic-earth.md",
+            "wikipedia-plate-tectonics.md"
+          ],
+          "revisionsApplied": null
+        },
+        {
+          "call": "POST /v1/learning/workspaces/{workspace}/learn?question=How+do+we+know+the+continents+have+moved%3F+What+is+the+evidence+for+continental+drift%2C+and+how+do+mid-ocean+ridges+and+subduction+zones+fit+together%3F&documents=3",
+          "workspace": "plate-tectonics-eval-neg",
+          "httpError": null,
+          "documentsAcquired": 3,
+          "claimsAdded": 324,
+          "acquired": [
+            "wikipedia-continental-drift.md",
+            "wikipedia-mid-ocean-ridge.md",
+            "wikipedia-subduction.md"
+          ],
+          "revisionsApplied": null
+        }
+      ]
+    },
+    {
+      "scope": "P1''",
+      "askedIn": "plate-tectonics-eval-neg2",
+      "description": "a second fresh copy of P1",
+      "steps": [
+        {
+          "call": "POST /v1/learning/workspaces/{workspace}/seed",
+          "workspace": "plate-tectonics-eval-neg2",
+          "httpError": null,
+          "documentsAcquired": 2,
+          "claimsAdded": 348,
+          "acquired": [
+            "usgs-this-dynamic-earth.md",
+            "wikipedia-plate-tectonics.md"
+          ],
+          "revisionsApplied": null
+        },
+        {
+          "call": "POST /v1/learning/workspaces/{workspace}/learn?question=How+do+we+know+the+continents+have+moved%3F+What+is+the+evidence+for+continental+drift%2C+and+how+do+mid-ocean+ridges+and+subduction+zones+fit+together%3F&documents=3",
+          "workspace": "plate-tectonics-eval-neg2",
+          "httpError": null,
+          "documentsAcquired": 3,
+          "claimsAdded": 324,
+          "acquired": [
+            "wikipedia-continental-drift.md",
+            "wikipedia-mid-ocean-ridge.md",
+            "wikipedia-subduction.md"
+          ],
+          "revisionsApplied": null
+        }
+      ]
+    }
+  ],
+  "results": [
+    {
+      "id": "A-01",
+      "category": "answerable",
+      "scope": "S1",
+      "verdict": "PASS",
+      "observed": "answered=True; 41 claims; 2 sources",
+      "problems": []
+    },
+    {
+      "id": "A-02",
+      "category": "answerable",
+      "scope": "S1",
+      "verdict": "FAIL",
+      "observed": "answered=True; 18 claims; 2 sources",
+      "problems": [
+        {
+          "problem": "the proposition is not cited: Convergent boundaries (destructive boundaries or active margins) occur where two plates sl",
+          "cause": "KnowledgeRetriever.java:386 — the relevance floor and the status filter: a claim reaches the answer's evidence only when it covers DEFAULT_MINIMUM_COVERAGE (0.25) of the question's terms AND its status is in EpistemicPolicy.CITABLE_STATUSES"
+        }
+      ]
+    },
+    {
+      "id": "A-03",
+      "category": "answerable",
+      "scope": "S1",
+      "verdict": "PASS",
+      "observed": "answered=True; 30 claims; 2 sources",
+      "problems": []
+    },
+    {
+      "id": "A-04",
+      "category": "answerable",
+      "scope": "S1",
+      "verdict": "FAIL",
+      "observed": "answered=True; 9 claims; 1 sources",
+      "problems": [
+        {
+          "problem": "the proposition is not cited: However, because plate motions are global in scale, they are best measured by satellite-ba",
+          "cause": "KnowledgeRetriever.java:386 — the relevance floor and the status filter: a claim reaches the answer's evidence only when it covers DEFAULT_MINIMUM_COVERAGE (0.25) of the question's terms AND its status is in EpistemicPolicy.CITABLE_STATUSES"
+        }
+      ]
+    },
+    {
+      "id": "A-05",
+      "category": "answerable",
+      "scope": "S1",
+      "verdict": "FAIL",
+      "observed": "answered=True; 16 claims; 2 sources",
+      "problems": [
+        {
+          "problem": "the proposition is not cited: Oceanic crust is formed at sea-floor spreading centers.",
+          "cause": "KnowledgeRetriever.java:386 — the relevance floor and the status filter: a claim reaches the answer's evidence only when it covers DEFAULT_MINIMUM_COVERAGE (0.25) of the question's terms AND its status is in EpistemicPolicy.CITABLE_STATUSES"
+        },
+        {
+          "problem": "the proposition is not cited: When these magnetic patterns were mapped over a wide region, the ocean floor showed a zebr",
+          "cause": "KnowledgeRetriever.java:386 — the relevance floor and the status filter: a claim reaches the answer's evidence only when it covers DEFAULT_MINIMUM_COVERAGE (0.25) of the question's terms AND its status is in EpistemicPolicy.CITABLE_STATUSES"
+        }
+      ]
+    },
+    {
+      "id": "A-06",
+      "category": "answerable",
+      "scope": "S1",
+      "verdict": "FAIL",
+      "observed": "answered=True; 7 claims; 1 sources",
+      "problems": [
+        {
+          "problem": "the source usgs-this-dynamic-earth.md is absent",
+          "cause": "KnowledgeRetriever.java:386 — the relevance floor and the status filter: a claim reaches the answer's evidence only when it covers DEFAULT_MINIMUM_COVERAGE (0.25) of the question's terms AND its status is in EpistemicPolicy.CITABLE_STATUSES"
+        },
+        {
+          "problem": "the proposition is not cited: The descending plate also provides a source of stress as the two plates interact, leading ",
+          "cause": "KnowledgeRetriever.java:386 — the relevance floor and the status filter: a claim reaches the answer's evidence only when it covers DEFAULT_MINIMUM_COVERAGE (0.25) of the question's terms AND its status is in EpistemicPolicy.CITABLE_STATUSES"
+        },
+        {
+          "problem": "the proposition is not cited: Subduction processes in oceanic-oceanic plate convergence also result in the formation of ",
+          "cause": "KnowledgeRetriever.java:386 — the relevance floor and the status filter: a claim reaches the answer's evidence only when it covers DEFAULT_MINIMUM_COVERAGE (0.25) of the question's terms AND its status is in EpistemicPolicy.CITABLE_STATUSES"
+        },
+        {
+          "problem": "the proposition is not cited: Magmas that form island arcs are produced by the partial melting of the descending plate a",
+          "cause": "KnowledgeRetriever.java:386 — the relevance floor and the status filter: a claim reaches the answer's evidence only when it covers DEFAULT_MINIMUM_COVERAGE (0.25) of the question's terms AND its status is in EpistemicPolicy.CITABLE_STATUSES"
+        }
+      ]
+    },
+    {
+      "id": "U-01",
+      "category": "unanswerable",
+      "scope": "S1",
+      "verdict": "PASS",
+      "observed": "answered=False; 0 claims; 0 sources",
+      "problems": []
+    },
+    {
+      "id": "U-02",
+      "category": "unanswerable",
+      "scope": "S1",
+      "verdict": "PASS",
+      "observed": "answered=False; 0 claims; 0 sources",
+      "problems": []
+    },
+    {
+      "id": "U-03",
+      "category": "unanswerable",
+      "scope": "S1",
+      "verdict": "PASS",
+      "observed": "answered=False; 0 claims; 0 sources",
+      "problems": []
+    },
+    {
+      "id": "U-04",
+      "category": "unanswerable",
+      "scope": "S1",
+      "verdict": "PASS",
+      "observed": "answered=False; 0 claims; 0 sources",
+      "problems": []
+    },
+    {
+      "id": "U-05",
+      "category": "unanswerable",
+      "scope": "S1",
+      "verdict": "PASS",
+      "observed": "answered=False; 0 claims; 0 sources",
+      "problems": []
+    },
+    {
+      "id": "F-01",
+      "category": "false-premise",
+      "scope": "S1",
+      "verdict": "PASS",
+      "observed": "verdict=SUPPORTED; promoted=False; disputed=False; 5 evidence ref(s)",
+      "problems": []
+    },
+    {
+      "id": "F-02",
+      "category": "false-premise",
+      "scope": "S1",
+      "verdict": "FAIL",
+      "observed": "verdict=UNRESOLVED; promoted=False; disputed=True; 5 evidence ref(s)",
+      "problems": [
+        {
+          "problem": "the verdict is UNRESOLVED, expected CONTRADICTED",
+          "cause": "PremiseAssessment.java:592 — agreeOn: the verdict is decided by whether the contradicting accounts settle each other"
+        }
+      ]
+    },
+    {
+      "id": "F-03",
+      "category": "false-premise",
+      "scope": "S1",
+      "verdict": "PASS",
+      "observed": "verdict=UNSUPPORTED; promoted=False; disputed=False; 0 evidence ref(s)",
+      "problems": []
+    },
+    {
+      "id": "F-04",
+      "category": "false-premise",
+      "scope": "S1",
+      "verdict": "PASS",
+      "observed": "verdict=UNRESOLVED; promoted=False; disputed=True; 5 evidence ref(s)",
+      "problems": []
+    },
+    {
+      "id": "M-01",
+      "category": "multi-claim",
+      "scope": "S1",
+      "verdict": "FAIL",
+      "observed": "answered=True; 18 claims; 2 sources",
+      "problems": [
+        {
+          "problem": "the proposition is not cited: Convergent boundaries (destructive boundaries or active margins) occur where two plates sl",
+          "cause": "KnowledgeRetriever.java:386 — the relevance floor and the status filter: a claim reaches the answer's evidence only when it covers DEFAULT_MINIMUM_COVERAGE (0.25) of the question's terms AND its status is in EpistemicPolicy.CITABLE_STATUSES"
+        },
+        {
+          "problem": "the proposition is not cited: The San Andreas Fault in California is an example of a transform boundary exhibiting dextr",
+          "cause": "KnowledgeRetriever.java:386 — the relevance floor and the status filter: a claim reaches the answer's evidence only when it covers DEFAULT_MINIMUM_COVERAGE (0.25) of the question's terms AND its status is in EpistemicPolicy.CITABLE_STATUSES"
+        }
+      ]
+    },
+    {
+      "id": "M-02",
+      "category": "multi-claim",
+      "scope": "S1",
+      "verdict": "PASS",
+      "observed": "answered=True; 86 claims; 2 sources",
+      "problems": []
+    },
+    {
+      "id": "K-01",
+      "category": "knows-what-it-does-not-know",
+      "scope": "S1",
+      "verdict": "PASS",
+      "observed": "answered=True; 6 claims; 2 sources",
+      "problems": []
+    },
+    {
+      "id": "K-02",
+      "category": "knows-what-it-does-not-know",
+      "scope": "S1",
+      "verdict": "PASS",
+      "observed": "answered=True; 6 claims; 2 sources",
+      "problems": []
+    },
+    {
+      "id": "P-01",
+      "category": "answerable",
+      "scope": "P1",
+      "verdict": "FAIL",
+      "observed": "answered=True; 63 claims; 5 sources",
+      "problems": [
+        {
+          "problem": "the proposition is not cited: This feature is where seafloor spreading takes place along a divergent plate boundary.",
+          "cause": "KnowledgeRetriever.java:386 — the relevance floor and the status filter: a claim reaches the answer's evidence only when it covers DEFAULT_MINIMUM_COVERAGE (0.25) of the question's terms AND its status is in EpistemicPolicy.CITABLE_STATUSES"
+        },
+        {
+          "problem": "the proposition is not cited: It typically has a depth of about 2,600 meters (8,500 ft) and rises about 2,000 meters (6,",
+          "cause": "KnowledgeRetriever.java:386 — the relevance floor and the status filter: a claim reaches the answer's evidence only when it covers DEFAULT_MINIMUM_COVERAGE (0.25) of the question's terms AND its status is in EpistemicPolicy.CITABLE_STATUSES"
+        },
+        {
+          "problem": "the proposition is not cited: In the 1960s, geologists discovered and began to propose mechanisms for seafloor spreading",
+          "cause": "KnowledgeRetriever.java:386 — the relevance floor and the status filter: a claim reaches the answer's evidence only when it covers DEFAULT_MINIMUM_COVERAGE (0.25) of the question's terms AND its status is in EpistemicPolicy.CITABLE_STATUSES"
+        }
+      ]
+    },
+    {
+      "id": "P-02",
+      "category": "answerable",
+      "scope": "P1",
+      "verdict": "FAIL",
+      "observed": "answered=True; 104 claims; 5 sources",
+      "problems": [
+        {
+          "problem": "the proposition is not cited: Oceanic trenches are the deepest parts of the ocean floor.",
+          "cause": "KnowledgeRetriever.java:386 — the relevance floor and the status filter: a claim reaches the answer's evidence only when it covers DEFAULT_MINIMUM_COVERAGE (0.25) of the question's terms AND its status is in EpistemicPolicy.CITABLE_STATUSES"
+        },
+        {
+          "problem": "the proposition is not cited: Beyond the forearc basin, volcanoes are found in long chains called volcanic arcs.",
+          "cause": "KnowledgeRetriever.java:386 — the relevance floor and the status filter: a claim reaches the answer's evidence only when it covers DEFAULT_MINIMUM_COVERAGE (0.25) of the question's terms AND its status is in EpistemicPolicy.CITABLE_STATUSES"
+        },
+        {
+          "problem": "the proposition is not cited: Since the Earth's circumference has not changed over geologic time, Hess concluded that ol",
+          "cause": "KnowledgeRetriever.java:386 — the relevance floor and the status filter: a claim reaches the answer's evidence only when it covers DEFAULT_MINIMUM_COVERAGE (0.25) of the question's terms AND its status is in EpistemicPolicy.CITABLE_STATUSES"
+        }
+      ]
+    },
+    {
+      "id": "U-06",
+      "category": "unanswerable",
+      "scope": "P1",
+      "verdict": "PASS",
+      "observed": "answered=False; 0 claims; 0 sources",
+      "problems": []
+    },
+    {
+      "id": "F-05",
+      "category": "false-premise",
+      "scope": "P1",
+      "verdict": "PASS",
+      "observed": "verdict=CONTRADICTED; promoted=False; disputed=True; 2 evidence ref(s)",
+      "problems": []
+    },
+    {
+      "id": "M-03",
+      "category": "multi-claim",
+      "scope": "P1",
+      "verdict": "FAIL",
+      "observed": "answered=True; 25 claims; 4 sources",
+      "problems": [
+        {
+          "problem": "the proposition is not cited: Similar plant and animal fossils are found around the shores of different continents, sugg",
+          "cause": "KnowledgeRetriever.java:386 — the relevance floor and the status filter: a claim reaches the answer's evidence only when it covers DEFAULT_MINIMUM_COVERAGE (0.25) of the question's terms AND its status is in EpistemicPolicy.CITABLE_STATUSES"
+        },
+        {
+          "problem": "the proposition is not cited: The fossils of Mesosaurus, a freshwater reptile rather like a small crocodile, found both ",
+          "cause": "KnowledgeRetriever.java:386 — the relevance floor and the status filter: a claim reaches the answer's evidence only when it covers DEFAULT_MINIMUM_COVERAGE (0.25) of the question's terms AND its status is in EpistemicPolicy.CITABLE_STATUSES"
+        },
+        {
+          "problem": "the proposition is not cited: This feature is where seafloor spreading takes place along a divergent plate boundary.",
+          "cause": "KnowledgeRetriever.java:386 — the relevance floor and the status filter: a claim reaches the answer's evidence only when it covers DEFAULT_MINIMUM_COVERAGE (0.25) of the question's terms AND its status is in EpistemicPolicy.CITABLE_STATUSES"
+        },
+        {
+          "problem": "the proposition is not cited: Beyond the forearc basin, volcanoes are found in long chains called volcanic arcs.",
+          "cause": "KnowledgeRetriever.java:386 — the relevance floor and the status filter: a claim reaches the answer's evidence only when it covers DEFAULT_MINIMUM_COVERAGE (0.25) of the question's terms AND its status is in EpistemicPolicy.CITABLE_STATUSES"
+        },
+        {
+          "problem": "the proposition is not cited: Oceanic trenches are the deepest parts of the ocean floor.",
+          "cause": "KnowledgeRetriever.java:386 — the relevance floor and the status filter: a claim reaches the answer's evidence only when it covers DEFAULT_MINIMUM_COVERAGE (0.25) of the question's terms AND its status is in EpistemicPolicy.CITABLE_STATUSES"
+        }
+      ]
+    },
+    {
+      "id": "R-01",
+      "category": "revision",
+      "scope": "P1->R1",
+      "verdict": "PASS",
+      "observed": "claimsAdded=14; decisions=14; revisionsApplied=1",
+      "problems": []
+    },
+    {
+      "id": "R-03",
+      "category": "revision",
+      "scope": "R1",
+      "verdict": "PASS",
+      "observed": "answered=True; 126 claims; 7 sources",
+      "problems": []
+    },
+    {
+      "id": "R-02",
+      "category": "revision",
+      "scope": "R1->R2",
+      "verdict": "PASS",
+      "observed": "claimsAdded=65; decisions=65; revisionsApplied=0",
+      "problems": []
+    },
+    {
+      "id": "R-04",
+      "category": "revision",
+      "scope": "P1'",
+      "verdict": "FAIL",
+      "observed": "claimsAdded=92; decisions=92; revisionsApplied=2",
+      "problems": [
+        {
+          "problem": "2 supersessions applied, 0 expected",
+          "cause": "ModelRevisionDecider.java:52 — decide: whether the new evidence revises the model, and which claim it revises"
+        },
+        {
+          "problem": "3 claim(s) changed status or version: clm-6995e2ea, clm-84ab17b2, clm-be4c776a",
+          "cause": "KnowledgeRefiner.java:100 — refine: the refinement that supersedes the claim and records the revision"
+        }
+      ]
+    },
+    {
+      "id": "R-05",
+      "category": "revision",
+      "scope": "P1''",
+      "verdict": "FAIL",
+      "observed": "claimsAdded=45; decisions=45; revisionsApplied=1",
+      "problems": [
+        {
+          "problem": "1 supersessions applied, 0 expected",
+          "cause": "ModelRevisionDecider.java:52 — decide: whether the new evidence revises the model, and which claim it revises"
+        },
+        {
+          "problem": "1 claim(s) changed status or version: clm-7424f0",
+          "cause": "KnowledgeRefiner.java:100 — refine: the refinement that supersedes the claim and records the revision"
+        }
+      ]
+    }
+  ],
+  "byCategory": {
+    "answerable": {
+      "passed": 2,
+      "failed": 6
+    },
+    "unanswerable": {
+      "passed": 6,
+      "failed": 0
+    },
+    "false-premise": {
+      "passed": 4,
+      "failed": 1
+    },
+    "multi-claim": {
+      "passed": 1,
+      "failed": 2
+    },
+    "knows-what-it-does-not-know": {
+      "passed": 2,
+      "failed": 0
+    },
+    "revision": {
+      "passed": 3,
+      "failed": 2
+    }
+  },
+  "passed": 18,
+  "total": 29
+}

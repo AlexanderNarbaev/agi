@@ -120,13 +120,11 @@ class BridgeIdempotencyTest {
 
         BridgeIdempotency.Outcome first = registry.firstOutcome(REQUEST_ID, "digest", () -> {
             calls[0]++;
-            return new BridgeIdempotency.Outcome(
-                    BridgeDecision.accepted(REQUEST_ID, "audit-1"), "digest");
+            return BridgeIdempotency.Outcome.of(BridgeDecision.accepted(REQUEST_ID, "audit-1"), "digest");
         });
         BridgeIdempotency.Outcome second = registry.firstOutcome(REQUEST_ID, "digest", () -> {
             calls[0]++;
-            return new BridgeIdempotency.Outcome(
-                    BridgeDecision.accepted(REQUEST_ID, "audit-2"), "digest");
+            return BridgeIdempotency.Outcome.of(BridgeDecision.accepted(REQUEST_ID, "audit-2"), "digest");
         });
 
         assertEquals(1, calls[0]);

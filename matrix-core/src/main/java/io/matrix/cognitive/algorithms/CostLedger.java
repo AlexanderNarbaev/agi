@@ -69,6 +69,79 @@ public final class CostLedger {
     private final ConcurrentMap<String, Measurement> measurements = new ConcurrentHashMap<>();
 
     /**
+     * W52 — where the measurement is kept when it must outlive the process.
+     *
+     * <p>Null means the ledger is process-local, which is the right thing for a test and
+     * the wrong thing for a running system: a system that forgets how its own methods
+     * behave at every restart falls back to the declared complexity of each method, which
+     * is a person's guess where a measurement belongs.</p>
+     */
+    private final MethodMeasurementStore store;
+
+    /**
+     * W52 — the workspace the measurements belong to.
+     */
+    private final String workspaceId;
+
+    /**
+     * The clock the durable record is stamped with.
+     */
+    private final java.util.function.Supplier<String> timestamps;
+
+    /**
+     * A ledger that lives and dies with the process.
+     */
+    public CostLedger() {
+        this(null, null, () -> java.time.Instant.now().toString());
+    }
+
+    /**
+     * W52 — a ledger whose measurements outlive the process.
+     *
+     * <p>The measurements already recorded are read back at construction, so a process that
+     * starts knows what its own methods cost before it has run any of them.</p>
+     *
+     * @param store      where the measurements are kept, or null for a process-local ledger
+     * @param workspaceId the workspace the measurements belong to
+     */
+    public CostLedger(MethodMeasurementStore store, String workspaceId) {
+        this(store, workspaceId, () -> java.time.Instant.now().toString());
+    }
+
+    /**
+     * W52 — a ledger whose measurements outlive the process, with the clock named.
+     *
+     * @param store       where the measurements are kept, or null for a process-local ledger
+     * @param workspaceId the workspace the measurements belong to
+     * @param timestamps  the clock the durable record is stamped with
+     */
+    public CostLedger(MethodMeasurementStore store, String workspaceId,
+                      java.util.function.Supplier<String> timestamps) {
+        if (store != null && (workspaceId == null || workspaceId.isBlank())) {
+            throw new IllegalArgumentException(
+                    "a durable ledger needs the workspace its measurements belong to");
+        }
+        this.store = store;
+        this.workspaceId = workspaceId;
+        this.timestamps = timestamps == null
+                ? () -> java.time.Instant.now().toString() : timestamps;
+        if (store != null) {
+            for (Measurement measurement : store.measurements(workspaceId)) {
+                measurements.put(measurement.methodId(), measurement);
+            }
+        }
+    }
+
+    /**
+     * True when the measurements of this ledger outlive the process.
+     *
+     * @return true when the ledger is durable
+     */
+    public boolean durable() {
+        return store != null;
+    }
+
+    /**
      * Records one measured call.
      *
      * @param methodId  the method that was run
@@ -92,6 +165,9 @@ public final class CostLedger {
                     existing.successes() + (succeeded ? 1 : 0),
                     existing.failures() + (succeeded ? 0 : 1));
         });
+        if (store != null) {
+            store.recordMeasurement(workspaceId, methodId, nanos, succeeded, timestamps.get());
+        }
     }
 
     /**

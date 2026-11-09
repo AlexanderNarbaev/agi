@@ -41,7 +41,32 @@ cycle, and whose current state existed in four documents of four different ages.
 
 ## 3. The active wave
 
-### W51 — the unified cognitive runtime, the world model and the safe self-extension (**the wave's work is committed; pull request #48 is open**)
+### W52 — the canonical path, the second direction and the registers in truth (**the wave is running**)
+
+**W52 is the wave that follows the merged W51.** It closes the three load-bearing gaps W51
+named, and nothing else is in scope:
+
+1. **the canonical contracts get their producers** — §3 of the mandate names twenty-two
+   types, and W51 gave them meaning but left fourteen of them without a producer in the
+   runtime; the two parallel vocabularies — the canonical interchange form and the cognitive
+   package's older internal records — are reconciled by an explicit, tested mapping;
+2. **the inter-chain contract gets its second direction** — chain A → chain B, under the same
+   governance as chain B → chain A, with the isolation gate extended to prove that the second
+   direction cannot break the first;
+3. **the repository's own instruments tell the truth again** — the capability registry, the
+   project state, this roadmap and the decision register know about the wave that made the
+   subsystems serve.
+
+**What the wave does NOT do:** it does not merge anything into `main`, it does not delete a
+subsystem, and it does not rewrite the W45.1 recovery contracts. The commit and the push are
+authorised by the owner's directive of 2026-11-08; **the merge into `main` is the owner's**.
+
+**The tasks are in §4.11**, and the wave's report will be `docs-v2/engineering/W52-STATUS.md` <!-- no-link: the wave's report is written at its close; the document does not exist yet -->.
+
+### W51 — the unified cognitive runtime, the world model and the safe self-extension (**merged**)
+
+**W51 is merged**: pull request #48 (`develop` → `main`), squash `3ef8a5c8`, 2026-11-09,
+**merged by the owner**. Its own report is `docs-v2/engineering/W51-STATUS.md`.
 
 **W51 is the wave that made the parts of MATRIX interact.** Its own report is
 `docs-v2/engineering/W51-STATUS.md`, the audit and the subsystem classification are
@@ -286,7 +311,41 @@ ids are in the fourth column.
 | **TASK-W51-08** | the W50 epistemic reliability | the 29-case evaluation is machine-readable, has a committed runner, and the eight named defects are fixed | **W51-07** | **done — 12/29 → 18/29, and the eleven that still fail are named** | `scripts/w51-epistemic-eval.py`, `matrix-core/src/main/resources/epistemic-eval/cases.json`, `docs-v2/engineering/W51-EPISTEMIC-EVALUATION.md` + `.json`; the **baseline was reproduced on the same runner** in a clean worktree at `a098f283` (12 PASS / 17 FAIL) before the fixes were credited; per category: unanswerable 2/6 → 6/6, revision 1/5 → 3/5; the knowledge scope is **641 tests, 0 failures** (+13); four existing expectations changed and each became **stricter** |
 | **TASK-W51-09** | the safety, isolation and failure handling | the failure modes of §11 are tested against the real components | **W51-08** | **done** | `io.matrix.safety` — **27 tests, 0 failures** over the eleven failure modes; the matrix found **three real defects**, all fixed in this wave and covered by tests of their own (the wall-clock budget of the sandbox, the absent consumer of `RetryPolicy`, the capability check that happened only at activation). A **fourth** defect was found by the final test scope: the two stores that share the owner's database file wrote DEFERRED transactions, so a concurrent write could fail with `SQLITE_BUSY` in about one run in three; both now write IMMEDIATE transactions (§5.7 of the status report) |
 | **TASK-W51-10** | the resource and configuration governance | the wave adds no magic numbers, and the touched paths are measured | **W51-09** | **done** | the quality gate: **271 candidates against a baseline of 271** — the wave adds **zero**; the measurements are in `docs-v2/engineering/W51-PERFORMANCE.md` |
-| **TASK-W51-11** | the closeout | the report, the canonical registers and the commit | **W51-10** | **open — the commit is the owner's** | `docs-v2/engineering/W51-STATUS.md`; the decisions are CD-020 … CD-025 in the decision register; the commit and the push are Level 3 operations under `AGENT-OPERATING-PROTOCOL.md` §3 |
+| **TASK-W51-11** | the closeout | the report, the canonical registers and the commit | **W51-10** | **done** | `docs-v2/engineering/W51-STATUS.md`; the decisions are CD-020 … CD-025 in the decision register; the commit and the push are Level 3 operations under `AGENT-OPERATING-PROTOCOL.md` §3 and the **owner authorised both on 2026-11-08**. The wave's work is **thirteen commits** on `develop`, pull request **#48** (`develop` → `main`) was opened on 2026-11-09 and **merged by the owner the same day** as the squash `3ef8a5c8` |
+
+### 4.11 The tasks the W52 wave creates
+
+**W52 is the wave that follows the merged W51.** The ids of this roadmap are stable and are
+the ones to use; the wave's own task ids are in the fourth column.
+
+| the id | the task | the goal | the wave's task | the state | the evidence |
+|---|---|---|---|---|---|
+| **TASK-W52-01** | the capability registry learns about W51 and W52 | the repository's own measure of the distance between *implemented* and *served* knows about the wave that moved that distance | **W52-00** | **done** | `docs-v2/architecture/CAPABILITY-REGISTRY.yml` — W51 added ten rows (**43 → 53**) and W52 added one more (**53 → 54**), the validator reports **0 defects**; four of the W51 rows carry an ISLAND or DORMANT axis, because the shared runtime, the plugin system, the meta-memory and the native boundary have no serving path today |
+| **TASK-W52-02** | the project state and the registers tell the truth | a reader who opens the snapshot sees the wave that is running, not the one that ran two waves ago | **W52-01** | **done** | `docs-v2/governance/PROJECT-STATE.md` — a fresh snapshot: the merged W51, the active W52, the re-measured routes and CLI count **with their methods**, the four CI findings as measured blockers, and the working tree observed again; `scripts/validate-project-state.py --strict` reports **0 defects** |
+| **TASK-W52-03** | the canonical contracts get their producers | §3's twenty-two types are not a vocabulary the runtime never fills, and the two parallel vocabularies are reconciled by an explicit, tested mapping | **W52-02** | **done — with two named absences** | `io.matrix.contract.CognitiveCycle` — the canonical form of a cycle, carried by the outcome; `io.matrix.cognitive.canonical.CanonicalCycleBuilder` — the mapping, named, pure and tested; `CanonicalContractCoverageTest` — **the acceptance: a test that asserts every canonical contract has a producer in the runtime path**, and the demonstration's report says which contracts the cycle filled and which it did not. **Two contracts are absent in the micro-world and the report says so:** the `Procedure` and the `Skill` come from the procedural memory, and the promotion is refused there by design — the W45 finding: the lamp world's input domain is exhausted once the model settles, so the validation set can never hold the two independent observations the promotion requires |
+| **TASK-W52-04** | the second direction of the inter-chain contract | chain A → chain B exists under the same governance as chain B → chain A: versioned envelopes, an idempotency key, a retry and timeout policy, a bounded queue, a capability check, a durable audit and provenance | **W52-03** | **done** | `io.matrix.bridge.KnowledgePublisher` and `io.matrix.api.bridge.KnowledgeBridge` — chain A offers what it established, chain B's brain takes it into its memory; the right names the direction, the signature and the capability and the budget and the idempotency key and the audit are the same governance; the protocol is version 2 and still reads version 1. **The isolation gate grew G10** — **25 checks, 0 failed** — and **the cross-process demonstration exercises both directions in one run**: `scripts/w52-bridge-both-directions-demo.sh`, **11 checks, 0 failed**, with chain B's brain measured to hold **1** item after the first offering and **2** after the second |
+| **TASK-W52-05** | the meta-memory across a restart | the system's record of how its own **methods** behaved survives a restart and is read by the method-selection layer | **W52-04** | **done** | `cognitive_method_measurement` — the profile is a table of the cognitive database, written by its single writer; `CostLedger` reads it back at construction; the selector consults it and **names** it: *"measured 5000ns; 2 call(s), 1 success(es), 1 failure(es)"*. `MethodProfileDurabilityTest` — 5 tests, the acceptance: the measurement is written, the store is closed, the store is opened again, and the selector weighs the restored measurement |
+| **TASK-W52-06** | the epistemic failures that have an honest fix | the eleven named failures of the W50 evaluation are fixed where that can be done honestly, and the rest stay named with the expectation **strengthened** where it changes | **W52-05** | **done — with the failures kept** | the evaluation was re-run against this wave's build: **18 of 29**, the same as W51, no regression. The eleven failures were then MEASURED rather than argued about: three configurations of the relevance floor, each re-running the whole evaluation — 0.25 weighted (shipped) gives 18/29 with **6/6** unanswerable cases abstaining; 0.25 counted over the question's terms gives 19/29 with **5/6**; 0.12 weighted gives 15/29 with **1/6**. **The floor stays where it is** (CD-029): the answerable and the unanswerable families sit in the same band of coverage, so no threshold separates them. No case was excluded, no assertion weakened and no expectation changed |
+| **TASK-W52-07** | the closeout | the report, the registers, the commit, the push and the pull request | **W52-06** | **done — the merge is the owner's** | `docs-v2/engineering/W52-STATUS.md` — the wave's report with the five categories, the measurements and the honest limits; the commit and the push are authorised by the owner's directive of 2026-11-08; the pull request `develop` → `main` is **prepared, not merged by an agent** |
+
+### 4.12 The tasks the W53 wave creates
+
+**W53 is the wave that follows the W52 pull request.** It takes the one bullet of the W51
+mandate's Definition of Done that the system does not yet meet — *"persistent, reusable
+skills or procedures"* — and the one measurement the W52 wave left open: the epistemic
+retrieval's floor cannot separate the answerable cases from the unanswerable ones. The ids
+of this roadmap are stable and are the ones to use; the wave's own task ids are in the fourth
+column.
+
+| the id | the task | the goal | the wave's task | the state | the evidence |
+|---|---|---|---|---|---|
+| **TASK-W53-01** | the procedure is written | when the model settles on exactly one hypothesis, the system writes the procedure down — its construction evidence, its precondition, its state — instead of holding it only as an unnamed shortcut | **W53-00** | **done** | the procedural memory holds a record that says what it is: `Procedure.learnedInEpisode` names the episode it was learned in and `Procedure.validationNote` says what its standing rests on; the note is in the trace and in the canonical form the cycle carries |
+| **TASK-W53-02** | the procedure is reused in a later task | §12's acceptance point 11, read literally: a previously learned procedure is reused, and the trace and the outcome name it | **W53-01** | **done** | `CognitiveKernelTest` — "a later episode consults the procedure the earlier one wrote, and the trace names it"; the `SELECT` step says "the procedure … was consulted — learned in episode …, resting on 4 case(s) of IN_SAMPLE evidence", and the mandate's acceptance point 11 now carries this evidence instead of the weaker one |
+| **TASK-W53-03** | the validation's precondition is explicit, and the reason it cannot be met is proved | the system states what independent evidence a validation would need; the reason the present environment cannot supply it is a proof, not an assertion | **W53-02** | **done** | `DomainExhaustionTest` — the space holds every function of the inputs (16 for two variables), each distinct assignment halves it (16, 8, 4, 2, 1), and the model settles exactly when every assignment of the domain has been observed, so the validation set can never hold an observation. The refusal in the record cites the arithmetic |
+| **TASK-W53-04** | the canonical `Procedure` and `Skill` are filled from a real record | the two contracts the W52 wave could not fill are filled by the wave that made the procedure real — and the `Skill` says whether the procedure is reusable, honestly | **W53-03** | **done** | `CanonicalContractCoverageTest` — **nothing is seeded any more**: the runtime settles, writes the procedure and the later cycles carry both contracts; the canonical `Procedure` carries its own provenance (the episode that wrote it) and the `Skill` carries `learnedFromEpisodeIds` |
+| **TASK-W53-05** | the epistemic demand gets a discriminator that is not a threshold | the W52 measurements show that no coverage threshold separates the two families; the wave looks for a criterion that does, and measures it before adopting it | **W53-04** | **done — with the score unchanged** | the whole 29-case evaluation was re-run with the new supersession rule: **18 of 29, unchanged, the same eleven failures** — the change is not a score-motivated one. The candidate the wave set out to test (a quantity must come from evidence about the asked subject) was measured and found **moot** on this dataset — the unanswerable family already abstains 6 of 6 — and was NOT adopted. The report names the blocker for the eight citation failures: the required claims exist and are citable and rank immediately below the relevance floor (10th of 161 at a floor of 0), so the match needs a shared rare term the answering claims do not contain |
+| **TASK-W53-06** | the registers tell the truth | the capability registry, the project state and the decision register record what the wave did and what it did not | **W53-05** | **done** | the capability registry grows from **54 to 55** rows and the validator reports **0 defects**; the project's state validator reports **0 defects**; CD-030 and CD-031 name the two rules the wave adopted |
+| **TASK-W53-07** | the closeout | the report, the commits, the push and the pull request | **W53-06** | **done — the merge is the owner's** | `docs-v2/engineering/W53-STATUS.md` — the wave's report with the five categories, the measurements and the honest limits; the pull request `develop` → `main` is **prepared, not merged by an agent** |
 
 ## 5. The blocked tasks
 
