@@ -24,6 +24,11 @@
 #       gate must report that the bridge server is reachable from chain B
 #       (G8), and it must exit non-zero. "The bridge is the only crossing"
 #       is a tested statement, not a promise.
+#   C5  W53 — the RECEIVER of a remote cognitive task that reaches chain A's
+#       epistemic store. The gate must report that the store is reachable from
+#       the task direction (G11), and it must exit non-zero. The third
+#       direction of the bridge is governed like the other two, and that claim
+#       is proved by breaking it on purpose.
 #
 # NOTHING IS TOUCHED IN THE REPOSITORY
 # The broken classes are compiled into a COPY of the compiled classes, in the
@@ -335,6 +340,64 @@ if grep -q "FAIL.*bridge server are reachable from chain B" "$PRIV/gate4.log"; t
 else
   fail "the gate did not name the violation of the bridge server"
   grep -E "^  FAIL" "$PRIV/gate4.log" | sed 's/^/        /'
+fi
+
+# ── control 5 — chain B's task receiver reaches chain A's store ──────────────
+head1 "control 5 — chain B's task receiver reaches chain A's epistemic store"
+
+rm -f "$BROKEN/matrix-api-gateway/build/classes/java/main/io/matrix/api/bridge/TaskBridge.class"
+mkdir -p "$PRIV/probe5/io/matrix/api/bridge"
+cat >"$PRIV/probe5/io/matrix/api/bridge/TaskBridge.java" <<'JAVA'
+package io.matrix.api.bridge;
+
+import java.nio.file.Path;
+
+/**
+ * The NEGATIVE CONTROL of rule G11 of the chain isolation gate: the receiver
+ * of a remote cognitive task reaches chain A's epistemic store.
+ *
+ * <p>A remote cognitive task crosses over the network and chain B keeps its own
+ * inbox. A receiver that writes into chain A's store is a crossing inside one
+ * class graph, and the gate must say so — otherwise the claim "the task
+ * direction is governed too" is a promise rather than a proof.</p>
+ */
+public final class TaskBridge {
+
+    public TaskBridge() {
+    }
+
+    public String answer(String body) {
+        io.matrix.knowledge.KnowledgeStore store =
+                new io.matrix.knowledge.KnowledgeStore(Path.of("probe.sqlite"));
+        store.claims("probe");
+        return body;
+    }
+}
+JAVA
+
+if ! "$JAVAC" -nowarn -cp "$CP" -d \
+    "$BROKEN/matrix-api-gateway/build/classes/java/main" \
+    "$PRIV/probe5/io/matrix/api/bridge/TaskBridge.java" 2>"$PRIV/probe5/javac.log"; then
+  fail "the task-direction control could not be compiled (see $PRIV/probe5/javac.log)"
+  cat "$PRIV/probe5/javac.log"
+  exit 1
+fi
+pass "the task-direction control is compiled into the COPY of the classes"
+
+W45_CLASSES_SOURCE="$BROKEN" W45_SKIP_BUILD=1 W45_SKIP_RUNTIME=1 \
+  bash "$GATE" >"$PRIV/gate5.log" 2>&1
+GATE_STATUS=$?
+if [ "$GATE_STATUS" -ne 0 ]; then
+  pass "the gate went red on the tree where the task receiver reaches the store (exit status $GATE_STATUS)"
+else
+  fail "the gate stayed green on a tree where chain B's task receiver reaches chain A's store"
+fi
+grep -E "^  (OK|FAIL)" "$PRIV/gate5.log" | sed 's/^/        /'
+if grep -q "FAIL.*reachable from the task direction" "$PRIV/gate5.log"; then
+  pass "the gate named the violation: the store is reachable from the task direction"
+else
+  fail "the gate did not name the violation of the task direction"
+  grep -E "^  FAIL" "$PRIV/gate5.log" | sed 's/^/        /'
 fi
 
 # ── the summary ─────────────────────────────────────────────────────────────

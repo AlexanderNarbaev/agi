@@ -125,6 +125,14 @@ BRIDGE_CLIENT = "io.matrix.brain.runtime.bridge.BridgePublisher"
 KNOWLEDGE_CLIENT = "io.matrix.bridge.KnowledgePublisher"
 KNOWLEDGE_RECEIVER = "io.matrix.api.bridge.KnowledgeBridge"
 
+# W53 — the third direction of the bridge: chain A delegates a bounded cognitive
+# task, chain B executes it. The client is chain A's publisher, the receiver is
+# chain B's task bridge. The same two properties hold as for the second
+# direction: the client must reach no class of the store, and the receiver must
+# reach no class of chain A's bridge server and no class of chain A's database.
+TASK_CLIENT = "io.matrix.bridge.TaskPublisher"
+TASK_RECEIVER = "io.matrix.api.bridge.TaskBridge"
+
 # The annotation names of the JAX-RS surface.
 HTTP_METHOD_ANNOTATIONS = {
     "jakarta.ws.rs.GET": "GET",
@@ -534,6 +542,18 @@ def main(argv: list[str]) -> int:
     knowledge_client_reachable = KNOWLEDGE_CLIENT in chain_a_closure
     knowledge_receiver_reachable = KNOWLEDGE_RECEIVER in chain_b_closure
 
+    # W53 — the third direction. The task client of chain A must reach no class
+    # of the store: it sends a request, it does not write into the epistemic
+    # model. The task receiver of chain B must reach no class of chain A's
+    # bridge server and no class of chain A's database: the cognitive work
+    # crosses over the network, and chain B's own inbox is chain B's own file.
+    task_client_reaches_store = sorted(closure_of(TASK_CLIENT) & set(store_own))
+    task_receiver_reaches_bridge_server = sorted(
+        c for c in closure_of(TASK_RECEIVER) if c.startswith(BRIDGE_SERVER_PACKAGE))
+    task_receiver_reaches_store = sorted(closure_of(TASK_RECEIVER) & set(store_own))
+    task_client_reachable = TASK_CLIENT in chain_a_closure
+    task_receiver_reachable = TASK_RECEIVER in chain_b_closure
+
     report = {
         "modules": [
             {"name": module, "role": module_of[module], "classes": len(module_classes[module])}
@@ -562,10 +582,15 @@ def main(argv: list[str]) -> int:
             "knowledge_receiver_reaches_store": knowledge_receiver_reaches_store,
             "knowledge_receiver_reaches_bridge_server":
                 knowledge_receiver_reaches_bridge_server,
+            "task_receiver_reachable": task_receiver_reachable,
+            "task_receiver_reaches_store": task_receiver_reaches_store,
+            "task_receiver_reaches_bridge_server": task_receiver_reaches_bridge_server,
         },
         "chain_a": {
             "knowledge_client_reachable": knowledge_client_reachable,
             "knowledge_client_reaches_store": knowledge_client_reaches_store,
+            "task_client_reachable": task_client_reachable,
+            "task_client_reaches_store": task_client_reaches_store,
             "store_subsystem_classes": len(store_closure),
             "store_own_classes": store_own,
             "epistemic_database_classes": epistemic_database_classes,

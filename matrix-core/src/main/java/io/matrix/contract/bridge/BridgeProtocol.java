@@ -29,8 +29,22 @@ public final class BridgeProtocol {
     /** The name of the bridge protocol, carried in every message. */
     public static final String NAME = "matrix.bridge";
 
-    /** The version of the bridge protocol this build speaks (BRIDGE-2). */
-    public static final int VERSION = 2;
+    /**
+     * W53 — the version of the bridge protocol this build speaks (BRIDGE-2).
+     *
+     * <p><b>Why the version moved from 2 to 3.</b> Version 2 carried the second
+     * direction of the bridge: an established belief sent to a peer. Version 3 adds the
+     * third: a bounded cognitive task and its answer. A version is not a decoration — it
+     * is the promise that a reader of this message understands every field in it — so a
+     * payload that carries a task request, a task response or a task report is a version-3
+     * payload, and a version-2 reader, which has never heard of those fields, refuses it
+     * by the rule it already follows: it does not guess.</p>
+     *
+     * <p>Versions 1 and 2 keep their meaning exactly. Nothing this wave changed touches
+     * the observations, the candidates, the evidence links or the established knowledge a
+     * version-1 or version-2 message carried, and the tests say so.</p>
+     */
+    public static final int VERSION = 3;
 
     /**
      * W52 — the oldest version this build still reads.
@@ -38,7 +52,9 @@ public final class BridgeProtocol {
      * <p><b>Why an old version is still readable.</b> Version 1 carried the first direction
      * of the bridge — an observation, a candidate, an evidence link — and every message of
      * that version says exactly what it means in a form this build understands. Version 2
-     * adds the second direction: a task. A reader that understands both does not have to
+     * adds the second direction: an established belief sent to a peer. Version 3 adds the
+     * third: a cognitive task, its answer and its report. A reader that understands them
+     * all does not have to
      * <i>guess</i> what a version-1 message meant, so reading it is not the guess BRIDGE-2
      * forbids; refusing it would break a peer that has not been upgraded yet, for no gain.</p>
      *

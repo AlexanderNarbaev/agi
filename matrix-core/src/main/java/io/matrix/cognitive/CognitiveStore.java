@@ -13,6 +13,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.Locale;
 
 /**
@@ -285,6 +286,30 @@ public final class CognitiveStore
                         created_at TEXT NOT NULL,
                         completed_at TEXT
                     )""");
+            // W53: the outbox of chain A. The intent to send a bounded cognitive task
+            // is written here BEFORE the request is sent, so that a crash between the
+            // intent and the answer leaves a row that a reconciliation pass can finish.
+            // The row is chain A's own, in chain A's own database, written by chain A's
+            // own single writer.
+            st.execute("""
+                    CREATE TABLE IF NOT EXISTS cognitive_task_dispatch (
+                        request_id TEXT PRIMARY KEY,
+                        task_id TEXT NOT NULL,
+                        parent_episode_id TEXT,
+                        workspace_id TEXT NOT NULL,
+                        capability_id TEXT NOT NULL,
+                        payload_hash TEXT NOT NULL,
+                        state TEXT NOT NULL,
+                        remote_responder TEXT,
+                        remote_status TEXT,
+                        disposition TEXT,
+                        disposition_reason TEXT,
+                        response_json TEXT,
+                        report_json TEXT,
+                        report_disposition TEXT,
+                        created_at TEXT NOT NULL,
+                        updated_at TEXT NOT NULL
+                    )""");
             st.execute("""
                     CREATE TABLE IF NOT EXISTS cognitive_event (
                         id TEXT PRIMARY KEY,
@@ -340,6 +365,11 @@ public final class CognitiveStore
             // The columns below carry what the recovery needs: the last durable CHECKPOINT of
             // the execution, the OWNER that claimed it, the stable REQUEST identity, and the
             // classification of a failure or of a recovery.
+            addColumnIfMissing(st, "cognitive_task_dispatch", "report_disposition", "TEXT");
+            addColumnIfMissing(st, "cognitive_task_dispatch", "parent_episode_id", "TEXT");
+            addColumnIfMissing(st, "cognitive_task_dispatch", "request_json", "TEXT");
+            addColumnIfMissing(st, "cognitive_task_dispatch", "attempts",
+                    "INTEGER NOT NULL DEFAULT 0");
             addColumnIfMissing(st, "cognitive_idempotency", "checkpoint", "TEXT");
             addColumnIfMissing(st, "cognitive_idempotency", "owner_token", "TEXT");
             addColumnIfMissing(st, "cognitive_idempotency", "owner_pid", "INTEGER");
@@ -1275,6 +1305,358 @@ public final class CognitiveStore
         }
     }
 
+    /**
+     * W53 — records the intent to dispatch a bounded cognitive task to a peer.
+     *
+     * <p>The row is written before the request is sent, which is what makes the
+     * exchange recoverable: after a crash the unfinished dispatches are still here, and
+     * the same request id can be sent again — the peer deduplicates it, so the logical
+     * effect still happens once.</p>
+     *
+     * @param intent the intent
+     */
+    public synchronized void recordDispatchIntent(DispatchIntent intent) {
+        recordDispatchIntent(intent, null);
+    }
+
+    /**
+     * W53 — records the intent to dispatch, with the request that will be sent.
+     *
+     * <p><b>Why the request travels with the intent.</b> The intent is written before the
+     * request leaves, so after a crash the unfinished dispatch is still here — but a
+     * reconciliation pass can only finish the task if it can send <i>the same request
+     * again</i>, and the request id alone is not the request. Storing the canonical
+     * request with the intent is what makes the recovery path real instead of
+     * theoretical: the replayed request is byte-for-byte the one that was lost, the
+     * peer's durable inbox recognises it, and the logical effect still happens once.</p>
+     *
+     * @param intent     the intent
+     * @param requestJson the canonical request, or null when the caller has none
+     */
+    public synchronized void recordDispatchIntent(DispatchIntent intent, String requestJson) {
+        if (intent == null) {
+            throw new IllegalArgumentException("the dispatch intent must not be null");
+        }
+        try (PreparedStatement ps = connection.prepareStatement(
+                "INSERT INTO cognitive_task_dispatch(request_id, task_id, parent_episode_id, "
+                        + "workspace_id, capability_id, payload_hash, state, remote_responder, "
+                        + "remote_status, disposition, disposition_reason, response_json, "
+                        + "report_json, request_json, created_at, updated_at) "
+                        + "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)")) {
+            ps.setString(1, intent.requestId());
+            ps.setString(2, intent.taskId());
+            ps.setString(3, intent.parentEpisodeId());
+            ps.setString(4, intent.workspaceId());
+            ps.setString(5, intent.capabilityId());
+            ps.setString(6, intent.payloadHash());
+            ps.setString(7, intent.state().name());
+            ps.setString(8, intent.remoteResponder());
+            ps.setString(9, intent.remoteStatus());
+            ps.setString(10, intent.disposition());
+            ps.setString(11, intent.dispositionReason());
+            ps.setString(12, intent.responseJson());
+            ps.setString(13, intent.reportJson());
+            ps.setString(14, requestJson);
+            ps.setString(15, intent.createdAt());
+            ps.setString(16, intent.updatedAt());
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            if (isRequestIdDuplicate(e)) {
+                throw new CognitiveConflictException(
+                        CognitiveConflictException.Kind.IMMUTABLE_RECORD,
+                        "the request id " + intent.requestId() + " is already dispatched", e);
+            }
+            throw new IllegalStateException("failed to record the dispatch intent", e);
+        }
+    }
+
+    /**
+     * W53 — counts one delivery attempt of a dispatch.
+     *
+     * <p><b>Why the counter is durable.</b> The retry budget is a promise about the
+     * <i>task</i>, not about the life of a process: a coordinator that restarted with a
+     * fresh counter would spend the budget again after every restart, and a peer that
+     * was down would be dialled without end. The count therefore lives in the dispatch's
+     * own row, next to the request it belongs to.</p>
+     *
+     * @param requestId the request
+     * @param at        the instant of the attempt
+     * @throws SQLException when the dispatch cannot be written
+     */
+    public synchronized void recordDispatchAttempt(String requestId, String at) {
+        if (requestId == null || requestId.isBlank()) {
+            throw new IllegalArgumentException("the request id must not be blank");
+        }
+        try (PreparedStatement ps = connection.prepareStatement(
+                "UPDATE cognitive_task_dispatch SET attempts = attempts + 1, updated_at = ? "
+                        + "WHERE request_id = ?")) {
+            ps.setString(1, at);
+            ps.setString(2, requestId);
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            throw new IllegalStateException("failed to record the delivery attempt", e);
+        }
+    }
+
+    /**
+     * W53 — how many delivery attempts a dispatch has spent.
+     *
+     * @param requestId the request
+     * @return the number of attempts, zero when the dispatch is unknown
+     */
+    public synchronized int attempts(String requestId) {
+        if (requestId == null || requestId.isBlank()) {
+            return 0;
+        }
+        try (PreparedStatement ps = connection.prepareStatement(
+                "SELECT attempts FROM cognitive_task_dispatch WHERE request_id = ?")) {
+            ps.setString(1, requestId);
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next() ? rs.getInt(1) : 0;
+            }
+        } catch (SQLException e) {
+            throw new IllegalStateException("failed to read the delivery attempts", e);
+        }
+    }
+
+    /**
+     * W53 — the canonical request a dispatch was committed to send.
+     *
+     * <p>This is what a reconciliation pass reads after a restart: the request id alone
+     * cannot be sent again, because the request id is the <i>identity</i> of the attempt,
+     * not its content.</p>
+     *
+     * @param requestId the request
+     * @return the canonical request, or empty when this dispatch carries none
+     */
+    public synchronized Optional<String> requestJson(String requestId) {
+        if (requestId == null || requestId.isBlank()) {
+            return Optional.empty();
+        }
+        try (PreparedStatement ps = connection.prepareStatement(
+                "SELECT request_json FROM cognitive_task_dispatch WHERE request_id = ?")) {
+            ps.setString(1, requestId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (!rs.next()) {
+                    return Optional.empty();
+                }
+                String json = rs.getString(1);
+                return json == null || json.isBlank() ? Optional.empty() : Optional.of(json);
+            }
+        } catch (SQLException e) {
+            throw new IllegalStateException("failed to read the dispatch request", e);
+        }
+    }
+
+    /**
+     * W53 — moves a dispatch to another state.
+     *
+     * @param requestId the request
+     * @param state     the state it is in now
+     * @param at        the instant of the change
+     */
+    public synchronized void markDispatchState(String requestId, DispatchIntent.State state,
+                                               String at) {
+        if (state == null) {
+            throw new IllegalArgumentException("the state must not be null");
+        }
+        try (PreparedStatement ps = connection.prepareStatement(
+                "UPDATE cognitive_task_dispatch SET state = ?, updated_at = ? "
+                        + "WHERE request_id = ?")) {
+            ps.setString(1, state.name());
+            ps.setString(2, at);
+            ps.setString(3, requestId);
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            throw new IllegalStateException("failed to move the dispatch to " + state, e);
+        }
+    }
+
+    /**
+     * W53 — records the peer's answer.
+     *
+     * @param requestId  the request
+     * @param state      the state the answer puts the dispatch in
+     * @param responder  who answered
+     * @param remoteStatus the peer's own status
+     * @param responseJson the structured response, when there was one
+     * @param reportJson the secondary report, when there was one
+     * @param at         the instant of the answer
+     */
+    public synchronized void recordDispatchAnswer(String requestId, DispatchIntent.State state,
+                                                  String responder, String remoteStatus,
+                                                  String responseJson, String reportJson,
+                                                  String at) {
+        if (state == null) {
+            throw new IllegalArgumentException("the state must not be null");
+        }
+        try (PreparedStatement ps = connection.prepareStatement(
+                "UPDATE cognitive_task_dispatch SET state = ?, remote_responder = ?, "
+                        + "remote_status = ?, response_json = ?, report_json = ?, updated_at = ? "
+                        + "WHERE request_id = ?")) {
+            ps.setString(1, state.name());
+            ps.setString(2, responder);
+            ps.setString(3, remoteStatus);
+            ps.setString(4, responseJson);
+            ps.setString(5, reportJson);
+            ps.setString(6, at);
+            ps.setString(7, requestId);
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            throw new IllegalStateException("failed to record the dispatch answer", e);
+        }
+    }
+
+    /**
+     * W53 — records chain A's verdict on the answer.
+     *
+     * @param requestId the request
+     * @param disposition the verdict
+     * @param reason     why
+     * @param at         the instant of the verdict
+     */
+    public synchronized void recordDispatchDisposition(String requestId, String disposition,
+                                                       String reason, String at) {
+        try (PreparedStatement ps = connection.prepareStatement(
+                "UPDATE cognitive_task_dispatch SET disposition = ?, disposition_reason = ?, "
+                        + "state = ?, updated_at = ? WHERE request_id = ?")) {
+            ps.setString(1, disposition);
+            ps.setString(2, reason);
+            ps.setString(3, DispatchIntent.State.ADJUDICATED.name());
+            ps.setString(4, at);
+            ps.setString(5, requestId);
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            throw new IllegalStateException("failed to record the disposition", e);
+        }
+    }
+
+    /**
+     * W53 — the dispatch of a request, when there is one.
+     *
+     * @param requestId the request
+     * @return the dispatch, or empty
+     */
+    public synchronized java.util.Optional<DispatchIntent> findDispatch(String requestId) {
+        if (requestId == null || requestId.isBlank()) {
+            return java.util.Optional.empty();
+        }
+        try (PreparedStatement ps = connection.prepareStatement(dispatchSelect()
+                + " WHERE request_id = ?")) {
+            ps.setString(1, requestId);
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next() ? java.util.Optional.of(readDispatch(rs))
+                        : java.util.Optional.empty();
+            }
+        } catch (SQLException e) {
+            throw new IllegalStateException("failed to read the dispatch", e);
+        }
+    }
+
+    /**
+     * W53 — the dispatches of a workspace.
+     *
+     * @param workspaceId the workspace
+     * @return the dispatches, in the order they were recorded
+     */
+    public synchronized List<DispatchIntent> dispatches(String workspaceId) {
+        List<DispatchIntent> found = new ArrayList<>();
+        try (PreparedStatement ps = connection.prepareStatement(dispatchSelect()
+                + " WHERE workspace_id = ? ORDER BY created_at")) {
+            ps.setString(1, workspaceId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    found.add(readDispatch(rs));
+                }
+            }
+            return found;
+        } catch (SQLException e) {
+            throw new IllegalStateException("failed to read the dispatches", e);
+        }
+    }
+
+    /**
+     * W53 — the dispatches that still owe an answer.
+     *
+     * <p>These are the rows a reconciliation pass looks at after a restart: the intent
+     * says the task was sent, and the durable record of the answer is not here yet. The
+     * same request id can be sent again, and the peer will not execute it twice.</p>
+     *
+     * @param workspaceId the workspace
+     * @return the unfinished dispatches
+     */
+    public synchronized List<DispatchIntent> unfinishedDispatches(String workspaceId) {
+        List<DispatchIntent> found = new ArrayList<>();
+        try (PreparedStatement ps = connection.prepareStatement(dispatchSelect()
+                + " WHERE workspace_id = ? AND state IN ('CREATED','DISPATCH_PENDING',"
+                + "'DISPATCHED') ORDER BY created_at")) {
+            ps.setString(1, workspaceId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    found.add(readDispatch(rs));
+                }
+            }
+            return found;
+        } catch (SQLException e) {
+            throw new IllegalStateException("failed to read the unfinished dispatches", e);
+        }
+    }
+
+    /**
+     * Records what chain A did with the peer's report.
+     *
+     * <p>The report is not the verdict: it is the peer's own account, and whether chain A
+     * admitted it into its epistemic store is a separate fact from what chain A decided
+     * about the proposition. Both are recorded, so that a reader can tell a report that was
+     * refused from a report that was admitted and then qualified.</p>
+     *
+     * @param requestId   the request
+     * @param disposition what happened to the report
+     * @param at          when it happened
+     */
+    public synchronized void recordReportDisposition(String requestId, String disposition,
+                                                      String at) {
+        try (PreparedStatement ps = connection.prepareStatement(
+                "UPDATE cognitive_task_dispatch SET report_disposition = ?, updated_at = ? "
+                        + "WHERE request_id = ?")) {
+            ps.setString(1, disposition);
+            ps.setString(2, at);
+            ps.setString(3, requestId);
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            throw new IllegalStateException("failed to record the report's admission", e);
+        }
+    }
+
+    /** The columns of a dispatch row, in the order the reader expects them. */
+    private static String dispatchSelect() {
+        return "SELECT request_id, task_id, parent_episode_id, workspace_id, capability_id, "
+                + "payload_hash, state, remote_responder, remote_status, disposition, "
+                + "disposition_reason, response_json, report_json, report_disposition, "
+                + "created_at, updated_at FROM cognitive_task_dispatch";
+    }
+
+    /** Reads one dispatch row. */
+    private static DispatchIntent readDispatch(ResultSet rs) throws SQLException {
+        return new DispatchIntent(
+                rs.getString("request_id"),
+                rs.getString("task_id"),
+                rs.getString("parent_episode_id"),
+                rs.getString("workspace_id"),
+                rs.getString("capability_id"),
+                rs.getString("payload_hash"),
+                DispatchIntent.State.valueOf(rs.getString("state")),
+                rs.getString("remote_responder"),
+                rs.getString("remote_status"),
+                rs.getString("disposition"),
+                rs.getString("disposition_reason"),
+                rs.getString("response_json"),
+                rs.getString("report_json"),
+                rs.getString("report_disposition"),
+                rs.getString("created_at"),
+                rs.getString("updated_at"));
+    }
+
     /** The stored content of a task, or null when it does not exist. */
     private List<String> taskContent(String taskId) {
         try (PreparedStatement ps = connection.prepareStatement(
@@ -1999,6 +2381,28 @@ public final class CognitiveStore
     // ── helpers ──────────────────────────────────────────────────────────────
 
     /** True when the failure is a constraint violation, and not a broken statement. */
+    /**
+     * Whether the failure is a genuine duplicate of the dispatch request id.
+     *
+     * <p><b>Why the narrow test.</b> A refusal of a dispatch must mean one thing: that
+     * this request id was dispatched before. A wider test — "the message mentions a
+     * constraint" — also catches a locked database, a missing column or a not-null
+     * violation, and reports them as a duplicate. A caller then concludes that its
+     * request was already running, when in fact the write never happened. Only SQLite's
+     * uniqueness failure on the request id itself is a duplicate.</p>
+     *
+     * @param e the failure
+     * @return {@code true} when the request id was already present
+     */
+    private static boolean isRequestIdDuplicate(SQLException e) {
+        String message = e.getMessage();
+        if (message == null) {
+            return false;
+        }
+        String text = message.toLowerCase(Locale.ROOT);
+        return text.contains("unique") && text.contains("request_id");
+    }
+
     private static boolean isConstraintViolation(SQLException e) {
         String message = e.getMessage();
         if (message == null) {

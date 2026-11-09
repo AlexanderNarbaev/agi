@@ -79,6 +79,16 @@ public final class MinimalHttpServer {
      * names — a bridge with no secret is not a bridge that accepts anything.</p>
      */
     private final io.matrix.api.bridge.KnowledgeBridge knowledgeBridge;
+
+    /**
+     * W53 — the third direction of the bridge: chain A asks this process to execute a
+     * bounded cognitive task.
+     *
+     * <p>It is a receiver of its own, with its own durable inbox, because a task that
+     * was executed must not be executed twice — and the knowledge messages, which teach
+     * rather than compute, have a different life.</p>
+     */
+    private final io.matrix.api.bridge.TaskBridge taskBridge;
     /** TRUE-W14: persistent HDC store, kept as instance field so /v1/federate can dump/load. */
     private io.matrix.brain.runtime.PersistentHdcStore hdcStore;
     private ProductionBrainClient prodBrain; // null if stub mode
@@ -339,6 +349,44 @@ public final class MinimalHttpServer {
         // W52 — the second direction of the bridge. The teacher is the production brain
         // when there is one; in stub mode there is no brain to teach, and the bridge says
         // so rather than pretending that the knowledge was taken.
+        // W53 — the remote cognitive task receiver. It is bound to the production brain
+        // when there is one; in stub mode there is no production path to run, and the
+        // receiver refuses the task rather than pretending to have thought.
+        io.matrix.api.bridge.RemoteTaskStore inbox = null;
+        try {
+            inbox = new io.matrix.api.bridge.RemoteTaskStore(
+                    io.matrix.api.bridge.RemoteTaskStore.defaultDatabase());
+            // W53 — the peer reconciles its own unfinished rows. A request that was in
+            // flight when this process died would otherwise stay ACCEPTED or RUNNING for
+            // ever: every later delivery of it would be answered as "still running",
+            // and the caller would wait for a task nobody is doing. The peer keeps the
+            // request's digest and not its payload, so it cannot finish the execution
+            // itself; the row is closed as a reasoned failure instead, and the caller
+            // learns what happened rather than waiting for a silence.
+            int closed = inbox.reconcileUnfinished(java.time.Instant.now().toString());
+            if (closed > 0) {
+                LOG.log(Level.WARNING, "W53: the peer closed " + closed
+                        + " task(s) that the previous run left unfinished");
+            }
+        } catch (java.sql.SQLException e) {
+            LOG.log(Level.WARNING, "the task inbox could not be opened; remote cognitive "
+                    + "tasks will be refused", e);
+        }
+        this.taskBridge = io.matrix.api.bridge.TaskBridge.configured(
+                inbox,
+                io.matrix.api.bridge.CognitiveCapability.standard(
+                        this.prodBrain == null ? null : new io.matrix.api.brain.BrainCycle() {
+                            @Override
+                            public io.matrix.api.brain.BrainCycle.CycleResult cycle(
+                                    String input, String context, String model) {
+                                return prodBrain.cycle(input, context, model);
+                            }
+
+                            @Override
+                            public io.matrix.api.brain.ExplainTrace buildExplain(String id) {
+                                return prodBrain.buildExplain(id);
+                            }
+                        }));
         this.knowledgeBridge = io.matrix.api.bridge.KnowledgeBridge.configured(
                 this.prodBrain == null ? null : new io.matrix.api.bridge.KnowledgeTeacher() {
                     @Override
@@ -423,6 +471,9 @@ public final class MinimalHttpServer {
         // W52 — the second direction of the bridge: chain A offers established knowledge.
         this.createContext(io.matrix.api.bridge.KnowledgeBridge.KNOWLEDGE_PATH,
                 this::handleBridgeKnowledge);
+        // W53 — the third direction of the bridge: chain A delegates a bounded cognitive
+        // task, and this process runs it through its own production path.
+        this.createContext(io.matrix.api.bridge.TaskBridge.TASK_PATH, this::handleBridgeTask);
         this.createContext("/v1/audit/logs", this::handleAuditLogs);
         // W42.9 / D-016: the promotion decisions of the runtime — the refusals
         // included — are readable here. Before this, a lesson that did NOT
@@ -1099,6 +1150,24 @@ public final class MinimalHttpServer {
         }
         String body = readBody(ex);
         String answer = knowledgeBridge.answer(body);
+        writeJson(ex, 200, answer);
+    }
+
+    /**
+     * W53 — a bounded cognitive task arrives from chain A.
+     *
+     * <p>The receiver does the work: it authenticates the message, checks the granted
+     * right, admits the request into its durable inbox, runs the production cognitive
+     * path and answers with a signed response and a signed report. This handler only
+     * moves bytes.</p>
+     */
+    private void handleBridgeTask(HttpExchange ex) throws IOException {
+        if (!"POST".equalsIgnoreCase(ex.getRequestMethod())) {
+            writeJson(ex, 405, "{\"error\":\"method not allowed\"}");
+            return;
+        }
+        String body = readBody(ex);
+        String answer = taskBridge.answer(body);
         writeJson(ex, 200, answer);
     }
 

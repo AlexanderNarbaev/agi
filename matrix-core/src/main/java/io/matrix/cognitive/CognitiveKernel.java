@@ -113,6 +113,16 @@ public final class CognitiveKernel {
     private final io.matrix.cognitive.microworld.MicroWorldEnvironment environment;
     private final AlgorithmSelectorBridge selector;
     private final RegulatoryBridge regulator;
+
+    /**
+     * W53 — the port to a remote cognitive capability.
+     *
+     * <p>It is optional: a kernel without one runs entirely locally, and a kernel with one
+     * may delegate the capability the selector chose. There is no second selector here — the
+     * choice of the method is still the {@code AlgorithmSelector}'s, and this port only says
+     * whether the capability that was chosen happens to be one another process can serve.</p>
+     */
+    private io.matrix.cognitive.distributed.RemoteExecutor remoteExecutor;
     private final Supplier<String> timestamps;
 
     /**
@@ -245,6 +255,22 @@ public final class CognitiveKernel {
                            RegulatoryBridge regulator) {
         this(workbench, store, sessionFactory, environment, selector, regulator,
                 () -> java.time.Instant.now().toString());
+    }
+
+    /**
+     * W53 — the kernel that may delegate a bounded cognitive task to another process.
+     *
+     * <p>The remote task then belongs to the same logical cognitive episode: the cycle's
+     * trace shows the dispatch, the receipt, the validation and the epistemic evaluation of
+     * what came back, and the task may be found again by its stable id after a restart.</p>
+     *
+     * @param remoteExecutor the port to the peer, or null for a kernel that runs locally
+     * @return this kernel
+     */
+    public CognitiveKernel withRemoteExecutor(
+            io.matrix.cognitive.distributed.RemoteExecutor remoteExecutor) {
+        this.remoteExecutor = remoteExecutor;
+        return this;
     }
 
     /**
@@ -478,6 +504,43 @@ public final class CognitiveKernel {
         }
 
         deadline.check("SELECT");
+
+        // ── 5b. DISPATCH REMOTE, WHEN THE CHOSEN CAPABILITY LIVES ELSEWHERE ──
+        // W53 — the remote task is part of THIS episode, not a separate demonstration.
+        // The four steps below are real transitions, not decoration: the request really
+        // left, a real answer really came back, it really was checked, and the result
+        // really was evaluated against this process's own evidence.
+        io.matrix.cognitive.distributed.RemoteExecutor.RemoteOutcome remote = null;
+        if (remoteExecutor != null && remoteExecutor.serves(decision.selectedAlgorithmId())) {
+            trace.step("DISPATCH_REMOTE", decision.selectedAlgorithmId(),
+                    "the chosen capability is served by another process; the task was "
+                            + "delegated with the criterion it will be judged against");
+            try {
+                remote = remoteExecutor.execute(decision.selectedAlgorithmId(),
+                        requested.toString(), "the answer must address the question that was "
+                                + "asked", episodeId);
+                trace.step("RECEIVE", decision.selectedAlgorithmId(),
+                        "the peer answered request " + remote.requestId()
+                                + " with status " + remote.status()
+                                + " from responder " + remote.responderId());
+                trace.step("VALIDATE", decision.selectedAlgorithmId(),
+                        "the answer was checked against the contract; the disposition is "
+                                + remote.disposition());
+                trace.step("EVALUATE_EVIDENCE", decision.selectedAlgorithmId(),
+                        "the result was evaluated against this process's own evidence: "
+                                + remote.reason());
+                notes.add("a remote execution contributed: request " + remote.requestId()
+                        + ", status " + remote.status() + ", disposition "
+                        + remote.disposition() + " — the peer's answer is a report, not a "
+                        + "settled fact, and the local computation continues on its own terms");
+            } catch (RuntimeException e) {
+                trace.step("DISPATCH_REMOTE", decision.selectedAlgorithmId(),
+                        "the delegation failed: " + e.getMessage());
+                notes.add("the remote delegation failed: " + e.getMessage());
+            }
+            deadline.check("DISPATCH_REMOTE");
+        }
+
         // ── 6. COMPUTE AND, WHEN THE MODEL IS UNSETTLED, ACT ────────────────
         Boolean computed = null;
         try {

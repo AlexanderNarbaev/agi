@@ -2452,7 +2452,8 @@ public final class KnowledgeStore implements AutoCloseable {
      * @param concepts the concepts the changes need; an existing concept
      *     is left alone
      */
-    public void applyChanges(String workspaceId, KnowledgeChanges changes, List<Concept> concepts) {
+    public synchronized void applyChanges(String workspaceId, KnowledgeChanges changes,
+                                        List<Concept> concepts) {
         KnowledgeSnapshot current = exportWorkspace(workspaceId);
         List<Claim> allClaims = new ArrayList<>(current.claims());
         allClaims.removeIf(c -> changes.claims().stream()
@@ -3405,7 +3406,7 @@ public final class KnowledgeStore implements AutoCloseable {
      * mission's §6.1 requires the answer to be explainable "through its
      * supporting claims and operations".
      */
-    public void recordDerivation(Derivation derivation) {
+    public synchronized void recordDerivation(Derivation derivation) {
         validateDerivation(derivation);
         try {
             connection.setAutoCommit(false);
@@ -3609,7 +3610,7 @@ public final class KnowledgeStore implements AutoCloseable {
      * inspected piece by piece, and so that a subtask's own evidence is
      * reachable without parsing the whole goal.
      */
-    public void recordGoalWithSubtasks(LearningGoal goal) {
+    public synchronized void recordGoalWithSubtasks(LearningGoal goal) {
         recordGoal(goal);
         try {
             connection.setAutoCommit(false);
@@ -4614,8 +4615,9 @@ public final class KnowledgeStore implements AutoCloseable {
     @io.matrix.auditor.ArticleIPermitted(value = "the transitioned_at stamp of a recorded "
             + "learning state; it records WHEN the state was recorded, and the stage itself is "
             + "decided by the evidence and not by the clock")
-    public void recordLearningStates(String workspaceId, Map<String, LearningState> states,
-                                      List<LearningTransition> transitions) {
+    public synchronized void recordLearningStates(String workspaceId,
+                                                  Map<String, LearningState> states,
+                                                  List<LearningTransition> transitions) {
         try {
             connection.setAutoCommit(false);
             try {
