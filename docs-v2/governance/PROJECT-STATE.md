@@ -2,17 +2,22 @@
 
 **Status:** `CANONICAL` · **This document is a SNAPSHOT, not a history.** It describes the
 project at one commit and is replaced, not appended to, when the state moves.
-**Snapshot of:** `71b5b5c66907883c1eaf9c38433197ba3191c5db` · **Date:** 2026-11-07
+**Snapshot of:** `492ea3cf` · **Date:** 2026-11-09
 **Validation:** `scripts/validate-project-state.py --strict` — it checks that the commit below
 is the repository's HEAD, that the wave and the baseline below are the current ones, and that
 the canonical documents it names exist. It reports a lag of one commit as an OBSERVATION, not
 as a defect: the snapshot names the commit it was written at, and the commit that follows it
 is the one that carries the snapshot itself.
-**The wave that produced this snapshot is still running.** The commit named above is the one
-observed at 2026-11-07T20:48:27+03:00 (`git rev-parse HEAD`); `origin/develop` pointed at
-the same commit at that moment. **The wave moves HEAD while it runs**, so a reader must
-expect the repository to be ahead of the commit written here — and must not read the lag as
-a defect.
+**The wave that produced this snapshot is running.** The commit named above is the one
+observed at 2026-11-09 (`git rev-parse HEAD`); `origin/develop` pointed at the same commit at
+that moment. **The wave moves HEAD while it runs**, so a reader must expect the repository to
+be ahead of the commit written here — and must not read the lag as a defect.
+**This snapshot replaces the one of 2026-11-07.** That one named W50 as the active wave; W50
+is merged (pull request #47, squash `67b3410d`, 2026-11-07) and W51 is merged (pull request
+#48, squash `3ef8a5c8`, 2026-11-09). The rows that were re-measured say so; the rows that
+were carried say that too, and the rows whose number was measured by a different method
+carry the method with them, because a number without its method is a number nobody can
+reproduce.
 
 ---
 
@@ -30,6 +35,15 @@ is not a system in which every implemented class is served. The distance between
 and "served" is the single most important fact about this repository, and it is measured in
 `docs-v2/architecture/CAPABILITY-REGISTRY.yml`.
 
+**What changed in W51:** the two serving applications do not meet, but the parts of MATRIX
+now interact through **one governed crossing** — the bridge, chain B → chain A — and the
+cognitive cycle is a real runnable loop with all six memory roles, a reflection that
+produces decisions, and a plugin architecture with a creator. **The distance did not close:
+it moved.** The bridge, the canonical contracts, the world-state memory and the reflection
+are **served**; the shared runtime, the plugin system, the meta-memory and the native
+boundary are **not** — their only caller today is the wave's demonstration. The registry says
+so on each of those rows, and §2 of this snapshot repeats it.
+
 ---
 
 ## 2. The state
@@ -37,15 +51,15 @@ and "served" is the single most important fact about this repository, and it is 
 | | |
 |---|---|
 | the branch | `develop` |
-| the commit | `71b5b5c66907883c1eaf9c38433197ba3191c5db` — the W50 commit observed at 2026-11-07T20:48:27+03:00; this snapshot is carried by the commit that follows it |
-| the remote | `origin/develop` — **the same commit** at the moment of writing (the local and the remote do not diverge). The wave is still running, so the remote moves with it. `origin/main` is `79045c57` — the **squash merge of pull request #44** (W49), merged on 2026-11-06 |
+| the commit | `492ea3cf` — the W52 commit observed at 2026-11-09; this snapshot is carried by the commit that follows it |
+| the remote | `origin/develop` — **the same commit** at the moment of writing (the local and the remote do not diverge). The wave is still running, so the remote moves with it. `origin/main` is `3ef8a5c8` — the **squash merge of pull request #48** (W51), merged on 2026-11-09; before it `67b3410d` was the squash of pull request #47 (W50) and `79045c57` the squash of pull request #44 (W49) |
 | the release version | **none.** The tags `v1.0.0` and `v16.0.0-mind` exist, but no release process is defined and the `v16.0.0-mind` tag predates three waves of work |
-| the latest completed wave | **W49** — the public-research workstream (OD-048) and the two implementation tasks W48 left approved. It is **merged into `main`**: pull request #44, squash `79045c57`, 2026-11-06. Before it, **W48** — the truth of the evidence (the CI reconciliation, the capability-claims guard, the measured native budget), and before that **W47** — the implementation of the owner's decisions of 2026-11-05 (OD-025…OD-044) |
-| the previous waves | W48 — the CI reconciliation and the native budget; W47 — the owner's four architecture decisions (`a6ded233`); W45.1 (`509d23ba`) — the crash consistency; W45.0 (`eae6003f`) — the cognitive kernel integrity; RECON-W44.0 (`ae6c017b`) — the bytecode archaeology |
-| the active wave | **W50 — MATRIX Local Evidence-Grounded Demonstrator: from research subsystems to a runnable, evidence-grounded learning system. Its report is `docs-v2/engineering/W50-STATUS.md`; the measured model evaluation is `docs-v2/engineering/W50-LOCAL-MODEL.md`.** **What it delivered:** a **bounded, licensed corpus in one domain** (plate tectonics) — 2 seed documents (USGS *This Dynamic Earth*, US public domain; Wikipedia *Plate tectonics*, CC BY-SA 4.0, oldid 1381934246) and a **7-document pre-cached research pool** of versioned Wikipedia snapshots, every file carrying its licence, its revision and its sha256 in a manifest that the import verifies; the seed import produced **348 claims** and the bounded acquisition cycle **3 pool documents and 324 claims**. The **four-turn demonstration ran on the packaged jar** (`matrix-core/build/quarkus-app/quarkus-run.jar`, `http://127.0.0.1:9091`): Q1 answered from **153 claims of 2 sources**; Q2 from **25 claims of 4 sources** after the acquisition; Q3 a **CONTRADICTED** verdict that names the disputed premise and the contradicting claim and its source, with `promoted=false` — the assertion was never stored; Q4 acquired the *Slab pull* document (**14 claims**) and applied **exactly one supersession** (relatedness 0.83) — the earlier claim stays in the history as SUPERSEDED (version 2), the new one is SUPPORTED (version 2), and the answer moves from **118 claims of 5 sources** to **128 claims of 7 sources**. **The teacher stays off** (OD-049): the local model evaluation measured **0 teacher invocations** during the deterministic acquisition, and the teacher is **not** more faithful (72.7 % of its propositions are verbatim against the deterministic path's 100 %). **What is still open, and named:** the false-premise judgement is **lexical, not semantic**; an answer's support value is **0.0**, because an imported claim carries no authored confidence; the pool is pre-cached and versioned, **not live web** — no request leaves the machine; and the status route leaves the workspace list and the counts empty (the three risks R-W50-01…R-W50-03, and the question Q-W50-03). **The public face is published from `main`, which now carries W49** (the squash `79045c57`) and is behind `develop` by the W50 work (R-W49-02, Q-W49-01); the **release path** has no credentials (R-W48-04); the **static analysis produces no evidence** and the Java 25-capable engine reports 1 414 findings (Q-W49-06); the **native build** needs a larger runner and one dependency (Q-W49-05) |
+| the latest completed wave | **W51** — the unified cognitive runtime, the world model and the safe self-extension. It is **merged into `main`**: pull request #48, squash `3ef8a5c8`, 2026-11-09, **merged by the owner** on the same day. Its report is `docs-v2/engineering/W51-STATUS.md`, its audit is `docs-v2/engineering/W51-AUDIT.md`, its architecture map is `docs-v2/engineering/W51-ARCHITECTURE-MAP.md` and its decisions are **CD-020 … CD-025** in `docs-v2/governance/DECISION-REGISTER.md`. Before it, **W50** — the local evidence-grounded demonstrator (pull request #47, squash `67b3410d`, 2026-11-07), **W49** (pull request #44, squash `79045c57`, 2026-11-06) and **W48** — the truth of the evidence |
+| the previous waves | **W50** — the local evidence-grounded demonstrator: a bounded, licensed corpus in one domain (plate tectonics) — 2 seed documents and a 7-document pre-cached research pool, every file carrying its licence, its revision and its sha256 in a manifest the import verifies; the seed import produced **348 claims** and the bounded acquisition cycle **3 pool documents and 324 claims**; the four-turn demonstration ran on the packaged jar: Q1 answered from **153 claims of 2 sources**, Q2 from **25 claims of 4 sources**, Q3 a **CONTRADICTED** verdict that names the disputed premise and the contradicting claim with `promoted=false`, Q4 applied **exactly one supersession**; the teacher stays off (OD-049) with **0 teacher invocations** measured. Its report is `docs-v2/engineering/W50-STATUS.md`. Before it, W48 — the CI reconciliation and the native budget; W47 — the owner's four architecture decisions (`a6ded233`); W45.1 (`509d23ba`) — the crash consistency; W45.0 (`eae6003f`) — the cognitive kernel integrity; RECON-W44.0 (`ae6c017b`) — the bytecode archaeology |
+| the active wave | **W52 — The Canonical Path, the Second Direction, and the Registers in Truth.** W51 is merged, so the wave that follows it closes the three gaps W51 named: the canonical contracts that have no producer in the runtime, the inter-chain contract that has only one direction, and the repository's own instruments that do not know about the wave. Its task list is §4.11 of `docs-v2/governance/ROADMAP.md`. |
 | the modules | **14** included in `settings.gradle`, 3 commented out, 2 outside Gradle, 1 stray orphan file |
-| the serving entry points | **2** applications — the Quarkus app on **9091** (210 routes) and the brain runtime's JDK server on **8765** (28 routes) |
-| the CLI entry points | **79** |
+| the serving entry points | **2** applications — the Quarkus app on **9091** and the brain runtime's JDK server on **8765**. **Measured 2026-11-09:** chain A carries **205** HTTP method endpoints (the count of the `@Path` annotations that carry an HTTP method) and chain B's gateway registers **33** route contexts (the count of the distinct `createContext` paths). The earlier figures in this snapshot — 210 and 28 — were measured by a different method and are not comparable; the method is written with each number here so that the next reader can reproduce it. |
+| the CLI entry points | **12** `@Command` classes in chain A's two modules, measured 2026-11-09 by the count of the `@Command` annotations. The earlier figure of 79 was measured by a method this snapshot does not carry, so it is replaced rather than restated. |
 | the databases | **one canonical** SQLite file (`data/knowledge/workbench.sqlite`, the knowledge schema **v19** — `KnowledgeStore.SCHEMA_VERSION = 19`) plus chain B's own `data/mind/mind.sqlite`. The W50 demonstration ran on that canonical file and left **687 claims** in each of its two workspaces; the claims carry the workspace id, but the `workspace` table itself holds no row — which is why the status route's workspace list comes back empty (Q-W50-03) |
 
 **What this snapshot re-verified, and what it carried.** Re-verified on 2026-11-07: the
@@ -82,6 +96,13 @@ of **scopes**, each verified on a named commit.
 | the disk-budget scope (the unit defect) | `./gradlew :matrix-brain-runtime:test --tests "io.matrix.brain.runtime.DiskBudgetTest"` | **10 tests, 0 failures, 0 errors, 0 skipped** | `af9ba688` | JVM |
 | the GPU benchmark harness's own arithmetic | `./gradlew :matrix-core:test --tests "io.matrix.benchmark.GpuBenchmarkHarnessTest"` | **8 executions, 0 failures, 0 errors** | `75937934` | JVM |
 | the W50 acquisition and premise scope | `./gradlew :matrix-core:test --tests "io.matrix.knowledge.acquisition.*" --tests "io.matrix.knowledge.PremiseAssessmentTest" --rerun-tasks` | **11 classes, 60 tests, 0 failures, 0 errors, 0 skipped** | `71b5b5c6` | JVM |
+| the W51 wave's whole scope | `./gradlew :matrix-core:test --tests "io.matrix.contract.*" --tests "io.matrix.plugin.*" --tests "io.matrix.runtime.*" --tests "io.matrix.bridge.*" --tests "io.matrix.learning.env.*" --tests "io.matrix.nativekernel.*" --tests "io.matrix.w51.*" --tests "io.matrix.safety.*" --tests "io.matrix.knowledge.*" --tests "io.matrix.benchmark.w51.*" --tests "io.matrix.cognitive.*" --rerun --offline` | **1323 tests, 0 failures, 0 errors, 0 skipped** | `83fa911c` | JVM, OpenJDK 25 |
+| the chain isolation gate, after the bridge | `bash scripts/w45-chain-isolation-check.sh` | **22 checks, 0 failed** | `83fa911c` | integration — a real chain B server |
+| its negative control, after the bridge | `bash scripts/w45-chain-isolation-selftest.sh` | **12 checks, 0 failed** | `83fa911c` | integration — the isolation is broken on purpose |
+| the cross-process bridge demonstration | `bash scripts/w51-bridge-demo.sh` | **10 checks, 0 failed** | `83fa911c` | integration — two processes, two databases |
+| the end-to-end demonstration | `./gradlew :matrix-core:w51Demonstration` | **15 of 15 acceptance points**; the trace is `docs-v2/engineering/W51-DEMONSTRATION.json` | `83fa911c` | JVM |
+| the W50 epistemic evaluation, before and after the W51 fixes | `python3 scripts/w51-epistemic-eval.py` | **12/29 → 18/29**, the baseline reproduced first on the same runner in a clean worktree at `a098f283` | `83fa911c` | evaluation — 29 cases, per-case report |
+| the quality gate, after the wave | `bash scripts/quality-gate.sh` | **271 literal candidates at the baseline of 271** | `83fa911c` | gate |
 
 **The four W48 rows are quoted from the wave's own committed records**, not re-run here:
 `docs-v2/engineering/W48-TEST-RECONCILIATION.md` §3 (the two test scopes),
@@ -92,6 +113,13 @@ of **scopes**, each verified on a named commit.
 `matrix-core/build/test-results/test/`: the eleven classes of `io.matrix.knowledge.acquisition.*`
 plus `io.matrix.knowledge.PremiseAssessmentTest`. It is a **scope**, not the project's total
 test population — the full suite is still not run here (R-W46-10).
+
+**The W51 rows are the wave's own scope**, measured on 2026-11-09 and counted from the
+retained JUnit XML: **1323 tests across eleven scopes**, 0 failures, 0 errors, 0 skipped. They
+are a **scope** too, and a wide one — the contract, the bridge, the plugin, the runtime, the
+learning environment, the native boundary, the safety matrix, the knowledge store, the
+benchmark and the cognitive kernel. **It is still not the project's total population**, and
+the full suite is still not run here.
 
 **Three things this baseline does NOT say:**
 
@@ -123,6 +151,10 @@ test population — the full suite is still not run here (R-W46-10).
 | the **GPU is an OPTIONAL ACCELERATOR, and the speed-up is measured but the digit is bounded** — the ONNX CUDA registration fails because the library path is a JVM system property and a native `dlopen` consults `LD_LIBRARY_PATH`; the diagnostic that reports the active provider is a **hardcoded string** | a performance defect + a lying diagnostic | the truth of the GPU claim | **decided by the owner on 2026-11-06 — OD-047**: the GPU is an **optional** accelerator, not part of the default serving path; the measurement is kept, the silent CPU fallback stays visible in the registry, and no deployment is obliged to provide the CUDA libraries. The measurement: `docs-v2/engineering/W48-GPU-BENCHMARK.md` measures **12.06× / 11.68× / 11.47×** over three runs of MATRIX's own forward call (`75937934`), the end-to-end path at **12.69×**, and the point call **4× slower** on the GPU. The historical **12.6×** does **not** reproduce and stays **HISTORICAL**, bounded by that measurement. **The serving path does not change; the hardcoded diagnostic still stands.**
 | the **quality gates are not blocking** — they live in a CI job named *«Quality gates (can fail)»*, and `STANDARDS-MATRIX.md` does not say so | a documentation and process defect | the trust a gate carries | the owner |
 | the **readiness probe is permanently 503** — the reactive PostgreSQL datasource gates it and **no production code reads it** | an operational blocker | the CI smoke test; every deployment manifest | the coordinator |
+| the **static analysis produces no evidence** — the pinned SpotBugs plugin 6.1.7 resolves the engine 4.9.3, whose ASM 9.7.1 reads class-file major 68 and the code is major 69; the run yields **6 645** `Unsupported class file major version` lines and **no** findings | an inherited infrastructure limitation, **measured 2026-11-09** | nothing in the cognitive architecture — the gate is not a prerequisite of the deliverable | the owner (Q-W49-06) |
+| the **secret scan exits 183** — TruffleHog finishes with **0 verified secrets** and **8 unverified** PostgreSQL-like findings, all documentation placeholders in `.veai/skills/**`; the job is red on the action's own exit code, not on a finding | an inherited infrastructure limitation, **measured 2026-11-09** | the job's green state, not the repository's secrets | the coordinator |
+| the **ShellCheck job is red on the repository's other scripts** — **182** findings at the wave's head, where the base commit `a098f283` had **210**; the wave's own four scripts have **zero**. The job is red on `main` at `67b3410d`, `79045c57` and `7a0ed0cc` as well | an inherited infrastructure limitation, **measured 2026-11-09** | the job's green state, not the wave's scripts | the coordinator |
+| the **native image runs out of memory** — `native.yml:28-34` sets no memory limit, `-J-Xmx8g` with `--gc=epsilon` is a hard wall, and the build dies with `OutOfMemoryError: Java heap space` | an inherited infrastructure limitation, **measured 2026-11-09** | nothing in the cognitive architecture — the mandate says the native image is not a prerequisite | the owner (Q-W49-05) |
 
 ---
 
@@ -157,27 +189,36 @@ accelerator**, not part of the default serving path. The register records it as 
 
 The canonical roadmap is `docs-v2/governance/ROADMAP.md`. The tasks this section used to
 list (TASK-W46-2…TASK-W46-6, TASK-W48-01…TASK-W48-03 and TASK-W49-01…TASK-W49-10) are
-**done** and live in §4.1, §4.7 and §4.8 of the roadmap. **What is open now, in order:**
+**done** and live in §4.1, §4.7 and §4.8 of the roadmap; the W51 tasks are in §4.10 and are
+done as well, with one exception — TASK-W51-11, the closeout, was open at the moment this
+snapshot was taken and is closed by the merge. **What is open now, in order:**
 
-1. **The release pull request** — the lead opens `develop` → `main` at the end of the wave,
+1. **The W52 tasks** — §4.11 of the roadmap. In order: the canonical contracts get their
+   producers in the runtime and the two vocabularies get an explicit, tested mapping; the
+   inter-chain contract gets its second direction, chain A → chain B, under the same
+   governance; the meta-memory's method facet gets closed across a restart; the epistemic
+   failures that have an honest fix get fixed and the rest stay named; and the wave's
+   measurement, its report and its registers follow.
+2. **The release pull request** — the lead opens `develop` → `main` at the end of the wave,
    and **an agent does not merge it**. The pull request is a prepared path, not a release;
-   the merge is the owner's decision (Q-W49-01).
-2. **The three owner questions this wave raised** — the licence interaction of the corpus
-   inside the repository (Q-W50-01), the audit trace of an imported claim (Q-W50-02) and the
-   status route's empty workspace list and counts (Q-W50-03). They are in §5 above and in
-   the register.
-3. **The honest limits of the demonstrator** — the false-premise judgement is lexical, not
+   the merge is the owner's decision (Q-W49-01). **The owner merged W50's pull request
+   (#47) and W51's (#48) on 2026-11-07 and 2026-11-09.**
+3. **The three W50 owner questions** — the licence interaction of the corpus inside the
+   repository (Q-W50-01), the audit trace of an imported claim (Q-W50-02) and the status
+   route's empty workspace list and counts (Q-W50-03). They are in §5 above and in the
+   register, and W51 did not close them.
+4. **The honest limits of the demonstrator** — the false-premise judgement is lexical, not
    semantic (R-W50-01); the extractor's corpus vocabulary is a heuristic verb list
    (R-W50-02); the answering path proves zero LLM calls by instrumentation, and the
    assertion check is itself a deterministic lexical pass (R-W50-03). They are named, not
    hidden.
-4. **The W49 owner questions, unchanged** — the release path's missing credentials
+5. **The W49 owner questions, unchanged** — the release path's missing credentials
    (R-W48-04), the static-analysis policy for the 1 414 findings of the Java 25-capable
    engine (Q-W49-06), and the native build's larger runner and one missing dependency
    (Q-W49-05).
-5. **The wave's own report** — `docs-v2/engineering/W50-STATUS.md` and
-   `docs-v2/engineering/W50-LOCAL-MODEL.md`. This snapshot names them and does not restate
-   them.
+6. **The wave's own report** — `docs-v2/engineering/W51-STATUS.md` for the wave that is
+   merged, and the W52 report when the wave closes. This snapshot names them and does not
+   restate them.
 
 ---
 
@@ -206,6 +247,9 @@ validator says so.
 | the test scopes | `docs-v2/engineering/TEST-CATALOGUE.yml` |
 | the waves | `docs-v2/waves/INDEX.md` — the chronological work log (W46.2) — and `docs-v2/engineering/W4*.md`, the record of what was done, **immutable** |
 | the W50 demonstrator | `docs-v2/engineering/W50-STATUS.md` (the wave's own report) and `docs-v2/engineering/W50-LOCAL-MODEL.md` (the measured local-model evaluation); the demonstration itself is `docs-v2/demos/local-learning-loop/README.md`, its four prompts are `docs-v2/demos/local-learning-loop/OWNER-SEQUENCE.md`, and the expected answers are `docs-v2/demos/local-learning-loop/ANSWER-KEY.md` — deliberately kept outside the application |
+| the W51 wave | `docs-v2/engineering/W51-STATUS.md` (the wave's own report) · `docs-v2/engineering/W51-AUDIT.md` (the audit and the classification of nineteen subsystems) · `docs-v2/engineering/W51-ARCHITECTURE-MAP.md` (the actual runtime interactions, with the file:line references) · `docs-v2/engineering/ADR-W51-01-cognitive-runtime-and-bridge.md` (the inter-chain model and the preserved boundaries) · `docs-v2/engineering/W51-PERFORMANCE.md` (the measured hot paths) · `docs-v2/engineering/W51-EPISTEMIC-EVALUATION.md` and `docs-v2/engineering/W51-JAVA-C-BOUNDARY.md` (the two measurements the mandate names) · `docs-v2/engineering/W51-DEMONSTRATION.json` (the machine-readable trace) |
+| the canonical cognitive contracts | `docs-v2/engineering/ADR-W51-01-cognitive-runtime-and-bridge.md` (the model) and the package `io.matrix.contract` (the records themselves); the compatibility and migration strategy is §5 of `docs-v2/engineering/W51-STATUS.md` |
+| the inter-chain contract | `docs-v2/engineering/ADR-W51-01-cognitive-runtime-and-bridge.md` and the decisions CD-020 to CD-025 in `docs-v2/governance/DECISION-REGISTER.md`; the evidence that the crossing is the only one is the gate `scripts/w45-chain-isolation-check.sh` and its negative control `scripts/w45-chain-isolation-selftest.sh` |
 | the research and the negative results | `docs-v2/research/RESEARCH-INDEX.md` and `docs-v2/research/NEGATIVE-RESULTS-INDEX.md` (W46.2) |
 | the documentation navigation | `README.md` and `docs-v2/INDEX.md` — both reconciled in W46.2 |
 | the agent's skills | `docs-v2/governance/SKILL-INVENTORY.md` (what exists) and `docs-v2/governance/SKILLS.md` (what is recommended) |
@@ -244,7 +288,7 @@ assumption.**
 
 ## 9. The owner's working tree — the set has changed, and the change is a fact
 
-**This section was rewritten on 2026-11-07, against the observed tree.** The W47 snapshot
+**This section was rewritten on 2026-11-09, against the observed tree.** The W47 snapshot
 named **eleven** owner entries that were *uncommitted* at that time. **At the commit this
 snapshot names, eight of them are tracked in git** — they were committed by the waves that
 followed, and they are still the owner's:
@@ -259,14 +303,11 @@ the index (`git ls-files opencode.json.bak` → empty). The local journal
 `wal/SESSION_WAL.md` is **tracked**, as it has been since the early waves; only
 `wal/state.yaml` is excluded and does not exist <!-- no-link: the file is excluded by .gitignore and does not exist -->.
 
-**The working tree carries the W50 wave's own working files and nothing of the owner's.**
-At 2026-11-07T20:51:28+03:00 `git ls-files -m -o --exclude-standard` returned **five**
-entries: the three documents of the demonstration
-(`docs-v2/demos/local-learning-loop/README.md`, `docs-v2/demos/local-learning-loop/OWNER-SEQUENCE.md`
-and `docs-v2/demos/local-learning-loop/ANSWER-KEY.md`), the launcher `scripts/run-local.sh`
-— **untracked**, so it is in no commit yet — and one file that is neither the wave's nor the
-owner's, `.dsh-project-memory/admission-shadow.jsonl`, which the harness writes. **The set
-changes as the wave runs**; what does not change is that **no owner entry is in it**.
+**The working tree carries the wave's own working files and nothing of the owner's.** At
+2026-11-09 `git ls-files -m -o --exclude-standard` returned **one** entry:
+`.dsh-project-memory/admission-shadow.jsonl`, which is **neither the wave's nor the owner's** —
+it is the harness's journal, and the harness writes it on every call. **The set changes as
+the wave runs**; what does not change is that **no owner entry is in it**.
 
 **A session that finds a different set of owner entries is not a failure — it is a fact that
 the owner worked in between.** Record the set; do not "restore" it.
