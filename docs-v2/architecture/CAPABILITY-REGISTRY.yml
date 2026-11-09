@@ -75,7 +75,7 @@ generated:
   branch: "develop"
   source: "docs-v2/engineering/W46-CAPABILITY-RECONCILIATION.csv"
   source_rows: 27
-  capabilities_in_this_file: 53
+  capabilities_in_this_file: 54
   additions_from_source: 8
   method: "the constant pool of the compiled classes (javap -p -c) over 2978 classes, the current "
   method_note: "source, and the current configuration. Every source_path, test_path and production "
@@ -93,6 +93,7 @@ generated:
     rewritten or deleted. The demonstrator itself is NOT a service: its operational
     axis is EXPERIMENTAL, and the six components that sit on a serving path say which
     route reaches them."
+  w52_addition: "W52 added one row — W52-METHOD-PROFILE, the durable profile of the system's own methods — and took the file from 53 rows to 54. It refreshed two rows from the source: W51-BRIDGE, which grew the second direction of the bridge, and W51-CANONICAL-CONTRACTS, whose twenty-two contracts now have producers. The additions were made from the source, from the executed test evidence and from the recorded runs of 2026-11-09; no row that was already there was renumbered, rewritten or deleted."
   w51_addition: "W51 added ten rows — W51-CANONICAL-CONTRACTS, W51-BRIDGE,
     W51-SHARED-RUNTIME, W51-PLUGIN-SYSTEM, W51-WORLD-STATE-MEMORY,
     W51-CYCLE-REFLECTION, W51-META-MEMORY, W51-NATIVE-BOUNDARY,
@@ -1836,7 +1837,7 @@ capabilities:
     verification: "TESTED"
     operational: "SERVED"
     serving_chain: "both"
-    serving_path: "the contracts are carried by the two routes that use them: POST /v1/bridge/messages on chain A (io.matrix.bridge.BridgeResource) and POST /v1/cognitive/observe and POST /v1/cognitive/solve on chain A (io.matrix.cognitive.CognitiveResource), and by the chain B publisher that speaks the same protocol (io.matrix.brain.runtime.bridge.BridgePublisher). They are not a route of their own: they are the vocabulary those routes carry."
+    serving_path: "the contracts are carried by the routes that use them: POST /v1/bridge/messages on chain A (io.matrix.bridge.BridgeResource) and POST /v1/cognitive/observe and POST /v1/cognitive/solve on chain A (io.matrix.cognitive.CognitiveResource), and by the chain B publisher that speaks the same protocol (io.matrix.brain.runtime.bridge.BridgePublisher). W52 adds the second direction of the bridge: POST /v1/bridge/knowledge on chain B (io.matrix.api.bridge.KnowledgeBridge) carries the canonical Belief and the canonical Outcome back. They are not a route of their own: they are the vocabulary those routes carry."
     source_paths:
       - "matrix-core/src/main/java/io/matrix/contract/Belief.java"
       - "matrix-core/src/main/java/io/matrix/contract/BeliefStatus.java"
@@ -1854,13 +1855,13 @@ capabilities:
       - "io.matrix.brain.runtime.bridge.BridgePublisher — matrix-brain-runtime/src/main/java/io/matrix/brain/runtime/bridge/BridgePublisher.java"
     test_paths:
       - "matrix-core/src/test/java/io/matrix/contract/CanonicalContractsTest.java"
-    test_evidence: "the contract scope: 33 tests in CanonicalContractsTest, 0 failures. The bridge protocol's own scope adds 63 tests. The evidence is the JUnit XML at matrix-core/build/test-results/test/TEST-io.matrix.contract*.xml; the wave's whole scope was 1323 tests, 0 failures, 0 errors."
+    test_evidence: "the contract scope: 33 tests in CanonicalContractsTest, 0 failures. The bridge protocol's own scope adds 63 tests. W52 adds the ACCEPTANCE of the canonical form: CanonicalContractCoverageTest drives the real kernel and asserts that every contract the mandate names has a producer, and CanonicalCycleBuilderTest (9 tests) pins the mapping's rules — an absent fact becomes an absent record, a hypothesis with no support is UNRESOLVED, a hypothesis with contradictions is CONTESTED, and a procedure that was not validated is not marked reusable. The evidence is the JUnit XML at matrix-core/build/test-results/test/TEST-io.matrix.contract*.xml; the wave's whole scope was 1352 tests, 0 failures, 0 errors."
     benchmark_evidence: "none — a contract has no throughput to measure; what is measured about it is that the gate can prove the package is pure (G7: nineteen contract classes are reachable from chain B and none of them can open a database, serve a route or reach a store)."
     formal_spec: "none"
     dependencies:
       - "the JDK 25 — records, sealed types and pattern matching"
       - "no dependency of its own: the package is pure"
-    limitations: "the contracts are the INTERCHANGE form, and the runtime still keeps an older, internal vocabulary of its own — io.matrix.cognitive.Prediction, Goal, Task, Procedure, Experiment and Hypothesis — which is what the store's schema and the W45.1 recovery contracts are written against. Nine of the twenty-three records have a producer in the runtime today (Entity, Property, WorldState, StateTransition, Observation, Evidence, Belief, Plugin, Evaluation, Reflection, Capability, Confidence, Provenance) and the rest are still interchange-only. Merging the two vocabularies is a refactor of a working, durable path and was deliberately not attempted."
+    limitations: "the contracts are the INTERCHANGE form, and the runtime still keeps an older, internal vocabulary of its own — io.matrix.cognitive.Prediction, Goal, Task, Procedure, Experiment and Hypothesis — which is what the store's schema and the W45.1 recovery contracts are written against. W52 gave every contract of the mandate a producer: the cognitive cycle now produces the canonical form of itself (io.matrix.contract.CognitiveCycle), and the acceptance — CanonicalContractCoverageTest — asserts it for all twenty-two. TWO of them cannot be produced by the micro-world's own run: the Procedure and the Skill come from the procedural memory, and the lamp world's input domain is exhausted once the model settles, so the promotion is refused there by the W45 finding. The demonstration's report names them as absent rather than faking them. Merging the two vocabularies into one is a refactor of a working, durable path and was deliberately not attempted; what W52 did instead is name the boundary between them — one mapping, tested."
     risks:
       - "a contract that nothing fills is a shape without a meaning: the interchange-only records can drift from the runtime's own semantics without any test noticing"
       - "the two vocabularies invite a second implementation of the same responsibility, which the mandate forbids"
@@ -1874,14 +1875,14 @@ capabilities:
   -
     id: "W51-BRIDGE"
     name: "the bridge: the one governed crossing between the two serving chains"
-    description: "The contract BRIDGE-1 to BRIDGE-10 that the repository wrote down in W45.2 and never implemented. Chain B publishes an observation over HTTP with an HMAC signature; chain A receives it, checks the signature, the capability, the budget and the version, writes a durable journal entry, and records the observation as an UNVERIFIED CANDIDATE with a SECONDARY_REPORT source. The request id is the idempotency key, the retry policy is explicit, the queue is bounded, and the audit is durable. The direction is one-way by decision: chain B may publish to chain A, and chain A adds observations, candidates and evidence links — and nothing else."
+    description: "The contract BRIDGE-1 to BRIDGE-10 that the repository wrote down in W45.2 and never implemented. Chain B publishes an observation over HTTP with an HMAC signature; chain A receives it, checks the signature, the capability, the budget and the version, writes a durable journal entry, and records the observation as an UNVERIFIED CANDIDATE with a SECONDARY_REPORT source. The request id is the idempotency key, the retry policy is explicit, the queue is bounded, and the audit is durable. W52 added the SECOND direction: chain A's epistemic core offers what it has ESTABLISHED — the canonical Belief with its status, its confidence, its evidence and its provenance — and chain B's brain takes it into its own memory, so that the brain can answer with what the epistemic core knows. The direction is carried by the RIGHT and not by a flag: chain A's bridge grants OBSERVATION, CANDIDATE and EVIDENCE_LINK, and chain B's bridge grants KNOWLEDGE, so a message of the wrong direction is refused for the same reason a forged one is. The protocol moved to version 2, and the version rule reads version 1 as well: a message of a version this build has never heard of is still refused with its number named."
     domain: "integration"
     implementation: "IMPLEMENTED"
     integration: "INTEGRATED"
     verification: "INTEGRATION_TESTED"
     operational: "SERVED"
     serving_chain: "both"
-    serving_path: "POST /v1/bridge/messages and GET /v1/bridge/status on chain A (io.matrix.bridge.BridgeResource); the publisher is io.matrix.brain.runtime.bridge.BridgePublisher, and the CLI that starts it is io.matrix.brain.runtime.bridge.BridgePublisherCli. The gateway's production client is io.matrix.api.brain.ProductionBrainClient."
+    serving_path: "POST /v1/bridge/messages and GET /v1/bridge/status on chain A (io.matrix.bridge.BridgeResource); the publisher is io.matrix.brain.runtime.bridge.BridgePublisher, and the CLI that starts it is io.matrix.brain.runtime.bridge.BridgePublisherCli. The gateway's production client is io.matrix.api.brain.ProductionBrainClient. The SECOND direction: POST /v1/bridge/knowledge on chain B (io.matrix.api.bridge.KnowledgeBridge), published by io.matrix.bridge.KnowledgePublisher, whose command-line face is io.matrix.bridge.KnowledgePublisherCli."
     source_paths:
       - "matrix-core/src/main/java/io/matrix/bridge/BridgeResource.java"
       - "matrix-core/src/main/java/io/matrix/bridge/BridgeService.java"
@@ -1892,12 +1893,20 @@ capabilities:
       - "matrix-brain-runtime/src/main/java/io/matrix/brain/runtime/bridge/BridgePublisher.java"
       - "matrix-brain-runtime/src/main/java/io/matrix/brain/runtime/bridge/BridgePublisherCli.java"
       - "matrix-api-gateway/src/main/java/io/matrix/api/brain/ProductionBrainClient.java"
+      - "matrix-core/src/main/java/io/matrix/bridge/KnowledgePublisher.java"
+      - "matrix-core/src/main/java/io/matrix/bridge/KnowledgePublisherCli.java"
+      - "matrix-api-gateway/src/main/java/io/matrix/api/bridge/KnowledgeBridge.java"
     production_callers:
       - "io.matrix.bridge.BridgeResource — matrix-core/src/main/java/io/matrix/bridge/BridgeResource.java"
       - "io.matrix.brain.runtime.bridge.BridgePublisher — matrix-brain-runtime/src/main/java/io/matrix/brain/runtime/bridge/BridgePublisher.java"
+      - "io.matrix.bridge.KnowledgePublisher — matrix-core/src/main/java/io/matrix/bridge/KnowledgePublisher.java"
+      - "io.matrix.api.bridge.KnowledgeBridge — matrix-api-gateway/src/main/java/io/matrix/api/bridge/KnowledgeBridge.java"
     test_paths:
       - "matrix-core/src/test/java/io/matrix/bridge/BridgeServiceTest.java"
       - "matrix-core/src/test/java/io/matrix/bridge/NeuroSymbolicBridgeTest.java"
+      - "matrix-core/src/test/java/io/matrix/contract/bridge/KnowledgeDirectionTest.java"
+      - "matrix-core/src/test/java/io/matrix/bridge/KnowledgePublisherTest.java"
+      - "matrix-api-gateway/src/test/java/io/matrix/api/bridge/KnowledgeBridgeTest.java"
     test_evidence: "the bridge scope: 76 tests, 0 failures, over the protocol, the service, the journal, the audit, the sink and the publisher. The cross-process run — scripts/w51-bridge-demo.sh — is the integration evidence: 10 checks, 0 failed, with chain A started as a real Quarkus process and chain B's publisher in a separate JVM. The first publication is ACCEPTED; a true retry of the same request id is answered with the ORIGINAL outcome and the SAME audit id; the same request id reused for a different payload is REFUSED with the conflict named; a forged signature is REFUSED with the signature named; the bridged workspace of chain A holds exactly one claim after three deliveries; and the owner's epistemic database is byte-identical before and after."
     benchmark_evidence: "scripts/w51-bridge-demo.sh — the cross-process demonstration, reproducible in one command; the isolation gate's G7, G8 and G9 and the negative controls C3 and C4 are the measurement that the crossing is the only one. The bridge receiver's audit chain was measured before and after its change: 23 279 to 40 914 bytes per call at 1000 to 10 000 messages, and 13 372, 13 203, 13 072 and 13 033 bytes per call after it — flat."
     formal_spec: "none"
@@ -1905,16 +1914,55 @@ capabilities:
       - "the chain-A application on 127.0.0.1:9091 — the receiver's HTTP surface"
       - "the shared secret that signs the envelope — an environment variable, never a file in the repository"
       - "the chain-B brain runtime and its publisher CLI"
-    limitations: "the direction is ONE-WAY: chain A cannot publish to chain B. The receiver accepts an observation and derives candidates and evidence links; it does not accept a conclusion, a belief or a revision, and it never writes to chain B's database. The demonstration of the crossing is the cross-process script and the gate, not a two-server deployment."
+    limitations: "the second direction carries PROPOSITIONS AND THEIR STANDING, and nothing else: the brain's answer does not come back as a claim the epistemic store can weigh. Chain B's request-id registry for the second direction is process-scoped — the effect itself is idempotent, because the brain's document id is derived from the content, but a restart of chain B between two deliveries of the same request id would teach the proposition twice. The demonstration of the crossing is the cross-process script and the gate, not a two-server deployment."
     risks:
-      - "a bridge that is one-way is a bridge that can be crossed in one direction only; the system's two halves therefore cannot yet inform each other"
-      - "the signature is a shared secret; a leak of it is a leak of the ability to publish, and the audit records the refusal but cannot prevent the attempt"
+      - "the second direction hands chain B propositions the epistemic core has established; a compromise of the shared secret would let anyone assert what the core knows — the audit records the refusal but cannot prevent the attempt"
+      - "the signature is a shared secret; a leak of it is a leak of the ability to publish in either direction"
+      - "the two directions share one protocol and one secret, so a defect in the protocol's version rule or in its idempotency would affect both"
     owner: "the owner (W51, 2026-11-08 — the direction and the boundary are CD-020)"
     decision_ref: "docs-v2/engineering/ADR-W51-01-cognitive-runtime-and-bridge.md; docs-v2/governance/DECISION-REGISTER.md CD-020"
     last_verified_commit: "83fa911c"
     last_verified_at: "2026-11-09"
     next_verification_condition: "a change to the envelope, the signature, the idempotency rule or the budget requires the cross-process demonstration and the isolation gate to be re-run"
     notes: "ADDED IN W51. The rule that a crossing is a class reachable from chain B AND from chain A's own store is the one the gate uses — not chain A's whole closure, because the shared substrate is not a path to the store."
+
+  -
+    id: "W52-METHOD-PROFILE"
+    name: "the profile of the system's own methods: what each method costs, and how it has behaved"
+    description: "The durable record of what the system's methods actually do. Before W52 the ledger of measured costs lived in the heap: every restart threw it away, and the method-selection layer — which the mandate asks to weigh the historical measured performance of a method against — fell back to the DECLARED complexity of each method, which is a person's estimate in the place where a measurement belonged. The profile is now a table of the cognitive database (cognitive_method_measurement): the total nanoseconds, the calls, the successes and the failures, per method and per workspace, written by the single writer of that database. A ledger built on a reopened store reads the profile back at construction, so a process that starts knows what its own methods cost before it has run any of them, and the selector's decision names the measurement AND its outcomes."
+    domain: "learning"
+    implementation: "IMPLEMENTED"
+    integration: "INTEGRATED"
+    verification: "INTEGRATION_TESTED"
+    operational: "SERVED"
+    serving_chain: "chain-a"
+    serving_path: "the ledger is built by the runtime that serves the cognitive surface — io.matrix.cognitive.CognitiveService.build() — and read by the selector of every cycle: POST /v1/cognitive/observe and POST /v1/cognitive/solve on chain A (io.matrix.cognitive.CognitiveResource). The profile is not a route of its own; it is the memory the selection reads."
+    source_paths:
+      - "matrix-core/src/main/java/io/matrix/cognitive/algorithms/MethodMeasurementStore.java"
+      - "matrix-core/src/main/java/io/matrix/cognitive/algorithms/CostLedger.java"
+      - "matrix-core/src/main/java/io/matrix/cognitive/algorithms/AlgorithmSelector.java"
+      - "matrix-core/src/main/java/io/matrix/cognitive/CognitiveStore.java"
+    production_callers:
+      - "io.matrix.cognitive.CognitiveService — matrix-core/src/main/java/io/matrix/cognitive/CognitiveService.java"
+      - "io.matrix.cognitive.algorithms.AlgorithmSelector — matrix-core/src/main/java/io/matrix/cognitive/algorithms/AlgorithmSelector.java"
+    test_paths:
+      - "matrix-core/src/test/java/io/matrix/cognitive/algorithms/MethodProfileDurabilityTest.java"
+    test_evidence: "MethodProfileDurabilityTest — 5 tests: the measurement is written, the store is closed, the store is opened again, and the selector weighs the restored measurement and names it (\"measured 5000ns; 2 call(s), 1 success(es), 1 failure(es)\"); a method that was never measured stays unmeasured; the profile of one workspace does not leak into another; and the process-local ledger still works and says that it is process-local."
+    benchmark_evidence: "the wave's own scope: 1352 tests, 0 failures, 0 errors. The measurement the profile records is the method's own duration, and the profile is what the selector's decision reads — the decision names the mean and the counts, so the measurement is visible in the artefact the system produces, not only in the heap."
+    formal_spec: "none"
+    dependencies:
+      - "the cognitive database — the single writer of it writes the profile"
+      - "the method-selection layer — it reads the profile and names it in its decision"
+    limitations: "the profile is measured and NAMED in the decision, but the selector's score still weighs accuracy and cost alone: the reliability the profile carries is reported, not yet scored. The profile is written inside the store's transaction discipline, and the wave measured the RESTART and not the crash."
+    risks:
+      - "a profile that is read but not scored is a record the system keeps and does not use — the next wave must decide whether a failing method loses points"
+      - "the profile grows without bound: a workspace with many methods accumulates one row per method, and nothing prunes it"
+    owner: "the owner (W52, 2026-11-09)"
+    decision_ref: "docs-v2/governance/DECISION-REGISTER.md CD-026"
+    last_verified_commit: "178e0d8c"
+    last_verified_at: "2026-11-09"
+    next_verification_condition: "a change to the ledger, to the profile's table or to the selector's reading of it requires the profile's own test to be re-run"
+    notes: "ADDED IN W52. The mandate asks the method-selection layer to weigh the historical measured performance of a method and the previous outcomes of that method; before this wave the first was possible only inside one process's lifetime and the second was not possible at all."
 
   -
     id: "W51-SHARED-RUNTIME"
