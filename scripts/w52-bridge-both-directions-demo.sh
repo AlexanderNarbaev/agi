@@ -257,6 +257,11 @@ sed 's/^/        /' "$PRIV/publisher-a2b-2.log"
 BRAIN_SIZE_SECOND="$(sed -n 's/.*the brain.s memory holds \([0-9]*\) item.*/\1/p' \
   "$PRIV/publisher-a2b-2.log" | head -1)"
 note "the brain's memory after the second offering: ${BRAIN_SIZE_SECOND:-unknown} item(s)"
+if [ "$A2B_STATUS2" -eq 0 ] && grep -q "outcome.status=SUCCEEDED" "$PRIV/publisher-a2b-2.log"; then
+  pass "the second proposition was accepted and the brain took it"
+else
+  fail "the second proposition was refused (exit status $A2B_STATUS2)"
+fi
 if [ -n "$BRAIN_SIZE_FIRST" ] && [ -n "$BRAIN_SIZE_SECOND" ] \
     && [ "$BRAIN_SIZE_SECOND" -eq $((BRAIN_SIZE_FIRST + 1)) ]; then
   pass "the brain's memory grew by exactly one: $BRAIN_SIZE_FIRST became $BRAIN_SIZE_SECOND"
