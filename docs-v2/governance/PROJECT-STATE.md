@@ -2,7 +2,7 @@
 
 **Status:** `CANONICAL` · **This document is a SNAPSHOT, not a history.** It describes the
 project at one commit and is replaced, not appended to, when the state moves.
-**Snapshot of:** `178e0d8c` · **Date:** 2026-11-09
+**Snapshot of:** `16eb815c` · **Date:** 2026-11-09
 **Validation:** `scripts/validate-project-state.py --strict` — it checks that the commit below
 is the repository's HEAD, that the wave and the baseline below are the current ones, and that
 the canonical documents it names exist. It reports a lag of one commit as an OBSERVATION, not
@@ -78,7 +78,7 @@ abstentions worse.
 | | |
 |---|---|
 | the branch | `develop` |
-| the commit | `178e0d8c` — the W52 commit observed at 2026-11-09; this snapshot is carried by the commit that follows it, which is the W53 wave's own commit |
+| the commit | `16eb815c` — the W53 wave's first commit, observed at 2026-11-09; this snapshot is carried by the commit that follows it |
 | the remote | `origin/develop` — **the same commit** at the moment of writing (the local and the remote do not diverge). The wave is still running, so the remote moves with it. `origin/main` is `3ef8a5c8` — the **squash merge of pull request #48** (W51), merged on 2026-11-09; before it `67b3410d` was the squash of pull request #47 (W50) and `79045c57` the squash of pull request #44 (W49) |
 | the release version | **none.** The tags `v1.0.0` and `v16.0.0-mind` exist, but no release process is defined and the `v16.0.0-mind` tag predates three waves of work |
 | the latest completed wave | **W51** — the unified cognitive runtime, the world model and the safe self-extension. It is **merged into `main`**: pull request #48, squash `3ef8a5c8`, 2026-11-09, **merged by the owner** on the same day. Its report is `docs-v2/engineering/W51-STATUS.md`, its audit is `docs-v2/engineering/W51-AUDIT.md`, its architecture map is `docs-v2/engineering/W51-ARCHITECTURE-MAP.md` and its decisions are **CD-020 … CD-025** in `docs-v2/governance/DECISION-REGISTER.md`. Before it, **W50** — the local evidence-grounded demonstrator (pull request #47, squash `67b3410d`, 2026-11-07), **W49** (pull request #44, squash `79045c57`, 2026-11-06) and **W48** — the truth of the evidence |
