@@ -70,6 +70,15 @@ public final class MinimalHttpServer {
     private final String bindAddress;
     private final HttpServer http;
     private final BrainCycle brain;
+    /**
+     * W52 — chain B's side of the SECOND direction of the bridge: chain A offers what its
+     * epistemic core has established, and the brain takes it into its own memory.
+     *
+     * <p>It is built from the shared secret the process is configured with. Without a
+     * secret the bridge exists and refuses every message with the reason the contract
+     * names — a bridge with no secret is not a bridge that accepts anything.</p>
+     */
+    private final io.matrix.api.bridge.KnowledgeBridge knowledgeBridge;
     /** TRUE-W14: persistent HDC store, kept as instance field so /v1/federate can dump/load. */
     private io.matrix.brain.runtime.PersistentHdcStore hdcStore;
     private ProductionBrainClient prodBrain; // null if stub mode
@@ -327,6 +336,21 @@ public final class MinimalHttpServer {
             this.brain = new StubBrainCycle();
             LOG.log(Level.INFO, "MATRIX_MODE={0} — using StubBrainCycle (dev mode)", mode);
         }
+        // W52 — the second direction of the bridge. The teacher is the production brain
+        // when there is one; in stub mode there is no brain to teach, and the bridge says
+        // so rather than pretending that the knowledge was taken.
+        this.knowledgeBridge = io.matrix.api.bridge.KnowledgeBridge.configured(
+                this.prodBrain == null ? null : new io.matrix.api.bridge.KnowledgeTeacher() {
+                    @Override
+                    public boolean teach(String input, String response) {
+                        return prodBrain.teach(input, response);
+                    }
+
+                    @Override
+                    public int knowledgeSize() {
+                        return prodBrain.knowledgeSize();
+                    }
+                });
         this.jwt = new JwtAuthFilter();
         this.rateLimiter = new RateLimiter(60_000);
         // RECON-W43.0: the gateway binds through the SHARED boundary, so it
@@ -396,6 +420,9 @@ public final class MinimalHttpServer {
         this.createContext("/v1/explain/", this::handleExplainById);
         this.createContext("/v1/explain", exchange -> writeJson(exchange, 200,
             "{\"explainments\":" + explanations.size() + "}"));
+        // W52 — the second direction of the bridge: chain A offers established knowledge.
+        this.createContext(io.matrix.api.bridge.KnowledgeBridge.KNOWLEDGE_PATH,
+                this::handleBridgeKnowledge);
         this.createContext("/v1/audit/logs", this::handleAuditLogs);
         // W42.9 / D-016: the promotion decisions of the runtime — the refusals
         // included — are readable here. Before this, a lesson that did NOT
@@ -1054,6 +1081,27 @@ public final class MinimalHttpServer {
      * POST /v1/teach — teach the brain a Q&A pair (W1266 CoEvolutionEngine).
      * Body: {"input":"...", "response":"..."}
      */
+    /**
+     * W52 — the second direction of the bridge: chain A's epistemic core offers what it
+     * has established, and this brain takes it into its memory.
+     *
+     * <p>The answer says what the brain did with it: the decision says whether the
+     * message was accepted under the protocol, and the outcome says whether the brain took
+     * the proposition.</p>
+     *
+     * @param ex the exchange
+     * @throws IOException when the answer cannot be written
+     */
+    private void handleBridgeKnowledge(HttpExchange ex) throws IOException {
+        if (!"POST".equalsIgnoreCase(ex.getRequestMethod())) {
+            writeJson(ex, 405, "{\"error\":\"method not allowed\"}");
+            return;
+        }
+        String body = readBody(ex);
+        String answer = knowledgeBridge.answer(body);
+        writeJson(ex, 200, answer);
+    }
+
     private void handleTeach(HttpExchange ex) throws IOException {
         if (!"POST".equalsIgnoreCase(ex.getRequestMethod())) {
             writeJson(ex, 405, "{\"error\":\"method not allowed\"}");

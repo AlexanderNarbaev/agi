@@ -40,7 +40,8 @@ public interface BridgeIdempotency {
      * @param decision     what was decided
      * @param payloadDigest the digest of the payload the decision was made about
      */
-    record Outcome(BridgeDecision decision, String payloadDigest) {
+    record Outcome(BridgeDecision decision, String payloadDigest,
+                   io.matrix.contract.Outcome effect) {
 
         public Outcome {
             if (decision == null) {
@@ -49,6 +50,17 @@ public interface BridgeIdempotency {
             if (payloadDigest == null || payloadDigest.isBlank()) {
                 throw new IllegalArgumentException("an outcome needs the digest of the payload");
             }
+        }
+
+        /**
+         * An outcome with no effect to report — the delivery direction.
+         *
+         * @param decision     the decision
+         * @param payloadDigest the digest of the payload
+         * @return the outcome
+         */
+        public static Outcome of(BridgeDecision decision, String payloadDigest) {
+            return new Outcome(decision, payloadDigest, null);
         }
     }
 

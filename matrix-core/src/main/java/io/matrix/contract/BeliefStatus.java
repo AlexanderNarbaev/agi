@@ -110,4 +110,26 @@ public enum BeliefStatus {
     public boolean answerable() {
         return this != REFUTED;
     }
+
+    /**
+     * The status a wire name names, if it names one at all.
+     *
+     * <p>An unknown name is not an error to be repaired: it is a name this reader does not
+     * know, and the caller decides what to do with that. The method therefore returns an
+     * {@link java.util.Optional} rather than throwing.</p>
+     *
+     * @param wireName the name as it appears on the wire
+     * @return the status it names, or empty when it names none
+     */
+    public static java.util.Optional<BeliefStatus> parse(String wireName) {
+        if (wireName == null) {
+            return java.util.Optional.empty();
+        }
+        for (BeliefStatus status : values()) {
+            if (status.name().equalsIgnoreCase(wireName.trim())) {
+                return java.util.Optional.of(status);
+            }
+        }
+        return java.util.Optional.empty();
+    }
 }

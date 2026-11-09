@@ -103,8 +103,9 @@ final class BridgeTestFixtures {
         private final List<BridgeEnvelope> accepted = new ArrayList<>();
 
         @Override
-        public void accept(BridgeEnvelope envelope) {
+        public io.matrix.contract.Outcome accept(BridgeEnvelope envelope) {
             accepted.add(envelope);
+            return null;
         }
 
         /** How many messages the sink was given. */

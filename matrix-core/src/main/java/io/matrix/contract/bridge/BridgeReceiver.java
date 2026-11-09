@@ -152,6 +152,22 @@ public final class BridgeReceiver {
      * @return the decision
      */
     public BridgeDecision receive(BridgeEnvelope envelope, long nowMillis) {
+        return receiveAnswer(envelope, nowMillis).decision();
+    }
+
+    /**
+     * W52 — the answer to a message: the decision, and what the receiver did with it.
+     *
+     * <p>The effect is carried through the idempotency registry, so a message that arrives
+     * twice answers with the FIRST answer — the same decision and the same effect — and
+     * does nothing the second time (BRIDGE-8). An effect that a retry could produce twice
+     * would break the property the retry exists to protect.</p>
+     *
+     * @param envelope   the message
+     * @param nowMillis  the instant of the delivery, in epoch milliseconds
+     * @return the answer
+     */
+    public BridgeAnswer receiveAnswer(BridgeEnvelope envelope, long nowMillis) {
         if (envelope == null) {
             throw new IllegalArgumentException("there is no message to receive");
         }
@@ -162,11 +178,11 @@ public final class BridgeReceiver {
         String digest = envelope.payloadDigest();
         BridgeIdempotency.Outcome outcome = idempotency.firstOutcome(envelope.requestId(), digest,
                 () -> {
-                    BridgeDecision decision = evaluate(envelope, nowMillis);
-                    auditLog.add(BridgeAuditRecord.of(decision, envelope, at(nowMillis)));
-                    return new BridgeIdempotency.Outcome(decision, digest);
+                    BridgeAnswer answer = evaluate(envelope, nowMillis);
+                    auditLog.add(BridgeAuditRecord.of(answer.decision(), envelope, at(nowMillis)));
+                    return new BridgeIdempotency.Outcome(answer.decision(), digest, answer.outcome());
                 });
-        return outcome.decision();
+        return new BridgeAnswer(outcome.decision(), outcome.effect());
     }
 
     /**
@@ -194,7 +210,7 @@ public final class BridgeReceiver {
             }
             Optional<BridgeIdempotency.Outcome> known = idempotency.find(envelope.requestId());
             if (known.isPresent()) {
-                decisions.add(replay(envelope, known.get(), nowMillis));
+                decisions.add(replay(envelope, known.get(), nowMillis).decision());
                 continue;
             }
             decisions.add(refuseOnce(envelope, nowMillis, BridgeRefusalReason.BATCH_TOO_LARGE,
@@ -210,17 +226,17 @@ public final class BridgeReceiver {
      * <p>Same request id, same payload: the first outcome, and no second effect. Same
      * request id, different payload: a conflict, refused and audited.</p>
      */
-    private BridgeDecision replay(BridgeEnvelope envelope, BridgeIdempotency.Outcome known,
-                                   long nowMillis) {
+    private BridgeAnswer replay(BridgeEnvelope envelope, BridgeIdempotency.Outcome known,
+                                 long nowMillis) {
         if (known.payloadDigest().equals(envelope.payloadDigest())) {
-            return known.decision();
+            return new BridgeAnswer(known.decision(), known.effect());
         }
         String auditId = nextAuditId(envelope.requestId());
         BridgeDecision decision = BridgeDecision.refused(envelope.requestId(), auditId,
                 BridgeRefusalReason.REQUEST_ID_CONFLICT,
                 "the request id already carries a different payload");
         auditLog.add(BridgeAuditRecord.of(decision, envelope, at(nowMillis)));
-        return decision;
+        return BridgeAnswer.of(decision);
     }
 
     /**
@@ -238,7 +254,7 @@ public final class BridgeReceiver {
                     BridgeDecision decision =
                             BridgeDecision.refused(envelope.requestId(), auditId, reason, detail);
                     auditLog.add(BridgeAuditRecord.of(decision, envelope, at(nowMillis)));
-                    return new BridgeIdempotency.Outcome(decision, digest);
+                    return BridgeIdempotency.Outcome.of(decision, digest);
                 });
         return outcome.decision();
     }
@@ -252,33 +268,33 @@ public final class BridgeReceiver {
      * understood: a bridge that spent a slot of its budget on a forged message would be
      * letting an unauthenticated sender exhaust the quota of an honest one.</p>
      */
-    private BridgeDecision evaluate(BridgeEnvelope envelope, long nowMillis) {
+    private BridgeAnswer evaluate(BridgeEnvelope envelope, long nowMillis) {
         String auditId = nextAuditId(envelope.requestId());
 
         // BRIDGE-1 and BRIDGE-2 — the protocol and its version.
         if (!BridgeProtocol.NAME.equals(envelope.protocol())) {
-            return refused(auditId, envelope, BridgeRefusalReason.UNKNOWN_PROTOCOL,
+            return refusedAnswer(auditId, envelope, BridgeRefusalReason.UNKNOWN_PROTOCOL,
                     "the message names the protocol " + envelope.protocol());
         }
         if (!BridgeProtocol.supportedVersion(envelope.version())) {
-            return refused(auditId, envelope, BridgeRefusalReason.UNSUPPORTED_VERSION,
+            return refusedAnswer(auditId, envelope, BridgeRefusalReason.UNSUPPORTED_VERSION,
                     "the message carries the version " + envelope.version()
                             + " and this reader speaks " + BridgeProtocol.VERSION);
         }
 
         // BRIDGE-5 — the right the sender asks for must be one this bridge granted.
         if (!envelope.kind().grantedBy(granted)) {
-            return refused(auditId, envelope, BridgeRefusalReason.CAPABILITY_NOT_GRANTED,
+            return refusedAnswer(auditId, envelope, BridgeRefusalReason.CAPABILITY_NOT_GRANTED,
                     "the bridge did not grant " + envelope.kind());
         }
 
         // BRIDGE-3 — the call is authenticated, or it is refused.
         if (verifier == null) {
-            return refused(auditId, envelope, BridgeRefusalReason.NO_SECRET_CONFIGURED,
+            return refusedAnswer(auditId, envelope, BridgeRefusalReason.NO_SECRET_CONFIGURED,
                     "no verification secret is configured, so nothing can be trusted");
         }
         if (!envelope.verify(verifier)) {
-            return refused(auditId, envelope, BridgeRefusalReason.SIGNATURE_INVALID,
+            return refusedAnswer(auditId, envelope, BridgeRefusalReason.SIGNATURE_INVALID,
                     "the signature does not verify under the configured secret");
         }
 
@@ -288,28 +304,43 @@ public final class BridgeReceiver {
         try {
             payload = codec.decode(envelope.payload());
         } catch (BridgeProtocolException e) {
-            return refused(auditId, envelope, e.reason(), e.getMessage());
+            return refusedAnswer(auditId, envelope, e.reason(), e.getMessage());
         }
         if (payload.kind() != envelope.kind()) {
-            return refused(auditId, envelope, BridgeRefusalReason.PAYLOAD_KIND_MISMATCH,
+            return refusedAnswer(auditId, envelope, BridgeRefusalReason.PAYLOAD_KIND_MISMATCH,
                     "the payload carries " + payload.kind() + " and the envelope declares "
                             + envelope.kind());
         }
         if (!payload.hasProvenance()) {
-            return refused(auditId, envelope, BridgeRefusalReason.MISSING_PROVENANCE,
+            return refusedAnswer(auditId, envelope, BridgeRefusalReason.MISSING_PROVENANCE,
                     "the delivery names neither its origin nor its instant");
         }
 
         // BRIDGE-9 — the budget is enforced before the store is touched.
         BridgeBudget.Verdict verdict = budget.check(envelope, 1, nowMillis);
         if (!verdict.allowed()) {
-            return refused(auditId, envelope, verdict.reason(), verdict.detail());
+            return refusedAnswer(auditId, envelope, verdict.reason(), verdict.detail());
         }
 
         // The effect. At most once per request id, because the idempotency registry runs
-        // this supplier at most once for a request id (BRIDGE-8).
-        sink.accept(envelope);
-        return BridgeDecision.accepted(envelope.requestId(), auditId);
+        // this supplier at most once for a request id (BRIDGE-8). The sink may report what
+        // it did, and that report travels back with the answer (W52).
+        io.matrix.contract.Outcome effect = sink.accept(envelope);
+        return new BridgeAnswer(BridgeDecision.accepted(envelope.requestId(), auditId), effect);
+    }
+
+    /**
+     * A refusal, wrapped in the answer the sender receives.
+     *
+     * @param auditId  the audit id of the refusal
+     * @param envelope the refused message
+     * @param reason   the reason the contract names
+     * @param detail   what the receiver says about it
+     * @return the answer
+     */
+    private BridgeAnswer refusedAnswer(String auditId, BridgeEnvelope envelope,
+                                        BridgeRefusalReason reason, String detail) {
+        return BridgeAnswer.of(refused(auditId, envelope, reason, detail));
     }
 
     /**

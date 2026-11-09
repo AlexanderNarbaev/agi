@@ -60,12 +60,14 @@ public record BridgePayload(
         }
         if (carried != 1) {
             throw new IllegalArgumentException(
-                    "a bridge payload carries exactly one of observation, candidate or evidence link");
+                    "a bridge payload carries exactly one of observation, candidate or "
+                            + "evidence link");
         }
         boolean agrees = switch (kind) {
             case OBSERVATION -> observation != null;
             case CANDIDATE -> candidate != null;
             case EVIDENCE_LINK -> evidenceLink != null;
+            case KNOWLEDGE -> candidate != null;
         };
         if (!agrees) {
             throw new IllegalArgumentException(
@@ -81,7 +83,8 @@ public record BridgePayload(
      * @return the payload
      */
     public static BridgePayload ofObservation(Observation observation, Provenance provenance) {
-        return new BridgePayload(BridgeCapability.OBSERVATION, observation, null, null, provenance);
+        return new BridgePayload(BridgeCapability.OBSERVATION, observation, null, null,
+                provenance);
     }
 
     /**
@@ -92,7 +95,8 @@ public record BridgePayload(
      * @return the payload
      */
     public static BridgePayload ofCandidate(Belief candidate, Provenance provenance) {
-        return new BridgePayload(BridgeCapability.CANDIDATE, null, candidate, null, provenance);
+        return new BridgePayload(BridgeCapability.CANDIDATE, null, candidate, null,
+                provenance);
     }
 
     /**
@@ -103,7 +107,24 @@ public record BridgePayload(
      * @return the payload
      */
     public static BridgePayload ofEvidenceLink(Evidence evidenceLink, Provenance provenance) {
-        return new BridgePayload(BridgeCapability.EVIDENCE_LINK, null, null, evidenceLink, provenance);
+        return new BridgePayload(BridgeCapability.EVIDENCE_LINK, null, null, evidenceLink,
+                provenance);
+    }
+
+    /**
+     * A payload carrying ESTABLISHED KNOWLEDGE — W52, the second direction of the bridge.
+     *
+     * <p>The belief is the canonical one: the proposition, its status, its confidence, the
+     * evidence that bears on it, the contradicting evidence, its validity and its
+     * provenance. It is the same record a candidate is — what differs is the standing
+     * behind it, and the right the sender exercises is what names that standing.</p>
+     *
+     * @param belief     the established belief
+     * @param provenance the provenance of the delivery
+     * @return the payload
+     */
+    public static BridgePayload ofKnowledge(Belief belief, Provenance provenance) {
+        return new BridgePayload(BridgeCapability.KNOWLEDGE, null, belief, null, provenance);
     }
 
     /**

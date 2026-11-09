@@ -116,6 +116,15 @@ BRIDGE_SERVER_PACKAGE = "io.matrix.bridge."
 # crossing" is a checked statement.
 BRIDGE_CLIENT = "io.matrix.brain.runtime.bridge.BridgePublisher"
 
+# W52 — the SECOND direction of the bridge. The client of the second direction
+# lives in chain A (the epistemic core offers what it established) and the
+# receiver of it lives in chain B (the brain takes it into its memory). Both
+# are measured the way the first direction is measured: the client must reach
+# no class of the store, and the receiver must reach no class of chain A's
+# bridge server.
+KNOWLEDGE_CLIENT = "io.matrix.bridge.KnowledgePublisher"
+KNOWLEDGE_RECEIVER = "io.matrix.api.bridge.KnowledgeBridge"
+
 # The annotation names of the JAX-RS surface.
 HTTP_METHOD_ANNOTATIONS = {
     "jakarta.ws.rs.GET": "GET",
@@ -511,6 +520,20 @@ def main(argv: list[str]) -> int:
     # and that is true whether or not anybody calls it.
     bridge_client_reaches_store = sorted(closure_of(BRIDGE_CLIENT) & set(store_own))
 
+    # W52 — the second direction. The client of the second direction is a class
+    # of chain A: it must reach no class of the store, for the same reason the
+    # client of the first direction does not. The receiver of the second
+    # direction is a class of chain B: it must reach no class of chain A's
+    # bridge server, or the crossing would happen inside one class graph
+    # instead of over the network.
+    knowledge_client_reaches_store = sorted(closure_of(KNOWLEDGE_CLIENT) & set(store_own))
+    knowledge_receiver_reaches_bridge_server = sorted(
+        c for c in closure_of(KNOWLEDGE_RECEIVER) if c.startswith(BRIDGE_SERVER_PACKAGE))
+    knowledge_receiver_reaches_store = sorted(
+        closure_of(KNOWLEDGE_RECEIVER) & set(store_own))
+    knowledge_client_reachable = KNOWLEDGE_CLIENT in chain_a_closure
+    knowledge_receiver_reachable = KNOWLEDGE_RECEIVER in chain_b_closure
+
     report = {
         "modules": [
             {"name": module, "role": module_of[module], "classes": len(module_classes[module])}
@@ -535,8 +558,14 @@ def main(argv: list[str]) -> int:
             "crossings": crossing,
             "bridge_client_reachable": bridge_client_reachable,
             "bridge_client_reaches_store": bridge_client_reaches_store,
+            "knowledge_receiver_reachable": knowledge_receiver_reachable,
+            "knowledge_receiver_reaches_store": knowledge_receiver_reaches_store,
+            "knowledge_receiver_reaches_bridge_server":
+                knowledge_receiver_reaches_bridge_server,
         },
         "chain_a": {
+            "knowledge_client_reachable": knowledge_client_reachable,
+            "knowledge_client_reaches_store": knowledge_client_reaches_store,
             "store_subsystem_classes": len(store_closure),
             "store_own_classes": store_own,
             "epistemic_database_classes": epistemic_database_classes,
@@ -638,6 +667,22 @@ def print_report(report: dict) -> None:
     print(f"  classes of io.matrix.knowledge.** that reach the persistence stack: "
           f"{len(chain_b['reachable_knowledge_persistence'])}")
     for name in chain_b["reachable_knowledge_persistence"]:
+        print(f"    {name}")
+    print(f"  the receiver of the SECOND direction (W52) is reachable from chain B: "
+          f"{chain_b['knowledge_receiver_reachable']}")
+    print(f"  classes of the store its own closure reaches: "
+          f"{len(chain_b['knowledge_receiver_reaches_store'])}")
+    for name in chain_b["knowledge_receiver_reaches_store"]:
+        print(f"    {name}")
+    print(f"  classes of chain A's bridge server its own closure reaches: "
+          f"{len(chain_b['knowledge_receiver_reaches_bridge_server'])}")
+    for name in chain_b["knowledge_receiver_reaches_bridge_server"]:
+        print(f"    {name}")
+    print(f"  the client of the SECOND direction (W52) is reachable from chain A: "
+          f"{report['chain_a']['knowledge_client_reachable']}")
+    print(f"  classes of the store its own closure reaches: "
+          f"{len(report['chain_a']['knowledge_client_reaches_store'])}")
+    for name in report["chain_a"]["knowledge_client_reaches_store"]:
         print(f"    {name}")
     print()
     print("the route census, read out of the compiled annotations:")

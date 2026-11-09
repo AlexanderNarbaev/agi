@@ -117,6 +117,7 @@ class BridgeSafetyTest {
             if (effects.incrementAndGet() == 1) {
                 throw new IllegalStateException("the epistemic store is not reachable");
             }
+            return null;
         });
 
         BridgeEnvelope envelope = signedEnvelope("req-unreachable", observationPayload());
@@ -168,7 +169,10 @@ class BridgeSafetyTest {
     @DisplayName("§11.1 — a message the bridge cannot authenticate is refused and applies no effect")
     void aMessageTheBridgeCannotAuthenticateIsRefusedAndAppliesNoEffect() {
         AtomicInteger effects = new AtomicInteger();
-        BridgeReceiver receiver = receiver(new InMemoryBridgeIdempotency(), envelope -> effects.incrementAndGet());
+        BridgeReceiver receiver = receiver(new InMemoryBridgeIdempotency(), envelope -> {
+                effects.incrementAndGet();
+                return null;
+            });
 
         // The signature was made with a different secret: the message cannot be trusted.
         BridgeEnvelope envelope = new BridgeEnvelope(BridgeProtocol.NAME, BridgeProtocol.VERSION,
@@ -189,7 +193,10 @@ class BridgeSafetyTest {
     @DisplayName("§11.4 — the same message delivered twice applies its effect once and answers with the first outcome")
     void theSameMessageDeliveredTwiceAppliesItsEffectOnce() {
         AtomicInteger effects = new AtomicInteger();
-        BridgeReceiver receiver = receiver(new InMemoryBridgeIdempotency(), envelope -> effects.incrementAndGet());
+        BridgeReceiver receiver = receiver(new InMemoryBridgeIdempotency(), envelope -> {
+                effects.incrementAndGet();
+                return null;
+            });
         BridgeEnvelope envelope = signedEnvelope("req-redelivered", observationPayload());
 
         BridgeDecision first = receiver.receive(envelope, NOW_MILLIS);
@@ -211,7 +218,10 @@ class BridgeSafetyTest {
     @DisplayName("§11.4 — the same request id with a different payload is a conflict, not a second effect")
     void theSameRequestIdWithADifferentPayloadIsAConflict() {
         AtomicInteger effects = new AtomicInteger();
-        BridgeReceiver receiver = receiver(new InMemoryBridgeIdempotency(), envelope -> effects.incrementAndGet());
+        BridgeReceiver receiver = receiver(new InMemoryBridgeIdempotency(), envelope -> {
+                effects.incrementAndGet();
+                return null;
+            });
 
         BridgeDecision first = receiver.receive(signedEnvelope("req-conflict", observationPayload()),
                 NOW_MILLIS);
@@ -262,7 +272,10 @@ class BridgeSafetyTest {
         AtomicInteger effects = new AtomicInteger();
         BridgeReceiver receiver = new BridgeReceiver(new HmacBridgeSigner(SECRET), GRANTED,
                 new BridgeBudget(1, WINDOW, MAX_MESSAGE_BYTES, MAX_BATCH, PER_DAY_CEILING),
-                new InMemoryBridgeIdempotency(), envelope -> effects.incrementAndGet());
+                new InMemoryBridgeIdempotency(), envelope -> {
+                effects.incrementAndGet();
+                return null;
+            });
 
         BridgeDecision first = receiver.receive(signedEnvelope("req-first", observationPayload()),
                 NOW_MILLIS);
@@ -286,7 +299,10 @@ class BridgeSafetyTest {
                 PER_DAY_CEILING);
         AtomicInteger effects = new AtomicInteger();
         BridgeReceiver receiver = new BridgeReceiver(new HmacBridgeSigner(SECRET), GRANTED, budget,
-                new InMemoryBridgeIdempotency(), envelope -> effects.incrementAndGet());
+                new InMemoryBridgeIdempotency(), envelope -> {
+                effects.incrementAndGet();
+                return null;
+            });
 
         BridgeEnvelope oversized = signedEnvelope("req-oversized", largeObservationPayload());
         BridgeDecision decision = receiver.receive(oversized, NOW_MILLIS);
@@ -322,7 +338,10 @@ class BridgeSafetyTest {
         AtomicInteger effects = new AtomicInteger();
         BridgeReceiver receiver = new BridgeReceiver(new HmacBridgeSigner(SECRET), GRANTED,
                 new BridgeBudget(10, WINDOW, MAX_MESSAGE_BYTES, 1, PER_DAY_CEILING),
-                new InMemoryBridgeIdempotency(), envelope -> effects.incrementAndGet());
+                new InMemoryBridgeIdempotency(), envelope -> {
+                effects.incrementAndGet();
+                return null;
+            });
 
         List<BridgeEnvelope> batch = List.of(
                 signedEnvelope("req-batch-one", observationPayload()),
@@ -343,7 +362,10 @@ class BridgeSafetyTest {
     @DisplayName("§11.8 — a message that names a version this reader does not speak is refused and the version is named")
     void aMessageThatNamesAnUnsupportedVersionIsRefusedAndTheVersionIsNamed() {
         AtomicInteger effects = new AtomicInteger();
-        BridgeReceiver receiver = receiver(new InMemoryBridgeIdempotency(), envelope -> effects.incrementAndGet());
+        BridgeReceiver receiver = receiver(new InMemoryBridgeIdempotency(), envelope -> {
+                effects.incrementAndGet();
+                return null;
+            });
 
         int unsupportedVersion = BridgeProtocol.VERSION + 1;
         BridgeEnvelope envelope = new BridgeEnvelope(BridgeProtocol.NAME, unsupportedVersion,
@@ -364,7 +386,10 @@ class BridgeSafetyTest {
     @DisplayName("§11.8 — a message that names another protocol is refused before anything else is looked at")
     void aMessageThatNamesAnotherProtocolIsRefused() {
         AtomicInteger effects = new AtomicInteger();
-        BridgeReceiver receiver = receiver(new InMemoryBridgeIdempotency(), envelope -> effects.incrementAndGet());
+        BridgeReceiver receiver = receiver(new InMemoryBridgeIdempotency(), envelope -> {
+                effects.incrementAndGet();
+                return null;
+            });
 
         BridgeEnvelope envelope = new BridgeEnvelope("some.other.protocol", BridgeProtocol.VERSION,
                 "req-protocol", SENT_AT, SENDER, BridgeCapability.OBSERVATION, observationPayload(),

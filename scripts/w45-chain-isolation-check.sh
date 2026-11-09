@@ -40,6 +40,10 @@
 #   G9  W51: the chain B bridge client reaches no class of the store. The
 #       client is compiled into matrix-core, which chain B depends on, so the
 #       property has to be checked rather than assumed.
+#   G10 W52: the SECOND direction of the bridge is governed the same way:
+#       the client of chain A reaches no class of the store, the receiver of
+#       chain B reaches no class of the store and no class of chain A's bridge
+#       server, and the crossing happens over the network in both directions
 #
 # HYGIENE
 # Everything the gate touches is inside ONE private temporary directory that
@@ -551,6 +555,29 @@ if [ "$G9" = "0" ]; then
 else
   fail "$G9 class(es) of the store are reachable from the chain B bridge client"
   report_field "$REPORT" chain_b.bridge_client_reaches_store
+fi
+
+# ── G10 — the second direction is governed too ──────────────────────────────
+head1 "G10 — the second direction of the bridge is governed too"
+G10A="$(report_size "$REPORT" chain_a.knowledge_client_reaches_store)"
+G10B="$(report_size "$REPORT" chain_b.knowledge_receiver_reaches_store)"
+G10C="$(report_size "$REPORT" chain_b.knowledge_receiver_reaches_bridge_server)"
+note "the classes of the store the chain A client's closure reaches: $G10A"
+note "the classes of the store the chain B receiver's closure reaches: $G10B"
+note "the classes of chain A's bridge server the chain B receiver reaches: $G10C"
+if [ "$G10A" = "0" ] && [ "$G10B" = "0" ]; then
+  pass "neither side of the second direction reaches a class of the epistemic store:"
+  pass "the crossing happens over the network, in both directions"
+else
+  fail "$((G10A + G10B)) class(es) of the store are reachable from the second direction"
+  report_field "$REPORT" chain_a.knowledge_client_reaches_store
+  report_field "$REPORT" chain_b.knowledge_receiver_reaches_store
+fi
+if [ "$G10C" = "0" ]; then
+  pass "the receiver of the second direction reaches no class of chain A's bridge server"
+else
+  fail "$G10C class(es) of chain A's bridge server are reachable from the receiver"
+  report_field "$REPORT" chain_b.knowledge_receiver_reaches_bridge_server
 fi
 
 # ── the summary ─────────────────────────────────────────────────────────────
