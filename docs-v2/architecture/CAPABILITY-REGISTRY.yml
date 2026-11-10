@@ -584,10 +584,10 @@ capabilities:
       - "the peer's inbox row is the only proof of effectively-once execution; it is a local file, and the guarantee is at-least-once delivery, not distributed exactly-once"
     owner: "the owner (W53 directive of 2026-11-09)"
     decision_ref: "CD-032; CD-033; CD-034; CD-035; CD-036"
-    last_verified_commit: "15d40d7f"
+    last_verified_commit: "dfcb3b00"
     last_verified_at: "2026-11-10"
     next_verification_condition: "the wave's remaining closeout: the owner's authorization for the wave's commits and its pull request"
-    notes: "the four axes say what they mean here: the source exists (IMPLEMENTED), a real two-process path drives it (INTEGRATION_TESTED), the scope and the gates were run and measured (MEASURED), and nothing serves it in production by default (DORMANT) — the remote port is attached to the kernel only when a coordinator is given to it. The evidence of 2026-11-10 was produced on the working tree of feature/w53-distributed-cognition, whose last commit is 15d40d7f and which still carries the wave's changes uncommitted — the commit needs the owner's authorization, which this wave does not have."
+    notes: "the four axes say what they mean here: the source exists (IMPLEMENTED), a real two-process path drives it (INTEGRATION_TESTED), the scope and the gates were run and measured (MEASURED), and nothing serves it in production by default (DORMANT) — the remote port is attached to the kernel only when a coordinator is given to it. The evidence of 2026-11-10 was produced on the tree of feature/w53-distributed-cognition that the wave's own commits record (dfcb3b00), and the owner authorized those commits on 2026-11-11."
 
   -
     id: "C-10"

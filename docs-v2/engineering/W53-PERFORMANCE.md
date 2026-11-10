@@ -61,7 +61,7 @@ The two passes have their own latency, their own stages and their own process me
 | JVM arguments | the defaults of the Quarkus fast-jar and of the gateway's start script |
 | Payload | one sentence of input, one expectation |
 | Random seed | none — the workload has no randomness |
-| the code the numbers belong to | the wave's own tree, which the wave's commits record; the head that was pushed before the wave's commits is `15d40d7f` |
+| the code the numbers belong to | the wave's own tree, which the wave's commits record: `dfcb3b00` on `feature/w53-distributed-cognition` |
 | the code that is **not** on the measured path | chain A's reconciliation queue (`CognitiveStore.unfinishedDispatches`), which was changed after the measurement: it is read when chain A starts, and the measured path is the task path |
 
 **These numbers are not comparable with a run on another machine.** They are the numbers of
