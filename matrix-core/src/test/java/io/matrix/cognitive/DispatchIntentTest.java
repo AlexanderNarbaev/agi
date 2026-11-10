@@ -8,6 +8,8 @@ import java.nio.file.Path;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -73,6 +75,48 @@ class DispatchIntentTest {
             assertEquals(2, unfinished.size());
             assertEquals(List.of("req-1", "req-2"),
                     unfinished.stream().map(DispatchIntent::requestId).toList());
+        }
+    }
+
+    @Test
+    @DisplayName("a dispatch whose answer is on record but whose verdict is not still owes "
+            + "chain A a decision: it belongs to the reconciliation queue")
+    void anAnsweredButUnjudgedDispatchStillOwesAVerdict() {
+        try (CognitiveStore store = new CognitiveStore(directory.resolve("cognitive.sqlite"))) {
+            store.recordDispatchIntent(intent("req-1", DispatchIntent.State.DISPATCH_PENDING));
+            store.markDispatchState("req-1", DispatchIntent.State.DISPATCHED, AT);
+            store.recordDispatchAnswer("req-1", DispatchIntent.State.COMPLETED,
+                    "chain-b-brain-runtime", "COMPLETED", "{\"status\":\"COMPLETED\"}",
+                    "{\"relation\":\"INDEPENDENT\"}", AT);
+
+            DispatchIntent dispatch = store.findDispatch("req-1").orElseThrow();
+            assertNull(dispatch.disposition(),
+                    "the verdict was not written: the process died before it");
+            assertEquals(1, store.unfinishedDispatches(WORKSPACE).size(),
+                    "an answered but unjudged dispatch must not be forgotten");
+        }
+    }
+
+    @Test
+    @DisplayName("a cancelled or a timed-out dispatch is finished: its answer stays on "
+            + "record, unjudged, and it is not sent again")
+    void aCancelledDispatchIsFinished() {
+        try (CognitiveStore store = new CognitiveStore(directory.resolve("cognitive.sqlite"))) {
+            store.recordDispatchIntent(intent("req-1", DispatchIntent.State.DISPATCH_PENDING));
+            store.markDispatchState("req-1", DispatchIntent.State.DISPATCHED, AT);
+            store.recordDispatchAnswer("req-1", DispatchIntent.State.CANCELLED,
+                    "chain-b-brain-runtime", "COMPLETED", "{\"status\":\"COMPLETED\"}",
+                    "{\"relation\":\"INDEPENDENT\"}", AT);
+            store.recordDispatchIntent(intent("req-2", DispatchIntent.State.DISPATCH_PENDING));
+            store.markDispatchState("req-2", DispatchIntent.State.DISPATCHED, AT);
+            store.recordDispatchAnswer("req-2", DispatchIntent.State.TIMED_OUT,
+                    "chain-b-brain-runtime", "COMPLETED", "{\"status\":\"COMPLETED\"}",
+                    "{\"relation\":\"INDEPENDENT\"}", AT);
+
+            assertTrue(store.unfinishedDispatches(WORKSPACE).isEmpty(),
+                    "a task that was called off is not to be sent again");
+            assertNotNull(store.findDispatch("req-1").orElseThrow().responseJson(),
+                    "the peer's answer must stay on record even when the task was called off");
         }
     }
 

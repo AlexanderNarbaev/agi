@@ -76,11 +76,15 @@ class TaskPeerRecoveryTest {
                 null);
     }
 
-    /** A brain that answers without thinking. */
+    /** A brain that answers without thinking, and counts how often it was asked. */
     private static final class QuietBrain implements BrainCycle {
+
+        private final java.util.concurrent.atomic.AtomicInteger calls =
+                new java.util.concurrent.atomic.AtomicInteger();
 
         @Override
         public CycleResult cycle(String input, String context, String model) {
+            calls.incrementAndGet();
             return new CycleResult("the lamp is lit", 0.8, 5L, true, List.of("BIR"));
         }
 
@@ -144,9 +148,15 @@ class TaskPeerRecoveryTest {
             store.markRunning("req-reconciled", NOW);
             store.reconcileUnfinished(NOW);
 
-            TaskBridge bridge = new TaskBridge(store, CognitiveCapability.standard(
-                    new QuietBrain()), SECRET, () -> NOW);
+            QuietBrain brain = new QuietBrain();
+            TaskBridge bridge = new TaskBridge(store, CognitiveCapability.standard(brain),
+                    SECRET, () -> NOW);
             String answer = bridge.answer(message[0]);
+
+            assertThat(brain.calls.get())
+                    .withFailMessage("the retry must not run the brain again: the task was "
+                            + "already admitted, and its logical effect must happen once")
+                    .isEqualTo(0);
 
             com.fasterxml.jackson.databind.JsonNode root =
                     new com.fasterxml.jackson.databind.ObjectMapper().readTree(answer);

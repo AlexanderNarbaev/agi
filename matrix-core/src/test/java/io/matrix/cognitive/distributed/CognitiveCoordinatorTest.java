@@ -200,6 +200,26 @@ class CognitiveCoordinatorTest {
     }
 
     @Test
+    @DisplayName("the peer's own execution time is recorded next to the crossing")
+    void thePeersExecutionTimeIsRecordedNextToTheCrossing() {
+        Path database = directory.resolve("cognitive.sqlite");
+        try (CognitiveStore store = new CognitiveStore(database)) {
+            AnsweringTransport transport = new AnsweringTransport(store);
+            CognitiveCoordinator coordinator = new CognitiveCoordinator(store, transport,
+                    new RemoteReportAssessor(RemoteReportAssessor.LocalEvidence.NONE),
+                    WORKSPACE, "chain-a-epistemic-core", () -> AT);
+
+            CognitiveCoordinator.Outcome outcome = coordinator.arrange(spec());
+
+            assertEquals(5_000_000L, outcome.timingsNanos().get("peer_execution_nanos"),
+                    "the peer said its execution took 5 ms; the crossing must carry that "
+                            + "so the network can be told apart from the peer's work");
+            assertTrue(outcome.timingsNanos().containsKey("dispatch_nanos"),
+                    "the crossing itself must still be measured");
+        }
+    }
+
+    @Test
     @DisplayName("a peer that says the task is still running is waited for, not judged")
     void aPeerThatSaysTheTaskIsStillRunningIsWaitedFor() {
         Path database = directory.resolve("cognitive.sqlite");

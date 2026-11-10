@@ -1576,11 +1576,25 @@ public final class CognitiveStore
     }
 
     /**
-     * W53 — the dispatches that still owe an answer.
+     * W53 — the dispatches that still owe an answer or a verdict.
      *
-     * <p>These are the rows a reconciliation pass looks at after a restart: the intent
-     * says the task was sent, and the durable record of the answer is not here yet. The
-     * same request id can be sent again, and the peer will not execute it twice.</p>
+     * <p>These are the rows a reconciliation pass looks at after a restart. Two kinds
+     * belong here:</p>
+     *
+     * <ul>
+     *   <li>the intent says the task was sent, and the durable record of the answer is
+     *       not here yet — the same request id can be sent again, and the peer will not
+     *       execute it twice;</li>
+     *   <li>the peer's answer <i>is</i> on record, but chain A never wrote its own
+     *       verdict — the process died between receiving the answer and judging it, and
+     *       the task would otherwise stay unjudged for ever. The answer is not a verdict:
+     *       only chain A can judge it.</li>
+     * </ul>
+     *
+     * <p>A cancelled or a timed-out dispatch keeps the peer's answer on record
+     * deliberately — that answer was not judged, and it must not be: the task was called
+     * off. Such a dispatch is therefore finished, not unfinished, and it is not sent
+     * again.</p>
      *
      * @param workspaceId the workspace
      * @return the unfinished dispatches
@@ -1588,8 +1602,9 @@ public final class CognitiveStore
     public synchronized List<DispatchIntent> unfinishedDispatches(String workspaceId) {
         List<DispatchIntent> found = new ArrayList<>();
         try (PreparedStatement ps = connection.prepareStatement(dispatchSelect()
-                + " WHERE workspace_id = ? AND state IN ('CREATED','DISPATCH_PENDING',"
-                + "'DISPATCHED') ORDER BY created_at")) {
+                + " WHERE workspace_id = ? AND (state IN ('CREATED','DISPATCH_PENDING',"
+                + "'DISPATCHED') OR (disposition IS NULL AND response_json IS NOT NULL"
+                + " AND state NOT IN ('CANCELLED','TIMED_OUT'))) ORDER BY created_at")) {
             ps.setString(1, workspaceId);
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {

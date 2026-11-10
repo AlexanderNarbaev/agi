@@ -61,12 +61,23 @@ the stored result.)
 | A contradicting report is recorded as a contradiction | 4 sink tests | `./gradlew :matrix-core:test --tests "io.matrix.bridge.*" --offline` |
 | The peer deduplicates durably | 7 store tests | `./gradlew :matrix-api-gateway:test --offline` |
 | The round trip is real and a forged report is dropped | 2 round-trip tests | the same |
-| The whole scope is green | **1558 tests, 0 failures, 0 errors** (matrix-core + gateway) | the scope command in the wave's baseline record |
+| The whole scope is green | **1617 tests, 0 failures, 0 errors, 0 skipped** across 244 classes (matrix-core + gateway) | the scope command in the wave's baseline record |
 | The quality gate holds | **PASS: 271 candidates, at or below the baseline of 271** | `bash scripts/quality-gate.sh` |
 | The isolation gate holds | **30 checks, 0 failed** (G11 added) | `bash scripts/w45-chain-isolation-check.sh` |
 | The new gate can go red | **15 checks, 0 failed** (C5 added: the task receiver is replaced with one that calls chain A's store, and the gate names the violation) | `bash scripts/w45-chain-isolation-selftest.sh` |
 | The epistemic benchmark does not regress | **18/29** — the same eleven failures (A-02, A-04, A-05, A-06, M-01, M-03, P-01, P-02, F-02, R-04, R-05) | `python3 scripts/w51-epistemic-eval.py` |
 | The two-process demonstration | the report `docs-v2/engineering/W53-DISTRIBUTED-DEMONSTRATION.json` | `bash scripts/w53-distributed-demo.sh` |
+| The outcome survives the restart of chain A | the task asked for again by its stable id after chain A restarted answers with the same request id, the same state and the same disposition, and the peer still holds exactly one row for it | the demonstration restarts chain A and checks it — the check fails when the trace is empty, when the disposition differs or when the peer holds a second row |
+| The delegation reaches the cycle's reflection | a delegated task that does not settle the proposition becomes an uncertainty of the reflection, and the reflection turns it into a decision that can be carried out: `LEAVE_UNRESOLVED`, naming the request that left it open | `CognitiveKernel`'s remote phase → `CycleReflection.of(...)`; `CognitiveKernelRemoteTest` holds it — with the uncertainty disabled, exactly that test goes red |
+| Both processes report their own health and the peer its active capabilities | chain A answers its Quarkus health endpoint and chain B its own; chain B names the capability it can really execute (`brain.cognitive-inference`), and the report records the status code with the body — chain A's endpoint answers 503 because the PostgreSQL connection check is down in this environment, and the task was served anyway | the demonstration's second check: the capability chain A used must be one the peer reports as active — with the peer's answer doctored, that check goes red |
+| A repeated request never enters the cognitive path again | the peer's durable record answers the repeat, and the test counts the brain's calls: the count stays at zero | `TaskPeerRecoveryTest` — with the durable row absent the delivery is fresh, the brain is asked, and the test goes red |
+| The performance report measures the processes, not only the client | the CPU time, the heap, the garbage collection, the allocation and the resident set of both processes, sampled from outside them | `bash scripts/w53-distributed-benchmark.sh --tasks 30` — the guard fails loudly when the numbers cannot be read |
+| The performance report is reproducible | both workloads in one document, each with the command that produced it, and the per-sample latencies that separate the cold start from the steady state | `bash scripts/w53-distributed-benchmark.sh --tasks 30 --concurrency 1 --report /tmp/single.json` and the same with `--concurrency 4`, then `scripts/w53-merge-performance.py` |
+| The measurement's own noise is measured | three runs of the same workload on the same day differ by 32 % at p50 (the sequential path) and by 112 % (the concurrent path's steady state) | the performance report's §5a |
+| The peer's own work is told apart from the crossing | the peer reports the duration of its execution; chain A records it beside the crossing: the peer's inference is **1 ms** at the median against the crossing's **7.3 ms** (sequential), so the governed crossing, not the remote cognitive work, dominates the path | `CognitiveCoordinator` writes `peer_execution_nanos`; `CognitiveCoordinatorTest` holds it, and the test goes red when the measurement is removed |
+| The cost of the durable idempotency path is measured apart from the first execution | the same requests are sent again with the same id and payload: the replay costs **14.26 ms** at p50 against the first execution's **27.43 ms**, **23.7 ms** of CPU against **86.0 ms**, and **30 of 30** replays answered with the disposition of the first execution | the benchmark's replay pass; the performance report's §5b; `CognitiveCoordinator` writes the `replay_*` stages and `CognitiveCoordinatorRetryTest` holds them (the test goes red when the measurement is removed) |
+| A crash between the peer's answer and chain A's own verdict is finished by the pass | the process dies inside the report's admission: the peer's answer is on record, the verdict is not, and the dispatch is in the reconciliation queue — the restarted process finds it, sends the same request again and ends with a verdict and the state `ADJUDICATED` | `CognitiveCoordinatorRecoveryTest` — with the store's query reverted the dispatch is not found and the test goes red |
+| A task that was called off is not sent again | a cancelled or a timed-out dispatch keeps the peer's answer on record **and unjudged on purpose**; such a dispatch is finished, not unfinished, and the reconciliation pass leaves it alone | `DispatchIntentTest` — with the exclusion removed the cancelled dispatch joins the queue and the test goes red |
 
 ---
 
@@ -95,17 +106,38 @@ database, and runs one bounded cognitive task through them.
 9c. A **forged request** — one whose signature was made with the wrong secret — is refused
     by the peer, and the demonstration checks the refusal's *reason*, so it cannot silently
     prove something else.
+9e. **Both processes report themselves**: chain A answers its Quarkus health endpoint and
+    chain B its own, and chain B names the capability it can really execute
+    (`brain.cognitive-inference`). The demonstration checks that the capability chain A
+    used is one the peer reports as active — so the peer's own word is the evidence, not
+    the script's. This is §13.2 of the mandate.
+9d. **Chain A is restarted** and the same task is asked for again by its stable id: chain A
+    answers with the same request id, the same state (`ADJUDICATED`) and the same
+    disposition it recorded before the restart, and the peer still holds **exactly one**
+    row for that request id — chain A's reconciliation pass, which runs at the startup,
+    found nothing unfinished and sent nothing. This is §13.22 of the mandate, and the
+    demonstration checks it: the check fails when the trace is empty, when the disposition
+    differs, or when the peer holds a second row.
 
 **What the report does not claim**, in its own words: it does not claim that the remote answer
 was correct, that the proposition is established, or that the system has distributed
 exactly-once execution. The delivery is at-least-once with a durable deduplication at the
 receiver; that is what the inbox row proves, and it is what the report says.
 
-**The report's schema** is `matrix.w53.distributed-demonstration/v2` since round 22: the
-`refusals` section (the unserved capability, the conflicting payload and the forged
-request, each with the reason its own receiver gave) and the three matching stages were
-added. The version moved because the section is new: a reader that knows only v1 must be
-able to tell that it is looking at something v1 never had.
+**The report's schema** is `matrix.w53.distributed-demonstration/v5` since round 33: v2
+came with round 22, which added the `refusals` section (the unserved capability, the
+conflicting payload and the forged request, each with the reason its own receiver gave)
+and the three matching stages; v3 came with round 31, which gave the `replayAfterRestart`
+section the replay's **own** measurements — the crossing, the admission and the assessment
+of the replay, under the `replay_*` keys of its `timingsNanos` map; v4 came with round 32,
+which added the `taskAfterChainARestart` section and the `whatTheChainARestartShows` lines
+that say what it does and does not prove; v5 came with round 33, which added the
+`processes` section — each process's own health answer with its status code, the peer's
+active capability ids, and the capability chain A used with the place it ran — and the
+stage `BOTH_PROCESSES_REPORTED_HEALTH_AND_ACTIVE_CAPABILITIES`. The version moved because
+the section is new: a
+reader that knows only the earlier versions must be able to tell that it is looking at
+something they never had.
 
 ---
 
@@ -144,7 +176,7 @@ happy path — and a scenario that shows only the happy path cannot show that th
 holds.
 
 The demonstration now carries a `refusals` section (the report's schema moved to
-`matrix.w53.distributed-demonstration/v2`):
+`matrix.w53.distributed-demonstration/v5`):
 
 | the scenario | who refused it | what the report shows |
 |---|---|---|
@@ -259,7 +291,15 @@ is missing, not a paraphrase of "future work".
    durable inbox recognises the request id, so the logical effect still happens once.
    What remains: the pass runs at startup, not on a timer, so an answer lost while the
    process stayed up waits for the next restart; and the peer is not told that a dispatch
-   was cancelled, so it may still be working on it.
+   was cancelled, so it may still be working on it. **Done in round 38:** the queue was
+   missing one kind of unfinished work — a dispatch whose answer **is** on record but
+   whose verdict is not, because the process died between receiving the answer and
+   judging it. Such a dispatch was in no queue at all: it was neither "sent, no answer"
+   nor "judged", so the task stayed unjudged for ever. The answer is not a verdict — only
+   chain A can judge it — so the pass now finds it, sends the same request again and
+   ends with a verdict and the state `ADJUDICATED`. The opposite case is closed with it:
+   a cancelled or a timed-out dispatch keeps the peer's answer on record **and unjudged on
+   purpose**, so it is finished and the pass leaves it alone.
 3. ~~Cancellation and deadline propagation are not implemented.~~ **Done in round 11 on
    chain A's side.** The deadline is now honoured: a late answer produces the distinct
    `TIMED_OUT` state, and the answer the peer sent stays on record in the dispatch row —
@@ -300,15 +340,18 @@ is missing, not a paraphrase of "future work".
    jobs.
 
    The numbers, from `docs-v2/engineering/W53-PERFORMANCE.json`: the single-task path
-   (30 tasks) — p50 **20.77 ms**, p95 **28.25 ms**,
-   throughput **31.83 tasks/s**, every sample `UNRESOLVED`; the concurrent path
+   (30 tasks) — p50 **27.43 ms**, p95 **37.73 ms**,
+   throughput **26.18 tasks/s**, every sample `UNRESOLVED`; the concurrent path
    (24 tasks, four at a time) — every task adjudicated
    `UNRESOLVED`, the steady state (after the cold start of the first
-   4 samples) p50 **35.57 ms**,
-   **27.89 tasks/s**. The concurrent path is
+   4 samples) p50 **75.37 ms**,
+   **12.64 tasks/s**. The concurrent path is
    **slower per task** than the single-task one — four tasks in flight contend for the same
    store and the same peer — and the report says so rather than quoting the throughput of a
-   run without its cold start.
+   run without its cold start. **The measurement's own noise is measured** (§3 and the
+   performance report's §5a): three runs of the same workload on the same day differ by
+   32 % at p50 on the sequential path and by 112 % on the concurrent path's steady state,
+   so no optimization was accepted on the strength of a benchmark run.
 7. **The earlier "concurrency defect" was a defect of the benchmark; the correction is
    recorded here rather than left in a chat.** The refusal `the request id
    req-w53-bench-N is already dispatched` was **correct behaviour**: chain A's cognitive
@@ -375,8 +418,51 @@ is missing, not a paraphrase of "future work".
     checks are still not consulted — chain B must not and cannot reach chain A's classes
     (the isolation gate holds that), so the remote capability's lifecycle is the peer's
     business, and a plugin that serves a remote capability must register it there.
-12. **The wave is not committed.** Every change is in the working tree; the mandate withholds
-    the authorization that commit and push require.
+12. **The wave is not committed.** Every change was in the working tree until the owner
+    authorised the commit and the push (round 22); the work of rounds 23–31 — the
+    measurement of the processes, the reproducible merge of the two workloads, the noise
+    floor, the separation of the peer's own execution and the separate measurement of the
+    durable idempotency path — is in the working tree again and waits for the owner's word.
+13. **The performance report separates the peer's own execution from the crossing, but not
+    the peer's remaining stages.** Chain A times the crossing as one interval, and the peer
+    carries one duration — its own execution — so the report now says how much of the
+    crossing is the remote cognitive work and how much is the governed crossing around it
+    (1 ms against 7.1 ms at the median, sequential). The peer's authentication, its inbox
+    write and its answer signing are still inside the crossing; separating them needs the
+    peer to carry more than one duration, and the protocol carries one today, so it is
+    named as the next measurement and is not done. **What was done in rounds 23–31:** the
+    two processes' own accounting is measured from outside them (the CPU time, the heap, the
+    garbage collection, the estimated allocation and the retained memory), the two
+    workloads live in one reproducible document, the **noise floor is measured** — three
+    runs of the same workload on the same day differ by 32 % at p50 on the sequential path
+    and by 112 % on the concurrent path's steady state — and the peer's own duration is
+    recorded beside the crossing. The cause of the noise is not established, and the report
+    says so rather than naming one. Because the noise is that wide, **no
+    optimization was accepted on the strength of a benchmark run**: the mandate asks that an
+    accepted change exceed the measurement noise, and nothing this wave changed was
+    measurable above it.
+14. **The reflection of a delegated task reaches the cycle, but the HTTP entry point does not
+    run a cycle.** When the delegated task is part of a cognitive cycle, the cycle's
+    reflection now names the delegation: a report that did not settle the proposition
+    becomes an uncertainty of the reflection, and the reflection turns it into a decision
+    that can be carried out — `LEAVE_UNRESOLVED`, naming the request that left it open
+    (`CognitiveKernelRemoteTest` holds it; with the uncertainty disabled, exactly that test
+    goes red). The demonstration's own path — `POST /v1/cognitive/task` — drives the
+    coordinator directly and does not open a cycle, so there the decision is recorded in
+    the dispatch row (the disposition and its reason), not in a reflection. Both records
+    are durable and both are readable; they are two shapes of the same fact, and the
+    mandate's §13.19 is answered for the cycle, not for the entry point.
+15. **The cost of the durable idempotency path is measured, but what the replay does inside
+    the peer is not.** Since round 31 the benchmark sends every request again, with the
+    same id and the same payload, and the replay is timed, staged and measured on its own:
+    14.26 ms against the first execution's 27.43 ms, 23.7 ms of CPU against 86.0 ms, and
+    30 of 30 replays answered with the disposition of the first execution. What is still
+    not told apart is the peer's own work inside the replay: the peer carries one duration
+    — the duration of the **original** execution — so it cannot be attributed to the
+    replay, and the report says so instead of recording it as the replay's cost. The
+    replay also does **not** prove a distributed exactly-once guarantee: it proves that the
+    peer's logical effect was not applied twice for these thirty requests, and the
+    at-least-once delivery with an effectively-once effect remains what the design claims.
 
 ---
 

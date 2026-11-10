@@ -511,6 +511,10 @@ public final class CognitiveKernel {
         // left, a real answer really came back, it really was checked, and the result
         // really was evaluated against this process's own evidence.
         io.matrix.cognitive.distributed.RemoteExecutor.RemoteOutcome remote = null;
+        // What the delegation left open, if it did. It reaches the reflection, so that the
+        // cycle's own evaluation names the remote report instead of the report being
+        // dropped into the notes and forgotten.
+        String remoteUncertainty = null;
         if (remoteExecutor != null && remoteExecutor.serves(decision.selectedAlgorithmId())) {
             trace.step("DISPATCH_REMOTE", decision.selectedAlgorithmId(),
                     "the chosen capability is served by another process; the task was "
@@ -533,6 +537,20 @@ public final class CognitiveKernel {
                         + ", status " + remote.status() + ", disposition "
                         + remote.disposition() + " — the peer's answer is a report, not a "
                         + "settled fact, and the local computation continues on its own terms");
+                learned.add("a task was delegated to another process: request "
+                        + remote.requestId() + ", responder " + remote.responderId()
+                        + ", status " + remote.status() + ", disposition "
+                        + remote.disposition() + " — the peer's answer is a report, and the "
+                        + "disposition is this process's own evaluation of it");
+                if (!"SUPPORTED".equals(remote.disposition())
+                        && !"QUALIFIED".equals(remote.disposition())) {
+                    // The report did not settle the proposition. That is exactly the thing
+                    // the reflection is for: it must name what remains open, or the cycle
+                    // would end as if the delegation had settled something.
+                    remoteUncertainty = "the delegated task " + remote.requestId()
+                            + " ended " + remote.disposition() + ": " + remote.reason()
+                            + " — the proposition is not settled by that report";
+                }
             } catch (RuntimeException e) {
                 trace.step("DISPATCH_REMOTE", decision.selectedAlgorithmId(),
                         "the delegation failed: " + e.getMessage());
@@ -824,6 +842,12 @@ public final class CognitiveKernel {
         learned.add("the model holds " + session.survivingHypotheses().size()
                 + " surviving hypothesis(es) over " + remembered.size() + " remembered case(s)");
         List<String> uncertainties = new ArrayList<>();
+        if (remoteUncertainty != null) {
+            // The delegation's own uncertainty belongs to the cycle's uncertainty, and the
+            // reflection turns it into a decision that can be carried out: leave the
+            // proposition unresolved, and say which request left it that way.
+            uncertainties.add(remoteUncertainty);
+        }
         if (!forecast.unanimous()) {
             uncertainties.add("the surviving hypotheses disagree: "
                     + forecast.disagreeingHypothesisIds().size() + " of them");

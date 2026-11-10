@@ -5,7 +5,12 @@ import io.matrix.cognitive.CognitiveStore;
 import io.matrix.cognitive.DispatchIntent;
 import io.matrix.cognitive.RemoteReportAssessor;
 import io.matrix.contract.Provenance;
+import io.matrix.contract.bridge.BridgeCapability;
 import io.matrix.contract.bridge.BridgeDecision;
+import io.matrix.contract.bridge.BridgeEnvelope;
+import io.matrix.contract.bridge.BridgePayload;
+import io.matrix.contract.bridge.BridgePayloadCodec;
+import io.matrix.contract.bridge.HmacBridgeSigner;
 import io.matrix.contract.bridge.BridgeProtocol;
 import io.matrix.contract.bridge.CognitiveTaskReport;
 import io.matrix.contract.bridge.CognitiveTaskRequest;
@@ -14,6 +19,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
@@ -41,6 +47,10 @@ class CognitiveCoordinatorRecoveryTest {
 
     /** The instant the fixtures claim. */
     private static final String AT = "2026-11-09T12:00:00Z";
+
+    /** The shared secret of the two sides. */
+    private static final byte[] SECRET =
+            "the-bridge-secret-of-the-tests".getBytes(StandardCharsets.UTF_8);
 
     /** The workspace of the fixtures. */
     private static final String WORKSPACE = "bridged";
@@ -134,6 +144,77 @@ class CognitiveCoordinatorRecoveryTest {
         return new TaskPublisher.Dispatch(request.requestId(),
                 BridgeDecision.Status.ACCEPTED, "the message satisfies the contract",
                 Optional.of(response), Optional.of(report), true, true, Optional.empty());
+    }
+
+    /**
+     * A transport whose peer always answers.
+     */
+    private static final class AnsweringTransport implements CognitiveCoordinator.TaskTransport {
+
+        private final List<CognitiveTaskRequest> seen = new ArrayList<>();
+
+        @Override
+        public TaskPublisher.Dispatch dispatch(CognitiveTaskRequest request, String sentAt) {
+            seen.add(request);
+            return answeredWithReport(request);
+        }
+    }
+
+    /**
+     * The peer's signed report, as it arrives at chain A.
+     *
+     * @param request the request the report answers
+     * @return the envelope
+     */
+    private static BridgeEnvelope peerReport(CognitiveTaskRequest request) {
+        CognitiveTaskReport report = new CognitiveTaskReport(BridgeProtocol.VERSION,
+                request.taskId(), request.requestId(), "the lamp is lit", null,
+                CognitiveTaskReport.Relation.INDEPENDENT, 0.9,
+                CognitiveTaskReport.ConfidenceBasis.DECLARED, List.of(), "chain-b",
+                request.requiredCapability(), "v1", List.of("the lamp is dark"),
+                Provenance.of("chain-b", AT), AT);
+        BridgeEnvelope envelope = new BridgeEnvelope(BridgeProtocol.NAME, BridgeProtocol.VERSION,
+                request.requestId(), AT, "chain-b", BridgeCapability.INFERENCE_RESPONSE,
+                new BridgePayloadCodec().encode(BridgePayload.ofTaskReport(report,
+                        Provenance.of("chain-b", AT))), null);
+        return envelope.withSignature(envelope.sign(new HmacBridgeSigner(SECRET)));
+    }
+
+    /**
+     * The answer a peer gives, with the report that goes with it.
+     *
+     * @param request the request that was sent
+     * @return the dispatch the peer produced
+     */
+    private static TaskPublisher.Dispatch answeredWithReport(CognitiveTaskRequest request) {
+        TaskPublisher.Dispatch plain = answer(request);
+        return new TaskPublisher.Dispatch(plain.requestId(), plain.status(), plain.reason(),
+                plain.response(), plain.report(), plain.responseSigned(), true,
+                Optional.of(peerReport(request)));
+    }
+
+    /**
+     * A sink that dies the first time it is asked to admit a report.
+     *
+     * <p>The crash lands exactly on the boundary the mandate names: the peer's answer is
+     * already on chain A's record, and chain A's own result — the admitted report and the
+     * disposition — is not yet written.</p>
+     */
+    private static final class DyingSink implements CognitiveCoordinator.ReportSink {
+
+        private final java.util.concurrent.atomic.AtomicInteger calls =
+                new java.util.concurrent.atomic.AtomicInteger();
+
+        @Override
+        public io.matrix.contract.bridge.BridgeDecision accept(
+                io.matrix.contract.bridge.BridgeEnvelope envelope) {
+            if (calls.incrementAndGet() == 1) {
+                throw new IllegalStateException(
+                        "the process died while the report was being admitted");
+            }
+            return io.matrix.contract.bridge.BridgeDecision.accepted(envelope.requestId(),
+                    "audit-" + envelope.requestId());
+        }
     }
 
     /**
@@ -235,6 +316,57 @@ class CognitiveCoordinatorRecoveryTest {
             assertEquals(1, summary.finished(), "the pass must finish it");
             assertTrue(summary.reasons().isEmpty(),
                     "nothing should be left unfinished: " + summary.reasons());
+            assertTrue(restarted.unfinishedDispatches(WORKSPACE).isEmpty(),
+                    "no dispatch may be left unfinished after the pass");
+        }
+    }
+
+    @Test
+    @DisplayName("a crash between the peer's answer and chain A's own verdict is finished "
+            + "by the reconciliation pass")
+    void aCrashBetweenTheAnswerAndTheVerdictIsFinishedByThePass() {
+        Path database = directory.resolve("cognitive.sqlite");
+        DyingSink dying = new DyingSink();
+
+        try (CognitiveStore store = new CognitiveStore(database)) {
+            CognitiveCoordinator coordinator = coordinator(store, new AnsweringTransport())
+                    .withReportSink(dying);
+            assertThrows(IllegalStateException.class, () -> coordinator.arrange(spec()),
+                    "the process must die while the report is admitted");
+
+            DispatchIntent afterCrash = store.findDispatch("req-tsk-1").orElseThrow();
+            assertEquals(DispatchIntent.State.COMPLETED, afterCrash.state(),
+                    "the peer's own status is on record: the peer finished the task");
+            assertNull(afterCrash.disposition(),
+                    "chain A's own verdict was not written: the crash landed before it");
+            assertNotNull(afterCrash.responseJson(),
+                    "the answer itself must be on record, or the restart could not finish it");
+        }
+
+        // The process restarts: a new store over the same file, a new coordinator whose
+        // sink works.
+        try (CognitiveStore restarted = new CognitiveStore(database)) {
+            List<DispatchIntent> unfinished = restarted.unfinishedDispatches(WORKSPACE);
+            assertEquals(1, unfinished.size(),
+                    "the answered but unjudged dispatch must be on record as unfinished");
+            assertEquals(DispatchIntent.State.COMPLETED, unfinished.get(0).state(),
+                    "the crash left the dispatch answered and unjudged");
+            assertNull(unfinished.get(0).disposition(),
+                    "an answered but unjudged dispatch still owes chain A a verdict");
+
+            DispatchReconciler.Summary summary = new DispatchReconciler(restarted,
+                    coordinator(restarted, new AnsweringTransport()).withReportSink(dying),
+                    WORKSPACE).reconcile();
+
+            assertEquals(1, summary.finished(),
+                    "the pass must finish the dispatch: " + summary.reasons());
+            assertTrue(summary.reasons().isEmpty(),
+                    "nothing should be left unfinished: " + summary.reasons());
+            DispatchIntent finished = restarted.findDispatch("req-tsk-1").orElseThrow();
+            assertEquals(DispatchIntent.State.ADJUDICATED, finished.state(),
+                    "the dispatch must end adjudicated");
+            assertNotNull(finished.disposition(),
+                    "the verdict must be on record after the recovery");
             assertTrue(restarted.unfinishedDispatches(WORKSPACE).isEmpty(),
                     "no dispatch may be left unfinished after the pass");
         }

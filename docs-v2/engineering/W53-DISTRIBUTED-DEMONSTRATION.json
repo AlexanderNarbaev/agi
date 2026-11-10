@@ -1,9 +1,9 @@
 {
-  "schema": "matrix.w53.distributed-demonstration/v2",
+  "schema": "matrix.w53.distributed-demonstration/v5",
   "generatedBy": "scripts/w53-distributed-demo.sh",
-  "taskId": "w53-demo-1794256541",
-  "requestId": "req-w53-demo-1794256541",
-  "commit": "375ed3f3b98ab910bc60ebefec0196c93db6fc84",
+  "taskId": "w53-demo-1794299483",
+  "requestId": "req-w53-demo-1794299483",
+  "commit": "15d40d7fc4e57b70731aa05b79c8ae1240ba187a",
   "chainA": {
     "kind": "quarkus",
     "port": 9191,
@@ -15,7 +15,67 @@
     "entryPoint": "POST /v1/bridge/task",
     "mode": "production"
   },
+  "processes": {
+    "chainA": {
+      "health": {
+        "status": "DOWN",
+        "checks": [
+          {
+            "name": "verification",
+            "status": "UP",
+            "data": {
+              "totalViolations": "0",
+              "properties": "3"
+            }
+          },
+          {
+            "name": "Database connections health check",
+            "status": "UP"
+          },
+          {
+            "name": "Reactive PostgreSQL connections health check",
+            "status": "DOWN",
+            "data": {
+              "<default>": "down - connection failed: Connection refused (connect failed): localhost/127.0.0.1:5433"
+            }
+          }
+        ]
+      },
+      "healthStatusCode": "503",
+      "checksNotUp": [
+        "Reactive PostgreSQL connections health check"
+      ],
+      "capabilityUsedForThisTask": "brain.cognitive-inference",
+      "whereThatCapabilityRan": "chain-b-brain-runtime"
+    },
+    "chainB": {
+      "health": {
+        "status": "UP",
+        "service": "matrix-api-gateway",
+        "mode": "production",
+        "brain_available": true,
+        "version": "0.1.0-T10",
+        "capabilities": [
+          "brain.cognitive-inference"
+        ]
+      },
+      "healthStatusCode": "200",
+      "activeCapabilities": [
+        "brain.cognitive-inference"
+      ]
+    },
+    "whatThisShows": [
+      "both processes started on their own and answered their own health endpoint: chain A through its Quarkus health endpoint, chain B through its own. The status code travels with the answer, because chain A's endpoint answers with a failing code when a check that has nothing to do with the demonstration is down. The checks that are not up are named in the answer (checksNotUp): the demonstration starts no PostgreSQL and this task uses none of it, and the task was served while that check was down",
+      "chain B reports the capabilities it can really execute, and the set is the allowlist itself — a withdrawn capability disappears from it. The ids are the only thing that crosses: no class name, no plugin id, no method",
+      "chain A names the capability this task used and where it ran: the work was done by the peer, and the durable dispatch row is the record of it"
+    ]
+  },
   "stages": [
+    {
+      "stage": "BOTH_PROCESSES_REPORTED_HEALTH_AND_ACTIVE_CAPABILITIES",
+      "process": "both",
+      "status": "OK"
+    },
     {
       "stage": "TASK_RECEIVED",
       "process": "chain-a",
@@ -85,31 +145,37 @@
       "stage": "FORGED_REQUEST_REFUSED",
       "process": "chain-b",
       "status": "OK"
+    },
+    {
+      "stage": "CHAIN_A_RESTARTED_AND_TASK_REQUERIED",
+      "process": "chain-a",
+      "status": "OK"
     }
   ],
   "refusals": {
     "unservedCapability": {
-      "taskId": "w53-demo-unserved-w53-demo-1794256541",
-      "requestId": "req-w53-demo-unserved-w53-demo-1794256541",
+      "taskId": "w53-demo-unserved-w53-demo-1794299483",
+      "requestId": "req-w53-demo-unserved-w53-demo-1794299483",
       "state": "ADJUDICATED",
       "disposition": "UNRESOLVED",
       "reason": "the peer did not complete the execution: UNSUPPORTED",
       "reportDisposition": "ACCEPTED: the message satisfies the contract",
       "timingsNanos": {
-        "intent_written_nanos": 1054782,
-        "dispatch_nanos": 32208356,
-        "report_admission_nanos": 10474019,
-        "assessment_nanos": 75041,
-        "total_nanos": 45856199
+        "intent_written_nanos": 768728,
+        "dispatch_nanos": 28342290,
+        "peer_execution_nanos": 0,
+        "report_admission_nanos": 13365382,
+        "assessment_nanos": 70213,
+        "total_nanos": 44209966
       }
     },
     "conflictingPayload": {
       "httpStatus": "409",
       "body": {
         "conflict": "IMMUTABLE_RECORD",
-        "requestId": "req-w53-demo-1794256541",
-        "taskId": "w53-demo-1794256541",
-        "error": "the request id req-w53-demo-1794256541 is already dispatched"
+        "requestId": "req-w53-demo-1794299483",
+        "taskId": "w53-demo-1794299483",
+        "error": "the request id req-w53-demo-1794299483 is already dispatched"
       }
     },
     "forgedRequest": {
@@ -124,25 +190,26 @@
     ]
   },
   "outcome": {
-    "taskId": "w53-demo-1794256541",
-    "requestId": "req-w53-demo-1794256541",
+    "taskId": "w53-demo-1794299483",
+    "requestId": "req-w53-demo-1794299483",
     "state": "ADJUDICATED",
     "disposition": "UNRESOLVED",
     "reason": "the peer's confidence rests on MEASURED, which is not independent evidence, and chain A's own records settle nothing",
     "reportDisposition": "ACCEPTED: the message satisfies the contract",
     "timingsNanos": {
-      "intent_written_nanos": 28944644,
-      "dispatch_nanos": 213618606,
-      "report_admission_nanos": 30662893,
-      "assessment_nanos": 4655146,
-      "total_nanos": 315885625
+      "intent_written_nanos": 55457730,
+      "dispatch_nanos": 172176322,
+      "peer_execution_nanos": 12000000,
+      "report_admission_nanos": 24030156,
+      "assessment_nanos": 7825564,
+      "total_nanos": 297093351
     }
   },
   "durableTrace": {
     "dispatches": [
       {
-        "taskId": "w53-demo-1794256541",
-        "requestId": "req-w53-demo-1794256541",
+        "taskId": "w53-demo-1794299483",
+        "requestId": "req-w53-demo-1794299483",
         "state": "ADJUDICATED",
         "capabilityId": "brain.cognitive-inference",
         "remoteResponder": "chain-b-brain-runtime",
@@ -150,43 +217,72 @@
         "disposition": "UNRESOLVED",
         "dispositionReason": "the peer's confidence rests on MEASURED, which is not independent evidence, and chain A's own records settle nothing",
         "reportDisposition": "ACCEPTED: the message satisfies the contract",
-        "createdAt": "2026-11-09T20:35:41.933886739Z",
-        "updatedAt": "2026-11-09T20:35:42.249703915Z"
+        "createdAt": "2026-11-10T08:31:23.456537622Z",
+        "updatedAt": "2026-11-10T08:31:23.753491570Z"
       }
     ],
-    "taskId": "w53-demo-1794256541"
+    "taskId": "w53-demo-1794299483"
   },
   "replayAfterRestart": {
-    "taskId": "w53-demo-1794256541",
-    "requestId": "req-w53-demo-1794256541",
+    "taskId": "w53-demo-1794299483",
+    "requestId": "req-w53-demo-1794299483",
     "state": "ADJUDICATED",
     "disposition": "UNRESOLVED",
     "reason": "the peer's confidence rests on MEASURED, which is not independent evidence, and chain A's own records settle nothing",
-    "reportDisposition": "ACCEPTED: the message satisfies the contract"
+    "reportDisposition": "ACCEPTED: the message satisfies the contract",
+    "timingsNanos": {
+      "replay_dispatch_nanos": 100601055,
+      "replay_report_admission_nanos": 2541458,
+      "replay_assessment_nanos": 6638678,
+      "replay_total_nanos": 203258634
+    }
   },
+  "taskAfterChainARestart": {
+    "dispatches": [
+      {
+        "taskId": "w53-demo-1794299483",
+        "requestId": "req-w53-demo-1794299483",
+        "state": "ADJUDICATED",
+        "capabilityId": "brain.cognitive-inference",
+        "remoteResponder": "chain-b-brain-runtime",
+        "remoteStatus": "COMPLETED",
+        "disposition": "UNRESOLVED",
+        "dispositionReason": "the peer's confidence rests on MEASURED, which is not independent evidence, and chain A's own records settle nothing",
+        "reportDisposition": "ACCEPTED: the message satisfies the contract",
+        "createdAt": "2026-11-10T08:31:23.456537622Z",
+        "updatedAt": "2026-11-10T08:31:25.030047680Z"
+      }
+    ],
+    "taskId": "w53-demo-1794299483"
+  },
+  "whatTheChainARestartShows": [
+    "the task is asked for again by its stable id after chain A restarted, and chain A answers with the same request id and the same disposition it recorded before the restart: the outcome survived the process, it was not recomputed",
+    "the peer still holds exactly one row for this request id: chain A's restart did not send the task again. The reconciliation pass runs at the startup and finds nothing unfinished, because the task was finished",
+    "this is the durability claim the demonstration can make: the state of both processes survives their restarts, and the logical effect of the task happened once. It is not a distributed exactly-once guarantee, and the report does not claim one"
+  ],
   "peerDurableInbox": [
     {
-      "requestId": "req-w53-demo-1794256541",
+      "requestId": "req-w53-demo-1794299483",
       "state": "COMPLETED",
       "effectCommitted": false,
-      "createdAt": "2026-11-09T20:35:42.088344398Z",
-      "updatedAt": "2026-11-09T20:35:42.088344398Z"
+      "createdAt": "2026-11-10T08:31:23.610905841Z",
+      "updatedAt": "2026-11-10T08:31:23.610905841Z"
     },
     {
-      "requestId": "req-w53-demo-unserved-w53-demo-1794256541",
+      "requestId": "req-w53-demo-unserved-w53-demo-1794299483",
       "state": "UNSUPPORTED",
       "effectCommitted": false,
-      "createdAt": "2026-11-09T20:35:43.583236767Z",
-      "updatedAt": "2026-11-09T20:35:43.583236767Z"
+      "createdAt": "2026-11-10T08:31:25.061254477Z",
+      "updatedAt": "2026-11-10T08:31:25.061254477Z"
     }
   ],
   "peerDurableInboxForTheTask": [
     {
-      "requestId": "req-w53-demo-1794256541",
+      "requestId": "req-w53-demo-1794299483",
       "state": "COMPLETED",
       "effectCommitted": false,
-      "createdAt": "2026-11-09T20:35:42.088344398Z",
-      "updatedAt": "2026-11-09T20:35:42.088344398Z"
+      "createdAt": "2026-11-10T08:31:23.610905841Z",
+      "updatedAt": "2026-11-10T08:31:23.610905841Z"
     }
   ],
   "whatTheInboxShows": [

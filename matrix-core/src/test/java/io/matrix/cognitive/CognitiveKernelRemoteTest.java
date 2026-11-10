@@ -46,6 +46,9 @@ class CognitiveKernelRemoteTest {
     /** Whether the peer serves the capability at all. */
     private boolean peerServes = true;
 
+    /** Whether the peer's report settles the proposition. */
+    private boolean settling = false;
+
     @BeforeEach
     void setUp() {
         Path database = directory.resolve("cognitive.sqlite");
@@ -75,6 +78,13 @@ class CognitiveKernelRemoteTest {
         public RemoteOutcome execute(String capabilityId, String input, String expectation,
                                      String episodeId) {
             delegated.add(capabilityId + "@" + episodeId);
+            if (settling) {
+                return new RemoteOutcome("req-" + episodeId, "chain-b", capabilityId,
+                        "COMPLETED", "SUPPORTED",
+                        "chain A's own evidence supports the proposition and the report is "
+                                + "independent",
+                        "the lamp is lit");
+            }
             return new RemoteOutcome("req-" + episodeId, "chain-b", capabilityId,
                     "COMPLETED", "UNRESOLVED",
                     "the peer's confidence rests on MEASURED, which is not independent evidence",
@@ -147,5 +157,49 @@ class CognitiveKernelRemoteTest {
         assertThat(outcome.notes().stream()
                 .anyMatch(note -> note.contains("not a settled fact")))
                 .isTrue();
+    }
+
+    @Test
+    @DisplayName("the reflection records the decision the delegation left open")
+    void theReflectionRecordsTheDecisionTheDelegationLeftOpen() {
+        CognitiveKernel kernel = kernel();
+
+        CognitiveOutcome outcome = cycle(kernel, "sig-4");
+
+        io.matrix.contract.Reflection reflection = outcome.reflection();
+        assertThat(reflection).isNotNull();
+        // The delegation's own outcome reaches the reflection: what the peer answered and
+        // how this process judged it.
+        assertThat(reflection.learned().stream()
+                .anyMatch(item -> item.contains("a task was delegated to another process")))
+                .isTrue();
+        // And what it left open is an uncertainty, not a fact.
+        assertThat(reflection.uncertainties().stream()
+                .anyMatch(item -> item.contains("the delegated task")
+                        && item.contains("UNRESOLVED")))
+                .isTrue();
+        // The uncertainty becomes a decision that can be carried out.
+        assertThat(reflection.decisions().stream()
+                .anyMatch(decision -> io.matrix.contract.Reflection.DECISION_LEAVE_UNRESOLVED
+                        .equals(decision.kind())))
+                .isTrue();
+    }
+
+    @Test
+    @DisplayName("a delegation that settles the proposition leaves no uncertainty of its own")
+    void aDelegationThatSettlesThePropositionLeavesNoUncertainty() {
+        peerServes = true;
+        settling = true;
+        CognitiveKernel kernel = kernel();
+
+        CognitiveOutcome outcome = cycle(kernel, "sig-5");
+
+        io.matrix.contract.Reflection reflection = outcome.reflection();
+        assertThat(reflection.learned().stream()
+                .anyMatch(item -> item.contains("a task was delegated to another process")))
+                .isTrue();
+        assertThat(reflection.uncertainties().stream()
+                .anyMatch(item -> item.contains("the delegated task")))
+                .isFalse();
     }
 }

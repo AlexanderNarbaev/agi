@@ -2,7 +2,7 @@
 
 **Status:** `CANONICAL` · **This document is a SNAPSHOT, not a history.** It describes the
 project at one commit and is replaced, not appended to, when the state moves.
-**Snapshot of:** `16eb815c` · **Date:** 2026-11-09
+**Snapshot of:** `15d40d7f` · **Date:** 2026-11-10
 **Validation:** `scripts/validate-project-state.py --strict` — it checks that the commit below
 is the repository's HEAD, that the wave and the baseline below are the current ones, and that
 the canonical documents it names exist. It reports a lag of one commit as an OBSERVATION, not
@@ -77,9 +77,9 @@ abstentions worse.
 
 | | |
 |---|---|
-| the branch | `develop` |
-| the commit | `16eb815c` — the W53 wave's first commit, observed at 2026-11-09; this snapshot is carried by the commit that follows it |
-| the remote | `origin/develop` — **the same commit** at the moment of writing (the local and the remote do not diverge). The wave is still running, so the remote moves with it. `origin/main` is `3ef8a5c8` — the **squash merge of pull request #48** (W51), merged on 2026-11-09; before it `67b3410d` was the squash of pull request #47 (W50) and `79045c57` the squash of pull request #44 (W49) |
+| the branch | `feature/w53-distributed-cognition` — the W53 wave's own branch. `develop` and `main` are **not touched** by the wave: `develop` is at `375ed3f3` and `main` at `7709dc9e` |
+| the commit | `15d40d7f` — the W53 wave's pushed head, observed at 2026-11-10; this snapshot is carried by the commit that follows it |
+| the remote | `origin/feature/w53-distributed-cognition` — **the same commit** at the moment of writing (the local and the remote do not diverge). The wave is still running, so the remote moves with it. `origin/main` is `3ef8a5c8` — the **squash merge of pull request #48** (W51), merged on 2026-11-09; before it `67b3410d` was the squash of pull request #47 (W50) and `79045c57` the squash of pull request #44 (W49) |
 | the release version | **none.** The tags `v1.0.0` and `v16.0.0-mind` exist, but no release process is defined and the `v16.0.0-mind` tag predates three waves of work |
 | the latest completed wave | **W51** — the unified cognitive runtime, the world model and the safe self-extension. It is **merged into `main`**: pull request #48, squash `3ef8a5c8`, 2026-11-09, **merged by the owner** on the same day. Its report is `docs-v2/engineering/W51-STATUS.md`, its audit is `docs-v2/engineering/W51-AUDIT.md`, its architecture map is `docs-v2/engineering/W51-ARCHITECTURE-MAP.md` and its decisions are **CD-020 … CD-025** in `docs-v2/governance/DECISION-REGISTER.md`. Before it, **W50** — the local evidence-grounded demonstrator (pull request #47, squash `67b3410d`, 2026-11-07), **W49** (pull request #44, squash `79045c57`, 2026-11-06) and **W48** — the truth of the evidence |
 | the previous waves | **W50** — the local evidence-grounded demonstrator: a bounded, licensed corpus in one domain (plate tectonics) — 2 seed documents and a 7-document pre-cached research pool, every file carrying its licence, its revision and its sha256 in a manifest the import verifies; the seed import produced **348 claims** and the bounded acquisition cycle **3 pool documents and 324 claims**; the four-turn demonstration ran on the packaged jar: Q1 answered from **153 claims of 2 sources**, Q2 from **25 claims of 4 sources**, Q3 a **CONTRADICTED** verdict that names the disputed premise and the contradicting claim with `promoted=false`, Q4 applied **exactly one supersession**; the teacher stays off (OD-049) with **0 teacher invocations** measured. Its report is `docs-v2/engineering/W50-STATUS.md`. Before it, W48 — the CI reconciliation and the native budget; W47 — the owner's four architecture decisions (`a6ded233`); W45.1 (`509d23ba`) — the crash consistency; W45.0 (`eae6003f`) — the cognitive kernel integrity; RECON-W44.0 (`ae6c017b`) — the bytecode archaeology |
@@ -228,6 +228,21 @@ snapshot was taken and is closed by the merge. **What is open now, in order:**
    report; the isolation gate grows; the cross-process demonstration runs; the method
    reliability is estimated honestly; the distributed path is measured; the research is
    persisted; and the closeout writes the report, the audit and the architecture map.
+   Three things were added in the wave's last rounds, each with its own evidence: the
+   delegation reaches the **reflection** when the task runs inside a cycle (a report that
+   did not settle the proposition becomes an uncertainty, and the reflection turns it into
+   a `LEAVE_UNRESOLVED` decision that names the request); both processes **report
+   themselves** — chain A answers its health endpoint, chain B names the capability it can
+   really execute — and the demonstration checks that the capability chain A used is one
+   the peer reports as active; and the peer's duplicate guard was found to stand in
+   **three** places, so the test now counts the brain's calls instead of trusting the
+   answer alone. And the **last crash boundary** was found to be a hole rather than a
+   covered case: a dispatch whose answer was on record but whose verdict was not — the
+   process died between receiving the answer and judging it — was in no queue at all, so
+   the task stayed unjudged for ever. The rule is now stated in the store where the truth
+   is: a dispatch is unfinished while it owes chain A a decision (CD-036), and the
+   cancelled and the timed-out dispatch, whose answer is deliberately kept unjudged, are
+   finished and are left alone.
    **The previous wave's tasks** — §4.12 of the roadmap, all closed with their evidence:
    the procedure
    of the settled model is written down with the standing it actually has; a later cycle

@@ -17,10 +17,12 @@ import org.junit.jupiter.api.io.TempDir;
 
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
@@ -167,6 +169,31 @@ class CognitiveCoordinatorRetryTest {
                     "the refusal must say that the budget is spent: " + outcome.get().reason());
             assertEquals(MAX_RETRIES + 1, restarted.attempts("req-tsk-1"),
                     "the attempt count must not change when the request is not sent");
+        }
+    }
+
+    @Test
+    @DisplayName("the replay is measured as a path of its own")
+    void theReplayIsMeasuredAsAPathOfItsOwn() {
+        Path database = directory.resolve("cognitive.sqlite");
+        try (CognitiveStore store = new CognitiveStore(database)) {
+            FailingThenAnsweringTransport transport = new FailingThenAnsweringTransport();
+            CognitiveCoordinator coordinator = coordinator(store, transport);
+
+            coordinator.arrange(spec());
+
+            Optional<CognitiveCoordinator.Outcome> replay =
+                    coordinator.replayByRequestId("req-tsk-1");
+
+            assertTrue(replay.isPresent());
+            Map<String, Long> timings = replay.get().timingsNanos();
+            assertTrue(timings.containsKey("replay_dispatch_nanos"),
+                    "the replay must measure the crossing it makes");
+            assertTrue(timings.containsKey("replay_total_nanos"),
+                    "the replay must measure itself as a whole");
+            assertFalse(timings.containsKey("dispatch_nanos"),
+                    "the replay must not be measured with the first path's keys: the two "
+                            + "costs are different numbers");
         }
     }
 

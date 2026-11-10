@@ -204,6 +204,14 @@ this yields is at-least-once delivery with effectively-once logical effects — 
 guarantee it does not yield, a distributed exactly-once execution, is written down so
 that no later reader has to guess it.
 
+**The unfinished work is what the store says it is.** The reconciliation queue holds two
+kinds of unfinished dispatch: one whose answer is not on record yet, and one whose answer
+*is* on record but whose verdict is not — the process died between receiving the answer and
+judging it. The second kind was a hole: the answer is not a verdict, so the task stayed
+unjudged for ever, and no pass could finish it because no pass could see it. A dispatch is
+unfinished while it owes chain A a decision; the two states that keep an answer unjudged
+**on purpose** — a cancelled and a timed-out dispatch — are finished and are left alone.
+
 **The verdict is chain A's.** `RemoteReportAssessor` turns the peer's answer into one of
 six dispositions. Two rules hold everywhere: a peer's confidence never makes a
 proposition supported, and a report that rests on what chain A supplied to the peer is
@@ -219,7 +227,7 @@ and the assessor says so in the reason it records.
 the gateway's own JDK server in production mode — each in its own directory with its own
 database, and runs one bounded cognitive task through them. The machine-readable report is
 `docs-v2/engineering/W53-DISTRIBUTED-DEMONSTRATION.json` (schema
-`matrix.w53.distributed-demonstration/v2`).
+`matrix.w53.distributed-demonstration/v5`).
 
 **The demonstration shows the refusals too.** A scenario that only shows the happy path
 cannot show that the boundary holds. Since round 22 the report carries a `refusals`

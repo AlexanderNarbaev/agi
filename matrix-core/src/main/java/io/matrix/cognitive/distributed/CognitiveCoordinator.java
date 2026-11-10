@@ -408,6 +408,14 @@ public final class CognitiveCoordinator {
                             + dispatch.reason(), timings);
         }
         CognitiveTaskResponse response = dispatch.response().orElseThrow();
+        // The peer reports how long its own execution took. That is the one part of the
+        // crossing chain A can measure from the other side, so it is recorded next to the
+        // crossing itself: the difference between the two is the network, the signing and
+        // the peer's own bookkeeping. The peer's clock has millisecond resolution, so the
+        // value is a rounded measurement and is reported as such.
+        if (response.durationMillis() != null) {
+            timings.put("peer_execution_nanos", response.durationMillis() * NANOS_PER_MILLI);
+        }
         DispatchIntent.State state = DispatchIntent.State.fromRemote(response.status().name());
         if (state == null) {
             state = DispatchIntent.State.FAILED;
@@ -577,6 +585,12 @@ public final class CognitiveCoordinator {
      */
     private Outcome resend(CognitiveTaskRequest request, String requestId,
                            List<String> supplied) {
+        // The replay is a path of its own and is measured as one: the durable
+        // idempotency path has its own cost, and the mandate asks for it to be told
+        // apart from the first execution. The keys carry the "replay_" prefix so the
+        // two paths can never be confused in a report.
+        Map<String, Long> timings = new LinkedHashMap<>();
+        long startedAt = System.nanoTime();
         int budget = Math.max(0, policy.maxRetries());
         if (store.attempts(requestId) > budget) {
             // The budget was already spent on this task. A restart does not buy a new
@@ -587,7 +601,9 @@ public final class CognitiveCoordinator {
         }
         store.recordDispatchAttempt(requestId, clock.get());
         String now = clock.get();
+        long dispatchedAt = System.nanoTime();
         TaskPublisher.Dispatch dispatch = transport.dispatch(request, now);
+        timings.put("replay_dispatch_nanos", System.nanoTime() - dispatchedAt);
         if (dispatch.response().isEmpty()) {
             store.recordDispatchAnswer(requestId, DispatchIntent.State.FAILED,
                     null, dispatch.status().name(), null, null, clock.get());
@@ -611,13 +627,18 @@ public final class CognitiveCoordinator {
                     Optional.empty(), "the peer is still running the task; its answer is not "
                             + "judged yet and the result stays on the peer's record");
         }
+        long admittedAt = System.nanoTime();
         admitReport(store.findDispatch(requestId).orElse(null), dispatch.reportEnvelope());
+        timings.put("replay_report_admission_nanos", System.nanoTime() - admittedAt);
+        long assessedAt = System.nanoTime();
         RemoteReportAssessor.Verdict verdict = assessor.assess(request, response,
                 dispatch.report().orElse(null), supplied);
+        timings.put("replay_assessment_nanos", System.nanoTime() - assessedAt);
         store.recordDispatchDisposition(requestId, verdict.disposition().name(),
                 verdict.reason(), clock.get());
+        timings.put("replay_total_nanos", System.nanoTime() - startedAt);
         return new Outcome(request.taskId(), requestId, DispatchIntent.State.ADJUDICATED,
-                Optional.of(verdict), verdict.reason());
+                Optional.of(verdict), verdict.reason(), timings);
     }
 
     /**

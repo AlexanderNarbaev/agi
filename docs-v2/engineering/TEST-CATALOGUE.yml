@@ -117,8 +117,8 @@ scopes:
     result:
       classes_discovered: 244
       classes_executed: 244
-      methods_executed: 1609
-      successful: 1609
+      methods_executed: 1617
+      successful: 1617
       failed: 0
       errored: 0
       skipped: 0
@@ -131,13 +131,14 @@ scopes:
       - the JDK 25 at /home/alexandr-narbaev/jdk25
       - the gateway scope runs as part of the same command (':matrix-api-gateway:test')
     notes:
-      - "the counts are the retained JUnit XML of the 2026-11-09 run - 244 classes and 1609 methods across matrix-core and the gateway, 0 failures, 0 errors, 0 skipped"
+      - "the counts are the retained JUnit XML of the 2026-11-10 run - 244 classes and 1617 methods across matrix-core and the gateway, 0 failures, 0 errors, 0 skipped"
       - "the coordinator's bounds carry their own negative control - with the payload limit, the concurrency cap, the deadline check and the cancellation check disabled, exactly the four matching tests of CognitiveCoordinatorLimitsTest went red; and with the request no longer stored with the intent, exactly the three matching tests of CognitiveCoordinatorRecoveryTest went red; and with the peer's three bounds disabled, exactly the four matching tests of TaskPeerBoundsTest went red; and with the retry budget widened past the policy, exactly the two matching tests of CognitiveCoordinatorRetryTest went red; and with the knowledge store's write transactions no longer serialized, exactly the two matching tests of KnowledgeStoreConcurrencyTest went red; and with the peer's version check and revocation check disabled, exactly the two matching tests of CognitiveCapabilityPolicyTest went red; and with the propositional circularity check disabled, exactly the matching assessor test went red; and with the citable rule disabled, exactly the matching KnowledgeStoreEvidence test went red; and with the peer's withdrawal handling disabled, exactly the matching peer test went red; and with the peer's post-execution withdrawal check disabled, exactly the matching one went red; and with the coordinator's waiting for a running task disabled, exactly the matching coordinator test went red; and with the peer's reconciliation of its unfinished rows disabled, exactly the two matching peer tests went red; and with the placeholder episode restored, exactly the two matching coordinator tests went red; and with the replay's waiting for a running task disabled, exactly the matching recovery test went red. The end-to-end demonstration additionally shows the three refusals of §13.24-26 (an unserved capability, the same request id under a different payload, and a forged request), each with the reason its own receiver gave"
     result_note: >-
       The counts of this row are filled in from the JUnit XML of the run, and the XML is the
       evidence: matrix-core/build/test-results/test/*.xml and
       matrix-api-gateway/build/test-results/test/*.xml. The scope that was run on 2026-11-09
-      was matrix-core plus matrix-api-gateway together: 1558 tests, 0 failures, 0 errors.
+      was matrix-core plus matrix-api-gateway together: 1617 tests, 0 failures, 0 errors,
+      0 skipped, across 244 classes.
       The three gates of the same day are recorded here too because they are part of what
       this scope proves: the quality gate 271 candidates against the baseline 271, the chain
       isolation gate 30 checks 0 failures (G11 was added for this direction), and the

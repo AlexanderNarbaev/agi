@@ -501,7 +501,10 @@ public final class MinimalHttpServer {
             "{\"status\":\"UP\",\"service\":\"matrix-api-gateway\","
             + "\"mode\":\"" + (prodBrain != null ? "production" : "stub") + "\","
             + "\"brain_available\":" + (prodBrain != null && prodBrain.isAvailable())
-            + ",\"version\":\"0.1.0-T10\"}"));
+            + ",\"version\":\"0.1.0-T10\""
+            // W53 §13.2 — the active capabilities, as the ids the bridge really serves.
+            // The set is the allowlist itself: a withdrawn capability is not in it.
+            + ",\"capabilities\":[" + servedCapabilityJson() + "]}"));
         this.createContext("/health/ready", exchange -> writeJson(exchange, 200,
             "{\"status\":\"UP\",\"checks\":{\"core\":\""
             + (prodBrain != null && prodBrain.isAvailable() ? "UP" : "STUB")
@@ -1691,6 +1694,25 @@ public final class MinimalHttpServer {
         } catch (java.io.IOException e) {
             return 0;
         }
+    }
+
+    /**
+     * The capability ids this bridge serves, as a JSON array.
+     *
+     * <p>The ids only: the bridge answers with the names that can be executed, and with
+     * nothing that could name a class, a plugin or a method behind them.</p>
+     *
+     * @return the JSON array of the ids
+     */
+    private String servedCapabilityJson() {
+        StringBuilder sb = new StringBuilder(64);
+        for (String id : taskBridge.servedCapabilities()) {
+            if (sb.length() > 0) {
+                sb.append(',');
+            }
+            sb.append('"').append(id).append('"');
+        }
+        return sb.toString();
     }
 
     private void handleStatus(com.sun.net.httpserver.HttpExchange ex) throws IOException {

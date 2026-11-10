@@ -152,6 +152,33 @@ public final class TaskBridge {
     }
 
     /**
+     * The capability set this bridge enforces.
+     *
+     * <p>The owner of the bridge holds the set, so that a capability can be withdrawn
+     * while the process runs; the bridge itself never widens it.</p>
+     *
+     * @return the capability set
+     */
+    public CognitiveCapability capabilities() {
+        return capabilities;
+    }
+
+    /**
+     * The capabilities this bridge serves right now.
+     *
+     * <p>The set is the allowlist the peer really runs, not a declaration: a withdrawn
+     * capability is not in it any more. The mandate's §13.2 asks both processes to report
+     * their active capabilities, and this is what the peer reports — the ids that can be
+     * executed, and nothing else. No class name, no plugin id and no method crosses with
+     * them.</p>
+     *
+     * @return the ids of the capabilities this bridge serves
+     */
+    public java.util.Set<String> servedCapabilities() {
+        return capabilities.served();
+    }
+
+    /**
      * The answer to a delivery, as the body of the HTTP response.
      *
      * @param body the body of the delivery

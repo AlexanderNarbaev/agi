@@ -363,6 +363,10 @@ public class DistributedTaskResource {
                 .map(v -> v.disposition().name()).orElse("NONE"));
         answer.put("reason", outcome.get().reason());
         answer.put("reportDisposition", reportDisposition(outcome.get().requestId()));
+        // The replay carries its own measurements: the cost of the durable idempotency
+        // path is a number of its own and must not be read as the cost of the first
+        // execution.
+        answer.put("timingsNanos", outcome.get().timingsNanos());
         return Response.ok(answer).build();
     }
 

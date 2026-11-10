@@ -90,6 +90,24 @@ class TaskRoundTripTest {
         return "http://127.0.0.1:" + server.getAddress().getPort();
     }
 
+    @Test
+    @DisplayName("the bridge reports the capability it really serves, and a withdrawn one disappears from it")
+    void theBridgeReportsTheCapabilityItReallyServes() {
+        assertThat(bridge.servedCapabilities())
+                .withFailMessage("the peer must name the capability it can execute")
+                .contains(CognitiveCapability.COGNITIVE_INFERENCE);
+        assertThat(bridge.servedCapabilities())
+                .withFailMessage("the report must name the capability and nothing else")
+                .allMatch(id -> !id.contains(".") || id.startsWith("brain."));
+
+        bridge.capabilities().revoke(CognitiveCapability.COGNITIVE_INFERENCE,
+                "the brain runtime was taken out of service");
+
+        assertThat(bridge.servedCapabilities())
+                .withFailMessage("a withdrawn capability must not be reported as active")
+                .doesNotContain(CognitiveCapability.COGNITIVE_INFERENCE);
+    }
+
     /** A request for the bounded cognitive inference. */
     private static CognitiveTaskRequest request(String requestId) {
         return new CognitiveTaskRequest(
