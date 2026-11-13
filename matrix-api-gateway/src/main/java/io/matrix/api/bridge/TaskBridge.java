@@ -125,6 +125,20 @@ public final class TaskBridge {
     private final java.util.function.Supplier<String> clock;
 
     /**
+     * The measurement of the delivery being handled on this thread.
+     *
+     * <p><b>Why a thread-local and not a field.</b> The peer serves concurrent
+     * deliveries, so a field would mix the stages of two tasks. The measurement is
+     * thread-confined: the receiver calls the sink on the thread that handles the
+     * delivery, and the delivery's own timing is taken on that same thread. The holder
+     * is removed when the delivery ends, so nothing is kept alive after it.</p>
+     */
+    private final ThreadLocal<PeerStages> stages = new ThreadLocal<>();
+
+    /** The value of a stage that was not measured. */
+    static final double NOT_MEASURED = -1.0;
+
+    /**
      * The shared secret, when the environment or the system property carries one.
      *
      * @return the secret, or empty
@@ -188,17 +202,58 @@ public final class TaskBridge {
         BridgeAnswer answer;
         String response = null;
         String report = null;
+        PeerStages measured = new PeerStages();
+        stages.set(measured);
+        String requestId = null;
         try {
             BridgeEnvelope envelope = envelopeCodec.decode(body);
+            requestId = envelope.requestId();
+            long deliveryStarted = System.nanoTime();
             answer = receiver.receiveAnswer(envelope, System.currentTimeMillis());
+            measured.deliveryMillis = millisSince(deliveryStarted);
+            long signingStarted = System.nanoTime();
             response = storedResponse(envelope.requestId());
             report = signedReport(envelope.requestId());
+            measured.answerSigningMillis = millisSince(signingStarted);
         } catch (RuntimeException e) {
             answer = BridgeAnswer.of(BridgeDecision.refused("audit-unknown", "audit-unknown",
                     BridgeRefusalReason.MALFORMED_MESSAGE,
                     "the delivery could not be read: " + e.getMessage()));
+        } finally {
+            // A delivery that failed is measured too: the stages it did reach are the
+            // stages that happened, and a measurement that is written only on the happy
+            // path describes the successful deliveries alone.
+            recordStages(requestId, measured);
+            stages.remove();
         }
         return jsonOf(answer, response, report);
+    }
+
+    /**
+     * The peer's own measurement of one delivery, in milliseconds.
+     *
+     * <p>The measurement is written to the peer's own row and nowhere else. The answer
+     * contract does not change: the caller receives exactly what it received before, and
+     * the reader of the performance report reads the peer's own file.</p>
+     *
+     * @param requestId the request the delivery carried
+     * @param measured  the measurement
+     */
+    private void recordStages(String requestId, PeerStages measured) {
+        if (store == null || requestId == null) {
+            return;
+        }
+        String json = measured.asJson();
+        if (json == null) {
+            return;
+        }
+        try {
+            store.recordStages(requestId, json);
+        } catch (SQLException e) {
+            // A measurement must never break the delivery: the task's result and its
+            // audit record are already written, and a missing measurement costs the
+            // report a number, not the peer a task.
+        }
     }
 
     /**
@@ -634,8 +689,10 @@ public final class TaskBridge {
             }
             String now = clock.get();
             RemoteTaskStore.Admission admission;
+            long inboxStarted = System.nanoTime();
             try {
                 admission = store.admit(request, envelope.payloadDigest(), now);
+                measure("inboxWrite", millisSince(inboxStarted));
             } catch (SQLException e) {
                 return new Outcome("outcome-" + envelope.requestId(),
                         "action-" + envelope.requestId(), null, null, Outcome.Status.FAILED,
@@ -678,15 +735,19 @@ public final class TaskBridge {
                 return refuseTask(envelope, request,
                         "the request exceeds the payload limit it declares", now);
             }
+            long stateStarted = System.nanoTime();
             try {
                 store.markRunning(request.requestId(), now);
+                measure("stateWrite", millisSince(stateStarted));
             } catch (SQLException e) {
                 return new Outcome("outcome-" + envelope.requestId(),
                         "action-" + envelope.requestId(), null, null, Outcome.Status.FAILED,
                         "the task state could not be written", false, 1.0,
                         "the task state could not be written: " + e.getMessage(), now);
             }
+            long executionStarted = System.nanoTime();
             CognitiveCapability.Execution execution = capabilities.execute(request);
+            measure("execution", millisSince(executionStarted));
             // The peer honours the deadline the task gave it. The work may have been done
             // and the answer may still be worth keeping — a deadline that passes does not
             // delete a result — but the caller must learn that the answer came late.
@@ -725,6 +786,7 @@ public final class TaskBridge {
                             + request.deadlineMillis() + " ms the task allowed"
                             : execution.refusalReason(),
                     now);
+            long outcomeStarted = System.nanoTime();
             try {
                 String json = MAPPER.writeValueAsString(response);
                 // A withdrawal that arrived while the task was running closes the row as
@@ -749,6 +811,7 @@ public final class TaskBridge {
                                     : execution.refusalReason(),
                             json, now);
                 }
+                measure("outcomeWrite", millisSince(outcomeStarted));
             } catch (Exception e) {
                 return new Outcome("outcome-" + envelope.requestId(),
                         "action-" + envelope.requestId(), null, null, Outcome.Status.FAILED,
@@ -764,6 +827,110 @@ public final class TaskBridge {
                     execution.confidence() == null ? 1.0 : execution.confidence(),
                     "the task was executed by the capability " + request.requiredCapability(),
                     now);
+        }
+    }
+
+    /** How many nanoseconds make a millisecond. */
+    private static final double NANOS_PER_MILLISECOND = 1_000_000.0;
+
+    /**
+     * The milliseconds that passed since a monotonic instant.
+     *
+     * @param startedNanos the instant, from {@link System#nanoTime()}
+     * @return the elapsed milliseconds
+     */
+    private static double millisSince(long startedNanos) {
+        return (System.nanoTime() - startedNanos) / NANOS_PER_MILLISECOND;
+    }
+
+    /**
+     * Records one measured stage of the delivery being handled.
+     *
+     * @param stage the name of the stage
+     * @param millis how long it took
+     */
+    private void measure(String stage, double millis) {
+        PeerStages measured = stages.get();
+        if (measured != null) {
+            measured.put(stage, millis);
+        }
+    }
+
+    /**
+     * The peer's own measurement of one delivery.
+     *
+     * <p><b>What the numbers mean.</b> Every stage is timed with the same monotonic
+     * clock, on the thread that handles the delivery: the durable inbox write, the write
+     * that moves the request to running, the execution of the capability, the write of
+     * the outcome, and the serialization and signing of the answer. The delivery total is
+     * the whole reception, and the remainder — what is left of it once the peer's own
+     * four writes and its execution are taken out — is the authentication and the
+     * validation together with the receiver's own bookkeeping. It is a remainder and the
+     * report says so; it is not a measurement of the signature alone.</p>
+     *
+     * <p><b>What it is not.</b> It is not a claim about the cost of the cryptography by
+     * itself, and it never leaves the peer: the caller receives the same answer it
+     * received before.</p>
+     */
+    private static final class PeerStages {
+
+        /** The stages the peer measured, with their durations. */
+        private final java.util.Map<String, Double> values = new java.util.TreeMap<>();
+
+        /** The whole reception of the delivery. */
+        private double deliveryMillis = NOT_MEASURED;
+
+        /** The serialization and the signing of the answer. */
+        private double answerSigningMillis = NOT_MEASURED;
+
+        /** The stages whose sum is the peer's own work inside the delivery. */
+        private static final String[] INNER_STAGES =
+                {"inboxWrite", "stateWrite", "execution", "outcomeWrite"};
+
+        /** Records one stage. */
+        void put(String stage, double millis) {
+            values.put(stage, millis);
+        }
+
+        /** The measurement as canonical JSON, or null when nothing was measured. */
+        String asJson() {
+            if (values.isEmpty()) {
+                return null;
+            }
+            java.util.Map<String, Object> document = new java.util.TreeMap<>(values);
+            if (deliveryMillis != NOT_MEASURED) {
+                document.put("deliveryTotal", deliveryMillis);
+            }
+            if (answerSigningMillis != NOT_MEASURED) {
+                document.put("answerSigning", answerSigningMillis);
+            }
+            Double inner = innerMillis();
+            if (inner != null && deliveryMillis != NOT_MEASURED) {
+                // The remainder, not a measurement of the signature alone: it is what
+                // the reception cost beyond the peer's own four writes and its
+                // execution, so it carries the authentication, the validation and the
+                // receiver's bookkeeping together.
+                document.put("authenticationAndValidation",
+                        Math.max(0.0, deliveryMillis - inner));
+            }
+            try {
+                return MAPPER.writeValueAsString(document);
+            } catch (Exception e) {
+                return null;
+            }
+        }
+
+        /** The sum of the peer's own stages, or null when one of them is missing. */
+        private Double innerMillis() {
+            double sum = 0.0;
+            for (String stage : INNER_STAGES) {
+                Double value = values.get(stage);
+                if (value == null) {
+                    return null;
+                }
+                sum += value;
+            }
+            return sum;
         }
     }
 }

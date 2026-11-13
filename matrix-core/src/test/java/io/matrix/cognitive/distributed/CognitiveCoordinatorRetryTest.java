@@ -143,7 +143,9 @@ class CognitiveCoordinatorRetryTest {
             assertEquals(2, transport.calls.get(), "the failed delivery must be retried");
             assertEquals(DispatchIntent.State.ADJUDICATED, outcome.state(),
                     "the answered attempt must reach a verdict");
-            assertEquals(2, store.attempts("req-tsk-1"));
+            assertEquals(1, store.attempts("req-tsk-1"),
+                    "the budget counts the deliveries that produced no answer: the failed "
+                            + "one spent it, the answered one did not");
         }
     }
 

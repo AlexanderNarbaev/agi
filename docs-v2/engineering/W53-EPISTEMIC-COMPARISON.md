@@ -1,6 +1,6 @@
 # W53 — the epistemic comparison, case by case
 
-**Status**: W53 evidence · the baseline is W52's, and this wave did not move it.
+**Status:** `ACTIVE` — the evidence of this wave: the baseline is W52's, and this wave did not move it.
 
 ## What this document is for
 
@@ -26,8 +26,25 @@ Three things are compared here:
 | the source | `docs-v2/demos/local-learning-loop/EVALUATION-SET.md` |
 | the boundary | the JVM's HTTP and HTTPS clients are pointed at a closed port on the loopback interface; no request leaves the machine and no model is called |
 | the machine-readable result | `docs-v2/engineering/W53-EPISTEMIC-EVALUATION.json` |
+| the run this document describes | **2026-11-12**, against the tree that carries the whole wave — the peer-side stage measurement, the reconciliation timer, the named chain A stores, the reliability rule of §4m and the measured performance — on `feature/w53-distributed-cognition` at the head `64b1657a` with the wave's own rounds in the working tree |
+| the command | `python3 scripts/w51-epistemic-eval.py --work /tmp/w53-eval-final --report docs-v2/engineering/W53-EPISTEMIC-EVALUATION.json` |
 
 The run is **offline**: True.
+
+**The table below was verified against that run, row by row.** All twenty-nine rows were
+compared with the machine-readable result — the verdict, the observation, the first
+recorded problem and the place it comes from — and every row matches. The table is not a
+remembering of the earlier run: it is the current run's own record.
+
+**And the machine-readable result did not change at all.** The run of 2026-11-11 against
+the wave's final tree produced a file with the checksum
+`957f97de55fa40ba5b4858babc023889` — **the checksum of the file committed on 2026-11-09**.
+The wave's later rounds (the episode integration, the adjudication of the remote report,
+the durable trace, the reconciliation timer, the named stores and the measured
+performance) did not move a single byte of the epistemic evaluation: the same 18 of 29,
+the same observations, the same failures for the same reasons. **A byte-identical result
+is a stronger statement than an equal score**: it says that what the retriever does did
+not change at all, not only that it did not change its verdict.
 
 ## The score
 
@@ -44,8 +61,9 @@ The run is **offline**: True.
 **18/29 — the W52 baseline, unchanged.** No expectation was edited,
 no threshold was moved, and no case was removed: the W53 file
 `docs-v2/engineering/W53-EPISTEMIC-EVALUATION.json` is byte-identical to the W51 runner's
-output for the same tree, which is the check that the tree's changes do not touch the
-retriever.
+output for the same tree (both files carry the checksum
+`957f97de55fa40ba5b4858babc023889` of the run of 2026-11-11), which is the check that the
+tree's changes do not touch the retriever.
 
 The eleven failures are the ones W52 named — A-02, A-04, A-05, A-06, M-01, M-03, P-01,
 P-02, F-02, R-04, R-05 — and they fail for the same reasons W52 recorded: the relevance

@@ -49,6 +49,12 @@
 #       the task receiver of chain B reaches no class of the store and no class
 #       of chain A's bridge server, and chain B really serves the route. The
 #       negative control breaks exactly this rule to prove it can go red.
+#   G12 W53: the OTHER HALF of the same boundary: chain A does not reach
+#       chain B's stores either. The task client of chain A reaches no class
+#       of chain B's store subsystem, and no class of chain A names one of
+#       chain B's databases — a class that opens a file by its path does not
+#       have to name the store class. The negative control breaks exactly
+#       this rule to prove it can go red.
 #
 # HYGIENE
 # Everything the gate touches is inside ONE private temporary directory that
@@ -611,6 +617,25 @@ if [ "$(report_field "$REPORT" chain_b.task_receiver_reachable)" = "true" ]; the
   pass "chain B serves the bounded cognitive task route"
 else
   fail "chain B does not reach the task receiver class"
+fi
+
+# ── G12 — chain A does not reach chain B's stores ───────────────────────────
+head1 "G12 — chain A does not reach chain B's own stores"
+G12A="$(report_size "$REPORT" chain_a.task_client_reaches_chain_b_store)"
+G12B="$(report_size "$REPORT" chain_a.names_mind_database)"
+note "the classes of chain B's store the chain A task client's closure reaches: $G12A"
+note "the classes of chain A that name one of chain B's databases: $G12B"
+if [ "$G12A" = "0" ]; then
+  pass "the chain A task client reaches no class of chain B's store"
+else
+  fail "$G12A class(es) of chain B's store are reachable from the chain A task client"
+  report_field "$REPORT" chain_a.task_client_reaches_chain_b_store
+fi
+if [ "$G12B" = "0" ]; then
+  pass "no class of chain A names one of chain B's databases"
+else
+  fail "$G12B class(es) of chain A name one of chain B's databases"
+  report_field "$REPORT" chain_a.names_mind_database
 fi
 
 # ── the summary ─────────────────────────────────────────────────────────────

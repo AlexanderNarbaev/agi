@@ -1,7 +1,7 @@
 # W53 — research track D — estimating a method's reliability, and carrying the uncertainty into the selection
 
 **Date:** 2026-11-09 · **Author:** research track D, W53
-**Status:** research input for the coordinator. Nothing described here is implemented; no file other than this one is touched.
+**Status:** `RESEARCH` — research input for the coordinator. Nothing described here is implemented; no file other than this one is touched.
 
 **Scope — what this document does NOT claim.** It does not claim that MATRIX has general intelligence, human-like understanding, universal learning, or reliable autonomous self-improvement: it describes a selector choosing between declared methods inside one workspace. It does not claim that any estimator, threshold, weight or state proposed here has been validated on MATRIX data — the evidence MATRIX holds about its own methods is far too small for that, and §5 says exactly which quantities it cannot estimate at all. It does not claim that the arithmetic in §3 and §4 is a measurement of MATRIX: every number was computed from the published formulas by the author of this document, and the two interval estimators were checked against published values before use (§9). It proposes a rule; it does not ship one, and it recommends against shipping the simplest version of it (§7.1).
 

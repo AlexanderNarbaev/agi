@@ -1,5 +1,6 @@
 # W53 Research A — Durable, idempotent, crash-consistent execution across two databases
 
+**Status:** `RESEARCH` — a research document: it proposes a design and names its primary sources; it binds nothing.
 **Date:** 2026-11-09 · **Author:** research track A, W53 · **Kind:** research document (no code changed)
 **Subject:** the correct durable execution protocol for *"Chain A dispatches a bounded cognitive task to Chain B; Chain B executes it; Chain A receives and evaluates the result"*, given two independently owned SQLite databases.
 

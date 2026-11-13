@@ -16,11 +16,13 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -178,6 +180,55 @@ class CognitiveCoordinatorTest {
     }
 
     @Test
+    @DisplayName("what chain A concluded about the peer's answer is recorded as a verdict")
+    void theConclusionIsRecordedAsAMethodVerdict() {
+        Path database = directory.resolve("cognitive.sqlite");
+        try (CognitiveStore store = new CognitiveStore(database)) {
+            AnsweringTransport transport = new AnsweringTransport(store);
+            List<io.matrix.cognitive.algorithms.MethodOutcome> verdicts = new ArrayList<>();
+            List<String> strata = new ArrayList<>();
+            CognitiveCoordinator coordinator = new CognitiveCoordinator(store, transport,
+                    new RemoteReportAssessor(RemoteReportAssessor.LocalEvidence.NONE),
+                    WORKSPACE, "chain-a-epistemic-core", () -> AT)
+                    .withVerdictSink((capability, family, version, outcome) -> {
+                        verdicts.add(outcome);
+                        strata.add(capability + "/" + family + "/" + version);
+                    });
+
+            coordinator.arrange(spec());
+
+            assertEquals(1, verdicts.size(),
+                    "the dispatch must record exactly one verdict of the peer's answer");
+            assertEquals(List.of("brain.cognitive-inference/COGNITIVE_INFERENCE/v1"), strata,
+                    "the verdict belongs to the peer's capability, in the stratum of the task "
+                            + "family and the capability version that ran");
+            assertEquals(io.matrix.cognitive.algorithms.MethodOutcome.UNVERIFIED,
+                    verdicts.get(0),
+                    "the assessor's evidence is empty, so nothing settled the proposition: "
+                            + "the verdict is unverified, and it is not a decided trial");
+        }
+    }
+
+    @Test
+    @DisplayName("a coordinator without a sink keeps no profile of the peer, and loses nothing")
+    void aCoordinatorWithoutASinkLosesNothing() {
+        Path database = directory.resolve("cognitive.sqlite");
+        try (CognitiveStore store = new CognitiveStore(database)) {
+            AnsweringTransport transport = new AnsweringTransport(store);
+            CognitiveCoordinator coordinator = new CognitiveCoordinator(store, transport,
+                    new RemoteReportAssessor(RemoteReportAssessor.LocalEvidence.NONE),
+                    WORKSPACE, "chain-a-epistemic-core", () -> AT);
+
+            CognitiveCoordinator.Outcome outcome = coordinator.arrange(spec());
+
+            assertEquals(DispatchIntent.State.ADJUDICATED, outcome.state(),
+                    "the dispatch is judged whether or not a profile is kept");
+            assertTrue(outcome.verdict().isPresent(),
+                    "the verdict is on the outcome either way");
+        }
+    }
+
+    @Test
     @DisplayName("the verdict is recorded, and it is chain A's verdict")
     void theVerdictIsRecorded() {
         Path database = directory.resolve("cognitive.sqlite");
@@ -231,11 +282,28 @@ class CognitiveCoordinatorTest {
 
             CognitiveCoordinator.Outcome outcome = coordinator.arrange(spec());
 
+            assertEquals(1, transport.calls.get(),
+                    "the peer is asked once: an answer that says the task is still running "
+                            + "is an answer, and asking again is the pass's work");
+            assertEquals(DispatchIntent.State.DISPATCHED, outcome.state(),
+                    "the task is not finished while the peer is still working");
+            assertFalse(outcome.verdict().isPresent(),
+                    "there is nothing to judge yet");
+            assertEquals(0, store.attempts("req-tsk-1"),
+                    "an answered delivery does not spend the retry budget");
+            assertEquals(DispatchIntent.State.DISPATCHED,
+                    store.findDispatch("req-tsk-1").orElseThrow().state(),
+                    "the dispatch stays unfinished, so the reconciliation pass picks it up");
+
+            Optional<CognitiveCoordinator.Outcome> replay =
+                    coordinator.replayByRequestId("req-tsk-1");
+
+            assertTrue(replay.isPresent());
             assertEquals(2, transport.calls.get(),
-                    "the caller must ask again while the peer is still working");
-            assertEquals(DispatchIntent.State.ADJUDICATED, outcome.state(),
+                    "the pass asks again, and the peer answers this time");
+            assertEquals(DispatchIntent.State.ADJUDICATED, replay.get().state(),
                     "the task completes when the peer finally answers");
-            assertTrue(outcome.verdict().isPresent(),
+            assertTrue(replay.get().verdict().isPresent(),
                     "the answer that came is judged, and only then");
         }
     }

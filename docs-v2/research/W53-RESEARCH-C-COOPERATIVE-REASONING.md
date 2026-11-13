@@ -1,6 +1,6 @@
 # W53 — Research track C: cooperative reasoning
 
-**Status:** research input for wave 53 · **Date:** 2026-11-09 · **Author:** research track C, W53
+**Status:** `RESEARCH` — research input for wave 53 · **Date:** 2026-11-09 · **Author:** research track C, W53
 **Subject:** how a system delegates part of a problem to another reasoning component, and how it
 evaluates what comes back.
 

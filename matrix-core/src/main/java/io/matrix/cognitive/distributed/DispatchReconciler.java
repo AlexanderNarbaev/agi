@@ -6,6 +6,7 @@ import io.matrix.cognitive.DispatchIntent;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Supplier;
 
 /**
  * W53 — the pass that finishes what a crash left unfinished.
@@ -38,6 +39,7 @@ public final class DispatchReconciler {
     private final CognitiveStore store;
     private final CognitiveCoordinator coordinator;
     private final String workspaceId;
+    private final Supplier<String> clock;
 
     /**
      * The reconciliation pass.
@@ -48,9 +50,23 @@ public final class DispatchReconciler {
      */
     public DispatchReconciler(CognitiveStore store, CognitiveCoordinator coordinator,
                               String workspaceId) {
+        this(store, coordinator, workspaceId, () -> java.time.Instant.now().toString());
+    }
+
+    /**
+     * The reconciliation pass, with its own clock.
+     *
+     * @param store       chain A's durable store
+     * @param coordinator the coordinator that sends the request again
+     * @param workspaceId the workspace whose dispatches belong to the pass
+     * @param clock       the source of the instants the pass writes
+     */
+    public DispatchReconciler(CognitiveStore store, CognitiveCoordinator coordinator,
+                              String workspaceId, Supplier<String> clock) {
         this.store = store;
         this.coordinator = coordinator;
         this.workspaceId = workspaceId;
+        this.clock = clock;
     }
 
     /**
@@ -59,7 +75,45 @@ public final class DispatchReconciler {
      * @return what the pass did
      */
     public Summary reconcile() {
-        List<DispatchIntent> unfinished = store.unfinishedDispatches(workspaceId);
+        return pass(store.unfinishedDispatches(workspaceId));
+    }
+
+    /**
+     * Sends the unfinished dispatches that are not in flight again.
+     *
+     * <p><b>Why the pass has a second mode.</b> The startup pass runs when nothing is in
+     * flight: the process has just died, so every unfinished dispatch is work that was
+     * lost. The timer pass runs while the process is up, and there the dispatch that is
+     * in flight and the dispatch whose answer was lost look the same on the record. The
+     * pass asks the coordinator which requests this process is working on right now, and
+     * it leaves those alone: a second delivery of a request that is still running spends
+     * one retry of the durable budget for nothing.</p>
+     *
+     * <p><b>What the pass does not decide.</b> It does not read the wall clock to decide
+     * what is old. The wall clock decides <i>when</i> the pass runs; the pass decides
+     * <i>what</i> to send, and it decides that by the durable record and by what this
+     * process is doing right now.</p>
+     *
+     * @return what the pass did
+     */
+    public Summary reconcileStale() {
+        List<DispatchIntent> stale = new ArrayList<>();
+        for (DispatchIntent intent : store.unfinishedDispatches(workspaceId)) {
+            if (coordinator.isInFlight(intent.requestId())) {
+                continue;
+            }
+            stale.add(intent);
+        }
+        return pass(stale);
+    }
+
+    /**
+     * The work of the pass, over the dispatches it was given.
+     *
+     * @param unfinished the dispatches to send again
+     * @return what the pass did
+     */
+    private Summary pass(List<DispatchIntent> unfinished) {
         List<String> reasons = new ArrayList<>();
         int replayed = 0;
         int finished = 0;
@@ -82,11 +136,33 @@ public final class DispatchReconciler {
             replayed++;
             if (outcome.get().state() == DispatchIntent.State.ADJUDICATED) {
                 finished++;
+            } else if (outcome.get().state() == DispatchIntent.State.FAILED) {
+                // The dispatch will not be sent again: the retry budget is spent. The
+                // row is closed, so it owes chain A nothing any more and the pass
+                // leaves it alone. Without this the row would stay unfinished for ever
+                // and every pass would keep picking it up.
+                closeAsFailed(intent, outcome.get().reason());
+                finished++;
+                reasons.add("the dispatch " + intent.requestId() + " is finished as failed: "
+                        + outcome.get().reason());
             } else {
                 reasons.add("the dispatch " + intent.requestId() + " is still "
                         + outcome.get().state().name() + ": " + outcome.get().reason());
             }
         }
         return new Summary(unfinished.size(), replayed, finished, List.copyOf(reasons));
+    }
+
+    /**
+     * Closes a dispatch that will not be sent again.
+     *
+     * @param intent the dispatch
+     * @param reason why it is closed
+     */
+    private void closeAsFailed(DispatchIntent intent, String reason) {
+        if (intent.state() == DispatchIntent.State.FAILED) {
+            return;
+        }
+        store.closeDispatchAsFailed(intent.requestId(), reason, clock.get());
     }
 }

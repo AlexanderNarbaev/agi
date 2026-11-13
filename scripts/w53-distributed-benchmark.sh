@@ -16,6 +16,7 @@
 #   * it does not treat the p99 of a small sample as a p99.
 #
 # Usage: scripts/w53-distributed-benchmark.sh [--tasks N] [--skip-build]
+#                              [--work-dir PATH] [--keep-work]
 # The machine-readable report is written to docs-v2/engineering/W53-PERFORMANCE.json
 
 set -euo pipefail
@@ -45,7 +46,8 @@ readonly TASK_TIMEOUT_SECONDS=60
 # persistent by design, and a request id is the identity of a dispatch: a second run that
 # reuses the ids of the first is not a measurement of the path but of the durable
 # idempotency, which correctly refuses a request id it has already seen.
-readonly RUN_STAMP="$(date +%s)-$$"
+RUN_STAMP="$(date +%s)-$$"
+readonly RUN_STAMP
 
 # The percentiles the report states.
 readonly PERCENTILE_P50=0.50
@@ -56,11 +58,19 @@ readonly PERCENTILE_P99=0.99
 readonly NANOS_PER_MILLI=1000000
 readonly MILLIS_PER_SECOND=1000
 
+# The working directory and whether it survives the run. They are declared BEFORE
+# the options are parsed: a variable that is reset after the parser has written into
+# it silently loses the value the caller gave.
+WORK=""
+KEEP_WORK=0
+
 while [ $# -gt 0 ]; do
   case "$1" in
     --tasks) TASKS="$2"; shift 2 ;;
     --concurrency) CONCURRENCY="$2"; shift 2 ;;
     --report) REPORT="$2"; shift 2 ;;
+    --work-dir) WORK="$2"; KEEP_WORK=1; shift 2 ;;
+    --keep-work) KEEP_WORK=1; shift ;;
     --skip-build) SKIP_BUILD=1; shift ;;
     *) echo "unknown argument: $1" >&2; exit 2 ;;
   esac
@@ -68,11 +78,23 @@ done
 
 # The directories the two processes keep their state in. The benchmark uses its own,
 # so that it never touches a developer's working state.
-WORK="$(mktemp -d)"
+#
+# The directory can be named with --work-dir, and that is not a convenience: the
+# mandate asks for the behaviour of the path under a GROWING audit and cognitive
+# history, and a history can only grow if the state of the previous run survives.
+# A run against a named directory therefore measures the path against the history
+# that the earlier runs left there, and keeps what it adds.
+if [ -z "$WORK" ]; then
+  WORK="$(mktemp -d)"
+fi
 export MATRIX_MIND_DIR="$WORK/chain-b-mind"
 export MATRIX_COGNITIVE_DIR="$WORK/chain-a-cognitive"
 export MATRIX_BRIDGE_JOURNAL_DIR="$WORK/chain-a-bridge"
-mkdir -p "$MATRIX_MIND_DIR" "$MATRIX_COGNITIVE_DIR" "$MATRIX_BRIDGE_JOURNAL_DIR"
+# Chain A's two stores are named to this run's directory as well: without them the
+# application opens its default files in the working directory, and the measurement is
+# taken against a database that every earlier run of the wave grew.
+MATRIX_KNOWLEDGE_DIR="$WORK/chain-a-knowledge"
+mkdir -p "$MATRIX_MIND_DIR" "$MATRIX_COGNITIVE_DIR" "$MATRIX_BRIDGE_JOURNAL_DIR" "$MATRIX_KNOWLEDGE_DIR"
 
 # The shared secret of the two processes. It is generated here, given to both
 # through the environment, and never printed.
@@ -84,8 +106,13 @@ log() { printf '[w53-bench] %s\n' "$*"; }
 cleanup() {
   # A run that did not finish keeps its directory: the logs are the evidence of what
   # happened, and a benchmark that throws its evidence away teaches nothing.
+  # A run that DID finish has already written its report somewhere else, and the
+  # directory holds nothing that the report does not: it is removed, so that a
+  # benchmark does not leave a directory behind on every run.
   if [ "${BENCH_COMPLETED:-0}" != "1" ]; then
     printf '[w53-bench] the run did not finish; its directory is kept: %s\n' "$WORK"
+  elif [ "$KEEP_WORK" != "1" ]; then
+    rm -rf "$WORK"
   fi
   if [ -n "${CHAIN_B_PID:-}" ] && kill -0 "$CHAIN_B_PID" 2>/dev/null; then
     kill "$CHAIN_B_PID" 2>/dev/null || true
@@ -133,6 +160,8 @@ MATRIX_PEER_URL="http://127.0.0.1:$CHAIN_B_PORT" \
 MATRIX_BRIDGE_SECRET="$BRIDGE_SECRET" \
 QUARKUS_HTTP_PORT="$CHAIN_A_PORT" \
   java -Xlog:gc:"$WORK/gc-chain-a.log" \
+  -Dmatrix.cognitive.path="$WORK/chain-a-cognitive/cognitive.sqlite" \
+  -Dmatrix.knowledge.path="$WORK/chain-a-knowledge/workbench.sqlite" \
   -jar matrix-core/build/quarkus-app/quarkus-run.jar \
   >"$WORK/chain-a.log" 2>&1 &
 CHAIN_A_PID=$!
@@ -229,6 +258,10 @@ METRICS_AFTER="$(python3 scripts/w53-process-metrics.py "$CHAIN_A_PID" "$WORK/gc
 METRICS_AFTER_B="$(python3 scripts/w53-process-metrics.py "$CHAIN_B_PID")" \
   || { log "the peer metrics could not be read after the run"; exit 1; }
 
+log "reading chain B's own record of what its work cost"
+PEER_INBOX="$(python3 scripts/w53-inbox-reader.py "$MATRIX_MIND_DIR/tasks.sqlite")" \
+  || PEER_INBOX='[]'
+
 log "writing the machine-readable report"
 mkdir -p "$(dirname "$REPORT")"
 # The process metrics travel through the environment: an index into argv is a number in
@@ -242,6 +275,7 @@ export W53_METRICS_MID="$METRICS_MID"
 export W53_METRICS_MID_B="$METRICS_MID_B"
 # The replay's files travel through the environment too: an index into argv is a number
 # in a shell script, and the quality gate reads every such number as a tunable.
+export W53_PEER_INBOX="$PEER_INBOX"
 export W53_REPLAY_SAMPLES="$WORK/replay-samples.jsonl"
 export W53_REPLAY_LATENCIES="$WORK/replay-latencies.txt"
 
@@ -398,10 +432,39 @@ metrics_after_b = json.loads(os.environ.get("W53_METRICS_AFTER_B", "{}") or "{}"
 metrics_mid = json.loads(os.environ.get("W53_METRICS_MID", "{}") or "{}")
 metrics_mid_b = json.loads(os.environ.get("W53_METRICS_MID_B", "{}") or "{}")
 
+# The peer's own stages. The peer measured them, kept them in its own row, and this
+# report reads the peer's own file: the measurement never travelled on the wire, so the
+# answer contract is exactly what it was.
+peer_rows = []
+peer_inbox_raw = os.environ.get("W53_PEER_INBOX", "")
+if peer_inbox_raw:
+    try:
+        parsed = json.loads(peer_inbox_raw)
+    except ValueError:
+        parsed = []
+    if isinstance(parsed, list):
+        prefix = "w53-bench-" + run_stamp
+        peer_rows = [row for row in parsed
+                     if isinstance(row, dict)
+                     and str(row.get("taskId", "")).startswith(prefix)]
+
+peer_stages = {}
+for row in peer_rows:
+    timings = row.get("stageTimings")
+    if not isinstance(timings, dict):
+        continue
+    for name, value in timings.items():
+        if isinstance(value, (int, float)) and not isinstance(value, bool):
+            peer_stages.setdefault(name, []).append(float(value))
+
 document = {
     "schema": "matrix.w53.distributed-performance/v2",
     "generatedBy": "scripts/w53-distributed-benchmark.sh",
     "commit": commit.stdout.strip() if commit.returncode == 0 else None,
+    "codeUnderTest": "the working tree the run executed. The commit above is the HEAD at "
+                      "the moment of the run, and the tree may carry changes that are not "
+                      "committed yet; the wave's report names the commit that carries the "
+                      "measurement",
     "environment": {
         "os": os_release or platform.platform(),
         "jdk": (java.stderr or java.stdout).splitlines()[0] if java.returncode == 0 else None,
@@ -421,6 +484,10 @@ document = {
                      "a time as the concurrency allows; the latency is the client's round "
                      "trip, the stage times are chain A's own monotonic measurements of the "
                      "parts it can time",
+        "stateDirectory": "the directory the two processes kept their state in. A run with "
+                          "--work-dir measures the path against the history that the earlier "
+                          "runs left there, which is how the behaviour under a growing "
+                          "cognitive and audit history is measured",
     },
     "endToEndMillis": {
         "p50": percentile(latencies, p50),
@@ -463,6 +530,20 @@ document = {
         }
         for name, values in sorted(stages.items())
     },
+    "peerStagesMillis": {
+        "whatItIs": "the peer's own measurement of its own work, read from the peer's own "
+                    "durable row. The peer keeps it there and does not send it: the answer "
+                    "contract is unchanged and the caller learns nothing new",
+        "rows": len(peer_rows),
+        "stages": {
+            name: {
+                "p50": percentile(values, p50),
+                "p95": percentile(values, p95),
+                "count": len(values),
+            }
+            for name, values in sorted(peer_stages.items())
+        },
+    },
     "stageMeanings": {
         "intent_written_nanos": "chain A: the durable dispatch intent, written before the send",
         "dispatch_nanos": "chain A: signing the request, the network round trip, chain B's "
@@ -482,6 +563,19 @@ document = {
                                          "epistemic model again",
         "replay_assessment_nanos": "the replay path: the epistemic evaluation again",
         "replay_total_nanos": "the replay path: the whole replay, as chain A can see it",
+    },
+    "peerStageMeanings": {
+        "inboxWrite": "chain B: the durable write of the request into its own inbox",
+        "stateWrite": "chain B: the write that moves the request into the running state",
+        "execution": "chain B: the production cognitive path it really ran",
+        "outcomeWrite": "chain B: the durable write of the outcome",
+        "answerSigning": "chain B: the serialization and the signing of the answer",
+        "deliveryTotal": "chain B: the whole reception of the delivery",
+        "authenticationAndValidation": "chain B: the REMAINDER of the reception — what it "
+                                       "cost beyond the peer's own four writes and its "
+                                       "execution. It carries the authentication, the "
+                                       "validation and the receiver's bookkeeping together, "
+                                       "so it is not a measurement of the signature alone",
     },
     "processMetrics": process_metrics,
     "processMetricsMeanings": {
@@ -505,16 +599,17 @@ document = {
     },
     "whatThisReportDoesNotClaim": [
         "it does not claim a p99 from a sample of this size",
-        "it does not separate chain B's stages from the network round trip — chain A times "
-        "the crossing as one interval, and only the peer's own total is told apart, by the "
-        "duration the peer reports; the peer's authentication, its durable inbox write and "
-        "its answer signing are still inside the crossing",
+        "it does not separate chain B's stages from the network round trip on chain A's "
+        "side: chain A times the crossing as one interval. The peer's own stages ARE "
+        "separated, in the peer's own record — the peer measures them and keeps them "
+        "there, and the report reads that record; the answer contract did not change",
         "it does not claim that these numbers are comparable with a run on another machine",
         "no optimization was accepted on the strength of this run alone",
         "it does not claim an exact allocation per task: the allocation is estimated from "
         "the JVM's own garbage-collection log, and the estimate is named as an estimate",
         "it does not separate the serialization and the signature cost from the network "
-        "round trip — chain A times the crossing as one interval",
+        "round trip on chain A's side — chain A times the crossing as one interval. On the "
+        "peer's side the signing of the answer is measured apart, and the report says so",
         "it does not claim that the replay path avoided the peer entirely: the request is "
         "sent again and the peer answers from its durable record, and the report measures "
         "that path rather than asserting that it never reached the peer",

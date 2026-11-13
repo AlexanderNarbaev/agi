@@ -22,17 +22,30 @@ def rows(path):
     connection = sqlite3.connect(path)
     try:
         found = list(connection.execute(
-            "SELECT request_id, state, effect_committed, created_at, updated_at "
+            "SELECT request_id, task_id, state, effect_committed, created_at, "
+            "updated_at, stage_timings_json "
             "FROM remote_task ORDER BY created_at"))
     finally:
         connection.close()
     return [{
         "requestId": row[0],
-        "state": row[1],
-        "effectCommitted": bool(row[2]),
-        "createdAt": row[3],
-        "updatedAt": row[4],
+        "taskId": row[1],
+        "state": row[2],
+        "effectCommitted": bool(row[3]),
+        "createdAt": row[4],
+        "updatedAt": row[5],
+        "stageTimings": stages(row[6]),
     } for row in found]
+
+
+def stages(raw):
+    """The stages the peer measured for one row, or None when it measured none."""
+    if not raw:
+        return None
+    try:
+        return json.loads(raw)
+    except ValueError:
+        return None
 
 
 if __name__ == "__main__":

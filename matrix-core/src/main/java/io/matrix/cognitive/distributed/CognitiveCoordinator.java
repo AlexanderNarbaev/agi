@@ -88,6 +88,41 @@ public final class CognitiveCoordinator {
     }
 
     /**
+     * Where the verdict of a remote execution is recorded.
+     *
+     * <p><b>Why this is a port.</b> The coordinator knows <i>what</i> the peer's answer was
+     * judged to be; it does not know where the profile of methods is kept. The port keeps the
+     * dependency one-way: the coordinator names a verdict, and the sink decides what to do
+     * with it. The sink may be absent — a coordinator without one records the disposition on
+     * the dispatch row alone, which is what the durable trace has always carried.</p>
+     *
+     * <p><b>What a verdict here is.</b> It is the peer's capability that is measured, in the
+     * stratum of the task family and the capability version it ran at — and it is chain A's
+     * own reading of the peer's answer, which is what the mapping in
+     * {@link RemoteVerdicts} says it is.</p>
+     */
+    public interface VerdictSink {
+
+        /**
+         * Records the verdict of one remote execution.
+         *
+         * <p><b>Why no cost comes with the verdict.</b> The peer's price was measured by the
+         * peer's own clock, and the local methods' prices by this process's clock: the two are
+         * not the same unit and must not share a column. The cost of the dispatch is on the
+         * dispatch's own record, where it belongs.</p>
+         *
+         * @param capabilityId      the capability the peer ran
+         * @param family            the family of the task it answered — for the remote path
+         *                           this is the typed task kind, which is the peer's own
+         *                           family of work
+         * @param capabilityVersion the version of the capability that ran
+         * @param outcome           what the execution was judged to be
+         */
+        void record(String capabilityId, String family, String capabilityVersion,
+                    io.matrix.cognitive.algorithms.MethodOutcome outcome);
+    }
+
+    /**
      * A task the coordinator is asked to arrange.
      *
      * @param taskId           the stable task id
@@ -218,7 +253,9 @@ public final class CognitiveCoordinator {
     private final LongSupplier nanoClock;
     private final AtomicInteger inFlight = new AtomicInteger();
     private final Set<String> cancelled = ConcurrentHashMap.newKeySet();
+    private final Set<String> inFlightRequests = ConcurrentHashMap.newKeySet();
     private ReportSink reportSink;
+    private VerdictSink verdictSink;
 
     /**
      * The coordinator.
@@ -274,8 +311,11 @@ public final class CognitiveCoordinator {
      * @return the coordinator
      */
     public CognitiveCoordinator withPolicy(DispatchPolicy policy) {
-        return new CognitiveCoordinator(store, transport, assessor, workspaceId, senderId,
-                clock, policy, nanoClock);
+        CognitiveCoordinator copy = new CognitiveCoordinator(store, transport, assessor,
+                workspaceId, senderId, clock, policy, nanoClock);
+        copy.reportSink = reportSink;
+        copy.verdictSink = verdictSink;
+        return copy;
     }
 
     /**
@@ -285,8 +325,11 @@ public final class CognitiveCoordinator {
      * @return the coordinator
      */
     public CognitiveCoordinator withNanoClock(LongSupplier nanoClock) {
-        return new CognitiveCoordinator(store, transport, assessor, workspaceId, senderId,
-                clock, policy, nanoClock);
+        CognitiveCoordinator copy = new CognitiveCoordinator(store, transport, assessor,
+                workspaceId, senderId, clock, policy, nanoClock);
+        copy.reportSink = reportSink;
+        copy.verdictSink = verdictSink;
+        return copy;
     }
 
     /**
@@ -301,8 +344,28 @@ public final class CognitiveCoordinator {
      */
     public CognitiveCoordinator withReportSink(ReportSink sink) {
         CognitiveCoordinator copy = new CognitiveCoordinator(store, transport, assessor,
-                workspaceId, senderId, clock);
+                workspaceId, senderId, clock, policy, nanoClock);
         copy.reportSink = sink;
+        return copy;
+    }
+
+    /**
+     * The coordinator that records what it concluded about the peer's answer.
+     *
+     * <p><b>Why the verdict is not the disposition.</b> The disposition is chain A's reading
+     * of the peer's answer as a <i>claim about the world</i>; the verdict is the same reading
+     * recorded as an <i>outcome of a method</i>, in the stratum of the task family and the
+     * capability version that ran. Without a sink the dispatch row still carries the
+     * disposition, so nothing about the trace depends on this.</p>
+     *
+     * @param sink where the verdict is recorded
+     * @return the coordinator
+     */
+    public CognitiveCoordinator withVerdictSink(VerdictSink sink) {
+        CognitiveCoordinator copy = new CognitiveCoordinator(store, transport, assessor,
+                workspaceId, senderId, clock, policy, nanoClock);
+        copy.reportSink = reportSink;
+        copy.verdictSink = sink;
         return copy;
     }
 
@@ -361,11 +424,30 @@ public final class CognitiveCoordinator {
                             + policy.maxConcurrentDispatches()
                             + " dispatches; the task was refused", timings);
         }
+        inFlightRequests.add(requestId);
         try {
             return dispatchAndJudge(spec, request, requestId, now, timings);
         } finally {
+            inFlightRequests.remove(requestId);
             inFlight.decrementAndGet();
         }
+    }
+
+    /**
+     * Whether this process is working on the request right now.
+     *
+     * <p><b>Why this exists.</b> A dispatch that is in flight and a dispatch whose answer
+     * was lost look the same on the record: the row says {@code DISPATCHED} and carries no
+     * answer. The reconciliation pass must not confuse them — a second delivery of a
+     * request that is still running spends one retry of the durable budget for nothing.
+     * This set is the difference, and it does not need to be durable: after a crash it is
+     * empty, and that is exactly right, because after a crash nothing is in flight.</p>
+     *
+     * @param requestId the request
+     * @return true while this process is working on it
+     */
+    public boolean isInFlight(String requestId) {
+        return inFlightRequests.contains(requestId);
     }
 
     /**
@@ -474,8 +556,37 @@ public final class CognitiveCoordinator {
         store.recordDispatchDisposition(requestId, verdict.disposition().name(),
                 verdict.reason(), clock.get());
         timings.put("total_nanos", System.nanoTime() - startedAt);
+        recordVerdict(request, response, verdict);
         return new Outcome(spec.taskId(), requestId, DispatchIntent.State.ADJUDICATED,
                 Optional.of(verdict), verdict.reason(), timings);
+    }
+
+    /**
+     * Records what this process concluded about the peer's answer, as a verdict.
+     *
+     * <p><b>Why the verdict is recorded at all.</b> The mandate asks for the reliability of a
+     * method to be measurable from decided trials, and the remote path is the one place where
+     * a verifier exists — chain A's own assessment. A dispatch that judged nothing leaves the
+     * profile blind to the peer, and a profile that never saw the peer cannot say anything
+     * about it. The verdict is recorded in the stratum of the task family and the capability
+     * version that ran, because a rate pooled over strata answers a different question.</p>
+     *
+     * <p><b>Why a missing sink is not an error.</b> The durable trace does not depend on this:
+     * the disposition is on the dispatch row either way. A coordinator without a sink simply
+     * keeps no profile of the peer.</p>
+     *
+     * @param request  the request that was sent
+     * @param response what the peer answered
+     * @param verdict  what chain A concluded about the answer
+     */
+    private void recordVerdict(CognitiveTaskRequest request, CognitiveTaskResponse response,
+                               RemoteReportAssessor.Verdict verdict) {
+        if (verdictSink == null) {
+            return;
+        }
+        verdictSink.record(request.requiredCapability(), request.kind().name(),
+                request.capabilityVersion(),
+                RemoteVerdicts.of(response.status(), verdict.disposition()));
     }
 
     /**
@@ -597,12 +708,22 @@ public final class CognitiveCoordinator {
             // one: the peer was dialled a bounded number of times in total.
             return new Outcome(request.taskId(), requestId, DispatchIntent.State.FAILED,
                     Optional.empty(), "the retry budget of " + (budget + 1)
-                            + " attempt(s) is spent, so the request is not sent again");
+                            + " delivery attempt(s) that produced no answer is spent, so "
+                            + "the request is not sent again");
         }
-        store.recordDispatchAttempt(requestId, clock.get());
         String now = clock.get();
         long dispatchedAt = System.nanoTime();
-        TaskPublisher.Dispatch dispatch = transport.dispatch(request, now);
+        TaskPublisher.Dispatch dispatch = null;
+        try {
+            dispatch = transport.dispatch(request, now);
+        } finally {
+            if (dispatch == null || dispatch.response().isEmpty()) {
+                // The delivery produced no answer — including the one that threw an
+                // exception nobody expected: the attempt is spent either way, so a peer
+                // that is down cannot be dialled without end.
+                store.recordDispatchAttempt(requestId, clock.get());
+            }
+        }
         timings.put("replay_dispatch_nanos", System.nanoTime() - dispatchedAt);
         if (dispatch.response().isEmpty()) {
             store.recordDispatchAnswer(requestId, DispatchIntent.State.FAILED,
@@ -637,6 +758,7 @@ public final class CognitiveCoordinator {
         store.recordDispatchDisposition(requestId, verdict.disposition().name(),
                 verdict.reason(), clock.get());
         timings.put("replay_total_nanos", System.nanoTime() - startedAt);
+        recordVerdict(request, response, verdict);
         return new Outcome(request.taskId(), requestId, DispatchIntent.State.ADJUDICATED,
                 Optional.of(verdict), verdict.reason(), timings);
     }
@@ -671,32 +793,32 @@ public final class CognitiveCoordinator {
         TaskPublisher.Dispatch last = TaskPublisher.Dispatch.empty(requestId,
                 BridgeDecision.Status.REFUSED, "the peer did not answer the task");
         for (int attempt = 0; attempt <= budget; attempt++) {
-            store.recordDispatchAttempt(requestId, clock.get());
+            TaskPublisher.Dispatch sent = null;
             try {
-                last = transport.dispatch(request, now);
-                if (last.response().isPresent()
-                        && last.response().get().status()
-                                != CognitiveTaskResponse.Status.IN_PROGRESS) {
-                    return last;
+                sent = transport.dispatch(request, now);
+                if (sent.response().isPresent()) {
+                    // The peer answered, and an answer that says "still running" is an
+                    // answer too. The task is alive on the peer's side: the attempt is
+                    // not spent against the budget, the peer is asked once and not once
+                    // per attempt, and the reconciliation pass asks again later until
+                    // the peer answers with a result or with its own timeout.
+                    return sent;
                 }
-                // A peer that says the task is still running has answered: the caller
-                // waits within its budget instead of spending the attempt as if the peer
-                // had said nothing.
+                last = sent;
             } catch (TaskDispatchException e) {
                 last = TaskPublisher.Dispatch.empty(requestId, BridgeDecision.Status.REFUSED,
                         "the delivery failed: " + e.getMessage());
+            } finally {
+                if (sent == null || sent.response().isEmpty()) {
+                    // The delivery produced no answer: the attempt is spent, and the
+                    // budget bounds the deliveries that produced nothing.
+                    store.recordDispatchAttempt(requestId, clock.get());
+                }
             }
-        }
-        if (last.response().isPresent()
-                && last.response().get().status() == CognitiveTaskResponse.Status.IN_PROGRESS) {
-            // The peer is working on the task and said so. The caller's budget is spent,
-            // but the task is not lost: the peer keeps the result, and the dispatch can
-            // be sent again with the same request id.
-            return last;
         }
         return TaskPublisher.Dispatch.empty(requestId, BridgeDecision.Status.REFUSED,
                 "the peer did not answer the task and the retry budget of " + (budget + 1)
-                        + " attempt(s) is spent: " + last.reason());
+                        + " delivery attempt(s) is spent: " + last.reason());
     }
 
     /**

@@ -93,6 +93,25 @@ EPISTEMIC_DATABASE_MARKERS = (b"matrix.knowledge.path", b"workbench.sqlite")
 # database: a class that cannot reach this stack cannot open it.
 PERSISTENCE_PACKAGES = ("java.sql.", "javax.sql.", "org.sqlite.")
 
+# W53 — chain B's OWN databases. The gate's G11 asks whether the task
+# direction reaches chain A's store; G12 asks the other half of the same
+# question: chain A must not reach chain B's stores either. A class that names
+# the file of chain B's store in its constant pool can open it, whether or not
+# it names the store class — so the marker is the file name and the variable
+# that points at the directory that holds it.
+MIND_DATABASE_MARKERS = (b"tasks.sqlite", b"mind.sqlite", b"MATRIX_MIND_DIR")
+
+# The classes that own chain B's stores: the durable inbox of the task
+# direction and the persistent memory of the brain. Their closure is what
+# chain A must not reach.
+CHAIN_B_STORE_CLASSES = ("io.matrix.api.bridge.RemoteTaskStore",
+                         "io.matrix.brain.runtime.PersistentMind")
+
+# The packages chain B's own store classes live in. The shared contract layer
+# is NOT part of the store: both chains read it, and its presence in the
+# intersection of two closures says nothing about the isolation.
+CHAIN_B_STORE_PACKAGES = ("io.matrix.api.bridge.", "io.matrix.brain.")
+
 # The HTTP methods that can change a state.
 WRITE_METHODS = ("POST", "PUT", "DELETE", "PATCH")
 
@@ -554,6 +573,23 @@ def main(argv: list[str]) -> int:
     task_client_reachable = TASK_CLIENT in chain_a_closure
     task_receiver_reachable = TASK_RECEIVER in chain_b_closure
 
+    # W53 — the other half of G11. Chain A must not reach chain B's stores:
+    # the task crosses over the network, and chain B's inbox and memory are
+    # chain B's own files. Two statements are measured: the task client of
+    # chain A reaches no class of chain B's store subsystem, and no class of
+    # chain A names one of chain B's databases in its constant pool — a class
+    # that opens a file by its path does not have to name the store class.
+    chain_b_store_closure: set[str] = set()
+    for entry in CHAIN_B_STORE_CLASSES:
+        chain_b_store_closure |= closure_of(entry)
+    mind_store_own = sorted(
+        c for c in chain_b_store_closure if c.startswith(CHAIN_B_STORE_PACKAGES))
+    task_client_reaches_chain_b_store = sorted(
+        closure_of(TASK_CLIENT) & set(mind_store_own))
+    chain_a_names_mind_database = sorted(
+        name for name in module_classes["matrix-core"]
+        if names_the_mind_database(class_dir(root, "matrix-core"), name))
+
     report = {
         "modules": [
             {"name": module, "role": module_of[module], "classes": len(module_classes[module])}
@@ -591,6 +627,8 @@ def main(argv: list[str]) -> int:
             "knowledge_client_reaches_store": knowledge_client_reaches_store,
             "task_client_reachable": task_client_reachable,
             "task_client_reaches_store": task_client_reaches_store,
+            "task_client_reaches_chain_b_store": task_client_reaches_chain_b_store,
+            "names_mind_database": chain_a_names_mind_database,
             "store_subsystem_classes": len(store_closure),
             "store_own_classes": store_own,
             "epistemic_database_classes": epistemic_database_classes,
@@ -622,6 +660,20 @@ def names_the_epistemic_database(base: Path, name: str) -> bool:
     except OSError:
         return False
     return any(marker in data for marker in EPISTEMIC_DATABASE_MARKERS)
+
+
+def names_the_mind_database(base: Path, name: str) -> bool:
+    """Whether the compiled class names one of chain B's databases.
+
+    The constant pool of a class file holds the literal strings the class
+    uses. A class that names the file of chain B's store can open it; a class
+    that does not, cannot.
+    """
+    try:
+        data = (base / (name.replace(".", "/") + ".class")).read_bytes()
+    except OSError:
+        return False
+    return any(marker in data for marker in MIND_DATABASE_MARKERS)
 
 
 def has_path_annotation(class_file: Path) -> bool:

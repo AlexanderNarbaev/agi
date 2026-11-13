@@ -1,10 +1,11 @@
 # W53 (the procedure-memory wave) — Completion report
 
-> **Note on the name.** This is the report of the *earlier* W53 wave — the one that made
-> the system's procedural memory non-empty. The distributed-cognition wave also carries the
-> name W53, and its report is `docs-v2/engineering/W53-PROCEDURE-MEMORY-STATUS.md`. This document was
-> renamed so that both waves have an unambiguous, addressable report; nothing in it was
-> changed except this note and its title.
+> **Note on the name.** This is the report of the *earlier* W53 wave — the reusable-procedure
+> wave, the one that made the system's procedural memory non-empty. The distributed-cognition
+> wave also carries the name W53, and **its** report is `docs-v2/engineering/W53-STATUS.md`.
+> This document was renamed from `W53-STATUS.md` so that both waves have an unambiguous,
+> addressable report; nothing in it was changed except this note, its title and the one row
+> of its own file list that names it.
 
 **Status:** `CANONICAL` for the wave · **Date:** 2026-11-09 · **Branch:** `develop`
 **The objective:** *"Develop MATRIX into a coherent, interacting cognitive computing system."*

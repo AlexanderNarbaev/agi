@@ -147,10 +147,11 @@ not measure reliability at all: its `successes` means "did not throw", so a wron
 counts as a success and a deliberate refusal counts as a failure, while the scored accuracy
 is the **declared** point estimate. The profile's key is also a pooling defect — every
 family, version and protocol lands in one rate, which is Simpson's paradox in a table. The
-wave therefore records the reliability work as **designed but not yet implemented**
-(§7.3 of the wave's report), with the estimator named: a 90 % Wilson **lower** limit, which
-at one observation of one gives a width of 0.730 and therefore leaves the score exactly as
-it is — a handful of observations must not create unjustified confidence.
+wave therefore **implemented** the reliability work (§4m of the wave's report), with the
+estimator named: a 90 % Wilson **lower** limit, which at one observation of one gives a width
+of 0.730 and therefore leaves the score exactly as it is — a handful of observations must not
+create unjustified confidence. The rule reached the score in round 61 (`CD-045`), and the
+remote path's verdicts reached the profile in round 64 (§6.5 of this ADR).
 
 ---
 
@@ -227,7 +228,7 @@ and the assessor says so in the reason it records.
 the gateway's own JDK server in production mode — each in its own directory with its own
 database, and runs one bounded cognitive task through them. The machine-readable report is
 `docs-v2/engineering/W53-DISTRIBUTED-DEMONSTRATION.json` (schema
-`matrix.w53.distributed-demonstration/v5`).
+`matrix.w53.distributed-demonstration/v6`).
 
 **The demonstration shows the refusals too.** A scenario that only shows the happy path
 cannot show that the boundary holds. Since round 22 the report carries a `refusals`
@@ -245,11 +246,14 @@ settled nothing. That disposition is the honest one and it is the point of the w
 design: a successful exchange is not a supported belief.
 
 **What the restart showed.** Chain B was restarted and the same request was sent again. The
-report carries the peer's own durable inbox: **one row, whose updated timestamp equals its
-creation timestamp**. The task was not executed a second time, and the result was still on
-disk after the restart. That is the durable claim, measured rather than asserted — and it
-is a claim about at-least-once delivery with effectively-once logical effects, not about
-distributed exactly-once execution.
+report carries the peer's own durable inbox: **exactly one row for that request id, with the
+result stored on it**. The task was not executed a second time, and the result was still on
+disk after the restart. The row count and the stored result are the evidence; the equality of
+the row's two timestamps is **not** — a timestamp says when a column was written, not how
+often a task ran, and the wave's own report withdraws that argument (§3 of the wave's
+report). This is the durable claim, measured rather than asserted — and it is a claim about
+at-least-once delivery with effectively-once logical effects, not about distributed
+exactly-once execution.
 
 ---
 
@@ -358,10 +362,11 @@ that fabrication into the epistemic layer.
 
 ### 3.3 The rights
 
-Two new rights in `io.matrix.contract.bridge.BridgeCapability`:
+Three new rights in `io.matrix.contract.bridge.BridgeCapability`:
 
 - `INFERENCE_REQUEST` — the right to ask a peer to execute a bounded cognitive task;
-- `INFERENCE_RESPONSE` — the right to return the result of one.
+- `INFERENCE_RESPONSE` — the right to return the result of one;
+- `INFERENCE_CANCEL` — the right to withdraw a task that is in flight (§4.4).
 
 **The right to receive established knowledge is not the right to execute a task, and the
 right to execute a task is not the right to write to Chain A's epistemic store.** A caller
@@ -430,8 +435,29 @@ depend on an in-memory map.
 
 The request carries a bounded payload, a bounded execution budget, a deadline and a hop
 count. The implementation enforces a maximum request size, a maximum response size, a
-maximum in-flight count, a bounded queue, a bounded retry budget and **a single remote
-hop**: a capability executed by Chain B does not create further remote tasks.
+maximum in-flight count, a bounded retry budget and **a single remote hop**: a capability
+executed by Chain B does not create further remote tasks.
+
+**There is no queue, and that is the decision.** An earlier draft of this section spoke of
+"a bounded queue"; the implementation has no queue at all, and the difference matters. A
+queue is a promise to wait, and a wait is unbounded latency and unbounded memory unless
+the queue itself is bounded — and a bounded queue still holds work the caller believes is
+being done. **The coordinator refuses the work that exceeds its concurrency cap instead
+of holding it** (`DispatchPolicy.maxConcurrentDispatches`, four by default), and the
+refusal happens **before the durable intent is written**: a refused task leaves no dispatch
+record, so the durable trace of a refused task is empty rather than a row that says "sent"
+for work that was never sent. The caller is told, with the cap in the message
+("the coordinator is at its concurrency limit of 4 dispatches; the task was refused"), and
+the work that was refused is **not** done — the report says so rather than hiding it in a
+queue's depth.
+
+**What that costs, measured.** The wave measured the bound by exceeding it: eight clients
+against the cap of four refused **12 of 24 tasks** at a client round trip of **3–33 ms**,
+with no stage timings at all (the refusal precedes the durable write) and no durable
+record — the replay of a refused request is answered "no dispatched task with that id",
+while the replay of an admitted one is answered from the peer's own record. **The queue
+depth is therefore 0 and the wait is 0, because nothing waits** (`W53-PERFORMANCE.md` §5d,
+CD-042).
 
 ### 4.3a The episode the delegated task belongs to
 
@@ -502,7 +528,147 @@ red. The new checks prove that:
 - the request path cannot bypass the authentication and the audit;
 - the response path cannot bypass Chain A's epistemic evaluation.
 
+### 6.1 What the peer measures about itself
+
+The mandate asks for the peer's authentication, its durable inbox write and its answer
+signing to be measured apart. The wave's honest list wrote that this needs a
+protocol-version decision, because the numbers would have to travel on the wire.
+
+**The decision is the opposite one: the numbers do not travel.**
+
+The measurement is the peer's own bookkeeping about its own work, so the peer measures it
+where the work happens — in the peer — and keeps it in the peer's own durable row
+(`remote_task.stage_timings_json`). The performance report reads the peer's own file; the
+answer the caller receives is exactly the answer it received before, and the bridge
+protocol needed no new version.
+
+What the peer measures, with its own monotonic clock: the durable write of the request
+into its inbox, the write that moves the request into the running state, the execution of
+the production cognitive path, the durable write of the outcome, and the serialization and
+signing of the answer. The whole reception is measured too, and the **remainder** — what
+the reception cost beyond the peer's own four writes and its execution — is reported as a
+remainder: it carries the authentication, the validation, the idempotency lookup and the
+receiver's bookkeeping together, so it is not a measurement of the signature alone.
+
+Two rules keep the measurement honest. It never changes what the caller receives, and it
+never fails a delivery: a measurement that cannot be written costs the report a number,
+not the peer a task.
+
 ---
+
+### 6.2 The reconciliation pass on a timer
+
+The startup pass answers one question: *what did the process lose when it died?* It
+walks the unfinished dispatches and sends each of them again, with the same request id,
+so the peer's durable inbox recognises it and the logical effect still happens once.
+
+That question does not cover the case where the process stays up. An answer can be lost
+without a crash: a connection drops, a peer is restarted mid-flight, the response never
+arrives. The dispatch row then says `DISPATCHED` and carries no answer, and nothing
+would finish it until the next restart — which may be never. So the pass also runs on a
+timer, in `DispatchReconcilerTimer`: a JDK `ScheduledExecutorService` with one daemon
+thread, started with the process and stopped with it. No new dependency is taken for it;
+the timer is a JDK type, and the framework's scheduler would have been a dependency for
+one method call.
+
+**The timer's rule: the clock decides when, the record decides what.** The tick
+selects *when* the pass runs — that is operational policy. The pass never reads the wall
+clock to decide *what* to send. It reads the durable record, and it asks the coordinator
+which requests this process is working on right now.
+
+**Why the in-flight distinction is needed.** On the record, a dispatch that is in flight
+and a dispatch whose answer was lost are the same thing: the row says `DISPATCHED` and
+carries no answer. The difference lives in the running process, not in the database:
+`CognitiveCoordinator` keeps the request ids it is working on, and `reconcileStale()`
+leaves those alone. A second delivery of a request the peer is still running would
+spend one retry of the durable budget for nothing, and with a small budget it would
+close a task that is not closed. The set is in memory on purpose: after a crash it is
+empty, and after a crash nothing is in flight.
+
+**Why the failure close is its own write.** `CognitiveStore.recordDispatchDisposition`
+is the *adjudication* write: it records the verdict chain A reached about the peer's
+answer and moves the row to `ADJUDICATED`. A dispatch whose retry budget is spent has
+no answer, so that write would claim a judgement that never happened. The coordinator
+returns `FAILED` for such a dispatch *without writing the row* — so the row would stay
+`DISPATCHED` and every pass would pick it up again, for ever. The store therefore has
+`closeDispatchAsFailed`, which writes the state, the disposition and the reason in one
+statement and says exactly what is true: the dispatch is over, it failed, and here is
+why.
+
+### 6.3 Chain A's stores are named, so a measurement is a measurement
+
+**The defect.** The cognitive store was opened at a hard-coded relative path
+(`data/cognitive/cognitive.sqlite`) and the knowledge store at the default
+`data/knowledge/workbench.sqlite`. The peer had always honoured its environment
+variable; chain A did not. The consequence was not a cosmetic one: the benchmark and the
+demonstration started chain A with its own directory for the peer's mind and for the
+bridge journal, and chain A's two stores stayed in the working directory. **The wave's
+report claimed that the benchmark "never touches a developer's working state" — for chain
+A that claim was false.** Every run of the benchmark added its dispatches, its reports and
+its claims to the same database, and the next run measured itself against that database.
+
+**What it cost.** The same workload, measured twice: against the accumulated store of the
+wave (860 dispatch rows, 4850 claims) the end-to-end p50 was 32.33 ms, and against a
+store of the run's own the p50 was 13.87 ms. The difference is concentrated where it
+should be: the admission of the report fell from 13.66 ms to 4.14 ms and the assessment
+from 6.57 ms to 0.35 ms — the assessment compares the peer's report against chain A's
+knowledge, and against an empty knowledge there is almost nothing to compare. **The
+accumulated epistemic state, not the crossing, was the dominant cost of the path.**
+
+**The decision.** The path of the cognitive store is a configuration value
+(`matrix.cognitive.path`, the environment variable `MATRIX_COGNITIVE_PATH`), shaped like
+the knowledge store's own `matrix.knowledge.path`, with the working directory's file as
+the default. The benchmark and the demonstration name both of chain A's stores to their
+own directory.
+
+**Why this is an architectural decision and not a fix.** A measurement that runs against a
+database which every earlier run grew is not a measurement of the path; it is a measurement
+of the path plus the history of the laboratory. The wave's own report had already noticed
+that the numbers moved by tens of percent between rounds and had attributed it to
+"the code changed". That attribution was half right: the code changed too, but the state
+the measurement ran against changed as well, and the second cause was the larger one. A
+number that is quoted without the state it was taken against is not evidence, and the
+wave's own doctrine — "a result must not independently validate itself" — applies to a
+benchmark as much as to a report.
+
+### 6.4 The bound is measured, not only asserted
+
+A limit that was never exceeded has no number, and the mandate asks for the queue depth,
+the wait time and the refusal rate among the reported measurements. The wave therefore
+measures the concurrency cap **from above** — the same workload with more tasks in flight
+than the cap allows — and keeps that measurement in its own section of the report
+(`overCapRun`, `W53-PERFORMANCE.json`), separate from the baseline pair, because it
+answers a different question: not "how fast is the path" but "what happens to the work
+that does not fit".
+
+**What the measurement does not say.** It does not say that the path sustains eight tasks
+in flight: it does not, and that is the point of the cap. It does not say that the refusal
+is free — the refused task cost the caller a round trip, and the work it carried was not
+done. And it does not say that the cap is the only bound: the payload limit, the retry
+budget, the deadline and the hop count are enforced by the same coordinator and are
+covered by its own tests.
+
+### 6.5 What chain A concluded about the peer's answer reaches the profile
+
+The mandate asks for the reliability of a method to be measurable from decided trials — a
+call whose answer something verified — and not from a completion rate. The local call sites
+record `UNVERIFIED`, because nothing in those paths verifies the answer, so the local
+profile has no decided trial at all. **The remote path is the one place in the system where
+a verifier exists**: chain A assesses the peer's report against chain A's own evidence, and
+that assessment ends in a disposition. The dispositions are verdicts.
+
+So the disposition is mapped — by a named table, `RemoteVerdicts`, not by a chain of
+conditions in the coordinator — onto the outcome taxonomy, and the verdict is recorded in
+the stratum of the **capability**, the **family of the task** and the **version of the
+capability that ran**. A report that is supported but not independent is its own kind
+(`QUALIFIED`): it is a decided trial and not a validated one, so it is in the denominator
+and not in the numerator. The estimate it produces answers one question — *how often does a
+report from this capability become a validated proposition in chain A's own epistemic
+model?* — and that quantity is about the peer **and** about chain A's evidence: a stricter
+chain A rejects more of the same peer. It is not a measure of the peer's reasoning alone
+(**CD-046**), and the research that forced the taxonomy says the same of every rate it
+warns against: a rate is confounded by the strictness of the verifier that produced it
+(`docs-v2/research/W53-RESEARCH-D-RELIABILITY-CALIBRATION.md` §3.8).
 
 ## 7. What this wave does not claim
 
@@ -513,3 +679,14 @@ red. The new checks prove that:
   the distributed path does not make a weakly-supported answer well-supported.
 - **Not general intelligence.** A remote capability provider is an engineering fact about
   two processes, not a claim about understanding.
+- **Not a queue.** The coordinator refuses the work over its concurrency cap instead of
+  holding it (§4.3), so the queue depth is zero and the wait is zero — and the work that
+  was refused was **not** done. A caller that needs the task done must ask again; the
+  wave does not pretend that a refusal is a slower success.
+- **Not a measure of the peer's reasoning alone.** The rate the remote path produces is
+  chain A's own reading of the peer's answer, and it is confounded by chain A's evidence
+  (§6.5). The stratum is named, the confounder is named, and the decision that reads the
+  estimate names the basis it is used on.
+- **Not a portable measurement.** The latency, the throughput and the allocation figures
+  in the performance report are the numbers of one machine, one JDK and one day, and they
+  are not comparable with a run on another machine.

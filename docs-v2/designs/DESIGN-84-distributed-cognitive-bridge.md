@@ -1,5 +1,7 @@
 # DESIGN-84 — The distributed cognitive bridge
 
+**Status:** `ACTIVE` — the design the four research tracks forced: what was adopted, what was rejected, what is deferred.
+
 > W53 research-engine iteration: the four cross-disciplinary tracks of the distributed
 > cognition wave, and the design they forced.
 > Domain: distributed systems, cybernetics, cooperative reasoning, statistical reliability.

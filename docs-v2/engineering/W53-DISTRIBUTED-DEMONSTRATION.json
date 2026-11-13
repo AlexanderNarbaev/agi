@@ -1,9 +1,9 @@
 {
-  "schema": "matrix.w53.distributed-demonstration/v5",
+  "schema": "matrix.w53.distributed-demonstration/v6",
   "generatedBy": "scripts/w53-distributed-demo.sh",
-  "taskId": "w53-demo-1794299483",
-  "requestId": "req-w53-demo-1794299483",
-  "commit": "15d40d7fc4e57b70731aa05b79c8ae1240ba187a",
+  "taskId": "w53-demo-1794472719",
+  "requestId": "req-w53-demo-1794472719",
+  "commit": "64b1657af950acb19221c6f778d27dd6e82c01ff",
   "chainA": {
     "kind": "quarkus",
     "port": 9191,
@@ -154,28 +154,28 @@
   ],
   "refusals": {
     "unservedCapability": {
-      "taskId": "w53-demo-unserved-w53-demo-1794299483",
-      "requestId": "req-w53-demo-unserved-w53-demo-1794299483",
+      "taskId": "w53-demo-unserved-w53-demo-1794472719",
+      "requestId": "req-w53-demo-unserved-w53-demo-1794472719",
       "state": "ADJUDICATED",
       "disposition": "UNRESOLVED",
       "reason": "the peer did not complete the execution: UNSUPPORTED",
       "reportDisposition": "ACCEPTED: the message satisfies the contract",
       "timingsNanos": {
-        "intent_written_nanos": 768728,
-        "dispatch_nanos": 28342290,
+        "intent_written_nanos": 311126,
+        "dispatch_nanos": 34245387,
         "peer_execution_nanos": 0,
-        "report_admission_nanos": 13365382,
-        "assessment_nanos": 70213,
-        "total_nanos": 44209966
+        "report_admission_nanos": 6014593,
+        "assessment_nanos": 83297,
+        "total_nanos": 41112086
       }
     },
     "conflictingPayload": {
       "httpStatus": "409",
       "body": {
         "conflict": "IMMUTABLE_RECORD",
-        "requestId": "req-w53-demo-1794299483",
-        "taskId": "w53-demo-1794299483",
-        "error": "the request id req-w53-demo-1794299483 is already dispatched"
+        "requestId": "req-w53-demo-1794472719",
+        "taskId": "w53-demo-1794472719",
+        "error": "the request id req-w53-demo-1794472719 is already dispatched"
       }
     },
     "forgedRequest": {
@@ -190,26 +190,26 @@
     ]
   },
   "outcome": {
-    "taskId": "w53-demo-1794299483",
-    "requestId": "req-w53-demo-1794299483",
+    "taskId": "w53-demo-1794472719",
+    "requestId": "req-w53-demo-1794472719",
     "state": "ADJUDICATED",
     "disposition": "UNRESOLVED",
     "reason": "the peer's confidence rests on MEASURED, which is not independent evidence, and chain A's own records settle nothing",
     "reportDisposition": "ACCEPTED: the message satisfies the contract",
     "timingsNanos": {
-      "intent_written_nanos": 55457730,
-      "dispatch_nanos": 172176322,
-      "peer_execution_nanos": 12000000,
-      "report_admission_nanos": 24030156,
-      "assessment_nanos": 7825564,
-      "total_nanos": 297093351
+      "intent_written_nanos": 21462370,
+      "dispatch_nanos": 174440400,
+      "peer_execution_nanos": 11000000,
+      "report_admission_nanos": 46055490,
+      "assessment_nanos": 1904178,
+      "total_nanos": 245107174
     }
   },
   "durableTrace": {
     "dispatches": [
       {
-        "taskId": "w53-demo-1794299483",
-        "requestId": "req-w53-demo-1794299483",
+        "taskId": "w53-demo-1794472719",
+        "requestId": "req-w53-demo-1794472719",
         "state": "ADJUDICATED",
         "capabilityId": "brain.cognitive-inference",
         "remoteResponder": "chain-b-brain-runtime",
@@ -217,31 +217,32 @@
         "disposition": "UNRESOLVED",
         "dispositionReason": "the peer's confidence rests on MEASURED, which is not independent evidence, and chain A's own records settle nothing",
         "reportDisposition": "ACCEPTED: the message satisfies the contract",
-        "createdAt": "2026-11-10T08:31:23.456537622Z",
-        "updatedAt": "2026-11-10T08:31:23.753491570Z"
+        "createdAt": "2026-11-12T08:38:39.758506837Z",
+        "updatedAt": "2026-11-12T08:38:40.004018824Z"
       }
     ],
-    "taskId": "w53-demo-1794299483"
+    "taskId": "w53-demo-1794472719"
   },
   "replayAfterRestart": {
-    "taskId": "w53-demo-1794299483",
-    "requestId": "req-w53-demo-1794299483",
+    "taskId": "w53-demo-1794472719",
+    "requestId": "req-w53-demo-1794472719",
     "state": "ADJUDICATED",
     "disposition": "UNRESOLVED",
     "reason": "the peer's confidence rests on MEASURED, which is not independent evidence, and chain A's own records settle nothing",
     "reportDisposition": "ACCEPTED: the message satisfies the contract",
     "timingsNanos": {
-      "replay_dispatch_nanos": 100601055,
-      "replay_report_admission_nanos": 2541458,
-      "replay_assessment_nanos": 6638678,
-      "replay_total_nanos": 203258634
+      "replay_dispatch_nanos": 97141920,
+      "replay_report_admission_nanos": 57168931,
+      "replay_assessment_nanos": 331174,
+      "replay_total_nanos": 155142328
     }
   },
   "taskAfterChainARestart": {
+    "taskId": "w53-demo-1794472719",
     "dispatches": [
       {
-        "taskId": "w53-demo-1794299483",
-        "requestId": "req-w53-demo-1794299483",
+        "taskId": "w53-demo-1794472719",
+        "requestId": "req-w53-demo-1794472719",
         "state": "ADJUDICATED",
         "capabilityId": "brain.cognitive-inference",
         "remoteResponder": "chain-b-brain-runtime",
@@ -249,11 +250,10 @@
         "disposition": "UNRESOLVED",
         "dispositionReason": "the peer's confidence rests on MEASURED, which is not independent evidence, and chain A's own records settle nothing",
         "reportDisposition": "ACCEPTED: the message satisfies the contract",
-        "createdAt": "2026-11-10T08:31:23.456537622Z",
-        "updatedAt": "2026-11-10T08:31:25.030047680Z"
+        "createdAt": "2026-11-12T08:38:39.758506837Z",
+        "updatedAt": "2026-11-12T08:38:41.230282660Z"
       }
-    ],
-    "taskId": "w53-demo-1794299483"
+    ]
   },
   "whatTheChainARestartShows": [
     "the task is asked for again by its stable id after chain A restarted, and chain A answers with the same request id and the same disposition it recorded before the restart: the outcome survived the process, it was not recomputed",
@@ -262,33 +262,73 @@
   ],
   "peerDurableInbox": [
     {
-      "requestId": "req-w53-demo-1794299483",
+      "requestId": "req-w53-demo-1794472719",
+      "taskId": "w53-demo-1794472719",
       "state": "COMPLETED",
       "effectCommitted": false,
-      "createdAt": "2026-11-10T08:31:23.610905841Z",
-      "updatedAt": "2026-11-10T08:31:23.610905841Z"
+      "createdAt": "2026-11-12T08:38:39.882539847Z",
+      "updatedAt": "2026-11-12T08:38:39.882539847Z",
+      "stageTimings": {
+        "answerSigning": 14.237307,
+        "authenticationAndValidation": 67.811433,
+        "deliveryTotal": 98.926132,
+        "execution": 14.120477,
+        "inboxWrite": 2.275688,
+        "outcomeWrite": 14.59998,
+        "stateWrite": 0.118554
+      }
     },
     {
-      "requestId": "req-w53-demo-unserved-w53-demo-1794299483",
+      "requestId": "req-w53-demo-unserved-w53-demo-1794472719",
+      "taskId": "w53-demo-unserved-w53-demo-1794472719",
       "state": "UNSUPPORTED",
       "effectCommitted": false,
-      "createdAt": "2026-11-10T08:31:25.061254477Z",
-      "updatedAt": "2026-11-10T08:31:25.061254477Z"
+      "createdAt": "2026-11-12T08:38:41.261200587Z",
+      "updatedAt": "2026-11-12T08:38:41.261200587Z",
+      "stageTimings": {
+        "answerSigning": 1.384779,
+        "authenticationAndValidation": 20.502733,
+        "deliveryTotal": 26.469836,
+        "execution": 0.219864,
+        "inboxWrite": 1.466493,
+        "outcomeWrite": 4.051825,
+        "stateWrite": 0.228921
+      }
     }
   ],
+  "peerStages": {
+    "answerSigning": 14.237307,
+    "authenticationAndValidation": 67.811433,
+    "deliveryTotal": 98.926132,
+    "execution": 14.120477,
+    "inboxWrite": 2.275688,
+    "outcomeWrite": 14.59998,
+    "stateWrite": 0.118554
+  },
   "peerDurableInboxForTheTask": [
     {
-      "requestId": "req-w53-demo-1794299483",
+      "requestId": "req-w53-demo-1794472719",
+      "taskId": "w53-demo-1794472719",
       "state": "COMPLETED",
       "effectCommitted": false,
-      "createdAt": "2026-11-10T08:31:23.610905841Z",
-      "updatedAt": "2026-11-10T08:31:23.610905841Z"
+      "createdAt": "2026-11-12T08:38:39.882539847Z",
+      "updatedAt": "2026-11-12T08:38:39.882539847Z",
+      "stageTimings": {
+        "answerSigning": 14.237307,
+        "authenticationAndValidation": 67.811433,
+        "deliveryTotal": 98.926132,
+        "execution": 14.120477,
+        "inboxWrite": 2.275688,
+        "outcomeWrite": 14.59998,
+        "stateWrite": 0.118554
+      }
     }
   ],
   "whatTheInboxShows": [
     "one row for THIS request id: the replay after the restart did not create a second row. The inbox also holds the row of the refusal scenario, which is a different request id and was refused, not executed",
     "the row holds the result of one execution: the replay did not run the task a second time — the evidence is the row count and the stored result, NOT the timestamps (the peer writes one instant for the whole request, so updatedAt equals createdAt on every row and says nothing about a single execution)",
-    "the state is COMPLETED: the first delivery finished the execution and the result is still on disk after the restart"
+    "the state is COMPLETED: the first delivery finished the execution and the result is still on disk after the restart",
+    "the row carries what the peer's own work cost: the durable inbox write, the execution, the write of the outcome and the signing of the answer, each measured by the peer with its own clock. The measurement stayed on the peer's side of the boundary: the answer the caller received carries nothing new"
   ],
   "reportAdmission": "ACCEPTED: the message satisfies the contract",
   "whatThisReportDoesNotClaim": [

@@ -6,6 +6,7 @@ import io.matrix.cognitive.DispatchIntent;
 import io.matrix.cognitive.RemoteReportAssessor;
 import io.matrix.contract.bridge.HmacBridgeSigner;
 import io.matrix.bridge.BridgeResource;
+import io.quarkus.runtime.ShutdownEvent;
 import io.quarkus.runtime.StartupEvent;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.Consumes;
@@ -94,6 +95,16 @@ public class DistributedTaskResource {
     private CognitiveStore store;
 
     /**
+     * The timer of the reconciliation pass.
+     *
+     * <p>VOLATILE: the startup observer writes it and the shutdown observer reads it, and
+     * they are not the same thread. A timer that is not seen is a timer that is never
+     * closed, and a closed timer that is not seen is a timer that is never closed either
+     * way round.</p>
+     */
+    private volatile DispatchReconcilerTimer reconcilerTimer;
+
+    /**
      * The coordinator of this process.
      *
      * <p><b>Why one and not one per request.</b> The coordinator holds the bounds it
@@ -121,6 +132,20 @@ public class DistributedTaskResource {
      */
     @Inject
     io.matrix.knowledge.KnowledgeWorkbench workbench;
+
+    /**
+     * Chain A's own service — the holder of the profile of measured methods.
+     *
+     * <p><b>Why the resource needs it.</b> The coordinator judges the peer's answer, and what
+     * it concluded has to go somewhere a later process can read: the durable profile of
+     * methods, in the stratum the verdict was observed in. The profile belongs to the service
+     * that keeps it for the whole process, and the resource asks that one for it — two
+     * profiles over one store would disagree until a restart, and a profile nobody can read
+     * back is not a profile. The field is null when the resource is built by hand in a test,
+     * and a coordinator without a sink simply keeps no profile of the peer.</p>
+     */
+    @Inject
+    io.matrix.cognitive.CognitiveService service;
 
     /**
      * The resource, built from the environment.
@@ -167,6 +192,15 @@ public class DistributedTaskResource {
                 SENDER_ID);
     }
 
+    /** The system property that names the file chain A's cognitive store lives in. */
+    public static final String COGNITIVE_PATH_PROPERTY = "matrix.cognitive.path";
+
+    /** The environment variable that names the file chain A's cognitive store lives in. */
+    public static final String COGNITIVE_PATH_ENV = "MATRIX_COGNITIVE_PATH";
+
+    /** The file chain A's cognitive store lives in when nothing names another one. */
+    public static final String DEFAULT_COGNITIVE_PATH = "data/cognitive/cognitive.sqlite";
+
     /**
      * Chain A's cognitive store, opened on the first use and kept afterwards.
      *
@@ -174,10 +208,62 @@ public class DistributedTaskResource {
      */
     private synchronized CognitiveStore store() {
         if (store == null) {
-            store = new CognitiveStore(
-                    java.nio.file.Path.of("data/cognitive/cognitive.sqlite"));
+            java.nio.file.Path cognitive = cognitiveStorePath();
+            refuseTheKnowledgeFile(cognitive);
+            store = new CognitiveStore(cognitive);
         }
         return store;
+    }
+
+    /**
+     * Refuses a configuration that would put two writers on one database.
+     *
+     * <p><b>Why this is a refusal and not a warning.</b> The dispatches live in their own
+     * file, and the service's cognitive tables live in the knowledge file. A configuration
+     * that pointed both at one file would give this process two writers on one SQLite
+     * database — the exact thing the wave's boundary forbids — and the writer lock would
+     * not catch it, because both holders are in this process and merely join the lock. The
+     * failure would show up later as a lock contention error on an unrelated request, so
+     * the configuration is refused at the moment the store is opened.</p>
+     *
+     * @param cognitive the file the dispatch store is about to be opened on
+     */
+    private void refuseTheKnowledgeFile(java.nio.file.Path cognitive) {
+        if (service == null) {
+            return;
+        }
+        java.nio.file.Path knowledge = service.storePath();
+        if (knowledge.toAbsolutePath().normalize()
+                .equals(cognitive.toAbsolutePath().normalize())) {
+            throw new IllegalStateException("the dispatch store must not live in the file of "
+                    + "the knowledge store (" + knowledge.toAbsolutePath().normalize()
+                    + "): that would give this process two writers on one database");
+        }
+    }
+
+    /**
+     * The file chain A's cognitive store lives in.
+     *
+     * <p><b>W53 — the path is a configuration value, not a constant in the code.</b> The
+     * store used to be opened at a hard-coded relative path, so every process that ran the
+     * application wrote into the same file in the working directory. A benchmark, a test
+     * or a second instance could not be given a store of its own, and the measurement of
+     * the distributed path was taken against a database that grew with every run. The
+     * property {@link #COGNITIVE_PATH_PROPERTY} names the file and follows the same shape
+     * as the knowledge store's own {@code matrix.knowledge.path}: the default is the
+     * working directory's file, and a caller that must not touch it names another one.</p>
+     *
+     * @return the path of the store's file
+     */
+    static java.nio.file.Path cognitiveStorePath() {
+        String configured = System.getProperty(COGNITIVE_PATH_PROPERTY);
+        if (configured == null || configured.isBlank()) {
+            configured = System.getenv(COGNITIVE_PATH_ENV);
+        }
+        if (configured == null || configured.isBlank()) {
+            configured = DEFAULT_COGNITIVE_PATH;
+        }
+        return java.nio.file.Path.of(configured);
     }
 
     /**
@@ -197,6 +283,16 @@ public class DistributedTaskResource {
             if (bridge != null) {
                 coordinator = coordinator.withReportSink(
                         envelope -> bridge.service().accept(envelope));
+            }
+            if (service != null) {
+                // W53: what chain A concluded about the peer's answer is recorded in the
+                // profile of methods, in the stratum of the task family and the capability
+                // version that ran. The profile is the ledger this process already keeps
+                // for its own methods — one ledger, one store, one writer — so the peer's
+                // verdicts and the local ones live in the same place and are read the same
+                // way.
+                coordinator = coordinator.withVerdictSink(
+                        new io.matrix.cognitive.LedgerVerdictSink(service.ledger()));
             }
         }
         return coordinator;
@@ -247,6 +343,24 @@ public class DistributedTaskResource {
             }
         } catch (RuntimeException e) {
             LOG.warn("the reconciliation pass could not run: {}", e.getMessage());
+        }
+        // The pass runs on a timer as well: the startup pass covers the crash, and the
+        // timer covers the answer that is lost while the process stays up.
+        reconcilerTimer = new DispatchReconcilerTimer(new DispatchReconciler(store(),
+                coordinator(), WORKSPACE));
+        reconcilerTimer.start();
+    }
+
+    /**
+     * Stops the reconciliation timer when the process goes down.
+     *
+     * @param event the shutdown of this process
+     */
+    void onShutdown(@jakarta.enterprise.event.Observes ShutdownEvent event) {
+        DispatchReconcilerTimer timer = reconcilerTimer;
+        if (timer != null) {
+            timer.close();
+            reconcilerTimer = null;
         }
     }
 

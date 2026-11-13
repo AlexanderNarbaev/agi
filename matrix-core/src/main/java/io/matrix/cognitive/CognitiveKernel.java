@@ -200,6 +200,26 @@ public final class CognitiveKernel {
         default <T> T measure(String methodId, java.util.function.Supplier<T> body) {
             return body.get();
         }
+
+        /**
+         * Runs the method and records what it cost and what it asserted, in the stratum of
+         * the request it answered.
+         *
+         * <p>W53 — the stratum is part of the record because a verdict pooled over the
+         * families answers a different question from the one the selection asks. The default
+         * measures nothing, exactly as the narrow form does.</p>
+         *
+         * @param methodId          the method being run
+         * @param family            the family of the request
+         * @param capabilityVersion the version of the capability that ran
+         * @param body              the work
+         * @param <T>               what the work produces
+         * @return what the work produced
+         */
+        default <T> T measure(String methodId, String family, String capabilityVersion,
+                              java.util.function.Supplier<T> body) {
+            return body.get();
+        }
     }
 
     /**
@@ -567,6 +587,7 @@ public final class CognitiveKernel {
             // every decision was the declared complexity, forever.
             final AlgorithmSelectorBridge.Selection chosen = selection;
             computed = selector.measure(chosen.method().capability().id(),
+                    FAMILY_MICRO_WORLD, chosen.method().capability().version(),
                     () -> chosen.method().execute(computation, budget));
             trace.step("COMPUTE", selection.method().capability().id(),
                     "the method returned " + computed

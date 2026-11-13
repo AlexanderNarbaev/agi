@@ -39,7 +39,11 @@ WORK="$(mktemp -d)"
 export MATRIX_MIND_DIR="$WORK/chain-b-mind"
 export MATRIX_COGNITIVE_DIR="$WORK/chain-a-cognitive"
 export MATRIX_BRIDGE_JOURNAL_DIR="$WORK/chain-a-bridge"
-mkdir -p "$MATRIX_MIND_DIR" "$MATRIX_COGNITIVE_DIR" "$MATRIX_BRIDGE_JOURNAL_DIR"
+# Chain A's two stores are named to this run's directory as well: without them the
+# application opens its default files in the working directory, and the demonstration
+# would read and write the developer's own epistemic state.
+MATRIX_KNOWLEDGE_DIR="$WORK/chain-a-knowledge"
+mkdir -p "$MATRIX_MIND_DIR" "$MATRIX_COGNITIVE_DIR" "$MATRIX_BRIDGE_JOURNAL_DIR" "$MATRIX_KNOWLEDGE_DIR"
 
 # The shared secret of the two processes. It is generated here, given to both processes
 # through the environment, and never printed.
@@ -49,6 +53,14 @@ export MATRIX_BRIDGE_SECRET="$BRIDGE_SECRET"
 log() { printf '[w53-demo] %s\n' "$*"; }
 
 cleanup() {
+  # The demonstration writes its machine-readable report outside this directory, so a
+  # finished run leaves nothing behind; an unfinished one keeps its directory, because
+  # the logs of both processes are the evidence of what happened.
+  if [[ "${DEMO_COMPLETED:-0}" == "1" ]]; then
+    rm -rf "$WORK"
+  else
+    printf '[w53-demo] the run did not finish; its directory is kept: %s\n' "$WORK"
+  fi
   if [[ -n "${CHAIN_B_PID:-}" ]] && kill -0 "$CHAIN_B_PID" 2>/dev/null; then
     kill "$CHAIN_B_PID" 2>/dev/null || true
     wait "$CHAIN_B_PID" 2>/dev/null || true
@@ -97,7 +109,9 @@ log "starting chain A — the Quarkus application"
 MATRIX_PEER_URL="http://127.0.0.1:$CHAIN_B_PORT" \
 MATRIX_BRIDGE_SECRET="$BRIDGE_SECRET" \
 QUARKUS_HTTP_PORT="$CHAIN_A_PORT" \
-  java -jar matrix-core/build/quarkus-app/quarkus-run.jar \
+  java -Dmatrix.cognitive.path="$WORK/chain-a-cognitive/cognitive.sqlite" \
+  -Dmatrix.knowledge.path="$WORK/chain-a-knowledge/workbench.sqlite" \
+  -jar matrix-core/build/quarkus-app/quarkus-run.jar \
   >"$WORK/chain-a.log" 2>&1 &
 CHAIN_A_PID=$!
 
@@ -174,7 +188,9 @@ wait "$CHAIN_A_PID" 2>/dev/null || true
 MATRIX_PEER_URL="http://127.0.0.1:$CHAIN_B_PORT" \
 MATRIX_BRIDGE_SECRET="$BRIDGE_SECRET" \
 QUARKUS_HTTP_PORT="$CHAIN_A_PORT" \
-  java -jar matrix-core/build/quarkus-app/quarkus-run.jar \
+  java -Dmatrix.cognitive.path="$WORK/chain-a-cognitive/cognitive.sqlite" \
+  -Dmatrix.knowledge.path="$WORK/chain-a-knowledge/workbench.sqlite" \
+  -jar matrix-core/build/quarkus-app/quarkus-run.jar \
   >>"$WORK/chain-a.log" 2>&1 &
 CHAIN_A_PID=$!
 wait_for_health "http://127.0.0.1:$CHAIN_A_PORT/q/health" "chain A after the restart"
@@ -208,6 +224,17 @@ def rows(text):
 before = [row for row in rows(inbox) if row.get("requestId") == request_id]
 after = [row for row in rows(inbox_after) if row.get("requestId") == request_id]
 
+def peer_stages_of(text, request_id):
+    """The stages the peer measured for one request, or an empty dict."""
+    data = parse(text)
+    if not isinstance(data, list):
+        return {}
+    for row in data:
+        if isinstance(row, dict) and row.get("requestId") == request_id:
+            stages = row.get("stageTimings")
+            return stages if isinstance(stages, dict) else {}
+    return {}
+
 def dispatch_of(text):
     """The dispatch row of the durable trace, or an empty dict."""
     data = parse(text)
@@ -233,6 +260,14 @@ if len(after) != len(before):
     problems.append("the peer received the request again after chain A restarted")
 if len(after) != 1:
     problems.append("the peer does not hold exactly one row for this request")
+peer_stages = before[0].get("stageTimings") if before else None
+if not isinstance(peer_stages, dict) or not peer_stages:
+    problems.append("the peer did not record what its own work cost")
+else:
+    for stage in ("inboxWrite", "execution", "outcomeWrite", "answerSigning",
+                  "deliveryTotal", "authenticationAndValidation"):
+        if stage not in peer_stages:
+            problems.append("the peer did not separate its stage " + stage)
 
 if problems:
     for problem in problems:
@@ -336,6 +371,17 @@ def parse(text):
 commit = subprocess.run(["git", "rev-parse", "HEAD"], capture_output=True, text=True)
 commit_sha = commit.stdout.strip() if commit.returncode == 0 else None
 
+def peer_stages_of(text, request_id):
+    """The stages the peer measured for one request, or an empty dict."""
+    data = parse(text)
+    if not isinstance(data, list):
+        return {}
+    for row in data:
+        if isinstance(row, dict) and row.get("requestId") == request_id:
+            stages = row.get("stageTimings")
+            return stages if isinstance(stages, dict) else {}
+    return {}
+
 def dispatch_of(text):
     """The dispatch row of the durable trace, or an empty dict."""
     data = parse(text)
@@ -359,7 +405,7 @@ if not isinstance(chain_b_capabilities, list):
     chain_b_capabilities = []
 
 document = {
-    "schema": "matrix.w53.distributed-demonstration/v5",
+    "schema": "matrix.w53.distributed-demonstration/v6",
     "generatedBy": "scripts/w53-distributed-demo.sh",
     "taskId": task_id,
     "requestId": request_id,
@@ -449,6 +495,7 @@ document = {
         "claim one",
     ],
     "peerDurableInbox": parse(inbox),
+    "peerStages": peer_stages_of(inbox, request_id),
     "peerDurableInboxForTheTask": [
         row for row in parse(inbox) if row.get("requestId") == request_id
     ],
@@ -461,6 +508,10 @@ document = {
         "timestamps (the peer writes one instant for the whole request, so updatedAt "
         "equals createdAt on every row and says nothing about a single execution)",
         "the state is COMPLETED: the first delivery finished the execution and the result is still on disk after the restart",
+        "the row carries what the peer's own work cost: the durable inbox write, the "
+        "execution, the write of the outcome and the signing of the answer, each "
+        "measured by the peer with its own clock. The measurement stayed on the peer's "
+        "side of the boundary: the answer the caller received carries nothing new",
     ],
     "reportAdmission": (parse(answer).get("reportDisposition")),
     "whatThisReportDoesNotClaim": [
@@ -480,5 +531,9 @@ with open(report, "w", encoding="utf-8") as handle:
     handle.write("\n")
 print("[w53-demo] the report is written to " + report)
 PY
+
+# The run finished: the report is written outside the work directory, so the
+# directory can go with it.
+DEMO_COMPLETED=1
 
 log "done"

@@ -49,6 +49,13 @@ import java.util.Optional;
  * path ran" and "the effect was committed" recoverable: after a restart, the reconciler
  * asks this store whether the effect was committed, and the answer is in the row rather
  * than in the reconciler's memory.</p>
+ *
+ * <p><b>One writer, one lock.</b> The peer serves concurrent deliveries, and this store
+ * holds ONE connection: a JDBC connection is not thread-safe, and two statements on it at
+ * once may interleave. Every method that touches the connection therefore synchronizes on
+ * the store, exactly as the cognitive store of chain A does. The lock costs nothing that
+ * SQLite's own write lock did not already cost: only one writer at a time may commit
+ * anyway, and the lock replaces a busy wait with a wait.</p>
  */
 public final class RemoteTaskStore implements AutoCloseable {
 
@@ -111,7 +118,8 @@ public final class RemoteTaskStore implements AutoCloseable {
             String refusalReason,
             boolean effectCommitted,
             String createdAt,
-            String updatedAt) {
+            String updatedAt,
+            String stageTimingsJson) {
     }
 
     /**
@@ -253,12 +261,17 @@ public final class RemoteTaskStore implements AutoCloseable {
                         refusal_reason TEXT,
                         effect_committed INTEGER NOT NULL DEFAULT 0,
                         cancel_requested_at TEXT,
+                        stage_timings_json TEXT,
                         created_at TEXT NOT NULL,
                         updated_at TEXT NOT NULL
                     )""");
             // W53 — the column arrives after the first version of the inbox did, so an
             // inbox written by an earlier build is migrated rather than refused.
             addColumnIfMissing("cancel_requested_at", "TEXT");
+            // W53 — the peer's own measurement of its own stages. It lives in the peer's
+            // row, not on the wire: the answer contract does not change, and the reader
+            // of the performance report reads the peer's own file.
+            addColumnIfMissing("stage_timings_json", "TEXT");
         }
     }
 
@@ -308,7 +321,7 @@ public final class RemoteTaskStore implements AutoCloseable {
      * @return the decision and the row
      * @throws SQLException when the inbox cannot be read or written
      */
-    public Admission admit(CognitiveTaskRequest request, String payloadDigest, String now)
+    public synchronized Admission admit(CognitiveTaskRequest request, String payloadDigest, String now)
             throws SQLException {
         if (request == null) {
             throw new IllegalArgumentException("there is no request to admit");
@@ -397,7 +410,7 @@ public final class RemoteTaskStore implements AutoCloseable {
      * @return how many rows were closed
      * @throws SQLException when the inbox cannot be read or written
      */
-    public int reconcileUnfinished(String now) throws SQLException {
+    public synchronized int reconcileUnfinished(String now) throws SQLException {
         int closed = 0;
         for (Row row : unfinished()) {
             update(row.requestId(), "state = ?", State.FAILED.name(), now);
@@ -424,7 +437,7 @@ public final class RemoteTaskStore implements AutoCloseable {
      *         request
      * @throws SQLException when the inbox cannot be written
      */
-    public Optional<State> cancel(String requestId, String now) throws SQLException {
+    public synchronized Optional<State> cancel(String requestId, String now) throws SQLException {
         Row row = find(requestId).orElse(null);
         if (row == null) {
             return Optional.empty();
@@ -449,7 +462,7 @@ public final class RemoteTaskStore implements AutoCloseable {
      * @return true when the peer was told to withdraw it
      * @throws SQLException when the inbox cannot be read
      */
-    public boolean cancelRequested(String requestId) throws SQLException {
+    public synchronized boolean cancelRequested(String requestId) throws SQLException {
         try (PreparedStatement ps = connection.prepareStatement(
                 "SELECT cancel_requested_at FROM remote_task WHERE request_id = ?")) {
             ps.setString(1, requestId);
@@ -466,7 +479,7 @@ public final class RemoteTaskStore implements AutoCloseable {
      * @param now       the instant
      * @throws SQLException when the inbox cannot be written
      */
-    public void markRunning(String requestId, String now) throws SQLException {
+    public synchronized void markRunning(String requestId, String now) throws SQLException {
         update(requestId, "state = ?", State.RUNNING.name(), now);
     }
 
@@ -480,7 +493,7 @@ public final class RemoteTaskStore implements AutoCloseable {
      * @param now           the instant
      * @throws SQLException when the inbox cannot be written
      */
-    public void markCompleted(String requestId, String resultJson, String traceReference,
+    public synchronized void markCompleted(String requestId, String resultJson, String traceReference,
                                boolean effectCommitted, String now) throws SQLException {
         try (PreparedStatement ps = connection.prepareStatement(
                 "UPDATE remote_task SET state = ?, result_json = ?, trace_reference = ?, "
@@ -504,7 +517,7 @@ public final class RemoteTaskStore implements AutoCloseable {
      * @param now       the instant
      * @throws SQLException when the inbox cannot be written
      */
-    public void markTerminal(String requestId, State state, String reason, String now)
+    public synchronized void markTerminal(String requestId, State state, String reason, String now)
             throws SQLException {
         markTerminal(requestId, state, reason, null, now);
     }
@@ -522,7 +535,7 @@ public final class RemoteTaskStore implements AutoCloseable {
      * @param now        the instant
      * @throws SQLException when the inbox cannot be written
      */
-    public void markTerminal(String requestId, State state, String reason, String resultJson,
+    public synchronized void markTerminal(String requestId, State state, String reason, String resultJson,
                              String now) throws SQLException {
         if (!state.terminal()) {
             throw new IllegalArgumentException("the state " + state + " is not terminal");
@@ -540,17 +553,47 @@ public final class RemoteTaskStore implements AutoCloseable {
     }
 
     /**
+     * Records the peer's own measurement of the stages of one execution.
+     *
+     * <p><b>Why it lives here and not on the wire.</b> The mandate asks for the peer's
+     * authentication, its durable inbox write and its answer signing to be measured
+     * apart. Sending the numbers to the caller would change the answer contract, and a
+     * changed contract is a protocol question. The measurement is the peer's own
+     * bookkeeping about its own work, so it stays in the peer's own row: the peer writes
+     * it, the peer owns it, and the performance report reads the peer's own file. The
+     * caller learns nothing new and the wire stays exactly as it was.</p>
+     *
+     * <p><b>Why it does not move {@code updated_at}.</b> The row's state did not change:
+     * the stages describe an execution that already happened. Writing the instant of the
+     * measurement into the column that means "the state last changed" would make the
+     * record lie about when the task ended.</p>
+     *
+     * @param requestId the request
+     * @param stagesJson the measurement, as canonical JSON
+     * @throws SQLException when the inbox cannot be written
+     */
+    public synchronized void recordStages(String requestId, String stagesJson) throws SQLException {
+        try (PreparedStatement ps = connection.prepareStatement(
+                "UPDATE remote_task SET stage_timings_json = ? WHERE request_id = ?")) {
+            ps.setString(1, stagesJson);
+            ps.setString(2, requestId);
+            ps.executeUpdate();
+        }
+    }
+
+    /**
      * The row of a request, when the inbox holds one.
      *
      * @param requestId the request
      * @return the row, or empty
      * @throws SQLException when the inbox cannot be read
      */
-    public Optional<Row> find(String requestId) throws SQLException {
+    public synchronized Optional<Row> find(String requestId) throws SQLException {
         try (PreparedStatement ps = connection.prepareStatement(
                 "SELECT request_id, task_id, payload_digest, payload_hash, capability_id, "
                         + "capability_version, state, result_json, trace_reference, "
-                        + "refusal_reason, effect_committed, created_at, updated_at "
+                        + "refusal_reason, effect_committed, created_at, updated_at, "
+                        + "stage_timings_json "
                         + "FROM remote_task WHERE request_id = ?")) {
             ps.setString(1, requestId);
             try (ResultSet rs = ps.executeQuery()) {
@@ -572,12 +615,13 @@ public final class RemoteTaskStore implements AutoCloseable {
      * @return the rows
      * @throws SQLException when the inbox cannot be read
      */
-    public List<Row> unfinished() throws SQLException {
+    public synchronized List<Row> unfinished() throws SQLException {
         List<Row> rows = new ArrayList<>();
         try (PreparedStatement ps = connection.prepareStatement(
                 "SELECT request_id, task_id, payload_digest, payload_hash, capability_id, "
                         + "capability_version, state, result_json, trace_reference, "
-                        + "refusal_reason, effect_committed, created_at, updated_at "
+                        + "refusal_reason, effect_committed, created_at, updated_at, "
+                        + "stage_timings_json "
                         + "FROM remote_task WHERE state IN ('ACCEPTED','RUNNING') "
                         + "ORDER BY created_at")) {
             try (ResultSet rs = ps.executeQuery()) {
@@ -597,7 +641,8 @@ public final class RemoteTaskStore implements AutoCloseable {
                 rs.getString("capability_version"), State.valueOf(rs.getString("state")),
                 rs.getString("result_json"), rs.getString("trace_reference"),
                 rs.getString("refusal_reason"), rs.getInt("effect_committed") != 0,
-                rs.getString("created_at"), rs.getString("updated_at"));
+                rs.getString("created_at"), rs.getString("updated_at"),
+                rs.getString("stage_timings_json"));
     }
 
     /** Runs one update of the state column. */
@@ -613,7 +658,7 @@ public final class RemoteTaskStore implements AutoCloseable {
     }
 
     /** How many requests the inbox holds. */
-    public int size() throws SQLException {
+    public synchronized int size() throws SQLException {
         try (Statement st = connection.createStatement();
              ResultSet rs = st.executeQuery("SELECT COUNT(*) FROM remote_task")) {
             return rs.next() ? rs.getInt(1) : 0;

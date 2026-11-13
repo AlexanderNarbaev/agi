@@ -1,0 +1,3182 @@
+{
+  "schema": "matrix.w53.distributed-performance/v3",
+  "generatedBy": "scripts/w53-distributed-benchmark.sh",
+  "commit": "64b1657af950acb19221c6f778d27dd6e82c01ff",
+  "codeUnderTest": "the working tree the run executed. The commit above is the HEAD at the moment of the run, and the tree may carry changes that are not committed yet; the wave's report names the commit that carries the measurement",
+  "environment": {
+    "os": "Ubuntu 26.04.1 LTS",
+    "jdk": "openjdk version \"25.0.5.0.3\" 2026-10-24",
+    "hardware": "x86_64",
+    "jvmArguments": "the default of the Quarkus fast-jar and of the gateway's start script"
+  },
+  "workload": {
+    "tasks": 30,
+    "concurrency": 1,
+    "runStamp": "1794473643-258895",
+    "requestIds": "w53-bench-<runStamp>-<index> — unique per run, because chain A's cognitive database is persistent and a request id is the identity of a dispatch",
+    "payloadSize": "one sentence of input and one expectation",
+    "seed": "none — the workload has no randomness",
+    "procedure": "the tasks go through POST /v1/cognitive/task on chain A, as many at a time as the concurrency allows; the latency is the client's round trip, the stage times are chain A's own monotonic measurements of the parts it can time",
+    "stateDirectory": "the directory the two processes kept their state in. A run with --work-dir measures the path against the history that the earlier runs left there, which is how the behaviour under a growing cognitive and audit history is measured"
+  },
+  "endToEndMillis": {
+    "p50": 14.443,
+    "p95": 23.894,
+    "p99": 234.24800000000002,
+    "min": 12.741000000000001,
+    "max": 234.24800000000002,
+    "mean": 22.4278
+  },
+  "throughputTasksPerSecond": 44.587520844665995,
+  "stagesMillis": {
+    "assessment_nanos": {
+      "p50": 0.345942,
+      "p95": 0.507426,
+      "count": 30
+    },
+    "dispatch_nanos": {
+      "p50": 6.354023,
+      "p95": 11.501741,
+      "count": 30
+    },
+    "intent_written_nanos": {
+      "p50": 0.246163,
+      "p95": 0.804275,
+      "count": 30
+    },
+    "peer_execution_nanos": {
+      "p50": 1.0,
+      "p95": 3.0,
+      "count": 30
+    },
+    "report_admission_nanos": {
+      "p50": 4.337473,
+      "p95": 7.198123,
+      "count": 30
+    },
+    "total_nanos": {
+      "p50": 11.45319,
+      "p95": 19.872995,
+      "count": 30
+    }
+  },
+  "peerStagesMillis": {
+    "whatItIs": "the peer's own measurement of its own work, read from the peer's own durable row. The peer keeps it there and does not send it: the answer contract is unchanged and the caller learns nothing new",
+    "rows": 30,
+    "stages": {
+      "answerSigning": {
+        "p50": 0.59991,
+        "p95": 1.431267,
+        "count": 30
+      },
+      "authenticationAndValidation": {
+        "p50": 0.7727460000000002,
+        "p95": 1.494717,
+        "count": 30
+      },
+      "deliveryTotal": {
+        "p50": 2.75455,
+        "p95": 5.521093,
+        "count": 30
+      },
+      "execution": {
+        "p50": 1.436166,
+        "p95": 3.135538,
+        "count": 30
+      },
+      "inboxWrite": {
+        "p50": 0.233029,
+        "p95": 0.455779,
+        "count": 30
+      },
+      "outcomeWrite": {
+        "p50": 0.226116,
+        "p95": 0.76429,
+        "count": 30
+      },
+      "stateWrite": {
+        "p50": 0.02691,
+        "p95": 0.062598,
+        "count": 30
+      }
+    }
+  },
+  "stageMeanings": {
+    "intent_written_nanos": "chain A: the durable dispatch intent, written before the send",
+    "dispatch_nanos": "chain A: signing the request, the network round trip, chain B's authentication, its durable inbox write, the production inference, the signed answer and its verification",
+    "peer_execution_nanos": "chain B, as chain B measured it: the production inference itself, rounded to the millisecond; the difference against dispatch_nanos is the network, the signing and chain B's own bookkeeping",
+    "report_admission_nanos": "chain A: the report entering the epistemic model through chain A's own bridge receiver",
+    "assessment_nanos": "chain A: the epistemic evaluation of the answer",
+    "total_nanos": "chain A: the whole task, as chain A can see it",
+    "replay_dispatch_nanos": "the replay path: chain A sending the request again and the peer answering from its durable record",
+    "replay_report_admission_nanos": "the replay path: the report entering the epistemic model again",
+    "replay_assessment_nanos": "the replay path: the epistemic evaluation again",
+    "replay_total_nanos": "the replay path: the whole replay, as chain A can see it"
+  },
+  "peerStageMeanings": {
+    "inboxWrite": "chain B: the durable write of the request into its own inbox",
+    "stateWrite": "chain B: the write that moves the request into the running state",
+    "execution": "chain B: the production cognitive path it really ran",
+    "outcomeWrite": "chain B: the durable write of the outcome",
+    "answerSigning": "chain B: the serialization and the signing of the answer",
+    "deliveryTotal": "chain B: the whole reception of the delivery",
+    "authenticationAndValidation": "chain B: the REMAINDER of the reception — what it cost beyond the peer's own four writes and its execution. It carries the authentication, the validation and the receiver's bookkeeping together, so it is not a measurement of the signature alone"
+  },
+  "processMetrics": {
+    "chainA": {
+      "cpuSeconds": 1.02,
+      "peakResidentBytes": 4923457536,
+      "residentBytes": 4415508480,
+      "heapUsedBytes": 1130769408,
+      "garbageCollection": {
+        "events": 0,
+        "pauseMillis": 0.0
+      }
+    },
+    "chainB": {
+      "cpuSeconds": 0.85,
+      "peakResidentBytes": 168341504,
+      "residentBytes": 168341504
+    },
+    "cpuSeconds": 1.87,
+    "cpuSecondsPerTask": 0.0623,
+    "estimatedAllocationBytes": 38462464,
+    "estimatedAllocationBytesPerTask": 1282082,
+    "allocationIsLowerBound": true,
+    "retainedResidentBytes": 21663744
+  },
+  "processMetricsMeanings": {
+    "chainA": "the Quarkus application: the CPU time it used, the peak memory it held, and the garbage collection the JVM's own log records",
+    "chainB": "the gateway's JDK server: the CPU time it used and the peak memory it held",
+    "cpuSecondsPerTask": "the CPU time the two processes together spent on the first pass, divided by the number of tasks",
+    "cpuSecondsPerReplay": "the CPU time the two processes together spent on the replay pass, divided by the number of replays",
+    "estimatedAllocationBytes": "the heap the JVM collected during the run, plus the growth of the heap it held — an estimate of the allocation, not a counter of it",
+    "allocationIsLowerBound": "true when the JVM collected nothing during the run: the estimate is then a lower bound on the allocation",
+    "retainedResidentBytes": "the growth of the resident set over the run — the memory the run retained in the process",
+    "peakResidentBytes": "the peak of the whole lifetime of the process, the startup included; it is not the memory the run used"
+  },
+  "whatThisReportDoesNotClaim": [
+    "it does not claim a p99 from a sample of this size",
+    "it does not separate chain B's stages from the network round trip on chain A's side: chain A times the crossing as one interval. The peer's own stages ARE separated, in the peer's own record — the peer measures them and keeps them there, and the report reads that record; the answer contract did not change",
+    "it does not claim that these numbers are comparable with a run on another machine",
+    "no optimization was accepted on the strength of this run alone",
+    "it does not claim an exact allocation per task: the allocation is estimated from the JVM's own garbage-collection log, and the estimate is named as an estimate",
+    "it does not separate the serialization and the signature cost from the network round trip on chain A's side — chain A times the crossing as one interval. On the peer's side the signing of the answer is measured apart, and the report says so",
+    "it does not claim that the replay path avoided the peer entirely: the request is sent again and the peer answers from its durable record, and the report measures that path rather than asserting that it never reached the peer",
+    "it does not average the workloads into one number: they answer different questions, and each keeps its own section",
+    "the section overCapRun measures the refusal the coordinator's concurrency cap makes when more tasks arrive than the cap allows; its throughput is the throughput of the accepted tasks alone and is not the throughput of the path"
+  ],
+  "samples": [
+    {
+      "index": 1,
+      "disposition": "UNRESOLVED",
+      "state": "ADJUDICATED",
+      "timingsNanos": {
+        "intent_written_nanos": 21308700,
+        "dispatch_nanos": 175062521,
+        "peer_execution_nanos": 12000000,
+        "report_admission_nanos": 9423886,
+        "assessment_nanos": 1275614,
+        "total_nanos": 208401217
+      },
+      "latencyMillis": 234.24800000000002
+    },
+    {
+      "index": 2,
+      "disposition": "UNRESOLVED",
+      "state": "ADJUDICATED",
+      "timingsNanos": {
+        "intent_written_nanos": 308642,
+        "dispatch_nanos": 11501741,
+        "peer_execution_nanos": 3000000,
+        "report_admission_nanos": 7198123,
+        "assessment_nanos": 362002,
+        "total_nanos": 19872995
+      },
+      "latencyMillis": 23.894
+    },
+    {
+      "index": 3,
+      "disposition": "UNRESOLVED",
+      "state": "ADJUDICATED",
+      "timingsNanos": {
+        "intent_written_nanos": 394082,
+        "dispatch_nanos": 9195826,
+        "peer_execution_nanos": 3000000,
+        "report_admission_nanos": 4961609,
+        "assessment_nanos": 303442,
+        "total_nanos": 15253440
+      },
+      "latencyMillis": 18.781
+    },
+    {
+      "index": 4,
+      "disposition": "UNRESOLVED",
+      "state": "ADJUDICATED",
+      "timingsNanos": {
+        "intent_written_nanos": 269137,
+        "dispatch_nanos": 8859984,
+        "peer_execution_nanos": 2000000,
+        "report_admission_nanos": 4872160,
+        "assessment_nanos": 276661,
+        "total_nanos": 14670883
+      },
+      "latencyMillis": 19.016000000000002
+    },
+    {
+      "index": 5,
+      "disposition": "UNRESOLVED",
+      "state": "ADJUDICATED",
+      "timingsNanos": {
+        "intent_written_nanos": 238900,
+        "dispatch_nanos": 6875565,
+        "peer_execution_nanos": 2000000,
+        "report_admission_nanos": 4008984,
+        "assessment_nanos": 280318,
+        "total_nanos": 11620205
+      },
+      "latencyMillis": 14.383
+    },
+    {
+      "index": 6,
+      "disposition": "UNRESOLVED",
+      "state": "ADJUDICATED",
+      "timingsNanos": {
+        "intent_written_nanos": 266131,
+        "dispatch_nanos": 7610519,
+        "peer_execution_nanos": 1000000,
+        "report_admission_nanos": 4507924,
+        "assessment_nanos": 329801,
+        "total_nanos": 13015203
+      },
+      "latencyMillis": 16.311
+    },
+    {
+      "index": 7,
+      "disposition": "UNRESOLVED",
+      "state": "ADJUDICATED",
+      "timingsNanos": {
+        "intent_written_nanos": 139653,
+        "dispatch_nanos": 6930698,
+        "peer_execution_nanos": 1000000,
+        "report_admission_nanos": 4062625,
+        "assessment_nanos": 324471,
+        "total_nanos": 11654018
+      },
+      "latencyMillis": 14.831999999999999
+    },
+    {
+      "index": 8,
+      "disposition": "UNRESOLVED",
+      "state": "ADJUDICATED",
+      "timingsNanos": {
+        "intent_written_nanos": 248909,
+        "dispatch_nanos": 7209664,
+        "peer_execution_nanos": 2000000,
+        "report_admission_nanos": 4362099,
+        "assessment_nanos": 300977,
+        "total_nanos": 12384134
+      },
+      "latencyMillis": 15.341000000000001
+    },
+    {
+      "index": 9,
+      "disposition": "UNRESOLVED",
+      "state": "ADJUDICATED",
+      "timingsNanos": {
+        "intent_written_nanos": 376921,
+        "dispatch_nanos": 7673538,
+        "peer_execution_nanos": 1000000,
+        "report_admission_nanos": 4463931,
+        "assessment_nanos": 307079,
+        "total_nanos": 13126143
+      },
+      "latencyMillis": 16.758
+    },
+    {
+      "index": 10,
+      "disposition": "UNRESOLVED",
+      "state": "ADJUDICATED",
+      "timingsNanos": {
+        "intent_written_nanos": 154311,
+        "dispatch_nanos": 6427411,
+        "peer_execution_nanos": 1000000,
+        "report_admission_nanos": 3715320,
+        "assessment_nanos": 391257,
+        "total_nanos": 10861705
+      },
+      "latencyMillis": 13.646
+    },
+    {
+      "index": 11,
+      "disposition": "UNRESOLVED",
+      "state": "ADJUDICATED",
+      "timingsNanos": {
+        "intent_written_nanos": 293643,
+        "dispatch_nanos": 6081088,
+        "peer_execution_nanos": 1000000,
+        "report_admission_nanos": 4301625,
+        "assessment_nanos": 317278,
+        "total_nanos": 11218578
+      },
+      "latencyMillis": 14.26
+    },
+    {
+      "index": 12,
+      "disposition": "UNRESOLVED",
+      "state": "ADJUDICATED",
+      "timingsNanos": {
+        "intent_written_nanos": 120527,
+        "dispatch_nanos": 4927724,
+        "peer_execution_nanos": 1000000,
+        "report_admission_nanos": 4337473,
+        "assessment_nanos": 389083,
+        "total_nanos": 9974424
+      },
+      "latencyMillis": 13.098
+    },
+    {
+      "index": 13,
+      "disposition": "UNRESOLVED",
+      "state": "ADJUDICATED",
+      "timingsNanos": {
+        "intent_written_nanos": 242376,
+        "dispatch_nanos": 7113323,
+        "peer_execution_nanos": 1000000,
+        "report_admission_nanos": 4405932,
+        "assessment_nanos": 282763,
+        "total_nanos": 12362914
+      },
+      "latencyMillis": 15.556000000000001
+    },
+    {
+      "index": 14,
+      "disposition": "UNRESOLVED",
+      "state": "ADJUDICATED",
+      "timingsNanos": {
+        "intent_written_nanos": 211198,
+        "dispatch_nanos": 6125542,
+        "peer_execution_nanos": 1000000,
+        "report_admission_nanos": 4166220,
+        "assessment_nanos": 318000,
+        "total_nanos": 11046294
+      },
+      "latencyMillis": 14.277
+    },
+    {
+      "index": 15,
+      "disposition": "UNRESOLVED",
+      "state": "ADJUDICATED",
+      "timingsNanos": {
+        "intent_written_nanos": 235825,
+        "dispatch_nanos": 6707609,
+        "peer_execution_nanos": 1000000,
+        "report_admission_nanos": 4687823,
+        "assessment_nanos": 313010,
+        "total_nanos": 12228571
+      },
+      "latencyMillis": 15.228
+    },
+    {
+      "index": 16,
+      "disposition": "UNRESOLVED",
+      "state": "ADJUDICATED",
+      "timingsNanos": {
+        "intent_written_nanos": 185159,
+        "dispatch_nanos": 6766570,
+        "peer_execution_nanos": 1000000,
+        "report_admission_nanos": 4623672,
+        "assessment_nanos": 507426,
+        "total_nanos": 12288925
+      },
+      "latencyMillis": 15.76
+    },
+    {
+      "index": 17,
+      "disposition": "UNRESOLVED",
+      "state": "ADJUDICATED",
+      "timingsNanos": {
+        "intent_written_nanos": 208914,
+        "dispatch_nanos": 6448640,
+        "peer_execution_nanos": 1000000,
+        "report_admission_nanos": 3808316,
+        "assessment_nanos": 321586,
+        "total_nanos": 10998654
+      },
+      "latencyMillis": 14.048
+    },
+    {
+      "index": 18,
+      "disposition": "UNRESOLVED",
+      "state": "ADJUDICATED",
+      "timingsNanos": {
+        "intent_written_nanos": 251534,
+        "dispatch_nanos": 6080366,
+        "peer_execution_nanos": 1000000,
+        "report_admission_nanos": 4576133,
+        "assessment_nanos": 323910,
+        "total_nanos": 11453190
+      },
+      "latencyMillis": 14.286999999999999
+    },
+    {
+      "index": 19,
+      "disposition": "UNRESOLVED",
+      "state": "ADJUDICATED",
+      "timingsNanos": {
+        "intent_written_nanos": 246163,
+        "dispatch_nanos": 6103751,
+        "peer_execution_nanos": 1000000,
+        "report_admission_nanos": 4739891,
+        "assessment_nanos": 345942,
+        "total_nanos": 11690186
+      },
+      "latencyMillis": 14.631
+    },
+    {
+      "index": 20,
+      "disposition": "UNRESOLVED",
+      "state": "ADJUDICATED",
+      "timingsNanos": {
+        "intent_written_nanos": 285097,
+        "dispatch_nanos": 5629357,
+        "peer_execution_nanos": 1000000,
+        "report_admission_nanos": 4692111,
+        "assessment_nanos": 356392,
+        "total_nanos": 11254635
+      },
+      "latencyMillis": 14.594
+    },
+    {
+      "index": 21,
+      "disposition": "UNRESOLVED",
+      "state": "ADJUDICATED",
+      "timingsNanos": {
+        "intent_written_nanos": 230684,
+        "dispatch_nanos": 5853760,
+        "peer_execution_nanos": 1000000,
+        "report_admission_nanos": 4121075,
+        "assessment_nanos": 351443,
+        "total_nanos": 10780282
+      },
+      "latencyMillis": 13.753
+    },
+    {
+      "index": 22,
+      "disposition": "UNRESOLVED",
+      "state": "ADJUDICATED",
+      "timingsNanos": {
+        "intent_written_nanos": 804275,
+        "dispatch_nanos": 7534216,
+        "peer_execution_nanos": 1000000,
+        "report_admission_nanos": 3935976,
+        "assessment_nanos": 351572,
+        "total_nanos": 12984896
+      },
+      "latencyMillis": 15.699000000000002
+    },
+    {
+      "index": 23,
+      "disposition": "UNRESOLVED",
+      "state": "ADJUDICATED",
+      "timingsNanos": {
+        "intent_written_nanos": 92775,
+        "dispatch_nanos": 5434610,
+        "peer_execution_nanos": 1000000,
+        "report_admission_nanos": 4024072,
+        "assessment_nanos": 338548,
+        "total_nanos": 10053323
+      },
+      "latencyMillis": 12.741000000000001
+    },
+    {
+      "index": 24,
+      "disposition": "UNRESOLVED",
+      "state": "ADJUDICATED",
+      "timingsNanos": {
+        "intent_written_nanos": 153129,
+        "dispatch_nanos": 5384044,
+        "peer_execution_nanos": 1000000,
+        "report_admission_nanos": 4849778,
+        "assessment_nanos": 402849,
+        "total_nanos": 10997913
+      },
+      "latencyMillis": 13.987
+    },
+    {
+      "index": 25,
+      "disposition": "UNRESOLVED",
+      "state": "ADJUDICATED",
+      "timingsNanos": {
+        "intent_written_nanos": 242016,
+        "dispatch_nanos": 5558203,
+        "peer_execution_nanos": 1000000,
+        "report_admission_nanos": 4333094,
+        "assessment_nanos": 455388,
+        "total_nanos": 10845926
+      },
+      "latencyMillis": 13.795
+    },
+    {
+      "index": 26,
+      "disposition": "UNRESOLVED",
+      "state": "ADJUDICATED",
+      "timingsNanos": {
+        "intent_written_nanos": 266031,
+        "dispatch_nanos": 6354023,
+        "peer_execution_nanos": 1000000,
+        "report_admission_nanos": 4216525,
+        "assessment_nanos": 399572,
+        "total_nanos": 11467527
+      },
+      "latencyMillis": 14.633000000000001
+    },
+    {
+      "index": 27,
+      "disposition": "UNRESOLVED",
+      "state": "ADJUDICATED",
+      "timingsNanos": {
+        "intent_written_nanos": 322688,
+        "dispatch_nanos": 5760674,
+        "peer_execution_nanos": 1000000,
+        "report_admission_nanos": 4196347,
+        "assessment_nanos": 389584,
+        "total_nanos": 10862277
+      },
+      "latencyMillis": 13.982
+    },
+    {
+      "index": 28,
+      "disposition": "UNRESOLVED",
+      "state": "ADJUDICATED",
+      "timingsNanos": {
+        "intent_written_nanos": 287502,
+        "dispatch_nanos": 5341124,
+        "peer_execution_nanos": 1000000,
+        "report_admission_nanos": 4009866,
+        "assessment_nanos": 382631,
+        "total_nanos": 10298404
+      },
+      "latencyMillis": 12.971
+    },
+    {
+      "index": 29,
+      "disposition": "UNRESOLVED",
+      "state": "ADJUDICATED",
+      "timingsNanos": {
+        "intent_written_nanos": 223601,
+        "dispatch_nanos": 4711086,
+        "peer_execution_nanos": 1000000,
+        "report_admission_nanos": 4762162,
+        "assessment_nanos": 486436,
+        "total_nanos": 10522857
+      },
+      "latencyMillis": 13.880999999999998
+    },
+    {
+      "index": 30,
+      "disposition": "UNRESOLVED",
+      "state": "ADJUDICATED",
+      "timingsNanos": {
+        "intent_written_nanos": 287842,
+        "dispatch_nanos": 5763068,
+        "peer_execution_nanos": 1000000,
+        "report_admission_nanos": 4311574,
+        "assessment_nanos": 433947,
+        "total_nanos": 11044209
+      },
+      "latencyMillis": 14.443
+    }
+  ],
+  "sequentialRun": {
+    "schema": "matrix.w53.distributed-performance/v2",
+    "generatedBy": "scripts/w53-distributed-benchmark.sh",
+    "commit": "64b1657af950acb19221c6f778d27dd6e82c01ff",
+    "codeUnderTest": "the working tree the run executed. The commit above is the HEAD at the moment of the run, and the tree may carry changes that are not committed yet; the wave's report names the commit that carries the measurement",
+    "environment": {
+      "os": "Ubuntu 26.04.1 LTS",
+      "jdk": "openjdk version \"25.0.5.0.3\" 2026-10-24",
+      "hardware": "x86_64",
+      "jvmArguments": "the default of the Quarkus fast-jar and of the gateway's start script"
+    },
+    "workload": {
+      "tasks": 30,
+      "concurrency": 1,
+      "runStamp": "1794473643-258895",
+      "requestIds": "w53-bench-<runStamp>-<index> — unique per run, because chain A's cognitive database is persistent and a request id is the identity of a dispatch",
+      "payloadSize": "one sentence of input and one expectation",
+      "seed": "none — the workload has no randomness",
+      "procedure": "the tasks go through POST /v1/cognitive/task on chain A, as many at a time as the concurrency allows; the latency is the client's round trip, the stage times are chain A's own monotonic measurements of the parts it can time",
+      "stateDirectory": "the directory the two processes kept their state in. A run with --work-dir measures the path against the history that the earlier runs left there, which is how the behaviour under a growing cognitive and audit history is measured"
+    },
+    "endToEndMillis": {
+      "p50": 14.443,
+      "p95": 23.894,
+      "p99": 234.24800000000002,
+      "min": 12.741000000000001,
+      "max": 234.24800000000002,
+      "mean": 22.4278
+    },
+    "throughputTasksPerSecond": 44.587520844665995,
+    "replayPath": {
+      "whatItIs": "the same requests sent again, with the same request id and the same payload: the peer recognises them and answers from its own durable record, so the cost of the durable idempotency path is measured apart from the cost of the first execution",
+      "replays": 30,
+      "endToEndMillis": {
+        "p50": 8.876,
+        "p95": 10.557,
+        "min": 6.288,
+        "max": 47.919999999999995,
+        "mean": 9.931366666666666
+      },
+      "stagesMillis": {
+        "replay_assessment_nanos": {
+          "p50": 0.50925,
+          "p95": 0.831567,
+          "count": 30
+        },
+        "replay_dispatch_nanos": {
+          "p50": 3.344311,
+          "p95": 4.525988,
+          "count": 30
+        },
+        "replay_report_admission_nanos": {
+          "p50": 1.901072,
+          "p95": 2.236193,
+          "count": 30
+        },
+        "replay_total_nanos": {
+          "p50": 6.20429,
+          "p95": 7.940902,
+          "count": 30
+        }
+      },
+      "sameDispositionAsTheFirstExecution": 30,
+      "comparedDispositions": 30
+    },
+    "stagesMillis": {
+      "assessment_nanos": {
+        "p50": 0.345942,
+        "p95": 0.507426,
+        "count": 30
+      },
+      "dispatch_nanos": {
+        "p50": 6.354023,
+        "p95": 11.501741,
+        "count": 30
+      },
+      "intent_written_nanos": {
+        "p50": 0.246163,
+        "p95": 0.804275,
+        "count": 30
+      },
+      "peer_execution_nanos": {
+        "p50": 1.0,
+        "p95": 3.0,
+        "count": 30
+      },
+      "report_admission_nanos": {
+        "p50": 4.337473,
+        "p95": 7.198123,
+        "count": 30
+      },
+      "total_nanos": {
+        "p50": 11.45319,
+        "p95": 19.872995,
+        "count": 30
+      }
+    },
+    "peerStagesMillis": {
+      "whatItIs": "the peer's own measurement of its own work, read from the peer's own durable row. The peer keeps it there and does not send it: the answer contract is unchanged and the caller learns nothing new",
+      "rows": 30,
+      "stages": {
+        "answerSigning": {
+          "p50": 0.59991,
+          "p95": 1.431267,
+          "count": 30
+        },
+        "authenticationAndValidation": {
+          "p50": 0.7727460000000002,
+          "p95": 1.494717,
+          "count": 30
+        },
+        "deliveryTotal": {
+          "p50": 2.75455,
+          "p95": 5.521093,
+          "count": 30
+        },
+        "execution": {
+          "p50": 1.436166,
+          "p95": 3.135538,
+          "count": 30
+        },
+        "inboxWrite": {
+          "p50": 0.233029,
+          "p95": 0.455779,
+          "count": 30
+        },
+        "outcomeWrite": {
+          "p50": 0.226116,
+          "p95": 0.76429,
+          "count": 30
+        },
+        "stateWrite": {
+          "p50": 0.02691,
+          "p95": 0.062598,
+          "count": 30
+        }
+      }
+    },
+    "stageMeanings": {
+      "intent_written_nanos": "chain A: the durable dispatch intent, written before the send",
+      "dispatch_nanos": "chain A: signing the request, the network round trip, chain B's authentication, its durable inbox write, the production inference, the signed answer and its verification",
+      "peer_execution_nanos": "chain B, as chain B measured it: the production inference itself, rounded to the millisecond; the difference against dispatch_nanos is the network, the signing and chain B's own bookkeeping",
+      "report_admission_nanos": "chain A: the report entering the epistemic model through chain A's own bridge receiver",
+      "assessment_nanos": "chain A: the epistemic evaluation of the answer",
+      "total_nanos": "chain A: the whole task, as chain A can see it",
+      "replay_dispatch_nanos": "the replay path: chain A sending the request again and the peer answering from its durable record",
+      "replay_report_admission_nanos": "the replay path: the report entering the epistemic model again",
+      "replay_assessment_nanos": "the replay path: the epistemic evaluation again",
+      "replay_total_nanos": "the replay path: the whole replay, as chain A can see it"
+    },
+    "peerStageMeanings": {
+      "inboxWrite": "chain B: the durable write of the request into its own inbox",
+      "stateWrite": "chain B: the write that moves the request into the running state",
+      "execution": "chain B: the production cognitive path it really ran",
+      "outcomeWrite": "chain B: the durable write of the outcome",
+      "answerSigning": "chain B: the serialization and the signing of the answer",
+      "deliveryTotal": "chain B: the whole reception of the delivery",
+      "authenticationAndValidation": "chain B: the REMAINDER of the reception — what it cost beyond the peer's own four writes and its execution. It carries the authentication, the validation and the receiver's bookkeeping together, so it is not a measurement of the signature alone"
+    },
+    "processMetrics": {
+      "chainA": {
+        "cpuSeconds": 1.02,
+        "peakResidentBytes": 4923457536,
+        "residentBytes": 4415508480,
+        "heapUsedBytes": 1130769408,
+        "garbageCollection": {
+          "events": 0,
+          "pauseMillis": 0.0
+        }
+      },
+      "chainB": {
+        "cpuSeconds": 0.85,
+        "peakResidentBytes": 168341504,
+        "residentBytes": 168341504
+      },
+      "cpuSeconds": 1.87,
+      "cpuSecondsPerTask": 0.0623,
+      "estimatedAllocationBytes": 38462464,
+      "estimatedAllocationBytesPerTask": 1282082,
+      "allocationIsLowerBound": true,
+      "retainedResidentBytes": 21663744
+    },
+    "processMetricsMeanings": {
+      "chainA": "the Quarkus application: the CPU time it used, the peak memory it held, and the garbage collection the JVM's own log records",
+      "chainB": "the gateway's JDK server: the CPU time it used and the peak memory it held",
+      "cpuSecondsPerTask": "the CPU time the two processes together spent on the first pass, divided by the number of tasks",
+      "cpuSecondsPerReplay": "the CPU time the two processes together spent on the replay pass, divided by the number of replays",
+      "estimatedAllocationBytes": "the heap the JVM collected during the run, plus the growth of the heap it held — an estimate of the allocation, not a counter of it",
+      "allocationIsLowerBound": "true when the JVM collected nothing during the run: the estimate is then a lower bound on the allocation",
+      "retainedResidentBytes": "the growth of the resident set over the run — the memory the run retained in the process",
+      "peakResidentBytes": "the peak of the whole lifetime of the process, the startup included; it is not the memory the run used"
+    },
+    "whatThisReportDoesNotClaim": [
+      "it does not claim a p99 from a sample of this size",
+      "it does not separate chain B's stages from the network round trip on chain A's side: chain A times the crossing as one interval. The peer's own stages ARE separated, in the peer's own record — the peer measures them and keeps them there, and the report reads that record; the answer contract did not change",
+      "it does not claim that these numbers are comparable with a run on another machine",
+      "no optimization was accepted on the strength of this run alone",
+      "it does not claim an exact allocation per task: the allocation is estimated from the JVM's own garbage-collection log, and the estimate is named as an estimate",
+      "it does not separate the serialization and the signature cost from the network round trip on chain A's side — chain A times the crossing as one interval. On the peer's side the signing of the answer is measured apart, and the report says so",
+      "it does not claim that the replay path avoided the peer entirely: the request is sent again and the peer answers from its durable record, and the report measures that path rather than asserting that it never reached the peer"
+    ],
+    "samples": [
+      {
+        "index": 1,
+        "disposition": "UNRESOLVED",
+        "state": "ADJUDICATED",
+        "timingsNanos": {
+          "intent_written_nanos": 21308700,
+          "dispatch_nanos": 175062521,
+          "peer_execution_nanos": 12000000,
+          "report_admission_nanos": 9423886,
+          "assessment_nanos": 1275614,
+          "total_nanos": 208401217
+        },
+        "latencyMillis": 234.24800000000002
+      },
+      {
+        "index": 2,
+        "disposition": "UNRESOLVED",
+        "state": "ADJUDICATED",
+        "timingsNanos": {
+          "intent_written_nanos": 308642,
+          "dispatch_nanos": 11501741,
+          "peer_execution_nanos": 3000000,
+          "report_admission_nanos": 7198123,
+          "assessment_nanos": 362002,
+          "total_nanos": 19872995
+        },
+        "latencyMillis": 23.894
+      },
+      {
+        "index": 3,
+        "disposition": "UNRESOLVED",
+        "state": "ADJUDICATED",
+        "timingsNanos": {
+          "intent_written_nanos": 394082,
+          "dispatch_nanos": 9195826,
+          "peer_execution_nanos": 3000000,
+          "report_admission_nanos": 4961609,
+          "assessment_nanos": 303442,
+          "total_nanos": 15253440
+        },
+        "latencyMillis": 18.781
+      },
+      {
+        "index": 4,
+        "disposition": "UNRESOLVED",
+        "state": "ADJUDICATED",
+        "timingsNanos": {
+          "intent_written_nanos": 269137,
+          "dispatch_nanos": 8859984,
+          "peer_execution_nanos": 2000000,
+          "report_admission_nanos": 4872160,
+          "assessment_nanos": 276661,
+          "total_nanos": 14670883
+        },
+        "latencyMillis": 19.016000000000002
+      },
+      {
+        "index": 5,
+        "disposition": "UNRESOLVED",
+        "state": "ADJUDICATED",
+        "timingsNanos": {
+          "intent_written_nanos": 238900,
+          "dispatch_nanos": 6875565,
+          "peer_execution_nanos": 2000000,
+          "report_admission_nanos": 4008984,
+          "assessment_nanos": 280318,
+          "total_nanos": 11620205
+        },
+        "latencyMillis": 14.383
+      },
+      {
+        "index": 6,
+        "disposition": "UNRESOLVED",
+        "state": "ADJUDICATED",
+        "timingsNanos": {
+          "intent_written_nanos": 266131,
+          "dispatch_nanos": 7610519,
+          "peer_execution_nanos": 1000000,
+          "report_admission_nanos": 4507924,
+          "assessment_nanos": 329801,
+          "total_nanos": 13015203
+        },
+        "latencyMillis": 16.311
+      },
+      {
+        "index": 7,
+        "disposition": "UNRESOLVED",
+        "state": "ADJUDICATED",
+        "timingsNanos": {
+          "intent_written_nanos": 139653,
+          "dispatch_nanos": 6930698,
+          "peer_execution_nanos": 1000000,
+          "report_admission_nanos": 4062625,
+          "assessment_nanos": 324471,
+          "total_nanos": 11654018
+        },
+        "latencyMillis": 14.831999999999999
+      },
+      {
+        "index": 8,
+        "disposition": "UNRESOLVED",
+        "state": "ADJUDICATED",
+        "timingsNanos": {
+          "intent_written_nanos": 248909,
+          "dispatch_nanos": 7209664,
+          "peer_execution_nanos": 2000000,
+          "report_admission_nanos": 4362099,
+          "assessment_nanos": 300977,
+          "total_nanos": 12384134
+        },
+        "latencyMillis": 15.341000000000001
+      },
+      {
+        "index": 9,
+        "disposition": "UNRESOLVED",
+        "state": "ADJUDICATED",
+        "timingsNanos": {
+          "intent_written_nanos": 376921,
+          "dispatch_nanos": 7673538,
+          "peer_execution_nanos": 1000000,
+          "report_admission_nanos": 4463931,
+          "assessment_nanos": 307079,
+          "total_nanos": 13126143
+        },
+        "latencyMillis": 16.758
+      },
+      {
+        "index": 10,
+        "disposition": "UNRESOLVED",
+        "state": "ADJUDICATED",
+        "timingsNanos": {
+          "intent_written_nanos": 154311,
+          "dispatch_nanos": 6427411,
+          "peer_execution_nanos": 1000000,
+          "report_admission_nanos": 3715320,
+          "assessment_nanos": 391257,
+          "total_nanos": 10861705
+        },
+        "latencyMillis": 13.646
+      },
+      {
+        "index": 11,
+        "disposition": "UNRESOLVED",
+        "state": "ADJUDICATED",
+        "timingsNanos": {
+          "intent_written_nanos": 293643,
+          "dispatch_nanos": 6081088,
+          "peer_execution_nanos": 1000000,
+          "report_admission_nanos": 4301625,
+          "assessment_nanos": 317278,
+          "total_nanos": 11218578
+        },
+        "latencyMillis": 14.26
+      },
+      {
+        "index": 12,
+        "disposition": "UNRESOLVED",
+        "state": "ADJUDICATED",
+        "timingsNanos": {
+          "intent_written_nanos": 120527,
+          "dispatch_nanos": 4927724,
+          "peer_execution_nanos": 1000000,
+          "report_admission_nanos": 4337473,
+          "assessment_nanos": 389083,
+          "total_nanos": 9974424
+        },
+        "latencyMillis": 13.098
+      },
+      {
+        "index": 13,
+        "disposition": "UNRESOLVED",
+        "state": "ADJUDICATED",
+        "timingsNanos": {
+          "intent_written_nanos": 242376,
+          "dispatch_nanos": 7113323,
+          "peer_execution_nanos": 1000000,
+          "report_admission_nanos": 4405932,
+          "assessment_nanos": 282763,
+          "total_nanos": 12362914
+        },
+        "latencyMillis": 15.556000000000001
+      },
+      {
+        "index": 14,
+        "disposition": "UNRESOLVED",
+        "state": "ADJUDICATED",
+        "timingsNanos": {
+          "intent_written_nanos": 211198,
+          "dispatch_nanos": 6125542,
+          "peer_execution_nanos": 1000000,
+          "report_admission_nanos": 4166220,
+          "assessment_nanos": 318000,
+          "total_nanos": 11046294
+        },
+        "latencyMillis": 14.277
+      },
+      {
+        "index": 15,
+        "disposition": "UNRESOLVED",
+        "state": "ADJUDICATED",
+        "timingsNanos": {
+          "intent_written_nanos": 235825,
+          "dispatch_nanos": 6707609,
+          "peer_execution_nanos": 1000000,
+          "report_admission_nanos": 4687823,
+          "assessment_nanos": 313010,
+          "total_nanos": 12228571
+        },
+        "latencyMillis": 15.228
+      },
+      {
+        "index": 16,
+        "disposition": "UNRESOLVED",
+        "state": "ADJUDICATED",
+        "timingsNanos": {
+          "intent_written_nanos": 185159,
+          "dispatch_nanos": 6766570,
+          "peer_execution_nanos": 1000000,
+          "report_admission_nanos": 4623672,
+          "assessment_nanos": 507426,
+          "total_nanos": 12288925
+        },
+        "latencyMillis": 15.76
+      },
+      {
+        "index": 17,
+        "disposition": "UNRESOLVED",
+        "state": "ADJUDICATED",
+        "timingsNanos": {
+          "intent_written_nanos": 208914,
+          "dispatch_nanos": 6448640,
+          "peer_execution_nanos": 1000000,
+          "report_admission_nanos": 3808316,
+          "assessment_nanos": 321586,
+          "total_nanos": 10998654
+        },
+        "latencyMillis": 14.048
+      },
+      {
+        "index": 18,
+        "disposition": "UNRESOLVED",
+        "state": "ADJUDICATED",
+        "timingsNanos": {
+          "intent_written_nanos": 251534,
+          "dispatch_nanos": 6080366,
+          "peer_execution_nanos": 1000000,
+          "report_admission_nanos": 4576133,
+          "assessment_nanos": 323910,
+          "total_nanos": 11453190
+        },
+        "latencyMillis": 14.286999999999999
+      },
+      {
+        "index": 19,
+        "disposition": "UNRESOLVED",
+        "state": "ADJUDICATED",
+        "timingsNanos": {
+          "intent_written_nanos": 246163,
+          "dispatch_nanos": 6103751,
+          "peer_execution_nanos": 1000000,
+          "report_admission_nanos": 4739891,
+          "assessment_nanos": 345942,
+          "total_nanos": 11690186
+        },
+        "latencyMillis": 14.631
+      },
+      {
+        "index": 20,
+        "disposition": "UNRESOLVED",
+        "state": "ADJUDICATED",
+        "timingsNanos": {
+          "intent_written_nanos": 285097,
+          "dispatch_nanos": 5629357,
+          "peer_execution_nanos": 1000000,
+          "report_admission_nanos": 4692111,
+          "assessment_nanos": 356392,
+          "total_nanos": 11254635
+        },
+        "latencyMillis": 14.594
+      },
+      {
+        "index": 21,
+        "disposition": "UNRESOLVED",
+        "state": "ADJUDICATED",
+        "timingsNanos": {
+          "intent_written_nanos": 230684,
+          "dispatch_nanos": 5853760,
+          "peer_execution_nanos": 1000000,
+          "report_admission_nanos": 4121075,
+          "assessment_nanos": 351443,
+          "total_nanos": 10780282
+        },
+        "latencyMillis": 13.753
+      },
+      {
+        "index": 22,
+        "disposition": "UNRESOLVED",
+        "state": "ADJUDICATED",
+        "timingsNanos": {
+          "intent_written_nanos": 804275,
+          "dispatch_nanos": 7534216,
+          "peer_execution_nanos": 1000000,
+          "report_admission_nanos": 3935976,
+          "assessment_nanos": 351572,
+          "total_nanos": 12984896
+        },
+        "latencyMillis": 15.699000000000002
+      },
+      {
+        "index": 23,
+        "disposition": "UNRESOLVED",
+        "state": "ADJUDICATED",
+        "timingsNanos": {
+          "intent_written_nanos": 92775,
+          "dispatch_nanos": 5434610,
+          "peer_execution_nanos": 1000000,
+          "report_admission_nanos": 4024072,
+          "assessment_nanos": 338548,
+          "total_nanos": 10053323
+        },
+        "latencyMillis": 12.741000000000001
+      },
+      {
+        "index": 24,
+        "disposition": "UNRESOLVED",
+        "state": "ADJUDICATED",
+        "timingsNanos": {
+          "intent_written_nanos": 153129,
+          "dispatch_nanos": 5384044,
+          "peer_execution_nanos": 1000000,
+          "report_admission_nanos": 4849778,
+          "assessment_nanos": 402849,
+          "total_nanos": 10997913
+        },
+        "latencyMillis": 13.987
+      },
+      {
+        "index": 25,
+        "disposition": "UNRESOLVED",
+        "state": "ADJUDICATED",
+        "timingsNanos": {
+          "intent_written_nanos": 242016,
+          "dispatch_nanos": 5558203,
+          "peer_execution_nanos": 1000000,
+          "report_admission_nanos": 4333094,
+          "assessment_nanos": 455388,
+          "total_nanos": 10845926
+        },
+        "latencyMillis": 13.795
+      },
+      {
+        "index": 26,
+        "disposition": "UNRESOLVED",
+        "state": "ADJUDICATED",
+        "timingsNanos": {
+          "intent_written_nanos": 266031,
+          "dispatch_nanos": 6354023,
+          "peer_execution_nanos": 1000000,
+          "report_admission_nanos": 4216525,
+          "assessment_nanos": 399572,
+          "total_nanos": 11467527
+        },
+        "latencyMillis": 14.633000000000001
+      },
+      {
+        "index": 27,
+        "disposition": "UNRESOLVED",
+        "state": "ADJUDICATED",
+        "timingsNanos": {
+          "intent_written_nanos": 322688,
+          "dispatch_nanos": 5760674,
+          "peer_execution_nanos": 1000000,
+          "report_admission_nanos": 4196347,
+          "assessment_nanos": 389584,
+          "total_nanos": 10862277
+        },
+        "latencyMillis": 13.982
+      },
+      {
+        "index": 28,
+        "disposition": "UNRESOLVED",
+        "state": "ADJUDICATED",
+        "timingsNanos": {
+          "intent_written_nanos": 287502,
+          "dispatch_nanos": 5341124,
+          "peer_execution_nanos": 1000000,
+          "report_admission_nanos": 4009866,
+          "assessment_nanos": 382631,
+          "total_nanos": 10298404
+        },
+        "latencyMillis": 12.971
+      },
+      {
+        "index": 29,
+        "disposition": "UNRESOLVED",
+        "state": "ADJUDICATED",
+        "timingsNanos": {
+          "intent_written_nanos": 223601,
+          "dispatch_nanos": 4711086,
+          "peer_execution_nanos": 1000000,
+          "report_admission_nanos": 4762162,
+          "assessment_nanos": 486436,
+          "total_nanos": 10522857
+        },
+        "latencyMillis": 13.880999999999998
+      },
+      {
+        "index": 30,
+        "disposition": "UNRESOLVED",
+        "state": "ADJUDICATED",
+        "timingsNanos": {
+          "intent_written_nanos": 287842,
+          "dispatch_nanos": 5763068,
+          "peer_execution_nanos": 1000000,
+          "report_admission_nanos": 4311574,
+          "assessment_nanos": 433947,
+          "total_nanos": 11044209
+        },
+        "latencyMillis": 14.443
+      }
+    ],
+    "replaySamples": [
+      {
+        "index": 1,
+        "disposition": "UNRESOLVED",
+        "state": "ADJUDICATED",
+        "timingsNanos": {
+          "replay_dispatch_nanos": 4575020,
+          "replay_report_admission_nanos": 37634641,
+          "replay_assessment_nanos": 544436,
+          "replay_total_nanos": 43123953
+        },
+        "latencyMillis": 47.919999999999995
+      },
+      {
+        "index": 2,
+        "disposition": "UNRESOLVED",
+        "state": "ADJUDICATED",
+        "timingsNanos": {
+          "replay_dispatch_nanos": 3593951,
+          "replay_report_admission_nanos": 2113913,
+          "replay_assessment_nanos": 463673,
+          "replay_total_nanos": 6546335
+        },
+        "latencyMillis": 9.332999999999998
+      },
+      {
+        "index": 3,
+        "disposition": "UNRESOLVED",
+        "state": "ADJUDICATED",
+        "timingsNanos": {
+          "replay_dispatch_nanos": 3627495,
+          "replay_report_admission_nanos": 2057186,
+          "replay_assessment_nanos": 831567,
+          "replay_total_nanos": 6799361
+        },
+        "latencyMillis": 9.567
+      },
+      {
+        "index": 4,
+        "disposition": "UNRESOLVED",
+        "state": "ADJUDICATED",
+        "timingsNanos": {
+          "replay_dispatch_nanos": 4171630,
+          "replay_report_admission_nanos": 1826582,
+          "replay_assessment_nanos": 456821,
+          "replay_total_nanos": 6728348
+        },
+        "latencyMillis": 9.249
+      },
+      {
+        "index": 5,
+        "disposition": "UNRESOLVED",
+        "state": "ADJUDICATED",
+        "timingsNanos": {
+          "replay_dispatch_nanos": 2512263,
+          "replay_report_admission_nanos": 1596718,
+          "replay_assessment_nanos": 452482,
+          "replay_total_nanos": 4774356
+        },
+        "latencyMillis": 6.673
+      },
+      {
+        "index": 6,
+        "disposition": "UNRESOLVED",
+        "state": "ADJUDICATED",
+        "timingsNanos": {
+          "replay_dispatch_nanos": 4525988,
+          "replay_report_admission_nanos": 1423292,
+          "replay_assessment_nanos": 741307,
+          "replay_total_nanos": 7047459
+        },
+        "latencyMillis": 10.049000000000001
+      },
+      {
+        "index": 7,
+        "disposition": "UNRESOLVED",
+        "state": "ADJUDICATED",
+        "timingsNanos": {
+          "replay_dispatch_nanos": 3414003,
+          "replay_report_admission_nanos": 1901072,
+          "replay_assessment_nanos": 463393,
+          "replay_total_nanos": 6035592
+        },
+        "latencyMillis": 8.812000000000001
+      },
+      {
+        "index": 8,
+        "disposition": "UNRESOLVED",
+        "state": "ADJUDICATED",
+        "timingsNanos": {
+          "replay_dispatch_nanos": 3428140,
+          "replay_report_admission_nanos": 1997654,
+          "replay_assessment_nanos": 494121,
+          "replay_total_nanos": 6204290
+        },
+        "latencyMillis": 8.95
+      },
+      {
+        "index": 9,
+        "disposition": "UNRESOLVED",
+        "state": "ADJUDICATED",
+        "timingsNanos": {
+          "replay_dispatch_nanos": 3151919,
+          "replay_report_admission_nanos": 2111819,
+          "replay_assessment_nanos": 518828,
+          "replay_total_nanos": 6052103
+        },
+        "latencyMillis": 8.307
+      },
+      {
+        "index": 10,
+        "disposition": "UNRESOLVED",
+        "state": "ADJUDICATED",
+        "timingsNanos": {
+          "replay_dispatch_nanos": 4225031,
+          "replay_report_admission_nanos": 2236193,
+          "replay_assessment_nanos": 729054,
+          "replay_total_nanos": 7479502
+        },
+        "latencyMillis": 10.557
+      },
+      {
+        "index": 11,
+        "disposition": "UNRESOLVED",
+        "state": "ADJUDICATED",
+        "timingsNanos": {
+          "replay_dispatch_nanos": 3305368,
+          "replay_report_admission_nanos": 2123862,
+          "replay_assessment_nanos": 704397,
+          "replay_total_nanos": 6510727
+        },
+        "latencyMillis": 9.037999999999998
+      },
+      {
+        "index": 12,
+        "disposition": "UNRESOLVED",
+        "state": "ADJUDICATED",
+        "timingsNanos": {
+          "replay_dispatch_nanos": 2638892,
+          "replay_report_admission_nanos": 1922712,
+          "replay_assessment_nanos": 973915,
+          "replay_total_nanos": 5676395
+        },
+        "latencyMillis": 7.707999999999999
+      },
+      {
+        "index": 13,
+        "disposition": "UNRESOLVED",
+        "state": "ADJUDICATED",
+        "timingsNanos": {
+          "replay_dispatch_nanos": 3355432,
+          "replay_report_admission_nanos": 2000459,
+          "replay_assessment_nanos": 576927,
+          "replay_total_nanos": 6365513
+        },
+        "latencyMillis": 9.289
+      },
+      {
+        "index": 14,
+        "disposition": "UNRESOLVED",
+        "state": "ADJUDICATED",
+        "timingsNanos": {
+          "replay_dispatch_nanos": 3304396,
+          "replay_report_admission_nanos": 1741041,
+          "replay_assessment_nanos": 677306,
+          "replay_total_nanos": 6033849
+        },
+        "latencyMillis": 8.556
+      },
+      {
+        "index": 15,
+        "disposition": "UNRESOLVED",
+        "state": "ADJUDICATED",
+        "timingsNanos": {
+          "replay_dispatch_nanos": 3876634,
+          "replay_report_admission_nanos": 1663164,
+          "replay_assessment_nanos": 629586,
+          "replay_total_nanos": 6493505
+        },
+        "latencyMillis": 9.110999999999999
+      },
+      {
+        "index": 16,
+        "disposition": "UNRESOLVED",
+        "state": "ADJUDICATED",
+        "timingsNanos": {
+          "replay_dispatch_nanos": 3558735,
+          "replay_report_admission_nanos": 1973739,
+          "replay_assessment_nanos": 476548,
+          "replay_total_nanos": 6403546
+        },
+        "latencyMillis": 8.995
+      },
+      {
+        "index": 17,
+        "disposition": "UNRESOLVED",
+        "state": "ADJUDICATED",
+        "timingsNanos": {
+          "replay_dispatch_nanos": 3220458,
+          "replay_report_admission_nanos": 1510396,
+          "replay_assessment_nanos": 466269,
+          "replay_total_nanos": 5426715
+        },
+        "latencyMillis": 8.63
+      },
+      {
+        "index": 18,
+        "disposition": "UNRESOLVED",
+        "state": "ADJUDICATED",
+        "timingsNanos": {
+          "replay_dispatch_nanos": 3316760,
+          "replay_report_admission_nanos": 2018213,
+          "replay_assessment_nanos": 456821,
+          "replay_total_nanos": 6061151
+        },
+        "latencyMillis": 8.332
+      },
+      {
+        "index": 19,
+        "disposition": "UNRESOLVED",
+        "state": "ADJUDICATED",
+        "timingsNanos": {
+          "replay_dispatch_nanos": 4039601,
+          "replay_report_admission_nanos": 2140944,
+          "replay_assessment_nanos": 558282,
+          "replay_total_nanos": 7940902
+        },
+        "latencyMillis": 9.889
+      },
+      {
+        "index": 20,
+        "disposition": "UNRESOLVED",
+        "state": "ADJUDICATED",
+        "timingsNanos": {
+          "replay_dispatch_nanos": 4287699,
+          "replay_report_admission_nanos": 1827664,
+          "replay_assessment_nanos": 509250,
+          "replay_total_nanos": 6928965
+        },
+        "latencyMillis": 9.001999999999999
+      },
+      {
+        "index": 21,
+        "disposition": "UNRESOLVED",
+        "state": "ADJUDICATED",
+        "timingsNanos": {
+          "replay_dispatch_nanos": 3071377,
+          "replay_report_admission_nanos": 1609082,
+          "replay_assessment_nanos": 465938,
+          "replay_total_nanos": 5443396
+        },
+        "latencyMillis": 7.685
+      },
+      {
+        "index": 22,
+        "disposition": "UNRESOLVED",
+        "state": "ADJUDICATED",
+        "timingsNanos": {
+          "replay_dispatch_nanos": 2758888,
+          "replay_report_admission_nanos": 1770746,
+          "replay_assessment_nanos": 586746,
+          "replay_total_nanos": 5351713
+        },
+        "latencyMillis": 7.754
+      },
+      {
+        "index": 23,
+        "disposition": "UNRESOLVED",
+        "state": "ADJUDICATED",
+        "timingsNanos": {
+          "replay_dispatch_nanos": 2865589,
+          "replay_report_admission_nanos": 1797336,
+          "replay_assessment_nanos": 493440,
+          "replay_total_nanos": 5386920
+        },
+        "latencyMillis": 8.092
+      },
+      {
+        "index": 24,
+        "disposition": "UNRESOLVED",
+        "state": "ADJUDICATED",
+        "timingsNanos": {
+          "replay_dispatch_nanos": 2132929,
+          "replay_report_admission_nanos": 1330547,
+          "replay_assessment_nanos": 458894,
+          "replay_total_nanos": 4088904
+        },
+        "latencyMillis": 6.288
+      },
+      {
+        "index": 25,
+        "disposition": "UNRESOLVED",
+        "state": "ADJUDICATED",
+        "timingsNanos": {
+          "replay_dispatch_nanos": 1974029,
+          "replay_report_admission_nanos": 1676699,
+          "replay_assessment_nanos": 438846,
+          "replay_total_nanos": 4245931
+        },
+        "latencyMillis": 6.893
+      },
+      {
+        "index": 26,
+        "disposition": "UNRESOLVED",
+        "state": "ADJUDICATED",
+        "timingsNanos": {
+          "replay_dispatch_nanos": 2744572,
+          "replay_report_admission_nanos": 1786947,
+          "replay_assessment_nanos": 484162,
+          "replay_total_nanos": 5226748
+        },
+        "latencyMillis": 7.4879999999999995
+      },
+      {
+        "index": 27,
+        "disposition": "UNRESOLVED",
+        "state": "ADJUDICATED",
+        "timingsNanos": {
+          "replay_dispatch_nanos": 3680204,
+          "replay_report_admission_nanos": 2140022,
+          "replay_assessment_nanos": 770772,
+          "replay_total_nanos": 6993016
+        },
+        "latencyMillis": 9.790999999999999
+      },
+      {
+        "index": 28,
+        "disposition": "UNRESOLVED",
+        "state": "ADJUDICATED",
+        "timingsNanos": {
+          "replay_dispatch_nanos": 3344311,
+          "replay_report_admission_nanos": 2224201,
+          "replay_assessment_nanos": 726018,
+          "replay_total_nanos": 6579577
+        },
+        "latencyMillis": 9.195
+      },
+      {
+        "index": 29,
+        "disposition": "UNRESOLVED",
+        "state": "ADJUDICATED",
+        "timingsNanos": {
+          "replay_dispatch_nanos": 3367835,
+          "replay_report_admission_nanos": 2192601,
+          "replay_assessment_nanos": 637401,
+          "replay_total_nanos": 6482975
+        },
+        "latencyMillis": 8.876
+      },
+      {
+        "index": 30,
+        "disposition": "UNRESOLVED",
+        "state": "ADJUDICATED",
+        "timingsNanos": {
+          "replay_dispatch_nanos": 3249864,
+          "replay_report_admission_nanos": 1604232,
+          "replay_assessment_nanos": 497818,
+          "replay_total_nanos": 5559605
+        },
+        "latencyMillis": 7.912000000000001
+      }
+    ],
+    "processMetricsReplayPass": {
+      "chainA": {
+        "cpuSeconds": 0.4,
+        "peakResidentBytes": 4923457536,
+        "residentBytes": 4416872448,
+        "heapUsedBytes": 1145093120,
+        "garbageCollection": {
+          "events": 0,
+          "pauseMillis": 0.0
+        }
+      },
+      "chainB": {
+        "cpuSeconds": 0.13,
+        "peakResidentBytes": 171597824,
+        "residentBytes": 171597824
+      },
+      "cpuSeconds": 0.53,
+      "cpuSecondsPerReplay": 0.0177,
+      "estimatedAllocationBytes": 14323712,
+      "estimatedAllocationBytesPerReplay": 477457,
+      "allocationIsLowerBound": true,
+      "retainedResidentBytes": 1363968
+    }
+  },
+  "concurrentRun": {
+    "schema": "matrix.w53.distributed-performance/v2",
+    "generatedBy": "scripts/w53-distributed-benchmark.sh",
+    "commit": "64b1657af950acb19221c6f778d27dd6e82c01ff",
+    "codeUnderTest": "the working tree the run executed. The commit above is the HEAD at the moment of the run, and the tree may carry changes that are not committed yet; the wave's report names the commit that carries the measurement",
+    "environment": {
+      "os": "Ubuntu 26.04.1 LTS",
+      "jdk": "openjdk version \"25.0.5.0.3\" 2026-10-24",
+      "hardware": "x86_64",
+      "jvmArguments": "the default of the Quarkus fast-jar and of the gateway's start script"
+    },
+    "workload": {
+      "tasks": 24,
+      "concurrency": 4,
+      "runStamp": "1794473812-260180",
+      "requestIds": "w53-bench-<runStamp>-<index> — unique per run, because chain A's cognitive database is persistent and a request id is the identity of a dispatch",
+      "payloadSize": "one sentence of input and one expectation",
+      "seed": "none — the workload has no randomness",
+      "procedure": "the tasks go through POST /v1/cognitive/task on chain A, as many at a time as the concurrency allows; the latency is the client's round trip, the stage times are chain A's own monotonic measurements of the parts it can time",
+      "stateDirectory": "the directory the two processes kept their state in. A run with --work-dir measures the path against the history that the earlier runs left there, which is how the behaviour under a growing cognitive and audit history is measured"
+    },
+    "endToEndMillis": {
+      "p50": 27.226,
+      "p95": 332.66,
+      "p99": 332.66499999999996,
+      "min": 19.572,
+      "max": 332.66499999999996,
+      "mean": 77.91558333333333
+    },
+    "throughputTasksPerSecond": 12.834403045176028,
+    "replayPath": {
+      "whatItIs": "the same requests sent again, with the same request id and the same payload: the peer recognises them and answers from its own durable record, so the cost of the durable idempotency path is measured apart from the cost of the first execution",
+      "replays": 24,
+      "endToEndMillis": {
+        "p50": 9.521,
+        "p95": 12.482,
+        "min": 7.654,
+        "max": 48.472,
+        "mean": 11.075208333333334
+      },
+      "stagesMillis": {
+        "replay_assessment_nanos": {
+          "p50": 0.475296,
+          "p95": 0.75368,
+          "count": 24
+        },
+        "replay_dispatch_nanos": {
+          "p50": 3.849663,
+          "p95": 5.478223,
+          "count": 24
+        },
+        "replay_report_admission_nanos": {
+          "p50": 1.68779,
+          "p95": 2.074669,
+          "count": 24
+        },
+        "replay_total_nanos": {
+          "p50": 6.463689,
+          "p95": 9.014635,
+          "count": 24
+        }
+      },
+      "sameDispositionAsTheFirstExecution": 24,
+      "comparedDispositions": 24
+    },
+    "stagesMillis": {
+      "assessment_nanos": {
+        "p50": 0.432375,
+        "p95": 0.702324,
+        "count": 24
+      },
+      "dispatch_nanos": {
+        "p50": 10.801422,
+        "p95": 223.988408,
+        "count": 24
+      },
+      "intent_written_nanos": {
+        "p50": 0.571266,
+        "p95": 24.481618,
+        "count": 24
+      },
+      "peer_execution_nanos": {
+        "p50": 3.0,
+        "p95": 20.0,
+        "count": 24
+      },
+      "report_admission_nanos": {
+        "p50": 11.815412,
+        "p95": 52.849038,
+        "count": 24
+      },
+      "total_nanos": {
+        "p50": 23.36285,
+        "p95": 303.684971,
+        "count": 24
+      }
+    },
+    "peerStagesMillis": {
+      "whatItIs": "the peer's own measurement of its own work, read from the peer's own durable row. The peer keeps it there and does not send it: the answer contract is unchanged and the caller learns nothing new",
+      "rows": 24,
+      "stages": {
+        "answerSigning": {
+          "p50": 0.765523,
+          "p95": 19.522134,
+          "count": 24
+        },
+        "authenticationAndValidation": {
+          "p50": 1.6849350000000003,
+          "p95": 76.396616,
+          "count": 24
+        },
+        "deliveryTotal": {
+          "p50": 5.81643,
+          "p95": 125.435996,
+          "count": 24
+        },
+        "execution": {
+          "p50": 3.287685,
+          "p95": 24.564815,
+          "count": 24
+        },
+        "inboxWrite": {
+          "p50": 0.621632,
+          "p95": 2.941633,
+          "count": 24
+        },
+        "outcomeWrite": {
+          "p50": 0.272583,
+          "p95": 21.20255,
+          "count": 24
+        },
+        "stateWrite": {
+          "p50": 0.362884,
+          "p95": 0.932397,
+          "count": 24
+        }
+      }
+    },
+    "stageMeanings": {
+      "intent_written_nanos": "chain A: the durable dispatch intent, written before the send",
+      "dispatch_nanos": "chain A: signing the request, the network round trip, chain B's authentication, its durable inbox write, the production inference, the signed answer and its verification",
+      "peer_execution_nanos": "chain B, as chain B measured it: the production inference itself, rounded to the millisecond; the difference against dispatch_nanos is the network, the signing and chain B's own bookkeeping",
+      "report_admission_nanos": "chain A: the report entering the epistemic model through chain A's own bridge receiver",
+      "assessment_nanos": "chain A: the epistemic evaluation of the answer",
+      "total_nanos": "chain A: the whole task, as chain A can see it",
+      "replay_dispatch_nanos": "the replay path: chain A sending the request again and the peer answering from its durable record",
+      "replay_report_admission_nanos": "the replay path: the report entering the epistemic model again",
+      "replay_assessment_nanos": "the replay path: the epistemic evaluation again",
+      "replay_total_nanos": "the replay path: the whole replay, as chain A can see it"
+    },
+    "peerStageMeanings": {
+      "inboxWrite": "chain B: the durable write of the request into its own inbox",
+      "stateWrite": "chain B: the write that moves the request into the running state",
+      "execution": "chain B: the production cognitive path it really ran",
+      "outcomeWrite": "chain B: the durable write of the outcome",
+      "answerSigning": "chain B: the serialization and the signing of the answer",
+      "deliveryTotal": "chain B: the whole reception of the delivery",
+      "authenticationAndValidation": "chain B: the REMAINDER of the reception — what it cost beyond the peer's own four writes and its execution. It carries the authentication, the validation and the receiver's bookkeeping together, so it is not a measurement of the signature alone"
+    },
+    "processMetrics": {
+      "chainA": {
+        "cpuSeconds": 1.49,
+        "peakResidentBytes": 4799819776,
+        "residentBytes": 4316700672,
+        "heapUsedBytes": 1131383808,
+        "garbageCollection": {
+          "events": 0,
+          "pauseMillis": 0.0
+        }
+      },
+      "chainB": {
+        "cpuSeconds": 1.39,
+        "peakResidentBytes": 204615680,
+        "residentBytes": 204615680
+      },
+      "cpuSeconds": 2.88,
+      "cpuSecondsPerTask": 0.12,
+      "estimatedAllocationBytes": 58669056,
+      "estimatedAllocationBytesPerTask": 2444544,
+      "allocationIsLowerBound": true,
+      "retainedResidentBytes": 46714880
+    },
+    "processMetricsMeanings": {
+      "chainA": "the Quarkus application: the CPU time it used, the peak memory it held, and the garbage collection the JVM's own log records",
+      "chainB": "the gateway's JDK server: the CPU time it used and the peak memory it held",
+      "cpuSecondsPerTask": "the CPU time the two processes together spent on the first pass, divided by the number of tasks",
+      "cpuSecondsPerReplay": "the CPU time the two processes together spent on the replay pass, divided by the number of replays",
+      "estimatedAllocationBytes": "the heap the JVM collected during the run, plus the growth of the heap it held — an estimate of the allocation, not a counter of it",
+      "allocationIsLowerBound": "true when the JVM collected nothing during the run: the estimate is then a lower bound on the allocation",
+      "retainedResidentBytes": "the growth of the resident set over the run — the memory the run retained in the process",
+      "peakResidentBytes": "the peak of the whole lifetime of the process, the startup included; it is not the memory the run used"
+    },
+    "whatThisReportDoesNotClaim": [
+      "it does not claim a p99 from a sample of this size",
+      "it does not separate chain B's stages from the network round trip on chain A's side: chain A times the crossing as one interval. The peer's own stages ARE separated, in the peer's own record — the peer measures them and keeps them there, and the report reads that record; the answer contract did not change",
+      "it does not claim that these numbers are comparable with a run on another machine",
+      "no optimization was accepted on the strength of this run alone",
+      "it does not claim an exact allocation per task: the allocation is estimated from the JVM's own garbage-collection log, and the estimate is named as an estimate",
+      "it does not separate the serialization and the signature cost from the network round trip on chain A's side — chain A times the crossing as one interval. On the peer's side the signing of the answer is measured apart, and the report says so",
+      "it does not claim that the replay path avoided the peer entirely: the request is sent again and the peer answers from its durable record, and the report measures that path rather than asserting that it never reached the peer"
+    ],
+    "samples": [
+      {
+        "index": 4,
+        "disposition": "UNRESOLVED",
+        "state": "ADJUDICATED",
+        "timingsNanos": {
+          "intent_written_nanos": 24399483,
+          "dispatch_nanos": 223988408,
+          "peer_execution_nanos": 20000000,
+          "report_admission_nanos": 50636860,
+          "assessment_nanos": 732210,
+          "total_nanos": 302117137
+        },
+        "latencyMillis": 332.66499999999996
+      },
+      {
+        "index": 1,
+        "disposition": "UNRESOLVED",
+        "state": "ADJUDICATED",
+        "timingsNanos": {
+          "intent_written_nanos": 24307350,
+          "dispatch_nanos": 224072917,
+          "peer_execution_nanos": 20000000,
+          "report_admission_nanos": 52230102,
+          "assessment_nanos": 293443,
+          "total_nanos": 302657176
+        },
+        "latencyMillis": 332.66
+      },
+      {
+        "index": 3,
+        "disposition": "UNRESOLVED",
+        "state": "ADJUDICATED",
+        "timingsNanos": {
+          "intent_written_nanos": 24481618,
+          "dispatch_nanos": 223913877,
+          "peer_execution_nanos": 20000000,
+          "report_admission_nanos": 52849038,
+          "assessment_nanos": 263306,
+          "total_nanos": 303684971
+        },
+        "latencyMillis": 332.617
+      },
+      {
+        "index": 2,
+        "disposition": "UNRESOLVED",
+        "state": "ADJUDICATED",
+        "timingsNanos": {
+          "intent_written_nanos": 24522145,
+          "dispatch_nanos": 223879953,
+          "peer_execution_nanos": 20000000,
+          "report_admission_nanos": 54535596,
+          "assessment_nanos": 677457,
+          "total_nanos": 306636273
+        },
+        "latencyMillis": 332.629
+      },
+      {
+        "index": 6,
+        "disposition": "UNRESOLVED",
+        "state": "ADJUDICATED",
+        "timingsNanos": {
+          "intent_written_nanos": 718033,
+          "dispatch_nanos": 17760484,
+          "peer_execution_nanos": 8000000,
+          "report_admission_nanos": 9630366,
+          "assessment_nanos": 462993,
+          "total_nanos": 28807850
+        },
+        "latencyMillis": 33.385
+      },
+      {
+        "index": 7,
+        "disposition": "UNRESOLVED",
+        "state": "ADJUDICATED",
+        "timingsNanos": {
+          "intent_written_nanos": 632522,
+          "dispatch_nanos": 16309811,
+          "peer_execution_nanos": 5000000,
+          "report_admission_nanos": 14995424,
+          "assessment_nanos": 486456,
+          "total_nanos": 33436241
+        },
+        "latencyMillis": 36.778999999999996
+      },
+      {
+        "index": 5,
+        "disposition": "UNRESOLVED",
+        "state": "ADJUDICATED",
+        "timingsNanos": {
+          "intent_written_nanos": 500934,
+          "dispatch_nanos": 17410736,
+          "peer_execution_nanos": 8000000,
+          "report_admission_nanos": 13443660,
+          "assessment_nanos": 702324,
+          "total_nanos": 32393546
+        },
+        "latencyMillis": 37.396
+      },
+      {
+        "index": 8,
+        "disposition": "UNRESOLVED",
+        "state": "ADJUDICATED",
+        "timingsNanos": {
+          "intent_written_nanos": 766344,
+          "dispatch_nanos": 16100517,
+          "peer_execution_nanos": 6000000,
+          "report_admission_nanos": 16889423,
+          "assessment_nanos": 449998,
+          "total_nanos": 34952498
+        },
+        "latencyMillis": 38.835
+      },
+      {
+        "index": 9,
+        "disposition": "UNRESOLVED",
+        "state": "ADJUDICATED",
+        "timingsNanos": {
+          "intent_written_nanos": 585063,
+          "dispatch_nanos": 9744981,
+          "peer_execution_nanos": 2000000,
+          "report_admission_nanos": 8655900,
+          "assessment_nanos": 388281,
+          "total_nanos": 19770672
+        },
+        "latencyMillis": 20.672
+      },
+      {
+        "index": 10,
+        "disposition": "UNRESOLVED",
+        "state": "ADJUDICATED",
+        "timingsNanos": {
+          "intent_written_nanos": 427456,
+          "dispatch_nanos": 9914181,
+          "peer_execution_nanos": 2000000,
+          "report_admission_nanos": 5850984,
+          "assessment_nanos": 361131,
+          "total_nanos": 17187755
+        },
+        "latencyMillis": 23.21
+      },
+      {
+        "index": 11,
+        "disposition": "UNRESOLVED",
+        "state": "ADJUDICATED",
+        "timingsNanos": {
+          "intent_written_nanos": 544586,
+          "dispatch_nanos": 10837350,
+          "peer_execution_nanos": 3000000,
+          "report_admission_nanos": 10679943,
+          "assessment_nanos": 409943,
+          "total_nanos": 22683149
+        },
+        "latencyMillis": 26.028
+      },
+      {
+        "index": 12,
+        "disposition": "UNRESOLVED",
+        "state": "ADJUDICATED",
+        "timingsNanos": {
+          "intent_written_nanos": 484683,
+          "dispatch_nanos": 11115915,
+          "peer_execution_nanos": 3000000,
+          "report_admission_nanos": 15171136,
+          "assessment_nanos": 282412,
+          "total_nanos": 27248862
+        },
+        "latencyMillis": 31.456
+      },
+      {
+        "index": 14,
+        "disposition": "UNRESOLVED",
+        "state": "ADJUDICATED",
+        "timingsNanos": {
+          "intent_written_nanos": 617494,
+          "dispatch_nanos": 9151283,
+          "peer_execution_nanos": 2000000,
+          "report_admission_nanos": 5370900,
+          "assessment_nanos": 357113,
+          "total_nanos": 15843242
+        },
+        "latencyMillis": 19.572
+      },
+      {
+        "index": 16,
+        "disposition": "UNRESOLVED",
+        "state": "ADJUDICATED",
+        "timingsNanos": {
+          "intent_written_nanos": 508088,
+          "dispatch_nanos": 9285155,
+          "peer_execution_nanos": 2000000,
+          "report_admission_nanos": 7969456,
+          "assessment_nanos": 482550,
+          "total_nanos": 18742255
+        },
+        "latencyMillis": 21.989
+      },
+      {
+        "index": 15,
+        "disposition": "UNRESOLVED",
+        "state": "ADJUDICATED",
+        "timingsNanos": {
+          "intent_written_nanos": 410583,
+          "dispatch_nanos": 10801422,
+          "peer_execution_nanos": 3000000,
+          "report_admission_nanos": 7863637,
+          "assessment_nanos": 432375,
+          "total_nanos": 19840753
+        },
+        "latencyMillis": 23.344
+      },
+      {
+        "index": 13,
+        "disposition": "UNRESOLVED",
+        "state": "ADJUDICATED",
+        "timingsNanos": {
+          "intent_written_nanos": 560456,
+          "dispatch_nanos": 10818444,
+          "peer_execution_nanos": 3000000,
+          "report_admission_nanos": 10556060,
+          "assessment_nanos": 546470,
+          "total_nanos": 22780573
+        },
+        "latencyMillis": 26.101
+      },
+      {
+        "index": 17,
+        "disposition": "UNRESOLVED",
+        "state": "ADJUDICATED",
+        "timingsNanos": {
+          "intent_written_nanos": 566798,
+          "dispatch_nanos": 10507038,
+          "peer_execution_nanos": 1000000,
+          "report_admission_nanos": 7787353,
+          "assessment_nanos": 359077,
+          "total_nanos": 19685562
+        },
+        "latencyMillis": 23.868000000000002
+      },
+      {
+        "index": 20,
+        "disposition": "UNRESOLVED",
+        "state": "ADJUDICATED",
+        "timingsNanos": {
+          "intent_written_nanos": 440881,
+          "dispatch_nanos": 10299486,
+          "peer_execution_nanos": 1000000,
+          "report_admission_nanos": 11824760,
+          "assessment_nanos": 366581,
+          "total_nanos": 23362850
+        },
+        "latencyMillis": 27.226
+      },
+      {
+        "index": 18,
+        "disposition": "UNRESOLVED",
+        "state": "ADJUDICATED",
+        "timingsNanos": {
+          "intent_written_nanos": 690932,
+          "dispatch_nanos": 10515814,
+          "peer_execution_nanos": 2000000,
+          "report_admission_nanos": 12547181,
+          "assessment_nanos": 563412,
+          "total_nanos": 24779930
+        },
+        "latencyMillis": 28.627
+      },
+      {
+        "index": 19,
+        "disposition": "UNRESOLVED",
+        "state": "ADJUDICATED",
+        "timingsNanos": {
+          "intent_written_nanos": 499622,
+          "dispatch_nanos": 10240595,
+          "peer_execution_nanos": 1000000,
+          "report_admission_nanos": 14196228,
+          "assessment_nanos": 383864,
+          "total_nanos": 25975734
+        },
+        "latencyMillis": 29.796
+      },
+      {
+        "index": 21,
+        "disposition": "UNRESOLVED",
+        "state": "ADJUDICATED",
+        "timingsNanos": {
+          "intent_written_nanos": 509610,
+          "dispatch_nanos": 8508782,
+          "peer_execution_nanos": 2000000,
+          "report_admission_nanos": 8478745,
+          "assessment_nanos": 381559,
+          "total_nanos": 18471915
+        },
+        "latencyMillis": 20.655
+      },
+      {
+        "index": 23,
+        "disposition": "UNRESOLVED",
+        "state": "ADJUDICATED",
+        "timingsNanos": {
+          "intent_written_nanos": 451019,
+          "dispatch_nanos": 8568204,
+          "peer_execution_nanos": 1000000,
+          "report_admission_nanos": 11815412,
+          "assessment_nanos": 580634,
+          "total_nanos": 22190251
+        },
+        "latencyMillis": 21.481
+      },
+      {
+        "index": 22,
+        "disposition": "UNRESOLVED",
+        "state": "ADJUDICATED",
+        "timingsNanos": {
+          "intent_written_nanos": 649724,
+          "dispatch_nanos": 8439351,
+          "peer_execution_nanos": 1000000,
+          "report_admission_nanos": 7023824,
+          "assessment_nanos": 392770,
+          "total_nanos": 17372162
+        },
+        "latencyMillis": 23.911
+      },
+      {
+        "index": 24,
+        "disposition": "UNRESOLVED",
+        "state": "ADJUDICATED",
+        "timingsNanos": {
+          "intent_written_nanos": 571266,
+          "dispatch_nanos": 8515926,
+          "peer_execution_nanos": 1000000,
+          "report_admission_nanos": 10426084,
+          "assessment_nanos": 453795,
+          "total_nanos": 20977566
+        },
+        "latencyMillis": 25.072
+      }
+    ],
+    "replaySamples": [
+      {
+        "index": 1,
+        "disposition": "UNRESOLVED",
+        "state": "ADJUDICATED",
+        "timingsNanos": {
+          "replay_dispatch_nanos": 5364918,
+          "replay_report_admission_nanos": 37655571,
+          "replay_assessment_nanos": 498840,
+          "replay_total_nanos": 43877073
+        },
+        "latencyMillis": 48.472
+      },
+      {
+        "index": 2,
+        "disposition": "UNRESOLVED",
+        "state": "ADJUDICATED",
+        "timingsNanos": {
+          "replay_dispatch_nanos": 4077122,
+          "replay_report_admission_nanos": 1787357,
+          "replay_assessment_nanos": 475296,
+          "replay_total_nanos": 6638699
+        },
+        "latencyMillis": 10.558
+      },
+      {
+        "index": 3,
+        "disposition": "UNRESOLVED",
+        "state": "ADJUDICATED",
+        "timingsNanos": {
+          "replay_dispatch_nanos": 4163264,
+          "replay_report_admission_nanos": 1631304,
+          "replay_assessment_nanos": 466599,
+          "replay_total_nanos": 6543550
+        },
+        "latencyMillis": 9.637
+      },
+      {
+        "index": 4,
+        "disposition": "UNRESOLVED",
+        "state": "ADJUDICATED",
+        "timingsNanos": {
+          "replay_dispatch_nanos": 4282168,
+          "replay_report_admission_nanos": 1973869,
+          "replay_assessment_nanos": 636790,
+          "replay_total_nanos": 7265410
+        },
+        "latencyMillis": 10.113999999999999
+      },
+      {
+        "index": 5,
+        "disposition": "UNRESOLVED",
+        "state": "ADJUDICATED",
+        "timingsNanos": {
+          "replay_dispatch_nanos": 3630821,
+          "replay_report_admission_nanos": 1547285,
+          "replay_assessment_nanos": 617193,
+          "replay_total_nanos": 6053366
+        },
+        "latencyMillis": 9.045
+      },
+      {
+        "index": 6,
+        "disposition": "UNRESOLVED",
+        "state": "ADJUDICATED",
+        "timingsNanos": {
+          "replay_dispatch_nanos": 3849663,
+          "replay_report_admission_nanos": 1686297,
+          "replay_assessment_nanos": 466830,
+          "replay_total_nanos": 6463689
+        },
+        "latencyMillis": 9.521
+      },
+      {
+        "index": 7,
+        "disposition": "UNRESOLVED",
+        "state": "ADJUDICATED",
+        "timingsNanos": {
+          "replay_dispatch_nanos": 2721257,
+          "replay_report_admission_nanos": 1598051,
+          "replay_assessment_nanos": 420252,
+          "replay_total_nanos": 5002937
+        },
+        "latencyMillis": 8.116
+      },
+      {
+        "index": 8,
+        "disposition": "UNRESOLVED",
+        "state": "ADJUDICATED",
+        "timingsNanos": {
+          "replay_dispatch_nanos": 4258444,
+          "replay_report_admission_nanos": 1684234,
+          "replay_assessment_nanos": 617874,
+          "replay_total_nanos": 7002063
+        },
+        "latencyMillis": 10.059000000000001
+      },
+      {
+        "index": 9,
+        "disposition": "UNRESOLVED",
+        "state": "ADJUDICATED",
+        "timingsNanos": {
+          "replay_dispatch_nanos": 3423300,
+          "replay_report_admission_nanos": 1436797,
+          "replay_assessment_nanos": 407158,
+          "replay_total_nanos": 5507768
+        },
+        "latencyMillis": 8.1
+      },
+      {
+        "index": 10,
+        "disposition": "UNRESOLVED",
+        "state": "ADJUDICATED",
+        "timingsNanos": {
+          "replay_dispatch_nanos": 3440813,
+          "replay_report_admission_nanos": 1675247,
+          "replay_assessment_nanos": 514689,
+          "replay_total_nanos": 5930464
+        },
+        "latencyMillis": 8.621
+      },
+      {
+        "index": 11,
+        "disposition": "UNRESOLVED",
+        "state": "ADJUDICATED",
+        "timingsNanos": {
+          "replay_dispatch_nanos": 3744476,
+          "replay_report_admission_nanos": 1814589,
+          "replay_assessment_nanos": 466630,
+          "replay_total_nanos": 6332532
+        },
+        "latencyMillis": 9.113
+      },
+      {
+        "index": 12,
+        "disposition": "UNRESOLVED",
+        "state": "ADJUDICATED",
+        "timingsNanos": {
+          "replay_dispatch_nanos": 3846628,
+          "replay_report_admission_nanos": 1687790,
+          "replay_assessment_nanos": 421865,
+          "replay_total_nanos": 6246280
+        },
+        "latencyMillis": 9.122
+      },
+      {
+        "index": 13,
+        "disposition": "UNRESOLVED",
+        "state": "ADJUDICATED",
+        "timingsNanos": {
+          "replay_dispatch_nanos": 4452460,
+          "replay_report_admission_nanos": 1800292,
+          "replay_assessment_nanos": 419431,
+          "replay_total_nanos": 7052398
+        },
+        "latencyMillis": 10.807
+      },
+      {
+        "index": 14,
+        "disposition": "UNRESOLVED",
+        "state": "ADJUDICATED",
+        "timingsNanos": {
+          "replay_dispatch_nanos": 2622030,
+          "replay_report_admission_nanos": 1535253,
+          "replay_assessment_nanos": 753680,
+          "replay_total_nanos": 5154963
+        },
+        "latencyMillis": 8.208
+      },
+      {
+        "index": 15,
+        "disposition": "UNRESOLVED",
+        "state": "ADJUDICATED",
+        "timingsNanos": {
+          "replay_dispatch_nanos": 3639007,
+          "replay_report_admission_nanos": 1407472,
+          "replay_assessment_nanos": 487298,
+          "replay_total_nanos": 5787395
+        },
+        "latencyMillis": 8.021
+      },
+      {
+        "index": 16,
+        "disposition": "UNRESOLVED",
+        "state": "ADJUDICATED",
+        "timingsNanos": {
+          "replay_dispatch_nanos": 3269550,
+          "replay_report_admission_nanos": 1630331,
+          "replay_assessment_nanos": 420251,
+          "replay_total_nanos": 5574383
+        },
+        "latencyMillis": 8.057
+      },
+      {
+        "index": 17,
+        "disposition": "UNRESOLVED",
+        "state": "ADJUDICATED",
+        "timingsNanos": {
+          "replay_dispatch_nanos": 3265152,
+          "replay_report_admission_nanos": 1374320,
+          "replay_assessment_nanos": 436743,
+          "replay_total_nanos": 5315175
+        },
+        "latencyMillis": 7.654
+      },
+      {
+        "index": 18,
+        "disposition": "UNRESOLVED",
+        "state": "ADJUDICATED",
+        "timingsNanos": {
+          "replay_dispatch_nanos": 5194668,
+          "replay_report_admission_nanos": 1868931,
+          "replay_assessment_nanos": 585734,
+          "replay_total_nanos": 8038907
+        },
+        "latencyMillis": 10.874
+      },
+      {
+        "index": 19,
+        "disposition": "UNRESOLVED",
+        "state": "ADJUDICATED",
+        "timingsNanos": {
+          "replay_dispatch_nanos": 3999716,
+          "replay_report_admission_nanos": 1619982,
+          "replay_assessment_nanos": 457522,
+          "replay_total_nanos": 6368129
+        },
+        "latencyMillis": 8.895
+      },
+      {
+        "index": 20,
+        "disposition": "UNRESOLVED",
+        "state": "ADJUDICATED",
+        "timingsNanos": {
+          "replay_dispatch_nanos": 5478223,
+          "replay_report_admission_nanos": 2074669,
+          "replay_assessment_nanos": 500212,
+          "replay_total_nanos": 8484096
+        },
+        "latencyMillis": 11.162999999999998
+      },
+      {
+        "index": 21,
+        "disposition": "UNRESOLVED",
+        "state": "ADJUDICATED",
+        "timingsNanos": {
+          "replay_dispatch_nanos": 4186638,
+          "replay_report_admission_nanos": 1812035,
+          "replay_assessment_nanos": 572259,
+          "replay_total_nanos": 6962880
+        },
+        "latencyMillis": 10.014999999999999
+      },
+      {
+        "index": 22,
+        "disposition": "UNRESOLVED",
+        "state": "ADJUDICATED",
+        "timingsNanos": {
+          "replay_dispatch_nanos": 6446657,
+          "replay_report_admission_nanos": 1762511,
+          "replay_assessment_nanos": 453765,
+          "replay_total_nanos": 9014635
+        },
+        "latencyMillis": 12.482
+      },
+      {
+        "index": 23,
+        "disposition": "UNRESOLVED",
+        "state": "ADJUDICATED",
+        "timingsNanos": {
+          "replay_dispatch_nanos": 3647102,
+          "replay_report_admission_nanos": 1758122,
+          "replay_assessment_nanos": 464375,
+          "replay_total_nanos": 6170066
+        },
+        "latencyMillis": 9.054
+      },
+      {
+        "index": 24,
+        "disposition": "UNRESOLVED",
+        "state": "ADJUDICATED",
+        "timingsNanos": {
+          "replay_dispatch_nanos": 3828564,
+          "replay_report_admission_nanos": 1942079,
+          "replay_assessment_nanos": 754551,
+          "replay_total_nanos": 6902556
+        },
+        "latencyMillis": 10.097
+      }
+    ],
+    "processMetricsReplayPass": {
+      "chainA": {
+        "cpuSeconds": 0.36,
+        "peakResidentBytes": 4799819776,
+        "residentBytes": 4318711808,
+        "heapUsedBytes": 1141987328,
+        "garbageCollection": {
+          "events": 0,
+          "pauseMillis": 0.0
+        }
+      },
+      "chainB": {
+        "cpuSeconds": 0.11,
+        "peakResidentBytes": 207994880,
+        "residentBytes": 207994880
+      },
+      "cpuSeconds": 0.47,
+      "cpuSecondsPerReplay": 0.0196,
+      "estimatedAllocationBytes": 10603520,
+      "estimatedAllocationBytesPerReplay": 441813,
+      "allocationIsLowerBound": true,
+      "retainedResidentBytes": 2011136
+    }
+  },
+  "overCapRun": {
+    "schema": "matrix.w53.distributed-performance/v2",
+    "generatedBy": "scripts/w53-distributed-benchmark.sh",
+    "commit": "64b1657af950acb19221c6f778d27dd6e82c01ff",
+    "codeUnderTest": "the working tree the run executed. The commit above is the HEAD at the moment of the run, and the tree may carry changes that are not committed yet; the wave's report names the commit that carries the measurement",
+    "environment": {
+      "os": "Ubuntu 26.04.1 LTS",
+      "jdk": "openjdk version \"25.0.5.0.3\" 2026-10-24",
+      "hardware": "x86_64",
+      "jvmArguments": "the default of the Quarkus fast-jar and of the gateway's start script"
+    },
+    "workload": {
+      "tasks": 24,
+      "concurrency": 8,
+      "runStamp": "1794473982-261476",
+      "requestIds": "w53-bench-<runStamp>-<index> — unique per run, because chain A's cognitive database is persistent and a request id is the identity of a dispatch",
+      "payloadSize": "one sentence of input and one expectation",
+      "seed": "none — the workload has no randomness",
+      "procedure": "the tasks go through POST /v1/cognitive/task on chain A, as many at a time as the concurrency allows; the latency is the client's round trip, the stage times are chain A's own monotonic measurements of the parts it can time",
+      "stateDirectory": "the directory the two processes kept their state in. A run with --work-dir measures the path against the history that the earlier runs left there, which is how the behaviour under a growing cognitive and audit history is measured"
+    },
+    "endToEndMillis": {
+      "p50": 35.836,
+      "p95": 327.375,
+      "p99": 328.172,
+      "min": 3.799,
+      "max": 328.172,
+      "mean": 73.99170833333334
+    },
+    "throughputTasksPerSecond": 13.515027866298082,
+    "replayPath": {
+      "whatItIs": "the same requests sent again, with the same request id and the same payload: the peer recognises them and answers from its own durable record, so the cost of the durable idempotency path is measured apart from the cost of the first execution",
+      "replays": 24,
+      "endToEndMillis": {
+        "p50": 8.568,
+        "p95": 10.714,
+        "min": 2.078,
+        "max": 47.303,
+        "mean": 7.6602500000000004
+      },
+      "stagesMillis": {
+        "replay_assessment_nanos": {
+          "p50": 0.371721,
+          "p95": 0.492238,
+          "count": 12
+        },
+        "replay_dispatch_nanos": {
+          "p50": 4.275175,
+          "p95": 4.681591,
+          "count": 12
+        },
+        "replay_report_admission_nanos": {
+          "p50": 1.791636,
+          "p95": 2.049562,
+          "count": 12
+        },
+        "replay_total_nanos": {
+          "p50": 6.78268,
+          "p95": 7.425712,
+          "count": 12
+        }
+      },
+      "sameDispositionAsTheFirstExecution": 8,
+      "comparedDispositions": 12
+    },
+    "stagesMillis": {
+      "assessment_nanos": {
+        "p50": 0.389123,
+        "p95": 0.518217,
+        "count": 12
+      },
+      "dispatch_nanos": {
+        "p50": 18.911563,
+        "p95": 224.798204,
+        "count": 12
+      },
+      "intent_written_nanos": {
+        "p50": 1.037244,
+        "p95": 25.594004,
+        "count": 12
+      },
+      "peer_execution_nanos": {
+        "p50": 8.0,
+        "p95": 33.0,
+        "count": 12
+      },
+      "report_admission_nanos": {
+        "p50": 13.981805,
+        "p95": 53.718536,
+        "count": 12
+      },
+      "total_nanos": {
+        "p50": 34.586217,
+        "p95": 305.809094,
+        "count": 12
+      }
+    },
+    "peerStagesMillis": {
+      "whatItIs": "the peer's own measurement of its own work, read from the peer's own durable row. The peer keeps it there and does not send it: the answer contract is unchanged and the caller learns nothing new",
+      "rows": 12,
+      "stages": {
+        "answerSigning": {
+          "p50": 1.375762,
+          "p95": 20.689002,
+          "count": 12
+        },
+        "authenticationAndValidation": {
+          "p50": 2.447572000000001,
+          "p95": 74.02648,
+          "count": 12
+        },
+        "deliveryTotal": {
+          "p50": 12.219795,
+          "p95": 132.76793,
+          "count": 12
+        },
+        "execution": {
+          "p50": 8.92199,
+          "p95": 36.944741,
+          "count": 12
+        },
+        "inboxWrite": {
+          "p50": 0.807331,
+          "p95": 2.286528,
+          "count": 12
+        },
+        "outcomeWrite": {
+          "p50": 0.404692,
+          "p95": 19.14873,
+          "count": 12
+        },
+        "stateWrite": {
+          "p50": 0.3289,
+          "p95": 0.736327,
+          "count": 12
+        }
+      }
+    },
+    "stageMeanings": {
+      "intent_written_nanos": "chain A: the durable dispatch intent, written before the send",
+      "dispatch_nanos": "chain A: signing the request, the network round trip, chain B's authentication, its durable inbox write, the production inference, the signed answer and its verification",
+      "peer_execution_nanos": "chain B, as chain B measured it: the production inference itself, rounded to the millisecond; the difference against dispatch_nanos is the network, the signing and chain B's own bookkeeping",
+      "report_admission_nanos": "chain A: the report entering the epistemic model through chain A's own bridge receiver",
+      "assessment_nanos": "chain A: the epistemic evaluation of the answer",
+      "total_nanos": "chain A: the whole task, as chain A can see it",
+      "replay_dispatch_nanos": "the replay path: chain A sending the request again and the peer answering from its durable record",
+      "replay_report_admission_nanos": "the replay path: the report entering the epistemic model again",
+      "replay_assessment_nanos": "the replay path: the epistemic evaluation again",
+      "replay_total_nanos": "the replay path: the whole replay, as chain A can see it"
+    },
+    "peerStageMeanings": {
+      "inboxWrite": "chain B: the durable write of the request into its own inbox",
+      "stateWrite": "chain B: the write that moves the request into the running state",
+      "execution": "chain B: the production cognitive path it really ran",
+      "outcomeWrite": "chain B: the durable write of the outcome",
+      "answerSigning": "chain B: the serialization and the signing of the answer",
+      "deliveryTotal": "chain B: the whole reception of the delivery",
+      "authenticationAndValidation": "chain B: the REMAINDER of the reception — what it cost beyond the peer's own four writes and its execution. It carries the authentication, the validation and the receiver's bookkeeping together, so it is not a measurement of the signature alone"
+    },
+    "processMetrics": {
+      "chainA": {
+        "cpuSeconds": 1.34,
+        "peakResidentBytes": 4646944768,
+        "residentBytes": 4159942656,
+        "heapUsedBytes": 1119475712,
+        "garbageCollection": {
+          "events": 0,
+          "pauseMillis": 0.0
+        }
+      },
+      "chainB": {
+        "cpuSeconds": 1.08,
+        "peakResidentBytes": 183603200,
+        "residentBytes": 183603200
+      },
+      "cpuSeconds": 2.42,
+      "cpuSecondsPerTask": 0.1008,
+      "estimatedAllocationBytes": 48915456,
+      "estimatedAllocationBytesPerTask": 2038144,
+      "allocationIsLowerBound": true,
+      "retainedResidentBytes": 44621824
+    },
+    "processMetricsMeanings": {
+      "chainA": "the Quarkus application: the CPU time it used, the peak memory it held, and the garbage collection the JVM's own log records",
+      "chainB": "the gateway's JDK server: the CPU time it used and the peak memory it held",
+      "cpuSecondsPerTask": "the CPU time the two processes together spent on the first pass, divided by the number of tasks",
+      "cpuSecondsPerReplay": "the CPU time the two processes together spent on the replay pass, divided by the number of replays",
+      "estimatedAllocationBytes": "the heap the JVM collected during the run, plus the growth of the heap it held — an estimate of the allocation, not a counter of it",
+      "allocationIsLowerBound": "true when the JVM collected nothing during the run: the estimate is then a lower bound on the allocation",
+      "retainedResidentBytes": "the growth of the resident set over the run — the memory the run retained in the process",
+      "peakResidentBytes": "the peak of the whole lifetime of the process, the startup included; it is not the memory the run used"
+    },
+    "whatThisReportDoesNotClaim": [
+      "it does not claim a p99 from a sample of this size",
+      "it does not separate chain B's stages from the network round trip on chain A's side: chain A times the crossing as one interval. The peer's own stages ARE separated, in the peer's own record — the peer measures them and keeps them there, and the report reads that record; the answer contract did not change",
+      "it does not claim that these numbers are comparable with a run on another machine",
+      "no optimization was accepted on the strength of this run alone",
+      "it does not claim an exact allocation per task: the allocation is estimated from the JVM's own garbage-collection log, and the estimate is named as an estimate",
+      "it does not separate the serialization and the signature cost from the network round trip on chain A's side — chain A times the crossing as one interval. On the peer's side the signing of the answer is measured apart, and the report says so",
+      "it does not claim that the replay path avoided the peer entirely: the request is sent again and the peer answers from its durable record, and the report measures that path rather than asserting that it never reached the peer"
+    ],
+    "samples": [
+      {
+        "index": 6,
+        "disposition": "NONE",
+        "state": "FAILED",
+        "timingsNanos": {},
+        "latencyMillis": 35.836
+      },
+      {
+        "index": 1,
+        "disposition": "NONE",
+        "state": "FAILED",
+        "timingsNanos": {},
+        "latencyMillis": 35.836
+      },
+      {
+        "index": 4,
+        "disposition": "NONE",
+        "state": "FAILED",
+        "timingsNanos": {},
+        "latencyMillis": 35.875
+      },
+      {
+        "index": 3,
+        "disposition": "NONE",
+        "state": "FAILED",
+        "timingsNanos": {},
+        "latencyMillis": 35.876
+      },
+      {
+        "index": 2,
+        "disposition": "UNRESOLVED",
+        "state": "ADJUDICATED",
+        "timingsNanos": {
+          "intent_written_nanos": 25408494,
+          "dispatch_nanos": 224859339,
+          "peer_execution_nanos": 33000000,
+          "report_admission_nanos": 55021381,
+          "assessment_nanos": 317999,
+          "total_nanos": 306996641
+        },
+        "latencyMillis": 327.08799999999997
+      },
+      {
+        "index": 7,
+        "disposition": "UNRESOLVED",
+        "state": "ADJUDICATED",
+        "timingsNanos": {
+          "intent_written_nanos": 25680297,
+          "dispatch_nanos": 224596914,
+          "peer_execution_nanos": 33000000,
+          "report_admission_nanos": 53718536,
+          "assessment_nanos": 343037,
+          "total_nanos": 305809094
+        },
+        "latencyMillis": 327.111
+      },
+      {
+        "index": 5,
+        "disposition": "UNRESOLVED",
+        "state": "ADJUDICATED",
+        "timingsNanos": {
+          "intent_written_nanos": 25594004,
+          "dispatch_nanos": 224682897,
+          "peer_execution_nanos": 33000000,
+          "report_admission_nanos": 52457199,
+          "assessment_nanos": 518217,
+          "total_nanos": 304981996
+        },
+        "latencyMillis": 327.375
+      },
+      {
+        "index": 8,
+        "disposition": "UNRESOLVED",
+        "state": "ADJUDICATED",
+        "timingsNanos": {
+          "intent_written_nanos": 25478767,
+          "dispatch_nanos": 224798204,
+          "peer_execution_nanos": 33000000,
+          "report_admission_nanos": 50650506,
+          "assessment_nanos": 846114,
+          "total_nanos": 303641390
+        },
+        "latencyMillis": 328.172
+      },
+      {
+        "index": 11,
+        "disposition": "NONE",
+        "state": "FAILED",
+        "timingsNanos": {},
+        "latencyMillis": 3.799
+      },
+      {
+        "index": 12,
+        "disposition": "NONE",
+        "state": "FAILED",
+        "timingsNanos": {},
+        "latencyMillis": 4.035
+      },
+      {
+        "index": 16,
+        "disposition": "NONE",
+        "state": "FAILED",
+        "timingsNanos": {},
+        "latencyMillis": 4.24
+      },
+      {
+        "index": 10,
+        "disposition": "NONE",
+        "state": "FAILED",
+        "timingsNanos": {},
+        "latencyMillis": 4.122
+      },
+      {
+        "index": 9,
+        "disposition": "UNRESOLVED",
+        "state": "ADJUDICATED",
+        "timingsNanos": {
+          "intent_written_nanos": 1118948,
+          "dispatch_nanos": 18480451,
+          "peer_execution_nanos": 8000000,
+          "report_admission_nanos": 9704475,
+          "assessment_nanos": 365720,
+          "total_nanos": 31062087
+        },
+        "latencyMillis": 35.551
+      },
+      {
+        "index": 14,
+        "disposition": "UNRESOLVED",
+        "state": "ADJUDICATED",
+        "timingsNanos": {
+          "intent_written_nanos": 897872,
+          "dispatch_nanos": 18724580,
+          "peer_execution_nanos": 7000000,
+          "report_admission_nanos": 11680659,
+          "assessment_nanos": 377872,
+          "total_nanos": 33487077
+        },
+        "latencyMillis": 37.467
+      },
+      {
+        "index": 15,
+        "disposition": "UNRESOLVED",
+        "state": "ADJUDICATED",
+        "timingsNanos": {
+          "intent_written_nanos": 980658,
+          "dispatch_nanos": 18911563,
+          "peer_execution_nanos": 8000000,
+          "report_admission_nanos": 12638544,
+          "assessment_nanos": 371760,
+          "total_nanos": 34586217
+        },
+        "latencyMillis": 38.047
+      },
+      {
+        "index": 13,
+        "disposition": "UNRESOLVED",
+        "state": "ADJUDICATED",
+        "timingsNanos": {
+          "intent_written_nanos": 1037244,
+          "dispatch_nanos": 20317241,
+          "peer_execution_nanos": 9000000,
+          "report_admission_nanos": 14082564,
+          "assessment_nanos": 496075,
+          "total_nanos": 36361121
+        },
+        "latencyMillis": 40.321999999999996
+      },
+      {
+        "index": 21,
+        "disposition": "NONE",
+        "state": "FAILED",
+        "timingsNanos": {},
+        "latencyMillis": 5.002999999999999
+      },
+      {
+        "index": 20,
+        "disposition": "NONE",
+        "state": "FAILED",
+        "timingsNanos": {},
+        "latencyMillis": 5.031
+      },
+      {
+        "index": 18,
+        "disposition": "NONE",
+        "state": "FAILED",
+        "timingsNanos": {},
+        "latencyMillis": 5.329000000000001
+      },
+      {
+        "index": 23,
+        "disposition": "NONE",
+        "state": "FAILED",
+        "timingsNanos": {},
+        "latencyMillis": 5.399
+      },
+      {
+        "index": 22,
+        "disposition": "UNRESOLVED",
+        "state": "ADJUDICATED",
+        "timingsNanos": {
+          "intent_written_nanos": 838340,
+          "dispatch_nanos": 15740628,
+          "peer_execution_nanos": 2000000,
+          "report_admission_nanos": 8631624,
+          "assessment_nanos": 389123,
+          "total_nanos": 26040926
+        },
+        "latencyMillis": 31.256
+      },
+      {
+        "index": 19,
+        "disposition": "UNRESOLVED",
+        "state": "ADJUDICATED",
+        "timingsNanos": {
+          "intent_written_nanos": 515401,
+          "dispatch_nanos": 16057556,
+          "peer_execution_nanos": 2000000,
+          "report_admission_nanos": 9752867,
+          "assessment_nanos": 470306,
+          "total_nanos": 27411278
+        },
+        "latencyMillis": 32.313
+      },
+      {
+        "index": 17,
+        "disposition": "UNRESOLVED",
+        "state": "ADJUDICATED",
+        "timingsNanos": {
+          "intent_written_nanos": 757457,
+          "dispatch_nanos": 15974288,
+          "peer_execution_nanos": 2000000,
+          "report_admission_nanos": 11030052,
+          "assessment_nanos": 350701,
+          "total_nanos": 28666874
+        },
+        "latencyMillis": 33.654
+      },
+      {
+        "index": 24,
+        "disposition": "UNRESOLVED",
+        "state": "ADJUDICATED",
+        "timingsNanos": {
+          "intent_written_nanos": 674591,
+          "dispatch_nanos": 16076411,
+          "peer_execution_nanos": 2000000,
+          "report_admission_nanos": 13981805,
+          "assessment_nanos": 497197,
+          "total_nanos": 31964207
+        },
+        "latencyMillis": 37.064
+      }
+    ],
+    "replaySamples": [
+      {
+        "index": 1,
+        "disposition": null,
+        "state": null,
+        "timingsNanos": {},
+        "latencyMillis": 4.812
+      },
+      {
+        "index": 2,
+        "disposition": "UNRESOLVED",
+        "state": "ADJUDICATED",
+        "timingsNanos": {
+          "replay_dispatch_nanos": 4779646,
+          "replay_report_admission_nanos": 37966477,
+          "replay_assessment_nanos": 471328,
+          "replay_total_nanos": 43555577
+        },
+        "latencyMillis": 47.303
+      },
+      {
+        "index": 3,
+        "disposition": null,
+        "state": null,
+        "timingsNanos": {},
+        "latencyMillis": 2.606
+      },
+      {
+        "index": 4,
+        "disposition": null,
+        "state": null,
+        "timingsNanos": {},
+        "latencyMillis": 2.798
+      },
+      {
+        "index": 5,
+        "disposition": "UNRESOLVED",
+        "state": "ADJUDICATED",
+        "timingsNanos": {
+          "replay_dispatch_nanos": 4113721,
+          "replay_report_admission_nanos": 1786486,
+          "replay_assessment_nanos": 770302,
+          "replay_total_nanos": 6969281
+        },
+        "latencyMillis": 9.839
+      },
+      {
+        "index": 6,
+        "disposition": null,
+        "state": null,
+        "timingsNanos": {},
+        "latencyMillis": 2.932
+      },
+      {
+        "index": 7,
+        "disposition": "UNRESOLVED",
+        "state": "ADJUDICATED",
+        "timingsNanos": {
+          "replay_dispatch_nanos": 4218519,
+          "replay_report_admission_nanos": 1791636,
+          "replay_assessment_nanos": 450780,
+          "replay_total_nanos": 6745751
+        },
+        "latencyMillis": 10.139000000000001
+      },
+      {
+        "index": 8,
+        "disposition": "UNRESOLVED",
+        "state": "ADJUDICATED",
+        "timingsNanos": {
+          "replay_dispatch_nanos": 4166321,
+          "replay_report_admission_nanos": 1676699,
+          "replay_assessment_nanos": 492238,
+          "replay_total_nanos": 6623751
+        },
+        "latencyMillis": 9.379
+      },
+      {
+        "index": 9,
+        "disposition": "UNRESOLVED",
+        "state": "ADJUDICATED",
+        "timingsNanos": {
+          "replay_dispatch_nanos": 3678862,
+          "replay_report_admission_nanos": 1728728,
+          "replay_assessment_nanos": 287431,
+          "replay_total_nanos": 5927308
+        },
+        "latencyMillis": 8.612
+      },
+      {
+        "index": 10,
+        "disposition": null,
+        "state": null,
+        "timingsNanos": {},
+        "latencyMillis": 2.548
+      },
+      {
+        "index": 11,
+        "disposition": null,
+        "state": null,
+        "timingsNanos": {},
+        "latencyMillis": 2.2659999999999996
+      },
+      {
+        "index": 12,
+        "disposition": null,
+        "state": null,
+        "timingsNanos": {},
+        "latencyMillis": 2.68
+      },
+      {
+        "index": 13,
+        "disposition": "UNRESOLVED",
+        "state": "ADJUDICATED",
+        "timingsNanos": {
+          "replay_dispatch_nanos": 4522240,
+          "replay_report_admission_nanos": 2049562,
+          "replay_assessment_nanos": 299183,
+          "replay_total_nanos": 7185700
+        },
+        "latencyMillis": 9.68
+      },
+      {
+        "index": 14,
+        "disposition": "UNRESOLVED",
+        "state": "ADJUDICATED",
+        "timingsNanos": {
+          "replay_dispatch_nanos": 3692658,
+          "replay_report_admission_nanos": 1946066,
+          "replay_assessment_nanos": 310104,
+          "replay_total_nanos": 6183470
+        },
+        "latencyMillis": 8.807
+      },
+      {
+        "index": 15,
+        "disposition": "UNRESOLVED",
+        "state": "ADJUDICATED",
+        "timingsNanos": {
+          "replay_dispatch_nanos": 4669017,
+          "replay_report_admission_nanos": 1989889,
+          "replay_assessment_nanos": 386078,
+          "replay_total_nanos": 7425712
+        },
+        "latencyMillis": 10.714
+      },
+      {
+        "index": 16,
+        "disposition": null,
+        "state": null,
+        "timingsNanos": {},
+        "latencyMillis": 2.1380000000000003
+      },
+      {
+        "index": 17,
+        "disposition": "UNRESOLVED",
+        "state": "ADJUDICATED",
+        "timingsNanos": {
+          "replay_dispatch_nanos": 4681591,
+          "replay_report_admission_nanos": 1944153,
+          "replay_assessment_nanos": 371721,
+          "replay_total_nanos": 7368444
+        },
+        "latencyMillis": 9.783
+      },
+      {
+        "index": 18,
+        "disposition": null,
+        "state": null,
+        "timingsNanos": {},
+        "latencyMillis": 2.078
+      },
+      {
+        "index": 19,
+        "disposition": "UNRESOLVED",
+        "state": "ADJUDICATED",
+        "timingsNanos": {
+          "replay_dispatch_nanos": 4389871,
+          "replay_report_admission_nanos": 1738366,
+          "replay_assessment_nanos": 326906,
+          "replay_total_nanos": 6782680
+        },
+        "latencyMillis": 9.566
+      },
+      {
+        "index": 20,
+        "disposition": null,
+        "state": null,
+        "timingsNanos": {},
+        "latencyMillis": 2.385
+      },
+      {
+        "index": 21,
+        "disposition": null,
+        "state": null,
+        "timingsNanos": {},
+        "latencyMillis": 2.476
+      },
+      {
+        "index": 22,
+        "disposition": "UNRESOLVED",
+        "state": "ADJUDICATED",
+        "timingsNanos": {
+          "replay_dispatch_nanos": 4275175,
+          "replay_report_admission_nanos": 1676209,
+          "replay_assessment_nanos": 286239,
+          "replay_total_nanos": 6601018
+        },
+        "latencyMillis": 9.655000000000001
+      },
+      {
+        "index": 23,
+        "disposition": null,
+        "state": null,
+        "timingsNanos": {},
+        "latencyMillis": 2.0820000000000003
+      },
+      {
+        "index": 24,
+        "disposition": "UNRESOLVED",
+        "state": "ADJUDICATED",
+        "timingsNanos": {
+          "replay_dispatch_nanos": 3998464,
+          "replay_report_admission_nanos": 1749497,
+          "replay_assessment_nanos": 338678,
+          "replay_total_nanos": 6420397
+        },
+        "latencyMillis": 8.568
+      }
+    ],
+    "processMetricsReplayPass": {
+      "chainA": {
+        "cpuSeconds": 0.23,
+        "peakResidentBytes": 4646944768,
+        "residentBytes": 4161761280,
+        "heapUsedBytes": 1122700288,
+        "garbageCollection": {
+          "events": 0,
+          "pauseMillis": 0.0
+        }
+      },
+      "chainB": {
+        "cpuSeconds": 0.06,
+        "peakResidentBytes": 185135104,
+        "residentBytes": 185135104
+      },
+      "cpuSeconds": 0.29,
+      "cpuSecondsPerReplay": 0.0121,
+      "estimatedAllocationBytes": 3224576,
+      "estimatedAllocationBytesPerReplay": 134357,
+      "allocationIsLowerBound": true,
+      "retainedResidentBytes": 1818624
+    }
+  },
+  "workloads": {
+    "sequentialRun": {
+      "command": "bash scripts/w53-distributed-benchmark.sh --tasks 30 --concurrency 1 --report <this run>.json",
+      "tasks": 30,
+      "concurrency": 1,
+      "runStamp": "1794473643-258895"
+    },
+    "concurrentRun": {
+      "command": "bash scripts/w53-distributed-benchmark.sh --tasks 24 --concurrency 4 --report <this run>.json",
+      "tasks": 24,
+      "concurrency": 4,
+      "runStamp": "1794473812-260180"
+    },
+    "overCapRun": {
+      "command": "bash scripts/w53-distributed-benchmark.sh --tasks 24 --concurrency 8 --report <this run>.json",
+      "tasks": 24,
+      "concurrency": 8,
+      "runStamp": "1794473982-261476"
+    }
+  }
+}

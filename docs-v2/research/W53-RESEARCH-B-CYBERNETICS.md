@@ -1,6 +1,6 @@
 # W53 — Research track B: cybernetics and control theory on coordination between two independently running cognitive components
 
-**Status:** research input for W53 · **Date:** 2026-11-09 · **Author:** research track B, W53
+**Status:** `RESEARCH` — research input for W53 · **Date:** 2026-11-09 · **Author:** research track B, W53
 
 **Track:** R-B of the cross-disciplinary doctrine (cybernetics / computational cognition).
 

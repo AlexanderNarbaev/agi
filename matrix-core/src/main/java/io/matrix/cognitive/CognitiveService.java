@@ -61,6 +61,7 @@ public class CognitiveService {
     private final Supplier<String> clock;
 
     private CognitiveStore store;
+    private CostLedger ledger;
     private CognitiveKernel kernel;
     private CognitiveSolver solver;
     private EpisodeIdAllocator allocator;
@@ -135,12 +136,46 @@ public class CognitiveService {
         return solver;
     }
 
+    /**
+     * The file this service's cognitive store lives in.
+     *
+     * <p><b>Why it is asked for.</b> The distributed resource opens a second store, on the
+     * file of the dispatches. Two stores on one file are two writers on one database, and the
+     * writer lock does not catch it — both holders are in this process and merely join the
+     * lock. The resource therefore compares its own file with this one before it opens
+     * anything.</p>
+     *
+     * @return the path of the store's file
+     */
+    public synchronized java.nio.file.Path storePath() {
+        return Paths.get(workbench.databasePath());
+    }
+
     /** The cognitive store, opened on first use. */
     public synchronized CognitiveStore store() {
         if (store == null) {
             store = new CognitiveStore(Paths.get(workbench.databasePath()));
         }
         return store;
+    }
+
+    /**
+     * The ledger of measured methods, opened on first use.
+     *
+     * <p><b>Why it is one ledger for the whole process.</b> A ledger is the profile of the
+     * system's own methods: what they cost, and what was concluded about their answers. Two
+     * ledgers over one store would be two profiles that disagree until a restart, and a
+     * profile that nobody can read back is not a profile. The ledger is therefore built once
+     * and kept, and it is the same object the selector reads and the same one a remote
+     * verdict is recorded into.</p>
+     *
+     * @return the ledger of this process
+     */
+    public synchronized CostLedger ledger() {
+        if (ledger == null) {
+            ledger = new CostLedger(store(), io.matrix.cognitive.CognitiveKernel.WORKSPACE_ID);
+        }
+        return ledger;
     }
 
     /** The allocator of the identities of a cycle, built on first use. */
@@ -249,18 +284,17 @@ public class CognitiveService {
         // back to the DECLARED complexity — a person's estimate where a measurement
         // belongs. The profile is written by the single writer of the cognitive database
         // and read back when the application starts.
-        CostLedger ledger = new CostLedger(store(),
-                io.matrix.cognitive.CognitiveKernel.WORKSPACE_ID);
+        CostLedger profile = ledger();
         AlgorithmRegistry registry = Portfolio.defaultRegistry()
                 .register(new MicroWorldReferenceMethod())
                 .register(new MicroWorldSettledModelMethod());
-        this.solver = new CognitiveSolver(new AlgorithmSelector(registry, ledger), ledger);
+        this.solver = new CognitiveSolver(new AlgorithmSelector(registry, profile), profile);
         CognitiveKernel built = new CognitiveKernel(
                 workbench,
                 store(),
                 sessionFactory,
                 environment,
-                new KernelSelector(registry, ledger),
+                new KernelSelector(registry, profile),
                 new KernelRegulator(),
                 () -> java.time.Instant.now().toString(),
                 monotonicNanos == null ? System::nanoTime : monotonicNanos);
