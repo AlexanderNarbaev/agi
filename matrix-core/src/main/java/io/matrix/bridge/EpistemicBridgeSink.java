@@ -8,6 +8,7 @@ import io.matrix.contract.bridge.BridgeEnvelope;
 import io.matrix.contract.bridge.BridgePayload;
 import io.matrix.contract.bridge.BridgePayloadCodec;
 import io.matrix.contract.bridge.BridgeSink;
+import io.matrix.contract.bridge.CognitiveTaskReport;
 import io.matrix.knowledge.Claim;
 import io.matrix.knowledge.ClaimStatus;
 import io.matrix.knowledge.ClaimWarrant;
@@ -71,6 +72,8 @@ final class EpistemicBridgeSink implements BridgeSink {
             case OBSERVATION -> writeObservation(envelope, payload.observation(), provenance, now);
             case CANDIDATE -> writeCandidate(envelope, payload.candidate(), provenance, now);
             case EVIDENCE_LINK -> writeEvidenceLink(envelope, payload.evidenceLink(), provenance, now);
+            case INFERENCE_RESPONSE -> writeTaskReport(envelope, payload.taskReport(),
+                    provenance, now);
             default -> throw new IllegalStateException("the bridge cannot carry "
                     + payload.kind());
         }
@@ -152,6 +155,105 @@ final class EpistemicBridgeSink implements BridgeSink {
         workbench.storeForValidation().applyChanges(workspaceId,
                 new KnowledgeChanges(List.of(source), List.<Claim>of(),
                         List.<io.matrix.knowledge.Evidence>of(evidence), List.of(), List.of()));
+    }
+
+    /**
+     * W53 — writes the secondary report of a remote cognitive task.
+     *
+     * <p><b>Why the report is a candidate, like every other bridged record.</b> A report
+     * from another process is a claim about something, made by somebody who has not been
+     * checked here. It is written as a candidate and never as an established fact, however
+     * confident the peer was: a confidence basis of {@code DECLARED} or {@code MEASURED}
+     * is not independent evidence, and the store's own vocabulary says a candidate is a
+     * candidate until a procedure validates it.</p>
+     *
+     * <p><b>Why the relation is the report's, not the sink's.</b> The research track on
+     * cooperative reasoning found the defect this fixes: the sink used to write
+     * {@code SUPPORTS} unconditionally, so a remote report that <i>denied</i> an
+     * established belief could only ever arrive as support for a new candidate and never
+     * reached the refutation path. The report now carries the relation, and the sink
+     * writes what the peer actually said — {@code CONTRADICTS} included.</p>
+     *
+     * <p><b>Where a contradiction attaches.</b> If the report names the claim it is about
+     * and that claim exists, the evidence attaches to that claim: the contradiction is
+     * then inspectable against the belief it denies, which is the only way a downstream
+     * assessor can see it. If the claim is unknown, the report is written as a candidate
+     * about the proposition it names, and the evidence attaches to that candidate — the
+     * report is still recorded, and nothing is invented.</p>
+     *
+     * <p><b>The lineage stays visible.</b> The records the peer derived the report from
+     * travel in the claim's notes, so that the reader can tell a proposition that came
+     * back from the peer from one the peer found on its own. The same information
+     * returning is not a second, independent observation of it.</p>
+     */
+    private void writeTaskReport(BridgeEnvelope envelope, CognitiveTaskReport report,
+                                 Provenance provenance, String now) {
+        if (report == null) {
+            return;
+        }
+        String claimId = claimIdFor(envelope.requestId());
+        if (alreadyApplied(claimId)) {
+            return;
+        }
+        String sourceId = sourceIdFor(envelope.requestId());
+        Source source = new Source(sourceId, workspaceId, SourceKind.SECONDARY_REPORT,
+                "the remote cognitive report of " + envelope.senderId(),
+                locatorOf(envelope, provenance),
+                BridgeService.BRIDGED_REPORT_AUTHORITY, BridgeService.BRIDGED_REPORT_FRESHNESS,
+                report.subjectProposition(), now, digestOf(report.subjectProposition()),
+                null, null, "text");
+        Claim claim = new Claim(claimId, workspaceId, conceptIdFor(envelope),
+                report.subjectProposition(), scopeOf(provenance), null, ClaimStatus.CANDIDATE,
+                0.0, 1, sourceId, notesOf(report), "not validated",
+                ClaimWarrant.NONE, null, now, now);
+        EvidenceRelation relation = relationOf(report);
+        io.matrix.knowledge.Evidence evidence = new io.matrix.knowledge.Evidence(
+                evidenceIdFor(envelope.requestId()), workspaceId, claimId, sourceId, relation,
+                report.subjectProposition(), BridgeService.BRIDGED_OBSERVATION_QUALITY, now);
+        workbench.storeForValidation().applyChanges(workspaceId,
+                new KnowledgeChanges(List.of(source), List.of(claim),
+                        List.<io.matrix.knowledge.Evidence>of(evidence), List.of(), List.of()));
+    }
+
+    /**
+     * The relation the peer stated, translated into the store's vocabulary.
+     *
+     * <p>A report that says neither — {@code INDEPENDENT} — is recorded as
+     * {@code CONTEXTUAL}: the store's own word for "this source is about the subject but
+     * does not bear on the claim". Writing support there would be exactly the defect this
+     * wave is fixing, in the other direction.</p>
+     */
+    private static EvidenceRelation relationOf(CognitiveTaskReport report) {
+        return switch (report.relation()) {
+            case SUPPORTS -> EvidenceRelation.SUPPORTS;
+            case CONTRADICTS -> EvidenceRelation.CONTRADICTS;
+            case INDEPENDENT -> EvidenceRelation.CONTEXTUAL;
+        };
+    }
+
+    /**
+     * How the claim entered the store: the responder, the capability and the lineage the
+     * peer declared.
+     *
+     * <p>The lineage lives here because this is the field that says where a claim came
+     * from, and a claim that came back from the peer must say so — the reader has to be
+     * able to tell a returning proposition from an independently observed one.</p>
+     */
+    private static String notesOf(CognitiveTaskReport report) {
+        StringBuilder notes = new StringBuilder();
+        notes.append("reported by ").append(report.responderId())
+                .append(" through ").append(report.capabilityId());
+        if (report.capabilityVersion() != null && !report.capabilityVersion().isBlank()) {
+            notes.append(" version ").append(report.capabilityVersion());
+        }
+        if (report.derivedFrom() != null && !report.derivedFrom().isEmpty()) {
+            notes.append("; derived from ").append(String.join(", ", report.derivedFrom()));
+        }
+        if (report.limitations() != null && !report.limitations().isEmpty()) {
+            notes.append("; the peer says it does not cover ")
+                    .append(String.join(", ", report.limitations()));
+        }
+        return notes.toString();
     }
 
     /**

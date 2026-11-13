@@ -6,11 +6,20 @@
 Поэтому здесь разделы, а документы перечислены там, где они нужны поштучно.
 
 > **Полный реестр — [docs-v2/engineering/W46-DOCUMENT-AUDIT.csv](engineering/W46-DOCUMENT-AUDIT.csv):**
-> 880 строк, по одной на документ, с колонками `path`, `category`, `status`,
+> 893 строки, по одной на документ, с колонками `path`, `category`, `status`,
 > `current_or_historical`, `wave`, `last_meaningful_update`, `known_stale_reference`,
-> `successor`. Из них **849** — под `docs-v2/`. Реестр сделан в W46.0 и **не знает** про 18
-> документов, созданных позже (W46.0–W46.2, включая сам governance-набор) — это долг перед
-> `TASK-W46-2`.
+> `successor`. Из них **862** — под `docs-v2/`. Реестр сделан в W46.0; волна W53 (распределённое
+> когнитивное исполнение) внесла в него **свои 12 документов и новую строку
+> `docs-v2/waves/INDEX.md`** (`CANONICAL`) — 13 строк, — и переклассифицировала `WAL-021` из `ACTIVE` в
+> `HISTORICAL` — это отчёт о завершённой волне W32, как и все 319 его соседей.
+> **Оставшийся долг — 69 markdown-документов** под `docs-v2/`, которых нет в реестре
+> (реестр ведёт **markdown-документы**; машинно-читаемые артефакты волны — JSON — в него не
+> входят по его же соглашению): governance-набор
+> (11), отчёты инженерных волн W46.0–W52 (41), исследования (6), спецификации W47 (3),
+> операции (2), демонстрация (4), архитектура (1), дизайн W47 (1). Это **унаследованный** долг:
+> обязательство «реестр документов остаётся согласованным» стоит в ROADMAP §9, и ни одна из
+> волн, создавших эти документы, его не закрыла. Волна W53 закрыла **свою** часть и назвала
+> остальное.
 > **Каноническая навигация — [governance/ROADMAP.md](governance/ROADMAP.md) плюс
 > governance-набор ниже.**
 
@@ -52,13 +61,13 @@
 
 | Раздел | Где | Что внутри | Документов | Статусы |
 |---|---|---|---|---|
-| Governance | `governance/` | канонические документы проекта | 8 | CANONICAL |
+| Governance | `governance/` | канонические документы проекта | 11 | CANONICAL |
 | Архитектура | `architecture/` | карта возможностей, топология, ADR, заявки на изменение | 21 | 19 ACTIVE, 2 CANONICAL |
-| Инженерия | `engineering/` | карты W44/W45/W46, отчёты волн, инварианты, план | 75 | 74 ACTIVE, 1 NORMATIVE |
+| Инженерия | `engineering/` | карты W44–W53, отчёты волн, инварианты, план | 82 | 79 ACTIVE, 2 CANONICAL, 1 NORMATIVE |
 | Операции | `operations/` | раннбук, развёртывание, лимиты, параметры настройки | 14 | ACTIVE |
 | Спецификации | `specifications/` | SPEC-000… и её наследники | 17 | 10 NORMATIVE, 7 ACTIVE |
-| Дизайны | `designs/` | проектные решения DESIGN-01…70 (+ `designs/drafts/`) | 88 | 19 NORMATIVE, 69 ACTIVE |
-| Исследования | `research/` | гипотезы, отчёты, протоколы, сводки (+ `reports/`, `protocols/`, `summaries/`) | 178 | 165 RESEARCH, 6 ACTIVE, 5 NORMATIVE, 1 REFERENCE, 1 UNVERIFIED |
+| Дизайны | `designs/` | проектные решения DESIGN-01…84 (+ `designs/drafts/`) | 89 | 19 NORMATIVE, 70 ACTIVE |
+| Исследования | `research/` | гипотезы, отчёты, протоколы, сводки (+ `reports/`, `protocols/`, `summaries/`) | 182 | 169 RESEARCH, 6 ACTIVE, 5 NORMATIVE, 1 REFERENCE, 1 UNVERIFIED |
 | Волны | `waves/` | хронологический журнал волн | 321 | 320 HISTORICAL, 1 CANONICAL |
 | Уровни | `levels/` | нормативные документы по уровням | 24 | NORMATIVE |
 | Парадигма | `paradigm/` | рамка проекта | 9 | 8 NORMATIVE, 1 ACTIVE |
@@ -68,8 +77,8 @@
 | Прочее | `quality/`, `releases/`, `archive/`, `story/`, `guide/`, `templates/`, `vision/`, `proposals/`, `security/`, `specs/` | качество, релизы, архив, нарратив, гайды, предложения | 40 | 25 ACTIVE, 8 HISTORICAL, 4 ARCHIVED, 2 UNVERIFIED, 1 NORMATIVE |
 | Корневые файлы `docs-v2/` | `SUMMARY.md`, `STYLE-GUIDE.md`, `TRANSFORMATION-PLAN.md`, `DEPLOYMENT-REPORT.md`, `index.md` | сводка, стиль, план трансформации, отчёт о развёртывании, страница сайта | 6 | ACTIVE |
 
-Счётчики — из `W46-DOCUMENT-AUDIT.csv`; `governance/` и корневые файлы `docs-v2/` в реестр
-ещё не попали (см. врезку в шапке).
+Счётчики — из `W46-DOCUMENT-AUDIT.csv`; `governance/` (11 документов) в реестр ещё не попал
+(см. врезку в шапке) — это унаследованный долг, а не ошибка этого реестра.
 
 ---
 
@@ -78,8 +87,8 @@
 | Каталог | Что это | Файлов | Статус | Свой индекс |
 |---|---|---|---|---|
 | `docs-v2/waves/` | журнал волн: по файлу на волну, от WAL-001 до W46 | 321 | 320 HISTORICAL, 1 CANONICAL | [waves/INDEX.md](waves/INDEX.md) |
-| `docs-v2/research/` | тело исследований: регистры гипотез, отчёты экспериментов, протоколы, сводки | 192 | RESEARCH (165) | [research/RESEARCH-INDEX.md](research/RESEARCH-INDEX.md), [research/NEGATIVE-RESULTS-INDEX.md](research/NEGATIVE-RESULTS-INDEX.md) |
-| `docs-v2/designs/` | проектные решения DESIGN-01…70, включая черновики | 88 | 19 NORMATIVE, 69 ACTIVE | по имени файла `DESIGN-NN-…` |
+| `docs-v2/research/` | тело исследований: регистры гипотез, отчёты экспериментов, протоколы, сводки | 200 | 169 RESEARCH (в реестре 182 документа) | [research/RESEARCH-INDEX.md](research/RESEARCH-INDEX.md), [research/NEGATIVE-RESULTS-INDEX.md](research/NEGATIVE-RESULTS-INDEX.md) |
+| `docs-v2/designs/` | проектные решения DESIGN-01…84, включая черновики | 90 | 19 NORMATIVE, 70 ACTIVE (в реестре 89 документов) | по имени файла `DESIGN-NN-…` |
 | `docs-v2/levels/` | нормативные документы по уровням | 24 | NORMATIVE | по имени файла |
 | `docs-v2/_raw/` | архив pre-v2 дерева; **в реестр не входит** (аудит исключает pre-v2 архив) | 316 | ARCHIVED | только для исторической справки |
 
@@ -104,6 +113,8 @@
 | Инженерные нормы | [engineering/INVARIANTS.md](engineering/INVARIANTS.md), [engineering/PLAN.md](engineering/PLAN.md), [engineering/STANDARDS-MATRIX.md](engineering/STANDARDS-MATRIX.md), [engineering/JMH-GATE-EVIDENCE.md](engineering/JMH-GATE-EVIDENCE.md), [engineering/SDD-COVERAGE.md](engineering/SDD-COVERAGE.md), [engineering/MUTATION-REPORT.md](engineering/MUTATION-REPORT.md), [engineering/TLA-STATUS.md](engineering/TLA-STATUS.md), [engineering/RELEASE-NOTES.md](engineering/RELEASE-NOTES.md), [engineering/RISK-REGISTER.md](engineering/RISK-REGISTER.md) |
 | Операции | [operations/RUNBOOK.md](operations/RUNBOOK.md), [operations/DEPLOYMENT.md](operations/DEPLOYMENT.md) |
 | Спецификации и наука | [specifications/INDEX.md](specifications/INDEX.md), [specifications/SPEC-004-perception.md](specifications/SPEC-004-perception.md), [science/SUBSTRATE-MODELS.md](science/SUBSTRATE-MODELS.md), [science/FOUNDATIONS.md](science/FOUNDATIONS.md), [science/GOALS-REQUIREMENTS.md](science/GOALS-REQUIREMENTS.md), [science/OPEN-PROBLEMS.md](science/OPEN-PROBLEMS.md), [science/ALGORITHM-ATLAS-INDEX.md](science/ALGORITHM-ATLAS-INDEX.md) |
+| W53 — распределённое когнитивное исполнение | [engineering/W53-STATUS.md](engineering/W53-STATUS.md), [engineering/W53-AUDIT.md](engineering/W53-AUDIT.md), [engineering/W53-ARCHITECTURE-MAP.md](engineering/W53-ARCHITECTURE-MAP.md), [engineering/ADR-W53-01-cognitive-task-bridge.md](engineering/ADR-W53-01-cognitive-task-bridge.md), [engineering/W53-EPISTEMIC-COMPARISON.md](engineering/W53-EPISTEMIC-COMPARISON.md), [engineering/W53-PERFORMANCE.md](engineering/W53-PERFORMANCE.md), [designs/DESIGN-84-distributed-cognitive-bridge.md](designs/DESIGN-84-distributed-cognitive-bridge.md), [research/W53-RESEARCH-A-DURABLE-EXECUTION.md](research/W53-RESEARCH-A-DURABLE-EXECUTION.md), [research/W53-RESEARCH-B-CYBERNETICS.md](research/W53-RESEARCH-B-CYBERNETICS.md), [research/W53-RESEARCH-C-COOPERATIVE-REASONING.md](research/W53-RESEARCH-C-COOPERATIVE-REASONING.md), [research/W53-RESEARCH-D-RELIABILITY-CALIBRATION.md](research/W53-RESEARCH-D-RELIABILITY-CALIBRATION.md), [engineering/W53-PERFORMANCE-VERIFICATION.json](engineering/W53-PERFORMANCE-VERIFICATION.json) |
+| W53 — волна процедурной памяти (первая волна с этим номером) | [engineering/W53-PROCEDURE-MEMORY-STATUS.md](engineering/W53-PROCEDURE-MEMORY-STATUS.md) |
 | W47 — четыре предмета, потерявшие документы (OD-031) | [specifications/SPEC-015-autonomy-impulses.md](specifications/SPEC-015-autonomy-impulses.md), [specifications/SPEC-016-decentralized-digests.md](specifications/SPEC-016-decentralized-digests.md), [specifications/SPEC-017-hierarchical-memory.md](specifications/SPEC-017-hierarchical-memory.md), [designs/DESIGN-73-consolidation-cycle.md](designs/DESIGN-73-consolidation-cycle.md), [engineering/W47-WORKSPACE-REPLACEMENT-CONTRACT.md](engineering/W47-WORKSPACE-REPLACEMENT-CONTRACT.md) |
 
 ---

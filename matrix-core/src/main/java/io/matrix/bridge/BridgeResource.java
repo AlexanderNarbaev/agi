@@ -59,7 +59,7 @@ public class BridgeResource {
      *
      * @return the service
      */
-    synchronized BridgeService service() {
+    public synchronized BridgeService service() {
         if (service == null) {
             journal = new BridgeJournal(java.nio.file.Path.of(JOURNAL_PATH));
             service = new BridgeService(workbench, BridgeConfiguration.verifier(),

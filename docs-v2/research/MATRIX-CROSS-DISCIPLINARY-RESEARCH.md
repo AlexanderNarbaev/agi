@@ -407,3 +407,45 @@ CrossRef / Europe PMC / издателя; ISBN проверены по OpenLibra
 
 Полный список — в `docs-v2/research/HYPOTHESES-NEW.md` (H-113…H-128) и в
 `docs-v2/designs/DESIGN-72-cognitive-kernel.md`.
+
+---
+
+## W53 (2026-11-09) — distributed cognition: four tracks and what they changed
+
+The distributed-cognition wave ran four research tracks in parallel (the maximum META-R4
+allows) and every one of them changed the design. The full documents, with their sources,
+are `docs-v2/research/W53-RESEARCH-A-DURABLE-EXECUTION.md`,
+`docs-v2/research/W53-RESEARCH-B-CYBERNETICS.md`,
+`docs-v2/research/W53-RESEARCH-C-COOPERATIVE-REASONING.md` and
+`docs-v2/research/W53-RESEARCH-D-RELIABILITY-CALIBRATION.md`; the design they produced is
+`docs-v2/designs/DESIGN-84-distributed-cognitive-bridge.md`, and the new hypotheses are
+H-129 … H-133 in `docs-v2/research/HYPOTHESES-NEW.md`.
+
+| The track | The school | The finding that changed the code |
+|---|---|---|
+| A — durable execution | distributed systems (transaction processing, streaming, workflow engines) | the intent must be durable **before** the send, and the peer's inbox must be durable — the recovery story is at-least-once with effectively-once effects, and no distributed exactly-once claim may be made |
+| B — cybernetics | cybernetics and control theory (Wiener, Ashby, Beer, Amann) | the request must carry the **criterion** by which the answer is judged, and the delegation must be observable to the regulator — a delegation whose outcome is not fed back is an unbounded autonomy |
+| C — cooperative reasoning | cognitive architecture and philosophy of science (Bruner, Sperber & Wilson, Hutchins, Pearl, Hájek) | the remote report is a **source-dependent report**: it must carry its relation and its lineage, the sink must never invent a support relation, and a report that rests on what was supplied is qualified rather than supported |
+| D — reliability and calibration | statistics (Wilson, Brown–Cai–DasGupta, Gelman et al.) | a handful of observations must not create confidence: the Wilson **lower** bound and a representative evidence base are the preconditions for putting reliability into a score — and the wave records the deferral rather than a number it cannot justify |
+
+Two of the four findings are hypotheses the wave **refused** to implement, and the refusal is
+recorded rather than hidden: the distributed exactly-once guarantee (it would require the
+cross-database transaction the architecture exists to avoid) and the reliability term in the
+selector's score (there is no representative evidence base yet, and no held-out set that
+would show it helps).
+
+**What the implementation did with the tracks afterwards.** Track A's durable-intent rule was
+extended into the recovery path: the request itself is stored with the intent, so an
+unfinished dispatch can be sent again with the same request id, and the delivery attempts
+are counted in the dispatch's own row so the retry budget belongs to the task rather than to
+the life of a process. Track B's bounded autonomy was enforced at the boundary on **both**
+sides — the queue, the concurrency cap and the payload limit are refused, not queued. Track
+C's report-not-truth rule is unchanged and is what the recorded verdict shows: the exchange
+succeeded and the proposition still came back `UNRESOLVED`. Track D's deferral stands: the
+Wilson lower bound is researched and recorded, and the estimate does not enter the score.
+
+The wave also found a defect that the tracks had predicted would exist: the epistemic
+store's write transactions were not serialized, so two writers interleaved on one SQLite
+connection and the remote report was lost with the transaction. The distributed path made
+it visible; the fix and its regression test are in `docs-v2/engineering/W53-PERFORMANCE.md`
+§5.1.

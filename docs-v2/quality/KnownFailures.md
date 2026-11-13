@@ -2114,6 +2114,18 @@ controlled**, and this one measures a stage (BPE) that is 14x over budget while 
 different one.
 
 
+### W53 — the same assertion, observed again (2026-11-09)
+
+A full `:matrix-core:test :matrix-api-gateway:test` run during the W53 wave reported
+`9429 tests completed, 1 failed, 19 skipped`, the failure being
+`Exp324EndToEndForwardPassTest.endToEndForwardPassLatency()` — the same assertion this
+entry already describes: the chain forward-pass median was measured at 2068 us and then
+2237 us against the 2000 us bound, while the test's own message says the mean was
+tracking scheduling noise. The class passed when it was run alone (twice, `BUILD
+SUCCESSFUL`), and the wave touches no code on that path. **This is the documented
+load-sensitivity, not a W53 regression** — and the wave's verification command is the
+per-package sequence, not the one-invocation full run.
+
 ## W37.5c — zsh history expansion silently rewrote every multi-module test command
 
 `./gradlew :$m:cleanTest :$m:test` inside a shell function reported **BUILD FAILED for all ten

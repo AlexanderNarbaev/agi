@@ -97,6 +97,21 @@ final class BridgeTestFixtures {
         return unsigned.withSignature(unsigned.sign(SECRET));
     }
 
+    /**
+     * A signed withdrawal of a dispatched task.
+     *
+     * @return the envelope
+     */
+    static BridgeEnvelope signedCancellation() {
+        CognitiveTaskCancel cancel = new CognitiveTaskCancel(BridgeProtocol.VERSION,
+                "tsk-cancel-1", "req-cancel-1",
+                new io.matrix.contract.Correlation("corr-cancel-1", "ep-parent",
+                        "ep-cancel-1", "req-cancel-1"),
+                "the task was withdrawn by the requester", SENT_AT, provenance());
+        BridgePayload payload = BridgePayload.ofTaskCancel(cancel, provenance());
+        return signedEnvelope(envelope(payload, "cancel-req-cancel-1"));
+    }
+
     /** A sink that remembers what it was given. */
     static final class RecordingSink implements BridgeSink {
 
