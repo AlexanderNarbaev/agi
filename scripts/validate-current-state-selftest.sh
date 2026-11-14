@@ -95,20 +95,55 @@ echo "=== 7. the actual repository is consistent"
 expect "the repository: no contradiction" "-" "$(run "$ROOT")"
 
 echo ""
-echo "=== 8. the quality gate fails when this checker fails (the wiring's own control)"
-# The gate calls the checker as its CURRENT-1 rule; a wiring that is never seen to
-# fail is a wiring that is not known to work. The fixture is a copy of the tree with
-# one contradiction planted, and the gate must report CURRENT-1 as a violation.
-cp "$ROOT/scripts/quality-gate.sh" "$WORK/stale-release/scripts/quality-gate.sh"
-mkdir -p "$WORK/stale-release/docs-v2/quality"
-cp "$ROOT/docs-v2/quality/quality-baseline.txt" "$WORK/stale-release/docs-v2/quality/" 2>/dev/null
-cp "$ROOT/docs-v2/quality/frozen-zone-baseline.txt" "$WORK/stale-release/docs-v2/quality/" 2>/dev/null
-GATE_OUTPUT="$(cd "$WORK/stale-release" && bash scripts/quality-gate.sh --report 2>&1)"
-if echo "$GATE_OUTPUT" | grep -q "CURRENT-1"; then
-  pass "the gate reports CURRENT-1 on the contradictory copy"
+echo "=== 8. the quality gate reports the contradiction as a violation (the wiring's own control)"
+# The gate calls the checker as its CURRENT-1 rule; a wiring that is never seen to fail
+# is a wiring that is not known to work. The fixture is a GIT repository whose main line
+# carries the squash of pull request #50 while the current state still says that pull
+# request is open - so the checker has a real contradiction to report (RELEASE_CLAIM), not
+# a repository it cannot read. The gate must report CURRENT-1 as a VIOLATION, and the
+# same gate with the wiring removed must NOT.
+FIX="$WORK/gate"
+mkdir -p "$FIX/docs-v2/governance" "$FIX/docs-v2/architecture" "$FIX/docs-v2/quality" "$FIX/scripts"
+cp "$ROOT/scripts/validate-current-state.py" "$FIX/scripts/validate-current-state.py"
+cp "$ROOT/scripts/quality-gate.sh" "$FIX/scripts/quality-gate.sh"
+cp "$ROOT/docs-v2/quality/quality-baseline.txt" "$FIX/docs-v2/quality/" 2>/dev/null
+cp "$ROOT/docs-v2/quality/frozen-zone-baseline.txt" "$FIX/docs-v2/quality/" 2>/dev/null
+printf '# PROJECT STATE\n\n**The wave is released into main.**\n\nPull request #50 is open, the merge is the owner'"'"'s release decision.\n' \
+  > "$FIX/docs-v2/governance/PROJECT-STATE.md"
+printf '# RUNTIME TOPOLOGY\n\nThe two applications meet at exactly one governed crossing.\n' \
+  > "$FIX/docs-v2/architecture/RUNTIME-TOPOLOGY.md"
+printf '### R-X\n\n- **evidence**: scripts/validate-current-state.py:10 and nothing else.\n' \
+  > "$FIX/docs-v2/governance/RISK-REGISTER.md"
+( cd "$FIX" && git init -q . >/dev/null 2>&1 && git config user.email selftest@local \
+    && git config user.name selftest && git add -A >/dev/null 2>&1 \
+    && git commit -q -m "pull request #50 is released into main (#50)" >/dev/null 2>&1 \
+    && git branch -M main >/dev/null 2>&1 )
+
+# (a) the checker really finds the planted contradiction - not an unreadable repository
+CHECKER_OUTPUT="$(python3 "$FIX/scripts/validate-current-state.py" --root "$FIX" --strict 2>&1)"
+if echo "$CHECKER_OUTPUT" | grep -q "RELEASE_CLAIM"; then
+  pass "the fixture's contradiction is detected: RELEASE_CLAIM"
 else
-  fail "the gate reports CURRENT-1 on the contradictory copy"
-  echo "$GATE_OUTPUT" | grep -E "CURRENT-1|DOCS-1|TEST-1" | head -5 | awk '{ print "        " $0 }'
+  fail "the fixture's contradiction is detected: RELEASE_CLAIM"
+  echo "$CHECKER_OUTPUT" | head -5 | awk '{ print "        " $0 }'
+fi
+
+# (b) the gate reports CURRENT-1 as a violation
+GATE_OUTPUT="$(cd "$FIX" && bash scripts/quality-gate.sh 2>&1)"
+if echo "$GATE_OUTPUT" | grep -q "CURRENT-1  the current-state documents contradict each other"; then
+  pass "the gate reports CURRENT-1 as a violation"
+else
+  fail "the gate reports CURRENT-1 as a violation"
+  echo "$GATE_OUTPUT" | grep -E "CURRENT-1" | head -3 | awk '{ print "        " $0 }'
+fi
+
+# (c) the control is sensitive to the wiring: with the call removed, the violation is gone
+sed 's/^check_current_state$/#check_current_state/' "$FIX/scripts/quality-gate.sh" > "$FIX/scripts/quality-gate-nowiring.sh"
+BROKEN_OUTPUT="$(cd "$FIX" && bash scripts/quality-gate-nowiring.sh 2>&1)"
+if echo "$BROKEN_OUTPUT" | grep -q "CURRENT-1  the current-state documents contradict each other"; then
+  fail "without the wiring the violation disappears"
+else
+  pass "without the wiring the violation disappears"
 fi
 
 echo ""

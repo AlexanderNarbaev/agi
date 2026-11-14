@@ -232,11 +232,15 @@ current; the correction references the original.*
 
 ### K.2 The CI on the released heads — the jobs, not the aggregate
 
-The aggregate `ci` workflow is **red on both branches**, and it is red for one reason:
-**the Docker Hub publication cannot authenticate** (`gh api repos/AlexanderNarbaev/agi/actions/secrets`
-→ `total_count: 0`, so the workflow's `DOCKERHUB_USERNAME`/`DOCKERHUB_TOKEN` are empty and
-the Docker Hub login step fails with *"Username and password required"*). **The aggregate is
-therefore not reported as green**, and the individual jobs are:
+The aggregate `ci` workflow is **red on both branches**, and **the cause is not the same on
+both**. On `main` it is the Docker Hub publication: it cannot authenticate
+(`gh api repos/AlexanderNarbaev/agi/actions/secrets` → `total_count: 0`, so the workflow's
+`DOCKERHUB_USERNAME`/`DOCKERHUB_TOKEN` are empty and the Docker Hub login step fails with
+*"Username and password required"*). On `develop` it is the **wall-clock assertion** of
+`PortfolioBenchmarkTest` (K.3 §5), and the Docker job there was **skipped behind it** — that
+job needs the build, the security scan, the container images and the web UI tests. **The
+aggregate is therefore not reported as green on either branch**, and the individual jobs
+are:
 
 | the job | `main` `32666218` | `develop` `4257d6df` |
 |---|---|---|
@@ -244,12 +248,12 @@ therefore not reported as green**, and the individual jobs are:
 | Quality gates (can fail) | **success** | **success** |
 | Web UI Tests (matrix-web-ui) | **success** | **success** |
 | Container Images (build + smoke) | **success** | skipped (blocked by the failing job) |
-| **Security Scan (TruffleHog)** | **success** | skipped (blocked by the failing job) |
+| **Security Scan** (the TruffleHog step) | **success** — the step that runs the scanner; the SpotBugs step in the same job prints *"SpotBugs SKIPPED ... No static-analysis evidence was produced for this run"*, so this green covers the secret scan and not the static analysis | skipped (blocked by the failing job) |
 | Weekly Research & Property Suites | skipped | skipped |
 | Docker Build & Push (web-ui / api-gateway) | **failure / cancelled** — no credentials | skipped |
 | Deploy to Production / Staging | skipped | skipped |
 | branch-validation | — | **success** |
-| docs-validation | **success** | **success** |
+| docs-validation | **success** | **—** (the workflow is path-filtered on `docs-v2/**` and the merge commit changed no such file, so no run exists for that head) |
 | Deploy Documentation to GitHub Pages | **success** | — |
 | Model-check TLA+ specs | **success** | — |
 | ShellCheck | **failure** — inherited | — |
@@ -273,12 +277,14 @@ was neither disabled nor given an exception.
 1. **Docker Hub authentication — the aggregate's only new cause.** Not fixable without the
    owner's credentials, and the directive forbids inventing them. **State: BLOCKED, the
    owner's.** Everything else in the `ci` workflow is green.
-2. **ShellCheck — inherited, unchanged.** The repository's own scripts carry the findings
-   (`snapshot_state.sh`, `mc-direct.sh`, `local-alpha-restart.sh`, the chain-isolation
-   check); the branch's own scripts carry none, and the branch's one finding was fixed
-   (PR #57) rather than baselined.
+2. **ShellCheck — inherited, unchanged.** The findings are in the repository's own scripts
+   (43 files in the report; `snapshot_state.sh`, `mc-direct.sh`, `local-alpha-restart.sh`
+   and the chain-isolation check are four examples); the branch's own scripts carry none,
+   and the branch's one finding was fixed (PR #57) rather than baselined.
 3. **GraalVM Native Build — inherited.** *"The Native Image build process ran out of
-   memory"* on the runner; it has been red since 2026-11-08, long before this work.
+   memory"* on the runner; it has been red since **2026-10-31** (the workflow's own history
+   shows failures on 2026-10-31, 2026-11-06, 2026-11-07 and every day since), long before
+   this work.
 4. **Historical unverified TruffleHog findings.** The push event scans the commits the push
    carried and finds nothing; the pull-request event scans the whole branch and reports nine
    unverified results, **0 verified**, all attached to historical commits (the W51
@@ -290,8 +296,10 @@ was neither disabled nor given an exception.
    `assertThat(triePerQuery).isLessThan(scanPerQuery)` — a **wall-clock comparison of two
    measured timings**, i.e. the same class as Exp324. It is **not** in the changed code (the
    membership-lookup methods), the **identical tree** passed the same job on `main`
-   (`32666218`, Build & Test success), and it passes **five of five** runs on this
-   machine. **Classification: an inherited, machine-load-dependent flake** — not a defect of
+   (`32666218`, Build & Test success). On this machine it passed **five consecutive runs**
+   of `./gradlew :matrix-core:test --tests "io.matrix.cognitive.algorithms.PortfolioBenchmarkTest" --offline`
+   on 2026-11-14 (the method and the date are here so the claim can be reproduced; the
+   local JUnit XML is not committed by convention). **Classification: an inherited, machine-load-dependent flake** — not a defect of
    this work. Its assertion is a performance contract, and making it robust (a minimum over
    repetitions) is a change to that contract, so it is named rather than quietly altered.
 
@@ -301,13 +309,18 @@ was neither disabled nor given an exception.
 - §J's *the PR/release (Stage 7) pending* → **done**: PR #53, #55, #57 and #56 are merged,
   `main` and `develop` hold the same tree, and the synchronization is `4257d6df`.
 - §J's *the full `matrix-core` suite at the final HEAD not verified* → **verified on the
-  remote**: the CI's Build & Test (Java) job is the full suite and it is green on `main`
-  (9 553 tests completed, 0 failed on the release run, 153 skipped).
-- §5's *no held-out split* → **stated plainly** in `docs-v2/engineering/E2-RETRIEVAL-EXPERIMENT.md`
-  §5b: the sweep ran on all twenty-nine cases, no generalization claim is made, no candidate
-  was adopted, and a held-out evaluation would need a **separately identified case set with
-  independently defined expectations** — a content task, which is why the next cycle's first
-  priority is the concept enrichment the residual points at, not another sweep.
+  remote**: the CI's Build & Test (Java) job is the full suite and it is **green on
+  `main`**. The count that the same job printed on `develop` was **9 553 tests completed,
+  1 failed, 153 skipped** — the one failure being the wall-clock assertion of K.3 §5 — and
+  the release run on `main` printed **no** such summary line and published **no artefacts**
+  (`gh api repos/AlexanderNarbaev/agi/actions/runs/43622412105/artifacts` → `total_count: 0`),
+  so **no count is quoted for it**: the number that exists belongs to the other run.
+- The *no held-out split* → **stated plainly** in §5b of
+  `docs-v2/engineering/E2-RETRIEVAL-EXPERIMENT.md`: the sweep ran on all twenty-nine cases,
+  no generalization claim is made, no candidate was adopted, and a held-out evaluation would
+  need a **separately identified case set with independently defined expectations** — a
+  content task, which is why the next cycle's first priority is the concept enrichment the
+  residual points at, not another sweep.
 
 ### K.5 One addition to the validation process
 

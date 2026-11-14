@@ -354,8 +354,15 @@ check_current_state() {
     fi
     local output
     if ! output="$(python3 "$checker" --root "$REPO_ROOT" --strict 2>&1)"; then
-        printf '%s\n' "$output" | grep -E "CONTRADICTION|STALE|CONFLICT" | head -20
-        report CURRENT-1 "the current-state documents contradict each other"
+        printf '%s\n' "$output" | grep -E "^  (RELEASE_CLAIM|TOPOLOGY_CROSSING|STALE_EVIDENCE|UNREADABLE) " | head -20
+        # A repository the checker cannot read is not a contradiction, and saying it is
+        # would be a false report: the rule fails closed either way, but it says which
+        # of the two happened.
+        if printf '%s\n' "$output" | grep -q "UNREADABLE"; then
+            report CURRENT-1 "the current-state check could not read the repository"
+        else
+            report CURRENT-1 "the current-state documents contradict each other"
+        fi
         VIOLATIONS=$((VIOLATIONS + 1))
         return
     fi
