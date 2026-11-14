@@ -11,7 +11,7 @@ cd "$(dirname "$0")/.."
 # run is reproducible and the write is a real write, not a replay of an old commit
 rm -rf docs-v2/demos/evidence-to-action/output
 mkdir -p docs-v2/demos/evidence-to-action/output
-export JAVA_HOME="${JAVA_HOME:?set JAVA_HOME to a JDK 25}"
+export JAVA_HOME="${JAVA_HOME:?set JAVA_HOME to a full JDK (the toolchain needs its compiler)}"
 ./gradlew :matrix-core:test \
   --rerun-tasks \
   --tests "io.matrix.actions.EvidenceToActionTest" \
