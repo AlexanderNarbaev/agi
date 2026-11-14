@@ -43,7 +43,7 @@
 |---|---|
 | source | `scripts/validate-current-state.py`, `scripts/validate-current-state-selftest.sh` |
 | behaviour | report-only deterministic checks: a release claim contradicted by `origin/main`'s subjects; a topology that denies the governed crossing while the contract declares it; stale evidence citations (path:line against the file, unique-basename resolution) |
-| tests | the self-test's 7 controls (clean silent; stale release; topology denial; unresolved citation; line beyond EOF; strict exit 1; strict exit 0; real repo 0) — all pass |
+| tests | the self-test's controls — **nine numbered sections, twelve assertions** (clean silent; stale release; topology denial; unresolved citation; line beyond EOF; strict exit 1; strict exit 0; real repo 0; the gate's own wiring — the fixture is detected, the gate reports the violation, and the violation disappears when the wiring is removed; and the bracketed claim form the project's own documents use) — all pass |
 | status | **implemented · tested · green** (0 contradictions on the branch) |
 
 ### B3. The E2 measurement instruments
@@ -206,3 +206,139 @@ review ruleset and on the Docker Hub credentials state (inherited).
 **Smallest actionable next step:** open the PR from `feature/evid-base-evidence-to-action` into
 `develop` and read the workflow's individual job conclusions; then the release PR
 `develop`→`main` per the project's squash convention.
+
+---
+
+## K. Release addendum (2026-11-14, after the integration)
+
+*This addendum is appended, not substituted: §F and §J above were written before the
+release and their "pending" markers are the evidence of that moment. Rule 5 of
+`docs-v2/governance/DOCUMENT-STATUS-POLICY.md` — a document is not rewritten to look
+current; the correction references the original.*
+
+### K.1 What the release actually was
+
+| the item | the value |
+|---|---|
+| the implementation | **PR #53** (`feature/evid-base-evidence-to-action` → `develop`), squash-merged as **`01d4cdc0`** |
+| the state correction | **PR #55** (the same content on the documentation branch; PR #54 was the closed duplicate) — `5ff4964a` |
+| the negative-control script's ShellCheck findings | **PR #57** (`fix/evid-base-shellcheck`) — `2b531dd0` |
+| the release | **PR #56** (`develop` → `main`), **squash `32666218`**, merged 2026-11-14T17:40:46Z |
+| the post-squash synchronization | `main` merged back into `develop` — **`4257d6df`** |
+| the final `develop` | **`4257d6df`** · the final `main` — **`32666218`** |
+| the final tree | **`7a703df9`** on both branches (`git rev-parse origin/main^{tree}` = `git rev-parse origin/develop^{tree}`) |
+| the ancestry | `main` is an ancestor of `develop`; `develop..main` is empty |
+| the working tree | clean except the harness-owned `.dsh-project-memory/admission-shadow.jsonl` |
+
+### K.2 The CI on the released heads — the jobs, not the aggregate
+
+The aggregate `ci` workflow is **red on both branches**, and **the cause is not the same on
+both**. On `main` it is the Docker Hub publication: it cannot authenticate
+(`gh api repos/AlexanderNarbaev/agi/actions/secrets` → `total_count: 0`, so the workflow's
+`DOCKERHUB_USERNAME`/`DOCKERHUB_TOKEN` are empty and the Docker Hub login step fails with
+*"Username and password required"*). On `develop` it is the **wall-clock assertion** of
+`PortfolioBenchmarkTest` (K.3 §5), and the Docker job there was **skipped behind it** — that
+job needs the build, the security scan, the container images and the web UI tests. **The
+aggregate is therefore not reported as green on either branch**, and the individual jobs
+are:
+
+| the job | `main` `32666218` | `develop` `4257d6df` |
+|---|---|---|
+| Build & Test (Java) | **success** | **failure** — see K.3 |
+| Quality gates (can fail) | **success** | **success** |
+| Web UI Tests (matrix-web-ui) | **success** | **success** |
+| Container Images (build + smoke) | **success** | skipped (blocked by the failing job) |
+| **Security Scan** (the TruffleHog step) | **success** — the step that runs the scanner; the SpotBugs step in the same job prints *"SpotBugs SKIPPED ... No static-analysis evidence was produced for this run"*, so this green covers the secret scan and not the static analysis | skipped (blocked by the failing job) |
+| Weekly Research & Property Suites | skipped | skipped |
+| Docker Build & Push (web-ui / api-gateway) | **failure / cancelled** — no credentials | skipped |
+| Deploy to Production / Staging | skipped | skipped |
+| branch-validation | — | **success** |
+| docs-validation | **success** | **—** (the workflow is path-filtered on `docs-v2/**` and the merge commit changed no such file, so no run exists for that head) |
+| Deploy Documentation to GitHub Pages | **success** | — |
+| Model-check TLA+ specs | **success** | — |
+| ShellCheck | **failure** — inherited | — |
+| GraalVM Native Build | **failure** — inherited | — |
+
+The runs: `main` [ci](https://github.com/AlexanderNarbaev/agi/actions/runs/43622412105) ·
+[ShellCheck](https://github.com/AlexanderNarbaev/agi/actions/runs/43622412113) ·
+[GraalVM](https://github.com/AlexanderNarbaev/agi/actions/runs/43622412085) ·
+[TLA+](https://github.com/AlexanderNarbaev/agi/actions/runs/43622412097) ·
+[docs](https://github.com/AlexanderNarbaev/agi/actions/runs/43622412142) ·
+[Pages](https://github.com/AlexanderNarbaev/agi/actions/runs/43622412207) ·
+`develop` [ci](https://github.com/AlexanderNarbaev/agi/actions/runs/43622428141) ·
+[branch-validation](https://github.com/AlexanderNarbaev/agi/actions/runs/43622428240).
+
+The **Security Scan is green on the released tree** (`main`), which is the fact that matters
+for the release: the wave's own finding was answered by the narrowest change and the scanner
+was neither disabled nor given an exception.
+
+### K.3 The CI triage, item by item
+
+1. **Docker Hub authentication — the aggregate's only new cause.** Not fixable without the
+   owner's credentials, and the directive forbids inventing them. **State: BLOCKED, the
+   owner's.** On `main` everything else in the `ci` workflow is green; on `develop` the
+   wall-clock assertion of §5 is red and the three jobs behind it (the container images, the
+   security scan and the Docker publication) were skipped behind it.
+2. **ShellCheck — inherited, unchanged.** The findings are in the repository's own scripts
+   (43 files in the report; `snapshot_state.sh`, `mc-direct.sh`, `local-alpha-restart.sh`
+   and the chain-isolation check are four examples); the branch's own scripts carry none,
+   and the branch's one finding was fixed (PR #57) rather than baselined.
+3. **GraalVM Native Build — inherited.** *"The Native Image build process ran out of
+   memory"* on the runner; it has been red since **2026-10-31** (the workflow's own history
+   shows failures on 2026-10-31, 2026-11-06 and 2026-11-07, and **no green run since** —
+   39 failures and one cancellation over the same window; the workflow has no schedule, so
+   it runs on the pushes and the pull requests that touch `main`), long before this work.
+4. **Historical unverified TruffleHog findings.** The push event scans the commits the push
+   carried and finds nothing; the pull-request event scans the whole branch and reports nine
+   unverified results, **0 verified**, all attached to historical commits (the W51
+   infrastructure plugin's placeholder URLs, the owner-protected `.veai/skills` placeholders,
+   and the wave's own historical commit). The tree is clean; the history is not, and clearing
+   the history needs either a frozen-workflow change or a decision on the protected files.
+5. **A regression introduced by this work — none.** The one red job on `develop` is
+   `PortfolioBenchmarkTest > aScanAndAPrebuiltIndexAreComparedOnTheSameCorpus`:
+   `assertThat(triePerQuery).isLessThan(scanPerQuery)` — a **wall-clock comparison of two
+   measured timings**, i.e. the same class as Exp324. It is **not** in the changed code (the
+   membership-lookup methods), the **identical tree** passed the same job on `main`
+   (`32666218`, Build & Test success). On this machine it passed **five consecutive runs**
+   of `./gradlew :matrix-core:test --tests "io.matrix.cognitive.algorithms.PortfolioBenchmarkTest" --offline`
+   on 2026-11-14 (the method and the date are here so the claim can be reproduced; the
+   local JUnit XML is not committed by convention, and the last run's copy — 3 tests, 0
+   failures, 2026-11-14T18:49:29Z — is what remains on this machine). **Classification: an inherited, machine-load-dependent flake** — not a defect of
+   this work. Its assertion is a performance contract, and making it robust (a minimum over
+   repetitions) is a change to that contract, so it is named rather than quietly altered.
+
+### K.4 What the report's "pending" markers became
+
+- §A's two pending markers — *"| PR | #53 (feature→develop) — merged as `01d4cdc0`; release
+  PR pending |"* and *"| integration status | integrated into `develop` as `01d4cdc0` (PR
+  #53); release to `main` pending |"* — and the base row (*"| base | `origin/develop`
+  `343299b1` … |"*, with the header's `origin/main` `1dc01537`) → **the release happened**:
+  PR #56, squash `32666218`; the heads are `4257d6df` and `32666218` (§K.1). §A is the
+  section titled "Final state", so its "pending" markers are listed here too, and they are
+  the reason this addendum exists.
+- §F's *release pending* → **the release happened**: PR #56, squash `32666218` (§K.1).
+- §J's *the PR/release (Stage 7) pending* → **done**: PR #53, #55, #57 and #56 are merged,
+  `main` and `develop` hold the same tree, and the synchronization is `4257d6df`.
+- §J's *the full `matrix-core` suite at the final HEAD not verified* → **verified on the
+  remote**: the CI's Build & Test (Java) job is the full suite and it is **green on
+  `main`**. The count that the same job printed on `develop` was **9 553 tests completed,
+  1 failed, 153 skipped** — the one failure being the wall-clock assertion of K.3 §5 — and
+  the release run on `main` printed **no** such summary line and published **no artefacts**
+  (`gh api repos/AlexanderNarbaev/agi/actions/runs/43622412105/artifacts` → `total_count: 0`),
+  so **no count is quoted for it**: the number that exists belongs to the other run.
+- The *no held-out split* → **stated plainly** in §5b of
+  `docs-v2/engineering/E2-RETRIEVAL-EXPERIMENT.md`: the sweep ran on all twenty-nine cases,
+  no generalization claim is made, no candidate was adopted, and a held-out evaluation would
+  need a **separately identified case set with independently defined expectations** — a
+  content task, which is why the next cycle's first priority is the concept enrichment the
+  residual points at, not another sweep.
+
+### K.5 One addition to the validation process
+
+`scripts/validate-current-state.py` (the consistency checker built by this work) is now the
+quality gate's rule **CURRENT-1**, so it runs with the other validators instead of standing
+alone: `scripts/quality-gate.sh` calls it in strict mode and fails on a contradiction. Its
+own negative control grew with the wiring: `scripts/validate-current-state-selftest.sh` now
+also plants a contradiction in a copy of the tree and requires the **gate** to report
+CURRENT-1 there — a wiring that is never seen to fail is not evidence that it works.
+**Nine numbered controls, twelve assertions, all passing.**

@@ -45,7 +45,7 @@ BRIDGE_CONTRACT = ("matrix-core/src/main/java/io/matrix/contract/bridge/"
 # contradicts the repository.
 RELEASE_PENDING_PATTERNS = (
     re.compile(r"pull request #(\d+)\s+is open", re.IGNORECASE),
-    re.compile(r"pull request #(\d+)\) is open", re.IGNORECASE),
+    re.compile(r"pull request \(#(\d+)\) is open", re.IGNORECASE),
     re.compile(r"the release is not done", re.IGNORECASE),
     re.compile(r"awaits the owner's release decision", re.IGNORECASE),
 )
