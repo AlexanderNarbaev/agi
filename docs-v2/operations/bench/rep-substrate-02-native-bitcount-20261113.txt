@@ -1,0 +1,31 @@
+the environment of this measurement
+===================================
+host:        alexandr-narbaev-JIAOLONG-Series
+kernel:      Linux 7.0.0-43-generic x86_64
+cpu:         AMD Ryzen 9 9955HX 16-Core Processor
+cores:       16 physical / 32 logical (2 threads per core)
+vector unit: AVX2 present, AVX-512F/DQ/BW/VL/CD present
+memory:      59 GiB total, 43 GiB available at the run
+disk:        185 GiB free of 469 GiB
+jvm:         OpenJDK 25.0.4.1+1-1-26.04.4-Ubuntu (the repository's JDK at $HOME/jdk25)
+gc:          G1 (UseG1GC=true, UseSerialGC=false)
+build:       Gradle 9.6.0, --offline, the me.champeau.jmh plugin 0.7.3, JMH 1.37
+benchmark:   mode avgt, 1 thread, warmup 5 x 1 s, measurement 10 x 1 s, fork 2
+command:     ./gradlew :matrix-core:jmh -PjmhBenchmark=<Name> --offline
+seeds:       42 (every random input of every arm)
+note:        the machine was NOT idle: a browser was running during the run, and the
+             wall-clock assertions of the repository are sensitive to that. The figures
+             below are the measurements of THIS machine in THIS state; the ratios are
+             what the wave publishes.
+
+the arms
+========
+NativeBitCountBenchmark.javaBitCount             1  avgt   20      1.316 ±  0.011  ns/op
+NativeBitCountBenchmark.javaBitCount          1024  avgt   20     43.406 ±  0.359  ns/op
+NativeBitCountBenchmark.nativeDowncall           1  avgt   20     14.922 ±  0.064  ns/op
+NativeBitCountBenchmark.nativeDowncall        1024  avgt   20  15116.263 ± 68.995  ns/op
+NativeBitCountBenchmark.productionHelper         1  avgt   20      1.311 ±  0.008  ns/op
+NativeBitCountBenchmark.productionHelper      1024  avgt   20     43.565 ±  0.236  ns/op
+
+the source: matrix-core/src/jmh/java/io/matrix/benchmark/NativeBitCountBenchmark.java
+the machine-readable result: docs-v2/operations/bench/rep-substrate-02-native-bitcount-20261113.json

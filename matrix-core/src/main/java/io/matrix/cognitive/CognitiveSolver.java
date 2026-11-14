@@ -111,6 +111,7 @@ public final class CognitiveSolver {
         ShortestPathProblem.Outcome outcome;
         try {
             outcome = ledger.measure(chosen.method().capability().id(),
+                    FAMILY_SHORTEST_PATH, chosen.method().capability().version(),
                     () -> chosen.method().execute(problem,
                             ComputeBudget.millis(
                                     DEFAULT_SOLVE_BUDGET_MILLIS)));

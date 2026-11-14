@@ -44,6 +44,17 @@
 #       the client of chain A reaches no class of the store, the receiver of
 #       chain B reaches no class of the store and no class of chain A's bridge
 #       server, and the crossing happens over the network in both directions
+#   G11 W53: the THIRD direction — a remote cognitive task — is governed the
+#       same way: the task client of chain A reaches no class of the store,
+#       the task receiver of chain B reaches no class of the store and no class
+#       of chain A's bridge server, and chain B really serves the route. The
+#       negative control breaks exactly this rule to prove it can go red.
+#   G12 W53: the OTHER HALF of the same boundary: chain A does not reach
+#       chain B's stores either. The task client of chain A reaches no class
+#       of chain B's store subsystem, and no class of chain A names one of
+#       chain B's databases — a class that opens a file by its path does not
+#       have to name the store class. The negative control breaks exactly
+#       this rule to prove it can go red.
 #
 # HYGIENE
 # Everything the gate touches is inside ONE private temporary directory that
@@ -578,6 +589,53 @@ if [ "$G10C" = "0" ]; then
 else
   fail "$G10C class(es) of chain A's bridge server are reachable from the receiver"
   report_field "$REPORT" chain_b.knowledge_receiver_reaches_bridge_server
+fi
+
+# ── G11 — the third direction: a remote cognitive task is governed too ──────
+head1 "G11 — the third direction of the bridge: a remote cognitive task is governed too"
+G11A="$(report_size "$REPORT" chain_a.task_client_reaches_store)"
+G11B="$(report_size "$REPORT" chain_b.task_receiver_reaches_store)"
+G11C="$(report_size "$REPORT" chain_b.task_receiver_reaches_bridge_server)"
+note "the classes of the store the chain A task client's closure reaches: $G11A"
+note "the classes of the store the chain B task receiver's closure reaches: $G11B"
+note "the classes of chain A's bridge server the chain B task receiver reaches: $G11C"
+if [ "$G11A" = "0" ] && [ "$G11B" = "0" ]; then
+  pass "neither side of the task direction reaches a class of the epistemic store:"
+  pass "the task crosses over the network, and the receiver keeps its own inbox"
+else
+  fail "$((G11A + G11B)) class(es) of the store are reachable from the task direction"
+  report_field "$REPORT" chain_a.task_client_reaches_store
+  report_field "$REPORT" chain_b.task_receiver_reaches_store
+fi
+if [ "$G11C" = "0" ]; then
+  pass "the receiver of a remote cognitive task reaches no class of chain A's bridge server"
+else
+  fail "$G11C class(es) of chain A's bridge server are reachable from the task receiver"
+  report_field "$REPORT" chain_b.task_receiver_reaches_bridge_server
+fi
+if [ "$(report_field "$REPORT" chain_b.task_receiver_reachable)" = "true" ]; then
+  pass "chain B serves the bounded cognitive task route"
+else
+  fail "chain B does not reach the task receiver class"
+fi
+
+# ── G12 — chain A does not reach chain B's stores ───────────────────────────
+head1 "G12 — chain A does not reach chain B's own stores"
+G12A="$(report_size "$REPORT" chain_a.task_client_reaches_chain_b_store)"
+G12B="$(report_size "$REPORT" chain_a.names_mind_database)"
+note "the classes of chain B's store the chain A task client's closure reaches: $G12A"
+note "the classes of chain A that name one of chain B's databases: $G12B"
+if [ "$G12A" = "0" ]; then
+  pass "the chain A task client reaches no class of chain B's store"
+else
+  fail "$G12A class(es) of chain B's store are reachable from the chain A task client"
+  report_field "$REPORT" chain_a.task_client_reaches_chain_b_store
+fi
+if [ "$G12B" = "0" ]; then
+  pass "no class of chain A names one of chain B's databases"
+else
+  fail "$G12B class(es) of chain A name one of chain B's databases"
+  report_field "$REPORT" chain_a.names_mind_database
 fi
 
 # ── the summary ─────────────────────────────────────────────────────────────

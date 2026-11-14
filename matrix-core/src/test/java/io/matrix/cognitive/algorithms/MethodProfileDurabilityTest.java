@@ -134,8 +134,9 @@ class MethodProfileDurabilityTest {
                             + measured.verdict());
             assertTrue(measured.verdict().contains("2 call(s)"),
                     "the decision names the outcomes as well: " + measured.verdict());
-            assertTrue(measured.verdict().contains("1 failure(es)"),
-                    "the decision names the failures as well: " + measured.verdict());
+            assertTrue(measured.verdict().contains("1 not completed"),
+                    "the decision names the calls that returned nothing as well: "
+                            + measured.verdict());
         }
     }
 

@@ -1,7 +1,7 @@
 # MATRIX — AGENT OPERATING PROTOCOL
 
 **Status:** `CANONICAL` · **Subject:** how an agent works in this repository
-**Snapshot of:** `a6ded23338e069b8bc8a3744c234be5a03995f43` · **Date:** 2026-11-04
+**Snapshot of:** `9f9948e7862efd310bb624b159c9f000f2a827ce` · **Date:** 2026-11-13
 **Companion documents:** `docs-v2/governance/PROJECT-STATE.md` (what MATRIX is today) ·
 `docs-v2/governance/ROADMAP.md` (what comes next) ·
 `docs-v2/governance/DECISION-REGISTER.md` (what was decided) ·
@@ -543,13 +543,25 @@ the snapshot commit (`docs-v2/governance/PROJECT-STATE.md` §3):
 | the W43 regression scope | `./gradlew :matrix-core:test --tests "io.matrix.memory.*" --tests "io.matrix.brain.*" --tests "io.matrix.api.*" --tests "io.matrix.rag.*" --rerun-tasks` | **98 classes, 1036 tests, 0 failures** | `a6ded233` |
 | the brain runtime | `./gradlew :matrix-brain-runtime:test --rerun-tasks` | **119 classes, 914 tests, 0 failures, 2 skipped** | `a6ded233` |
 | the API gateway | `./gradlew :matrix-api-gateway:test --rerun-tasks` | **43 classes, 240 tests, 0 failures** | `a6ded233` |
+| **the W53 scope** (the six packages of the wave) **and the gateway** | `./gradlew :matrix-core:test :matrix-api-gateway:test --offline` | **255 classes, 1668 tests, 0 failures, 0 errors, 0 skipped** | `9f9948e7` (the tree of the working tree's release hardening) |
+| **the whole `matrix-core` module** | `./gradlew :matrix-core:test --offline` | **1300 classes, 9522 tests, 0 failures, 0 errors, 23 skipped**, in 24 min 22 s | `9f9948e7` (the tree of the working tree's release hardening and of the wave's own last test method) |
+| **the brain runtime** | `./gradlew :matrix-brain-runtime:test --offline` | **124 classes, 928 tests, 0 failures, 0 errors, 2 skipped** | `9f9948e7` |
+
+**The rows above the W53 ones are the snapshot's own baseline and keep their commit; the
+three rows below them are the measurements of 2026-11-13.** A row that was not re-measured
+is not a new claim — it is the previous measurement, and it says which commit it belongs
+to. The full `matrix-core` suite **ran on 2026-11-13** on this host without the heap
+exhaustion the rule above warns about (the JVM asked for its 16 g and the machine had
+38–40 GiB); the 23 skipped tests are the native-image and the GPU-bound classes, which are
+**BLOCKED** here and are never counted as passing.
 
 **The full `matrix-core` suite needs the owner's approval, and the reason is the memory.**
 `AGENTS.md` §Тестирование: *«Полный прогон — только по согласованию (риск OOM)»*. The test
 JVM asks for **16 g** (`matrix-core/build.gradle:119` — `maxHeapSize = '16g'`; line 121 —
 `jvmArgs '-Xmx16g'`) against **38–40 GiB available**; two concurrent matrix-core test JVMs
 plus two Gradle daemons would exceed `MemAvailable`. The full suite is **TASK-W46-11** and
-is blocked on the owner's approval and a resource estimate.
+is blocked on the owner's approval and a resource estimate — the run of 2026-11-13 was made
+inside that approval, and it is the evidence that one host can carry it.
 
 ### 7.3 The gates
 
@@ -607,6 +619,16 @@ The XML is what the machine wrote per class; the console line is a roll-up the a
 retypes. At the snapshot commit the tree carries **98** XML files for `matrix-core`,
 **119** for `matrix-brain-runtime` and **43** for `matrix-api-gateway` — matching the class
 counts in the recorded baseline, which is the cross-check that makes the numbers believable.
+**The tree of 2026-11-13 carries 1298 XML files for `matrix-core`, 121 for
+`matrix-brain-runtime` and 54 for `matrix-api-gateway`** — the numbers of the same cross-check
+for the current tree, and the counts the recorded baselines of §"the scopes with a recorded
+baseline" name.
+
+**A filtered run leaves the module's XML incomplete, and an incomplete XML is not a
+baseline.** A run with `--tests` writes only the classes the filter matched, so the class
+count of the directory is the count of the **scope**, not of the module. The scope's count
+is a legitimate number — it is what the catalogue's row names — and it is legitimate only
+when the scope is named with it.
 
 **When you report a test result, distinguish all seven numbers:**
 

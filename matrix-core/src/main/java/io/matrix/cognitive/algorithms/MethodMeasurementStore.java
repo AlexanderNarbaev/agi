@@ -31,6 +31,33 @@ public interface MethodMeasurementStore {
                            String at);
 
     /**
+     * Records the verdict of one call of a method, in the stratum it was observed in.
+     *
+     * <p>W53 — the durable profile carries the outcome kinds, not only the fact that a call
+     * completed: a method that answers and is wrong must not look like a method that answers
+     * and is right, and neither must look like a method that merely did not throw. The verdict
+     * is keyed by the stratum, because a rate pooled over the strata answers a different
+     * question from the one the selection asks.</p>
+     *
+     * @param workspaceId       the workspace the verdict belongs to
+     * @param methodId          the method that was run
+     * @param family            the family of the request it answered
+     * @param capabilityVersion the version of the capability that ran
+     * @param outcome           the kind of outcome the call had
+     * @param at                the instant of the call
+     */
+    void recordVerdict(String workspaceId, String methodId, String family, String capabilityVersion,
+                       MethodOutcome outcome, String at);
+
+    /**
+     * The verdicts of a workspace, read back after a restart.
+     *
+     * @param workspaceId the workspace
+     * @return the verdicts, never null
+     */
+    List<MethodVerdict> verdicts(String workspaceId);
+
+    /**
      * The measurements of a workspace, keyed by method.
      *
      * @param workspaceId the workspace

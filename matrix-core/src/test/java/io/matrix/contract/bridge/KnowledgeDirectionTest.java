@@ -221,15 +221,37 @@ class KnowledgeDirectionTest {
     }
 
     @Test
-    @DisplayName("the version rule: this build reads version 1 and version 2, and refuses the rest")
+    @DisplayName("the version rule: this build reads version 1, 2 and 3, and refuses the rest")
     void theVersionRule() {
-        assertEquals(2, BridgeProtocol.VERSION, "the second direction is version 2");
+        assertEquals(3, BridgeProtocol.VERSION, "the cognitive task direction is version 3");
         assertTrue(BridgeProtocol.supportedVersion(1),
                 "a message of the first direction is still readable");
-        assertTrue(BridgeProtocol.supportedVersion(2));
-        assertFalse(BridgeProtocol.supportedVersion(3),
+        assertTrue(BridgeProtocol.supportedVersion(2),
+                "a message of the second direction is still readable");
+        assertTrue(BridgeProtocol.supportedVersion(3));
+        assertFalse(BridgeProtocol.supportedVersion(4),
                 "a version this build has never heard of is refused");
         assertFalse(BridgeProtocol.supportedVersion(0));
+    }
+
+    @Test
+    @DisplayName("a version-1 and a version-2 message keep their meaning: the reader accepts "
+            + "both and writes the same records")
+    void theOldVersionsKeepTheirMeaning() {
+        BridgeReceiver receiver = new BridgeReceiver(new HmacBridgeSigner(SECRET),
+                EnumSet.of(BridgeCapability.KNOWLEDGE), BridgeBudget.standard(),
+                new InMemoryBridgeIdempotency(), new CountingSink("the brain took it"));
+        for (int version : new int[]{1, 2}) {
+            BridgeEnvelope envelope = new BridgeEnvelope(BridgeProtocol.NAME, version,
+                    "req-old-" + version, SENT_AT, SENDER_ID, BridgeCapability.KNOWLEDGE,
+                    new BridgePayloadCodec().encode(payload()), null);
+            BridgeEnvelope signed = envelope.withSignature(envelope.sign(new HmacBridgeSigner(SECRET)));
+            BridgeAnswer answer = receiver.receiveAnswer(signed, NOW_MILLIS);
+            assertTrue(answer.decision().accepted(),
+                    "a version-" + version + " message is still understood: "
+                            + answer.decision().reason());
+            assertEquals("req-old-" + version, answer.decision().requestId());
+        }
     }
 
     @Test

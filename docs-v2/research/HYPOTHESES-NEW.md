@@ -345,3 +345,85 @@ Status: **proposed** → **running** по мере реализации RUN 437-
   Open Science Collaboration 2015, *Science* 349(6251), DOI 10.1126/science.aac4716.
   *Статус:* **ОТКРЫТА** — `ProcedureValidator` требует согласия на отложенных случаях, второй
   серии нет.
+
+## W53 — distributed cognition (2026-11-09)
+
+| The hypothesis | What it claims | The status | The evidence |
+|---|---|---|---|
+| **H-129** | a durable inbox and a durable intent are enough to cross two independently owned databases, without a distributed transaction | CONFIRMED in W53 | the peer's inbox: one row after the restart, its `updatedAt` equal to its `createdAt` |
+| **H-130** | a confidence declared by another process is not independent evidence and cannot make a proposition supported | CONFIRMED | `RemoteReportAssessor`; the recorded verdict is `UNRESOLVED` even though every exchange succeeded |
+| **H-131** | information that returned through another process is not independent corroboration | CONFIRMED IN PART | the lineage travels and is compared with what was supplied (`QUALIFIED`); the full propositional predicate is not written |
+| **H-132** | reliability must stay out of the score until the evidence base is representative | OPEN | the rule is implemented and enforced since round 61: the Wilson lower limit at the 90 % level, the three states and the two bases of the accuracy term are in the selector, and the estimate stays out because the evidence does not bear it (the system's verdicts are UNVERIFIED — nothing verifies a local method's answer — so the state is NO_EVIDENCE). The research is in `docs-v2/research/W53-RESEARCH-D-RELIABILITY-CALIBRATION.md`; the held-out measurement that would show the term helps is not done |
+| **H-133** | a delegation without the criterion by which the answer is judged is an open loop | CONFIRMED | the expectation travels in the request's context (`EXPECTATION_KEY`) |
+| **H-134** | a lossy projection into a narrower representation destroys the information the representation exists to carry, and no measurement of the downstream cost reveals it | CONFIRMED | the fold of the Tsetlin trainer (`TsetlinTrainer.pack`) maps 256 source bits onto 16 by XOR-parity: its kernel has dimension **240**, and it cannot tell a vector from its complement. **The path is served**: chain B's gateway builds the brain runtime's `RuleInductionEngine` with a 256-bit `EpisodeFeatureExtractor` and trains a 16-bit trainer on its features, and the serving path folds the same way. On the real episodic log (108 entries, 24 distinct features) the fold already makes **one pair of distinct episodes indistinguishable** (23 distinct folded values). The research is in `docs-v2/research/REP-SUBSTRATE-00-baseline.md`; the downstream accuracy on an independent sample and the question whether Tsetlin needs the whole width are **not** measured yet |
+
+- **H-129**: Соглашение между двумя процессами, каждый со своей базой, **не требует**
+  распределённой транзакции: достаточно долговременного inbox у получателя, долговременного
+  intent у отправителя и идемпотентного эффекта. *Источник:* Gray & Reuter, 1993,
+  *Transaction Processing: Concepts and Techniques*; Kleppmann, 2018, *Designing
+  Data-Intensive Applications*, ch. 11; Lamport, 1998, *Time and Clocks*. *Статус:*
+  **ПОДТВЕРЖДЕНА** в волне W53 — входящий журнал пира, ключ по request id и хэшу полезной
+  нагрузки, повтор возвращает первый результат; доказано в демонстрации двух процессов
+  (`docs-v2/engineering/W53-DISTRIBUTED-DEMONSTRATION.json`: после перезапуска пира в его
+  долговременном инбоксе — **одна** строка на request id, и в ней **один** сохранённый
+  результат; доказательство — счётчик строк и сохранённый результат, а не временные
+  метки: пир пишет один момент на весь запрос, поэтому `updatedAt` равен `createdAt` на
+  каждой строке и ничего не говорит о единственном исполнении). *Что не следует:* ровно-однократное исполнение в
+  распределённом смысле — его нет и не будет без распределённой транзакции.
+- **H-130**: Уверенность, объявленная другим процессом, **не является** независимым
+  доказательством и не может сделать утверждение поддержанным; основа `DECLARED` или
+  `MEASURED` — это заявление о происхождении числа, а не второе наблюдение. *Источник:*
+  Pearl, 1988, *Probabilistic Reasoning in Intelligent Systems*; Hájek, 1997 (coherence and
+  entailment in evidence); Nisbett & Ross, 1981 (*Human Inference*, the
+  source-monitoring errors). *Статус:* **ПОДТВЕРЖДЕНА** — `RemoteReportAssessor` не даёт
+  `SUPPORTED` без собственного свидетельства Chain A; в записанной демонстрации вердикт —
+  `UNRESOLVED` при успешном обмене.
+- **H-131**: Информация, вернувшаяся через другой процесс, **не является** независимой
+  корроборацией: происхождение нужно сохранять через оба направления моста, и отчёт,
+  выведенный из того, что Chain A сам передал, должен быть квалифицирован, а не поддержан.
+  *Источник:* Sperber & Wilson, 1986 (relevance and the anti-occlusion of reasoning);
+  Campagne & Gordon, 2008 (resource-dependent communication); Hutchins, 1995, *The Wizard of
+  Oz* (coordination as a distributed cognitive system). *Статус:* **ПОДТВЕРЖДЕНА ЧАСТИЧНО** —
+  родословна едет и сравнивается с переданным (`QUALIFIED`), но полная предикатная проверка
+  «это утверждение вернулось от меня» не написана.
+- **H-132**: Надёжность метода по нескольким наблюдениям **не должна** входить в счёт
+  до тех пор, пока доказательная база не представительна; Уилсоновская нижняя граница
+  даёт интервал, который при одном наблюдении из одного имеет ширину 0.730 и не различает
+  ничего. *Источник:* Wilson, 1927, *JASA* 22(158); Brown, Cai & DasGupta, 2001,
+  *Statistical Science* 16(2); Gelman, Carlin, Stern & Rubin, 2013 (hierarchical models for
+  the "hockey stick" problem). *Статус:* **ОТКРЫТА** — направление решено и записано
+  (`docs-v2/research/W53-RESEARCH-D-RELIABILITY-CALIBRATION.md`), оценка в счёт селектора не
+  входит; удерживающий набор задач не измерен.
+- **H-133**: Согласованность без центрального управления требует, чтобы запрос нёс
+  **критерий** оценки ответа, а не только задачу: без критерия замыкание петли регулятора
+  отсутствует, и делегирование превращается в открытый контур. *Источник:* Wiener, 1948,
+  *Cybernetics*; Ashby, 1956, *An Introduction to Cybernetics* (requisite variety);
+  Beer, 1972, *Brain as a Metastable Multicomponent System* (the law of requisite variety in
+  the organisation). *Статус:* **ПОДТВЕРЖДЕНА** — ожидание координатора едет в контексте
+  запроса (`EXPECTATION_KEY`), и без него ответ нечем оценивать.
+- **H-134**: Проекция в более узкое представление **уничтожает** ту информацию, ради
+  которой представление и существует, и **никакое измерение стоимости этого не
+  показывает**: код работает, числа стабильны, а смысла больше нет. *Источник:* Cover &
+  Thomas, *Elements of Information Theory*, 2nd ed., ch. 2 (rank, null space of a linear
+  map) и ch. 7 (rate-distortion: the price of a coarser description); Hinton & Salakhutdinov,
+  2006, *Reducing the Dimensionality of Data with Neural Networks*; Shannon, 1948, *Bell
+  System Technical Journal* 27(3) (the logarithmic bound on the bits a description must
+  carry). *Источник:* измерения волны — `docs-v2/research/REP-SUBSTRATE-00-baseline.md` §5 и
+  тест `matrix-core/src/test/java/io/matrix/tsetlin/TsetlinPackInformationLossTest.java`
+  (6 тестов, 0 падений) и, на production-ширине и на реальном логе эпизодов,
+  `matrix-brain-runtime/src/test/java/io/matrix/brain/runtime/EpisodeFeatureFoldLossTest.java`
+  (3 теста, 0 падений). *Статус:* **ПОДТВЕРЖДЕНА** — свёртка
+  `TsetlinTrainer.pack` раскладывает 256 источниковых бит на 16 по XOR-чётности: ядро
+  имеет размерность **240** (ранг 16, в каждой группе из 16 бит остаётся 15 свободных),
+  и свёртка **не различает вектор и его дополнение** — она склеивает ровно те векторы,
+  которые биполярный HDC называет maximally distant (similarity −1.0, Хэмминг 1024 из
+  1024). **Путь обслуживается**: шлюз цепи B строит `RuleInductionEngine` brain-runtime с
+  `EpisodeFeatureExtractor` шириной 256 бит и обучает 16-битный тренер на его признаках,
+  а путь обслуживания сворачивает так же; на реальном логе эпизодов (108 записей, 24
+  различных признака) свёрка **уже делает неразличимыми одну пару различных эпизодов**
+  (23 различных свёрнутых значения). Первый production-потребитель — `AcceptanceModel` —
+  свёрку не задевает (16-битный признак в 16-битный тренер, свёрка есть тождество), но
+  второй — задевает, и он живой. *Что не следует:* расширять тренер до 256 бит — это
+  изменение пространства обучения и его стоимости, а не исправление потери; downstream
+  точность на независимой выборке и вопрос «нужна ли Tsetlin вся ширина вектора или меньший
+  набор информативных признаков» **не измерены**.

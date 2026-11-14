@@ -64,4 +64,10 @@ public final class KernelSelector implements CognitiveKernel.AlgorithmSelectorBr
     public <T> T measure(String methodId, java.util.function.Supplier<T> body) {
         return ledger.measure(methodId, body);
     }
+
+    @Override
+    public <T> T measure(String methodId, String family, String capabilityVersion,
+                         java.util.function.Supplier<T> body) {
+        return ledger.measure(methodId, family, capabilityVersion, body);
+    }
 }

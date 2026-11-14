@@ -98,8 +98,8 @@ which.
 
 - **type**: engineering-uncertainty
 - **why it matters**: The W46 target contract names path aliases and symlinks explicitly. The guard normalises the path but does not resolve it.
-- **what is known**: WriterLock.java:145 and :159 use databaseFile.toAbsolutePath().normalize(). normalize() collapses . and .. but does not resolve symbolic links. Two aliases therefore yield two lock files.
-- **evidence**: WriterLock.java:145; WriterLock.java:159; the D4 target contract in the W46 directive
+- **what is known**: WriterLock.java:145 and :159 use databaseFile.toAbsolutePath().normalize(). normalize() collapses . and .. but does not resolve symbolic links. Two aliases therefore yield two lock files. **One guard of the same class was fixed on 2026-11-13**: the dispatch store's own guard (`io.matrix.cognitive.distributed.DistributedTaskResource`) compared the spelled paths of the knowledge file and of the dispatch file, so a symlinked alias of the knowledge database was not caught; it now resolves the path (the directory part through `toRealPath()`, the last element through `readSymbolicLink`, bounded at 16 hops) before it compares, and `TwoWritersOnOneDatabaseTest` holds it. **That guard is not this question's guard** — `WriterLock` still resolves nothing, and the question stays open
+- **evidence**: WriterLock.java:145; WriterLock.java:159; the D4 target contract in the W46 directive; the dispatch guard's own fix of 2026-11-13 and its test (`matrix-core/src/test/java/io/matrix/cognitive/distributed/TwoWritersOnOneDatabaseTest.java`)
 - **competing explanations**: (a) the deployment always uses one canonical path and the risk is theoretical; (b) a symlinked data directory is a normal deployment and the risk is real
 - **available experiments**: A test that opens the same database through a symlink and through its target and asserts that the second writer is refused
 - **cost of resolving**: One small defect fix plus a test

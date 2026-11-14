@@ -42,7 +42,28 @@ public record BridgePayload(
         Observation observation,
         Belief candidate,
         Evidence evidenceLink,
+        CognitiveTaskRequest taskRequest,
+        CognitiveTaskResponse taskResponse,
+        CognitiveTaskReport taskReport,
+        CognitiveTaskCancel taskCancel,
         Provenance provenance) {
+
+    /**
+     * The shape the W51 and W52 payloads had.
+     *
+     * <p>The wave that added the remote cognitive task added two fields; a payload written
+     * before it carries neither, and says so by carrying neither.</p>
+     *
+     * @param kind         the right the message claims
+     * @param observation  the observation, when the message carries one
+     * @param candidate    the candidate belief, when the message carries one
+     * @param evidenceLink the evidence link, when the message carries one
+     * @param provenance   where the message came from
+     */
+    public BridgePayload(BridgeCapability kind, Observation observation, Belief candidate,
+                         Evidence evidenceLink, Provenance provenance) {
+        this(kind, observation, candidate, evidenceLink, null, null, null, null, provenance);
+    }
 
     public BridgePayload {
         if (kind == null) {
@@ -58,16 +79,32 @@ public record BridgePayload(
         if (evidenceLink != null) {
             carried++;
         }
+        if (taskRequest != null) {
+            carried++;
+        }
+        if (taskResponse != null) {
+            carried++;
+        }
+        if (taskReport != null) {
+            carried++;
+        }
+        if (taskCancel != null) {
+            carried++;
+        }
         if (carried != 1) {
             throw new IllegalArgumentException(
-                    "a bridge payload carries exactly one of observation, candidate or "
-                            + "evidence link");
+                    "a bridge payload carries exactly one of observation, candidate, "
+                            + "evidence link, task request, task response, task report "
+                            + "or task cancellation");
         }
         boolean agrees = switch (kind) {
             case OBSERVATION -> observation != null;
             case CANDIDATE -> candidate != null;
             case EVIDENCE_LINK -> evidenceLink != null;
             case KNOWLEDGE -> candidate != null;
+            case INFERENCE_REQUEST -> taskRequest != null;
+            case INFERENCE_RESPONSE -> taskResponse != null || taskReport != null;
+            case INFERENCE_CANCEL -> taskCancel != null;
         };
         if (!agrees) {
             throw new IllegalArgumentException(
@@ -84,7 +121,7 @@ public record BridgePayload(
      */
     public static BridgePayload ofObservation(Observation observation, Provenance provenance) {
         return new BridgePayload(BridgeCapability.OBSERVATION, observation, null, null,
-                provenance);
+                null, null, null, null, provenance);
     }
 
     /**
@@ -96,7 +133,7 @@ public record BridgePayload(
      */
     public static BridgePayload ofCandidate(Belief candidate, Provenance provenance) {
         return new BridgePayload(BridgeCapability.CANDIDATE, null, candidate, null,
-                provenance);
+                null, null, null, null, provenance);
     }
 
     /**
@@ -106,9 +143,67 @@ public record BridgePayload(
      * @param provenance   the provenance of the delivery
      * @return the payload
      */
+    /**
+     * A payload that asks a peer to execute a bounded cognitive task.
+     *
+     * @param request    the typed request
+     * @param provenance where the request came from
+     * @return the payload
+     */
+    public static BridgePayload ofTaskRequest(CognitiveTaskRequest request,
+                                               Provenance provenance) {
+        return new BridgePayload(BridgeCapability.INFERENCE_REQUEST, null, null, null,
+                request, null, null, null, provenance);
+    }
+
+    /**
+     * A payload that returns the result of a bounded cognitive task.
+     *
+     * @param response   the structured response
+     * @param provenance where the response came from
+     * @return the payload
+     */
+    public static BridgePayload ofTaskResponse(CognitiveTaskResponse response,
+                                                Provenance provenance) {
+        return new BridgePayload(BridgeCapability.INFERENCE_RESPONSE, null, null, null,
+                null, response, null, null, provenance);
+    }
+
+    /**
+     * A payload that returns the secondary report of a bounded cognitive task.
+     *
+     * <p>The report is the epistemic form of the answer: it names the proposition the
+     * peer is talking about, whether it supports or contradicts it, what the peer's
+     * confidence rests on, and the records the peer derived it from. The response that
+     * came with the report says whether the execution finished; the report says what the
+     * peer thinks, and it may contradict.</p>
+     *
+     * @param report     the report
+     * @param provenance where the report came from
+     * @return the payload
+     */
+    public static BridgePayload ofTaskReport(CognitiveTaskReport report,
+                                              Provenance provenance) {
+        return new BridgePayload(BridgeCapability.INFERENCE_RESPONSE, null, null, null,
+                null, null, report, null, provenance);
+    }
+
+    /**
+     * A payload that withdraws a dispatched cognitive task.
+     *
+     * @param cancel     the typed cancellation
+     * @param provenance where the cancellation came from
+     * @return the payload
+     */
+    public static BridgePayload ofTaskCancel(CognitiveTaskCancel cancel,
+                                             Provenance provenance) {
+        return new BridgePayload(BridgeCapability.INFERENCE_CANCEL, null, null, null,
+                null, null, null, cancel, provenance);
+    }
+
     public static BridgePayload ofEvidenceLink(Evidence evidenceLink, Provenance provenance) {
         return new BridgePayload(BridgeCapability.EVIDENCE_LINK, null, null, evidenceLink,
-                provenance);
+                null, null, null, null, provenance);
     }
 
     /**

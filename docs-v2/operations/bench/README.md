@@ -12,6 +12,8 @@ this directory is the provenance for the whole tuning document.
 
 | File | What it is | Use it for |
 |---|---|---|
+| `rep-substrate-02-native-bitcount-20261113.json` / `.txt` | **REP-SUBSTRATE.2** — the bit-count comparison with **both sides in one harness**: the Java path, the FFM downcall to the repository's own C function, and the path the production helper actually takes | the native-path decision of REP-02 (`docs-v2/research/REP-SUBSTRATE-02-workloads.md` §3) |
+| `rep-substrate-02-workloads-20261113.json` / `.txt` | **REP-SUBSTRATE.2** — the five workload directions (BIR, HDC, NeuronLayer, Tsetlin, byte serialization) in one run | the workload numbers of REP-02 (`docs-v2/research/REP-SUBSTRATE-02-workloads.md` §4) |
 | `w30-hdc-retrieval.json` | HDC Jaccard variants, first run, before the scratch-reuse methodology fix | superseded — see note below |
 | `w30-perf-20261002-125143.json` | HDC variants, **corrected** run, filter verified 20/20 | the numbers quoted in `TUNING-PARAMETERS.md` §6 |
 | `w30-perf-20261002-131739.json` / `.txt` | `GcPressureBenchmark`, quick budget | GC baseline run |

@@ -54,6 +54,25 @@ class BridgeReceiverTest {
     }
 
     @Test
+    @DisplayName("a withdrawal whose right was not granted is refused")
+    void aWithdrawalWhoseRightWasNotGrantedIsRefused() {
+        // The right to withdraw is its own right. A receiver that grants only the
+        // request right must refuse a withdrawal: the right lives in the receiver's
+        // grant, never in the message.
+        BridgeTestFixtures.RecordingSink sink = new BridgeTestFixtures.RecordingSink();
+        BridgeReceiver receiver = new BridgeReceiver(new HmacBridgeSigner(SECRET),
+                EnumSet.of(BridgeCapability.INFERENCE_REQUEST), BridgeBudget.standard(),
+                new InMemoryBridgeIdempotency(), sink);
+        BridgeEnvelope message = BridgeTestFixtures.signedCancellation();
+
+        BridgeDecision decision = receiver.receive(message, NOW_MILLIS);
+
+        assertTrue(decision.refused());
+        assertTrue(decision.reason().contains("did not grant"), decision.reason());
+        assertEquals(0, sink.count());
+    }
+
+    @Test
     @DisplayName("the acceptance is recorded with the digest of the payload")
     void theAcceptanceIsRecorded() {
         BridgeTestFixtures.RecordingSink sink = new BridgeTestFixtures.RecordingSink();

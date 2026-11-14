@@ -113,6 +113,16 @@ public final class CognitiveKernel {
     private final io.matrix.cognitive.microworld.MicroWorldEnvironment environment;
     private final AlgorithmSelectorBridge selector;
     private final RegulatoryBridge regulator;
+
+    /**
+     * W53 — the port to a remote cognitive capability.
+     *
+     * <p>It is optional: a kernel without one runs entirely locally, and a kernel with one
+     * may delegate the capability the selector chose. There is no second selector here — the
+     * choice of the method is still the {@code AlgorithmSelector}'s, and this port only says
+     * whether the capability that was chosen happens to be one another process can serve.</p>
+     */
+    private io.matrix.cognitive.distributed.RemoteExecutor remoteExecutor;
     private final Supplier<String> timestamps;
 
     /**
@@ -190,6 +200,26 @@ public final class CognitiveKernel {
         default <T> T measure(String methodId, java.util.function.Supplier<T> body) {
             return body.get();
         }
+
+        /**
+         * Runs the method and records what it cost and what it asserted, in the stratum of
+         * the request it answered.
+         *
+         * <p>W53 — the stratum is part of the record because a verdict pooled over the
+         * families answers a different question from the one the selection asks. The default
+         * measures nothing, exactly as the narrow form does.</p>
+         *
+         * @param methodId          the method being run
+         * @param family            the family of the request
+         * @param capabilityVersion the version of the capability that ran
+         * @param body              the work
+         * @param <T>               what the work produces
+         * @return what the work produced
+         */
+        default <T> T measure(String methodId, String family, String capabilityVersion,
+                              java.util.function.Supplier<T> body) {
+            return body.get();
+        }
     }
 
     /**
@@ -245,6 +275,22 @@ public final class CognitiveKernel {
                            RegulatoryBridge regulator) {
         this(workbench, store, sessionFactory, environment, selector, regulator,
                 () -> java.time.Instant.now().toString());
+    }
+
+    /**
+     * W53 — the kernel that may delegate a bounded cognitive task to another process.
+     *
+     * <p>The remote task then belongs to the same logical cognitive episode: the cycle's
+     * trace shows the dispatch, the receipt, the validation and the epistemic evaluation of
+     * what came back, and the task may be found again by its stable id after a restart.</p>
+     *
+     * @param remoteExecutor the port to the peer, or null for a kernel that runs locally
+     * @return this kernel
+     */
+    public CognitiveKernel withRemoteExecutor(
+            io.matrix.cognitive.distributed.RemoteExecutor remoteExecutor) {
+        this.remoteExecutor = remoteExecutor;
+        return this;
     }
 
     /**
@@ -478,6 +524,61 @@ public final class CognitiveKernel {
         }
 
         deadline.check("SELECT");
+
+        // ── 5b. DISPATCH REMOTE, WHEN THE CHOSEN CAPABILITY LIVES ELSEWHERE ──
+        // W53 — the remote task is part of THIS episode, not a separate demonstration.
+        // The four steps below are real transitions, not decoration: the request really
+        // left, a real answer really came back, it really was checked, and the result
+        // really was evaluated against this process's own evidence.
+        io.matrix.cognitive.distributed.RemoteExecutor.RemoteOutcome remote = null;
+        // What the delegation left open, if it did. It reaches the reflection, so that the
+        // cycle's own evaluation names the remote report instead of the report being
+        // dropped into the notes and forgotten.
+        String remoteUncertainty = null;
+        if (remoteExecutor != null && remoteExecutor.serves(decision.selectedAlgorithmId())) {
+            trace.step("DISPATCH_REMOTE", decision.selectedAlgorithmId(),
+                    "the chosen capability is served by another process; the task was "
+                            + "delegated with the criterion it will be judged against");
+            try {
+                remote = remoteExecutor.execute(decision.selectedAlgorithmId(),
+                        requested.toString(), "the answer must address the question that was "
+                                + "asked", episodeId);
+                trace.step("RECEIVE", decision.selectedAlgorithmId(),
+                        "the peer answered request " + remote.requestId()
+                                + " with status " + remote.status()
+                                + " from responder " + remote.responderId());
+                trace.step("VALIDATE", decision.selectedAlgorithmId(),
+                        "the answer was checked against the contract; the disposition is "
+                                + remote.disposition());
+                trace.step("EVALUATE_EVIDENCE", decision.selectedAlgorithmId(),
+                        "the result was evaluated against this process's own evidence: "
+                                + remote.reason());
+                notes.add("a remote execution contributed: request " + remote.requestId()
+                        + ", status " + remote.status() + ", disposition "
+                        + remote.disposition() + " — the peer's answer is a report, not a "
+                        + "settled fact, and the local computation continues on its own terms");
+                learned.add("a task was delegated to another process: request "
+                        + remote.requestId() + ", responder " + remote.responderId()
+                        + ", status " + remote.status() + ", disposition "
+                        + remote.disposition() + " — the peer's answer is a report, and the "
+                        + "disposition is this process's own evaluation of it");
+                if (!"SUPPORTED".equals(remote.disposition())
+                        && !"QUALIFIED".equals(remote.disposition())) {
+                    // The report did not settle the proposition. That is exactly the thing
+                    // the reflection is for: it must name what remains open, or the cycle
+                    // would end as if the delegation had settled something.
+                    remoteUncertainty = "the delegated task " + remote.requestId()
+                            + " ended " + remote.disposition() + ": " + remote.reason()
+                            + " — the proposition is not settled by that report";
+                }
+            } catch (RuntimeException e) {
+                trace.step("DISPATCH_REMOTE", decision.selectedAlgorithmId(),
+                        "the delegation failed: " + e.getMessage());
+                notes.add("the remote delegation failed: " + e.getMessage());
+            }
+            deadline.check("DISPATCH_REMOTE");
+        }
+
         // ── 6. COMPUTE AND, WHEN THE MODEL IS UNSETTLED, ACT ────────────────
         Boolean computed = null;
         try {
@@ -486,6 +587,7 @@ public final class CognitiveKernel {
             // every decision was the declared complexity, forever.
             final AlgorithmSelectorBridge.Selection chosen = selection;
             computed = selector.measure(chosen.method().capability().id(),
+                    FAMILY_MICRO_WORLD, chosen.method().capability().version(),
                     () -> chosen.method().execute(computation, budget));
             trace.step("COMPUTE", selection.method().capability().id(),
                     "the method returned " + computed
@@ -761,6 +863,12 @@ public final class CognitiveKernel {
         learned.add("the model holds " + session.survivingHypotheses().size()
                 + " surviving hypothesis(es) over " + remembered.size() + " remembered case(s)");
         List<String> uncertainties = new ArrayList<>();
+        if (remoteUncertainty != null) {
+            // The delegation's own uncertainty belongs to the cycle's uncertainty, and the
+            // reflection turns it into a decision that can be carried out: leave the
+            // proposition unresolved, and say which request left it that way.
+            uncertainties.add(remoteUncertainty);
+        }
         if (!forecast.unanimous()) {
             uncertainties.add("the surviving hypotheses disagree: "
                     + forecast.disagreeingHypothesisIds().size() + " of them");

@@ -24,6 +24,16 @@
 #       gate must report that the bridge server is reachable from chain B
 #       (G8), and it must exit non-zero. "The bridge is the only crossing"
 #       is a tested statement, not a promise.
+#   C5  W53 — the RECEIVER of a remote cognitive task that reaches chain A's
+#       epistemic store. The gate must report that the store is reachable from
+#       the task direction (G11), and it must exit non-zero. The third
+#       direction of the bridge is governed like the other two, and that claim
+#       is proved by breaking it on purpose.
+#   C6  W53 — chain A that OPENS one of chain B's databases. The gate must
+#       report that a class of chain A names chain B's database and that the
+#       task client reaches chain B's store (G12), and it must exit non-zero.
+#       A gate that proves one direction of a boundary does not prove the
+#       boundary: the other direction is proved by breaking it on purpose.
 #
 # NOTHING IS TOUCHED IN THE REPOSITORY
 # The broken classes are compiled into a COPY of the compiled classes, in the
@@ -335,6 +345,186 @@ if grep -q "FAIL.*bridge server are reachable from chain B" "$PRIV/gate4.log"; t
 else
   fail "the gate did not name the violation of the bridge server"
   grep -E "^  FAIL" "$PRIV/gate4.log" | sed 's/^/        /'
+fi
+
+# ── control 5 — chain B's task receiver reaches chain A's store ──────────────
+head1 "control 5 — chain B's task receiver reaches chain A's epistemic store"
+
+rm -f "$BROKEN/matrix-api-gateway/build/classes/java/main/io/matrix/api/bridge/TaskBridge.class"
+mkdir -p "$PRIV/probe5/io/matrix/api/bridge"
+cat >"$PRIV/probe5/io/matrix/api/bridge/TaskBridge.java" <<'JAVA'
+package io.matrix.api.bridge;
+
+import java.nio.file.Path;
+
+/**
+ * The NEGATIVE CONTROL of rule G11 of the chain isolation gate: the receiver
+ * of a remote cognitive task reaches chain A's epistemic store.
+ *
+ * <p>A remote cognitive task crosses over the network and chain B keeps its own
+ * inbox. A receiver that writes into chain A's store is a crossing inside one
+ * class graph, and the gate must say so — otherwise the claim "the task
+ * direction is governed too" is a promise rather than a proof.</p>
+ */
+public final class TaskBridge {
+
+    public TaskBridge() {
+    }
+
+    public String answer(String body) {
+        io.matrix.knowledge.KnowledgeStore store =
+                new io.matrix.knowledge.KnowledgeStore(Path.of("probe.sqlite"));
+        store.claims("probe");
+        return body;
+    }
+}
+JAVA
+
+if ! "$JAVAC" -nowarn -cp "$CP" -d \
+    "$BROKEN/matrix-api-gateway/build/classes/java/main" \
+    "$PRIV/probe5/io/matrix/api/bridge/TaskBridge.java" 2>"$PRIV/probe5/javac.log"; then
+  fail "the task-direction control could not be compiled (see $PRIV/probe5/javac.log)"
+  cat "$PRIV/probe5/javac.log"
+  exit 1
+fi
+pass "the task-direction control is compiled into the COPY of the classes"
+
+W45_CLASSES_SOURCE="$BROKEN" W45_SKIP_BUILD=1 W45_SKIP_RUNTIME=1 \
+  bash "$GATE" >"$PRIV/gate5.log" 2>&1
+GATE_STATUS=$?
+if [ "$GATE_STATUS" -ne 0 ]; then
+  pass "the gate went red on the tree where the task receiver reaches the store (exit status $GATE_STATUS)"
+else
+  fail "the gate stayed green on a tree where chain B's task receiver reaches chain A's store"
+fi
+grep -E "^  (OK|FAIL)" "$PRIV/gate5.log" | sed 's/^/        /'
+if grep -q "FAIL.*reachable from the task direction" "$PRIV/gate5.log"; then
+  pass "the gate named the violation: the store is reachable from the task direction"
+else
+  fail "the gate did not name the violation of the task direction"
+  grep -E "^  FAIL" "$PRIV/gate5.log" | sed 's/^/        /'
+fi
+
+# ── control 6 — chain A opens one of chain B's databases ────────────────────
+head1 "control 6 — chain A opens one of chain B's databases"
+
+rm -f "$BROKEN/matrix-core/build/classes/java/main/io/matrix/bridge/TaskPublisher.class"
+mkdir -p "$PRIV/probe6/io/matrix/bridge"
+cat >"$PRIV/probe6/io/matrix/bridge/TaskPublisher.java" <<'JAVA'
+package io.matrix.bridge;
+
+import io.matrix.contract.RetryPolicy;
+import io.matrix.contract.bridge.BridgeDecision;
+import io.matrix.contract.bridge.BridgeEnvelope;
+import io.matrix.contract.bridge.BridgeSigner;
+import io.matrix.contract.bridge.CognitiveTaskReport;
+import io.matrix.contract.bridge.CognitiveTaskRequest;
+import io.matrix.contract.bridge.CognitiveTaskResponse;
+
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.time.Duration;
+import java.util.Optional;
+
+/**
+ * The NEGATIVE CONTROL of rule G12 of the chain isolation gate: chain A opens
+ * the database of chain B.
+ *
+ * <p>The task direction crosses over the network, and chain B's inbox and memory
+ * are chain B's own files. A class of chain A that opens the peer's database is
+ * a crossing inside one file system instead of one network — and the gate must
+ * say so, otherwise the claim "chain A does not reach chain B's stores" is a
+ * promise rather than a proof.</p>
+ */
+public final class TaskPublisher {
+
+    /** The path the remote cognitive task arrives at. */
+    public static final String TASK_PATH = "/v1/bridge/task";
+
+    /** The default timeout of the exchange. */
+    public static final Duration DEFAULT_TIMEOUT = Duration.ofSeconds(5);
+
+    /** The peer's own database — the violation this control makes. */
+    private static final String CHAIN_B_INBOX = "data/mind/tasks.sqlite";
+
+    public TaskPublisher(String baseUrl, BridgeSigner signer, String senderId) {
+        this(baseUrl, signer, senderId, DEFAULT_TIMEOUT, RetryPolicy.STANDARD);
+    }
+
+    public TaskPublisher(String baseUrl, BridgeSigner signer, String senderId,
+                         Duration timeout, RetryPolicy retryPolicy) {
+    }
+
+    /** What the peer answered. */
+    public record Dispatch(
+            String requestId,
+            BridgeDecision.Status status,
+            String reason,
+            Optional<CognitiveTaskResponse> response,
+            Optional<CognitiveTaskReport> report,
+            boolean responseSigned,
+            boolean reportSigned,
+            Optional<BridgeEnvelope> reportEnvelope) {
+
+        /** The dispatch of a task that produced nothing. */
+        public static Dispatch empty(String requestId, BridgeDecision.Status status, String reason) {
+            return new Dispatch(requestId, status, reason, Optional.empty(), Optional.empty(),
+                    false, false, Optional.empty());
+        }
+
+        /**
+         * True when the peer accepted the message and the task finished.
+         *
+         * @return true when there is a result
+         */
+        public boolean completed() {
+            return response.isPresent()
+                    && response.get().status() == CognitiveTaskResponse.Status.COMPLETED;
+        }
+    }
+
+    public boolean cancel(String requestId, String taskId, String reason, String sentAt) {
+        return false;
+    }
+
+    public Dispatch dispatch(CognitiveTaskRequest request, String sentAt) {
+        try {
+            Connection connection = DriverManager.getConnection("jdbc:sqlite:" + CHAIN_B_INBOX);
+            connection.close();
+        } catch (Exception failure) {
+            return Dispatch.empty(request.requestId(), BridgeDecision.Status.REFUSED,
+                    failure.getMessage());
+        }
+        return Dispatch.empty(request.requestId(), BridgeDecision.Status.REFUSED,
+                io.matrix.api.bridge.RemoteTaskStore.defaultDatabase().toString());
+    }
+}
+JAVA
+
+CP="$ROOT/matrix-core/build/classes/java/main:$ROOT/matrix-api-gateway/build/classes/java/main"
+if ! "$JAVAC" -nowarn -cp "$CP" -d     "$BROKEN/matrix-core/build/classes/java/main"     "$PRIV/probe6/io/matrix/bridge/TaskPublisher.java" 2>"$PRIV/probe6/javac.log"; then
+  fail "the chain-A-store control could not be compiled (see $PRIV/probe6/javac.log)"
+  cat "$PRIV/probe6/javac.log"
+  exit 1
+fi
+pass "the chain-A-store control is compiled into the COPY of the classes"
+
+W45_CLASSES_SOURCE="$BROKEN" W45_SKIP_BUILD=1 W45_SKIP_RUNTIME=1 \
+  bash "$GATE" >"$PRIV/gate6.log" 2>&1
+GATE_STATUS=$?
+if [ "$GATE_STATUS" -ne 0 ]; then
+  pass "the gate went red on the tree where chain A opens chain B's database (exit status $GATE_STATUS)"
+else
+  fail "the gate stayed green on a tree where chain A opens chain B's database"
+fi
+grep -E "^  (OK|FAIL)" "$PRIV/gate6.log" | sed 's/^/        /'
+if grep -q "FAIL.*name one of chain B's databases" "$PRIV/gate6.log" \
+   && grep -q "FAIL.*of chain B's store are reachable from the chain A task client" "$PRIV/gate6.log"; then
+  pass "the gate named both halves of the violation: chain A names chain B's database"
+  pass "and the chain A task client reaches a class of chain B's store"
+else
+  fail "the gate did not name the violation of chain A's reach into chain B's store"
+  grep -E "^  FAIL" "$PRIV/gate6.log" | sed 's/^/        /'
 fi
 
 # ── the summary ─────────────────────────────────────────────────────────────

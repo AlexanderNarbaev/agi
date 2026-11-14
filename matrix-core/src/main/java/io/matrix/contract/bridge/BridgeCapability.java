@@ -56,7 +56,48 @@ public enum BridgeCapability {
      * both the canonical {@code Belief}; what separates them is not the shape but the
      * standing behind it — and the standing is what the right names.</p>
      */
-    KNOWLEDGE;
+    KNOWLEDGE,
+
+    /**
+     * W53 — the right to ASK A PEER TO EXECUTE A BOUNDED COGNITIVE TASK.
+     *
+     * <p><b>This is the direction of the work, not of the knowledge.</b> The rights above
+     * carry what a process <i>knows</i>; this one carries a request that a process
+     * <i>does</i>. The two are not interchangeable: the right to receive established
+     * knowledge is not the right to make a peer execute a task, and the right to make a peer
+     * execute a task is not the right to write into the peer's epistemic store. A receiver
+     * grants them separately, and a message that claims the wrong one is refused exactly as
+     * a forged message is.</p>
+     *
+     * <p><b>Where the authorisation lives.</b> In the receiver's grant, never in the
+     * message. A request that carried its own permission would be a caller widening its own
+     * permission, which is the failure this whole contract exists to make impossible.</p>
+     */
+    INFERENCE_REQUEST,
+
+    /**
+     * W53 — the right to RETURN THE RESULT OF A BOUNDED COGNITIVE TASK.
+     *
+     * <p>The answer travels back as a report, and the report is evaluated by the caller
+     * before it affects anything: the right to answer is not the right to be believed.</p>
+     */
+    INFERENCE_RESPONSE,
+
+    /**
+     * W53 — the right to CANCEL A DISPATCHED COGNITIVE TASK.
+     *
+     * <p><b>Why it is a right and not a field of the request.</b> A cancellation is a
+     * separate act: the request asked for work, and the cancellation withdraws it. Carried
+     * as a field of the request, it would arrive with the work itself — too late to
+     * prevent anything, and it would make every request carry the authority to withdraw
+     * itself. As its own kind, the right is granted (or not) by the receiver, checked on
+     * every message, and audited like every other crossing.</p>
+     *
+     * <p><b>What it does not grant.</b> It does not grant the right to write into the
+     * peer's epistemic store, nor to read anything of it, nor to execute anything: the
+     * cancellation withdraws a task that was already dispatched and nothing more.</p>
+     */
+    INFERENCE_CANCEL;
 
     /**
      * True when this right is among the ones the bridge granted (BRIDGE-5).

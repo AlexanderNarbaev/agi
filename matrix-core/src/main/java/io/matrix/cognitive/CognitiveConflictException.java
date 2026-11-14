@@ -51,6 +51,22 @@ public class CognitiveConflictException extends RuntimeException {
         this.kind = kind;
     }
 
+    /**
+     * A conflict, with the failure that caused it kept.
+     *
+     * <p>The cause is kept because a refusal that hides its cause is not diagnosable: a
+     * caller cannot tell a real duplicate from a database that was locked by another
+     * writer. The message stays the caller's guide; the cause is the evidence.</p>
+     *
+     * @param kind    what kind of conflict this is
+     * @param message what was refused, in words a caller can act on
+     * @param cause   the failure underneath, or {@code null}
+     */
+    public CognitiveConflictException(Kind kind, String message, Throwable cause) {
+        super(message, cause);
+        this.kind = kind;
+    }
+
     /** What kind of conflict this is. */
     public Kind kind() {
         return kind;

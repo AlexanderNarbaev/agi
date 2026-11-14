@@ -45,10 +45,13 @@ import java.util.Set;
  * in this class and no randomness: the cost comes from the ledger, which is written AFTER a call
  * has finished, so a decision never depends on how loaded the machine was when it was made.</p>
  *
- * <p><b>The tie-break.</b> Highest score first; then the lexicographically smallest method id.
- * The cost enters the score, so a cheaper method wins whenever the cost weight is positive; the
- * id decides only between methods that are indistinguishable on the evidence, which is what makes
- * a choice reproducible.</p>
+ * <p><b>The tie-break.</b> Highest score first; then, between candidates that scored exactly the
+ * same, the one whose reliability evidence is the stronger (an estimate that may be acted on
+ * before one that may not, and one that was observed at all before one that was not); then the
+ * lexicographically smallest method id. The cost enters the score, so a cheaper method wins
+ * whenever the cost weight is positive; the state and the id decide only between methods that
+ * are indistinguishable on the evidence, which is what makes a choice reproducible. The state
+ * never changes the score: it only orders candidates that already scored the same.</p>
  */
 public final class AlgorithmSelector {
 
@@ -117,6 +120,7 @@ public final class AlgorithmSelector {
             double score,
             long costNanos,
             CostAssessment cost,
+            MethodReliability reliability,
             String verdict) {
     }
 
@@ -202,7 +206,8 @@ public final class AlgorithmSelector {
                 continue;
             }
             CostAssessment cost = assessCost(capability);
-            admitted.add(new Scored(method, 0.0, cost.nanos(), cost, ""));
+            admitted.add(new Scored(method, 0.0, cost.nanos(), cost,
+                    MethodReliability.neverMeasured(capability.id()), ""));
         }
 
         if (admitted.isEmpty()) {
@@ -225,16 +230,38 @@ public final class AlgorithmSelector {
             double costFraction = spread == 0L
                     ? 0.0
                     : (double) (candidate.costNanos() - cheapest) / (double) spread;
-            double accuracy = accuracyOf(candidate.method().capability());
+            // W53: the accuracy term has two bases, exactly as the cost term already had.
+            // When the method's reliability has been ESTIMATED, the measured lower bound of the
+            // interval REPLACES the declared accuracy — a measured, uncertainty-bearing
+            // number supersedes a person's estimate. When it has not (NO_EVIDENCE or
+            // NOT_YET_USABLE), the declared accuracy stands and the decision says so. A
+            // handful of observations therefore changes the STATE and the RECORD and not the
+            // score.
+            MethodReliability reliability = costLedger.reliability(
+                    candidate.method().capability().id(),
+                    request.family(),
+                    candidate.method().capability().version());
+            double declared = accuracyOf(candidate.method().capability());
+            boolean measured = reliability.state() == MethodReliability.State.ESTIMATED;
+            double accuracy = measured ? reliability.lowerBound() : declared;
             double score = ACCURACY_WEIGHT * accuracy - weight * costFraction;
             scored.add(new Scored(candidate.method(), score, candidate.costNanos(), candidate.cost(),
-                    "admitted; accuracy " + accuracy + " over "
+                    reliability,
+                    "admitted; accuracy " + accuracy + " on the " + (measured ? "MEASURED" : "DECLARED")
+                            + " basis over "
                             + candidate.method().capability().accuracyEvidence().denominator()
-                            + " case(s), cost " + candidate.cost().detail()));
+                            + " case(s), cost " + candidate.cost().detail()
+                            + ", reliability " + describe(reliability)));
         }
 
+        // W53: among equally scored candidates the RELIABILITY STATE decides — a method whose
+        // reliability was actually measured comes before one whose evidence is too thin, and a
+        // method with no evidence at all comes last. The state never overrides the score: a
+        // method measured at 0 of 30 still loses to an unmeasured candidate that declares 0.9,
+        // because known to be bad is worse than not known.
         scored.sort(Comparator
                 .comparingDouble(Scored::score).reversed()
+                .thenComparingInt(s -> stateRank(s.reliability()))
                 .thenComparing(s -> s.method().capability().id()));
 
         // A method that does not fit the budget is not chosen in preference to one that does.
@@ -382,8 +409,8 @@ public final class AlgorithmSelector {
             String detail = "measured " + measured + "ns";
             if (profile != null) {
                 detail = detail + "; " + profile.calls() + " call(s), "
-                        + profile.successes() + " success(es), "
-                        + profile.failures() + " failure(es)";
+                        + profile.successes() + " completed, "
+                        + profile.failures() + " not completed";
             }
             return new CostAssessment(measured, 0, CostBasis.MEASURED, detail);
         }
@@ -398,6 +425,54 @@ public final class AlgorithmSelector {
             return 0.0;
         }
         return Math.max(0.0, Math.min(1.0, accuracy.value()));
+    }
+
+    /**
+     * W53 — how the reliability evidence is stated in a decision.
+     *
+     * <p>The mandate asks the selection trace to say which candidates were considered, which
+     * preconditions held, which were rejected and why, the cost evidence, the reliability
+     * evidence "if applicable", the method selected and why. The reliability is therefore
+     * always stated — either as the estimate, with its bounds and its counts, or as the reason
+     * it may not be used.</p>
+     *
+     * @param reliability the estimate of the method
+     * @return the sentence the decision carries
+     */
+    private static String describe(MethodReliability reliability) {
+        if (reliability == null) {
+            return "not measured";
+        }
+        if (reliability.state() == MethodReliability.State.ESTIMATED) {
+            return "the " + (int) (MethodReliability.RELIABILITY_CONFIDENCE * MethodReliability.PERCENT)
+                    + " % interval [" + round(reliability.lowerBound()) + ", "
+                    + round(reliability.upperBound()) + "] over "
+                    + reliability.decisions() + " decided trial(s) of "
+                    + reliability.calls() + " call(s), the posterior mean "
+                    + round(reliability.jeffreysMean());
+        }
+        return "kept out of the score (" + reliability.state() + ") — " + reliability.reason();
+    }
+
+    /**
+     * W53 — the order of the reliability states, for the tie-break.
+     *
+     * <p>ESTIMATED before NOT_YET_USABLE before NO_EVIDENCE: among equally scored candidates
+     * the one whose reliability was actually measured is the one whose next decision can be
+     * audited.</p>
+     *
+     * @param reliability the estimate of the method
+     * @return the rank of the state, the smaller the better
+     */
+    private static int stateRank(MethodReliability reliability) {
+        if (reliability == null) {
+            return 3;
+        }
+        return switch (reliability.state()) {
+            case ESTIMATED -> 0;
+            case NOT_YET_USABLE -> 1;
+            case NO_EVIDENCE -> 2;
+        };
     }
 
     private boolean fitsBudget(Scored candidate, ComputeBudget budget) {
@@ -415,10 +490,15 @@ public final class AlgorithmSelector {
         sb.append("selected ").append(capability.id()).append('@').append(capability.version());
         sb.append(" with score ").append(round(winner.score()));
         sb.append(" over ").append(admittedCount).append(" admitted candidate(s)");
-        sb.append("; the accuracy evidence was ").append(accuracyOf(capability));
+        boolean measured = winner.reliability().state() == MethodReliability.State.ESTIMATED;
+        sb.append("; the accuracy evidence was ")
+                .append(measured ? winner.reliability().lowerBound() : accuracyOf(capability));
+        sb.append(" on the ").append(measured ? "MEASURED" : "DECLARED").append(" basis");
         sb.append(" over ").append(capability.accuracyEvidence().denominator()).append(" case(s)");
         sb.append("; the cost came from ").append(winner.cost().basis());
         sb.append(" and was weighed with a cost weight of ").append(weight);
+        sb.append("; the reliability was ").append(describe(winner.reliability()));
+        sb.append("; the reliability evidence was ").append(winner.reliability().reason());
         if (status == AlgorithmDecision.Status.RESOURCE_LIMITED) {
             sb.append("; the estimated cost did not fit the budget, so the fallback ")
                     .append(capability.fallbackAlgorithmId() == null
