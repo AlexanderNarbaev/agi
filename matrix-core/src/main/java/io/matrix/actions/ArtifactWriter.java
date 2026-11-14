@@ -1,6 +1,7 @@
 package io.matrix.actions;
 
 import com.fasterxml.jackson.core.JsonParser;
+import io.matrix.auditor.ArticleIPermitted;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
@@ -250,6 +251,9 @@ public final class ArtifactWriter {
     }
 
     /** The staged-then-committed write. */
+    @ArticleIPermitted("the record timestamp is journal metadata written verbatim into the "
+            + "STAGED and COMMITTED lines; it decides nothing — no branch, ordering, retry, "
+            + "timeout or verdict reads it (the adapter writes exactly what the caller supplied)")
     private Result stagedWrite(String actionId, String fileName, byte[] content, String digest,
                                Disposition success) throws IOException {
         Path staged = root.resolve(stagedName(fileName, actionId));
