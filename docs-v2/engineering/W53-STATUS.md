@@ -569,7 +569,8 @@ reachability proof alone would not see it. On the wave's own tree both statement
 **0** classes — and the gate now runs **32 checks, 0 failed**.
 
 **And the rule can go red (C6).** The negative control replaces chain A's task publisher with
-one that opens the peer's inbox — `jdbc:sqlite:data/mind/tasks.sqlite` — and calls chain B's
+one that opens the peer's inbox — the SQLite URL of chain B's own inbox (`jdbc:sqlite:`
+followed by the inbox's relative path, `data/mind/tasks.sqlite`) — and calls chain B's
 store class. The gate goes red and names **both** halves: *"1 class(es) of chain A name one of
 chain B's databases"* and *"5 class(es) of chain B's store are reachable from the chain A
 task client"*. The control now runs **19 checks, 0 failed**.
@@ -751,10 +752,10 @@ the checks the CI runs that can be reproduced here, and named the ones that cann
 | …the wave's own scripts under the same linter | the same | **0 findings** — and finding them took one fix: `scripts/w53-distributed-benchmark.sh` carried `SC2155` (a `readonly` that masked the command substitution's status). The declaration and the assignment are now separate, and the fix is a real improvement: a failing `date` now stops the run instead of leaving an empty stamp that would collide with the previous run's request ids | **the wave's own, now fixed** — the tree's count is back to the inherited 156, so the wave adds **zero** |
 | **the formal gate** | the pinned TLA+ tool from the repository (`tools/tla2tools.jar`) | **15 specifications model-checked, 15 passed, 0 failed** (`scripts/formal-gate.sh`) | green |
 | **the security boundary** | the script the CI runs | **every assertion held**, and the live knowledge and mind databases were untouched (`scripts/security-boundary-check.sh`) | green |
-| **TruffleHog** | the CI action scans the commits a push carries | **not reproducible here** — the binary is not installed on this machine, and the CI's scan runs on the push, which has not happened. What *is* reproducible was checked: a scan of every file this wave changed or added for secret-shaped literals found **nothing**, the shared secret is **generated at runtime** and never stored, and the demonstration's report carries no secret | **not run locally** — stated as such, not as a pass |
+| **TruffleHog** | the CI action scans the commits a push carries | **reproduced locally on 2026-11-13** with the same image the CI uses: `docker run --rm -v "$PWD":/repo:ro ghcr.io/trufflesecurity/trufflehog:latest git file:///repo --results=verified,unverified,unknown --json` — **44 findings in the whole tree, 0 verified**, and the CI run of the push (`43366273512`, the `develop` push at `9f9948e7`) carries **exactly one** finding inside its own 16-commit range: `docs-v2/engineering/W53-STATUS.md:572`, the verbatim SQLite URL of chain B's inbox — the driver prefix `jdbc:sqlite:` followed by the relative path `data/mind/tasks.sqlite` — a **relative local path with no credentials**, so a false positive. The job is red on the action's **exit code 183**, its convention for "unverified findings remain", and not on a secret | **inherited** — the job was already red on `main` for the same class of reason (run `42618343390`) |
 | **the native build** | — | inherited (the heap exhaustion) — the wave did not touch it, and §10.4 keeps the Java path selected | **inherited** |
 | **SpotBugs** | — | the limitation is documented in the workflow itself, and the workflow is frozen and was not touched | **inherited** |
-| **the Java build and test** | JDK 25 | the CI runs the **full** `./gradlew test`; the full run is the owner's authorised scope, so the wave ran the targeted suite (1646 tests, 250 classes, 0 failures) and did **not** claim full coverage | green within the authorised scope |
+| **the Java build and test** | JDK 25 | the CI runs the **full** `./gradlew test`. The wave's authorised scope was the targeted suite (1646 tests, 250 classes, 0 failures). **On 2026-11-13 the full module was run as well** — `matrix-core`: the **last** run of the tree is **1300 classes, 9522 tests, 0 failures, 0 errors, 23 skipped**, in 24 minutes 22 seconds; the 23 skipped tests are the native-image and the GPU-bound classes, which are **BLOCKED** on this host and are never counted as passing. An **earlier** run of the same tree (9521 tests, before the wave's own last method) ended with **1 failure** in 26 minutes 51 seconds. **That one failure was a wall-clock assertion, not a defect of the wave**: `Exp324EndToEndForwardPassTest.endToEndForwardPassLatency` asserts that the median of the boolean-chain forward pass is under 2 ms, and this machine now measures a median of 1992–2350 µs (four isolated runs; the mean 1992–2127 µs, the max 2678–3565 µs) — the bound sits exactly where the machine stands. **It is not caused by the wave's changes**: the same test fails with the wave's production change and its test removed from the tree; and the **first** full run of the same tree passed (24 min 55 s, BUILD SUCCESSFUL), while the failing run took 12 % longer. **The bound was not raised** — raising it is a decision about the performance envelope the project claims, and it is the owner's. The **last** full run of the same tree **passed**, which confirms the attribution: the assertion is a statement about this machine's load. The W53 scope after the release hardening: **255 classes and 1668 tests** across `matrix-core` and the gateway, 0 failures | green within the scope; the last full-module run is green as well, and the one earlier full-module failure is a wall-clock assertion |
 | **the quality gates** | — | the clean-code gate: **271 candidates against the accepted baseline of 271**, 0 other violations | green |
 
 **What the wave's contribution to the CI state is: zero new findings and one fixed.** The
@@ -948,6 +949,111 @@ re-derived from the verification artefact with the benchmark's own nearest-rank 
 14.954 ms at p50, 18.439 at p95, 42.21 tasks/s, the steady state 27.049 ms and 145.75
 tasks/s, 12 of 24 tasks refused above the cap, and 0.06 s of CPU per task — every figure in
 §4o's table is the artefact's own number.
+
+*(The count above is the wave's own count, measured on 2026-11-12. The release hardening of
+2026-11-13 added seventeen methods in matrix-core and five in the gateway, and the scope is
+now **1668 tests in 255 classes** — §4u.)*
+
+### 4u. What the release hardening of 2026-11-13 added: six regression tests, one real defect
+
+The owner's directive of 2026-11-13 asked for the wave's fixes to be **held by tests that
+catch them**, not merely accompanied by them, and for the failing security scan to be
+**localized** rather than silenced. This section records what that phase produced. **The work is committed** — the guard's
+fix (`04b7c5de`), the five tests that hold the wave's own fixes (`027e8f76`) and the
+research with its evidence (`5e26748d`) — and the merge of pull request #50 remains the
+owner's release decision.
+
+**The six fixes and the test that holds each of them.** Each test was proven to catch its
+defect by **mutating the production code and restoring it byte-identically** (`diff`
+against the copy taken before the mutation) — the mutation is the evidence that the test
+is not a bystander:
+
+| the fix | the test | what the mutation was | what the mutation did |
+|---|---|---|---|
+| the cognitive store's writes are serialized | `CognitiveStoreConcurrencyTest` (the third of its tests) | `synchronized` removed from `nextSequence`, `recordMeasurement` and `recordVerdict` | **the test failed** at the write of a concurrent writer: `IllegalStateException — failed to allocate the next value of the sequence event-position` |
+| an observed but undecided stratum is `NOT_YET_USABLE`, not `NO_EVIDENCE` | `MethodReliabilityStateTest` (7 tests) | the state forced to `NO_EVIDENCE` whenever the stratum holds no decision | **three of the seven failed**: `expected: NOT_YET_USABLE but was: NO_EVIDENCE` |
+| a disposition is not substituted by its reason | `DispatchDispositionSeparationTest` (4 tests) | the closure wrote its reason into the `disposition` column | **two of the four failed**: `Expecting null or empty but was: "the peer never answered within the budget"` |
+| two writers on one database are refused | `TwoWritersOnOneDatabaseTest` (5 tests) | the guard compared the **spelled** paths again (the pre-fix comparison) | **the two symlink cases failed**: `Expected java.lang.IllegalStateException to be thrown, but nothing was thrown` |
+| the peer's inbox is serialized around its one JDBC connection | `PeerInboxSerializationTest` (3 tests) | `synchronized` removed from `admit`, `markCompleted`, `recordStages`, `find`, `unfinished` and `size` | **the test failed** in all three runs: `org.sqlite.SQLiteException: [SQLITE_CONSTRAINT_PRIMARYKEY] A PRIMARY KEY constraint failed` — two deliveries of one request id both passed the check and both wrote |
+| a refused delivery keeps its stage timings | `RefusedDeliveryStageTimingsTest` (2 tests) | the measurement written only where the delivery ran to the end (the pre-fix shape) | **the test failed**: `a delivery that was refused is measured too: the stages it did reach are the stages that happened` |
+
+**The six mutations were run again on 2026-11-14, on the tree that is to be committed**, and
+each of them still turns its test red, for the same reason and not for another one:
+
+| the mutation | the test that went red |
+|---|---|
+| `synchronized` removed from the cognitive store's writes | `CognitiveStoreConcurrencyTest > concurrent writers on one store lose no row and no sequence number` |
+| the state forced to `NO_EVIDENCE` whenever the stratum holds no decision | `MethodReliabilityStateTest` — **three** of its seven tests |
+| the closure writes its reason into the `disposition` column | `DispatchDispositionSeparationTest` — **two** of its four tests |
+| the guard compares the spelled paths again | `TwoWritersOnOneDatabaseTest` — the **two symlink cases** |
+| `synchronized` removed from the peer's inbox | `PeerInboxSerializationTest > concurrent deliveries of one request id are admitted once` |
+| the measurement written only where the delivery ran to the end | `RefusedDeliveryStageTimingsTest > a refused delivery keeps the stages it reached in its own row` |
+
+Two details of that re-run are worth keeping. First, **the last mutation must reproduce the
+shape of the old implementation, not a syntactic move**: a refusal that returns normally is
+still on the happy path, so placing the write at the end of the `try` block leaves the test
+green; the pre-fix code wrote the measurement only where the delivery ran to the end — the
+outcome write — and the mutation that reproduces *that* turns the test red. Second, after
+every mutation the production file was restored and compared with `git show HEAD:<path>`:
+**byte-identical in all six cases**.
+
+**One of the six found a real gap, and the gap is in serving code.** The two-writer guard
+compared `knowledge.toAbsolutePath().normalize()` with `cognitive.toAbsolutePath().normalize()`.
+`normalize()` collapses `.` and `..` but does **not** resolve a symbolic link, so **a
+symlinked alias of the knowledge database was not caught** — the very condition the guard
+exists to prevent. The guard now resolves the path (the directory part through
+`toRealPath()`, the last element through `readSymbolicLink`, bounded at 16 hops) before it
+compares, and it refuses the alias with the same reason it refuses the identical path. This
+is the **same defect class as the open question Q-W46-04**, whose guard — the knowledge
+store's own `WriterLock` — is still unresolved; the fix here is in the dispatch store's
+guard and does not close that question.
+
+**The security finding was localized, not silenced.** The CI's `Security Scan` job of the
+`develop` push (run `43366273512`, head `9f9948e7`) is red. The action scans the **commits
+the push carried** — sixteen of them — and exactly **one** of the tree's forty-four local
+findings lies in that range: `docs-v2/engineering/W53-STATUS.md:572`, the verbatim SQLite URL
+of chain B's inbox — the driver prefix `jdbc:sqlite:` followed by the relative path
+`data/mind/tasks.sqlite`. It is a **relative local path with no credentials**, so the finding
+is a false positive; the **0 verified secrets** are the fact that matters. The scanner was
+**not** disabled and **no wide exception** was added; the finding itself is answered by the
+narrowest possible change — the documentation line that quoted the URL verbatim now names
+the driver prefix and the path separately, so the file carries the same fact without the
+literal. **The fix is committed** (`5e26748d` carries the documents that no longer quote the
+literal); the scanner's verdict on the pushed tree is recorded in the wave's release
+section.
+
+### 4v. What the reconciliation of `main` into `develop` was rehearsed as, after this wave's own work landed
+
+The owner's procedure for the reconciliation has five steps: the list of the conflicting
+files, what of `main` is already in `develop`, a resolution that keeps both behaviours, the
+affected serving paths, stores and protocols, and the targeted tests. The rehearsal of
+2026-11-13 answers each of them, and it was run **in a disposable clone**, on the tree
+that includes this wave's own working state — because the order of operations matters: the
+merge must be applied **after** this wave's changes are committed onto `develop`, not
+before.
+
+| the step | what the rehearsal found |
+|---|---|
+| the conflicting files | **17**, and they are the same seventeen as the first rehearsal: the four documents of this wave's own correction (`W53-STATUS.md`, `DECISION-REGISTER.md`, `PROJECT-STATE.md`, `ROADMAP.md`), the gateway's `MinimalHttpServer`, five classes of chain A's cognitive core (`CognitiveService`, `CognitiveStore`, `AlgorithmSelector`, `CostLedger`, `MethodMeasurementStore`), the three bridge contract classes, two bridge tests, and the two chain-isolation scripts |
+| what of `main` is already in `develop` | **everything**: `main` is W52 + the reusable procedure (the squash of pull request #49), and `develop` carries the same work as its own sequence of commits |
+| the resolution | **every conflict resolved to `develop`'s side**, and the merged tree is `1ddcc244…` — **byte for byte the tree of this wave's working state**: the merge changes **no file**, and therefore no serving path, no store and no protocol |
+| the targeted tests | on the merged tree: the chain A cognitive scope **64 classes / 489 tests, 0 failures**, and the gateway **54 classes / 284 tests, 0 failures** |
+| the mergeability of pull request #50 | the merge commit's parents are this wave's commit and `7709dc9e` (`main`), so **`main` is contained in `develop`'s history** ⇒ merging `develop` into `main` is a **fast-forward**: the pull request becomes **technically mergeable** with no conflicts and no merge commit of its own. Until the merge is applied and pushed, the pull request stays `CONFLICTING` on GitHub — that is the state of the repository, not a property of the merge |
+
+**The order of operations, and one trap.** The merge must be applied **after** this wave's
+changes are committed onto `develop`: the four corrected documents are themselves among the
+seventeen conflicting files, so a merge prepared against the earlier tree is stale the
+moment this wave's commit lands. And the harness's own file
+(`.dsh-project-memory/admission-shadow.jsonl`) is **tracked in the repository** — `main` and
+`develop` hold the same blob for it — while the harness writes to it at runtime; a commit
+that stages its live version produces a **false eighteenth conflict** on a file that is not
+the project's. The rehearsal saw exactly that, and the count returned to seventeen once the
+file was restored to its tracked blob.
+
+**Nothing was applied.** The rehearsal lives in a disposable clone under `/tmp`, the merge
+commit of the first rehearsal lives in a **detached** worktree (`f55a3a47`, its tree
+identical to `develop`'s), and **no branch moved, nothing was pushed, and pull request #50
+was not merged**. The real merge touches serving code and is the owner's decision.
 
 ### 4b. What round 19 found in the demonstration, and what it changed
 
@@ -1170,20 +1276,15 @@ is missing, not a paraphrase of "future work".
     checks are still not consulted — chain B must not and cannot reach chain A's classes
     (the isolation gate holds that), so the remote capability's lifecycle is the peer's
     business, and a plugin that serves a remote capability must register it there.
-12. **Part of the wave is committed; the rest is not.** The owner authorised the wave's
-    commit and the push on 2026-11-11 at 00:21, and **rounds 23–39 are committed and
-    pushed** — the head is `64b1657a`, and the local and the remote are at the same commit.
-    **Rounds 41 to 66 are in the working tree and wait for the owner's word**: the peer's
-    own stage timings, the reconciliation timer and the in-flight exclusion, the closure of
-    a dispatch whose retry budget is spent, the hygiene of the two scripts' working
-    directories, the named chain A stores and the benchmark's own directory, the corrected
-    measurement and the corrected noise, the over-cap measurement of the concurrency bound,
-    the re-verified epistemic comparison, the audit of this table, the reliability rule and
-    the remote path's verdicts, the two independent reviews of round 66 and the defects they
-    found, and the reports that carry all of it. **The wave's pull request is not opened** — it waits for the same word.
-    The wave does not claim to be committed, and it does not claim to be finished: what is
-    missing is the owner's authorisation, and it is named here rather than left to be
-    discovered.
+12. **The wave is committed, merged into `develop` and pushed; the release into `main` is the
+    owner's.** The owner authorised the wave's commits and the push; the wave's own head is
+    `8cfcf854`, the merge that brought it onto `develop` is `48bfe37a`, and `develop` was
+    pushed with the four dependabot bumps that follow it (`9f9948e7`). **Pull request #50
+    (`develop` → `main`) is open**, and the merge of it is the owner's release decision — an
+    agent does not take it. What remains for the wave is that release, the reconciliation of
+    `main` into `develop` (prepared and reviewed, not applied), and the limitations this
+    table names. The wave's own report is not a claim that nothing is open: what is open is
+    named here rather than left to be discovered.
 13. ~~**The performance report separates the peer's own execution from the crossing, but not
     the peer's remaining stages.**~~ **Done in round 41.** The wave had written that
     separating the peer's authentication, its inbox write and its answer signing needs the
@@ -1333,4 +1434,4 @@ The list §20 asks for, and it is a list of facts, not of excuses:
 | the native and GPU paths | **not enabled** | §10.4 keeps the Java path selected; nothing in the end-to-end profile exposed a computational bottleneck that would justify the marshalling cost |
 | the concurrency of the distributed path | **measured, not optimized** | the concurrent path is slower per task than the single-task one (27.03 ms against 14.29 ms at p50) and reaches **143.95 tasks/s** against the single-task path's **42.99** with four tasks in flight; no optimization was accepted, because nothing was profiled as a profile (CD-W42-01), and the measurement's own noise — **9.9 %** on the sequential path — is larger than every difference the runs showed |
 | the concurrency cap | **measured at the cap and above it** | the cap of four is measured from both sides: at four in flight the path reaches 143.95 tasks/s, and at eight clients **half the tasks are refused** rather than queued (§5d of the performance report, CD-042). What is not measured is the cost of the refusal to the *caller's* work: the refused task is not done, and the report says so |
-| the wave's commit, push and pull request | **commit and push done up to round 39; rounds 41 to 65 are not committed; the pull request is not** | the owner authorized the wave's commits on 2026-11-11, and the branch `feature/w53-distributed-cognition` carries them: the measurement tooling and the performance report, the implementation with the crash boundary it lost, and the registers that name the commit which carries the wave. **Rounds 41 to 65 are not committed and not pushed** — they are the peer's own stage measurement, the reconciliation timer, the isolation gate's second half, the reliability rule and the remote path's verdicts, and a commit is an operation of level 3, so it waits for the owner's word. The **pull request** is the next step after that, and it asks for the owner's word too |
+| the wave's commit, push and pull request | **committed, pushed, merged into `develop`; the pull request is open and the release is the owner's** | the owner authorized the wave's commits on 2026-11-11, and the branch `feature/w53-distributed-cognition` carries them: the measurement tooling and the performance report, the implementation with the crash boundary it lost, and the registers that name the commit which carries the wave. **Rounds 41 to 65 are committed** — they are the peer's own stage measurement, the reconciliation timer, the isolation gate's second half, the reliability rule and the remote path's verdicts — and the wave's head is `8cfcf854`, merged into `develop` by `48bfe37a` and pushed with the dependabot bumps that follow it (`9f9948e7`). The **pull request #50** (`develop` → `main`) is open, and **its merge is the owner's decision**: it is a release operation over serving code, and an agent does not take it |

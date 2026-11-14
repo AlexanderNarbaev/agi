@@ -56,7 +56,8 @@ git clone https://github.com/AlexanderNarbaev/agi.git
 cd agi
 
 # `develop` is the working branch. The default branch `main` is the release
-# branch and currently lags it by 357 commits — a fresh clone that stays on
+# branch and currently lags it by 433 commits (measured 2026-11-14,
+# `git rev-list --count origin/main..develop`) — a fresh clone that stays on
 # `main` gets the older state of the project.
 git checkout develop
 
