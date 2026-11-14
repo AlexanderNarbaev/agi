@@ -102,6 +102,46 @@ status filter removed none of them. The evidence that remains is that the retrie
 match misses two of the required propositions completely — that is the ranking/term-matching
 hypothesis (H3), and it is the next experiment's target.
 
+## 4c. The middle floors, and why the floor cannot be the fix (measured)
+
+The sweep was extended to the middle of the interval to test whether a floor exists that
+recovers the answerable cases **and** keeps the abstentions:
+
+| Floor | Total | answerable | unanswerable | moved |
+|---|---|---|---|---|
+| 0.25 (default) | 18/29 | 2/8 | 6/6 | — |
+| **0.15** | 17/29 | 4/8 | **3/6** | `U-01`, `U-05` break |
+| **0.10** | 15/29 | 4/8 | 1/6 | breaks further |
+| 0.00 | 15/29 | 4/8 | 1/6 | breaks further |
+
+**No floor in the interval separates "the workspace should cite this claim" from "the
+workspace should answer at all".** The gain of `A-02`/`A-04` comes only with a loss of three
+abstentions at 0.15 — the cost rises as the benefit rises. That is the measurement that rules
+the single-floor sweep out as a production fix, and it is why the answer floor stays at 0.25.
+
+## 4d. The residual: semantic adjacency the representation does not carry (measured)
+
+The two propositions cited at no floor (`P-02`'s "Oceanic trenches are the deepest parts of
+the ocean floor", `M-03`'s copy) were traced to their concept:
+
+```
+claim clm-2a740579  status=SUPPORTED  concept=d542c957
+concept name="Oceanic trenches"      definition=None
+representation mentions trench: true   oceanic: true
+                          subduction: false   produce: false   forms: false   volcan: false
+```
+
+The question is `"What is subduction, and what does it produce?"` — the claim answers it
+through the **semantic relation subduction → trenches**, and that relation is nowhere in the
+workspace: the concept's definition is **empty**, and no relation edge exists. The retrieval
+is lexical; it cannot recover a fact the representation does not carry. The same shape holds
+for the volcanic-arc proposition.
+
+**So the deepest E2 residual is not a ranking bug — it is an enrichment gap** (concept
+definitions and inter-concept relations), which is a data/architecture decision for the
+owner, not a threshold or a scoring patch. The next measurement that matters is how many
+concepts have a definition at all.
+
 ## 5. What this round did NOT establish
 
 No production improvement survived. The next lever is **H3 (ranking/subject

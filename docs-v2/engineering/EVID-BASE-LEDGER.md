@@ -90,6 +90,8 @@ documents named as current state.
 | **H2 — the status filter removes legitimate evidence** | **REFUTED**: every gold claim is `SUPPORTED` (citable); the filter removes none | `E2-CANDIDATE-RECALL.json` |
 | **H3 — the text match misses legitimate claims** | **CONFIRMED as the residual**: 2 of 18 required propositions are cited at no floor (no term match); the floor-0 recall is 3/4/6 of 18 at K=1/5/10, MRR 0.2593; some already-cited propositions rank 129–303 | `E2-CANDIDATE-RECALL.json` |
 | **H4 — downstream** | **CONFIRMED for 3 cases**: `F-02`, `R-04`, `R-05` are unaffected by every floor setting | `E2-FLOOR-SWEEP.json` |
+| the floor sweep's full interval | 0.25→18/29 · 0.15→17/29 · 0.10→15/29 · 0.0→15/29; no floor separates the answerable gains from the abstention losses → **no production change** | `E2-FLOOR-SWEEP.json` |
+| the residual's nature | the two never-cited propositions require the semantic relation subduction→trenches; the concept's `definition` is **empty** and no relation edge exists → **enrichment gap, owner-level**, not a ranking patch | `E2-RETRIEVAL-EXPERIMENT.md` §4d |
 
 The full reading is in `E2-RETRIEVAL-EXPERIMENT.md`. Next leverage: H3 (the ranking —
 needs a test-scope harness that exposes the per-claim scores) and the H4 cases

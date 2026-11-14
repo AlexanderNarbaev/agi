@@ -3,43 +3,13 @@
   "date": "2026-11-14",
   "property": "matrix.retrieval.minimum-coverage",
   "floors": [
-    "0.25",
-    "0.0"
+    "0.10",
+    "0.15"
   ],
   "dataset": "w50-plate-tectonics",
   "datasetVersion": "1.1",
   "perFloor": {
-    "0.25": {
-      "passed": 18,
-      "total": 29,
-      "byCategory": {
-        "answerable": {
-          "passed": 2,
-          "failed": 6
-        },
-        "unanswerable": {
-          "passed": 6,
-          "failed": 0
-        },
-        "false-premise": {
-          "passed": 4,
-          "failed": 1
-        },
-        "multi-claim": {
-          "passed": 1,
-          "failed": 2
-        },
-        "knows-what-it-does-not-know": {
-          "passed": 2,
-          "failed": 0
-        },
-        "revision": {
-          "passed": 3,
-          "failed": 2
-        }
-      }
-    },
-    "0.0": {
+    "0.10": {
       "passed": 15,
       "total": 29,
       "byCategory": {
@@ -68,326 +38,356 @@
           "failed": 2
         }
       }
+    },
+    "0.15": {
+      "passed": 17,
+      "total": 29,
+      "byCategory": {
+        "answerable": {
+          "passed": 4,
+          "failed": 4
+        },
+        "unanswerable": {
+          "passed": 3,
+          "failed": 3
+        },
+        "false-premise": {
+          "passed": 4,
+          "failed": 1
+        },
+        "multi-claim": {
+          "passed": 1,
+          "failed": 2
+        },
+        "knows-what-it-does-not-know": {
+          "passed": 2,
+          "failed": 0
+        },
+        "revision": {
+          "passed": 3,
+          "failed": 2
+        }
+      }
     }
   },
   "cases": {
     "A-01": {
       "category": "answerable",
       "verdicts": {
-        "0.25": "PASS",
-        "0.0": "PASS"
+        "0.10": "PASS",
+        "0.15": "PASS"
       },
       "problems": {
-        "0.25": "",
-        "0.0": ""
+        "0.10": "",
+        "0.15": ""
       }
     },
     "A-02": {
       "category": "answerable",
       "verdicts": {
-        "0.25": "FAIL",
-        "0.0": "PASS"
+        "0.10": "PASS",
+        "0.15": "PASS"
       },
       "problems": {
-        "0.25": "the proposition is not cited: Convergent boundaries (destructive boundaries or active margins) occur where two plates sl",
-        "0.0": ""
+        "0.10": "",
+        "0.15": ""
       }
     },
     "A-03": {
       "category": "answerable",
       "verdicts": {
-        "0.25": "PASS",
-        "0.0": "PASS"
+        "0.10": "PASS",
+        "0.15": "PASS"
       },
       "problems": {
-        "0.25": "",
-        "0.0": ""
+        "0.10": "",
+        "0.15": ""
       }
     },
     "A-04": {
       "category": "answerable",
       "verdicts": {
-        "0.25": "FAIL",
-        "0.0": "PASS"
+        "0.10": "PASS",
+        "0.15": "PASS"
       },
       "problems": {
-        "0.25": "the proposition is not cited: However, because plate motions are global in scale, they are best measured by satellite-ba",
-        "0.0": ""
+        "0.10": "",
+        "0.15": ""
       }
     },
     "A-05": {
       "category": "answerable",
       "verdicts": {
-        "0.25": "FAIL",
-        "0.0": "FAIL"
+        "0.10": "FAIL",
+        "0.15": "FAIL"
       },
       "problems": {
-        "0.25": "the proposition is not cited: Oceanic crust is formed at sea-floor spreading centers.",
-        "0.0": "the proposition is not cited: When these magnetic patterns were mapped over a wide region, the ocean floor showed a zebr"
+        "0.10": "the proposition is not cited: When these magnetic patterns were mapped over a wide region, the ocean floor showed a zebr",
+        "0.15": "the proposition is not cited: When these magnetic patterns were mapped over a wide region, the ocean floor showed a zebr"
       }
     },
     "A-06": {
       "category": "answerable",
       "verdicts": {
-        "0.25": "FAIL",
-        "0.0": "FAIL"
+        "0.10": "FAIL",
+        "0.15": "FAIL"
       },
       "problems": {
-        "0.25": "the source usgs-this-dynamic-earth.md is absent",
-        "0.0": "the proposition is not cited: Magmas that form island arcs are produced by the partial melting of the descending plate a"
+        "0.10": "the proposition is not cited: Magmas that form island arcs are produced by the partial melting of the descending plate a",
+        "0.15": "the proposition is not cited: The descending plate also provides a source of stress as the two plates interact, leading "
       }
     },
     "U-01": {
       "category": "unanswerable",
       "verdicts": {
-        "0.25": "PASS",
-        "0.0": "FAIL"
+        "0.10": "FAIL",
+        "0.15": "PASS"
       },
       "problems": {
-        "0.25": "",
-        "0.0": "answered=True, expected False"
+        "0.10": "answered=True, expected False",
+        "0.15": ""
       }
     },
     "U-02": {
       "category": "unanswerable",
       "verdicts": {
-        "0.25": "PASS",
-        "0.0": "FAIL"
+        "0.10": "FAIL",
+        "0.15": "FAIL"
       },
       "problems": {
-        "0.25": "",
-        "0.0": "answered=True, expected False"
+        "0.10": "answered=True, expected False",
+        "0.15": "answered=True, expected False"
       }
     },
     "U-03": {
       "category": "unanswerable",
       "verdicts": {
-        "0.25": "PASS",
-        "0.0": "PASS"
+        "0.10": "PASS",
+        "0.15": "PASS"
       },
       "problems": {
-        "0.25": "",
-        "0.0": ""
+        "0.10": "",
+        "0.15": ""
       }
     },
     "U-04": {
       "category": "unanswerable",
       "verdicts": {
-        "0.25": "PASS",
-        "0.0": "FAIL"
+        "0.10": "FAIL",
+        "0.15": "FAIL"
       },
       "problems": {
-        "0.25": "",
-        "0.0": "answered=True, expected False"
+        "0.10": "answered=True, expected False",
+        "0.15": "answered=True, expected False"
       }
     },
     "U-05": {
       "category": "unanswerable",
       "verdicts": {
-        "0.25": "PASS",
-        "0.0": "FAIL"
+        "0.10": "FAIL",
+        "0.15": "PASS"
       },
       "problems": {
-        "0.25": "",
-        "0.0": "answered=True, expected False"
+        "0.10": "answered=True, expected False",
+        "0.15": ""
       }
     },
     "F-01": {
       "category": "false-premise",
       "verdicts": {
-        "0.25": "PASS",
-        "0.0": "PASS"
+        "0.10": "PASS",
+        "0.15": "PASS"
       },
       "problems": {
-        "0.25": "",
-        "0.0": ""
+        "0.10": "",
+        "0.15": ""
       }
     },
     "F-02": {
       "category": "false-premise",
       "verdicts": {
-        "0.25": "FAIL",
-        "0.0": "FAIL"
+        "0.10": "FAIL",
+        "0.15": "FAIL"
       },
       "problems": {
-        "0.25": "the verdict is UNRESOLVED, expected CONTRADICTED",
-        "0.0": "the verdict is UNRESOLVED, expected CONTRADICTED"
+        "0.10": "the verdict is UNRESOLVED, expected CONTRADICTED",
+        "0.15": "the verdict is UNRESOLVED, expected CONTRADICTED"
       }
     },
     "F-03": {
       "category": "false-premise",
       "verdicts": {
-        "0.25": "PASS",
-        "0.0": "PASS"
+        "0.10": "PASS",
+        "0.15": "PASS"
       },
       "problems": {
-        "0.25": "",
-        "0.0": ""
+        "0.10": "",
+        "0.15": ""
       }
     },
     "F-04": {
       "category": "false-premise",
       "verdicts": {
-        "0.25": "PASS",
-        "0.0": "PASS"
+        "0.10": "PASS",
+        "0.15": "PASS"
       },
       "problems": {
-        "0.25": "",
-        "0.0": ""
+        "0.10": "",
+        "0.15": ""
       }
     },
     "M-01": {
       "category": "multi-claim",
       "verdicts": {
-        "0.25": "FAIL",
-        "0.0": "FAIL"
+        "0.10": "FAIL",
+        "0.15": "FAIL"
       },
       "problems": {
-        "0.25": "the proposition is not cited: Convergent boundaries (destructive boundaries or active margins) occur where two plates sl",
-        "0.0": "the proposition is not cited: The San Andreas Fault in California is an example of a transform boundary exhibiting dextr"
+        "0.10": "the proposition is not cited: The San Andreas Fault in California is an example of a transform boundary exhibiting dextr",
+        "0.15": "the proposition is not cited: The San Andreas Fault in California is an example of a transform boundary exhibiting dextr"
       }
     },
     "M-02": {
       "category": "multi-claim",
       "verdicts": {
-        "0.25": "PASS",
-        "0.0": "PASS"
+        "0.10": "PASS",
+        "0.15": "PASS"
       },
       "problems": {
-        "0.25": "",
-        "0.0": ""
+        "0.10": "",
+        "0.15": ""
       }
     },
     "K-01": {
       "category": "knows-what-it-does-not-know",
       "verdicts": {
-        "0.25": "PASS",
-        "0.0": "PASS"
+        "0.10": "PASS",
+        "0.15": "PASS"
       },
       "problems": {
-        "0.25": "",
-        "0.0": ""
+        "0.10": "",
+        "0.15": ""
       }
     },
     "K-02": {
       "category": "knows-what-it-does-not-know",
       "verdicts": {
-        "0.25": "PASS",
-        "0.0": "PASS"
+        "0.10": "PASS",
+        "0.15": "PASS"
       },
       "problems": {
-        "0.25": "",
-        "0.0": ""
+        "0.10": "",
+        "0.15": ""
       }
     },
     "P-01": {
       "category": "answerable",
       "verdicts": {
-        "0.25": "FAIL",
-        "0.0": "FAIL"
+        "0.10": "FAIL",
+        "0.15": "FAIL"
       },
       "problems": {
-        "0.25": "the proposition is not cited: This feature is where seafloor spreading takes place along a divergent plate boundary.",
-        "0.0": "the proposition is not cited: This feature is where seafloor spreading takes place along a divergent plate boundary."
+        "0.10": "the proposition is not cited: This feature is where seafloor spreading takes place along a divergent plate boundary.",
+        "0.15": "the proposition is not cited: This feature is where seafloor spreading takes place along a divergent plate boundary."
       }
     },
     "P-02": {
       "category": "answerable",
       "verdicts": {
-        "0.25": "FAIL",
-        "0.0": "FAIL"
+        "0.10": "FAIL",
+        "0.15": "FAIL"
       },
       "problems": {
-        "0.25": "the proposition is not cited: Oceanic trenches are the deepest parts of the ocean floor.",
-        "0.0": "the proposition is not cited: Oceanic trenches are the deepest parts of the ocean floor."
+        "0.10": "the proposition is not cited: Oceanic trenches are the deepest parts of the ocean floor.",
+        "0.15": "the proposition is not cited: Oceanic trenches are the deepest parts of the ocean floor."
       }
     },
     "U-06": {
       "category": "unanswerable",
       "verdicts": {
-        "0.25": "PASS",
-        "0.0": "FAIL"
+        "0.10": "FAIL",
+        "0.15": "FAIL"
       },
       "problems": {
-        "0.25": "",
-        "0.0": "answered=True, expected False"
+        "0.10": "answered=True, expected False",
+        "0.15": "answered=True, expected False"
       }
     },
     "F-05": {
       "category": "false-premise",
       "verdicts": {
-        "0.25": "PASS",
-        "0.0": "PASS"
+        "0.10": "PASS",
+        "0.15": "PASS"
       },
       "problems": {
-        "0.25": "",
-        "0.0": ""
+        "0.10": "",
+        "0.15": ""
       }
     },
     "M-03": {
       "category": "multi-claim",
       "verdicts": {
-        "0.25": "FAIL",
-        "0.0": "FAIL"
+        "0.10": "FAIL",
+        "0.15": "FAIL"
       },
       "problems": {
-        "0.25": "the proposition is not cited: Similar plant and animal fossils are found around the shores of different continents, sugg",
-        "0.0": "the proposition is not cited: The fossils of Mesosaurus, a freshwater reptile rather like a small crocodile, found both "
+        "0.10": "the proposition is not cited: Similar plant and animal fossils are found around the shores of different continents, sugg",
+        "0.15": "the proposition is not cited: Similar plant and animal fossils are found around the shores of different continents, sugg"
       }
     },
     "R-01": {
       "category": "revision",
       "verdicts": {
-        "0.25": "PASS",
-        "0.0": "PASS"
+        "0.10": "PASS",
+        "0.15": "PASS"
       },
       "problems": {
-        "0.25": "",
-        "0.0": ""
+        "0.10": "",
+        "0.15": ""
       }
     },
     "R-03": {
       "category": "revision",
       "verdicts": {
-        "0.25": "PASS",
-        "0.0": "PASS"
+        "0.10": "PASS",
+        "0.15": "PASS"
       },
       "problems": {
-        "0.25": "",
-        "0.0": ""
+        "0.10": "",
+        "0.15": ""
       }
     },
     "R-02": {
       "category": "revision",
       "verdicts": {
-        "0.25": "PASS",
-        "0.0": "PASS"
+        "0.10": "PASS",
+        "0.15": "PASS"
       },
       "problems": {
-        "0.25": "",
-        "0.0": ""
+        "0.10": "",
+        "0.15": ""
       }
     },
     "R-04": {
       "category": "revision",
       "verdicts": {
-        "0.25": "FAIL",
-        "0.0": "FAIL"
+        "0.10": "FAIL",
+        "0.15": "FAIL"
       },
       "problems": {
-        "0.25": "2 supersessions applied, 0 expected",
-        "0.0": "2 supersessions applied, 0 expected"
+        "0.10": "2 supersessions applied, 0 expected",
+        "0.15": "2 supersessions applied, 0 expected"
       }
     },
     "R-05": {
       "category": "revision",
       "verdicts": {
-        "0.25": "FAIL",
-        "0.0": "FAIL"
+        "0.10": "FAIL",
+        "0.15": "FAIL"
       },
       "problems": {
-        "0.25": "1 supersessions applied, 0 expected",
-        "0.0": "1 supersessions applied, 0 expected"
+        "0.10": "1 supersessions applied, 0 expected",
+        "0.15": "1 supersessions applied, 0 expected"
       }
     }
   }
