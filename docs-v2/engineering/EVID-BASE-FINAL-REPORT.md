@@ -18,9 +18,9 @@
 | base | `origin/develop` `343299b1` (the directive's verified head) |
 | commits | 16 at the time of writing (see `git log --oneline origin/develop..HEAD`) |
 | working tree | clean except the harness-owned `.dsh-project-memory/` |
-| PR | *pending — Stage 7* |
-| final tree SHA | *pending — recorded after the merge* |
-| integration status | implemented + verified locally; pushed/PR/release *pending* |
+| PR | **#53** (feature→develop) — merged as `01d4cdc0`; release PR *pending* |
+| final tree SHA | `01d4cdc0`'s tree — see `git rev-parse origin/develop^{tree}`; the release records the final one |
+| integration status | **integrated into `develop`** as `01d4cdc0` (PR #53); release to `main` *pending* |
 
 ## B. Implemented capabilities
 
@@ -122,12 +122,31 @@ cases stay refused.
 
 ## F. CI and release
 
-*Pending — this section is written from the actual workflow runs after the push and the PR.*
+**PR #53 (feature → develop)** — every job that ran on the final head `43fba124` passed:
 
-The inherited state must not be reported as green: at the verified heads the aggregate CI was
-`failure` because of Docker Hub authentication during image publication, with ShellCheck,
-GraalVM Native Build (runner memory) and historical unverified TruffleHog findings as known
-non-green checks. The branch's own required checks will be reported individually with their URLs.
+| job | result |
+|---|---|
+| Build & Test (Java) | **pass** |
+| Quality gates (can fail) | **pass** (it initially failed on two literal candidates this branch added, 271→273; both were removed and the gate is back at its accepted baseline 271 — it was not baselined) |
+| Container Images (build + smoke) | **pass** |
+| Security Scan | **pass** |
+| Compile all T-01 modules | **pass** |
+| Model-check TLA+ specs | **pass** |
+| CONSTITUTION compliance check | **pass** |
+| Web UI Tests (matrix-web-ui) | **pass** |
+| Validate branch name · RU/EN parity | **pass** |
+| Deploy Documentation to GitHub Pages | **pass** (it initially failed on a literal Liquid brace sequence this branch wrote into the ledger; rephrased, not ignored) |
+
+The inherited non-green items are unchanged and were not touched: Docker Hub authentication
+during image publication (aggregate workflow `failure` at the verified heads), ShellCheck,
+GraalVM Native Build resource limits, and historical unverified TruffleHog findings. This branch
+disabled no check and weakened no scan.
+
+The release (develop → main) and its squash commit are recorded in the release PR; the
+repository's `main` ruleset requires one approving review, which a sole author cannot supply, so
+the directive's single, explicitly recorded administrative bypass applies **only** to that
+review rule (the conditions: two independent reviews with documented findings, every genuinely
+required check green, no protected file changed, all material findings resolved).
 
 ## G. Architectural integrity
 
