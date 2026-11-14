@@ -205,8 +205,8 @@ number is available**.
 |---|---|
 | `E2-FLOOR-0p25.json` | the baseline run (18/29) |
 | `E2-FLOOR-0p0.json` | the answer-floor sweep at 0.0 |
-| `E2-FLOOR-0p10.json` | the answer-floor sweep at 0.10 (the source report of §4c's second row) |
-| `E2-FLOOR-0p15.json` | the answer-floor sweep at 0.15 (the source report of §4c's third row) |
+| `E2-FLOOR-0p10.json` | the answer-floor sweep at 0.10 (the source report of §4c's third row — 15 of 29 answered) |
+| `E2-FLOOR-0p15.json` | the answer-floor sweep at 0.15 (the source report of §4c's second row — 17 of 29 answered) |
 | `E2-FLOOR-SWEEP.json` | the per-case comparison, answer floor |
 | (no citation-floor artifacts are in the tree: that experiment needed a temporary build that was reverted; the measured numbers are in §3) | — |
 | `scripts/e2-retrieval-experiment.py` | the harness that runs the official runner at each configuration |

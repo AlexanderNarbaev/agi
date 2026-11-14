@@ -309,10 +309,13 @@ was neither disabled nor given an exception.
 
 ### K.4 What the report's "pending" markers became
 
-- §A's *release PR pending* and the *base* row (the heads `343299b1` / `1dc01537`) → **the
-  release happened**: PR #56, squash `32666218`; the heads are `4257d6df` and `32666218`
-  (§K.1). §A is the section titled "Final state", so its "pending" markers are listed here
-  too, and they are the reason this addendum exists.
+- §A's two pending markers — *"| PR | #53 (feature→develop) — merged as `01d4cdc0`; release
+  PR pending |"* and *"| integration status | integrated into `develop` as `01d4cdc0` (PR
+  #53); release to `main` pending |"* — and the base row (*"| base | `origin/develop`
+  `343299b1` … |"*, with the header's `origin/main` `1dc01537`) → **the release happened**:
+  PR #56, squash `32666218`; the heads are `4257d6df` and `32666218` (§K.1). §A is the
+  section titled "Final state", so its "pending" markers are listed here too, and they are
+  the reason this addendum exists.
 - §F's *release pending* → **the release happened**: PR #56, squash `32666218` (§K.1).
 - §J's *the PR/release (Stage 7) pending* → **done**: PR #53, #55, #57 and #56 are merged,
   `main` and `develop` hold the same tree, and the synchronization is `4257d6df`.
