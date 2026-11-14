@@ -95,6 +95,23 @@ echo "=== 7. the actual repository is consistent"
 expect "the repository: no contradiction" "-" "$(run "$ROOT")"
 
 echo ""
+echo "=== 8. the quality gate fails when this checker fails (the wiring's own control)"
+# The gate calls the checker as its CURRENT-1 rule; a wiring that is never seen to
+# fail is a wiring that is not known to work. The fixture is a copy of the tree with
+# one contradiction planted, and the gate must report CURRENT-1 as a violation.
+cp "$ROOT/scripts/quality-gate.sh" "$WORK/stale-release/scripts/quality-gate.sh"
+mkdir -p "$WORK/stale-release/docs-v2/quality"
+cp "$ROOT/docs-v2/quality/quality-baseline.txt" "$WORK/stale-release/docs-v2/quality/" 2>/dev/null
+cp "$ROOT/docs-v2/quality/frozen-zone-baseline.txt" "$WORK/stale-release/docs-v2/quality/" 2>/dev/null
+GATE_OUTPUT="$(cd "$WORK/stale-release" && bash scripts/quality-gate.sh --report 2>&1)"
+if echo "$GATE_OUTPUT" | grep -q "CURRENT-1"; then
+  pass "the gate reports CURRENT-1 on the contradictory copy"
+else
+  fail "the gate reports CURRENT-1 on the contradictory copy"
+  echo "$GATE_OUTPUT" | grep -E "CURRENT-1|DOCS-1|TEST-1" | head -5 | awk '{ print "        " $0 }'
+fi
+
+echo ""
 if [ "$failures" -eq 0 ]; then
   echo "the self-test: PASS (all controls behaved)"
   exit 0

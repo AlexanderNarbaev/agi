@@ -162,6 +162,34 @@ Java experiment harness over the same packaged corpus that reads the retriever's
 candidates directly (a test-scope measurement; it does not change production code), and only
 if that measurement shows a rankable separation is a production change proposed.
 
+## 5b. The held-out question, stated plainly
+
+The sweep above ran on **all twenty-nine cases** — the whole documented corpus — and there
+is **no held-out partition**: twenty-nine cases do not divide into statistically useful
+subsets, and the directive anticipates exactly this ("if the original 29 cases cannot be
+divided into statistically useful subsets, add a separately identified evaluation set with
+independently defined expectations").
+
+Two things follow, and both are stated here rather than implied:
+
+1. **No generalization claim is made.** The sweep's numbers are a **diagnostic of the
+   mechanism** ("what happens to each case when the floor moves"), not an estimate of
+   accuracy on unseen cases. Because **no candidate was adopted** (§5, §7), the absence of
+   a held-out split cannot inflate any production claim: the only production change is an
+   inert knob whose default is unchanged.
+2. **What a held-out evaluation would take.** A separately identified case set with
+   independently defined expectations over the same licensed corpus, and a sweep measured
+   on it without ever having been read during a parameter choice. The corpus is the
+   project's own `w50-plate-tectonics` seed (two documents, 41 claims); a second case set
+   means a second set of independently verified propositions, which is a **content** task
+   (reading and verifying propositions against the source), not a threshold task. That is
+   why the next cycle's first priority is the concept enrichment the residual points at
+   (§4d), not another sweep.
+
+**The honest summary:** the floor is refuted as the cause of the eleven failures, the
+status filter is refuted, and the residual is a representation gap — with **no production
+improvement claimed and no held-out generalization number available**.
+
 ## 6. Artifacts
 
 | Artifact | What it holds |

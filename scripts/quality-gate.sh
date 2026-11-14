@@ -16,6 +16,8 @@
 #               (W46.3; the checker is scripts/docs-link-check.py)
 #   6. TEST-1   the test evidence catalogue agrees with the evidence on this
 #               machine (W46.3; scripts/validate-test-catalogue.py)
+#   6b. CURRENT-1 the current-state documents do not contradict each other
+#                (EVID-BASE; the checker is scripts/validate-current-state.py)
 #   7. RETENTION-1 the backup retention policy proves itself on a synthetic tree
 #   8. SNAPSHOT-RETENTION-1 the snapshot retention policy proves itself, the
 #               snapshot payload's size bound is configured, and the dry run
@@ -334,6 +336,33 @@ check_test_catalogue() {
 }
 
 # ---------------------------------------------------------------------------
+# CURRENT-1: the current-state documents do not contradict each other
+# ---------------------------------------------------------------------------
+#
+# The link checker proves that a document points at something that exists; this
+# proves that a document which claims to describe the CURRENT state does not
+# contradict another one. The checker is separate (scripts/validate-current-state.py)
+# because it is useful on its own, and it carries its own negative control
+# (scripts/validate-current-state-selftest.sh) - a checker that has never gone red
+# on a wrong tree is not evidence.
+check_current_state() {
+    local checker="$REPO_ROOT/scripts/validate-current-state.py"
+    if [ ! -f "$checker" ]; then
+        report CURRENT-1 "the current-state checker is absent: scripts/validate-current-state.py"
+        VIOLATIONS=$((VIOLATIONS + 1))
+        return
+    fi
+    local output
+    if ! output="$(python3 "$checker" --root "$REPO_ROOT" --strict 2>&1)"; then
+        printf '%s\n' "$output" | grep -E "CONTRADICTION|STALE|CONFLICT" | head -20
+        report CURRENT-1 "the current-state documents contradict each other"
+        VIOLATIONS=$((VIOLATIONS + 1))
+        return
+    fi
+    report CURRENT-1 "the current-state documents agree with each other"
+}
+
+# ---------------------------------------------------------------------------
 # RETENTION-1: the backup retention policy proves itself on a synthetic tree
 # ---------------------------------------------------------------------------
 #
@@ -443,6 +472,7 @@ check_env_provenance
 check_frozen
 check_docs_links
 check_test_catalogue
+check_current_state
 check_retention
 check_snapshot_retention
 
