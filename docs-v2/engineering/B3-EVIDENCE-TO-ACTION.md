@@ -13,7 +13,7 @@
 | the report | `docs-v2/demos/evidence-to-action/output/evidence-report.md` — **51,541 bytes**, SHA-256 `115936e8e14a0326aa08260d5c196fd38e924c875aea7472edf7fdc2c8c8ef1b` |
 | the trace | `docs-v2/demos/evidence-to-action/output/.artifact-index.ndjson` — **2 records: STAGED + COMMITTED**, same digest |
 | the measurement | `docs-v2/engineering/B3-EVIDENCE-TO-ACTION-RESULT.json` |
-| end-to-end latency (this artifact's run) | seed **3,583 ms**, write **2 ms**, total **3,681 ms** |
+| end-to-end latency (this artifact's run) | seed **1,251 ms**, write **1 ms**, total **1,316 ms** |
 
 ---
 
@@ -24,7 +24,7 @@
 | `ArtifactWriter` | `matrix-core/src/main/java/io/matrix/actions/ArtifactWriter.java` | the *only* new side effect: one artifact into one authorized root, with the boundary, the atomic staged write, the append-only index and crash recovery |
 | `ArtifactAction` | `…/actions/ArtifactAction.java` | the adapter that registers the writer as an existing `ActionRegistry.Action` (`report.artifact.write`), so the action is listed, precondition-checked and postcondition-checked like every other action |
 | the workflow | `matrix-core/src/test/java/io/matrix/knowledge/EvidenceToActionDemonstrationTest.java` | the real end-to-end path: `AcquisitionCycle.loadSeed` → `KnowledgeWorkbench.ask` → report assembled from the answer's citations → the action → verification → trace |
-| the boundary tests | `matrix-core/src/test/java/io/matrix/actions/EvidenceToActionTest.java` | 11 tests over the boundary, idempotency and crash boundaries |
+| the boundary tests | `matrix-core/src/test/java/io/matrix/actions/EvidenceToActionTest.java` | **26 tests** over the boundary, idempotency, crash boundaries, a forged record, a hard-linked index, a torn index, a move failure and the artifact budget; plus the demonstration (1) — **27 in total** |
 
 Nothing new was invented where something existed: the corpus import, the retrieval, the answer
 record, the action contract and the audit index are the project's own.
@@ -49,9 +49,9 @@ record, the action contract and the audit index are the project's own.
 | State | How it is produced | Recovery |
 |---|---|---|
 | crash before commit | a staged temp + a `STAGED` record, no commit | `recover()` → `NO_COMMIT`, the temp is removed, no final file; the retry writes exactly once (`crashBeforeCommit`) |
-| crash after the staged write, before the outcome record | the same state (the staged file and its record are the durable evidence) | the same resolution |
+| crash after the staged write, before the outcome record | the staged file with its `STAGED` record, no final file | `recover()` → `NO_COMMIT`, the staged file removed (when its record exists; a temp created before its record is not derivable and is left — documented) |
 | crash after the commit, before the response | `COMMITTED` record + the final file | `recover()` → `COMMITTED`, `finalPresent`, no rewrite on retry (`crashAfterCommit`) |
-| commit record but the file is gone | delete the artifact | `recover()` → `COMMITTED_BUT_FILE_MISSING`; the retry → `RECONCILED_WRITTEN`, the same digest, one new commit record (`committedButFileMissing`) |
+| commit record but the file is gone or changed | delete or tamper the artifact | `recover()` → `COMMITTED_BUT_CONTENT_DIFFERS`; the retry → `RECONCILED_WRITTEN` re-hashing and restoring the bytes, one new commit record (`committedButFileMissing`, `tamperedArtifactIsNotReplayed`) |
 
 **The guarantee, stated honestly:** for one action identity, **at most one committed artifact
 can exist**, and a retry can only reproduce it — a retry re-hashes the artifact against the
@@ -86,7 +86,7 @@ certifies nothing about the truth of the sentences, and the report says so in it
   a symlink escaping the root → `REFUSED_SYMLINK_ESCAPE`
 - the retry with the same identity → `REPLAYED`
 - the recovery read-back → `COMMITTED`
-- measured latency (the committed result): seed 3,583 ms, write 2 ms, total 3,681 ms
+- measured latency (the committed result): seed 1,251 ms, write 1 ms, total 1,316 ms
 
 ## 6. What this does not claim
 

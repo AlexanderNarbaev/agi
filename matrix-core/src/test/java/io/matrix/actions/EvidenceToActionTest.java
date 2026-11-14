@@ -98,7 +98,7 @@ class EvidenceToActionTest {
     @DisplayName("a crash before commit leaves a staged file that recovery removes")
     void crashBeforeCommit() throws Exception {
         // exactly the state a crash between the stage and the commit leaves
-        Path staged = root.resolve(".report.md.tmp-act-9");
+        Path staged = root.resolve(ArtifactWriter.stagedName("report.md", "act-9"));
         Files.write(staged, MARKDOWN, StandardOpenOption.CREATE, StandardOpenOption.WRITE);
         writer.index().toFile().createNewFile();
         Files.writeString(writer.index(), "{\"actionId\":\"act-9\",\"fileName\":\"report.md\","
@@ -150,6 +150,49 @@ class EvidenceToActionTest {
 
         Map<String, Object> state = writer.recover("act-7");
         assertThat(state.get("disposition")).isEqualTo("COMMITTED");
+    }
+
+    @Test
+    @DisplayName("another identity cannot take over the crash window's committed artifact")
+    void crossIdentityCrashWindow() throws Exception {
+        // the exact state the writer produces when the COMMITTED append fails: the final
+        // file plus only the first identity's STAGED record
+        Files.write(root.resolve("report.md"), MARKDOWN);
+        Files.writeString(writer.index(), "{\"actionId\":\"act-a\",\"fileName\":\"report.md\","
+                + "\"sha256\":\"" + sha256(root.resolve("report.md")) + "\",\"status\":\"STAGED\","
+                + "\"bytes\":" + MARKDOWN.length + ",\"timestamp\":\"2026-11-14T00:00:00Z\"}\n");
+
+        ArtifactWriter.Result takeover = writer.write("act-b", "report.md",
+                "# Takeover\n".getBytes(StandardCharsets.UTF_8));
+
+        assertThat(takeover.disposition()).isEqualTo(ArtifactWriter.Disposition.REFUSED_IDENTITY);
+        assertThat(Files.readString(root.resolve("report.md")))
+                .isEqualTo(new String(MARKDOWN, StandardCharsets.UTF_8));
+        // the owner's retry still replays its own artifact
+        assertThat(writer.write("act-a", "report.md", MARKDOWN).disposition())
+                .isEqualTo(ArtifactWriter.Disposition.REPLAYED);
+    }
+
+    @Test
+    @DisplayName("a control character or NUL in the name is a disposition, not an exception")
+    void controlCharacterNames() {
+        assertThat(writer.write("act-1", "re\u0000port.md", MARKDOWN).disposition())
+                .isEqualTo(ArtifactWriter.Disposition.REFUSED_TRAVERSAL);
+        assertThat(writer.write("act-2", "re\u0007port.md", MARKDOWN).disposition())
+                .isEqualTo(ArtifactWriter.Disposition.REFUSED_TRAVERSAL);
+    }
+
+    @Test
+    @DisplayName("a hard-linked index is refused, never appended through")
+    void hardLinkedIndex() throws Exception {
+        Path outside = temporary.resolve("outside-index.ndjson");
+        Files.writeString(outside, "");
+        Files.createLink(root.resolve(ArtifactWriter.INDEX_FILE), outside);
+
+        ArtifactWriter.Result result = writer.write("act-1", "report.md", MARKDOWN);
+
+        assertThat(result.disposition()).isEqualTo(ArtifactWriter.Disposition.REFUSED_SYMLINK_ESCAPE);
+        assertThat(Files.size(outside)).isZero();
     }
 
     @Test
@@ -208,7 +251,11 @@ class EvidenceToActionTest {
                 "# Other report\n".getBytes(StandardCharsets.UTF_8));
 
         assertThat(second.disposition()).isEqualTo(ArtifactWriter.Disposition.WRITTEN);
-        assertThat(writer.readIndex()).isNotEmpty();
+        // the torn line must not swallow the next write's own records
+        List<ArtifactWriter.Record> records = writer.readIndex().stream()
+                .filter(r -> r.actionId().equals("act-2")).toList();
+        assertThat(records).extracting(ArtifactWriter.Record::status)
+                .containsExactly("STAGED", "COMMITTED");
     }
 
     // ── the boundary ────────────────────────────────────────────────────────
@@ -241,7 +288,8 @@ class EvidenceToActionTest {
     void symlinkedStagedPath() throws Exception {
         Path victim = temporary.resolve("victim.md");
         Files.writeString(victim, "# victim\n");
-        Files.createSymbolicLink(root.resolve(".report.md.tmp-act-1"), victim);
+        Files.createSymbolicLink(root.resolve(ArtifactWriter.stagedName("report.md", "act-1")),
+                victim);
 
         ArtifactWriter.Result result = writer.write("act-1", "report.md", MARKDOWN);
 

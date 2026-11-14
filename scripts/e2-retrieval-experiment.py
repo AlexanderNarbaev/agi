@@ -45,11 +45,9 @@ def run_one(floor: str, report: Path, force: bool) -> dict:
         result["_exitCode"] = "reused"
         return result
     environment = dict(os.environ)
-    if mode == "cite":
-        # the answer floor stays at its default; only the citation floor moves
-        environment["JAVA_TOOL_OPTIONS"] = "-D%s=%s" % (CITATION_PROPERTY, floor)
-    else:
-        environment["JAVA_TOOL_OPTIONS"] = "-D%s=%s" % (PROPERTY, floor)
+    # only the ANSWER floor is a production knob; the citation-floor experiment ran on a
+    # temporary build that was reverted, so it is not a mode of this harness
+    environment["JAVA_TOOL_OPTIONS"] = "-D%s=%s" % (PROPERTY, floor)
     command = [sys.executable, str(RUNNER), "--report", str(report)]
     print("=== floor %s -> %s" % (floor, report.name), flush=True)
     completed = subprocess.run(command, cwd=str(ROOT), env=environment,
@@ -78,8 +76,6 @@ def main(argv):
     parser.add_argument("--floors", default="0.25,0.0")
     parser.add_argument("--force", action="store_true",
                         help="re-run a floor even when its report exists")
-    parser.add_argument("--mode", choices=("answer", "cite"), default="answer",
-                        help="which floor the values are: the answer floor or the citation floor")
     arguments = parser.parse_args(argv[1:])
     floors = [f.strip() for f in arguments.floors.split(",") if f.strip()]
 

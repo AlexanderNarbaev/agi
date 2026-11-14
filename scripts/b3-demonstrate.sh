@@ -13,11 +13,16 @@ rm -rf docs-v2/demos/evidence-to-action/output
 mkdir -p docs-v2/demos/evidence-to-action/output
 export JAVA_HOME="${JAVA_HOME:?set JAVA_HOME to a JDK 25}"
 ./gradlew :matrix-core:test \
+  --rerun-tasks \
   --tests "io.matrix.actions.EvidenceToActionTest" \
   --tests "io.matrix.knowledge.EvidenceToActionDemonstrationTest" \
   --console=plain \
   -Dmatrix.b3.dir="$PWD/docs-v2/demos/evidence-to-action/output" \
   -Dmatrix.b3.result="$PWD/docs-v2/engineering/B3-EVIDENCE-TO-ACTION-RESULT.json"
+test -s docs-v2/demos/evidence-to-action/output/evidence-report.md \
+  || { echo "the artifact is missing after the run"; exit 1; }
+test -s docs-v2/demos/evidence-to-action/output/.artifact-index.ndjson \
+  || { echo "the trace is missing after the run"; exit 1; }
 echo "artifact: docs-v2/demos/evidence-to-action/output/evidence-report.md"
 echo "trace:    docs-v2/demos/evidence-to-action/output/.artifact-index.ndjson"
 echo "result:   docs-v2/engineering/B3-EVIDENCE-TO-ACTION-RESULT.json"

@@ -2,7 +2,7 @@
 
 **Status:** `ACTIVE` · **Branch:** `feature/evid-base-evidence-to-action`
 **Runner:** `python3 scripts/w51-epistemic-eval.py` (the official 29-case evaluation)
-**Harness:** `python3 scripts/e2-retrieval-experiment.py --floors … [--mode answer|cite]`
+**Harness:** `python3 scripts/e2-retrieval-experiment.py --floors … [--force]` (one mode: the answer floor)
 **What this document records:** what was measured, which hypothesis each measurement supports,
 and the one negative result that stopped a production change.
 
@@ -169,7 +169,7 @@ if that measurement shows a rankable separation is a production change proposed.
 | `E2-FLOOR-0p25.json` | the baseline run (18/29) |
 | `E2-FLOOR-0p0.json` | the answer-floor sweep at 0.0 |
 | `E2-FLOOR-SWEEP.json` | the per-case comparison, answer floor |
-| `E2-CITE-0p0.json`, `E2-CITE-0p10.json`, `E2-CITE-SWEEP.json` | the citation-floor experiment |
+| (no citation-floor artifacts are in the tree: that experiment needed a temporary build that was reverted; the measured numbers are in §3) | — |
 | `scripts/e2-retrieval-experiment.py` | the harness that runs the official runner at each configuration |
 
 ## 7. The one production change this round kept

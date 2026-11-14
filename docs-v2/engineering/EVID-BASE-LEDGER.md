@@ -113,10 +113,10 @@ independent of the retrieval threshold.
 
 | Item | Evidence |
 |---|---|
-| the only new side effect | `ArtifactWriter` (`matrix-core/src/main/java/io/matrix/actions/`) — canonical-path + traversal + symlink + size + type/content boundary, atomic staged write, append-only index, crash recovery |
+| the only new side effect | `ArtifactWriter` (`matrix-core/src/main/java/io/matrix/actions/`) — canonical-path + traversal + symlink (target, staged path, index) + hard-link + control-character + size + strict-content boundary, atomic staged write, append-only index with torn-line tolerance, identity→artifact binding, crash recovery |
 | the action contract | `ArtifactAction` registers `report.artifact.write` in the existing `ActionRegistry` |
-| boundary tests | `EvidenceToActionTest` — **11 tests**: normal write, idempotent repeat, same-identity refusal, crash before commit, crash after commit, committed-but-file-missing, outside root, symlink escape, reserved names, content bounds, the action contract |
-| the real demonstration | `docs-v2/demos/evidence-to-action/output/evidence-report.md` — **51,541 bytes**, SHA-256 `115936e8…`, written from the real seed corpus (41 claims, 2 sources); trace: `.artifact-index.ndjson` (STAGED + COMMITTED); two refusals + a symlink refusal; retry `REPLAYED`; recovery `COMMITTED`; latency seed 1,209 ms / write 1 ms |
+| boundary tests | `EvidenceToActionTest` — **26 tests**: normal write, idempotent repeat, same-identity refusal, crash before commit, crash after commit, the move→COMMITTED crash window (same and cross identity), tampered/missing artifact, outside root, symlink escape at the target *and at the staged path and the index*, reserved names, control characters, content bounds, strict JSON, a forged record, a torn index, a hard-linked index, a move failure, the artifact budget, the action contract; plus the demonstration — **27 in total** |
+| the real demonstration | `docs-v2/demos/evidence-to-action/output/evidence-report.md` — **51,541 bytes**, SHA-256 `115936e8…`, written from the real seed corpus (41 claims, 2 sources); trace: `.artifact-index.ndjson` (STAGED + COMMITTED); two refusals + a symlink refusal; retry `REPLAYED`; recovery `COMMITTED`; latency seed 1,251 ms / write 1 ms |
 | reproduce | `./scripts/b3-demonstrate.sh`; result: `B3-EVIDENCE-TO-ACTION-RESULT.json` |
 | the guarantee | at most one committed artifact per action identity; a retry can only reproduce it; a crash between the stage and its record leaves a temp that recovery removes |
 
