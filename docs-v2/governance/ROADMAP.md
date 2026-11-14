@@ -51,8 +51,8 @@ and chain A evaluates that report before it affects anything.
 
 **The wave's work is merged into `develop`** (`48bfe37a`) and **released into `main`**:
 pull request #50 (`develop` → `main`), **squash `bcdd1a0a`, merged on 2026-11-14**, and
-`main` was merged back into `develop` (`e41cd3c1`), so the two branches hold the same
-project tree (`d434705b`). The release's own record — the commit identifiers, the merge, the
+`main` was merged back into `develop` (`e41cd3c1` and, for the release record's own
+squash, `0bd5b574`), so the two branches hold the same project tree. The release's own record — the commit identifiers, the merge, the
 squash, the synchronization, the checks and the three inherited reds — is in
 `docs-v2/engineering/W53-STATUS.md` §4w. The wave's
 report is `docs-v2/engineering/W53-STATUS.md`, its audit is
