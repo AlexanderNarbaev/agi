@@ -98,8 +98,19 @@ needs a test-scope harness that exposes the per-claim scores) and the H4 cases
 (`F-02` verdict logic, `R-04`/`R-05` over-supersession), which the floor sweep proved are
 independent of the retrieval threshold.
 
-## Stages B2/B3 — not started
+## Stage 3 — E1 rule-learning evidence base (COMPLETE, result INSUFFICIENT_DATA)
 
-E1 (rule-learning evidence base) and Evidence-to-Action remain ahead. Their baselines,
-hypotheses and acceptance criteria are fixed in the directive and will be recorded here when
-each stage begins, with the command that produced each number.
+| Fact | Measured | Artifact |
+|---|---|---|
+| dataset | real: **108 entries (64/44)**, 20 distinct inputs, 24 distinct features; synthetic: **144 (99/45)**, documented content rule, seed 42, deterministic (sha256 stable) | `e1/DATASET-MANIFEST.json`, `scripts/e1-build-dataset.py` |
+| the production training window | the last 20 entries are **20 positive / 0 negative, 3 distinct inputs** — one class | `E1-LEARNING-EVIDENCE.json` |
+| the real chronological test partition | **21/21 positive** — the 1.000 accuracy is degenerate (balanced 0.500) | same |
+| the fold's cost on real data | **24 distinct features → 23 folded values: 1 exact, 1 CROSS-LABEL collision**; 46 informative bits in train, 84 over the log | same |
+| fold vs informative projection | no measurable held-out difference on either split (real test degenerate; synthetic test 0.68–0.71 fold vs 0.54–0.68 projection) | same |
+| the A/B/C decision | **INSUFFICIENT_DATA** — needs a real dataset with both classes in the evaluation window and >24 distinct features; ADR §4.4 stays OPEN; K_MAX, trainer width and the fold untouched | `E1-LEARNING-EVIDENCE.md` §4 |
+
+## Stage B3 — Evidence-to-Action (not started)
+
+Remains ahead: the bounded, auditable file action, its authorization boundary, persistence and
+crash recovery, the real demonstration with the negative control, the independent review, and
+the Git integration.
