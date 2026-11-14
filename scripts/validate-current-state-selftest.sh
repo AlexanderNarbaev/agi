@@ -108,7 +108,7 @@ cp "$ROOT/scripts/validate-current-state.py" "$FIX/scripts/validate-current-stat
 cp "$ROOT/scripts/quality-gate.sh" "$FIX/scripts/quality-gate.sh"
 cp "$ROOT/docs-v2/quality/quality-baseline.txt" "$FIX/docs-v2/quality/" 2>/dev/null
 cp "$ROOT/docs-v2/quality/frozen-zone-baseline.txt" "$FIX/docs-v2/quality/" 2>/dev/null
-printf '# PROJECT STATE\n\n**The wave is released into main.**\n\nPull request #50 is open, the merge is the owner'"'"'s release decision.\n' \
+printf '# PROJECT STATE\n\n**The wave is released into main.**\n\nPull request #%s is open, the merge is the owner'"'"'s release decision.\n' "$FIXTURE_PR" \
   > "$FIX/docs-v2/governance/PROJECT-STATE.md"
 printf '# RUNTIME TOPOLOGY\n\nThe two applications meet at exactly one governed crossing.\n' \
   > "$FIX/docs-v2/architecture/RUNTIME-TOPOLOGY.md"
@@ -116,7 +116,7 @@ printf '### R-X\n\n- **evidence**: scripts/validate-current-state.py:10 and noth
   > "$FIX/docs-v2/governance/RISK-REGISTER.md"
 ( cd "$FIX" && git init -q . >/dev/null 2>&1 && git config user.email selftest@local \
     && git config user.name selftest && git add -A >/dev/null 2>&1 \
-    && git commit -q -m "pull request #50 is released into main (#50)" >/dev/null 2>&1 \
+    && git commit -q -m "pull request #${FIXTURE_PR} is released into main (#${FIXTURE_PR})" >/dev/null 2>&1 \
     && git branch -M main >/dev/null 2>&1 )
 
 # (a) the checker really finds the planted contradiction - not an unreadable repository
