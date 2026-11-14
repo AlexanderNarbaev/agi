@@ -62,18 +62,23 @@ report is `docs-v2/engineering/W53-STATUS.md`, its audit is
 
 **What the wave did NOT do:** it did not merge anything into `main` on its own, it did not
 close the limitations its own report names, and it did not publish a number it had not
-measured. The reconciliation of `main` into `develop` — the two branches' divergent
-histories — is prepared and waits for the owner's word.
+measured. **The reconciliation of `main` into `develop` is done** — the merge commits
+`e41cd3c1` and `0bd5b574` brought the released squashes back into `develop`, and the
+post-release synchronisations `097ffeec`, `1dc01537` and `343299b1` kept it there: `main`
+(`1dc01537`) is an ancestor of `develop` (`343299b1`), and the two trees are byte for byte
+identical (`da7edd36`).
 
 **The reconciliation was rehearsed on the tree that includes this wave's own work**
 (`docs-v2/engineering/W53-STATUS.md` §4v): **17 conflicting files**, every one resolved to
 `develop`'s side, the merged tree **byte for byte the tree of the working state** — so the
 merge changes no serving path, no store and no protocol — and the targeted tests on the
 merged tree green (the chain A cognitive scope 489 tests, the gateway 284). The merge
-commit's parents make `main` an ancestor of `develop`, so **pull request #50 becomes
-technically mergeable as a fast-forward** once the merge is applied and pushed. **The order
-matters:** the merge must be applied *after* this wave's changes are committed, because
-four of the seventeen conflicting files are the documents this wave itself corrects.
+commit's parents make `main` an ancestor of `develop`, so **pull request #50 became
+technically mergeable as a fast-forward** once the merge was applied and pushed — which is
+what happened: the rehearsal's prediction held, and the released squash `bcdd1a0a` is the
+merge's own consequence. **The order mattered:** the merge was applied *after* this wave's
+changes were committed, because four of the seventeen conflicting files are the documents
+this wave itself corrects.
 
 **The tasks are in §4.13**, and the next wave — REP-SUBSTRATE — is in §4.14.
 

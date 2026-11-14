@@ -87,7 +87,14 @@ public final class TsetlinTrainer {
         for (long[] row : inputs) {
             if (row == null || row.length == 0) continue;
             for (int j = 0; j < inputBits; j++) {
-                if (((row[0] >>> j) & 1L) != 0L) sawOne[j] = true; else sawZero[j] = true;
+                // the word and the bit within it, not a shift of the first word: a shift of
+                // row[0] by j wraps at 64 in Java, so for any width above 64 an earlier
+                // version counted the first 64 physical bits several times and never saw
+                // the later words (found by the EVID-BASE independent review, 2026-11-14)
+                int word = j >>> 6;
+                boolean set = word < row.length
+                        && ((row[word] >>> (j & 63)) & 1L) != 0L;
+                if (set) sawOne[j] = true; else sawZero[j] = true;
             }
         }
         int count = 0;

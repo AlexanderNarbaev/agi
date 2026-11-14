@@ -1,6 +1,6 @@
 # W53 — Distributed Cognition, Durable Task Execution & Closed-Loop Collaboration
 
-**Status:** `ACTIVE` — the wave is in progress: the distributed path works end to end; the closeout is not finished
+**Status:** `RELEASED` — the wave is complete and released into `main` (pull request #50, squash `bcdd1a0a`, 2026-11-14; release record `c4cee8ab`; registers `1dc01537`). The body below was written at the wave's closeout on `develop`; it is preserved as the wave's own record. The release addendum is §12.
 **Date:** 2026-11-09 · **Branch:** `feature/w53-distributed-cognition` (from `develop` @ `375ed3f3`)
 **The objective:** *"make MATRIX capable of assigning a bounded cognitive task to another running cognitive process, receiving its actual result, evaluating that result, and completing the original task with a durable, verifiable execution trace."*
 **The central rule, honoured:** *"A remote cognitive process is a capability provider. Its output is a report that must be evaluated, not an automatic source of truth."*
@@ -1529,3 +1529,17 @@ The list §20 asks for, and it is a list of facts, not of excuses:
 | the concurrency of the distributed path | **measured, not optimized** | the concurrent path is slower per task than the single-task one (27.03 ms against 14.29 ms at p50) and reaches **143.95 tasks/s** against the single-task path's **42.99** with four tasks in flight; no optimization was accepted, because nothing was profiled as a profile (CD-W42-01), and the measurement's own noise — **9.9 %** on the sequential path — is larger than every difference the runs showed |
 | the concurrency cap | **measured at the cap and above it** | the cap of four is measured from both sides: at four in flight the path reaches 143.95 tasks/s, and at eight clients **half the tasks are refused** rather than queued (§5d of the performance report, CD-042). What is not measured is the cost of the refusal to the *caller's* work: the refused task is not done, and the report says so |
 | the wave's commit, push and pull request | **committed, pushed, merged into `develop`, and RELEASED into `main`** | the owner authorized the wave's commits on 2026-11-11, and the branch `feature/w53-distributed-cognition` carries them. **The release itself is done**: the hardening and the representation-substrate research were committed on `develop` (`04b7c5de`, `027e8f76`, `5e26748d`, `9ec6723b`), `main` was merged into `develop` (`bfbec57b`, the tree unchanged), pull request #50 was **squash-merged** into `main` (`bcdd1a0a`, 2026-11-14), and `main` was merged back into `develop` (`e41cd3c1`) so that the two branches hold the same tree (`d434705b`) the measurement tooling and the performance report, the implementation with the crash boundary it lost, and the registers that name the commit which carries the wave. **Rounds 41 to 65 are committed** — they are the peer's own stage measurement, the reconciliation timer, the isolation gate's second half, the reliability rule and the remote path's verdicts — and the wave's head is `8cfcf854`, merged into `develop` by `48bfe37a` and pushed with the dependabot bumps that follow it (`9f9948e7`). The **pull request #50** (`develop` → `main`) is open, and **its merge is the owner's decision**: it is a release operation over serving code, and an agent does not take it |
+
+---
+
+## 12. Release addendum (2026-11-14)
+
+The wave was released into `main` after this report was written: pull request #50, squash
+`bcdd1a0a`, 2026-11-14; the release record followed as pull request #51 (`c4cee8ab`) and the
+registers naming the release's final commits as pull request #52 (`1dc01537`). The released
+tree and the integration tree are byte for byte identical (`da7edd36`), and `main` is
+contained in `develop`'s history.
+
+The status field above now says `RELEASED`; nothing else in this document changed. The
+recorded run, the `UNRESOLVED` verdict, the single durable inbox row and the unsigned-claim
+caveats are the evidence of the wave at its own commit and remain exactly as measured.
