@@ -162,12 +162,51 @@ Java experiment harness over the same packaged corpus that reads the retriever's
 candidates directly (a test-scope measurement; it does not change production code), and only
 if that measurement shows a rankable separation is a production change proposed.
 
+## 5b. The held-out question, stated plainly
+
+The sweep above ran on **all twenty-nine cases** — the whole documented corpus — and there
+is **no held-out partition**: twenty-nine cases do not divide into statistically useful
+subsets. The proposal that this work answers states the rule in its own words
+(`docs-v2/proposals/PROPOSAL-EVID-BASE-2026-11-14.md`, the E2 section): *"A sweep can be
+fitted to the twenty-nine cases — the held-out set must be declared in advance"* — and the
+way out of that is a **separately identified evaluation set with independently defined
+expectations**.
+
+Two things follow, and both are stated here rather than implied:
+
+1. **No generalization claim is made.** The sweep's numbers are a **diagnostic of the
+   mechanism** ("what happens to each case when the floor moves"), not an estimate of
+   accuracy on unseen cases. Because **no candidate was adopted** (§5, §7), the absence of
+   a held-out split cannot inflate any production claim: the only production change **to
+   the retrieval path** is an inert knob whose default is unchanged. (The wave's other
+   production changes are elsewhere: the trainer's `countInformativeBits` bug fix and the
+   bounded action's writer — `ArtifactWriter`/`ArtifactAction` — all recorded in
+   `docs-v2/engineering/EVID-BASE-FINAL-REPORT.md`.)
+2. **What a held-out evaluation would take.** A separately identified case set with
+   independently defined expectations over the same licensed corpus, and a sweep measured
+   on it without ever having been read during a parameter choice. The corpus is the
+   project's own `w50-plate-tectonics` seed — **two documents, 348 claims** (the seed
+   import's own record: `matrix-core/src/main/resources/epistemic-eval/cases.json`; the 41
+   claims of one answer are a per-answer count, not the corpus's size). A second case set
+   means a second set of independently verified propositions, which is a **content** task
+   (reading and verifying propositions against the source), not a threshold task. That is
+   why the next cycle's first priority is the concept enrichment the residual points at
+   (§4d), not another sweep.
+
+**The honest summary:** the floor is **refuted as the fix** — it IS the measured cause for
+two of the eleven failures (A-02, A-04, §4b) and lowering it only moves the answerable
+cases into the abstention band (§4c); the status filter is refuted; and the residual is a
+representation gap. **No production improvement is claimed, and no held-out generalization
+number is available**.
+
 ## 6. Artifacts
 
 | Artifact | What it holds |
 |---|---|
 | `E2-FLOOR-0p25.json` | the baseline run (18/29) |
 | `E2-FLOOR-0p0.json` | the answer-floor sweep at 0.0 |
+| `E2-FLOOR-0p10.json` | the answer-floor sweep at 0.10 (the source report of §4c's third row — 15 of 29 answered) |
+| `E2-FLOOR-0p15.json` | the answer-floor sweep at 0.15 (the source report of §4c's second row — 17 of 29 answered) |
 | `E2-FLOOR-SWEEP.json` | the per-case comparison, answer floor |
 | (no citation-floor artifacts are in the tree: that experiment needed a temporary build that was reverted; the measured numbers are in §3) | — |
 | `scripts/e2-retrieval-experiment.py` | the harness that runs the official runner at each configuration |
