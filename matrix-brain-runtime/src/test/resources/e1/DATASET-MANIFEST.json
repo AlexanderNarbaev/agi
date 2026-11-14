@@ -1,0 +1,37 @@
+{
+  "record": "E1-DATASET",
+  "version": "1.0",
+  "date": "2026-11-14",
+  "generator": "scripts/e1-build-dataset.py",
+  "seed": 42,
+  "synthetic": {
+    "path": "matrix-brain-runtime/src/test/resources/e1/synthetic-episodes.ndjson",
+    "sha256": "cf5cf5cd42b86263bb550d75d8d30241b40068224ff78336c85c350aba3afa43",
+    "episodes": 144,
+    "positives": 99,
+    "negatives": 45,
+    "labelRule": "the reply echoes at least 2 distinct tokens of the input \u2014 a documented CONTENT property, so the comparison measures the representations' ability to discriminate a known function of the tokens",
+    "partitionRule": "seeded stride: 6/10 train, 2/10 validation, 2/10 test",
+    "status": "CONTROLLED SYNTHETIC \u2014 mechanism fixtures, never real-world evidence"
+  },
+  "real": {
+    "path": "data/mind/episodic.ndjson",
+    "present": true,
+    "sha256": "c2035b35478fc11b165ff24576fc277a9797c92208b8e8a5a83aecf13b336df1",
+    "entries": 108,
+    "positives": 64,
+    "negatives": 44,
+    "distinctInputs": 20,
+    "distinctReplies": 23,
+    "firstTimestamp": 1790420512423,
+    "lastTimestamp": 1791124121588,
+    "labelRule": "confidence >= 0.7 AND accepted (the production rule, read from the entry)",
+    "trainingWindow": "the last K_MAX=20 entries in time order (the production window, RealSleepScheduler.runInduction)",
+    "note": "runtime data, not part of the repository; referenced by path and hash. The distinct 256-bit feature count is measured by the harness, not here."
+  },
+  "leakage": {
+    "syntheticToReal": "none: the two splits share no episode text (asserted by the harness)",
+    "trainToValidationToTest": "disjoint by construction (seeded stride), asserted by the harness"
+  },
+  "whatThisIsNot": "It is not a claim that the synthetic episodes measure the production distribution, and it is not a held-out real evaluation; the real split is the running gateway's log by reference."
+}
