@@ -47,9 +47,12 @@ import java.util.Set;
  * same directory, are forced to disk, and are moved onto the final name with
  * {@link StandardCopyOption#ATOMIC_MOVE}. The action appends its own records to an
  * append-only NDJSON index in the root ({@value #INDEX_FILE}): {@code STAGED} before the
- * move, {@code COMMITTED} after it. A crash therefore leaves exactly one of: the old file,
- * the staged file without a commit, or the final file with a commit record — and
- * {@link #recover(String)} resolves each of those dispositions explicitly. A crash
+ * move, {@code COMMITTED} after it. A crash therefore leaves one of: the old file, the
+ * staged file without a commit, or the final file with a commit record — and
+ * {@link #recover(String)} resolves each of those dispositions explicitly. One window is
+ * documented rather than eliminated: a temporary file created before its {@code STAGED}
+ * record was written is not derivable from the index, so recovery cannot remove it; the
+ * intended retry overwrites it (it is the identity's own reserved path). A crash
  * <b>between the move and the COMMITTED append</b> is resolved as a commit too: a
  * {@code STAGED} record whose final file exists with the recorded digest <i>is</i> a
  * committed artifact, and the retry reports it instead of writing again.</p>
@@ -334,6 +337,13 @@ public final class ArtifactWriter {
      */
     public Map<String, Object> recover(String actionId) {
         Map<String, Object> state = new LinkedHashMap<>();
+        if (Files.isSymbolicLink(index()) || hardLinked(index())) {
+            state.put("actionId", actionId);
+            state.put("disposition", "INDEX_REFUSED");
+            state.put("note", "the index is a link; the writer never follows one, so the "
+                    + "crash state cannot be read through it");
+            return state;
+        }
         try {
             List<Record> records = readIndex();
             boolean staged = records.stream().anyMatch(r -> r.actionId().equals(actionId)

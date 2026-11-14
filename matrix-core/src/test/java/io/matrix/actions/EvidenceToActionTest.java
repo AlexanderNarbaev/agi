@@ -435,6 +435,52 @@ class EvidenceToActionTest {
     }
 
     @Test
+    @DisplayName("a replay is not refused by the artifact budget")
+    void replayIsNotBlockedByTheBudget() throws Exception {
+        writer.write("act-1", "report.md", MARKDOWN);
+        for (int index = 0; index < ArtifactWriter.MAX_ARTIFACTS - 1; index++) {
+            Files.writeString(writer.index(), "{\"actionId\":\"seed" + index + "\",\"fileName\":\"s"
+                    + index + ".md\",\"sha256\":\"" + "0".repeat(64)
+                    + "\",\"status\":\"COMMITTED\",\"bytes\":1,"
+                    + "\"timestamp\":\"2026-11-14T00:00:00Z\"}\n",
+                    StandardOpenOption.CREATE, StandardOpenOption.APPEND);
+        }
+
+        ArtifactWriter.Result replay = writer.write("act-1", "report.md", MARKDOWN);
+
+        assertThat(replay.disposition()).isEqualTo(ArtifactWriter.Disposition.REPLAYED);
+    }
+
+    @Test
+    @DisplayName("a STAGED-append failure leaves no staged file behind")
+    void stagedAppendFailureLeavesNoResidue() throws Exception {
+        writer.write("act-1", "report.md", MARKDOWN);   // creates the index
+        Set<PosixFilePermission> indexPermissions = Files.getPosixFilePermissions(writer.index());
+        Files.setPosixFilePermissions(writer.index(), Set.of(PosixFilePermission.OWNER_READ));
+        try {
+            ArtifactWriter.Result result = writer.write("act-2", "other.md",
+                    "# Other\n".getBytes(StandardCharsets.UTF_8));
+            assertThat(result.disposition()).isEqualTo(ArtifactWriter.Disposition.REFUSED_WRITE_FAILED);
+            assertThat(Files.list(root).noneMatch(p ->
+                    p.getFileName().toString().contains(".tmp-"))).isTrue();
+        } finally {
+            Files.setPosixFilePermissions(writer.index(), indexPermissions);
+        }
+    }
+
+    @Test
+    @DisplayName("recovery reports a refused index rather than a crash state")
+    void recoveryRefusesALinkedIndex() throws Exception {
+        Path outside = temporary.resolve("linked-index.ndjson");
+        Files.writeString(outside, "");
+        Files.createSymbolicLink(writer.index(), outside);
+
+        Map<String, Object> state = writer.recover("act-1");
+
+        assertThat(state.get("disposition")).isEqualTo("INDEX_REFUSED");
+    }
+
+    @Test
     @DisplayName("the action contract wraps the writer and reports its refusals as failures")
     void theActionContract() {
         ActionRegistry.Action action = ArtifactAction.of(writer);

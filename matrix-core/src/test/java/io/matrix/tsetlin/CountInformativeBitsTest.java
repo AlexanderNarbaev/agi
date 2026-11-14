@@ -26,6 +26,16 @@ class CountInformativeBitsTest {
     }
 
     @Test
+    @DisplayName("a difference at exactly bit 64 — the first bit of the second word — is seen")
+    void bitSixtyFourIsSeen() {
+        long[][] inputs = {
+                {0L, 0L, 0L, 0L},
+                {0L, 1L, 0L, 0L}};   // physical bit 64
+
+        assertThat(TsetlinTrainer.countInformativeBits(inputs, 256)).isEqualTo(1);
+    }
+
+    @Test
     @DisplayName("a difference beyond the first word is seen")
     void laterWordsAreSeen() {
         long[][] inputs = {
