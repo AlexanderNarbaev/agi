@@ -87,6 +87,9 @@ documents named as current state.
 | H1 — the answer floor is too restrictive | floor 0.0 → **15/29** (answerable 4/8, **unanswerable 1/6**): recovers `A-02`,`A-04`, breaks five `U-*` → **rejected** | `E2-FLOOR-SWEEP.json` |
 | the two-threshold hypothesis (answer floor 0.25 + citation floor 0.0/0.10) | **17/29**, unanswerable 3/6 → **rejected and reverted before commit**: the quantity gate reads the *cited* set, so the widened evidence let `U-01` answer a "boiling point" question with 14 plate-tectonics claims | `E2-CITE-SWEEP.json` |
 | the one kept production change | `matrix.retrieval.minimum-coverage` knob (default unchanged; contract test; 13/13 in the class) | commit `51b5d3a0` |
+| **H2 — the status filter removes legitimate evidence** | **REFUTED**: every gold claim is `SUPPORTED` (citable); the filter removes none | `E2-CANDIDATE-RECALL.json` |
+| **H3 — the text match misses legitimate claims** | **CONFIRMED as the residual**: 2 of 18 required propositions are cited at no floor (no term match); the floor-0 recall is 3/4/6 of 18 at K=1/5/10, MRR 0.2593; some already-cited propositions rank 129–303 | `E2-CANDIDATE-RECALL.json` |
+| **H4 — downstream** | **CONFIRMED for 3 cases**: `F-02`, `R-04`, `R-05` are unaffected by every floor setting | `E2-FLOOR-SWEEP.json` |
 
 The full reading is in `E2-RETRIEVAL-EXPERIMENT.md`. Next leverage: H3 (the ranking —
 needs a test-scope harness that exposes the per-claim scores) and the H4 cases

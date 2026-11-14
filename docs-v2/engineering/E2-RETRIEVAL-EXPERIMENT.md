@@ -70,6 +70,38 @@ existing implementation is preserved; the negative result is recorded here with 
 | `F-02` | **downstream (H4)**: the verdict is decided by `PremiseAssessment.agreeOn`; the retrieval floor does not change it | verdict `UNRESOLVED` at every floor |
 | `R-04`, `R-05` | **downstream (H4)**: over-supersession in `ModelRevisionDecider`/`KnowledgeRefiner`; the floor does not change it | `2` and `1` supersessions at every floor |
 
+## 4b. Candidate recall and the exact cause of every citation failure (measured)
+
+The candidate list was read without changing production code: the application was started with
+`-Dmatrix.retrieval.minimum-coverage=0.0`, so every citable claim with any term match is cited
+**in rank order**; the workspace's claims and their statuses came from
+`GET /v1/workbench/workspaces/{id}/claims`. Artifact: `E2-CANDIDATE-RECALL.json`,
+harness: `scripts/e2-candidate-recall.py`, command
+`JAVA_HOME=<jdk-25> python3 scripts/e2-candidate-recall.py`.
+
+| Fact | Measured |
+|---|---|
+| gold claim present in the workspace | **18 of 18 required propositions** |
+| gold claim's epistemic status | **`SUPPORTED` for all 18 — citable** |
+| cited exactly at floor 0.0 | **16 of 18** (ranks 1, 2, 9, 10, 11, 17, 33, 41, 129, 303, …) |
+| cited nowhere even at floor 0.0 | **2 of 18** — no term match against the question at all |
+| required source present at floor 0.0 | yes for `A-05`, `A-06`, `M-01`, `P-01`, `P-02` |
+| **Recall@1 / @5 / @10 / MRR** (floor 0.0) | **3 / 4 / 6 of 18** · **MRR 0.2593** |
+
+**The classification, per case:**
+
+| Case | Measured cause |
+|---|---|
+| `A-02`, `A-04` | **the floor** — the gold claims are cited at ranks 1/2 and 9/11 at floor 0.0 and drop out at 0.25; both PASS at 0.0 |
+| `A-05`, `A-06`, `M-01`, `P-01` | **the floor AND the term match** — part of their required propositions is cited exactly at floor 0.0 (ranks 11–129), another part is not cited at any floor |
+| `M-03`, `P-02` | **the term match (H3)** — a required proposition ranks 303 and another never appears; `P-02`'s two required propositions are absent at floor 0.0 entirely |
+| `F-02`, `R-04`, `R-05` | **downstream (H4)** — unchanged by any floor setting |
+
+**H2 (the status filter) is refuted by measurement**: every gold claim is `SUPPORTED`, and the
+status filter removed none of them. The evidence that remains is that the retrieval's TEXT
+match misses two of the required propositions completely — that is the ranking/term-matching
+hypothesis (H3), and it is the next experiment's target.
+
 ## 5. What this round did NOT establish
 
 No production improvement survived. The next lever is **H3 (ranking/subject
