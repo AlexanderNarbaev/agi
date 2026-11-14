@@ -1,0 +1,92 @@
+{
+  "record": "EVID-BASE-BASELINE",
+  "version": "1.0",
+  "date": "2026-11-14",
+  "whatThisIs": "The verified starting point of the EVID-BASE & Evidence-to-Action initiative. Every value here was produced by the command written next to it, on this machine, at these commits.",
+  "remoteState": {
+    "verified_by": "git fetch origin; git rev-parse origin/main origin/develop; git rev-parse <ref>^{tree}",
+    "origin/main": "1dc0153771fd9bf922771524562e91def52a7244",
+    "origin/main_tree": "da7edd36b3f7dee5907ac33203a456f16b0e8f29",
+    "origin/develop": "343299b1ef90ffbea3518768561258862923a655",
+    "origin/develop_tree": "da7edd36b3f7dee5907ac33203a456f16b0e8f29",
+    "trees_equal": true,
+    "main_is_ancestor_of_develop": true,
+    "develop_ahead_behind": "0\t444",
+    "note": "The checkout also carries an unrelated historical local branch `main` (7a0ed0cc, tree c886bb28, the v18.0.0-mind line). The canonical release/integration refs for this initiative are origin/main and origin/develop, as the directive states.",
+    "working_branch": "feature/evid-base-evidence-to-action"
+  },
+  "hardware": {
+    "logical_cpus": "32",
+    "memory_gib_total": "59",
+    "memory_gib_available": "44",
+    "jdk": "openjdk version \"25.0.5.0.3\" 2026-10-24",
+    "disk_free": "186G",
+    "python": "3.14.4"
+  },
+  "evaluation": {
+    "dataset": "w50-plate-tectonics",
+    "dataset_version": "1.1",
+    "runner": "scripts/w51-epistemic-eval.py",
+    "command": "python3 scripts/w51-epistemic-eval.py",
+    "report": "docs-v2/engineering/W51-EPISTEMIC-EVALUATION.json",
+    "passed": 18,
+    "total": 29,
+    "failing_ids": [
+      "A-02",
+      "A-04",
+      "A-05",
+      "A-06",
+      "F-02",
+      "M-01",
+      "M-03",
+      "P-01",
+      "P-02",
+      "R-04",
+      "R-05"
+    ],
+    "by_category": {
+      "answerable": {
+        "passed": 2,
+        "failed": 6
+      },
+      "unanswerable": {
+        "passed": 6,
+        "failed": 0
+      },
+      "false-premise": {
+        "passed": 4,
+        "failed": 1
+      },
+      "multi-claim": {
+        "passed": 1,
+        "failed": 2
+      },
+      "knows-what-it-does-not-know": {
+        "passed": 2,
+        "failed": 0
+      },
+      "revision": {
+        "passed": 3,
+        "failed": 2
+      }
+    },
+    "reproduced_exactly": true,
+    "note": "The failing set matches the documented eleven case identifiers exactly; the runner is offline by construction (JVM HTTP clients pointed at a closed loopback port)."
+  },
+  "knownCiStateAtDirective": {
+    "source": "the directive's baseline section (GitHub Actions), not re-queried in this record",
+    "aggregate": "failure",
+    "failingJobs": [
+      "Docker Hub publication (auth)",
+      "ShellCheck",
+      "GraalVM Native Build (runner memory)"
+    ],
+    "passingJobs": [
+      "Build & Test (Java)",
+      "Quality gates",
+      "Web UI Tests",
+      "Container Images (build+smoke)",
+      "Security Scan"
+    ]
+  }
+}
