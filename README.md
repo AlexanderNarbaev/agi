@@ -122,10 +122,13 @@ its vocabulary.
 
 ---
 
-## 4. Current architecture: two applications that do not meet
+## 4. Current architecture: two applications, one governed crossing
 
-MATRIX serves **two applications that deliberately do not call each other**. The
-separation is enforced and measured, not asserted.
+MATRIX serves **two applications that own their data separately**: no shared database,
+no shared memory, no class-level cross-chain access — the separation is enforced and
+measured. Since W53 they are no longer silent to each other either: they meet at exactly
+one place, the **governed bridge**, by which chain A assigns a bounded cognitive task to
+chain B and evaluates what comes back as a candidate report.
 
 | | **Chain A — the epistemic application** | **Chain B — the brain runtime** |
 |---|---|---|
@@ -146,6 +149,18 @@ control is [`scripts/w45-chain-isolation-selftest.sh`](scripts/w45-chain-isolati
 which breaks the isolation on purpose and requires the gate to notice.
 ([W46-ARCHITECTURE-TRUTH-MAP.md](docs-v2/engineering/W46-ARCHITECTURE-TRUTH-MAP.md),
 [W45.2-CHAIN-BOUNDARY.md](docs-v2/engineering/W45.2-CHAIN-BOUNDARY.md))
+
+**The one crossing is the bridge.** A typed request carries an id, a correlation, a
+capability, a bounded input, a budget, a deadline, a payload limit and a hop limit; the
+response carries eight statuses, the result, the confidence **with its basis**, the
+limitations and a trace reference. The direction is carried by a granted right, the
+contract is versioned (version 2 is current, version 1 is still readable, an unknown
+version is rejected), the peer keeps a durable inbox, and a re-delivered request creates no
+second row and runs no second time. Chain A evaluates the report before it affects
+anything: **a successful exchange is not a supported belief**, and a peer's `MEASURED`
+confidence is not independent evidence. ([W53-STATUS.md](docs-v2/engineering/W53-STATUS.md),
+[ADR-W53-01](docs-v2/engineering/ADR-W53-01-cognitive-task-bridge.md))
+
 
 **The module graph has no cycles** — at the module level. The measurement covers module
 edges only: two class-level cycles exist inside `matrix-core`, and a 42-package strongly

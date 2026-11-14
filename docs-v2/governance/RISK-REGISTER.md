@@ -89,7 +89,7 @@ implemented, tested and never called has no exposure, and saying so is part of t
 - **severity**: high
 - **probability**: low
 - **impact**: high
-- **evidence**: WriterLock.java:145 and :159 derive the lock file from databaseFile.toAbsolutePath().normalize(). normalize() collapses . and .. but does NOT resolve symlinks, so a symlink and its target yield two different lock files and the guard admits both.
+- **evidence**: WriterLock.java:145 and :159 derive the lock file from databaseFile.toAbsolutePath().normalize(). normalize() collapses . and .. but does NOT resolve symlinks, so a symlink and its target yield two different lock files and the guard admits both. **Verified 2026-11-14:** W53's `04b7c5de` fixed a *different* guard of the same class — `DistributedTaskResource.refuseTheKnowledgeFile` now resolves aliases (the directory part through `toRealPath()`, the last element through `readSymbolicLink`, bounded at 16 hops) and `TwoWritersOnOneDatabaseTest` holds it with two symlink refusal tests. **This risk's guard, `WriterLock`, is unchanged** and still admits aliases: the fix is scoped, the broader risk stays open.
 - **exposure**: Low but real: it needs a deployment that uses a symlinked or aliased data path
 - **mitigation**: Resolve to the real path (Path.toRealPath()) before deriving the lock file, with a fallback to the normalised path when the file does not exist yet. A local defect fix inside an already-approved contract (D4-a).
 - **owner**: agent (Level 1)

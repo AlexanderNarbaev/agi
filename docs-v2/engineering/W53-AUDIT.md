@@ -1,6 +1,6 @@
 # W53 — Audit of the subsystem integration
 
-**Status:** `ACTIVE` — the audit of the subsystem integration, one answer per subsystem with its proof.
+**Status:** `RELEASED` — the audit of the subsystem integration, one answer per subsystem with its proof. The audited wave was released into `main` on 2026-11-14 (pull request #50, squash `bcdd1a0a`); the release did not change the audited paths, so every answer below stands as written.
 **Date:** 2026-11-09 · **Branch:** `feature/w53-distributed-cognition` · **Wave:** distributed cognition
 
 This audit answers one question per subsystem: **is the W53 path a real production call path,
