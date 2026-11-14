@@ -202,6 +202,14 @@ public class DistributedTaskResource {
     public static final String DEFAULT_COGNITIVE_PATH = "data/cognitive/cognitive.sqlite";
 
     /**
+     * How many links in one path are followed before the path is taken as it stands.
+     *
+     * <p>A chain of links is followed to its end; a path that links to itself would
+     * otherwise be followed forever, so the chain has a bound.</p>
+     */
+    private static final int MAX_LINK_HOPS = 16;
+
+    /**
      * Chain A's cognitive store, opened on the first use and kept afterwards.
      *
      * @return the one store of this process
@@ -232,12 +240,84 @@ public class DistributedTaskResource {
         if (service == null) {
             return;
         }
-        java.nio.file.Path knowledge = service.storePath();
-        if (knowledge.toAbsolutePath().normalize()
-                .equals(cognitive.toAbsolutePath().normalize())) {
+        refuseTheKnowledgeFile(service.storePath(), cognitive);
+    }
+
+    /**
+     * Refuses a configuration that would put two writers on one database.
+     *
+     * <p><b>Why the files are compared, not the spellings.</b> Two paths that name one
+     * file are two writers on one SQLite database, and a symbolic link is a second name
+     * for a file: a dispatch store opened on a link to the knowledge file writes into the
+     * knowledge file. A comparison of the spelled paths cannot see that — {@code
+     * normalize()} removes {@code ..} and a trailing separator, but it does not follow a
+     * link — so the file each path names is resolved first: the directory is taken
+     * through its real path, and a link in the last element is read and followed. The
+     * file need not exist: a link may dangle, and the link is what names the other
+     * file.</p>
+     *
+     * @param knowledge the file the knowledge store lives in
+     * @param cognitive the file the dispatch store is about to be opened on
+     */
+    static void refuseTheKnowledgeFile(java.nio.file.Path knowledge, java.nio.file.Path cognitive) {
+        if (namesOneFile(knowledge, cognitive)) {
             throw new IllegalStateException("the dispatch store must not live in the file of "
-                    + "the knowledge store (" + knowledge.toAbsolutePath().normalize()
+                    + "the knowledge store (" + resolvedFile(knowledge)
                     + "): that would give this process two writers on one database");
+        }
+    }
+
+    /**
+     * Whether two paths name one file.
+     *
+     * @param knowledge the file the knowledge store lives in
+     * @param cognitive the file the dispatch store is about to be opened on
+     * @return true when both paths name the same file
+     */
+    static boolean namesOneFile(java.nio.file.Path knowledge, java.nio.file.Path cognitive) {
+        return resolvedFile(knowledge).equals(resolvedFile(cognitive));
+    }
+
+    /**
+     * The file a path names once its symbolic links are followed.
+     *
+     * @param path the path as it was written
+     * @return the file the path names
+     */
+    static java.nio.file.Path resolvedFile(java.nio.file.Path path) {
+        java.nio.file.Path current = path.toAbsolutePath().normalize();
+        for (int hop = 0; hop < MAX_LINK_HOPS; hop++) {
+            java.nio.file.Path parent = current.getParent();
+            if (parent == null || current.getFileName() == null) {
+                return current;
+            }
+            java.nio.file.Path realParent = realDirectory(parent);
+            java.nio.file.Path candidate = realParent.resolve(current.getFileName());
+            if (!java.nio.file.Files.isSymbolicLink(candidate)) {
+                return candidate;
+            }
+            try {
+                java.nio.file.Path target = java.nio.file.Files.readSymbolicLink(candidate);
+                current = (target.isAbsolute() ? target : realParent.resolve(target))
+                        .toAbsolutePath().normalize();
+            } catch (java.io.IOException unreadable) {
+                return candidate;
+            }
+        }
+        return current;
+    }
+
+    /**
+     * The real path of a directory, when the directory is there.
+     *
+     * @param directory the directory as it was written
+     * @return the directory with its links followed
+     */
+    private static java.nio.file.Path realDirectory(java.nio.file.Path directory) {
+        try {
+            return directory.toRealPath();
+        } catch (java.io.IOException missing) {
+            return directory;
         }
     }
 
