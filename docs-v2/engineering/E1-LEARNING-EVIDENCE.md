@@ -1,6 +1,6 @@
 # E1 — the rule-learning evidence base (EVID-BASE, 2026-11-14)
 
-**Status:** `COMPLETE (result INSUFFICIENT_DATA for the fold decision)` ·
+**Status:** `RESEARCH` — the measured evidence; the fold decision stays OPEN ·
 **Harness:** `matrix-brain-runtime/src/test/java/io/matrix/brain/runtime/E1LearningEvidenceTest.java`
 **Dataset:** `matrix-brain-runtime/src/test/resources/e1/` (manifest: `DATASET-MANIFEST.json`)
 **Artifact:** `E1-LEARNING-EVIDENCE.json` (written by the harness, not typed)

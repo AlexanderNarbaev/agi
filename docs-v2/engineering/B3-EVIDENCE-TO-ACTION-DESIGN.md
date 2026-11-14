@@ -1,6 +1,6 @@
 # B3 — Evidence-to-Action design (EVID-BASE, 2026-11-14)
 
-**Status:** `DESIGN` · **Branch:** `feature/evid-base-evidence-to-action`
+**Status:** `REFERENCE` — the plan the report implements · **Branch:** `feature/evid-base-evidence-to-action`
 **What this is:** the implementation plan for the directive's §7, anchored on the components
 that already exist. Nothing new is built where something existing fits.
 

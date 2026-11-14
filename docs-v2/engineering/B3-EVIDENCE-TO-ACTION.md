@@ -1,6 +1,6 @@
 # B3 — Evidence-to-Action (EVID-BASE, 2026-11-14)
 
-**Status:** `IMPLEMENTED + VERIFIED` (local integration demonstration) · **Branch:** `feature/evid-base-evidence-to-action`
+**Status:** `RESEARCH` — the implementation and its measured demonstration · **Branch:** `feature/evid-base-evidence-to-action`
 **Reproduce (from the repository root, JDK 25):**
 
     export JAVA_HOME=<JDK 25>
