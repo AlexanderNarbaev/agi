@@ -399,7 +399,7 @@ public class KnowledgeWorkbench implements AutoCloseable {
         String expanded = context.expand(question);
         String resolvedSubject = expanded.equals(question) ? null : context.resolveSubject(question);
         Answer answer = new KnowledgeRetriever(snapshot,
-                KnowledgeRetriever.DEFAULT_MINIMUM_COVERAGE, weakenedBindings(workspaceId))
+                KnowledgeRetriever.configuredMinimumCoverage(), weakenedBindings(workspaceId))
                 .answer(expanded.equals(question) ? question : expanded, level);
 
 
