@@ -13,7 +13,7 @@
 | the report | `docs-v2/demos/evidence-to-action/output/evidence-report.md` — **51,541 bytes**, SHA-256 `115936e8e14a0326aa08260d5c196fd38e924c875aea7472edf7fdc2c8c8ef1b` |
 | the trace | `docs-v2/demos/evidence-to-action/output/.artifact-index.ndjson` — **2 records: STAGED + COMMITTED**, same digest |
 | the measurement | `docs-v2/engineering/B3-EVIDENCE-TO-ACTION-RESULT.json` |
-| end-to-end latency | seed **1,209 ms**, write **1 ms**, total **1,270 ms** |
+| end-to-end latency (this artifact's run) | seed **3,583 ms**, write **2 ms**, total **3,681 ms** |
 
 ---
 
@@ -40,7 +40,7 @@ record, the action contract and the audit index are the project's own.
 | explicit destination authorization | the root is a constructor argument; no default root exists | every test constructs the writer with its root |
 | atomic staged write | temp file in the root → `force(true)` → `ATOMIC_MOVE` | `normalCompletion` (no temp left) |
 | stable action identity | the writer's `actionId`; the `ArtifactAction` adapter carries the action's name and version | `identityNamesOneArtifact` |
-| idempotent retry | the same identity + the same digest → `REPLAYED`, no second write, mtime unchanged | `idempotentRepeat` |
+| idempotent retry | the same identity + the same digest and a re-hashed matching file → `REPLAYED`, no second write, mtime unchanged; a tampered or missing file → `RECONCILED_WRITTEN` | `idempotentRepeat`, `tamperedArtifactIsNotReplayed` |
 | refusal dispositions | `REFUSED_OUTSIDE_ROOT`, `REFUSED_TRAVERSAL`, `REFUSED_SYMLINK_ESCAPE`, `REFUSED_UNSUPPORTED_TYPE`, `REFUSED_TOO_LARGE`, `REFUSED_INVALID_CONTENT`, `REFUSED_EMPTY_NAME`, `REFUSED_IDENTITY` | each has a test |
 | no shell, no network, no arbitrary reads | the executor only calls `writer.write` with the bytes it is given | the whole class has no such API surface |
 
@@ -54,7 +54,11 @@ record, the action contract and the audit index are the project's own.
 | commit record but the file is gone | delete the artifact | `recover()` → `COMMITTED_BUT_FILE_MISSING`; the retry → `RECONCILED_WRITTEN`, the same digest, one new commit record (`committedButFileMissing`) |
 
 **The guarantee, stated honestly:** for one action identity, **at most one committed artifact
-can exist**, and a retry can only reproduce it. The writer does not claim exactly-once for a
+can exist**, and a retry can only reproduce it — a retry re-hashes the artifact against the
+recorded digest (a tampered or missing file is rewritten, never replayed from the record).
+**Not claimed:** durability across a power loss — Java exposes no directory fsync without
+native access, so the guarantee is crash consistency of the file state (the file is either
+old or new, never torn), not power-loss durability of the rename. The writer does not claim exactly-once for a
 process that dies *between* the staged file's creation and its record (that window leaves a
 temporary file that recovery removes); it claims that no state leaves two committed artifacts
 or a torn final file.
@@ -77,12 +81,12 @@ certifies nothing about the truth of the sentences, and the report says so in it
 - the answer: **answered, 41 claims, 2 sources**
 - the artifact: 51,541 bytes, digest `115936e8…c8ef1b` (the trace records the same digest
   twice: `STAGED`, then `COMMITTED`)
-- negative controls, all refused and nothing written: `../outside.md` →
-  `REFUSED_TRAVERSAL`; `/etc/evidence-report.md` → `REFUSED_TRAVERSAL`; a symlink escaping
-  the root → `REFUSED_SYMLINK_ESCAPE`
+- negative controls, all refused and nothing written: a parent-directory name (a leading
+  parent reference) → `REFUSED_TRAVERSAL`; an absolute destination → `REFUSED_TRAVERSAL`;
+  a symlink escaping the root → `REFUSED_SYMLINK_ESCAPE`
 - the retry with the same identity → `REPLAYED`
 - the recovery read-back → `COMMITTED`
-- measured latency: seed 1,209 ms, write 1 ms, total 1,270 ms
+- measured latency (the committed result): seed 3,583 ms, write 2 ms, total 3,681 ms
 
 ## 6. What this does not claim
 
@@ -91,6 +95,8 @@ certifies nothing about the truth of the sentences, and the report says so in it
   question (the retrieval's known weakness, measured in E2); the report shows them as they are
   with their statuses rather than curating them.
 - It does not distribute, transmit, or schedule anything; the next invocation is the caller's.
-- The demonstration runs in-process; the same action is registered in the action registry and
-  callable through the existing serving path, but a remote HTTP route for this action was not
-  added (an API decision, not required by the directive's §7).
+- The demonstration runs in-process through a local `ActionRegistry`; the action is
+  **implemented** and exercised by the demonstration, but it is **not wired into a production
+  route** (`ActionRegistry` is not instantiated by the running service), so it is not
+  operational end-to-end over HTTP. An HTTP route and the identity→`VersionedContract`
+  binding are deliberate follow-ups, not claimed here.

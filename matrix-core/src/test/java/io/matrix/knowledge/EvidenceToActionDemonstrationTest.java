@@ -144,7 +144,10 @@ class EvidenceToActionDemonstrationTest {
         long writeNanos = System.nanoTime() - writeStart;
         assertThat(actionResult.success()).isTrue();
         ArtifactWriter.Result written = (ArtifactWriter.Result) actionResult.output();
-        assertThat(written.disposition()).isEqualTo(ArtifactWriter.Disposition.WRITTEN);
+        // against a directory that already holds this artifact (the committed demonstration)
+        // the writer reports the commit it finds; both dispositions mean the artifact is there
+        assertThat(written.disposition()).isIn(ArtifactWriter.Disposition.WRITTEN,
+                ArtifactWriter.Disposition.REPLAYED);
 
         // ── the verification ────────────────────────────────────────────────
         Path artifact = root.resolve("evidence-report.md");

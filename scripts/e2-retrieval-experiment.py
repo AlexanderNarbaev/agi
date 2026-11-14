@@ -30,10 +30,9 @@ ROOT = Path(__file__).resolve().parent.parent
 RUNNER = ROOT / "scripts" / "w51-epistemic-eval.py"
 REPORT_DIR = ROOT / "docs-v2" / "engineering"
 PROPERTY = "matrix.retrieval.minimum-coverage"
-CITATION_PROPERTY = "matrix.retrieval.citation-coverage"
 
 
-def run_one(floor: str, report: Path, force: bool, mode: str) -> dict:
+def run_one(floor: str, report: Path, force: bool) -> dict:
     """Runs the official evaluation with the floor configured, and reads its report.
 
     The official runner exits 1 whenever any case fails (that is its own
@@ -86,16 +85,16 @@ def main(argv):
 
     reports = {}
     for floor in floors:
-        prefix = "E2-CITE" if arguments.mode == "cite" else "E2-FLOOR"
+        prefix = "E2-FLOOR"
         report = REPORT_DIR / ("%s-%s.json" % (prefix, floor.replace(".", "p")))
-        reports[floor] = run_one(floor, report, arguments.force, arguments.mode)
+        reports[floor] = run_one(floor, report, arguments.force)
 
     # the comparison artifact: every case, every floor, verdict + first problem
     case_ids = [r["id"] for r in reports[floors[0]]["results"]]
     comparison = {
         "record": "E2-FLOOR-SWEEP",
         "date": "2026-11-14",
-        "property": CITATION_PROPERTY if arguments.mode == "cite" else PROPERTY,
+        "property": PROPERTY,
         "floors": floors,
         "dataset": reports[floors[0]]["dataset"],
         "datasetVersion": reports[floors[0]]["datasetVersion"],
@@ -112,7 +111,7 @@ def main(argv):
             row["problems"][floor] = first_problem(result)
         comparison["cases"][case_id] = row
 
-    out = REPORT_DIR / ("E2-CITE-SWEEP.json" if arguments.mode == "cite"
+    out = REPORT_DIR / ("E2-FLOOR-SWEEP.json" if True
                        else "E2-FLOOR-SWEEP.json")
     out.write_text(json.dumps(comparison, indent=2), encoding="utf-8")
 

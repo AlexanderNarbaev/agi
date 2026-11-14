@@ -1,13 +1,16 @@
 package io.matrix.actions;
 
+import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.LinkOption;
+import java.nio.file.OpenOption;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
@@ -20,6 +23,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 /**
  * B3 — the bounded artifact writer: the one new side effect of Evidence-to-Action.
@@ -31,10 +35,13 @@ import java.util.Optional;
  *
  * <p><b>How the boundary is enforced.</b> The target is resolved against the root's REAL
  * path ({@link Path#toRealPath}) and refused when the resolved target is not under it; a
- * name containing a separator, a {@code ..}, or a leading dot is refused before any I/O; a
- * symlink at the target is resolved and its real path is checked the same way. The content
- * is bounded ({@link #MAX_ARTIFACT_BYTES}) and validated by type before anything is
- * staged.</p>
+ * name containing a separator, a {@code ..}, or a leading dot is refused before any I/O;
+ * a symlink at the target is resolved and its real path is checked the same way. The
+ * content is bounded ({@link #MAX_ARTIFACT_BYTES}) and validated by type before anything
+ * is staged. The staged temporary file and the index are opened with
+ * {@link LinkOption#NOFOLLOW_LINKS} and created with {@code CREATE_NEW}: a symbolic link
+ * planted at either deterministic path is refused, never followed, so the write cannot be
+ * redirected outside the root.</p>
  *
  * <p><b>How a write is made recoverable.</b> The bytes go to a staged temporary file in the
  * same directory, are forced to disk, and are moved onto the final name with
@@ -42,17 +49,27 @@ import java.util.Optional;
  * append-only NDJSON index in the root ({@value #INDEX_FILE}): {@code STAGED} before the
  * move, {@code COMMITTED} after it. A crash therefore leaves exactly one of: the old file,
  * the staged file without a commit, or the final file with a commit record — and
- * {@link #recover(String)} resolves each of those dispositions explicitly.</p>
+ * {@link #recover(String)} resolves each of those dispositions explicitly. A crash
+ * <b>between the move and the COMMITTED append</b> is resolved as a commit too: a
+ * {@code STAGED} record whose final file exists with the recorded digest <i>is</i> a
+ * committed artifact, and the retry reports it instead of writing again.</p>
  *
  * <p><b>What the guarantee is.</b> For one action identity, at most one committed file
  * exists, and a retry can only reproduce it: a retry with the same identity and the same
- * content returns the recorded digest without a second write; a retry whose final file is
- * missing re-writes it and records the reconciliation.</p>
+ * content re-hashes the final file and returns the recorded digest without a second write
+ * when the file still matches; when the file is missing or its bytes changed, the retry
+ * rewrites it and records the reconciliation. The index is append-only and a torn trailing
+ * line (the expected state after a crash mid-append) is skipped on read, never repaired
+ * automatically. Two concurrent processes writing the same root are not supported; the
+ * guarantee is per identity within one process.</p>
  */
 public final class ArtifactWriter {
 
     /** The largest artifact the writer will stage, in bytes. */
     public static final int MAX_ARTIFACT_BYTES = 256 * 1024;
+
+    /** The most committed artifacts one root may hold. */
+    public static final int MAX_ARTIFACTS = 1000;
 
     /** The append-only index of every staged and committed write, in the root. */
     public static final String INDEX_FILE = ".artifact-index.ndjson";
@@ -62,7 +79,8 @@ public final class ArtifactWriter {
         WRITTEN, REPLAYED, RECONCILED_WRITTEN,
         REFUSED_OUTSIDE_ROOT, REFUSED_TRAVERSAL, REFUSED_SYMLINK_ESCAPE,
         REFUSED_UNSUPPORTED_TYPE, REFUSED_TOO_LARGE, REFUSED_INVALID_CONTENT,
-        REFUSED_EMPTY_NAME, REFUSED_IDENTITY
+        REFUSED_EMPTY_NAME, REFUSED_IDENTITY, REFUSED_WRITE_FAILED, REFUSED_BUDGET,
+        WRITTEN_TRACE_INCOMPLETE
     }
 
     /** One write's outcome. */
@@ -70,7 +88,8 @@ public final class ArtifactWriter {
                          Path path, String sha256, String reason, String tracePath) {
         public boolean written() {
             return disposition == Disposition.WRITTEN || disposition == Disposition.REPLAYED
-                    || disposition == Disposition.RECONCILED_WRITTEN;
+                    || disposition == Disposition.RECONCILED_WRITTEN
+                    || disposition == Disposition.WRITTEN_TRACE_INCOMPLETE;
         }
     }
 
@@ -147,11 +166,14 @@ public final class ArtifactWriter {
         if (invalid != null) {
             return refuse(Disposition.REFUSED_INVALID_CONTENT, actionId, fileName, invalid);
         }
+        if (Files.isSymbolicLink(index())) {
+            return refuse(Disposition.REFUSED_SYMLINK_ESCAPE, actionId, fileName,
+                    "the index is a symbolic link; the writer never follows one");
+        }
 
         Path target = root.resolve(fileName);
-        // the boundary: the target's real parent must be the authorized root
-        Path parent = target.toAbsolutePath().getParent();
         try {
+            Path parent = target.toAbsolutePath().getParent();
             if (parent == null || !Files.isDirectory(parent)
                     || !parent.toRealPath().equals(root)) {
                 return refuse(Disposition.REFUSED_OUTSIDE_ROOT, actionId, fileName,
@@ -171,26 +193,51 @@ public final class ArtifactWriter {
 
         String digest = digest(content);
         try {
-            Optional<Record> committed = committedRecord(actionId);
-            if (committed.isPresent() && !committed.get().sha256().equals(digest)) {
-                return refuse(Disposition.REFUSED_IDENTITY, actionId, fileName,
-                        "the action identity was already committed with different content; an "
-                                + "identity names one artifact, and a second content under it is "
-                                + "a new action");
+            long committedFiles = readIndex().stream()
+                    .filter(r -> r.status().equals("COMMITTED"))
+                    .map(Record::fileName).distinct().count();
+            if (committedFiles >= MAX_ARTIFACTS) {
+                return refuse(Disposition.REFUSED_BUDGET, actionId, fileName,
+                        "the root holds " + committedFiles + " committed artifacts, at "
+                                + "the budget of " + MAX_ARTIFACTS);
             }
-            if (committed.isPresent() && committed.get().sha256().equals(digest)) {
-                Path finalPath = root.resolve(committed.get().fileName());
-                if (Files.isRegularFile(finalPath)) {
-                    return new Result(Disposition.REPLAYED, actionId, fileName, finalPath, digest,
-                            "the same action identity and content were already committed",
-                            index().toString());
+            Optional<Record> sameName = readIndex().stream()
+                    .filter(r -> r.status().equals("COMMITTED") && r.fileName().equals(fileName)
+                            && !r.actionId().equals(actionId))
+                    .findFirst();
+            if (sameName.isPresent()) {
+                return refuse(Disposition.REFUSED_IDENTITY, actionId, fileName,
+                        "the artifact name is already committed by the action identity "
+                                + sameName.get().actionId() + "; one artifact has one identity");
+            }
+            Optional<Record> commit = effectiveCommit(actionId);
+            if (commit.isPresent()) {
+                if (!commit.get().fileName().equals(fileName)) {
+                    // an identity names ONE artifact: a record naming another file must not
+                    // redirect this request, and a forged one must not suppress it silently
+                    return refuse(Disposition.REFUSED_IDENTITY, actionId, fileName,
+                            "the action identity is committed to the artifact " + commit.get()
+                                    .fileName() + ", not " + fileName);
                 }
-                // the commit record exists and the file does not: an honest reconciliation
+                if (!commit.get().sha256().equals(digest)) {
+                    return refuse(Disposition.REFUSED_IDENTITY, actionId, fileName,
+                            "the action identity was already committed with different content; an "
+                                    + "identity names one artifact, and a second content under it is "
+                                    + "a new action");
+                }
+                Path finalPath = root.resolve(commit.get().fileName());
+                if (Files.isRegularFile(finalPath)
+                        && digest(finalPath).equals(commit.get().sha256())) {
+                    return new Result(Disposition.REPLAYED, actionId, fileName, finalPath, digest,
+                            "the same action identity and content were already committed, and the "
+                                    + "artifact still matches its recorded digest", index().toString());
+                }
+                // the commit record exists and the artifact is missing or changed: reconcile
                 return stagedWrite(actionId, fileName, content, digest, Disposition.RECONCILED_WRITTEN);
             }
             return stagedWrite(actionId, fileName, content, digest, Disposition.WRITTEN);
         } catch (IOException failure) {
-            return new Result(Disposition.REFUSED_INVALID_CONTENT, actionId, fileName, target,
+            return new Result(Disposition.REFUSED_WRITE_FAILED, actionId, fileName, target,
                     digest, "the write failed: " + failure.getMessage(), index().toString());
         }
     }
@@ -199,17 +246,75 @@ public final class ArtifactWriter {
     private Result stagedWrite(String actionId, String fileName, byte[] content, String digest,
                                Disposition success) throws IOException {
         Path staged = root.resolve("." + fileName + ".tmp-" + sanitize(actionId));
-        Files.write(staged, content, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING,
-                StandardOpenOption.WRITE);
-        try (FileChannel channel = FileChannel.open(staged, StandardOpenOption.WRITE)) {
-            channel.force(true);
+        if (Files.isSymbolicLink(staged)) {
+            // never follow a planted link: a symbolic link at the deterministic staged
+            // path would redirect the bytes outside the root
+            return refuse(Disposition.REFUSED_SYMLINK_ESCAPE, actionId, fileName,
+                    "a symbolic link is planted at the staged path " + staged.getFileName());
         }
-        append(new Record(actionId, fileName, digest, "STAGED", content.length, Instant.now().toString()));
+        Files.deleteIfExists(staged);
+        try {
+            Set<OpenOption> options = Set.of(StandardOpenOption.CREATE_NEW, StandardOpenOption.WRITE,
+                    LinkOption.NOFOLLOW_LINKS);
+            try (FileChannel channel = FileChannel.open(staged, options)) {
+                ByteBuffer buffer = ByteBuffer.wrap(content);
+                while (buffer.hasRemaining()) {
+                    channel.write(buffer);
+                }
+                channel.force(true);
+            }
+        } catch (IOException failure) {
+            // nothing was moved: remove the partial staged file so a refusal leaves no residue
+            Files.deleteIfExists(staged);
+            throw failure;
+        }
+        append(new Record(actionId, fileName, digest, "STAGED", content.length,
+                Instant.now().toString()));
         Path target = root.resolve(fileName);
-        Files.move(staged, target, StandardCopyOption.ATOMIC_MOVE,
-                StandardCopyOption.REPLACE_EXISTING);
-        append(new Record(actionId, fileName, digest, "COMMITTED", content.length, Instant.now().toString()));
+        try {
+            Files.move(staged, target, StandardCopyOption.ATOMIC_MOVE);
+        } catch (IOException failure) {
+            // the move failed: the staged file must not be left behind
+            Files.deleteIfExists(staged);
+            throw failure;
+        }
+        try {
+            append(new Record(actionId, fileName, digest, "COMMITTED", content.length,
+                    Instant.now().toString()));
+        } catch (IOException incomplete) {
+            // the artifact IS committed; only its trace line is missing. The retry reads
+            // the STAGED record and the file's digest and reports it (effectiveCommit), so
+            // the state is honest and recoverable — the caller must not be told "refused".
+            return new Result(Disposition.WRITTEN_TRACE_INCOMPLETE, actionId, fileName, target,
+                    digest, "the artifact was committed but its trace line could not be "
+                    + "appended: " + incomplete.getMessage(), index().toString());
+        }
         return new Result(success, actionId, fileName, target, digest, null, index().toString());
+    }
+
+    /**
+     * The commit of an identity, including the crash window between the move and the
+     * COMMITTED append: a {@code STAGED} record whose final file exists with the recorded
+     * digest is treated as committed.
+     */
+    public Optional<Record> effectiveCommit(String actionId) throws IOException {
+        List<Record> records = readIndex();
+        Optional<Record> committed = records.stream()
+                .filter(r -> r.actionId().equals(actionId) && r.status().equals("COMMITTED"))
+                .reduce((first, second) -> second);
+        if (committed.isPresent()) {
+            return committed;
+        }
+        Optional<Record> staged = records.stream()
+                .filter(r -> r.actionId().equals(actionId) && r.status().equals("STAGED"))
+                .reduce((first, second) -> second);
+        if (staged.isPresent()) {
+            Path finalPath = root.resolve(staged.get().fileName());
+            if (Files.isRegularFile(finalPath) && digest(finalPath).equals(staged.get().sha256())) {
+                return staged;
+            }
+        }
+        return Optional.empty();
     }
 
     /**
@@ -224,26 +329,39 @@ public final class ArtifactWriter {
             List<Record> records = readIndex();
             boolean staged = records.stream().anyMatch(r -> r.actionId().equals(actionId)
                     && r.status().equals("STAGED"));
-            Optional<Record> committed = committedRecord(actionId);
-            Path stagedFile = null;
-            for (String candidate : stagedNames()) {
-                if (candidate.contains(sanitize(actionId))) {
-                    stagedFile = root.resolve(candidate);
+            Optional<Record> committed = records.stream()
+                    .filter(r -> r.actionId().equals(actionId) && r.status().equals("COMMITTED"))
+                    .reduce((first, second) -> second);
+            // the exact staged names this identity can have left behind, derived from its
+            // records — never a substring match, so a committed artifact is never deleted
+            List<String> stagedNames = new ArrayList<>();
+            for (Record record : records) {
+                if (record.actionId().equals(actionId) && record.status().equals("STAGED")) {
+                    stagedNames.add("." + record.fileName() + ".tmp-" + sanitize(actionId));
                 }
             }
-            if (stagedFile != null) {
-                Files.deleteIfExists(stagedFile);
+            boolean stagedRemoved = false;
+            for (String name : stagedNames) {
+                Path candidate = root.resolve(name);
+                if (Files.isRegularFile(candidate, LinkOption.NOFOLLOW_LINKS)
+                        || Files.isSymbolicLink(candidate)) {
+                    Files.deleteIfExists(candidate);
+                    stagedRemoved = true;
+                }
             }
             state.put("actionId", actionId);
             state.put("hadStaged", staged);
             state.put("hadCommitted", committed.isPresent());
-            state.put("stagedRemoved", stagedFile != null);
-            if (committed.isPresent()) {
-                Path finalPath = root.resolve(committed.get().fileName());
+            state.put("stagedRemoved", stagedRemoved);
+            Optional<Record> effective = effectiveCommit(actionId);
+            if (effective.isPresent()) {
+                Path finalPath = root.resolve(effective.get().fileName());
                 boolean present = Files.isRegularFile(finalPath);
+                boolean matches = present && digest(finalPath).equals(effective.get().sha256());
                 state.put("finalPresent", present);
-                state.put("disposition", present ? "COMMITTED" : "COMMITTED_BUT_FILE_MISSING");
-                state.put("recoversOnRetry", !present);
+                state.put("finalMatchesDigest", matches);
+                state.put("disposition", matches ? "COMMITTED" : "COMMITTED_BUT_CONTENT_DIFFERS");
+                state.put("recoversOnRetry", !matches);
             } else {
                 state.put("disposition", "NO_COMMIT");
                 state.put("recoversOnRetry", true);
@@ -262,15 +380,29 @@ public final class ArtifactWriter {
                 .reduce((first, second) -> second);
     }
 
-    /** Every record of the index, oldest first. */
+    /**
+     * Every readable record of the index, oldest first. A torn line — the state a crash
+     * mid-append leaves — is skipped, not repaired: the index is evidence, not state to
+     * rewrite.
+     */
     public List<Record> readIndex() throws IOException {
         List<Record> records = new ArrayList<>();
-        if (!Files.isRegularFile(index())) {
+        if (!Files.isRegularFile(index(), LinkOption.NOFOLLOW_LINKS)) {
             return records;
         }
         for (String line : Files.readAllLines(index(), StandardCharsets.UTF_8)) {
-            if (!line.isBlank()) {
-                records.add(JSON.readValue(line, Record.class));
+            if (line.isBlank()) {
+                continue;
+            }
+            Record record;
+            try {
+                record = JSON.readValue(line, Record.class);
+            } catch (IOException torn) {
+                // a partial append: skip it; the write that appends next is unaffected
+                continue;
+            }
+            if (validRecord(record)) {
+                records.add(record);
             }
         }
         return records;
@@ -279,13 +411,21 @@ public final class ArtifactWriter {
     private void append(Record record) throws IOException {
         String line = JSON.writeValueAsString(record) + "\n";
         Files.write(index(), line.getBytes(StandardCharsets.UTF_8), StandardOpenOption.CREATE,
-                StandardOpenOption.APPEND);
+                StandardOpenOption.APPEND, StandardOpenOption.WRITE, LinkOption.NOFOLLOW_LINKS);
     }
 
-    private List<String> stagedNames() throws IOException {
-        try (var stream = Files.list(root)) {
-            return stream.map(p -> p.getFileName().toString()).filter(n -> n.contains(".tmp-")).toList();
-        }
+    /** A record is evidence only if it names a plain artifact and a real digest. */
+    private static boolean validRecord(Record record) {
+        return record != null
+                && record.actionId() != null && !record.actionId().isBlank()
+                && record.fileName() != null && !record.fileName().isBlank()
+                && !record.fileName().contains("/") && !record.fileName().contains("\\")
+                && !record.fileName().contains("..") && !record.fileName().startsWith(".")
+                && !record.fileName().equals(INDEX_FILE)
+                && (record.fileName().endsWith(".md") || record.fileName().endsWith(".json"))
+                && record.sha256() != null && record.sha256().matches("[0-9a-f]{64}")
+                && ("STAGED".equals(record.status()) || "COMMITTED".equals(record.status()))
+                && record.bytes() > 0;
     }
 
     private String validateContent(String fileName, byte[] content) {
@@ -294,8 +434,14 @@ public final class ArtifactWriter {
             return "the content is empty";
         }
         if (fileName.endsWith(".json")) {
-            try {
-                JSON.readTree(content);
+            try (JsonParser parser = JSON.getFactory().createParser(content)) {
+                var node = parser.readValueAsTree();
+                if (node == null || !(node.isObject() || node.isArray())) {
+                    return "the .json artifact must be one JSON object or array";
+                }
+                if (parser.nextToken() != null) {
+                    return "the .json artifact carries content after its first JSON value";
+                }
             } catch (IOException unreadable) {
                 return "the .json artifact does not parse: " + unreadable.getMessage();
             }
@@ -314,6 +460,15 @@ public final class ArtifactWriter {
         try {
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
             return HexFormat.of().formatHex(digest.digest(content));
+        } catch (NoSuchAlgorithmException absent) {
+            throw new IllegalStateException("SHA-256 is unavailable", absent);
+        }
+    }
+
+    private static String digest(Path file) throws IOException {
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            return HexFormat.of().formatHex(digest.digest(Files.readAllBytes(file)));
         } catch (NoSuchAlgorithmException absent) {
             throw new IllegalStateException("SHA-256 is unavailable", absent);
         }

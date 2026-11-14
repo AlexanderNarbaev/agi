@@ -85,12 +85,12 @@ documents named as current state.
 |---|---|---|
 | baseline reproduced on the packaged jar | **18/29**, the documented eleven failing ids | `E2-FLOOR-0p25.json` |
 | H1 — the answer floor is too restrictive | floor 0.0 → **15/29** (answerable 4/8, **unanswerable 1/6**): recovers `A-02`,`A-04`, breaks five `U-*` → **rejected** | `E2-FLOOR-SWEEP.json` |
-| the two-threshold hypothesis (answer floor 0.25 + citation floor 0.0/0.10) | **17/29**, unanswerable 3/6 → **rejected and reverted before commit**: the quantity gate reads the *cited* set, so the widened evidence let `U-01` answer a "boiling point" question with 14 plate-tectonics claims | `E2-CITE-SWEEP.json` |
+| the two-threshold hypothesis (answer floor 0.25 + citation floor 0.0/0.10) | **17/29**, unanswerable 3/6 → **rejected and reverted before commit**: the quantity gate reads the *cited* set, so the widened evidence let `U-01` answer a "boiling point" question with 14 plate-tectonics claims. The run needed a temporary build whose knob is **not in this tree**, so the artifacts were removed; the numbers are the record of the experiment's result | `E2-RETRIEVAL-EXPERIMENT.md` §3 |
 | the one kept production change | `matrix.retrieval.minimum-coverage` knob (default unchanged; contract test; 13/13 in the class) | commit `51b5d3a0` |
 | **H2 — the status filter removes legitimate evidence** | **REFUTED**: every gold claim is `SUPPORTED` (citable); the filter removes none | `E2-CANDIDATE-RECALL.json` |
-| **H3 — the text match misses legitimate claims** | **CONFIRMED as the residual**: 2 of 18 required propositions are cited at no floor (no term match); the floor-0 recall is 3/4/6 of 18 at K=1/5/10, MRR 0.2593; some already-cited propositions rank 129–303 | `E2-CANDIDATE-RECALL.json` |
+| **H3 — the text match misses legitimate claims** | **CONFIRMED as the residual**: 11 of 27 proposition entries are cited at no floor (no term match); of the 16 cited, Recall@1/5/10 = 3/4/6, MRR 0.2593 (0.1536 over all 27); some already-cited propositions rank 129–368 | `E2-CANDIDATE-RECALL.json` |
 | **H4 — downstream** | **CONFIRMED for 3 cases**: `F-02`, `R-04`, `R-05` are unaffected by every floor setting | `E2-FLOOR-SWEEP.json` |
-| the floor sweep's full interval | 0.25→18/29 · 0.15→17/29 · 0.10→15/29 · 0.0→15/29; no floor separates the answerable gains from the abstention losses → **no production change** | `E2-FLOOR-SWEEP.json` |
+| the floor sweep's full interval | 0.25→18/29 · 0.15→17/29 · 0.10→15/29 · 0.0→15/29; no floor separates the answerable gains from the abstention losses → **no production change** | `E2-FLOOR-0p25/0p15/0p10/0p0.json` (the SWEEP artifact covers 0.10 and 0.15; reproduce with `--force`) |
 | the residual's nature | the two never-cited propositions require the semantic relation subduction→trenches; the concept's `definition` is **empty** and no relation edge exists → **enrichment gap, owner-level**, not a ranking patch | `E2-RETRIEVAL-EXPERIMENT.md` §4d |
 
 The full reading is in `E2-RETRIEVAL-EXPERIMENT.md`. Next leverage: H3 (the ranking —
@@ -105,7 +105,7 @@ independent of the retrieval threshold.
 | dataset | real: **108 entries (64/44)**, 20 distinct inputs, 24 distinct features; synthetic: **144 (99/45)**, documented content rule, seed 42, deterministic (sha256 stable) | `e1/DATASET-MANIFEST.json`, `scripts/e1-build-dataset.py` |
 | the production training window | the last 20 entries are **20 positive / 0 negative, 3 distinct inputs** — one class | `E1-LEARNING-EVIDENCE.json` |
 | the real chronological test partition | **21/21 positive** — the 1.000 accuracy is degenerate (balanced 0.500) | same |
-| the fold's cost on real data | **24 distinct features → 23 folded values: 1 exact, 1 CROSS-LABEL collision**; 46 informative bits in train, 84 over the log | same |
+| the fold's cost on real data | **24 distinct features → 23 folded values: 1 exact, 1 CROSS-LABEL collision**; 46 informative bits in train, **71** over the log (the library counter's width defect was found in review and fixed; see `E1-LEARNING-EVIDENCE.md` §6) | same |
 | fold vs informative projection | no measurable held-out difference on either split (real test degenerate; synthetic test 0.68–0.71 fold vs 0.54–0.68 projection) | same |
 | the A/B/C decision | **INSUFFICIENT_DATA** — needs a real dataset with both classes in the evaluation window and >24 distinct features; ADR §4.4 stays OPEN; K_MAX, trainer width and the fold untouched | `E1-LEARNING-EVIDENCE.md` §4 |
 

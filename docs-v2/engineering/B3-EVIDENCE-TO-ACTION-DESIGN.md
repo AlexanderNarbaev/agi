@@ -22,7 +22,7 @@ directory — then verifies the artifact and records an auditable trace.
 | evidence retrieval | `KnowledgeRetriever` (already measured in E2) | unchanged; the report cites what it cites and marks the rest |
 | the action contract | `io.matrix.actions.ActionRegistry.Action` (`ActionExecutor`, preconditions/postconditions, `ActionResult`) | the new file action IS an `Action` registered in the registry |
 | stable action identity | `io.matrix.actions.VersionedContract` (`name`, `version`, `domainHash`) | the idempotency key is the action's versioned identity + the input hash |
-| the audit/trace substrate | `io.matrix.audit.HashChain` / `HashChain` links; `io.matrix.api.AuditLogResource` | the execution trace is appended to the existing hash chain, so it survives restart and is tamper-evident |
+| the audit/trace substrate | `io.matrix.audit.HashChain` / `HashChain` links exist, but they are **not** wired into this first action | the execution trace is an append-only NDJSON index in the allowed root, with the digest recorded before and after the move. It survives restart and is inspectable; it is **not** hash-chained in this iteration (a follow-up, recorded as a residual risk) |
 | the plugin sandbox (for context) | `io.matrix.plugin.DeclarativeSandbox` | not used for file writes; the file action has its own explicit path boundary (below) |
 
 ## 3. The security boundary (the only new side effect)
@@ -66,26 +66,30 @@ New side effect: writing one artifact into one explicitly authorized directory.
 | normal completion | artifact exists, digest recorded, trace appended |
 | repeated request, same identity | second call returns the same digest, no second write (mtime/ inode unchanged) |
 | crash before commit | staged temp file removed on recovery; no final file; the trace records `STAGED` only |
-| crash after staged write, before the outcome record | recovery sees the staged file and no commit record; the final file is absent; the staged file is discarded |
-| crash after commit, before the response | recovery sees the committed digest + the final file; no duplicate write on retry |
+| crash after staged write, before the outcome record | if the move had not happened yet: the staged file is discarded, no artifact; if the move **had** happened (the dangerous window): the final file exists and its digest matches the STAGED record, which **is** the commit — the retry reports `REPLAYED` and never overwrites |
+| crash after commit, before the response | recovery sees the committed digest + the final file; no duplicate write on retry. A crash between the move and the COMMITTED append is resolved the same way (see above) |
 | unauthorized destination | `REFUSED_OUTSIDE_ROOT`, nothing written |
 | symlink escape | `REFUSED_SYMLINK_ESCAPE`, nothing written |
 | missing source evidence | the report is still valid, every unsupported section marked `UNGROUNDED` |
 | contradictory evidence | the contradicted claim is reported with both sides named |
-| invalid artifact content | refused before the write (the content validator runs on the bytes) |
-| size exhaustion | `REFUSED_TOO_LARGE` |
+| invalid artifact content | refused before the write: `.md` must open with a heading, `.json` must be exactly one object or array to end of input |
+| size exhaustion | `REFUSED_TOO_LARGE` per artifact (256 KiB) and `REFUSED_BUDGET` when the root already holds 1000 committed artifacts |
 
 At-most-once holds for a completed write; the guarantee is stated as: *one committed file per
-action identity, and a retry can only reproduce it*.
+action identity, and a retry re-hashes the artifact and can only reproduce it*. The index is
+append-only, validated on read, and a torn trailing line is skipped; an attacker who can
+write the root can still deny writes (by planting a forged record for an identity), which is
+recorded as a residual risk — the writer never follows a link, never writes outside the root,
+and never certifies a digest it has not measured.
 
 ## 6. The demonstration
 
-`scripts/b3-evidence-to-action.py` (or a JUnit integration test when the workflow is in-process):
+`scripts/b3-demonstrate.sh` (a JUnit integration test drives the in-process workflow):
 1. seed the plate-tectonics workspace from the packaged corpus (real documents);
 2. ask the E2 question that the retrieval answers well (`A-01`);
 3. assemble the report from the answer's citations + the unmatched terms + the limitations;
-4. execute the bounded file action into `docs-v2/demos/local-learning-loop/artifact/` (a new
-   allowed directory under the demo);
+4. execute the bounded file action into the demonstration output directory
+   (`docs-v2/demos/evidence-to-action/output/`, created by the runbook);
 5. verify: file exists, JSON/Markdown parses, every cited claim id is in the workspace, the
    SHA-256 matches the trace;
 6. the negative control: a second request targeting `../outside` and a symlinked escape —

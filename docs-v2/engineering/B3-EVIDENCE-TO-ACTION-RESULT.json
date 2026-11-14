@@ -26,7 +26,7 @@
   }, {
     "actionId" : "b3-symlink",
     "fileName" : "escape.md",
-    "outcome" : "REFUSED_SYMLINK_ESCAPE: a symbolic link at the target resolves outside the root: /home/alexandr-narbaev/Projects/agi/data/tmp/junit-9909836936435733778/symlink-target.md"
+    "outcome" : "REFUSED_SYMLINK_ESCAPE: a symbolic link at the target resolves outside the root: /home/alexandr-narbaev/Projects/agi/data/tmp/junit-13000890055369718415/symlink-target.md"
   } ],
   "retryDisposition" : "REPLAYED (no second write)",
   "recovery" : {
@@ -35,6 +35,7 @@
     "hadCommitted" : true,
     "stagedRemoved" : false,
     "finalPresent" : true,
+    "finalMatchesDigest" : true,
     "disposition" : "COMMITTED",
     "recoversOnRetry" : false
   },
@@ -46,18 +47,18 @@
     "sha256" : "115936e8e14a0326aa08260d5c196fd38e924c875aea7472edf7fdc2c8c8ef1b",
     "status" : "STAGED",
     "bytes" : 51541,
-    "timestamp" : "2026-11-14T14:25:45.096425206Z"
+    "timestamp" : "2026-11-14T14:42:52.110831955Z"
   }, {
     "actionId" : "b3-demo-1",
     "fileName" : "evidence-report.md",
     "sha256" : "115936e8e14a0326aa08260d5c196fd38e924c875aea7472edf7fdc2c8c8ef1b",
     "status" : "COMMITTED",
     "bytes" : 51541,
-    "timestamp" : "2026-11-14T14:25:45.096620674Z"
+    "timestamp" : "2026-11-14T14:42:52.111345463Z"
   } ],
   "latencyMillis" : {
-    "write" : 1,
-    "seed" : 1226,
-    "total" : 1295
+    "total" : 3681,
+    "seed" : 3583,
+    "write" : 2
   }
 }

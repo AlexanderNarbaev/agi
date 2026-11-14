@@ -14,9 +14,9 @@
       "distinctReplies" : 135
     },
     "partitions" : {
+      "train" : 88,
       "test" : 28,
-      "validation" : 28,
-      "train" : 88
+      "validation" : 28
     },
     "partitionsDisjoint" : true,
     "informativeBitsOnTrain" : 35,
@@ -27,7 +27,7 @@
       "distinctFoldedValues" : 141,
       "exactCollisions" : 3,
       "crossLabelCollisions" : 0,
-      "informativeBits" : 48
+      "informativeBits" : 35
     },
     "representations" : {
       "productionFold" : [ {
@@ -42,8 +42,8 @@
           "tn" : 1,
           "fp" : 10,
           "fn" : 4,
-          "trainNanos" : 14583386,
-          "predictNanos" : 686819
+          "trainNanos" : 13488261,
+          "predictNanos" : 840445
         },
         "test" : {
           "accuracy" : 0.6785714285714286,
@@ -55,8 +55,8 @@
           "tn" : 1,
           "fp" : 7,
           "fn" : 2,
-          "trainNanos" : 9798445,
-          "predictNanos" : 410547
+          "trainNanos" : 8748635,
+          "predictNanos" : 358356
         },
         "deterministicRepeatEqual" : true
       }, {
@@ -71,8 +71,8 @@
           "tn" : 0,
           "fp" : 11,
           "fn" : 2,
-          "trainNanos" : 7873493,
-          "predictNanos" : 174711
+          "trainNanos" : 7146163,
+          "predictNanos" : 158589
         },
         "test" : {
           "accuracy" : 0.7142857142857143,
@@ -84,8 +84,8 @@
           "tn" : 1,
           "fp" : 7,
           "fn" : 1,
-          "trainNanos" : 7217212,
-          "predictNanos" : 75323
+          "trainNanos" : 6896493,
+          "predictNanos" : 70132
         }
       }, {
         "seed" : 44,
@@ -99,8 +99,8 @@
           "tn" : 1,
           "fp" : 10,
           "fn" : 0,
-          "trainNanos" : 7191794,
-          "predictNanos" : 62869
+          "trainNanos" : 6856697,
+          "predictNanos" : 60183
         },
         "test" : {
           "accuracy" : 0.7142857142857143,
@@ -112,8 +112,8 @@
           "tn" : 0,
           "fp" : 8,
           "fn" : 0,
-          "trainNanos" : 7104979,
-          "predictNanos" : 61967
+          "trainNanos" : 5910884,
+          "predictNanos" : 60454
         }
       } ],
       "informativeProjection" : [ {
@@ -128,8 +128,8 @@
           "tn" : 1,
           "fp" : 10,
           "fn" : 3,
-          "trainNanos" : 8455645,
-          "predictNanos" : 53652
+          "trainNanos" : 7534846,
+          "predictNanos" : 55545
         },
         "test" : {
           "accuracy" : 0.6071428571428571,
@@ -141,8 +141,8 @@
           "tn" : 0,
           "fp" : 8,
           "fn" : 3,
-          "trainNanos" : 7422120,
-          "predictNanos" : 52810
+          "trainNanos" : 6565699,
+          "predictNanos" : 48572
         },
         "deterministicRepeatEqual" : true
       }, {
@@ -157,8 +157,8 @@
           "tn" : 2,
           "fp" : 9,
           "fn" : 4,
-          "trainNanos" : 6751031,
-          "predictNanos" : 48682
+          "trainNanos" : 5807770,
+          "predictNanos" : 49714
         },
         "test" : {
           "accuracy" : 0.6785714285714286,
@@ -170,8 +170,8 @@
           "tn" : 1,
           "fp" : 7,
           "fn" : 2,
-          "trainNanos" : 6304887,
-          "predictNanos" : 42630
+          "trainNanos" : 5276448,
+          "predictNanos" : 40015
         }
       }, {
         "seed" : 44,
@@ -185,8 +185,8 @@
           "tn" : 0,
           "fp" : 11,
           "fn" : 3,
-          "trainNanos" : 5622235,
-          "predictNanos" : 42741
+          "trainNanos" : 5369674,
+          "predictNanos" : 37982
         },
         "test" : {
           "accuracy" : 0.5357142857142857,
@@ -198,8 +198,8 @@
           "tn" : 0,
           "fp" : 8,
           "fn" : 5,
-          "trainNanos" : 5590555,
-          "predictNanos" : 38502
+          "trainNanos" : 5289803,
+          "predictNanos" : 36498
         }
       } ],
       "randomProjection" : [ {
@@ -214,8 +214,8 @@
           "tn" : 9,
           "fp" : 2,
           "fn" : 13,
-          "trainNanos" : 6905432,
-          "predictNanos" : 32812
+          "trainNanos" : 7739963,
+          "predictNanos" : 31469
         },
         "test" : {
           "accuracy" : 0.4642857142857143,
@@ -227,8 +227,8 @@
           "tn" : 7,
           "fp" : 1,
           "fn" : 14,
-          "trainNanos" : 6184529,
-          "predictNanos" : 31489
+          "trainNanos" : 6092738,
+          "predictNanos" : 30688
         },
         "deterministicRepeatEqual" : true
       }, {
@@ -243,8 +243,8 @@
           "tn" : 11,
           "fp" : 0,
           "fn" : 17,
-          "trainNanos" : 5472802,
-          "predictNanos" : 31960
+          "trainNanos" : 6440503,
+          "predictNanos" : 33102
         },
         "test" : {
           "accuracy" : 0.2857142857142857,
@@ -256,8 +256,8 @@
           "tn" : 8,
           "fp" : 0,
           "fn" : 20,
-          "trainNanos" : 5026367,
-          "predictNanos" : 41117
+          "trainNanos" : 6255985,
+          "predictNanos" : 30938
         }
       }, {
         "seed" : 44,
@@ -271,8 +271,8 @@
           "tn" : 9,
           "fp" : 2,
           "fn" : 13,
-          "trainNanos" : 4923243,
-          "predictNanos" : 39816
+          "trainNanos" : 6116132,
+          "predictNanos" : 30017
         },
         "test" : {
           "accuracy" : 0.4642857142857143,
@@ -284,11 +284,15 @@
           "tn" : 7,
           "fp" : 1,
           "fn" : 14,
-          "trainNanos" : 5178626,
-          "predictNanos" : 30488
+          "trainNanos" : 5640334,
+          "predictNanos" : 28754
         }
       } ]
     }
+  },
+  "leakage" : {
+    "syntheticRealExactTextOverlap" : 0,
+    "realTestInputsSeenInTrain" : "17 of 21"
   },
   "real" : {
     "dataset" : "real",
@@ -300,9 +304,9 @@
       "distinctReplies" : 23
     },
     "partitions" : {
+      "train" : 65,
       "test" : 21,
-      "validation" : 22,
-      "train" : 65
+      "validation" : 22
     },
     "partitionsDisjoint" : true,
     "informativeBitsOnTrain" : 46,
@@ -313,7 +317,7 @@
       "distinctFoldedValues" : 23,
       "exactCollisions" : 1,
       "crossLabelCollisions" : 1,
-      "informativeBits" : 84
+      "informativeBits" : 71
     },
     "representations" : {
       "productionFold" : [ {
@@ -328,8 +332,8 @@
           "tn" : 2,
           "fp" : 1,
           "fn" : 0,
-          "trainNanos" : 3976572,
-          "predictNanos" : 42561
+          "trainNanos" : 4051619,
+          "predictNanos" : 45746
         },
         "test" : {
           "accuracy" : 1.0,
@@ -341,8 +345,8 @@
           "tn" : 0,
           "fp" : 0,
           "fn" : 0,
-          "trainNanos" : 3917781,
-          "predictNanos" : 28153
+          "trainNanos" : 4007015,
+          "predictNanos" : 26761
         },
         "deterministicRepeatEqual" : true
       }, {
@@ -357,8 +361,8 @@
           "tn" : 2,
           "fp" : 1,
           "fn" : 1,
-          "trainNanos" : 3576455,
-          "predictNanos" : 36359
+          "trainNanos" : 3654430,
+          "predictNanos" : 36459
         },
         "test" : {
           "accuracy" : 1.0,
@@ -370,8 +374,8 @@
           "tn" : 0,
           "fp" : 0,
           "fn" : 0,
-          "trainNanos" : 3637851,
-          "predictNanos" : 23644
+          "trainNanos" : 3677784,
+          "predictNanos" : 22502
         }
       }, {
         "seed" : 44,
@@ -385,8 +389,8 @@
           "tn" : 2,
           "fp" : 1,
           "fn" : 1,
-          "trainNanos" : 3735987,
-          "predictNanos" : 38182
+          "trainNanos" : 3797750,
+          "predictNanos" : 38112
         },
         "test" : {
           "accuracy" : 1.0,
@@ -398,8 +402,8 @@
           "tn" : 0,
           "fp" : 0,
           "fn" : 0,
-          "trainNanos" : 3716220,
-          "predictNanos" : 25258
+          "trainNanos" : 3790747,
+          "predictNanos" : 23875
         }
       } ],
       "informativeProjection" : [ {
@@ -414,8 +418,8 @@
           "tn" : 3,
           "fp" : 0,
           "fn" : 1,
-          "trainNanos" : 3734924,
-          "predictNanos" : 44774
+          "trainNanos" : 3811506,
+          "predictNanos" : 47800
         },
         "test" : {
           "accuracy" : 1.0,
@@ -427,8 +431,8 @@
           "tn" : 0,
           "fp" : 0,
           "fn" : 0,
-          "trainNanos" : 3712102,
-          "predictNanos" : 23685
+          "trainNanos" : 3835571,
+          "predictNanos" : 25568
         },
         "deterministicRepeatEqual" : true
       }, {
@@ -443,8 +447,8 @@
           "tn" : 3,
           "fp" : 0,
           "fn" : 2,
-          "trainNanos" : 3933220,
-          "predictNanos" : 33563
+          "trainNanos" : 4068751,
+          "predictNanos" : 34535
         },
         "test" : {
           "accuracy" : 1.0,
@@ -456,8 +460,8 @@
           "tn" : 0,
           "fp" : 0,
           "fn" : 0,
-          "trainNanos" : 3956514,
-          "predictNanos" : 24947
+          "trainNanos" : 4055205,
+          "predictNanos" : 25688
         }
       }, {
         "seed" : 44,
@@ -471,8 +475,8 @@
           "tn" : 2,
           "fp" : 1,
           "fn" : 1,
-          "trainNanos" : 4185688,
-          "predictNanos" : 34476
+          "trainNanos" : 4267727,
+          "predictNanos" : 32241
         },
         "test" : {
           "accuracy" : 1.0,
@@ -484,8 +488,8 @@
           "tn" : 0,
           "fp" : 0,
           "fn" : 0,
-          "trainNanos" : 4184917,
-          "predictNanos" : 62057
+          "trainNanos" : 4325365,
+          "predictNanos" : 92394
         }
       } ],
       "randomProjection" : [ {
@@ -500,8 +504,8 @@
           "tn" : 3,
           "fp" : 0,
           "fn" : 17,
-          "trainNanos" : 4433897,
-          "predictNanos" : 33042
+          "trainNanos" : 4573052,
+          "predictNanos" : 38954
         },
         "test" : {
           "accuracy" : 0.0,
@@ -513,8 +517,8 @@
           "tn" : 0,
           "fp" : 0,
           "fn" : 21,
-          "trainNanos" : 4384073,
-          "predictNanos" : 27311
+          "trainNanos" : 4565679,
+          "predictNanos" : 34715
         },
         "deterministicRepeatEqual" : true
       }, {
@@ -529,8 +533,8 @@
           "tn" : 3,
           "fp" : 0,
           "fn" : 18,
-          "trainNanos" : 4563642,
-          "predictNanos" : 30828
+          "trainNanos" : 4711043,
+          "predictNanos" : 32842
         },
         "test" : {
           "accuracy" : 0.0,
@@ -542,8 +546,8 @@
           "tn" : 0,
           "fp" : 0,
           "fn" : 21,
-          "trainNanos" : 4557571,
-          "predictNanos" : 27331
+          "trainNanos" : 4697466,
+          "predictNanos" : 29857
         }
       }, {
         "seed" : 44,
@@ -557,8 +561,8 @@
           "tn" : 3,
           "fp" : 0,
           "fn" : 18,
-          "trainNanos" : 4670505,
-          "predictNanos" : 24827
+          "trainNanos" : 4807624,
+          "predictNanos" : 26210
         },
         "test" : {
           "accuracy" : 0.0,
@@ -570,8 +574,8 @@
           "tn" : 0,
           "fp" : 0,
           "fn" : 21,
-          "trainNanos" : 4668741,
-          "predictNanos" : 22262
+          "trainNanos" : 4801924,
+          "predictNanos" : 23614
         }
       } ]
     }

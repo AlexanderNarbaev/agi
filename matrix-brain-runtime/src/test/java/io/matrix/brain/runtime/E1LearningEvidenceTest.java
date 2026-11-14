@@ -387,6 +387,17 @@ class E1LearningEvidenceTest {
                 report);
 
         List<Episode> real = realEpisodes(root);
+        // the leakage claim, asserted: the two splits share no episode text, and the real
+        // split's input-level overlap is measured rather than assumed
+        java.util.Set<String> syntheticTexts = synthetic.stream()
+                .map(e -> e.input() + " " + e.reply()).collect(java.util.stream.Collectors.toSet());
+        java.util.Set<String> realTexts = real.stream()
+                .map(e -> e.input() + " " + e.reply()).collect(java.util.stream.Collectors.toSet());
+        syntheticTexts.retainAll(realTexts);
+        Map<String, Object> leakage = new LinkedHashMap<>();
+        leakage.put("syntheticRealExactTextOverlap", syntheticTexts.size());
+        report.put("leakage", leakage);
+        assertThat(syntheticTexts).isEmpty();
         Map<String, Object> realResult = null;
         if (real.isEmpty()) {
             report.put("real", Map.of("status", "INSUFFICIENT_DATA",
@@ -395,6 +406,14 @@ class E1LearningEvidenceTest {
             Map<String, List<Episode>> realSplit = chronologicalSplit(real);
             assertThat(disjoint(realSplit)).isTrue();
             realResult = evaluate("real", realSplit, extractor, report);
+            // how much of the real test partition reuses an input seen in training — measured,
+            // because the texts repeat in a runtime log even when the full entries do not
+            java.util.Set<String> trainInputs = realSplit.get("train").stream()
+                    .map(Episode::input).collect(java.util.stream.Collectors.toSet());
+            long reused = realSplit.get("test").stream()
+                    .filter(e -> trainInputs.contains(e.input())).count();
+            leakage.put("realTestInputsSeenInTrain",
+                    reused + " of " + realSplit.get("test").size());
             // the production training window, measured separately
             int window = Math.min(real.size(), 20);
             List<Episode> productionWindow = real.subList(real.size() - window, real.size());

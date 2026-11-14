@@ -47,6 +47,12 @@ unconfigured behaviour is unchanged), swept at `0.0` and `0.10`:
 | 0.0 | 17/29 | 4/8 | **3/6** |
 | 0.10 | 17/29 | 4/8 | **3/6** |
 
+**Provenance of those two numbers (corrected after the independent review).** They were
+measured on a temporary build that carried the two-floor change, which was reverted before
+any commit. `matrix.retrieval.citation-coverage` is read by no production code in this tree,
+so the CITE runs are **not reproducible here**; the artifacts were removed and the numbers
+are kept only as the record of the experiment's result.
+
 **Why it failed — measured.** The epistemic gates downstream of retrieval do not read the
 *answerability* set; they read the **cited** set. At citation floor 0.0, `U-01` ("What is the
 boiling point of water at the summit of Mount Kilimanjaro?") cites 14 claims about the role of
@@ -81,20 +87,21 @@ harness: `scripts/e2-candidate-recall.py`, command
 
 | Fact | Measured |
 |---|---|
-| gold claim present in the workspace | **18 of 18 required propositions** |
-| gold claim's epistemic status | **`SUPPORTED` for all 18 — citable** |
-| cited exactly at floor 0.0 | **16 of 18** (ranks 1, 2, 9, 10, 11, 17, 33, 41, 129, 303, …) |
-| cited nowhere even at floor 0.0 | **2 of 18** — no term match against the question at all |
-| required source present at floor 0.0 | yes for `A-05`, `A-06`, `M-01`, `P-01`, `P-02` |
-| **Recall@1 / @5 / @10 / MRR** (floor 0.0) | **3 / 4 / 6 of 18** · **MRR 0.2593** |
+| gold proposition entries in the artifact | **27 entries, 22 distinct propositions** (the dataset's required propositions per case) |
+| gold claim present in the workspace | **27 of 27 entries** — all present |
+| gold claim's epistemic status | **`SUPPORTED` for all 27 — citable** |
+| cited exactly at floor 0.0 | **16 of 27 entries** (ranks 1, 1, 1, 2, 9, 10, 11, 12, 13, 17, 17, 33, 41, 129, 303, 368) |
+| cited nowhere even at floor 0.0 | **11 of 27 entries** — no term match against the question |
+| required source present at floor 0.0 | yes for `A-05`, `A-06`, `M-01`, `P-01`, `P-02`; `None` for `M-03` (no required source in that case) |
+| **Recall@1 / @5 / @10 / MRR** | **3 / 4 / 6 of 16 cited** · **MRR 0.2593** (mean 1/rank over the 16 cited; **0.1536** over all 27 with misses counted as zero) |
 
-**The classification, per case:**
+**The classification, per case (entries cited of entries required):**
 
 | Case | Measured cause |
 |---|---|
 | `A-02`, `A-04` | **the floor** — the gold claims are cited at ranks 1/2 and 9/11 at floor 0.0 and drop out at 0.25; both PASS at 0.0 |
-| `A-05`, `A-06`, `M-01`, `P-01` | **the floor AND the term match** — part of their required propositions is cited exactly at floor 0.0 (ranks 11–129), another part is not cited at any floor |
-| `M-03`, `P-02` | **the term match (H3)** — a required proposition ranks 303 and another never appears; `P-02`'s two required propositions are absent at floor 0.0 entirely |
+| `A-05`, `A-06`, `M-01`, `P-01` | **the floor AND the term match** — part of their required propositions is cited exactly at floor 0.0 (`A-05`: 3 of 4, `A-06`: 2 of 3, `M-01`: 2 of 3, `P-01`: 1 of 3), another part is not cited at any floor |
+| `M-03`, `P-02` | **the term match (H3)** — `M-03`: 2 of 5 cited (one at rank 303); `P-02`: 0 of 3 cited at floor 0.0 |
 | `F-02`, `R-04`, `R-05` | **downstream (H4)** — unchanged by any floor setting |
 
 **H2 (the status filter) is refuted by measurement**: every gold claim is `SUPPORTED`, and the
@@ -107,12 +114,16 @@ hypothesis (H3), and it is the next experiment's target.
 The sweep was extended to the middle of the interval to test whether a floor exists that
 recovers the answerable cases **and** keeps the abstentions:
 
-| Floor | Total | answerable | unanswerable | moved |
+| Floor | Total | answerable | unanswerable | source report |
 |---|---|---|---|---|
-| 0.25 (default) | 18/29 | 2/8 | 6/6 | — |
-| **0.15** | 17/29 | 4/8 | **3/6** | `U-01`, `U-05` break |
-| **0.10** | 15/29 | 4/8 | 1/6 | breaks further |
-| 0.00 | 15/29 | 4/8 | 1/6 | breaks further |
+| 0.25 (default) | 18/29 | 2/8 | 6/6 | `E2-FLOOR-0p25.json` |
+| **0.15** | 17/29 | 4/8 | **3/6** (`U-01`, `U-05` break) | `E2-FLOOR-0p15.json` |
+| **0.10** | 15/29 | 4/8 | 1/6 | `E2-FLOOR-0p10.json` |
+| 0.00 | 15/29 | 4/8 | 1/6 | `E2-FLOOR-0p0.json` |
+
+(The comparison artifact `E2-FLOOR-SWEEP.json` covers the two floors measured together —
+0.10 and 0.15; the 0.25 and 0.0 numbers are in their individual reports. A reproduce run
+must pass `--force`, because the harness reuses a committed report by default.)
 
 **No floor in the interval separates "the workspace should cite this claim" from "the
 workspace should answer at all".** The gain of `A-02`/`A-04` comes only with a loss of three
@@ -167,4 +178,4 @@ if that measurement shows a rankable separation is a production change proposed.
 property (`matrix.retrieval.minimum-coverage`), with the pre-existing `0.25` as the default
 when the property is absent or unusable. This is the knob the next rounds' experiments need;
 it changes no unconfigured behaviour, and it is covered by a contract test
-(`KnowledgeRetrieverTest.theCoverageFloorOverride`, 13/13 tests in the class pass).
+(`KnowledgeRetrieverTest.theCoverageFloorOverride`; the class runs 11 tests with 0 failures).
