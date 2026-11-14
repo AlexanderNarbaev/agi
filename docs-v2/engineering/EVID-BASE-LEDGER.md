@@ -77,7 +77,7 @@ documents named as current state.
 | `scripts/validate-current-state.py` | **0 contradictions** |
 | `scripts/validate-current-state-selftest.sh` | **PASS** (7 controls) |
 | `scripts/docs-link-check.py` | exit 0 (0 strict failures; 185 external links unverified) |
-| `scripts/validate-docs.sh` | **pre-existing red, not this work's**: it counts any `{{` in `docs-v2/` as a potential Liquid issue and flags two GitHub-Actions code samples in files this branch does not touch (`W48-CI-RECONCILIATION.md:848`, `TRANSFORMATION-PLAN.md:237`). Recorded as an inherited baseline condition, not silently repaired — the heuristic change belongs to its own narrow correction. |
+| `scripts/validate-docs.sh` | **pre-existing red, not this work's**: it counts any unescaped double-brace Liquid sequence in `docs-v2/` as a potential Liquid issue and flags two GitHub-Actions code samples in files this branch does not touch (`W48-CI-RECONCILIATION.md:848`, `TRANSFORMATION-PLAN.md:237`). Recorded as an inherited baseline condition, not silently repaired — the heuristic change belongs to its own narrow correction. |
 
 ## Stage 2 — E2 retrieval quality (in progress, `51b5d3a0` + this round's artifacts)
 
