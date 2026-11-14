@@ -67,6 +67,18 @@ check network state (the main-line squash is read from local git), does not rewr
 document, and does not treat a historical document as a current snapshot — it reads only the
 documents named as current state.
 
+### 1c. Validator status after Stage 1 (all run 2026-11-14, on this branch)
+
+| Validator | Result |
+|---|---|
+| `scripts/validate-project-state.py --strict` | **0 defects** (one snapshot-lag observation, by the document's own convention) |
+| `scripts/validate-project-registry.py` | **0 defects** — 56 capabilities, 24 fields per record |
+| `scripts/validate-test-catalogue.py` | **0 defects** — 13 scopes, 2 cannot run on this machine |
+| `scripts/validate-current-state.py` | **0 contradictions** |
+| `scripts/validate-current-state-selftest.sh` | **PASS** (7 controls) |
+| `scripts/docs-link-check.py` | exit 0 (0 strict failures; 185 external links unverified) |
+| `scripts/validate-docs.sh` | **pre-existing red, not this work's**: it counts any `{{` in `docs-v2/` as a potential Liquid issue and flags two GitHub-Actions code samples in files this branch does not touch (`W48-CI-RECONCILIATION.md:848`, `TRANSFORMATION-PLAN.md:237`). Recorded as an inherited baseline condition, not silently repaired — the heuristic change belongs to its own narrow correction. |
+
 ## Stages B1/B2/B3 — not started
 
 E2 (retrieval quality), E1 (rule-learning evidence base) and Evidence-to-Action remain
