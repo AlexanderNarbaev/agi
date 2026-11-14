@@ -348,11 +348,15 @@ check_test_catalogue() {
 #
 # The rule needs the repository's main line: it reads the merge squashes from
 # `git log origin/main` (or `git log main`) to know which pull requests are already
-# merged. In a shallow clone or an unpacked tarball that history is absent, the
-# checker says UNREADABLE, and the rule FAILS CLOSED - the gate's convention is that
-# every rule contributes to the exit status, and a check that cannot run is not a
-# check. The CI fetches the full history (fetch-depth: 0), so it runs there; a local
-# shallow clone must be deepened (git fetch --unshallow) before the gate can pass.
+# merged. Two degraded clones are possible, and they behave differently:
+#   - an unpacked tarball (no .git at all): the checker cannot answer, reports
+#     UNREADABLE, and the rule FAILS CLOSED - the gate's convention is that every rule
+#     contributes to the exit status, and a check that cannot run is not a check;
+#   - a SHALLOW clone: `git log origin/main` answers with what it has, so the checker
+#     sees a TRUNCATED set of merge squashes and reports no contradiction. The rule
+#     does not fail - it sees less than it should. A shallow clone therefore weakens
+#     this rule silently, and the fix is to deepen the clone (git fetch --unshallow).
+# The CI fetches the full history (fetch-depth: 0), so the rule runs there in full.
 check_current_state() {
     local checker="$REPO_ROOT/scripts/validate-current-state.py"
     if [ ! -f "$checker" ]; then

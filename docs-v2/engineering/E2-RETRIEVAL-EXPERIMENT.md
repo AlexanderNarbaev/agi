@@ -168,7 +168,7 @@ The sweep above ran on **all twenty-nine cases** — the whole documented corpus
 is **no held-out partition**: twenty-nine cases do not divide into statistically useful
 subsets. The proposal that this work answers states the rule in its own words
 (`docs-v2/proposals/PROPOSAL-EVID-BASE-2026-11-14.md`, the E2 section): *"A sweep can be
-fitted to the twenty-nine cases - the held-out set must be declared in advance"* - and the
+fitted to the twenty-nine cases — the held-out set must be declared in advance"* — and the
 way out of that is a **separately identified evaluation set with independently defined
 expectations**.
 
@@ -205,6 +205,8 @@ number is available**.
 |---|---|
 | `E2-FLOOR-0p25.json` | the baseline run (18/29) |
 | `E2-FLOOR-0p0.json` | the answer-floor sweep at 0.0 |
+| `E2-FLOOR-0p10.json` | the answer-floor sweep at 0.10 (the source report of §4c's second row) |
+| `E2-FLOOR-0p15.json` | the answer-floor sweep at 0.15 (the source report of §4c's third row) |
 | `E2-FLOOR-SWEEP.json` | the per-case comparison, answer floor |
 | (no citation-floor artifacts are in the tree: that experiment needed a temporary build that was reverted; the measured numbers are in §3) | — |
 | `scripts/e2-retrieval-experiment.py` | the harness that runs the official runner at each configuration |

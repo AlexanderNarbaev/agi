@@ -41,7 +41,7 @@ cycle, and whose current state existed in four documents of four different ages.
 
 ## 3. The active wave
 
-### EVID-BASE — the representation substrate, the evidence base and the first real action (complete and released)
+### EVID-BASE — the evidence base and the first real action (complete and released)
 
 **EVID-BASE is the wave that follows the released W53.** It worked on the branch
 `feature/evid-base-evidence-to-action` (`43fba124`), cut from `origin/develop` at `343299b1`,
@@ -49,16 +49,17 @@ and it did not touch `main` until its release. Its objective, in the owner's wor
 M.A.T.R.I.X. **demonstrably more useful, more epistemically reliable and capable of
 performing bounded real actions** — not another infrastructure wave.
 
-**Its work is merged into `develop`** (pull request #53, squash `01d4cdc0`) and **released into
-`main`** (pull request #56, squash `32666218`, merged 2026-11-14), with `main` merged back
-into `develop` (`4257d6df`); the state correction followed in pull request #55 (`5ff4964a`)
-and the negative-control script's ShellCheck findings in pull request #57 (`2b531dd0`).
+**Its work is merged into `develop`** (pull request #53, squash `01d4cdc0`); the state
+correction followed in pull request #55 (`5ff4964a`) and the negative-control script's
+ShellCheck findings in pull request #57 (`2b531dd0`); and the wave was **released into
+`main`** in pull request #56 (squash `32666218`, merged 2026-11-14), with `main` merged
+back into `develop` (`4257d6df`).
 
 **What it delivered, and what it measured:**
 
 | the workstream | the outcome | the evidence |
 |---|---|---|
-| the project truth | the current-state contradictions are corrected and a **deterministic consistency checker** now runs as the quality gate's rule CURRENT-1 | `scripts/validate-current-state.py`, `scripts/validate-current-state-selftest.sh` (eight controls) |
+| the project truth | the current-state contradictions are corrected and a **deterministic consistency checker** now runs as the quality gate's rule CURRENT-1 | `scripts/validate-current-state.py`, `scripts/validate-current-state-selftest.sh` (nine numbered controls, twelve assertions) |
 | E2 — evidence retrieval | the **18/29 baseline reproduced**, all eleven failures attributed to a **measured** cause, and the relevance floor **refuted as the fix** (it is the cause for two of them; lowering it only moves answerable cases into the abstention band). **No production improvement is claimed**: the only production change to the retrieval path is an inert knob whose default is unchanged | `docs-v2/engineering/E2-RETRIEVAL-EXPERIMENT.md`, `E2-FLOOR-*.json` |
 | E1 — the learning evidence base | a provenance-carrying dataset with **both classes** and three partitions, and the original 256-bit representation compared with the 16-bit parity fold and an informative projection. The fold's information loss is measured; **the A/B/C decision stays the owner's** | `docs-v2/engineering/E1-LEARNING-EVIDENCE.md`, `E1-LEARNING-EVIDENCE.json`, `matrix-brain-runtime/src/test/resources/e1/` |
 | B3 — evidence to action | **one real bounded action**: an authorized Markdown/JSON artefact written on disk through the existing cognitive components, with an append-only trace, canonical path validation, symlink-escape refusal and idempotent retry. **Implemented, tested and demonstrated — not wired into a production route** | `docs-v2/engineering/B3-EVIDENCE-TO-ACTION.md`, `docs-v2/demos/evidence-to-action/output/` |

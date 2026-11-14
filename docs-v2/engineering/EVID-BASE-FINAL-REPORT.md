@@ -285,8 +285,9 @@ was neither disabled nor given an exception.
    and the branch's one finding was fixed (PR #57) rather than baselined.
 3. **GraalVM Native Build — inherited.** *"The Native Image build process ran out of
    memory"* on the runner; it has been red since **2026-10-31** (the workflow's own history
-   shows failures on 2026-10-31, 2026-11-06 and 2026-11-07, and every run since — the
-   workflow has no schedule, so it runs on the pushes to `main`), long before this work.
+   shows failures on 2026-10-31, 2026-11-06 and 2026-11-07, and **no green run since** —
+   39 failures and one cancellation over the same window; the workflow has no schedule, so
+   it runs on the pushes and the pull requests that touch `main`), long before this work.
 4. **Historical unverified TruffleHog findings.** The push event scans the commits the push
    carried and finds nothing; the pull-request event scans the whole branch and reports nine
    unverified results, **0 verified**, all attached to historical commits (the W51
@@ -301,12 +302,17 @@ was neither disabled nor given an exception.
    (`32666218`, Build & Test success). On this machine it passed **five consecutive runs**
    of `./gradlew :matrix-core:test --tests "io.matrix.cognitive.algorithms.PortfolioBenchmarkTest" --offline`
    on 2026-11-14 (the method and the date are here so the claim can be reproduced; the
-   local JUnit XML is not committed by convention). **Classification: an inherited, machine-load-dependent flake** — not a defect of
+   local JUnit XML is not committed by convention, and the last run's copy — 3 tests, 0
+   failures, 2026-11-14T18:49:29Z — is what remains on this machine). **Classification: an inherited, machine-load-dependent flake** — not a defect of
    this work. Its assertion is a performance contract, and making it robust (a minimum over
    repetitions) is a change to that contract, so it is named rather than quietly altered.
 
 ### K.4 What the report's "pending" markers became
 
+- §A's *release PR pending* and the *base* row (the heads `343299b1` / `1dc01537`) → **the
+  release happened**: PR #56, squash `32666218`; the heads are `4257d6df` and `32666218`
+  (§K.1). §A is the section titled "Final state", so its "pending" markers are listed here
+  too, and they are the reason this addendum exists.
 - §F's *release pending* → **the release happened**: PR #56, squash `32666218` (§K.1).
 - §J's *the PR/release (Stage 7) pending* → **done**: PR #53, #55, #57 and #56 are merged,
   `main` and `develop` hold the same tree, and the synchronization is `4257d6df`.
