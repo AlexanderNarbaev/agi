@@ -79,8 +79,22 @@ documents named as current state.
 | `scripts/docs-link-check.py` | exit 0 (0 strict failures; 185 external links unverified) |
 | `scripts/validate-docs.sh` | **pre-existing red, not this work's**: it counts any `{{` in `docs-v2/` as a potential Liquid issue and flags two GitHub-Actions code samples in files this branch does not touch (`W48-CI-RECONCILIATION.md:848`, `TRANSFORMATION-PLAN.md:237`). Recorded as an inherited baseline condition, not silently repaired — the heuristic change belongs to its own narrow correction. |
 
-## Stages B1/B2/B3 — not started
+## Stage 2 — E2 retrieval quality (in progress, `51b5d3a0` + this round's artifacts)
 
-E2 (retrieval quality), E1 (rule-learning evidence base) and Evidence-to-Action remain
-ahead. Their baselines, hypotheses and acceptance criteria are fixed in the directive and
-will be recorded here when each stage begins, with the command that produced each number.
+| Step | Measured result | Artifact |
+|---|---|---|
+| baseline reproduced on the packaged jar | **18/29**, the documented eleven failing ids | `E2-FLOOR-0p25.json` |
+| H1 — the answer floor is too restrictive | floor 0.0 → **15/29** (answerable 4/8, **unanswerable 1/6**): recovers `A-02`,`A-04`, breaks five `U-*` → **rejected** | `E2-FLOOR-SWEEP.json` |
+| the two-threshold hypothesis (answer floor 0.25 + citation floor 0.0/0.10) | **17/29**, unanswerable 3/6 → **rejected and reverted before commit**: the quantity gate reads the *cited* set, so the widened evidence let `U-01` answer a "boiling point" question with 14 plate-tectonics claims | `E2-CITE-SWEEP.json` |
+| the one kept production change | `matrix.retrieval.minimum-coverage` knob (default unchanged; contract test; 13/13 in the class) | commit `51b5d3a0` |
+
+The full reading is in `E2-RETRIEVAL-EXPERIMENT.md`. Next leverage: H3 (the ranking —
+needs a test-scope harness that exposes the per-claim scores) and the H4 cases
+(`F-02` verdict logic, `R-04`/`R-05` over-supersession), which the floor sweep proved are
+independent of the retrieval threshold.
+
+## Stages B2/B3 — not started
+
+E1 (rule-learning evidence base) and Evidence-to-Action remain ahead. Their baselines,
+hypotheses and acceptance criteria are fixed in the directive and will be recorded here when
+each stage begins, with the command that produced each number.
