@@ -41,7 +41,7 @@ cycle, and whose current state existed in four documents of four different ages.
 
 ## 3. The active wave
 
-### W53 — distributed cognition: the wave is complete, the release is the owner's
+### W53 — distributed cognition: the wave is complete and released
 
 **W53 is the wave that follows the merged W52.** It worked on the branch
 `feature/w53-distributed-cognition` (`8cfcf854`), cut from `origin/develop`, and it did not
@@ -49,9 +49,12 @@ touch `main`. Its objective: chain A assigns a bounded cognitive task to chain B
 executes it through its own production path, the result returns as an authenticated report,
 and chain A evaluates that report before it affects anything.
 
-**The wave's work is merged into `develop`** (`48bfe37a`), and **pull request #50**
-(`develop` → `main`) is open. **The merge of that pull request is the owner's decision**:
-it is a release operation over serving code, and it is not taken by an agent. The wave's
+**The wave's work is merged into `develop`** (`48bfe37a`) and **released into `main`**:
+pull request #50 (`develop` → `main`), **squash `bcdd1a0a`, merged on 2026-11-14**, and
+`main` was merged back into `develop` (`e41cd3c1`), so the two branches hold the same
+project tree (`d434705b`). The release's own record — the commit identifiers, the merge, the
+squash, the synchronization, the checks and the three inherited reds — is in
+`docs-v2/engineering/W53-STATUS.md` §4w. The wave's
 report is `docs-v2/engineering/W53-STATUS.md`, its audit is
 `docs-v2/engineering/W53-AUDIT.md`, its demonstration is
 `docs-v2/engineering/W53-DISTRIBUTED-DEMONSTRATION.json`, its measurement is
@@ -426,6 +429,27 @@ stops an identifier at a letter that follows the number (CD-043).
 | **TASK-W53-2-12** | the distributed path is measured | the cost of the whole task is known, stage by stage | **W53-2-11** | **done** |  `scripts/w53-distributed-benchmark.sh` and the report it writes, `docs-v2/engineering/W53-PERFORMANCE.md` and `W53-PERFORMANCE.json` — the whole task, not the message parser: the ingress, the durable intent, the signed dispatch and the round trip, the peer's authentication and durable inbox write, the production inference, the signed answer, chain A's verification, the admission of the report and the epistemic evaluation. The single-task path: **p50 14.29 ms, p95 21.41 ms, 42.99 tasks/s** over 30 tasks, every sample `UNRESOLVED`. The concurrent path (24 tasks, four at a time): every task adjudicated `UNRESOLVED`, the steady state **p50 27.03 ms, 143.95 tasks/s**, the cold start separated and the rule stated. **The measurement is taken against a store of the run's own**: chain A's cognitive and knowledge stores are named to the benchmark's own directory, and the same workload against the store the wave had accumulated gave **32.33 ms** against the isolated **13.87 ms** — the state, not the crossing, was the dominant cost, so the wave's earlier numbers were a measurement of the laboratory and are withdrawn. **The measurement's own noise is measured**: seven runs of the same code, each against a store of its own, differ by **9.9 %** at p50 on the sequential path and by **2.7 %** at the median of the concurrent path's steady state, so **no optimization was accepted** on the strength of a benchmark run. **The durable idempotency path is measured apart from the first execution** (§10.2 of the mandate): the same requests sent again with the same id and payload cost **p50 8.07 ms** against the first execution's 14.29 ms, **18.3 ms** of CPU against 64.7 ms, and **30 of 30** replays answered with the disposition of the first execution. **The bound is measured as well, not only asserted**: eight clients against the coordinator's cap of four refused **12 of 24** tasks at a client round trip of **3–33 ms**, with no stage timings and no durable record — the cap refuses the excess instead of queueing it, so the queue depth is 0. Two defects were found and fixed on the way: the epistemic store's unserialized write transactions (a lost transaction under concurrent writers) and the benchmark's bare `wait` |
 | **TASK-W53-2-13** | the research is persisted | the cross-disciplinary findings reach the repository, not only the chat | **W53-2-12** | **done** | all four tracks have written their documents — `docs-v2/research/W53-RESEARCH-A-DURABLE-EXECUTION.md` (416 lines, 21 primary sources), `W53-RESEARCH-B-CYBERNETICS.md` (441 lines, 12 primary works), `W53-RESEARCH-C-COOPERATIVE-REASONING.md` (465 lines, 30 primary sources) and `W53-RESEARCH-D-RELIABILITY-CALIBRATION.md` (342 lines, 31 primary sources). **The research changed the implementation and the design.** Track A found that the bridge's in-memory fallback let the W52 defect survive as a configuration (it is now a refusal) and that the inbox opened without the PRAGMA discipline the cognitive store uses (it does now). Track B turned the design into three consequences the ADR records: the request must carry the criterion by which the result is judged; the deadline must be derived from the remaining cycle budget (the repository's 250 ms cycle budget and the publisher's 5 s timeout contradict each other today); and a failed delegation must change the next one, which today it does not — nothing reaches the method profile, the selector or the regulator. Track C found the blocker of the adjudication phase: a remote report cannot express a contradiction, because the sink writes the evidence relation as SUPPORTS unconditionally, and the derivation chain is dropped at the sink boundary, so the circularity check has nothing to run on. The doctrine, the design appendix and the hypotheses register are still to be written from the four documents |
 | **TASK-W53-2-14** | the closeout | the report, the audit, the architecture map, the registers | **W53-2-13** | **the wave's own work is done; the release is the owner's** |  `docs-v2/engineering/W53-STATUS.md` (the wave's report, with the honest list of what is not done), `docs-v2/engineering/W53-AUDIT.md` (the integration status and the real production call paths), `docs-v2/engineering/W53-ARCHITECTURE-MAP.md` (the architecture that exists in the code), `docs-v2/engineering/W53-EPISTEMIC-COMPARISON.md` (all 29 cases, their observation and the cause of each of the eleven failures), `docs-v2/engineering/ADR-W53-01-cognitive-task-bridge.md` (the decision), the decision register with **CD-032 … CD-047**, the capability registry with **C-53**, the test catalogue with **SCOPE-W53-DISTRIBUTED** (**1 668 tests in 255 classes, 0 failures** — the wave's own count was 1 646 in 250; the release hardening of 2026-11-13 added seventeen methods in matrix-core and five in the gateway) — and the two independent reviews of round 66 (`docs-v2/engineering/W53-STATUS.md` §4s), whose defects were fixed and whose corrections are named, the research registers and `docs-v2/designs/DESIGN-84-distributed-cognitive-bridge.md`. **What is done:** the commit (`8cfcf854`), the merge into `develop` (`48bfe37a`), the push (`9f9948e7`) and the pull request #50 (`develop` → `main`), which is **open**. **What is not done, and is the owner's:** the merge of pull request #50 — a release operation over serving code — and the reconciliation of `main` into `develop`, which is prepared and reviewed and not applied |
+
+### 4.15 The next cycle, proposed: four experiments that end in a number
+
+**The W53 release is done** (pull request #50, squash `bcdd1a0a`, merged on 2026-11-14),
+and the representation-substrate wave is complete with it. The next cycle is **a proposal,
+not a wave**: `docs-v2/proposals/PROPOSAL-EVID-BASE-2026-11-14.md`. The owner names it and
+cuts its branch; the numeric wave ids are taken (`W54` and `W55` exist), so the name is
+the identifier.
+
+The proposal exists because two of MATRIX's own claims cannot be proved today, and both are
+measurable: the peer's reported **fidelity of 1.0000** was measured on a window of **one
+class** and three distinct texts, and **11 of the 29 epistemic cases still fail** because
+the right claim is not retrieved (`KnowledgeRetriever.java:386`). Four experiments, each
+with a baseline, a design, an acceptance criterion and a recommendation:
+
+| the id | the experiment | the baseline | the recommendation |
+|---|---|---|---|
+| **E1** | the rule induction's evidence base — a labelled episode set with both classes, the fold's cost in accuracy points, the learner's held-out accuracy | 20 episodes, 16 of 256 bits vary, one class, fidelity 1.0000 | **ADOPT** — the measurement is the deliverable, and it decides whether the fold is worth answering at all |
+| **E2** | the retrieval's relevance floor — recall@K and MRR per failing case, then a sweep of the floor and the status filter | **18/29**, reproduced on 2026-11-14 by the same runner | **ADOPT** — the defect is user-visible and the measurement is cheap |
+| **E3** | the interrupted execution — the peer's inbox keeps the digest and not the payload, so a crashed execution is lost | the crash-boundary test and the honest limitation | **OPEN** — the durable contract and what may be stored are the owner's |
+| **E4** | the neuron's compute economy — the buffer API the ADR adopted, measured end to end and not only in a microbenchmark | 146.5 ns per neuron against 1.8 ns at the boundary | **DEFER** until the end-to-end effect is measured |
 
 ### 4.14 The tasks the representation-substrate wave (REP-SUBSTRATE) creates
 

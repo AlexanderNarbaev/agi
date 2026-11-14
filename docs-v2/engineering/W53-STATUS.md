@@ -1055,6 +1055,87 @@ commit of the first rehearsal lives in a **detached** worktree (`f55a3a47`, its 
 identical to `develop`'s), and **no branch moved, nothing was pushed, and pull request #50
 was not merged**. The real merge touches serving code and is the owner's decision.
 
+### 4w. What the release of 2026-11-14 did: the wave is in `main`, and the two branches hold one project
+
+The W53 release is done. This section is the record of it — the commits, the merge, the
+squash, the synchronization, the checks and the two reds that are inherited rather than
+caused.
+
+**The commits on `develop`, in order.**
+
+| the commit | what it carries |
+|---|---|
+| `04b7c5de` | the dispatch store's two-writer guard resolves a symbolic link, and the test that holds it |
+| `027e8f76` | the five regression tests that hold the wave's own fixes |
+| `5e26748d` | REP-SUBSTRATE: the research, the ADR, the two JMH harnesses, the bench artefacts and the four research test classes |
+| `9ec6723b` | the registers, the wave's report and the twelve corrected statements |
+| `bfbec57b` | the merge of `main` into `develop` — the tree does not change |
+| `bb46fc41` | the demonstration's null-prediction guard (a flaky CI failure that was **not** the wave's) and the next cycle's proposal |
+| `e41cd3c1` | the post-squash synchronization of `main` back into `develop` |
+
+**The reconciliation.** `main` carried W52 and the reusable procedure as the squash
+`7709dc9e` of pull request #49, and `develop` carried the same work as its own sequence of
+commits — which is why the two histories diverged and why pull request #50 was marked as
+conflicting although no content differed. The merge `bfbec57b` resolved the **seventeen**
+conflicting files to `develop`'s side, and the merged tree was **byte for byte the tree
+`develop` had before the merge** (`f182fa6f`): no serving path, no store, no protocol and
+no document changed. The targeted tests on the merged tree were green (the chain A
+cognitive scope 489 tests, the gateway 284, the brain runtime 928).
+
+**The release.** Pull request #50 was merged as a **squash** — the repository's established
+policy — as `bcdd1a0a` on 2026-11-14, and the two branches now hold **the same tree**
+(`d434705b`): `main` is contained in `develop`'s history, `develop` is 440 commits ahead
+with nothing behind it, and `main..develop` holds the whole of W53.
+
+**The checks on the released branches.**
+
+| the check | the release commit `bb46fc41` (push) | `main`'s squash `bcdd1a0a` |
+|---|---|---|
+| Build & Test (Java) | **success** (CI run `43573097294`) | **success** (CI run `43574788457`) |
+| Quality gates | success | success |
+| Web UI Tests | success | success |
+| Container Images (build + smoke) | **success** | **success** |
+| **Security Scan (TruffleHog)** | **success** — 0 verified secrets | **success** — 0 verified secrets |
+| branch validation, docs validation, TLA+ model check, Pages | success | success |
+| ShellCheck | **failure — inherited** | **failure — inherited** |
+| GraalVM Native Build | **failure — inherited** | **failure — inherited** |
+| Docker Build & Push | **failure — inherited** | **failure — inherited** |
+
+**The three inherited reds, and what each one is.** They are not the wave's, and they are
+not new: the ShellCheck job has been red since **2026-11-09** (the repository's own
+scripts — `snapshot_state.sh`, `mc-direct.sh`, `local-alpha-restart.sh`, the chain-isolation
+check — with 182 findings, of which the wave's own scripts have none); the GraalVM native
+build has been red since **2026-11-08** with *«The Native Image build process ran out of
+memory»* on the runner; and the Docker push cannot log in at all, because **the repository
+has no secrets** (`gh api repos/AlexanderNarbaev/agi/actions/secrets` → `total_count: 0`) and
+the workflow asks for `DOCKERHUB_USERNAME`/`DOCKERHUB_TOKEN`. The last two were **hidden
+before**: the security scan was red, so the jobs behind it were skipped, and the scan is
+green now, so they run and show what they always showed.
+
+**The flaky failure that was not the wave's.** The release commit's first CI run was red on
+`W51DemonstrationTest > the report carries every section of the trace` — a null pointer
+exception inside the W51 demonstration, while the parallel pull-request run of the same
+commit passed. The demonstration is not deterministic by design (the record identifiers are
+random UUIDs), so a cycle occasionally ends without a prediction, and the two acceptance
+points that quote the prediction did not guard it — while the cycle section twenty lines
+above already did. The guard is now in place: **25 consecutive runs pass**, and the
+demonstration's acceptance table after the fix is identical to the committed
+`docs-v2/engineering/W51-DEMONSTRATION.json` — fifteen of fifteen points demonstrated.
+
+**What the security scan still reports, and why the job is green.** The pull-request event
+scans the whole branch and finds **9 unverified results and 0 verified**, all attached to
+**historical** commits: the W51 infrastructure plugin's placeholder URLs, the placeholder
+URLs in the owner-protected `.veai/skills` files, and the wave's own historical commit — the
+one whose current form no longer contains the literal. A push that carries only the new
+commits finds nothing, and the job is green on both released branches. **No scanner was
+disabled and no exception was added**: the wave's own finding was answered by the
+narrowest possible change, and what remains is the history of the literals.
+
+**The open owner decisions are untouched.** The Exp324 threshold stands at 2 ms. The
+replacement of the trainer's fold (ADR §4.4, options A/B/C) stays **OPEN**, and the next
+wave's proposal says so in its own first paragraph. The peer's durable contract — whether
+the payload may be stored at rest — stays **OPEN**.
+
 ### 4b. What round 19 found in the demonstration, and what it changed
 
 The demonstration failed twice in a row under machine load, and the failure was **not** a
@@ -1434,4 +1515,4 @@ The list §20 asks for, and it is a list of facts, not of excuses:
 | the native and GPU paths | **not enabled** | §10.4 keeps the Java path selected; nothing in the end-to-end profile exposed a computational bottleneck that would justify the marshalling cost |
 | the concurrency of the distributed path | **measured, not optimized** | the concurrent path is slower per task than the single-task one (27.03 ms against 14.29 ms at p50) and reaches **143.95 tasks/s** against the single-task path's **42.99** with four tasks in flight; no optimization was accepted, because nothing was profiled as a profile (CD-W42-01), and the measurement's own noise — **9.9 %** on the sequential path — is larger than every difference the runs showed |
 | the concurrency cap | **measured at the cap and above it** | the cap of four is measured from both sides: at four in flight the path reaches 143.95 tasks/s, and at eight clients **half the tasks are refused** rather than queued (§5d of the performance report, CD-042). What is not measured is the cost of the refusal to the *caller's* work: the refused task is not done, and the report says so |
-| the wave's commit, push and pull request | **committed, pushed, merged into `develop`; the pull request is open and the release is the owner's** | the owner authorized the wave's commits on 2026-11-11, and the branch `feature/w53-distributed-cognition` carries them: the measurement tooling and the performance report, the implementation with the crash boundary it lost, and the registers that name the commit which carries the wave. **Rounds 41 to 65 are committed** — they are the peer's own stage measurement, the reconciliation timer, the isolation gate's second half, the reliability rule and the remote path's verdicts — and the wave's head is `8cfcf854`, merged into `develop` by `48bfe37a` and pushed with the dependabot bumps that follow it (`9f9948e7`). The **pull request #50** (`develop` → `main`) is open, and **its merge is the owner's decision**: it is a release operation over serving code, and an agent does not take it |
+| the wave's commit, push and pull request | **committed, pushed, merged into `develop`, and RELEASED into `main`** | the owner authorized the wave's commits on 2026-11-11, and the branch `feature/w53-distributed-cognition` carries them. **The release itself is done**: the hardening and the representation-substrate research were committed on `develop` (`04b7c5de`, `027e8f76`, `5e26748d`, `9ec6723b`), `main` was merged into `develop` (`bfbec57b`, the tree unchanged), pull request #50 was **squash-merged** into `main` (`bcdd1a0a`, 2026-11-14), and `main` was merged back into `develop` (`e41cd3c1`) so that the two branches hold the same tree (`d434705b`) the measurement tooling and the performance report, the implementation with the crash boundary it lost, and the registers that name the commit which carries the wave. **Rounds 41 to 65 are committed** — they are the peer's own stage measurement, the reconciliation timer, the isolation gate's second half, the reliability rule and the remote path's verdicts — and the wave's head is `8cfcf854`, merged into `develop` by `48bfe37a` and pushed with the dependabot bumps that follow it (`9f9948e7`). The **pull request #50** (`develop` → `main`) is open, and **its merge is the owner's decision**: it is a release operation over serving code, and an agent does not take it |

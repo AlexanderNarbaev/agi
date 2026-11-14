@@ -56,9 +56,13 @@ git clone https://github.com/AlexanderNarbaev/agi.git
 cd agi
 
 # `develop` is the working branch. The default branch `main` is the release
-# branch and currently lags it by 433 commits (measured 2026-11-14,
+# branch and currently lags it by 440 commits (measured 2026-11-14,
 # `git rev-list --count origin/main..develop`) — a fresh clone that stays on
-# `main` gets the older state of the project.
+# `main` gets the older state of the project. The two branches hold the same
+# project tree (`git rev-parse origin/main^{tree}` and
+# `git rev-parse origin/develop^{tree}` are equal); `main` carries the
+# released state as the squash of pull request #50, and `develop` carries the
+# same work as its own sequence of commits.
 git checkout develop
 
 # The epistemic application (chain A) — the cognitive kernel and the workbench
