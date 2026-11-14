@@ -109,8 +109,18 @@ independent of the retrieval threshold.
 | fold vs informative projection | no measurable held-out difference on either split (real test degenerate; synthetic test 0.68–0.71 fold vs 0.54–0.68 projection) | same |
 | the A/B/C decision | **INSUFFICIENT_DATA** — needs a real dataset with both classes in the evaluation window and >24 distinct features; ADR §4.4 stays OPEN; K_MAX, trainer width and the fold untouched | `E1-LEARNING-EVIDENCE.md` §4 |
 
-## Stage B3 — Evidence-to-Action (not started)
+## Stage 4 — Evidence-to-Action (IMPLEMENTED + VERIFIED)
 
-Remains ahead: the bounded, auditable file action, its authorization boundary, persistence and
-crash recovery, the real demonstration with the negative control, the independent review, and
-the Git integration.
+| Item | Evidence |
+|---|---|
+| the only new side effect | `ArtifactWriter` (`matrix-core/src/main/java/io/matrix/actions/`) — canonical-path + traversal + symlink + size + type/content boundary, atomic staged write, append-only index, crash recovery |
+| the action contract | `ArtifactAction` registers `report.artifact.write` in the existing `ActionRegistry` |
+| boundary tests | `EvidenceToActionTest` — **11 tests**: normal write, idempotent repeat, same-identity refusal, crash before commit, crash after commit, committed-but-file-missing, outside root, symlink escape, reserved names, content bounds, the action contract |
+| the real demonstration | `docs-v2/demos/evidence-to-action/output/evidence-report.md` — **51,541 bytes**, SHA-256 `115936e8…`, written from the real seed corpus (41 claims, 2 sources); trace: `.artifact-index.ndjson` (STAGED + COMMITTED); two refusals + a symlink refusal; retry `REPLAYED`; recovery `COMMITTED`; latency seed 1,209 ms / write 1 ms |
+| reproduce | `./scripts/b3-demonstrate.sh`; result: `B3-EVIDENCE-TO-ACTION-RESULT.json` |
+| the guarantee | at most one committed artifact per action identity; a retry can only reproduce it; a crash between the stage and its record leaves a temp that recovery removes |
+
+## Remaining — independent review and Git integration
+
+Stage 5 (integration verification), Stage 6 (independent review by a separate reviewer) and
+Stage 7 (push, PR to `develop`, release workflow) remain ahead.

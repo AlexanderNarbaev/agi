@@ -99,6 +99,10 @@ dependencies {
 
 tasks.withType(Test) {
     useJUnitPlatform()
+    // EVID-BASE B3: the demonstration writes its result artifact to the path
+    // this property names; unset means it only prints.
+    systemProperty 'matrix.b3.result', System.getProperty('matrix.b3.result', '')
+    systemProperty 'matrix.b3.dir', System.getProperty('matrix.b3.dir', '')
     // RECON-W43: the ONNX runtime extracts a native library of about 583 MB
     // into a fresh directory under java.io.tmpdir for EVERY session load and
     // never removes it. A test run therefore left as many directories as it

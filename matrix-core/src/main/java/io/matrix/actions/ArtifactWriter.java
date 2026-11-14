@@ -1,0 +1,330 @@
+package io.matrix.actions;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.nio.channels.FileChannel;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.LinkOption;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
+import java.nio.file.StandardOpenOption;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.HexFormat;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+
+/**
+ * B3 — the bounded artifact writer: the one new side effect of Evidence-to-Action.
+ *
+ * <p><b>What it may do.</b> Write exactly one file, whose name is a plain file name (no
+ * directory part) inside one explicitly authorized root directory, whose bytes the caller
+ * supplies. Nothing else: it does not read the root's contents beyond its own index, does
+ * not run a command, does not open a connection, does not expand its own permissions.</p>
+ *
+ * <p><b>How the boundary is enforced.</b> The target is resolved against the root's REAL
+ * path ({@link Path#toRealPath}) and refused when the resolved target is not under it; a
+ * name containing a separator, a {@code ..}, or a leading dot is refused before any I/O; a
+ * symlink at the target is resolved and its real path is checked the same way. The content
+ * is bounded ({@link #MAX_ARTIFACT_BYTES}) and validated by type before anything is
+ * staged.</p>
+ *
+ * <p><b>How a write is made recoverable.</b> The bytes go to a staged temporary file in the
+ * same directory, are forced to disk, and are moved onto the final name with
+ * {@link StandardCopyOption#ATOMIC_MOVE}. The action appends its own records to an
+ * append-only NDJSON index in the root ({@value #INDEX_FILE}): {@code STAGED} before the
+ * move, {@code COMMITTED} after it. A crash therefore leaves exactly one of: the old file,
+ * the staged file without a commit, or the final file with a commit record — and
+ * {@link #recover(String)} resolves each of those dispositions explicitly.</p>
+ *
+ * <p><b>What the guarantee is.</b> For one action identity, at most one committed file
+ * exists, and a retry can only reproduce it: a retry with the same identity and the same
+ * content returns the recorded digest without a second write; a retry whose final file is
+ * missing re-writes it and records the reconciliation.</p>
+ */
+public final class ArtifactWriter {
+
+    /** The largest artifact the writer will stage, in bytes. */
+    public static final int MAX_ARTIFACT_BYTES = 256 * 1024;
+
+    /** The append-only index of every staged and committed write, in the root. */
+    public static final String INDEX_FILE = ".artifact-index.ndjson";
+
+    /** The dispositions of one write attempt. */
+    public enum Disposition {
+        WRITTEN, REPLAYED, RECONCILED_WRITTEN,
+        REFUSED_OUTSIDE_ROOT, REFUSED_TRAVERSAL, REFUSED_SYMLINK_ESCAPE,
+        REFUSED_UNSUPPORTED_TYPE, REFUSED_TOO_LARGE, REFUSED_INVALID_CONTENT,
+        REFUSED_EMPTY_NAME, REFUSED_IDENTITY
+    }
+
+    /** One write's outcome. */
+    public record Result(Disposition disposition, String actionId, String fileName,
+                         Path path, String sha256, String reason, String tracePath) {
+        public boolean written() {
+            return disposition == Disposition.WRITTEN || disposition == Disposition.REPLAYED
+                    || disposition == Disposition.RECONCILED_WRITTEN;
+        }
+    }
+
+    private static final ObjectMapper JSON = new ObjectMapper();
+    private final Path root;
+
+    /**
+     * A writer over one authorized root.
+     *
+     * @param root the authorized output directory; it must already exist, because the
+     *     permission to write there is the directory the caller created and named
+     */
+    public ArtifactWriter(Path root) {
+        if (root == null) {
+            throw new IllegalArgumentException("the authorized root is required");
+        }
+        if (!Files.isDirectory(root, LinkOption.NOFOLLOW_LINKS)) {
+            throw new IllegalArgumentException("the authorized root must be an existing directory: "
+                    + root);
+        }
+        try {
+            this.root = root.toRealPath();
+        } catch (IOException failure) {
+            throw new UncheckedIOException("the authorized root cannot be resolved", failure);
+        }
+    }
+
+    /** The authorized root, as the real path. */
+    public Path root() {
+        return root;
+    }
+
+    /** The index's path. */
+    public Path index() {
+        return root.resolve(INDEX_FILE);
+    }
+
+    /**
+     * Writes one artifact, or explains why it refuses.
+     *
+     * @param actionId the stable identity of the action (see {@link VersionedContract})
+     * @param fileName a plain file name with a supported extension
+     * @param content the artifact's bytes
+     * @return the outcome; {@code written()} is false for every refusal
+     */
+    public Result write(String actionId, String fileName, byte[] content) {
+        if (actionId == null || actionId.isBlank()) {
+            return refuse(Disposition.REFUSED_IDENTITY, actionId, fileName, "the action identity is required");
+        }
+        if (content == null) {
+            return refuse(Disposition.REFUSED_INVALID_CONTENT, actionId, fileName, "the content is absent");
+        }
+        if (content.length > MAX_ARTIFACT_BYTES) {
+            return refuse(Disposition.REFUSED_TOO_LARGE, actionId, fileName,
+                    "the artifact is " + content.length + " bytes, above the bound of "
+                            + MAX_ARTIFACT_BYTES);
+        }
+        if (fileName == null || fileName.isBlank()) {
+            return refuse(Disposition.REFUSED_EMPTY_NAME, actionId, fileName, "the file name is required");
+        }
+        if (fileName.contains("/") || fileName.contains("\\") || fileName.contains("..")
+                || fileName.startsWith(".") || fileName.equals(INDEX_FILE)) {
+            return refuse(Disposition.REFUSED_TRAVERSAL, actionId, fileName,
+                    "the name must be a plain file name without a directory part, a parent "
+                            + "reference or a reserved prefix");
+        }
+        boolean markdown = fileName.endsWith(".md");
+        boolean json = fileName.endsWith(".json");
+        if (!markdown && !json) {
+            return refuse(Disposition.REFUSED_UNSUPPORTED_TYPE, actionId, fileName,
+                    "the supported artifact types are .md and .json");
+        }
+        String invalid = validateContent(fileName, content);
+        if (invalid != null) {
+            return refuse(Disposition.REFUSED_INVALID_CONTENT, actionId, fileName, invalid);
+        }
+
+        Path target = root.resolve(fileName);
+        // the boundary: the target's real parent must be the authorized root
+        Path parent = target.toAbsolutePath().getParent();
+        try {
+            if (parent == null || !Files.isDirectory(parent)
+                    || !parent.toRealPath().equals(root)) {
+                return refuse(Disposition.REFUSED_OUTSIDE_ROOT, actionId, fileName,
+                        "the target is not inside the authorized root");
+            }
+            if (Files.exists(target, LinkOption.NOFOLLOW_LINKS) && Files.isSymbolicLink(target)) {
+                Path resolved = target.toRealPath();
+                if (!resolved.startsWith(root)) {
+                    return refuse(Disposition.REFUSED_SYMLINK_ESCAPE, actionId, fileName,
+                            "a symbolic link at the target resolves outside the root: " + resolved);
+                }
+            }
+        } catch (IOException failure) {
+            return refuse(Disposition.REFUSED_OUTSIDE_ROOT, actionId, fileName,
+                    "the target's location cannot be resolved: " + failure.getMessage());
+        }
+
+        String digest = digest(content);
+        try {
+            Optional<Record> committed = committedRecord(actionId);
+            if (committed.isPresent() && !committed.get().sha256().equals(digest)) {
+                return refuse(Disposition.REFUSED_IDENTITY, actionId, fileName,
+                        "the action identity was already committed with different content; an "
+                                + "identity names one artifact, and a second content under it is "
+                                + "a new action");
+            }
+            if (committed.isPresent() && committed.get().sha256().equals(digest)) {
+                Path finalPath = root.resolve(committed.get().fileName());
+                if (Files.isRegularFile(finalPath)) {
+                    return new Result(Disposition.REPLAYED, actionId, fileName, finalPath, digest,
+                            "the same action identity and content were already committed",
+                            index().toString());
+                }
+                // the commit record exists and the file does not: an honest reconciliation
+                return stagedWrite(actionId, fileName, content, digest, Disposition.RECONCILED_WRITTEN);
+            }
+            return stagedWrite(actionId, fileName, content, digest, Disposition.WRITTEN);
+        } catch (IOException failure) {
+            return new Result(Disposition.REFUSED_INVALID_CONTENT, actionId, fileName, target,
+                    digest, "the write failed: " + failure.getMessage(), index().toString());
+        }
+    }
+
+    /** The staged-then-committed write. */
+    private Result stagedWrite(String actionId, String fileName, byte[] content, String digest,
+                               Disposition success) throws IOException {
+        Path staged = root.resolve("." + fileName + ".tmp-" + sanitize(actionId));
+        Files.write(staged, content, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING,
+                StandardOpenOption.WRITE);
+        try (FileChannel channel = FileChannel.open(staged, StandardOpenOption.WRITE)) {
+            channel.force(true);
+        }
+        append(new Record(actionId, fileName, digest, "STAGED", content.length, Instant.now().toString()));
+        Path target = root.resolve(fileName);
+        Files.move(staged, target, StandardCopyOption.ATOMIC_MOVE,
+                StandardCopyOption.REPLACE_EXISTING);
+        append(new Record(actionId, fileName, digest, "COMMITTED", content.length, Instant.now().toString()));
+        return new Result(success, actionId, fileName, target, digest, null, index().toString());
+    }
+
+    /**
+     * Resolves the state a crash may have left for one action identity.
+     *
+     * @param actionId the identity whose state is asked for
+     * @return a description of the state and the disposition the recovery resolved
+     */
+    public Map<String, Object> recover(String actionId) {
+        Map<String, Object> state = new LinkedHashMap<>();
+        try {
+            List<Record> records = readIndex();
+            boolean staged = records.stream().anyMatch(r -> r.actionId().equals(actionId)
+                    && r.status().equals("STAGED"));
+            Optional<Record> committed = committedRecord(actionId);
+            Path stagedFile = null;
+            for (String candidate : stagedNames()) {
+                if (candidate.contains(sanitize(actionId))) {
+                    stagedFile = root.resolve(candidate);
+                }
+            }
+            if (stagedFile != null) {
+                Files.deleteIfExists(stagedFile);
+            }
+            state.put("actionId", actionId);
+            state.put("hadStaged", staged);
+            state.put("hadCommitted", committed.isPresent());
+            state.put("stagedRemoved", stagedFile != null);
+            if (committed.isPresent()) {
+                Path finalPath = root.resolve(committed.get().fileName());
+                boolean present = Files.isRegularFile(finalPath);
+                state.put("finalPresent", present);
+                state.put("disposition", present ? "COMMITTED" : "COMMITTED_BUT_FILE_MISSING");
+                state.put("recoversOnRetry", !present);
+            } else {
+                state.put("disposition", "NO_COMMIT");
+                state.put("recoversOnRetry", true);
+            }
+        } catch (IOException failure) {
+            state.put("disposition", "UNREADABLE");
+            state.put("error", failure.getMessage());
+        }
+        return state;
+    }
+
+    /** The committed record for an identity, if any. */
+    public Optional<Record> committedRecord(String actionId) throws IOException {
+        return readIndex().stream()
+                .filter(r -> r.actionId().equals(actionId) && r.status().equals("COMMITTED"))
+                .reduce((first, second) -> second);
+    }
+
+    /** Every record of the index, oldest first. */
+    public List<Record> readIndex() throws IOException {
+        List<Record> records = new ArrayList<>();
+        if (!Files.isRegularFile(index())) {
+            return records;
+        }
+        for (String line : Files.readAllLines(index(), StandardCharsets.UTF_8)) {
+            if (!line.isBlank()) {
+                records.add(JSON.readValue(line, Record.class));
+            }
+        }
+        return records;
+    }
+
+    private void append(Record record) throws IOException {
+        String line = JSON.writeValueAsString(record) + "\n";
+        Files.write(index(), line.getBytes(StandardCharsets.UTF_8), StandardOpenOption.CREATE,
+                StandardOpenOption.APPEND);
+    }
+
+    private List<String> stagedNames() throws IOException {
+        try (var stream = Files.list(root)) {
+            return stream.map(p -> p.getFileName().toString()).filter(n -> n.contains(".tmp-")).toList();
+        }
+    }
+
+    private String validateContent(String fileName, byte[] content) {
+        String text = new String(content, StandardCharsets.UTF_8);
+        if (text.isBlank()) {
+            return "the content is empty";
+        }
+        if (fileName.endsWith(".json")) {
+            try {
+                JSON.readTree(content);
+            } catch (IOException unreadable) {
+                return "the .json artifact does not parse: " + unreadable.getMessage();
+            }
+        }
+        if (fileName.endsWith(".md") && !text.startsWith("#")) {
+            return "the .md artifact must start with a Markdown heading";
+        }
+        return null;
+    }
+
+    private Result refuse(Disposition disposition, String actionId, String fileName, String reason) {
+        return new Result(disposition, actionId, fileName, null, null, reason, index().toString());
+    }
+
+    private static String digest(byte[] content) {
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            return HexFormat.of().formatHex(digest.digest(content));
+        } catch (NoSuchAlgorithmException absent) {
+            throw new IllegalStateException("SHA-256 is unavailable", absent);
+        }
+    }
+
+    private static String sanitize(String actionId) {
+        return actionId.replaceAll("[^A-Za-z0-9._-]", "_");
+    }
+
+    /** One line of the append-only index. */
+    public record Record(String actionId, String fileName, String sha256, String status,
+                         int bytes, String timestamp) {
+    }
+}
