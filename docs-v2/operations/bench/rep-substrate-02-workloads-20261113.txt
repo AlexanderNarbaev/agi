@@ -1,0 +1,39 @@
+the environment of this measurement
+===================================
+host:        alexandr-narbaev-JIAOLONG-Series
+kernel:      Linux 7.0.0-43-generic x86_64
+cpu:         AMD Ryzen 9 9955HX 16-Core Processor
+cores:       16 physical / 32 logical (2 threads per core)
+vector unit: AVX2 present, AVX-512F/DQ/BW/VL/CD present
+memory:      59 GiB total, 43 GiB available at the run
+disk:        185 GiB free of 469 GiB
+jvm:         OpenJDK 25.0.4.1+1-1-26.04.4-Ubuntu (the repository's JDK at $HOME/jdk25)
+gc:          G1 (UseG1GC=true, UseSerialGC=false)
+build:       Gradle 9.6.0, --offline, the me.champeau.jmh plugin 0.7.3, JMH 1.37
+benchmark:   mode avgt, 1 thread, warmup 5 x 1 s, measurement 10 x 1 s, fork 2
+command:     ./gradlew :matrix-core:jmh -PjmhBenchmark=<Name> --offline
+seeds:       42 (every random input of every arm)
+note:        the machine was NOT idle: a browser was running during the run, and the
+             wall-clock assertions of the repository are sensitive to that. The figures
+             below are the measurements of THIS machine in THIS state; the ratios are
+             what the wave publishes.
+
+the arms
+========
+RepresentationWorkloadBenchmark.birBatch                   avgt   20   143.471 ±  0.358  ns/op
+RepresentationWorkloadBenchmark.birScalarReusedBuffer      avgt   20     0.643 ±  0.007  ns/op
+RepresentationWorkloadBenchmark.birScalarRuntimeAllocates  avgt   20     2.255 ±  0.029  ns/op
+RepresentationWorkloadBenchmark.byteSerializationDecode    avgt   20  1121.364 ± 11.034  ns/op
+RepresentationWorkloadBenchmark.byteSerializationEncode    avgt   20   837.266 ±  9.422  ns/op
+RepresentationWorkloadBenchmark.byteSerializationSize      avgt   20   771.248 ± 17.168  ns/op
+RepresentationWorkloadBenchmark.hdcBundle                  avgt   20  2109.341 ± 10.862  ns/op
+RepresentationWorkloadBenchmark.hdcCleanup                 avgt   20   354.945 ±  2.566  ns/op
+RepresentationWorkloadBenchmark.hdcHamming                 avgt   20     4.010 ±  0.017  ns/op
+RepresentationWorkloadBenchmark.hdcSimilarity              avgt   20     4.453 ±  0.071  ns/op
+RepresentationWorkloadBenchmark.hdcXor                     avgt   20    10.688 ±  0.217  ns/op
+RepresentationWorkloadBenchmark.neuronLayerEvaluate        avgt   20  4688.089 ± 80.907  ns/op
+RepresentationWorkloadBenchmark.neuronLayerInputCopy       avgt   20     1.812 ±  0.052  ns/op
+RepresentationWorkloadBenchmark.tsetlinPackWide            avgt   20   572.389 ±  1.427  ns/op
+
+the source: matrix-core/src/jmh/java/io/matrix/benchmark/RepresentationWorkloadBenchmark.java
+the machine-readable result: docs-v2/operations/bench/rep-substrate-02-workloads-20261113.json

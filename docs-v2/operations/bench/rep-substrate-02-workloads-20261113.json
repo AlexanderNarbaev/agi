@@ -1,0 +1,1026 @@
+[
+    {
+        "jmhVersion" : "1.37",
+        "benchmark" : "io.matrix.benchmark.RepresentationWorkloadBenchmark.birBatch",
+        "mode" : "avgt",
+        "threads" : 1,
+        "forks" : 2,
+        "jvm" : "/home/alexandr-narbaev/jdk25/bin/java",
+        "jvmArgs" : [
+            "-Dfile.encoding=UTF-8",
+            "-Djava.io.tmpdir=/home/alexandr-narbaev/Projects/agi/matrix-core/build/tmp/jmh",
+            "-Duser.country=US",
+            "-Duser.language=en",
+            "-Duser.variant"
+        ],
+        "jdkVersion" : "25.0.4.1",
+        "vmName" : "OpenJDK 64-Bit Server VM",
+        "vmVersion" : "25.0.4.1+1-1-26.04.4-Ubuntu",
+        "warmupIterations" : 5,
+        "warmupTime" : "1 s",
+        "warmupBatchSize" : 1,
+        "measurementIterations" : 10,
+        "measurementTime" : "1 s",
+        "measurementBatchSize" : 1,
+        "primaryMetric" : {
+            "score" : 143.4706499542126,
+            "scoreError" : 0.35826533127777405,
+            "scoreConfidence" : [
+                143.11238462293483,
+                143.82891528549038
+            ],
+            "scorePercentiles" : {
+                "0.0" : 142.6787205327642,
+                "50.0" : 143.4073348768411,
+                "90.0" : 143.92712712638598,
+                "95.0" : 144.19013140418033,
+                "99.0" : 144.20380350933453,
+                "99.9" : 144.20380350933453,
+                "99.99" : 144.20380350933453,
+                "99.999" : 144.20380350933453,
+                "99.9999" : 144.20380350933453,
+                "100.0" : 144.20380350933453
+            },
+            "scoreUnit" : "ns/op",
+            "rawData" : [
+                [
+                    143.2888795763812,
+                    144.20380350933453,
+                    143.8442110758893,
+                    143.78347176540643,
+                    143.40293065660254,
+                    143.93036140625068,
+                    143.03884787359888,
+                    143.8980186076038,
+                    143.54813804985935,
+                    143.8198972387036
+                ],
+                [
+                    142.94926812548445,
+                    143.35346459791054,
+                    143.3925021219733,
+                    142.6787205327642,
+                    143.8541776878345,
+                    143.41173909707967,
+                    143.78414832160712,
+                    143.1984179689178,
+                    143.18636955070562,
+                    142.8456313203451
+                ]
+            ]
+        },
+        "secondaryMetrics" : {
+        }
+    },
+    {
+        "jmhVersion" : "1.37",
+        "benchmark" : "io.matrix.benchmark.RepresentationWorkloadBenchmark.birScalarReusedBuffer",
+        "mode" : "avgt",
+        "threads" : 1,
+        "forks" : 2,
+        "jvm" : "/home/alexandr-narbaev/jdk25/bin/java",
+        "jvmArgs" : [
+            "-Dfile.encoding=UTF-8",
+            "-Djava.io.tmpdir=/home/alexandr-narbaev/Projects/agi/matrix-core/build/tmp/jmh",
+            "-Duser.country=US",
+            "-Duser.language=en",
+            "-Duser.variant"
+        ],
+        "jdkVersion" : "25.0.4.1",
+        "vmName" : "OpenJDK 64-Bit Server VM",
+        "vmVersion" : "25.0.4.1+1-1-26.04.4-Ubuntu",
+        "warmupIterations" : 5,
+        "warmupTime" : "1 s",
+        "warmupBatchSize" : 1,
+        "measurementIterations" : 10,
+        "measurementTime" : "1 s",
+        "measurementBatchSize" : 1,
+        "primaryMetric" : {
+            "score" : 0.6434135984702659,
+            "scoreError" : 0.007137464652102109,
+            "scoreConfidence" : [
+                0.6362761338181638,
+                0.650551063122368
+            ],
+            "scorePercentiles" : {
+                "0.0" : 0.6325901387874157,
+                "50.0" : 0.6404698399398022,
+                "90.0" : 0.6597231353889974,
+                "95.0" : 0.6599541960146637,
+                "99.0" : 0.6599651149165313,
+                "99.9" : 0.6599651149165313,
+                "99.99" : 0.6599651149165313,
+                "99.999" : 0.6599651149165313,
+                "99.9999" : 0.6599651149165313,
+                "100.0" : 0.6599651149165313
+            },
+            "scoreUnit" : "ns/op",
+            "rawData" : [
+                [
+                    0.6370483345095695,
+                    0.6373501870284296,
+                    0.642893067199137,
+                    0.6391180867094003,
+                    0.6356810543747241,
+                    0.6325901387874157,
+                    0.6597467368791776,
+                    0.6376788566537053,
+                    0.6469550349765737,
+                    0.6595107219773749
+                ],
+                [
+                    0.6499638197582587,
+                    0.6470959598320511,
+                    0.6404585254242792,
+                    0.6383753126232347,
+                    0.6404811544553253,
+                    0.6438467901357643,
+                    0.6599651149165313,
+                    0.6385511111955697,
+                    0.636929854675987,
+                    0.6440321072928089
+                ]
+            ]
+        },
+        "secondaryMetrics" : {
+        }
+    },
+    {
+        "jmhVersion" : "1.37",
+        "benchmark" : "io.matrix.benchmark.RepresentationWorkloadBenchmark.birScalarRuntimeAllocates",
+        "mode" : "avgt",
+        "threads" : 1,
+        "forks" : 2,
+        "jvm" : "/home/alexandr-narbaev/jdk25/bin/java",
+        "jvmArgs" : [
+            "-Dfile.encoding=UTF-8",
+            "-Djava.io.tmpdir=/home/alexandr-narbaev/Projects/agi/matrix-core/build/tmp/jmh",
+            "-Duser.country=US",
+            "-Duser.language=en",
+            "-Duser.variant"
+        ],
+        "jdkVersion" : "25.0.4.1",
+        "vmName" : "OpenJDK 64-Bit Server VM",
+        "vmVersion" : "25.0.4.1+1-1-26.04.4-Ubuntu",
+        "warmupIterations" : 5,
+        "warmupTime" : "1 s",
+        "warmupBatchSize" : 1,
+        "measurementIterations" : 10,
+        "measurementTime" : "1 s",
+        "measurementBatchSize" : 1,
+        "primaryMetric" : {
+            "score" : 2.25535402455409,
+            "scoreError" : 0.029347496437990186,
+            "scoreConfidence" : [
+                2.2260065281160997,
+                2.2847015209920802
+            ],
+            "scorePercentiles" : {
+                "0.0" : 2.2019346338252324,
+                "50.0" : 2.244913524442806,
+                "90.0" : 2.324452372839734,
+                "95.0" : 2.3393501509487216,
+                "99.0" : 2.33990297388783,
+                "99.9" : 2.33990297388783,
+                "99.99" : 2.33990297388783,
+                "99.999" : 2.33990297388783,
+                "99.9999" : 2.33990297388783,
+                "100.0" : 2.33990297388783
+            },
+            "scoreUnit" : "ns/op",
+            "rawData" : [
+                [
+                    2.2414867018391997,
+                    2.245150635626411,
+                    2.2776689431724186,
+                    2.23845694805436,
+                    2.2304968811067214,
+                    2.257286647278873,
+                    2.2701186885266234,
+                    2.276048867994514,
+                    2.3288465151056625,
+                    2.2446764132592016
+                ],
+                [
+                    2.2389720062240985,
+                    2.232726467862085,
+                    2.216349266044473,
+                    2.245423180747161,
+                    2.2019346338252324,
+                    2.2345342230545633,
+                    2.2442376121261463,
+                    2.2578577928998325,
+                    2.33990297388783,
+                    2.284905092446377
+                ]
+            ]
+        },
+        "secondaryMetrics" : {
+        }
+    },
+    {
+        "jmhVersion" : "1.37",
+        "benchmark" : "io.matrix.benchmark.RepresentationWorkloadBenchmark.byteSerializationDecode",
+        "mode" : "avgt",
+        "threads" : 1,
+        "forks" : 2,
+        "jvm" : "/home/alexandr-narbaev/jdk25/bin/java",
+        "jvmArgs" : [
+            "-Dfile.encoding=UTF-8",
+            "-Djava.io.tmpdir=/home/alexandr-narbaev/Projects/agi/matrix-core/build/tmp/jmh",
+            "-Duser.country=US",
+            "-Duser.language=en",
+            "-Duser.variant"
+        ],
+        "jdkVersion" : "25.0.4.1",
+        "vmName" : "OpenJDK 64-Bit Server VM",
+        "vmVersion" : "25.0.4.1+1-1-26.04.4-Ubuntu",
+        "warmupIterations" : 5,
+        "warmupTime" : "1 s",
+        "warmupBatchSize" : 1,
+        "measurementIterations" : 10,
+        "measurementTime" : "1 s",
+        "measurementBatchSize" : 1,
+        "primaryMetric" : {
+            "score" : 1121.3639365251724,
+            "scoreError" : 11.03374569895295,
+            "scoreConfidence" : [
+                1110.3301908262195,
+                1132.3976822241254
+            ],
+            "scorePercentiles" : {
+                "0.0" : 1099.1100875689078,
+                "50.0" : 1120.7773697259406,
+                "90.0" : 1141.1979461151109,
+                "95.0" : 1148.0544560528838,
+                "99.0" : 1148.4119704482143,
+                "99.9" : 1148.4119704482143,
+                "99.99" : 1148.4119704482143,
+                "99.999" : 1148.4119704482143,
+                "99.9999" : 1148.4119704482143,
+                "100.0" : 1148.4119704482143
+            },
+            "scoreUnit" : "ns/op",
+            "rawData" : [
+                [
+                    1122.7805051355447,
+                    1127.7832209073913,
+                    1109.8918528431657,
+                    1104.148817357204,
+                    1105.100534935451,
+                    1120.0310134988342,
+                    1117.1062163665486,
+                    1099.1100875689078,
+                    1140.6243182766855,
+                    1114.4109339169154
+                ],
+                [
+                    1118.6815611713819,
+                    1148.4119704482143,
+                    1112.4024695422384,
+                    1118.2983201968846,
+                    1132.1238781978718,
+                    1121.8260416549838,
+                    1121.523725953047,
+                    1128.7333232511787,
+                    1123.0282567393979,
+                    1141.2616825416026
+                ]
+            ]
+        },
+        "secondaryMetrics" : {
+        }
+    },
+    {
+        "jmhVersion" : "1.37",
+        "benchmark" : "io.matrix.benchmark.RepresentationWorkloadBenchmark.byteSerializationEncode",
+        "mode" : "avgt",
+        "threads" : 1,
+        "forks" : 2,
+        "jvm" : "/home/alexandr-narbaev/jdk25/bin/java",
+        "jvmArgs" : [
+            "-Dfile.encoding=UTF-8",
+            "-Djava.io.tmpdir=/home/alexandr-narbaev/Projects/agi/matrix-core/build/tmp/jmh",
+            "-Duser.country=US",
+            "-Duser.language=en",
+            "-Duser.variant"
+        ],
+        "jdkVersion" : "25.0.4.1",
+        "vmName" : "OpenJDK 64-Bit Server VM",
+        "vmVersion" : "25.0.4.1+1-1-26.04.4-Ubuntu",
+        "warmupIterations" : 5,
+        "warmupTime" : "1 s",
+        "warmupBatchSize" : 1,
+        "measurementIterations" : 10,
+        "measurementTime" : "1 s",
+        "measurementBatchSize" : 1,
+        "primaryMetric" : {
+            "score" : 837.2662007616998,
+            "scoreError" : 9.4217653024605,
+            "scoreConfidence" : [
+                827.8444354592393,
+                846.6879660641603
+            ],
+            "scorePercentiles" : {
+                "0.0" : 821.0229995739452,
+                "50.0" : 836.1468141080727,
+                "90.0" : 853.185644535895,
+                "95.0" : 867.7787979038037,
+                "99.0" : 868.5274940453086,
+                "99.9" : 868.5274940453086,
+                "99.99" : 868.5274940453086,
+                "99.999" : 868.5274940453086,
+                "99.9999" : 868.5274940453086,
+                "100.0" : 868.5274940453086
+            },
+            "scoreUnit" : "ns/op",
+            "rawData" : [
+                [
+                    834.0333637709258,
+                    837.1411211276566,
+                    836.5904503949864,
+                    835.7031778211589,
+                    834.2731440368954,
+                    840.1674987759804,
+                    821.0229995739452,
+                    830.0479739464721,
+                    825.305375845417,
+                    829.6219772982156
+                ],
+                [
+                    840.5522440242418,
+                    853.5535712152117,
+                    849.8743044220447,
+                    825.132568901941,
+                    832.1078915427612,
+                    837.0525692936807,
+                    868.5274940453086,
+                    844.614454504228,
+                    839.3681975500941,
+                    830.6336371428287
+                ]
+            ]
+        },
+        "secondaryMetrics" : {
+        }
+    },
+    {
+        "jmhVersion" : "1.37",
+        "benchmark" : "io.matrix.benchmark.RepresentationWorkloadBenchmark.byteSerializationSize",
+        "mode" : "avgt",
+        "threads" : 1,
+        "forks" : 2,
+        "jvm" : "/home/alexandr-narbaev/jdk25/bin/java",
+        "jvmArgs" : [
+            "-Dfile.encoding=UTF-8",
+            "-Djava.io.tmpdir=/home/alexandr-narbaev/Projects/agi/matrix-core/build/tmp/jmh",
+            "-Duser.country=US",
+            "-Duser.language=en",
+            "-Duser.variant"
+        ],
+        "jdkVersion" : "25.0.4.1",
+        "vmName" : "OpenJDK 64-Bit Server VM",
+        "vmVersion" : "25.0.4.1+1-1-26.04.4-Ubuntu",
+        "warmupIterations" : 5,
+        "warmupTime" : "1 s",
+        "warmupBatchSize" : 1,
+        "measurementIterations" : 10,
+        "measurementTime" : "1 s",
+        "measurementBatchSize" : 1,
+        "primaryMetric" : {
+            "score" : 771.24835335805,
+            "scoreError" : 17.167862414872655,
+            "scoreConfidence" : [
+                754.0804909431774,
+                788.4162157729227
+            ],
+            "scorePercentiles" : {
+                "0.0" : 738.1177239442109,
+                "50.0" : 772.4245696359151,
+                "90.0" : 797.556932134676,
+                "95.0" : 814.4861141401564,
+                "99.0" : 815.3655710159248,
+                "99.9" : 815.3655710159248,
+                "99.99" : 815.3655710159248,
+                "99.999" : 815.3655710159248,
+                "99.9999" : 815.3655710159248,
+                "100.0" : 815.3655710159248
+            },
+            "scoreUnit" : "ns/op",
+            "rawData" : [
+                [
+                    759.7024865267243,
+                    756.2483737670459,
+                    766.5948217053312,
+                    756.4801382659274,
+                    738.1177239442109,
+                    746.4247408246594,
+                    748.2873464923109,
+                    757.1239289904993,
+                    766.8899566620252,
+                    751.8864324071158
+                ],
+                [
+                    781.069347819975,
+                    797.7764335005548,
+                    785.481577211253,
+                    815.3655710159248,
+                    795.5814198417661,
+                    785.2117187101333,
+                    777.959182609805,
+                    778.9626763371716,
+                    781.2482885860956,
+                    778.5549019424685
+                ]
+            ]
+        },
+        "secondaryMetrics" : {
+        }
+    },
+    {
+        "jmhVersion" : "1.37",
+        "benchmark" : "io.matrix.benchmark.RepresentationWorkloadBenchmark.hdcBundle",
+        "mode" : "avgt",
+        "threads" : 1,
+        "forks" : 2,
+        "jvm" : "/home/alexandr-narbaev/jdk25/bin/java",
+        "jvmArgs" : [
+            "-Dfile.encoding=UTF-8",
+            "-Djava.io.tmpdir=/home/alexandr-narbaev/Projects/agi/matrix-core/build/tmp/jmh",
+            "-Duser.country=US",
+            "-Duser.language=en",
+            "-Duser.variant"
+        ],
+        "jdkVersion" : "25.0.4.1",
+        "vmName" : "OpenJDK 64-Bit Server VM",
+        "vmVersion" : "25.0.4.1+1-1-26.04.4-Ubuntu",
+        "warmupIterations" : 5,
+        "warmupTime" : "1 s",
+        "warmupBatchSize" : 1,
+        "measurementIterations" : 10,
+        "measurementTime" : "1 s",
+        "measurementBatchSize" : 1,
+        "primaryMetric" : {
+            "score" : 2109.3409097402027,
+            "scoreError" : 10.861720468452276,
+            "scoreConfidence" : [
+                2098.4791892717503,
+                2120.202630208655
+            ],
+            "scorePercentiles" : {
+                "0.0" : 2089.785122516397,
+                "50.0" : 2106.775091897873,
+                "90.0" : 2129.218327951193,
+                "95.0" : 2138.063747506539,
+                "99.0" : 2138.527158271074,
+                "99.9" : 2138.527158271074,
+                "99.99" : 2138.527158271074,
+                "99.999" : 2138.527158271074,
+                "99.9999" : 2138.527158271074,
+                "100.0" : 2138.527158271074
+            },
+            "scoreUnit" : "ns/op",
+            "rawData" : [
+                [
+                    2119.3031355488642,
+                    2104.811694215398,
+                    2110.643172345387,
+                    2097.5687784580086,
+                    2101.280792648338,
+                    2106.3053826259834,
+                    2096.822396987569,
+                    2100.2132006451016,
+                    2089.785122516397,
+                    2095.0736964705043
+                ],
+                [
+                    2110.4170581011103,
+                    2138.527158271074,
+                    2111.7686928319863,
+                    2128.8527926884813,
+                    2104.081677606665,
+                    2102.744617551827,
+                    2113.779580311987,
+                    2129.258942980383,
+                    2118.335500829226,
+                    2107.244801169763
+                ]
+            ]
+        },
+        "secondaryMetrics" : {
+        }
+    },
+    {
+        "jmhVersion" : "1.37",
+        "benchmark" : "io.matrix.benchmark.RepresentationWorkloadBenchmark.hdcCleanup",
+        "mode" : "avgt",
+        "threads" : 1,
+        "forks" : 2,
+        "jvm" : "/home/alexandr-narbaev/jdk25/bin/java",
+        "jvmArgs" : [
+            "-Dfile.encoding=UTF-8",
+            "-Djava.io.tmpdir=/home/alexandr-narbaev/Projects/agi/matrix-core/build/tmp/jmh",
+            "-Duser.country=US",
+            "-Duser.language=en",
+            "-Duser.variant"
+        ],
+        "jdkVersion" : "25.0.4.1",
+        "vmName" : "OpenJDK 64-Bit Server VM",
+        "vmVersion" : "25.0.4.1+1-1-26.04.4-Ubuntu",
+        "warmupIterations" : 5,
+        "warmupTime" : "1 s",
+        "warmupBatchSize" : 1,
+        "measurementIterations" : 10,
+        "measurementTime" : "1 s",
+        "measurementBatchSize" : 1,
+        "primaryMetric" : {
+            "score" : 354.94524642636884,
+            "scoreError" : 2.5657794633798314,
+            "scoreConfidence" : [
+                352.379466962989,
+                357.5110258897487
+            ],
+            "scorePercentiles" : {
+                "0.0" : 350.96156086666934,
+                "50.0" : 354.4364711165813,
+                "90.0" : 359.4949528347487,
+                "95.0" : 362.21925841387133,
+                "99.0" : 362.3602820598105,
+                "99.9" : 362.3602820598105,
+                "99.99" : 362.3602820598105,
+                "99.999" : 362.3602820598105,
+                "99.9999" : 362.3602820598105,
+                "100.0" : 362.3602820598105
+            },
+            "scoreUnit" : "ns/op",
+            "rawData" : [
+                [
+                    354.3821489645026,
+                    352.8184218055407,
+                    357.7285427014174,
+                    356.0385294471526,
+                    355.70715391246705,
+                    353.11940735897093,
+                    351.61178858430037,
+                    352.5614111961939,
+                    350.96156086666934,
+                    351.15740344428883
+                ],
+                [
+                    354.99061722102346,
+                    353.2466396650738,
+                    353.7162739740754,
+                    354.1834484780918,
+                    356.56121387054486,
+                    359.09124607824623,
+                    362.3602820598105,
+                    359.53980914102675,
+                    354.63823648931844,
+                    354.4907932686599
+                ]
+            ]
+        },
+        "secondaryMetrics" : {
+        }
+    },
+    {
+        "jmhVersion" : "1.37",
+        "benchmark" : "io.matrix.benchmark.RepresentationWorkloadBenchmark.hdcHamming",
+        "mode" : "avgt",
+        "threads" : 1,
+        "forks" : 2,
+        "jvm" : "/home/alexandr-narbaev/jdk25/bin/java",
+        "jvmArgs" : [
+            "-Dfile.encoding=UTF-8",
+            "-Djava.io.tmpdir=/home/alexandr-narbaev/Projects/agi/matrix-core/build/tmp/jmh",
+            "-Duser.country=US",
+            "-Duser.language=en",
+            "-Duser.variant"
+        ],
+        "jdkVersion" : "25.0.4.1",
+        "vmName" : "OpenJDK 64-Bit Server VM",
+        "vmVersion" : "25.0.4.1+1-1-26.04.4-Ubuntu",
+        "warmupIterations" : 5,
+        "warmupTime" : "1 s",
+        "warmupBatchSize" : 1,
+        "measurementIterations" : 10,
+        "measurementTime" : "1 s",
+        "measurementBatchSize" : 1,
+        "primaryMetric" : {
+            "score" : 4.009806352860525,
+            "scoreError" : 0.01718202242249112,
+            "scoreConfidence" : [
+                3.992624330438034,
+                4.0269883752830165
+            ],
+            "scorePercentiles" : {
+                "0.0" : 3.9860786481727684,
+                "50.0" : 4.004713952799461,
+                "90.0" : 4.054116732655867,
+                "95.0" : 4.059934107452123,
+                "99.0" : 4.0600752604497625,
+                "99.9" : 4.0600752604497625,
+                "99.99" : 4.0600752604497625,
+                "99.999" : 4.0600752604497625,
+                "99.9999" : 4.0600752604497625,
+                "100.0" : 4.0600752604497625
+            },
+            "scoreUnit" : "ns/op",
+            "rawData" : [
+                [
+                    3.99846498750011,
+                    4.004158545028661,
+                    3.999970743369779,
+                    3.9968203484844604,
+                    4.006777619927387,
+                    4.02189581595492,
+                    4.012669304550084,
+                    3.9860786481727684,
+                    3.9922876237245393,
+                    4.00067454337044
+                ],
+                [
+                    4.0600752604497625,
+                    4.012568716159473,
+                    4.057252200496969,
+                    4.005269360570263,
+                    4.003026109009938,
+                    4.025897522085949,
+                    4.016284121067297,
+                    3.9944696107857793,
+                    4.013848120675806,
+                    3.987637855826117
+                ]
+            ]
+        },
+        "secondaryMetrics" : {
+        }
+    },
+    {
+        "jmhVersion" : "1.37",
+        "benchmark" : "io.matrix.benchmark.RepresentationWorkloadBenchmark.hdcSimilarity",
+        "mode" : "avgt",
+        "threads" : 1,
+        "forks" : 2,
+        "jvm" : "/home/alexandr-narbaev/jdk25/bin/java",
+        "jvmArgs" : [
+            "-Dfile.encoding=UTF-8",
+            "-Djava.io.tmpdir=/home/alexandr-narbaev/Projects/agi/matrix-core/build/tmp/jmh",
+            "-Duser.country=US",
+            "-Duser.language=en",
+            "-Duser.variant"
+        ],
+        "jdkVersion" : "25.0.4.1",
+        "vmName" : "OpenJDK 64-Bit Server VM",
+        "vmVersion" : "25.0.4.1+1-1-26.04.4-Ubuntu",
+        "warmupIterations" : 5,
+        "warmupTime" : "1 s",
+        "warmupBatchSize" : 1,
+        "measurementIterations" : 10,
+        "measurementTime" : "1 s",
+        "measurementBatchSize" : 1,
+        "primaryMetric" : {
+            "score" : 4.452535884406524,
+            "scoreError" : 0.07127050704488715,
+            "scoreConfidence" : [
+                4.381265377361637,
+                4.523806391451411
+            ],
+            "scorePercentiles" : {
+                "0.0" : 4.400166891334848,
+                "50.0" : 4.416370810377876,
+                "90.0" : 4.570756298299634,
+                "95.0" : 4.722379662011554,
+                "99.0" : 4.730347100446082,
+                "99.9" : 4.730347100446082,
+                "99.99" : 4.730347100446082,
+                "99.999" : 4.730347100446082,
+                "99.9999" : 4.730347100446082,
+                "100.0" : 4.730347100446082
+            },
+            "scoreUnit" : "ns/op",
+            "rawData" : [
+                [
+                    4.730347100446082,
+                    4.454191176855376,
+                    4.412438629168732,
+                    4.418684549609614,
+                    4.412208670584415,
+                    4.407237274677136,
+                    4.414057071146138,
+                    4.458566596228151,
+                    4.400166891334848,
+                    4.568577997196531
+                ],
+                [
+                    4.43141823342624,
+                    4.402661393755664,
+                    4.400443726019827,
+                    4.445470712220389,
+                    4.469422795651626,
+                    4.408794819562626,
+                    4.4026822437701725,
+                    4.4095492017615365,
+                    4.432800272959838,
+                    4.5709983317555345
+                ]
+            ]
+        },
+        "secondaryMetrics" : {
+        }
+    },
+    {
+        "jmhVersion" : "1.37",
+        "benchmark" : "io.matrix.benchmark.RepresentationWorkloadBenchmark.hdcXor",
+        "mode" : "avgt",
+        "threads" : 1,
+        "forks" : 2,
+        "jvm" : "/home/alexandr-narbaev/jdk25/bin/java",
+        "jvmArgs" : [
+            "-Dfile.encoding=UTF-8",
+            "-Djava.io.tmpdir=/home/alexandr-narbaev/Projects/agi/matrix-core/build/tmp/jmh",
+            "-Duser.country=US",
+            "-Duser.language=en",
+            "-Duser.variant"
+        ],
+        "jdkVersion" : "25.0.4.1",
+        "vmName" : "OpenJDK 64-Bit Server VM",
+        "vmVersion" : "25.0.4.1+1-1-26.04.4-Ubuntu",
+        "warmupIterations" : 5,
+        "warmupTime" : "1 s",
+        "warmupBatchSize" : 1,
+        "measurementIterations" : 10,
+        "measurementTime" : "1 s",
+        "measurementBatchSize" : 1,
+        "primaryMetric" : {
+            "score" : 10.688097918162988,
+            "scoreError" : 0.2173471413574835,
+            "scoreConfidence" : [
+                10.470750776805504,
+                10.905445059520472
+            ],
+            "scorePercentiles" : {
+                "0.0" : 10.165349456554274,
+                "50.0" : 10.725682935202038,
+                "90.0" : 10.966715840189343,
+                "95.0" : 11.077441571478392,
+                "99.0" : 11.083042560678111,
+                "99.9" : 11.083042560678111,
+                "99.99" : 11.083042560678111,
+                "99.999" : 11.083042560678111,
+                "99.9999" : 11.083042560678111,
+                "100.0" : 11.083042560678111
+            },
+            "scoreUnit" : "ns/op",
+            "rawData" : [
+                [
+                    10.710016549912497,
+                    10.97102277668374,
+                    10.601524799598264,
+                    10.901463714261359,
+                    10.885444800699572,
+                    10.846325860700315,
+                    10.750041851699972,
+                    10.495996249952999,
+                    10.324706335298902,
+                    10.815887750266349
+                ],
+                [
+                    10.557769302931842,
+                    11.083042560678111,
+                    10.927953411739775,
+                    10.741349320491576,
+                    10.165349456554274,
+                    10.319165987358907,
+                    10.685912626522843,
+                    10.700934767527091,
+                    10.359760223104546,
+                    10.918290017276822
+                ]
+            ]
+        },
+        "secondaryMetrics" : {
+        }
+    },
+    {
+        "jmhVersion" : "1.37",
+        "benchmark" : "io.matrix.benchmark.RepresentationWorkloadBenchmark.neuronLayerEvaluate",
+        "mode" : "avgt",
+        "threads" : 1,
+        "forks" : 2,
+        "jvm" : "/home/alexandr-narbaev/jdk25/bin/java",
+        "jvmArgs" : [
+            "-Dfile.encoding=UTF-8",
+            "-Djava.io.tmpdir=/home/alexandr-narbaev/Projects/agi/matrix-core/build/tmp/jmh",
+            "-Duser.country=US",
+            "-Duser.language=en",
+            "-Duser.variant"
+        ],
+        "jdkVersion" : "25.0.4.1",
+        "vmName" : "OpenJDK 64-Bit Server VM",
+        "vmVersion" : "25.0.4.1+1-1-26.04.4-Ubuntu",
+        "warmupIterations" : 5,
+        "warmupTime" : "1 s",
+        "warmupBatchSize" : 1,
+        "measurementIterations" : 10,
+        "measurementTime" : "1 s",
+        "measurementBatchSize" : 1,
+        "primaryMetric" : {
+            "score" : 4688.088740270018,
+            "scoreError" : 80.90666291659053,
+            "scoreConfidence" : [
+                4607.182077353427,
+                4768.995403186609
+            ],
+            "scorePercentiles" : {
+                "0.0" : 4513.247981696503,
+                "50.0" : 4664.453603587605,
+                "90.0" : 4845.437418091922,
+                "95.0" : 4898.904623580292,
+                "99.0" : 4901.489002264239,
+                "99.9" : 4901.489002264239,
+                "99.99" : 4901.489002264239,
+                "99.999" : 4901.489002264239,
+                "99.9999" : 4901.489002264239,
+                "100.0" : 4901.489002264239
+            },
+            "scoreUnit" : "ns/op",
+            "rawData" : [
+                [
+                    4721.192414086103,
+                    4849.801428585283,
+                    4775.82395159827,
+                    4629.168168668564,
+                    4513.247981696503,
+                    4665.051358713396,
+                    4728.720560354405,
+                    4711.147964086524,
+                    4727.485438637126,
+                    4663.078903565417
+                ],
+                [
+                    4636.420044690044,
+                    4623.622403550542,
+                    4627.929506489901,
+                    4674.783529103818,
+                    4649.9282556036505,
+                    4806.161323651671,
+                    4901.489002264239,
+                    4663.855848461814,
+                    4628.9649445982095,
+                    4563.901776994898
+                ]
+            ]
+        },
+        "secondaryMetrics" : {
+        }
+    },
+    {
+        "jmhVersion" : "1.37",
+        "benchmark" : "io.matrix.benchmark.RepresentationWorkloadBenchmark.neuronLayerInputCopy",
+        "mode" : "avgt",
+        "threads" : 1,
+        "forks" : 2,
+        "jvm" : "/home/alexandr-narbaev/jdk25/bin/java",
+        "jvmArgs" : [
+            "-Dfile.encoding=UTF-8",
+            "-Djava.io.tmpdir=/home/alexandr-narbaev/Projects/agi/matrix-core/build/tmp/jmh",
+            "-Duser.country=US",
+            "-Duser.language=en",
+            "-Duser.variant"
+        ],
+        "jdkVersion" : "25.0.4.1",
+        "vmName" : "OpenJDK 64-Bit Server VM",
+        "vmVersion" : "25.0.4.1+1-1-26.04.4-Ubuntu",
+        "warmupIterations" : 5,
+        "warmupTime" : "1 s",
+        "warmupBatchSize" : 1,
+        "measurementIterations" : 10,
+        "measurementTime" : "1 s",
+        "measurementBatchSize" : 1,
+        "primaryMetric" : {
+            "score" : 1.8117505239972043,
+            "scoreError" : 0.05154761654126048,
+            "scoreConfidence" : [
+                1.7602029074559438,
+                1.8632981405384648
+            ],
+            "scorePercentiles" : {
+                "0.0" : 1.7304506230572925,
+                "50.0" : 1.8066478442565708,
+                "90.0" : 1.9063044180048425,
+                "95.0" : 1.946246333525192,
+                "99.0" : 1.9481363106390837,
+                "99.9" : 1.9481363106390837,
+                "99.99" : 1.9481363106390837,
+                "99.999" : 1.9481363106390837,
+                "99.9999" : 1.9481363106390837,
+                "100.0" : 1.9481363106390837
+            },
+            "scoreUnit" : "ns/op",
+            "rawData" : [
+                [
+                    1.7878061302290047,
+                    1.8539566331645176,
+                    1.8698441481646477,
+                    1.9481363106390837,
+                    1.8151177794815496,
+                    1.8559798542490118,
+                    1.8066941769575282,
+                    1.7383051591020704,
+                    1.7993421936090417,
+                    1.8700132647971612
+                ],
+                [
+                    1.7366181684997852,
+                    1.8003063330706701,
+                    1.8066015115556133,
+                    1.80706682832773,
+                    1.9103367683612515,
+                    1.7443368287828902,
+                    1.7722741512005566,
+                    1.7551167237967675,
+                    1.8267068928979087,
+                    1.7304506230572925
+                ]
+            ]
+        },
+        "secondaryMetrics" : {
+        }
+    },
+    {
+        "jmhVersion" : "1.37",
+        "benchmark" : "io.matrix.benchmark.RepresentationWorkloadBenchmark.tsetlinPackWide",
+        "mode" : "avgt",
+        "threads" : 1,
+        "forks" : 2,
+        "jvm" : "/home/alexandr-narbaev/jdk25/bin/java",
+        "jvmArgs" : [
+            "-Dfile.encoding=UTF-8",
+            "-Djava.io.tmpdir=/home/alexandr-narbaev/Projects/agi/matrix-core/build/tmp/jmh",
+            "-Duser.country=US",
+            "-Duser.language=en",
+            "-Duser.variant"
+        ],
+        "jdkVersion" : "25.0.4.1",
+        "vmName" : "OpenJDK 64-Bit Server VM",
+        "vmVersion" : "25.0.4.1+1-1-26.04.4-Ubuntu",
+        "warmupIterations" : 5,
+        "warmupTime" : "1 s",
+        "warmupBatchSize" : 1,
+        "measurementIterations" : 10,
+        "measurementTime" : "1 s",
+        "measurementBatchSize" : 1,
+        "primaryMetric" : {
+            "score" : 572.3888988785018,
+            "scoreError" : 1.4268491375652426,
+            "scoreConfidence" : [
+                570.9620497409365,
+                573.815748016067
+            ],
+            "scorePercentiles" : {
+                "0.0" : 570.6391023003938,
+                "50.0" : 571.7774388538521,
+                "90.0" : 573.9198842126974,
+                "95.0" : 577.328405433364,
+                "99.0" : 577.5068189403589,
+                "99.9" : 577.5068189403589,
+                "99.99" : 577.5068189403589,
+                "99.999" : 577.5068189403589,
+                "99.9999" : 577.5068189403589,
+                "100.0" : 577.5068189403589
+            },
+            "scoreUnit" : "ns/op",
+            "rawData" : [
+                [
+                    570.6391023003938,
+                    571.375343573946,
+                    571.0681220707676,
+                    570.8770824796047,
+                    573.7011824119874,
+                    573.7519029228253,
+                    572.8852485214727,
+                    571.0731222531763,
+                    572.3804276409921,
+                    573.1140292968504
+                ],
+                [
+                    573.727731235128,
+                    577.5068189403589,
+                    571.7575576722335,
+                    570.7140104976871,
+                    571.7973200354706,
+                    571.5986005568967,
+                    573.9385488004609,
+                    571.1245889263805,
+                    573.0565511132197,
+                    571.6906863201845
+                ]
+            ]
+        },
+        "secondaryMetrics" : {
+        }
+    }
+]
+
+
