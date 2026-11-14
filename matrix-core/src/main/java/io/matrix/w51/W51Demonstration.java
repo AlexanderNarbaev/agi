@@ -361,26 +361,42 @@ public final class W51Demonstration {
                             + "; the decision record says: "
                             + (outcome.decision() == null ? "no decision"
                                     : outcome.decision().reason()));
+            // The absence of a field is not evidence of absence of an event: a cycle may
+            // end without a prediction, and the demonstration says what it saw instead of
+            // dereferencing a prediction that is not there. The two points below read the
+            // prediction the same way the cycle section above already reads it.
             point(acceptance, 7, "at least one prediction or hypothesis is recorded",
-                    "DEMONSTRATED", "prediction " + outcome.prediction().id() + " says \""
-                            + outcome.prediction().predictedValue() + "\" on the basis of "
-                            + outcome.prediction().basis());
+                    outcome.prediction() == null ? "NOT DEMONSTRATED" : "DEMONSTRATED",
+                    outcome.prediction() == null
+                            ? "the cycle recorded no prediction in this run, so the point is"
+                                    + " not demonstrated by it"
+                            : "prediction " + outcome.prediction().id() + " says \""
+                                    + outcome.prediction().predictedValue() + "\" on the basis of "
+                                    + outcome.prediction().basis());
             point(acceptance, 8, "an experiment or action is performed in the environment",
                     "DEMONSTRATED", "the trace holds " + cycle.get("traceSteps")
                             + " step(s): " + cycle.get("tracePhases"));
             point(acceptance, 9, "the observed result is compared with the prediction",
-                    "DEMONSTRATED", outcome.error() == null
-                            ? "the prediction was \"" + outcome.prediction().predictedValue()
-                                    + "\" and the observation matched it, so the cycle recorded"
-                                    + " NO error signal — the absence of the error IS the"
-                                    + " outcome of the comparison, and the prediction was"
-                                    + " settled BEFORE the probe (the trace holds the PROBE"
-                                    + " step after the PREDICT step)"
-                            : "the prediction was \"" + outcome.prediction().predictedValue()
-                                    + "\", the observation was \""
-                                    + outcome.error().observed() + "\", and the error signal"
-                                    + " has magnitude " + outcome.error().magnitude()
-                                    + " with the disposition " + outcome.error().disposition());
+                    outcome.prediction() == null ? "NOT DEMONSTRATED" : "DEMONSTRATED",
+                    outcome.prediction() == null
+                            ? "the cycle recorded no prediction in this run, so there was"
+                                    + " nothing to compare the observation with"
+                            : outcome.error() == null
+                                    ? "the prediction was \""
+                                            + outcome.prediction().predictedValue()
+                                            + "\" and the observation matched it, so the cycle"
+                                            + " recorded NO error signal — the absence of the"
+                                            + " error IS the outcome of the comparison, and the"
+                                            + " prediction was settled BEFORE the probe (the"
+                                            + " trace holds the PROBE step after the PREDICT step)"
+                                    : "the prediction was \""
+                                            + outcome.prediction().predictedValue()
+                                            + "\", the observation was \""
+                                            + outcome.error().observed() + "\", and the error"
+                                            + " signal has magnitude "
+                                            + outcome.error().magnitude()
+                                            + " with the disposition "
+                                            + outcome.error().disposition());
         }
     }
 
