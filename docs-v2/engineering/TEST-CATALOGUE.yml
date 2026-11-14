@@ -112,7 +112,7 @@ scopes:
       io.matrix.safety, io.matrix.knowledge]
     test_packages: [io.matrix.contract, io.matrix.cognitive, io.matrix.bridge, io.matrix.w51,
       io.matrix.safety, io.matrix.knowledge]
-    last_verified_commit: e41cd3c1
+    last_verified_commit: 0bd5b574
     last_execution: '2026-11-13'
     result:
       classes_discovered: 255
@@ -208,7 +208,7 @@ scopes:
     filters: []
     source_packages: [io.matrix.brain.runtime]
     test_packages: [io.matrix.brain.runtime]
-    last_verified_commit: e41cd3c1
+    last_verified_commit: 0bd5b574
     last_execution: '2026-11-13'
     result:
       classes_discovered: 124

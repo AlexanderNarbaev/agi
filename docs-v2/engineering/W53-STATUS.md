@@ -1072,6 +1072,8 @@ caused.
 | `bfbec57b` | the merge of `main` into `develop` — the tree does not change |
 | `bb46fc41` | the demonstration's null-prediction guard (a flaky CI failure that was **not** the wave's) and the next cycle's proposal |
 | `e41cd3c1` | the post-squash synchronization of `main` back into `develop` |
+| `d71b3d73` | the release record — the identifiers, the checks and the inherited reds |
+| `0bd5b574` | the synchronization of the release record's own squash back into `develop` |
 
 **The reconciliation.** `main` carried W52 and the reusable procedure as the squash
 `7709dc9e` of pull request #49, and `develop` carried the same work as its own sequence of
@@ -1083,9 +1085,11 @@ no document changed. The targeted tests on the merged tree were green (the chain
 cognitive scope 489 tests, the gateway 284, the brain runtime 928).
 
 **The release.** Pull request #50 was merged as a **squash** — the repository's established
-policy — as `bcdd1a0a` on 2026-11-14, and the two branches now hold **the same tree**
-(`d434705b`): `main` is contained in `develop`'s history, `develop` is 440 commits ahead
-with nothing behind it, and `main..develop` holds the whole of W53.
+policy — as `bcdd1a0a` on 2026-11-14, and the release record itself followed as pull
+request #51, squash `c4cee8ab`. The two branches now hold **the same tree**
+(`git rev-parse origin/main^{tree}` and `git rev-parse origin/develop^{tree}` are equal):
+`main` is contained in `develop`'s history, `develop` is 442 commits ahead with nothing
+behind it, and `main..develop` holds the whole of W53.
 
 **The checks on the released branches.**
 
@@ -1130,6 +1134,15 @@ one whose current form no longer contains the literal. A push that carries only 
 commits finds nothing, and the job is green on both released branches. **No scanner was
 disabled and no exception was added**: the wave's own finding was answered by the
 narrowest possible change, and what remains is the history of the literals.
+
+**How the pull requests were merged.** The repository's ruleset ("Protected main") requires
+one approving review from a code owner, and the repository has **one** collaborator — the
+owner — who is also the author of both pull requests; GitHub does not allow an author to
+approve their own pull request, so the requirement cannot be met by anybody but the
+owner's own merge. The ruleset therefore carries the administrator in its bypass list, and
+the two merges were made through that path (`gh pr merge --squash --admin`). **No check was
+disabled, no assertion was weakened and no approval was faked** — and the owner may approve
+or merge by hand instead, which would leave the same trees.
 
 **The open owner decisions are untouched.** The Exp324 threshold stands at 2 ms. The
 replacement of the trainer's fold (ADR §4.4, options A/B/C) stays **OPEN**, and the next

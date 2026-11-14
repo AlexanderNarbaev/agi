@@ -591,7 +591,7 @@ capabilities:
       - "the peer's inbox row is the only proof of effectively-once execution; it is a local file, and the guarantee is at-least-once delivery, not distributed exactly-once"
     owner: "the owner (W53 directive of 2026-11-09)"
     decision_ref: "CD-032; CD-033; CD-034; CD-035; CD-036"
-    last_verified_commit: "e41cd3c1"
+    last_verified_commit: "0bd5b574"
     last_verified_at: "2026-11-14"
     next_verification_condition: "the capability is RELEASED: pull request #50 was squash-merged into main as bcdd1a0a on 2026-11-14, and the two branches hold the same tree. The next verification is a change to the bridge, the dispatch store or the peer's inbox"
     notes: "the four axes say what they mean here: the source exists (IMPLEMENTED), a real two-process path drives it (INTEGRATION_TESTED), the scope and the gates were run and measured (MEASURED), and nothing serves it in production by default (DORMANT) — the remote port is attached to the kernel only when a coordinator is given to it. The evidence of 2026-11-13 was produced on the tree of develop at 9f9948e7 - the wave's own commits (8cfcf854) and the merge that brought them onto develop (48bfe37a) - and the wave's pull request #50 is open; the release into main is the owner's decision."
