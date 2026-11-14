@@ -1,6 +1,6 @@
 # MATRIX — RUNTIME TOPOLOGY
 
-**Status:** `CANONICAL` · **Date:** 2026-11-04
+**Status:** `CANONICAL` · **Date:** 2026-11-14 (corrected after W53) — the two serving applications still share no database, no memory and no class-level access; they are no longer isolated from each other, because W53 added exactly one governed crossing, the bridge, described in §1.
 **What it owns:** what actually runs, what it binds, what it serves, and what it does not
 reach.
 
@@ -20,9 +20,19 @@ is **not** the topology of the running system, and the two must not be confused.
 
 ## 1. The two serving chains
 
-**They do not meet.** The isolation is not a convention: chain B reaches **zero** of
-`io.matrix.cognitive.**, zero of the stores, zero of the database-naming classes. What they
-share is **179 substrate classes** — the library, not a path to the data.
+**They do not share data ownership, and they communicate through exactly one governed
+crossing.** The isolation is not a convention: chain B reaches **zero** of
+`io.matrix.cognitive.**`, zero of the stores, zero of the database-naming classes — **no
+shared database, no shared memory, no class-level cross-chain access**. What they share is
+**179 substrate classes** — the library, not a path to the data.
+
+**What changed in W53:** the two applications now meet at exactly one place, the **governed
+bridge** (chain B → chain A, and the W53 task-assignment direction): an authenticated,
+versioned request/response contract with granted rights, idempotency, a payload limit and a
+hop limit, and a durable inbox on chain B. Chain A writes its intent down before it sends,
+chain B executes through its own production path, and chain A **evaluates the returned report
+as a candidate** before anything is affected. The isolation gate still proves the data
+boundary; the bridge is a governed crossing, not a merger of the chains.
 
 ### Chain A — one Quarkus process, three serving paths
 

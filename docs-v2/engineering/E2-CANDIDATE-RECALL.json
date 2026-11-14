@@ -1,0 +1,398 @@
+{
+  "record": "E2-CANDIDATE-RECALL",
+  "date": "2026-11-14",
+  "property": "matrix.retrieval.minimum-coverage=0.0",
+  "cases": {
+    "A-02": {
+      "scope": "S1",
+      "answered": true,
+      "citedClaims": 160,
+      "citedSources": [
+        "usgs-this-dynamic-earth.md",
+        "wikipedia-plate-tectonics.md"
+      ],
+      "gold": [
+        {
+          "proposition": "types of plate boundaries three types of plate boundaries exist, characterized by the way the plates move relative to ea",
+          "inWorkspace": true,
+          "status": "SUPPORTED",
+          "established": true,
+          "citedExact": true,
+          "citedNormalised": true,
+          "citedRank": 1,
+          "cause": "CITED-EXACTLY (this claim cannot be the failure)"
+        },
+        {
+          "proposition": "where the plates meet, their relative motion determines the type of plate boundary (or fault): convergent, divergent, or",
+          "inWorkspace": true,
+          "status": "SUPPORTED",
+          "established": true,
+          "citedExact": true,
+          "citedNormalised": true,
+          "citedRank": 12,
+          "cause": "CITED-EXACTLY (this claim cannot be the failure)"
+        },
+        {
+          "proposition": "convergent boundaries (destructive boundaries or active margins) occur where two plates slide toward each other to form ",
+          "inWorkspace": true,
+          "status": "SUPPORTED",
+          "established": true,
+          "citedExact": true,
+          "citedNormalised": true,
+          "citedRank": 17,
+          "cause": "CITED-EXACTLY (this claim cannot be the failure)"
+        }
+      ],
+      "requiredSource": "wikipedia-plate-tectonics.md",
+      "requiredSourcePresent": true
+    },
+    "A-04": {
+      "scope": "S1",
+      "answered": true,
+      "citedClaims": 161,
+      "citedSources": [
+        "usgs-this-dynamic-earth.md",
+        "wikipedia-plate-tectonics.md"
+      ],
+      "gold": [
+        {
+          "proposition": "gps satellite and ground receiver [63 k] current plate movement can be tracked directly by means of ground-based or spac",
+          "inWorkspace": true,
+          "status": "SUPPORTED",
+          "established": true,
+          "citedExact": true,
+          "citedNormalised": true,
+          "citedRank": 2,
+          "cause": "CITED-EXACTLY (this claim cannot be the failure)"
+        },
+        {
+          "proposition": "however, because plate motions are global in scale, they are best measured by satellite-based methods",
+          "inWorkspace": true,
+          "status": "SUPPORTED",
+          "established": true,
+          "citedExact": true,
+          "citedNormalised": true,
+          "citedRank": 10,
+          "cause": "CITED-EXACTLY (this claim cannot be the failure)"
+        },
+        {
+          "proposition": "the three most commonly used space-geodetic techniques -- very long baseline interferometry (vlbi), satellite laser rang",
+          "inWorkspace": true,
+          "status": "SUPPORTED",
+          "established": true,
+          "citedExact": true,
+          "citedNormalised": true,
+          "citedRank": 1,
+          "cause": "CITED-EXACTLY (this claim cannot be the failure)"
+        }
+      ],
+      "requiredSource": "usgs-this-dynamic-earth.md",
+      "requiredSourcePresent": true
+    },
+    "A-05": {
+      "scope": "S1",
+      "answered": true,
+      "citedClaims": 53,
+      "citedSources": [
+        "usgs-this-dynamic-earth.md",
+        "wikipedia-plate-tectonics.md"
+      ],
+      "gold": [
+        {
+          "proposition": "oceanic crust is formed at sea-floor spreading centers",
+          "inWorkspace": true,
+          "status": "SUPPORTED",
+          "established": true,
+          "citedExact": true,
+          "citedNormalised": true,
+          "citedRank": 33,
+          "cause": "CITED-EXACTLY (this claim cannot be the failure)"
+        },
+        {
+          "proposition": "the lost surface is balanced by the formation of new oceanic crust along divergent margins by seafloor spreading, keepin",
+          "inWorkspace": true,
+          "status": "SUPPORTED",
+          "established": true,
+          "citedExact": true,
+          "citedNormalised": true,
+          "citedRank": 11,
+          "cause": "CITED-EXACTLY (this claim cannot be the failure)"
+        },
+        {
+          "proposition": "when these magnetic patterns were mapped over a wide region, the ocean floor showed a zebra-like pattern: one stripe wit",
+          "inWorkspace": true,
+          "status": "SUPPORTED",
+          "established": true,
+          "citedExact": false,
+          "citedNormalised": false,
+          "citedRank": null,
+          "cause": "RANKING (citable, but not cited even at floor 0.0)"
+        },
+        {
+          "proposition": "seafloor spreading over the past 100 to 200 million years has caused the atlantic ocean to grow from a tiny inlet of wat",
+          "inWorkspace": true,
+          "status": "SUPPORTED",
+          "established": true,
+          "citedExact": true,
+          "citedNormalised": true,
+          "citedRank": 13,
+          "cause": "CITED-EXACTLY (this claim cannot be the failure)"
+        }
+      ],
+      "requiredSource": "usgs-this-dynamic-earth.md",
+      "requiredSourcePresent": true
+    },
+    "A-06": {
+      "scope": "S1",
+      "answered": true,
+      "citedClaims": 61,
+      "citedSources": [
+        "usgs-this-dynamic-earth.md",
+        "wikipedia-plate-tectonics.md"
+      ],
+      "gold": [
+        {
+          "proposition": "the descending plate also provides a source of stress as the two plates interact, leading to frequent moderate to strong",
+          "inWorkspace": true,
+          "status": "SUPPORTED",
+          "established": true,
+          "citedExact": true,
+          "citedNormalised": true,
+          "citedRank": 41,
+          "cause": "CITED-EXACTLY (this claim cannot be the failure)"
+        },
+        {
+          "proposition": "subduction processes in oceanic-oceanic plate convergence also result in the formation of volcanoes",
+          "inWorkspace": true,
+          "status": "SUPPORTED",
+          "established": true,
+          "citedExact": true,
+          "citedNormalised": true,
+          "citedRank": 9,
+          "cause": "CITED-EXACTLY (this claim cannot be the failure)"
+        },
+        {
+          "proposition": "magmas that form island arcs are produced by the partial melting of the descending plate and/or the overlying oceanic li",
+          "inWorkspace": true,
+          "status": "SUPPORTED",
+          "established": true,
+          "citedExact": false,
+          "citedNormalised": false,
+          "citedRank": null,
+          "cause": "RANKING (citable, but not cited even at floor 0.0)"
+        }
+      ],
+      "requiredSource": "usgs-this-dynamic-earth.md",
+      "requiredSourcePresent": true
+    },
+    "M-01": {
+      "scope": "S1",
+      "answered": true,
+      "citedClaims": 160,
+      "citedSources": [
+        "usgs-this-dynamic-earth.md",
+        "wikipedia-plate-tectonics.md"
+      ],
+      "gold": [
+        {
+          "proposition": "types of plate boundaries three types of plate boundaries exist, characterized by the way the plates move relative to ea",
+          "inWorkspace": true,
+          "status": "SUPPORTED",
+          "established": true,
+          "citedExact": true,
+          "citedNormalised": true,
+          "citedRank": 1,
+          "cause": "CITED-EXACTLY (this claim cannot be the failure)"
+        },
+        {
+          "proposition": "convergent boundaries (destructive boundaries or active margins) occur where two plates slide toward each other to form ",
+          "inWorkspace": true,
+          "status": "SUPPORTED",
+          "established": true,
+          "citedExact": true,
+          "citedNormalised": true,
+          "citedRank": 17,
+          "cause": "CITED-EXACTLY (this claim cannot be the failure)"
+        },
+        {
+          "proposition": "the san andreas fault in california is an example of a transform boundary exhibiting dextral motion",
+          "inWorkspace": true,
+          "status": "SUPPORTED",
+          "established": true,
+          "citedExact": false,
+          "citedNormalised": false,
+          "citedRank": null,
+          "cause": "RANKING (citable, but not cited even at floor 0.0)"
+        }
+      ],
+      "requiredSource": "wikipedia-plate-tectonics.md",
+      "requiredSourcePresent": true
+    },
+    "M-03": {
+      "scope": "P1",
+      "answered": true,
+      "citedClaims": 390,
+      "citedSources": [
+        "usgs-this-dynamic-earth.md",
+        "wikipedia-continental-drift.md",
+        "wikipedia-mid-ocean-ridge.md",
+        "wikipedia-plate-tectonics.md",
+        "wikipedia-subduction.md"
+      ],
+      "gold": [
+        {
+          "proposition": "similar plant and animal fossils are found around the shores of different continents, suggesting that they were once joi",
+          "inWorkspace": true,
+          "status": "SUPPORTED",
+          "established": true,
+          "citedExact": true,
+          "citedNormalised": true,
+          "citedRank": 303,
+          "cause": "CITED-EXACTLY (this claim cannot be the failure)"
+        },
+        {
+          "proposition": "the fossils of mesosaurus, a freshwater reptile rather like a small crocodile, found both in brazil and south africa, ar",
+          "inWorkspace": true,
+          "status": "SUPPORTED",
+          "established": true,
+          "citedExact": false,
+          "citedNormalised": false,
+          "citedRank": null,
+          "cause": "RANKING (citable, but not cited even at floor 0.0)"
+        },
+        {
+          "proposition": "this feature is where seafloor spreading takes place along a divergent plate boundary",
+          "inWorkspace": true,
+          "status": "SUPPORTED",
+          "established": true,
+          "citedExact": false,
+          "citedNormalised": false,
+          "citedRank": null,
+          "cause": "RANKING (citable, but not cited even at floor 0.0)"
+        },
+        {
+          "proposition": "beyond the forearc basin, volcanoes are found in long chains called volcanic arcs",
+          "inWorkspace": true,
+          "status": "SUPPORTED",
+          "established": true,
+          "citedExact": false,
+          "citedNormalised": false,
+          "citedRank": null,
+          "cause": "RANKING (citable, but not cited even at floor 0.0)"
+        },
+        {
+          "proposition": "oceanic trenches are the deepest parts of the ocean floor",
+          "inWorkspace": true,
+          "status": "SUPPORTED",
+          "established": true,
+          "citedExact": true,
+          "citedNormalised": true,
+          "citedRank": 368,
+          "cause": "CITED-EXACTLY (this claim cannot be the failure)"
+        }
+      ],
+      "requiredSource": null,
+      "requiredSourcePresent": null
+    },
+    "P-01": {
+      "scope": "P1",
+      "answered": true,
+      "citedClaims": 176,
+      "citedSources": [
+        "usgs-this-dynamic-earth.md",
+        "wikipedia-continental-drift.md",
+        "wikipedia-mid-ocean-ridge.md",
+        "wikipedia-plate-tectonics.md",
+        "wikipedia-subduction.md"
+      ],
+      "gold": [
+        {
+          "proposition": "this feature is where seafloor spreading takes place along a divergent plate boundary",
+          "inWorkspace": true,
+          "status": "SUPPORTED",
+          "established": true,
+          "citedExact": false,
+          "citedNormalised": false,
+          "citedRank": null,
+          "cause": "RANKING (citable, but not cited even at floor 0.0)"
+        },
+        {
+          "proposition": "it typically has a depth of about 2,600 meters (8,500 ft) and rises about 2,000 meters (6,600 ft) above the deepest port",
+          "inWorkspace": true,
+          "status": "SUPPORTED",
+          "established": true,
+          "citedExact": true,
+          "citedNormalised": true,
+          "citedRank": 129,
+          "cause": "CITED-EXACTLY (this claim cannot be the failure)"
+        },
+        {
+          "proposition": "in the 1960s, geologists discovered and began to propose mechanisms for seafloor spreading",
+          "inWorkspace": true,
+          "status": "SUPPORTED",
+          "established": true,
+          "citedExact": false,
+          "citedNormalised": false,
+          "citedRank": null,
+          "cause": "RANKING (citable, but not cited even at floor 0.0)"
+        }
+      ],
+      "requiredSource": "wikipedia-mid-ocean-ridge.md",
+      "requiredSourcePresent": true
+    },
+    "P-02": {
+      "scope": "P1",
+      "answered": true,
+      "citedClaims": 104,
+      "citedSources": [
+        "usgs-this-dynamic-earth.md",
+        "wikipedia-continental-drift.md",
+        "wikipedia-mid-ocean-ridge.md",
+        "wikipedia-plate-tectonics.md",
+        "wikipedia-subduction.md"
+      ],
+      "gold": [
+        {
+          "proposition": "oceanic trenches are the deepest parts of the ocean floor",
+          "inWorkspace": true,
+          "status": "SUPPORTED",
+          "established": true,
+          "citedExact": false,
+          "citedNormalised": false,
+          "citedRank": null,
+          "cause": "RANKING (citable, but not cited even at floor 0.0)"
+        },
+        {
+          "proposition": "beyond the forearc basin, volcanoes are found in long chains called volcanic arcs",
+          "inWorkspace": true,
+          "status": "SUPPORTED",
+          "established": true,
+          "citedExact": false,
+          "citedNormalised": false,
+          "citedRank": null,
+          "cause": "RANKING (citable, but not cited even at floor 0.0)"
+        },
+        {
+          "proposition": "since the earth's circumference has not changed over geologic time, hess concluded that older seafloor has to be consume",
+          "inWorkspace": true,
+          "status": "SUPPORTED",
+          "established": true,
+          "citedExact": false,
+          "citedNormalised": false,
+          "citedRank": null,
+          "cause": "RANKING (citable, but not cited even at floor 0.0)"
+        }
+      ],
+      "requiredSource": "wikipedia-subduction.md",
+      "requiredSourcePresent": true
+    }
+  },
+  "summary": {
+    "recallAt1": 3,
+    "recallAt5": 4,
+    "recallAt10": 6,
+    "goldCitedWithFloorZero": 16,
+    "mrr": 0.2593,
+    "note": "floor 0.0 cites every citable claim with any term match, so a gold claim absent here has matched zero terms"
+  }
+}

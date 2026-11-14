@@ -185,4 +185,41 @@ class KnowledgeRetrieverTest {
         assertThat(answer.answered()).isFalse();
         assertThat(answer.abstentionReason()).isNotBlank();
     }
+
+    @Test
+    @DisplayName("the coverage floor's override: default when absent or unusable, the value when set")
+    void theCoverageFloorOverride() {
+        String property = KnowledgeRetriever.MINIMUM_COVERAGE_PROPERTY;
+        String previous = System.getProperty(property);
+        try {
+            System.clearProperty(property);
+            assertThat(KnowledgeRetriever.configuredMinimumCoverage())
+                    .isEqualTo(KnowledgeRetriever.DEFAULT_MINIMUM_COVERAGE);
+
+            System.setProperty(property, "0.0");
+            assertThat(KnowledgeRetriever.configuredMinimumCoverage()).isEqualTo(0.0);
+
+            System.setProperty(property, "0.4");
+            assertThat(KnowledgeRetriever.configuredMinimumCoverage()).isEqualTo(0.4);
+
+            System.setProperty(property, "not-a-number");
+            assertThat(KnowledgeRetriever.configuredMinimumCoverage())
+                    .isEqualTo(KnowledgeRetriever.DEFAULT_MINIMUM_COVERAGE);
+
+            System.setProperty(property, "2.5");
+            assertThat(KnowledgeRetriever.configuredMinimumCoverage())
+                    .isEqualTo(KnowledgeRetriever.DEFAULT_MINIMUM_COVERAGE);
+
+            System.setProperty(property, " ");
+            assertThat(KnowledgeRetriever.configuredMinimumCoverage())
+                    .isEqualTo(KnowledgeRetriever.DEFAULT_MINIMUM_COVERAGE);
+        } finally {
+            if (previous == null) {
+                System.clearProperty(property);
+            } else {
+                System.setProperty(property, previous);
+            }
+        }
+    }
+
 }

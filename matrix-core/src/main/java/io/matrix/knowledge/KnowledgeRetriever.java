@@ -35,6 +35,42 @@ public final class KnowledgeRetriever {
     /** The least share of the question's informative terms a claim must cover. */
     public static final double DEFAULT_MINIMUM_COVERAGE = 0.25;
 
+    /**
+     * The system property that overrides the coverage floor, for diagnosis and
+     * the retrieval experiments (EVID-BASE E2).
+     *
+     * <p>The name follows the house style of the other runtime knobs
+     * ({@code matrix.knowledge.snapshot.max-payload-bytes}): a dotted name
+     * under the {@code matrix.} prefix, read with {@link System#getProperty}.</p>
+     */
+    public static final String MINIMUM_COVERAGE_PROPERTY =
+            "matrix.retrieval.minimum-coverage";
+
+    /**
+     * The coverage floor in force: the configured value, or the default.
+     *
+     * <p>A property that is absent, unreadable, or outside the unit interval
+     * leaves the default in place, so an unconfigured deployment retrieves
+     * exactly as it did before this knob existed.</p>
+     *
+     * @return the share a claim must cover to reach the answer's evidence
+     */
+    public static double configuredMinimumCoverage() {
+        String configured = System.getProperty(MINIMUM_COVERAGE_PROPERTY);
+        if (configured == null || configured.isBlank()) {
+            return DEFAULT_MINIMUM_COVERAGE;
+        }
+        try {
+            double value = Double.parseDouble(configured.trim());
+            if (Double.isNaN(value) || value < 0.0 || value > 1.0) {
+                return DEFAULT_MINIMUM_COVERAGE;
+            }
+            return value;
+        } catch (NumberFormatException unreadable) {
+            return DEFAULT_MINIMUM_COVERAGE;
+        }
+    }
+
     private final KnowledgeSnapshot snapshot;
     private final double minimumCoverage;
 
