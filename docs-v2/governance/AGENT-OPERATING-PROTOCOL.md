@@ -1,7 +1,7 @@
 # MATRIX — AGENT OPERATING PROTOCOL
 
 **Status:** `CANONICAL` · **Subject:** how an agent works in this repository
-**Snapshot of:** `9f9948e7862efd310bb624b159c9f000f2a827ce` · **Date:** 2026-11-13
+**Snapshot of:** `e41cd3c1fa50d061af294881f72a13b3d592954a` · **Date:** 2026-11-14
 **Companion documents:** `docs-v2/governance/PROJECT-STATE.md` (what MATRIX is today) ·
 `docs-v2/governance/ROADMAP.md` (what comes next) ·
 `docs-v2/governance/DECISION-REGISTER.md` (what was decided) ·
@@ -543,9 +543,9 @@ the snapshot commit (`docs-v2/governance/PROJECT-STATE.md` §3):
 | the W43 regression scope | `./gradlew :matrix-core:test --tests "io.matrix.memory.*" --tests "io.matrix.brain.*" --tests "io.matrix.api.*" --tests "io.matrix.rag.*" --rerun-tasks` | **98 classes, 1036 tests, 0 failures** | `a6ded233` |
 | the brain runtime | `./gradlew :matrix-brain-runtime:test --rerun-tasks` | **119 classes, 914 tests, 0 failures, 2 skipped** | `a6ded233` |
 | the API gateway | `./gradlew :matrix-api-gateway:test --rerun-tasks` | **43 classes, 240 tests, 0 failures** | `a6ded233` |
-| **the W53 scope** (the six packages of the wave) **and the gateway** | `./gradlew :matrix-core:test :matrix-api-gateway:test --offline` | **255 classes, 1668 tests, 0 failures, 0 errors, 0 skipped** | `9f9948e7` (the tree of the working tree's release hardening) |
-| **the whole `matrix-core` module** | `./gradlew :matrix-core:test --offline` | **1300 classes, 9522 tests, 0 failures, 0 errors, 23 skipped**, in 24 min 22 s | `9f9948e7` (the tree of the working tree's release hardening and of the wave's own last test method) |
-| **the brain runtime** | `./gradlew :matrix-brain-runtime:test --offline` | **124 classes, 928 tests, 0 failures, 0 errors, 2 skipped** | `9f9948e7` |
+| **the W53 scope** (the six packages of the wave) **and the gateway** | `./gradlew :matrix-core:test :matrix-api-gateway:test --offline` | **255 classes, 1668 tests, 0 failures, 0 errors, 0 skipped** | `e41cd3c1` (the released tree) |
+| **the whole `matrix-core` module** | `./gradlew :matrix-core:test --offline` | **1300 classes, 9522 tests, 0 failures, 0 errors, 23 skipped**, in 24 min 22 s | `e41cd3c1` (the released tree) |
+| **the brain runtime** | `./gradlew :matrix-brain-runtime:test --offline` | **124 classes, 928 tests, 0 failures, 0 errors, 2 skipped** | `e41cd3c1` (the released tree) |
 
 **The rows above the W53 ones are the snapshot's own baseline and keep their commit; the
 three rows below them are the measurements of 2026-11-13.** A row that was not re-measured

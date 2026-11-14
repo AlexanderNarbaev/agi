@@ -1,6 +1,6 @@
 # DECISION REGISTER — MATRIX
 
-**Status:** CANONICAL · 2026-11-14 · branch `develop` · HEAD `9f9948e7`
+**Status:** CANONICAL · 2026-11-14 · branch `develop` · HEAD `e41cd3c1`
 **Kind:** an index. Nothing in this file is a decision; every row points at the document that
 holds the decision, and the full text, the rejected alternatives and the evidence live there.
 
