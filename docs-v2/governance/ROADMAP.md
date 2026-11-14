@@ -493,11 +493,15 @@ repository's own code already answers badly: *which representation, and which co
 method, does which workload deserve?* **The name is the wave's name, not a number.** The
 identifier `W54` is taken — `docs-v2/waves/WAL-030-w54-w55-sampling-kv-cache-sampled-generation-202.md`
 — and the ids up to W80 and W99 exist, so the wave takes the **id `REP-SUBSTRATE`** with the
-sub-ids `REP-SUBSTRATE.0` … `REP-SUBSTRATE.4`. **It has not started**, and the wave it
-follows is not yet released: the sequence the owner set is (1) the W53 release hardening,
-(2) the reconciliation of `main` and `develop`, (3) the review of pull request #50, (4) this
-wave on a **separate research branch** cut from the agreed `develop`, and (5) the
-architecture decision.
+sub-ids `REP-SUBSTRATE.0` … `REP-SUBSTRATE.4`. **It is complete**: the wave's work is in
+`develop` (`5e26748d`) and its decision is
+`docs-v2/engineering/ADR-REP-SUBSTRATE-01-representation-substrate.md`. The sequence the
+owner set — (1) the W53 release hardening, (2) the reconciliation of `main` and `develop`,
+(3) the review of pull request #50, (4) the wave on a separate research branch, (5) the
+architecture decision — is done: W53 was released into `main` on 2026-11-14 (pull request
+#50, squash `bcdd1a0a`), and **step (5) remains the owner's**: the fold replacement
+(ADR §4.4, options A/B/C) is still **OPEN**, and the evidence that would decide it is the
+EVID-BASE wave's learning evidence base (`docs-v2/engineering/E1-LEARNING-EVIDENCE.md`).
 
 **The principle that governs the wave.** *MATRIX must select representations and
 computational methods according to the workload, the correctness requirements, the resource

@@ -147,6 +147,15 @@ else
 fi
 
 echo ""
+echo "=== 9. the bracketed claim form is caught (positive control)"
+# The project's own documents write the claim as "pull request (#49) is open", not as
+# "pull request #49 is open" - the pattern that matched the second form did not match
+# the first, and a checker that misses the form the documents use is blind to them.
+printf '# PROJECT STATE\n\n**The wave is released into main.**\n\npull request (#%s) is open and unmerged.\n' \
+  "$FIXTURE_PR" > "$FIX/docs-v2/governance/PROJECT-STATE.md"
+expect "bracketed release claim: RELEASE_CLAIM" "RELEASE_CLAIM" "$(run "$FIX")"
+
+echo ""
 if [ "$failures" -eq 0 ]; then
   echo "the self-test: PASS (all controls behaved)"
   exit 0

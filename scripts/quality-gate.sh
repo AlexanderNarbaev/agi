@@ -345,6 +345,14 @@ check_test_catalogue() {
 # because it is useful on its own, and it carries its own negative control
 # (scripts/validate-current-state-selftest.sh) - a checker that has never gone red
 # on a wrong tree is not evidence.
+#
+# The rule needs the repository's main line: it reads the merge squashes from
+# `git log origin/main` (or `git log main`) to know which pull requests are already
+# merged. In a shallow clone or an unpacked tarball that history is absent, the
+# checker says UNREADABLE, and the rule FAILS CLOSED - the gate's convention is that
+# every rule contributes to the exit status, and a check that cannot run is not a
+# check. The CI fetches the full history (fetch-depth: 0), so it runs there; a local
+# shallow clone must be deepened (git fetch --unshallow) before the gate can pass.
 check_current_state() {
     local checker="$REPO_ROOT/scripts/validate-current-state.py"
     if [ ! -f "$checker" ]; then

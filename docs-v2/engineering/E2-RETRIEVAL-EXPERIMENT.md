@@ -179,12 +179,15 @@ Two things follow, and both are stated here rather than implied:
    accuracy on unseen cases. Because **no candidate was adopted** (§5, §7), the absence of
    a held-out split cannot inflate any production claim: the only production change **to
    the retrieval path** is an inert knob whose default is unchanged. (The wave's other
-   production change is the `countInformativeBits` bug fix in the trainer, recorded in
+   production changes are elsewhere: the trainer's `countInformativeBits` bug fix and the
+   bounded action's writer — `ArtifactWriter`/`ArtifactAction` — all recorded in
    `docs-v2/engineering/EVID-BASE-FINAL-REPORT.md`.)
 2. **What a held-out evaluation would take.** A separately identified case set with
    independently defined expectations over the same licensed corpus, and a sweep measured
    on it without ever having been read during a parameter choice. The corpus is the
-   project's own `w50-plate-tectonics` seed (two documents, 41 claims); a second case set
+   project's own `w50-plate-tectonics` seed — **two documents, 348 claims** (the seed
+   import's own record: `matrix-core/src/main/resources/epistemic-eval/cases.json`; the 41
+   claims of one answer are a per-answer count, not the corpus's size). A second case set
    means a second set of independently verified propositions, which is a **content** task
    (reading and verifying propositions against the source), not a threshold task. That is
    why the next cycle's first priority is the concept enrichment the residual points at

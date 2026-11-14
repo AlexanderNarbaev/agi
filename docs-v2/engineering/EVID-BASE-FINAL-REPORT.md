@@ -43,7 +43,7 @@
 |---|---|
 | source | `scripts/validate-current-state.py`, `scripts/validate-current-state-selftest.sh` |
 | behaviour | report-only deterministic checks: a release claim contradicted by `origin/main`'s subjects; a topology that denies the governed crossing while the contract declares it; stale evidence citations (path:line against the file, unique-basename resolution) |
-| tests | the self-test's 7 controls (clean silent; stale release; topology denial; unresolved citation; line beyond EOF; strict exit 1; strict exit 0; real repo 0) — all pass |
+| tests | the self-test's controls — **nine numbered sections, twelve assertions** (clean silent; stale release; topology denial; unresolved citation; line beyond EOF; strict exit 1; strict exit 0; real repo 0; the gate's own wiring — the fixture is detected, the gate reports the violation, and the violation disappears when the wiring is removed; and the bracketed claim form the project's own documents use) — all pass |
 | status | **implemented · tested · green** (0 contradictions on the branch) |
 
 ### B3. The E2 measurement instruments
@@ -276,15 +276,17 @@ was neither disabled nor given an exception.
 
 1. **Docker Hub authentication — the aggregate's only new cause.** Not fixable without the
    owner's credentials, and the directive forbids inventing them. **State: BLOCKED, the
-   owner's.** Everything else in the `ci` workflow is green.
+   owner's.** On `main` everything else in the `ci` workflow is green; on `develop` the
+   wall-clock assertion of §5 is red and the three jobs behind it (the container images, the
+   security scan and the Docker publication) were skipped behind it.
 2. **ShellCheck — inherited, unchanged.** The findings are in the repository's own scripts
    (43 files in the report; `snapshot_state.sh`, `mc-direct.sh`, `local-alpha-restart.sh`
    and the chain-isolation check are four examples); the branch's own scripts carry none,
    and the branch's one finding was fixed (PR #57) rather than baselined.
 3. **GraalVM Native Build — inherited.** *"The Native Image build process ran out of
    memory"* on the runner; it has been red since **2026-10-31** (the workflow's own history
-   shows failures on 2026-10-31, 2026-11-06, 2026-11-07 and every day since), long before
-   this work.
+   shows failures on 2026-10-31, 2026-11-06 and 2026-11-07, and every run since — the
+   workflow has no schedule, so it runs on the pushes to `main`), long before this work.
 4. **Historical unverified TruffleHog findings.** The push event scans the commits the push
    carried and finds nothing; the pull-request event scans the whole branch and reports nine
    unverified results, **0 verified**, all attached to historical commits (the W51
@@ -329,5 +331,5 @@ quality gate's rule **CURRENT-1**, so it runs with the other validators instead 
 alone: `scripts/quality-gate.sh` calls it in strict mode and fails on a contradiction. Its
 own negative control grew with the wiring: `scripts/validate-current-state-selftest.sh` now
 also plants a contradiction in a copy of the tree and requires the **gate** to report
-CURRENT-1 there — a wiring that is never seen to fail is not evidence that it works. Eight
-controls, all passing.
+CURRENT-1 there — a wiring that is never seen to fail is not evidence that it works.
+**Nine numbered controls, twelve assertions, all passing.**
