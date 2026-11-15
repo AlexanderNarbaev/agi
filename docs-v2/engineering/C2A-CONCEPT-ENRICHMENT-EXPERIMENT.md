@@ -36,7 +36,7 @@ The v1.0 classification counted a CASE, not a GOLD, and it counted a case as `BE
 | `P1'` | `plate-tectonics-eval-neg` | 1 | 5 | 672 | 766 | 699 |
 | `P1''` | `plate-tectonics-eval-neg2` | 1 | 5 | 672 | 718 | 654 |
 
-Every scope of the dataset was prepared with the production methods behind the HTTP calls: `AcquisitionCycle.loadSeed` (the seed route), `AcquisitionCycle.run` (the learn route) and `AcquisitionCycle.acquireAndRevise` (the revise route). The preparation is repeated before every case, exactly as the official runner does it. Preparation cost: 81809 ms.
+Every scope of the dataset was prepared with the production methods behind the HTTP calls: `AcquisitionCycle.loadSeed` (the seed route), `AcquisitionCycle.run` (the learn route) and `AcquisitionCycle.acquireAndRevise` (the revise route). The preparation is repeated before every case, exactly as the official runner does it. Preparation cost: 81025 ms.
 
 ## 2. What the source-grounded extraction found
 
@@ -50,7 +50,7 @@ The extraction of the workspace of the first answer case (S1, 348 claims, 326 co
 | relation candidates | 7 | 7 |
 | — of which SUPPORTED | 7 | 7 |
 | relation candidates rejected | 116 | 116 |
-| extraction time | 146 ms | 46 ms |
+| extraction time | 110 ms | 53 ms |
 | retained text of the extraction | 43020 bytes | 53411 bytes |
 
 **Why the rule was tightened.** The v1.0 rule asked for two things that may happen ANYWHERE in the same sentence: the concept's name and a definitional copula. Of the 162 definitions it produced, only 109 have the name **immediately** followed by a definitional copula (67.3%), and 3 are longer than the 400 characters the v1.1 rule allows. The other sentences state something ELSE about the concept — they are not definitions, and a candidate that carries them does not test the hypothesis it claims to test. The v1.1 rule therefore requires the **adjacency** and the **length cap**. It keeps 120 definitions; for 11 of those concepts it is a DIFFERENT sentence — the loose rule stopped at the first sentence that carried the name and a copula anywhere, and the tight rule kept looking for one that carried the name immediately before the copula. The examples the loose rule produced are below.
@@ -117,7 +117,7 @@ The supporting span of every relation is the sentence it was read from; the full
 
 **What `SUPPORTED` says.** It says that the **sentence** is an established claim of the workspace — the production validator promoted a claim carrying it. It does **not** say that the relation is true: the rule reads the sentence lexically, and a reader may call a relation wrong (the `IS_A` between "Plate tectonics ..." and "Tectonic plates" is read from a sentence that says plate tectonics *comprises* plates). The status is about the provenance of the text, not about the semantics of the relation — which is exactly why the relation is a **candidate**.
 
-The extraction over the whole run took 1265 ms under the tight rule and 1094 ms under the loose one, and retained 1059921 and 1292127 bytes of text.
+The extraction over the whole run took 1208 ms under the tight rule and 1056 ms under the loose one, and retained 1059921 and 1292127 bytes of text.
 
 ## 3. Does the in-process harness reproduce the official 18/29?
 
@@ -157,12 +157,12 @@ The cost (the retriever-level rows are the PURE retriever; the `BASELINE-PATH` r
 
 | Row | Mean retrieval (ms) | Total over the row (ms) | Overhead per case against `BASELINE-RETRIEVER` (ms) |
 |---|---|---|---|
-| `BASELINE-PATH` | 25 | 469 | 16.0000 |
-| `BASELINE-RETRIEVER` | 9 | 163 | 0.0000 |
-| `H1-definition-enrichment` | 9 | 168 | 0.0000 |
-| `H2-relation-expansion` | 8 | 152 | -1.0000 |
-| `H3-query-lexical-expansion` | 8 | 151 | -1.0000 |
-| `H1+H2-definition-and-relation-expansion` | 9 | 165 | 0.0000 |
+| `BASELINE-PATH` | 21 | 410 | 14.0000 |
+| `BASELINE-RETRIEVER` | 7 | 144 | 0.0000 |
+| `H1-definition-enrichment` | 8 | 153 | 1.0000 |
+| `H2-relation-expansion` | 7 | 137 | 0.0000 |
+| `H3-query-lexical-expansion` | 7 | 138 | 0.0000 |
+| `H1+H2-definition-and-relation-expansion` | 8 | 156 | 1.0000 |
 
 The failure lists:
 
@@ -216,12 +216,12 @@ The cost (the retriever-level rows are the PURE retriever; the `BASELINE-PATH` r
 
 | Row | Mean retrieval (ms) | Total over the row (ms) | Overhead per case against `BASELINE-RETRIEVER` (ms) |
 |---|---|---|---|
-| `BASELINE-PATH` | 25 | 469 | 17.0000 |
-| `BASELINE-RETRIEVER` | 8 | 145 | 0.0000 |
-| `H1-definition-enrichment` | 9 | 169 | 1.0000 |
-| `H2-relation-expansion` | 8 | 143 | 0.0000 |
-| `H3-query-lexical-expansion` | 8 | 154 | 0.0000 |
-| `H1+H2-definition-and-relation-expansion` | 9 | 171 | 1.0000 |
+| `BASELINE-PATH` | 21 | 410 | 14.0000 |
+| `BASELINE-RETRIEVER` | 7 | 139 | 0.0000 |
+| `H1-definition-enrichment` | 8 | 161 | 1.0000 |
+| `H2-relation-expansion` | 7 | 139 | 0.0000 |
+| `H3-query-lexical-expansion` | 7 | 141 | 0.0000 |
+| `H1+H2-definition-and-relation-expansion` | 9 | 167 | 2.0000 |
 
 The failure lists:
 
